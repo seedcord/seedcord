@@ -236,6 +236,8 @@ const messages = {
         `renderTable's ${paint.bold(option)} is ${value}. Pass ${expected}.`,
     [SeedcordErrorCode.UtilUnhandledUnionMember]: (value: string) =>
         `assertNever() ran with ${value}, which its types ruled out. Something passed a value outside the union.`,
+    [SeedcordErrorCode.LoggerFileNameHasFolder]: (filename: string, logsFolder: string) =>
+        `${paint.bold('WinstonFileSink')} got ${paint.path(filename)} as its ${paint.bold('filename')}, which has a folder in it. File logs always go in ${paint.path(logsFolder)}. Pass only the file name, like ${paint.sky("'bot-{date}.log'")}.`,
 
     [SeedcordErrorCode.PluginOptionsRejected]: (pluginName: string, reason: string) =>
         `${paint.sky(pluginName)} rejected its options. ${sentence(reason.charAt(0).toUpperCase() + reason.slice(1))}`,

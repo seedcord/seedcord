@@ -4,6 +4,7 @@ import { existsSync, mkdtempDisposableSync, readdirSync, readFileSync, writeFile
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 
+import { SeedcordErrorCode } from '@seedcord/errors';
 import { stripAnsi } from '@seedcord/utils';
 import { setBuiltFiles, setDevFiles } from '@seedcord/utils/internal';
 import { Envapter } from 'envapt';
@@ -42,6 +43,19 @@ async function listWhenWritten(dir: string, timeoutMs = 2000): Promise<string[]>
 }
 
 const plain = (value: string): string => stripAnsi(value);
+
+// a script without a bot config logs under logs/ in its working folder
+function workingFolder(): Disposable & { logs: string } {
+    const dir = mkdtempDisposableSync(join(tmpdir(), 'seedcord-logger-'));
+    const cwd = vi.spyOn(process, 'cwd').mockReturnValue(dir.path);
+    return {
+        logs: join(dir.path, 'logs'),
+        [Symbol.dispose]: () => {
+            cwd.mockRestore();
+            dir.remove();
+        }
+    };
+}
 
 // the slot the entry of a built bot fills before anything imports seedcord
 function asBuiltBot({ root, configFile }: { root: string; configFile: string }): Disposable {
@@ -152,34 +166,32 @@ describe('winston sinks', () => {
     }, 20_000);
 
     it('the file sink writes a record to disk', async () => {
-        using dir = mkdtempDisposableSync(join(tmpdir(), 'seedcord-logger-'));
-        const filename = join(dir.path, 'out.log');
-        using sink = new WinstonFileSink({ filename, format: 'json' });
+        using folder = workingFolder();
+        using sink = new WinstonFileSink({ filename: 'out.log', format: 'json' });
 
         sink.onLog(record({ message: 'to-disk', channel: 'events' }));
-        const content = await readWhenWritten(filename);
+        const content = await readWhenWritten(join(folder.logs, 'out.log'));
 
         expect(content).toContain('to-disk');
         expect(content).toContain('events');
     });
 
     it('the json sink stamps the record timestamp as ISO, not the format-time now', async () => {
-        using dir = mkdtempDisposableSync(join(tmpdir(), 'seedcord-logger-'));
-        const filename = join(dir.path, 'ts.log');
-        using sink = new WinstonFileSink({ filename, format: 'json' });
+        using folder = workingFolder();
+        using sink = new WinstonFileSink({ filename: 'ts.log', format: 'json' });
 
         const ts = 1_600_000_000_000;
         sink.onLog(record({ message: 'stamped', timestamp: ts }));
-        const content = await readWhenWritten(filename);
+        const content = await readWhenWritten(join(folder.logs, 'ts.log'));
         const line = content.trim().split('\n')[0] ?? '{}';
         expect((JSON.parse(line) as { timestamp?: string }).timestamp).toBe(new Date(ts).toISOString());
     });
 
-    it('writes a relative file name beside seedcord.config.ts in a built bot', async () => {
+    it('writes the logs folder beside seedcord.config.ts in a built bot', async () => {
         using project = mkdtempDisposableSync(join(tmpdir(), 'seedcord-logger-'));
         writeFileSync(join(project.path, 'seedcord.config.ts'), '');
         using _builtBot = asBuiltBot({ root: join(project.path, 'dist'), configFile: '../seedcord.config.ts' });
-        using sink = new WinstonFileSink({ filename: 'logs/out.log', format: 'json' });
+        using sink = new WinstonFileSink({ filename: 'out.log', format: 'json' });
 
         sink.onLog(record({ message: 'beside the config' }));
 
@@ -204,45 +216,44 @@ describe('winston sinks', () => {
         expect(await listWhenWritten(join(project.path, 'logs'))).toHaveLength(1);
     });
 
-    it('writes a relative file name in the working folder outside a built bot', async () => {
-        using cwd = mkdtempDisposableSync(join(tmpdir(), 'seedcord-logger-'));
-        using _cwd = vi.spyOn(process, 'cwd').mockReturnValue(cwd.path);
-        using sink = new WinstonFileSink({ filename: 'logs/out.log', format: 'json' });
+    it.each(['logs/out.log', join(tmpdir(), 'out.log')])(
+        'throws LoggerFileNameHasFolder for a filename like %s',
+        (filename) => {
+            expect(() => new WinstonFileSink({ filename })).toThrow(
+                expect.objectContaining({ code: SeedcordErrorCode.LoggerFileNameHasFolder })
+            );
+        }
+    );
+
+    it('writes the logs folder in the working folder outside a built bot', async () => {
+        using folder = workingFolder();
+        using sink = new WinstonFileSink({ filename: 'out.log', format: 'json' });
 
         sink.onLog(record({ message: 'in the working folder' }));
 
-        expect(await readWhenWritten(join(cwd.path, 'logs/out.log'))).toContain('in the working folder');
+        expect(await readWhenWritten(join(folder.logs, 'out.log'))).toContain('in the working folder');
     });
 
-    it('expands {timestamp} in the file name', async () => {
-        using dir = mkdtempDisposableSync(join(tmpdir(), 'seedcord-logger-'));
-        using sink = new WinstonFileSink({ filename: join(dir.path, 'run-{timestamp}.log'), format: 'json' });
+    it.each([
+        ['{timestamp}', 'run-{timestamp}.log', /^run-\d{4}-\d{2}-\d{2}-\d{6}-\d{3}\.log$/u],
+        ['{date}', 'run-{date}.log', /^run-\d{4}-\d{2}-\d{2}\.log$/u]
+    ])('expands %s in the file name', async (_, filename, written) => {
+        using folder = workingFolder();
+        using sink = new WinstonFileSink({ filename, format: 'json' });
 
         sink.onLog(record({ message: 'stamped' }));
 
-        const written = await listWhenWritten(dir.path);
-        expect(written).toHaveLength(1);
-        expect(written[0]).toMatch(/^run-\d{4}-\d{2}-\d{2}-\d{6}-\d{3}\.log$/u);
-    });
-
-    it('expands {date} in the file name', async () => {
-        using dir = mkdtempDisposableSync(join(tmpdir(), 'seedcord-logger-'));
-        using sink = new WinstonFileSink({ filename: join(dir.path, 'run-{date}.log'), format: 'json' });
-
-        sink.onLog(record({ message: 'stamped' }));
-
-        const written = await listWhenWritten(dir.path);
-        expect(written).toHaveLength(1);
-        expect(written[0]).toMatch(/^run-\d{4}-\d{2}-\d{2}\.log$/u);
+        const files = await listWhenWritten(folder.logs);
+        expect(files).toHaveLength(1);
+        expect(files[0]).toMatch(written);
     });
 
     it('writes the pretty file format ANSI-stripped', async () => {
-        using dir = mkdtempDisposableSync(join(tmpdir(), 'seedcord-logger-'));
-        const filename = join(dir.path, 'pretty.log');
-        using sink = new WinstonFileSink({ filename, format: 'pretty' });
+        using folder = workingFolder();
+        using sink = new WinstonFileSink({ filename: 'pretty.log', format: 'pretty' });
 
         sink.onLog(record({ level: 'warn', message: 'to-file', label: 'Bot' }));
-        const content = await readWhenWritten(filename);
+        const content = await readWhenWritten(join(folder.logs, 'pretty.log'));
 
         expect(content).toContain('to-file');
         expect(content).toContain('warn');
@@ -250,20 +261,18 @@ describe('winston sinks', () => {
     });
 
     it('the file sink is disposable via using', async () => {
-        using dir = mkdtempDisposableSync(join(tmpdir(), 'seedcord-logger-'));
-        const filename = join(dir.path, 'scoped.log');
+        using folder = workingFolder();
         {
-            using sink = new WinstonFileSink({ filename, format: 'json' });
+            using sink = new WinstonFileSink({ filename: 'scoped.log', format: 'json' });
             sink.onLog(record({ message: 'scoped-write' }));
         }
-        const content = await readWhenWritten(filename);
+        const content = await readWhenWritten(join(folder.logs, 'scoped.log'));
         expect(content).toContain('scoped-write');
     });
 
     it('marks node sinks with node: true', () => {
         expect(new WinstonConsoleSink().node).toBe(true);
-        using dir = mkdtempDisposableSync(join(tmpdir(), 'sc-'));
-        expect(new WinstonFileSink({ filename: join(dir.path, 'x.log') }).node).toBe(true);
+        expect(new WinstonFileSink({ filename: 'x.log' }).node).toBe(true);
     });
 });
 

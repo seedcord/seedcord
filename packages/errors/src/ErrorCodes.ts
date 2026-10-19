@@ -182,6 +182,9 @@ export enum SeedcordErrorCode {
     /** `assertNever` ran with a value that its types ruled out. */
     UtilUnhandledUnionMember = 1952,
 
+    /** `WinstonFileSink` got a `filename` with a folder in it. File logs always go in the logs folder. */
+    LoggerFileNameHasFolder = 1971,
+
     /** A plugin's constructor called `rejectOptions` on the options it got. */
     PluginOptionsRejected = 2001,
     /** Two or more plugins threw while disposing. */

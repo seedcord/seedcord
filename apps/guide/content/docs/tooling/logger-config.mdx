@@ -112,7 +112,7 @@ export const seedcord = new Seedcord({
         sinks: [
             new WinstonConsoleSink({ format: 'json' }),
             new WinstonFileSink({
-                filename: 'logs/bot-{date}.log',
+                filename: 'bot-{date}.log',
                 maxSize: 5_000_000,
                 maxFiles: 5
             })
@@ -135,7 +135,7 @@ export const seedcord = new Seedcord({
 
 | option | default | what it sets |
 | --- | --- | --- |
-| `filename` | `logs/combined-{timestamp}.log` | the file to write |
+| `filename` | `combined-{timestamp}.log` | the file's name inside the `logs` folder beside `seedcord.config.ts` |
 | `format` | `'pretty'` | the same two values as the console sink |
 | `maxSize` | none | the size winston rotates at |
 | `maxFiles` | none | how many rotated files winston keeps |
@@ -143,6 +143,8 @@ export const seedcord = new Seedcord({
 {/* prettier-ignore-end */}
 
 seedcord replaces `{date}` with `2026-01-31` and `{timestamp}` with `2026-01-31-143005-812` when you construct the sink, so two runs in the same second still get their own file. Without `maxSize` or `maxFiles`, the sink writes a single file that keeps growing.
+
+`seedcord dev` and `seedcord build` both skip the `logs` folder, so a log write never reloads a handler and never ends up in a build. That's why `filename` takes a name only. If you pass one with a folder in it, like `'logs/bot.log'`, the sink throws [`LoggerFileNameHasFolder`](ref:errors/SeedcordErrorCode).
 
 A channel can carry its own `sinks` as well. That list replaces the top-level one for that channel.
 
