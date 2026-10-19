@@ -9,7 +9,7 @@ import { isInside, resolveFromRoot } from '#src/files/paths';
 import { asError } from '#src/misc/asError';
 
 import { decodeFile } from './encodedFile';
-import { builtModulePath, isModulePath, isNonCodeFile, isSkippedUnder } from './extensions';
+import { builtModulePath, isModulePath, isModuleUnder, isNonCodeFile, isSkippedUnder } from './extensions';
 import { botFilesSlot } from './slots';
 
 import type { BotFolders, BuiltSlot, ModuleLoader } from './slots';
@@ -101,7 +101,7 @@ abstract class FileSource {
 class DiskFiles extends FileSource {
     protected async modulesIn(folder: string): Promise<Loaders<ModuleLoader>> {
         const all = await DiskFiles.filesUnder(folder);
-        const files = all.filter((file) => isModulePath(file) && !isSkippedUnder(folder, file));
+        const files = all.filter((file) => isModuleUnder(folder, file));
         // node reads a raw windows path's drive letter as a url protocol
         return files.map((file) => [
             file,

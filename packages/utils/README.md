@@ -102,8 +102,7 @@ These run on node, bun, and Cloudflare Workers with Node compat. A built bot rea
 
 | function | what it does |
 | --- | --- |
-| `isTsOrJsFile(entry)` | whether a `Dirent` is a `.ts`, `.tsx`, `.mts`, `.js`, `.jsx` or `.mjs` file, skipping type declarations |
-| `traverseDirectory(dir)` | imports every one of those files under a directory, sorted by path, for a `for await` loop |
+| `traverseDirectory(dir)` | imports every `.ts`, `.tsx`, `.mts`, `.js`, `.jsx` or `.mjs` file under a directory, skipping type declarations, sorted by path, for a `for await` loop |
 | `readFiles(dir)` | reads every other file under a directory as a `Buffer`, sorted by path, for a `for await` loop |
 
 <!-- prettier-ignore-end -->

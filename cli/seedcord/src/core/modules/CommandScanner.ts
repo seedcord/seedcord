@@ -6,8 +6,7 @@ import { join } from 'node:path';
 import { CommandMetadataKey, isCommandClass } from '@seedcord/core/internal';
 import { SeedcordErrorCode, isSeedcordError } from '@seedcord/errors';
 import { SeedcordError, SeedcordTypeError, throwSingleOrAggregate } from '@seedcord/errors/internal';
-import { isTsOrJsFile } from '@seedcord/utils';
-import { asError, resolveFromRoot } from '@seedcord/utils/internal';
+import { asError, isModuleUnder, isSkippedUnder, resolveFromRoot } from '@seedcord/utils/internal';
 import { ApplicationCommandType } from 'discord-api-types/v10';
 
 import type { ModuleLoader } from '#core/modules/ModuleLoader';
@@ -97,8 +96,8 @@ export class CommandScanner {
         for (const entry of entries.toSorted((a, b) => a.name.localeCompare(b.name))) {
             const fullPath = join(dir, entry.name);
             if (entry.isDirectory()) {
-                yield* this.walk(fullPath, seen);
-            } else if (isTsOrJsFile(entry)) {
+                if (!isSkippedUnder(dir, fullPath)) yield* this.walk(fullPath, seen);
+            } else if (entry.isFile() && isModuleUnder(dir, fullPath)) {
                 const imported = await this.modules.importModule<Record<string, unknown>>(fullPath);
                 for (const exported of Object.values(imported)) {
                     // a barrel re-exports the same class object

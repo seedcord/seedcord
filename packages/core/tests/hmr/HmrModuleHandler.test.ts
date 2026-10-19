@@ -94,6 +94,19 @@ describe('HmrModuleHandler', () => {
         expect(registerMiddleware).not.toHaveBeenCalled();
     });
 
+    it.each(['.drafts', 'node_modules/pkg'])(
+        'ignores a handler saved under %s, which startup skips',
+        async (folder) => {
+            const file = join(handlersDir, folder, 'Ping.mjs');
+            mkdirSync(join(handlersDir, folder), { recursive: true });
+            writeFileSync(file, 'export class Ping {}\n');
+
+            await handler.handle({ file, type: 'update' });
+
+            expect(registerHandler).not.toHaveBeenCalled();
+        }
+    );
+
     it('skips a created directory without logging a failed reload', async () => {
         const { logger, spies } = fakeLogger();
         const withSpies = new HmrModuleHandler<TestHandler>({

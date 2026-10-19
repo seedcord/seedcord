@@ -1,13 +1,6 @@
 import * as path from 'node:path';
 
-import type * as fs from 'node:fs';
-
-/**
- * Determines if a directory entry is a TypeScript or JavaScript file.
- */
-export function isTsOrJsFile(entry: fs.Dirent): boolean {
-    return entry.isFile() && isModulePath(entry.name);
-}
+import { isInside } from './paths';
 
 const MODULE_EXTENSIONS = ['.ts', '.tsx', '.mts', '.js', '.jsx', '.mjs'];
 const DECLARATION_EXTENSIONS = ['.d.ts', '.d.mts'];
@@ -31,6 +24,11 @@ export const SKIPPED_GLOBS = ['!**/node_modules/**', '!**/.*', '!**/.*/**'];
 
 export function isSkippedUnder(dir: string, file: string): boolean {
     return path.relative(dir, file).split(path.sep).some(isSkippedName);
+}
+
+// whether traverseDirectory(dir) imports the file
+export function isModuleUnder(dir: string, file: string): boolean {
+    return isInside(dir, file) && isModulePath(file) && !isSkippedUnder(dir, file);
 }
 
 export function isNonCodeFile(dir: string, file: string): boolean {

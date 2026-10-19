@@ -3,6 +3,7 @@ export {
     builtExtension,
     builtModulePath,
     isModulePath,
+    isModuleUnder,
     isSkippedUnder,
     moduleGlobs,
     nonCodeGlobs,
