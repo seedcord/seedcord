@@ -74,7 +74,6 @@ describe('builtConfigDir', () => {
 });
 
 describe('traverseDirectory in a built bot', () => {
-    // a bundler leaves the root at the /bot placeholder
     it('reports a file outside the working directory by its full path', async () => {
         using _built = register({ folders: ['/handlers'], modules: { '/handlers/Roll.ts': stub('Roll') } });
         const shown: string[] = [];

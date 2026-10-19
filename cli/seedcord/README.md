@@ -84,6 +84,8 @@ export default defineConfig({
 });
 ```
 
+`build.start` points at the file that starts a node bot, like `build: { start: './index.ts' }`. `seedcord build` then writes an `index.mjs` in `outDir` that runs it. Without `build.start`, `index.mjs` default exports the bot for your own node app to import and start, with its types in `index.d.mts`.
+
 `ENVIRONMENT`, `ENV`, `NODE_ENV` or `MODE` in your shell sets the Vite mode, as in `ENV=staging pnpm build`. The CLI loads the `.env.<mode>` files for it. It reads these variables from your shell only, because `.env` usually holds your dev environment. With none of them set, `seedcord build` runs in `production` and the other commands in `development`. The mode has to be one of envapt's four environments: `development`, `staging`, `production` or `test`. Any other value throws `ConfigInvalidEnv`.
 
 ## Edge bots

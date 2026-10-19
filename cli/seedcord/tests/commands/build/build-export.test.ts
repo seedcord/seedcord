@@ -73,24 +73,24 @@ const APP_TSC_FLAGS = [
     '--skipLibCheck'
 ];
 
-async function exportCopy(fixture: string, scripts: Record<string, string>): ReturnType<typeof fixtureCopy> {
-    const copy = await fixtureCopy(fixture);
-    await writeFile(join(copy.path, 'seedcord.config.ts'), EXPORT_CONFIG);
-    for (const [name, script] of Object.entries(scripts)) await writeFile(join(copy.path, name), script);
-    return copy;
+async function writeExportProject(projectDir: string, scripts: Record<string, string>): Promise<void> {
+    await writeFile(join(projectDir, 'seedcord.config.ts'), EXPORT_CONFIG);
+    for (const [name, script] of Object.entries(scripts)) await writeFile(join(projectDir, name), script);
 }
 
 describe('seedcord build without build.start on an http bot', () => {
     let projectDir = '';
 
     beforeAll(async () => {
-        const copy = await exportCopy(HTTP_BOT, { 'server.mjs': FETCH_SERVER });
-        projectDir = copy.path;
+        await using cleanup = new AsyncDisposableStack();
+        ({ path: projectDir } = cleanup.use(await fixtureCopy(HTTP_BOT)));
+        await writeExportProject(projectDir, { 'server.mjs': FETCH_SERVER });
         const botFile = join(projectDir, 'src/bot.ts');
         const source = await readFile(botFile, 'utf8');
         await writeFile(botFile, source.replace('port: 0', 'port: false'));
         await quickBuildRunner().run(projectDir);
-        return () => copy[Symbol.asyncDispose]();
+        const owned = cleanup.move();
+        return () => owned.disposeAsync();
     }, 120_000);
 
     it("serves the bot through the fetch of a plain node server's own port", async () => {
@@ -128,11 +128,12 @@ describe('seedcord build without build.start on a gateway bot', () => {
     const labels: string[] = [];
 
     beforeAll(async () => {
-        const copy = await exportCopy(GATEWAY_BOT, {
+        await using cleanup = new AsyncDisposableStack();
+        ({ path: projectDir } = cleanup.use(await fixtureCopy(GATEWAY_BOT)));
+        await writeExportProject(projectDir, {
             'server.mjs': GATEWAY_SCRIPT,
             'seedcord-first.mjs': SEEDCORD_FIRST_SCRIPT
         });
-        projectDir = copy.path;
         const recording: Steps<BuildStep> = {
             step: (label, task) => {
                 labels.push(label);
@@ -141,7 +142,8 @@ describe('seedcord build without build.start on a gateway bot', () => {
             detail: () => undefined
         };
         await quickBuildRunner(targetBuildFor, new ShellMode(), recording).run(projectDir);
-        return () => copy[Symbol.asyncDispose]();
+        const owned = cleanup.move();
+        return () => owned.disposeAsync();
     }, 120_000);
 
     it('writes the types in a step after the bundle', () => {

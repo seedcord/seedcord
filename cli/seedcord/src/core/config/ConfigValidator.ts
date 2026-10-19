@@ -69,7 +69,8 @@ export class ConfigValidator {
 
     public validate(raw: unknown): CheckedConfig {
         this.assertValid(raw);
-        // justified: problems() checked the build fields of this target's config type
+        // justified: problems() checked build.outDir and build.start on a server target
+        // a server's port stays unchecked because nothing reads it
         return { target: this.target, config: raw } as CheckedConfig;
     }
 

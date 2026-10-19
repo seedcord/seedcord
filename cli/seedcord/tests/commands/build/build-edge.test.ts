@@ -131,7 +131,7 @@ describe('a built edge worker', () => {
 });
 
 describe('seedcord build on an edge bot with files it never loads', () => {
-    it('builds beside a dist folder of other files, with an unimported file that sets a timer, and a bot.ts that exports a durable object and a constant and awaits at the top', async () => {
+    it('builds a project with unimported files and extra exports from bot.ts', async () => {
         const projectDir = await copyEdgeBotForTest();
         await mkdir(join(projectDir, 'dist'));
         await writeFile(join(projectDir, 'dist/notes.txt'), 'not a build\n');

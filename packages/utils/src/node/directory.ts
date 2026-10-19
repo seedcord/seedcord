@@ -166,7 +166,7 @@ function builtFiles(): BuiltFileLoaders | undefined {
 }
 
 // an app can import seedcord before the built bot it embeds
-export function onBuiltFiles(callback: () => void): void {
+export function setBuiltFilesHook(callback: () => void): void {
     if (builtFiles()) callback();
     else Reflect.set(globalThis, Symbol.for(BUILT_FILES_READY_KEY), callback);
 }
@@ -207,15 +207,19 @@ function fileSource(): FileSource {
     return source;
 }
 
-interface ImportedFile {
+interface FoundFile {
     fullPath: string;
+    /**
+     * The path to show in logs. A file under the working directory gets a relative path. Any other file gets its absolute path.
+     */
     relativePath: string;
+}
+
+interface ImportedFile extends FoundFile {
     imported: Record<string, unknown>;
 }
 
-interface TextFile {
-    fullPath: string;
-    relativePath: string;
+interface TextFile extends FoundFile {
     text: string;
 }
 

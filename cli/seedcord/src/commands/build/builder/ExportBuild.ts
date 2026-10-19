@@ -3,7 +3,7 @@ import { join } from 'node:path';
 
 import { viteKey } from '#core/project/ProjectFiles';
 
-import { ENTRY_DECLARATIONS_NAME } from './output';
+import { ENTRY_FILE_NAME } from './output';
 import { ServerBuild } from './ServerBuild';
 import { exportInstance } from './serverEntry';
 
@@ -11,6 +11,7 @@ import type { BundleStats } from './output';
 import type { NextCommand } from './TargetBuild';
 
 const DECLARATIONS_NAME = 'types';
+const ENTRY_DECLARATIONS_NAME = ENTRY_FILE_NAME.replace(/\.mjs$/, '.d.mts');
 
 export class ExportBuild extends ServerBuild {
     public nextCommands(): NextCommand[] {

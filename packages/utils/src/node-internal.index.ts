@@ -4,9 +4,9 @@ export {
     builtConfigDir,
     builtModulePath,
     moduleGlobs,
-    onBuiltFiles,
     resolveFolder,
     setBotRoot,
+    setBuiltFilesHook,
     textGlobs
 } from './node/directory';
 export { importFailed, recordThrownBy, vitePluginThrew } from './node/importFailed';

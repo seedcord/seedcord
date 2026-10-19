@@ -58,7 +58,6 @@ describe('MiddlewareRegistry', () => {
         );
     });
 
-    // a minifier gives unrelated classes the same short name
     it('chains two different classes that share a name', () => {
         const first = middleware('o');
         const second = middleware('o');

@@ -7,16 +7,27 @@ import type { Project } from '#core/project/Project';
 
 export type Build = EdgeBuild | StartBuild | ExportBuild;
 
+interface BuildKind {
+    check(): void;
+    create(project: Project): Build;
+}
+
+function buildKindFor(config: ResolvedSeedcordConfig): BuildKind {
+    const { target } = config;
+    if (target.kind === 'edge') {
+        return { check: () => EdgeBuild.check(config), create: (project) => new EdgeBuild(project, target) };
+    }
+    if (startsItself(target)) {
+        return { check: () => StartBuild.check(config, target), create: (project) => new StartBuild(project, target) };
+    }
+    return { check: () => ExportBuild.check(config, target), create: (project) => new ExportBuild(project, target) };
+}
+
 // runs before any plugin in vitePlugins starts
 export function checkBuildTarget(config: ResolvedSeedcordConfig): void {
-    const { target } = config;
-    if (target.kind === 'edge') EdgeBuild.check(config);
-    else if (startsItself(target)) StartBuild.check(config, target);
-    else ExportBuild.check(config, target);
+    buildKindFor(config).check();
 }
 
 export function targetBuildFor(project: Project): Build {
-    const { target } = project.config;
-    if (target.kind === 'edge') return new EdgeBuild(project, target);
-    return startsItself(target) ? new StartBuild(project, target) : new ExportBuild(project, target);
+    return buildKindFor(project.config).create(project);
 }
