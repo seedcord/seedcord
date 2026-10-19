@@ -17,14 +17,12 @@ export class ExportBuild extends ServerBuild {
         return [];
     }
 
-    public async bundle(): Promise<BundleStats> {
+    public bundle(): Promise<BundleStats> {
         const { config, configDir } = this.project;
-        const stats = await this.bundleJs(exportInstance(viteKey(configDir, config.instance)));
-        await this.writeDeclarations();
-        return stats;
+        return this.bundleJs(exportInstance(viteKey(configDir, config.instance)));
     }
 
-    private async writeDeclarations(): Promise<void> {
+    public override async writeTypes(): Promise<void> {
         const { config } = this.project;
         const { outDir } = this.target;
         const tsconfig = this.project.tsconfig();

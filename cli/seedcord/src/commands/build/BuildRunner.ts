@@ -25,6 +25,7 @@ export const BUILD_STEPS = [
     'type check',
     'read discord',
     'bundle',
+    'write types',
     'boot'
 ] as const;
 export type BuildStep = (typeof BUILD_STEPS)[number];
@@ -80,6 +81,8 @@ export class BuildRunner {
             ({ tsconfig }) => paint.path(tsconfig)
         );
         const bundle = await this.bundle(build, instance.config.bot);
+        const writeTypes = build.writeTypes?.bind(build);
+        if (writeTypes) await steps.step('write types', writeTypes);
         const boot = build.boot?.bind(build);
         if (boot) await steps.step('boot', boot);
 

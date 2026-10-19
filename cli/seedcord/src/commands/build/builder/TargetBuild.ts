@@ -9,6 +9,8 @@ export abstract class TargetBuild implements AsyncDisposable {
 
     constructor(public readonly project: Project) {}
 
+    public writeTypes?(): Promise<void>;
+
     public boot?(): Promise<void>;
 
     public abstract nextCommands(bundle: BundleStats): NextCommand[];

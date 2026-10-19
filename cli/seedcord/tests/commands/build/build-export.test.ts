@@ -4,11 +4,16 @@ import { join } from 'node:path';
 import { build } from 'vite';
 import { describe, expect, it } from 'vitest';
 
+import { targetBuildFor } from '#commands/build/builder/targetBuildFor';
 import { runProjectTsc } from '#core/modules/runProjectTsc';
+import { ShellMode } from '#core/viteMode';
 
 import { copyFixture, GATEWAY_BOT, HTTP_BOT } from './fixtureCopy';
 import { quickBuildRunner } from './quickBuildRunner';
 import { smoke } from './smoke';
+
+import type { BuildStep } from '#commands/build/BuildRunner';
+import type { Steps } from '#core/output/Steps';
 
 const EXPORT_CONFIG = `export default {
     root: './src',
@@ -116,6 +121,22 @@ describe('seedcord build without build.start', () => {
 
         expect(result.stdout + result.stderr).toBe('');
         expect(result.exitCode).toBe(0);
+    }, 120_000);
+
+    it('writes the types in a step after the bundle', async () => {
+        const projectDir = await exportProject(GATEWAY_BOT, GATEWAY_SCRIPT);
+        const labels: string[] = [];
+        const recording: Steps<BuildStep> = {
+            step: (label, task) => {
+                labels.push(label);
+                return task();
+            },
+            detail: () => undefined
+        };
+
+        await quickBuildRunner(targetBuildFor, new ShellMode(), recording).run(projectDir);
+
+        expect(labels.slice(-2)).toEqual(['bundle', 'write types']);
     }, 120_000);
 
     it('reads the .env beside the config when the app imports seedcord before the bot', async () => {
