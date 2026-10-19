@@ -6,7 +6,7 @@ Copy [`sample`](./sample) to start. It has one of every block a post can use. Th
 
 Add yourself to `apps/home/src/lib/blog/authors.ts` before your first post, keyed by your GitHub handle, then list that handle under `authors`.
 
-Images go in the post's folder, written as `![what it shows](./name.webp)`. Each one has to be a webp of 500 KB or less, with alt text. Otherwise the build fails with the image's path in the error. Convert a screenshot with `cwebp -q 80 shot.png -o shot.webp`.
+Images go in the post's folder, written as `![what it shows](./name.webp)`. Each one has to be a webp of 500 KB or less, with alt text and a name made of lowercase words and numbers joined by hyphens, like `shot-1.webp`. Otherwise the build fails with the image's path in the error. Convert a screenshot with `cwebp -q 80 shot.png -o shot.webp`.
 
 Give a fence a `title` to show it as the filename on the code card:
 

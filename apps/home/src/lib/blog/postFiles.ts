@@ -26,11 +26,19 @@ const KB = 1024;
 // every post image is committed to git. a webp screenshot is usually 50 to 200 KB
 const MAX_IMAGE_KB = 500;
 
+const isUrlSlug = (text: string): boolean => text.split('-').every((word) => /^[a-z0-9]+$/.test(word));
+
 export function readPostImage(src: string, postFile: string): ImageRead {
     const name = path.posix.basename(src);
     if (!name.endsWith(WEBP)) {
         const webp = `${name.slice(0, name.length - path.posix.extname(name).length)}${WEBP}`;
         return unusable(`${src} is not a webp. Convert it with \`cwebp -q 80 ${name} -o ${webp}\`.`);
+    }
+
+    if (!isUrlSlug(name.slice(0, -WEBP.length))) {
+        return unusable(
+            `${src} is not a valid image url. Rename it to lowercase words and numbers joined by hyphens, like shot-1.webp.`
+        );
     }
 
     if (path.posix.normalize(src) !== name) {
@@ -59,8 +67,6 @@ export function readPostImage(src: string, postFile: string): ImageRead {
     const url = `${postPath(postFolderName(postFile))}${name}`;
     return { ok: true, image: { src: url, width: size.width, height: size.height } };
 }
-
-const isUrlSlug = (folder: string): boolean => folder.split('-').every((word) => /^[a-z0-9]+$/.test(word));
 
 // the image route publishes every webp in the folder, including ones the post never shows
 export function postImageNames(postFile: string): string[] {

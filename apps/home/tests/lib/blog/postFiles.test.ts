@@ -60,6 +60,12 @@ describe('the files of a post', () => {
         );
     });
 
+    it.each(['shot#1.webp', 'Shot.webp', 'my shot.webp'])('fails the build on an image named %s', async (name) => {
+        using post = new PostFolder().webp(name);
+
+        await expect(post.compile(`![the dev tui](<./${name}>)`)).rejects.toThrow('is not a valid image url');
+    });
+
     it('fails the build on a webp over 500 KB that the post never shows', () => {
         using post = new PostFolder().webp('shot.webp').webp('unused.webp', 500 * KB + 1);
 
