@@ -84,9 +84,10 @@ describe('EdgeDevRuntime lifecycle', () => {
         const before = Envapter.get('DISCORD_BOT_TOKEN');
         await using project = await edgeProject();
 
-        await using started = await startedRuntime(project.projectDir);
-        expect(readBotToken()).toBe(FAKE_TOKEN);
-        await started[Symbol.asyncDispose]();
+        {
+            await using _started = await startedRuntime(project.projectDir);
+            expect(readBotToken()).toBe(FAKE_TOKEN);
+        }
 
         expect(Envapter.get('DISCORD_BOT_TOKEN')).toBe(before);
     }, 120_000);
