@@ -45,6 +45,8 @@ Ground it in the guide or in the code, never in what you remember about another 
 
 **Say whether the complaint is over, in the tense.** A complaint in flat present reads as the way things simply are, so the reader gets to the end of it without knowing whether this page fixes the thing or teaches them to live with it. They find out one paragraph later, which is a paragraph too late. Where the feature takes the complaint away, write it in past tense and let the flip back to present be the answer arriving. The options page ran "`getString('query')` still handed back `string | null`. Every read opened with a check whose answer you already knew", answered by "Every option you declare becomes a getter on `this.options`".
 
+That past tense covers the reader's own work without the feature. Release history, like "The old build only compiled TypeScript" or "running dev in both used to break both", reads like a changelog, since a reader who starts today never had the old behavior. Describe how things work now, and put upgrade notes in the changeset.
+
 The test is whether the reader still lives with it after this page. Discord still allows three seconds, still hands a click back as one string, still lists commands flat. Those stay in present, because past tense would promise a fix nobody is shipping.
 
 A frame word does the same job, and about twenty openers use one: `by hand`, `yourself`, `Without`, `With plain discord.js`, or an `if` that makes the sentence a hypothetical. An opener with neither a frame nor a past tense is the one to look at.
@@ -244,37 +246,31 @@ Read the paragraph after each fix. Never the sentence.
 
 ## 4. What goes wrong
 
-Seventeen shapes, drawn from real corrections. Judge whether a sentence does the same thing, however it is worded.
+Eighteen shapes, drawn from real corrections. Each one's rule, its test and its worked example live in the review prompt that enforces it, so read [`PROSE-REVIEW.md`](./PROSE-REVIEW.md) items 1 to 14 and [`CONTENT-REVIEW.md`](./CONTENT-REVIEW.md) checks 2, 4, 5 and 9 before you write. Judge whether a sentence does the same thing, however it is worded, and refer to a shape by its name, since numbers change.
 
-**Refer to one by its name, never its number.** A reviewer reports a finding by name, so a renumbering cannot make a report point at the wrong rule. The worked example for each lives in the review prompt that enforces it, and the numbers here match the prose review's.
+The prose review checks these:
 
-The prose review covers these fourteen. It reads the page and nothing else.
+- A sentence about the page instead of a sentence with a fact
+- Overclaiming, or a reason that does not hold
+- Explaining what the reader already knows
+- A rhetorical shape standing in for the thing
+- Written from the framework's side instead of the reader's
+- Content that does not earn its space
+- A claim about behavior with the value left out
+- An example picked because it was available to name
+- One phrasing carrying every cross-reference
+- A requirement on the author written as behavior
+- A rule with the reason left out
+- Inline code long enough to hold a line open
+- Prose that runs beside a sample without reading it
+- A design presented as a list of its good properties
 
-1. **A sentence about the page instead of a sentence with a fact.** A line restating its heading. Announcing a list and not delivering one. Test: delete the first sentence under a heading and see whether anything is lost. A line naming what a fence shows survives that test, and so does a sentence setting up a problem the section then solves.
-2. **Overclaiming, or a reason that does not hold.** `Everything`, `always`, `never` where the truth is narrower. A list of three reading as the complete set. A because-clause that falls apart when you check it, which is worse than giving no reason at all, because the reader takes it as settled. Also any count a non-breaking release could change, and any promise about future releases the project does not make. An opener and a first sample that read as the whole surface count too. The modals page opened on text and showed one text input, so a reader stopped there thinking a modal holds only text.
-3. **Explaining what the reader already knows.** Defending why a requirement is a requirement. Spelling out a consequence that is the next sentence anyway. An argument for the design is never this finding. The same shape runs at page scale, where a paragraph says what a later heading is for. A why added to the top of the hot-reload page announced which saves need a restart, which is what the paragraph below it closes on and what a heading further down covers in full. Read a new paragraph against the headings under it before it ships.
-4. **A rhetorical shape standing in for the thing.** Verbless fragments as beats. Wordplay. Any sentence that would be shorter and clearer said plainly.
-5. **Written from the framework's side instead of the reader's.** The deepest one, and it comes from writing what seedcord does before asking what the reader is trying to build. Gates once led with the catalog seedcord ships, where the point is that you write your own.
-6. **Content that does not earn its space.** An error a reader will rarely hit. Anything that does not serve the one thing this page is for. An argument the page is responsible for under section 1 always earns its space.
-7. **A claim about behavior with the value left out.** The sentence says something happens and omits the argument, the type, the default, or the option set. "Call it yourself to widen that" hands the reader a task they cannot finish. A claim that grew to cover more cases and lost its values counts too, and widening needs a table. So does a sentence saying what a surface lacks without saying where the reader gets it, and a number the reader matches in code written without the name they would type, like 10062 without `UnknownInteraction`.
-8. **An example picked because it was available to name.** A section covering a surface nobody reaches for, with whichever member the writer could name first inside it. A one-line fact wearing a callout.
-9. **One phrasing carrying every cross-reference.** A guide is mostly links to other pages, and one shape for all of them turns the whole thing into a chant. Fold the link into a noun the sentence already has, or verb the link, or give the other page a verb that fits what it does.
-10. **A requirement on the author written as behavior.** A sentence describing what a symbol does reads as automatic. Where the author writes it by hand, the reader waits for something the framework never does. The repair names the obligation and what enforces it.
-11. **A rule with the reason left out.** The page says to do something a certain way and never says what goes wrong otherwise. A recommendation hedged with no criterion the reader can apply. A style preference welded to an unrelated mechanism, so the mechanism reads as the reason for the preference.
-12. **Inline code long enough to hold a line open.** Backticks do not wrap, so a full error message or a chained expression pushes past the column on a narrow screen.
-13. **Prose that runs beside a sample without reading it.** After a fence, the paragraph points at something in it, a value, a line, a token the reader can go and look at. Could it sit under a different sample unchanged? Then it is written beside the code. Section 1 has the worked example.
-14. **A design presented as a list of its good properties.** Where a page asks the reader to adopt a shape nothing forces on them, a run of sentences each naming one nice thing about that shape reads as marketing. The five beats under "A forced decision argues differently from a chosen one" are the repair. A page covering something the framework forces is exempt.
+The content review checks these, plus everything in section 7:
 
-The content review covers these three, plus everything in section 7. It opens the declarations.
-
-<!-- the numbering continues the list above, since a reviewer cites a shape by its number -->
-<!-- markdownlint-disable MD029 -->
-
-15. **A way of using the surface the page never shows.** Read every declaration whole, including the variadic parameters, the overloads, the optional arguments, and the generic bounds. Each distinct form appears once. This settles at a different level from the example rule above, which decides how deep one member goes where this one decides which forms appear at all.
-16. **An optional parameter or field stated flatly.** A parameter read as required costs the reader an argument they never needed. A field read as always present costs them a guard they skipped. The reverse counts too.
-17. **A feature taught with no reason to exist.** The section says how to turn the thing on and never says what the reader does without it. Read the section's opening and name what it would cost someone to go without the feature, sourced from the code and from what the platform requires.
-
-<!-- markdownlint-enable MD029 -->
+- A way of using the surface the page never shows
+- An optional parameter or field stated flatly
+- A feature taught with no reason to exist
+- Advice that breaks in production
 
 ---
 
@@ -375,7 +371,7 @@ A frontmatter description packs hardest, because it tries to fit a whole page in
 <!-- markdownlint-disable MD029 -->
 
 9. **Shape.** Read the page whole, out loud, as someone who has never seen it. Two questions. Does a person explaining this sound like this? Would a reader who learned English second get through without re-reading? Then check the spread against section 3.
-10. Run both reviewers, in parallel. One Sonnet agent each. [`PROSE-REVIEW.md`](./PROSE-REVIEW.md) and [`CONTENT-REVIEW.md`](./CONTENT-REVIEW.md).
+10. Run both reviewers in parallel, one Sonnet agent each, with [`PROSE-REVIEW.md`](./PROSE-REVIEW.md) and [`CONTENT-REVIEW.md`](./CONTENT-REVIEW.md). One pair can take a batch of up to four pages. Each agent re-reads the skills before it starts, so a pair per page costs four times as much for the same findings.
 11. Fix what they find, then run step 9 again, since every fix is a sentence nothing has checked.
 
 <!-- markdownlint-enable MD029 -->
@@ -422,11 +418,12 @@ Writing from the framework's side is the failure that keeps recurring, and it co
 
 The content review checks this section as a list. A page that breaks one of these still renders, which is why nothing else catches them.
 
-- **The frontmatter `description` says what the reader does with the feature, in one sentence of 100 to 160 characters.** It becomes the meta description, the link preview, the lede under the page title, and the first line of the page's Markdown copy, so the reader deciding whether to open the page reads it with nothing else. Someone who has never heard of seedcord should get the gist from it alone. Lead with the task in the reader's words, and add the one detail that no neighbouring page shares. "Upload files with a reply and show them in the message through a file, thumbnail, or media gallery component" tells someone in a search result that this is their page. The page's sharpest fact belongs in the body. "Discord hides an upload that no component references" is a fact the files page proves. Leave out a list of what the page covers, since the table of contents already shows the headings and Google cuts a snippet at about 155 characters. Keep a colon followed by a space out of it, since the value is unquoted YAML. Backticks don't render in a description, so write a function name as `or()` to keep it from reading as the English word.
+- **The frontmatter `description` says what the reader does with the feature, in one sentence of 100 to 160 characters.** It becomes the meta description, the link preview, the lede under the page title, and the first line of the page's Markdown copy, so the reader deciding whether to open the page reads it with nothing else. Someone who has never heard of seedcord should get the gist from it alone. Lead with the task in the reader's words, and add the one detail that no neighbouring page shares. "Upload files with a reply and show them in the message through a file, thumbnail, or media gallery component" tells someone in a search result that this is their page. The page's sharpest fact belongs in the body. "Discord hides an upload that no component references" is a fact the files page proves. Leave out a list of what the page covers, since the table of contents already shows the headings and Google cuts a snippet at about 155 characters. The "from X to Y and Z" shape is that list in disguise, so rewrite it around the task. Keep a colon followed by a space out of it, since the value is unquoted YAML. Backticks don't render in a description, so write a function name as `or()` to keep it from reading as the English word.
 - **A seedcord symbol named in prose gets a `ref:` link on its first mention.** `[BuilderComponent](ref:core/BuilderComponent)`, package segment then symbol. A fence tagged `hovers` already links its own tokens. A table links every symbol in it again, since a reader lands on one row without the paragraph that held the first link.
 - **Emphasis earns its place per word.** Italic stresses a word a reader would misread without it, as in "Routing reads the prefix _alone_". Bold marks a Discord UI label, like **Confirm**, or a list label. There is no quota, and most paragraphs carry none.
 - **The import line shows on the first fence and gets cut on the rest**, with `// ---cut---` under it. A later fence keeps its imports when its symbols are new to the page. Start-tab pages keep imports on every fence. Prose around a fence can only name what the fence still shows, since a cut hides those lines from everyone except the writer.
 - **A fence states how it shows types.** `^?` when the prose is about one or two of them. `hovers` when the reader has a shape worth exploring, at roughly five times the bytes and build time. `^|` when the reader's question is what they can type here. A bare `twoslash` with no marker when the sample only needs checking, which is most samples. Leave `twoslash` off when the sample is a fragment that cannot compile alone.
+- **Prose describes what the rendered page shows.** twoslash strips its markers (`^?`, `^|`, `// @errors`, `// ---cut---`) before the page renders, so a sentence pointing at one points at nothing. Point at what the reader sees, like the type under a line or the list of completions.
 - **Ten twoslash blocks per page is the ceiling.** Past that `next dev` has run out of memory at 8 GB. A page needing more than ten compiled samples is usually two pages.
 - **One `^|` per fence.** Two markers in one sample break it, since a line ending in a dangling dot swallows the line below into that member access and the second marker then resolves against nothing. Two questions want two fences. A failed marker throws at render and takes the whole page to a 500, so check any page carrying one in the browser before you move on. For an object key with nothing typed yet, end the line on a quote, as in `this.match({ '`. twoslash hands TypeScript the character before the caret as a trigger character, and `{` throws "Illegal value" while a space returns nothing.
 - **Read the rendered list before writing the sentence above a `^|` fence.** The list holds what the type offers, which is often narrower than the prose assumes. `Commands.` offered the routes that are valid identifiers and left the slashed ones out, so a lead-in claiming it listed every route was false against the fence directly under it. Confirming the marker rendered is a separate question from confirming the sentence matches it.
@@ -437,8 +434,10 @@ The content review checks this section as a list. A page that breaks one of thes
 - **A symbol whose type differs between the two transport packages takes a `<Callout type="transport">` naming both types.** Check each member separately, since one callout over a class does not cover a second member that differs on its own.
 - **No page names an `./internal` entry**, or a symbol reachable only through one. Read the `exports` map in the package's `package.json` to tell. Name the public surface and stop.
 - **Inline code stays short.** Backticks do not wrap, so a full error message or a chained expression pushes past the column on a narrow screen. Use quotes, a fence, or a table cell.
-- **A trap uses the exact error string as its heading**, so a pasted error hits an anchor.
+- **A trap uses the exact error string as its heading**, so a pasted error hits an anchor. When two related errors share causes, like the global and the guild command deploy refusals, put what they share in one paragraph above both headings. Each heading then holds what differs for that error, in whole sentences that make sense when someone lands on that anchor from a search.
+- **A claim about Discord links Discord's docs, or comes off the page.** A limit, a threshold, or how the client behaves is Discord's to state. The content review can check a claim against seedcord's code, and nothing in the repo proves a claim about Discord, so an old page's line about Discord gets checked against Discord's docs before a rewrite keeps it.
 - **A section that narrows the one above it takes an H3.** One option inside "Adding options" nests under that H2, so the table of contents shows which section it belongs to.
 - **A callout takes whole blocks, including a fence.** Use the blank-line form: `<Callout type="warning">`, a blank line, the blocks, a blank line, the close.
+- **A callout's type matches what it holds.** A warning holds a trap the reader will hit and break on, so a trap like that never sits in plain prose. A tip holds something optional, and a note holds context. A one-line fact with nothing to act on stays in prose. When most sections carry a callout, none of them stand out, so keep the ones a reader would regret skipping.
 - **A page outside the Start tab assumes no prior page was read.** Someone opens it cold from search or the sidebar, so it names what it needs and links the rest. The Start tab is an ordered path and its pages do build on each other, which is how the core page opens on the ping handler two pages earlier.
 - **No page's code sample depends on a prior page**, wherever the page sits.

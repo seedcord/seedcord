@@ -1,10 +1,10 @@
 # The content review
 
-One Sonnet agent, one page. It reads the page plus the declarations the page teaches from, and it opens source files. The prose half runs as a separate agent against [`PROSE-REVIEW.md`](./PROSE-REVIEW.md), and the two run in parallel.
+One Sonnet agent, up to four pages. It reads each page plus the declarations the page teaches from, and it opens source files. The prose half runs as a separate agent against [`PROSE-REVIEW.md`](./PROSE-REVIEW.md), and the two run in parallel.
 
 The split is deliberate. This half has to open source to do its job. The prose half never should, because a page's own text is what it is judging.
 
-**Send the prompt verbatim.** Fill in four per-page fields and change nothing else: the file path, the symbols the page teaches, which sibling pages cover which material, and which of the five architectural arguments this page is responsible for. Adding the verdict you already reached turns the answer into your own opinion read back to you.
+**Send the prompt verbatim.** Fill in four per-page fields, repeated for each page in the batch, and change nothing else: the file path, the symbols the page teaches, which sibling pages cover which material, and which of the five architectural arguments this page is responsible for. Adding the verdict you already reached turns the answer into your own opinion read back to you.
 
 Section 1 of the skill lists the five arguments. Which page is responsible for each one is a content decision rather than a rule, so you fill that field in when you send the prompt.
 
@@ -31,7 +31,7 @@ Use the codebase-memory MCP for structure, then open every declaration yourself
 and read it whole. Never assert a claim about the code you have not opened. Give
 a file and line for every finding.
 
-Eight checks.
+Nine checks.
 
 1. The argument this page is responsible for.
 
@@ -196,6 +196,17 @@ Eight checks.
 
    Check that every symbol in a table carries its ref: link, even where the
    prose above already linked it.
+
+9. Advice that breaks in production.
+
+   Read every instruction and every recommended setup as someone who runs a
+   real bot for real users. Report advice they would refuse to follow, or a
+   workflow that only works because the page assumed a shortcut. A real miss:
+   the commands pages assumed one Discord application for testing and
+   production, then taught "making the bot global" and a cleanup step for the
+   test-server copies. A production bot runs as its own application with
+   TESTING_GUILD_IDS unset, so neither step exists. Say what a real setup
+   does instead, and which page should say it.
 
 Two rules on how you answer.
 

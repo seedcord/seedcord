@@ -13,6 +13,7 @@ export const NPM_URL = 'https://www.npmjs.com/package/seedcord';
 export const ROADMAP_URL = 'https://github.com/orgs/seedcord/projects/1';
 export const CDN_URL = 'https://cdn.seedcord.org';
 export const ENVAPT_URL = 'https://envapt.materwelon.dev';
+export const VITE_PLUGINS_URL = 'https://vite.dev/plugins/';
 
 export function canonicalUrl(path: string): string {
     return SITE.at(path);

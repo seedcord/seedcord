@@ -1,8 +1,8 @@
 # The prose review
 
-One Sonnet agent, one page. It reads the page and nothing else. The content half runs as a separate agent against [`CONTENT-REVIEW.md`](./CONTENT-REVIEW.md), and the two run in parallel.
+One Sonnet agent, up to four pages. It reads the pages and nothing else, and judges each one on its own. The content half runs as a separate agent against [`CONTENT-REVIEW.md`](./CONTENT-REVIEW.md), and the two run in parallel.
 
-**Send the prompt verbatim.** The only per-page addition is the file path. Adding what you already concluded turns the answer into your own opinion read back to you. A line like "judge whether this really breaks, since the index page already covers it" tells the agent the verdict and buys nothing.
+**Send the prompt verbatim.** The only per-page addition is the file path, one `Read:` line per page in the batch. Adding what you already concluded turns the answer into your own opinion read back to you. A line like "judge whether this really breaks, since the index page already covers it" tells the agent the verdict and buys nothing.
 
 ---
 
@@ -118,6 +118,13 @@ finding, and a tic is a habit rather than a single sentence.
    over, and so does `by hand`, `yourself`, `Without`, or an `if`. Leave a
    complaint the reader still lives with after this page in present, since
    Discord's three seconds and its one string per click outlive the page.
+
+   Report release history written into a page. "The old build only compiled
+   TypeScript", "running dev in both used to break both", and "now every
+   command loads your bot through Vite" describe how seedcord changed, and a
+   reader who starts today never had the old behavior. That belongs in a
+   changeset. The past tense above is for the reader's own work without the
+   feature.
 
    Report a complaint with nobody in front of the verb. seedcord is the only
    name on the page, so "a second reply comes back rejected" reads as seedcord
