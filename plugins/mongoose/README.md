@@ -23,11 +23,11 @@
 
 ## About
 
-`@seedcord/plugin-mongoose` connects a seedcord bot to MongoDB through Mongoose. It opens the connection during startup, loads every class under `dir` that carries `@RegisterMongooseService`, builds each one's model from its schema, and exposes them under the key you attached it on.
+`@seedcord/plugin-mongoose` connects a seedcord bot to MongoDB through Mongoose. It connects when the bot starts, loads your service classes, and disconnects when the bot shuts down. Handlers reach each service through `this.core`.
 
-It runs on the gateway transport and on http's server runtime. Attaching it to an edge host is a compile error, since Mongoose opens a TCP connection that edge runtimes have no socket for.
+Install it when your bot stores data in MongoDB. It works with a gateway bot and with an http bot on your own server. On a Cloudflare Workers bot, attaching it is a compile error.
 
-Until v1.0.0, minor versions can break.
+seedcord is pre-1.0, so a minor version can break your bot. Each release's changelog says what changed and how to update.
 
 ## Installation
 
@@ -35,46 +35,36 @@ Until v1.0.0, minor versions can break.
 pnpm add @seedcord/plugin-mongoose mongoose
 ```
 
-`mongoose`, `envapt`, `typescript`, and `@seedcord/core` are peer dependencies.
+## Usage
 
-## Attach
-
-`attach` takes a property name, the plugin class, and its options. Chain it off the constructor:
+Attach the plugin in `bot.ts`. Handlers read it from `this.core` under the key you pass:
 
 ```ts
 // bot.ts
-import { resolve } from 'node:path';
-
 import { Seedcord } from '@seedcord/gateway';
 import { Mongoose } from '@seedcord/plugin-mongoose';
+import { GatewayIntentBits } from 'discord.js';
+import { Converters, Envapter } from 'envapt';
 
-export const seedcord = new Seedcord(config).attach('db', Mongoose, {
-    dir: resolve(import.meta.dirname, './services'),
-    uri: Vars.mongoUri,
-    name: Vars.dbName
+export default new Seedcord({
+    bot: {
+        clientOptions: { intents: [GatewayIntentBits.Guilds] },
+        interactions: { path: './handlers' },
+        commands: { path: './commands' },
+        events: { path: null }
+    },
+    subscribers: { path: null }
+}).attach('db', Mongoose, {
+    dir: './services',
+    uri: Envapter.getRequired('MONGO_URI', Converters.String),
+    name: 'my-bot'
 });
-
-export default seedcord;
 ```
 
-```ts
-// index.ts
-import seedcord from './bot';
-
-await seedcord.start();
-```
-
-`attach` returns the instance widened with the key, and `seedcord codegen` writes `db: (typeof Bot)['db']` into `seedcord-gen.d.ts` off a default import of that module. Calling `attach` as a bare statement drops the widened type. A named-only export leaves codegen with nothing to import.
-
-Attach before startup. A call after initialization throws `CorePluginAfterInit`.
-
-`Vars` stands in for an [`envapt`](https://www.npmjs.com/package/envapt) class. A `process.env` read types as `string | undefined`, which the required `uri` and `name` reject.
-
-## Services
-
-Declare the schema on the class as a `public static schema`. A class without one is a compile error.
+Each file in `services/` holds a service with its schema:
 
 ```ts
+// services/Users.ts
 import { MongooseService, RegisterMongooseService } from '@seedcord/plugin-mongoose';
 import mongoose from 'mongoose';
 
@@ -94,11 +84,7 @@ export class Users extends MongooseService<IUser> {
         return this.model.findOne({ userId });
     }
 }
-```
 
-Name each key once so the lookup types resolve:
-
-```ts
 declare module '@seedcord/plugin-mongoose' {
     interface MongooseServices {
         users: Users;
@@ -106,8 +92,4 @@ declare module '@seedcord/plugin-mongoose' {
 }
 ```
 
-Then call it from a handler through `core`:
-
-```ts
-const user = await this.core.db.services.users.findByUserId(this.event.user.id);
-```
+A handler then calls `await this.core.db.services.users.findByUserId(this.event.user.id)`. The [Mongoose guide](https://seedcord.org/guide/plugins/mongoose) covers the options, services, and errors.

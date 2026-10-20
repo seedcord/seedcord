@@ -23,41 +23,28 @@
 
 ## About
 
-`create-seedcord` scaffolds a new seedcord bot project.
+`create-seedcord` sets up a new seedcord bot. It asks a few questions, writes the project, and can install its dependencies and make the first git commit. You run it once, when you start a new bot.
 
-Until v1.0.0, minor versions can break.
+seedcord is pre-1.0, so a minor version can break your bot. Each release's changelog says what changed and how to update.
 
 ## Usage
 
 ```sh
 pnpm create seedcord my-bot
-npm create seedcord my-bot
-yarn create seedcord my-bot
 ```
 
-It asks where the project goes, how Discord reaches your bot, where an http bot runs, what the bot should react to, your bot token, the servers to test your commands in, an accent color, and whether to install dependencies and set up git. Then it writes the project. A yes to install also installs dependencies, formats, and generates your command types. A yes to git makes the first commit. If a step after the write fails, its output shows under that step and the summary still prints.
+`npm create seedcord`, `yarn create seedcord`, and `bun create seedcord` work too, and the project uses that package manager.
 
-If you don't have the token yet, press Enter twice on its prompt to skip it. Fill it into `.env` before you start the bot.
+It asks whether your bot is a gateway or an http bot, where an http bot runs, what a gateway bot reacts to, your bot token, and the servers to test your commands in. The [first bot guide](https://seedcord.org/guide/first-bot) walks through each question.
 
-## Flags
-
-Every question has a flag. Pass them all to skip all questions. `--help` prints the list.
-
-npm forwards flags to the package only after a `--`:
+Every question has a flag, and `--help` prints them all. npm passes flags on only after a `--`:
 
 ```sh
 npm create seedcord my-bot -- --transport gateway --capabilities reactions
-pnpm create seedcord my-bot --transport gateway --capabilities reactions
 ```
-
-`--install` and `--git` answer yes to those two questions, and `--no-install` and `--no-git` answer no. `--no-token` leaves the token empty without asking. `--verbose` keeps the stack frames in a failed step's output. `-v` prints the version and `-h` prints the flag list.
-
-With no terminal to ask on, it reads the flags alone and installs and commits unless told otherwise. An http bot runs on your own server unless you pass `--runtime edge`, and its commands deploy globally unless you pass `--testing-guilds`. It prints the flag that would supply any other answer you left out.
 
 ## What you get
 
-A TypeScript project holding one slash command, its handler, a sample event handler (if you picked `gateway`), `seedcord.config.ts`, eslint, prettier, and a `.env` listing every key the framework reads.
+A TypeScript project with one slash command, its handler, a sample plugin, `seedcord.config.ts`, ESLint, Prettier, and a `.env` for your token. A gateway bot also gets a sample event handler. An http bot on Cloudflare Workers also gets a `cloudflare.config.ts` and a `deploy` script.
 
-`pnpm dev` starts it with hot reload. On the http transport it also opens a cloudflared tunnel and sets it up, and Discord posts interactions to that URL.
-
-An http bot on Cloudflare Workers (`--runtime edge`) also gets a `cloudflare.config.ts` declaring the keys the worker reads, and a `deploy` script that builds the worker and uploads it with `cf`.
+`pnpm dev` starts the bot with hot reload.

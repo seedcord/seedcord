@@ -23,20 +23,38 @@
 
 ## About
 
-`@seedcord/core` is the foundational code both seedcord transports share. Command and context-menu injection, the interaction route decorators, the handler bases, gates, the startup and shutdown phases, and the plugin base all live here.
+`@seedcord/core` is the code both seedcord transports share. It has the route decorators, the handler bases, checks, pagination, the startup and shutdown phases, and the plugin base. [`@seedcord/gateway`](https://www.npmjs.com/package/@seedcord/gateway) and [`@seedcord/http`](https://www.npmjs.com/package/@seedcord/http) connect it to Discord.
 
-Nothing in it opens a connection to Discord. `@seedcord/gateway` and `@seedcord/http` each bind their own transport into these pieces.
+Both transports depend on core and re-export all of it, so a bot imports everything from its transport. Install core directly when you write a plugin that works on both transports.
 
-Until v1.0.0, minor versions can break.
+seedcord is pre-1.0, so a minor version can break your plugin. Each release's changelog says what changed and how to update.
 
 ## Installation
 
-Your transport already re-exports all of this.
-
-Install it directly when you are writing a plugin against the framework:
-
 ```sh
-pnpm add @seedcord/core
+pnpm add -D @seedcord/core envapt typescript
 ```
 
-Your plugin extends `Plugin` from `@seedcord/core/plugin`.
+Also list `@seedcord/core` in your plugin's `peerDependencies`, with the versions you tested against. A plugin that extends a different copy of core than the bot's throws `CorePluginFromOtherCore` when the bot attaches it.
+
+## Usage
+
+A plugin extends `Plugin` from `@seedcord/core/plugin` and implements `init()`:
+
+```ts
+import { Plugin } from '@seedcord/core/plugin';
+
+export class Uptime extends Plugin {
+    private startedAt = 0;
+
+    public async init(): Promise<void> {
+        this.startedAt = Date.now();
+    }
+
+    public elapsed(): number {
+        return Date.now() - this.startedAt;
+    }
+}
+```
+
+A gateway or http bot attaches it with `.attach('uptime', Uptime)`, and handlers call `this.core.uptime.elapsed()`. The [plugin guide](https://seedcord.org/guide/plugins/your-own) covers options, lifecycle phases, and publishing.

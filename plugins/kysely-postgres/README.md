@@ -23,13 +23,11 @@
 
 ## About
 
-`@seedcord/plugin-kysely-postgres` connects a seedcord bot to Postgres through Kysely. It opens the pool during startup, runs your migrations, loads every class under `dir` that carries `@RegisterKyselyService`, and exposes them under the key you attached it on.
+`@seedcord/plugin-kysely-postgres` connects a seedcord bot to Postgres through Kysely. It opens a connection pool when the bot starts, runs your migrations, loads your service classes, and closes the pool when the bot shuts down. Handlers reach each service through `this.core`. You declare your database schema once, and Kysely types every query from it.
 
-You declare the schema once. Kysely types every query off it, so a renamed column breaks the build.
+Install it when your bot stores data in Postgres. It works with a gateway bot and with an http bot on your own server. On a Cloudflare Workers bot, attaching it is a compile error.
 
-It runs on the gateway transport and on http's server runtime. Attaching it to an edge host is a compile error.
-
-Until v1.0.0, minor versions can break.
+seedcord is pre-1.0, so a minor version can break your bot. Each release's changelog says what changed and how to update.
 
 ## Installation
 
@@ -37,82 +35,56 @@ Until v1.0.0, minor versions can break.
 pnpm add @seedcord/plugin-kysely-postgres kysely pg
 ```
 
-`kysely`, `pg`, `envapt`, `typescript`, and `@seedcord/core` are peer dependencies.
+## Usage
 
-## Attach
-
-`attach` takes a property name, the plugin class, and its options. Chain it off the constructor:
+Attach the plugin in `bot.ts`. Handlers read it from `this.core` under the key you pass:
 
 ```ts
 // bot.ts
 import { Seedcord } from '@seedcord/gateway';
 import { KyselyPostgres } from '@seedcord/plugin-kysely-postgres';
+import { GatewayIntentBits } from 'discord.js';
+import { Converters, Envapter } from 'envapt';
 
-export const seedcord = new Seedcord(config).attach('sql', KyselyPostgres, {
+export default new Seedcord({
+    bot: {
+        clientOptions: { intents: [GatewayIntentBits.Guilds] },
+        interactions: { path: './handlers' },
+        commands: { path: './commands' },
+        events: { path: null }
+    },
+    subscribers: { path: null }
+}).attach('sql', KyselyPostgres, {
     dir: './services',
-    connectionString: Vars.databaseUrl,
+    connectionString: Envapter.getRequired('DATABASE_URL', Converters.String),
     migrations: { dir: './migrations' }
 });
-
-export default seedcord;
 ```
 
-```ts
-// index.ts
-import seedcord from './bot';
-
-await seedcord.start();
-```
-
-`attach` returns the instance widened with the key, and `seedcord codegen` writes `sql: (typeof Bot)['sql']` into `seedcord-gen.d.ts` off a default import of that module. Calling `attach` as a bare statement drops the widened type. A named-only export leaves codegen with nothing to import.
-
-Attach before startup. A call after initialization throws `CorePluginAfterInit`.
-
-`Vars.databaseUrl` stands in for an [`envapt`](https://www.npmjs.com/package/envapt) accessor. `process.env.DATABASE_URL` types as `string | undefined`, which `connectionString?: string` rejects under the `exactOptionalPropertyTypes` that `@seedcord/tsconfig` turns on.
-
-`dir` and `migrations.dir` resolve against `root` from `seedcord.config.ts`. Every TypeScript and JavaScript file under `migrations.dir`, subfolders included, exports `up` and optionally `down`. `migrations.onStartup` runs to latest by default.
-
-## Schema
-
-Declare it once so every service and the plugin's own `connection` resolve table names from it:
+Each file in `services/` holds a service for one table. `Database` is the table interface you write for Kysely:
 
 ```ts
-declare module '@seedcord/plugin-kysely-postgres' {
-    interface KyselyDatabase {
-        schema: MyDatabase;
-    }
-}
-```
-
-Until that declaration exists, `KyselyTable` widens to `string` and any table name type-checks.
-
-## Services
-
-The service reads the table whose name matches its key. Set `table` when the two differ:
-
-```ts
+// services/Users.ts
 import { KyselyService, RegisterKyselyService } from '@seedcord/plugin-kysely-postgres';
 
-@RegisterKyselyService('users', { table: 'app_users' })
-export class UsersService extends KyselyService<'app_users'> {
+import type { Database } from '../database';
+
+@RegisterKyselyService('users')
+export class Users extends KyselyService<'users'> {
     public async findByUserId(userId: string) {
         return this.db.selectFrom(this.table).selectAll().where('user_id', '=', userId).executeTakeFirst();
     }
 }
-```
 
-Name each key once so the lookup types resolve:
-
-```ts
 declare module '@seedcord/plugin-kysely-postgres' {
+    interface KyselyDatabase {
+        schema: Database;
+    }
+
     interface KyselyServices {
-        users: UsersService;
+        users: Users;
     }
 }
 ```
 
-Then call it from a handler through `core`:
-
-```ts
-const user = await this.core.sql.services.users.findByUserId(this.event.user.id);
-```
+A handler then calls `await this.core.sql.services.users.findByUserId(this.event.user.id)`. The [Kysely guide](https://seedcord.org/guide/plugins/kysely) covers the options, the schema, services, and migrations.
