@@ -1,10 +1,7 @@
 import { describe, expect, it } from 'vitest';
 
 import { inviteUrl } from '#cli/invite';
-
-function tokenFor(applicationId: string): string {
-    return `${Buffer.from(applicationId, 'utf8').toString('base64url')}.bbbbbb.${'c'.repeat(38)}`;
-}
+import { tokenFor } from '#tests/token';
 
 describe('inviteUrl', () => {
     it('reads the application id out of the first token part', () => {
@@ -21,19 +18,7 @@ describe('inviteUrl', () => {
         );
     });
 
-    it('says nothing when the first part decodes to something other than an id', () => {
-        expect(inviteUrl(`${'a'.repeat(26)}.bbbbbb.${'c'.repeat(38)}`)).toBeNull();
-    });
-
-    it('says nothing when the id is too short to be a snowflake', () => {
-        expect(inviteUrl(tokenFor('1234'))).toBeNull();
-    });
-
     it('says nothing for a token left for .env', () => {
         expect(inviteUrl(null)).toBeNull();
-    });
-
-    it('says nothing for a value with no parts to read', () => {
-        expect(inviteUrl('')).toBeNull();
     });
 });

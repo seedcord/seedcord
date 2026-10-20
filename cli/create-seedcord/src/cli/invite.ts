@@ -1,15 +1,10 @@
-import { isSnowflake } from './snowflake';
+import { applicationIdFromToken } from '@seedcord/errors/internal';
 
 const AUTHORIZE = 'https://discord.com/oauth2/authorize';
 
-// the first token part is the application id in base64
+// the token step validates the token, application id included
 export function inviteUrl(token: string | null): string | null {
-    const encoded = token?.split('.')[0];
-    if (encoded === undefined || encoded === '') return null;
-
-    const applicationId = Buffer.from(encoded, 'base64').toString('utf8');
-    if (!isSnowflake(applicationId)) return null;
-
+    if (!token) return null;
     // Discord reads the scopes and permissions off the app's Installation tab
-    return `${AUTHORIZE}?client_id=${applicationId}`;
+    return `${AUTHORIZE}?client_id=${applicationIdFromToken(token)}`;
 }

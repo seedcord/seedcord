@@ -1,8 +1,7 @@
 import { describe, expect, it } from 'vitest';
 
 import { tokenStep } from '#interview/steps/token';
-
-const TOKEN = `${'a'.repeat(26)}.${'b'.repeat(6)}.${'c'.repeat(38)}`;
+import { TOKEN } from '#tests/token';
 
 describe('tokenStep', () => {
     it('takes a token shaped like the three parts Discord issues', () => {
@@ -20,6 +19,10 @@ describe('tokenStep', () => {
     it('rejects a value with the wrong number of parts', () => {
         expect(() => tokenStep.flag.parse('aaa.bbb')).toThrow();
         expect(() => tokenStep.flag.parse(`${TOKEN}.ddd`)).toThrow();
+    });
+
+    it('rejects three parts whose first one holds no application id', () => {
+        expect(() => tokenStep.flag.parse(`${'a'.repeat(26)}.${'b'.repeat(6)}.${'c'.repeat(38)}`)).toThrow();
     });
 
     it('rejects an empty part, which is what a truncated paste looks like', () => {

@@ -2,8 +2,7 @@ import { KEY, PromptTerminal, settled } from '@seedcord/cli-prompts/testing';
 import { describe, expect, it } from 'vitest';
 
 import { tokenStep } from '#interview/steps/token';
-
-const TOKEN = `${'a'.repeat(26)}.${'b'.repeat(6)}.${'c'.repeat(38)}`;
+import { TOKEN } from '#tests/token';
 
 describe('the token question', () => {
     it('answers null on the second empty Enter', async () => {
