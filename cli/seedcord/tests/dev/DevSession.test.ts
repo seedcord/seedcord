@@ -14,7 +14,7 @@ import { DevLock } from '#core/state/DevLock';
 import { StateFolder } from '#core/state/StateFolder';
 import { bindEnv } from '#tests/bindEnv';
 import { APP_ID, FAKE_TOKEN } from '#tests/commands/build/smoke';
-import { lockDir } from '#tests/lockDir';
+import { lockDir, type LockDir } from '#tests/lockDir';
 import { silentLogger } from '#tests/silentLogger';
 import { vitePluginsOf } from '#tests/vitePluginsOf';
 import { DevStore } from '#ui/stores/DevStore';
@@ -61,7 +61,7 @@ function sessionDeps(store = new DevStore(), onEvent: DevEventHandler = () => un
         codegen: { writeFrom: () => Promise.resolve(UNCHANGED) },
         codegenLogger: silentLogger,
         state: new StateFolder(process.cwd(), silentLogger),
-        lock: new DevLock(lockDir(), silentLogger)
+        lock: new DevLock(locks.path, silentLogger)
     };
 }
 
@@ -75,19 +75,24 @@ async function settle(session: DevSession, run: Promise<unknown>): Promise<unkno
     return outcome;
 }
 
+let locks: LockDir;
+
 beforeEach(() => {
-    bindEnv({ DISCORD_BOT_TOKEN: FAKE_TOKEN });
+    const test = new DisposableStack();
+    test.use(bindEnv({ DISCORD_BOT_TOKEN: FAKE_TOKEN }));
+    locks = test.use(lockDir());
+    return () => test.dispose();
 });
 
 describe('DevSession', () => {
     it('refuses to start a bot whose application another dev session runs', async () => {
         const start = vi.fn(() => Promise.resolve());
-        const dir = lockDir();
-        new DevLock(dir, silentLogger).hold(APP_ID, '/bots/other');
-        const session = new DevSession(...withFiles(config()), fakeRuntime({ default: fakeBot({ start }) }), {
-            ...sessionDeps(),
-            lock: new DevLock(dir, silentLogger)
-        });
+        new DevLock(locks.path, silentLogger).hold(APP_ID, '/bots/other');
+        const session = new DevSession(
+            ...withFiles(config()),
+            fakeRuntime({ default: fakeBot({ start }) }),
+            sessionDeps()
+        );
 
         const error = await settle(session, session.start());
 

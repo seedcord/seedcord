@@ -84,7 +84,7 @@ export function buildContext(
         intents: isGateway ? intentsFor(capabilities) : [],
         partials: isGateway ? partialsFor(capabilities) : [],
         hasMessages: capabilities.some((id) => MESSAGE_CAPABILITIES.has(id)),
-        token: answers.token ?? '',
+        token: answers.token?.value ?? '',
         testingGuildIds: answers.testingGuilds.join(','),
         botColor: answers.botColor,
         developerUsername: extras.developerUsername,

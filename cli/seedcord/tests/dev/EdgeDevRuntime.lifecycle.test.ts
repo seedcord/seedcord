@@ -86,7 +86,7 @@ describe('EdgeDevRuntime lifecycle', () => {
 
         {
             await using _started = await startedRuntime(project.projectDir);
-            expect(readBotToken()).toBe(FAKE_TOKEN);
+            expect(readBotToken().value).toBe(FAKE_TOKEN);
         }
 
         expect(Envapter.get('DISCORD_BOT_TOKEN')).toBe(before);
@@ -179,11 +179,12 @@ describe('EdgeDevRuntime lifecycle', () => {
         };
         const store = new DevStore();
         const state = new StateFolder(projectDir, silentLogger);
+        using locks = lockDir();
         const runner = new DevRunner({
             projectLoader: { readConfig: () => Promise.resolve(loadedConfig(config)) },
             store,
             state,
-            lock: new DevLock(lockDir(), silentLogger),
+            lock: new DevLock(locks.path, silentLogger),
             codegen: CodegenRunner.create(quietSteps, silentLogger, new ShellMode()),
             codegenLogger: silentLogger,
             // justified: tunnel mode off routes nothing

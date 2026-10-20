@@ -1,4 +1,5 @@
 import type { Prompter } from '@seedcord/cli-prompts';
+import type { BotToken } from '@seedcord/errors/internal';
 import type { ColorName } from '@seedcord/types';
 
 export interface Answers {
@@ -6,7 +7,7 @@ export interface Answers {
     transport: 'gateway' | 'http';
     runtime: 'server' | 'edge';
     capabilities: string[];
-    token: string | null;
+    token: BotToken | null;
     testingGuilds: string[];
     botColor: ColorName | `#${string}`;
     install: boolean;

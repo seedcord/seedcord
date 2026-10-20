@@ -2,6 +2,7 @@ import { SeedcordErrorCode, isSeedcordError } from '@seedcord/errors';
 import { describe, expect, it } from 'vitest';
 
 import { runFlow } from '#interview/runFlow';
+import { BOT_TOKEN } from '#tests/token';
 
 import type { Answers, Step } from '#interview/types';
 
@@ -43,7 +44,7 @@ describe('runFlow with no terminal', () => {
     it('offers the --no- flag, with what it does, when a step that can wait has no answer', async () => {
         const token: Step<'token'> = {
             ...neverAsks('token', 'token'),
-            flag: { name: 'token', description: 'a stub', parse: String, noFlag: 'leave it for later' }
+            flag: { name: 'token', description: 'a stub', parse: () => BOT_TOKEN, noFlag: 'leave it for later' }
         };
 
         const thrown = await runFlow([token], {}, NO_TERMINAL).catch((error: unknown) => error);

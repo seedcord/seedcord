@@ -1,21 +1,11 @@
 import { describe, expect, it } from 'vitest';
 
 import { inviteUrl } from '#cli/invite';
-import { tokenFor } from '#tests/token';
+import { BOT_TOKEN } from '#tests/token';
 
 describe('inviteUrl', () => {
-    it('reads the application id out of the first token part', () => {
-        expect(inviteUrl(tokenFor('123456789012345678'))).toContain('client_id=123456789012345678');
-    });
-
-    it('takes an id that needed base64 padding Discord strips', () => {
-        expect(inviteUrl(tokenFor('1234567890123456789'))).toContain('client_id=1234567890123456789');
-    });
-
-    it('carries the id alone, leaving the scopes to the app dashboard', () => {
-        expect(inviteUrl(tokenFor('123456789012345678'))).toBe(
-            'https://discord.com/oauth2/authorize?client_id=123456789012345678'
-        );
+    it("carries the token's application id alone, leaving the scopes to the app dashboard", () => {
+        expect(inviteUrl(BOT_TOKEN)).toBe('https://discord.com/oauth2/authorize?client_id=1195232619718254663');
     });
 
     it('says nothing for a token left for .env', () => {

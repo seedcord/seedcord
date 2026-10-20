@@ -2,6 +2,7 @@ import { Prompter } from '@seedcord/cli-prompts';
 import { describe, expect, it } from 'vitest';
 
 import { runFlow } from '#interview/runFlow';
+import { BOT_TOKEN } from '#tests/token';
 
 import type { FlowMode } from '#interview/runFlow';
 import type { Answers, Step } from '#interview/types';
@@ -16,7 +17,7 @@ function stubStep<Key extends keyof Answers>(key: Key, value: Answers[Key], aske
             asked.push(key);
             return Promise.resolve(value);
         },
-        shown: (answer) => `shown ${String(answer)}`
+        shown: (answer) => `shown ${JSON.stringify(answer)}`
     };
 }
 
@@ -47,7 +48,7 @@ describe('runFlow', () => {
             interactive(rows)
         );
 
-        expect(rows).toEqual(['transport: shown gateway']);
+        expect(rows).toEqual(['transport: shown "gateway"']);
     });
 
     it('leaves a step unasked when its flag already supplied the answer', async () => {
@@ -77,7 +78,7 @@ describe('runFlow', () => {
 
     it('leaves a step unasked when its --no- flag answered null', async () => {
         const asked: (keyof Answers)[] = [];
-        const answers = await runFlow([stubStep('token', 'prompted', asked)], { token: null }, interactive());
+        const answers = await runFlow([stubStep('token', BOT_TOKEN, asked)], { token: null }, interactive());
 
         expect(asked).toEqual([]);
         expect(answers.token).toBeNull();

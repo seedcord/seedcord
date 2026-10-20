@@ -1,14 +1,15 @@
 import { describe, expect, it } from 'vitest';
 
 import { applyFlags } from '#interview/applyFlags';
+import { BOT_TOKEN } from '#tests/token';
 
 import type { Step } from '#interview/types';
 
 const token: Step<'token'> = {
     key: 'token',
     label: 'token',
-    flag: { name: 'token', description: 'a stub', parse: (raw) => raw, noFlag: 'a stub' },
-    ask: () => Promise.resolve('asked'),
+    flag: { name: 'token', description: 'a stub', parse: () => BOT_TOKEN, noFlag: 'a stub' },
+    ask: () => Promise.resolve(BOT_TOKEN),
     shown: String
 };
 

@@ -1,15 +1,15 @@
 import { describe, expect, it } from 'vitest';
 
 import { tokenStep } from '#interview/steps/token';
-import { TOKEN } from '#tests/token';
+import { BOT_TOKEN, TOKEN } from '#tests/token';
 
 describe('tokenStep', () => {
     it('takes a token shaped like the three parts Discord issues', () => {
-        expect(tokenStep.flag.parse(TOKEN)).toBe(TOKEN);
+        expect(tokenStep.flag.parse(TOKEN)).toEqual(BOT_TOKEN);
     });
 
     it('trims a token a shell or a copy paste padded', () => {
-        expect(tokenStep.flag.parse(`  ${TOKEN}  `)).toBe(TOKEN);
+        expect(tokenStep.flag.parse(`  ${TOKEN}  `)).toEqual(BOT_TOKEN);
     });
 
     it('rejects three parts too short to be a token, which the bot would reject at startup', () => {

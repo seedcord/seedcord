@@ -16,7 +16,7 @@ import { ShellMode } from '#core/viteMode';
 import { bindEnv } from '#tests/bindEnv';
 import { APP_ID, FAKE_TOKEN } from '#tests/commands/build/smoke';
 import { loadedConfig } from '#tests/loadedConfig';
-import { lockDir } from '#tests/lockDir';
+import { lockDir, type LockDir } from '#tests/lockDir';
 import { silentLogger } from '#tests/silentLogger';
 import { DevStore } from '#ui/stores/DevStore';
 
@@ -58,7 +58,7 @@ function makeRunner(overrides: Partial<DevRunnerDeps> = {}): DevRunner {
         projectLoader: { readConfig: () => Promise.resolve(loadedDevConfig()) },
         store: new DevStore(),
         state: STATE,
-        lock: new DevLock(lockDir(), silentLogger),
+        lock: new DevLock(locks.path, silentLogger),
         codegen: fakeCodegen(),
         codegenLogger: silentLogger,
         tunnel: fakeTunnel(),
@@ -72,8 +72,13 @@ function fakeTunnel(overrides: Partial<TunnelRouter> = {}): TunnelRouter {
     return { route: () => undefined, stop: () => Promise.resolve(), ...overrides } as TunnelRouter;
 }
 
+let locks: LockDir;
+
 beforeEach(() => {
-    bindEnv({ DISCORD_BOT_TOKEN: FAKE_TOKEN });
+    const test = new DisposableStack();
+    test.use(bindEnv({ DISCORD_BOT_TOKEN: FAKE_TOKEN }));
+    locks = test.use(lockDir());
+    return () => test.dispose();
 });
 
 // setImmediate runs after every queued promise callback
@@ -131,22 +136,24 @@ describe('DevRunner quit', () => {
         expect(order).toStrictEqual(['teardown', 'run']);
     });
 
-    it("frees the bot's application once the tunnel teardown finishes", async () => {
-        const dir = lockDir();
+    it("holds the bot's application until the tunnel teardown finishes, even after quit stops waiting", async () => {
         const teardown = Promise.withResolvers<undefined>();
-        const stop = vi.fn(() => teardown.promise);
         const codegen = fakeCodegen();
-        const runner = makeRunner({ codegen, lock: new DevLock(dir, silentLogger), tunnel: fakeTunnel({ stop }) });
+        const runner = makeRunner({ codegen, tunnel: fakeTunnel({ stop: () => teardown.promise }) });
         const running = runner.run();
         await vi.waitFor(() => expect(codegen.writeFrom).toHaveBeenCalledOnce());
-        const nextSession = (): void => new DevLock(dir, silentLogger).hold(APP_ID, '/bots/next');
+        const nextSession = (): void => new DevLock(locks.path, silentLogger).hold(APP_ID, '/bots/next');
 
+        vi.useFakeTimers();
         const quitting = runner.quit();
-        await vi.waitFor(() => expect(stop).toHaveBeenCalledOnce());
-        expect(nextSession).toThrow(expect.objectContaining({ code: SeedcordErrorCode.CliDevAlreadyRunning }));
-        teardown.resolve(undefined);
+        await vi.advanceTimersByTimeAsync(3000);
         await quitting;
         await running;
+        expect(nextSession).toThrow(expect.objectContaining({ code: SeedcordErrorCode.CliDevAlreadyRunning }));
+
+        vi.useRealTimers();
+        teardown.resolve(undefined);
+        await settled();
 
         expect(nextSession).not.toThrow();
     });

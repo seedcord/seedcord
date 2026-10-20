@@ -136,10 +136,10 @@ export class DevRunner {
         this.next = 'quit';
         this.deps.store.setPhase('quitting');
         await this.currentSession?.stop();
+        // release after the clear, or the clear can wipe the endpoint the next session just set
+        const endpointCleared = this.deps.tunnel.stop().finally(() => this.deps.lock.release());
         // the endpoint clear is a discord round trip
-        await settleWithin(this.deps.tunnel.stop(), TUNNEL_TEARDOWN_MS);
-        // a session that held the app before the clear would lose its endpoint to it
-        this.deps.lock.release();
+        await settleWithin(endpointCleared, TUNNEL_TEARDOWN_MS);
         this.signalResolve?.();
     }
 

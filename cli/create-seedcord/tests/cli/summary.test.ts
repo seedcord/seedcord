@@ -7,6 +7,7 @@ import { parseInput } from '#cli/parseInput';
 import { dashboardToggles, nextSteps as paintedSteps, reproducingCommand } from '#cli/summary';
 import { version } from '#cli/version';
 import { STEPS } from '#interview/steps';
+import { BOT_TOKEN } from '#tests/token';
 
 import type { ScaffoldAnswers } from '#template/context';
 
@@ -25,7 +26,7 @@ const GATEWAY: ScaffoldAnswers = {
     directory: 'my-bot',
     transport: 'gateway',
     capabilities: ['guild-messages'],
-    token: 'aaa.bbb.ccc',
+    token: BOT_TOKEN,
     testingGuilds: [],
     botColor: 'Blurple',
     install: true,
@@ -36,7 +37,7 @@ const HTTP: ScaffoldAnswers = {
     directory: 'my-bot',
     transport: 'http',
     runtime: 'server',
-    token: 'aaa.bbb.ccc',
+    token: BOT_TOKEN,
     testingGuilds: [],
     botColor: 'Blurple',
     install: true,
@@ -116,7 +117,7 @@ describe('reproducingCommand', () => {
     it('keeps the secret out of the line', () => {
         const command = reproducingCommand(GATEWAY, 'pnpm');
 
-        expect(command).not.toContain('aaa.bbb.ccc');
+        expect(command).not.toContain(BOT_TOKEN.value);
         expect(command).toContain('--token');
     });
 

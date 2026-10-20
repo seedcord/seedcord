@@ -6,6 +6,7 @@ import { noFlagName } from '#interview/applyFlags';
 import { privilegedFor } from '#interview/capabilities';
 
 import type { ScaffoldAnswers } from '#template/context';
+import type { BotToken } from '@seedcord/errors/internal';
 import type { AgentName } from 'package-manager-detector';
 
 const PORTAL = 'https://discord.com/developers/applications';
@@ -33,7 +34,7 @@ export function nextSteps(answers: ScaffoldAnswers, run: { agent: AgentName; ins
     return [cd, ...install, ...fill, paint.bold(`${runPrefix(run.agent)} dev`)];
 }
 
-function secretFlag(value: string | null, flag: string, placeholder: string): string {
+function secretFlag(value: BotToken | null, flag: string, placeholder: string): string {
     return value === null ? `--${noFlagName(flag)}` : `--${flag} ${placeholder}`;
 }
 

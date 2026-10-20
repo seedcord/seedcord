@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest';
 
 import { buildContext } from '#template/context';
+import { BOT_TOKEN } from '#tests/token';
 
 import type { ScaffoldAnswers } from '#template/context';
 
@@ -8,7 +9,7 @@ const GATEWAY: ScaffoldAnswers = {
     directory: 'my-bot',
     transport: 'gateway',
     capabilities: ['reactions'],
-    token: 'aaa.bbb.ccc',
+    token: BOT_TOKEN,
     testingGuilds: [],
     botColor: 'Blurple',
     install: true,
@@ -19,7 +20,7 @@ const HTTP: ScaffoldAnswers = {
     directory: 'edge/my-bot',
     transport: 'http',
     runtime: 'server',
-    token: 'aaa.bbb.ccc',
+    token: BOT_TOKEN,
     testingGuilds: [],
     botColor: '#ff8800',
     install: true,

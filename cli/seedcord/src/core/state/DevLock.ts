@@ -5,7 +5,7 @@ import { join } from 'node:path';
 
 import { paint, SeedcordErrorCode } from '@seedcord/errors';
 import { SeedcordError } from '@seedcord/errors/internal';
-import { isPlainObject } from '@seedcord/utils/internal';
+import { hasErrorCode, isPlainObject } from '@seedcord/utils/internal';
 
 import type { ILogger } from '@seedcord/types';
 
@@ -20,13 +20,19 @@ interface HeldLock {
     readonly path: string;
 }
 
-function errnoOf(error: unknown): unknown {
-    return Error.isError(error) && 'code' in error ? error.code : undefined;
+// undefined when its session released it after the folder was listed
+function readLockText(path: string): string | undefined {
+    try {
+        return readFileSync(path, 'utf8');
+    } catch (error: unknown) {
+        if (hasErrorCode(error, 'ENOENT')) return undefined;
+        throw error;
+    }
 }
 
-function readLock(path: string): LockBody | undefined {
+function parseLock(text: string): LockBody | undefined {
     try {
-        const raw: unknown = JSON.parse(readFileSync(path, 'utf8'));
+        const raw: unknown = JSON.parse(text);
         return isPlainObject(raw) &&
             typeof raw.pid === 'number' &&
             typeof raw.startedAt === 'number' &&
@@ -44,7 +50,7 @@ function isRunning(pid: number): boolean {
         process.kill(pid, 0);
         return true;
     } catch (error: unknown) {
-        return errnoOf(error) === 'EPERM';
+        return hasErrorCode(error, 'EPERM');
     }
 }
 
@@ -83,7 +89,7 @@ export class DevLock {
 
         const path = this.publish(appId, { pid: process.pid, startedAt: Date.now(), configDir });
         try {
-            this.assertOnlySession(appId, path);
+            this.refuseLiveSessions(appId, path);
         } catch (error: unknown) {
             rmSync(path, { force: true });
             throw error;
@@ -97,23 +103,30 @@ export class DevLock {
         this.held = undefined;
     }
 
-    // renaming a finished draft keeps half-written locks out of other sessions' reads
+    // the rename is atomic. no session reads a half-written lock
     private publish(appId: string, body: LockBody): string {
         const session = randomUUID();
         const draft = join(this.dir, `${session}.tmp`);
         const path = join(this.dir, `${appId}.${session}.lock`);
-        writeFileSync(draft, JSON.stringify(body));
-        renameSync(draft, path);
+        try {
+            writeFileSync(draft, JSON.stringify(body));
+            renameSync(draft, path);
+        } catch (error: unknown) {
+            rmSync(draft, { force: true });
+            throw error;
+        }
         return path;
     }
 
-    // a session deletes only its own file or one whose pid is dead
-    private assertOnlySession(appId: string, ownPath: string): void {
+    // never deletes a lock whose pid is still running
+    private refuseLiveSessions(appId: string, ownPath: string): void {
         for (const name of readdirSync(this.dir)) {
             const path = join(this.dir, name);
             if (path === ownPath || !name.startsWith(`${appId}.`) || !name.endsWith('.lock')) continue;
 
-            const holder = readLock(path);
+            const text = readLockText(path);
+            if (text === undefined) continue;
+            const holder = parseLock(text);
             if (holder && isRunning(holder.pid)) throw alreadyRunning(holder, path);
 
             rmSync(path, { force: true });

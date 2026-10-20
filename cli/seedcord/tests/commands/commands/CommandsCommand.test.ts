@@ -111,7 +111,8 @@ describe('seedcord commands, on a terminal', () => {
         process.stdin.isTTY = true;
         process.stdout.isTTY = true;
         delete process.env.CI;
-        bindEnv({ DISCORD_BOT_TOKEN: FAKE_TOKEN });
+        const env = bindEnv({ DISCORD_BOT_TOKEN: FAKE_TOKEN });
+        return () => env[Symbol.dispose]();
     });
 
     afterEach(() => {
@@ -197,7 +198,8 @@ describe('seedcord commands clean and purge, off a terminal', () => {
 
     beforeEach(() => {
         process.stdin.isTTY = false;
-        bindEnv({ DISCORD_BOT_TOKEN: FAKE_TOKEN });
+        const env = bindEnv({ DISCORD_BOT_TOKEN: FAKE_TOKEN });
+        return () => env[Symbol.dispose]();
     });
 
     afterEach(() => {

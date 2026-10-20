@@ -1,6 +1,6 @@
 import { REST } from '@discordjs/rest';
 import { Bus } from '@seedcord/core';
-import { applicationIdFromToken } from '@seedcord/errors/internal';
+import { validateDiscordToken } from '@seedcord/errors/internal';
 import { MemoryRateLimiter } from '@seedcord/rate-limiter';
 
 import { edgeRestOptions, edgeShutdown } from '#src/edge/defaults';
@@ -23,7 +23,7 @@ export function testCore(config: HttpConfig, token: string): Core {
         shutdown: edgeShutdown,
         startup,
         get applicationId(): string {
-            return applicationIdFromToken(token);
+            return validateDiscordToken(token).applicationId;
         }
     } as CoreDraft;
     draft.bus = new Bus(draft);

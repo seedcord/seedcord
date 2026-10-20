@@ -4,8 +4,9 @@ import { SeedcordTypeError, validateDiscordToken } from '@seedcord/errors/intern
 import { validatorFor } from './validatorFor';
 
 import type { Step } from '#interview/types';
+import type { BotToken } from '@seedcord/errors/internal';
 
-function parseToken(raw: string): string {
+function parseToken(raw: string): BotToken {
     try {
         return validateDiscordToken(raw);
     } catch {

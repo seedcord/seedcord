@@ -5,6 +5,7 @@ import { join, resolve } from 'node:path';
 import { describe, expect, it, onTestFinished } from 'vitest';
 
 import { scaffold } from '#scaffold/scaffold';
+import { BOT_TOKEN } from '#tests/token';
 
 import type { StepUi } from '#cli/steps';
 import type { CommandRunner, ScaffoldResult } from '#scaffold/scaffold';
@@ -32,7 +33,7 @@ const GATEWAY: ScaffoldAnswers = {
     directory: 'my-bot',
     transport: 'gateway',
     capabilities: ['guild-messages'],
-    token: 'aaa.bbb.ccc',
+    token: BOT_TOKEN,
     testingGuilds: [],
     botColor: 'Blurple',
     install: true,
@@ -43,7 +44,7 @@ const HTTP: ScaffoldAnswers = {
     directory: 'my-bot',
     transport: 'http',
     runtime: 'server',
-    token: 'aaa.bbb.ccc',
+    token: BOT_TOKEN,
     testingGuilds: [],
     botColor: 'Blurple',
     install: true,
@@ -420,7 +421,7 @@ describe('scaffold', () => {
 
         await scaffold(baseInput(target), runner);
 
-        expect(await readFile(join(target, '.env'), 'utf8')).toContain('DISCORD_BOT_TOKEN=aaa.bbb.ccc');
+        expect(await readFile(join(target, '.env'), 'utf8')).toContain(`DISCORD_BOT_TOKEN=${BOT_TOKEN.value}`);
     });
 });
 

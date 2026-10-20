@@ -2,7 +2,7 @@ import { dirname } from 'node:path';
 
 import { readBotToken } from '@seedcord/core/internal';
 import { paint, SeedcordErrorCode } from '@seedcord/errors';
-import { applicationIdFromToken, SeedcordError } from '@seedcord/errors/internal';
+import { SeedcordError } from '@seedcord/errors/internal';
 import { HostAugmentTarget, HostVersion, type SeedcordInstance } from '@seedcord/types/internal';
 import { asError, unlessAborted } from '@seedcord/utils/internal';
 
@@ -96,7 +96,7 @@ export class DevSession {
         profileMark('entry');
         const exported = await this.unlessStopped(resolveDefaultExport(module));
         const instance = toSeedcordInstance(exported, this.config.instance);
-        this.deps.lock.hold(applicationIdFromToken(readBotToken()), dirname(this.config.configFile));
+        this.deps.lock.hold(readBotToken().applicationId, dirname(this.config.configFile));
 
         this.instance = instance;
         store.setTransport({

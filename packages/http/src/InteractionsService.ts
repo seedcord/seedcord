@@ -2,7 +2,7 @@ import { REST } from '@discordjs/rest';
 import { Bus } from '@seedcord/core';
 import { interactionMiddleware, MiddlewareRegistry, readBotToken, SubscriberLoader } from '@seedcord/core/internal';
 import { SeedcordErrorCode } from '@seedcord/errors';
-import { applicationIdFromToken, SeedcordError } from '@seedcord/errors/internal';
+import { SeedcordError } from '@seedcord/errors/internal';
 import { MemoryRateLimiter } from '@seedcord/rate-limiter';
 
 import { InteractionDispatcher } from '#src/dispatch/InteractionDispatcher';
@@ -14,6 +14,7 @@ import type { HttpConfig } from '#interfaces/Config';
 import type { Core } from '#interfaces/Core';
 import type { Engine } from '#src/engine';
 import type { RESTOptions } from '@discordjs/rest';
+import type { BotToken } from '@seedcord/errors/internal';
 import type { IRateLimiter } from '@seedcord/types';
 
 export class InteractionsService {
@@ -23,7 +24,7 @@ export class InteractionsService {
     public readonly subscribers: SubscriberLoader;
     public readonly interactions: InteractionDispatcher | undefined;
 
-    private token?: string;
+    private token?: BotToken;
     private builtEngine?: Engine;
 
     constructor(
@@ -44,12 +45,12 @@ export class InteractionsService {
 
     public get applicationId(): string {
         if (!this.token) throw new SeedcordError(SeedcordErrorCode.CoreApplicationUnavailable);
-        return applicationIdFromToken(this.token);
+        return this.token.applicationId;
     }
 
     public authenticate(): void {
         this.token = readBotToken();
-        this.rest.setToken(this.token);
+        this.rest.setToken(this.token.value);
     }
 
     public get engine(): Engine {

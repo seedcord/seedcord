@@ -75,7 +75,7 @@ describe('EdgeBuild', () => {
         assert(target.kind === 'edge');
         const { config } = await importInstance(project.modules, project.config.instance);
         // opening the project binds process.env
-        bindEnv({});
+        using _env = bindEnv({});
 
         await expect(new EdgeBuild(project, target).readDiscord(config.bot)).rejects.toMatchObject({
             code: SeedcordErrorCode.ConfigMissingEnv

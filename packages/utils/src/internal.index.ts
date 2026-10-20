@@ -14,6 +14,7 @@ export {
 export { botFolder } from './files/sources';
 export { withoutQuery } from './files/withoutQuery';
 export * from './misc/asError';
+export * from './misc/hasErrorCode';
 export * from './misc/isPortInUse';
 export * from './misc/unlessAborted';
 export * from './objects/isPlainObject';

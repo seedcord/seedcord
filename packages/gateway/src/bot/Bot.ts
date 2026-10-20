@@ -32,7 +32,7 @@ interface Controllers {
  */
 export class Bot implements HmrAware {
     public get botToken(): string {
-        return readBotToken();
+        return readBotToken().value;
     }
 
     readonly #logger = new Logger('Bot', { channel: 'bot' });
