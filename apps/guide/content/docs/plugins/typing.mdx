@@ -55,9 +55,7 @@ Each transport package declares its own `Core`, so the `declare module` line use
 
 ## When to run it
 
-The generated file only changes when codegen runs, so a stale one either misses a new key or still types a key you removed. Run `seedcord codegen` after you attach a plugin, remove one, or rename a key.
-
-When you accept the prompt from `seedcord dev` to re-register your commands, it runs codegen too.
+The generated file only changes when codegen runs, so a stale one either misses a new key or still types a key you removed. `seedcord dev` rewrites it each time the bot has started, so after you attach a plugin or rename a key, press `r` and the types follow. Outside dev, run `seedcord codegen` yourself. `seedcord codegen --check` throws `CliCodegenOutOfDate` when the file is stale, which lets CI catch a run you forgot.
 
 Once codegen has run, your editor offers `db` on `this.core`.
 

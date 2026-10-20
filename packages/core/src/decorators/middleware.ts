@@ -62,7 +62,7 @@ export interface InteractionMiddlewareMetadata {
  * }
  * ```
  *
- * @throws A **SeedcordTypeError** If `priority` is not a finite number.
+ * @throws A **SeedcordTypeError** when `priority` is not a finite number.
  */
 export function RegisterInteractionMiddleware<
     const Kinds extends NonEmptyTuple<MiddlewareKind> = NonEmptyTuple<MiddlewareKind>

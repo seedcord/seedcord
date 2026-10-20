@@ -122,14 +122,14 @@ async function settle(sender: ReplySender, message: Message, outcome: Outcome | 
 /**
  * Shows a confirm/cancel prompt with built-in Confirm and Cancel buttons and resolves to `true` only if the
  * invoking user clicks confirm. A cancel click or a timeout resolves to `false`. Gate the action behind it
- * with an early return. A failed prompt send throws into the fault boundary. A {@link ModalHandler} is
- * excluded at compile time.
+ * with an early return. A {@link ModalHandler} is excluded at compile time.
  *
  * @param handler - The handler to prompt from, `this` inside a non-modal handler.
  * @param prompt - The message shown above the Confirm and Cancel buttons.
  * @param options - Ephemeral flag, timeout, the built-in buttons' labels and style, and the optional
  *   `onConfirm`/`onCancel`/`onTimeout` outcome replies that edit the prompt in place.
  * @returns `true` if confirmed, `false` on cancel or timeout.
+ * @throws The send error when the prompt fails to send. The handler's fault boundary catches it.
  *
  * @example
  * ```ts
@@ -153,8 +153,7 @@ export function getConfirmation(
 /**
  * Shows a confirm/cancel prompt you build yourself and resolves to `true` only if the invoking user clicks
  * confirm. The factory receives the two minted button ids. Set them on your own buttons. A cancel click or a
- * timeout resolves to `false`. A failed prompt send throws into the fault boundary. A {@link ModalHandler} is
- * excluded at compile time.
+ * timeout resolves to `false`. A {@link ModalHandler} is excluded at compile time.
  *
  * @param handler - The handler to prompt from, `this` inside a non-modal handler.
  * @param prompt - A factory given the minted `{ confirm, cancel }` ids that returns the reply to show. Build
@@ -162,6 +161,7 @@ export function getConfirmation(
  * @param options - Ephemeral flag, timeout, and the optional `onConfirm`/`onCancel`/`onTimeout` outcome
  *   replies that edit the prompt in place.
  * @returns `true` if confirmed, `false` on cancel or timeout.
+ * @throws The send error when the prompt fails to send. The handler's fault boundary catches it.
  *
  * @remarks
  * The prompt is collected in-process, so it does not survive a bot restart. Without an outcome hook the

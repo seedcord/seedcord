@@ -39,13 +39,9 @@ Run it after you add a command, change its options, attach a plugin, or edit you
 
 Your handler then reads its options through `this.options`. `getString('query')` comes back as `string`, because you marked that option required. A typo in the name stops the build. [Command options](/commands/options) covers what each kind returns.
 
-You rerun it whenever a command changes, and the file sits stale until you do. `seedcord dev` offers to run codegen whenever it re-registers your commands, so most of the time you answer `y` and never think about it.
-
-<Callout type="note">
+`seedcord dev` runs codegen every time the bot starts, and again when you answer `y` to its refresh prompt. If you edit commands while dev is stopped, or your project never runs dev, run it yourself.
 
 Codegen writes the file into the `root` folder set in your `seedcord.config.ts`. A scaffolded project sets `root: './src'`, which puts it at `src/seedcord-gen.d.ts`.
-
-</Callout>
 
 ## What it writes
 
@@ -83,19 +79,24 @@ A command constructor that throws fails the whole run, since codegen has to cons
 
 ## Catching a stale file in CI
 
-Some drift breaks the build for you. If you add a command without rerunning codegen, the handler naming its route fails to compile. Your editor flags it immediately.
+Some drift breaks the build for you. If you add a command without rerunning codegen, the handler with that route fails to compile. Your editor flags it immediately.
 
 Other drift compiles perfectly. If you delete a command, its entry stays in `SlashRegistry`, still typing a route your bot stopped answering. Passing `--check` renders the file in memory and compares it to the copy on disk, which catches the kind that still compiles.
 
 <Shell exec="seedcord codegen --check" />
 
-When the two match, the command prints nothing and exits `0`. A difference prints the path it compared and exits `1`.
+It prints a line per step, like plain codegen. If the file matches, the last line reads `src/seedcord-gen.d.ts is up to date` and the command exits `0`. If it differs, `--check` throws `CliCodegenOutOfDate` and exits `1`.
 
 ```txt output
-Augmentations are out of date. Run `seedcord codegen` and commit /home/you/my-bot/src/seedcord-gen.d.ts.
+  ✔︎ read config     373ms
+  ✔︎ load bot        152ms
+  ✔︎ scan commands     6ms  2 commands
+  ✘ compare types     5ms
+
+  [3119] src/seedcord-gen.d.ts is out of date. Run seedcord codegen and commit it.
 ```
 
-`--check` only reports, so you fix the drift by running plain `seedcord codegen`. The scaffold does not wire a script for it, so put it wherever your pipeline runs its checks.
+`--check` only reports, so you fix the drift by running plain `seedcord codegen`. The scaffold doesn't wire a script for it, so put it wherever your pipeline runs its checks.
 
 If codegen can't read your commands folder, it throws `CorePathUnreadable`, because a run that found no commands would pass `--check` against a file that's already stale.
 

@@ -57,4 +57,4 @@ export class Uptime extends Plugin {
 }
 ```
 
-A gateway or http bot attaches it with `.attach('uptime', Uptime)`, and handlers call `this.core.uptime.elapsed()`. The [plugin guide](https://seedcord.org/guide/plugins/your-own) covers options, lifecycle phases, and publishing.
+A gateway or http bot attaches it with `.attach('uptime', Uptime)`, and handlers call `this.core.uptime.elapsed()`. The [Writing plugins guide](https://seedcord.org/guide/writing-plugins) covers options, lifecycle phases, testing a plugin locally, and publishing.

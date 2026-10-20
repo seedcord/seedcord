@@ -97,7 +97,9 @@ With two ids under [`commands.guilds`](/commands#one-list-of-servers-for-every-c
 
 ## Commands fills during startup
 
-Your bot sends its commands to Discord after it connects, then `Commands` fills from what comes back. A read before that throws.
+Your bot sends its commands to Discord after it connects, then `Commands` fills from what comes back. If you read `Commands` before that, it throws.
+
+A deployed Worker sends nothing to Discord, so its `Commands` fills at the first request from the ids `seedcord build` wrote into it. Run [`seedcord commands deploy`](/commands/deployed#when-a-deploy-happens) before that build, because the build reads the ids from Discord and stops on a command that has none.
 
 ```txt output
 Commands.ping has no value yet. Commands fills during startup, and a read at the top of a file runs before that.

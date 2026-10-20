@@ -102,8 +102,8 @@ export default defineConfig({
 
 `ENV=staging pnpm build` builds in staging mode and loads your `.env.staging` files. [envapt](https://envapt.materwelon.dev) reads the same mode in your bot.
 
-The [tooling guide](https://seedcord.org/guide/tooling) covers every key.
+The [config guide](https://seedcord.org/guide/build/config) covers every key.
 
 ## Edge bots
 
-A `cloudflare.config.ts` beside `seedcord.config.ts` turns an http bot into a Cloudflare Worker. `seedcord dev` runs it in workerd, and `seedcord build` writes a worker you deploy with `cf deploy --prebuilt`. The [build guide](https://seedcord.org/guide/tooling/build) covers the setup.
+A `cloudflare.config.ts` beside `seedcord.config.ts` turns an http bot into a Cloudflare Worker. `seedcord dev` runs it in workerd, and `seedcord build` writes a worker you deploy with `cf deploy --prebuilt`. The [Workers guide](https://seedcord.org/guide/build/workers) covers the setup.

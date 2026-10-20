@@ -3,9 +3,9 @@ title: Effect gates
 description: Write a gate that changes something, like spending a credit, with defineEffectGate(), and control when that change happens.
 ---
 
-Say a command costs one credit. Your gate reads the balance and deducts one. A later gate then refuses. The command never ran, and the caller lost a credit anyway.
+Say a command costs one credit. Your gate reads the balance and deducts one. A later gate then refuses. The command never ran, but the caller still lost a credit.
 
-[`defineEffectGate`](ref:core/defineEffectGate) splits your gate in two. `check` reads and refuses. `commit` applies the change, and seedcord holds that half back until every gate on the handler has passed.
+[`defineEffectGate`](ref:core/defineEffectGate) splits your gate in two. `check` reads and refuses. `commit` applies the change, which seedcord runs only once every gate on the handler has passed.
 
 ```ts twoslash title="src/gates/SpendCredit.ts"
 import { defineEffectGate, Notice } from '@seedcord/gateway';

@@ -1,9 +1,9 @@
 ---
 title: Tooling
-description: Configure a seedcord project through its two config files, one for the CLI and one for your bot, and look up every CLI key.
+description: Point the seedcord CLI at your bot with seedcord.config.ts, and see what each seedcord command does.
 ---
 
-A seedcord project has two config files, because two different programs read them. `seedcord dev` and `seedcord codegen` have to import your bot before it runs, so they need its path from somewhere other than the bot itself. `seedcord.config.ts` holds those paths for the CLI. The `new Seedcord({ ... })` call in `src/bot.ts` configures the bot while it runs.
+A seedcord project has two config files, because two different programs read them. `seedcord dev`, `codegen`, `build`, and `commands deploy` have to import your bot before it runs, so they need its path from somewhere other than the bot itself. `seedcord.config.ts` holds that path for the CLI. The `new Seedcord({ ... })` call in `src/bot.ts` builds a [`Seedcord`](ref:gateway/Seedcord) bot and configures it while it runs.
 
 The CLI looks for `seedcord.config.ts` or `seedcord.config.mts` in the directory you run it from.
 
@@ -13,57 +13,28 @@ import { defineConfig } from 'seedcord';
 export default defineConfig({
     root: './src',
     instance: './bot.ts',
-    // false stops the dev terminal's idle animation
-    idleAnimation: true,
-    build: {
-        start: './index.ts',
-        tsconfig: './tsconfig.build.json'
-    },
-    hmr: {
-        // true runs tsc --watch beside the bot, in a second node process
-        typecheck: false
-    }
+    build: { start: './index.ts' }
 });
 ```
 
-You have to write `instance` and `entry`. Every other key has a default.
+Only `instance` is required. `build.start` is optional. Without it, the build's `index.mjs` default-exports the bot for your own node server to start. An edge bot, which [runs on Cloudflare Workers](/build/workers), leaves it out too. [Your first bot](/first-bot#where-your-folders-resolve) explains how `root`, `instance`, and `build.start` fit together.
 
-{/* prettier-ignore-start */}
-
-| key | default | what it does |
-| --- | --- | --- |
-| `instance` | required | the module whose default export is your configured [`Seedcord`](ref:gateway/Seedcord) |
-| `entry` | required | the file that starts the bot, and the one the build copies |
-| `root` | the config's own folder | the folder `instance` and `entry` resolve against |
-| `tunnel` | `true` | `true` opens a cloudflared quick tunnel to your http bot, and `false` turns it off. An https string is a URL you already serve. A gateway bot ignores it |
-| `files` | omitted | folders whose non-code files `seedcord build` bundles for [`readFiles`](ref:utils/readFiles), like `['./locales']`. Each one resolves against `root` |
-| `idleAnimation` | `true` | whether the dev terminal animates while nothing happens |
-| `build` | `{}` | `outDir` (default `dist`) and `tsconfig` for `seedcord build`, resolved against the config's folder |
-| `hmr` | omitted | `restart` globs, `rollback`, and `typecheck` for `seedcord dev` |
-| `vitePlugins` | omitted | Vite plugins that run on your bot's code in `seedcord dev`, `build`, `codegen`, and `commands`, like one that turns a `.yaml` import into an object |
-
-{/* prettier-ignore-end */}
-
-`entry` has to resolve inside `root`. A path outside it throws `CorePathOutsideRoot`.
+Every other key is optional: `root`, `files`, `vitePlugins`, `tunnel`, `hmr`, `idleAnimation`, the rest of `build`, and `port` on an edge bot. [The config reference](/build/config) lists each one with its default. `vitePlugins` takes a function that returns [Vite plugins](/build/vite-plugins), like `() => [yaml()]`.
 
 ## The commands
-
-A project from `create-seedcord` has `dev`, `codegen`, and `build` as scripts in its `package.json`, and all three read the config above.
 
 {/* prettier-ignore-start */}
 
 | command | what it does |
 | --- | --- |
-| [`seedcord dev`](/tooling/dev) | runs your bot, reloads a changed file in place, and prints its logs in a terminal you can filter |
+| [`seedcord dev`](/tooling/dev) | runs your bot, reloads a changed file in place, and prints its logs in a terminal you can filter. An edge bot runs in workerd |
 | [`seedcord codegen`](/tooling/codegen) | imports your bot and command files, then writes `seedcord-gen.d.ts` into `root` |
-| [`seedcord build`](/tooling/build) | compiles `src` and writes a bootstrap file beside it |
-| [`seedcord commands`](/commands/deployed) | inspects and cleans up the commands Discord has registered for your bot |
+| [`seedcord build`](/build) | type checks your bot and bundles it for a server, a Cloudflare Worker, or another program to import |
+| [`seedcord commands`](/tooling/commands) | deploys your commands to Discord, lists what Discord holds, and deletes the ones you no longer want |
 
 {/* prettier-ignore-end */}
 
-`seedcord commands` doesn't read the config. It reads `DISCORD_BOT_TOKEN` from your environment. It isn't one of the scripts either, so run it through your package manager's runner.
-
-<Shell exec="seedcord commands" />
+A project from `create-seedcord` wraps these as scripts, along with `check`, `commands:deploy`, and the `deploy` and `types` scripts of an edge bot. [Your first bot](/first-bot#scripts) lists every one.
 
 ## Your bot's config
 
@@ -76,7 +47,7 @@ A project from `create-seedcord` has `dev`, `codegen`, and `build` as scripts in
 | key | what it sets | where it's taught |
 | --- | --- | --- |
 | `bot.interactions` | the folder seedcord scans for handlers, plus middleware and ignored ids | [Components](/components) |
-| `bot.commands` | the folder seedcord scans for commands | [Commands](/commands) |
+| `bot.commands` | the folder seedcord scans for commands, and `guilds`, the test servers that bare `@RegisterCommand()` commands deploy to | [Commands](/commands), [Test servers](/commands/deployed#test-servers) |
 | `bot.emojis` | the emoji names [`Emojis`](ref:gateway/Emojis) resolves at startup | [Components](/components) |
 | `bot.events` | the folder seedcord scans for event handlers. Gateway only | [Events](/events) |
 | `bot.clientOptions` | passed straight to the discord.js `Client`. Gateway only | [Your first bot](/first-bot) |
@@ -95,9 +66,9 @@ A project from `create-seedcord` has `dev`, `codegen`, and `build` as scripts in
 
 Each transport package declares its own `Seedcord` and its own config type, and a few keys only exist on one of them.
 
-- An http server takes `port`, which defaults to 3000. TypeScript rejects `port` and `lifecycle` on an edge bot.
-- A gateway bot runs a small health server on port 6967 that answers `/health`. Its `healthCheck` key takes `false` to turn that off, or an object with `port`, `path`, and `host`.
-- `Emojis` resolves each name to a discord.js emoji on gateway, and to a plain resolved emoji object on http.
+- Both http configs take `bot.restOptions`. Only a node http server takes `port`, which defaults to 3000, and `port: false` lets [your own server](/build/embed) host the bot. TypeScript rejects `port` and `lifecycle` on an edge bot.
+- A gateway bot runs a small health server on port 6967 that answers `/health`. Its `healthCheck` key takes `false` to turn that off, `true` for the defaults, or an object with the optional fields `port`, `path`, and `host`.
+- [`Emojis`](ref:gateway/Emojis) on gateway holds a subclass of [`ResolvedEmoji`](ref:core/ResolvedEmoji) tied to the discord.js `GuildEmoji` or `ApplicationEmoji`. [`Emojis`](ref:http/Emojis) on http holds a plain `ResolvedEmoji`.
 
 </Callout>
 

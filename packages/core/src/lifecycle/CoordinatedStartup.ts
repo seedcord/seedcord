@@ -18,7 +18,7 @@ export class CoordinatedStartup extends CoordinatedLifecycle<StartupPhase> {
     }
 
     /**
-     * Adds a task to a startup phase. The task gets a signal that aborts when it outlives `timeoutMs`
+     * Adds a task to a startup phase. The task gets a signal that aborts when it runs past `timeoutMs`
      * or when startup is aborted. Pass it to any request the task makes.
      */
     public override addTask(

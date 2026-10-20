@@ -99,7 +99,7 @@ const messages = {
     [SeedcordErrorCode.CorePathOutsideRoot]: (path: string, root: string) =>
         `${paint.path(path)} is outside ${paint.bold('root')} (${paint.path(root)}). ${paint.bold('seedcord build')} bundles only the files under ${paint.bold('root')}. Move it under ${paint.bold('root')}, or set ${paint.bold('root')} in seedcord.config.ts to a folder that holds it.`,
     [SeedcordErrorCode.CoreDirectoryRootUnknown]: (dir: string) =>
-        `${paint.path(dir)} is relative to ${paint.bold('root')}, but this process has no ${paint.bold('root')} to resolve it against. ${paint.bold('seedcord dev')} and a built bot set ${paint.bold('root')} from seedcord.config.ts. Start the bot one of those ways, or pass an absolute path like ${paint.sky(`resolve(import.meta.dirname, '${dir}')`)}.`,
+        `${paint.path(dir)} is relative to ${paint.bold('root')}, but nothing set ${paint.bold('root')} in this process. ${paint.bold('seedcord codegen')}, ${paint.bold('build')}, and ${paint.bold('commands')} import bot.ts without starting it, so read the folder in a startup task or a plugin's init(). In a test or a script, pass an absolute path like ${paint.sky(`resolve(import.meta.dirname, '${dir}')`)}.`,
     [SeedcordErrorCode.CoreDirectoryNotBuilt]: (dir: string, root: string) =>
         `${paint.path(dir)} was not a folder under ${paint.bold('root')} (${paint.path(root)}) or in ${paint.bold('files')} when ${paint.bold('seedcord build')} ran, so the build holds none of its files. Create the folder, then build again.`,
     [SeedcordErrorCode.CoreDirectoryNotListed]: (dir: string) =>

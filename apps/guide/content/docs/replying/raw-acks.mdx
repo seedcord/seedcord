@@ -67,7 +67,7 @@ The rule resolves the receiver's type, which is how it reports `this.event.reply
 ## When you actually need one
 
 - **An embed or a poll.** The ComponentsV2 flag on every seedcord reply forbids both. `this.event.reply()` sends them.
-- **A click you collected yourself.** Gateway only. `message.awaitMessageComponent()` hands you a component interaction that never reached seedcord's dispatcher, so no handler and no sender exist for it. That click is its own interaction. Answering it leaves your handler's state where it was. An http bot answers each interaction in its own request, and a collector needs a process that stays alive between them.
+- **A click you collected yourself.** Gateway only. `message.awaitMessageComponent()` hands you a component interaction that never reached seedcord's dispatcher, so no handler and no sender exist for it. That click is its own interaction. Answering it leaves your handler's state where it was. A collector needs a process that stays alive between interactions, but an http bot answers each interaction in its own request.
 
 seedcord has a replacement for each. Text Display and Container are Discord's replacements for `content` and `embeds` under the flag. seedcord routes a click by its customId to a [`ButtonHandler`](ref:gateway/ButtonHandler), for example, which any process can answer. A collector runs in the process that opened it, so a restart drops every prompt still waiting.
 

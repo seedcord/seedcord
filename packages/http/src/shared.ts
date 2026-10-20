@@ -20,6 +20,7 @@ export { Emojis } from '#src/emojis/EmojiInjector';
 export type { InjectedEmojiMap } from '#src/emojis/EmojiInjector';
 
 export * from '@seedcord/core';
+export { HmrModuleHandler } from '@seedcord/core/hmr';
 export * from '@seedcord/errors';
 export * from '@seedcord/event-emitter';
 export * from '@seedcord/logger';

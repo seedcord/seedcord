@@ -120,7 +120,7 @@ class ViewProfile extends UserContextMenuHandler<'View Profile'> {
 
 ## Several commands in one handler
 
-You put both commands on one class. Its decorator takes every name and its generic repeats them. Each arm then receives the clicked user and their server member, narrowed to that one command.
+You put both commands on one class. Write every name in its decorator, then repeat them in its generic. Each arm then receives the clicked user and their server member, narrowed to that one command.
 
 ```ts twoslash title="src/handlers/Moderation.ts"
 import {

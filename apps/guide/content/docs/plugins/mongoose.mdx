@@ -8,8 +8,6 @@ A bot that stores data in MongoDB needs the connection open before the first han
 <Shell add="@seedcord/plugin-mongoose mongoose" />
 
 ```ts twoslash title="src/bot.ts"
-import { resolve } from 'node:path';
-
 import { Seedcord } from '@seedcord/gateway';
 import { Mongoose } from '@seedcord/plugin-mongoose';
 import { GatewayIntentBits } from 'discord.js';
@@ -17,17 +15,13 @@ import { GatewayIntentBits } from 'discord.js';
 export const seedcord = new Seedcord({
     bot: {
         clientOptions: { intents: [GatewayIntentBits.Guilds] },
-        interactions: {
-            path: resolve(import.meta.dirname, './handlers')
-        },
-        commands: {
-            path: resolve(import.meta.dirname, './commands')
-        },
+        interactions: { path: './handlers' },
+        commands: { path: './commands' },
         events: { path: null }
     },
     subscribers: { path: null }
 }).attach('db', Mongoose, {
-    dir: resolve(import.meta.dirname, './services'),
+    dir: './services',
     uri: 'mongodb://localhost:27017/',
     name: 'seedcord',
     connectionOptions: { serverSelectionTimeoutMS: 5000 },
@@ -37,7 +31,9 @@ export const seedcord = new Seedcord({
 export default seedcord;
 ```
 
-This sample builds a gateway bot. The same `attach` call works on an http `Seedcord` from `@seedcord/http`. An edge bot can't [attach plugins](/plugins) at all.
+This sample builds a gateway bot. The same `attach` call works on an http `Seedcord` from `@seedcord/http` that runs on a server. Mongoose is a server-only plugin, so on an http bot for Cloudflare Workers the same call is a compile error, and a cast that gets past it throws `CorePluginScopeMismatch`. A Workers bot [attaches other plugins](/plugins#a-plugin-declares-where-it-runs) as usual.
+
+A real bot reads the connection string from its environment. `process.env.MONGO_URI` has the type `string | undefined`, which `uri` rejects. `Envapter.getRequired('MONGO_URI', Converters.String)` from envapt returns a `string`, and it throws when the variable is unset. [Env files and modes](/build/env) covers reading config that way.
 
 ## The options
 
@@ -45,7 +41,7 @@ This sample builds a gateway bot. The same `attach` call works on an http `Seedc
 
 | option | required | what it sets |
 | --- | --- | --- |
-| `dir` | yes | the directory the plugin scans for service classes |
+| `dir` | yes | the folder the plugin scans for service classes. A relative path is relative to `root`, and the folder has to sit inside it, as [the folder rules](/plugins) describe |
 | `uri` | yes | the MongoDB connection string |
 | `name` | yes | the database, passed to mongoose as `dbName` |
 | `connectionOptions` | no | any `mongoose.ConnectOptions`, merged over what the plugin sets |
@@ -73,7 +69,7 @@ Shutdown runs the same steps backwards. `dispose()` clears the service registry 
 
 Most of your queries go through [service classes](/plugins/mongoose-services). Some work doesn't belong in a service, like checking whether the bot is still connected to MongoDB. For that, use `this.core.db.connection`, the Mongoose instance that `mongoose.connect()` returned. Its `connection` property is Mongoose's `Connection` object, and its `model()` method builds a model.
 
-```ts hovers twoslash
+```ts twoslash
 import { SlashHandler, SlashRoute } from '@seedcord/gateway';
 
 import type { Mongoose } from '@seedcord/plugin-mongoose';
@@ -89,6 +85,7 @@ class History extends SlashHandler<'history'> {
     public async execute(): Promise<void> {
         // ---cut---
         const state = this.core.db.connection.connection.readyState;
+        //    ^?
 
         await this.reply(`Connection state ${String(state)}.`);
         // ---cut-after---
@@ -98,6 +95,10 @@ class History extends SlashHandler<'history'> {
 
 The handler reads `readyState` from Mongoose's `Connection`, which is `1` while the bot is connected. `this.core.db` only has a type once you've run [`seedcord codegen`](/plugins/typing).
 
+<Callout type="warning">
+
 `connection` and `services` are only ready after `init()` resolves. If you read `connection` before then, you get `undefined`, even though its type says it's always set. Reading `services` before then throws `PluginServicesNotReady`.
+
+</Callout>
 
 Next, write the [service classes](/plugins/mongoose-services) the plugin loads from `dir`.

@@ -1,0 +1,25 @@
+---
+title: How seedcord runs your bot
+description: Run and build your bot through Vite, so the same Vite plugins, .env files, and data files work in seedcord dev, codegen, and the production build.
+---
+
+Your bot's source can't run as it is. Your handlers use decorators, which node's own TypeScript support stops on with a parser error. Compiling with `tsc` gets past the decorators. It still leaves a handler unable to import a `.yaml` file, and your translation files never reach `dist` unless you copy them there yourself.
+
+seedcord solves all three by loading your bot through [Vite](https://vite.dev). Vite compiles the decorators, and a Vite plugin can turn the `.yaml` file into code. The translation folder goes into `dist` once you list it under `files`.
+
+Every `seedcord` command loads your bot this way. [`seedcord dev`](/tooling/dev) runs it. [`seedcord codegen`](/tooling/codegen) and [`seedcord commands`](/tooling/commands) import it. `seedcord build` builds it. All of them use the same Vite plugins. A plugin you add for dev also runs in the build unless its `apply` option limits it, so an import that works while you edit works in production too.
+
+## What you get
+
+- **Any Vite plugin.** A plugin you list in `seedcord.config.ts` runs on your bot's code in every command, so a handler can import a `.yaml` file. [Vite plugins](/build/vite-plugins) shows how.
+- **`.env` files per environment.** `ENV=staging pnpm build` loads `.env.staging` after `.env`, so its values win. [Environment and config](/build/env) has the order and how to read the values.
+- **Data files.** List a folder like `./locales` under `files` and [`readFiles`](ref:utils/readFiles) reads it the same way in dev and in a built bot. [Data files](/build/data-files) covers it.
+- **Where it runs.** The same build gives you a [Node or Bun server](/build/server), a [Cloudflare Worker](/build/workers), a [package other projects install](/build/package), or [a bot inside your own server](/build/embed). [`seedcord.config.ts`](/build/config) and a `cloudflare.config.ts` beside it decide which.
+
+## Installing Vite
+
+`vite` is a peer dependency of `seedcord`. A bot from `pnpm create seedcord` already has it. pnpm, npm, and Bun install peer dependencies on their own, but Yarn leaves them out, so on Yarn you add it yourself:
+
+<Shell add="-D vite" />
+
+Your bot and the CLI need the same copy of Vite. With two versions installed, TypeScript rejects your Vite plugins' types.

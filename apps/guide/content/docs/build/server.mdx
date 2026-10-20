@@ -1,0 +1,162 @@
+---
+title: A Node or Bun server
+description: Build your bot into one folder you copy to a VPS or a container and start with node, or compile it into a single Bun binary that needs no node_modules.
+---
+
+A host like a VPS, a container, or Railway runs one process for you. You give it a folder and one command that starts it, and that folder shouldn't carry your `src`, your dev dependencies, or the seedcord CLI.
+
+`seedcord build` writes that folder. Point `build.start` at the file that starts your bot. [seedcord.config.ts](/build/config) covers `root`, `instance`, and the other keys.
+
+```ts twoslash title="seedcord.config.ts"
+import { defineConfig } from 'seedcord';
+
+export default defineConfig({
+    root: './src',
+    instance: './bot.ts',
+    build: { start: './index.ts' }
+});
+```
+
+```ts title="src/index.ts"
+import seedcord from './bot';
+
+await seedcord.start();
+```
+
+`index.ts` only starts the bot that `bot.ts` exports, and a bot from [`pnpm create seedcord`](/first-bot) already has both files. With `build.start` set, the build writes `dist/index.mjs`, which runs `index.ts`. Without `build.start`, the build writes a bot that other code imports, which [a package](/build/package) and [an embedded bot](/build/embed) both use.
+
+## Building
+
+<Shell run="build" />
+
+```txt output
+seedcord v0.21.5  build
+
+  ✔︎ read config    197ms
+  ✔︎ load bot       152ms
+  ✔︎ type check     698ms  tsconfig.json
+  ✔︎ bundle          36ms
+
+  11 modules, 0 listed files, 8.7 kB → dist/index.mjs
+
+  run      node dist/index.mjs
+  compile  bun build --compile dist/index.mjs --outfile my-bot
+```
+
+Each `✔︎` line is one step. The three that do the work:
+
+- **load bot** imports your `instance` file and constructs the bot, the same way `seedcord dev` does. An env value your config reads at construction has to exist in CI too, or the build stops here.
+- **type check** runs `tsc --noEmit` against the `tsconfig.json` beside `seedcord.config.ts`, from your project's own `typescript`. [`build.tsconfig`](/build/config) points it at another file.
+- **bundle** runs Vite and writes `dist`, with `index.mjs` as the entry, one `.js` file for each of your modules, and a source map beside each. The code stays unminified. [Every code file under `root`](/build/config#keep-tool-files-outside-root) builds, whether or not your bot imports it.
+
+The last two lines print the commands that start what it built. The `run` line uses the runtime the CLI ran on, so `bun --bun run build` prints `bun dist/index.mjs`. The `compile` line takes the binary's name from your `package.json`, without the scope, so `@acme/my-bot` builds to `my-bot`.
+
+### outDir gets emptied
+
+Vite deletes everything in `outDir` before it writes, so a file from a source you deleted can't linger in `dist`. Before that happens, the build checks the folder. It goes ahead if `outDir` doesn't exist, is empty, or holds an `index.mjs` that an earlier `seedcord build` wrote. Anything else stops it:
+
+```txt output
+[3117] build.outDir is dist, which already contains other files. seedcord build empties outDir before it writes. Point it at an empty folder, or delete what is in it.
+```
+
+That's `CliBuildOutDirNotEmpty`.
+
+<Callout type="warning">
+
+The check only reads `index.mjs`. Once a seedcord build sits in the folder, everything else in it goes too, like a `Dockerfile` or a `.env` you put beside the build. Keep those outside `outDir`.
+
+</Callout>
+
+## Running it
+
+The scaffold's start script runs the build with node's `--enable-source-maps` flag:
+
+```sh
+node --enable-source-maps dist/index.mjs
+```
+
+The printed `run` line leaves the flag out, so add it yourself. Without it, a stack trace points at lines in `dist`. With it, node reads the source maps the build wrote and points at your `.ts` lines.
+
+To run it on a host, copy the whole `dist` folder there, along with `package.json` and your production dependencies, since `dist` imports packages like `@seedcord/gateway` from `node_modules`.
+
+A host that only got `dist` and `package.json` has no `seedcord.config.ts`, which changes where the bot looks for `.env`. [A built bot's .env files](/build/env#in-a-built-bot) has both cases.
+
+## One file with Bun
+
+`bun build --compile` turns the build into a single executable that carries the Bun runtime and every dependency inside it. The host then needs no node, no Bun, and no `node_modules`:
+
+```sh
+bun build --compile dist/index.mjs --outfile my-bot
+./my-bot
+```
+
+Bun stores the bot's files inside the executable, under a virtual `/$bunfs` folder. The bot then never finds `seedcord.config.ts` on disk, even on the machine that built it, so it reads `.env` from the folder you start the binary in. Put a `.env` beside it, or set the variables on the host. The data files you list under [`files`](/build/data-files) are inside the binary already.
+
+### Calling Bun's own APIs
+
+`@seedcord/tsconfig` sets `"types": ["node"]`, which leaves `Bun.*` untyped. If your bot calls Bun's APIs, install `@types/bun` and add it to your tsconfig:
+
+<Shell add="-D @types/bun" />
+
+```json title="tsconfig.json"
+{
+    "extends": "@seedcord/tsconfig/node",
+    "compilerOptions": {
+        "types": ["node", "bun", "vite/client"]
+    }
+}
+```
+
+A bot that calls `Bun.*` only runs on Bun after that, so use these APIs only if you've already picked Bun for production.
+
+## The health server
+
+Most hosting platforms call an http endpoint to check that your process is still alive. A gateway bot opens a small server that answers `/health` on port 6967 once it reaches the Ready phase, and it does this under `seedcord dev` too.
+
+```ts twoslash title="src/bot.ts"
+import { Seedcord } from '@seedcord/gateway';
+import { GatewayIntentBits } from 'discord.js';
+
+export default new Seedcord({
+    bot: {
+        clientOptions: { intents: [GatewayIntentBits.Guilds] },
+        interactions: { path: './handlers' },
+        commands: { path: './commands' },
+        events: { path: null }
+    },
+    subscribers: { path: null },
+    healthCheck: { port: 8080, path: '/healthz' }
+});
+```
+
+This bot answers `/healthz` on port 8080. All three keys are optional. `port` defaults to 6967, `path` to `/health`, and `host` to every network interface. `healthCheck: true` and leaving the key out both give you those defaults. `healthCheck: false` turns the server off.
+
+Change `port` or `path` if your host expects its health check somewhere else. Set `host` if the server should only listen inside a container network. Turn it off if nothing calls it or port 6967 is already taken on the machine.
+
+<Callout type="transport" only="gateway">
+
+An http bot's config doesn't accept `healthCheck`. Its own port answers every request that isn't a POST with a 405, so a host check that expects a 2xx fails against it. Point your host's check at the port itself, with a TCP check.
+
+</Callout>
+
+## When the build fails
+
+The build prints the error under the step that failed. Problems in `seedcord.config.ts` itself, like an `outDir` that holds `root`, come first, all at once. [Config mistakes](/build/config#config-mistakes) lists them.
+
+{/* prettier-ignore-start */}
+
+| what happened | the error |
+| --- | --- |
+| a type error in your project | `CliBuildFailed`, with the compiler's output cut to its first 24,000 characters |
+| no `tsconfig.json` beside the config, or `build.tsconfig` points at a missing file | `CliTsconfigNotFound` |
+| the project doesn't install `typescript` | `CliDependencyMissing` |
+| the `build.start` file doesn't exist | `CliFileNotFound`, with `build.start` in the message |
+| `outDir` holds files from something else | `CliBuildOutDirNotEmpty` |
+| your bot throws while it loads, like an env value it reads at construction is missing | `CoreImportFailed`, with your bot's own error after it |
+| a Vite plugin or an import fails while bundling | `CliBundleFailed`, with Vite's reason |
+| two files under `root` build to one name, like `a.ts` and `a.js` | `CliProblems`, listing a `CoreDuplicateName` for each pair |
+| a file or folder in the project has a `#` in its path | `CliPathHasHash` |
+
+{/* prettier-ignore-end */}
+
+Run the build with `--verbose` to see the resolved config and the full stack of any seedcord error.

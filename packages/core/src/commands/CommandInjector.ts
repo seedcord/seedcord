@@ -39,7 +39,9 @@ export type InjectedCommandMap = {
 /**
  * The bot's deployed slash commands, keyed by {@link SlashRegistry}. A server bot fills these after
  * each deploy. An edge bot fills them on its first request, from the ids `seedcord build` wrote into
- * the worker. Reading one before then throws.
+ * the worker.
+ *
+ * @throws A **SeedcordError** when you read a command before the bot fills it.
  *
  * @example
  * ```ts
@@ -70,8 +72,9 @@ export interface InjectedContextMenuMap {
 
 /**
  * The bot's deployed context-menu commands. A server bot fills these after each deploy. An edge bot
- * fills them on its first request, from the ids `seedcord build` wrote into the worker. Reading one
- * before then throws.
+ * fills them on its first request, from the ids `seedcord build` wrote into the worker.
+ *
+ * @throws A **SeedcordError** when you read a command before the bot fills it.
  *
  * @example
  * ```ts

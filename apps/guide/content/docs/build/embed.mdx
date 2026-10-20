@@ -1,0 +1,168 @@
+---
+title: Inside your own server
+description: Run an http bot inside a server you already have, like Hono, Next.js, or Express, so one process and one port answer both your app and Discord's interactions.
+---
+
+You may already run a web server, like a Next.js site, a Hono API, or an Express app. Running the bot beside it as a second process meant a second port to expose, a second thing to deploy, and a second process to keep alive, all to answer one route.
+
+An http bot can answer that route from inside your server instead. Build it the way [a package](/build/package) builds, with no `build.start`, and set `port: false` so it never opens a port of its own:
+
+```ts twoslash title="src/bot.ts"
+import { Seedcord } from '@seedcord/http';
+
+export default new Seedcord({
+    bot: {
+        interactions: { path: './handlers' },
+        commands: { path: './commands' }
+    },
+    subscribers: { path: null },
+    port: false
+});
+```
+
+<Callout type="transport" only="http">
+
+`port: false` and this `fetch(request)` belong to http's Node `Seedcord`. A gateway bot connects out to Discord over a websocket and takes no interactions requests to hand over. On Workers, Cloudflare calls the edge bot's own `fetch`, which [Cloudflare Workers](/build/workers) covers.
+
+</Callout>
+
+Your server imports the built bot, by its package name if you published it, or from its `dist/index.mjs`. The samples below import `@acme/my-bot`. In your server, call `start()` once, then hand every request on your interactions route to [`fetch()`](ref:http/Seedcord.fetch), which takes a web `Request` and returns the `Response` to send back.
+
+`start()` loads your handlers and deploys your commands to Discord, the same as a bot on its own port. It deploys on every start, so a server that restarts often can hit Discord's limit on replacing commands. [When a deploy happens](/commands/deployed#when-a-deploy-happens) covers that.
+
+A request that arrives while `start()` runs waits for startup to finish. A request that reaches `fetch()` before you called `start()` gets an error:
+
+```txt output
+[1221] fetch() ran before start(). Call await seedcord.start() before your server passes requests to fetch().
+```
+
+Once shutdown begins, or if `start()` failed, `fetch()` answers 503.
+
+Point your application's interactions endpoint URL in the [Discord developer portal](https://discord.com/developers/applications) at the route, like `https://example.com/interactions`.
+
+Any server works if it can hand `fetch()` a web `Request` and send back the `Response` it returns. Hono, a Next.js route handler, and a plain Bun or Deno server already use web `Request` objects, so they pass theirs straight through. A Node framework like Express or Fastify takes a few lines to convert its own request and response. The samples below show Hono and Next.js for the first kind, and Express for the second.
+
+## Hono
+
+In Hono, `c.req.raw` is the request your server received, already a web `Request`:
+
+```ts title="server.ts"
+import bot from '@acme/my-bot';
+import { serve } from '@hono/node-server';
+import { Hono } from 'hono';
+
+await bot.start();
+
+const app = new Hono();
+app.post('/interactions', (c) => bot.fetch(c.req.raw));
+
+serve({ fetch: app.fetch, port: 3000 });
+```
+
+## Next.js
+
+Keep the bot in its own package, with its own `package.json`, `seedcord.config.ts`, and `src`. In a monorepo that's a folder beside the Next app, like `packages/bot`, and the app depends on it as `"@acme/my-bot": "workspace:*"`. The bot's `root` then never overlaps the app's `src`, which matters because [every code file under root](/build/config#keep-tool-files-outside-root) goes into the bot's build. Build the bot before the app, so `dist` exists when Next.js imports it.
+
+A route handler gets a web `Request` too, and returns the bot's `Response` as it is:
+
+```ts title="app/api/interactions/route.ts"
+import bot from '@acme/my-bot';
+
+let started: Promise<unknown> | undefined;
+
+export async function POST(request: Request): Promise<Response> {
+    started ??= bot.start().catch((error: unknown) => {
+        console.error(error);
+    });
+    await started;
+    return bot.fetch(request);
+}
+```
+
+That route answers `/api/interactions`, so the endpoint URL ends in `/api/interactions`.
+
+The first POST starts the bot. `next build` can load a route's module while it collects page data. A `start()` at the top of the module would then deploy your commands from the build machine. Inside `POST`, it runs only when Discord sends a request. If `start()` fails, the `catch` logs it and `fetch()` answers 503 from then on.
+
+`next dev` loads the route module again after you edit it. `start()` on a bot that already started returns the same startup, so that doesn't deploy again. If Next.js loads a fresh copy of the bot's own module, that copy starts and deploys once more.
+
+Next.js bundles the bot again, so `import.meta.dirname` is undefined in its bundle. Handlers, commands, and the files you list under [`files`](/build/data-files) still load, since the build put all of them inside the bundle. A read from disk relative to the bot's folder, like `fs.readFile` next to `import.meta.dirname`, breaks. Read data files through [`readFiles`](ref:utils/readFiles), which reads them from the build.
+
+## Express
+
+Discord [signs every request](https://docs.discord.com/developers/interactions/overview#validating-security-request-headers) over the timestamp plus the exact bytes of the body, and the bot checks that signature before anything else runs. Most Express apps add `express.json()` for every route, which swaps the body for a parsed object. Your interactions route has to keep the raw bytes, and you turn Express's request into a web `Request` yourself:
+
+```ts title="server.ts"
+import bot from '@acme/my-bot';
+import express from 'express';
+
+import type {
+    Request as ExpressRequest,
+    Response as ExpressResponse
+} from 'express';
+
+await bot.start();
+
+async function interactions(
+    req: ExpressRequest,
+    res: ExpressResponse
+): Promise<void> {
+    const request = new Request(
+        new URL(req.originalUrl, `http://${req.get('host')}`),
+        {
+            method: req.method,
+            headers: new Headers(
+                req.headers as Record<string, string>
+            ),
+            body: new Uint8Array(req.body as Buffer)
+        }
+    );
+    const response = await bot.fetch(request);
+    res.status(response.status);
+    response.headers.forEach((value, name) =>
+        res.setHeader(name, value)
+    );
+    res.send(Buffer.from(await response.arrayBuffer()));
+}
+
+const app = express();
+app.post(
+    '/interactions',
+    express.raw({ type: '*/*' }),
+    interactions
+);
+app.use(express.json());
+
+app.listen(3000);
+```
+
+`express.raw({ type: '*/*' })` keeps the body as a `Buffer`. It has to run before any app-wide `express.json()`, so register the route ahead of `app.use(express.json())`. The rest of your app keeps its JSON parsing.
+
+If `express.json()` reads the body first, the route only gets the parsed object. `JSON.stringify` turns it back into text, but those bytes match Discord's only if Discord wrote its JSON with the same spacing and escapes `JSON.stringify` does. Every other request fails the signature check with a 401.
+
+## Developing the bot locally
+
+`seedcord dev` opens [its tunnel](/tooling/tunnel) once the bot's own server is listening. With `port: false` the bot never listens, so you get no tunnel and Discord can't reach it. Give the bot a port only while you develop it, from a variable your dev script sets:
+
+```ts twoslash title="src/bot.ts"
+import { Seedcord } from '@seedcord/http';
+import { Converters, Envapter } from 'envapt';
+
+export default new Seedcord({
+    bot: {
+        interactions: { path: './handlers' },
+        commands: { path: './commands' }
+    },
+    subscribers: { path: null },
+    port: Envapter.getAs('BOT_PORT', Converters.Port) ?? false
+});
+```
+
+```json title="package.json"
+{
+    "scripts": {
+        "dev": "BOT_PORT=3001 seedcord dev"
+    }
+}
+```
+
+`pnpm dev` in the bot's package then serves on 3001 behind the tunnel, the way a bot on its own server does. Your server never sets `BOT_PORT`, so the built bot it imports keeps `port: false`. Keep `BOT_PORT` in the dev script. A line in the bot's `.env` would also reach the built bot, because a built bot reads the `.env` beside its `seedcord.config.ts` while that file is on disk.

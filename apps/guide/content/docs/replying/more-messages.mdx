@@ -1,11 +1,78 @@
 ---
-title: Follow-ups and edits
-description: Send more messages after the first reply to an interaction, then edit or delete them later from the same handler.
+title: Deferring and follow-ups
+description: Keep an interaction open past Discord's three-second limit, then send more messages and edit or delete them from the same handler.
 ---
+
+Some handlers need longer than the three seconds Discord allows for a first response. [`this.defer()`](ref:gateway/RepliableHandler.defer) answers inside that with a loading state, which leaves the real reply for later.
+
+```ts twoslash title="src/handlers/Ban.ts"
+import { SlashHandler, SlashRoute } from '@seedcord/gateway';
+// ---cut-start---
+
+async function countPriorBans(userId: string): Promise<number> {
+    return 0;
+}
+// ---cut-end---
+
+@SlashRoute('ban')
+export class Ban extends SlashHandler<'ban'> {
+    public async execute(): Promise<void> {
+        await this.defer();
+
+        const target = this.options.getUser('target');
+        const priors = await countPriorBans(target.id);
+
+        await this.edit(
+            `Banned ${target.username}. ${priors} bans before this one.`
+        );
+    }
+}
+```
+
+The person who ran the command sees your bot thinking until [`edit()`](ref:gateway/RepliableHandler.edit) runs. Discord expires the interaction token fifteen minutes after the interaction, so every call you make on it has to arrive before then.
+
+## Set ephemeral when you defer
+
+`defer()` takes an `ephemeral` option, and it's on by default. Only the person who ran the command sees the placeholder and the reply that fills it.
+
+```ts twoslash
+import { SlashHandler, SlashRoute } from '@seedcord/gateway';
+
+@SlashRoute('ban')
+class Ban extends SlashHandler<'ban'> {
+    public async execute(): Promise<void> {
+        // ---cut---
+        await this.defer({ ephemeral: false });
+        // ---cut-after---
+    }
+}
+```
+
+`edit()` doesn't take options, so whatever you pass `defer()` is what the reply carries.
+
+## reply() after a deferral throws
+
+The deferral was the initial response. `edit()` rewrites it.
+
+```txt output
+reply() was called when this interaction was already deferred.
+Use edit() to fill the deferred reply or followUp() for a new
+message. (route slash:ban)
+```
+
+[`followUp()`](ref:gateway/RepliableHandler.followUp) sends a second message beside the first, which [the next section](#sending-more-messages) covers, and [`delete()`](ref:gateway/RepliableHandler.delete) removes the loading state. [The full table](/replying/ack-states) lists every state and how you reach it.
+
+## Defer before anything slow
+
+[`reply()`](ref:gateway/RepliableHandler.reply) after the three seconds throws Discord's own error, `DiscordAPIError[10062]`, since the interaction is gone by then. seedcord rethrows it untouched, then sends its [error card](/replying/faults) to that same interaction. Discord rejects the card too, and seedcord drops that rejection with a debug line. The person who ran the command sees the interaction fail.
+
+Defer first whenever you can't predict how long the handler takes.
+
+## Sending more messages
 
 Suppose your ban handler revokes the target's sessions after it has already replied "Banned." Telling the caller how that went takes a different call from the first one, and rewriting the message you already sent takes a reference to it.
 
-Once you've replied or deferred, [`this.followUp()`](ref:gateway/RepliableHandler.followUp) sends another message. Every one of [`reply()`](ref:gateway/RepliableHandler.reply), `followUp()`, and [`edit()`](ref:gateway/RepliableHandler.edit) resolves to the message it wrote. Pass one back to `edit()` to rewrite it.
+Once you've replied or deferred, `this.followUp()` sends another message. Every one of `reply()`, `followUp()`, and `edit()` resolves to the message it wrote. Pass one back to `edit()` to rewrite it.
 
 ```ts twoslash title="src/handlers/Ban.ts"
 import { SlashHandler, SlashRoute } from '@seedcord/gateway';
@@ -49,7 +116,7 @@ Pass a message this interaction sent, returned by reply(),
 followUp(), edit(), or update(). (route slash:ban)
 ```
 
-[`delete()`](ref:gateway/RepliableHandler.delete) checks the same list. Without an argument it removes the first reply. `delete(message)` removes the one you pass, so that id leaves the list and a later edit of it throws.
+`delete()` checks the same list. Without an argument it removes the first reply. `delete(message)` removes the one you pass, so that id leaves the list and a later edit of it throws.
 
 ```ts twoslash
 import { SlashHandler, SlashRoute } from '@seedcord/gateway';

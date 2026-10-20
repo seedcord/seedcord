@@ -39,7 +39,7 @@ const MAX_ID = 2_147_483_647;
  * Pass the result to {@link toComponentEmbed} or {@link toComponentEmbedJson}. They throw the same errors they
  * throw for a tree built with JSX.
  *
- * @throws a {@link ComponentEmbedError} when the JSON can't become a tree, like a component with a type no embed allows
+ * @throws A {@link ComponentEmbedError} when the JSON can't become a tree, like a component with a type no embed allows
  * or a separator spacing other than 1 or 2. Its `path` lists the JSON keys that lead to the problem.
  *
  * @example

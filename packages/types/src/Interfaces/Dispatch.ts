@@ -24,7 +24,7 @@ export interface DispatchBag {
     /**
      * Read a key that must be present, with `undefined` stripped from the result.
      *
-     * @throws A **SeedcordError** If nothing set the key on this dispatch.
+     * @throws A **SeedcordError** when nothing set the key on this dispatch.
      */
     require<Key extends keyof DispatchState>(key: Key): Exclude<DispatchState[Key], undefined>;
 }

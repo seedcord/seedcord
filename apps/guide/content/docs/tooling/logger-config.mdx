@@ -123,7 +123,7 @@ export const seedcord = new Seedcord({
 
 <Callout type="transport">
 
-`@seedcord/gateway` and `@seedcord/http` both export `WinstonConsoleSink` and `WinstonFileSink`. `@seedcord/http/edge` doesn't, since both need node, so an edge bot configures `ObjectConsoleSink` or a sink you write.
+`@seedcord/gateway` and `@seedcord/http` both export `WinstonConsoleSink` and `WinstonFileSink`. The build of `@seedcord/http` that an edge bot gets doesn't export them, since both need node, so an edge bot configures `ObjectConsoleSink` or a sink you write.
 
 </Callout>
 

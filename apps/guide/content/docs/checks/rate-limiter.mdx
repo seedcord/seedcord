@@ -146,7 +146,7 @@ async function clearAwards(memberId: string): Promise<void> {
 
 ## The default store
 
-Every sample on this page charges the default store. seedcord builds a [`MemoryRateLimiter`](ref:rate-limiter/MemoryRateLimiter) for you, which keeps its counts in the memory of one process. A restart clears every window. On a serverless deploy each running copy keeps its own counts.
+Every sample on this page charges the default store. seedcord builds a [`MemoryRateLimiter`](ref:rate-limiter/MemoryRateLimiter) for you, which keeps its counts in the memory of one process. A restart clears every window. On a serverless deploy each running copy keeps its own counts, and on [Workers](/build/workers) each isolate is one copy.
 
 Set the `store` config key to replace it. `core.rateLimiter` then points at your store, for your own `charge` calls and for every `Cooldown` gate.
 
@@ -156,7 +156,7 @@ If a limit has to survive a restart, or several copies of your bot share one cou
 
 [`Store`](ref:types/Store) takes the operations a backend supports as its generic. `'charge'` is the one rate limiting uses. A `Store<'charge'>` carries two fields plus the three [`IRateLimiter`](ref:types/IRateLimiter) methods.
 
-The generic takes a union. If one backend serves several features, it declares `Store<'charge' | 'claim'>` and lists both operations in `caps`. The type rejects an operation in `caps` that the generic leaves out. It doesn't check that `caps` lists every operation in the generic, so keep the two matching yourself. Rate limiting reads `'charge'` alone.
+The generic takes a union. If one backend serves several features, declare it as `Store<'charge' | 'claim'>` and list both operations in `caps`. The type rejects an operation in `caps` that the generic leaves out. It doesn't check that `caps` lists every operation in the generic, so keep the two matching yourself. Rate limiting reads `'charge'` alone.
 
 {/* prettier-ignore-start */}
 
@@ -223,7 +223,7 @@ export class SharedStore implements Store<'charge'> {
 
 The type can't check two things for you.
 
-1. Resolve `limit` the way `slots` does. It's optional, and a zero or negative value would block every call.
+1. Resolve `limit` the way `slots` does, since it's optional and a zero or negative value would block every call.
 2. Make `recordUse` read and write in one step, such as inside a transaction. Otherwise two requests can each read a free slot before either records a use. Both of them then pass.
 
 Pass a `SharedStore` as `store`. Both transports read the key the same way.

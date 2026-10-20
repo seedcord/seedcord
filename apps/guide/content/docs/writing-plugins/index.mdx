@@ -1,0 +1,196 @@
+---
+title: Writing a plugin
+description: Write a plugin that your bot starts and stops, give it typed options, and call it from your handlers through this.core.
+---
+
+Your bot talks to an outside service, like a metrics API or a cache. You created its client in `bot.ts` and exported it. Nothing closes that client when the bot shuts down, and a handler can import it before it has connected. As a plugin, the client starts and stops with your bot, and handlers read it from `this.core` under the key you attach it with. [Using a plugin](/plugins) shows how a bot attaches one.
+
+To write a plugin, extend [`Plugin`](ref:core/Plugin) and write `init()`. Everything else on the base is optional.
+
+```ts twoslash title="src/plugins/Uptime.ts"
+import { Plugin } from '@seedcord/gateway';
+
+export class Uptime extends Plugin {
+    private startedAt = 0;
+
+    public async init(): Promise<void> {
+        this.startedAt = Date.now();
+    }
+
+    public elapsed(): number {
+        return Date.now() - this.startedAt;
+    }
+}
+```
+
+A new project has a plugin like this in `src/plugins/Uptime.ts`. Its constructor takes only the bot, so you attach it with a key and the class.
+
+```ts twoslash
+import { Plugin, Seedcord } from '@seedcord/gateway';
+
+declare const seedcord: Seedcord;
+
+class Uptime extends Plugin {
+    public async init(): Promise<void> {}
+}
+
+// ---cut---
+export default seedcord.attach('uptime', Uptime);
+```
+
+## Calling it from a handler
+
+A handler calls your plugin's methods on `this.core.uptime`, the key you attached it under. It needs no import from `bot.ts`.
+
+```ts twoslash title="src/handlers/UptimeCommand.ts"
+import { SlashHandler, SlashRoute } from '@seedcord/gateway';
+// ---cut-start---
+import { Plugin } from '@seedcord/gateway';
+
+class Uptime extends Plugin {
+    private startedAt = 0;
+
+    public async init(): Promise<void> {
+        this.startedAt = Date.now();
+    }
+
+    public elapsed(): number {
+        return Date.now() - this.startedAt;
+    }
+}
+
+declare module '@seedcord/gateway' {
+    interface Core {
+        uptime: Uptime;
+    }
+}
+// ---cut-end---
+
+@SlashRoute('uptime')
+export class UptimeCommand extends SlashHandler<'uptime'> {
+    public async execute(): Promise<void> {
+        const ms = this.core.uptime.elapsed();
+        //    ^?
+        await this.reply(
+            `Up for ${Math.floor(ms / 1000)} seconds.`
+        );
+    }
+}
+```
+
+`ms` is a `number` because `elapsed()` returns a `number`. [Typing what you ship](/writing-plugins/typing) shows how the type gets from your class to `this.core`.
+
+A handler can call every public member of your class. `startedAt` is private, so a handler reads the time through `elapsed()` and can't overwrite it. Keep connections and state private, and make public only the methods you want handlers to call.
+
+Handlers can call those methods only after startup. Startup runs in three phases: Configuration, Login and Ready. `init()` runs in Configuration by default, and a plugin can also define `ready()` for the Ready phase. Handlers start receiving interactions once every `init()` has finished, so a handler can call your method while `ready()` is still running. If a method reads something `ready()` sets, return early or throw while it's unset. [The lifecycle](/plugins/lifecycle) has the full order.
+
+## Closing what init() opened
+
+A timer that `init()` starts keeps firing after the bot begins shutting down, and an open connection keeps the process from exiting. `dispose()` runs at shutdown. Close in it whatever `init()` started.
+
+```ts twoslash title="src/plugins/Heartbeat.ts"
+import { Plugin } from '@seedcord/gateway';
+
+export class Heartbeat extends Plugin {
+    private timer: NodeJS.Timeout | undefined;
+
+    public async init(): Promise<void> {
+        this.timer = setInterval(() => {
+            this.logger.debug('still running');
+        }, 30_000);
+    }
+
+    public override async dispose(): Promise<void> {
+        clearInterval(this.timer);
+    }
+}
+```
+
+If `init()` throws, seedcord skips `dispose()`. A plugin that opens two things in `init()` has to close the first itself when the second fails. [When init fails](/plugins/lifecycle#when-init-fails) shows what seedcord cleans up.
+
+On a bot running on Cloudflare Workers, `dispose()` runs only when startup fails, and then only for plugins whose `init()` had finished. So write state as soon as it changes. [On Cloudflare Workers](/plugins/lifecycle#on-cloudflare-workers) has the rest of the differences.
+
+## Which base to import
+
+Each transport exports its own `Plugin` class. A transport is how the bot talks to Discord, either the gateway websocket or http interactions. The base you extend sets the type of `this.core`.
+
+{/* prettier-ignore-start */}
+
+| import from | `this.core` has | extend it when your plugin |
+| --- | --- | --- |
+| `@seedcord/gateway` | the gateway [`Core`](ref:gateway/Core), which adds `bot`, `startup` and `shutdown` | reads `bot`, `startup` or `shutdown` |
+| `@seedcord/http` | the http [`Core`](ref:http/Core), which adds `startup` and `shutdown` | reads `startup` or `shutdown` on an http bot |
+| `@seedcord/core/plugin` | [`CoreBase`](ref:core/CoreBase), the members both transports share | only uses what both transports share |
+
+{/* prettier-ignore-end */}
+
+`CoreBase` has members both transports share, such as `config`, `rest`, and `bus`. A plugin on the `@seedcord/core/plugin` base attaches to a bot on either transport. Each base also sets where a bot may attach the plugin. [Where it runs](/writing-plugins/runtimes) has that.
+
+<Callout type="transport">
+
+`config` follows the base you extend. The gateway base types it as [`GatewayConfig`](ref:gateway/GatewayConfig), the http base as [`HttpConfig`](ref:http/HttpConfig), and `CoreBase` as the shared [`Config`](ref:types/Config).
+
+</Callout>
+
+## What the constructor takes
+
+Most plugins need settings, like a connection string or a label. The constructor's first parameter is the bot, which seedcord passes in when you call `attach`. The samples call it `host`. Type it as `CoreBase` and pass it to `super`. Every parameter after it is yours, and you pass their values to `attach` after the plugin class, where TypeScript checks their types. If you type the first parameter as a transport's `Core`, the `attach` call fails to compile. [Typing what you ship](/writing-plugins/typing#why-the-first-parameter-is-corebase) explains why.
+
+```ts twoslash
+import { Plugin } from '@seedcord/gateway';
+
+import type { CoreBase } from '@seedcord/gateway';
+
+export class Uptime extends Plugin {
+    public constructor(
+        host: CoreBase,
+        private readonly label: string
+    ) {
+        super(host);
+    }
+
+    public async init(): Promise<void> {
+        this.logger.info(`tracking ${this.label}`);
+    }
+}
+```
+
+`Uptime` takes a `label` after the bot, so you write [`seedcord.attach('uptime', Uptime, label)`](ref:gateway/Seedcord.attach).
+
+Import `CoreBase` from the package you took `Plugin` from, either `@seedcord/gateway` or `@seedcord/http`. The `@seedcord/core/plugin` path doesn't export it, so on that base, import it from `@seedcord/core` and list that package as a peer dependency. [Publishing](/writing-plugins/publishing#the-peer-entry) shows the entry.
+
+After the host, `super()` takes an optional [`PluginLifecycleSpec`](ref:core/PluginLifecycleSpec) to move `init()` to another phase or set a timeout in milliseconds, as in `super(host, { init: { timeout: 30_000 } })`. [The lifecycle page](/plugins/lifecycle#moving-a-method-to-another-phase) shows the phases.
+
+Keep the rest of the constructor to storing its arguments, because it runs whenever something loads `bot.ts`. [`seedcord codegen`](/tooling/codegen#codegen-constructs-your-bot) and `seedcord build` both load it. A connection opened there opens on every codegen run and every build, even though no bot is running. Open connections and read files in `init()`.
+
+## Rejecting bad options
+
+Catch a bad option, like an empty label, while the bot starts, before anything connects. Call [`rejectOptions`](ref:core/Plugin.rejectOptions) from the constructor to stop the bot at the `attach` call.
+
+```ts twoslash
+import { Plugin } from '@seedcord/gateway';
+
+import type { CoreBase } from '@seedcord/gateway';
+
+// ---cut---
+export class Uptime extends Plugin {
+    public constructor(host: CoreBase, label: string) {
+        super(host);
+
+        if (label.length === 0)
+            this.rejectOptions('label is empty');
+    }
+
+    public async init(): Promise<void> {}
+}
+```
+
+Calling `rejectOptions` throws an error with the code `PluginOptionsRejected`, which stops the bot with this message.
+
+```txt output
+Uptime rejected its options. Label is empty.
+```
+
+## Logging
+
+`this.logger` exists from the constructor onward and prints under your class name. Each log line goes to a channel, a named stream that a bot can filter or silence. A line logged in the constructor goes to the default channel. From `init()` on, `attach` has set the channel to the key, so if someone attaches your plugin as `metrics`, its lines go to the `metrics` channel. [The log channel section](/plugins#the-key-is-also-a-log-channel) shows how a bot filters them.

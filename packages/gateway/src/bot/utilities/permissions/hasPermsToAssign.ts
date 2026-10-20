@@ -38,7 +38,8 @@ function botRoleOf(guild: Guild): Role {
  * Validates that the bot can assign a target role. Refuses when the target role is above the bot's, is managed, or the bot lacks Manage Roles.
  *
  * @param roleOrOptions - Target role or complete options for the check
- * @throws A `Notice` on refusal, or a `SeedcordError` when the bot has no role in the guild's role cache.
+ * @throws A {@link Notice} when the check refuses.
+ * @throws A **SeedcordError** when the bot has no role in the guild's role cache.
  *
  * @example
  * ```ts

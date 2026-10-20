@@ -153,6 +153,6 @@ Calling `getConfirmation` from a [`ModalHandler`](ref:gateway/ModalHandler) fail
 
 ## When a prompt is the wrong tool
 
-The collector runs inside your bot's process. A restart ends every open prompt, and a later click gets Discord's own failure message.
+The collector runs inside your bot's process. A restart ends every open prompt, so a later click gets Discord's own failure message.
 
 Use a prompt for a decision someone makes in seconds. `timeoutMs` defaults to 30 seconds. Put an approval a moderator might answer hours later on a routed button with a [custom id](/components/custom-ids), which still works after a restart.

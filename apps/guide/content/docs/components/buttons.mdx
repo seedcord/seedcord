@@ -28,13 +28,13 @@ export class Appeal extends ButtonHandler<[typeof AppealId]> {
 }
 ```
 
-[`@ButtonRoute`](ref:core/ButtonRoute) takes the [`CustomId`](ref:custom-id/CustomId) your component used, and the generic lists the same one as a tuple. Passing the decorator one definition and the generic another is a compile error.
+Pass [`@ButtonRoute`](ref:core/ButtonRoute) the [`CustomId`](ref:custom-id/CustomId) your component used, and list the same one as a tuple in the generic. Passing the decorator one definition and the generic another is a compile error.
 
 A click is an interaction like any other, so every [reply method](/replying) works here.
 
 <Callout type="transport" only="gateway">
 
-A gateway `ButtonHandler` takes a second type argument, discord.js's `CacheType`, which defaults to `'cached'`. That default types `this.event.member` as a `GuildMember`, and seedcord doesn't check it at runtime. A button in a DM has no member, so pass `'raw'` or `CacheType` for a handler that can get one. An http `ButtonHandler` takes only the route tuple.
+A gateway `ButtonHandler` takes a second type argument, discord.js's `CacheType`, which defaults to `'cached'`. That default types `this.event.member` as a `GuildMember`, but seedcord doesn't check it at runtime. A button in a DM has no member, so pass `'raw'` or `CacheType` for a handler that can get one. An http `ButtonHandler` takes only the route tuple.
 
 </Callout>
 

@@ -3,12 +3,14 @@ title: Reporting faults
 description: Send the errors your bot reports to a Discord channel through a webhook, or write a reporter of your own.
 ---
 
-seedcord logs every reported throw, and nobody watches a production bot's terminal. A reporter posts each one to a Discord channel instead. seedcord ships two and registers both while your bot starts. Each one reads a webhook url from an environment variable. Set both, so a throw you didn't expect reaches a channel you read.
+seedcord logs every reported throw, but nobody watches a production bot's terminal. A reporter posts each one to a Discord channel instead. seedcord ships two and registers both while your bot starts. Each one reads a webhook url from an environment variable. Set both, so a throw you didn't expect reaches a channel you read.
 
 ```txt title=".env"
 HANDLED_EXCEPTION_WEBHOOK_URL=https://discord.com/api/webhooks/...
 UNKNOWN_EXCEPTION_WEBHOOK_URL=https://discord.com/api/webhooks/...
 ```
+
+On an edge bot, declare both variables as secrets in `cloudflare.config.ts`, because only declared bindings reach its environment. [Workers](/build/workers) shows the file.
 
 {/* prettier-ignore-start */}
 
@@ -142,7 +144,7 @@ seedcord registers the two shipped reporters whether or not you set that path. A
 
 ## One card a minute
 
-One bug in a busy command can throw on every interaction. Unthrottled, that's a card per throw, and the first one scrolls away under the rest.
+One bug in a busy command can throw on every interaction. Unthrottled, that's a card per throw, so the first one scrolls away under the rest.
 
 seedcord calls `throttleKey()` before it sends each card. The base returns `null`, so each publish sends its own card. Return a string from your override. Events sharing that string then collapse into one card a minute.
 

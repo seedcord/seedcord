@@ -87,4 +87,4 @@ app.post('/interactions', (c) => bot.fetch(c.req.raw));
 
 ### Cloudflare Workers
 
-The same `Seedcord` import runs on Cloudflare Workers. A `cloudflare.config.ts` beside `seedcord.config.ts` makes `seedcord build` write a worker, which you deploy with `cf deploy --prebuilt`. The [build guide](https://seedcord.org/guide/tooling/build) covers the setup.
+The same `Seedcord` import runs on Cloudflare Workers. A `cloudflare.config.ts` beside `seedcord.config.ts` makes `seedcord build` write a worker, which you deploy with `cf deploy --prebuilt`. The [Workers guide](https://seedcord.org/guide/build/workers) covers the setup.

@@ -69,6 +69,10 @@ export class Seedcord extends ServerHost<'http'> implements SeedcordInstance {
 
     public readonly config: HttpServerConfig;
 
+    /**
+     * @throws A **SeedcordError** when another `Seedcord` exists in this process and has not shut down.
+     * @throws A **SeedcordError** when the running Node or Bun is older than the range in `engines`.
+     */
     constructor(config: HttpServerConfig) {
         super('http', new CoordinatedShutdown(config.lifecycle?.shutdownDeadline), new CoordinatedStartup());
         this.config = config;

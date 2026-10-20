@@ -76,11 +76,11 @@ export abstract class AutocompleteHandler<
      *
      * Provide one arm per autocompletable field across the registered commands, keyed by field name. Each
      * arm receives the focused partial value and a `respond` typed to that field's choice value. The
-     * arms must cover every autocompletable field, a missing field or an unknown key is a compile error. A
-     * focused field with no arm, only reachable from a stale-deployed command, throws at runtime.
+     * arms must cover every autocompletable field. A missing field or an unknown key is a compile error.
      *
      * @param arms - One handler per autocompletable field, keyed by field name.
      * @returns The result of the arm that ran.
+     * @throws A **SeedcordTypeError** with `MatchArmMissing` when the focused field has no arm. Only a stale-deployed command can send one.
      *
      * @example
      * ```ts

@@ -1,7 +1,7 @@
 import { highlightToHtml } from '@seedcord/ui/shiki';
 
 import { ShellTabs } from '#components/ShellTabs';
-import { MANAGERS, VERBS } from '#lib/packageManager';
+import { commandLines, MANAGERS, VERBS } from '#lib/packageManager';
 
 import type { Manager, Verb } from '#lib/packageManager';
 import type { ReactElement } from 'react';
@@ -11,25 +11,24 @@ export type ShellProps = Partial<Record<Verb, string>> & {
     before?: string;
 };
 
-function verbOf({ before: _before, ...verbs }: ShellProps): [Verb, string] {
-    const written = Object.entries(verbs);
-    const [first] = written;
+function verbsOf({ before: _before, ...verbs }: ShellProps): [Verb, string][] {
+    const written = Object.entries(verbs) as [Verb, string][];
 
-    if (written.length !== 1 || !first) {
-        throw new Error(`Shell takes exactly one of ${Object.keys(VERBS).join(', ')}. This one got ${written.length}.`);
+    if (written.length === 0) {
+        throw new Error(`Shell takes at least one of ${Object.keys(VERBS).join(', ')}.`);
     }
 
-    return first as [Verb, string];
+    return written;
 }
 
 export async function Shell(props: ShellProps): Promise<ReactElement> {
-    const [verb, argument] = verbOf(props);
+    const verbs = verbsOf(props);
     const lead = props.before === undefined ? '' : `${props.before}\n`;
 
     const commands = {} as Record<Manager, string>;
     const html = {} as Record<Manager, string | null>;
 
-    for (const manager of MANAGERS) commands[manager] = `${lead}${VERBS[verb][manager]} ${argument}`;
+    for (const manager of MANAGERS) commands[manager] = `${lead}${commandLines(verbs, manager)}`;
 
     const rendered = await Promise.all(MANAGERS.map((manager) => highlightToHtml(commands[manager], 'bash')));
     MANAGERS.forEach((manager, index) => (html[manager] = rendered[index] ?? null));

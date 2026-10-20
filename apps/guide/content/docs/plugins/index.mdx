@@ -8,8 +8,6 @@ Most bots need something beside Discord, like a database, a cache, or a client f
 A plugin packages that work. It starts and stops at defined points in your bot's lifecycle, takes its own options, and logs on its own channel. You attach it under a key you pick, then read it from `this.core` anywhere `core` is available, like a handler.
 
 ```ts twoslash hovers title="src/bot.ts"
-import { resolve } from 'node:path';
-
 import { Seedcord } from '@seedcord/gateway';
 import { Mongoose } from '@seedcord/plugin-mongoose';
 import { GatewayIntentBits } from 'discord.js';
@@ -17,17 +15,13 @@ import { GatewayIntentBits } from 'discord.js';
 export const seedcord = new Seedcord({
     bot: {
         clientOptions: { intents: [GatewayIntentBits.Guilds] },
-        interactions: {
-            path: resolve(import.meta.dirname, './handlers')
-        },
-        commands: {
-            path: resolve(import.meta.dirname, './commands')
-        },
+        interactions: { path: './handlers' },
+        commands: { path: './commands' },
         events: { path: null }
     },
     subscribers: { path: null }
 }).attach('db', Mongoose, {
-    dir: resolve(import.meta.dirname, './services'),
+    dir: './services',
     uri: 'mongodb://localhost:27017/',
     name: 'seedcord'
 });
@@ -37,7 +31,11 @@ export default seedcord;
 
 [`attach`](ref:gateway/Seedcord.attach) takes the key, the plugin class, and whatever that class's constructor takes after the host. Here that's `'db'`, `Mongoose`, and its options object. If a plugin's constructor takes only the host, attach it with two arguments.
 
-Keep the `export default`. `seedcord codegen` imports that default export to [type `this.core.db`](/plugins/typing). Without it, `this.core.db` doesn't compile.
+The `dir` option is a folder of your bot, so a relative one is relative to `root` in [`seedcord.config.ts`](/build/config), like the `path` keys. With `root: './src'`, `'./services'` means `src/services`. The folder has to sit inside `root`, outside dot-folders, `node_modules`, and your `outDir`. In `seedcord dev` and when a built bot starts, a `dir` outside `root` throws `CorePathOutsideRoot`, and one inside a skipped folder throws `CoreDirectorySkipped`.
+
+A test or a `tsx` script has no `root`, because it doesn't start through `seedcord dev` or a built bot. A relative `dir` throws `CoreDirectoryRootUnknown` there, so pass an absolute path in those runs.
+
+However many plugins you attach, keep `bot.ts` exporting the bot as its default export, the way the sample does. `seedcord dev`, `build`, and `codegen` load your bot from that default export, and without one they stop with `CliInstanceInvalid`. `seedcord codegen` also reads it to [type `this.core.db`](/plugins/typing).
 
 ## Reading it from a handler
 
@@ -99,57 +97,49 @@ export class History extends SlashHandler<'history'> {
 
 `History` reaches the mongoose service through `this.core.db`.
 
-The sample declares its `Core` block by hand so it compiles on this page. In your project, `seedcord codegen` writes that block for you.
+The sample hides a `Core` declaration above the handler so it compiles on this page. In your project, `seedcord codegen` writes that declaration for you.
 
 ## Attaching more than one
 
 A bot can attach more than one plugin, each under its own key. Chain another `attach` for each one. Inside one startup phase the plugins start one after another, in the order you attached them. If your plugin's `init()` reads another plugin, attach that one first. Otherwise your `init()` runs before the other plugin has started.
 
 ```ts twoslash
-import { resolve } from 'node:path';
-
 import { Seedcord } from '@seedcord/gateway';
 import { KyselyPostgres } from '@seedcord/plugin-kysely-postgres';
 import { Mongoose } from '@seedcord/plugin-mongoose';
 import { GatewayIntentBits } from 'discord.js';
 
-// ---cut---
 export const seedcord = new Seedcord({
     bot: {
         clientOptions: { intents: [GatewayIntentBits.Guilds] },
-        interactions: {
-            path: resolve(import.meta.dirname, './handlers')
-        },
-        commands: {
-            path: resolve(import.meta.dirname, './commands')
-        },
+        interactions: { path: './handlers' },
+        commands: { path: './commands' },
         events: { path: null }
     },
     subscribers: { path: null }
 })
     .attach('db', Mongoose, {
-        dir: resolve(import.meta.dirname, './mongo'),
+        dir: './mongo',
         uri: 'mongodb://localhost:27017/',
         name: 'seedcord'
     })
     .attach('sql', KyselyPostgres, {
-        dir: resolve(import.meta.dirname, './postgres'),
+        dir: './postgres',
         connectionString: 'postgres://localhost:5432/seedcord',
-        migrations: {
-            dir: resolve(import.meta.dirname, './migrations')
-        }
+        migrations: { dir: './migrations' }
     });
 ```
 
 ### Grouping plugins under one name
 
-Your own services are plugins too, so each one takes its own key on `core`. Ten of them means ten keys, `core.usersService`, `core.ticketsService`, `core.economyService`, and seven more, in one list with your database.
+A class you write as a `Plugin` takes its own key on `core` too. Ten of them means ten keys, `core.usersService`, `core.ticketsService`, `core.economyService`, and seven more, in one list with your database.
 
-Put a dot in the key to attach the plugin under a group.
+Put a dot in the key to move a plugin out of that list and into a group.
 
 ```ts twoslash
 import { Plugin, Seedcord } from '@seedcord/gateway';
 
+// ---cut-start---
 declare const seedcord: Seedcord;
 
 class Users extends Plugin {
@@ -159,23 +149,23 @@ class Users extends Plugin {
 class Tickets extends Plugin {
     public async init(): Promise<void> {}
 }
-
-// ---cut---
+// ---cut-end---
 export default seedcord
-    .attach('services.users', Users)
-    .attach('services.tickets', Tickets);
+    .attach('app.users', Users)
+    .attach('app.tickets', Tickets);
 ```
 
-`services` here is a plain object on `core`. Each plugin takes the key after the dot, so a handler reads one as `this.core.services.users`. seedcord still starts both in attach order and stops them during shutdown.
+`app` here is a plain object on `core`. Each plugin takes the key after the dot, so a handler reads one as `this.core.app.users`. seedcord still starts both in attach order and stops them during shutdown.
 
 A key takes one dot. `seedcord codegen` writes one row for the group, which types every plugin inside it.
 
-A name holds one plugin or one group. If `services.users` exists, attaching a plugin at `services` fails to compile. Nesting under `db`, which already holds your database, fails the same way.
+A name holds one plugin or one group. If `app.users` exists, attaching a plugin at `app` fails to compile. Nesting under `db`, which already holds your database, fails the same way.
 
 ```ts twoslash
 // @errors: 2345
 import { Plugin, Seedcord } from '@seedcord/gateway';
 
+// ---cut-start---
 declare const seedcord: Seedcord;
 
 class Users extends Plugin {
@@ -185,11 +175,8 @@ class Users extends Plugin {
 class Tickets extends Plugin {
     public async init(): Promise<void> {}
 }
-
-// ---cut---
-seedcord
-    .attach('services.users', Users)
-    .attach('services', Tickets);
+// ---cut-end---
+seedcord.attach('app.users', Users).attach('app', Tickets);
 ```
 
 ## No plugin types in your handler?
@@ -219,8 +206,6 @@ Every mongoose log line prints on the `db` channel, since a plugin logs on the c
 
 ```ts twoslash
 // @errors: 2345
-import { resolve } from 'node:path';
-
 import { Seedcord } from '@seedcord/gateway';
 import { Mongoose } from '@seedcord/plugin-mongoose';
 import { GatewayIntentBits } from 'discord.js';
@@ -228,12 +213,8 @@ import { GatewayIntentBits } from 'discord.js';
 const seedcord = new Seedcord({
     bot: {
         clientOptions: { intents: [GatewayIntentBits.Guilds] },
-        interactions: {
-            path: resolve(import.meta.dirname, './handlers')
-        },
-        commands: {
-            path: resolve(import.meta.dirname, './commands')
-        },
+        interactions: { path: './handlers' },
+        commands: { path: './commands' },
         events: { path: null }
     },
     subscribers: { path: null }
@@ -241,7 +222,7 @@ const seedcord = new Seedcord({
 
 // ---cut---
 seedcord.attach('commands', Mongoose, {
-    dir: resolve(import.meta.dirname, './services'),
+    dir: './services',
     uri: 'mongodb://localhost:27017/',
     name: 'seedcord'
 });
@@ -249,13 +230,13 @@ seedcord.attach('commands', Mongoose, {
 
 <Callout type="warning">
 
-`commands` is one of those reserved channels, so that attach fails to compile. If the compiler can't see the key, like one read from an environment variable, `attach` throws `CorePluginReservedChannel` when it runs. [Logging](/tooling/logging) lists the reserved channels with what each one carries.
+`commands` is one of those reserved channels, so that attach fails to compile. If the key is only known at run time, like one read from an environment variable, `attach` throws `CorePluginReservedChannel` when it runs. [Logging](/tooling/logging) lists the reserved channels with what each one carries.
 
 </Callout>
 
 `attach` also throws in these cases when it runs:
 
-- If the bot has already started, it throws `CorePluginAfterInit`.
+- If startup has begun, like when a startup task calls `attach`, it throws `CorePluginAfterInit`.
 - If another plugin or seedcord itself already uses the key on `core`, like `bus`, it throws `CorePluginKeyExists`.
 - Nesting under a name the bot already uses, like `db`, throws `CorePluginGroupTaken`.
 - Attaching a plugin at a name that holds a group throws `CorePluginKeyHoldsGroup`.
@@ -264,16 +245,29 @@ seedcord.attach('commands', Mongoose, {
 
 ## A plugin declares where it runs
 
-Some plugins only work in one setup, like one that reads discord.js objects on gateway. A plugin can declare the transport it supports, `'gateway'` or `'http'`, and the runtime, `'server'` or `'edge'`. Both default to `'any'`, which attaches to any bot. If you attach a plugin to a bot that doesn't match, TypeScript reports the mismatch in your editor before the bot runs.
+Some plugins only work in one setup, like one that reads discord.js objects, which only a gateway bot has. A plugin declares the transport it supports, `'gateway'` or `'http'`, and the runtime it supports. A gateway bot and an http bot on Node or Bun run on a `'server'`. An http bot on Cloudflare Workers runs on the `'edge'`. The base class a plugin extends sets what it starts with, and [a plugin can narrow it](/writing-plugins/runtimes):
+
+{/* prettier-ignore-start */}
+
+| base class | transport | runtime |
+| --- | --- | --- |
+| `Plugin` from `@seedcord/gateway` | `'gateway'` | `'server'` |
+| `Plugin` from `@seedcord/http` | `'http'` | `'any'` |
+| `Plugin` from `@seedcord/core/plugin` | `'any'` | `'any'` |
+
+{/* prettier-ignore-end */}
+
+`'any'` attaches to any bot. The `Users` and `Tickets` plugins above extend the gateway `Plugin`, so they attach to a gateway bot only. Extend the `@seedcord/core/plugin` one for a plugin that works on both transports.
+
+If you attach a plugin to a bot that doesn't match, TypeScript reports the mismatch in your editor before the bot runs.
 
 ```txt output
 this plugin declares transport 'gateway' but this bot runs 'http'
+this plugin declares runtime 'server' but this bot runs 'edge'
 ```
 
-<Callout type="transport" only="http">
+A bot on Cloudflare Workers attaches plugins the same way as any other bot, with `attach` in `bot.ts`. The two plugins in this tab declare the `'server'` runtime, so a Workers bot gets the second message above for [Mongoose](/plugins/mongoose) and [Kysely](/plugins/kysely). A plugin from the `@seedcord/http` or `@seedcord/core/plugin` base attaches there unless it limits `runtime`.
 
-An edge bot can't use plugins. `createSeedcord` from `@seedcord/http/edge` returns a request handler, which doesn't have `attach`.
+A cast, or a plain JavaScript bot, gets past the types. `attach` then throws `CorePluginScopeMismatch` when it runs, with the plugin's name and the transport or runtime that differs. [Workers](/build/workers) covers setting that bot up.
 
-</Callout>
-
-[Typing a plugin](/plugins/typing) explains the codegen step behind `this.core.db`. [The lifecycle](/plugins/lifecycle) says when a plugin starts and when it stops. To write one, start at [Writing your own](/plugins/your-own).
+[Typing a plugin](/plugins/typing) explains the codegen step behind `this.core.db`. [The lifecycle](/plugins/lifecycle) says when a plugin starts and when it stops, and [what differs on Workers](/plugins/lifecycle#on-cloudflare-workers). To write a plugin of your own, start at [Writing plugins](/writing-plugins).

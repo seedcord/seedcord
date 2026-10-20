@@ -71,8 +71,8 @@ describe('a shell block', () => {
         expect(screen.getByRole('button', { name: /Copy/ })).toBeInTheDocument();
     });
 
-    it('refuses two verbs at once', async () => {
-        await expect(Shell({ run: 'dev', add: 'zod' })).rejects.toThrow('exactly one');
+    it('refuses a block with no command', async () => {
+        await expect(Shell({ before: 'cd my-bot' })).rejects.toThrow('at least one');
     });
 });
 

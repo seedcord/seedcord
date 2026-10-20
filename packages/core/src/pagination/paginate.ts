@@ -10,7 +10,7 @@ import type { PageView } from './PageView';
  * @param page - The requested zero-based page, clamped into `[0, totalPages - 1]`.
  * @param perPage - The page size. Must be a positive integer.
  * @returns The sliced {@link PageView}, with `totalPages` always known.
- * @throws SeedcordRangeError when `perPage` is not a positive integer.
+ * @throws A **SeedcordRangeError** when `perPage` is not a positive integer.
  */
 export function paginate<Item>(items: readonly Item[], page: number, perPage: number): PageView<Item> {
     if (!Number.isSafeInteger(perPage) || perPage <= 0) {

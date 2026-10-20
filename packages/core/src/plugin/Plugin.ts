@@ -49,7 +49,7 @@ export const FixedScope = Symbol('seedcord:plugin:fixed-scope');
  *
  * @typeParam Opts - Where this plugin may attach.
  * @typeParam TCore - The `Core` each transport binds `this.core` to.
- * @typeParam Fixed - The axes a transport's own `Plugin` base sets. Leave it out.
+ * @typeParam Fixed - The `transport` and `runtime` values a transport's own `Plugin` base sets. Leave it out.
  *
  * @example
  * ```ts
@@ -142,9 +142,10 @@ export abstract class Plugin<
     dispose?(): Promise<void>;
 
     /**
-     * Throws a `SeedcordTypeError` that contains the plugin class name and the reason.
+     * Rejects the options this plugin got.
      *
      * @param reason - Why the options are invalid.
+     * @throws A **SeedcordTypeError** every time, with the plugin class name and `reason` in its message.
      */
     protected rejectOptions(reason: string): never {
         throw new SeedcordTypeError(SeedcordErrorCode.PluginOptionsRejected, [this.constructor.name, reason]);

@@ -280,10 +280,13 @@ export class CustomId<Prefix extends string, Shape extends CustomIdShape = {}> {
     }
 
     /**
-     * Mint a wire string from values. Throws if a value doesn't fit its field or the wire is over 100 chars.
+     * Encodes the values into a wire string.
      *
      * @param values - One value per field, typed by the chain.
      * @returns The wire string to put on the component's customId.
+     * @throws A **SeedcordTypeError** when a value is the wrong kind for its field.
+     * @throws A **SeedcordRangeError** when a value is outside its field's bounds.
+     * @throws A **SeedcordRangeError** when the wire is over 100 characters.
      *
      * @example
      * ```ts
@@ -304,14 +307,12 @@ export class CustomId<Prefix extends string, Shape extends CustomIdShape = {}> {
     }
 
     /**
-     * Read a wire string back into values.
-     *
-     * Throws two different errors. A wire minted before the shape changed throws the stale one. A
-     * corrupt wire, or one minted by a different definition, throws the invalid one.
-     * Use {@link setCustomIdErrors} to customize the two thrown Error classes.
+     * Read a wire string back into values. Use {@link setCustomIdErrors} to change the two errors it throws.
      *
      * @param wire - The customId string from the interaction.
      * @returns The decoded values, typed by the chain.
+     * @throws The stale error when the wire was encoded before the shape changed. The default is a **SeedcordError**.
+     * @throws The invalid error when the wire is corrupt or was encoded by a different definition. The default is a **SeedcordError**.
      *
      * @example
      * ```ts
@@ -377,7 +378,8 @@ export type DecodedRoute<Defs extends readonly AnyCustomId[]> = {
  * @param defs - The customId definitions to try, in order.
  * @param wire - The customId string from the interaction.
  * @returns The matched prefix and its decoded params.
- * @throws When no definition owns the wire, or when the matched one refuses it.
+ * @throws The invalid error from {@link setCustomIdErrors} when no definition owns the wire.
+ * @throws What {@link CustomId.decode} throws when the matched definition rejects the wire.
  *
  * @example
  * ```ts

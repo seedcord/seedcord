@@ -3,7 +3,7 @@ title: Logging
 description: Log from your handlers, subscribers, and plugins through the logger each one carries, with five levels and named channels.
 ---
 
-A `console.log` in a handler prints a bare string. You can't tell which handler wrote it, you can't hide it in production without deleting it, and the [dev terminal](/tooling/dev) can't filter it. Every handler, subscriber, and plugin carries a `logger` that fixes all three, and you call it with one of five methods.
+A `console.log` in a handler prints a bare string. You can't tell which handler wrote it, you can't hide it in production without deleting it, and the [dev terminal](/tooling/dev) files it under the `default` channel with the label `Console`, next to every other line logged without a channel. Every handler, subscriber, and plugin carries a `logger` that fixes all three, and you call it with one of five methods.
 
 ```ts twoslash title="src/handlers/Ping.ts"
 import { SlashHandler, SlashRoute } from '@seedcord/gateway';
@@ -108,7 +108,7 @@ The message itself takes format specifiers, like the two `%s` in the `debug` cal
 
 ## Channels
 
-A bot writes lines about commands, events, plugins, and startup all at once, and you usually care about one of those at a time. Every line also carries a channel, which is a label for the part of your bot the line came from. seedcord picks the channel for its own classes. For example, an interaction handler logs on `interactions`, an event handler on `events`, and a subscriber on `subscribers`.
+A bot writes lines about commands, events, plugins, and startup all at once, but you usually care about one of those at a time. Every line also carries a channel, which is a label for the part of your bot the line came from. seedcord picks the channel for its own classes. For example, an interaction handler logs on `interactions`, an event handler on `events`, and a subscriber on `subscribers`.
 
 These names belong to the framework, and [`FRAMEWORK_CHANNELS`](ref:logger/FRAMEWORK_CHANNELS) holds every one of them.
 

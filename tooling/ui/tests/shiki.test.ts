@@ -214,14 +214,36 @@ describe('the wrapped fragment helpers', () => {
 });
 
 describe('isHighlightable', () => {
-    it.each(['ts', 'typescript', 'tsx', 'js', 'javascript', 'jsx', 'json', 'bash', 'sh', 'shell', 'zsh', 'txt'])(
-        'accepts %s, and the highlighter has its grammar',
-        async (lang) => {
-            if (!isHighlightable(lang)) throw new Error(`${lang} is not highlightable`);
+    it.each([
+        'ts',
+        'typescript',
+        'tsx',
+        'js',
+        'javascript',
+        'jsx',
+        'json',
+        'yaml',
+        'yml',
+        'toml',
+        'bash',
+        'sh',
+        'shell',
+        'zsh',
+        'txt'
+    ])('accepts %s, and the highlighter has its grammar', async (lang) => {
+        if (!isHighlightable(lang)) throw new Error(`${lang} is not highlightable`);
 
-            await expect(highlightToHtml('x', lang, { throwOnFailure: true })).resolves.toContain('<pre');
-        }
-    );
+        await expect(highlightToHtml('x', lang, { throwOnFailure: true })).resolves.toContain('<pre');
+    });
+
+    it('colours a yaml key apart from its value', async () => {
+        const html = (await highlightToHtml('name: Deploy', 'yaml')) ?? '';
+        const colourOf = (text: string): string | undefined =>
+            new RegExp(`<span style="([^"]*)">${text}</span>`).exec(html)?.[1];
+
+        expect(colourOf('name')).toBeDefined();
+        expect(colourOf('name')).not.toBe(colourOf(' Deploy'));
+    });
 
     it.each(['python', 'rust', 'go', 'css', ''])('rejects %s, which the highlighter never loaded', (lang) => {
         expect(isHighlightable(lang)).toBe(false);

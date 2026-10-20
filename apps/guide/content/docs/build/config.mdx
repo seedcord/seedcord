@@ -1,0 +1,84 @@
+---
+title: seedcord.config.ts
+description: Tell the seedcord CLI where your bot lives and how to build it with seedcord.config.ts, and look up what each key does and where its paths resolve.
+---
+
+The CLI has to find `bot.ts` before it can import it, so the paths that locate it can't live inside `bot.ts`. `instance` and `root` go in `seedcord.config.ts`, beside your `package.json`. `seedcord.config.mts` works too. The CLI looks only in the folder you run it from, which is your project folder when you run it through a `package.json` script.
+
+Your bot's own settings, like its intents and its handler folders, go in `new Seedcord({ ... })` in `bot.ts`. [Tooling](/tooling) lists those.
+
+```ts twoslash title="seedcord.config.ts"
+import { defineConfig } from 'seedcord';
+
+export default defineConfig({
+    root: './src',
+    instance: './bot.ts',
+    files: ['./locales'],
+    build: {
+        start: './index.ts',
+        outDir: './dist'
+    },
+    hmr: { restart: ['./config/**'] },
+    vitePlugins: () => []
+});
+```
+
+`instance` is the only key you have to write. `defineConfig` comes from the `seedcord` package and types every key.
+
+## Every key
+
+{/* prettier-ignore-start */}
+
+| key | default | relative to | what it does |
+| --- | --- | --- | --- |
+| `instance` | required | `root` | the module whose default export is your configured `Seedcord` |
+| `root` | the config's folder | the config's folder | the folder that holds your bot's code. Everything under it builds |
+| `files` | `[]` | `root` | folders of non-code files a built bot reads through [`readFiles`](ref:utils/readFiles). [Data files](/build/data-files) |
+| `vitePlugins` | none | | a function returning the Vite plugins that run on your bot's code. [Vite plugins](/build/vite-plugins) |
+| `build.start` | none | `root` | the file that calls `start()`. Leave it out to [build the bot as a package](/build/package). Server bots only |
+| `build.outDir` | `./dist` | the config's folder | where `seedcord build` writes. Server bots only |
+| `build.tsconfig` | `tsconfig.json` beside the config | the config's folder | the tsconfig `seedcord build` type checks against |
+| `tunnel` | `true` | | how `seedcord dev` exposes an http bot. [The tunnel](/tooling/tunnel) |
+| `port` | `3000` | | the port `seedcord dev` serves an edge bot on. `0` picks a free one. Edge bots only |
+| `hmr.restart` | `[]` | `root` | globs for files whose save restarts the bot. [Hot reload](/tooling/hot-reload) |
+| `hmr.rollback` | `true` | | whether a failed reload goes back to the last version that loaded |
+| `hmr.typecheck` | `false` | `root` | `true` runs `tsc --watch` beside the bot, and `{ tsconfig }` picks the tsconfig |
+| `idleAnimation` | `true` | | whether the [dev terminal](/tooling/dev) animates while nothing happens |
+
+{/* prettier-ignore-end */}
+
+`tunnel` takes `true`, `false`, or an https URL you already serve, and a gateway bot ignores it. A Node http bot sets its port in `new Seedcord({ port })`, so TypeScript rejects `port` here.
+
+## Where paths resolve
+
+Every relative path is relative to one of two folders. `root`, `build.outDir`, and `build.tsconfig` are relative to the folder that holds `seedcord.config.ts`. Everything that points into your bot's code is relative to `root`, so with `root: './src'` you write `instance: './bot.ts'`. Writing `'./src/bot.ts'` there would look for `src/src/bot.ts`.
+
+The folder paths inside `new Seedcord({ ... })` follow the same rule, so `interactions: { path: './handlers' }` reaches `src/handlers`. seedcord loads the same code files from a handler folder that [`importFiles`](ref:utils/importFiles) does. A plugin that reads a folder, like Mongoose with its `dir`, [resolves it the same way](/writing-plugins/files#where-a-relative-path-starts).
+
+A test or a `tsx` script that imports `bot.ts` runs without `root`, so [Your first bot](/first-bot#your-bots-settings) shows the absolute paths those runs need.
+
+### Keep tool files outside root
+
+`seedcord build` builds every code file under `root`, whether or not your bot imports it. A leftover `src/old-index.ts` ships in `dist`, and so does a tool's config file under `root`, like `content-collections.ts`. Keep those beside `seedcord.config.ts`, outside `root`.
+
+That's also why `root` is usually `./src`. If you leave `root` at the config's folder, `eslint.config.ts` sits under it and gets built with your bot.
+
+## Config mistakes
+
+The CLI checks the type of every key before it loads your bot. If several are wrong, it reports them together in one `CliProblems` error. Three more checks look at the folders and each stops the CLI by itself:
+
+- If `root` is inside `build.outDir`, the CLI throws `CliConfigOutDirDeletesRoot`, because the build empties `outDir` before it writes.
+- If `instance` or `build.start` points at a file that doesn't exist, the CLI throws `CliFileNotFound` and says which key.
+- If an entry in `files` sits outside the config's folder, every command throws `CliListedFolderUnusable`. `seedcord build` throws it too for an entry that's missing or is a file.
+
+If a path resolves somewhere you didn't expect, pass `--verbose` to `seedcord build`, `codegen`, or `commands`. It prints where the CLI resolved `root`, `instance`, `build.start`, and `build.outDir`.
+
+## An edge bot's config
+
+A `cloudflare.config.ts` beside `seedcord.config.ts` makes your bot an edge bot, which `seedcord build` turns into a Cloudflare Worker. Add `"customConditions": ["workerd"]` to its tsconfig too. The CLI throws if one of the two is there without the other. Under that condition `defineConfig` takes the edge keys:
+
+- `build` takes only `tsconfig`, because the worker always goes to `.cloudflare/output` and runs without a start file.
+- `port` sets where `seedcord dev` serves the worker.
+- `root` can't be the config's folder or any folder above it. The worker bundles every file under it. Tool configs like `eslint.config.ts` break that bundle, so the build throws `CliEdgeRootHoldsConfig`.
+
+[Cloudflare Workers](/build/workers) covers the rest of an edge bot's setup.

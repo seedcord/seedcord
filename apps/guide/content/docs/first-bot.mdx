@@ -1,48 +1,56 @@
 ---
 title: Your first bot
-description: Create a seedcord project with pnpm create seedcord, run it, and get its first slash command answering in Discord.
+description: Create a seedcord project with pnpm create seedcord, run it, and try its first slash command in Discord.
 ---
 
-You need the token from the last page. If you don't have it yet, the scaffolder can leave it for later.
+You need the token from the last page, though you can leave it for later. The command below asks a few questions, then writes your project.
 
 <Shell create="seedcord" />
 
 ## What it asks
 
 - **Where the project goes.** The folder name becomes the package name, so it takes lowercase letters, digits, and `. _ -`.
-- **How Discord reaches your bot.** Gateway or http, the choice from two pages ago.
-- **What your bot should react to.** Gateway only. A checklist covering messages in servers, reactions, member joins, polls, and more. Each one says which events your bot gets from it, and the privileged ones are marked. The scaffolder turns your picks into the intents and partials in your `bot.ts`.
-- **Your bot token.** Paste it now, or press Enter twice on the empty prompt and the scaffolder leaves `DISCORD_BOT_TOKEN` empty in `.env`. Your bot won't start until you fill it in.
-- **Your bot color.** Every embed and container you build takes it, unless you set a color on that one yourself.
-- **Whether to install and set up git.** Two yes or no questions, both starting on yes.
+- **How Discord reaches your bot.** Gateway or http, the choice from [gateway or http](/gateway-or-http).
+- **Where your http bot runs.** Http only. A Node or Bun process on any host, or [Cloudflare Workers](/build/workers).
+- **What your bot should react to.** Gateway only. A checklist of events like messages, reactions, and member joins, with a hint on each and the privileged ones marked. Your picks become the intents and partials in your `bot.ts`. Those are discord.js's options for which events and incomplete objects your bot gets.
+- **Your bot token.** Paste it now, or press Enter twice on the empty prompt to leave `DISCORD_BOT_TOKEN` empty in `.env`. Your bot won't start until you fill it in.
+- **Your test servers.** The ids of the servers where you try your commands, separated by commas. [Turn on Developer Mode in Discord](https://support.discord.com/hc/en-us/articles/206346498), right-click a server, and pick **Copy Server ID**. The ids go to `TESTING_GUILD_IDS` in `.env`. If you press Enter to leave it empty, your commands go to every server your bot is in.
+- **Your bot color.** Every embed and container you build with `BuilderComponent` takes it, unless you set a color on that one yourself.
+- **Whether to install dependencies and set up git.** Two yes or no questions, both defaulting to yes.
 
-Then the scaffolder writes the project. A yes to installing gets your dependencies, formats the project, and runs `seedcord codegen`. A yes to git makes the first commit.
+If you say yes to installing, the command installs your dependencies, formats the project, and runs `seedcord codegen`. If you say yes to git, it makes the first commit, unless git isn't installed or the folder is already inside a repo.
+
+Every question has a flag, like `--transport http` or `--testing-guilds 123,456`, and `--help` lists them all. npm passes flags on only after a `--`.
 
 ## Run it
 
 <Shell run="dev" before="cd my-bot" />
 
-Your bot logs in and sends its commands to Discord. The terminal turns into a dev console.
+Your bot starts and sends its commands to Discord. The terminal shows a [dev console](/tooling/dev) that reloads a handler when you save it.
+
+<Callout type="transport" only="http">
+
+`seedcord dev` also opens a cloudflared tunnel to let Discord reach your laptop. It writes the tunnel's address into the **Interactions Endpoint URL** of your Discord application. If cloudflared isn't installed, your bot still runs and the terminal prints an install hint. [The dev tunnel](/tooling/tunnel) has the rest.
+
+</Callout>
 
 ### Run the ping command
 
-The scaffold ships a `ping` command. Type `/ping` in a server your bot is in.
+The new project ships a `ping` command. Type `/ping` in a server your bot is in.
 
-The command probably won't be there yet. Global commands take time to appear, and Discord doesn't publish how long that takes.
+If you gave test servers, `/ping` appears right away. seedcord deploys it to those servers only, and [Discord updates a server's commands immediately](https://docs.discord.com/developers/interactions/application-commands).
 
-<Callout type="tip">
-    Restart your Discord client with Ctrl+R or Cmd+R. That fetches a
-    fresh command list and usually ends the wait.
-</Callout>
+If you left the test servers empty, `ping` is a global command, and global commands can take a while to appear.
 
-## What the scaffolder made
+## What the command wrote
 
-The `ping` command came from a file the scaffolder wrote, along with everything else in this tree.
+The `ping` command came from a file the setup command wrote, along with everything else in this tree.
 
 ```txt title="my-bot" output
 my-bot/
 ├─ .vscode/
-│  └─ extensions.json
+│  ├─ extensions.json
+│  └─ settings.json
 ├─ src/
 │  ├─ commands/
 │  │  └─ Ping.ts
@@ -50,55 +58,109 @@ my-bot/
 │  │  └─ Ready.ts
 │  ├─ handlers/
 │  │  └─ Ping.ts
+│  ├─ plugins/
+│  │  └─ Uptime.ts
 │  ├─ bot.ts
 │  ├─ index.ts
 │  └─ seedcord-gen.d.ts
 ├─ .env
+├─ .gitattributes
 ├─ .gitignore
 ├─ .prettierignore
+├─ AGENTS.md
+├─ CLAUDE.md
 ├─ eslint.config.ts
 ├─ package.json
+├─ pnpm-workspace.yaml
 ├─ prettier.config.ts
 ├─ README.md
 ├─ seedcord.config.ts
-├─ tsconfig.build.json
 └─ tsconfig.json
 ```
 
-- **`src/bot.ts`** builds your bot and exports it. **`src/index.ts`** imports that and starts it. They are separate so the CLI can import `bot.ts` and read your commands without logging in.
-- **`seedcord.config.ts`** configures the CLI. Your bot's own settings go in `bot.ts`, which is the file below.
-- **`src/seedcord-gen.d.ts`** carries the types generated from your config and your commands. `seedcord codegen` writes it and you commit it.
-- **`tsconfig.json`** type-checks the project. **`tsconfig.build.json`** compiles `src` into `dist`.
-- **`.env`** holds your token and the ids of your test servers, and [envapt](https://envapt.materwelon.dev) reads it. `seedcord dev` runs in the project folder, and a built bot reads `.env` from there whichever folder you start it in.
-- **`src/events/`** holds `Ready.ts`. Picking any of the message capabilities swaps that for `Mentioned.ts`, which answers when someone mentions your bot.
+`pnpm-workspace.yaml` only exists for a project made with pnpm. A project made with Bun gets a `bunfig.toml` instead, unless it's a Workers bot.
+
+- **`src/bot.ts`** builds your bot and exports it. **`src/index.ts`** imports that and starts it. They are separate so the CLI can import `bot.ts` and read your commands without starting the bot.
+- **[`seedcord.config.ts`](/build/config)** configures the CLI. Your bot's own settings go in `bot.ts`, shown below.
+- **`src/seedcord-gen.d.ts`** holds the types generated from your config and your commands. `seedcord codegen` writes it, and you commit it so a fresh clone type-checks before anyone runs codegen.
+- **`src/plugins/Uptime.ts`** is a small [plugin](/writing-plugins) that records when the bot started.
+- **`tsconfig.json`** configures the type check, and [`seedcord build`](/build) reads it too. Its `paths` define the `#src/*`, `#components/*`, and `#plugins/*` aliases. `bot.ts` imports `#plugins/Uptime` through the last one.
+- **`.env`** holds your secrets, and `.gitignore` keeps it out of commits. [envapt](https://envapt.materwelon.dev) reads it.
+- **`.env` keys:** `DISCORD_BOT_TOKEN`, `TESTING_GUILD_IDS`, and `UNKNOWN_EXCEPTION_WEBHOOK_URL` and `HANDLED_EXCEPTION_WEBHOOK_URL`, which take Discord webhook URLs for error reports. A server bot also gets `ENV=development`. The mode itself comes from your shell, as [Environment and config](/build/env) explains.
+- **`src/events/`** holds `Ready.ts`. If you pick a message event, `Mentioned.ts` replaces it and answers when someone mentions your bot.
+- **`AGENTS.md`** and **`CLAUDE.md`** point a coding agent at this guide.
 
 <Callout type="transport" only="http">
-    Discord posts only interactions to an http bot, so the
-    scaffolder writes no `src/events` folder.
+
+Discord posts only interactions to an http bot, so the command doesn't create a `src/events` folder. A bot for [Cloudflare Workers](/build/workers) has no `src/index.ts` either, since Cloudflare starts the worker. It gets a `cloudflare.config.ts` that declares the keys the worker receives, and nothing else reaches it.
+
 </Callout>
+
+### Scripts
+
+`package.json` defines the scripts that run the CLI. If you run a global `seedcord` in a project that installs its own, it throws `CliNotProjectInstall`, because the CLI has to load the same seedcord packages your bot imports.
+
+{/* prettier-ignore-start */}
+
+| script | what it does |
+| --- | --- |
+| `dev` | [runs the bot](/tooling/dev) with hot reload |
+| `build` | [builds the bot](/build) for production |
+| `start` | runs the build in `dist`. Every bot but a Workers bot has it |
+| `deploy` | builds, then uploads the worker with `cf deploy`. Only a Workers bot has it |
+| `codegen` | [rewrites `seedcord-gen.d.ts`](/tooling/codegen) |
+| `commands` | opens a menu to deploy, list, clean up, or purge your commands on Discord |
+| `commands:deploy` | sends your commands to Discord |
+| `tc`, `lint`, `lint:fix`, `fmt`, `fmt:check` | the type check, ESLint, and Prettier |
+| `check` | runs `tc`, `lint`, and `fmt:check` one after another |
+
+{/* prettier-ignore-end */}
+
+A Workers bot also has a `types` script that regenerates its Cloudflare binding types, and a `postinstall` script that runs it after each install.
+
+### Where your folders resolve
+
+`seedcord.config.ts` sets where the CLI finds your bot. `root` is the folder that holds your bot's code, and it defaults to the folder that holds the config. `seedcord build` bundles your code from `root`.
+
+```ts twoslash title="seedcord.config.ts"
+import { defineConfig } from 'seedcord';
+
+export default defineConfig({
+    root: './src',
+    instance: './bot.ts',
+    build: { start: './index.ts' },
+    // set false to hold the running arc and live dot still, which cuts idle redraws by ~80%
+    idleAnimation: true,
+    hmr: {
+        // set true to run tsc --watch alongside the bot, at the cost of a second node process
+        typecheck: false
+    }
+});
+```
+
+`instance` is the file that exports your bot, and `build.start` is the file that starts it. If you leave `build.start` out, the build exports the bot as a [package](/build/package) instead. Both paths are relative to `root`, and so is every relative folder path in `bot.ts`. A Workers bot's config has no `build.start`.
 
 ### Your bot's settings
 
-Every answer you gave shows up in one object.
+Your answers about events, color, and test servers end up in one object, the argument to `new Seedcord()`.
 
-```ts twoslash title="src/bot.ts"
-import { resolve } from 'node:path';
-
+```ts title="src/bot.ts"
 import { Seedcord } from '@seedcord/gateway';
 import { GatewayIntentBits } from 'discord.js';
 import { Converters, Envapter } from 'envapt';
 
+import { Uptime } from '#plugins/Uptime';
+
 export const seedcord = new Seedcord({
     bot: {
-        // passed straight to the discord.js Client constructor
         clientOptions: {
             intents: [GatewayIntentBits.Guilds]
         },
         interactions: {
-            path: resolve(import.meta.dirname, './handlers')
+            path: './handlers'
         },
         commands: {
-            path: resolve(import.meta.dirname, './commands'),
+            path: './commands',
             guilds: Envapter.getAs(
                 'TESTING_GUILD_IDS',
                 Converters.array(),
@@ -106,7 +168,7 @@ export const seedcord = new Seedcord({
             )
         },
         events: {
-            path: resolve(import.meta.dirname, './events')
+            path: './events'
         }
     },
     subscribers: {
@@ -116,18 +178,22 @@ export const seedcord = new Seedcord({
     notifications: {
         developerUsername: 'you'
     }
-});
+}).attach('uptime', Uptime);
 
 export default seedcord;
 ```
 
-The `path` keys name the folders seedcord scans at startup. The tab that teaches each folder covers its key.
+Each `path` key is a folder seedcord imports files from at startup, and a `null` path scans nothing. `'./handlers'` is relative to `root`, so with `root: './src'` it means `src/handlers`. Only `seedcord dev` and a built bot set `root`. If a test or a `tsx` script runs the bot, a relative path throws `CoreDirectoryRootUnknown`. In those runs, use an absolute path built from `import.meta.dirname`.
 
-Build your bot with `new Seedcord(...)` and export it, the way this file does. seedcord's types read the object you built, so a subclass of `Seedcord` loses the checks that come with [attaching a plugin](/plugins) and the types [codegen](/tooling/codegen) writes.
+The optional `guilds` key lists the servers where every command registered with [`RegisterCommand()`](ref:core/RegisterCommand) deploys. It reads `TESTING_GUILD_IDS` from `.env` through envapt, which splits the comma-separated ids into an array. An empty list sends those commands to every server your bot is in, so don't set `TESTING_GUILD_IDS` where you deploy. A command that passes `'global'` to the decorator ignores the list, and one that passes its own ids replaces it. [Commands](/commands) explains both. [Environment files](/build/env) explains how envapt picks `.env` files and reads your own keys.
+
+`botColor` is the color from your answer. `developerUsername` is who seedcord's generic error reply tells users to contact. The setup command fills it from your git user name, or "the developer" when git has none, so the sample's `'you'` stands for your name. `subscribers.path` is `null` because the new project has no [subscribers](/events/bus). `.attach('uptime', Uptime)` puts the plugin on `this.core.uptime`, which [the core object](/core) shows next.
+
+Build your bot with [`new Seedcord(...)`](ref:gateway/Seedcord) and make it the default export, the way this file does, because `instance` in `seedcord.config.ts` points at that export.
 
 <Callout type="transport" only="http">
 
-An http config takes a top-level `port`, which defaults to 3000. `clientOptions` and `events` belong to gateway alone.
+An http bot imports `Seedcord` from `@seedcord/http` and has no `clientOptions` or `events`. On a server it takes a top-level `port`, which defaults to 3000. `port: false` turns the built-in server off for a bot [inside your own server](/build/embed). A bot on Workers has neither `port` nor `lifecycle`.
 
 </Callout>
 
@@ -158,14 +224,24 @@ export class Ping extends BuilderComponent<'command'> {
 }
 ```
 
-Discord gets a name, a description, and one optional boolean.
+`@RegisterCommand()` makes seedcord send this class to Discord, and `this.instance` is the discord.js slash command builder.
 
 ```ts twoslash title="src/handlers/Ping.ts"
 import {
     SlashHandler,
     SlashRoute,
-    timestampFromSnowflake
+    timestampFromSnowflake,
+    toEpochSeconds
 } from '@seedcord/gateway';
+// ---cut-start---
+import type { EpochMs } from '@seedcord/gateway';
+
+declare module '@seedcord/gateway' {
+    interface Core {
+        uptime: { startedAt: EpochMs };
+    }
+}
+// ---cut-end---
 
 @SlashRoute('ping')
 export class Ping extends SlashHandler<'ping'> {
@@ -176,7 +252,7 @@ export class Ping extends SlashHandler<'ping'> {
 
         if (this.options.getBoolean('detailed')) {
             lines.push(
-                `Uptime **${Math.round(process.uptime())}s**`
+                `Up since **<t:${toEpochSeconds(this.core.uptime.startedAt)}:R>**`
             );
         }
 
@@ -185,20 +261,23 @@ export class Ping extends SlashHandler<'ping'> {
 }
 ```
 
-That runs when someone uses it. `'ping'` appears twice, on the decorator and on the generic, and both have to match the name the command sets. The compiler catches a mismatch. [`this.options`](ref:gateway/SlashHandler.options) carries `detailed` because `seedcord codegen` recorded it off the command file.
+`execute()` runs when someone uses `/ping`. `'ping'` appears twice, on the decorator and on the generic, and both have to match the name the command sets. The compiler catches a mismatch. [`this.options`](ref:gateway/SlashHandler.options) carries `detailed` because `seedcord codegen` recorded it off the command file.
+
+`roundtrip` measures one way, from Discord creating the interaction to `execute()` running, so it is closer to a latency than a round trip. It comes from the interaction's id, so it includes any gap between your clock and Discord's. With `detailed` set, the reply adds a line like "Up since 3 minutes ago". Discord turns the `<t:...:R>` markup into a relative time.
 
 <Callout type="transport" only="http">
-    An http scaffold writes the same two files and imports from
-    `@seedcord/http`.
+
+An http project has the same two files and imports from `@seedcord/http`. `this.event` is a discord.js `ChatInputCommandInteraction` on gateway and Discord's raw `APIChatInputApplicationCommandInteraction` on http. The handler reads only `id` from it, which both have.
+
 </Callout>
 
 ## Change something
 
 Open `src/handlers/Ping.ts` and change what it replies with. Save.
 
-The dev server reloads the handler while the bot stays connected. Run `/ping` again and the new reply comes back.
+The dev console reloads the handler while the bot keeps running. Run `/ping` again to see the new reply.
 
-Now open `src/commands/Ping.ts` and change the command itself, its description for example. Save, then look at the terminal. The dev server asks whether to re-register.
+Now open `src/commands/Ping.ts` and change the command itself, its description for example. Save, then look at the terminal. The console asks whether to refresh your commands.
 
 ```txt output
 Commands updated:
@@ -206,18 +285,20 @@ Commands updated:
 Refresh commands? (y/n)
 ```
 
-A handler edit needs no confirmation because nothing leaves your machine. A command edit does, since the new definition has to go to Discord before anyone sees it.
+The `Refresh commands? (y/n)` prompt appears only for the command edit, because the new definition has to go to Discord before anyone sees it. A handler edit reloads on its own.
 
-Press `y`. That sends the new command to Discord and runs `seedcord codegen`, which rewrites `src/seedcord-gen.d.ts` so your handler's types match what the command now declares.
+Press `y` to send the new command to Discord and run `seedcord codegen`, which rewrites `src/seedcord-gen.d.ts` so your handler's types match what the command now declares.
 
-Press `n` if you want Discord to keep the old command.
+Press `n` if you want Discord to keep the old command. Codegen doesn't run then, so your handler's types stay as they were until the dev console restarts or you run `seedcord codegen`.
 
 ## When a file fails to import
 
-seedcord imports every file under `src/commands`, `src/handlers`, and `src/events` at startup. A syntax error in any one of them stops the whole scan. A half-typed file saved mid-edit does it too, so the restart below is the normal way back.
+seedcord imports every file in the folders you list in `bot.ts` at startup. If one of them throws while it loads, startup stops with an error shaped like this.
 
 ```txt output
-src/handlers/Ping.ts threw while importing.
+Could not import <file>. <what the file threw>
 ```
 
-Fix the file and press `r` to restart.
+Fix the file and press `r` to restart. If a save throws while the bot is running, seedcord goes back to the last working version of that handler. [A save that throws on import](/tooling/hot-reload#a-save-that-throws-on-import) explains the rollback.
+
+[The core object](/core) is next.

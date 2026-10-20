@@ -1,0 +1,123 @@
+---
+title: Typing what you ship
+description: Make a bot see your plugin's types, give a plugin a type parameter, and read one plugin from another without breaking attach.
+---
+
+You can't declare your plugin on [`Core`](ref:gateway/Core) yourself, because the bot's author picks the key. Two things carry the types to them. [`attach`](ref:gateway/Seedcord.attach) returns the bot typed with your instance under the key, and [`seedcord codegen`](/tooling/codegen) copies that instance type onto `Core`, which [Typing a plugin](/plugins/typing) shows from the bot's side. Each member's type comes from your class. The key and any type argument come from the bot that attaches it.
+
+## Why the first parameter is CoreBase
+
+Codegen adds every attached plugin to the transport's `Core`. If a constructor types its first parameter as that `Core`, the plugin's type depends on itself, which TypeScript can't resolve. `attach` rejects such a plugin at compile time.
+
+```ts twoslash
+// @errors: 2345
+import { Plugin, Seedcord } from '@seedcord/gateway';
+
+import type { Core } from '@seedcord/gateway';
+
+declare const seedcord: Seedcord;
+
+class Uptime extends Plugin {
+    public constructor(host: Core) {
+        super(host);
+    }
+
+    public async init(): Promise<void> {}
+}
+
+seedcord.attach('uptime', Uptime);
+```
+
+The compiler rejects `Uptime` as the argument to `attach` and prints this requirement under it.
+
+```txt output
+this plugin constructor must take CoreBase as its first parameter and read the transport Core off this.core
+```
+
+Type the first parameter as [`CoreBase`](ref:core/CoreBase). To reach the transport's `Core`, read `this.core`, which your base class already types. [Writing a plugin](/writing-plugins#what-the-constructor-takes) has the working constructor.
+
+## A plugin with a type parameter
+
+A plugin that stores values for the bot, like a key-value cache, can't fix their type when you write it. A type parameter lets the bot choose.
+
+```ts twoslash
+import { Plugin, Seedcord } from '@seedcord/gateway';
+
+declare const seedcord: Seedcord;
+
+// ---cut---
+interface Session {
+    userId: string;
+}
+
+export class KeyValue<TValue> extends Plugin {
+    private readonly entries = new Map<string, TValue>();
+
+    public async init(): Promise<void> {}
+
+    public get(key: string): TValue | undefined {
+        return this.entries.get(key);
+    }
+}
+
+const bot = seedcord.attach('sessions', KeyValue<Session>);
+const session = bot.sessions.get('abc');
+//    ^?
+```
+
+`KeyValue<Session>` in the `attach` call sets `TValue`, so `session` comes back as `Session | undefined`. The `<Session>` after a value is an instantiation expression, which needs TypeScript 4.7 or later. A handler reading `this.core.sessions` gets the same type.
+
+If you pass `KeyValue` alone, `TValue` becomes `unknown`, the fallback for a type parameter with no `extends`. That holds even when `TValue` has a default. Passing a value to the constructor doesn't set `TValue` either. Tell your users to write the type argument in the `attach` call.
+
+## Reading another plugin
+
+A plugin on the base from `@seedcord/core/plugin` has a `this.core` typed as `CoreBase`, which has no members for attached plugins. Reading another plugin by key fails to compile.
+
+```ts twoslash
+// @errors: 2339
+import { Plugin } from '@seedcord/core/plugin';
+
+export class Greeter extends Plugin {
+    public async init(): Promise<void> {
+        this.core.hello.greet('world');
+    }
+}
+```
+
+A plugin on a transport base can't read another plugin by key either. Codegen writes the key into the bot's project, so it doesn't exist when your plugin's package builds. Take the other plugin as a constructor argument, which `attach` checks for you.
+
+```ts twoslash
+import { Plugin, Seedcord } from '@seedcord/gateway';
+
+import type { CoreBase } from '@seedcord/gateway';
+
+declare const seedcord: Seedcord;
+
+class Hello extends Plugin {
+    public async init(): Promise<void> {}
+
+    public greet(name: string): string {
+        return `hi, ${name}`;
+    }
+}
+
+class Greeter extends Plugin {
+    public constructor(
+        host: CoreBase,
+        private readonly hello: Hello
+    ) {
+        super(host);
+    }
+
+    public async init(): Promise<void> {
+        this.logger.info(this.hello.greet('world'));
+    }
+}
+
+const bot = seedcord.attach('hello', Hello);
+bot.attach('greeter', Greeter, bot.hello);
+```
+
+`attach` returns the bot typed with the `hello` key, so `bot.hello` is the `Hello` instance that the `Greeter` constructor takes. The bot's author writes those last two lines, so tell your users to attach `Hello` first. If they attach `Greeter` first, `bot.hello` doesn't exist and the call fails to compile. Use an argument like this when your plugin needs the other plugin's methods. A plugin option works for settings.
+
+[Where it runs](/writing-plugins/runtimes) covers limiting a plugin to one transport or runtime.

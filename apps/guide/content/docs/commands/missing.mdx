@@ -1,29 +1,54 @@
 ---
 title: Why your command has not appeared
-description: Find out why Discord doesn't show a command your logs say deployed, starting with its scope and its permissions.
+description: Find out why Discord doesn't show a command, from its scope and your test servers to dev skips and permissions.
 ---
 
-Your bot started and the logs list the command. Discord still doesn't show it.
+Your bot started, and either the logs list a command or they say the deploy was skipped. Discord still doesn't show it.
 
-## Check the scope first
+## The logs don't list it
 
-A guild command appears the moment your bot deploys it. A global command takes longer, and Discord doesn't publish how long.
+A command deploys only if its class extends [`BuilderComponent`](ref:core/BuilderComponent), carries a `@RegisterCommand` decorator, and is exported from a file under your `commands` path. seedcord skips any other export without an error.
 
-Discord checks the version when someone runs a command. A client still holding the old copy gets an error, then Discord sends that client the new copy. The next run works.
+## Check whether it's global or per-server first
 
-Register to a guild while you're still changing a command. Move it to global once you're ready to ship it.
+A guild command appears the moment your bot deploys it. A global command takes longer. Discord doesn't say how long.
+
+To skip the wait while you develop, deploy your test application's commands to your test servers through `TESTING_GUILD_IDS`. [Test servers](/commands/deployed#test-servers) shows the setup.
+
+Once an update shows up, a client can still hold the old copy of the command. Discord compares the command's version when someone runs it, so that client gets an error from Discord and then receives the new copy. The next run works.
+
+## It only shows in your test servers
+
+If `commands.guilds` lists any servers, every command with a bare `@RegisterCommand()` deploys to those servers only. A bot from `create-seedcord` fills the list from `TESTING_GUILD_IDS` in `.env`. If this is your production bot, unset `TESTING_GUILD_IDS` where it runs, as [In production](/commands/deployed#in-production) shows.
+
+A command registered with its own ids, like `@RegisterCommand('guild', ['613425648685547541'])`, deploys to those servers whatever `commands.guilds` says. It is missing everywhere else.
+
+## Dev skipped the deploy
+
+These make `seedcord dev` leave a command out of Discord:
+
+- You answered `n` to the refresh prompt after saving the file. Restart the bot to load the change.
+- The log says "Skipped the global commands". Dev skips a scope when its hash matches the saved one and the command names on Discord match yours. It compares names only, so versions that another checkout deployed under the same names get skipped too. Run `seedcord commands deploy --force` to deploy anyway. [Deployed commands](/commands/deployed#seedcord-dev-skips-a-deploy-that-changes-nothing) explains the check.
+
+## A Worker never sends its commands
+
+A deployed Cloudflare Worker sends no commands to Discord. Run [`seedcord commands deploy`](/tooling/commands). Discord gives a new command an id, and the Worker only has the ids `seedcord build` wrote into it, so build and publish the Worker again after the deploy.
 
 ## Nobody can see it
 
-Discord hides a command from the picker when the person lacks permission to use it. A command you cannot run looks exactly like a command nobody deployed.
+Discord hides a command from the picker when the person lacks permission to use it. A command you can't run looks exactly like a command nobody deployed.
 
-Two places set that permission. `setDefaultMemberPermissions` in your command file sets who can use it by default. A server's admins can then change it for their server under **Server Settings**, **Integrations**, where they can limit your command to some roles or channels or turn it off for everyone. Your bot's token can't change those settings, so check that page when a command shows up in one server and not in another.
+The permission comes from two places. `setDefaultMemberPermissions` in your command file sets who can use it by default. A server's admins can change it for their server. In **Server Settings**, then **Integrations**, they can limit your command to some roles or channels, or turn it off for everyone.
 
-Your commands also stay inside servers by default, since [`BuilderComponent`](ref:core/BuilderComponent) sets `InteractionContextType.Guild`. A command missing from a DM needs `BotDM` in your own `setContexts` call, passed alongside `Guild`, since that call replaces the whole list.
+If a command shows in one server and not another, check **Integrations** in the server that hides it, since your bot's token can't change those settings.
+
+## It's missing in direct messages
+
+A command stays out of DMs by default, since [`BuilderComponent`](ref:core/BuilderComponent) sets `InteractionContextType.Guild`. To show it in a DM, call `setContexts` with `InteractionContextType.Guild` and `InteractionContextType.BotDM`. The call replaces the whole list, so `Guild` goes in again.
 
 ## You are near a limit
 
-Discord caps how many commands an application registers, and every server gets that same allowance again for its guild commands.
+Discord caps how many commands an application registers, and every server gets its own allowance of the same size for its guild commands.
 
 {/* prettier-ignore-start */}
 
@@ -35,4 +60,4 @@ Discord caps how many commands an application registers, and every server gets t
 
 {/* prettier-ignore-end */}
 
-Creating a command counts against a second cap, 200 per day per guild. Sending a name Discord already has updates that command, so restarting your bot all day doesn't count against it. Reaching the cap takes two hundred names Discord has never seen.
+Creating a command counts against a second cap, 200 per day per guild. If you send a name Discord already has, Discord updates that command, so restarting your bot all day doesn't count against the cap. Reaching the cap takes 200 names Discord has never seen in one day.

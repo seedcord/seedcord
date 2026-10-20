@@ -1,0 +1,141 @@
+---
+title: Vite plugins
+description: Add a Vite plugin to your bot so handlers can import YAML, SQL, or any file a plugin can load, in seedcord dev, codegen, and the build alike.
+---
+
+Your bot's replies live in a `messages.yaml` file, and a handler needs them as an object. Node can't import a `.yaml` file, and neither can Vite on its own. A Vite plugin can. seedcord runs the plugins you list on your bot's code in every command that loads it.
+
+List them under `vitePlugins` in `seedcord.config.ts`. This one uses [`@rollup/plugin-yaml`](https://github.com/rollup/plugins/tree/master/packages/yaml), which turns a YAML file into a default export:
+
+<Shell add="-D @rollup/plugin-yaml" />
+
+```ts title="seedcord.config.ts"
+import yaml from '@rollup/plugin-yaml';
+import { defineConfig } from 'seedcord';
+
+export default defineConfig({
+    root: './src',
+    instance: './bot.ts',
+    build: { start: './index.ts' },
+    vitePlugins: () => [yaml()]
+});
+```
+
+A handler then imports the file like any module:
+
+```ts title="src/handlers/Greet.ts"
+import messages from '../messages.yaml';
+```
+
+TypeScript doesn't know what a `.yaml` import holds, so it reports the import above until you declare the module. Put the declaration in any `.d.ts` file under `root`:
+
+```ts title="src/yaml.d.ts"
+declare module '*.yaml' {
+    const value: Record<string, unknown>;
+    export default value;
+}
+```
+
+The same goes for any other kind of file a plugin loads. Write a `declare module` for each extension.
+
+## Why vitePlugins is a function
+
+`vitePlugins` takes a function that returns the plugins, like `() => [yaml()]`. seedcord calls it once for every Vite server and every build that loads your bot, so each one gets fresh plugin objects. `seedcord build` calls it twice, once to load your bot and once to bundle it.
+
+The reason is hooks like `configureServer`, which Vite runs once for each server a plugin object is added to. `seedcord dev` on an edge bot opens two servers, so one shared object would run that hook twice. Build new plugins on each call, and keep any state inside the plugin you return.
+
+## Where they run
+
+{/* prettier-ignore-start */}
+
+| command | what loads your bot | Vite's `command` |
+| --- | --- | --- |
+| `seedcord dev` | the dev server running your bot | `serve` |
+| `seedcord codegen` | an import that reads your commands | `serve` |
+| `seedcord commands` | an import that reads your commands | `serve` |
+| `seedcord build` | the **load bot** step, which checks that your bot constructs | `serve` |
+| `seedcord build` | the **bundle** step, which writes `outDir` | `build` |
+
+{/* prettier-ignore-end */}
+
+The CLI reads `seedcord.config.ts` itself without your plugins, so the config file can't import anything they load.
+
+### Leave `apply` off
+
+A plugin with `apply: 'build'` runs in the bundle step alone, because every other step runs Vite as `serve`. Say that plugin turns `messages.yaml` into code. Codegen then imports your bot without it and stops with `CoreImportFailed`. The build's **load bot** step fails the same way before the bundle starts.
+
+`apply: 'serve'` breaks the other step. The bundle can't read `messages.yaml`, so the build stops with `CliBundleFailed`.
+
+Leave `apply` off a plugin your bot's imports depend on. Keep `apply: 'build'` for a plugin that only changes the output, like one that writes a file next to the bundle.
+
+## The seedcord environment
+
+seedcord loads your bot in a Vite environment named `seedcord`, in every command that loads it, on Node and on Cloudflare Workers. Vite also creates its usual `client` and `ssr` environments, which stay empty. A plugin without a scope runs its per-environment hooks in all three.
+
+To run a plugin on your bot alone, check that name in `applyToEnvironment`:
+
+```ts title="seedcord.config.ts"
+import type { Plugin } from 'vite';
+
+function banner(): Plugin {
+    return {
+        name: 'banner',
+        applyToEnvironment: ({ name }) => name === 'seedcord',
+        transform(code, id) {
+            if (!id.endsWith('/bot.ts')) return;
+            return `console.log('built ${new Date().toISOString()}');\n${code}`;
+        }
+    };
+}
+```
+
+The `name === 'seedcord'` check in `banner` matches in every command that loads your bot. Two plugin settings still miss that environment:
+
+- A top-level `ssr` option in a plugin's `config` hook reaches the `ssr` environment, which holds none of your code. Set it under `environments.seedcord` to reach your bot.
+- A `config` hook reads `isSsrBuild` as `false` during `seedcord build`, since the bot builds in its own environment.
+
+If a plugin renames or removes the `seedcord` environment, the CLI stops with `CliViteEnvironmentMissing`.
+
+## Writing your own
+
+seedcord doesn't re-export any Vite type, so import `Plugin` from `vite` yourself. Your project already has it as a peer of `seedcord`.
+
+Then pick each hook in that plugin by how often its work should happen. `load` and `transform` run on every import, and again on each import a hot reload repeats, so do only the work that one file needs in them. Open anything shared, like a database connection or a cache, in `buildStart` and close it in `closeBundle`.
+
+```ts title="seedcord.config.ts"
+import type { Plugin } from 'vite';
+
+function queries(): Plugin {
+    let compiled = new Map<string, string>();
+    return {
+        name: 'queries',
+        buildStart() {
+            compiled = new Map();
+        },
+        transform(code, id) {
+            if (!id.endsWith('.sql')) return;
+            const known = compiled.get(code);
+            if (known) return known;
+            const output = `export default ${JSON.stringify(code.trim())};`;
+            compiled.set(code, output);
+            return output;
+        },
+        closeBundle() {
+            compiled.clear();
+        }
+    };
+}
+```
+
+`buildStart` runs in a different environment depending on the job. During `seedcord codegen` and the build's **load bot** step, Vite calls it once in `client`. During the bundle it calls it in `seedcord`. A plugin scoped to `seedcord` through `applyToEnvironment` therefore never gets a `buildStart` in codegen.
+
+If your `transform` needs what `buildStart` opens, leave `applyToEnvironment` off that plugin and check the file's path in `transform`, as `queries` does. `closeBundle` runs once for each environment as the CLI closes them.
+
+If `vitePlugins` itself throws, or one of the hooks that run while your code loads does, like `config`, `buildStart`, `load`, or `transform`, the CLI stops with `CoreVitePluginThrew`. The message gives the plugin's name and the hook, plus the file for a `load` or `transform`.
+
+## A Vite plugin or a seedcord plugin?
+
+- A Vite plugin runs while the CLI loads your code. It changes what an import gives back, like turning a `.yaml` file into an object. The plugin itself never runs in your built bot. You list it in `seedcord.config.ts`.
+- A [seedcord plugin](/plugins) runs inside your bot. It starts and stops with the bot and gives handlers methods to call, like `this.core.uptime.elapsed()`. You attach it in `bot.ts`.
+
+If you want a handler to read a file's contents, you want a Vite plugin or [`readFiles`](/build/data-files). If you want a handler to call a service, you want a seedcord plugin, which you can [write yourself](/writing-plugins).

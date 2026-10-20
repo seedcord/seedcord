@@ -1,32 +1,37 @@
 ---
 title: Create your Discord application
-description: Set up your bot's application in Discord's developer portal, get its token, turn on its intents, and add it to a server.
+description: Create the application your bot runs as in Discord's developer portal, then get its token and add it to a server.
 ---
 
-Your bot needs an application on Discord's side before any code runs. Every step on this page happens in the [Discord Developer Portal](https://discord.com/developers/applications). Start with **New Application**, top right.
+Your bot needs an application on Discord's side before any code runs. Every step but the last happens in the [Discord Developer Portal](https://discord.com/developers/applications). Start with **New Application** in the top right.
 
 ## Get the token
 
-Open **Bot** in the sidebar. Discord shows a token once. **Reset Token** gives you a new one and invalidates the old.
+Open **Bot** in the sidebar. Discord shows a token once. **Reset Token** gives you a new one.
 
 ![The Token block on the Bot page, with a Reset Token button](/portal-token.webp)
 
-Keep it somewhere safe. You paste it in when you set up the project.
+Keep the token private, because anyone who holds it controls your bot. You paste it in when you [create your project](/first-bot), which stores it in `.env`.
 
 <Callout type="warning">
     The **Client Secret** on the **OAuth2** page is a different
     credential. Don't paste it where the token goes.
 </Callout>
 
+## Make a second application for production
+
+Make one application to develop against and another one that your users add. Each has its own token. Your project's `.env` holds the test application's token, and the host that runs your bot holds the production one.
+
+If both use one application, your laptop and your users' bot are the same bot. On gateway, both connections receive every interaction and race to answer it. On http, `seedcord dev` points the interactions endpoint URL at your tunnel, so your users' interactions reach your laptop.
+
 ## Turn on the intents you need
 
-<Callout type="transport" only="gateway">
-    An http bot holds no gateway connection and declares no intents.
+<Callout type="transport" only="http">
+    An http bot has no gateway connection, so it declares no
+    intents.
 </Callout>
 
-The same page has **Privileged Gateway Intents** further down. Turn on the ones your bot needs. Discord only reviews these once your app reaches more than 10,000 users.
-
-Discord closes the connection when your code asks for one of these without the switch turned on here, and discord.js reports it as `Used disallowed intents`.
+The **Bot** page also has **Privileged Gateway Intents** below the token. The table says what each switch covers, and you turn on the ones your bot needs. Once your app reaches 10,000 users, Discord requires you to apply for them ([Discord's gateway docs](https://docs.discord.com/developers/events/gateway) have the details).
 
 {/* prettier-ignore-start */}
 
@@ -38,33 +43,39 @@ Discord closes the connection when your code asks for one of these without the s
 
 {/* prettier-ignore-end */}
 
-![The three privileged gateway intent switches on the Bot page](/portal-intents.webp)
+![The privileged gateway intent switches on the Bot page](/portal-intents.webp)
 
-## Copy the public key
+A switch here only allows an intent. Your bot also has to list the intents it uses in the `intents` option of `clientOptions` in `bot.ts`. The setup command on [the first bot page](/first-bot) fills that list in from your answers. If your code asks for an intent whose switch is off in the portal, Discord closes the connection and discord.js reports `Used disallowed intents`.
 
-<Callout type="transport" only="http">
-    A gateway bot needs no public key.
+## Leave the endpoint URL empty
+
+<Callout type="transport" only="gateway">
+    A gateway bot has no endpoint URL to set.
 </Callout>
 
-**General Information** carries your **Public Key**. Discord signs every request it posts to you, and your bot checks the signature against this key. Get the key wrong and every interaction fails that check, so Discord never accepts your endpoint URL in the first place.
+**General Information** has an **Interactions Endpoint URL** field. Discord sends a signed request to a URL before it saves it ([Discord's interactions docs](https://docs.discord.com/developers/interactions/overview#configuring-an-interactions-endpoint-url) describe the check), so the field stays empty until a bot is answering. `seedcord dev` waits for your bot to answer, then writes the URL for you. Once you deploy, you enter your bot's public URL here yourself.
 
-The same page has an **Interactions Endpoint URL** field. Leave it empty. The dev server sets it for you later.
+The same page shows your **Public Key**. An http bot uses it to verify Discord's signature on every request, but you don't copy it anywhere. A bot reads the key from Discord with your token when it starts, and `seedcord build` writes it into a [Cloudflare Worker](/build/workers#building).
+
+If that read fails on a server or under `seedcord dev`, startup throws `CoreDiscordReadFailed`. Set `DISCORD_PUBLIC_KEY` to the key shown here to skip the read. A built Worker ignores that variable.
 
 ## Add the bot to a server
 
-Open **Installation**.
+Commands deploy to your test servers only after the bot is installed in them. Open **Installation**.
 
-Under **Installation Contexts**, tick **Guild Install**. That's the one that puts your bot in a server. **User Install** puts it on a person's account.
+Under **Installation Contexts**, turn on **Guild Install**. Guild Install puts your bot in a server, and **User Install** puts it on a person's account.
 
 ![Installation Contexts with Guild Install ticked](/portal-install-contexts.webp)
 
-Under **Default Install Settings**, pick the permissions your bot needs. `applications.commands` and `bot` are already in the scopes, and `applications.commands` can't be removed.
+Under **Default Install Settings**, pick the permissions your bot needs, like Ban Members for a `ban` command. The scopes already include `bot` and `applications.commands`. You can't remove `applications.commands`.
+
+<Callout type="warning">
+    To add a bot to a server, you need the **Manage Server**
+    permission there ([Discord's permissions
+    docs](https://docs.discord.com/developers/topics/permissions)
+    list it).
+</Callout>
 
 Copy the URL under **Install Link** and open it. Pick your server and confirm.
 
 ![The install link and the default scopes and permissions](/portal-install-link.webp)
-
-<Callout type="warning">
-    Adding a bot to a server needs the **Manage Server** permission
-    in that server.
-</Callout>

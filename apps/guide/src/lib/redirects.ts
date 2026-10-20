@@ -2,6 +2,7 @@ import { PageAsset } from '@seedcord/ui/PageAsset';
 
 // Add a line here whenever a page's slug changes. Nothing detects a rename.
 export const RENAMED_PAGES: Record<string, string> = {
+    '/replying/deferring': '/replying/more-messages',
     '/throwing': '/replying/throwing',
     '/throwing/faults': '/replying/faults',
     '/throwing/reporting': '/replying/reporting',
@@ -18,7 +19,10 @@ export const RENAMED_PAGES: Record<string, string> = {
     '/gates/cooldown': '/checks/cooldown',
     '/gates/rate-limiter': '/checks/rate-limiter',
     '/gates/in-handler-permissions': '/checks/in-handler-permissions',
-    '/gates/changing-roles': '/checks/changing-roles'
+    '/gates/changing-roles': '/checks/changing-roles',
+    '/plugins/your-own': '/writing-plugins',
+    '/writing-plugins/local-testing': '/writing-plugins/publishing',
+    '/tooling/build': '/build/server'
 };
 
 function withoutTrailingSlash(pathname: string): string {

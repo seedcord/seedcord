@@ -43,7 +43,7 @@ export interface EventMiddlewareMetadata {
  * }
  * ```
  *
- * @throws A **SeedcordTypeError** If `priority` is not a finite number.
+ * @throws A **SeedcordTypeError** when `priority` is not a finite number.
  */
 export function RegisterEventMiddleware<
     const Events extends NonEmptyTuple<ValidNonInteractionKeys> = NonEmptyTuple<ValidNonInteractionKeys>

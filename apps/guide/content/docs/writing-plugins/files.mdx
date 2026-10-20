@@ -1,0 +1,105 @@
+---
+title: Loading a bot's files
+description: Load a folder of the bot's code or data from a plugin with importFiles and readFiles, in dev, in tests, and in a built bot.
+---
+
+Say your plugin takes a folder, like `./jobs` or `./locales`, and loads what's in it. With plain `fs`, a relative path starts at the working directory, which differs between `seedcord dev`, a built bot, and a test. A built bot ships `dist`, and the source folder isn't in it.
+
+[`importFiles`](ref:utils/importFiles) and [`readFiles`](ref:utils/readFiles) start every relative path at `root` from `seedcord.config.ts`, the folder that holds your bot's code, and read from the build when there is one.
+
+Both are exported from `@seedcord/gateway` and `@seedcord/http`. `@seedcord/core` doesn't export them, so on the `@seedcord/core/plugin` base, import them from `@seedcord/utils` and list it as a second peer dependency beside `@seedcord/core`. [Publishing](/writing-plugins/publishing#a-minimal-package) shows that package.json.
+
+## Importing code with importFiles
+
+`importFiles` yields one module at a time. It loads `.ts`, `.tsx`, `.mts`, `.js`, `.jsx`, and `.mjs` files, sorted by path, and skips type declarations, dotfiles, dot-folders, and `node_modules`.
+
+```ts twoslash title="src/plugins/Tasks.ts"
+import { importFiles, Plugin } from '@seedcord/gateway';
+
+import type { CoreBase } from '@seedcord/gateway';
+
+export class Tasks extends Plugin {
+    private readonly found: string[] = [];
+
+    public constructor(
+        host: CoreBase,
+        private readonly dir: string
+    ) {
+        super(host);
+    }
+
+    public async init(): Promise<void> {
+        for await (const { relativePath, imported } of importFiles(
+            this.dir
+        )) {
+            for (const [name, exported] of Object.entries(
+                imported
+            )) {
+                if (typeof exported === 'function')
+                    this.found.push(`${name} from ${relativePath}`);
+            }
+        }
+    }
+}
+```
+
+Each yield also carries `fullPath`. A `break` stops the loop before the next import. [Reloading in dev](/writing-plugins/hot-reload) shows how a plugin picks up edits under `seedcord dev`.
+
+## Reading data with readFiles
+
+`readFiles` yields the bytes of every file in a folder, text or binary, sorted by path. It skips the code files `importFiles` loads and `.map` files.
+
+```ts twoslash title="src/plugins/Locales.ts"
+import { Plugin, readFiles } from '@seedcord/gateway';
+
+import type { CoreBase } from '@seedcord/gateway';
+
+export class Locales extends Plugin {
+    private readonly strings = new Map<string, unknown>();
+
+    public constructor(
+        host: CoreBase,
+        private readonly dir: string
+    ) {
+        super(host);
+    }
+
+    public async init(): Promise<void> {
+        for await (const { relativePath, bytes } of readFiles(
+            this.dir
+        )) {
+            this.strings.set(
+                relativePath,
+                JSON.parse(bytes.toString())
+            );
+        }
+    }
+}
+```
+
+`bytes` is a `Buffer`, so `Locales` turns it into text before parsing.
+
+A built bot ships non-code files only from folders that [`files` in `seedcord.config.ts`](/build/data-files) lists. A folder outside that list throws `CoreDirectoryNotListed`, in dev and in a built bot. In your README, tell the bot's author to list the folder in `files` and pass the same path to your plugin.
+
+```ts twoslash title="seedcord.config.ts"
+import { defineConfig } from 'seedcord';
+
+export default defineConfig({
+    root: './src',
+    instance: './bot.ts',
+    files: ['./locales']
+});
+```
+
+With this config, `attach('locales', Locales, './locales')` reads `src/locales`. The error for an unlisted folder tells the author to add it to `files`.
+
+## Where a relative path starts
+
+A relative `dir` is relative to `root`, whichever file calls `importFiles` or `readFiles`. Name your option `dir` or `path` and document it as relative to `root`, the way the `dir` option of [Mongoose](/plugins/mongoose) works.
+
+- Outside `seedcord dev` and a built bot, a relative path throws `CoreDirectoryRootUnknown`, because the process has no `root`. A test or a `tsx` script passes an absolute path, like `resolve(import.meta.dirname, './locales')`.
+- `importFiles` throws `CorePathOutsideRoot` for a folder outside `root`. `readFiles` takes any folder listed in `files`, and a listed folder can sit beside `root`, inside the folder that holds `seedcord.config.ts`.
+- A folder inside a dot-folder or `node_modules` throws `CoreDirectorySkipped`.
+- In a built bot, a folder that was missing at build time throws `CoreDirectoryNotBuilt`.
+
+A folder inside your plugin's own package can't go through `readFiles`, because a listed folder has to sit inside the bot's project and `node_modules` is skipped. Import that data from your plugin's code, so your plugin's build carries it.

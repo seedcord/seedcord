@@ -60,7 +60,8 @@ export class Seedcord extends ServerHost<'gateway'> implements SeedcordInstance 
 
     /**
      * @param config - Bot configuration including paths and Discord client options
-     * @throws A **SeedcordError** When attempting to create multiple instances (singleton)
+     * @throws A **SeedcordError** when another `Seedcord` exists in this process and has not shut down.
+     * @throws A **SeedcordError** when the running Node or Bun is older than the range in `engines`.
      */
     constructor(public readonly config: GatewayConfig) {
         super('gateway', new CoordinatedShutdown(config.lifecycle?.shutdownDeadline), new CoordinatedStartup());

@@ -11,6 +11,8 @@ A gateway bot opens its own connection to Discord, so it ignores the `tunnel` se
 
 </Callout>
 
+An [edge bot](/tooling/dev#running-an-edge-bot) uses the same tunnel. `seedcord dev` points it at the port the Worker listens on.
+
 ## What cloudflared does
 
 `cloudflared` is a small program from Cloudflare. You run it on your machine. It opens a connection to Cloudflare, and Cloudflare gives you a public https address. Anything posted to that address comes back through the same connection to your local port.
@@ -41,7 +43,7 @@ A quick tunnel works without a Cloudflare account or a domain, so leaving `tunne
 
 Each start follows these steps.
 
-1. Your bot's interactions server starts listening on its port.
+1. Your bot's interactions server starts listening on its port, on `127.0.0.1` only. A URL you serve yourself makes it listen on every address.
 2. seedcord starts `cloudflared` pointed at that port, then waits up to 60 seconds for Cloudflare to assign a hostname.
 3. seedcord waits four more seconds, because Cloudflare publishes the DNS record a couple of seconds after it assigns the hostname. Discord's resolver keeps a failed lookup for about half an hour, so an early check would burn that hostname for Discord while the address answered fine from your machine.
 4. seedcord posts an unsigned request to the new address until it gets a `401`. After 60 seconds seedcord continues either way. Your bot rejects an unsigned request with exactly that status, so a `401` means the tunnel reaches your port.
@@ -96,4 +98,4 @@ Your bot keeps running through each of these, and the error goes to the [`cli` c
 
 The last row also turns the tunnel's status in the sidebar to `lost`.
 
-`CliTunnelNotVerified` usually has one cause. Discord checks an endpoint by posting its own signed ping to it, and that ping fails until Discord's DNS resolver can resolve the new hostname. Pasting the same address into the developer portal keeps failing for about half an hour, since Discord's resolver holds the failed lookup that long. Press `r` to restart, which gets you a fresh hostname and another attempt.
+`CliTunnelNotVerified` usually has one cause. Discord checks an endpoint by posting its own signed ping to it, and that ping fails until Discord's DNS resolver can resolve the new hostname. Pasting the same address into the developer portal keeps failing for about half an hour, since Discord's resolver holds the failed lookup that long. Press `r` to restart. That opens a fresh tunnel with a new hostname and tries again.

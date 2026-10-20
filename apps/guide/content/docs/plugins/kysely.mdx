@@ -8,8 +8,6 @@ A bot on Postgres usually creates a `pg` pool in `bot.ts`, runs a migration scri
 <Shell add="@seedcord/plugin-kysely-postgres kysely pg" />
 
 ```ts twoslash title="src/bot.ts"
-import { resolve } from 'node:path';
-
 import { Seedcord } from '@seedcord/gateway';
 import { KyselyPostgres } from '@seedcord/plugin-kysely-postgres';
 import { GatewayIntentBits } from 'discord.js';
@@ -17,29 +15,25 @@ import { GatewayIntentBits } from 'discord.js';
 export const seedcord = new Seedcord({
     bot: {
         clientOptions: { intents: [GatewayIntentBits.Guilds] },
-        interactions: {
-            path: resolve(import.meta.dirname, './handlers')
-        },
-        commands: {
-            path: resolve(import.meta.dirname, './commands')
-        },
+        interactions: { path: './handlers' },
+        commands: { path: './commands' },
         events: { path: null }
     },
     subscribers: { path: null }
 }).attach('db', KyselyPostgres, {
-    dir: resolve(import.meta.dirname, './services'),
+    dir: './services',
     connectionString: 'postgres://localhost:5432/seedcord',
-    migrations: {
-        dir: resolve(import.meta.dirname, './migrations')
-    }
+    migrations: { dir: './migrations' }
 });
 
 export default seedcord;
 ```
 
-This sample builds a gateway bot. The same `attach` call works on an http `Seedcord` from `@seedcord/http`. An edge bot can't [attach plugins](/plugins) at all.
+This sample builds a gateway bot. The same `attach` call works on an http `Seedcord` from `@seedcord/http` that runs on a server. Kysely is a server-only plugin, so on an http bot for Cloudflare Workers the same call is a compile error, and a cast that gets past it throws `CorePluginScopeMismatch`. A Workers bot [attaches other plugins](/plugins#a-plugin-declares-where-it-runs) as usual.
 
-`dir` and `migrations` are the two required options. The sample also passes `connectionString`. Without one, `pg` reads `PGHOST`, `PGPORT`, `PGUSER`, `PGPASSWORD`, and `PGDATABASE` from the environment.
+`dir` and `migrations` are the two required options. `dir` and `migrations.dir` are folders of your bot, so a relative one is relative to `root`. Both have to sit inside it, as [the folder rules](/plugins) describe. The sample also passes `connectionString`. Without one, `pg` reads `PGHOST`, `PGPORT`, `PGUSER`, `PGPASSWORD`, and `PGDATABASE` from the environment.
+
+A real bot reads the connection string from its environment. With `exactOptionalPropertyTypes`, which the scaffold's `@seedcord/tsconfig` turns on, `connectionString: process.env.DATABASE_URL` is a compile error, because its type is `string | undefined`. `Envapter.getRequired('DATABASE_URL', Converters.String)` from envapt returns a `string`, and it throws when the variable is unset. [Env files and modes](/build/env) covers reading config that way.
 
 ## The options
 
@@ -47,8 +41,8 @@ This sample builds a gateway bot. The same `attach` call works on an http `Seedc
 
 | option | required | what it sets |
 | --- | --- | --- |
-| `dir` | yes | the directory the plugin scans for service classes |
-| `migrations` | yes | where your migration files are and when they run |
+| `dir` | yes | the folder the plugin scans for service classes |
+| `migrations` | yes | the folder of your migration files and when they run |
 | `pool` | no | a `pg` pool to reuse, or the config to build one from |
 | `connectionString` | no | the Postgres URL |
 | `onConnectSQL` | no | statements to run on every new connection |
@@ -79,8 +73,6 @@ Most bots only need a URL. You'll pass more when you tune the pool, or when othe
 **A `PoolConfig` object** sets `pg`'s own pool options, like `max` and `idleTimeoutMillis`.
 
 ```ts twoslash
-import { resolve } from 'node:path';
-
 import { Seedcord } from '@seedcord/gateway';
 import { KyselyPostgres } from '@seedcord/plugin-kysely-postgres';
 import { GatewayIntentBits } from 'discord.js';
@@ -88,12 +80,8 @@ import { GatewayIntentBits } from 'discord.js';
 const seedcord = new Seedcord({
     bot: {
         clientOptions: { intents: [GatewayIntentBits.Guilds] },
-        interactions: {
-            path: resolve(import.meta.dirname, './handlers')
-        },
-        commands: {
-            path: resolve(import.meta.dirname, './commands')
-        },
+        interactions: { path: './handlers' },
+        commands: { path: './commands' },
         events: { path: null }
     },
     subscribers: { path: null }
@@ -101,15 +89,13 @@ const seedcord = new Seedcord({
 
 // ---cut---
 seedcord.attach('db', KyselyPostgres, {
-    dir: resolve(import.meta.dirname, './services'),
+    dir: './services',
     pool: {
         connectionString: 'postgres://localhost:5432/seedcord',
         max: 20
     },
     onConnectSQL: ["set time zone 'UTC'"],
-    migrations: {
-        dir: resolve(import.meta.dirname, './migrations')
-    }
+    migrations: { dir: './migrations' }
 });
 ```
 
@@ -118,8 +104,6 @@ That pool holds up to 20 connections, up from `pg`'s default of 10. Each new con
 **A `Pool` you built yourself** fits when other code in your app already queries through that pool. The plugin uses it as you built it, so it ignores `connectionString` and `forceInsecureSSL`. It also skips creating the database, which the next section covers.
 
 ```ts twoslash
-import { resolve } from 'node:path';
-
 import { KyselyPostgres } from '@seedcord/plugin-kysely-postgres';
 import { Pool } from 'pg';
 
@@ -133,11 +117,9 @@ const pool = new Pool({
 });
 
 seedcord.attach('db', KyselyPostgres, {
-    dir: resolve(import.meta.dirname, './services'),
+    dir: './services',
     pool,
-    migrations: {
-        dir: resolve(import.meta.dirname, './migrations')
-    }
+    migrations: { dir: './migrations' }
 });
 ```
 
@@ -168,11 +150,11 @@ If anything else fails here, like a database user without permission to create d
 
 `init()` connects, runs your migrations unless you [turned that off](/plugins/kysely-migrations), then loads every service class from `dir`. If any of those steps fails, `init()` closes the pool itself before it rethrows the error, since seedcord doesn't call `dispose()` for a plugin whose `init()` failed. A bot whose migration fails never reaches its handlers.
 
-If the pool can't connect after that check, `init()` throws `PluginConnectionFailed`. Its message includes the database name when the plugin could find one, and pg's own error is in its `cause`.
+If that first connect fails, `init()` throws `PluginConnectionFailed`. Its message includes the database name when the plugin could find one, and pg's own error is in its `cause`.
 
 <Callout type="warning">
 
-The migrations directory has to exist before the first start. The plugin treats a missing path as a single migration file, so importing it throws Node's `ERR_MODULE_NOT_FOUND`. An empty directory works.
+Unless you set `onStartup` to `false`, the migrations folder has to exist before the first start. If it's missing, `init()` throws `CorePathUnreadable` with the path. A built bot throws `CoreDirectoryNotBuilt` instead, since `seedcord build` found no folder to bundle. An empty folder works in both. With `onStartup: false`, `init()` never reads the folder, so the error waits for your first call to a migration method.
 
 </Callout>
 
@@ -182,6 +164,10 @@ Shutdown runs fewer steps. `dispose()` clears the service registry, then closes 
 
 [Services](/plugins/kysely-services) hold the queries for one table each. A query that joins tables, or a transaction that writes to two of them, uses the Kysely instance directly. That instance is [`connection`](ref:plugin-kysely-postgres/KyselyPostgres.connection), which a handler reads as `this.core.db.connection` once [codegen has typed `db`](/plugins/typing).
 
+<Callout type="warning">
+
 `connection` is only set after the pool connects. If you read it before then, you get `undefined`, even though its type says it's always set.
+
+</Callout>
 
 TypeScript checks the table and column names in those queries against a [schema](/plugins/kysely-schema) you declare yourself.

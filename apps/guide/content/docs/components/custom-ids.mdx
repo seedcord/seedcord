@@ -3,7 +3,7 @@ title: Custom IDs
 description: Declare what a component's custom id carries with CustomId, so a click arrives with typed values and you skip parsing strings.
 ---
 
-Discord hands a component's `custom_id` back when someone clicks a button, picks from a select menu, or submits a modal. It's always a plain string, and whatever your handler reads later has to be inside it.
+Discord hands a component's `custom_id` back when someone clicks a button, picks from a select menu, or submits a modal. It's always a plain string, so whatever your handler reads later has to be inside it.
 
 Written by hand, that's a string like `ticket:184580573574955008:close:true` that you build in one file and split apart in another. Every value comes back as text, so turning `'true'` back into a boolean is your job too. The two sides agree on the order only because you kept them matching by hand. Add a field to one side and the other reads the wrong piece, with no error until someone clicks.
 
@@ -251,7 +251,7 @@ A custom id you write by hand compiles. `setCustomId('ticket:123')` skips the sh
 
 <Callout type="danger">
 
-`CustomId` ships in `@seedcord/custom-id`, and your transport package re-exports it. Import it from `@seedcord/gateway` or `@seedcord/http`. Adding `@seedcord/custom-id` to your own dependencies can resolve a second copy, and a decode failure from that copy skips the [rendered notices](/components/stale) seedcord provides.
+`CustomId` ships in `@seedcord/custom-id`, and your transport package re-exports it. Import it from `@seedcord/gateway` or `@seedcord/http`. Adding `@seedcord/custom-id` to your own dependencies can resolve a second copy. A decode failure from that copy skips the [rendered notices](/components/stale) seedcord provides.
 
 </Callout>
 

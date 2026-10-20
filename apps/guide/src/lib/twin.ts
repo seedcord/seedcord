@@ -4,12 +4,11 @@ import { defaultHandlers } from 'mdast-util-to-markdown';
 
 import { CALLOUT_LABELS, TRANSPORT_LABELS } from '#lib/callout';
 import { cleanFence } from '#lib/fence';
-import { getServerManager, VERBS } from '#lib/packageManager';
+import { commandLines, getServerManager, isVerb } from '#lib/packageManager';
 import { FENCE_MODES } from '#lib/rehypeFenceMeta';
 import { canonicalUrl } from '#lib/site';
 
 import type { CalloutType, Transport } from '#lib/callout';
-import type { Verb } from '#lib/packageManager';
 import type { LLMsOptions } from 'fumadocs-core/mdx-plugins/remark-llms';
 import type { MdxJsxFlowElement, MdxJsxTextElement } from 'mdast-util-mdx';
 import type { Nodes } from 'mdast';
@@ -44,11 +43,12 @@ function shellCommand(node: JsxNode): string {
     const before = attribute(node, 'before');
     const lead = before === undefined ? '' : `${before}\n`;
 
-    for (const verb of Object.keys(VERBS) as Verb[]) {
-        const argument = attribute(node, verb);
-        if (argument !== undefined) return `${lead}${VERBS[verb][manager]} ${argument}`;
-    }
-    return lead.trimEnd();
+    const verbs = node.attributes.flatMap((attr) =>
+        attr.type === 'mdxJsxAttribute' && isVerb(attr.name) && typeof attr.value === 'string'
+            ? [[attr.name, attr.value] as const]
+            : []
+    );
+    return verbs.length === 0 ? lead.trimEnd() : `${lead}${commandLines(verbs, manager)}`;
 }
 
 function isJsx(node: Nodes): node is JsxNode {

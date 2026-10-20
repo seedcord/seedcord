@@ -1,0 +1,137 @@
+---
+title: Your bot as a package
+description: Publish your bot as an npm package that another project installs, imports, and starts, with its plugins typed and its port picked by whoever runs it.
+---
+
+Sometimes the bot isn't the whole project. You keep it in its own repository, and a dashboard, a monorepo app, or somebody else's server installs it and starts it. That project has no `seedcord.config.ts` and never runs the seedcord CLI, so it needs a bot that's already built and imports like any other dependency.
+
+`seedcord build` writes one when your config leaves out `build.start`:
+
+```ts twoslash title="seedcord.config.ts"
+import { defineConfig } from 'seedcord';
+
+export default defineConfig({
+    root: './src',
+    instance: './bot.ts'
+});
+```
+
+## What the build writes
+
+<Shell run="build" />
+
+`dist/index.mjs` default exports the bot your `instance` file exports. The build's `write types` step also writes `dist/index.d.mts`, so the project that installs it gets the bot's full type, plugins included. The build prints no run command, since nothing in `dist` starts the bot.
+
+The project that installs it imports the bot and starts it:
+
+```ts title="server.ts"
+import bot from '@acme/my-bot';
+
+await bot.start();
+console.log(bot.stats.uptime.sinceStart());
+```
+
+`bot.stats.uptime` is a plugin the bot attached in its own `bot.ts`, and it comes through typed. The sample under [settings the installing project picks](#settings-the-installing-project-picks) shows the attach.
+
+## package.json
+
+```json title="package.json"
+{
+    "name": "@acme/my-bot",
+    "version": "0.1.0",
+    "type": "module",
+    "exports": {
+        ".": {
+            "types": "./dist/index.d.mts",
+            "default": "./dist/index.mjs"
+        }
+    },
+    "files": ["dist"],
+    "scripts": {
+        "build": "seedcord build",
+        "prepublishOnly": "pnpm build"
+    },
+    "dependencies": {
+        "@discordjs/builders": "^1.13.1",
+        "@seedcord/http": "^0.10.2",
+        "discord-api-types": "^0.38.0",
+        "envapt": "^9.1.0"
+    },
+    "devDependencies": {
+        "seedcord": "^0.21.5",
+        "typescript": "^6.0.3",
+        "vite": "^8.3.4"
+    }
+}
+```
+
+`@discordjs/builders` and `discord-api-types` stand in for whatever your own handlers import. Every package your bot imports at runtime goes in `dependencies`. `dist` leaves them as imports that resolve from `node_modules`, and `index.d.mts` imports its types from `@seedcord/http` or `@seedcord/gateway`. If you leave one in `devDependencies`, the installing project doesn't get it, so the first import of it fails there.
+
+Keep the CLI, `vite`, and `typescript` in `devDependencies`, since only your own build uses them.
+
+`files` publishes `dist`.
+
+<Callout type="warning">
+
+Keep `seedcord.config.ts` out of `files`. A built bot looks for `.env` beside that file whenever it exists, so a published copy would point the bot at `node_modules/@acme/my-bot`.
+
+</Callout>
+
+`dist` only holds what the last build wrote. `prepublishOnly` runs `pnpm build` before every `pnpm publish`, so a publish never ships a stale or empty `dist`.
+
+## Settings the installing project picks
+
+Without `seedcord.config.ts` beside it, the bot reads `.env` from the folder the installing project's app starts in, the case [a built bot's .env files](/build/env#in-a-built-bot) describes. The token, the webhooks, and every value your bot reads with envapt come from there, so whoever runs the bot sets them.
+
+The token decides which Discord application the bot runs as. Every `start()` deploys your bot's commands to that application, so the installing project's token gets your commands. [When a deploy happens](/commands/deployed#when-a-deploy-happens) covers Discord's limit on repeated deploys.
+
+Anything else they'd want to change goes through the environment the same way. An http bot binds its port in its own config, so read the port from an env value:
+
+```ts twoslash title="src/bot.ts"
+import { Seedcord } from '@seedcord/http';
+import { Converters, Envapter } from 'envapt';
+// ---cut-start---
+import { Plugin } from '@seedcord/http';
+
+class Uptime extends Plugin {
+    public init(): Promise<void> {
+        return Promise.resolve();
+    }
+
+    public sinceStart(): number {
+        return 0;
+    }
+}
+// ---cut-end---
+
+export default new Seedcord({
+    bot: {
+        interactions: { path: './handlers' },
+        commands: { path: './commands' }
+    },
+    subscribers: { path: null },
+    port: Envapter.getAs('PORT', Converters.Port, 3000)
+}).attach('stats.uptime', Uptime);
+```
+
+`PORT=8080 node server.ts` then serves on 8080, and the bot falls back to 3000 when `PORT` isn't set. [Reading a value](/build/env#reading-a-value) covers `getAs` and its converters.
+
+<Callout type="transport">
+
+`port` is on http's config only. A gateway bot connects out to Discord and binds no port for interactions. The one port it opens is [the health server's](/build/server#the-health-server), which `healthCheck.port` sets the same way.
+
+</Callout>
+
+`Uptime` is a plugin class from the bot's own code. The `.attach('stats.uptime', Uptime)` at the end is where `bot.stats.uptime` in the installing project's sample comes from. [Typing plugins](/plugins/typing) explains why the default export has to be that whole chain.
+
+The bot can also skip a port of its own and run inside a server the installing project already has. [Embedding the bot](/build/embed) sets `port: false` and hands each request to it.
+
+## Testing the package locally
+
+Pack the bot and install the tarball into another project to check it the way a user gets it:
+
+<Shell pack="" />
+
+If you pack again without changing `version`, pnpm can keep the old contents for the same file name and version. Bump the version before each pack, or delete the installing project's `node_modules` and lockfile before you reinstall.
+
+The pack command also lists every file in the tarball. Every code file under `root` ends up in that list, whether your bot imports it or not. [Keep tool files outside root](/build/config#keep-tool-files-outside-root) so the package carries only the bot.

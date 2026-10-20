@@ -48,6 +48,13 @@ interface BrandTheme {
     settings: BrandThemeSetting[];
 }
 
+const PROPERTY_SCOPES = [
+    'meta.object-literal.key',
+    'variable.other.property',
+    'support.variable.property',
+    'entity.name.tag.yaml'
+];
+
 function buildSettings(p: BrandPalette): BrandThemeSetting[] {
     return [
         {
@@ -101,10 +108,7 @@ function buildSettings(p: BrandPalette): BrandThemeSetting[] {
         },
         { scope: ['variable.parameter'], settings: { foreground: p.parameter, fontStyle: 'italic' } },
         { scope: ['variable', 'variable.other', 'meta.definition.variable'], settings: { foreground: p.variable } },
-        {
-            scope: ['meta.object-literal.key', 'variable.other.property', 'support.variable.property'],
-            settings: { foreground: p.property }
-        },
+        { scope: PROPERTY_SCOPES, settings: { foreground: p.property } },
         {
             scope: [
                 'punctuation',

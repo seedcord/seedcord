@@ -72,9 +72,8 @@ export class Seedcord extends PluginHost<'http', 'edge'> {
     public readonly bus: Bus;
 
     /**
-     * `addTask` throws `CoreLifecycleUnavailable`.
-     *
      * @deprecated Cloudflare Workers don't provide a shutdown hook.
+     * @throws A **SeedcordError** with `CoreLifecycleUnavailable` every time you call `addTask`.
      */
     public readonly shutdown = edgeShutdown;
 
@@ -149,7 +148,7 @@ export class Seedcord extends PluginHost<'http', 'edge'> {
     /**
      * Answers one request to the interactions endpoint. Cloudflare passes `env` and `ctx`, but this
      * method reads only `ctx`. Import your bindings as `env` from `cloudflare:workers`.
-     * `cf workers types` writes their types. Work past the 202 runs under `ctx.waitUntil`. Any request
+     * `cf workers types` writes their types. Work that continues after the 202 response runs under `ctx.waitUntil`. Any request
      * besides a POST gets a 405 before the bot starts.
      */
     public async fetch(request: Request, _env?: unknown, ctx?: EngineContext): Promise<Response> {

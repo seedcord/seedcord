@@ -3,7 +3,7 @@ title: Options
 description: Declare options on a slash command and read them back through getters typed from what you declared, with required ones never null.
 ---
 
-You marked the option required when you registered it, and `getString('query')` still handed back `string | null`. Every read opened with a check whose answer you already knew, or a `!` you hoped was right. A misspelled name compiled fine, then handed null to whoever ran the command.
+You marked the option required when you registered it, but `getString('query')` still handed back `string | null`. Every read opened with a check whose answer you already knew, or a `!` you hoped was right. A misspelled name compiled fine, then handed null to whoever ran the command.
 
 Both of those come from the same gap, where nothing connects your declaration to the getter that reads it. Every option you declare becomes a getter on [`this.options`](ref:gateway/SlashHandler.options), typed from what you declared.
 
@@ -107,7 +107,7 @@ class Maintenance extends SlashHandler<'maintenance'> {
 
 `notify` and `target` were declared with `setRequired(true)`, so they arrive as values. `reason` was left optional, so it arrives as `string | null`. Discord rejects the command before your handler runs when a required option is missing.
 
-Mark an option required when your handler has nothing sensible to do without it. Discord then turns the caller away at the picker, where they can still fix it, and your handler reads the value with no guard.
+Mark an option required when your handler has nothing sensible to do without it. Discord then turns the caller away at the picker, where they can still fix it, so your handler reads the value with no guard.
 
 ```ts twoslash
 import { SlashHandler, SlashRoute } from '@seedcord/gateway';

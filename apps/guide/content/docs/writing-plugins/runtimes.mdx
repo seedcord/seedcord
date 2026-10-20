@@ -1,0 +1,81 @@
+---
+title: Where it runs
+description: Limit a plugin to one transport or runtime so a wrong attach fails to compile, and keep Workers plugins free of server-only imports.
+---
+
+A plugin that reads `this.core.bot` needs a gateway bot. One that talks to a database through a Node driver can't run on Workers. If you attach either to the wrong bot, you find out when the plugin first reads something that isn't there.
+
+You can catch the wrong bot at compile time. If you declare the transport or the runtime your plugin needs, an [`attach`](ref:gateway/Seedcord.attach) call on a bot that doesn't match fails to compile. A transport is how the bot talks to Discord, `'gateway'` or `'http'`. A runtime is where the bot's code runs, `'server'` for Node or Bun and `'edge'` for Cloudflare Workers. A type cast or plain JavaScript gets past the compiler, and then `attach` throws when it runs.
+
+## Limiting where a plugin runs
+
+You can limit a plugin to one transport, one runtime, or both. The compile errors below call this narrowing. Each base sets a default, and [the table on the Plugins tab](/plugins#a-plugin-declares-where-it-runs) lists them. The gateway [`Plugin`](ref:gateway/Plugin) is already limited to the gateway transport and the server runtime, so if your plugin needs `this.core.bot`, extend it and declare nothing more. The http base is limited to the http transport and leaves the runtime open. The base from `@seedcord/core/plugin` leaves both open.
+
+Limit a plugin when it works with one transport or runtime but doesn't need that transport's members. Extend the base that matches what the plugin reads, then pass the [`PluginOptions`](ref:core/PluginOptions) generic for what is still open. A plugin on the http base keeps `startup` and `shutdown` and can still limit `runtime`. One on the `@seedcord/core/plugin` base has only the members both transports share, and it can limit either field. [Mongoose](/plugins/mongoose) limits `runtime` this way.
+
+A plugin limited to `'server'`, like Mongoose, runs on Node and on Bun. Before your README says the plugin runs on Bun, check that its dependencies do. A native addon is the usual one that doesn't.
+
+When you limit a plugin, pass the same value to `super()`.
+
+```ts twoslash
+import { Plugin } from '@seedcord/http';
+
+import type { CoreBase } from '@seedcord/http';
+
+export class DriverCache extends Plugin<{ runtime: 'server' }> {
+    public constructor(host: CoreBase) {
+        super(host, { runtime: 'server' });
+    }
+
+    public async init(): Promise<void> {}
+}
+```
+
+`DriverCache` repeats `server` in `super()` because TypeScript erases the type argument when it compiles. At run time, `attach` can only read what the constructor passes. The second argument of `super()` is typed from the type argument, so the two can't disagree. It also takes the [`PluginLifecycleSpec`](ref:core/PluginLifecycleSpec) fields, like an `init` timeout in milliseconds.
+
+```ts
+super(host, { runtime: 'server', init: { timeout: 30_000 } });
+```
+
+If you limit a plugin and don't write a constructor, the `attach` call fails to compile with this message.
+
+```txt output
+this plugin narrows its transport or runtime. Give it a constructor that passes them to super(), like super(host, { runtime: 'server' })
+```
+
+If your constructor calls `super(host)` alone, TypeScript reports "Expected 2 arguments, but got 1".
+
+A bot on the wrong runtime fails to compile when it attaches `DriverCache`. The sample below types the bot as `PluginHost<'http', 'edge'>`, the base class of the Workers `Seedcord`, because the guide's samples compile against the Node build.
+
+```ts twoslash
+// @errors: 2345
+import { Plugin, PluginHost } from '@seedcord/core/plugin';
+
+import type { CoreBase } from '@seedcord/core';
+
+class DriverCache extends Plugin<{ runtime: 'server' }> {
+    public constructor(host: CoreBase) {
+        super(host, { runtime: 'server' });
+    }
+
+    public async init(): Promise<void> {}
+}
+
+declare const workersBot: PluginHost<'http', 'edge'>;
+
+workersBot.attach('cache', DriverCache);
+```
+
+The error prints the runtime `DriverCache` declares beside the one the bot runs. A cast or plain JavaScript skips that check, and then `attach` throws `CorePluginScopeMismatch` with the plugin, the runtime it declares, and the runtime the bot uses.
+
+```txt output
+DriverCache only runs on the server runtime, but this bot uses the edge runtime. Remove the attach call, or move the bot to the server runtime.
+```
+
+## Cloudflare Workers
+
+A Workers bot starts its plugins on the first POST that each isolate receives. An isolate is one running copy of the worker, and Cloudflare can run several at once. [The lifecycle page](/plugins/lifecycle#on-cloudflare-workers) lists what that changes for `init()`, `dispose()` and shutdown tasks. The constructor still runs when the worker loads `bot.ts`, so keep timers and connections in `init()`.
+
+A plugin that targets Workers imports from `@seedcord/http` or `@seedcord/core/plugin`. Under the `workerd` condition, `@seedcord/http` resolves to the edge `Seedcord`, while `@seedcord/gateway` has no `workerd` build. Everything your plugin imports is bundled into the worker. Keep `node:http` and other server-only code out of it. The Workers build also needs Cloudflare's Node compatibility on, which [Workers](/build/workers) shows how to set.
+
+If a dependency can't run on Workers, declare `runtime: 'server'`. Attaching the plugin to a Workers bot then fails to compile.

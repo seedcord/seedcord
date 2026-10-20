@@ -7,18 +7,18 @@ import { RENAMED_PAGES, redirectFor } from '#lib/redirects';
 
 const DOCS = resolve(import.meta.dirname, '../../content/docs');
 
-function pageFile(route: string): string {
+function pageExists(route: string): boolean {
     const slug = route.replace(/^\//, '');
-    return resolve(DOCS, slug === '' ? 'index.mdx' : `${slug}.mdx`);
+    return [`${slug}.mdx`, `${slug}/index.mdx`].some((file) => existsSync(resolve(DOCS, file)));
 }
 
 describe('the rename log', () => {
     it.each(Object.entries(RENAMED_PAGES))('sends %s to a page that exists', (_from, to) => {
-        expect(existsSync(pageFile(to))).toBe(true);
+        expect(pageExists(to)).toBe(true);
     });
 
     it.each(Object.keys(RENAMED_PAGES))('keeps %s off a live page', (from) => {
-        expect(existsSync(pageFile(from))).toBe(false);
+        expect(pageExists(from)).toBe(false);
     });
 
     it('answers a request that carries the trailing slash', () => {

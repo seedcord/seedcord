@@ -50,10 +50,11 @@ export abstract class ComponentHandler<Event extends ComponentInteraction, Defs 
     /**
      * The decoded params of the single route this handler is registered for.
      *
-     * Reading this decodes `this.event.customId` once (cached after the first read) and throws
-     * `StaleCustomId` or `InvalidCustomId` when the wire no longer matches the current shape, which the
-     * controller boundary turns into a reply. On a handler registered for several routes this is
-     * `never`. Use {@link match} instead.
+     * Reading this decodes `this.event.customId` once and caches the result. On a handler registered
+     * for several routes this is `never`. Use {@link match} instead.
+     *
+     * @throws A **StaleCustomId** when the wire was encoded under an older shape. The controller boundary turns it into a reply.
+     * @throws An **InvalidCustomId** when the wire is corrupt. The controller boundary turns it into a reply.
      */
     protected get params(): SingleParams<Defs> {
         return this.route.params as SingleParams<Defs>;
@@ -65,12 +66,13 @@ export abstract class ComponentHandler<Event extends ComponentInteraction, Defs 
      * handler `this.params` is `never`, leaving match as the only way to read the decoded params.
      *
      * Provide one arm per registered route, keyed by its prefix, and each arm receives that route's own
-     * decoded params. The arms cover every registered route prefix, checked at compile time, and a prefix
-     * unmatched at runtime throws `MatchArmMissing`. Decoding runs before any arm, so a stale or
-     * corrupt wire throws before an arm body executes.
+     * decoded params. The compiler checks that the arms cover every registered route prefix. `match`
+     * decodes the wire before it runs an arm.
      *
      * @param arms - One callback per registered route, keyed by prefix.
      * @returns The result of the arm that ran.
+     * @throws A **SeedcordTypeError** with `MatchArmMissing` when the wire's prefix has no arm.
+     * @throws A **StaleCustomId** or **InvalidCustomId** when the wire is stale or corrupt, before any arm runs.
      *
      * @example
      * ```ts

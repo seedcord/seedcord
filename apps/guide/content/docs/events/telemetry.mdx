@@ -264,7 +264,7 @@ export class Faults extends Subscriber<'unknownException'> {
 
 ## Typing a payload yourself
 
-Once a subscriber grows helpers, each helper needs the payload type, and a hand-written copy of the fields goes stale when seedcord adds one. [`SubscriptionData`](ref:core/SubscriptionData) takes a key and returns that key's payload type.
+Once a subscriber grows helpers, each helper needs the payload type. A hand-written copy of the fields goes stale when seedcord adds one. [`SubscriptionData`](ref:core/SubscriptionData) takes a key and returns that key's payload type.
 
 ```ts twoslash title="src/subscribers/rows.ts"
 import type { SubscriptionData } from '@seedcord/gateway';

@@ -64,11 +64,12 @@ export interface SelectedMentionables {
 /**
  * The fields a modal carries, read by custom id.
  *
- * Every getter throws when no field in the modal has that custom id. It also throws when the field holds a
- * kind that getter does not read. The message names the getter that does.
- *
  * A select getter resolves the ids its field picked against the interaction's `resolved` data and returns a
- * `Collection` keyed by id. A field that picked nothing returns null. Pass `required` to throw there instead.
+ * `Collection` keyed by id. A field that picked nothing returns null.
+ *
+ * @throws A **SeedcordTypeError** from every getter when no field in the modal has that custom id.
+ * @throws A **SeedcordTypeError** from every getter when the field holds a kind that getter does not read. The message gives the getter that does.
+ * @throws A **SeedcordTypeError** from a select getter called with `required` when its field picked nothing.
  */
 export class ModalFields {
     private readonly entries = new Map<string, ModalSubmitComponent>();
@@ -125,7 +126,10 @@ export class ModalFields {
      * Returns the field with this custom id, as Discord sent it. Use it for a component type the typed
      * getters do not cover.
      *
-     * Pass a component type to get that exact type back. It throws when the field holds a different one.
+     * Pass a component type to get that exact type back.
+     *
+     * @throws A **SeedcordTypeError** when no field has this custom id.
+     * @throws A **SeedcordTypeError** when you pass a component type and the field holds a different one.
      */
     getField<Kind extends FieldKind>(customId: string, kind: Kind): Extract<ModalSubmitComponent, { type: Kind }>;
     getField(customId: string): ModalSubmitComponent;

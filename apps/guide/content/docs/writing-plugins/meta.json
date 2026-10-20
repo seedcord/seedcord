@@ -1,0 +1,5 @@
+{
+    "title": "Writing plugins",
+    "root": true,
+    "pages": ["index", "typing", "runtimes", "files", "hot-reload", "publishing"]
+}

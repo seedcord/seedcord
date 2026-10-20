@@ -66,15 +66,16 @@ export abstract class PluginHost<BotT extends Transport, BotRt extends Runtime> 
      * Startup runs each plugin's `init()` in attach order within its phase. A node bot starts in
      * `start()`. An edge bot starts on its first request.
      *
-     * Attaching a plugin whose `transport` or `runtime` differs from this host fails to compile, and
-     * throws when the types were bypassed.
+     * Attaching a plugin whose `transport` or `runtime` differs from this host fails to compile.
      * Your constructor takes `CoreBase` as its first parameter (you don't need to pass it though).
      * A narrower one fails to compile here.
      *
-     * @param key - Also the channel the plugin logs on, dots included. Reserved channel names throw.
+     * @param key - Also the channel the plugin logs on, dots included.
      * @param args - Whatever your constructor takes after the host.
-     * @throws A **SeedcordError** if you attach after the bot has started, and a **SeedcordTypeError** for a taken or reserved key.
-     * So does a plugin that extends `Plugin` from another copy of `@seedcord/core`.
+     * @throws A **SeedcordError** when you attach after the bot has started.
+     * @throws A **SeedcordTypeError** when `key` is taken, reserved, or malformed.
+     * @throws A **SeedcordTypeError** when the plugin extends `Plugin` from another copy of `@seedcord/core`.
+     * @throws A **SeedcordTypeError** when the plugin's `transport` or `runtime` differs from this host and the types were bypassed.
      * @example
      * ```ts
      * seedcord.attach('db', Mongoose, { uri: 'mongodb://...', name: 'seedcord', dir: ... });

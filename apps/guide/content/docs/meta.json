@@ -13,6 +13,8 @@
         "checks",
         "events",
         "plugins",
-        "tooling"
+        "writing-plugins",
+        "tooling",
+        "build"
     ]
 }

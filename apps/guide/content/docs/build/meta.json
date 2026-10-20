@@ -1,0 +1,5 @@
+{
+    "title": "Build & deploy",
+    "root": true,
+    "pages": ["index", "config", "vite-plugins", "env", "data-files", "server", "workers", "package", "embed"]
+}

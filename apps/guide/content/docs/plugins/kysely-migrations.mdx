@@ -3,9 +3,9 @@ title: Migrations
 description: Create and change your Postgres tables with Kysely migrations in the kysely plugin, and control when they run.
 ---
 
-Your bot's tables have to exist on every database it uses, like your laptop, a teammate's machine, and production. If you create them by running `CREATE TABLE` yourself, each database needs the same statements in the same order. Miss one, and your bot fails at the first query that touches a table or column that database doesn't have.
+Your bot's tables have to exist on every database it uses, like your laptop, a teammate's machine, and production. If you create them by running `CREATE TABLE` yourself, each database needs the same statements in the same order. If you miss one, your bot fails at the first query that touches a table or column that database doesn't have.
 
-A migration is a file that exports two functions. `up` makes one change to your database, like creating a table. `down` undoes that change, and Kysely only runs it when you roll the migration back. Kysely keeps a table in each database listing the migrations that database has already run. By default, the plugin runs the rest while your bot starts, before any service can query the tables.
+A migration is a file that exports `up` and, if you want to be able to undo it, `down`. `up` makes one change to your database, like creating a table. `down` undoes that change, and Kysely only runs it when you roll the migration back. Leave `down` out only on a change you'll never roll back, because a rollback can't undo it. Kysely keeps a table in each database listing the migrations that database has already run. By default, the plugin runs the rest while your bot starts, before any service can query the tables.
 
 ```ts twoslash title="src/migrations/001-create-users.ts"
 import type { Kysely } from 'kysely';
@@ -32,19 +32,19 @@ export async function down(db: Kysely<any>): Promise<void> {
 
 ## Where to put the files
 
-Kysely compares the names of your migrations against the names recorded in its table to find the ones that haven't run. The shape you give `path` under `migrations` sets each name, so changing the shape later can make a database's recorded migrations look missing. The last column shows the name Kysely records for a file called `001-create-users.ts`.
+The plugin reads one folder, the `dir` under `migrations`, and its subfolders too. A relative `dir` is relative to `root` and has to sit inside it, as [the folder rules](/plugins) describe. With `root: './src'`, `'./migrations'` means `src/migrations`.
 
-{/* prettier-ignore-start */}
+Every code file in that folder has to be a migration. If a file doesn't export `up`, the plugin throws `PluginKyselyInvalidMigrationModule` with the file's path, so keep helper files out of the folder. The plugin reads `.ts`, `.tsx`, `.mts`, `.js`, `.jsx`, and `.mjs` files. It skips type declarations, dotfiles, dot-folders, and `node_modules`.
 
-| `path` | what the plugin reads | recorded name |
-| --- | --- | --- |
-| a directory | every script file directly inside it (`.ts`, `.js`, `.mts`, `.mjs`, `.cts`, `.cjs`) that exports `up` | `001-create-users` |
-| one file path | that file alone, which has to export `up` and `down` | `001-create-users` |
-| an array of paths | those files, each exporting `up` and `down` | `001-create-users` |
+<Callout type="warning">
 
-{/* prettier-ignore-end */}
+The plugin also skips a `.cjs` or `.cts` file without an error, so that migration never runs.
 
-Whichever shape you pick, `path` can be relative or absolute. A relative path like `'./src/migrations'` resolves against the folder you start your bot from, so starting the bot from any other folder points the plugin at the wrong place. The samples on this page build `path` with `resolve(import.meta.dirname, './migrations')` instead. That resolves against the folder of `bot.ts`, so it stays correct wherever you start the bot.
+</Callout>
+
+Kysely compares the names of your migrations against the names recorded in its table to find the ones that haven't run. A migration's name is its file name without the folder or the extension, so `001-create-users.ts` is recorded as `001-create-users`. Moving that file into a subfolder keeps its name. Two files with the same name in different folders, like `users/001-init.ts` and `guilds/001-init.ts`, throw `CoreDuplicateName` with both paths.
+
+Kysely sorts the pending migrations by name, by character code, before it runs them. Start each file name with a number like `001-` or a timestamp to set the order. Pad the number with zeros, since `10-add-streaks` sorts before `9-create-users`. `nameComparator` doesn't change that order. [The options at the end](#the-rest-of-the-options) say what it does change.
 
 The first sample exports `up` and `down` by name. A migration file can also default-export one object holding both functions:
 
@@ -67,9 +67,7 @@ export default {
 };
 ```
 
-Only a directory path reads that form, because Kysely checks a file's default export before its named exports. If you list `002-add-username.ts` in a file or array path, the plugin throws `PluginKyselyInvalidMigrationModule`, since it only looks for named `up` and `down` exports. Named exports work with all three shapes, so use them unless all your migrations are in one directory.
-
-Kysely sorts every migration name by character code before it runs them, whichever shape you use. Start each file name with a number like `001-` or a timestamp to set the order. Pad the number with zeros, since `10-add-streaks` sorts before `9-create-users`. `nameComparator` doesn't change that order, because Kysely sorts the names again after the plugin's own sort.
+Both forms work in every file. If a file has a default export with an `up` function, the plugin reads that one and ignores the file's named exports.
 
 ### When a previously executed migration is missing
 
@@ -79,7 +77,7 @@ Kysely throws this error when its table lists a migration name that doesn't matc
 corrupted migrations: previously executed migration 001-create-users is missing
 ```
 
-Every path shape records a migration's name without its file extension, so `001-create-users.ts` under `seedcord dev` and `001-create-users.js` in your built bot match the same recorded name. The error comes up if you rename or delete a migration file after a database ran it.
+The recorded name has no file extension, so `001-create-users.ts` under `seedcord dev` and `001-create-users.js` in your built bot match the same recorded name. The error comes up if you rename or delete a migration file after a database ran it.
 
 ## When they run
 
@@ -97,11 +95,9 @@ By default the plugin runs every pending migration while the bot starts. If a mi
 
 {/* prettier-ignore-end */}
 
-Set it to `false` when you run migrations as their own deploy step. A failing migration stops the bot either way, so what changes is when you find out. During startup, the deploy has already replaced your running bot, and the new one fails on the tables it expects. As a deploy step, the migration fails while the old bot keeps serving.
+Set it to `false` when you run migrations as their own deploy step. A failing migration stops the bot either way, so what changes is when you find out. If the migration runs during startup, the new bot fails on the tables it expects. On a host that replaces your bot as soon as the new one starts, the old one is already gone by then. As a deploy step, the migration fails while the old bot keeps serving.
 
 ```ts twoslash
-import { resolve } from 'node:path';
-
 import { KyselyPostgres } from '@seedcord/plugin-kysely-postgres';
 
 // ---cut-start---
@@ -110,16 +106,15 @@ import type { Seedcord } from '@seedcord/gateway';
 declare const seedcord: Seedcord;
 // ---cut-end---
 seedcord.attach('db', KyselyPostgres, {
-    dir: resolve(import.meta.dirname, './services'),
+    dir: './services',
     connectionString: 'postgres://localhost:5432/seedcord',
-    migrations: {
-        dir: resolve(import.meta.dirname, './migrations'),
-        onStartup: false
-    }
+    migrations: { dir: './migrations', onStartup: false }
 });
 ```
 
 With `onStartup: false`, this bot starts on whatever tables the database already has.
+
+Under `seedcord dev`, saving a file in the migrations folder asks for a restart. The plugin ran the migrations when the bot started, so a hot reload would leave the database as it was.
 
 ## Running them yourself
 
@@ -131,7 +126,7 @@ You can also run migrations from your own code, like an owner-only command that 
 | --- | --- |
 | [`migrate(options?)`](ref:plugin-kysely-postgres/KyselyPostgres.migrate) | runs to the latest migration, or to the target or direction you pass |
 | [`migrateUp(options?)`](ref:plugin-kysely-postgres/KyselyPostgres.migrateUp) | runs one pending migration, or `steps` of them |
-| [`migrateDown(options?)`](ref:plugin-kysely-postgres/KyselyPostgres.migrateDown) | reverts the last migration, or the last `steps` of them |
+| [`migrateDown(options?)`](ref:plugin-kysely-postgres/KyselyPostgres.migrateDown) | reverts the last migration, or the last `steps` of them. It stops at a migration without a `down` |
 | [`listMigrations()`](ref:plugin-kysely-postgres/KyselyPostgres.listMigrations) | every migration, run or pending |
 | [`listPendingMigrations()`](ref:plugin-kysely-postgres/KyselyPostgres.listPendingMigrations) | the ones that haven't run yet |
 
@@ -166,6 +161,12 @@ await db.migrate({ target: NO_MIGRATIONS });
 
 That call runs every `down` in reverse order. Each one only undoes what you wrote in it, so your tables are gone once every `down` drops what its `up` created.
 
+<Callout type="warning">
+
+If a migration in that range has no `down`, Kysely skips it and keeps its row in the migrations table, then still rolls back every older one. The next start throws "corrupted migrations: expected previously executed migration", because the recorded list no longer starts with your first migration. Give every migration a `down` before you roll back to `NO_MIGRATIONS`.
+
+</Callout>
+
 `steps` has to be a whole number of zero or more. A fraction, a negative number, `NaN`, or `Infinity` throws `PluginKyselyInvalidStepCount`. Zero runs nothing. If you pass any other `direction`, `migrate` throws `PluginKyselyUnknownDirection`.
 
 ## When a migration fails
@@ -176,15 +177,12 @@ If a migration throws an `Error`, you get that error unchanged, so a failing `CR
 
 | what went wrong | what you get |
 | --- | --- |
-| a listed file that doesn't export `up` and `down` | `PluginKyselyInvalidMigrationModule`, with the file path |
-| an empty array of paths | `PluginKyselyNoMigrationFiles` |
-| two listed files with the same name once the extension is gone, like `users/001-init.ts` and `guilds/001-init.ts` | `CoreDuplicateName`, with both file paths |
+| a file in the folder that doesn't export `up` | `PluginKyselyInvalidMigrationModule`, with the file path |
+| two files with the same name once the folder and extension are gone | `CoreDuplicateName`, with both file paths |
 | a migration that throws something other than an `Error` | `PluginKyselyNonErrorFailure` |
-| a `path` that doesn't exist | Node's `ERR_MODULE_NOT_FOUND`, since the plugin imports it as a file |
+| a `dir` that doesn't exist | `CorePathUnreadable` under `seedcord dev`, `CoreDirectoryNotBuilt` in a built bot |
 
 {/* prettier-ignore-end */}
-
-If a file in a directory doesn't export `up`, Kysely skips it without an error.
 
 ## The rest of the options
 
@@ -196,8 +194,10 @@ If a file in a directory doesn't export `up`, Kysely skips it without an error.
 | `migrationTableName` | the table recording which migrations ran. Defaults to `kysely_migration` |
 | `migrationLockTableName` | the table Kysely locks so two bots don't migrate at once. Defaults to `kysely_migration_lock` |
 | `migrationTableSchema` | the Postgres schema holding both of those tables |
-| `nameComparator` | orders the list the plugin prints in its debug log for a file or an array. Kysely sorts by name again before running, so run order stays the same |
+| `nameComparator` | orders the recorded migrations that share a timestamp when Kysely reads them back from the database. Defaults to `localeCompare`. It never changes the order pending migrations run in |
 
 {/* prettier-ignore-end */}
 
 `allowUnorderedMigrations` matters when two branches each add a migration. Say one branch merges `003-add-streaks` after the database already ran `004-add-guilds`. Unless you set it to `true`, Kysely throws a `corrupted migrations` error before running anything.
+
+`nameComparator` matters when two names differ in case, like `B-seed` and `a-seed`, and one run applied both within the same millisecond. Kysely sorted your files by character code, so it ran `B-seed` first. It reads the recorded names back with `localeCompare`, which puts `a-seed` first. The next start then throws `corrupted migrations`. Pass `(a, b) => (a < b ? -1 : a > b ? 1 : 0)` as `nameComparator` to read them back in the order they ran.

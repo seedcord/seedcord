@@ -35,7 +35,7 @@ export class MemberLog extends EventHandler<
 }
 ```
 
-`MemberLog` passes `@RegisterEvent` one tuple for each event, then lists the same two events as a union in the `EventHandler` generic. If the decorator and the generic list different events, the class fails to compile. Both arms call the same private `post`, so you write the posting code once.
+You write the events twice. `MemberLog` passes `@RegisterEvent` one tuple for each event, then lists the same two events as a union in the `EventHandler` generic. If the decorator and the generic list different events, the class fails to compile. Both arms call the same private `post`, so you write the posting code once.
 
 <Callout type="warning">
 

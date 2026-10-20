@@ -19,10 +19,11 @@ export interface ModalLike {
 }
 
 /**
- * Tracks acknowledgement state and throws a translated `SeedcordError` on an illegal verb before any
- * transport call. Every verb runs the legality check, calls the transport's wire writer, then updates
- * the state and the ack trace. Each transport binds `TMessage` to its own created-message type and
- * supplies the writers.
+ * Tracks acknowledgement state. Every verb runs the legality check, calls the transport's wire writer,
+ * then updates the state and the ack trace. Each transport binds `TMessage` to its own created-message
+ * type and supplies the writers.
+ *
+ * @throws A **SeedcordError** when you call a verb the current ack state doesn't allow. It throws before any transport call.
  */
 export abstract class BaseReplySender<TMessage extends { id: string }, TNative = never> {
     private state: AckState;

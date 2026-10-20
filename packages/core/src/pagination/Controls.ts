@@ -30,8 +30,10 @@ export interface PaginatorControls {
      */
     button(key: ControlKey, cosmetics?: ControlCosmetics): ButtonBuilder;
     /**
-     * Assemble an action row of the chosen controls, in order. Throws on an empty set, more than five
-     * controls, or a duplicate.
+     * Assemble an action row of the chosen controls, in order.
+     *
+     * @throws A **SeedcordRangeError** when `keys` is empty or holds more than five controls.
+     * @throws A **SeedcordTypeError** when `keys` holds the same control twice.
      */
     row(...keys: ControlKey[]): ActionRowBuilder<ButtonBuilder>;
 }

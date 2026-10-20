@@ -42,7 +42,7 @@ function hasInteractionType(payload: unknown): payload is { type: number } {
     return typeof payload === 'object' && payload !== null && 'type' in payload && typeof payload.type === 'number';
 }
 
-/** Structural match for the Workers `ExecutionContext`. Work past the 202 runs under its `waitUntil`. */
+/** Matches the shape of the Workers `ExecutionContext`. Work that continues after the 202 response runs under its `waitUntil`. */
 export interface EngineContext {
     waitUntil(promise: Promise<unknown>): void;
 }

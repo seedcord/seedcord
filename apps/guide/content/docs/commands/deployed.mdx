@@ -1,71 +1,81 @@
 ---
 title: Deployed commands
-description: See how your bot sends its commands to Discord each time it starts, and remove guild commands you no longer need.
+description: Control when your bot sends its commands to Discord and which servers get them, and see why seedcord dev sometimes skips the deploy.
 ---
 
-Discord keeps its own copy of your commands. Your bot sends that copy every time it starts, so your command folder decides what people see.
+Discord keeps its own copy of your commands, and your command folder is the source for it. A deploy overwrites Discord's copy.
 
-Nothing in your build or your deploy pipeline calls Discord.
+Your bot sends one request per scope. A scope is the list of global commands, or the list of commands in one server. Discord replaces the whole scope with what arrives. If you delete a command file, Discord removes that command on the next deploy, unless it was the last one in its scope. A rename does the same to the old name.
 
-## Each request replaces the whole scope
-
-Your bot sends one request per scope. One carries every global command. Each server with a guild command gets its own.
-
-Discord replaces the whole scope with what arrives. If you delete a command file, that command is gone the next time your bot starts. A rename does the same to the old name.
-
-## Deleting your last global command leaves it live
-
-Your bot skips the request when a scope has nothing left in it.
-
-That leaves one gap. If you remove your _last_ global command, your bot sends nothing, so the copy Discord already has stays. The same happens to the last guild command in a server.
-
-Adding another global command fixes the global scope on the next start. Guild commands need `seedcord commands`.
-
-## Removing guild commands
-
-`seedcord commands` deletes deployed guild commands. It reads `DISCORD_BOT_TOKEN` from your `.env`, fetches what Discord currently has, and prints the list before it deletes anything.
-
-<Shell exec="seedcord commands" />
-
-Without flags, on a real terminal, it asks which servers to look at and what to remove. Anywhere without a terminal, or with `CI` set, it prints what it would need and exits.
-
-Flags do the same work without the prompts. The common case is a command you moved from one server to global, which Discord then shows twice in the picker.
-
-<Shell exec="seedcord commands --clean --guild 613425648685547541 --apply" />
-
-`--clean` finds every guild command whose name also exists globally. Drop `--apply` to print them without removing anything.
-
-To empty a server completely, `--purge` deletes every command in the servers you name.
-
-<Shell exec="seedcord commands --purge --guild 613425648685547541 --apply" />
-
-For CI, `--all-guilds` covers every server your bot is in. `--yes` is required there, since `--apply` asks you to confirm the count and throws `CliCleanApplyNeedsYes` when it can't find a terminal to ask on.
-
-<Shell exec="seedcord commands --clean --all-guilds --apply --yes" />
-
-## The flags
+## When a deploy happens
 
 {/* prettier-ignore-start */}
 
-| flag | what it does |
+| what runs | when it deploys |
 | --- | --- |
-| `--clean` | Find guild commands that duplicate a global command |
-| `--guild <ids...>` | The servers to look at, one id or several |
-| `--all-guilds` | Every server your bot is in |
-| `--purge` | Delete every command in the named servers |
-| `--apply` | Delete what was found |
-| `--yes` | Skip the prompts, for CI |
+| a started bot, gateway or http server | every scope that has commands, every time it starts |
+| `seedcord dev` | when the bot starts, and when you answer `y` to the refresh prompt after saving a command file. It skips a scope that hasn't changed |
+| a deployed Cloudflare Worker | never |
+| `seedcord commands deploy` | when you run it and confirm |
+| `seedcord build` | never |
 
 {/* prettier-ignore-end */}
 
-<Callout type="warning">
+A started bot deploys on every start, and Discord lets a bot replace its global commands twice a minute, so a third restart inside that minute has to wait. The log says how many seconds Discord makes it wait. After 75 seconds startup stops waiting and fails.
 
-`--purge` needs named servers. Passing `--all-guilds` alongside it throws, since that pair would delete every guild command your bot has. Passing neither `--guild` nor `--all-guilds` throws too, since `--purge` then has nothing to aim at.
+The [`seedcord dev`](/tooling/dev) row depends on its refresh prompt, **Refresh commands? (y/n)**, which shows when you save a command file. If you answer `n`, neither Discord nor the running bot receives the change, so restart the bot to load it.
 
-</Callout>
+The Worker row reads never because a Worker sends nothing to Discord. It reads the command ids that `seedcord build` wrote into it. Run [`seedcord commands deploy`](/tooling/commands) before you build a Worker. The build reads the ids from Discord and stops with a list of the commands that have none. Building a server bot never calls Discord, though starting it does. [Workers](/build/workers) covers the Worker build.
 
-<Callout type="note">
+## Test servers
 
-`seedcord commands` only ever deletes guild commands. To remove a global one, delete its file and let a later start replace the scope.
+A global command takes a while to appear, and a half-built command shouldn't reach every server your bot is in. To deploy every bare [`@RegisterCommand()`](ref:core/RegisterCommand) command to your test servers only, list them under `commands.guilds`. The command appears there right away. [Commands](/commands#one-list-of-servers-for-every-command) shows the config and the other decorator forms.
 
-</Callout>
+An empty list, or no `guilds` key, deploys those commands globally. A bot from `create-seedcord` reads the list from `TESTING_GUILD_IDS` in `.env`, a comma-separated list of ids.
+
+Your bot has to be in every server on the list. If it isn't, the deploy fails.
+
+### In production
+
+Run your production bot as [its own application](/discord-application#make-a-second-application-for-production). If `TESTING_GUILD_IDS` is unset where it runs, its commands deploy globally when it starts. The test servers belong to your test application, so their copies never reach your users.
+
+## Deleting your last command leaves it live
+
+A bot with only guild commands has an empty global list. Sending it would wipe the global commands that another deploy put there, so a bot never sends an empty global scope.
+
+That means a deploy can't remove your _last_ global command. Your bot sends nothing, so Discord keeps the copy it has. A guild scope with no commands isn't sent at start either.
+
+`seedcord dev` treats a guild differently. If you delete the last command file for a server and answer `y` to the refresh prompt, dev sends that server an empty list, which clears it. The global scope is the only one dev never clears.
+
+Adding another global command fixes the global scope on the next start. To empty a scope you can't refill, run `seedcord commands purge` for that scope, which [`seedcord commands`](/tooling/commands) explains.
+
+## `seedcord dev` skips a deploy that changes nothing
+
+Every dev restart would otherwise replace every scope. That uses up the rate limit on commands that haven't changed.
+
+After each deploy, dev saves one hash per scope in `.seedcord/deployed-commands.json`, filed under your bot's application id. The hash covers the whole definition of every command in the scope. On the next deploy, dev hashes each scope again. It skips a scope when two things hold:
+
+1. Its hash matches the file.
+2. The command names in it match the names Discord holds right now.
+
+The second check reads Discord. If someone deleted or added a command there since your last deploy, the names differ, so dev deploys the scope.
+
+```txt output
+Skipped the global commands because they match the last deploy.
+```
+
+When the log shows that line, dev compared only names. Say you deployed other versions of the same commands from another checkout. The names match, so your dev run skips them and Discord keeps the other versions. Run `seedcord commands deploy --force` to deploy anyway, or delete `.seedcord/deployed-commands.json`.
+
+`seedcord commands deploy` writes the same file. If you deploy from the CLI, the next `seedcord dev` run skips whatever you just sent. A started bot reads no file and deploys every scope that has commands.
+
+## When Discord refuses a deploy
+
+The bot fails to start, and the error shows Discord's reply. A 401 means `DISCORD_BOT_TOKEN` is wrong or was reset. A 400 means a command broke one of Discord's rules for names, descriptions or options, and Discord's reply says which field.
+
+### Discord refused the global command deploy
+
+If Discord answered with a status other than 401 or 400, try again. If it keeps failing, check discordstatus.com.
+
+### Discord refused the command deploy for guild
+
+The error includes the guild id. If Discord answered with a status other than 401 or 400, check that id under `commands.guilds` or in your decorator, and check that your bot is in that server.

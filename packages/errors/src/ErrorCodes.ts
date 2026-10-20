@@ -50,7 +50,7 @@ export enum SeedcordErrorCode {
     CoreBotRoleMissing = 1204,
     /** A bot controller was constructed without the folder that holds its handlers. */
     CoreControllerPathMissing = 1205,
-    /** A file that seedcord could not import, in the bot or in the CLI. */
+    /** seedcord could not import a file in the bot or in the CLI. */
     CoreImportFailed = 1206,
     /** A file or folder that seedcord reads could not be read. */
     CorePathUnreadable = 1207,
@@ -62,7 +62,7 @@ export enum SeedcordErrorCode {
     CoreAccessorUnresolved = 1210,
     /** A shutdown task was added on an edge bot. Cloudflare stops an isolate without a shutdown hook. */
     CoreLifecycleUnavailable = 1211,
-    /** `emit` was called on the bus. It reaches listeners but skips every subscriber. */
+    /** `emit` was called on the bus. It calls the listeners and skips every subscriber. */
     CoreBusEmitUnavailable = 1212,
     /** A command registers to the `'config'` guilds while `commands.guilds` is empty. */
     CoreCommandGuildsEmpty = 1213,
@@ -153,7 +153,7 @@ export enum SeedcordErrorCode {
     ModalFieldWrongKind = 1612,
     /** A modal field read as required has nothing picked. */
     ModalFieldEmpty = 1613,
-    /** A channel select picked a channel type that `getSelectedChannels()` was told to exclude. */
+    /** A channel select returned a channel whose type the `getSelectedChannels()` call excludes. */
     ModalFieldChannelType = 1614,
     /** A customId was encoded under an older shape of the same definition. */
     CustomIdWireStale = 1615,
@@ -169,7 +169,7 @@ export enum SeedcordErrorCode {
     PaginationInvalidPerPage = 1801,
     /** A control row has no controls, or more than the five buttons Discord allows. */
     PaginationControlCount = 1802,
-    /** A control row repeats a control, which would give two buttons the same custom_id. */
+    /** A control row lists the same control twice. Its two buttons would share a custom_id. */
     PaginationDuplicateControls = 1803,
 
     /** A color value doesn't resolve to a Discord color integer. */
@@ -279,7 +279,7 @@ export enum SeedcordErrorCode {
     CliEdgeRootHoldsConfig = 3129,
     /** An edge build found commands in code that have no deployed id on Discord. */
     CliEdgeCommandsNotDeployed = 3130,
-    /** Something called the dev runtime before `start()` finished or after `stop()`, which is a bug in seedcord. */
+    /** Something called the dev runtime before `start()` finished or after `stop()`. This is a bug in seedcord. */
     CliDevRuntimeNotRunning = 3131,
     /** `seedcord commands deploy` ran on a bot whose `commands.path` is `null`. */
     CliDeployNoCommandsFolder = 3132,

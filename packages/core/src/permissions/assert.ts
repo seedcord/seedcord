@@ -30,7 +30,7 @@ export interface PermissionAssertion extends PermissionNoticeOverrides {
  * The caller computes `permissions`, gateway off a discord.js role, member, or channel, and HTTP off the
  * bitfield the interaction payload carries.
  *
- * @throws A {@link Notice} listing the missing or present permissions.
+ * @throws A {@link Notice} when the check refuses. It lists the missing or present permissions.
  *
  * @example
  * ```ts

@@ -5,7 +5,21 @@ description: Swap a saved file into your running bot with seedcord dev, and see 
 
 When you save a file under `seedcord dev`, seedcord unloads that file, imports the fresh copy, and registers its handlers again. Your bot keeps its connection to Discord the whole time, so you can switch back to Discord and test the change immediately.
 
-Node has no way to drop a module once it has imported it. A plain watcher like `node --watch`, `nodemon`, or `tsx watch` works around that by restarting the process, which for a gateway bot means logging in to Discord again, and Discord limits how many sessions a bot may start per day. `seedcord dev` runs your bot inside Vite's module runner instead, which keeps its own graph of the modules it evaluated. seedcord drops the saved file from that graph and imports it again, inside the process that's already running.
+## What reloads in place
+
+A saved file reloads when it holds one of these.
+
+- an interaction handler or middleware
+- a command
+- an event handler (gateway only)
+- a bus subscriber
+- files a plugin loads itself, if the plugin implements `onHmr`. Saving the plugin's own file asks for a restart. [Plugins and hot reload](/writing-plugins/hot-reload) has both
+
+Any other file, like a card or a helper, reloads through the files that import it. A file that none of those groups imports has nothing to reload. Reloading works only in the `development` and `test` modes, so `ENV=staging seedcord dev` reloads nothing.
+
+## How it works
+
+Node can't unload a module once it has imported it. A plain watcher like `node --watch`, `nodemon`, or `tsx watch` works around that by restarting the process, which for a gateway bot means logging in to Discord again, and Discord limits how many [sessions](https://discord.com/developers/docs/events/gateway#session-start-limit-object) a bot may start per day. `seedcord dev` runs your bot inside Vite's module runner instead, which keeps its own graph of the modules it evaluated. seedcord removes the saved file from that graph and imports it again, inside the process that's already running.
 
 The graph also records which modules imported which, so seedcord reloads the modules that imported your saved file, and the ones that imported those. Saving a card every handler builds therefore updates all of them. Vite's watcher reports each save, its transform step reads your TypeScript and your tsconfig paths, and its message channel carries what the CLI and your bot say to each other, like the restart prompt below.
 
@@ -15,12 +29,13 @@ A few files can't be swapped this way, because something read them once when the
 
 seedcord asks for a full restart when you save one of these, since the CLI or the bot reads each of them once at startup:
 
-- `seedcord.config.ts`
-- a `package.json`, `tsconfig.json`, or `.env` file under `root`
-- the two files `entry` and `instance` point at
-- a file those two import, directly or through another file, like a plugin your bot file attaches
+- a file beside `seedcord.config.ts` named `seedcord.config.*`, `tsconfig*.json`, `package.json`, or a lockfile (`pnpm-lock.yaml`, `package-lock.json`, `yarn.lock`, `bun.lock`, `bun.lockb`)
+- a `.env`, `.env.local`, `.env.<mode>`, or `.env.<mode>.local` file beside `seedcord.config.ts`
+- on an edge bot, `cloudflare.config.ts`, `.dev.vars`, and `.dev.vars.<mode>`
+- the file `instance` points at
+- a file `instance` imports, directly or through another file, like a plugin your bot file attaches
 
-The watcher only covers `root` and the config file itself. With the scaffold's `root: './src'`, saving the `package.json` or `.env` beside `seedcord.config.ts` doesn't trigger anything, so press `r` yourself after changing one. A file named `.env.local` or `tsconfig.build.json` doesn't count either.
+These sit beside the config, so they count even when `root` is `./src`. A `package.json` deeper in the project reloads like any other file. The `build.start` file isn't one of them, because `seedcord dev` never loads it.
 
 After one of those saves, your bot keeps running the old code, and the terminal prints this.
 
@@ -30,7 +45,7 @@ Restart required. Press r to restart.
 
 Nothing restarts automatically. Press `r` once you're ready to drop the connection for a moment.
 
-Your own files can need a restart too. The usual case is a file that opens a connection or computes something once at import, since a reload imports it again and repeats that work. `hmr.restart` takes glob patterns, matched against paths relative to `root`.
+Your own files can need a restart too. The usual case is a file that opens a connection or computes something once at import, since a reload imports it again and repeats that work. `hmr.restart` takes glob patterns. They're relative to `root`, so `./config/**` and `config/**` match the same files. An absolute path works too.
 
 ```ts twoslash title="seedcord.config.ts"
 import { defineConfig } from 'seedcord';
@@ -45,7 +60,7 @@ export default defineConfig({
 });
 ```
 
-With this config, saving anything under `src/config/` or `src/constants.ts` asks for a restart, and so does saving a file that one of them imports. A plugin can add patterns to the same list with [`registerCriticalFiles`](ref:core/Plugin.registerCriticalFiles), which [Writing your own](/plugins/your-own#reacting-to-a-dev-reload) shows.
+With this config, saving anything under `src/config/` or `src/constants.ts` asks for a restart, and so does saving a file that one of them imports. A plugin can add patterns to the same list with [`registerCriticalFiles`](ref:core/Plugin.registerCriticalFiles).
 
 ## A save that throws on import
 

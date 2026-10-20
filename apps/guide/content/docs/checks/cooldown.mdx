@@ -146,7 +146,7 @@ Cooldown('10s', {
 });
 ```
 
-Discord's `<t:...:R>` markup takes seconds, and [`toEpochSeconds`](ref:utils/toEpochSeconds) converts it. The default card already prints a relative time.
+Discord's `<t:...:R>` markup takes seconds. [`toEpochSeconds`](ref:utils/toEpochSeconds) converts a millisecond timestamp to them. The default card already prints a relative time.
 
 ```ts twoslash
 import { Cooldown, Notice } from '@seedcord/gateway';

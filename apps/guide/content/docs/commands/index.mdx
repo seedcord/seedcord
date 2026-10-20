@@ -57,13 +57,15 @@ The file goes under the `commands` path your `bot.ts` declares. seedcord imports
 
 ## Global or one server
 
+The `/ban` sample passes `'global'` to show that form. A bare `@RegisterCommand()`, which a scaffolded bot uses, follows [`commands.guilds`](#one-list-of-servers-for-every-command) instead.
+
 `'global'` puts the command in every server your bot is in. A global command takes a while to show up, and Discord doesn't publish how long that takes.
 
 For one server, pass `'guild'` with the ids. The command appears there right away.
 
-That speed is why a command you're still shaping belongs in a guild. You edit it, restart, and run it. Move it to `'global'` once the shape has settled, since every change after that waits on Discord.
+That speed is why you point your test application at test servers. With the decorator bare, [`commands.guilds`](#one-list-of-servers-for-every-command) picks the servers for each environment. Pass `'guild'` with ids only for a command that belongs in those servers in production too, like an admin command for your own server.
 
-The guild copy stays behind when you move it, and Discord shows both in the picker. [`seedcord commands`](/commands/deployed) finds the duplicates and deletes them.
+If you change a command's decorator from `'guild'` to `'global'`, Discord keeps the guild copy, so those servers show it twice in the picker. [`seedcord commands clean`](/tooling/commands#delete-what-your-code-no-longer-sends) deletes the guild copy.
 
 ```ts
 @RegisterCommand('guild', ['613425648685547541'])
@@ -78,8 +80,6 @@ You paste the same ids into every command file. Eighty commands means eighty cop
 `commands.guilds` holds the list once to save you that effort.
 
 ```ts twoslash title="src/bot.ts"
-import { resolve } from 'node:path';
-
 import { Seedcord } from '@seedcord/gateway';
 import { GatewayIntentBits } from 'discord.js';
 
@@ -87,10 +87,10 @@ export const seedcord = new Seedcord({
     bot: {
         clientOptions: { intents: [GatewayIntentBits.Guilds] },
         interactions: {
-            path: resolve(import.meta.dirname, './handlers')
+            path: './handlers'
         },
         commands: {
-            path: resolve(import.meta.dirname, './commands'),
+            path: './commands',
             guilds: ['613425648685547541']
         },
         events: { path: null }
@@ -105,7 +105,7 @@ A command decorated with [`@RegisterCommand()`](ref:core/RegisterCommand) deploy
 @RegisterCommand()
 ```
 
-With `guilds` left out, or with no ids in it, those same commands deploy globally. Delete that one line in `bot.ts` to take your bot public. Every command file stays as it is, and the copies already sitting in those servers stay too, so run [`seedcord commands`](/commands/deployed) to clear them if need be.
+With `guilds` left out, or with no ids in it, those same commands deploy globally. Your command files don't change. Leave `TESTING_GUILD_IDS` unset where your production bot runs, as [In production](/commands/deployed#in-production) shows.
 
 When you pass a scope yourself, seedcord skips the list. `'global'` keeps the command global. `'guild'` with ids sends it to those servers. Add `'config'` to that array to send the command to the configured servers as well.
 
@@ -137,13 +137,13 @@ Commit that file. The next codegen run overwrites whatever you put there by hand
 
 [`SlashRegistry`](ref:core/SlashRegistry) ships empty, so `keyof SlashRegistry` is `never` until codegen fills it in. A handler can't declare its route before that.
 
-<Callout type="warning">
+<Callout type="tip">
 
 A stale generated file doesn't break anything at runtime, since nothing there reads these types. Run your project's `tc` script to catch it.
 
-You can turn on `hmr.typecheck` to run `tsc --watch` next to the bot during `seedcord dev`, at the cost of a second node process.
+You can turn on [`hmr.typecheck`](/build/config#every-key) to run `tsc --watch` next to the bot during `seedcord dev`, at the cost of a second node process.
 
-```ts title="seedcord.config.ts"
+```ts twoslash title="seedcord.config.ts"
 import { defineConfig } from 'seedcord';
 
 export default defineConfig({
@@ -158,20 +158,22 @@ export default defineConfig({
 
 </Callout>
 
-Run `seedcord codegen` after you add a command or change its options. `seedcord dev` runs it when you answer `y` to the re-register prompt.
+Outside `seedcord dev`, run `seedcord codegen` after you add a command or change its options. Dev runs codegen every time the bot starts and when you answer `y` to the refresh prompt.
 
 ## The handler file
 
 Now the code that runs when someone uses `/ban`.
 
-```ts twoslash hovers title="src/handlers/Ban.ts"
+```ts twoslash title="src/handlers/Ban.ts"
 import { SlashHandler, SlashRoute } from '@seedcord/gateway';
 // ---cut---
 @SlashRoute('ban')
 export class Ban extends SlashHandler<'ban'> {
     public async execute(): Promise<void> {
         const target = this.options.getUser('target');
+        //    ^?
         const reason = this.options.getString('reason');
+        //    ^?
 
         await this.reply(
             `Banned ${target.username}. ${reason ?? 'No reason given.'}`
@@ -180,13 +182,13 @@ export class Ban extends SlashHandler<'ban'> {
 }
 ```
 
-`'ban'` appears twice, on the decorator and on the generic. You write the command's own name in both, and a mismatch is a compile error.
+`'ban'` appears twice, on the decorator and on the generic. You write the command's own name in both. A mismatch is a compile error.
 
 The two do different jobs. The decorator registers the route at startup, and the generic types `this.options` from what the command declared. Writing the name in both keeps `extends` a plain class name, so go-to-definition lands on `SlashHandler` itself.
 
 `target` was required on the command, so it arrives without a null check. `reason` was optional, so it can be null.
 
-Handler files go under the `interactions` path.
+Put this handler's file under the `interactions` path, the folder seedcord scans for handlers.
 
 ## A command with no handler
 

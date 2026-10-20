@@ -65,15 +65,16 @@ function scopeValue(ctx: GateContextBase, per: 'user' | 'guild' | 'channel'): st
 
 /**
  * Allows `limit` uses per window, scoped by `per`. A number `duration` is **seconds**, and a string is
- * a duration like `30m` or `24h`. An unparseable string throws a **SeedcordTypeError** at construction, and a zero or
- * negative one throws a **SeedcordRangeError**. The
- * slot is charged in commit, only after the whole gate set passes, so a later refusal never burns the cooldown.
+ * a duration like `30m` or `24h`. The slot is charged in commit, only after the whole gate set passes,
+ * so a later refusal never burns the cooldown.
  * That split also means two requests racing the same key can both pass before either charges the slot.
  * The key combines the handler's route with the window settings, keeping two different handlers on separate
  * windows. Reword the refusal with {@link CooldownOptions.message} or replace it with {@link CooldownOptions.notice}.
  *
- * @param duration - A number is seconds, and a string is a duration like `30m` or `24h`. An unparseable string throws a **SeedcordTypeError**, and a zero or negative one a **SeedcordRangeError**.
+ * @param duration - A number is seconds, and a string is a duration like `30m` or `24h`.
  * @param options - Sets the scope with `per`, the uses per window with `limit`, and the refusal text with `message` or `notice`.
+ * @throws A **SeedcordTypeError** when `duration` is a string that doesn't parse.
+ * @throws A **SeedcordRangeError** when `duration` is zero or negative.
  *
  * @see the `@Gated` decorator from your transport package
  * @see {@link IRateLimiter}

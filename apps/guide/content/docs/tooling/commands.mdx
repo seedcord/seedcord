@@ -1,0 +1,127 @@
+---
+title: The commands CLI
+description: Deploy your commands to Discord, list what it holds, and delete duplicates or whole scopes with seedcord commands, from a terminal or a CI job.
+---
+
+A bot sends its commands when it starts. [Deployed commands](/commands/deployed) covers when that happens and to which servers. Anything past that means writing your own script against Discord's REST routes: a deploy step in CI before a Worker build, a look at what Discord holds right now, or a delete per command to clear a test server after you moved a command to global. `seedcord commands` does each of those.
+
+<Shell exec="seedcord commands" />
+
+In a terminal that opens a menu with one entry per subcommand. Without a terminal it prints the help text.
+
+## Before you run it
+
+A scaffolded project has the scripts `commands` and `commands:deploy`. [Your first bot](/first-bot#scripts) explains why the CLI runs through scripts.
+
+Every subcommand reads `DISCORD_BOT_TOKEN` from your environment or a [`.env` file](/build/env#the-env-files). `clean` and `purge` need nothing else. `deploy` and `list` compare Discord against the commands in your code, so they also read [`seedcord.config.ts`](/build/config), run its [Vite plugins](/build/vite-plugins), and import the module `instance` points at. That import [constructs your bot](/tooling/codegen#codegen-constructs-your-bot) and never starts it.
+
+{/* prettier-ignore-start */}
+
+| subcommand | what it does | flags |
+| --- | --- | --- |
+| `deploy` | sends the commands in your code to Discord | `--yes`, `--force` |
+| `list` | prints the commands Discord holds | `--guilds`, `--all-guilds`, `--json` |
+| `clean` | deletes a server's copy of a command that is also global | `--guilds`, `--all-guilds`, `--yes` |
+| `purge` | deletes every command in the scopes you pick | `--global`, `--guilds`, `--all-guilds`, `--yes` |
+
+{/* prettier-ignore-end */}
+
+`--guilds` takes a space-separated list of server ids, as in `--guilds 111 222`, and conflicts with `--all-guilds`. The global `--verbose` flag prints the resolved config and full stack traces on a failure. It also adds the ids of the commands that `list`, `clean`, and `purge` print, and lists the kept commands by name in a `deploy` preview.
+
+## Deploy your commands
+
+<Shell exec="seedcord commands deploy" />
+
+Before it sends anything, `deploy` compares your code against Discord scope by scope and prints what each one gains and loses. It then asks first.
+
+```txt output
+global  3 commands
+  + /search
+  - /old-search
+    2 kept
+
+Test Server  1 command, none added or removed
+```
+
+The `+` row holds commands Discord doesn't have yet. The `-` row holds commands your code no longer defines. Discord [overwrites the whole scope](https://discord.com/developers/docs/interactions/application-commands#bulk-overwrite-global-application-commands) on a deploy, so every `-` command disappears from the picker. `Test Server` shows "none added or removed" when one of its commands changed in place, like a new description or option. Its scope still gets sent again. The prompt that follows defaults to no.
+
+`deploy` skips a scope whose hash matches `.seedcord/deployed-commands.json` and whose command names match what Discord holds. [Deployed commands](/commands/deployed#seedcord-dev-skips-a-deploy-that-changes-nothing) explains the check. A confirmed `deploy` writes that file, so the next `seedcord dev` run skips what you just sent. Pass `--force` to send a skipped scope anyway.
+
+If everything was skipped, a terminal asks "Deploy them anyway?". With `--yes` and no `--force`, `deploy` prints "Nothing to deploy." and exits `0`.
+
+`deploy` throws `CliDeployNoCommandsFolder` when the bot's `bot.commands.path` is `null`, since there's no folder to read. For an edge bot, a deploy that adds a command also prints a reminder to run `seedcord build` again, because the Worker holds the ids it read at build time. [Workers](/build/workers) has the order.
+
+## List what Discord holds
+
+<Shell exec="seedcord commands list" />
+
+`list` prints the global commands and the commands in each server your code deploys to. `--guilds 111 222` adds those servers, and `--all-guilds` adds every server the bot is in.
+
+`--json` prints Discord's command objects as JSON on stdout. The step lines go to stderr, so `seedcord commands list --json > commands.json` writes a file a script can parse. `global` holds an array, and `guilds` maps each server id to its own array.
+
+If Discord refuses to list one server's commands, usually because the bot isn't in it, `list` stops with `CoreDiscordReadFailed`. `clean` and `purge` read the same way and stop before they delete anything.
+
+## Delete what your code no longer sends
+
+`clean` and `purge` differ in what they pick.
+
+- `clean` deletes a server's copy of a command only when a global command has the same name and type. That's the double entry in the picker after you change a command's decorator from `'guild'` to `'global'`. It never touches a global command.
+- `purge` deletes every command in the scopes you pass. `--global` adds the global scope. It clears each scope with one request, so the scope stays empty until the next deploy.
+
+[Deployed commands](/commands/deployed#deleting-your-last-command-leaves-it-live) shows when `purge` is the only way to empty a scope.
+
+Pass flags to run either one from a script.
+
+<Shell exec="seedcord commands clean --all-guilds" />
+
+With flags, both subcommands list what they would delete and stop with "Dry run. Re-run with `--yes` to delete these." A script that forgets the flag deletes nothing. `clean` needs `--guilds` or `--all-guilds`, and `purge` needs one of those or `--global`. Otherwise they throw `CliNoScopeGiven`.
+
+<Shell exec="seedcord commands purge --global --yes" />
+
+If a delete fails, the command warns about each one that failed, then throws `CliCommandsNotDeleted` and exits `1`.
+
+## The pickers
+
+Run `clean` or `purge` in a terminal with no flags and each asks its questions one line at a time. `purge` first asks where, with **In guilds**, **Globally**, and **Globally and in guilds** as the answers. Unless you answer **Globally**, both then ask for **Pick specific guilds** or **All guilds the bot is in**. They delete only after you confirm the count.
+
+A bot that's in one server skips the picker and uses that server. A bot in none stops with "The bot is in no guilds."
+
+The guild picker filters as you type, with the best match first. Skipped letters are fine, so `mhub` finds **Main Hub**. A typo in a word is fine too, like `Tset` for **Test Server**, and up to three words match in any order. Paste a server id to find a server by it.
+
+{/* prettier-ignore-start */}
+
+| key | what it does |
+| --- | --- |
+| any text | filters the list. `Space` goes into the search |
+| `↑` `↓` | move the cursor |
+| `Tab` | select or unselect the row under the cursor |
+| `Enter` | finish with the rows selected |
+| `Esc` or `Ctrl-C` | cancel with nothing changed |
+
+{/* prettier-ignore-end */}
+
+The line under the list counts the selection, like "2 selected · 3 of 12 match". The other prompts use `↑` `↓` and `Enter`, and a yes or no question also takes `y` and `n`.
+
+## With no terminal, or with CI set
+
+No subcommand changes anything on Discord without `--yes` or a confirmed prompt. Each one behaves differently when there's no terminal to ask.
+
+{/* prettier-ignore-start */}
+
+| run | in a terminal | with no terminal, or `CI` set |
+| --- | --- | --- |
+| `seedcord commands` | opens the menu | prints the help |
+| `deploy` | previews, then asks | throws `CliDeployNeedsYes` unless you pass `--yes` |
+| `list` | prints | prints |
+| `clean` or `purge` with no flags | opens the pickers | throws `CliNoScopeGiven` |
+| `clean` or `purge` with flags | lists, and deletes with `--yes` | lists, and deletes with `--yes` |
+
+{/* prettier-ignore-end */}
+
+A non-empty `CI` counts as no terminal even when stdin and stdout are real, so a CI job that fakes a terminal never reaches a prompt. Set it yourself when a coding agent runs the command in a real terminal, since nobody is there to answer a picker.
+
+<Shell exec="seedcord commands deploy --yes" />
+
+With `DISCORD_BOT_TOKEN` set, that line is a complete CI step. `deploy` reads `commands.guilds` from the bot it imports. A job that deploys your production application leaves `TESTING_GUILD_IDS` unset, so the commands go out globally. An edge bot runs the step before `seedcord build`, because the build reads the deployed command ids from Discord.
+
+A package script passes extra arguments through. With pnpm, write `pnpm commands clean --yes --all-guilds`, and leave out the `--`, since pnpm hands it to the CLI as one more argument. npm needs the `--`.

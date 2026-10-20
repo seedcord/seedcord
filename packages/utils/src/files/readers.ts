@@ -29,10 +29,11 @@ interface ReadFile extends FoundFile {
  * It skips type declarations, dotfiles, dot-folders and node_modules. A `break` stops the walk before the next import.
  * A relative `dir` resolves against `root` from seedcord.config.ts, whichever file calls this.
  *
- * @throws **SeedcordError** when the directory cannot be read, or a file throws while importing.
- * @throws **SeedcordError** when `dir` is relative and the bot did not start through `seedcord dev` or its built output.
- * @throws **SeedcordError** under `seedcord dev` or in a built bot, when the directory is outside `root` or has a dot-folder or node_modules in its path.
- * @throws **SeedcordError** in a built bot, when the directory was missing at build time.
+ * @throws A **SeedcordError** when the directory cannot be read.
+ * @throws A **SeedcordError** when a file throws while it imports.
+ * @throws A **SeedcordError** when `dir` is relative and the bot did not start through `seedcord dev` or its built output.
+ * @throws A **SeedcordError** when the directory is outside `root` or has a dot-folder or node_modules in its path, under `seedcord dev` or in a built bot.
+ * @throws A **SeedcordError** when the directory was missing at build time, in a built bot.
  *
  * @example
  * ```ts
@@ -58,12 +59,12 @@ export async function* importFiles(dir: string): AsyncGenerator<ImportedFile> {
  * Reads every file under a directory, recursively and sorted by path, yielding its bytes. Text and binary files both work.
  * It skips the code files {@link importFiles} imports, .map files, dotfiles, dot-folders and node_modules.
  * In a built bot the files come from the build output. A relative `dir` resolves against `root`, the same as {@link importFiles}.
- * Under `seedcord dev` and in a built bot, `dir` has to be one of the folders `files` in seedcord.config.ts lists, or a subfolder of one.
+ * Under `seedcord dev` and in a built bot, `dir` has to be one of the folders that `files` in seedcord.config.ts lists, or a subfolder of one.
  *
- * @throws **SeedcordError** when the directory or a file in it cannot be read.
- * @throws **SeedcordError** when `dir` is relative and the bot did not start through `seedcord dev` or its built output.
- * @throws **SeedcordError** under `seedcord dev` or in a built bot, when `dir` is outside every folder in `files`, or has a dot-folder or node_modules in its path.
- * @throws **SeedcordError** in a built bot, when the directory was missing at build time.
+ * @throws A **SeedcordError** when the directory or a file in it cannot be read.
+ * @throws A **SeedcordError** when `dir` is relative and the bot did not start through `seedcord dev` or its built output.
+ * @throws A **SeedcordError** when `dir` is outside every folder in `files` or has a dot-folder or node_modules in its path, under `seedcord dev` or in a built bot.
+ * @throws A **SeedcordError** when the directory was missing at build time, in a built bot.
  *
  * @example
  * ```ts

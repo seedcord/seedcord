@@ -7,8 +7,8 @@ import type { EmbedElement } from './element';
  * Returns the `<script>` tag Discord reads for a component embed, as an HTML string. Use it where you write raw HTML
  * into the page yourself.
  *
- * @throws a {@link ComponentEmbedError} when the tree breaks a rule of the format, or when your own code throws while
- * the package reads it.
+ * @throws A {@link ComponentEmbedError} when the tree breaks a rule of the format.
+ * @throws A {@link ComponentEmbedError} when your own code throws while the package reads it.
  *
  * @example
  * ```ts

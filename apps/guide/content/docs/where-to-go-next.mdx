@@ -9,17 +9,19 @@ Your bot is running and answering `/ping`. Everything after this page is what yo
 
 - **Commands.** Declaring one, the options it takes, subcommands, autocomplete, context menus, and cleaning up what Discord already has registered.
 - **Replying.** Which reply method Discord allows from which state, how one `throw` stops a command and tells the user why, and the helpers for building the text you send.
-- **Components.** The class that wraps a discord.js builder, then buttons, select menus, modals, and pagination. Discord hands a click back as a plain string, and seedcord gives you back the fields you put in it, typed.
+- **Components.** The class that wraps a discord.js builder, then buttons, select menus, modals, and pagination. Discord hands a click back as a plain string. seedcord gives you back the fields you put in it, typed.
 - **Checks.** Gates that run before your handler and refuse by throwing, like permissions, cooldowns, and rules you write. Middleware that runs around every handler, and the order seedcord runs them all in.
 - **Events.** Messages, members, reactions, and the rest of what discord.js emits, on gateway. Publishing and subscribing to your own works on either transport.
-- **Plugins.** Extending seedcord with your own functionality, reachable from every handler and typed. Attaching one, its lifecycle, and writing your own.
-- **Tooling.** The dev loop, codegen, the build, the tunnel an http bot runs behind, logging, and the lint rules for a seedcord project.
+- **Plugins.** Adding a database or anything else your bot needs, reachable from every handler and typed. Attaching one, its lifecycle, and the Mongoose and Kysely plugins.
+- **Writing plugins.** Building your own plugin, limiting where it runs, reloading it in dev, testing it in a bot on your machine, and publishing it.
+- **Tooling.** The dev loop, codegen, `seedcord commands`, the tunnel an http bot runs behind, logging, and the lint rules for a seedcord project.
+- **Build & deploy.** How seedcord runs your bot through Vite, every config key, Vite plugins, `.env` modes, and building for a server, Cloudflare Workers, an npm package, or a route in your own server.
 
 ## The bots in the repo
 
 [`mocks/gateway`](https://github.com/seedcord/seedcord/tree/next/mocks/gateway) is a runnable bot that does much more than the scaffold. It has pagination done two ways, an autocomplete route, a gated command, both kinds of context menu, event handlers, and commands that throw on purpose so you can see what the user gets.
 
-[`mocks/http`](https://github.com/seedcord/seedcord/tree/next/mocks/http) runs the same ping bot on the other transport.
+[`mocks/http`](https://github.com/seedcord/seedcord/tree/next/mocks/http) runs the same ping bot on the other transport, and [`mocks/edge`](https://github.com/seedcord/seedcord/tree/next/mocks/edge) runs it on Cloudflare Workers.
 
 ## The reference
 

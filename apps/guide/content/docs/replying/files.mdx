@@ -68,6 +68,8 @@ An upload with no component pointing at it still reaches Discord. Nobody reading
 
 `data` and `name` are required. A file missing its name fails to compile.
 
+To attach a file that ships with your bot, like a template PDF, read its bytes with `readFiles`, which returns each file as a `Buffer`. A built bot holds only the folders you list in `files`, and [Data files](/build/data-files) covers that setup.
+
 Prefix the name with `SPOILER_` to blur the attachment until the viewer clicks it.
 
 ```ts

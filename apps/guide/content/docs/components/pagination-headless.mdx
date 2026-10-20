@@ -6,7 +6,7 @@ description: Page a message without a Paginator by calling paginate() with a cur
 You page by hand when a [`Paginator`](ref:gateway/Paginator) can't carry what your message needs, as in these two cases.
 
 - **An embed.** Discord forbids an embed on a ComponentsV2 message, which is what seedcord's reply methods send.
-- **Extra values on the button.** A paginator's cursor carries a page and a slot. A filter, a sort key, or a target user id has to survive the page turn, so the nav button carries it, and shaping that id means writing your own [`CustomId`](ref:custom-id/CustomId).
+- **Extra values on the button.** A paginator's cursor carries a page and a slot. A filter, a sort key, or a target user id has to survive the page turn, so the nav button carries it. Shaping that id means writing your own [`CustomId`](ref:custom-id/CustomId).
 
 [`paginate()`](ref:core/paginate) is the slicing math on its own. It takes a list, a page number, and a page size, then returns a [`PageView`](ref:core/PageView) with `totalPages` filled in. The cursor, the buttons, and the routing are all yours to write.
 

@@ -6,8 +6,8 @@ import type { EmbedElement } from './element';
  * Builds the `Response` for a URL that a `<link rel="discord:component-embed">` tag points at. Return it from that
  * route.
  *
- * @throws a {@link ComponentEmbedError} when the tree breaks a rule of the format, or when your own code throws while
- * the package reads it.
+ * @throws A {@link ComponentEmbedError} when the tree breaks a rule of the format.
+ * @throws A {@link ComponentEmbedError} when your own code throws while the package reads it.
  *
  * @example
  * ```tsx
