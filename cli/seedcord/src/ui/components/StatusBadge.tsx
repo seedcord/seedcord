@@ -1,10 +1,10 @@
 import { Text } from 'ink';
-import Spinner from 'ink-spinner';
 import React from 'react';
 
 import { isStreaming, PHASE_META } from '#ui/stores/devPhase';
 
 import { BlinkDot } from './primitives/BlinkDot';
+import { Spinner } from './primitives/Spinner';
 
 import type { DevPhase } from '#ui/stores/devPhase';
 import type { ReactElement } from 'react';
@@ -18,11 +18,9 @@ interface StatusBadgeProps {
 function Glyph({ phase, glyph, animate }: Required<StatusBadgeProps>): ReactElement {
     const meta = PHASE_META[phase];
     if (glyph === 'live') return isStreaming(phase) ? <BlinkDot animate={animate} /> : <Text>{meta.icon}</Text>;
-    // ink-spinner keeps its frame index across a type swap and wraps on equality, so a 7-frame
-    // index carried into a 4-frame set renders nothing forever. The key forces a fresh mount.
-    if (meta.kind === 'spinner') return <Spinner key="balloon2" type="balloon2" />;
+    if (meta.kind === 'spinner') return <Spinner type="balloon2" />;
     // the arc runs for as long as the bot does
-    if (meta.kind === 'arc' && animate) return <Spinner key="toggle4" type="toggle4" />;
+    if (meta.kind === 'arc' && animate) return <Spinner type="toggle4" />;
     return <Text>{meta.icon}</Text>;
 }
 

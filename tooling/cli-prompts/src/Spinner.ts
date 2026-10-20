@@ -1,6 +1,6 @@
 import cliSpinners from 'cli-spinners';
 
-// the dev TUI's ink-spinner draws the same set
+// the dev TUI's Spinner draws the same set
 const { frames, interval } = cliSpinners.dots;
 
 const HIDE_CURSOR = '\u001B[?25l';

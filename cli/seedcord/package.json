@@ -91,7 +91,6 @@
         "commander": "^15.0.0",
         "discord-api-types": "catalog:deps",
         "ink": "catalog:deps",
-        "ink-spinner": "^5.0.0",
         "minimatch": "^10.2.6",
         "react": "catalog:react",
         "reflect-metadata": "catalog:deps",

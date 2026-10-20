@@ -1,5 +1,5 @@
 import { readFile, readdir } from 'node:fs/promises';
-import { join, posix, relative, sep } from 'node:path';
+import { join, posix, sep } from 'node:path';
 
 import Handlebars from 'handlebars';
 
@@ -20,21 +20,9 @@ function targetPath(templateRelative: string): string {
     return posix.join(...parts, DOTTED.has(name) ? `.${name}` : name);
 }
 
-async function templateFiles(root: string, directory: string): Promise<string[]> {
-    const entries = await readdir(directory, { withFileTypes: true });
-    const found = await Promise.all(
-        entries.map(async (entry) => {
-            const full = join(directory, entry.name);
-            if (entry.isDirectory()) return templateFiles(root, full);
-            return entry.name.endsWith('.hbs') ? [relative(root, full)] : [];
-        })
-    );
-
-    return found.flat();
-}
-
 export async function renderTemplates(templatesRoot: string, context: TemplateContext): Promise<RenderedFile[]> {
-    const sources = await templateFiles(templatesRoot, templatesRoot);
+    const paths = await readdir(templatesRoot, { recursive: true });
+    const sources = paths.filter((path) => path.endsWith('.hbs'));
 
     const rendered = await Promise.all(
         sources.map(async (source) => {

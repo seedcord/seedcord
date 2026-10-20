@@ -1,6 +1,5 @@
+import { useBoxMetrics } from 'ink';
 import { useRef } from 'react';
-
-import { useMeasuredBox } from '#ui/hooks/useMeasuredBox';
 
 import type { DOMElement } from 'ink';
 import type { RefObject } from 'react';
@@ -14,8 +13,8 @@ export interface PanelFit {
 export function usePanelFit(): PanelFit {
     const panelRef = useRef<DOMElement | null>(null);
     const contentRef = useRef<DOMElement | null>(null);
-    const panel = useMeasuredBox(panelRef);
-    const content = useMeasuredBox(contentRef);
+    const panel = useBoxMetrics(panelRef);
+    const content = useBoxMetrics(contentRef);
 
     return { panelRef, contentRef, fits: content.height <= panel.height };
 }

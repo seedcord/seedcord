@@ -1,7 +1,7 @@
 import { settled } from '@seedcord/cli-prompts/testing';
-import { Box, Text, measureElement } from 'ink';
+import { Box, Text, useBoxMetrics } from 'ink';
 import { render } from 'ink-testing-library';
-import React, { useLayoutEffect, useRef, useState } from 'react';
+import React, { useRef } from 'react';
 import { afterEach, describe, expect, it } from 'vitest';
 
 import { version } from '#core/version';
@@ -97,15 +97,8 @@ const slimRail: RailAt = (ref) => (
 // the size readout sits outside the measured box
 function Harness({ rail }: { readonly rail: RailAt }): ReactElement {
     const railRef = useRef<DOMElement | null>(null);
-    const [size, setSize] = useState('pending');
-
-    // eslint-disable-next-line @eslint-react/exhaustive-deps, react-hooks/exhaustive-deps -- the equality bail below is what keeps the update chain from forming
-    useLayoutEffect(() => {
-        if (!railRef.current) return;
-        const { height, width } = measureElement(railRef.current);
-
-        setSize((prev) => (prev === `${height}x${width}` ? prev : `${height}x${width}`));
-    });
+    const { height, width, hasMeasured } = useBoxMetrics(railRef);
+    const size = hasMeasured ? `${height}x${width}` : 'pending';
 
     return (
         <Box flexDirection="column">

@@ -1,4 +1,4 @@
-import { Box, useInput, useWindowSize } from 'ink';
+import { Box, useBoxMetrics, useInput, useWindowSize } from 'ink';
 import React, { useRef, useState } from 'react';
 
 import { Rule } from '#ui/components/primitives/Rule';
@@ -8,7 +8,6 @@ import { useFilterPanel } from '#ui/hooks/useFilterPanel';
 import { useLogCapture } from '#ui/hooks/useLogCapture';
 import { useLogRows } from '#ui/hooks/useLogRows';
 import { useLogs } from '#ui/hooks/useLogs';
-import { useMeasuredBox } from '#ui/hooks/useMeasuredBox';
 import { usePanelFit } from '#ui/hooks/usePanelFit';
 import { usePrefs } from '#ui/hooks/usePrefs';
 import { useRailWidth } from '#ui/hooks/useRailWidth';
@@ -51,10 +50,10 @@ export function DevApp(props: DevAppProps): ReactElement {
     const [cursor, setCursor] = useState(INITIAL_CURSOR);
 
     const logBoxRef = useRef<DOMElement | null>(null);
-    const logBox = useMeasuredBox(logBoxRef);
+    const logBox = useBoxMetrics(logBoxRef);
 
     const railRef = useRef<DOMElement | null>(null);
-    const railWidth = useRailWidth(railRef, state.phase, rows, columns);
+    const railWidth = useRailWidth(railRef, state.phase);
 
     const notices = noticesOf(state);
 
@@ -106,7 +105,7 @@ export function DevApp(props: DevAppProps): ReactElement {
                 scroll={scroll}
                 logLayout={logLayout}
                 viewportHeight={viewportHeight}
-                measured={logBox.height > 0}
+                measured={logBox.hasMeasured}
                 filters={filters}
                 filterView={screen.filterView(open)}
                 panelFit={panelFit}

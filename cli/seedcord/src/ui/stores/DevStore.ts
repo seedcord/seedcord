@@ -1,6 +1,6 @@
-import { TypedEventEmitter } from '@seedcord/event-emitter';
 import { assertNever } from '@seedcord/utils';
 
+import { ChangeStore } from './ChangeStore';
 import { isSessionLive } from './devPhase';
 
 import type { DevEvent } from '#commands/dev/runtime/events';
@@ -46,7 +46,7 @@ const INITIAL: DevState = {
     liveSinceMs: null
 };
 
-export class DevStore extends TypedEventEmitter<{ change: [] }> {
+export class DevStore extends ChangeStore {
     private state: DevState = INITIAL;
 
     // a stable reference between mutations, which useSyncExternalStore needs to avoid render loops

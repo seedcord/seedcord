@@ -1,4 +1,4 @@
-import { useCallback, useMemo, useSyncExternalStore } from 'react';
+import { useMemo, useSyncExternalStore } from 'react';
 
 import { LogStore } from '#ui/stores/LogStore';
 
@@ -24,20 +24,7 @@ export function filterLogs(
 // the memo recomputes every render.
 export function useLogs(channels?: ReadonlySet<string>, levels?: ReadonlySet<LogLevel>): readonly LogEntry[] {
     const store = LogStore.instance;
-
-    const subscribe = useCallback(
-        (cb: () => void) => {
-            store.on('change', cb);
-            return () => {
-                store.off('change', cb);
-            };
-        },
-        [store]
-    );
-
-    const getSnapshot = useCallback(() => store.getLogs(), [store]);
-
-    const allLogs = useSyncExternalStore(subscribe, getSnapshot);
+    const allLogs = useSyncExternalStore(store.subscribe, () => store.getLogs());
 
     return useMemo(
         () => filterLogs(allLogs, channels ?? EMPTY_CHANNELS, levels ?? EMPTY_LEVELS),
