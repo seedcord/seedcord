@@ -43,9 +43,13 @@ function isProjectFileName(name: string): boolean {
     return name.startsWith('seedcord.config.') || (name.startsWith('tsconfig') && name.endsWith('.json'));
 }
 
+// the symbols tinyglobby's escapePath escapes in a posix path.
+// i would use the dependency directly, but the edge bundle can't resolve tinyglobby's fs import
+const GLOB_SYMBOLS = /[()[\]{}*?|]|[!+@](?=\()/g;
+
 // a key of '/' is base itself
 function globFolder(base: string, key: string): string {
-    return key === '/' ? base : `${base}${key}`;
+    return (key === '/' ? base : `${base}${key}`).replaceAll(GLOB_SYMBOLS, String.raw`\$&`);
 }
 
 function endsWithAny(file: string, extensions: string[]): boolean {
@@ -153,6 +157,15 @@ export class BotLayout {
         return new BotFolder(this.resolve(dir), this);
     }
 
+    // sorted by path, the order importFiles loads them in
+    public async modulesUnder(folder: string): Promise<string[]> {
+        const entries = await Array.fromAsync(this.entriesUnder(folder));
+        return entries
+            .filter(({ path: file, isFolder }) => !isFolder && this.isModule(file))
+            .map(({ path: file }) => file)
+            .toSorted();
+    }
+
     // never reads inside a skipped folder
     public async *entriesUnder(folder: string): AsyncGenerator<BotEntry> {
         const entries = await readdir(folder, { withFileTypes: true }).catch((error: unknown) => {
@@ -174,9 +187,10 @@ export class BotLayout {
 
     // base is the folder import.meta.glob resolves the patterns against, relative to root
     public moduleGlobs(base = '.'): string[] {
+        const folder = globFolder(base, '/');
         return [
-            ...MODULE_EXTENSIONS.map((extension) => `${base}/**/*${extension}`),
-            ...DECLARATION_EXTENSIONS.map((extension) => `!${base}/**/*${extension}`),
+            ...MODULE_EXTENSIONS.map((extension) => `${folder}/**/*${extension}`),
+            ...DECLARATION_EXTENSIONS.map((extension) => `!${folder}/**/*${extension}`),
             ...this.globExcludes(base)
         ];
     }
@@ -212,7 +226,7 @@ export class BotLayout {
     }
 
     private globExcludes(base: string): string[] {
-        const folders = this.bundledData().skippedFolders.map((key) => `!${base}${key}/**`);
+        const folders = this.bundledData().skippedFolders.map((key) => `!${globFolder(base, key)}/**`);
         const configDir = this.configDir();
         const projectFiles =
             configDir === undefined || !this.holds(configDir)

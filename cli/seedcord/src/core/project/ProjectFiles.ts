@@ -28,14 +28,9 @@ export class ProjectFiles {
         this.layout = layoutOf(paths);
     }
 
-    // sorted by path, the order importFiles loads them in
     public async modulePaths(folder = this.layout.root): Promise<string[]> {
         this.layout.assertBundled(folder);
-        const entries = await Array.fromAsync(this.layout.entriesUnder(folder));
-        return entries
-            .filter(({ path }) => this.layout.isModule(path))
-            .map(({ path }) => path)
-            .toSorted();
+        return this.layout.modulesUnder(folder);
     }
 
     public async foldersIncludingEmpty(): Promise<string[]> {

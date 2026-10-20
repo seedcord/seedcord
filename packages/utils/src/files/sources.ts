@@ -93,8 +93,7 @@ abstract class FileSource {
 
 class DiskFiles extends FileSource {
     protected async modulesIn(folder: string, layout: BotLayout): Promise<Loaders<ModuleLoader>> {
-        const all = await DiskFiles.filesUnder(folder, layout);
-        const files = all.filter((file) => layout.isModule(file));
+        const files = await layout.modulesUnder(folder);
         // node reads a raw windows path's drive letter as a url protocol
         return files.map((file) => [
             file,

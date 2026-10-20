@@ -81,6 +81,23 @@ describe('the build globs', () => {
             listed.map((file) => layout.keyOf(file)).toSorted()
         );
     });
+
+    it.for(['[en]', '{en,fr}', '(en)', '@(en)', '+(en)'])(
+        'match every file in a listed folder named %s',
+        async (folder) => {
+            const root = await projectRoot();
+            await mkdir(join(root, folder));
+            await writeFile(join(root, folder, 'hi.json'), '{}\n');
+            const { layout } = new ProjectFiles({
+                root,
+                configFile: realPath(join(root, 'seedcord.config.ts')),
+                files: [realPath(join(root, folder))],
+                target: { kind: 'server', start: undefined, outDir: realPath(join(root, 'dist')) }
+            });
+
+            await expect(globKeys(root, layout.listedFileGlobs())).resolves.toEqual([`/${folder}/hi.json`]);
+        }
+    );
 });
 
 describe('ProjectFiles', () => {
@@ -93,6 +110,14 @@ describe('ProjectFiles', () => {
         await mkdir(join(root, 'made-on-load'));
 
         await expect(files.foldersIncludingEmpty()).resolves.toContain('/made-on-load');
+    });
+
+    it('lists only files as modules when a folder is named like one', async () => {
+        const root = await projectRoot();
+        await mkdir(join(root, 'handlers', 'group.ts'), { recursive: true });
+        await writeFile(join(root, 'handlers', 'group.ts', 'Ping.ts'), 'export {};\n');
+
+        await expect(filesUnder(root).modulePaths()).resolves.toEqual([join(root, 'handlers', 'group.ts', 'Ping.ts')]);
     });
 
     it('skips a project file written beside the config after the layout was read', async () => {
