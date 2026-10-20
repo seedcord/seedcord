@@ -11,7 +11,6 @@ A `declare module` block written by hand for every key works too, though you'd h
 // @errors: 2339
 import { SlashHandler, SlashRoute } from '@seedcord/gateway';
 
-// ---cut---
 @SlashRoute('history')
 export class History extends SlashHandler<'history'> {
     public async execute(): Promise<void> {

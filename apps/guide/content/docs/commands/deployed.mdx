@@ -21,7 +21,7 @@ Your bot sends one request per scope. A scope is the list of global commands, or
 
 {/* prettier-ignore-end */}
 
-A started bot deploys on every start, and Discord lets a bot replace its global commands twice a minute, so a third restart inside that minute has to wait. The log says how many seconds Discord makes it wait. After 75 seconds startup stops waiting and fails.
+A started bot deploys on every start, and Discord [rate-limits](https://docs.discord.com/developers/topics/rate-limits) replacing its global commands. In practice that's twice a minute, so a third restart inside that minute has to wait. The log says how many seconds Discord makes it wait. After 75 seconds startup stops waiting and fails.
 
 The [`seedcord dev`](/tooling/dev) row depends on its refresh prompt, **Refresh commands? (y/n)**, which shows when you save a command file. If you answer `n`, neither Discord nor the running bot receives the change, so restart the bot to load it.
 

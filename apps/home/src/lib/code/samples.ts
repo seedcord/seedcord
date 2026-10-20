@@ -172,7 +172,7 @@ export class BanHandler extends SlashHandler<'ban'> {
     }
 }`;
 
-export const pluginSource = `import { Plugin } from '@seedcord/gateway';
+export const pluginSource = `import { Plugin } from '@seedcord/core/plugin';
 import type { CoreBase } from '@seedcord/core';
 
 export class Uptime extends Plugin {

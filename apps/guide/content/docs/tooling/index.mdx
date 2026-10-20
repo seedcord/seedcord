@@ -1,6 +1,6 @@
 ---
 title: Tooling
-description: Point the seedcord CLI at your bot with seedcord.config.ts, and see what each seedcord command does.
+description: Point the seedcord CLI at your bot with seedcord.config.ts, and pick the command that runs, builds, or deploys it.
 ---
 
 A seedcord project has two config files, because two different programs read them. `seedcord dev`, `codegen`, `build`, and `commands deploy` have to import your bot before it runs, so they need its path from somewhere other than the bot itself. `seedcord.config.ts` holds that path for the CLI. The `new Seedcord({ ... })` call in `src/bot.ts` builds a [`Seedcord`](ref:gateway/Seedcord) bot and configures it while it runs.

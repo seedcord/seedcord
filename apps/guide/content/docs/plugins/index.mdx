@@ -165,7 +165,6 @@ A name holds one plugin or one group. If `app.users` exists, attaching a plugin 
 // @errors: 2345
 import { Plugin, Seedcord } from '@seedcord/gateway';
 
-// ---cut-start---
 declare const seedcord: Seedcord;
 
 class Users extends Plugin {
@@ -175,7 +174,7 @@ class Users extends Plugin {
 class Tickets extends Plugin {
     public async init(): Promise<void> {}
 }
-// ---cut-end---
+// ---cut---
 seedcord.attach('app.users', Users).attach('app', Tickets);
 ```
 

@@ -242,6 +242,7 @@ describe('isHighlightable', () => {
             new RegExp(`<span style="([^"]*)">${text}</span>`).exec(html)?.[1];
 
         expect(colourOf('name')).toBeDefined();
+        expect(colourOf(' Deploy')).toBeDefined();
         expect(colourOf('name')).not.toBe(colourOf(' Deploy'));
     });
 

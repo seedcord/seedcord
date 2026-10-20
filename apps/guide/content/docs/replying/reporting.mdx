@@ -159,7 +159,6 @@ import {
 } from '@seedcord/gateway';
 
 import type { WebhookReport } from '@seedcord/gateway';
-// ---cut-start---
 
 class MirrorCard extends BuilderComponent<'container'> {
     constructor(uuid: string, origin: string, suppressed: number) {
@@ -173,8 +172,7 @@ class MirrorCard extends BuilderComponent<'container'> {
         );
     }
 }
-// ---cut-end---
-
+// ---cut---
 @Subscribe('handledException')
 @WebhookUrl('FAULT_MIRROR_WEBHOOK_URL')
 export class FaultMirror extends WebhookLog<'handledException'> {

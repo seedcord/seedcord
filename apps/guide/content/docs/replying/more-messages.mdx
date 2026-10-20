@@ -76,13 +76,11 @@ Once you've replied or deferred, `this.followUp()` sends another message. Every 
 
 ```ts twoslash title="src/handlers/Ban.ts"
 import { SlashHandler, SlashRoute } from '@seedcord/gateway';
-// ---cut-start---
 
 async function revokeSessions(userId: string): Promise<number> {
     return 0;
 }
-// ---cut-end---
-
+// ---cut---
 @SlashRoute('ban')
 export class Ban extends SlashHandler<'ban'> {
     public async execute(): Promise<void> {

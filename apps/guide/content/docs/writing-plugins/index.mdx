@@ -90,7 +90,7 @@ A timer that `init()` starts keeps firing after the bot begins shutting down, an
 
 ```ts twoslash title="src/plugins/Heartbeat.ts"
 import { Plugin } from '@seedcord/gateway';
-
+// ---cut---
 export class Heartbeat extends Plugin {
     private timer: NodeJS.Timeout | undefined;
 
@@ -119,7 +119,7 @@ Each transport exports its own `Plugin` class. A transport is how the bot talks 
 | import from | `this.core` has | extend it when your plugin |
 | --- | --- | --- |
 | `@seedcord/gateway` | the gateway [`Core`](ref:gateway/Core), which adds `bot`, `startup` and `shutdown` | reads `bot`, `startup` or `shutdown` |
-| `@seedcord/http` | the http [`Core`](ref:http/Core), which adds `startup` and `shutdown` | reads `startup` or `shutdown` on an http bot |
+| `@seedcord/http` | the http [`Core`](ref:http/Core), which adds `startup` and `shutdown` | reads `startup` or `shutdown` on an http bot (on Workers, [`shutdown`](/plugins/lifecycle#on-cloudflare-workers) throws) |
 | `@seedcord/core/plugin` | [`CoreBase`](ref:core/CoreBase), the members both transports share | only uses what both transports share |
 
 {/* prettier-ignore-end */}
@@ -131,6 +131,8 @@ Each transport exports its own `Plugin` class. A transport is how the bot talks 
 `config` follows the base you extend. The gateway base types it as [`GatewayConfig`](ref:gateway/GatewayConfig), the http base as [`HttpConfig`](ref:http/HttpConfig), and `CoreBase` as the shared [`Config`](ref:types/Config).
 
 </Callout>
+
+When you publish a plugin, its base decides which bots can attach it. One on the gateway base attaches only to gateway bots, and one on the http base only to http bots. Extend `@seedcord/core/plugin` unless your plugin needs `bot`, `startup`, or `shutdown`. The Mongoose and Kysely plugins both extend it, so a bot on either transport can attach them. A plugin inside your own bot only ever runs on that bot's transport, so extend that transport's base.
 
 ## What the constructor takes
 
@@ -157,7 +159,7 @@ export class Uptime extends Plugin {
 
 `Uptime` takes a `label` after the bot, so you write [`seedcord.attach('uptime', Uptime, label)`](ref:gateway/Seedcord.attach).
 
-Import `CoreBase` from the package you took `Plugin` from, either `@seedcord/gateway` or `@seedcord/http`. The `@seedcord/core/plugin` path doesn't export it, so on that base, import it from `@seedcord/core` and list that package as a peer dependency. [Publishing](/writing-plugins/publishing#the-peer-entry) shows the entry.
+Import `CoreBase` from the package you took `Plugin` from. On the `@seedcord/core/plugin` base, that's `@seedcord/core`, which a new bot doesn't install. Add it to your bot, and list it as a peer dependency when you publish the plugin. [Publishing](/writing-plugins/publishing#the-peer-entry) shows the entry.
 
 After the host, `super()` takes an optional [`PluginLifecycleSpec`](ref:core/PluginLifecycleSpec) to move `init()` to another phase or set a timeout in milliseconds, as in `super(host, { init: { timeout: 30_000 } })`. [The lifecycle page](/plugins/lifecycle#moving-a-method-to-another-phase) shows the phases.
 

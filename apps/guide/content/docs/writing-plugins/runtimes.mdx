@@ -9,13 +9,24 @@ You can catch the wrong bot at compile time. If you declare the transport or the
 
 ## Limiting where a plugin runs
 
-You can limit a plugin to one transport, one runtime, or both. The compile errors below call this narrowing. Each base sets a default, and [the table on the Plugins tab](/plugins#a-plugin-declares-where-it-runs) lists them. The gateway [`Plugin`](ref:gateway/Plugin) is already limited to the gateway transport and the server runtime, so if your plugin needs `this.core.bot`, extend it and declare nothing more. The http base is limited to the http transport and leaves the runtime open. The base from `@seedcord/core/plugin` leaves both open.
+The package you import `Plugin` from sets the transport. A plugin for one transport extends that transport's base, which also types `this.core` with that transport's members. The runtime stays open on the http and `@seedcord/core/plugin` bases, and you limit it with the [`PluginOptions`](ref:core/PluginOptions) generic. The compile errors below call this narrowing.
 
-Limit a plugin when it works with one transport or runtime but doesn't need that transport's members. Extend the base that matches what the plugin reads, then pass the [`PluginOptions`](ref:core/PluginOptions) generic for what is still open. A plugin on the http base keeps `startup` and `shutdown` and can still limit `runtime`. One on the `@seedcord/core/plugin` base has only the members both transports share, and it can limit either field. [Mongoose](/plugins/mongoose) limits `runtime` this way.
+{/* prettier-ignore-start */}
 
-A plugin limited to `'server'`, like Mongoose, runs on Node and on Bun. Before your README says the plugin runs on Bun, check that its dependencies do. A native addon is the usual one that doesn't.
+| your plugin attaches to | import `Plugin` from | declare |
+| --- | --- | --- |
+| gateway bots | `@seedcord/gateway` | nothing, the base sets `'server'` |
+| http bots on any runtime | `@seedcord/http` | nothing |
+| http bots on Node or Bun | `@seedcord/http` | `runtime: 'server'` |
+| http bots on Workers | `@seedcord/http` | `runtime: 'edge'` |
+| bots on either transport, any runtime | `@seedcord/core/plugin` | nothing |
+| bots on either transport, on Node or Bun | `@seedcord/core/plugin` | `runtime: 'server'`, like [Mongoose](/plugins/mongoose) |
 
-When you limit a plugin, pass the same value to `super()`.
+{/* prettier-ignore-end */}
+
+A plugin limited to `'server'` runs on Node and on Bun. Before your README says the plugin runs on Bun, check that its dependencies do. A package that ships a native addon, for example `bcrypt`, is the most likely to fail.
+
+When you limit the runtime, pass the same value to `super()`.
 
 ```ts twoslash
 import { Plugin } from '@seedcord/http';
@@ -49,9 +60,10 @@ A bot on the wrong runtime fails to compile when it attaches `DriverCache`. The 
 
 ```ts twoslash
 // @errors: 2345
-import { Plugin, PluginHost } from '@seedcord/core/plugin';
+import { Plugin } from '@seedcord/http';
+import { PluginHost } from '@seedcord/core/plugin';
 
-import type { CoreBase } from '@seedcord/core';
+import type { CoreBase } from '@seedcord/http';
 
 class DriverCache extends Plugin<{ runtime: 'server' }> {
     public constructor(host: CoreBase) {

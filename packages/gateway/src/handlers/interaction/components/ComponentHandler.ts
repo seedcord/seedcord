@@ -72,7 +72,8 @@ export abstract class ComponentHandler<Event extends ComponentInteraction, Defs 
      * @param arms - One callback per registered route, keyed by prefix.
      * @returns The result of the arm that ran.
      * @throws A **SeedcordTypeError** with `MatchArmMissing` when the wire's prefix has no arm.
-     * @throws A **StaleCustomId** or **InvalidCustomId** when the wire is stale or corrupt, before any arm runs.
+     * @throws A **StaleCustomId** when the wire was encoded under an older shape.
+     * @throws An **InvalidCustomId** when the wire is corrupt.
      *
      * @example
      * ```ts

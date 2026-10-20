@@ -8,7 +8,9 @@ Say a command costs one credit. Your gate reads the balance and deducts one. A l
 [`defineEffectGate`](ref:core/defineEffectGate) splits your gate in two. `check` reads and refuses. `commit` applies the change, which seedcord runs only once every gate on the handler has passed.
 
 ```ts twoslash title="src/gates/SpendCredit.ts"
-import { defineEffectGate, Notice } from '@seedcord/gateway';
+import { defineEffectGate } from '@seedcord/gateway';
+// ---cut-start---
+import { Notice } from '@seedcord/gateway';
 
 import type { ReplyResponse } from '@seedcord/gateway';
 
@@ -28,8 +30,8 @@ class OutOfCredits extends Notice {
         return { components };
     }
 }
+// ---cut-end---
 
-// ---cut---
 export const SpendCredit = defineEffectGate(
     'SpendCredit',
     async (ctx) => {

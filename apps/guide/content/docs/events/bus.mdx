@@ -111,15 +111,13 @@ Some follow-ups belong to the first publish only, like a "first level-up on the 
 
 ```ts twoslash
 import { Subscribe, Subscriber } from '@seedcord/gateway';
-// ---cut-start---
 
 declare module '@seedcord/gateway' {
     interface Subscriptions {
         levelUp: { userId: string; level: number };
     }
 }
-// ---cut-end---
-
+// ---cut---
 @Subscribe('levelUp', { frequency: 'once' })
 export class FirstLevel extends Subscriber<'levelUp'> {
     public async execute(): Promise<void> {

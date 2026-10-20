@@ -50,7 +50,7 @@ The first sample exports `up` and `down` by name. A migration file can also defa
 
 ```ts twoslash title="src/migrations/002-add-username.ts"
 import type { Kysely } from 'kysely';
-
+// ---cut---
 export default {
     async up(db: Kysely<any>): Promise<void> {
         await db.schema
