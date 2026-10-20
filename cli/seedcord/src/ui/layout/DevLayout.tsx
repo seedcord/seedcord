@@ -17,6 +17,7 @@ import type { LogFilters } from '#ui/devPrefs';
 import type { FilterCursor } from '#ui/filterCursor';
 import type { PanelFit } from '#ui/hooks/usePanelFit';
 import type { ScrollApi } from '#ui/hooks/useScroll';
+import type { DetailMode } from '#ui/LogLayout';
 import type { LogRow } from '#ui/logRows';
 import type { Notice } from '#ui/notices';
 import type { FilterView, Screen } from '#ui/Screen';
@@ -41,13 +42,13 @@ export interface DevLayoutProps extends Pick<ScrollableLogViewProps, 'viewportHe
     readonly cursor: FilterCursor;
     readonly interactive: boolean;
     readonly uptimeMs: number | null;
-    readonly fullDetails: boolean;
+    readonly details: DetailMode;
 }
 
 function Rail(props: DevLayoutProps): ReactElement | null {
-    const { state, screen, scroll, filterView, interactive, uptimeMs, fullDetails } = props;
+    const { state, screen, scroll, filterView, interactive, uptimeMs, details } = props;
     const { railRef, railWidth, filters, cursor } = props;
-    const shared = { state, uptimeMs, following: scroll.following, interactive, view: filterView, fullDetails };
+    const shared = { state, uptimeMs, following: scroll.following, interactive, view: filterView, details };
     switch (screen.rail) {
         case 'sidebar': {
             return <Sidebar ref={railRef} {...shared} filters={filters} cursor={cursor} width={railWidth} />;
@@ -65,7 +66,7 @@ function Rail(props: DevLayoutProps): ReactElement | null {
 }
 
 function statusBar(props: DevLayoutProps): ReactElement | null {
-    const { state, screen, notices, filters, filterView, uptimeMs, fullDetails } = props;
+    const { state, screen, notices, filters, filterView, uptimeMs, details } = props;
     const filtered = filters.channels.size > 0 || filters.levels.size > 0;
     const filtersShown = filterView === 'shown';
     switch (screen.header) {
@@ -78,7 +79,7 @@ function statusBar(props: DevLayoutProps): ReactElement | null {
                     filtered={filtered}
                     filtersShown={filtersShown}
                     canToggleRail={screen.canToggleRail}
-                    fullDetails={fullDetails}
+                    details={details}
                 />
             );
         }

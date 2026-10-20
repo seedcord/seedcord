@@ -139,19 +139,25 @@ describe('DevApp tiers', () => {
         app.unmount();
     });
 
-    it('shows the full details on p, and fits them to the pane again on the next p', async () => {
+    it('steps the details from auto to full to none and back on p', async () => {
         const seconds = formatClock(logOn('bot').timestamp, 'seconds');
+        const minutes = formatClock(logOn('bot').timestamp, 'minutes');
         const app = view({ rows: 40, columns: 70 });
         LogStore.instance.onLog(logOn('bot'));
         await LogStore.instance.flush();
         await settled(() => expect(app.lastFrame()).toContain('from bot'));
+        expect(app.lastFrame()).toContain(minutes);
         expect(app.lastFrame()).not.toContain(seconds);
 
         app.press('p');
         await settled(() => expect(app.lastFrame()).toContain(seconds));
 
         app.press('p');
-        await settled(() => expect(app.lastFrame()).not.toContain(seconds));
+        await settled(() => expect(app.lastFrame()).not.toContain(minutes));
+
+        app.press('p');
+        await settled(() => expect(app.lastFrame()).toContain(minutes));
+        expect(app.lastFrame()).not.toContain(seconds);
         app.unmount();
     });
 
@@ -371,7 +377,7 @@ describe('DevApp saved prefs', () => {
         await settled(() =>
             expect(onPrefsChange).toHaveBeenLastCalledWith({
                 filters: { channels: new Set([focused]), levels: new Set() },
-                fullDetails: true,
+                details: 'full',
                 railHidden: true
             })
         );

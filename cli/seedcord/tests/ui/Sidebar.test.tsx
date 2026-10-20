@@ -83,21 +83,14 @@ function sidebar(view: FilterView, width: number | null = null): RailAt {
             cursor={INITIAL_CURSOR}
             width={width}
             view={view}
-            fullDetails={false}
+            details="auto"
         />
     );
 }
 
 const slimRail: RailAt = (ref) => (
     <Box ref={ref}>
-        <SlimRail
-            state={HTTP}
-            uptimeMs={12_000}
-            following={true}
-            interactive={true}
-            view="collapsed"
-            fullDetails={false}
-        />
+        <SlimRail state={HTTP} uptimeMs={12_000} following={true} interactive={true} view="collapsed" details="auto" />
     </Box>
 );
 
@@ -160,7 +153,7 @@ describe('Sidebar', () => {
                 cursor={INITIAL_CURSOR}
                 width={null}
                 view="collapsed"
-                fullDetails={false}
+                details="auto"
             />
         );
         const frame = view.lastFrame() ?? '';

@@ -1,11 +1,13 @@
 import { useState } from 'react';
 
+import { nextDetailMode } from '#ui/LogLayout';
+
 import type { DevPrefs, LogFilters } from '#ui/devPrefs';
 
 interface Prefs extends DevPrefs {
     readonly setFilters: (filters: LogFilters) => void;
     readonly toggleRail: () => void;
-    readonly toggleDetails: () => void;
+    readonly cycleDetails: () => void;
 }
 
 export function usePrefs(initial: DevPrefs, onChange?: (prefs: DevPrefs) => void): Prefs {
@@ -21,6 +23,6 @@ export function usePrefs(initial: DevPrefs, onChange?: (prefs: DevPrefs) => void
         ...prefs,
         setFilters: (filters) => update({ filters }),
         toggleRail: () => update({ railHidden: !prefs.railHidden }),
-        toggleDetails: () => update({ fullDetails: !prefs.fullDetails })
+        cycleDetails: () => update({ details: nextDetailMode(prefs.details) })
     };
 }

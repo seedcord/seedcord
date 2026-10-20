@@ -8,6 +8,7 @@ import { StateFolder } from '#core/state/StateFolder';
 import { silentLogger } from '#tests/silentLogger';
 import { devPrefsFile } from '#ui/devPrefs';
 
+import type { DevPrefs } from '#ui/devPrefs';
 import type { LogLevel } from '@seedcord/types';
 
 async function projectDir(): Promise<string> {
@@ -19,9 +20,9 @@ async function projectDir(): Promise<string> {
 describe('devPrefsFile', () => {
     it('reads back the prefs it wrote', async () => {
         const state = new StateFolder(await projectDir(), silentLogger);
-        const prefs = {
+        const prefs: DevPrefs = {
             filters: { channels: new Set(['hmr', 'db']), levels: new Set<LogLevel>(['error', 'warn']) },
-            fullDetails: true,
+            details: 'none',
             railHidden: true
         };
 
@@ -32,7 +33,7 @@ describe('devPrefsFile', () => {
 
     it('reads the defaults when a level is not one the filters offer', async () => {
         const dir = await projectDir();
-        const file = { filters: { channels: ['hmr'], levels: ['verbose'] }, fullDetails: true, railHidden: false };
+        const file = { filters: { channels: ['hmr'], levels: ['verbose'] }, details: 'none', railHidden: false };
         await mkdir(join(dir, '.seedcord'));
         await writeFile(join(dir, '.seedcord', devPrefsFile.name), JSON.stringify(file));
 

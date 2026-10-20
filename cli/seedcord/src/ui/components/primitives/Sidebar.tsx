@@ -16,6 +16,7 @@ import { Rule } from './Rule';
 import type { TunnelStatus } from '#commands/dev/tunnel/TunnelCoordinator';
 import type { LogFilters } from '#ui/devPrefs';
 import type { FilterCursor } from '#ui/filterCursor';
+import type { DetailMode } from '#ui/LogLayout';
 import type { FilterView } from '#ui/Screen';
 import type { DevState, DevTransport } from '#ui/stores/DevStore';
 import type { DOMElement } from 'ink';
@@ -37,11 +38,11 @@ export interface SidebarProps {
     readonly cursor: FilterCursor;
     readonly width: number | null;
     readonly view: FilterView;
-    readonly fullDetails: boolean;
+    readonly details: DetailMode;
     readonly ref?: Ref<DOMElement>;
 }
 
-type RailKeysProps = Pick<SidebarProps, 'view' | 'state' | 'interactive' | 'following' | 'fullDetails'>;
+type RailKeysProps = Pick<SidebarProps, 'view' | 'state' | 'interactive' | 'following' | 'details'>;
 
 function Meta({ label, value }: { label: string; value: string }): ReactElement {
     return (
@@ -87,7 +88,7 @@ export function StatusBlock({ state, uptimeMs, withTarget }: StatusBlockProps): 
     );
 }
 
-function RailKeys({ view, state, interactive, following, fullDetails }: RailKeysProps): ReactElement {
+function RailKeys({ view, state, interactive, following, details }: RailKeysProps): ReactElement {
     return (
         <Box flexShrink={0} marginTop={1} flexDirection="column">
             {view === 'collapsed' ? <FiltersKey shown={false} /> : <FilterKeys />}
@@ -97,7 +98,7 @@ function RailKeys({ view, state, interactive, following, fullDetails }: RailKeys
             ) : (
                 <>
                     <SessionKeys state={state} interactive={interactive} view={view} following={following} />
-                    <ViewKeys fullDetails={fullDetails} />
+                    <ViewKeys details={details} />
                 </>
             )}
         </Box>
@@ -114,7 +115,7 @@ export function Sidebar({
     cursor,
     width,
     view,
-    fullDetails,
+    details,
     ref
 }: SidebarProps): ReactElement {
     return (
@@ -144,13 +145,7 @@ export function Sidebar({
                     open={view !== 'collapsed'}
                 />
             </Box>
-            <RailKeys
-                view={view}
-                state={state}
-                interactive={interactive}
-                following={following}
-                fullDetails={fullDetails}
-            />
+            <RailKeys view={view} state={state} interactive={interactive} following={following} details={details} />
             <LiveFooter state={state} />
         </Box>
     );

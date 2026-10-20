@@ -2,9 +2,11 @@ import { Box, Text } from 'ink';
 import React from 'react';
 
 import { keyIsLive } from '#ui/hotkeys';
+import { nextDetailMode } from '#ui/LogLayout';
 import { ui } from '#ui/palette';
 
 import type { KeyGate } from '#ui/hotkeys';
+import type { DetailMode } from '#ui/LogLayout';
 import type { FilterView } from '#ui/Screen';
 import type { DevPhase } from '#ui/stores/devPhase';
 import type { DevState } from '#ui/stores/DevStore';
@@ -60,11 +62,11 @@ export function SessionKeys({ state, interactive, view, following }: SessionKeys
 }
 
 // the keys a rail lists for how the screen looks
-export function ViewKeys({ fullDetails }: { readonly fullDetails: boolean }): ReactElement {
+export function ViewKeys({ details }: { readonly details: DetailMode }): ReactElement {
     return (
         <Box flexDirection="column">
             <RailKey shown />
-            <DetailsKey full={fullDetails} />
+            <DetailsKey mode={details} />
         </Box>
     );
 }
@@ -73,8 +75,11 @@ export function RailKey({ shown }: { readonly shown: boolean }): ReactElement {
     return <Hotkey keyLabel="s" action={shown ? 'hide rail' : 'show rail'} />;
 }
 
-export function DetailsKey({ full }: { readonly full: boolean }): ReactElement {
-    return <Hotkey keyLabel="p" action={full ? 'auto details' : 'full details'} />;
+const DETAILS_ACTION: Record<DetailMode, string> = { auto: 'auto details', full: 'full details', none: 'no details' };
+
+// the hint offers the mode p switches to
+export function DetailsKey({ mode }: { readonly mode: DetailMode }): ReactElement {
+    return <Hotkey keyLabel="p" action={DETAILS_ACTION[nextDetailMode(mode)]} />;
 }
 
 export function FilterKeys({ direction = 'column' }: { readonly direction?: 'column' | 'row' }): ReactElement {

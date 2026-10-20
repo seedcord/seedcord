@@ -12,11 +12,11 @@ import type { ReactElement } from 'react';
 // the longest row is the status block's tunnel line, 'tunnel  opening…', plus the padding
 export const SLIM_RAIL_WIDTH = 18;
 
-type SlimRailProps = Pick<SidebarProps, 'state' | 'uptimeMs' | 'following' | 'interactive' | 'view' | 'fullDetails'>;
+type SlimRailProps = Pick<SidebarProps, 'state' | 'uptimeMs' | 'following' | 'interactive' | 'view' | 'details'>;
 
 // f opens the filters over the logs
 export function SlimRail(props: SlimRailProps): ReactElement {
-    const { state, uptimeMs, following, interactive, view, fullDetails } = props;
+    const { state, uptimeMs, following, interactive, view, details } = props;
     return (
         <Box flexDirection="column" width={SLIM_RAIL_WIDTH} flexShrink={0} paddingX={1} overflow="hidden">
             <Box flexShrink={0}>
@@ -28,7 +28,7 @@ export function SlimRail(props: SlimRailProps): ReactElement {
             <Box flexShrink={0} marginTop={1} flexDirection="column">
                 <FiltersKey shown={view === 'shown'} />
                 <SessionKeys state={state} interactive={interactive} view={view} following={following} />
-                <ViewKeys fullDetails={fullDetails} />
+                <ViewKeys details={details} />
             </Box>
             <LiveFooter state={state} />
         </Box>

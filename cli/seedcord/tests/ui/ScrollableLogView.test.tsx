@@ -15,7 +15,7 @@ import { logEntry as entry } from './logEntry';
 import type { LogEntry } from '#ui/stores/LogStore';
 import type { LogLevel } from '@seedcord/types';
 
-const WIDE = LogLayout.fit(120, 12, false);
+const WIDE = LogLayout.fit(120, 12, 'auto');
 // safe because LEVEL_COLOR is a Record over every LogLevel
 const LEVELS = Object.keys(LEVEL_COLOR) as LogLevel[];
 
@@ -40,7 +40,7 @@ describe('ScrollableLogView', () => {
     });
 
     it('leaves the clock off a narrow pane', () => {
-        const frame = frameOf([entry({ text: 'connected' })], LogLayout.fit(50, 12, false));
+        const frame = frameOf([entry({ text: 'connected' })], LogLayout.fit(50, 12, 'auto'));
 
         expect(frame).not.toContain(formatClock(0, 'minutes'));
         expect(frame).toContain('connected');
@@ -84,7 +84,7 @@ describe('ScrollableLogView', () => {
     });
 
     it('carries a long message onto a second line with no second prefix', () => {
-        const layout = LogLayout.fit(LogLayout.fit(0, 3, false).messageColumn + 20, 3, false);
+        const layout = LogLayout.fit(LogLayout.fit(0, 3, 'auto').messageColumn + 20, 3, 'auto');
         const lines = linesOf(
             frameOf([entry({ text: 'alpha bravo charlie delta echo foxtrot golf hotel india' })], layout)
         );

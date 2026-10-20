@@ -7,6 +7,7 @@ import { DetailsKey, RailKey } from './Hotkeys';
 import { LOG_DIR, transportLabel, tunnelValue } from './Sidebar';
 import { BrandStatus, KeySlot, PendingKey } from './StatusLine';
 
+import type { DetailMode } from '#ui/LogLayout';
 import type { Notice } from '#ui/notices';
 import type { DevState } from '#ui/stores/DevStore';
 import type { ReactElement } from 'react';
@@ -18,7 +19,7 @@ interface StatusBandProps {
     readonly filtered: boolean;
     readonly filtersShown: boolean;
     readonly canToggleRail: boolean;
-    readonly fullDetails: boolean;
+    readonly details: DetailMode;
 }
 
 function infoRow(state: DevState, uptimeMs: number | null, filtered: boolean): string {
@@ -36,7 +37,7 @@ function infoRow(state: DevState, uptimeMs: number | null, filtered: boolean): s
 }
 
 export function StatusBand(props: StatusBandProps): ReactElement {
-    const { state, notices, uptimeMs, filtered, filtersShown, canToggleRail, fullDetails } = props;
+    const { state, notices, uptimeMs, filtered, filtersShown, canToggleRail, details } = props;
     return (
         <Box flexDirection="column" flexShrink={0} paddingX={1}>
             <Box justifyContent="space-between">
@@ -52,7 +53,7 @@ export function StatusBand(props: StatusBandProps): ReactElement {
                     </KeySlot>
                 ) : null}
                 <KeySlot>
-                    <DetailsKey full={fullDetails} />
+                    <DetailsKey mode={details} />
                 </KeySlot>
             </Box>
             <Box justifyContent="space-between">

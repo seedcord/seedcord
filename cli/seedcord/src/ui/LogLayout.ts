@@ -34,6 +34,23 @@ const STEPS: readonly Step[] = [
 ];
 const NARROWEST: Step = { minPane: 0, clock: null, maxLabel: 0 };
 
+// p steps through these in order
+const DETAIL_MODES = {
+    auto: { next: 'full', step: (width: number) => STEPS.find((each) => width >= each.minPane) ?? NARROWEST },
+    full: { next: 'none', step: () => WIDEST },
+    none: { next: 'auto', step: () => NARROWEST }
+} as const satisfies Record<string, { next: string; step: (width: number) => Step }>;
+
+export type DetailMode = keyof typeof DETAIL_MODES;
+
+export function nextDetailMode(mode: DetailMode): DetailMode {
+    return DETAIL_MODES[mode].next;
+}
+
+export function isDetailMode(value: unknown): value is DetailMode {
+    return typeof value === 'string' && Object.hasOwn(DETAIL_MODES, value);
+}
+
 const LEVEL_LETTER: Record<LogLevel, string> = { error: 'E', warn: 'W', info: 'I', debug: 'D', trace: 'T' };
 const DOT = '●';
 const ELLIPSIS = '…';
@@ -93,9 +110,8 @@ export class LogLayout {
         this.messageColumn = this.cells.reduce((sum, cell) => sum + cellText(cell, PROBE).length + 1, 0);
     }
 
-    public static fit(width: number, longestLabel: number, full: boolean): LogLayout {
-        const step = full ? WIDEST : (STEPS.find((each) => width >= each.minPane) ?? NARROWEST);
-        return new LogLayout(width, step, longestLabel);
+    public static fit(width: number, longestLabel: number, details: DetailMode): LogLayout {
+        return new LogLayout(width, DETAIL_MODES[details].step(width), longestLabel);
     }
 
     public get guideIndent(): number {

@@ -41,7 +41,7 @@ export function DevApp(props: DevAppProps): ReactElement {
     const state = useDevState(store);
     const { rows, columns } = useWindowSize();
 
-    const { filters, fullDetails, railHidden, setFilters, toggleRail, toggleDetails } = usePrefs(
+    const { filters, details, railHidden, setFilters, toggleRail, cycleDetails } = usePrefs(
         props.initialPrefs,
         props.onPrefsChange
     );
@@ -59,7 +59,7 @@ export function DevApp(props: DevAppProps): ReactElement {
     const notices = noticesOf(state);
 
     const logs = useLogs(filters.channels, filters.levels);
-    const { logLayout, logRows } = useLogRows(logs, logBox.width, fullDetails);
+    const { logLayout, logRows } = useLogRows(logs, logBox.width, details);
     const viewportHeight = Math.max(1, logBox.height);
     const scroll = useScroll(logRows, viewportHeight, rowKey);
     const uptimeMs = useUptime(state, screen.uptime);
@@ -80,7 +80,7 @@ export function DevApp(props: DevAppProps): ReactElement {
             toggleFilterView: toggleOpen,
             canToggleRail: screen.canToggleRail,
             toggleRail,
-            toggleDetails,
+            cycleDetails,
             cursor,
             setCursor,
             onQuit: props.onQuit,
@@ -113,7 +113,7 @@ export function DevApp(props: DevAppProps): ReactElement {
                 cursor={cursor}
                 interactive={interactive}
                 uptimeMs={uptimeMs}
-                fullDetails={fullDetails}
+                details={details}
             />
         </Box>
     );
