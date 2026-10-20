@@ -3,28 +3,37 @@ import {
     Activity,
     AtSign,
     Blocks,
+    Binary,
     Bot,
     Cable,
+    Cloud,
     Component,
     Database,
     FileCode2,
+    FolderInput,
     GalleryHorizontalEnd,
     Gauge,
     GitMerge,
     HeartPulse,
     Hourglass,
     KeyRound,
+    Layers,
     Leaf,
     ListTree,
+    Lock,
     MessageSquareWarning,
     MousePointerClick,
+    PackageOpen,
     PackagePlus,
     Plug,
+    Puzzle,
     Radio,
     RadioTower,
     RefreshCw,
+    Route,
     Rss,
     ScrollText,
+    Server,
     ShieldAlert,
     ShieldCheck,
     SlidersHorizontal,
@@ -34,6 +43,7 @@ import {
     Split,
     SquareTerminal,
     TimerReset,
+    Variable,
     WandSparkles,
     Waypoints,
     Webhook
@@ -134,7 +144,8 @@ const GROUPS: Group[] = [
             { icon: HeartPulse, label: 'lifecycle', gloss: 'phased startup and shutdown' },
             { icon: ScrollText, label: 'logger', gloss: 'named channels, levels and sinks' },
             { icon: Activity, label: 'health check', gloss: 'an HTTP endpoint that reports readiness' },
-            { icon: Webhook, label: 'webhook reporters', gloss: 'faults posted to a Discord webhook' }
+            { icon: Webhook, label: 'webhook reporters', gloss: 'faults posted to a Discord webhook' },
+            { icon: Variable, label: 'typed env', gloss: 'envapt reads .env, your shell and Worker bindings' }
         ]
     },
     {
@@ -145,6 +156,11 @@ const GROUPS: Group[] = [
             { icon: Bot, label: 'ready for agents', gloss: 'AGENTS.md, a skill and llms.txt' },
             { icon: SquareTerminal, label: 'seedcord dev', gloss: 'a full-screen dev terminal' },
             {
+                icon: Lock,
+                label: 'one dev session per app',
+                gloss: 'a second seedcord dev on the same app stops and points at the first'
+            },
+            {
                 icon: RefreshCw,
                 label: 'hot reload',
                 gloss: 'Vite HMR swaps changed modules, the gateway stays connected'
@@ -154,14 +170,28 @@ const GROUPS: Group[] = [
             {
                 icon: WandSparkles,
                 label: 'seedcord commands',
-                gloss: 'inspect and clean commands already deployed'
+                gloss: 'deploy, list and clean up your commands on Discord'
             },
             { icon: SpellCheck, label: 'eslint rules', gloss: 'flags payloads Discord rejects, before you send them' }
         ]
     },
     {
-        area: 'Plugins',
+        area: 'Build',
         accent: 'flesh',
+        rows: [
+            { icon: Puzzle, label: 'Vite plugins', gloss: 'any Vite plugin, in dev and in the build' },
+            { icon: Layers, label: '.env modes', gloss: 'ENV=staging loads your .env.staging files' },
+            { icon: FolderInput, label: 'data files', gloss: 'listed folders ship inside the build' },
+            { icon: Server, label: 'Node or Bun', gloss: 'one bundle you start with node or bun' },
+            { icon: Binary, label: 'Bun binary', gloss: 'the build prints the compile command' },
+            { icon: Cloud, label: 'Cloudflare Workers', gloss: 'an http bot builds into a worker' },
+            { icon: PackageOpen, label: 'npm package', gloss: 'publish your bot for anyone to install and start' },
+            { icon: Route, label: 'inside your server', gloss: 'a Hono or Next.js route calls bot.fetch()' }
+        ]
+    },
+    {
+        area: 'Plugins',
+        accent: 'rind',
         rows: [
             { icon: Plug, label: 'typed plugins', gloss: 'attach once, codegen types it on core' },
             { icon: Leaf, label: 'Mongoose', gloss: 'MongoDB, services typed by key' },

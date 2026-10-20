@@ -205,3 +205,30 @@ declare module '@seedcord/gateway' {
         uptime: (typeof Bot)['uptime'];
     }
 }`;
+
+export const viteConfig = `import yaml from '@rollup/plugin-yaml';
+import { defineConfig } from 'seedcord';
+
+export default defineConfig({
+    root: './src',
+    instance: './bot.ts',
+    build: { start: './index.ts' },
+    vitePlugins: () => [yaml()]
+});`;
+
+export const viteHandler = `import {
+    SlashRoute, SlashHandler
+} from '@seedcord/gateway';
+
+import strings from '../strings.yaml';
+
+@SlashRoute('greet')
+export class GreetHandler extends SlashHandler<'greet'> {
+    public async execute(): Promise<void> {
+        await this.reply(strings.greeting);
+    }
+}`;
+
+export const packageConsumer = `import bot from 'your-bot';
+
+await bot.start();`;

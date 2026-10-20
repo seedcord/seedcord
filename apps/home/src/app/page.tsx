@@ -10,8 +10,10 @@ import { FeatureMarquee } from '#components/home/Marquee';
 import { Nav } from '#components/home/Nav';
 import { Plugins } from '#components/home/Plugins';
 import { ResolvedType } from '#components/home/ResolvedType';
+import { Targets } from '#components/home/Targets';
 import { Transports } from '#components/home/Transports';
 import { TypedDx } from '#components/home/TypedDx';
+import { Vite } from '#components/home/Vite';
 import { SlashCommand } from '#components/SlashCommand';
 import { FEATURES } from '#lib/features';
 import { HOME_PREVIEW } from '#lib/linkPreview';
@@ -33,7 +35,9 @@ function Home(): ReactNode {
                 <TypedDx />
                 <ResolvedType />
                 <BeforeAfter />
+                <Vite />
                 <Transports />
+                <Targets />
                 <Codec />
                 <Gates />
                 <Plugins />

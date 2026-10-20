@@ -38,8 +38,8 @@ export function Hero(): ReactNode {
                             A TypeScript framework for Discord bots.{' '}
                         </span>
                         A wrong route or option name is a compile error, before the bot ever connects. Every command,
-                        button, and event goes to a class you write, with reusable checks, hot reload, and a lot more
-                        built in.
+                        button, and event goes to a class you write, with reusable checks, any Vite plugin, hot reload,
+                        and a lot more built in.
                     </p>
                     <HeroStart />
                     <div className={cn('mt-3 flex flex-wrap items-center gap-3')}>

@@ -26,8 +26,8 @@ export const HOME_PREVIEW: PreviewCardProps = {
     extraText: [
         '- Typed slash options and customIds',
         '- Reusable checks and middleware',
-        '- Hot reload and a dev tunnel',
-        '- Runs on the gateway or over HTTP'
+        '- Any Vite plugin, hot reload and a dev tunnel',
+        '- Gateway or HTTP, on a server, Workers or npm'
     ].join('\n'),
     thumbnail: THUMBNAIL,
     bannerUrl: `${CDN_URL}/assets/banner-2.webp`,

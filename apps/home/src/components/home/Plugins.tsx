@@ -30,6 +30,10 @@ export function Plugins(): ReactNode {
                         <Code className={cn(CODE_MARK_LIGHT)}>this.core.uptime.startedAt</Code> compiles wherever you
                         need it.
                     </p>
+                    <p className={cn('mt-4 text-lg/snug font-medium text-(--seed-dark)/85')}>
+                        A plugin runs on both transports, and on Cloudflare Workers unless it needs a server. You can
+                        publish it to npm, and any other bot can attach it the same way.
+                    </p>
                 </div>
             </div>
             {/* a third column cuts each card to 354px and clips the longest import lines */}

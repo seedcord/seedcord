@@ -7,16 +7,16 @@ import type { ReactNode } from 'react';
 
 const TRANSPORTS = [
     {
-        icon: Radio,
-        name: '@seedcord/gateway',
-        summary: 'Holds a websocket connection through the discord.js client.',
-        detail: 'Discord streams every event down it. Messages, joins, voice state, typing, and all other events. Pick it when your bot reacts to anything past interactions.'
-    },
-    {
         icon: PlugZap,
         name: '@seedcord/http',
         summary: "Answers Discord's interactions endpoint.",
-        detail: 'Discord POSTs each interaction to your URL, and seedcord verifies the Ed25519 signature before anything dispatches. Nothing else arrives here, so a commands-only bot never opens a connection.'
+        detail: 'Discord POSTs each interaction to your URL, and seedcord verifies the Ed25519 signature before anything dispatches. A commands-only bot never opens a connection, so it runs wherever a request can reach it, like your own server or Cloudflare Workers.'
+    },
+    {
+        icon: Radio,
+        name: '@seedcord/gateway',
+        summary: 'Holds a websocket connection through the discord.js client.',
+        detail: 'Discord streams every event down it. Messages, joins, voice state, typing, and all other events. Each one gets a typed handler class, and handlers read discord.js objects. Pick it when your bot reacts to anything past interactions.'
     }
 ] as const;
 
@@ -30,7 +30,7 @@ export function Transports(): ReactNode {
             </h2>
             <p className={cn('mt-6 max-w-xl text-lg/snug font-medium text-(--pith)')}>
                 Handlers, checks, and the rest of the seedcord API work the same way on both. The objects they read
-                differ: discord.js objects on the gateway, raw payloads on http.
+                differ: raw payloads on http, discord.js objects on the gateway.
             </p>
             <div className={cn('mt-10 grid gap-6 lg:grid-cols-2 lg:gap-10')}>
                 {TRANSPORTS.map((transport) => (

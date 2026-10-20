@@ -1,8 +1,9 @@
-import { cn, Icon } from '@seedcord/ui';
+import { cn } from '@seedcord/ui';
 import { ArrowLeftFromLine, ArrowRightFromLine } from 'lucide-react';
 
 import { CodeCard } from '#components/code/CodeCard';
 import { SECTION_HEADING, Section } from '#components/home/Section';
+import { Chips } from '#components/ui/Chips';
 import { Code } from '#components/ui/Code';
 import { CODE_MARK_DARK } from '#lib/code/marks';
 import { codecComponent, codecHandler } from '#lib/code/samples';
@@ -36,19 +37,7 @@ export function Codec(): ReactNode {
                         Discord caps that string at 100 characters. The codec packs your fields into fewer of them than
                         joining the values would.
                     </p>
-                    <div className={cn('mt-6 flex flex-wrap gap-2')}>
-                        {CHIPS.map((chip) => (
-                            <span
-                                key={chip.label}
-                                className={cn(
-                                    'rule-pith font-mono-code flex items-center gap-2 rounded-sm bg-(--seed-dark)/30 px-3 py-1.5 text-xs font-semibold'
-                                )}
-                            >
-                                <Icon icon={chip.icon} size={14} className={cn('shrink-0')} />
-                                {chip.label}
-                            </span>
-                        ))}
-                    </div>
+                    <Chips items={CHIPS} ground="flesh" />
                 </div>
             </div>
             {/* columns and gutter match the text grid above */}
