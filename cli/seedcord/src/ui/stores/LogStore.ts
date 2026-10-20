@@ -42,7 +42,6 @@ export class LogStore extends TypedEventEmitter<LogStoreEvents> implements ILogS
     private pendingUpdate = false;
     private flushTimer: ReturnType<typeof setTimeout> | null = null;
     private readonly MAX_LOGS = 1000;
-    private readonly MAX_LABEL_WIDTH = 12;
 
     private constructor() {
         super();
@@ -103,10 +102,10 @@ export class LogStore extends TypedEventEmitter<LogStoreEvents> implements ILogS
         return [...seen].sort();
     }
 
-    public getLabelWidth(): number {
-        let width = 0;
-        for (const entry of this.entries) if (entry.label.length > width) width = entry.label.length;
-        return Math.min(width, this.MAX_LABEL_WIDTH);
+    public getLongestLabel(): number {
+        let longest = 0;
+        for (const entry of this.entries) if (entry.label.length > longest) longest = entry.label.length;
+        return longest;
     }
 
     public clear(): void {

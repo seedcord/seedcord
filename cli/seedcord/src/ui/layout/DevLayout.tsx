@@ -9,6 +9,7 @@ import { ScrollableLogView } from '#ui/components/primitives/ScrollableLogView';
 import { Sidebar } from '#ui/components/primitives/Sidebar';
 import { StatusLine } from '#ui/components/primitives/StatusLine';
 
+import type { ScrollableLogViewProps } from '#ui/components/primitives/ScrollableLogView';
 import type { LogFilters } from '#ui/devPrefs';
 import type { FilterCursor } from '#ui/filterCursor';
 import type { FilterView } from '#ui/hooks/useFilters';
@@ -21,7 +22,7 @@ import type { Tier } from '#ui/tier';
 import type { DOMElement } from 'ink';
 import type { ReactElement, Ref } from 'react';
 
-export interface DevLayoutProps {
+export interface DevLayoutProps extends Pick<ScrollableLogViewProps, 'viewportHeight' | 'measured'> {
     readonly state: DevState;
     readonly tier: Tier;
     readonly notices: readonly Notice[];
@@ -31,8 +32,7 @@ export interface DevLayoutProps {
     // the shell measures this box to size the scroll window. it must be attached or the viewport is empty
     readonly logBoxRef: Ref<DOMElement>;
     readonly scroll: ScrollApi<LogRow>;
-    readonly viewportHeight: number;
-    readonly measured: boolean;
+    readonly logLayout: ScrollableLogViewProps['layout'];
     readonly filters: LogFilters;
     readonly filterView: FilterView;
     readonly panelFit: PanelFit;
@@ -43,7 +43,7 @@ export interface DevLayoutProps {
 
 // notification cards render below the logs so stack traces have room
 export function DevLayout(props: DevLayoutProps): ReactElement {
-    const { state, tier, notices, railRef, railWidth, logBoxRef, scroll, viewportHeight, measured } = props;
+    const { state, tier, notices, railRef, railWidth, logBoxRef, scroll, logLayout, viewportHeight, measured } = props;
     const { filters, filterView, panelFit, cursor, interactive, uptimeMs } = props;
     const railed = tier === 'full' || tier === 'compact';
 
@@ -93,6 +93,7 @@ export function DevLayout(props: DevLayoutProps): ReactElement {
                         <Box ref={logBoxRef} flexGrow={1} minHeight={1} overflow="hidden">
                             <ScrollableLogView
                                 visible={scroll.visible}
+                                layout={logLayout}
                                 viewportHeight={viewportHeight}
                                 measured={measured}
                             />

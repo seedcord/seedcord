@@ -18,8 +18,11 @@ export function formatUptime(ms: number): string {
     return `${seconds}s`;
 }
 
+export type ClockPrecision = 'seconds' | 'minutes';
+
 // local time
-export function formatClock(ts: number): string {
+export function formatClock(ts: number, precision: ClockPrecision): string {
     const d = new Date(ts);
-    return `${pad(d.getHours())}:${pad(d.getMinutes())}:${pad(d.getSeconds())}`;
+    const minutes = `${pad(d.getHours())}:${pad(d.getMinutes())}`;
+    return precision === 'seconds' ? `${minutes}:${pad(d.getSeconds())}` : minutes;
 }

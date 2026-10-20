@@ -13,6 +13,7 @@ import { useScroll } from '#ui/hooks/useScroll';
 import { useUptime } from '#ui/hooks/useUptime';
 import { acceptsSessionKeys, dispatchHotkey } from '#ui/hotkeys';
 import { DevLayout } from '#ui/layout/DevLayout';
+import { LogLayout } from '#ui/LogLayout';
 import { expandRows, rowKey, wrapRows } from '#ui/logRows';
 import { noticesOf } from '#ui/notices';
 import { profileWrap } from '#ui/profile';
@@ -55,12 +56,11 @@ export function DevApp(props: DevAppProps): ReactElement {
     const notices = noticesOf(state);
 
     const logs = useLogs(filters.channels, filters.levels);
-    // the label width only grows with a new entry, so the logs dep already covers it
-    const logRows = useMemo(
-        () =>
-            profileWrap(() => wrapRows(expandRows(logs), logBox.width, Math.max(1, LogStore.instance.getLabelWidth()))),
-        [logs, logBox.width]
-    );
+    // getLongestLabel changes only when logs does
+    const { logLayout, logRows } = useMemo(() => {
+        const logLayout = LogLayout.fit(logBox.width, LogStore.instance.getLongestLabel());
+        return { logLayout, logRows: profileWrap(() => wrapRows(expandRows(logs), logLayout)) };
+    }, [logs, logBox.width]);
     const viewportHeight = Math.max(1, logBox.height);
     const scroll = useScroll(logRows, viewportHeight, rowKey);
     const uptimeMs = useUptime(state, tier !== 'logs');
@@ -114,6 +114,7 @@ export function DevApp(props: DevAppProps): ReactElement {
                 railWidth={railWidth}
                 logBoxRef={logBoxRef}
                 scroll={scroll}
+                logLayout={logLayout}
                 viewportHeight={viewportHeight}
                 measured={logBox.height > 0}
                 filters={filters}

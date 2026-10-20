@@ -4,115 +4,100 @@ import React from 'react';
 
 import { channelColor } from '#ui/channelColor';
 import { Rule } from '#ui/components/primitives/Rule';
-import { formatClock } from '#ui/format';
-import { messageColumn } from '#ui/logRows';
+import { BAR, cellText, GUIDE, isErrorTail } from '#ui/LogLayout';
 import { ui } from '#ui/palette';
-import { LogStore } from '#ui/stores/LogStore';
 
-import type { LogRow } from '#ui/logRows';
+import type { LogLayout, PrefixCell } from '#ui/LogLayout';
+import type { EntryRow, LogRow } from '#ui/logRows';
 import type { LogEntry } from '#ui/stores/LogStore';
-import type { LogLevel, TypedOmit } from '@seedcord/types';
+import type { LogLevel } from '@seedcord/types';
+import type { TextProps } from 'ink';
 import type { ReactElement } from 'react';
 
 const MIN_LOG_LINES = 5; // fits an error head plus a few stack frames
 
 export const NO_ROOM = 'Need more room for logs.';
-const DOT = '●';
-const BAR = '▌';
-const GUIDE = '│';
-const ELLIPSIS = '…';
 const CHIP_TEXT = '#1a1a1a';
 
-const LEVEL_LETTER: Record<LogLevel, string> = { error: 'E', warn: 'W', info: 'I', debug: 'D', trace: 'T' };
+const WASH: Partial<Record<LogLevel, TextProps>> = {
+    warn: { backgroundColor: '#3a2f14' },
+    error: { backgroundColor: '#3d1a20' }
+};
 
-const WASH: Partial<Record<LogLevel, string>> = { warn: '#3a2f14', error: '#3d1a20' };
-
-function truncate(label: string, width: number): string {
-    return label.length > width ? `${label.slice(0, width - 1)}${ELLIPSIS}` : label;
-}
-
-function Chip({ level }: { level: LogLevel }): ReactElement {
-    return (
-        <Text backgroundColor={LEVEL_COLOR[level]} color={CHIP_TEXT} bold>
-            {` ${LEVEL_LETTER[level]} `}
-        </Text>
-    );
-}
-
-function Prefix({ log, labelWidth }: { log: LogEntry; labelWidth: number }): ReactElement {
-    const label = truncate(log.label, labelWidth).padStart(labelWidth);
-    return (
-        <>
-            <Chip level={log.level} /> <Text dimColor>{formatClock(log.timestamp)}</Text> <Text>{label}</Text>{' '}
-            <Text color={channelColor(log.channel)}>{DOT}</Text>
-        </>
-    );
-}
+const CELL_STYLE: Record<PrefixCell['kind'], (log: LogEntry) => TextProps> = {
+    chip: (log) => ({ backgroundColor: LEVEL_COLOR[log.level], color: CHIP_TEXT, bold: true }),
+    clock: () => ({ dimColor: true }),
+    label: () => ({}),
+    dot: (log) => ({ color: channelColor(log.channel) })
+};
 
 interface LineProps {
-    readonly log: LogEntry;
-    readonly text: string;
-    readonly labelWidth: number;
+    readonly row: EntryRow;
+    readonly layout: LogLayout;
 }
 
-function HeadLine({ log, text, labelWidth }: LineProps): ReactElement {
-    const wash = WASH[log.level];
+function Prefix({ row, layout }: LineProps): ReactElement {
+    return (
+        <Text {...WASH[row.entry.level]}>
+            {layout.cells.map((cell, index) => (
+                <React.Fragment key={cell.kind}>
+                    {index === 0 ? null : ' '}
+                    <Text {...CELL_STYLE[cell.kind](row.entry)}>{cellText(cell, row.entry)}</Text>
+                </React.Fragment>
+            ))}
+        </Text>
+    );
+}
 
-    if (wash) {
-        return (
-            <Text wrap="truncate">
-                <Text backgroundColor={wash}>
-                    <Prefix log={log} labelWidth={labelWidth} />
-                </Text>{' '}
-                {text}
+function HeadLine({ row, layout }: LineProps): ReactElement {
+    return (
+        <Text wrap="truncate">
+            <Prefix row={row} layout={layout} /> {row.text}
+        </Text>
+    );
+}
+
+function GuideLine({ row, layout }: LineProps): ReactElement {
+    return (
+        <Text wrap="truncate">
+            {' '.repeat(layout.guideIndent)}
+            <Text dimColor>{GUIDE}</Text>
+            {row.text}
+        </Text>
+    );
+}
+
+function FrameLine({ row }: LineProps): ReactElement {
+    return (
+        <Text wrap="truncate">
+            <Text color={LEVEL_COLOR.error} bold>
+                {BAR}
             </Text>
-        );
-    }
-
-    return (
-        <Text wrap="truncate">
-            <Prefix log={log} labelWidth={labelWidth} /> {text}
+            <Text dimColor={row.entry.frame}>{row.text}</Text>
         </Text>
     );
 }
 
-function HeadTail({ text, labelWidth }: TypedOmit<LineProps, 'log'>): ReactElement {
-    return (
-        <Text wrap="truncate">
-            {' '.repeat(messageColumn(labelWidth) - 2)}
-            <Text dimColor>{GUIDE}</Text> {text}
-        </Text>
-    );
+function Line(props: LineProps): ReactElement {
+    if (isErrorTail(props.row.entry)) return <FrameLine {...props} />;
+    if (props.row.entry.head && props.row.first) return <HeadLine {...props} />;
+    return <GuideLine {...props} />;
 }
 
-function ContinuationLine({ log, text, labelWidth }: LineProps): ReactElement {
-    if (log.level === 'error') {
-        return (
-            <Text wrap="truncate">
-                <Text color={LEVEL_COLOR.error} bold>
-                    {BAR}
-                </Text>
-                <Text dimColor={log.frame}>{text}</Text>
-            </Text>
-        );
-    }
-
-    return (
-        <Text wrap="truncate">
-            {' '.repeat(messageColumn(labelWidth) - 2)}
-            <Text dimColor>{GUIDE}</Text> {text}
-        </Text>
-    );
-}
-
-interface ScrollableLogViewProps {
+export interface ScrollableLogViewProps {
     readonly visible: readonly LogRow[];
+    readonly layout: LogLayout;
     readonly viewportHeight: number;
     // an unmeasured height would flash "too small" on the first frame
     readonly measured: boolean;
 }
 
-export function ScrollableLogView({ visible, viewportHeight, measured }: ScrollableLogViewProps): ReactElement | null {
+export function ScrollableLogView({
+    visible,
+    layout,
+    viewportHeight,
+    measured
+}: ScrollableLogViewProps): ReactElement | null {
     if (!measured) return null;
 
     if (viewportHeight < MIN_LOG_LINES) {
@@ -125,21 +110,15 @@ export function ScrollableLogView({ visible, viewportHeight, measured }: Scrolla
         );
     }
 
-    const labelWidth = Math.max(1, LogStore.instance.getLabelWidth());
-
     return (
         // flex-end keeps the newest line on the bottom edge even when the buffer is nearly empty
         <Box flexDirection="column" flexGrow={1} justifyContent="flex-end" overflow="hidden">
             {visible.length === 0 ? (
                 <Text dimColor>Waiting for logs…</Text>
             ) : (
-                visible.map((row) => {
-                    if (row.kind === 'rule') return <Rule key={row.key} />;
-                    const props = { log: row.entry, text: row.text, labelWidth };
-                    // a continuation draws its gutter on every row
-                    if (!row.entry.head) return <ContinuationLine key={row.key} {...props} />;
-                    return row.first ? <HeadLine key={row.key} {...props} /> : <HeadTail key={row.key} {...props} />;
-                })
+                visible.map((row) =>
+                    row.kind === 'rule' ? <Rule key={row.key} /> : <Line key={row.key} row={row} layout={layout} />
+                )
             )}
         </Box>
     );

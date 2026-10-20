@@ -66,11 +66,11 @@ describe('LogStore', () => {
         expect(store.getLogs().every((entry) => !entry.frame)).toBe(true);
     });
 
-    it('caps the widest-label width for the right-aligned column', async () => {
+    it('measures the longest label across entries', async () => {
         store.onLog(record({ label: 'Bot', message: 'a' }));
         store.onLog(record({ label: 'CoordinatedShutdown', message: 'b' }));
         await store.flush();
 
-        expect(store.getLabelWidth()).toBe(12);
+        expect(store.getLongestLabel()).toBe(19);
     });
 });

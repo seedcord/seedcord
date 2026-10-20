@@ -3,7 +3,7 @@ import { describe, expect, it } from 'vitest';
 import { MAX_RAIL } from '#ui/components/primitives/Sidebar';
 import { COMPACT_ROWS, FULL_ROWS, RAIL_COLUMNS, tierFor } from '#ui/tier';
 
-// a log line spends about 28 columns on its prefix, and a message needs a dozen more to read
+// the log pane beside the widest rail still shows a short prefix plus some of the message
 const MIN_LOG_COLUMNS = 40;
 
 describe('tierFor', () => {

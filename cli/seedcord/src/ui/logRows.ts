@@ -1,19 +1,20 @@
 import wrapAnsi from 'wrap-ansi';
 
+import type { LogLayout } from '#ui/LogLayout';
 import type { LogEntry } from '#ui/stores/LogStore';
 
-const CHIP_WIDTH = 3;
-const TIME_WIDTH = 8;
-const DOT_WIDTH = 1;
-const BAR_WIDTH = 1;
 const MIN_TEXT_WIDTH = 8;
 
-export const messageColumn = (labelWidth: number): number =>
-    CHIP_WIDTH + 1 + TIME_WIDTH + 1 + labelWidth + 1 + DOT_WIDTH + 1;
+export interface EntryRow {
+    readonly kind: 'entry';
+    readonly key: string;
+    readonly entry: LogEntry;
+    readonly text: string;
+    readonly first: boolean;
+}
 
 // one row per rendered line, which the viewport math uses
-export type LogRow =
-    { kind: 'entry'; key: string; entry: LogEntry; text: string; first: boolean } | { kind: 'rule'; key: string };
+export type LogRow = EntryRow | { readonly kind: 'rule'; readonly key: string };
 
 function isBlockLine(entry: LogEntry | undefined): boolean {
     return entry !== undefined && entry.level !== 'error';
@@ -49,28 +50,27 @@ export function expandRows(logs: readonly LogEntry[]): LogRow[] {
     return rows;
 }
 
-// the gutters mirror what ScrollableLogView draws in front of each line
-function textWidth(entry: LogEntry, width: number, labelWidth: number): number {
-    const gutter = !entry.head && entry.level === 'error' ? BAR_WIDTH : messageColumn(labelWidth);
-    return width - gutter;
+// a stack frame's tail rows line up under its first row
+function hangingIndent(text: string, available: number): string {
+    const indent = /^ */.exec(text)?.[0] ?? '';
+    return available - indent.length < MIN_TEXT_WIDTH ? '' : indent;
 }
 
-export function wrapRows(rows: readonly LogRow[], width: number, labelWidth: number): LogRow[] {
+export function wrapRows(rows: readonly LogRow[], layout: LogLayout): LogRow[] {
     return rows.flatMap((row) => {
         if (row.kind === 'rule') return row;
 
-        const available = textWidth(row.entry, width, labelWidth);
-        // nothing left to wrap into at this width, and the render truncates
+        const available = layout.textWidth(row.entry);
+        // the render truncates a row this narrow
         if (available < MIN_TEXT_WIDTH) return row;
 
-        // trim would strip a stack frame's leading indentation
-        const lines = wrapAnsi(row.text, available, { hard: true, trim: false }).split('\n');
+        const indent = hangingIndent(row.text, available);
+        const lines = wrapAnsi(row.text.slice(indent.length), available - indent.length, { hard: true }).split('\n');
         return lines.map((text, index) => ({
             kind: 'entry' as const,
             key: `${row.key}:${String(index)}`,
             entry: row.entry,
-            // the wrap break leaves a leading space that would misalign the tail
-            text: index === 0 ? text : text.replace(/^ +/, ''),
+            text: `${indent}${text}`,
             first: index === 0
         }));
     });

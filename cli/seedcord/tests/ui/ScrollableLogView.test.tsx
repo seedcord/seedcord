@@ -1,113 +1,108 @@
+import { stripVTControlCharacters } from 'node:util';
+
+import { LEVEL_COLOR } from '@seedcord/logger';
 import { render } from 'ink-testing-library';
 import React from 'react';
-import { afterEach, describe, expect, it } from 'vitest';
+import { describe, expect, it } from 'vitest';
 
 import { NO_ROOM, ScrollableLogView } from '#ui/components/primitives/ScrollableLogView';
-import { expandRows, messageColumn, wrapRows } from '#ui/logRows';
-import { LogStore } from '#ui/stores/LogStore';
+import { formatClock } from '#ui/format';
+import { LogLayout } from '#ui/LogLayout';
+import { expandRows, wrapRows } from '#ui/logRows';
 
-import type { LogRecord } from '@seedcord/types';
+import { logEntry as entry } from './logEntry';
 
-function record(over: Partial<LogRecord>): LogRecord {
-    return { level: 'info', message: '', label: 'Bot', channel: 'default', timestamp: 1_700_000_000_000, ...over };
+import type { LogEntry } from '#ui/stores/LogStore';
+import type { LogLevel } from '@seedcord/types';
+
+const WIDE = LogLayout.fit(120, 12);
+// safe because LEVEL_COLOR is a Record over every LogLevel
+const LEVELS = Object.keys(LEVEL_COLOR) as LogLevel[];
+
+function frameOf(logs: readonly LogEntry[], layout = WIDE): string {
+    const rows = wrapRows(expandRows(logs), layout);
+    const { lastFrame } = render(<ScrollableLogView visible={rows} layout={layout} viewportHeight={10} measured />);
+    return stripVTControlCharacters(lastFrame() ?? '');
+}
+
+function linesOf(frame: string): string[] {
+    return frame.split('\n').filter((line) => line.trim() !== '');
 }
 
 describe('ScrollableLogView', () => {
-    const store = LogStore.instance;
-    afterEach(() => store.clear());
+    it('renders a head line with the clock, label, dot, and message', () => {
+        const frame = frameOf([entry({ label: 'Mongoose', text: 'connected' })]);
 
-    it('renders a head line with the label, dot, and message', async () => {
-        store.onLog(record({ label: 'Mongoose', message: 'connected' }));
-        await store.flush();
-
-        const { lastFrame } = render(
-            <ScrollableLogView visible={expandRows(store.getLogs())} viewportHeight={10} measured />
-        );
-        const frame = lastFrame() ?? '';
+        expect(frame).toContain(formatClock(0, 'seconds'));
         expect(frame).toContain('Mongoose');
         expect(frame).toContain('●');
         expect(frame).toContain('connected');
     });
 
-    it('rails an error continuation line with the bar', async () => {
-        store.onLog(record({ level: 'error', message: 'boom', args: [new Error('bad')] }));
-        await store.flush();
+    it('leaves the clock off a narrow pane', () => {
+        const frame = frameOf([entry({ text: 'connected' })], LogLayout.fit(50, 12));
 
-        const { lastFrame } = render(
-            <ScrollableLogView visible={expandRows(store.getLogs())} viewportHeight={10} measured />
+        expect(frame).not.toContain(formatClock(0, 'minutes'));
+        expect(frame).toContain('connected');
+    });
+
+    it.each(LEVELS)('starts a %s message at the layout column', (level) => {
+        const [line = ''] = linesOf(frameOf([entry({ level, text: 'connected' })]));
+
+        expect(line.indexOf('connected')).toBe(WIDE.messageColumn);
+    });
+
+    it('rails an error continuation line with the bar', () => {
+        const frame = frameOf([
+            entry({ id: 1, level: 'error', text: 'boom' }),
+            entry({ id: 2, level: 'error', head: false, frame: true, text: '    at run (a.ts:1:1)' })
+        ]);
+
+        expect(frame).toContain('▌    at run (a.ts:1:1)');
+    });
+
+    it('guides a non-error continuation under the dot', () => {
+        const lines = linesOf(
+            frameOf([
+                entry({ id: 1, label: 'Interactions', text: 'Loaded handlers' }),
+                entry({ id: 2, label: 'Interactions', head: false, text: 'FeedNav' })
+            ])
         );
-        expect(lastFrame() ?? '').toContain('▌');
+        const head = lines.find((line) => line.includes('Loaded handlers')) ?? '';
+        const guided = lines.find((line) => line.includes('FeedNav')) ?? '';
+
+        expect(guided.indexOf('│')).toBe(head.indexOf('●'));
     });
 
-    it('renders a non-error continuation as a guided block line', async () => {
-        store.onLog(record({ label: 'Interactions', message: 'Loaded handlers\nFeedNav' }));
-        await store.flush();
+    it('brackets a non-error block with a rule above and below', () => {
+        const lines = linesOf(
+            frameOf([entry({ id: 1, text: 'Loaded handlers' }), entry({ id: 2, head: false, text: 'FeedNav' })])
+        );
 
-        const frame =
-            render(
-                <ScrollableLogView visible={expandRows(store.getLogs())} viewportHeight={10} measured />
-            ).lastFrame() ?? '';
-        expect(frame).toContain('│');
-        expect(frame).toContain('FeedNav');
+        expect(lines.filter((line) => line.includes('─'))).toHaveLength(2);
+        expect(lines.some((line) => line.includes('Loaded handlers') && line.includes('─'))).toBe(false);
     });
 
-    it('brackets a non-error block with a full-width rule above and below', async () => {
-        store.onLog(record({ label: 'Interactions', message: 'Loaded handlers\nFeedNav' }));
-        await store.flush();
-
-        const frame =
-            render(
-                <ScrollableLogView visible={expandRows(store.getLogs())} viewportHeight={10} measured />
-            ).lastFrame() ?? '';
-        const ruleLines = frame.split('\n').filter((line) => line.includes('─'));
-        expect(ruleLines.length).toBeGreaterThanOrEqual(2);
-        const merged = frame.split('\n').some((line) => line.includes('Loaded handlers') && line.includes('─'));
-        expect(merged).toBe(false);
-    });
-
-    it('leaves a single-line log unruled', async () => {
-        store.onLog(record({ message: 'connected' }));
-        await store.flush();
-
-        const frame =
-            render(
-                <ScrollableLogView visible={expandRows(store.getLogs())} viewportHeight={10} measured />
-            ).lastFrame() ?? '';
-        expect(frame).not.toContain('─');
-    });
-
-    it('leaves an error stack unruled', async () => {
-        store.onLog(record({ level: 'error', message: 'boom', args: [new Error('bad')] }));
-        await store.flush();
-
-        const frame =
-            render(
-                <ScrollableLogView visible={expandRows(store.getLogs())} viewportHeight={10} measured />
-            ).lastFrame() ?? '';
-        expect(frame).not.toContain('─');
-    });
-
-    it('carries a long message onto a second line with no second prefix', async () => {
-        store.onLog(record({ label: 'Bot', message: 'alpha bravo charlie delta echo foxtrot golf hotel india' }));
-        await store.flush();
-
-        const width = messageColumn(3) + 20;
-        const rows = wrapRows(expandRows(store.getLogs()), width, 3);
-        const frame = render(<ScrollableLogView visible={rows} viewportHeight={10} measured />).lastFrame() ?? '';
-        const lines = frame.split('\n').filter((line) => line.trim() !== '');
+    it('carries a long message onto a second line with no second prefix', () => {
+        const layout = LogLayout.fit(LogLayout.fit(0, 3).messageColumn + 20, 3);
+        const lines = linesOf(
+            frameOf([entry({ text: 'alpha bravo charlie delta echo foxtrot golf hotel india' })], layout)
+        );
 
         expect(lines).toHaveLength(3);
         expect(lines.filter((line) => line.includes('●'))).toHaveLength(1);
-        expect(frame).toContain('india');
+        expect(lines.at(-1)).toContain('india');
     });
 
     it('renders nothing until measured', () => {
-        const { lastFrame } = render(<ScrollableLogView visible={[]} viewportHeight={10} measured={false} />);
+        const { lastFrame } = render(
+            <ScrollableLogView visible={[]} layout={WIDE} viewportHeight={10} measured={false} />
+        );
         expect((lastFrame() ?? '').trim()).toBe('');
     });
 
     it('reports a viewport with too few rows to carry a log line', () => {
-        const { lastFrame } = render(<ScrollableLogView visible={[]} viewportHeight={2} measured />);
+        const { lastFrame } = render(<ScrollableLogView visible={[]} layout={WIDE} viewportHeight={2} measured />);
         expect(lastFrame() ?? '').toContain(NO_ROOM);
     });
 });
