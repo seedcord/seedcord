@@ -7,4 +7,4 @@
 
 # @seedcord/mock-edge
 
-A working bot on the interactions transport, running on Cloudflare Workers.
+A private http bot on Cloudflare Workers that this repo runs to test seedcord's edge build by hand.

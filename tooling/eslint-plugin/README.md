@@ -23,11 +23,11 @@
 
 ## About
 
-`@seedcord/eslint-plugin` holds the ESLint rules for seedcord bots. The `seedcord` preset layers these over [`eslint-plugin-discordjs`](https://www.npmjs.com/package/eslint-plugin-discordjs)'s `recommended`, so one entry covers the framework rules and the discord.js rules together.
+`@seedcord/eslint-plugin` has the ESLint rules for seedcord bots. Each one catches a seedcord mistake that still compiles, like a handler with no route decorator, which never registers. Its `seedcord` preset also turns on [`eslint-plugin-discordjs`](https://www.npmjs.com/package/eslint-plugin-discordjs)'s `recommended` rules.
 
-The preset suits a project carrying its own ESLint config. A project on [`@seedcord/eslint-config`](https://www.npmjs.com/package/@seedcord/eslint-config) turns the same rules on with `registerSeedcordPlugin` and `registerDiscordjsPlugin`.
+Install it in a seedcord bot that has its own ESLint config. A bot on [`@seedcord/eslint-config`](https://www.npmjs.com/package/@seedcord/eslint-config) already has it, through `registerSeedcordPlugin`.
 
-Until v1.0.0, minor versions can break.
+seedcord is pre-1.0, so a minor version can break your lint setup. Each release's changelog says what changed and how to update.
 
 ## Installation
 
@@ -59,4 +59,25 @@ export default defineConfig(
 );
 ```
 
-The rules read types, so they need typed linting ([`projectService`](https://typescript-eslint.io/getting-started/typed-linting)). If your config already sets it up, drop the `languageOptions` block and keep the scoped `extends` entry.
+The rules read types, so they need typed linting ([`projectService`](https://typescript-eslint.io/getting-started/typed-linting)). If your config already sets it up, leave out the `languageOptions` block.
+
+## Rules
+
+Every rule runs at `error` in the preset.
+
+<!-- prettier-ignore-start -->
+
+| Rule | Catches |
+| --- | --- |
+| [command-builder-missing-register-command](docs/rules/command-builder-missing-register-command.md) | a command builder without `@RegisterCommand`, which never deploys |
+| [interaction-handler-missing-route](docs/rules/interaction-handler-missing-route.md) | an interaction handler without its route decorator, which never runs |
+| [event-handler-missing-register-event](docs/rules/event-handler-missing-register-event.md) | an event handler without `@RegisterEvent`, which never runs |
+| [middleware-missing-register-decorator](docs/rules/middleware-missing-register-decorator.md) | a middleware without its register decorator, or with the other kind's |
+| [subscriber-missing-decorators](docs/rules/subscriber-missing-decorators.md) | a subscriber without `@Subscribe`, or a webhook log without `@WebhookUrl` |
+| [no-djs-builder-import](docs/rules/no-djs-builder-import.md) | a component builder imported from `discord.js`. Import it from `@discordjs/builders` |
+| [no-raw-client-events](docs/rules/no-raw-client-events.md) | a `client.on()` listener for a gateway event, which skips `@RegisterEvent` and its middleware |
+| [no-raw-interaction-acks](docs/rules/no-raw-interaction-acks.md) | `this.event.reply()` and the other discord.js replies inside a handler, which skip seedcord's reply tracking |
+| [use-custom-id-codec](docs/rules/use-custom-id-codec.md) | a hand-written string in `setCustomId` |
+| [use-paint-in-logs](docs/rules/use-paint-in-logs.md) | chalk inside a logger call |
+
+<!-- prettier-ignore-end -->

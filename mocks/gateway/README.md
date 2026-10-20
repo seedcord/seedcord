@@ -7,4 +7,4 @@
 
 # @seedcord/mock-gateway
 
-A working bot on the gateway transport.
+A private gateway bot that this repo runs to test seedcord's gateway transport by hand.

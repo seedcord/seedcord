@@ -23,28 +23,25 @@
 
 ## About
 
-`@seedcord/tsconfig` is the base TypeScript config seedcord projects extend. It turns on `strict` plus the checks that catch the things `strict` leaves open, including `noUncheckedIndexedAccess`, `exactOptionalPropertyTypes`, `noImplicitOverride`, `noImplicitReturns`, and `noFallthroughCasesInSwitch`. `experimentalDecorators` is on. The framework's route and command decorators require it.
+`@seedcord/tsconfig` is the TypeScript config seedcord projects extend. It turns on `strict` and stricter checks like `noUncheckedIndexedAccess` and `exactOptionalPropertyTypes`. It also turns on `experimentalDecorators`, which seedcord's decorators need.
 
-Two configs ship. `base` targets `ESNext`, and `node` targets `ES2024`.
-
-Until v1.0.0, minor versions can break.
+`pnpm create seedcord` installs it. Install it yourself to add seedcord to an existing project, or to use the same checks in any TypeScript project.
 
 ## Installation
 
 ```sh
-pnpm add -D @seedcord/tsconfig
+pnpm add -D @seedcord/tsconfig @types/node typescript
 ```
+
+The config sets `types: ["node"]`, so it needs `@types/node`.
 
 ## Usage
 
 ```jsonc
 {
     "extends": "@seedcord/tsconfig/node",
-    "compilerOptions": {
-        "outDir": "dist"
-    },
     "include": ["src"]
 }
 ```
 
-Both configs set `noEmit`, so a package that builds sets its own `outDir` and turns emit back on.
+`@seedcord/tsconfig/node` targets ES2024, and `@seedcord/tsconfig/base` targets ESNext. Both set `noEmit`. To emit with `tsc`, set `"noEmit": false` and an `outDir`.

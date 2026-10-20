@@ -7,4 +7,4 @@
 
 # @seedcord/mock-http
 
-A working bot on the interactions transport.
+A private http bot on its own server that this repo runs to test seedcord's http transport by hand.

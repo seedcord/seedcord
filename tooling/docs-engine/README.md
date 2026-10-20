@@ -7,6 +7,4 @@
 
 # @seedcord/docs-engine
 
-Reads the API model JSON that `@seedcord/docs-generator` writes and produces what `apps/docs` renders.
-
-The root entry imports `node:*` and api-extractor-model. `@seedcord/docs-engine/client` is the subset a client component can import, since a `node:*` import reachable from a client bundle breaks `next build`.
+A private package that reads the API model JSON from `@seedcord/docs-generator` and turns it into the pages the reference site at seedcord.org/docs renders.

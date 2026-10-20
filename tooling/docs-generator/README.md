@@ -7,4 +7,4 @@
 
 # @seedcord/docs-generator
 
-Runs api-extractor over the published packages and writes the API model JSON that `@seedcord/docs-engine` reads. `pnpm docs:extract` from the repo root runs it.
+A private package that runs api-extractor over the published packages and writes the API model JSON for the reference site. `pnpm docs:extract` from the repo root runs it.

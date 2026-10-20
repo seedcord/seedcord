@@ -23,31 +23,40 @@
 
 ## About
 
-`@seedcord/eslint-config` is the flat ESLint config seedcord projects run. `createConfig` builds the whole setup, and two options turn on the seedcord rules and the discord.js rules:
+`@seedcord/eslint-config` is the flat ESLint config seedcord projects run, with a matching Prettier config. Two options add the bot rules:
 
-- `registerSeedcordPlugin` applies [`@seedcord/eslint-plugin`](https://www.npmjs.com/package/@seedcord/eslint-plugin)'s recommended preset
-- `registerDiscordjsPlugin` applies [`eslint-plugin-discordjs`](https://www.npmjs.com/package/eslint-plugin-discordjs)'s recommended preset
+- `registerSeedcordPlugin` turns on [`@seedcord/eslint-plugin`](https://www.npmjs.com/package/@seedcord/eslint-plugin)
+- `registerDiscordjsPlugin` turns on [`eslint-plugin-discordjs`](https://www.npmjs.com/package/eslint-plugin-discordjs)
 
-`create-seedcord` writes a config that uses this.
-
-Until v1.0.0, minor versions can break.
+`pnpm create seedcord` installs it and writes both config files. Install it yourself to add the same setup to an existing bot, or to any TypeScript project with both options left off.
 
 ## Installation
 
 ```sh
-pnpm add -D @seedcord/eslint-config
+pnpm add -D @seedcord/eslint-config eslint jiti prettier typescript
 ```
+
+ESLint loads an `eslint.config.ts` through `jiti`.
 
 ## Usage
 
-```js
-// eslint.config.js
+```ts
+// eslint.config.ts
 import createConfig from '@seedcord/eslint-config';
 
 export default createConfig({
+    tsconfigRootDir: import.meta.dirname,
+    registerDiscordjsPlugin: true,
     registerSeedcordPlugin: true,
-    registerDiscordjsPlugin: true
+    generalIgnores: ['**/seedcord-gen.d.ts']
 });
 ```
 
-`@seedcord/eslint-config/prettier` holds the matching Prettier config.
+```ts
+// prettier.config.ts
+import { createPrettierConfig } from '@seedcord/eslint-config/prettier';
+
+export default createPrettierConfig();
+```
+
+The [linting guide](https://seedcord.org/guide/tooling/lint) covers what the rules catch.

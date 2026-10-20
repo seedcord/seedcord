@@ -7,4 +7,4 @@
 
 # @seedcord/vitest-config
 
-Internal vitest preset. `createVitestConfig(import.meta.url, overrides?)` merges the workspace test defaults, aliases derived from the sibling `tsconfig.json` `paths`, and the package's overrides. `aliasFromTsconfig(import.meta.url)` returns the derived aliases alone, as a list `resolve.alias` accepts.
+A private vitest preset that every seedcord package with tests uses, through `createVitestConfig` in its `vitest.config.ts`.
