@@ -1,10 +1,11 @@
-import { mkdtempDisposableSync, realpathSync, writeFileSync } from 'node:fs';
+import { mkdtempDisposableSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 
 import { onTestFinished } from 'vitest';
 
 import { ProjectLoader } from '#core/config/ProjectLoader';
+import { realPath } from '#core/project/realPath';
 import { ShellMode } from '#core/viteMode';
 
 import type { ResolvedSeedcordConfig } from '#core/config/schema';
@@ -21,8 +22,8 @@ export async function openProject(loader: ProjectLoader, projectDir: string): Pr
 export function tempProject(): string {
     const projectDir = mkdtempDisposableSync(join(tmpdir(), 'seedcord-config-'));
     onTestFinished(() => projectDir.remove());
-    // the loader resolves against the real path of a mac temp dir
-    return realpathSync(projectDir.path);
+    // tmpdir() sits under a symlink on mac and uses an 8.3 short name on the windows runner
+    return realPath(projectDir.path);
 }
 
 export interface StubModules {

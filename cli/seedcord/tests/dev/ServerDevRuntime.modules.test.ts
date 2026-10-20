@@ -7,6 +7,7 @@ import { isSeedcordError, SeedcordErrorCode } from '@seedcord/errors';
 import { assert, describe, expect, it, onTestFinished, vi } from 'vitest';
 
 import { ServerDevRuntime } from '#commands/dev/runtime/ServerDevRuntime';
+import { realPath } from '#core/project/realPath';
 import { GREETING, GREETING_PROBE, greetingPlugin } from '#tests/greetingPlugin';
 import { vitePluginsOf } from '#tests/vitePluginsOf';
 
@@ -31,7 +32,7 @@ interface Ban {
 async function startedRuntime(): Promise<{ runtime: ServerDevRuntime; ban: string; entry: unknown }> {
     const temp = await mkdtempDisposable(join(tmpdir(), 'dev-modules-'));
     onTestFinished(() => temp.remove());
-    const dir = temp.path;
+    const dir = realPath(temp.path);
     await writeProject(dir);
 
     const runtime = new ServerDevRuntime();

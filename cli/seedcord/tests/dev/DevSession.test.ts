@@ -290,7 +290,7 @@ describe('DevSession with a broken entry', () => {
     it('puts the entry path once in front of the parse error', async () => {
         const temp = await mkdtempDisposable(join(tmpdir(), 'dev-session-'));
         onTestFinished(() => temp.remove());
-        const entry = join(temp.path, 'src', 'index.ts');
+        const entry = join(realPath(temp.path), 'src', 'index.ts');
         await mkdir(join(temp.path, 'src'));
         await writeFile(join(temp.path, 'package.json'), JSON.stringify({ name: 'dev-fixture', type: 'module' }));
         await writeFile(entry, 'export const = ;\n');
