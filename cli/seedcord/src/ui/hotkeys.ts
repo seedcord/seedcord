@@ -1,8 +1,10 @@
 import { FILTER_LEVELS } from '#ui/components/primitives/FilterChips';
+import { CONFIRMS } from '#ui/confirms';
 import { focusedIn, moveCursor } from '#ui/filterCursor';
 import { isStreaming } from '#ui/stores/devPhase';
 import { LogStore } from '#ui/stores/LogStore';
 
+import type { Confirmable } from '#ui/confirms';
 import type { LogFilters } from '#ui/devPrefs';
 import type { CursorMove, FilterCursor } from '#ui/filterCursor';
 import type { FilterView } from '#ui/hooks/useFilters';
@@ -42,111 +44,133 @@ interface HotkeyContext {
     readonly onRefreshCommands?: ((shouldRefresh: boolean) => Promise<void> | void) | undefined;
 }
 
-function quit(ctx: HotkeyContext): void {
+export type KeyGate = Pick<HotkeyContext, 'state' | 'interactive' | 'filterView'>;
+
+interface Binding {
+    readonly when?: (gate: KeyGate) => boolean;
+    readonly confirm?: Confirmable;
+    readonly run: (ctx: HotkeyContext) => void;
+}
+
+const prompting = (gate: KeyGate): boolean => gate.state.commandUpdatePrompt !== null;
+const sessionOpen = (gate: KeyGate): boolean => gate.interactive && !prompting(gate);
+const canDisconnect = (gate: KeyGate): boolean => sessionOpen(gate) && isStreaming(gate.state.phase);
+const chipsToggle = (gate: KeyGate): boolean => gate.filterView !== 'always';
+const chipsOpen = (gate: KeyGate): boolean => gate.filterView !== 'collapsed';
+
+type Action = (ctx: HotkeyContext) => void;
+
+function changeChip(change: FilterChange): Action {
+    return (ctx) => {
+        const { filters } = ctx;
+        const channels = LogStore.instance.getChannels();
+        if (ctx.cursor.group === 'channels') {
+            const index = focusedIn(ctx.cursor, 'channels', channels.length);
+            const channel = index === null ? undefined : channels[index];
+            if (channel === undefined) return;
+            ctx.setFilters({ ...filters, channels: change(filters.channels, channel, channels) });
+            return;
+        }
+        const index = focusedIn(ctx.cursor, 'levels', FILTER_LEVELS.length);
+        const level = index === null ? undefined : FILTER_LEVELS[index];
+        if (level === undefined) return;
+        ctx.setFilters({ ...filters, levels: change(filters.levels, level, FILTER_LEVELS) });
+    };
+}
+
+function moveChip(move: CursorMove): Action {
+    return (ctx) => {
+        const channelCount = LogStore.instance.getChannels().length;
+        ctx.setCursor(moveCursor(ctx.cursor, move, channelCount, FILTER_LEVELS.length));
+    };
+}
+
+function answer(shouldRefresh: boolean): Action {
+    return (ctx) => {
+        void ctx.onRefreshCommands?.(shouldRefresh);
+        ctx.store.clearPrompt();
+    };
+}
+
+const quit: Action = (ctx) => {
     ctx.store.beginQuit();
     void ctx.onQuit?.();
+};
+const disconnect: Action = (ctx) => {
+    ctx.store.beginDisconnect();
+    void ctx.onDisconnect?.();
+};
+const restart: Action = (ctx) => {
+    ctx.store.beginRestart();
+    void ctx.onRestart?.();
+};
+const clearLogs: Action = (ctx) => {
+    LogStore.instance.clear();
+    ctx.scroll.toBottom();
+};
+const toggleChips: Action = (ctx) => ctx.toggleFilterView();
+const scrollUp: Action = (ctx) => ctx.scroll.up();
+const scrollDown: Action = (ctx) => ctx.scroll.down();
+const pageUp: Action = (ctx) => ctx.scroll.pageUp();
+const pageDown: Action = (ctx) => ctx.scroll.pageDown();
+const toTop: Action = (ctx) => ctx.scroll.toTop();
+const toBottom: Action = (ctx) => ctx.scroll.toBottom();
+
+// ctrl-c reaches us as a keypress because ink puts stdin in raw mode
+const KEYMAP = {
+    [CONFIRMS.quit.key]: { confirm: 'quit', run: quit },
+    [CONFIRMS.disconnect.key]: { confirm: 'disconnect', when: canDisconnect, run: disconnect },
+    y: { when: prompting, run: answer(true) },
+    n: { when: prompting, run: answer(false) },
+    f: { when: chipsToggle, run: toggleChips },
+    leftArrow: { when: chipsOpen, run: moveChip('left') },
+    rightArrow: { when: chipsOpen, run: moveChip('right') },
+    tab: { when: chipsOpen, run: moveChip('switch') },
+    ' ': { when: chipsOpen, run: changeChip(solo) },
+    o: { when: chipsOpen, run: changeChip(toggle) },
+    upArrow: { run: scrollUp },
+    downArrow: { run: scrollDown },
+    pageUp: { run: pageUp },
+    pageDown: { run: pageDown },
+    t: { run: toTop },
+    home: { run: toTop },
+    b: { run: toBottom },
+    end: { run: toBottom },
+    q: { run: quit },
+    r: { when: sessionOpen, run: restart },
+    d: { when: canDisconnect, run: disconnect },
+    c: { when: sessionOpen, run: clearLogs }
+} satisfies Record<string, Binding>;
+
+type KeyId = keyof typeof KEYMAP;
+
+const BINDINGS: ReadonlyMap<string, Binding> = new Map(Object.entries(KEYMAP));
+
+const SPECIAL_KEYS = [
+    'upArrow',
+    'downArrow',
+    'leftArrow',
+    'rightArrow',
+    'pageUp',
+    'pageDown',
+    'home',
+    'end',
+    'tab'
+] as const satisfies readonly (keyof Key)[];
+
+function keyIdOf(input: string, key: Key): string {
+    const special = SPECIAL_KEYS.find((name) => key[name]);
+    if (special) return special;
+    return key.ctrl ? `ctrl+${input}` : input;
 }
 
-// ink puts stdin in raw mode, so ctrl-c arrives as a plain keypress with no sigint
-function handleQuitSignal(ctx: HotkeyContext): boolean {
-    if (!ctx.key.ctrl || ctx.input !== 'c') return false;
-
-    if (ctx.state.quitArmed) quit(ctx);
-    else ctx.store.setQuitArmed(true);
-    return true;
+function isLive(binding: Binding, gate: KeyGate): boolean {
+    return binding.when?.(gate) ?? true;
 }
 
-function handlePrompt(ctx: HotkeyContext): boolean {
-    if (!ctx.state.commandUpdatePrompt) return false;
-    if (ctx.input === 'y') {
-        void ctx.onRefreshCommands?.(true);
-        ctx.store.clearPrompt();
-    } else if (ctx.input === 'n') {
-        void ctx.onRefreshCommands?.(false);
-        ctx.store.clearPrompt();
-    }
-    return true;
-}
-
-function applyAtCursor(ctx: HotkeyContext, channels: readonly string[], change: FilterChange): void {
-    const { filters } = ctx;
-    if (ctx.cursor.group === 'channels') {
-        const index = focusedIn(ctx.cursor, 'channels', channels.length);
-        const channel = index === null ? undefined : channels[index];
-        if (channel === undefined) return;
-        ctx.setFilters({ ...filters, channels: change(filters.channels, channel, channels) });
-        return;
-    }
-    const index = focusedIn(ctx.cursor, 'levels', FILTER_LEVELS.length);
-    const level = index === null ? undefined : FILTER_LEVELS[index];
-    if (level === undefined) return;
-    ctx.setFilters({ ...filters, levels: change(filters.levels, level, FILTER_LEVELS) });
-}
-
-function handleFilters(ctx: HotkeyContext): boolean {
-    if (ctx.input === 'f' && ctx.filterView !== 'always') {
-        ctx.toggleFilterView();
-        return true;
-    }
-    if (ctx.filterView === 'collapsed') return false;
-
-    const channels = LogStore.instance.getChannels();
-    const move = (dir: CursorMove): void =>
-        ctx.setCursor(moveCursor(ctx.cursor, dir, channels.length, FILTER_LEVELS.length));
-
-    if (ctx.key.leftArrow) move('left');
-    else if (ctx.key.rightArrow) move('right');
-    else if (ctx.key.tab) move('switch');
-    else if (ctx.input === ' ') applyAtCursor(ctx, channels, solo);
-    else if (ctx.input === 'o') applyAtCursor(ctx, channels, toggle);
-    else return false;
-    return true;
-}
-
-function handleScroll(ctx: HotkeyContext): boolean {
-    // runs before session actions so scroll works even when non-interactive
-    const { key, input, scroll } = ctx;
-    if (key.upArrow) scroll.up();
-    else if (key.downArrow) scroll.down();
-    else if (key.pageUp) scroll.pageUp();
-    else if (key.pageDown) scroll.pageDown();
-    else if (key.home || input === 't') scroll.toTop();
-    else if (key.end || input === 'b') scroll.toBottom();
-    else return false;
-    return true;
-}
-
-function handleActions(ctx: HotkeyContext): void {
-    const { input, state, store } = ctx;
-
-    if (input === 'q') {
-        quit(ctx);
-        return;
-    }
-    if (!ctx.interactive) return;
-
-    switch (input) {
-        case 'd': {
-            if (!isStreaming(state.phase)) return;
-            store.beginDisconnect();
-            void ctx.onDisconnect?.();
-
-            break;
-        }
-        case 'r': {
-            store.beginRestart();
-            void ctx.onRestart?.();
-
-            break;
-        }
-        case 'c': {
-            LogStore.instance.clear();
-            ctx.scroll.toBottom();
-
-            break;
-        }
-        // No default
-    }
+// the hints read this to grey out a dead key
+export function keyIsLive(id: KeyId, gate: KeyGate): boolean {
+    return isLive(KEYMAP[id], gate);
 }
 
 // r and d abort startup.
@@ -155,12 +179,14 @@ export function acceptsSessionKeys(state: Pick<DevState, 'phase' | 'isBusy' | 'r
     return !state.isBusy || state.restartRequired || state.phase === 'starting';
 }
 
-// dispatch checks the prompt before filters. an open y/n prompt would otherwise lose keys to filter hotkeys
 export function dispatchHotkey(ctx: HotkeyContext): void {
-    if (handleQuitSignal(ctx)) return;
-    if (ctx.state.quitArmed) ctx.store.setQuitArmed(false);
-    if (handlePrompt(ctx)) return;
-    if (handleFilters(ctx)) return;
-    if (handleScroll(ctx)) return;
-    handleActions(ctx);
+    const found = BINDINGS.get(keyIdOf(ctx.input, ctx.key));
+    const binding = found && isLive(found, ctx) ? found : undefined;
+
+    if (binding?.confirm && ctx.state.armed !== binding.confirm) {
+        ctx.store.setArmed(binding.confirm);
+        return;
+    }
+    if (ctx.state.armed !== null) ctx.store.setArmed(null);
+    binding?.run(ctx);
 }

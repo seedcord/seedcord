@@ -6,6 +6,7 @@ import { isSessionLive } from './devPhase';
 import type { DevEvent } from '#commands/dev/runtime/events';
 import type { TunnelStatus } from '#commands/dev/tunnel/TunnelCoordinator';
 import type { ResolvedTarget } from '#core/config/schema';
+import type { Confirmable } from '#ui/confirms';
 import type { DevPhase } from './devPhase';
 
 export interface DevTransport {
@@ -25,7 +26,7 @@ export interface DevState {
     readonly commandUpdatePrompt: string[] | null;
     readonly port: number | null;
     readonly tunnel: TunnelStatus | null;
-    readonly quitArmed: boolean;
+    readonly armed: Confirmable | null;
     readonly idleAnimation: boolean;
     readonly liveSinceMs: number | null;
 }
@@ -40,7 +41,7 @@ const INITIAL: DevState = {
     commandUpdatePrompt: null,
     port: null,
     tunnel: null,
-    quitArmed: false,
+    armed: null,
     idleAnimation: true,
     liveSinceMs: null
 };
@@ -77,8 +78,8 @@ export class DevStore extends TypedEventEmitter<{ change: [] }> {
         this.patch({ tunnel });
     }
 
-    public setQuitArmed(quitArmed: boolean): void {
-        this.patch({ quitArmed });
+    public setArmed(armed: Confirmable | null): void {
+        this.patch({ armed });
     }
 
     public setIdleAnimation(idleAnimation: boolean): void {

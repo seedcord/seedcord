@@ -36,7 +36,7 @@ export function StatusLine({ state, notices, filtered, filtersShown }: StatusLin
             </Box>
             {/* flexShrink 0 and the margin keep the key readable against a summary that fills the row */}
             <Box flexShrink={0} marginLeft={2}>
-                {/* an open prompt takes every key, f included */}
+                {/* a pending notice shows its own keys here */}
                 {top ? (
                     <Text bold color={ui.accent}>
                         {top.action}

@@ -1,9 +1,10 @@
 import { Box, Text } from 'ink';
 import React from 'react';
 
+import { keyIsLive } from '#ui/hotkeys';
 import { ui } from '#ui/palette';
-import { isStreaming } from '#ui/stores/devPhase';
 
+import type { KeyGate } from '#ui/hotkeys';
 import type { DevPhase } from '#ui/stores/devPhase';
 import type { ReactElement } from 'react';
 
@@ -30,18 +31,22 @@ function Hotkey({ keyLabel, action, enabled = true, highlight = false }: HotkeyP
 const RESTART_HINT_PHASES = new Set<DevPhase>(['restart-required', 'disconnected', 'error']);
 
 interface SessionKeysProps {
-    readonly phase: DevPhase;
-    readonly interactive: boolean;
+    readonly gate: KeyGate;
     readonly following: boolean;
 }
 
-export function SessionKeys({ phase, interactive, following }: SessionKeysProps): ReactElement {
+export function SessionKeys({ gate, following }: SessionKeysProps): ReactElement {
     return (
         <Box flexDirection="column">
             <Hotkey keyLabel="q" action="quit" />
-            <Hotkey keyLabel="r" action="restart" enabled={interactive} highlight={RESTART_HINT_PHASES.has(phase)} />
-            <Hotkey keyLabel="d" action="disconnect" enabled={interactive && isStreaming(phase)} />
-            <Hotkey keyLabel="c" action="clear" enabled={interactive} />
+            <Hotkey
+                keyLabel="r"
+                action="restart"
+                enabled={keyIsLive('r', gate)}
+                highlight={RESTART_HINT_PHASES.has(gate.state.phase)}
+            />
+            <Hotkey keyLabel="d" action="disconnect" enabled={keyIsLive('d', gate)} />
+            <Hotkey keyLabel="c" action="clear" enabled={keyIsLive('c', gate)} />
             <Hotkey keyLabel="↑↓" action="scroll" />
             <Hotkey keyLabel="t/b" action="top/bottom" highlight={!following} />
         </Box>

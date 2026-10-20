@@ -19,14 +19,18 @@ describe('noticesOf', () => {
         expect(noticesOf(running().getState())).toHaveLength(0);
     });
 
-    it('ranks an armed quit first and gives it a card', () => {
+    it.each([
+        ['quit', 'press Ctrl-C again'],
+        ['disconnect', 'press Ctrl-D again']
+    ] as const)('ranks an armed %s first and gives it a card', (confirm, action) => {
         const store = running();
         store.setError(new Error('boom'));
-        store.setQuitArmed(true);
+        store.setArmed(confirm);
 
         const [top] = noticesOf(store.getState());
 
-        expect(top?.key).toBe('quit');
+        expect(top?.key).toBe(confirm);
+        expect(top?.action).toBe(action);
         expect(top?.card).toBeDefined();
     });
 

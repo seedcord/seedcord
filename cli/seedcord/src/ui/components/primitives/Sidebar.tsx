@@ -92,7 +92,7 @@ function RailKeys({ view, state, interactive, following }: RailKeysProps): React
             {view === 'shown' ? (
                 <FiltersKey shown />
             ) : (
-                <SessionKeys phase={state.phase} interactive={interactive} following={following} />
+                <SessionKeys gate={{ state, interactive, filterView: view }} following={following} />
             )}
         </Box>
     );

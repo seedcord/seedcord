@@ -41,7 +41,7 @@ function makeCtx(overrides: Partial<Ctx>): Ctx {
     return {
         input: '',
         key: key(),
-        state: {},
+        state: { armed: null, commandUpdatePrompt: null, phase: 'running' },
         interactive: true,
         scroll: {},
         store: {},
@@ -80,6 +80,27 @@ describe('session keys while the bot starts', () => {
         dispatchHotkey(makeCtx({ input: 'd', state: store.getState(), store, onDisconnect }));
 
         expect(onDisconnect).toHaveBeenCalledOnce();
+    });
+
+    it('holds r, d and c while a prompt waits for y or n, and leaves every other key working', () => {
+        const store = new DevStore();
+        store.setPhase('running');
+        store.apply({ type: 'command-update-prompt', files: ['a.ts'] });
+        const onRestart = vi.fn();
+        const onQuit = vi.fn();
+        const onRefreshCommands = vi.fn();
+        const scroll = scrollSpy();
+        const ctx = { state: store.getState(), store, scroll, onRestart, onQuit, onRefreshCommands };
+
+        dispatchHotkey(makeCtx({ ...ctx, input: 'r' }));
+        dispatchHotkey(makeCtx({ ...ctx, input: 't' }));
+        dispatchHotkey(makeCtx({ ...ctx, input: 'y' }));
+        dispatchHotkey(makeCtx({ ...ctx, input: 'q' }));
+
+        expect(onRestart).not.toHaveBeenCalled();
+        expect(scroll.toTop).toHaveBeenCalledOnce();
+        expect(onRefreshCommands).toHaveBeenCalledWith(true);
+        expect(onQuit).toHaveBeenCalledOnce();
     });
 });
 
@@ -265,64 +286,59 @@ describe('filter cursor keys', () => {
     });
 });
 
-// justified: the quit path reads one flag off each, and the rest of both shapes is unreachable here
-function armed(quitArmed: boolean): Ctx['state'] {
-    return { quitArmed } as unknown as Ctx['state'];
+// justified: the confirm path reads only the phase and the armed key off the state
+function armedState(armed: Ctx['state']['armed']): Ctx['state'] {
+    return { armed, commandUpdatePrompt: null, phase: 'running' } as unknown as Ctx['state'];
 }
 
 function storeSpy(spies: Record<string, unknown>): Ctx['store'] {
     return spies as unknown as Ctx['store'];
 }
 
-describe('dispatchHotkey quit', () => {
-    it('arms on the first ctrl-c without quitting', () => {
-        const onQuit = vi.fn();
-        const setQuitArmed = vi.fn();
+describe.each([
+    { input: 'c', confirm: 'quit', begin: 'beginQuit', callback: 'onQuit' },
+    { input: 'd', confirm: 'disconnect', begin: 'beginDisconnect', callback: 'onDisconnect' }
+] as const)('dispatchHotkey ctrl-$input', ({ input, confirm, begin, callback }) => {
+    it(`arms ${confirm} on the first press without running it`, () => {
+        const run = vi.fn();
+        const setArmed = vi.fn();
 
-        dispatchHotkey(
-            makeCtx({
-                input: 'c',
-                key: key({ ctrl: true }),
-                state: armed(false),
-                store: storeSpy({ setQuitArmed }),
-                onQuit
-            })
-        );
+        dispatchHotkey(makeCtx({ input, key: key({ ctrl: true }), store: storeSpy({ setArmed }), [callback]: run }));
 
-        expect(setQuitArmed).toHaveBeenCalledWith(true);
-        expect(onQuit).not.toHaveBeenCalled();
+        expect(setArmed).toHaveBeenCalledWith(confirm);
+        expect(run).not.toHaveBeenCalled();
     });
 
-    it('quits on the second ctrl-c', () => {
-        const onQuit = vi.fn();
-        const beginQuit = vi.fn();
+    it(`runs ${confirm} on the second press`, () => {
+        const run = vi.fn();
+        const beginSpy = vi.fn();
 
         dispatchHotkey(
             makeCtx({
-                input: 'c',
+                input,
                 key: key({ ctrl: true }),
-                state: armed(true),
-                store: storeSpy({ beginQuit }),
-                onQuit
+                state: armedState(confirm),
+                store: storeSpy({ [begin]: beginSpy, setArmed: vi.fn() }),
+                [callback]: run
             })
         );
 
-        expect(beginQuit).toHaveBeenCalledOnce();
-        expect(onQuit).toHaveBeenCalledOnce();
+        expect(beginSpy).toHaveBeenCalledOnce();
+        expect(run).toHaveBeenCalledOnce();
     });
 
     it('disarms when any other key follows', () => {
-        const setQuitArmed = vi.fn();
+        const setArmed = vi.fn();
 
         dispatchHotkey(
             makeCtx({
                 key: key({ downArrow: true }),
-                state: armed(true),
-                store: storeSpy({ setQuitArmed }),
+                state: armedState(confirm),
+                store: storeSpy({ setArmed }),
                 scroll: scrollSpy()
             })
         );
 
-        expect(setQuitArmed).toHaveBeenCalledWith(false);
+        expect(setArmed).toHaveBeenCalledWith(null);
     });
 });

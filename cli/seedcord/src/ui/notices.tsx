@@ -2,16 +2,18 @@ import React from 'react';
 
 import { plural } from '#core/format';
 import { CommandRefreshPrompt } from '#ui/components/CommandRefreshPrompt';
+import { ConfirmCard } from '#ui/components/ConfirmCard';
 import { ErrorDisplay } from '#ui/components/ErrorDisplay';
-import { QuitConfirmCard } from '#ui/components/QuitConfirmCard';
 import { RestartRequiredCard } from '#ui/components/RestartRequiredCard';
 import { TunnelOpeningCard } from '#ui/components/TunnelOpeningCard';
+import { CONFIRMS, confirmKeyLabel } from '#ui/confirms';
 
 import type { TunnelPhase, TunnelStatus } from '#commands/dev/tunnel/TunnelCoordinator';
+import type { Confirmable } from '#ui/confirms';
 import type { DevState } from '#ui/stores/DevStore';
 import type { ReactElement } from 'react';
 
-type NoticeKey = 'quit' | 'commands' | 'error' | 'restart' | 'tunnel';
+type NoticeKey = Confirmable | 'commands' | 'error' | 'restart' | 'tunnel';
 
 export interface Notice {
     readonly key: NoticeKey;
@@ -32,8 +34,13 @@ function openingPhase(status: TunnelStatus | null): TunnelPhase | null {
 export function noticesOf(state: DevState): readonly Notice[] {
     const notices: Notice[] = [];
 
-    if (state.quitArmed) {
-        notices.push({ key: 'quit', summary: 'Quit?', action: 'press Ctrl-C again', card: <QuitConfirmCard /> });
+    if (state.armed) {
+        notices.push({
+            key: state.armed,
+            summary: CONFIRMS[state.armed].title,
+            action: `press ${confirmKeyLabel(state.armed)} again`,
+            card: <ConfirmCard confirm={state.armed} />
+        });
     }
 
     if (state.commandUpdatePrompt) {
