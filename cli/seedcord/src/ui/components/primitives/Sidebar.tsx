@@ -10,7 +10,7 @@ import { LogStore } from '#ui/stores/LogStore';
 
 import { BlinkDot } from './BlinkDot';
 import { FilterChips } from './FilterChips';
-import { FilterKeys, FiltersKey, SessionKeys } from './Hotkeys';
+import { FilterKeys, FiltersKey, SessionKeys, ViewKeys } from './Hotkeys';
 import { Rule } from './Rule';
 
 import type { TunnelStatus } from '#commands/dev/tunnel/TunnelCoordinator';
@@ -28,7 +28,7 @@ const META_LABEL_WIDTH = 8;
 
 export const LOG_DIR = 'logs/'; // the dev default writes one combined file into this folder
 
-interface SidebarProps {
+export interface SidebarProps {
     readonly state: DevState;
     readonly filters: LogFilters;
     readonly uptimeMs: number | null;
@@ -37,15 +37,11 @@ interface SidebarProps {
     readonly cursor: FilterCursor;
     readonly width: number | null;
     readonly view: FilterView;
+    readonly fullDetails: boolean;
     readonly ref?: Ref<DOMElement>;
 }
 
-interface RailKeysProps {
-    readonly view: FilterView;
-    readonly state: DevState;
-    readonly interactive: boolean;
-    readonly following: boolean;
-}
+type RailKeysProps = Pick<SidebarProps, 'view' | 'state' | 'interactive' | 'following' | 'fullDetails'>;
 
 function Meta({ label, value }: { label: string; value: string }): ReactElement {
     return (
@@ -91,7 +87,7 @@ export function StatusBlock({ state, uptimeMs, withTarget }: StatusBlockProps): 
     );
 }
 
-function RailKeys({ view, state, interactive, following }: RailKeysProps): ReactElement {
+function RailKeys({ view, state, interactive, following, fullDetails }: RailKeysProps): ReactElement {
     return (
         <Box flexShrink={0} marginTop={1} flexDirection="column">
             {view === 'collapsed' ? <FiltersKey shown={false} /> : <FilterKeys />}
@@ -99,10 +95,13 @@ function RailKeys({ view, state, interactive, following }: RailKeysProps): React
             {view === 'shown' ? (
                 <FiltersKey shown />
             ) : (
-                <SessionKeys
-                    gate={{ state, interactive, filterView: view, canToggleRail: true }}
-                    following={following}
-                />
+                <>
+                    <SessionKeys
+                        gate={{ state, interactive, filterView: view, canToggleRail: true }}
+                        following={following}
+                    />
+                    <ViewKeys fullDetails={fullDetails} />
+                </>
             )}
         </Box>
     );
@@ -118,6 +117,7 @@ export function Sidebar({
     cursor,
     width,
     view,
+    fullDetails,
     ref
 }: SidebarProps): ReactElement {
     return (
@@ -147,7 +147,13 @@ export function Sidebar({
                     open={view !== 'collapsed'}
                 />
             </Box>
-            <RailKeys view={view} state={state} interactive={interactive} following={following} />
+            <RailKeys
+                view={view}
+                state={state}
+                interactive={interactive}
+                following={following}
+                fullDetails={fullDetails}
+            />
             <LiveFooter state={state} />
         </Box>
     );

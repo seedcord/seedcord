@@ -3,26 +3,20 @@ import React from 'react';
 
 import { Banner } from '#ui/components/Banner';
 
-import { FiltersKey, SessionKeys } from './Hotkeys';
+import { FiltersKey, SessionKeys, ViewKeys } from './Hotkeys';
 import { LiveFooter, StatusBlock } from './Sidebar';
 
-import type { FilterView } from '#ui/Screen';
-import type { DevState } from '#ui/stores/DevStore';
+import type { SidebarProps } from './Sidebar';
 import type { ReactElement } from 'react';
 
 // the longest row is the status block's tunnel line, 'tunnel  opening…', plus the padding
 export const SLIM_RAIL_WIDTH = 18;
 
-interface SlimRailProps {
-    readonly state: DevState;
-    readonly uptimeMs: number | null;
-    readonly following: boolean;
-    readonly interactive: boolean;
-    readonly view: FilterView;
-}
+type SlimRailProps = Pick<SidebarProps, 'state' | 'uptimeMs' | 'following' | 'interactive' | 'view' | 'fullDetails'>;
 
 // f opens the filters over the logs
-export function SlimRail({ state, uptimeMs, following, interactive, view }: SlimRailProps): ReactElement {
+export function SlimRail(props: SlimRailProps): ReactElement {
+    const { state, uptimeMs, following, interactive, view, fullDetails } = props;
     return (
         <Box flexDirection="column" width={SLIM_RAIL_WIDTH} flexShrink={0} paddingX={1} overflow="hidden">
             <Box flexShrink={0}>
@@ -37,6 +31,7 @@ export function SlimRail({ state, uptimeMs, following, interactive, view }: Slim
                     gate={{ state, interactive, filterView: view, canToggleRail: true }}
                     following={following}
                 />
+                <ViewKeys fullDetails={fullDetails} />
             </Box>
             <LiveFooter state={state} />
         </Box>

@@ -13,10 +13,10 @@ interface LogRows {
     readonly logRows: readonly LogRow[];
 }
 
-export function useLogRows(logs: readonly LogEntry[], width: number): LogRows {
+export function useLogRows(logs: readonly LogEntry[], width: number, fullDetails: boolean): LogRows {
     // getLongestLabel changes only when logs does
     return useMemo(() => {
-        const logLayout = LogLayout.fit(width, LogStore.instance.getLongestLabel());
+        const logLayout = LogLayout.fit(width, LogStore.instance.getLongestLabel(), fullDetails);
         return { logLayout, logRows: profileWrap(() => wrapRows(expandRows(logs), logLayout)) };
-    }, [logs, width]);
+    }, [logs, width, fullDetails]);
 }

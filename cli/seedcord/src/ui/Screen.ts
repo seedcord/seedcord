@@ -1,7 +1,7 @@
 // measured against the real rail with every framework channel.
 // Sidebar.test re-measures, so a new rail section fails there before it clips at runtime.
-export const FULL_ROWS = 31;
-export const COMPACT_ROWS = 22;
+export const FULL_ROWS = 32;
+export const COMPACT_ROWS = 23;
 
 // i picked these by trial-n-error
 // make sure to do that again if changing

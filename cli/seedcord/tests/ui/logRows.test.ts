@@ -11,10 +11,10 @@ import type { LogEntry } from '#ui/stores/LogStore';
 
 const LABEL_WIDTH = 3;
 // every width below stays under the step that shows the clock
-const COLUMN = LogLayout.fit(0, LABEL_WIDTH).messageColumn;
+const COLUMN = LogLayout.fit(0, LABEL_WIDTH, false).messageColumn;
 
 function wrap(logs: readonly LogEntry[], width: number): LogRow[] {
-    return wrapRows(expandRows(logs), LogLayout.fit(width, LABEL_WIDTH));
+    return wrapRows(expandRows(logs), LogLayout.fit(width, LABEL_WIDTH, false));
 }
 
 function texts(rows: readonly LogRow[]): string[] {

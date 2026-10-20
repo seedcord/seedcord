@@ -41,36 +41,19 @@ export interface DevLayoutProps extends Pick<ScrollableLogViewProps, 'viewportHe
     readonly cursor: FilterCursor;
     readonly interactive: boolean;
     readonly uptimeMs: number | null;
+    readonly fullDetails: boolean;
 }
 
 function Rail(props: DevLayoutProps): ReactElement | null {
-    const { state, screen, scroll, filterView, interactive, uptimeMs, railRef, railWidth, filters, cursor } = props;
+    const { state, screen, scroll, filterView, interactive, uptimeMs, fullDetails } = props;
+    const { railRef, railWidth, filters, cursor } = props;
+    const shared = { state, uptimeMs, following: scroll.following, interactive, view: filterView, fullDetails };
     switch (screen.rail) {
         case 'sidebar': {
-            return (
-                <Sidebar
-                    ref={railRef}
-                    state={state}
-                    filters={filters}
-                    uptimeMs={uptimeMs}
-                    following={scroll.following}
-                    interactive={interactive}
-                    cursor={cursor}
-                    width={railWidth}
-                    view={filterView}
-                />
-            );
+            return <Sidebar ref={railRef} {...shared} filters={filters} cursor={cursor} width={railWidth} />;
         }
         case 'slim': {
-            return (
-                <SlimRail
-                    state={state}
-                    uptimeMs={uptimeMs}
-                    following={scroll.following}
-                    interactive={interactive}
-                    view={filterView}
-                />
-            );
+            return <SlimRail {...shared} />;
         }
         case null: {
             return null;
@@ -82,7 +65,7 @@ function Rail(props: DevLayoutProps): ReactElement | null {
 }
 
 function statusBar(props: DevLayoutProps): ReactElement | null {
-    const { state, screen, notices, filters, filterView, uptimeMs } = props;
+    const { state, screen, notices, filters, filterView, uptimeMs, fullDetails } = props;
     const filtered = filters.channels.size > 0 || filters.levels.size > 0;
     const filtersShown = filterView === 'shown';
     switch (screen.header) {
@@ -95,6 +78,7 @@ function statusBar(props: DevLayoutProps): ReactElement | null {
                     filtered={filtered}
                     filtersShown={filtersShown}
                     canToggleRail={screen.canToggleRail}
+                    fullDetails={fullDetails}
                 />
             );
         }

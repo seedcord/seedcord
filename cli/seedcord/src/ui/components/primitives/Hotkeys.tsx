@@ -49,13 +49,26 @@ export function SessionKeys({ gate, following }: SessionKeysProps): ReactElement
             <Hotkey keyLabel="c" action="clear" enabled={keyIsLive('c', gate)} />
             <Hotkey keyLabel="↑↓" action="scroll" />
             <Hotkey keyLabel="t/b" action="top/bottom" highlight={!following} />
+        </Box>
+    );
+}
+
+// the keys a rail lists for how the screen looks
+export function ViewKeys({ fullDetails }: { readonly fullDetails: boolean }): ReactElement {
+    return (
+        <Box flexDirection="column">
             <RailKey shown />
+            <DetailsKey full={fullDetails} />
         </Box>
     );
 }
 
 export function RailKey({ shown }: { readonly shown: boolean }): ReactElement {
     return <Hotkey keyLabel="s" action={shown ? 'hide rail' : 'show rail'} />;
+}
+
+export function DetailsKey({ full }: { readonly full: boolean }): ReactElement {
+    return <Hotkey keyLabel="p" action={full ? 'auto details' : 'full details'} />;
 }
 
 export function FilterKeys({ direction = 'column' }: { readonly direction?: 'column' | 'row' }): ReactElement {

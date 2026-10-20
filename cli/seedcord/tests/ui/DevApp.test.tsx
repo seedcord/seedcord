@@ -5,6 +5,7 @@ import { describe, expect, it, vi } from 'vitest';
 import { NO_FILTER_ROOM } from '#ui/components/primitives/FilterPanel';
 import { NO_ROOM } from '#ui/components/primitives/ScrollableLogView';
 import { DevApp } from '#ui/DevApp';
+import { formatClock } from '#ui/format';
 import { COMPACT_ROWS } from '#ui/Screen';
 import { DevStore } from '#ui/stores/DevStore';
 import { LogStore } from '#ui/stores/LogStore';
@@ -134,6 +135,22 @@ describe('DevApp tiers', () => {
 
         app.press('s');
         await settled(() => expect(app.lastFrame()).toContain('hide rail'));
+        app.unmount();
+    });
+
+    it('shows the full details on p, and fits them to the pane again on the next p', async () => {
+        const seconds = formatClock(logOn('bot').timestamp, 'seconds');
+        const app = view({ rows: 40, columns: 70 });
+        LogStore.instance.onLog(logOn('bot'));
+        await LogStore.instance.flush();
+        await settled(() => expect(app.lastFrame()).toContain('from bot'));
+        expect(app.lastFrame()).not.toContain(seconds);
+
+        app.press('p');
+        await settled(() => expect(app.lastFrame()).toContain(seconds));
+
+        app.press('p');
+        await settled(() => expect(app.lastFrame()).not.toContain(seconds));
         app.unmount();
     });
 

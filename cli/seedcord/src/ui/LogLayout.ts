@@ -15,22 +15,24 @@ export type PrefixCell =
 type CellSource = Pick<LogEntry, 'level' | 'label' | 'timestamp'>;
 
 interface Step {
+    // the narrowest log pane that shows this step
+    readonly minPane: number;
     readonly clock: ClockPrecision | null;
     readonly maxLabel: number;
 }
 
 const LABEL_CAP = 12;
 const SHORT_LABEL = 6;
-// picked by eye from side-by-side trials at 50 and 65 columns
-const MIN_MESSAGE_WIDTH = 40;
 
+// the widths came from side-by-side trials while i adjusted the layout
+const WIDEST: Step = { minPane: 112, clock: 'seconds', maxLabel: LABEL_CAP };
 const STEPS: readonly Step[] = [
-    { clock: 'seconds', maxLabel: LABEL_CAP },
-    { clock: 'minutes', maxLabel: LABEL_CAP },
-    { clock: 'minutes', maxLabel: SHORT_LABEL },
-    { clock: null, maxLabel: SHORT_LABEL }
+    WIDEST,
+    { minPane: 100, clock: 'minutes', maxLabel: LABEL_CAP },
+    { minPane: 64, clock: 'minutes', maxLabel: SHORT_LABEL },
+    { minPane: 56, clock: 'minutes', maxLabel: 0 }
 ];
-const NARROWEST: Step = { clock: null, maxLabel: 0 };
+const NARROWEST: Step = { minPane: 0, clock: null, maxLabel: 0 };
 
 const LEVEL_LETTER: Record<LogLevel, string> = { error: 'E', warn: 'W', info: 'I', debug: 'D', trace: 'T' };
 const DOT = '●';
@@ -91,12 +93,9 @@ export class LogLayout {
         this.messageColumn = this.cells.reduce((sum, cell) => sum + cellText(cell, PROBE).length + 1, 0);
     }
 
-    public static fit(width: number, longestLabel: number): LogLayout {
-        for (const step of STEPS) {
-            const layout = new LogLayout(width, step, longestLabel);
-            if (width - layout.messageColumn >= MIN_MESSAGE_WIDTH) return layout;
-        }
-        return new LogLayout(width, NARROWEST, longestLabel);
+    public static fit(width: number, longestLabel: number, full: boolean): LogLayout {
+        const step = full ? WIDEST : (STEPS.find((each) => width >= each.minPane) ?? NARROWEST);
+        return new LogLayout(width, step, longestLabel);
     }
 
     public get guideIndent(): number {

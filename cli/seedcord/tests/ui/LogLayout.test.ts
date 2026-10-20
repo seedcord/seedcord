@@ -13,30 +13,31 @@ function shape(layout: LogLayout): string {
 }
 
 describe('LogLayout', () => {
-    it('shows the whole prefix when the pane is wide', () => {
-        const layout = LogLayout.fit(120, 8);
+    it('shows the whole prefix when the pane is wide, or at any width while p pins it', () => {
+        const layout = LogLayout.fit(120, 8, false);
 
         expect(shape(layout)).toBe('chip clock:seconds label:8 dot');
         expect(layout.messageColumn).toBe(24);
+        expect(shape(LogLayout.fit(30, 8, true))).toBe(shape(layout));
     });
 
     it('caps a long label at 12 columns', () => {
-        expect(shape(LogLayout.fit(120, 19))).toBe('chip clock:seconds label:12 dot');
+        expect(shape(LogLayout.fit(120, 19, false))).toBe('chip clock:seconds label:12 dot');
     });
 
-    // each step's first width leaves the message exactly 40 columns
+    // each step's narrowest pane, then a pane one cell narrower
     it.each([
-        [68, 'chip clock:seconds label:12 dot', 28],
-        [67, 'chip clock:minutes label:12 dot', 25],
-        [65, 'chip clock:minutes label:12 dot', 25],
+        [112, 'chip clock:seconds label:12 dot', 28],
+        [111, 'chip clock:minutes label:12 dot', 25],
+        [100, 'chip clock:minutes label:12 dot', 25],
+        [99, 'chip clock:minutes label:6 dot', 19],
         [64, 'chip clock:minutes label:6 dot', 19],
-        [59, 'chip clock:minutes label:6 dot', 19],
-        [58, 'chip label:6 dot', 13],
-        [53, 'chip label:6 dot', 13],
-        [52, 'chip dot', 6],
+        [63, 'chip clock:minutes dot', 12],
+        [56, 'chip clock:minutes dot', 12],
+        [55, 'chip dot', 6],
         [10, 'chip dot', 6]
     ])('fits the prefix to a %i-column pane', (width, expected, column) => {
-        const layout = LogLayout.fit(width, 12);
+        const layout = LogLayout.fit(width, 12, false);
 
         expect(shape(layout)).toBe(expected);
         expect(layout.messageColumn).toBe(column);

@@ -38,6 +38,7 @@ interface HotkeyContext {
     readonly toggleFilterView: () => void;
     readonly canToggleRail: boolean;
     readonly toggleRail: () => void;
+    readonly toggleDetails: () => void;
     readonly cursor: FilterCursor;
     readonly setCursor: (next: FilterCursor) => void;
     readonly onQuit?: (() => Promise<void> | void) | undefined;
@@ -113,6 +114,7 @@ const clearLogs: Action = (ctx) => {
 };
 const toggleChips: Action = (ctx) => ctx.toggleFilterView();
 const toggleRail: Action = (ctx) => ctx.toggleRail();
+const toggleDetails: Action = (ctx) => ctx.toggleDetails();
 const scrollUp: Action = (ctx) => ctx.scroll.up();
 const scrollDown: Action = (ctx) => ctx.scroll.down();
 const pageUp: Action = (ctx) => ctx.scroll.pageUp();
@@ -128,6 +130,7 @@ const KEYMAP = {
     n: { when: prompting, run: answer(false) },
     f: { when: chipsToggle, run: toggleChips },
     s: { when: canToggleRail, run: toggleRail },
+    p: { run: toggleDetails },
     leftArrow: { when: chipsOpen, run: moveChip('left') },
     rightArrow: { when: chipsOpen, run: moveChip('right') },
     tab: { when: chipsOpen, run: moveChip('switch') },

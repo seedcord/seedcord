@@ -12,6 +12,7 @@ import { usePanelFit } from '#ui/hooks/usePanelFit';
 import { useRailWidth } from '#ui/hooks/useRailWidth';
 import { useScroll } from '#ui/hooks/useScroll';
 import { useUptime } from '#ui/hooks/useUptime';
+import { useViewPrefs } from '#ui/hooks/useViewPrefs';
 import { acceptsSessionKeys, dispatchHotkey } from '#ui/hotkeys';
 import { DevLayout } from '#ui/layout/DevLayout';
 import { rowKey } from '#ui/logRows';
@@ -40,7 +41,7 @@ export function DevApp(props: DevAppProps): ReactElement {
     const state = useDevState(store);
     const { rows, columns } = useWindowSize();
 
-    const [railHidden, setRailHidden] = useState(false);
+    const { railHidden, fullDetails, toggleRail, toggleDetails } = useViewPrefs();
     const screen = Screen.fit(rows, columns, railHidden);
     const { filters, setFilters, open, toggleOpen } = useFilters(initialFilters, screen.filters, onFiltersChange);
     const panelFit = usePanelFit();
@@ -55,7 +56,7 @@ export function DevApp(props: DevAppProps): ReactElement {
     const notices = noticesOf(state);
 
     const logs = useLogs(filters.channels, filters.levels);
-    const { logLayout, logRows } = useLogRows(logs, logBox.width);
+    const { logLayout, logRows } = useLogRows(logs, logBox.width, fullDetails);
     const viewportHeight = Math.max(1, logBox.height);
     const scroll = useScroll(logRows, viewportHeight, rowKey);
     const uptimeMs = useUptime(state, screen.uptime);
@@ -75,7 +76,8 @@ export function DevApp(props: DevAppProps): ReactElement {
             filterView: screen.filterKeysView(open, panelFit.fits),
             toggleFilterView: toggleOpen,
             canToggleRail: screen.canToggleRail,
-            toggleRail: () => setRailHidden(!railHidden),
+            toggleRail,
+            toggleDetails,
             cursor,
             setCursor,
             onQuit: props.onQuit,
@@ -120,6 +122,7 @@ export function DevApp(props: DevAppProps): ReactElement {
                 cursor={cursor}
                 interactive={interactive}
                 uptimeMs={uptimeMs}
+                fullDetails={fullDetails}
             />
         </Box>
     );
