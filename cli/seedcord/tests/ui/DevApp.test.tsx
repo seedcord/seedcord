@@ -5,9 +5,9 @@ import { describe, expect, it, vi } from 'vitest';
 import { NO_FILTER_ROOM } from '#ui/components/primitives/FilterPanel';
 import { NO_ROOM } from '#ui/components/primitives/ScrollableLogView';
 import { DevApp } from '#ui/DevApp';
+import { COMPACT_ROWS } from '#ui/Screen';
 import { DevStore } from '#ui/stores/DevStore';
 import { LogStore } from '#ui/stores/LogStore';
-import { COMPACT_ROWS } from '#ui/tier';
 
 import { renderAt } from './renderAt';
 import { renderOnScreen } from './renderOnScreen';

@@ -93,6 +93,7 @@ When someone asks how seedcord does something, answer for gateway and for http. 
 - **No dead code.** Before adding `export`, confirm something outside the file names the symbol. A symbol that exists only for a test belongs in the test folder.
 - **Grep every consuming surface before deleting anything.** That includes markdown and generated output. Show no callers or name the replacement.
 - **Commit subjects are one lowercase line with no scope and no body.** Write `feat:`, never `feat(http):`. A breaking change marks the bare type, `feat!:`. A PR title follows the same rule, because a squash merge turns it into the commit.
+- **Name a file after its main export, in that export's casing.** A file built around a class is `LogLayout.ts`, and one built around a function is `linkCommands.ts`, even when a helper class sits inside it. Rename the file when its main export changes kind. On macOS, `git mv` a case-only rename through a temporary name.
 - **Move files with `git mv`.** Add dependencies with `pnpm add` so the lockfile updates.
 
 ---

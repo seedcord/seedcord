@@ -16,7 +16,7 @@ import { Rule } from './Rule';
 import type { TunnelStatus } from '#commands/dev/tunnel/TunnelCoordinator';
 import type { LogFilters } from '#ui/devPrefs';
 import type { FilterCursor } from '#ui/filterCursor';
-import type { FilterView } from '#ui/hooks/useFilters';
+import type { FilterView } from '#ui/Screen';
 import type { DevState, DevTransport } from '#ui/stores/DevStore';
 import type { DOMElement } from 'ink';
 import type { ReactElement, Ref } from 'react';

@@ -17,8 +17,8 @@ import { LogLayout } from '#ui/LogLayout';
 import { expandRows, rowKey, wrapRows } from '#ui/logRows';
 import { noticesOf } from '#ui/notices';
 import { profileWrap } from '#ui/profile';
+import { Screen } from '#ui/Screen';
 import { LogStore } from '#ui/stores/LogStore';
-import { tierFor } from '#ui/tier';
 
 import type { LogFilters } from '#ui/devPrefs';
 import type { DevStore } from '#ui/stores/DevStore';
@@ -41,10 +41,9 @@ export function DevApp(props: DevAppProps): ReactElement {
     const state = useDevState(store);
     const { rows, columns } = useWindowSize();
 
-    const tier = tierFor(rows, columns);
-    const { filters, setFilters, view, toggleView } = useFilters(initialFilters, tier, onFiltersChange);
+    const screen = Screen.fit(rows, columns);
+    const { filters, setFilters, open, toggleOpen } = useFilters(initialFilters, screen.filters, onFiltersChange);
     const panelFit = usePanelFit();
-    const keysView = tier === 'logs' && !panelFit.fits ? 'collapsed' : view;
     const [cursor, setCursor] = useState(INITIAL_CURSOR);
 
     const logBoxRef = useRef<DOMElement | null>(null);
@@ -63,7 +62,7 @@ export function DevApp(props: DevAppProps): ReactElement {
     }, [logs, logBox.width]);
     const viewportHeight = Math.max(1, logBox.height);
     const scroll = useScroll(logRows, viewportHeight, rowKey);
-    const uptimeMs = useUptime(state, tier !== 'logs');
+    const uptimeMs = useUptime(state, screen.uptime);
 
     const interactive = acceptsSessionKeys(state);
 
@@ -77,8 +76,8 @@ export function DevApp(props: DevAppProps): ReactElement {
             store,
             filters,
             setFilters,
-            filterView: keysView,
-            toggleFilterView: toggleView,
+            filterView: screen.filterKeysView(open, panelFit.fits),
+            toggleFilterView: toggleOpen,
             cursor,
             setCursor,
             onQuit: props.onQuit,
@@ -108,7 +107,7 @@ export function DevApp(props: DevAppProps): ReactElement {
             <Rule />
             <DevLayout
                 state={state}
-                tier={tier}
+                screen={screen}
                 notices={notices}
                 railRef={railRef}
                 railWidth={railWidth}
@@ -118,7 +117,7 @@ export function DevApp(props: DevAppProps): ReactElement {
                 viewportHeight={viewportHeight}
                 measured={logBox.height > 0}
                 filters={filters}
-                filterView={view}
+                filterView={screen.filterView(open)}
                 panelFit={panelFit}
                 cursor={cursor}
                 interactive={interactive}

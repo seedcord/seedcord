@@ -7,9 +7,9 @@ import { LogStore } from '#ui/stores/LogStore';
 import type { Confirmable } from '#ui/confirms';
 import type { LogFilters } from '#ui/devPrefs';
 import type { CursorMove, FilterCursor } from '#ui/filterCursor';
-import type { FilterView } from '#ui/hooks/useFilters';
 import type { ScrollApi } from '#ui/hooks/useScroll';
 import type { LogRow } from '#ui/logRows';
+import type { FilterView } from '#ui/Screen';
 import type { DevState, DevStore } from '#ui/stores/DevStore';
 import type { Key } from 'ink';
 

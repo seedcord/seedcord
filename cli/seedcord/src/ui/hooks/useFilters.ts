@@ -1,26 +1,24 @@
 import { useState } from 'react';
 
 import type { LogFilters } from '#ui/devPrefs';
-import type { Tier } from '#ui/tier';
-
-export type FilterView = 'always' | 'shown' | 'collapsed';
+import type { FilterPlace } from '#ui/Screen';
 
 interface Filters {
     readonly filters: LogFilters;
     readonly setFilters: (next: LogFilters) => void;
-    readonly view: FilterView;
-    readonly toggleView: () => void;
+    readonly open: boolean;
+    readonly toggleOpen: () => void;
 }
 
-export function useFilters(initial: LogFilters, tier: Tier, onChange?: (filters: LogFilters) => void): Filters {
+export function useFilters(initial: LogFilters, place: FilterPlace, onChange?: (filters: LogFilters) => void): Filters {
     const [filters, setFilters] = useState(initial);
-    const [shown, setShown] = useState(false);
-    const [lastTier, setLastTier] = useState(tier);
+    const [open, setOpen] = useState(false);
+    const [lastPlace, setLastPlace] = useState(place);
 
     // react's pattern for resetting state when a prop changes, applied during render
-    if (tier !== lastTier) {
-        setLastTier(tier);
-        if (tier === 'full') setShown(false);
+    if (place !== lastPlace) {
+        setLastPlace(place);
+        if (place === 'rail-always') setOpen(false);
     }
 
     const changeFilters = (next: LogFilters): void => {
@@ -28,10 +26,5 @@ export function useFilters(initial: LogFilters, tier: Tier, onChange?: (filters:
         onChange?.(next);
     };
 
-    return {
-        filters,
-        setFilters: changeFilters,
-        view: tier === 'full' ? 'always' : shown ? 'shown' : 'collapsed',
-        toggleView: () => setShown(!shown)
-    };
+    return { filters, setFilters: changeFilters, open, toggleOpen: () => setOpen(!open) };
 }
