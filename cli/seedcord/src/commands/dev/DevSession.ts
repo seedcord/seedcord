@@ -1,7 +1,8 @@
 import { dirname } from 'node:path';
 
+import { readBotToken } from '@seedcord/core/internal';
 import { paint, SeedcordErrorCode } from '@seedcord/errors';
-import { SeedcordError } from '@seedcord/errors/internal';
+import { applicationIdFromToken, SeedcordError } from '@seedcord/errors/internal';
 import { HostAugmentTarget, HostVersion, type SeedcordInstance } from '@seedcord/types/internal';
 import { asError, unlessAborted } from '@seedcord/utils/internal';
 
@@ -14,6 +15,7 @@ import { TscRunner } from './TscRunner';
 import type { CodegenRunner } from '#commands/codegen/CodegenRunner';
 import type { ResolvedSeedcordConfig } from '#core/config/schema';
 import type { ProjectFiles } from '#core/project/ProjectFiles';
+import type { DevLock } from '#core/state/DevLock';
 import type { StateFolder } from '#core/state/StateFolder';
 import type { DevStore } from '#ui/stores/DevStore';
 import type { DevRuntime } from './runtime/DevRuntime';
@@ -28,6 +30,7 @@ export interface DevSessionDeps {
     readonly codegen: Pick<CodegenRunner, 'writeFrom'>;
     readonly codegenLogger: ILogger;
     readonly state: StateFolder;
+    readonly lock: DevLock;
     readonly onEvent: DevEventHandler;
 }
 
@@ -93,6 +96,7 @@ export class DevSession {
         profileMark('entry');
         const exported = await this.unlessStopped(resolveDefaultExport(module));
         const instance = toSeedcordInstance(exported, this.config.instance);
+        this.deps.lock.hold(applicationIdFromToken(readBotToken()), dirname(this.config.configFile));
 
         this.instance = instance;
         store.setTransport({

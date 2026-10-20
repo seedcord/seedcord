@@ -1,9 +1,11 @@
 import { appendFile, mkdir, readFile, writeFile } from 'node:fs/promises';
 import { join } from 'node:path';
 
+import { readBotToken } from '@seedcord/core/internal';
 import { isSeedcordError, SeedcordErrorCode } from '@seedcord/errors';
 import { posixRelative } from '@seedcord/utils/internal';
 import { bindings, exports } from 'cf/config';
+import { Envapter } from 'envapt';
 import { assert, beforeAll, describe, expect, it, onTestFinished, vi } from 'vitest';
 
 import { CodegenRunner } from '#commands/codegen/CodegenRunner';
@@ -11,12 +13,14 @@ import { DevRunner } from '#commands/dev/DevRunner';
 import { EdgeDevRuntime } from '#commands/dev/runtime/EdgeDevRuntime';
 import { quietSteps } from '#core/output/quietSteps';
 import { deployedCommandsFile } from '#core/state/deployedCommands';
+import { DevLock } from '#core/state/DevLock';
 import { StateFolder } from '#core/state/StateFolder';
 import { ShellMode } from '#core/viteMode';
 import { READ_IN_WORKERD, writeCloudflareConfig } from '#tests/commands/build/edgeBot';
-import { ED25519_KEY_BYTES } from '#tests/commands/build/smoke';
+import { ED25519_KEY_BYTES, FAKE_TOKEN } from '#tests/commands/build/smoke';
 import { GREETING, GREETING_PROBE, greetingPlugin } from '#tests/greetingPlugin';
 import { loadedConfig } from '#tests/loadedConfig';
+import { lockDir } from '#tests/lockDir';
 import { silentLogger } from '#tests/silentLogger';
 import { vitePluginsOf } from '#tests/vitePluginsOf';
 import { DevStore } from '#ui/stores/DevStore';
@@ -74,6 +78,17 @@ describe('EdgeDevRuntime lifecycle', () => {
         await writeFile(join(project.projectDir, '.dev.vars.staging'), `${staging.join('\n')}\n`);
 
         await expect(nodeCopyApiToken(project.projectDir, 'staging')).resolves.toBe('from-staging');
+    }, 120_000);
+
+    it("reads the bot's token from .dev.vars in the CLI until the runtime stops", async () => {
+        const before = Envapter.get('DISCORD_BOT_TOKEN');
+        await using project = await edgeProject();
+
+        await using started = await startedRuntime(project.projectDir);
+        expect(readBotToken()).toBe(FAKE_TOKEN);
+        await started[Symbol.asyncDispose]();
+
+        expect(Envapter.get('DISCORD_BOT_TOKEN')).toBe(before);
     }, 120_000);
 
     describe('on one started bot', () => {
@@ -167,6 +182,7 @@ describe('EdgeDevRuntime lifecycle', () => {
             projectLoader: { readConfig: () => Promise.resolve(loadedConfig(config)) },
             store,
             state,
+            lock: new DevLock(lockDir(), silentLogger),
             codegen: CodegenRunner.create(quietSteps, silentLogger, new ShellMode()),
             codegenLogger: silentLogger,
             // justified: tunnel mode off routes nothing

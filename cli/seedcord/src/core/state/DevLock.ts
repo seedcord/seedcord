@@ -1,4 +1,5 @@
 import { mkdirSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
+import { tmpdir, userInfo } from 'node:os';
 import { join } from 'node:path';
 
 import { paint, SeedcordErrorCode } from '@seedcord/errors';
@@ -64,6 +65,11 @@ export class DevLock {
         private readonly dir: string,
         private readonly logger: ILogger
     ) {}
+
+    // linux shares one /tmp across users
+    public static create(logger: ILogger): DevLock {
+        return new DevLock(join(tmpdir(), `seedcord-${userInfo().username}`, 'dev'), logger);
+    }
 
     public hold(appId: string, configDir: string): void {
         const path = join(this.dir, `${appId}.lock`);

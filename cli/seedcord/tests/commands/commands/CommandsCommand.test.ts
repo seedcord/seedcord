@@ -4,13 +4,13 @@ import { Command } from '@commander-js/extra-typings';
 import { KEY, PromptTerminal } from '@seedcord/cli-prompts/testing';
 import { paint, SeedcordErrorCode } from '@seedcord/errors';
 import { Routes } from 'discord-api-types/v10';
-import { Envapter, PortableSource } from 'envapt';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
 import { CommandsCommand } from '#commands/commands/CommandsCommand';
 import { DeployRunner } from '#commands/commands/deploy/DeployRunner';
 import { ListRunner } from '#commands/commands/list/ListRunner';
 import { RemoveRunner } from '#commands/commands/remove/RemoveRunner';
+import { bindEnv } from '#tests/bindEnv';
 import { FAKE_TOKEN } from '#tests/commands/build/smoke';
 import { APP_ID, botGuilds, fakeDiscord, fakeProject, slash } from '#tests/commands/commands/fakeBot';
 import { silentLogger } from '#tests/silentLogger';
@@ -111,7 +111,7 @@ describe('seedcord commands, on a terminal', () => {
         process.stdin.isTTY = true;
         process.stdout.isTTY = true;
         delete process.env.CI;
-        Envapter.useSource(new PortableSource({ DISCORD_BOT_TOKEN: FAKE_TOKEN }));
+        bindEnv({ DISCORD_BOT_TOKEN: FAKE_TOKEN });
     });
 
     afterEach(() => {
@@ -197,7 +197,7 @@ describe('seedcord commands clean and purge, off a terminal', () => {
 
     beforeEach(() => {
         process.stdin.isTTY = false;
-        Envapter.useSource(new PortableSource({ DISCORD_BOT_TOKEN: FAKE_TOKEN }));
+        bindEnv({ DISCORD_BOT_TOKEN: FAKE_TOKEN });
     });
 
     afterEach(() => {

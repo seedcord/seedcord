@@ -1,11 +1,8 @@
-import { Envapter, PortableSource } from 'envapt';
 import { describe, expect, it } from 'vitest';
 
 import { createTunnelCoordinator, missingCloudflaredHint } from '#commands/dev/tunnel/createTunnelCoordinator';
 import { TunnelCoordinator } from '#commands/dev/tunnel/TunnelCoordinator';
 import { silentLogger } from '#tests/silentLogger';
-
-const VALID_TOKEN = `${'a'.repeat(24)}.${'b'.repeat(6)}.${'c'.repeat(27)}`;
 
 describe('createTunnelCoordinator', () => {
     it('builds nothing when the tunnel is off', () => {
@@ -24,8 +21,6 @@ describe('createTunnelCoordinator', () => {
     });
 
     it('builds a coordinator when cloudflared is on PATH', () => {
-        Envapter.useSource(new PortableSource({ DISCORD_BOT_TOKEN: VALID_TOKEN }));
-
         const coordinator = createTunnelCoordinator(
             silentLogger,
             () => undefined,
@@ -37,8 +32,6 @@ describe('createTunnelCoordinator', () => {
     });
 
     it('builds a coordinator for a configured url without looking for cloudflared', () => {
-        Envapter.useSource(new PortableSource({ DISCORD_BOT_TOKEN: VALID_TOKEN }));
-
         const coordinator = createTunnelCoordinator(
             silentLogger,
             () => undefined,

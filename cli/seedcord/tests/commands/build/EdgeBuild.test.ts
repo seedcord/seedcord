@@ -2,7 +2,6 @@ import { join } from 'node:path';
 import { stripVTControlCharacters } from 'node:util';
 
 import { isSeedcordError, SeedcordErrorCode } from '@seedcord/errors';
-import { Envapter, PortableSource } from 'envapt';
 import { assert, describe, expect, it } from 'vitest';
 
 import { EdgeBuild } from '#commands/build/builder/EdgeBuild';
@@ -12,6 +11,7 @@ import { importInstance } from '#core/modules/importInstance';
 import { openModuleLoader } from '#core/modules/openModuleLoader';
 import { quietSteps } from '#core/output/quietSteps';
 import { ShellMode } from '#core/viteMode';
+import { bindEnv } from '#tests/bindEnv';
 
 import type { Project } from '#core/project/Project';
 import type { BakedIds } from '@seedcord/core/internal';
@@ -75,7 +75,7 @@ describe('EdgeBuild', () => {
         assert(target.kind === 'edge');
         const { config } = await importInstance(project.modules, project.config.instance);
         // opening the project binds process.env
-        Envapter.useSource(new PortableSource({}));
+        bindEnv({});
 
         await expect(new EdgeBuild(project, target).readDiscord(config.bot)).rejects.toMatchObject({
             code: SeedcordErrorCode.ConfigMissingEnv
