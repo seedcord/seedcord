@@ -299,6 +299,8 @@ export enum SeedcordErrorCode {
     CliViteEnvironmentMissing = 3139,
     /** A folder that `files` in `seedcord.config.ts` lists is missing or is a file. */
     CliListedFolderUnusable = 3140,
+    /** Another `seedcord dev` already runs a bot on the same Discord application. */
+    CliDevAlreadyRunning = 3141,
 
     /** A flag answers a question that the earlier answers skip. */
     CreateFlagNotApplicable = 3201,
