@@ -1,19 +1,15 @@
-import { useEffect, useRef } from 'react';
+import { useEffect, useEffectEvent } from 'react';
 
 import { LogStore } from '#ui/stores/LogStore';
 
 export function useLogCapture(onReady: () => void): void {
-    const isInitializedRef = useRef(false);
+    const ready = useEffectEvent(onReady);
     useEffect(() => {
-        if (isInitializedRef.current) return;
-        isInitializedRef.current = true;
-
         LogStore.instance.clear();
         LogStore.instance.mount();
-        onReady();
-
+        ready();
         return () => {
             LogStore.instance.unmount();
         };
-    }, [onReady]);
+    }, []);
 }

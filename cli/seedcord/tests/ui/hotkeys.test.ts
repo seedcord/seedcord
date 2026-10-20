@@ -95,6 +95,7 @@ describe('session keys while the bot starts', () => {
 
         for (const input of ['r', 'd', 'c']) dispatchHotkey(makeCtx({ ...ctx, input }));
         dispatchHotkey(makeCtx({ ...ctx, input: 'd', key: key({ ctrl: true }) }));
+        expect(store.getState().armed).toBeNull();
         dispatchHotkey(makeCtx({ ...ctx, input: 't' }));
         dispatchHotkey(makeCtx({ ...ctx, input: 'y' }));
         dispatchHotkey(makeCtx({ ...ctx, input: 'q' }));
@@ -102,7 +103,6 @@ describe('session keys while the bot starts', () => {
         expect(onRestart).not.toHaveBeenCalled();
         expect(onDisconnect).not.toHaveBeenCalled();
         expect(scroll.toBottom).not.toHaveBeenCalled();
-        expect(store.getState().armed).toBeNull();
         expect(scroll.toTop).toHaveBeenCalledOnce();
         expect(onRefreshCommands).toHaveBeenCalledWith(true);
         expect(onQuit).toHaveBeenCalledOnce();

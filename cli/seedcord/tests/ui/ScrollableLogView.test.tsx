@@ -71,7 +71,8 @@ describe('ScrollableLogView', () => {
         const head = lines.find((line) => line.includes('Loaded handlers')) ?? '';
         const guided = lines.find((line) => line.includes('FeedNav')) ?? '';
 
-        expect(guided.indexOf('│')).toBe(head.indexOf('●'));
+        expect(head.indexOf('●')).toBe(WIDE.guideIndent);
+        expect(guided.indexOf('│')).toBe(WIDE.guideIndent);
     });
 
     it('brackets a non-error block with a rule above and below', () => {
