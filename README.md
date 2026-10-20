@@ -25,7 +25,7 @@ seedcord is a TypeScript framework for Discord bots, typed end to end. Commands,
 
 You can build two kinds of bots with seedcord, and each one runs on its own package, called a transport. A gateway bot runs on `@seedcord/gateway`, which holds a websocket connection to Discord through the discord.js client and gets message, member, voice, and reaction events. An http bot runs on `@seedcord/http`, which answers the interaction requests Discord posts to your URL, on your own server or on Cloudflare Workers, with no discord.js dependency. You pick one when you scaffold. Handlers, checks, and the rest of the seedcord API work the same way on both. The objects a handler reads differ: discord.js objects on the gateway, raw payloads on http.
 
-Your bot runs through Vite, from the first `seedcord dev` to the production build. A Vite plugin in `seedcord.config.ts` lets your handlers import YAML, SQL, or whatever else that plugin loads. `ENV=staging` loads your `.env.staging` files. A saved handler reloads in place without restarting the bot. One `seedcord build` turns the same code into a Node or Bun server, a single Bun binary, a Cloudflare Worker, or a module your own server imports.
+Your bot runs through Vite, from the first `seedcord dev` to the production build. You can add any Vite plugin in `seedcord.config.ts`, so your handlers can import YAML, SQL, or whatever else a plugin loads. `ENV=staging` loads your `.env.staging` files. A saved handler reloads in place without restarting the bot. One `seedcord build` turns the same code into a Node or Bun server, a single Bun binary, a Cloudflare Worker, or a module your own server imports.
 
 ## What it looks like
 
@@ -77,7 +77,7 @@ export class Ping extends SlashHandler<'ping'> {
 **Tooling**
 
 - Hot reload that keeps the Discord connection open
-- Your own Vite plugins, `.env` modes, and bundled data files, the same in dev and in the build
+- Any Vite plugin, `.env` modes, and bundled data files, the same in dev and in the build
 - A dev terminal that shows startup phases and reply timings
 - `seedcord commands` to deploy, list, and clean up your commands on Discord
 - `seedcord codegen --check` for CI
@@ -86,6 +86,7 @@ export class Ping extends SlashHandler<'ping'> {
 **Runtime**
 
 - Startup and shutdown in ordered phases
+- Typed config from `.env` and the shell through [envapt](https://envapt.materwelon.dev)
 - Typed plugins with `init`, `ready`, and `dispose`, on a server or on Workers
 - A typed event bus on both transports
 - Custom emojis looked up by the name in your config
@@ -129,8 +130,6 @@ import bot from 'your-bot';
 
 await bot.start();
 ```
-
-To publish it, point `exports` in your `package.json` at `dist/index.mjs` and `dist/index.d.mts`, and list everything the bot imports at runtime under `dependencies`. The bot reads its token and the rest of its `.env` from the folder the app starts in.
 
 ## Demo
 

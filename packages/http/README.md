@@ -23,22 +23,68 @@
 
 ## About
 
-`@seedcord/http` runs a seedcord bot on Discord's interactions endpoint. Discord posts each interaction to your URL. The framework verifies the Ed25519 signature before dispatching it.
+`@seedcord/http` is the transport for an http bot. Discord posts each interaction to your bot's URL, and the bot checks the request's Ed25519 signature before it runs your handler. It has no discord.js dependency and keeps no connection open, so it runs on your own server or on Cloudflare Workers.
 
-Discord posts only interactions over this transport. Use [`@seedcord/gateway`](https://www.npmjs.com/package/@seedcord/gateway) when the bot reacts to messages, members, or voice.
+Discord posts only interactions to that URL. Use [`@seedcord/gateway`](https://www.npmjs.com/package/@seedcord/gateway) when your bot reacts to messages, members, voice, or reactions.
 
-Until v1.0.0, minor versions can break.
+seedcord is pre-1.0, so a minor version can break your bot. Each release's changelog says what changed and how to update.
 
 ## Installation
 
+`pnpm create seedcord` sets up a new bot and asks where it runs. To add seedcord to an existing project:
+
 ```sh
-pnpm add @seedcord/http
+pnpm add @seedcord/http @discordjs/builders envapt
+pnpm add -D seedcord vite typescript
 ```
 
-`pnpm create seedcord` scaffolds the whole project. On this transport `pnpm dev` also opens a cloudflared tunnel and registers the URL with Discord.
+`envapt` and `typescript` are peer dependencies. `seedcord` is the CLI that runs the bot in dev and builds it. In dev, it also opens a cloudflared tunnel and sets your app's interactions URL to it.
 
-## Entry points
+## Usage
 
-The root entry runs on Node through the `Seedcord` class. It binds its own server on `port`. Set `port: false` to pass each request from your own server to `seedcord.fetch()`.
+`bot.ts` creates the bot and tells it where your handlers are:
 
-Under the `workerd` export condition, the same import gives Cloudflare Workers an edge build of `Seedcord`. That build is a work in progress and cannot be used yet.
+```ts
+import { Seedcord } from '@seedcord/http';
+import { Converters, Envapter } from 'envapt';
+
+export default new Seedcord({
+    bot: {
+        interactions: { path: './handlers' },
+        commands: {
+            path: './commands',
+            guilds: Envapter.getAs('TESTING_GUILD_IDS', Converters.array(), [])
+        }
+    },
+    subscribers: { path: null }
+});
+```
+
+Read your environment through [envapt](https://envapt.materwelon.dev), the way `TESTING_GUILD_IDS` is read above. seedcord loads your `.env` files into envapt, and binds a worker's `env` to it on Cloudflare Workers, so the same read works in dev, in a build, and on Workers. envapt also reads your shell's variables, while `process.env` misses everything in your `.env` files.
+
+Handlers read raw payloads from `discord-api-types`. Slash commands, components, checks, and plugins work the same way as on the gateway. The [guide](https://seedcord.org/guide) covers them.
+
+## Where it runs
+
+### Its own server
+
+On Node or Bun, `Seedcord` listens on `port`, 3000 by default.
+
+### Inside your server
+
+Set `port: false`, start the bot, then pass each request to `bot.fetch()`. It takes a web `Request` and returns a `Response`, so a Hono or Next.js route can forward to it:
+
+```ts
+import { Hono } from 'hono';
+
+import bot from './bot';
+
+await bot.start();
+
+const app = new Hono();
+app.post('/interactions', (c) => bot.fetch(c.req.raw));
+```
+
+### Cloudflare Workers
+
+The same `Seedcord` import runs on Cloudflare Workers. A `cloudflare.config.ts` beside `seedcord.config.ts` makes `seedcord build` write a worker, which you deploy with `cf deploy --prebuilt`. The [build guide](https://seedcord.org/guide/tooling/build) covers the setup.

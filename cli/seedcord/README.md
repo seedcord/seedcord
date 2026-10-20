@@ -25,7 +25,9 @@
 
 `seedcord` is the CLI a bot project runs during development and at build time. It reads `seedcord.config.ts` and gives you a dev server with hot reload, a production build, the codegen that types your commands, and a way to deploy those commands to Discord.
 
-Until v1.0.0, minor versions can break.
+It loads your bot through Vite every time, with any Vite plugin you add. Those plugins, your `.env` modes, and bundled data files you set up in dev work the same way in the build. One `seedcord build` makes a Node or Bun server, a single Bun binary, a Cloudflare Worker, or a package another app installs and starts.
+
+seedcord is pre-1.0, so a minor version can break your bot. Each release's changelog says what changed and how to update.
 
 ## Installation
 
@@ -34,6 +36,8 @@ Until v1.0.0, minor versions can break.
 ```sh
 pnpm add -D seedcord vite
 ```
+
+Run it through your project's scripts, like `pnpm dev`. A global `seedcord` throws `CliNotProjectInstall`, because the CLI has to load the same seedcord packages your bot imports.
 
 ## Commands
 
@@ -72,58 +76,34 @@ In CI, or anywhere without a terminal, nothing changes on Discord unless you pas
 
 On the http transport, `dev` also opens a cloudflared tunnel and points Discord's interactions URL at it.
 
+Pass `--verbose` to any command for the resolved config and full error stacks.
+
 ## Config
 
 `defineConfig` types `seedcord.config.ts`:
 
 ```ts
+import yaml from '@rollup/plugin-yaml';
 import { defineConfig } from 'seedcord';
 
 export default defineConfig({
-    // ...
+    root: './src',
+    instance: './bot.ts',
+    build: { start: './index.ts' },
+    files: ['./locales'],
+    vitePlugins: () => [yaml()]
 });
 ```
 
-`build.start` points at the file that starts a node bot, like `build: { start: './index.ts' }`. `seedcord build` then writes an `index.mjs` in `outDir` that runs it. Without `build.start`, `index.mjs` default exports the bot for your own node app to import and start, with its types in `index.d.mts`.
+- `instance` is the file that exports your bot.
+- `build.start` is the file that starts it. Leave it out to build the bot as a package.
+- `files` lists the folders of data files the build bundles. The bot reads them with `readFiles`.
+- `vitePlugins` takes any Vite plugin, and each one runs in dev and in the build. With the YAML plugin above, a handler can import a `.yaml` file.
 
-`files` lists the folders whose non-code files `seedcord build` bundles, like `files: ['./locales']`. The bot reads them, text or binary, through `readFiles` from `@seedcord/gateway` or `@seedcord/http`. Each folder resolves against `root` and includes its subfolders. A folder can also sit beside `root`, like `'../assets'`, as long as it is inside the folder that holds `seedcord.config.ts`. Code files under `root` need no listing. The build bundles every code file under `root` except those in dot-folders, `node_modules`, `outDir` and the logs folder beside `seedcord.config.ts`.
+`ENV=staging pnpm build` builds in staging mode and loads your `.env.staging` files. [envapt](https://envapt.materwelon.dev) reads the same mode in your bot.
 
-`ENVIRONMENT`, `ENV`, `NODE_ENV` or `MODE` in your shell sets the Vite mode, as in `ENV=staging pnpm build`. The CLI loads the `.env.<mode>` files for it. It reads these variables from your shell only, because `.env` usually holds your dev environment. With none of them set, `seedcord build` runs in `production` and the other commands in `development`. The mode has to be one of envapt's four environments: `development`, `staging`, `production` or `test`. Any other value throws `ConfigInvalidEnv`.
+The [tooling guide](https://seedcord.org/guide/tooling) covers every key.
 
 ## Edge bots
 
-A `cloudflare.config.ts` beside `seedcord.config.ts` makes the bot an edge bot, for Cloudflare Workers. An edge bot needs three things:
-
-- `"customConditions": ["workerd"]` in its tsconfig
-- a `root` in `seedcord.config.ts` that points at the bot's code, like `'./src'`
-- `@cloudflare/vite-plugin` 2 and `cf` as dev dependencies
-
-```sh
-pnpm add -D @cloudflare/vite-plugin@2.0.0-beta.v.0 cf@1.0.0-beta.17
-```
-
-The worker's `env` holds only the bindings that `cloudflare.config.ts` declares, so declare every secret the bot reads. The CLI throws if `cloudflare.config.ts` sets `entrypoint`, because seedcord builds the worker's entry from `instance`.
-
-```ts
-import { bindings, defineConfig } from 'cf/config';
-
-export default defineConfig({
-    worker: {
-        name: 'my-bot',
-        compatibilityDate: '2026-08-04',
-        env: { DISCORD_BOT_TOKEN: bindings.secret() }
-    }
-});
-```
-
-`bindings.secret()` declares `DISCORD_BOT_TOKEN` without a value, so the token stays out of the file. Its value comes from your local env files in dev and from the secrets you upload when you deploy.
-
-`seedcord dev` runs the bot in workerd through `@cloudflare/vite-plugin`. It listens on `port` from `seedcord.config.ts`, or on 3000 if you leave it out. The worker gets its secrets from `.dev.vars`, or from the `.env` files and your shell when there's no `.dev.vars`. A saved handler reloads in place. After you change `cloudflare.config.ts`, a `.dev.vars` file or a `.env` file, press `r` to restart.
-
-`seedcord build` writes the worker to `.cloudflare/output`, then starts it once in workerd to check that it loads. Deploy it with `cf deploy --prebuilt`. Cloudflare refuses to deploy a worker while one of its declared secrets has no value, so the first deploy of a new worker needs `--secrets-file` with a value for each one.
-
-A `cloudflare.config.ts` that exports a function gets the Vite mode as `mode`. Local env files never replace a `bindings.text()` value, so read `mode` for a value that differs per environment, as in `ENV: bindings.text(mode)`.
-
-Cloudflare's config loader throws on Bun, so run the CLI on Node for an edge bot. `bun run dev` runs it on Node. `bun --bun run dev` runs it on Bun.
-
-Before it bundles, the build reads the public key, command ids and emoji ids from Discord with `DISCORD_BOT_TOKEN` from your environment or `.env`, and writes them into the worker. Every command in your code has to be deployed already, or the build stops and lists the ones that aren't. Run `seedcord commands deploy` first.
+A `cloudflare.config.ts` beside `seedcord.config.ts` turns an http bot into a Cloudflare Worker. `seedcord dev` runs it in workerd, and `seedcord build` writes a worker you deploy with `cf deploy --prebuilt`. The [build guide](https://seedcord.org/guide/tooling/build) covers the setup.

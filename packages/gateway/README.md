@@ -23,23 +23,70 @@
 
 ## About
 
-`@seedcord/gateway` runs a seedcord bot over a websocket connection through the discord.js client, which also keeps the cache. A gateway connection carries message, member, voice, and reaction events. Discord never posts those to an interactions endpoint. Pick this transport when the bot reacts to any of them.
+`@seedcord/gateway` is the transport for a gateway bot. It holds a websocket connection to Discord through the discord.js client, which also keeps the cache. That connection carries message, member, voice, and reaction events, and Discord only sends those over a websocket. Pick this transport when your bot reacts to any of them.
 
-Until v1.0.0, minor versions can break.
+A bot that only answers commands and components can use [`@seedcord/http`](https://www.npmjs.com/package/@seedcord/http) instead, which keeps no connection open and also runs on Cloudflare Workers.
+
+seedcord is pre-1.0, so a minor version can break your bot. Each release's changelog says what changed and how to update.
 
 ## Installation
 
+`pnpm create seedcord` sets up a new bot. To add seedcord to an existing project:
+
 ```sh
-pnpm add @seedcord/gateway discord.js
+pnpm add @seedcord/gateway discord.js @discordjs/builders envapt
+pnpm add -D seedcord vite typescript
 ```
 
-`discord.js`, `envapt`, and `typescript` are peer dependencies. `pnpm create seedcord` sets all of it up.
+`discord.js`, `envapt`, and `typescript` are peer dependencies. `seedcord` is the CLI that runs the bot in dev and builds it.
+
+## Usage
+
+`bot.ts` creates the bot and tells it where your handlers are:
+
+```ts
+import { Seedcord } from '@seedcord/gateway';
+import { GatewayIntentBits } from 'discord.js';
+import { Converters, Envapter } from 'envapt';
+
+export default new Seedcord({
+    bot: {
+        clientOptions: { intents: [GatewayIntentBits.Guilds, GatewayIntentBits.GuildMessages] },
+        interactions: { path: './handlers' },
+        commands: {
+            path: './commands',
+            guilds: Envapter.getAs('TESTING_GUILD_IDS', Converters.array(), [])
+        },
+        events: { path: './events' }
+    },
+    subscribers: { path: null }
+});
+```
+
+Read your environment through [envapt](https://envapt.materwelon.dev), the way `TESTING_GUILD_IDS` is read above. seedcord loads your `.env` files into envapt, and reads `DISCORD_BOT_TOKEN` from it too. envapt also reads your shell's variables, while `process.env` misses everything in your `.env` files.
+
+A file in `events/` reacts to any discord.js client event. Its handler reads the same arguments discord.js passes to `client.on()`:
+
+```ts
+import { EventHandler, RegisterEvent } from '@seedcord/gateway';
+import { Events } from 'discord.js';
+
+@RegisterEvent([Events.MessageCreate])
+export class Mentioned extends EventHandler<Events.MessageCreate> {
+    public async execute(): Promise<void> {
+        const [message] = this.event;
+        if (message.mentions.users.has(message.client.user.id)) await message.reply('hey');
+    }
+}
+```
+
+Slash commands, components, checks, and plugins work the same way as on http. The [guide](https://seedcord.org/guide) covers them.
 
 ## What it adds over the core
 
-Everything in `@seedcord/core`, plus the parts that use a live connection:
+Everything in [`@seedcord/core`](https://www.npmjs.com/package/@seedcord/core), plus:
 
-- `Seedcord`, the class that connects and holds the discord.js client
-- event subscribers, through `Subscriber` and `WebhookLog`
-- `getConfirmation`, which waits on a button press and returns the answer
-- pagination sources bound to the gateway
+- `Seedcord`, which connects to Discord and holds the discord.js client
+- handlers that read discord.js objects, like a `ChatInputCommandInteraction`
+- event handlers for every discord.js client event, through `EventHandler` and `@RegisterEvent`
+- `getConfirmation`, which shows buttons and waits for the answer in one `await`
