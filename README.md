@@ -21,26 +21,77 @@
 
 </div>
 
-seedcord is a TypeScript framework for Discord bots, typed end to end. Commands, events, components, gates, lifecycle, and plugins all come with it. A wrong route or a wrong option name is a compile error, before the bot ever connects.
+seedcord is a TypeScript framework for Discord bots, typed end to end. Commands, events, components, checks, lifecycle, and plugins all come with it. A wrong route or a wrong option name is a compile error, before the bot ever connects.
 
-You pick one of two transports when you scaffold. `@seedcord/gateway` holds a websocket connection through the discord.js client. `@seedcord/http` answers Discord's interaction requests and has no discord.js dependency. Handlers, checks, and the rest of the seedcord API work the same way on both. The objects they read differ: discord.js objects on the gateway, raw payloads on http.
+You can build two kinds of bots with seedcord, and each one runs on its own package, called a transport. A gateway bot runs on `@seedcord/gateway`, which holds a websocket connection to Discord through the discord.js client and gets message, member, voice, and reaction events. An http bot runs on `@seedcord/http`, which answers the interaction requests Discord posts to your URL, on your own server or on Cloudflare Workers, with no discord.js dependency. You pick one when you scaffold. Handlers, checks, and the rest of the seedcord API work the same way on both. The objects a handler reads differ: discord.js objects on the gateway, raw payloads on http.
+
+Your bot runs through Vite, from the first `seedcord dev` to the production build. A Vite plugin in `seedcord.config.ts` lets your handlers import YAML, SQL, or whatever else that plugin loads. `ENV=staging` loads your `.env.staging` files. A saved handler reloads in place without restarting the bot. One `seedcord build` turns the same code into a Node or Bun server, a single Bun binary, a Cloudflare Worker, or a module your own server imports.
+
+## What it looks like
+
+A slash command is a builder in `commands/` and a handler in `handlers/`:
+
+```ts
+// commands/Ping.ts
+import { BuilderComponent, RegisterCommand } from '@seedcord/gateway';
+
+@RegisterCommand()
+export class Ping extends BuilderComponent<'command'> {
+    constructor() {
+        super('command');
+
+        this.instance
+            .setName('ping')
+            .setDescription('Check that the bot is answering')
+            .addBooleanOption((option) => option.setName('detailed').setDescription('Include process uptime'));
+    }
+}
+```
+
+```ts
+// handlers/Ping.ts
+import { SlashHandler, SlashRoute } from '@seedcord/gateway';
+
+@SlashRoute('ping')
+export class Ping extends SlashHandler<'ping'> {
+    public async execute(): Promise<void> {
+        const detailed = this.options.getBoolean('detailed'); // boolean | null
+        await this.reply(detailed ? `Pong, up for ${process.uptime()}s` : 'Pong');
+    }
+}
+```
+
+`seedcord codegen` reads the builder and types the handler from it. `getBoolean('detail')` fails the type check, and so does `@SlashRoute('pong')`.
 
 ## Features
 
-- Option types generated from your discord.js builders
-- Typed slash commands, subcommands, context menus, autocomplete
-- A typed customId codec for buttons, selects, and modals
-- Gates that refuse before the handler runs
+**Handlers**
+
+- Typed slash commands, subcommands, context menus, and autocomplete, with option types read from your discord.js builders
+- Typed customIds for buttons, selects, and modals
+- Reusable checks for permissions, cooldowns, and your own rules, which refuse before the handler runs
+- Middleware that runs around a handler
 - One `throw` that replies, logs, and reports
-- Middlewares that run around your handler
-- A typed pub/sub bus, on both transports
-- The same handlers on both gateway and http
-- Vite HMR that holds the Discord connection
-- A dev terminal that shows startup phases and reply timings
-- Startup and shutdown that run in ordered phases
 - Pagination that survives a restart
-- Typed plugins with `init`, `ready`, and `dispose`
-- and a lot more...
+
+**Tooling**
+
+- Hot reload that keeps the Discord connection open
+- Your own Vite plugins, `.env` modes, and bundled data files, the same in dev and in the build
+- A dev terminal that shows startup phases and reply timings
+- `seedcord commands` to deploy, list, and clean up your commands on Discord
+- `seedcord codegen --check` for CI
+- ESLint rules for seedcord and discord.js mistakes
+
+**Runtime**
+
+- Startup and shutdown in ordered phases
+- Typed plugins with `init`, `ready`, and `dispose`, on a server or on Workers
+- A typed event bus on both transports
+- Custom emojis looked up by the name in your config
+- Logging in named channels you can quiet one at a time
+
+...and a lot more in [the guide](https://seedcord.org/guide).
 
 ## Get started
 
@@ -50,7 +101,36 @@ pnpm create seedcord
 
 **[Read the guide →](https://seedcord.org/guide)**
 
-_**seedcord is pre-1.0, so minor versions can break.** I've already completed nearly all of the massive changes I planned though, so it's relatively stable. Read the changelog before you bump. Also, the `http` transport's edge build for Cloudflare Workers is a work in progress, and currently cannot be used._
+seedcord is pre-1.0, so a minor version can break your bot. Each release's changelog says what changed and how to update.
+
+## Where it runs
+
+<!-- prettier-ignore-start -->
+
+| where | how |
+| --- | --- |
+| a Node or Bun server | set `build.start` to the file that starts your bot, then `seedcord build` and `node --enable-source-maps dist/index.mjs` |
+| one Bun binary | `seedcord build` prints the `bun build --compile` line for your bot |
+| Cloudflare Workers | an http bot with a `cloudflare.config.ts`, then `seedcord build && cf deploy --prebuilt` |
+| inside your own server | an http bot with `port: false` takes each request from your Hono or Next.js route through `bot.fetch()` |
+
+<!-- prettier-ignore-end -->
+
+## Your bot as a package
+
+Without `build.start` in `seedcord.config.ts`, `seedcord build` turns your bot into a package. Once it's on npm, anyone can install it, import it, and start it, with your bot's types:
+
+```sh
+pnpm add your-bot
+```
+
+```ts
+import bot from 'your-bot';
+
+await bot.start();
+```
+
+To publish it, point `exports` in your `package.json` at `dist/index.mjs` and `dist/index.d.mts`, and list everything the bot imports at runtime under `dependencies`. The bot reads its token and the rest of its `.env` from the folder the app starts in.
 
 ## Demo
 
@@ -63,17 +143,33 @@ From `pnpm create seedcord` to a running bot.
 
 <https://github.com/user-attachments/assets/ed9fb965-3ac5-4e7c-a3aa-4b94fe58390b>
 
-## Public packages
+## Packages
+
+`pnpm create seedcord` installs the CLI and one transport. Add a plugin or the lint setup when you want them.
 
 <!-- prettier-ignore-start -->
 
 | package | changelogs | what it does |
 | --- | --- | --- |
 | [`create-seedcord`](cli/create-seedcord) | [![version](https://img.shields.io/npm/v/create-seedcord?style=flat-square&label=npm&labelColor=1f1f1f&color=c8341f)](cli/create-seedcord/CHANGELOG.md) | scaffolds a new bot |
-| [`seedcord`](cli/seedcord) | [![version](https://img.shields.io/npm/v/seedcord?style=flat-square&label=npm&labelColor=1f1f1f&color=c8341f)](cli/seedcord/CHANGELOG.md) | the CLI, dev server, build, and codegen |
-| [`@seedcord/core`](packages/core) | [![version](https://img.shields.io/npm/v/%40seedcord%2Fcore?style=flat-square&label=npm&labelColor=1f1f1f&color=c8341f)](packages/core/CHANGELOG.md) | foundational code shared by both transports |
+| [`seedcord`](cli/seedcord) | [![version](https://img.shields.io/npm/v/seedcord?style=flat-square&label=npm&labelColor=1f1f1f&color=c8341f)](cli/seedcord/CHANGELOG.md) | the CLI: dev server, build, codegen, and command deploys |
 | [`@seedcord/gateway`](packages/gateway) | [![version](https://img.shields.io/npm/v/%40seedcord%2Fgateway?style=flat-square&label=npm&labelColor=1f1f1f&color=c8341f)](packages/gateway/CHANGELOG.md) | the websocket transport, on the discord.js client |
-| [`@seedcord/http`](packages/http) | [![version](https://img.shields.io/npm/v/%40seedcord%2Fhttp?style=flat-square&label=npm&labelColor=1f1f1f&color=c8341f)](packages/http/CHANGELOG.md) | the interactions transport |
+| [`@seedcord/http`](packages/http) | [![version](https://img.shields.io/npm/v/%40seedcord%2Fhttp?style=flat-square&label=npm&labelColor=1f1f1f&color=c8341f)](packages/http/CHANGELOG.md) | the interactions transport, on a server or Cloudflare Workers |
+| [`@seedcord/plugin-mongoose`](plugins/mongoose) | [![version](https://img.shields.io/npm/v/%40seedcord%2Fplugin-mongoose?style=flat-square&label=npm&labelColor=1f1f1f&color=c8341f)](plugins/mongoose/CHANGELOG.md) | MongoDB through Mongoose |
+| [`@seedcord/plugin-kysely-postgres`](plugins/kysely-postgres) | [![version](https://img.shields.io/npm/v/%40seedcord%2Fplugin-kysely-postgres?style=flat-square&label=npm&labelColor=1f1f1f&color=c8341f)](plugins/kysely-postgres/CHANGELOG.md) | Postgres through Kysely |
+| [`@seedcord/eslint-plugin`](tooling/eslint-plugin) | [![version](https://img.shields.io/npm/v/%40seedcord%2Feslint-plugin?style=flat-square&label=npm&labelColor=1f1f1f&color=c8341f)](tooling/eslint-plugin/CHANGELOG.md) | ESLint rules for seedcord bots |
+| [`@seedcord/eslint-config`](tooling/eslint-config) | [![version](https://img.shields.io/npm/v/%40seedcord%2Feslint-config?style=flat-square&label=npm&labelColor=1f1f1f&color=c8341f)](tooling/eslint-config/CHANGELOG.md) | shared ESLint config |
+| [`@seedcord/tsconfig`](tooling/tsconfig) | [![version](https://img.shields.io/npm/v/%40seedcord%2Ftsconfig?style=flat-square&label=npm&labelColor=1f1f1f&color=c8341f)](tooling/tsconfig/CHANGELOG.md) | shared TypeScript config |
+
+<!-- prettier-ignore-end -->
+
+Both transports depend on these, so a bot gets them without installing them. Each one also works on its own.
+
+<!-- prettier-ignore-start -->
+
+| package | changelogs | what it does |
+| --- | --- | --- |
+| [`@seedcord/core`](packages/core) | [![version](https://img.shields.io/npm/v/%40seedcord%2Fcore?style=flat-square&label=npm&labelColor=1f1f1f&color=c8341f)](packages/core/CHANGELOG.md) | the code both transports share |
 | [`@seedcord/logger`](packages/logger) | [![version](https://img.shields.io/npm/v/%40seedcord%2Flogger?style=flat-square&label=npm&labelColor=1f1f1f&color=c8341f)](packages/logger/CHANGELOG.md) | channelled logging |
 | [`@seedcord/custom-id`](packages/custom-id) | [![version](https://img.shields.io/npm/v/%40seedcord%2Fcustom-id?style=flat-square&label=npm&labelColor=1f1f1f&color=c8341f)](packages/custom-id/CHANGELOG.md) | typed customId encoding and decoding |
 | [`@seedcord/errors`](packages/errors) | [![version](https://img.shields.io/npm/v/%40seedcord%2Ferrors?style=flat-square&label=npm&labelColor=1f1f1f&color=c8341f)](packages/errors/CHANGELOG.md) | typed errors with registered codes |
@@ -81,12 +177,16 @@ From `pnpm create seedcord` to a running bot.
 | [`@seedcord/types`](packages/types) | [![version](https://img.shields.io/npm/v/%40seedcord%2Ftypes?style=flat-square&label=npm&labelColor=1f1f1f&color=c8341f)](packages/types/CHANGELOG.md) | config shapes and shared types |
 | [`@seedcord/rate-limiter`](packages/rate-limiter) | [![version](https://img.shields.io/npm/v/%40seedcord%2Frate-limiter?style=flat-square&label=npm&labelColor=1f1f1f&color=c8341f)](packages/rate-limiter/CHANGELOG.md) | rate limiting and key building |
 | [`@seedcord/event-emitter`](packages/event-emitter) | [![version](https://img.shields.io/npm/v/%40seedcord%2Fevent-emitter?style=flat-square&label=npm&labelColor=1f1f1f&color=c8341f)](packages/event-emitter/CHANGELOG.md) | node-free typed event emitter with `waitFor` |
-| [`@seedcord/plugin-mongoose`](plugins/mongoose) | [![version](https://img.shields.io/npm/v/%40seedcord%2Fplugin-mongoose?style=flat-square&label=npm&labelColor=1f1f1f&color=c8341f)](plugins/mongoose/CHANGELOG.md) | MongoDB through Mongoose |
-| [`@seedcord/plugin-kysely-postgres`](plugins/kysely-postgres) | [![version](https://img.shields.io/npm/v/%40seedcord%2Fplugin-kysely-postgres?style=flat-square&label=npm&labelColor=1f1f1f&color=c8341f)](plugins/kysely-postgres/CHANGELOG.md) | Postgres through Kysely |
-| [`@seedcord/eslint-plugin`](tooling/eslint-plugin) | [![version](https://img.shields.io/npm/v/%40seedcord%2Feslint-plugin?style=flat-square&label=npm&labelColor=1f1f1f&color=c8341f)](tooling/eslint-plugin/CHANGELOG.md) | ESLint rules for seedcord bots |
+
+<!-- prettier-ignore-end -->
+
+These two work without seedcord. `eslint-plugin-discordjs` lints any discord.js bot, and `discord-component-embed` builds the preview Discord shows when someone posts a link to your website.
+
+<!-- prettier-ignore-start -->
+
+| package | changelogs | what it does |
+| --- | --- | --- |
 | [`eslint-plugin-discordjs`](tooling/eslint-plugin-discordjs) | [![version](https://img.shields.io/npm/v/eslint-plugin-discordjs?style=flat-square&label=npm&labelColor=1f1f1f&color=c8341f)](tooling/eslint-plugin-discordjs/CHANGELOG.md) | ESLint rules for discord.js bots |
-| [`@seedcord/eslint-config`](tooling/eslint-config) | [![version](https://img.shields.io/npm/v/%40seedcord%2Feslint-config?style=flat-square&label=npm&labelColor=1f1f1f&color=c8341f)](tooling/eslint-config/CHANGELOG.md) | shared ESLint config |
-| [`@seedcord/tsconfig`](tooling/tsconfig) | [![version](https://img.shields.io/npm/v/%40seedcord%2Ftsconfig?style=flat-square&label=npm&labelColor=1f1f1f&color=c8341f)](tooling/tsconfig/CHANGELOG.md) | shared TypeScript config |
 | [`discord-component-embed`](packages/discord-component-embed) | [![version](https://img.shields.io/npm/v/discord-component-embed?style=flat-square&label=npm&labelColor=1f1f1f&color=c8341f)](packages/discord-component-embed/CHANGELOG.md) | build and check Discord link previews, with JSX or plain functions |
 
 <!-- prettier-ignore-end -->
