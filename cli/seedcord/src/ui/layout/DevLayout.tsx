@@ -1,3 +1,4 @@
+import { assertNever } from '@seedcord/utils';
 import { Box } from 'ink';
 import React from 'react';
 
@@ -7,6 +8,8 @@ import { NotificationStack } from '#ui/components/primitives/NotificationStack';
 import { Rule } from '#ui/components/primitives/Rule';
 import { ScrollableLogView } from '#ui/components/primitives/ScrollableLogView';
 import { Sidebar } from '#ui/components/primitives/Sidebar';
+import { SlimRail } from '#ui/components/primitives/SlimRail';
+import { StatusBand } from '#ui/components/primitives/StatusBand';
 import { StatusLine } from '#ui/components/primitives/StatusLine';
 
 import type { ScrollableLogViewProps } from '#ui/components/primitives/ScrollableLogView';
@@ -40,16 +43,11 @@ export interface DevLayoutProps extends Pick<ScrollableLogViewProps, 'viewportHe
     readonly uptimeMs: number | null;
 }
 
-// notification cards render below the logs so stack traces have room
-export function DevLayout(props: DevLayoutProps): ReactElement {
-    const { state, screen, notices, railRef, railWidth, logBoxRef, scroll, logLayout, viewportHeight, measured } =
-        props;
-    const { filters, filterView, panelFit, cursor, interactive, uptimeMs } = props;
-    const railed = screen.rail !== null;
-
-    return (
-        <Box flexGrow={1}>
-            {railed ? (
+function Rail(props: DevLayoutProps): ReactElement | null {
+    const { state, screen, scroll, filterView, interactive, uptimeMs, railRef, railWidth, filters, cursor } = props;
+    switch (screen.rail) {
+        case 'sidebar': {
+            return (
                 <Sidebar
                     ref={railRef}
                     state={state}
@@ -61,7 +59,76 @@ export function DevLayout(props: DevLayoutProps): ReactElement {
                     width={railWidth}
                     view={filterView}
                 />
-            ) : null}
+            );
+        }
+        case 'slim': {
+            return (
+                <SlimRail
+                    state={state}
+                    uptimeMs={uptimeMs}
+                    following={scroll.following}
+                    interactive={interactive}
+                    view={filterView}
+                />
+            );
+        }
+        case null: {
+            return null;
+        }
+        default: {
+            return assertNever(screen.rail);
+        }
+    }
+}
+
+function statusBar(props: DevLayoutProps): ReactElement | null {
+    const { state, screen, notices, filters, filterView, uptimeMs } = props;
+    const filtered = filters.channels.size > 0 || filters.levels.size > 0;
+    const filtersShown = filterView === 'shown';
+    switch (screen.header) {
+        case 'band': {
+            return (
+                <StatusBand
+                    state={state}
+                    notices={notices}
+                    uptimeMs={uptimeMs}
+                    filtered={filtered}
+                    filtersShown={filtersShown}
+                    canToggleRail={screen.canToggleRail}
+                />
+            );
+        }
+        case 'line': {
+            return <StatusLine state={state} notices={notices} filtered={filtered} filtersShown={filtersShown} />;
+        }
+        case null: {
+            return null;
+        }
+        default: {
+            return assertNever(screen.header);
+        }
+    }
+}
+
+function Header(props: DevLayoutProps): ReactElement | null {
+    const bar = statusBar(props);
+    return bar ? (
+        <>
+            {bar}
+            <Rule />
+        </>
+    ) : null;
+}
+
+// notification cards render below the logs so stack traces have room
+export function DevLayout(props: DevLayoutProps): ReactElement {
+    const { screen, notices, logBoxRef, scroll, logLayout, viewportHeight, measured } = props;
+    const { filters, filterView, cursor, panelFit } = props;
+    const railed = screen.rail !== null;
+
+    return (
+        <Box flexGrow={1}>
+            <Rail {...props} />
             <Box
                 flexDirection="column"
                 flexGrow={1}
@@ -75,17 +142,7 @@ export function DevLayout(props: DevLayoutProps): ReactElement {
                 paddingLeft={railed ? 1 : 0}
                 overflow="hidden"
             >
-                {screen.header === 'line' ? (
-                    <>
-                        <StatusLine
-                            state={state}
-                            notices={notices}
-                            filtered={filters.channels.size > 0 || filters.levels.size > 0}
-                            filtersShown={filterView === 'shown'}
-                        />
-                        <Rule />
-                    </>
-                ) : null}
+                <Header {...props} />
                 {screen.filters === 'pane-on-f' && filterView === 'shown' ? (
                     <FilterPanel filters={filters} cursor={cursor} {...panelFit} />
                 ) : (

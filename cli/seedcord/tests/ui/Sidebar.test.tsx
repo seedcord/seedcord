@@ -6,6 +6,7 @@ import { afterEach, describe, expect, it } from 'vitest';
 
 import { version } from '#core/version';
 import { Sidebar } from '#ui/components/primitives/Sidebar';
+import { SlimRail } from '#ui/components/primitives/SlimRail';
 import { INITIAL_CURSOR } from '#ui/filterCursor';
 import { COMPACT_ROWS, FULL_ROWS } from '#ui/Screen';
 import { DevStore } from '#ui/stores/DevStore';
@@ -17,7 +18,7 @@ import type { FilterView } from '#ui/Screen';
 import type { DevState } from '#ui/stores/DevStore';
 import type { LogRecord } from '@seedcord/types';
 import type { DOMElement } from 'ink';
-import type { ReactElement } from 'react';
+import type { ReactElement, Ref } from 'react';
 
 // every channel the framework logs on, which is the tallest the chip list gets without plugins
 const FRAMEWORK_CHANNELS = [
@@ -68,14 +69,32 @@ function tunnelState(status: TunnelStatus): DevState {
     return store.getState();
 }
 
-// the readout renders outside the measured rail, so it never changes the size it reports
-interface HarnessProps {
-    readonly view: FilterView;
-    readonly width: number | null;
-    readonly state: DevState;
+type RailAt = (ref: Ref<DOMElement>) => ReactElement;
+
+function sidebar(view: FilterView, width: number | null = null): RailAt {
+    return (ref) => (
+        <Sidebar
+            ref={ref}
+            state={HTTP}
+            filters={NO_FILTERS}
+            uptimeMs={12_000}
+            following={true}
+            interactive={true}
+            cursor={INITIAL_CURSOR}
+            width={width}
+            view={view}
+        />
+    );
 }
 
-function Harness({ view, width, state }: HarnessProps): ReactElement {
+const slimRail: RailAt = (ref) => (
+    <Box ref={ref}>
+        <SlimRail state={HTTP} uptimeMs={12_000} following={true} interactive={true} view="collapsed" />
+    </Box>
+);
+
+// the readout renders outside the measured rail, so it never changes the size it reports
+function Harness({ rail }: { readonly rail: RailAt }): ReactElement {
     const railRef = useRef<DOMElement | null>(null);
     const [size, setSize] = useState('pending');
 
@@ -89,19 +108,7 @@ function Harness({ view, width, state }: HarnessProps): ReactElement {
 
     return (
         <Box flexDirection="column">
-            <Box flexDirection="row">
-                <Sidebar
-                    ref={railRef}
-                    state={state}
-                    filters={NO_FILTERS}
-                    uptimeMs={12_000}
-                    following={true}
-                    interactive={true}
-                    cursor={INITIAL_CURSOR}
-                    width={width}
-                    view={view}
-                />
-            </Box>
+            <Box flexDirection="row">{rail(railRef)}</Box>
             <Text>size:{size}</Text>
         </Box>
     );
@@ -115,7 +122,7 @@ function read(frame: string | undefined): { rows: number; columns: number } {
 describe('Sidebar', () => {
     afterEach(() => LogStore.instance.clear());
 
-    async function measure(view: FilterView, width: number | null = null): Promise<{ rows: number; columns: number }> {
+    async function measure(rail: RailAt): Promise<{ rows: number; columns: number }> {
         for (const channel of FRAMEWORK_CHANNELS) {
             LogStore.instance.onLog({
                 level: 'info',
@@ -127,10 +134,10 @@ describe('Sidebar', () => {
         }
         await LogStore.instance.flush();
 
-        const rail = render(<Harness view={view} width={width} state={HTTP} />);
-        await settled(() => expect(read(rail.lastFrame()).rows).toBeGreaterThan(0));
-        const size = read(rail.lastFrame());
-        rail.unmount();
+        const view = render(<Harness rail={rail} />);
+        await settled(() => expect(read(view.lastFrame()).rows).toBeGreaterThan(0));
+        const size = read(view.lastFrame());
+        view.unmount();
         return size;
     }
 
@@ -154,21 +161,23 @@ describe('Sidebar', () => {
 
     // the tier thresholds are authored constants, and this is what keeps them honest as the rail changes
     it('fits the open rail inside the full tier', async () => {
-        const { rows } = await measure('always');
+        const { rows } = await measure(sidebar('always'));
 
         expect(rows).toBeLessThanOrEqual(FULL_ROWS);
     });
 
-    it('fits the collapsed rail inside the compact tier', async () => {
-        const { rows } = await measure('collapsed');
+    it('fits the collapsed rail and the slim rail inside the compact tier', async () => {
+        const collapsed = await measure(sidebar('collapsed'));
+        const slim = await measure(slimRail);
 
-        expect(rows).toBeLessThanOrEqual(COMPACT_ROWS);
+        expect(collapsed.rows).toBeLessThanOrEqual(COMPACT_ROWS);
+        expect(slim.rows).toBeLessThanOrEqual(COMPACT_ROWS);
     });
 
     // the collapsed rail is the narrowest the filters view can get
     it('fits the filters view inside the compact tier at the collapsed width', async () => {
-        const collapsed = await measure('collapsed');
-        const { rows } = await measure('shown', collapsed.columns);
+        const collapsed = await measure(sidebar('collapsed'));
+        const { rows } = await measure(sidebar('shown', collapsed.columns));
 
         expect(rows).toBeLessThanOrEqual(COMPACT_ROWS);
     });

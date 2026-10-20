@@ -26,7 +26,7 @@ export const MAX_RAIL = 40;
 // the widest label is 'gateway' at 7
 const META_LABEL_WIDTH = 8;
 
-const LOG_DIR = 'logs/'; // the dev default writes one combined file into this folder
+export const LOG_DIR = 'logs/'; // the dev default writes one combined file into this folder
 
 interface SidebarProps {
     readonly state: DevState;
@@ -56,23 +56,30 @@ function Meta({ label, value }: { label: string; value: string }): ReactElement 
     );
 }
 
-function tunnelValue(status: TunnelStatus): string {
+export function tunnelValue(status: TunnelStatus): string {
     return status === 'live' || status === 'lost' ? status : `${status}…`;
 }
 
-function transportLabel({ name }: DevTransport): string {
+export function transportLabel({ name }: DevTransport): string {
     return name.replace('@seedcord/', '');
 }
 
-function StatusBlock({ state, uptimeMs }: { state: DevState; uptimeMs: number | null }): ReactElement {
+interface StatusBlockProps {
+    readonly state: DevState;
+    readonly uptimeMs: number | null;
+    readonly withTarget: boolean;
+}
+
+export function StatusBlock({ state, uptimeMs, withTarget }: StatusBlockProps): ReactElement {
+    const { transport } = state;
     return (
         <Box flexDirection="column">
             <StatusBadge phase={state.phase} animate={state.idleAnimation} />
-            {state.status ? <Text>{state.status}</Text> : null}
-            {state.transport === null ? null : (
+            {state.status ? <Text wrap="truncate">{state.status}</Text> : null}
+            {transport === null ? null : (
                 <Meta
-                    label={transportLabel(state.transport)}
-                    value={`v${state.transport.version} · ${state.transport.target}`}
+                    label={transportLabel(transport)}
+                    value={withTarget ? `v${transport.version} · ${transport.target}` : `v${transport.version}`}
                 />
             )}
             {uptimeMs === null ? null : <Meta label="up" value={formatUptime(uptimeMs)} />}
@@ -92,7 +99,10 @@ function RailKeys({ view, state, interactive, following }: RailKeysProps): React
             {view === 'shown' ? (
                 <FiltersKey shown />
             ) : (
-                <SessionKeys gate={{ state, interactive, filterView: view }} following={following} />
+                <SessionKeys
+                    gate={{ state, interactive, filterView: view, canToggleRail: true }}
+                    following={following}
+                />
             )}
         </Box>
     );
@@ -126,7 +136,7 @@ export function Sidebar({
             {/* compact has no room for the status beside the open chips */}
             {view === 'shown' ? null : (
                 <Box flexShrink={0} marginTop={1}>
-                    <StatusBlock state={state} uptimeMs={uptimeMs} />
+                    <StatusBlock state={state} uptimeMs={uptimeMs} withTarget />
                 </Box>
             )}
             <Box flexShrink={0} marginTop={1} flexDirection="column">
@@ -138,6 +148,14 @@ export function Sidebar({
                 />
             </Box>
             <RailKeys view={view} state={state} interactive={interactive} following={following} />
+            <LiveFooter state={state} />
+        </Box>
+    );
+}
+
+export function LiveFooter({ state }: { readonly state: DevState }): ReactElement {
+    return (
+        <>
             <Box flexGrow={1} />
             <Box flexShrink={0} justifyContent="flex-end">
                 {isStreaming(state.phase) ? (
@@ -149,6 +167,6 @@ export function Sidebar({
                     <Text dimColor>○ idle</Text>
                 )}
             </Box>
-        </Box>
+        </>
     );
 }

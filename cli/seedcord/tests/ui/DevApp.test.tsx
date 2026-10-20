@@ -108,6 +108,35 @@ describe('DevApp tiers', () => {
         unmount();
     });
 
+    it('puts the status in a band above the logs and the cards below them on a narrow, tall terminal', async () => {
+        const store = runningStore();
+        store.setError(new Error('boom'));
+        const app = view({ rows: 40, columns: 70 }, { store });
+        await settled(() => expect(app.lastFrame()).toContain('logs/'));
+
+        app.press('s');
+        const frame = await stableFrame(app.lastFrame);
+        expect(frame).toContain('Connected as TestBot');
+        expect(frame).toContain('Error: Error');
+        expect(frame).not.toContain('q quit');
+        expect(frame).not.toContain('show rail');
+        app.unmount();
+    });
+
+    it('slims the rail below the full width, and s hides it and brings it back', async () => {
+        const app = view({ rows: 40, columns: 100 });
+        await settled(() => expect(app.lastFrame()).toContain('hide rail'));
+        expect(app.lastFrame()).not.toContain('channels');
+
+        app.press('s');
+        await settled(() => expect(app.lastFrame()).toContain('show rail'));
+        expect(app.lastFrame()).not.toContain('q quit');
+
+        app.press('s');
+        await settled(() => expect(app.lastFrame()).toContain('hide rail'));
+        app.unmount();
+    });
+
     it('names the pending notice on the status line', async () => {
         const store = runningStore();
         store.apply({ type: 'command-update-prompt', files: ['a.ts', 'b.ts'] });

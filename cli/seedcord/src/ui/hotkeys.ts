@@ -36,6 +36,8 @@ interface HotkeyContext {
     readonly setFilters: (next: LogFilters) => void;
     readonly filterView: FilterView;
     readonly toggleFilterView: () => void;
+    readonly canToggleRail: boolean;
+    readonly toggleRail: () => void;
     readonly cursor: FilterCursor;
     readonly setCursor: (next: FilterCursor) => void;
     readonly onQuit?: (() => Promise<void> | void) | undefined;
@@ -44,7 +46,7 @@ interface HotkeyContext {
     readonly onRefreshCommands?: ((shouldRefresh: boolean) => Promise<void> | void) | undefined;
 }
 
-export type KeyGate = Pick<HotkeyContext, 'state' | 'interactive' | 'filterView'>;
+export type KeyGate = Pick<HotkeyContext, 'state' | 'interactive' | 'filterView' | 'canToggleRail'>;
 
 interface Binding {
     readonly when?: (gate: KeyGate) => boolean;
@@ -57,6 +59,7 @@ const sessionOpen = (gate: KeyGate): boolean => gate.interactive && !prompting(g
 const canDisconnect = (gate: KeyGate): boolean => sessionOpen(gate) && isStreaming(gate.state.phase);
 const chipsToggle = (gate: KeyGate): boolean => gate.filterView !== 'always';
 const chipsOpen = (gate: KeyGate): boolean => gate.filterView !== 'collapsed';
+const canToggleRail = (gate: KeyGate): boolean => gate.canToggleRail;
 
 type Action = (ctx: HotkeyContext) => void;
 
@@ -109,6 +112,7 @@ const clearLogs: Action = (ctx) => {
     ctx.scroll.toBottom();
 };
 const toggleChips: Action = (ctx) => ctx.toggleFilterView();
+const toggleRail: Action = (ctx) => ctx.toggleRail();
 const scrollUp: Action = (ctx) => ctx.scroll.up();
 const scrollDown: Action = (ctx) => ctx.scroll.down();
 const pageUp: Action = (ctx) => ctx.scroll.pageUp();
@@ -123,6 +127,7 @@ const KEYMAP = {
     y: { when: prompting, run: answer(true) },
     n: { when: prompting, run: answer(false) },
     f: { when: chipsToggle, run: toggleChips },
+    s: { when: canToggleRail, run: toggleRail },
     leftArrow: { when: chipsOpen, run: moveChip('left') },
     rightArrow: { when: chipsOpen, run: moveChip('right') },
     tab: { when: chipsOpen, run: moveChip('switch') },

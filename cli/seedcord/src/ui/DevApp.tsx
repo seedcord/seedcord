@@ -1,10 +1,11 @@
 import { Box, useInput, useWindowSize } from 'ink';
-import React, { useEffect, useMemo, useRef, useState } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 
 import { Rule } from '#ui/components/primitives/Rule';
 import { INITIAL_CURSOR } from '#ui/filterCursor';
 import { useDevState } from '#ui/hooks/useDevState';
 import { useFilters } from '#ui/hooks/useFilters';
+import { useLogRows } from '#ui/hooks/useLogRows';
 import { useLogs } from '#ui/hooks/useLogs';
 import { useMeasuredBox } from '#ui/hooks/useMeasuredBox';
 import { usePanelFit } from '#ui/hooks/usePanelFit';
@@ -13,10 +14,8 @@ import { useScroll } from '#ui/hooks/useScroll';
 import { useUptime } from '#ui/hooks/useUptime';
 import { acceptsSessionKeys, dispatchHotkey } from '#ui/hotkeys';
 import { DevLayout } from '#ui/layout/DevLayout';
-import { LogLayout } from '#ui/LogLayout';
-import { expandRows, rowKey, wrapRows } from '#ui/logRows';
+import { rowKey } from '#ui/logRows';
 import { noticesOf } from '#ui/notices';
-import { profileWrap } from '#ui/profile';
 import { Screen } from '#ui/Screen';
 import { LogStore } from '#ui/stores/LogStore';
 
@@ -41,7 +40,8 @@ export function DevApp(props: DevAppProps): ReactElement {
     const state = useDevState(store);
     const { rows, columns } = useWindowSize();
 
-    const screen = Screen.fit(rows, columns);
+    const [railHidden, setRailHidden] = useState(false);
+    const screen = Screen.fit(rows, columns, railHidden);
     const { filters, setFilters, open, toggleOpen } = useFilters(initialFilters, screen.filters, onFiltersChange);
     const panelFit = usePanelFit();
     const [cursor, setCursor] = useState(INITIAL_CURSOR);
@@ -55,11 +55,7 @@ export function DevApp(props: DevAppProps): ReactElement {
     const notices = noticesOf(state);
 
     const logs = useLogs(filters.channels, filters.levels);
-    // getLongestLabel changes only when logs does
-    const { logLayout, logRows } = useMemo(() => {
-        const logLayout = LogLayout.fit(logBox.width, LogStore.instance.getLongestLabel());
-        return { logLayout, logRows: profileWrap(() => wrapRows(expandRows(logs), logLayout)) };
-    }, [logs, logBox.width]);
+    const { logLayout, logRows } = useLogRows(logs, logBox.width);
     const viewportHeight = Math.max(1, logBox.height);
     const scroll = useScroll(logRows, viewportHeight, rowKey);
     const uptimeMs = useUptime(state, screen.uptime);
@@ -78,6 +74,8 @@ export function DevApp(props: DevAppProps): ReactElement {
             setFilters,
             filterView: screen.filterKeysView(open, panelFit.fits),
             toggleFilterView: toggleOpen,
+            canToggleRail: screen.canToggleRail,
+            toggleRail: () => setRailHidden(!railHidden),
             cursor,
             setCursor,
             onQuit: props.onQuit,

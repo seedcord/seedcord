@@ -49,8 +49,13 @@ export function SessionKeys({ gate, following }: SessionKeysProps): ReactElement
             <Hotkey keyLabel="c" action="clear" enabled={keyIsLive('c', gate)} />
             <Hotkey keyLabel="↑↓" action="scroll" />
             <Hotkey keyLabel="t/b" action="top/bottom" highlight={!following} />
+            <RailKey shown />
         </Box>
     );
+}
+
+export function RailKey({ shown }: { readonly shown: boolean }): ReactElement {
+    return <Hotkey keyLabel="s" action={shown ? 'hide rail' : 'show rail'} />;
 }
 
 export function FilterKeys({ direction = 'column' }: { readonly direction?: 'column' | 'row' }): ReactElement {
