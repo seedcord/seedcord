@@ -32,6 +32,17 @@ describe('DevLock', () => {
         expect(() => new DevLock(dir, silentLogger).hold(APP, '/bots/other')).toThrow(refusedBy(BOT_DIR));
     });
 
+    it('leaves nothing behind for a refused session', () => {
+        const dir = lockDir();
+        const first = new DevLock(dir, silentLogger);
+        first.hold(APP, BOT_DIR);
+        expect(() => new DevLock(dir, silentLogger).hold(APP, '/bots/refused')).toThrow();
+
+        first.release();
+
+        expect(() => new DevLock(dir, silentLogger).hold(APP, BOT_DIR)).not.toThrow();
+    });
+
     it('frees the application once the session releases it', () => {
         const dir = lockDir();
         const first = new DevLock(dir, silentLogger);
@@ -59,25 +70,32 @@ describe('DevLock', () => {
         expect(() => new DevLock(dir, silentLogger).hold(APP, '/bots/other')).not.toThrow();
     });
 
-    it('replaces a lock whose session crashed', () => {
+    it('removes the lock of a session that crashed', () => {
         const dir = lockDir();
         const crashed = { pid: deadPid(), startedAt: Date.now(), configDir: '/bots/crashed' };
-        writeFileSync(join(dir, `${APP}.lock`), JSON.stringify(crashed));
+        writeFileSync(join(dir, `${APP}.crashed.lock`), JSON.stringify(crashed));
         const info = vi.fn();
 
         new DevLock(dir, { ...silentLogger, info }).hold(APP, BOT_DIR);
 
-        expect(info).toHaveBeenCalledExactlyOnceWith(expect.stringContaining(`${APP}.lock`));
+        expect(info).toHaveBeenCalledExactlyOnceWith(expect.stringContaining(`${APP}.crashed.lock`));
         expect(() => new DevLock(dir, silentLogger).hold(APP, '/bots/other')).toThrow(refusedBy(BOT_DIR));
     });
 
     it.each([
         ['is not json', '{ "pid": 4'],
         ['is json of another shape', JSON.stringify({ pid: process.pid })]
-    ])('replaces a lock file that %s', (_, contents) => {
+    ])('removes a lock file that %s', (_, contents) => {
         const dir = lockDir();
-        writeFileSync(join(dir, `${APP}.lock`), contents);
+        writeFileSync(join(dir, `${APP}.broken.lock`), contents);
 
         expect(() => new DevLock(dir, silentLogger).hold(APP, BOT_DIR)).not.toThrow();
+    });
+
+    // root owns /. the check needs a uid, which windows lacks, and it passes every folder for root
+    it.skipIf(process.getuid === undefined || process.getuid() === 0)('refuses a lock folder another user owns', () => {
+        expect(() => new DevLock('/', silentLogger).hold(APP, BOT_DIR)).toThrow(
+            expect.objectContaining({ code: SeedcordErrorCode.CliDevLockFolderNotOwned }) as Error
+        );
     });
 });

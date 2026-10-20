@@ -301,6 +301,8 @@ export enum SeedcordErrorCode {
     CliListedFolderUnusable = 3140,
     /** Another `seedcord dev` already runs a bot on the same Discord application. */
     CliDevAlreadyRunning = 3141,
+    /** The folder that holds the dev session locks belongs to another user. */
+    CliDevLockFolderNotOwned = 3142,
 
     /** A flag answers a question that the earlier answers skip. */
     CreateFlagNotApplicable = 3201,

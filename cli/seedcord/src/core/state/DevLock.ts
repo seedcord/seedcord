@@ -1,5 +1,6 @@
-import { mkdirSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
-import { tmpdir, userInfo } from 'node:os';
+import { randomUUID } from 'node:crypto';
+import { mkdirSync, readdirSync, readFileSync, renameSync, rmSync, statSync, writeFileSync } from 'node:fs';
+import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 
 import { paint, SeedcordErrorCode } from '@seedcord/errors';
@@ -14,19 +15,13 @@ interface LockBody {
     readonly configDir: string;
 }
 
-function errnoOf(error: unknown): unknown {
-    return Error.isError(error) && 'code' in error ? error.code : undefined;
+interface HeldLock {
+    readonly appId: string;
+    readonly path: string;
 }
 
-// false when another session created the file first
-function createLock(path: string, body: LockBody): boolean {
-    try {
-        writeFileSync(path, JSON.stringify(body), { flag: 'wx' });
-        return true;
-    } catch (error: unknown) {
-        if (errnoOf(error) === 'EEXIST') return false;
-        throw error;
-    }
+function errnoOf(error: unknown): unknown {
+    return Error.isError(error) && 'code' in error ? error.code : undefined;
 }
 
 function readLock(path: string): LockBody | undefined {
@@ -58,8 +53,16 @@ function alreadyRunning(holder: LockBody, path: string): SeedcordError {
     return new SeedcordError(SeedcordErrorCode.CliDevAlreadyRunning, [holder.configDir, holder.pid, startedAt, path]);
 }
 
+// windows has no uids and gives every user their own tmpdir
+function assertOwnFolder(dir: string): void {
+    const uid = process.getuid?.();
+    if (uid !== undefined && statSync(dir).uid !== uid) {
+        throw new SeedcordError(SeedcordErrorCode.CliDevLockFolderNotOwned, [dir]);
+    }
+}
+
 export class DevLock {
-    private heldPath: string | undefined;
+    private held: HeldLock | undefined;
 
     constructor(
         private readonly dir: string,
@@ -68,33 +71,53 @@ export class DevLock {
 
     // linux shares one /tmp across users
     public static create(logger: ILogger): DevLock {
-        return new DevLock(join(tmpdir(), `seedcord-${userInfo().username}`, 'dev'), logger);
+        const uid = process.getuid?.();
+        return new DevLock(join(tmpdir(), uid === undefined ? 'seedcord-dev' : `seedcord-dev-${uid}`), logger);
     }
 
     public hold(appId: string, configDir: string): void {
-        const path = join(this.dir, `${appId}.lock`);
-        if (path === this.heldPath) return;
+        if (this.held?.appId === appId) return;
         this.release();
-        mkdirSync(this.dir, { recursive: true });
+        mkdirSync(this.dir, { recursive: true, mode: 0o700 });
+        assertOwnFolder(this.dir);
 
-        this.claim(path, { pid: process.pid, startedAt: Date.now(), configDir });
-        this.heldPath = path;
-    }
-
-    private claim(path: string, body: LockBody): void {
-        if (createLock(path, body)) return;
-
-        const holder = readLock(path);
-        if (holder && isRunning(holder.pid)) throw alreadyRunning(holder, path);
-
-        rmSync(path, { force: true });
-        this.logger.info(`Replaced the lock of a dev session that is no longer running at ${paint.path(path)}`);
-        this.claim(path, body);
+        const path = this.publish(appId, { pid: process.pid, startedAt: Date.now(), configDir });
+        try {
+            this.assertOnlySession(appId, path);
+        } catch (error: unknown) {
+            rmSync(path, { force: true });
+            throw error;
+        }
+        this.held = { appId, path };
     }
 
     public release(): void {
-        if (this.heldPath === undefined) return;
-        rmSync(this.heldPath, { force: true });
-        this.heldPath = undefined;
+        if (!this.held) return;
+        rmSync(this.held.path, { force: true });
+        this.held = undefined;
+    }
+
+    // renaming a finished draft keeps half-written locks out of other sessions' reads
+    private publish(appId: string, body: LockBody): string {
+        const session = randomUUID();
+        const draft = join(this.dir, `${session}.tmp`);
+        const path = join(this.dir, `${appId}.${session}.lock`);
+        writeFileSync(draft, JSON.stringify(body));
+        renameSync(draft, path);
+        return path;
+    }
+
+    // a session deletes only its own file or one whose pid is dead
+    private assertOnlySession(appId: string, ownPath: string): void {
+        for (const name of readdirSync(this.dir)) {
+            const path = join(this.dir, name);
+            if (path === ownPath || !name.startsWith(`${appId}.`) || !name.endsWith('.lock')) continue;
+
+            const holder = readLock(path);
+            if (holder && isRunning(holder.pid)) throw alreadyRunning(holder, path);
+
+            rmSync(path, { force: true });
+            this.logger.info(`Removed a stale dev session lock at ${paint.path(path)}`);
+        }
     }
 }
