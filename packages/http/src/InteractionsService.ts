@@ -1,10 +1,9 @@
 import { REST } from '@discordjs/rest';
 import { Bus } from '@seedcord/core';
-import { interactionMiddleware, MiddlewareRegistry, SubscriberLoader } from '@seedcord/core/internal';
+import { interactionMiddleware, MiddlewareRegistry, readBotToken, SubscriberLoader } from '@seedcord/core/internal';
 import { SeedcordErrorCode } from '@seedcord/errors';
-import { applicationIdFromToken, SeedcordError, validateDiscordToken } from '@seedcord/errors/internal';
+import { applicationIdFromToken, SeedcordError } from '@seedcord/errors/internal';
 import { MemoryRateLimiter } from '@seedcord/rate-limiter';
-import { Envapter } from 'envapt';
 
 import { InteractionDispatcher } from '#src/dispatch/InteractionDispatcher';
 import { emptyRouteMaps } from '#src/dispatch/resolve';
@@ -49,7 +48,7 @@ export class InteractionsService {
     }
 
     public authenticate(): void {
-        this.token = validateDiscordToken(Envapter.get('DISCORD_BOT_TOKEN'));
+        this.token = readBotToken();
         this.rest.setToken(this.token);
     }
 

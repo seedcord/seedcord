@@ -1,6 +1,6 @@
+import { readBotToken } from '@seedcord/core/internal';
 import { SeedcordErrorCode, paint } from '@seedcord/errors';
-import { SeedcordError, validateDiscordToken } from '@seedcord/errors/internal';
-import { Envapter } from 'envapt';
+import { SeedcordError } from '@seedcord/errors/internal';
 
 import { findCloudflared, installHint, systemLookup } from './cloudflared';
 import { CloudflaredTunnel, systemTunnelDeps } from './CloudflaredTunnel';
@@ -30,7 +30,7 @@ export function createTunnelCoordinator(
     if (tunnel.mode === 'off') return undefined;
 
     const deps = systemTunnelDeps();
-    const endpoint = InteractionsEndpoint.create(() => validateDiscordToken(Envapter.get('DISCORD_BOT_TOKEN')));
+    const endpoint = InteractionsEndpoint.create(readBotToken);
 
     if (tunnel.mode === 'url') {
         return new TunnelCoordinator({

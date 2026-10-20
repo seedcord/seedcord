@@ -36,6 +36,7 @@ export type { GateObserver } from '#gates/runGates';
 export { accessorStore, clearStore, guardedAccessor } from '#src/miscellaneous/guarded';
 export { isEmojiTuple } from '#src/miscellaneous/emojiConfig';
 export { currentApplication } from '#src/miscellaneous/currentApplication';
+export { readBotToken } from '#src/miscellaneous/readBotToken';
 export { resolveEmojis } from '#src/miscellaneous/resolveEmojis';
 
 export { BAKED_IDS_KEY, type BakedIds } from '#src/bakedIds';

@@ -1,10 +1,9 @@
-import { COMMAND_DEPLOY_TIMEOUT_MS, CommandRegistry } from '@seedcord/core/internal';
+import { COMMAND_DEPLOY_TIMEOUT_MS, CommandRegistry, readBotToken } from '@seedcord/core/internal';
 import { DRAIN_TASK_TIMEOUT_MS, DRAIN_WINDOW_MS, ShutdownPhase, StartupPhase } from '@seedcord/core/node/internal';
 import { SeedcordErrorCode, paint } from '@seedcord/errors';
-import { SeedcordError, validateDiscordToken } from '@seedcord/errors/internal';
+import { SeedcordError } from '@seedcord/errors/internal';
 import { Logger } from '@seedcord/logger';
 import { Client, Events } from 'discord.js';
-import { Envapter } from 'envapt';
 
 import { EventDispatcher } from '#bControllers/EventDispatcher';
 import { InteractionDispatcher } from '#bControllers/InteractionDispatcher';
@@ -33,7 +32,7 @@ interface Controllers {
  */
 export class Bot implements HmrAware {
     public get botToken(): string {
-        return validateDiscordToken(Envapter.get('DISCORD_BOT_TOKEN'));
+        return readBotToken();
     }
 
     readonly #logger = new Logger('Bot', { channel: 'bot' });
