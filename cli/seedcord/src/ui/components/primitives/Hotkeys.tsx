@@ -5,7 +5,9 @@ import { keyIsLive } from '#ui/hotkeys';
 import { ui } from '#ui/palette';
 
 import type { KeyGate } from '#ui/hotkeys';
+import type { FilterView } from '#ui/Screen';
 import type { DevPhase } from '#ui/stores/devPhase';
+import type { DevState } from '#ui/stores/DevStore';
 import type { ReactElement } from 'react';
 
 interface HotkeyProps {
@@ -31,11 +33,15 @@ function Hotkey({ keyLabel, action, enabled = true, highlight = false }: HotkeyP
 const RESTART_HINT_PHASES = new Set<DevPhase>(['restart-required', 'disconnected', 'error']);
 
 interface SessionKeysProps {
-    readonly gate: KeyGate;
+    readonly state: DevState;
+    readonly interactive: boolean;
+    readonly view: FilterView;
     readonly following: boolean;
 }
 
-export function SessionKeys({ gate, following }: SessionKeysProps): ReactElement {
+export function SessionKeys({ state, interactive, view, following }: SessionKeysProps): ReactElement {
+    // a rail only draws at a size where s works
+    const gate: KeyGate = { state, interactive, filterView: view, canToggleRail: true };
     return (
         <Box flexDirection="column">
             <Hotkey keyLabel="q" action="quit" />

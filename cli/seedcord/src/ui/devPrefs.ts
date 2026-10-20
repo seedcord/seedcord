@@ -10,19 +10,35 @@ export interface LogFilters {
     readonly levels: ReadonlySet<LogLevel>;
 }
 
+export interface DevPrefs {
+    readonly filters: LogFilters;
+    readonly fullDetails: boolean;
+    readonly railHidden: boolean;
+}
+
 const LEVEL_NAMES: ReadonlySet<string> = new Set(FILTER_LEVELS);
 
 function isFilterLevels(values: readonly string[]): values is LogLevel[] {
     return values.every((value) => LEVEL_NAMES.has(value));
 }
 
-export const devPrefsFile: StateFile<LogFilters> = {
+export const devPrefsFile: StateFile<DevPrefs> = {
     name: 'dev-prefs.json',
-    defaults: { channels: new Set(), levels: new Set() },
+    defaults: { filters: { channels: new Set(), levels: new Set() }, fullDetails: false, railHidden: false },
     parse(raw) {
-        if (!isPlainObject(raw) || !isStringArray(raw.channels) || !isStringArray(raw.levels)) return undefined;
-        if (!isFilterLevels(raw.levels)) return undefined;
-        return { channels: new Set(raw.channels), levels: new Set(raw.levels) };
+        if (!isPlainObject(raw) || !isPlainObject(raw.filters)) return undefined;
+        const { channels, levels } = raw.filters;
+        if (!isStringArray(channels) || !isStringArray(levels) || !isFilterLevels(levels)) return undefined;
+        if (typeof raw.fullDetails !== 'boolean' || typeof raw.railHidden !== 'boolean') return undefined;
+        return {
+            filters: { channels: new Set(channels), levels: new Set(levels) },
+            fullDetails: raw.fullDetails,
+            railHidden: raw.railHidden
+        };
     },
-    serialize: ({ channels, levels }) => ({ channels: [...channels], levels: [...levels] })
+    serialize: ({ filters, fullDetails, railHidden }) => ({
+        filters: { channels: [...filters.channels], levels: [...filters.levels] },
+        fullDetails,
+        railHidden
+    })
 };

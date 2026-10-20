@@ -27,10 +27,7 @@ export function SlimRail(props: SlimRailProps): ReactElement {
             </Box>
             <Box flexShrink={0} marginTop={1} flexDirection="column">
                 <FiltersKey shown={view === 'shown'} />
-                <SessionKeys
-                    gate={{ state, interactive, filterView: view, canToggleRail: true }}
-                    following={following}
-                />
+                <SessionKeys state={state} interactive={interactive} view={view} following={following} />
                 <ViewKeys fullDetails={fullDetails} />
             </Box>
             <LiveFooter state={state} />

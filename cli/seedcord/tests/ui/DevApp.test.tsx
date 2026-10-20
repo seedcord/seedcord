@@ -5,6 +5,7 @@ import { describe, expect, it, vi } from 'vitest';
 import { NO_FILTER_ROOM } from '#ui/components/primitives/FilterPanel';
 import { NO_ROOM } from '#ui/components/primitives/ScrollableLogView';
 import { DevApp } from '#ui/DevApp';
+import { devPrefsFile } from '#ui/devPrefs';
 import { formatClock } from '#ui/format';
 import { COMPACT_ROWS } from '#ui/Screen';
 import { DevStore } from '#ui/stores/DevStore';
@@ -13,7 +14,7 @@ import { LogStore } from '#ui/stores/LogStore';
 import { renderAt } from './renderAt';
 import { renderOnScreen } from './renderOnScreen';
 
-import type { LogFilters } from '#ui/devPrefs';
+import type { DevPrefs } from '#ui/devPrefs';
 import type { LogRecord } from '@seedcord/types';
 import type { ComponentProps, ReactElement } from 'react';
 
@@ -38,14 +39,14 @@ function squeezedStore(): DevStore {
     return store;
 }
 
-const NO_FILTERS: LogFilters = { channels: new Set(), levels: new Set() };
+const NO_PREFS: DevPrefs = devPrefsFile.defaults;
 
 function view(
     size: { rows: number; columns: number },
     props: Partial<ComponentProps<typeof DevApp>> = {}
 ): ReturnType<typeof renderAt> {
     return renderAt(
-        <DevApp store={runningStore()} onReady={() => undefined} initialFilters={NO_FILTERS} {...props} />,
+        <DevApp store={runningStore()} onReady={() => undefined} initialPrefs={NO_PREFS} {...props} />,
         size
     );
 }
@@ -182,7 +183,7 @@ describe('DevApp tiers', () => {
             return store;
         };
         const app = (): ReactElement => (
-            <DevApp store={offlineStore()} onReady={() => undefined} initialFilters={NO_FILTERS} />
+            <DevApp store={offlineStore()} onReady={() => undefined} initialPrefs={NO_PREFS} />
         );
         const widened = renderOnScreen(app(), { rows: 40, columns: 90 });
         await stableFrame(widened.screen);
@@ -279,8 +280,8 @@ describe('DevApp filters below the full layout', () => {
     });
 
     it('asks for more room and holds the filter keys when the chips do not fit', async () => {
-        const onFiltersChange = vi.fn();
-        const app = view({ rows: 9, columns: 79 }, { onFiltersChange });
+        const onPrefsChange = vi.fn();
+        const app = view({ rows: 9, columns: 79 }, { onPrefsChange });
         for (const record of MANY_CHANNELS.map(logOn)) LogStore.instance.onLog(record);
         await LogStore.instance.flush();
 
@@ -289,7 +290,7 @@ describe('DevApp filters below the full layout', () => {
         app.press(' ');
 
         expect(await stableFrame(app.lastFrame)).toContain(NO_FILTER_ROOM);
-        expect(onFiltersChange).not.toHaveBeenCalled();
+        expect(onPrefsChange).not.toHaveBeenCalled();
         app.unmount();
     });
 
@@ -317,8 +318,8 @@ describe('DevApp filters below the full layout', () => {
     });
 
     it('takes the filter keys once f opens the filters in compact', async () => {
-        const onFiltersChange = vi.fn();
-        const app = view(COMPACT, { onFiltersChange });
+        const onPrefsChange = vi.fn();
+        const app = view(COMPACT, { onPrefsChange });
         for (const record of ['bot', 'hmr'].map(logOn)) LogStore.instance.onLog(record);
         await LogStore.instance.flush();
         await settled(() => expect(app.lastFrame()).toContain('from hmr'));
@@ -329,27 +330,32 @@ describe('DevApp filters below the full layout', () => {
         app.press(' ');
 
         await settled(() =>
-            expect(onFiltersChange).toHaveBeenCalledWith({ channels: new Set([focused]), levels: new Set() })
+            expect(onPrefsChange).toHaveBeenCalledWith(
+                expect.objectContaining({ filters: { channels: new Set([focused]), levels: new Set() } })
+            )
         );
         app.unmount();
     });
 });
 
-describe('DevApp saved filters', () => {
-    it('opens with the saved filters applied', async () => {
-        const app = view(FULL, { initialFilters: { channels: new Set(['hmr']), levels: new Set() } });
+describe('DevApp saved prefs', () => {
+    it('opens with the saved filters applied and the rail hidden', async () => {
+        const app = view(FULL, {
+            initialPrefs: { ...NO_PREFS, filters: { channels: new Set(['hmr']), levels: new Set() }, railHidden: true }
+        });
 
         for (const record of ['bot', 'hmr'].map(logOn)) LogStore.instance.onLog(record);
         await LogStore.instance.flush();
         await settled(() => expect(app.lastFrame()).toContain('from hmr'));
 
         expect(app.lastFrame()).not.toContain('from bot');
+        expect(app.lastFrame()).toContain('show rail');
         app.unmount();
     });
 
-    it('reports the filters after a filter key', async () => {
-        const onFiltersChange = vi.fn();
-        const app = view(FULL, { onFiltersChange });
+    it('reports the prefs after a filter key, s, and p', async () => {
+        const onPrefsChange = vi.fn();
+        const app = view(FULL, { onPrefsChange });
 
         for (const record of ['bot', 'hmr'].map(logOn)) LogStore.instance.onLog(record);
         await LogStore.instance.flush();
@@ -357,9 +363,17 @@ describe('DevApp saved filters', () => {
         const [focused] = LogStore.instance.getChannels();
 
         app.press(' ');
+        await settled(() => expect(onPrefsChange).toHaveBeenCalledOnce());
+        app.press('s');
+        await settled(() => expect(onPrefsChange).toHaveBeenCalledTimes(2));
+        app.press('p');
 
         await settled(() =>
-            expect(onFiltersChange).toHaveBeenCalledWith({ channels: new Set([focused]), levels: new Set() })
+            expect(onPrefsChange).toHaveBeenLastCalledWith({
+                filters: { channels: new Set([focused]), levels: new Set() },
+                fullDetails: true,
+                railHidden: true
+            })
         );
         app.unmount();
     });

@@ -17,25 +17,25 @@ async function projectDir(): Promise<string> {
 }
 
 describe('devPrefsFile', () => {
-    it('reads back the filters it wrote', async () => {
+    it('reads back the prefs it wrote', async () => {
         const state = new StateFolder(await projectDir(), silentLogger);
+        const prefs = {
+            filters: { channels: new Set(['hmr', 'db']), levels: new Set<LogLevel>(['error', 'warn']) },
+            fullDetails: true,
+            railHidden: true
+        };
 
-        state.write(devPrefsFile, { channels: new Set(['hmr', 'db']), levels: new Set<LogLevel>(['error', 'warn']) });
+        state.write(devPrefsFile, prefs);
 
-        expect(state.read(devPrefsFile)).toEqual({
-            channels: new Set(['hmr', 'db']),
-            levels: new Set(['error', 'warn'])
-        });
+        expect(state.read(devPrefsFile)).toEqual(prefs);
     });
 
     it('reads the defaults when a level is not one the filters offer', async () => {
         const dir = await projectDir();
+        const file = { filters: { channels: ['hmr'], levels: ['verbose'] }, fullDetails: true, railHidden: false };
         await mkdir(join(dir, '.seedcord'));
-        await writeFile(join(dir, '.seedcord', devPrefsFile.name), '{ "channels": ["hmr"], "levels": ["verbose"] }');
+        await writeFile(join(dir, '.seedcord', devPrefsFile.name), JSON.stringify(file));
 
-        expect(new StateFolder(dir, silentLogger).read(devPrefsFile)).toEqual({
-            channels: new Set(),
-            levels: new Set()
-        });
+        expect(new StateFolder(dir, silentLogger).read(devPrefsFile)).toEqual(devPrefsFile.defaults);
     });
 });

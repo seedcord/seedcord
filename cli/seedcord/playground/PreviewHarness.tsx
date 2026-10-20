@@ -34,7 +34,7 @@ export function PreviewHarness({ store, scenario }: PreviewHarnessProps): ReactE
     return (
         <DevApp
             store={store}
-            initialFilters={devPrefsFile.defaults}
+            initialPrefs={devPrefsFile.defaults}
             onReady={handleReady}
             onQuit={() => process.exit(0)}
             onDisconnect={() => {

@@ -80,9 +80,9 @@ export class DevCommand extends BaseCommand {
         const { unmount, waitUntilExit } = render(
             React.createElement(DevApp, {
                 store,
-                initialFilters: stateFolder.read(devPrefsFile),
-                onFiltersChange: (filters) => {
-                    stateFolder.write(devPrefsFile, filters);
+                initialPrefs: stateFolder.read(devPrefsFile),
+                onPrefsChange: (prefs) => {
+                    stateFolder.write(devPrefsFile, prefs);
                 },
                 onQuit: () => runner.quit(),
                 onDisconnect: () => runner.disconnect(),

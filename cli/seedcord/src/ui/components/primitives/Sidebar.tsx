@@ -96,10 +96,7 @@ function RailKeys({ view, state, interactive, following, fullDetails }: RailKeys
                 <FiltersKey shown />
             ) : (
                 <>
-                    <SessionKeys
-                        gate={{ state, interactive, filterView: view, canToggleRail: true }}
-                        following={following}
-                    />
+                    <SessionKeys state={state} interactive={interactive} view={view} following={following} />
                     <ViewKeys fullDetails={fullDetails} />
                 </>
             )}

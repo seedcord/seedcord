@@ -1,26 +1,26 @@
 import { Box, useInput, useWindowSize } from 'ink';
-import React, { useEffect, useRef, useState } from 'react';
+import React, { useRef, useState } from 'react';
 
 import { Rule } from '#ui/components/primitives/Rule';
 import { INITIAL_CURSOR } from '#ui/filterCursor';
 import { useDevState } from '#ui/hooks/useDevState';
-import { useFilters } from '#ui/hooks/useFilters';
+import { useFilterPanel } from '#ui/hooks/useFilterPanel';
+import { useLogCapture } from '#ui/hooks/useLogCapture';
 import { useLogRows } from '#ui/hooks/useLogRows';
 import { useLogs } from '#ui/hooks/useLogs';
 import { useMeasuredBox } from '#ui/hooks/useMeasuredBox';
 import { usePanelFit } from '#ui/hooks/usePanelFit';
+import { usePrefs } from '#ui/hooks/usePrefs';
 import { useRailWidth } from '#ui/hooks/useRailWidth';
 import { useScroll } from '#ui/hooks/useScroll';
 import { useUptime } from '#ui/hooks/useUptime';
-import { useViewPrefs } from '#ui/hooks/useViewPrefs';
 import { acceptsSessionKeys, dispatchHotkey } from '#ui/hotkeys';
 import { DevLayout } from '#ui/layout/DevLayout';
 import { rowKey } from '#ui/logRows';
 import { noticesOf } from '#ui/notices';
 import { Screen } from '#ui/Screen';
-import { LogStore } from '#ui/stores/LogStore';
 
-import type { LogFilters } from '#ui/devPrefs';
+import type { DevPrefs } from '#ui/devPrefs';
 import type { DevStore } from '#ui/stores/DevStore';
 import type { DOMElement } from 'ink';
 import type { ReactElement } from 'react';
@@ -28,8 +28,8 @@ import type { ReactElement } from 'react';
 interface DevAppProps {
     readonly store: DevStore;
     readonly onReady: () => void;
-    readonly initialFilters: LogFilters;
-    readonly onFiltersChange?: (filters: LogFilters) => void;
+    readonly initialPrefs: DevPrefs;
+    readonly onPrefsChange?: (prefs: DevPrefs) => void;
     readonly onQuit?: () => Promise<void> | void;
     readonly onDisconnect?: () => Promise<void> | void;
     readonly onRestart?: () => Promise<void> | void;
@@ -37,13 +37,16 @@ interface DevAppProps {
 }
 
 export function DevApp(props: DevAppProps): ReactElement {
-    const { store, onReady, initialFilters, onFiltersChange } = props;
+    const { store, onReady } = props;
     const state = useDevState(store);
     const { rows, columns } = useWindowSize();
 
-    const { railHidden, fullDetails, toggleRail, toggleDetails } = useViewPrefs();
+    const { filters, fullDetails, railHidden, setFilters, toggleRail, toggleDetails } = usePrefs(
+        props.initialPrefs,
+        props.onPrefsChange
+    );
     const screen = Screen.fit(rows, columns, railHidden);
-    const { filters, setFilters, open, toggleOpen } = useFilters(initialFilters, screen.filters, onFiltersChange);
+    const { open, toggleOpen } = useFilterPanel(screen.filters);
     const panelFit = usePanelFit();
     const [cursor, setCursor] = useState(INITIAL_CURSOR);
 
@@ -87,19 +90,7 @@ export function DevApp(props: DevAppProps): ReactElement {
         });
     });
 
-    const isInitializedRef = useRef(false);
-    useEffect(() => {
-        if (isInitializedRef.current) return;
-        isInitializedRef.current = true;
-
-        LogStore.instance.clear();
-        LogStore.instance.mount();
-        onReady();
-
-        return () => {
-            LogStore.instance.unmount();
-        };
-    }, [onReady]);
+    useLogCapture(onReady);
 
     return (
         <Box flexDirection="column" width={columns} height={rows} overflow="hidden">
