@@ -19,7 +19,6 @@ import { openViteServer } from '#core/modules/openViteServer';
 import { mergeViteConfig } from '#core/modules/userCodeConfig';
 import { WorkerEnv } from '#core/modules/workerEnv';
 import { functionExportsOf } from '#core/modules/workerExports';
-import { ProjectFiles } from '#core/project/ProjectFiles';
 
 import { BaseDevRuntime } from './BaseDevRuntime';
 import { devWatchOptions, edgeViteConfig } from './devServerConfig';
@@ -79,7 +78,7 @@ export class EdgeDevRuntime extends BaseDevRuntime<EdgeStarted> {
 
     protected async open(context: DevRuntimeContext, resources: AsyncDisposableStack): Promise<EdgeStarted> {
         const { config } = context;
-        const files = ProjectFiles.of(config);
+        const { files } = context;
         const { viteRoot } = this.target;
         installCliLogSinks(resources);
         this.emit(context, { type: 'progress', status: 'Loading Cloudflare plugin…' });
@@ -89,7 +88,7 @@ export class EdgeDevRuntime extends BaseDevRuntime<EdgeStarted> {
             WorkerEnv.load(this.target.cloudflareConfig, config.viteMode)
         ]);
         const nodeCopy = await openModuleLoader(dirname(config.configFile), this.target, config.viteMode, config, {
-            watch: devWatchOptions(config),
+            watch: devWatchOptions(files.layout),
             workerEnv
         }).catch(rethrowVitePluginError);
         resources.use(nodeCopy);
@@ -101,7 +100,7 @@ export class EdgeDevRuntime extends BaseDevRuntime<EdgeStarted> {
         ]);
         const server = await openViteServer(
             resources,
-            mergeViteConfig(edgeViteConfig(config, viteRoot), {
+            mergeViteConfig(edgeViteConfig(files.layout, viteRoot), {
                 mode: config.viteMode,
                 plugins: [
                     workerEntry({

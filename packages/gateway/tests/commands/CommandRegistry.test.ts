@@ -332,8 +332,7 @@ describe('CommandRegistry Integration', () => {
         using _dev = setDevFiles({
             root: testEnv.rootDir,
             listed: [],
-            skippedFolders: [],
-            configFile: 'seedcord.config.ts'
+            skippedFolders: []
         });
         const command = (name: string): string => `
             import { BuilderComponent, RegisterCommand } from '${seedcordPath}';
@@ -362,8 +361,7 @@ describe('CommandRegistry Integration', () => {
         using _dev = setDevFiles({
             root: testEnv.rootDir,
             listed: [],
-            skippedFolders: [],
-            configFile: 'seedcord.config.ts'
+            skippedFolders: []
         });
         const sent: string[] = [];
         setDevChannel({ send: (event) => sent.push(event), on: () => undefined, off: () => undefined });

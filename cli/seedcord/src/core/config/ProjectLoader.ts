@@ -1,6 +1,7 @@
 import { dirname, resolve } from 'node:path';
 
 import { Project } from '#core/project/Project';
+import { ProjectFiles } from '#core/project/ProjectFiles';
 import { realPath } from '#core/project/realPath';
 import { resolveDefaultExport } from '#utils/resolveDefaultExport';
 
@@ -65,28 +66,28 @@ export class ProjectLoader {
         const target = detectTarget(configDir);
         await using stack = new AsyncDisposableStack();
         const configModules = stack.use(await this.openModules(configDir, target, mode, 'config'));
-        const project = new Project(await this.resolveConfig(configModules, configPath, target, mode), configModules);
+        const config = await this.resolveConfig(configModules, configPath, target, mode);
+        const project = new Project(config, new ProjectFiles(config), configModules);
+        assertPathsBundled(project);
         await assertNoHashPaths(project);
         await assertTargetMatchesTsconfig(project);
-        // the build's check reports an outDir that holds root before every path under it reads as skipped
         await check?.(project);
-        assertPathsBundled(project);
-        const loaded = new LoadedConfig(project.config);
-        return loaded.hasVitePlugins ? new LoadedConfig(project.config, stack.move()) : loaded;
+        const loaded = new LoadedConfig(config, project.files);
+        return loaded.hasVitePlugins ? new LoadedConfig(config, project.files, stack.move()) : loaded;
     }
 
     // starts the config's vite plugins. on an edge bot it also runs cloudflare.config.ts
     public async openProject(loaded: LoadedConfig): Promise<Project> {
         await using stack = new AsyncDisposableStack();
         stack.use(loaded);
-        const { config } = loaded;
+        const { config, files } = loaded;
         const botModules = await this.openModules(
             dirname(config.configFile),
             config.target,
             config.viteMode,
             config
         ).catch(rethrowVitePluginError);
-        return new Project(config, botModules, stack.move());
+        return new Project(config, files, botModules, stack.move());
     }
 
     private async resolveConfig(

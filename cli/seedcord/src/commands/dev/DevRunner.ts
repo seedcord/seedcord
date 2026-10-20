@@ -105,12 +105,12 @@ export class DevRunner {
         store.setBusy(true);
         const restarts = this.restarts;
         await using loaded = await this.deps.projectLoader.readConfig();
-        const { config } = loaded;
+        const { config, files } = loaded;
         // a key pressed during the config load had no session to stop
         if (this.next !== 'session' || this.restarts !== restarts) return;
         profileMark('config');
         store.setIdleAnimation(config.idleAnimation);
-        this.currentSession = new DevSession(config, this.deps.runtime(config.target), {
+        this.currentSession = new DevSession(config, files, this.deps.runtime(config.target), {
             ...this.deps,
             onEvent: (event) => void tunnel.route(config.tunnel, event)
         });

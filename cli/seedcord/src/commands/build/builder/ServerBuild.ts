@@ -1,4 +1,4 @@
-import { join, relative } from 'node:path';
+import { join } from 'node:path';
 
 import { BotLayout, withoutQuery } from '@seedcord/utils/internal';
 import { createBuilder } from 'vite';
@@ -41,8 +41,8 @@ export abstract class ServerBuild<Target extends ResolvedServerTarget = Resolved
         super(project);
     }
 
-    public static check({ root }: ResolvedSeedcordConfig, { outDir }: ResolvedServerTarget): void {
-        assertOutDirSafe(outDir, root);
+    public static check(_: ResolvedSeedcordConfig, { outDir }: ResolvedServerTarget): void {
+        assertOutDirSafe(outDir);
     }
 
     public abstract bundle(): Promise<BundleStats>;
@@ -56,7 +56,7 @@ export abstract class ServerBuild<Target extends ResolvedServerTarget = Resolved
             layout,
             folders: await files.foldersIncludingEmpty(),
             rootKey: BotLayout.keyUnder(configDir, root),
-            configFile: relative(outDir, config.configFile)
+            configFile: BotLayout.keyUnder(outDir, config.configFile)
         };
 
         const result = await this.buildBot([serverEntry(builtFiles, importBot), pinModulePaths(layout)], {

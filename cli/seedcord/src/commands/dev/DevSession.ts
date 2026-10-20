@@ -13,6 +13,7 @@ import { TscRunner } from './TscRunner';
 
 import type { CodegenRunner } from '#commands/codegen/CodegenRunner';
 import type { ResolvedSeedcordConfig } from '#core/config/schema';
+import type { ProjectFiles } from '#core/project/ProjectFiles';
 import type { StateFolder } from '#core/state/StateFolder';
 import type { DevStore } from '#ui/stores/DevStore';
 import type { DevRuntime } from './runtime/DevRuntime';
@@ -40,6 +41,7 @@ export class DevSession {
 
     constructor(
         private readonly config: ResolvedSeedcordConfig,
+        private readonly files: ProjectFiles,
         private readonly runtime: DevRuntime,
         private readonly deps: DevSessionDeps
     ) {}
@@ -51,6 +53,7 @@ export class DevSession {
     private async startRuntime(): Promise<void> {
         await this.runtime.start({
             config: this.config,
+            files: this.files,
             state: this.deps.state,
             onEvent: (event) => {
                 this.deps.store.apply(event);
@@ -170,6 +173,7 @@ export class DevSession {
         try {
             const { outputPath, changed } = await codegen.writeFrom({
                 config: this.config,
+                files: this.files,
                 instance,
                 modules: this.runtime
             });

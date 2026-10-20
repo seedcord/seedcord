@@ -1,6 +1,6 @@
 export { encodeFile } from './files/encodedFile';
 export { BotLayout } from './files/BotLayout';
-export type { BotEntry, BotFolder, BotLayoutData } from './files/BotLayout';
+export type { BotEntry } from './files/BotLayout';
 export { importFailed, recordThrownBy, vitePluginThrew } from './files/importFailed';
 export { isInside, posixRelative, toPosixPath, workerdPath } from './files/paths';
 export {

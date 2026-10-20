@@ -190,7 +190,7 @@ describe('winston sinks', () => {
     it('writes the logs folder beside seedcord.config.ts in a built bot', async () => {
         using project = mkdtempDisposableSync(join(tmpdir(), 'seedcord-logger-'));
         writeFileSync(join(project.path, 'seedcord.config.ts'), '');
-        using _builtBot = asBuiltBot({ root: join(project.path, 'dist'), configFile: '../seedcord.config.ts' });
+        using _builtBot = asBuiltBot({ root: join(project.path, 'dist'), configFile: '/../seedcord.config.ts' });
         using sink = new WinstonFileSink({ filename: 'out.log', format: 'json' });
 
         sink.onLog(record({ message: 'beside the config' }));
@@ -207,7 +207,7 @@ describe('winston sinks', () => {
             root: join(project.path, 'src'),
             listed: [],
             skippedFolders: [],
-            configFile: '../seedcord.config.ts'
+            configFile: '/../seedcord.config.ts'
         });
         using sink = new WinstonFileSink({ format: 'json' });
 

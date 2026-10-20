@@ -3,7 +3,7 @@ import { join } from 'node:path';
 
 import { SeedcordErrorCode } from '@seedcord/errors';
 import { SeedcordError } from '@seedcord/errors/internal';
-import { BOT_FILES_KEY, isInside } from '@seedcord/utils/internal';
+import { BOT_FILES_KEY } from '@seedcord/utils/internal';
 
 import { ENTRY_FILE_NAME } from './output';
 
@@ -18,9 +18,6 @@ function isSafeToEmpty(outDir: string): boolean {
 }
 
 // vite empties outDir before it writes
-export function assertOutDirSafe(outDir: string, root: string): void {
-    if (isInside(outDir, root)) {
-        throw new SeedcordError(SeedcordErrorCode.CliConfigOutDirDeletesRoot, [outDir, root]);
-    }
+export function assertOutDirSafe(outDir: string): void {
     if (!isSafeToEmpty(outDir)) throw new SeedcordError(SeedcordErrorCode.CliBuildOutDirNotEmpty, [outDir]);
 }

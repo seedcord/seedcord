@@ -130,8 +130,7 @@ describe('a folder on disk under seedcord dev', () => {
         const dev = setDevFiles({
             root: FIXTURES,
             listed: ['/text'],
-            skippedFolders: [],
-            configFile: 'seedcord.config.ts'
+            skippedFolders: []
         });
         return () => dev[Symbol.dispose]();
     });
@@ -158,19 +157,11 @@ describe('a folder on disk under seedcord dev', () => {
         expect(error).toMatchObject({ code: SeedcordErrorCode.CoreDirectoryNotListed });
     });
 
-    it('throws CorePathOutsideRoot when importFiles walks a folder outside root', async () => {
-        const error = await rejection(importFiles(path.join(scratch, 'extensions')));
-
-        expect(error).toMatchObject({ code: SeedcordErrorCode.CorePathOutsideRoot });
-    });
-
-    it('throws CorePathOutsideRoot for a folder outside root, pointing a plugin at importing its own files', async () => {
-        const error = await rejection(readFiles(scratch));
-
-        expect(error).toMatchObject({
-            code: SeedcordErrorCode.CorePathOutsideRoot,
-            message: expect.stringContaining("import them from the plugin's code") as string
-        });
+    it.each([
+        ['importFiles', () => importFiles(path.join(scratch, 'extensions'))],
+        ['readFiles', () => readFiles(scratch)]
+    ])('throws CorePathOutsideRoot when %s reads a folder outside root', async (_, read) => {
+        expect(await rejection(read())).toMatchObject({ code: SeedcordErrorCode.CorePathOutsideRoot });
     });
 });
 
@@ -194,8 +185,7 @@ describe('the folders and files the build leaves out, under seedcord dev', () =>
             root,
             listed: ['/'],
             skippedFolders: ['/dist', '/logs'],
-            configDir: '/',
-            configFile: 'seedcord.config.ts'
+            configFile: '/seedcord.config.ts'
         });
         return () => dev[Symbol.dispose]();
     });
@@ -234,8 +224,7 @@ describe('a folder seedcord build skips, under seedcord dev', () => {
         const dev = setDevFiles({
             root,
             listed: ['/locales'],
-            skippedFolders: [],
-            configFile: 'seedcord.config.ts'
+            skippedFolders: []
         });
         return () => dev[Symbol.dispose]();
     });

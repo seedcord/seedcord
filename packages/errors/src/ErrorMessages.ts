@@ -95,8 +95,8 @@ const messages = {
             : `The Vite plugin ${paint.sky(plugin)} from ${paint.bold('vitePlugins')} in ${paint.path(configFile)} threw ${placeText(place.hook, place.loading)}. ${reasonThen(reason, vitePluginFix(place))}`,
     [SeedcordErrorCode.CorePathUnreadable]: (path: string, reason: string) =>
         `Could not read ${paint.path(path)}. ${reasonThen(reason, 'Check that it exists and that this process can read it.')}`,
-    [SeedcordErrorCode.CorePathOutsideRoot]: (path: string, root: string, readBy?: 'readFiles') =>
-        `${paint.path(path)} is outside ${paint.bold('root')} (${paint.path(root)}). ${paint.bold('seedcord build')} bundles only the files under ${paint.bold('root')}. Move it under ${paint.bold('root')}, or set ${paint.bold('root')} in seedcord.config.ts to a folder that holds it.${readBy ? ` If a plugin calls ${paint.bold('readFiles')} for its own data files, import them from the plugin's code.` : ''}`,
+    [SeedcordErrorCode.CorePathOutsideRoot]: (path: string, root: string) =>
+        `${paint.path(path)} is outside ${paint.bold('root')} (${paint.path(root)}). ${paint.bold('seedcord build')} bundles only the files under ${paint.bold('root')}. Move it under ${paint.bold('root')}, or set ${paint.bold('root')} in seedcord.config.ts to a folder that holds it.`,
     [SeedcordErrorCode.CoreDirectoryRootUnknown]: (dir: string) =>
         `${paint.path(dir)} is relative to ${paint.bold('root')}, but this process has no ${paint.bold('root')} to resolve it against. ${paint.bold('seedcord dev')} and a built bot set ${paint.bold('root')} from seedcord.config.ts. Start the bot one of those ways, or pass an absolute path like ${paint.sky(`resolve(import.meta.dirname, '${dir}')`)}.`,
     [SeedcordErrorCode.CoreDirectoryNotBuilt]: (dir: string, root: string) =>

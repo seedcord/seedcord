@@ -12,10 +12,11 @@ import { assert, describe, expect, it, onTestFinished } from 'vitest';
 
 import { AugmentationBuilder } from '#commands/codegen/AugmentationBuilder';
 import { CodegenRunner } from '#commands/codegen/CodegenRunner';
-import { LoadedConfig } from '#core/config/LoadedConfig';
 import { quietSteps } from '#core/output/quietSteps';
 import { Project } from '#core/project/Project';
+import { ProjectFiles } from '#core/project/ProjectFiles';
 import { realPath } from '#core/project/realPath';
+import { loadedConfig } from '#tests/loadedConfig';
 import { silentLogger } from '#tests/silentLogger';
 import { vitePluginsOf } from '#tests/vitePluginsOf';
 
@@ -68,8 +69,8 @@ function configAt(root: string, instance: string): ResolvedSeedcordConfig {
 
 function projectOpener(config: ResolvedSeedcordConfig, modules: ModuleLoader & AsyncDisposable): ProjectOpener {
     return {
-        readConfig: () => Promise.resolve(new LoadedConfig(config)),
-        openProject: (loaded) => Promise.resolve(new Project(loaded.config, modules))
+        readConfig: () => Promise.resolve(loadedConfig(config)),
+        openProject: (loaded) => Promise.resolve(new Project(loaded.config, loaded.files, modules))
     };
 }
 
@@ -191,8 +192,10 @@ describe('CodegenRunner writeFrom', () => {
 
         // justified: the scan treats every import as an export map
         const modules = { importModule: () => Promise.resolve({ BanCommand }) } as ModuleLoader;
+        const config = configAt(root, resolve(root, 'bot.ts'));
         await runner.writeFrom({
-            config: configAt(root, resolve(root, 'bot.ts')),
+            config,
+            files: new ProjectFiles(config),
             // justified: codegen reads only the brand keys and config.bot off the instance
             instance: brandedInstance(cmdDir) as SeedcordInstance,
             modules

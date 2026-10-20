@@ -7,11 +7,11 @@ import { afterEach, describe, expect, it, onTestFinished, vi, type Mock } from '
 
 import { DevRunner } from '#commands/dev/DevRunner';
 import { ServerDevRuntime } from '#commands/dev/runtime/ServerDevRuntime';
-import { LoadedConfig } from '#core/config/LoadedConfig';
 import { ProjectLoader } from '#core/config/ProjectLoader';
 import { openModuleLoader } from '#core/modules/openModuleLoader';
 import { StateFolder } from '#core/state/StateFolder';
 import { ShellMode } from '#core/viteMode';
+import { loadedConfig } from '#tests/loadedConfig';
 import { silentLogger } from '#tests/silentLogger';
 import { DevStore } from '#ui/stores/DevStore';
 
@@ -29,8 +29,8 @@ const devConfig = devConfigFor(process.cwd(), 'bot.ts');
 
 const STATE = new StateFolder(devConfig.root, silentLogger);
 
-function loadedDevConfig(): LoadedConfig {
-    return new LoadedConfig(devConfig);
+function loadedDevConfig(): ReturnType<typeof loadedConfig> {
+    return loadedConfig(devConfig);
 }
 
 function readyRuntime(): DevRuntime {
@@ -388,7 +388,7 @@ function untilError(store: DevStore): Promise<Error> {
 describe('DevRunner run', () => {
     it('reads the config once and shows a session that fails to start as an error', async () => {
         const projectLoader = {
-            readConfig: vi.fn(() => Promise.resolve(new LoadedConfig(devConfigFor(process.cwd(), 'bot.ts'))))
+            readConfig: vi.fn(() => Promise.resolve(loadedConfig(devConfigFor(process.cwd(), 'bot.ts'))))
         };
         const store = new DevStore();
         const runner = new DevRunner({

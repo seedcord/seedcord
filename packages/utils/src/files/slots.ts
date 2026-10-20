@@ -1,6 +1,8 @@
 import { existsSync } from 'node:fs';
 import * as path from 'node:path';
 
+import { BotLayout } from './BotLayout';
+
 import type { BotLayoutData } from './BotLayout';
 import type { EncodedFile } from './encodedFile';
 
@@ -15,14 +17,11 @@ export interface BuiltSlot extends BotLayoutData {
     listedFiles: Record<string, EncodedFileLoader>;
     // seedcord dev runs the source files themselves
     sourcePaths?: boolean;
-    // relative to root. only a server build writes it
-    configFile?: string;
 }
 
 // server dev reads the files off disk
 export interface DevSlot extends BotLayoutData {
     kind: 'dev';
-    configFile: string;
 }
 
 type BotFilesSlot = BuiltSlot | DevSlot;
@@ -49,11 +48,9 @@ export function setBuiltFilesHook(callback: () => void): void {
 
 export function botConfigDir(): string | undefined {
     const slot = botFilesSlot();
-    if (slot?.configFile === undefined) return undefined;
-
-    const configFile = path.resolve(slot.root, slot.configFile);
+    const configFile = slot && new BotLayout(slot).configFile;
     // a bun binary's root is under /$bunfs
-    return existsSync(configFile) ? path.dirname(configFile) : undefined;
+    return configFile !== undefined && existsSync(configFile) ? path.dirname(configFile) : undefined;
 }
 
 function writeSlot(slot: BotFilesSlot): Disposable {

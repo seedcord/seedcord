@@ -139,8 +139,7 @@ describe('HmrModuleHandler', () => {
         using _dev = setDevFiles({
             root: dir,
             listed: [],
-            skippedFolders: [],
-            configFile: 'seedcord.config.ts'
+            skippedFolders: []
         });
         const relative = new HmrModuleHandler<TestHandler>({
             handlersDir: './commands',

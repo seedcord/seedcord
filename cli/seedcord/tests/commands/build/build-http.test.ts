@@ -97,8 +97,11 @@ describe('seedcord build on an http bot', () => {
         expect(greeting).toContain('hello from the markdown twin');
     });
 
-    it('bundles no text from a folder outside files', () => {
-        expect(builtFilesContaining('fixture:unlisted')).toEqual([]);
+    it.each([
+        ['a folder outside files', 'fixture:unlisted'],
+        ['a dot-folder inside a listed folder', 'fixture:skipped']
+    ])('bundles no text from %s', (_, marker) => {
+        expect(builtFilesContaining(marker)).toEqual([]);
     });
 
     it.skipIf(!compilesBunBinaries())(

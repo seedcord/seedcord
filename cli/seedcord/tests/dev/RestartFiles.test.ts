@@ -6,6 +6,7 @@ import { describe, expect, it, onTestFinished } from 'vitest';
 
 import { RestartFiles } from '#commands/dev/runtime/RestartFiles';
 import { WorkerEnv } from '#core/modules/workerEnv';
+import { ProjectFiles } from '#core/project/ProjectFiles';
 import { realPath } from '#core/project/realPath';
 import { edgeFolder } from '#tests/edgeFolder';
 
@@ -17,15 +18,18 @@ async function configFiles(mode = 'development'): Promise<{ files: RestartFiles;
     const cloudflareConfig = realPath(folder.cloudflareConfig);
     const dir = realPath(dirname(cloudflareConfig));
     const { files } = await WorkerEnv.load(cloudflareConfig, mode);
-    const config: ConstructorParameters<typeof RestartFiles>[0] = {
+    const paths = {
         root: dir,
         configFile: realPath(join(dir, 'seedcord.config.ts')),
         files: [],
-        target: { kind: 'server', start: undefined, outDir: realPath(join(dir, 'dist')) },
-        instance: realPath(join(dir, 'bot.ts')),
-        viteMode: mode
+        target: { kind: 'server', start: undefined, outDir: realPath(join(dir, 'dist')) }
+    } as const;
+    const config = { ...paths, instance: realPath(join(dir, 'bot.ts')), viteMode: mode };
+    const { layout } = new ProjectFiles({ ...paths, files: [] });
+    return {
+        files: new RestartFiles(config, layout, [basename(cloudflareConfig), ...files]),
+        config: cloudflareConfig
     };
-    return { files: new RestartFiles(config, [basename(cloudflareConfig), ...files]), config: cloudflareConfig };
 }
 
 describe('RestartFiles', () => {
@@ -56,6 +60,17 @@ describe('RestartFiles', () => {
         const { files, config } = await configFiles();
 
         expect(files.hiddenFromVite(config.replaceAll('\\', '/'))).toBe(true);
+    });
+
+    it.each([
+        ['pnpm-lock.yaml', true],
+        ['tsconfig.build.json', true],
+        ['src/package.json', false],
+        ['src/tsconfig.json', false]
+    ])('asks for a restart when %s is saved: %s', async (file, expected) => {
+        const { files, config } = await configFiles();
+
+        expect(files.needsRestart(join(dirname(config), file))).toBe(expected);
     });
 
     it('leaves a .env in another folder out', async () => {

@@ -7,43 +7,36 @@ import { posixRelative } from '@seedcord/utils/internal';
 import { minimatch } from 'minimatch';
 
 import { viteEnvFiles } from '#core/modules/viteEnvFiles';
-import { ProjectFiles } from '#core/project/ProjectFiles';
-import { realPath } from '#core/project/realPath';
 
 import type { ResolvedSeedcordConfig } from '#core/config/schema';
-import type { RealPath } from '#core/project/realPath';
 import type { BotLayout } from '@seedcord/utils/internal';
 import type { FSWatcher } from 'node:fs';
 
 const logger = new Logger('HMR', { channel: 'hmr' });
 
-type RestartConfig = Pick<
-    ResolvedSeedcordConfig,
-    'root' | 'configFile' | 'files' | 'target' | 'instance' | 'viteMode' | 'hmr'
->;
+type RestartConfig = Pick<ResolvedSeedcordConfig, 'root' | 'configFile' | 'instance' | 'viteMode' | 'hmr'>;
 
 // every file whose save asks for a dev restart
 export class RestartFiles {
-    private readonly layout: BotLayout;
-    private readonly configDir: RealPath;
+    private readonly configDir: string;
     private readonly hiddenNames: Set<string>;
     private readonly patterns = new Set<string>();
 
     // targetFiles are the edge target's cloudflare.config.ts and .dev.vars files
     public constructor(
         private readonly config: RestartConfig,
-        targetFiles: readonly string[] = []
+        private readonly layout: BotLayout,
+        targetFiles: readonly string[]
     ) {
-        this.layout = ProjectFiles.of(config).layout;
-        this.configDir = realPath(dirname(config.configFile));
+        this.configDir = dirname(config.configFile);
         this.hiddenNames = new Set([basename(config.configFile), ...viteEnvFiles(config.viteMode), ...targetFiles]);
         this.addPatterns(config.hmr?.restart ?? []);
     }
 
     // vite restarts itself when its watcher reports an env file. the cloudflare plugin does the same for its config.
     // either restart leaves the bot's module runner on the closed server
-    // chokidar passes forward slashes to vite's ignored matchers on windows
     public readonly hiddenFromVite = (path: string): boolean => {
+        // chokidar passes forward slashes to vite's ignored matchers on windows
         const file = resolve(path);
         return dirname(file) === this.configDir && this.hiddenNames.has(basename(file));
     };

@@ -1,5 +1,6 @@
 import { join } from 'node:path';
 
+import { ProjectFiles } from '#core/project/ProjectFiles';
 import { realPath } from '#core/project/realPath';
 import { StateFolder } from '#core/state/StateFolder';
 import { silentLogger } from '#tests/silentLogger';
@@ -29,5 +30,6 @@ export function devConfigFor(root: string, instance: string): ResolvedSeedcordCo
 }
 
 export function devContextFor(root: string, instance: string): DevRuntimeContext {
-    return { config: devConfigFor(root, instance), state: new StateFolder(root, silentLogger) };
+    const config = devConfigFor(root, instance);
+    return { config, files: new ProjectFiles(config), state: new StateFolder(root, silentLogger) };
 }

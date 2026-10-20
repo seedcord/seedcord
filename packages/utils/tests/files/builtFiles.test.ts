@@ -70,14 +70,14 @@ describe('botConfigDir', () => {
     it('returns the folder holding seedcord.config.ts', () => {
         using project = mkdtempDisposableSync(path.join(tmpdir(), 'seedcord-built-'));
         writeFileSync(path.join(project.path, 'seedcord.config.ts'), '');
-        using _built = register({ root: path.join(project.path, 'dist'), configFile: '../seedcord.config.ts' });
+        using _built = register({ root: path.join(project.path, 'dist'), configFile: '/../seedcord.config.ts' });
 
         expect(botConfigDir()).toBe(project.path);
     });
 
     it('returns nothing for a build copied away from its project', () => {
         using elsewhere = mkdtempDisposableSync(path.join(tmpdir(), 'seedcord-built-'));
-        using _built = register({ root: path.join(elsewhere.path, 'app'), configFile: '../seedcord.config.ts' });
+        using _built = register({ root: path.join(elsewhere.path, 'app'), configFile: '/../seedcord.config.ts' });
 
         expect(botConfigDir()).toBeUndefined();
     });
@@ -108,8 +108,7 @@ describe('setBuiltFilesHook', () => {
         using _dev = setDevFiles({
             root: ROOT,
             listed: [],
-            skippedFolders: [],
-            configFile: 'seedcord.config.ts'
+            skippedFolders: []
         });
         // setBuiltFilesHook keeps the hook it could not run yet
         onTestFinished(clearBuiltFiles);

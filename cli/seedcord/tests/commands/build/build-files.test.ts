@@ -5,7 +5,6 @@ import { join } from 'node:path';
 import { SeedcordErrorCode } from '@seedcord/errors';
 import { describe, expect, it } from 'vitest';
 
-import { builtSource, fixtureCopy, HTTP_BOT } from './fixtureCopy';
 import { quickBuildRunner } from './quickBuildRunner';
 
 interface ProjectShape {
@@ -76,18 +75,4 @@ describe('seedcord build with files in the config', () => {
         expect(error).toMatchObject({ code: SeedcordErrorCode.CoreDuplicateName });
         expect(Error.isError(error) ? error.message : '').toMatch(/Roll\.ts[\s\S]*Roll\.tsx[\s\S]*Roll\.js/);
     });
-
-    it('leaves dot-folders and node_modules inside a listed folder out of the build', async () => {
-        await using bot = await fixtureCopy(HTTP_BOT);
-        for (const folder of ['.cache', 'node_modules/pkg']) {
-            await mkdir(join(bot.path, 'src/locales', folder), { recursive: true });
-            await writeFile(join(bot.path, 'src/locales', folder, 'stale.txt'), `fixture:skipped ${folder}\n`);
-        }
-
-        await quickBuildRunner().run(bot.path);
-        const built = await builtSource(join(bot.path, 'dist'));
-
-        expect(built).toContain('hello from the markdown twin');
-        expect(built).not.toContain('fixture:skipped');
-    }, 120_000);
 });

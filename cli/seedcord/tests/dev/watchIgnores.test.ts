@@ -8,6 +8,7 @@ import { afterEach, describe, expect, it, onTestFinished, vi } from 'vitest';
 
 import { serverViteConfig } from '#commands/dev/runtime/devServerConfig';
 import { mergeViteConfig } from '#core/modules/userCodeConfig';
+import { ProjectFiles } from '#core/project/ProjectFiles';
 import { realPath } from '#core/project/realPath';
 
 import type { ResolvedSeedcordConfig } from '#core/config/schema';
@@ -35,7 +36,9 @@ function project(): string {
     onTestFinished(() => scratch.remove());
     const root = realPath(scratch.path);
 
-    for (const folder of ['logs', 'build', 'src/logs', 'src/dist']) mkdirSync(join(root, folder), { recursive: true });
+    for (const folder of ['logs', 'build', '.seedcord', 'src/logs', 'src/dist']) {
+        mkdirSync(join(root, folder), { recursive: true });
+    }
     writeFileSync(join(root, 'bot.ts'), 'export const bot = 1;\n');
     writeFileSync(join(root, LOG_FILE), 'first line\n');
     writeFileSync(join(root, BUILT_FILE), 'export {};\n');
@@ -60,7 +63,7 @@ async function watchProject(root: string, botRoot = root): Promise<WatchedProjec
         target: { kind: 'server', start: undefined, outDir: realPath(join(root, 'build')) }
     };
     server = await createServer(
-        mergeViteConfig(serverViteConfig(config), {
+        mergeViteConfig(serverViteConfig(config, new ProjectFiles(config).layout), {
             plugins: [
                 {
                     name: 'record',
@@ -96,14 +99,15 @@ describe('dev server watch ignores', () => {
         ['the project', (dir: string) => dir],
         ['./src', (dir: string) => join(dir, 'src')]
     ])(
-        'never watches the logs folder beside the config of a bot rooted at %s',
+        'never watches the logs or .seedcord folder beside the config of a bot rooted at %s',
         async (_, botRoot) => {
             const dir = project();
             const { watcher, touchUntilReported } = await watchProject(dir, botRoot(dir));
 
             await touchUntilReported(SOURCE_FILE);
 
-            expect(watcher.getWatched()[join(dir, 'logs')]).toBeUndefined();
+            const watched = watcher.getWatched();
+            expect([watched[join(dir, 'logs')], watched[join(dir, '.seedcord')]]).toEqual([undefined, undefined]);
         },
         TEST_TIMEOUT_MS
     );

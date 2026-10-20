@@ -100,7 +100,7 @@ export enum SeedcordErrorCode {
     CoreVitePluginThrew = 1229,
     /** `readFiles` read a folder that `files` in `seedcord.config.ts` leaves out. */
     CoreDirectoryNotListed = 1230,
-    /** `readFiles` or `importFiles` read a folder with a dot-folder or `node_modules` in its path. */
+    /** A folder is inside one that `seedcord build` skips, like a dot-folder, `node_modules`, `outDir` or the logs folder. */
     CoreDirectorySkipped = 1231,
 
     /** A command class carries `@RegisterCommand` twice. */
@@ -297,7 +297,7 @@ export enum SeedcordErrorCode {
     CliNotProjectInstall = 3138,
     /** Vite's environments leave out the one seedcord runs the bot in. */
     CliViteEnvironmentMissing = 3139,
-    /** A folder that `files` in `seedcord.config.ts` lists is missing, is a file, or is one `seedcord build` skips. */
+    /** A folder that `files` in `seedcord.config.ts` lists is missing or is a file. */
     CliListedFolderUnusable = 3140,
 
     /** A flag answers a question that the earlier answers skip. */

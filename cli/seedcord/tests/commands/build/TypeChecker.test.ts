@@ -7,6 +7,7 @@ import { beforeEach, describe, expect, it } from 'vitest';
 
 import { TypeChecker } from '#commands/build/builder/TypeChecker';
 import { Project } from '#core/project/Project';
+import { ProjectFiles } from '#core/project/ProjectFiles';
 import { realPath } from '#core/project/realPath';
 
 import type { ResolvedSeedcordConfig } from '#core/config/schema';
@@ -37,7 +38,7 @@ function projectFor(tsconfig?: string): Project {
         importModule: () => Promise.reject(new Error('the type checker loads no modules')),
         [Symbol.asyncDispose]: () => Promise.resolve()
     };
-    return new Project(config, loader);
+    return new Project(config, new ProjectFiles(config), loader);
 }
 
 describe('TypeChecker', () => {

@@ -14,7 +14,6 @@ import { CommandScanner } from '#core/modules/CommandScanner';
 import { importInstance } from '#core/modules/importInstance';
 import { openModuleLoader } from '#core/modules/openModuleLoader';
 import { printResolvedConfig } from '#core/output/printResolvedConfig';
-import { ProjectFiles } from '#core/project/ProjectFiles';
 import { startupShell } from '#core/viteMode';
 
 import { AugmentationBuilder } from './AugmentationBuilder';
@@ -24,6 +23,7 @@ import type { ProjectOpener } from '#core/config/openProjectWithSteps';
 import type { ResolvedSeedcordConfig } from '#core/config/schema';
 import type { ModuleLoader } from '#core/modules/ModuleLoader';
 import type { Steps } from '#core/output/Steps';
+import type { ProjectFiles } from '#core/project/ProjectFiles';
 import type { ScannedCommand } from './AugmentationBuilder';
 import type { ILogger } from '@seedcord/types';
 
@@ -33,6 +33,7 @@ const ENTRY_EXTENSION = /\.[mc]?[jt]sx?$/;
 
 export interface LoadedBot {
     readonly config: ResolvedSeedcordConfig;
+    readonly files: ProjectFiles;
     readonly instance: SeedcordInstance;
     readonly modules: ModuleLoader;
 }
@@ -81,27 +82,24 @@ export class CodegenRunner {
         const { steps, projectLoader } = this.deps;
 
         await using project = await openProjectWithSteps(steps, projectLoader);
-        const { config, modules } = project;
+        const { config, files, modules } = project;
         printResolvedConfig(steps, config);
         const instance = await steps.step('load bot', () => importInstance(modules, config.instance));
 
         // a bare return disposes the project before the scan's imports run
-        return await this.generate({ config, instance, modules }, check);
+        return await this.generate({ config, files, instance, modules }, check);
     }
 
     public async writeFrom(bot: LoadedBot): Promise<CodegenResult> {
         return this.generate(bot, false);
     }
 
-    private async generate({ config, instance, modules }: LoadedBot, check: boolean): Promise<CodegenResult> {
+    private async generate({ config, files, instance, modules }: LoadedBot, check: boolean): Promise<CodegenResult> {
         const { steps } = this.deps;
         const commandsPath = instance.config.bot.commands.path;
         const commands = await steps.step(
             'scan commands',
-            () =>
-                commandsPath
-                    ? new CommandScanner(modules, ProjectFiles.of(config)).scan(commandsPath)
-                    : Promise.resolve([]),
+            () => (commandsPath ? new CommandScanner(modules, files).scan(commandsPath) : Promise.resolve([])),
             (found) => paint.mute(plural(found.length, 'command'))
         );
 

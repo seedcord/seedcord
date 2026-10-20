@@ -17,24 +17,15 @@ function layoutOf({ root, configFile, files, target }: ProjectPaths): BotLayout 
         root,
         listed: keysOf(files),
         skippedFolders: keysOf([...outDir, logsFolderIn(configDir)]),
-        configDir: BotLayout.keyUnder(root, configDir)
+        configFile: BotLayout.keyUnder(root, configFile)
     });
 }
-
-const filesOfConfig = new WeakMap<ProjectPaths, ProjectFiles>();
 
 export class ProjectFiles {
     public readonly layout: BotLayout;
 
-    private constructor(paths: ProjectPaths) {
+    constructor(paths: ProjectPaths) {
         this.layout = layoutOf(paths);
-    }
-
-    // dev, build and codegen share one layout per config
-    public static of(paths: ProjectPaths): ProjectFiles {
-        const files = filesOfConfig.get(paths) ?? new ProjectFiles(paths);
-        filesOfConfig.set(paths, files);
-        return files;
     }
 
     // sorted by path, the order importFiles loads them in

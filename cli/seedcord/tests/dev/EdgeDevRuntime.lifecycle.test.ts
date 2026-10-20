@@ -9,7 +9,6 @@ import { assert, beforeAll, describe, expect, it, onTestFinished, vi } from 'vit
 import { CodegenRunner } from '#commands/codegen/CodegenRunner';
 import { DevRunner } from '#commands/dev/DevRunner';
 import { EdgeDevRuntime } from '#commands/dev/runtime/EdgeDevRuntime';
-import { LoadedConfig } from '#core/config/LoadedConfig';
 import { quietSteps } from '#core/output/quietSteps';
 import { deployedCommandsFile } from '#core/state/deployedCommands';
 import { StateFolder } from '#core/state/StateFolder';
@@ -17,6 +16,7 @@ import { ShellMode } from '#core/viteMode';
 import { READ_IN_WORKERD, writeCloudflareConfig } from '#tests/commands/build/edgeBot';
 import { ED25519_KEY_BYTES } from '#tests/commands/build/smoke';
 import { GREETING, GREETING_PROBE, greetingPlugin } from '#tests/greetingPlugin';
+import { loadedConfig } from '#tests/loadedConfig';
 import { silentLogger } from '#tests/silentLogger';
 import { vitePluginsOf } from '#tests/vitePluginsOf';
 import { DevStore } from '#ui/stores/DevStore';
@@ -164,7 +164,7 @@ describe('EdgeDevRuntime lifecycle', () => {
         const store = new DevStore();
         const state = new StateFolder(projectDir, silentLogger);
         const runner = new DevRunner({
-            projectLoader: { readConfig: () => Promise.resolve(new LoadedConfig(config)) },
+            projectLoader: { readConfig: () => Promise.resolve(loadedConfig(config)) },
             store,
             state,
             codegen: CodegenRunner.create(quietSteps, silentLogger, new ShellMode()),

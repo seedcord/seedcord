@@ -13,7 +13,7 @@ import type { ModuleLoader } from '#core/modules/ModuleLoader';
 import type { RealPath } from '#core/project/realPath';
 
 function filesAt(root: RealPath): ProjectFiles {
-    return ProjectFiles.of({
+    return new ProjectFiles({
         root,
         configFile: realPath(join(root, 'seedcord.config.ts')),
         files: [],

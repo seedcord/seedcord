@@ -23,7 +23,7 @@ export class ServerDevRuntime extends BaseDevRuntime {
         const hmr = this.openHmr(context, BOT_ENVIRONMENT, resources);
         const server = await openViteServer(
             resources,
-            mergeViteConfig(serverViteConfig(context.config), {
+            mergeViteConfig(serverViteConfig(context.config, context.files.layout), {
                 mode: context.config.viteMode,
                 plugins: [hmr.plugin, context.config.vitePlugins.create()]
             })

@@ -10,11 +10,10 @@ import { workerdPath } from '@seedcord/utils/internal';
 
 import { deployedCommandsFile, lastDeployOf } from '#core/state/deployedCommands';
 
-import { RestartFiles } from './RestartFiles';
-
 import type { ResolvedSeedcordConfig } from '#core/config/schema';
 import type { StateFolder } from '#core/state/StateFolder';
 import type { DevEvent } from './events';
+import type { RestartFiles } from './RestartFiles';
 import type { HmrEventType, HmrUpdateEvent, TypedOmit } from '@seedcord/types';
 import type { DevChannel, SeedcordCliEvents, SeedcordFrameworkEvents } from '@seedcord/types/internal';
 import type { FSWatcher } from 'node:fs';
@@ -39,7 +38,6 @@ const TYPE_COLOR = {
 
 export class HmrPlugin extends TypedEventEmitter<{ event: [DevEvent] }> {
     private readonly logger: Logger;
-    private readonly restartFiles: RestartFiles;
     private readonly lastUpdate = new Map<string, number>();
     private server: ViteDevServer | null = null;
     private restartFilesWatcher?: FSWatcher | undefined;
@@ -56,10 +54,9 @@ export class HmrPlugin extends TypedEventEmitter<{ event: [DevEvent] }> {
         private readonly config: ResolvedSeedcordConfig,
         private readonly state: StateFolder,
         private readonly botEnvironment: string,
-        targetRestartFiles: readonly string[] = []
+        private readonly restartFiles: RestartFiles
     ) {
         super();
-        this.restartFiles = new RestartFiles(config, targetRestartFiles);
         this.logger = new Logger('HMR', { channel: 'hmr' });
     }
 

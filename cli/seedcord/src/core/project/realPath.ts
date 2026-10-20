@@ -14,6 +14,6 @@ function resolved(path: string): string {
 }
 
 export function realPath(path: string): RealPath {
-    // justified: the only place a RealPath is made, right after realpathSync ran
+    // justified: the only place a RealPath is made
     return resolved(path) as RealPath;
 }

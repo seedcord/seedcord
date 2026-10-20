@@ -18,7 +18,7 @@ async function projectRoot(): Promise<RealPath> {
 }
 
 function filesUnder(root: RealPath): ProjectFiles {
-    return ProjectFiles.of({
+    return new ProjectFiles({
         root,
         configFile: realPath(join(root, 'seedcord.config.ts')),
         files: [],
@@ -66,7 +66,7 @@ describe('the build globs', () => {
             await mkdir(join(root, file, '..'), { recursive: true });
             await writeFile(join(root, file), '{}\n');
         }
-        const files = ProjectFiles.of({
+        const files = new ProjectFiles({
             root,
             configFile: realPath(join(root, 'seedcord.config.ts')),
             files: [realPath(join(root, 'locales'))],

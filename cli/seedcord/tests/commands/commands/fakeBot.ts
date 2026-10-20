@@ -9,10 +9,10 @@ import { SeedcordBrand } from '@seedcord/types/internal';
 import { ApplicationCommandType, Routes } from 'discord-api-types/v10';
 import { onTestFinished, vi } from 'vitest';
 
-import { LoadedConfig } from '#core/config/LoadedConfig';
 import { Project } from '#core/project/Project';
 import { realPath } from '#core/project/realPath';
 import { StateFolder } from '#core/state/StateFolder';
+import { loadedConfig } from '#tests/loadedConfig';
 import { silentLogger } from '#tests/silentLogger';
 import { vitePluginsOf } from '#tests/vitePluginsOf';
 
@@ -126,8 +126,8 @@ export async function fakeProject({
         [Symbol.asyncDispose]: () => Promise.resolve()
     } as ModuleLoader & AsyncDisposable;
     return {
-        readConfig: () => Promise.resolve(new LoadedConfig(config)),
-        openProject: (loaded) => Promise.resolve(new Project(loaded.config, modules)),
+        readConfig: () => Promise.resolve(loadedConfig(config)),
+        openProject: (loaded) => Promise.resolve(new Project(loaded.config, loaded.files, modules)),
         state: new StateFolder(root, silentLogger)
     };
 }

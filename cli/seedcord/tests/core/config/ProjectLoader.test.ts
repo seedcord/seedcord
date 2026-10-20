@@ -440,15 +440,6 @@ describe('ProjectLoader validation', () => {
             message: expect.stringContaining('() => [yaml()]') as string
         });
     });
-
-    // dev and codegen never write outDir
-    it('loads a build.outDir that holds root', async () => {
-        const { projectDir, load } = projectWith({ ...MINIMAL, root: './src', build: { outDir: '.' } });
-
-        const { target } = await load();
-
-        expect(target).toMatchObject({ outDir: projectDir });
-    });
 });
 
 describe('ProjectLoader files', () => {
@@ -476,6 +467,12 @@ describe('ProjectLoader files', () => {
             code: SeedcordErrorCode.CorePathOutsideRoot,
             message: expect.stringContaining('shared') as string
         });
+    });
+
+    it('throws CliConfigOutDirDeletesRoot for an outDir that holds root, the way seedcord dev loads it', async () => {
+        const load = projectWith({ ...MINIMAL, root: './src', build: { ...MINIMAL.build, outDir: '.' } }).load();
+
+        await expect(load).rejects.toMatchObject({ code: SeedcordErrorCode.CliConfigOutDirDeletesRoot });
     });
 
     it('throws CoreDirectorySkipped for a folder inside a dot-folder', async () => {

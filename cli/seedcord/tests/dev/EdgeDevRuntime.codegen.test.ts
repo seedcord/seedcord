@@ -5,6 +5,7 @@ import { describe, expect, it, vi } from 'vitest';
 
 import { CodegenRunner } from '#commands/codegen/CodegenRunner';
 import { quietSteps } from '#core/output/quietSteps';
+import { ProjectFiles } from '#core/project/ProjectFiles';
 import { ShellMode } from '#core/viteMode';
 import { silentLogger } from '#tests/silentLogger';
 
@@ -29,7 +30,8 @@ describe('EdgeDevRuntime codegen', () => {
         await using started = await startedRuntime(projectDir);
         const { runtime, instance } = started;
         const codegen = CodegenRunner.create(quietSteps, silentLogger, new ShellMode());
-        const bot = { config: edgeConfig(projectDir), instance, modules: runtime };
+        const config = edgeConfig(projectDir);
+        const bot = { config, files: new ProjectFiles(config), instance, modules: runtime };
         const { outputPath: first } = await codegen.writeFrom(bot);
         await expect(readFile(first, 'utf8')).resolves.toContain('wave');
 

@@ -15,8 +15,8 @@ export interface BotLayoutData {
     readonly listed: readonly string[];
     // outDir and the logs folder
     readonly skippedFolders: readonly string[];
-    // the folder holding seedcord.config.ts. a script without a config has none
-    readonly configDir?: string | undefined;
+    // seedcord.config.ts. a script without a config has none
+    readonly configFile?: string | undefined;
 }
 
 export interface BotEntry {
@@ -36,7 +36,6 @@ const PROJECT_FILE_NAMES = new Set([
     'bun.lock',
     'bun.lockb'
 ]);
-// isProjectFileName matches the same names
 const PROJECT_FILE_GLOBS = ['seedcord.config.*', 'tsconfig*.json', ...PROJECT_FILE_NAMES];
 
 function isProjectFileName(name: string): boolean {
@@ -62,25 +61,25 @@ function isSkippedName(name: string): boolean {
     return name.startsWith('.') || name === 'node_modules';
 }
 
-// the CLI writes this into the slot for seedcord dev and the built bot
+// the CLI writes this layout's data into the slot for seedcord dev and the built bot
 export class BotLayout {
     public readonly root: string;
+    public readonly configFile: string | undefined;
     private readonly data: Readonly<BotLayoutData>;
     private readonly listed: readonly string[];
     private readonly skippedFolders: readonly string[];
-    private readonly configDir: string | undefined;
 
-    public constructor({ root, listed, skippedFolders, configDir }: BotLayoutData) {
+    public constructor({ root, listed, skippedFolders, configFile }: BotLayoutData) {
         this.root = path.resolve(root);
         this.data = Object.freeze({
             root: this.root,
             listed: [...listed],
             skippedFolders: [...skippedFolders],
-            configDir
+            configFile
         });
         this.listed = this.data.listed.map((key) => this.pathOf(key));
         this.skippedFolders = this.data.skippedFolders.map((key) => this.pathOf(key));
-        this.configDir = configDir === undefined ? undefined : this.pathOf(configDir);
+        this.configFile = configFile === undefined ? undefined : this.pathOf(configFile);
     }
 
     // a script that reads an absolute folder without a config gets every file in it
@@ -124,18 +123,17 @@ export class BotLayout {
 
     // also true for one written after the layout was built
     public isProjectFile(file: string): boolean {
-        return path.dirname(file) === this.configDir && isProjectFileName(path.basename(file));
+        return path.dirname(file) === this.configDir() && isProjectFileName(path.basename(file));
     }
 
-    public bundleProblem(folder: string, readBy?: 'readFiles'): SeedcordError | undefined {
-        if (!this.holds(folder))
-            return new SeedcordError(SeedcordErrorCode.CorePathOutsideRoot, [folder, this.root, readBy]);
+    public bundleProblem(folder: string): SeedcordError | undefined {
+        if (!this.holds(folder)) return new SeedcordError(SeedcordErrorCode.CorePathOutsideRoot, [folder, this.root]);
         if (this.isSkipped(folder)) return new SeedcordError(SeedcordErrorCode.CoreDirectorySkipped, [folder]);
         return undefined;
     }
 
-    public assertBundled(folder: string, readBy?: 'readFiles'): void {
-        const problem = this.bundleProblem(folder, readBy);
+    public assertBundled(folder: string): void {
+        const problem = this.bundleProblem(folder);
         if (problem) throw problem;
     }
 
@@ -198,27 +196,31 @@ export class BotLayout {
         return this.data;
     }
 
-    // a built bot resolves these against its own root, where a key like '/../dist' is the bot itself
+    // a built bot resolves these against its own root, where a key like '/../dist' is the bot itself.
+    // the built entry writes its own configFile, relative to outDir
     public bundledData(): BotLayoutData {
         const insideRoot = (keys: readonly string[]): string[] => keys.filter((key) => this.holds(this.pathOf(key)));
-        const { listed, skippedFolders, configDir } = this.data;
         return {
             root: this.root,
-            listed: insideRoot(listed),
-            skippedFolders: insideRoot(skippedFolders),
-            configDir: configDir === undefined ? undefined : insideRoot([configDir])[0]
+            listed: insideRoot(this.data.listed),
+            skippedFolders: insideRoot(this.data.skippedFolders)
         };
     }
 
+    private configDir(): string | undefined {
+        return this.configFile === undefined ? undefined : path.dirname(this.configFile);
+    }
+
     private globExcludes(base: string): string[] {
-        const { skippedFolders, configDir } = this.bundledData();
-        const folders = skippedFolders.map((key) => `!${base}${key}/**`);
+        const folders = this.bundledData().skippedFolders.map((key) => `!${base}${key}/**`);
+        const configDir = this.configDir();
         const projectFiles =
-            configDir === undefined ? [] : PROJECT_FILE_GLOBS.map((name) => `!${globFolder(base, configDir)}/${name}`);
+            configDir === undefined || !this.holds(configDir)
+                ? []
+                : PROJECT_FILE_GLOBS.map((name) => `!${globFolder(base, this.keyOf(configDir))}/${name}`);
         return [...SKIPPED_NAME_GLOBS, ...folders, ...projectFiles];
     }
 
-    // path.join keeps the trailing slash of a '/' key
     private pathOf(key: string): string {
         return path.resolve(this.root, `.${key}`);
     }
@@ -236,8 +238,8 @@ export class BotFolder {
         return isInside(this.path, file) && this.layout.isModule(file);
     }
 
-    // any file in this folder that seedcord build keeps, code or not
-    public holdsBotFile(file: string): boolean {
+    // a skipped file counts as outside the folder
+    public holds(file: string): boolean {
         return isInside(this.path, file) && !this.layout.isSkipped(file);
     }
 }

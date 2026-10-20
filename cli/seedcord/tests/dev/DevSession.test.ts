@@ -8,6 +8,7 @@ import { assert, describe, expect, it, onTestFinished, vi } from 'vitest';
 
 import { DevSession } from '#commands/dev/DevSession';
 import { ServerDevRuntime } from '#commands/dev/runtime/ServerDevRuntime';
+import { ProjectFiles } from '#core/project/ProjectFiles';
 import { realPath } from '#core/project/realPath';
 import { StateFolder } from '#core/state/StateFolder';
 import { silentLogger } from '#tests/silentLogger';
@@ -40,6 +41,11 @@ function config(): ResolvedSeedcordConfig {
         viteMode: 'development',
         vitePlugins: vitePluginsOf()
     };
+}
+
+// the two arguments a DevSession takes from a loaded config
+function withFiles(loaded: ResolvedSeedcordConfig): [ResolvedSeedcordConfig, ProjectFiles] {
+    return [loaded, new ProjectFiles(loaded)];
 }
 
 const UNCHANGED = { outputPath: 'seedcord-gen.d.ts', changed: false };
@@ -77,7 +83,7 @@ describe('DevSession', () => {
                 return entryLoaded;
             }
         };
-        const session = new DevSession(config(), slowEntry, sessionDeps());
+        const session = new DevSession(...withFiles(config()), slowEntry, sessionDeps());
 
         const starting = session.start();
         await entryRequested;
@@ -91,7 +97,7 @@ describe('DevSession', () => {
     it('never starts a bot whose default export settles after the session stopped', async () => {
         const start = vi.fn(() => Promise.resolve());
         const { promise: exported, resolve: settleExport } = Promise.withResolvers<unknown>();
-        const session = new DevSession(config(), fakeRuntime({ default: exported }), sessionDeps());
+        const session = new DevSession(...withFiles(config()), fakeRuntime({ default: exported }), sessionDeps());
 
         const starting = session.start();
         // on the fake runtime, start() reaches the export within one macrotask
@@ -106,7 +112,7 @@ describe('DevSession', () => {
     it('forwards a runtime event past the store', async () => {
         const seen: DevEvent[] = [];
         const session = new DevSession(
-            config(),
+            ...withFiles(config()),
             fakeRuntime({}, { type: 'server-listening', port: 4321 }),
             sessionDeps(new DevStore(), (event) => seen.push(event))
         );
@@ -119,7 +125,7 @@ describe('DevSession', () => {
     it('applies the event to the store too', async () => {
         const store = new DevStore();
         const session = new DevSession(
-            config(),
+            ...withFiles(config()),
             fakeRuntime({}, { type: 'server-listening', port: 4321 }),
             sessionDeps(store)
         );
@@ -130,7 +136,11 @@ describe('DevSession', () => {
     });
 
     it('rejects a default export that carries no seedcord brand', async () => {
-        const session = new DevSession(config(), fakeRuntime({ default: { start: vi.fn() } }), sessionDeps());
+        const session = new DevSession(
+            ...withFiles(config()),
+            fakeRuntime({ default: { start: vi.fn() } }),
+            sessionDeps()
+        );
 
         const error = await settle(session, session.start());
         expect(isSeedcordError(error, undefined, SeedcordErrorCode.CliInstanceInvalid)).toBe(true);
@@ -138,7 +148,7 @@ describe('DevSession', () => {
 
     it('accepts a branded instance', async () => {
         const store = new DevStore();
-        const session = new DevSession(config(), fakeRuntime({ default: fakeBot() }), sessionDeps(store));
+        const session = new DevSession(...withFiles(config()), fakeRuntime({ default: fakeBot() }), sessionDeps(store));
 
         const running = session.start();
         await vi.waitFor(() =>
@@ -156,7 +166,7 @@ describe('DevSession', () => {
     it('skips a queued type write once the session stops', async () => {
         const { promise: firstWrite, resolve: finishFirstWrite } = Promise.withResolvers<typeof UNCHANGED>();
         const writeFrom = vi.fn().mockReturnValueOnce(firstWrite).mockResolvedValue(UNCHANGED);
-        const session = new DevSession(config(), fakeRuntime({ default: fakeBot() }), {
+        const session = new DevSession(...withFiles(config()), fakeRuntime({ default: fakeBot() }), {
             ...sessionDeps(),
             codegen: { writeFrom }
         });
@@ -176,7 +186,7 @@ describe('DevSession', () => {
         const writeFrom = vi.fn(() => new Promise<never>(() => undefined));
         const runtimeStop = vi.fn(() => Promise.resolve());
         const runtime: DevRuntime = { ...fakeRuntime({ default: fakeBot() }), stop: runtimeStop };
-        const session = new DevSession(config(), runtime, { ...sessionDeps(), codegen: { writeFrom } });
+        const session = new DevSession(...withFiles(config()), runtime, { ...sessionDeps(), codegen: { writeFrom } });
         const running = session.start();
         await vi.waitFor(() => expect(writeFrom).toHaveBeenCalledOnce());
         vi.useFakeTimers();
@@ -198,7 +208,7 @@ describe('DevSession', () => {
             stop: () => Promise.reject(new Error('shutdown failed'))
         };
         const store = new DevStore();
-        const session = new DevSession(config(), runtime, sessionDeps(store));
+        const session = new DevSession(...withFiles(config()), runtime, sessionDeps(store));
         const running = session.start();
         await vi.waitFor(() => expect(store.getState().phase).toBe('running'));
 
@@ -211,7 +221,7 @@ describe('DevSession', () => {
             // eslint-disable-next-line prefer-promise-reject-errors, @typescript-eslint/prefer-promise-reject-errors -- the case under test is a non-Error rejection
             start: () => Promise.reject('token was revoked')
         });
-        const session = new DevSession(config(), fakeRuntime({ default: instance }), sessionDeps());
+        const session = new DevSession(...withFiles(config()), fakeRuntime({ default: instance }), sessionDeps());
 
         const error = await settle(session, session.start());
 
@@ -224,7 +234,7 @@ describe('DevSession', () => {
     it('keeps the startup failure as the cause of CliStartFailed', async () => {
         const failure = new Error('phase Ready failed');
         const session = new DevSession(
-            config(),
+            ...withFiles(config()),
             fakeRuntime({ default: fakeBot({ start: () => Promise.reject(failure) }) }),
             sessionDeps()
         );
@@ -247,7 +257,7 @@ describe('DevSession on a real runtime', () => {
 
     it('ends quietly without loading the entry when it stops while the runtime starts', async () => {
         const entry = 'Reflect.set(globalThis, "entryImported", true);\nexport default {};\n';
-        const session = new DevSession(await project(entry), new ServerDevRuntime(), sessionDeps());
+        const session = new DevSession(...withFiles(await project(entry)), new ServerDevRuntime(), sessionDeps());
         onTestFinished(() => {
             Reflect.deleteProperty(globalThis, 'entryImported');
         });
@@ -263,7 +273,7 @@ describe('DevSession on a real runtime', () => {
         // the entry marks that it started loading, then never finishes
         const entry =
             'Reflect.set(globalThis, "entryLoading", true);\nawait new Promise(() => {});\nexport default {};\n';
-        const session = new DevSession(await project(entry), new ServerDevRuntime(), sessionDeps());
+        const session = new DevSession(...withFiles(await project(entry)), new ServerDevRuntime(), sessionDeps());
         onTestFinished(() => {
             Reflect.deleteProperty(globalThis, 'entryLoading');
         });
@@ -285,7 +295,7 @@ describe('DevSession with a broken entry', () => {
         await writeFile(join(temp.path, 'package.json'), JSON.stringify({ name: 'dev-fixture', type: 'module' }));
         await writeFile(entry, 'export const = ;\n');
         const brokenConfig = { ...devConfigFor(temp.path, 'index.ts'), typecheck: { enabled: false } } as const;
-        const session = new DevSession(brokenConfig, new ServerDevRuntime(), sessionDeps());
+        const session = new DevSession(...withFiles(brokenConfig), new ServerDevRuntime(), sessionDeps());
         onTestFinished(() => session.stop());
 
         const error: unknown = await session.start().catch((caught: unknown) => caught);

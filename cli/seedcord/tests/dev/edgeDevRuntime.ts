@@ -11,6 +11,7 @@ import { onTestFinished } from 'vitest';
 
 import { EdgeDevRuntime } from '#commands/dev/runtime/EdgeDevRuntime';
 import { toSeedcordInstance } from '#core/modules/importInstance';
+import { ProjectFiles } from '#core/project/ProjectFiles';
 import { realPath } from '#core/project/realPath';
 import { StateFolder } from '#core/state/StateFolder';
 import { copyEdgeBot } from '#tests/commands/build/edgeBot';
@@ -229,7 +230,12 @@ export async function startedRuntime(
     };
     await using cleanup = new AsyncDisposableStack();
     cleanup.defer(() => runtime.stop());
-    await runtime.start({ config, state: new StateFolder(projectDir, silentLogger), onEvent: recordPort });
+    await runtime.start({
+        config,
+        files: new ProjectFiles(config),
+        state: new StateFolder(projectDir, silentLogger),
+        onEvent: recordPort
+    });
     const { module } = await runtime.loadEntry();
     const instance = toSeedcordInstance(await resolveDefaultExport(module), config.instance);
     const port = (): number => {

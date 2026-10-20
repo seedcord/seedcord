@@ -18,6 +18,8 @@ import {
 } from 'vitest';
 
 import { HmrPlugin } from '#commands/dev/runtime/HmrPlugin';
+import { RestartFiles } from '#commands/dev/runtime/RestartFiles';
+import { ProjectFiles } from '#core/project/ProjectFiles';
 import { realPath } from '#core/project/realPath';
 import { StateFolder } from '#core/state/StateFolder';
 import { silentLogger } from '#tests/silentLogger';
@@ -103,8 +105,12 @@ interface ConfiguredPlugin {
 // the last-deploy tests below write to their own folder
 const STATE = new StateFolder(process.cwd(), silentLogger);
 
+function restartFilesOf(config: ResolvedSeedcordConfig): RestartFiles {
+    return new RestartFiles(config, new ProjectFiles(config).layout, []);
+}
+
 function configuredPlugin(config: ConstructorParameters<typeof HmrPlugin>[0], state = STATE): ConfiguredPlugin {
-    const plugin = new HmrPlugin(config, state, 'seedcord');
+    const plugin = new HmrPlugin(config, state, 'seedcord', restartFilesOf(config));
     onTestFinished(() => plugin.close());
     const listeners = new Map<string, (data: unknown) => void>();
     // justified: spy on the private `hot` getter
@@ -156,7 +162,7 @@ describe('HmrPlugin', () => {
             vi.spyOn(Logger.prototype, level).mockImplementation(() => undefined);
         }
         trace = vi.spyOn(Logger.prototype, 'trace').mockImplementation(() => undefined);
-        hmrPlugin = new HmrPlugin(mockConfig, STATE, 'seedcord');
+        hmrPlugin = new HmrPlugin(mockConfig, STATE, 'seedcord', restartFilesOf(mockConfig));
     });
 
     afterEach(() => {
@@ -164,7 +170,12 @@ describe('HmrPlugin', () => {
     });
 
     it('carries the config rollback flag onto the hmr payload', () => {
-        const plugin = new HmrPlugin({ ...mockConfig, hmr: { rollback: false } }, STATE, 'seedcord');
+        const plugin = new HmrPlugin(
+            { ...mockConfig, hmr: { rollback: false } },
+            STATE,
+            'seedcord',
+            restartFilesOf(mockConfig)
+        );
         const hotSend = vi.fn();
         // justified: spy on the private `hot` getter
         const hotHost = plugin as unknown as { hot: { send: typeof hotSend; on: ReturnType<typeof vi.fn> } };

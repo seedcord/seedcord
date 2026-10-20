@@ -22,6 +22,7 @@ export function isListedFileId(moduleId: string): boolean {
 }
 
 export function listedFileOf(moduleId: string): string {
+    // justified: listedFileId wrote this part with JSON.stringify of a path
     return JSON.parse(moduleId.slice(LISTED_FILE_PREFIX.length)) as string;
 }
 
@@ -66,7 +67,7 @@ export function builtFilesSource({
 }: BuiltFilesOptions): string {
     const moduleOptions = { base: rootKey };
     const fileOptions = { ...moduleOptions, query: LISTED_FILE_QUERY, import: 'default' };
-    const { listed, skippedFolders, configDir } = layout.bundledData();
+    const { listed, skippedFolders } = layout.bundledData();
 
     return [
         `${BOT_FILES_SLOT} = {`,
@@ -74,7 +75,6 @@ export function builtFilesSource({
         `    root: ${rootExpression},`,
         `    listed: ${JSON.stringify(listed)},`,
         `    skippedFolders: ${JSON.stringify(skippedFolders)},`,
-        ...(configDir === undefined ? [] : [`    configDir: ${JSON.stringify(configDir)},`]),
         `    folders: ${JSON.stringify(folders)},`,
         `    modules: import.meta.glob(${JSON.stringify(layout.moduleGlobs())}, ${JSON.stringify(moduleOptions)}),`,
         `    listedFiles: import.meta.glob(${JSON.stringify(layout.listedFileGlobs())}, ${JSON.stringify(fileOptions)}),`,
