@@ -148,7 +148,8 @@ export class DevStore extends TypedEventEmitter<{ change: [] }> {
     private patch(next: Partial<DevState>): void {
         const merged = { ...this.state, ...next };
         const liveSinceMs = isSessionLive(merged.phase) ? (this.state.liveSinceMs ?? Date.now()) : null;
-        this.state = { ...merged, liveSinceMs };
+        const armed = merged.phase === this.state.phase ? merged.armed : null;
+        this.state = { ...merged, liveSinceMs, armed };
         this.emit('change');
     }
 }

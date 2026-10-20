@@ -22,12 +22,12 @@ import type { DevState, DevTransport } from '#ui/stores/DevStore';
 import type { DOMElement } from 'ink';
 import type { ReactElement, Ref } from 'react';
 
-export const MAX_RAIL = 40;
+const MAX_RAIL = 40;
 
 // the widest label is 'gateway' at 7
 const META_LABEL_WIDTH = 8;
 
-export const LOG_DIR = 'logs/'; // the dev default writes one combined file into this folder
+const LOG_DIR = 'logs/'; // the dev default writes one combined file into this folder
 
 export interface SidebarProps {
     readonly state: DevState;
@@ -53,12 +53,34 @@ function Meta({ label, value }: { label: string; value: string }): ReactElement 
     );
 }
 
-export function tunnelValue(status: TunnelStatus): string {
+function tunnelValue(status: TunnelStatus): string {
     return status === 'live' || status === 'lost' ? status : `${status}…`;
 }
 
-export function transportLabel({ name }: DevTransport): string {
+function transportLabel({ name }: DevTransport): string {
     return name.replace('@seedcord/', '');
+}
+
+interface StatusFact {
+    readonly label: string;
+    readonly value: string;
+}
+
+export function statusFacts(state: DevState, uptimeMs: number | null, withTarget: boolean): StatusFact[] {
+    const { transport, port, tunnel } = state;
+    const facts: (StatusFact | null)[] = [
+        transport === null
+            ? null
+            : {
+                  label: transportLabel(transport),
+                  value: withTarget ? `v${transport.version} · ${transport.target}` : `v${transport.version}`
+              },
+        uptimeMs === null ? null : { label: 'up', value: formatUptime(uptimeMs) },
+        port === null ? null : { label: 'port', value: String(port) }, // only the http host reports one
+        tunnel === null ? null : { label: 'tunnel', value: tunnelValue(tunnel) },
+        { label: 'logs', value: LOG_DIR }
+    ];
+    return facts.filter((fact) => fact !== null);
 }
 
 interface StatusBlockProps {
@@ -68,22 +90,13 @@ interface StatusBlockProps {
 }
 
 export function StatusBlock({ state, uptimeMs, withTarget }: StatusBlockProps): ReactElement {
-    const { transport } = state;
     return (
         <Box flexDirection="column">
             <StatusBadge phase={state.phase} animate={state.idleAnimation} />
             {state.status ? <Text wrap="truncate">{state.status}</Text> : null}
-            {transport === null ? null : (
-                <Meta
-                    label={transportLabel(transport)}
-                    value={withTarget ? `v${transport.version} · ${transport.target}` : `v${transport.version}`}
-                />
-            )}
-            {uptimeMs === null ? null : <Meta label="up" value={formatUptime(uptimeMs)} />}
-            {/* only the http host reports a port */}
-            {state.port === null ? null : <Meta label="port" value={String(state.port)} />}
-            {state.tunnel === null ? null : <Meta label="tunnel" value={tunnelValue(state.tunnel)} />}
-            <Meta label="logs" value={LOG_DIR} />
+            {statusFacts(state, uptimeMs, withTarget).map((fact) => (
+                <Meta key={fact.label} label={fact.label} value={fact.value} />
+            ))}
         </Box>
     );
 }
@@ -97,7 +110,7 @@ function RailKeys({ view, state, interactive, following, details }: RailKeysProp
                 <FiltersKey shown />
             ) : (
                 <>
-                    <SessionKeys state={state} interactive={interactive} view={view} following={following} />
+                    <SessionKeys state={state} interactive={interactive} following={following} />
                     <ViewKeys details={details} />
                 </>
             )}

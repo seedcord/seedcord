@@ -87,17 +87,22 @@ describe('session keys while the bot starts', () => {
         store.setPhase('running');
         store.apply({ type: 'command-update-prompt', files: ['a.ts'] });
         const onRestart = vi.fn();
+        const onDisconnect = vi.fn();
         const onQuit = vi.fn();
         const onRefreshCommands = vi.fn();
         const scroll = scrollSpy();
-        const ctx = { state: store.getState(), store, scroll, onRestart, onQuit, onRefreshCommands };
+        const ctx = { state: store.getState(), store, scroll, onRestart, onDisconnect, onQuit, onRefreshCommands };
 
-        dispatchHotkey(makeCtx({ ...ctx, input: 'r' }));
+        for (const input of ['r', 'd', 'c']) dispatchHotkey(makeCtx({ ...ctx, input }));
+        dispatchHotkey(makeCtx({ ...ctx, input: 'd', key: key({ ctrl: true }) }));
         dispatchHotkey(makeCtx({ ...ctx, input: 't' }));
         dispatchHotkey(makeCtx({ ...ctx, input: 'y' }));
         dispatchHotkey(makeCtx({ ...ctx, input: 'q' }));
 
         expect(onRestart).not.toHaveBeenCalled();
+        expect(onDisconnect).not.toHaveBeenCalled();
+        expect(scroll.toBottom).not.toHaveBeenCalled();
+        expect(store.getState().armed).toBeNull();
         expect(scroll.toTop).toHaveBeenCalledOnce();
         expect(onRefreshCommands).toHaveBeenCalledWith(true);
         expect(onQuit).toHaveBeenCalledOnce();
@@ -286,7 +291,7 @@ describe('filter cursor keys', () => {
     });
 });
 
-// justified: the confirm path reads only the phase and the armed key off the state
+// justified: the confirm path reads only the phase, the prompt, and the armed key off the state
 function armedState(armed: Ctx['state']['armed']): Ctx['state'] {
     return { armed, commandUpdatePrompt: null, phase: 'running' } as unknown as Ctx['state'];
 }

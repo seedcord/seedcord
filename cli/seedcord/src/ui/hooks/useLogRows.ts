@@ -15,7 +15,7 @@ interface LogRows {
 }
 
 export function useLogRows(logs: readonly LogEntry[], width: number, details: DetailMode): LogRows {
-    // getLongestLabel changes only when logs does
+    // getLongestLabel reads the same entries as logs
     return useMemo(() => {
         const logLayout = LogLayout.fit(width, LogStore.instance.getLongestLabel(), details);
         return { logLayout, logRows: profileWrap(() => wrapRows(expandRows(logs), logLayout)) };

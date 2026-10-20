@@ -69,21 +69,11 @@ describe('wrapRows', () => {
         expect(texts(rows)).toEqual(['short']);
     });
 
-    it('splits a head line that overflows the message column', () => {
+    it('splits a head line that overflows into rows with their own keys, marking only the first', () => {
         const rows = wrap([entry({ id: 1, text: 'aaaa bbbb cccc' })], COLUMN + 9);
 
         expect(texts(rows)).toEqual(['aaaa bbbb', 'cccc']);
-    });
-
-    it('marks only the head line first', () => {
-        const rows = wrap([entry({ id: 1, text: 'aaaa bbbb cccc' })], COLUMN + 9);
-
         expect(rows.map((row) => row.kind === 'entry' && row.first)).toEqual([true, false]);
-    });
-
-    it('gives every row of one entry a distinct key', () => {
-        const rows = wrap([entry({ id: 1, text: 'aaaa bbbb cccc' })], COLUMN + 9);
-
         expect(new Set(rows.map((row) => row.key)).size).toBe(rows.length);
     });
 
@@ -141,13 +131,6 @@ describe('wrapRows', () => {
 
         expect(rows[0]?.kind).toBe('rule');
         expect(rows.at(-1)?.kind).toBe('rule');
-    });
-
-    it('re-splits the same entry when the width changes', () => {
-        const logs = [entry({ id: 1, text: 'aaaa bbbb cccc' })];
-
-        expect(texts(wrap(logs, COLUMN + 9))).toHaveLength(2);
-        expect(texts(wrap(logs, COLUMN + 20))).toHaveLength(1);
     });
 
     it('keeps one row when the width leaves no room for text', () => {

@@ -18,7 +18,6 @@ interface StatusLineProps {
     readonly filtersShown: boolean;
 }
 
-// the one row of status on a terminal too short for the band
 export function StatusLine({ state, notices, filtered, filtersShown }: StatusLineProps): ReactElement {
     const [top, ...rest] = notices;
 
@@ -60,7 +59,6 @@ interface PendingKeyProps {
     readonly filtersShown: boolean;
 }
 
-// a pending notice shows its own keys in place of f
 export function PendingKey({ top, filtersShown }: PendingKeyProps): ReactElement {
     return (
         <KeySlot>

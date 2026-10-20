@@ -16,6 +16,16 @@ describe('DevStore', () => {
         });
     });
 
+    it('drops an armed confirm once the phase changes under it', () => {
+        const store = new DevStore();
+        store.setPhase('running');
+        store.setArmed('disconnect');
+
+        store.setPhase('disconnected');
+
+        expect(store.getState().armed).toBeNull();
+    });
+
     it('scalar setters patch their field and emit one change each', () => {
         const store = new DevStore();
         const onChange = vi.fn();

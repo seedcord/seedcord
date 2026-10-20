@@ -1,6 +1,6 @@
 const CTRL = 'ctrl+';
 
-// each one runs on the second press of its key
+// dispatchHotkey runs the action on the second press
 export const CONFIRMS = {
     quit: { key: `${CTRL}c`, title: 'Quit?' },
     disconnect: { key: `${CTRL}d`, title: 'Disconnect?' }

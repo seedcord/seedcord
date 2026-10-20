@@ -94,7 +94,7 @@ const slimRail: RailAt = (ref) => (
     </Box>
 );
 
-// the readout renders outside the measured rail, so it never changes the size it reports
+// the size readout sits outside the measured box
 function Harness({ rail }: { readonly rail: RailAt }): ReactElement {
     const railRef = useRef<DOMElement | null>(null);
     const [size, setSize] = useState('pending');
@@ -191,9 +191,22 @@ describe('Sidebar', () => {
         expect(frame).toContain('live');
     });
 
-    it('trails the ellipsis only while the tunnel is still opening', () => {
+    it('trails the ellipsis only while the tunnel is still opening, on one row even in the slim rail', () => {
         expect(frameFor(HTTP)).not.toContain('live…');
         expect(frameFor(tunnelState('resolving'))).toContain('resolving…');
+
+        const slim = render(
+            <SlimRail
+                state={tunnelState('registering')}
+                uptimeMs={null}
+                following={true}
+                interactive={true}
+                view="collapsed"
+                details="auto"
+            />
+        );
+        expect(slim.lastFrame()).toContain('tunnel  registering…');
+        slim.unmount();
     });
 
     it('leaves both rows out on a gateway run', () => {

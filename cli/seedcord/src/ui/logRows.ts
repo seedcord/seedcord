@@ -50,7 +50,6 @@ export function expandRows(logs: readonly LogEntry[]): LogRow[] {
     return rows;
 }
 
-// a stack frame's tail rows line up under its first row
 function hangingIndent(text: string, available: number): string {
     const indent = /^ */.exec(text)?.[0] ?? '';
     return available - indent.length < MIN_TEXT_WIDTH ? '' : indent;

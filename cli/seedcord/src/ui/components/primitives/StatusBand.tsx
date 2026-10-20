@@ -1,10 +1,8 @@
 import { Box, Text } from 'ink';
 import React from 'react';
 
-import { formatUptime } from '#ui/format';
-
 import { DetailsKey, RailKey } from './Hotkeys';
-import { LOG_DIR, transportLabel, tunnelValue } from './Sidebar';
+import { statusFacts } from './Sidebar';
 import { BrandStatus, KeySlot, PendingKey } from './StatusLine';
 
 import type { DetailMode } from '#ui/LogLayout';
@@ -23,17 +21,8 @@ interface StatusBandProps {
 }
 
 function infoRow(state: DevState, uptimeMs: number | null, filtered: boolean): string {
-    const { transport, port, tunnel } = state;
-    return [
-        transport === null ? null : `${transportLabel(transport)} v${transport.version}`,
-        uptimeMs === null ? null : `up ${formatUptime(uptimeMs)}`,
-        port === null ? null : `port ${String(port)}`,
-        tunnel === null ? null : `tunnel ${tunnelValue(tunnel)}`,
-        LOG_DIR,
-        filtered ? 'filtered' : null
-    ]
-        .filter((part) => part !== null)
-        .join(' · ');
+    const facts = statusFacts(state, uptimeMs, false).map(({ label, value }) => `${label} ${value}`);
+    return [...facts, ...(filtered ? ['filtered'] : [])].join(' · ');
 }
 
 export function StatusBand(props: StatusBandProps): ReactElement {

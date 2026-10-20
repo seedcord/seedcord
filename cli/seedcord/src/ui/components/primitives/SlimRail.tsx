@@ -9,8 +9,8 @@ import { LiveFooter, StatusBlock } from './Sidebar';
 import type { SidebarProps } from './Sidebar';
 import type { ReactElement } from 'react';
 
-// the longest row is the status block's tunnel line, 'tunnel  opening…', plus the padding
-export const SLIM_RAIL_WIDTH = 18;
+// the longest status row, 'tunnel  registering…', is 20 wide. paddingX adds 2.
+const SLIM_RAIL_WIDTH = 22;
 
 type SlimRailProps = Pick<SidebarProps, 'state' | 'uptimeMs' | 'following' | 'interactive' | 'view' | 'details'>;
 
@@ -27,7 +27,7 @@ export function SlimRail(props: SlimRailProps): ReactElement {
             </Box>
             <Box flexShrink={0} marginTop={1} flexDirection="column">
                 <FiltersKey shown={view === 'shown'} />
-                <SessionKeys state={state} interactive={interactive} view={view} following={following} />
+                <SessionKeys state={state} interactive={interactive} following={following} />
                 <ViewKeys details={details} />
             </Box>
             <LiveFooter state={state} />

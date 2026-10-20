@@ -1,15 +1,13 @@
 import { Box, Text } from 'ink';
 import React from 'react';
 
-import { keyIsLive } from '#ui/hotkeys';
+import { sessionKeyIsLive } from '#ui/hotkeys';
 import { nextDetailMode } from '#ui/LogLayout';
 import { ui } from '#ui/palette';
 
-import type { KeyGate } from '#ui/hotkeys';
+import type { SessionGate } from '#ui/hotkeys';
 import type { DetailMode } from '#ui/LogLayout';
-import type { FilterView } from '#ui/Screen';
 import type { DevPhase } from '#ui/stores/devPhase';
-import type { DevState } from '#ui/stores/DevStore';
 import type { ReactElement } from 'react';
 
 interface HotkeyProps {
@@ -34,34 +32,29 @@ function Hotkey({ keyLabel, action, enabled = true, highlight = false }: HotkeyP
 
 const RESTART_HINT_PHASES = new Set<DevPhase>(['restart-required', 'disconnected', 'error']);
 
-interface SessionKeysProps {
-    readonly state: DevState;
-    readonly interactive: boolean;
-    readonly view: FilterView;
+interface SessionKeysProps extends SessionGate {
     readonly following: boolean;
 }
 
-export function SessionKeys({ state, interactive, view, following }: SessionKeysProps): ReactElement {
-    // a rail only draws at a size where s works
-    const gate: KeyGate = { state, interactive, filterView: view, canToggleRail: true };
+export function SessionKeys({ state, interactive, following }: SessionKeysProps): ReactElement {
+    const gate = { state, interactive };
     return (
         <Box flexDirection="column">
             <Hotkey keyLabel="q" action="quit" />
             <Hotkey
                 keyLabel="r"
                 action="restart"
-                enabled={keyIsLive('r', gate)}
-                highlight={RESTART_HINT_PHASES.has(gate.state.phase)}
+                enabled={sessionKeyIsLive('r', gate)}
+                highlight={RESTART_HINT_PHASES.has(state.phase)}
             />
-            <Hotkey keyLabel="d" action="disconnect" enabled={keyIsLive('d', gate)} />
-            <Hotkey keyLabel="c" action="clear" enabled={keyIsLive('c', gate)} />
+            <Hotkey keyLabel="d" action="disconnect" enabled={sessionKeyIsLive('d', gate)} />
+            <Hotkey keyLabel="c" action="clear" enabled={sessionKeyIsLive('c', gate)} />
             <Hotkey keyLabel="↑↓" action="scroll" />
             <Hotkey keyLabel="t/b" action="top/bottom" highlight={!following} />
         </Box>
     );
 }
 
-// the keys a rail lists for how the screen looks
 export function ViewKeys({ details }: { readonly details: DetailMode }): ReactElement {
     return (
         <Box flexDirection="column">
@@ -77,7 +70,6 @@ export function RailKey({ shown }: { readonly shown: boolean }): ReactElement {
 
 const DETAILS_ACTION: Record<DetailMode, string> = { auto: 'auto details', full: 'full details', none: 'no details' };
 
-// the hint offers the mode p switches to
 export function DetailsKey({ mode }: { readonly mode: DetailMode }): ReactElement {
     return <Hotkey keyLabel="p" action={DETAILS_ACTION[nextDetailMode(mode)]} />;
 }

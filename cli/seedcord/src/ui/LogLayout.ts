@@ -15,8 +15,7 @@ export type PrefixCell =
 type CellSource = Pick<LogEntry, 'level' | 'label' | 'timestamp'>;
 
 interface Step {
-    // the narrowest log pane that shows this step
-    readonly minPane: number;
+    readonly narrowestPane: number;
     readonly clock: ClockPrecision | null;
     readonly maxLabel: number;
 }
@@ -25,18 +24,17 @@ const LABEL_CAP = 12;
 const SHORT_LABEL = 6;
 
 // the widths came from side-by-side trials while i adjusted the layout
-const WIDEST: Step = { minPane: 112, clock: 'seconds', maxLabel: LABEL_CAP };
+const WIDEST: Step = { narrowestPane: 112, clock: 'seconds', maxLabel: LABEL_CAP };
 const STEPS: readonly Step[] = [
     WIDEST,
-    { minPane: 100, clock: 'minutes', maxLabel: LABEL_CAP },
-    { minPane: 64, clock: 'minutes', maxLabel: SHORT_LABEL },
-    { minPane: 56, clock: 'minutes', maxLabel: 0 }
+    { narrowestPane: 100, clock: 'minutes', maxLabel: LABEL_CAP },
+    { narrowestPane: 64, clock: 'minutes', maxLabel: SHORT_LABEL },
+    { narrowestPane: 56, clock: 'minutes', maxLabel: 0 }
 ];
-const NARROWEST: Step = { minPane: 0, clock: null, maxLabel: 0 };
+const NARROWEST: Step = { narrowestPane: 0, clock: null, maxLabel: 0 };
 
-// p steps through these in order
 const DETAIL_MODES = {
-    auto: { next: 'full', step: (width: number) => STEPS.find((each) => width >= each.minPane) ?? NARROWEST },
+    auto: { next: 'full', step: (width: number) => STEPS.find((each) => width >= each.narrowestPane) ?? NARROWEST },
     full: { next: 'none', step: () => WIDEST },
     none: { next: 'auto', step: () => NARROWEST }
 } as const satisfies Record<string, { next: string; step: (width: number) => Step }>;

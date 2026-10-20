@@ -47,7 +47,8 @@ interface HotkeyContext {
     readonly onRefreshCommands?: ((shouldRefresh: boolean) => Promise<void> | void) | undefined;
 }
 
-export type KeyGate = Pick<HotkeyContext, 'state' | 'interactive' | 'filterView' | 'canToggleRail'>;
+type KeyGate = Pick<HotkeyContext, 'state' | 'interactive' | 'filterView' | 'canToggleRail'>;
+export type SessionGate = Pick<KeyGate, 'state' | 'interactive'>;
 
 interface Binding {
     readonly when?: (gate: KeyGate) => boolean;
@@ -55,9 +56,9 @@ interface Binding {
     readonly run: (ctx: HotkeyContext) => void;
 }
 
-const prompting = (gate: KeyGate): boolean => gate.state.commandUpdatePrompt !== null;
-const sessionOpen = (gate: KeyGate): boolean => gate.interactive && !prompting(gate);
-const canDisconnect = (gate: KeyGate): boolean => sessionOpen(gate) && isStreaming(gate.state.phase);
+const prompting = (gate: Pick<KeyGate, 'state'>): boolean => gate.state.commandUpdatePrompt !== null;
+const sessionOpen = (gate: SessionGate): boolean => gate.interactive && !prompting(gate);
+const canDisconnect = (gate: SessionGate): boolean => sessionOpen(gate) && isStreaming(gate.state.phase);
 const chipsToggle = (gate: KeyGate): boolean => gate.filterView !== 'always';
 const chipsOpen = (gate: KeyGate): boolean => gate.filterView !== 'collapsed';
 const canToggleRail = (gate: KeyGate): boolean => gate.canToggleRail;
@@ -122,7 +123,7 @@ const pageDown: Action = (ctx) => ctx.scroll.pageDown();
 const toTop: Action = (ctx) => ctx.scroll.toTop();
 const toBottom: Action = (ctx) => ctx.scroll.toBottom();
 
-// ctrl-c reaches us as a keypress because ink puts stdin in raw mode
+// in ink's raw mode, ctrl-c arrives as a keypress with no SIGINT
 const KEYMAP = {
     [CONFIRMS.quit.key]: { confirm: 'quit', run: quit },
     [CONFIRMS.disconnect.key]: { confirm: 'disconnect', when: canDisconnect, run: disconnect },
@@ -150,8 +151,6 @@ const KEYMAP = {
     c: { when: sessionOpen, run: clearLogs }
 } satisfies Record<string, Binding>;
 
-type KeyId = keyof typeof KEYMAP;
-
 const BINDINGS: ReadonlyMap<string, Binding> = new Map(Object.entries(KEYMAP));
 
 const SPECIAL_KEYS = [
@@ -176,9 +175,8 @@ function isLive(binding: Binding, gate: KeyGate): boolean {
     return binding.when?.(gate) ?? true;
 }
 
-// the hints read this to grey out a dead key
-export function keyIsLive(id: KeyId, gate: KeyGate): boolean {
-    return isLive(KEYMAP[id], gate);
+export function sessionKeyIsLive(id: 'r' | 'd' | 'c', gate: SessionGate): boolean {
+    return KEYMAP[id].when(gate);
 }
 
 // r and d abort startup.
