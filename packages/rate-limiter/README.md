@@ -23,29 +23,16 @@
 
 ## About
 
-`@seedcord/rate-limiter` gives you `MemoryRateLimiter` and `buildKey`. Each transport constructs one in its `Seedcord` constructor and assigns it to `core.rateLimiter`. The `Cooldown` gate reads it from there. A handler gets the same instance from `this.core.rateLimiter`.
+`@seedcord/rate-limiter` counts uses of a key over a time window.
 
-`MemoryRateLimiter` counts in one process, so it resets on restart and stays per-isolate on serverless. Pass your own `Store<'charge'>` as `config.store` to keep the counts across restarts and isolates.
+Both seedcord transports depend on it and re-export it. A bot reaches it through `this.core.rateLimiter`, and the `Cooldown` check counts through it.
 
-Until v1.0.0, minor versions can break.
+seedcord is pre-1.0, so a minor version can break your bot. Each release's changelog says what changed and how to update.
 
 ## Installation
-
-Your transport already re-exports this.
 
 ```sh
 pnpm add @seedcord/rate-limiter
 ```
 
-## Usage
-
-`buildKey` joins a prefix and its parts with `:`, substituting `global` for a null part, so two features never collide on one user id:
-
-```ts
-import { buildKey, MemoryRateLimiter } from '@seedcord/rate-limiter';
-
-const limiter = new MemoryRateLimiter();
-const key = buildKey('daily', interaction.user.id);
-```
-
-The `Cooldown` gate covers the common case. Call `this.core.rateLimiter` from a handler when the gate has no option for the window you want.
+The [rate limiter guide](https://seedcord.org/guide/checks/rate-limiter) covers how a bot uses it.

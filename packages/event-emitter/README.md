@@ -23,15 +23,13 @@
 
 ## About
 
-`TypedEventEmitter` ties each event name to its payload tuple, so a typo in a name or a wrong argument is a compile error. It carries no dependency on `node:events`. It runs on Cloudflare Workers and other edge runtimes alongside Node.
+`@seedcord/event-emitter` exports `TypedEventEmitter`, which ties each event name to its payload types. A typo in an event name or a wrong argument is a compile error. It imports nothing from Node, so it runs on Node, Bun, and Cloudflare Workers.
 
-`waitFor` resolves with the payload of the next matching event. It rejects with a `WaitForError` when the timeout elapses or the `AbortSignal` fires, and `error.reason` says which of the two happened.
+Both seedcord transports depend on it and re-export it, and a bot's `this.core.bus` is one. Install it directly for a typed emitter in any project. It has no dependencies.
 
-Until v1.0.0, minor versions can break.
+seedcord is pre-1.0, so a minor version can break your code. Each release's changelog says what changed and how to update.
 
 ## Installation
-
-Your transport already re-exports this. It also stands alone with no seedcord dependency:
 
 ```sh
 pnpm add @seedcord/event-emitter
@@ -56,4 +54,4 @@ bus.on('ready', (startedAt) => {
 const [startedAt] = await bus.waitFor('ready', { timeoutMs: 5_000 });
 ```
 
-`waitFor` also takes a `filter`, which resolves on the first payload the filter accepts.
+`waitFor` resolves with the next payload for that event. It rejects with a `WaitForError` when `timeoutMs` passes or a `signal` aborts.

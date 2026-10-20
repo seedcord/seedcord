@@ -23,18 +23,16 @@
 
 ## About
 
-`@seedcord/logger` writes log lines into named channels, so you can quiet the framework's startup and dispatch output while keeping your own. seedcord registers its channels through `FRAMEWORK_CHANNELS`. You register whatever else your bot logs.
+`@seedcord/logger` writes each log line on a named channel, and you set the level per channel. That lets you quiet one part of a program and keep the rest. `@seedcord/logger/node` adds console and file output through winston.
 
-The root entry stays runtime-agnostic and writes through `ObjectConsoleSink`. `@seedcord/logger/node` swaps in the winston sinks for pretty console output and rotating files.
+Both seedcord transports depend on it and re-export it, and every handler, subscriber, and plugin in a bot has a `this.logger`. Install it directly to use the same logger in a script or a tool outside a bot.
 
-Until v1.0.0, minor versions can break.
+seedcord is pre-1.0, so a minor version can break your code. Each release's changelog says what changed and how to update.
 
 ## Installation
 
-Your transport already re-exports this. Install it directly for a standalone tool:
-
 ```sh
-pnpm add @seedcord/logger
+pnpm add @seedcord/logger envapt
 ```
 
 ## Usage
@@ -43,10 +41,11 @@ pnpm add @seedcord/logger
 import { Logger } from '@seedcord/logger';
 import { installNodeDefaults } from '@seedcord/logger/node';
 
-installNodeDefaults();
+installNodeDefaults({ channels: { sync: { level: 'warn' } } });
 
-const logger = new Logger('Payments', { channel: 'app' });
-logger.info('charge captured', { id });
+const logger = new Logger('Sync', { channel: 'sync' });
+logger.info('starting'); // hidden, since sync only shows warn and above
+logger.warn('retrying after a timeout');
 ```
 
-`paint` holds the truecolor tones the framework uses for interpolated values. `logger.utils` renders multi-line output as a summary, a block, or entries.
+The [logging guide](https://seedcord.org/guide/tooling/logging) covers channels, and the [logger config guide](https://seedcord.org/guide/tooling/logger-config) covers levels and sinks.

@@ -23,15 +23,13 @@
 
 ## About
 
-`@seedcord/errors` holds every error seedcord throws. Each one carries a registered code from `SeedcordErrorCode`, so a caller can branch on one specific failure.
+`@seedcord/errors` defines the codes for every error seedcord throws, in `SeedcordErrorCode`. `isSeedcordError` checks a caught value against a code, so your code can react to one specific failure.
 
-Framework code never throws a raw `Error`. A third-party throw may be translated into one of these before you catch it.
+Both seedcord transports depend on it and re-export it, so a bot imports `isSeedcordError` from its transport. Install it directly in a plugin or a library that catches errors from a seedcord package, like [`@seedcord/custom-id`](https://www.npmjs.com/package/@seedcord/custom-id) in a discord.js bot.
 
-Until v1.0.0, minor versions can break.
+seedcord is pre-1.0, so a minor version can break your code. Each release's changelog says what changed and how to update.
 
 ## Installation
-
-Your transport already re-exports this.
 
 ```sh
 pnpm add @seedcord/errors
@@ -39,17 +37,17 @@ pnpm add @seedcord/errors
 
 ## Usage
 
-`isSeedcordError` narrows on the class and the code together:
+Say `Approve` is a `CustomId` from `@seedcord/custom-id`, and a click arrives on a button built from an older version of it:
 
 ```ts
 import { isSeedcordError, SeedcordErrorCode } from '@seedcord/errors';
 
 try {
-    await run();
+    Approve.decode(interaction.customId);
 } catch (error) {
-    if (isSeedcordError(error, 'SeedcordError', SeedcordErrorCode.CliCancelled)) return;
-    throw error;
+    if (!isSeedcordError(error, 'SeedcordError', SeedcordErrorCode.CustomIdWireStale)) throw error;
+    await interaction.reply('This button is out of date. Run the command again.');
 }
 ```
 
-Called with one argument it narrows to any seedcord error.
+The [error handling guide](https://seedcord.org/guide/replying/error-behavior) covers how a seedcord bot replies to an error.

@@ -23,16 +23,16 @@
 
 ## About
 
-`@seedcord/types` holds the config shapes and interfaces the transports, the plugins, and the CLI all reference. Keeping them in one leaf package lets a plugin type against the framework without depending on either transport.
+`@seedcord/types` defines the config shapes and interfaces that the transports, the plugins, and the CLI share. Apart from a `version` string, every export is a type.
 
-Everything past the `version` string is a type-only export, so it costs nothing at runtime.
+Both seedcord transports depend on it and re-export its types, so a bot imports them from its transport. Install it directly when a plugin or a tool needs seedcord's types without depending on a transport.
 
-Until v1.0.0, minor versions can break.
+seedcord is pre-1.0, so a minor version can break your code. Each release's changelog says what changed and how to update.
 
 ## Installation
-
-Your transport already re-exports these types. Install it directly for a plugin or a tool that types against seedcord:
 
 ```sh
 pnpm add -D @seedcord/types
 ```
+
+The [reference](https://seedcord.org/docs/packages/types/latest) lists every type.

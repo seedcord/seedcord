@@ -25,19 +25,17 @@
 
 Discord gives a component one string to carry its state, capped at 100 characters. `@seedcord/custom-id` declares what that string holds, packs values into it, and reads them back with the types you declared. The component that mints the id and the code that reads a click share one declaration.
 
-Values pack into a compact wire, which fits more of them under the cap. Every id carries a short hash of its shape, so a click on a component built before you changed the fields refuses, and the wrong values never reach your code.
+Each id also carries a short hash of its fields. A click on a component built before you changed them throws on decode, so values in the old layout never reach your code.
 
-When using it directly with discord.js or any other library, you'll have to set up routing yourself. Seedcord's gateway and http packages do that for you, so you can just declare the shape and read the wire.
+Both seedcord transports depend on it, and a seedcord bot imports `CustomId` from its transport. Install it directly to use it with discord.js or any other Discord library, without seedcord. You then match each click to its definition yourself.
 
-Until v1.0.0, minor versions can break.
+seedcord is pre-1.0, so a minor version can break your bot. Each release's changelog says what changed and how to update.
 
 ## Installation
 
 ```sh
 pnpm add @seedcord/custom-id
 ```
-
-A seedcord bot already has this through `@seedcord/gateway` or `@seedcord/http`. Installing it directly risks a second copy whose decode failures skip your bot's reply cards.
 
 ## Usage
 
@@ -58,14 +56,4 @@ client.on(Events.InteractionCreate, (interaction) => {
 });
 ```
 
-Fields come from `snowflake`, `uuid`, `int`, `bool`, `oneOf`, `someOf`, and `str`. Each one takes `{ nullable: true }` to also carry null. `int` alone takes a second form with bounds, as `int('page', 1, 50)`.
-
-`prefixOf` recovers the route prefix from a raw wire. The prefix survives a shape change, which makes it what you route on. `decodeFor` takes several definitions at once and returns the matched prefix with its own params.
-
-Refer to the [guide](https://seedcord.org/guide/components/custom-ids) for more examples, and the [reference](https://seedcord.org/docs/packages/custom-id/latest) for the full API.
-
-## Errors
-
-`decode` throws two things. A wire minted before the shape changed throws `CustomIdWireStale`. A corrupt wire, or one another definition minted, throws `CustomIdWireInvalid`. Both are `SeedcordError` from `@seedcord/errors`, so branch on the code.
-
-`setCustomIdErrors` replaces both with your own constructors. Replace them with `Notice` subclasses when using the seedcord framework.
+The [custom ids guide](https://seedcord.org/guide/components/custom-ids) covers every field type and what `decode` throws. The [reference](https://seedcord.org/docs/packages/custom-id/latest) has the full API.

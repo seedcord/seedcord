@@ -23,19 +23,33 @@
 
 ## About
 
-`@seedcord/utils` holds the small functions the rest of seedcord builds on.
+`@seedcord/utils` has the small functions seedcord uses everywhere: number and time helpers, string formatting, object helpers, and the readers that load a bot's files.
 
-Until v1.0.0, minor versions can break.
+Both seedcord transports depend on it and re-export it, so a bot imports these from its transport. Install it directly for the helpers in a plugin or any other project.
+
+seedcord is pre-1.0, so a minor version can break your code. Each release's changelog says what changed and how to update.
 
 ## Installation
-
-Your transport already re-exports this.
 
 ```sh
 pnpm add @seedcord/utils
 ```
 
-## Numbers
+## Usage
+
+```ts
+import { ordinal, parseDuration, renderTable } from '@seedcord/utils';
+
+parseDuration('30m'); // 1800000
+ordinal(22); // '22nd'
+
+const table = renderTable([
+    ['player', 'wins'],
+    ['ana', '12']
+]);
+```
+
+## Functions
 
 <!-- prettier-ignore-start -->
 
@@ -43,66 +57,28 @@ pnpm add @seedcord/utils
 | --- | --- |
 | `currentTime()` | the current time in epoch seconds |
 | `generateCode(digits)` | a random numeric code with that many digits |
-| `ordinal(n)` | the number with its suffix, `1st`, `22nd`, `13th` |
-| `parseDuration(input)` | `'30m'` to milliseconds. Returns `null` on a bare number, an unknown or uppercase unit, a fraction, or a zero result |
+| `ordinal(n)` | the number with its suffix, like `22nd` |
+| `parseDuration(input)` | `'30m'` to milliseconds, or `null` when it can't parse the input |
 | `percentage(a, b)` | `a` as a percentage of `b`, to two decimals |
 | `round(num, precision)` | rounds to that many decimal places |
-| `roundToDenomination(num, opts?)` | `1234` to `"1.2K"`. Suffixes and precision are configurable |
-| `timestampFromSnowflake(id)` | the epoch ms encoded in the top 42 bits of a Discord snowflake |
+| `roundToDenomination(num, opts?)` | `1234` to `'1.2K'` |
+| `timestampFromSnowflake(id)` | the time a Discord snowflake was created, in epoch ms |
 | `toEpochSeconds(ms)` | epoch ms to epoch seconds, the unit Discord's `<t:...>` markup reads |
-
-<!-- prettier-ignore-end -->
-
-Passing epoch ms straight into `<t:...>` renders a date tens of thousands of years out, so convert with `toEpochSeconds` first.
-
-## Strings
-
-<!-- prettier-ignore-start -->
-
-| function | what it does |
-| --- | --- |
 | `capitalize(word)` | first letter uppercase, the rest lowercase |
-| `longestStringLength(arr)` | the character count of the longest element, numbers included |
-| `prettify(key, opts?)` | camelCase, PascalCase, snake_case, or kebab-case to spaced words |
-| `prettyDifference(before, after)` | the difference as a string, prefixed with `+` when positive |
-| `renderTable(data, options?)` | a framed monospace table for Discord. Widths count a CJK character or an emoji as two columns, which a terminal draws square and Discord draws wide for emoji. Pass `budget` for one string per page |
-| `stripAnsi(value)` | strips ANSI escape sequences, for a sink that would print them raw |
+| `longestStringLength(arr)` | the length of the longest element |
+| `prettify(key, opts?)` | `camelCase`, `PascalCase`, `snake_case`, or `kebab-case` to spaced words |
+| `prettyDifference(before, after)` | the difference as a string, with `+` in front when positive |
+| `renderTable(data, options?)` | a monospace table for a Discord message |
+| `stripAnsi(value)` | removes ANSI escape codes |
+| `filterCirculars(value, opts?)` | a copy that `JSON.stringify` accepts, with circular references replaced |
+| `hasKeys(obj, keys)` | checks that every dot path exists and isn't null, and narrows the type |
+| `keepDefined(source, ...keys)` | copies the keys whose values aren't `undefined` or `null` |
+| `assertNever(value)` | a `switch` default that fails to compile when a case is missing |
+| `formatFilePath(path, opts?)` | a path relative to the working directory, like `./src/Bot.ts` |
+| `fyShuffle(items)` | a shuffled copy of the array |
+| `importFiles(dir)` | imports every code file under a folder, one at a time in a `for await` loop |
+| `readFiles(dir)` | reads every other file under a folder as a `Buffer`, one at a time in a `for await` loop |
 
 <!-- prettier-ignore-end -->
 
-## Objects
-
-<!-- prettier-ignore-start -->
-
-| function | what it does |
-| --- | --- |
-| `filterCirculars(value, opts?)` | a JSON-safe clone with circular references replaced by a marker. `decycle` mode skips `toJSON`, `json` mode runs stringify and parse |
-| `hasKeys(obj, keys)` | a type guard over dot-notation paths. Returns true when every path exists and is non-null, and narrows the object to match |
-| `keepDefined(source, ...keys)` | copies the named keys whose values are neither `undefined` nor `null`. Omit the keys to sweep all of them |
-
-<!-- prettier-ignore-end -->
-
-## Misc
-
-<!-- prettier-ignore-start -->
-
-| function | what it does |
-| --- | --- |
-| `assertNever(value)` | exhaustiveness guard for a `switch` default. Adding a union variant without a case fails to compile |
-| `formatFilePath(path, opts?)` | a path rewritten relative to the working directory with forward slashes, `./src/Bot.ts`. Returns the full path outside that directory or on a runtime with no `process` |
-| `fyShuffle(items)` | Fisher-Yates shuffle. Returns a new array and leaves the original alone |
-
-<!-- prettier-ignore-end -->
-
-## Files
-
-These run on node, bun, and Cloudflare Workers with Node compat. A built bot reads its files from the build output.
-
-<!-- prettier-ignore-start -->
-
-| function | what it does |
-| --- | --- |
-| `importFiles(dir)` | imports every `.ts`, `.tsx`, `.mts`, `.js`, `.jsx` or `.mjs` file under a directory, skipping type declarations, sorted by path, for a `for await` loop |
-| `readFiles(dir)` | reads every other file under a directory as a `Buffer`, sorted by path, for a `for await` loop |
-
-<!-- prettier-ignore-end -->
+`importFiles` and `readFiles` resolve a relative folder against `root` from `seedcord.config.ts`. Outside a seedcord bot, pass them an absolute path. The [reference](https://seedcord.org/docs/packages/utils/latest) has every option.
