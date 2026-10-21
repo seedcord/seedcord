@@ -51,6 +51,8 @@ Startup runs three phases in order.
 
 {/* prettier-ignore-end */}
 
+Once Ready finishes, a bot on a server starts answering its [health path](/build/server#the-health-server). Nothing a plugin adds runs after it, so a host that waits on the health path sees a bot whose `ready()` calls have all finished.
+
 On a server, shutdown runs four phases. A bot on [Cloudflare Workers](#on-cloudflare-workers) never reaches them.
 
 {/* prettier-ignore-start */}

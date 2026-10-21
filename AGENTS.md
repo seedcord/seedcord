@@ -61,7 +61,7 @@ Everything ships against one of two transports.
 
 `@seedcord/http` answers Discord's interactions endpoint through a `Seedcord` class. Node gets the default build. Cloudflare Workers get a separate edge `Seedcord` under the same name through the `workerd` export condition. Discord posts only interactions here.
 
-Both transports re-export all of `@seedcord/core`. A bot installs one seedcord package. Code they share belongs in `core`. A plugin extends `@seedcord/core/plugin`, which both transport barrels re-export.
+Both transports re-export all of `@seedcord/core`. A bot installs one seedcord package. Code they share belongs in `core`. A plugin for one transport extends that transport's `Plugin`. A plugin for both extends the base from `@seedcord/core/plugin`, which neither transport re-exports, so its author installs `@seedcord/core`.
 
 The edge build runs with Cloudflare's Node compat on. It may import `node:buffer`, `node:fs`, `node:path`, `node:url` and `node:util`. Keep node server code, like `node:http` and the process signal handlers, out of anything it reaches.
 
@@ -90,7 +90,7 @@ When someone asks how seedcord does something, answer for gateway and for http. 
     - **Check that every runtime the code reaches has it.** A package runs on the oldest Node in its `engines` field, and anything the edge build imports also runs in workerd. Confirm the built-in exists in both before you use it.
     - **Keep one copy.** When several packages need the same built-in wrapped, put the wrapper in `@seedcord/utils`. A package that can't import utils calls the built-in directly.
 - **Only implement what was asked.** Surface additions as a question first. Wait for the third use before extracting an abstraction.
-- **No dead code.** Before adding `export`, confirm something outside the file names the symbol. A symbol that exists only for a test belongs in the test folder.
+- **No dead code.** Before adding `export`, confirm something outside the file uses the symbol. A symbol that exists only for a test belongs in the test folder.
 - **Grep every consuming surface before deleting anything.** That includes markdown and generated output. Show no callers or name the replacement.
 - **Commit subjects are one lowercase line with no scope and no body.** Write `feat:`, never `feat(http):`. A breaking change marks the bare type, `feat!:`. A PR title follows the same rule, because a squash merge turns it into the commit.
 - **Name a file after its main export, in that export's casing.** A file built around a class is `LogLayout.ts`, and one built around a function is `linkCommands.ts`, even when a helper class sits inside it. Rename the file when its main export changes kind. On macOS, `git mv` a case-only rename through a temporary name.

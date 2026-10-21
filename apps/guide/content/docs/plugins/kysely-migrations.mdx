@@ -32,7 +32,7 @@ export async function down(db: Kysely<any>): Promise<void> {
 
 ## Where to put the files
 
-The plugin reads one folder, the `dir` under `migrations`, and its subfolders too. A relative `dir` is relative to `root` and has to sit inside it, as [the folder rules](/plugins) describe. With `root: './src'`, `'./migrations'` means `src/migrations`.
+The plugin reads one folder, the `dir` under `migrations`, and its subfolders too. A relative `dir` is relative to `root` and has to point inside it, as [the folder rules](/plugins) describe. With `root: './src'`, `'./migrations'` means `src/migrations`.
 
 Every code file in that folder has to be a migration. If a file doesn't export `up`, the plugin throws `PluginKyselyInvalidMigrationModule` with the file's path, so keep helper files out of the folder. The plugin reads `.ts`, `.tsx`, `.mts`, `.js`, `.jsx`, and `.mjs` files. It skips type declarations, dotfiles, dot-folders, and `node_modules`.
 
@@ -81,7 +81,7 @@ The recorded name has no file extension, so `001-create-users.ts` under `seedcor
 
 ## When they run
 
-By default the plugin runs every pending migration while the bot starts. If a migration throws, startup stops. The plugin closes the pool, and your bot never reaches its handlers.
+By default the plugin runs every pending migration while the bot starts. If a migration throws, startup stops. The plugin closes the pool, and your bot never reaches its handlers. A deploy that waits on the [health path](/build/server#the-health-server) only sees your bot once its migrations have finished.
 
 `onStartup` changes what runs at that point.
 

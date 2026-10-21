@@ -1,5 +1,5 @@
 import type { RESTOptions } from '@discordjs/rest';
-import type { BotConfig, Config, TypedOmit } from '@seedcord/types';
+import type { BotConfig, Config, HealthCheckConfig, TypedOmit } from '@seedcord/types';
 
 // workerd throws when a timer starts at a worker's global scope
 export type EdgeSweeperKey = 'hashSweepInterval' | 'handlerSweepInterval';
@@ -24,6 +24,12 @@ export interface HttpServerConfig extends Config {
      * @defaultValue `3000`
      */
     port?: number | false;
+
+    /**
+     * The health path on the interactions server. It answers 503 until startup finishes, then 200.
+     * `false` turns it off, `true` or omit for `/health`, `{ path }` sets the path.
+     */
+    healthCheck?: boolean | Pick<HealthCheckConfig, 'path'>;
 }
 
 /**

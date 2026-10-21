@@ -3,7 +3,7 @@ import { createServer } from 'node:http';
 
 import { bindBotColor, busLoggerOf, connectDevChannel, getDevChannel, HmrManager } from '@seedcord/core/internal';
 import { CoordinatedShutdown, CoordinatedStartup, ServerHost } from '@seedcord/core/node';
-import { DRAIN_TASK_TIMEOUT_MS, ShutdownPhase, StartupPhase } from '@seedcord/core/node/internal';
+import { DRAIN_TASK_TIMEOUT_MS, HealthResponder, ShutdownPhase, StartupPhase } from '@seedcord/core/node/internal';
 import { paint, SeedcordErrorCode } from '@seedcord/errors';
 import { SeedcordError } from '@seedcord/errors/internal';
 import { Logger } from '@seedcord/logger';
@@ -82,7 +82,7 @@ export class Seedcord extends ServerHost<'http'> implements SeedcordInstance {
         this.rest = this.#service.rest;
         this.rateLimiter = this.#service.rateLimiter;
         this.bus = this.#service.bus;
-        this.#endpoint = new NodeEndpoint(this.#service, this.#logger);
+        this.#endpoint = new NodeEndpoint(this.#service, this.#logger, HealthResponder.fromOption(config.healthCheck));
 
         this.#hmrManager = new HmrManager();
         this.#hmrManager.init(connectDevChannel());
@@ -108,6 +108,11 @@ export class Seedcord extends ServerHost<'http'> implements SeedcordInstance {
         const starting = this.init();
         this.#endpoint.startWith(starting);
         return starting;
+    }
+
+    /** @internal */
+    protected override openHealth(): void {
+        this.#endpoint.openHealth();
     }
 
     /**

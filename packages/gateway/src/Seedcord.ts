@@ -92,15 +92,15 @@ export class Seedcord extends ServerHost<'gateway'> implements SeedcordInstance 
             await this.#subscribers.init();
             busLoggerOf(this.bus).utils.initialization('Subscribers', 'end');
         });
+    }
 
+    /** @internal */
+    protected override async openHealth(): Promise<void> {
         const healthCheck = this.#healthCheck;
-        if (healthCheck) {
-            this.startup.addTask(StartupPhase.Ready, 'health-check', async () => {
-                healthCheck.logger.utils.initialization('HealthCheck', 'start');
-                await healthCheck.init();
-                healthCheck.logger.utils.initialization('HealthCheck', 'end');
-            });
-        }
+        if (!healthCheck) return;
+        healthCheck.logger.utils.initialization('HealthCheck', 'start');
+        await healthCheck.init();
+        healthCheck.logger.utils.initialization('HealthCheck', 'end');
     }
 
     /**

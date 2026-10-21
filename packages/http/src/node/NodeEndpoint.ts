@@ -4,19 +4,30 @@ import { SeedcordError } from '@seedcord/errors/internal';
 
 import type { EngineContext } from '#src/engine';
 import type { InteractionsService } from '#src/InteractionsService';
+import type { HealthResponder } from '@seedcord/core/node/internal';
 import type { Logger } from '@seedcord/logger';
 
 const SERVICE_UNAVAILABLE = 503;
 
+function unavailable(): Response {
+    return new Response(null, { status: SERVICE_UNAVAILABLE });
+}
+
 export class NodeEndpoint implements EngineContext {
     private readonly inFlight: InFlight;
     private started?: Promise<void>;
+    private healthy = false;
 
     constructor(
         private readonly service: InteractionsService,
-        logger: Logger
+        logger: Logger,
+        private readonly health: HealthResponder | undefined
     ) {
         this.inFlight = new InFlight(logger, 'Interactions');
+    }
+
+    public openHealth(): void {
+        this.healthy = true;
     }
 
     public startWith(starting: Promise<unknown>): void {
@@ -34,8 +45,11 @@ export class NodeEndpoint implements EngineContext {
     }
 
     // the built-in server calls this directly because it binds in Ready, before start() resolves
-    public answer(request: Request): Promise<Response> {
-        if (this.inFlight.closed) return Promise.resolve(new Response(null, { status: SERVICE_UNAVAILABLE }));
+    public async answer(request: Request): Promise<Response> {
+        if (this.inFlight.closed) return unavailable();
+        if (this.health?.matches(request.method, new URL(request.url).pathname)) {
+            return this.healthy ? this.health.ok() : unavailable();
+        }
         const answering = this.service.engine(request, this);
         this.inFlight.track(answering);
         return answering;

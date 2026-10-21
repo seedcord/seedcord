@@ -6,6 +6,7 @@ import { StartupPhase } from '#src/lifecycle/phases';
 import { CoordinatedLifecycle } from './CoordinatedLifecycle';
 
 import type { LifecycleTask } from './LifecycleTypes';
+import type { Promisable } from 'type-fest';
 
 const PHASE_ORDER: StartupPhase[] = [StartupPhase.Configuration, StartupPhase.Login, StartupPhase.Ready];
 
@@ -64,7 +65,7 @@ export class CoordinatedStartup extends CoordinatedLifecycle<StartupPhase> {
 
     // each phase completes fully before the next begins
     /** @internal */
-    public async run(): Promise<void> {
+    public async run(afterReady?: () => Promisable<void>): Promise<void> {
         if (this.#hasStarted) {
             this.logger.warn('Startup sequence has already completed');
             return;
@@ -79,14 +80,17 @@ export class CoordinatedStartup extends CoordinatedLifecycle<StartupPhase> {
         this.beginRun();
         this.logger.info(`${paint.mint.bold('Starting')} coordinated startup sequence`);
 
+        const steps: (() => Promisable<void>)[] = PHASE_ORDER.map((phase) => () => this.runPhase(phase));
+        if (afterReady) steps.push(afterReady);
+
         try {
-            for (const phase of PHASE_ORDER) {
+            for (const step of steps) {
                 // eslint-disable-next-line @typescript-eslint/no-unnecessary-condition -- abort() can flip isStartingUp to false mid-loop from the cli
                 if (!this.#isStartingUp) {
                     this.logger.warn('Startup sequence aborted');
                     return;
                 }
-                await this.runPhase(phase);
+                await step();
             }
 
             this.#hasStarted = true;
