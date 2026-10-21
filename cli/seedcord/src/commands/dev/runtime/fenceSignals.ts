@@ -1,6 +1,6 @@
 import { DEV_SIGNALS } from '#commands/dev/DevSignals';
 
-// miniflare's exit hook calls process.exit from a listener on each of these. dev's quit disposes miniflare itself
+// miniflare's exit hook calls process.exit from its SIGINT and SIGTERM listeners. dev's quit disposes miniflare itself
 const FENCED_SIGNALS = new Set<string | symbol>(DEV_SIGNALS);
 
 type Listener = (...args: unknown[]) => void;

@@ -19,7 +19,7 @@ export interface CoordinatorDeps {
     readonly makeTunnel: (onLost: () => void) => CoordinatorTunnel;
     // a quick hostname lasts only as long as this process, so quit clears the endpoint
     readonly kind: 'quick' | 'configured';
-    readonly endpoint: Pick<InteractionsEndpoint, 'set' | 'clear' | 'holds'>;
+    readonly endpoint: Pick<InteractionsEndpoint, 'set' | 'clear' | 'reuse'>;
     readonly onStatus: (status: TunnelStatus | null) => void;
     readonly logger: ILogger;
 }
@@ -46,13 +46,10 @@ function elapsedSince(startedAt: number): () => string {
 export class TunnelCoordinator {
     private live: LiveTunnel | undefined;
     private current: AbortController | undefined;
-    // a restart that keeps the endpoint still brings a new bot, maybe with a new token
-    private latestInstance: SeedcordInstance | undefined;
 
     constructor(private readonly deps: CoordinatorDeps) {}
 
     public async onPort(port: number, instance: SeedcordInstance): Promise<void> {
-        this.latestInstance = instance;
         if (this.live?.port === port) return this.registerAgain(this.live, instance);
 
         this.live = undefined;
@@ -81,7 +78,7 @@ export class TunnelCoordinator {
     }
 
     private async registerAgain(live: LiveTunnel, instance: SeedcordInstance): Promise<void> {
-        if (this.deps.endpoint.holds(live.url)) return;
+        if (this.deps.endpoint.reuse(live.url, instance)) return;
 
         try {
             await this.register(live, elapsedSince(Date.now()), instance);
@@ -117,17 +114,16 @@ export class TunnelCoordinator {
     }
 
     public async stop(): Promise<void> {
-        const { current, latestInstance } = this;
-        if (!current || !latestInstance) return;
+        if (!this.current) return;
 
         this.live = undefined;
-        current.abort();
+        this.current.abort();
         this.current = undefined;
         this.deps.onStatus(null);
         if (this.deps.kind === 'configured') return;
 
         try {
-            await this.deps.endpoint.clear(latestInstance);
+            await this.deps.endpoint.clear();
         } catch (error: unknown) {
             this.deps.logger.warn('Could not clear the interactions endpoint', error);
         }

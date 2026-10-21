@@ -68,21 +68,6 @@ function refusalWith(errors: unknown): DiscordAPIError {
 }
 
 describe('InteractionsEndpoint', () => {
-    it('holds the url it set until the token belongs to another application', async () => {
-        const { rest: client } = rest();
-        let token = TOKEN;
-        const endpoint = new InteractionsEndpoint(
-            () => token,
-            () => client
-        );
-
-        await endpoint.set(TUNNEL, RUNNING, INSTANCE);
-        expect(endpoint.holds(TUNNEL)).toBe(true);
-
-        token = { value: 'second-token', applicationId: '2' };
-        expect(endpoint.holds(TUNNEL)).toBe(false);
-    });
-
     it("writes through the bot's own REST options", async () => {
         const discord = await fakeDiscordApi();
         using _env = bindEnv({ DISCORD_BOT_TOKEN: FAKE_TOKEN });
@@ -164,13 +149,64 @@ describe('InteractionsEndpoint', () => {
         expect(patch).not.toHaveBeenCalled();
     });
 
-    it('clears the endpoint with a null', async () => {
+    it('clears the url it set with a null and writes nothing before a set', async () => {
         const { rest: client, patch } = rest();
+        const endpoint = endpointFor(client);
 
-        await endpointFor(client).clear(INSTANCE);
+        await endpoint.clear();
+        expect(patch).not.toHaveBeenCalled();
 
-        expect(patch).toHaveBeenCalledExactlyOnceWith(Routes.currentApplication(), {
+        await endpoint.set(TUNNEL, RUNNING, INSTANCE);
+        await endpoint.clear();
+        expect(patch).toHaveBeenLastCalledWith(Routes.currentApplication(), {
             body: { interactions_endpoint_url: null }
         });
     });
+
+    it('clears with the token it set with, after the session that loaded it stopped', async () => {
+        const { endpoint, writtenWith, readToken } = recordingEndpoint();
+
+        await endpoint.set(TUNNEL, RUNNING, INSTANCE);
+        readToken(unset);
+        await endpoint.clear();
+
+        expect(writtenWith).toEqual(['first-token', 'first-token']);
+    });
+
+    it('reuses the url it set for a restarted bot of the same application, then clears with its token', async () => {
+        const { endpoint, writtenWith, readToken } = recordingEndpoint();
+        await endpoint.set(TUNNEL, RUNNING, INSTANCE);
+
+        readToken(() => ({ value: 'reset-token', applicationId: TOKEN.applicationId }));
+        expect(endpoint.reuse(TUNNEL, INSTANCE)).toBe(true);
+        readToken(unset);
+        await endpoint.clear();
+        expect(writtenWith).toEqual(['first-token', 'reset-token']);
+
+        readToken(() => ({ value: 'other-app-token', applicationId: '2' }));
+        expect(endpoint.reuse(TUNNEL, INSTANCE)).toBe(false);
+    });
 });
+
+// what readBotToken does once the session that bound .dev.vars has stopped
+function unset(): BotToken {
+    throw new Error('DISCORD_BOT_TOKEN is unset');
+}
+
+// each client records the token it was built with
+function recordingEndpoint(): {
+    endpoint: InteractionsEndpoint;
+    writtenWith: string[];
+    readToken: (next: () => BotToken) => void;
+} {
+    const writtenWith: string[] = [];
+    let token = (): BotToken => TOKEN;
+    const endpoint = new InteractionsEndpoint(
+        () => token(),
+        () => {
+            const { value } = token();
+            return { patch: () => Promise.resolve(writtenWith.push(value)) };
+        }
+    );
+    return { endpoint, writtenWith, readToken: (next) => (token = next) };
+}

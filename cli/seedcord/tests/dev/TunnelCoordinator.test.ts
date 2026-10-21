@@ -26,7 +26,7 @@ function deps({ endpoint, ...overrides }: DepsOverrides = {}): CoordinatorDeps {
             stop: () => undefined
         }),
         kind: 'quick',
-        endpoint: { set: () => Promise.resolve(), clear: () => Promise.resolve(), holds: () => true, ...endpoint },
+        endpoint: { set: () => Promise.resolve(), clear: () => Promise.resolve(), reuse: () => true, ...endpoint },
         onStatus: () => undefined,
         logger: silentLogger,
         ...overrides
@@ -224,20 +224,25 @@ describe('TunnelCoordinator', () => {
         expect(open).toHaveBeenCalledOnce();
     });
 
-    it('sets the same url again when a restart leaves the endpoint without it', async () => {
+    it('hands a restarted bot to the endpoint it kept, and sets the url again once the endpoint lost it', async () => {
         const open = vi.fn<CoordinatorTunnel['open']>().mockResolvedValue(urlFor(3000));
         const set = vi.fn<CoordinatorDeps['endpoint']['set']>().mockResolvedValue();
-        let holds = true;
+        const reuse = vi.fn<CoordinatorDeps['endpoint']['reuse']>().mockReturnValue(true);
         const coordinator = new TunnelCoordinator(
             deps({
                 makeTunnel: () => ({ open, stop: () => undefined }),
-                endpoint: { set, holds: () => holds }
+                endpoint: { set, reuse }
             })
         );
+        // justified: the coordinator passes the instance through to the endpoint untouched
+        const restarted = {} as SeedcordInstance;
 
         await coordinator.onPort(3000, INSTANCE);
-        holds = false;
-        await coordinator.onPort(3000, INSTANCE);
+        await coordinator.onPort(3000, restarted);
+        expect(reuse).toHaveBeenLastCalledWith(urlFor(3000), restarted);
+
+        reuse.mockReturnValue(false);
+        await coordinator.onPort(3000, restarted);
 
         expect(open).toHaveBeenCalledOnce();
         expect(set.mock.calls.map(([url]) => url)).toEqual([urlFor(3000), urlFor(3000)]);
@@ -426,19 +431,6 @@ describe('TunnelCoordinator', () => {
 
         await expect(coordinator.stop()).resolves.toBeUndefined();
         expect(warn).toHaveBeenCalledOnce();
-    });
-
-    it('clears with the bot from the latest restart, even one that kept the endpoint', async () => {
-        const clear = vi.fn<CoordinatorDeps['endpoint']['clear']>().mockResolvedValue();
-        const coordinator = new TunnelCoordinator(deps({ endpoint: { clear, holds: () => true } }));
-        // justified: the coordinator passes the instance through to the endpoint untouched
-        const restarted = {} as SeedcordInstance;
-
-        await coordinator.onPort(3000, INSTANCE);
-        await coordinator.onPort(3000, restarted);
-        await coordinator.stop();
-
-        expect(clear).toHaveBeenCalledExactlyOnceWith(restarted);
     });
 
     it('stop does nothing when no tunnel opened', async () => {

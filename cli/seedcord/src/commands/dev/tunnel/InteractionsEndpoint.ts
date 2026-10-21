@@ -32,6 +32,8 @@ function containsField(errors: unknown): boolean {
 interface WrittenEndpoint {
     readonly applicationId: string;
     readonly url: string;
+    // quit clears after the edge session that bound .dev.vars has stopped
+    readonly rest: EndpointRest;
 }
 
 export class InteractionsEndpoint {
@@ -50,25 +52,32 @@ export class InteractionsEndpoint {
         );
     }
 
-    public holds(url: string): boolean {
-        return this.written?.url === url && this.written.applicationId === this.token().applicationId;
+    // a restart that keeps the endpoint still brings a new bot, maybe with a reset token
+    public reuse(url: string, instance: SeedcordInstance): boolean {
+        const { written } = this;
+        if (written?.url !== url || written.applicationId !== this.token().applicationId) return false;
+
+        this.written = { ...written, rest: this.rest(instance) };
+        return true;
     }
 
     public async set(url: string, signal: AbortSignal, instance: SeedcordInstance): Promise<void> {
         signal.throwIfAborted();
         const { applicationId } = this.token();
+        const rest = this.rest(instance);
         try {
-            await write(this.rest(instance), url);
+            await write(rest, url);
         } catch (error: unknown) {
             if (!unverified(error)) throw error;
             throw new SeedcordError(SeedcordErrorCode.CliTunnelNotVerified, [url]);
         }
 
-        this.written = { applicationId, url };
+        this.written = { applicationId, url, rest };
     }
 
-    public async clear(instance: SeedcordInstance): Promise<void> {
-        await write(this.rest(instance), null);
+    public async clear(): Promise<void> {
+        if (!this.written) return;
+        await write(this.written.rest, null);
         this.written = undefined;
     }
 }
