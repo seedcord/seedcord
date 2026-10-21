@@ -46,6 +46,10 @@ export function setBuiltFilesHook(callback: () => void): void {
     else Reflect.set(globalThis, Symbol.for(BUILT_FILES_READY_KEY), callback);
 }
 
+export function runsUnderSeedcordDev(): boolean {
+    return botFilesSlot()?.kind === 'dev';
+}
+
 export function botConfigDir(): string | undefined {
     const slot = botFilesSlot();
     const configFile = slot && new BotLayout(slot).configFile;

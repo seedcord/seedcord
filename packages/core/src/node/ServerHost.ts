@@ -3,6 +3,7 @@ import { SeedcordError } from '@seedcord/errors/internal';
 import { LoggerChannelRegistry } from '@seedcord/logger';
 import { installNodeConsole, installNodeDefaults } from '@seedcord/logger/node';
 import { HostShutdown, HostStartup } from '@seedcord/types/internal';
+import { runsUnderSeedcordDev } from '@seedcord/utils/internal';
 
 import { assertDeclaredRuntime } from '#node/assertRuntimeVersion';
 import { PluginLifecycle } from '#src/lifecycle/PluginLifecycle';
@@ -76,8 +77,9 @@ export abstract class ServerHost<BotT extends Transport> extends PluginHost<BotT
         sealAttachments(this);
         this.#lifecycle.register(attachmentsOf(this));
 
-        // codegen and the build construct the bot without starting it
-        this[HostShutdown].registerSignalHandlers();
+        // codegen and the build construct the bot without starting it.
+        // under seedcord dev the CLI handles SIGINT and SIGTERM
+        if (!runsUnderSeedcordDev()) this[HostShutdown].registerSignalHandlers();
         if (this.config.errors?.catchProcessErrors ?? true) {
             ServerHost.#liveProcessErrors = registerProcessErrors(this, this[HostShutdown]);
         }

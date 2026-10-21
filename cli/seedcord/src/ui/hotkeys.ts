@@ -91,10 +91,7 @@ function moveChip(move: CursorMove): Action {
 }
 
 function answer(shouldRefresh: boolean): Action {
-    return (ctx) => {
-        void ctx.onRefreshCommands?.(shouldRefresh);
-        ctx.store.clearPrompt();
-    };
+    return (ctx) => void ctx.onRefreshCommands?.(shouldRefresh);
 }
 
 const quit: Action = (ctx) => {
@@ -105,10 +102,7 @@ const disconnect: Action = (ctx) => {
     ctx.store.beginDisconnect();
     void ctx.onDisconnect?.();
 };
-const restart: Action = (ctx) => {
-    ctx.store.beginRestart();
-    void ctx.onRestart?.();
-};
+const restart: Action = (ctx) => void ctx.onRestart?.();
 const clearLogs: Action = (ctx) => {
     LogStore.instance.clear();
     ctx.scroll.toBottom();

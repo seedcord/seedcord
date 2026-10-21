@@ -1,5 +1,6 @@
 import { REST } from '@discordjs/rest';
 import { MemoryRateLimiter } from '@seedcord/rate-limiter';
+import { setDevFiles } from '@seedcord/utils/internal';
 import { describe, it, expect, afterEach } from 'vitest';
 
 import { CoordinatedShutdown } from '#node/Lifecycle/CoordinatedShutdown';
@@ -56,6 +57,15 @@ describe('signal handlers on a plugin host', () => {
         await host.run();
 
         expect(signalListeners()).toEqual([sigterm + 1, sigint + 1]);
+    });
+
+    it('installs none on start under seedcord dev, which stops the bot itself', async () => {
+        const before = signalListeners();
+        using _dev = setDevFiles({ root: process.cwd(), listed: [], skippedFolders: [] });
+
+        await new TestHost().run();
+
+        expect(signalListeners()).toEqual(before);
     });
 
     it('releases them on reset after a start', async () => {

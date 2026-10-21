@@ -4,6 +4,7 @@ import React from 'react';
 
 import { BaseCommand } from '#core/BaseCommand';
 import { cliLogger } from '#core/cliLogger';
+import { isInteractive } from '#core/interactive';
 import { StateFolder } from '#core/state/StateFolder';
 import { DevApp } from '#ui/DevApp';
 import { devPrefsFile } from '#ui/devPrefs';
@@ -12,6 +13,7 @@ import { DevStore } from '#ui/stores/DevStore';
 import { LogStore } from '#ui/stores/LogStore';
 
 import { DevRunner } from './DevRunner';
+import { runPlain } from './runPlain';
 
 import type { Command } from '@commander-js/extra-typings';
 
@@ -40,7 +42,7 @@ export class DevCommand extends BaseCommand {
                 process.once('SIGTERM', onSignal);
 
                 try {
-                    await this.runDevApp(store, runner, stateFolder);
+                    await (isInteractive() ? this.runDevApp(store, runner, stateFolder) : runPlain(store, runner));
                 } catch (error: unknown) {
                     this.logger.error(`${WORDMARK} dev failed`, error);
                     process.exitCode = 1;

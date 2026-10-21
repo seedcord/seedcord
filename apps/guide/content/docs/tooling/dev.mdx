@@ -112,6 +112,16 @@ Each log line starts with a clock and a label. While `p` is on fitting the width
 
 ![The dev terminal at a narrow width, with the chips gone and a status line above the logs](/dev-narrow-layout.webp)
 
+## Without a terminal
+
+When stdin or stdout is a pipe, or `CI` is set to any value, `seedcord dev` skips the terminal UI and prints each log line as it comes. That's how it runs from a script, a process manager, or a container started without `-t`. Nobody is there to press a key, so it answers the prompts itself:
+
+- A save that needs a restart restarts the bot.
+- A change to your command files refreshes your commands, the same as pressing `y`.
+- A bot that fails to start stops `seedcord dev` with exit code 1.
+
+Ctrl-C or `SIGTERM` stops it.
+
 ## Where the logs go
 
 The terminal fills your whole console while it runs, so the log pane is the only place those lines appear on screen. In `development` mode seedcord also writes every line to a file under `logs/`, so a restart or the 1,000-line limit doesn't lose them. A `logger.sinks` list in your bot config replaces that file sink. When you quit, the terminal prints the `logs/` folder either way.

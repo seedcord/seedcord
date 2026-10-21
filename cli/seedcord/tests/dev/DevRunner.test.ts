@@ -7,6 +7,7 @@ import { HostShutdown, HostStartup } from '@seedcord/types/internal';
 import { afterEach, beforeEach, describe, expect, it, onTestFinished, vi, type Mock } from 'vitest';
 
 import { DevRunner } from '#commands/dev/DevRunner';
+import { runPlain } from '#commands/dev/runPlain';
 import { ServerDevRuntime } from '#commands/dev/runtime/ServerDevRuntime';
 import { ProjectLoader } from '#core/config/ProjectLoader';
 import { openModuleLoader } from '#core/modules/openModuleLoader';
@@ -459,4 +460,38 @@ describe('DevRunner run', () => {
 
         expect(Reflect.get(globalThis, BUILD_STARTS)).toBe(1);
     }, 60_000);
+});
+
+describe('runPlain, with no terminal to answer prompts', () => {
+    it('restarts the bot when a save needs a restart', async () => {
+        const store = new DevStore();
+        let sessions = 0;
+        const runtime = (): DevRuntime =>
+            fakeRuntime({ default: readyBot }, sessions++ === 0 ? { type: 'restart-required' } : undefined);
+        const runner = makeRunner({ store, runtime });
+
+        const running = runPlain(store, runner);
+        await vi.waitFor(() => expect(sessions).toBe(2));
+        await runner.quit();
+        await running;
+    });
+
+    it('accepts a command refresh', async () => {
+        const store = new DevStore();
+        const runtime = fakeRuntime({ default: readyBot }, { type: 'command-update-prompt', files: ['ban.ts'] });
+        const refresh = vi.spyOn(runtime, 'refreshCommands');
+        const runner = makeRunner({ store, runtime: () => runtime });
+
+        const running = runPlain(store, runner);
+        await vi.waitFor(() => expect(refresh).toHaveBeenCalledWith(true));
+        await runner.quit();
+        await running;
+    });
+
+    it('rejects with the error of a session that fails to start', async () => {
+        const store = new DevStore();
+        const runner = makeRunner({ store, runtime: () => new ServerDevRuntime() });
+
+        await expect(runPlain(store, runner)).rejects.toThrow(/Cannot find \S+bot\.ts|Failed to load url/);
+    });
 });

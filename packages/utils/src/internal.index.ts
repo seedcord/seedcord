@@ -7,6 +7,7 @@ export {
     BOT_FILES_KEY,
     BUILT_FILES_READY_KEY,
     botConfigDir,
+    runsUnderSeedcordDev,
     setBuiltFiles,
     setBuiltFilesHook,
     setDevFiles

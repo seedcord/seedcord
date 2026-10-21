@@ -145,6 +145,7 @@ export class DevRunner {
 
     public async restart(): Promise<void> {
         if (this.next === 'quit') return;
+        this.deps.store.beginRestart();
         this.next = 'session';
         this.restarts++;
         await this.currentSession?.stop();
@@ -161,6 +162,7 @@ export class DevRunner {
     }
 
     public refreshCommands(shouldRefresh: boolean): void {
+        this.deps.store.clearPrompt();
         this.currentSession?.refreshCommands(shouldRefresh);
     }
 
