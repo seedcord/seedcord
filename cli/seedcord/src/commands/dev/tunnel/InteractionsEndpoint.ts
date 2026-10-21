@@ -36,17 +36,19 @@ interface WrittenEndpoint {
 
 export class InteractionsEndpoint {
     private written: WrittenEndpoint | undefined;
+    // quit calls clear() after the session that loaded the bot has stopped
+    private lastRest: EndpointRest | undefined;
 
     // read per request because a restart reloads .env and the bot
     constructor(
         private readonly token: () => BotToken,
-        private readonly rest: () => EndpointRest
+        private readonly rest: (instance: SeedcordInstance) => EndpointRest
     ) {}
 
-    public static create(instance: () => SeedcordInstance): InteractionsEndpoint {
+    public static create(): InteractionsEndpoint {
         // without this the client silently waits out an exhausted bucket and the cli looks frozen
-        return new InteractionsEndpoint(readBotToken, () =>
-            restOf(instance(), { rejectOnRateLimit: ['/applications'] })
+        return new InteractionsEndpoint(readBotToken, (instance) =>
+            restOf(instance, { rejectOnRateLimit: ['/applications'] })
         );
     }
 
@@ -54,11 +56,12 @@ export class InteractionsEndpoint {
         return this.written?.url === url && this.written.applicationId === this.token().applicationId;
     }
 
-    public async set(url: string, signal: AbortSignal): Promise<void> {
+    public async set(url: string, signal: AbortSignal, instance: SeedcordInstance): Promise<void> {
         signal.throwIfAborted();
         const { applicationId } = this.token();
+        this.lastRest = this.rest(instance);
         try {
-            await this.write(url);
+            await write(this.lastRest, url);
         } catch (error: unknown) {
             if (!unverified(error)) throw error;
             throw new SeedcordError(SeedcordErrorCode.CliTunnelNotVerified, [url]);
@@ -68,13 +71,14 @@ export class InteractionsEndpoint {
     }
 
     public async clear(): Promise<void> {
-        await this.write(null);
+        if (!this.lastRest) return;
+        await write(this.lastRest, null);
         this.written = undefined;
     }
+}
 
-    private async write(endpoint: string | null): Promise<void> {
-        await this.rest().patch(Routes.currentApplication(), {
-            body: { interactions_endpoint_url: endpoint } satisfies RESTPatchCurrentApplicationJSONBody
-        });
-    }
+async function write(rest: EndpointRest, endpoint: string | null): Promise<void> {
+    await rest.patch(Routes.currentApplication(), {
+        body: { interactions_endpoint_url: endpoint } satisfies RESTPatchCurrentApplicationJSONBody
+    });
 }

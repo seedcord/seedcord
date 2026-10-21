@@ -12,7 +12,7 @@ import { ListRunner } from '#commands/commands/list/ListRunner';
 import { RemoveRunner } from '#commands/commands/remove/RemoveRunner';
 import { bindEnv } from '#tests/bindEnv';
 import { FAKE_TOKEN } from '#tests/commands/build/smoke';
-import { APP_ID, botGuilds, fakeDiscord, fakeProject, slash } from '#tests/commands/commands/fakeBot';
+import { APP_ID, botGuilds, fakeDiscord, fakeProject, removeDeps, slash } from '#tests/commands/commands/fakeBot';
 import { silentLogger } from '#tests/silentLogger';
 
 import type { FakeProject } from '#tests/commands/commands/fakeBot';
@@ -80,7 +80,7 @@ async function run(
     const runners = {
         deployRunner: new DeployRunner({ ...deps, state: opened.state }),
         listRunner: new ListRunner(deps),
-        removeRunner: new RemoveRunner(() => Promise.resolve(discord.rest))
+        removeRunner: new RemoveRunner(removeDeps(discord.rest))
     };
     await runCommands(prompter ? { ...runners, prompter } : runners, ...args);
     return discord;

@@ -5,6 +5,7 @@ import { formatUptime } from '#ui/format';
 import type { CloudflaredTunnel } from './CloudflaredTunnel';
 import type { InteractionsEndpoint } from './InteractionsEndpoint';
 import type { ILogger } from '@seedcord/types';
+import type { SeedcordInstance } from '@seedcord/types/internal';
 
 const PASTE_HINT = 'The tunnel is still up, so try pasting that URL into the dashboard.';
 const RESTART_HINT = 'Restart for a fresh hostname, or set `tunnel` to an https URL you already serve.';
@@ -48,8 +49,8 @@ export class TunnelCoordinator {
 
     constructor(private readonly deps: CoordinatorDeps) {}
 
-    public async onPort(port: number): Promise<void> {
-        if (this.live?.port === port) return this.registerAgain(this.live);
+    public async onPort(port: number, instance: SeedcordInstance): Promise<void> {
+        if (this.live?.port === port) return this.registerAgain(this.live, instance);
 
         this.live = undefined;
         const attempt = this.begin();
@@ -67,7 +68,7 @@ export class TunnelCoordinator {
             this.deps.logger.info(`Reachable at ${paint.sky.bold(url)} ${since()}`);
 
             patched = true;
-            await this.register({ port, url, attempt }, since);
+            await this.register({ port, url, attempt }, since, instance);
         } catch (error: unknown) {
             if (superseded(attempt)) return;
             // discord will refuse the same hostname again
@@ -76,20 +77,20 @@ export class TunnelCoordinator {
         }
     }
 
-    private async registerAgain(live: LiveTunnel): Promise<void> {
+    private async registerAgain(live: LiveTunnel, instance: SeedcordInstance): Promise<void> {
         if (this.deps.endpoint.holds(live.url)) return;
 
         try {
-            await this.register(live, elapsedSince(Date.now()));
+            await this.register(live, elapsedSince(Date.now()), instance);
         } catch (error: unknown) {
             if (superseded(live.attempt)) return;
             this.reportFailure(error, false);
         }
     }
 
-    private async register(live: LiveTunnel, since: () => string): Promise<void> {
+    private async register(live: LiveTunnel, since: () => string, instance: SeedcordInstance): Promise<void> {
         this.deps.onStatus('registering');
-        await this.deps.endpoint.set(live.url, live.attempt.signal);
+        await this.deps.endpoint.set(live.url, live.attempt.signal, instance);
         if (superseded(live.attempt)) return;
 
         this.live = live;

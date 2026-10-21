@@ -7,13 +7,14 @@ import { posixRelative } from '@seedcord/utils/internal';
 import chalk from 'chalk';
 import { beforeAll, describe, expect, it, onTestFinished, vi } from 'vitest';
 
+import { fakeDiscordApi } from '#tests/fakeDiscordApi';
+
 import {
     asDevelopment,
     captureLogs,
     developmentMode,
     edgeProject,
     editFile,
-    fakeDiscordApi,
     liveVars,
     logCapture,
     messagesOf,

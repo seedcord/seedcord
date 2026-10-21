@@ -1,9 +1,16 @@
-import type { HealthCheckOption } from '@seedcord/types';
+import type { HealthCheckConfig, HealthCheckOption } from '@seedcord/types';
 import type { IncomingMessage, ServerResponse } from 'node:http';
 
 const HTTP_OK = 200;
+const HTTP_SERVICE_UNAVAILABLE = 503;
 const DEFAULT_HEALTH_CHECK_PATH = '/health';
 const JSON_HEADERS = { 'Content-Type': 'application/json' };
+
+// undefined turns the health check off
+export function healthCheckConfig(option?: HealthCheckOption): HealthCheckConfig | undefined {
+    if (option === false) return undefined;
+    return typeof option === 'object' ? option : {};
+}
 
 export class HealthResponder {
     public readonly path: string;
@@ -13,12 +20,8 @@ export class HealthResponder {
     }
 
     public static fromOption(option?: HealthCheckOption): HealthResponder | undefined {
-        if (option === false) return undefined;
-        return new HealthResponder(typeof option === 'object' ? option.path : undefined);
-    }
-
-    public matches(method: string | undefined, path: string | undefined): boolean {
-        return method === 'GET' && path === this.path;
+        const config = healthCheckConfig(option);
+        return config && new HealthResponder(config.path);
     }
 
     public tryRespond(req: IncomingMessage, res: ServerResponse): boolean {
@@ -29,8 +32,14 @@ export class HealthResponder {
         return true;
     }
 
-    public ok(): Response {
+    public answer(request: Request, ready: boolean): Response | undefined {
+        if (!this.matches(request.method, new URL(request.url).pathname)) return undefined;
+        if (!ready) return new Response(null, { status: HTTP_SERVICE_UNAVAILABLE });
         return new Response(this.body(), { status: HTTP_OK, headers: JSON_HEADERS });
+    }
+
+    private matches(method: string | undefined, path: string | undefined): boolean {
+        return method === 'GET' && path === this.path;
     }
 
     private body(): string {

@@ -3,7 +3,7 @@ import { HostAugmentTarget, HostShutdown, HostStartup, HostVersion, SeedcordBran
 import { InstanceLifecycle } from '#commands/dev/runtime/InstanceLifecycle';
 
 import type { DevRuntime } from '#commands/dev/runtime/DevRuntime';
-import type { DevEvent } from '#commands/dev/runtime/events';
+import type { DevEvent, DevEventHandler } from '#commands/dev/runtime/events';
 
 // the fields the dev session and InstanceLifecycle read off a bot
 export function fakeBot(overrides: Record<PropertyKey, unknown> = {}): Record<PropertyKey, unknown> {
@@ -18,16 +18,20 @@ export function fakeBot(overrides: Record<PropertyKey, unknown> = {}): Record<Pr
     };
 }
 
-// loads `module` as the entry and runs the bot in this process
+// runs `module` as the bot in this process. `emit` goes out from startBot, where a real runtime reports the port
 export function fakeRuntime(module: unknown, emit?: DevEvent): DevRuntime {
     const lifecycle = new InstanceLifecycle();
+    let onEvent: DevEventHandler | undefined;
     return {
         start: (context) => {
-            if (emit) context.onEvent?.(emit);
+            onEvent = context.onEvent;
             return Promise.resolve();
         },
         loadEntry: () => Promise.resolve({ module }),
-        startBot: (instance) => lifecycle.start(instance),
+        startBot: (instance) => {
+            if (emit) onEvent?.(emit);
+            return lifecycle.start(instance);
+        },
         stop: () => lifecycle.stop(),
         importModule: () => Promise.reject(new Error('the fake runtime loads no files')),
         refreshCommands: () => undefined

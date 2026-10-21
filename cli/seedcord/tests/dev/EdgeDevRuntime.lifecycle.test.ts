@@ -18,6 +18,7 @@ import { StateFolder } from '#core/state/StateFolder';
 import { ShellMode } from '#core/viteMode';
 import { READ_IN_WORKERD, writeCloudflareConfig } from '#tests/commands/build/edgeBot';
 import { ED25519_KEY_BYTES, FAKE_TOKEN } from '#tests/commands/build/smoke';
+import { fakeDiscordApi } from '#tests/fakeDiscordApi';
 import { GREETING, GREETING_PROBE, greetingPlugin } from '#tests/greetingPlugin';
 import { loadedConfig } from '#tests/loadedConfig';
 import { lockDir } from '#tests/lockDir';
@@ -30,7 +31,6 @@ import {
     edgeConfig,
     edgeProject,
     editFile,
-    fakeDiscordApi,
     liveVars,
     messagesOf,
     startedRuntime,

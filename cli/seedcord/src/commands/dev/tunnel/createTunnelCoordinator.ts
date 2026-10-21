@@ -10,7 +10,6 @@ import { TunnelCoordinator } from './TunnelCoordinator';
 import type { ResolvedTunnel } from '#core/config/schema';
 import type { TunnelStatus } from './TunnelCoordinator';
 import type { ILogger } from '@seedcord/types';
-import type { SeedcordInstance } from '@seedcord/types/internal';
 
 export function missingCloudflaredHint(platform: NodeJS.Platform): string {
     const arrow = paint.mute('→');
@@ -25,13 +24,12 @@ export function createTunnelCoordinator(
     logger: ILogger,
     onStatus: (status: TunnelStatus | null) => void,
     tunnel: ResolvedTunnel,
-    instance: () => SeedcordInstance,
     findBinary: () => string | undefined = () => findCloudflared(systemLookup())
 ): TunnelCoordinator | undefined {
     if (tunnel.mode === 'off') return undefined;
 
     const deps = systemTunnelDeps();
-    const endpoint = InteractionsEndpoint.create(instance);
+    const endpoint = InteractionsEndpoint.create();
 
     if (tunnel.mode === 'url') {
         return new TunnelCoordinator({

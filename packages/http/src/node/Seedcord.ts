@@ -7,7 +7,7 @@ import { DRAIN_TASK_TIMEOUT_MS, HealthResponder, ShutdownPhase, StartupPhase } f
 import { paint, SeedcordErrorCode } from '@seedcord/errors';
 import { SeedcordError } from '@seedcord/errors/internal';
 import { Logger } from '@seedcord/logger';
-import { HostAugmentTarget, HostListenHost, HostVersion, SeedcordBrand } from '@seedcord/types/internal';
+import { HostAugmentTarget, HostListenHost, HostStartup, HostVersion, SeedcordBrand } from '@seedcord/types/internal';
 import { isPortInUse } from '@seedcord/utils/internal';
 import { Envapter } from 'envapt';
 
@@ -82,7 +82,12 @@ export class Seedcord extends ServerHost<'http'> implements SeedcordInstance {
         this.rest = this.#service.rest;
         this.rateLimiter = this.#service.rateLimiter;
         this.bus = this.#service.bus;
-        this.#endpoint = new NodeEndpoint(this.#service, this.#logger, HealthResponder.fromOption(config.healthCheck));
+        this.#endpoint = new NodeEndpoint(
+            this.#service,
+            this.#logger,
+            HealthResponder.fromOption(config.healthCheck),
+            this[HostStartup]
+        );
 
         this.#hmrManager = new HmrManager();
         this.#hmrManager.init(connectDevChannel());
@@ -108,11 +113,6 @@ export class Seedcord extends ServerHost<'http'> implements SeedcordInstance {
         const starting = this.init();
         this.#endpoint.startWith(starting);
         return starting;
-    }
-
-    /** @internal */
-    protected override openHealth(): void {
-        this.#endpoint.openHealth();
     }
 
     /**

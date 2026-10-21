@@ -8,12 +8,17 @@ import { commandCount } from '#commands/commands/scope';
 
 import { deletedNote, scanNote } from './removeSteps';
 
-import type { DiscordRest } from '#commands/commands/runnerDeps';
+import type { RunnerDeps } from '#commands/commands/runnerDeps';
 import type { GuildTargets } from '#commands/commands/scope';
 import type { RemoveMode } from './RemoveMode';
 import type { RemovePresenter } from './RemovePresenter';
 import type { Selection } from './removeSteps';
 import type { GuildSummary } from '@seedcord/core/internal';
+import type { SeedcordInstance } from '@seedcord/types/internal';
+
+export interface RemoveDeps extends Pick<RunnerDeps, 'openDiscord'> {
+    readonly loadInstance: () => Promise<SeedcordInstance>;
+}
 
 interface RemovePlan {
     mode: RemoveMode;
@@ -25,11 +30,14 @@ interface RemovePlan {
 export class RemoveRunner {
     private opened?: Promise<DiscordSession>;
 
-    constructor(private readonly connect: () => Promise<DiscordRest>) {}
+    constructor(private readonly deps: RemoveDeps) {}
 
     public static create(): RemoveRunner {
         const deps = defaultRunnerDeps();
-        return new RemoveRunner(async () => deps.openDiscord(await loadInstance(deps, process.cwd())));
+        return new RemoveRunner({
+            openDiscord: deps.openDiscord,
+            loadInstance: () => loadInstance(deps, process.cwd())
+        });
     }
 
     public async listBotGuilds(): Promise<GuildSummary[]> {
@@ -77,7 +85,9 @@ export class RemoveRunner {
 
     // the wizard's guild list and the run share one session
     private session(): Promise<DiscordSession> {
-        this.opened ??= this.connect().then((rest) => DiscordSession.open(rest));
+        this.opened ??= this.deps
+            .loadInstance()
+            .then((instance) => DiscordSession.open(this.deps.openDiscord(instance)));
         return this.opened;
     }
 }

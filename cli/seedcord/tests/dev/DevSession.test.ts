@@ -24,7 +24,6 @@ import { fakeBot, fakeRuntime } from './fakes';
 
 import type { DevSessionDeps } from '#commands/dev/DevSession';
 import type { DevRuntime } from '#commands/dev/runtime/DevRuntime';
-import type { DevEvent, DevEventHandler } from '#commands/dev/runtime/events';
 import type { ResolvedSeedcordConfig } from '#core/config/schema';
 
 function config(): ResolvedSeedcordConfig {
@@ -54,11 +53,13 @@ function withFiles(loaded: ResolvedSeedcordConfig): [ResolvedSeedcordConfig, Pro
 
 const UNCHANGED = { outputPath: 'seedcord-gen.d.ts', changed: false };
 
-function sessionDeps(store = new DevStore(), onEvent: DevEventHandler = () => undefined): DevSessionDeps {
+function sessionDeps(
+    store = new DevStore(),
+    onListening: DevSessionDeps['onListening'] = () => undefined
+): DevSessionDeps {
     return {
         store,
-        onEvent,
-        onInstanceLoaded: () => undefined,
+        onListening,
         codegen: { writeFrom: () => Promise.resolve(UNCHANGED) },
         codegenLogger: silentLogger,
         state: new StateFolder(process.cwd(), silentLogger),
@@ -139,30 +140,22 @@ describe('DevSession', () => {
         expect(start).not.toHaveBeenCalled();
     });
 
-    it('forwards a runtime event past the store', async () => {
-        const seen: DevEvent[] = [];
-        const session = new DevSession(
-            ...withFiles(config()),
-            fakeRuntime({}, { type: 'server-listening', port: 4321 }),
-            sessionDeps(new DevStore(), (event) => seen.push(event))
-        );
-
-        await settle(session, session.start());
-
-        expect(seen).toContainEqual({ type: 'server-listening', port: 4321 });
-    });
-
-    it('applies the event to the store too', async () => {
+    it('hands the port the bot listens on to the store and to onListening with the bot it loaded', async () => {
         const store = new DevStore();
+        const bot = fakeBot();
+        const onListening = vi.fn();
         const session = new DevSession(
             ...withFiles(config()),
-            fakeRuntime({}, { type: 'server-listening', port: 4321 }),
-            sessionDeps(store)
+            fakeRuntime({ default: bot }, { type: 'server-listening', port: 4321 }),
+            sessionDeps(store, onListening)
         );
 
-        await settle(session, session.start());
-
+        const running = session.start();
+        await vi.waitFor(() => expect(onListening).toHaveBeenCalledExactlyOnceWith(4321, bot));
         expect(store.getState().port).toBe(4321);
+
+        await session.stop();
+        await running;
     });
 
     it('rejects a default export that carries no seedcord brand', async () => {

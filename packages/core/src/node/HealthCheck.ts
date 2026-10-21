@@ -7,7 +7,7 @@ import { isPortInUse } from '@seedcord/utils/internal';
 
 import { ShutdownPhase } from '#src/lifecycle/phases';
 
-import { HealthResponder } from './HealthResponder';
+import { healthCheckConfig, HealthResponder } from './HealthResponder';
 
 import type { CoordinatedShutdown } from './Lifecycle/CoordinatedShutdown';
 import type { HealthCheckConfig, HealthCheckOption } from '@seedcord/types';
@@ -47,8 +47,8 @@ export class HealthCheck {
     }
 
     public static fromOption(shutdown: CoordinatedShutdown, option?: HealthCheckOption): HealthCheck | undefined {
-        if (option === false) return undefined;
-        return new HealthCheck(shutdown, typeof option === 'object' ? option : undefined);
+        const config = healthCheckConfig(option);
+        return config && new HealthCheck(shutdown, config);
     }
 
     public async init(): Promise<void> {

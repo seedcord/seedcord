@@ -1,9 +1,9 @@
 import { missingCloudflaredHint } from './createTunnelCoordinator';
 
-import type { DevEvent } from '#commands/dev/runtime/events';
 import type { ResolvedTunnel } from '#core/config/schema';
 import type { TunnelCoordinator } from './TunnelCoordinator';
 import type { ILogger } from '@seedcord/types';
+import type { SeedcordInstance } from '@seedcord/types/internal';
 
 function same(a: ResolvedTunnel | undefined, b: ResolvedTunnel): boolean {
     if (a?.mode !== b.mode) return false;
@@ -20,14 +20,13 @@ export class TunnelRouter {
     ) {}
 
     // the dev session calls this from a sync callback where a rejection would end up unhandled
-    public route(tunnel: ResolvedTunnel, event: DevEvent): Promise<void> {
-        if (event.type !== 'server-listening') return Promise.resolve();
-        return this.routeTo(tunnel, event.port).catch((error: unknown) => {
+    public route(tunnel: ResolvedTunnel, port: number, instance: SeedcordInstance): Promise<void> {
+        return this.routeTo(tunnel, port, instance).catch((error: unknown) => {
             this.logger.error('Tunnel setup failed, the bot runs without a public endpoint', error);
         });
     }
 
-    private async routeTo(tunnel: ResolvedTunnel, port: number): Promise<void> {
+    private async routeTo(tunnel: ResolvedTunnel, port: number, instance: SeedcordInstance): Promise<void> {
         // each restart reloads the config
         if (!same(this.built, tunnel)) {
             // clearing the old endpoint must finish before the replacement sets its own
@@ -39,7 +38,7 @@ export class TunnelRouter {
             }
         }
 
-        await this.coordinator?.onPort(port);
+        await this.coordinator?.onPort(port, instance);
     }
 
     // a rejection here would go unreported on the quit path

@@ -11,14 +11,8 @@ import { quietSteps } from '#core/output/quietSteps';
 import { StepPrinter } from '#core/output/StepPrinter';
 import { bindEnv } from '#tests/bindEnv';
 import { FAKE_TOKEN } from '#tests/commands/build/smoke';
-import {
-    APP_ID,
-    discordServer,
-    fakeDiscord,
-    fakeProject,
-    pipedTerminal,
-    slash
-} from '#tests/commands/commands/fakeBot';
+import { APP_ID, fakeDiscord, fakeProject, pipedTerminal, slash } from '#tests/commands/commands/fakeBot';
+import { fakeDiscordApi } from '#tests/fakeDiscordApi';
 import { silentLogger } from '#tests/silentLogger';
 
 import type { ListScope } from '#commands/commands/list/ListRunner';
@@ -96,7 +90,7 @@ describe('ListRunner', () => {
     });
 
     it("reads discord through the bot's own REST options", async () => {
-        await using discord = await discordServer({ [Routes.currentApplication()]: { id: APP_ID }, ...ON_DISCORD });
+        const discord = await fakeDiscordApi({ [Routes.currentApplication()]: { id: APP_ID }, ...ON_DISCORD });
         using _env = bindEnv({ DISCORD_BOT_TOKEN: FAKE_TOKEN });
         const project = await fakeProject({ commandsPath: null, rest: new REST({ api: discord.api }) });
 

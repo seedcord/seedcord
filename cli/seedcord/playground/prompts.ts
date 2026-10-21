@@ -12,7 +12,9 @@ import { RemoveWizard, WIZARD_STEPS } from '#commands/commands/remove/RemoveWiza
 import { cliLogger } from '#core/cliLogger';
 import { StepPrinter } from '#core/output/StepPrinter';
 
+import type { RemoveDeps } from '#commands/commands/remove/RemoveRunner';
 import type { WizardQuestions } from '#commands/commands/remove/RemoveWizard';
+import type { SeedcordInstance } from '@seedcord/types/internal';
 
 type Scenario = (prompter: Prompter) => Promise<unknown>;
 
@@ -42,6 +44,12 @@ const rest = new REST();
 rest.get = fakeDiscord;
 rest.put = fakeDiscord;
 rest.delete = fakeDiscord;
+
+const REMOVE_DEPS: RemoveDeps = {
+    openDiscord: () => rest,
+    // justified: openDiscord above ignores the instance
+    loadInstance: () => Promise.resolve({} as SeedcordInstance)
+};
 
 // long enough to read the warning while the deploy step spins
 const RATE_LIMIT_MS = 5000;
@@ -88,7 +96,7 @@ const SCENARIOS: Record<string, Scenario> = {
 async function runWizard(prompter: Prompter, questions: WizardQuestions): Promise<string> {
     const printer = new StepPrinter({ command: 'commands', labels: WIZARD_STEPS, verbose: false });
     printer.header();
-    await new RemoveWizard(new RemoveRunner(() => Promise.resolve(rest)), printer, prompter, false).run(questions);
+    await new RemoveWizard(new RemoveRunner(REMOVE_DEPS), printer, prompter, false).run(questions);
     return 'done';
 }
 

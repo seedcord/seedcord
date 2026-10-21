@@ -7,9 +7,10 @@ import { CodegenRunner } from '#commands/codegen/CodegenRunner';
 import { quietSteps } from '#core/output/quietSteps';
 import { ProjectFiles } from '#core/project/ProjectFiles';
 import { ShellMode } from '#core/viteMode';
+import { fakeDiscordApi } from '#tests/fakeDiscordApi';
 import { silentLogger } from '#tests/silentLogger';
 
-import { edgeConfig, edgeProject, editFile, fakeDiscordApi, startedRuntime, WAVE_COMMAND } from './edgeDevRuntime';
+import { edgeConfig, edgeProject, editFile, startedRuntime, WAVE_COMMAND } from './edgeDevRuntime';
 
 import type { DevEvent } from '#commands/dev/runtime/events';
 

@@ -1,14 +1,12 @@
-import { assert, describe, expect, it } from 'vitest';
+import { describe, expect, it } from 'vitest';
 
 import { createTunnelCoordinator, missingCloudflaredHint } from '#commands/dev/tunnel/createTunnelCoordinator';
 import { TunnelCoordinator } from '#commands/dev/tunnel/TunnelCoordinator';
 import { silentLogger } from '#tests/silentLogger';
 
-const noInstance = (): never => assert.fail('read the instance');
-
 describe('createTunnelCoordinator', () => {
     it('builds nothing when the tunnel is off', () => {
-        expect(createTunnelCoordinator(silentLogger, () => undefined, { mode: 'off' }, noInstance)).toBeUndefined();
+        expect(createTunnelCoordinator(silentLogger, () => undefined, { mode: 'off' })).toBeUndefined();
     });
 
     it('builds nothing when a quick tunnel needs cloudflared and it is absent', () => {
@@ -17,7 +15,6 @@ describe('createTunnelCoordinator', () => {
                 silentLogger,
                 () => undefined,
                 { mode: 'quick' },
-                noInstance,
                 () => undefined
             )
         ).toBeUndefined();
@@ -28,7 +25,6 @@ describe('createTunnelCoordinator', () => {
             silentLogger,
             () => undefined,
             { mode: 'quick' },
-            noInstance,
             () => '/opt/homebrew/bin/cloudflared'
         );
 
@@ -40,7 +36,6 @@ describe('createTunnelCoordinator', () => {
             silentLogger,
             () => undefined,
             { mode: 'url', url: 'https://bot.example.com' },
-            noInstance,
             () => undefined
         );
 

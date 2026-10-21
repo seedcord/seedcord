@@ -11,7 +11,7 @@ import { RemoveRunner } from '#commands/commands/remove/RemoveRunner';
 import { RemoveWizard, WIZARD_STEPS } from '#commands/commands/remove/RemoveWizard';
 import { levelMark } from '#core/output/levelMark';
 import { StepPrinter } from '#core/output/StepPrinter';
-import { APP_ID, fakeDiscord, slash } from '#tests/commands/commands/fakeBot';
+import { APP_ID, fakeDiscord, removeDeps, slash } from '#tests/commands/commands/fakeBot';
 
 import type { WizardQuestions } from '#commands/commands/remove/RemoveWizard';
 import type { APIApplicationCommand } from 'discord-api-types/v10';
@@ -59,7 +59,7 @@ function wizard(
         stdout: terminal.stdout,
         stderr: terminal.stdout
     });
-    const runner = new RemoveRunner(() => Promise.resolve(rest));
+    const runner = new RemoveRunner(removeDeps(rest));
     const done = new RemoveWizard(runner, printer, terminal.prompter, false).run(questions);
     return { deleted: deletes, cleared: puts, done };
 }

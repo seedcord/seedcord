@@ -6,9 +6,12 @@ import { silentLogger } from '#tests/silentLogger';
 import type { TunnelCoordinator } from '#commands/dev/tunnel/TunnelCoordinator';
 import type { ResolvedTunnel } from '#core/config/schema';
 import type { ILogger } from '@seedcord/types';
+import type { SeedcordInstance } from '@seedcord/types/internal';
 
 const QUICK: ResolvedTunnel = { mode: 'quick' };
 const OFF: ResolvedTunnel = { mode: 'off' };
+// justified: the router passes the instance through to the coordinator untouched
+const INSTANCE = {} as SeedcordInstance;
 
 // justified: the router reads only onPort and stop off the coordinator
 function fakeCoordinator(overrides: Partial<TunnelCoordinator> = {}): TunnelCoordinator {
@@ -30,7 +33,7 @@ describe('TunnelRouter', () => {
             { ...silentLogger, error }
         );
 
-        await expect(routing.route(QUICK, { type: 'server-listening', port: 1 })).resolves.toBeUndefined();
+        await expect(routing.route(QUICK, 1, INSTANCE)).resolves.toBeUndefined();
 
         expect(error).toHaveBeenCalledOnce();
         expect(error.mock.calls[0]?.[1]).toBe(boom);
@@ -39,41 +42,27 @@ describe('TunnelRouter', () => {
     it('hands the bound port to the coordinator', async () => {
         const onPort = vi.fn().mockResolvedValue(undefined);
 
-        await router(fakeCoordinator({ onPort })).route(QUICK, {
-            type: 'server-listening',
-            port: 4321
-        });
+        await router(fakeCoordinator({ onPort })).route(QUICK, 4321, INSTANCE);
 
-        expect(onPort).toHaveBeenCalledExactlyOnceWith(4321);
+        expect(onPort).toHaveBeenCalledExactlyOnceWith(4321, INSTANCE);
     });
 
     it('stays out of the way when the config turns the tunnel off', async () => {
         const onPort = vi.fn().mockResolvedValue(undefined);
         const warn = vi.fn();
 
-        await router(fakeCoordinator({ onPort }), { ...silentLogger, warn }).route(OFF, {
-            type: 'server-listening',
-            port: 4321
-        });
+        await router(fakeCoordinator({ onPort }), { ...silentLogger, warn }).route(OFF, 4321, INSTANCE);
 
         expect(onPort).not.toHaveBeenCalled();
         expect(warn).not.toHaveBeenCalled();
-    });
-
-    it('ignores every event that is not a bound port', async () => {
-        const onPort = vi.fn().mockResolvedValue(undefined);
-
-        await router(fakeCoordinator({ onPort })).route(QUICK, { type: 'restart-required' });
-
-        expect(onPort).not.toHaveBeenCalled();
     });
 
     it('names the install command once when cloudflared is absent', async () => {
         const warn = vi.fn();
         const routing = router(undefined, { ...silentLogger, warn });
 
-        await routing.route(QUICK, { type: 'server-listening', port: 1 });
-        await routing.route(QUICK, { type: 'server-listening', port: 2 });
+        await routing.route(QUICK, 1, INSTANCE);
+        await routing.route(QUICK, 2, INSTANCE);
 
         expect(warn).toHaveBeenCalledOnce();
     });
@@ -85,7 +74,7 @@ describe('TunnelRouter', () => {
     it('stop reaches the coordinator', async () => {
         const stop = vi.fn().mockResolvedValue(undefined);
         const routing = router(fakeCoordinator({ stop }));
-        await routing.route(QUICK, { type: 'server-listening', port: 1 });
+        await routing.route(QUICK, 1, INSTANCE);
 
         await routing.stop();
 
@@ -96,8 +85,8 @@ describe('TunnelRouter', () => {
         const make = vi.fn(() => fakeCoordinator());
         const routing = new TunnelRouter(make, silentLogger);
 
-        await routing.route(QUICK, { type: 'server-listening', port: 1 });
-        await routing.route(QUICK, { type: 'server-listening', port: 2 });
+        await routing.route(QUICK, 1, INSTANCE);
+        await routing.route(QUICK, 2, INSTANCE);
 
         expect(make).toHaveBeenCalledOnce();
     });
@@ -111,21 +100,21 @@ describe('TunnelRouter', () => {
             .mockReturnValueOnce(fakeCoordinator({ onPort: onFreshPort }));
         const routing = new TunnelRouter(make, silentLogger);
 
-        await routing.route({ mode: 'url', url: 'https://stale.example.com' }, { type: 'server-listening', port: 1 });
-        await routing.route({ mode: 'url', url: 'https://fresh.example.com' }, { type: 'server-listening', port: 2 });
+        await routing.route({ mode: 'url', url: 'https://stale.example.com' }, 1, INSTANCE);
+        await routing.route({ mode: 'url', url: 'https://fresh.example.com' }, 2, INSTANCE);
 
         expect(make).toHaveBeenCalledTimes(2);
         expect(make.mock.calls[1]?.[0]).toEqual({ mode: 'url', url: 'https://fresh.example.com' });
         expect(stopStale).toHaveBeenCalledOnce();
-        expect(onFreshPort).toHaveBeenCalledExactlyOnceWith(2);
+        expect(onFreshPort).toHaveBeenCalledExactlyOnceWith(2, INSTANCE);
     });
 
     it('drops the running tunnel when a restart turns it off', async () => {
         const stop = vi.fn().mockResolvedValue(undefined);
         const routing = new TunnelRouter(() => fakeCoordinator({ stop }), silentLogger);
 
-        await routing.route({ mode: 'url', url: 'https://stale.example.com' }, { type: 'server-listening', port: 1 });
-        await routing.route(OFF, { type: 'server-listening', port: 2 });
+        await routing.route({ mode: 'url', url: 'https://stale.example.com' }, 1, INSTANCE);
+        await routing.route(OFF, 2, INSTANCE);
 
         expect(stop).toHaveBeenCalledOnce();
     });
@@ -135,7 +124,7 @@ describe('TunnelRouter', () => {
         const boom = new Error('cloudflared refused to close');
         const routing = router(fakeCoordinator({ stop: () => Promise.reject(boom) }), { ...silentLogger, warn });
 
-        await routing.route(QUICK, { type: 'server-listening', port: 1 });
+        await routing.route(QUICK, 1, INSTANCE);
 
         await expect(routing.stop()).resolves.toBeUndefined();
         expect(warn).toHaveBeenCalledOnce();
@@ -147,12 +136,9 @@ describe('TunnelRouter', () => {
         const warn = vi.fn();
         const configured: ResolvedTunnel = { mode: 'url', url: 'https://bot.example.com' };
 
-        await router(fakeCoordinator({ onPort }), { ...silentLogger, warn }).route(configured, {
-            type: 'server-listening',
-            port: 4321
-        });
+        await router(fakeCoordinator({ onPort }), { ...silentLogger, warn }).route(configured, 4321, INSTANCE);
 
-        expect(onPort).toHaveBeenCalledExactlyOnceWith(4321);
+        expect(onPort).toHaveBeenCalledExactlyOnceWith(4321, INSTANCE);
         expect(warn).not.toHaveBeenCalled();
     });
 });

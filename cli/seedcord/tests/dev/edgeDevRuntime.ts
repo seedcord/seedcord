@@ -1,6 +1,4 @@
-import { once } from 'node:events';
 import { readdir, readFile, writeFile } from 'node:fs/promises';
-import { createServer as createHttpServer } from 'node:http';
 import { join } from 'node:path';
 
 import { LoggerChannelRegistry } from '@seedcord/logger';
@@ -24,7 +22,6 @@ import type { DevEventHandler } from '#commands/dev/runtime/events';
 import type { ResolvedEdgeTarget, ResolvedSeedcordConfig } from '#core/config/schema';
 import type { LogRecord } from '@seedcord/types';
 import type { SeedcordInstance } from '@seedcord/types/internal';
-import type { AddressInfo } from 'node:net';
 
 // a port probed up front can go to another worker before the runtime binds it
 const ANY_PORT = 0;
@@ -98,38 +95,6 @@ export class WaveHandler extends SlashHandler<'wave'> {
     }
 }
 `;
-
-const OK = 200;
-
-interface FakeDiscord {
-    api: string;
-    deployedNames: string[][];
-}
-
-// answers the reads a dev startup makes and records every command PUT
-export async function fakeDiscordApi(): Promise<FakeDiscord> {
-    const deployedNames: string[][] = [];
-    const server = createHttpServer((request, response) => {
-        const chunks: Buffer[] = [];
-        request.on('data', (chunk: Buffer) => chunks.push(chunk));
-        request.on('end', () => {
-            response.writeHead(OK, { 'content-type': 'application/json' });
-            if (request.method !== 'PUT') {
-                response.end(JSON.stringify({ username: 'fake', items: [] }));
-                return;
-            }
-            // justified: the bulk-overwrite body is an array of command JSON
-            const commands = JSON.parse(Buffer.concat(chunks).toString()) as { name: string }[];
-            deployedNames.push(commands.map((command) => command.name));
-            response.end(JSON.stringify(commands.map((command, index) => ({ ...command, id: String(index + 1) }))));
-        });
-    }).listen(0);
-    await once(server, 'listening');
-    onTestFinished(() => void server.close());
-    // justified: address() is AddressInfo once a TCP server is listening
-    const { port } = server.address() as AddressInfo;
-    return { api: `http://localhost:${port}/api`, deployedNames };
-}
 
 export async function editFile(path: string, edit: (text: string) => string): Promise<void> {
     await writeFile(path, edit(await readFile(path, 'utf8')));

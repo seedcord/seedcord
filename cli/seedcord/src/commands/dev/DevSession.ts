@@ -19,7 +19,6 @@ import type { DevLock } from '#core/state/DevLock';
 import type { StateFolder } from '#core/state/StateFolder';
 import type { DevStore } from '#ui/stores/DevStore';
 import type { DevRuntime } from './runtime/DevRuntime';
-import type { DevEventHandler } from './runtime/events';
 import type { ILogger } from '@seedcord/types';
 
 // gonna wait up to 5s otherwise a command import could block quitting forever
@@ -31,8 +30,7 @@ export interface DevSessionDeps {
     readonly codegenLogger: ILogger;
     readonly state: StateFolder;
     readonly lock: DevLock;
-    readonly onEvent: DevEventHandler;
-    readonly onInstanceLoaded: (instance: SeedcordInstance) => void;
+    readonly onListening: (port: number, instance: SeedcordInstance) => void;
 }
 
 export class DevSession {
@@ -61,10 +59,16 @@ export class DevSession {
             state: this.deps.state,
             onEvent: (event) => {
                 this.deps.store.apply(event);
-                this.deps.onEvent(event);
+                if (event.type === 'server-listening') this.deps.onListening(event.port, this.startedInstance());
             }
         });
         profileMark('vite');
+    }
+
+    // only a bot that run() loaded and started can report a port
+    private startedInstance(): SeedcordInstance {
+        if (!this.instance) throw new SeedcordError(SeedcordErrorCode.CliDevRuntimeNotRunning, ['onListening']);
+        return this.instance;
     }
 
     private startTypecheck(): void {
@@ -100,7 +104,6 @@ export class DevSession {
         this.deps.lock.hold(readBotToken().applicationId, dirname(this.config.configFile));
 
         this.instance = instance;
-        this.deps.onInstanceLoaded(instance);
         store.setTransport({
             name: instance[HostAugmentTarget],
             version: instance[HostVersion],
