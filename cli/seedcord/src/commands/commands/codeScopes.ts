@@ -42,7 +42,7 @@ export function scopesInCode(found: readonly FoundCommand[], configuredGuilds: r
 
 export async function loadInstance({ projectLoader }: LoadDeps, projectDir: string): Promise<SeedcordInstance> {
     await using project = await openProjectWithSteps(quietSteps, projectLoader, { projectDir });
-    return importInstance(project.modules, project.config.instance);
+    return await importInstance(project.modules, project.config.instance);
 }
 
 export async function loadCodeScopes(

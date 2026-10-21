@@ -85,12 +85,12 @@ export class CoordinatedStartup extends CoordinatedLifecycle<StartupPhase> {
 
         try {
             for (const step of steps) {
+                await step();
                 // eslint-disable-next-line @typescript-eslint/no-unnecessary-condition -- abort() can flip isStartingUp to false mid-loop from the cli
                 if (!this.#isStartingUp) {
                     this.logger.warn('Startup sequence aborted');
                     return;
                 }
-                await step();
             }
 
             this.#hasStarted = true;

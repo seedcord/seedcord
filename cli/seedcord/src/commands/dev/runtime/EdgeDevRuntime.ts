@@ -23,6 +23,7 @@ import { functionExportsOf } from '#core/modules/workerExports';
 
 import { BaseDevRuntime } from './BaseDevRuntime';
 import { devWatchOptions, edgeViteConfig } from './devServerConfig';
+import { fenceSignals } from './fenceSignals';
 import { listenForInteractions } from './listenForInteractions';
 import { loadWorkerEntry } from './loadWorkerEntry';
 
@@ -88,6 +89,7 @@ export class EdgeDevRuntime extends BaseDevRuntime<EdgeStarted> {
         const { config } = context;
         const { files } = context;
         const { viteRoot } = this.target;
+        resources.use(fenceSignals());
         installCliLogSinks(resources);
         this.emit(context, { type: 'progress', status: 'Loading Cloudflare plugin…' });
         const [folders, cloudflare, workerEnv] = await Promise.all([

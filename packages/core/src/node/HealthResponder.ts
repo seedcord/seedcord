@@ -6,7 +6,6 @@ const HTTP_SERVICE_UNAVAILABLE = 503;
 const DEFAULT_HEALTH_CHECK_PATH = '/health';
 const JSON_HEADERS = { 'Content-Type': 'application/json' };
 
-// undefined turns the health check off
 export function healthCheckConfig(option?: HealthCheckOption): HealthCheckConfig | undefined {
     if (option === false) return undefined;
     return typeof option === 'object' ? option : {};

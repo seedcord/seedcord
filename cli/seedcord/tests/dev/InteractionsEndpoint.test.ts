@@ -164,16 +164,12 @@ describe('InteractionsEndpoint', () => {
         expect(patch).not.toHaveBeenCalled();
     });
 
-    it('clears the url it set with a null and writes nothing before a set', async () => {
+    it('clears the endpoint with a null', async () => {
         const { rest: client, patch } = rest();
-        const endpoint = endpointFor(client);
 
-        await endpoint.clear();
-        expect(patch).not.toHaveBeenCalled();
+        await endpointFor(client).clear(INSTANCE);
 
-        await endpoint.set(TUNNEL, RUNNING, INSTANCE);
-        await endpoint.clear();
-        expect(patch).toHaveBeenLastCalledWith(Routes.currentApplication(), {
+        expect(patch).toHaveBeenCalledExactlyOnceWith(Routes.currentApplication(), {
             body: { interactions_endpoint_url: null }
         });
     });

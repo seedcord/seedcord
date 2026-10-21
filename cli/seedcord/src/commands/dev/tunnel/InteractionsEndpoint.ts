@@ -36,8 +36,6 @@ interface WrittenEndpoint {
 
 export class InteractionsEndpoint {
     private written: WrittenEndpoint | undefined;
-    // quit calls clear() after the session that loaded the bot has stopped
-    private lastRest: EndpointRest | undefined;
 
     // read per request because a restart reloads .env and the bot
     constructor(
@@ -59,9 +57,8 @@ export class InteractionsEndpoint {
     public async set(url: string, signal: AbortSignal, instance: SeedcordInstance): Promise<void> {
         signal.throwIfAborted();
         const { applicationId } = this.token();
-        this.lastRest = this.rest(instance);
         try {
-            await write(this.lastRest, url);
+            await write(this.rest(instance), url);
         } catch (error: unknown) {
             if (!unverified(error)) throw error;
             throw new SeedcordError(SeedcordErrorCode.CliTunnelNotVerified, [url]);
@@ -70,9 +67,8 @@ export class InteractionsEndpoint {
         this.written = { applicationId, url };
     }
 
-    public async clear(): Promise<void> {
-        if (!this.lastRest) return;
-        await write(this.lastRest, null);
+    public async clear(instance: SeedcordInstance): Promise<void> {
+        await write(this.rest(instance), null);
         this.written = undefined;
     }
 }

@@ -46,10 +46,13 @@ function elapsedSince(startedAt: number): () => string {
 export class TunnelCoordinator {
     private live: LiveTunnel | undefined;
     private current: AbortController | undefined;
+    // a restart that keeps the endpoint still brings a new bot, maybe with a new token
+    private latestInstance: SeedcordInstance | undefined;
 
     constructor(private readonly deps: CoordinatorDeps) {}
 
     public async onPort(port: number, instance: SeedcordInstance): Promise<void> {
+        this.latestInstance = instance;
         if (this.live?.port === port) return this.registerAgain(this.live, instance);
 
         this.live = undefined;
@@ -114,16 +117,17 @@ export class TunnelCoordinator {
     }
 
     public async stop(): Promise<void> {
-        if (!this.current) return;
+        const { current, latestInstance } = this;
+        if (!current || !latestInstance) return;
 
         this.live = undefined;
-        this.current.abort();
+        current.abort();
         this.current = undefined;
         this.deps.onStatus(null);
         if (this.deps.kind === 'configured') return;
 
         try {
-            await this.deps.endpoint.clear();
+            await this.deps.endpoint.clear(latestInstance);
         } catch (error: unknown) {
             this.deps.logger.warn('Could not clear the interactions endpoint', error);
         }

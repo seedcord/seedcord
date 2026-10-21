@@ -125,16 +125,28 @@ export async function fakeProject({
         viteMode: 'development',
         vitePlugins: vitePluginsOf()
     };
-    // justified: the commands runners read only importModule off the loader
-    const modules = {
-        importModule: (path: string) => Promise.resolve(byPath.get(path) ?? {}),
-        [Symbol.asyncDispose]: () => Promise.resolve()
-    } as ModuleLoader & AsyncDisposable;
     return {
         readConfig: () => Promise.resolve(loadedConfig(config)),
-        openProject: (loaded) => Promise.resolve(new Project(loaded.config, loaded.files, modules)),
+        openProject: (loaded) => Promise.resolve(new Project(loaded.config, loaded.files, moduleLoader(byPath))),
         state: new StateFolder(root, silentLogger)
     };
+}
+
+// a fresh one per project, like the real loader. it fails an import that is still running when vite closes
+function moduleLoader(byPath: ReadonlyMap<string, Record<string, unknown>>): ModuleLoader & AsyncDisposable {
+    let closed = false;
+    // justified: the commands runners read only importModule off the loader
+    return {
+        importModule: async (path: string) => {
+            await new Promise(setImmediate);
+            if (closed) throw new Error('the module runner closed during the import');
+            return byPath.get(path) ?? {};
+        },
+        [Symbol.asyncDispose]: () => {
+            closed = true;
+            return Promise.resolve();
+        }
+    } as ModuleLoader & AsyncDisposable;
 }
 
 // a function answers a GET from its query

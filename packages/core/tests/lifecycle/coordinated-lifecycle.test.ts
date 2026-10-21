@@ -140,4 +140,12 @@ describe('CoordinatedStartup failure and guards', () => {
         expect(startup.isReady).toBe(false);
         expect(readyRan).toBe(false);
     });
+
+    it('abort() inside the step after Ready keeps isReady false', async () => {
+        const startup = new CoordinatedStartup();
+
+        await startup.run(() => startup.abort());
+
+        expect(startup.isReady).toBe(false);
+    });
 });
