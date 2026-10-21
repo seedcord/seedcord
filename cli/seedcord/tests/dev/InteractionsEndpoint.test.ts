@@ -173,18 +173,18 @@ describe('InteractionsEndpoint', () => {
         expect(writtenWith).toEqual(['first-token', 'first-token']);
     });
 
-    it('reuses the url it set for a restarted bot of the same application, then clears with its token', async () => {
+    it('reuses the url only for a restarted bot of the same application, then clears with its token', async () => {
         const { endpoint, writtenWith, readToken } = recordingEndpoint();
         await endpoint.set(TUNNEL, RUNNING, INSTANCE);
 
         readToken(() => ({ value: 'reset-token', applicationId: TOKEN.applicationId }));
         expect(endpoint.reuse(TUNNEL, INSTANCE)).toBe(true);
+        readToken(() => ({ value: 'other-app-token', applicationId: '2' }));
+        expect(endpoint.reuse(TUNNEL, INSTANCE)).toBe(false);
+
         readToken(unset);
         await endpoint.clear();
         expect(writtenWith).toEqual(['first-token', 'reset-token']);
-
-        readToken(() => ({ value: 'other-app-token', applicationId: '2' }));
-        expect(endpoint.reuse(TUNNEL, INSTANCE)).toBe(false);
     });
 });
 

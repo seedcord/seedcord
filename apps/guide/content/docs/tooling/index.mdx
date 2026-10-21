@@ -67,7 +67,7 @@ A project from `create-seedcord` wraps these as scripts, along with `check`, `co
 Each transport package declares its own `Seedcord` and its own config type, and a few keys only exist on one of them.
 
 - Both http configs take `bot.restOptions`. Only a node http server takes `port`, which defaults to 3000, and `port: false` lets [your own server](/build/embed) host the bot. TypeScript rejects `port`, `lifecycle`, and `healthCheck` on an edge bot.
-- A gateway bot runs a small health server on port 6967 that answers `/health`. Its `healthCheck` key takes `false` to turn that off, `true` for the defaults, or an object with the optional fields `port`, `path`, and `host`. A node http server answers `/health` on its own `port`. Its `healthCheck` takes `false` to turn that off or an object with `path` to move it.
+- `healthCheck` takes different options on gateway and on a node http server. [The health server](/build/server#the-health-server) covers both.
 - [`Emojis`](ref:gateway/Emojis) on gateway holds a subclass of [`ResolvedEmoji`](ref:core/ResolvedEmoji) tied to the discord.js `GuildEmoji` or `ApplicationEmoji`. [`Emojis`](ref:http/Emojis) on http holds a plain `ResolvedEmoji`.
 
 </Callout>

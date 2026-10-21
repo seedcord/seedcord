@@ -111,7 +111,7 @@ A bot that calls `Bun.*` only runs on Bun after that, so use these APIs only if 
 
 ## The health server
 
-Most hosting platforms call an http endpoint to check that your process is still alive. A gateway bot opens a small server that answers `/health` on port 6967 once startup finishes, after every plugin's `ready()`. It does this under `seedcord dev` too.
+Most hosting platforms call an http endpoint to check that your process is still alive. A gateway bot opens a small server that answers `/health` on port 6967 once startup finishes, after every plugin's `ready()`, and closes it when the bot shuts down. It does this under `seedcord dev` too.
 
 ```ts twoslash title="src/bot.ts"
 import { Seedcord } from '@seedcord/gateway';
@@ -135,7 +135,7 @@ Change `port` or `path` if your host expects its health check somewhere else. Se
 
 <Callout type="transport" only="http">
 
-A node http bot answers `/health` on its own `port` with a 503 until startup finishes, then with a 200. Its `healthCheck` takes `false` to turn that off or `{ path }` to move it. A bot on Cloudflare Workers doesn't answer a health path.
+A node http bot answers `/health` on its own `port` with a 503 until startup finishes, then with a 200. Once shutdown starts, it answers 503 again. Its `healthCheck` takes `false` to turn that off, `true` or nothing for `/health`, or `{ path }` to move it. A bot on Cloudflare Workers doesn't answer a health path.
 
 </Callout>
 
