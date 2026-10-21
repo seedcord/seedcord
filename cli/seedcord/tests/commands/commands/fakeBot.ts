@@ -1,9 +1,11 @@
-import { EventEmitter } from 'node:events';
+import { EventEmitter, once } from 'node:events';
 import { mkdir, mkdtempDisposable, writeFile } from 'node:fs/promises';
+import { createServer } from 'node:http';
 import { tmpdir } from 'node:os';
 import { join, resolve } from 'node:path';
 import { stripVTControlCharacters } from 'node:util';
 
+import { REST } from '@discordjs/rest';
 import { BuilderComponent, RegisterCommand } from '@seedcord/core';
 import { SeedcordBrand } from '@seedcord/types/internal';
 import { ApplicationCommandType, Routes } from 'discord-api-types/v10';
@@ -20,9 +22,9 @@ import type { ProjectOpener } from '#core/config/openProjectWithSteps';
 import type { ResolvedSeedcordConfig } from '#core/config/schema';
 import type { ModuleLoader } from '#core/modules/ModuleLoader';
 import type { Terminal } from '#core/output/terminal';
-import type { REST } from '@discordjs/rest';
 import type { CommandBody } from '@seedcord/core/internal';
 import type { APIApplicationCommand } from 'discord-api-types/v10';
+import type { AddressInfo } from 'node:net';
 
 export const APP_ID = 'app-1';
 
@@ -49,6 +51,7 @@ interface BotOptions {
     commandsPath?: string | null;
     guilds?: string[];
     edge?: boolean;
+    rest?: REST;
 }
 
 // a test that reuses a project reuses its last deploy
@@ -81,7 +84,8 @@ export async function fakeProject({
     commands = [Ping, Config],
     commandsPath = './commands',
     guilds = [],
-    edge = false
+    edge = false,
+    rest = new REST()
 }: BotOptions = {}): Promise<FakeProject> {
     const dir = await mkdtempDisposable(join(tmpdir(), 'bot-'));
     onTestFinished(() => dir.remove());
@@ -97,7 +101,7 @@ export async function fakeProject({
     const instance = resolve(root, 'bot.ts');
     await writeFile(instance, '');
     byPath.set(instance, {
-        default: { [SeedcordBrand]: true, config: { bot: { commands: { path: commandsPath, guilds } } } }
+        default: { [SeedcordBrand]: true, rest, config: { bot: { commands: { path: commandsPath, guilds } } } }
     });
 
     const config: ResolvedSeedcordConfig = {
@@ -173,6 +177,40 @@ export function fakeDiscord(onDiscord: Record<string, unknown> = {}): FakeDiscor
     });
     // eslint-disable-next-line no-restricted-syntax -- the runners call only get, put, delete, on and off on this double
     return { rest: rest as unknown as REST, gets, puts, deletes };
+}
+
+const HTTP_OK = 200;
+const HTTP_NOT_FOUND = 404;
+
+interface DiscordServer extends AsyncDisposable {
+    // pass as the bot's REST `api` option
+    readonly api: string;
+    readonly routes: string[];
+}
+
+// a test that goes through restOf needs a real url
+export async function discordServer(onDiscord: Record<string, unknown>): Promise<DiscordServer> {
+    const routes: string[] = [];
+    const server = createServer((request, response) => {
+        const route = request.url?.replace(/^\/api\/v\d+/u, '').split('?')[0] ?? '';
+        routes.push(route);
+        const known = route in onDiscord;
+        response.writeHead(known ? HTTP_OK : HTTP_NOT_FOUND, { 'content-type': 'application/json' });
+        response.end(JSON.stringify(known ? onDiscord[route] : { message: 'Unknown', code: 0 }));
+    });
+    server.listen(0, '127.0.0.1');
+    await once(server, 'listening');
+    // justified: address() is AddressInfo once a TCP server is listening
+    const { port } = server.address() as AddressInfo;
+    return {
+        api: `http://127.0.0.1:${String(port)}/api`,
+        routes,
+        [Symbol.asyncDispose]: async () => {
+            server.closeAllConnections();
+            server.close();
+            await once(server, 'close');
+        }
+    };
 }
 
 // the bot's guild list, paged the way discord pages it after the id in the query

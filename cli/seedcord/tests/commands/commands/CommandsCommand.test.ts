@@ -80,7 +80,7 @@ async function run(
     const runners = {
         deployRunner: new DeployRunner({ ...deps, state: opened.state }),
         listRunner: new ListRunner(deps),
-        removeRunner: new RemoveRunner(deps)
+        removeRunner: new RemoveRunner(() => Promise.resolve(discord.rest))
     };
     await runCommands(prompter ? { ...runners, prompter } : runners, ...args);
     return discord;

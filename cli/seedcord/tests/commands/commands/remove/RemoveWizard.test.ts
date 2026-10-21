@@ -59,7 +59,7 @@ function wizard(
         stdout: terminal.stdout,
         stderr: terminal.stdout
     });
-    const runner = new RemoveRunner({ openDiscord: () => rest });
+    const runner = new RemoveRunner(() => Promise.resolve(rest));
     const done = new RemoveWizard(runner, printer, terminal.prompter, false).run(questions);
     return { deleted: deletes, cleared: puts, done };
 }

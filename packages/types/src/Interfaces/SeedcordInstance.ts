@@ -7,10 +7,12 @@ import type {
     HostVersion
 } from '#src/brand';
 import type { Config } from './Config';
+import type { REST } from '@discordjs/rest';
 
 // Core implements this. the CLI narrows a loaded module export to it after the SeedcordBrand runtime check
 export interface SeedcordInstance {
     readonly config: Config;
+    readonly rest: REST; // the CLI copies its options for every request it makes to discord
     readonly username: string | undefined; // the bot's discord username, for the dev status. undefined before login
 
     // symbol keys keep these out of autocomplete on a host

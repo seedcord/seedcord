@@ -1,12 +1,16 @@
-import { DiscordAPIError, RateLimitError } from '@discordjs/rest';
+import { DiscordAPIError, RateLimitError, REST } from '@discordjs/rest';
 import { isSeedcordError, SeedcordErrorCode } from '@seedcord/errors';
 import { RESTJSONErrorCodes, Routes } from 'discord-api-types/v10';
 import { describe, expect, it, vi } from 'vitest';
 
 import { InteractionsEndpoint } from '#commands/dev/tunnel/InteractionsEndpoint';
+import { bindEnv } from '#tests/bindEnv';
+import { FAKE_TOKEN } from '#tests/commands/build/smoke';
+import { discordServer } from '#tests/commands/commands/fakeBot';
 
 import type { EndpointRest } from '#commands/dev/tunnel/InteractionsEndpoint';
 import type { BotToken } from '@seedcord/errors/internal';
+import type { SeedcordInstance } from '@seedcord/types/internal';
 
 const TUNNEL = 'https://abc.trycloudflare.com';
 const RUNNING = new AbortController().signal;
@@ -64,18 +68,28 @@ function refusalWith(errors: unknown): DiscordAPIError {
 describe('InteractionsEndpoint', () => {
     it('holds the url it set until the token belongs to another application', async () => {
         const { rest: client } = rest();
-        const makeRest = vi.fn((_token: string) => client);
         let token = TOKEN;
-        const endpoint = new InteractionsEndpoint(() => token, makeRest);
+        const endpoint = new InteractionsEndpoint(
+            () => token,
+            () => client
+        );
 
         await endpoint.set(TUNNEL, RUNNING);
         expect(endpoint.holds(TUNNEL)).toBe(true);
 
         token = { value: 'second-token', applicationId: '2' };
         expect(endpoint.holds(TUNNEL)).toBe(false);
+    });
 
-        await endpoint.set(TUNNEL, RUNNING);
-        expect(makeRest).toHaveBeenLastCalledWith('second-token');
+    it("writes through the bot's own REST options", async () => {
+        await using discord = await discordServer({ [Routes.currentApplication()]: {} });
+        using _env = bindEnv({ DISCORD_BOT_TOKEN: FAKE_TOKEN });
+        // justified: create reads only rest off the instance
+        const instance = { rest: new REST({ api: discord.api }) } as SeedcordInstance;
+
+        await InteractionsEndpoint.create(() => instance).set(TUNNEL, RUNNING);
+
+        expect(discord.routes).toEqual([Routes.currentApplication()]);
     });
 
     it('patches the application with the url', async () => {

@@ -88,7 +88,7 @@ const SCENARIOS: Record<string, Scenario> = {
 async function runWizard(prompter: Prompter, questions: WizardQuestions): Promise<string> {
     const printer = new StepPrinter({ command: 'commands', labels: WIZARD_STEPS, verbose: false });
     printer.header();
-    await new RemoveWizard(new RemoveRunner({ openDiscord: () => rest }), printer, prompter, false).run(questions);
+    await new RemoveWizard(new RemoveRunner(() => Promise.resolve(rest)), printer, prompter, false).run(questions);
     return 'done';
 }
 

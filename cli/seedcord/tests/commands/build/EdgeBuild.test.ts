@@ -73,11 +73,11 @@ describe('EdgeBuild', () => {
         await using project = await openEdgeBot();
         const { target } = project.config;
         assert(target.kind === 'edge');
-        const { config } = await importInstance(project.modules, project.config.instance);
+        const instance = await importInstance(project.modules, project.config.instance);
         // opening the project binds process.env
         using _env = bindEnv({});
 
-        await expect(new EdgeBuild(project, target).readDiscord(config.bot)).rejects.toMatchObject({
+        await expect(new EdgeBuild(project, target).readDiscord(instance)).rejects.toMatchObject({
             code: SeedcordErrorCode.ConfigMissingEnv
         });
     });
@@ -86,10 +86,15 @@ describe('EdgeBuild', () => {
         await using project = await openEdgeBot();
         const { target, root } = project.config;
         assert(target.kind === 'edge');
-        const { config } = await importInstance(project.modules, project.config.instance);
+        const instance = await importInstance(project.modules, project.config.instance);
         const build = new EdgeBuild(project, target, { openDiscord: () => ({ get: () => Promise.resolve([]) }) });
+        const { config } = instance;
+        const elsewhere = {
+            ...instance,
+            config: { ...config, bot: { ...config.bot, commands: { path: './no-commands' } } }
+        };
 
-        await expect(build.readDiscord({ ...config.bot, commands: { path: './no-commands' } })).rejects.toMatchObject({
+        await expect(build.readDiscord(elsewhere)).rejects.toMatchObject({
             code: SeedcordErrorCode.CorePathUnreadable,
             message: expect.stringContaining(join(root, 'no-commands')) as string
         });

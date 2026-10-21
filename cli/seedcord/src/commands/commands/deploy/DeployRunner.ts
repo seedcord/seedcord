@@ -34,11 +34,11 @@ export class DeployRunner {
     }
 
     public async run(presenter: DeployPresenter, { force = false, yes = false }: DeployOptions = {}): Promise<void> {
-        const { target, instance, scopes } = await loadCodeScopes(presenter, this.deps, process.cwd());
-        if (!scopes) throw new SeedcordError(SeedcordErrorCode.CliDeployNoCommandsFolder, [instance]);
+        const { target, instancePath, instance, scopes } = await loadCodeScopes(presenter, this.deps, process.cwd());
+        if (!scopes) throw new SeedcordError(SeedcordErrorCode.CliDeployNoCommandsFolder, [instancePath]);
 
         const { session, targets } = await presenter.step('read discord', async () => {
-            const session = await DiscordSession.open(this.deps.openDiscord());
+            const session = await DiscordSession.open(this.deps.openDiscord(instance));
             return { session, targets: await session.readTargets([...scopes.keys()]) };
         });
         presenter.detail('app', paint.mute(session.appId));

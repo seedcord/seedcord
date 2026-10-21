@@ -52,11 +52,11 @@ export class ListRunner {
     }
 
     public async read(steps: Steps<ListStep>, scope = NO_EXTRA_GUILDS): Promise<Listing> {
-        const { scopes } = await loadCodeScopes(steps, this.deps, process.cwd());
+        const { instance, scopes } = await loadCodeScopes(steps, this.deps, process.cwd());
         const codeGuildIds = [...(scopes?.keys() ?? [])].filter((id) => id !== GLOBAL_ID);
 
         const { session, scan } = await steps.step('read discord', async () => {
-            const session = await DiscordSession.open(this.deps.openDiscord());
+            const session = await DiscordSession.open(this.deps.openDiscord(instance));
             const botGuilds = scope.allGuilds ? await session.guildsOf({ kind: 'all' }) : [];
             const ids = new Set([...codeGuildIds, ...scope.guildIds, ...botGuilds.map(({ id }) => id)]);
             const knownNames = new Map(botGuilds.map(({ id, name }) => [id, name]));

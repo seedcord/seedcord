@@ -341,6 +341,7 @@ Illustrative. When a word is missing from the table, apply section 1 and the tes
 | does more than X | state what it does |
 | names / naming, as a verb | banned. write the verb for what actually happens and rephrase the sentence in simple words if needed |
 | drop / dropped / dropping, standing in for a more exact verb | work out what happens to the thing in that sentence, then write the verb for it |
+| gone / is gone / goes away, standing in for what happened to a thing | write who did what to it: `stop()` closed the server, `runSession` set the field to `null`, the build deleted the file |
 | worth noting / surprisingly / you may notice | delete, state the fact |
 | good catch / fair point / great question | delete |
 | to be honest / frankly | delete |

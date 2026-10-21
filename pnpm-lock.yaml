@@ -1550,6 +1550,9 @@ importers:
 
   packages/types:
     dependencies:
+      '@discordjs/rest':
+        specifier: catalog:deps
+        version: 2.6.3
       discord-api-types:
         specifier: ^0.38.52
         version: 0.38.56

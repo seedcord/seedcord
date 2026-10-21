@@ -13,6 +13,7 @@ import { DevStore } from '#ui/stores/DevStore';
 import { LogStore } from '#ui/stores/LogStore';
 
 import { DevRunner } from './DevRunner';
+import { DevSignals } from './DevSignals';
 import { runPlain } from './runPlain';
 
 import type { Command } from '@commander-js/extra-typings';
@@ -34,21 +35,13 @@ export class DevCommand extends BaseCommand {
                 const stateFolder = new StateFolder(process.cwd(), this.logger);
                 const runner = DevRunner.create(store, stateFolder);
 
-                // ink intercepts Ctrl-C under raw mode. this fires only when stdin is not raw.
-                const onSignal = (): void => {
-                    void runner.quit();
-                };
-                process.once('SIGINT', onSignal);
-                process.once('SIGTERM', onSignal);
-
                 try {
+                    // ink takes Ctrl-C itself in raw mode
+                    using _signals = DevSignals.own(() => void runner.quit());
                     await (isInteractive() ? this.runDevApp(store, runner, stateFolder) : runPlain(store, runner));
                 } catch (error: unknown) {
                     this.logger.error(`${WORDMARK} dev failed`, error);
                     process.exitCode = 1;
-                } finally {
-                    process.off('SIGINT', onSignal);
-                    process.off('SIGTERM', onSignal);
                 }
 
                 // the in-ui logs went with the unmount

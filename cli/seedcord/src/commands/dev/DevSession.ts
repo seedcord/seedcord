@@ -32,6 +32,7 @@ export interface DevSessionDeps {
     readonly state: StateFolder;
     readonly lock: DevLock;
     readonly onEvent: DevEventHandler;
+    readonly onInstanceLoaded: (instance: SeedcordInstance) => void;
 }
 
 export class DevSession {
@@ -99,6 +100,7 @@ export class DevSession {
         this.deps.lock.hold(readBotToken().applicationId, dirname(this.config.configFile));
 
         this.instance = instance;
+        this.deps.onInstanceLoaded(instance);
         store.setTransport({
             name: instance[HostAugmentTarget],
             version: instance[HostVersion],

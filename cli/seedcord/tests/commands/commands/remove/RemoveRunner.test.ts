@@ -46,7 +46,7 @@ async function run({
     const discord = fakeDiscord(onDiscord);
     const lines: string[] = [];
     const confirm = vi.fn((_message: string) => Promise.resolve(answer));
-    const runner = new RemoveRunner({ openDiscord: () => discord.rest });
+    const runner = new RemoveRunner(() => Promise.resolve(discord.rest));
     await runner.run(new RemovePresenter(outputInto(lines), confirm, verbose), { mode, guilds, apply });
     return { ...discord, lines, confirm };
 }
@@ -77,7 +77,7 @@ describe('RemoveRunner.run', () => {
         });
         const presenter = new RemovePresenter(outputInto([]), () => Promise.resolve(true), false);
 
-        const removal = new RemoveRunner({ openDiscord: () => discord.rest }).run(presenter, {
+        const removal = new RemoveRunner(() => Promise.resolve(discord.rest)).run(presenter, {
             mode: new CleanMode(),
             guilds: { kind: 'named', ids: ['111', '222'] },
             apply: true
@@ -96,7 +96,7 @@ describe('RemoveRunner.run', () => {
         const lines: string[] = [];
         const presenter = new RemovePresenter(outputInto(lines), () => Promise.resolve(true), false);
 
-        const removal = new RemoveRunner({ openDiscord: () => discord.rest }).run(presenter, {
+        const removal = new RemoveRunner(() => Promise.resolve(discord.rest)).run(presenter, {
             mode: new CleanMode(),
             guilds: { kind: 'named', ids: ['111', '222'] },
             apply: true

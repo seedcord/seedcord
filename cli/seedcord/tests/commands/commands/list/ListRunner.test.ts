@@ -1,3 +1,4 @@
+import { REST } from '@discordjs/rest';
 import { SeedcordErrorCode } from '@seedcord/errors';
 import { ApplicationCommandOptionType, Routes } from 'discord-api-types/v10';
 import { describe, expect, it } from 'vitest';
@@ -5,14 +6,23 @@ import { describe, expect, it } from 'vitest';
 import { listingJson } from '#commands/commands/list/listingJson';
 import { ListPresenter } from '#commands/commands/list/ListPresenter';
 import { LIST_STEPS, ListRunner } from '#commands/commands/list/ListRunner';
+import { defaultRunnerDeps } from '#commands/commands/runnerDeps';
 import { quietSteps } from '#core/output/quietSteps';
 import { StepPrinter } from '#core/output/StepPrinter';
-import { APP_ID, fakeDiscord, fakeProject, pipedTerminal, slash } from '#tests/commands/commands/fakeBot';
+import { bindEnv } from '#tests/bindEnv';
+import { FAKE_TOKEN } from '#tests/commands/build/smoke';
+import {
+    APP_ID,
+    discordServer,
+    fakeDiscord,
+    fakeProject,
+    pipedTerminal,
+    slash
+} from '#tests/commands/commands/fakeBot';
 import { silentLogger } from '#tests/silentLogger';
 
 import type { ListScope } from '#commands/commands/list/ListRunner';
 import type { ProjectOpener } from '#core/config/openProjectWithSteps';
-import type { REST } from '@discordjs/rest';
 
 interface ListOptions {
     verbose?: boolean;
@@ -83,6 +93,16 @@ describe('ListRunner', () => {
         const listing = list(await fakeProject(), rest, { scope: { guildIds: ['222'], allGuilds: false } });
 
         await expect(listing).rejects.toMatchObject({ code: SeedcordErrorCode.CoreDiscordReadFailed });
+    });
+
+    it("reads discord through the bot's own REST options", async () => {
+        await using discord = await discordServer({ [Routes.currentApplication()]: { id: APP_ID }, ...ON_DISCORD });
+        using _env = bindEnv({ DISCORD_BOT_TOKEN: FAKE_TOKEN });
+        const project = await fakeProject({ commandsPath: null, rest: new REST({ api: discord.api }) });
+
+        await new ListRunner({ ...defaultRunnerDeps(), projectLoader: project }).read(quietSteps);
+
+        expect(discord.routes).toContain(Routes.applicationCommands(APP_ID));
     });
 
     it('lists every guild the bot is in with --all-guilds and reads no guild names one by one', async () => {

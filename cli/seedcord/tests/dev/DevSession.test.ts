@@ -58,6 +58,7 @@ function sessionDeps(store = new DevStore(), onEvent: DevEventHandler = () => un
     return {
         store,
         onEvent,
+        onInstanceLoaded: () => undefined,
         codegen: { writeFrom: () => Promise.resolve(UNCHANGED) },
         codegenLogger: silentLogger,
         state: new StateFolder(process.cwd(), silentLogger),

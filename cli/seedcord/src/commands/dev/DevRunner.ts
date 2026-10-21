@@ -1,4 +1,6 @@
 import { settleWithin } from '@seedcord/core/node/internal';
+import { SeedcordErrorCode } from '@seedcord/errors';
+import { SeedcordError } from '@seedcord/errors/internal';
 
 import { CodegenRunner } from '#commands/codegen/CodegenRunner';
 import { cliLogger } from '#core/cliLogger';
@@ -23,10 +25,11 @@ import type { DevSessionDeps } from './DevSession';
 import type { DevRuntime } from './runtime/DevRuntime';
 import type { TunnelCoordinator } from './tunnel/TunnelCoordinator';
 import type { TypedOmit } from '@seedcord/types';
+import type { SeedcordInstance } from '@seedcord/types/internal';
 
 const TUNNEL_TEARDOWN_MS = 3000;
 
-export interface DevRunnerDeps extends TypedOmit<DevSessionDeps, 'onEvent'> {
+export interface DevRunnerDeps extends TypedOmit<DevSessionDeps, 'onEvent' | 'onInstanceLoaded'> {
     readonly projectLoader: Pick<ProjectLoader, 'readConfig'>;
     readonly tunnel: TunnelRouter;
     readonly runtime: (target: ResolvedTarget) => DevRuntime;
@@ -36,6 +39,8 @@ type NextStep = 'session' | 'disconnected' | 'quit';
 
 export class DevRunner {
     private currentSession: DevSession | null = null;
+    // currentSession can be null by the time runQuit clears the tunnel's endpoint
+    private loadedInstance?: SeedcordInstance;
     private signalResolve?: () => void;
     private next: NextStep = 'session';
     private restarts = 0;
@@ -47,9 +52,14 @@ export class DevRunner {
         const codegenLogger = cliLogger('Codegen');
         const tunnelLogger = cliLogger('Tunnel');
         const makeCoordinator = (tunnel: ResolvedTunnel): TunnelCoordinator | undefined =>
-            createTunnelCoordinator(tunnelLogger, (status) => store.setTunnel(status), tunnel);
+            createTunnelCoordinator(
+                tunnelLogger,
+                (status) => store.setTunnel(status),
+                tunnel,
+                () => runner.instance()
+            );
 
-        return new DevRunner({
+        const runner = new DevRunner({
             projectLoader: new ProjectLoader(openModuleLoader, startupShell),
             store,
             state,
@@ -59,6 +69,13 @@ export class DevRunner {
             tunnel: new TunnelRouter(makeCoordinator, tunnelLogger),
             runtime: (target) => (target.kind === 'edge' ? new EdgeDevRuntime(target) : new ServerDevRuntime())
         });
+        return runner;
+    }
+
+    // DevSession loads the instance before the bot can send server-listening
+    private instance(): SeedcordInstance {
+        if (!this.loadedInstance) throw new SeedcordError(SeedcordErrorCode.CliDevRuntimeNotRunning, ['the tunnel']);
+        return this.loadedInstance;
     }
 
     public async run(): Promise<void> {
@@ -114,7 +131,10 @@ export class DevRunner {
         store.setIdleAnimation(config.idleAnimation);
         this.currentSession = new DevSession(config, files, this.deps.runtime(config.target), {
             ...this.deps,
-            onEvent: (event) => void tunnel.route(config.tunnel, event)
+            onEvent: (event) => void tunnel.route(config.tunnel, event),
+            onInstanceLoaded: (instance) => {
+                this.loadedInstance = instance;
+            }
         });
 
         try {

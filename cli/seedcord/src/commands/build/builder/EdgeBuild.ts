@@ -7,7 +7,7 @@ import { BotLayout, isInside } from '@seedcord/utils/internal';
 import { createBuilder } from 'vite';
 
 import { cliLogger } from '#core/cliLogger';
-import { restFromEnv } from '#core/discord/restFromEnv';
+import { restOf } from '#core/discord/restOf';
 import { BOT_ENVIRONMENT, LOOK_FOR_BUILD_PLUGIN } from '#core/modules/botEnvironment';
 import { importCloudflare, importCloudflareCopy } from '#core/modules/cloudflarePlugin';
 import { CommandScanner } from '#core/modules/CommandScanner';
@@ -31,15 +31,16 @@ import type { CommandsInCode } from './readDiscord';
 import type { NextCommand } from './TargetBuild';
 import type { REST } from '@discordjs/rest';
 import type { BakedIds } from '@seedcord/core/internal';
-import type { BotConfig, CommandsConfig } from '@seedcord/types';
+import type { CommandsConfig } from '@seedcord/types';
+import type { SeedcordInstance } from '@seedcord/types/internal';
 import type { EnvironmentOptions, Plugin, Rolldown } from 'vite';
 
 interface EdgeBuildDeps {
     importCloudflare: ImportCloudflare;
-    openDiscord: () => Pick<REST, 'get'>;
+    openDiscord: (instance: SeedcordInstance) => Pick<REST, 'get'>;
 }
 
-const DEFAULT_DEPS: EdgeBuildDeps = { importCloudflare, openDiscord: restFromEnv };
+const DEFAULT_DEPS: EdgeBuildDeps = { importCloudflare, openDiscord: restOf };
 
 function captureChunks(onChunks: (chunks: Rolldown.OutputChunk[]) => void): Plugin {
     return {
@@ -92,11 +93,12 @@ export class EdgeBuild extends TargetBuild {
         }
     }
 
-    public async readDiscord(bot: BotConfig): Promise<BakedIds> {
+    public async readDiscord(instance: SeedcordInstance): Promise<BakedIds> {
+        const { commands, emojis } = instance.config.bot;
         const read = await readDiscord({
-            rest: this.deps.openDiscord(),
-            commands: await this.commandsInCode(bot.commands),
-            emojis: bot.emojis
+            rest: this.deps.openDiscord(instance),
+            commands: await this.commandsInCode(commands),
+            emojis
         });
 
         warnLinks(this.logger, read);
