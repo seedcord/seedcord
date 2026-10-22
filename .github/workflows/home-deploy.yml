@@ -23,7 +23,7 @@ jobs:
     uses: $/.github/workflows/site-deploy.yml
     with:
       app: home
-      site_url: https://seedcord.org
+      site_origin: https://seedcord.org
     secrets:
       CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
       TURBO_TOKEN: ${{ secrets.TURBO_TOKEN }}

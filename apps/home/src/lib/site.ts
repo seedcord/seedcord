@@ -1,11 +1,9 @@
-import { HOME_URL, SiteAddress } from '@seedcord/ui';
+import { HOME } from '@seedcord/ui';
 import { OG_SIZE } from '@seedcord/ui/og';
 
 export { AUTHOR_GITHUB_URL, AUTHOR_URL, DISCORD_URL, DOCS_URL, GUIDE_URL, NPM_ORG_URL, REPO_URL } from '@seedcord/ui';
 
-const SITE = new SiteAddress(process.env.NEXT_PUBLIC_SITE_URL ?? HOME_URL);
-
-export const SITE_URL = SITE.url;
+export const SITE_URL = HOME.url;
 export const SITE_NAME = 'seedcord';
 export const SITE_DESCRIPTION =
     'A TypeScript framework for Discord bots, typed end to end, with generated slash-option types, typed customIds, reusable checks, any Vite plugin, hot reload, and a lot more.';
@@ -16,7 +14,7 @@ export const ENVAPT_URL = 'https://envapt.materwelon.dev';
 export const VITE_PLUGINS_URL = 'https://vite.dev/plugins/';
 
 export function canonicalUrl(path: string): string {
-    return SITE.at(path);
+    return HOME.at(path);
 }
 
 export const OG_SCALE = 3;

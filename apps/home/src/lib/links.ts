@@ -1,9 +1,6 @@
-import { DISCORD_URL, DOCS, GUIDE, HOME_URL, isSitePath } from '@seedcord/ui/sites';
+import { DISCORD_URL, DOCS, GUIDE, HOME_URL, isSitePath, PRODUCTION_ORIGIN } from '@seedcord/ui/sites';
 
-import { SITE_URL } from '#lib/site';
-
-// SITE_URL differs from seedcord.org in a preview build
-const SAME_SITE = new Set([new URL(HOME_URL).origin, new URL(SITE_URL).origin]);
+const SAME_SITE = new Set([PRODUCTION_ORIGIN, new URL(HOME_URL).origin]);
 const OTHER_APPS = [GUIDE.path, DOCS.path];
 const OFF_SITE_REDIRECTS = [DISCORD_URL];
 

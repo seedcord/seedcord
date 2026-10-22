@@ -71,7 +71,6 @@ jobs:
       - name: Render every page
         run: pnpm -C apps/docs build
         env:
-          NEXT_PUBLIC_SITE_URL: https://seedcord.org/docs
           DOCS_BUILD_CPUS: 4
 
       - name: Check every docs link

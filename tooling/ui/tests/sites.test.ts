@@ -1,6 +1,39 @@
-import { describe, expect, it } from 'vitest';
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
 import { SiteAddress } from '#src/sites';
+
+describe('the three sites', () => {
+    beforeEach(() => {
+        vi.resetModules();
+    });
+
+    afterEach(() => {
+        vi.unstubAllEnvs();
+    });
+
+    it('sit on the production origin by default', async () => {
+        const { HOME_URL, GUIDE_URL, DOCS_URL } = await import('#src/sites');
+
+        expect([HOME_URL, GUIDE_URL, DOCS_URL]).toEqual([
+            'https://seedcord.org',
+            'https://seedcord.org/guide',
+            'https://seedcord.org/docs'
+        ]);
+    });
+
+    it('move home and the guide to NEXT_PUBLIC_SITE_ORIGIN, and docs and the chat link stay on production', async () => {
+        vi.stubEnv('NEXT_PUBLIC_SITE_ORIGIN', 'https://preview.seedcord.org');
+
+        const { HOME_URL, GUIDE_URL, DOCS_URL, DISCORD_URL } = await import('#src/sites');
+
+        expect([HOME_URL, GUIDE_URL, DOCS_URL, DISCORD_URL]).toEqual([
+            'https://preview.seedcord.org',
+            'https://preview.seedcord.org/guide',
+            'https://seedcord.org/docs',
+            'https://seedcord.org/chat/'
+        ]);
+    });
+});
 
 describe('SiteAddress', () => {
     const guide = new SiteAddress('https://seedcord.org/guide');

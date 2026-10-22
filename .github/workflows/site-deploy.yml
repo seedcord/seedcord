@@ -7,8 +7,8 @@ on:
         description: The app folder under apps/ to deploy
         required: true
         type: string
-      site_url:
-        description: The public URL the build renders links against
+      site_origin:
+        description: The origin the build renders links against
         required: true
         type: string
     secrets:
@@ -44,7 +44,7 @@ jobs:
         run: pnpm turbo build --filter="@seedcord/$APP..."
         env:
           APP: ${{ inputs.app }}
-          NEXT_PUBLIC_SITE_URL: ${{ inputs.site_url }}
+          NEXT_PUBLIC_SITE_ORIGIN: ${{ inputs.site_origin }}
 
       - name: Deploy
         uses: cloudflare/wrangler-action@ebbaa1584979971c8614a24965b4405ff95890e0 # v4.0.0
