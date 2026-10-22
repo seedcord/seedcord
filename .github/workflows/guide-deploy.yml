@@ -2,7 +2,7 @@ name: guide-deploy
 
 on:
   push:
-    branches: [main]
+    branches: [main, next]
     paths:
       - 'apps/guide/**'
       - 'tooling/ui/**'
@@ -23,7 +23,7 @@ jobs:
     uses: $/.github/workflows/site-deploy.yml
     with:
       app: guide
-      site_origin: https://seedcord.org
+      preview: ${{ github.ref_name != 'main' }}
     secrets:
       CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
       TURBO_TOKEN: ${{ secrets.TURBO_TOKEN }}

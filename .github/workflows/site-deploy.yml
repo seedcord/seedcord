@@ -7,10 +7,10 @@ on:
         description: The app folder under apps/ to deploy
         required: true
         type: string
-      site_origin:
-        description: The origin the build renders links against
-        required: true
-        type: string
+      preview:
+        description: Deploy to the preview environment at preview.seedcord.org
+        type: boolean
+        default: false
     secrets:
       CLOUDFLARE_API_TOKEN:
         required: true
@@ -44,7 +44,7 @@ jobs:
         run: pnpm turbo build --filter="@seedcord/$APP..."
         env:
           APP: ${{ inputs.app }}
-          NEXT_PUBLIC_SITE_ORIGIN: ${{ inputs.site_origin }}
+          NEXT_PUBLIC_SITE_ORIGIN: ${{ inputs.preview && 'https://preview.seedcord.org' || 'https://seedcord.org' }}
 
       - name: Deploy
         uses: cloudflare/wrangler-action@ebbaa1584979971c8614a24965b4405ff95890e0 # v4.0.0
@@ -53,4 +53,4 @@ jobs:
           accountId: ${{ vars.CLOUDFLARE_ACCOUNT_ID }}
           workingDirectory: apps/${{ inputs.app }}
           packageManager: pnpm
-          command: deploy
+          command: ${{ inputs.preview && 'deploy --env preview' || 'deploy' }}

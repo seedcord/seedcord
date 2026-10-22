@@ -1,3 +1,5 @@
+import { IS_PRODUCTION } from '@seedcord/ui';
+
 import { lastChanged, newestChange, postDate } from '#lib/blog/summary';
 import { listedPosts } from '#lib/blog/posts';
 import { BLOG_PATH } from '#lib/blog/paths';
@@ -8,6 +10,8 @@ import type { MetadataRoute } from 'next';
 export const revalidate = false;
 
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
+    if (!IS_PRODUCTION) return [];
+
     const posts = await listedPosts();
     const newest = newestChange(posts);
 

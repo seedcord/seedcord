@@ -30,6 +30,8 @@ export const PRODUCTION_ORIGIN = 'https://seedcord.org';
 
 const ORIGIN = new URL(process.env.NEXT_PUBLIC_SITE_ORIGIN ?? PRODUCTION_ORIGIN).origin;
 
+export const IS_PRODUCTION = ORIGIN === PRODUCTION_ORIGIN;
+
 export const HOME = new SiteAddress(ORIGIN);
 export const GUIDE = new SiteAddress(`${ORIGIN}/guide`);
 export const DOCS = new SiteAddress(`${PRODUCTION_ORIGIN}/docs`);
