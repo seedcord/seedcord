@@ -1,6 +1,6 @@
 import { agentLinkHeader } from '@seedcord/ui/agents';
 import { PageAsset, TWIN } from '@seedcord/ui/PageAsset';
-import { GUIDE } from '@seedcord/ui/sites';
+import { GUIDE, PRODUCTION_ORIGIN } from '@seedcord/ui/sites';
 
 import { redirectFor } from './src/lib/redirects';
 
@@ -11,6 +11,8 @@ interface Env {
 const TRAILING_SLASH_REDIRECT = 307;
 const PERMANENT_REDIRECT = 308;
 const NOT_FOUND = 404;
+
+const PRODUCTION_HOST = new URL(PRODUCTION_ORIGIN).hostname;
 
 const MARKDOWN = 'text/markdown';
 const HTML = 'text/html';
@@ -66,7 +68,7 @@ async function fromAssets(env: Env, request: Request, page: string): Promise<Res
 
 const handler = {
     async fetch(request: Request, env: Env): Promise<Response> {
-        const { pathname } = new URL(request.url);
+        const { hostname, pathname } = new URL(request.url);
         // the zone routes only /guide and /guide/* here
         const page = pathname.slice(GUIDE.path.length) || '/';
 
@@ -95,6 +97,7 @@ const handler = {
         if (contentType.includes('text/html') || contentType.includes(MARKDOWN)) {
             response.headers.set('Vary', 'Accept');
         }
+        if (hostname !== PRODUCTION_HOST) response.headers.set('X-Robots-Tag', 'noindex, nofollow');
         return response;
     }
 };

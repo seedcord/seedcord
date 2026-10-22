@@ -43,6 +43,16 @@ function asking(path: string, accept: string): Request {
     return new Request(`${GUIDE}${path}`, { headers: { accept } });
 }
 
+describe('search indexing', () => {
+    it('is off on every host except production', async () => {
+        const preview = await handler.fetch(new Request('https://preview.seedcord.org/guide/'), serving(html()));
+        const production = await get('/', serving(html()));
+
+        expect(preview.headers.get('x-robots-tag')).toBe('noindex, nofollow');
+        expect(production.headers.get('x-robots-tag')).toBeNull();
+    });
+});
+
 describe('the guide worker', () => {
     it('advertises the reference site and the home page to an agent', async () => {
         const response = await get('/tooling/', serving(html()));
