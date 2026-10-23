@@ -1,7 +1,7 @@
 {
     "$schema": "node_modules/wrangler/config-schema.json",
     "name": "seedcord-docs",
-    "compatibility_date": "2026-06-23",
+    "compatibility_date": "2026-08-04",
     "main": "./worker.ts",
     // one pattern also covers /docs.txt, which next requests for the root page
     "routes": [{ "pattern": "seedcord.org/docs*", "zone_name": "seedcord.org" }],

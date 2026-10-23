@@ -1,7 +1,7 @@
 {
     "$schema": "node_modules/wrangler/config-schema.json",
     "name": "seedcord-home",
-    "compatibility_date": "2026-06-23",
+    "compatibility_date": "2026-08-04",
     "main": "./worker.ts",
     "routes": [
         { "pattern": "seedcord.org", "custom_domain": true },
