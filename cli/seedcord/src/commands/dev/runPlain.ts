@@ -22,6 +22,10 @@ function commandOn(line: string): ((runner: DevRunner) => Promise<void>) | undef
     }
 }
 
+function leaveToRun(command: Promise<void>): void {
+    void command.catch(() => undefined); // no reason to handle the rejection here
+}
+
 // runs dev without the TUI, answering the prompts nobody is there to press a key for
 export async function runPlain(store: DevStore, runner: DevRunner, input: Readable): Promise<void> {
     let failure: Error | undefined;
@@ -30,18 +34,18 @@ export async function runPlain(store: DevStore, runner: DevRunner, input: Readab
         if (commandUpdatePrompt !== null) runner.refreshCommands(true);
         if (phase === 'restart-required') {
             logger.info('Restarting to pick up the change');
-            void runner.restart();
+            leaveToRun(runner.restart());
         } else if (phase === 'error' && error !== null) {
             failure ??= error;
-            void runner.quit();
+            leaveToRun(runner.quit());
         }
     };
 
     // terminal mode would take ctrl-c away from DevSignals
-    const lines = createInterface({ input, terminal: false });
+    using lines = createInterface({ input, terminal: false });
     lines.on('line', (line) => {
         const command = commandOn(line);
-        if (command) void command(runner);
+        if (command) leaveToRun(command(runner));
         else logger.warn(`Ignoring stdin line: ${line}`);
     });
 
@@ -50,7 +54,6 @@ export async function runPlain(store: DevStore, runner: DevRunner, input: Readab
         await runner.run();
     } finally {
         store.off('change', answer);
-        lines.close();
     }
     if (failure) throw failure;
 }
