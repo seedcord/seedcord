@@ -2,9 +2,9 @@ import { Option } from '@commander-js/extra-typings';
 import { Prompter, unlessCancelled } from '@seedcord/cli-prompts';
 import { SeedcordErrorCode } from '@seedcord/errors';
 import { SeedcordTypeError } from '@seedcord/errors/internal';
+import { isInteractive } from '@seedcord/utils/internal';
 
 import { BaseCommand } from '#core/BaseCommand';
-import { isInteractive } from '#core/interactive';
 import { stderrSteps } from '#core/output/stderrSteps';
 import { isVerbose } from '#core/verbose';
 

@@ -3,7 +3,7 @@ title: Configuring the logger
 description: Set where your bot's logs go and how much of them prints, through the logger block on your bot config.
 ---
 
-By default a node bot prints every level in development, drops `trace` in staging, and prints `info` and above everywhere else. It writes readable columns plus a log file in development, and JSON lines in every other environment. Your bot config takes a `logger` block for when that doesn't fit, like a noisy channel you want quieter or logs you need sent to a service. Its three keys are `level`, `channels`, and `sinks`, all optional.
+By default a node bot prints every level in development, drops `trace` in staging, and prints `info` and above everywhere else. It writes a log file in development, and the console prints readable columns or JSON lines depending on how the bot runs. Your bot config takes a `logger` block for when that doesn't fit, like a noisy channel you want quieter or logs you need sent to a service. Its three keys are `level`, `channels`, and `sinks`, all optional.
 
 ## The level floor
 
@@ -87,7 +87,22 @@ These sinks ship with seedcord.
 
 {/* prettier-ignore-end */}
 
-A node bot starts with the winston console sink, which writes readable columns in development and JSON everywhere else, plus the file sink in development. An edge bot starts with `ObjectConsoleSink`, since both winston sinks require node. That sink puts an object you pass after the message into the record's own fields, so a Workers drain indexes `userId` on its own. A sink you write yourself runs on either runtime.
+A node bot starts with the winston console sink, plus the file sink in development. The console sink picks its format from where the bot runs:
+
+{/* prettier-ignore-start */}
+
+| how the bot runs | console output | ANSI codes |
+| --- | --- | --- |
+| `seedcord dev` in a terminal | none, the [terminal UI](/tooling/dev) shows the logs | colored |
+| `node dist/index.mjs` in a terminal, in `development` mode | readable columns | colored |
+| either one in `development` mode, with its output piped or redirected, or under `CI` | JSON lines | kept in `message` |
+| any other mode | JSON lines | stripped |
+
+{/* prettier-ignore-end */}
+
+The mode is `development` unless your shell sets another one, as [Environment and config](/build/env) explains. A tool that spawns your bot can render these codes in `message`. Colors are off when stdout is a pipe, so that tool should set `FORCE_COLOR=3` on the spawned bot. A `WinstonConsoleSink` you create without a `format` follows the same table, and `format` takes `pretty`, `json`, or `json-ansi` when you want to choose.
+
+An edge bot starts with `ObjectConsoleSink`, since both winston sinks require node. That sink puts an object you pass after the message into the record's own fields, so a Workers drain indexes `userId` on its own. A sink you write yourself runs on either runtime.
 
 ### Replacing the sinks
 

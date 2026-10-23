@@ -1,10 +1,10 @@
 import { WORDMARK } from '@seedcord/errors/internal';
+import { isInteractive } from '@seedcord/utils/internal';
 import { render } from 'ink';
 import React from 'react';
 
 import { BaseCommand } from '#core/BaseCommand';
 import { cliLogger } from '#core/cliLogger';
-import { isInteractive } from '#core/interactive';
 import { StateFolder } from '#core/state/StateFolder';
 import { DevApp } from '#ui/DevApp';
 import { devPrefsFile } from '#ui/devPrefs';
@@ -38,7 +38,9 @@ export class DevCommand extends BaseCommand {
                 try {
                     // ink takes Ctrl-C itself in raw mode
                     using _signals = DevSignals.own(() => void runner.quit());
-                    await (isInteractive() ? this.runDevApp(store, runner, stateFolder) : runPlain(store, runner));
+                    await (isInteractive()
+                        ? this.runDevApp(store, runner, stateFolder)
+                        : runPlain(store, runner, process.stdin));
                 } catch (error: unknown) {
                     this.logger.error(`${WORDMARK} dev failed`, error);
                     process.exitCode = 1;

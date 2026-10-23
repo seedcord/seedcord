@@ -21,7 +21,10 @@ export const seedcord = new Seedcord({
     botColor: '#fe565a',
     port: 6967,
     logger: {
-        sinks: [new WinstonConsoleSink(), new WinstonFileSink({ filename: 'http-mock-{timestamp}.log' })]
+        sinks: [
+            new WinstonConsoleSink({ format: 'json' }),
+            new WinstonFileSink({ filename: 'http-mock-{timestamp}.log' })
+        ]
     }
 })
     .attach('stats.uptime', Uptime)

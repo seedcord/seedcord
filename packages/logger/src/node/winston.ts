@@ -17,7 +17,9 @@ const LEVEL = Symbol.for('level');
 // winston's default npm levels have no `trace`
 export const NODE_LEVELS: Record<LogLevel, number> = { error: 0, warn: 1, info: 2, debug: 3, trace: 4 };
 
-export type SinkFormat = 'pretty' | 'json';
+export type SinkFormat = 'pretty' | 'json' | 'json-ansi';
+
+export type FileSinkFormat = Exclude<SinkFormat, 'json-ansi'>;
 
 const formatter = new LogFormatter();
 
@@ -26,15 +28,15 @@ export function preFormat(): ReturnType<typeof format.combine> {
 }
 
 export function consoleFormat(mode: SinkFormat): ReturnType<typeof format.combine> {
-    return mode === 'json'
-        ? format.combine(...formatter.json({ stripAnsi: true }))
-        : format.combine(...formatter.pretty());
+    return mode === 'pretty'
+        ? format.combine(...formatter.pretty())
+        : format.combine(...formatter.json({ stripAnsi: mode === 'json' }));
 }
 
-export function fileFormat(mode: SinkFormat): ReturnType<typeof format.combine> {
-    return mode === 'json'
-        ? format.combine(...formatter.json({ stripAnsi: true }))
-        : format.combine(...formatter.pretty({ stripExtras: true }));
+export function fileFormat(mode: FileSinkFormat): ReturnType<typeof format.combine> {
+    return mode === 'pretty'
+        ? format.combine(...formatter.pretty({ stripExtras: true }))
+        : format.combine(...formatter.json({ stripAnsi: true }));
 }
 
 export function prettyPipeline(): ReturnType<typeof format.combine> {

@@ -9,7 +9,7 @@ import { logsFolderIn } from '#src/logsFolderIn';
 
 import { ensureDir, fileFormat, NODE_LEVELS, preFormat, resolveFilename, toInfo } from './winston';
 
-import type { SinkFormat } from './winston';
+import type { FileSinkFormat } from './winston';
 import type { ILogSink, LogRecord } from '@seedcord/types';
 import type { Logger as Winston } from 'winston';
 
@@ -19,13 +19,13 @@ export class WinstonFileSink implements ILogSink {
     public readonly node = true;
 
     private readonly filename: string;
-    private readonly format: SinkFormat;
+    private readonly format: FileSinkFormat;
     private readonly maxSize: number | undefined;
     private readonly maxFiles: number | undefined;
     // winston's File transport creates the file at construction, so a sink disposed before any log (repeated installNodeDefaults churns these) would leave an empty file
     private winston?: Winston;
 
-    constructor(options?: { filename?: string; format?: SinkFormat; maxSize?: number; maxFiles?: number }) {
+    constructor(options?: { filename?: string; format?: FileSinkFormat; maxSize?: number; maxFiles?: number }) {
         const logsFolder = logsFolderIn(botConfigDir() ?? process.cwd());
         const filename = options?.filename ?? 'combined-{timestamp}.log';
         if (/[\\/]/.test(filename)) {

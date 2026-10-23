@@ -31,7 +31,7 @@ interface PrettyFormatOptions {
 }
 
 interface JsonFormatOptions {
-    stripAnsi?: boolean;
+    stripAnsi: boolean;
 }
 
 /** @internal */
@@ -293,33 +293,32 @@ export class LogFormatter {
     }
 
     // JSON.stringify skips an Error's message and stack
-    private jsonExtra(entry: unknown): unknown {
-        const clean = this.sanitizeAnsi(entry);
+    private jsonExtra(entry: unknown, strip: boolean): unknown {
+        const clean = strip ? this.sanitizeAnsi(entry) : entry;
         return Error.isError(clean) ? { name: clean.name, message: clean.message, stack: clean.stack } : clean;
     }
 
-    public json(options: JsonFormatOptions = {}): Logform.Format[] {
-        const base = [format.errors({ stack: true }), this.interpolate()];
-
-        if (options.stripAnsi) {
-            base.push(
-                format((info) => {
-                    info.message = typeof info.message === 'string' ? stripAnsi(info.message) : info.message;
-                    const args = this.getExtras(info);
-                    if (typeof info.stack === 'string') {
-                        // info.stack is plain text with no cause in it
-                        const firstError = args.find((entry): entry is Error => Error.isError(entry));
-                        info.stack = stripAnsi(info.stack) + (firstError ? this.detailBlock(firstError, true) : '');
-                    }
-                    const extras = args.slice(this.specifierCount(info));
-                    if (extras.length > 0) info.extras = extras.map((entry) => this.jsonExtra(entry));
-                    return info;
-                })()
-            );
-        }
-
-        base.push(format.json({ bigint: true, space: 0 }));
-
-        return base;
+    public json({ stripAnsi: strip }: JsonFormatOptions): Logform.Format[] {
+        return [
+            format.errors({ stack: true }),
+            this.interpolate(),
+            format((info) => {
+                if (strip && typeof info.message === 'string') info.message = stripAnsi(info.message);
+                const args = this.getExtras(info);
+                let stackError: Error | undefined;
+                if (typeof info.stack === 'string') {
+                    // info.stack is plain text with no cause in it
+                    stackError = args.find((entry): entry is Error => Error.isError(entry));
+                    const stack = strip ? stripAnsi(info.stack) : info.stack;
+                    info.stack = stack + (stackError ? this.detailBlock(stackError, strip) : '');
+                }
+                const extras = args
+                    .slice(this.specifierCount(info))
+                    .filter((entry) => stackError === undefined || entry !== stackError);
+                if (extras.length > 0) info.extras = extras.map((entry) => this.jsonExtra(entry, strip));
+                return info;
+            })(),
+            format.json({ bigint: true, space: 0 })
+        ];
     }
 }

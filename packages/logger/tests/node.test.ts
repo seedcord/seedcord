@@ -44,6 +44,8 @@ async function listWhenWritten(dir: string, timeoutMs = 2000): Promise<string[]>
 
 const plain = (value: string): string => stripAnsi(value);
 
+const DIM = `${String.fromCharCode(27)}[2m`;
+
 // a script without a bot config logs under logs/ in its working folder
 function workingFolder(): Disposable & { logs: string } {
     const dir = mkdtempDisposableSync(join(tmpdir(), 'seedcord-logger-'));
@@ -60,6 +62,30 @@ function workingFolder(): Disposable & { logs: string } {
 function inDevelopment(): Disposable {
     const spy = vi.spyOn(Envapter, 'isDevelopment', 'get').mockReturnValue(true);
     return { [Symbol.dispose]: () => spy.mockRestore() };
+}
+
+function atTerminal(isTTY: boolean): Disposable {
+    const { stdin, stdout } = { stdin: process.stdin.isTTY, stdout: process.stdout.isTTY };
+    process.stdin.isTTY = isTTY;
+    process.stdout.isTTY = isTTY;
+    vi.stubEnv('CI', '');
+    return {
+        [Symbol.dispose]: () => {
+            vi.unstubAllEnvs();
+            process.stdin.isTTY = stdin;
+            process.stdout.isTTY = stdout;
+        }
+    };
+}
+
+function consoleOutputOf(overrides: Partial<LogRecord>): string {
+    // winston's console transport writes to console._stdout, which vitest swaps out
+    const { _stdout } = console as unknown as { _stdout: NodeJS.WriteStream };
+    const write = vi.spyOn(_stdout, 'write').mockReturnValue(true);
+    registry.dispatch(record(overrides));
+    const output = write.mock.calls.map(([chunk]) => String(chunk)).join('');
+    write.mockRestore();
+    return output;
 }
 
 // the slot the entry of a built bot fills before anything imports seedcord
@@ -156,6 +182,18 @@ describe('winston sinks', () => {
     it('the console sink logs without throwing', () => {
         const sink = new WinstonConsoleSink({ format: 'json' });
         expect(() => sink.onLog(record({ message: 'hi', args: [{ a: 1 }] }))).not.toThrow();
+    });
+
+    it.each([
+        ['json', 'task'],
+        ['json-ansi', `${DIM}task`]
+    ] as const)('the %s console format writes the message as %j and an error once, in stack', (format, message) => {
+        registry.configure({ sinks: [new WinstonConsoleSink({ format })] });
+
+        const line = JSON.parse(consoleOutputOf({ message: `${DIM}task`, args: [new TypeError('boom')] })) as object;
+
+        expect(line).toMatchObject({ message, stack: expect.stringContaining('TypeError: boom') as unknown });
+        expect(line).not.toHaveProperty('extras');
     });
 
     it('the console sink stops writing once its stdout closes', async () => {
@@ -331,6 +369,23 @@ describe('installNodeDefaults', () => {
         installNodeDefaults({ sinks: [{ kind: 'console', onLog: () => undefined }] });
 
         expect(existsSync(folder.logs)).toBe(false);
+    });
+
+    it('picks the console format from the environment and the terminal', () => {
+        using _folder = workingFolder();
+        using _piped = atTerminal(false);
+        const printed = (): unknown => JSON.parse(consoleOutputOf({ message: `${DIM}task` }));
+
+        installNodeDefaults();
+        expect(printed()).toMatchObject({ message: 'task' });
+
+        using _dev = inDevelopment();
+        installNodeDefaults();
+        expect(printed()).toMatchObject({ message: `${DIM}task` });
+
+        using _terminal = atTerminal(true);
+        installNodeDefaults();
+        expect(plain(consoleOutputOf({ message: 'task' }))).toContain('[info');
     });
 
     it('creates no log file until a record is logged, so repeated bootstraps leave no orphans', async () => {

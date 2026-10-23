@@ -340,12 +340,13 @@ describe('LogFormatter', () => {
     });
 
     describe('json format', () => {
-        it('emits parseable json with the message intact on the default path', () => {
-            const { logger, output } = createTestLogger(formatter, 'info', formatter.json());
-            logger.info('plain json');
+        it('keeps ANSI in the message and the extras when it is not stripping', () => {
+            const { logger, output } = createTestLogger(formatter, 'info', formatter.json({ stripAnsi: false }));
+            logger.info(`${ESC}[1mplain${ESC}[22m json`, `${ESC}[2mextra${ESC}[22m`);
 
-            const parsed = JSON.parse(output.join('')) as { message: string };
-            expect(parsed.message).toBe('plain json');
+            const parsed = JSON.parse(output.join('')) as { message: string; extras: string[] };
+            expect(parsed.message).toBe(`${ESC}[1mplain${ESC}[22m json`);
+            expect(parsed.extras).toEqual([`${ESC}[2mextra${ESC}[22m`]);
         });
 
         it('interpolates specifiers and keeps only the unconsumed args in extras', () => {
@@ -363,17 +364,18 @@ describe('LogFormatter', () => {
             expect(JSON.stringify(record.extras)).toContain(String.raw`TypeError: boom\n    at `);
         });
 
-        it('strips ANSI from the message and a colored error', () => {
+        it('strips ANSI from the message, a colored error and a string extra', () => {
             const { logger, output } = createTestLogger(formatter, 'info', formatter.json({ stripAnsi: true }));
             const err = new Error('bad request');
             err.name = `${ESC}[1m${ESC}[31mSeedcordError${ESC}[39m${ESC}[22m`;
-            logger.error(`${ESC}[1mfailed${ESC}[22m`, err);
+            logger.error(`${ESC}[1mfailed${ESC}[22m`, err, `${ESC}[2mextra${ESC}[22m`);
 
             const line = output.join('');
             expect(line).not.toContain(ESC);
-            const parsed = JSON.parse(line) as { message: string; stack?: string };
+            const parsed = JSON.parse(line) as { message: string; stack?: string; extras: unknown[] };
             expect(parsed.message).toContain('failed');
             expect(parsed.stack).toContain('SeedcordError');
+            expect(parsed.extras).toContain('extra');
         });
 
         it('strips an aggregate whose members reach itself', () => {

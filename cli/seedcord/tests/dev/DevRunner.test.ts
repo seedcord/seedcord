@@ -1,6 +1,7 @@
 import { mkdir, mkdtempDisposable, writeFile } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
+import { PassThrough } from 'node:stream';
 
 import { SeedcordErrorCode } from '@seedcord/errors';
 import { HostShutdown, HostStartup } from '@seedcord/types/internal';
@@ -470,7 +471,7 @@ describe('runPlain, with no terminal to answer prompts', () => {
             fakeRuntime({ default: readyBot }, sessions++ === 0 ? { type: 'restart-required' } : undefined);
         const runner = makeRunner({ store, runtime });
 
-        const running = runPlain(store, runner);
+        const running = runPlain(store, runner, new PassThrough());
         await vi.waitFor(() => expect(sessions).toBe(2));
         await runner.quit();
         await running;
@@ -482,9 +483,25 @@ describe('runPlain, with no terminal to answer prompts', () => {
         const refresh = vi.spyOn(runtime, 'refreshCommands');
         const runner = makeRunner({ store, runtime: () => runtime });
 
-        const running = runPlain(store, runner);
+        const running = runPlain(store, runner, new PassThrough());
         await vi.waitFor(() => expect(refresh).toHaveBeenCalledWith(true));
         await runner.quit();
+        await running;
+    });
+
+    it('runs restart, disconnect and quit lines from the input and ignores the rest', async () => {
+        const store = new DevStore();
+        const runner = makeRunner({ store });
+        const restart = vi.spyOn(runner, 'restart');
+        const disconnect = vi.spyOn(runner, 'disconnect');
+        const input = new PassThrough();
+
+        const running = runPlain(store, runner, input);
+        input.write('not json\nnull\n{"do":"nope"}\n{"do":"constructor"}\n{"do":"restart"}\n');
+        await vi.waitFor(() => expect(restart).toHaveBeenCalledOnce());
+        input.write('{"do":"disconnect"}\n');
+        await vi.waitFor(() => expect(disconnect).toHaveBeenCalledOnce());
+        input.write('{"do":"quit"}\n');
         await running;
     });
 
@@ -492,6 +509,8 @@ describe('runPlain, with no terminal to answer prompts', () => {
         const store = new DevStore();
         const runner = makeRunner({ store, runtime: () => new ServerDevRuntime() });
 
-        await expect(runPlain(store, runner)).rejects.toThrow(/Cannot find \S+bot\.ts|Failed to load url/);
+        await expect(runPlain(store, runner, new PassThrough())).rejects.toThrow(
+            /Cannot find \S+bot\.ts|Failed to load url/
+        );
     });
 });
