@@ -1,28 +1,6 @@
-export type SearchResultKind =
-    | 'package'
-    | 'page'
-    | 'resource'
-    | 'class'
-    | 'interface'
-    | 'type'
-    | 'enum'
-    | 'function'
-    | 'constructor'
-    | 'method'
-    | 'property'
-    | 'variable'
-    | 'parameter'
-    | 'typeParameter'
-    | 'enumMember';
+import type { SearchAction } from '@seedcord/docs-search';
 
-export interface CommandAction {
-    id: string;
-    label: string;
-    path: string;
-    href: string;
-    kind: SearchResultKind;
-    description?: string;
-    value?: string;
+export interface CommandAction extends SearchAction {
     isExternal?: boolean;
 }
 

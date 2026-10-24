@@ -1,9 +1,8 @@
-import { PACKAGES_URL, searchFileUrl } from './files';
-import { SearchCatalog } from './SearchCatalog';
-import { SearchResults } from './SearchResults';
+import { PACKAGES_FILE_NAME, REFERENCE_SEARCH_URL, searchFileUrl } from '#src/files';
+import { ALL_PACKAGES, SearchCatalog } from '#src/SearchCatalog';
+import { SearchResults } from '#src/SearchResults';
 
-import type { SearchIndexEntry, SearchPackage } from './types';
-import type { ActiveDocsTarget } from '#components/search/command-palette/activeTarget';
+import type { SearchIndexEntry, SearchPackage, SearchViewedPackage } from '#src/types';
 
 class DownloadCache<Value> {
     private readonly downloads = new Map<string, Promise<Value>>();
@@ -19,23 +18,32 @@ class DownloadCache<Value> {
     }
 }
 
-class SearchFiles {
+export class ReferenceSearch {
     private readonly catalogs = new DownloadCache<SearchCatalog>();
     private readonly indexes = new DownloadCache<SearchIndexEntry[]>();
 
+    constructor(private readonly endpoint = REFERENCE_SEARCH_URL) {}
+
     catalog(): Promise<SearchCatalog> {
         return this.catalogs.get(
-            PACKAGES_URL,
-            async (url) => new SearchCatalog(await SearchFiles.json<SearchPackage[]>(url))
+            `${this.endpoint}/${PACKAGES_FILE_NAME}`,
+            async (url) => new SearchCatalog(await ReferenceSearch.json<SearchPackage[]>(url))
         );
     }
 
-    async results(viewed: ActiveDocsTarget, scope: string, prerelease: boolean): Promise<SearchResults> {
-        const targets = (await this.catalog()).targets(viewed, scope, prerelease);
+    async results(
+        viewed: SearchViewedPackage | null = null,
+        scope = ALL_PACKAGES,
+        prerelease = false
+    ): Promise<SearchResults> {
+        const catalog = await this.catalog();
+        const targets = catalog.targets(viewed, scope, prerelease);
         const files = await Promise.all(
             targets.map(({ id, version }) =>
                 this.indexes
-                    .get(searchFileUrl(id, version), (url) => SearchFiles.json<SearchIndexEntry[]>(url))
+                    .get(searchFileUrl(id, version, this.endpoint), (url) =>
+                        ReferenceSearch.json<SearchIndexEntry[]>(url)
+                    )
                     .catch((): SearchIndexEntry[] => [])
             )
         );
@@ -49,5 +57,3 @@ class SearchFiles {
         return (await response.json()) as Payload;
     }
 }
-
-export const searchFiles = new SearchFiles();

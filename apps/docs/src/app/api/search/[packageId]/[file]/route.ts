@@ -1,6 +1,7 @@
+import { searchFileName, versionFromFile } from '@seedcord/docs-search';
+
 import { loadDocsCatalog } from '#lib/docs/catalog';
 import { searchIndexFor } from '#lib/search/buildIndex';
-import { searchFileName, versionFromFile } from '#lib/search/files';
 
 export const dynamic = 'force-static';
 

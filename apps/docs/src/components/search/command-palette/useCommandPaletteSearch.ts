@@ -1,16 +1,16 @@
 'use client';
 
+import { DEFAULT_VERSION } from '@seedcord/docs-engine/client';
 import { usePathname } from 'next/navigation';
 import { useEffect, useMemo, useState } from 'react';
 
-import { searchFiles } from '#lib/search/SearchFiles';
+import { referenceSearch } from '#lib/search/referenceSearch';
 
 import { parseActiveDocsTarget } from './activeTarget';
 import { MIN_SEARCH_QUERY_LENGTH } from './constants';
 
-import type { KindFilter } from './constants';
 import type { CommandAction } from './types';
-import type { SearchResults } from '#lib/search/SearchResults';
+import type { KindFilter, SearchResults } from '@seedcord/docs-search';
 
 type SearchStatus = 'idle' | 'loading' | 'success' | 'error';
 
@@ -49,7 +49,7 @@ export function useCommandPaletteSearch({
         if (!open || hasCurrentResults) return undefined;
 
         let cancelled = false;
-        searchFiles.results({ pkg, version }, scope, prerelease).then(
+        referenceSearch.results({ pkg, version: version === DEFAULT_VERSION ? null : version }, scope, prerelease).then(
             (results) => {
                 if (!cancelled) setLastLoaded({ key, results });
             },
@@ -66,7 +66,7 @@ export function useCommandPaletteSearch({
     const ranked = useMemo(
         () =>
             lastLoaded && 'results' in lastLoaded && trimmed.length >= MIN_SEARCH_QUERY_LENGTH
-                ? lastLoaded.results.rank(trimmed, kind)
+                ? lastLoaded.results.rank(trimmed, kind).map(({ action }) => action)
                 : [],
         [lastLoaded, trimmed, kind]
     );

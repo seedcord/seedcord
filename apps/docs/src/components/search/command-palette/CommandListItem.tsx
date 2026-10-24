@@ -6,7 +6,8 @@ import { getToneConfig } from '#lib/tonePresentation';
 
 import { SEARCH_KIND_ICONS } from './constants';
 
-import type { CommandAction, SearchResultKind } from './types';
+import type { CommandAction } from './types';
+import type { SearchResultKind } from '@seedcord/docs-search';
 import type { EntityTone } from '@seedcord/docs-engine/client';
 import type { ReactElement } from 'react';
 

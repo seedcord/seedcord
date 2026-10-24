@@ -1,8 +1,8 @@
-import { DocSearch } from '@seedcord/docs-search';
+import { DOCS } from '@seedcord/ui/sites';
 
-import type { SearchIndexEntry } from './types';
-import type { KindFilter } from '#components/search/command-palette/constants';
-import type { CommandAction, SearchResultKind } from '#components/search/command-palette/types';
+import { DocSearch } from '#src/DocSearch';
+
+import type { KindFilter, ReferenceSearchResult, SearchIndexEntry, SearchResultKind } from '#src/types';
 
 const MAX_RESULTS = 24;
 
@@ -22,10 +22,10 @@ export class SearchResults {
         this.search = new DocSearch(entries);
     }
 
-    rank(query: string, kind: KindFilter): CommandAction[] {
+    rank(query: string, kind: KindFilter = 'all'): ReferenceSearchResult[] {
         // overload signatures share package, slug and kind
         const seen = new Set<string>();
-        const results: CommandAction[] = [];
+        const results: ReferenceSearchResult[] = [];
         for (const entry of this.search.search(query)) {
             if (!SearchResults.matchesKind(entry.action.kind, kind)) continue;
 
@@ -33,7 +33,7 @@ export class SearchResults {
             if (seen.has(key)) continue;
             seen.add(key);
 
-            results.push(entry.action);
+            results.push({ ...entry, url: DOCS.at(entry.action.href) });
             if (results.length >= MAX_RESULTS) break;
         }
         return results;

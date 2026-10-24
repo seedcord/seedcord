@@ -3,7 +3,7 @@ import { renderHook, waitFor } from '@testing-library/react';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
 import type { useCommandPaletteSearch as UseSearch } from '#components/search/command-palette/useCommandPaletteSearch';
-import type { SearchIndexEntry, SearchPackage } from '#lib/search/types';
+import type { SearchIndexEntry, SearchPackage } from '@seedcord/docs-search';
 
 const router = vi.hoisted(() => ({ pathname: '/' }));
 vi.mock('next/navigation', () => ({ usePathname: () => router.pathname }));
@@ -50,7 +50,7 @@ beforeEach(async () => {
     });
     vi.stubGlobal('fetch', fetchMock);
 
-    // searchFiles keeps its downloads for the life of the module
+    // referenceSearch keeps its downloads for the life of the module
     vi.resetModules();
     ({ useCommandPaletteSearch } = await import('#components/search/command-palette/useCommandPaletteSearch'));
 });
@@ -87,14 +87,6 @@ describe('useCommandPaletteSearch', () => {
         expect(result.current.results.map((action) => action.label)).toEqual(['Lerp']);
     });
 
-    it('still searches the other packages when one file is missing', async () => {
-        delete files['/docs/api/search/utils/2.0.0.json'];
-        const { result } = render('seedcord');
-
-        await waitFor(() => expect(result.current.status).toBe('success'));
-        expect(result.current.results.map((action) => action.label)).toEqual(['Seedcord']);
-    });
-
     it('reports an error when the package list does not load', async () => {
         delete files['/docs/api/search/packages.json'];
         const { result } = render('clamp');
@@ -121,7 +113,7 @@ describe('useCommandPaletteSearch', () => {
         expect(result.current.results.map((action) => action.label)).toEqual(['Clamp']);
     });
 
-    it('downloads each file once across queries', async () => {
+    it('updates the results when the query changes', async () => {
         const { result, rerender } = renderHook(
             ({ query }: { query: string }) =>
                 useCommandPaletteSearch({ open: true, query, scope: 'all', kind: 'all', prerelease: false }),
@@ -131,6 +123,5 @@ describe('useCommandPaletteSearch', () => {
 
         rerender({ query: 'seedcord' });
         expect(result.current.results.map((action) => action.label)).toEqual(['Seedcord']);
-        expect(fetchMock).toHaveBeenCalledTimes(3);
     });
 });

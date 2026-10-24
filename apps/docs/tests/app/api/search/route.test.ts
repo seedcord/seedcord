@@ -3,7 +3,7 @@ import { describe, expect, it, vi } from 'vitest';
 
 import { docNode, fixtureEngine } from '#tests/fixtures/docsEngine';
 
-import type { SearchIndexEntry } from '#lib/search/types';
+import type { SearchIndexEntry } from '@seedcord/docs-search';
 
 vi.mock('#lib/docs/engine', () => ({
     getDocsEngine: () =>

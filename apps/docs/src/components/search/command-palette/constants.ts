@@ -1,3 +1,4 @@
+import { KIND_FILTERS } from '@seedcord/docs-search';
 import {
     Braces,
     ExternalLink,
@@ -14,24 +15,8 @@ import {
     Variable
 } from 'lucide-react';
 
-import type { SearchResultKind } from './types';
-import type { DropdownOption } from '@seedcord/ui';
+import type { KindFilter, SearchResultKind } from '@seedcord/docs-search';
 import type { LucideIcon } from 'lucide-react';
-
-export const KIND_FILTERS = [
-    { value: 'all', label: 'All kinds' },
-    { value: 'class', label: 'Classes' },
-    { value: 'interface', label: 'Interfaces' },
-    { value: 'type', label: 'Types' },
-    { value: 'enum', label: 'Enums' },
-    { value: 'function', label: 'Functions' },
-    { value: 'variable', label: 'Variables' },
-    { value: 'member', label: 'Members' }
-] as const satisfies readonly DropdownOption[];
-
-export type KindFilter = (typeof KIND_FILTERS)[number]['value'];
-
-export const ALL_PACKAGES = 'all';
 
 export function isKindFilter(value: string): value is KindFilter {
     return KIND_FILTERS.some((option) => option.value === value);

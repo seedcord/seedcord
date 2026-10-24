@@ -1,11 +1,12 @@
 'use client';
 
+import { ALL_PACKAGES, KIND_FILTERS } from '@seedcord/docs-search';
 import { Dropdown, SearchField, Switch, cn, tw, useSearchDialogContainer, type DropdownOption } from '@seedcord/ui';
 
-import { ALL_PACKAGES, COMMAND_LISTBOX_ID, KIND_FILTERS } from './constants';
+import { COMMAND_LISTBOX_ID } from './constants';
 
-import type { KindFilter } from './constants';
 import type { DocsPackageOption } from './types';
+import type { KindFilter } from '@seedcord/docs-search';
 import type { KeyboardEvent, ReactElement, RefObject } from 'react';
 
 const SEPARATOR = tw`text-sm text-(--text-faint)`;

@@ -1,8 +1,8 @@
 import { describe, expect, it } from 'vitest';
 
-import { SearchCatalog } from '#lib/search/SearchCatalog';
+import { SearchCatalog } from '#src/SearchCatalog';
 
-import type { SearchPackage } from '#lib/search/types';
+import type { SearchPackage } from '#src/types';
 
 const seedcord: SearchPackage = {
     id: 'seedcord',
@@ -30,9 +30,9 @@ describe('SearchCatalog.targets', () => {
         });
     });
 
-    it('reads latest on the viewed package as its stable head', () => {
+    it('uses the stable head when the viewed version is unspecified', () => {
         const catalog = new SearchCatalog([logger]);
-        expect(catalog.targets({ pkg: 'logger', version: 'latest' }, 'all', true)).toEqual([
+        expect(catalog.targets({ pkg: 'logger', version: null }, 'all', true)).toEqual([
             { id: 'logger', version: '2.1.0' }
         ]);
     });
@@ -41,6 +41,10 @@ describe('SearchCatalog.targets', () => {
         const catalog = new SearchCatalog([seedcord, logger]);
         expect(catalog.targets(onSeedcord, 'all', false)).toContainEqual({ id: 'logger', version: '2.1.0' });
         expect(catalog.targets(onSeedcord, 'all', true)).toContainEqual({ id: 'logger', version: '3.0.0-next.1' });
+        expect(catalog.targets(null, 'all', true)).toEqual([
+            { id: 'seedcord', version: '1.0.0' },
+            { id: 'logger', version: '3.0.0-next.1' }
+        ]);
     });
 
     it('falls back to the other channel when the toggled one is empty', () => {

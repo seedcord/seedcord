@@ -1,18 +1,18 @@
 'use client';
 
+import { ALL_PACKAGES } from '@seedcord/docs-search';
 import { usePathname, useRouter } from 'next/navigation';
 import { useCallback, useEffect, useRef, useState, type RefObject } from 'react';
 import { useShallow } from 'zustand/react/shallow';
 
 import { log } from '#lib/logger';
-import { searchFiles } from '#lib/search/SearchFiles';
-import type { SearchCatalog } from '#lib/search/SearchCatalog';
+import { referenceSearch } from '#lib/search/referenceSearch';
 import { useUIStore, type UIStore } from '#store/ui';
 
-import { ALL_PACKAGES, FOCUS_DELAY_MS, isKindFilter } from './constants';
+import { FOCUS_DELAY_MS, isKindFilter } from './constants';
 
-import type { KindFilter } from './constants';
 import type { CommandAction, DocsPackageOption } from './types';
+import type { KindFilter, SearchCatalog } from '@seedcord/docs-search';
 
 function buildNavigationHref(action: CommandAction, origin: string): string {
     try {
@@ -31,7 +31,7 @@ function useSearchCatalog(open: boolean): SearchCatalog | null {
         if (catalog || (failed && !open)) return undefined;
 
         let cancelled = false;
-        searchFiles
+        referenceSearch
             .catalog()
             .then((loaded) => {
                 if (!cancelled) setCatalog(loaded);

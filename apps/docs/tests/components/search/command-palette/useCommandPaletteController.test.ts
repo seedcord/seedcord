@@ -1,7 +1,7 @@
 import { act, renderHook, waitFor } from '@testing-library/react';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
-import type { SearchPackage } from '#lib/search/types';
+import type { SearchPackage } from '@seedcord/docs-search';
 
 vi.mock('next/navigation', () => ({ useRouter: () => ({ push: vi.fn() }), usePathname: () => '/docs' }));
 
@@ -9,7 +9,7 @@ const PACKAGES: SearchPackage[] = [
     { id: 'core', label: 'core', fullName: '@seedcord/core', stable: '0.9.2', prerelease: '1.0.0-next.1' }
 ];
 
-// searchFiles keeps each download for the life of the module
+// referenceSearch keeps each download for the life of the module
 async function freshController(): Promise<
     typeof import('#components/search/command-palette/useCommandPaletteController')
 > {

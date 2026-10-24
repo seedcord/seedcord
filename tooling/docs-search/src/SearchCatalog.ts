@@ -1,10 +1,6 @@
-import { DEFAULT_VERSION } from '@seedcord/docs-engine/client';
+import type { SearchPackage, SearchViewedPackage } from '#src/types';
 
-import { ALL_PACKAGES } from '#components/search/command-palette/constants';
-
-import type { SearchPackage } from './types';
-import type { ActiveDocsTarget } from '#components/search/command-palette/activeTarget';
-import type { DocsPackageOption } from '#components/search/command-palette/types';
+export const ALL_PACKAGES = 'all';
 
 interface SearchTarget {
     id: string;
@@ -14,7 +10,7 @@ interface SearchTarget {
 export class SearchCatalog {
     constructor(private readonly packages: readonly SearchPackage[]) {}
 
-    get options(): DocsPackageOption[] {
+    get options(): { folder: string; label: string }[] {
         return this.packages.map(({ id, label }) => ({ folder: id, label }));
     }
 
@@ -22,7 +18,7 @@ export class SearchCatalog {
         return this.packages.some(({ prerelease }) => prerelease !== null);
     }
 
-    targets(viewed: ActiveDocsTarget, scope: string, prerelease: boolean): SearchTarget[] {
+    targets(viewed: SearchViewedPackage | null, scope: string, prerelease: boolean): SearchTarget[] {
         return this.packages.reduce<SearchTarget[]>((targets, pkg) => {
             if (scope !== ALL_PACKAGES && pkg.id !== scope) return targets;
 
@@ -32,9 +28,13 @@ export class SearchCatalog {
         }, []);
     }
 
-    private static versionFor(pkg: SearchPackage, viewed: ActiveDocsTarget, prerelease: boolean): string | null {
-        if (pkg.id !== viewed.pkg) return SearchCatalog.head(pkg, prerelease);
-        return viewed.version === DEFAULT_VERSION ? SearchCatalog.head(pkg, false) : viewed.version;
+    private static versionFor(
+        pkg: SearchPackage,
+        viewed: SearchViewedPackage | null,
+        prerelease: boolean
+    ): string | null {
+        if (pkg.id !== viewed?.pkg) return SearchCatalog.head(pkg, prerelease);
+        return viewed.version ?? SearchCatalog.head(pkg, false);
     }
 
     private static head(pkg: SearchPackage, prerelease: boolean): string | null {

@@ -1,12 +1,11 @@
-import { DocKind } from '@seedcord/docs-search';
 import { describe, expect, it } from 'vitest';
 
-import { SearchResults } from '#lib/search/SearchResults';
+import { DocKind } from '#src/DocKind';
+import { SearchResults } from '#src/SearchResults';
 
-import type { CommandAction } from '#components/search/command-palette/types';
-import type { SearchIndexEntry } from '#lib/search/types';
+import type { SearchAction, SearchIndexEntry } from '#src/types';
 
-function entry(slug: string, kind: CommandAction['kind'], packageName = 'seedcord'): SearchIndexEntry {
+function entry(slug: string, kind: SearchAction['kind'], packageName = 'seedcord'): SearchIndexEntry {
     const name = slug.split('/').at(-1) ?? slug;
     return {
         slug,
@@ -21,13 +20,18 @@ function entry(slug: string, kind: CommandAction['kind'], packageName = 'seedcor
 
 describe('SearchResults.rank', () => {
     it('keeps only the matching kind', () => {
-        const results = new SearchResults([entry('logger', 'class'), entry('logger/log', 'method')]);
-        expect(results.rank('log', 'class').map((action) => action.kind)).toEqual(['class']);
+        const logger = entry('logger', 'class');
+        logger.action.href = '/packages/logger/1.0.0/classes/logger#log';
+        logger.action.description = 'Writes messages';
+        const results = new SearchResults([logger, entry('logger/log', 'method')]);
+        expect(results.rank('log', 'class')).toEqual([
+            { ...logger, url: 'https://seedcord.org/docs/packages/logger/1.0.0/classes/logger#log' }
+        ]);
     });
 
     it("treats 'member' as any member kind", () => {
         const results = new SearchResults([entry('logger', 'class'), entry('logger/log', 'method')]);
-        expect(results.rank('log', 'member').map((action) => action.kind)).toEqual(['method']);
+        expect(results.rank('log', 'member').map(({ action }) => action.kind)).toEqual(['method']);
     });
 
     it('collapses overloads that share package, slug and kind', () => {
