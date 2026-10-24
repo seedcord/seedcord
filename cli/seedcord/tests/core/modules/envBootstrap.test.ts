@@ -2,7 +2,7 @@ import { writeFile } from 'node:fs/promises';
 import { join } from 'node:path';
 
 import { Envapter, PortableSource } from 'envapt';
-import { describe, expect, it, onTestFinished } from 'vitest';
+import { describe, expect, it, onTestFinished, vi } from 'vitest';
 
 import { openModuleLoader } from '#core/modules/openModuleLoader';
 import { realPath } from '#core/project/realPath';
@@ -10,6 +10,40 @@ import { cloudflareConfigSource, edgeFolder } from '#tests/edgeFolder';
 import { vitePluginsOf } from '#tests/vitePluginsOf';
 
 describe('environment setup before user imports', () => {
+    it('keeps custom-prefix values fixed when the Node runtime source refreshes', async () => {
+        const { dir } = await edgeFolder('', ['envapt']);
+        await writeFile(join(dir, '.env'), 'APP_GREETING=app\nVITE_GREETING=vite\n');
+        const entry = join(dir, 'probe.ts');
+        await writeFile(
+            entry,
+            `import { Envapter } from 'envapt';
+Envapter.useSource(Envapter.source);
+export const app = Envapter.get('APP_GREETING');
+export const direct = import.meta.env.APP_GREETING;
+export const vite = Envapter.get('VITE_GREETING');
+export const base = Envapter.get('BASE_URL');
+`
+        );
+        await using modules = await openModuleLoader(dir, { kind: 'server' }, 'development', {
+            vitePlugins: vitePluginsOf(() => [{ name: 'env-prefix', config: () => ({ envPrefix: 'APP_' }) }])
+        });
+
+        using environment = new DisposableStack();
+        environment.defer(() => {
+            vi.unstubAllEnvs();
+        });
+        vi.stubEnv('APP_GREETING', 'runtime');
+        vi.stubEnv('VITE_GREETING', 'runtime');
+        vi.stubEnv('BASE_URL', 'runtime-base');
+
+        expect(await modules.importModule(entry)).toMatchObject({
+            app: 'app',
+            direct: 'app',
+            vite: 'runtime',
+            base: 'runtime-base'
+        });
+    });
+
     it('drops removed Vite keys when the loader restarts', async () => {
         const { dir } = await edgeFolder('', ['envapt']);
         const entry = join(dir, 'probe.ts');

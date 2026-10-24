@@ -25,8 +25,8 @@ export function bindViteEnv(
     vite: Record<string, unknown>,
     { bindings, directory }: ViteEnvOptions = {}
 ): Disposable {
-    const values = Object.fromEntries(Object.entries(vite).filter(([key]) => key.startsWith('VITE_')));
-    const mode = vite.MODE;
+    // vite has alrdy applied envPrefix to the exposed user vars
+    const { MODE: mode, BASE_URL: _baseUrl, DEV: _dev, PROD: _prod, SSR: _ssr, ...values } = vite;
     const source =
         bindings === undefined
             ? envapter.source

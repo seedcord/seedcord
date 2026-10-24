@@ -80,19 +80,22 @@ describe('EdgeDevRuntime lifecycle', () => {
         await expect(nodeCopyApiToken(project.projectDir, 'staging')).resolves.toBe('from-staging');
     }, 120_000);
 
-    it('binds Vite values and the selected mode in both bot copies', async () => {
+    it('binds a custom Vite prefix and the selected mode in both bot copies', async () => {
         await using project = await edgeProject();
-        await writeCloudflareConfig(project.projectDir, { env: { VITE_GREETING: bindings.text('worker') } });
-        await writeFile(join(project.projectDir, '.env'), 'VITE_GREETING=vite\n');
+        await writeCloudflareConfig(project.projectDir, { env: { APP_GREETING: bindings.text('worker') } });
+        await writeFile(join(project.projectDir, '.env'), 'APP_GREETING=vite\n');
         await editFile(
             join(project.projectDir, 'src/bot.ts'),
             (text) => `import { Envapter } from 'envapt';
-if (Envapter.get('VITE_GREETING') !== import.meta.env.VITE_GREETING) throw new Error('Vite sources disagree');
+if (Envapter.get('APP_GREETING') !== import.meta.env.APP_GREETING) throw new Error('Vite sources disagree');
 if (Envapter.environment !== 'staging') throw new Error('Worker mode disagrees');
 ${text}`
         );
 
-        await using _started = await startedRuntime(project.projectDir, undefined, { viteMode: 'staging' });
+        await using _started = await startedRuntime(project.projectDir, undefined, {
+            viteMode: 'staging',
+            vitePlugins: vitePluginsOf(() => [{ name: 'env-prefix', config: () => ({ envPrefix: 'APP_' }) }])
+        });
     }, 120_000);
 
     it("reads the bot's token from .dev.vars in the CLI until the runtime stops", async () => {

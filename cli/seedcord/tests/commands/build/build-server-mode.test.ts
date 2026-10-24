@@ -23,6 +23,15 @@ describe('seedcord build mode on a node bot', () => {
             await cp(fixture, projectDir, { recursive: true, filter: (source) => !source.endsWith('dist') });
             await mkdir(join(projectDir, 'node_modules/@seedcord'), { recursive: true });
             await linkPackages(projectDir, ['envapt', '@seedcord/tsconfig', `@seedcord/${kind}`]);
+            const configSource = await readFile(join(projectDir, 'seedcord.config.ts'), 'utf8');
+            await writeFile(
+                join(projectDir, 'seedcord.config.ts'),
+                configSource.replace(
+                    'export default {',
+                    `export default {
+    vitePlugins: () => [{ name: 'env-prefix', config: () => ({ envPrefix: ['VITE_', 'APP_'] }) }],`
+                )
+            );
             const bot = join(projectDir, 'src/bot.ts');
             await writeFile(bot, `import './env-probe';\n${await readFile(bot, 'utf8')}`);
             await writeFile(
@@ -30,7 +39,9 @@ describe('seedcord build mode on a node bot', () => {
                 `import { Envapter, PortableSource, merge } from 'envapt';
 Envapter.useSource(merge(Envapter.source, new PortableSource({ CUSTOM: 'composed' })));
 if (Envapter.get('VITE_GREETING') !== import.meta.env.VITE_GREETING) throw new Error('Vite sources disagree');
+if (Envapter.get('APP_GREETING') !== import.meta.env.APP_GREETING) throw new Error('Custom prefix sources disagree');
 console.log('fixture:vite', Envapter.get('VITE_GREETING'));
+console.log('fixture:app', Envapter.get('APP_GREETING'));
 console.log('fixture:runtime', Envapter.get('RUNTIME_GREETING'));
 console.log('fixture:custom', Envapter.get('CUSTOM'));
 Envapter.envFileOptions = { override: true };
@@ -39,7 +50,10 @@ Envapter.envFileOptions = {};
 Envapter.useSource(new PortableSource(Envapter.source.readVars()));
 `
             );
-            await writeFile(join(projectDir, '.env'), 'VITE_GREETING=built\nRUNTIME_GREETING=before\n');
+            await writeFile(
+                join(projectDir, '.env'),
+                'VITE_GREETING=built\nAPP_GREETING=built-app\nRUNTIME_GREETING=before\n'
+            );
             const previousCwd = process.cwd();
             try {
                 process.chdir(projectDir);
@@ -47,12 +61,16 @@ Envapter.useSource(new PortableSource(Envapter.source.readVars()));
             } finally {
                 process.chdir(previousCwd);
             }
-            await writeFile(join(projectDir, '.env'), 'VITE_GREETING=changed\nRUNTIME_GREETING=deployed\n');
+            await writeFile(
+                join(projectDir, '.env'),
+                'VITE_GREETING=changed\nAPP_GREETING=changed-app\nRUNTIME_GREETING=deployed\n'
+            );
             const deployedDir = join(temporary.path, 'deployed');
             await rename(projectDir, deployedDir);
             const output = await smoke(kind, process.execPath, [join(deployedDir, 'dist/index.mjs')]);
 
             expect(output).toContain('fixture:vite built');
+            expect(output).toContain('fixture:app built-app');
             expect(output).toContain('fixture:runtime deployed');
             expect(output).toContain('fixture:custom composed');
             expect(output).toContain('fixture:override changed');
