@@ -17,7 +17,7 @@ const base = defineConfig({
         // mergeConfig puts these before a package's own setupFiles
         setupFiles: [fileURLToPath(new URL(`freshModules${extname(import.meta.url)}`, import.meta.url))],
         // node_modules packages that keep state between test files
-        server: { deps: { inline: ['envapt', '@testing-library/react'] } },
+        server: { deps: { inline: ['envapt', '@testing-library/react', '@cloudflare/vite-plugin'] } },
         testTimeout: 10_000,
         passWithNoTests: true,
         exclude: [...configDefaults.exclude, '**/.claude/**'],
