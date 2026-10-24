@@ -8,7 +8,7 @@ const RESOLVED_ENV_BOOTSTRAP_ID = `\0${ENV_BOOTSTRAP_ID}`;
 type BootstrapOptions = { runtime: 'node'; directory?: string } | { runtime: 'worker' };
 
 export function envBootstrapSource(options: BootstrapOptions): string {
-    const helperPath = fileURLToPath(import.meta.resolve('@seedcord/core/internal'));
+    const helperPath = fileURLToPath(import.meta.resolve('@seedcord/core/internal/env'));
     const imports = `import { Envapter } from 'envapt';
 import { bindViteEnv } from ${JSON.stringify(helperPath)};\n`;
     if (options.runtime === 'worker') {
@@ -18,7 +18,8 @@ export const binding = bindViteEnv(Envapter, import.meta.env, { bindings: env })
     if (options.directory !== undefined) {
         return `${imports}export const binding = bindViteEnv(Envapter, import.meta.env, { directory: ${JSON.stringify(options.directory)} });\n`;
     }
-    return `${imports}import { botConfigDir } from '@seedcord/utils/internal';
+    const utilsPath = fileURLToPath(import.meta.resolve('@seedcord/utils/internal'));
+    return `${imports}import { botConfigDir } from ${JSON.stringify(utilsPath)};
 export const binding = bindViteEnv(Envapter, import.meta.env, { directory: botConfigDir() });\n`;
 }
 

@@ -44,6 +44,12 @@
                 "default": "./dist/internal.index.mjs"
             }
         },
+        "./internal/env": {
+            "import": {
+                "types": "./dist/env-internal.index.d.mts",
+                "default": "./dist/env-internal.index.mjs"
+            }
+        },
         "./node": {
             "import": {
                 "types": "./dist/node.index.d.mts",

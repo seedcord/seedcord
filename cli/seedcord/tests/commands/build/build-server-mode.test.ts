@@ -1,9 +1,11 @@
-import { appendFile, readFile, writeFile } from 'node:fs/promises';
+import { appendFile, cp, mkdir, mkdtempDisposable, readFile, rename, writeFile } from 'node:fs/promises';
+import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 
 import { describe, expect, it, onTestFinished, vi } from 'vitest';
 
 import { ShellMode } from '#src/core/ShellMode';
+import { linkPackages } from '#tests/edgeFolder';
 
 import { builtSource, copyFixture, FLAT_BOT, GATEWAY_BOT, HTTP_BOT } from './fixtureCopy';
 import { quickBuildRunner } from './quickBuildRunner';
@@ -16,7 +18,11 @@ describe('seedcord build mode on a node bot', () => {
     ] as const)(
         'keeps Vite values fixed and runtime values deployable on %s',
         async (kind, fixture) => {
-            const projectDir = await copyFixture(fixture);
+            await using temporary = await mkdtempDisposable(join(tmpdir(), 'seedcord-env-build-'));
+            const projectDir = join(temporary.path, 'project');
+            await cp(fixture, projectDir, { recursive: true, filter: (source) => !source.endsWith('dist') });
+            await mkdir(join(projectDir, 'node_modules/@seedcord'), { recursive: true });
+            await linkPackages(projectDir, ['envapt', '@seedcord/tsconfig', `@seedcord/${kind}`]);
             const bot = join(projectDir, 'src/bot.ts');
             await writeFile(bot, `import './env-probe';\n${await readFile(bot, 'utf8')}`);
             await writeFile(
@@ -34,10 +40,17 @@ Envapter.useSource(new PortableSource(Envapter.source.readVars()));
 `
             );
             await writeFile(join(projectDir, '.env'), 'VITE_GREETING=built\nRUNTIME_GREETING=before\n');
-            await quickBuildRunner().run(projectDir);
+            const previousCwd = process.cwd();
+            try {
+                process.chdir(projectDir);
+                await quickBuildRunner().run(projectDir);
+            } finally {
+                process.chdir(previousCwd);
+            }
             await writeFile(join(projectDir, '.env'), 'VITE_GREETING=changed\nRUNTIME_GREETING=deployed\n');
-
-            const output = await smoke(kind, process.execPath, [join(projectDir, 'dist/index.mjs')]);
+            const deployedDir = join(temporary.path, 'deployed');
+            await rename(projectDir, deployedDir);
+            const output = await smoke(kind, process.execPath, [join(deployedDir, 'dist/index.mjs')]);
 
             expect(output).toContain('fixture:vite built');
             expect(output).toContain('fixture:runtime deployed');
