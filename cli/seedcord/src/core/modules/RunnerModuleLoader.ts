@@ -4,17 +4,20 @@ import { SeedcordErrorCode } from '@seedcord/errors';
 import { SeedcordError } from '@seedcord/errors/internal';
 import { importFailed } from '@seedcord/utils/internal';
 
-import { BIND_ENV_ID } from './edgeStandIns';
+import { ENV_BOOTSTRAP_ID } from './envBootstrap';
 
 import type { ModuleLoader } from './ModuleLoader';
+import type { bindViteEnv } from '@seedcord/core/internal';
 import type { ModuleRunner } from 'vite/module-runner';
 
 // this is way longer than any real import. the edge test bot's cold import takes about 135ms
 const IMPORT_DEADLINE_MS = 30_000;
 
-export class RunnerModuleLoader implements ModuleLoader {
+export class RunnerModuleLoader implements ModuleLoader, AsyncDisposable {
+    private binding?: Disposable;
+
     constructor(
-        protected readonly runner: ModuleRunner,
+        private readonly runner: ModuleRunner,
         private readonly deadlineMs = IMPORT_DEADLINE_MS
     ) {}
 
@@ -25,11 +28,20 @@ export class RunnerModuleLoader implements ModuleLoader {
         return this.load<TModule>(path, path);
     }
 
-    public async bindEdgeEnv(): Promise<void> {
-        await this.load(BIND_ENV_ID, 'envapt');
+    public async bindEnv(): Promise<void> {
+        const { binding } = await this.load<{ binding: ReturnType<typeof bindViteEnv> }>(ENV_BOOTSTRAP_ID, 'envapt');
+        this.binding = binding;
     }
 
-    protected async load<TModule>(id: string, shownAs: string): Promise<TModule> {
+    public async [Symbol.asyncDispose](): Promise<void> {
+        try {
+            await this.runner.close();
+        } finally {
+            this.binding?.[Symbol.dispose]();
+        }
+    }
+
+    private async load<TModule>(id: string, shownAs: string): Promise<TModule> {
         let timer: NodeJS.Timeout | undefined;
         const stalled = new Promise<undefined>((resolve) => {
             timer = setTimeout(resolve, this.deadlineMs, undefined);

@@ -42,23 +42,20 @@ async function writeRuntimePackage(root: string, name: string): Promise<void> {
     await writeFile(join(dir, 'node.js'), `export default 'node';\n`, 'utf8');
 }
 
-// every edge bot installs envapt, a peer of @seedcord/http
-async function edgeProject(): Promise<string> {
-    const root = await project();
-    await linkPackages(root, ['envapt']);
-    return root;
-}
-
 async function writeModule(root: string, source: string): Promise<string> {
     const entry = join(root, 'src', 'probe.ts');
     await writeFile(entry, source, 'utf8');
     return entry;
 }
 
-async function project(options: Record<string, unknown> = {}): Promise<string> {
+async function project(
+    options: Record<string, unknown> = {},
+    packages: readonly string[] = ['envapt']
+): Promise<string> {
     const tmp = await mkdtempDisposable(join(tmpdir(), 'seedcord-loader-'));
     onTestFinished(() => tmp.remove());
     const root = tmp.path;
+    await linkPackages(root, packages);
     const compilerOptions = { module: 'preserve', moduleResolution: 'bundler', ...options };
 
     await writeFile(join(root, 'tsconfig.json'), JSON.stringify({ compilerOptions }), 'utf8');
@@ -89,7 +86,6 @@ describe('openModuleLoader', () => {
 
     it("writes nothing to the project's vite cache", async () => {
         const root = await project();
-        await mkdir(join(root, 'node_modules'));
 
         await using modules = await openModuleLoader(root, SERVER, 'development', BOT_CODE);
         await modules.importModule(await writeEntry(root, './lib/greeting'));
@@ -194,7 +190,7 @@ describe('openModuleLoader for an edge bot', () => {
     it.each(['fixture-runtime', '@seedcord/fixture-runtime'])(
         "picks %s's workerd export on edge and its import export on a server",
         async (name) => {
-            const root = await edgeProject();
+            const root = await project();
             await writeRuntimePackage(root, name);
             const entry = await writeModule(root, `export { default } from '${name}';\n`);
 
@@ -210,7 +206,7 @@ describe('openModuleLoader for an edge bot', () => {
 
     it("loads cloudflare:workers with the shell's value for a declared secret", async () => {
         vi.stubEnv('SEEDCORD_PROBE', 'from the shell');
-        const root = await edgeProject();
+        const root = await project();
         const entry = await writeModule(
             root,
             `import { env } from 'cloudflare:workers';\nexport const probe = env.SEEDCORD_PROBE;\n`
@@ -223,7 +219,7 @@ describe('openModuleLoader for an edge bot', () => {
     });
 
     it("loads cloudflare:workers with .env's value for a declared secret", async () => {
-        const root = await edgeProject();
+        const root = await project();
         await writeFile(join(root, '.env'), 'SEEDCORD_PROBE=from .env\n', 'utf8');
         const entry = await writeModule(
             root,
@@ -238,7 +234,7 @@ describe('openModuleLoader for an edge bot', () => {
 
     it('reads the env from the WorkerEnv it is given', async () => {
         vi.stubEnv('SEEDCORD_PROBE', 'from the shell');
-        const root = await edgeProject();
+        const root = await project();
         const target = await edgeTarget(root);
         const workerEnv = await WorkerEnv.load(join(root, 'cloudflare.config.ts'), 'development');
         await writeFile(join(root, 'cloudflare.config.ts'), `throw new Error('loaded a second time');\n`, 'utf8');
@@ -254,7 +250,7 @@ describe('openModuleLoader for an edge bot', () => {
     });
 
     it('loads classes that extend the cloudflare:workers base classes', async () => {
-        const root = await edgeProject();
+        const root = await project();
         const entry = await writeModule(
             root,
             [
@@ -273,7 +269,7 @@ describe('openModuleLoader for an edge bot', () => {
     });
 
     it('throws CoreImportFailed for an edge bot without envapt installed', async () => {
-        const root = await project();
+        const root = await project({}, []);
 
         await expect(openModuleLoader(root, await edgeTarget(root), 'development', BOT_CODE)).rejects.toMatchObject({
             code: SeedcordErrorCode.CoreImportFailed,
@@ -283,7 +279,7 @@ describe('openModuleLoader for an edge bot', () => {
 
     it("binds envapt's workerd build to the worker's env", async () => {
         vi.stubEnv('SEEDCORD_PROBE', 'from the shell');
-        const root = await edgeProject();
+        const root = await project();
         const entry = await writeModule(
             root,
             `import { Envapter } from 'envapt';\nexport const probe = Envapter.get('SEEDCORD_PROBE');\n`

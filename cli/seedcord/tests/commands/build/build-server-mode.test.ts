@@ -1,14 +1,52 @@
-import { appendFile, writeFile } from 'node:fs/promises';
+import { appendFile, readFile, writeFile } from 'node:fs/promises';
 import { join } from 'node:path';
 
 import { describe, expect, it, onTestFinished, vi } from 'vitest';
 
 import { ShellMode } from '#src/core/ShellMode';
 
-import { builtSource, copyFixture, FLAT_BOT, GATEWAY_BOT } from './fixtureCopy';
+import { builtSource, copyFixture, FLAT_BOT, GATEWAY_BOT, HTTP_BOT } from './fixtureCopy';
 import { quickBuildRunner } from './quickBuildRunner';
+import { smoke } from './smoke';
 
 describe('seedcord build mode on a node bot', () => {
+    it.each([
+        ['gateway', GATEWAY_BOT],
+        ['http', HTTP_BOT]
+    ] as const)(
+        'keeps Vite values fixed and runtime values deployable on %s',
+        async (kind, fixture) => {
+            const projectDir = await copyFixture(fixture);
+            const bot = join(projectDir, 'src/bot.ts');
+            await writeFile(bot, `import './env-probe';\n${await readFile(bot, 'utf8')}`);
+            await writeFile(
+                join(projectDir, 'src/env-probe.ts'),
+                `import { Envapter, PortableSource, merge } from 'envapt';
+Envapter.useSource(merge(Envapter.source, new PortableSource({ CUSTOM: 'composed' })));
+if (Envapter.get('VITE_GREETING') !== import.meta.env.VITE_GREETING) throw new Error('Vite sources disagree');
+console.log('fixture:vite', Envapter.get('VITE_GREETING'));
+console.log('fixture:runtime', Envapter.get('RUNTIME_GREETING'));
+console.log('fixture:custom', Envapter.get('CUSTOM'));
+Envapter.envFileOptions = { override: true };
+console.log('fixture:override', Envapter.get('VITE_GREETING'));
+Envapter.envFileOptions = {};
+Envapter.useSource(new PortableSource(Envapter.source.readVars()));
+`
+            );
+            await writeFile(join(projectDir, '.env'), 'VITE_GREETING=built\nRUNTIME_GREETING=before\n');
+            await quickBuildRunner().run(projectDir);
+            await writeFile(join(projectDir, '.env'), 'VITE_GREETING=changed\nRUNTIME_GREETING=deployed\n');
+
+            const output = await smoke(kind, process.execPath, [join(projectDir, 'dist/index.mjs')]);
+
+            expect(output).toContain('fixture:vite built');
+            expect(output).toContain('fixture:runtime deployed');
+            expect(output).toContain('fixture:custom composed');
+            expect(output).toContain('fixture:override changed');
+        },
+        120_000
+    );
+
     it('bundles in the mode the shell sets', async () => {
         const projectDir = await copyFixture(FLAT_BOT);
         await appendFile(join(projectDir, 'index.ts'), 'console.log(`fixture:mode ${import.meta.env.MODE}`);\n');

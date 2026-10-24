@@ -1,3 +1,5 @@
+import { ENV_BOOTSTRAP_ID } from '#core/modules/envBootstrap';
+
 import { builtFilesSource, loadListedFiles, PLACEHOLDER_ROOT } from './builtFiles';
 
 import type { EntryPlugins } from './builtFiles';
@@ -27,7 +29,7 @@ export function exportInstance(instanceKey: string): string[] {
 
 export function serverEntry(builtFiles: EntryBuiltFiles, importBot: string[]): EntryPlugins {
     const registerFiles = builtFilesSource({ ...builtFiles, rootExpression: ROOT_EXPRESSION, sourcePaths: false });
-    const source = [registerFiles, ...importBot, ''].join('\n');
+    const source = [registerFiles, `await import('${ENV_BOOTSTRAP_ID}');`, ...importBot, ''].join('\n');
     const entry: Plugin = {
         name: ENTRY_ID,
         resolveId: (id) => (id === ENTRY_ID ? RESOLVED_ENTRY_ID : undefined),

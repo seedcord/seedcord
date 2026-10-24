@@ -340,8 +340,8 @@ catalogs:
       specifier: ^14.27.0
       version: 14.27.0
     envapt:
-      specifier: ^9.1.0
-      version: 9.1.0
+      specifier: ^9.2.0
+      version: 9.2.0
     kysely:
       specifier: ^0.29.4
       version: 0.29.6
@@ -513,7 +513,7 @@ importers:
         version: link:../../packages/discord-component-embed
       envapt:
         specifier: catalog:peer
-        version: 9.1.0
+        version: 9.2.0
       github-slugger:
         specifier: ^2.0.0
         version: 2.0.0
@@ -737,7 +737,7 @@ importers:
         version: 14.27.0
       envapt:
         specifier: catalog:peer
-        version: 9.1.0
+        version: 9.2.0
       eslint:
         specifier: ^9.39.4
         version: 9.39.4(jiti@2.7.0)(supports-color@10.2.2)
@@ -1063,7 +1063,7 @@ importers:
         version: 14.27.0
       envapt:
         specifier: catalog:peer
-        version: 9.1.0
+        version: 9.2.0
       eslint-plugin-react-hooks:
         specifier: catalog:eslint
         version: 7.1.1(eslint@10.8.0(jiti@2.7.0)(supports-color@10.2.2))(supports-color@10.2.2)
@@ -1096,7 +1096,7 @@ importers:
         version: 0.38.56
       envapt:
         specifier: catalog:peer
-        version: 9.1.0
+        version: 9.2.0
       typescript:
         specifier: catalog:peer
         version: 6.0.3
@@ -1133,7 +1133,7 @@ importers:
         version: 14.27.0
       envapt:
         specifier: catalog:peer
-        version: 9.1.0
+        version: 9.2.0
       mongoose:
         specifier: catalog:peer
         version: 9.11.2
@@ -1164,7 +1164,7 @@ importers:
         version: 0.38.56
       envapt:
         specifier: catalog:peer
-        version: 9.1.0
+        version: 9.2.0
       typescript:
         specifier: catalog:peer
         version: 6.0.3
@@ -1235,7 +1235,7 @@ importers:
         version: link:../../tooling/vitest-config
       envapt:
         specifier: catalog:peer
-        version: 9.1.0
+        version: 9.2.0
       type-fest:
         specifier: catalog:deps
         version: 5.10.0
@@ -1401,7 +1401,7 @@ importers:
         version: 14.27.0
       envapt:
         specifier: catalog:peer
-        version: 9.1.0
+        version: 9.2.0
       type-fest:
         specifier: catalog:deps
         version: 5.10.0
@@ -1477,7 +1477,7 @@ importers:
         version: 4.1.12(supports-color@10.2.2)(vitest@4.1.12)
       envapt:
         specifier: catalog:peer
-        version: 9.1.0
+        version: 9.2.0
       esbuild:
         specifier: ^0.28.1
         version: 0.28.2
@@ -1520,7 +1520,7 @@ importers:
         version: link:../../tooling/vitest-config
       envapt:
         specifier: catalog:peer
-        version: 9.1.0
+        version: 9.2.0
       tsx:
         specifier: catalog:deps
         version: 4.23.15
@@ -1665,7 +1665,7 @@ importers:
         version: 8.23.1
       envapt:
         specifier: catalog:peer
-        version: 9.1.0
+        version: 9.2.0
       kysely:
         specifier: catalog:peer
         version: 0.29.6
@@ -1720,7 +1720,7 @@ importers:
         version: link:../../tooling/vitest-config
       envapt:
         specifier: catalog:peer
-        version: 9.1.0
+        version: 9.2.0
       mongoose:
         specifier: catalog:peer
         version: 9.11.2
@@ -1747,7 +1747,7 @@ importers:
         version: link:../tooling/docs-generator
       envapt:
         specifier: catalog:peer
-        version: 9.1.0
+        version: 9.2.0
       yaml:
         specifier: catalog:deps
         version: 2.9.1
@@ -6575,8 +6575,8 @@ packages:
     resolution: {integrity: sha512-dtJUTepzMW3Lm/NPxRf3wP4642UWhjL2sQxc+ym2YMj1m/H2zDNQOlezafzkHwn6sMstjHTwG6iQQsctDW/b1A==}
     engines: {node: ^12.20.0 || ^14.13.1 || >=16.0.0}
 
-  envapt@9.1.0:
-    resolution: {integrity: sha512-o5UMfyKyzpiUV/2qXfzFx5fOwXbb8sph2fli0onxxUAf81NE/s9j1WB2j5CK2Q7yteanjIZwmvNK3L8zAP8Q9Q==}
+  envapt@9.2.0:
+    resolution: {integrity: sha512-5fwl7dKviaNlWLAVGsylCbX0lUErE496k2GIrlm0QOYDGB/DHVeLmL+ntG4pQ7W+rLadzwkrri3FROduf9ssew==}
     engines: {bun: '>=1.3.11', deno: '>=2.5.0', node: '>=22.23.3'}
 
   environment@1.1.0:
@@ -14155,7 +14155,7 @@ snapshots:
 
   env-paths@3.0.0: {}
 
-  envapt@9.1.0: {}
+  envapt@9.2.0: {}
 
   environment@1.1.0: {}
 

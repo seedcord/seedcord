@@ -7,6 +7,8 @@ import { SeedcordErrorCode } from '@seedcord/errors';
 import { BOT_FILES_KEY } from '@seedcord/utils/internal';
 import { beforeEach, describe, expect, it, onTestFinished } from 'vitest';
 
+import { linkPackages } from '#tests/edgeFolder';
+
 import { quickBuildRunner } from './quickBuildRunner';
 
 let projectDir: string;
@@ -14,6 +16,7 @@ let projectDir: string;
 beforeEach(async () => {
     const tmp = await mkdtempDisposable(join(tmpdir(), 'seedcord-outdir-'));
     projectDir = tmp.path;
+    await linkPackages(projectDir, ['envapt']);
     await mkdir(join(projectDir, 'src/handlers'), { recursive: true });
     await writeFile(join(projectDir, 'src/index.ts'), '');
     await writeFile(join(projectDir, 'src/bot.ts'), '');

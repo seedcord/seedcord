@@ -1,5 +1,4 @@
-import { mkdirSync, mkdtempDisposableSync, realpathSync, writeFileSync } from 'node:fs';
-import { tmpdir } from 'node:os';
+import { mkdirSync, writeFileSync } from 'node:fs';
 import { join } from 'node:path';
 
 import { isSeedcordError, SeedcordErrorCode } from '@seedcord/errors';
@@ -10,6 +9,8 @@ import { ProjectLoader } from '#core/config/ProjectLoader';
 import { openModuleLoader } from '#core/modules/openModuleLoader';
 import { ShellMode } from '#src/core/ShellMode';
 import { configWithGreetingPlugin, GREETING, GREETING_PROBE } from '#tests/greetingPlugin';
+
+import { tempProject } from './projectLoaderFixtures';
 
 const SERVER_FIELDS = "root: './src', instance: './bot.ts', build: { start: './index.ts' }";
 const STARTED = 'seedcordTestPluginStarted';
@@ -34,10 +35,7 @@ function recordingSteps(): RecordedSteps {
 }
 
 function projectWithConfig(source: string): string {
-    const temp = mkdtempDisposableSync(join(tmpdir(), 'seedcord-open-'));
-    onTestFinished(() => temp.remove());
-    // the loader resolves against the real path of a mac temp dir
-    const projectDir = realpathSync(temp.path);
+    const projectDir = tempProject();
     mkdirSync(join(projectDir, 'src'));
     writeFileSync(join(projectDir, 'seedcord.config.ts'), source);
     writeFileSync(join(projectDir, 'src/probe.ts'), GREETING_PROBE);

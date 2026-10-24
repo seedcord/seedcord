@@ -1,4 +1,4 @@
-import { mkdtempDisposableSync, writeFileSync } from 'node:fs';
+import { mkdirSync, mkdtempDisposableSync, symlinkSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 
@@ -22,6 +22,12 @@ export async function openProject(loader: ProjectLoader, projectDir: string): Pr
 export function tempProject(): string {
     const projectDir = mkdtempDisposableSync(join(tmpdir(), 'seedcord-config-'));
     onTestFinished(() => projectDir.remove());
+    mkdirSync(join(projectDir.path, 'node_modules'));
+    symlinkSync(
+        join(import.meta.dirname, '../../../node_modules/envapt'),
+        join(projectDir.path, 'node_modules/envapt'),
+        'junction'
+    );
     // tmpdir() sits under a symlink on mac and uses an 8.3 short name on the windows runner
     return realPath(projectDir.path);
 }

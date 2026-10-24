@@ -49,7 +49,23 @@ describe('seedcord build on an edge bot', () => {
         ({ projectDir, remove } = await copyEdgeBot());
         const signing = await writeSigningEnv(projectDir);
         sign = signing.sign;
+        await writeCloudflareConfig(projectDir, {
+            env: { VITE_GREETING: bindings.text('worker-binding'), RUNTIME_GREETING: bindings.secret() }
+        });
+        await writeFile(join(projectDir, '.env'), 'VITE_GREETING=built\n');
+        await appendFile(join(projectDir, '.dev.vars'), 'RUNTIME_GREETING=before\n');
+        const bot = join(projectDir, 'src/bot.ts');
+        await writeFile(
+            bot,
+            `import { Envapter } from 'envapt';
+if (Envapter.get('VITE_GREETING') !== import.meta.env.VITE_GREETING) throw new Error('Vite sources disagree');
+if (Envapter.get('RUNTIME_GREETING') !== env.RUNTIME_GREETING) throw new Error('Runtime source is stale');
+if (Envapter.environment !== 'production') throw new Error('Worker mode disagrees');
+${await readFile(bot, 'utf8')}`
+        );
         result = await edgeBuildRunner(fakeDiscord(signing.publicKey)).run(projectDir);
+        await writeFile(join(projectDir, '.env'), 'VITE_GREETING=changed-after-build\n');
+        await appendFile(join(projectDir, '.dev.vars'), 'RUNTIME_GREETING=after\n');
     }, 120_000);
 
     afterAll(() => remove());

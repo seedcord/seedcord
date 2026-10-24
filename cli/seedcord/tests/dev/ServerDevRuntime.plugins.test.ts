@@ -5,6 +5,7 @@ import { join } from 'node:path';
 import { describe, expect, it } from 'vitest';
 
 import { ServerDevRuntime } from '#commands/dev/runtime/ServerDevRuntime';
+import { linkPackages } from '#tests/edgeFolder';
 
 import { devContextFor } from './devConfigFor';
 
@@ -50,6 +51,7 @@ async function writePackage(root: string, name: string, manifest: object, entry:
 
 // the bot depends on `from` alone and imports the plugin class through it
 async function writeProject(root: string, from: string): Promise<void> {
+    await linkPackages(root, ['envapt']);
     await mkdir(join(root, 'src'), { recursive: true });
     await writeFile(
         join(root, 'package.json'),

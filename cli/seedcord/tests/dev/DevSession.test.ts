@@ -14,6 +14,7 @@ import { DevLock } from '#core/state/DevLock';
 import { StateFolder } from '#core/state/StateFolder';
 import { bindEnv } from '#tests/bindEnv';
 import { APP_ID, FAKE_TOKEN } from '#tests/commands/build/smoke';
+import { linkPackages } from '#tests/edgeFolder';
 import { lockDir, type LockDir } from '#tests/lockDir';
 import { silentLogger } from '#tests/silentLogger';
 import { vitePluginsOf } from '#tests/vitePluginsOf';
@@ -271,6 +272,7 @@ describe('DevSession', () => {
 describe('DevSession on a real runtime', () => {
     async function project(entry: string): Promise<ResolvedSeedcordConfig> {
         const temp = await mkdtempDisposable(join(tmpdir(), 'dev-session-'));
+        await linkPackages(temp.path, ['envapt']);
         onTestFinished(() => temp.remove());
         await mkdir(join(temp.path, 'src'));
         await writeFile(join(temp.path, 'package.json'), JSON.stringify({ name: 'dev-fixture', type: 'module' }));
@@ -312,6 +314,7 @@ describe('DevSession on a real runtime', () => {
 describe('DevSession with a broken entry', () => {
     it('puts the entry path once in front of the parse error', async () => {
         const temp = await mkdtempDisposable(join(tmpdir(), 'dev-session-'));
+        await linkPackages(temp.path, ['envapt']);
         onTestFinished(() => temp.remove());
         const entry = join(realPath(temp.path), 'src', 'index.ts');
         await mkdir(join(temp.path, 'src'));

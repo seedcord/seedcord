@@ -8,6 +8,7 @@ import { assert, describe, expect, it, onTestFinished } from 'vitest';
 
 import { ServerDevRuntime } from '#commands/dev/runtime/ServerDevRuntime';
 import { realPath } from '#core/project/realPath';
+import { linkPackages } from '#tests/edgeFolder';
 import { GREETING, GREETING_PROBE, greetingPlugin } from '#tests/greetingPlugin';
 import { vitePluginsOf } from '#tests/vitePluginsOf';
 
@@ -16,6 +17,7 @@ import { saveUntil } from './saveUntil';
 
 // the entry loads ban.ts the way importFiles loads a command file
 async function writeProject(dir: string): Promise<void> {
+    await linkPackages(dir, ['envapt']);
     await mkdir(join(dir, 'src', 'commands'), { recursive: true });
     await writeFile(join(dir, 'package.json'), JSON.stringify({ name: 'dev-fixture', type: 'module' }));
     await writeFile(join(dir, 'seedcord.config.ts'), 'export default {};\n');

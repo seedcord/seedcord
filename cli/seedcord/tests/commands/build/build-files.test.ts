@@ -5,6 +5,8 @@ import { join } from 'node:path';
 import { SeedcordErrorCode } from '@seedcord/errors';
 import { describe, expect, it } from 'vitest';
 
+import { linkPackages } from '#tests/edgeFolder';
+
 import { quickBuildRunner } from './quickBuildRunner';
 
 interface ProjectShape {
@@ -21,6 +23,7 @@ interface Project extends AsyncDisposable {
 async function project({ root = './src', files = [], write = [] }: ProjectShape): Promise<Project> {
     await using stack = new AsyncDisposableStack();
     const tmp = stack.use(await mkdtempDisposable(join(tmpdir(), 'seedcord-files-')));
+    await linkPackages(tmp.path, ['envapt']);
     const rootDir = join(tmp.path, root);
     await mkdir(rootDir, { recursive: true });
     await writeFile(join(rootDir, 'bot.ts'), '');

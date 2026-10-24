@@ -4,6 +4,7 @@ import { BotLayout, withoutQuery } from '@seedcord/utils/internal';
 import { createBuilder } from 'vite';
 
 import { BOT_ENVIRONMENT, botEnvironment } from '#core/modules/botEnvironment';
+import { envBootstrap } from '#core/modules/envBootstrap';
 
 import { assertOutDirSafe } from './assertOutDirSafe';
 import { isListedFileId, listedFileOf } from './builtFiles';
@@ -59,22 +60,25 @@ export abstract class ServerBuild<Target extends ResolvedServerTarget = Resolved
             configFile: BotLayout.keyUnder(outDir, config.configFile)
         };
 
-        const result = await this.buildBot([serverEntry(builtFiles, importBot), pinModulePaths(layout)], {
-            outDir,
-            emptyOutDir: true,
-            sourcemap: true,
-            minify: false,
-            target: NODE_TARGET,
-            rolldownOptions: {
-                input: ENTRY_ID,
-                output: {
-                    format: 'esm',
-                    preserveModules: true,
-                    preserveModulesRoot: root,
-                    entryFileNames: (chunk) => outputName(chunk.facadeModuleId, layout)
+        const result = await this.buildBot(
+            [envBootstrap({ runtime: 'node' }), serverEntry(builtFiles, importBot), pinModulePaths(layout)],
+            {
+                outDir,
+                emptyOutDir: true,
+                sourcemap: true,
+                minify: false,
+                target: NODE_TARGET,
+                rolldownOptions: {
+                    input: ENTRY_ID,
+                    output: {
+                        format: 'esm',
+                        preserveModules: true,
+                        preserveModulesRoot: root,
+                        entryFileNames: (chunk) => outputName(chunk.facadeModuleId, layout)
+                    }
                 }
             }
-        });
+        );
         return bundleStats(outputChunks(result), layout, join(outDir, ENTRY_FILE_NAME));
     }
 

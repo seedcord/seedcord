@@ -17,6 +17,7 @@ import { StateFolder } from '#core/state/StateFolder';
 import { ShellMode } from '#src/core/ShellMode';
 import { bindEnv } from '#tests/bindEnv';
 import { APP_ID, FAKE_TOKEN } from '#tests/commands/build/smoke';
+import { linkPackages } from '#tests/edgeFolder';
 import { loadedConfig } from '#tests/loadedConfig';
 import { lockDir, type LockDir } from '#tests/lockDir';
 import { silentLogger } from '#tests/silentLogger';
@@ -435,6 +436,7 @@ describe('DevRunner run', () => {
 
     it("starts the config's Vite plugins once per session", async () => {
         const temp = await mkdtempDisposable(join(tmpdir(), 'dev-runner-plugins-'));
+        await linkPackages(temp.path, ['envapt']);
         onTestFinished(() => temp.remove());
         await mkdir(join(temp.path, 'src'));
         await writeFile(

@@ -2,29 +2,15 @@ import { createServerModuleRunner } from 'vite';
 
 import { botEnvironment } from './botEnvironment';
 import { edgeStandIns } from './edgeStandIns';
+import { envBootstrap } from './envBootstrap';
 import { openViteServer } from './openViteServer';
 import { RunnerModuleLoader } from './RunnerModuleLoader';
 import { mergeViteConfig, NODE_CONDITIONS, WORKERD_CONDITIONS, userCodeConfig } from './userCodeConfig';
 import { WorkerEnv } from './workerEnv';
 
 import type { BuildTarget } from '#core/config/detectTarget';
-import type { LoaderUse } from './ModuleLoader';
-import type { ServerOptions, ViteDevServer } from 'vite';
-import type { ModuleRunner } from 'vite/module-runner';
-
-class ViteModuleLoader extends RunnerModuleLoader implements AsyncDisposable {
-    constructor(
-        private readonly server: ViteDevServer,
-        runner: ModuleRunner
-    ) {
-        super(runner);
-    }
-
-    public async [Symbol.asyncDispose](): Promise<void> {
-        await this.runner.close();
-        await this.server.close();
-    }
-}
+import type { LoaderUse, ModuleLoader } from './ModuleLoader';
+import type { ServerOptions } from 'vite';
 
 interface EdgeDevCopy {
     readonly watch: NonNullable<ServerOptions['watch']>;
@@ -42,12 +28,12 @@ export async function openModuleLoader(
     mode: string,
     use: LoaderUse,
     devCopy?: EdgeDevCopy
-): Promise<RunnerModuleLoader & AsyncDisposable> {
+): Promise<ModuleLoader & AsyncDisposable> {
     const runsWorkerCode = target.kind === 'edge' && use !== 'config';
-    const workerEnv =
+    const loadWorkerEnv =
         target.kind === 'edge' ? lazyWorkerEnv(target.cloudflareConfig, mode, devCopy?.workerEnv) : undefined;
     // read up front because the runner reports anything a load hook throws as CoreImportFailed
-    if (runsWorkerCode) await workerEnv?.();
+    const workerEnv = runsWorkerCode && loadWorkerEnv ? await loadWorkerEnv() : undefined;
     const conditions = runsWorkerCode ? WORKERD_CONDITIONS : NODE_CONDITIONS;
     const userPlugins = use === 'config' ? [] : use.vitePlugins.create();
     const config = mergeViteConfig(userCodeConfig(conditions, projectDir), {
@@ -60,16 +46,22 @@ export async function openModuleLoader(
         server: { middlewareMode: true, hmr: false, ws: false, watch: devCopy?.watch ?? null },
         // keeps vite from writing a dep cache into the project's node_modules/.vite
         optimizeDeps: { noDiscovery: true, include: [] },
-        plugins: [...(workerEnv ? [edgeStandIns(workerEnv)] : []), userPlugins]
+        plugins: [
+            envBootstrap(runsWorkerCode ? { runtime: 'worker' } : { runtime: 'node', directory: projectDir }),
+            ...(loadWorkerEnv ? [edgeStandIns(loadWorkerEnv)] : []),
+            userPlugins
+        ]
     });
     await using onFailure = new AsyncDisposableStack();
+    workerEnv?.bindToCli(onFailure);
     const server = await openViteServer(onFailure, config);
     const runner = createServerModuleRunner(botEnvironment(server.environments), { hmr: false });
-    onFailure.defer(() => runner.close());
+    const loader = onFailure.use(new RunnerModuleLoader(runner));
+    await loader.bindEnv();
 
-    const loader = new ViteModuleLoader(server, runner);
-    if (runsWorkerCode) await loader.bindEdgeEnv();
-
-    onFailure.move();
-    return loader;
+    const resources = onFailure.move();
+    return {
+        importModule: loader.importModule.bind(loader),
+        [Symbol.asyncDispose]: () => resources.disposeAsync()
+    };
 }

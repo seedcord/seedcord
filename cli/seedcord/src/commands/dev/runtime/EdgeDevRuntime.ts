@@ -7,7 +7,6 @@ import { installNodeDefaults } from '@seedcord/logger/node';
 import { filterCirculars } from '@seedcord/utils';
 import { BotLayout } from '@seedcord/utils/internal';
 import chalk from 'chalk';
-import { Envapter, FileSource, merge, PortableSource } from 'envapt';
 
 import { CloudflareWorker } from '#commands/build/builder/CloudflareWorker';
 import { workerEntry } from '#commands/build/builder/workerEntry';
@@ -71,13 +70,6 @@ function installCliLogSinks(stack: AsyncDisposableStack): void {
     stack.defer(() => LoggerChannelRegistry.instance.configure({}));
 }
 
-// the tunnel and the dev lock read the bot's token in this process
-function bindWorkerEnvToCli(workerEnv: WorkerEnv, stack: AsyncDisposableStack): void {
-    // eslint-disable-next-line @eslint-react/rules-of-hooks, react-hooks/rules-of-hooks -- envapt isn't react
-    Envapter.useSource(merge(new FileSource(), new PortableSource(workerEnv.values())));
-    stack.defer(() => Envapter.useSource(new FileSource()));
-}
-
 export class EdgeDevRuntime extends BaseDevRuntime<EdgeStarted> {
     private settleStart?: (() => void) | undefined;
 
@@ -97,7 +89,6 @@ export class EdgeDevRuntime extends BaseDevRuntime<EdgeStarted> {
             CloudflareWorker.load(this.target),
             WorkerEnv.load(this.target.cloudflareConfig, config.viteMode)
         ]);
-        bindWorkerEnvToCli(workerEnv, resources);
         const nodeCopy = await openModuleLoader(dirname(config.configFile), this.target, config.viteMode, config, {
             watch: devWatchOptions(files.layout),
             workerEnv

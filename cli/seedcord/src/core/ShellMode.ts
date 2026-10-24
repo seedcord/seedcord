@@ -21,6 +21,9 @@ function envFilesSetDevNodeEnv(mode: string, configDir: string): boolean {
 }
 
 export class ShellMode {
+    private readonly nodeEnv = process.env.NODE_ENV;
+    private readonly viteNodeEnv = process.env.VITE_USER_NODE_ENV;
+
     constructor(private readonly variable?: ShellVar) {}
 
     // the mode comes from the shell alone because a bot's .env usually sets its dev environment
@@ -35,9 +38,12 @@ export class ShellMode {
     public applyMode(defaultMode: DefaultMode, configDir: string): string {
         const mode = this.viteMode(defaultMode);
         Envapter.environment = mode;
-        // vite fills NODE_ENV with development when its first dev server opens
-        // eslint-disable-next-line @typescript-eslint/prefer-nullish-coalescing -- vite fills an empty NODE_ENV too
-        process.env.NODE_ENV ||= envFilesSetDevNodeEnv(mode, configDir) ? 'development' : defaultMode;
+        if (this.nodeEnv) process.env.NODE_ENV = this.nodeEnv;
+        else {
+            if (this.viteNodeEnv === undefined) delete process.env.VITE_USER_NODE_ENV;
+            else process.env.VITE_USER_NODE_ENV = this.viteNodeEnv;
+            process.env.NODE_ENV = envFilesSetDevNodeEnv(mode, configDir) ? 'development' : defaultMode;
+        }
         return mode;
     }
 

@@ -2,6 +2,8 @@ import { BAKED_IDS_KEY } from '@seedcord/core/internal';
 import { assertNever } from '@seedcord/utils';
 import { workerdPath } from '@seedcord/utils/internal';
 
+import { envBootstrapSource } from '#core/modules/envBootstrap';
+
 import { builtFilesSource, loadListedFiles, PLACEHOLDER_ROOT } from './builtFiles';
 
 import type { EntryPlugins } from './builtFiles';
@@ -20,12 +22,6 @@ export const workerEntryConfig: EntryCustomizer = () => ({ entrypoint: WORKER_EN
 const BIND_ENV_ID = 'virtual:seedcord/bind-env';
 const BUILT_FILES_ID = 'virtual:seedcord/built-files';
 const BAKED_IDS_ID = 'virtual:seedcord/baked-ids';
-
-// envapt's workerd build throws on a read until something binds a source
-const BIND_ENV = `import { env } from 'cloudflare:workers';
-import { Envapter, PortableSource } from 'envapt';
-Envapter.useSource(new PortableSource(env));
-`;
 
 const CWD_ID = 'virtual:seedcord/cwd';
 
@@ -86,7 +82,7 @@ function setupSources({ layout, folders, rootKey, mode }: WorkerEntryOptions): M
         [CWD_ID, cwdSource(cwd)],
         ...modules,
         // the instance file may read env while it loads
-        [BIND_ENV_ID, BIND_ENV],
+        [BIND_ENV_ID, envBootstrapSource({ runtime: 'worker' })],
         [BUILT_FILES_ID, builtFilesSource({ layout, folders, rootExpression, rootKey, sourcePaths })]
     ]);
 }

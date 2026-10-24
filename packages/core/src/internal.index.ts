@@ -38,6 +38,7 @@ export { accessorStore, clearStore, guardedAccessor } from '#src/miscellaneous/g
 export { isEmojiTuple } from '#src/miscellaneous/emojiConfig';
 export { currentApplication } from '#src/miscellaneous/currentApplication';
 export { readBotToken } from '#src/miscellaneous/readBotToken';
+export { bindEnv, bindViteEnv } from '#src/miscellaneous/bindViteEnv';
 export { resolveEmojis } from '#src/miscellaneous/resolveEmojis';
 
 export { BAKED_IDS_KEY, type BakedIds } from '#src/bakedIds';

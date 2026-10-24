@@ -94,4 +94,16 @@ describe('ShellMode.applyMode NODE_ENV', () => {
 
         expect(process.env.NODE_ENV).toBe('development');
     });
+
+    it('forgets a file-derived NODE_ENV when the setting is removed before a restart', async () => {
+        const dir = await configDir({ '.env.production': 'NODE_ENV=development\n' });
+        const shell = new ShellMode();
+        shell.applyMode('production', dir);
+        expect(process.env.NODE_ENV).toBe('development');
+        await writeFile(join(dir, '.env.production'), '');
+
+        shell.applyMode('production', dir);
+
+        expect(process.env.NODE_ENV).toBe('production');
+    });
 });

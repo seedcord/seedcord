@@ -8,4 +8,4 @@
 'seedcord': minor
 ---
 
-**BREAKING:** seedcord now needs envapt 9.1. Run `pnpm add envapt@^9.1`, then update your own envapt reads with the [v8 to v9 migration guide](https://envapt.materwelon.dev/docs/migration-v8-to-v9/).
+**BREAKING:** seedcord now needs envapt ≥9.2. Run `pnpm add envapt@latest`, then update your own envapt reads with the [v8 to v9 migration guide](https://envapt.materwelon.dev/docs/migration-v8-to-v9/).

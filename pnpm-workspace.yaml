@@ -102,7 +102,7 @@ catalogs:
   peer:
     '@cloudflare/vite-plugin': 2.0.0-beta.v.0
     discord.js: ^14.27.0
-    envapt: ^9.1.0
+    envapt: ^9.2.0
     kysely: ^0.29.4
     mongoose: ^9.9.1
     pg: ^8.22.0
@@ -131,3 +131,4 @@ catalogs:
 
 minimumReleaseAgeExclude:
   - es-toolkit@1.53.0
+  - envapt@9.2.0

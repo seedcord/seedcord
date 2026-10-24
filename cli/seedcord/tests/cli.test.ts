@@ -41,7 +41,6 @@ describe('the seedcord CLI', () => {
 
     it('runs from a symlinked project install and goes on to look for the config', async () => {
         const project = tempProject();
-        await mkdir(join(project, 'node_modules'));
         await symlink(PACKAGE_DIR, join(project, 'node_modules', 'seedcord'), 'dir');
 
         const { stderr } = await codegenIn(project);

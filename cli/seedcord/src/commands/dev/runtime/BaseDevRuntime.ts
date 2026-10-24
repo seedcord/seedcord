@@ -7,14 +7,14 @@ import { instanceModule } from '#core/modules/importInstance';
 import { HmrPlugin } from './HmrPlugin';
 import { RestartFiles } from './RestartFiles';
 
-import type { RunnerModuleLoader } from '#core/modules/RunnerModuleLoader';
+import type { ModuleLoader } from '#core/modules/ModuleLoader';
 import type { DevRuntime, DevRuntimeContext, DevRuntimeLoadResult } from './DevRuntime';
 import type { DevEvent } from './events';
 import type { SeedcordInstance } from '@seedcord/types/internal';
 
 export interface StartedRuntime {
     readonly context: DevRuntimeContext;
-    readonly modules: RunnerModuleLoader;
+    readonly modules: ModuleLoader;
     readonly hmr: HmrPlugin;
     readonly resources: AsyncDisposableStack;
 }

@@ -110,8 +110,15 @@ describe('dev runtime with root set to src', () => {
         await mkdir(SCRATCH_ROOT, { recursive: true });
         const dir = await mkdtemp(join(SCRATCH_ROOT, 'dev-'));
         await writeProject(dir);
-        await writeFile(join(dir, '.env'), 'VITE_GREETING=hi from the project\n');
-        await writeFile(join(dir, 'src', 'env.ts'), 'export const greeting = import.meta.env.VITE_GREETING;\n');
+        await writeFile(join(dir, '.env'), 'VITE_GREETING=hi from the project\nRUNTIME_GREETING=runtime\n');
+        await writeFile(
+            join(dir, 'src', 'env.ts'),
+            `import { Envapter } from 'envapt';
+export const greeting = import.meta.env.VITE_GREETING;
+export const envapt = Envapter.get('VITE_GREETING');
+export const runtime = Envapter.get('RUNTIME_GREETING');
+`
+        );
 
         const runtime = new ServerDevRuntime();
         runtimes.push(runtime);
@@ -119,7 +126,11 @@ describe('dev runtime with root set to src', () => {
         await runtime.start(devContextFor(dir, 'env.ts'));
         const { module } = await runtime.loadEntry();
 
-        expect(module).toMatchObject({ greeting: 'hi from the project' });
+        expect(module).toMatchObject({
+            greeting: 'hi from the project',
+            envapt: 'hi from the project',
+            runtime: 'runtime'
+        });
     }, 60_000);
 
     it('forgets root once the bot stops', async () => {

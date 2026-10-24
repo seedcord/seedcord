@@ -2,9 +2,11 @@ import { existsSync, readFileSync } from 'node:fs';
 import { dirname, join } from 'node:path';
 import { parseEnv } from 'node:util';
 
+import { bindEnv } from '@seedcord/core/internal';
 import { SeedcordErrorCode, paint } from '@seedcord/errors';
 import { SeedcordError, SeedcordTypeError } from '@seedcord/errors/internal';
 import { asError } from '@seedcord/utils/internal';
+import { Envapter, merge, PortableSource } from 'envapt';
 import { loadEnv } from 'vite';
 
 import { isPackageMissing } from './cloudflarePlugin';
@@ -75,6 +77,10 @@ export class WorkerEnv {
 
     public static async load(cloudflareConfig: string, mode: string): Promise<WorkerEnv> {
         return new WorkerEnv(await loadWorker(cloudflareConfig, mode), cloudflareConfig, mode);
+    }
+
+    public bindToCli(stack: AsyncDisposableStack): void {
+        stack.use(bindEnv(Envapter, merge(Envapter.source, new PortableSource(this.values())), this.envDir));
     }
 
     // the plugin's resolveLocalBindings uses the same rules. kv, d1 and the other resources have no node stand-in
