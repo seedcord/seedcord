@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 
-import { rankByCoverage } from '#lib/searchRank';
+import { rankByCoverage } from '#src/rankByCoverage';
 
 interface Row {
     type: 'page' | 'heading' | 'text';

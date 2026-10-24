@@ -1,7 +1,7 @@
 'use client';
 
+import { GUIDE_SEARCH_URL, GuideSearch as GuideSearchClient, stripStopwords } from '@seedcord/docs-search';
 import {
-    GUIDE,
     SearchDialog,
     SearchField,
     SearchTrigger,
@@ -11,13 +11,8 @@ import {
     useSearchHotkey
 } from '@seedcord/ui';
 import { useDocsSearch } from 'fumadocs-core/search/client';
-import { staticClient } from 'fumadocs-core/search/client/orama-static';
 import { useRouter } from 'next/navigation';
 import { useCallback, useMemo, useRef, useState } from 'react';
-
-import { firstPages } from '#lib/searchHighlight';
-import { stripStopwords } from '#lib/searchQuery';
-import { rankByCoverage } from '#lib/searchRank';
 
 import { SearchResultRow } from './SearchResultRow';
 
@@ -29,9 +24,6 @@ const LISTBOX_ID = 'guide-search-results';
 export const SEARCH_LABEL = 'Search the guide';
 
 const NO_RESULTS: SortedResult[] = [];
-
-// a common term matches most of the guide
-const MAX_PAGES = 16;
 
 function optionId(id: string): string {
     return `guide-search-${id}`;
@@ -97,10 +89,8 @@ export function GuideSearch({ open, onOpenChange: setOpen }: GuideSearchProps): 
     const inputRef = useRef<HTMLInputElement>(null);
     const router = useRouter();
 
-    // tolerance is the edit distance zbsearch allows. 1 covers a single typo
-    // fumadocs builds the default index path from vite's BASE_URL. next leaves it unset
-    const client = useMemo(() => staticClient({ from: `${GUIDE.path}/api/search`, search: { tolerance: 1 } }), []);
-    const { setSearch, query } = useDocsSearch({ client });
+    const search = useMemo(() => new GuideSearchClient(new URL(GUIDE_SEARCH_URL).pathname), []);
+    const { setSearch, query } = useDocsSearch({ client: search.client });
 
     const onValueChange = useCallback(
         (value: string) => {
@@ -114,9 +104,8 @@ export function GuideSearch({ open, onOpenChange: setOpen }: GuideSearchProps): 
 
     const found = query.data === 'empty' || query.data === undefined ? NO_RESULTS : query.data;
     const terms = useMemo(() => stripStopwords(typed), [typed]);
-    // the cap drops whatever the ranking put last
     // useRovingList keys an effect on this array's identity
-    const results = useMemo(() => firstPages(rankByCoverage(found, terms), MAX_PAGES), [found, terms]);
+    const results = useMemo(() => search.rank(found, terms), [search, found, terms]);
 
     const select = useCallback(
         (result: SortedResult) => {

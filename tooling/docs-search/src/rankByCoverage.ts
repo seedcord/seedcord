@@ -13,12 +13,12 @@ interface Group<Row> {
 const MARKS = /<\/?mark>/g;
 
 function coverage(content: string, terms: readonly string[]): number {
-    const plain = content.replace(MARKS, '').toLowerCase();
+    const plain = content.replaceAll(MARKS, '').toLowerCase();
     return terms.filter((term) => plain.includes(term)).length;
 }
 
 function wordCount(content: string): number {
-    return content.replace(MARKS, '').split(/\s+/).filter(Boolean).length;
+    return content.replaceAll(MARKS, '').split(/\s+/).filter(Boolean).length;
 }
 
 function better<Row>(left: Group<Row>, right: Group<Row>): number {
@@ -45,7 +45,7 @@ export function rankByCoverage<Row extends Result>(results: readonly Row[], quer
         if (row.type === 'page' || groups.length === 0) {
             groups.push({ rows: [], titleCovered: 0, titleWords: 0, covered: 0 });
         }
-        const group = groups[groups.length - 1];
+        const group = groups.at(-1);
         if (!group) continue;
 
         group.rows.push(row);
@@ -58,9 +58,6 @@ export function rankByCoverage<Row extends Result>(results: readonly Row[], quer
         group.covered = Math.max(group.covered, found);
     }
 
-    // a stable sort() keeps pages scoring the same in the order the index gave them
-    return groups
-        .slice()
-        .sort(better)
-        .flatMap((group) => group.rows);
+    // keep equally ranked pages in the order they appear in the index
+    return [...groups].sort(better).flatMap((group) => group.rows);
 }

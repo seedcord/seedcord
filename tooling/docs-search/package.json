@@ -48,6 +48,7 @@
         "@seedcord/vitest-config": "workspace:^"
     },
     "dependencies": {
-        "@leeoniya/ufuzzy": "catalog:deps"
+        "@leeoniya/ufuzzy": "catalog:deps",
+        "fumadocs-core": "catalog:deps"
     }
 }

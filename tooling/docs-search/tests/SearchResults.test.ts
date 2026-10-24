@@ -44,8 +44,10 @@ describe('SearchResults.rank', () => {
         expect(results.rank('logger', 'all')).toHaveLength(2);
     });
 
-    it('caps the results at 24', () => {
+    it('caps results at the requested limit, defaulting to 24', () => {
         const results = new SearchResults(Array.from({ length: 40 }, (_, index) => entry(`entry-${index}`, 'class')));
         expect(results.rank('entry', 'all')).toHaveLength(24);
+        expect(results.rank('entry', 'all', 25)).toHaveLength(25);
+        expect(results.rank('entry', 'all', 0)).toEqual([]);
     });
 });

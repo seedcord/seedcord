@@ -5,6 +5,7 @@ on:
     branches: [main, next]
     paths:
       - 'apps/guide/**'
+      - 'tooling/docs-search/**'
       - 'tooling/ui/**'
       - 'pnpm-workspace.yaml'
       - '.github/workflows/guide-deploy.yml'

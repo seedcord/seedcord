@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 
-import { stripStopwords } from '#lib/searchQuery';
+import { stripStopwords } from '#src/stripStopwords';
 
 describe('the query that reaches the index', () => {
     it('drops the words every block contains', () => {

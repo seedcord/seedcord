@@ -169,16 +169,6 @@ export function highlightSegments(content: string, query: string): HighlightSegm
     return segments;
 }
 
-/** Cuts the flat result list after `limit` pages, keeping each page's own rows with it. */
-export function firstPages<Row extends { type: string }>(results: readonly Row[], limit: number): Row[] {
-    let pages = 0;
-
-    return results.filter((result) => {
-        if (result.type === 'page') pages += 1;
-        return pages <= limit;
-    });
-}
-
 const ELLIPSIS = '…';
 
 function lengthOf(segments: readonly HighlightSegment[]): number {

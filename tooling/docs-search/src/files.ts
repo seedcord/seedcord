@@ -1,7 +1,8 @@
-import { DOCS } from '@seedcord/ui/sites';
+import { DOCS, GUIDE } from '@seedcord/ui/sites';
 
 const EXTENSION = '.json';
 export const REFERENCE_SEARCH_URL = DOCS.at('/api/search');
+export const GUIDE_SEARCH_URL = GUIDE.at('/api/search');
 
 export const searchFileName = (version: string): string => `${version}${EXTENSION}`;
 

@@ -22,7 +22,8 @@ export class SearchResults {
         this.search = new DocSearch(entries);
     }
 
-    rank(query: string, kind: KindFilter = 'all'): ReferenceSearchResult[] {
+    rank(query: string, kind: KindFilter = 'all', limit = MAX_RESULTS): ReferenceSearchResult[] {
+        if (limit <= 0) return [];
         // overload signatures share package, slug and kind
         const seen = new Set<string>();
         const results: ReferenceSearchResult[] = [];
@@ -34,7 +35,7 @@ export class SearchResults {
             seen.add(key);
 
             results.push({ ...entry, url: DOCS.at(entry.action.href) });
-            if (results.length >= MAX_RESULTS) break;
+            if (results.length >= limit) break;
         }
         return results;
     }

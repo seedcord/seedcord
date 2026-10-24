@@ -621,6 +621,9 @@ importers:
       '@seedcord/docs-engine':
         specifier: workspace:^
         version: link:../../tooling/docs-engine
+      '@seedcord/docs-search':
+        specifier: workspace:^
+        version: link:../../tooling/docs-search
       '@seedcord/ui':
         specifier: workspace:^
         version: link:../../tooling/ui
@@ -1903,6 +1906,9 @@ importers:
       '@leeoniya/ufuzzy':
         specifier: catalog:deps
         version: 1.0.19
+      fumadocs-core:
+        specifier: catalog:deps
+        version: 16.15.18(@mdx-js/mdx@3.1.1(supports-color@10.2.2))(@types/estree-jsx@1.0.5)(@types/hast@3.0.5)(@types/mdast@4.0.4)(@types/react@19.3.0)(lucide-react@1.51.0(@types/react@19.3.0)(react@19.3.1))(next@16.4.2(@babel/core@7.29.7(supports-color@10.2.2))(@opentelemetry/api@1.9.1)(@types/node@26.1.2)(react-dom@19.3.1(react@19.3.1))(react@19.3.1))(react-dom@19.3.1(react@19.3.1))(react@19.3.1)(supports-color@10.2.2)(zod@4.6.5)
     devDependencies:
       '@seedcord/eslint-config':
         specifier: workspace:^

@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 
-import { firstPages, highlightSegments, matchWindow } from '#lib/searchHighlight';
+import { highlightSegments, matchWindow } from '#lib/searchHighlight';
 
 describe('the parts of a search result the query matched', () => {
     it('marks the run the query matched', () => {
@@ -145,23 +145,5 @@ describe('the window a row shows around the match', () => {
         const none = highlightSegments('nothing matched here', 'needle');
 
         expect(matchWindow(none, 24, 150)).toEqual(none);
-    });
-});
-
-describe('how many pages a search shows', () => {
-    const rows = [
-        { type: 'page' as const, id: 'p1' },
-        { type: 'text' as const, id: 't1' },
-        { type: 'page' as const, id: 'p2' },
-        { type: 'heading' as const, id: 'h1' },
-        { type: 'page' as const, id: 'p3' }
-    ];
-
-    it('keeps each page rows with it', () => {
-        expect(firstPages(rows, 2).map((row) => row.id)).toEqual(['p1', 't1', 'p2', 'h1']);
-    });
-
-    it('returns everything when the limit is past the count', () => {
-        expect(firstPages(rows, 9)).toEqual(rows);
     });
 });
