@@ -4,7 +4,7 @@ import type { Envapter, Source } from 'envapt';
 
 export function bindEnv(envapter: typeof Envapter, source: Source, directory?: string): Disposable {
     const previousSource = envapter.source;
-    const previousBaseDir = envapter.baseDir;
+    const previousBaseDir = previousSource.supportsFiles ? envapter.baseDir : undefined;
     using cleanup = new DisposableStack();
     cleanup.defer(() => {
         envapter.useSource(previousSource);

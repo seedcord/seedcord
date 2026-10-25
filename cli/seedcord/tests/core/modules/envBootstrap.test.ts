@@ -86,7 +86,7 @@ export const runtime = Envapter.get('RUNTIME_GREETING');
             cloudflareConfigSource(
                 'DISCORD_BOT_TOKEN: bindings.secret(), VITE_GREETING: bindings.text("worker"), ENVIRONMENT: bindings.text("production")'
             ),
-            ['cf', 'envapt']
+            ['cf', 'envapt', '@seedcord']
         );
         await writeFile(join(dir, '.dev.vars'), 'DISCORD_BOT_TOKEN=local-token\n');
         await writeFile(join(dir, '.env'), 'VITE_GREETING=vite\n');
@@ -94,6 +94,14 @@ export const runtime = Envapter.get('RUNTIME_GREETING');
         await writeFile(
             entry,
             `import { Envapter } from 'envapt';
+import { bindViteEnv } from '@seedcord/core/internal/env';
+const previousFileApiMode = Envapter.fileApiMode;
+Envapter.fileApiMode = 'throw';
+try {
+    using binding = bindViteEnv(Envapter, import.meta.env);
+} finally {
+    Envapter.fileApiMode = previousFileApiMode;
+}
 export const greeting = Envapter.get('VITE_GREETING');
 export const token = Envapter.get('DISCORD_BOT_TOKEN');
 export const environment = Envapter.environment;
