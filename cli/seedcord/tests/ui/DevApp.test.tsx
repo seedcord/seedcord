@@ -191,17 +191,17 @@ describe('DevApp tiers', () => {
         const app = (): ReactElement => (
             <DevApp store={offlineStore()} onReady={() => undefined} initialPrefs={NO_PREFS} />
         );
-        const widened = renderOnScreen(app(), { rows: 40, columns: 90 });
-        await stableFrame(widened.screen);
+        using widened = renderOnScreen(app(), { rows: 40, columns: 90 });
+        await settled(async () => expect(await widened.screen()).toContain('Waiting for logs…'));
         widened.resize(FULL);
 
-        const fresh = renderOnScreen(app(), FULL);
-        const expected = await stableFrame(fresh.screen);
-        expect(expected).toContain('○ offline');
-        await settled(async () => expect(await widened.screen()).toBe(expected));
-
-        widened.unmount();
-        fresh.unmount();
+        using fresh = renderOnScreen(app(), FULL);
+        await settled(async () => {
+            const expected = await fresh.screen();
+            expect(expected).toContain('○ offline');
+            expect(expected).toContain('Waiting for logs…');
+            expect(await widened.screen()).toBe(expected);
+        });
     });
 
     it('ignores the filter keys while the chips are collapsed', async () => {

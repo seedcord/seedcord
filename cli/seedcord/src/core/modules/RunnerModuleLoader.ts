@@ -7,7 +7,7 @@ import { importFailed } from '@seedcord/utils/internal';
 import { ENV_BOOTSTRAP_ID } from './envBootstrap';
 
 import type { ModuleLoader } from './ModuleLoader';
-import type { bindViteEnv } from '@seedcord/core/internal';
+import type { bindViteEnv } from '@seedcord/core/internal/env';
 import type { ModuleRunner } from 'vite/module-runner';
 
 // this is way longer than any real import. the edge test bot's cold import takes about 135ms

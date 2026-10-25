@@ -4,10 +4,9 @@ import { render } from 'ink';
 import type { Size } from '@seedcord/cli-prompts/testing';
 import type { ReactElement } from 'react';
 
-export interface OnScreen {
+interface OnScreen extends Disposable {
     readonly screen: () => Promise<string>;
     readonly resize: (size: Size) => void;
-    readonly unmount: () => void;
 }
 
 // renders in ink's interactive alternate-screen mode, the way `seedcord dev` does
@@ -25,7 +24,7 @@ export function renderOnScreen(tree: ReactElement, size: Size): OnScreen {
     return {
         screen: () => stdout.screen(),
         resize: (next) => stdout.resize(next),
-        unmount: () => {
+        [Symbol.dispose]: () => {
             instance.unmount();
             instance.cleanup();
             stdout.destroy();
