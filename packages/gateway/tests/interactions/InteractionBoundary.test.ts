@@ -1,6 +1,6 @@
 import { DispatchContext, Notice, Silence, Fault } from '@seedcord/core';
 import { PublishDefault } from '@seedcord/core/internal';
-import { Logger } from '@seedcord/logger';
+import { Logger, LoggerChannelRegistry } from '@seedcord/logger';
 import { MessageFlags, RESTJSONErrorCodes } from 'discord.js';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
@@ -241,6 +241,26 @@ describe('handleInteractionFault', () => {
     describe('autocomplete arm', () => {
         beforeEach(() => {
             mock.isAutocomplete.mockReturnValue(true);
+        });
+
+        it.each([
+            { failure: new Error('network down'), reported: true },
+            { failure: harmlessError(), reported: false }
+        ])('reports an empty-choices send failure only when unexpected ($reported)', async ({ failure, reported }) => {
+            const failures: unknown[] = [];
+            using _sink = LoggerChannelRegistry.instance.installSink({
+                kind: 'capture',
+                onLog: (record) => {
+                    if (record.level === 'error') failures.push(...(record.args ?? []));
+                }
+            });
+            mock.respond.mockRejectedValueOnce(failure);
+
+            await expect(
+                handleInteractionFault(new Error('boom'), asInteraction(mock), mockCore(publish))
+            ).resolves.toBeUndefined();
+
+            expect(failures.includes(failure)).toBe(reported);
         });
 
         // the only legal autocomplete response, and it clears the client's loading spinner

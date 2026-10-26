@@ -468,7 +468,7 @@ export class InteractionDispatcher implements Initializeable, HmrAware {
         if (isFallback) {
             this.logger.warn(`No handler found for key ${paint.sky.bold(key)}. Falling back to ${HandlerCtor.name}.`);
         }
-        this.logger.debug(`Processing ${paint.sky.bold(key)} with ${paint.mute(HandlerCtor.name)}`);
+        this.logger.trace(`Processing ${paint.sky.bold(key)} with ${paint.mute(HandlerCtor.name)}`);
         // in a union of both handler bases, the event parameter is never. the maps pair each kind with its class.
         return new (HandlerCtor as ConstructableHandler)(interaction as never, this.core, dispatch);
     }

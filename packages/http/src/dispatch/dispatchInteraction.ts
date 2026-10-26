@@ -259,7 +259,7 @@ export async function dispatchInteraction(args: DispatchArgs): Promise<(() => Pr
     const report = dispatchReporter(match, payload, core, dispatch.id);
 
     const Handler = match.ctor;
-    logger().debug(`Processing ${paint.sky.bold(routeId)} with ${paint.mute(Handler.name)}`);
+    logger().trace(`Processing ${paint.sky.bold(routeId)} with ${paint.mute(Handler.name)}`);
 
     let handler: InstanceType<ConstructableHandler>;
     try {

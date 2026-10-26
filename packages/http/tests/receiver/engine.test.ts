@@ -49,12 +49,12 @@ describe('engine request logging', () => {
     });
 
     it('names why each request got its status', async () => {
-        const debug = vi.spyOn(Logger.prototype, 'debug').mockReturnValue(undefined);
+        const trace = vi.spyOn(Logger.prototype, 'trace').mockReturnValue(undefined);
         const { handle } = await readySeedcord();
 
         await handle(new Request('https://bot.example/interactions', { method: 'POST' }));
 
-        expect(debug.mock.calls[0]?.[0]).toContain('unsigned');
+        expect(trace.mock.calls.find(([message]) => message.includes('unsigned'))?.[0]).toContain('unsigned');
     });
 });
 

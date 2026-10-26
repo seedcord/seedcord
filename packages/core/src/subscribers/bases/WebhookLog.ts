@@ -67,7 +67,7 @@ export abstract class WebhookLog<KeyOfSubscribers extends SubscriptionKey, TCore
         const throttle = ReportThrottle.for(this.core);
         const suppressed = key === null ? 0 : throttle.take(key);
         if (suppressed === null) {
-            this.logger.debug(`counted a repeat into the next ${paint.sky.bold(this.constructor.name)} card`);
+            this.logger.trace(`counted a repeat into the next ${paint.sky.bold(this.constructor.name)} card`);
             return;
         }
 
