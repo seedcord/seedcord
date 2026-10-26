@@ -37,6 +37,8 @@ async function projectWithFakeTsc(): Promise<string> {
 
 describe('TscRunner', () => {
     it('logs a line tsc writes in two chunks as one line', async () => {
+        LoggerChannelRegistry.instance.configure({ level: 'debug', sinks: [] });
+        onTestFinished(() => LoggerChannelRegistry.instance.configure({}));
         const records: LogRecord[] = [];
         const sink = LoggerChannelRegistry.instance.installSink({
             kind: 'capture',
@@ -55,8 +57,8 @@ describe('TscRunner', () => {
             expect.objectContaining({ message: "  Type 'string' is not assignable to type 'number'.", level: 'error' })
         );
         expect(records).toContainEqual(expect.objectContaining({ message: SOURCE_LINE, level: 'error' }));
+        expect(records).toContainEqual(expect.objectContaining({ message: WATCH_STATUS, level: 'debug' }));
         const messages = records.map((record) => record.message);
-        expect(messages).not.toContain(WATCH_STATUS);
         expect(messages).not.toContain(SPLIT_LINE[0].trimEnd());
     });
 
