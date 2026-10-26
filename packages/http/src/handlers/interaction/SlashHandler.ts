@@ -31,6 +31,11 @@ export abstract class SlashHandler<
     /** @internal */
     declare readonly [SlashRouteBrand]?: Route;
 
+    /** The selected command's path, such as `search/docs`, without the interaction-kind prefix. */
+    protected get route(): Route {
+        return slashRouteOf(this.event.data) as Route;
+    }
+
     private resolver?: HttpSlashOptions;
 
     /**
@@ -63,7 +68,7 @@ export abstract class SlashHandler<
      * @returns The result of the arm that ran.
      */
     protected async match<Ret>(arms: SlashMatchArms<Route, Ret>): Promise<Ret> {
-        const route = slashRouteOf(this.event.data);
+        const route = this.route;
         // justified: SlashMatchArms is keyed by Route literals, the Record cast indexes it with the runtime route string.
         const arm = Object.hasOwn(arms, route)
             ? (arms as Record<string, (options: SlashOptions<Route>) => Promisable<Ret>>)[route]

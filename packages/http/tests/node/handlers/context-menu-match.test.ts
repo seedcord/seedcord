@@ -90,7 +90,7 @@ class Menu extends UserContextMenuHandler<'hb Profile' | 'hb Greet'> {
     }
 
     public readName(): 'hb Profile' | 'hb Greet' {
-        return this.commandName;
+        return this.route;
     }
 }
 

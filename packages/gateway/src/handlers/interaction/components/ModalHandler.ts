@@ -61,6 +61,6 @@ export abstract class ModalHandler<
     // discord omits the message when a command opened the modal
     private ensureSourceMessage(method: string): void {
         if (this.event.isFromMessage()) return;
-        throw new SeedcordError(SeedcordErrorCode.ReplyUpdateWithoutSource, [method, this.routeId]);
+        throw new SeedcordError(SeedcordErrorCode.ReplyUpdateWithoutSource, [method, this.dispatch.routeId]);
     }
 }

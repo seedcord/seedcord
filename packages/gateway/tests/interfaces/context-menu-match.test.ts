@@ -67,7 +67,7 @@ class Menu extends UserContextMenuHandler<'View Profile' | 'Say Hello'> {
     }
 
     public readName(): 'View Profile' | 'Say Hello' {
-        return this.commandName;
+        return this.route;
     }
 }
 

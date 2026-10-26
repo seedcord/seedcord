@@ -67,7 +67,7 @@ export abstract class UserContextMenuHandler<
     }
 
     /** The selected context-menu command's name, without the interaction-kind prefix. */
-    protected get commandName(): Names {
+    protected get route(): Names {
         return this.event.data.name as Names;
     }
 
@@ -96,7 +96,7 @@ export abstract class UserContextMenuHandler<
      * ```
      */
     protected async match<Ret>(arms: UserMenuArms<Names, Ret>): Promise<Ret> {
-        const arm = armFor<Ret>(this, arms, this.event.data.name);
+        const arm = armFor<Ret>(this, arms, this.route);
         return await (
             arm as (target: APIUser, member: APIInteractionDataResolvedGuildMember | null) => Promisable<Ret>
         )(this.target, this.targetMember);
@@ -126,7 +126,7 @@ export abstract class MessageContextMenuHandler<
     }
 
     /** The selected context-menu command's name, without the interaction-kind prefix. */
-    protected get commandName(): Names {
+    protected get route(): Names {
         return this.event.data.name as Names;
     }
 
@@ -155,7 +155,7 @@ export abstract class MessageContextMenuHandler<
      * ```
      */
     protected async match<Ret>(arms: MessageMenuArms<Names, Ret>): Promise<Ret> {
-        const arm = armFor<Ret>(this, arms, this.event.data.name);
+        const arm = armFor<Ret>(this, arms, this.route);
         return await (arm as (target: APIMessage) => Promisable<Ret>)(this.target);
     }
 }

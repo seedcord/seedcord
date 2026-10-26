@@ -42,9 +42,19 @@ export abstract class ComponentHandler<Event extends ComponentInteraction, Defs 
 
     private decoded?: DecodedComponentRoute;
 
-    private get route(): DecodedComponentRoute {
+    private get decodedRoute(): DecodedComponentRoute {
         this.decoded ??= decodeComponentRoute(this.constructor, this.event.customId);
         return this.decoded;
+    }
+
+    /**
+     * The matched custom-ID prefix, such as `approve`, without encoded params.
+     *
+     * @throws A **StaleCustomId** when the wire was encoded under an older shape.
+     * @throws An **InvalidCustomId** when the wire is corrupt.
+     */
+    protected get route(): Defs[number]['prefix'] {
+        return this.decodedRoute.prefix;
     }
 
     /**
@@ -57,7 +67,7 @@ export abstract class ComponentHandler<Event extends ComponentInteraction, Defs 
      * @throws An **InvalidCustomId** when the wire is corrupt. The controller boundary turns it into a reply.
      */
     protected get params(): SingleParams<Defs> {
-        return this.route.params as SingleParams<Defs>;
+        return this.decodedRoute.params as SingleParams<Defs>;
     }
 
     /**
@@ -89,7 +99,7 @@ export abstract class ComponentHandler<Event extends ComponentInteraction, Defs 
      * ```
      */
     protected async match<Ret>(arms: MatchArms<Defs, Ret>): Promise<Ret> {
-        const { prefix, params } = this.route;
+        const { prefix, params } = this.decodedRoute;
         // justified: MatchArms is keyed by prefix literals, so the Record cast indexes it with the runtime prefix
         const arm = Object.hasOwn(arms, prefix)
             ? (arms as Record<string, (params: Record<string, unknown>) => Promisable<Ret>>)[prefix]

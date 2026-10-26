@@ -24,11 +24,9 @@ export abstract class RepliableHandler<
 > extends BaseHandler<Event, TCore> {
     /** The reply surface for this interaction. Pass the handler to reply from outside its class. */
     public readonly sender: TSender;
-    protected readonly routeId: string;
 
     protected constructor(event: Event, core: TCore, dispatch: DispatchContext, sender?: TSender) {
         super(event, core, dispatch, 'interactions');
-        this.routeId = dispatch.routeId;
         // the override runs before its own field initializers
         this.sender = sender ?? this.buildSender(event, core, dispatch);
     }
