@@ -1,5 +1,6 @@
 import { spawn, type ChildProcess } from 'node:child_process';
 import { createInterface } from 'node:readline';
+import { stripVTControlCharacters } from 'node:util';
 
 import { Logger } from '@seedcord/logger';
 
@@ -41,7 +42,10 @@ export class TscRunner {
             stdio: ['ignore', 'pipe', 'pipe']
         });
 
-        this.logLines(this.process.stdout, (line) => this.logger.debug(line));
+        this.logLines(this.process.stdout, (line) => {
+            const level = /^\[\d{1,2}:\d{2}:\d{2}/.test(stripVTControlCharacters(line)) ? 'debug' : 'error';
+            this.logger[level](line);
+        });
         this.logLines(this.process.stderr, (line) => this.logger.error(line));
 
         this.process.on('error', (err) => {
