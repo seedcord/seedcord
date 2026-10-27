@@ -1835,6 +1835,31 @@ importers:
         specifier: catalog:test
         version: 4.1.12(@opentelemetry/api@1.9.1)(@types/node@26.1.2)(@vitest/coverage-istanbul@4.1.12)(@vitest/coverage-v8@4.1.12)(jsdom@30.1.1)(vite@8.3.4(@types/node@26.1.2)(esbuild@0.28.2)(jiti@2.7.0)(tsx@4.23.15)(yaml@2.9.1))
 
+  tooling/cli-templates:
+    dependencies:
+      '@seedcord/utils':
+        specifier: workspace:^
+        version: link:../../packages/utils
+      typescript:
+        specifier: catalog:peer
+        version: 6.0.3
+    devDependencies:
+      '@seedcord/eslint-config':
+        specifier: workspace:^
+        version: link:../eslint-config
+      '@seedcord/tsconfig':
+        specifier: workspace:^
+        version: link:../tsconfig
+      '@seedcord/tsdown-config':
+        specifier: workspace:^
+        version: link:../tsdown-config
+      '@seedcord/vitest-config':
+        specifier: workspace:^
+        version: link:../vitest-config
+      vitest:
+        specifier: catalog:test
+        version: 4.1.12(@opentelemetry/api@1.9.1)(@types/node@26.1.2)(@vitest/coverage-istanbul@4.1.12)(@vitest/coverage-v8@4.1.12)(jsdom@30.1.1)(vite@8.3.4(@types/node@26.1.2)(esbuild@0.28.2)(jiti@2.7.0)(tsx@4.23.15)(yaml@2.9.1))
+
   tooling/docs-engine:
     dependencies:
       '@microsoft/api-extractor-model':

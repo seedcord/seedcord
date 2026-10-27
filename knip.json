@@ -70,6 +70,7 @@
         },
         "tooling/eslint-utils": {},
         "tooling/cli-prompts": {},
+        "tooling/cli-templates": {},
         "packages/event-emitter": {
             "entry": ["**/*.types-test.ts"]
         },

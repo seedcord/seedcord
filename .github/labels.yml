@@ -53,6 +53,9 @@
 - name: '📦 cli-prompts'
   color: 6278bc
   description: Internal Ink prompts both CLIs bundle
+- name: '📦 cli-templates'
+  color: 6278bc
+  description: Internal template reader and renderer for seedcord make
 - name: '📦 tsconfig'
   color: 6e62bc
 - name: '📦 tsdown-config'
