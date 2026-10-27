@@ -1,8 +1,9 @@
-import { join } from 'node:path';
+import { join, posix } from 'node:path';
 
 import Handlebars from 'handlebars';
 
 import { CLI_HELPERS } from './helpers';
+import { splitName } from './splitName';
 import { cliVariables } from './variables';
 
 import type { TemplateFile } from './Template';
@@ -21,23 +22,43 @@ export interface RenderedFile {
     readonly contents: string;
 }
 
+interface Target {
+    readonly file: TemplateFile;
+    readonly path: string;
+}
+
 export class TemplateOutput {
     private readonly handlebars = Handlebars.create();
+    private readonly name: string;
+    private readonly targets: readonly Target[];
 
     constructor(
-        private readonly files: readonly TemplateFile[],
-        private readonly name: string,
+        files: readonly TemplateFile[],
+        nameWithFolder: string,
         private readonly project: RenderProject
     ) {
+        const { folder, name } = splitName(nameWithFolder);
+        this.name = name;
         this.handlebars.registerHelper(CLI_HELPERS);
         this.handlebars.registerHelper(project.helpers);
+        this.targets = files.map((file) => ({
+            file,
+            path: join(
+                project.root,
+                posix.dirname(file.layout),
+                folder,
+                this.compile(posix.basename(file.layout))({ name: this.name })
+            )
+        }));
+    }
+
+    public get paths(): string[] {
+        return this.targets.map(({ path }) => path);
     }
 
     public render(answers: JsonObject): RenderedFile[] {
-        const asked = { ...answers, name: this.name };
-        return this.files.map((file) => {
-            const path = join(this.project.root, this.compile(file.layout)(asked));
-            const context = { ...asked, ...cliVariables({ project: this.project, path }) };
+        return this.targets.map(({ file, path }) => {
+            const context = { ...answers, name: this.name, ...cliVariables({ project: this.project, path }) };
             return { path, contents: this.compile(file.source)(context) };
         });
     }

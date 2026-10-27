@@ -1,5 +1,6 @@
 import { join } from 'node:path';
 
+import { SeedcordErrorCode } from '@seedcord/errors';
 import { assert, describe, expect, it, onTestFinished, vi } from 'vitest';
 
 import { Template } from '#src/Template';
@@ -105,6 +106,41 @@ describe('TemplateOutput.render', () => {
 
         expect(file?.contents).toBe('ROLL SOME DICE');
     });
+
+    it('puts a folder from the name under each file folder and lists the paths before rendering', async () => {
+        await using made = await onlyTemplate({
+            'components/{{pascal name}}.ts.hbs': '{{toRoot}}',
+            'handlers/{{pascal name}}.ts.hbs': '{{toRoot}}'
+        });
+
+        const output = made.template.output('tickets/appeal', GATEWAY);
+
+        expect(output.paths).toEqual([
+            join(ROOT, 'components/tickets/Appeal.ts'),
+            join(ROOT, 'handlers/tickets/Appeal.ts')
+        ]);
+        expect(output.render({})).toEqual(output.paths.map((path) => ({ path, contents: '../..' })));
+    });
+
+    it.each(['', '2fast', 'roll!dice', 'tickets/', '../Appeal', '/Appeal', 'a//Appeal', 'a/./Appeal'])(
+        'rejects %j as a name before any path is built',
+        async (name) => {
+            await using made = await onlyTemplate({ 'x.hbs': '' });
+
+            expect(() => made.template.output(name, GATEWAY)).toThrow(
+                expect.objectContaining({ type: 'SeedcordTypeError', code: SeedcordErrorCode.MakeInvalidName })
+            );
+        }
+    );
+
+    it.each(['roll dice', 'roll-dice', 'roll_dice', 'RollDice2', 'tickets/Appeal', 'a/b/Appeal'])(
+        'accepts %j as a name',
+        async (name) => {
+            await using made = await onlyTemplate({ 'x.hbs': '' });
+
+            expect(() => made.template.output(name, GATEWAY)).not.toThrow();
+        }
+    );
 
     it('throws when a template reads a value it was never given', async () => {
         await using made = await onlyTemplate({ 'x.hbs': '[{{description}}]' });

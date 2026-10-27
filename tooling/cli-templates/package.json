@@ -37,6 +37,7 @@
         "typescript": "catalog:peer"
     },
     "dependencies": {
+        "@seedcord/errors": "workspace:^",
         "@seedcord/utils": "workspace:^",
         "es-toolkit": "catalog:deps",
         "handlebars": "catalog:deps",

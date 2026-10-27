@@ -1843,6 +1843,9 @@ importers:
 
   tooling/cli-templates:
     dependencies:
+      '@seedcord/errors':
+        specifier: workspace:^
+        version: link:../../packages/errors
       '@seedcord/utils':
         specifier: workspace:^
         version: link:../../packages/utils

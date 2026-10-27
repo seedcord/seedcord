@@ -313,5 +313,8 @@ export enum SeedcordErrorCode {
     /** The target path already has files in it. */
     CreateTargetNotEmpty = 3204,
     /** A command that create-seedcord ran exited non-zero. */
-    CreateStepFailed = 3205
+    CreateStepFailed = 3205,
+
+    /** The name given to `seedcord make` can't become a file name. */
+    MakeInvalidName = 3301
 }

@@ -375,7 +375,10 @@ const messages = {
     [SeedcordErrorCode.CreateTargetNotEmpty]: (target: string) =>
         `${paint.path(target)} already has files in it. Pick an empty directory or a name that does not exist yet.`,
     [SeedcordErrorCode.CreateStepFailed]: (command: string, reason: string) =>
-        `${paint.bold(command)} failed.\n${reason}`
+        `${paint.bold(command)} failed.\n${reason}`,
+
+    [SeedcordErrorCode.MakeInvalidName]: (name: string) =>
+        `${paint.bold(JSON.stringify(name))} can't be a file name. Start it with a letter and use only letters, digits, spaces, - and _, like ${paint.bold('RollDice')}. Put folders in front with /, like ${paint.bold('fun/RollDice')}.`
 } satisfies Record<SeedcordErrorCode, (...args: never[]) => string>;
 
 /** @internal */
