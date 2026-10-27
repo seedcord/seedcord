@@ -17,8 +17,8 @@ import { Project } from '#core/project/Project';
 import { ProjectFiles } from '#core/project/ProjectFiles';
 import { realPath } from '#core/project/realPath';
 import { loadedConfig } from '#tests/loadedConfig';
+import { resolvedConfigOf } from '#tests/resolvedConfigOf';
 import { silentLogger } from '#tests/silentLogger';
-import { vitePluginsOf } from '#tests/vitePluginsOf';
 
 import type { ProjectOpener } from '#core/config/openProjectWithSteps';
 import type { ResolvedSeedcordConfig } from '#core/config/schema';
@@ -52,19 +52,13 @@ function configAt(root: string, instance: string): ResolvedSeedcordConfig {
     writeFileSync(instance, '');
     onTestFinished(() => rmSync(instance, { force: true }));
     const at = (path: string): RealPath => realPath(resolve(root, path));
-    return {
+    return resolvedConfigOf(root, {
         root: at('.'),
         instance: at(instance),
-        configFile: at('seedcord.config.ts'),
         target: { kind: 'server', start: at('index.ts'), outDir: at('dist') },
-        build: {},
-        files: [],
-        typecheck: { enabled: false },
         idleAnimation: false,
-        tunnel: { mode: 'off' },
-        viteMode: 'development',
-        vitePlugins: vitePluginsOf()
-    };
+        tunnel: { mode: 'off' }
+    });
 }
 
 function projectOpener(config: ResolvedSeedcordConfig, modules: ModuleLoader & AsyncDisposable): ProjectOpener {

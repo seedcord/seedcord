@@ -22,8 +22,8 @@ import { RestartFiles } from '#commands/dev/runtime/RestartFiles';
 import { ProjectFiles } from '#core/project/ProjectFiles';
 import { realPath } from '#core/project/realPath';
 import { StateFolder } from '#core/state/StateFolder';
+import { resolvedConfigOf } from '#tests/resolvedConfigOf';
 import { silentLogger } from '#tests/silentLogger';
-import { vitePluginsOf } from '#tests/vitePluginsOf';
 
 import type { DevEvent } from '#commands/dev/runtime/events';
 import type { ResolvedSeedcordConfig } from '#core/config/schema';
@@ -136,23 +136,10 @@ function configuredPlugin(config: ConstructorParameters<typeof HmrPlugin>[0], st
 
 describe('HmrPlugin', () => {
     let hmrPlugin: HmrPlugin;
-    const mockConfig: ResolvedSeedcordConfig = {
+    const mockConfig = resolvedConfigOf(projectRoot, {
         root: projectRoot,
-        configFile: realPath(join(projectRoot, 'seedcord.config.ts')),
-        target: {
-            kind: 'server',
-            start: realPath(join(projectRoot, 'src/index.ts')),
-            outDir: realPath(join(projectRoot, 'dist'))
-        },
-        instance: realPath(join(projectRoot, 'src/Seedcord.ts')),
-        typecheck: { enabled: false } as const,
-        idleAnimation: true,
-        tunnel: { mode: 'quick' } as const,
-        build: {},
-        files: [],
-        viteMode: 'development',
-        vitePlugins: vitePluginsOf()
-    };
+        instance: realPath(join(projectRoot, 'src/Seedcord.ts'))
+    });
 
     const srcRoot = realPath(join(projectRoot, 'src'));
     let trace: MockInstance<Logger['trace']>;
