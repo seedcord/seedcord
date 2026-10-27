@@ -223,6 +223,9 @@ catalogs:
     fumadocs-mdx:
       specifier: 15.4.6
       version: 15.4.6
+    handlebars:
+      specifier: ^4.7.10
+      version: 4.7.10
     ink:
       specifier: ^8.0.0
       version: 8.0.0
@@ -919,6 +922,9 @@ importers:
       '@seedcord/cli-prompts':
         specifier: workspace:^
         version: link:../../tooling/cli-prompts
+      '@seedcord/core':
+        specifier: workspace:^
+        version: link:../../packages/core
       '@seedcord/errors':
         specifier: workspace:^
         version: link:../../packages/errors
@@ -941,7 +947,7 @@ importers:
         specifier: catalog:peer
         version: 14.27.0
       handlebars:
-        specifier: ^4.7.10
+        specifier: catalog:deps
         version: 4.7.10
       package-manager-detector:
         specifier: ^1.8.0
@@ -1840,10 +1846,22 @@ importers:
       '@seedcord/utils':
         specifier: workspace:^
         version: link:../../packages/utils
+      es-toolkit:
+        specifier: catalog:deps
+        version: 1.53.0
+      handlebars:
+        specifier: catalog:deps
+        version: 4.7.10
+      type-fest:
+        specifier: catalog:deps
+        version: 5.10.0
       typescript:
         specifier: catalog:peer
         version: 6.0.3
     devDependencies:
+      '@seedcord/core':
+        specifier: workspace:^
+        version: link:../../packages/core
       '@seedcord/eslint-config':
         specifier: workspace:^
         version: link:../eslint-config

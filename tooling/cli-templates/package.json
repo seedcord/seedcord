@@ -37,9 +37,13 @@
         "typescript": "catalog:peer"
     },
     "dependencies": {
-        "@seedcord/utils": "workspace:^"
+        "@seedcord/utils": "workspace:^",
+        "es-toolkit": "catalog:deps",
+        "handlebars": "catalog:deps",
+        "type-fest": "catalog:deps"
     },
     "devDependencies": {
+        "@seedcord/core": "workspace:^",
         "@seedcord/eslint-config": "workspace:^",
         "@seedcord/tsconfig": "workspace:^",
         "@seedcord/tsdown-config": "workspace:^",

@@ -1,11 +1,12 @@
 import type { Prompter } from '@seedcord/cli-prompts';
+import type { Runtime, Transport } from '@seedcord/core/internal';
 import type { BotToken } from '@seedcord/errors/internal';
 import type { ColorName } from '@seedcord/types';
 
 export interface Answers {
     directory: string;
-    transport: 'gateway' | 'http';
-    runtime: 'server' | 'edge';
+    transport: Transport;
+    runtime: Runtime;
     capabilities: string[];
     token: BotToken | null;
     testingGuilds: string[];
