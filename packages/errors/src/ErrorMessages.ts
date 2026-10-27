@@ -378,7 +378,9 @@ const messages = {
         `${paint.bold(command)} failed.\n${reason}`,
 
     [SeedcordErrorCode.MakeInvalidName]: (name: string) =>
-        `${paint.bold(JSON.stringify(name))} can't be a file name. Start it with a letter and use only letters, digits, spaces, - and _, like ${paint.bold('RollDice')}. Put folders in front with /, like ${paint.bold('fun/RollDice')}.`
+        `${paint.bold(JSON.stringify(name))} can't be a file name. Start it with a letter and use only letters, digits, spaces, - and _, like ${paint.bold('RollDice')}. Put folders in front with /, like ${paint.bold('fun/RollDice')}.`,
+    [SeedcordErrorCode.MakeImportOfUnmatched]: (template: string, folder: string, count: number) =>
+        `${paint.bold(`importOf "${folder}"`)} in the ${paint.bold(template)} template needs exactly one ${paint.path('.hbs')} file in the template's ${paint.path(folder)} folder. That folder holds ${count}. Point importOf at a folder with one template file.`
 } satisfies Record<SeedcordErrorCode, (...args: never[]) => string>;
 
 /** @internal */

@@ -316,5 +316,7 @@ export enum SeedcordErrorCode {
     CreateStepFailed = 3205,
 
     /** The name given to `seedcord make` can't become a file name. */
-    MakeInvalidName = 3301
+    MakeInvalidName = 3301,
+    /** A template calls `importOf` on a folder that doesn't hold exactly one template file. */
+    MakeImportOfUnmatched = 3302
 }

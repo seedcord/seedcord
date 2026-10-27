@@ -1,12 +1,15 @@
-import { join, posix } from 'node:path';
+import { dirname, join, posix } from 'node:path';
 
+import { SeedcordErrorCode } from '@seedcord/errors';
+import { SeedcordTypeError } from '@seedcord/errors/internal';
+import { importSpecifier } from '@seedcord/utils/internal';
 import Handlebars from 'handlebars';
 
 import { CLI_HELPERS } from './helpers';
 import { splitName } from './splitName';
 import { cliVariables } from './variables';
 
-import type { TemplateFile } from './Template';
+import type { Template, TemplateFile } from './Template';
 import type { Runtime, Transport } from '@seedcord/core/internal';
 import type { JsonObject } from 'type-fest';
 
@@ -33,7 +36,7 @@ export class TemplateOutput {
     private readonly targets: readonly Target[];
 
     constructor(
-        files: readonly TemplateFile[],
+        private readonly template: Template,
         nameWithFolder: string,
         private readonly project: RenderProject
     ) {
@@ -41,7 +44,7 @@ export class TemplateOutput {
         this.name = name;
         this.handlebars.registerHelper(CLI_HELPERS);
         this.handlebars.registerHelper(project.helpers);
-        this.targets = files.map((file) => ({
+        this.targets = template.files.map((file) => ({
             file,
             path: join(
                 project.root,
@@ -59,11 +62,25 @@ export class TemplateOutput {
     public render(answers: JsonObject): RenderedFile[] {
         return this.targets.map(({ file, path }) => {
             const context = { ...answers, name: this.name, ...cliVariables({ project: this.project, path }) };
-            return { path, contents: this.compile(file.source)(context) };
+            const importOf = (folder: string): string => importSpecifier(dirname(path), this.onlyPathIn(folder));
+            return { path, contents: this.compile(file.source)(context, { helpers: { importOf } }) };
         });
     }
 
-    private compile(source: string): HandlebarsTemplateDelegate {
+    private onlyPathIn(folder: string): string {
+        const inFolder = this.targets.filter(({ file }) => posix.dirname(file.layout) === folder);
+        const [only] = inFolder;
+        if (!only || inFolder.length > 1) {
+            throw new SeedcordTypeError(SeedcordErrorCode.MakeImportOfUnmatched, [
+                this.template.name,
+                folder,
+                inFolder.length
+            ]);
+        }
+        return only.path;
+    }
+
+    private compile(source: string): Handlebars.TemplateDelegate {
         // handlebars escapes ' to &#x27; by default
         return this.handlebars.compile(source, { noEscape: true, strict: true });
     }

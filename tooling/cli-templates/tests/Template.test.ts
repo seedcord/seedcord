@@ -142,6 +142,35 @@ describe('TemplateOutput.render', () => {
         }
     );
 
+    it('imports the file another folder of the template writes', async () => {
+        await using made = await onlyTemplate({
+            'components/{{pascal name}}.ts.hbs': 'export const {{pascal name}}Id = 1;',
+            'handlers/{{pascal name}}.ts.hbs': `import { {{pascal name}}Id } from '{{importOf "components"}}';`
+        });
+
+        const [, handler] = made.template.output('tickets/appeal', GATEWAY).render({});
+
+        expect(handler?.contents).toBe(`import { AppealId } from '../../components/tickets/Appeal';`);
+    });
+
+    it.each([
+        ['no file', { 'handlers/x.ts.hbs': '{{importOf "components"}}' }],
+        [
+            'two files',
+            {
+                'components/A.ts.hbs': '',
+                'components/B.ts.hbs': '',
+                'handlers/x.ts.hbs': '{{importOf "components"}}'
+            }
+        ]
+    ])('throws when the folder importOf reads holds %s', async (_case, files) => {
+        await using made = await onlyTemplate(files);
+
+        expect(() => made.template.output('A', GATEWAY).render({})).toThrow(
+            expect.objectContaining({ type: 'SeedcordTypeError', code: SeedcordErrorCode.MakeImportOfUnmatched })
+        );
+    });
+
     it('throws when a template reads a value it was never given', async () => {
         await using made = await onlyTemplate({ 'x.hbs': '[{{description}}]' });
 

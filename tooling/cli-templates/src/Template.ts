@@ -43,7 +43,7 @@ export class Template {
     private constructor(
         public readonly name: string,
         public readonly from: string,
-        private readonly files: readonly TemplateFile[]
+        public readonly files: readonly TemplateFile[]
     ) {}
 
     public static async readAll(dir: string, from: string): Promise<Template[]> {
@@ -56,6 +56,6 @@ export class Template {
     }
 
     public output(name: string, project: RenderProject): TemplateOutput {
-        return new TemplateOutput(this.files, name, project);
+        return new TemplateOutput(this, name, project);
     }
 }
