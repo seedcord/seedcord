@@ -1,42 +1,9 @@
 import { SeedcordErrorCode } from './ErrorCodes';
+import { deployFix, listedFolderProblems, placeText, token, vitePluginFix } from './messageParts';
 import { allOf, counted, isOne, oneOf, quoted, reasonThen, sentence } from './messageText';
 import { paint } from './palette';
 
-export interface VitePluginPlace {
-    hook?: string | undefined;
-    // only load and transform run on a module
-    loading?: { kind: 'file'; path: string } | { kind: 'virtual'; id: string } | undefined;
-}
-
-function placeText(hook: string, loading: VitePluginPlace['loading']): string {
-    const inHook = `in its ${paint.bold(hook)} hook`;
-    if (loading === undefined) return inHook;
-    const shown = loading.kind === 'file' ? paint.path(loading.path) : paint.bold(loading.id);
-    return `${inHook} while loading ${shown}`;
-}
-
-function vitePluginFix({ loading }: VitePluginPlace): string {
-    if (loading?.kind !== 'file') return 'Check the options you pass the plugin.';
-    return `Fix ${paint.path(loading.path)}, or check the options you pass the plugin if that file looks right.`;
-}
-
-const listedFolderProblems = {
-    missing: `which does not exist. Create it, or take it out of ${paint.bold('files')}.`,
-    file: `which is a file. ${paint.bold('files')} takes folders. List the folder that holds it.`,
-    outsideProject: `which is outside the folder that holds seedcord.config.ts. Move it into that folder and list its new path.`
-};
-
-// the edge worker sets chalk's color level after this module loads
-const token = (): string => paint.bold('DISCORD_BOT_TOKEN');
-
-const BAD_REQUEST = 400;
-const UNAUTHORIZED = 401;
-
-function deployFix(status: number | undefined, otherwise: string): string {
-    if (status === UNAUTHORIZED) return `Check that ${token()} is still valid.`;
-    if (status === BAD_REQUEST) return "Check that each command's name, description and options are valid.";
-    return otherwise;
-}
+import type { VitePluginPlace } from './messageParts';
 
 /** @internal */
 const messages = {
@@ -382,7 +349,11 @@ const messages = {
     [SeedcordErrorCode.MakeImportOfUnmatched]: (template: string, folder: string, count: number) =>
         `${paint.bold(`importOf "${folder}"`)} in the ${paint.bold(template)} template needs exactly one ${paint.path('.hbs')} file in the template's ${paint.path(folder)} folder. That folder holds ${count}. Point importOf at a folder with one template file.`,
     [SeedcordErrorCode.MakeValueUsedTwoWays]: (template: string, value: string) =>
-        `The ${paint.bold(template)} template loops over ${paint.bold(value)} with ${paint.bold('#each')} and also reads a field from it, like ${paint.bold(`${value}.name`)}. A value is either a list or an entry with fields. Give one of the two uses its own name.`
+        `The ${paint.bold(template)} template loops over ${paint.bold(value)} with ${paint.bold('#each')} and also reads a field from it, like ${paint.bold(`${value}.name`)}. A value is either a list or an entry with fields. Give one of the two uses its own name.`,
+    [SeedcordErrorCode.MakeTemplateFailed]: (file: string, from: string, reason: string) =>
+        `Handlebars could not render ${paint.path(file)} from ${paint.bold(from)}.\n${reason}\nFix that template file.`,
+    [SeedcordErrorCode.MakeLookupDynamicKey]: (template: string, value: string) =>
+        `The ${paint.bold(template)} template calls ${paint.bold('lookup')} on ${paint.bold(value)} without a quoted key. seedcord make can't tell which field of ${paint.bold(value)} to ask for. Give lookup a quoted key like ${paint.bold(`{{lookup ${value} "title"}}`)}, or map the value in a helper under ${paint.bold('make.helpers')} in seedcord.config.ts.`
 } satisfies Record<SeedcordErrorCode, (...args: never[]) => string>;
 
 /** @internal */

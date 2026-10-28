@@ -320,5 +320,9 @@ export enum SeedcordErrorCode {
     /** A template calls `importOf` on a folder that doesn't hold exactly one template file. */
     MakeImportOfUnmatched = 3302,
     /** A template uses one value both as a list and as an entry with fields. */
-    MakeValueUsedTwoWays = 3303
+    MakeValueUsedTwoWays = 3303,
+    /** Handlebars could not parse or render a template file. */
+    MakeTemplateFailed = 3304,
+    /** A template calls `lookup` with a key that isn't quoted text. */
+    MakeLookupDynamicKey = 3305
 }

@@ -7,6 +7,7 @@ import Handlebars from 'handlebars';
 
 import { CLI_HELPERS, helperNames, IMPORT_OF } from './helpers';
 import { inputsOf } from './inputsOf';
+import { inTemplateFile } from './inTemplateFile';
 import { splitName } from './splitName';
 import { cliVariables, FILLED_NAMES } from './variables';
 
@@ -46,14 +47,16 @@ export class TemplateOutput {
         this.name = name;
         this.handlebars.registerHelper(CLI_HELPERS);
         this.handlebars.registerHelper(project.helpers);
-        this.handlebars.registerPartial(Object.fromEntries(template.partials));
+        this.handlebars.registerPartial(
+            Object.fromEntries([...template.partials].map(([partial, file]) => [partial, file.source]))
+        );
         this.targets = template.files.map((file) => ({
             file,
             path: join(
                 project.root,
                 posix.dirname(file.layout),
                 folder,
-                this.compile(posix.basename(file.layout))({ name: this.name })
+                this.renderText(file, posix.basename(file.layout), { name: this.name })
             )
         }));
     }
@@ -71,7 +74,10 @@ export class TemplateOutput {
         return this.targets.map(({ file, path }) => {
             const context = { ...answers, name: this.name, ...cliVariables({ project: this.project, path }) };
             const importOf = (folder: string): string => importSpecifier(dirname(path), this.onlyPathIn(folder));
-            return { path, contents: this.compile(file.source)(context, { helpers: { [IMPORT_OF]: importOf } }) };
+            return {
+                path,
+                contents: this.renderText(file, file.source, context, { helpers: { [IMPORT_OF]: importOf } })
+            };
         });
     }
 
@@ -88,8 +94,10 @@ export class TemplateOutput {
         return only.path;
     }
 
-    private compile(source: string): Handlebars.TemplateDelegate {
-        // handlebars escapes ' to &#x27; by default
-        return this.handlebars.compile(source, { noEscape: true, strict: true });
+    private renderText(file: TemplateFile, text: string, context: object, options?: Handlebars.RuntimeOptions): string {
+        return inTemplateFile(this.template, file, () =>
+            // handlebars escapes ' to &#x27; by default
+            this.handlebars.compile(text, { noEscape: true, strict: true })(context, options)
+        );
     }
 }

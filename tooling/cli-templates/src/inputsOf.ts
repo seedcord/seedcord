@@ -2,7 +2,9 @@ import { SeedcordErrorCode } from '@seedcord/errors';
 import { SeedcordTypeError } from '@seedcord/errors/internal';
 import Handlebars from 'handlebars';
 
-import type { Template } from './Template';
+import { inTemplateFile } from './inTemplateFile';
+
+import type { Template, TemplateFile } from './Template';
 
 export type InputShape =
     | { readonly kind: 'text' }
@@ -112,17 +114,12 @@ class InputReader extends Handlebars.Visitor {
 
     /* eslint-disable @typescript-eslint/naming-convention -- Handlebars.Visitor calls each method by its node type */
     public override MustacheStatement(mustache: hbs.AST.MustacheStatement): void {
-        if (!ast.helperExpression(mustache)) {
-            this.accept(mustache.path);
-            return;
-        }
-        this.acceptArray(mustache.params);
-        this.accept(mustache.hash);
+        if (ast.helperExpression(mustache)) this.readHelperCall(mustache);
+        else this.accept(mustache.path);
     }
 
     public override SubExpression(sexpr: hbs.AST.SubExpression): void {
-        this.acceptArray(sexpr.params);
-        this.accept(sexpr.hash);
+        this.readHelperCall(sexpr);
     }
 
     public override PartialStatement(partial: hbs.AST.PartialStatement): void {
@@ -163,6 +160,35 @@ class InputReader extends Handlebars.Visitor {
     }
     /* eslint-enable @typescript-eslint/naming-convention */
 
+    public readFile(file: TemplateFile): void {
+        this.accept(this.parse(file));
+    }
+
+    private parse(file: TemplateFile): hbs.AST.Program {
+        return inTemplateFile(this.template, file, () => Handlebars.parse(file.source));
+    }
+
+    private readHelperCall(call: hbs.AST.MustacheStatement | hbs.AST.SubExpression): void {
+        if (pathOf(call.path)?.original === 'lookup') {
+            this.readLookup(call.params);
+            return;
+        }
+        this.acceptArray(call.params);
+        this.accept(call.hash);
+    }
+
+    private readLookup([object, key]: readonly hbs.AST.Expression[]): void {
+        const objectPath = pathOf(object);
+        if (key?.type !== 'StringLiteral') {
+            throw new SeedcordTypeError(SeedcordErrorCode.MakeLookupDynamicKey, [
+                this.template.name,
+                objectPath?.original ?? 'a value'
+            ]);
+        }
+        const field = (key as hbs.AST.StringLiteral).value;
+        this.slotOf(objectPath)?.field(field).printed();
+    }
+
     private readTest(block: hbs.AST.BlockStatement): void {
         const subject = this.subjectOf(block);
         if (subject) subject.tested();
@@ -188,8 +214,8 @@ class InputReader extends Handlebars.Visitor {
     // handlebars runs a partial against the argument it gets, or the caller's context, plus each hash key
     private readPartial(partial: hbs.AST.PartialStatement | hbs.AST.PartialBlockStatement): void {
         const name = partial.name.type === 'PathExpression' ? partial.name.original : '';
-        const source = this.template.partials.get(name);
-        if (source === undefined || this.partialsBeingRead.includes(name)) {
+        const file = this.template.partials.get(name);
+        if (!file || this.partialsBeingRead.includes(name)) {
             this.acceptArray(partial.params);
             this.accept(partial.hash);
             return;
@@ -199,7 +225,7 @@ class InputReader extends Handlebars.Visitor {
         const slot = context ? this.slotOf(context) : this.scopes.at(-1)?.slot;
         const params = new Map(pairsOf(partial).map(({ key, value }) => [key, this.slotOf(pathOf(value))]));
         this.partialsBeingRead.push(name);
-        this.acceptInScope(Handlebars.parse(source), { slot: slot ?? this.untracedSlot(), params });
+        this.acceptInScope(this.parse(file), { slot: slot ?? this.untracedSlot(), params });
         this.partialsBeingRead.pop();
     }
 
@@ -238,6 +264,6 @@ class InputReader extends Handlebars.Visitor {
 
 export function inputsOf(template: Template, helpers: ReadonlySet<string>): TemplateInputs {
     const reader = new InputReader(template, helpers);
-    for (const file of template.files) reader.accept(Handlebars.parse(file.source));
+    for (const file of template.files) reader.readFile(file);
     return reader.root.fieldShapes();
 }

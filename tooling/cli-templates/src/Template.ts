@@ -1,5 +1,5 @@
 import { readdir, readFile } from 'node:fs/promises';
-import { join } from 'node:path';
+import { join, posix } from 'node:path';
 
 import { hasErrorCode, toPosixPath } from '@seedcord/utils/internal';
 
@@ -12,7 +12,9 @@ const PARTIALS_FOLDER = '_partials';
 const TEMPLATE_EXTENSION = '.hbs';
 
 export interface TemplateFile {
-    // the path inside the template, like handlers/{{pascal name}}.ts
+    // inside the templates folder, like Button/handlers/{{pascal name}}.ts.hbs
+    readonly path: string;
+    // inside its own folder without .hbs, like handlers/{{pascal name}}.ts
     readonly layout: string;
     readonly source: string;
 }
@@ -26,16 +28,20 @@ async function unlessMissing<Entry>(read: Promise<Entry[]>): Promise<Entry[]> {
     }
 }
 
-async function filesIn(dir: string): Promise<TemplateFile[]> {
-    const paths = await unlessMissing(readdir(dir, { recursive: true }));
+async function filesIn(dir: string, folder: string): Promise<TemplateFile[]> {
+    const paths = await unlessMissing(readdir(join(dir, folder), { recursive: true }));
     return Promise.all(
         paths
             .filter((path) => path.endsWith(TEMPLATE_EXTENSION))
             .toSorted()
-            .map(async (path) => ({
-                layout: toPosixPath(path).slice(0, -TEMPLATE_EXTENSION.length),
-                source: await readFile(join(dir, path), 'utf8')
-            }))
+            .map(async (path) => {
+                const inFolder = toPosixPath(path);
+                return {
+                    path: posix.join(folder, inFolder),
+                    layout: inFolder.slice(0, -TEMPLATE_EXTENSION.length),
+                    source: await readFile(join(dir, folder, path), 'utf8')
+                };
+            })
     );
 }
 
@@ -44,23 +50,21 @@ export class Template {
         public readonly name: string,
         public readonly from: string,
         public readonly files: readonly TemplateFile[],
-        // keyed by the path inside _partials, like discord/imports
-        public readonly partials: ReadonlyMap<string, string>
+        // keyed by the path inside _partials without .hbs, like discord/imports
+        public readonly partials: ReadonlyMap<string, TemplateFile>
     ) {}
 
     public static async readAll(dir: string, from: string): Promise<Template[]> {
         const [entries, partialFiles] = await Promise.all([
             unlessMissing(readdir(dir, { withFileTypes: true })),
-            filesIn(join(dir, PARTIALS_FOLDER))
+            filesIn(dir, PARTIALS_FOLDER)
         ]);
-        const partials = new Map(partialFiles.map(({ layout, source }) => [layout, source]));
+        const partials = new Map(partialFiles.map((file) => [file.layout, file]));
         const folders = entries
             .filter((entry) => entry.isDirectory() && !entry.name.startsWith(SHARED_FOLDER_PREFIX))
             .map((entry) => entry.name)
             .toSorted((a, b) => a.localeCompare(b));
-        return Promise.all(
-            folders.map(async (name) => new Template(name, from, await filesIn(join(dir, name)), partials))
-        );
+        return Promise.all(folders.map(async (name) => new Template(name, from, await filesIn(dir, name), partials)));
     }
 
     public output(name: string, project: RenderProject): TemplateOutput {

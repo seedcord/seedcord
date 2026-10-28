@@ -1,10 +1,11 @@
 import { join } from 'node:path';
 
-import { SeedcordErrorCode } from '@seedcord/errors';
+import { isSeedcordError, SeedcordErrorCode } from '@seedcord/errors';
 import { assert, describe, expect, it, onTestFinished, vi } from 'vitest';
 
 import { Template } from '#src/Template';
 import { templateFolder } from '#tests/templateFolder';
+import { thrownBy } from '#tests/thrownBy';
 
 import type { RenderProject } from '#src/TemplateOutput';
 
@@ -174,10 +175,20 @@ describe('TemplateOutput.render', () => {
         );
     });
 
-    it('throws when a template reads a value it was never given', async () => {
-        await using made = await onlyTemplate({ 'x.hbs': '[{{description}}]' });
+    it.each([
+        ['reads a value it was never given', '[{{description}}]', /description/],
+        ['calls a helper that does not exist', '{{shout name}}', /shout/],
+        ['calls a partial that does not exist', '{{> header}}', /header/],
+        ['does not parse', '{{#if ready}}', /ready/]
+    ])('throws MakeTemplateFailed, naming the file, when a template %s', async (_case, body, reason) => {
+        await using made = await onlyTemplate({ 'handlers/x.ts.hbs': body });
 
-        expect(() => made.template.output('A', GATEWAY).render({})).toThrow(/description/);
+        const error = thrownBy(() => made.template.output('A', GATEWAY).render({}));
+
+        assert(isSeedcordError(error, 'SeedcordTypeError', SeedcordErrorCode.MakeTemplateFailed));
+        expect(error.message).toContain('handlers/x.ts.hbs');
+        expect(error.message).toMatch(reason);
+        expect(error.cause).toBeInstanceOf(Error);
     });
 
     it('renders partials from the _partials folder beside the template, nested folders included', async () => {
@@ -288,6 +299,25 @@ describe('TemplateOutput.inputs', () => {
             ephemeral: { kind: 'bool' },
             author: { kind: 'object', fields: { name: { kind: 'text' } } }
         });
+    });
+
+    it('asks for the field a quoted lookup reads', async () => {
+        const inputs = await inputsFor({ 'x.hbs': '{{lookup labels "title"}}' });
+
+        expect(inputs).toEqual({ labels: { kind: 'object', fields: { title: { kind: 'text' } } } });
+    });
+
+    it('throws when lookup reads a field picked by another value', async () => {
+        await expect(inputsFor({ 'x.hbs': '{{lookup labels key}}' })).rejects.toThrow(
+            expect.objectContaining({ code: SeedcordErrorCode.MakeLookupDynamicKey })
+        );
+    });
+
+    it('throws MakeTemplateFailed, naming the file, when a template does not parse', async () => {
+        const error = await inputsFor({ 'handlers/x.ts.hbs': '{{#if ready}}' }).catch((thrown: unknown) => thrown);
+
+        assert(isSeedcordError(error, 'SeedcordTypeError', SeedcordErrorCode.MakeTemplateFailed));
+        expect(error.message).toContain('handlers/x.ts.hbs');
     });
 
     it('stops reading a partial where it calls itself', async () => {
