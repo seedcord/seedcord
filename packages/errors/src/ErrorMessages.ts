@@ -380,7 +380,9 @@ const messages = {
     [SeedcordErrorCode.MakeInvalidName]: (name: string) =>
         `${paint.bold(JSON.stringify(name))} can't be a file name. Start it with a letter and use only letters, digits, spaces, - and _, like ${paint.bold('RollDice')}. Put folders in front with /, like ${paint.bold('fun/RollDice')}.`,
     [SeedcordErrorCode.MakeImportOfUnmatched]: (template: string, folder: string, count: number) =>
-        `${paint.bold(`importOf "${folder}"`)} in the ${paint.bold(template)} template needs exactly one ${paint.path('.hbs')} file in the template's ${paint.path(folder)} folder. That folder holds ${count}. Point importOf at a folder with one template file.`
+        `${paint.bold(`importOf "${folder}"`)} in the ${paint.bold(template)} template needs exactly one ${paint.path('.hbs')} file in the template's ${paint.path(folder)} folder. That folder holds ${count}. Point importOf at a folder with one template file.`,
+    [SeedcordErrorCode.MakeValueUsedTwoWays]: (template: string, value: string) =>
+        `The ${paint.bold(template)} template loops over ${paint.bold(value)} with ${paint.bold('#each')} and also reads a field from it, like ${paint.bold(`${value}.name`)}. A value is either a list or an entry with fields. Give one of the two uses its own name.`
 } satisfies Record<SeedcordErrorCode, (...args: never[]) => string>;
 
 /** @internal */

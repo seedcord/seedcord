@@ -18,6 +18,8 @@ const CLI_VARIABLES = {
     toRoot: ({ project, path }: OutputFile) => posixRelative(dirname(path), project.root) || '.'
 } satisfies Record<string, (file: OutputFile) => JsonValue>;
 
+export const FILLED_NAMES: ReadonlySet<string> = new Set(['name', ...Object.keys(CLI_VARIABLES)]);
+
 export function cliVariables(file: OutputFile): JsonObject {
     return mapValues(CLI_VARIABLES, (read) => read(file));
 }

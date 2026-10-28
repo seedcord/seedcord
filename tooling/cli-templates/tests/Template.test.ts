@@ -177,3 +177,94 @@ describe('TemplateOutput.render', () => {
         expect(() => made.template.output('A', GATEWAY).render({})).toThrow(/description/);
     });
 });
+
+describe('TemplateOutput.inputs', () => {
+    async function inputsFor(files: Record<string, string>, project = GATEWAY): Promise<unknown> {
+        await using made = await onlyTemplate(files);
+        return made.template.output('A', project).inputs();
+    }
+
+    it('asks for text or yes/no by how a template uses each value, and skips what the CLI fills', async () => {
+        const inputs = await inputsFor(
+            {
+                'x.hbs': [
+                    '{{description}} {{#if ephemeral}}e{{/if}} {{#unless guildOnly}}g{{/unless}}',
+                    '{{#if note}}// {{note}}{{/if}} {{shout label}} {{pascal name}} {{transport}} {{toRoot}} {{timestamp}}'
+                ].join('\n')
+            },
+            { ...GATEWAY, helpers: { shout: (value: string) => value } }
+        );
+
+        expect(inputs).toEqual({
+            description: { kind: 'text' },
+            ephemeral: { kind: 'bool' },
+            guildOnly: { kind: 'bool' },
+            note: { kind: 'text' },
+            label: { kind: 'text' }
+        });
+    });
+
+    it('asks for a list of text or a list of entries by what each loop reads', async () => {
+        const inputs = await inputsFor({
+            'x.hbs': [
+                "{{#each choices}}'{{this}}'{{#unless @last}},{{/unless}}{{/each}}",
+                '{{#each options as |option i|}}{{option.name}}{{#if option.required}}!{{/if}}{{i}}{{/each}}',
+                '{{#each groups}}{{title}}{{#each tags}}{{this}}{{/each}}{{/each}}'
+            ].join('\n')
+        });
+
+        expect(inputs).toEqual({
+            choices: { kind: 'list', item: { kind: 'text' } },
+            options: {
+                kind: 'list',
+                item: { kind: 'object', fields: { name: { kind: 'text' }, required: { kind: 'bool' } } }
+            },
+            groups: {
+                kind: 'list',
+                item: {
+                    kind: 'object',
+                    fields: { title: { kind: 'text' }, tags: { kind: 'list', item: { kind: 'text' } } }
+                }
+            }
+        });
+    });
+
+    it('reads with blocks and dotted paths as entries, and ../ and @root as the outer values', async () => {
+        const inputs = await inputsFor({
+            'x.hbs':
+                '{{#with author}}{{name}} {{../prefix}}{{/with}} {{owner.id}} {{#each tags}}{{@root.suffix}}{{/each}}'
+        });
+
+        expect(inputs).toEqual({
+            author: { kind: 'object', fields: { name: { kind: 'text' } } },
+            prefix: { kind: 'text' },
+            owner: { kind: 'object', fields: { id: { kind: 'text' } } },
+            tags: { kind: 'list', item: { kind: 'text' } },
+            suffix: { kind: 'text' }
+        });
+    });
+
+    it('asks once for a value that several files of the template read', async () => {
+        const inputs = await inputsFor({
+            'commands/{{pascal name}}.ts.hbs': '{{description}} {{#if ephemeral}}e{{/if}}',
+            'handlers/{{pascal name}}.ts.hbs': '{{description}} {{ephemeral}}'
+        });
+
+        expect(inputs).toEqual({ description: { kind: 'text' }, ephemeral: { kind: 'text' } });
+    });
+
+    it('asks for what a partial call passes in, leaving the partial name alone', async () => {
+        const inputs = await inputsFor({ 'x.hbs': '{{> header}} {{> footer note=description}}' });
+
+        expect(inputs).toEqual({ description: { kind: 'text' } });
+    });
+
+    it.each([
+        ['a list first', '{{#each x}}{{this}}{{/each}} {{x.name}}'],
+        ['an entry first', '{{x.name}} {{#each x}}{{this}}{{/each}}']
+    ])('throws when one value is used as a list and as an entry, with %s', async (_case, body) => {
+        await expect(inputsFor({ 'x.hbs': body })).rejects.toThrow(
+            expect.objectContaining({ type: 'SeedcordTypeError', code: SeedcordErrorCode.MakeValueUsedTwoWays })
+        );
+    });
+});

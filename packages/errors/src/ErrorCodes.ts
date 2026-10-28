@@ -318,5 +318,7 @@ export enum SeedcordErrorCode {
     /** The name given to `seedcord make` can't become a file name. */
     MakeInvalidName = 3301,
     /** A template calls `importOf` on a folder that doesn't hold exactly one template file. */
-    MakeImportOfUnmatched = 3302
+    MakeImportOfUnmatched = 3302,
+    /** A template uses one value both as a list and as an entry with fields. */
+    MakeValueUsedTwoWays = 3303
 }

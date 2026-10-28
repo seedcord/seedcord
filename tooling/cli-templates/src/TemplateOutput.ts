@@ -5,10 +5,12 @@ import { SeedcordTypeError } from '@seedcord/errors/internal';
 import { importSpecifier } from '@seedcord/utils/internal';
 import Handlebars from 'handlebars';
 
-import { CLI_HELPERS } from './helpers';
+import { CLI_HELPERS, helperNames, IMPORT_OF } from './helpers';
+import { inputsOf } from './inputsOf';
 import { splitName } from './splitName';
-import { cliVariables } from './variables';
+import { cliVariables, FILLED_NAMES } from './variables';
 
+import type { TemplateInputs } from './inputsOf';
 import type { Template, TemplateFile } from './Template';
 import type { Runtime, Transport } from '@seedcord/core/internal';
 import type { JsonObject } from 'type-fest';
@@ -59,11 +61,16 @@ export class TemplateOutput {
         return this.targets.map(({ path }) => path);
     }
 
+    public inputs(): TemplateInputs {
+        const inputs = inputsOf(this.template, helperNames(this.project.helpers));
+        return Object.fromEntries(Object.entries(inputs).filter(([key]) => !FILLED_NAMES.has(key)));
+    }
+
     public render(answers: JsonObject): RenderedFile[] {
         return this.targets.map(({ file, path }) => {
             const context = { ...answers, name: this.name, ...cliVariables({ project: this.project, path }) };
             const importOf = (folder: string): string => importSpecifier(dirname(path), this.onlyPathIn(folder));
-            return { path, contents: this.compile(file.source)(context, { helpers: { importOf } }) };
+            return { path, contents: this.compile(file.source)(context, { helpers: { [IMPORT_OF]: importOf } }) };
         });
     }
 

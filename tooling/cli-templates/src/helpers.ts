@@ -1,5 +1,7 @@
 import { camelCase, kebabCase, pascalCase, snakeCase } from 'es-toolkit';
 
+import type { RenderProject } from './TemplateOutput';
+
 const DATE_TIME_DIGITS = 'YYYYMMDDHHmmss'.length;
 
 function timestamp(): string {
@@ -13,3 +15,10 @@ export const CLI_HELPERS = {
     kebab: kebabCase,
     timestamp
 };
+
+// registered per file while rendering, since it reads that file's path
+export const IMPORT_OF = 'importOf';
+
+export function helperNames(projectHelpers: RenderProject['helpers']): Set<string> {
+    return new Set([...Object.keys(CLI_HELPERS), IMPORT_OF, ...Object.keys(projectHelpers)]);
+}
