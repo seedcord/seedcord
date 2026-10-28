@@ -46,6 +46,7 @@ export class TemplateOutput {
         this.name = name;
         this.handlebars.registerHelper(CLI_HELPERS);
         this.handlebars.registerHelper(project.helpers);
+        this.handlebars.registerPartial(Object.fromEntries(template.partials));
         this.targets = template.files.map((file) => ({
             file,
             path: join(

@@ -82,6 +82,15 @@ function blockParamsOf(program: ParsedProgram): readonly string[] {
     return program.blockParams ?? [];
 }
 
+// the parser also leaves hash undefined on a call without key=value pairs
+function pairsOf(call: { readonly hash?: hbs.AST.Hash }): readonly hbs.AST.HashPair[] {
+    return call.hash?.pairs ?? [];
+}
+
+function pathOf(expression: hbs.AST.Expression | undefined): hbs.AST.PathExpression | undefined {
+    return expression?.type === 'PathExpression' ? (expression as hbs.AST.PathExpression) : undefined;
+}
+
 function fieldOf(slot: Slot, keys: readonly string[]): Slot {
     return keys.reduce((parent, key) => parent.field(key), slot);
 }
@@ -89,13 +98,15 @@ function fieldOf(slot: Slot, keys: readonly string[]): Slot {
 class InputReader extends Handlebars.Visitor {
     public readonly root: Slot;
     private readonly scopes: Scope[];
+    // a partial that calls itself would loop forever
+    private readonly partialsBeingRead: string[] = [];
 
     constructor(
-        private readonly template: string,
+        private readonly template: Template,
         private readonly helpers: ReadonlySet<string>
     ) {
         super();
-        this.root = new Slot(template, '');
+        this.root = new Slot(template.name, '');
         this.scopes = [{ slot: this.root, params: new Map() }];
     }
 
@@ -115,13 +126,11 @@ class InputReader extends Handlebars.Visitor {
     }
 
     public override PartialStatement(partial: hbs.AST.PartialStatement): void {
-        this.acceptArray(partial.params);
-        this.accept(partial.hash);
+        this.readPartial(partial);
     }
 
     public override PartialBlockStatement(partial: hbs.AST.PartialBlockStatement): void {
-        this.acceptArray(partial.params);
-        this.accept(partial.hash);
+        this.readPartial(partial);
         this.accept(partial.program);
     }
 
@@ -162,7 +171,7 @@ class InputReader extends Handlebars.Visitor {
     }
 
     private readLoop(block: hbs.AST.BlockStatement): void {
-        const item = this.subjectOf(block)?.listItem() ?? new Slot(this.template, '');
+        const item = this.subjectOf(block)?.listItem() ?? this.untracedSlot();
         const [itemParam, indexParam] = blockParamsOf(block.program);
         const params = new Map<string, Slot | undefined>();
         if (itemParam) params.set(itemParam, item);
@@ -171,9 +180,32 @@ class InputReader extends Handlebars.Visitor {
     }
 
     private readWith(block: hbs.AST.BlockStatement): void {
-        const target = this.subjectOf(block) ?? new Slot(this.template, '');
+        const target = this.subjectOf(block) ?? this.untracedSlot();
         const [asParam] = blockParamsOf(block.program);
         this.acceptInScope(block.program, { slot: target, params: new Map(asParam ? [[asParam, target]] : []) });
+    }
+
+    // handlebars runs a partial against the argument it gets, or the caller's context, plus each hash key
+    private readPartial(partial: hbs.AST.PartialStatement | hbs.AST.PartialBlockStatement): void {
+        const name = partial.name.type === 'PathExpression' ? partial.name.original : '';
+        const source = this.template.partials.get(name);
+        if (source === undefined || this.partialsBeingRead.includes(name)) {
+            this.acceptArray(partial.params);
+            this.accept(partial.hash);
+            return;
+        }
+
+        const context = pathOf(partial.params[0]);
+        const slot = context ? this.slotOf(context) : this.scopes.at(-1)?.slot;
+        const params = new Map(pairsOf(partial).map(({ key, value }) => [key, this.slotOf(pathOf(value))]));
+        this.partialsBeingRead.push(name);
+        this.acceptInScope(Handlebars.parse(source), { slot: slot ?? this.untracedSlot(), params });
+        this.partialsBeingRead.pop();
+    }
+
+    // holds the uses of a value the reader can't trace, like the item of {{#each (someHelper)}}
+    private untracedSlot(): Slot {
+        return new Slot(this.template.name, '');
     }
 
     private acceptInScope(program: hbs.AST.Program, scope: Scope): void {
@@ -183,11 +215,11 @@ class InputReader extends Handlebars.Visitor {
     }
 
     private subjectOf(block: hbs.AST.BlockStatement): Slot | undefined {
-        const [subject] = block.params;
-        return subject?.type === 'PathExpression' ? this.slotOf(subject as hbs.AST.PathExpression) : undefined;
+        return this.slotOf(pathOf(block.params[0]));
     }
 
-    private slotOf(path: hbs.AST.PathExpression): Slot | undefined {
+    private slotOf(path: hbs.AST.PathExpression | undefined): Slot | undefined {
+        if (!path) return undefined;
         if (path.data) return path.parts[0] === 'root' ? fieldOf(this.root, path.parts.slice(1)) : undefined;
         if (ast.simpleId(path) && this.helpers.has(path.original)) return undefined;
 
@@ -205,7 +237,7 @@ class InputReader extends Handlebars.Visitor {
 }
 
 export function inputsOf(template: Template, helpers: ReadonlySet<string>): TemplateInputs {
-    const reader = new InputReader(template.name, helpers);
+    const reader = new InputReader(template, helpers);
     for (const file of template.files) reader.accept(Handlebars.parse(file.source));
     return reader.root.fieldShapes();
 }

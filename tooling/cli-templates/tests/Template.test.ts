@@ -35,9 +35,12 @@ describe('Template.readAll', () => {
 const ROOT = '/bot/src';
 const GATEWAY: RenderProject = { root: ROOT, transport: 'gateway', runtime: 'server', helpers: {} };
 
+// a path starting with _ stays beside the template, like _partials/header.hbs
 async function onlyTemplate(files: Record<string, string>): Promise<AsyncDisposable & { template: Template }> {
     const folder = await templateFolder(
-        Object.fromEntries(Object.entries(files).map(([path, body]) => [`T/${path}`, body]))
+        Object.fromEntries(
+            Object.entries(files).map(([path, body]) => [path.startsWith('_') ? path : `T/${path}`, body])
+        )
     );
     const [template] = await Template.readAll(folder.path, 'templates/');
     assert(template);
@@ -176,6 +179,24 @@ describe('TemplateOutput.render', () => {
 
         expect(() => made.template.output('A', GATEWAY).render({})).toThrow(/description/);
     });
+
+    it('renders partials from the _partials folder beside the template, nested folders included', async () => {
+        await using made = await onlyTemplate({
+            '_partials/discord/imports.hbs': "import { {{names}} } from '{{transport}}';\n",
+            'x.hbs': '{{> discord/imports names="Ping"}}\n{{pascal name}}'
+        });
+
+        const [file] = made.template.output('roll dice', GATEWAY).render({});
+
+        expect(file?.contents).toBe("import { Ping } from '@seedcord/gateway';\nRollDice");
+    });
+
+    it('reads partials only from the folder the template came from', async () => {
+        await using _other = await templateFolder({ '_partials/header.hbs': 'h' });
+        await using made = await onlyTemplate({ 'x.hbs': '{{> header}}' });
+
+        expect(() => made.template.output('A', GATEWAY).render({})).toThrow(/header/);
+    });
 });
 
 describe('TemplateOutput.inputs', () => {
@@ -253,10 +274,29 @@ describe('TemplateOutput.inputs', () => {
         expect(inputs).toEqual({ description: { kind: 'text' }, ephemeral: { kind: 'text' } });
     });
 
-    it('asks for what a partial call passes in, leaving the partial name alone', async () => {
-        const inputs = await inputsFor({ 'x.hbs': '{{> header}} {{> footer note=description}}' });
+    it('reads through partials, asking for what each call passes in', async () => {
+        const inputs = await inputsFor({
+            '_partials/header.hbs': '{{title}}',
+            '_partials/footer.hbs': '{{note}} {{#if ephemeral}}e{{/if}}',
+            '_partials/card.hbs': '{{name}}',
+            'x.hbs': '{{> header}} {{> footer note=description}} {{> card author}}'
+        });
 
-        expect(inputs).toEqual({ description: { kind: 'text' } });
+        expect(inputs).toEqual({
+            title: { kind: 'text' },
+            description: { kind: 'text' },
+            ephemeral: { kind: 'bool' },
+            author: { kind: 'object', fields: { name: { kind: 'text' } } }
+        });
+    });
+
+    it('stops reading a partial where it calls itself', async () => {
+        const inputs = await inputsFor({
+            '_partials/tree.hbs': '{{label}}{{#each children}}{{> tree}}{{/each}}',
+            'x.hbs': '{{> tree}}'
+        });
+
+        expect(inputs).toEqual({ label: { kind: 'text' }, children: { kind: 'list', item: { kind: 'text' } } });
     });
 
     it.each([
