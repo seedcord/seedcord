@@ -1,7 +1,8 @@
 import { join } from 'node:path';
+import { runInNewContext } from 'node:vm';
 
 import { isSeedcordError, SeedcordErrorCode } from '@seedcord/errors';
-import { assert, describe, expect, it, onTestFinished, vi } from 'vitest';
+import { assert, beforeAll, describe, expect, it } from 'vitest';
 
 import { Template } from '#src/Template';
 import { templateFolder } from '#tests/templateFolder';
@@ -69,6 +70,16 @@ describe('TemplateOutput.render', () => {
         expect(file?.contents).toBe('RollDice rollDice roll_dice roll-dice');
     });
 
+    it('quotes an answer as a single-quoted string literal that reads back as typed', async () => {
+        await using made = await onlyTemplate({ 'x.hbs': '{{quote reply}}' });
+        const reply = `Don't "panic"\n\\ok`;
+
+        const [file] = made.template.output('A', GATEWAY).render({ reply });
+
+        expect(file?.contents.startsWith("'")).toBe(true);
+        expect(runInNewContext(file?.contents ?? '')).toBe(reply);
+    });
+
     it('fills the transport variables from the project', async () => {
         await using made = await onlyTemplate({ 'x.hbs': '{{transport}} {{isGateway}} {{isEdge}}' });
         const edge: RenderProject = { ...GATEWAY, transport: 'http', runtime: 'edge' };
@@ -87,19 +98,6 @@ describe('TemplateOutput.render', () => {
             .map((file) => file.contents);
 
         expect(contents).toEqual(['../..', '.']);
-    });
-
-    it('stamps a file name with the time in UTC, largest unit first', async () => {
-        vi.useFakeTimers({ toFake: ['Date'] });
-        onTestFinished(() => {
-            vi.useRealTimers();
-        });
-        vi.setSystemTime(new Date('2026-10-27T15:30:05Z'));
-        await using made = await onlyTemplate({ 'migrations/{{timestamp}}_{{snake name}}.ts.hbs': '' });
-
-        const [file] = made.template.output('GuildSettings', GATEWAY).render({});
-
-        expect(file?.path).toBe(join(ROOT, 'migrations/20261027153005_guild_settings.ts'));
     });
 
     it('fills answers and runs the project helpers', async () => {
@@ -126,25 +124,30 @@ describe('TemplateOutput.render', () => {
         expect(output.render({})).toEqual(output.paths.map((path) => ({ path, contents: '../..' })));
     });
 
-    it.each(['', '2fast', 'roll!dice', 'tickets/', '../Appeal', '/Appeal', 'a//Appeal', 'a/./Appeal'])(
-        'rejects %j as a name before any path is built',
-        async (name) => {
-            await using made = await onlyTemplate({ 'x.hbs': '' });
+    describe('the name', () => {
+        let template: Template;
+        beforeAll(async () => {
+            const made = await onlyTemplate({ 'x.hbs': '' });
+            ({ template } = made);
+            return () => made[Symbol.asyncDispose]();
+        });
 
-            expect(() => made.template.output(name, GATEWAY)).toThrow(
-                expect.objectContaining({ type: 'SeedcordTypeError', code: SeedcordErrorCode.MakeInvalidName })
-            );
-        }
-    );
+        it.each(['', '2fast', 'roll!dice', 'tickets/', '../Appeal', '/Appeal', 'a//Appeal', 'a/./Appeal'])(
+            'rejects %j before any path is built',
+            (name) => {
+                expect(() => template.output(name, GATEWAY)).toThrow(
+                    expect.objectContaining({ type: 'SeedcordTypeError', code: SeedcordErrorCode.MakeInvalidName })
+                );
+            }
+        );
 
-    it.each(['roll dice', 'roll-dice', 'roll_dice', 'RollDice2', 'tickets/Appeal', 'a/b/Appeal'])(
-        'accepts %j as a name',
-        async (name) => {
-            await using made = await onlyTemplate({ 'x.hbs': '' });
-
-            expect(() => made.template.output(name, GATEWAY)).not.toThrow();
-        }
-    );
+        it.each(['roll dice', 'roll-dice', 'roll_dice', 'RollDice2', 'tickets/Appeal', 'a/b/Appeal'])(
+            'accepts %j',
+            (name) => {
+                expect(() => template.output(name, GATEWAY)).not.toThrow();
+            }
+        );
+    });
 
     it('imports the file another folder of the template writes', async () => {
         await using made = await onlyTemplate({
@@ -203,10 +206,14 @@ describe('TemplateOutput.render', () => {
     });
 
     it('reads partials only from the folder the template came from', async () => {
-        await using _other = await templateFolder({ '_partials/header.hbs': 'h' });
-        await using made = await onlyTemplate({ 'x.hbs': '{{> header}}' });
+        await using withPartial = await templateFolder({ '_partials/header.hbs': 'h', 'A/x.hbs': '{{> header}}' });
+        await using without = await templateFolder({ 'B/x.hbs': '{{> header}}' });
+        const [a] = await Template.readAll(withPartial.path, 'one/');
+        const [b] = await Template.readAll(without.path, 'two/');
+        assert(a && b);
 
-        expect(() => made.template.output('A', GATEWAY).render({})).toThrow(/header/);
+        expect(a.output('A', GATEWAY).render({})[0]?.contents).toBe('h');
+        expect(() => b.output('A', GATEWAY).render({})).toThrow(/header/);
     });
 });
 
@@ -221,7 +228,7 @@ describe('TemplateOutput.inputs', () => {
             {
                 'x.hbs': [
                     '{{description}} {{#if ephemeral}}e{{/if}} {{#unless guildOnly}}g{{/unless}}',
-                    '{{#if note}}// {{note}}{{/if}} {{shout label}} {{pascal name}} {{transport}} {{toRoot}} {{timestamp}}'
+                    '{{#if note}}// {{note}}{{/if}} {{shout label}} {{pascal name}} {{transport}} {{toRoot}} {{quote description}}'
                 ].join('\n')
             },
             { ...GATEWAY, helpers: { shout: (value: string) => value } }
@@ -283,6 +290,42 @@ describe('TemplateOutput.inputs', () => {
         });
 
         expect(inputs).toEqual({ description: { kind: 'text' }, ephemeral: { kind: 'text' } });
+    });
+
+    it('asks for a value that only a helper call reads, as the subject of a block or a partial', async () => {
+        const inputs = await inputsFor(
+            {
+                '_partials/h.hbs': '{{title}}',
+                'x.hbs': [
+                    '{{#each (split csv)}}{{this}}{{/each}}',
+                    '{{#with (split pair)}}{{this}}{{/with}}',
+                    '{{> h (pascal thing)}}',
+                    '{{> h title=(pascal heading)}}'
+                ].join('\n')
+            },
+            { ...GATEWAY, helpers: { split: (value: string) => value } }
+        );
+
+        expect(inputs).toEqual({
+            csv: { kind: 'text' },
+            pair: { kind: 'text' },
+            thing: { kind: 'text' },
+            heading: { kind: 'text' }
+        });
+    });
+
+    it("leaves the caller's block params out of a partial", async () => {
+        const inputs = await inputsFor({
+            '_partials/row.hbs': '{{item.name}}',
+            'x.hbs': '{{#each items as |item|}}{{> row}}{{/each}}'
+        });
+
+        expect(inputs).toEqual({
+            items: {
+                kind: 'list',
+                item: { kind: 'object', fields: { item: { kind: 'object', fields: { name: { kind: 'text' } } } } }
+            }
+        });
     });
 
     it('reads through partials, asking for what each call passes in', async () => {

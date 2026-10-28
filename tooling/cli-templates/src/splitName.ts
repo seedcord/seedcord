@@ -4,7 +4,7 @@ import { SeedcordTypeError } from '@seedcord/errors/internal';
 const FOLDER = /^[\w -]+$/;
 const NAME = /^[A-Za-z][\w -]*$/;
 
-export interface SplitName {
+interface SplitName {
     readonly folder: string;
     readonly name: string;
 }

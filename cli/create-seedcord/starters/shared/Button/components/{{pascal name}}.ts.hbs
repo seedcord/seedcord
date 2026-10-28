@@ -11,7 +11,7 @@ export class {{ pascal name }}Row extends RowComponent<'button'> {
         this.instance.addComponents(
             new ButtonBuilder()
                 .setCustomId({{ pascal name }}Id.encode({}))
-                .setLabel('{{ label }}')
+                .setLabel({{ quote label }})
                 .setStyle(ButtonStyle.Primary)
         );
     }

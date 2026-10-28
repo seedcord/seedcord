@@ -9,9 +9,6 @@ import type { RenderedFile } from '@seedcord/cli-templates';
 // npm drops a literal .gitignore from a tarball, whatever the files list says
 const DOTTED = new Set(['env', 'gitattributes', 'gitignore', 'prettierignore']);
 
-// Event imports discord.js, missing from an http bot
-const GATEWAY_STARTERS = new Set(['Event']);
-
 function targetPath(templateRelative: string): string {
     const parts = templateRelative.split(sep);
     const name = parts.pop()?.replace(/\.hbs$/, '') ?? '';
@@ -44,13 +41,18 @@ export async function renderTemplates(templatesRoot: string, context: TemplateCo
 
 // seedcord make renders these later
 export async function copyStarters(startersRoot: string, { isGateway }: TemplateContext): Promise<RenderedFile[]> {
-    const all = await hbsFilesIn(startersRoot);
-    const sources = all.filter((source) => isGateway || !GATEWAY_STARTERS.has(source.split(sep)[0] ?? ''));
-
-    return Promise.all(
-        sources.map(async (source) => ({
-            path: posix.join('templates', ...source.split(sep)),
-            contents: await readFile(join(startersRoot, source), 'utf8')
-        }))
+    const groups = isGateway ? ['shared', 'gateway'] : ['shared'];
+    const copied = await Promise.all(
+        groups.map(async (group) => {
+            const dir = join(startersRoot, group);
+            const sources = await hbsFilesIn(dir);
+            return Promise.all(
+                sources.map(async (source) => ({
+                    path: posix.join('templates', ...source.split(sep)),
+                    contents: await readFile(join(dir, source), 'utf8')
+                }))
+            );
+        })
     );
+    return copied.flat();
 }

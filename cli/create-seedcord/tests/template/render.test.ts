@@ -1,5 +1,6 @@
+import { readFile } from 'node:fs/promises';
 import { createRequire } from 'node:module';
-import { resolve } from 'node:path';
+import { join, resolve } from 'node:path';
 
 import { Template } from '@seedcord/cli-templates';
 import { describe, expect, it } from 'vitest';
@@ -158,21 +159,24 @@ function sampleOf(shape: InputShape): Answers[string] {
 }
 
 describe('the starters', () => {
-    it('go into templates/ unrendered, with the event starter on gateway only', async () => {
+    it('go into templates/ unrendered, with the gateway starters on gateway only', async () => {
         const gateway = await copyStarters(STARTERS, buildContext(GATEWAY, EXTRAS));
         const http = await copyStarters(STARTERS, buildContext(HTTP, EXTRAS));
-        const httpPaths = new Set(http.map((file) => file.path));
+        const sourceOf = (group: string, path: string): Promise<string> =>
+            readFile(join(STARTERS, group, path.replace(/^templates\//, '')), 'utf8');
+        const event = 'templates/Event/events/{{pascal name}}.ts.hbs';
 
-        expect(gateway.filter((file) => !httpPaths.has(file.path)).map((file) => file.path)).toEqual([
-            'templates/Event/events/{{pascal name}}.ts.hbs'
-        ]);
-        expect(gateway.every((file) => file.contents.includes('{{ transport }}'))).toBe(true);
+        for (const file of http) expect(file.contents).toBe(await sourceOf('shared', file.path));
+        expect(gateway).toEqual([...http, { path: event, contents: await sourceOf('gateway', event) }]);
     });
 
     it('each render with seedcord make, leaving no mustache behind', async () => {
         const project = { root: '/bot/src', transport: 'gateway', runtime: 'server', helpers: {} } as const;
+        const groups = await Promise.all(
+            ['shared', 'gateway'].map((group) => Template.readAll(join(STARTERS, group), ''))
+        );
 
-        for (const template of await Template.readAll(STARTERS, 'starters/')) {
+        for (const template of groups.flat()) {
             const output = template.output('roll dice', project);
             const answers = sampleOf({ kind: 'object', fields: output.inputs() }) as Answers;
 

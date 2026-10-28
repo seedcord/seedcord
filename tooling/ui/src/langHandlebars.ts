@@ -2,7 +2,7 @@ import type { LanguageRegistration } from 'shiki';
 
 const PATH = String.raw`[A-Za-z_@.][\w./@-]*`;
 
-// a .hbs file only becomes code once it renders
+// the text between mustaches can be any language, so this colors only the mustaches
 export const langHandlebars: LanguageRegistration = {
     name: 'hbs',
     scopeName: 'text.hbs',

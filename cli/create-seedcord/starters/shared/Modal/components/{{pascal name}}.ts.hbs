@@ -9,10 +9,10 @@ export class {{ pascal name }}Modal extends BuilderComponent<'modal'> {
 
         this.instance
             .setCustomId({{ pascal name }}Id.encode({}))
-            .setTitle('{{ title }}')
+            .setTitle({{ quote title }})
             .addLabelComponents((label) =>
                 label
-                    .setLabel('{{ question }}')
+                    .setLabel({{ quote question }})
                     .setTextInputComponent((input) => input.setCustomId('answer').setStyle(TextInputStyle.Short))
             );
     }

@@ -5,38 +5,42 @@ import { dirname } from 'node:path';
 import { validatorFor } from '@seedcord/cli-prompts';
 import { paint, SeedcordErrorCode } from '@seedcord/errors';
 import { SeedcordError } from '@seedcord/errors/internal';
+import { HostAugmentTarget } from '@seedcord/types/internal';
 import { hasErrorCode } from '@seedcord/utils/internal';
 
+import { openProjectWithSteps } from '#core/config/openProjectWithSteps';
 import { ProjectLoader } from '#core/config/ProjectLoader';
 import { plural } from '#core/format';
-import { directDependencies } from '#core/modules/installedManifest';
+import { importInstance } from '#core/modules/importInstance';
 import { openModuleLoader } from '#core/modules/openModuleLoader';
+import { directDependencies } from '#core/modules/PackageManifest';
 import { startupShell } from '#src/core/ShellMode';
 
 import { findTemplates } from './findTemplates';
 import { InputQuestions } from './InputQuestions';
 
+import type { ProjectOpener } from '#core/config/openProjectWithSteps';
 import type { ResolvedSeedcordConfig } from '#core/config/schema';
-import type { InstalledDependencies } from '#core/modules/installedManifest';
 import type { StepPrinter } from '#core/output/StepPrinter';
 import type { Answered } from './InputQuestions';
 import type { Prompter } from '@seedcord/cli-prompts';
 import type { RenderedFile, RenderProject, Template } from '@seedcord/cli-templates';
+import type { SeedcordInstance } from '@seedcord/types/internal';
 
-export const MAKE_STEPS = ['read config', 'find templates', 'write'] as const;
+export const MAKE_STEPS = ['read config', 'load plugins', 'find templates', 'load bot', 'write'] as const;
 type MakeStep = (typeof MAKE_STEPS)[number];
 
 interface MakeRunnerDeps {
     readonly steps: StepPrinter<MakeStep>;
     readonly prompter: Prompter;
-    readonly projectLoader: Pick<ProjectLoader, 'readConfig'>;
+    readonly projectLoader: ProjectOpener;
     readonly interactive: boolean;
 }
 
-function renderProjectOf(config: ResolvedSeedcordConfig, dependencies: InstalledDependencies): RenderProject {
+function renderProjectOf(config: ResolvedSeedcordConfig, instance: SeedcordInstance): RenderProject {
     return {
         root: config.root,
-        transport: dependencies.has('@seedcord/gateway') ? 'gateway' : 'http',
+        transport: instance[HostAugmentTarget] === '@seedcord/gateway' ? 'gateway' : 'http',
         runtime: config.target.kind,
         helpers: config.make.helpers
     };
@@ -73,18 +77,18 @@ export class MakeRunner {
         const { steps, prompter, projectLoader, interactive } = this.deps;
         if (!interactive) throw new SeedcordError(SeedcordErrorCode.MakeNeedsTerminal);
 
-        await using loaded = await steps.step('read config', () => projectLoader.readConfig());
-        const { config } = loaded;
-        const dependencies = directDependencies(dirname(config.configFile));
+        await using opened = await openProjectWithSteps(steps, projectLoader);
+        const { config } = opened;
         const templates = await steps.step(
             'find templates',
-            () => findTemplates(config, dependencies),
+            () => findTemplates(config, directDependencies(dirname(config.configFile))),
             (found) => paint.mute(plural(found.length, 'template'))
         );
         if (templates.length === 0) throw new SeedcordError(SeedcordErrorCode.MakeNoTemplates, [config.make.templates]);
+        const instance = await steps.step('load bot', () => importInstance(opened.modules, config.instance));
 
         const answered: Answered = (label, shown) => steps.line(`${paint.mint(paint.check)} ${label}  ${shown}`);
-        const project = renderProjectOf(config, dependencies);
+        const project = renderProjectOf(config, instance);
         const template = await this.pickTemplate(templates);
         answered('template', template.name);
         const name = await prompter.text({

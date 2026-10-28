@@ -1,3 +1,4 @@
+import { CLI_HELPER_NAMES } from '@seedcord/cli-templates/helper-names';
 import { paint, SeedcordErrorCode } from '@seedcord/errors';
 import { SeedcordRangeError, SeedcordTypeError, throwSingleOrAggregate } from '@seedcord/errors/internal';
 import { isPlainObject, isStringArray } from '@seedcord/utils/internal';
@@ -62,7 +63,9 @@ function* makeProblems(value: unknown): Generator<SeedcordTypeError> {
         return;
     }
     for (const [name, helper] of Object.entries(value.helpers)) {
-        if (typeof helper !== 'function') yield invalidField(`make.helpers.${name}`, 'a function');
+        if (CLI_HELPER_NAMES.has(name)) {
+            yield invalidField(`make.helpers.${name}`, `renamed, since seedcord already ships a ${name} helper`);
+        } else if (typeof helper !== 'function') yield invalidField(`make.helpers.${name}`, 'a function');
     }
 }
 

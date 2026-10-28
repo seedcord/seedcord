@@ -8,14 +8,12 @@ import { describe, expect, it } from 'vitest';
 import { MAKE_STEPS, MakeRunner } from '#commands/make/MakeRunner';
 import { StepPrinter } from '#core/output/StepPrinter';
 import { makeProject } from '#tests/commands/make/makeProject';
-import { loadedConfig } from '#tests/loadedConfig';
+import { brandedInstance, modulesFrom, projectOpener } from '#tests/fakeProject';
 import { maskStepTimes } from '#tests/maskStepTimes';
 import { resolvedConfigOf } from '#tests/resolvedConfigOf';
 
-const GATEWAY_BOT = {
-    'package.json': JSON.stringify({ dependencies: { '@seedcord/gateway': '1.0.0' } }),
-    'node_modules/@seedcord/gateway/package.json': '{}'
-};
+// brandedInstance is a gateway bot that this package.json doesn't list
+const GATEWAY_BOT = { 'package.json': '{}', 'src/bot.ts': '' };
 
 function make(terminal: PromptTerminal, projectDir: string, interactive = true): Promise<void> {
     const printer = new StepPrinter({
@@ -25,11 +23,11 @@ function make(terminal: PromptTerminal, projectDir: string, interactive = true):
         stdout: terminal.stdout,
         stderr: terminal.stdout
     });
-    const config = resolvedConfigOf(projectDir);
+    const modules = modulesFrom(() => Promise.resolve({ default: brandedInstance() }));
     return new MakeRunner({
         steps: printer,
         prompter: terminal.prompter,
-        projectLoader: { readConfig: () => Promise.resolve(loadedConfig(config)) },
+        projectLoader: projectOpener(resolvedConfigOf(projectDir), modules),
         interactive
     }).run();
 }

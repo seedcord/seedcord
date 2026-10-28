@@ -10,7 +10,7 @@ export class {{ pascal name }}Menu extends RowComponent<'menu_string'> {
         this.instance.addComponents(
             new StringSelectMenuBuilder()
                 .setCustomId({{ pascal name }}Id.encode({}))
-                .addOptions({{#each choices}}{ label: '{{ this }}', value: '{{ kebab this }}' }{{#unless @last}}, {{/unless}}{{/each}})
+                .addOptions({{#each choices}}{ label: {{ quote this }}, value: '{{ kebab this }}' }{{#unless @last}}, {{/unless}}{{/each}})
         );
     }
 }

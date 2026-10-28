@@ -1,7 +1,8 @@
-import { messageOf, StepRow } from '@seedcord/cli-prompts';
+import { StepRow } from '@seedcord/cli-prompts';
 import { paint } from '@seedcord/errors';
 
 import { banner } from '#cli/banner';
+import { messageOf } from '#cli/messageOf';
 import { CommandFailed } from '#scaffold/exec';
 
 import type { StepUi } from '#cli/steps';

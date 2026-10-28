@@ -70,6 +70,8 @@ interface Scope {
     readonly slot: Slot;
     // block params from `as |item index|`. the index holds no value to ask for
     readonly params: ReadonlyMap<string, Slot | undefined>;
+    // handlebars runs a partial without the caller's block params
+    readonly partial?: true;
 }
 
 // handlebars' types call it scopeId. the function on the object is scopedId
@@ -182,7 +184,7 @@ class InputReader extends Handlebars.Visitor {
         if (key?.type !== 'StringLiteral') {
             throw new SeedcordTypeError(SeedcordErrorCode.MakeLookupDynamicKey, [
                 this.template.name,
-                objectPath?.original ?? 'a value'
+                objectPath?.original ?? 'its value'
             ]);
         }
         const field = (key as hbs.AST.StringLiteral).value;
@@ -190,14 +192,12 @@ class InputReader extends Handlebars.Visitor {
     }
 
     private readTest(block: hbs.AST.BlockStatement): void {
-        const subject = this.subjectOf(block);
-        if (subject) subject.tested();
-        else this.acceptArray(block.params);
+        this.slotOrRead(block.params[0])?.tested();
         this.accept(block.program);
     }
 
     private readLoop(block: hbs.AST.BlockStatement): void {
-        const item = this.subjectOf(block)?.listItem() ?? this.untracedSlot();
+        const item = this.slotOrRead(block.params[0])?.listItem() ?? this.untracedSlot();
         const [itemParam, indexParam] = blockParamsOf(block.program);
         const params = new Map<string, Slot | undefined>();
         if (itemParam) params.set(itemParam, item);
@@ -206,7 +206,7 @@ class InputReader extends Handlebars.Visitor {
     }
 
     private readWith(block: hbs.AST.BlockStatement): void {
-        const target = this.subjectOf(block) ?? this.untracedSlot();
+        const target = this.slotOrRead(block.params[0]) ?? this.untracedSlot();
         const [asParam] = blockParamsOf(block.program);
         this.acceptInScope(block.program, { slot: target, params: new Map(asParam ? [[asParam, target]] : []) });
     }
@@ -221,11 +221,11 @@ class InputReader extends Handlebars.Visitor {
             return;
         }
 
-        const context = pathOf(partial.params[0]);
-        const slot = context ? this.slotOf(context) : this.scopes.at(-1)?.slot;
-        const params = new Map(pairsOf(partial).map(({ key, value }) => [key, this.slotOf(pathOf(value))]));
+        const [context] = partial.params;
+        const slot = context ? this.slotOrRead(context) : this.scopes.at(-1)?.slot;
+        const params = new Map(pairsOf(partial).map(({ key, value }) => [key, this.slotOrRead(value)]));
         this.partialsBeingRead.push(name);
-        this.acceptInScope(this.parse(file), { slot: slot ?? this.untracedSlot(), params });
+        this.acceptInScope(this.parse(file), { slot: slot ?? this.untracedSlot(), params, partial: true });
         this.partialsBeingRead.pop();
     }
 
@@ -240,8 +240,19 @@ class InputReader extends Handlebars.Visitor {
         this.scopes.pop();
     }
 
-    private subjectOf(block: hbs.AST.BlockStatement): Slot | undefined {
-        return this.slotOf(pathOf(block.params[0]));
+    // an expression like (split csv) has no slot of its own, but its arguments still get asked
+    private slotOrRead(expression: hbs.AST.Expression | undefined): Slot | undefined {
+        const slot = this.slotOf(pathOf(expression));
+        if (!slot && expression) this.accept(expression);
+        return slot;
+    }
+
+    private scopeDeclaring(param: string): Scope | undefined {
+        for (const scope of this.scopes.toReversed()) {
+            if (scope.params.has(param)) return scope;
+            if (scope.partial) return undefined;
+        }
+        return undefined;
     }
 
     private slotOf(path: hbs.AST.PathExpression | undefined): Slot | undefined {
@@ -251,7 +262,7 @@ class InputReader extends Handlebars.Visitor {
 
         const [head, ...rest] = path.parts;
         if (head !== undefined && path.depth === 0 && !ast.scopedId(path)) {
-            const declared = this.scopes.findLast((scope) => scope.params.has(head));
+            const declared = this.scopeDeclaring(head);
             if (declared) {
                 const param = declared.params.get(head);
                 return param && fieldOf(param, rest);

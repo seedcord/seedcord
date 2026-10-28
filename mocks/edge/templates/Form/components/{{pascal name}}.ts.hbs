@@ -10,10 +10,10 @@ export class {{ pascal name }}Modal extends BuilderComponent<'modal'> {
 
         this.instance
             .setCustomId({{ pascal name }}Id.encode({}))
-            .setTitle('{{ title }}'){{#each fields as |field index|}}
+            .setTitle({{ quote title }}){{#each fields as |field index|}}
             // field {{ index }} of {{ @root.title }}
             .addLabelComponents((label) =>
-                label.setLabel('{{ field.label }}').setTextInputComponent((input) =>
+                label.setLabel({{ quote field.label }}).setTextInputComponent((input) =>
                     input
                         .setCustomId('{{ kebab field.label }}')
                         .setStyle(TextInputStyle.{{#if field.long}}Paragraph{{else}}Short{{/if}})

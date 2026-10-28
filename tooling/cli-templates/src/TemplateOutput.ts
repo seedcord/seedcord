@@ -5,14 +5,14 @@ import { SeedcordTypeError } from '@seedcord/errors/internal';
 import { importSpecifier } from '@seedcord/utils/internal';
 import Handlebars from 'handlebars';
 
+import { IMPORT_OF } from './helperNames';
 import { CLI_HELPERS, helperNames } from './helpers';
-import { IMPORT_OF } from './helperTypes';
 import { inputsOf } from './inputsOf';
 import { inTemplateFile } from './inTemplateFile';
 import { splitName } from './splitName';
 import { cliVariables, FILLED_NAMES } from './variables';
 
-import type { TemplateHelper } from './helperTypes';
+import type { TemplateHelper } from './helperNames';
 import type { TemplateInputs } from './inputsOf';
 import type { Template, TemplateFile } from './Template';
 import type { Runtime, Transport } from '@seedcord/core/internal';

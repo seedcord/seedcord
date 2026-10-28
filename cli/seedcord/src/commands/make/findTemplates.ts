@@ -1,34 +1,22 @@
-import { dirname, join } from 'node:path';
+import { dirname } from 'node:path';
 
 import { Template } from '@seedcord/cli-templates';
-import { isPlainObject, posixRelative } from '@seedcord/utils/internal';
-
-import { readManifest } from '#core/modules/installedManifest';
+import { posixRelative } from '@seedcord/utils/internal';
 
 import type { ResolvedSeedcordConfig } from '#core/config/schema';
-import type { InstalledDependencies } from '#core/modules/installedManifest';
-
-interface TemplateSource {
-    readonly dir: string;
-    readonly from: string;
-}
-
-// a plugin lists its templates folder as "seedcord": { "templates": "./templates" } in its package.json
-function pluginSources(dependencies: InstalledDependencies): TemplateSource[] {
-    return [...dependencies].flatMap(([name, manifestPath]) => {
-        const seedcord = readManifest(manifestPath)?.seedcord;
-        if (!isPlainObject(seedcord) || typeof seedcord.templates !== 'string') return [];
-        return [{ dir: join(dirname(manifestPath), seedcord.templates), from: name }];
-    });
-}
+import type { PackageManifest } from '#core/modules/PackageManifest';
 
 export async function findTemplates(
     config: ResolvedSeedcordConfig,
-    dependencies: InstalledDependencies
+    dependencies: ReadonlyMap<string, PackageManifest>
 ): Promise<Template[]> {
+    const plugins = [...dependencies].flatMap(([name, manifest]) => {
+        const dir = manifest.templatesFolder;
+        return dir === undefined ? [] : [{ dir, from: name }];
+    });
     const sources = [
         { dir: config.make.templates, from: `${posixRelative(dirname(config.configFile), config.make.templates)}/` },
-        ...pluginSources(dependencies)
+        ...plugins
     ];
     const found = await Promise.all(sources.map(({ dir, from }) => Template.readAll(dir, from)));
     return found.flat();

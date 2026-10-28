@@ -1,6 +1,6 @@
-import { dirname, join } from 'node:path';
+import { join } from 'node:path';
 
-import { dependencyNames, installedManifest, PROJECT_FIELDS } from './installedManifest';
+import { PackageManifest, PROJECT_FIELDS } from './PackageManifest';
 
 const PACKAGE_FIELDS = ['dependencies', 'peerDependencies'] as const;
 
@@ -16,22 +16,19 @@ function installedGraph(projectDir: string): {
     const edges = new Map<string, Map<string, string>>();
     const listsSeedcord = new Set<string>();
 
-    const collect = (manifestPath: string, fields: readonly string[]): void => {
-        if (edges.has(manifestPath)) return;
+    const collect = (manifest: PackageManifest, fields: readonly string[]): void => {
+        if (edges.has(manifest.path)) return;
         const children = new Map<string, string>();
-        edges.set(manifestPath, children);
+        edges.set(manifest.path, children);
 
-        for (const name of dependencyNames(manifestPath, fields)) {
-            if (isSeedcordPackage(name)) listsSeedcord.add(manifestPath);
-
-            const depManifest = installedManifest(name, dirname(manifestPath));
-            if (depManifest === undefined) continue;
-            children.set(name, depManifest);
-            collect(depManifest, PACKAGE_FIELDS);
+        if (manifest.dependencyNames(fields).some(isSeedcordPackage)) listsSeedcord.add(manifest.path);
+        for (const [name, dependency] of manifest.installedDependencies(fields)) {
+            children.set(name, dependency.path);
+            collect(dependency, PACKAGE_FIELDS);
         }
     };
 
-    collect(join(projectDir, 'package.json'), PROJECT_FIELDS);
+    collect(PackageManifest.read(join(projectDir, 'package.json')), PROJECT_FIELDS);
     return { edges, listsSeedcord };
 }
 

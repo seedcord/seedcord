@@ -11,7 +11,7 @@ export class {{ pascal name }} extends BuilderComponent<'command'> {
 
         this.instance
             .setName('{{ kebab name }}')
-            .setDescription('{{ description }}'){{#if guildOnly}}
+            .setDescription({{ quote description }}){{#if guildOnly}}
             .setContexts(InteractionContextType.Guild){{/if}};
     }
 }

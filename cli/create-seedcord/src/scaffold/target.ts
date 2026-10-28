@@ -1,8 +1,9 @@
 import { readdirSync, statSync } from 'node:fs';
 
-import { messageOf } from '@seedcord/cli-prompts';
 import { SeedcordErrorCode } from '@seedcord/errors';
 import { SeedcordError, SeedcordTypeError } from '@seedcord/errors/internal';
+
+import { messageOf } from '#cli/messageOf';
 
 function readable<Result>(read: () => Result): Result {
     try {

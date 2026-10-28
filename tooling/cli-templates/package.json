@@ -21,10 +21,10 @@
                 "default": "./dist/index.mjs"
             }
         },
-        "./helper-types": {
+        "./helper-names": {
             "import": {
-                "types": "./dist/helperTypes.d.mts",
-                "default": "./dist/helperTypes.mjs"
+                "types": "./dist/helperNames.d.mts",
+                "default": "./dist/helperNames.mjs"
             }
         }
     },

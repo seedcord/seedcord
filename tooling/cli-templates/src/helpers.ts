@@ -1,14 +1,17 @@
 import { camelCase, kebabCase, pascalCase, snakeCase } from 'es-toolkit';
 
-import { IMPORT_OF } from './helperTypes';
+import { CLI_HELPER_NAMES } from './helperNames';
 
-import type { SharedHelperName, TemplateHelper } from './helperTypes';
+import type { SharedHelperName, TemplateHelper } from './helperNames';
 import type { RenderProject } from './TemplateOutput';
 
-const DATE_TIME_DIGITS = 'YYYYMMDDHHmmss'.length;
-
-function timestamp(): string {
-    return new Date().toISOString().replaceAll(/\D/g, '').slice(0, DATE_TIME_DIGITS);
+// a new bot's prettier config sets singleQuote
+function quote(text: string): string {
+    const escaped = JSON.stringify(text)
+        .slice(1, -1)
+        .replaceAll(String.raw`\"`, '"')
+        .replaceAll("'", String.raw`\'`);
+    return `'${escaped}'`;
 }
 
 export const CLI_HELPERS = {
@@ -16,9 +19,9 @@ export const CLI_HELPERS = {
     camel: camelCase,
     snake: snakeCase,
     kebab: kebabCase,
-    timestamp
+    quote
 } satisfies Record<SharedHelperName, TemplateHelper>;
 
 export function helperNames(projectHelpers: RenderProject['helpers']): Set<string> {
-    return new Set([...Object.keys(CLI_HELPERS), IMPORT_OF, ...Object.keys(projectHelpers)]);
+    return new Set([...CLI_HELPER_NAMES, ...Object.keys(projectHelpers)]);
 }

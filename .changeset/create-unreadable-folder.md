@@ -2,4 +2,4 @@
 'create-seedcord': patch
 ---
 
-Fixed `--dir` pointing at a folder create-seedcord can't read failing with node's raw error. It now fails as a `--dir` answer that asks for another folder.
+Fixed `--dir` on a folder create-seedcord can't read. It now reports node's error as a bad `--dir` answer and tells you to pick a folder you can create files in.

@@ -44,7 +44,7 @@ export class {{ pascal name }}Row extends RowComponent<'button'> {
         this.instance.addComponents(
             new ButtonBuilder()
                 .setCustomId({{ pascal name }}Id.encode({}))
-                .setLabel('{{ label }}')
+                .setLabel({{ quote label }})
                 .setStyle(ButtonStyle.Primary)
         );
     }
@@ -61,7 +61,7 @@ import { {{ pascal name }}Id } from '{{ importOf "components" }}';
 @ButtonRoute({{ pascal name }}Id)
 export class {{ pascal name }}Button extends ButtonHandler<[typeof {{ pascal name }}Id]> {
     public async execute(): Promise<void> {
-        await this.reply('{{ reply }}');
+        await this.reply({{ quote reply }});
     }
 }
 ```
@@ -89,15 +89,15 @@ Prettier treats a `.hbs` file as a Handlebars HTML template and fails on TypeScr
 
 `name` is the part after the last `/`, exactly as you typed it, so any casing works. `roll dice`, `rollDice`, and `RollDice` all become `RollDice` through `{{ pascal name }}`. `{{ kebab name }}` turns each of them into `roll-dice`.
 
-The name starts with a letter and contains letters, digits, spaces, `-`, and `_`. To write into a subfolder, type the folder names first, separated by `/`. `tickets/Appeal`, for example, puts both files in a `tickets` folder. If a file the template would write already exists, the name prompt shows `MakeFileExists` and asks again. `make` doesn't overwrite a file.
+The name starts with a letter and contains letters, digits, spaces, `-`, and `_`. To write into a subfolder, type the folder names first, separated by `/`. `tickets/Appeal`, for example, puts both files in a `tickets` folder. If a file the template would write already exists, the name prompt says the file "already exists" and asks again. `make` doesn't overwrite a file.
 
 The template doesn't see the folders you typed. If it builds a custom id from `name`, as the component above does, then `tickets/Appeal` and `moderation/Appeal` both get the id `appeal`, and your bot throws `CoreDuplicateName` when it starts. Give those two different names, or build the id from a value the template asks for, like `{{ kebab id }}`.
 
-Handlebars renders only the file name in a template's path, so a folder called `{{pascal name}}` keeps that name. seedcord computes every path as soon as you type the name, before it asks anything else. So the name prompt can already report `MakeFileExists`, and a file name can only use `name` and the helpers.
+seedcord renders only the file name in a template's path, so a folder called `{{pascal name}}` keeps that name. It works out every path as soon as you type the name, before it asks anything else. That's how the name prompt already knows a file exists, and why a file name can only use `name` and the helpers.
 
 ## The values you're asked for
 
-You don't declare a template's values anywhere. seedcord reads every `.hbs` file in the template, partials included, and decides what to ask by looking at how the template uses each value, so the prompts always match what the template reads.
+You don't declare a template's values anywhere. seedcord reads every `.hbs` file in the template, partials included, and picks each question from how the template uses that value. Add a value to a template and the next run asks for it.
 
 {/* prettier-ignore-start */}
 
@@ -115,7 +115,7 @@ The questions come in the order the values first appear. `make` reads the files 
 
 `make` also asks for a value you reach through `../`, `@root`, or a block param, as in `as |option|`. It doesn't ask for `@index`, which contains the position in the loop.
 
-seedcord disables Handlebars' HTML escaping, so `{{ label }}` writes your answer exactly as typed, quotes and `<` included.
+seedcord disables Handlebars' HTML escaping, so `{{ label }}` writes your answer exactly as typed, quotes and `<` included. An answer like `Don't panic` ends a `'...'` string early. `{{ quote label }}`, as in the samples above, writes the answer as a single-quoted string with every quote and backslash in it escaped.
 
 `make` throws on these two, after you type the name and before it asks for any value:
 
@@ -133,7 +133,7 @@ If a template file doesn't parse, calls a helper that doesn't exist, or has a fi
 | value | what it contains |
 | --- | --- |
 | `name` | the name you typed, after the last `/` |
-| `transport` | `@seedcord/gateway` when the `package.json` beside your config depends on it, otherwise `@seedcord/http` |
+| `transport` | the package your bot's `Seedcord` comes from, `@seedcord/gateway` or `@seedcord/http` |
 | `isGateway` | `true` on a gateway bot |
 | `isEdge` | `true` on a bot that [runs on Cloudflare Workers](/build/workers) |
 | `toRoot` | the path from the file being written back to `root`, like `../..` |
@@ -142,7 +142,7 @@ If a template file doesn't parse, calls a helper that doesn't exist, or has a fi
 
 Use `toRoot` to import a file at a fixed place under `root`, like `'{{ toRoot }}/db'`. The path is correct at any depth.
 
-In a monorepo, list `@seedcord/gateway` in the `package.json` next to `seedcord.config.ts`, or `transport` reads `@seedcord/http`.
+To fill in `transport`, `make` loads your [`instance`](/build/config) file the way `seedcord codegen` does. If constructing your bot throws, for example because an env var is missing, `make` throws too.
 
 ## The helpers seedcord ships
 
@@ -156,16 +156,10 @@ With the name typed as `roll dice`:
 | `camel` | `{{ camel name }}` | `rollDice` |
 | `snake` | `{{ snake name }}` | `roll_dice` |
 | `kebab` | `{{ kebab name }}` | `roll-dice` |
-| `timestamp` | `{{ timestamp }}` | the time in UTC, like `20261028193502` |
+| `quote` | `{{ quote name }}` | `'roll dice'` |
 | `importOf` | `{{ importOf "components" }}` | the import path to the one file in that template folder |
 
 {/* prettier-ignore-end */}
-
-`timestamp` puts the largest unit first, so file names that start with it sort in the order you made them. That works well for migrations:
-
-```txt
-templates/Migration/migrations/{{timestamp}}_{{snake name}}.ts.hbs
-```
 
 `importOf` takes the path of a folder inside the template, like `"components"`. It returns the import path from the file being written to the file in that folder. The path leaves off a `.ts` or `.js` extension. If that folder contains no `.hbs` file or more than one, `make` throws `MakeImportOfUnmatched`.
 

@@ -6,17 +6,15 @@ import { dirname, join, resolve } from 'node:path';
 import { BuilderComponent, RegisterCommand } from '@seedcord/core';
 import { CommandMetadataKey } from '@seedcord/core/internal';
 import { SeedcordErrorCode, isSeedcordError } from '@seedcord/errors';
-import { HostAugmentTarget, HostPluginKeys, SeedcordBrand } from '@seedcord/types/internal';
 import { ApplicationCommandType, ButtonStyle } from 'discord.js';
 import { assert, describe, expect, it, onTestFinished } from 'vitest';
 
 import { AugmentationBuilder } from '#commands/codegen/AugmentationBuilder';
 import { CodegenRunner } from '#commands/codegen/CodegenRunner';
 import { quietSteps } from '#core/output/quietSteps';
-import { Project } from '#core/project/Project';
 import { ProjectFiles } from '#core/project/ProjectFiles';
 import { realPath } from '#core/project/realPath';
-import { loadedConfig } from '#tests/loadedConfig';
+import { brandedInstance, modulesFrom, projectOpener } from '#tests/fakeProject';
 import { resolvedConfigOf } from '#tests/resolvedConfigOf';
 import { silentLogger } from '#tests/silentLogger';
 
@@ -61,32 +59,14 @@ function configAt(root: string, instance: string): ResolvedSeedcordConfig {
     });
 }
 
-function projectOpener(config: ResolvedSeedcordConfig, modules: ModuleLoader & AsyncDisposable): ProjectOpener {
-    return {
-        readConfig: () => Promise.resolve(loadedConfig(config)),
-        openProject: (loaded) => Promise.resolve(new Project(loaded.config, loaded.files, modules))
-    };
-}
-
 function runnerWith(
     config: ResolvedSeedcordConfig,
     importModule: (entryPath: string) => Promise<unknown>,
     logger: ILogger
 ): CodegenRunner {
-    // justified: codegen reads only importModule off the loader
-    const modules = { importModule, [Symbol.asyncDispose]: () => Promise.resolve() } as ModuleLoader & AsyncDisposable;
-    const projectLoader = projectOpener(config, modules);
+    const projectLoader = projectOpener(config, modulesFrom(importModule));
 
     return new CodegenRunner({ steps: quietSteps, projectLoader, generator: new AugmentationBuilder(logger), logger });
-}
-
-function brandedInstance(commandsPath: string | null = null, pluginKeys: readonly string[] = []): object {
-    return {
-        [SeedcordBrand]: true,
-        [HostAugmentTarget]: '@seedcord/gateway',
-        [HostPluginKeys]: pluginKeys,
-        config: { bot: { commands: { path: commandsPath } } }
-    };
 }
 
 // no commands path, so the scan is empty and the rendered registry is deterministic.

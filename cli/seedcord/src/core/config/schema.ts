@@ -1,7 +1,7 @@
 import type { RealPath } from '#core/project/realPath';
 import type { EdgeTarget, ServerTarget } from './detectTarget';
 import type { VitePlugins } from './vitePlugins';
-import type { CliHelperName, TemplateHelper } from '@seedcord/cli-templates/helper-types';
+import type { CliHelperName, TemplateHelper } from '@seedcord/cli-templates/helper-names';
 import type { TypedOmit } from '@seedcord/types';
 import type { PluginOption } from 'vite';
 

@@ -3,7 +3,7 @@ import { join } from 'node:path';
 import { describe, expect, it } from 'vitest';
 
 import { findTemplates } from '#commands/make/findTemplates';
-import { directDependencies } from '#core/modules/installedManifest';
+import { directDependencies } from '#core/modules/PackageManifest';
 import { realPath } from '#core/project/realPath';
 import { makeProject } from '#tests/commands/make/makeProject';
 import { resolvedConfigOf } from '#tests/resolvedConfigOf';

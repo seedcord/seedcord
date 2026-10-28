@@ -277,7 +277,6 @@ describe('scaffold', () => {
         const { runtime } = installs(calls);
         expect(runtime).toContain('@seedcord/http');
         expect(runtime).not.toContain('discord.js');
-        // the starters import their enums from it
         expect(runtime).toContain('discord-api-types');
     });
 

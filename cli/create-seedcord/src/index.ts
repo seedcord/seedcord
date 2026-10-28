@@ -1,13 +1,14 @@
 import { resolve } from 'node:path';
 import process from 'node:process';
 
-import { messageOf, Prompter, unlessCancelled } from '@seedcord/cli-prompts';
+import { Prompter, unlessCancelled } from '@seedcord/cli-prompts';
 import { paint } from '@seedcord/errors';
 
 import ownPackage from '#package' with { type: 'json' };
 
 import { helpText } from '#cli/help';
 import { inviteUrl } from '#cli/invite';
+import { messageOf } from '#cli/messageOf';
 import { CreateOutput } from '#cli/output';
 import { runningAgent } from '#cli/packageManager';
 import { parseInput, wantsHelp, wantsVerbose, wantsVersion } from '#cli/parseInput';

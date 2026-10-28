@@ -19,6 +19,8 @@ export interface TemplateFile {
     readonly source: string;
 }
 
+const byName = (a: string, b: string): number => a.localeCompare(b);
+
 async function unlessMissing<Entry>(read: Promise<Entry[]>): Promise<Entry[]> {
     try {
         return await read;
@@ -33,7 +35,7 @@ async function filesIn(dir: string, folder: string): Promise<TemplateFile[]> {
     return Promise.all(
         paths
             .filter((path) => path.endsWith(TEMPLATE_EXTENSION))
-            .toSorted()
+            .toSorted(byName)
             .map(async (path) => {
                 const inFolder = toPosixPath(path);
                 return {
@@ -63,7 +65,7 @@ export class Template {
         const folders = entries
             .filter((entry) => entry.isDirectory() && !entry.name.startsWith(SHARED_FOLDER_PREFIX))
             .map((entry) => entry.name)
-            .toSorted((a, b) => a.localeCompare(b));
+            .toSorted(byName);
         return Promise.all(folders.map(async (name) => new Template(name, from, await filesIn(dir, name), partials)));
     }
 

@@ -5,6 +5,6 @@ import { {{ pascal name }}Id } from '{{ importOf "components" }}';
 @ButtonRoute({{ pascal name }}Id)
 export class {{ pascal name }}Button extends ButtonHandler<[typeof {{ pascal name }}Id]> {
     public async execute(): Promise<void> {
-        await this.reply('{{ reply }}');
+        await this.reply({{ quote reply }});
     }
 }
