@@ -5,12 +5,14 @@ import { SeedcordTypeError } from '@seedcord/errors/internal';
 import { importSpecifier } from '@seedcord/utils/internal';
 import Handlebars from 'handlebars';
 
-import { CLI_HELPERS, helperNames, IMPORT_OF } from './helpers';
+import { CLI_HELPERS, helperNames } from './helpers';
+import { IMPORT_OF } from './helperTypes';
 import { inputsOf } from './inputsOf';
 import { inTemplateFile } from './inTemplateFile';
 import { splitName } from './splitName';
 import { cliVariables, FILLED_NAMES } from './variables';
 
+import type { TemplateHelper } from './helperTypes';
 import type { TemplateInputs } from './inputsOf';
 import type { Template, TemplateFile } from './Template';
 import type { Runtime, Transport } from '@seedcord/core/internal';
@@ -20,7 +22,7 @@ export interface RenderProject {
     readonly root: string;
     readonly transport: Transport;
     readonly runtime: Runtime;
-    readonly helpers: Readonly<Record<string, Handlebars.HelperDelegate>>;
+    readonly helpers: Readonly<Record<string, TemplateHelper>>;
 }
 
 export interface RenderedFile {
@@ -46,7 +48,8 @@ export class TemplateOutput {
         const { folder, name } = splitName(nameWithFolder);
         this.name = name;
         this.handlebars.registerHelper(CLI_HELPERS);
-        this.handlebars.registerHelper(project.helpers);
+        // justified: handlebars types every helper argument as any
+        this.handlebars.registerHelper(project.helpers as Handlebars.HelperDeclareSpec);
         this.handlebars.registerPartial(
             Object.fromEntries([...template.partials].map(([partial, file]) => [partial, file.source]))
         );

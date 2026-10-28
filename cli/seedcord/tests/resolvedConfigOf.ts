@@ -24,6 +24,7 @@ export function resolvedConfigOf(
         tunnel: { mode: 'quick' },
         viteMode: 'development',
         vitePlugins: vitePluginsOf(),
+        make: { templates: at('templates'), helpers: {} },
         ...fields
     };
 }

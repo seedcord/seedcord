@@ -239,6 +239,39 @@ describe('ProjectLoader on an edge bot', () => {
     });
 });
 
+describe('ProjectLoader make', () => {
+    it('reads templates from ./templates beside the config with no helpers by default', async () => {
+        const { projectDir, load } = projectWith(MINIMAL);
+
+        const { make } = await load();
+
+        expect(make).toEqual({ templates: resolve(projectDir, 'templates'), helpers: {} });
+    });
+
+    it('resolves make.templates against the config folder and keeps make.helpers', async () => {
+        const shout = (value: string): string => value.toUpperCase();
+        const { projectDir, load } = projectWith({ ...MINIMAL, make: { templates: './tpl', helpers: { shout } } });
+
+        const { make } = await load();
+
+        expect(make).toEqual({ templates: resolve(projectDir, 'tpl'), helpers: { shout } });
+    });
+
+    it.each([
+        ['make', 'templates'],
+        ['make.templates', { templates: 3 }],
+        ['make.helpers', { helpers: 'shout' }],
+        ['make.helpers.shout', { helpers: { shout: 'loud' } }]
+    ])('throws CliConfigInvalidField naming %s for a malformed make', async (field, make) => {
+        const { load } = projectWith({ ...MINIMAL, make });
+
+        await expect(load()).rejects.toMatchObject({
+            code: SeedcordErrorCode.CliConfigInvalidField,
+            message: expect.stringContaining(field) as string
+        });
+    });
+});
+
 describe('ProjectLoader paths with a #', () => {
     it('throws CliPathHasHash for a file under root whose name contains a #', async () => {
         const { projectDir, load } = projectWith(MINIMAL);

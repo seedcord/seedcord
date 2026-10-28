@@ -1040,6 +1040,9 @@ importers:
       '@seedcord/cli-prompts':
         specifier: workspace:^
         version: link:../../tooling/cli-prompts
+      '@seedcord/cli-templates':
+        specifier: workspace:^
+        version: link:../../tooling/cli-templates
       '@seedcord/eslint-config':
         specifier: workspace:^
         version: link:../../tooling/eslint-config

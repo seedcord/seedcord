@@ -103,6 +103,7 @@
         "@cloudflare/vite-plugin": "catalog:peer",
         "@eslint-react/eslint-plugin": "catalog:eslint",
         "@seedcord/cli-prompts": "workspace:^",
+        "@seedcord/cli-templates": "workspace:^",
         "@seedcord/eslint-config": "workspace:^",
         "@seedcord/gateway": "workspace:^",
         "@seedcord/http": "workspace:^",

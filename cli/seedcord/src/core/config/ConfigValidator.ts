@@ -46,6 +46,26 @@ function* hmrProblems(value: unknown): Generator<SeedcordTypeError> {
     yield* typecheckProblems(value.typecheck);
 }
 
+function* makeProblems(value: unknown): Generator<SeedcordTypeError> {
+    if (value === undefined) return;
+    if (!isPlainObject(value)) {
+        yield invalidField('make', 'an object');
+        return;
+    }
+    if (!isOptionalString(value.templates)) yield invalidField('make.templates', 'a folder path');
+    if (value.helpers === undefined) return;
+    if (!isPlainObject(value.helpers)) {
+        yield invalidField(
+            'make.helpers',
+            `an object of functions, like ${paint.bold('{ shout: (text) => text.toUpperCase() }')}`
+        );
+        return;
+    }
+    for (const [name, helper] of Object.entries(value.helpers)) {
+        if (typeof helper !== 'function') yield invalidField(`make.helpers.${name}`, 'a function');
+    }
+}
+
 function* tunnelProblems(value: unknown): Generator<SeedcordTypeError> {
     if (value === undefined || typeof value === 'boolean') return;
     // discord only accepts an https interactions endpoint
@@ -93,6 +113,7 @@ export class ConfigValidator {
         yield* tunnelProblems(raw.tunnel);
         yield* this.buildProblems(raw.build);
         yield* hmrProblems(raw.hmr);
+        yield* makeProblems(raw.make);
         if (raw.vitePlugins !== undefined && typeof raw.vitePlugins !== 'function') {
             yield invalidField(
                 'vitePlugins',
