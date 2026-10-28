@@ -183,7 +183,7 @@ export const seedcord = new Seedcord({
 export default seedcord;
 ```
 
-Each `path` key is a folder seedcord imports files from at startup, and a `null` path scans nothing. `'./handlers'` is relative to `root`, so with `root: './src'` it means `src/handlers`. Only `seedcord dev` and a built bot set `root`. If a test or a `tsx` script runs the bot, a relative path throws `CoreDirectoryRootUnknown`. In those runs, use an absolute path built from `import.meta.dirname`.
+Each `path` key is a folder seedcord imports files from at startup, and a `null` path scans nothing. `'./handlers'` is relative to `root`, so with `root: './src'` it means `src/handlers`. The seedcord CLI and a built bot set `root`. If a test or a `tsx` script runs the bot, a relative path throws `CoreDirectoryRootUnknown`. In those runs, use an absolute path built from `import.meta.dirname`.
 
 The optional `guilds` key lists the servers where every command registered with [`RegisterCommand()`](ref:core/RegisterCommand) deploys. It reads `TESTING_GUILD_IDS` from `.env` through envapt, which splits the comma-separated ids into an array. An empty list sends those commands to every server your bot is in, so don't set `TESTING_GUILD_IDS` where you deploy. A command that passes `'global'` to the decorator ignores the list, and one that passes its own ids replaces it. [Commands](/commands) explains both. [Environment files](/build/env) explains how envapt picks `.env` files and reads your own keys.
 

@@ -97,7 +97,7 @@ With this config, `attach('locales', Locales, './locales')` reads `src/locales`.
 
 A relative `dir` is relative to `root`, whichever file calls `importFiles` or `readFiles`. Name your option `dir` or `path` and document it as relative to `root`, the way the `dir` option of [Mongoose](/plugins/mongoose) works.
 
-- Outside `seedcord dev` and a built bot, a relative path throws `CoreDirectoryRootUnknown`, because the process has no `root`. A test or a `tsx` script passes an absolute path, like `resolve(import.meta.dirname, './locales')`.
+- Outside the seedcord CLI and a built bot, a relative path throws `CoreDirectoryRootUnknown`, because the process has no `root`. A test or a `tsx` script passes an absolute path, like `resolve(import.meta.dirname, './locales')`.
 - `importFiles` throws `CorePathOutsideRoot` for a folder outside `root`. `readFiles` takes any folder listed in `files`, and a listed folder can sit beside `root`, inside the folder that holds `seedcord.config.ts`.
 - A folder inside a dot-folder or `node_modules` throws `CoreDirectorySkipped`.
 - In a built bot, a folder that was missing at build time throws `CoreDirectoryNotBuilt`.

@@ -40,29 +40,22 @@ export class Users extends KyselyService<'users'> {
             .executeTakeFirst();
     }
 }
-
-declare module '@seedcord/plugin-kysely-postgres' {
-    interface KyselyServices {
-        users: Users;
-    }
-}
 ```
 
 Here's what each part of `Users.ts` does.
 
-- **`@RegisterKyselyService('users')`** gives the class its key. Your handlers read the service from `services` under that key, and the plugin also uses it as the table name unless you [pass another one](#the-key-is-also-the-table-name).
+- **[`@RegisterKyselyService('users')`](ref:plugin-kysely-postgres/RegisterKyselyService)** gives the class its key. Your handlers read the service from `services` under that key, and the plugin also uses it as the table name unless you [pass another one](#the-key-is-also-the-table-name).
 - **`KyselyService<'users'>`** is the base class, and its type argument is a table from [your schema](/plugins/kysely-schema). `this.table` holds that name, so `selectFrom(this.table)` checks `discord_id` against the `users` columns.
 - **`this.db`** returns the plugin's [`connection`](ref:plugin-kysely-postgres/KyselyPostgres.connection), so every service queries through the same pool. It can query every table in your schema, so a method can join `users` with another table.
-- **`findByDiscordId`** keeps the lookup inside the class. A handler calls that method and never writes the query itself.
-- **The `declare module` block** adds `users` to the keys the decorator accepts. [Typing the registry](#typing-the-registry) explains why you write it.
+- **`findByDiscordId`** keeps the lookup inside the class. A handler calls that method on `services.users` and never writes the query itself. `services.users` gets its type once [codegen has run](#typing-the-registry).
 
 ## You never construct a service
 
-The plugin builds your services itself, after it has connected and run your migrations, so `this.db` has a working connection by the time any method runs. It imports every code file under the `dir` you gave the [kysely plugin](/plugins/kysely), including subfolders, in order of path. That covers `.ts`, `.tsx`, `.mts`, `.js`, `.jsx`, and `.mjs`, and skips type declarations, dotfiles, dot-folders, and `node_modules`. For each exported class that extends `KyselyService` and carries the decorator, it constructs the class. That constructor call adds the instance to the plugin's `services` map under its key.
+The plugin builds your services itself, after it has connected and run your startup migrations, so `this.db` has a working connection by the time any method runs. It imports every code file under the `dir` you gave the [kysely plugin](/plugins/kysely), including subfolders, in order of path. That covers `.ts`, `.tsx`, `.mts`, `.js`, `.jsx`, and `.mjs`, and skips type declarations, dotfiles, dot-folders, and `node_modules`. For each exported class that extends `KyselyService` and carries the decorator, it constructs the class. That constructor call adds the instance to the plugin's `services` map under its key.
 
 <Callout type="warning">
 
-If a class isn't exported or has no [`@RegisterKyselyService`](ref:plugin-kysely-postgres/RegisterKyselyService), the plugin skips it without throwing or logging anything. `services.users` then reads `undefined` even though TypeScript types it as `Users`.
+If a class isn't exported or has no [`@RegisterKyselyService`](ref:plugin-kysely-postgres/RegisterKyselyService), the plugin skips it without throwing or logging anything, and `services.users` reads `undefined`. Codegen skips the class too, so once it has run, `services.users` fails to compile.
 
 </Callout>
 
@@ -89,19 +82,15 @@ declare module '@seedcord/plugin-kysely-postgres' {
     interface KyselyDatabase {
         schema: { app_users: UsersTable };
     }
-
-    interface KyselyServices {
-        users: Users;
-    }
 }
 
 @RegisterKyselyService('users', { table: 'app_users' })
 export class Users extends KyselyService<'app_users'> {}
 ```
 
-`Users` queries the `app_users` table, while handlers use it as `services.users`. The two names come from the two interfaces in that `declare module` block:
+`Users` queries the `app_users` table, while handlers use it as `services.users`. The two names come from two places:
 
-- **`'users'`** is a key in `KyselyServices`. The decorator's first argument only accepts keys declared there.
+- **`'users'`** is the service's key. Codegen writes it into your types along with the class, as [Typing the registry](#typing-the-registry) shows.
 - **`'app_users'`** is a table in the `schema` you declared on `KyselyDatabase`, which [Your schema](/plugins/kysely-schema) covers. `table` only accepts a table from that schema, and the decorator checks the class's type argument against it.
 
 Your editor also reads that schema to suggest table names for `table`. With a `bans` table added, it offers both:
@@ -124,10 +113,6 @@ declare module '@seedcord/plugin-kysely-postgres' {
     interface KyselyDatabase {
         schema: { app_users: UsersTable; bans: BansTable };
     }
-
-    interface KyselyServices {
-        users: Users;
-    }
 }
 
 RegisterKyselyService('users', { table: '
@@ -138,30 +123,39 @@ The decorator checks that `table` matches the class's type argument, so TypeScri
 
 ## Typing the registry
 
-[`KyselyServices`](ref:plugin-kysely-postgres/KyselyServices) starts empty, so the decorator doesn't accept any key until you declare one. The `declare module` block in `src/postgres/Users.ts` above adds `users`. The decorator then takes `'users'` and checks that the class matches `Users`, the type you declared for that key. If you pass `'guilds'` to the decorator before adding a `guilds` entry, TypeScript reports an error.
+The plugin finds your services by importing `dir` when the bot starts. TypeScript only reads your source, so without codegen each service needs a hand-written `declare module` entry, and every rename means editing it.
+
+[`seedcord codegen`](/plugins/typing) imports `dir` the same way and writes each key it finds into `src/seedcord-gen.d.ts`. `services.users` is then typed as your `Users` service, and the decorator only accepts the keys codegen found.
 
 ```ts twoslash
 // @noErrors
 import { RegisterKyselyService } from '@seedcord/plugin-kysely-postgres';
 
+import type {} from '@seedcord/gateway';
+
 declare class Users {}
 declare class Guilds {}
 
-// ---cut---
-declare module '@seedcord/plugin-kysely-postgres' {
-    interface KyselyServices {
-        users: Users;
-        guilds: Guilds;
+declare module '@seedcord/gateway' {
+    interface PluginTypes {
+        '@seedcord/plugin-kysely-postgres': {
+            services: { users: typeof Users; guilds: typeof Guilds };
+        };
     }
 }
 
+// ---cut---
 RegisterKyselyService('
 //                     ^|
 ```
 
-The decorator offers the two keys that `declare module` block adds to `KyselyServices`, `users` and `guilds`.
+With a `users` and a `guilds` service in your `dir`, the decorator offers both. Before codegen first runs, the decorator accepts any key, and TypeScript types every entry on `services` as `object`.
 
-You add each entry by hand when you write a new service, since codegen doesn't write this block. It only writes the `Core` block from [Typing a plugin](/plugins/typing).
+<Callout type="warning">
+
+If you add a service or change its key, the decorator rejects the new key until codegen runs again. The generated file still lists the keys from the last run, so run `seedcord codegen`.
+
+</Callout>
 
 ## Reading a service
 
@@ -201,15 +195,14 @@ class Users extends KyselyService<'users'> {
     }
 }
 
-declare module '@seedcord/plugin-kysely-postgres' {
-    interface KyselyServices {
-        users: Users;
-    }
-}
-
 declare module '@seedcord/gateway' {
     interface Core {
         db: KyselyPostgres;
+    }
+    interface PluginTypes {
+        '@seedcord/plugin-kysely-postgres': {
+            services: { users: typeof Users };
+        };
     }
 }
 
@@ -232,4 +225,4 @@ class Leaderboard extends SlashHandler<'leaderboard'> {
 
 `findByDiscordId` resolves to `undefined` when no row matches, so the handler checks `found` before it reads `streak`.
 
-If you read `services` before the plugin's `init()` has connected, migrated, and loaded every class, it throws `PluginServicesNotReady`. Your handlers never read it that early, though, because they only start receiving interactions once `init()` has finished.
+If you read `services` before the plugin's `init()` has connected and loaded every class, it throws `PluginServicesNotReady`. Your handlers never read it that early, though, because they only start receiving interactions once `init()` has finished.

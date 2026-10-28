@@ -189,7 +189,7 @@ export class DevSession {
             if (changed) codegenLogger.info(`Augmentations written to ${paint.path(outputPath)}`);
         } catch (error: unknown) {
             // the dev session keeps running when codegen throws
-            codegenLogger.error('Could not update the command types', error);
+            codegenLogger.error('Could not update the generated types', error);
         }
 
         if (!this.hasQueuedWrite || this.isStopped) return;

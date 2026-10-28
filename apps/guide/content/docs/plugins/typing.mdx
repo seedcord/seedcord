@@ -35,8 +35,12 @@ import type Bot from './bot';
 declare module '@seedcord/gateway' {
     interface Core {
         db: (typeof Bot)['db'];
+        i18n: (typeof Bot)['i18n'];
     }
     // SlashRegistry, the context menu registries, and EmojiMap follow
+    interface PluginTypes {
+        'seedcord-locales': { messages: { bye: true; greet: true } };
+    }
 }
 
 export {};
@@ -44,17 +48,23 @@ export {};
 
 `Bot` is the default export of the file your `instance` config key points at. Each row reads its type straight from that bot, so `db` gets exactly the type `attach` produced, `Mongoose` here. That only works when the default export is the value `attach` returns. If you [export the bot without it](/plugins#no-plugin-types-in-your-handler), `this.core.db` compiles as `any`. If you export the bot only as a named const, codegen stops with the code `CliInstanceInvalid` before it writes anything.
 
-The [`Core`](ref:gateway/Core) block only appears once you've attached something.
+[`PluginTypes`](ref:core/PluginTypes) holds types that a plugin built from your project's files while codegen ran. The row above comes from a translations plugin attached as `i18n`, and it lists the message keys in your `locales` folder, so `this.core.i18n.t()` accepts `'bye'` or `'greet'` and rejects a typo. [Writing types from codegen](/writing-plugins/codegen) shows how a plugin adds a row.
+
+The [`Core`](ref:gateway/Core) block only appears once you've attached something, and `PluginTypes` once a plugin has written a row.
 
 <Callout type="transport">
 
-Each transport package declares its own `Core`, so the `declare module` line uses the package you import `Seedcord` from. A gateway bot's file starts with `declare module '@seedcord/gateway'`, and an http bot's starts with `declare module '@seedcord/http'`.
+Each transport package declares its own `Core`, so the `declare module` line uses the package you import `Seedcord` from. A gateway bot's file declares `declare module '@seedcord/gateway'`, and an http bot's declares `declare module '@seedcord/http'`.
 
 </Callout>
 
 ## When to run it
 
-The generated file only changes when codegen runs, so a stale one either misses a new key or still types a key you removed. `seedcord dev` rewrites it each time the bot has started, so after you attach a plugin or rename a key, press `r` and the types follow. Outside dev, run `seedcord codegen` yourself. `seedcord codegen --check` throws `CliCodegenOutOfDate` when the file is stale, which lets CI catch a run you forgot.
+The generated file only changes when codegen runs, so a stale one either misses a new key or still types a key you removed.
+
+- In `seedcord dev`, press `r` after you attach a plugin or rename a key. Dev rewrites the file each time the bot starts.
+- After you add a service, or outside dev, run `seedcord codegen`.
+- In CI, `seedcord codegen --check` throws `CliCodegenOutOfDate` when the file is stale.
 
 Once codegen has run, your editor offers `db` on `this.core`.
 

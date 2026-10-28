@@ -120,4 +120,4 @@ bot.attach('greeter', Greeter, bot.hello);
 
 `attach` returns the bot typed with the `hello` key, so `bot.hello` is the `Hello` instance that the `Greeter` constructor takes. The bot's author writes those last two lines, so tell your users to attach `Hello` first. If they attach `Greeter` first, `bot.hello` doesn't exist and the call fails to compile. Use an argument like this when your plugin needs the other plugin's methods. A plugin option works for settings.
 
-[Where it runs](/writing-plugins/runtimes) covers limiting a plugin to one transport or runtime.
+If your plugin reads keys out of the bot's files, like locale messages, [codegen can type them](/writing-plugins/codegen). [Where it runs](/writing-plugins/runtimes) covers limiting a plugin to one transport or runtime.

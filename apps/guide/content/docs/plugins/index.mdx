@@ -29,13 +29,21 @@ export const seedcord = new Seedcord({
 export default seedcord;
 ```
 
-[`attach`](ref:gateway/Seedcord.attach) takes the key, the plugin class, and whatever that class's constructor takes after the host. Here that's `'db'`, `Mongoose`, and its options object. If a plugin's constructor takes only the host, attach it with two arguments.
+[`attach`](ref:gateway/Seedcord.attach) takes the key, the plugin class, and whatever that class's constructor takes after the host. If the constructor takes only the host, attach it with two arguments.
 
-The `dir` option is a folder of your bot, so a relative one is relative to `root` in [`seedcord.config.ts`](/build/config), like the `path` keys. With `root: './src'`, `'./services'` means `src/services`. The folder has to sit inside `root`, outside dot-folders, `node_modules`, and your `outDir`. In `seedcord dev` and when a built bot starts, a `dir` outside `root` throws `CorePathOutsideRoot`, and one inside a skipped folder throws `CoreDirectorySkipped`.
+Mongoose reads its `dir` relative to `root` in [`seedcord.config.ts`](/build/config), the same as the `path` keys. With `root: './src'`, the `'./services'` above means `src/services`. It reads the folder when the bot starts, and again during `seedcord codegen`. That read throws if the folder breaks one of these rules:
 
-A test or a `tsx` script has no `root`, because it doesn't start through `seedcord dev` or a built bot. A relative `dir` throws `CoreDirectoryRootUnknown` there, so pass an absolute path in those runs.
+{/* prettier-ignore-start */}
 
-However many plugins you attach, keep `bot.ts` exporting the bot as its default export, the way the sample does. `seedcord dev`, `build`, and `codegen` load your bot from that default export, and without one they stop with `CliInstanceInvalid`. `seedcord codegen` also reads it to [type `this.core.db`](/plugins/typing).
+| if the folder | it throws |
+| --- | --- |
+| is outside `root` | `CorePathOutsideRoot` |
+| is inside a dot-folder, `node_modules`, or your `outDir` | `CoreDirectorySkipped` |
+| is relative in a test or `tsx` script, which has no `root` | `CoreDirectoryRootUnknown`. Pass an absolute path there |
+
+{/* prettier-ignore-end */}
+
+Keep `bot.ts` exporting the bot as its default export, the way the sample does. `seedcord dev`, `build`, and `codegen` load your bot from it and stop with `CliInstanceInvalid` without one.
 
 ## Reading it from a handler
 
@@ -69,15 +77,14 @@ class Users extends MongooseService<IUser> {
     }
 }
 
-declare module '@seedcord/plugin-mongoose' {
-    interface MongooseServices {
-        users: Users;
-    }
-}
-
 declare module '@seedcord/gateway' {
     interface Core {
         db: Mongoose;
+    }
+    interface PluginTypes {
+        '@seedcord/plugin-mongoose': {
+            services: { users: typeof Users };
+        };
     }
 }
 
@@ -97,7 +104,7 @@ export class History extends SlashHandler<'history'> {
 
 `History` reaches the mongoose service through `this.core.db`.
 
-The sample hides a `Core` declaration above the handler so it compiles on this page. In your project, `seedcord codegen` writes that declaration for you.
+The sample hides the lines that `seedcord codegen` writes into `src/seedcord-gen.d.ts` in your project. With them, `services.users` is typed as the `Users` service above, so `findByName` type-checks.
 
 ## Attaching more than one
 

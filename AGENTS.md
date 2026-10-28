@@ -128,7 +128,7 @@ Zero lint errors, zero lint warnings, zero from `tc`, every test passing. Fix th
 
 Watch warnings. `lint-staged` passes `--max-warnings=0`, so a warn-severity rule blocks your commit. Plain `pnpm lint` lets it through.
 
-Regenerate docs with `pnpm docs:extract` after changing the public surface.
+To check a public surface change in the docs site or the guide locally, run `pnpm docs:extract` first. Its output is gitignored, so there's nothing to commit.
 
 ---
 

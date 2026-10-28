@@ -174,7 +174,6 @@ export function fileSource(): FileSource {
     return slot ? sourceOf(slot) : new DiskFiles(new OpenFolderAccess());
 }
 
-// a folder of the bot under seedcord dev and in a built bot. a script without a slot gets dir on its own
 export function botFolder(dir: string): BotFolder {
     return fileSource().layoutFor(dir).folderAt(dir);
 }

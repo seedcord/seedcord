@@ -1,0 +1,373 @@
+---
+title: Writing types from codegen
+description: Give your plugin's methods exact types for what it reads from the bot's project, like the keys in its locale files, with a codegen() method.
+---
+
+Say your plugin translates messages. A bot calls `t('greet')`, and your plugin looks up `greet` in the bot's `locales/en.json`. You write the plugin before any bot exists, so its types can't list which keys a bot's locale files will hold. Without codegen, `t()` takes any `string`. The bot's author gets no suggestions, and a typo like `t('gret')` only shows up when a user sees the wrong message.
+
+## How it works
+
+You add a `codegen()` method and a `static readonly id` to your plugin. Three things then happen:
+
+```txt output
+1. your codegen() returns a value
+   { messages: { greet: true, bye: true } }
+
+2. seedcord codegen writes it as a type into the bot's seedcord-gen.d.ts
+   'seedcord-locales': { messages: { greet: true; bye: true } }
+
+3. your plugin reads it back with Generated<typeof Locales>['messages']
+   { greet: true; bye: true }
+```
+
+So you design the return value as the type you want. Each key of an object becomes a key of the type, an array becomes a tuple, and a string becomes its literal. `seedcord codegen` runs your `codegen()` in every bot that attaches your plugin, and `seedcord dev` runs it each time the bot starts, so every bot gets a type built from its own files.
+
+```ts twoslash title="src/plugins/Locales.ts"
+import { Plugin, readFiles } from '@seedcord/gateway';
+
+import type { CoreBase, Generated } from '@seedcord/gateway';
+
+type Messages = Generated<typeof Locales>['messages'];
+
+export class Locales extends Plugin {
+    public static readonly id = 'seedcord-locales';
+
+    private messages = new Map<string, string>();
+
+    public constructor(
+        host: CoreBase,
+        private readonly dir: string
+    ) {
+        super(host);
+    }
+
+    public async init(): Promise<void> {
+        this.messages = await this.read();
+    }
+
+    public override async codegen(): Promise<{
+        messages: Record<string, true>;
+    }> {
+        const keys = [...(await this.read()).keys()];
+        return {
+            messages: Object.fromEntries(
+                keys.map((key) => [key, true] as const)
+            )
+        };
+    }
+
+    public t(key: keyof Messages): string {
+        return this.messages.get(key) ?? key;
+    }
+
+    private async read(): Promise<Map<string, string>> {
+        const messages = new Map<string, string>();
+        for await (const { bytes } of readFiles(this.dir)) {
+            const file: Record<string, string> = JSON.parse(
+                bytes.toString()
+            );
+            for (const [key, text] of Object.entries(file)) {
+                messages.set(key, text);
+            }
+        }
+        return messages;
+    }
+}
+```
+
+`codegen()` reads the same files `init()` does, through one `read()` method, and returns each message's key set to `true`. `t()` only needs the keys, and `true` gives each key something to hold. If the bot's `locales/en.json` holds `{ "greet": "Hello!", "bye": "See you." }`, codegen writes this row into the bot's file:
+
+```ts title="src/seedcord-gen.d.ts" output
+interface PluginTypes {
+    'seedcord-locales': { messages: { bye: true; greet: true } };
+}
+```
+
+`Messages` reads its keys from that row, so `t()` accepts `'bye'` or `'greet'`, and a handler's editor offers both:
+
+```ts twoslash
+// @noErrors
+import { Plugin } from '@seedcord/gateway';
+
+import type { Generated } from '@seedcord/gateway';
+
+declare module '@seedcord/gateway' {
+    interface PluginTypes {
+        'seedcord-locales': { messages: { bye: true; greet: true } };
+    }
+}
+
+type Messages = Generated<typeof Locales>['messages'];
+
+declare class Locales extends Plugin {
+    public static readonly id: 'seedcord-locales';
+    public init(): Promise<void>;
+    public override codegen(): Promise<{
+        messages: Record<string, true>;
+    }>;
+    public t(key: keyof Messages): string;
+}
+
+declare const locales: Locales;
+// ---cut---
+locales.t('
+//         ^|
+```
+
+Before codegen first runs in a bot, [`Generated`](ref:core/Generated) falls back to the return type you declared, `Record<string, true>` here, so `t()` takes any string.
+
+<Callout type="warning">
+
+Tell your users in your README to run `seedcord codegen` after they add a message, and after they upgrade to a release of your plugin that changes what `codegen()` returns. Until they do, a new key fails to compile, and after such an upgrade `Generated` becomes an error message asking them to run it.
+
+</Callout>
+
+The sample extends the gateway `Plugin`, so it only attaches to a gateway bot. To support both transports, import `Plugin` and `Generated` from `@seedcord/core/plugin` and `readFiles` from `@seedcord/utils`, as [Loading a bot's files](/writing-plugins/files) explains.
+
+## Typing more than keys
+
+Say your messages carry placeholders, like `"greet": "Hello {name}!"`. `t('greet')` should then require a `name`. Return each key with the list of its placeholders, and type `t()` from that list. Only `codegen()` and `t()` change, plus a helper:
+
+```ts twoslash title="src/plugins/Locales.ts"
+// ---cut-start---
+import { Plugin, readFiles } from '@seedcord/gateway';
+
+import type { CoreBase, Generated } from '@seedcord/gateway';
+
+type Messages = Generated<typeof Locales>['messages'];
+
+// ---cut-end---
+export class Locales extends Plugin {
+    // ...id, the constructor, init() and read() from above
+    // ---cut-start---
+    public static readonly id = 'seedcord-locales';
+
+    private messages = new Map<string, string>();
+
+    public constructor(
+        host: CoreBase,
+        private readonly dir: string
+    ) {
+        super(host);
+    }
+
+    public async init(): Promise<void> {
+        this.messages = await this.read();
+    }
+
+    private async read(): Promise<Map<string, string>> {
+        const messages = new Map<string, string>();
+        for await (const { bytes } of readFiles(this.dir)) {
+            const file: Record<string, string> = JSON.parse(
+                bytes.toString()
+            );
+            for (const [key, text] of Object.entries(file)) {
+                messages.set(key, text);
+            }
+        }
+        return messages;
+    }
+    // ---cut-end---
+
+    public override async codegen(): Promise<{
+        messages: Record<string, string[]>;
+    }> {
+        const entries = [...(await this.read())].map(
+            ([key, text]) =>
+                [key, Locales.placeholdersIn(text)] as const
+        );
+        return { messages: Object.fromEntries(entries) };
+    }
+
+    public t<Key extends keyof Messages>(
+        key: Key,
+        values: Record<Messages[Key][number], string>
+    ): string {
+        const given = new Map(Object.entries<string>(values));
+        const text = this.messages.get(key) ?? key;
+        return text.replace(
+            /\{(\w+)\}/g,
+            (match, name: string) => given.get(name) ?? match
+        );
+    }
+
+    // "Hello {name}!" gives ['name']
+    private static placeholdersIn(text: string): string[] {
+        return (
+            text.match(/\{\w+\}/g)?.map((p) => p.slice(1, -1)) ?? []
+        );
+    }
+}
+```
+
+With `"greet": "Hello {name}!"` and `"bye": "See you."`, codegen writes `{ greet: ['name']; bye: [] }`. `Messages['greet'][number]` is `'name'`, so `t('greet')` needs a `name` and `t('bye')` takes an empty object:
+
+```ts twoslash
+// @errors: 2345
+import { Plugin } from '@seedcord/gateway';
+
+import type { Generated } from '@seedcord/gateway';
+
+declare module '@seedcord/gateway' {
+    interface PluginTypes {
+        'seedcord-locales': {
+            messages: { bye: []; greet: ['name'] };
+        };
+    }
+}
+
+type Messages = Generated<typeof Locales>['messages'];
+
+declare class Locales extends Plugin {
+    public static readonly id: 'seedcord-locales';
+    public init(): Promise<void>;
+    public override codegen(): Promise<{
+        messages: Record<string, string[]>;
+    }>;
+    public t<Key extends keyof Messages>(
+        key: Key,
+        values: Record<Messages[Key][number], string>
+    ): string;
+}
+
+declare const locales: Locales;
+// ---cut---
+locales.t('greet', { name: 'Ada' });
+locales.t('bye', {});
+locales.t('greet', {});
+```
+
+## Getting the type you want
+
+`codegen()` returns plain data, and your plugin shapes it into the type its methods take. In this table, `Row` stands for the field you read off `Generated<typeof YourPlugin>`, like `Messages` above.
+
+{/* prettier-ignore-start */}
+
+| you want | return | read it as |
+| --- | --- | --- |
+| a union of names | an object, `{ bye: true, greet: true }` | `keyof Row` is `'bye' \| 'greet'` |
+| a union of values | an array, `['en', 'fr']` | `Row[number]` is `'en' \| 'fr'` |
+| data for each name | an object of data, `{ greet: ['name'] }` | `Row[Key]` is `['name']` for `'greet'` |
+| a fixed value | a string, a finite number, a boolean, or `null` | `Row` is that literal, like `'en'` |
+| a nested shape | objects and arrays inside each other | the same shape, with object keys sorted |
+| a class | a class a project file exports | `Row` is the class, and `InstanceType<Row>` is an instance of it |
+
+{/* prettier-ignore-end */}
+
+A few rules decide what you can return:
+
+- **A class or object needs a file that exports it.** Codegen writes it as an import of that file, so the bot or your `codegen()` has to have imported the file. If your own package exports it, codegen imports it by package name.
+- **Anything else has to be plain data.** A `Date`, a class instance, or a function that no file exports stops codegen with `CliPluginCodegenValue`.
+- **Prefer an object over an array if a bot can attach your plugin twice.** Codegen merges two objects key by key. Two arrays have to match as a whole, or codegen stops with `CliPluginCodegenConflict`.
+- **Return only what your types need.** Codegen writes every value into the bot's committed file. If you returned the message text, `seedcord codegen --check` would fail each time someone rewords a message.
+
+## Returning classes
+
+Say your plugin runs jobs, and a bot writes each job as a class in its `jobs` folder. `codegen()` can import that folder with [`importFiles`](ref:utils/importFiles) and return the job classes themselves, keyed by their export name:
+
+```ts twoslash title="src/plugins/Scheduler.ts"
+import { importFiles, Plugin } from '@seedcord/gateway';
+
+import type { CoreBase, Generated } from '@seedcord/gateway';
+
+export abstract class Job {
+    public abstract run(): Promise<void>;
+}
+
+type JobClass = new () => Job;
+type Jobs = Generated<typeof Scheduler>['jobs'];
+
+function isJobClass(value: unknown): value is JobClass {
+    return (
+        typeof value === 'function' &&
+        value.prototype instanceof Job
+    );
+}
+
+export class Scheduler extends Plugin {
+    public static readonly id = 'seedcord-scheduler';
+
+    private jobs: Record<string, JobClass> = {};
+
+    public constructor(
+        host: CoreBase,
+        private readonly dir: string
+    ) {
+        super(host);
+    }
+
+    public async init(): Promise<void> {
+        this.jobs = await this.load();
+    }
+
+    public override async codegen(): Promise<{
+        jobs: Record<string, JobClass>;
+    }> {
+        return { jobs: await this.load() };
+    }
+
+    public create<Name extends keyof Jobs & string>(
+        name: Name
+    ): InstanceType<Jobs[Name]> {
+        const JobClass = this.jobs[name];
+        if (!JobClass) throw new Error(`no job called ${name}`);
+        return new JobClass();
+    }
+
+    private async load(): Promise<Record<string, JobClass>> {
+        const jobs: Record<string, JobClass> = {};
+        for await (const { imported } of importFiles(this.dir)) {
+            for (const [name, value] of Object.entries(imported)) {
+                if (isJobClass(value)) jobs[name] = value;
+            }
+        }
+        return jobs;
+    }
+}
+```
+
+If the bot's `jobs/Cleanup.ts` exports a `Cleanup` class that extends `Job`, codegen writes it as an import of that file:
+
+```ts title="src/seedcord-gen.d.ts" output
+interface PluginTypes {
+    'seedcord-scheduler': {
+        jobs: {
+            Cleanup: (typeof import('./jobs/Cleanup'))['Cleanup'];
+        };
+    };
+}
+```
+
+`Jobs['Cleanup']` is the class itself, so `create('Cleanup')` returns `InstanceType<Jobs['Cleanup']>`, a `Cleanup` with every method the bot wrote on it. [Mongoose](/plugins/mongoose-services#typing-the-registry) types its services the same way.
+
+## The id
+
+Rows in the bot's file share one list, keyed by your plugin's id. You declare the id on the class because your package reads its own row with `Generated<typeof Locales>` when it builds, before any bot has picked an attach key. Use your package's name, like `'seedcord-locales'` here, so no other plugin writes the same key.
+
+Write it `static readonly`. Without `readonly`, TypeScript types the id as `string`, and `Generated` turns into a message saying to add it.
+
+A bot can attach your plugin under two keys, like two `Locales` for two folders. Both share the one row, so codegen merges what the two `codegen()` calls returned, key by key. Two folders that hold the same key have to return the same value for it.
+
+## codegen() runs without init()
+
+`seedcord codegen` constructs the bot and never calls `init()`, and neither does a CI job running `seedcord codegen --check`. Anything `init()` sets up, like a connection, doesn't exist yet. Inside `codegen()`, use only what the constructor stored and the bot's files.
+
+[`readFiles`](ref:utils/readFiles) and `importFiles` work there, since the CLI sets the bot's `root` before it loads your plugin. `readFiles` still needs the folder listed in the bot's [`files`](/build/data-files), the same as when the bot runs.
+
+`seedcord dev` writes the file after the bot has started, when `init()` has already run. A `codegen()` that reads `init()` state works in dev and fails under `seedcord codegen`, so test yours with `seedcord codegen`.
+
+## When codegen stops
+
+`seedcord codegen` collects every plugin's problem from one run and reports them together. `seedcord dev` logs them and keeps the bot running.
+
+{/* prettier-ignore-start */}
+
+| error | when |
+| --- | --- |
+| `CliPluginCodegenNoId` | the class has a `codegen()` and no `id` |
+| `CoreDuplicateName` | two different classes use one id |
+| `CliPluginCodegenThrew` | your `codegen()` threw. It carries the plugin's key and your error's message |
+| `CliPluginCodegenValue` | your `codegen()` returned a value codegen can't write, at the path it gives |
+| `CliPluginCodegenConflict` | two attachments of your plugin returned different values for one field. It gives both keys and the field |
+
+{/* prettier-ignore-end */}
