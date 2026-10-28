@@ -1006,6 +1006,12 @@ importers:
       discord-api-types:
         specifier: ^0.38.52
         version: 0.38.56
+      es-toolkit:
+        specifier: catalog:deps
+        version: 1.53.0
+      handlebars:
+        specifier: catalog:deps
+        version: 4.7.10
       ink:
         specifier: catalog:deps
         version: 8.0.0(@types/react@19.3.0)(react@19.3.1)
@@ -6678,9 +6684,6 @@ packages:
 
   es-toolkit@1.50.0:
     resolution: {integrity: sha512-OyZKhUVvEep9ITEiwHn8GKnMRQIVqoSIX7WnRbkWgJkllCujilqP2rD0u979tkl8wqyc8ICwlc1UBVv/Sl1G6w==}
-
-  es-toolkit@1.52.0:
-    resolution: {integrity: sha512-XTNEJQh1tY1ZJVcf6ayP/2n4ZPyaHlW2FWs7xvw5ddPuhUVjLD3olQVQS7kf58JbAB48iL0uL/jerTrjtV3lDA==}
 
   es-toolkit@1.53.0:
     resolution: {integrity: sha512-3+AYXp9fmJ/UhHBMYj2/U+RaUouMD90SzoItyDOB2Za7W6dB7fQApFGnZPl2MF6K8/Tv1koh1JyirSx/kju6Pw==}
@@ -14321,8 +14324,6 @@ snapshots:
 
   es-toolkit@1.50.0: {}
 
-  es-toolkit@1.52.0: {}
-
   es-toolkit@1.53.0: {}
 
   esast-util-from-estree@2.0.0:
@@ -15531,7 +15532,7 @@ snapshots:
       cli-cursor: 4.0.0
       cli-truncate: 6.1.1
       code-excerpt: 4.0.0
-      es-toolkit: 1.52.0
+      es-toolkit: 1.53.0
       indent-string: 5.0.0
       is-in-ci: 2.0.0
       patch-console: 2.0.0

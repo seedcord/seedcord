@@ -353,7 +353,13 @@ const messages = {
     [SeedcordErrorCode.MakeTemplateFailed]: (file: string, from: string, reason: string) =>
         `Handlebars could not render ${paint.path(file)} from ${paint.bold(from)}.\n${reason}\nFix that template file.`,
     [SeedcordErrorCode.MakeLookupDynamicKey]: (template: string, value: string) =>
-        `The ${paint.bold(template)} template calls ${paint.bold('lookup')} on ${paint.bold(value)} without a quoted key. seedcord make can't tell which field of ${paint.bold(value)} to ask for. Give lookup a quoted key like ${paint.bold(`{{lookup ${value} "title"}}`)}, or map the value in a helper under ${paint.bold('make.helpers')} in seedcord.config.ts.`
+        `The ${paint.bold(template)} template calls ${paint.bold('lookup')} on ${paint.bold(value)} without a quoted key. seedcord make can't tell which field of ${paint.bold(value)} to ask for. Give lookup a quoted key like ${paint.bold(`{{lookup ${value} "title"}}`)}, or map the value in a helper under ${paint.bold('make.helpers')} in seedcord.config.ts.`,
+    [SeedcordErrorCode.MakeNeedsTerminal]: () =>
+        `${paint.bold('seedcord make')} asks for a template, a name and each value in a terminal. Run it from a terminal with ${paint.bold('CI')} unset.`,
+    [SeedcordErrorCode.MakeNoTemplates]: (folder: string) =>
+        `Found no templates in ${paint.path(folder)} or in the installed plugins. Each folder inside ${paint.path(folder)} is one template. ${paint.sky('https://seedcord.org/guide/tooling/make')} shows how to write one and where to copy the starters from.`,
+    [SeedcordErrorCode.MakeFileExists]: (file: string) =>
+        `${paint.path(file)} already exists. Pick another name, or delete that file first.`
 } satisfies Record<SeedcordErrorCode, (...args: never[]) => string>;
 
 /** @internal */

@@ -90,6 +90,8 @@
         "cli-spinners": "catalog:deps",
         "commander": "^15.0.0",
         "discord-api-types": "catalog:deps",
+        "es-toolkit": "catalog:deps",
+        "handlebars": "catalog:deps",
         "ink": "catalog:deps",
         "minimatch": "^10.2.6",
         "react": "catalog:react",

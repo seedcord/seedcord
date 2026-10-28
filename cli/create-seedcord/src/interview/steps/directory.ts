@@ -1,11 +1,10 @@
 import { basename, resolve } from 'node:path';
 
+import { validatorFor } from '@seedcord/cli-prompts';
 import { SeedcordErrorCode, paint } from '@seedcord/errors';
 import { SeedcordTypeError } from '@seedcord/errors/internal';
 
 import { claimTarget } from '#scaffold/target';
-
-import { validatorFor } from './validatorFor';
 
 import type { Step } from '#interview/types';
 
@@ -63,7 +62,10 @@ export const directoryStep: Step<'directory'> = {
             await prompter.text({
                 message: `Where should the project go? ${paint.mute(FORMAT)}`,
                 placeholder: 'my-bot',
-                validate: validatorFor((value) => claimTarget(resolve(parseDirectory(value))))
+                validate: validatorFor(
+                    [SeedcordErrorCode.CreateInvalidAnswer, SeedcordErrorCode.CreateTargetNotEmpty],
+                    (value) => claimTarget(resolve(parseDirectory(value)))
+                )
             })
         ),
     shown: (directory) => directory

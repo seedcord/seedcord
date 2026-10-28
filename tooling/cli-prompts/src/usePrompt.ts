@@ -16,7 +16,10 @@ export interface PromptMachine<State, Answer> {
     readonly submit: (state: State) => Submitted<State, Answer>;
 }
 
-export type Outcome<Answer> = { readonly kind: 'answered'; readonly answer: Answer } | { readonly kind: 'cancelled' };
+export type Outcome<Answer> =
+    | { readonly kind: 'answered'; readonly answer: Answer }
+    | { readonly kind: 'cancelled' }
+    | { readonly kind: 'failed'; readonly error: unknown };
 
 interface Progress<State, Answer> {
     readonly state: State;
@@ -36,10 +39,15 @@ function advance<State, Answer>(
     if (isCancel(keyPress)) return { ...progress, outcome: { kind: 'cancelled' } };
     if (!keyPress.key.return) return { state: machine.press(progress.state, keyPress) };
 
-    const submitted = machine.submit(progress.state);
-    return 'stay' in submitted
-        ? { state: submitted.stay }
-        : { ...progress, outcome: { kind: 'answered', answer: submitted.answer } };
+    try {
+        const submitted = machine.submit(progress.state);
+        return 'stay' in submitted
+            ? { state: submitted.stay }
+            : { ...progress, outcome: { kind: 'answered', answer: submitted.answer } };
+    } catch (error: unknown) {
+        // ink's input handler has no caller to rethrow to
+        return { ...progress, outcome: { kind: 'failed', error } };
+    }
 }
 
 const LINE_BREAK = /\r\n|\r|\n/u;

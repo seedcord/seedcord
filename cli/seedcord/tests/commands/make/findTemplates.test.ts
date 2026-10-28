@@ -1,30 +1,18 @@
-import { mkdirSync, mkdtempDisposableSync, writeFileSync } from 'node:fs';
-import { tmpdir } from 'node:os';
-import { dirname, join } from 'node:path';
+import { join } from 'node:path';
 
-import { describe, expect, it, onTestFinished } from 'vitest';
+import { describe, expect, it } from 'vitest';
 
 import { findTemplates } from '#commands/make/findTemplates';
 import { realPath } from '#core/project/realPath';
+import { makeProject } from '#tests/commands/make/makeProject';
 import { resolvedConfigOf } from '#tests/resolvedConfigOf';
-
-// a bot folder on disk, keyed by the path inside it
-function projectWith(files: Record<string, string>): string {
-    const dir = mkdtempDisposableSync(join(tmpdir(), 'seedcord-make-'));
-    onTestFinished(() => dir.remove());
-    for (const [path, contents] of Object.entries(files)) {
-        mkdirSync(dirname(join(dir.path, path)), { recursive: true });
-        writeFileSync(join(dir.path, path), contents);
-    }
-    return realPath(dir.path);
-}
 
 const listed = (templates: { name: string; from: string }[]): string[] =>
     templates.map(({ name, from }) => `${from} ${name}`);
 
 describe('findTemplates', () => {
     it("lists the bot's templates, then each installed dependency's that its package.json points at", async () => {
-        const projectDir = projectWith({
+        const projectDir = makeProject({
             'package.json': JSON.stringify({
                 dependencies: { 'seedcord-plugin-db': '1.0.0', 'plain-lib': '1.0.0', 'not-installed': '1.0.0' },
                 devDependencies: { 'seedcord-plugin-dev': '1.0.0' }
@@ -47,7 +35,7 @@ describe('findTemplates', () => {
     });
 
     it('reads the folder make.templates points at', async () => {
-        const projectDir = projectWith({
+        const projectDir = makeProject({
             'package.json': '{}',
             'scaffolds/Button/x.ts.hbs': ''
         });

@@ -41,6 +41,21 @@ describe('Prompter.text', () => {
         await expect(answer).resolves.toBe('my-bot');
     });
 
+    it('rejects with what validate throws', async () => {
+        using terminal = new PromptTerminal();
+        const broken = new Error('the check itself broke');
+        const answer = terminal.prompter.text({
+            message: FOLDER.message,
+            validate: () => {
+                throw broken;
+            }
+        });
+
+        await terminal.press(...'my-bot', KEY.enter);
+
+        await expect(answer).rejects.toBe(broken);
+    });
+
     it('hides the error once you type again', async () => {
         using terminal = new PromptTerminal();
         const answer = terminal.prompter.text(FOLDER);

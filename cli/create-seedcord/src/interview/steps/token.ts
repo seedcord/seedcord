@@ -1,7 +1,6 @@
+import { validatorFor } from '@seedcord/cli-prompts';
 import { SeedcordErrorCode, paint } from '@seedcord/errors';
 import { SeedcordTypeError, validateDiscordToken } from '@seedcord/errors/internal';
-
-import { validatorFor } from './validatorFor';
 
 import type { Step } from '#interview/types';
 import type { BotToken } from '@seedcord/errors/internal';
@@ -29,7 +28,7 @@ export const tokenStep: Step<'token'> = {
     ask: async (_answers, prompter) => {
         const pasted = await prompter.password({
             message: `Paste your bot token ${paint.mute('or press Enter twice to add it to .env later')}`,
-            validate: validatorFor(parseToken),
+            validate: validatorFor([SeedcordErrorCode.CreateInvalidAnswer], parseToken),
             emptyWarning: 'Nothing pasted. Press Enter again to leave it empty in .env for now.'
         });
 

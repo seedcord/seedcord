@@ -324,5 +324,11 @@ export enum SeedcordErrorCode {
     /** Handlebars could not parse or render a template file. */
     MakeTemplateFailed = 3304,
     /** A template calls `lookup` with a key that isn't quoted text. */
-    MakeLookupDynamicKey = 3305
+    MakeLookupDynamicKey = 3305,
+    /** `seedcord make` ran without a terminal to ask its questions in. */
+    MakeNeedsTerminal = 3306,
+    /** `seedcord make` found no templates in the bot or its plugins. */
+    MakeNoTemplates = 3307,
+    /** A file `seedcord make` would write already exists. */
+    MakeFileExists = 3308
 }

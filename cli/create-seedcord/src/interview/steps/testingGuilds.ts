@@ -1,7 +1,6 @@
+import { validatorFor } from '@seedcord/cli-prompts';
 import { SeedcordErrorCode, paint } from '@seedcord/errors';
 import { isSnowflake, SeedcordTypeError } from '@seedcord/errors/internal';
-
-import { validatorFor } from './validatorFor';
 
 import type { Step } from '#interview/types';
 
@@ -35,7 +34,7 @@ export const testingGuildsStep: Step<'testingGuilds'> = {
         parseTestingGuilds(
             await prompter.text({
                 message: `Server ids to test your commands in ${paint.mute('or press Enter to deploy them globally')}`,
-                validate: validatorFor(parseTestingGuilds)
+                validate: validatorFor([SeedcordErrorCode.CreateInvalidAnswer], parseTestingGuilds)
             })
         ),
     shown: (ids) => (ids.length === 0 ? paint.mute('global') : ids.join(', '))
