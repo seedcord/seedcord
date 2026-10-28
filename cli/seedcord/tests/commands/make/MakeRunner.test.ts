@@ -2,7 +2,7 @@ import { existsSync, readFileSync } from 'node:fs';
 import { join } from 'node:path';
 
 import { KEY, PromptTerminal, settled } from '@seedcord/cli-prompts/testing';
-import { SeedcordErrorCode } from '@seedcord/errors';
+import { paint, SeedcordErrorCode } from '@seedcord/errors';
 import { describe, expect, it } from 'vitest';
 
 import { MAKE_STEPS, MakeRunner } from '#commands/make/MakeRunner';
@@ -53,6 +53,9 @@ describe('MakeRunner', () => {
             "import '@seedcord/gateway';\nexport const label = 'Appeal now';\n"
         );
         const screen = maskStepTimes(await terminal.screen());
+        expect(screen).toContain(`${paint.check} template  Button`);
+        expect(screen).toContain(`${paint.check} name  appeal`);
+        expect(screen).toContain(`${paint.check} label  Appeal now`);
         expect(screen).toContain('write                T  1 file\n      │ ');
         expect(screen.replaceAll('\n', '')).toContain(join(projectDir, 'src/handlers/Appeal.ts'));
         expect(screen).toContain('Run seedcord codegen, or keep seedcord dev running, to type new routes.');

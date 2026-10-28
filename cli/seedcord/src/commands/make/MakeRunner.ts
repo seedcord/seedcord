@@ -13,12 +13,13 @@ import { directDependencies } from '#core/modules/installedManifest';
 import { openModuleLoader } from '#core/modules/openModuleLoader';
 import { startupShell } from '#src/core/ShellMode';
 
-import { askInputs } from './askInputs';
 import { findTemplates } from './findTemplates';
+import { InputQuestions } from './InputQuestions';
 
 import type { ResolvedSeedcordConfig } from '#core/config/schema';
 import type { InstalledDependencies } from '#core/modules/installedManifest';
 import type { StepPrinter } from '#core/output/StepPrinter';
+import type { Answered } from './InputQuestions';
 import type { Prompter } from '@seedcord/cli-prompts';
 import type { RenderedFile, RenderProject, Template } from '@seedcord/cli-templates';
 
@@ -82,8 +83,10 @@ export class MakeRunner {
         );
         if (templates.length === 0) throw new SeedcordError(SeedcordErrorCode.MakeNoTemplates, [config.make.templates]);
 
+        const answered: Answered = (label, shown) => steps.line(`${paint.mint(paint.check)} ${label}  ${shown}`);
         const project = renderProjectOf(config, dependencies);
         const template = await this.pickTemplate(templates);
+        answered('template', template.name);
         const name = await prompter.text({
             message: 'Name',
             placeholder: 'like RollDice, or tickets/Appeal for a subfolder',
@@ -91,8 +94,9 @@ export class MakeRunner {
                 assertFree(template.output(value, project).paths)
             )
         });
+        answered('name', name);
         const output = template.output(name, project);
-        const files = output.render(await askInputs(prompter, output.inputs()));
+        const files = output.render(await new InputQuestions(prompter, answered).ask(output.inputs()));
 
         await steps.step(
             'write',

@@ -106,7 +106,7 @@ You don't declare a template's values anywhere. seedcord reads every `.hbs` file
 | `{{ label }}` | a line of text |
 | `{{#if ephemeral}}` or `{{#unless ephemeral}}` | yes or no |
 | `{{#each choices}}{{ this }}{{/each}}` | one line of text, split at each comma |
-| `{{#each options}}{{ label }}{{/each}}` | "Add one to options?", then each field of that item, until you answer no |
+| `{{#each options}}{{ label }}{{/each}}` | "Add an item to options?", then each field of that item, until you answer no |
 | `{{ author.label }}`, or `{{ label }}` inside `{{#with author}}` | each field of `author`, asked as `author.label` |
 
 {/* prettier-ignore-end */}
