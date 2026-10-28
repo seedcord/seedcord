@@ -34,6 +34,7 @@
     "files": [
         "bin",
         "dist",
+        "starters",
         "templates",
         "package.json",
         "README.md",
@@ -54,6 +55,7 @@
     },
     "devDependencies": {
         "@seedcord/cli-prompts": "workspace:^",
+        "@seedcord/cli-templates": "workspace:^",
         "@seedcord/core": "workspace:^",
         "@seedcord/errors": "workspace:^",
         "@seedcord/eslint-config": "workspace:^",

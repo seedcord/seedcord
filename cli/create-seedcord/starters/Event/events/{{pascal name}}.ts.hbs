@@ -1,0 +1,9 @@
+import { EventHandler, RegisterEvent } from '{{ transport }}';
+import { Events } from 'discord.js';
+
+@RegisterEvent([Events.{{ event }}])
+export class {{ pascal name }} extends EventHandler<Events.{{ event }}> {
+    public async execute(): Promise<void> {
+        this.logger.info('{{ pascal name }} ran');
+    }
+}

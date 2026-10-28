@@ -35,7 +35,9 @@ export function dependencyNames(manifestPath: string, fields: readonly string[])
 }
 
 // maps each dependency the project lists and has installed to its package.json
-export function directDependencies(projectDir: string): Map<string, string> {
+export type InstalledDependencies = ReadonlyMap<string, string>;
+
+export function directDependencies(projectDir: string): InstalledDependencies {
     const installed = new Map<string, string>();
     for (const name of dependencyNames(join(projectDir, 'package.json'), PROJECT_FIELDS)) {
         const manifest = installedManifest(name, projectDir);

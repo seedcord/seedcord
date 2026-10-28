@@ -25,6 +25,7 @@ That starts the dev server with hot reload{{#unless isGateway}} and opens a tunn
 | `{{ pm.run }} start` | run the compiled build |
 {{/if}}
 | `{{ pm.run }} codegen` | regenerate `src/seedcord-gen.d.ts` |
+| `{{ pm.run }} make` | write a new command, button, select menu{{#if isGateway}}, modal, or event{{else}}, or modal{{/if}} from `templates/` |
 {{#if isEdge}}
 | `{{ pm.run }} types` | regenerate the binding types in `.cloudflare/types/` |
 {{/if}}
@@ -78,6 +79,7 @@ After that, `{{ pm.run }} deploy` is enough. `TESTING_GUILD_IDS` can stay empty 
 - `src/events/` holds event handlers for the things happening in a server.
 {{/if}}
 - `src/bot.ts` is the config.
+- `templates/` holds the templates `{{ pm.run }} make` writes new files from. [Templates](https://seedcord.org/guide/tooling/make) shows how to change them or add your own.
 
 ## Docs
 

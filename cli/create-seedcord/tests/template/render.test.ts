@@ -1,15 +1,18 @@
 import { createRequire } from 'node:module';
 import { resolve } from 'node:path';
 
+import { Template } from '@seedcord/cli-templates';
 import { describe, expect, it } from 'vitest';
 
 import { buildContext } from '#template/context';
-import { renderTemplates } from '#template/render';
+import { copyStarters, renderTemplates } from '#template/render';
 import { BOT_TOKEN } from '#tests/token';
 
 import type { ScaffoldAnswers } from '#template/context';
+import type { InputShape } from '@seedcord/cli-templates';
 
 const TEMPLATES = resolve(import.meta.dirname, '../../templates');
+const STARTERS = resolve(import.meta.dirname, '../../starters');
 const EXTRAS = { developerUsername: 'dhruv', agent: 'pnpm' } as const;
 
 const GATEWAY: ScaffoldAnswers = {
@@ -142,6 +145,39 @@ describe('renderTemplates', () => {
         const onlyOnGateway = [...gateway.keys()].filter((path) => !http.has(path));
 
         expect(onlyOnGateway).toEqual(['src/events/Ready.ts']);
+    });
+});
+
+type Answers = Parameters<ReturnType<Template['output']>['render']>[0];
+
+function sampleOf(shape: InputShape): Answers[string] {
+    if (shape.kind === 'text') return 'Sample';
+    if (shape.kind === 'bool') return true;
+    if (shape.kind === 'list') return [sampleOf(shape.item)];
+    return Object.fromEntries(Object.entries(shape.fields).map(([key, field]) => [key, sampleOf(field)]));
+}
+
+describe('the starters', () => {
+    it('go into templates/ unrendered, with the event starter on gateway only', async () => {
+        const gateway = await copyStarters(STARTERS, buildContext(GATEWAY, EXTRAS));
+        const http = await copyStarters(STARTERS, buildContext(HTTP, EXTRAS));
+        const httpPaths = new Set(http.map((file) => file.path));
+
+        expect(gateway.filter((file) => !httpPaths.has(file.path)).map((file) => file.path)).toEqual([
+            'templates/Event/events/{{pascal name}}.ts.hbs'
+        ]);
+        expect(gateway.every((file) => file.contents.includes('{{ transport }}'))).toBe(true);
+    });
+
+    it('each render with seedcord make, leaving no mustache behind', async () => {
+        const project = { root: '/bot/src', transport: 'gateway', runtime: 'server', helpers: {} } as const;
+
+        for (const template of await Template.readAll(STARTERS, 'starters/')) {
+            const output = template.output('roll dice', project);
+            const answers = sampleOf({ kind: 'object', fields: output.inputs() }) as Answers;
+
+            for (const file of output.render(answers)) expect(file.contents).not.toContain('{{');
+        }
     });
 });
 

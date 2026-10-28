@@ -3,6 +3,7 @@ import { join } from 'node:path';
 import { describe, expect, it } from 'vitest';
 
 import { findTemplates } from '#commands/make/findTemplates';
+import { directDependencies } from '#core/modules/installedManifest';
 import { realPath } from '#core/project/realPath';
 import { makeProject } from '#tests/commands/make/makeProject';
 import { resolvedConfigOf } from '#tests/resolvedConfigOf';
@@ -25,7 +26,7 @@ describe('findTemplates', () => {
             'node_modules/plain-lib/package.json': JSON.stringify({ name: 'plain-lib' })
         });
 
-        const templates = await findTemplates(resolvedConfigOf(projectDir));
+        const templates = await findTemplates(resolvedConfigOf(projectDir), directDependencies(projectDir));
 
         expect(listed(templates)).toEqual([
             'templates/ Slash',
@@ -43,6 +44,6 @@ describe('findTemplates', () => {
             make: { templates: realPath(join(projectDir, 'scaffolds')), helpers: {} }
         });
 
-        expect(listed(await findTemplates(config))).toEqual(['scaffolds/ Button']);
+        expect(listed(await findTemplates(config, new Map()))).toEqual(['scaffolds/ Button']);
     });
 });

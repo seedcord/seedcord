@@ -5,7 +5,7 @@ import { addCommand, execCommand } from '#cli/packageManager';
 import { gitPlanFrom, probeGit } from '#scaffold/git';
 import { claimTarget } from '#scaffold/target';
 import { buildContext } from '#template/context';
-import { renderTemplates } from '#template/render';
+import { copyStarters, renderTemplates } from '#template/render';
 
 import type { StepLabel, StepUi } from '#cli/steps';
 import type { GitPlan } from '#scaffold/git';
@@ -18,6 +18,7 @@ export type CommandRunner = (command: string, args: string[], cwd: string) => Pr
 export interface ScaffoldInput {
     target: string;
     templatesRoot: string;
+    startersRoot: string;
     answers: ScaffoldAnswers;
     agent: AgentName;
     steps: StepUi;
@@ -50,7 +51,8 @@ const DEV_PACKAGES = [
 ];
 // both are betas, pinned to the versions seedcord's own edge tests run on
 const EDGE_DEV_PACKAGES = ['cf@1.0.0-beta.17', '@cloudflare/vite-plugin@2.0.0-beta.v.0'];
-const SHARED_PACKAGES = ['@discordjs/builders', 'envapt'];
+// the starters import ButtonStyle and TextInputStyle from discord-api-types
+const SHARED_PACKAGES = ['@discordjs/builders', 'discord-api-types', 'envapt'];
 
 function runtimePackages({ isGateway }: TemplateContext): string[] {
     const transport = isGateway ? ['@seedcord/gateway', 'discord.js'] : ['@seedcord/http'];
@@ -155,7 +157,11 @@ async function runInstallSteps(
 async function writeProject(input: ScaffoldInput, context: TemplateContext, existed: boolean): Promise<boolean> {
     const written = await succeeded(input.steps, 'files', async () => {
         await mkdir(input.target, { recursive: true });
-        await writeTree(input.target, await renderTemplates(input.templatesRoot, context));
+        const files = await Promise.all([
+            renderTemplates(input.templatesRoot, context),
+            copyStarters(input.startersRoot, context)
+        ]);
+        await writeTree(input.target, files.flat());
     });
 
     if (!written) {

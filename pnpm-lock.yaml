@@ -922,6 +922,9 @@ importers:
       '@seedcord/cli-prompts':
         specifier: workspace:^
         version: link:../../tooling/cli-prompts
+      '@seedcord/cli-templates':
+        specifier: workspace:^
+        version: link:../../tooling/cli-templates
       '@seedcord/core':
         specifier: workspace:^
         version: link:../../packages/core

@@ -9,6 +9,7 @@ node_modules/
 
 turbo/generators/templates
 cli/create-seedcord/templates
+cli/create-seedcord/starters
 
 **/.next/
 **/dist/

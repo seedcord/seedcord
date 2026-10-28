@@ -17,6 +17,7 @@ import { askInputs } from './askInputs';
 import { findTemplates } from './findTemplates';
 
 import type { ResolvedSeedcordConfig } from '#core/config/schema';
+import type { InstalledDependencies } from '#core/modules/installedManifest';
 import type { StepPrinter } from '#core/output/StepPrinter';
 import type { Prompter } from '@seedcord/cli-prompts';
 import type { RenderedFile, RenderProject, Template } from '@seedcord/cli-templates';
@@ -31,8 +32,7 @@ interface MakeRunnerDeps {
     readonly interactive: boolean;
 }
 
-function renderProjectOf(config: ResolvedSeedcordConfig): RenderProject {
-    const dependencies = directDependencies(dirname(config.configFile));
+function renderProjectOf(config: ResolvedSeedcordConfig, dependencies: InstalledDependencies): RenderProject {
     return {
         root: config.root,
         transport: dependencies.has('@seedcord/gateway') ? 'gateway' : 'http',
@@ -74,14 +74,15 @@ export class MakeRunner {
 
         await using loaded = await steps.step('read config', () => projectLoader.readConfig());
         const { config } = loaded;
+        const dependencies = directDependencies(dirname(config.configFile));
         const templates = await steps.step(
             'find templates',
-            () => findTemplates(config),
+            () => findTemplates(config, dependencies),
             (found) => paint.mute(plural(found.length, 'template'))
         );
         if (templates.length === 0) throw new SeedcordError(SeedcordErrorCode.MakeNoTemplates, [config.make.templates]);
 
-        const project = renderProjectOf(config);
+        const project = renderProjectOf(config, dependencies);
         const template = await this.pickTemplate(templates);
         const name = await prompter.text({
             message: 'Name',

@@ -4,14 +4,13 @@ import { join, posix, sep } from 'node:path';
 import Handlebars from 'handlebars';
 
 import type { TemplateContext } from './context';
-
-export interface RenderedFile {
-    path: string;
-    contents: string;
-}
+import type { RenderedFile } from '@seedcord/cli-templates';
 
 // npm drops a literal .gitignore from a tarball, whatever the files list says
 const DOTTED = new Set(['env', 'gitattributes', 'gitignore', 'prettierignore']);
+
+// Event imports discord.js, missing from an http bot
+const GATEWAY_STARTERS = new Set(['Event']);
 
 function targetPath(templateRelative: string): string {
     const parts = templateRelative.split(sep);
@@ -20,10 +19,13 @@ function targetPath(templateRelative: string): string {
     return posix.join(...parts, DOTTED.has(name) ? `.${name}` : name);
 }
 
-export async function renderTemplates(templatesRoot: string, context: TemplateContext): Promise<RenderedFile[]> {
-    const paths = await readdir(templatesRoot, { recursive: true });
-    const sources = paths.filter((path) => path.endsWith('.hbs'));
+async function hbsFilesIn(root: string): Promise<string[]> {
+    const paths = await readdir(root, { recursive: true });
+    return paths.filter((path) => path.endsWith('.hbs'));
+}
 
+export async function renderTemplates(templatesRoot: string, context: TemplateContext): Promise<RenderedFile[]> {
+    const sources = await hbsFilesIn(templatesRoot);
     const rendered = await Promise.all(
         sources.map(async (source) => {
             const raw = await readFile(join(templatesRoot, source), 'utf8');
@@ -38,4 +40,17 @@ export async function renderTemplates(templatesRoot: string, context: TemplateCo
 
     // a template that wraps its whole body in a conditional writes no file when that is false
     return rendered.filter((file) => file.contents.trim() !== '');
+}
+
+// seedcord make renders these later
+export async function copyStarters(startersRoot: string, { isGateway }: TemplateContext): Promise<RenderedFile[]> {
+    const all = await hbsFilesIn(startersRoot);
+    const sources = all.filter((source) => isGateway || !GATEWAY_STARTERS.has(source.split(sep)[0] ?? ''));
+
+    return Promise.all(
+        sources.map(async (source) => ({
+            path: posix.join('templates', ...source.split(sep)),
+            contents: await readFile(join(startersRoot, source), 'utf8')
+        }))
+    );
 }
