@@ -108,7 +108,7 @@ const messages = {
     [SeedcordErrorCode.CorePathOutsideRoot]: (path: string, root: string) =>
         `${paint.path(path)} is outside ${paint.bold('root')} (${paint.path(root)}). ${paint.bold('seedcord build')} bundles only the files under ${paint.bold('root')}. Move it under ${paint.bold('root')}, or set ${paint.bold('root')} in seedcord.config.ts to a folder that holds it.`,
     [SeedcordErrorCode.CoreDirectoryRootUnknown]: (dir: string) =>
-        `${paint.path(dir)} is relative to ${paint.bold('root')}, but nothing set ${paint.bold('root')} in this process. ${paint.bold('seedcord codegen')}, ${paint.bold('build')}, and ${paint.bold('commands')} import bot.ts without starting it, so read the folder in a startup task or a plugin's init(). In a test or a script, pass an absolute path like ${paint.sky(`resolve(import.meta.dirname, '${dir}')`)}.`,
+        `${paint.path(dir)} is relative to ${paint.bold('root')}, but nothing set ${paint.bold('root')} in this process. The ${paint.bold('seedcord')} CLI sets it, and a plain script or a test doesn't. Pass an absolute path there, like ${paint.sky(`resolve(import.meta.dirname, '${dir}')`)}.`,
     [SeedcordErrorCode.CoreDirectoryNotBuilt]: (dir: string, root: string) =>
         `${paint.path(dir)} was not a folder under ${paint.bold('root')} (${paint.path(root)}) or in ${paint.bold('files')} when ${paint.bold('seedcord build')} ran, so the build holds none of its files. Create the folder, then build again.`,
     [SeedcordErrorCode.CoreDirectoryNotListed]: (dir: string) =>
@@ -338,6 +338,14 @@ const messages = {
         `Another ${paint.bold('seedcord dev')} is running this bot's application from ${paint.path(configDir)} (pid ${pid}, started ${startedAt}). Two dev sessions on one application overwrite each other's commands and interactions endpoint. Press ${paint.bold('q')} in that session, or delete ${paint.path(lockFile)} if it is no longer running.`,
     [SeedcordErrorCode.CliDevLockFolderNotOwned]: (folder: string) =>
         `Another user owns ${paint.path(folder)}, the folder ${paint.bold('seedcord dev')} writes its session locks to. That account could write a lock there that blocks your dev sessions. Ask that user or an admin to delete the folder, then start ${paint.bold('seedcord dev')} again.`,
+    [SeedcordErrorCode.CliPluginCodegenThrew]: (plugin: string, key: string, reason: string) =>
+        `The ${paint.bold('codegen()')} of the plugin attached at ${paint.sky(key)} (${paint.sky(plugin)}) threw. ${sentence(reason)} ${paint.bold('seedcord codegen')} never runs ${paint.bold('init()')}, so ${paint.bold('codegen()')} can read only constructor state and files.`,
+    [SeedcordErrorCode.CliPluginCodegenNoId]: (plugin: string, key: string) =>
+        `The plugin attached at ${paint.sky(key)} (${paint.sky(plugin)}) needs an id because it has a ${paint.bold('codegen()')}. Add ${paint.bold("static readonly id = '<your package name>'")} to the class.`,
+    [SeedcordErrorCode.CliPluginCodegenValue]: (id: string, path: string, value: string) =>
+        `${paint.bold(id)}'s ${paint.bold('codegen()')} returned ${value} at ${paint.bold(path)}. Codegen can't write that value as a type. It writes plain data, and classes or objects that a project file or the plugin's package exports. Export the value from a file, or return plain data.`,
+    [SeedcordErrorCode.CliPluginCodegenConflict]: (id: string, first: string, second: string, path: string) =>
+        `The plugins attached at ${paint.sky(first)} and ${paint.sky(second)} are both ${paint.bold(id)}, and their ${paint.bold('codegen()')} results differ at ${paint.bold(path)}. Every attachment of one plugin shares one type. Rename the key in one of them.`,
     [SeedcordErrorCode.CliCodegenOutOfDate]: (outputPath: string) =>
         `${paint.path(outputPath)} is out of date. Run ${paint.bold('seedcord codegen')} and commit it.`,
     [SeedcordErrorCode.CliEdgeWithoutWorkerdCondition]: (cloudflareConfig: string, tsconfig: string) =>

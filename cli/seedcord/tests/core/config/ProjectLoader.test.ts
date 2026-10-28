@@ -2,7 +2,7 @@ import { mkdirSync, symlinkSync, writeFileSync } from 'node:fs';
 import { dirname, join, resolve } from 'node:path';
 
 import { SeedcordErrorCode, isSeedcordError } from '@seedcord/errors';
-import { toPosixPath } from '@seedcord/utils/internal';
+import { botFolder, toPosixPath } from '@seedcord/utils/internal';
 import { assert, describe, it, expect, onTestFinished, vi } from 'vitest';
 
 import { ProjectLoader } from '#core/config/ProjectLoader';
@@ -307,7 +307,7 @@ describe('ProjectLoader validation', () => {
         expect(modules.loaders).toEqual([{ loads: 'config', closed: true }]);
     });
 
-    it('closes the config loader once the project opens, and the bot loader with the project', async () => {
+    it('closes the config loader once the project opens, and the bot loader and root with the project', async () => {
         const projectDir = tempProject();
         writeFileSync(join(projectDir, 'seedcord.config.ts'), '');
         const modules = stubModulesExporting(MINIMAL);
@@ -319,12 +319,16 @@ describe('ProjectLoader validation', () => {
                 { loads: 'bot', closed: false }
             ]);
             expect(project.config.instance).toBe(resolve(projectDir, 'bot.ts'));
+            expect(() => botFolder('.')).not.toThrow();
         }
 
         expect(modules.loaders).toEqual([
             { loads: 'config', closed: true },
             { loads: 'bot', closed: true }
         ]);
+        expect(() => botFolder('.')).toThrow(
+            expect.objectContaining({ code: SeedcordErrorCode.CoreDirectoryRootUnknown })
+        );
     });
 
     it('resolves each tunnel shape into a mode', async () => {

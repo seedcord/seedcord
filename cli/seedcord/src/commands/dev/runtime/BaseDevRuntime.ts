@@ -7,7 +7,7 @@ import { instanceModule } from '#core/modules/importInstance';
 import { HmrPlugin } from './HmrPlugin';
 import { RestartFiles } from './RestartFiles';
 
-import type { ModuleLoader } from '#core/modules/ModuleLoader';
+import type { EvaluatedModule, ModuleLoader } from '#core/modules/ModuleLoader';
 import type { DevRuntime, DevRuntimeContext, DevRuntimeLoadResult } from './DevRuntime';
 import type { DevEvent } from './events';
 import type { SeedcordInstance } from '@seedcord/types/internal';
@@ -48,6 +48,14 @@ export abstract class BaseDevRuntime<TStarted extends StartedRuntime = StartedRu
 
     public importModule<TModule = unknown>(path: string): Promise<TModule> {
         return this.require('importModule').modules.importModule<TModule>(path);
+    }
+
+    public importPackage(name: string): Promise<Record<string, unknown>> {
+        return this.require('importPackage').modules.importPackage(name);
+    }
+
+    public evaluated(): readonly EvaluatedModule[] {
+        return this.require('evaluated').modules.evaluated();
     }
 
     public async loadEntry(): Promise<DevRuntimeLoadResult> {

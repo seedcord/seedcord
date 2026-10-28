@@ -1,19 +1,14 @@
+import type { KyselyPostgres } from '#src/KyselyPostgres';
+import type { Generated } from '@seedcord/core/plugin';
+
+type FoundServices = Generated<typeof KyselyPostgres>['services'];
+
+type ServiceInstances = { [Key in keyof FoundServices]: InstanceType<FoundServices[Key]> };
+
 /**
- * Registry of Kysely services, augmented per consumer via declaration merging.
- *
- * Declare a member for each class you decorate with `@RegisterKyselyService` to get
- * type-safe access to it.
- *
- * @example
- * ```typescript
- * declare module '@seedcord/plugin-kysely-postgres' {
- *   interface KyselyServices {
- *     'users': Users;
- *   }
- * }
- * ```
+ * Every service you register with `@RegisterKyselyService`, by its key. `seedcord codegen` fills this in.
  */
-export interface KyselyServices {}
+export interface KyselyServices extends ServiceInstances {}
 
 /** @internal */
 export type KyselyServiceKeys = keyof KyselyServices;

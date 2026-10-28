@@ -1,5 +1,7 @@
 import { dirname, resolve } from 'node:path';
 
+import { setCliFiles } from '@seedcord/utils/internal';
+
 import { Project } from '#core/project/Project';
 import { ProjectFiles } from '#core/project/ProjectFiles';
 import { realPath } from '#core/project/realPath';
@@ -81,6 +83,7 @@ export class ProjectLoader {
         await using stack = new AsyncDisposableStack();
         stack.use(loaded);
         const { config, files } = loaded;
+        stack.use(setCliFiles(files.layout.toJSON()));
         const botModules = await this.openModules(
             dirname(config.configFile),
             config.target,

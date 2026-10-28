@@ -1,19 +1,13 @@
+import type { Mongoose } from '#src/Mongoose';
+import type { Generated } from '@seedcord/core/plugin';
+
+type FoundServices = Generated<typeof Mongoose>['services'];
+
+type ServiceInstances = { [Key in keyof FoundServices]: InstanceType<FoundServices[Key]> };
+
 /**
- * Registry of available database services.
- *
- * Declare a member for each class you decorate with `@RegisterMongooseService` to get
- * type-safe access to it.
- *
- * @example
- * ```typescript
- * declare module '@seedcord/plugin-mongoose' {
- *   interface MongooseServices {
- *     'user': Users;
- *     'guild': Guilds;
- *   }
- * }
- * ```
+ * Every service you register with `@RegisterMongooseService`, by its key. `seedcord codegen` fills this in.
  */
-export interface MongooseServices {}
+export interface MongooseServices extends ServiceInstances {}
 
 export type MongooseServiceKeys = keyof MongooseServices;

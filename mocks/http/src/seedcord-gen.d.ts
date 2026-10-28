@@ -6,6 +6,7 @@ import type Bot from './bot';
 // prettier-ignore
 declare module '@seedcord/http' {
     interface Core {
+        i18n: (typeof Bot)['i18n'];
         stats: (typeof Bot)['stats'];
     }
     interface SlashRegistry {
@@ -20,6 +21,9 @@ declare module '@seedcord/http' {
     }
     interface EmojiMap {
 
+    }
+    interface PluginTypes {
+        'mock-i18n': { messages: { goodbye: []; greet: ['name']; transfer: ['from', 'amount', 'to'] } };
     }
 }
 

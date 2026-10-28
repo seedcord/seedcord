@@ -6,6 +6,8 @@ import { SeedcordError, SeedcordTypeError, throwSingleOrAggregate } from '@seedc
 import { asError } from '@seedcord/utils/internal';
 import { ApplicationCommandType } from 'discord-api-types/v10';
 
+import { ModuleExports } from './ModuleExports';
+
 import type { ModuleLoader } from '#core/modules/ModuleLoader';
 import type { ProjectFiles } from '#core/project/ProjectFiles';
 import type { CommandCtor, CommandMeta } from '@seedcord/core/internal';
@@ -62,20 +64,28 @@ export class CommandScanner {
     ) {}
 
     public async scan(commandsPath: string): Promise<FoundCommand[]> {
-        const commands: FoundCommand[] = [];
-        const problems: unknown[] = [];
+        const found: CommandClassFile[] = [];
+        const importFailures: unknown[] = [];
         try {
             for await (const commandClass of this.commandClasses(this.files.layout.resolve(commandsPath))) {
-                const built = construct(commandClass);
-                if (isSeedcordError(built)) problems.push(built);
-                else commands.push(built);
+                found.push(commandClass);
             }
         } catch (error: unknown) {
             // the walk stops at the first file that fails to import
-            problems.push(error);
+            importFailures.push(error);
         }
 
-        throwSingleOrAggregate(problems, SeedcordErrorCode.CliProblems);
+        const exports = new ModuleExports(this.modules.evaluated());
+        const commands: FoundCommand[] = [];
+        const problems: unknown[] = [];
+        for (const { sourceFile, Command } of found) {
+            const definingFile = exports.definingExport(Command)?.module.file ?? sourceFile;
+            const built = construct({ sourceFile: definingFile, Command });
+            if (isSeedcordError(built)) problems.push(built);
+            else commands.push(built);
+        }
+
+        throwSingleOrAggregate([...problems, ...importFailures], SeedcordErrorCode.CliProblems);
         return commands;
     }
 

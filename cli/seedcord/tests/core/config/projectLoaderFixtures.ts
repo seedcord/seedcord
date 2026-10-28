@@ -7,6 +7,7 @@ import { onTestFinished } from 'vitest';
 import { ProjectLoader } from '#core/config/ProjectLoader';
 import { realPath } from '#core/project/realPath';
 import { ShellMode } from '#src/core/ShellMode';
+import { emptyModuleGraph } from '#tests/emptyModuleGraph';
 
 import type { ResolvedSeedcordConfig } from '#core/config/schema';
 import type { OpenModules } from '#core/modules/ModuleLoader';
@@ -46,6 +47,7 @@ export function stubModulesExporting(config: unknown): StubModules {
         return Promise.resolve({
             // justified: the only module a ProjectLoader imports through this stub is the config
             importModule: <TModule = unknown>(): Promise<TModule> => Promise.resolve({ default: config } as TModule),
+            ...emptyModuleGraph,
             [Symbol.asyncDispose]: () => {
                 loader.closed = true;
                 return Promise.resolve();

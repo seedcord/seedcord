@@ -84,12 +84,6 @@ export class Users extends MongooseService<IUser> {
         return this.model.findOne({ userId });
     }
 }
-
-declare module '@seedcord/plugin-mongoose' {
-    interface MongooseServices {
-        users: Users;
-    }
-}
 ```
 
-A handler then calls `await this.core.db.services.users.findByUserId(this.event.user.id)`. The [Mongoose guide](https://seedcord.org/guide/plugins/mongoose) covers the options, services, and errors.
+Run `seedcord codegen` after you add or rename a service. It adds the service's key to `MongooseServices`, the type behind the decorator and `core.db.services`. A handler then calls `await this.core.db.services.users.findByUserId(this.event.user.id)`. The [Mongoose guide](https://seedcord.org/guide/plugins/mongoose) covers the options, services, and errors.

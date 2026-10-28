@@ -4,6 +4,7 @@ import { FRAMEWORK_CHANNELS } from '@seedcord/logger';
 import { HostPluginKeys } from '@seedcord/types/internal';
 
 import { declaredScopeOf, extendsThisCorePlugin, pluginLoggerOf, resolvedLifecycleSpecOf } from './Plugin';
+import { splitPluginKey } from './pluginKey';
 
 import type { CoreBase } from '#interfaces/CoreBase';
 import type { Bus } from '#subscribers/Bus';
@@ -97,15 +98,13 @@ export abstract class PluginHost<BotT extends Transport, BotRt extends Runtime> 
             throw new SeedcordError(SeedcordErrorCode.CorePluginAfterInit);
         }
 
-        const dot = key.indexOf('.');
-        const head = dot === -1 ? key : key.slice(0, dot);
+        const { head, leaf } = splitPluginKey(key);
 
         // runs before assertFree because some reserved channels are also host members
         if (RESERVED_KEYS.has(head)) {
             throw new SeedcordTypeError(SeedcordErrorCode.CorePluginReservedChannel, [head]);
         }
 
-        const leaf = dot === -1 ? undefined : key.slice(dot + 1);
         if (head === '' || leaf === '') {
             throw new SeedcordTypeError(SeedcordErrorCode.CorePluginKeyMalformed, [key, 'has an empty part.']);
         }

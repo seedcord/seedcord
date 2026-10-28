@@ -24,6 +24,7 @@ import type { KyselyServices } from './types/KyselyServices';
 import type { CoreBase } from '@seedcord/core';
 import type { HmrUpdateEvent } from '@seedcord/types';
 import type { MigrationInfo } from 'kysely/migration';
+import type { Constructor } from 'type-fest';
 
 export interface KyselyArtifact {
     key?: string;
@@ -36,6 +37,8 @@ export interface KyselyArtifact {
  * services so the core can resolve them.
  */
 export class KyselyPostgres extends Plugin<{ transport: 'any'; runtime: 'server' }> {
+    public static readonly id = '@seedcord/plugin-kysely-postgres';
+
     private isInitialised = false;
     private servicesReady = false;
     private inFlight: Promise<void> | null = null;
@@ -131,6 +134,12 @@ export class KyselyPostgres extends Plugin<{ transport: 'any'; runtime: 'server'
 
     public override async dispose(): Promise<void> {
         await this.disconnect();
+    }
+
+    // Generated checks every service class against this. Each one reads its own table.
+    public override async codegen(): Promise<{ services: Record<string, Constructor<object>> }> {
+        const found = await Array.fromAsync(this.serviceRegistry.serviceClassesIn(this.options.dir));
+        return { services: Object.fromEntries(found.map(({ key, Service }) => [key, Service])) };
     }
 
     private async connect(): Promise<void> {

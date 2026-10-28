@@ -1,16 +1,15 @@
-import { existsSync, readFileSync } from 'node:fs';
 import { dirname, join } from 'node:path';
 
 import { isPlainObject } from '@seedcord/utils/internal';
 
-import { installedManifest } from './installedManifest';
+import { installedManifest, readManifest } from './installedManifest';
 
 const PROJECT_FIELDS = ['dependencies', 'devDependencies', 'optionalDependencies'] as const;
 const PACKAGE_FIELDS = ['dependencies', 'peerDependencies'] as const;
 
 function dependencyNames(manifestPath: string, fields: readonly string[]): string[] {
-    const manifest: unknown = existsSync(manifestPath) ? JSON.parse(readFileSync(manifestPath, 'utf8')) : undefined;
-    if (!isPlainObject(manifest)) return [];
+    const manifest = readManifest(manifestPath);
+    if (!manifest) return [];
 
     return fields.flatMap((field) => {
         const deps = manifest[field];

@@ -142,6 +142,15 @@ export abstract class Plugin<
     dispose?(): Promise<void>;
 
     /**
+     * Runs in `seedcord codegen` and in dev. Return plain data, or values that a
+     * project file or this plugin's package exports, and read the result with `Generated<typeof X>`.
+     *
+     * Read only constructor state and files here. `seedcord codegen` and CI never run `init()`.
+     * The class needs a `static readonly id`.
+     */
+    codegen?(): Promise<unknown>;
+
+    /**
      * Rejects the options this plugin got.
      *
      * @param reason - Why the options are invalid.

@@ -4,7 +4,10 @@ import { SlashHandler, SlashRoute, timestampFromSnowflake } from '@seedcord/gate
 export class Ping extends SlashHandler<'ping'> {
     public async execute(): Promise<void> {
         const roundtrip = Date.now() - timestampFromSnowflake(this.event.id);
-        const lines = ['### Pong', `Roundtrip **${roundtrip}ms**`];
+        const lines = [
+            `### ${this.core.i18n.t('greet', { name: this.event.user.username })}`,
+            `Roundtrip **${roundtrip}ms**`
+        ];
 
         if (this.options.getBoolean('detailed')) {
             lines.push(`Uptime **${Math.round(process.uptime())}s**`);

@@ -19,6 +19,7 @@ export { logUnknownFault } from '#src/notices/logUnknownFault';
 export { FixedScope } from '#src/plugin/Plugin';
 export type { PluginArgs, PluginCtor } from '#src/plugin/Plugin';
 export { attachmentsOf, sealAttachments } from '#src/plugin/PluginHost';
+export { splitPluginKey } from '#src/plugin/pluginKey';
 export { CoordinatedStartup } from '#src/lifecycle/CoordinatedStartup';
 export { PluginLifecycle } from '#src/lifecycle/PluginLifecycle';
 

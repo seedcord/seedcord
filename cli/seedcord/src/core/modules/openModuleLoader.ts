@@ -62,6 +62,8 @@ export async function openModuleLoader(
     const resources = onFailure.move();
     return {
         importModule: loader.importModule.bind(loader),
+        importPackage: loader.importPackage.bind(loader),
+        evaluated: loader.evaluated.bind(loader),
         [Symbol.asyncDispose]: () => resources.disposeAsync()
     };
 }

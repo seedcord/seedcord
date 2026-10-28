@@ -7,6 +7,7 @@ import type Bot from './bot';
 declare module '@seedcord/gateway' {
     interface Core {
         db: (typeof Bot)['db'];
+        i18n: (typeof Bot)['i18n'];
     }
     interface SlashRegistry {
         defernotice: { options: {}; cache: 'cached' };
@@ -28,6 +29,10 @@ declare module '@seedcord/gateway' {
     interface EmojiMap {
         Cancel: 'application';
         Confirm: 'application';
+    }
+    interface PluginTypes {
+        '@seedcord/plugin-mongoose': { services: { users: (typeof import('./services/Users'))['Users'] } };
+        'mock-i18n': { messages: { goodbye: []; greet: ['name']; transfer: ['from', 'amount', 'to'] } };
     }
 }
 

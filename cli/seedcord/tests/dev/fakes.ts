@@ -1,6 +1,7 @@
 import { HostAugmentTarget, HostShutdown, HostStartup, HostVersion, SeedcordBrand } from '@seedcord/types/internal';
 
 import { InstanceLifecycle } from '#commands/dev/runtime/InstanceLifecycle';
+import { emptyModuleGraph } from '#tests/emptyModuleGraph';
 
 import type { DevRuntime } from '#commands/dev/runtime/DevRuntime';
 import type { DevEvent, DevEventHandler } from '#commands/dev/runtime/events';
@@ -34,6 +35,7 @@ export function fakeRuntime(module: unknown, emit?: DevEvent): DevRuntime {
         },
         stop: () => lifecycle.stop(),
         importModule: () => Promise.reject(new Error('the fake runtime loads no files')),
+        ...emptyModuleGraph,
         refreshCommands: () => undefined
     };
 }

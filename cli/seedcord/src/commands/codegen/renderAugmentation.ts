@@ -1,3 +1,5 @@
+import { splitPluginKey } from '@seedcord/core/internal';
+
 import type { EmojiKinds, Augmentation, ContextMenuTables, RouteOptions, SlashTables } from './AugmentationBuilder';
 import type { SlashOption, SlashRouteEntry } from '@seedcord/core/internal';
 
@@ -10,9 +12,15 @@ const IDENTIFIER = /^[A-Za-z_$][A-Za-z0-9_$]*$/;
 const CONTROL_CHAR = 0x20;
 const HEX_RADIX = 16;
 
+type PluginId = string;
+type TypeSource = string;
+
+export type PluginTypeTable = ReadonlyMap<PluginId, TypeSource>;
+
 interface AttachedPlugins {
     readonly specifier: string; // relative to the generated file at config.root
     readonly keys: readonly string[];
+    readonly types?: PluginTypeTable;
 }
 
 export function renderAugmentation(registry: Augmentation, target: string, plugins?: AttachedPlugins): string {
@@ -20,6 +28,8 @@ export function renderAugmentation(registry: Augmentation, target: string, plugi
     const attached = plugins !== undefined && keys.length > 0;
     const botImport = attached ? `import type ${BOT_BINDING} from '${escapeLiteral(plugins.specifier)}';\n\n` : '';
     const coreRows = attached ? `    interface Core {\n${renderPluginRows(keys)}\n    }\n` : '';
+    const types = plugins?.types;
+    const typeRows = types?.size ? `    interface PluginTypes {\n${renderPluginTypeRows(types)}\n    }\n` : '';
 
     // prettier-ignore binds to the next statement, and the declare module is the whole file
     const header = `${BANNER}\n\n${botImport}// prettier-ignore\ndeclare module '${target}' {\n`;
@@ -28,27 +38,27 @@ export function renderAugmentation(registry: Augmentation, target: string, plugi
         `${header + coreRows}    interface SlashRegistry {\n${renderSlashRows(registry.slash)}\n    }\n` +
         `    interface UserContextMenuRegistry {\n${renderContextMenuRows(registry.userContextMenus)}\n    }\n` +
         `    interface MessageContextMenuRegistry {\n${renderContextMenuRows(registry.messageContextMenus)}\n    }\n` +
-        `    interface EmojiMap {\n${renderEmojiRows(registry.emojis)}\n    }\n` +
+        `    interface EmojiMap {\n${renderEmojiRows(registry.emojis)}\n    }\n${typeRows}` +
         `}\n\nexport {};\n`
     );
 }
 
 // Core declares one member per group
 function groupNames(keys: readonly string[]): string[] {
-    return [
-        ...new Set(
-            keys.map((key) => {
-                const dot = key.indexOf('.');
-                return dot === -1 ? key : key.slice(0, dot);
-            })
-        )
-    ];
+    return [...new Set(keys.map((key) => splitPluginKey(key).head))];
 }
 
 // the indexed access defers resolution. an `extends Pick<typeof Bot, ...>` clause resolves while the bot
 // constant is still being inferred, and a plugin ctor naming Core closes that loop (TS7022).
 function renderPluginRows(keys: readonly string[]): string {
     return keys.map((key) => `        ${renderKey(key)}: (typeof ${BOT_BINDING})['${escapeLiteral(key)}'];`).join('\n');
+}
+
+function renderPluginTypeRows(types: PluginTypeTable): string {
+    return [...types]
+        .toSorted(([first], [second]) => compare(first, second))
+        .map(([id, type]) => `        ${renderKey(id)}: ${type};`)
+        .join('\n');
 }
 
 function renderSlashRows(tables: SlashTables): string {
@@ -103,11 +113,11 @@ function renderChoice(value: string | number): string {
 }
 
 // discord allows spaces and apostrophes in a context-menu name
-function renderKey(name: string): string {
+export function renderKey(name: string): string {
     return IDENTIFIER.test(name) ? name : `'${escapeLiteral(name)}'`;
 }
 
-function escapeLiteral(value: string): string {
+export function escapeLiteral(value: string): string {
     let escaped = '';
     for (const char of value) {
         const code = char.charCodeAt(0);
@@ -141,7 +151,7 @@ function escapeLiteral(value: string): string {
     return escaped;
 }
 
-function compare(first: string, second: string): number {
+export function compare(first: string, second: string): number {
     if (first < second) return -1;
     return first > second ? 1 : 0;
 }

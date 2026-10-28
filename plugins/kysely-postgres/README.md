@@ -80,11 +80,7 @@ declare module '@seedcord/plugin-kysely-postgres' {
     interface KyselyDatabase {
         schema: Database;
     }
-
-    interface KyselyServices {
-        users: Users;
-    }
 }
 ```
 
-A handler then calls `await this.core.sql.services.users.findByUserId(this.event.user.id)`. The [Kysely guide](https://seedcord.org/guide/plugins/kysely) covers the options, the schema, services, and migrations.
+Run `seedcord codegen` after you add or rename a service. It adds the service's key to `KyselyServices`, the type behind the decorator and `core.sql.services`. A handler then calls `await this.core.sql.services.users.findByUserId(this.event.user.id)`. The [Kysely guide](https://seedcord.org/guide/plugins/kysely) covers the options, the schema, services, and migrations.

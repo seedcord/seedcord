@@ -16,6 +16,7 @@ import type { MongooseServices } from './types/MongooseServices';
 import type { CoreBase } from '@seedcord/core';
 import type { HmrUpdateEvent } from '@seedcord/types';
 import type { Mongoose as MongooseInstance } from 'mongoose';
+import type { Constructor } from 'type-fest';
 
 export interface MongooseArtifact {
     key?: string;
@@ -29,6 +30,8 @@ export interface MongooseArtifact {
  * access to database services through service registration decorators.
  */
 export class Mongoose extends Plugin<{ transport: 'any'; runtime: 'server' }> {
+    public static readonly id = '@seedcord/plugin-mongoose';
+
     private isInitialised = false;
     private servicesReady = false;
     private inFlight: Promise<void> | null = null;
@@ -100,6 +103,12 @@ export class Mongoose extends Plugin<{ transport: 'any'; runtime: 'server' }> {
 
     public override async dispose(): Promise<void> {
         await this.disconnect();
+    }
+
+    // Generated checks every service class against this. Each one has its own document type.
+    public override async codegen(): Promise<{ services: Record<string, Constructor<object>> }> {
+        const found = await Array.fromAsync(this.serviceRegistry.serviceClassesIn(this.options.dir));
+        return { services: Object.fromEntries(found.map(({ key, Service }) => [key, Service])) };
     }
 
     private async connect(): Promise<void> {

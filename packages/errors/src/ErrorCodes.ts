@@ -303,6 +303,14 @@ export enum SeedcordErrorCode {
     CliDevAlreadyRunning = 3141,
     /** The folder that holds the dev session locks belongs to another user. */
     CliDevLockFolderNotOwned = 3142,
+    /** A plugin's `codegen()` threw. */
+    CliPluginCodegenThrew = 3143,
+    /** A plugin class with a `codegen()` is missing its `static readonly id`. */
+    CliPluginCodegenNoId = 3144,
+    /** A plugin's `codegen()` returned a value that codegen can't write as a type. */
+    CliPluginCodegenValue = 3145,
+    /** Two attachments of one plugin class returned different values at one key from `codegen()`. */
+    CliPluginCodegenConflict = 3146,
 
     /** A flag answers a question that the earlier answers skip. */
     CreateFlagNotApplicable = 3201,

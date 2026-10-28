@@ -13,6 +13,7 @@ import { onTestFinished, vi } from 'vitest';
 import { Project } from '#core/project/Project';
 import { realPath } from '#core/project/realPath';
 import { StateFolder } from '#core/state/StateFolder';
+import { emptyModuleGraph } from '#tests/emptyModuleGraph';
 import { loadedConfig } from '#tests/loadedConfig';
 import { silentLogger } from '#tests/silentLogger';
 import { vitePluginsOf } from '#tests/vitePluginsOf';
@@ -142,6 +143,7 @@ function moduleLoader(byPath: ReadonlyMap<string, Record<string, unknown>>): Mod
             if (closed) throw new Error('the module runner closed during the import');
             return byPath.get(path) ?? {};
         },
+        ...emptyModuleGraph,
         [Symbol.asyncDispose]: () => {
             closed = true;
             return Promise.resolve();

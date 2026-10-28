@@ -2,11 +2,11 @@ import { existsSync } from 'node:fs';
 
 import { SeedcordErrorCode } from '@seedcord/errors';
 import { SeedcordError } from '@seedcord/errors/internal';
-import { importFailed } from '@seedcord/utils/internal';
+import { importFailed, isPlainObject } from '@seedcord/utils/internal';
 
 import { ENV_BOOTSTRAP_ID } from './envBootstrap';
 
-import type { ModuleLoader } from './ModuleLoader';
+import type { EvaluatedModule, ModuleLoader } from './ModuleLoader';
 import type { bindViteEnv } from '@seedcord/core/internal/env';
 import type { ModuleRunner } from 'vite/module-runner';
 
@@ -26,6 +26,19 @@ export class RunnerModuleLoader implements ModuleLoader, AsyncDisposable {
         if (!existsSync(path))
             throw new SeedcordError(SeedcordErrorCode.CoreImportFailed, [path, 'The file does not exist.']);
         return this.load<TModule>(path, path);
+    }
+
+    public importPackage(name: string): Promise<Record<string, unknown>> {
+        return this.load<Record<string, unknown>>(name, name);
+    }
+
+    public evaluated(): readonly EvaluatedModule[] {
+        return this.runner.evaluatedModules.idToModuleMap
+            .values()
+            .flatMap(({ id, file, exports, imports }) =>
+                file && isPlainObject(exports) ? [{ id, file, exports, imports }] : []
+            )
+            .toArray();
     }
 
     public async bindEnv(): Promise<void> {

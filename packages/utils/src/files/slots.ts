@@ -19,12 +19,12 @@ export interface BuiltSlot extends BotLayoutData {
     sourcePaths?: boolean;
 }
 
-// server dev reads the files off disk
-export interface DevSlot extends BotLayoutData {
-    kind: 'dev';
+// the CLI reads the source files off disk. dev runs the bot, every other command only imports it
+export interface SourceSlot extends BotLayoutData {
+    kind: 'dev' | 'cli';
 }
 
-type BotFilesSlot = BuiltSlot | DevSlot;
+type BotFilesSlot = BuiltSlot | SourceSlot;
 
 // dev writes this from the CLI's copy of this module. the generated entry writes it without importing seedcord
 export const BOT_FILES_KEY = 'seedcord:utils:bot-files';
@@ -63,8 +63,12 @@ function writeSlot(slot: BotFilesSlot): Disposable {
     return { [Symbol.dispose]: () => Reflect.deleteProperty(globalThis, key) };
 }
 
-export function setDevFiles(dev: Omit<DevSlot, 'kind'>): Disposable {
+export function setDevFiles(dev: BotLayoutData): Disposable {
     return writeSlot({ kind: 'dev', ...dev });
+}
+
+export function setCliFiles(source: BotLayoutData): Disposable {
+    return writeSlot({ kind: 'cli', ...source });
 }
 
 // the generated entry writes the same object without importing seedcord

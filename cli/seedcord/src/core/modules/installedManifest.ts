@@ -1,5 +1,12 @@
-import { existsSync, realpathSync } from 'node:fs';
+import { existsSync, readFileSync, realpathSync } from 'node:fs';
 import { dirname, join } from 'node:path';
+
+import { isPlainObject } from '@seedcord/utils/internal';
+
+export function readManifest(manifestPath: string): Record<string, unknown> | undefined {
+    const manifest: unknown = existsSync(manifestPath) ? JSON.parse(readFileSync(manifestPath, 'utf8')) : undefined;
+    return isPlainObject(manifest) ? manifest : undefined;
+}
 
 // bun doesn't have findPackageJSON
 export function installedManifest(name: string, fromDir: string): string | undefined {

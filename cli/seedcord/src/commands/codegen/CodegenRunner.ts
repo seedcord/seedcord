@@ -17,6 +17,7 @@ import { printResolvedConfig } from '#core/output/printResolvedConfig';
 import { startupShell } from '#src/core/ShellMode';
 
 import { AugmentationBuilder } from './AugmentationBuilder';
+import { PluginTypesCollector } from './PluginTypesCollector';
 import { renderAugmentation } from './renderAugmentation';
 
 import type { ProjectOpener } from '#core/config/openProjectWithSteps';
@@ -25,6 +26,7 @@ import type { ModuleLoader } from '#core/modules/ModuleLoader';
 import type { Steps } from '#core/output/Steps';
 import type { ProjectFiles } from '#core/project/ProjectFiles';
 import type { ScannedCommand } from './AugmentationBuilder';
+import type { PluginTypeTable } from './renderAugmentation';
 import type { ILogger } from '@seedcord/types';
 
 const OUTPUT_FILENAME = 'seedcord-gen.d.ts';
@@ -41,6 +43,7 @@ export const CODEGEN_STEPS = [
     'load plugins',
     'load bot',
     'scan commands',
+    'run plugin codegen',
     'write types',
     'compare types'
 ] as const;
@@ -95,8 +98,12 @@ export class CodegenRunner {
             (found) => paint.mute(plural(found.length, 'command'))
         );
 
+        const types = await steps.step('run plugin codegen', () =>
+            PluginTypesCollector.collect(instance, modules, config.root)
+        );
+
         const outputPath = resolve(config.root, OUTPUT_FILENAME);
-        const render = (): string => this.render(config, instance, commands);
+        const render = (): string => this.render(config, instance, commands, types);
         if (check) {
             await steps.step('compare types', () => this.check(render(), outputPath));
             return { outputPath, changed: false };
@@ -106,11 +113,17 @@ export class CodegenRunner {
         return { outputPath, changed };
     }
 
-    private render(config: ResolvedSeedcordConfig, instance: SeedcordInstance, commands: ScannedCommand[]): string {
+    private render(
+        config: ResolvedSeedcordConfig,
+        instance: SeedcordInstance,
+        commands: ScannedCommand[],
+        types: PluginTypeTable
+    ): string {
         const emojis = instance.config.bot.emojis ?? {};
         return renderAugmentation(this.deps.generator.generate(commands, emojis), instance[HostAugmentTarget], {
             specifier: importSpecifier(config.root, config.instance),
-            keys: instance[HostPluginKeys]
+            keys: instance[HostPluginKeys],
+            types
         });
     }
 

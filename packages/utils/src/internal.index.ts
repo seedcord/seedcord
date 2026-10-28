@@ -10,6 +10,7 @@ export {
     runsUnderSeedcordDev,
     setBuiltFiles,
     setBuiltFilesHook,
+    setCliFiles,
     setDevFiles
 } from './files/slots';
 export { botFolder } from './files/sources';
