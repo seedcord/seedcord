@@ -81,6 +81,7 @@ export class Ping extends SlashHandler<'ping'> {
 - A dev terminal that shows startup phases and reply timings
 - `seedcord commands` to deploy, list, and clean up your commands on Discord
 - `seedcord codegen --check` for CI
+- `seedcord make` to write new files from your own templates
 - ESLint rules for seedcord and discord.js mistakes
 
 **Runtime**

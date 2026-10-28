@@ -34,6 +34,7 @@ interface BrandPalette {
     property: string;
     operator: string;
     punctuation: string;
+    placeholder: string;
 }
 
 interface BrandThemeSetting {
@@ -81,7 +82,11 @@ function buildSettings(p: BrandPalette): BrandThemeSetting[] {
             settings: { foreground: p.keyword }
         },
         { scope: ['keyword.operator'], settings: { foreground: p.operator } },
-        { scope: ['entity.name.type', 'support.type'], settings: { foreground: p.type, fontStyle: 'italic' } },
+        {
+            // the ts grammar scopes the class in `new Foo()` as a function call
+            scope: ['entity.name.type', 'support.type', 'new.expr meta.function-call entity.name.function'],
+            settings: { foreground: p.type, fontStyle: 'italic' }
+        },
         {
             scope: [
                 'entity.name.class',
@@ -126,7 +131,9 @@ function buildSettings(p: BrandPalette): BrandThemeSetting[] {
         {
             scope: ['meta.type variable.other'],
             settings: { foreground: p.type, fontStyle: 'italic' }
-        }
+        },
+        { scope: ['meta.mustache.hbs'], settings: { foreground: p.placeholder } },
+        { scope: ['meta.mustache.hbs variable.other'], settings: { foreground: p.placeholder, fontStyle: 'italic' } }
     ];
 }
 
@@ -145,7 +152,8 @@ function palette(mode: ThemeMode): BrandPalette {
         variable: HUES.linen[mode],
         property: HUES.tan[mode],
         operator: HUES.clay[mode],
-        punctuation: HUES.husk[mode]
+        punctuation: HUES.husk[mode],
+        placeholder: HUES.amber[mode]
     };
 }
 

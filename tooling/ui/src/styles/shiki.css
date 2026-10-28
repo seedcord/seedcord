@@ -1,3 +1,16 @@
+/* light-dark() only carries the color. shiki writes each theme's italic and bold as custom properties */
+.shiki span,
+.shiki-inline span {
+    font-style: var(--shiki-light-font-style, inherit);
+    font-weight: var(--shiki-light-font-weight, inherit);
+}
+
+[data-theme='dark'] .shiki span,
+[data-theme='dark'] .shiki-inline span {
+    font-style: var(--shiki-dark-font-style, inherit);
+    font-weight: var(--shiki-dark-font-weight, inherit);
+}
+
 /* a browser without light-dark() drops the whole color declaration, taking the highlighting with it.
  * shiki writes these custom properties alongside for exactly that case. */
 @supports not (color: light-dark(red, blue)) {
