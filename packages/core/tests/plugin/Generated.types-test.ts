@@ -53,8 +53,8 @@ declare module '#src/plugin/Generated' {
 
 expectTypeOf<Generated<typeof NotGenerated>>().toEqualTypeOf<{ names: Record<string, true> }>();
 expectTypeOf<keyof Generated<typeof Generates>['names']>().toEqualTypeOf<'DailyDigest' | 'Heartbeat'>();
-expectTypeOf<keyof Generated<typeof Stale>>().toExtend<`${string}Run seedcord codegen.${string}`>();
-expectTypeOf<keyof Generated<typeof WideId>>().toExtend<`${string}static readonly id${string}`>();
+expectTypeOf<Generated<typeof Stale>['names']>().toExtend<`${string}Run seedcord codegen.${string}`>();
+expectTypeOf<Generated<typeof WideId>['names']>().toExtend<`${string}static readonly id${string}`>();
 // @ts-expect-error a class without a static id
 expectTypeOf<Generated<typeof NoId>>();
 

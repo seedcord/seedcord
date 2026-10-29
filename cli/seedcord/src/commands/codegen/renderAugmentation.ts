@@ -12,15 +12,12 @@ const IDENTIFIER = /^[A-Za-z_$][A-Za-z0-9_$]*$/;
 const CONTROL_CHAR = 0x20;
 const HEX_RADIX = 16;
 
-type PluginId = string;
-type TypeSource = string;
-
-export type PluginTypeTable = ReadonlyMap<PluginId, TypeSource>;
+export type PluginTypeTable = ReadonlyMap<string, string>;
 
 interface AttachedPlugins {
     readonly specifier: string; // relative to the generated file at config.root
     readonly keys: readonly string[];
-    readonly types?: PluginTypeTable;
+    readonly types: PluginTypeTable;
 }
 
 export function renderAugmentation(registry: Augmentation, target: string, plugins?: AttachedPlugins): string {

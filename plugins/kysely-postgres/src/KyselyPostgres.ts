@@ -136,7 +136,6 @@ export class KyselyPostgres extends Plugin<{ transport: 'any'; runtime: 'server'
         await this.disconnect();
     }
 
-    // every service class fits this, whatever table it reads
     public override async codegen(): Promise<{ services: Record<string, Constructor<object>> }> {
         const found = await Array.fromAsync(this.serviceRegistry.serviceClassesIn(this.options.dir));
         return { services: Object.fromEntries(found.map(({ key, Service }) => [key, Service])) };

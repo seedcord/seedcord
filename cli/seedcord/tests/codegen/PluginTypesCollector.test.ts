@@ -99,7 +99,9 @@ describe('PluginTypesCollector', () => {
         class Bad {
             public static readonly id = 'bad';
             public codegen(): Promise<unknown> {
-                return Promise.resolve({ when: new Date(0), fn: () => 1, n: Number.NaN, big: 1n });
+                // justified: Object.create(null) always returns an object
+                const bare: unknown = Object.create(Object.create(null) as object);
+                return Promise.resolve({ when: new Date(0), fn: () => 1, n: Number.NaN, big: 1n, bare });
             }
         }
         class Throws {
@@ -121,6 +123,7 @@ describe('PluginTypesCollector', () => {
         expect(caught.errors.map((error) => (isSeedcordError(error) ? error.code : undefined))).toEqual([
             SeedcordErrorCode.CliPluginCodegenThrew,
             SeedcordErrorCode.CliPluginCodegenNoId,
+            SeedcordErrorCode.CliPluginCodegenValue,
             SeedcordErrorCode.CliPluginCodegenValue,
             SeedcordErrorCode.CliPluginCodegenValue,
             SeedcordErrorCode.CliPluginCodegenValue,

@@ -42,7 +42,7 @@ describe('ObjectConsoleSink', () => {
         new ObjectConsoleSink().onLog(record({ message: 'list', args: [[1, 2, 3], new Date(0), new Point(4)] }));
 
         const payload = cap.payload();
-        expect(payload.args).toHaveLength(3);
+        expect(payload.args).toEqual([[1, 2, 3], '1970-01-01T00:00:00.000Z', { x: 4 }]);
         expect(payload.x).toBeUndefined();
     });
 

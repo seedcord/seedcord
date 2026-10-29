@@ -118,7 +118,7 @@ Before codegen first runs in a bot, [`Generated`](ref:core/Generated) falls back
 
 <Callout type="warning">
 
-Tell your users in your README to run `seedcord codegen` after they add a message, and after they upgrade to a release of your plugin that changes what `codegen()` returns. Until they do, a new key fails to compile, and after such an upgrade `Generated` becomes an error message asking them to run it.
+Tell your users in your README to run `seedcord codegen` after they add a message, and after they upgrade to a release of your plugin that changes what `codegen()` returns. Until they do, a new key fails to compile. After such an upgrade, each field they read through your types turns into a message asking them to run it.
 
 </Callout>
 
@@ -344,7 +344,7 @@ interface PluginTypes {
 
 Rows in the bot's file share one list, keyed by your plugin's id. You declare the id on the class because your package reads its own row with `Generated<typeof Locales>` when it builds, before any bot has picked an attach key. Use your package's name, like `'seedcord-locales'` here, so no other plugin writes the same key.
 
-Write it `static readonly`. Without `readonly`, TypeScript types the id as `string`, and `Generated` turns into a message saying to add it.
+Write it `static readonly`. Without `readonly`, TypeScript types the id as `string`, and each field of `Generated` turns into a message saying to add it.
 
 A bot can attach your plugin under two keys, like two `Locales` for two folders. Both share the one row, so codegen merges what the two `codegen()` calls returned, key by key. Two folders that hold the same key have to return the same value for it.
 

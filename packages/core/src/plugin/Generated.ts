@@ -22,6 +22,11 @@ type IdNotLiteral = "This plugin's id is a plain string. Declare it as static re
 type Stale =
     "What seedcord codegen wrote for this plugin doesn't fit its codegen() return type. Run seedcord codegen. If this stays, widen that return type.";
 
+// a plugin's published .d.ts indexes one field. skipLibCheck turns a missing field there into any
+type FieldsSetTo<PluginClass extends CodegenPluginClass, Message> = {
+    [Field in keyof CodegenResultOf<PluginClass>]: Message;
+};
+
 // skipLibCheck skips seedcord-gen.d.ts. Generated is the only check of its rows against codegen()'s return type.
 /**
  * The data that `codegen()` returned for a plugin class, merged across every attachment of it.
@@ -29,9 +34,9 @@ type Stale =
  */
 export type Generated<PluginClass extends CodegenPluginClass> =
     IsStringLiteral<PluginClass['id']> extends false
-        ? Record<IdNotLiteral, never>
+        ? FieldsSetTo<PluginClass, IdNotLiteral>
         : PluginClass['id'] extends keyof PluginTypes
           ? PluginTypes[PluginClass['id']] extends CodegenResultOf<PluginClass>
               ? PluginTypes[PluginClass['id']]
-              : Record<Stale, never>
+              : FieldsSetTo<PluginClass, Stale>
           : CodegenResultOf<PluginClass>;

@@ -82,7 +82,7 @@ With `modelName: 'app_user'`, mongoose reads the `app_users` collection, while y
 
 ## Typing the registry
 
-The plugin finds your services by importing `dir` when the bot starts, and TypeScript only reads your source. Typing each key by hand means a `declare module` entry per service, which you keep in step with the decorator yourself.
+The plugin finds your services by importing `dir` when the bot starts, but TypeScript only reads your source. Typing each key by hand means a `declare module` entry per service, which you keep in step with the decorator yourself.
 
 [`seedcord codegen`](/plugins/typing) imports `dir` the same way and writes each key it finds into `src/seedcord-gen.d.ts`. After that, `services.users` is typed as your `Users` service, and the decorator offers the keys codegen found. With a `users` and a `guilds` service, it offers both:
 

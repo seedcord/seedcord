@@ -75,9 +75,8 @@ export class PluginTypesCollector {
         try {
             this.store(Class.id, { Class, key, data: await plugin.codegen() });
         } catch (caught) {
-            const error = asError(caught);
             this.problems.push(
-                new SeedcordError(SeedcordErrorCode.CliPluginCodegenThrew, [Class.name, key, error.message], {
+                new SeedcordError(SeedcordErrorCode.CliPluginCodegenThrew, [Class.name, key, asError(caught).message], {
                     cause: caught
                 })
             );
@@ -93,7 +92,10 @@ export class PluginTypesCollector {
             existing.data = this.merge(existing.data, entry.data, '', attachments);
         } else {
             const sources = [existing, entry].map(({ Class, key }) => `${paint.sky(Class.name)} at ${paint.sky(key)}`);
-            this.problems.push(new SeedcordError(SeedcordErrorCode.CoreDuplicateName, ['plugin id', id, sources]));
+            const note = `A subclass inherits its parent's id, so give it its own ${paint.bold('static readonly id')}.`;
+            this.problems.push(
+                new SeedcordError(SeedcordErrorCode.CoreDuplicateName, ['plugin id', id, sources, note])
+            );
         }
     }
 
@@ -214,7 +216,10 @@ function literalOf(value: unknown): string | undefined {
 
 function describeValue(value: unknown): string {
     if (typeof value === 'function') return `the function ${value.name || '(anonymous)'}`;
-    if (isReferable(value)) return `a ${value.constructor.name}`;
+    if (isReferable(value)) {
+        const Class: unknown = Reflect.get(value, 'constructor');
+        return typeof Class === 'function' ? `a ${Class.name}` : 'an object with no class';
+    }
     if (typeof value === 'bigint' || typeof value === 'symbol') return `a ${typeof value}`;
     return String(value);
 }

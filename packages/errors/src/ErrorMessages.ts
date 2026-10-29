@@ -108,7 +108,7 @@ const messages = {
     [SeedcordErrorCode.CorePathOutsideRoot]: (path: string, root: string) =>
         `${paint.path(path)} is outside ${paint.bold('root')} (${paint.path(root)}). ${paint.bold('seedcord build')} bundles only the files under ${paint.bold('root')}. Move it under ${paint.bold('root')}, or set ${paint.bold('root')} in seedcord.config.ts to a folder that holds it.`,
     [SeedcordErrorCode.CoreDirectoryRootUnknown]: (dir: string) =>
-        `${paint.path(dir)} is relative to ${paint.bold('root')}, but nothing set ${paint.bold('root')} in this process. The ${paint.bold('seedcord')} CLI sets it, and a plain script or a test doesn't. Pass an absolute path there, like ${paint.sky(`resolve(import.meta.dirname, '${dir}')`)}.`,
+        `${paint.path(dir)} is relative to ${paint.bold('root')}, but nothing set ${paint.bold('root')} in this process. The ${paint.bold('seedcord')} CLI sets it, but a plain script or a test doesn't. Pass an absolute path there, like ${paint.sky(`resolve(import.meta.dirname, '${dir}')`)}.`,
     [SeedcordErrorCode.CoreDirectoryNotBuilt]: (dir: string, root: string) =>
         `${paint.path(dir)} was not a folder under ${paint.bold('root')} (${paint.path(root)}) or in ${paint.bold('files')} when ${paint.bold('seedcord build')} ran, so the build holds none of its files. Create the folder, then build again.`,
     [SeedcordErrorCode.CoreDirectoryNotListed]: (dir: string) =>
