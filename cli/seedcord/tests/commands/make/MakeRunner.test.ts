@@ -4,6 +4,7 @@ import { join } from 'node:path';
 import { KEY, PromptTerminal, settled } from '@seedcord/cli-prompts/testing';
 import { paint, SeedcordErrorCode } from '@seedcord/errors';
 import { HostAugmentTarget } from '@seedcord/types/internal';
+import { toPosixPath } from '@seedcord/utils/internal';
 import { describe, expect, it } from 'vitest';
 
 import { MAKE_STEPS, MakeRunner } from '#commands/make/MakeRunner';
@@ -69,7 +70,7 @@ describe('MakeRunner', () => {
         expect(screen).toContain(`${paint.check} name  appeal`);
         expect(screen).toContain(`${paint.check} label  Appeal now`);
         expect(screen).toContain('write                T  1 file\n      │ ');
-        expect(screen.replaceAll('\n', '')).toContain(join(projectDir, 'src/handlers/Appeal.ts'));
+        expect(screen.replaceAll('\n', '')).toContain(toPosixPath(join(projectDir, 'src/handlers/Appeal.ts')));
         expect(screen).toContain('Run seedcord codegen, or keep seedcord dev running, to type new routes.');
     });
 
@@ -135,7 +136,7 @@ describe('MakeRunner', () => {
 
         await expect(make(terminal, projectDir)).rejects.toMatchObject({
             code: SeedcordErrorCode.MakeNoTemplates,
-            message: expect.stringContaining(join(projectDir, 'templates')) as string
+            message: expect.stringContaining(toPosixPath(join(projectDir, 'templates'))) as string
         });
     });
 
@@ -182,7 +183,10 @@ describe('MakeRunner', () => {
 
         await terminal.press(KEY.enter);
         await terminal.press(rejected, KEY.enter);
-        await settled(async () => expect(await terminal.screen()).toContain(message));
+        await settled(async () => {
+            const screen = await terminal.screen();
+            expect(screen.replaceAll(/\s+/g, ' ')).toContain(message);
+        });
         await terminal.press(...rejected.split('').map(() => KEY.backspace), 'roll dice', KEY.enter);
         await done;
 
