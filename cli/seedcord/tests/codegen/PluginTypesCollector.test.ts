@@ -1,11 +1,12 @@
 import { realpathSync } from 'node:fs';
 import { mkdir, mkdtempDisposable, writeFile } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
-import { join } from 'node:path';
+import { join, resolve } from 'node:path';
 import { stripVTControlCharacters } from 'node:util';
 
 import { isSeedcordError, SeedcordErrorCode } from '@seedcord/errors';
 import { HostPluginKeys } from '@seedcord/types/internal';
+import { toPosixPath } from '@seedcord/utils/internal';
 import { assert, describe, expect, it } from 'vitest';
 
 import { PluginTypesCollector } from '#commands/codegen/PluginTypesCollector';
@@ -13,7 +14,7 @@ import { PluginTypesCollector } from '#commands/codegen/PluginTypesCollector';
 import type { EvaluatedModule, ModuleLoader } from '#core/modules/ModuleLoader';
 import type { SeedcordInstance } from '@seedcord/types/internal';
 
-const ROOT = '/bot/src';
+const ROOT = resolve('/bot/src');
 
 class Users {
     public readonly table = 'users';
@@ -34,8 +35,11 @@ function growingLoader(): GrowingLoader {
             evaluated: () => evaluated,
             importPackage: (name) => Promise.resolve(packages.get(name) ?? {})
         },
+        // vite's runner stores forward slashes on windows too
         load: (file, exports, imports = []) => {
-            evaluated.push({ id: file, file, exports: { ...exports }, imports: new Set(imports) });
+            const posix = toPosixPath(file);
+            const posixImports = imports.map(toPosixPath);
+            evaluated.push({ id: posix, file: posix, exports: { ...exports }, imports: new Set(posixImports) });
         },
         publish: (name, exports) => {
             packages.set(name, exports);
@@ -51,12 +55,12 @@ function botWith(plugins: Record<string, object>): SeedcordInstance {
 describe('PluginTypesCollector', () => {
     it('points at the file that defines a class codegen() loaded, past a barrel that re-exports it', async () => {
         const { modules, load } = growingLoader();
-        const defining = join(ROOT, 'services/Users.ts');
+        const defining = join(ROOT, "tony's/Users.ts");
         const labels = ['a', 1, true, null];
         class Services {
             public static readonly id = 'services';
             public codegen(): Promise<unknown> {
-                load(join(ROOT, 'services/All.ts'), { Users }, [defining]);
+                load(join(ROOT, "tony's/All.ts"), { Users }, [defining]);
                 load(defining, { Users, labels });
                 return Promise.resolve({ services: { users: Users }, labels });
             }
@@ -65,7 +69,7 @@ describe('PluginTypesCollector', () => {
         const types = await PluginTypesCollector.collect(botWith({ db: new Services() }), modules, ROOT);
 
         expect(types.get('services')).toBe(
-            "{ labels: ['a', 1, true, null]; services: { users: (typeof import('./services/Users'))['Users'] } }"
+            String.raw`{ labels: ['a', 1, true, null]; services: { users: (typeof import('./tony\'s/Users'))['Users'] } }`
         );
     });
 
@@ -101,7 +105,9 @@ describe('PluginTypesCollector', () => {
             public codegen(): Promise<unknown> {
                 // justified: Object.create(null) always returns an object
                 const bare: unknown = Object.create(Object.create(null) as object);
-                return Promise.resolve({ when: new Date(0), fn: () => 1, n: Number.NaN, big: 1n, bare });
+                const loop: Record<string, unknown> = {};
+                loop.self = loop;
+                return Promise.resolve({ when: new Date(0), fn: () => 1, n: Number.NaN, big: 1n, bare, loop });
             }
         }
         class Throws {
@@ -123,6 +129,7 @@ describe('PluginTypesCollector', () => {
         expect(caught.errors.map((error) => (isSeedcordError(error) ? error.code : undefined))).toEqual([
             SeedcordErrorCode.CliPluginCodegenThrew,
             SeedcordErrorCode.CliPluginCodegenNoId,
+            SeedcordErrorCode.CliPluginCodegenValue,
             SeedcordErrorCode.CliPluginCodegenValue,
             SeedcordErrorCode.CliPluginCodegenValue,
             SeedcordErrorCode.CliPluginCodegenValue,
@@ -163,6 +170,18 @@ describe('PluginTypesCollector', () => {
             "{ tasks: { constructor: 'nightly'; digest: 'daily'; steps: [{ run: 'send' }] } }"
         );
         await expect(clash).rejects.toMatchObject({ code: SeedcordErrorCode.CliPluginCodegenConflict });
+
+        const loop = (): Record<string, unknown> => {
+            const tasks: Record<string, unknown> = {};
+            tasks.self = tasks;
+            return tasks;
+        };
+        const cycles = PluginTypesCollector.collect(
+            botWith({ cron: new Cron(loop()), admin: new Cron(loop()) }),
+            modules,
+            ROOT
+        );
+        await expect(cycles).rejects.toMatchObject({ code: SeedcordErrorCode.CliPluginCodegenValue });
     });
 
     it('reads a plugin attached inside a group', async () => {

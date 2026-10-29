@@ -1,11 +1,11 @@
-import { dirname, join, sep } from 'node:path';
+import { dirname, join, relative, sep } from 'node:path';
 import { isDeepStrictEqual } from 'node:util';
 
 import { splitPluginKey } from '@seedcord/core/internal';
 import { paint, SeedcordErrorCode } from '@seedcord/errors';
 import { SeedcordError, SeedcordTypeError, throwSingleOrAggregate } from '@seedcord/errors/internal';
 import { HostPluginKeys, type SeedcordInstance } from '@seedcord/types/internal';
-import { asError, importSpecifier, isPlainObject } from '@seedcord/utils/internal';
+import { asError, importSpecifier, isInside, isPlainObject } from '@seedcord/utils/internal';
 
 import { readManifest } from '#core/modules/installedManifest';
 import { isReferable, ModuleExports } from '#core/modules/ModuleExports';
@@ -99,14 +99,24 @@ export class PluginTypesCollector {
         }
     }
 
-    private merge(existing: unknown, incoming: unknown, path: string, attachments: MergingAttachments): unknown {
+    // stops at a cycle and leaves render to report it
+    private merge(
+        existing: unknown,
+        incoming: unknown,
+        path: string,
+        attachments: MergingAttachments,
+        above: ReadonlySet<object> = new Set()
+    ): unknown {
         if (isPlainObject(existing) && isPlainObject(incoming)) {
+            if (above.has(existing)) return existing;
+            const inside = new Set(above).add(existing);
             const names = new Set([...Object.keys(existing), ...Object.keys(incoming)]);
             return Object.fromEntries(
                 names.values().map((name) => {
                     if (!Object.hasOwn(existing, name)) return [name, incoming[name]];
                     if (!Object.hasOwn(incoming, name)) return [name, existing[name]];
-                    return [name, this.merge(existing[name], incoming[name], joinPath(path, name), attachments)];
+                    const at = joinPath(path, name);
+                    return [name, this.merge(existing[name], incoming[name], at, attachments, inside)];
                 })
             );
         }
@@ -148,8 +158,9 @@ class ExportIndex {
         problems: Error[]
     ): Promise<ExportIndex> {
         const evaluated = modules.evaluated();
+        // vite writes module files with forward slashes on windows too
         const inProject = (file: string): boolean =>
-            file.startsWith(root + sep) && !file.includes(`${sep}node_modules${sep}`);
+            isInside(root, file) && !relative(root, file).split(sep).includes('node_modules');
         const project = new ModuleExports(evaluated.filter(({ file }) => inProject(file)));
         const installed = new ModuleExports(evaluated.filter(({ file }) => !inProject(file)));
 
@@ -167,22 +178,26 @@ class ExportIndex {
         return new ExportIndex(root, project, packages, problems);
     }
 
-    public render(value: unknown, id: string, path: string): string {
-        if (Array.isArray(value))
-            return `[${value.map((item, i) => this.render(item, id, `${path}[${i}]`)).join(', ')}]`;
-        if (isPlainObject(value)) {
+    public render(value: unknown, id: string, path: string, above: ReadonlySet<object> = new Set()): string {
+        if (Array.isArray(value) || isPlainObject(value)) {
+            if (above.has(value)) return this.unwritable(id, path, 'a reference back to itself');
+            const inside = new Set(above).add(value);
+            if (Array.isArray(value))
+                return `[${value.map((item, i) => this.render(item, id, `${path}[${i}]`, inside)).join(', ')}]`;
             const parts = Object.keys(value)
                 .toSorted(compare)
-                .map((name) => `${renderKey(name)}: ${this.render(value[name], id, joinPath(path, name))}`);
+                .map((name) => `${renderKey(name)}: ${this.render(value[name], id, joinPath(path, name), inside)}`);
             return parts.length === 0 ? '{}' : `{ ${parts.join('; ')} }`;
         }
 
         const literal = literalOf(value);
         if (literal !== undefined) return literal;
         const found = this.importOf(value);
-        if (found) return `(typeof import('${found.specifier}'))['${escapeLiteral(found.name)}']`;
+        if (found) return `(typeof import('${escapeLiteral(found.specifier)}'))['${escapeLiteral(found.name)}']`;
+        return this.unwritable(id, path, describeValue(value));
+    }
 
-        const shown = describeValue(value);
+    private unwritable(id: string, path: string, shown: string): string {
         this.problems.push(
             new SeedcordTypeError(SeedcordErrorCode.CliPluginCodegenValue, [id, shownPath(path), shown])
         );
