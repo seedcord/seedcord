@@ -256,7 +256,7 @@ locales.t('greet', {});
 
 A few rules decide what you can return:
 
-- **A class or object needs a file that exports it.** Codegen writes it as an import of that file, so the bot or your `codegen()` has to have imported the file. If your own package exports it, codegen imports it by package name.
+- **A class or object needs a file that exports it.** Codegen writes it as an import of that file, so the bot or your `codegen()` has to have imported the file. If your own package exports it, codegen imports it by package name. Any value a file exports goes through that import, so declare exported data `as const` to keep its literal types.
 - **Anything else has to be plain data.** A `Date`, a class instance, or a function that no file exports stops codegen with `CliPluginCodegenValue`.
 - **Prefer an object over an array if a bot can attach your plugin twice.** Codegen merges two objects key by key. Two arrays have to match as a whole, or codegen stops with `CliPluginCodegenConflict`.
 - **Return only what your types need.** Codegen writes every value into the bot's committed file. If you returned the message text, `seedcord codegen --check` would fail each time someone rewords a message.
@@ -354,7 +354,7 @@ A bot can attach your plugin under two keys, like two `Locales` for two folders.
 
 [`readFiles`](ref:utils/readFiles) and `importFiles` work there, since the CLI sets the bot's `root` before it loads your plugin. `readFiles` still needs the folder listed in the bot's [`files`](/build/data-files), the same as when the bot runs.
 
-`seedcord dev` writes the file after the bot has started, when `init()` has already run. A `codegen()` that reads `init()` state works in dev and fails under `seedcord codegen`, so test yours with `seedcord codegen`.
+For a server bot, `seedcord dev` writes the file after the bot has started, when `init()` has already run. An edge bot runs in workerd, and dev runs codegen on a separate copy in Node that never calls `init()`. A `codegen()` that reads `init()` state works for a server bot in dev and fails everywhere else, so test yours with `seedcord codegen`.
 
 ## When codegen stops
 

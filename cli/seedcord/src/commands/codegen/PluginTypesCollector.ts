@@ -179,22 +179,24 @@ class ExportIndex {
     }
 
     public render(value: unknown, id: string, path: string, above: ReadonlySet<object> = new Set()): string {
+        const found = this.importOf(value);
+        if (found) return `(typeof import('${escapeLiteral(found.specifier)}'))['${escapeLiteral(found.name)}']`;
+
         if (Array.isArray(value) || isPlainObject(value)) {
             if (above.has(value)) return this.unwritable(id, path, 'a reference back to itself');
             const inside = new Set(above).add(value);
-            if (Array.isArray(value))
-                return `[${value.map((item, i) => this.render(item, id, `${path}[${i}]`, inside)).join(', ')}]`;
+            if (Array.isArray(value)) {
+                // map skips holes
+                const items = Array.from(value, (item, i) => this.render(item, id, `${path}[${i}]`, inside));
+                return `[${items.join(', ')}]`;
+            }
             const parts = Object.keys(value)
                 .toSorted(compare)
                 .map((name) => `${renderKey(name)}: ${this.render(value[name], id, joinPath(path, name), inside)}`);
             return parts.length === 0 ? '{}' : `{ ${parts.join('; ')} }`;
         }
 
-        const literal = literalOf(value);
-        if (literal !== undefined) return literal;
-        const found = this.importOf(value);
-        if (found) return `(typeof import('${escapeLiteral(found.specifier)}'))['${escapeLiteral(found.name)}']`;
-        return this.unwritable(id, path, describeValue(value));
+        return literalOf(value) ?? this.unwritable(id, path, describeValue(value));
     }
 
     private unwritable(id: string, path: string, shown: string): string {

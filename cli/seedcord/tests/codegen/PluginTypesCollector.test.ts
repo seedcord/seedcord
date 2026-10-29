@@ -56,20 +56,20 @@ describe('PluginTypesCollector', () => {
     it('points at the file that defines a class codegen() loaded, past a barrel that re-exports it', async () => {
         const { modules, load } = growingLoader();
         const defining = join(ROOT, "tony's/Users.ts");
-        const labels = ['a', 1, true, null];
+        const jobs = { run: (): void => undefined };
         class Services {
             public static readonly id = 'services';
             public codegen(): Promise<unknown> {
                 load(join(ROOT, "tony's/All.ts"), { Users }, [defining]);
-                load(defining, { Users, labels });
-                return Promise.resolve({ services: { users: Users }, labels });
+                load(defining, { Users, jobs });
+                return Promise.resolve({ services: { users: Users }, labels: ['a', 1, true, null], jobs });
             }
         }
 
         const types = await PluginTypesCollector.collect(botWith({ db: new Services() }), modules, ROOT);
 
         expect(types.get('services')).toBe(
-            String.raw`{ labels: ['a', 1, true, null]; services: { users: (typeof import('./tony\'s/Users'))['Users'] } }`
+            String.raw`{ jobs: (typeof import('./tony\'s/Users'))['jobs']; labels: ['a', 1, true, null]; services: { users: (typeof import('./tony\'s/Users'))['Users'] } }`
         );
     });
 
@@ -107,7 +107,9 @@ describe('PluginTypesCollector', () => {
                 const bare: unknown = Object.create(Object.create(null) as object);
                 const loop: Record<string, unknown> = {};
                 loop.self = loop;
-                return Promise.resolve({ when: new Date(0), fn: () => 1, n: Number.NaN, big: 1n, bare, loop });
+                const holes: unknown[] = [];
+                holes[1] = 3;
+                return Promise.resolve({ when: new Date(0), fn: () => 1, n: Number.NaN, big: 1n, bare, loop, holes });
             }
         }
         class Throws {
@@ -129,6 +131,7 @@ describe('PluginTypesCollector', () => {
         expect(caught.errors.map((error) => (isSeedcordError(error) ? error.code : undefined))).toEqual([
             SeedcordErrorCode.CliPluginCodegenThrew,
             SeedcordErrorCode.CliPluginCodegenNoId,
+            SeedcordErrorCode.CliPluginCodegenValue,
             SeedcordErrorCode.CliPluginCodegenValue,
             SeedcordErrorCode.CliPluginCodegenValue,
             SeedcordErrorCode.CliPluginCodegenValue,
