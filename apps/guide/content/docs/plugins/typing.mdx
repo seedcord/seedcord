@@ -54,7 +54,7 @@ The [`Core`](ref:gateway/Core) block only appears once you've attached something
 
 <Callout type="transport">
 
-Each transport package declares its own `Core`, so the `declare module` line uses the package you import `Seedcord` from. A gateway bot's file declares `declare module '@seedcord/gateway'`, and an http bot's declares `declare module '@seedcord/http'`.
+Each transport package declares its own `Core`, so the `declare module` line uses the package you import `Seedcord` from. A gateway bot's file uses `declare module '@seedcord/gateway'`, and an http bot's uses `declare module '@seedcord/http'`.
 
 </Callout>
 
@@ -62,8 +62,8 @@ Each transport package declares its own `Core`, so the `declare module` line use
 
 The generated file only changes when codegen runs, so a stale one either misses a new key or still types a key you removed.
 
-- In `seedcord dev`, press `r` after you attach a plugin or rename a key. Dev rewrites the file each time the bot starts.
-- After you add a service, or outside dev, run `seedcord codegen`.
+- In `seedcord dev`, press `r` after you attach a plugin, rename a key, or add a service. Dev rewrites the file each time the bot starts.
+- Outside dev, run `seedcord codegen`.
 - In CI, `seedcord codegen --check` throws `CliCodegenOutOfDate` when the file is stale.
 
 Once codegen has run, your editor offers `db` on `this.core`.

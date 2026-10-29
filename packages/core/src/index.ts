@@ -92,7 +92,7 @@ export type { PageSourceBase } from '#pagination/sources';
 export type { ControlCosmetics, ControlKey, PaginatorControls } from '#pagination/Controls';
 export type { ItemRender, PageRender } from '#pagination/render';
 
-export type { Generated, PluginTypes } from '#src/plugin/codegen';
+export type { Generated, PluginTypes } from '#src/plugin/Generated';
 
 export { Bus, Subscribe, Subscriber, WebhookLog, WebhookUrl } from '#subscribers/index';
 export type {

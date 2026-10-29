@@ -4,7 +4,7 @@ import { FRAMEWORK_CHANNELS } from '@seedcord/logger';
 import { HostPluginKeys } from '@seedcord/types/internal';
 
 import { declaredScopeOf, extendsThisCorePlugin, pluginLoggerOf, resolvedLifecycleSpecOf } from './Plugin';
-import { splitPluginKey } from './pluginKey';
+import { splitPluginKey } from './splitPluginKey';
 
 import type { CoreBase } from '#interfaces/CoreBase';
 import type { Bus } from '#subscribers/Bus';

@@ -52,6 +52,9 @@ describe('Mongoose Plugin Integration', () => {
             dir: testEnv.resolvePath(servicesDir)
         });
 
+        const { services } = await plugin.codegen();
+        expect(services.users?.name).toBe('UserService');
+
         await plugin.init();
 
         expect(plugin.services).toHaveProperty('users');

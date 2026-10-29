@@ -105,7 +105,7 @@ export class Mongoose extends Plugin<{ transport: 'any'; runtime: 'server' }> {
         await this.disconnect();
     }
 
-    // Generated checks every service class against this. Each one has its own document type.
+    // every service class fits this, whatever its document type
     public override async codegen(): Promise<{ services: Record<string, Constructor<object>> }> {
         const found = await Array.fromAsync(this.serviceRegistry.serviceClassesIn(this.options.dir));
         return { services: Object.fromEntries(found.map(({ key, Service }) => [key, Service])) };

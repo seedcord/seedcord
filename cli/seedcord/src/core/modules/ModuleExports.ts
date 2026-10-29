@@ -1,6 +1,6 @@
 import type { EvaluatedModule } from './ModuleLoader';
 
-export interface Export {
+interface Export {
     readonly module: EvaluatedModule;
     readonly name: string;
 }

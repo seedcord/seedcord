@@ -10,7 +10,7 @@ import { decodeFile } from './encodedFile';
 import { botFilesSlot } from './slots';
 
 import type { BotFolder } from './BotLayout';
-import type { BuiltSlot, ModuleLoader, SourceSlot } from './slots';
+import type { BotFilesSlot, BuiltSlot, ModuleLoader } from './slots';
 import type { Buffer } from 'node:buffer';
 
 type BytesLoader = () => Promise<Buffer>;
@@ -159,9 +159,9 @@ class BuiltFiles extends FileSource {
 }
 
 // every reader of one slot shares its BotLayout
-const sources = new WeakMap<BuiltSlot | SourceSlot, FileSource>();
+const sources = new WeakMap<BotFilesSlot, FileSource>();
 
-function sourceOf(slot: BuiltSlot | SourceSlot): FileSource {
+function sourceOf(slot: BotFilesSlot): FileSource {
     const source =
         sources.get(slot) ??
         (slot.kind === 'built' ? new BuiltFiles(slot) : new DiskFiles(new BotFolderAccess(new BotLayout(slot))));

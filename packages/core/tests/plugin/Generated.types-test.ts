@@ -2,9 +2,8 @@ import { expectTypeOf } from 'vitest';
 
 import { Plugin } from '#src/plugin/Plugin';
 
-import type { Generated } from '#src/plugin/codegen';
+import type { Generated } from '#src/plugin/Generated';
 
-// justified: never invoked, these fixtures exist for type probes only
 abstract class Probe extends Plugin {
     public init(): Promise<void> {
         return Promise.resolve();
@@ -45,7 +44,7 @@ class NoId extends Probe {
     }
 }
 
-declare module '#src/plugin/codegen' {
+declare module '#src/plugin/Generated' {
     interface PluginTypes {
         'probe-generates': { names: { DailyDigest: true; Heartbeat: true } };
         'probe-stale': { names: { DailyDigest: 'not true' } };

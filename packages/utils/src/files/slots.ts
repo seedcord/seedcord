@@ -24,7 +24,7 @@ export interface SourceSlot extends BotLayoutData {
     kind: 'dev' | 'cli';
 }
 
-type BotFilesSlot = BuiltSlot | SourceSlot;
+export type BotFilesSlot = BuiltSlot | SourceSlot;
 
 // dev writes this from the CLI's copy of this module. the generated entry writes it without importing seedcord
 export const BOT_FILES_KEY = 'seedcord:utils:bot-files';

@@ -34,10 +34,16 @@ describe('ObjectConsoleSink', () => {
         expect(cap.payload().message).toBe('ratio 0.5 obj {"a":1} pct %');
     });
 
-    it('keeps an array arg in the args field', () => {
+    it('keeps an array, a Date, and a class instance in the args field', () => {
+        class Point {
+            public constructor(public readonly x: number) {}
+        }
         const cap = capture();
-        new ObjectConsoleSink().onLog(record({ message: 'list', args: [[1, 2, 3]] }));
-        expect(cap.payload().args).toEqual([[1, 2, 3]]);
+        new ObjectConsoleSink().onLog(record({ message: 'list', args: [[1, 2, 3], new Date(0), new Point(4)] }));
+
+        const payload = cap.payload();
+        expect(payload.args).toHaveLength(3);
+        expect(payload.x).toBeUndefined();
     });
 
     it('merges a trailing object arg into top-level fields', () => {

@@ -17,8 +17,12 @@ interface FoundService {
     readonly Service: KyselyServiceConstructor;
 }
 
+function serviceKeyOf(Service: KyselyServiceConstructor): string | undefined {
+    const key: unknown = Reflect.getMetadata(KyselyServiceMetadataKey, Service);
+    return typeof key === 'string' ? key : undefined;
+}
+
 export class KyselyServiceRegistry {
-    // the augmented interface has no index signature, hence Reflect below
     private readonly services = Object.create(null) as KyselyServices;
 
     constructor(
@@ -43,9 +47,8 @@ export class KyselyServiceRegistry {
         for await (const { fullPath, relativePath, imported } of importFiles(dir)) {
             for (const Service of Object.values(imported)) {
                 if (!this.isServiceClass(Service)) continue;
-                // isServiceClass checked KyselyServiceMetadataKey exists
-                const key = Reflect.getMetadata(KyselyServiceMetadataKey, Service) as string;
-                yield { key, fullPath, relativePath, Service };
+                const key = serviceKeyOf(Service);
+                if (key !== undefined) yield { key, fullPath, relativePath, Service };
             }
         }
     }
@@ -67,7 +70,7 @@ export class KyselyServiceRegistry {
     }
 
     public unregister(Service: KyselyServiceConstructor, artifacts?: KyselyArtifact): void {
-        const key = artifacts?.key ?? (Reflect.getMetadata(KyselyServiceMetadataKey, Service) as string | undefined);
+        const key = artifacts?.key ?? serviceKeyOf(Service);
         if (key) Reflect.deleteProperty(this.services, key);
     }
 

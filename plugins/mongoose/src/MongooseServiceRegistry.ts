@@ -19,8 +19,12 @@ interface FoundService {
     readonly Service: MongooseServiceConstructor;
 }
 
+function metadataString(metadataKey: string | symbol, Service: MongooseServiceConstructor): string | undefined {
+    const value: unknown = Reflect.getMetadata(metadataKey, Service);
+    return typeof value === 'string' ? value : undefined;
+}
+
 export class MongooseServiceRegistry {
-    // the augmented interface has no index signature, hence Reflect below
     private readonly services = Object.create(null) as MongooseServices;
     private readonly ownModels = new Set<string>();
 
@@ -55,9 +59,8 @@ export class MongooseServiceRegistry {
         for await (const { fullPath, relativePath, imported } of importFiles(dir)) {
             for (const Service of Object.values(imported)) {
                 if (!this.isServiceClass(Service)) continue;
-                // isServiceClass checked ServiceMetadataKey exists
-                const key = Reflect.getMetadata(ServiceMetadataKey, Service) as string;
-                yield { key, fullPath, relativePath, Service };
+                const key = metadataString(ServiceMetadataKey, Service);
+                if (key !== undefined) yield { key, fullPath, relativePath, Service };
             }
         }
     }
@@ -105,9 +108,8 @@ export class MongooseServiceRegistry {
     }
 
     public unregister(Service: MongooseServiceConstructor, artifacts?: MongooseArtifact): void {
-        const key = artifacts?.key ?? (Reflect.getMetadata(ServiceMetadataKey, Service) as string | undefined);
-        const modelName =
-            artifacts?.modelName ?? (Reflect.getMetadata(ModelNameMetadataKey, Service) as string | undefined);
+        const key = artifacts?.key ?? metadataString(ServiceMetadataKey, Service);
+        const modelName = artifacts?.modelName ?? metadataString(ModelNameMetadataKey, Service);
 
         if (key) Reflect.deleteProperty(this.services, key);
 
@@ -121,8 +123,8 @@ export class MongooseServiceRegistry {
     }
 
     public getArtifacts(ctor: MongooseServiceConstructor): MongooseArtifact {
-        const key = Reflect.getMetadata(ServiceMetadataKey, ctor) as string | undefined;
-        const modelName = Reflect.getMetadata(ModelNameMetadataKey, ctor) as string | undefined;
+        const key = metadataString(ServiceMetadataKey, ctor);
+        const modelName = metadataString(ModelNameMetadataKey, ctor);
         return {
             ...(key && { key }),
             ...(modelName && { modelName })

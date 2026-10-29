@@ -1,11 +1,11 @@
-import { existsSync } from 'node:fs';
 import { dirname, join, sep } from 'node:path';
+import { isDeepStrictEqual } from 'node:util';
 
 import { splitPluginKey } from '@seedcord/core/internal';
 import { paint, SeedcordErrorCode } from '@seedcord/errors';
 import { SeedcordError, SeedcordTypeError, throwSingleOrAggregate } from '@seedcord/errors/internal';
 import { HostPluginKeys, type SeedcordInstance } from '@seedcord/types/internal';
-import { asError, importSpecifier } from '@seedcord/utils/internal';
+import { asError, importSpecifier, isPlainObject } from '@seedcord/utils/internal';
 
 import { readManifest } from '#core/modules/installedManifest';
 import { isReferable, ModuleExports } from '#core/modules/ModuleExports';
@@ -59,7 +59,7 @@ export class PluginTypesCollector {
 
         // built after every codegen(), since codegen() imports the files it reads
         const index = await ExportIndex.create(modules, root, collector.classes(), collector.problems);
-        const types = new Map(collector.entries.entries().map(([id, { data }]) => [id, index.render(data, id, id)]));
+        const types = new Map(collector.entries.entries().map(([id, { data }]) => [id, index.render(data, id, '')]));
         throwSingleOrAggregate(collector.problems, SeedcordErrorCode.CliProblems);
         return types;
     }
@@ -98,22 +98,24 @@ export class PluginTypesCollector {
     }
 
     private merge(existing: unknown, incoming: unknown, path: string, attachments: MergingAttachments): unknown {
-        if (isLiteralObject(existing) && isLiteralObject(incoming)) {
-            const merged: Record<string, unknown> = { ...existing };
-            for (const [name, value] of Object.entries(incoming)) {
-                const at = joinPath(path, name);
-                merged[name] = name in merged ? this.merge(merged[name], value, at, attachments) : value;
-            }
-            return merged;
+        if (isPlainObject(existing) && isPlainObject(incoming)) {
+            const names = new Set([...Object.keys(existing), ...Object.keys(incoming)]);
+            return Object.fromEntries(
+                names.values().map((name) => {
+                    if (!Object.hasOwn(existing, name)) return [name, incoming[name]];
+                    if (!Object.hasOwn(incoming, name)) return [name, existing[name]];
+                    return [name, this.merge(existing[name], incoming[name], joinPath(path, name), attachments)];
+                })
+            );
         }
-        if (!sameValue(existing, incoming)) {
+        if (!isDeepStrictEqual(existing, incoming)) {
             const { id, firstKey, secondKey } = attachments;
             this.problems.push(
                 new SeedcordError(SeedcordErrorCode.CliPluginCodegenConflict, [
                     id,
                     firstKey,
                     secondKey,
-                    path || 'the top level'
+                    shownPath(path)
                 ])
             );
         }
@@ -164,11 +166,9 @@ class ExportIndex {
     }
 
     public render(value: unknown, id: string, path: string): string {
-        const found = this.importOf(value);
-        if (found) return `(typeof import('${found.specifier}'))['${escapeLiteral(found.name)}']`;
         if (Array.isArray(value))
             return `[${value.map((item, i) => this.render(item, id, `${path}[${i}]`)).join(', ')}]`;
-        if (isLiteralObject(value)) {
+        if (isPlainObject(value)) {
             const parts = Object.keys(value)
                 .toSorted(compare)
                 .map((name) => `${renderKey(name)}: ${this.render(value[name], id, joinPath(path, name))}`);
@@ -177,8 +177,13 @@ class ExportIndex {
 
         const literal = literalOf(value);
         if (literal !== undefined) return literal;
+        const found = this.importOf(value);
+        if (found) return `(typeof import('${found.specifier}'))['${escapeLiteral(found.name)}']`;
+
         const shown = describeValue(value);
-        this.problems.push(new SeedcordTypeError(SeedcordErrorCode.CliPluginCodegenValue, [id, path, shown]));
+        this.problems.push(
+            new SeedcordTypeError(SeedcordErrorCode.CliPluginCodegenValue, [id, shownPath(path), shown])
+        );
         return 'never';
     }
 
@@ -217,10 +222,9 @@ function describeValue(value: unknown): string {
 // bun doesn't have findPackageJSON
 function packageNameOf(file: string): string | undefined {
     for (let dir = dirname(file); dir !== dirname(dir); dir = dirname(dir)) {
-        const manifestPath = join(dir, 'package.json');
-        if (!existsSync(manifestPath)) continue;
-        const name = readManifest(manifestPath)?.name;
-        return typeof name === 'string' ? name : undefined;
+        // a nested dist/package.json often holds only "type"
+        const name = readManifest(join(dir, 'package.json'))?.name;
+        if (typeof name === 'string') return name;
     }
     return undefined;
 }
@@ -229,15 +233,6 @@ function joinPath(path: string, name: string): string {
     return path ? `${path}.${name}` : name;
 }
 
-function sameValue(first: unknown, second: unknown): boolean {
-    if (Object.is(first, second)) return true;
-    if (!Array.isArray(first) || !Array.isArray(second) || first.length !== second.length) return false;
-    return first.every((item, i) => sameValue(item, second[i]));
-}
-
-// @seedcord/utils's isPlainObject also passes a Date or a class instance
-function isLiteralObject(value: unknown): value is Record<string, unknown> {
-    if (typeof value !== 'object' || value === null || Array.isArray(value)) return false;
-    const proto: unknown = Object.getPrototypeOf(value);
-    return proto === Object.prototype || proto === null;
+function shownPath(path: string): string {
+    return path || 'the top level';
 }

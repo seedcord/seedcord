@@ -34,18 +34,33 @@ import type { ProjectOpener } from '#core/config/openProjectWithSteps';
 import type { SeedcordInstance } from '@seedcord/types/internal';
 
 describe('CodegenRunner plugin capabilities', () => {
-    it('augments Core from the attach keys and imports the bot entry', async () => {
+    it('augments Core from the attach keys and PluginTypes from each codegen(), sorted by id', async () => {
         const root = await tempDir('codegen-');
-        await pluginRunner(root, resolve(root, 'bot.ts'), ['db'], silentLogger).run(false);
+        const generating = (id: string, data: object): object =>
+            new (class {
+                public static readonly id = id;
+                public codegen(): Promise<object> {
+                    return Promise.resolve(data);
+                }
+            })();
+        const plugins = {
+            db: {},
+            i18n: generating('seedcord-locales', { messages: { greet: true } }),
+            cron: generating('cron', { ready: true })
+        };
+        await pluginRunner(root, resolve(root, 'bot.ts'), plugins, silentLogger).run(false);
 
         const output = await readFile(resolve(root, OUTPUT), 'utf8');
         expect(output).toContain("import type Bot from './bot';");
         expect(output).toContain("        db: (typeof Bot)['db'];");
+        expect(output).toContain(
+            "    interface PluginTypes {\n        cron: { ready: true };\n        'seedcord-locales': { messages: { greet: true } };\n    }"
+        );
     });
 
     it('writes a nested bot entry as a relative specifier with no extension', async () => {
         const root = await tempDir('codegen-');
-        await pluginRunner(root, resolve(root, 'app/bot.ts'), ['db'], silentLogger).run(false);
+        await pluginRunner(root, resolve(root, 'app/bot.ts'), { db: {} }, silentLogger).run(false);
 
         const output = await readFile(resolve(root, OUTPUT), 'utf8');
         expect(output).toContain("import type Bot from './app/bot';");
@@ -54,19 +69,20 @@ describe('CodegenRunner plugin capabilities', () => {
     it('writes a bot entry above the root as a parent specifier', async () => {
         const root = await tempDir('codegen-');
         const instance = resolve(root, '..', `${root.split('/').pop() ?? 'x'}-bot.ts`);
-        await pluginRunner(root, instance, ['db'], silentLogger).run(false);
+        await pluginRunner(root, instance, { db: {} }, silentLogger).run(false);
 
         const output = await readFile(resolve(root, OUTPUT), 'utf8');
         expect(output).toContain("import type Bot from '../");
     });
 
-    it('emits no import and no Core block when nothing is attached', async () => {
+    it('emits no import, no Core block, and no PluginTypes block when nothing is attached', async () => {
         const root = await tempDir('codegen-');
-        await pluginRunner(root, resolve(root, 'bot.ts'), [], silentLogger).run(false);
+        await pluginRunner(root, resolve(root, 'bot.ts'), {}, silentLogger).run(false);
 
         const output = await readFile(resolve(root, OUTPUT), 'utf8');
         expect(output).not.toContain('import type');
         expect(output).not.toContain('interface Core');
+        expect(output).not.toContain('interface PluginTypes');
     });
 });
 

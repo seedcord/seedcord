@@ -93,12 +93,13 @@ function runnerWith(
     return new CodegenRunner({ steps: quietSteps, projectLoader, generator: new AugmentationBuilder(logger), logger });
 }
 
-export function brandedInstance(commandsPath: string | null = null, pluginKeys: readonly string[] = []): object {
+export function brandedInstance(commandsPath: string | null = null, plugins: Record<string, object> = {}): object {
     return {
         [SeedcordBrand]: true,
         [HostAugmentTarget]: '@seedcord/gateway',
-        [HostPluginKeys]: pluginKeys,
-        config: { bot: { commands: { path: commandsPath } } }
+        [HostPluginKeys]: Object.keys(plugins),
+        config: { bot: { commands: { path: commandsPath } } },
+        ...plugins
     };
 }
 
@@ -142,10 +143,10 @@ export function asyncInstanceRunner(root: string, logger: ILogger): CodegenRunne
 export function pluginRunner(
     root: string,
     instance: string,
-    pluginKeys: readonly string[],
+    plugins: Record<string, object>,
     logger: ILogger
 ): CodegenRunner {
-    const importModule = (): Promise<unknown> => Promise.resolve({ default: brandedInstance(null, pluginKeys) });
+    const importModule = (): Promise<unknown> => Promise.resolve({ default: brandedInstance(null, plugins) });
 
     return runnerWith(configAt(root, instance), importModule, logger);
 }

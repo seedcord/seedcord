@@ -2,6 +2,7 @@ import { realpathSync } from 'node:fs';
 import { mkdir, mkdtempDisposable, writeFile } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
+import { stripVTControlCharacters } from 'node:util';
 
 import { isSeedcordError, SeedcordErrorCode } from '@seedcord/errors';
 import { HostPluginKeys } from '@seedcord/types/internal';
@@ -51,12 +52,13 @@ describe('PluginTypesCollector', () => {
     it('points at the file that defines a class codegen() loaded, past a barrel that re-exports it', async () => {
         const { modules, load } = growingLoader();
         const defining = join(ROOT, 'services/Users.ts');
+        const labels = ['a', 1, true, null];
         class Services {
             public static readonly id = 'services';
             public codegen(): Promise<unknown> {
                 load(join(ROOT, 'services/All.ts'), { Users }, [defining]);
-                load(defining, { Users });
-                return Promise.resolve({ services: { users: Users }, labels: ['a', 1, true, null] });
+                load(defining, { Users, labels });
+                return Promise.resolve({ services: { users: Users }, labels });
             }
         }
 
@@ -97,7 +99,7 @@ describe('PluginTypesCollector', () => {
         class Bad {
             public static readonly id = 'bad';
             public codegen(): Promise<unknown> {
-                return Promise.resolve({ at: new Date(0), fn: () => 1, n: Number.NaN, big: 1n });
+                return Promise.resolve({ when: new Date(0), fn: () => 1, n: Number.NaN, big: 1n });
             }
         }
         class Throws {
@@ -124,20 +126,27 @@ describe('PluginTypesCollector', () => {
             SeedcordErrorCode.CliPluginCodegenValue,
             SeedcordErrorCode.CliPluginCodegenValue
         ]);
+        const messages = caught.errors.map((error) =>
+            isSeedcordError(error) ? stripVTControlCharacters(error.message) : undefined
+        );
+        expect(messages).toContainEqual(expect.stringContaining('returned a Date at when.'));
     });
 
     it('merges two attachments of one class and reports a key where they disagree', async () => {
         const { modules } = growingLoader();
         class Cron {
             public static readonly id = 'cron';
-            public constructor(private readonly tasks: Record<string, string>) {}
+            public constructor(private readonly tasks: Record<string, unknown>) {}
             public codegen(): Promise<unknown> {
                 return Promise.resolve({ tasks: this.tasks });
             }
         }
 
         const merged = await PluginTypesCollector.collect(
-            botWith({ cron: new Cron({ digest: 'daily' }), admin: new Cron({ cleanup: 'nightly' }) }),
+            botWith({
+                cron: new Cron({ digest: 'daily', steps: [{ run: 'send' }] }),
+                admin: new Cron({ constructor: 'nightly', steps: [{ run: 'send' }] })
+            }),
             modules,
             ROOT
         );
@@ -147,8 +156,29 @@ describe('PluginTypesCollector', () => {
             ROOT
         );
 
-        expect(merged.get('cron')).toBe("{ tasks: { cleanup: 'nightly'; digest: 'daily' } }");
+        expect(merged.get('cron')).toBe(
+            "{ tasks: { constructor: 'nightly'; digest: 'daily'; steps: [{ run: 'send' }] } }"
+        );
         await expect(clash).rejects.toMatchObject({ code: SeedcordErrorCode.CliPluginCodegenConflict });
+    });
+
+    it('reads a plugin attached inside a group', async () => {
+        const { modules } = growingLoader();
+        class Grouped {
+            public static readonly id = 'grouped';
+            public codegen(): Promise<unknown> {
+                return Promise.resolve({ ready: true });
+            }
+        }
+        // justified: the collector reads only the plugin keys and the plugins they point at
+        const bot = {
+            [HostPluginKeys]: ['services.users'],
+            services: { users: new Grouped() }
+        } as unknown as SeedcordInstance;
+
+        const types = await PluginTypesCollector.collect(bot, modules, ROOT);
+
+        expect(types.get('grouped')).toBe('{ ready: true }');
     });
 
     it('reports two classes that share an id', async () => {
