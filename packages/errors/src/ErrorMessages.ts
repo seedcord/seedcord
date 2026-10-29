@@ -348,8 +348,19 @@ const messages = {
         `${paint.bold(JSON.stringify(name))} can't be a file name. Start it with a letter and use only letters, digits, spaces, - and _, like ${paint.bold('RollDice')}. Put folders in front with /, like ${paint.bold('fun/RollDice')}.`,
     [SeedcordErrorCode.MakeImportOfUnmatched]: (template: string, folder: string, count: number) =>
         `${paint.bold(`importOf "${folder}"`)} in the ${paint.bold(template)} template needs exactly one ${paint.path('.hbs')} file in the template's ${paint.path(folder)} folder. That folder holds ${count}. Point importOf at a folder with one template file.`,
-    [SeedcordErrorCode.MakeValueUsedTwoWays]: (template: string, value: string) =>
-        `The ${paint.bold(template)} template loops over ${paint.bold(value)} with ${paint.bold('#each')} and also reads a field from it, like ${paint.bold(`${value}.name`)}. A value is either a list or an entry with fields. Give one of the two uses its own name.`,
+    [SeedcordErrorCode.MakeValueUsedTwoWays]: (
+        template: string,
+        value: string,
+        first: 'text' | 'list' | 'object',
+        second: 'text' | 'list' | 'object'
+    ) => {
+        const uses = {
+            text: 'prints it',
+            list: `loops over it with ${paint.bold('#each')}`,
+            object: `reads a field from it, like ${paint.bold(`${value}.name`)}`
+        };
+        return `The ${paint.bold(template)} template uses ${paint.bold(value)} two ways. It ${uses[first]}, and it also ${uses[second]}. Give one of the two uses its own name.`;
+    },
     [SeedcordErrorCode.MakeTemplateFailed]: (file: string, from: string, reason: string) =>
         `Handlebars could not render ${paint.path(file)} from ${paint.bold(from)}.\n${reason}\nFix that template file.`,
     [SeedcordErrorCode.MakeLookupDynamicKey]: (template: string, value: string) =>
@@ -359,7 +370,9 @@ const messages = {
     [SeedcordErrorCode.MakeNoTemplates]: (folder: string) =>
         `Found no templates in ${paint.path(folder)} or in the installed plugins. Each folder inside ${paint.path(folder)} is one template. ${paint.sky('https://seedcord.org/guide/tooling/make')} shows how to write one and where to copy the starters from.`,
     [SeedcordErrorCode.MakeFileExists]: (file: string) =>
-        `${paint.path(file)} already exists. Pick another name, or delete that file first.`
+        `${paint.path(file)} already exists. Pick another name, or delete that file first.`,
+    [SeedcordErrorCode.MakePartialCallsItself]: (template: string, partial: string) =>
+        `The ${paint.bold(partial)} partial in the ${paint.bold(template)} template calls itself. seedcord make asks for every value before it writes a file, and it can't tell how many levels a partial that calls itself goes down. Write out each level the template needs.`
 } satisfies Record<SeedcordErrorCode, (...args: never[]) => string>;
 
 /** @internal */

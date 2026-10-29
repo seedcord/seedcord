@@ -319,7 +319,7 @@ export enum SeedcordErrorCode {
     MakeInvalidName = 3301,
     /** A template calls `importOf` on a folder that doesn't hold exactly one template file. */
     MakeImportOfUnmatched = 3302,
-    /** A template uses one value both as a list and as an entry with fields. */
+    /** A template uses one value as two of text, a list, and an entry with fields. */
     MakeValueUsedTwoWays = 3303,
     /** Handlebars could not parse or render a template file. */
     MakeTemplateFailed = 3304,
@@ -330,5 +330,7 @@ export enum SeedcordErrorCode {
     /** `seedcord make` found no templates in the bot or its plugins. */
     MakeNoTemplates = 3307,
     /** A file `seedcord make` would write already exists. */
-    MakeFileExists = 3308
+    MakeFileExists = 3308,
+    /** A template's partial calls itself, so `seedcord make` can't tell how many levels to ask for. */
+    MakePartialCallsItself = 3309
 }

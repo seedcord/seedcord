@@ -1,25 +1,26 @@
 import { dirname } from 'node:path';
 
 import { posixRelative } from '@seedcord/utils/internal';
-import { mapValues } from 'es-toolkit';
 
+import type { FilledName } from './helperNames';
 import type { RenderProject } from './TemplateOutput';
-import type { JsonObject, JsonValue } from 'type-fest';
+import type { Runtime } from '@seedcord/core/internal';
+import type { TransportPackage } from '@seedcord/types/internal';
+import type { JsonValue } from 'type-fest';
 
-interface OutputFile {
-    readonly project: RenderProject;
-    readonly path: string;
+export interface TransportVariables {
+    readonly transport: TransportPackage;
+    readonly isGateway: boolean;
+    readonly isEdge: boolean;
 }
 
-const CLI_VARIABLES = {
-    transport: ({ project }: OutputFile) => `@seedcord/${project.transport}`,
-    isGateway: ({ project }: OutputFile) => project.transport === 'gateway',
-    isEdge: ({ project }: OutputFile) => project.runtime === 'edge',
-    toRoot: ({ project, path }: OutputFile) => posixRelative(dirname(path), project.root) || '.'
-} satisfies Record<string, (file: OutputFile) => JsonValue>;
+export function transportVariables(transport: TransportPackage, runtime: Runtime): TransportVariables {
+    return { transport, isGateway: transport === '@seedcord/gateway', isEdge: runtime === 'edge' };
+}
 
-export const FILLED_NAMES: ReadonlySet<string> = new Set(['name', ...Object.keys(CLI_VARIABLES)]);
-
-export function cliVariables(file: OutputFile): JsonObject {
-    return mapValues(CLI_VARIABLES, (read) => read(file));
+export function cliVariables(project: RenderProject, path: string): Record<Exclude<FilledName, 'name'>, JsonValue> {
+    return {
+        ...transportVariables(project.transport, project.runtime),
+        toRoot: posixRelative(dirname(path), project.root) || '.'
+    };
 }

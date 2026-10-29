@@ -1,7 +1,7 @@
 import type { RealPath } from '#core/project/realPath';
 import type { EdgeTarget, ServerTarget } from './detectTarget';
 import type { VitePlugins } from './vitePlugins';
-import type { CliHelperName, TemplateHelper } from '@seedcord/cli-templates/helper-names';
+import type { TakenName, TemplateHelper } from '@seedcord/cli-templates/helper-names';
 import type { TypedOmit } from '@seedcord/types';
 import type { PluginOption } from 'vite';
 
@@ -73,11 +73,11 @@ export interface SeedcordHmrConfig {
 }
 
 /**
- * Handlebars helpers your templates can call, like `{{ shout name }}`. A helper with the name of one
- * seedcord ships is a compile error.
+ * Handlebars helpers your templates can call, like `{{ shout name }}`. A helper named after one that
+ * seedcord or Handlebars ships, or after a value seedcord fills in like `name`, is a compile error.
  */
 export type SeedcordMakeHelpers = Record<string, TemplateHelper> & {
-    [Name in CliHelperName]?: `seedcord already ships a helper called ${Name}. Pick another name.`;
+    [Name in TakenName]?: `templates already use ${Name}. Pick another name.`;
 };
 
 /**

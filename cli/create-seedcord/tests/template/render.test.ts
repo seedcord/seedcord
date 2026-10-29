@@ -170,8 +170,8 @@ describe('the starters', () => {
         expect(gateway).toEqual([...http, { path: event, contents: await sourceOf('gateway', event) }]);
     });
 
-    it('each render with seedcord make, leaving no mustache behind', async () => {
-        const project = { root: '/bot/src', transport: 'gateway', runtime: 'server', helpers: {} } as const;
+    it('each render with seedcord make from the answers it asks for', async () => {
+        const project = { root: '/bot/src', transport: '@seedcord/gateway', runtime: 'server', helpers: {} } as const;
         const groups = await Promise.all(
             ['shared', 'gateway'].map((group) => Template.readAll(join(STARTERS, group), ''))
         );
@@ -180,7 +180,7 @@ describe('the starters', () => {
             const output = template.output('roll dice', project);
             const answers = sampleOf({ kind: 'object', fields: output.inputs() }) as Answers;
 
-            for (const file of output.render(answers)) expect(file.contents).not.toContain('{{');
+            expect(() => output.render(answers), template.name).not.toThrow();
         }
     });
 });

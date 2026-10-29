@@ -3,19 +3,33 @@ import { join } from 'node:path';
 
 import { KEY, PromptTerminal, settled } from '@seedcord/cli-prompts/testing';
 import { paint, SeedcordErrorCode } from '@seedcord/errors';
+import { HostAugmentTarget } from '@seedcord/types/internal';
 import { describe, expect, it } from 'vitest';
 
 import { MAKE_STEPS, MakeRunner } from '#commands/make/MakeRunner';
 import { StepPrinter } from '#core/output/StepPrinter';
+import { realPath } from '#core/project/realPath';
 import { makeProject } from '#tests/commands/make/makeProject';
 import { brandedInstance, modulesFrom, projectOpener } from '#tests/fakeProject';
 import { maskStepTimes } from '#tests/maskStepTimes';
 import { resolvedConfigOf } from '#tests/resolvedConfigOf';
 
-// brandedInstance is a gateway bot that this package.json doesn't list
-const GATEWAY_BOT = { 'package.json': '{}', 'src/bot.ts': '' };
+import type { ResolvedSeedcordConfig } from '#core/config/schema';
 
-function make(terminal: PromptTerminal, projectDir: string, interactive = true): Promise<void> {
+// make reads the transport off the bot, and this package.json lists neither
+const BOT_FILES = { 'package.json': '{}', 'src/bot.ts': '' };
+
+interface MakeOptions {
+    readonly interactive?: boolean;
+    readonly bot?: object;
+    readonly config?: Partial<ResolvedSeedcordConfig>;
+}
+
+function make(
+    terminal: PromptTerminal,
+    projectDir: string,
+    { interactive = true, bot = brandedInstance(), config }: MakeOptions = {}
+): Promise<void> {
     const printer = new StepPrinter({
         command: 'make',
         labels: MAKE_STEPS,
@@ -23,11 +37,11 @@ function make(terminal: PromptTerminal, projectDir: string, interactive = true):
         stdout: terminal.stdout,
         stderr: terminal.stdout
     });
-    const modules = modulesFrom(() => Promise.resolve({ default: brandedInstance() }));
+    const modules = modulesFrom(() => Promise.resolve({ default: bot }));
     return new MakeRunner({
         steps: printer,
         prompter: terminal.prompter,
-        projectLoader: projectOpener(resolvedConfigOf(projectDir), modules),
+        projectLoader: projectOpener(resolvedConfigOf(projectDir, config), modules),
         interactive
     }).run();
 }
@@ -36,7 +50,7 @@ describe('MakeRunner', () => {
     it('writes the picked template under the typed name with the answers, and lists what it wrote', async () => {
         using terminal = new PromptTerminal();
         const projectDir = makeProject({
-            ...GATEWAY_BOT,
+            ...BOT_FILES,
             'templates/Button/handlers/{{pascal name}}.ts.hbs':
                 "import '{{transport}}';\nexport const label = '{{label}}';\n"
         });
@@ -59,10 +73,32 @@ describe('MakeRunner', () => {
         expect(screen).toContain('Run seedcord codegen, or keep seedcord dev running, to type new routes.');
     });
 
+    it("fills an http bot's transport and runs the config's helpers", async () => {
+        using terminal = new PromptTerminal();
+        const projectDir = makeProject({
+            ...BOT_FILES,
+            'templates/Slash/{{pascal name}}.ts.hbs': '{{transport}} {{shout name}}'
+        });
+        const done = make(terminal, projectDir, {
+            bot: { ...brandedInstance(), [HostAugmentTarget]: '@seedcord/http' },
+            config: {
+                make: {
+                    templates: realPath(join(projectDir, 'templates')),
+                    helpers: { shout: (text: string) => text.toUpperCase() }
+                }
+            }
+        });
+
+        await terminal.press(KEY.enter, 'roll', KEY.enter);
+        await done;
+
+        expect(readFileSync(join(projectDir, 'src/Roll.ts'), 'utf8')).toBe('@seedcord/http ROLL');
+    });
+
     it('asks yes or no, a comma separated list, one entry at a time, and each field of an entry', async () => {
         using terminal = new PromptTerminal();
         const projectDir = makeProject({
-            ...GATEWAY_BOT,
+            ...BOT_FILES,
             'templates/Slash/{{pascal name}}.ts.hbs': [
                 '{{#if ephemeral}}e{{/if}}',
                 '{{#each choices}}{{this}}.{{/each}}',
@@ -88,14 +124,14 @@ describe('MakeRunner', () => {
     it('throws MakeNeedsTerminal without a terminal', async () => {
         using terminal = new PromptTerminal();
 
-        await expect(make(terminal, makeProject(GATEWAY_BOT), false)).rejects.toMatchObject({
+        await expect(make(terminal, makeProject(BOT_FILES), { interactive: false })).rejects.toMatchObject({
             code: SeedcordErrorCode.MakeNeedsTerminal
         });
     });
 
     it('throws MakeNoTemplates with the templates folder when the bot and its plugins have none', async () => {
         using terminal = new PromptTerminal();
-        const projectDir = makeProject(GATEWAY_BOT);
+        const projectDir = makeProject(BOT_FILES);
 
         await expect(make(terminal, projectDir)).rejects.toMatchObject({
             code: SeedcordErrorCode.MakeNoTemplates,
@@ -105,7 +141,7 @@ describe('MakeRunner', () => {
 
     it('writes nothing when a prompt is cancelled', async () => {
         using terminal = new PromptTerminal();
-        const projectDir = makeProject({ ...GATEWAY_BOT, 'templates/Button/{{pascal name}}.ts.hbs': '{{label}}' });
+        const projectDir = makeProject({ ...BOT_FILES, 'templates/Button/{{pascal name}}.ts.hbs': '{{label}}' });
         const done = make(terminal, projectDir);
 
         await terminal.press(KEY.enter, 'appeal', KEY.enter);
@@ -117,7 +153,7 @@ describe('MakeRunner', () => {
 
     it('throws MakeTemplateFailed after the name when a file name reads any other value', async () => {
         using terminal = new PromptTerminal();
-        const projectDir = makeProject({ ...GATEWAY_BOT, 'templates/Button/{{label}}.ts.hbs': '' });
+        const projectDir = makeProject({ ...BOT_FILES, 'templates/Button/{{label}}.ts.hbs': '' });
         const done = make(terminal, projectDir);
 
         await terminal.press(KEY.enter, 'appeal', KEY.enter);
@@ -131,7 +167,7 @@ describe('MakeRunner', () => {
     ])('keeps asking for the name after %s', async (_case, rejected, message) => {
         using terminal = new PromptTerminal();
         const projectDir = makeProject({
-            ...GATEWAY_BOT,
+            ...BOT_FILES,
             'src/handlers/Appeal.ts': 'kept',
             'templates/Button/handlers/{{pascal name}}.ts.hbs': 'new'
         });

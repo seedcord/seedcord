@@ -12,7 +12,7 @@ interface SplitName {
 export function splitName(nameWithFolder: string): SplitName {
     const folders = nameWithFolder.split('/');
     const name = folders.pop() ?? '';
-    if (!NAME.test(name) || !folders.every((folder) => FOLDER.test(folder))) {
+    if (!NAME.test(name) || !folders.every((folder) => FOLDER.test(folder) && folder.trim() === folder)) {
         throw new SeedcordTypeError(SeedcordErrorCode.MakeInvalidName, [nameWithFolder]);
     }
     return { folder: folders.join('/'), name };

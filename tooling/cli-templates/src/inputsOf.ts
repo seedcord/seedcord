@@ -26,7 +26,7 @@ class Slot {
     ) {}
 
     public printed(): void {
-        if (this.kind === undefined || this.kind === 'bool') this.kind = 'text';
+        this.become('text');
     }
 
     public tested(): void {
@@ -34,13 +34,13 @@ class Slot {
     }
 
     public listItem(): Slot {
-        this.becomeOneOf('list', 'object');
+        this.become('list');
         this.item ??= new Slot(this.template, this.path);
         return this.item;
     }
 
     public field(key: string): Slot {
-        this.becomeOneOf('object', 'list');
+        this.become('object');
         const existing = this.fields.get(key);
         if (existing) return existing;
         const created = new Slot(this.template, this.path === '' ? key : `${this.path}.${key}`);
@@ -58,9 +58,15 @@ class Slot {
         return { kind: this.kind ?? 'text' };
     }
 
-    private becomeOneOf(kind: 'list' | 'object', other: 'list' | 'object'): void {
-        if (this.kind === other) {
-            throw new SeedcordTypeError(SeedcordErrorCode.MakeValueUsedTwoWays, [this.template, this.path]);
+    // {{#if x}} only checks that x has an answer, so a tested value can still take any shape
+    private become(kind: Exclude<InputShape['kind'], 'bool'>): void {
+        if (this.kind !== undefined && this.kind !== 'bool' && this.kind !== kind) {
+            throw new SeedcordTypeError(SeedcordErrorCode.MakeValueUsedTwoWays, [
+                this.template,
+                this.path,
+                this.kind,
+                kind
+            ]);
         }
         this.kind = kind;
     }
@@ -102,7 +108,6 @@ function fieldOf(slot: Slot, keys: readonly string[]): Slot {
 class InputReader extends Handlebars.Visitor {
     public readonly root: Slot;
     private readonly scopes: Scope[];
-    // a partial that calls itself would loop forever
     private readonly partialsBeingRead: string[] = [];
 
     constructor(
@@ -215,10 +220,13 @@ class InputReader extends Handlebars.Visitor {
     private readPartial(partial: hbs.AST.PartialStatement | hbs.AST.PartialBlockStatement): void {
         const name = partial.name.type === 'PathExpression' ? partial.name.original : '';
         const file = this.template.partials.get(name);
-        if (!file || this.partialsBeingRead.includes(name)) {
+        if (!file) {
             this.acceptArray(partial.params);
             this.accept(partial.hash);
             return;
+        }
+        if (this.partialsBeingRead.includes(name)) {
+            throw new SeedcordTypeError(SeedcordErrorCode.MakePartialCallsItself, [this.template.name, name]);
         }
 
         const [context] = partial.params;

@@ -262,7 +262,9 @@ describe('ProjectLoader make', () => {
         ['make.templates', { templates: 3 }],
         ['make.helpers', { helpers: 'shout' }],
         ['make.helpers.shout', { helpers: { shout: 'loud' } }],
-        ['make.helpers.pascal', { helpers: { pascal: (text: string) => text } }]
+        ['make.helpers.pascal', { helpers: { pascal: (text: string) => text } }],
+        ['make.helpers.name', { helpers: { name: (text: string) => text } }],
+        ['make.helpers.each', { helpers: { each: (text: string) => text } }]
     ])('throws CliConfigInvalidField naming %s for a malformed make', async (field, make) => {
         const { load } = projectWith({ ...MINIMAL, make });
 

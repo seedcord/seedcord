@@ -1,6 +1,6 @@
 {{#if isGateway}}
 {{#unless hasMessages}}
-import { EventHandler, RegisterEvent } from '{{ transportPackage }}';
+import { EventHandler, RegisterEvent } from '{{ transport }}';
 import { Events } from 'discord.js';
 
 @RegisterEvent([Events.ClientReady, { frequency: 'once' }])

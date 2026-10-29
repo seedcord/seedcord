@@ -40,7 +40,7 @@ interface MakeRunnerDeps {
 function renderProjectOf(config: ResolvedSeedcordConfig, instance: SeedcordInstance): RenderProject {
     return {
         root: config.root,
-        transport: instance[HostAugmentTarget] === '@seedcord/gateway' ? 'gateway' : 'http',
+        transport: instance[HostAugmentTarget],
         runtime: config.target.kind,
         helpers: config.make.helpers
     };

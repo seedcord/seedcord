@@ -5,22 +5,23 @@ import { SeedcordTypeError } from '@seedcord/errors/internal';
 import { importSpecifier } from '@seedcord/utils/internal';
 import Handlebars from 'handlebars';
 
-import { IMPORT_OF } from './helperNames';
+import { FILLED, IMPORT_OF } from './helperNames';
 import { CLI_HELPERS, helperNames } from './helpers';
 import { inputsOf } from './inputsOf';
 import { inTemplateFile } from './inTemplateFile';
 import { splitName } from './splitName';
-import { cliVariables, FILLED_NAMES } from './variables';
+import { cliVariables } from './variables';
 
 import type { TemplateHelper } from './helperNames';
 import type { TemplateInputs } from './inputsOf';
 import type { Template, TemplateFile } from './Template';
-import type { Runtime, Transport } from '@seedcord/core/internal';
+import type { Runtime } from '@seedcord/core/internal';
+import type { TransportPackage } from '@seedcord/types/internal';
 import type { JsonObject } from 'type-fest';
 
 export interface RenderProject {
     readonly root: string;
-    readonly transport: Transport;
+    readonly transport: TransportPackage;
     readonly runtime: Runtime;
     readonly helpers: Readonly<Record<string, TemplateHelper>>;
 }
@@ -70,12 +71,12 @@ export class TemplateOutput {
 
     public inputs(): TemplateInputs {
         const inputs = inputsOf(this.template, helperNames(this.project.helpers));
-        return Object.fromEntries(Object.entries(inputs).filter(([key]) => !FILLED_NAMES.has(key)));
+        return Object.fromEntries(Object.entries(inputs).filter(([key]) => !FILLED.has(key)));
     }
 
     public render(answers: JsonObject): RenderedFile[] {
         return this.targets.map(({ file, path }) => {
-            const context = { ...answers, name: this.name, ...cliVariables({ project: this.project, path }) };
+            const context = { ...answers, name: this.name, ...cliVariables(this.project, path) };
             const importOf = (folder: string): string => importSpecifier(dirname(path), this.onlyPathIn(folder));
             return {
                 path,

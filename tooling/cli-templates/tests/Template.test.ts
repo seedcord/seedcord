@@ -35,7 +35,7 @@ describe('Template.readAll', () => {
 });
 
 const ROOT = '/bot/src';
-const GATEWAY: RenderProject = { root: ROOT, transport: 'gateway', runtime: 'server', helpers: {} };
+const GATEWAY: RenderProject = { root: ROOT, transport: '@seedcord/gateway', runtime: 'server', helpers: {} };
 
 // a path starting with _ stays beside the template, like _partials/header.hbs
 async function onlyTemplate(files: Record<string, string>): Promise<AsyncDisposable & { template: Template }> {
@@ -82,7 +82,7 @@ describe('TemplateOutput.render', () => {
 
     it('fills the transport variables from the project', async () => {
         await using made = await onlyTemplate({ 'x.hbs': '{{transport}} {{isGateway}} {{isEdge}}' });
-        const edge: RenderProject = { ...GATEWAY, transport: 'http', runtime: 'edge' };
+        const edge: RenderProject = { ...GATEWAY, transport: '@seedcord/http', runtime: 'edge' };
 
         const contents = [GATEWAY, edge].map((project) => made.template.output('A', project).render({})[0]?.contents);
 
@@ -132,14 +132,23 @@ describe('TemplateOutput.render', () => {
             return () => made[Symbol.asyncDispose]();
         });
 
-        it.each(['', '2fast', 'roll!dice', 'tickets/', '../Appeal', '/Appeal', 'a//Appeal', 'a/./Appeal'])(
-            'rejects %j before any path is built',
-            (name) => {
-                expect(() => template.output(name, GATEWAY)).toThrow(
-                    expect.objectContaining({ type: 'SeedcordTypeError', code: SeedcordErrorCode.MakeInvalidName })
-                );
-            }
-        );
+        it.each([
+            '',
+            '2fast',
+            'roll!dice',
+            'tickets/',
+            '../Appeal',
+            '/Appeal',
+            'a//Appeal',
+            'a/./Appeal',
+            '  /Appeal',
+            'tickets /Appeal',
+            ' tickets/Appeal'
+        ])('rejects %j before any path is built', (name) => {
+            expect(() => template.output(name, GATEWAY)).toThrow(
+                expect.objectContaining({ type: 'SeedcordTypeError', code: SeedcordErrorCode.MakeInvalidName })
+            );
+        });
 
         it.each(['roll dice', 'roll-dice', 'roll_dice', 'RollDice2', 'tickets/Appeal', 'a/b/Appeal'])(
             'accepts %j',
@@ -363,19 +372,23 @@ describe('TemplateOutput.inputs', () => {
         expect(error.message).toContain('handlers/x.ts.hbs');
     });
 
-    it('stops reading a partial where it calls itself', async () => {
-        const inputs = await inputsFor({
-            '_partials/tree.hbs': '{{label}}{{#each children}}{{> tree}}{{/each}}',
-            'x.hbs': '{{> tree}}'
-        });
-
-        expect(inputs).toEqual({ label: { kind: 'text' }, children: { kind: 'list', item: { kind: 'text' } } });
+    it('throws MakePartialCallsItself before asking anything when a partial calls itself', async () => {
+        await expect(
+            inputsFor({
+                '_partials/tree.hbs': '{{label}}{{#each children}}{{> tree}}{{/each}}',
+                'x.hbs': '{{> tree}}'
+            })
+        ).rejects.toThrow(expect.objectContaining({ code: SeedcordErrorCode.MakePartialCallsItself }));
     });
 
     it.each([
-        ['a list first', '{{#each x}}{{this}}{{/each}} {{x.name}}'],
-        ['an entry first', '{{x.name}} {{#each x}}{{this}}{{/each}}']
-    ])('throws when one value is used as a list and as an entry, with %s', async (_case, body) => {
+        ['a list, then an entry', '{{#each x}}{{this}}{{/each}} {{x.name}}'],
+        ['an entry, then a list', '{{x.name}} {{#each x}}{{this}}{{/each}}'],
+        ['text, then an entry', '{{x}} {{x.name}}'],
+        ['an entry, then text', '{{x.name}} {{x}}'],
+        ['text, then a list', '{{x}} {{#each x}}{{this}}{{/each}}'],
+        ['a list, then text', '{{#each x}}{{this}}{{/each}} {{x}}']
+    ])('throws when one value is used as %s', async (_case, body) => {
         await expect(inputsFor({ 'x.hbs': body })).rejects.toThrow(
             expect.objectContaining({ type: 'SeedcordTypeError', code: SeedcordErrorCode.MakeValueUsedTwoWays })
         );
