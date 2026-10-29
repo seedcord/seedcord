@@ -4,6 +4,7 @@ export type * from './Dispatch';
 export type * from './EmojiMap';
 export type * from './Errors';
 export type * from './ILogger';
+export type * from './Kv';
 export type * from './LogSink';
 export type * from './RateLimiter';
 export type * from './ReplyResponse';

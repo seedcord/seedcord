@@ -92,6 +92,12 @@ export type { PageSourceBase } from '#pagination/sources';
 export type { ControlCosmetics, ControlKey, PaginatorControls } from '#pagination/Controls';
 export type { ItemRender, PageRender } from '#pagination/render';
 
+export { KeyvDriver } from '#src/kv/KeyvDriver';
+export { Kv } from '#src/kv/Kv';
+export { KvCollection } from '#src/kv/KvCollection';
+export { MemoryDriver } from '#src/kv/MemoryDriver';
+export { UnstorageDriver } from '#src/kv/UnstorageDriver';
+
 export type { Generated, PluginTypes } from '#src/plugin/Generated';
 
 export { Bus, Subscribe, Subscriber, WebhookLog, WebhookUrl } from '#subscribers/index';
