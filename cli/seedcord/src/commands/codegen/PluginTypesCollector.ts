@@ -25,10 +25,14 @@ interface CodegenPlugin {
     codegen(): Promise<unknown>;
 }
 
+interface Attachment {
+    readonly key: string;
+    readonly data: unknown;
+}
+
 interface Entry {
     readonly Class: PluginClass;
-    readonly key: string;
-    data: unknown;
+    readonly attachments: [Attachment, ...Attachment[]];
 }
 
 interface Found {
@@ -36,7 +40,12 @@ interface Found {
     readonly name: string;
 }
 
-interface MergingAttachments {
+interface AttachedAt {
+    readonly id: string;
+    readonly key: string;
+}
+
+interface AttachmentPair {
     readonly id: string;
     readonly firstKey: string;
     readonly secondKey: string;
@@ -60,7 +69,12 @@ export class PluginTypesCollector {
         // built after every codegen(), since codegen() imports the files it reads
         const index = await ExportIndex.create(modules, root, collector.classes(), collector.problems);
         const types = new Map(
-            collector.entries.entries().map(([id, { key, data }]) => [id, { key, type: index.render(data, id, '') }])
+            collector.entries
+                .entries()
+                .map(([id, { attachments }]) => [
+                    id,
+                    attachments.map((attachment) => ({ key: attachment.key, type: index.typeOf(id, attachment) }))
+                ])
         );
         throwSingleOrAggregate(collector.problems, SeedcordErrorCode.CliProblems);
         return types;
@@ -75,7 +89,7 @@ export class PluginTypesCollector {
         }
 
         try {
-            this.store(Class.id, { Class, key, data: await plugin.codegen() });
+            this.store(Class.id, Class, { key, data: await plugin.codegen() });
         } catch (caught) {
             this.problems.push(
                 new SeedcordError(SeedcordErrorCode.CliPluginCodegenThrew, [Class.name, key, asError(caught).message], {
@@ -85,15 +99,21 @@ export class PluginTypesCollector {
         }
     }
 
-    private store(id: string, entry: Entry): void {
+    private store(id: string, Class: PluginClass, attachment: Attachment): void {
         const existing = this.entries.get(id);
         if (!existing) {
-            this.entries.set(id, entry);
-        } else if (existing.Class === entry.Class) {
-            const attachments = { id, firstKey: existing.key, secondKey: entry.key };
-            existing.data = this.merge(existing.data, entry.data, '', attachments);
+            this.entries.set(id, { Class, attachments: [attachment] });
+        } else if (existing.Class === Class) {
+            for (const earlier of existing.attachments) {
+                const pair = { id, firstKey: earlier.key, secondKey: attachment.key };
+                this.reportConflicts(earlier.data, attachment.data, pair);
+            }
+            existing.attachments.push(attachment);
         } else {
-            const sources = [existing, entry].map(({ Class, key }) => `${paint.sky(Class.name)} at ${paint.sky(key)}`);
+            const sources = [
+                `${paint.sky(existing.Class.name)} at ${paint.sky(existing.attachments[0].key)}`,
+                `${paint.sky(Class.name)} at ${paint.sky(attachment.key)}`
+            ];
             const note = `A subclass inherits its parent's id, so give it its own ${paint.bold('static readonly id')}.`;
             this.problems.push(
                 new SeedcordError(SeedcordErrorCode.CoreDuplicateName, ['plugin id', id, sources, note])
@@ -101,39 +121,28 @@ export class PluginTypesCollector {
         }
     }
 
-    // stops at a cycle and leaves render to report it
-    private merge(
-        existing: unknown,
+    // the row intersects each attachment's type. stops at a cycle and leaves render to report it
+    private reportConflicts(
+        earlier: unknown,
         incoming: unknown,
-        path: string,
-        attachments: MergingAttachments,
+        pair: AttachmentPair,
+        path = '',
         above: ReadonlySet<object> = new Set()
-    ): unknown {
-        if (isPlainObject(existing) && isPlainObject(incoming)) {
-            if (above.has(existing)) return existing;
-            const inside = new Set(above).add(existing);
-            const names = new Set([...Object.keys(existing), ...Object.keys(incoming)]);
-            return Object.fromEntries(
-                names.values().map((name) => {
-                    if (!Object.hasOwn(existing, name)) return [name, incoming[name]];
-                    if (!Object.hasOwn(incoming, name)) return [name, existing[name]];
-                    const at = joinPath(path, name);
-                    return [name, this.merge(existing[name], incoming[name], at, attachments, inside)];
-                })
-            );
+    ): void {
+        if (isPlainObject(earlier) && isPlainObject(incoming)) {
+            if (above.has(earlier)) return;
+            const inside = new Set(above).add(earlier);
+            for (const name of Object.keys(earlier)) {
+                if (Object.hasOwn(incoming, name))
+                    this.reportConflicts(earlier[name], incoming[name], pair, joinPath(path, name), inside);
+            }
+            return;
         }
-        if (!isDeepStrictEqual(existing, incoming)) {
-            const { id, firstKey, secondKey } = attachments;
-            this.problems.push(
-                new SeedcordError(SeedcordErrorCode.CliPluginCodegenConflict, [
-                    id,
-                    firstKey,
-                    secondKey,
-                    shownPath(path)
-                ])
-            );
-        }
-        return existing;
+        if (isDeepStrictEqual(earlier, incoming)) return;
+        const { id, firstKey, secondKey } = pair;
+        this.problems.push(
+            new SeedcordError(SeedcordErrorCode.CliPluginCodegenConflict, [id, firstKey, secondKey, shownPath(path)])
+        );
     }
 
     private classes(): PluginClass[] {
@@ -180,30 +189,34 @@ class ExportIndex {
         return new ExportIndex(root, project, packages, problems);
     }
 
-    public render(value: unknown, id: string, path: string, above: ReadonlySet<object> = new Set()): string {
+    public typeOf(id: string, { key, data }: Attachment): string {
+        return this.render(data, { id, key });
+    }
+
+    private render(value: unknown, at: AttachedAt, path = '', above: ReadonlySet<object> = new Set()): string {
         const found = this.importOf(value);
         if (found) return `(typeof import('${escapeLiteral(found.specifier)}'))['${escapeLiteral(found.name)}']`;
 
         if (Array.isArray(value) || isPlainObject(value)) {
-            if (above.has(value)) return this.unwritable(id, path, 'a reference back to itself');
+            if (above.has(value)) return this.unwritable(at, path, 'a reference back to itself');
             const inside = new Set(above).add(value);
             if (Array.isArray(value)) {
                 // map skips holes
-                const items = Array.from(value, (item, i) => this.render(item, id, `${path}[${i}]`, inside));
+                const items = Array.from(value, (item, i) => this.render(item, at, `${path}[${i}]`, inside));
                 return `[${items.join(', ')}]`;
             }
             const parts = Object.keys(value)
                 .toSorted(compare)
-                .map((name) => `${renderKey(name)}: ${this.render(value[name], id, joinPath(path, name), inside)}`);
+                .map((name) => `${renderKey(name)}: ${this.render(value[name], at, joinPath(path, name), inside)}`);
             return parts.length === 0 ? '{}' : `{ ${parts.join('; ')} }`;
         }
 
-        return literalOf(value) ?? this.unwritable(id, path, describeValue(value));
+        return literalOf(value) ?? this.unwritable(at, path, describeValue(value));
     }
 
-    private unwritable(id: string, path: string, shown: string): string {
+    private unwritable({ id, key }: AttachedAt, path: string, shown: string): string {
         this.problems.push(
-            new SeedcordTypeError(SeedcordErrorCode.CliPluginCodegenValue, [id, shownPath(path), shown])
+            new SeedcordTypeError(SeedcordErrorCode.CliPluginCodegenValue, [id, key, shownPath(path), shown])
         );
         return 'never';
     }

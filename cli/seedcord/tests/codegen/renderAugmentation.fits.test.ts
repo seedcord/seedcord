@@ -3,6 +3,8 @@ import { describe, expect, it } from 'vitest';
 
 import { renderAugmentation } from '#commands/codegen/renderAugmentation';
 
+import type { PluginTypeTable } from '#commands/codegen/renderAugmentation';
+
 const TARGET = `
 export interface Core {}
 export interface SlashRegistry {}
@@ -13,15 +15,29 @@ export interface PluginTypes {}
 `;
 
 const BOT = `
-declare const bot: { cron: { codegen(): Promise<{ ready: true }> } };
+declare class Picker<T extends string> {
+    codegen(): Promise<{ values: Record<string, T> }>;
+}
+declare const bot: {
+    cron: { codegen(): Promise<{ ready: true }> };
+    first: Picker<'a'>;
+    second: Picker<'b'>;
+};
 export default bot;
 `;
 
-function errorCodes(row: string): number[] {
+function errorCodes(types: PluginTypeTable): number[] {
     const generated = renderAugmentation(
         { slash: {}, userContextMenus: {}, messageContextMenus: {}, emojis: {} },
         './target',
-        { specifier: './bot', keys: ['cron'], types: new Map([['cron', { key: 'cron', type: row }]]) }
+        {
+            specifier: './bot',
+            keys: types
+                .values()
+                .flatMap((parts) => parts.map(({ key }) => key))
+                .toArray(),
+            types
+        }
     );
     const files = new Map([
         ['/target.ts', TARGET],
@@ -52,8 +68,24 @@ function errorCodes(row: string): number[] {
 
 describe('renderAugmentation Fits rows', () => {
     it("compiles a row that fits its plugin's codegen() and rejects one that doesn't", () => {
-        expect(errorCodes('{ ready: true }')).toEqual([]);
+        expect(errorCodes(new Map([['cron', [{ key: 'cron', type: '{ ready: true }' }]]]))).toEqual([]);
         // 2344: the row doesn't satisfy the constraint on Fits
-        expect(errorCodes("{ ready: 'no' }")).toEqual([2344]);
+        expect(errorCodes(new Map([['cron', [{ key: 'cron', type: "{ ready: 'no' }" }]]]))).toEqual([2344]);
+    });
+
+    it('checks each attachment of a generic plugin against its own type argument', () => {
+        const picks = (second: string): PluginTypeTable =>
+            new Map([
+                [
+                    'picker',
+                    [
+                        { key: 'first', type: "{ values: { x: 'a' } }" },
+                        { key: 'second', type: second }
+                    ]
+                ]
+            ]);
+
+        expect(errorCodes(picks("{ values: { y: 'b' } }"))).toEqual([]);
+        expect(errorCodes(picks("{ values: { y: 'a' } }"))).toEqual([2344]);
     });
 });

@@ -309,8 +309,8 @@ const messages = {
         `The ${paint.bold('codegen()')} of the plugin attached at ${paint.sky(key)} (${paint.sky(plugin)}) threw. ${sentence(reason)} ${paint.bold('seedcord codegen')} calls ${paint.bold('codegen()')} without running ${paint.bold('init()')} first, so read only constructor state and files in it.`,
     [SeedcordErrorCode.CliPluginCodegenNoId]: (plugin: string, key: string) =>
         `The plugin attached at ${paint.sky(key)} (${paint.sky(plugin)}) needs an id because it has a ${paint.bold('codegen()')}. Add ${paint.bold("static readonly id = '<your package name>'")} to the class.`,
-    [SeedcordErrorCode.CliPluginCodegenValue]: (id: string, path: string, value: string) =>
-        `${paint.bold(id)}'s ${paint.bold('codegen()')} returned ${value} at ${paint.bold(path)}. Codegen can't write that value as a type. It writes plain data, and classes or objects that a project file or the plugin's package exports. Export the value from a file, or return plain data.`,
+    [SeedcordErrorCode.CliPluginCodegenValue]: (id: string, key: string, path: string, value: string) =>
+        `The ${paint.bold('codegen()')} of the plugin attached at ${paint.sky(key)} (${paint.sky(id)}) returned ${value} at ${paint.bold(path)}. Codegen can't write that value as a type. It writes plain data, and classes or objects that a project file or the plugin's package exports. Export the value from a file, or return plain data.`,
     [SeedcordErrorCode.CliPluginCodegenConflict]: (id: string, first: string, second: string, path: string) =>
         `The plugins attached at ${paint.sky(first)} and ${paint.sky(second)} are both ${paint.bold(id)}, and their ${paint.bold('codegen()')} results differ at ${paint.bold(path)}. Every attachment of one plugin shares one type, so both have to return the same value there. Change that value in the files one of them reads, or attach the plugin once.`,
     [SeedcordErrorCode.CliCodegenOutOfDate]: (outputPath: string) =>

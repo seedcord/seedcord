@@ -556,7 +556,7 @@ export {};
         const output = renderAugmentation(empty, AUGMENT_TARGET, {
             specifier: './bot',
             keys: ['services.users'],
-            types: new Map([['users-plugin', { key: 'services.users', type: '{ ready: true }' }]])
+            types: new Map([['users-plugin', [{ key: 'services.users', type: '{ ready: true }' }]]])
         });
 
         expect(output).toContain("        'users-plugin': Fits<(typeof Bot)['services']['users'], { ready: true }>;");

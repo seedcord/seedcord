@@ -68,9 +68,12 @@ describe('PluginTypesCollector', () => {
 
         const types = await PluginTypesCollector.collect(botWith({ db: new Services() }), modules, ROOT);
 
-        expect(types.get('services')?.type).toBe(
-            String.raw`{ jobs: (typeof import('./tony\'s/Users'))['jobs']; labels: ['a', 1, true, null]; services: { users: (typeof import('./tony\'s/Users'))['Users'] } }`
-        );
+        expect(types.get('services')).toEqual([
+            {
+                key: 'db',
+                type: String.raw`{ jobs: (typeof import('./tony\'s/Users'))['jobs']; labels: ['a', 1, true, null]; services: { users: (typeof import('./tony\'s/Users'))['Users'] } }`
+            }
+        ]);
     });
 
     it("writes a value from the plugin's own package as an import of the package name", async () => {
@@ -95,7 +98,9 @@ describe('PluginTypesCollector', () => {
 
         const types = await PluginTypesCollector.collect(botWith({ x: new Installed() }), modules, ROOT);
 
-        expect(types.get('plugin-x')?.type).toBe("{ services: { health: (typeof import('plugin-x'))['Health'] } }");
+        expect(types.get('plugin-x')).toEqual([
+            { key: 'x', type: "{ services: { health: (typeof import('plugin-x'))['Health'] } }" }
+        ]);
     });
 
     it('reports every problem from every plugin in one aggregate', async () => {
@@ -145,7 +150,7 @@ describe('PluginTypesCollector', () => {
         expect(messages).toContainEqual(expect.stringContaining('returned a Date at when.'));
     });
 
-    it('merges two attachments of one class and reports a key where they disagree', async () => {
+    it('keeps each attachment of one class and reports a key where they disagree', async () => {
         const { modules } = growingLoader();
         class Cron {
             public static readonly id = 'cron';
@@ -155,10 +160,10 @@ describe('PluginTypesCollector', () => {
             }
         }
 
-        const merged = await PluginTypesCollector.collect(
+        const both = await PluginTypesCollector.collect(
             botWith({
-                cron: new Cron({ digest: 'daily', steps: [{ run: 'send' }] }),
-                admin: new Cron({ constructor: 'nightly', steps: [{ run: 'send' }] })
+                cron: new Cron({ constructor: 'nightly', steps: [{ run: 'send' }] }),
+                admin: new Cron({ digest: 'daily', steps: [{ run: 'send' }] })
             }),
             modules,
             ROOT
@@ -169,9 +174,10 @@ describe('PluginTypesCollector', () => {
             ROOT
         );
 
-        expect(merged.get('cron')?.type).toBe(
-            "{ tasks: { constructor: 'nightly'; digest: 'daily'; steps: [{ run: 'send' }] } }"
-        );
+        expect(both.get('cron')).toEqual([
+            { key: 'cron', type: "{ tasks: { constructor: 'nightly'; steps: [{ run: 'send' }] } }" },
+            { key: 'admin', type: "{ tasks: { digest: 'daily'; steps: [{ run: 'send' }] } }" }
+        ]);
         await expect(clash).rejects.toMatchObject({ code: SeedcordErrorCode.CliPluginCodegenConflict });
 
         const loop = (): Record<string, unknown> => {
@@ -184,7 +190,13 @@ describe('PluginTypesCollector', () => {
             modules,
             ROOT
         );
-        await expect(cycles).rejects.toMatchObject({ code: SeedcordErrorCode.CliPluginCodegenValue });
+        await expect(cycles).rejects.toMatchObject({
+            code: SeedcordErrorCode.CliProblems,
+            errors: [
+                { code: SeedcordErrorCode.CliPluginCodegenValue },
+                { code: SeedcordErrorCode.CliPluginCodegenValue }
+            ]
+        });
     });
 
     it('reads a plugin attached inside a group', async () => {
@@ -203,7 +215,7 @@ describe('PluginTypesCollector', () => {
 
         const types = await PluginTypesCollector.collect(bot, modules, ROOT);
 
-        expect(types.get('grouped')).toEqual({ key: 'services.users', type: '{ ready: true }' });
+        expect(types.get('grouped')).toEqual([{ key: 'services.users', type: '{ ready: true }' }]);
     });
 
     it('reports two classes that share an id', async () => {
