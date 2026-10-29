@@ -74,10 +74,11 @@ class Slot {
 
 interface Scope {
     readonly slot: Slot;
-    // block params from `as |item index|`. the index holds no value to ask for
-    readonly params: ReadonlyMap<string, Slot | undefined>;
-    // handlebars runs a partial without the caller's block params
-    readonly partial?: true;
+    // block params from `as |item index|`
+    readonly params: ReadonlyMap<string, Slot>;
+    // a partial's hash values. handlebars sets them on the
+    // partial's context and leaves out the caller's block params
+    readonly fields?: ReadonlyMap<string, Slot>;
 }
 
 // handlebars' types call it scopeId. the function on the object is scopedId
@@ -105,8 +106,13 @@ function fieldOf(slot: Slot, keys: readonly string[]): Slot {
     return keys.reduce((parent, key) => parent.field(key), slot);
 }
 
+function lookUp(names: ReadonlyMap<string, Slot> | undefined, [head, ...rest]: readonly string[]): Slot | undefined {
+    const named = head === undefined ? undefined : names?.get(head);
+    return named && fieldOf(named, rest);
+}
+
 class InputReader extends Handlebars.Visitor {
-    public readonly root: Slot;
+    private readonly root: Slot;
     private readonly scopes: Scope[];
     private readonly partialsBeingRead: string[] = [];
 
@@ -167,8 +173,9 @@ class InputReader extends Handlebars.Visitor {
     }
     /* eslint-enable @typescript-eslint/naming-convention */
 
-    public readFile(file: TemplateFile): void {
-        this.accept(this.parse(file));
+    public read(): TemplateInputs {
+        for (const file of this.template.files) this.accept(this.parse(file));
+        return this.root.fieldShapes();
     }
 
     private parse(file: TemplateFile): hbs.AST.Program {
@@ -204,9 +211,9 @@ class InputReader extends Handlebars.Visitor {
     private readLoop(block: hbs.AST.BlockStatement): void {
         const item = this.slotOrRead(block.params[0])?.listItem() ?? this.untracedSlot();
         const [itemParam, indexParam] = blockParamsOf(block.program);
-        const params = new Map<string, Slot | undefined>();
+        const params = new Map<string, Slot>();
         if (itemParam) params.set(itemParam, item);
-        if (indexParam) params.set(indexParam, undefined);
+        if (indexParam) params.set(indexParam, this.untracedSlot());
         this.acceptInScope(block.program, { slot: item, params });
     }
 
@@ -218,9 +225,9 @@ class InputReader extends Handlebars.Visitor {
 
     // handlebars runs a partial against the argument it gets, or the caller's context, plus each hash key
     private readPartial(partial: hbs.AST.PartialStatement | hbs.AST.PartialBlockStatement): void {
-        const name = partial.name.type === 'PathExpression' ? partial.name.original : '';
-        const file = this.template.partials.get(name);
-        if (!file) {
+        const name = pathOf(partial.name)?.original;
+        const file = name === undefined ? undefined : this.template.partials.get(name);
+        if (name === undefined || !file) {
             this.acceptArray(partial.params);
             this.accept(partial.hash);
             return;
@@ -231,9 +238,11 @@ class InputReader extends Handlebars.Visitor {
 
         const [context] = partial.params;
         const slot = context ? this.slotOrRead(context) : this.scopes.at(-1)?.slot;
-        const params = new Map(pairsOf(partial).map(({ key, value }) => [key, this.slotOrRead(value)]));
+        const fields = new Map(
+            pairsOf(partial).map(({ key, value }) => [key, this.slotOrRead(value) ?? this.untracedSlot()])
+        );
         this.partialsBeingRead.push(name);
-        this.acceptInScope(this.parse(file), { slot: slot ?? this.untracedSlot(), params, partial: true });
+        this.acceptInScope(this.parse(file), { slot: slot ?? this.untracedSlot(), params: new Map(), fields });
         this.partialsBeingRead.pop();
     }
 
@@ -248,7 +257,7 @@ class InputReader extends Handlebars.Visitor {
         this.scopes.pop();
     }
 
-    // an expression like (split csv) has no slot of its own, but its arguments still get asked
+    // (split csv) has no slot of its own. reading it still asks for csv
     private slotOrRead(expression: hbs.AST.Expression | undefined): Slot | undefined {
         const slot = this.slotOf(pathOf(expression));
         if (!slot && expression) this.accept(expression);
@@ -258,7 +267,7 @@ class InputReader extends Handlebars.Visitor {
     private scopeDeclaring(param: string): Scope | undefined {
         for (const scope of this.scopes.toReversed()) {
             if (scope.params.has(param)) return scope;
-            if (scope.partial) return undefined;
+            if (scope.fields) return undefined;
         }
         return undefined;
     }
@@ -268,21 +277,16 @@ class InputReader extends Handlebars.Visitor {
         if (path.data) return path.parts[0] === 'root' ? fieldOf(this.root, path.parts.slice(1)) : undefined;
         if (ast.simpleId(path) && this.helpers.has(path.original)) return undefined;
 
-        const [head, ...rest] = path.parts;
-        if (head !== undefined && path.depth === 0 && !ast.scopedId(path)) {
-            const declared = this.scopeDeclaring(head);
-            if (declared) {
-                const param = declared.params.get(head);
-                return param && fieldOf(param, rest);
-            }
-        }
+        const [head] = path.parts;
+        const declared =
+            head !== undefined && path.depth === 0 && !ast.scopedId(path) ? this.scopeDeclaring(head) : undefined;
+        if (declared) return lookUp(declared.params, path.parts);
+
         const scope = this.scopes.at(-1 - path.depth);
-        return scope && fieldOf(scope.slot, path.parts);
+        return scope && (lookUp(scope.fields, path.parts) ?? fieldOf(scope.slot, path.parts));
     }
 }
 
 export function inputsOf(template: Template, helpers: ReadonlySet<string>): TemplateInputs {
-    const reader = new InputReader(template, helpers);
-    for (const file of template.files) reader.readFile(file);
-    return reader.root.fieldShapes();
+    return new InputReader(template, helpers).read();
 }

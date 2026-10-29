@@ -39,20 +39,19 @@ export async function renderTemplates(templatesRoot: string, context: TemplateCo
     return rendered.filter((file) => file.contents.trim() !== '');
 }
 
+async function copiedIntoTemplates(dir: string): Promise<RenderedFile[]> {
+    const sources = await hbsFilesIn(dir);
+    return Promise.all(
+        sources.map(async (source) => ({
+            path: posix.join('templates', ...source.split(sep)),
+            contents: await readFile(join(dir, source), 'utf8')
+        }))
+    );
+}
+
 // seedcord make renders these later
 export async function copyStarters(startersRoot: string, { isGateway }: TemplateContext): Promise<RenderedFile[]> {
     const groups = isGateway ? ['shared', 'gateway'] : ['shared'];
-    const copied = await Promise.all(
-        groups.map(async (group) => {
-            const dir = join(startersRoot, group);
-            const sources = await hbsFilesIn(dir);
-            return Promise.all(
-                sources.map(async (source) => ({
-                    path: posix.join('templates', ...source.split(sep)),
-                    contents: await readFile(join(dir, source), 'utf8')
-                }))
-            );
-        })
-    );
+    const copied = await Promise.all(groups.map((group) => copiedIntoTemplates(join(startersRoot, group))));
     return copied.flat();
 }

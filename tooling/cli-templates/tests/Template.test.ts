@@ -158,6 +158,17 @@ describe('TemplateOutput.render', () => {
         );
     });
 
+    it.each(['Appeal', 'appeal'])(
+        'throws MakePathTaken for %j when two files of the template land on one path in any casing',
+        async (name) => {
+            await using made = await onlyTemplate({ '{{name}}.ts.hbs': '', '{{pascal name}}.ts.hbs': '' });
+
+            expect(() => made.template.output(name, GATEWAY)).toThrow(
+                expect.objectContaining({ code: SeedcordErrorCode.MakePathTaken })
+            );
+        }
+    );
+
     it('imports the file another folder of the template writes', async () => {
         await using made = await onlyTemplate({
             'components/{{pascal name}}.ts.hbs': 'export const {{pascal name}}Id = 1;',
@@ -320,6 +331,18 @@ describe('TemplateOutput.inputs', () => {
             pair: { kind: 'text' },
             thing: { kind: 'text' },
             heading: { kind: 'text' }
+        });
+    });
+
+    it("reads a partial's hash values as fields of the partial's own context", async () => {
+        const inputs = await inputsFor({
+            '_partials/card.hbs': '{{this.author.name}} {{#each items}}{{author}}{{/each}}',
+            'x.hbs': '{{> card author=owner}}'
+        });
+
+        expect(inputs).toEqual({
+            owner: { kind: 'object', fields: { name: { kind: 'text' } } },
+            items: { kind: 'list', item: { kind: 'object', fields: { author: { kind: 'text' } } } }
         });
     });
 

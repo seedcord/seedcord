@@ -48,7 +48,7 @@ function renderProjectOf(config: ResolvedSeedcordConfig, instance: SeedcordInsta
 
 function assertFree(paths: readonly string[]): void {
     const taken = paths.find((path) => existsSync(path));
-    if (taken !== undefined) throw new SeedcordError(SeedcordErrorCode.MakeFileExists, [taken]);
+    if (taken !== undefined) throw new SeedcordError(SeedcordErrorCode.MakePathTaken, [taken]);
 }
 
 async function writeNew({ path, contents }: RenderedFile): Promise<void> {
@@ -56,7 +56,7 @@ async function writeNew({ path, contents }: RenderedFile): Promise<void> {
     try {
         await writeFile(path, contents, { flag: 'wx' });
     } catch (error: unknown) {
-        if (hasErrorCode(error, 'EEXIST')) throw new SeedcordError(SeedcordErrorCode.MakeFileExists, [path]);
+        if (hasErrorCode(error, 'EEXIST')) throw new SeedcordError(SeedcordErrorCode.MakePathTaken, [path]);
         throw error;
     }
 }
@@ -94,7 +94,7 @@ export class MakeRunner {
         const name = await prompter.text({
             message: 'Name',
             placeholder: 'like RollDice, or tickets/Appeal for a subfolder',
-            validate: validatorFor([SeedcordErrorCode.MakeInvalidName, SeedcordErrorCode.MakeFileExists], (value) =>
+            validate: validatorFor([SeedcordErrorCode.MakeInvalidName, SeedcordErrorCode.MakePathTaken], (value) =>
                 assertFree(template.output(value, project).paths)
             )
         });

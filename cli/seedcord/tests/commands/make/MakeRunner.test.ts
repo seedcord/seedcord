@@ -162,12 +162,19 @@ describe('MakeRunner', () => {
     });
 
     it.each([
-        ['a name that can not be a file', '2fast', "can't be a file name"],
-        ['the name of a file that already exists', 'appeal', 'already exists']
-    ])('keeps asking for the name after %s', async (_case, rejected, message) => {
+        ['a name that can not be a file', '2fast', "can't be a file name", {}],
+        ['the name of a file that already exists', 'appeal', 'already exists', {}],
+        [
+            'a name two of its files share',
+            'Appeal',
+            'both be written',
+            { 'templates/Button/handlers/{{name}}.ts.hbs': '' }
+        ]
+    ])('keeps asking for the name after %s', async (_case, rejected, message, extraFiles) => {
         using terminal = new PromptTerminal();
         const projectDir = makeProject({
             ...BOT_FILES,
+            ...extraFiles,
             'src/handlers/Appeal.ts': 'kept',
             'templates/Button/handlers/{{pascal name}}.ts.hbs': 'new'
         });

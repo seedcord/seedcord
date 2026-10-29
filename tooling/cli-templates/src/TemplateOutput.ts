@@ -1,12 +1,12 @@
 import { dirname, join, posix } from 'node:path';
 
 import { SeedcordErrorCode } from '@seedcord/errors';
-import { SeedcordTypeError } from '@seedcord/errors/internal';
+import { SeedcordError, SeedcordTypeError } from '@seedcord/errors/internal';
 import { importSpecifier } from '@seedcord/utils/internal';
 import Handlebars from 'handlebars';
 
-import { FILLED, IMPORT_OF } from './helperNames';
-import { CLI_HELPERS, helperNames } from './helpers';
+import { CLI_HELPER_NAMES, FILLED, IMPORT_OF } from './helperNames';
+import { CLI_HELPERS } from './helpers';
 import { inputsOf } from './inputsOf';
 import { inTemplateFile } from './inTemplateFile';
 import { splitName } from './splitName';
@@ -63,6 +63,7 @@ export class TemplateOutput {
                 this.renderText(file, posix.basename(file.layout), { name: this.name })
             )
         }));
+        this.assertDistinctPaths();
     }
 
     public get paths(): string[] {
@@ -70,7 +71,8 @@ export class TemplateOutput {
     }
 
     public inputs(): TemplateInputs {
-        const inputs = inputsOf(this.template, helperNames(this.project.helpers));
+        const helpers = new Set([...CLI_HELPER_NAMES, ...Object.keys(this.project.helpers)]);
+        const inputs = inputsOf(this.template, helpers);
         return Object.fromEntries(Object.entries(inputs).filter(([key]) => !FILLED.has(key)));
     }
 
@@ -83,6 +85,16 @@ export class TemplateOutput {
                 contents: this.renderText(file, file.source, context, { helpers: { [IMPORT_OF]: importOf } })
             };
         });
+    }
+
+    // macOS and Windows file systems ignore case by default
+    private assertDistinctPaths(): void {
+        const seen = new Set<string>();
+        for (const { path } of this.targets) {
+            const key = path.toLowerCase();
+            if (seen.has(key)) throw new SeedcordError(SeedcordErrorCode.MakePathTaken, [path, this.template.name]);
+            seen.add(key);
+        }
     }
 
     private onlyPathIn(folder: string): string {

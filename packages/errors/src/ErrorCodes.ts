@@ -329,8 +329,8 @@ export enum SeedcordErrorCode {
     MakeNeedsTerminal = 3306,
     /** `seedcord make` found no templates in the bot or its plugins. */
     MakeNoTemplates = 3307,
-    /** A file `seedcord make` would write already exists. */
-    MakeFileExists = 3308,
+    /** A path `seedcord make` would write to is taken, by a file on disk or by another file of the same template. */
+    MakePathTaken = 3308,
     /** A template's partial calls itself, so `seedcord make` can't tell how many levels to ask for. */
     MakePartialCallsItself = 3309
 }

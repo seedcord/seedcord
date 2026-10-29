@@ -4,7 +4,7 @@ import type { SeedcordErrorCode } from '@seedcord/errors';
 
 export function validatorFor(
     retypeCodes: readonly [SeedcordErrorCode, ...SeedcordErrorCode[]],
-    check: (value: string) => unknown
+    check: (value: string) => void
 ): (value: string) => string | undefined {
     return (value) => {
         try {

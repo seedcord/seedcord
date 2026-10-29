@@ -117,9 +117,10 @@ The questions come in the order the values first appear. `make` reads the files 
 
 seedcord disables Handlebars' HTML escaping, so `{{ label }}` writes your answer exactly as typed, quotes and `<` included. An answer like `Don't panic` ends a `'...'` string early. `{{ quote label }}`, as in the samples above, writes the answer as a single-quoted string with every single quote and backslash in it escaped.
 
-`make` throws on these two, after you type the name and before it asks for any value:
+`make` throws on these, after you type the name and before it asks for any value:
 
-- If the template loops over `tags` with `#each` and also reads a field like `{{ tags.first }}`, `make` throws `MakeValueUsedTwoWays`. A value is either a list or an item with fields.
+- If the template uses one value as two of text, a list, and an item with fields, `make` throws `MakeValueUsedTwoWays`. Looping over `tags` with `#each` and also printing `{{ tags.first }}` is one example. So is printing `{{ author }}` and also `{{ author.name }}`.
+- If a partial calls itself, `make` throws `MakePartialCallsItself`, because it can't tell how many levels to ask for.
 - If Handlebars' `lookup` helper gets an unquoted key, `make` throws `MakeLookupDynamicKey`, because seedcord can't tell which field to ask for. Quote the key, as in `{{ lookup author "label" }}`.
 
 If a template file doesn't parse, calls a helper that doesn't exist, or has a file name that reads a value other than `name`, `make` throws `MakeTemplateFailed` with the file's path and the error Handlebars gave.

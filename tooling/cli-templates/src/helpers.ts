@@ -1,9 +1,6 @@
 import { camelCase, kebabCase, pascalCase, snakeCase } from 'es-toolkit';
 
-import { CLI_HELPER_NAMES } from './helperNames';
-
 import type { SharedHelperName, TemplateHelper } from './helperNames';
-import type { RenderProject } from './TemplateOutput';
 
 // a new bot's prettier config sets singleQuote
 function quote(text: string): string {
@@ -21,7 +18,3 @@ export const CLI_HELPERS = {
     kebab: kebabCase,
     quote
 } satisfies Record<SharedHelperName, TemplateHelper>;
-
-export function helperNames(projectHelpers: RenderProject['helpers']): Set<string> {
-    return new Set([...CLI_HELPER_NAMES, ...Object.keys(projectHelpers)]);
-}

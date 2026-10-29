@@ -369,8 +369,10 @@ const messages = {
         `${paint.bold('seedcord make')} asks for a template, a name and each value in a terminal. Run it from a terminal with ${paint.bold('CI')} unset.`,
     [SeedcordErrorCode.MakeNoTemplates]: (folder: string) =>
         `Found no templates in ${paint.path(folder)} or in the installed plugins. Each folder inside ${paint.path(folder)} is one template. ${paint.sky('https://seedcord.org/guide/tooling/make')} shows how to write one and where to copy the starters from.`,
-    [SeedcordErrorCode.MakeFileExists]: (file: string) =>
-        `${paint.path(file)} already exists. Pick another name, or delete that file first.`,
+    [SeedcordErrorCode.MakePathTaken]: (path: string, takenByTemplate?: string) =>
+        takenByTemplate === undefined
+            ? `${paint.path(path)} already exists. Pick another name, or delete that file first.`
+            : `Two files of the ${paint.bold(takenByTemplate)} template would both be written to ${paint.path(path)}. Pick a name that keeps them apart, or give the files different names in the template.`,
     [SeedcordErrorCode.MakePartialCallsItself]: (template: string, partial: string) =>
         `The ${paint.bold(partial)} partial in the ${paint.bold(template)} template calls itself. seedcord make asks for every value before it writes a file, and it can't tell how many levels a partial that calls itself goes down. Write out each level the template needs.`
 } satisfies Record<SeedcordErrorCode, (...args: never[]) => string>;
