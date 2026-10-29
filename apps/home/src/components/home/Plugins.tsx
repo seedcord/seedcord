@@ -4,7 +4,7 @@ import { CodeCard } from '#components/code/CodeCard';
 import { SECTION_HEADING, Section } from '#components/home/Section';
 import { Code } from '#components/ui/Code';
 import { CODE_MARK_LIGHT } from '#lib/code/marks';
-import { pluginAttach, pluginGenerated, pluginSource } from '#lib/code/samples';
+import { pluginAttach, pluginSource, pluginUsage } from '#lib/code/samples';
 
 import type { ReactNode } from 'react';
 
@@ -41,12 +41,7 @@ export function Plugins(): ReactNode {
                 <CodeCard code={pluginSource} filename="plugins/uptime.ts" note="write it" className={cn(CARD)} />
                 <div className={cn('grid grid-rows-[auto_1fr] gap-5')}>
                     <CodeCard code={pluginAttach} filename="bot.ts" note="attach it" className={cn(CARD)} />
-                    <CodeCard
-                        code={pluginGenerated}
-                        filename="seedcord-gen.d.ts"
-                        note="generated"
-                        className={cn(CARD)}
-                    />
+                    <CodeCard code={pluginUsage} filename="handlers/uptime.ts" note="use it" className={cn(CARD)} />
                 </div>
             </div>
         </Section>
