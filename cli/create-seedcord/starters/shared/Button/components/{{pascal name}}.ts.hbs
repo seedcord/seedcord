@@ -1,0 +1,18 @@
+import { ButtonBuilder } from '@discordjs/builders';
+import { CustomId, RowComponent } from '{{ transport }}';
+import { ButtonStyle } from 'discord-api-types/v10';
+
+export const {{ pascal name }}Id = new CustomId('{{ kebab name }}');
+
+export class {{ pascal name }}Row extends RowComponent<'button'> {
+    constructor() {
+        super('button');
+
+        this.instance.addComponents(
+            new ButtonBuilder()
+                .setCustomId({{ pascal name }}Id.encode({}))
+                .setLabel({{ quote label }})
+                .setStyle(ButtonStyle.Primary)
+        );
+    }
+}

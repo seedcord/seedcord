@@ -7,8 +7,8 @@ node_modules/
 
 .env
 
-turbo/generators/templates
-cli/create-seedcord/templates
+# prettier reads .hbs as an html template, and these hold typescript and markdown
+*.hbs
 
 **/.next/
 **/dist/

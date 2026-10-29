@@ -1,6 +1,7 @@
 import type { RealPath } from '#core/project/realPath';
 import type { EdgeTarget, ServerTarget } from './detectTarget';
 import type { VitePlugins } from './vitePlugins';
+import type { TakenName, TemplateHelper } from '@seedcord/cli-templates/helper-names';
 import type { TypedOmit } from '@seedcord/types';
 import type { PluginOption } from 'vite';
 
@@ -72,6 +73,30 @@ export interface SeedcordHmrConfig {
 }
 
 /**
+ * Handlebars helpers your templates can call, like `{{ shout name }}`. A helper named after one that
+ * seedcord or Handlebars ships, or after a value seedcord fills in like `name`, is a compile error.
+ */
+export type SeedcordMakeHelpers = Record<string, TemplateHelper> & {
+    [Name in TakenName]?: `templates already use ${Name}. Pick another name.`;
+};
+
+/**
+ * Options for `seedcord make`.
+ */
+export interface SeedcordMakeConfig {
+    /**
+     * The folder that holds your templates. Each folder inside it is one template.
+     *
+     * @defaultValue `./templates` beside the config file
+     */
+    templates?: string;
+    /**
+     * Helpers your templates can call on top of the ones seedcord ships.
+     */
+    helpers?: SeedcordMakeHelpers;
+}
+
+/**
  * The `seedcord.config.ts` of a bot that runs on Cloudflare Workers. A bot that runs on node or
  * bun uses {@link SeedcordServerConfig}. Its `build` also takes `outDir` and `start`.
  */
@@ -132,6 +157,10 @@ export interface SeedcordConfig {
      * file into an object. seedcord calls it once for each Vite server and build.
      */
     vitePlugins?: () => PluginOption[];
+    /**
+     * Options for `seedcord make`.
+     */
+    make?: SeedcordMakeConfig;
 }
 
 /**
@@ -162,9 +191,18 @@ export interface ResolvedSeedcordBuildConfig {
     tsconfig?: RealPath;
 }
 
+interface ResolvedSeedcordMakeConfig {
+    templates: RealPath;
+    helpers: SeedcordMakeHelpers;
+}
+
 export interface ResolvedSeedcordConfig extends Required<
-    TypedOmit<SeedcordConfig, 'build' | 'hmr' | 'tunnel' | 'port' | 'vitePlugins' | 'root' | 'instance' | 'files'>
+    TypedOmit<
+        SeedcordConfig,
+        'build' | 'hmr' | 'tunnel' | 'port' | 'vitePlugins' | 'root' | 'instance' | 'files' | 'make'
+    >
 > {
+    make: ResolvedSeedcordMakeConfig;
     root: RealPath;
     instance: RealPath;
     files: RealPath[];

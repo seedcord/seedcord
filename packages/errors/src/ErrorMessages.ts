@@ -1,42 +1,9 @@
 import { SeedcordErrorCode } from './ErrorCodes';
+import { deployFix, listedFolderProblems, placeText, token, vitePluginFix } from './messageParts';
 import { allOf, counted, isOne, oneOf, quoted, reasonThen, sentence } from './messageText';
 import { paint } from './palette';
 
-export interface VitePluginPlace {
-    hook?: string | undefined;
-    // only load and transform run on a module
-    loading?: { kind: 'file'; path: string } | { kind: 'virtual'; id: string } | undefined;
-}
-
-function placeText(hook: string, loading: VitePluginPlace['loading']): string {
-    const inHook = `in its ${paint.bold(hook)} hook`;
-    if (loading === undefined) return inHook;
-    const shown = loading.kind === 'file' ? paint.path(loading.path) : paint.bold(loading.id);
-    return `${inHook} while loading ${shown}`;
-}
-
-function vitePluginFix({ loading }: VitePluginPlace): string {
-    if (loading?.kind !== 'file') return 'Check the options you pass the plugin.';
-    return `Fix ${paint.path(loading.path)}, or check the options you pass the plugin if that file looks right.`;
-}
-
-const listedFolderProblems = {
-    missing: `which does not exist. Create it, or take it out of ${paint.bold('files')}.`,
-    file: `which is a file. ${paint.bold('files')} takes folders. List the folder that holds it.`,
-    outsideProject: `which is outside the folder that holds seedcord.config.ts. Move it into that folder and list its new path.`
-};
-
-// the edge worker sets chalk's color level after this module loads
-const token = (): string => paint.bold('DISCORD_BOT_TOKEN');
-
-const BAD_REQUEST = 400;
-const UNAUTHORIZED = 401;
-
-function deployFix(status: number | undefined, otherwise: string): string {
-    if (status === UNAUTHORIZED) return `Check that ${token()} is still valid.`;
-    if (status === BAD_REQUEST) return "Check that each command's name, description and options are valid.";
-    return otherwise;
-}
+import type { VitePluginPlace } from './messageParts';
 
 /** @internal */
 const messages = {
@@ -383,7 +350,39 @@ const messages = {
     [SeedcordErrorCode.CreateTargetNotEmpty]: (target: string) =>
         `${paint.path(target)} already has files in it. Pick an empty directory or a name that does not exist yet.`,
     [SeedcordErrorCode.CreateStepFailed]: (command: string, reason: string) =>
-        `${paint.bold(command)} failed.\n${reason}`
+        `${paint.bold(command)} failed.\n${reason}`,
+
+    [SeedcordErrorCode.MakeInvalidName]: (name: string) =>
+        `${paint.bold(JSON.stringify(name))} can't be a file name. Start it with a letter and use only letters, digits, spaces, - and _, like ${paint.bold('RollDice')}. Put folders in front with /, like ${paint.bold('fun/RollDice')}.`,
+    [SeedcordErrorCode.MakeImportOfUnmatched]: (template: string, folder: string, count: number) =>
+        `${paint.bold(`importOf "${folder}"`)} in the ${paint.bold(template)} template needs exactly one ${paint.path('.hbs')} file in the template's ${paint.path(folder)} folder. That folder holds ${count}. Point importOf at a folder with one template file.`,
+    [SeedcordErrorCode.MakeValueUsedTwoWays]: (
+        template: string,
+        value: string,
+        first: 'text' | 'list' | 'object',
+        second: 'text' | 'list' | 'object'
+    ) => {
+        const uses = {
+            text: 'prints it',
+            list: `loops over it with ${paint.bold('#each')}`,
+            object: `reads a field from it, like ${paint.bold(`${value}.name`)}`
+        };
+        return `The ${paint.bold(template)} template uses ${paint.bold(value)} two ways. It ${uses[first]}, and it also ${uses[second]}. Give one of the two uses its own name.`;
+    },
+    [SeedcordErrorCode.MakeTemplateFailed]: (file: string, from: string, reason: string) =>
+        `Handlebars could not render ${paint.path(file)} from ${paint.bold(from)}.\n${reason}\nFix that template file.`,
+    [SeedcordErrorCode.MakeLookupDynamicKey]: (template: string, value: string) =>
+        `The ${paint.bold(template)} template calls ${paint.bold('lookup')} on ${paint.bold(value)} without a quoted key. seedcord make can't tell which field of ${paint.bold(value)} to ask for. Give lookup a quoted key like ${paint.bold(`{{lookup ${value} "title"}}`)}, or map the value in a helper under ${paint.bold('make.helpers')} in seedcord.config.ts.`,
+    [SeedcordErrorCode.MakeNeedsTerminal]: () =>
+        `${paint.bold('seedcord make')} asks for a template, a name and each value in a terminal. Run it from a terminal with ${paint.bold('CI')} unset.`,
+    [SeedcordErrorCode.MakeNoTemplates]: (folder: string) =>
+        `Found no templates in ${paint.path(folder)} or in the installed plugins. Each folder inside ${paint.path(folder)} is one template. ${paint.sky('https://seedcord.org/guide/tooling/make')} shows how to write one and where to copy the starters from.`,
+    [SeedcordErrorCode.MakePathTaken]: (path: string, takenByTemplate?: string) =>
+        takenByTemplate === undefined
+            ? `${paint.path(path)} already exists. Pick another name, or delete that file first.`
+            : `Two files of the ${paint.bold(takenByTemplate)} template would both be written to ${paint.path(path)}. Pick a name that keeps them apart, or give the files different names in the template.`,
+    [SeedcordErrorCode.MakePartialCallsItself]: (template: string, partial: string) =>
+        `The ${paint.bold(partial)} partial in the ${paint.bold(template)} template calls itself. seedcord make asks for every value before it writes a file, and it can't tell how many levels a partial that calls itself goes down. Write out each level the template needs.`
 } satisfies Record<SeedcordErrorCode, (...args: never[]) => string>;
 
 /** @internal */

@@ -9,6 +9,8 @@ import type {
 import type { Config } from './Config';
 import type { REST } from '@discordjs/rest';
 
+export type TransportPackage = '@seedcord/gateway' | '@seedcord/http';
+
 // Core implements this. the CLI narrows a loaded module export to it after the SeedcordBrand runtime check
 export interface SeedcordInstance {
     readonly config: Config;
@@ -17,7 +19,7 @@ export interface SeedcordInstance {
 
     // symbol keys keep these out of autocomplete on a host
     readonly [HostVersion]: string;
-    readonly [HostAugmentTarget]: string;
+    readonly [HostAugmentTarget]: TransportPackage;
     readonly [HostPluginKeys]: readonly string[];
     readonly [HostShutdown]: { run(exitCode?: number, exitProcess?: boolean): Promise<void> };
     readonly [HostStartup]: { abort(): void };

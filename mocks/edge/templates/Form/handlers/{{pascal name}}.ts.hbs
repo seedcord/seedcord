@@ -1,0 +1,11 @@
+{{> header part="the command's handler" }}
+import { SlashHandler, SlashRoute } from '{{ transport }}';
+
+import { {{ pascal name }}Modal } from '{{ importOf "components" }}';
+
+@SlashRoute('{{ kebab name }}')
+export class {{ pascal name }} extends SlashHandler<'{{ kebab name }}'> {
+    public async execute(): Promise<void> {
+        await this.showModal(new {{ pascal name }}Modal().component);
+    }
+}

@@ -18,6 +18,7 @@ async function scaffolded(...args: Parameters<typeof scaffold>): Promise<Extract
 }
 
 const TEMPLATES = resolve(import.meta.dirname, '../../templates');
+const STARTERS = resolve(import.meta.dirname, '../../starters');
 
 const BUILT_IN = new Set(['node']);
 // the binary a script calls, against the package that ships it
@@ -142,6 +143,7 @@ function baseInput(target: string, steps: StepUi = stepRecorder().steps): Parame
     return {
         target,
         templatesRoot: TEMPLATES,
+        startersRoot: STARTERS,
         answers: GATEWAY,
         agent: 'pnpm',
         steps
@@ -275,6 +277,7 @@ describe('scaffold', () => {
         const { runtime } = installs(calls);
         expect(runtime).toContain('@seedcord/http');
         expect(runtime).not.toContain('discord.js');
+        expect(runtime).toContain('discord-api-types');
     });
 
     it('skips install, format, and codegen when install is off', async () => {

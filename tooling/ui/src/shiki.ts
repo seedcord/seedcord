@@ -10,6 +10,7 @@ import { createHighlighterCore, type HighlighterCore } from 'shiki/core';
 import { createOnigurumaEngine } from 'shiki/engine/oniguruma';
 
 import { seedcordBrandDark, seedcordBrandLight } from './brandTheme';
+import { langHandlebars } from './langHandlebars';
 
 import type { DecorationItem, ShikiTransformer } from 'shiki';
 
@@ -33,6 +34,7 @@ const HIGHLIGHTABLE = [
     'yaml',
     'yml',
     'toml',
+    'hbs',
     ...SHELLS,
     'txt',
     'text',
@@ -63,7 +65,7 @@ let highlighterPromise: Promise<HighlighterCore> | null = null;
 function ensureHighlighter(): Promise<HighlighterCore> {
     highlighterPromise ??= createHighlighterCore({
         themes: [seedcordBrandLight, seedcordBrandDark],
-        langs: [langTs, langTsx, langJs, langJsx, langJson, langYaml, langToml, langBash],
+        langs: [langTs, langTsx, langJs, langJsx, langJson, langYaml, langToml, langHandlebars, langBash],
         engine: createOnigurumaEngine(import('shiki/wasm'))
     });
     return highlighterPromise;

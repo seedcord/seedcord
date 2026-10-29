@@ -1,0 +1,10 @@
+import { BuilderComponent, RegisterCommand } from '{{ transport }}';
+
+@RegisterCommand()
+export class {{ pascal name }} extends BuilderComponent<'command'> {
+    constructor() {
+        super('command');
+
+        this.instance.setName('{{ kebab name }}').setDescription({{ quote description }});
+    }
+}

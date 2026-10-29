@@ -13,7 +13,7 @@ import type { ReactElement } from 'react';
 export interface TextPrompt {
     readonly message: string;
     readonly placeholder?: string;
-    // return a message to keep the prompt open
+    // return a message to keep the prompt open. a throw rejects the prompt with that error
     readonly validate?: (value: string) => string | undefined;
     // shown on the first empty enter. the second one answers ''
     readonly emptyWarning?: string;

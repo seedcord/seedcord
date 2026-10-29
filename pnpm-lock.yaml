@@ -223,6 +223,9 @@ catalogs:
     fumadocs-mdx:
       specifier: 15.4.6
       version: 15.4.6
+    handlebars:
+      specifier: ^4.7.10
+      version: 4.7.10
     ink:
       specifier: ^8.0.0
       version: 8.0.0
@@ -919,6 +922,12 @@ importers:
       '@seedcord/cli-prompts':
         specifier: workspace:^
         version: link:../../tooling/cli-prompts
+      '@seedcord/cli-templates':
+        specifier: workspace:^
+        version: link:../../tooling/cli-templates
+      '@seedcord/core':
+        specifier: workspace:^
+        version: link:../../packages/core
       '@seedcord/errors':
         specifier: workspace:^
         version: link:../../packages/errors
@@ -941,7 +950,7 @@ importers:
         specifier: catalog:peer
         version: 14.27.0
       handlebars:
-        specifier: ^4.7.10
+        specifier: catalog:deps
         version: 4.7.10
       package-manager-detector:
         specifier: ^1.8.0
@@ -1000,6 +1009,12 @@ importers:
       discord-api-types:
         specifier: ^0.38.52
         version: 0.38.56
+      es-toolkit:
+        specifier: catalog:deps
+        version: 1.53.0
+      handlebars:
+        specifier: catalog:deps
+        version: 4.7.10
       ink:
         specifier: catalog:deps
         version: 8.0.0(@types/react@19.3.0)(react@19.3.1)
@@ -1034,6 +1049,9 @@ importers:
       '@seedcord/cli-prompts':
         specifier: workspace:^
         version: link:../../tooling/cli-prompts
+      '@seedcord/cli-templates':
+        specifier: workspace:^
+        version: link:../../tooling/cli-templates
       '@seedcord/eslint-config':
         specifier: workspace:^
         version: link:../../tooling/eslint-config
@@ -1211,6 +1229,9 @@ importers:
       reflect-metadata:
         specifier: catalog:deps
         version: 0.2.2
+      type-fest:
+        specifier: catalog:deps
+        version: 5.10.0
       typescript:
         specifier: catalog:consumerTypes
         version: 7.0.2
@@ -1236,9 +1257,6 @@ importers:
       envapt:
         specifier: catalog:peer
         version: 9.2.0
-      type-fest:
-        specifier: catalog:deps
-        version: 5.10.0
       vite:
         specifier: catalog:peer
         version: 8.3.4(@types/node@26.1.2)(esbuild@0.28.1)(jiti@2.7.0)(tsx@4.23.15)(yaml@2.9.1)
@@ -1251,6 +1269,9 @@ importers:
       discord-api-types:
         specifier: ^0.38.52
         version: 0.38.56
+      type-fest:
+        specifier: catalog:deps
+        version: 5.10.0
       typescript:
         specifier: catalog:consumerTypes
         version: 7.0.2
@@ -1267,9 +1288,6 @@ importers:
       '@seedcord/vitest-config':
         specifier: workspace:^
         version: link:../../tooling/vitest-config
-      type-fest:
-        specifier: catalog:deps
-        version: 5.10.0
 
   packages/discord-component-embed:
     devDependencies:
@@ -1380,6 +1398,9 @@ importers:
       reflect-metadata:
         specifier: catalog:deps
         version: 0.2.2
+      type-fest:
+        specifier: catalog:deps
+        version: 5.10.0
       typescript:
         specifier: catalog:consumerTypes
         version: 7.0.2
@@ -1402,9 +1423,6 @@ importers:
       envapt:
         specifier: catalog:peer
         version: 9.2.0
-      type-fest:
-        specifier: catalog:deps
-        version: 5.10.0
 
   packages/http:
     dependencies:
@@ -1555,6 +1573,9 @@ importers:
       discord-api-types:
         specifier: ^0.38.52
         version: 0.38.56
+      type-fest:
+        specifier: catalog:deps
+        version: 5.10.0
       typescript:
         specifier: catalog:consumerTypes
         version: 7.0.2
@@ -1574,9 +1595,6 @@ importers:
       discord.js:
         specifier: catalog:peer
         version: 14.27.0
-      type-fest:
-        specifier: catalog:deps
-        version: 5.10.0
 
   packages/utils:
     dependencies:
@@ -1592,6 +1610,9 @@ importers:
       strip-ansi:
         specifier: ^7.2.0
         version: 7.2.0
+      type-fest:
+        specifier: catalog:deps
+        version: 5.10.0
       typescript:
         specifier: catalog:consumerTypes
         version: 7.0.2
@@ -1614,9 +1635,6 @@ importers:
       tsx:
         specifier: catalog:deps
         version: 4.23.15
-      type-fest:
-        specifier: catalog:deps
-        version: 5.10.0
 
   plugins/kysely-postgres:
     dependencies:
@@ -1635,6 +1653,9 @@ importers:
       reflect-metadata:
         specifier: catalog:deps
         version: 0.2.2
+      type-fest:
+        specifier: catalog:deps
+        version: 5.10.0
       typescript:
         specifier: catalog:consumerTypes
         version: 7.0.2
@@ -1672,9 +1693,6 @@ importers:
       pg:
         specifier: catalog:peer
         version: 8.23.1
-      type-fest:
-        specifier: catalog:deps
-        version: 5.10.0
 
   plugins/mongoose:
     dependencies:
@@ -1693,6 +1711,9 @@ importers:
       reflect-metadata:
         specifier: catalog:deps
         version: 0.2.2
+      type-fest:
+        specifier: catalog:deps
+        version: 5.10.0
       typescript:
         specifier: catalog:consumerTypes
         version: 7.0.2
@@ -1724,9 +1745,6 @@ importers:
       mongoose:
         specifier: catalog:peer
         version: 9.11.2
-      type-fest:
-        specifier: catalog:deps
-        version: 5.10.0
 
   scripts:
     dependencies:
@@ -1831,6 +1849,49 @@ importers:
       tsx:
         specifier: catalog:deps
         version: 4.23.15
+      vitest:
+        specifier: catalog:test
+        version: 4.1.12(@opentelemetry/api@1.9.1)(@types/node@26.1.2)(@vitest/coverage-istanbul@4.1.12)(@vitest/coverage-v8@4.1.12)(jsdom@30.1.1)(vite@8.3.4(@types/node@26.1.2)(esbuild@0.28.2)(jiti@2.7.0)(tsx@4.23.15)(yaml@2.9.1))
+
+  tooling/cli-templates:
+    dependencies:
+      '@seedcord/errors':
+        specifier: workspace:^
+        version: link:../../packages/errors
+      '@seedcord/utils':
+        specifier: workspace:^
+        version: link:../../packages/utils
+      es-toolkit:
+        specifier: catalog:deps
+        version: 1.53.0
+      handlebars:
+        specifier: catalog:deps
+        version: 4.7.10
+      type-fest:
+        specifier: catalog:deps
+        version: 5.10.0
+      typescript:
+        specifier: catalog:peer
+        version: 6.0.3
+    devDependencies:
+      '@seedcord/core':
+        specifier: workspace:^
+        version: link:../../packages/core
+      '@seedcord/eslint-config':
+        specifier: workspace:^
+        version: link:../eslint-config
+      '@seedcord/tsconfig':
+        specifier: workspace:^
+        version: link:../tsconfig
+      '@seedcord/tsdown-config':
+        specifier: workspace:^
+        version: link:../tsdown-config
+      '@seedcord/types':
+        specifier: workspace:^
+        version: link:../../packages/types
+      '@seedcord/vitest-config':
+        specifier: workspace:^
+        version: link:../vitest-config
       vitest:
         specifier: catalog:test
         version: 4.1.12(@opentelemetry/api@1.9.1)(@types/node@26.1.2)(@vitest/coverage-istanbul@4.1.12)(@vitest/coverage-v8@4.1.12)(jsdom@30.1.1)(vite@8.3.4(@types/node@26.1.2)(esbuild@0.28.2)(jiti@2.7.0)(tsx@4.23.15)(yaml@2.9.1))
@@ -6629,9 +6690,6 @@ packages:
 
   es-toolkit@1.50.0:
     resolution: {integrity: sha512-OyZKhUVvEep9ITEiwHn8GKnMRQIVqoSIX7WnRbkWgJkllCujilqP2rD0u979tkl8wqyc8ICwlc1UBVv/Sl1G6w==}
-
-  es-toolkit@1.52.0:
-    resolution: {integrity: sha512-XTNEJQh1tY1ZJVcf6ayP/2n4ZPyaHlW2FWs7xvw5ddPuhUVjLD3olQVQS7kf58JbAB48iL0uL/jerTrjtV3lDA==}
 
   es-toolkit@1.53.0:
     resolution: {integrity: sha512-3+AYXp9fmJ/UhHBMYj2/U+RaUouMD90SzoItyDOB2Za7W6dB7fQApFGnZPl2MF6K8/Tv1koh1JyirSx/kju6Pw==}
@@ -14272,8 +14330,6 @@ snapshots:
 
   es-toolkit@1.50.0: {}
 
-  es-toolkit@1.52.0: {}
-
   es-toolkit@1.53.0: {}
 
   esast-util-from-estree@2.0.0:
@@ -15482,7 +15538,7 @@ snapshots:
       cli-cursor: 4.0.0
       cli-truncate: 6.1.1
       code-excerpt: 4.0.0
-      es-toolkit: 1.52.0
+      es-toolkit: 1.53.0
       indent-string: 5.0.0
       is-in-ci: 2.0.0
       patch-console: 2.0.0

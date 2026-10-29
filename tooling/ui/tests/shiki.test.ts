@@ -229,7 +229,8 @@ describe('isHighlightable', () => {
         'sh',
         'shell',
         'zsh',
-        'txt'
+        'txt',
+        'hbs'
     ])('accepts %s, and the highlighter has its grammar', async (lang) => {
         if (!isHighlightable(lang)) throw new Error(`${lang} is not highlightable`);
 

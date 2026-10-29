@@ -5,6 +5,8 @@ export {
     type SeedcordBuildConfig,
     type SeedcordConfig,
     type SeedcordHmrConfig,
+    type SeedcordMakeConfig,
+    type SeedcordMakeHelpers,
     type SeedcordServerConfig
 } from '#core/config/schema';
 

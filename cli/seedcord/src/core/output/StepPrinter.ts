@@ -52,7 +52,8 @@ export class StepPrinter<Label extends string> implements Steps<Label> {
     public async step<Result>(
         label: Label,
         task: () => Promise<Result>,
-        note?: (result: Result) => string
+        note?: (result: Result) => string,
+        lines?: (result: Result) => readonly string[]
     ): Promise<Result> {
         // bound before holdOutput swaps stdout.write for its own
         const write = this.stdout.write.bind(this.stdout);
@@ -60,7 +61,7 @@ export class StepPrinter<Label extends string> implements Steps<Label> {
         const held = holdOutput(this.stdout, this.stderr, this.verbose, (line) => row.printAbove(line));
 
         return row.run(task, {
-            done: (result) => ({ lines: held.release(), note: note?.(result) }),
+            done: (result) => ({ lines: [...held.release(), ...(lines?.(result) ?? [])], note: note?.(result) }),
             linesUnderFailure: () => held.release()
         });
     }

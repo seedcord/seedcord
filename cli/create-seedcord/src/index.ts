@@ -28,6 +28,7 @@ import type { AgentName } from 'package-manager-detector';
 
 // dist/index.mjs and src/index.ts are both one level under the package root
 const TEMPLATES = resolve(import.meta.dirname, '../templates');
+const STARTERS = resolve(import.meta.dirname, '../starters');
 
 // a pty can report zero columns
 function hasUsableWidth(): boolean {
@@ -76,6 +77,7 @@ async function main(output: CreateOutput): Promise<void> {
         {
             target,
             templatesRoot: TEMPLATES,
+            startersRoot: STARTERS,
             answers,
             agent,
             steps: interactive ? output.stepRows() : output.plainSteps()

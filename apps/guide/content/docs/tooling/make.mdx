@@ -1,0 +1,231 @@
+---
+title: Templates
+description: Generate new handlers, components, and commands from Handlebars templates you keep in your bot, with seedcord make prompting for each value.
+---
+
+You've started a new button by copying the last one. You renamed the class and the custom id, retyped the label, and fixed the import path when the copy was one folder deeper. Then you did the same again for the handler that answers it.
+
+`seedcord make` writes those files from a template you keep in your project. You pick a template and type a name. It asks for each value the template reads, then writes every file in the template under your [`root`](/build/config) folder.
+
+<Shell exec="seedcord make" />
+
+It only runs in a terminal, since every answer comes from a prompt. It doesn't take the answers as flags. With no terminal, or with `CI` set, it throws `MakeNeedsTerminal`.
+
+## Writing a template
+
+Templates live in a `templates` folder beside `seedcord.config.ts`. Each folder directly inside it is one template, and the first prompt lists them by folder name. seedcord skips a folder whose name starts with `_`, so [partials](#partials) can live there. `make.templates` in your config points at a different folder, as [Your own helpers](#your-own-helpers) shows.
+
+This `Button` template writes a button row and the handler that answers it:
+
+```txt
+templates/
+└─ Button/
+   ├─ components/
+   │  └─ {{pascal name}}.ts.hbs
+   └─ handlers/
+      └─ {{pascal name}}.ts.hbs
+```
+
+The folders inside a template become folders under `root`, which is `./src` in a scaffolded project. `components/{{pascal name}}.ts.hbs` goes to `components/` with the `.hbs` taken off, and the handler goes to `handlers/`. Any extension works in front of `.hbs`, like `.json.hbs`. seedcord ignores a file that doesn't end in `.hbs`.
+
+Each file is a [Handlebars](https://handlebarsjs.com/guide/) template. The sample builds a [custom id](/components/custom-ids) and a [button row](/components/buttons). Here's the component:
+
+```hbs title="templates/Button/components/{{pascal name}}.ts.hbs"
+import { ButtonBuilder } from '@discordjs/builders';
+import { CustomId, RowComponent } from '{{ transport }}';
+import { ButtonStyle } from 'discord-api-types/v10';
+
+export const {{ pascal name }}Id = new CustomId('{{ kebab name }}');
+
+export class {{ pascal name }}Row extends RowComponent<'button'> {
+    constructor() {
+        super('button');
+
+        this.instance.addComponents(
+            new ButtonBuilder()
+                .setCustomId({{ pascal name }}Id.encode({}))
+                .setLabel({{ quote label }})
+                .setStyle(ButtonStyle.Primary)
+        );
+    }
+}
+```
+
+And the handler, which imports the component's custom id:
+
+```hbs title="templates/Button/handlers/{{pascal name}}.ts.hbs"
+import { ButtonHandler, ButtonRoute } from '{{ transport }}';
+
+import { {{ pascal name }}Id } from '{{ importOf "components" }}';
+
+@ButtonRoute({{ pascal name }}Id)
+export class {{ pascal name }}Button extends ButtonHandler<[typeof {{ pascal name }}Id]> {
+    public async execute(): Promise<void> {
+        await this.reply({{ quote reply }});
+    }
+}
+```
+
+Say you pick `Button`, type `tickets/Appeal` as the name, then answer `Appeal ban` for `label` and `Sent to the mods` for `reply`. seedcord writes two files:
+
+```txt output
+src/components/tickets/Appeal.ts
+src/handlers/tickets/Appeal.ts
+```
+
+In both, `{{ pascal name }}` becomes `Appeal`, and `{{ transport }}` becomes `@seedcord/gateway` on a gateway bot. In the handler, `{{ importOf "components" }}` becomes `../../components/tickets/Appeal`, which is the path from the new handler to the new component.
+
+Keep a component and the handler that answers it in one template. If you split them into two templates, you have to type that import path by hand, because `importOf` only reaches files the same run writes.
+
+After `make` writes the files, it reminds you to run [`seedcord codegen`](/tooling/codegen), or to keep `seedcord dev` running. A new command's route only type checks once codegen records it.
+
+<Callout type="warning">
+
+Prettier treats a `.hbs` file as a Handlebars HTML template and fails on TypeScript inside it, like the `typeof` in the handler above. List `templates/` in `.prettierignore`.
+
+</Callout>
+
+### The name
+
+`name` is the part after the last `/`, exactly as you typed it, so any casing works. `roll dice`, `rollDice`, and `RollDice` all become `RollDice` through `{{ pascal name }}`. `{{ kebab name }}` turns each of them into `roll-dice`.
+
+The name starts with a letter and contains letters, digits, spaces, `-`, and `_`. To write into a subfolder, type the folder names first, separated by `/`. `tickets/Appeal`, for example, puts both files in a `tickets` folder. If a file the template would write already exists, the name prompt says the file "already exists" and asks again. `make` doesn't overwrite a file.
+
+The template doesn't see the folders you typed. If it builds a custom id from `name`, as the component above does, then `tickets/Appeal` and `moderation/Appeal` both get the id `appeal`, and your bot throws `CoreDuplicateName` when it starts. Give those two different names, or build the id from a value the template asks for, like `{{ kebab id }}`.
+
+seedcord renders only the file name in a template's path, so a folder called `{{pascal name}}` keeps that name. It works out every path as soon as you type the name, before it asks anything else. That's how the name prompt already knows a file exists, and why a file name can only use `name` and the helpers.
+
+## The values you're asked for
+
+You don't declare a template's values anywhere. seedcord reads every `.hbs` file in the template, partials included, and picks each question from how the template uses that value. Add a value to a template and the next run asks for it.
+
+{/* prettier-ignore-start */}
+
+| in the template | what you're asked |
+| --- | --- |
+| `{{ label }}` | a line of text |
+| `{{#if ephemeral}}` or `{{#unless ephemeral}}` | yes or no |
+| `{{#each choices}}{{ this }}{{/each}}` | one line of text, split at each comma |
+| `{{#each options}}{{ label }}{{/each}}` | "Add an item to options?", then each field of that item, until you answer no |
+| `{{ author.label }}`, or `{{ label }}` inside `{{#with author}}` | each field of `author`, asked as `author.label` |
+
+{/* prettier-ignore-end */}
+
+The questions come in the order the values first appear. `make` reads the files in alphabetical order of their paths. If a template prints a value and also uses it in an `#if`, as in `{{#if note}}{{ note }}{{/if}}`, `make` asks for text. An empty answer skips the block.
+
+`make` also asks for a value you reach through `../`, `@root`, or a block param, as in `as |option|`. It doesn't ask for `@index`, which contains the position in the loop.
+
+seedcord disables Handlebars' HTML escaping, so `{{ label }}` writes your answer exactly as typed, quotes and `<` included. An answer like `Don't panic` ends a `'...'` string early. `{{ quote label }}`, as in the samples above, writes the answer as a single-quoted string with every single quote and backslash in it escaped.
+
+`make` throws on these, after you type the name and before it asks for any value:
+
+- If the template uses one value as two of text, a list, and an item with fields, `make` throws `MakeValueUsedTwoWays`. Looping over `tags` with `#each` and also printing `{{ tags.first }}` is one example. So is printing `{{ author }}` and also `{{ author.name }}`.
+- If a partial calls itself, `make` throws `MakePartialCallsItself`, because it can't tell how many levels to ask for.
+- If Handlebars' `lookup` helper gets an unquoted key, `make` throws `MakeLookupDynamicKey`, because seedcord can't tell which field to ask for. Quote the key, as in `{{ lookup author "label" }}`.
+
+If a template file doesn't parse, calls a helper that doesn't exist, or has a file name that reads a value other than `name`, `make` throws `MakeTemplateFailed` with the file's path and the error Handlebars gave.
+
+## The values seedcord fills in
+
+`make` fills these in from your project and the name you typed.
+
+{/* prettier-ignore-start */}
+
+| value | what it contains |
+| --- | --- |
+| `name` | the name you typed, after the last `/` |
+| `transport` | the package your bot's `Seedcord` comes from, `@seedcord/gateway` or `@seedcord/http` |
+| `isGateway` | `true` on a gateway bot |
+| `isEdge` | `true` on a bot that [runs on Cloudflare Workers](/build/workers) |
+| `toRoot` | the path from the file being written back to `root`, like `../..` |
+
+{/* prettier-ignore-end */}
+
+Use `toRoot` to import a file at a fixed place under `root`, like `'{{ toRoot }}/db'`. The path is correct at any depth.
+
+To fill in `transport`, `make` loads your [`instance`](/build/config) file the way `seedcord codegen` does. If constructing your bot throws, for example because an env var is missing, `make` throws too.
+
+## The helpers seedcord ships
+
+With the name typed as `roll dice`:
+
+{/* prettier-ignore-start */}
+
+| helper | call | gives |
+| --- | --- | --- |
+| `pascal` | `{{ pascal name }}` | `RollDice` |
+| `camel` | `{{ camel name }}` | `rollDice` |
+| `snake` | `{{ snake name }}` | `roll_dice` |
+| `kebab` | `{{ kebab name }}` | `roll-dice` |
+| `quote` | `{{ quote name }}` | `'roll dice'` |
+| `importOf` | `{{ importOf "components" }}` | the import path to the one file in that template folder |
+
+{/* prettier-ignore-end */}
+
+`importOf` takes the path of a folder inside the template, like `"components"`. It returns the import path from the file being written to the file in that folder. The path leaves off a `.ts` or `.js` extension. If that folder contains no `.hbs` file or more than one, `make` throws `MakeImportOfUnmatched`.
+
+## Your own helpers
+
+If several templates need the same change to a value, write it once as a helper under `make.helpers` in `seedcord.config.ts`:
+
+```ts twoslash title="seedcord.config.ts"
+import { defineConfig } from 'seedcord';
+
+export default defineConfig({
+    root: './src',
+    instance: './bot.ts',
+    make: {
+        templates: './templates', // the default
+        helpers: {
+            upper: (text: string) => text.toUpperCase()
+        }
+    }
+});
+```
+
+A template calls `upper` like a built-in helper. `{{ upper (snake name) }}` turns `roll dice` into `ROLL_DICE`, a name for a constant. Handlebars writes what a helper returns into the file as text, so the type of `make.helpers` rejects a helper that doesn't return a string. Handlebars passes your arguments first, then an options object you can ignore. If you keep your helpers in their own file, type them as `SeedcordMakeHelpers` from `seedcord`.
+
+If you give a helper a name templates already use, like `pascal`, Handlebars' `each`, or a value seedcord fills in like `name`, TypeScript reports an error in your config, and `make` throws `CliConfigInvalidField`. `make` never asks for a value with a helper's name, even when a template calls the helper with no arguments, as in `{{ upper }}`.
+
+## Partials
+
+Every handler template starts with the same import line. If it lives in each template, a change to it means editing every copy. A partial holds that shared piece once. Put it in `templates/_partials/` and call it by its file name without `.hbs`:
+
+{/* prettier-ignore */}
+```hbs title="templates/_partials/imports.hbs"
+import { {{ symbols }} } from '{{ transport }}';
+```
+
+```hbs title="templates/Button/handlers/{{pascal name}}.ts.hbs"
+{{> imports symbols="ButtonHandler, ButtonRoute"}}
+```
+
+`symbols="..."` passes a value into the partial. If the partial reads a value you don't pass in, `make` asks for it like any other, because seedcord reads a partial as part of the template that calls it.
+
+A value after the partial's name becomes the data inside it. In `{{> card author}}`, a `{{ label }}` inside `card` reads `author.label`, so that's the question you get.
+
+A partial in a subfolder keeps the folder in its name. `_partials/discord/imports.hbs`, for example, is `{{> discord/imports}}`. Your templates use the `_partials` in your templates folder. A plugin's templates use the plugin's own `_partials`.
+
+## Templates from a plugin
+
+A plugin's users write the same files around it in every bot, like a handler that reads the plugin from `this.core`. A plugin can ship those as templates. `make` reads the `package.json` of each installed package listed in your bot's own `package.json`. If one points at a templates folder, `make` lists its templates.
+
+```json title="package.json"
+{
+    "name": "@you/seedcord-plugin",
+    "files": ["dist", "templates"],
+    "seedcord": {
+        "templates": "./templates"
+    }
+}
+```
+
+The path resolves against the plugin's own folder. List the folder in `files` too, or npm leaves it out of [the published package](/writing-plugins/publishing). The first prompt shows where each template came from beside its name. Your own templates show your templates folder, like `templates/`. A plugin's templates show its package name.
+
+A plugin's templates work like yours. One template can serve gateway and http bots alike, since `{{ transport }}` and `{{#if isGateway}}` read the bot `make` runs in.
+
+## Starting with no templates
+
+A project from `create-seedcord` starts with templates in `templates/` for a slash command, a button, a select menu, a modal, and on gateway an event. They come from the [starters](https://github.com/seedcord/seedcord/tree/next/cli/create-seedcord/starters) in the seedcord repo, so you can copy them into a project that doesn't have them.
+
+If neither your bot nor its plugins have a template, `make` throws `MakeNoTemplates` with the folder it read.

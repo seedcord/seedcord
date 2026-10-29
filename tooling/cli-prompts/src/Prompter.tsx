@@ -80,6 +80,7 @@ export class Prompter {
         await app.waitUntilExit();
 
         if (outcome.kind === 'cancelled') throw new SeedcordError(SeedcordErrorCode.CliCancelled);
+        if (outcome.kind === 'failed') throw outcome.error;
         return outcome.answer;
     }
 }

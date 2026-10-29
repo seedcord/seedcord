@@ -38,7 +38,7 @@ describe('buildContext on gateway', () => {
 
     it('points the imports at the gateway package', () => {
         expect(context.isGateway).toBe(true);
-        expect(context.transportPackage).toBe('@seedcord/gateway');
+        expect(context.transport).toBe('@seedcord/gateway');
     });
 
     it('resolves the picked capabilities into intents and partials', () => {
@@ -60,7 +60,7 @@ describe('buildContext on http', () => {
 
     it('points the imports at the http package', () => {
         expect(context.isGateway).toBe(false);
-        expect(context.transportPackage).toBe('@seedcord/http');
+        expect(context.transport).toBe('@seedcord/http');
     });
 
     it('carries no intents or partials', () => {

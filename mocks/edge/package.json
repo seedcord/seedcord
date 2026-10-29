@@ -14,6 +14,7 @@
         "build": "seedcord build",
         "deploy": "seedcord build && cf deploy --prebuilt",
         "codegen": "seedcord codegen",
+        "make": "seedcord make",
         "types": "cf workers types",
         "postinstall": "cf workers types",
         "clean": "rm -rf .cloudflare",

@@ -14,6 +14,7 @@ import { realPath } from '#core/project/realPath';
 import { StateFolder } from '#core/state/StateFolder';
 import { copyEdgeBot } from '#tests/commands/build/edgeBot';
 import { ED25519_KEY_BYTES, FAKE_TOKEN } from '#tests/commands/build/smoke';
+import { resolvedConfigOf } from '#tests/resolvedConfigOf';
 import { silentLogger } from '#tests/silentLogger';
 import { vitePluginsOf } from '#tests/vitePluginsOf';
 import { resolveDefaultExport } from '#utils/resolveDefaultExport';
@@ -35,30 +36,8 @@ function edgeTarget(projectDir: string, port: number): ResolvedEdgeTarget {
     };
 }
 
-function configWith(
-    projectDir: string,
-    target: ResolvedEdgeTarget,
-    viteMode: string,
-    vitePlugins = vitePluginsOf(),
-    files: string[] = []
-): ResolvedSeedcordConfig {
-    return {
-        configFile: realPath(join(projectDir, 'seedcord.config.ts')),
-        root: realPath(join(projectDir, 'src')),
-        instance: realPath(join(projectDir, 'src/bot.ts')),
-        target,
-        build: {},
-        files: files.map((folder) => realPath(folder)),
-        typecheck: { enabled: false },
-        idleAnimation: true,
-        viteMode,
-        tunnel: { mode: 'quick' },
-        vitePlugins
-    };
-}
-
 export function edgeConfig(projectDir: string, port = ANY_PORT): ResolvedSeedcordConfig {
-    return configWith(projectDir, edgeTarget(projectDir, port), 'development');
+    return resolvedConfigOf(projectDir, { target: edgeTarget(projectDir, port) });
 }
 
 export const liveVars = { DISCORD_BOT_TOKEN: FAKE_TOKEN, DISCORD_PUBLIC_KEY: 'ab'.repeat(ED25519_KEY_BYTES) };
@@ -186,7 +165,12 @@ export async function startedRuntime(
     { devPort = ANY_PORT, viteMode = 'development', vitePlugins = vitePluginsOf(), files = [] }: RuntimeOptions = {}
 ): Promise<StartedRuntime> {
     const target = edgeTarget(projectDir, devPort);
-    const config = configWith(projectDir, target, viteMode, vitePlugins, files);
+    const config = resolvedConfigOf(projectDir, {
+        target,
+        viteMode,
+        vitePlugins,
+        files: files.map((folder) => realPath(folder))
+    });
     const runtime = new EdgeDevRuntime(target);
     let listening: number | undefined;
     const recordPort: DevEventHandler = (event) => {

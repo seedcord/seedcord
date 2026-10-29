@@ -1,0 +1,16 @@
+import { StringSelectMenuBuilder } from '@discordjs/builders';
+import { CustomId, RowComponent } from '{{ transport }}';
+
+export const {{ pascal name }}Id = new CustomId('{{ kebab name }}');
+
+export class {{ pascal name }}Menu extends RowComponent<'menu_string'> {
+    constructor() {
+        super('menu_string');
+
+        this.instance.addComponents(
+            new StringSelectMenuBuilder()
+                .setCustomId({{ pascal name }}Id.encode({}))
+                .addOptions({{#each choices}}{ label: {{ quote this }}, value: '{{ kebab this }}' }{{#unless @last}}, {{/unless}}{{/each}})
+        );
+    }
+}

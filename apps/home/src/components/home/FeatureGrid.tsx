@@ -10,6 +10,7 @@ import {
     Component,
     Database,
     FileCode2,
+    FilePlus2,
     FolderInput,
     GalleryHorizontalEnd,
     Gauge,
@@ -167,6 +168,7 @@ const GROUPS: Group[] = [
             },
             { icon: Cable, label: 'dev tunnel', gloss: 'opens cloudflared and points Discord at it' },
             { icon: FileCode2, label: 'codegen', gloss: 'writes the types for your commands and config' },
+            { icon: FilePlus2, label: 'file templates', gloss: 'writes new files from your own Handlebars templates' },
             {
                 icon: WandSparkles,
                 label: 'seedcord commands',

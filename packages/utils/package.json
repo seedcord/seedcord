@@ -63,7 +63,8 @@
         "@seedcord/errors": "workspace:^",
         "@seedcord/types": "workspace:^",
         "discord-api-types": "catalog:deps",
-        "strip-ansi": "^7.2.0"
+        "strip-ansi": "^7.2.0",
+        "type-fest": "catalog:deps"
     },
     "devDependencies": {
         "@seedcord/eslint-config": "workspace:^",
@@ -71,8 +72,7 @@
         "@seedcord/tsdown-config": "workspace:^",
         "@seedcord/vitest-config": "workspace:^",
         "discord.js": "catalog:peer",
-        "tsx": "catalog:deps",
-        "type-fest": "catalog:deps"
+        "tsx": "catalog:deps"
     },
     "publishConfig": {
         "access": "public",

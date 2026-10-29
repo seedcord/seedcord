@@ -23,7 +23,7 @@
 
 ## About
 
-`seedcord` is the CLI a bot project runs during development and at build time. It reads `seedcord.config.ts` and gives you a dev server with hot reload, a production build, the codegen that types your commands, and a way to deploy those commands to Discord.
+`seedcord` is the CLI a bot project runs during development and at build time. It reads `seedcord.config.ts` and gives you a dev server with hot reload, a production build, the codegen that types your commands, a way to deploy those commands to Discord, and new files written from your own templates.
 
 It loads your bot through Vite every time, with any Vite plugin you add. Those plugins, your `.env` modes, and bundled data files you set up in dev work the same way in the build. One `seedcord build` makes a Node or Bun server, a single Bun binary, a Cloudflare Worker, or a package another app installs and starts.
 
@@ -49,10 +49,13 @@ Run it through your project's scripts, like `pnpm dev`. A global `seedcord` thro
 | `seedcord build` | type checks the bot and bundles it into `outDir` with Vite. An edge bot builds into a Cloudflare worker |
 | `seedcord codegen` | writes the typed augmentations for your commands and config |
 | `seedcord commands` | deploys, lists and cleans up your commands on Discord |
+| `seedcord make` | writes new files from one of your Handlebars templates, or one an installed plugin ships |
 
 <!-- prettier-ignore-end -->
 
 `codegen --check` verifies the committed augmentations match your source. Run it in CI.
+
+`make` asks for a name and each value the template reads. The [make guide](https://seedcord.org/guide/tooling/make) shows how to write a template.
 
 `commands` reads `DISCORD_BOT_TOKEN` from your environment or `.env`:
 

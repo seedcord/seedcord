@@ -70,8 +70,7 @@
         "@types/pg": "catalog:deps",
         "envapt": "catalog:peer",
         "kysely": "catalog:peer",
-        "pg": "catalog:peer",
-        "type-fest": "catalog:deps"
+        "pg": "catalog:peer"
     },
     "publishConfig": {
         "access": "public",
@@ -82,6 +81,7 @@
         "@seedcord/logger": "workspace:^",
         "@seedcord/types": "workspace:^",
         "@seedcord/utils": "workspace:^",
-        "reflect-metadata": "catalog:deps"
+        "reflect-metadata": "catalog:deps",
+        "type-fest": "catalog:deps"
     }
 }

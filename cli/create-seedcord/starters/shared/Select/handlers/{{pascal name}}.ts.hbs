@@ -1,0 +1,10 @@
+import { StringMenuHandler, StringMenuRoute } from '{{ transport }}';
+
+import { {{ pascal name }}Id } from '{{ importOf "components" }}';
+
+@StringMenuRoute({{ pascal name }}Id)
+export class {{ pascal name }}Select extends StringMenuHandler<[typeof {{ pascal name }}Id]> {
+    public async execute(): Promise<void> {
+        await this.reply(this.values.join(', '));
+    }
+}

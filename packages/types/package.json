@@ -58,7 +58,8 @@
     },
     "dependencies": {
         "@discordjs/rest": "catalog:deps",
-        "discord-api-types": "catalog:deps"
+        "discord-api-types": "catalog:deps",
+        "type-fest": "catalog:deps"
     },
     "peerDependencies": {
         "typescript": "catalog:consumerTypes"
@@ -68,8 +69,7 @@
         "@seedcord/tsconfig": "workspace:^",
         "@seedcord/tsdown-config": "workspace:^",
         "@seedcord/vitest-config": "workspace:^",
-        "discord.js": "catalog:peer",
-        "type-fest": "catalog:deps"
+        "discord.js": "catalog:peer"
     },
     "publishConfig": {
         "access": "public",

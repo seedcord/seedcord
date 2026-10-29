@@ -1,5 +1,7 @@
-import { chmod, mkdir, readFile, stat, utimes, writeFile } from 'node:fs/promises';
-import { join, resolve } from 'node:path';
+import { mkdirSync, rmSync, writeFileSync } from 'node:fs';
+import { chmod, mkdir, mkdtempDisposable, readFile, stat, utimes, writeFile } from 'node:fs/promises';
+import { tmpdir } from 'node:os';
+import { dirname, join, resolve } from 'node:path';
 
 import { BuilderComponent, RegisterCommand } from '@seedcord/core';
 import { CommandMetadataKey } from '@seedcord/core/internal';
@@ -12,26 +14,103 @@ import { AugmentationBuilder } from '#commands/codegen/AugmentationBuilder';
 import { CodegenRunner } from '#commands/codegen/CodegenRunner';
 import { quietSteps } from '#core/output/quietSteps';
 import { ProjectFiles } from '#core/project/ProjectFiles';
+import { realPath } from '#core/project/realPath';
+import { brandedInstance, modulesFrom, projectOpener } from '#tests/fakeProject';
+import { resolvedConfigOf } from '#tests/resolvedConfigOf';
 import { silentLogger } from '#tests/silentLogger';
 
-import {
-    asyncInstanceRunner,
-    BanCommand,
-    brandedInstance,
-    commandsUnder,
-    configAt,
-    invalidRunner,
-    loaderFrom,
-    makeRunner,
-    OUTPUT,
-    pluginRunner,
-    projectOpener,
-    scanRunner,
-    tempDir
-} from './codegenFixtures';
-
 import type { ProjectOpener } from '#core/config/openProjectWithSteps';
+import type { ResolvedSeedcordConfig } from '#core/config/schema';
+import type { RealPath } from '#core/project/realPath';
+import type { ILogger } from '@seedcord/types';
 import type { SeedcordInstance } from '@seedcord/types/internal';
+
+const OUTPUT = 'seedcord-gen.d.ts';
+
+async function tempDir(prefix: string): Promise<RealPath> {
+    const dir = await mkdtempDisposable(join(tmpdir(), prefix));
+    onTestFinished(() => dir.remove());
+    return realPath(dir.path);
+}
+
+async function commandsUnder(root: string): Promise<string> {
+    return mkdir(join(root, 'commands')).then(() => join(root, 'commands'));
+}
+
+class BanCommand extends BuilderComponent<'command'> {
+    public constructor() {
+        super('command');
+        this.instance.setName('ban').setDescription('Ban a member');
+    }
+}
+RegisterCommand('global')(BanCommand);
+
+function configAt(root: string, instance: string): ResolvedSeedcordConfig {
+    mkdirSync(dirname(instance), { recursive: true });
+    writeFileSync(instance, '');
+    onTestFinished(() => rmSync(instance, { force: true }));
+    const at = (path: string): RealPath => realPath(resolve(root, path));
+    return resolvedConfigOf(root, {
+        root: at('.'),
+        instance: at(instance),
+        target: { kind: 'server', start: at('index.ts'), outDir: at('dist') },
+        idleAnimation: false,
+        tunnel: { mode: 'off' }
+    });
+}
+
+function runnerWith(
+    config: ResolvedSeedcordConfig,
+    importModule: (entryPath: string) => Promise<unknown>,
+    logger: ILogger
+): CodegenRunner {
+    const projectLoader = projectOpener(config, modulesFrom(importModule));
+
+    return new CodegenRunner({ steps: quietSteps, projectLoader, generator: new AugmentationBuilder(logger), logger });
+}
+
+// no commands path, so the scan is empty and the rendered registry is deterministic.
+function makeRunner(root: string, logger: ILogger): CodegenRunner {
+    const importModule = (): Promise<unknown> => Promise.resolve({ default: brandedInstance() });
+
+    return runnerWith(configAt(root, resolve(root, 'bot.ts')), importModule, logger);
+}
+
+// importModule returns the branded instance for instancePath and the command module for every other path.
+function scanRunner(
+    root: string,
+    commandsPath: string | null,
+    moduleByPath: (entryPath: string) => Record<string, unknown>,
+    logger: ILogger
+): CodegenRunner {
+    const instancePath = resolve(root, 'bot.ts');
+    const importModule = (entryPath: string): Promise<unknown> =>
+        entryPath === instancePath
+            ? Promise.resolve({ default: brandedInstance(commandsPath) })
+            : Promise.resolve(moduleByPath(entryPath));
+
+    return runnerWith(configAt(root, instancePath), importModule, logger);
+}
+
+// instance double whose default export carries no SeedcordBrand, to exercise the isSeedcordInstance guard.
+function invalidRunner(root: string, logger: ILogger): CodegenRunner {
+    const importModule = (): Promise<unknown> => Promise.resolve({ default: { not: 'branded' } });
+
+    return runnerWith(configAt(root, resolve(root, 'bot.ts')), importModule, logger);
+}
+
+// dev accepts a default export that resolves to the instance
+function asyncInstanceRunner(root: string, logger: ILogger): CodegenRunner {
+    const importModule = (): Promise<unknown> => Promise.resolve({ default: Promise.resolve(brandedInstance()) });
+
+    return runnerWith(configAt(root, resolve(root, 'bot.ts')), importModule, logger);
+}
+
+function pluginRunner(root: string, instance: string, plugins: Record<string, object>, logger: ILogger): CodegenRunner {
+    const importModule = (): Promise<unknown> => Promise.resolve({ default: brandedInstance(null, plugins) });
+
+    return runnerWith(configAt(root, instance), importModule, logger);
+}
 
 describe('CodegenRunner plugin capabilities', () => {
     it('augments Core from the attach keys and PluginTypes from each codegen(), sorted by id', async () => {
@@ -109,7 +188,7 @@ describe('CodegenRunner writeFrom', () => {
             files,
             // justified: codegen reads only the brand keys and config.bot off the instance
             instance: brandedInstance(cmdDir) as SeedcordInstance,
-            modules: loaderFrom(() => Promise.resolve({ BanCommand }))
+            modules: modulesFrom(() => Promise.resolve({ BanCommand }))
         });
 
         const written = await readFile(resolve(root, OUTPUT), 'utf8');
@@ -125,7 +204,7 @@ describe('CodegenRunner', () => {
         await writeFile(join(cmdDir, 'ban.ts'), 'export {};', 'utf8');
         const instancePath = resolve(root, 'bot.ts');
         let closed = false;
-        const modules = loaderFrom(
+        const modules = modulesFrom(
             (entryPath) => {
                 if (closed) return Promise.reject(new Error('Vite module runner has been closed.'));
                 return Promise.resolve(

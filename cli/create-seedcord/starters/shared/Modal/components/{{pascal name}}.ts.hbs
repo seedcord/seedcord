@@ -1,0 +1,19 @@
+import { BuilderComponent, CustomId } from '{{ transport }}';
+import { TextInputStyle } from 'discord-api-types/v10';
+
+export const {{ pascal name }}Id = new CustomId('{{ kebab name }}');
+
+export class {{ pascal name }}Modal extends BuilderComponent<'modal'> {
+    constructor() {
+        super('modal');
+
+        this.instance
+            .setCustomId({{ pascal name }}Id.encode({}))
+            .setTitle({{ quote title }})
+            .addLabelComponents((label) =>
+                label
+                    .setLabel({{ quote question }})
+                    .setTextInputComponent((input) => input.setCustomId('answer').setStyle(TextInputStyle.Short))
+            );
+    }
+}

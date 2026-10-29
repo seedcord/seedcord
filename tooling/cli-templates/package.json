@@ -1,0 +1,61 @@
+{
+    "name": "@seedcord/cli-templates",
+    "type": "module",
+    "version": "0.0.0",
+    "engines": {
+        "node": "^24.22.1 || >=26.12.1",
+        "bun": ">=1.4.2"
+    },
+    "private": true,
+    "description": "Reads and renders the Handlebars templates seedcord make writes files from",
+    "types": "./dist/index.d.mts",
+    "repository": {
+        "type": "git",
+        "url": "https://github.com/seedcord/seedcord.git",
+        "directory": "tooling/cli-templates"
+    },
+    "exports": {
+        ".": {
+            "import": {
+                "types": "./dist/index.d.mts",
+                "default": "./dist/index.mjs"
+            }
+        },
+        "./helper-names": {
+            "import": {
+                "types": "./dist/helperNames.d.mts",
+                "default": "./dist/helperNames.mjs"
+            }
+        }
+    },
+    "scripts": {
+        "build": "tsdown",
+        "clean": "rm -rf dist",
+        "lint": "eslint '**/*.{ts,tsx}' --cache --no-error-on-unmatched-pattern",
+        "lint:fix": "eslint '**/*.{ts,tsx}' --fix --cache --no-error-on-unmatched-pattern",
+        "fmt": "prettier --write '**/*.{ts,tsx,json,md}' --cache --no-error-on-unmatched-pattern",
+        "fmt:check": "prettier --check '**/*.{ts,tsx,json,md}' --cache --no-error-on-unmatched-pattern",
+        "tc": "tsgo --noEmit",
+        "test": "vitest run",
+        "test:watch": "vitest dev"
+    },
+    "peerDependencies": {
+        "typescript": "catalog:peer"
+    },
+    "dependencies": {
+        "@seedcord/errors": "workspace:^",
+        "@seedcord/utils": "workspace:^",
+        "es-toolkit": "catalog:deps",
+        "handlebars": "catalog:deps",
+        "type-fest": "catalog:deps"
+    },
+    "devDependencies": {
+        "@seedcord/core": "workspace:^",
+        "@seedcord/eslint-config": "workspace:^",
+        "@seedcord/tsconfig": "workspace:^",
+        "@seedcord/tsdown-config": "workspace:^",
+        "@seedcord/types": "workspace:^",
+        "@seedcord/vitest-config": "workspace:^",
+        "vitest": "catalog:test"
+    }
+}

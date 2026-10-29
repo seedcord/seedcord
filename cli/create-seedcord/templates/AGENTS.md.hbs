@@ -10,7 +10,7 @@ Rules for an AI coding agent working in this repo.
 
 The API reference is at <https://seedcord.org/docs>, one page per symbol.
 
-This project runs on the {{#if isGateway}}gateway{{else}}http{{/if}} transport{{#if isEdge}} on Cloudflare Workers{{/if}} and imports everything from `{{ transportPackage }}`. A page marks anything that differs between the two transports.
+This project runs on the {{#if isGateway}}gateway{{else}}http{{/if}} transport{{#if isEdge}} on Cloudflare Workers{{/if}} and imports everything from `{{ transport }}`. A page marks anything that differs between the two transports.
 
 ## How a command works here
 
@@ -30,6 +30,7 @@ Run `{{ pm.run }} codegen` after you add a command or change its options. It wri
 | `src/events/` | handlers for things happening in a server |
 {{/if}}
 | `src/bot.ts` | the config |
+| `templates/` | a template for each kind of file, like a command or a button. Copy its shape when you add one |
 
 <!-- prettier-ignore-end -->
 

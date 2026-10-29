@@ -15,3 +15,11 @@ defineServerConfig({ instance: './bot.ts', entry: './index.ts' });
 
 // @ts-expect-error build.bootstrap is gone, the entry is always index.mjs
 defineServerConfig({ instance: './bot.ts', build: { bootstrap: './boot.ts' } });
+
+defineServerConfig({
+    instance: './bot.ts',
+    make: { templates: './tpl', helpers: { shout: (value: string) => value } }
+});
+
+// @ts-expect-error seedcord ships pascal
+defineServerConfig({ instance: './bot.ts', make: { helpers: { pascal: (value: string) => value } } });

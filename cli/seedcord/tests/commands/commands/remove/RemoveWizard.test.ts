@@ -12,6 +12,7 @@ import { RemoveWizard, WIZARD_STEPS } from '#commands/commands/remove/RemoveWiza
 import { levelMark } from '#core/output/levelMark';
 import { StepPrinter } from '#core/output/StepPrinter';
 import { APP_ID, fakeDiscord, removeDeps, slash } from '#tests/commands/commands/fakeBot';
+import { maskStepTimes } from '#tests/maskStepTimes';
 
 import type { WizardQuestions } from '#commands/commands/remove/RemoveWizard';
 import type { APIApplicationCommand } from 'discord-api-types/v10';
@@ -36,8 +37,6 @@ const ROUTES: Record<string, unknown> = {
     [Routes.applicationGuildCommands(APP_ID, 'g3')]: []
 };
 
-// a step's time depends on the machine
-const masked = (screen: string): string => screen.replaceAll(/ +\d[\d.]*m?s\b/gu, (time) => 'T'.padStart(time.length));
 const finished = (row: string): string => `  ${paint.check} ${row}`;
 
 interface WizardRun {
@@ -78,7 +77,7 @@ describe('RemoveWizard with the clean questions', () => {
             '/applications/app-1/guilds/g1/commands/11',
             '/applications/app-1/guilds/g2/commands/21'
         ]);
-        expect(masked(await terminal.screen())).toBe(
+        expect(maskStepTimes(await terminal.screen())).toBe(
             [
                 finished('guilds        T  3 guilds'),
                 finished('connect       T'),
@@ -116,7 +115,7 @@ describe('RemoveWizard with the clean questions', () => {
         await done;
 
         expect(deleted).toEqual([]);
-        const screen = masked(await terminal.screen());
+        const screen = maskStepTimes(await terminal.screen());
         expect(screen).not.toContain('delete  ');
         expect(screen.trimEnd().split('\n').at(-1)).toBe('  Nothing deleted.');
     });
@@ -129,7 +128,7 @@ describe('RemoveWizard with the clean questions', () => {
         await done;
 
         expect(deleted).toEqual(['/applications/app-1/guilds/g1/commands/11']);
-        expect(masked(await terminal.screen())).toContain('guilds        T  1 guild, using Alpha');
+        expect(maskStepTimes(await terminal.screen())).toContain('guilds        T  1 guild, using Alpha');
     });
 
     it.each([
@@ -171,7 +170,7 @@ describe('RemoveWizard with the purge questions', () => {
 
         expect(cleared.map(({ route }) => route)).toEqual(['/applications/app-1/guilds/g1/commands']);
         expect(deleted).toEqual([]);
-        const screen = masked(await terminal.screen()).replaceAll(' ', ' ');
+        const screen = maskStepTimes(await terminal.screen()).replaceAll(' ', ' ');
         expect(screen).toContain('scan          T  3 commands in 1 guild');
         expect(screen).toContain('  Alpha  3 commands\n      /ban /setup Report (message)');
     });
@@ -184,7 +183,7 @@ describe('RemoveWizard with the purge questions', () => {
         await done;
 
         expect(cleared.map(({ route }) => route)).toEqual(['/applications/app-1/commands']);
-        const screen = masked(await terminal.screen());
+        const screen = maskStepTimes(await terminal.screen());
         expect(screen).toContain('scan          T  2 commands globally');
         expect(screen).not.toContain('Global commands untouched.');
     });

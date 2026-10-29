@@ -122,7 +122,11 @@ export class ProjectLoader {
             viteMode: mode,
             tunnel: resolveTunnel(config.tunnel),
             hmr: config.hmr,
-            vitePlugins: new VitePlugins(config.vitePlugins, configPath)
+            vitePlugins: new VitePlugins(config.vitePlugins, configPath),
+            make: {
+                templates: realPathUnder(configDir, config.make?.templates ?? 'templates'),
+                helpers: config.make?.helpers ?? {}
+            }
         } satisfies ResolvedSeedcordConfig;
     }
 

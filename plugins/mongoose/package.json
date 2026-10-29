@@ -63,7 +63,8 @@
         "@seedcord/logger": "workspace:^",
         "@seedcord/types": "workspace:^",
         "@seedcord/utils": "workspace:^",
-        "reflect-metadata": "catalog:deps"
+        "reflect-metadata": "catalog:deps",
+        "type-fest": "catalog:deps"
     },
     "devDependencies": {
         "@seedcord/core": "workspace:^",
@@ -74,8 +75,7 @@
         "@seedcord/tsdown-config": "workspace:^",
         "@seedcord/vitest-config": "workspace:^",
         "envapt": "catalog:peer",
-        "mongoose": "catalog:peer",
-        "type-fest": "catalog:deps"
+        "mongoose": "catalog:peer"
     },
     "publishConfig": {
         "access": "public",

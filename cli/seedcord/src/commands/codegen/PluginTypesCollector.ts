@@ -1,4 +1,4 @@
-import { dirname, join, relative, sep } from 'node:path';
+import { relative, sep } from 'node:path';
 import { isDeepStrictEqual } from 'node:util';
 
 import { splitPluginKey } from '@seedcord/core/internal';
@@ -7,8 +7,8 @@ import { SeedcordError, SeedcordTypeError, throwSingleOrAggregate } from '@seedc
 import { HostPluginKeys, type SeedcordInstance } from '@seedcord/types/internal';
 import { asError, importSpecifier, isInside, isPlainObject } from '@seedcord/utils/internal';
 
-import { readManifest } from '#core/modules/installedManifest';
 import { isReferable, ModuleExports } from '#core/modules/ModuleExports';
+import { PackageManifest } from '#core/modules/PackageManifest';
 
 import { compare, escapeLiteral, renderKey } from './renderAugmentation';
 
@@ -168,7 +168,7 @@ class ExportIndex {
         const packages = new Map<unknown, Found>();
         for (const Class of pluginClasses) {
             const home = installed.definingExport(Class)?.module.file;
-            const name = home === undefined ? undefined : packageNameOf(home);
+            const name = home === undefined ? undefined : PackageManifest.packageNameOf(home);
             if (name === undefined) continue;
             for (const [exportName, value] of Object.entries(await modules.importPackage(name))) {
                 if (isReferable(value) && !packages.has(value))
@@ -237,16 +237,6 @@ function describeValue(value: unknown): string {
     }
     if (typeof value === 'bigint' || typeof value === 'symbol') return `a ${typeof value}`;
     return String(value);
-}
-
-// bun doesn't have findPackageJSON
-function packageNameOf(file: string): string | undefined {
-    for (let dir = dirname(file); dir !== dirname(dir); dir = dirname(dir)) {
-        // a nested dist/package.json often holds only "type"
-        const name = readManifest(join(dir, 'package.json'))?.name;
-        if (typeof name === 'string') return name;
-    }
-    return undefined;
 }
 
 function joinPath(path: string, name: string): string {

@@ -16,8 +16,8 @@ import { bindEnv } from '#tests/bindEnv';
 import { APP_ID, FAKE_TOKEN } from '#tests/commands/build/smoke';
 import { linkPackages } from '#tests/edgeFolder';
 import { lockDir, type LockDir } from '#tests/lockDir';
+import { resolvedConfigOf } from '#tests/resolvedConfigOf';
 import { silentLogger } from '#tests/silentLogger';
-import { vitePluginsOf } from '#tests/vitePluginsOf';
 import { DevStore } from '#ui/stores/DevStore';
 
 import { devConfigFor } from './devConfigFor';
@@ -28,23 +28,12 @@ import type { DevRuntime } from '#commands/dev/runtime/DevRuntime';
 import type { ResolvedSeedcordConfig } from '#core/config/schema';
 
 function config(): ResolvedSeedcordConfig {
-    return {
+    const manifest = realPath(join(process.cwd(), 'package.json'));
+    return resolvedConfigOf(process.cwd(), {
         root: realPath(process.cwd()),
-        configFile: realPath(join(process.cwd(), 'seedcord.config.ts')),
-        target: {
-            kind: 'server',
-            start: realPath(join(process.cwd(), 'package.json')),
-            outDir: realPath(join(process.cwd(), 'dist'))
-        },
-        instance: realPath(join(process.cwd(), 'package.json')),
-        tunnel: { mode: 'quick' },
-        typecheck: { enabled: false },
-        idleAnimation: true,
-        build: {},
-        files: [],
-        viteMode: 'development',
-        vitePlugins: vitePluginsOf()
-    };
+        instance: manifest,
+        target: { kind: 'server', start: manifest, outDir: realPath(join(process.cwd(), 'dist')) }
+    });
 }
 
 // the two arguments a DevSession takes from a loaded config

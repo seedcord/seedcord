@@ -321,5 +321,24 @@ export enum SeedcordErrorCode {
     /** The target path already has files in it. */
     CreateTargetNotEmpty = 3204,
     /** A command that create-seedcord ran exited non-zero. */
-    CreateStepFailed = 3205
+    CreateStepFailed = 3205,
+
+    /** The name given to `seedcord make` can't become a file name. */
+    MakeInvalidName = 3301,
+    /** A template calls `importOf` on a folder that doesn't hold exactly one template file. */
+    MakeImportOfUnmatched = 3302,
+    /** A template uses one value as two of text, a list, and an entry with fields. */
+    MakeValueUsedTwoWays = 3303,
+    /** Handlebars could not parse or render a template file. */
+    MakeTemplateFailed = 3304,
+    /** A template calls `lookup` with a key that isn't quoted text. */
+    MakeLookupDynamicKey = 3305,
+    /** `seedcord make` ran without a terminal to ask its questions in. */
+    MakeNeedsTerminal = 3306,
+    /** `seedcord make` found no templates in the bot or its plugins. */
+    MakeNoTemplates = 3307,
+    /** A path `seedcord make` would write to is taken, by a file on disk or by another file of the same template. */
+    MakePathTaken = 3308,
+    /** A template's partial calls itself, so `seedcord make` can't tell how many levels to ask for. */
+    MakePartialCallsItself = 3309
 }

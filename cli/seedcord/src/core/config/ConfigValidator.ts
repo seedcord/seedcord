@@ -1,3 +1,4 @@
+import { TAKEN_NAMES } from '@seedcord/cli-templates/helper-names';
 import { paint, SeedcordErrorCode } from '@seedcord/errors';
 import { SeedcordRangeError, SeedcordTypeError, throwSingleOrAggregate } from '@seedcord/errors/internal';
 import { isPlainObject, isStringArray } from '@seedcord/utils/internal';
@@ -44,6 +45,28 @@ function* hmrProblems(value: unknown): Generator<SeedcordTypeError> {
         yield invalidField('hmr.rollback', 'a boolean');
     }
     yield* typecheckProblems(value.typecheck);
+}
+
+function* makeProblems(value: unknown): Generator<SeedcordTypeError> {
+    if (value === undefined) return;
+    if (!isPlainObject(value)) {
+        yield invalidField('make', 'an object');
+        return;
+    }
+    if (!isOptionalString(value.templates)) yield invalidField('make.templates', 'a folder path');
+    if (value.helpers === undefined) return;
+    if (!isPlainObject(value.helpers)) {
+        yield invalidField(
+            'make.helpers',
+            `an object of functions, like ${paint.bold('{ shout: (text) => text.toUpperCase() }')}`
+        );
+        return;
+    }
+    for (const [name, helper] of Object.entries(value.helpers)) {
+        const field = `make.helpers.${name}`;
+        if (TAKEN_NAMES.has(name)) yield invalidField(field, `renamed, since templates already use ${name}`);
+        else if (typeof helper !== 'function') yield invalidField(field, 'a function');
+    }
 }
 
 function* tunnelProblems(value: unknown): Generator<SeedcordTypeError> {
@@ -93,6 +116,7 @@ export class ConfigValidator {
         yield* tunnelProblems(raw.tunnel);
         yield* this.buildProblems(raw.build);
         yield* hmrProblems(raw.hmr);
+        yield* makeProblems(raw.make);
         if (raw.vitePlugins !== undefined && typeof raw.vitePlugins !== 'function') {
             yield invalidField(
                 'vitePlugins',

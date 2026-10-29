@@ -1,0 +1,24 @@
+{{> header part="the modal's handler" }}
+import { ModalHandler, ModalRoute } from '{{ transport }}';
+
+import { {{ pascal name }}Id } from '{{ importOf "components" }}';
+
+const {{ upper (snake name) }}_TAGS = [{{#each tags}}{{ quote this }}{{#unless @last}}, {{/unless}}{{/each}}];
+
+@ModalRoute({{ pascal name }}Id)
+export class {{ pascal name }}Submit extends ModalHandler<[typeof {{ pascal name }}Id]> {
+    public async execute(): Promise<void> {
+        const lines = [{{#each fields}}
+            [{{ quote label }}, this.fields.getTextInputValue('{{ kebab label }}')].join(': '),{{/each}}
+            `Tags: ${ {{ upper (snake name) }}_TAGS.join(', ') }`
+        ];
+{{#if footer}}
+        lines.push({{ quote footer }});
+{{/if}}
+{{#with author}}
+        lines.push(`Made by ${ {{ quote name }} }`, {{ quote (lookup this "handle") }});
+{{/with}}
+
+        await this.reply(lines.join('\n'));
+    }
+}

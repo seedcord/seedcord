@@ -70,6 +70,11 @@ ruleTester.run('use-custom-id-codec', rule, {
             let id = 'raw';
             id = encoded;
             new ButtonBuilder().setCustomId(id);
+        `,
+        // a text input's id only keys its value in the submitted modal
+        dedent`
+            import { TextInputBuilder } from 'discord.js';
+            new TextInputBuilder().setCustomId('feedback-input');
         `
     ],
     invalid: [
@@ -196,13 +201,6 @@ ruleTester.run('use-custom-id-codec', rule, {
             code: dedent`
                 import { MentionableSelectMenuBuilder } from 'discord.js';
                 new MentionableSelectMenuBuilder().setCustomId('pick-mentionable');
-            `,
-            errors: [{ messageId: 'rawCustomId' }]
-        },
-        {
-            code: dedent`
-                import { TextInputBuilder } from 'discord.js';
-                new TextInputBuilder().setCustomId('feedback-input');
             `,
             errors: [{ messageId: 'rawCustomId' }]
         }

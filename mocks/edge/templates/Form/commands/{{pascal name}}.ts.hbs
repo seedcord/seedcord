@@ -1,0 +1,17 @@
+{{> header part="the command" }}
+import { BuilderComponent, RegisterCommand } from '{{ transport }}';
+{{#if guildOnly}}
+import { InteractionContextType } from 'discord-api-types/v10';
+{{/if}}
+
+@RegisterCommand()
+export class {{ pascal name }} extends BuilderComponent<'command'> {
+    constructor() {
+        super('command');
+
+        this.instance
+            .setName('{{ kebab name }}')
+            .setDescription({{ quote description }}){{#if guildOnly}}
+            .setContexts(InteractionContextType.Guild){{/if}};
+    }
+}

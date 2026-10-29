@@ -1,5 +1,6 @@
 import { basename } from 'node:path';
 
+import { transportVariables } from '@seedcord/cli-templates';
 import { SeedcordErrorCode } from '@seedcord/errors';
 import { SeedcordTypeError } from '@seedcord/errors/internal';
 
@@ -10,6 +11,7 @@ import { intentsFor, partialsFor } from '#interview/capabilities';
 import { STEPS } from '#interview/steps';
 
 import type { Answers } from '#interview/types';
+import type { TransportVariables } from '@seedcord/cli-templates';
 import type { AgentName } from 'package-manager-detector';
 
 type SharedAnswers = Omit<Answers, 'transport' | 'runtime' | 'capabilities'>;
@@ -25,11 +27,8 @@ export function capabilitiesOf(answers: ScaffoldAnswers): string[] {
 // capabilities that require receiving messageCreate events
 const MESSAGE_CAPABILITIES = new Set(['guild-messages', 'message-text', 'direct-messages']);
 
-export interface TemplateContext {
+export interface TemplateContext extends TransportVariables {
     projectName: string;
-    isGateway: boolean;
-    isEdge: boolean;
-    transportPackage: string;
     intents: string[];
     partials: string[];
     hasMessages: boolean;
@@ -72,15 +71,16 @@ export function buildContext(
     answers: ScaffoldAnswers,
     extras: { developerUsername: string; agent: AgentName }
 ): TemplateContext {
-    const isGateway = answers.transport === 'gateway';
-    const isEdge = answers.transport === 'http' && answers.runtime === 'edge';
+    const transportValues = transportVariables(
+        `@seedcord/${answers.transport}`,
+        answers.transport === 'http' ? answers.runtime : 'server'
+    );
+    const { isGateway, isEdge } = transportValues;
     const capabilities = capabilitiesOf(answers);
 
     return {
         projectName: basename(answers.directory),
-        isGateway,
-        isEdge,
-        transportPackage: isGateway ? '@seedcord/gateway' : '@seedcord/http',
+        ...transportValues,
         intents: isGateway ? intentsFor(capabilities) : [],
         partials: isGateway ? partialsFor(capabilities) : [],
         hasMessages: capabilities.some((id) => MESSAGE_CAPABILITIES.has(id)),

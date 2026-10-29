@@ -1,4 +1,4 @@
-import { SlashHandler, SlashRoute, timestampFromSnowflake, toEpochSeconds } from '{{ transportPackage }}';
+import { SlashHandler, SlashRoute, timestampFromSnowflake, toEpochSeconds } from '{{ transport }}';
 
 @SlashRoute('ping')
 export class Ping extends SlashHandler<'ping'> {

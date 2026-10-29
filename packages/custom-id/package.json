@@ -53,7 +53,8 @@
     },
     "dependencies": {
         "@seedcord/errors": "workspace:^",
-        "discord-api-types": "catalog:deps"
+        "discord-api-types": "catalog:deps",
+        "type-fest": "catalog:deps"
     },
     "peerDependencies": {
         "typescript": "catalog:consumerTypes"
@@ -62,8 +63,7 @@
         "@seedcord/eslint-config": "workspace:^",
         "@seedcord/tsconfig": "workspace:^",
         "@seedcord/tsdown-config": "workspace:^",
-        "@seedcord/vitest-config": "workspace:^",
-        "type-fest": "catalog:deps"
+        "@seedcord/vitest-config": "workspace:^"
     },
     "publishConfig": {
         "access": "public",

@@ -44,6 +44,8 @@ export default defineConfig({
 | `hmr.rollback` | `true` | | whether a failed reload goes back to the last version that loaded |
 | `hmr.typecheck` | `false` | `root` | `true` runs `tsc --watch` beside the bot, and `{ tsconfig }` picks the tsconfig |
 | `idleAnimation` | `true` | | whether the [dev terminal](/tooling/dev) animates while nothing happens |
+| `make.templates` | `./templates` | the config's folder | the folder [`seedcord make`](/tooling/make) reads templates from |
+| `make.helpers` | `{}` | | [your own Handlebars helpers](/tooling/make#your-own-helpers) for those templates |
 
 {/* prettier-ignore-end */}
 

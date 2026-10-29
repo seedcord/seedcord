@@ -13,8 +13,7 @@ const CUSTOM_ID_BUILDERS = new Set([
     'RoleSelectMenuBuilder',
     'ChannelSelectMenuBuilder',
     'MentionableSelectMenuBuilder',
-    'ModalBuilder',
-    'TextInputBuilder'
+    'ModalBuilder'
 ]);
 
 function isRawString(expr: TSESTree.Expression): boolean {

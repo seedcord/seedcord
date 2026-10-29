@@ -70,6 +70,7 @@
         },
         "tooling/eslint-utils": {},
         "tooling/cli-prompts": {},
+        "tooling/cli-templates": {},
         "packages/event-emitter": {
             "entry": ["**/*.types-test.ts"]
         },
@@ -105,7 +106,7 @@
         },
         "cli/seedcord": {
             "entry": ["**/*.types-test.ts", "tests/fixtures/*/**/*.{ts,tsx,mts,js,jsx,mjs}"],
-            "ignoreDependencies": ["cloudflare", "@leeoniya/ufuzzy"]
+            "ignoreDependencies": ["cloudflare", "@leeoniya/ufuzzy", "es-toolkit", "handlebars"]
         },
         "cli/create-seedcord": {
             "entry": ["**/*.types-test.ts"]

@@ -1,0 +1,8 @@
+import { SlashHandler, SlashRoute } from '{{ transport }}';
+
+@SlashRoute('{{ kebab name }}')
+export class {{ pascal name }} extends SlashHandler<'{{ kebab name }}'> {
+    public async execute(): Promise<void> {
+        await this.reply({{ quote reply }});
+    }
+}

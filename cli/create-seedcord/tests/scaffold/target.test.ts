@@ -1,4 +1,4 @@
-import { mkdir, mkdtempDisposable, writeFile } from 'node:fs/promises';
+import { chmod, mkdir, mkdtempDisposable, writeFile } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 
@@ -57,4 +57,18 @@ describe('claimTarget', () => {
 
         expect(isSeedcordError(thrown, undefined, SeedcordErrorCode.CreateTargetNotEmpty)).toBe(true);
     });
+
+    it.skipIf(process.platform === 'win32' || process.getuid?.() === 0)(
+        "throws CreateInvalidAnswer with the path when it can't read the folder",
+        async () => {
+            const target = join(await scratch(), 'my-bot');
+            await mkdir(target, { mode: 0o000 });
+            onTestFinished(() => chmod(target, 0o700));
+
+            const thrown = thrownBy(() => claimTarget(target));
+
+            expect(isSeedcordError(thrown, undefined, SeedcordErrorCode.CreateInvalidAnswer)).toBe(true);
+            expect((thrown as Error).message).toContain(target);
+        }
+    );
 });
