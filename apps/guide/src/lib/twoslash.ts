@@ -196,7 +196,7 @@ function sampleCompilerOptions(): ts.CompilerOptions {
 
 const BASE_OPTIONS = {
     compilerOptions: sampleCompilerOptions(),
-    extraFiles: { 'seedcord-gen.d.ts': SAMPLE_AUGMENTATION }
+    extraFiles: { 'seedcord-gen.ts': SAMPLE_AUGMENTATION }
 };
 
 // hovers make twoslash query typescript on every identifier. that triples what a fence costs to compile

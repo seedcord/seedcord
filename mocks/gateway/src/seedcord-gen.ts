@@ -3,6 +3,9 @@
 
 import type Bot from './bot';
 
+// a row has to fit what its plugin's codegen() declares
+type Fits<Plugin extends { codegen(): Promise<unknown> }, Row extends Awaited<ReturnType<Plugin['codegen']>>> = Row;
+
 // prettier-ignore
 declare module '@seedcord/gateway' {
     interface Core {
@@ -31,8 +34,8 @@ declare module '@seedcord/gateway' {
         Confirm: 'application';
     }
     interface PluginTypes {
-        '@seedcord/plugin-mongoose': { services: { users: (typeof import('./services/Users'))['Users'] } };
-        'mock-i18n': { messages: { goodbye: []; greet: ['name']; transfer: ['from', 'amount', 'to'] } };
+        '@seedcord/plugin-mongoose': Fits<(typeof Bot)['db'], { services: { users: (typeof import('./services/Users'))['Users'] } }>;
+        'mock-i18n': Fits<(typeof Bot)['i18n'], { messages: { goodbye: []; greet: ['name']; transfer: ['from', 'amount', 'to'] } }>;
     }
 }
 

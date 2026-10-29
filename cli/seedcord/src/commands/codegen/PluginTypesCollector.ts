@@ -59,7 +59,9 @@ export class PluginTypesCollector {
 
         // built after every codegen(), since codegen() imports the files it reads
         const index = await ExportIndex.create(modules, root, collector.classes(), collector.problems);
-        const types = new Map(collector.entries.entries().map(([id, { data }]) => [id, index.render(data, id, '')]));
+        const types = new Map(
+            collector.entries.entries().map(([id, { key, data }]) => [id, { key, type: index.render(data, id, '') }])
+        );
         throwSingleOrAggregate(collector.problems, SeedcordErrorCode.CliProblems);
         return types;
     }

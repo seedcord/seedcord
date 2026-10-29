@@ -12,7 +12,16 @@ const IDENTIFIER = /^[A-Za-z_$][A-Za-z0-9_$]*$/;
 const CONTROL_CHAR = 0x20;
 const HEX_RADIX = 16;
 
-export type PluginTypeTable = ReadonlyMap<string, string>;
+interface PluginTypeRow {
+    // the first key the bot attached this plugin at
+    readonly key: string;
+    readonly type: string;
+}
+
+export type PluginTypeTable = ReadonlyMap<string, PluginTypeRow>;
+
+const FITS = `// a row has to fit what its plugin's codegen() declares
+type Fits<Plugin extends { codegen(): Promise<unknown> }, Row extends Awaited<ReturnType<Plugin['codegen']>>> = Row;`;
 
 interface AttachedPlugins {
     readonly specifier: string; // relative to the generated file at config.root
@@ -27,9 +36,10 @@ export function renderAugmentation(registry: Augmentation, target: string, plugi
     const coreRows = attached ? `    interface Core {\n${renderPluginRows(keys)}\n    }\n` : '';
     const types = plugins?.types;
     const typeRows = types?.size ? `    interface PluginTypes {\n${renderPluginTypeRows(types)}\n    }\n` : '';
+    const fits = types?.size ? `${FITS}\n\n` : '';
 
     // prettier-ignore binds to the next statement, and the declare module is the whole file
-    const header = `${BANNER}\n\n${botImport}// prettier-ignore\ndeclare module '${target}' {\n`;
+    const header = `${BANNER}\n\n${botImport}${fits}// prettier-ignore\ndeclare module '${target}' {\n`;
 
     return (
         `${header + coreRows}    interface SlashRegistry {\n${renderSlashRows(registry.slash)}\n    }\n` +
@@ -54,8 +64,14 @@ function renderPluginRows(keys: readonly string[]): string {
 function renderPluginTypeRows(types: PluginTypeTable): string {
     return [...types]
         .toSorted(([first], [second]) => compare(first, second))
-        .map(([id, type]) => `        ${renderKey(id)}: ${type};`)
+        .map(([id, { key, type }]) => `        ${renderKey(id)}: Fits<${pluginAt(key)}, ${type}>;`)
         .join('\n');
+}
+
+function pluginAt(key: string): string {
+    const { head, leaf } = splitPluginKey(key);
+    const top = `(typeof ${BOT_BINDING})['${escapeLiteral(head)}']`;
+    return leaf === undefined ? top : `${top}['${escapeLiteral(leaf)}']`;
 }
 
 function renderSlashRows(tables: SlashTables): string {

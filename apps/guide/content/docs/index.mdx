@@ -102,11 +102,11 @@ The sample is gateway, where `getUser` returns a discord.js `User`. On http the 
 
 </Callout>
 
-[`seedcord codegen`](/tooling/codegen) imports your command files, constructs each command, and writes what the builders produced to `seedcord-gen.d.ts`. Run it again after you change a command, or say yes when `seedcord dev` offers to re-register.
+[`seedcord codegen`](/tooling/codegen) imports your command files, constructs each command, and writes what the builders produced to `seedcord-gen.ts`. Run it again after you change a command, or say yes when `seedcord dev` offers to re-register.
 
 ## What a seedcord project looks like
 
-The generated `seedcord-gen.d.ts` sits beside your own files, in a tree the setup command creates.
+The generated `seedcord-gen.ts` sits beside your own files, in a tree the setup command creates.
 
 ```txt title="my-bot" output
 my-bot/
@@ -121,13 +121,13 @@ my-bot/
 │  │  └─ Uptime.ts
 │  ├─ bot.ts
 │  ├─ index.ts
-│  └─ seedcord-gen.d.ts
+│  └─ seedcord-gen.ts
 ├─ seedcord.config.ts
 ├─ .env
 └─ package.json
 ```
 
-`src/commands/` holds what a command looks like on Discord. `src/handlers/` holds the code that runs when someone uses one. `src/events/` holds the handlers for everything else happening in a server. Only a gateway bot has it. `src/plugins/` holds a small sample plugin. `bot.ts` is your bot's config, `seedcord.config.ts` configures the CLI, and `seedcord-gen.d.ts` is written by the CLI.
+`src/commands/` holds what a command looks like on Discord. `src/handlers/` holds the code that runs when someone uses one. `src/events/` holds the handlers for everything else happening in a server. Only a gateway bot has it. `src/plugins/` holds a small sample plugin. `bot.ts` is your bot's config, `seedcord.config.ts` configures the CLI, and `seedcord-gen.ts` is written by the CLI.
 
 One command sets this up, along with the tsconfig, lint, and formatter files.
 

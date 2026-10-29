@@ -1,3 +1,3 @@
 {
-    "ignorePatterns": "**/tests/fixtures/**\n**/CHANGELOG.md\n**/seedcord-gen.d.ts\npnpm-lock.yaml"
+    "ignorePatterns": "**/tests/fixtures/**\n**/CHANGELOG.md\n**/seedcord-gen.ts\npnpm-lock.yaml"
 }

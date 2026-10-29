@@ -2,7 +2,7 @@ import type { IsStringLiteral } from 'type-fest';
 
 /**
  * The type of what each plugin's `codegen()` returned, keyed by the plugin class's `static id`.
- * `seedcord codegen` writes the rows into `seedcord-gen.d.ts`. Read a plugin's row with {@link Generated}.
+ * `seedcord codegen` writes the rows into `seedcord-gen.ts`. Read a plugin's row with {@link Generated}.
  */
 export interface PluginTypes {}
 
@@ -19,27 +19,21 @@ type CodegenResultOf<PluginClass extends CodegenPluginClass> = PluginClass['prot
 
 type IdNotLiteral = "This plugin's id is a plain string. Declare it as static readonly id = '<your package name>'.";
 
-type Stale =
-    "What seedcord codegen wrote for this plugin doesn't fit its codegen() return type. Run seedcord codegen. If this stays, widen that return type.";
-
 // a plugin's published .d.ts indexes one field. skipLibCheck turns a missing field there into any
 type FieldsSetTo<PluginClass extends CodegenPluginClass, Message> = {
     [Field in keyof CodegenResultOf<PluginClass>]: Message;
 };
 
-// skipLibCheck skips seedcord-gen.d.ts. Generated is the only check of its rows against codegen()'s return type.
 /**
  * The data that `codegen()` returned for a plugin class, merged across every attachment of it.
  * Before codegen has run, it is the declared return type of `codegen()`.
  *
- * When the written row doesn't fit that return type, or the class's `id` is typed as a plain `string`,
- * each field becomes a message that says how to fix it.
+ * When the class's `id` is typed as a plain `string`, each field becomes a message that says how to fix it.
  */
 export type Generated<PluginClass extends CodegenPluginClass> =
     IsStringLiteral<PluginClass['id']> extends false
         ? FieldsSetTo<PluginClass, IdNotLiteral>
         : PluginClass['id'] extends keyof PluginTypes
-          ? PluginTypes[PluginClass['id']] extends CodegenResultOf<PluginClass>
-              ? PluginTypes[PluginClass['id']]
-              : FieldsSetTo<PluginClass, Stale>
+          ? // Fits in seedcord-gen.ts checks this row against codegen()'s return type
+            PluginTypes[PluginClass['id']]
           : CodegenResultOf<PluginClass>;

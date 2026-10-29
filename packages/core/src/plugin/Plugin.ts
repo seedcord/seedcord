@@ -142,7 +142,7 @@ export abstract class Plugin<
     dispose?(): Promise<void>;
 
     /**
-     * Returns data that `seedcord codegen` writes into the bot's `seedcord-gen.d.ts` as a type.
+     * Returns data that `seedcord codegen` writes into the bot's `seedcord-gen.ts` as a type.
      * Read it back with `Generated<typeof YourPlugin>`. Return plain data, or classes and objects
      * that a project file or your plugin's package exports. The class needs a `static readonly id`.
      *

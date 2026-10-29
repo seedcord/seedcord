@@ -68,7 +68,7 @@ describe('PluginTypesCollector', () => {
 
         const types = await PluginTypesCollector.collect(botWith({ db: new Services() }), modules, ROOT);
 
-        expect(types.get('services')).toBe(
+        expect(types.get('services')?.type).toBe(
             String.raw`{ jobs: (typeof import('./tony\'s/Users'))['jobs']; labels: ['a', 1, true, null]; services: { users: (typeof import('./tony\'s/Users'))['Users'] } }`
         );
     });
@@ -95,7 +95,7 @@ describe('PluginTypesCollector', () => {
 
         const types = await PluginTypesCollector.collect(botWith({ x: new Installed() }), modules, ROOT);
 
-        expect(types.get('plugin-x')).toBe("{ services: { health: (typeof import('plugin-x'))['Health'] } }");
+        expect(types.get('plugin-x')?.type).toBe("{ services: { health: (typeof import('plugin-x'))['Health'] } }");
     });
 
     it('reports every problem from every plugin in one aggregate', async () => {
@@ -169,7 +169,7 @@ describe('PluginTypesCollector', () => {
             ROOT
         );
 
-        expect(merged.get('cron')).toBe(
+        expect(merged.get('cron')?.type).toBe(
             "{ tasks: { constructor: 'nightly'; digest: 'daily'; steps: [{ run: 'send' }] } }"
         );
         await expect(clash).rejects.toMatchObject({ code: SeedcordErrorCode.CliPluginCodegenConflict });
@@ -203,7 +203,7 @@ describe('PluginTypesCollector', () => {
 
         const types = await PluginTypesCollector.collect(bot, modules, ROOT);
 
-        expect(types.get('grouped')).toBe('{ ready: true }');
+        expect(types.get('grouped')).toEqual({ key: 'services.users', type: '{ ready: true }' });
     });
 
     it('reports two classes that share an id', async () => {

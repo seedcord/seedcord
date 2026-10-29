@@ -104,7 +104,7 @@ export class History extends SlashHandler<'history'> {
 
 `History` reaches the mongoose service through `this.core.db`.
 
-The sample hides the lines that `seedcord codegen` writes into `src/seedcord-gen.d.ts` in your project. With them, `services.users` is typed as the `Users` service above, so `findByName` type-checks.
+The sample hides the lines that `seedcord codegen` writes into `src/seedcord-gen.ts` in your project. With them, `services.users` is typed as the `Users` service above, so `findByName` type-checks.
 
 ## Attaching more than one
 
@@ -204,7 +204,7 @@ seedcord.attach('db', Mongoose, options);
 type Db = (typeof seedcord)['db'];
 ```
 
-The last line is the lookup codegen writes into `src/seedcord-gen.d.ts`. You won't see this error there, because the scaffold's tsconfig turns on `skipLibCheck`, which skips type errors in `.d.ts` files. `this.core.db` compiles as `any` instead. Your editor stops offering `services`, and a typo like `this.core.db.servics` still compiles.
+The last line is the lookup codegen writes into `src/seedcord-gen.ts`, so your `tc` script reports this error in that file. `this.core.db` compiles as `any` in your handlers until you fix the export. Your editor stops offering `services`, and a typo like `this.core.db.servics` still compiles.
 
 ## The key is also a log channel
 

@@ -41,7 +41,7 @@ function withFiles(loaded: ResolvedSeedcordConfig): [ResolvedSeedcordConfig, Pro
     return [loaded, new ProjectFiles(loaded)];
 }
 
-const UNCHANGED = { outputPath: 'seedcord-gen.d.ts', changed: false };
+const UNCHANGED = { outputPath: 'seedcord-gen.ts', changed: false };
 
 function sessionDeps(
     store = new DevStore(),

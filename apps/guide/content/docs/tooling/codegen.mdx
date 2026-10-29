@@ -31,7 +31,7 @@ export class SearchCommand extends BuilderComponent<'command'> {
 
 An option's name and its required flag are arguments to method calls. Those calls run when something constructs the class. TypeScript reads the source of that chain without running it, so the name `query` only exists once the chain has run.
 
-`seedcord codegen` records those names for you. It imports every TypeScript and JavaScript file under your commands folder, constructs each decorated class it finds, reads the JSON that class's builder produced, and writes what it found to `seedcord-gen.d.ts`.
+`seedcord codegen` records those names for you. It imports every TypeScript and JavaScript file under your commands folder, constructs each decorated class it finds, reads the JSON that class's builder produced, and writes what it found to `seedcord-gen.ts`.
 
 <Shell run="codegen" />
 
@@ -41,7 +41,7 @@ Your handler then reads its options through `this.options`. `getString('query')`
 
 `seedcord dev` runs codegen every time the bot starts, and again when you answer `y` to its refresh prompt. If you edit commands while dev is stopped, or your project never runs dev, run it yourself.
 
-Codegen writes the file into the `root` folder set in your `seedcord.config.ts`. A scaffolded project sets `root: './src'`, which puts it at `src/seedcord-gen.d.ts`.
+Codegen writes the file into the `root` folder set in your `seedcord.config.ts`. A scaffolded project sets `root: './src'`, which puts it at `src/seedcord-gen.ts`.
 
 ## What it writes
 
@@ -88,7 +88,7 @@ Other drift compiles perfectly. If you delete a command, its entry stays in `Sla
 
 <Shell exec="seedcord codegen --check" />
 
-It prints a line per step, like plain codegen. If the file matches, the last line reads `src/seedcord-gen.d.ts is up to date` and the command exits `0`. If it differs, `--check` throws `CliCodegenOutOfDate` and exits `1`.
+It prints a line per step, like plain codegen. If the file matches, the last line reads `src/seedcord-gen.ts is up to date` and the command exits `0`. If it differs, `--check` throws `CliCodegenOutOfDate` and exits `1`.
 
 ```txt output
   ✔︎ read config          373ms
@@ -97,7 +97,7 @@ It prints a line per step, like plain codegen. If the file matches, the last lin
   ✔︎ run plugin codegen     4ms
   ✘ compare types          5ms
 
-  [3119] src/seedcord-gen.d.ts is out of date. Run seedcord codegen and commit it.
+  [3119] src/seedcord-gen.ts is out of date. Run seedcord codegen and commit it.
 ```
 
 `--check` only reports, so you fix the drift by running plain `seedcord codegen`. The scaffold doesn't wire a script for it, so put it wherever your pipeline runs its checks.

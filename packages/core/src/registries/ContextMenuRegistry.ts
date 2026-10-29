@@ -14,7 +14,7 @@ export type ContextMenuKind = ApplicationCommandType.User | ApplicationCommandTy
  *
  * @example
  * ```ts
- * // seedcord-gen.d.ts (emitted, committed)
+ * // seedcord-gen.ts (emitted, committed)
  * declare module '@seedcord/gateway' {
  *   interface UserContextMenuRegistry {
  *     'View Profile': { cache: 'cached' };

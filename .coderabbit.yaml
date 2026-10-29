@@ -5,7 +5,7 @@ reviews:
   path_filters:
     - '!**/tests/fixtures/**'
     - '!**/CHANGELOG.md'
-    - '!**/seedcord-gen.d.ts'
+    - '!**/seedcord-gen.ts'
     - '!pnpm-lock.yaml'
   pre_merge_checks:
     docstrings:

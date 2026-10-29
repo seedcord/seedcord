@@ -16,7 +16,7 @@ This project runs on the {{#if isGateway}}gateway{{else}}http{{/if}} transport{{
 
 A command takes two files. One declares what Discord shows people. The other answers it, as a handler class carrying a route decorator. seedcord reads those decorators at startup and dispatches every interaction itself.
 
-Run `{{ pm.run }} codegen` after you add a command or change its options. It writes `src/seedcord-gen.d.ts`, which types `this.options`. That file is committed.
+Run `{{ pm.run }} codegen` after you add a command or change its options. It writes `src/seedcord-gen.ts`, which types `this.options`. That file is committed.
 
 ## Where things go
 

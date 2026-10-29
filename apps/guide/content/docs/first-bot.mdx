@@ -62,7 +62,7 @@ my-bot/
 │  │  └─ Uptime.ts
 │  ├─ bot.ts
 │  ├─ index.ts
-│  └─ seedcord-gen.d.ts
+│  └─ seedcord-gen.ts
 ├─ templates/
 │  ├─ Button/
 │  ├─ Event/
@@ -88,7 +88,7 @@ my-bot/
 
 - **`src/bot.ts`** builds your bot and exports it. **`src/index.ts`** imports that and starts it. They are separate so the CLI can import `bot.ts` and read your commands without starting the bot.
 - **[`seedcord.config.ts`](/build/config)** configures the CLI. Your bot's own settings go in `bot.ts`, shown below.
-- **`src/seedcord-gen.d.ts`** holds the types generated from your config and your commands. `seedcord codegen` writes it, and you commit it so a fresh clone type-checks before anyone runs codegen.
+- **`src/seedcord-gen.ts`** holds the types generated from your config and your commands. `seedcord codegen` writes it, and you commit it so a fresh clone type-checks before anyone runs codegen.
 - **`src/plugins/Uptime.ts`** is a small [plugin](/writing-plugins) that records when the bot started.
 - **`tsconfig.json`** configures the type check, and [`seedcord build`](/build) reads it too. Its `paths` define the `#src/*`, `#components/*`, and `#plugins/*` aliases. `bot.ts` imports `#plugins/Uptime` through the last one.
 - **`.env`** holds your secrets, and `.gitignore` keeps it out of commits. [envapt](https://envapt.materwelon.dev) reads it.
@@ -115,7 +115,7 @@ Discord posts only interactions to an http bot, so the command doesn't create a 
 | `build` | [builds the bot](/build) for production |
 | `start` | runs the build in `dist`. Every bot but a Workers bot has it |
 | `deploy` | builds, then uploads the worker with `cf deploy`. Only a Workers bot has it |
-| `codegen` | [rewrites `seedcord-gen.d.ts`](/tooling/codegen) |
+| `codegen` | [rewrites `seedcord-gen.ts`](/tooling/codegen) |
 | `make` | [writes new files](/tooling/make) from one of your templates |
 | `commands` | opens a menu to deploy, list, clean up, or purge your commands on Discord |
 | `commands:deploy` | sends your commands to Discord |
@@ -295,7 +295,7 @@ Refresh commands? (y/n)
 
 The `Refresh commands? (y/n)` prompt appears only for the command edit, because the new definition has to go to Discord before anyone sees it. A handler edit reloads on its own.
 
-Press `y` to send the new command to Discord and run `seedcord codegen`, which rewrites `src/seedcord-gen.d.ts` so your handler's types match what the command now declares.
+Press `y` to send the new command to Discord and run `seedcord codegen`, which rewrites `src/seedcord-gen.ts` so your handler's types match what the command now declares.
 
 Press `n` if you want Discord to keep the old command. Codegen doesn't run then, so your handler's types stay as they were until the dev console restarts or you run `seedcord codegen`.
 

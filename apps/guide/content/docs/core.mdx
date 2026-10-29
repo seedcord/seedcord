@@ -148,6 +148,6 @@ export default seedcord.attach('db', KyselyPostgres, {
 });
 ```
 
-`attach()` sets the property at runtime. The type that makes `this.core.db` compile in a handler is defined in `seedcord-gen.d.ts`. `seedcord codegen` writes that file, and `seedcord dev` rewrites it each time the bot starts. Both `dir` values are relative to `root` in `seedcord.config.ts`, like the folders in `bot.ts`.
+`attach()` sets the property at runtime. The type that makes `this.core.db` compile in a handler is defined in `seedcord-gen.ts`. `seedcord codegen` writes that file, and `seedcord dev` rewrites it each time the bot starts. Both `dir` values are relative to `root` in `seedcord.config.ts`, like the folders in `bot.ts`.
 
 The scaffold's `bot.ts` attaches its `Uptime` plugin with `.attach('uptime', Uptime)`, so the `ping` handler can read `this.core.uptime`.

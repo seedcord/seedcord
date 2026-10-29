@@ -13,7 +13,7 @@ You add a `codegen()` method and a `static readonly id` to your plugin. Three th
 1. your codegen() returns a value
    { messages: { greet: true, bye: true } }
 
-2. seedcord codegen writes it as a type into the bot's seedcord-gen.d.ts
+2. seedcord codegen writes it as a type into the bot's seedcord-gen.ts
    'seedcord-locales': { messages: { bye: true; greet: true } }
 
 3. your plugin reads it back with Generated<typeof Locales>['messages']
@@ -75,13 +75,18 @@ export class Locales extends Plugin {
 }
 ```
 
-`codegen()` reads the same files `init()` does, through one `read()` method, and returns each message's key set to `true`. `t()` only needs the keys, and `true` gives each key something to hold. If the bot's `locales/en.json` holds `{ "greet": "Hello!", "bye": "See you." }`, codegen writes this row into the bot's file:
+`codegen()` reads the same files `init()` does, through one `read()` method, and returns each message's key set to `true`. `t()` only needs the keys, and `true` gives each key something to hold. If a bot attaches it as `i18n` and its `locales/en.json` holds `{ "greet": "Hello!", "bye": "See you." }`, codegen writes this row into the bot's file:
 
-```ts title="src/seedcord-gen.d.ts" output
+```ts title="src/seedcord-gen.ts" output
 interface PluginTypes {
-    'seedcord-locales': { messages: { bye: true; greet: true } };
+    'seedcord-locales': Fits<
+        (typeof Bot)['i18n'],
+        { messages: { bye: true; greet: true } }
+    >;
 }
 ```
+
+`Fits` is a type defined at the top of that file. The bot's `tc` fails on it when the row doesn't match your `codegen()` return type.
 
 `Messages` reads its keys from that row, so `t()` accepts `'bye'` or `'greet'`, and a handler's editor offers both:
 
@@ -118,7 +123,7 @@ Before codegen first runs in a bot, [`Generated`](ref:core/Generated) falls back
 
 <Callout type="warning">
 
-Tell your users in your README to run `seedcord codegen` after they add a message, and after they upgrade to a release of your plugin that changes what `codegen()` returns. Until they do, a new key fails to compile. After such an upgrade, each field they read through your types turns into a message asking them to run it.
+Tell your users in your README to run `seedcord codegen` after they add a message, and after they upgrade to a release of your plugin that changes what `codegen()` returns. Until they do, a new key fails to compile. After such an upgrade, their `tc` fails on your row's `Fits` line until codegen rewrites it.
 
 </Callout>
 
@@ -326,15 +331,18 @@ export class Scheduler extends Plugin {
 }
 ```
 
-If the bot's `jobs/Cleanup.ts` exports a `Cleanup` class that extends `Job`, codegen writes it as an import of that file:
+If a bot attaches it as `scheduler` and its `jobs/Cleanup.ts` exports a `Cleanup` class that extends `Job`, codegen writes it as an import of that file:
 
-```ts title="src/seedcord-gen.d.ts" output
+```ts title="src/seedcord-gen.ts" output
 interface PluginTypes {
-    'seedcord-scheduler': {
-        jobs: {
-            Cleanup: (typeof import('./jobs/Cleanup'))['Cleanup'];
-        };
-    };
+    'seedcord-scheduler': Fits<
+        (typeof Bot)['scheduler'],
+        {
+            jobs: {
+                Cleanup: (typeof import('./jobs/Cleanup'))['Cleanup'];
+            };
+        }
+    >;
 }
 ```
 

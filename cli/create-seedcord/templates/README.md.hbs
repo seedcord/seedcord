@@ -24,7 +24,7 @@ That starts the dev server with hot reload{{#unless isGateway}} and opens a tunn
 | `{{ pm.run }} build` | compile to `dist/` |
 | `{{ pm.run }} start` | run the compiled build |
 {{/if}}
-| `{{ pm.run }} codegen` | regenerate `src/seedcord-gen.d.ts` |
+| `{{ pm.run }} codegen` | regenerate `src/seedcord-gen.ts` |
 | `{{ pm.run }} make` | write a new command, button, select menu{{#if isGateway}}, modal, or event{{else}}, or modal{{/if}} from `templates/` |
 {{#if isEdge}}
 | `{{ pm.run }} types` | regenerate the binding types in `.cloudflare/types/` |

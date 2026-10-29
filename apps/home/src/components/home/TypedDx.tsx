@@ -51,7 +51,7 @@ export function TypedDx(): ReactNode {
                 {/* moving this into the left column puts it before the builder on mobile */}
                 <CodeCard
                     code={codegenOutput}
-                    filename="seedcord-gen.d.ts"
+                    filename="seedcord-gen.ts"
                     note="automatically generated"
                     className={cn('rule blk-rind lg:col-start-1 lg:row-start-2')}
                 />

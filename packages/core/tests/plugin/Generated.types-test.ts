@@ -24,13 +24,6 @@ class Generates extends Probe {
     }
 }
 
-class Stale extends Probe {
-    public static readonly id = 'probe-stale';
-    public override codegen(): Promise<{ names: Record<string, true> }> {
-        return Promise.resolve({ names: {} });
-    }
-}
-
 class WideId extends Probe {
     public static id = 'probe-wide-id';
     public override codegen(): Promise<{ names: Record<string, true> }> {
@@ -47,19 +40,16 @@ class NoId extends Probe {
 declare module '#src/plugin/Generated' {
     interface PluginTypes {
         'probe-generates': { names: { DailyDigest: true; Heartbeat: true } };
-        'probe-stale': { names: { DailyDigest: 'not true' } };
     }
 }
 
 expectTypeOf<Generated<typeof NotGenerated>>().toEqualTypeOf<{ names: Record<string, true> }>();
 expectTypeOf<keyof Generated<typeof Generates>['names']>().toEqualTypeOf<'DailyDigest' | 'Heartbeat'>();
-expectTypeOf<Generated<typeof Stale>['names']>().toExtend<`${string}Run seedcord codegen.${string}`>();
 expectTypeOf<Generated<typeof WideId>['names']>().toExtend<`${string}static readonly id${string}`>();
 // @ts-expect-error a class without a static id
 expectTypeOf<Generated<typeof NoId>>();
 
 void NotGenerated;
 void Generates;
-void Stale;
 void WideId;
 void NoId;

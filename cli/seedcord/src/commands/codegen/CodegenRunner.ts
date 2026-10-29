@@ -29,7 +29,7 @@ import type { ScannedCommand } from './AugmentationBuilder';
 import type { PluginTypeTable } from './renderAugmentation';
 import type { ILogger } from '@seedcord/types';
 
-const OUTPUT_FILENAME = 'seedcord-gen.d.ts';
+const OUTPUT_FILENAME = 'seedcord-gen.ts';
 
 export interface LoadedBot {
     readonly config: ResolvedSeedcordConfig;

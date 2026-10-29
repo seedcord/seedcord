@@ -37,7 +37,7 @@ export interface SlashRouteEntry {
  *
  * @example
  * ```ts
- * // seedcord-gen.d.ts (emitted, committed)
+ * // seedcord-gen.ts (emitted, committed)
  * declare module '@seedcord/gateway' {
  *   interface SlashRegistry {
  *     ban: { options: { target: { kind: 'user'; required: true } }; cache: 'cached' };

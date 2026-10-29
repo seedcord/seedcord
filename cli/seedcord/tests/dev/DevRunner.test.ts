@@ -46,7 +46,7 @@ function readyRuntime(): DevRuntime {
     return fakeRuntime({ default: readyBot });
 }
 
-const WRITTEN = { outputPath: 'seedcord-gen.d.ts', changed: true };
+const WRITTEN = { outputPath: 'seedcord-gen.ts', changed: true };
 
 interface FakeCodegen {
     writeFrom: Mock<CodegenRunner['writeFrom']>;

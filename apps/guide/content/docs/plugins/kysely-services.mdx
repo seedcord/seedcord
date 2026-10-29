@@ -125,7 +125,7 @@ The decorator checks that `table` matches the class's type argument, so TypeScri
 
 The plugin finds your services by importing `dir` when the bot starts. TypeScript only reads your source, so without codegen each service needs a hand-written `declare module` entry, and every rename means editing it.
 
-[`seedcord codegen`](/plugins/typing) imports `dir` the same way and writes each key it finds into `src/seedcord-gen.d.ts`. `services.users` is then typed as your `Users` service, and the decorator only accepts the keys codegen found.
+[`seedcord codegen`](/plugins/typing) imports `dir` the same way and writes each key it finds into `src/seedcord-gen.ts`. `services.users` is then typed as your `Users` service, and the decorator only accepts the keys codegen found.
 
 ```ts twoslash
 // @noErrors

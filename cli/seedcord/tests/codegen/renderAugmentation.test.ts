@@ -551,6 +551,16 @@ export {};
 
         expect(output).toContain(String.raw`import type Bot from './a\\b/bot';`);
     });
+
+    it('checks a plugin attached inside a group against the plugin at that path', () => {
+        const output = renderAugmentation(empty, AUGMENT_TARGET, {
+            specifier: './bot',
+            keys: ['services.users'],
+            types: new Map([['users-plugin', { key: 'services.users', type: '{ ready: true }' }]])
+        });
+
+        expect(output).toContain("        'users-plugin': Fits<(typeof Bot)['services']['users'], { ready: true }>;");
+    });
 });
 
 describe('renderAugmentation emoji rows', () => {

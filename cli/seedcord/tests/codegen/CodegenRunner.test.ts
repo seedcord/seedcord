@@ -25,7 +25,7 @@ import type { RealPath } from '#core/project/realPath';
 import type { ILogger } from '@seedcord/types';
 import type { SeedcordInstance } from '@seedcord/types/internal';
 
-const OUTPUT = 'seedcord-gen.d.ts';
+const OUTPUT = 'seedcord-gen.ts';
 
 async function tempDir(prefix: string): Promise<RealPath> {
     const dir = await mkdtempDisposable(join(tmpdir(), prefix));
@@ -133,7 +133,7 @@ describe('CodegenRunner plugin capabilities', () => {
         expect(output).toContain("import type Bot from './bot';");
         expect(output).toContain("        db: (typeof Bot)['db'];");
         expect(output).toContain(
-            "    interface PluginTypes {\n        cron: { ready: true };\n        'seedcord-locales': { messages: { greet: true } };\n    }"
+            "    interface PluginTypes {\n        cron: Fits<(typeof Bot)['cron'], { ready: true }>;\n        'seedcord-locales': Fits<(typeof Bot)['i18n'], { messages: { greet: true } }>;\n    }"
         );
     });
 

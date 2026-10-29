@@ -117,9 +117,9 @@ When you pass a scope yourself, seedcord skips the list. `'global'` keeps the co
 
 ## Codegen
 
-`seedcord codegen` imports every command file, constructs each command it finds, calls `toJSON()` on the builder, and writes `src/seedcord-gen.d.ts`.
+`seedcord codegen` imports every command file, constructs each command it finds, calls `toJSON()` on the builder, and writes `src/seedcord-gen.ts`.
 
-```ts title="src/seedcord-gen.d.ts" output
+```ts title="src/seedcord-gen.ts" output
 declare module '@seedcord/gateway' {
     interface SlashRegistry {
         ban: {

@@ -99,7 +99,7 @@ The codegen page carries this one. What shipped, spread over the top of the page
 
 > An option's name and its required flag are arguments to method calls. Those calls run when something constructs the class. TypeScript reads the source of that chain without running it, so the name `query` only exists once the chain has run.
 >
-> `seedcord codegen` records those names for you. It imports every `.ts` and `.js` file under your commands folder, constructs each decorated class it finds, reads the JSON that class's builder produced, and writes what it found to `seedcord-gen.d.ts`.
+> `seedcord codegen` records those names for you. It imports every `.ts` and `.js` file under your commands folder, constructs each decorated class it finds, reads the JSON that class's builder produced, and writes what it found to `seedcord-gen.ts`.
 >
 > Your handler then reads its options through `this.options`. `getString('query')` comes back as `string`, because you marked that option required. A typo in the name stops the build.
 >
