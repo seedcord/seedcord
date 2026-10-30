@@ -1,5 +1,5 @@
 import { SeedcordErrorCode } from '@seedcord/errors';
-import { SeedcordTypeError } from '@seedcord/errors/internal';
+import { SeedcordError, SeedcordTypeError } from '@seedcord/errors/internal';
 import { Logger } from '@seedcord/logger';
 
 import { getDevChannel } from '#hmr/devChannel';
@@ -8,6 +8,7 @@ import { RuntimeBrand, TransportBrand } from './brands';
 import { resolveLifecycleSpec } from './lifecycle';
 
 import type { CoreBase } from '#interfaces/CoreBase';
+import type { Kv } from '#src/kv/Kv';
 import type { ScopedSpec } from './brands';
 import type { ResolvedPluginLifecycleSpec, PluginLifecycleSpec } from './lifecycle';
 import type {
@@ -34,6 +35,8 @@ const resolvedSpecSlot = Symbol('seedcord:plugin:spec');
 const loggerSlot = Symbol('seedcord:plugin:logger');
 /** @internal */
 const scopeSlot = Symbol('seedcord:plugin:scope');
+/** @internal */
+const attachSlot = Symbol('seedcord:plugin:attach');
 /** @internal */
 export const FixedScope = Symbol('seedcord:plugin:fixed-scope');
 
@@ -95,6 +98,8 @@ export abstract class Plugin<
     /** Logs under the plugin's class name, on the channel its attach key sets. */
     protected readonly logger: Logger;
 
+    #kv?: Kv;
+
     // CoreBase here keeps the augmented Core out of ConstructorParameters, which attach reads
     constructor(
         private readonly host: CoreBase,
@@ -116,6 +121,30 @@ export abstract class Plugin<
     protected get core(): TCore {
         // justified: each transport binds TCore to the Core its own host satisfies
         return this.host as TCore;
+    }
+
+    /**
+     * This plugin's records in the bot's `config.kv`, stored under its attach key. Two attachments of
+     * one plugin class each get their own records. Renaming the attach key leaves the records under
+     * the old key behind.
+     *
+     * @throws A **SeedcordError** when read before `attach()` gave the plugin its key, like from its constructor.
+     * @example
+     * ```ts
+     * // inside a plugin method
+     * const jobs = this.kv.collection<Job>('job');
+     * await jobs.set(job.id, job);
+     * ```
+     */
+    protected get kv(): Kv {
+        if (!this.#kv) throw new SeedcordError(SeedcordErrorCode.CorePluginKvBeforeAttach, [this.constructor.name]);
+        return this.#kv;
+    }
+
+    /** @internal */
+    public [attachSlot](key: string, kv: Kv): void {
+        this.logger.setChannel(key);
+        this.#kv = kv;
     }
 
     /**
@@ -195,6 +224,11 @@ export function declaredScopeOf(plugin: PluginLike): DeclaredScope {
     return plugin[scopeSlot];
 }
 
+/** @internal */
+export function bindAttachment(plugin: PluginLike, key: string, kv: Kv): void {
+    plugin[attachSlot](key, kv);
+}
+
 export type { PluginLifecycleSpec } from './lifecycle';
 export type { PluginOptions } from './options';
 
@@ -203,7 +237,14 @@ export type { PluginOptions } from './options';
 /** @internal */
 export type PluginLike = Pick<
     Plugin,
-    'init' | 'ready' | 'dispose' | 'onHmr' | typeof resolvedSpecSlot | typeof loggerSlot | typeof scopeSlot
+    | 'init'
+    | 'ready'
+    | 'dispose'
+    | 'onHmr'
+    | typeof resolvedSpecSlot
+    | typeof loggerSlot
+    | typeof scopeSlot
+    | typeof attachSlot
 >;
 
 // a `CoreBase` first parameter rejects a narrowing ctor on its own, and it also collapses

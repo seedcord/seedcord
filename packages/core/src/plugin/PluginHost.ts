@@ -7,7 +7,7 @@ import { Kv } from '#src/kv/Kv';
 import { MemoryDriver } from '#src/kv/MemoryDriver';
 import { KvRateLimiter } from '#src/rateLimiter/KvRateLimiter';
 
-import { declaredScopeOf, extendsThisCorePlugin, pluginLoggerOf, resolvedLifecycleSpecOf } from './Plugin';
+import { bindAttachment, declaredScopeOf, extendsThisCorePlugin, resolvedLifecycleSpecOf } from './Plugin';
 import { splitPluginKey } from './splitPluginKey';
 
 import type { CoreBase } from '#interfaces/CoreBase';
@@ -53,13 +53,14 @@ export abstract class PluginHost<
     readonly #attachments: Attachment[] = [];
     readonly #groups = new Map<string, Record<string, PluginLike>>();
     readonly #scope: { readonly transport: BotT; readonly runtime: BotRt };
+    readonly #driver: TDriver;
 
     constructor(transport: BotT, runtime: BotRt, driver: TDriver | undefined) {
         this.#scope = { transport, runtime };
         // justified: NarrowedKv on each bot's config makes kv required once TDriver is narrower than KvDriver
-        const resolved = (driver ?? new MemoryDriver()) as TDriver;
-        this.kv = new Kv(resolved, 'app');
-        this.rateLimiter = new KvRateLimiter(new Kv(resolved, 'seedcord'));
+        this.#driver = (driver ?? new MemoryDriver()) as TDriver;
+        this.kv = new Kv(this.#driver, 'app');
+        this.rateLimiter = new KvRateLimiter(new Kv(this.#driver, 'seedcord'));
     }
 
     /** @internal */
@@ -139,7 +140,7 @@ export abstract class PluginHost<
 
         const instance = new Plugin(this, ...args);
         this.#assertScope(Plugin.name, declaredScopeOf(instance));
-        pluginLoggerOf(instance).setChannel(key);
+        bindAttachment(instance, key, new Kv(this.#driver, 'plugins', key));
         this.#attachments.push({ key, instance, spec: resolvedLifecycleSpecOf(instance) });
 
         if (leaf === undefined) {

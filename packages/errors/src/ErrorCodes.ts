@@ -102,8 +102,10 @@ export enum SeedcordErrorCode {
     CoreDirectoryNotListed = 1230,
     /** A folder is inside one that `seedcord build` skips, like a dot-folder, `node_modules`, `outDir` or the logs folder. */
     CoreDirectorySkipped = 1231,
-    /** `collection.ids()` ran on a Keyv store in `config.kv` that can't list its keys. */
+    /** `collection.entries()` ran on a Keyv store in `config.kv` that can't list its keys. */
     CoreKvKeysUnsupported = 1232,
+    /** A plugin read `this.kv` before `attach()` gave it a key, like from its constructor. */
+    CorePluginKvBeforeAttach = 1233,
 
     /** A command class carries `@RegisterCommand` twice. */
     DecoratorCommandAlreadyRegistered = 1301,
