@@ -1,10 +1,10 @@
 import { DispatchContext, Notice, defineGate } from '@seedcord/core';
 import { runHandlerGates } from '@seedcord/core/internal';
-import { describe, expect, it } from 'vitest';
+import { describe, expect, it } from 'vite-plus/test';
 
 import { Gated } from '#bDecorators/Gated';
 import { eventGateContext, interactionGateContext } from '#bot/gates/runGates';
-import { EventHandler } from '#handlers/event';
+import { EventHandler } from '#handlers/event/index';
 import { SlashHandler } from '#handlers/interaction/SlashHandler';
 import { TestNotice } from '#tests/utils/TestNotice';
 

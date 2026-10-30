@@ -23,7 +23,7 @@ import { eventMiddlewareMetaOf } from '#bDecorators/Middlewares';
 import { eventGateContext } from '#bot/gates/runGates';
 import { handleEventFault } from '#bot/handleEventFault';
 import { reportEventDispatched, reportEventDispatching } from '#bot/reportEventDispatch';
-import { EventHandler, EventMiddleware } from '#handlers/event';
+import { EventHandler, EventMiddleware } from '#handlers/event/index';
 
 import type { RegisterEventMetadataEntry } from '#bDecorators/Events';
 import type {

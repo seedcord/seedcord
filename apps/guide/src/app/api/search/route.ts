@@ -1,6 +1,6 @@
 import { createFromSource } from 'fumadocs-core/search/server';
 
-import { source } from '#lib/source';
+import { source } from '#lib/source.ts';
 
 // next prerenders a route into a static export only when revalidate is false
 export const revalidate = false;

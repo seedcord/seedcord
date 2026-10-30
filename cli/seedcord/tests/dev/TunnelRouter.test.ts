@@ -1,4 +1,4 @@
-import { describe, expect, it, vi } from 'vitest';
+import { describe, expect, it, vi } from 'vite-plus/test';
 
 import { TunnelRouter } from '#commands/dev/tunnel/TunnelRouter';
 import { silentLogger } from '#tests/silentLogger';

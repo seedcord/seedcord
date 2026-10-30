@@ -1,6 +1,6 @@
 import { HasDangerousPermissions, MissingPermissions } from '@seedcord/core/internal';
 import { Guild, GuildMember, PermissionFlagsBits, PermissionsBitField, Role } from 'discord.js';
-import { describe, it, expect } from 'vitest';
+import { describe, it, expect } from 'vite-plus/test';
 
 import { checkBotPermissions } from '#bUtilities/permissions/checkBotPermissions';
 import { checkPermissions } from '#bUtilities/permissions/checkPermissions';

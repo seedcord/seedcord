@@ -1,6 +1,6 @@
-import { describe, expect, it } from 'vitest';
+import { describe, expect, it } from 'vite-plus/test';
 
-import { buildVersionGroups } from '#components/layout/sidebar/utils/buildVersionGroups';
+import { buildVersionGroups } from '#components/layout/sidebar/utils/buildVersionGroups.tsx';
 
 import type { PackageVersionCatalog } from '#lib/docs/types';
 

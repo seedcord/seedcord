@@ -1,4 +1,4 @@
-import { SITE_NAME } from '#lib/site';
+import { SITE_NAME } from '#lib/site.ts';
 
 export const BLOG_NAME = `${SITE_NAME} blog`;
 export const BLOG_TITLE = 'Blog';

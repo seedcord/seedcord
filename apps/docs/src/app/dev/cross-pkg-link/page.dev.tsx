@@ -1,7 +1,7 @@
 import { formatRenderedSignaturePretty, type RenderedSignature, type ResolveHref } from '@seedcord/docs-engine';
 import { CodeBlock, cn } from '@seedcord/ui';
 
-import { CommentParagraphs } from '#components/docs/entity/comments/CommentParagraphs';
+import { CommentParagraphs } from '#components/docs/entity/comments/CommentParagraphs.tsx';
 import { decorateProseLinks } from '#lib/docs/comments/renderers/decorateProseLinks';
 import { opensInNewTab } from '#lib/docs/crossPackage';
 import { sanitizeHtml } from '#lib/sanitizeHtml';

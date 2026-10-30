@@ -1,6 +1,6 @@
-import { beforeEach, describe, expect, it } from 'vitest';
+import { beforeEach, describe, expect, it } from 'vite-plus/test';
 
-import { channelColor, resetChannelColors } from '#ui/channelColor';
+import { channelColor, resetChannelColors } from '#ui/channelColor.ts';
 
 describe('channelColor', () => {
     beforeEach(() => resetChannelColors());

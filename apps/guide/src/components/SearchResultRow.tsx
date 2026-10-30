@@ -3,9 +3,9 @@
 import { Icon, cn, tw } from '@seedcord/ui';
 import { FileText, Hash, TextQuote } from 'lucide-react';
 
-import { highlightSegments, matchWindow } from '#lib/searchHighlight';
+import { highlightSegments, matchWindow } from '#lib/searchHighlight.ts';
 
-import type { HighlightSegment } from '#lib/searchHighlight';
+import type { HighlightSegment } from '#lib/searchHighlight.ts';
 import type { IconComponent } from '@seedcord/ui';
 import type { SortedResult } from 'fumadocs-core/search';
 import type { ReactElement } from 'react';

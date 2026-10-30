@@ -1,6 +1,6 @@
-import { describe, expect, it } from 'vitest';
+import { describe, expect, it } from 'vite-plus/test';
 
-import { formatDuration } from '#src/formatDuration';
+import { formatDuration } from '#src/formatDuration.ts';
 
 describe('formatDuration', () => {
     it('shows milliseconds under a second and seconds from there', () => {

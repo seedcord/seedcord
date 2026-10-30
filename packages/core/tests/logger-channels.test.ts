@@ -1,5 +1,5 @@
 import { LoggerChannelRegistry } from '@seedcord/logger';
-import { beforeEach, describe, expect, it, vi } from 'vitest';
+import { beforeEach, describe, expect, it, vi } from 'vite-plus/test';
 
 import { HealthCheck } from '#node/HealthCheck';
 import { Bus, busLoggerOf } from '#subscribers/Bus';

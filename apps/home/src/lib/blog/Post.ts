@@ -3,7 +3,7 @@ import path from 'node:path';
 import { readingMinutes } from '@seedcord/ui/readingTime';
 import { twinDocument } from '@seedcord/ui/twin';
 
-import { REPO_URL } from '#lib/site';
+import { REPO_URL } from '#lib/site.ts';
 
 import { AUTHORS_BY_HANDLE } from './authors';
 import { postFolderName, postPath } from './paths';

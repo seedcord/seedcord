@@ -1,7 +1,7 @@
 import { DispatchContext, RequirePermissions } from '@seedcord/core';
 import { MissingPermissions } from '@seedcord/core/internal';
 import { GuildMember, PermissionFlagsBits } from 'discord.js';
-import { describe, it, expect } from 'vitest';
+import { describe, it, expect } from 'vite-plus/test';
 
 import { eventGateContext, interactionGateContext } from '#bot/gates/runGates';
 

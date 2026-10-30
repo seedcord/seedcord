@@ -1,8 +1,8 @@
+import type { SearchIndexEntry, SearchPackage, SearchViewedPackage } from '#src/types';
+
 import { PACKAGES_FILE_NAME, REFERENCE_SEARCH_URL, searchFileUrl } from '#src/files';
 import { ALL_PACKAGES, SearchCatalog } from '#src/SearchCatalog';
 import { SearchResults } from '#src/SearchResults';
-
-import type { SearchIndexEntry, SearchPackage, SearchViewedPackage } from '#src/types';
 
 class DownloadCache<Value> {
     private readonly downloads = new Map<string, Promise<Value>>();

@@ -2,7 +2,7 @@ import { appendFile, cp, mkdir, mkdtempDisposable, readFile, rename, writeFile }
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 
-import { describe, expect, it, onTestFinished, vi } from 'vitest';
+import { describe, expect, it, onTestFinished, vi } from 'vite-plus/test';
 
 import { ShellMode } from '#src/core/ShellMode';
 import { linkPackages } from '#tests/edgeFolder';
@@ -22,7 +22,7 @@ describe('seedcord build mode on a node bot', () => {
             const projectDir = join(temporary.path, 'project');
             await cp(fixture, projectDir, { recursive: true, filter: (source) => !source.endsWith('dist') });
             await mkdir(join(projectDir, 'node_modules/@seedcord'), { recursive: true });
-            await linkPackages(projectDir, ['envapt', '@seedcord/tsconfig', `@seedcord/${kind}`]);
+            await linkPackages(projectDir, ['typescript', 'envapt', '@seedcord/tsconfig', `@seedcord/${kind}`]);
             const configSource = await readFile(join(projectDir, 'seedcord.config.ts'), 'utf8');
             await writeFile(
                 join(projectDir, 'seedcord.config.ts'),

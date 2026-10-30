@@ -16,7 +16,7 @@ import { STEP_LABELS } from '#cli/steps';
 import { dashboardToggles, nextSteps, reproducingCommand } from '#cli/summary';
 import { version } from '#cli/version';
 import { runFlow } from '#interview/runFlow';
-import { STEPS } from '#interview/steps';
+import { STEPS } from '#interview/steps/index';
 import { missingNotice, probeCloudflared } from '#scaffold/cloudflared';
 import { createExecRunner } from '#scaffold/exec';
 import { scaffold } from '#scaffold/scaffold';

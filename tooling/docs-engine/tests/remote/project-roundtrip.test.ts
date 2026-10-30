@@ -1,4 +1,4 @@
-import { beforeAll, describe, expect, it } from 'vitest';
+import { beforeAll, describe, expect, it } from 'vite-plus/test';
 
 import { deserializeProject, serializeProject } from '#remote/project-file';
 import { getMockPackage } from '#tests/utils/test-helpers';

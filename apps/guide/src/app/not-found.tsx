@@ -1,4 +1,4 @@
-import { NotFoundPanel } from '#components/NotFoundPanel';
+import { NotFoundPanel } from '#components/NotFoundPanel.tsx';
 
 import type { ReactNode } from 'react';
 

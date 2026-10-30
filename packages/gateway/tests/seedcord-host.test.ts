@@ -5,7 +5,7 @@ import { SeedcordErrorCode } from '@seedcord/errors';
 import { Logger, LoggerChannelRegistry } from '@seedcord/logger';
 import { HostShutdown, HostStartup } from '@seedcord/types/internal';
 import { Events } from 'discord.js';
-import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
+import { describe, it, expect, beforeEach, afterEach, vi } from 'vite-plus/test';
 
 import { Plugin } from '#src/Plugin';
 import { Seedcord } from '#src/Seedcord';
@@ -15,7 +15,7 @@ import { testConfig } from './utils/test-config';
 import type { ILogSink } from '@seedcord/types';
 import type { Client } from 'discord.js';
 import type { AddressInfo } from 'node:net';
-import type { Mock } from 'vitest';
+import type { Mock } from 'vite-plus/test';
 
 function freePort(): Promise<number> {
     const probe = createServer().listen(0, '127.0.0.1');

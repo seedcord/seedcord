@@ -1,6 +1,6 @@
 import { resolve } from 'node:path';
 
-import { describe, expect, it } from 'vitest';
+import { describe, expect, it } from 'vite-plus/test';
 
 import { ApiAdapter } from '#model/ApiAdapter';
 import { createApiModel, loadApiPackage } from '#model/load-model';

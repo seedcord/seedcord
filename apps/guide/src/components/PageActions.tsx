@@ -4,10 +4,10 @@ import { Button, cn, GithubIcon, Popover, PopoverContent, PopoverTrigger, tw } f
 import { ArrowUpRight, ChevronDown, FileText, MessageSquareWarning } from 'lucide-react';
 import { useState } from 'react';
 
-import { AssistantIcon } from '#components/AssistantIcons';
-import { CopyPageButton } from '#components/CopyPageButton';
+import { AssistantIcon } from '#components/AssistantIcons.tsx';
+import { CopyPageButton } from '#components/CopyPageButton.tsx';
 
-import type { PageActionLinks } from '#lib/pageActions';
+import type { PageActionLinks } from '#lib/pageActions.ts';
 import type { LucideIcon } from 'lucide-react';
 import type { ReactElement, ReactNode } from 'react';
 

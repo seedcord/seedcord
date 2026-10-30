@@ -8,7 +8,7 @@ import ownPackage from '#package' with { type: 'json' };
 
 import { execPrefix, runPrefix } from '#cli/packageManager';
 import { intentsFor, partialsFor } from '#interview/capabilities';
-import { STEPS } from '#interview/steps';
+import { STEPS } from '#interview/steps/index';
 
 import type { Answers } from '#interview/types';
 import type { TransportVariables } from '@seedcord/cli-templates';

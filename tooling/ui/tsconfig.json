@@ -7,19 +7,8 @@
         "jsx": "react-jsx",
         "rootDir": "./",
         "outDir": "./dist",
-        "paths": {
-            "#src/*": ["./src/*"]
-        }
+        "allowImportingTsExtensions": true
     },
-    "include": [
-        "src/**/*.ts",
-        "src/**/*.tsx",
-        "tests/**/*.ts",
-        "tests/**/*.tsx",
-        "eslint.config.ts",
-        "prettier.config.ts",
-        "tsdown.config.ts",
-        "vitest.config.ts"
-    ],
+    "include": ["src/**/*.ts", "src/**/*.tsx", "tests/**/*.ts", "tests/**/*.tsx", "eslint.config.ts", "vite.config.ts"],
     "exclude": ["node_modules", "dist"]
 }

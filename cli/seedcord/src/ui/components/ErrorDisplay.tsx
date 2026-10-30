@@ -3,7 +3,7 @@ import React from 'react';
 
 import { plural } from '#core/format';
 import { messageOf } from '#core/output/renderError';
-import { ui } from '#ui/palette';
+import { ui } from '#ui/palette.ts';
 
 import type { ReactElement } from 'react';
 

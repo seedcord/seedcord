@@ -5,9 +5,9 @@ import { DetailsKey, RailKey } from './Hotkeys';
 import { statusFacts } from './Sidebar';
 import { BrandStatus, KeySlot, PendingKey } from './StatusLine';
 
-import type { DetailMode } from '#ui/LogLayout';
-import type { Notice } from '#ui/notices';
-import type { DevState } from '#ui/stores/DevStore';
+import type { DetailMode } from '#ui/LogLayout.ts';
+import type { Notice } from '#ui/notices.tsx';
+import type { DevState } from '#ui/stores/DevStore.ts';
 import type { ReactElement } from 'react';
 
 interface StatusBandProps {

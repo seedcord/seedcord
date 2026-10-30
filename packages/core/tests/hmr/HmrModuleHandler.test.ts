@@ -4,7 +4,7 @@ import { join } from 'node:path';
 
 import { SeedcordErrorCode } from '@seedcord/errors';
 import { setDevFiles } from '@seedcord/utils/internal';
-import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
+import { describe, it, expect, beforeEach, afterEach, vi } from 'vite-plus/test';
 
 import { HmrModuleHandler } from '#hmr/HmrModuleHandler';
 

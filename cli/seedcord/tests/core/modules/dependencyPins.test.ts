@@ -1,7 +1,7 @@
 import { readFileSync } from 'node:fs';
 import { join } from 'node:path';
 
-import { describe, expect, it } from 'vitest';
+import { describe, expect, it } from 'vite-plus/test';
 
 const CLI_ROOT = join(import.meta.dirname, '../../..');
 
@@ -20,13 +20,4 @@ describe('cloudflare pins', () => {
             expect(dependencies(join(CLI_ROOT, 'package.json'))[name]).toBe(plugin[name]);
         }
     );
-});
-
-describe('rolldown pin', () => {
-    // rolldown-plugin-dts imports rolldown itself. the same range resolves it to vite's copy
-    it('matches the rolldown range vite depends on', () => {
-        const vite = dependencies(join(CLI_ROOT, 'node_modules/vite/package.json'));
-
-        expect(dependencies(join(CLI_ROOT, 'package.json')).rolldown).toBe(vite.rolldown);
-    });
 });

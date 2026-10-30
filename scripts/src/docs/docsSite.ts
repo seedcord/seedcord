@@ -44,7 +44,7 @@ export function buildOfHead(): SiteBuild {
 }
 
 const runWrangler: Wrangler = (args) =>
-    execFileSync('pnpm', ['exec', 'wrangler', ...args, '--json'], { cwd: DOCS_APP, encoding: 'utf8' });
+    execFileSync('vp', ['exec', 'wrangler', ...args, '--json'], { cwd: DOCS_APP, encoding: 'utf8' });
 
 // wrangler rollback picks the newest earlier deployment that runs one version at 100%
 export function rollbackBuildId(wrangler: Wrangler = runWrangler): string | null {

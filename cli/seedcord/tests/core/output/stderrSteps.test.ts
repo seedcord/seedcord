@@ -1,4 +1,4 @@
-import { describe, expect, it } from 'vitest';
+import { describe, expect, it } from 'vite-plus/test';
 
 import { stderrSteps } from '#core/output/stderrSteps';
 import { pipedTerminal } from '#tests/commands/commands/fakeBot';

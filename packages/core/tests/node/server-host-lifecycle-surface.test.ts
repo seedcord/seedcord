@@ -1,7 +1,7 @@
 import { REST } from '@discordjs/rest';
 import { MemoryRateLimiter } from '@seedcord/rate-limiter';
 import { HostShutdown, HostStartup } from '@seedcord/types/internal';
-import { describe, it, expect, afterEach } from 'vitest';
+import { describe, it, expect, afterEach } from 'vite-plus/test';
 
 import { CoordinatedShutdown } from '#node/Lifecycle/CoordinatedShutdown';
 import { ServerHost } from '#node/ServerHost';

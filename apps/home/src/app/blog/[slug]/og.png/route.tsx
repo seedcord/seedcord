@@ -4,12 +4,12 @@ import { loadOgFonts, OG_SIZE } from '@seedcord/ui/og';
 import { BRAND } from '@seedcord/ui/palette';
 import { ImageResponse } from 'takumi-js/response';
 
-import { BLOG_PATH } from '#lib/blog/paths';
-import { OG_PILL, ogMeta } from '#lib/blog/ogCard';
-import { postParams, summaryFromParams } from '#lib/blog/posts';
-import { canonicalUrl } from '#lib/site';
+import { BLOG_PATH } from '#lib/blog/paths.ts';
+import { OG_PILL, ogMeta } from '#lib/blog/ogCard.ts';
+import { postParams, summaryFromParams } from '#lib/blog/posts.ts';
+import { canonicalUrl } from '#lib/site.ts';
 
-import type { PostParams } from '#lib/blog/posts';
+import type { PostParams } from '#lib/blog/posts.ts';
 
 export const dynamic = 'force-static';
 export const dynamicParams = false;

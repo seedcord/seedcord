@@ -1,7 +1,7 @@
 import { randomUUID } from 'node:crypto';
 
 import { SeedcordErrorCode } from '@seedcord/errors';
-import { describe, it, expect } from 'vitest';
+import { describe, it, expect } from 'vite-plus/test';
 
 import { Bus } from '#subscribers/index';
 

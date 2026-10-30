@@ -56,20 +56,21 @@ jobs:
       - name: Setup workspace
         uses: $/.github/actions/setup
         with:
+          cache: false # to prevent cache poisoning
           registry-url: https://registry.npmjs.org
       - name: Build prettier config dependency
-        run: pnpm exec turbo run build --filter=@seedcord/eslint-config
+        run: vp exec turbo run build --filter=@seedcord/eslint-config
 
       - id: changesets
         uses: changesets/action@ae32849d5ba541f9ae29e40e22a623bc13562f51 # v2.1.2
         with:
           github-token: ${{ secrets.GITHUB_TOKEN }}
-          publish-script: pnpm run release
+          publish-script: vp run release
           create-github-releases: false
           push-git-tags: false
         env:
           NPM_CONFIG_PROVENANCE: 'true'
-          HUSKY: 0
+          VP_GIT_HOOKS: 0
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
   github-release:

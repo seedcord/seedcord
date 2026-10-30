@@ -1,4 +1,4 @@
-import { describe, expect, it } from 'vitest';
+import { describe, expect, it } from 'vite-plus/test';
 
 import { CustomId } from '#src/CustomId';
 import { setCustomIdErrors } from '#src/errors';

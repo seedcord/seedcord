@@ -1,16 +1,16 @@
-import { FILTER_LEVELS } from '#ui/components/primitives/FilterChips';
-import { CONFIRMS } from '#ui/confirms';
-import { focusedIn, moveCursor } from '#ui/filterCursor';
-import { isStreaming } from '#ui/stores/devPhase';
-import { LogStore } from '#ui/stores/LogStore';
+import { FILTER_LEVELS } from '#ui/components/primitives/FilterChips.tsx';
+import { CONFIRMS } from '#ui/confirms.ts';
+import { focusedIn, moveCursor } from '#ui/filterCursor.ts';
+import { isStreaming } from '#ui/stores/devPhase.ts';
+import { LogStore } from '#ui/stores/LogStore.ts';
 
-import type { Confirmable } from '#ui/confirms';
-import type { LogFilters } from '#ui/devPrefs';
-import type { CursorMove, FilterCursor } from '#ui/filterCursor';
-import type { ScrollApi } from '#ui/hooks/useScroll';
-import type { LogRow } from '#ui/logRows';
-import type { FilterView } from '#ui/Screen';
-import type { DevState, DevStore } from '#ui/stores/DevStore';
+import type { Confirmable } from '#ui/confirms.ts';
+import type { LogFilters } from '#ui/devPrefs.ts';
+import type { CursorMove, FilterCursor } from '#ui/filterCursor.ts';
+import type { ScrollApi } from '#ui/hooks/useScroll.ts';
+import type { LogRow } from '#ui/logRows.ts';
+import type { FilterView } from '#ui/Screen.ts';
+import type { DevState, DevStore } from '#ui/stores/DevStore.ts';
 import type { Key } from 'ink';
 
 type FilterChange = <ItemT>(prev: ReadonlySet<ItemT>, item: ItemT, all: readonly ItemT[]) => ReadonlySet<ItemT>;

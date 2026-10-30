@@ -1,6 +1,6 @@
-import { describe, expect, it } from 'vitest';
+import { describe, expect, it } from 'vite-plus/test';
 
-import { guidePreview } from '#lib/linkPreview';
+import { guidePreview } from '#lib/linkPreview.ts';
 
 const ORDER = [
     { label: 'Start here', href: '/', tab: 'Start' },

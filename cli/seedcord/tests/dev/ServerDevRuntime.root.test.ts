@@ -4,7 +4,7 @@ import { join } from 'node:path';
 import { SeedcordErrorCode } from '@seedcord/errors';
 import { HostListenHost, HostShutdown } from '@seedcord/types/internal';
 import { readFiles } from '@seedcord/utils';
-import { afterAll, describe, expect, it, vi } from 'vitest';
+import { afterAll, describe, expect, it, vi } from 'vite-plus/test';
 
 import { ServerDevRuntime } from '#commands/dev/runtime/ServerDevRuntime';
 import { ProjectFiles } from '#core/project/ProjectFiles';

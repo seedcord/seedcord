@@ -1,19 +1,15 @@
 {
     "name": "@seedcord/eslint-utils",
-    "type": "module",
     "version": "0.0.1",
-    "engines": {
-        "node": "^24.22.1 || >=26.12.1",
-        "bun": ">=1.4.2"
-    },
     "private": true,
     "description": "Internal shared utilities for the seedcord eslint plugins",
-    "types": "./dist/index.d.mts",
     "repository": {
         "type": "git",
         "url": "https://github.com/seedcord/seedcord.git",
         "directory": "tooling/eslint-utils"
     },
+    "type": "module",
+    "types": "./dist/index.d.mts",
     "exports": {
         ".": {
             "import": {
@@ -23,16 +19,11 @@
         }
     },
     "scripts": {
-        "build": "tsdown",
+        "build": "vp pack",
         "clean": "rm -rf dist",
         "lint": "eslint '**/*.ts' --cache --no-error-on-unmatched-pattern",
         "lint:fix": "eslint '**/*.ts' --fix --cache --no-error-on-unmatched-pattern",
-        "fmt": "prettier --write '**/*.{ts,json,md}' --cache --no-error-on-unmatched-pattern",
-        "fmt:check": "prettier --check '**/*.{ts,json,md}' --cache --no-error-on-unmatched-pattern",
         "tc": "tsgo --noEmit"
-    },
-    "peerDependencies": {
-        "typescript": "catalog:peer"
     },
     "dependencies": {
         "@typescript-eslint/utils": "catalog:eslint"
@@ -42,5 +33,12 @@
         "@seedcord/tsconfig": "workspace:^",
         "@seedcord/tsdown-config": "workspace:^",
         "eslint": "catalog:eslint"
+    },
+    "peerDependencies": {
+        "typescript": "catalog:peer"
+    },
+    "engines": {
+        "bun": ">=1.4.2",
+        "node": "^24.22.1 || >=26.12.1"
     }
 }

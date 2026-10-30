@@ -4,7 +4,7 @@ import { CustomId, InteractionKind } from '@seedcord/core';
 import { shutdownOf } from '@seedcord/core/node/internal';
 import { SeedcordErrorCode } from '@seedcord/errors';
 import { Logger } from '@seedcord/logger';
-import { describe, expect, beforeEach, afterEach, vi } from 'vitest';
+import { describe, expect, beforeEach, afterEach, vi } from 'vite-plus/test';
 
 import { botLoggerOf, interactionsOf } from '#bot/Bot';
 import { CONFIRM_DEF } from '#bot/confirm/reserved';
@@ -109,7 +109,8 @@ const it = base.extend<{ client: ClientHarness; bootWith: BootWith; dispatchedFo
         await controller.init();
 
         const fire = onSpy.mock.calls.find(([event]) => event === 'interactionCreate')?.[1] as
-            ((i: unknown) => void) | undefined;
+            | ((i: unknown) => void)
+            | undefined;
         expect(fire).toBeDefined();
         await use({ seedcord, controller, fire });
     },
@@ -201,7 +202,8 @@ describe('InteractionDispatcher Integration', () => {
         });
 
         const fire = onSpy.mock.calls.find(([event]) => event === 'interactionCreate')?.[1] as
-            ((i: unknown) => void) | undefined;
+            | ((i: unknown) => void)
+            | undefined;
 
         expect(fire).toBeDefined();
         expect(() => fire?.(fakeSlash('ping'))).not.toThrow();

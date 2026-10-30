@@ -14,8 +14,8 @@ const workspace = await Workspace.load(import.meta.dirname);
 const root = workspace.rootDir;
 const workspaceYaml = readFileSync(path.join(root, 'pnpm-workspace.yaml'), 'utf8');
 
-function pnpm(...args: string[]): void {
-    execFileSync('pnpm', args, { cwd: root, stdio: 'inherit' });
+function vp(...args: string[]): void {
+    execFileSync('vp', args, { cwd: root, stdio: 'inherit' });
 }
 
 // cloudflare's runtime types and @types/node declare the same globals
@@ -24,7 +24,7 @@ const builtTypes = workspace.published().map((one) => `${path.relative(root, one
 const typesFloor = lowestTypescript(workspaceYaml, 'consumerTypes');
 for (const mock of ['gateway', 'http', 'edge']) {
     const tsc = ['tsc', '--noEmit', '--skipLibCheck', 'false', '-p', `mocks/${mock}/tsconfig.json`];
-    const { status, stdout, stderr } = spawnSync('pnpm', ['dlx', `--package=typescript@${typesFloor}`, ...tsc], {
+    const { status, stdout, stderr } = spawnSync('vp', ['dlx', `--package=typescript@${typesFloor}`, ...tsc], {
         cwd: root,
         encoding: 'utf8'
     });
@@ -41,8 +41,8 @@ const lintFloor = lowestTypescript(workspaceYaml, 'consumerLint');
 const LINT_PACKAGES = ['eslint-plugin-discordjs', 'eslint-plugin', 'eslint-config'];
 // the plugins read TypeFlags through eslint-utils' own typescript
 for (const pkg of ['eslint-utils', ...LINT_PACKAGES]) {
-    pnpm('-C', `tooling/${pkg}`, 'add', '-D', `typescript@${lintFloor}`);
+    vp('-C', `tooling/${pkg}`, 'add', '-D', `typescript@${lintFloor}`);
 }
 for (const pkg of LINT_PACKAGES) {
-    pnpm('-C', `tooling/${pkg}`, 'test');
+    vp('-C', `tooling/${pkg}`, 'test');
 }

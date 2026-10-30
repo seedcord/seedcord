@@ -4,7 +4,7 @@ import { SeedcordErrorCode } from '@seedcord/errors';
 import { HostStartup, HostVersion } from '@seedcord/types/internal';
 import { setDevFiles } from '@seedcord/utils/internal';
 import { ApplicationCommandType, Collection, Events, GatewayIntentBits } from 'discord.js';
-import { type Mock, describe, expect, afterEach, onTestFinished, vi } from 'vitest';
+import { type Mock, describe, expect, afterEach, onTestFinished, vi } from 'vite-plus/test';
 
 import { commandRegistryOf } from '#bot/Bot';
 import { Plugin } from '#src/Plugin';

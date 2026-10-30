@@ -1,6 +1,5 @@
 {
     "name": "@seedcord/mock-edge",
-    "type": "module",
     "version": "0.0.1",
     "private": true,
     "description": "Edge mock bot on Cloudflare Workers for demonstration and testing",
@@ -9,6 +8,7 @@
         "url": "https://github.com/seedcord/seedcord.git",
         "directory": "mocks/edge"
     },
+    "type": "module",
     "scripts": {
         "dev": "seedcord dev",
         "build": "seedcord build",
@@ -20,12 +20,7 @@
         "clean": "rm -rf .cloudflare",
         "lint": "eslint '**/*.{ts,tsx}' --cache --no-error-on-unmatched-pattern",
         "lint:fix": "eslint '**/*.{ts,tsx}' --fix --cache --no-error-on-unmatched-pattern",
-        "fmt": "prettier --write '**/*.{ts,tsx,json,jsonc,md}' --cache --no-error-on-unmatched-pattern",
-        "fmt:check": "prettier --check '**/*.{ts,tsx,json,jsonc,md}' --cache --no-error-on-unmatched-pattern",
         "tc": "tsgo --noEmit"
-    },
-    "peerDependencies": {
-        "typescript": "catalog:peer"
     },
     "dependencies": {
         "@discordjs/builders": "catalog:deps",
@@ -39,5 +34,8 @@
         "@seedcord/tsconfig": "workspace:^",
         "cf": "catalog:deps",
         "seedcord": "workspace:^"
+    },
+    "peerDependencies": {
+        "typescript": "catalog:peer"
     }
 }

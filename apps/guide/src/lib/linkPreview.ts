@@ -2,11 +2,11 @@ import { DOCS_URL, HOME_URL } from '@seedcord/ui';
 import { PREVIEW_EMOJI, SITE_ACCENT } from '@seedcord/ui/LinkPreview';
 import { readingMinutes, readTimeLabel } from '@seedcord/ui/readingTime';
 
-import { editUrl } from '#lib/pageActions';
-import { isFrontPage, markdownUrl, shownTitle, SITE_DESCRIPTION } from '#lib/site';
+import { editUrl } from '#lib/pageActions.ts';
+import { isFrontPage, markdownUrl, shownTitle, SITE_DESCRIPTION } from '#lib/site.ts';
 
-import type { OrderedPage } from '#lib/neighbours';
-import type { GuidePage } from '#lib/pageActions';
+import type { OrderedPage } from '#lib/neighbours.ts';
+import type { GuidePage } from '#lib/pageActions.ts';
 import type { PreviewCardProps, PreviewLink } from '@seedcord/ui/LinkPreview';
 
 const SITE_LINKS: readonly PreviewLink[] = [

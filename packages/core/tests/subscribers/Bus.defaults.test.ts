@@ -1,4 +1,4 @@
-import { describe, it, expect } from 'vitest';
+import { describe, it, expect } from 'vite-plus/test';
 
 import { Bus } from '#subscribers/index';
 import { RegisterDefaults, RegisteredCount } from '#subscribers/slots';

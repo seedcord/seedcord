@@ -4,8 +4,8 @@ import { skillUrl } from '@seedcord/ui/skills';
 import { SEEDCORD_SKILL } from '@seedcord/ui/skills/seedcord';
 import Link from 'next/link';
 
-import { SiteLink } from '#components/ui/SiteLink';
-import { BLOG_PATH } from '#lib/blog/paths';
+import { SiteLink } from '#components/ui/SiteLink.tsx';
+import { BLOG_PATH } from '#lib/blog/paths.ts';
 import {
     AUTHOR_GITHUB_URL,
     AUTHOR_URL,
@@ -15,7 +15,7 @@ import {
     NPM_ORG_URL,
     REPO_URL,
     ROADMAP_URL
-} from '#lib/site';
+} from '#lib/site.ts';
 
 import type { ReactNode } from 'react';
 

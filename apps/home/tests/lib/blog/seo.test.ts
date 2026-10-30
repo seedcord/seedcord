@@ -1,6 +1,6 @@
-import { describe, expect, it } from 'vitest';
+import { describe, expect, it } from 'vite-plus/test';
 
-import { postMetadata } from '#lib/blog/seo';
+import { postMetadata } from '#lib/blog/seo.ts';
 import { POST } from '#tests/fixtures/post';
 
 describe('postMetadata', () => {

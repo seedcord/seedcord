@@ -4,17 +4,9 @@
     "compilerOptions": {
         "rootDir": "./",
         "outDir": "./dist",
-        "paths": {
-            "#src/*": ["./src/*"],
-            "#tests/*": ["./tests/*"],
-            "#ui/*": ["./src/ui/*"],
-            "#core/*": ["./src/core/*"],
-            "#commands/*": ["./src/commands/*"],
-            "#utils/*": ["./src/utils/*"],
-            "#api/*": ["./src/api/*"]
-        },
         "types": ["react"],
-        "jsx": "react"
+        "jsx": "react",
+        "allowImportingTsExtensions": true
     },
     "include": [
         "src/**/*.ts",
@@ -24,8 +16,7 @@
         "playground/**/*.ts",
         "playground/**/*.tsx",
         "eslint.config.ts",
-        "tsdown.config.ts",
-        "vitest.config.ts"
+        "vite.config.ts"
     ],
     "exclude": ["node_modules", "dist", "tests/fixtures"]
 }

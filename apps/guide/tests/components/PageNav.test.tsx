@@ -1,7 +1,7 @@
 import { render, screen } from '@testing-library/react';
-import { describe, expect, it } from 'vitest';
+import { describe, expect, it } from 'vite-plus/test';
 
-import { PageNav } from '#components/PageNav';
+import { PageNav } from '#components/PageNav.tsx';
 
 const PREVIOUS = { tab: 'Gates', label: 'Permissions in a handler', href: '/gates/in-handler-permissions' };
 const NEXT = { tab: 'Plugins', label: 'Plugins', href: '/plugins' };

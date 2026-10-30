@@ -2,7 +2,15 @@ import type { ChannelType } from 'discord-api-types/v10';
 
 /** A slash option kind as a plain string union (`string`, `channel`, ...), keyed to the registry. */
 export type OptionKind =
-    'string' | 'integer' | 'number' | 'boolean' | 'user' | 'channel' | 'role' | 'mentionable' | 'attachment';
+    | 'string'
+    | 'integer'
+    | 'number'
+    | 'boolean'
+    | 'user'
+    | 'channel'
+    | 'role'
+    | 'mentionable'
+    | 'attachment';
 
 /**
  * The cache state a command's interaction arrives in, read from the `contexts` it declares. A guild-only

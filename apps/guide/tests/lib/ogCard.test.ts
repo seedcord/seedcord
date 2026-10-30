@@ -1,6 +1,6 @@
-import { describe, expect, it } from 'vitest';
+import { describe, expect, it } from 'vite-plus/test';
 
-import { pillFor } from '#lib/og/card';
+import { pillFor } from '#lib/og/card.ts';
 
 describe('the pill on a guide card', () => {
     it('names the tab a page belongs to', () => {

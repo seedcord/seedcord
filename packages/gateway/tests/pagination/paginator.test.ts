@@ -7,7 +7,7 @@ import {
     serializeReply
 } from '@seedcord/core/internal';
 import { ComponentType, MessageFlags } from 'discord.js';
-import { beforeEach, describe, expect, expectTypeOf, it, vi } from 'vitest';
+import { beforeEach, describe, expect, expectTypeOf, it, vi } from 'vite-plus/test';
 
 import { ReplySender } from '#bot/ReplySender';
 import { InteractionHandler } from '#handlers/interaction/InteractionHandler';

@@ -1,7 +1,7 @@
 import { cn, tw } from '@seedcord/ui';
 import { Hammer, Sigma, SquareDot, Workflow } from 'lucide-react';
 
-import { PROSE_CODE_BLOCK } from '#components/docs/proseCodeBlock';
+import { PROSE_CODE_BLOCK } from '#components/docs/proseCodeBlock.ts';
 
 import type { MemberPrefix } from '#lib/docs/types';
 import type { LucideIcon } from 'lucide-react';

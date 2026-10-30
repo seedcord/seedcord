@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from 'react';
 
-import { idOf } from '#components/TableOfContents';
+import { idOf } from '#components/TableOfContents.tsx';
 
 import type { TOCItemType } from 'fumadocs-core/toc';
 

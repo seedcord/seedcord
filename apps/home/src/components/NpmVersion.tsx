@@ -3,8 +3,8 @@
 import { cn, Icon, NpmIcon } from '@seedcord/ui';
 import { useEffect, useState } from 'react';
 
-import { PosterButton } from '#components/ui/PosterButton';
-import { NPM_URL } from '#lib/site';
+import { PosterButton } from '#components/ui/PosterButton.tsx';
+import { NPM_URL } from '#lib/site.ts';
 
 import type { ReactNode } from 'react';
 

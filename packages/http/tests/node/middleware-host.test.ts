@@ -1,7 +1,7 @@
 import path from 'node:path';
 
 import { shutdownOf } from '@seedcord/core/node/internal';
-import { beforeEach, describe, expect, it } from 'vitest';
+import { beforeEach, describe, expect, it } from 'vite-plus/test';
 
 import { Seedcord } from '#src/node/Seedcord';
 import { slashPayload } from '#tests/helpers/interactions';

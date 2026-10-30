@@ -1,8 +1,8 @@
 import { DOCS } from '@seedcord/ui/sites';
 
-import { DocSearch } from '#src/DocSearch';
-
 import type { KindFilter, ReferenceSearchResult, SearchIndexEntry, SearchResultKind } from '#src/types';
+
+import { DocSearch } from '#src/DocSearch';
 
 const MAX_RESULTS = 24;
 

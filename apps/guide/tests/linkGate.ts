@@ -10,8 +10,8 @@ import remarkMdx from 'remark-mdx';
 import remarkParse from 'remark-parse';
 import { unified } from 'unified';
 
-import { redirectFor } from '#lib/redirects';
-import { SymbolRef } from '#lib/SymbolRef';
+import { redirectFor } from '#lib/redirects.ts';
+import { SymbolRef } from '#lib/SymbolRef.ts';
 
 import type { Nodes, Root } from 'mdast';
 
@@ -32,7 +32,7 @@ interface Target {
 const GUIDE_ROOT = path.resolve(import.meta.dirname, '..');
 const CONTENT_DIR = path.join(GUIDE_ROOT, 'content/docs');
 const PUBLIC_DIR = path.join(GUIDE_ROOT, 'public');
-// pnpm docs:local writes these from this checkout. a symbol that isn't published yet passes here
+// vp run docs:local writes these from this checkout. a symbol that isn't published yet passes here
 const ARTIFACTS_DIR = path.resolve(GUIDE_ROOT, '../../generated/artifacts');
 
 const FRONTMATTER = /^---\n[\s\S]*?\n---\n/;
@@ -179,7 +179,9 @@ async function readJson<Shape>(file: string): Promise<Shape> {
     try {
         return JSON.parse(await readFile(file, 'utf8')) as Shape;
     } catch (error) {
-        throw new Error(`the link gate reads ${file}. Run pnpm docs:local from the repo root first.`, { cause: error });
+        throw new Error(`the link gate reads ${file}. Run vp run docs:local from the repo root first.`, {
+            cause: error
+        });
     }
 }
 

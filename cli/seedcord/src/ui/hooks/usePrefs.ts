@@ -1,8 +1,8 @@
 import { useState } from 'react';
 
-import { nextDetailMode } from '#ui/LogLayout';
+import { nextDetailMode } from '#ui/LogLayout.ts';
 
-import type { DevPrefs, LogFilters } from '#ui/devPrefs';
+import type { DevPrefs, LogFilters } from '#ui/devPrefs.ts';
 
 interface Prefs extends DevPrefs {
     readonly setFilters: (filters: LogFilters) => void;

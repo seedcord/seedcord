@@ -2,7 +2,7 @@ import { cn, DOCS, HOME, MAIN_CONTENT_ID } from '@seedcord/ui';
 import { Materwelon } from '@seedcord/ui/Materwelon';
 import Link from 'next/link';
 
-import { DOCS_URL, HOME_URL } from '#lib/site';
+import { DOCS_URL, HOME_URL } from '#lib/site.ts';
 
 import type { ReactNode } from 'react';
 

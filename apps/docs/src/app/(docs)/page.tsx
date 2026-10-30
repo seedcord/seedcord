@@ -1,6 +1,6 @@
 import { buildPackageBasePath, DEFAULT_VERSION } from '@seedcord/docs-engine/client';
 import { cn, tw } from '@seedcord/ui';
-import { HoverPrefetchLink } from '#components/HoverPrefetchLink';
+import { HoverPrefetchLink } from '#components/HoverPrefetchLink.tsx';
 import { findCatalogVersion, loadDocsCatalog } from '#lib/docs/catalog';
 import { DocsPage } from '#lib/docs/DocsPage';
 import { docsFrontPreview } from '#lib/docs/linkPreview';

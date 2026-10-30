@@ -1,14 +1,14 @@
 import { Box, Text } from 'ink';
 import React from 'react';
 
-import { Banner } from '#ui/components/Banner';
-import { StatusBadge } from '#ui/components/StatusBadge';
-import { ui } from '#ui/palette';
+import { Banner } from '#ui/components/Banner.tsx';
+import { StatusBadge } from '#ui/components/StatusBadge.tsx';
+import { ui } from '#ui/palette.ts';
 
 import { FiltersKey } from './Hotkeys';
 
-import type { Notice } from '#ui/notices';
-import type { DevState } from '#ui/stores/DevStore';
+import type { Notice } from '#ui/notices.tsx';
+import type { DevState } from '#ui/stores/DevStore.ts';
 import type { ReactElement, ReactNode } from 'react';
 
 interface StatusLineProps {

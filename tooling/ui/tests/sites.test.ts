@@ -1,6 +1,6 @@
-import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vite-plus/test';
 
-import { SiteAddress } from '#src/sites';
+import { SiteAddress } from '#src/sites.ts';
 
 describe('the three sites', () => {
     beforeEach(() => {
@@ -12,7 +12,7 @@ describe('the three sites', () => {
     });
 
     it('sit on the production origin by default', async () => {
-        const { HOME_URL, GUIDE_URL, DOCS_URL } = await import('#src/sites');
+        const { HOME_URL, GUIDE_URL, DOCS_URL } = await import('#src/sites.ts');
 
         expect([HOME_URL, GUIDE_URL, DOCS_URL]).toEqual([
             'https://seedcord.org',
@@ -24,7 +24,7 @@ describe('the three sites', () => {
     it('move home and the guide to NEXT_PUBLIC_SITE_ORIGIN, and docs and the chat link stay on production', async () => {
         vi.stubEnv('NEXT_PUBLIC_SITE_ORIGIN', 'https://preview.seedcord.org');
 
-        const { HOME_URL, GUIDE_URL, DOCS_URL, DISCORD_URL, IS_PRODUCTION } = await import('#src/sites');
+        const { HOME_URL, GUIDE_URL, DOCS_URL, DISCORD_URL, IS_PRODUCTION } = await import('#src/sites.ts');
 
         expect(IS_PRODUCTION).toBe(false);
         expect([HOME_URL, GUIDE_URL, DOCS_URL, DISCORD_URL]).toEqual([

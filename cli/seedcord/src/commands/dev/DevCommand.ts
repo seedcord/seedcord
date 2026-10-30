@@ -6,11 +6,11 @@ import React from 'react';
 import { BaseCommand } from '#core/BaseCommand';
 import { cliLogger } from '#core/cliLogger';
 import { StateFolder } from '#core/state/StateFolder';
-import { DevApp } from '#ui/DevApp';
-import { devPrefsFile } from '#ui/devPrefs';
-import { profileFrame, profileReport, profileStdout } from '#ui/profile';
-import { DevStore } from '#ui/stores/DevStore';
-import { LogStore } from '#ui/stores/LogStore';
+import { DevApp } from '#ui/DevApp.tsx';
+import { devPrefsFile } from '#ui/devPrefs.ts';
+import { profileFrame, profileReport, profileStdout } from '#ui/profile.ts';
+import { DevStore } from '#ui/stores/DevStore.ts';
+import { LogStore } from '#ui/stores/LogStore.ts';
 
 import { DevRunner } from './DevRunner';
 import { DevSignals } from './DevSignals';

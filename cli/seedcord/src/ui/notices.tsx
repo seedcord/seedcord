@@ -1,16 +1,16 @@
 import React from 'react';
 
 import { plural } from '#core/format';
-import { CommandRefreshPrompt } from '#ui/components/CommandRefreshPrompt';
-import { ConfirmCard } from '#ui/components/ConfirmCard';
-import { ErrorDisplay } from '#ui/components/ErrorDisplay';
-import { RestartRequiredCard } from '#ui/components/RestartRequiredCard';
-import { TunnelOpeningCard } from '#ui/components/TunnelOpeningCard';
-import { CONFIRMS, confirmKeyLabel } from '#ui/confirms';
+import { CommandRefreshPrompt } from '#ui/components/CommandRefreshPrompt.tsx';
+import { ConfirmCard } from '#ui/components/ConfirmCard.tsx';
+import { ErrorDisplay } from '#ui/components/ErrorDisplay.tsx';
+import { RestartRequiredCard } from '#ui/components/RestartRequiredCard.tsx';
+import { TunnelOpeningCard } from '#ui/components/TunnelOpeningCard.tsx';
+import { CONFIRMS, confirmKeyLabel } from '#ui/confirms.ts';
 
 import type { TunnelPhase, TunnelStatus } from '#commands/dev/tunnel/TunnelCoordinator';
-import type { Confirmable } from '#ui/confirms';
-import type { DevState } from '#ui/stores/DevStore';
+import type { Confirmable } from '#ui/confirms.ts';
+import type { DevState } from '#ui/stores/DevStore.ts';
 import type { ReactElement } from 'react';
 
 type NoticeKey = Confirmable | 'commands' | 'error' | 'restart' | 'tunnel';

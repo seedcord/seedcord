@@ -1,5 +1,5 @@
 import { createSearchAPI } from 'fumadocs-core/search/server';
-import { afterEach, expect, it, vi } from 'vitest';
+import { afterEach, expect, it, vi } from 'vite-plus/test';
 
 import { GuideSearch } from '#src/GuideSearch';
 

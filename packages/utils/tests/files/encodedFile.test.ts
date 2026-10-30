@@ -1,6 +1,6 @@
 import { randomBytes } from 'node:crypto';
 
-import { describe, expect, it } from 'vitest';
+import { describe, expect, it } from 'vite-plus/test';
 
 import { decodeFile, encodeFile } from '#src/files/encodedFile';
 

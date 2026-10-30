@@ -3,7 +3,7 @@ import { createRequire } from 'node:module';
 import { join, resolve } from 'node:path';
 
 import { Template } from '@seedcord/cli-templates';
-import { describe, expect, it } from 'vitest';
+import { describe, expect, it } from 'vite-plus/test';
 
 import { buildContext } from '#template/context';
 import { copyStarters, renderTemplates } from '#template/render';

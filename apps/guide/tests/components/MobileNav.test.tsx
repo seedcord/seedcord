@@ -1,10 +1,10 @@
 import { render, screen, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
-import { describe, expect, it, vi } from 'vitest';
+import { describe, expect, it, vi } from 'vite-plus/test';
 
-import { MobileNav } from '#components/MobileNav';
+import { MobileNav } from '#components/MobileNav.tsx';
 
-import type { GuideTab, SidebarsByTab } from '#lib/nav';
+import type { GuideTab, SidebarsByTab } from '#lib/nav.ts';
 
 const TABS: readonly GuideTab[] = [
     { label: 'Start', href: '/docs' },

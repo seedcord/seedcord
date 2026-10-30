@@ -1,5 +1,5 @@
 import { render, screen } from '@testing-library/react';
-import { describe, expect, it, vi } from 'vitest';
+import { describe, expect, it, vi } from 'vite-plus/test';
 
 import type { PackageCatalogEntry } from '#lib/docs/types';
 
@@ -29,7 +29,7 @@ vi.mock('#lib/docs/catalog', async (importOriginal) => ({
     loadDocsCatalog: () => Promise.resolve([GATEWAY])
 }));
 
-const { default: DocsIndexPage } = await import('#src/app/(docs)/page');
+const { default: DocsIndexPage } = await import('#src/app/(docs)/page.tsx');
 
 describe('docs index page', () => {
     it('links each package at its latest url', async () => {

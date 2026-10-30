@@ -1,7 +1,7 @@
 import { setTimeout } from 'node:timers/promises';
 
 import { Logger } from '@seedcord/logger';
-import { describe, expect, it } from 'vitest';
+import { describe, expect, it } from 'vite-plus/test';
 
 import { InFlight } from '#node/Lifecycle/InFlight';
 

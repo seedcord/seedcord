@@ -1,7 +1,7 @@
 import wrapAnsi from 'wrap-ansi';
 
-import type { LogLayout } from '#ui/LogLayout';
-import type { LogEntry } from '#ui/stores/LogStore';
+import type { LogLayout } from '#ui/LogLayout.ts';
+import type { LogEntry } from '#ui/stores/LogStore.ts';
 
 const MIN_TEXT_WIDTH = 8;
 

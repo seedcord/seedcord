@@ -3,7 +3,7 @@ import { llms } from 'fumadocs-core/source/llms';
 
 import { TWIN } from '@seedcord/ui/PageAsset';
 
-import { SITE_DESCRIPTION, SITE_NAME, SITE_URL } from '#lib/site';
+import { SITE_DESCRIPTION, SITE_NAME, SITE_URL } from '#lib/site.ts';
 
 import type { LoaderConfig, LoaderOutput } from 'fumadocs-core/source';
 

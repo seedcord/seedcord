@@ -1,5 +1,5 @@
 import { SeedcordErrorCode } from '@seedcord/errors';
-import { beforeEach, describe, expect, it } from 'vitest';
+import { beforeEach, describe, expect, it } from 'vite-plus/test';
 
 import { RegisterInteractionMiddleware } from '#decorators/middleware';
 import { interactionMiddleware, MiddlewareRegistry } from '#src/dispatch/MiddlewareRegistry';

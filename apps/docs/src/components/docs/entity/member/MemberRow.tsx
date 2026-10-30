@@ -1,6 +1,6 @@
 import { cn } from '@seedcord/ui';
 
-import { DeprecatedEntity } from '#components/docs/entity/DeprecatedEntity';
+import { DeprecatedEntity } from '#components/docs/entity/DeprecatedEntity.tsx';
 
 import { MemberRowBody } from './MemberRowBody';
 import { MemberRowHeader } from './MemberRowHeader';

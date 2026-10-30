@@ -1,6 +1,6 @@
-import { describe, expect, it } from 'vitest';
+import { describe, expect, it } from 'vite-plus/test';
 
-import { matchChoices } from '#src/matchChoices';
+import { matchChoices } from '#src/matchChoices.ts';
 
 const choices = [
     { value: '1001', label: 'Main Hub' },

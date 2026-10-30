@@ -1,8 +1,8 @@
-import { describe, expect, it } from 'vitest';
+import { describe, expect, it } from 'vite-plus/test';
 
-import { agentLinkHeader, agentRules, readmeFeatures, siteLinks } from '#src/agents';
+import { agentLinkHeader, agentRules, readmeFeatures, siteLinks } from '#src/agents.ts';
 
-import type { SeedcordSite } from '#src/agents';
+import type { SeedcordSite } from '#src/agents.ts';
 
 const SITES: SeedcordSite[] = ['home', 'guide', 'docs'];
 

@@ -12,13 +12,13 @@ import {
 } from '@seedcord/core';
 import { GatedMetadataKey } from '@seedcord/core/internal';
 import { PermissionFlagsBits } from 'discord.js';
-import { describe, expect, it } from 'vitest';
+import { describe, expect, it } from 'vite-plus/test';
 
 import { Gated } from '#bDecorators/Gated';
-import { IgnoreBots, Nsfw } from '#bot/gates';
-import { EventHandler } from '#handlers/event';
+import { IgnoreBots, Nsfw } from '#bot/gates/index';
+import { EventHandler } from '#handlers/event/index';
 import { AutocompleteHandler } from '#handlers/interaction/AutocompleteHandler';
-import { ModalHandler } from '#handlers/interaction/components';
+import { ModalHandler } from '#handlers/interaction/components/index';
 import { SlashHandler } from '#handlers/interaction/SlashHandler';
 
 import type { Events } from 'discord.js';

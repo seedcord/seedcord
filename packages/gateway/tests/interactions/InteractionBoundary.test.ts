@@ -2,7 +2,7 @@ import { DispatchContext, Notice, Silence, Fault } from '@seedcord/core';
 import { PublishDefault } from '@seedcord/core/internal';
 import { Logger, LoggerChannelRegistry } from '@seedcord/logger';
 import { MessageFlags, RESTJSONErrorCodes } from 'discord.js';
-import { beforeEach, describe, expect, it, vi } from 'vitest';
+import { beforeEach, describe, expect, it, vi } from 'vite-plus/test';
 
 import { handleInteractionFault as boundary } from '#bot/handleInteractionFault';
 import { ReplySender } from '#bot/ReplySender';

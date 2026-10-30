@@ -1,7 +1,7 @@
-import { afterEach, describe, expect, it } from 'vitest';
+import { afterEach, describe, expect, it } from 'vite-plus/test';
 
-import { DocsLinks } from '#lib/DocsLinks';
-import { SymbolRef } from '#lib/SymbolRef';
+import { DocsLinks } from '#lib/DocsLinks.ts';
+import { SymbolRef } from '#lib/SymbolRef.ts';
 
 import { DOCS_INDEX_FIXTURE } from '#tests/test-setup';
 

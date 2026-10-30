@@ -1,6 +1,6 @@
-import { describe, expect, it } from 'vitest';
+import { describe, expect, it } from 'vite-plus/test';
 
-import { listedNewestFirst } from '#lib/blog/summary';
+import { listedNewestFirst } from '#lib/blog/summary.ts';
 import { POST } from '#tests/fixtures/post';
 
 describe('listedNewestFirst', () => {

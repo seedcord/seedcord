@@ -1,5 +1,5 @@
 import { act, renderHook, waitFor } from '@testing-library/react';
-import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vite-plus/test';
 
 import type { SearchPackage } from '@seedcord/docs-search';
 
@@ -11,10 +11,10 @@ const PACKAGES: SearchPackage[] = [
 
 // referenceSearch keeps each download for the life of the module
 async function freshController(): Promise<
-    typeof import('#components/search/command-palette/useCommandPaletteController')
+    typeof import('#components/search/command-palette/useCommandPaletteController.ts')
 > {
     vi.resetModules();
-    return import('#components/search/command-palette/useCommandPaletteController');
+    return import('#components/search/command-palette/useCommandPaletteController.ts');
 }
 
 describe('useCommandPaletteController', () => {

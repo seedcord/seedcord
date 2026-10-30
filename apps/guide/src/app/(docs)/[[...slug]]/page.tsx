@@ -1,19 +1,19 @@
 import { cn, CopyAnchorButton } from '@seedcord/ui';
 import { notFound } from 'next/navigation';
 
-import { PageActions } from '#components/PageActions';
-import { PageNav } from '#components/PageNav';
-import { ANCHOR_DROP, ANCHOR_SIZE, mdxComponents } from '#lib/mdxComponents';
-import { guidePreview } from '#lib/linkPreview';
-import { guideOrder } from '#lib/nav';
+import { PageActions } from '#components/PageActions.tsx';
+import { PageNav } from '#components/PageNav.tsx';
+import { ANCHOR_DROP, ANCHOR_SIZE, mdxComponents } from '#lib/mdxComponents.tsx';
+import { guidePreview } from '#lib/linkPreview.ts';
+import { guideOrder } from '#lib/nav.ts';
 import { ANCHOR_REVEAL } from '@seedcord/ui/AnchoredHeading';
 import { PreviewCard } from '@seedcord/ui/LinkPreview';
 import { ComponentEmbed } from 'discord-component-embed/react';
-import { neighboursOf } from '#lib/neighbours';
-import { pillFor } from '#lib/og/card';
-import { pageActionsFor } from '#lib/pageActions';
-import { pageMetadata } from '#lib/site';
-import { source } from '#lib/source';
+import { neighboursOf } from '#lib/neighbours.ts';
+import { pillFor } from '#lib/og/card.ts';
+import { pageActionsFor } from '#lib/pageActions.ts';
+import { pageMetadata } from '#lib/site.ts';
+import { source } from '#lib/source.ts';
 
 import type { Metadata } from 'next';
 import type { ReactNode } from 'react';

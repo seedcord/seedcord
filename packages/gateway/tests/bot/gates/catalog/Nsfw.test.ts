@@ -1,11 +1,11 @@
 import { or, OwnerOnly } from '@seedcord/core';
 import { NeedsAny } from '@seedcord/core/internal';
-import { describe, it, expect } from 'vitest';
+import { describe, it, expect } from 'vite-plus/test';
 
-import { Nsfw } from '#bot/gates/catalog';
-import { NotNsfw } from '#bot/notices';
+import { Nsfw } from '#bot/gates/catalog/index';
+import { NotNsfw } from '#bot/notices/index';
 
-import type { InteractionGateContext } from '#bot/gates';
+import type { InteractionGateContext } from '#bot/gates/index';
 import type { NonModalInteraction } from '#src/handlers/interactionTypes';
 
 function nsfwCtx(channel: unknown): InteractionGateContext<NonModalInteraction> {

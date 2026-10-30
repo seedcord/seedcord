@@ -1,5 +1,5 @@
 import { SeedcordErrorCode } from '@seedcord/errors';
-import { expect, vi } from 'vitest';
+import { expect, vi } from 'vite-plus/test';
 
 import { Prompter } from './Prompter';
 import { KeyboardStdin, ScreenStdout } from './terminalStubs';

@@ -1,4 +1,4 @@
-import { afterEach, describe, expect, vi } from 'vitest';
+import { afterEach, describe, expect, vi } from 'vite-plus/test';
 
 import { eventsOf } from '#bot/Bot';
 import { Seedcord } from '#src/Seedcord';
@@ -141,7 +141,8 @@ describe('eventDispatched', () => {
         seedcord.bus.on('eventDispatched', (payload) => ends.push(payload));
 
         const fire = onSpy.mock.calls.find(([event]) => event === 'messageCreate')?.[1] as
-            ((...args: unknown[]) => void) | undefined;
+            | ((...args: unknown[]) => void)
+            | undefined;
         expect(fire).toBeDefined();
 
         fire?.({ reply: vi.fn() });

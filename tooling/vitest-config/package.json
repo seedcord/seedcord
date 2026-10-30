@@ -1,19 +1,22 @@
 {
     "name": "@seedcord/vitest-config",
-    "type": "module",
     "version": "0.0.1",
-    "engines": {
-        "node": "^24.22.1 || >=26.12.1",
-        "bun": ">=1.4.2"
-    },
     "private": true,
     "description": "Internal vitest preset for seedcord packages",
-    "main": "./dist/index.mjs",
-    "types": "./dist/index.d.mts",
     "repository": {
         "type": "git",
         "url": "https://github.com/seedcord/seedcord.git",
         "directory": "tooling/vitest-config"
+    },
+    "files": [
+        "dist",
+        "src"
+    ],
+    "type": "module",
+    "main": "./dist/index.mjs",
+    "types": "./dist/index.d.mts",
+    "imports": {
+        "#src/*": "./src/*.ts"
     },
     "exports": {
         ".": {
@@ -23,25 +26,18 @@
             }
         }
     },
-    "files": [
-        "dist",
-        "src"
-    ],
     "scripts": {
-        "build": "tsdown",
+        "build": "vp pack",
         "clean": "rm -rf dist",
         "lint": "eslint '**/*.{ts,tsx}' --cache --no-error-on-unmatched-pattern",
         "lint:fix": "eslint '**/*.{ts,tsx}' --fix --cache --no-error-on-unmatched-pattern",
-        "fmt": "prettier --write '**/*.{ts,tsx,json,md}' --cache --no-error-on-unmatched-pattern",
-        "fmt:check": "prettier --check '**/*.{ts,tsx,json,md}' --cache --no-error-on-unmatched-pattern",
         "tc": "tsgo --noEmit",
-        "test": "vitest run",
-        "test:watch": "vitest dev",
-        "coverage": "vitest run --coverage"
+        "test": "vp test run",
+        "test:watch": "vp test dev",
+        "coverage": "vp test run --coverage"
     },
     "dependencies": {
-        "get-tsconfig": "^4.14.1",
-        "vitest": "catalog:test"
+        "get-tsconfig": "^4.14.1"
     },
     "devDependencies": {
         "@seedcord/eslint-config-base": "workspace:^",
@@ -49,5 +45,9 @@
         "@seedcord/tsdown-config": "workspace:^",
         "@types/node": "catalog:deps",
         "typescript": "catalog:peer"
+    },
+    "engines": {
+        "bun": ">=1.4.2",
+        "node": "^24.22.1 || >=26.12.1"
     }
 }

@@ -51,25 +51,7 @@ function groupByConfig(files: readonly string[], name: string): Map<string, Grou
 
 // every command starts in the repo root, with no shell to run a cd
 function scoped(rootDir: string | undefined, command: string): string {
-    return rootDir === undefined ? `pnpm exec ${command}` : `pnpm -C ${quote(rootDir)} exec ${command}`;
-}
-
-export function runPrettier(files: readonly string[]): string[] {
-    if (files.length === 0) return [];
-
-    const commands: string[] = [];
-
-    for (const info of groupByConfig(files, 'prettier.config.ts').values()) {
-        const fileList = quoteFiles(info.files);
-        if (!fileList) continue;
-
-        const base = ['prettier', '--ignore-unknown', '--write'];
-        if (info.configPath) base.push('--config', quote(info.configPath));
-
-        commands.push(scoped(info.rootDir, [...base, fileList].join(' ')));
-    }
-
-    return commands;
+    return rootDir === undefined ? `vp exec ${command}` : `vp -C ${quote(rootDir)} exec ${command}`;
 }
 
 export function runEslint(files: readonly string[]): string[] {

@@ -1,6 +1,6 @@
-import { describe, expect, it } from 'vitest';
+import { describe, expect, it } from 'vite-plus/test';
 
-import { CARD, PageAsset, TWIN } from '#src/PageAsset';
+import { CARD, PageAsset, TWIN } from '#src/PageAsset.ts';
 
 describe('the file a page asset is written to', () => {
     it('puts the extension on the last segment', () => {

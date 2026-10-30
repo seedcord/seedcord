@@ -4,8 +4,8 @@ import { paramFragment, typeParamFragment, withOverload } from '@seedcord/docs-e
 import { cn } from '@seedcord/ui';
 import { useMemo } from 'react';
 
-import { MemberDetailGroup } from '#components/docs/entity/member/MemberDetailGroup';
-import { useActiveSignatureList } from '#components/docs/entity/utils/useActiveSignatureList';
+import { MemberDetailGroup } from '#components/docs/entity/member/MemberDetailGroup.tsx';
+import { useActiveSignatureList } from '#components/docs/entity/utils/useActiveSignatureList.tsx';
 
 import type {
     EntityMemberSummary,

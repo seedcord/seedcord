@@ -1,4 +1,4 @@
-import { describe, expect, it } from 'vitest';
+import { describe, expect, it } from 'vite-plus/test';
 
 import {
     isHighlightable,
@@ -7,7 +7,7 @@ import {
     highlightSignatureToHtml,
     highlightToHtml,
     highlightTypeParamToHtml
-} from '#src/shiki';
+} from '#src/shiki.ts';
 
 import type { ShikiTransformer } from 'shiki';
 

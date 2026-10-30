@@ -1,10 +1,10 @@
 import { Box, Text } from 'ink';
 import React from 'react';
 
-import { CONFIRMS, confirmKeyLabel } from '#ui/confirms';
-import { ui } from '#ui/palette';
+import { CONFIRMS, confirmKeyLabel } from '#ui/confirms.ts';
+import { ui } from '#ui/palette.ts';
 
-import type { Confirmable } from '#ui/confirms';
+import type { Confirmable } from '#ui/confirms.ts';
 import type { ReactElement } from 'react';
 
 export function ConfirmCard({ confirm }: { readonly confirm: Confirmable }): ReactElement {

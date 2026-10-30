@@ -2,7 +2,7 @@ import { readFile, writeFile } from 'node:fs/promises';
 import { join } from 'node:path';
 
 import { build } from 'vite';
-import { beforeAll, describe, expect, it } from 'vitest';
+import { beforeAll, describe, expect, it } from 'vite-plus/test';
 
 import { targetBuildFor } from '#commands/build/builder/targetBuildFor';
 import { runProjectTsc } from '#core/modules/runProjectTsc';

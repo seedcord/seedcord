@@ -1,9 +1,10 @@
 import { mkdirSync, symlinkSync, writeFileSync } from 'node:fs';
 import { dirname, join, resolve } from 'node:path';
+import process from 'node:process';
 
 import { SeedcordErrorCode, isSeedcordError } from '@seedcord/errors';
 import { botFolder, toPosixPath } from '@seedcord/utils/internal';
-import { assert, describe, it, expect, onTestFinished, vi } from 'vitest';
+import { assert, describe, it, expect, onTestFinished, vi } from 'vite-plus/test';
 
 import { ProjectLoader } from '#core/config/ProjectLoader';
 import { openModuleLoader } from '#core/modules/openModuleLoader';
@@ -48,7 +49,7 @@ describe('ProjectLoader', () => {
         writeFileSync(join(projectDir, 'seedcord.config.ts'), '');
         const source = join(projectDir, 'source');
         mkdirSync(source);
-        symlinkSync(source, join(projectDir, 'src'), 'dir');
+        symlinkSync(source, join(projectDir, 'src'), process.platform === 'win32' ? 'junction' : 'dir');
         const { open } = stubModulesExporting({ ...MINIMAL, root: './src', files: ['./locales'] });
 
         await using loaded = await new ProjectLoader(open, new ShellMode()).readConfig(projectDir);

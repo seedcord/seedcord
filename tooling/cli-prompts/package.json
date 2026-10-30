@@ -1,18 +1,17 @@
 {
     "name": "@seedcord/cli-prompts",
-    "type": "module",
     "version": "0.0.2",
-    "engines": {
-        "node": "^24.22.1 || >=26.12.1",
-        "bun": ">=1.4.2"
-    },
     "private": true,
     "description": "The Ink prompts and step spinner both seedcord CLIs bundle",
-    "types": "./dist/index.d.mts",
     "repository": {
         "type": "git",
         "url": "https://github.com/seedcord/seedcord.git",
         "directory": "tooling/cli-prompts"
+    },
+    "type": "module",
+    "types": "./dist/index.d.mts",
+    "imports": {
+        "#src/*": "./src/*"
     },
     "exports": {
         ".": {
@@ -29,19 +28,14 @@
         }
     },
     "scripts": {
-        "build": "tsdown",
+        "build": "vp pack",
         "clean": "rm -rf dist",
         "lint": "eslint '**/*.{ts,tsx}' --cache --no-error-on-unmatched-pattern",
         "lint:fix": "eslint '**/*.{ts,tsx}' --fix --cache --no-error-on-unmatched-pattern",
-        "fmt": "prettier --write '**/*.{ts,tsx,json,md}' --cache --no-error-on-unmatched-pattern",
-        "fmt:check": "prettier --check '**/*.{ts,tsx,json,md}' --cache --no-error-on-unmatched-pattern",
         "tc": "tsgo --noEmit",
-        "preview": "tsx playground/preview.ts",
-        "test": "vitest run",
-        "test:watch": "vitest dev"
-    },
-    "peerDependencies": {
-        "typescript": "catalog:peer"
+        "preview": "vpx playground/preview.ts",
+        "test": "vp test run",
+        "test:watch": "vp test dev"
     },
     "dependencies": {
         "@leeoniya/ufuzzy": "catalog:deps",
@@ -59,7 +53,13 @@
         "@types/react": "catalog:react",
         "@xterm/headless": "^6.0.0",
         "eslint-plugin-react-hooks": "catalog:eslint",
-        "tsx": "catalog:deps",
         "vitest": "catalog:test"
+    },
+    "peerDependencies": {
+        "typescript": "catalog:peer"
+    },
+    "engines": {
+        "bun": ">=1.4.2",
+        "node": "^24.22.1 || >=26.12.1"
     }
 }

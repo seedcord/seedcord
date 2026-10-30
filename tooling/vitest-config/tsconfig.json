@@ -4,10 +4,7 @@
     "compilerOptions": {
         "rootDir": "./",
         "outDir": "./dist",
-        "allowImportingTsExtensions": true,
-        "paths": {
-            "#src/*": ["./src/*"]
-        }
+        "allowImportingTsExtensions": true
     },
     "include": ["**/*.ts"],
     "exclude": ["node_modules", "dist", "coverage"]

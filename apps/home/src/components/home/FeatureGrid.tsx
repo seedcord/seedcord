@@ -50,7 +50,7 @@ import {
     Webhook
 } from 'lucide-react';
 
-import { SECTION_HEADING, Section } from '#components/home/Section';
+import { SECTION_HEADING, Section } from '#components/home/Section.tsx';
 
 import type { LucideIcon } from 'lucide-react';
 import type { ReactNode } from 'react';

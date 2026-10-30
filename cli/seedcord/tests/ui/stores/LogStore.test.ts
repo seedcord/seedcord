@@ -1,6 +1,6 @@
-import { afterEach, describe, expect, it } from 'vitest';
+import { afterEach, describe, expect, it } from 'vite-plus/test';
 
-import { LogStore } from '#ui/stores/LogStore';
+import { LogStore } from '#ui/stores/LogStore.ts';
 
 import type { LogRecord } from '@seedcord/types';
 

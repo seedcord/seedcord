@@ -1,7 +1,7 @@
 import { LoggerChannelRegistry } from '@seedcord/logger';
-import { afterEach, beforeEach, describe, expect, it } from 'vitest';
+import { afterEach, beforeEach, describe, expect, it } from 'vite-plus/test';
 
-import { routeConsoleToLogs } from '#ui/stores/routeConsole';
+import { routeConsoleToLogs } from '#ui/stores/routeConsole.ts';
 
 import type { LogRecord, LogSinkHandle } from '@seedcord/types';
 

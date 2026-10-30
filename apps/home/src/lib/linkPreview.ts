@@ -1,12 +1,12 @@
 import { PREVIEW_EMOJI, SITE_ACCENT } from '@seedcord/ui/LinkPreview';
 import { readTimeLabel } from '@seedcord/ui/readingTime';
 
-import { BLOG_DESCRIPTION, BLOG_NAME } from '#lib/blog/about';
-import { joinList } from '#lib/blog/summary';
-import { BLOG_PATH, twinPath } from '#lib/blog/paths';
-import { canonicalUrl, CDN_URL, DOCS_URL, GUIDE_URL, REPO_URL, SITE_NAME, SITE_URL } from '#lib/site';
+import { BLOG_DESCRIPTION, BLOG_NAME } from '#lib/blog/about.ts';
+import { joinList } from '#lib/blog/summary.ts';
+import { BLOG_PATH, twinPath } from '#lib/blog/paths.ts';
+import { canonicalUrl, CDN_URL, DOCS_URL, GUIDE_URL, REPO_URL, SITE_NAME, SITE_URL } from '#lib/site.ts';
 
-import type { PostSummary } from '#lib/blog/summary';
+import type { PostSummary } from '#lib/blog/summary.ts';
 import type { PreviewCardProps, PreviewLink } from '@seedcord/ui/LinkPreview';
 
 const THUMBNAIL = { url: `${CDN_URL}/assets/logo.png`, description: 'the seedcord mark' };

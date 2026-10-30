@@ -5,7 +5,7 @@ import { useState } from 'react';
 
 import { DocsSidebar } from './DocsSidebar';
 
-import type { GuideTab, SidebarsByTab } from '#lib/nav';
+import type { GuideTab, SidebarsByTab } from '#lib/nav.ts';
 import type { DropdownOption } from '@seedcord/ui';
 import type { ReactElement } from 'react';
 

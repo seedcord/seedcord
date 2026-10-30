@@ -1,7 +1,7 @@
 import { act, renderHook } from '@testing-library/react';
-import { describe, expect, it, vi } from 'vitest';
+import { describe, expect, it, vi } from 'vite-plus/test';
 
-import { useRovingList } from '#src/lib/useRovingList';
+import { useRovingList } from '#src/lib/useRovingList.ts';
 
 import type { KeyboardEvent } from 'react';
 

@@ -1,6 +1,6 @@
 import { EventMetadataKey } from '@seedcord/core/internal';
 
-import type { EventHandler } from '#handlers/event';
+import type { EventHandler } from '#handlers/event/index';
 import type { ValidNonInteractionKeys } from '#src/handlers/interactionTypes';
 import type { EventFrequency } from '@seedcord/types';
 import type { ClientEvents } from 'discord.js';
@@ -75,7 +75,8 @@ export function RegisterEvent<const Defs extends readonly EventSpec<ValidNonInte
     // this single constraint rejects a handler whose generic and decorator list different events, both directions.
     return function <HandlerCtor extends Constructor<EventHandler<EventKey>>>(constructor: HandlerCtor): void {
         const saved = Reflect.getMetadata(EventMetadataKey, constructor) as
-            RegisterEventMetadataEntry<EventKey>[] | undefined;
+            | RegisterEventMetadataEntry<EventKey>[]
+            | undefined;
         const existing = saved ?? [];
 
         const entries = defs.map<RegisterEventMetadataEntry<EventKey>>(([event, options]) => ({

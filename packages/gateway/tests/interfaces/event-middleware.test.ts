@@ -1,11 +1,11 @@
 import { DispatchContext, RegisterInteractionMiddleware } from '@seedcord/core';
 import { SeedcordErrorCode } from '@seedcord/errors';
 import { Events } from 'discord.js';
-import { describe, expect, expectTypeOf, it, vi } from 'vitest';
+import { describe, expect, expectTypeOf, it, vi } from 'vite-plus/test';
 
 import { RegisterEventMiddleware } from '#bDecorators/Middlewares';
-import { EventMiddleware } from '#handlers/event';
-import { InteractionMiddleware } from '#handlers/interaction';
+import { EventMiddleware } from '#handlers/event/index';
+import { InteractionMiddleware } from '#handlers/interaction/index';
 
 import type { Core } from '#interfaces/Core';
 import type { ValidNonInteractionKeys } from '#src/handlers/interactionTypes';

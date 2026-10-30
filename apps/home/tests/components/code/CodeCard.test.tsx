@@ -1,7 +1,7 @@
 import { renderToStaticMarkup } from 'react-dom/server';
-import { describe, expect, it } from 'vitest';
+import { describe, expect, it } from 'vite-plus/test';
 
-import { CodeCard } from '#components/code/CodeCard';
+import { CodeCard } from '#components/code/CodeCard.tsx';
 
 const textOf = (html: string): string => html.replaceAll(/<[^>]+>/g, '');
 

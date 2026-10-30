@@ -3,7 +3,7 @@ import { createRequire } from 'node:module';
 import { REST } from '@discordjs/rest';
 import { SeedcordErrorCode } from '@seedcord/errors';
 import { MemoryRateLimiter } from '@seedcord/rate-limiter';
-import { afterEach, describe, expect, it, vi } from 'vitest';
+import { afterEach, describe, expect, it, vi } from 'vite-plus/test';
 
 import { assertDeclaredRuntime } from '#node/assertRuntimeVersion';
 import { CoordinatedShutdown } from '#node/Lifecycle/CoordinatedShutdown';

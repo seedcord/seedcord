@@ -2,12 +2,12 @@
 
 import { cn } from '@seedcord/ui';
 
-import { CommentExamples } from '#components/docs/entity/comments/CommentExamples';
-import { CommentParagraphs } from '#components/docs/entity/comments/CommentParagraphs';
-import { SignaturePanel } from '#components/docs/entity/signatures/SignaturePanel';
-import { SignatureSelector } from '#components/docs/entity/signatures/SignatureSelector';
-import { useActiveSignature } from '#components/docs/entity/utils/useActiveSignature';
-import { SeeAlso } from '#components/docs/SeeAlso';
+import { CommentExamples } from '#components/docs/entity/comments/CommentExamples.tsx';
+import { CommentParagraphs } from '#components/docs/entity/comments/CommentParagraphs.tsx';
+import { SignaturePanel } from '#components/docs/entity/signatures/SignaturePanel.tsx';
+import { SignatureSelector } from '#components/docs/entity/signatures/SignatureSelector.tsx';
+import { useActiveSignature } from '#components/docs/entity/utils/useActiveSignature.tsx';
+import { SeeAlso } from '#components/docs/SeeAlso.tsx';
 
 import type { EntityMemberSummary, WithParentDeprecationStatus } from '#lib/docs/types';
 import type { ReactElement } from 'react';

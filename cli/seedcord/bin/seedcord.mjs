@@ -39,12 +39,7 @@ async function run() {
     const distEntry = resolve(here, '../dist/cli.mjs');
     if (existsSync(distEntry)) {
         await import(pathToFileURL(distEntry).href);
-        return;
     }
-
-    const srcEntry = resolve(here, '../src/cli.ts');
-    await import('tsx/esm/api');
-    await import(pathToFileURL(srcEntry).href);
 }
 
 const unsupported = unsupportedRuntime();

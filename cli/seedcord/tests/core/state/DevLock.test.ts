@@ -3,7 +3,7 @@ import { readdirSync, symlinkSync, writeFileSync } from 'node:fs';
 import { join } from 'node:path';
 
 import { SeedcordErrorCode } from '@seedcord/errors';
-import { describe, expect, it, vi } from 'vitest';
+import { describe, expect, it, vi } from 'vite-plus/test';
 
 import { DevLock } from '#core/state/DevLock';
 import { lockDir } from '#tests/lockDir';

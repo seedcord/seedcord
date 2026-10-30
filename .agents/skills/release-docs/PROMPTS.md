@@ -94,7 +94,7 @@ Prose: no em or en dashes, no semicolons in prose, no comma splices, no "not X, 
 2. <packages>
 ...
 
-After each batch, run pnpm exec prettier --write <files> from the worktree root with the sandbox off. Then report: the files, one line per README on what changed, every fact you cut with the guide page it belongs on, and every claim you could not verify. Don't stage, commit or push. Stay out of <the folders the main session is using>.
+After each batch, run vp fmt <files> from the worktree root with the sandbox off. Then report: the files, one line per README on what changed, every fact you cut with the guide page it belongs on, and every claim you could not verify. Don't stage, commit or push. Stay out of <the folders the main session is using>.
 
 Never use sed -i or perl -i on any file, temp files included, and never write a file from the shell. Use Write and Edit for every file change.
 ```
@@ -143,7 +143,7 @@ Worktree: <path>. Guide pages: apps/guide/content/docs/<tab>/. The dev server ru
 1. curl the page with its trailing slash: 200, and no "Errors were thrown" in the html.
 2. Ten twoslash fences per page at most.
 3. Every ref: link target exists.
-4. pnpm exec prettier --write <files>.
+4. vp fmt <files>.
 
 ## Rules
 

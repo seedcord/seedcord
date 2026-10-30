@@ -1,9 +1,9 @@
 import { IS_PRODUCTION } from '@seedcord/ui';
 
-import { lastChanged, newestChange, postDate } from '#lib/blog/summary';
-import { listedPosts } from '#lib/blog/posts';
-import { BLOG_PATH } from '#lib/blog/paths';
-import { canonicalUrl } from '#lib/site';
+import { lastChanged, newestChange, postDate } from '#lib/blog/summary.ts';
+import { listedPosts } from '#lib/blog/posts.ts';
+import { BLOG_PATH } from '#lib/blog/paths.ts';
+import { canonicalUrl } from '#lib/site.ts';
 
 import type { MetadataRoute } from 'next';
 

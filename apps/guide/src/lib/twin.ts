@@ -2,13 +2,13 @@ import { absoluteUrl } from '@seedcord/ui';
 import { parseCodeBlockAttributes } from 'fumadocs-core/mdx-plugins/codeblock-utils';
 import { defaultHandlers } from 'mdast-util-to-markdown';
 
-import { CALLOUT_LABELS, TRANSPORT_LABELS } from '#lib/callout';
-import { cleanFence } from '#lib/fence';
-import { commandLines, getServerManager, isVerb } from '#lib/packageManager';
-import { FENCE_MODES } from '#lib/rehypeFenceMeta';
-import { canonicalUrl } from '#lib/site';
+import { CALLOUT_LABELS, TRANSPORT_LABELS } from '#lib/callout.ts';
+import { cleanFence } from '#lib/fence.ts';
+import { commandLines, getServerManager, isVerb } from '#lib/packageManager.ts';
+import { FENCE_MODES } from '#lib/rehypeFenceMeta.ts';
+import { canonicalUrl } from '#lib/site.ts';
 
-import type { CalloutType, Transport } from '#lib/callout';
+import type { CalloutType, Transport } from '#lib/callout.ts';
 import type { LLMsOptions } from 'fumadocs-core/mdx-plugins/remark-llms';
 import type { MdxJsxFlowElement, MdxJsxTextElement } from 'mdast-util-mdx';
 import type { Nodes } from 'mdast';

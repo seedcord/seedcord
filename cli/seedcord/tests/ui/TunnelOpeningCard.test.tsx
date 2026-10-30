@@ -1,8 +1,8 @@
 import { render } from 'ink-testing-library';
 import React from 'react';
-import { describe, expect, it } from 'vitest';
+import { describe, expect, it } from 'vite-plus/test';
 
-import { TunnelOpeningCard } from '#ui/components/TunnelOpeningCard';
+import { TunnelOpeningCard } from '#ui/components/TunnelOpeningCard.tsx';
 
 function rowsOf(frame: string): string[] {
     return frame.split('\n').filter((line) => /Opening|Waiting|Telling/.test(line));

@@ -1,5 +1,5 @@
 import { cn, tw } from '@seedcord/ui';
-import { describe, expect, it } from 'vitest';
+import { describe, expect, it } from 'vite-plus/test';
 
 describe('tw', () => {
     it('drops null, undefined, false, and empty-string interpolations', () => {

@@ -1,9 +1,9 @@
 import { Card, Icon, cn } from '@seedcord/ui';
 import { ArrowLeftRight, Info, Lightbulb, OctagonAlert, TriangleAlert } from 'lucide-react';
 
-import { CALLOUT_LABELS, TRANSPORT_LABELS } from '#lib/callout';
+import { CALLOUT_LABELS, TRANSPORT_LABELS } from '#lib/callout.ts';
 
-import type { CalloutType, Transport } from '#lib/callout';
+import type { CalloutType, Transport } from '#lib/callout.ts';
 import type { IconComponent } from '@seedcord/ui';
 import type { ReactElement, ReactNode } from 'react';
 

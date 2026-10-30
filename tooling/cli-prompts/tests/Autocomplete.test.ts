@@ -1,6 +1,6 @@
-import { describe, expect, it } from 'vitest';
+import { describe, expect, it } from 'vite-plus/test';
 
-import { KEY, PromptTerminal } from '#src/PromptTerminal';
+import { KEY, PromptTerminal } from '#src/PromptTerminal.ts';
 
 const COLORS = {
     message: 'Pick an accent color, or type a hex',

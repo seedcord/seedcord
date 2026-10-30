@@ -3,9 +3,9 @@
 import { CodeBlock, SegmentedControl, cn } from '@seedcord/ui';
 import { useSyncExternalStore } from 'react';
 
-import { MANAGERS, getManager, getServerManager, setManager, subscribe } from '#lib/packageManager';
+import { MANAGERS, getManager, getServerManager, setManager, subscribe } from '#lib/packageManager.ts';
 
-import type { Manager } from '#lib/packageManager';
+import type { Manager } from '#lib/packageManager.ts';
 import type { ReactElement } from 'react';
 
 const OPTIONS = MANAGERS.map((name) => ({ value: name, label: name }));

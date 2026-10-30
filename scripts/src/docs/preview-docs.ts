@@ -17,7 +17,7 @@ async function main(): Promise<void> {
     if (deleted.length > 0) console.log(`🗑️ deleted older builds: ${deleted.join(', ')}`);
 
     const wrangler = ['exec', 'wrangler', 'dev', '--env', 'preview', '--var', `BUILD_ID:${build.id}`];
-    spawn('pnpm', [...wrangler, ...process.argv.slice(2)], { cwd: DOCS_APP, stdio: 'inherit' }).on('exit', (code) => {
+    spawn('vp', [...wrangler, ...process.argv.slice(2)], { cwd: DOCS_APP, stdio: 'inherit' }).on('exit', (code) => {
         process.exitCode = code ?? 1;
     });
 }

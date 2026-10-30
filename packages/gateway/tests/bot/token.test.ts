@@ -1,6 +1,6 @@
 import { SeedcordErrorCode } from '@seedcord/errors';
 import { Envapter, FileSource, PortableSource } from 'envapt';
-import { afterEach, describe, expect, it } from 'vitest';
+import { afterEach, describe, expect, it } from 'vite-plus/test';
 
 import { Seedcord } from '#src/Seedcord';
 import { testConfig } from '#tests/utils/test-config';

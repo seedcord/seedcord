@@ -1,5 +1,5 @@
 import { PublishDefault } from '@seedcord/core/internal';
-import { afterEach, describe, expect, vi } from 'vitest';
+import { afterEach, describe, expect, vi } from 'vite-plus/test';
 
 import { botLoggerOf, eventsOf } from '#bot/Bot';
 import { Seedcord } from '#src/Seedcord';
@@ -85,7 +85,8 @@ describe('EventDispatcher Integration', () => {
         });
 
         const fire = onSpy.mock.calls.find(([event]) => event === 'messageCreate')?.[1] as
-            ((...args: unknown[]) => void) | undefined;
+            | ((...args: unknown[]) => void)
+            | undefined;
 
         expect(fire).toBeDefined();
         expect(() => fire?.({ reply: vi.fn() })).not.toThrow();
@@ -119,7 +120,8 @@ describe('EventDispatcher Integration', () => {
         seedcord.bus.on('eventDispatching', (payload) => seen.push(payload));
 
         const fire = onSpy.mock.calls.find(([event]) => event === 'messageCreate')?.[1] as
-            ((...args: unknown[]) => void) | undefined;
+            | ((...args: unknown[]) => void)
+            | undefined;
         const message = { id: 'm1', content: 'hi' };
         fire?.(message);
 
@@ -492,7 +494,8 @@ describe('EventDispatcher Integration', () => {
                 await controller.init();
 
                 const fire = onSpy.mock.calls.find(([event]) => event === 'messageCreate')?.[1] as
-                    ((...args: unknown[]) => void) | undefined;
+                    | ((...args: unknown[]) => void)
+                    | undefined;
                 expect(fire).toBeDefined();
                 await use({ seedcord, controller, fire });
             }

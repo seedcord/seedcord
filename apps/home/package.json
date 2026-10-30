@@ -1,24 +1,27 @@
 {
     "name": "@seedcord/home",
     "version": "0.0.3",
-    "type": "module",
-    "engines": {
-        "node": "^24.22.1 || >=26.12.1"
-    },
     "private": true,
+    "type": "module",
+    "imports": {
+        "#tests/*": "./tests/*.ts",
+        "#src/*": "./src/*.ts",
+        "#components/*": "./src/components/*",
+        "#ui/*": "./src/components/ui/*",
+        "#lib/*": "./src/lib/*",
+        "#styles/*": "./src/app/*.ts"
+    },
     "scripts": {
         "dev": "next dev",
         "build": "next build",
-        "start": "pnpm dlx serve dist",
+        "start": "vp dlx serve dist",
         "deploy": "wrangler deploy",
         "deploy:preview": "wrangler versions upload",
         "lint": "eslint '**/*.{ts,tsx}' --cache --no-error-on-unmatched-pattern",
         "lint:fix": "eslint '**/*.{ts,tsx}' --fix --cache --no-error-on-unmatched-pattern",
-        "fmt": "prettier --write '**/*.{ts,tsx,json,md,css}' 'content/**/*.mdx' --cache --no-error-on-unmatched-pattern",
-        "fmt:check": "prettier --check '**/*.{ts,tsx,json,md,css}' 'content/**/*.mdx' --cache --no-error-on-unmatched-pattern",
         "tc": "tsgo --noEmit",
-        "test": "vitest run",
-        "test:watch": "vitest dev"
+        "test": "vp test run",
+        "test:watch": "vp test dev"
     },
     "dependencies": {
         "@fumari/image-size": "^0.1.1",
@@ -60,5 +63,8 @@
         "vfile": "catalog:deps",
         "vitest": "catalog:test",
         "wrangler": "catalog:peer"
+    },
+    "engines": {
+        "node": "^24.22.1 || >=26.12.1"
     }
 }

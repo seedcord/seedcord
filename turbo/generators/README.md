@@ -8,7 +8,7 @@ turbo gen package
 turbo gen package --args <name> "<one-line description>" <dir>
 ```
 
-It prompts for the npm name, a description, and the workspace folder, then writes `package.json`, `tsconfig.json`, `tsdown.config.ts`, `eslint.config.ts`, `tsdoc.json`, `README.md`, `LICENSE`, `src/index.ts`, `tests/.gitkeep`, and `vitest.config.ts` from the templates in `templates/`.
+It prompts for the npm name, a description, and the workspace folder, then writes `package.json`, `tsconfig.json`, `vite.config.ts`, `eslint.config.ts`, `tsdoc.json`, `README.md`, `LICENSE`, `src/index.ts`, `tests/.gitkeep`, and `vitest.config.ts` from the templates in `templates/`.
 
 `<folder>` is the npm name without `@seedcord/`, so `@seedcord/core` scaffolds into `packages/core/`. Under `plugins/` the folder also omits the `plugin-` prefix, so `@seedcord/plugin-mongoose` scaffolds into `plugins/mongoose/`. The prefix earns its place on npm, where a package name carries no parent folder.
 
@@ -34,14 +34,14 @@ Finish these after generating, none of them are automated.
 
     ```sh
     # set "version": "0.0.1" in <dir>/<folder>/package.json first, then:
-    pnpm -C <dir>/<folder> build
+    vp -C <dir>/<folder> run build
     cd <dir>/<folder>
     # latest first, a bare publish defaults to the latest tag, no provenance locally
-    npm publish --access public --no-provenance
+    vp pm publish --access public
     # then point next at the same version
-    npm dist-tag add <name>@0.0.1 next
+    vp pm dist-tag add <name>@0.0.1 next
     # deprecate both tags in one go (since both are the same version)
-    npm deprecate <name>@0.0.1 "This is a bootstrap version, please use the next tag for development."
+    vp pm deprecate <name>@0.0.1 "This is a bootstrap version, please use the next tag for development."
     ```
 
 10. Update OIDC trust for the `publish.yml` workflow for the new packages on the npm page. Only `@materwelonDhruv` can do this as well.

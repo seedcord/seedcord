@@ -1,8 +1,8 @@
 import { loadOgFonts, OG_SIZE } from '@seedcord/ui/og';
 import { ImageResponse } from 'takumi-js/response';
 
-import { OgCard } from '#lib/og/card';
-import { OG_SCALE } from '#lib/site';
+import { OgCard } from '#lib/og/card.tsx';
+import { OG_SCALE } from '#lib/site.ts';
 
 export const dynamic = 'force-static';
 export const revalidate = false;

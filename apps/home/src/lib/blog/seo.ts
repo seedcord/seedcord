@@ -2,7 +2,7 @@ import { ORG_ID, SOFTWARE_ID } from '@seedcord/ui';
 import { OG_SIZE } from '@seedcord/ui/og';
 import { ogPageCardAlt } from '@seedcord/ui/OgCard';
 
-import { canonicalUrl, DEFAULT_OG_IMAGE, SITE_NAME } from '#lib/site';
+import { canonicalUrl, DEFAULT_OG_IMAGE, SITE_NAME } from '#lib/site.ts';
 
 import { BLOG_DESCRIPTION, BLOG_NAME, BLOG_TITLE } from './about';
 import { OG_PILL, ogMeta } from './ogCard';

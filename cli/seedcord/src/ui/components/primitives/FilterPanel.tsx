@@ -1,15 +1,15 @@
 import { Box, Text } from 'ink';
 import React from 'react';
 
-import { ui } from '#ui/palette';
-import { LogStore } from '#ui/stores/LogStore';
+import { ui } from '#ui/palette.ts';
+import { LogStore } from '#ui/stores/LogStore.ts';
 
 import { FilterChips } from './FilterChips';
 import { FilterKeys } from './Hotkeys';
 
-import type { LogFilters } from '#ui/devPrefs';
-import type { FilterCursor } from '#ui/filterCursor';
-import type { PanelFit } from '#ui/hooks/usePanelFit';
+import type { LogFilters } from '#ui/devPrefs.ts';
+import type { FilterCursor } from '#ui/filterCursor.ts';
+import type { PanelFit } from '#ui/hooks/usePanelFit.ts';
 import type { ReactElement } from 'react';
 
 export const NO_FILTER_ROOM = 'Need more room for filters.';

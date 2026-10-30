@@ -1,5 +1,5 @@
 import { DocKind } from '@seedcord/docs-search';
-import { describe, expect, it, vi } from 'vitest';
+import { describe, expect, it, vi } from 'vite-plus/test';
 
 import { docNode, fixtureEngine } from '#tests/fixtures/docsEngine';
 
@@ -14,7 +14,7 @@ vi.mock('#lib/docs/engine', () => ({
         )
 }));
 
-const { GET } = await import('#src/app/api/search/[packageId]/[file]/route');
+const { GET } = await import('#src/app/api/search/[packageId]/[file]/route.ts');
 
 function search(packageId: string, file: string): Promise<Response> {
     return GET(new Request('https://seedcord.org/docs/api/search'), { params: Promise.resolve({ packageId, file }) });

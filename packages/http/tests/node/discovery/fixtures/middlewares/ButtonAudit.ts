@@ -1,6 +1,6 @@
 import { InteractionKind, RegisterInteractionMiddleware } from '@seedcord/core';
 
-import { InteractionMiddleware } from '#handlers/interaction';
+import { InteractionMiddleware } from '#handlers/interaction/index';
 
 @RegisterInteractionMiddleware({ kinds: [InteractionKind.Button], priority: 5 })
 export class ButtonAudit extends InteractionMiddleware<InteractionKind.Button> {

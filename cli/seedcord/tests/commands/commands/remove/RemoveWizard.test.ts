@@ -3,7 +3,7 @@ import { stripVTControlCharacters } from 'node:util';
 import { KEY, PromptTerminal } from '@seedcord/cli-prompts/testing';
 import { SeedcordErrorCode, paint } from '@seedcord/errors';
 import { ApplicationCommandType, Routes } from 'discord-api-types/v10';
-import { describe, expect, it } from 'vitest';
+import { describe, expect, it } from 'vite-plus/test';
 
 import { askClean } from '#commands/commands/clean/CleanMode';
 import { askPurge } from '#commands/commands/purge/PurgeMode';

@@ -1,7 +1,7 @@
 import { defineGate } from '@seedcord/core';
 import { pickNotice } from '@seedcord/core/internal';
 
-import { NotNsfw } from '#bot/notices';
+import { NotNsfw } from '#bot/notices/index';
 
 import type { InteractionGateContext } from '#bot/gates/Gate';
 import type { NonModalInteraction } from '#src/handlers/interactionTypes';

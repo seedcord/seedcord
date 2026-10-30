@@ -1,6 +1,6 @@
 import { CustomId, RequireBotPermissions } from '@seedcord/core';
 import { PermissionFlagsBits } from 'discord-api-types/v10';
-import { expectTypeOf } from 'vitest';
+import { expectTypeOf } from 'vite-plus/test';
 
 import { AutocompleteHandler } from '#handlers/interaction/AutocompleteHandler';
 import { ButtonHandler } from '#handlers/interaction/components/ButtonHandler';

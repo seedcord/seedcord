@@ -4,7 +4,7 @@ import { join } from 'node:path';
 
 import { SeedcordErrorCode, isSeedcordError } from '@seedcord/errors';
 import { toPosixPath } from '@seedcord/utils/internal';
-import { assert, beforeEach, describe, expect, it, onTestFinished, vi } from 'vitest';
+import { assert, beforeEach, describe, expect, it, onTestFinished, vi } from 'vite-plus/test';
 
 import { DevSession } from '#commands/dev/DevSession';
 import { ServerDevRuntime } from '#commands/dev/runtime/ServerDevRuntime';
@@ -18,7 +18,7 @@ import { linkPackages } from '#tests/edgeFolder';
 import { lockDir, type LockDir } from '#tests/lockDir';
 import { resolvedConfigOf } from '#tests/resolvedConfigOf';
 import { silentLogger } from '#tests/silentLogger';
-import { DevStore } from '#ui/stores/DevStore';
+import { DevStore } from '#ui/stores/DevStore.ts';
 
 import { devConfigFor } from './devConfigFor';
 import { fakeBot, fakeRuntime } from './fakes';

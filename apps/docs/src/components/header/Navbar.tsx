@@ -18,7 +18,7 @@ import {
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 
-import { hasMobileNavPanel } from '#components/layout/sidebar/utils/hasMobileNavPanel';
+import { hasMobileNavPanel } from '#components/layout/sidebar/utils/hasMobileNavPanel.ts';
 import { SITE_URL } from '#lib/site';
 import { log } from '#lib/logger';
 import { useUIStore } from '#store/ui';

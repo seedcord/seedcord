@@ -1,4 +1,4 @@
-import { describe, it, expect } from 'vitest';
+import { describe, it, expect } from 'vite-plus/test';
 
 import { Subscribe } from '#subscribers/decorators/Subscribe';
 import { Bus, registrationFor } from '#subscribers/index';

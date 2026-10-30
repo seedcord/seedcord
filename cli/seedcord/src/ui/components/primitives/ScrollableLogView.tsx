@@ -2,14 +2,14 @@ import { LEVEL_COLOR } from '@seedcord/logger';
 import { Box, Text } from 'ink';
 import React from 'react';
 
-import { channelColor } from '#ui/channelColor';
-import { Rule } from '#ui/components/primitives/Rule';
-import { BAR, cellText, GUIDE, isErrorTail } from '#ui/LogLayout';
-import { ui } from '#ui/palette';
+import { channelColor } from '#ui/channelColor.ts';
+import { Rule } from '#ui/components/primitives/Rule.tsx';
+import { BAR, cellText, GUIDE, isErrorTail } from '#ui/LogLayout.ts';
+import { ui } from '#ui/palette.ts';
 
-import type { LogLayout, PrefixCell } from '#ui/LogLayout';
-import type { EntryRow, LogRow } from '#ui/logRows';
-import type { LogEntry } from '#ui/stores/LogStore';
+import type { LogLayout, PrefixCell } from '#ui/LogLayout.ts';
+import type { EntryRow, LogRow } from '#ui/logRows.ts';
+import type { LogEntry } from '#ui/stores/LogStore.ts';
 import type { LogLevel } from '@seedcord/types';
 import type { TextProps } from 'ink';
 import type { ReactElement } from 'react';

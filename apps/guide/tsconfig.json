@@ -11,15 +11,9 @@
                 "name": "next"
             }
         ],
-        "paths": {
-            "#tests/*": ["./tests/*"],
-            "#src/*": ["./src/*"],
-            "#components/*": ["./src/components/*"],
-            "#lib/*": ["./src/lib/*"],
-            "#styles/*": ["./src/app/*"]
-        },
         "incremental": true,
-        "esModuleInterop": true
+        "esModuleInterop": true,
+        "allowImportingTsExtensions": true
     },
     "include": [
         "next-env.d.ts",
@@ -28,9 +22,8 @@
         "tests/**/*.ts",
         "tests/**/*.tsx",
         "eslint.config.ts",
-        "prettier.config.ts",
         "next.config.ts",
-        "vitest.config.ts",
+        "vite.config.ts",
         "source.config.ts",
         ".next/types/**/*.ts",
         "worker.ts"

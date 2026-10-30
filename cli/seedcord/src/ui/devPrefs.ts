@@ -1,10 +1,10 @@
 import { isPlainObject, isStringArray } from '@seedcord/utils/internal';
 
-import { FILTER_LEVELS } from '#ui/components/primitives/FilterChips';
-import { isDetailMode } from '#ui/LogLayout';
+import { FILTER_LEVELS } from '#ui/components/primitives/FilterChips.tsx';
+import { isDetailMode } from '#ui/LogLayout.ts';
 
 import type { StateFile } from '#core/state/StateFolder';
-import type { DetailMode } from '#ui/LogLayout';
+import type { DetailMode } from '#ui/LogLayout.ts';
 import type { LogLevel } from '@seedcord/types';
 
 export interface LogFilters {

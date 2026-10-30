@@ -1,12 +1,12 @@
 import { isSeedcordError, SeedcordErrorCode } from '@seedcord/errors';
 import { Routes } from 'discord-api-types/v10';
-import { assert, describe, expect, it, vi } from 'vitest';
+import { assert, describe, expect, it, vi } from 'vite-plus/test';
 
 import { resolveEmojis } from '#src/miscellaneous/resolveEmojis';
 
 import type { REST } from '@discordjs/rest';
 import type { APIEmoji } from 'discord-api-types/v10';
-import type { Mock } from 'vitest';
+import type { Mock } from 'vite-plus/test';
 
 const APP = 'app-1';
 

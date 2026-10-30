@@ -1,29 +1,25 @@
 {
     "name": "@seedcord/scripts",
-    "type": "module",
     "version": "0.0.1",
-    "engines": {
-        "node": ">=26.12.1"
-    },
     "private": true,
     "description": "Repo scripts for docs, releases, and workspace checks",
-    "imports": {
-        "#src/*": "./src/*.ts"
-    },
     "repository": {
         "type": "git",
         "url": "https://github.com/seedcord/seedcord.git",
         "directory": "scripts"
     },
+    "type": "module",
+    "imports": {
+        "#tests/*": "./tests/*.ts",
+        "#src/*": "./src/*.ts"
+    },
     "scripts": {
         "lint": "eslint '**/*.ts' --cache --no-error-on-unmatched-pattern",
         "lint:fix": "eslint '**/*.ts' --fix --cache --no-error-on-unmatched-pattern",
-        "fmt": "prettier --write '**/*.{ts,json,md}' --cache --no-error-on-unmatched-pattern",
-        "fmt:check": "prettier --check '**/*.{ts,json,md}' --cache --no-error-on-unmatched-pattern",
         "tc": "tsgo --noEmit",
-        "test": "vitest run",
-        "test:watch": "vitest dev",
-        "coverage": "vitest run --coverage"
+        "test": "vp test run",
+        "test:watch": "vp test dev",
+        "coverage": "vp test run --coverage"
     },
     "dependencies": {
         "@aws-sdk/client-s3": "^3.1101.0",
@@ -43,7 +39,10 @@
         "jsonc-parser": "^3.3.1",
         "string-argv": "^0.3.2",
         "typescript": "catalog:peer",
-        "vite": "catalog:peer",
+        "vite": "catalog:deps",
         "vitest": "catalog:test"
+    },
+    "engines": {
+        "node": ">=26.12.1"
     }
 }

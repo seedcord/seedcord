@@ -1,6 +1,6 @@
 import { DOCS, GUIDE, IS_PRODUCTION } from '@seedcord/ui';
 
-import { canonicalUrl } from '#lib/site';
+import { canonicalUrl } from '#lib/site.ts';
 
 // not MetadataRoute so it can carry the non-standard Content-Signal directive
 export const dynamic = 'force-static';

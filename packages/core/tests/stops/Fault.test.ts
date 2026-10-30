@@ -1,4 +1,4 @@
-import { describe, expect, it } from 'vitest';
+import { describe, expect, it } from 'vite-plus/test';
 
 import { DispatchContext } from '#src/dispatch/DispatchContext';
 import { Fault } from '#stops/Fault';

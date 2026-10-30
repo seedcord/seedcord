@@ -18,7 +18,11 @@
  *   `cause`.
  */
 export type ComponentEmbedErrorCode =
-    'InvalidStructure' | 'InvalidProp' | 'OverLimit' | 'UnsupportedComponent' | 'ReadFailed';
+    | 'InvalidStructure'
+    | 'InvalidProp'
+    | 'OverLimit'
+    | 'UnsupportedComponent'
+    | 'ReadFailed';
 
 /**
  * Thrown when a component tree breaks a rule of Discord's component embed format, or when your own code throws while

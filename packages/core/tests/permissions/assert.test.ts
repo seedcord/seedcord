@@ -1,5 +1,5 @@
 import { PermissionFlagsBits } from 'discord-api-types/v10';
-import { describe, expect, it } from 'vitest';
+import { describe, expect, it } from 'vite-plus/test';
 
 import { HasDangerousPermissions, MissingPermissions } from '#notices/index';
 import { assertPermissions } from '#src/permissions/assert';

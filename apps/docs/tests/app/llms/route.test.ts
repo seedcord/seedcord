@@ -1,4 +1,4 @@
-import { describe, expect, it, vi } from 'vitest';
+import { describe, expect, it, vi } from 'vite-plus/test';
 
 const { resolveEntityMock } = vi.hoisted(() => ({ resolveEntityMock: vi.fn() }));
 
@@ -6,7 +6,7 @@ vi.mock('#lib/site', () => ({ canonicalUrl: (path: string) => `https://seedcord.
 vi.mock('#lib/docs/catalog', () => ({ findPackageVersion: vi.fn() }));
 vi.mock('#lib/docs/resolveEntity', () => ({ resolveEntity: resolveEntityMock }));
 
-const { GET } = await import('#src/app/llms/[[...path]]/route');
+const { GET } = await import('#src/app/llms/[[...path]]/route.ts');
 
 function call(path: string[]): Promise<Response> {
     return GET(new Request('https://seedcord.org/docs/llms'), { params: Promise.resolve({ path }) });

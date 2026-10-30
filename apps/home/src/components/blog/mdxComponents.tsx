@@ -4,10 +4,10 @@ import { readFenceElement } from '@seedcord/ui/fence';
 import { isShellLanguage } from '@seedcord/ui/shiki';
 import Image from 'next/image';
 
-import { CodeCard } from '#components/code/CodeCard';
-import { Code } from '#components/ui/Code';
-import { SiteLink } from '#components/ui/SiteLink';
-import { CODE_MARK_LIGHT } from '#lib/code/marks';
+import { CodeCard } from '#components/code/CodeCard.tsx';
+import { Code } from '#components/ui/Code.tsx';
+import { SiteLink } from '#components/ui/SiteLink.tsx';
+import { CODE_MARK_LIGHT } from '#lib/code/marks.ts';
 
 import type { HighlightLanguage } from '@seedcord/ui/shiki';
 import type { MDXComponents } from 'mdx/types';

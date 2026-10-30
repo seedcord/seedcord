@@ -1,6 +1,6 @@
-import { postFromParams, postParams } from '#lib/blog/posts';
+import { postFromParams, postParams } from '#lib/blog/posts.ts';
 
-import type { PostParams } from '#lib/blog/posts';
+import type { PostParams } from '#lib/blog/posts.ts';
 
 export const dynamic = 'force-static';
 export const dynamicParams = false;

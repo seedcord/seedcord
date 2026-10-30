@@ -27,11 +27,11 @@ import { Events } from 'discord.js';
 import { Envapter } from 'envapt';
 
 import { CONFIRM_DEF } from '#bot/confirm/reserved';
-import { UnhandledAutocomplete, UnhandledRepliable } from '#bot/defaults';
+import { UnhandledAutocomplete, UnhandledRepliable } from '#bot/defaults/index';
 import { interactionGateContext } from '#bot/gates/runGates';
 import { handleInteractionFault } from '#bot/handleInteractionFault';
 import { slashRouteOf } from '#bUtilities/miscellaneous/slashRouteOf';
-import { AutocompleteHandler, InteractionMiddleware } from '#handlers/interaction';
+import { AutocompleteHandler, InteractionMiddleware } from '#handlers/interaction/index';
 import { InteractionHandler } from '#handlers/interaction/InteractionHandler';
 import { RepliableHandler } from '#handlers/RepliableHandler';
 

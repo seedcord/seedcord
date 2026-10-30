@@ -1,7 +1,7 @@
 import { Button, Icon, cn } from '@seedcord/ui';
 import { ArrowUpRight, Star } from 'lucide-react';
 
-import { REPO_URL } from '#lib/site';
+import { REPO_URL } from '#lib/site.ts';
 
 import type { ReactElement } from 'react';
 

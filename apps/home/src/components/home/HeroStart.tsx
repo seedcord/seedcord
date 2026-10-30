@@ -3,10 +3,10 @@
 import { SegmentedControl, cn } from '@seedcord/ui';
 import { useState } from 'react';
 
-import { CopyCommand } from '#components/ui/CopyCommand';
-import { NEW_BOT_PROMPT, PORT_PROMPT } from '#lib/agentPrompts';
+import { CopyCommand } from '#components/ui/CopyCommand.tsx';
+import { NEW_BOT_PROMPT, PORT_PROMPT } from '#lib/agentPrompts.ts';
 
-import type { SwapDirection } from '#components/ui/CopyCommand';
+import type { SwapDirection } from '#components/ui/CopyCommand.tsx';
 import type { ReactNode } from 'react';
 
 const STARTS = {

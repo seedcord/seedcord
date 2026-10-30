@@ -1,9 +1,9 @@
 import { stripVTControlCharacters } from 'node:util';
 
 import { paint } from '@seedcord/errors';
-import { describe, expect, it } from 'vitest';
+import { describe, expect, it } from 'vite-plus/test';
 
-import { StepRow } from '#src/StepRow';
+import { StepRow } from '#src/StepRow.ts';
 
 function piped(): { write: (text: string) => void; text: () => string } {
     let written = '';

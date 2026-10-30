@@ -1,4 +1,4 @@
-import type { EventHandler } from '#handlers/event';
+import type { EventHandler } from '#handlers/event/index';
 import type { InteractionHandler } from '#handlers/interaction/InteractionHandler';
 import type { ValidEventTypes } from '#src/handlers/interactionTypes';
 import type { EventGateContext, InteractionGateContext } from './Gate';

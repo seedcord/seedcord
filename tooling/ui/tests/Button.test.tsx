@@ -1,9 +1,9 @@
 import { render, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { createRef } from 'react';
-import { describe, expect, it, vi } from 'vitest';
+import { describe, expect, it, vi } from 'vite-plus/test';
 
-import { Button } from '#src/Button';
+import { Button } from '#src/Button.tsx';
 
 describe('Button behavior', () => {
     it('calls onClick when clicked', async () => {

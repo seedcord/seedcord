@@ -4,18 +4,18 @@ import { ComponentEmbed } from 'discord-component-embed/react';
 import Image from 'next/image';
 import Link from 'next/link';
 
-import { mdxComponents } from '#components/blog/mdxComponents';
-import { Byline, PostDates } from '#components/blog/PostMeta';
-import { Footer } from '#components/home/Footer';
-import { Nav } from '#components/home/Nav';
-import { SiteLink } from '#components/ui/SiteLink';
-import { BLOG_PATH } from '#lib/blog/paths';
-import { postFromParams, postParams, summaryFromParams } from '#lib/blog/posts';
-import { postJsonLd, postMetadata } from '#lib/blog/seo';
-import { postPreview } from '#lib/linkPreview';
+import { mdxComponents } from '#components/blog/mdxComponents.tsx';
+import { Byline, PostDates } from '#components/blog/PostMeta.tsx';
+import { Footer } from '#components/home/Footer.tsx';
+import { Nav } from '#components/home/Nav.tsx';
+import { SiteLink } from '#components/ui/SiteLink.tsx';
+import { BLOG_PATH } from '#lib/blog/paths.ts';
+import { postFromParams, postParams, summaryFromParams } from '#lib/blog/posts.ts';
+import { postJsonLd, postMetadata } from '#lib/blog/seo.ts';
+import { postPreview } from '#lib/linkPreview.ts';
 
-import type { PostSummary } from '#lib/blog/summary';
-import type { PostParams } from '#lib/blog/posts';
+import type { PostSummary } from '#lib/blog/summary.ts';
+import type { PostParams } from '#lib/blog/posts.ts';
 import type { Metadata } from 'next';
 import type { ReactNode } from 'react';
 

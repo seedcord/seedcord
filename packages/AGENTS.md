@@ -49,7 +49,7 @@ Translate a third-party throw into a seedcord error before it reaches a consumer
 
 ## Changesets
 
-Write one with `pnpm cs` when you change a published package in a way that someone on the latest release will notice. Skip it when you fix code that isn't on `main` yet. That bug never shipped. `git log origin/main -- <path>` shows whether `main` has the file.
+Write one with `vp run cs` when you change a published package in a way that someone on the latest release will notice. Skip it when you fix code that isn't on `main` yet. That bug never shipped. `git log origin/main -- <path>` shows whether `main` has the file.
 
 A changeset is one or two plain sentences naming the user-visible change. Skip the sub-changes that rode along, since the changelog reader has the diff. Mark a breaking change with a bold `**BREAKING:**` prefix line.
 

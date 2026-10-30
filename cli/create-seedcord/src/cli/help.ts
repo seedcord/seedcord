@@ -1,6 +1,6 @@
 import { VERBOSE_FLAG } from '#cli/parseInput';
 import { noFlagName } from '#interview/applyFlags';
-import { STEPS } from '#interview/steps';
+import { STEPS } from '#interview/steps/index';
 
 import type { AnyStep } from '#interview/types';
 

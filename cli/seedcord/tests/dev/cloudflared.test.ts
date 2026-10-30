@@ -1,4 +1,4 @@
-import { describe, expect, it } from 'vitest';
+import { describe, expect, it } from 'vite-plus/test';
 
 import { findCloudflared, installHint } from '#commands/dev/tunnel/cloudflared';
 

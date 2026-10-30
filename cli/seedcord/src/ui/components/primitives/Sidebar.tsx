@@ -2,11 +2,11 @@ import { Box, Text } from 'ink';
 import React from 'react';
 
 import { version } from '#core/version';
-import { Banner } from '#ui/components/Banner';
-import { StatusBadge } from '#ui/components/StatusBadge';
-import { formatUptime } from '#ui/format';
-import { isStreaming } from '#ui/stores/devPhase';
-import { LogStore } from '#ui/stores/LogStore';
+import { Banner } from '#ui/components/Banner.tsx';
+import { StatusBadge } from '#ui/components/StatusBadge.tsx';
+import { formatUptime } from '#ui/format.ts';
+import { isStreaming } from '#ui/stores/devPhase.ts';
+import { LogStore } from '#ui/stores/LogStore.ts';
 
 import { BlinkDot } from './BlinkDot';
 import { FilterChips } from './FilterChips';
@@ -14,11 +14,11 @@ import { FilterKeys, FiltersKey, SessionKeys, ViewKeys } from './Hotkeys';
 import { Rule } from './Rule';
 
 import type { TunnelStatus } from '#commands/dev/tunnel/TunnelCoordinator';
-import type { LogFilters } from '#ui/devPrefs';
-import type { FilterCursor } from '#ui/filterCursor';
-import type { DetailMode } from '#ui/LogLayout';
-import type { FilterView } from '#ui/Screen';
-import type { DevState, DevTransport } from '#ui/stores/DevStore';
+import type { LogFilters } from '#ui/devPrefs.ts';
+import type { FilterCursor } from '#ui/filterCursor.ts';
+import type { DetailMode } from '#ui/LogLayout.ts';
+import type { FilterView } from '#ui/Screen.ts';
+import type { DevState, DevTransport } from '#ui/stores/DevStore.ts';
 import type { DOMElement } from 'ink';
 import type { ReactElement, Ref } from 'react';
 

@@ -4,7 +4,7 @@ import { Popover, PopoverAnchor, PopoverContent, cn, tw } from '@seedcord/ui';
 import { ArrowUpRight } from 'lucide-react';
 import { useCallback, useEffect, useRef, useState } from 'react';
 
-import { Ref } from '#components/Ref';
+import { Ref } from '#components/Ref.tsx';
 
 import type { CSSProperties, FocusEvent, KeyboardEvent, PointerEvent, ReactElement, ReactNode, RefObject } from 'react';
 

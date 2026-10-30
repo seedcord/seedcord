@@ -1,6 +1,6 @@
 import { PaginatorBase } from '@seedcord/core';
 
-import { ButtonHandler } from '#handlers/interaction/components';
+import { ButtonHandler } from '#handlers/interaction/components/index';
 
 import type { RepliableHandler } from '#handlers/RepliableHandler';
 import type { Core } from '#interfaces/Core';

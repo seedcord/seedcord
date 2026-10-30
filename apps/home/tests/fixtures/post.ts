@@ -1,4 +1,4 @@
-import type { PostSummary } from '#lib/blog/summary';
+import type { PostSummary } from '#lib/blog/summary.ts';
 
 export const POST: PostSummary = {
     slug: 'typed-custom-ids',

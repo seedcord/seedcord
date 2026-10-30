@@ -1,6 +1,6 @@
-import { describe, expect, it } from 'vitest';
+import { describe, expect, it } from 'vite-plus/test';
 
-import { LineEditor } from '#src/LineEditor';
+import { LineEditor } from '#src/LineEditor.ts';
 
 const caretAtEnd = (text: string): LineEditor => LineEditor.empty().insert(text);
 

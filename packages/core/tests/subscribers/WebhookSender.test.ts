@@ -1,6 +1,6 @@
 import { DiscordAPIError, REST } from '@discordjs/rest';
 import { ComponentType } from 'discord-api-types/v10';
-import { afterEach, beforeEach, describe, expect, it, vi, type MockInstance } from 'vitest';
+import { afterEach, beforeEach, describe, expect, it, vi, type MockInstance } from 'vite-plus/test';
 
 import { WebhookSender } from '#subscribers/bases/WebhookSender';
 

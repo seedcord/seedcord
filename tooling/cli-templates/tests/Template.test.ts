@@ -2,7 +2,7 @@ import { join } from 'node:path';
 import { runInNewContext } from 'node:vm';
 
 import { isSeedcordError, SeedcordErrorCode } from '@seedcord/errors';
-import { assert, beforeAll, describe, expect, it } from 'vitest';
+import { assert, beforeAll, describe, expect, it } from 'vite-plus/test';
 
 import { Template } from '#src/Template';
 import { templateFolder } from '#tests/templateFolder';

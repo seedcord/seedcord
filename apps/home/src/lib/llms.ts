@@ -3,10 +3,10 @@ import path from 'node:path';
 
 import { agentRules, readmeFeatures } from '@seedcord/ui/agents';
 
-import { FEED_PATH, twinPath } from '#lib/blog/paths';
-import { canonicalUrl, DOCS_URL, GUIDE_URL, REPO_URL, SITE_DESCRIPTION, SITE_URL } from '#lib/site';
+import { FEED_PATH, twinPath } from '#lib/blog/paths.ts';
+import { canonicalUrl, DOCS_URL, GUIDE_URL, REPO_URL, SITE_DESCRIPTION, SITE_URL } from '#lib/site.ts';
 
-import type { PostSummary } from '#lib/blog/summary';
+import type { PostSummary } from '#lib/blog/summary.ts';
 
 // next build runs this from apps/home. the static export writes the text to a file
 const README = path.join(process.cwd(), '../../README.md');

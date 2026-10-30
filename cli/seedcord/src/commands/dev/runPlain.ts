@@ -2,7 +2,7 @@ import { createInterface } from 'node:readline';
 
 import { cliLogger } from '#core/cliLogger';
 
-import type { DevStore } from '#ui/stores/DevStore';
+import type { DevStore } from '#ui/stores/DevStore.ts';
 import type { DevRunner } from './DevRunner';
 import type { Readable } from 'node:stream';
 

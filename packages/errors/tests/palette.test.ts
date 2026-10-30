@@ -1,7 +1,7 @@
 import { join } from 'node:path';
 import { stripVTControlCharacters } from 'node:util';
 
-import { afterEach, describe, expect, it, vi } from 'vitest';
+import { afterEach, describe, expect, it, vi } from 'vite-plus/test';
 
 import { paint } from '#src/index';
 

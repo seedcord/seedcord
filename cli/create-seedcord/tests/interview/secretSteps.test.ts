@@ -1,4 +1,4 @@
-import { describe, expect, it } from 'vitest';
+import { describe, expect, it } from 'vite-plus/test';
 
 import { tokenStep } from '#interview/steps/token';
 import { BOT_TOKEN, TOKEN } from '#tests/token';

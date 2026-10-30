@@ -1,5 +1,5 @@
 import { CustomId, defineGate } from '@seedcord/core';
-import { expectTypeOf } from 'vitest';
+import { expectTypeOf } from 'vite-plus/test';
 
 import { EventHandler } from '#handlers/event/EventHandler';
 import { AutocompleteHandler } from '#handlers/interaction/AutocompleteHandler';

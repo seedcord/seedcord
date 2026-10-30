@@ -1,9 +1,9 @@
 import { cn, MAIN_CONTENT_ID } from '@seedcord/ui';
 import { Materwelon } from '@seedcord/ui/Materwelon';
 
-import { Footer } from '#components/home/Footer';
-import { Nav } from '#components/home/Nav';
-import { PosterButton } from '#components/ui/PosterButton';
+import { Footer } from '#components/home/Footer.tsx';
+import { Nav } from '#components/home/Nav.tsx';
+import { PosterButton } from '#components/ui/PosterButton.tsx';
 
 import type { ReactNode } from 'react';
 

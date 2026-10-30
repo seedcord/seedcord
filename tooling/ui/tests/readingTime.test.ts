@@ -1,6 +1,6 @@
-import { describe, expect, it } from 'vitest';
+import { describe, expect, it } from 'vite-plus/test';
 
-import { readingMinutes } from '#src/readingTime';
+import { readingMinutes } from '#src/readingTime.ts';
 
 const words = (count: number): string => Array.from({ length: count }, () => 'word').join(' ');
 

@@ -5,7 +5,7 @@ import { KEY, PromptTerminal, settled } from '@seedcord/cli-prompts/testing';
 import { paint, SeedcordErrorCode } from '@seedcord/errors';
 import { HostAugmentTarget } from '@seedcord/types/internal';
 import { toPosixPath } from '@seedcord/utils/internal';
-import { describe, expect, it } from 'vitest';
+import { describe, expect, it } from 'vite-plus/test';
 
 import { MAKE_STEPS, MakeRunner } from '#commands/make/MakeRunner';
 import { StepPrinter } from '#core/output/StepPrinter';

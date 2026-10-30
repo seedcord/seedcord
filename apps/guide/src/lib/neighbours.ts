@@ -1,4 +1,4 @@
-import type { SidebarLink } from '#components/DocsSidebar';
+import type { SidebarLink } from '#components/DocsSidebar.tsx';
 
 export interface OrderedPage extends SidebarLink {
     tab: string;

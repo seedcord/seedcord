@@ -1,5 +1,5 @@
 /** @jsxImportSource react */
-import { describe, expect, it } from 'vitest';
+import { describe, expect, it } from 'vite-plus/test';
 
 import { ActionRow, Container, LinkButton, Section, TextDisplay, Thumbnail, toComponentEmbed } from '#src/index';
 

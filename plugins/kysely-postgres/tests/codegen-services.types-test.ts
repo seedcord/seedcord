@@ -1,4 +1,4 @@
-import { expectTypeOf } from 'vitest';
+import { expectTypeOf } from 'vite-plus/test';
 
 import { RegisterKyselyService } from '#src/decorators/RegisterKyselyService';
 import { KyselyService } from '#src/KyselyService';

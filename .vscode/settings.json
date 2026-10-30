@@ -7,14 +7,17 @@
     "files.insertFinalNewline": true,
     "files.trimFinalNewlines": true,
     "editor.codeActionsOnSave": {
-        "source.fixAll.eslint": "explicit"
+        "source.fixAll.eslint": "explicit",
+        "source.fixAll.oxc": "explicit"
     },
 
-    // Prettier Settings
+    // Oxfmt Settings
+    "editor.defaultFormatter": "oxc.oxc-vscode",
     "editor.formatOnSave": true,
-    "editor.defaultFormatter": "esbenp.prettier-vscode",
-    "prettier.requireConfig": true,
-    "prettier.useEditorConfig": true,
+    "editor.formatOnSaveMode": "file",
+    "oxc.disableNestedConfig": true,
+    "oxc.fmt.disableNestedConfig": true,
+    "oxc.fmt.configPath": "vite.config.ts",
 
     // ESLint Settings
     "eslint.validate": ["javascript", "javascriptreact", "typescript", "typescriptreact"],
@@ -78,19 +81,22 @@
     },
 
     // Language-specific settings
+    "[javascript]": { "editor.defaultFormatter": "oxc.oxc-vscode" },
+    "[javascriptreact]": { "editor.defaultFormatter": "oxc.oxc-vscode" },
+    "[typescript]": { "editor.defaultFormatter": "oxc.oxc-vscode" },
+    "[typescriptreact]": { "editor.defaultFormatter": "oxc.oxc-vscode" },
     "[jsonc]": {
-        "editor.defaultFormatter": "esbenp.prettier-vscode"
+        "editor.defaultFormatter": "oxc.oxc-vscode"
     },
     "[markdown]": {
-        "editor.defaultFormatter": "esbenp.prettier-vscode",
+        "editor.defaultFormatter": "oxc.oxc-vscode",
         "files.trimTrailingWhitespace": false
     },
 
     // Vitest configuration
     "vitest.shellType": "terminal",
-
-    "prettier.prettierPath": "node_modules/prettier",
     "vitest.disableWorkspaceWarning": true,
+
     "chat.tools.terminal.autoApprove": {
         "pnpm": true
     },

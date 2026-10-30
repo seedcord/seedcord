@@ -1,8 +1,8 @@
 import { cn } from '@seedcord/ui';
 import { notFound } from 'next/navigation';
 
-import { devSource } from '#lib/devSource';
-import { mdxComponents } from '#lib/mdxComponents';
+import { devSource } from '#lib/devSource.ts';
+import { mdxComponents } from '#lib/mdxComponents.tsx';
 
 import type { ReactNode } from 'react';
 

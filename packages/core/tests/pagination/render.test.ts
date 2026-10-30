@@ -1,7 +1,7 @@
 import { ButtonBuilder, TextDisplayBuilder } from '@discordjs/builders';
 import { CustomId } from '@seedcord/custom-id';
 import { ButtonStyle, ComponentType } from 'discord-api-types/v10';
-import { describe, expect, it } from 'vitest';
+import { describe, expect, it } from 'vite-plus/test';
 
 import { BuilderComponent } from '#components/Component';
 import { pageCursor } from '#pagination/cursor';

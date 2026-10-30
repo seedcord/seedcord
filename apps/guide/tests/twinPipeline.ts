@@ -4,8 +4,8 @@ import remarkParse from 'remark-parse';
 import { unified } from 'unified';
 import { VFile } from 'vfile';
 
-import { remarkRefLinks } from '#lib/remarkRefLinks';
-import { TWIN_OPTIONS } from '#lib/twin';
+import { remarkRefLinks } from '#lib/remarkRefLinks.ts';
+import { TWIN_OPTIONS } from '#lib/twin.ts';
 
 // _data is the plugin's own hook for reading the markdown without compiling a module.
 // source.config.ts runs remarkRefLinks ahead of the twin

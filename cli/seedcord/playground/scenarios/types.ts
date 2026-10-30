@@ -1,5 +1,5 @@
 import type { DevEvent } from '#commands/dev/runtime/events';
-import type { DevStore } from '#ui/stores/DevStore';
+import type { DevStore } from '#ui/stores/DevStore.ts';
 import type { LogLevel } from '@seedcord/types';
 
 export type PreviewLogLevel = LogLevel;

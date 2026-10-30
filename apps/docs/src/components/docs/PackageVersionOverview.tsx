@@ -1,7 +1,7 @@
 import { cn, tw } from '@seedcord/ui';
 import Link from 'next/link';
 
-import { HoverPrefetchLink } from '#components/HoverPrefetchLink';
+import { HoverPrefetchLink } from '#components/HoverPrefetchLink.tsx';
 import { getToneConfig, getToneTitle, TONE_ORDER } from '#lib/tonePresentation';
 
 import type { ReexportLink } from '#lib/docs/ActiveVersion';

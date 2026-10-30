@@ -1,20 +1,20 @@
 import { settled, stableFrame } from '@seedcord/cli-prompts/testing';
 import React from 'react';
-import { describe, expect, it, vi } from 'vitest';
+import { describe, expect, it, vi } from 'vite-plus/test';
 
-import { NO_FILTER_ROOM } from '#ui/components/primitives/FilterPanel';
-import { NO_ROOM } from '#ui/components/primitives/ScrollableLogView';
-import { DevApp } from '#ui/DevApp';
-import { devPrefsFile } from '#ui/devPrefs';
-import { formatClock } from '#ui/format';
-import { COMPACT_ROWS } from '#ui/Screen';
-import { DevStore } from '#ui/stores/DevStore';
-import { LogStore } from '#ui/stores/LogStore';
+import { NO_FILTER_ROOM } from '#ui/components/primitives/FilterPanel.tsx';
+import { NO_ROOM } from '#ui/components/primitives/ScrollableLogView.tsx';
+import { DevApp } from '#ui/DevApp.tsx';
+import { devPrefsFile } from '#ui/devPrefs.ts';
+import { formatClock } from '#ui/format.ts';
+import { COMPACT_ROWS } from '#ui/Screen.ts';
+import { DevStore } from '#ui/stores/DevStore.ts';
+import { LogStore } from '#ui/stores/LogStore.ts';
 
 import { renderAt } from './renderAt';
 import { renderOnScreen } from './renderOnScreen';
 
-import type { DevPrefs } from '#ui/devPrefs';
+import type { DevPrefs } from '#ui/devPrefs.ts';
 import type { LogRecord } from '@seedcord/types';
 import type { ComponentProps, ReactElement } from 'react';
 
