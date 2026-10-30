@@ -1,7 +1,16 @@
+import { SeedcordErrorCode } from '@seedcord/errors';
+import { SeedcordError } from '@seedcord/errors/internal';
+
 import type { KvDriver } from '@seedcord/types';
 
 // the slice of Keyv 6 this driver calls
 interface KeyvLike {
+    readonly store: {
+        readonly capabilities?: {
+            readonly store: string;
+            readonly methods: { readonly iterator: { readonly exists: boolean } };
+        };
+    };
     get(key: string): Promise<unknown>;
     set(key: string, value: string, ttl?: number): Promise<boolean>;
     delete(key: string): Promise<boolean>;
@@ -35,9 +44,18 @@ export class KeyvDriver<TKeyv extends KeyvLike> implements KvDriver {
         await this.keyv.delete(key);
     }
 
+    /** @throws A **SeedcordError** when the Keyv store can't list its keys, like `@keyv/memcache`. */
     public async keys(prefix: string): Promise<string[]> {
+        if (!this.#canListKeys()) throw new SeedcordError(SeedcordErrorCode.CoreKvKeysUnsupported);
+
         const found: string[] = [];
         for await (const [key] of this.keyv.iterator()) if (key.startsWith(prefix)) found.push(key);
         return found;
+    }
+
+    // Keyv iterates a Map-like store itself. any other store without an iterator() doesn't yield anything
+    #canListKeys(): boolean {
+        const capabilities = this.keyv.store.capabilities;
+        return capabilities?.store === 'mapLike' || capabilities?.methods.iterator.exists === true;
     }
 }

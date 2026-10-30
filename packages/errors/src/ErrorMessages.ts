@@ -1,3 +1,4 @@
+/* eslint-disable max-lines -- the satisfies check below covers every code only while all messages are in one map */
 import { SeedcordErrorCode } from './ErrorCodes';
 import { deployFix, listedFolderProblems, placeText, token, vitePluginFix } from './messageParts';
 import { allOf, counted, isOne, oneOf, quoted, reasonThen, sentence } from './messageText';
@@ -82,6 +83,8 @@ const messages = {
         `${paint.bold('readFiles')} was called on ${paint.path(dir)}, which is outside every folder in ${paint.bold('files')} in seedcord.config.ts. ${paint.bold('seedcord build')} bundles non-code files from only those folders. Add it to ${paint.bold('files')}, like ${paint.sky("files: ['./locales']")}.`,
     [SeedcordErrorCode.CoreDirectorySkipped]: (dir: string) =>
         `${paint.path(dir)} is in a folder ${paint.bold('seedcord build')} skips, so a built bot holds none of its files. The build skips dot-folders, node_modules, outDir, the logs folder beside seedcord.config.ts and project files like package.json. Move the files to a folder outside those.`,
+    [SeedcordErrorCode.CoreKvKeysUnsupported]: () =>
+        `${paint.bold('collection.ids()')} reads the key list of the Keyv store in ${paint.bold('config.kv')}, but that store can't list its keys. Cache adapters like ${paint.bold('@keyv/memcache')} never can. Pass an adapter that can, like ${paint.bold('@keyv/redis')} or ${paint.bold('@keyv/sqlite')}.`,
     [SeedcordErrorCode.CorePluginGroupTaken]: (head: string, key: string) =>
         `${paint.bold(head)} is already taken on this bot, so ${paint.sky(key)} cannot nest under it. Pick another group name.`,
     [SeedcordErrorCode.CorePluginKeyMalformed]: (key: string, reason: string) =>

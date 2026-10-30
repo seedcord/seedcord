@@ -7,6 +7,6 @@ export interface KvDriver {
     /** @param ttlMs - Lets the backend delete the key after this many milliseconds. Seedcord checks the expiry on read either way. */
     set(key: string, value: string, ttlMs?: number): Promise<void>;
     delete(key: string): Promise<void>;
-    /** Every key that starts with `prefix`, prefix included. */
+    /** Every key that starts with `prefix`, prefix included. Throw if the backend can't list its keys. */
     keys(prefix: string): Promise<string[]>;
 }

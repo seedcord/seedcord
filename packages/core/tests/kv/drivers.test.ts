@@ -2,6 +2,7 @@ import { mkdtempSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import path from 'node:path';
 
+import { SeedcordErrorCode } from '@seedcord/errors';
 import Keyv from 'keyv';
 import { createStorage } from 'unstorage';
 import fsDriver from 'unstorage/drivers/fs';
@@ -102,5 +103,44 @@ describe.each(cases)('$name', ({ open, persists }) => {
             expect(await kv.get('k')).toBeUndefined();
             expect(await kv.ids()).toEqual([]);
         });
+    });
+});
+
+describe('KeyvDriver', () => {
+    it('throws on ids() when the Keyv store cannot list its keys', async () => {
+        const store = new Map<string, unknown>();
+        // memcache can't list its keys either
+        const unlistable = {
+            get: (key: string) => Promise.resolve(store.get(key)),
+            set: (key: string, value: unknown) => Promise.resolve(store.set(key, value)),
+            delete: (key: string) => Promise.resolve(store.delete(key)),
+            clear: () => Promise.resolve(store.clear())
+        };
+        const jobs = new Kv(new KeyvDriver(new Keyv({ store: unlistable }))).collection<number>('job');
+        await jobs.set('1', 1);
+
+        await expect(jobs.ids()).rejects.toMatchObject({ code: SeedcordErrorCode.CoreKvKeysUnsupported });
+    });
+});
+
+describe('UnstorageDriver', () => {
+    it('passes Cloudflare KV a ttl of at least 60 seconds', async () => {
+        const ttls: (number | undefined)[] = [];
+        const storage = {
+            getItem: () => Promise.resolve(null),
+            setItem: (_key: string, _value: string, opts?: { ttl?: number }) => {
+                ttls.push(opts?.ttl);
+                return Promise.resolve();
+            },
+            removeItem: () => Promise.resolve(),
+            getKeys: () => Promise.resolve([])
+        };
+        const driver = new UnstorageDriver(storage);
+
+        await driver.set('short', 'v', 30_000);
+        await driver.set('long', 'v', 90_500);
+        await driver.set('forever', 'v');
+
+        expect(ttls).toEqual([60, 91, undefined]);
     });
 });

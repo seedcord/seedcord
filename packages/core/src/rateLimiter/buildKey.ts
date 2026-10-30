@@ -1,6 +1,6 @@
 /**
  * Builds a rate-limit key from a prefix and scope parts, joined with `:`. A null or undefined part
- * becomes `'global'`, so a missing scope (a DM's guild id) collapses into one shared bucket.
+ * becomes `'global'`. A key built from a DM's guild id reads `<prefix>:global` for every DM caller.
  *
  * @param prefix - Names the bucket family, e.g. `'cooldown'`.
  * @param parts - Scope values, e.g. a user or guild id.

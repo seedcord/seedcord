@@ -44,7 +44,7 @@ export abstract class PluginHost<
     public abstract readonly applicationId: string;
     public abstract readonly bus: Bus;
 
-    /** Your handlers' records, in `config.kv` under the `app:` prefix. */
+    /** @see {@link Kv} */
     public readonly kv: Kv<TDriver>;
     /** @see {@link IRateLimiter} */
     public readonly rateLimiter: IRateLimiter;

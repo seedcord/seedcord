@@ -21,10 +21,6 @@ function liveUses(stored: readonly number[] | undefined, now: number): number[] 
     return (stored ?? []).filter((exp) => exp > now);
 }
 
-/**
- * The {@link IRateLimiter} behind `core.rateLimiter`. It keeps an exact sliding window per key and
- * saves each use's expiry time in `config.kv`.
- */
 export class KvRateLimiter implements IRateLimiter {
     private readonly uses: KvCollection<number[]>;
 
