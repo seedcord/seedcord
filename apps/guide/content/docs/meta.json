@@ -12,6 +12,7 @@
         "components",
         "checks",
         "events",
+        "built-ins",
         "plugins",
         "writing-plugins",
         "tooling",
