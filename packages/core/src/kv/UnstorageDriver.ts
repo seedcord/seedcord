@@ -7,9 +7,16 @@ const MS_PER_SECOND = 1000;
 // the slice of unstorage 1.x and 2.x this driver calls
 interface StorageLike {
     getItem(key: string): Promise<unknown>;
+    getItems(keys: string[]): Promise<{ key: string; value: unknown }[]>;
     setItem(key: string, value: string, opts?: { ttl?: number }): Promise<void>;
     removeItem(key: string): Promise<void>;
     getKeys(base?: string): Promise<string[]>;
+    dispose(): Promise<void>;
+}
+
+// getItem and getItems parse the stored JSON text with destr
+function storedText(value: unknown): string | undefined {
+    return value === null ? undefined : JSON.stringify(value);
 }
 
 /**
@@ -27,9 +34,7 @@ export class UnstorageDriver<TStorage extends StorageLike> implements KvDriver {
     ) {}
 
     public async get(key: string): Promise<string | undefined> {
-        // getItem parses the stored JSON text with destr
-        const value = await this.storage.getItem(key);
-        return value === null ? undefined : JSON.stringify(value);
+        return storedText(await this.storage.getItem(key));
     }
 
     public async set(key: string, value: string, ttlMs?: number): Promise<void> {
@@ -42,7 +47,15 @@ export class UnstorageDriver<TStorage extends StorageLike> implements KvDriver {
         await this.storage.removeItem(key);
     }
 
-    public async keys(prefix: string): Promise<string[]> {
-        return this.storage.getKeys(prefix);
+    public async *entries(prefix: string): AsyncIterable<[key: string, value: string]> {
+        const items = await this.storage.getItems(await this.storage.getKeys(prefix));
+        for (const { key, value } of items) {
+            const text = storedText(value);
+            if (text !== undefined) yield [key, text];
+        }
+    }
+
+    public async [Symbol.asyncDispose](): Promise<void> {
+        await this.storage.dispose();
     }
 }

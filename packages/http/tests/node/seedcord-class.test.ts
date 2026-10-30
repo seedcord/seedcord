@@ -45,7 +45,7 @@ describe('http Seedcord class', () => {
         await host.rateLimiter.charge('user', { windowMs: 60_000 });
 
         expect(host.kv.driver).toBe(driver);
-        expect(await driver.keys('seedcord:')).toHaveLength(1);
+        expect(await Array.fromAsync(driver.entries('seedcord:'))).toHaveLength(1);
     });
 
     it('shutdown closes the server', async () => {

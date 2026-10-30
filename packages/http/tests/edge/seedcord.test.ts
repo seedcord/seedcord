@@ -289,7 +289,7 @@ describe('the edge Seedcord', () => {
         await seedcord.rateLimiter.charge('user', { windowMs: 60_000 });
 
         expect(seedcord.kv.driver).toBe(driver);
-        expect(await driver.keys('seedcord:')).toHaveLength(1);
+        expect(await Array.fromAsync(driver.entries('seedcord:'))).toHaveLength(1);
     });
 
     it('resolves the application id from the token on the first request', async () => {

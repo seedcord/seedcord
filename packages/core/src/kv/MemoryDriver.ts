@@ -31,9 +31,18 @@ export class MemoryDriver implements KvDriver {
         return Promise.resolve();
     }
 
-    public keys(prefix: string): Promise<string[]> {
+    // eslint-disable-next-line @typescript-eslint/require-await -- KvDriver.entries is async but the Map isn't
+    public async *entries(prefix: string): AsyncIterable<[key: string, value: string]> {
         this.#maybeSweep();
-        return Promise.resolve([...this.#entries.keys()].filter((key) => key.startsWith(prefix) && this.#live(key)));
+        for (const key of this.#entries.keys()) {
+            const entry = key.startsWith(prefix) ? this.#live(key) : undefined;
+            if (entry) yield [key, entry.value];
+        }
+    }
+
+    public [Symbol.asyncDispose](): Promise<void> {
+        this.#entries.clear();
+        return Promise.resolve();
     }
 
     #live(key: string): Entry | undefined {

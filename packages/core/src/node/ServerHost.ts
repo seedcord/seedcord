@@ -67,6 +67,7 @@ export abstract class ServerHost<BotT extends Transport, TDriver extends KvDrive
         this.shutdown = { addTask: shutdown.addTask.bind(shutdown) };
         this.startup = { addTask: startup.addTask.bind(startup) };
         this.#lifecycle = new PluginLifecycle(this.startup, this.shutdown);
+        shutdown.disposeAfterPhases(this.kv.driver);
     }
 
     /** @internal */

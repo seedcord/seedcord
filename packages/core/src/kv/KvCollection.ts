@@ -19,8 +19,21 @@ interface Envelope<TValue> {
 }
 
 /**
- * One kind of record under its own prefix, typed where you create it with `kv.collection<T>()`.
- * Records go through JSON. A `Date` you store reads back as a string.
+ * The records of one type, stored under one name in `config.kv`. Get one from
+ * `kv.collection<T>('name')`.
+ *
+ * Every record goes through JSON on its way in and out. A `Date` you store reads back from `get()`
+ * as an ISO string.
+ *
+ * @example
+ * ```ts
+ * interface Profile { bio: string; joinedAt: Date }
+ * const profiles = this.core.kv.collection<Profile>('profile');
+ *
+ * await profiles.set(user.id, { bio: 'hi', joinedAt: new Date() });
+ * const profile = await profiles.get(user.id); // { bio: string; joinedAt: string } | undefined
+ * await profiles.delete(user.id);
+ * ```
  */
 export class KvCollection<TRecord> {
     readonly #driver: KvDriver;
@@ -31,30 +44,47 @@ export class KvCollection<TRecord> {
         this.#prefix = prefix;
     }
 
+    /** Reads the record stored under `id`. Resolves to `undefined` when nothing is there or the record expired. */
     public async get(id: string): Promise<Jsonify<TRecord> | undefined> {
         const raw = await this.#driver.get(this.#prefix + id);
-        if (raw === undefined) return undefined;
-
-        // justified: only this collection writes under its prefix
-        const envelope = JSON.parse(raw) as Envelope<Jsonify<TRecord>>;
-        if (envelope.expiresAt !== undefined && envelope.expiresAt <= Date.now()) return undefined;
-        return envelope.value;
+        return raw === undefined ? undefined : this.#liveValue(raw);
     }
 
-    /** @param ttlMs - Reads return `undefined` after this many milliseconds. */
+    /**
+     * Stores `value` under `id` and replaces whatever was there.
+     *
+     * @param ttlMs - How long the record lasts, in milliseconds. Leave it out to keep the record until you delete it.
+     */
     public async set(id: string, value: TRecord, ttlMs?: number): Promise<void> {
         const envelope: Envelope<TRecord> = ttlMs === undefined ? { value } : { value, expiresAt: Date.now() + ttlMs };
         await this.#driver.set(this.#prefix + id, JSON.stringify(envelope), ttlMs);
     }
 
+    /** Removes the record under `id`. */
     public async delete(id: string): Promise<void> {
         await this.#driver.delete(this.#prefix + id);
     }
 
     /**
-     * Passes the record under `id` to `next` and writes back the `value` it returns, with its `ttlMs`
-     * when it sets one. Resolves to its `result`. Calls on one key run one at a time in this process.
-     * Two processes on one store can both read before either writes.
+     * Changes the record under `id` based on what it holds now. `next` gets the current record, or
+     * `undefined` when there is none. It returns an object with:
+     *
+     * - `value`: the record to store
+     * - `result`: what `update()` resolves to, which can differ from `value`
+     * - `ttlMs` (optional): how long the stored record lasts
+     *
+     * Use it over a `get()` then a `set()` when two calls can change one record at the same time.
+     * Calls on one id in this process run one after the other. None of them loses another's change.
+     * Two processes sharing one backend can still both read before either writes.
+     *
+     * @example
+     * ```ts
+     * // counts a run of the command and resolves to the new count
+     * const runs = await counts.update(user.id, (count) => {
+     *     const total = (count ?? 0) + 1;
+     *     return { value: total, result: total };
+     * });
+     * ```
      */
     public async update<TResult>(
         id: string,
@@ -79,11 +109,28 @@ export class KvCollection<TRecord> {
         return run;
     }
 
-    /** Costs one driver read per key, because it reads each record to skip the expired ones. */
-    public async ids(): Promise<string[]> {
-        const keys = await this.#driver.keys(this.#prefix);
-        const ids = keys.map((key) => key.slice(this.#prefix.length));
-        const live = await Promise.all(ids.map(async (id) => ((await this.get(id)) === undefined ? [] : [id])));
-        return live.flat();
+    /**
+     * Yields `[id, record]` for every record in this collection that hasn't expired. Use it to read
+     * back what the bot saved before a restart.
+     *
+     * @throws A **SeedcordError** when the backend can't list its keys, like `@keyv/memcache`.
+     * @example
+     * ```ts
+     * // schedules every saved reminder again after a restart
+     * for await (const [id, reminder] of reminders.entries()) schedule(id, reminder);
+     * ```
+     */
+    public async *entries(): AsyncIterable<[id: string, record: Jsonify<TRecord>]> {
+        for await (const [key, raw] of this.#driver.entries(this.#prefix)) {
+            const value = this.#liveValue(raw);
+            if (value !== undefined) yield [key.slice(this.#prefix.length), value];
+        }
+    }
+
+    #liveValue(raw: string): Jsonify<TRecord> | undefined {
+        // justified: only this collection writes under its prefix
+        const envelope = JSON.parse(raw) as Envelope<Jsonify<TRecord>>;
+        if (envelope.expiresAt !== undefined && envelope.expiresAt <= Date.now()) return undefined;
+        return envelope.value;
     }
 }

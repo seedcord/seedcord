@@ -29,6 +29,7 @@ export class CoordinatedShutdown extends CoordinatedLifecycle<ShutdownPhase> {
     #deadlineMs = DEFAULT_SHUTDOWN_DEADLINE_MS;
     #phasesExpireAt = Infinity;
     #runningPhase: ShutdownPhase | undefined;
+    readonly #afterPhases = new AsyncDisposableStack();
 
     public constructor(deadlineMs?: number) {
         super('Shutdown', PHASE_ORDER, ShutdownPhase);
@@ -45,6 +46,20 @@ export class CoordinatedShutdown extends CoordinatedLifecycle<ShutdownPhase> {
             ]);
         }
         this.#deadlineMs = deadlineMs;
+    }
+
+    /** @internal disposes `resource` once every phase has run, last added first */
+    public disposeAfterPhases(resource: AsyncDisposable): void {
+        this.#afterPhases.use(resource);
+    }
+
+    async #runPhasesThenDispose(failures: unknown[]): Promise<void> {
+        await this.#runPhases(failures);
+        try {
+            await this.#afterPhases.disposeAsync();
+        } catch (error) {
+            failures.push(error);
+        }
     }
 
     async #runPhases(failures: unknown[]): Promise<void> {
@@ -158,7 +173,10 @@ export class CoordinatedShutdown extends CoordinatedLifecycle<ShutdownPhase> {
             if (this.#startupGate) await settleWithin(this.#startupGate, this.#deadlineMs);
 
             const failures: unknown[] = [];
-            await settleWithin(this.#runPhases(failures), Math.max(this.#phasesExpireAt - performance.now(), 0));
+            await settleWithin(
+                this.#runPhasesThenDispose(failures),
+                Math.max(this.#phasesExpireAt - performance.now(), 0)
+            );
 
             const caughtPhase = this.#runningPhase;
             if (caughtPhase !== undefined) {

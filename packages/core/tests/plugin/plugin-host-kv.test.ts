@@ -11,8 +11,8 @@ describe('the host kv', () => {
         await host.kv.collection<number>('count').set('a', 1);
         await host.rateLimiter.charge('user', { windowMs: 60_000 });
 
-        const keys = await driver.keys('');
-        expect(keys.toSorted()).toEqual(['app:count:a', 'seedcord:rate-limit:user']);
+        const entries = await Array.fromAsync(driver.entries(''));
+        expect(entries.map(([key]) => key).toSorted()).toEqual(['app:count:a', 'seedcord:rate-limit:user']);
     });
 
     it('falls back to a MemoryDriver', () => {

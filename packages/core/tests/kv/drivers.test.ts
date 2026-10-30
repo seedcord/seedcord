@@ -59,13 +59,14 @@ describe.each(cases)('$name', ({ open, persists }) => {
         expect(read).toEqual({ ...job, runAt: '1970-01-01T00:00:00.000Z' });
     });
 
-    it('lists only its own ids', async () => {
+    it('lists only its own records', async () => {
         const driver = open();
         await new Kv(driver, 'a').collection<number>('job').set('1', 1);
         await new Kv(driver, 'a').collection<number>('jobs').set('2', 2);
         await new Kv(driver, 'b').collection<number>('job').set('3', 3);
 
-        expect(await new Kv(driver, 'a').collection<number>('job').ids()).toEqual(['1']);
+        const entries = await Array.fromAsync(new Kv(driver, 'a').collection<number>('job').entries());
+        expect(entries).toEqual([['1', 1]]);
     });
 
     it('deletes', async () => {
@@ -101,13 +102,13 @@ describe.each(cases)('$name', ({ open, persists }) => {
 
             vi.setSystemTime(Date.now() + 1000);
             expect(await kv.get('k')).toBeUndefined();
-            expect(await kv.ids()).toEqual([]);
+            expect(await Array.fromAsync(kv.entries())).toEqual([]);
         });
     });
 });
 
 describe('KeyvDriver', () => {
-    it('throws on ids() when the Keyv store cannot list its keys', async () => {
+    it('throws on entries() when the Keyv store cannot list its keys', async () => {
         const store = new Map<string, unknown>();
         // memcache can't list its keys either
         const unlistable = {
@@ -119,7 +120,9 @@ describe('KeyvDriver', () => {
         const jobs = new Kv(new KeyvDriver(new Keyv({ store: unlistable }))).collection<number>('job');
         await jobs.set('1', 1);
 
-        await expect(jobs.ids()).rejects.toMatchObject({ code: SeedcordErrorCode.CoreKvKeysUnsupported });
+        await expect(Array.fromAsync(jobs.entries())).rejects.toMatchObject({
+            code: SeedcordErrorCode.CoreKvKeysUnsupported
+        });
     });
 });
 
@@ -133,7 +136,9 @@ describe('UnstorageDriver', () => {
                 return Promise.resolve();
             },
             removeItem: () => Promise.resolve(),
-            getKeys: () => Promise.resolve([])
+            getKeys: () => Promise.resolve([]),
+            getItems: () => Promise.resolve([]),
+            dispose: () => Promise.resolve()
         };
         const driver = new UnstorageDriver(storage);
 

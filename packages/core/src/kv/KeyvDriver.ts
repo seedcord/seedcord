@@ -15,6 +15,7 @@ interface KeyvLike {
     set(key: string, value: string, ttl?: number): Promise<boolean>;
     delete(key: string): Promise<boolean>;
     iterator(): AsyncGenerator<[string, unknown], void>;
+    disconnect(): Promise<void>;
 }
 
 /**
@@ -45,12 +46,16 @@ export class KeyvDriver<TKeyv extends KeyvLike> implements KvDriver {
     }
 
     /** @throws A **SeedcordError** when the Keyv store can't list its keys, like `@keyv/memcache`. */
-    public async keys(prefix: string): Promise<string[]> {
+    public async *entries(prefix: string): AsyncIterable<[key: string, value: string]> {
         if (!this.#canListKeys()) throw new SeedcordError(SeedcordErrorCode.CoreKvKeysUnsupported);
 
-        const found: string[] = [];
-        for await (const [key] of this.keyv.iterator()) if (key.startsWith(prefix)) found.push(key);
-        return found;
+        for await (const [key, value] of this.keyv.iterator()) {
+            if (key.startsWith(prefix) && typeof value === 'string') yield [key, value];
+        }
+    }
+
+    public async [Symbol.asyncDispose](): Promise<void> {
+        await this.keyv.disconnect();
     }
 
     // Keyv iterates a Map-like store itself. any other store without an iterator() doesn't yield anything
