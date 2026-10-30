@@ -1,33 +1,17 @@
-import { REST } from '@discordjs/rest';
 import { setDevFiles } from '@seedcord/utils/internal';
 import { describe, it, expect, afterEach } from 'vitest';
 
 import { CoordinatedShutdown } from '#node/Lifecycle/CoordinatedShutdown';
-import { ServerHost } from '#node/ServerHost';
 import { CoordinatedStartup } from '#src/lifecycle/CoordinatedStartup';
-import { Bus } from '#subscribers/Bus';
+import { TestServerHost } from '#tests/utils/TestServerHost';
 
 import type { Config } from '@seedcord/types';
 
-class TestHost extends ServerHost<'gateway'> {
-    // justified: startup reads config.errors and nothing else on Config
-    public readonly config = { errors: { catchProcessErrors: false } } as Config;
-    public readonly rest = new REST();
-    public readonly applicationId = 'app-1';
-    public readonly bus: Bus;
+// justified: startup reads config.errors and nothing else on Config
+const config = { errors: { catchProcessErrors: false } } as Config;
 
-    constructor() {
-        super('gateway', new CoordinatedShutdown(), new CoordinatedStartup(), undefined);
-        this.bus = new Bus(this);
-    }
-
-    public run(): Promise<this> {
-        return this.init();
-    }
-
-    public static resetHost(): void {
-        ServerHost.reset();
-    }
+function signalHost(): TestServerHost {
+    return new TestServerHost(new CoordinatedShutdown(), new CoordinatedStartup(), config);
 }
 
 function signalListeners(): [sigterm: number, sigint: number] {
@@ -36,21 +20,20 @@ function signalListeners(): [sigterm: number, sigint: number] {
 
 describe('signal handlers on a plugin host', () => {
     afterEach(() => {
-        TestHost.resetHost();
+        TestServerHost.resetHost();
     });
 
     it('installs none while the bot is only constructed', () => {
         const before = signalListeners();
 
-        // eslint-disable-next-line no-new -- construction is the behavior under test
-        new TestHost();
+        signalHost();
 
         expect(signalListeners()).toEqual(before);
     });
 
     it('installs one SIGTERM and one SIGINT handler on start', async () => {
         const [sigterm, sigint] = signalListeners();
-        const host = new TestHost();
+        const host = signalHost();
 
         await host.run();
 
@@ -61,17 +44,17 @@ describe('signal handlers on a plugin host', () => {
         const before = signalListeners();
         using _dev = setDevFiles({ root: process.cwd(), listed: [], skippedFolders: [] });
 
-        await new TestHost().run();
+        await signalHost().run();
 
         expect(signalListeners()).toEqual(before);
     });
 
     it('releases them on reset after a start', async () => {
         const before = signalListeners();
-        const host = new TestHost();
+        const host = signalHost();
         await host.run();
 
-        TestHost.resetHost();
+        TestServerHost.resetHost();
 
         expect(signalListeners()).toEqual(before);
     });

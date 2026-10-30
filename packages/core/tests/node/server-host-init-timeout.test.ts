@@ -1,15 +1,12 @@
-import { REST } from '@discordjs/rest';
 import { Logger } from '@seedcord/logger';
 import { describe, it, expect, afterEach, vi } from 'vitest';
 
 import { CoordinatedShutdown } from '#node/Lifecycle/CoordinatedShutdown';
-import { ServerHost } from '#node/ServerHost';
 import { CoordinatedStartup } from '#src/lifecycle/CoordinatedStartup';
 import { Plugin } from '#src/plugin/Plugin';
-import { Bus } from '#subscribers/Bus';
+import { TestServerHost } from '#tests/utils/TestServerHost';
 
 import type { CoreBase } from '#interfaces/CoreBase';
-import type { Config } from '@seedcord/types';
 
 const INIT_TIMEOUT_MS = 10;
 const CLAIM_MS = 40;
@@ -37,33 +34,13 @@ class SlowClaim extends Plugin {
     }
 }
 
-class TestHost extends ServerHost<'gateway'> {
-    public readonly config = {} as Config;
-    public readonly rest = new REST();
-    public readonly applicationId = 'app-1';
-    public readonly bus: Bus;
-
-    constructor(shutdown: CoordinatedShutdown, startup: CoordinatedStartup) {
-        super('gateway', shutdown, startup, undefined);
-        this.bus = new Bus(this);
-    }
-
-    public run(): Promise<this> {
-        return this.init();
-    }
-
-    public static resetHost(): void {
-        ServerHost.reset();
-    }
-}
-
-function makeHost(): TestHost {
-    return new TestHost(new CoordinatedShutdown(), new CoordinatedStartup());
+function makeHost(): TestServerHost {
+    return new TestServerHost(new CoordinatedShutdown(), new CoordinatedStartup());
 }
 
 describe('a plugin whose init outlasts its timeout', () => {
     afterEach(() => {
-        TestHost.resetHost();
+        TestServerHost.resetHost();
         vi.restoreAllMocks();
     });
 
@@ -167,7 +144,7 @@ describe('a plugin whose init outlasts its timeout', () => {
         }
 
         const shutdown = new CoordinatedShutdown();
-        const host = new TestHost(shutdown, new CoordinatedStartup());
+        const host = new TestServerHost(shutdown, new CoordinatedStartup());
         // only the healthy plugin registers a shutdown task
         const healthy = host.attach('healthy', QuickClaim).healthy;
         const late = host.attach('slow', SlowClaim).slow;

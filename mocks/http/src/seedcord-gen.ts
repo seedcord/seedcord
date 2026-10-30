@@ -10,7 +10,6 @@ type Fits<Plugin extends { codegen(): Promise<unknown> }, Row extends Awaited<Re
 declare module '@seedcord/http' {
     interface Core {
         i18n: (typeof Bot)['i18n'];
-        kv: (typeof Bot)['kv'];
         stats: (typeof Bot)['stats'];
     }
     interface SlashRegistry {

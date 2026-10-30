@@ -1,5 +1,5 @@
 import type { RESTOptions } from '@discordjs/rest';
-import type { BotConfig, Config, HealthCheckConfig, KvDriver, TypedOmit } from '@seedcord/types';
+import type { BotConfig, Config, HealthCheckConfig, TypedOmit } from '@seedcord/types';
 
 // workerd throws when a timer starts at a worker's global scope
 export type EdgeSweeperKey = 'hashSweepInterval' | 'handlerSweepInterval';
@@ -14,7 +14,7 @@ interface HttpBotConfig<Options> extends BotConfig {
 /**
  * Config for a long-running node server. Pass to `new Seedcord(config).start()`.
  */
-export interface HttpServerConfig<TDriver extends KvDriver = KvDriver> extends Config<TDriver> {
+export interface HttpServerConfig extends Config {
     bot: HttpBotConfig<Partial<RESTOptions>>;
 
     /**
@@ -35,7 +35,7 @@ export interface HttpServerConfig<TDriver extends KvDriver = KvDriver> extends C
 /**
  * Config for a bot on Cloudflare Workers. Pass to `new Seedcord(config)`.
  */
-export interface HttpEdgeConfig<TDriver extends KvDriver = KvDriver> extends Config<TDriver> {
+export interface HttpEdgeConfig extends Config {
     bot: HttpBotConfig<Partial<TypedOmit<RESTOptions, EdgeSweeperKey>>>;
     port?: never;
     // an isolate does not run a coordinated shutdown

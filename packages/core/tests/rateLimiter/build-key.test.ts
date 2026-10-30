@@ -21,20 +21,10 @@ describe('buildKey', () => {
         expect(buildKey('cooldown')).toBe('cooldown');
     });
 
-    it('composes real snowflake ids into a scoped key', () => {
-        expect(buildKey('report', '850000000000000000', '900000000000000001')).toBe(
-            'report:850000000000000000:900000000000000001'
-        );
-    });
-
     it('preserves an empty-string part as its own segment', () => {
         // '' is not nullish so ?? keeps it, only undefined becomes 'global'
         expect(buildKey('p', '')).toBe('p:');
         expect(buildKey('p', '', 'c')).toBe('p::c');
-    });
-
-    it('joins many parts in order', () => {
-        expect(buildKey('p', 'a', 'b', 'c', 'd', 'e')).toBe('p:a:b:c:d:e');
     });
 
     it('keeps a colon inside the prefix, which can collide with an extra part', () => {

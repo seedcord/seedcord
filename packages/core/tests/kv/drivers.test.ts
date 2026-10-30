@@ -1,4 +1,4 @@
-import { mkdtempSync } from 'node:fs';
+import { mkdtempSync, rmSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import path from 'node:path';
 
@@ -6,14 +6,16 @@ import { SeedcordErrorCode } from '@seedcord/errors';
 import Keyv from 'keyv';
 import { createStorage } from 'unstorage';
 import fsDriver from 'unstorage/drivers/fs';
-import { afterEach, beforeEach, describe, expect, expectTypeOf, it, vi } from 'vitest';
+import { createStorage as createStorageV1 } from 'unstorage-v1';
+import fsDriverV1 from 'unstorage-v1/drivers/fs';
+import { afterAll, afterEach, beforeEach, describe, expect, expectTypeOf, it, vi } from 'vitest';
 
 import { KeyvDriver } from '#src/kv/KeyvDriver';
 import { Kv } from '#src/kv/Kv';
 import { MemoryDriver } from '#src/kv/MemoryDriver';
 import { UnstorageDriver } from '#src/kv/UnstorageDriver';
 
-import type { KvDriver } from '@seedcord/types';
+import type { Config } from '@seedcord/types';
 
 interface Job {
     task: string;
@@ -24,15 +26,19 @@ interface Job {
 interface Case {
     name: string;
     // a second call opens the same backing data, the way a restarted bot would
-    open: () => KvDriver;
+    open: () => NonNullable<Config['kv']>;
     persists: boolean;
 }
 
-const fsBase = path.join(mkdtempSync(path.join(tmpdir(), 'seedcord-kv-')), 'fs');
+const fsRoot = mkdtempSync(path.join(tmpdir(), 'seedcord-kv-'));
+const fsBase = path.join(fsRoot, 'fs');
+const fsBaseV1 = path.join(fsRoot, 'fs-v1');
+afterAll(() => rmSync(fsRoot, { recursive: true, force: true }));
 
 const memory = new MemoryDriver();
 const keyvMemory = new KeyvDriver(new Keyv());
 const unstorageMemory = new UnstorageDriver(createStorage());
+const unstorageV1Memory = new UnstorageDriver(createStorageV1());
 
 const cases: Case[] = [
     { name: 'MemoryDriver', open: () => memory, persists: false },
@@ -41,6 +47,12 @@ const cases: Case[] = [
     {
         name: 'unstorage fs',
         open: () => new UnstorageDriver(createStorage({ driver: fsDriver({ base: fsBase }) })),
+        persists: true
+    },
+    { name: 'unstorage 1.x memory', open: () => unstorageV1Memory, persists: false },
+    {
+        name: 'unstorage 1.x fs',
+        open: () => new UnstorageDriver(createStorageV1({ driver: fsDriverV1({ base: fsBaseV1 }) })),
         persists: true
     }
 ];
@@ -63,10 +75,41 @@ describe.each(cases)('$name', ({ open, persists }) => {
         const driver = open();
         await new Kv(driver, 'a').collection<number>('job').set('1', 1);
         await new Kv(driver, 'a').collection<number>('jobs').set('2', 2);
-        await new Kv(driver, 'b').collection<number>('job').set('3', 3);
+        await new Kv(driver, 'a').collection<number>('job:settings').set('3', 3);
+        await new Kv(driver, 'b').collection<number>('job').set('4', 4);
 
         const entries = await Array.fromAsync(new Kv(driver, 'a').collection<number>('job').entries());
         expect(entries).toEqual([['1', 1]]);
+    });
+
+    it('keeps every id as written', async () => {
+        const ids = [
+            'a:b',
+            'a::b',
+            'a%3Ab',
+            'x/y',
+            String.raw`x\y`,
+            'q',
+            'q?z',
+            '..',
+            '.',
+            '',
+            'end$',
+            ':lead',
+            'trail:'
+        ];
+        const names = new Kv(open()).collection<string>('id');
+        await Promise.all(ids.map(async (id) => names.set(id, `value of ${id}`)));
+
+        expect(await Promise.all(ids.map(async (id) => names.get(id)))).toEqual(ids.map((id) => `value of ${id}`));
+        const listed = await Array.fromAsync(names.entries());
+        expect(listed.map(([id]) => id).toSorted()).toEqual(ids.toSorted());
+    });
+
+    it('returns a stored string exactly as written', async () => {
+        const driver = open();
+        await driver.set('raw', 'plain text');
+        expect(await driver.get('raw')).toBe('plain text');
     });
 
     it('deletes', async () => {
@@ -78,8 +121,7 @@ describe.each(cases)('$name', ({ open, persists }) => {
 
     it('runs concurrent updates on one key one after another', async () => {
         const counts = new Kv(open()).collection<number>('count');
-        const bump = async (): Promise<number> =>
-            counts.update('runs', (n) => ({ value: (n ?? 0) + 1, result: (n ?? 0) + 1 }));
+        const bump = async (): Promise<number> => counts.update('runs', (n) => (n ?? 0) + 1);
 
         const results = await Promise.all([bump(), bump(), bump(), bump(), bump()]);
         expect(results.toSorted()).toEqual([1, 2, 3, 4, 5]);
@@ -95,14 +137,31 @@ describe.each(cases)('$name', ({ open, persists }) => {
         beforeEach(() => vi.useFakeTimers({ toFake: ['Date'] }));
         afterEach(() => vi.useRealTimers());
 
-        it('expires the key once the ttl passes', async () => {
-            const kv = new Kv(open()).collection<string>('ttl');
-            await kv.set('k', 'v', 1000);
-            expect(await kv.get('k')).toBe('v');
+        it('expires the key once the ttl passes, and deletes it on the next read', async () => {
+            const driver = open();
+            const kv = new Kv(driver).collection<string>('ttl');
+            await kv.set('read', 'v', 1000);
+            await kv.set('listed', 'v', 1000);
+            expect(await kv.get('read')).toBe('v');
 
             vi.setSystemTime(Date.now() + 1000);
-            expect(await kv.get('k')).toBeUndefined();
+            expect(await kv.get('read')).toBeUndefined();
             expect(await Array.fromAsync(kv.entries())).toEqual([]);
+            expect(await Array.fromAsync(driver.entries('ttl:'))).toEqual([]);
+        });
+
+        it('takes a ttl computed from the stored value', async () => {
+            const kv = new Kv(open()).collection<number>('ttl-fn');
+            await kv.update(
+                'k',
+                () => 5,
+                (seconds) => seconds * 1000
+            );
+
+            vi.setSystemTime(Date.now() + 4999);
+            expect(await kv.get('k')).toBe(5);
+            vi.setSystemTime(Date.now() + 1);
+            expect(await kv.get('k')).toBeUndefined();
         });
     });
 });
@@ -130,14 +189,13 @@ describe('UnstorageDriver', () => {
     it('passes Cloudflare KV a ttl of at least 60 seconds', async () => {
         const ttls: (number | undefined)[] = [];
         const storage = {
-            getItem: () => Promise.resolve(null),
-            setItem: (_key: string, _value: string, opts?: { ttl?: number }) => {
+            getItemRaw: () => Promise.resolve(null),
+            setItemRaw: (_key: string, _value: string, opts?: { ttl?: number }) => {
                 ttls.push(opts?.ttl);
                 return Promise.resolve();
             },
             removeItem: () => Promise.resolve(),
             getKeys: () => Promise.resolve([]),
-            getItems: () => Promise.resolve([]),
             dispose: () => Promise.resolve()
         };
         const driver = new UnstorageDriver(storage);

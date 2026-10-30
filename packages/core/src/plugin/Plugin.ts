@@ -25,6 +25,14 @@ import type {
 } from './options';
 import type { Tail, FrameworkChannel, HmrAware, HmrUpdateEvent } from '@seedcord/types';
 
+interface Attaching {
+    readonly key: string;
+    readonly kv: Kv;
+}
+
+// set only while attach() runs `new Plugin()`
+let attaching: Attaching | undefined;
+
 export interface Initializeable {
     init(): Promise<void>;
 }
@@ -35,8 +43,6 @@ const resolvedSpecSlot = Symbol('seedcord:plugin:spec');
 const loggerSlot = Symbol('seedcord:plugin:logger');
 /** @internal */
 const scopeSlot = Symbol('seedcord:plugin:scope');
-/** @internal */
-const attachSlot = Symbol('seedcord:plugin:attach');
 /** @internal */
 export const FixedScope = Symbol('seedcord:plugin:fixed-scope');
 
@@ -98,14 +104,19 @@ export abstract class Plugin<
     /** Logs under the plugin's class name, on the channel its attach key sets. */
     protected readonly logger: Logger;
 
-    #kv?: Kv;
+    readonly #kv: Kv | undefined;
 
     // CoreBase here keeps the augmented Core out of ConstructorParameters, which attach reads
     constructor(
         private readonly host: CoreBase,
         ...[spec]: PluginSpecArgs<Opts, Fixed>
     ) {
-        this.logger = new Logger(this.constructor.name);
+        // cleared here. a plugin this constructor builds by hand doesn't get the outer key
+        const attachment = attaching;
+        attaching = undefined;
+        this.#kv = attachment?.kv;
+
+        this.logger = new Logger(this.constructor.name, attachment && { channel: attachment.key });
         this[loggerSlot] = this.logger;
         this[resolvedSpecSlot] = resolveLifecycleSpec(spec, this.constructor.name);
 
@@ -128,23 +139,16 @@ export abstract class Plugin<
      * one plugin class each get their own records. Renaming the attach key leaves the records under
      * the old key behind.
      *
-     * @throws A **SeedcordError** when read before `attach()` gave the plugin its key, like from its constructor.
+     * @throws A **SeedcordError** when something built the plugin with `new` outside `attach()`.
      * @example
      * ```ts
-     * // inside a plugin method
-     * const jobs = this.kv.collection<Job>('job');
-     * await jobs.set(job.id, job);
+     * // works in a field initializer, the constructor, and every method
+     * private readonly jobs = this.kv.collection<Job>('job');
      * ```
      */
     protected get kv(): Kv {
-        if (!this.#kv) throw new SeedcordError(SeedcordErrorCode.CorePluginKvBeforeAttach, [this.constructor.name]);
+        if (!this.#kv) throw new SeedcordError(SeedcordErrorCode.CorePluginKvOutsideAttach, [this.constructor.name]);
         return this.#kv;
-    }
-
-    /** @internal */
-    public [attachSlot](key: string, kv: Kv): void {
-        this.logger.setChannel(key);
-        this.#kv = kv;
     }
 
     /**
@@ -225,8 +229,13 @@ export function declaredScopeOf(plugin: PluginLike): DeclaredScope {
 }
 
 /** @internal */
-export function bindAttachment(plugin: PluginLike, key: string, kv: Kv): void {
-    plugin[attachSlot](key, kv);
+export function constructAttached<TPlugin>(key: string, kv: Kv, construct: () => TPlugin): TPlugin {
+    attaching = { key, kv };
+    try {
+        return construct();
+    } finally {
+        attaching = undefined;
+    }
 }
 
 export type { PluginLifecycleSpec } from './lifecycle';
@@ -237,14 +246,7 @@ export type { PluginOptions } from './options';
 /** @internal */
 export type PluginLike = Pick<
     Plugin,
-    | 'init'
-    | 'ready'
-    | 'dispose'
-    | 'onHmr'
-    | typeof resolvedSpecSlot
-    | typeof loggerSlot
-    | typeof scopeSlot
-    | typeof attachSlot
+    'init' | 'ready' | 'dispose' | 'onHmr' | typeof resolvedSpecSlot | typeof loggerSlot | typeof scopeSlot
 >;
 
 // a `CoreBase` first parameter rejects a narrowing ctor on its own, and it also collapses

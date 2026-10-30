@@ -31,8 +31,7 @@ import type { EngineContext } from '#src/engine';
 import type { REST } from '@discordjs/rest';
 import type { Bus } from '@seedcord/core';
 import type { BakedIds } from '@seedcord/core/internal';
-import type { KvDriver } from '@seedcord/types';
-import type { DevChannel, NarrowedKv, SeedcordCliEvents, SeedcordFrameworkEvents } from '@seedcord/types/internal';
+import type { DevChannel, SeedcordCliEvents, SeedcordFrameworkEvents } from '@seedcord/types/internal';
 
 // seedcord build's worker entry writes these before bot.ts loads
 function bakedIds(): BakedIds {
@@ -53,7 +52,7 @@ function bakedIds(): BakedIds {
  * Under `seedcord dev` the bot starts when the CLI starts it. It reads the public key and emoji
  * ids from Discord and deploys your commands, the way a node bot does.
  */
-export class Seedcord<TDriver extends KvDriver = KvDriver> extends PluginHost<'http', 'edge', TDriver> {
+export class Seedcord extends PluginHost<'http', 'edge'> {
     // the CLI reads these to detect and augment the instance
     /** @internal */
     public readonly [SeedcordBrand] = true;
@@ -77,7 +76,7 @@ export class Seedcord<TDriver extends KvDriver = KvDriver> extends PluginHost<'h
     /** Add a task that runs during startup, on the first POST. */
     public readonly startup: Pick<CoordinatedStartup, 'addTask'>;
 
-    public readonly config: HttpEdgeConfig<TDriver> & NarrowedKv<TDriver>;
+    public readonly config: HttpEdgeConfig;
 
     readonly #service: InteractionsService;
     readonly #startup = new CoordinatedStartup();
@@ -94,7 +93,7 @@ export class Seedcord<TDriver extends KvDriver = KvDriver> extends PluginHost<'h
 
     static #isInstantiated = false;
 
-    constructor(config: HttpEdgeConfig<TDriver> & NarrowedKv<TDriver>) {
+    constructor(config: HttpEdgeConfig) {
         super('http', 'edge', config.kv);
         if (Seedcord.#isInstantiated) throw new SeedcordError(SeedcordErrorCode.CoreSingletonViolation);
         Seedcord.#isInstantiated = true;

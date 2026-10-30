@@ -1,15 +1,14 @@
-import { REST } from '@discordjs/rest';
 import { isSeedcordError, SeedcordErrorCode } from '@seedcord/errors';
 import { SeedcordError } from '@seedcord/errors/internal';
 import { Logger } from '@seedcord/logger';
 import { describe, it, expect, expectTypeOf, afterEach, vi } from 'vitest';
 
 import { CoordinatedShutdown } from '#node/Lifecycle/CoordinatedShutdown';
-import { ServerHost } from '#node/ServerHost';
+import { MemoryDriver } from '#src/kv/MemoryDriver';
 import { CoordinatedStartup } from '#src/lifecycle/CoordinatedStartup';
 import { ShutdownPhase, StartupPhase } from '#src/lifecycle/phases';
 import { Plugin } from '#src/plugin/Plugin';
-import { Bus } from '#subscribers/Bus';
+import { TestServerHost } from '#tests/utils/TestServerHost';
 
 import type { CoreBase } from '#interfaces/CoreBase';
 import type { PluginArgs } from '#src/plugin/Plugin';
@@ -44,31 +43,10 @@ class TestPlugin extends Plugin {
     public onDispose?: () => void;
 }
 
-class TestHost extends ServerHost<'gateway'> {
-    public readonly config: Config;
-    public readonly rest = new REST();
-    public readonly applicationId = 'app-1';
-    public readonly bus: Bus;
-
-    constructor(shutdown: CoordinatedShutdown, startup: CoordinatedStartup, config: Config = {} as Config) {
-        super('gateway', shutdown, startup, undefined);
-        this.config = config;
-        this.bus = new Bus(this);
-    }
-
-    public run(): Promise<this> {
-        return this.init();
-    }
-
-    public static resetHost(): void {
-        ServerHost.reset();
-    }
-}
-
-function makeHost(): { host: TestHost; startup: CoordinatedStartup; shutdown: CoordinatedShutdown } {
+function makeHost(): { host: TestServerHost; startup: CoordinatedStartup; shutdown: CoordinatedShutdown } {
     const startup = new CoordinatedStartup();
     const shutdown = new CoordinatedShutdown();
-    return { host: new TestHost(shutdown, startup), startup, shutdown };
+    return { host: new TestServerHost(shutdown, startup), startup, shutdown };
 }
 
 function InfersConcreteCtorArgsAtAttach(): void {
@@ -82,7 +60,7 @@ void InfersConcreteCtorArgsAtAttach;
 
 describe('ServerHost', () => {
     afterEach(() => {
-        TestHost.resetHost();
+        TestServerHost.resetHost();
         vi.restoreAllMocks();
     });
 
@@ -98,6 +76,37 @@ describe('ServerHost', () => {
         }
 
         expect(ran).toEqual(['drain']);
+    });
+
+    it('disposes config.kv after a plugin dispose in the last phase finishes', async () => {
+        const order: string[] = [];
+        class ClosingDriver extends MemoryDriver {
+            public override [Symbol.dispose](): void {
+                order.push('kv closed');
+                super[Symbol.dispose]();
+            }
+        }
+        class LogoutWriter extends Plugin {
+            constructor(core: CoreBase) {
+                super(core, { dispose: { phase: ShutdownPhase.Logout } });
+            }
+            public init(): Promise<void> {
+                return Promise.resolve();
+            }
+            public override async dispose(): Promise<void> {
+                await delay(0);
+                order.push('plugin disposed');
+            }
+        }
+
+        const shutdown = new CoordinatedShutdown();
+        // justified: ServerHost reads only kv off the config
+        const config = Object.assign({} as Config, { kv: new ClosingDriver() });
+        const host = new TestServerHost(shutdown, new CoordinatedStartup(), config).attach('writer', LogoutWriter);
+        await host.run();
+        await shutdown.run(0, false);
+
+        expect(order).toEqual(['plugin disposed', 'kv closed']);
     });
 
     it('allows a new host once an await using scope ends', async () => {
@@ -542,7 +551,7 @@ describe('ServerHost', () => {
         const base = process.listenerCount('SIGTERM');
         makeHost();
 
-        TestHost.resetHost();
+        TestServerHost.resetHost();
         expect(process.listenerCount('SIGTERM')).toBe(base);
         expect(() => makeHost()).not.toThrow();
     });
@@ -550,7 +559,7 @@ describe('ServerHost', () => {
 
 describe('ServerHost shutdown during startup', () => {
     afterEach(() => {
-        TestHost.resetHost();
+        TestServerHost.resetHost();
         vi.restoreAllMocks();
     });
 

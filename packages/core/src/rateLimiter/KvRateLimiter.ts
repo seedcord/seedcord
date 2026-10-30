@@ -3,7 +3,7 @@ import type { KvCollection } from '#src/kv/KvCollection';
 import type { EpochMs, IRateLimiter, RateLimitResult, RateLimitWindow } from '@seedcord/types';
 
 function limitedResult(live: readonly number[], now: number): RateLimitResult {
-    // soonest a slot frees is the earliest expiry. a reduce, because spreading into Math.min throws past the argument cap
+    // a reduce, because spreading into Math.min throws past the argument cap
     const resetAt = live.reduce((earliest, exp) => Math.min(earliest, exp), Number.POSITIVE_INFINITY) as EpochMs;
     return { limited: true, resetAt, remaining: 0, retryAfterMs: resetAt - now };
 }
@@ -31,15 +31,20 @@ export class KvRateLimiter implements IRateLimiter {
     public async charge(key: string, window: RateLimitWindow): Promise<RateLimitResult> {
         const now = Date.now();
         const limit = limitOf(window);
-        return this.uses.update(key, (stored) => {
-            const live = liveUses(stored, now);
-            const limited = live.length >= limit;
-            if (!limited) live.push(now + window.windowMs);
-
-            const result = limited ? limitedResult(live, now) : openResult(limit - live.length);
-            const latest = live.reduce((max, exp) => Math.max(max, exp), now);
-            return { value: live, result, ttlMs: latest - now };
-        });
+        // update() calls the callback before it resolves
+        let result!: RateLimitResult;
+        await this.uses.update(
+            key,
+            (stored) => {
+                const live = liveUses(stored, now);
+                const limited = live.length >= limit;
+                if (!limited) live.push(now + window.windowMs);
+                result = limited ? limitedResult(live, now) : openResult(limit - live.length);
+                return live;
+            },
+            (live) => live.reduce((latest, exp) => Math.max(latest, exp), now) - now
+        );
+        return result;
     }
 
     public async peek(key: string, window: RateLimitWindow): Promise<RateLimitResult> {

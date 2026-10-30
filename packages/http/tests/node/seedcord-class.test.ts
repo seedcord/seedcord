@@ -38,14 +38,11 @@ describe('http Seedcord class', () => {
         expect(response.status).toBe(202);
     });
 
-    it('backs core.kv and core.rateLimiter with config.kv', async () => {
+    it('backs core.kv with config.kv', async () => {
         const driver = new MemoryDriver();
         await using host = new Seedcord({ ...config(), kv: driver });
 
-        await host.rateLimiter.charge('user', { windowMs: 60_000 });
-
         expect(host.kv.driver).toBe(driver);
-        expect(await Array.fromAsync(driver.entries('seedcord:'))).toHaveLength(1);
     });
 
     it('shutdown closes the server', async () => {

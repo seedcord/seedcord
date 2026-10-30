@@ -1,7 +1,7 @@
 import { SeedcordErrorCode } from '@seedcord/errors';
 import { SeedcordError } from '@seedcord/errors/internal';
 
-import type { KvDriver } from '@seedcord/types';
+import type { KvDriver, KvEntry } from '@seedcord/types';
 
 // the slice of Keyv 6 this driver calls
 interface KeyvLike {
@@ -26,7 +26,7 @@ interface KeyvLike {
  * new Seedcord({ ...config, kv: new KeyvDriver(new Keyv(new KeyvSqlite('sqlite://./kv.sqlite'))) });
  * ```
  */
-export class KeyvDriver<TKeyv extends KeyvLike> implements KvDriver {
+export class KeyvDriver<TKeyv extends KeyvLike> implements KvDriver, AsyncDisposable {
     constructor(
         /** The Keyv instance you passed, with its full type. */
         public readonly keyv: TKeyv
@@ -46,7 +46,7 @@ export class KeyvDriver<TKeyv extends KeyvLike> implements KvDriver {
     }
 
     /** @throws A **SeedcordError** when the Keyv store can't list its keys, like `@keyv/memcache`. */
-    public async *entries(prefix: string): AsyncIterable<[key: string, value: string]> {
+    public async *entries(prefix: string): AsyncIterable<KvEntry> {
         if (!this.#canListKeys()) throw new SeedcordError(SeedcordErrorCode.CoreKvKeysUnsupported);
 
         for await (const [key, value] of this.keyv.iterator()) {

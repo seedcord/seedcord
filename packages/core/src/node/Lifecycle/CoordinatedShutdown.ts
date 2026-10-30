@@ -48,8 +48,9 @@ export class CoordinatedShutdown extends CoordinatedLifecycle<ShutdownPhase> {
         this.#deadlineMs = deadlineMs;
     }
 
-    /** @internal disposes `resource` once every phase has run, last added first */
-    public disposeAfterPhases(resource: AsyncDisposable): void {
+    // disposes once every phase has finished, the last one added first
+    /** @internal */
+    public disposeAfterPhases(resource: Disposable | AsyncDisposable): void {
         this.#afterPhases.use(resource);
     }
 

@@ -2,7 +2,7 @@ import type { BotColor } from '#src/Types/Colors';
 import type { CustomIdMatcher } from './CustomId';
 import type { EmojiConfig } from './EmojiMap';
 import type { ErrorsConfig } from './Errors';
-import type { KvDriver } from './Kv';
+import type { KvDriver, KvTypes } from './Kv';
 import type { LoggerConfig } from './LogSink';
 
 // interactions, commands, services, bus subscribers
@@ -135,12 +135,29 @@ export interface NotificationsConfig {
     developerUsername?: string;
 }
 
+type DisposableKvDriver = KvDriver & (Disposable | AsyncDisposable);
+
+interface KvField {
+    /**
+     * Where seedcord, plugins, and your handlers keep state. The default `MemoryDriver` loses
+     * everything on restart. Pass a `KeyvDriver`, an `UnstorageDriver`, or your own driver to keep it.
+     */
+    kv?: DisposableKvDriver;
+}
+
+interface RegisteredKvField<TDriver extends DisposableKvDriver> {
+    /** The driver you registered in {@link KvTypes}. */
+    kv: TDriver;
+}
+
+type ConfigKv = KvTypes extends { driver: infer TDriver extends DisposableKvDriver }
+    ? RegisteredKvField<TDriver>
+    : KvField;
+
 /**
  * Main configuration object for Seedcord bot
- *
- * @typeParam TDriver - The driver in `kv`.
  */
-export interface Config<TDriver extends KvDriver = KvDriver> {
+export interface Config extends ConfigKv {
     bot: BotConfig;
     subscribers: SubscribersConfig;
 
@@ -165,12 +182,6 @@ export interface Config<TDriver extends KvDriver = KvDriver> {
      * User ids the `OwnerOnly` gate treats as bot owners.
      */
     ownerIds?: string[];
-
-    /**
-     * Where seedcord, plugins, and your handlers keep state. The default `MemoryDriver` loses
-     * everything on restart. Pass a `KeyvDriver`, an `UnstorageDriver`, or your own driver to keep it.
-     */
-    kv?: TDriver;
 
     /**
      * Logging level, sinks, and per-channel overrides. Omitted fields keep the transport's defaults.

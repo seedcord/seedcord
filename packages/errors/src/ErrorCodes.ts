@@ -104,8 +104,8 @@ export enum SeedcordErrorCode {
     CoreDirectorySkipped = 1231,
     /** `collection.entries()` ran on a Keyv store in `config.kv` that can't list its keys. */
     CoreKvKeysUnsupported = 1232,
-    /** A plugin read `this.kv` before `attach()` gave it a key, like from its constructor. */
-    CorePluginKvBeforeAttach = 1233,
+    /** A plugin built with `new` outside `attach()` read `this.kv`. */
+    CorePluginKvOutsideAttach = 1233,
 
     /** A command class carries `@RegisterCommand` twice. */
     DecoratorCommandAlreadyRegistered = 1301,

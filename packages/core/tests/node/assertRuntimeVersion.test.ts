@@ -1,32 +1,10 @@
 import { createRequire } from 'node:module';
 
-import { REST } from '@discordjs/rest';
 import { SeedcordErrorCode } from '@seedcord/errors';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 
 import { assertDeclaredRuntime } from '#node/assertRuntimeVersion';
-import { CoordinatedShutdown } from '#node/Lifecycle/CoordinatedShutdown';
-import { ServerHost } from '#node/ServerHost';
-import { CoordinatedStartup } from '#src/lifecycle/CoordinatedStartup';
-import { Bus } from '#subscribers/Bus';
-
-import type { Config } from '@seedcord/types';
-
-class TestHost extends ServerHost<'gateway'> {
-    public readonly config = {} as Config;
-    public readonly rest = new REST();
-    public readonly applicationId = 'app-1';
-    public readonly bus: Bus;
-
-    constructor() {
-        super('gateway', new CoordinatedShutdown(), new CoordinatedStartup(), undefined);
-        this.bus = new Bus(this);
-    }
-
-    public static resetHost(): void {
-        ServerHost.reset();
-    }
-}
+import { TestServerHost } from '#tests/utils/TestServerHost';
 
 interface Runtime {
     nodeRange?: string;
@@ -62,7 +40,7 @@ afterEach(() => {
     vi.unstubAllEnvs();
     if (realNode) Object.defineProperty(process.versions, 'node', realNode);
     Reflect.deleteProperty(process.versions, 'bun');
-    TestHost.resetHost();
+    TestServerHost.resetHost();
 });
 
 describe('the runtime check on node', () => {
@@ -137,18 +115,18 @@ describe('a host constructed on an unsupported runtime', () => {
     it('throws on node before the host reaches its own setup', () => {
         onRuntime({ nodeRange: '>=99.0' });
 
-        expectUnsupported(() => new TestHost());
+        expectUnsupported(() => new TestServerHost());
     });
 
     it('throws on bun older than its own range, whatever node version it reports', () => {
         onRuntime({ nodeRange: '>=1.0', bun: '1.4.1' });
 
-        expectUnsupported(() => new TestHost());
+        expectUnsupported(() => new TestServerHost());
     });
 
     it('constructs when the running version meets the range', () => {
         onRuntime({ nodeRange: '>=1.0' });
 
-        expect(() => new TestHost()).not.toThrow();
+        expect(() => new TestServerHost()).not.toThrow();
     });
 });

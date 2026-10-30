@@ -11,7 +11,6 @@ declare module '@seedcord/gateway' {
     interface Core {
         db: (typeof Bot)['db'];
         i18n: (typeof Bot)['i18n'];
-        kv: (typeof Bot)['kv'];
     }
     interface SlashRegistry {
         defernotice: { options: {}; cache: 'cached' };

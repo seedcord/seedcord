@@ -1,18 +1,8 @@
+import type { KeyedQueue } from './KeyedQueue';
 import type { KvDriver } from '@seedcord/types';
 import type { Jsonify } from 'type-fest';
 
-// keyed by driver because kv.collection() returns a new collection on every call
-const pendingUpdates = new WeakMap<KvDriver, Map<string, Promise<void>>>();
-
-function updateQueue(driver: KvDriver): Map<string, Promise<void>> {
-    const existing = pendingUpdates.get(driver);
-    if (existing) return existing;
-    const queue = new Map<string, Promise<void>>();
-    pendingUpdates.set(driver, queue);
-    return queue;
-}
-
-// get() checks expiresAt because unstorage's fs driver ignores a ttl
+// expiresAt covers backends that ignore a ttl, like unstorage's fs driver
 interface Envelope<TValue> {
     value: TValue;
     expiresAt?: number;
@@ -38,16 +28,23 @@ interface Envelope<TValue> {
 export class KvCollection<TRecord> {
     readonly #driver: KvDriver;
     readonly #prefix: string;
+    readonly #updates: KeyedQueue;
 
-    constructor(driver: KvDriver, prefix: string) {
+    constructor(driver: KvDriver, prefix: string, updates: KeyedQueue) {
         this.#driver = driver;
         this.#prefix = prefix;
+        this.#updates = updates;
     }
 
     /** Reads the record stored under `id`. Resolves to `undefined` when nothing is there or the record expired. */
     public async get(id: string): Promise<Jsonify<TRecord> | undefined> {
-        const raw = await this.#driver.get(this.#prefix + id);
-        return raw === undefined ? undefined : this.#liveValue(raw);
+        const key = this.#prefix + id;
+        const raw = await this.#driver.get(key);
+        if (raw === undefined) return undefined;
+
+        const value = this.#liveValue(raw);
+        if (value === undefined) await this.#driver.delete(key);
+        return value;
     }
 
     /**
@@ -66,47 +63,30 @@ export class KvCollection<TRecord> {
     }
 
     /**
-     * Changes the record under `id` based on what it holds now. `next` gets the current record, or
-     * `undefined` when there is none. It returns an object with:
-     *
-     * - `value`: the record to store
-     * - `result`: what `update()` resolves to, which can differ from `value`
-     * - `ttlMs` (optional): how long the stored record lasts
+     * Stores what `next` returns for the record under `id`, then resolves to that value. `next` gets
+     * the current record, or `undefined` when there is none.
      *
      * Use it over a `get()` then a `set()` when two calls can change one record at the same time.
      * Calls on one id in this process run one after the other. None of them loses another's change.
      * Two processes sharing one backend can still both read before either writes.
      *
+     * @param ttlMs - How many milliseconds the stored record lasts. Pass a function to work it out from the record. Leave it out to keep the record until you delete it.
      * @example
      * ```ts
      * // counts a run of the command and resolves to the new count
-     * const runs = await counts.update(user.id, (count) => {
-     *     const total = (count ?? 0) + 1;
-     *     return { value: total, result: total };
-     * });
+     * const runs = await counts.update(user.id, (count) => (count ?? 0) + 1);
      * ```
      */
-    public async update<TResult>(
+    public async update(
         id: string,
-        next: (current: Jsonify<TRecord> | undefined) => { value: TRecord; result: TResult; ttlMs?: number }
-    ): Promise<TResult> {
-        const key = this.#prefix + id;
-        const queue = updateQueue(this.#driver);
-        const run = (queue.get(key) ?? Promise.resolve()).then(async () => {
-            const { value, result, ttlMs } = next(await this.get(id));
-            await this.set(id, value, ttlMs);
-            return result;
+        next: (current: Jsonify<TRecord> | undefined) => TRecord,
+        ttlMs?: number | ((value: TRecord) => number)
+    ): Promise<TRecord> {
+        return this.#updates.run(this.#prefix + id, async () => {
+            const value = next(await this.get(id));
+            await this.set(id, value, typeof ttlMs === 'function' ? ttlMs(value) : ttlMs);
+            return value;
         });
-
-        const settled = run.then(
-            () => undefined,
-            () => undefined
-        );
-        queue.set(key, settled);
-        void settled.then(() => {
-            if (queue.get(key) === settled) queue.delete(key);
-        });
-        return run;
     }
 
     /**
@@ -121,9 +101,16 @@ export class KvCollection<TRecord> {
      * ```
      */
     public async *entries(): AsyncIterable<[id: string, record: Jsonify<TRecord>]> {
-        for await (const [key, raw] of this.#driver.entries(this.#prefix)) {
-            const value = this.#liveValue(raw);
-            if (value !== undefined) yield [key.slice(this.#prefix.length), value];
+        const expired: string[] = [];
+        try {
+            for await (const [key, raw] of this.#driver.entries(this.#prefix)) {
+                const value = this.#liveValue(raw);
+                if (value === undefined) expired.push(key);
+                else yield [key.slice(this.#prefix.length), value];
+            }
+        } finally {
+            // deletes wait until the listing ends. a driver may be reading from an open cursor
+            await Promise.all(expired.map(async (key) => this.#driver.delete(key)));
         }
     }
 

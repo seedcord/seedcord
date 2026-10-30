@@ -22,8 +22,7 @@ import { toWebRequest, writeWebResponse } from './webBridge';
 import type { HttpServerConfig } from '#interfaces/Config';
 import type { REST } from '@discordjs/rest';
 import type { Bus } from '@seedcord/core';
-import type { KvDriver } from '@seedcord/types';
-import type { NarrowedKv, SeedcordInstance } from '@seedcord/types/internal';
+import type { SeedcordInstance } from '@seedcord/types/internal';
 import type { Server } from 'node:http';
 import type { AddressInfo } from 'node:net';
 
@@ -37,10 +36,7 @@ const SERVER_SHUTDOWN_TIMEOUT_MS = 5000;
  * Shutdown waits up to 5s for interactions that are still running.
  */
 // tests/node/seedcord-core.types-test.ts checks this class against Core in place of an implements clause
-export class Seedcord<TDriver extends KvDriver = KvDriver>
-    extends ServerHost<'http', TDriver>
-    implements SeedcordInstance
-{
+export class Seedcord extends ServerHost<'http'> implements SeedcordInstance {
     // the CLI reads these to detect and augment the instance
     /** @internal */
     public readonly [SeedcordBrand] = true;
@@ -66,13 +62,13 @@ export class Seedcord<TDriver extends KvDriver = KvDriver>
     #boundPort?: number;
     #fetchedUsername?: string | undefined;
 
-    public readonly config: HttpServerConfig<TDriver> & NarrowedKv<TDriver>;
+    public readonly config: HttpServerConfig;
 
     /**
      * @throws A **SeedcordError** when another `Seedcord` exists in this process and has not shut down.
      * @throws A **SeedcordError** when the running Node or Bun is older than the range in `engines`.
      */
-    constructor(config: HttpServerConfig<TDriver> & NarrowedKv<TDriver>) {
+    constructor(config: HttpServerConfig) {
         super('http', new CoordinatedShutdown(config.lifecycle?.shutdownDeadline), new CoordinatedStartup(), config.kv);
         this.config = config;
 

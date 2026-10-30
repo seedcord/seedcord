@@ -1,4 +1,4 @@
-import type { KvDriver } from '@seedcord/types';
+import type { KvDriver, KvEntry } from '@seedcord/types';
 
 const SWEEP_GAP_MS = 60_000;
 
@@ -11,28 +11,25 @@ interface Entry {
  * The default `config.kv`. It keeps every key in a `Map` and loses them on restart. On serverless,
  * each running copy keeps its own.
  */
-export class MemoryDriver implements KvDriver {
+export class MemoryDriver implements KvDriver, Disposable {
     readonly #entries = new Map<string, Entry>();
     #lastSweep = Date.now();
 
-    public get(key: string): Promise<string | undefined> {
+    public get(key: string): string | undefined {
         this.#maybeSweep();
-        return Promise.resolve(this.#live(key)?.value);
+        return this.#live(key)?.value;
     }
 
-    public set(key: string, value: string, ttlMs?: number): Promise<void> {
+    public set(key: string, value: string, ttlMs?: number): void {
         this.#maybeSweep();
         this.#entries.set(key, { value, expiresAt: ttlMs === undefined ? undefined : Date.now() + ttlMs });
-        return Promise.resolve();
     }
 
-    public delete(key: string): Promise<void> {
+    public delete(key: string): void {
         this.#entries.delete(key);
-        return Promise.resolve();
     }
 
-    // eslint-disable-next-line @typescript-eslint/require-await -- KvDriver.entries is async but the Map isn't
-    public async *entries(prefix: string): AsyncIterable<[key: string, value: string]> {
+    public *entries(prefix: string): Iterable<KvEntry> {
         this.#maybeSweep();
         for (const key of this.#entries.keys()) {
             const entry = key.startsWith(prefix) ? this.#live(key) : undefined;
@@ -40,9 +37,8 @@ export class MemoryDriver implements KvDriver {
         }
     }
 
-    public [Symbol.asyncDispose](): Promise<void> {
+    public [Symbol.dispose](): void {
         this.#entries.clear();
-        return Promise.resolve();
     }
 
     #live(key: string): Entry | undefined {

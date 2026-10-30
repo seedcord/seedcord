@@ -22,3 +22,5 @@ kv.collection<Map<string, string>>('g');
 kv.collection<{ name: string; run: () => void }>('h');
 // @ts-expect-error JSON.stringify throws on a bigint
 kv.collection<{ n: bigint }>('i');
+// @ts-expect-error the record type is missing
+kv.collection('j');

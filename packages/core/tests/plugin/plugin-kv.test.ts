@@ -1,24 +1,49 @@
 import { SeedcordErrorCode } from '@seedcord/errors';
-import { describe, expect, it } from 'vitest';
+import { LoggerChannelRegistry } from '@seedcord/logger';
+import { beforeEach, describe, expect, it } from 'vitest';
 
 import { MemoryDriver } from '#src/kv/MemoryDriver';
 import { Plugin } from '#src/plugin/Plugin';
 import { TestPluginHost } from '#tests/utils/TestPluginHost';
 
 import type { CoreBase } from '#interfaces/CoreBase';
+import type { ILogSink, LogRecord } from '@seedcord/types';
+
+class FakeSink implements ILogSink {
+    public readonly records: LogRecord[] = [];
+    public readonly kind = 'console';
+    public onLog(record: LogRecord): void {
+        this.records.push(record);
+    }
+}
+
+let sink: FakeSink;
+
+beforeEach(() => {
+    LoggerChannelRegistry.instance.reset();
+    sink = new FakeSink();
+    LoggerChannelRegistry.instance.configure({ level: 'trace', sinks: [sink] });
+});
 
 class Notes extends Plugin {
+    private readonly notes = this.kv.collection<string>('note');
+
+    constructor(core: CoreBase) {
+        super(core);
+        this.logger.info('constructed');
+    }
+
     public init(): Promise<void> {
         return Promise.resolve();
     }
 
     public async save(id: string, text: string): Promise<void> {
-        await this.kv.collection<string>('note').set(id, text);
+        await this.notes.set(id, text);
     }
 }
 
-describe('a plugin kv', () => {
-    it('keeps each attachment under its own attach key', async () => {
+describe('a plugin under its attach key', () => {
+    it('keeps its records and its constructor logs under that key', async () => {
         const driver = new MemoryDriver();
         const host = new TestPluginHost('gateway', 'server', driver)
             .attach('a', Notes)
@@ -35,21 +60,19 @@ describe('a plugin kv', () => {
             'plugins:b:note:1',
             'plugins:group.c:note:1'
         ]);
+        expect(sink.records.map((record) => record.channel)).toEqual(['a', 'b', 'group.c']);
     });
 
-    it('throws when the constructor reads this.kv before attach() sets its key', () => {
-        class Eager extends Plugin {
-            constructor(core: CoreBase) {
-                super(core);
-                void this.kv;
-            }
+    it('throws when a plugin is built with new outside attach()', () => {
+        class Outer extends Plugin {
+            public readonly inner = new Notes(this.core);
             public init(): Promise<void> {
                 return Promise.resolve();
             }
         }
 
-        expect(() => new TestPluginHost().attach('eager', Eager)).toThrow(
-            expect.objectContaining({ code: SeedcordErrorCode.CorePluginKvBeforeAttach })
+        expect(() => new TestPluginHost().attach('outer', Outer)).toThrow(
+            expect.objectContaining({ code: SeedcordErrorCode.CorePluginKvOutsideAttach })
         );
     });
 });

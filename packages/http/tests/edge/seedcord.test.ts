@@ -282,14 +282,11 @@ describe('the edge Seedcord', () => {
         );
     });
 
-    it('backs core.kv and core.rateLimiter with config.kv', async () => {
+    it('backs core.kv with config.kv', () => {
         const driver = new MemoryDriver();
         const seedcord = new Seedcord({ ...config(), kv: driver });
 
-        await seedcord.rateLimiter.charge('user', { windowMs: 60_000 });
-
         expect(seedcord.kv.driver).toBe(driver);
-        expect(await Array.fromAsync(driver.entries('seedcord:'))).toHaveLength(1);
     });
 
     it('resolves the application id from the token on the first request', async () => {

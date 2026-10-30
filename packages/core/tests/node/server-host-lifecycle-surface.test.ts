@@ -1,38 +1,16 @@
-import { REST } from '@discordjs/rest';
 import { HostShutdown, HostStartup } from '@seedcord/types/internal';
 import { describe, it, expect, afterEach } from 'vitest';
 
-import { CoordinatedShutdown } from '#node/Lifecycle/CoordinatedShutdown';
-import { ServerHost } from '#node/ServerHost';
-import { CoordinatedStartup } from '#src/lifecycle/CoordinatedStartup';
 import { ShutdownPhase, StartupPhase } from '#src/lifecycle/phases';
-import { Bus } from '#subscribers/Bus';
-
-import type { Config } from '@seedcord/types';
-
-class TestHost extends ServerHost<'gateway'> {
-    public readonly config = {} as Config;
-    public readonly rest = new REST();
-    public readonly applicationId = 'app-1';
-    public readonly bus: Bus;
-
-    constructor() {
-        super('gateway', new CoordinatedShutdown(), new CoordinatedStartup(), undefined);
-        this.bus = new Bus(this);
-    }
-
-    public static resetHost(): void {
-        ServerHost.reset();
-    }
-}
+import { TestServerHost } from '#tests/utils/TestServerHost';
 
 describe('the lifecycle surface a bot author reaches', () => {
     afterEach(() => {
-        TestHost.resetHost();
+        TestServerHost.resetHost();
     });
 
     it('carries addTask alone on shutdown', () => {
-        const host = new TestHost();
+        const host = new TestServerHost();
 
         expect(Object.keys(host.shutdown)).toEqual(['addTask']);
         expect('run' in host.shutdown).toBe(false);
@@ -41,7 +19,7 @@ describe('the lifecycle surface a bot author reaches', () => {
     });
 
     it('carries addTask alone on startup', () => {
-        const host = new TestHost();
+        const host = new TestServerHost();
 
         expect(Object.keys(host.startup)).toEqual(['addTask']);
         expect('run' in host.startup).toBe(false);
@@ -49,7 +27,7 @@ describe('the lifecycle surface a bot author reaches', () => {
     });
 
     it('registers a shutdown task on the real lifecycle', () => {
-        const host = new TestHost();
+        const host = new TestServerHost();
 
         host.shutdown.addTask(ShutdownPhase.Drain, 'probe', () => Promise.resolve());
 
@@ -57,7 +35,7 @@ describe('the lifecycle surface a bot author reaches', () => {
     });
 
     it('registers a startup task on the real lifecycle', () => {
-        const host = new TestHost();
+        const host = new TestServerHost();
 
         host.startup.addTask(StartupPhase.Ready, 'probe', () => Promise.resolve());
 

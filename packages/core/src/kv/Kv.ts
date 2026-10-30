@@ -1,6 +1,9 @@
+import { KeyedQueue } from './KeyedQueue';
 import { KvCollection } from './KvCollection';
 
-import type { KvDriver } from '@seedcord/types';
+import type { Config } from '@seedcord/types';
+
+type ConfiguredDriver = NonNullable<Config['kv']>;
 
 // what JSON.stringify keeps as written. a Date passes through its toJSON
 type JsonSafe<TValue> = TValue extends string | number | boolean | null | undefined
@@ -18,35 +21,37 @@ type JsonSafe<TValue> = TValue extends string | number | boolean | null | undefi
               : never;
 
 // tsc prints a failed string argument against an object type as only `string is not assignable`
-type CollectionName<TRecord> = [TRecord] extends [JsonSafe<TRecord>]
-    ? string
-    : 'This record type holds a value JSON cannot keep, like a function, Map, Set, or bigint.';
+type CollectionName<TRecord> = unknown extends TRecord
+    ? 'Pass the record type, like kv.collection<Profile>(name).'
+    : [TRecord] extends [JsonSafe<TRecord>]
+      ? string
+      : 'This record type holds a value JSON cannot keep, like a function, Map, Set, or bigint.';
 
+// unescaped, every key under `user:settings:` would also start with `user:`
 function keyPrefix(path: readonly string[]): string {
-    return path.map((segment) => `${segment}:`).join('');
+    return path.map((segment) => `${encodeURIComponent(segment)}:`).join('');
 }
 
 /**
  * The bot's key-value store, or one prefixed slice of it. `core.kv` holds your handlers' records. A
  * plugin's `this.kv` holds the plugin's.
- *
- * @typeParam TDriver - The driver from `config.kv`.
  */
-export class Kv<TDriver extends KvDriver = KvDriver> {
-    /** What you passed as `config.kv`, for calling the library's own methods. */
-    public readonly driver: TDriver;
+export class Kv {
+    /** What you passed as `config.kv`. Register its type in `KvTypes` to call the library's own methods on it. */
+    public readonly driver: ConfiguredDriver;
     readonly #path: readonly string[];
+    readonly #updates = new KeyedQueue();
 
-    constructor(driver: TDriver, ...path: string[]) {
+    constructor(driver: ConfiguredDriver, ...path: string[]) {
         this.driver = driver;
         this.#path = path;
     }
 
     /**
-     * Records of one type under `name`. A record type holding a function, `Map`, `Set`, or `bigint`
-     * fails to compile here.
+     * Records of one type under `name`. Pass the type argument. A record type holding a function,
+     * `Map`, `Set`, or `bigint` fails to compile here.
      */
     public collection<TRecord>(name: CollectionName<TRecord>): KvCollection<TRecord> {
-        return new KvCollection<TRecord>(this.driver, keyPrefix([...this.#path, name]));
+        return new KvCollection<TRecord>(this.driver, keyPrefix([...this.#path, name]), this.#updates);
     }
 }

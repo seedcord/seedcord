@@ -17,18 +17,14 @@ import { version as packageVersion } from './version';
 
 import type { GatewayConfig } from './interfaces/Config';
 import type { REST } from '@discordjs/rest';
-import type { KvDriver } from '@seedcord/types';
-import type { NarrowedKv, SeedcordInstance } from '@seedcord/types/internal';
+import type { SeedcordInstance } from '@seedcord/types/internal';
 
 /**
  * The gateway bot host. Opens a discord.js gateway session, discovers handlers, and runs
  * coordinated startup and shutdown. Attach plugins with `attach()`.
  */
 // an `implements Core` clause breaks a bot's full lib check once codegen adds its plugins to Core
-export class Seedcord<TDriver extends KvDriver = KvDriver>
-    extends ServerHost<'gateway', TDriver>
-    implements SeedcordInstance
-{
+export class Seedcord extends ServerHost<'gateway'> implements SeedcordInstance {
     // the CLI reads these to detect and augment the instance
     /** @internal */
     public readonly [SeedcordBrand] = true;
@@ -61,7 +57,7 @@ export class Seedcord<TDriver extends KvDriver = KvDriver>
      * @throws A **SeedcordError** when another `Seedcord` exists in this process and has not shut down.
      * @throws A **SeedcordError** when the running Node or Bun is older than the range in `engines`.
      */
-    constructor(public readonly config: GatewayConfig<TDriver> & NarrowedKv<TDriver>) {
+    constructor(public readonly config: GatewayConfig) {
         super(
             'gateway',
             new CoordinatedShutdown(config.lifecycle?.shutdownDeadline),
