@@ -34,16 +34,20 @@
                 "@seedcord/http",
                 "@discordjs/builders",
                 "@seedcord/core",
+                "@keyv/sqlite",
                 "@seedcord/plugin-kysely-postgres",
                 "@seedcord/plugin-mongoose",
                 "@types/pg",
+                "db0",
                 "discord-api-types",
                 "discord.js",
                 "envapt",
+                "keyv",
                 "kysely",
                 "mongoose",
                 "pg",
-                "seedcord"
+                "seedcord",
+                "unstorage"
             ]
         },
         "apps/home": {
