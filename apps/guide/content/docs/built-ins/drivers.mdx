@@ -39,6 +39,12 @@ The records go into `kv.sqlite`, in the folder you start the bot from. If you sw
 
 [`entries()`](/built-ins/#reading-every-record) needs an adapter that can list its keys. A cache adapter like `@keyv/memcache` can't, so `entries()` throws a `SeedcordError` with the code `CoreKvKeysUnsupported`. `get`, `set`, `update`, and `delete` still work on it.
 
+<Callout type="warning">
+
+If you listen for Keyv's `error` event, Keyv stops throwing when the store fails. While the store is down, every read returns `undefined`, as if the record didn't exist. An `update` at that moment starts from `undefined` and writes over the real record. A failed write still throws `CoreKvDriverFailed`.
+
+</Callout>
+
 ## unstorage
 
 <Shell add="unstorage" />
@@ -198,6 +204,6 @@ const storage = prefixStorage(
 
 ## Closing the connection
 
-seedcord closes your driver after the last [shutdown phase](/plugins/lifecycle) of a node bot. `KeyvDriver` calls Keyv's `disconnect()`, and `UnstorageDriver` calls the storage's `dispose()`. A Workers bot has no shutdown phase, so its driver stays open until Cloudflare stops the isolate.
+seedcord closes your driver in the `Release` [shutdown phase](/plugins/lifecycle) of a node bot, after every plugin has stopped. `KeyvDriver` calls Keyv's `disconnect()`, and `UnstorageDriver` calls the storage's `dispose()`. A Workers bot has no shutdown phase, so its driver stays open until Cloudflare stops the isolate.
 
 For storage neither library supports, [write your own driver](/built-ins/your-driver).

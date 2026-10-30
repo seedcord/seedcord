@@ -11,8 +11,11 @@ const PHASE_ORDER: ShutdownPhase[] = [
     ShutdownPhase.Unbind,
     ShutdownPhase.Drain,
     ShutdownPhase.Disconnect,
-    ShutdownPhase.Logout
+    ShutdownPhase.Logout,
+    ShutdownPhase.Release
 ];
+
+const SHUTDOWN_SIGNALS: NodeJS.Signals[] = ['SIGTERM', 'SIGINT'];
 
 // gives the logger's file sink time to flush before process.exit
 const LOG_FLUSH_DELAY_MS = 3000;
@@ -23,13 +26,11 @@ const DEFAULT_SHUTDOWN_DEADLINE_MS = 25_000;
 export class CoordinatedShutdown extends CoordinatedLifecycle<ShutdownPhase> {
     #running?: Promise<void>;
     #exitCode = 0;
-    #onSigTerm: (() => void) | null = null;
-    #onSigInt: (() => void) | null = null;
+    readonly #signalHandlers = new Map<NodeJS.Signals, () => void>();
     #startupGate?: Promise<void>;
     #deadlineMs = DEFAULT_SHUTDOWN_DEADLINE_MS;
     #phasesExpireAt = Infinity;
     #runningPhase: ShutdownPhase | undefined;
-    readonly #afterPhases = new AsyncDisposableStack();
 
     public constructor(deadlineMs?: number) {
         super('Shutdown', PHASE_ORDER, ShutdownPhase);
@@ -48,24 +49,9 @@ export class CoordinatedShutdown extends CoordinatedLifecycle<ShutdownPhase> {
         this.#deadlineMs = deadlineMs;
     }
 
-    // disposes once every phase has finished, the last one added first
-    /** @internal */
-    public disposeAfterPhases(resource: Disposable | AsyncDisposable): void {
-        this.#afterPhases.use(resource);
-    }
-
-    async #runPhasesThenDispose(failures: unknown[]): Promise<void> {
-        await this.#runPhases(failures);
-        try {
-            await this.#afterPhases.disposeAsync();
-        } catch (error) {
-            failures.push(error);
-        }
-    }
-
     async #runPhases(failures: unknown[]): Promise<void> {
         for (const phase of PHASE_ORDER) {
-            // set above the check so the reported phase is the one that never started
+            // set first so the deadline log shows this phase
             this.#runningPhase = phase;
             // runPhases keeps going after settleWithin stops waiting on it
             if (performance.now() >= this.#phasesExpireAt) return;
@@ -100,35 +86,24 @@ export class CoordinatedShutdown extends CoordinatedLifecycle<ShutdownPhase> {
 
     /** @internal */
     public registerSignalHandlers(): void {
-        this.#onSigTerm = () => {
-            this.logger.info(`Received ${paint.amber.bold('SIGTERM')} signal`);
-            void this.run(0);
-        };
-
-        this.#onSigInt = () => {
-            this.logger.info(`Received ${paint.amber.bold('SIGINT')} signal`);
-            void this.run(0);
-        };
-
-        process.on('SIGTERM', this.#onSigTerm);
-        process.on('SIGINT', this.#onSigInt);
+        for (const signal of SHUTDOWN_SIGNALS) {
+            const handler = (): void => {
+                this.logger.info(`Received ${paint.amber.bold(signal)} signal`);
+                void this.run(0);
+            };
+            this.#signalHandlers.set(signal, handler);
+            process.on(signal, handler);
+        }
     }
 
     /** @internal */
     public removeSignalHandlers(): void {
-        if (this.#onSigTerm) {
-            process.off('SIGTERM', this.#onSigTerm);
-            this.#onSigTerm = null;
-        }
-        if (!this.#onSigInt) {
-            return;
-        }
-
-        process.off('SIGINT', this.#onSigInt);
-        this.#onSigInt = null;
+        for (const [signal, handler] of this.#signalHandlers) process.off(signal, handler);
+        this.#signalHandlers.clear();
     }
 
-    /** @internal run() awaits this so boot finishes registering its dispose tasks first */
+    // run() awaits this so boot finishes registering its dispose tasks first
+    /** @internal */
     public gateOnStartup(settled: Promise<void>): void {
         this.#startupGate = settled;
     }
@@ -174,21 +149,18 @@ export class CoordinatedShutdown extends CoordinatedLifecycle<ShutdownPhase> {
             if (this.#startupGate) await settleWithin(this.#startupGate, this.#deadlineMs);
 
             const failures: unknown[] = [];
-            await settleWithin(
-                this.#runPhasesThenDispose(failures),
-                Math.max(this.#phasesExpireAt - performance.now(), 0)
-            );
+            await settleWithin(this.#runPhases(failures), Math.max(this.#phasesExpireAt - performance.now(), 0));
 
-            const caughtPhase = this.#runningPhase;
-            if (caughtPhase !== undefined) {
+            const unfinishedPhase = this.#runningPhase;
+            if (unfinishedPhase !== undefined) {
                 this.logger.error(
-                    `Shutdown deadline of ${paint.sky.bold(this.#deadlineMs)}ms elapsed at phase ${paint.iris.bold(this.phaseEnum[caughtPhase])}`
+                    `Shutdown deadline of ${paint.sky.bold(this.#deadlineMs)}ms elapsed at phase ${paint.iris.bold(this.phaseEnum[unfinishedPhase])}`
                 );
             }
 
             if (failures.length > 0) {
                 this.logger.error(`${paint.coral.bold('Coordinated shutdown failed')}`, ...failures);
-            } else if (caughtPhase === undefined) {
+            } else if (unfinishedPhase === undefined) {
                 this.logger.info(`${paint.mint.bold('Coordinated shutdown completed')} successfully`);
             }
         } finally {

@@ -61,6 +61,7 @@ Treat those files as the rules. Do not substitute your own taste where they alre
 7. Exports: every export added or changed, whether anything outside its file uses it, whether it belongs on the public surface, and whether the package.json exports map and README agree.
 8. Code that's staggered across functions that could be consolidated for clarity and maintainability by refactoring into an OOP-based design.
 9. Refactors: if the changes read as a set of patches, list each patch with its file:line and propose the refactor that would replace them, with its scope.
+    - A member handled outside the structure its siblings use: a flag, a field, a branch, or a copied rule that gives one item a behavior the others get from the existing model (a phase, a registry, a pipeline). Name the structure it belongs in.
 
 ## Output
 

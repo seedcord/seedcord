@@ -178,4 +178,21 @@ describe('CoordinatedShutdown deadline', () => {
         const claimedSuccess = info.mock.calls.some((call) => call.some((arg) => String(arg).includes('completed')));
         expect(claimedSuccess).toBe(false);
     });
+
+    it('reports the phases a slow startup left no time for', async () => {
+        const errors = vi.spyOn(Logger.prototype, 'error').mockImplementation(() => undefined);
+        const info = vi.spyOn(Logger.prototype, 'info').mockImplementation(() => undefined);
+        const shutdown = new CoordinatedShutdown(DEADLINE_MS);
+        shutdown.removeSignalHandlers();
+        shutdown.gateOnStartup(never());
+
+        await shutdown.run(1, false);
+
+        const claimedSuccess = info.mock.calls.some((call) => call.some((arg) => String(arg).includes('completed')));
+        const named = errors.mock.calls.some((call) =>
+            call.some((arg) => String(arg).includes('deadline') && String(arg).includes('Unbind'))
+        );
+        expect(claimedSuccess).toBe(false);
+        expect(named).toBe(true);
+    });
 });

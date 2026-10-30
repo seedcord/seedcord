@@ -38,7 +38,8 @@ export class KeyvDriver<TKeyv extends KeyvLike> implements KvDriver, AsyncDispos
     }
 
     public async set(key: string, value: string, ttlMs?: number): Promise<void> {
-        await this.keyv.set(key, value, ttlMs);
+        if (!(await this.keyv.set(key, value, ttlMs)))
+            throw new SeedcordError(SeedcordErrorCode.CoreKvDriverFailed, ['write', key]);
     }
 
     public async delete(key: string): Promise<void> {

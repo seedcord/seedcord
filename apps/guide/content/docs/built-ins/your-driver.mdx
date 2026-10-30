@@ -80,7 +80,7 @@ If your storage can expire a key itself, like Redis with the `PX` option of `SET
 
 ## Closing the connection
 
-Your driver holds a connection or a file open, and seedcord closes it for you. It calls `[Symbol.dispose]()` after the last [shutdown phase](/plugins/lifecycle) of a node bot, which is why `config.kv` takes only a driver that implements `Disposable` or `AsyncDisposable`. If your client closes asynchronously, implement `AsyncDisposable` with `[Symbol.asyncDispose]` instead. If your driver implements neither, TypeScript rejects it as `kv`.
+Your driver holds a connection or a file open, and seedcord closes it for you. It calls `[Symbol.dispose]()` in the `Release` [shutdown phase](/plugins/lifecycle) of a node bot, which is why `config.kv` takes only a driver that implements `Disposable` or `AsyncDisposable`. If your client closes asynchronously, implement `AsyncDisposable` with `[Symbol.asyncDispose]` instead. If your driver implements neither, TypeScript rejects it as `kv`.
 
 If the client is one your bot also uses elsewhere, close it where you opened it, and leave `[Symbol.dispose]` empty.
 

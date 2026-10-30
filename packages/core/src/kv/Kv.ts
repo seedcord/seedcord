@@ -1,3 +1,4 @@
+import { GuardedDriver } from './GuardedDriver';
 import { KeyedQueue } from './KeyedQueue';
 import { KvCollection } from './KvCollection';
 
@@ -39,11 +40,13 @@ function keyPrefix(path: readonly string[]): string {
 export class Kv {
     /** What you passed as `config.kv`. Register its type in `KvTypes` to call the library's own methods on it. */
     public readonly driver: ConfiguredDriver;
+    readonly #guarded: GuardedDriver;
     readonly #path: readonly string[];
     readonly #updates = new KeyedQueue();
 
     constructor(driver: ConfiguredDriver, ...path: string[]) {
         this.driver = driver;
+        this.#guarded = new GuardedDriver(driver);
         this.#path = path;
     }
 
@@ -52,6 +55,6 @@ export class Kv {
      * `Map`, `Set`, or `bigint` fails to compile here.
      */
     public collection<TRecord>(name: CollectionName<TRecord>): KvCollection<TRecord> {
-        return new KvCollection<TRecord>(this.driver, keyPrefix([...this.#path, name]), this.#updates);
+        return new KvCollection<TRecord>(this.#guarded, keyPrefix([...this.#path, name]), this.#updates);
     }
 }

@@ -200,6 +200,33 @@ describe('KeyvDriver', () => {
             code: SeedcordErrorCode.CoreKvKeysUnsupported
         });
     });
+
+    it('throws when Keyv reports a failed write', async () => {
+        const down = (): Promise<never> => Promise.reject(new Error('store down'));
+        const keyv = new Keyv({ store: { get: down, set: down, delete: down, clear: down } });
+        // once an 'error' listener exists, Keyv resolves a failed set() to false
+        keyv.on('error', () => undefined);
+        const jobs = new Kv(new KeyvDriver(keyv)).collection<number>('job');
+
+        await expect(jobs.set('1', 1)).rejects.toMatchObject({ code: SeedcordErrorCode.CoreKvDriverFailed });
+    });
+});
+
+describe('a driver that throws', () => {
+    it('surfaces as CoreKvDriverFailed, with what it threw as the cause', async () => {
+        const down = new Error('store down');
+        class DownDriver extends MemoryDriver {
+            public override get(): never {
+                throw down;
+            }
+        }
+        const counts = new Kv(new DownDriver()).collection<number>('count');
+
+        await expect(counts.update('k', (n) => (n ?? 0) + 1)).rejects.toMatchObject({
+            code: SeedcordErrorCode.CoreKvDriverFailed,
+            cause: down
+        });
+    });
 });
 
 describe('UnstorageDriver', () => {

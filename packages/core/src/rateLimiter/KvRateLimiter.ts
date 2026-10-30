@@ -49,9 +49,10 @@ export class KvRateLimiter implements IRateLimiter {
     }
 
     public async peek(key: string, window: RateLimitWindow): Promise<RateLimitResult> {
+        const stored = await this.uses.get(key);
         const now = Date.now();
         const limit = limitOf(window);
-        const live = liveUses(await this.uses.get(key), now);
+        const live = liveUses(stored, now);
         return live.length >= limit ? limitedResult(live, now) : openResult(limit - live.length);
     }
 

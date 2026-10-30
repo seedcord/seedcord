@@ -21,5 +21,7 @@ export enum ShutdownPhase {
     /** External resources close. Plugin dispose runs here by default. */
     Disconnect,
     /** The client disconnects last so in-flight handlers can still reference it during drain. */
-    Logout
+    Logout,
+    /** Resources seedcord holds for the bot, like the `config.kv` driver, close after every plugin has stopped. */
+    Release
 }

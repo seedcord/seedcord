@@ -6,6 +6,7 @@ import { HostShutdown, HostStartup } from '@seedcord/types/internal';
 import { runsUnderSeedcordDev } from '@seedcord/utils/internal';
 
 import { assertDeclaredRuntime } from '#node/assertRuntimeVersion';
+import { ShutdownPhase } from '#src/lifecycle/phases';
 import { PluginLifecycle } from '#src/lifecycle/PluginLifecycle';
 import { attachmentsOf, PluginHost, sealAttachments } from '#src/plugin/PluginHost';
 
@@ -58,7 +59,9 @@ export abstract class ServerHost<BotT extends Transport> extends PluginHost<BotT
         this.shutdown = { addTask: shutdown.addTask.bind(shutdown) };
         this.startup = { addTask: startup.addTask.bind(startup) };
         this.#lifecycle = new PluginLifecycle(this.startup, this.shutdown);
-        shutdown.disposeAfterPhases(this.kv.driver);
+        shutdown.addTask(ShutdownPhase.Release, 'close-kv', async () => {
+            await using _driver = this.kv.driver;
+        });
     }
 
     /** @internal */
