@@ -1,5 +1,5 @@
 import { SeedcordErrorCode } from '@seedcord/errors';
-import { SeedcordError, SeedcordTypeError } from '@seedcord/errors/internal';
+import { SeedcordTypeError } from '@seedcord/errors/internal';
 import { Logger } from '@seedcord/logger';
 
 import { getDevChannel } from '#hmr/devChannel';
@@ -139,7 +139,7 @@ export abstract class Plugin<
      * one plugin class each get their own records. Renaming the attach key leaves the records under
      * the old key behind.
      *
-     * @throws A **SeedcordError** when something built the plugin with `new` outside `attach()`.
+     * @throws A **SeedcordTypeError** when something built the plugin with `new` outside `attach()`.
      * @example
      * ```ts
      * // works in a field initializer, the constructor, and every method
@@ -147,7 +147,8 @@ export abstract class Plugin<
      * ```
      */
     protected get kv(): Kv {
-        if (!this.#kv) throw new SeedcordError(SeedcordErrorCode.CorePluginKvOutsideAttach, [this.constructor.name]);
+        if (!this.#kv)
+            throw new SeedcordTypeError(SeedcordErrorCode.CorePluginKvOutsideAttach, [this.constructor.name]);
         return this.#kv;
     }
 

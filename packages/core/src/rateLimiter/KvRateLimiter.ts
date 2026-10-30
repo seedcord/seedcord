@@ -29,20 +29,21 @@ export class KvRateLimiter implements IRateLimiter {
     }
 
     public async charge(key: string, window: RateLimitWindow): Promise<RateLimitResult> {
-        const now = Date.now();
         const limit = limitOf(window);
         // update() calls the callback before it resolves
         let result!: RateLimitResult;
         await this.uses.update(
             key,
             (stored) => {
+                // read here, since this callback can wait in the queue behind other charges
+                const now = Date.now();
                 const live = liveUses(stored, now);
                 const limited = live.length >= limit;
                 if (!limited) live.push(now + window.windowMs);
                 result = limited ? limitedResult(live, now) : openResult(limit - live.length);
                 return live;
             },
-            (live) => live.reduce((latest, exp) => Math.max(latest, exp), now) - now
+            (live) => live.reduce((latest, exp) => Math.max(latest, exp), 0) - Date.now()
         );
         return result;
     }

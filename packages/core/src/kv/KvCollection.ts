@@ -40,10 +40,8 @@ export class KvCollection<TRecord> {
     public async get(id: string): Promise<Jsonify<TRecord> | undefined> {
         const key = this.#prefix + id;
         const raw = await this.#driver.get(key);
-        if (raw === undefined) return undefined;
-
         const value = this.#liveValue(raw);
-        if (value === undefined) await this.#driver.delete(key);
+        if (raw !== undefined && value === undefined) await this.#deleteExpired(key);
         return value;
     }
 
@@ -53,13 +51,14 @@ export class KvCollection<TRecord> {
      * @param ttlMs - How long the record lasts, in milliseconds. Leave it out to keep the record until you delete it.
      */
     public async set(id: string, value: TRecord, ttlMs?: number): Promise<void> {
-        const envelope: Envelope<TRecord> = ttlMs === undefined ? { value } : { value, expiresAt: Date.now() + ttlMs };
-        await this.#driver.set(this.#prefix + id, JSON.stringify(envelope), ttlMs);
+        const key = this.#prefix + id;
+        await this.#updates.run(key, async () => this.#write(key, value, ttlMs));
     }
 
     /** Removes the record under `id`. */
     public async delete(id: string): Promise<void> {
-        await this.#driver.delete(this.#prefix + id);
+        const key = this.#prefix + id;
+        await this.#updates.run(key, async () => this.#driver.delete(key));
     }
 
     /**
@@ -67,8 +66,9 @@ export class KvCollection<TRecord> {
      * the current record, or `undefined` when there is none.
      *
      * Use it over a `get()` then a `set()` when two calls can change one record at the same time.
-     * Calls on one id in this process run one after the other. None of them loses another's change.
-     * Two processes sharing one backend can still both read before either writes.
+     * `set()`, `delete()`, and `update()` calls on one id run one after the other in this process.
+     * None of them loses another's change. Two processes sharing one backend can still both read
+     * before either writes.
      *
      * @param ttlMs - How many milliseconds the stored record lasts. Pass a function to work it out from the record. Leave it out to keep the record until you delete it.
      * @example
@@ -82,9 +82,10 @@ export class KvCollection<TRecord> {
         next: (current: Jsonify<TRecord> | undefined) => TRecord,
         ttlMs?: number | ((value: TRecord) => number)
     ): Promise<TRecord> {
-        return this.#updates.run(this.#prefix + id, async () => {
-            const value = next(await this.get(id));
-            await this.set(id, value, typeof ttlMs === 'function' ? ttlMs(value) : ttlMs);
+        const key = this.#prefix + id;
+        return this.#updates.run(key, async () => {
+            const value = next(this.#liveValue(await this.#driver.get(key)));
+            await this.#write(key, value, typeof ttlMs === 'function' ? ttlMs(value) : ttlMs);
             return value;
         });
     }
@@ -110,11 +111,25 @@ export class KvCollection<TRecord> {
             }
         } finally {
             // deletes wait until the listing ends. a driver may be reading from an open cursor
-            await Promise.all(expired.map(async (key) => this.#driver.delete(key)));
+            await Promise.all(expired.map(async (key) => this.#deleteExpired(key)));
         }
     }
 
-    #liveValue(raw: string): Jsonify<TRecord> | undefined {
+    async #write(key: string, value: TRecord, ttlMs: number | undefined): Promise<void> {
+        const envelope: Envelope<TRecord> = ttlMs === undefined ? { value } : { value, expiresAt: Date.now() + ttlMs };
+        await this.#driver.set(key, JSON.stringify(envelope), ttlMs);
+    }
+
+    // reads again in the queue. a set queued after the first read may have stored a live record
+    async #deleteExpired(key: string): Promise<void> {
+        await this.#updates.run(key, async () => {
+            const raw = await this.#driver.get(key);
+            if (raw !== undefined && this.#liveValue(raw) === undefined) await this.#driver.delete(key);
+        });
+    }
+
+    #liveValue(raw: string | undefined): Jsonify<TRecord> | undefined {
+        if (raw === undefined) return undefined;
         // justified: only this collection writes under its prefix
         const envelope = JSON.parse(raw) as Envelope<Jsonify<TRecord>>;
         if (envelope.expiresAt !== undefined && envelope.expiresAt <= Date.now()) return undefined;

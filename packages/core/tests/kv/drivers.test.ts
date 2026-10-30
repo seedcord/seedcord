@@ -128,6 +128,14 @@ describe.each(cases)('$name', ({ open, persists }) => {
         expect(await counts.get('runs')).toBe(5);
     });
 
+    it('keeps a delete that lands while an update runs', async () => {
+        const counts = new Kv(open()).collection<number>('race');
+        await counts.set('k', 5);
+
+        await Promise.all([counts.update('k', (n) => (n ?? 0) + 1), counts.delete('k')]);
+        expect(await counts.get('k')).toBeUndefined();
+    });
+
     it.runIf(persists)('reads what an earlier instance wrote', async () => {
         await new Kv(open()).collection<string>('restart').set('k', 'kept');
         expect(await new Kv(open()).collection<string>('restart').get('k')).toBe('kept');
@@ -148,6 +156,15 @@ describe.each(cases)('$name', ({ open, persists }) => {
             expect(await kv.get('read')).toBeUndefined();
             expect(await Array.fromAsync(kv.entries())).toEqual([]);
             expect(await Array.fromAsync(driver.entries('ttl:'))).toEqual([]);
+        });
+
+        it('keeps a set that lands while a read deletes the expired record', async () => {
+            const kv = new Kv(open()).collection<string>('ttl-race');
+            await kv.set('k', 'old', 1000);
+            vi.setSystemTime(Date.now() + 1000);
+
+            await Promise.all([kv.get('k'), kv.set('k', 'new')]);
+            expect(await kv.get('k')).toBe('new');
         });
 
         it('takes a ttl computed from the stored value', async () => {

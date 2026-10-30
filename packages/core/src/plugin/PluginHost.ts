@@ -29,9 +29,7 @@ const RESERVED_KEYS: ReadonlySet<string> = new Set(FRAMEWORK_CHANNELS);
 const attachmentsSlot = Symbol('seedcord:host:attachments');
 const sealSlot = Symbol('seedcord:host:seal');
 
-/**
- * Base class for a plugin host.
- */
+/** Base class for a plugin host. */
 export abstract class PluginHost<BotT extends Transport, BotRt extends Runtime> implements CoreBase {
     public abstract readonly config: Config;
     public abstract readonly rest: REST;

@@ -5,8 +5,8 @@ import type { Promisable } from 'type-fest';
  * value into JSON before it calls the driver. Each method may return its result directly or as a
  * promise.
  *
- * Implement `Disposable` or `AsyncDisposable` beside it to close the backend. A node bot closes the
- * driver after the last shutdown phase.
+ * `config.kv` also requires `Disposable` or `AsyncDisposable` on the driver. A node bot calls it
+ * after the last shutdown phase to close the backend.
  *
  * @example
  * ```ts
@@ -16,7 +16,7 @@ import type { Promisable } from 'type-fest';
  */
 export interface KvDriver {
     get(key: string): Promisable<string | undefined>;
-    /** @param ttlMs - Lets the backend delete the key after this many milliseconds. Seedcord checks the expiry on read either way. */
+    /** @param ttlMs - The backend may delete the key after this many milliseconds. Seedcord checks the expiry on read either way. */
     set(key: string, value: string, ttlMs?: number): Promisable<void>;
     delete(key: string): Promisable<void>;
     /** Every key that starts with `prefix`, prefix included, with its value. Throw if the backend can't list its keys. */

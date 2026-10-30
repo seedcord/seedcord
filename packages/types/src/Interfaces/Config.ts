@@ -154,9 +154,7 @@ type ConfigKv = KvTypes extends { driver: infer TDriver extends DisposableKvDriv
     ? RegisteredKvField<TDriver>
     : KvField;
 
-/**
- * Main configuration object for Seedcord bot
- */
+/** Main configuration object for Seedcord bot */
 export interface Config extends ConfigKv {
     bot: BotConfig;
     subscribers: SubscribersConfig;
