@@ -6,6 +6,7 @@ import type Bot from './bot';
 // prettier-ignore
 declare module '@seedcord/http' {
     interface Core {
+        kv: (typeof Bot)['kv'];
         pings: (typeof Bot)['pings'];
     }
     interface SlashRegistry {

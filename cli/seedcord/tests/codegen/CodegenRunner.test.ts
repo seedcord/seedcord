@@ -154,13 +154,12 @@ describe('CodegenRunner plugin capabilities', () => {
         expect(output).toContain("import type Bot from '../");
     });
 
-    it('emits no import, no Core block, and no PluginTypes block when nothing is attached', async () => {
+    it('types only core.kv and emits no PluginTypes block when nothing is attached', async () => {
         const root = await tempDir('codegen-');
         await pluginRunner(root, resolve(root, 'bot.ts'), {}, silentLogger).run(false);
 
         const output = await readFile(resolve(root, OUTPUT), 'utf8');
-        expect(output).not.toContain('import type');
-        expect(output).not.toContain('interface Core');
+        expect(output).toContain("    interface Core {\n        kv: (typeof Bot)['kv'];\n    }");
         expect(output).not.toContain('interface PluginTypes');
     });
 });

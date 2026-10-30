@@ -19,6 +19,7 @@ declare class Picker<T extends string> {
     codegen(): Promise<{ values: Record<string, T> }>;
 }
 declare const bot: {
+    kv: unknown;
     cron: { codegen(): Promise<{ ready: true }> };
     first: Picker<'a'>;
     second: Picker<'b'>;
