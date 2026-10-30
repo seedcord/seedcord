@@ -41,6 +41,7 @@
     },
     "devDependencies": {
         "@discordjs/builders": "catalog:deps",
+        "@keyv/sqlite": "6.1.0",
         "@mdx-js/mdx": "catalog:deps",
         "@seedcord/core": "workspace:^",
         "@seedcord/eslint-config": "workspace:^",
@@ -62,6 +63,7 @@
         "@types/react": "catalog:react",
         "@types/react-dom": "catalog:react",
         "cross-env": "catalog:deps",
+        "db0": "catalog:deps",
         "discord-api-types": "catalog:deps",
         "discord.js": "catalog:peer",
         "envapt": "catalog:peer",
@@ -70,6 +72,7 @@
         "eslint-plugin-better-tailwindcss": "catalog:eslint",
         "eslint-plugin-tailwind-canonical-classes": "catalog:eslint",
         "jsdom": "catalog:test",
+        "keyv": "catalog:deps",
         "kysely": "catalog:peer",
         "mdast-util-mdx": "^3.0.0",
         "mdast-util-to-markdown": "catalog:deps",
@@ -82,6 +85,7 @@
         "tailwindcss": "catalog:deps",
         "typescript": "catalog:peer",
         "unified": "^11.0.5",
+        "unstorage": "catalog:deps",
         "vfile": "catalog:deps",
         "vitest": "catalog:test",
         "wrangler": "catalog:peer"

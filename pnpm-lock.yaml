@@ -214,6 +214,9 @@ catalogs:
     cross-env:
       specifier: ^10.1.0
       version: 10.1.0
+    db0:
+      specifier: 0.4.2
+      version: 0.4.2
     es-toolkit:
       specifier: ^1.53.0
       version: 1.53.0
@@ -229,6 +232,9 @@ catalogs:
     ink:
       specifier: ^8.0.0
       version: 8.0.0
+    keyv:
+      specifier: 6.1.0
+      version: 6.1.0
     lucide-react:
       specifier: ^1.51.0
       version: 1.51.0
@@ -271,6 +277,9 @@ catalogs:
     unist-util-visit:
       specifier: ^5.1.0
       version: 5.1.0
+    unstorage:
+      specifier: 2.0.0-beta.0
+      version: 2.0.0-beta.0
     verkit:
       specifier: ^0.5.0
       version: 0.5.0
@@ -669,6 +678,9 @@ importers:
       '@discordjs/builders':
         specifier: catalog:deps
         version: 1.14.1
+      '@keyv/sqlite':
+        specifier: 6.1.0
+        version: 6.1.0(keyv@6.1.0)
       '@mdx-js/mdx':
         specifier: catalog:deps
         version: 3.1.1(supports-color@10.2.2)
@@ -732,6 +744,9 @@ importers:
       cross-env:
         specifier: catalog:deps
         version: 10.1.0
+      db0:
+        specifier: catalog:deps
+        version: 0.4.2
       discord-api-types:
         specifier: ^0.38.52
         version: 0.38.56
@@ -756,6 +771,9 @@ importers:
       jsdom:
         specifier: catalog:test
         version: 30.1.1
+      keyv:
+        specifier: catalog:deps
+        version: 6.1.0
       kysely:
         specifier: catalog:peer
         version: 0.29.6
@@ -792,6 +810,9 @@ importers:
       unified:
         specifier: ^11.0.5
         version: 11.0.5
+      unstorage:
+        specifier: catalog:deps
+        version: 2.0.0-beta.0
       vfile:
         specifier: catalog:deps
         version: 6.0.3
@@ -1109,6 +1130,9 @@ importers:
       '@seedcord/http':
         specifier: workspace:^
         version: link:../../packages/http
+      db0:
+        specifier: catalog:deps
+        version: 0.4.2
       discord-api-types:
         specifier: ^0.38.52
         version: 0.38.56
@@ -1118,6 +1142,9 @@ importers:
       typescript:
         specifier: catalog:peer
         version: 6.0.3
+      unstorage:
+        specifier: catalog:deps
+        version: 2.0.0-beta.0
     devDependencies:
       '@cloudflare/vite-plugin':
         specifier: catalog:peer
@@ -1255,14 +1282,14 @@ importers:
         specifier: catalog:peer
         version: 9.2.0
       keyv:
-        specifier: 6.1.0
+        specifier: catalog:deps
         version: 6.1.0
       unstorage:
-        specifier: 2.0.0-beta.0
+        specifier: catalog:deps
         version: 2.0.0-beta.0
       unstorage-v1:
         specifier: npm:unstorage@1.17.6
-        version: unstorage@1.17.6
+        version: unstorage@1.17.6(db0@0.4.2)
       vite:
         specifier: catalog:peer
         version: 8.3.4(@types/node@26.1.2)(esbuild@0.28.1)(jiti@2.7.0)(tsx@4.23.15)(yaml@2.9.1)
@@ -3763,6 +3790,12 @@ packages:
   '@jridgewell/trace-mapping@0.3.9':
     resolution: {integrity: sha512-3Belt6tdc8bPgAtbcmdtNJlirVoTmEb5e2gC94PnkwEW9jI6CAHUeoG85tjWP5WquqfavoMtMwiG4P926ZKKuQ==}
 
+  '@keyv/sqlite@6.1.0':
+    resolution: {integrity: sha512-298muS2rnBHP39QlH80NXmkWuwy5sLY5S0a6+d7aSQFLNrsk5q4PDCzYqKFGZFyj1Ir+yFwumPmVsZeRrKIIwQ==}
+    engines: {node: '>= 22.19.0'}
+    peerDependencies:
+      keyv: ^6.1.0
+
   '@leeoniya/ufuzzy@1.0.19':
     resolution: {integrity: sha512-0pikDeYt0IHEUPza5RTCDXc/17S1pTrYnReEMp8Aa6k1ovzw5QdZLwicW8TjljwEZRb6oYag0xmALohrcq/yOQ==}
 
@@ -6159,6 +6192,10 @@ packages:
     engines: {node: '>=6.0.0'}
     hasBin: true
 
+  better-sqlite3@13.0.3:
+    resolution: {integrity: sha512-RbOBxmLBG8uvFUc15X9+9SFemKcQ0WBuISBVkpuiaUB2qblC8UWlHEjdWVoZ8AdhSwmoEgsiXKfopX0CQxaACQ==}
+    engines: {node: '>=22'}
+
   bidi-js@1.1.0:
     resolution: {integrity: sha512-fX1Onk0tdVPC7obPWB5EbJ1z7NVhLq4m2xZLq2YXBkxzMXIGRpNMU88n0EPgWseKl12J7zXs7qrDxPK4sRs2fg==}
 
@@ -6467,6 +6504,9 @@ packages:
   data-view-byte-offset@1.0.1:
     resolution: {integrity: sha512-BS8PfmtDGnrgYdOonGZQdLZslWIeCGFP9tpan0hi1Co2Zr2NKADsvGYA8XxuG/4UWgJ6Cjtv+YJnB6MM69QGlQ==}
     engines: {node: '>= 0.4'}
+
+  db0@0.4.2:
+    resolution: {integrity: sha512-OCBz+HiE8NgfQdlvvNrzdE+4RhmoAV3QnkxOhLU40bQH/N1msRwmPBvVyXmCUDmjhDl1+t4CFcSCccmi5jf+VQ==}
 
   debounce-fn@6.0.0:
     resolution: {integrity: sha512-rBMW+F2TXryBwB54Q0d8drNEI+TfoS9JpNTAoVpukbWEhjXQq4rySFYLaqXMFXwdv61Zb2OHtj5bviSoimqxRQ==}
@@ -8491,6 +8531,10 @@ packages:
         optional: true
       sass:
         optional: true
+
+  node-addon-api@8.9.2:
+    resolution: {integrity: sha512-VijLXbi3UACN69I0JVXJsX4tjACjNoQDgv2gTF6sx2wWEi8tkSg2eX8p5gSIFi8z2+DL3oHmY6OyKce38SDolg==}
+    engines: {node: ^18 || ^20 || >= 21}
 
   node-exports-info@1.6.0:
     resolution: {integrity: sha512-pyFS63ptit/P5WqUkt+UUfe+4oevH+bFeIiPPdfb0pFeYEu/1ELnJu5l+5EcTKYL5M7zaAa7S8ddywgXypqKCw==}
@@ -11823,6 +11867,12 @@ snapshots:
       '@jridgewell/resolve-uri': 3.1.2
       '@jridgewell/sourcemap-codec': 1.6.0
 
+  '@keyv/sqlite@6.1.0(keyv@6.1.0)':
+    dependencies:
+      better-sqlite3: 13.0.3
+      hookified: 3.1.0
+      keyv: 6.1.0
+
   '@leeoniya/ufuzzy@1.0.19': {}
 
   '@manypkg/find-root@3.1.0':
@@ -13873,6 +13923,10 @@ snapshots:
 
   baseline-browser-mapping@2.11.15: {}
 
+  better-sqlite3@13.0.3:
+    dependencies:
+      node-addon-api: 8.9.2
+
   bidi-js@1.1.0:
     dependencies:
       require-from-string: 2.0.2
@@ -14164,6 +14218,8 @@ snapshots:
       call-bound: 1.0.4
       es-errors: 1.3.0
       is-data-view: 1.0.2
+
+  db0@0.4.2: {}
 
   debounce-fn@6.0.0:
     dependencies:
@@ -16921,6 +16977,8 @@ snapshots:
       - '@types/node'
       - babel-plugin-macros
 
+  node-addon-api@8.9.2: {}
+
   node-exports-info@1.6.0:
     dependencies:
       array.prototype.flatmap: 1.3.3
@@ -18449,7 +18507,7 @@ snapshots:
       '@unrs/resolver-binding-win32-ia32-msvc': 1.12.2
       '@unrs/resolver-binding-win32-x64-msvc': 1.12.2
 
-  unstorage@1.17.6:
+  unstorage@1.17.6(db0@0.4.2):
     dependencies:
       anymatch: 3.1.3
       chokidar: 5.0.0
@@ -18459,6 +18517,8 @@ snapshots:
       node-fetch-native: 1.6.7
       ofetch: 1.5.1
       ufo: 1.6.4
+    optionalDependencies:
+      db0: 0.4.2
 
   unstorage@2.0.0-beta.0: {}
 

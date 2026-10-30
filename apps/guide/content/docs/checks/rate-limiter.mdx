@@ -148,34 +148,7 @@ async function clearAwards(memberId: string): Promise<void> {
 
 The rate limiter saves its windows through the driver you pass as `kv` in the bot's config. Without one, seedcord uses a [`MemoryDriver`](ref:core/MemoryDriver), which keeps them in the memory of one process. A restart clears every window. On a serverless deploy each running copy keeps its own counts, and on [Workers](/build/workers) each isolate is one copy.
 
-To keep the windows through a restart, pass a driver over storage that keeps its data after the process exits, like a [`KeyvDriver`](ref:core/KeyvDriver) over SQLite or an [`UnstorageDriver`](ref:core/UnstorageDriver) over the filesystem.
-
-```ts twoslash title="src/bot.ts"
-import { resolve } from 'node:path';
-
-import { KeyvDriver, Seedcord } from '@seedcord/gateway';
-import { GatewayIntentBits } from 'discord.js';
-
-declare const keyv: ConstructorParameters<typeof KeyvDriver>[0];
-
-// ---cut---
-export const seedcord = new Seedcord({
-    kv: new KeyvDriver(keyv),
-    bot: {
-        clientOptions: { intents: [GatewayIntentBits.Guilds] },
-        interactions: {
-            path: resolve(import.meta.dirname, './handlers')
-        },
-        commands: {
-            path: resolve(import.meta.dirname, './commands')
-        },
-        events: { path: null }
-    },
-    subscribers: { path: null }
-});
-```
-
-`keyv` is your own Keyv instance. Every `charge` on this page and every `Cooldown` gate now writes through that `KeyvDriver`.
+To keep the windows through a restart, pass a driver over a file or a database, as [Drivers](/built-ins/drivers) shows. Every `charge` on this page and every `Cooldown` gate then writes through it.
 
 <Callout type="warning">
 

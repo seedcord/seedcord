@@ -111,8 +111,8 @@
         "@seedcord/tsdown-config": "workspace:^",
         "@seedcord/vitest-config": "workspace:^",
         "envapt": "catalog:peer",
-        "keyv": "6.1.0",
-        "unstorage": "2.0.0-beta.0",
+        "keyv": "catalog:deps",
+        "unstorage": "catalog:deps",
         "unstorage-v1": "npm:unstorage@1.17.6",
         "vite": "catalog:peer"
     },

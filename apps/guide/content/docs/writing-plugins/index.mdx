@@ -195,4 +195,44 @@ Uptime rejected its options. Label is empty.
 
 ## Logging
 
-`this.logger` exists from the constructor onward and prints under your class name. Each log line goes to a channel, a named stream that a bot can filter or silence. A line logged in the constructor goes to the default channel. From `init()` on, `attach` has set the channel to the key, so if someone attaches your plugin as `metrics`, its lines go to the `metrics` channel. [The log channel section](/plugins#the-key-is-also-a-log-channel) shows how a bot filters them.
+`this.logger` exists from the constructor onward and prints under your class name. Each log line goes to a channel, a named stream that a bot can filter or silence. `attach` sets the channel to the key before your constructor runs, so if someone attaches your plugin as `metrics`, every line it logs goes to the `metrics` channel. [The log channel section](/plugins#the-key-is-also-a-log-channel) shows how a bot filters them.
+
+## Keeping records
+
+A plugin that schedules jobs or remembers where a sync left off needs that state back after a restart. `this.kv` is a [kv store](/built-ins/) of your plugin's own. It writes through the driver the bot passes as `kv`, under your plugin's attach key, so its records stay apart from `core.kv` and from every other plugin's.
+
+```ts twoslash
+import { Plugin } from '@seedcord/gateway';
+// ---cut---
+interface Job {
+    channelId: string;
+    runAt: string;
+}
+
+export class Reminders extends Plugin {
+    private readonly jobs = this.kv.collection<Job>('job');
+
+    public async init(): Promise<void> {}
+
+    public override async ready(): Promise<void> {
+        for await (const [id, job] of this.jobs.entries()) {
+            this.schedule(id, job);
+        }
+    }
+
+    public async add(id: string, job: Job): Promise<void> {
+        await this.jobs.set(id, job);
+        this.schedule(id, job);
+    }
+
+    private schedule(id: string, job: Job): void {
+        this.logger.debug(`${id} runs at ${job.runAt}`);
+    }
+}
+```
+
+`add` saves a job before it schedules it, so `ready()` finds the job again after a restart. The restore runs in `ready()`, after the bot has logged in, because a job that is already due sends its message right away.
+
+`jobs` reads `this.kv` in a field initializer, which works because `attach` sets it before your constructor runs. The constructor and every method can read it too. If a bot attaches `Reminders` twice under two keys, each one keeps its own jobs. If the bot renames the key, the records under the old key stay in the driver and the plugin starts empty.
+
+A plugin you build with `new` yourself, as in a test, has no attach key. Reading `this.kv` on it throws `CorePluginKvOutsideAttach`.

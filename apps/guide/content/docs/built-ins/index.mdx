@@ -1,0 +1,161 @@
+---
+title: The kv store
+description: Keep settings, counters, and saved jobs between interactions with core.kv, as typed records that can expire and, with a driver, outlast a restart.
+---
+
+Your bot has to remember some things after a handler returns, like a member's timezone, how often they claimed a daily reward, or a reminder due tomorrow. A `Map` at the top of a module holds them until the process restarts. Every handler that needs it imports it. Nothing removes an entry once it's stale.
+
+`this.core.kv` keeps them instead. Its records can expire, and with a [driver](/built-ins/drivers) they last through a restart. You ask it for a [collection](ref:core/KvCollection), which is the set of records of one type stored under one name, then read and write each record by an id.
+
+```ts twoslash title="src/handlers/Timezone.ts"
+import { SlashHandler, SlashRoute } from '@seedcord/gateway';
+
+interface Preferences {
+    timezone: string;
+    updatedAt: Date;
+}
+
+@SlashRoute('timezone')
+export class Timezone extends SlashHandler<'timezone'> {
+    public async execute(): Promise<void> {
+        const preferences =
+            this.core.kv.collection<Preferences>('preferences');
+
+        await preferences.set(this.event.user.id, {
+            timezone: this.options.getString('zone'),
+            updatedAt: new Date()
+        });
+        await this.reply('Saved.');
+    }
+}
+```
+
+`set` stores the record under the member's id and replaces what that id held before. An id is any string. A Discord id is the usual one.
+
+Every handler that asks for `'preferences'` gets the same records. Nothing checks that they all pass the same type, so export `Preferences` from one file and import it wherever you read the collection.
+
+## Records are stored as JSON
+
+A driver stores strings, so seedcord turns each record into JSON when you store it and parses it when you read it back. Another handler reading the same collection gets this:
+
+```ts twoslash
+import type { CoreBase } from '@seedcord/gateway';
+
+interface Preferences {
+    timezone: string;
+    updatedAt: Date;
+}
+
+declare const core: CoreBase;
+declare const userId: string;
+// ---cut---
+const preferences = core.kv.collection<Preferences>('preferences');
+const saved = await preferences.get(userId);
+const updatedAt = saved?.updatedAt;
+//    ^?
+```
+
+`updatedAt` reads back as a `string`, because JSON keeps a `Date` as its ISO text. Pass it to `new Date()` to get the date again. `get` resolves to `undefined` when nothing is stored under the id.
+
+A `Set`, a `Map`, a function, and a `bigint` have no JSON form at all. If the record type holds one, the `collection()` call fails to compile:
+
+```ts twoslash
+// @errors: 2345
+import type { CoreBase } from '@seedcord/gateway';
+
+declare const core: CoreBase;
+// ---cut---
+const seen = core.kv.collection<{ ids: Set<string> }>('seen');
+```
+
+Store an array of ids there instead.
+
+## Records that expire
+
+Some records only matter for a while, like a code you sent someone to confirm. Pass a third argument to `set` to keep the record for that many milliseconds:
+
+```ts twoslash
+import type { CoreBase } from '@seedcord/gateway';
+
+declare const core: CoreBase;
+declare const userId: string;
+// ---cut---
+const TEN_MINUTES_MS = 600_000;
+
+const codes = core.kv.collection<string>('confirm-code');
+await codes.set(userId, '4821', TEN_MINUTES_MS);
+```
+
+Once `TEN_MINUTES_MS` has passed, `codes.get(userId)` resolves to `undefined` and deletes the record. Without a third argument, the record stays until you call `delete`.
+
+seedcord also hands the ttl to the driver. If the storage behind it can't expire keys itself, like unstorage's filesystem driver, an expired record your code never reads again stays in storage.
+
+## Changing a record two interactions share
+
+A `get` followed by a `set` can overwrite a change. If two people claim `/daily` at the same moment, both handlers read `4` and both write `5`, so one claim goes uncounted. `update` runs your function on the current record and stores the result before the next call on that id starts:
+
+```ts twoslash title="src/handlers/Daily.ts"
+import { SlashHandler, SlashRoute } from '@seedcord/gateway';
+// ---cut---
+@SlashRoute('daily')
+export class Daily extends SlashHandler<'daily'> {
+    public async execute(): Promise<void> {
+        const claims =
+            this.core.kv.collection<number>('daily-claims');
+        const total = await claims.update(
+            this.event.user.id,
+            (count) => (count ?? 0) + 1
+            //^?
+        );
+
+        await this.reply(`You've claimed ${total} times.`);
+    }
+}
+```
+
+`count` is the current record, or `undefined` when there isn't one. Like a `get` result, `count` has been through JSON. Your function returns the type you store, and `update` resolves to what it stored.
+
+Calls to `update`, `set`, and `delete` on one id run one after another, so the second claim reads `5` and writes `6`. The third argument works like `set`'s. If the expiry depends on the record, pass a function that takes the record and returns the milliseconds.
+
+<Callout type="warning">
+
+That order holds inside one process. Two processes that share one driver's storage, like two copies of your bot or two Workers isolates, can both read a record before either one writes, so one change is lost. Most bots run as one process, where `update` is exact.
+
+</Callout>
+
+## Reading every record
+
+`get` needs an id, and after a restart nothing in memory holds the ids your bot saved. `entries()` yields an `[id, record]` pair for every record in the collection that hasn't expired:
+
+```ts twoslash
+import type { CoreBase } from '@seedcord/gateway';
+
+interface Preferences {
+    timezone: string;
+    updatedAt: Date;
+}
+
+declare const core: CoreBase;
+// ---cut---
+const preferences = core.kv.collection<Preferences>('preferences');
+
+for await (const [userId, saved] of preferences.entries()) {
+    console.log(userId, saved.timezone);
+}
+```
+
+To restore scheduled jobs after a restart, put them in a plugin, as [Keeping records](/writing-plugins/#keeping-records) shows.
+
+The Keyv and unstorage drivers read every key in the storage to find one collection's records, so a large store makes `entries()` slow. Call it at startup or from a timer. It throws on a [driver that can't list its keys](/built-ins/drivers#keyv).
+
+## Where the records go
+
+Every read and write uses the driver you pass as `kv` in your bot's config. If you leave `kv` out, seedcord uses a [`MemoryDriver`](ref:core/MemoryDriver), which keeps records in the memory of one process. A restart empties it. [Drivers](/built-ins/drivers) shows the ones that keep records in a file or a database.
+
+<Callout type="transport" only="http">
+
+On [Cloudflare Workers](/build/workers) each isolate, one running copy of your worker, has its own `MemoryDriver`. Cloudflare starts a new isolate whenever it needs one, and the new one starts empty. Pass a [driver over D1](/built-ins/drivers#on-cloudflare-workers) to share records between them.
+
+</Callout>
+
+A plugin keeps its records in the same driver through `this.kv`, separate from the ones your handlers keep. [Writing a plugin](/writing-plugins/#keeping-records) shows how.

@@ -15,7 +15,7 @@ Only an http bot runs on Workers. `@seedcord/gateway` holds a websocket to Disco
 
 A Worker has no process that starts once. The bot starts on the first POST that reaches each isolate. That request loads your handlers, runs the startup tasks, and runs every plugin's [`init()`](/plugins/lifecycle#on-cloudflare-workers), and any request that arrives meanwhile waits for it. Cloudflare can start a new isolate whenever it likes, and each new one pays that cost again.
 
-Anything the bot keeps in memory lives in one isolate. The default `kv` behind [cooldowns and charges](/checks/rate-limiter) resets with each new isolate, and two isolates keep separate counts. Pass a durable `kv` driver in the bot's config if a limit has to hold across them.
+Each isolate has its own memory. By default, [`core.kv`](/built-ins/) and [cooldowns](/checks/rate-limiter) keep their records there, so a new isolate starts with none and two isolates can't see each other's. To share them, store them in D1, as [Drivers](/built-ins/drivers#on-cloudflare-workers) shows.
 
 An isolate also stops without warning, since Cloudflare doesn't give a worker a shutdown hook. `shutdown.addTask` throws there, and the config doesn't take `lifecycle` or `port`. Some plugins need a server too. [Mongoose](/plugins/mongoose) and [Kysely](/plugins/kysely) declare themselves server-only, so attaching either one to an edge bot fails.
 

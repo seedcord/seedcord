@@ -1,0 +1,109 @@
+---
+title: Writing a driver
+description: Connect core.kv to storage that Keyv and unstorage don't support by writing a KvDriver, a class with four methods and a way to close it.
+---
+
+[`KeyvDriver`](ref:core/KeyvDriver) and [`UnstorageDriver`](ref:core/UnstorageDriver) wrap Keyv and unstorage. If either library already has an adapter for your storage, use it with the [shipped driver](/built-ins/drivers). Your storage may be one neither supports, like a database client your bot already opens or a service with its own SDK. A driver of your own connects `core.kv` to it.
+
+A driver is a class that implements [`KvDriver`](ref:types/KvDriver). It only ever stores strings, since seedcord turns every record into JSON before it calls the driver. This one keeps them in SQLite through Node's built-in `node:sqlite`:
+
+```ts twoslash title="src/SqliteDriver.ts"
+import { DatabaseSync } from 'node:sqlite';
+
+import type { KvDriver, KvEntry } from '@seedcord/gateway';
+
+interface Row {
+    key: string;
+    value: string;
+}
+
+export class SqliteDriver implements KvDriver, Disposable {
+    private readonly db = new DatabaseSync('./kv.sqlite');
+
+    constructor() {
+        this.db.exec(
+            'CREATE TABLE IF NOT EXISTS kv (key TEXT PRIMARY KEY, value TEXT NOT NULL)'
+        );
+    }
+
+    public get(key: string): string | undefined {
+        const row = this.db
+            .prepare('SELECT key, value FROM kv WHERE key = ?')
+            .get(key) as Row | undefined;
+        return row?.value;
+    }
+
+    public set(key: string, value: string): void {
+        this.db
+            .prepare(
+                'INSERT OR REPLACE INTO kv (key, value) VALUES (?, ?)'
+            )
+            .run(key, value);
+    }
+
+    public delete(key: string): void {
+        this.db.prepare('DELETE FROM kv WHERE key = ?').run(key);
+    }
+
+    public *entries(prefix: string): Iterable<KvEntry> {
+        const rows = this.db
+            .prepare(
+                'SELECT key, value FROM kv WHERE substr(key, 1, ?) = ?'
+            )
+            .iterate(prefix.length, prefix) as Iterable<Row>;
+        for (const row of rows) yield [row.key, row.value];
+    }
+
+    public [Symbol.dispose](): void {
+        this.db.close();
+    }
+}
+```
+
+`get` returns `undefined` for a key that isn't stored, and `set` replaces what the key held, which is why the sample uses `INSERT OR REPLACE`. Every method returns its value directly, because `node:sqlite` is synchronous. A driver that uses a network client returns promises from the same methods, and `entries` can be an `async *entries` generator. seedcord awaits each call, so a driver can mix both styles.
+
+`seedcord codegen` and the build load `bot.ts`, and loading it runs this constructor. Opening a local file there costs nothing. If your driver talks to a server, connect on the first call, so codegen and the build don't open a connection to it.
+
+## Listing keys
+
+`entries(prefix)` yields every stored key that starts with `prefix`, prefix included, as a [`KvEntry`](ref:types/KvEntry), a `[key, value]` pair. [`collection.entries()`](/built-ins/#reading-every-record) calls it.
+
+The sample matches the prefix with `substr(key, 1, ?) = ?`. A `LIKE 'prefix%'` query looks simpler, but it can match keys from other collections, because `LIKE` treats `%` and `_` as wildcards. Both turn up in the prefixes seedcord passes. It percent-encodes a `:` or a `/` in a collection name, so a collection called `user:settings` has the prefix `app:user%3Asettings:`. A `_` in a name stays as written.
+
+If your storage can't list its keys, throw an error from `entries` that says so. The collection's `get`, `set`, `update`, and `delete` keep working without it.
+
+## The ttl
+
+`set` gets a third argument if the caller passed a ttl, the record's lifetime in milliseconds. The sample ignores it, because seedcord also writes the expiry time into every record and checks it when it reads the record. If that time has passed, `get` returns `undefined` and deletes the record. You don't write any of that.
+
+If your storage can expire a key itself, like Redis with the `PX` option of `SET`, pass the ttl to it. Otherwise an expired record your code never reads again stays in storage.
+
+## Closing the connection
+
+Your driver holds a connection or a file open, and seedcord closes it for you. It calls `[Symbol.dispose]()` after the last [shutdown phase](/plugins/lifecycle) of a node bot, which is why `config.kv` takes only a driver that implements `Disposable` or `AsyncDisposable`. If your client closes asynchronously, implement `AsyncDisposable` with `[Symbol.asyncDispose]` instead. If your driver implements neither, TypeScript rejects it as `kv`.
+
+If the client is one your bot also uses elsewhere, close it where you opened it, and leave `[Symbol.dispose]` empty.
+
+## Passing it to the bot
+
+```ts title="src/bot.ts"
+import { Seedcord } from '@seedcord/gateway';
+import { GatewayIntentBits } from 'discord.js';
+
+import { SqliteDriver } from './SqliteDriver';
+
+export const seedcord = new Seedcord({
+    kv: new SqliteDriver(),
+    bot: {
+        clientOptions: { intents: [GatewayIntentBits.Guilds] },
+        interactions: { path: './handlers' },
+        commands: { path: './commands' },
+        events: { path: null }
+    },
+    subscribers: { path: null }
+});
+
+export default seedcord;
+```
+
+Every collection, every plugin's `this.kv`, and the rate limiter now store and read their records with `SqliteDriver`. If you add methods of your own to it, register its type in [`KvTypes`](/built-ins/drivers#calling-the-library-through-corekvdriver) to call them on `core.kv.driver`.

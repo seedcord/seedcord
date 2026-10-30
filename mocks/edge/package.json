@@ -30,8 +30,10 @@
     "dependencies": {
         "@discordjs/builders": "catalog:deps",
         "@seedcord/http": "workspace:^",
+        "db0": "catalog:deps",
         "discord-api-types": "catalog:deps",
-        "envapt": "catalog:peer"
+        "envapt": "catalog:peer",
+        "unstorage": "catalog:deps"
     },
     "devDependencies": {
         "@cloudflare/vite-plugin": "catalog:peer",

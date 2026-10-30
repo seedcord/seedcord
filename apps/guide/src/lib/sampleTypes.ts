@@ -46,6 +46,8 @@ const REGISTRIES = `
         };
         roles: { options: {}; cache: 'cached' };
         whoami: { options: {}; cache: 'cached' };
+        timezone: { options: { zone: { kind: 'string'; required: true } }; cache: 'cached' };
+        daily: { options: {}; cache: 'cached' };
         history: { options: {}; cache: 'cached' };
         feed: { options: {}; cache: 'cached' };
         uptime: { options: {}; cache: 'cached' };
