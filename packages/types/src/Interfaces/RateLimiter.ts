@@ -32,16 +32,15 @@ export interface RateLimitResult {
 }
 
 /**
- * Sliding-window rate limiting keyed by caller-built strings, available as `core.rateLimiter`.
- *
- * Async so one interface spans the in-memory default and durable store backends. The in-memory
- * implementation resolves synchronously, so the `await` costs no event-loop yield.
+ * Sliding-window rate limiting keyed by caller-built strings, available as `core.rateLimiter`. It
+ * saves its counts in `config.kv`.
  */
 export interface IRateLimiter {
     /**
-     * Records a use of `key` if the window has a free slot, in one atomic step.
+     * Records a use of `key` if the window has a free slot. Charges on one key run one at a time in
+     * this process.
      *
-     * @param key - The bucket to charge. Build it from your own scope, or with `buildKey` from `@seedcord/rate-limiter`.
+     * @param key - The bucket to charge. Build it from your own scope, or with `buildKey`.
      * @param window - The usage window to apply.
      */
     charge(key: string, window: RateLimitWindow): Promise<RateLimitResult>;

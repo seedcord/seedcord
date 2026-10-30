@@ -1,13 +1,13 @@
 import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
 
-import { MemoryRateLimiter } from '#src/MemoryRateLimiter';
+import { memoryRateLimiter } from '#tests/utils/memoryRateLimiter';
 
-describe('MemoryRateLimiter sliding window', () => {
+describe('KvRateLimiter sliding window', () => {
     beforeEach(() => vi.useFakeTimers());
     afterEach(() => vi.useRealTimers());
 
     it('keeps a slot limited through windowMs-1 and frees it at windowMs', async () => {
-        const limiter = new MemoryRateLimiter();
+        const limiter = memoryRateLimiter();
         const window = { windowMs: 1000 };
         await limiter.charge('user', window);
 
@@ -19,7 +19,7 @@ describe('MemoryRateLimiter sliding window', () => {
     });
 
     it('frees one staggered slot at a time as each expiry passes', async () => {
-        const limiter = new MemoryRateLimiter();
+        const limiter = memoryRateLimiter();
         const window = { windowMs: 1000, limit: 3 };
         const start = Date.now();
 
@@ -42,7 +42,7 @@ describe('MemoryRateLimiter sliding window', () => {
     });
 
     it('reports resetAt as the earliest live expiry', async () => {
-        const limiter = new MemoryRateLimiter();
+        const limiter = memoryRateLimiter();
         const window = { windowMs: 1000, limit: 2 };
         const start = Date.now();
 
@@ -56,7 +56,7 @@ describe('MemoryRateLimiter sliding window', () => {
     });
 
     it('counts only live uses and excludes an expired one from resetAt', async () => {
-        const limiter = new MemoryRateLimiter();
+        const limiter = memoryRateLimiter();
         const window = { windowMs: 1000, limit: 2 };
         const start = Date.now();
 
@@ -71,5 +71,16 @@ describe('MemoryRateLimiter sliding window', () => {
         const peeked = await limiter.peek('user', window);
         expect(peeked.limited).toBe(true);
         expect(peeked.resetAt).toBe(start + 1400);
+    });
+
+    it('keeps a long-window use after a shorter window charges the same key', async () => {
+        const limiter = memoryRateLimiter();
+        const daily = { windowMs: 86_400_000 };
+
+        await limiter.charge('user', daily);
+        await limiter.charge('user', { windowMs: 1000, limit: 2 });
+
+        vi.advanceTimersByTime(1000);
+        expect(await limiter.peek('user', daily)).toMatchObject({ limited: true });
     });
 });

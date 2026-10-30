@@ -1,13 +1,13 @@
 import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
 
-import { MemoryRateLimiter } from '#src/MemoryRateLimiter';
+import { memoryRateLimiter } from '#tests/utils/memoryRateLimiter';
 
-describe('MemoryRateLimiter concurrent charges', () => {
+describe('KvRateLimiter concurrent charges', () => {
     beforeEach(() => vi.useFakeTimers());
     afterEach(() => vi.useRealTimers());
 
     it('admits exactly limit charges when many requests arrive in one frozen tick', async () => {
-        const limiter = new MemoryRateLimiter();
+        const limiter = memoryRateLimiter();
         const window = { windowMs: 1000, limit: 3 };
 
         const results = await Promise.all(Array.from({ length: 5 }, () => limiter.charge('user', window)));

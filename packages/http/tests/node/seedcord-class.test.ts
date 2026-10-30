@@ -1,5 +1,6 @@
 import path from 'node:path';
 
+import { MemoryDriver } from '@seedcord/core';
 import { ShutdownPhase, shutdownOf } from '@seedcord/core/node/internal';
 import { describe, expect, it } from 'vitest';
 
@@ -35,6 +36,16 @@ describe('http Seedcord class', () => {
         const response = await postSigned(host, signer, JSON.stringify(slashPayload('ping')));
 
         expect(response.status).toBe(202);
+    });
+
+    it('backs core.kv and core.rateLimiter with config.kv', async () => {
+        const driver = new MemoryDriver();
+        await using host = new Seedcord({ ...config(), kv: driver });
+
+        await host.rateLimiter.charge('user', { windowMs: 60_000 });
+
+        expect(host.kv.driver).toBe(driver);
+        expect(await driver.keys('seedcord:')).toHaveLength(1);
     });
 
     it('shutdown closes the server', async () => {

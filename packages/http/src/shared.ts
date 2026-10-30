@@ -24,7 +24,6 @@ export { HmrModuleHandler } from '@seedcord/core/hmr';
 export * from '@seedcord/errors';
 export * from '@seedcord/event-emitter';
 export * from '@seedcord/logger';
-export * from '@seedcord/rate-limiter';
 export type * from '@seedcord/types';
 export * from '@seedcord/utils';
 

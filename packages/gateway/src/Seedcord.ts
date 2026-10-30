@@ -5,11 +5,11 @@ import {
     busLoggerOf,
     connectDevChannel,
     HmrManager,
+    openKv,
     SubscriberLoader
 } from '@seedcord/core/internal';
 import { CoordinatedShutdown, CoordinatedStartup, ServerHost } from '@seedcord/core/node';
 import { HealthCheck, shutdownOf, StartupPhase } from '@seedcord/core/node/internal';
-import { MemoryRateLimiter } from '@seedcord/rate-limiter';
 import { HostAugmentTarget, HostVersion, SeedcordBrand } from '@seedcord/types/internal';
 import { Envapter } from 'envapt';
 
@@ -18,7 +18,8 @@ import { version as packageVersion } from './version';
 
 import type { GatewayConfig } from './interfaces/Config';
 import type { REST } from '@discordjs/rest';
-import type { IRateLimiter } from '@seedcord/types';
+import type { Kv } from '@seedcord/core';
+import type { IRateLimiter, KvDriver } from '@seedcord/types';
 import type { SeedcordInstance } from '@seedcord/types/internal';
 
 /**
@@ -26,7 +27,7 @@ import type { SeedcordInstance } from '@seedcord/types/internal';
  * coordinated startup and shutdown. Attach plugins with `attach()`.
  */
 // an `implements Core` clause breaks a bot's full lib check once codegen adds its plugins to Core
-export class Seedcord extends ServerHost<'gateway'> implements SeedcordInstance {
+export class Seedcord<TDriver extends KvDriver = KvDriver> extends ServerHost<'gateway'> implements SeedcordInstance {
     // the CLI reads these to detect and augment the instance
     /** @internal */
     public readonly [SeedcordBrand] = true;
@@ -57,12 +58,15 @@ export class Seedcord extends ServerHost<'gateway'> implements SeedcordInstance 
     /** @see {@link IRateLimiter} */
     public readonly rateLimiter: IRateLimiter;
 
+    /** @see {@link Kv} */
+    public readonly kv: Kv<TDriver>;
+
     /**
      * @param config - Bot configuration including paths and Discord client options
      * @throws A **SeedcordError** when another `Seedcord` exists in this process and has not shut down.
      * @throws A **SeedcordError** when the running Node or Bun is older than the range in `engines`.
      */
-    constructor(public readonly config: GatewayConfig) {
+    constructor(public readonly config: GatewayConfig & { kv?: TDriver }) {
         super('gateway', new CoordinatedShutdown(config.lifecycle?.shutdownDeadline), new CoordinatedStartup());
 
         bindBotColor(() => this.config.botColor);
@@ -73,7 +77,7 @@ export class Seedcord extends ServerHost<'gateway'> implements SeedcordInstance 
         this.#subscribers = new SubscriberLoader(this.bus, config.subscribers.path);
         this.bot = new Bot(this);
         this.rest = this.bot.client.rest;
-        this.rateLimiter = config.store ?? new MemoryRateLimiter();
+        ({ kv: this.kv, rateLimiter: this.rateLimiter } = openKv(config.kv));
         this.#healthCheck = HealthCheck.fromOption(shutdownOf(this), config.healthCheck);
 
         this.#registerStartupTasks();

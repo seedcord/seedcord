@@ -175,7 +175,6 @@ Both transports depend on these, so a bot gets them without installing them. Eac
 | [`@seedcord/errors`](packages/errors) | [![version](https://img.shields.io/npm/v/%40seedcord%2Ferrors?style=flat-square&label=npm&labelColor=1f1f1f&color=c8341f)](packages/errors/CHANGELOG.md) | typed errors with registered codes |
 | [`@seedcord/utils`](packages/utils) | [![version](https://img.shields.io/npm/v/%40seedcord%2Futils?style=flat-square&label=npm&labelColor=1f1f1f&color=c8341f)](packages/utils/CHANGELOG.md) | type helpers and small functions |
 | [`@seedcord/types`](packages/types) | [![version](https://img.shields.io/npm/v/%40seedcord%2Ftypes?style=flat-square&label=npm&labelColor=1f1f1f&color=c8341f)](packages/types/CHANGELOG.md) | config shapes and shared types |
-| [`@seedcord/rate-limiter`](packages/rate-limiter) | [![version](https://img.shields.io/npm/v/%40seedcord%2Frate-limiter?style=flat-square&label=npm&labelColor=1f1f1f&color=c8341f)](packages/rate-limiter/CHANGELOG.md) | rate limiting and key building |
 | [`@seedcord/event-emitter`](packages/event-emitter) | [![version](https://img.shields.io/npm/v/%40seedcord%2Fevent-emitter?style=flat-square&label=npm&labelColor=1f1f1f&color=c8341f)](packages/event-emitter/CHANGELOG.md) | node-free typed event emitter with `waitFor` |
 
 <!-- prettier-ignore-end -->

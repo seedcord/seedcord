@@ -9,4 +9,3 @@ export type * from './LogSink';
 export type * from './RateLimiter';
 export type * from './ReplyResponse';
 export type * from './SendOpts';
-export type * from './Store';

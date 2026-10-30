@@ -214,4 +214,4 @@ If two requests for the same key arrive at the same moment, both can read a free
 
 ## Keeping windows across restarts
 
-[`core.rateLimiter`](ref:types/IRateLimiter) holds the cooldown windows and counts them in memory by default. A restart clears every cooldown, and on a serverless deploy each running copy keeps its own counts. A durable [`store`](/checks/rate-limiter) keeps the windows through both.
+[`core.rateLimiter`](ref:types/IRateLimiter) holds the cooldown windows and counts them in memory by default. A restart clears every cooldown, and on a serverless deploy each running copy keeps its own counts. A durable [`kv` driver](/checks/rate-limiter#keeping-counts-across-restarts) keeps the windows through both.

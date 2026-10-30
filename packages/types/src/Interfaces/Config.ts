@@ -2,8 +2,8 @@ import type { BotColor } from '#src/Types/Colors';
 import type { CustomIdMatcher } from './CustomId';
 import type { EmojiConfig } from './EmojiMap';
 import type { ErrorsConfig } from './Errors';
+import type { KvDriver } from './Kv';
 import type { LoggerConfig } from './LogSink';
-import type { Store } from './Store';
 
 // interactions, commands, services, bus subscribers
 
@@ -163,10 +163,10 @@ export interface Config {
     ownerIds?: string[];
 
     /**
-     * The in-memory default resets on restart and is per-isolate on serverless. Pass a durable store
-     * to keep framework state across restarts and isolates.
+     * Where seedcord, plugins, and your handlers keep state. The default `MemoryDriver` loses
+     * everything on restart. Pass a `KeyvDriver`, an `UnstorageDriver`, or your own driver to keep it.
      */
-    store?: Store<'charge'>;
+    kv?: KvDriver;
 
     /**
      * Logging level, sinks, and per-channel overrides. Omitted fields keep the transport's defaults.

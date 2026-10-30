@@ -7,6 +7,7 @@ import { declaredScopeOf, extendsThisCorePlugin, pluginLoggerOf, resolvedLifecyc
 import { splitPluginKey } from './splitPluginKey';
 
 import type { CoreBase } from '#interfaces/CoreBase';
+import type { Kv } from '#src/kv/Kv';
 import type { Bus } from '#subscribers/Bus';
 import type { ResolvedPluginLifecycleSpec } from './lifecycle';
 import type { DeclaredScope, Runtime, Transport } from './options';
@@ -32,6 +33,7 @@ export abstract class PluginHost<BotT extends Transport, BotRt extends Runtime> 
     public abstract readonly applicationId: string;
     public abstract readonly rateLimiter: IRateLimiter;
     public abstract readonly bus: Bus;
+    public abstract readonly kv: Kv;
 
     #sealed = false;
     readonly #attachments: Attachment[] = [];

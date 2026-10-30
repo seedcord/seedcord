@@ -3,7 +3,6 @@ import { Bus } from '@seedcord/core';
 import { interactionMiddleware, MiddlewareRegistry, readBotToken, SubscriberLoader } from '@seedcord/core/internal';
 import { SeedcordErrorCode } from '@seedcord/errors';
 import { SeedcordError } from '@seedcord/errors/internal';
-import { MemoryRateLimiter } from '@seedcord/rate-limiter';
 
 import { InteractionDispatcher } from '#src/dispatch/InteractionDispatcher';
 import { emptyRouteMaps } from '#src/dispatch/resolve';
@@ -15,11 +14,9 @@ import type { Core } from '#interfaces/Core';
 import type { Engine } from '#src/engine';
 import type { RESTOptions } from '@discordjs/rest';
 import type { BotToken } from '@seedcord/errors/internal';
-import type { IRateLimiter } from '@seedcord/types';
 
 export class InteractionsService {
     public readonly rest: REST;
-    public readonly rateLimiter: IRateLimiter;
     public readonly bus: Bus;
     public readonly subscribers: SubscriberLoader;
     public readonly interactions: InteractionDispatcher | undefined;
@@ -33,7 +30,6 @@ export class InteractionsService {
         restOptions: Partial<RESTOptions> | undefined
     ) {
         this.rest = new REST(restOptions);
-        this.rateLimiter = config.store ?? new MemoryRateLimiter();
         this.bus = new Bus(host);
         this.subscribers = new SubscriberLoader(this.bus, config.subscribers.path);
 

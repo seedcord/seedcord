@@ -65,7 +65,6 @@
         "@seedcord/errors": "workspace:^",
         "@seedcord/event-emitter": "workspace:^",
         "@seedcord/logger": "workspace:^",
-        "@seedcord/rate-limiter": "workspace:^",
         "@seedcord/types": "workspace:^",
         "@seedcord/utils": "workspace:^",
         "reflect-metadata": "catalog:deps",

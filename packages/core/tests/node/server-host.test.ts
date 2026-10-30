@@ -2,15 +2,17 @@ import { REST } from '@discordjs/rest';
 import { isSeedcordError, SeedcordErrorCode } from '@seedcord/errors';
 import { SeedcordError } from '@seedcord/errors/internal';
 import { Logger } from '@seedcord/logger';
-import { MemoryRateLimiter } from '@seedcord/rate-limiter';
 import { describe, it, expect, expectTypeOf, afterEach, vi } from 'vitest';
 
 import { CoordinatedShutdown } from '#node/Lifecycle/CoordinatedShutdown';
 import { ServerHost } from '#node/ServerHost';
+import { Kv } from '#src/kv/Kv';
+import { MemoryDriver } from '#src/kv/MemoryDriver';
 import { CoordinatedStartup } from '#src/lifecycle/CoordinatedStartup';
 import { ShutdownPhase, StartupPhase } from '#src/lifecycle/phases';
 import { Plugin } from '#src/plugin/Plugin';
 import { Bus } from '#subscribers/Bus';
+import { memoryRateLimiter } from '#tests/utils/memoryRateLimiter';
 
 import type { CoreBase } from '#interfaces/CoreBase';
 import type { PluginArgs } from '#src/plugin/Plugin';
@@ -49,7 +51,8 @@ class TestHost extends ServerHost<'gateway'> {
     public readonly config: Config;
     public readonly rest = new REST();
     public readonly applicationId = 'app-1';
-    public readonly rateLimiter: IRateLimiter = new MemoryRateLimiter();
+    public readonly rateLimiter: IRateLimiter = memoryRateLimiter();
+    public readonly kv = new Kv(new MemoryDriver());
     public readonly bus: Bus;
 
     constructor(shutdown: CoordinatedShutdown, startup: CoordinatedStartup, config: Config = {} as Config) {

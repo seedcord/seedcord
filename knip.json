@@ -90,7 +90,6 @@
             "entry": ["**/*.types-test.ts", "tests/fixtures/*.ts"],
             "ignoreDependencies": ["tsx"]
         },
-        "packages/rate-limiter": {},
         "packages/types": {
             "entry": ["**/*.types-test.ts"]
         },

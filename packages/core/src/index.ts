@@ -97,6 +97,7 @@ export { Kv } from '#src/kv/Kv';
 export { KvCollection } from '#src/kv/KvCollection';
 export { MemoryDriver } from '#src/kv/MemoryDriver';
 export { UnstorageDriver } from '#src/kv/UnstorageDriver';
+export { buildKey } from '#src/rateLimiter/buildKey';
 
 export type { Generated, PluginTypes } from '#src/plugin/Generated';
 

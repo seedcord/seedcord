@@ -1242,9 +1242,6 @@ importers:
       '@seedcord/eslint-config':
         specifier: workspace:^
         version: link:../../tooling/eslint-config
-      '@seedcord/rate-limiter':
-        specifier: workspace:^
-        version: link:../rate-limiter
       '@seedcord/tsconfig':
         specifier: workspace:^
         version: link:../../tooling/tsconfig
@@ -1392,9 +1389,6 @@ importers:
       '@seedcord/logger':
         specifier: workspace:^
         version: link:../logger
-      '@seedcord/rate-limiter':
-        specifier: workspace:^
-        version: link:../rate-limiter
       '@seedcord/types':
         specifier: workspace:^
         version: link:../types
@@ -1456,9 +1450,6 @@ importers:
       '@seedcord/logger':
         specifier: workspace:^
         version: link:../logger
-      '@seedcord/rate-limiter':
-        specifier: workspace:^
-        version: link:../rate-limiter
       '@seedcord/types':
         specifier: workspace:^
         version: link:../types
@@ -1548,28 +1539,6 @@ importers:
       tsx:
         specifier: catalog:deps
         version: 4.23.15
-
-  packages/rate-limiter:
-    dependencies:
-      '@seedcord/types':
-        specifier: workspace:^
-        version: link:../types
-      typescript:
-        specifier: catalog:consumerTypes
-        version: 7.0.2
-    devDependencies:
-      '@seedcord/eslint-config':
-        specifier: workspace:^
-        version: link:../../tooling/eslint-config
-      '@seedcord/tsconfig':
-        specifier: workspace:^
-        version: link:../../tooling/tsconfig
-      '@seedcord/tsdown-config':
-        specifier: workspace:^
-        version: link:../../tooling/tsdown-config
-      '@seedcord/vitest-config':
-        specifier: workspace:^
-        version: link:../../tooling/vitest-config
 
   packages/types:
     dependencies:

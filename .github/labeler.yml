@@ -22,9 +22,6 @@
 '📦 errors':
   - changed-files:
       - any-glob-to-any-file: 'packages/errors/**'
-'📦 rate-limiter':
-  - changed-files:
-      - any-glob-to-any-file: 'packages/rate-limiter/**'
 '📦 event-emitter':
   - changed-files:
       - any-glob-to-any-file: 'packages/event-emitter/**'

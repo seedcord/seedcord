@@ -24,7 +24,6 @@
                 "@seedcord/logger#build",
                 "@seedcord/plugin-kysely-postgres#build",
                 "@seedcord/plugin-mongoose#build",
-                "@seedcord/rate-limiter#build",
                 "@seedcord/types#build",
                 "@seedcord/utils#build",
                 "discord-component-embed#build",

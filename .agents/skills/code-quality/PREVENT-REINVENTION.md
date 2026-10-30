@@ -136,7 +136,7 @@ For targeted guidance on specific topics, see:
 
 Framework / packages:
 
-- **Hand-rolled rate limiters, logger wrappers, lifecycle managers, or error hierarchies** when `@seedcord/rate-limiter`, `@seedcord/logger`, `@seedcord/core/node`, and `@seedcord/errors` already provide them.
+- **Hand-rolled rate limiters, logger wrappers, lifecycle managers, or error hierarchies** when `core.rateLimiter`, `@seedcord/logger`, `@seedcord/core/node`, and `@seedcord/errors` already provide them.
 - **Duplicate type aliases** in app or package code when `@seedcord/types` already exposes the same shape.
 - **Local string/number/object helpers** that already live in `@seedcord/utils`.
 - **Parallel CLI flows.** Extend `@seedcord/cli`'s Commander + Ink structure.
@@ -180,7 +180,7 @@ If no existing surface fits and there is no clean shared extension path, stop an
 1. **Add it in the shared package.** Do not add it in the consuming app or downstream package.
     - Pure type / interface: `@seedcord/types`
     - Pure helper (string/number/object/brand/misc): `@seedcord/utils`
-    - Runtime service (logger, rate limiter, lifecycle, error class, health check): `@seedcord/logger` / `@seedcord/rate-limiter` / `@seedcord/core/node` / `@seedcord/errors`
+    - Runtime service (logger, rate limiter, lifecycle, error class, health check): `@seedcord/logger` / `@seedcord/core` / `@seedcord/core/node` / `@seedcord/errors`
     - Typed event emitter: `@seedcord/event-emitter`
     - Framework-level bus event, interface, or orchestrator hook: `@seedcord/seedcord`
     - Plugin-shaped behavior: a package under `plugins/`

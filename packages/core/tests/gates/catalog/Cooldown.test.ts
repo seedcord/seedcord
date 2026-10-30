@@ -1,11 +1,11 @@
 import { isSeedcordError, SeedcordErrorCode } from '@seedcord/errors';
-import { MemoryRateLimiter } from '@seedcord/rate-limiter';
 import { describe, it, expect, vi } from 'vitest';
 
 import { Cooldown } from '#gates/catalog/Cooldown';
 import { runGates } from '#gates/runGates';
 import { OnCooldown } from '#notices/index';
 import { Notice } from '#stops/Notice';
+import { memoryRateLimiter } from '#tests/utils/memoryRateLimiter';
 
 import type { GateContextBase } from '#gates/Gate';
 import type { CoreBase } from '#interfaces/CoreBase';
@@ -107,7 +107,7 @@ describe('Cooldown', () => {
     });
 
     it('allows `limit` uses within one window, then refuses', async () => {
-        const rl = new MemoryRateLimiter();
+        const rl = memoryRateLimiter();
         const gate = Cooldown(60, { limit: 3 });
         const ctx = cdCtx(rl);
 
@@ -209,7 +209,7 @@ describe('Cooldown', () => {
 
     // flips when the limiter gets an atomic reserve, the peek/charge split admits both rn
     it.fails('admits exactly one of two requests racing the same key', async () => {
-        const rl = new MemoryRateLimiter();
+        const rl = memoryRateLimiter();
         const gate = Cooldown(60);
 
         const results = await Promise.allSettled([runGates([gate], cdCtx(rl)), runGates([gate], cdCtx(rl))]);

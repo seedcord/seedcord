@@ -1,13 +1,13 @@
 import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
 
-import { MemoryRateLimiter } from '#src/MemoryRateLimiter';
+import { memoryRateLimiter } from '#tests/utils/memoryRateLimiter';
 
-describe('MemoryRateLimiter retryAfterMs and resetAt math', () => {
+describe('KvRateLimiter retryAfterMs and resetAt math', () => {
     beforeEach(() => vi.useFakeTimers());
     afterEach(() => vi.useRealTimers());
 
     it('shrinks retryAfterMs as time passes while resetAt stays fixed', async () => {
-        const limiter = new MemoryRateLimiter();
+        const limiter = memoryRateLimiter();
         const window = { windowMs: 1000 };
         const start = Date.now();
         await limiter.charge('user', window);
@@ -23,7 +23,7 @@ describe('MemoryRateLimiter retryAfterMs and resetAt math', () => {
     });
 
     it('reports retryAfterMs as resetAt minus the call-time now', async () => {
-        const limiter = new MemoryRateLimiter();
+        const limiter = memoryRateLimiter();
         const window = { windowMs: 5000 };
         await limiter.charge('user', window);
 

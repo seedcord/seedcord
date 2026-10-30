@@ -1,7 +1,7 @@
 import type { KvDriver } from '@seedcord/types';
 import type { Jsonify } from 'type-fest';
 
-// keyed by driver because a plugin's this.kv builds a new collection on every read
+// keyed by driver because kv.collection() returns a new collection on every call
 const pendingUpdates = new WeakMap<KvDriver, Map<string, Promise<void>>>();
 
 function updateQueue(driver: KvDriver): Map<string, Promise<void>> {
@@ -49,19 +49,18 @@ export class KvCollection<TRecord> {
     }
 
     /**
-     * Passes the record under `id` to `next` and writes back the `value` it returns. Resolves to its
-     * `result`. Calls on one key run one at a time in this process. Two processes on one store can both
-     * read before either writes.
+     * Passes the record under `id` to `next` and writes back the `value` it returns, with its `ttlMs`
+     * when it sets one. Resolves to its `result`. Calls on one key run one at a time in this process.
+     * Two processes on one store can both read before either writes.
      */
     public async update<TResult>(
         id: string,
-        next: (current: Jsonify<TRecord> | undefined) => { value: TRecord; result: TResult },
-        ttlMs?: number
+        next: (current: Jsonify<TRecord> | undefined) => { value: TRecord; result: TResult; ttlMs?: number }
     ): Promise<TResult> {
         const key = this.prefix + id;
         const queue = updateQueue(this.driver);
         const run = (queue.get(key) ?? Promise.resolve()).then(async () => {
-            const { value, result } = next(await this.get(id));
+            const { value, result, ttlMs } = next(await this.get(id));
             await this.set(id, value, ttlMs);
             return result;
         });

@@ -1,13 +1,15 @@
 import { REST } from '@discordjs/rest';
 import { Logger } from '@seedcord/logger';
-import { MemoryRateLimiter } from '@seedcord/rate-limiter';
 import { describe, it, expect, afterEach, vi } from 'vitest';
 
 import { CoordinatedShutdown } from '#node/Lifecycle/CoordinatedShutdown';
 import { ServerHost } from '#node/ServerHost';
+import { Kv } from '#src/kv/Kv';
+import { MemoryDriver } from '#src/kv/MemoryDriver';
 import { CoordinatedStartup } from '#src/lifecycle/CoordinatedStartup';
 import { Plugin } from '#src/plugin/Plugin';
 import { Bus } from '#subscribers/Bus';
+import { memoryRateLimiter } from '#tests/utils/memoryRateLimiter';
 
 import type { CoreBase } from '#interfaces/CoreBase';
 import type { Config, IRateLimiter } from '@seedcord/types';
@@ -42,7 +44,8 @@ class TestHost extends ServerHost<'gateway'> {
     public readonly config = {} as Config;
     public readonly rest = new REST();
     public readonly applicationId = 'app-1';
-    public readonly rateLimiter: IRateLimiter = new MemoryRateLimiter();
+    public readonly rateLimiter: IRateLimiter = memoryRateLimiter();
+    public readonly kv = new Kv(new MemoryDriver());
     public readonly bus: Bus;
 
     constructor(shutdown: CoordinatedShutdown, startup: CoordinatedStartup) {
