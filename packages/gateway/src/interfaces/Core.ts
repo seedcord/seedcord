@@ -1,7 +1,7 @@
 import type { Bot } from '#bot/Bot';
 import type { GatewayConfig } from '#interfaces/Config';
 import type { CoreBase } from '@seedcord/core';
-import type { CoordinatedShutdown, CoordinatedStartup } from '@seedcord/core/node';
+import type { ShutdownTasks, StartupTasks } from '@seedcord/core/node';
 
 /**
  * Main interface for Seedcord core functionality
@@ -21,8 +21,8 @@ import type { CoordinatedShutdown, CoordinatedStartup } from '@seedcord/core/nod
  * ```
  * */
 export interface Core extends CoreBase {
-    readonly shutdown: Pick<CoordinatedShutdown, 'addTask'>;
-    readonly startup: Pick<CoordinatedStartup, 'addTask'>;
+    readonly shutdown: ShutdownTasks;
+    readonly startup: StartupTasks;
 
     readonly bot: Bot;
     readonly config: GatewayConfig;

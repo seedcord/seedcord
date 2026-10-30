@@ -22,6 +22,12 @@ export enum ShutdownPhase {
     Disconnect,
     /** The client disconnects last so in-flight handlers can still reference it during drain. */
     Logout,
-    /** Resources seedcord holds for the bot, like the `config.kv` driver, close after every plugin has stopped. */
+    /**
+     * Resources seedcord holds for the bot, like the `config.kv` driver, close after every plugin
+     * has stopped. Only seedcord runs work here.
+     */
     Release
 }
+
+// the phases a bot's shutdown task or a plugin's dispose() can run in
+export type TaskShutdownPhase = Exclude<ShutdownPhase, ShutdownPhase.Release>;

@@ -63,7 +63,7 @@ On a server, shutdown runs five phases. A bot on [Cloudflare Workers](#on-cloudf
 | `Drain` | in-flight work finishes and internal services stop | |
 | `Disconnect` | external resources close | `dispose()` runs here by default |
 | `Logout` | the client disconnects, so a draining handler can still reference it until here | |
-| `Release` | seedcord closes what it holds for the bot, like your [`config.kv` driver](/built-ins/drivers#closing-the-connection) | |
+| `Release` | seedcord closes what it holds for the bot, like your [`config.kv` driver](/built-ins/drivers#closing-the-connection) | `dispose()` and your own tasks can't run here |
 
 {/* prettier-ignore-end */}
 

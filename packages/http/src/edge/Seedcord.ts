@@ -30,7 +30,7 @@ import type { HttpEdgeConfig } from '#interfaces/Config';
 import type { EngineContext } from '#src/engine';
 import type { REST } from '@discordjs/rest';
 import type { Bus } from '@seedcord/core';
-import type { BakedIds } from '@seedcord/core/internal';
+import type { StartupTasks, BakedIds } from '@seedcord/core/internal';
 import type { DevChannel, SeedcordCliEvents, SeedcordFrameworkEvents } from '@seedcord/types/internal';
 
 // seedcord build's worker entry writes these before bot.ts loads
@@ -74,7 +74,7 @@ export class Seedcord extends PluginHost<'http', 'edge'> {
     public readonly shutdown = edgeShutdown;
 
     /** Add a task that runs during startup, on the first POST. */
-    public readonly startup: Pick<CoordinatedStartup, 'addTask'>;
+    public readonly startup: StartupTasks;
 
     public readonly config: HttpEdgeConfig;
 

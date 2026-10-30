@@ -6,6 +6,13 @@ import { ShutdownPhase } from '#src/lifecycle/phases';
 import { settleWithin } from '#src/lifecycle/withTimeout';
 
 import type { LifecycleTask } from '#src/lifecycle/LifecycleTypes';
+import type { TaskShutdownPhase } from '#src/lifecycle/phases';
+import type { Tail } from '@seedcord/types';
+
+/** Adds work to a node bot's shutdown, in any phase before `ShutdownPhase.Release`. */
+export interface ShutdownTasks {
+    addTask(phase: TaskShutdownPhase, ...rest: Tail<Parameters<CoordinatedShutdown['addTask']>>): void;
+}
 
 const PHASE_ORDER: ShutdownPhase[] = [
     ShutdownPhase.Unbind,

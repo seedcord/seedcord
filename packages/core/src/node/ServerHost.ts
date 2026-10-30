@@ -12,8 +12,8 @@ import { attachmentsOf, PluginHost, sealAttachments } from '#src/plugin/PluginHo
 
 import { registerProcessErrors } from './processErrors';
 
-import type { CoordinatedShutdown } from '#node/Lifecycle/CoordinatedShutdown';
-import type { CoordinatedStartup } from '#src/lifecycle/CoordinatedStartup';
+import type { CoordinatedShutdown, ShutdownTasks } from '#node/Lifecycle/CoordinatedShutdown';
+import type { CoordinatedStartup, StartupTasks } from '#src/lifecycle/CoordinatedStartup';
 import type { Transport } from '#src/plugin/options';
 import type { Config } from '@seedcord/types';
 import type { Promisable } from 'type-fest';
@@ -26,10 +26,10 @@ export abstract class ServerHost<BotT extends Transport> extends PluginHost<BotT
     readonly [HostStartup]: CoordinatedStartup;
 
     /** Add a task that runs while the bot shuts down. */
-    public readonly shutdown: Pick<CoordinatedShutdown, 'addTask'>;
+    public readonly shutdown: ShutdownTasks;
 
     /** Add a task that runs while the bot starts. */
-    public readonly startup: Pick<CoordinatedStartup, 'addTask'>;
+    public readonly startup: StartupTasks;
 
     readonly #lifecycle: PluginLifecycle;
     #startFailed = false;

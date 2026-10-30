@@ -10,6 +10,9 @@ import type { Promisable } from 'type-fest';
 
 const PHASE_ORDER: StartupPhase[] = [StartupPhase.Configuration, StartupPhase.Login, StartupPhase.Ready];
 
+/** Adds work to a bot's startup. */
+export type StartupTasks = Pick<CoordinatedStartup, 'addTask'>;
+
 export class CoordinatedStartup extends CoordinatedLifecycle<StartupPhase> {
     #isStartingUp = false;
     #hasStarted = false;

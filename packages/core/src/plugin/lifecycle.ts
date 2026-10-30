@@ -3,6 +3,8 @@ import { SeedcordRangeError } from '@seedcord/errors/internal';
 
 import { ShutdownPhase, StartupPhase } from '#src/lifecycle/phases';
 
+import type { TaskShutdownPhase } from '#src/lifecycle/phases';
+
 /**
  * Sets when a plugin's lifecycle methods run. Pass it as the second argument to `super()`. Omit a
  * field to keep its default.
@@ -23,14 +25,14 @@ export interface PluginLifecycleSpec {
     /** `ready()` always runs in `StartupPhase.Ready`. Defaults to a 15000ms timeout. */
     ready?: { timeout?: number };
     /** Defaults to `ShutdownPhase.Disconnect` and 10000ms. */
-    dispose?: { phase?: ShutdownPhase; timeout?: number };
+    dispose?: { phase?: TaskShutdownPhase; timeout?: number };
 }
 
 /** @internal */
 export interface ResolvedPluginLifecycleSpec {
     readonly init: { readonly phase: StartupPhase; readonly timeout: number };
     readonly ready: { readonly timeout: number };
-    readonly dispose: { readonly phase: ShutdownPhase; readonly timeout: number };
+    readonly dispose: { readonly phase: TaskShutdownPhase; readonly timeout: number };
 }
 
 const DEFAULT_INIT_TIMEOUT_MS = 15_000;
