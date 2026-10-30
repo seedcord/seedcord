@@ -10,8 +10,6 @@ import type { Storage } from 'unstorage';
 
 const keyv = new Kv(new KeyvDriver(new Keyv<string>()));
 expectTypeOf(keyv.driver.keyv).toEqualTypeOf<Keyv<string>>();
-expectTypeOf(keyv.scope('app').driver.keyv).toEqualTypeOf<Keyv<string>>();
 
 const unstorage = new Kv(new UnstorageDriver(createStorage()));
 expectTypeOf(unstorage.driver.storage).toEqualTypeOf<Storage>();
-expectTypeOf(unstorage.scope('app').driver.storage).toEqualTypeOf<Storage>();

@@ -7,7 +7,6 @@ import {
     forwardLogsToCli,
     HmrManager,
     installLinks,
-    openKv,
     PluginLifecycle,
     sealAttachments,
     toWireError
@@ -30,10 +29,10 @@ import { edgeRestOptions, edgeShutdown } from './defaults';
 import type { HttpEdgeConfig } from '#interfaces/Config';
 import type { EngineContext } from '#src/engine';
 import type { REST } from '@discordjs/rest';
-import type { Bus, Kv } from '@seedcord/core';
+import type { Bus } from '@seedcord/core';
 import type { BakedIds } from '@seedcord/core/internal';
-import type { IRateLimiter, KvDriver } from '@seedcord/types';
-import type { DevChannel, SeedcordCliEvents, SeedcordFrameworkEvents } from '@seedcord/types/internal';
+import type { KvDriver } from '@seedcord/types';
+import type { DevChannel, NarrowedKv, SeedcordCliEvents, SeedcordFrameworkEvents } from '@seedcord/types/internal';
 
 // seedcord build's worker entry writes these before bot.ts loads
 function bakedIds(): BakedIds {
@@ -54,7 +53,7 @@ function bakedIds(): BakedIds {
  * Under `seedcord dev` the bot starts when the CLI starts it. It reads the public key and emoji
  * ids from Discord and deploys your commands, the way a node bot does.
  */
-export class Seedcord<TDriver extends KvDriver = KvDriver> extends PluginHost<'http', 'edge'> {
+export class Seedcord<TDriver extends KvDriver = KvDriver> extends PluginHost<'http', 'edge', TDriver> {
     // the CLI reads these to detect and augment the instance
     /** @internal */
     public readonly [SeedcordBrand] = true;
@@ -66,14 +65,8 @@ export class Seedcord<TDriver extends KvDriver = KvDriver> extends PluginHost<'h
     /** Discord REST client built from `bot.restOptions`, with both sweepers off. */
     public readonly rest: REST;
 
-    /** @see {@link IRateLimiter} */
-    public readonly rateLimiter: IRateLimiter;
-
     /** @see {@link Bus} */
     public readonly bus: Bus;
-
-    /** @see {@link Kv} */
-    public readonly kv: Kv<TDriver>;
 
     /**
      * @deprecated Cloudflare Workers don't provide a shutdown hook.
@@ -84,7 +77,7 @@ export class Seedcord<TDriver extends KvDriver = KvDriver> extends PluginHost<'h
     /** Add a task that runs during startup, on the first POST. */
     public readonly startup: Pick<CoordinatedStartup, 'addTask'>;
 
-    public readonly config: HttpEdgeConfig & { kv?: TDriver };
+    public readonly config: HttpEdgeConfig<TDriver> & NarrowedKv<TDriver>;
 
     readonly #service: InteractionsService;
     readonly #startup = new CoordinatedStartup();
@@ -101,8 +94,8 @@ export class Seedcord<TDriver extends KvDriver = KvDriver> extends PluginHost<'h
 
     static #isInstantiated = false;
 
-    constructor(config: HttpEdgeConfig & { kv?: TDriver }) {
-        super('http', 'edge');
+    constructor(config: HttpEdgeConfig<TDriver> & NarrowedKv<TDriver>) {
+        super('http', 'edge', config.kv);
         if (Seedcord.#isInstantiated) throw new SeedcordError(SeedcordErrorCode.CoreSingletonViolation);
         Seedcord.#isInstantiated = true;
 
@@ -112,7 +105,6 @@ export class Seedcord<TDriver extends KvDriver = KvDriver> extends PluginHost<'h
 
         this.#service = new InteractionsService(this, config, edgeRestOptions(config.bot.restOptions));
         this.rest = this.#service.rest;
-        ({ kv: this.kv, rateLimiter: this.rateLimiter } = openKv(config.kv));
         this.bus = this.#service.bus;
 
         const cli = connectDevChannel();

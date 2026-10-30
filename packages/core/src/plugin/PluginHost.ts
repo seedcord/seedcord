@@ -3,17 +3,20 @@ import { SeedcordError, SeedcordTypeError } from '@seedcord/errors/internal';
 import { FRAMEWORK_CHANNELS } from '@seedcord/logger';
 import { HostPluginKeys } from '@seedcord/types/internal';
 
+import { Kv } from '#src/kv/Kv';
+import { MemoryDriver } from '#src/kv/MemoryDriver';
+import { KvRateLimiter } from '#src/rateLimiter/KvRateLimiter';
+
 import { declaredScopeOf, extendsThisCorePlugin, pluginLoggerOf, resolvedLifecycleSpecOf } from './Plugin';
 import { splitPluginKey } from './splitPluginKey';
 
 import type { CoreBase } from '#interfaces/CoreBase';
-import type { Kv } from '#src/kv/Kv';
 import type { Bus } from '#subscribers/Bus';
 import type { ResolvedPluginLifecycleSpec } from './lifecycle';
 import type { DeclaredScope, Runtime, Transport } from './options';
 import type { AttachableCtor, Attached, AttachKeyAssert, PluginArgs, PluginCtor, PluginLike } from './Plugin';
 import type { REST } from '@discordjs/rest';
-import type { Config, IRateLimiter } from '@seedcord/types';
+import type { Config, IRateLimiter, KvDriver } from '@seedcord/types';
 
 export interface Attachment {
     readonly key: string;
@@ -26,22 +29,37 @@ const RESERVED_KEYS: ReadonlySet<string> = new Set(FRAMEWORK_CHANNELS);
 const attachmentsSlot = Symbol('seedcord:host:attachments');
 const sealSlot = Symbol('seedcord:host:seal');
 
-/** Base class for a plugin host. */
-export abstract class PluginHost<BotT extends Transport, BotRt extends Runtime> implements CoreBase {
-    public abstract readonly config: Config;
+/**
+ * Base class for a plugin host.
+ *
+ * @typeParam TDriver - The driver from `config.kv`.
+ */
+export abstract class PluginHost<
+    BotT extends Transport,
+    BotRt extends Runtime,
+    TDriver extends KvDriver = KvDriver
+> implements CoreBase {
+    public abstract readonly config: Config<TDriver>;
     public abstract readonly rest: REST;
     public abstract readonly applicationId: string;
-    public abstract readonly rateLimiter: IRateLimiter;
     public abstract readonly bus: Bus;
-    public abstract readonly kv: Kv;
+
+    /** Your handlers' records, in `config.kv` under the `app:` prefix. */
+    public readonly kv: Kv<TDriver>;
+    /** @see {@link IRateLimiter} */
+    public readonly rateLimiter: IRateLimiter;
 
     #sealed = false;
     readonly #attachments: Attachment[] = [];
     readonly #groups = new Map<string, Record<string, PluginLike>>();
     readonly #scope: { readonly transport: BotT; readonly runtime: BotRt };
 
-    constructor(transport: BotT, runtime: BotRt) {
+    constructor(transport: BotT, runtime: BotRt, driver: TDriver | undefined) {
         this.#scope = { transport, runtime };
+        // justified: NarrowedKv on each bot's config makes kv required once TDriver is narrower than KvDriver
+        const resolved = (driver ?? new MemoryDriver()) as TDriver;
+        this.kv = new Kv(resolved, 'app');
+        this.rateLimiter = new KvRateLimiter(new Kv(resolved, 'seedcord'));
     }
 
     /** @internal */

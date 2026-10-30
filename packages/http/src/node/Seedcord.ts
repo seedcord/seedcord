@@ -1,14 +1,7 @@
 import { once } from 'node:events';
 import { createServer } from 'node:http';
 
-import {
-    bindBotColor,
-    busLoggerOf,
-    connectDevChannel,
-    getDevChannel,
-    HmrManager,
-    openKv
-} from '@seedcord/core/internal';
+import { bindBotColor, busLoggerOf, connectDevChannel, getDevChannel, HmrManager } from '@seedcord/core/internal';
 import { CoordinatedShutdown, CoordinatedStartup, ServerHost } from '@seedcord/core/node';
 import { DRAIN_TASK_TIMEOUT_MS, HealthResponder, ShutdownPhase, StartupPhase } from '@seedcord/core/node/internal';
 import { paint, SeedcordErrorCode } from '@seedcord/errors';
@@ -28,9 +21,9 @@ import { toWebRequest, writeWebResponse } from './webBridge';
 
 import type { HttpServerConfig } from '#interfaces/Config';
 import type { REST } from '@discordjs/rest';
-import type { Bus, Kv } from '@seedcord/core';
-import type { IRateLimiter, KvDriver } from '@seedcord/types';
-import type { SeedcordInstance } from '@seedcord/types/internal';
+import type { Bus } from '@seedcord/core';
+import type { KvDriver } from '@seedcord/types';
+import type { NarrowedKv, SeedcordInstance } from '@seedcord/types/internal';
 import type { Server } from 'node:http';
 import type { AddressInfo } from 'node:net';
 
@@ -44,7 +37,10 @@ const SERVER_SHUTDOWN_TIMEOUT_MS = 5000;
  * Shutdown waits up to 5s for interactions that are still running.
  */
 // tests/node/seedcord-core.types-test.ts checks this class against Core in place of an implements clause
-export class Seedcord<TDriver extends KvDriver = KvDriver> extends ServerHost<'http'> implements SeedcordInstance {
+export class Seedcord<TDriver extends KvDriver = KvDriver>
+    extends ServerHost<'http', TDriver>
+    implements SeedcordInstance
+{
     // the CLI reads these to detect and augment the instance
     /** @internal */
     public readonly [SeedcordBrand] = true;
@@ -58,14 +54,8 @@ export class Seedcord<TDriver extends KvDriver = KvDriver> extends ServerHost<'h
     /** Discord REST client built from `bot.restOptions`. `start()` sets the token. */
     public readonly rest: REST;
 
-    /** @see {@link IRateLimiter} */
-    public readonly rateLimiter: IRateLimiter;
-
     /** @see {@link Bus} */
     public readonly bus: Bus;
-
-    /** @see {@link Kv} */
-    public readonly kv: Kv<TDriver>;
 
     readonly #service: InteractionsService;
     readonly #endpoint: NodeEndpoint;
@@ -76,21 +66,20 @@ export class Seedcord<TDriver extends KvDriver = KvDriver> extends ServerHost<'h
     #boundPort?: number;
     #fetchedUsername?: string | undefined;
 
-    public readonly config: HttpServerConfig & { kv?: TDriver };
+    public readonly config: HttpServerConfig<TDriver> & NarrowedKv<TDriver>;
 
     /**
      * @throws A **SeedcordError** when another `Seedcord` exists in this process and has not shut down.
      * @throws A **SeedcordError** when the running Node or Bun is older than the range in `engines`.
      */
-    constructor(config: HttpServerConfig & { kv?: TDriver }) {
-        super('http', new CoordinatedShutdown(config.lifecycle?.shutdownDeadline), new CoordinatedStartup());
+    constructor(config: HttpServerConfig<TDriver> & NarrowedKv<TDriver>) {
+        super('http', new CoordinatedShutdown(config.lifecycle?.shutdownDeadline), new CoordinatedStartup(), config.kv);
         this.config = config;
 
         bindBotColor(() => this.config.botColor);
 
         this.#service = new InteractionsService(this, config, config.bot.restOptions);
         this.rest = this.#service.rest;
-        ({ kv: this.kv, rateLimiter: this.rateLimiter } = openKv(config.kv));
         this.bus = this.#service.bus;
         this.#endpoint = new NodeEndpoint(
             this.#service,

@@ -48,7 +48,7 @@ const job: Job = { task: 'Reminder', runAt: new Date(0), data: { userId: '1', ta
 
 describe.each(cases)('$name', ({ open, persists }) => {
     it('round-trips a record through JSON', async () => {
-        const jobs = new Kv(open()).scope('plugins').scope('tasks').collection<Job>('job');
+        const jobs = new Kv(open(), 'plugins', 'tasks').collection<Job>('job');
         await jobs.set('abc', job);
 
         const read = await jobs.get('abc');
@@ -59,12 +59,12 @@ describe.each(cases)('$name', ({ open, persists }) => {
     });
 
     it('lists only its own ids', async () => {
-        const kv = new Kv(open());
-        await kv.scope('a').collection<number>('job').set('1', 1);
-        await kv.scope('a').collection<number>('jobs').set('2', 2);
-        await kv.scope('b').collection<number>('job').set('3', 3);
+        const driver = open();
+        await new Kv(driver, 'a').collection<number>('job').set('1', 1);
+        await new Kv(driver, 'a').collection<number>('jobs').set('2', 2);
+        await new Kv(driver, 'b').collection<number>('job').set('3', 3);
 
-        expect(await kv.scope('a').collection<number>('job').ids()).toEqual(['1']);
+        expect(await new Kv(driver, 'a').collection<number>('job').ids()).toEqual(['1']);
     });
 
     it('deletes', async () => {

@@ -5,7 +5,6 @@ import {
     busLoggerOf,
     connectDevChannel,
     HmrManager,
-    openKv,
     SubscriberLoader
 } from '@seedcord/core/internal';
 import { CoordinatedShutdown, CoordinatedStartup, ServerHost } from '@seedcord/core/node';
@@ -18,16 +17,18 @@ import { version as packageVersion } from './version';
 
 import type { GatewayConfig } from './interfaces/Config';
 import type { REST } from '@discordjs/rest';
-import type { Kv } from '@seedcord/core';
-import type { IRateLimiter, KvDriver } from '@seedcord/types';
-import type { SeedcordInstance } from '@seedcord/types/internal';
+import type { KvDriver } from '@seedcord/types';
+import type { NarrowedKv, SeedcordInstance } from '@seedcord/types/internal';
 
 /**
  * The gateway bot host. Opens a discord.js gateway session, discovers handlers, and runs
  * coordinated startup and shutdown. Attach plugins with `attach()`.
  */
 // an `implements Core` clause breaks a bot's full lib check once codegen adds its plugins to Core
-export class Seedcord<TDriver extends KvDriver = KvDriver> extends ServerHost<'gateway'> implements SeedcordInstance {
+export class Seedcord<TDriver extends KvDriver = KvDriver>
+    extends ServerHost<'gateway', TDriver>
+    implements SeedcordInstance
+{
     // the CLI reads these to detect and augment the instance
     /** @internal */
     public readonly [SeedcordBrand] = true;
@@ -55,19 +56,18 @@ export class Seedcord<TDriver extends KvDriver = KvDriver> extends ServerHost<'g
         return this.bot.applicationId;
     }
 
-    /** @see {@link IRateLimiter} */
-    public readonly rateLimiter: IRateLimiter;
-
-    /** @see {@link Kv} */
-    public readonly kv: Kv<TDriver>;
-
     /**
      * @param config - Bot configuration including paths and Discord client options
      * @throws A **SeedcordError** when another `Seedcord` exists in this process and has not shut down.
      * @throws A **SeedcordError** when the running Node or Bun is older than the range in `engines`.
      */
-    constructor(public readonly config: GatewayConfig & { kv?: TDriver }) {
-        super('gateway', new CoordinatedShutdown(config.lifecycle?.shutdownDeadline), new CoordinatedStartup());
+    constructor(public readonly config: GatewayConfig<TDriver> & NarrowedKv<TDriver>) {
+        super(
+            'gateway',
+            new CoordinatedShutdown(config.lifecycle?.shutdownDeadline),
+            new CoordinatedStartup(),
+            config.kv
+        );
 
         bindBotColor(() => this.config.botColor);
 
@@ -77,7 +77,6 @@ export class Seedcord<TDriver extends KvDriver = KvDriver> extends ServerHost<'g
         this.#subscribers = new SubscriberLoader(this.bus, config.subscribers.path);
         this.bot = new Bot(this);
         this.rest = this.bot.client.rest;
-        ({ kv: this.kv, rateLimiter: this.rateLimiter } = openKv(config.kv));
         this.#healthCheck = HealthCheck.fromOption(shutdownOf(this), config.healthCheck);
 
         this.#registerStartupTasks();

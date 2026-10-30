@@ -6,17 +6,14 @@ import { describe, it, expect, expectTypeOf, afterEach, vi } from 'vitest';
 
 import { CoordinatedShutdown } from '#node/Lifecycle/CoordinatedShutdown';
 import { ServerHost } from '#node/ServerHost';
-import { Kv } from '#src/kv/Kv';
-import { MemoryDriver } from '#src/kv/MemoryDriver';
 import { CoordinatedStartup } from '#src/lifecycle/CoordinatedStartup';
 import { ShutdownPhase, StartupPhase } from '#src/lifecycle/phases';
 import { Plugin } from '#src/plugin/Plugin';
 import { Bus } from '#subscribers/Bus';
-import { memoryRateLimiter } from '#tests/utils/memoryRateLimiter';
 
 import type { CoreBase } from '#interfaces/CoreBase';
 import type { PluginArgs } from '#src/plugin/Plugin';
-import type { Config, IRateLimiter } from '@seedcord/types';
+import type { Config } from '@seedcord/types';
 
 function delay(ms: number): Promise<void> {
     return new Promise((resolve) => setTimeout(resolve, ms));
@@ -51,12 +48,10 @@ class TestHost extends ServerHost<'gateway'> {
     public readonly config: Config;
     public readonly rest = new REST();
     public readonly applicationId = 'app-1';
-    public readonly rateLimiter: IRateLimiter = memoryRateLimiter();
-    public readonly kv = new Kv(new MemoryDriver());
     public readonly bus: Bus;
 
     constructor(shutdown: CoordinatedShutdown, startup: CoordinatedStartup, config: Config = {} as Config) {
-        super('gateway', shutdown, startup);
+        super('gateway', shutdown, startup, undefined);
         this.config = config;
         this.bus = new Bus(this);
     }

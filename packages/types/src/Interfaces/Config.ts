@@ -135,8 +135,12 @@ export interface NotificationsConfig {
     developerUsername?: string;
 }
 
-/** Main configuration object for Seedcord bot */
-export interface Config {
+/**
+ * Main configuration object for Seedcord bot
+ *
+ * @typeParam TDriver - The driver in `kv`.
+ */
+export interface Config<TDriver extends KvDriver = KvDriver> {
     bot: BotConfig;
     subscribers: SubscribersConfig;
 
@@ -166,7 +170,7 @@ export interface Config {
      * Where seedcord, plugins, and your handlers keep state. The default `MemoryDriver` loses
      * everything on restart. Pass a `KeyvDriver`, an `UnstorageDriver`, or your own driver to keep it.
      */
-    kv?: KvDriver;
+    kv?: TDriver;
 
     /**
      * Logging level, sinks, and per-channel overrides. Omitted fields keep the transport's defaults.

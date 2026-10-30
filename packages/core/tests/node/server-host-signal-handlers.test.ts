@@ -4,25 +4,20 @@ import { describe, it, expect, afterEach } from 'vitest';
 
 import { CoordinatedShutdown } from '#node/Lifecycle/CoordinatedShutdown';
 import { ServerHost } from '#node/ServerHost';
-import { Kv } from '#src/kv/Kv';
-import { MemoryDriver } from '#src/kv/MemoryDriver';
 import { CoordinatedStartup } from '#src/lifecycle/CoordinatedStartup';
 import { Bus } from '#subscribers/Bus';
-import { memoryRateLimiter } from '#tests/utils/memoryRateLimiter';
 
-import type { Config, IRateLimiter } from '@seedcord/types';
+import type { Config } from '@seedcord/types';
 
 class TestHost extends ServerHost<'gateway'> {
     // justified: startup reads config.errors and nothing else on Config
     public readonly config = { errors: { catchProcessErrors: false } } as Config;
     public readonly rest = new REST();
     public readonly applicationId = 'app-1';
-    public readonly rateLimiter: IRateLimiter = memoryRateLimiter();
-    public readonly kv = new Kv(new MemoryDriver());
     public readonly bus: Bus;
 
     constructor() {
-        super('gateway', new CoordinatedShutdown(), new CoordinatedStartup());
+        super('gateway', new CoordinatedShutdown(), new CoordinatedStartup(), undefined);
         this.bus = new Bus(this);
     }
 

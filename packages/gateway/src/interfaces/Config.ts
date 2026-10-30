@@ -1,4 +1,4 @@
-import type { BotConfig, Config, HealthCheckOption } from '@seedcord/types';
+import type { BotConfig, Config, HealthCheckOption, KvDriver } from '@seedcord/types';
 import type { ClientOptions } from 'discord.js';
 
 /**
@@ -36,7 +36,7 @@ export interface GatewayBotConfig extends BotConfig {
 /**
  * The gateway transport's configuration, what the {@link Seedcord} constructor takes.
  */
-export interface GatewayConfig extends Config {
+export interface GatewayConfig<TDriver extends KvDriver = KvDriver> extends Config<TDriver> {
     bot: GatewayBotConfig;
 
     /**

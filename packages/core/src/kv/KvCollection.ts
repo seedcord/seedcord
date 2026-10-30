@@ -23,13 +23,16 @@ interface Envelope<TValue> {
  * Records go through JSON. A `Date` you store reads back as a string.
  */
 export class KvCollection<TRecord> {
-    constructor(
-        private readonly driver: KvDriver,
-        private readonly prefix: string
-    ) {}
+    readonly #driver: KvDriver;
+    readonly #prefix: string;
+
+    constructor(driver: KvDriver, prefix: string) {
+        this.#driver = driver;
+        this.#prefix = prefix;
+    }
 
     public async get(id: string): Promise<Jsonify<TRecord> | undefined> {
-        const raw = await this.driver.get(this.prefix + id);
+        const raw = await this.#driver.get(this.#prefix + id);
         if (raw === undefined) return undefined;
 
         // justified: only this collection writes under its prefix
@@ -41,11 +44,11 @@ export class KvCollection<TRecord> {
     /** @param ttlMs - Reads return `undefined` after this many milliseconds. */
     public async set(id: string, value: TRecord, ttlMs?: number): Promise<void> {
         const envelope: Envelope<TRecord> = ttlMs === undefined ? { value } : { value, expiresAt: Date.now() + ttlMs };
-        await this.driver.set(this.prefix + id, JSON.stringify(envelope), ttlMs);
+        await this.#driver.set(this.#prefix + id, JSON.stringify(envelope), ttlMs);
     }
 
     public async delete(id: string): Promise<void> {
-        await this.driver.delete(this.prefix + id);
+        await this.#driver.delete(this.#prefix + id);
     }
 
     /**
@@ -57,8 +60,8 @@ export class KvCollection<TRecord> {
         id: string,
         next: (current: Jsonify<TRecord> | undefined) => { value: TRecord; result: TResult; ttlMs?: number }
     ): Promise<TResult> {
-        const key = this.prefix + id;
-        const queue = updateQueue(this.driver);
+        const key = this.#prefix + id;
+        const queue = updateQueue(this.#driver);
         const run = (queue.get(key) ?? Promise.resolve()).then(async () => {
             const { value, result, ttlMs } = next(await this.get(id));
             await this.set(id, value, ttlMs);
@@ -78,8 +81,8 @@ export class KvCollection<TRecord> {
 
     /** Costs one driver read per key, because it reads each record to skip the expired ones. */
     public async ids(): Promise<string[]> {
-        const keys = await this.driver.keys(this.prefix);
-        const ids = keys.map((key) => key.slice(this.prefix.length));
+        const keys = await this.#driver.keys(this.#prefix);
+        const ids = keys.map((key) => key.slice(this.#prefix.length));
         const live = await Promise.all(ids.map(async (id) => ((await this.get(id)) === undefined ? [] : [id])));
         return live.flat();
     }

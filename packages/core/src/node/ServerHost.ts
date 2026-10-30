@@ -14,10 +14,15 @@ import { registerProcessErrors } from './processErrors';
 import type { CoordinatedShutdown } from '#node/Lifecycle/CoordinatedShutdown';
 import type { CoordinatedStartup } from '#src/lifecycle/CoordinatedStartup';
 import type { Transport } from '#src/plugin/options';
+import type { KvDriver } from '@seedcord/types';
 import type { Promisable } from 'type-fest';
 
 /** Base class for a transport `Seedcord` class that runs as a long-lived node or bun process. */
-export abstract class ServerHost<BotT extends Transport> extends PluginHost<BotT, 'server'> {
+export abstract class ServerHost<BotT extends Transport, TDriver extends KvDriver = KvDriver> extends PluginHost<
+    BotT,
+    'server',
+    TDriver
+> {
     /** @internal */
     readonly [HostShutdown]: CoordinatedShutdown;
     /** @internal */
@@ -38,10 +43,15 @@ export abstract class ServerHost<BotT extends Transport> extends PluginHost<BotT
     static #liveShutdown?: CoordinatedShutdown | undefined;
     static #liveProcessErrors?: (() => void) | undefined;
 
-    constructor(transport: BotT, shutdown: CoordinatedShutdown, startup: CoordinatedStartup) {
+    constructor(
+        transport: BotT,
+        shutdown: CoordinatedShutdown,
+        startup: CoordinatedStartup,
+        driver: TDriver | undefined
+    ) {
         // a `sideEffects: false` build would drop the same call in the node entry
         assertDeclaredRuntime();
-        super(transport, 'server');
+        super(transport, 'server', driver);
 
         if (ServerHost.#isInstantiated) throw new SeedcordError(SeedcordErrorCode.CoreSingletonViolation);
 
