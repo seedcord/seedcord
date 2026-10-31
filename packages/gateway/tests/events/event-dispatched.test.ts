@@ -1,24 +1,12 @@
 import { afterEach, describe, expect, vi } from 'vitest';
 
-import { eventsOf } from '#bot/Bot';
 import { Seedcord } from '#src/Seedcord';
+import { dispatcherOf } from '#tests/utils/dispatcherOf';
 import { seedcordPath } from '#tests/utils/source-path';
 import { testConfig } from '#tests/utils/test-config';
 import { it } from '#tests/utils/test-env';
 
 import type { SubscriptionData } from '@seedcord/core';
-import type { InFlight } from '@seedcord/core/node/internal';
-
-interface PrivateEventDispatcher {
-    init(): Promise<void>;
-    processEvent(eventName: string, args: unknown[]): Promise<void>;
-    inFlight: InFlight;
-}
-
-// justified: processEvent is private on the dispatcher
-function dispatcherOf(instance: Seedcord): PrivateEventDispatcher {
-    return eventsOf(instance.bot) as unknown as PrivateEventDispatcher;
-}
 
 const EVENTS_DIR = 'events';
 const MIDDLEWARES_DIR = 'event-mw';

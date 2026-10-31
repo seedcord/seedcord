@@ -189,7 +189,7 @@ export class Bus extends TypedEventEmitter<SubscriptionTuples> {
 
         const pending = registrations.reduce<Promise<void>[]>((acc, entry) => {
             // claimed before awaiting so a re-entrant publish can't run it twice mid-flight
-            if (entry.frequency === 'once' && !this.onceRuns.claim(entry.ctor, subscriberName)) return acc;
+            if (!this.onceRuns.claim(entry, subscriberName)) return acc;
             acc.push(this.runSubscriber(entry, subscriberName, data));
             return acc;
         }, []);

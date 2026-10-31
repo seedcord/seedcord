@@ -153,7 +153,7 @@ When discord.js emits an event, seedcord runs every handler you registered for i
 | `dispatchId` | `string` | this dispatch of the event, the same id `eventDispatching` published |
 | `name` | `keyof ClientEvents` | the event, `messageCreate` shaped |
 | `outcome` | [`DispatchOutcome`](ref:core/DispatchOutcome) | how the middleware chain ended |
-| `handlers` | [`HandlerOutcome[]`](ref:core/HandlerOutcome) | one entry per handler that ran, in order |
+| `handlers` | [`HandlerOutcome[]`](ref:core/HandlerOutcome) | one entry per handler that ran, in load order |
 | `durationMs` | `number` | dispatch entry until every handler finishes, monotonic |
 
 {/* prettier-ignore-end */}

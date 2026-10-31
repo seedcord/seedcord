@@ -1,20 +1,10 @@
 import { describe, expect, vi } from 'vitest';
 
-import { eventsOf } from '#bot/Bot';
 import { Seedcord } from '#src/Seedcord';
+import { dispatcherOf } from '#tests/utils/dispatcherOf';
 import { seedcordPath } from '#tests/utils/source-path';
 import { testConfig } from '#tests/utils/test-config';
 import { it } from '#tests/utils/test-env';
-
-interface PrivateEventDispatcher {
-    init(): Promise<void>;
-    processEvent(eventName: string, args: unknown[]): Promise<void>;
-}
-
-// justified: processEvent is private on the dispatcher
-function dispatcherOf(instance: Seedcord): PrivateEventDispatcher {
-    return eventsOf(instance.bot) as unknown as PrivateEventDispatcher;
-}
 
 describe('once event handlers', () => {
     it('marks a once handler spent even when it throws a non-Error, so it does not run again', async ({ testEnv }) => {
@@ -65,7 +55,7 @@ describe('once event handlers', () => {
         const events = dispatcherOf(seedcord);
         await events.init();
 
-        // both dispatches pass the once filter because runMiddlewares awaits between the snapshot and the mark
+        // both dispatches pass the once filter because runMiddlewares awaits between the snapshot and the claim
         const message = { reply: vi.fn() };
         await Promise.all([
             events.processEvent('messageCreate', [message]),
@@ -159,5 +149,35 @@ describe('once event handlers', () => {
         }
 
         expect(message.reply.mock.calls.flat()).toEqual(['created', 'updated', 'deleted', 'deleted']);
+    });
+
+    it('keeps a spent once handler spent after a failed reload rolls it back', async ({ testEnv }) => {
+        const filePath = await testEnv.createFile(
+            'events/OnceRollback.ts',
+            `
+            import { EventHandler, RegisterEvent } from '${seedcordPath}';
+            import { Events } from 'discord.js';
+
+            @RegisterEvent(['messageCreate', { frequency: 'once' }])
+            export class OnceRollback extends EventHandler<Events.MessageCreate> {
+                public async execute() {
+                    await this.match({ messageCreate: (message) => message.reply('once') });
+                }
+            }
+            `
+        );
+
+        await using seedcord = new Seedcord(testConfig({ events: testEnv.resolvePath('events') }));
+        const events = dispatcherOf(seedcord);
+        await events.init();
+
+        const message = { reply: vi.fn() };
+        await events.processEvent('messageCreate', [message]);
+
+        await testEnv.createFile('events/OnceRollback.ts', 'export const broken = {{{ not valid');
+        await events.onHmr({ file: filePath, type: 'update' });
+        await events.processEvent('messageCreate', [message]);
+
+        expect(message.reply).toHaveBeenCalledTimes(1);
     });
 });

@@ -1,27 +1,14 @@
 import { PublishDefault } from '@seedcord/core/internal';
 import { afterEach, describe, expect, vi } from 'vitest';
 
-import { botLoggerOf, eventsOf } from '#bot/Bot';
+import { botLoggerOf } from '#bot/Bot';
 import { Seedcord } from '#src/Seedcord';
+import { dispatcherOf } from '#tests/utils/dispatcherOf';
 import { seedcordPath } from '#tests/utils/source-path';
 import { testConfig } from '#tests/utils/test-config';
 import { it } from '#tests/utils/test-env';
 
 import type { SubscriptionData } from '@seedcord/core';
-import type { InFlight } from '@seedcord/core/node/internal';
-
-interface PrivateEventDispatcher {
-    eventMap: Map<string, unknown[]>;
-    init(): Promise<void>;
-    onHmr(event: unknown): Promise<void>;
-    processEvent(eventName: string, args: unknown[]): Promise<void>;
-    inFlight: InFlight;
-}
-
-// justified: eventMap and processEvent are private on the dispatcher
-function dispatcherOf(instance: Seedcord): PrivateEventDispatcher {
-    return eventsOf(instance.bot) as unknown as PrivateEventDispatcher;
-}
 
 describe('EventDispatcher Integration', () => {
     afterEach(() => {
@@ -195,41 +182,6 @@ describe('EventDispatcher Integration', () => {
         expect(publish).toHaveBeenCalledWith('unknownException', expect.anything());
     });
 
-    it('keeps a spent once handler spent after a failed reload rolls it back', async ({ testEnv }) => {
-        const eventsDir = 'events';
-        const filePath = await testEnv.createFile(
-            `${eventsDir}/OnceRollback.ts`,
-            `
-            import { EventHandler, RegisterEvent } from '${seedcordPath}';
-            import { Events } from 'discord.js';
-
-            @RegisterEvent(['messageCreate', { frequency: 'once' }])
-            export class OnceRollback extends EventHandler<Events.MessageCreate> {
-                public async execute() {
-                    await this.match({ messageCreate: (message) => message.reply('once') });
-                }
-            }
-            `
-        );
-
-        const config = testConfig({ events: testEnv.resolvePath(eventsDir) });
-
-        await using seedcord = new Seedcord(config);
-        const events = dispatcherOf(seedcord);
-        await events.init();
-
-        const message = { reply: vi.fn() };
-        await events.processEvent('messageCreate', [message]);
-        expect(message.reply).toHaveBeenCalledTimes(1);
-
-        // the failed reload rolls the handler back
-        await testEnv.createFile(`${eventsDir}/OnceRollback.ts`, 'export const broken = {{{ not valid');
-        await events.onHmr({ file: filePath, type: 'update' });
-
-        await events.processEvent('messageCreate', [message]);
-        expect(message.reply).toHaveBeenCalledTimes(1);
-    });
-
     it('should handle HMR updates for event handlers', async ({ testEnv }) => {
         const eventsDir = 'events';
         const filePath = await testEnv.createFile(
@@ -349,7 +301,7 @@ describe('EventDispatcher Integration', () => {
     describe('client-attached dispatch', () => {
         interface ClientHarness {
             seedcord: Seedcord;
-            controller: PrivateEventDispatcher;
+            controller: ReturnType<typeof dispatcherOf>;
             fire: ((...args: unknown[]) => void) | undefined;
         }
 

@@ -27,9 +27,8 @@ const payload: AllSubscriptions['unknownException'] = {
     origin: 'slash:probe'
 };
 
-async function publish(bus: Bus): Promise<void> {
+function publish(bus: Bus): void {
     bus[PublishDefault]('unknownException', payload);
-    await new Promise((resolve) => setTimeout(resolve, 20));
 }
 
 function onceCounter(): { Counted: StoredSubscriberCtor; runs: () => number } {
@@ -45,7 +44,7 @@ function onceCounter(): { Counted: StoredSubscriberCtor; runs: () => number } {
 }
 
 describe("Bus 'once' subscribers", () => {
-    it('runs a once subscriber a single time even if it re-publishes the same event', async () => {
+    it('runs a once subscriber a single time even if it re-publishes the same event', () => {
         const bus = busWithCore();
 
         let runs = 0;
@@ -60,34 +59,34 @@ describe("Bus 'once' subscribers", () => {
         }
 
         bus[RegisterSubscriber]({ keys: ['unknownException'], frequency: 'once', ctor: ReentrantOnce });
-        await publish(bus);
+        publish(bus);
 
         expect(runs).toBe(1);
     });
 
-    it('keeps a spent once subscriber spent when a rollback registers the same class again', async () => {
+    it('keeps a spent once subscriber spent when a rollback registers the same class again', () => {
         const bus = busWithCore();
         const { Counted, runs } = onceCounter();
 
         bus[RegisterSubscriber]({ keys: ['unknownException'], frequency: 'once', ctor: Counted });
-        await publish(bus);
+        publish(bus);
         bus[UnregisterSubscriber](Counted);
         bus[RegisterSubscriber]({ keys: ['unknownException'], frequency: 'once', ctor: Counted });
-        await publish(bus);
+        publish(bus);
 
         expect(runs()).toBe(1);
     });
 
-    it('runs a once subscriber again after a save loads a new class', async () => {
+    it('runs a once subscriber again after a save loads a new class', () => {
         const bus = busWithCore();
         const before = onceCounter();
         const after = onceCounter();
 
         bus[RegisterSubscriber]({ keys: ['unknownException'], frequency: 'once', ctor: before.Counted });
-        await publish(bus);
+        publish(bus);
         bus[UnregisterSubscriber](before.Counted);
         bus[RegisterSubscriber]({ keys: ['unknownException'], frequency: 'once', ctor: after.Counted });
-        await publish(bus);
+        publish(bus);
 
         expect([before.runs(), after.runs()]).toEqual([1, 1]);
     });

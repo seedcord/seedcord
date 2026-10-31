@@ -1,28 +1,16 @@
 import { afterEach, beforeEach, describe, expect, vi } from 'vitest';
 
-import { eventsOf } from '#bot/Bot';
+import { dispatcherOf } from '#tests/utils/dispatcherOf';
 import { seedcordPath } from '#tests/utils/source-path';
 import { testConfig } from '#tests/utils/test-config';
 import { it } from '#tests/utils/test-env';
-
-import type { Seedcord } from '#src/Seedcord';
-
-interface PrivateEventDispatcher {
-    init(): Promise<void>;
-    processEvent(eventName: string, args: unknown[]): Promise<void>;
-}
-
-// justified: processEvent is private on the dispatcher
-function dispatcherOf(instance: Seedcord): PrivateEventDispatcher {
-    return eventsOf(instance.bot) as unknown as PrivateEventDispatcher;
-}
 
 // a global is the only channel back to the test, since the fixture compiles into a temp dir
 function fireCalls(): string[] {
     return (globalThis as { fireCalls?: string[] }).fireCalls ?? [];
 }
 
-type Boot = (handlers: string, middlewares?: string) => Promise<PrivateEventDispatcher>;
+type Boot = (handlers: string, middlewares?: string) => Promise<ReturnType<typeof dispatcherOf>>;
 
 const withBoot = it.extend<{ boot: Boot }>({
     boot: async ({ testEnv, seedcordWith }, use) => {

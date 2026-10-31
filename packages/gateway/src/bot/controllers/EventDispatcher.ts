@@ -316,13 +316,15 @@ export class EventDispatcher implements Initializeable, HmrAware {
 
         this.core.bot.client.on(eventName, (...args: ClientEvents[typeof eventName]) => {
             void this.inFlight.admit(() =>
-                this.processEvent(eventName, args).catch((caught: unknown) => {
-                    const error = asError(caught);
-                    this.logger.error(`[${paint.coral.bold('UNHANDLED ERROR AT ROOT')}] ${error.name}`, error.stack);
-                    this.core.bus[PublishDefault]('unhandledEventError', { error });
-                })
+                this.processEvent(eventName, args).catch((caught: unknown) => this.reportUnhandled(caught))
             );
         });
+    }
+
+    private reportUnhandled(caught: unknown): void {
+        const error = asError(caught);
+        this.logger.error(`[${paint.coral.bold('UNHANDLED ERROR AT ROOT')}] ${error.name}`, error.stack);
+        this.core.bus[PublishDefault]('unhandledEventError', { error });
     }
 
     private async processEvent<KeyOfEvents extends keyof ClientEvents>(
@@ -333,9 +335,7 @@ export class EventDispatcher implements Initializeable, HmrAware {
         const handlerEntries = this.eventMap.get(eventName);
         if (!handlerEntries || handlerEntries.length === 0) return;
 
-        const handlersToExecute = handlerEntries.filter(
-            (entry) => entry.frequency !== 'once' || !this.onceRuns.isSpent(entry.ctor, eventName)
-        );
+        const handlersToExecute = handlerEntries.filter((entry) => !this.onceRuns.isSpent(entry, eventName));
 
         if (handlersToExecute.length === 0) return;
 
@@ -351,9 +351,7 @@ export class EventDispatcher implements Initializeable, HmrAware {
             if (stopped) return;
 
             // another dispatch may have claimed a once handler during the runMiddlewares await
-            const claimed = handlersToExecute.filter(
-                (entry) => entry.frequency !== 'once' || this.onceRuns.claim(entry.ctor, eventName)
-            );
+            const claimed = handlersToExecute.filter((entry) => this.onceRuns.claim(entry, eventName));
             const results = claimed.map((entry) => this.processHandler(eventName, entry.ctor, args, dispatch));
             handlers.push(...(await Promise.all(results)));
         } finally {
@@ -378,11 +376,16 @@ export class EventDispatcher implements Initializeable, HmrAware {
             await handler.execute();
             return { handler: Ctor.name, outcome: 'handled' };
         } catch (caught) {
-            handleEventFault(
-                caught,
-                { eventName: String(eventName), handlerName: Ctor.name, args, dispatch },
-                this.core
-            );
+            try {
+                handleEventFault(
+                    caught,
+                    { eventName: String(eventName), handlerName: Ctor.name, args, dispatch },
+                    this.core
+                );
+            } catch (reportFailed) {
+                // a Notice's render() is user code
+                this.reportUnhandled(reportFailed);
+            }
             return { handler: Ctor.name, ...resultFor(caught) };
         }
     }

@@ -1,21 +1,10 @@
 import { afterEach, describe, expect, vi } from 'vitest';
 
-import { eventsOf } from '#bot/Bot';
 import { Seedcord } from '#src/Seedcord';
+import { dispatcherOf } from '#tests/utils/dispatcherOf';
 import { seedcordPath } from '#tests/utils/source-path';
 import { testConfig } from '#tests/utils/test-config';
 import { it } from '#tests/utils/test-env';
-
-interface PrivateEventDispatcher {
-    init(): Promise<void>;
-    onHmr(event: unknown): Promise<void>;
-    processEvent(eventName: string, args: unknown[]): Promise<void>;
-}
-
-// justified: processEvent and onHmr are private on the dispatcher
-function dispatcherOf(instance: Seedcord): PrivateEventDispatcher {
-    return eventsOf(instance.bot) as unknown as PrivateEventDispatcher;
-}
 
 const EVENTS_DIR = 'events';
 const MIDDLEWARES_DIR = 'event-mw';
