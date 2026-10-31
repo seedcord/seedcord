@@ -5,25 +5,48 @@ import { describe, it, expect } from 'vitest';
 import { Bus } from '#subscribers/Bus';
 import { Subscribe } from '#subscribers/decorators/Subscribe';
 import { PublishDefault } from '#subscribers/publishDefault';
-import { RegisterSubscriber } from '#subscribers/slots';
+import { RegisterSubscriber, UnregisterSubscriber } from '#subscribers/slots';
 import { Subscriber } from '#subscribers/Subscriber';
 
 import type { CoreBase } from '#interfaces/CoreBase';
+import type { StoredSubscriberCtor } from '#subscribers/Bus';
 import type { AllSubscriptions } from '#subscribers/types/Subscriptions';
 
-describe("Bus 'once' re-entrancy", () => {
-    it('runs a once subscriber a single time even if it re-publishes the same event', async () => {
-        // justified: the subscriber reads core.bus to re-publish, nothing else on core
-        const core = {} as unknown as CoreBase;
-        const bus = new Bus(core);
-        (core as { bus: Bus }).bus = bus;
+function busWithCore(): Bus {
+    // justified: a subscriber here reads only core.bus
+    const core = {} as unknown as CoreBase;
+    const bus = new Bus(core);
+    (core as { bus: Bus }).bus = bus;
+    return bus;
+}
 
-        const payload: AllSubscriptions['unknownException'] = {
-            uuid: randomUUID(),
-            dispatchId: 'd-1',
-            error: new Error('boom'),
-            origin: 'slash:probe'
-        };
+const payload: AllSubscriptions['unknownException'] = {
+    uuid: randomUUID(),
+    dispatchId: 'd-1',
+    error: new Error('boom'),
+    origin: 'slash:probe'
+};
+
+async function publish(bus: Bus): Promise<void> {
+    bus[PublishDefault]('unknownException', payload);
+    await new Promise((resolve) => setTimeout(resolve, 20));
+}
+
+function onceCounter(): { Counted: StoredSubscriberCtor; runs: () => number } {
+    let runs = 0;
+    @Subscribe('unknownException', { frequency: 'once' })
+    class Counted extends Subscriber<'unknownException', CoreBase> {
+        public execute(): Promise<void> {
+            runs += 1;
+            return Promise.resolve();
+        }
+    }
+    return { Counted, runs: () => runs };
+}
+
+describe("Bus 'once' subscribers", () => {
+    it('runs a once subscriber a single time even if it re-publishes the same event', async () => {
+        const bus = busWithCore();
 
         let runs = 0;
         @Subscribe('unknownException', { frequency: 'once' })
@@ -37,10 +60,35 @@ describe("Bus 'once' re-entrancy", () => {
         }
 
         bus[RegisterSubscriber]({ keys: ['unknownException'], frequency: 'once', ctor: ReentrantOnce });
-
-        bus[PublishDefault]('unknownException', payload);
-        await new Promise((resolve) => setTimeout(resolve, 20));
+        await publish(bus);
 
         expect(runs).toBe(1);
+    });
+
+    it('keeps a spent once subscriber spent when a rollback registers the same class again', async () => {
+        const bus = busWithCore();
+        const { Counted, runs } = onceCounter();
+
+        bus[RegisterSubscriber]({ keys: ['unknownException'], frequency: 'once', ctor: Counted });
+        await publish(bus);
+        bus[UnregisterSubscriber](Counted);
+        bus[RegisterSubscriber]({ keys: ['unknownException'], frequency: 'once', ctor: Counted });
+        await publish(bus);
+
+        expect(runs()).toBe(1);
+    });
+
+    it('runs a once subscriber again after a save loads a new class', async () => {
+        const bus = busWithCore();
+        const before = onceCounter();
+        const after = onceCounter();
+
+        bus[RegisterSubscriber]({ keys: ['unknownException'], frequency: 'once', ctor: before.Counted });
+        await publish(bus);
+        bus[UnregisterSubscriber](before.Counted);
+        bus[RegisterSubscriber]({ keys: ['unknownException'], frequency: 'once', ctor: after.Counted });
+        await publish(bus);
+
+        expect([before.runs(), after.runs()]).toEqual([1, 1]);
     });
 });

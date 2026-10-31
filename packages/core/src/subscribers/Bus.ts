@@ -3,6 +3,7 @@ import { SeedcordError, SeedcordTypeError } from '@seedcord/errors/internal';
 import { TypedEventEmitter } from '@seedcord/event-emitter';
 import { Logger } from '@seedcord/logger';
 
+import { OnceTracker } from '#src/dispatch/OnceTracker';
 import { SubscribeMetadataKey } from '#src/metadataKeys';
 
 import { WebhookLog } from './bases/WebhookLog';
@@ -48,7 +49,7 @@ export class Bus extends TypedEventEmitter<SubscriptionTuples> {
     readonly [loggerSlot]: Logger = this.logger;
 
     private readonly subscribersMap = new Map<SubscriptionKey, SubscriberRegistration[]>();
-    private readonly executedOnce = new Set<SubscriberRegistration>();
+    private readonly onceRuns = new OnceTracker();
     // url -> env keys
     private readonly webhookProbes = new Map<string, string[]>();
 
@@ -84,7 +85,6 @@ export class Bus extends TypedEventEmitter<SubscriptionTuples> {
             const index = registrations.findIndex((entry) => entry.ctor === ctor);
             if (index !== -1) registrations.splice(index, 1);
         }
-        // a re-registered subscriber runs again because executedOnce is keyed by registration identity
     }
 
     /** @internal */
@@ -188,11 +188,8 @@ export class Bus extends TypedEventEmitter<SubscriptionTuples> {
         if (!registrations) return;
 
         const pending = registrations.reduce<Promise<void>[]>((acc, entry) => {
-            if (entry.frequency === 'once') {
-                if (this.executedOnce.has(entry)) return acc;
-                // mark before awaiting, so a re-entrant publish can't run a 'once' subscriber twice mid-flight
-                this.executedOnce.add(entry);
-            }
+            // claimed before awaiting so a re-entrant publish can't run it twice mid-flight
+            if (entry.frequency === 'once' && !this.onceRuns.claim(entry.ctor, subscriberName)) return acc;
             acc.push(this.runSubscriber(entry, subscriberName, data));
             return acc;
         }, []);

@@ -63,7 +63,7 @@ export class EventDispatcher implements Initializeable, HmrAware {
     private readonly middlewares = new MiddlewareRegistry<EventMiddlewareConstructor, keyof ClientEvents>(
         eventMiddleware
     );
-    private readonly once = new OnceTracker();
+    private readonly onceRuns = new OnceTracker();
     private readonly attachedEvents = new Set<keyof ClientEvents>();
 
     // a reload reports on the hmr channel
@@ -334,7 +334,7 @@ export class EventDispatcher implements Initializeable, HmrAware {
         if (!handlerEntries || handlerEntries.length === 0) return;
 
         const handlersToExecute = handlerEntries.filter(
-            (entry) => entry.frequency !== 'once' || !this.once.isSpent(entry.ctor, eventName)
+            (entry) => entry.frequency !== 'once' || !this.onceRuns.isSpent(entry.ctor, eventName)
         );
 
         if (handlersToExecute.length === 0) return;
@@ -352,7 +352,7 @@ export class EventDispatcher implements Initializeable, HmrAware {
 
             for (const entry of handlersToExecute) {
                 // another dispatch may have claimed this handler during the runMiddlewares await
-                if (entry.frequency === 'once' && !this.once.claim(entry.ctor, eventName)) continue;
+                if (entry.frequency === 'once' && !this.onceRuns.claim(entry.ctor, eventName)) continue;
 
                 handlers.push(await this.processHandler(eventName, entry.ctor, args, dispatch));
             }
