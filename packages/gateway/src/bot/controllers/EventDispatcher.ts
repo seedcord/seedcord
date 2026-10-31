@@ -350,12 +350,12 @@ export class EventDispatcher implements Initializeable, HmrAware {
             stopped = await this.runMiddlewares(eventName, args, dispatch, ran);
             if (stopped) return;
 
-            for (const entry of handlersToExecute) {
-                // another dispatch may have claimed this handler during the runMiddlewares await
-                if (entry.frequency === 'once' && !this.onceRuns.claim(entry.ctor, eventName)) continue;
-
-                handlers.push(await this.processHandler(eventName, entry.ctor, args, dispatch));
-            }
+            // another dispatch may have claimed a once handler during the runMiddlewares await
+            const claimed = handlersToExecute.filter(
+                (entry) => entry.frequency !== 'once' || this.onceRuns.claim(entry.ctor, eventName)
+            );
+            const results = claimed.map((entry) => this.processHandler(eventName, entry.ctor, args, dispatch));
+            handlers.push(...(await Promise.all(results)));
         } finally {
             const result = eventResultFor(stopped, handlers);
             reportEventDispatched(this.core, dispatch.id, eventName, result, startedAt);

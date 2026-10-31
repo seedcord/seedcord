@@ -128,7 +128,7 @@ If you forget `@RegisterEvent` on a handler class, that handler never runs. seed
 
 ## Several handlers for one event
 
-Several handlers can register the same event, so a welcome message and a join log can stay in separate files. They run one after another, in the order seedcord loaded their files. If one of them throws, the rest still run. [Throwing](/replying/throwing) covers what seedcord does with the error.
+Several handlers can register the same event, so a welcome message and a join log can stay in separate files, for example. They run at the same time, and if one of them throws, the rest still run. [Throwing](/replying/throwing) covers what seedcord does with the error.
 
 Processing one event with every handler registered for it is an _event dispatch_. The [event middleware](/events/middleware) for that event runs once per event dispatch, ahead of all of those handlers. Each event dispatch runs in this order.
 
@@ -137,7 +137,7 @@ discord.js emits an event
 │
 ├─ 1. seedcord lists the event's handlers      leaves out a once handler that already ran
 ├─ 2. each event middleware's execute()        lowest priority first
-├─ 3. for each handler, in load order
+├─ 3. every handler at the same time
 │     ├─ seedcord builds the handler           your constructor runs here
 │     ├─ the handler's gates                   checks, then commits
 │     └─ the handler's execute()
@@ -145,7 +145,7 @@ discord.js emits an event
 
 if step 1 leaves no handlers, steps 2 to 4 don't run
 a throw in 2 skips straight to 4
-a throw in 3 stops that handler, and the next handler still runs
+a throw in 3 stops that handler, and the others still run
 ```
 
 An interaction runs in [a different order](/checks#what-a-dispatch-is), with its one handler built before any middleware.
