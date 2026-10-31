@@ -1,5 +1,34 @@
 # @seedcord/core
 
+## 0.12.0-next.0
+
+### 💥 Breaking
+
+- Renamed context-menu handlers' `commandName` to `route` and removed handlers' `routeId`. Read the dispatch identifier from `this.dispatch.routeId`. ([#422](https://github.com/seedcord/seedcord/pull/422))
+- `config.store` is now `config.kv`, and your handlers and plugins read it through `core.kv` and `this.kv`. Leave it out to keep everything in memory, or pass a `KeyvDriver`, an `UnstorageDriver`, or your own driver. Import `buildKey` from your transport package, and rename any plugin attached as `kv`. ([#429](https://github.com/seedcord/seedcord/pull/429))
+
+### ✨ Minor
+
+- Plugins can now define `codegen()`, and `seedcord codegen` writes what it returns into `seedcord-gen.ts`. A plugin reads that back with `Generated<typeof ThePlugin>`, keyed by its `static readonly id`. ([#426](https://github.com/seedcord/seedcord/pull/426))
+- `reply()`, `update()`, and the other reply methods now take raw component json next to builders, like `{ type: 10, content: 'hi' }` or the components `@dressed/react` renders. ([`ba8d7d0`](https://github.com/seedcord/seedcord/commit/ba8d7d0dbc0822861f3152f30df66b8f541450cc))
+
+### 🩹 Patch
+
+- Fixed a `once` subscriber running again in `seedcord dev` when a broken save rolled its file back. ([#430](https://github.com/seedcord/seedcord/pull/430))
+- Fixed a plugin's constructor logging on the `default` channel. Those lines now use its attach key as their channel, like every other log line from the plugin. ([#429](https://github.com/seedcord/seedcord/pull/429))
+- Hovering a `CustomId`, its decoded `this.params` or a `match` arm, or an autocomplete's `this.focused` now shows the plain fields, like `{ userId: string; amount: number }`. ([`b3b4489`](https://github.com/seedcord/seedcord/commit/b3b44898c3738ffaa3546319703f545c4feb3f46))
+- Fixed a `null` or `undefined` entry in a reply's `components` crashing with a bare `TypeError`. It now throws seedcord's serialization error with the entry's index, like any other bad component. ([`ba8d7d0`](https://github.com/seedcord/seedcord/commit/ba8d7d0dbc0822861f3152f30df66b8f541450cc))
+- Fixed routine request and dispatch details appearing at `debug` instead of `trace`. ([#423](https://github.com/seedcord/seedcord/pull/423))
+- Fixed the `type-fest` types in the published declarations failing to resolve, since each package listed `type-fest` only as a dev dependency. ([`50db882`](https://github.com/seedcord/seedcord/commit/50db8827aca008f874bf60e5796a696c894056cc))
+
+#### 📦 Seedcord packages
+
+- `@seedcord/logger` 0.5.0 → 0.6.0-next.0
+- `@seedcord/utils` 0.9.0 → 0.9.1-next.0
+- `@seedcord/types` 0.15.0 → 0.16.0-next.0
+- `@seedcord/errors` 0.14.0 → 0.15.0-next.0
+- `@seedcord/custom-id` 0.3.0 → 0.3.1-next.0
+
 ## 0.11.0
 
 ### 💥 Breaking

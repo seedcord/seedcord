@@ -1,5 +1,32 @@
 # @seedcord/http
 
+## 0.12.0-next.0
+
+### 💥 Breaking
+
+- Renamed context-menu handlers' `commandName` to `route` and removed handlers' `routeId`. Read the dispatch identifier from `this.dispatch.routeId`. ([#422](https://github.com/seedcord/seedcord/pull/422))
+- `config.store` is now `config.kv`, and your handlers and plugins read it through `core.kv` and `this.kv`. Leave it out to keep everything in memory, or pass a `KeyvDriver`, an `UnstorageDriver`, or your own driver. Import `buildKey` from your transport package, and rename any plugin attached as `kv`. ([#429](https://github.com/seedcord/seedcord/pull/429))
+
+### ✨ Minor
+
+- Added a readonly `route` property to slash, context-menu, and component handlers for the selected command's path, command name, or custom-ID prefix. ([#422](https://github.com/seedcord/seedcord/pull/422))
+- Plugins can now define `codegen()`, and `seedcord codegen` writes what it returns into `seedcord-gen.ts`. A plugin reads that back with `Generated<typeof ThePlugin>`, keyed by its `static readonly id`. ([#426](https://github.com/seedcord/seedcord/pull/426))
+
+### 🩹 Patch
+
+- `seedcord dev` now warns when an http bot with `port: false` runs with a quick tunnel, and links the guide's fix. ([`2c04581`](https://github.com/seedcord/seedcord/commit/2c0458198ec443fc3b23be2b6d2985cce57245f7))
+- Fixed interactions through `fetch()` failing while a `ready()` call took longer than Discord's three seconds, because `fetch()` held every request until all of them finished. It now answers once the Ready phase starts, the same moment the built-in server does. ([`f2cb9a9`](https://github.com/seedcord/seedcord/commit/f2cb9a9e1897fda0c49445a65fdb35fa8f707a8a))
+- Fixed routine request and dispatch details appearing at `debug` instead of `trace`. ([#423](https://github.com/seedcord/seedcord/pull/423))
+
+#### 📦 Seedcord packages
+
+- `@seedcord/logger` 0.5.0 → 0.6.0-next.0
+- `@seedcord/utils` 0.9.0 → 0.9.1-next.0
+- `@seedcord/core` 0.11.0 → 0.12.0-next.0
+- `@seedcord/types` 0.15.0 → 0.16.0-next.0
+- `@seedcord/errors` 0.14.0 → 0.15.0-next.0
+- `@seedcord/custom-id` 0.3.0 → 0.3.1-next.0
+
 ## 0.11.0
 
 ### 💥 Breaking

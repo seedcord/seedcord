@@ -1,5 +1,36 @@
 # @seedcord/gateway
 
+## 0.9.0-next.0
+
+### 💥 Breaking
+
+- The handlers registered on one event now run at the same time. If one handler reads something another handler writes on the same event, it can now get the old value, for example a rank-role handler reading the XP a leveling handler adds. Move steps that depend on each other into one handler. ([#430](https://github.com/seedcord/seedcord/pull/430))
+- Renamed context-menu handlers' `commandName` to `route` and removed handlers' `routeId`. Read the dispatch identifier from `this.dispatch.routeId`. ([#422](https://github.com/seedcord/seedcord/pull/422))
+- `config.store` is now `config.kv`, and your handlers and plugins read it through `core.kv` and `this.kv`. Leave it out to keep everything in memory, or pass a `KeyvDriver`, an `UnstorageDriver`, or your own driver. Import `buildKey` from your transport package, and rename any plugin attached as `kv`. ([#429](https://github.com/seedcord/seedcord/pull/429))
+
+### ✨ Minor
+
+- Added a readonly `route` property to slash, context-menu, and component handlers for the selected command's path, command name, or custom-ID prefix. ([#422](https://github.com/seedcord/seedcord/pull/422))
+- Plugins can now define `codegen()`, and `seedcord codegen` writes what it returns into `seedcord-gen.ts`. A plugin reads that back with `Generated<typeof ThePlugin>`, keyed by its `static readonly id`. ([#426](https://github.com/seedcord/seedcord/pull/426))
+
+### 🩹 Patch
+
+- Fixed a handler reading `Emojis` before startup filled it, when an interaction or event arrived right after login. Handlers now start in the Ready phase, and anything that arrived during Login is dispatched once Ready is complete. ([`f2cb9a9`](https://github.com/seedcord/seedcord/commit/f2cb9a9e1897fda0c49445a65fdb35fa8f707a8a))
+- Fixed a refused Discord login, like a bad token or disallowed intents, waiting out the 10 second startup timeout. Startup now fails right away with Discord's reason. ([`162704a`](https://github.com/seedcord/seedcord/commit/162704a1437313575b54f09059e9e9d5b84441bf))
+- Fixed a class registered with two `once` events, like `guildMemberAdd` and `guildMemberUpdate`, running only whichever fired first. ([#430](https://github.com/seedcord/seedcord/pull/430))
+- Fixed routine request and dispatch details appearing at `debug` instead of `trace`. ([#423](https://github.com/seedcord/seedcord/pull/423))
+- Fixed the `type-fest` types in the published declarations failing to resolve, since each package listed `type-fest` only as a dev dependency. ([`50db882`](https://github.com/seedcord/seedcord/commit/50db8827aca008f874bf60e5796a696c894056cc))
+- Fixed unexpected autocomplete recovery failures and compiler diagnostics being logged at `debug` instead of `error`. ([#423](https://github.com/seedcord/seedcord/pull/423))
+
+#### 📦 Seedcord packages
+
+- `@seedcord/logger` 0.5.0 → 0.6.0-next.0
+- `@seedcord/utils` 0.9.0 → 0.9.1-next.0
+- `@seedcord/core` 0.11.0 → 0.12.0-next.0
+- `@seedcord/types` 0.15.0 → 0.16.0-next.0
+- `@seedcord/errors` 0.14.0 → 0.15.0-next.0
+- `@seedcord/custom-id` 0.3.0 → 0.3.1-next.0
+
 ## 0.8.0
 
 ### 💥 Breaking

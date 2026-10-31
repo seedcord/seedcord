@@ -1,5 +1,23 @@
 # @seedcord/plugin-kysely-postgres
 
+## 0.8.0-next.0
+
+### ✨ Minor
+
+- `seedcord codegen` now fills in `MongooseServices` and `KyselyServices` from your decorated service classes. You can delete the `declare module` blocks that list your services. ([#426](https://github.com/seedcord/seedcord/pull/426))
+
+### 🩹 Patch
+
+- Fixed the `type-fest` types in the published declarations failing to resolve, since each package listed `type-fest` only as a dev dependency. ([`50db882`](https://github.com/seedcord/seedcord/commit/50db8827aca008f874bf60e5796a696c894056cc))
+
+#### 📦 Seedcord packages
+
+- `@seedcord/logger` 0.5.0 → 0.6.0-next.0
+- `@seedcord/utils` 0.9.0 → 0.9.1-next.0
+- `@seedcord/core` 0.11.0 → 0.12.0-next.0
+- `@seedcord/types` 0.15.0 → 0.16.0-next.0
+- `@seedcord/errors` 0.14.0 → 0.15.0-next.0
+
 ## 0.7.0
 
 ### 💥 Breaking

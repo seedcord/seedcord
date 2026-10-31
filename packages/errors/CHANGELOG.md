@@ -1,5 +1,16 @@
 # @seedcord/errors
 
+## 0.15.0-next.0
+
+### 💥 Breaking
+
+- `config.store` is now `config.kv`, and your handlers and plugins read it through `core.kv` and `this.kv`. Leave it out to keep everything in memory, or pass a `KeyvDriver`, an `UnstorageDriver`, or your own driver. Import `buildKey` from your transport package, and rename any plugin attached as `kv`. ([#429](https://github.com/seedcord/seedcord/pull/429))
+
+### ✨ Minor
+
+- Plugins can now define `codegen()`, and `seedcord codegen` writes what it returns into `seedcord-gen.ts`. A plugin reads that back with `Generated<typeof ThePlugin>`, keyed by its `static readonly id`. ([#426](https://github.com/seedcord/seedcord/pull/426))
+- Added `seedcord make`, which writes new files from the Handlebars templates in your `templates` folder or in an installed plugin. It asks for each value the templates read. Your own helpers go under `make.helpers` in `seedcord.config.ts`. ([#425](https://github.com/seedcord/seedcord/pull/425))
+
 ## 0.14.0
 
 ### 💥 Breaking

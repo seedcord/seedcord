@@ -1,5 +1,11 @@
 # @seedcord/eslint-plugin
 
+## 0.5.1-next.0
+
+### 🩹 Patch
+
+- Fixed `use-custom-id-codec` flagging the custom id of a text input, like `input.setCustomId('reason')` in a modal. That id only keys the value you read back with `getTextInputValue`. ([`f0177b9`](https://github.com/seedcord/seedcord/commit/f0177b9aa7503cf9aabfb5009d802e83d9ade50a))
+
 ## 0.5.0
 
 ### 💥 Breaking

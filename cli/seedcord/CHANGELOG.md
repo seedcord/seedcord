@@ -1,5 +1,34 @@
 # seedcord
 
+## 0.23.0-next.0
+
+### 💥 Breaking
+
+- An edge bot now needs `@cloudflare/vite-plugin@2.0.0-beta.v.8` and `cf@1.0.0-beta.26`. Run `pnpm add -D @cloudflare/vite-plugin@2.0.0-beta.v.8 cf@1.0.0-beta.26` in an existing edge bot. ([`f8ba5ff`](https://github.com/seedcord/seedcord/commit/f8ba5ff9f49c827339a323b7029a15ac9a06e63a))
+- `seedcord codegen` now writes `seedcord-gen.ts` in place of `seedcord-gen.d.ts`, and `tc` reports a plugin row that doesn't match its plugin's `codegen()`. Delete the old file, run codegen once, and rename it in your eslint ignores, `.prettierignore`, `.gitattributes`, and editor settings. ([#427](https://github.com/seedcord/seedcord/pull/427))
+- `config.store` is now `config.kv`, and your handlers and plugins read it through `core.kv` and `this.kv`. Leave it out to keep everything in memory, or pass a `KeyvDriver`, an `UnstorageDriver`, or your own driver. Import `buildKey` from your transport package, and rename any plugin attached as `kv`. ([#429](https://github.com/seedcord/seedcord/pull/429))
+
+### ✨ Minor
+
+- Added a `g` key to `seedcord dev` that runs codegen for the running bot without restarting it. ([`8d77737`](https://github.com/seedcord/seedcord/commit/8d77737dfbb8b8fd30ab8f54d9bdbaadb2d7b406))
+- Plugins can now define `codegen()`, and `seedcord codegen` writes what it returns into `seedcord-gen.ts`. A plugin reads that back with `Generated<typeof ThePlugin>`, keyed by its `static readonly id`. ([#426](https://github.com/seedcord/seedcord/pull/426))
+- Added `seedcord make`, which writes new files from the Handlebars templates in your `templates` folder or in an installed plugin. It asks for each value the templates read. Your own helpers go under `make.helpers` in `seedcord.config.ts`. ([#425](https://github.com/seedcord/seedcord/pull/425))
+
+### 🩹 Patch
+
+- Fixed a relative `readFiles` or `importFiles` path throwing `CoreDirectoryRootUnknown` under `seedcord codegen`, `seedcord build`, and `seedcord commands`. ([#426](https://github.com/seedcord/seedcord/pull/426))
+- Fixed the seedcord CLI mentioning a barrel file when a command's constructor throws, if the barrel re-exports a command defined in another file. The error now points at the file that defines the command. ([#426](https://github.com/seedcord/seedcord/pull/426))
+- `seedcord dev` now warns when an http bot with `port: false` runs with a quick tunnel, and links the guide's fix. ([`2c04581`](https://github.com/seedcord/seedcord/commit/2c0458198ec443fc3b23be2b6d2985cce57245f7))
+- Fixed unexpected autocomplete recovery failures and compiler diagnostics being logged at `debug` instead of `error`. ([#423](https://github.com/seedcord/seedcord/pull/423))
+
+#### 📦 Seedcord packages
+
+- `@seedcord/logger` 0.5.0 → 0.6.0-next.0
+- `@seedcord/utils` 0.9.0 → 0.9.1-next.0
+- `@seedcord/core` 0.11.0 → 0.12.0-next.0
+- `@seedcord/types` 0.15.0 → 0.16.0-next.0
+- `@seedcord/errors` 0.14.0 → 0.15.0-next.0
+
 ## 0.22.0
 
 ### 💥 Breaking

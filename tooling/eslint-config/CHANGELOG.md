@@ -1,5 +1,15 @@
 # @seedcord/eslint-config
 
+## 3.0.1-next.0
+
+### 🩹 Patch
+
+- Fixed a type issue in the prettier config of @seedcord/eslint-config. It's now fully typed and not labeled as unknown. ([#421](https://github.com/seedcord/seedcord/pull/421), thanks [@lunaradev1](https://github.com/lunaradev1))
+
+#### 📦 Seedcord packages
+
+- `@seedcord/eslint-plugin` 0.5.0 → 0.5.1-next.0
+
 ## 3.0.0
 
 ### 💥 Breaking

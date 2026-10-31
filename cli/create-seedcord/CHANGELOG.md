@@ -1,5 +1,21 @@
 # create-seedcord
 
+## 0.6.0-next.0
+
+### 💥 Breaking
+
+- `seedcord codegen` now writes `seedcord-gen.ts` in place of `seedcord-gen.d.ts`, and `tc` reports a plugin row that doesn't match its plugin's `codegen()`. Delete the old file, run codegen once, and rename it in your eslint ignores, `.prettierignore`, `.gitattributes`, and editor settings. ([#427](https://github.com/seedcord/seedcord/pull/427))
+
+### ✨ Minor
+
+- New projects now start with `seedcord make` templates for a slash command, a button, a select menu, a modal, and on gateway an event, plus a `make` script to run it. ([#425](https://github.com/seedcord/seedcord/pull/425))
+
+### 🩹 Patch
+
+- A new project's `AGENTS.md` now tells a coding agent to try a change by running `dev` in the background, driving it over stdin, and asking you to run the command in Discord. ([`f911ad1`](https://github.com/seedcord/seedcord/commit/f911ad1835bcdf65ce1031fad231fd73ba4cb6dd))
+- A new edge bot now gets `@cloudflare/vite-plugin@2.0.0-beta.v.8` and `cf@1.0.0-beta.26`. ([`f8ba5ff`](https://github.com/seedcord/seedcord/commit/f8ba5ff9f49c827339a323b7029a15ac9a06e63a))
+- Fixed `--dir` on a folder create-seedcord can't read. It now reports node's error as a bad `--dir` answer and tells you to pick a folder you can create files in. ([#425](https://github.com/seedcord/seedcord/pull/425))
+
 ## 0.5.0
 
 ### 💥 Breaking

@@ -1,5 +1,17 @@
 # @seedcord/utils
 
+## 0.9.1-next.0
+
+### 🩹 Patch
+
+- Fixed the edge logger losing a `Date` passed to a log call, and spreading a class instance's fields into the top level. Both now go in `args`. ([#426](https://github.com/seedcord/seedcord/pull/426))
+- Fixed the `type-fest` types in the published declarations failing to resolve, since each package listed `type-fest` only as a dev dependency. ([`50db882`](https://github.com/seedcord/seedcord/commit/50db8827aca008f874bf60e5796a696c894056cc))
+
+#### 📦 Seedcord packages
+
+- `@seedcord/types` 0.15.0 → 0.16.0-next.0
+- `@seedcord/errors` 0.14.0 → 0.15.0-next.0
+
 ## 0.9.0
 
 ### 💥 Breaking
