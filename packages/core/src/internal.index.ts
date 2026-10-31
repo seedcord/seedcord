@@ -140,6 +140,7 @@ export {
 } from '#subscribers/slots';
 export { outcomeFor, queuedMsFor, reportDispatch } from '#src/dispatch/dispatchReport';
 export { eventResultFor, resultFor, runAfter } from '#src/dispatch/runAfter';
+export { OnceTracker } from '#src/dispatch/OnceTracker';
 // each transport declaration-merges its own default keys into this
 export type { DefaultSubscriptions } from '#subscribers/types/Subscriptions';
 export type { Initializeable } from '#src/plugin/Plugin';

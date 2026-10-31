@@ -5,6 +5,7 @@ import {
     EventMiddlewareMetadataKey,
     eventResultFor,
     MiddlewareRegistry,
+    OnceTracker,
     PublishDefault,
     resultFor,
     runAfter,
@@ -62,7 +63,7 @@ export class EventDispatcher implements Initializeable, HmrAware {
     private readonly middlewares = new MiddlewareRegistry<EventMiddlewareConstructor, keyof ClientEvents>(
         eventMiddleware
     );
-    private readonly executedOnceHandlers = new Set<EventHandlerConstructor>();
+    private readonly once = new OnceTracker();
     private readonly attachedEvents = new Set<keyof ClientEvents>();
 
     // a reload reports on the hmr channel
@@ -205,7 +206,6 @@ export class EventDispatcher implements Initializeable, HmrAware {
                 this.eventMap.delete(event as keyof ClientEvents);
             }
         }
-        // leaving executedOnceHandlers alone keeps a rollback-restored ctor spent
     }
 
     private unregisterMiddleware(middlewareCtor: EventMiddlewareConstructor): void {
@@ -334,7 +334,7 @@ export class EventDispatcher implements Initializeable, HmrAware {
         if (!handlerEntries || handlerEntries.length === 0) return;
 
         const handlersToExecute = handlerEntries.filter(
-            (entry) => entry.frequency !== 'once' || !this.executedOnceHandlers.has(entry.ctor)
+            (entry) => entry.frequency !== 'once' || !this.once.isSpent(entry.ctor, eventName)
         );
 
         if (handlersToExecute.length === 0) return;
@@ -351,12 +351,8 @@ export class EventDispatcher implements Initializeable, HmrAware {
             if (stopped) return;
 
             for (const entry of handlersToExecute) {
-                // marked spent before running so a rethrow can't invoke it again
-                if (entry.frequency === 'once') {
-                    // another dispatch may have marked this handler during the runMiddlewares await
-                    if (this.executedOnceHandlers.has(entry.ctor)) continue;
-                    this.executedOnceHandlers.add(entry.ctor);
-                }
+                // another dispatch may have claimed this handler during the runMiddlewares await
+                if (entry.frequency === 'once' && !this.once.claim(entry.ctor, eventName)) continue;
 
                 handlers.push(await this.processHandler(eventName, entry.ctor, args, dispatch));
             }

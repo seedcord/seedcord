@@ -146,12 +146,4 @@ Each tuple carries its own options, so one event's handler can run once while th
 
 Here the join arm runs for the first member and never again. The update arm runs every time.
 
-<Callout type="warning">
-
-seedcord records a `once` run against the whole class. If one class marks two different events as `once`, like `guildMemberAdd` and `guildMemberUpdate`, seedcord marks the class as run when it processes either event. The other event's arm then won't run until your bot restarts. Put each run-once event in its own class.
-
-An arm on that class without `once` still runs every time. Another class registered for the same event keeps its own record and follows its own `frequency`.
-
-</Callout>
-
 When several handlers need the same check before they run, like skipping muted members, an [event middleware](/events/middleware) runs it once ahead of all of them.
