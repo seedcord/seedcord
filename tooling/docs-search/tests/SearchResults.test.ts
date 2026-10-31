@@ -51,3 +51,13 @@ describe('SearchResults.rank', () => {
         expect(results.rank('entry', 'all', 0)).toEqual([]);
     });
 });
+
+describe('SearchResults.get', () => {
+    it('returns the result rank gave for its id, and undefined for an unknown id', () => {
+        const results = new SearchResults([entry('logger', 'class'), entry('logger/log', 'method')]);
+        const [picked] = results.rank('log', 'member');
+        expect(picked).toBeDefined();
+        expect(results.get(picked?.action.id ?? '')).toEqual(picked);
+        expect(results.get('seedcord:missing:class')).toBeUndefined();
+    });
+});

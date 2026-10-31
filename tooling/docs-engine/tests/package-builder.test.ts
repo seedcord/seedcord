@@ -135,3 +135,53 @@ describe('buildPackageFromModel search gate', () => {
         expect(indexes.byQName.has('InternalInterface')).toBe(true);
     });
 });
+
+function searchEntryFor(summary: string): { summary: string | null; tokens: string[] } | undefined {
+    const options = makeNode({
+        name: 'options',
+        kind: DocKind.Property,
+        isExported: true,
+        comment: {
+            summary,
+            summaryParts: [{ kind: 'text', text: summary }],
+            blockTags: [],
+            modifierTags: [],
+            examples: []
+        }
+    });
+    const root = makeNode({ name: 'root', kind: DocKind.Project, isExported: true, children: [options] });
+    return buildPackageFromModel(manifest, root).indexes.search.find(({ name }) => name === 'options');
+}
+
+describe('buildPackageFromModel search summary', () => {
+    it("keeps the summary's first sentence and still indexes the rest", () => {
+        const entry = searchEntryFor(
+            [
+                "The typed options for this command's route. Only the getters for kinds this command declares appear.",
+                'Each getter is restricted to that kind.',
+                '',
+                '',
+                '',
+                '- Choices narrow to their literal union.'
+            ].join('\n')
+        );
+        expect(entry?.summary).toBe("The typed options for this command's route.");
+        expect(entry?.tokens).toContain('union');
+    });
+
+    it.each([
+        [
+            'a next sentence that opens with a code name',
+            'Extracts the constructor type. typeof on a class gives more.',
+            'Extracts the constructor type.'
+        ],
+        [
+            'an e.g. inside the first sentence',
+            'The full route, e.g. ban/user. The rest follows.',
+            'The full route, e.g. ban/user.'
+        ],
+        ['a dotted name', 'Reads this.event.options once. Then caches it.', 'Reads this.event.options once.']
+    ])('ends the first sentence correctly for %s', (_, summary, first) => {
+        expect(searchEntryFor(summary)?.summary).toBe(first);
+    });
+});

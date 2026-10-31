@@ -61,6 +61,17 @@ function buildIndexes(root: DocNode, manifest: DocManifestPackage): DocIndexes {
     return { byId, bySlug, byQName, byKind, search };
 }
 
+const SENTENCE_END = /^.*?(?<!\b(?:e\.g|i\.e))[.!?](?=\s|$)/;
+
+function firstSentence(summary: string): string {
+    const paragraph =
+        summary
+            .split(/\n\s*\n/, 1)[0]
+            ?.replaceAll(/\s+/g, ' ')
+            .trim() ?? '';
+    return SENTENCE_END.exec(paragraph)?.[0] ?? paragraph;
+}
+
 function createSearchEntry(node: DocNode, manifest: DocManifestPackage, condition?: string): DocSearchEntry {
     const summary = node.comment?.summary ?? '';
     const nodeAliases = collectCommentAliases(node.comment);
@@ -84,7 +95,7 @@ function createSearchEntry(node: DocNode, manifest: DocManifestPackage, conditio
         qualifiedName: node.qualifiedName,
         packageName: node.packageName,
         kind: node.kind,
-        summary: summary || null,
+        summary: firstSentence(summary) || null,
         tokens
     };
 
