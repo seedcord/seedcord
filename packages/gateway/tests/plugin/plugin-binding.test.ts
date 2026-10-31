@@ -4,6 +4,7 @@ import { Plugin } from '#src/Plugin';
 
 import type { Core } from '#interfaces/Core';
 import type { CoreBase } from '@seedcord/core';
+import type { Promisable } from 'type-fest';
 
 // justified: the test only reads the members it declares
 const core = { bot: { client: { token: 'seed' } } } as unknown as Core;
@@ -49,7 +50,7 @@ class OnEdge extends Plugin<{ runtime: 'edge' }> {
 void OnEdge;
 
 class Declared extends Plugin<{ transport: 'gateway'; runtime: 'server' }> {
-    public init(): Promise<void> {
+    public init(): Promisable<void> {
         return Promise.resolve();
     }
 }

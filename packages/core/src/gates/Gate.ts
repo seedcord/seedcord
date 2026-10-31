@@ -1,5 +1,6 @@
 import type { CoreBase } from '#interfaces/CoreBase';
 import type { DispatchContext } from '#src/dispatch/DispatchContext';
+import type { Promisable } from 'type-fest';
 
 /**
  * The transport-agnostic gate context, the scalar identity of the acting user resolvable from any
@@ -177,7 +178,7 @@ export interface EffectGate<Ctx extends GateContextBase = GateContextBase, Name 
  */
 export function defineGate<const Name extends string, Ctx extends GateContextBase = GateContextBase>(
     name: Name,
-    fn: (ctx: Ctx) => void | Promise<void>
+    fn: (ctx: Ctx) => Promisable<void>
 ): Gate<Ctx, Name> {
     return { name, check: async (ctx) => fn(ctx) } as Gate<Ctx, Name>;
 }
@@ -219,8 +220,8 @@ export function defineGate<const Name extends string, Ctx extends GateContextBas
  */
 export function defineEffectGate<const Name extends string, Ctx extends GateContextBase = GateContextBase>(
     name: Name,
-    check: (ctx: Ctx) => void | Promise<void>,
-    commit: (ctx: Ctx) => void | Promise<void>
+    check: (ctx: Ctx) => Promisable<void>,
+    commit: (ctx: Ctx) => Promisable<void>
 ): EffectGate<Ctx, Name> {
     return {
         name,

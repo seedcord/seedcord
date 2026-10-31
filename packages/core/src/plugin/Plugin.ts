@@ -24,6 +24,7 @@ import type {
     TransportAssert
 } from './options';
 import type { Tail, FrameworkChannel, HmrAware, HmrUpdateEvent } from '@seedcord/types';
+import type { Promisable } from 'type-fest';
 
 interface Attaching {
     readonly key: string;
@@ -34,7 +35,7 @@ interface Attaching {
 let attaching: Attaching | undefined;
 
 export interface Initializeable {
-    init(): Promise<void>;
+    init(): Promisable<void>;
 }
 
 /** @internal */
@@ -156,7 +157,7 @@ export abstract class Plugin<
      * Runs in `StartupPhase.Configuration` by default.
      * Move it to a different phase with the {@link PluginLifecycleSpec}.
      */
-    abstract init(): Promise<void>;
+    abstract init(): Promisable<void>;
 
     /**
      * Runs in the Ready phase, after every attached plugin's `init()` has resolved. The other Ready
@@ -164,7 +165,7 @@ export abstract class Plugin<
      *
      * Override it when your work needs a logged-in client or a resolved application id.
      */
-    ready?(): Promise<void>;
+    ready?(): Promisable<void>;
 
     /**
      * Runs during teardown, in `ShutdownPhase.Disconnect` by default. seedcord skips it when `init()`
@@ -173,7 +174,7 @@ export abstract class Plugin<
      * When `init()` outlasts its timeout, seedcord calls this once that `init()` resolves, outside any
      * shutdown phase. The process must still be alive for that call to happen.
      */
-    dispose?(): Promise<void>;
+    dispose?(): Promisable<void>;
 
     /**
      * Returns data that `seedcord codegen` writes into the bot's `seedcord-gen.ts` as a type.
@@ -196,7 +197,7 @@ export abstract class Plugin<
     }
 
     /** Override to reload plugin state on an HMR update. */
-    public onHmr(_event: HmrUpdateEvent): Promise<void> {
+    public onHmr(_event: HmrUpdateEvent): Promisable<void> {
         return Promise.resolve();
     }
 

@@ -5,6 +5,7 @@ import type { Core } from '#interfaces/Core';
 import type { InteractionOf } from './middlewareKinds';
 import type { DispatchContext, DispatchResult, MiddlewareKind } from '@seedcord/core';
 import type { MiddlewareKindsBrand } from '@seedcord/core/internal';
+import type { Promisable } from 'type-fest';
 
 /**
  * Base class for interaction middleware.
@@ -52,5 +53,5 @@ export abstract class InteractionMiddleware<
      * }
      * ```
      */
-    public after?(result: DispatchResult): Promise<void>;
+    public after?(result: DispatchResult): Promisable<void>;
 }

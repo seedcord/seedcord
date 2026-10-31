@@ -4,9 +4,10 @@ import { outcomeFor } from './dispatchReport';
 
 import type { DispatchResult, EventDispatchResult, HandlerResult } from './dispatchResult';
 import type { Logger } from '@seedcord/logger';
+import type { Promisable } from 'type-fest';
 
 interface Afterable<Result> {
-    after?(result: Result): Promise<void>;
+    after?(result: Result): Promisable<void>;
 }
 
 /** @internal */
