@@ -90,6 +90,7 @@ export class Ping extends SlashHandler<'ping'> {
 - Typed config from `.env` and the shell through [envapt](https://envapt.materwelon.dev)
 - Typed plugins with `init`, `ready`, and `dispose`, on a server or on Workers
 - A typed event bus on both transports
+- A typed kv store, in memory or on any Keyv or unstorage driver
 - Custom emojis looked up by the name in your config
 - Logging in named channels you can quiet one at a time
 

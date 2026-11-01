@@ -15,6 +15,7 @@ import {
     GalleryHorizontalEnd,
     Gauge,
     GitMerge,
+    HardDrive,
     HeartPulse,
     Hourglass,
     KeyRound,
@@ -146,7 +147,12 @@ const GROUPS: Group[] = [
             { icon: ScrollText, label: 'logger', gloss: 'named channels, levels and sinks' },
             { icon: Activity, label: 'health check', gloss: 'an HTTP endpoint that reports readiness' },
             { icon: Webhook, label: 'webhook reporters', gloss: 'faults posted to a Discord webhook' },
-            { icon: Variable, label: 'typed env', gloss: 'envapt reads .env, your shell and Worker bindings' }
+            { icon: Variable, label: 'typed env', gloss: 'envapt reads .env, your shell and Worker bindings' },
+            {
+                icon: HardDrive,
+                label: 'kv store',
+                gloss: 'typed records that expire, in memory or on a Keyv or unstorage driver'
+            }
         ]
     },
     {
