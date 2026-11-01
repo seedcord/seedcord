@@ -15,34 +15,34 @@ const search = new GuideSearch();
 
 const loadMatches = loadOnce(() => GuideMatches.load());
 
-type Found =
-    | {
-          question: string;
-          results: GuideResult[];
-      }
-    | {
-          question: string;
-          notice: string;
-      };
+type GroupState =
+    { status: 'pending' } | { status: 'failed'; notice: string } | { status: 'done'; results: GuideResult[] };
 
-export interface ResultGroup {
-    label: string;
-    pending: boolean;
-    results: GuideResult[];
-    // shown in place of the rows when the search failed
-    notice: string | undefined;
+export type ResultGroup = { label: string } & GroupState;
+
+interface Answer {
+    question: string;
+    state: Exclude<GroupState, { status: 'pending' }>;
 }
 
-export interface GuideSearchState {
-    groups: ResultGroup[];
-    searching: boolean;
-}
+const PENDING: GroupState = { status: 'pending' };
+const NOT_ASKED: GroupState = { status: 'done', results: NO_RESULTS };
 
 function noticeFor(error: unknown): string {
     if (error instanceof TooManySearches) return error.message;
     // fetch rejects with a TypeError when the request never reaches the server
     if (error instanceof TypeError) return 'Related results need a network connection.';
     return 'Related results are unavailable right now. Try again in a minute.';
+}
+
+function relatedState(question: string | undefined, answer: Answer | null): GroupState {
+    if (question === undefined) return NOT_ASKED;
+    return answer?.question === question ? answer.state : PENDING;
+}
+
+function withoutShown(state: GroupState, shown: ReadonlySet<string>): GroupState {
+    if (state.status !== 'done') return state;
+    return { status: 'done', results: state.results.filter((result) => !shown.has(result.path)) };
 }
 
 function useMatches(open: boolean): GuideMatches | undefined {
@@ -65,11 +65,10 @@ function useMatches(open: boolean): GuideMatches | undefined {
     return matches;
 }
 
-export function useGuideSearch(typed: string, open: boolean): GuideSearchState {
+export function useGuideSearch(typed: string, open: boolean): ResultGroup[] {
     const matches = useMatches(open);
-    const [found, setFound] = useState<Found | null>(null);
+    const [answer, setAnswer] = useState<Answer | null>(null);
     const question = parseQuestion(typed);
-    const asking = question !== undefined;
 
     useEffect(() => {
         if (question === undefined) return undefined;
@@ -78,10 +77,11 @@ export function useGuideSearch(typed: string, open: boolean): GuideSearchState {
         const timer = setTimeout(() => {
             search.search(question, replaced.signal).then(
                 (results) => {
-                    if (!replaced.signal.aborted) setFound({ question, results });
+                    if (!replaced.signal.aborted) setAnswer({ question, state: { status: 'done', results } });
                 },
                 (error: unknown) => {
-                    if (!replaced.signal.aborted) setFound({ question, notice: noticeFor(error) });
+                    if (replaced.signal.aborted) return;
+                    setAnswer({ question, state: { status: 'failed', notice: noticeFor(error) } });
                 }
             );
         }, TYPING_PAUSE_MS);
@@ -91,24 +91,15 @@ export function useGuideSearch(typed: string, open: boolean): GuideSearchState {
         };
     }, [question]);
 
-    const current = asking && found?.question === question ? found : null;
-    const searching = asking && current === null;
-    const answered = current !== null && 'results' in current ? current.results : NO_RESULTS;
-    const notice = current !== null && 'notice' in current ? current.notice : undefined;
+    const related = relatedState(question, answer);
     const matched = useMemo(() => matches?.match(typed) ?? NO_RESULTS, [matches, typed]);
 
-    const groups = useMemo(() => {
+    return useMemo(() => {
         const shown = new Set(matched.map((result) => result.path));
-        return [
-            { label: 'Matches', pending: false, results: matched, notice: undefined },
-            {
-                label: 'Related',
-                pending: searching,
-                results: answered.filter((result) => !shown.has(result.path)),
-                notice
-            }
-        ].filter((group) => group.pending || group.results.length > 0 || group.notice !== undefined);
-    }, [matched, answered, searching, notice]);
-
-    return { groups, searching };
+        const groups: ResultGroup[] = [
+            { label: 'Matches', status: 'done', results: matched },
+            { label: 'Related', ...withoutShown(related, shown) }
+        ];
+        return groups.filter((group) => group.status !== 'done' || group.results.length > 0);
+    }, [matched, related]);
 }

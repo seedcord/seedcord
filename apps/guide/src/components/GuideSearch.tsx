@@ -21,7 +21,7 @@ import { useGuideSearch } from './useGuideSearch';
 
 import type { ResultGroup } from './useGuideSearch';
 import type { GuideResult } from '@seedcord/docs-search';
-import type { RowPosition } from '@seedcord/ui';
+import type { RovingGroup, RowPosition } from '@seedcord/ui';
 import type { ReactElement } from 'react';
 
 const LISTBOX_ID = 'guide-search-results';
@@ -32,31 +32,30 @@ function optionId(path: string): string {
     return `guide-search-${path}`;
 }
 
-interface PlacedRow {
-    result: GuideResult;
-    index: number;
-}
-
-interface PlacedGroup extends Omit<ResultGroup, 'results'> {
-    rows: PlacedRow[];
+interface PlacedGroup {
+    group: ResultGroup;
+    start: number;
 }
 
 interface ResultList {
     groups: PlacedGroup[];
     rows: GuideResult[];
-    groupStarts: number[];
+    roving: RovingGroup[];
 }
 
 function placeGroups(groups: readonly ResultGroup[]): ResultList {
     const placed: PlacedGroup[] = [];
     const rows: GuideResult[] = [];
-    const groupStarts: number[] = [];
-    for (const { results, ...group } of groups) {
-        if (results.length > 0 || group.pending) groupStarts.push(rows.length);
-        placed.push({ ...group, rows: results.map((result, offset) => ({ result, index: rows.length + offset })) });
-        rows.push(...results);
+    const roving: RovingGroup[] = [];
+    for (const group of groups) {
+        placed.push({ group, start: rows.length });
+        if (group.status === 'pending') roving.push({ loading: true });
+        if (group.status === 'done') {
+            roving.push({ loading: false, start: rows.length });
+            rows.push(...group.results);
+        }
     }
-    return { groups: placed, rows, groupStarts };
+    return { groups: placed, rows, roving };
 }
 
 interface RowEvents {
@@ -65,29 +64,41 @@ interface RowEvents {
     onActivate: (index: number) => void;
 }
 
-function Group({ group, activeIndex, onSelect, onActivate }: RowEvents & { group: PlacedGroup }): ReactElement {
+function GroupBody({
+    placed: { group, start },
+    activeIndex,
+    onSelect,
+    onActivate
+}: RowEvents & { placed: PlacedGroup }): ReactElement | ReactElement[] {
+    if (group.status === 'pending') return <SearchResultsSkeleton />;
+    if (group.status === 'failed') {
+        return (
+            <p aria-hidden className={cn('text-subtle px-3 py-2 text-sm')}>
+                {group.notice}
+            </p>
+        );
+    }
+    return group.results.map((result, offset) => (
+        <SearchResultRow
+            key={result.path}
+            result={result}
+            isActive={start + offset === activeIndex}
+            optionId={optionId(result.path)}
+            index={start + offset}
+            onSelect={onSelect}
+            onActivate={onActivate}
+        />
+    ));
+}
+
+function Group(props: RowEvents & { placed: PlacedGroup }): ReactElement {
+    const { label } = props.placed.group;
     return (
-        <div role="group" aria-label={group.label} className={cn('mt-3 first:mt-0')}>
+        <div role="group" aria-label={label} className={cn('mt-3 first:mt-0')}>
             <div aria-hidden className={cn(SECTION_LABEL, 'px-3 pb-2')}>
-                {group.label}
+                {label}
             </div>
-            {group.pending ? <SearchResultsSkeleton /> : null}
-            {group.notice === undefined ? null : (
-                <p aria-hidden className={cn('text-subtle px-3 py-2 text-sm')}>
-                    {group.notice}
-                </p>
-            )}
-            {group.rows.map(({ result, index }) => (
-                <SearchResultRow
-                    key={result.path}
-                    result={result}
-                    isActive={index === activeIndex}
-                    optionId={optionId(result.path)}
-                    index={index}
-                    onSelect={onSelect}
-                    onActivate={onActivate}
-                />
-            ))}
+            <GroupBody {...props} />
         </div>
     );
 }
@@ -105,7 +116,7 @@ function Results({
     const active = list.rows[rowEvents.activeIndex];
     useActiveRowScroll(active ? optionId(active.path) : undefined, position);
 
-    // a null child collapses the animated panel back to just the bar with the hint
+    // a null child collapses the animated panel to only the bar with the hint
     if (emptyMessage === null && list.groups.length === 0) return null;
 
     return (
@@ -115,8 +126,8 @@ function Results({
             )}
             {list.groups.length > 0 ? (
                 <div id={LISTBOX_ID} role="listbox" aria-label="Search results">
-                    {list.groups.map((group) => (
-                        <Group key={group.label} group={group} {...rowEvents} />
+                    {list.groups.map((placed) => (
+                        <Group key={placed.group.label} placed={placed} {...rowEvents} />
                     ))}
                 </div>
             ) : null}
@@ -134,7 +145,7 @@ export function GuideSearch({ open, onOpenChange: setOpen }: GuideSearchProps): 
     const inputRef = useRef<HTMLInputElement>(null);
     const router = useRouter();
 
-    const { groups, searching } = useGuideSearch(typed, open);
+    const groups = useGuideSearch(typed, open);
     // useRovingList tracks the rows by identity
     const list = useMemo(() => placeGroups(groups), [groups]);
 
@@ -153,7 +164,7 @@ export function GuideSearch({ open, onOpenChange: setOpen }: GuideSearchProps): 
 
     const { activeIndex, pointAt, onKeyDown, ...position } = useRovingList({
         items: list.rows,
-        groupStarts: list.groupStarts,
+        groups: list.roving,
         onSelect: select
     });
 
@@ -170,9 +181,7 @@ export function GuideSearch({ open, onOpenChange: setOpen }: GuideSearchProps): 
                 onClose={() => setOpen(false)}
                 title="Search"
                 description="Search every page in the seedcord guide."
-                footer={
-                    list.rows.length === 0 ? undefined : <SearchKeyLegend hasGroups={list.groupStarts.length > 1} />
-                }
+                footer={list.rows.length === 0 ? undefined : <SearchKeyLegend hasGroups={list.roving.length > 1} />}
                 field={
                     <SearchField
                         inputRef={inputRef}
@@ -186,7 +195,7 @@ export function GuideSearch({ open, onOpenChange: setOpen }: GuideSearchProps): 
                         maxLength={QUESTION_LENGTH.max}
                         listboxId={LISTBOX_ID}
                         listExpanded={list.rows.length > 0}
-                        isSearching={searching}
+                        isSearching={groups.some((group) => group.status === 'pending')}
                         {...(active ? { activeId: optionId(active.path) } : {})}
                     />
                 }
@@ -201,7 +210,7 @@ export function GuideSearch({ open, onOpenChange: setOpen }: GuideSearchProps): 
                 />
                 {/* a screen reader announces a change inside a status region that already exists */}
                 <p role="status" className={cn('sr-only')}>
-                    {groups.find((group) => group.notice !== undefined)?.notice}
+                    {groups.find((group) => group.status === 'failed')?.notice}
                 </p>
             </SearchDialog>
         </>

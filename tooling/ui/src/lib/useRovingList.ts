@@ -4,11 +4,13 @@ import { useCallback, useState } from 'react';
 
 import type { KeyboardEvent } from 'react';
 
+// Tab jumps to the start of each group and holds still on a group that's loading
+export type RovingGroup = { loading: false; start: number } | { loading: true };
+
 export interface RovingListOptions<TItem> {
     items: readonly TItem[];
     onSelect: (item: TItem) => void;
-    // Tab jumps between these. pass items.length for a group that's still loading
-    groupStarts?: readonly number[];
+    groups?: readonly RovingGroup[];
 }
 
 export interface RowPosition {
@@ -24,23 +26,19 @@ export interface RovingList extends RowPosition {
     onKeyDown: (event: KeyboardEvent<HTMLElement>) => void;
 }
 
-const NO_GROUPS: readonly number[] = [];
+const NO_GROUPS: readonly RovingGroup[] = [];
 
 function clamp(index: number, total: number): number {
     if (index < 0) return 0;
     return Math.min(index, total - 1);
 }
 
-function nextGroupStart(starts: readonly number[], activeIndex: number, step: 1 | -1): number {
-    const current = starts.findLastIndex((start) => start <= activeIndex);
-    return starts.at((current + step) % starts.length) ?? 0;
+function nextGroup(groups: readonly RovingGroup[], activeIndex: number, step: 1 | -1): RovingGroup | undefined {
+    const current = groups.findLastIndex((group) => !group.loading && group.start <= activeIndex);
+    return groups.at((current + step) % groups.length);
 }
 
-export function useRovingList<TItem>({
-    items,
-    onSelect,
-    groupStarts = NO_GROUPS
-}: RovingListOptions<TItem>): RovingList {
+export function useRovingList<TItem>({ items, onSelect, groups = NO_GROUPS }: RovingListOptions<TItem>): RovingList {
     const [{ activeIndex, pickedByPointer }, setActive] = useState({ activeIndex: 0, pickedByPointer: false });
     const setActiveIndex = useCallback(
         (index: number) => setActive({ activeIndex: index, pickedByPointer: false }),
@@ -48,7 +46,7 @@ export function useRovingList<TItem>({
     );
     const pointAt = useCallback((index: number) => setActive({ activeIndex: index, pickedByPointer: true }), []);
 
-    // react's adjust-state-during-render pattern, an effect here would cost a second pass
+    // adjusting state during render skips the extra render an effect would cost
     const [trackedItems, setTrackedItems] = useState(items);
     if (trackedItems !== items) {
         setTrackedItems(items);
@@ -85,10 +83,10 @@ export function useRovingList<TItem>({
                     break;
                 }
                 case 'Tab': {
-                    if (groupStarts.length < 2) break;
+                    if (groups.length < 2) break;
                     event.preventDefault();
-                    const next = nextGroupStart(groupStarts, activeIndex, event.shiftKey ? -1 : 1);
-                    if (next < total) setActiveIndex(next);
+                    const next = nextGroup(groups, activeIndex, event.shiftKey ? -1 : 1);
+                    if (next?.loading === false) setActiveIndex(next.start);
                     break;
                 }
                 case 'Enter': {
@@ -102,14 +100,14 @@ export function useRovingList<TItem>({
                 }
             }
         },
-        [activeIndex, groupStarts, items, onSelect, total, setActiveIndex]
+        [activeIndex, groups, items, onSelect, total, setActiveIndex]
     );
 
     return {
         activeIndex,
         isFirst: activeIndex === 0,
         isLast: total > 0 && activeIndex === total - 1,
-        isGroupStart: groupStarts.includes(activeIndex),
+        isGroupStart: groups.some((group) => !group.loading && group.start === activeIndex),
         pickedByPointer,
         pointAt,
         onKeyDown

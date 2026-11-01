@@ -100,8 +100,11 @@ describe('useRovingList', () => {
 
     it('moves between group starts with Tab and Shift+Tab, wrapping at either end', () => {
         const items = ['a', 'b', 'c', 'd'];
-        const groupStarts = [0, 2];
-        const { result } = renderHook(() => useRovingList({ items, groupStarts, onSelect: vi.fn() }));
+        const groups = [
+            { loading: false, start: 0 },
+            { loading: false, start: 2 }
+        ] as const;
+        const { result } = renderHook(() => useRovingList({ items, groups, onSelect: vi.fn() }));
 
         press(result, 'ArrowDown', 'Tab');
         expect(result.current.activeIndex).toBe(2);
@@ -114,7 +117,9 @@ describe('useRovingList', () => {
     });
 
     it('leaves Tab to the browser when there is one group', () => {
-        const { result } = renderHook(() => useRovingList({ items: ITEMS, groupStarts: [0], onSelect: vi.fn() }));
+        const { result } = renderHook(() =>
+            useRovingList({ items: ITEMS, groups: [{ loading: false, start: 0 }], onSelect: vi.fn() })
+        );
         const preventDefault = vi.fn();
 
         act(() => result.current.onKeyDown(keyEvent('Tab', false, preventDefault)));
@@ -134,7 +139,11 @@ describe('useRovingList', () => {
 
     it('holds Tab in place while the next group is still loading', () => {
         const { result } = renderHook(() =>
-            useRovingList({ items: ITEMS, groupStarts: [0, ITEMS.length], onSelect: vi.fn() })
+            useRovingList({
+                items: ITEMS,
+                groups: [{ loading: false, start: 0 }, { loading: true }],
+                onSelect: vi.fn()
+            })
         );
         const preventDefault = vi.fn();
 

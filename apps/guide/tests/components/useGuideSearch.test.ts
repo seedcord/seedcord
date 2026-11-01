@@ -54,11 +54,17 @@ function serving(sections: Response[] = []): Server {
     };
 }
 
-const relatedNotice = (groups: readonly ResultGroup[]): string | undefined =>
-    groups.find((group) => group.label === 'Related')?.notice;
+const relatedNotice = (groups: readonly ResultGroup[]): string | undefined => {
+    const related = groups.find((group) => group.label === 'Related');
+    return related?.status === 'failed' ? related.notice : undefined;
+};
 
-const shown = (groups: readonly ResultGroup[]): { label: string; pending: boolean; paths: string[] }[] =>
-    groups.map(({ label, pending, results }) => ({ label, pending, paths: results.map((result) => result.path) }));
+const shown = (groups: readonly ResultGroup[]): { label: string; status: ResultGroup['status']; paths: string[] }[] =>
+    groups.map((group) => ({
+        label: group.label,
+        status: group.status,
+        paths: group.status === 'done' ? group.results.map((result) => result.path) : []
+    }));
 
 const matchedPaths = (groups: readonly ResultGroup[]): string[] =>
     shown(groups).find((group) => group.label === 'Matches')?.paths ?? [];
@@ -91,18 +97,14 @@ describe('useGuideSearch', () => {
         });
         await pauseTyping();
         await answer('cooldown');
-        expect(shown(result.current.groups)).toEqual([
-            { label: 'Related', pending: false, paths: ['/checks/cooldown'] }
-        ]);
+        expect(shown(result.current)).toEqual([{ label: 'Related', status: 'done', paths: ['/checks/cooldown'] }]);
 
         rerender({ typed: 'kysely' });
-        expect(shown(result.current.groups)).toEqual([{ label: 'Related', pending: true, paths: [] }]);
+        expect(shown(result.current)).toEqual([{ label: 'Related', status: 'pending', paths: [] }]);
 
         await pauseTyping();
         await answer('kysely');
-        expect(shown(result.current.groups)).toEqual([
-            { label: 'Related', pending: false, paths: ['/plugins/kysely'] }
-        ]);
+        expect(shown(result.current)).toEqual([{ label: 'Related', status: 'done', paths: ['/plugins/kysely'] }]);
     });
 
     it('cancels the request for a question the reader typed past', async () => {
@@ -124,12 +126,12 @@ describe('useGuideSearch', () => {
         });
         await pauseTyping();
         await answer('cooldown', new Response(null, { status: 429, headers: { 'retry-after': '60' } }));
-        expect(relatedNotice(result.current.groups)).toBe('Too many searches. Try again in 60 seconds.');
+        expect(relatedNotice(result.current)).toBe('Too many searches. Try again in 60 seconds.');
 
         rerender({ typed: 'kysely' });
         await pauseTyping();
         await answer('kysely', new TypeError('Failed to fetch'));
-        expect(relatedNotice(result.current.groups)).toBe('Related results need a network connection.');
+        expect(relatedNotice(result.current)).toBe('Related results need a network connection.');
     });
 
     it('loads the guide sections once the dialog opens, and again on the next open after a failure', async () => {
@@ -141,11 +143,11 @@ describe('useGuideSearch', () => {
 
         rerender({ open: true });
         await act(() => vi.advanceTimersByTimeAsync(0));
-        expect(matchedPaths(result.current.groups)).toEqual([]);
+        expect(matchedPaths(result.current)).toEqual([]);
 
         rerender({ open: false });
         rerender({ open: true });
         await act(() => vi.advanceTimersByTimeAsync(0));
-        expect(matchedPaths(result.current.groups)).toEqual(['/checks/cooldown/']);
+        expect(matchedPaths(result.current)).toEqual(['/checks/cooldown/']);
     });
 });
