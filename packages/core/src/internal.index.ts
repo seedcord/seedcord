@@ -66,7 +66,6 @@ export { isCommandClass, type CommandCtor } from '#src/commands/isCommandClass';
 export { slashRouteLeaves } from '#src/commands/slashRouteLeaves';
 export type { CommandBuilder, DeployResult } from '#src/commands/types';
 
-export { PermissionNames } from '#gates/catalog/permissions';
 export type { GateFitsWith } from '#gates/matching';
 
 export { getDevChannel, setDevChannel } from '#hmr/devChannel';
@@ -75,18 +74,7 @@ export { wrapHot } from '#hmr/wrapHot';
 export { fromDevLogLine, fromWireError, toWireError } from '#hmr/wire';
 export { forwardLogsToCli } from '#hmr/forwardLogsToCli';
 
-export {
-    GateNotice,
-    HasPresentPermissions,
-    MissingPermissions,
-    MissingRole,
-    NeedsAny,
-    NotAllowed,
-    NotInDm,
-    NotInGuild,
-    NotOwner,
-    OnCooldown
-} from '#notices/index';
+export { MissingRole, NeedsAny, NotAllowed, NotInDm, NotInGuild, NotOwner, OnCooldown } from '#notices/index';
 
 export {
     CommandMetadataKey,

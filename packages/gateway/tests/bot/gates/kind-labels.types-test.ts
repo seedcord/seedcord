@@ -17,7 +17,7 @@ import { UserContextMenuHandler, MessageContextMenuHandler } from '#handlers/int
 import { SlashHandler } from '#handlers/interaction/SlashHandler';
 
 import type { AnyHandlerCtor, FitAll } from '#bot/gates/matching';
-import type { EventGateContext } from '#src/bot/gates/Gate';
+import type { EventGateContext, InteractionGateContext } from '#src/bot/gates/Gate';
 import type { Constructor } from 'type-fest';
 
 declare module '@seedcord/core' {
@@ -34,7 +34,11 @@ const messageOnly = defineGate('Probe', (ctx: EventGateContext<'messageCreate'>)
 
 const channelScoped = RequireBotPermissions([PermissionFlagsBits.BanMembers]);
 
-type Mismatch<Got extends string> = `gate 'Probe' requires a messageCreate event handler, and this handler is ${Got}`;
+const anyInteraction = defineGate('AnyInteraction', (ctx: InteractionGateContext) => {
+    void ctx;
+});
+
+type Mismatch<Got extends string> = `gate 'Probe' requires a messageCreate event handler, but this handler is ${Got}`;
 
 type LabelOf<TCtor extends AnyHandlerCtor> =
     FitAll<TCtor, [typeof messageOnly]>[0] extends Constructor<[infer Message]> ? Message : never;
@@ -129,7 +133,12 @@ function typeChecks(): void {
         FitAll<typeof ProbeMemberEvent, [typeof channelScoped]>[0] extends Constructor<[infer Message]>
             ? Message
             : never
-    >().toEqualTypeOf<"gate 'RequireBotPermissions' requires a gateway interaction handler, and this handler is guildMemberAdd event">();
+    >().toEqualTypeOf<"gate 'RequireBotPermissions' requires a generic interaction handler, but this handler is guildMemberAdd event">();
+    expectTypeOf<
+        FitAll<typeof ProbeMemberEvent, [typeof anyInteraction]>[0] extends Constructor<[infer Message]>
+            ? Message
+            : never
+    >().toEqualTypeOf<"gate 'AnyInteraction' requires a generic interaction handler, but this handler is guildMemberAdd event">();
 }
 
 // no-unused-vars does not count a name used only in a type position
@@ -137,6 +146,7 @@ void [
     ProbeId,
     messageOnly,
     channelScoped,
+    anyInteraction,
     typeChecks,
     ProbeSlash,
     ProbeMessageMenu,

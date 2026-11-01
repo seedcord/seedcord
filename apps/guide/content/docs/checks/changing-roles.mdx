@@ -31,7 +31,7 @@ declare const role: Role;
 hasPermsToAssign({ role });
 ```
 
-To compare positions, `hasPermsToAssign` reads your bot's own role from the guild's role cache. If the cache doesn't have it, the call throws a `SeedcordError` with the code `CoreBotRoleMissing`.
+To compare positions, `hasPermsToAssign` reads your bot's own role from the guild's role cache. If the cache doesn't have it, the call throws a `SeedcordError` with the code `CoreBotRoleMissing`. If the member cache doesn't have your bot's member, the Manage Roles check throws `CoreBotMemberMissing`.
 
 <Callout type="transport" only="gateway">
 

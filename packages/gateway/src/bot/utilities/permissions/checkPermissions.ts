@@ -10,13 +10,13 @@ export interface CheckPermissionOptions {
     /** The role or member to check. */
     for: Role | GuildMember;
     /** A channel or thread, to read the set after its overwrites. Leave it out to read the base set from roles. */
-    in?: GuildBasedChannel;
+    in?: GuildBasedChannel | undefined;
     /** The permission flag bits to check. */
     scope: PermissionScope;
     /** Refuse when the target holds a scope bit. */
     inverse?: boolean;
-    /** Thrown in place of the default refusal, constructed with the target's mention and the refused names. */
-    notice?: PermissionNoticeConstructor;
+    /** Your Notice class, thrown in place of the default refusal. seedcord constructs it with the target's mention and the refused names. */
+    notice?: PermissionNoticeConstructor | undefined;
 }
 
 /**
@@ -54,6 +54,6 @@ export function checkPermissions({
         permissions: held.bitfield,
         scope,
         inverse,
-        ...(notice && { notice })
+        notice
     });
 }

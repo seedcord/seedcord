@@ -11,7 +11,6 @@ import type { PermissionScope } from '#src/permissions/bits';
 import type { NoticeConstructor } from '#stops/Notice';
 
 export type { PermissionScope } from '#src/permissions/bits';
-export { PermissionNames } from '#src/permissions/bits';
 
 const BOT_SUBJECT = 'The bot';
 
@@ -27,9 +26,9 @@ export interface RequireBotPermissionsOptions {
      * @defaultValue `'channel'`
      */
     in?: 'channel' | 'guild';
-    /** Thrown in place of the refusal outside a guild. */
+    /** Your Notice class, constructed and thrown in place of the refusal outside a guild. */
     notInGuild?: NoticeConstructor;
-    /** Thrown in place of the refusal when a permission is missing. */
+    /** Your Notice class, constructed and thrown in place of the refusal when a permission is missing. */
     missing?: PermissionNoticeConstructor;
 }
 
@@ -37,7 +36,7 @@ export interface RequireBotPermissionsOptions {
  * Options for {@link RequirePermissions}.
  */
 export interface RequirePermissionsOptions extends RequireBotPermissionsOptions {
-    /** Thrown in place of the refusal when the member's permissions are unavailable inside a guild. */
+    /** Your Notice class, constructed and thrown in place of the refusal when the member's permissions are unavailable inside a guild. */
     unresolved?: NoticeConstructor;
 }
 
@@ -45,27 +44,26 @@ export interface RequirePermissionsOptions extends RequireBotPermissionsOptions 
  * Options for {@link RequireRole}.
  */
 export interface RequireRoleOptions {
-    /** Thrown in place of the refusal outside a guild. */
+    /** Your Notice class, constructed and thrown in place of the refusal outside a guild. */
     notInGuild?: NoticeConstructor;
-    /** Thrown in place of the refusal when the caller lacks the role, constructed with the role id. */
+    /** Your Notice class, constructed with the role id and thrown in place of the refusal when the caller lacks the role. */
     missingRole?: NoticeConstructor<[roleId: string]>;
 }
 
 interface HeldCheck {
     guildId: string | null;
     subject: string | null;
-    // throws when the guild's set is unavailable
-    read: (guildId: string) => bigint;
+    readOrThrow: (guildId: string) => bigint;
 }
 
 function requireHeld(
-    { guildId, subject, read }: HeldCheck,
+    { guildId, subject, readOrThrow }: HeldCheck,
     scope: PermissionScope,
     options: RequireBotPermissionsOptions | undefined
 ): void {
     if (!guildId) throw new (options?.notInGuild ?? NotInGuild)();
-    const permissions = read(guildId);
-    assertPermissions({ subject, permissions, scope, ...(options?.missing && { notice: options.missing }) });
+    const permissions = readOrThrow(guildId);
+    assertPermissions({ subject, permissions, scope, notice: options?.missing });
 }
 
 function botMemberMissing(guildId: string): never {
@@ -123,13 +121,13 @@ export function RequirePermissions(
     };
     if (options?.in === 'guild') {
         return defineGate('RequirePermissions', (ctx: GuildPermissionsContext) => {
-            const read = (): bigint => resolved(ctx.memberGuildPermissions);
-            requireHeld({ guildId: ctx.guildId, subject: null, read }, scope, options);
+            const readOrThrow = (): bigint => resolved(ctx.memberGuildPermissions);
+            requireHeld({ guildId: ctx.guildId, subject: null, readOrThrow }, scope, options);
         });
     }
     return defineGate('RequirePermissions', (ctx: GateContextBase) => {
-        const read = (): bigint => resolved(ctx.memberPermissions);
-        requireHeld({ guildId: ctx.guildId, subject: null, read }, scope, options);
+        const readOrThrow = (): bigint => resolved(ctx.memberPermissions);
+        requireHeld({ guildId: ctx.guildId, subject: null, readOrThrow }, scope, options);
     });
 }
 
@@ -175,12 +173,16 @@ export function RequireBotPermissions(
 ): Gate<GuildPermissionsContext, 'RequireBotPermissions'> | Gate<AppPermissionsContext, 'RequireBotPermissions'> {
     if (options?.in === 'guild') {
         return defineGate('RequireBotPermissions', (ctx: GuildPermissionsContext) => {
-            const read = (guildId: string): bigint => ctx.appGuildPermissions ?? botMemberMissing(guildId);
-            requireHeld({ guildId: ctx.guildId, subject: BOT_SUBJECT, read }, scope, options);
+            const readOrThrow = (guildId: string): bigint => ctx.appGuildPermissions ?? botMemberMissing(guildId);
+            requireHeld({ guildId: ctx.guildId, subject: BOT_SUBJECT, readOrThrow }, scope, options);
         });
     }
     return defineGate('RequireBotPermissions', (ctx: AppPermissionsContext) => {
-        requireHeld({ guildId: ctx.guildId, subject: BOT_SUBJECT, read: () => ctx.appPermissions }, scope, options);
+        requireHeld(
+            { guildId: ctx.guildId, subject: BOT_SUBJECT, readOrThrow: () => ctx.appPermissions },
+            scope,
+            options
+        );
     });
 }
 

@@ -5,27 +5,21 @@ import { NoticeCard } from '#stops/NoticeCard';
 
 import type { EpochMs, ReplyResponse } from '@seedcord/types';
 
-export abstract class GateNotice extends Notice {
-    public render(): ReplyResponse {
-        return { components: [new NoticeCard(this.message).component] };
-    }
-}
-
-export class NotOwner extends GateNotice {
+export class NotOwner extends Notice {
     public constructor() {
         super('Only the bot owner can use this.');
         this.summary = 'be the bot owner';
     }
 }
 
-export class NotInGuild extends GateNotice {
+export class NotInGuild extends Notice {
     public constructor() {
         super('This can only be used in a server.');
         this.summary = 'be in a server';
     }
 }
 
-export class NotInDm extends GateNotice {
+export class NotInDm extends Notice {
     public constructor() {
         super('This can only be used in a direct message.');
         this.summary = 'be in a direct message';
@@ -36,7 +30,7 @@ function retryAt(resetAt: EpochMs): string {
     return `<t:${toEpochSeconds(resetAt)}:R>`;
 }
 
-export class OnCooldown extends GateNotice {
+export class OnCooldown extends Notice {
     public constructor(public readonly resetAt: EpochMs) {
         super(`You are doing that too fast. Try again ${retryAt(resetAt)}.`);
         this.summary = `try again ${retryAt(resetAt)}`;
@@ -48,7 +42,7 @@ export class NotAllowed extends Notice {
         super('not allowed');
     }
 
-    public render(): ReplyResponse {
+    public override render(): ReplyResponse {
         return { components: [new NoticeCard('You are not allowed to use this command.').component] };
     }
 }
@@ -62,55 +56,70 @@ export class NeedsAny extends Notice {
         this.summaries = [...new Set(summaries)];
     }
 
-    public render(): ReplyResponse {
+    public override render(): ReplyResponse {
         const bullets = this.summaries.map((summary) => `• ${summary}`).join('\n');
         return { components: [new NoticeCard(`You need to meet at least one of these:\n${bullets}`).component] };
     }
 }
 
-export class MissingRole extends GateNotice {
+export class MissingRole extends Notice {
     public constructor(roleId: string) {
         super(`You need the <@&${roleId}> role to use this.`);
         this.summary = `hold the <@&${roleId}> role`;
     }
 }
 
-export class PermissionsUnresolved extends GateNotice {
+export class PermissionsUnresolved extends Notice {
     public constructor() {
         super('Your server member data could not be resolved. Try again.');
     }
 }
 
+interface Wording {
+    lead: string;
+    summary: string;
+}
+
+interface ListWording {
+    caller: Wording;
+    subject: Wording;
+}
+
 abstract class PermissionListNotice extends Notice {
+    private readonly lead: string;
+
     protected constructor(
         message: string,
-        private readonly lead: string,
-        private readonly permissions: readonly string[]
+        subject: string | null,
+        private readonly permissions: readonly string[],
+        wording: ListWording
     ) {
         super(message);
+        const [prefix, words] = subject === null ? ['', wording.caller] : [`${subject} `, wording.subject];
+        this.lead = `${prefix}${words.lead}`;
+        this.summary = `${prefix}${words.summary} ${permissions.join(', ')}`;
     }
 
-    public render(): ReplyResponse {
+    public override render(): ReplyResponse {
         const bullets = this.permissions.map((perm) => `• ${perm}`).join('\n');
         return { components: [new NoticeCard(`${this.lead}\n${bullets}`).component] };
     }
 }
 
-// a null subject is the caller
 export class MissingPermissions extends PermissionListNotice {
     public constructor(subject: string | null, permissions: readonly string[]) {
-        const who = subject === null ? 'You are' : `${subject} is`;
-        super('A required permission is missing.', `${who} missing the following permission entries:`, permissions);
-        const names = permissions.join(', ');
-        this.summary = subject === null ? `hold ${names}` : `${subject} needs ${names}`;
+        super('A required permission is missing.', subject, permissions, {
+            caller: { lead: 'You are missing the following permission entries:', summary: 'hold' },
+            subject: { lead: 'is missing the following permission entries:', summary: 'needs' }
+        });
     }
 }
 
 export class HasPresentPermissions extends PermissionListNotice {
     public constructor(subject: string | null, permissions: readonly string[]) {
-        const who = subject === null ? 'You hold' : `${subject} holds`;
-        super('A refused permission is held.', `${who} permissions this command refuses:`, permissions);
-        const names = permissions.join(', ');
-        this.summary = subject === null ? `not hold ${names}` : `${subject} must not hold ${names}`;
+        super('A refused permission is held.', subject, permissions, {
+            caller: { lead: "You hold permissions that aren't allowed here:", summary: 'not hold' },
+            subject: { lead: "holds permissions that aren't allowed here:", summary: 'must not hold' }
+        });
     }
 }

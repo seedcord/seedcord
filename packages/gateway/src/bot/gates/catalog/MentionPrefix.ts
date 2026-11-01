@@ -13,8 +13,9 @@ function startsWithBotMention(message: Message | PartialMessage): boolean {
  * Passes only a message that starts with a mention of the bot, like `@bot ping`. It ignores every other message
  * with a {@link Silence}, including a reply that pings the bot, a role mention, and a mention later in the text.
  *
- * On `messageUpdate` it passes only when the edit adds the mention. An edit that keeps it doesn't run the handler
- * again. Attach it without calling it, since it takes no options.
+ * On `messageUpdate` it passes only when the edit adds the mention. An edit that keeps the mention doesn't run the
+ * handler again. If discord.js didn't cache the old message, that edit runs it again. Attach the gate without calling
+ * it, since it takes no options.
  *
  * A handler behind this gate can read `content` without the Message Content intent, because Discord sends the text of
  * a message that mentions the bot.

@@ -143,7 +143,7 @@ class BoomError extends Notice {
     constructor() {
         super('boom');
     }
-    render(): ReplyResponse {
+    override render(): ReplyResponse {
         return { components: [] };
     }
 }

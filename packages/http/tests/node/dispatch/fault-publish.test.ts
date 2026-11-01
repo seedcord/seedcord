@@ -27,7 +27,7 @@ class Reported extends Notice {
         super('reported through the boundary');
     }
 
-    render(): ReplyResponse {
+    override render(): ReplyResponse {
         return { components: [] };
     }
 }

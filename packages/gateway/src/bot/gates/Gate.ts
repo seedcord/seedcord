@@ -23,11 +23,10 @@ import type { ClientEvents, Guild, GuildMember, User } from 'discord.js';
  * });
  * ```
  */
-export interface InteractionGateContext<Repliable extends Repliables = Repliables> extends GuildPermissionsContext {
+export interface InteractionGateContext<Repliable extends Repliables = Repliables>
+    extends GuildPermissionsContext, AppPermissionsContext {
     /** The literal `'interaction'`. Narrow on it before reading `interaction`. */
     readonly kind: 'interaction';
-    /** The bot's permissions in the invoked channel, the wire `app_permissions` value. */
-    readonly appPermissions: AppPermissionsContext['appPermissions'];
     /** The running framework, with the gateway's bot and bus. */
     readonly core: Core;
     /** The interaction being handled, which is the reply target. */

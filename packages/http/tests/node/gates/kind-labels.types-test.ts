@@ -30,7 +30,7 @@ const ProbeId = new CustomId('httpkindprobe').str('x');
 const guildScoped = RequireBotPermissions([PermissionFlagsBits.BanMembers], { in: 'guild' });
 
 type Mismatch<Got extends string> =
-    `gate 'RequireBotPermissions' requires a gateway (guild permissions) handler, and this handler is ${Got}`;
+    `gate 'RequireBotPermissions' requires a gateway (guild permissions) handler, but this handler is ${Got}`;
 
 type LabelOf<TCtor extends AnyHandlerCtor> =
     FitAll<TCtor, [typeof guildScoped]>[0] extends Constructor<[infer Message]> ? Message : never;

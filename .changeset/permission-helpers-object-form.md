@@ -2,4 +2,4 @@
 '@seedcord/gateway': minor
 ---
 
-**BREAKING:** `checkPermissions`, `checkBotPermissions` and `hasPermsToAssign` now take one options object, like `checkPermissions({ for: member, in: channel, scope })`. Leave `in` out to check the base set from roles, and pass any channel or thread to check its set.
+**BREAKING:** `checkPermissions` and `checkBotPermissions` now take one options object, like `checkPermissions({ for: member, in: channel, scope })`. `hasPermsToAssign` no longer takes a bare `Role`, and its options now read `{ role, higher, managed, missing }` where they read `{ targetRole, noticeOverrides }`.

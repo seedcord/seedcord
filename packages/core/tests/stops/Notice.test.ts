@@ -9,7 +9,7 @@ class TestNotice extends Notice {
     constructor(cause?: unknown) {
         super('test denial', cause === undefined ? undefined : { cause });
     }
-    render(c: RenderContext): ReplyResponse {
+    override render(c: RenderContext): ReplyResponse {
         return { components: [new TextDisplayBuilder().setContent(c.uuid)] };
     }
 }
@@ -19,7 +19,7 @@ class ReportingNotice extends Notice {
         super('reported fault');
         this.report = true;
     }
-    render(): ReplyResponse {
+    override render(): ReplyResponse {
         return { components: [] };
     }
 }

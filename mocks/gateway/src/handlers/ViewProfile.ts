@@ -8,7 +8,7 @@ class ProfileCooldown extends Notice {
         super('profile lookups are rate limited');
     }
 
-    public render(): ReplyResponse {
+    public override render(): ReplyResponse {
         const text = new TextDisplayBuilder().setContent(
             `Slow down. You can view another profile <t:${Math.round(this.resetAt / 1000)}:R>.`
         );

@@ -18,11 +18,7 @@ import type { EpochMs } from '@seedcord/types';
  * // one use per channel, refusing with your own Notice class
  * class SlowDown extends Notice {
  *     public constructor(resetAt: EpochMs) {
- *         super(`Slow down. Try again <t:${Math.round(resetAt / 1000)}:R>.`);
- *     }
- *
- *     public render(): ReplyResponse {
- *         return { components: [new NoticeCard(this.message).component] };
+ *         super(`Slow down. Try again <t:${toEpochSeconds(resetAt)}:R>.`);
  *     }
  * }
  *
@@ -48,7 +44,7 @@ export interface CooldownOptions {
      * @defaultValue `1`
      */
     limit?: number;
-    /** Thrown in place of the default refusal, constructed with the epoch ms the key frees up. */
+    /** Your Notice class, constructed with the epoch ms the key frees up and thrown in place of the default refusal. */
     notice?: NoticeConstructor<[resetAt: EpochMs]>;
 }
 

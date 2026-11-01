@@ -1,5 +1,4 @@
 import { DispatchContext, RequirePermissions } from '@seedcord/core';
-import { MissingPermissions } from '@seedcord/core/internal';
 import { GuildMember, PermissionFlagsBits } from 'discord.js';
 import { describe, it, expect } from 'vitest';
 
@@ -21,7 +20,7 @@ function fakeMember(roleIds: string[], permissionBits: bigint): GuildMember {
 }
 
 describe('interactionGateContext', () => {
-    it('builds the interaction arm with the scalar identity', () => {
+    it('builds the interaction context with the scalar identity', () => {
         // a minimal interaction-shaped fake, the builder only reads these fields
         const interaction = {
             user: { id: 'u1' },
@@ -45,9 +44,8 @@ describe('interactionGateContext', () => {
         expect(built.memberRoleIds).toEqual([]);
         expect(built.memberPermissions).toBeNull();
         expect(built.appPermissions).toBe(64n);
-        // an uncached member and no bot member leave the guild base sets null
         expect(built.memberGuildPermissions).toBeNull();
-        expect(built.appGuildPermissions).toBeNull();
+        expect(built.appGuildPermissions).toBe(0n);
     });
 
     it('reads role ids and channel-scoped permissions from a cached member', () => {
@@ -135,8 +133,6 @@ describe('eventGateContext', () => {
         expect(built.channelId).toBeNull();
         expect(built.memberRoleIds).toEqual([]);
         expect(built.memberPermissions).toBeNull();
-        // no interaction payload on an event, and no member or bot member to read a base set from
-        expect(built.appPermissions).toBeNull();
         expect(built.memberGuildPermissions).toBeNull();
         expect(built.appGuildPermissions).toBeNull();
     });
@@ -158,8 +154,6 @@ describe('eventGateContext', () => {
         expect(built.memberRoleIds).toEqual(['r1']);
         // events have no channel scope, so these are the member's guild-level bits
         expect(built.memberPermissions).toBe(4n);
-        // no interaction payload on an event
-        expect(built.appPermissions).toBeNull();
         expect(built.memberGuildPermissions).toBe(4n);
         expect(built.appGuildPermissions).toBe(2n);
     });
@@ -186,9 +180,9 @@ describe('core permission gate over a djs-built context', () => {
         ).resolves.toBeUndefined();
     });
 
-    it('refuses with MissingPermissions when the member lacks it', async () => {
+    it('refuses when the member lacks it', async () => {
         await expect(
             RequirePermissions([PermissionFlagsBits.BanMembers]).check(contextFor(PermissionFlagsBits.SendMessages))
-        ).rejects.toBeInstanceOf(MissingPermissions);
+        ).rejects.toThrow('A required permission is missing.');
     });
 });

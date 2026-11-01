@@ -49,7 +49,7 @@ Discord sends the real content in these five cases, whatever intents you set. If
 
 {/* prettier-ignore-end */}
 
-A bot that answers mentions, like `@bot ping`, can read those messages in full without a privileged intent. [`MentionPrefix`](ref:gateway/MentionPrefix) lets a handler run only for a message that starts with a mention of your bot.
+Discord sends the full text of a message that mentions your bot, even without a privileged intent. Attach [`MentionPrefix`](ref:gateway/MentionPrefix) to a handler that needs to read the message content to answer commands like `@bot ping`.
 
 ```ts twoslash title="src/events/Mentioned.ts"
 import {
@@ -71,7 +71,7 @@ export class Mentioned extends EventHandler<Events.MessageCreate> {
 }
 ```
 
-Your handler only runs for a message that starts with a mention of your bot. It ignores a reply that pings your bot and a message that mentions your bot later in the text. If an edit should run the command, register `messageUpdate` too. The gate then passes an edit only when the edit adds the mention. If the message already started with the mention, editing it doesn't run the command again.
+Your handler only runs for a message that starts with a mention of your bot. It ignores a reply that pings your bot and a message that mentions your bot later in the text. If an edit should run the command, register `messageUpdate` too. The gate then passes an edit only when the edit adds the mention. If the message already started with the mention, editing it doesn't run the command again. If discord.js didn't cache the old message, that edit runs it again.
 
 [`@Gated`](ref:gateway/Gated) with [`IgnoreBots`](ref:gateway/IgnoreBots) stops the handler on a message from any bot, including your own. Without it, `Mentioned` would answer another bot that mentions yours. Two bots like that can reply to each other forever. The [gate catalog](/checks/gates) lists the other checks.
 

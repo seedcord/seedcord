@@ -1,10 +1,10 @@
 import { Notice } from '@seedcord/core';
-import { GateNotice, NoticeCard } from '@seedcord/core/internal';
+import { NoticeCard } from '@seedcord/core/internal';
 
 import type { ReplyResponse } from '@seedcord/types';
 import type { Role } from 'discord.js';
 
-export class NotNsfw extends GateNotice {
+export class NotNsfw extends Notice {
     public constructor() {
         super('This can only be used in an age-restricted channel.');
         this.summary = 'be in an age-restricted channel';
@@ -19,7 +19,7 @@ export class RoleHigherThanMe extends Notice {
         super('Role is higher than me');
     }
 
-    public render(): ReplyResponse {
+    public override render(): ReplyResponse {
         const card = new NoticeCard(
             `I cannot assign a role that is higher than me.\n\n` +
                 `The role <@&${this.role.id}> is higher than my role <@&${this.botRole.id}> in the hierarchy.`
@@ -33,7 +33,7 @@ export class CannotAssignBotRole extends Notice {
         super(`Cannot assign managed role ${role.name}`);
     }
 
-    public render(): ReplyResponse {
+    public override render(): ReplyResponse {
         return { components: [new NoticeCard(`I cannot assign <@&${this.role.id}>, a managed role.`).component] };
     }
 }

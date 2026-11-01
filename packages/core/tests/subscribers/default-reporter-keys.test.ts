@@ -16,7 +16,7 @@ class Boom extends Notice {
         super('boom');
     }
 
-    render(): ReplyResponse {
+    override render(): ReplyResponse {
         return { components: [] };
     }
 }

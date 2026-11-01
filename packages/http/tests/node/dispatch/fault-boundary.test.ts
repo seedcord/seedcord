@@ -125,7 +125,7 @@ describe('fault boundary', () => {
                 super('denied late');
             }
 
-            public render(): ReplyResponse {
+            public override render(): ReplyResponse {
                 return { components: [{ toJSON: () => ({ type: 10, content: 'no access' }) }] };
             }
         }

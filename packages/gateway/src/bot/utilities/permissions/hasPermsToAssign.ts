@@ -13,11 +13,11 @@ import type { Guild, Role } from 'discord.js';
 export interface HasPermsToAssignOptions {
     /** The role the bot would assign. */
     role: Role;
-    /** Thrown in place of the refusal when the role sits at or above the bot's, constructed with both roles. */
+    /** Your Notice class, constructed with both roles and thrown in place of the refusal when the role is at or above the bot's. */
     higher?: NoticeConstructor<[role: Role, botRole: Role]>;
-    /** Thrown in place of the refusal when an integration manages the role, constructed with the role. */
+    /** Your Notice class, constructed with the role and thrown in place of the refusal when an integration manages the role. */
     managed?: NoticeConstructor<[role: Role]>;
-    /** Thrown in place of the refusal when the bot lacks Manage Roles, constructed with its mention and that name. */
+    /** Your Notice class, thrown when the bot lacks Manage Roles. seedcord constructs it with the bot's mention and that permission's name. */
     missing?: PermissionNoticeConstructor;
 }
 
@@ -52,6 +52,6 @@ export function hasPermsToAssign({ role, higher, managed, missing }: HasPermsToA
     checkBotPermissions({
         in: role.guild,
         scope: [PermissionFlagsBits.ManageRoles],
-        ...(missing && { notice: missing })
+        notice: missing
     });
 }

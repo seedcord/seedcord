@@ -1,4 +1,4 @@
-import { HasPresentPermissions, MissingPermissions } from '@seedcord/core/internal';
+import { Notice } from '@seedcord/core';
 import { SeedcordErrorCode } from '@seedcord/errors';
 import { Guild, GuildMember, PermissionFlagsBits, PermissionsBitField, Role, TextChannel } from 'discord.js';
 import { describe, it, expect } from 'vitest';
@@ -8,7 +8,11 @@ import { checkBotPermissions } from '#bUtilities/permissions/checkBotPermissions
 import { checkPermissions } from '#bUtilities/permissions/checkPermissions';
 import { hasPermsToAssign } from '#bUtilities/permissions/hasPermsToAssign';
 
+import type { RenderContext } from '@seedcord/types';
+
 const { Administrator, BanMembers, ManageRoles, SendMessages } = PermissionFlagsBits;
+const MISSING = 'A required permission is missing.';
+const HELD = 'A refused permission is held.';
 
 function guildFake(extra: object = {}): Guild {
     return Object.assign(Object.create(Guild.prototype) as Guild, extra);
@@ -22,7 +26,7 @@ function memberWith(perms: bigint[], id = 'm1'): GuildMember {
     return member;
 }
 
-// the channel resolves its own set, standing in for permissionsFor after overwrites
+// stands in for permissionsFor after the channel's overwrites
 function channelWith(perms: bigint[], guild?: Guild): TextChannel {
     const channel = Object.create(TextChannel.prototype) as TextChannel;
     Object.defineProperty(channel, 'guild', { value: guild });
@@ -48,28 +52,32 @@ describe('checkPermissions', () => {
         expect(() => checkPermissions({ for: memberWith([BanMembers]), scope: [BanMembers] })).not.toThrow();
     });
 
-    it('refuses with MissingPermissions that mentions the member', () => {
+    it('refuses with a card that mentions the member', () => {
         const caught = thrownBy(() => checkPermissions({ for: memberWith([], 'm7'), scope: [BanMembers] }));
-        expect(caught).toBeInstanceOf(MissingPermissions);
-        expect(JSON.stringify((caught as MissingPermissions).render())).toContain('<@m7>');
+        expect(caught).toBeInstanceOf(Notice);
+        // the permission card reads nothing off the render context
+        const card = (caught as Notice).render({} as RenderContext);
+        expect(JSON.stringify(card)).toContain('<@m7>');
     });
 
     it('reads the channel set when given a channel', () => {
         const member = memberWith([SendMessages]);
-        expect(() => checkPermissions({ for: member, in: channelWith([]), scope: [SendMessages] })).toThrow(
-            MissingPermissions
-        );
+        expect(() => checkPermissions({ for: member, in: channelWith([]), scope: [SendMessages] })).toThrow(MISSING);
     });
 
     it('refuses on the inverse check when a scoped permission is present, and passes when none is', () => {
         expect(() =>
             checkPermissions({ for: memberWith([Administrator]), scope: [Administrator], inverse: true })
-        ).toThrow(HasPresentPermissions);
+        ).toThrow(HELD);
         expect(() => checkPermissions({ for: memberWith([]), scope: [Administrator], inverse: true })).not.toThrow();
     });
 
     it('refuses with the notice class it was given', () => {
-        class Custom extends MissingPermissions {}
+        class Custom extends Notice {
+            public constructor() {
+                super('custom');
+            }
+        }
         expect(() => checkPermissions({ for: memberWith([]), scope: [BanMembers], notice: Custom })).toThrow(Custom);
     });
 });
@@ -80,18 +88,16 @@ describe('checkBotPermissions', () => {
         expect(() => checkBotPermissions({ in: guild, scope: [BanMembers] })).not.toThrow();
     });
 
-    it('refuses with MissingPermissions when the bot lacks them in a channel', () => {
+    it('refuses when the bot lacks them in a channel', () => {
         const guild = guildFake({ members: { me: memberWith([SendMessages]) } });
-        expect(() => checkBotPermissions({ in: channelWith([], guild), scope: [SendMessages] })).toThrow(
-            MissingPermissions
-        );
+        expect(() => checkBotPermissions({ in: channelWith([], guild), scope: [SendMessages] })).toThrow(MISSING);
     });
 
-    it('throws CoreBotMemberMissing when the bot member is uncached, on both arms', () => {
+    it('throws CoreBotMemberMissing when the bot member is uncached, in the guild and in a channel', () => {
         const guild = guildFake({ id: 'g1', members: { me: null } });
         const uncached = { code: SeedcordErrorCode.CoreBotMemberMissing };
         expect(thrownBy(() => checkBotPermissions({ in: guild, scope: [BanMembers] }))).toMatchObject(uncached);
-        expect(thrownBy(() => checkBotPermissions({ in: guild, scope: [BanMembers], inverse: true }))).toMatchObject(
+        expect(thrownBy(() => checkBotPermissions({ in: channelWith([], guild), scope: [BanMembers] }))).toMatchObject(
             uncached
         );
     });
@@ -129,9 +135,9 @@ describe('hasPermsToAssign', () => {
         expect(() => hasPermsToAssign({ role })).toThrow(CannotAssignBotRole);
     });
 
-    it('refuses with MissingPermissions when the bot lacks Manage Roles', () => {
+    it('refuses when the bot lacks Manage Roles', () => {
         const role = roleWith({ id: 't1', managed: false, guild: guildWithBot([]), comparePositionTo: () => -1 });
-        expect(() => hasPermsToAssign({ role })).toThrow(MissingPermissions);
+        expect(() => hasPermsToAssign({ role })).toThrow(MISSING);
     });
 
     it('refuses with the higher class it was given, constructed with both roles', () => {
@@ -142,9 +148,8 @@ describe('hasPermsToAssign', () => {
             guild: guildWithBot([ManageRoles]),
             comparePositionTo: () => 1
         });
-        expect(thrownBy(() => hasPermsToAssign({ role, higher: TooHigh }))).toMatchObject({
-            role,
-            botRole: { id: 'bot' }
-        });
+        const caught = thrownBy(() => hasPermsToAssign({ role, higher: TooHigh }));
+        expect(caught).toBeInstanceOf(TooHigh);
+        expect(caught).toMatchObject({ role, botRole: { id: 'bot' } });
     });
 });

@@ -21,8 +21,8 @@ export interface PermissionAssertion {
     scope: PermissionScope;
     /** Refuse when the subject holds a scope bit. */
     inverse?: boolean;
-    /** Thrown in place of the default refusal, with the missing names, or the held ones under `inverse`. */
-    notice?: PermissionNoticeConstructor;
+    /** Your Notice class, thrown in place of the default refusal. seedcord constructs it with the missing names, or the held ones under `inverse`. */
+    notice?: PermissionNoticeConstructor | undefined;
 }
 
 /**

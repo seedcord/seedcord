@@ -25,7 +25,7 @@ describe('MissingPermissions', () => {
 describe('HasPresentPermissions', () => {
     it('leads with the subject and lists the refused permissions', () => {
         const text = cardJson(new HasPresentPermissions('<@123>', ['Administrator']).render());
-        expect(text).toContain('<@123> holds permissions this command refuses:');
+        expect(text).toContain("<@123> holds permissions that aren't allowed here:");
         expect(text).toContain('• Administrator');
     });
 });

@@ -16,7 +16,7 @@ class CustomRefusal extends Notice {
     constructor(public readonly at: number) {
         super(`wait ${at}`);
     }
-    render(): ReplyResponse {
+    override render(): ReplyResponse {
         return { components: [] };
     }
 }

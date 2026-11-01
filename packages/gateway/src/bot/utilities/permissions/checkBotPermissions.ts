@@ -5,10 +5,11 @@ import { Guild } from 'discord.js';
 import { checkPermissions } from './checkPermissions';
 
 import type { CheckPermissionOptions } from './checkPermissions';
+import type { TypedOmit } from '@seedcord/types';
 import type { GuildBasedChannel, GuildMember } from 'discord.js';
 
 /** Options for {@link checkBotPermissions}. */
-export interface CheckBotPermissionOptions extends Omit<CheckPermissionOptions, 'for' | 'in'> {
+export interface CheckBotPermissionOptions extends TypedOmit<CheckPermissionOptions, 'for' | 'in'> {
     /** A guild, to read the bot's base set from roles, or a channel or thread, to read its set there. */
     in: Guild | GuildBasedChannel;
 }
@@ -36,5 +37,5 @@ function botMemberOf(guild: Guild): GuildMember {
  */
 export function checkBotPermissions({ in: where, ...check }: CheckBotPermissionOptions): void {
     const [guild, channel] = where instanceof Guild ? [where, undefined] : [where.guild, where];
-    checkPermissions({ for: botMemberOf(guild), ...(channel && { in: channel }), ...check });
+    checkPermissions({ for: botMemberOf(guild), in: channel, ...check });
 }

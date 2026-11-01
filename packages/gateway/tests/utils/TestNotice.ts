@@ -7,7 +7,7 @@ export class TestNotice extends Notice {
         super(message);
     }
 
-    render(): ReplyResponse {
+    override render(): ReplyResponse {
         return { components: [] };
     }
 }
