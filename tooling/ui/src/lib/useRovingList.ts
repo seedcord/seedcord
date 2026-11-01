@@ -10,6 +10,7 @@ export interface RovingGroup<TItem> {
 }
 
 export interface RovingListOptions<TItem> {
+    query: string;
     groups: readonly RovingGroup<TItem>[];
     onSelect: (item: TItem) => void;
 }
@@ -42,6 +43,7 @@ interface Layout<TItem> {
 }
 
 interface Picked<TItem> {
+    query: string;
     item: TItem | undefined;
     pickedByPointer: boolean;
 }
@@ -66,67 +68,69 @@ function nextStop(stops: readonly TabStop[], activeIndex: number, step: 1 | -1):
     return stops.at((current + step) % stops.length);
 }
 
-function pick<TItem>(item: TItem | undefined, pickedByPointer: boolean) {
+function pick<TItem>(next: Picked<TItem>) {
     return (previous: Picked<TItem>): Picked<TItem> =>
-        previous.item === item && previous.pickedByPointer === pickedByPointer ? previous : { item, pickedByPointer };
+        previous.query === next.query &&
+        previous.item === next.item &&
+        previous.pickedByPointer === next.pickedByPointer
+            ? previous
+            : next;
 }
 
-export function useRovingList<TItem>({ groups, onSelect }: RovingListOptions<TItem>): RovingList<TItem> {
+export function useRovingList<TItem>({ query, groups, onSelect }: RovingListOptions<TItem>): RovingList<TItem> {
     const { items, stops } = layout(groups);
-    const [picked, setPicked] = useState<Picked<TItem>>({ item: undefined, pickedByPointer: false });
+    const [picked, setPicked] = useState<Picked<TItem>>({ query, item: undefined, pickedByPointer: false });
+    const current = picked.query === query ? picked : undefined;
 
     // if the picked item leaves the list, the first row is active until it comes back
-    const activeIndex = Math.max(0, picked.item === undefined ? 0 : items.indexOf(picked.item));
+    const activeIndex = current?.item === undefined ? 0 : Math.max(0, items.indexOf(current.item));
     const active = items[activeIndex];
     const total = items.length;
 
-    const pointAt = useCallback((item: TItem) => setPicked(pick(item, true)), []);
+    const pointAt = useCallback((item: TItem) => setPicked(pick({ query, item, pickedByPointer: true })), [query]);
 
-    const onKeyDown = useCallback(
-        (event: RovingKey): void => {
-            if (total === 0) return;
+    const onKeyDown = (event: RovingKey): void => {
+        if (total === 0) return;
 
-            const move = (next: number): void => {
-                event.preventDefault();
-                setPicked(pick(items[clamp(next, total)], false));
-            };
+        const move = (next: number): void => {
+            event.preventDefault();
+            setPicked(pick({ query, item: items[clamp(next, total)], pickedByPointer: false }));
+        };
 
-            switch (event.key) {
-                case 'ArrowDown': {
-                    move(activeIndex + 1);
-                    break;
-                }
-                case 'ArrowUp': {
-                    move(activeIndex - 1);
-                    break;
-                }
-                case 'Home': {
-                    move(0);
-                    break;
-                }
-                case 'End': {
-                    move(total - 1);
-                    break;
-                }
-                case 'Tab': {
-                    if (stops.length < 2) break;
-                    event.preventDefault();
-                    const next = nextStop(stops, activeIndex, event.shiftKey ? -1 : 1);
-                    if (next?.loading === false) move(next.start);
-                    break;
-                }
-                case 'Enter': {
-                    event.preventDefault();
-                    if (active !== undefined) onSelect(active);
-                    break;
-                }
-                default: {
-                    break;
-                }
+        switch (event.key) {
+            case 'ArrowDown': {
+                move(activeIndex + 1);
+                break;
             }
-        },
-        [active, activeIndex, items, onSelect, stops, total]
-    );
+            case 'ArrowUp': {
+                move(activeIndex - 1);
+                break;
+            }
+            case 'Home': {
+                move(0);
+                break;
+            }
+            case 'End': {
+                move(total - 1);
+                break;
+            }
+            case 'Tab': {
+                if (stops.length < 2) break;
+                event.preventDefault();
+                const next = nextStop(stops, activeIndex, event.shiftKey ? -1 : 1);
+                if (next?.loading === false) move(next.start);
+                break;
+            }
+            case 'Enter': {
+                event.preventDefault();
+                if (active !== undefined) onSelect(active);
+                break;
+            }
+            default: {
+                break;
+            }
+        }
+    };
 
     return {
         active,
@@ -135,7 +139,7 @@ export function useRovingList<TItem>({ groups, onSelect }: RovingListOptions<TIt
         isFirst: total > 0 && activeIndex === 0,
         isLast: total > 0 && activeIndex === total - 1,
         isGroupStart: stops.some((stop) => !stop.loading && stop.start === activeIndex),
-        pickedByPointer: picked.pickedByPointer,
+        pickedByPointer: current?.pickedByPointer ?? false,
         pointAt,
         onKeyDown
     };

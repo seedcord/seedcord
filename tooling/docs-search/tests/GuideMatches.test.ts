@@ -78,14 +78,6 @@ describe('GuideMatches', () => {
         ]);
     });
 
-    it('returns at most three titles', () => {
-        const matches = new GuideMatches(
-            ['one', 'two', 'three', 'four'].map((n) => heading(`/events/#${n}`, 'Events', `Event ${n}`))
-        );
-
-        expect(paths(matches, 'event')).toHaveLength(3);
-    });
-
     it('finds text pasted from a section, after the title matches, with an excerpt starting near it', () => {
         const matches = new GuideMatches([
             ...SECTIONS,

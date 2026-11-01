@@ -162,20 +162,13 @@ describe('CommandPaletteDialog', () => {
         expect(screen.queryAllByRole('switch', { name: 'Pre-release' })).not.toHaveLength(0);
     });
 
-    it('re-anchors the active option to the first when the results identity changes', () => {
+    it('moves the active option back to the first when the query changes, even if the old one is still listed', () => {
         const { rerender } = renderDialog(makeController());
         fireEvent.keyDown(combobox(), { key: 'ArrowDown' });
         expect(combobox()).toHaveAttribute('aria-activedescendant', optionId('b'));
 
-        searchHook.mockReturnValue({
-            results: [
-                { id: 'x', label: 'Xi', path: '/x', href: '/x', kind: 'page' },
-                { id: 'y', label: 'Psi', path: '/y', href: '/y', kind: 'class' }
-            ],
-            status: 'success'
-        });
-        rerender(makeController());
+        rerender(makeController({ searchValue: 'alph' }));
 
-        expect(combobox()).toHaveAttribute('aria-activedescendant', optionId('x'));
+        expect(combobox()).toHaveAttribute('aria-activedescendant', optionId('a'));
     });
 });

@@ -28,7 +28,7 @@ function zeroPadded(...front: number[]): number[] {
     return [...front, ...new Array<number>(embedding.dimensions - front.length).fill(0)];
 }
 
-// the lengths differ on purpose because the index compares by angle
+// different lengths on purpose. the test fails if rank stops dividing by each vector's length
 const VECTORS = [zeroPadded(3, 0), zeroPadded(0, 5), zeroPadded(1, 1)];
 
 function assets(sections: unknown, vectors: number[][]): (path: string) => Promise<Response> {

@@ -119,7 +119,7 @@ export function GuideSearch({ open, onOpenChange: setOpen }: GuideSearchProps): 
 
     const select = useCallback((result: GuideResult) => navigate(result.path), [navigate]);
 
-    const roving = useRovingList({ groups: rovingGroups(groups), onSelect: select });
+    const roving = useRovingList({ query: typed, groups: rovingGroups(groups), onSelect: select });
     const { active } = roving;
 
     return (

@@ -114,7 +114,11 @@ export function CommandPaletteDialog({ controller }: { controller: CommandPalett
     const listProps = deriveListProps(searchState, normalizedSearch);
     const { results } = listProps;
 
-    const roving = useRovingList({ groups: [{ items: results, loading: false }], onSelect: handleSelect });
+    const roving = useRovingList({
+        query: normalizedSearch,
+        groups: [{ items: results, loading: false }],
+        onSelect: handleSelect
+    });
     const activeId = roving.active ? optionId(roving.active.id) : undefined;
     const listExpanded = !listProps.showInitialHint && !listProps.errorMessage && results.length > 0;
 

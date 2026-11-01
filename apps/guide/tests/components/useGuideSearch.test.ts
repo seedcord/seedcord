@@ -175,7 +175,9 @@ describe('useGuideSearch', () => {
         rerender({ open: true });
         expect(groupOf(result.current, 'Matches')?.status).toBe('pending');
         await act(() => vi.advanceTimersByTimeAsync(0));
-        expect(noticeOf(result.current, 'Matches')).toBe('Matches are unavailable right now. Try again in a minute.');
+        expect(noticeOf(result.current, 'Matches')).toBe(
+            'Matches are unavailable right now. Close and reopen search to try again.'
+        );
 
         rerender({ open: false });
         rerender({ open: true });

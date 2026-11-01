@@ -58,7 +58,7 @@ export function useActiveRowScroll(
         }
         const row = document.getElementById(activeId);
         const group = isGroupStart ? row?.closest('[role="group"]') : null;
-        // scrollIntoView with block start also scrolls the overflow-hidden panel, which pushes the field out of view
+        // scrollIntoView with block start also scrolls the overflow-hidden panel
         if (group) scroll.toTopOf(group);
         else row?.scrollIntoView({ block: 'nearest' });
     }, [activeId, isFirst, isLast, isGroupStart, pickedByPointer, scroll]);

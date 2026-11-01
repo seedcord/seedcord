@@ -26,7 +26,7 @@ function press(result: { current: RovingList<string> }, ...keys: string[]): void
 
 describe('useRovingList', () => {
     it('starts on the first item', () => {
-        const { result } = renderHook(() => useRovingList({ groups: one(ITEMS), onSelect: vi.fn() }));
+        const { result } = renderHook(() => useRovingList({ query: 'q', groups: one(ITEMS), onSelect: vi.fn() }));
 
         expect(result.current.active).toBe('a');
         expect(result.current.isFirst).toBe(true);
@@ -34,7 +34,7 @@ describe('useRovingList', () => {
     });
 
     it('stops at the last item instead of wrapping to the first', () => {
-        const { result } = renderHook(() => useRovingList({ groups: one(ITEMS), onSelect: vi.fn() }));
+        const { result } = renderHook(() => useRovingList({ query: 'q', groups: one(ITEMS), onSelect: vi.fn() }));
 
         press(result, 'ArrowDown', 'ArrowDown', 'ArrowDown', 'ArrowDown');
 
@@ -43,7 +43,7 @@ describe('useRovingList', () => {
     });
 
     it('stops at the first item instead of wrapping to the last', () => {
-        const { result } = renderHook(() => useRovingList({ groups: one(ITEMS), onSelect: vi.fn() }));
+        const { result } = renderHook(() => useRovingList({ query: 'q', groups: one(ITEMS), onSelect: vi.fn() }));
 
         press(result, 'ArrowDown', 'ArrowUp', 'ArrowUp');
 
@@ -51,7 +51,7 @@ describe('useRovingList', () => {
     });
 
     it('jumps to either end with Home and End', () => {
-        const { result } = renderHook(() => useRovingList({ groups: one(ITEMS), onSelect: vi.fn() }));
+        const { result } = renderHook(() => useRovingList({ query: 'q', groups: one(ITEMS), onSelect: vi.fn() }));
 
         press(result, 'End');
         expect(result.current.active).toBe('c');
@@ -62,7 +62,7 @@ describe('useRovingList', () => {
 
     it('selects the active item on Enter', () => {
         const onSelect = vi.fn();
-        const { result } = renderHook(() => useRovingList({ groups: one(ITEMS), onSelect }));
+        const { result } = renderHook(() => useRovingList({ query: 'q', groups: one(ITEMS), onSelect }));
 
         press(result, 'ArrowDown', 'Enter');
 
@@ -71,7 +71,7 @@ describe('useRovingList', () => {
 
     it('ignores every key when the list is empty', () => {
         const onSelect = vi.fn();
-        const { result } = renderHook(() => useRovingList({ groups: one<string>([]), onSelect }));
+        const { result } = renderHook(() => useRovingList({ query: 'q', groups: one<string>([]), onSelect }));
 
         press(result, 'ArrowDown', 'End', 'Enter');
 
@@ -82,7 +82,7 @@ describe('useRovingList', () => {
 
     it('returns to the first item when the list changes', () => {
         const { result, rerender } = renderHook(
-            ({ items }) => useRovingList({ groups: one(items), onSelect: vi.fn() }),
+            ({ items }) => useRovingList({ query: 'q', groups: one(items), onSelect: vi.fn() }),
             {
                 initialProps: { items: ITEMS }
             }
@@ -94,11 +94,25 @@ describe('useRovingList', () => {
         expect(result.current.active).toBe('x');
     });
 
+    it('goes back to the first row for a new query, even when the old row is still listed', () => {
+        const groups = one(ITEMS);
+        const { result, rerender } = renderHook(({ query }) => useRovingList({ query, groups, onSelect: vi.fn() }), {
+            initialProps: { query: 'co' }
+        });
+
+        act(() => result.current.pointAt('c'));
+        rerender({ query: 'coo' });
+
+        expect(result.current.active).toBe('a');
+        expect(result.current.pickedByPointer).toBe(false);
+    });
+
     it('keeps the active row when a later group loads in', () => {
         const matches = [{ path: '/a' }, { path: '/b' }];
         const { result, rerender } = renderHook(
             ({ related }) =>
                 useRovingList({
+                    query: 'cooldown',
                     groups: [
                         { items: matches, loading: false },
                         { items: related, loading: related.length === 0 }
@@ -119,7 +133,7 @@ describe('useRovingList', () => {
             { items: ['a', 'b'], loading: false },
             { items: ['c', 'd'], loading: false }
         ];
-        const { result } = renderHook(() => useRovingList({ groups, onSelect: vi.fn() }));
+        const { result } = renderHook(() => useRovingList({ query: 'q', groups, onSelect: vi.fn() }));
 
         press(result, 'ArrowDown', 'Tab');
         expect(result.current.active).toBe('c');
@@ -133,7 +147,7 @@ describe('useRovingList', () => {
     });
 
     it('leaves Tab to the browser when there is one group', () => {
-        const { result } = renderHook(() => useRovingList({ groups: one(ITEMS), onSelect: vi.fn() }));
+        const { result } = renderHook(() => useRovingList({ query: 'q', groups: one(ITEMS), onSelect: vi.fn() }));
         const preventDefault = vi.fn();
 
         act(() => result.current.onKeyDown(keyEvent('Tab', false, preventDefault)));
@@ -147,7 +161,7 @@ describe('useRovingList', () => {
             { items: ITEMS, loading: false },
             { items: [], loading: true }
         ];
-        const { result } = renderHook(() => useRovingList({ groups, onSelect: vi.fn() }));
+        const { result } = renderHook(() => useRovingList({ query: 'q', groups, onSelect: vi.fn() }));
         const preventDefault = vi.fn();
 
         act(() => result.current.onKeyDown(keyEvent('Tab', false, preventDefault)));
@@ -157,7 +171,7 @@ describe('useRovingList', () => {
     });
 
     it('marks a row the pointer picked, until a key moves the selection', () => {
-        const { result } = renderHook(() => useRovingList({ groups: one(ITEMS), onSelect: vi.fn() }));
+        const { result } = renderHook(() => useRovingList({ query: 'q', groups: one(ITEMS), onSelect: vi.fn() }));
 
         act(() => result.current.pointAt('c'));
         expect(result.current.pickedByPointer).toBe(true);
@@ -172,7 +186,7 @@ describe('useRovingList', () => {
         let renders = 0;
         const { result } = renderHook(() => {
             renders += 1;
-            return useRovingList({ groups, onSelect: vi.fn() });
+            return useRovingList({ query: 'q', groups, onSelect: vi.fn() });
         });
 
         act(() => result.current.pointAt('b'));

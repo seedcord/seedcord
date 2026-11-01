@@ -38,11 +38,19 @@ type Loaded = TaggedUnion<'status', Pick<States, 'pending' | 'failed'> & { ready
 const PENDING = { status: 'pending' } as const;
 const NOT_ASKED: GroupState = { status: 'done', results: NO_RESULTS };
 
-function noticeFor(error: unknown, results: string): string {
+interface Failing {
+    results: string;
+    retry: string;
+}
+
+const RELATED: Failing = { results: 'Related results', retry: 'Try again in a minute.' };
+const MATCHES: Failing = { results: 'Matches', retry: 'Close and reopen search to try again.' };
+
+function noticeFor(error: unknown, { results, retry }: Failing): string {
     if (error instanceof TooManySearches) return error.message;
     // fetch rejects with a TypeError when the request never reaches the server
     if (error instanceof TypeError) return `${results} can't load without a network connection.`;
-    return `${results} are unavailable right now. Try again in a minute.`;
+    return `${results} are unavailable right now. ${retry}`;
 }
 
 function matchesState(typed: string, loaded: Loaded): GroupState {
@@ -77,7 +85,7 @@ function useMatches(open: boolean): Loaded {
                 if (!cancelled) setLoaded({ status: 'ready', matches });
             },
             (error: unknown) => {
-                if (!cancelled) setLoaded({ status: 'failed', notice: noticeFor(error, 'Matches') });
+                if (!cancelled) setLoaded({ status: 'failed', notice: noticeFor(error, MATCHES) });
             }
         );
         return () => {
@@ -103,7 +111,7 @@ export function useGuideSearch(typed: string, open: boolean): ResultGroup[] {
                 },
                 (error: unknown) => {
                     if (replaced.signal.aborted) return;
-                    setAnswer({ question, state: { status: 'failed', notice: noticeFor(error, 'Related results') } });
+                    setAnswer({ question, state: { status: 'failed', notice: noticeFor(error, RELATED) } });
                 }
             );
         }, TYPING_PAUSE_MS);
