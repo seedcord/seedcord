@@ -79,9 +79,7 @@ export class GuideMatches {
 
     // the page's own origin, since the same build wrote this file
     static async load(): Promise<GuideMatches> {
-        return new GuideMatches(
-            await readJson<GuideSection[]>((path) => fetch(path), `${GUIDE.path}${GUIDE_SECTIONS_PATH}`)
-        );
+        return new GuideMatches(await readJson<GuideSection[]>(`${GUIDE.path}${GUIDE_SECTIONS_PATH}`));
     }
 
     match(input: string): GuideResult[] {

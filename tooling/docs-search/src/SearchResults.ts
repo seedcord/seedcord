@@ -20,8 +20,9 @@ export class SearchResults {
     private readonly search: DocSearch<SearchIndexEntry>;
 
     constructor(entries: readonly SearchIndexEntry[]) {
+        // overload signatures share one id
         this.byId = new Map(entries.map((entry) => [entry.action.id, entry]));
-        this.search = new DocSearch(entries);
+        this.search = new DocSearch([...this.byId.values()]);
     }
 
     get(id: string): ReferenceSearchResult | undefined {

@@ -135,7 +135,7 @@ export function GuideSearch({ open, onOpenChange: setOpen }: GuideSearchProps): 
     const inputRef = useRef<HTMLInputElement>(null);
     const router = useRouter();
 
-    const { groups, searching } = useGuideSearch(typed);
+    const { groups, searching } = useGuideSearch(typed, open);
     // useRovingList tracks the rows by identity
     const list = useMemo(() => placeGroups(groups), [groups]);
 

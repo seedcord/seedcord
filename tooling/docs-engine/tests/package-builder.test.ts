@@ -180,7 +180,9 @@ describe('buildPackageFromModel search summary', () => {
             'E.g. ban/user, i.e. a route, kick, etc. all work. The rest follows.',
             'E.g. ban/user, i.e. a route, kick, etc. all work.'
         ],
-        ['a dotted name', 'Reads this.event.options once. Then caches it.', 'Reads this.event.options once.']
+        ['a dotted name', 'Reads this.event.options once. Then caches it.', 'Reads this.event.options once.'],
+        ['a numbered step', '1. Creates a client. Then logs in.', '1. Creates a client.'],
+        ['vs.', 'Pick one vs. the other. The rest follows.', 'Pick one vs. the other.']
     ])('ends the first sentence correctly for %s', (_, summary, first) => {
         expect(searchEntryFor(summary)?.summary).toBe(first);
     });

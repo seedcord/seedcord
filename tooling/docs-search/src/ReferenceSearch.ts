@@ -1,4 +1,5 @@
 import { PACKAGES_FILE_NAME, REFERENCE_SEARCH_URL, searchFileUrl } from '#src/files';
+import { readJson } from '#src/readAsset';
 import { ALL_PACKAGES, SearchCatalog } from '#src/SearchCatalog';
 import { SearchResults } from '#src/SearchResults';
 
@@ -27,7 +28,7 @@ export class ReferenceSearch {
     catalog(): Promise<SearchCatalog> {
         return this.catalogs.get(
             `${this.endpoint}/${PACKAGES_FILE_NAME}`,
-            async (url) => new SearchCatalog(await ReferenceSearch.json<SearchPackage[]>(url))
+            async (url) => new SearchCatalog(await readJson<SearchPackage[]>(url))
         );
     }
 
@@ -41,19 +42,10 @@ export class ReferenceSearch {
         const files = await Promise.all(
             targets.map(({ id, version }) =>
                 this.indexes
-                    .get(searchFileUrl(id, version, this.endpoint), (url) =>
-                        ReferenceSearch.json<SearchIndexEntry[]>(url)
-                    )
+                    .get(searchFileUrl(id, version, this.endpoint), (url) => readJson<SearchIndexEntry[]>(url))
                     .catch((): SearchIndexEntry[] => [])
             )
         );
         return new SearchResults(files.flat());
-    }
-
-    private static async json<Payload>(url: string): Promise<Payload> {
-        const response = await fetch(url);
-        if (!response.ok) throw new Error(`Search index failed to load with status ${response.status}`);
-        // the docs build writes these files from the same types
-        return (await response.json()) as Payload;
     }
 }

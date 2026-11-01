@@ -48,22 +48,28 @@ function noticeFor(error: unknown): string {
     return 'Related results are unavailable right now. Try again in a minute.';
 }
 
-function useMatches(): GuideMatches | undefined {
+function useMatches(open: boolean): GuideMatches | undefined {
     const [matches, setMatches] = useState<GuideMatches>();
+    const loaded = matches !== undefined;
     useEffect(() => {
+        if (!open || loaded) return undefined;
         let cancelled = false;
-        void loadMatches().then((loaded) => {
-            if (!cancelled) setMatches(loaded);
-        });
+        // a failed load leaves Matches empty until the dialog opens again
+        loadMatches().then(
+            (sections) => {
+                if (!cancelled) setMatches(sections);
+            },
+            () => undefined
+        );
         return () => {
             cancelled = true;
         };
-    }, []);
+    }, [open, loaded]);
     return matches;
 }
 
-export function useGuideSearch(typed: string): GuideSearchState {
-    const matches = useMatches();
+export function useGuideSearch(typed: string, open: boolean): GuideSearchState {
+    const matches = useMatches(open);
     const [found, setFound] = useState<Found | null>(null);
     const question = parseQuestion(typed);
     const asking = question !== undefined;

@@ -34,6 +34,11 @@ describe('SearchResults.rank', () => {
         expect(results.rank('log', 'member').map(({ action }) => action.kind)).toEqual(['method']);
     });
 
+    it('lists an overloaded method once', () => {
+        const results = new SearchResults([entry('logger/log', 'method'), entry('logger/log', 'method')]);
+        expect(results.rank('log', 'all')).toHaveLength(1);
+    });
+
     it('keeps a same-named entity from another package', () => {
         const results = new SearchResults([entry('logger', 'class'), entry('logger', 'class', '@seedcord/logger')]);
         expect(results.rank('logger', 'all')).toHaveLength(2);

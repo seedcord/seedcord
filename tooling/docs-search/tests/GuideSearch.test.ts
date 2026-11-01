@@ -50,6 +50,17 @@ describe('GuideSearch', () => {
         await expect(new GuideSearch(ENDPOINT).search('button', SIGNAL)).rejects.toEqual(new TooManySearches(60));
     });
 
+    it('throws a plain status error for a 429 with no wait in seconds', async () => {
+        for (const headers of [{}, { 'retry-after': 'Wed, 21 Oct 2026 07:28:00 GMT' }]) {
+            answering(new Response(null, { status: 429, headers }));
+
+            const failure = new GuideSearch(ENDPOINT).search('button', SIGNAL);
+
+            await expect(failure).rejects.toThrow(/429/);
+            await expect(failure).rejects.not.toBeInstanceOf(TooManySearches);
+        }
+    });
+
     it('throws with the status when the endpoint fails another way', async () => {
         answering(new Response(null, { status: 500 }));
 

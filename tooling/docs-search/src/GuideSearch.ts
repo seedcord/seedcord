@@ -29,7 +29,11 @@ export class TooManySearches extends Error {
 
 async function fetchAnswer(url: string, signal: AbortSignal): Promise<Response> {
     const response = await fetch(url, { signal });
-    if (response.status === TOO_MANY_REQUESTS) throw new TooManySearches(Number(response.headers.get('retry-after')));
+    // retry-after may also hold an HTTP date
+    const retryAfter = Number(response.headers.get('retry-after'));
+    if (response.status === TOO_MANY_REQUESTS && Number.isSafeInteger(retryAfter) && retryAfter > 0) {
+        throw new TooManySearches(retryAfter);
+    }
     return response;
 }
 
@@ -42,7 +46,7 @@ export class GuideSearch {
 
         const url = new URL(this.endpoint);
         url.searchParams.set('q', question);
-        const hits = await readJson<GuideHit[]>((path) => fetchAnswer(path, signal), url.href);
+        const hits = await readJson<GuideHit[]>(url.href, (path) => fetchAnswer(path, signal));
         return hits.map(guideResult);
     }
 }

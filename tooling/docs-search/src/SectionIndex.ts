@@ -38,8 +38,8 @@ export class SectionIndex {
 
     static async load(read: ReadAsset): Promise<SectionIndex> {
         const [sections, buffer] = await Promise.all([
-            readJson<GuideSection[]>(read, GUIDE_SECTIONS_PATH),
-            readAsset(read, GUIDE_VECTORS_PATH).then((file) => file.arrayBuffer())
+            readJson<GuideSection[]>(GUIDE_SECTIONS_PATH, read),
+            readAsset(GUIDE_VECTORS_PATH, read).then((file) => file.arrayBuffer())
         ]);
 
         const vectors = new Float32Array(buffer);

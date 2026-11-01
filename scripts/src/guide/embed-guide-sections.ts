@@ -20,7 +20,7 @@ const exported = (path: string): URL => new URL(`.${path}`, EXPORT);
 const fromExport: ReadAsset = async (path) => new Response(await readFile(exported(path)));
 
 async function main(): Promise<void> {
-    const sections = await readJson<GuideSection[]>(fromExport, GUIDE_SECTIONS_PATH);
+    const sections = await readJson<GuideSection[]>(GUIDE_SECTIONS_PATH, fromExport);
     const vectors = await WorkersAi.fromEnv().embed(sections.map(embedding.document));
     await writeFile(exported(GUIDE_VECTORS_PATH), new Float32Array(vectors.flat()));
 
