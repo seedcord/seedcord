@@ -2,12 +2,11 @@
 
 import { ALL_PACKAGES } from '@seedcord/docs-search';
 import { usePathname, useRouter } from 'next/navigation';
-import { useCallback, useEffect, useRef, useState, type RefObject } from 'react';
-import { useShallow } from 'zustand/react/shallow';
+import { useCallback, useEffect, useRef, useState, useTransition, type RefObject } from 'react';
 
+import { useCommandPaletteOpen } from '#components/providers/CommandPaletteProvider';
 import { log } from '#lib/logger';
 import { referenceSearch } from '#lib/search/referenceSearch';
-import { useUIStore, type UIStore } from '#store/ui';
 
 import { FOCUS_DELAY_MS, isKindFilter } from './constants';
 
@@ -97,12 +96,8 @@ export interface CommandPaletteController {
 }
 
 export function useCommandPaletteController(): CommandPaletteController {
-    const { open, setCommandPaletteOpen } = useUIStore(
-        useShallow((state: UIStore) => ({
-            open: state.isCommandPaletteOpen,
-            setCommandPaletteOpen: state.setCommandPaletteOpen
-        }))
-    );
+    const { open, setOpen } = useCommandPaletteOpen();
+    const [, startTransition] = useTransition();
     const router = useRouter();
     const pathname = usePathname();
     const inputRef = useRef<HTMLInputElement>(null);
@@ -136,32 +131,30 @@ export function useCommandPaletteController(): CommandPaletteController {
                 setSearchValue('');
                 resetFilters();
             }
-            setCommandPaletteOpen(next);
+            setOpen(next);
         },
-        [setCommandPaletteOpen, resetFilters]
+        [setOpen, resetFilters]
     );
 
-    const handleClose = useCallback(() => setCommandPaletteOpen(false), [setCommandPaletteOpen]);
+    const handleClose = useCallback(() => setOpen(false), [setOpen]);
 
     const handleSelect = useCallback(
         (action: CommandAction): void => {
             log('Command palette item selected', action);
-            handleClose();
 
             if (action.isExternal) {
+                setOpen(false);
                 window.open(action.href, '_blank', 'noopener');
                 return;
             }
 
-            if (typeof window !== 'undefined') {
-                const targetHref = buildNavigationHref(action, window.location.origin);
-                router.push(targetHref);
-                return;
-            }
-
-            router.push(action.href);
+            // react commits this close together with the pushed page
+            startTransition(() => {
+                router.push(buildNavigationHref(action, window.location.origin));
+                setOpen(false);
+            });
         },
-        [handleClose, router]
+        [router, setOpen]
     );
 
     return {

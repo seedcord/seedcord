@@ -72,7 +72,11 @@ function Group({ group, activeIndex, onSelect, onActivate }: RowEvents & { group
                 {group.label}
             </div>
             {group.pending ? <SearchResultsSkeleton /> : null}
-            {group.notice === undefined ? null : <p className={cn('text-subtle px-3 py-2 text-sm')}>{group.notice}</p>}
+            {group.notice === undefined ? null : (
+                <p aria-hidden className={cn('text-subtle px-3 py-2 text-sm')}>
+                    {group.notice}
+                </p>
+            )}
             {group.rows.map(({ result, index }) => (
                 <SearchResultRow
                     key={result.path}
@@ -196,6 +200,10 @@ export function GuideSearch({ open, onOpenChange: setOpen }: GuideSearchProps): 
                     onActivate={pointAt}
                     emptyMessage={emptyMessage}
                 />
+                {/* a screen reader announces a change inside a status region that already exists */}
+                <p role="status" className={cn('sr-only')}>
+                    {groups.find((group) => group.notice !== undefined)?.notice}
+                </p>
             </SearchDialog>
         </>
     );

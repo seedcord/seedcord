@@ -32,7 +32,7 @@ const initialState = useUIStore.getState();
 function resetStore(): void {
     useUIStore.setState(
         {
-            isCommandPaletteOpen: initialState.isCommandPaletteOpen,
+            isMobileNavOpen: initialState.isMobileNavOpen,
             memberAccessLevel: initialState.memberAccessLevel
         },
         false
@@ -50,28 +50,6 @@ afterEach(() => {
 });
 
 describe('useUIStore', () => {
-    describe('command palette', () => {
-        it('toggles open state without touching localStorage', () => {
-            const setItem = vi.spyOn(window.localStorage, 'setItem');
-
-            useUIStore.getState().toggleCommandPalette();
-            expect(useUIStore.getState().isCommandPaletteOpen).toBe(true);
-
-            useUIStore.getState().toggleCommandPalette();
-            expect(useUIStore.getState().isCommandPaletteOpen).toBe(false);
-
-            expect(setItem).not.toHaveBeenCalled();
-        });
-
-        it('setCommandPaletteOpen does not write to localStorage', () => {
-            const setItem = vi.spyOn(window.localStorage, 'setItem');
-
-            useUIStore.getState().setCommandPaletteOpen(true);
-
-            expect(setItem).not.toHaveBeenCalled();
-        });
-    });
-
     describe('member access level', () => {
         it('persists memberAccessLevel under docs.memberAccessLevel', () => {
             const setItem = vi.spyOn(window.localStorage, 'setItem');
@@ -87,7 +65,7 @@ describe('useUIStore', () => {
 
             const snapshot = useUIStore.getState();
             expect(snapshot.memberAccessLevel).toBe('public');
-            expect(snapshot.isCommandPaletteOpen).toBe(false);
+            expect(snapshot.isMobileNavOpen).toBe(false);
         });
     });
 

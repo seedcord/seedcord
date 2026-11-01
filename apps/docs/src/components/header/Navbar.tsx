@@ -19,6 +19,7 @@ import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 
 import { hasMobileNavPanel } from '#components/layout/sidebar/utils/hasMobileNavPanel';
+import { useCommandPaletteOpen } from '#components/providers/CommandPaletteProvider';
 import { SITE_URL } from '#lib/site';
 import { log } from '#lib/logger';
 import { useUIStore } from '#store/ui';
@@ -39,13 +40,12 @@ const DESTINATIONS: readonly SiteDestination[] = [
 export function Navbar(): ReactElement {
     const setMobileNavOpen = useUIStore((state) => state.setMobileNavOpen);
     const isMobileNavOpen = useUIStore((state) => state.isMobileNavOpen);
-    const isCommandPaletteOpen = useUIStore((state) => state.isCommandPaletteOpen);
-    const setCommandPaletteOpen = useUIStore((state) => state.setCommandPaletteOpen);
+    const palette = useCommandPaletteOpen();
     const showMobileNavButton = hasMobileNavPanel(usePathname());
 
     const openSearch = (): void => {
         log('Search button clicked');
-        setCommandPaletteOpen(!isCommandPaletteOpen);
+        palette.setOpen(!palette.open);
     };
 
     return (
