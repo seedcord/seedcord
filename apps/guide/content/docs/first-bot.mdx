@@ -87,7 +87,7 @@ my-bot/
 `pnpm-workspace.yaml` only exists for a project made with pnpm. A project made with Bun gets a `bunfig.toml` instead, unless it's a Workers bot.
 
 - **`src/bot.ts`** builds your bot and exports it. **`src/index.ts`** imports that and starts it. They are separate so the CLI can import `bot.ts` and read your commands without starting the bot.
-- **[`seedcord.config.ts`](/build/config)** configures the CLI. Your bot's own settings go in `bot.ts`, shown below.
+- **[`seedcord.config.ts`](/build/config)** configures the CLI. Put your bot's own settings in `bot.ts`, shown below.
 - **`src/seedcord-gen.ts`** holds the types generated from your config and your commands. `seedcord codegen` writes it, and you commit it so a fresh clone type-checks before anyone runs codegen.
 - **`src/plugins/Uptime.ts`** is a small [plugin](/writing-plugins) that records when the bot started.
 - **`tsconfig.json`** configures the type check, and [`seedcord build`](/build) reads it too. Its `paths` define the `#src/*`, `#components/*`, and `#plugins/*` aliases. `bot.ts` imports `#plugins/Uptime` through the last one.

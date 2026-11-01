@@ -51,7 +51,7 @@ export const FixedScope = Symbol('seedcord:plugin:fixed-scope');
  * Base class for a seedcord plugin. Extend it and implement `init()`. `this.core` is the running
  * bot.
  *
- * Your constructor takes the host first and passes it to `super()`. Add your own parameters after
+ * Take the host as your constructor's first parameter and pass it to `super()`. Add your own parameters after
  * it. `attach()` types them at the call site.
  *
  * A plugin that narrows `transport` or `runtime` in `Opts` passes the same values to `super()`.

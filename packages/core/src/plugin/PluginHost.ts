@@ -81,7 +81,7 @@ export abstract class PluginHost<BotT extends Transport, BotRt extends Runtime> 
      * `start()`. An edge bot starts on its first request.
      *
      * Attaching a plugin whose `transport` or `runtime` differs from this host fails to compile.
-     * Your constructor takes `CoreBase` as its first parameter (you don't need to pass it though).
+     * Take `CoreBase` as your constructor's first parameter. `attach()` passes it, so you don't.
      * A narrower one fails to compile here.
      *
      * @param key - Also the channel the plugin logs on, dots included.

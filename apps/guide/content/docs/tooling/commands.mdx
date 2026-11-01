@@ -122,6 +122,6 @@ A non-empty `CI` counts as no terminal even when stdin and stdout are real, so a
 
 <Shell exec="seedcord commands deploy --yes" />
 
-With `DISCORD_BOT_TOKEN` set, that line is a complete CI step. `deploy` reads `commands.guilds` from the bot it imports. A job that deploys your production application leaves `TESTING_GUILD_IDS` unset, so the commands go out globally. An edge bot runs the step before `seedcord build`, because the build reads the deployed command ids from Discord.
+With `DISCORD_BOT_TOKEN` set, that line is a complete CI step. `deploy` reads `commands.guilds` from the bot it imports. In the job that deploys your production application, leave `TESTING_GUILD_IDS` unset so the commands go out globally. An edge bot runs the step before `seedcord build`, because the build reads the deployed command ids from Discord.
 
 A package script passes extra arguments through. With pnpm, write `pnpm commands clean --yes --all-guilds`, and leave out the `--`, since pnpm hands it to the CLI as one more argument. npm needs the `--`.

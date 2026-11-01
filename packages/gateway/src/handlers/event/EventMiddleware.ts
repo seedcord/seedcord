@@ -15,9 +15,9 @@ import type { Promisable } from 'type-fest';
  *
  * Middleware runs before event handlers and can stop the event by throwing a `Silence`. Unlike `EventHandler`, it
  * runs the SAME for every event it is registered for, so it has no `match`. Specify a single event in the
- * generic and `{ events }` to read `this.event` fully typed. Span several events (or omit `{ events }` for a
- * catchall) and `this.event` narrows to `never`, read `this.eventName` and do work that does not depend on the
- * payload shape. A middleware that needs each event's payload is written one event per class.
+ * generic and `{ events }` to read `this.event` fully typed. If you span several events (or omit `{ events }` for
+ * a catchall), `this.event` narrows to `never`. Read `this.eventName` then, and do work that doesn't depend on the
+ * payload shape. Write one class per event for a middleware that needs each event's payload.
  *
  * @typeParam EventName - One or more `ClientEvents` keys. Defaults to every event (catchall).
  */

@@ -60,7 +60,7 @@ export class SqliteDriver implements KvDriver, Disposable {
 }
 ```
 
-`get` returns `undefined` for a key that isn't stored, and `set` replaces what the key held, which is why the sample uses `INSERT OR REPLACE`. Every method returns its value directly, because `node:sqlite` is synchronous. A driver that uses a network client returns promises from the same methods, and `entries` can be an `async *entries` generator. seedcord awaits each call, so a driver can mix both styles.
+`get` returns `undefined` for a key that isn't stored, and `set` replaces what the key held, which is why the sample uses `INSERT OR REPLACE`. Every method returns its value directly, because `node:sqlite` is synchronous. If your driver uses a network client, return promises from the same methods. `entries` can be an `async *entries` generator too. seedcord awaits each call, so a driver can mix both styles.
 
 `seedcord codegen` and the build load `bot.ts`, and loading it runs this constructor. Opening a local file there costs nothing. If your driver talks to a server, connect on the first call, so codegen and the build don't open a connection to it.
 

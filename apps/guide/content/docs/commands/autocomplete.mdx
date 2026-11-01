@@ -90,7 +90,7 @@ Discord sends one of these every time the person edits the field, so `value` is 
 
 ## One case per field
 
-An autocomplete interaction says which field is focused, so every handler branches on it. `this.match` takes one case per autocompletable field, and a case you leave out fails to compile.
+An autocomplete interaction says which field is focused, so your handler has to branch on it. `this.match` takes one case per autocompletable field, and a case you leave out fails to compile.
 
 Each case receives the partial value and a `respond` typed to that field's choice values.
 

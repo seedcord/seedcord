@@ -18,8 +18,8 @@ type EventMatchCases<Names extends ValidNonInteractionKeys, Ret> = {
 /**
  * Base class for a Discord client event handler.
  *
- * Pass the event name(s) as the generic, the same one(s) as `@RegisterEvent`. A single-event handler reads
- * `this.event` (the payload tuple) directly. A handler registered for several events branches with `this.match`,
+ * Pass the event name(s) as the generic, the same one(s) as `@RegisterEvent`. On a single-event handler, read
+ * `this.event` (the payload tuple) directly. On a handler registered for several events, branch with `this.match`,
  * keyed by event name, since the union of payload tuples is not directly readable.
  *
  * @typeParam Names - One or more `ClientEvents` keys, e.g. `Events.MessageCreate` or `Events.MessageCreate | Events.MessageUpdate`.
@@ -53,7 +53,7 @@ export abstract class EventHandler<in out Names extends ValidNonInteractionKeys>
 
     /**
      * Run the case for the current event. Use this only when the handler is registered for several
-     * events. A single-event handler reads `this.event` directly. On a multi-event handler `this.event` is
+     * events. On a single-event handler, read `this.event` directly. On a multi-event handler `this.event` is
      * `never`, so match is the only way to read the payload.
      *
      * Provide one case per registered event, keyed by its name, and each case receives that event's own

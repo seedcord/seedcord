@@ -43,7 +43,7 @@ export interface GateContextBase {
     readonly declaredRoute: string | null;
     /**
      * The bag for this dispatch, the same instance the handler and its middleware hold. Every middleware
-     * runs before the first gate. A gate therefore reads what a middleware wrote.
+     * runs before the first gate. A gate can therefore read what a middleware wrote.
      */
     readonly dispatch: DispatchContext;
 }

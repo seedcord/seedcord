@@ -162,7 +162,7 @@ Shutdown runs fewer steps. `dispose()` clears the service registry, then closes 
 
 ## The Kysely instance
 
-[Services](/plugins/kysely-services) hold the queries for one table each. A query that joins tables, or a transaction that writes to two of them, uses the Kysely instance directly. That instance is [`connection`](ref:plugin-kysely-postgres/KyselyPostgres.connection), which a handler reads as `this.core.db.connection` once [codegen has typed `db`](/plugins/typing).
+[Services](/plugins/kysely-services) hold the queries for one table each. For a query that joins tables, or a transaction that writes to two of them, use the Kysely instance directly. That instance is [`connection`](ref:plugin-kysely-postgres/KyselyPostgres.connection), which a handler reads as `this.core.db.connection` once [codegen has typed `db`](/plugins/typing).
 
 <Callout type="warning">
 

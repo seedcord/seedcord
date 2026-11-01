@@ -139,8 +139,8 @@ type AssertComponentRoute<
 /**
  * Routes one or more slash commands to a `SlashHandler`.
  *
- * Pass the same route string(s) as the handler's generic. A single command reads `this.options`, several
- * commands branch with `this.match`. The decorator routes and the generic must match exactly. Listing
+ * Pass the same route string(s) as the handler's generic. On a handler for one command, read
+ * `this.options`. On a handler for several, branch with `this.match`. The decorator routes and the generic must match exactly. Listing
  * fewer or more than the handler declares is a compile error. Subcommands use a slash path.
  *
  * @param routes - The route string(s) this handler serves, e.g. `'ban'`, `'ban', 'kick'`, or `'demo/setup'`.
@@ -282,7 +282,7 @@ export function ModalRoute<const Defs extends readonly AnyCustomId[]>(...defs: D
  * Routes string select menu interactions to a `StringMenuHandler`.
  *
  * Pass the {@link CustomId} definition(s) this handler decodes and list the same ones in the handler's
- * generic. The handler reads the chosen option values from `this.values`.
+ * generic. Read the chosen option values from `this.values`.
  *
  * @param defs - The customId definition(s) this handler decodes, one per route.
  * @decorator

@@ -272,7 +272,7 @@ this plugin declares transport 'gateway' but this bot runs 'http'
 this plugin declares runtime 'server' but this bot runs 'edge'
 ```
 
-A bot on Cloudflare Workers attaches plugins the same way as any other bot, with `attach` in `bot.ts`. The two plugins in this tab declare the `'server'` runtime, so a Workers bot gets the second message above for [Mongoose](/plugins/mongoose) and [Kysely](/plugins/kysely). A plugin from the `@seedcord/http` or `@seedcord/core/plugin` base attaches there unless it limits `runtime`.
+On Cloudflare Workers, attach plugins the same way as on any other bot, with `attach` in `bot.ts`. The two plugins in this tab declare the `'server'` runtime, so a Workers bot gets the second message above for [Mongoose](/plugins/mongoose) and [Kysely](/plugins/kysely). A plugin from the `@seedcord/http` or `@seedcord/core/plugin` base attaches there unless it limits `runtime`.
 
 A cast, or a plain JavaScript bot, gets past the types. `attach` then throws `CorePluginScopeMismatch` when it runs, with the plugin's name and the transport or runtime that differs. [Workers](/build/workers) covers setting that bot up.
 

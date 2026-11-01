@@ -15,8 +15,8 @@ export const ModelNameMetadataKey = Symbol.for('seedcord:mongoose:model-name');
  * Associates a service class with a key for dependency injection.
  * The service becomes available via `core.db.services[key]`.
  *
- * The decorated class declares its schema as a `public static schema` member, which the plugin
- * reads to build the model once the connection is open. A class without one is a compile error.
+ * Declare the schema as a `public static schema` member on the decorated class. The plugin reads it
+ * to build the model once the connection is open. A class without one is a compile error.
  *
  * @typeParam TService - The service key type
  * @param key - Service key for registration and type-safe access

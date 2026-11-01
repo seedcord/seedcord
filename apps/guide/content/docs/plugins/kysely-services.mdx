@@ -47,7 +47,7 @@ Here's what each part of `Users.ts` does.
 - **[`@RegisterKyselyService('users')`](ref:plugin-kysely-postgres/RegisterKyselyService)** gives the class its key. Your handlers read the service from `services` under that key, and the plugin also uses it as the table name unless you [pass another one](#the-key-is-also-the-table-name).
 - **`KyselyService<'users'>`** is the base class, and its type argument is a table from [your schema](/plugins/kysely-schema). `this.table` holds that name, so `selectFrom(this.table)` checks `discord_id` against the `users` columns.
 - **`this.db`** returns the plugin's [`connection`](ref:plugin-kysely-postgres/KyselyPostgres.connection), so every service queries through the same pool. It can query every table in your schema, so a method can join `users` with another table.
-- **`findByDiscordId`** keeps the lookup inside the class. A handler calls that method on `services.users` and never writes the query itself. `services.users` gets its type once [codegen has run](#typing-the-registry).
+- **`findByDiscordId`** keeps the lookup inside the class. Your handlers call that method on `services.users`, so none of them writes the query. `services.users` gets its type once [codegen has run](#typing-the-registry).
 
 ## You never construct a service
 

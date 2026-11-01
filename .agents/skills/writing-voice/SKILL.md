@@ -123,6 +123,20 @@ A noun made from a verb can take the subject slot, and then a clause slips in be
 
 The tell is a subject that is an action, a noun made from a verb, like "a scan of the root throws" or "a save that early never reaches vite". Find who does the action and make that the subject. In a code comment that is usually a function, so name it: "assertNoHashPaths throws on this folder". Then read the draft once at speed. If you stop and start over, rewrite the sentence.
 
+### Write an instruction as an instruction
+
+A generic subject with a present-tense verb reads as a fact about how the code behaves. When the reader is the one who has to do the thing, they wait for something that never happens. The sentence usually turns into a garden path too, because the clause that picks the subject sits between it and its verb.
+
+<!--prettier-ignore-start-->
+
+| Reads as a fact | Says who does it |
+|---|---|
+| A gate that reads them annotates `ctx` with `AppPermissionsContext` and reads `ctx.appPermissions`. | To read them, annotate `ctx` with `AppPermissionsContext` and read `ctx.appPermissions`. |
+
+<!--prettier-ignore-end-->
+
+Ask who does the verb. If it's the reader, write the imperative or `you`. If it's advice, write `should`. Keep the generic subject only when the code does the thing.
+
 ---
 
 ## 3. Anthropomorphism, with a test you can apply

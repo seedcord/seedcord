@@ -72,7 +72,7 @@ export abstract class ComponentHandler<Event extends ComponentInteraction, Defs 
 
     /**
      * Run the case for whichever route the component was minted from. Use this only when the handler is
-     * registered for several routes. A single-route handler reads `this.params` directly. On a multi-route
+     * registered for several routes. On a single-route handler, read `this.params` directly. On a multi-route
      * handler `this.params` is `never`, leaving match as the only way to read the decoded params.
      *
      * Provide one case per registered route, keyed by its prefix, and each case receives that route's own
