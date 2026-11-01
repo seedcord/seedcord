@@ -152,8 +152,10 @@ Nine checks.
    that states a single fact from the body in place of what the reader does with
    the feature, and one that promises something the page does not teach. Report
    one that leaves a reader who has never seen seedcord unable to tell what the
-   page is for, and one that lists the page's sections. Section 7 asks for one
-   sentence on what the reader does, plus the detail no neighbouring page shares.
+   page is for, and one that lists the page's sections. Report one narrower
+   than the page, where a single example stands in for the general claim. Section
+   7 asks for one sentence on what the reader does, plus the detail no
+   neighbouring page shares.
 
    Several need a file open, which is why they are here rather than in the prose
    review. The ref: link targets, the import-line cut convention, the fence type

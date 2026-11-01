@@ -71,6 +71,12 @@ finding, and a tic is a habit rather than a single sentence.
    the bottom lists nine more input kinds. Name the forms the top should
    mention.
 
+   The same miss runs the other way in a description or an opener rewritten
+   around one example. "Let either the owner or a moderator run a command with
+   or()" read as if gates only check roles, on a page about combining any
+   gates. Report it and give the general claim back, with the example marked
+   by `like`.
+
 3. Explaining what the reader already knows. Defending why a requirement is a
    requirement. Spelling out a consequence that is the next sentence anyway.
 
