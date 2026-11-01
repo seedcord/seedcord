@@ -295,7 +295,9 @@ describe('the ask endpoint', () => {
     const toward = (axis: number): number[] =>
         Array.from({ length: embedding.dimensions }, (_, index) => (index === axis ? 1 : 0));
 
-    function searching({ allowed = true } = {}): Env & { embedded: string[] } {
+    function searching({ allowed = true, aiError }: { allowed?: boolean; aiError?: Error } = {}): Env & {
+        embedded: string[];
+    } {
         const embedded: string[] = [];
         const files: Record<string, () => Response> = {
             [`/guide${GUIDE_SECTIONS_PATH}`]: () => Response.json(SECTIONS),
@@ -306,6 +308,7 @@ describe('the ask endpoint', () => {
             ASSETS: { fetch: (request) => Promise.resolve(files[new URL(request.url).pathname]?.() ?? new Response()) },
             AI: {
                 run: (_, { text }) => {
+                    if (aiError) return Promise.reject(aiError);
                     embedded.push(...text);
                     return Promise.resolve({ data: [toward(1)] });
                 }
@@ -355,6 +358,18 @@ describe('the ask endpoint', () => {
 
         expect((await get('/api/ask?q=k', env)).status).toBe(400);
         expect(env.embedded).toEqual([]);
+    });
+
+    it('says to come back at midnight UTC once Workers AI runs out for the day', async () => {
+        vi.useFakeTimers({ now: new Date('2026-11-01T17:00:00Z'), toFake: ['Date'] });
+        const usedUp = new Error('4006: you have used up your daily free allocation of 10,000 neurons');
+
+        const response = await get('/api/ask?q=button', searching({ aiError: usedUp }));
+        vi.useRealTimers();
+
+        expect(response.status).toBe(503);
+        expect(response.headers.get('retry-after')).toBe(String(7 * 60 * 60));
+        expect(response.headers.get('access-control-allow-origin')).toBe('*');
     });
 
     it('refuses once the visitor runs out of searches', async () => {

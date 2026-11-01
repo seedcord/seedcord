@@ -45,10 +45,16 @@ describe('GuideSearch', () => {
         expect(asked).toEqual([]);
     });
 
-    it('throws how long to wait once the visitor runs out of searches', async () => {
-        answering(new Response(null, { status: 429, headers: { 'retry-after': '60' } }));
+    it.each([
+        [429, '45', 'Too many searches. Try again in 45 seconds.'],
+        [503, '25200', 'Too many searches. Try again in 7 hours.']
+    ])('throws how long to wait for a %i that carries retry-after', async (status, retryAfter, message) => {
+        answering(new Response(null, { status, headers: { 'retry-after': retryAfter } }));
 
-        await expect(new GuideSearch(ENDPOINT).search('button', SIGNAL)).rejects.toEqual(new TooManySearches(60));
+        const failure = new GuideSearch(ENDPOINT).search('button', SIGNAL);
+
+        await expect(failure).rejects.toBeInstanceOf(TooManySearches);
+        await expect(failure).rejects.toThrow(message);
     });
 
     it('throws a plain status error for a 429 with no wait in seconds', async () => {

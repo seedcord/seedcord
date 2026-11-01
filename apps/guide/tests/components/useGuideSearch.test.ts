@@ -157,7 +157,7 @@ describe('useGuideSearch', () => {
         });
         await pauseTyping();
         await answer('cooldown', new Response(null, { status: 429, headers: { 'retry-after': '60' } }));
-        expect(noticeOf(result.current, 'Related')).toBe('Too many searches. Try again in 60 seconds.');
+        expect(noticeOf(result.current, 'Related')).toBe('Too many searches. Try again in 1 minute.');
 
         rerender({ typed: 'kysely' });
         await pauseTyping();

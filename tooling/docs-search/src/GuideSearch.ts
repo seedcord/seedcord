@@ -7,10 +7,25 @@ import type { GuideResult } from '#src/GuideResult';
 import type { GuideHit } from '#src/guideSections';
 
 const TOO_MANY_REQUESTS = 429;
+const SERVICE_UNAVAILABLE = 503;
+// ask.ts sends 429 for one visitor's limit and 503 for the site's daily Workers AI allowance
+const WAIT_STATUSES = new Set([TOO_MANY_REQUESTS, SERVICE_UNAVAILABLE]);
+
+const UNITS = [
+    { unit: 'hour', seconds: 3600 },
+    { unit: 'minute', seconds: 60 }
+] as const;
+
+const relative = new Intl.RelativeTimeFormat('en', { numeric: 'always' });
+
+function wait(seconds: number): string {
+    const fits = UNITS.find((size) => seconds >= size.seconds);
+    return fits ? relative.format(Math.ceil(seconds / fits.seconds), fits.unit) : relative.format(seconds, 'second');
+}
 
 export class TooManySearches extends Error {
     constructor(readonly retryAfterSeconds: number) {
-        super(`Too many searches. Try again in ${retryAfterSeconds} seconds.`);
+        super(`Too many searches. Try again ${wait(retryAfterSeconds)}.`);
     }
 }
 
@@ -18,7 +33,7 @@ async function fetchAnswer(url: string, signal: AbortSignal): Promise<Response> 
     const response = await fetch(url, { signal });
     // retry-after may also hold an HTTP date
     const retryAfter = Number(response.headers.get('retry-after'));
-    if (response.status === TOO_MANY_REQUESTS && Number.isSafeInteger(retryAfter) && retryAfter > 0) {
+    if (WAIT_STATUSES.has(response.status) && Number.isSafeInteger(retryAfter) && retryAfter > 0) {
         throw new TooManySearches(retryAfter);
     }
     return response;

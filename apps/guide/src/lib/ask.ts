@@ -18,8 +18,17 @@ const RESULTS = 8;
 const CACHE_CONTROL = 'public, max-age=300, s-maxage=86400';
 const BAD_REQUEST = 400;
 const TOO_MANY_REQUESTS = 429;
+const SERVICE_UNAVAILABLE = 503;
 // the ASK_LIMIT period in wrangler.jsonc
 const LIMIT_PERIOD_SECONDS = 60;
+const SECOND_MS = 1000;
+const DAY_MS = 86_400_000;
+
+// workers ai puts its error code first in the message. 4006 is the daily free allowance running out
+const isOutForTheDay = (error: unknown): boolean => error instanceof Error && error.message.startsWith('4006:');
+
+// the free allowance resets at 00:00 UTC
+const secondsUntilReset = (now: number): number => Math.ceil((DAY_MS - (now % DAY_MS)) / SECOND_MS);
 
 // the site calls this from localhost in next dev. browsers hide retry-after from other origins unless exposed
 const CORS = { 'access-control-allow-origin': '*', 'access-control-expose-headers': 'retry-after' };
@@ -56,7 +65,15 @@ export async function ask(request: Request, env: GuideEnv, context: WorkerContex
         });
     }
 
-    const { data } = await env.AI.run(embedding.model, { text: [embedding.query(question)] });
+    let data: number[][];
+    try {
+        ({ data } = await env.AI.run(embedding.model, { text: [embedding.query(question)] }));
+    } catch (error) {
+        if (!isOutForTheDay(error)) throw error;
+        return refuse(SERVICE_UNAVAILABLE, 'Search used up its daily Workers AI allowance.', {
+            'retry-after': String(secondsUntilReset(Date.now()))
+        });
+    }
     const [vector] = data;
     if (!vector) throw new Error(`${embedding.model} returned no embedding`);
 
