@@ -2,6 +2,7 @@
 
 import { QUESTION_LENGTH } from '@seedcord/docs-search';
 import {
+    KeyLegend,
     SearchDialog,
     SearchField,
     SearchTrigger,
@@ -10,6 +11,7 @@ import {
     useRovingList,
     useSearchHotkey
 } from '@seedcord/ui';
+import { ArrowDown, ArrowUp, CornerDownLeft } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import { useCallback, useMemo, useRef, useState } from 'react';
 
@@ -19,9 +21,22 @@ import { useGuideSearch } from './useGuideSearch';
 
 import type { ResultGroup } from './useGuideSearch';
 import type { GuideResult } from '@seedcord/docs-search';
+import type { KeyHint } from '@seedcord/ui';
 import type { ReactElement } from 'react';
 
 const LISTBOX_ID = 'guide-search-results';
+
+const ROW_HINTS: readonly KeyHint[] = [
+    {
+        keys: [
+            { label: 'Up', icon: ArrowUp },
+            { label: 'Down', icon: ArrowDown }
+        ],
+        action: 'move'
+    },
+    { keys: [{ label: 'Enter', icon: CornerDownLeft }], action: 'open' }
+];
+const GROUP_HINTS: readonly KeyHint[] = [...ROW_HINTS, { keys: [{ label: 'Tab' }], action: 'next group' }];
 
 export const SEARCH_LABEL = 'Search the guide';
 
@@ -169,6 +184,11 @@ export function GuideSearch({ open, onOpenChange: setOpen }: GuideSearchProps): 
                 onClose={() => setOpen(false)}
                 title="Search"
                 description="Search every page in the seedcord guide."
+                footer={
+                    list.rows.length === 0 ? undefined : (
+                        <KeyLegend hints={list.groupStarts.length > 1 ? GROUP_HINTS : ROW_HINTS} />
+                    )
+                }
                 field={
                     <SearchField
                         inputRef={inputRef}

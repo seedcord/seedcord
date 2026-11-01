@@ -1,19 +1,13 @@
 import { embedding } from '#src/embedding';
 import { GUIDE_SECTIONS_PATH, GUIDE_VECTORS_PATH } from '#src/files';
 import { guideHit } from '#src/guideSections';
+import { readAsset, readJson } from '#src/readAsset';
 
 import type { GuideHit, GuideSection } from '#src/guideSections';
-
-type ReadAsset = (path: string) => Promise<Response>;
+import type { ReadAsset } from '#src/readAsset';
 
 const VERSION_CHARS = 16;
 const HEX = 16;
-
-async function read(asset: ReadAsset, path: string): Promise<Response> {
-    const response = await asset(path);
-    if (!response.ok) throw new Error(`${path} failed to load with status ${response.status}`);
-    return response;
-}
 
 async function versionOf(...files: (string | ArrayBuffer)[]): Promise<string> {
     const digest = new Uint8Array(await crypto.subtle.digest('SHA-256', await new Blob(files).arrayBuffer()));
@@ -42,22 +36,18 @@ export class SectionIndex {
         });
     }
 
-    static async load(asset: ReadAsset): Promise<SectionIndex> {
-        const [sectionsFile, vectorsFile] = await Promise.all([
-            read(asset, GUIDE_SECTIONS_PATH),
-            read(asset, GUIDE_VECTORS_PATH)
+    static async load(read: ReadAsset): Promise<SectionIndex> {
+        const [sections, buffer] = await Promise.all([
+            readJson<GuideSection[]>(read, GUIDE_SECTIONS_PATH),
+            readAsset(read, GUIDE_VECTORS_PATH).then((file) => file.arrayBuffer())
         ]);
-        const text = await sectionsFile.text();
-        const buffer = await vectorsFile.arrayBuffer();
-        // the guide build writes this file from the same type
-        const sections = JSON.parse(text) as GuideSection[];
 
         const vectors = new Float32Array(buffer);
         const count = vectors.length / embedding.dimensions;
         if (count !== sections.length) {
             throw new Error(`${GUIDE_VECTORS_PATH} holds ${count} vectors for ${sections.length} sections`);
         }
-        return new SectionIndex(sections, vectors, await versionOf(text, buffer));
+        return new SectionIndex(sections, vectors, await versionOf(JSON.stringify(sections), buffer));
     }
 
     rank(question: readonly number[], limit: number): GuideHit[] {

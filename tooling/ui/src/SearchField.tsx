@@ -6,6 +6,7 @@ import { Button } from './Button';
 import { Icon } from './Icon';
 import { IconSwap } from './IconSwap';
 import { Input } from './Input';
+import { Kbd } from './Kbd';
 import { cn } from './lib/cn';
 
 import type { KeyboardEvent, ReactElement, ReactNode, RefObject } from 'react';
@@ -24,15 +25,12 @@ function CloseControls({ onClose, label }: { onClose: () => void; label: string 
             </Button>
             <Button
                 variant="ghost"
+                size="none"
                 onClick={onClose}
                 aria-label={label}
-                className={cn(
-                    'text-subtle hidden h-auto items-center rounded-md border border-(--border)',
-                    'bg-(--surface-moderate) px-2 py-1 text-xs leading-none font-semibold tracking-wide uppercase',
-                    'hover:bg-(--surface-moderate) hover:text-(--text) sm:inline-flex'
-                )}
+                className={cn('group hidden hover:bg-transparent sm:inline-flex')}
             >
-                Esc
+                <Kbd className={cn('uppercase group-hover:text-(--text)')}>Esc</Kbd>
             </Button>
         </>
     );

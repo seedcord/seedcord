@@ -3,6 +3,8 @@
 import { GuideSearch, GuideTitles, parseQuestion } from '@seedcord/docs-search';
 import { useEffect, useMemo, useState } from 'react';
 
+import { loadOnce } from '#lib/loadOnce';
+
 import type { GuideResult } from '@seedcord/docs-search';
 
 const TYPING_PAUSE_MS = 250;
@@ -11,15 +13,7 @@ const NO_RESULTS: GuideResult[] = [];
 
 const search = new GuideSearch();
 
-let titlesLoading: Promise<GuideTitles> | undefined;
-
-function loadTitles(): Promise<GuideTitles> {
-    titlesLoading ??= GuideTitles.load().catch((error: unknown) => {
-        titlesLoading = undefined;
-        throw error;
-    });
-    return titlesLoading;
-}
+const loadTitles = loadOnce(() => GuideTitles.load());
 
 type Found =
     | {
@@ -33,7 +27,6 @@ type Found =
 
 export interface ResultGroup {
     label: string;
-    // true while this group's results for the current input are still loading
     pending: boolean;
     results: GuideResult[];
 }

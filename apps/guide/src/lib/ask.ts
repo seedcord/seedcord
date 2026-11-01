@@ -1,6 +1,8 @@
 import { embedding, parseQuestion, QUESTION_LENGTH, SectionIndex } from '@seedcord/docs-search';
 import { GUIDE } from '@seedcord/ui/sites';
 
+import { loadOnce } from './loadOnce';
+
 export interface GuideEnv {
     ASSETS: { fetch(request: Request): Promise<Response> };
     AI: { run(model: typeof embedding.model, input: { text: string[] }): Promise<{ data: number[][] }> };
@@ -20,17 +22,9 @@ const TOO_MANY_REQUESTS = 429;
 // the site calls this from localhost in next dev
 const CORS = { 'access-control-allow-origin': '*' };
 
-let loading: Promise<SectionIndex> | undefined;
-
-function indexFor(request: Request, env: GuideEnv): Promise<SectionIndex> {
-    loading ??= SectionIndex.load((path) =>
-        env.ASSETS.fetch(new Request(new URL(GUIDE.path + path, request.url)))
-    ).catch((error: unknown) => {
-        loading = undefined;
-        throw error;
-    });
-    return loading;
-}
+const indexFor = loadOnce((request: Request, env: GuideEnv) =>
+    SectionIndex.load((path) => env.ASSETS.fetch(new Request(new URL(GUIDE.path + path, request.url))))
+);
 
 function refuse(status: number, error: string): Response {
     return Response.json({ error }, { status, headers: CORS });

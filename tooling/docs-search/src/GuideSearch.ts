@@ -1,6 +1,7 @@
 import { GUIDE } from '@seedcord/ui/sites';
 
 import { GUIDE_ASK_URL } from '#src/files';
+import { readJson } from '#src/readAsset';
 
 import type { GuideHit } from '#src/guideSections';
 
@@ -26,11 +27,7 @@ export class GuideSearch {
 
         const url = new URL(this.endpoint);
         url.searchParams.set('q', question);
-        const response = await fetch(url);
-        if (!response.ok) throw new Error(`Guide search failed with status ${response.status}`);
-
-        // the guide worker writes this from the same type
-        const hits = (await response.json()) as GuideHit[];
+        const hits = await readJson<GuideHit[]>((path) => fetch(path), url.href);
         return hits.map(guideResult);
     }
 }

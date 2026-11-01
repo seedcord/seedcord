@@ -2,6 +2,7 @@ import { GUIDE } from '@seedcord/ui/sites';
 
 import { GUIDE_TITLES_PATH } from '#src/files';
 import { guideResult } from '#src/GuideSearch';
+import { readJson } from '#src/readAsset';
 
 import type { GuideResult } from '#src/GuideSearch';
 import type { GuideHit } from '#src/guideSections';
@@ -45,11 +46,7 @@ export class GuideTitles {
 
     // the page's own origin, since the same build wrote this file
     static async load(): Promise<GuideTitles> {
-        const path = `${GUIDE.path}${GUIDE_TITLES_PATH}`;
-        const response = await fetch(path);
-        if (!response.ok) throw new Error(`${path} failed to load with status ${response.status}`);
-        // the guide build writes this file from the same type
-        return new GuideTitles((await response.json()) as GuideHit[]);
+        return new GuideTitles(await readJson<GuideHit[]>((path) => fetch(path), `${GUIDE.path}${GUIDE_TITLES_PATH}`));
     }
 
     match(input: string): GuideResult[] {

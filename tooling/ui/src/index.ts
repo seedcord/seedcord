@@ -14,6 +14,8 @@ export * from './GithubIcon';
 export * from './Icon';
 export * from './IconSwap';
 export * from './Input';
+export * from './Kbd';
+export * from './KeyLegend';
 export * from './LabelSwap';
 export * from './MobileNavButton';
 export * from './MobilePanel';

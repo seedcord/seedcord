@@ -79,6 +79,11 @@ function useMeasuredHeight(): [number, (el: HTMLDivElement | null) => void] {
     return [height, measureRef];
 }
 
+function Footer({ children }: { children: ReactNode }): ReactElement | null {
+    if (children === undefined) return null;
+    return <div className={cn('border-border hidden shrink-0 border-t px-4 py-2 sm:block')}>{children}</div>;
+}
+
 export interface SearchDialogProps {
     open: boolean;
     onOpenChange: (open: boolean) => void;
@@ -86,6 +91,7 @@ export interface SearchDialogProps {
     title: string;
     description: string;
     field: ReactNode;
+    footer?: ReactNode;
     children?: ReactNode;
 }
 
@@ -96,6 +102,7 @@ export function SearchDialog({
     title,
     description,
     field,
+    footer,
     children
 }: SearchDialogProps): ReactElement {
     const panelRef = useRef<HTMLDivElement | null>(null);
@@ -143,11 +150,11 @@ export function SearchDialog({
                     <Card
                         size="none"
                         className={cn(
-                            'mx-auto max-h-[78vh] w-full max-w-xl overflow-hidden bg-(--bg-dim) text-(--text)',
-                            'transition sm:max-w-2xl md:max-w-3xl'
+                            'mx-auto flex max-h-[78vh] w-full max-w-xl flex-col overflow-hidden bg-(--bg-dim)',
+                            'text-(--text) transition sm:max-w-2xl md:max-w-3xl'
                         )}
                     >
-                        <div ref={panelRef} className={cn('flex h-full flex-col')}>
+                        <div ref={panelRef} className={cn('flex min-h-0 flex-col')}>
                             <Dialog.Title className={cn('sr-only')}>{title}</Dialog.Title>
                             <Dialog.Description className={cn('sr-only')}>{description}</Dialog.Description>
                             <SearchDialogContext.Provider value={handles}>
@@ -156,10 +163,11 @@ export function SearchDialog({
                                     ref={scrollRef}
                                     animate={{ height: contentHeight }}
                                     transition={{ duration: HEIGHT_ANIMATION_S, ease: [...easeOutStrong] }}
-                                    className={cn('max-h-[calc(78vh-5.25rem)] overflow-y-auto overscroll-contain px-2')}
+                                    className={cn('min-h-0 overflow-y-auto overscroll-contain px-2')}
                                 >
                                     <div ref={measureRef}>{children}</div>
                                 </m.div>
+                                <Footer>{footer}</Footer>
                             </SearchDialogContext.Provider>
                         </div>
                     </Card>
