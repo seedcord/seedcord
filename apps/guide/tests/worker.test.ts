@@ -360,7 +360,10 @@ describe('the ask endpoint', () => {
     it('refuses once the visitor runs out of searches', async () => {
         const env = searching({ allowed: false });
 
-        expect((await get('/api/ask?q=button', env)).status).toBe(429);
+        const response = await get('/api/ask?q=button', env);
+
+        expect(response.status).toBe(429);
+        expect(response.headers.get('retry-after')).toBe('60');
         expect(env.embedded).toEqual([]);
     });
 });

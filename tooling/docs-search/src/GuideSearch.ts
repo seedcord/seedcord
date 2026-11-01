@@ -19,6 +19,20 @@ export function parseQuestion(input: string): string | undefined {
     return question.length >= QUESTION_LENGTH.min && question.length <= QUESTION_LENGTH.max ? question : undefined;
 }
 
+const TOO_MANY_REQUESTS = 429;
+
+export class TooManySearches extends Error {
+    constructor(readonly retryAfterSeconds: number) {
+        super(`Too many searches. Try again in ${retryAfterSeconds} seconds.`);
+    }
+}
+
+async function fetchAnswer(url: string, signal: AbortSignal): Promise<Response> {
+    const response = await fetch(url, { signal });
+    if (response.status === TOO_MANY_REQUESTS) throw new TooManySearches(Number(response.headers.get('retry-after')));
+    return response;
+}
+
 export class GuideSearch {
     constructor(private readonly endpoint = GUIDE_ASK_URL) {}
 
@@ -28,7 +42,7 @@ export class GuideSearch {
 
         const url = new URL(this.endpoint);
         url.searchParams.set('q', question);
-        const hits = await readJson<GuideHit[]>((path) => fetch(path, { signal }), url.href);
+        const hits = await readJson<GuideHit[]>((path) => fetchAnswer(path, signal), url.href);
         return hits.map(guideResult);
     }
 }

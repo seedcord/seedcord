@@ -121,4 +121,16 @@ describe('useRovingList', () => {
 
         expect(preventDefault).not.toHaveBeenCalled();
     });
+
+    it('holds Tab in place while the next group is still loading', () => {
+        const { result } = renderHook(() =>
+            useRovingList({ items: ITEMS, groupStarts: [0, ITEMS.length], onSelect: vi.fn() })
+        );
+        const preventDefault = vi.fn();
+
+        act(() => result.current.onKeyDown(keyEvent('Tab', false, preventDefault)));
+
+        expect(preventDefault).toHaveBeenCalled();
+        expect(result.current.activeIndex).toBe(0);
+    });
 });

@@ -1,6 +1,6 @@
 import { afterEach, describe, expect, it, vi } from 'vitest';
 
-import { GuideSearch, QUESTION_LENGTH } from '#src/GuideSearch';
+import { GuideSearch, QUESTION_LENGTH, TooManySearches } from '#src/GuideSearch';
 
 import type { GuideHit } from '#src/guideSections';
 
@@ -44,9 +44,15 @@ describe('GuideSearch', () => {
         expect(asked).toEqual([]);
     });
 
-    it('throws with the status when the endpoint refuses', async () => {
-        answering(new Response(null, { status: 429 }));
+    it('throws how long to wait once the visitor runs out of searches', async () => {
+        answering(new Response(null, { status: 429, headers: { 'retry-after': '60' } }));
 
-        await expect(new GuideSearch(ENDPOINT).search('button', SIGNAL)).rejects.toThrow(/429/);
+        await expect(new GuideSearch(ENDPOINT).search('button', SIGNAL)).rejects.toEqual(new TooManySearches(60));
+    });
+
+    it('throws with the status when the endpoint fails another way', async () => {
+        answering(new Response(null, { status: 500 }));
+
+        await expect(new GuideSearch(ENDPOINT).search('button', SIGNAL)).rejects.toThrow(/500/);
     });
 });

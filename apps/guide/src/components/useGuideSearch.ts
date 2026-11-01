@@ -1,6 +1,6 @@
 'use client';
 
-import { GuideMatches, GuideSearch, matchTerms, parseQuestion } from '@seedcord/docs-search';
+import { GuideMatches, GuideSearch, matchTerms, parseQuestion, TooManySearches } from '@seedcord/docs-search';
 import { useEffect, useMemo, useState } from 'react';
 
 import { loadOnce } from '#lib/loadOnce';
@@ -24,7 +24,7 @@ type Found =
       }
     | {
           question: string;
-          failed: true;
+          notice: string;
       };
 
 export interface ResultGroup {
@@ -32,12 +32,20 @@ export interface ResultGroup {
     pending: boolean;
     results: GuideResult[];
     terms: MatchTerms;
+    // shown in place of the rows when the search failed
+    notice: string | undefined;
 }
 
 export interface GuideSearchState {
     groups: ResultGroup[];
     searching: boolean;
-    failed: boolean;
+}
+
+function noticeFor(error: unknown): string {
+    if (error instanceof TooManySearches) return error.message;
+    // fetch rejects with a TypeError when the request never reaches the server
+    if (error instanceof TypeError) return 'Related results need a network connection.';
+    return 'Related results are unavailable right now. Try again in a minute.';
 }
 
 function useMatches(): GuideMatches | undefined {
@@ -69,8 +77,8 @@ export function useGuideSearch(typed: string): GuideSearchState {
                 (results) => {
                     if (!replaced.signal.aborted) setFound({ question, results });
                 },
-                () => {
-                    if (!replaced.signal.aborted) setFound({ question, failed: true });
+                (error: unknown) => {
+                    if (!replaced.signal.aborted) setFound({ question, notice: noticeFor(error) });
                 }
             );
         }, TYPING_PAUSE_MS);
@@ -83,21 +91,23 @@ export function useGuideSearch(typed: string): GuideSearchState {
     const current = asking && found?.question === question ? found : null;
     const searching = asking && current === null;
     const answered = current !== null && 'results' in current ? current.results : NO_RESULTS;
+    const notice = current !== null && 'notice' in current ? current.notice : undefined;
     const matched = useMemo(() => matches?.match(typed) ?? NO_RESULTS, [matches, typed]);
     const terms = useMemo(() => matchTerms(typed), [typed]);
 
     const groups = useMemo(() => {
         const shown = new Set(matched.map((result) => result.path));
         return [
-            { label: 'Matches', pending: false, results: matched, terms },
+            { label: 'Matches', pending: false, results: matched, terms, notice: undefined },
             {
                 label: 'Related',
                 pending: searching,
                 results: answered.filter((result) => !shown.has(result.path)),
-                terms: NO_TERMS
+                terms: NO_TERMS,
+                notice
             }
-        ].filter((group) => group.pending || group.results.length > 0);
-    }, [matched, answered, searching, terms]);
+        ].filter((group) => group.pending || group.results.length > 0 || group.notice !== undefined);
+    }, [matched, answered, searching, terms, notice]);
 
-    return { groups, searching, failed: current !== null && 'failed' in current };
+    return { groups, searching };
 }

@@ -65,7 +65,7 @@ function placeGroups(groups: readonly ResultGroup[]): ResultList {
     const rows: GuideResult[] = [];
     const groupStarts: number[] = [];
     for (const { results, ...group } of groups) {
-        if (results.length > 0) groupStarts.push(rows.length);
+        if (results.length > 0 || group.pending) groupStarts.push(rows.length);
         placed.push({ ...group, rows: results.map((result, offset) => ({ result, index: rows.length + offset })) });
         rows.push(...results);
     }
@@ -85,6 +85,7 @@ function Group({ group, activeIndex, onSelect, onActivate }: RowEvents & { group
                 {group.label}
             </div>
             {group.pending ? <SearchResultsSkeleton /> : null}
+            {group.notice === undefined ? null : <p className={cn('text-subtle px-3 py-2 text-sm')}>{group.notice}</p>}
             {group.rows.map(({ result, index }) => (
                 <SearchResultRow
                     key={result.path}
@@ -143,7 +144,7 @@ export function GuideSearch({ open, onOpenChange: setOpen }: GuideSearchProps): 
     const inputRef = useRef<HTMLInputElement>(null);
     const router = useRouter();
 
-    const { groups, searching, failed } = useGuideSearch(typed);
+    const { groups, searching } = useGuideSearch(typed);
     // useRovingList tracks the rows by identity
     const list = useMemo(() => placeGroups(groups), [groups]);
 
@@ -166,9 +167,7 @@ export function GuideSearch({ open, onOpenChange: setOpen }: GuideSearchProps): 
         onSelect: select
     });
 
-    let emptyMessage: string | null = null;
-    if (typed.trim() === '') emptyMessage = 'Ask anything about seedcord, or type a term.';
-    else if (failed) emptyMessage = 'Search is unavailable right now. Try again in a minute.';
+    const emptyMessage = typed.trim() === '' ? 'Ask anything about seedcord, or type a term.' : null;
 
     const active = list.rows[activeIndex];
 

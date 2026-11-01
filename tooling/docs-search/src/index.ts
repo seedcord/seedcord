@@ -10,7 +10,7 @@ export {
     searchFileName,
     versionFromFile
 } from '#src/files';
-export { GuideSearch, parseQuestion, QUESTION_LENGTH, type GuideResult } from '#src/GuideSearch';
+export { GuideSearch, parseQuestion, QUESTION_LENGTH, TooManySearches, type GuideResult } from '#src/GuideSearch';
 export { guideSections, type GuideSection } from '#src/guideSections';
 export { findWordStart, GuideMatches, matchTerms, type MatchTerms } from '#src/GuideMatches';
 export { readJson, type ReadAsset } from '#src/readAsset';

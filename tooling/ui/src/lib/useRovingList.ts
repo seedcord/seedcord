@@ -7,7 +7,7 @@ import type { KeyboardEvent } from 'react';
 export interface RovingListOptions<TItem> {
     items: readonly TItem[];
     onSelect: (item: TItem) => void;
-    // the index each group of items starts at, in order. Tab moves between them once there are two
+    // Tab jumps between these. pass items.length for a group that's still loading
     groupStarts?: readonly number[];
 }
 
@@ -81,7 +81,8 @@ export function useRovingList<TItem>({
                 case 'Tab': {
                     if (groupStarts.length < 2) break;
                     event.preventDefault();
-                    setActiveIndex(nextGroupStart(groupStarts, activeIndex, event.shiftKey ? -1 : 1));
+                    const next = nextGroupStart(groupStarts, activeIndex, event.shiftKey ? -1 : 1);
+                    if (next < total) setActiveIndex(next);
                     break;
                 }
                 case 'Enter': {

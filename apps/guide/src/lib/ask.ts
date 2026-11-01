@@ -20,16 +20,18 @@ const RESULTS = 8;
 const CACHE_CONTROL = 'public, max-age=300, s-maxage=86400';
 const BAD_REQUEST = 400;
 const TOO_MANY_REQUESTS = 429;
+// the ASK_LIMIT period in wrangler.jsonc
+const LIMIT_PERIOD_SECONDS = 60;
 
-// the site calls this from localhost in next dev
-const CORS = { 'access-control-allow-origin': '*' };
+// the site calls this from localhost in next dev. browsers hide retry-after from other origins unless exposed
+const CORS = { 'access-control-allow-origin': '*', 'access-control-expose-headers': 'retry-after' };
 
 const indexFor = loadOnce((request: Request, env: GuideEnv) =>
     SectionIndex.load((path) => env.ASSETS.fetch(new Request(new URL(GUIDE.path + path, request.url))))
 );
 
-function refuse(status: number, error: string): Response {
-    return Response.json({ error }, { status, headers: CORS });
+function refuse(status: number, error: string, headers: Record<string, string> = {}): Response {
+    return Response.json({ error }, { status, headers: { ...CORS, ...headers } });
 }
 
 export async function ask(request: Request, env: GuideEnv, context: WorkerContext): Promise<Response> {
@@ -50,7 +52,11 @@ export async function ask(request: Request, env: GuideEnv, context: WorkerContex
     if (cached) return cached;
 
     const { success } = await env.ASK_LIMIT.limit({ key: request.headers.get('cf-connecting-ip') ?? 'unknown' });
-    if (!success) return refuse(TOO_MANY_REQUESTS, 'Too many searches. Try again in a minute.');
+    if (!success) {
+        return refuse(TOO_MANY_REQUESTS, 'Too many searches. Try again in a minute.', {
+            'retry-after': String(LIMIT_PERIOD_SECONDS)
+        });
+    }
 
     const { data } = await env.AI.run(embedding.model, { text: [embedding.query(question)] });
     const [vector] = data;

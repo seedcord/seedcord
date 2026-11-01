@@ -12,34 +12,43 @@ const ANSWERS: Record<string, { path: string; page: string }[]> = {
     kysely: [{ path: '/plugins/kysely', page: 'Kysely' }]
 };
 
+// an Error rejects the fetch the way a dropped connection does
+type Reply = Response | Error;
+
 interface Server {
-    answer(question: string): Promise<void>;
+    answer(question: string, reply?: Reply): Promise<void>;
     signals: Map<string, AbortSignal | undefined>;
 }
 
 // sections.json answers right away. each question waits until the test answers it
 function serving(): Server {
-    const pending = new Map<string, () => void>();
+    const pending = new Map<string, (reply: Reply | undefined) => void>();
     const signals = new Map<string, AbortSignal | undefined>();
     vi.stubGlobal('fetch', (input: string | URL, init?: RequestInit) => {
         const url = new URL(input, 'https://seedcord.org');
         if (url.pathname.endsWith('/sections.json')) return Promise.resolve(Response.json([]));
         const question = url.searchParams.get('q') ?? '';
         signals.set(question, init?.signal ?? undefined);
-        return new Promise<Response>((resolve) => {
-            pending.set(question, () => resolve(Response.json(ANSWERS[question] ?? [])));
+        return new Promise<Response>((resolve, reject) => {
+            pending.set(question, (reply) => {
+                if (reply instanceof Error) reject(reply);
+                else resolve(reply ?? Response.json(ANSWERS[question] ?? []));
+            });
         });
     });
     return {
         signals,
-        answer: async (question) => {
+        answer: async (question, reply) => {
             await act(() => {
-                pending.get(question)?.();
+                pending.get(question)?.(reply);
                 return vi.advanceTimersByTimeAsync(0);
             });
         }
     };
 }
+
+const relatedNotice = (groups: readonly ResultGroup[]): string | undefined =>
+    groups.find((group) => group.label === 'Related')?.notice;
 
 const shown = (groups: readonly ResultGroup[]): { label: string; pending: boolean; paths: string[] }[] =>
     groups.map(({ label, pending, results }) => ({ label, pending, paths: results.map((result) => result.path) }));
@@ -84,5 +93,20 @@ describe('useGuideSearch', () => {
         rerender({ typed: 'kysely' });
 
         expect(signals.get('cooldown')?.aborted).toBe(true);
+    });
+
+    it('says why related results failed', async () => {
+        const { answer } = serving();
+        const { result, rerender } = renderHook(({ typed }) => useGuideSearch(typed), {
+            initialProps: { typed: 'cooldown' }
+        });
+        await pauseTyping();
+        await answer('cooldown', new Response(null, { status: 429, headers: { 'retry-after': '60' } }));
+        expect(relatedNotice(result.current.groups)).toBe('Too many searches. Try again in 60 seconds.');
+
+        rerender({ typed: 'kysely' });
+        await pauseTyping();
+        await answer('kysely', new TypeError('Failed to fetch'));
+        expect(relatedNotice(result.current.groups)).toBe('Related results need a network connection.');
     });
 });
