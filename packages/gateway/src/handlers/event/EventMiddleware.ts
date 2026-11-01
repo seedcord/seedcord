@@ -8,6 +8,7 @@ import type { ValidNonInteractionKeys } from '#src/handlers/interactionTypes';
 import type { SingleEventPayload } from './payload';
 import type { DispatchContext, EventDispatchResult } from '@seedcord/core';
 import type { ClientEvents } from 'discord.js';
+import type { Promisable } from 'type-fest';
 
 /**
  * Base class for Discord event middleware.
@@ -62,5 +63,5 @@ export abstract class EventMiddleware<
      * }
      * ```
      */
-    public after?(result: EventDispatchResult): Promise<void>;
+    public after?(result: EventDispatchResult): Promisable<void>;
 }

@@ -3,6 +3,7 @@ import { Logger } from '@seedcord/logger';
 import type { CoreBase } from '#interfaces/CoreBase';
 import type { DispatchContext } from '#src/dispatch/DispatchContext';
 import type { LoggerChannelId } from '@seedcord/types';
+import type { Promisable } from 'type-fest';
 
 /**
  * Base class every transport handler extends. Don't register handlers directly. Use the more specific
@@ -32,5 +33,5 @@ export abstract class BaseHandler<Event, TCore extends CoreBase> {
      * Holds the main logic of your handler. The dispatcher calls it after the handler's gates pass, so a
      * gate that refuses stops `execute()` from running.
      */
-    abstract execute(): Promise<void>;
+    abstract execute(): Promisable<void>;
 }

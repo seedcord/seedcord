@@ -1,9 +1,11 @@
 import { SeedcordErrorCode } from '@seedcord/errors';
 import { SeedcordError } from '@seedcord/errors/internal';
 
+import type { Promisable } from 'type-fest';
+
 // calling start() in here turns its synchronous throw into a rejection
 async function raceTimer(
-    start: () => Promise<unknown>,
+    start: () => Promisable<unknown>,
     timeoutMs: number,
     onTimeout: (resolve: () => void, reject: (error: unknown) => void) => void
 ): Promise<void> {
@@ -31,7 +33,7 @@ async function raceTimer(
 }
 
 // rejects with a LifecycleTaskTimeout when run outlasts the bound
-export function withTimeout(name: string, run: () => Promise<void>, timeoutMs: number): Promise<void> {
+export function withTimeout(name: string, run: () => Promisable<void>, timeoutMs: number): Promise<void> {
     return raceTimer(run, timeoutMs, (_, reject) => {
         reject(new SeedcordError(SeedcordErrorCode.LifecycleTaskTimeout, [name, timeoutMs]));
     });

@@ -11,10 +11,11 @@ import type { ShutdownTasks } from '#node/Lifecycle/CoordinatedShutdown';
 import type { TaskShutdownPhase } from '#src/lifecycle/phases';
 import type { Attachment } from '#src/plugin/PluginHost';
 import type { StartupTasks } from './CoordinatedStartup';
+import type { Promisable } from 'type-fest';
 
 interface ReadyStep {
     readonly key: string;
-    readonly run: () => Promise<void>;
+    readonly run: () => Promisable<void>;
     readonly timeout: number;
 }
 
@@ -45,7 +46,6 @@ export class PluginLifecycle {
             const budget = group.reduce((sum, a) => sum + a.spec.init.timeout, 0);
             this.startup.addTask(phase, 'plugins-init', () => this.runInits(group), budget);
         }
-
         this.registerReadyTask(groups.get(StartupPhase.Ready) ?? []);
     }
 
@@ -74,7 +74,7 @@ export class PluginLifecycle {
                 await withTimeout(`Plugin (${key})`, () => running, spec.init.timeout);
             } catch (caught) {
                 if (isSeedcordError(caught, undefined, SeedcordErrorCode.LifecycleTaskTimeout)) {
-                    this.disposeWhenInitResolves(attachment, running);
+                    this.disposeWhenInitResolves(attachment, Promise.resolve(running));
                 }
                 throw caught;
             }
@@ -105,11 +105,11 @@ export class PluginLifecycle {
     private registerReadyTask(readyInits: readonly Attachment[]): void {
         const steps = this.attachments.reduce<ReadyStep[]>((acc, { key, instance, spec }) => {
             const ready = instance.ready?.bind(instance);
+
             if (ready) acc.push({ key, run: ready, timeout: spec.ready.timeout });
             return acc;
         }, []);
         if (readyInits.length === 0 && steps.length === 0) return;
-
         const budget =
             readyInits.reduce((sum, a) => sum + a.spec.init.timeout, 0) +
             steps.reduce((sum, step) => sum + step.timeout, 0);

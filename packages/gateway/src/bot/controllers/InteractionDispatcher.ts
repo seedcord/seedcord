@@ -61,6 +61,7 @@ import type {
     UserContextMenuCommandInteraction,
     UserSelectMenuInteraction
 } from 'discord.js';
+import type { Promisable } from 'type-fest';
 
 interface InteractionArtifact {
     routeType: InteractionKind;
@@ -68,7 +69,7 @@ interface InteractionArtifact {
 }
 
 interface DispatchedHandler {
-    execute(): Promise<void>;
+    execute(): Promisable<void>;
 }
 
 interface DispatchReportRow {
