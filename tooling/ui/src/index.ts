@@ -27,6 +27,7 @@ export * from './Popover';
 export * from './ScrollToTopButton';
 export * from './SearchDialog';
 export * from './SearchField';
+export * from './SearchOption';
 export * from './SearchTrigger';
 export * from './sectionLabel';
 export * from './SegmentedControl';

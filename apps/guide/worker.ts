@@ -1,13 +1,13 @@
 import { PRODUCTION_ORIGIN } from '@seedcord/brand';
 import { GUIDE_ASK_PATH } from '@seedcord/docs-search';
 import { agentLinkHeader } from '@seedcord/ui/agents';
+import { fetchAsset } from '@seedcord/ui/fetchAsset';
 import { PageAsset, TWIN } from '@seedcord/ui/PageAsset';
 import { GUIDE } from '@seedcord/ui/sites';
 
 import { ask, type GuideEnv, type WorkerContext } from './src/lib/ask';
 import { redirectFor } from './src/lib/redirects';
 
-const TRAILING_SLASH_REDIRECT = 307;
 const PERMANENT_REDIRECT = 308;
 const NOT_FOUND = 404;
 
@@ -57,7 +57,7 @@ async function fromAssets(env: GuideEnv, request: Request, page: string): Promis
         if (twin.status !== NOT_FOUND) return twin;
     }
 
-    const direct = await env.ASSETS.fetch(request);
+    const direct = await fetchAsset(env.ASSETS, request);
     if (direct.status !== NOT_FOUND) return direct;
 
     const generated = PageAsset.forPath(page)?.exportPath(page);
@@ -76,19 +76,12 @@ const handler = {
             return new Response(null, { status: PERMANENT_REDIRECT, headers: { location: GUIDE.path + moved } });
 
         const asset = await fromAssets(env, request, page);
-
-        // collapse the slash/non-slash duplicate into one permanent redirect
-        const normalized =
-            asset.status === TRAILING_SLASH_REDIRECT && asset.headers.has('location')
-                ? new Response(null, { status: PERMANENT_REDIRECT, headers: asset.headers })
-                : asset;
-
-        const response = new Response(normalized.body, normalized);
+        const response = new Response(asset.body, asset);
 
         const typed = TYPED_PATHS[page];
         if (typed !== undefined) response.headers.set('Content-Type', typed);
 
-        const contentType = normalized.headers.get('content-type') ?? '';
+        const contentType = asset.headers.get('content-type') ?? '';
         if (contentType.includes('text/html')) {
             response.headers.set('Link', agentLinkHeader('guide', GUIDE.path + TWIN.publicPath(page)));
         }

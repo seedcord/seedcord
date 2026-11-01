@@ -238,6 +238,20 @@ describe('the guide worker', () => {
         expect(response.headers.get('location')).toBe('/guide/tooling/');
     });
 
+    it('serves a file with a $ in its name straight away', async () => {
+        const encoded = '/guide/__next.%24oc%24slug.txt';
+        const assets = recording(encoded);
+        const served = assets.ASSETS.fetch;
+        assets.ASSETS.fetch = (request) =>
+            new URL(request.url).pathname === encoded
+                ? served(request)
+                : Promise.resolve(new Response(null, { status: 307, headers: { location: encoded } }));
+
+        const response = await get('/__next.$oc$slug.txt', assets);
+
+        expect(response.status).toBe(200);
+    });
+
     it('sends a renamed page to where it moved', async () => {
         const response = await get('/throwing/faults/', recording());
 

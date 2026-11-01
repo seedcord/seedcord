@@ -1,6 +1,6 @@
-import { Skeleton, cn } from '@seedcord/ui';
+import { SEARCH_OPTION_BOX, Skeleton, cn } from '@seedcord/ui';
 
-import { ROW_BOX, ROW_ICON, ROW_SUBTITLE, ROW_TEXT, ROW_TITLE } from './SearchResultRow';
+import { ROW_ICON, ROW_SUBTITLE, ROW_TEXT, ROW_TITLE } from './SearchResultRow';
 
 import type { ReactElement } from 'react';
 
@@ -14,7 +14,7 @@ export function SearchResultsSkeleton(): ReactElement {
     return (
         <>
             {ROWS.map((row) => (
-                <div key={row.id} className={cn(ROW_BOX)}>
+                <div key={row.id} className={cn(SEARCH_OPTION_BOX)}>
                     <Skeleton className={cn(ROW_ICON)} />
                     <div className={cn(ROW_TEXT)}>
                         <div className={cn(ROW_TITLE, 'flex h-lh items-center')}>

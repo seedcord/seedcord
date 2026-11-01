@@ -10,22 +10,32 @@ const ANSWERS: Record<string, { path: string; page: string }[]> = {
     kysely: [{ path: '/plugins/kysely', page: 'Kysely' }]
 };
 
+interface Server {
+    answer(question: string): Promise<void>;
+    signals: Map<string, AbortSignal | undefined>;
+}
+
 // titles.json answers right away. each question waits until the test answers it
-function serving(): (question: string) => Promise<void> {
+function serving(): Server {
     const pending = new Map<string, () => void>();
-    vi.stubGlobal('fetch', (input: string | URL) => {
+    const signals = new Map<string, AbortSignal | undefined>();
+    vi.stubGlobal('fetch', (input: string | URL, init?: RequestInit) => {
         const url = new URL(input, 'https://seedcord.org');
         if (url.pathname.endsWith('/titles.json')) return Promise.resolve(Response.json([]));
         const question = url.searchParams.get('q') ?? '';
+        signals.set(question, init?.signal ?? undefined);
         return new Promise<Response>((resolve) => {
             pending.set(question, () => resolve(Response.json(ANSWERS[question] ?? [])));
         });
     });
-    return async (question) => {
-        await act(() => {
-            pending.get(question)?.();
-            return vi.advanceTimersByTimeAsync(0);
-        });
+    return {
+        signals,
+        answer: async (question) => {
+            await act(() => {
+                pending.get(question)?.();
+                return vi.advanceTimersByTimeAsync(0);
+            });
+        }
     };
 }
 
@@ -41,7 +51,7 @@ afterEach(() => {
 
 describe('useGuideSearch', () => {
     it('shows related results only for the question typed now', async () => {
-        const answer = serving();
+        const { answer } = serving();
         const { result, rerender } = renderHook(({ typed }) => useGuideSearch(typed), {
             initialProps: { typed: 'cooldown' }
         });
@@ -59,5 +69,15 @@ describe('useGuideSearch', () => {
         expect(result.current.groups).toEqual([
             { label: 'Related', pending: false, results: [expect.objectContaining({ path: '/plugins/kysely' })] }
         ]);
+    });
+
+    it('cancels the request for a question the reader typed past', async () => {
+        const { signals } = serving();
+        const { rerender } = renderHook(({ typed }) => useGuideSearch(typed), { initialProps: { typed: 'cooldown' } });
+        await pauseTyping();
+
+        rerender({ typed: 'kysely' });
+
+        expect(signals.get('cooldown')?.aborted).toBe(true);
     });
 });

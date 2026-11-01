@@ -60,19 +60,19 @@ export function useGuideSearch(typed: string): GuideSearchState {
     useEffect(() => {
         if (question === undefined) return undefined;
 
-        let cancelled = false;
+        const replaced = new AbortController();
         const timer = setTimeout(() => {
-            search.search(question).then(
+            search.search(question, replaced.signal).then(
                 (results) => {
-                    if (!cancelled) setFound({ question, results });
+                    if (!replaced.signal.aborted) setFound({ question, results });
                 },
                 () => {
-                    if (!cancelled) setFound({ question, failed: true });
+                    if (!replaced.signal.aborted) setFound({ question, failed: true });
                 }
             );
         }, TYPING_PAUSE_MS);
         return () => {
-            cancelled = true;
+            replaced.abort();
             clearTimeout(timer);
         };
     }, [question]);

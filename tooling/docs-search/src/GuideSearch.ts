@@ -21,13 +21,13 @@ export function parseQuestion(input: string): string | undefined {
 export class GuideSearch {
     constructor(private readonly endpoint = GUIDE_ASK_URL) {}
 
-    async search(input: string): Promise<GuideResult[]> {
+    async search(input: string, signal: AbortSignal): Promise<GuideResult[]> {
         const question = parseQuestion(input);
         if (question === undefined) return [];
 
         const url = new URL(this.endpoint);
         url.searchParams.set('q', question);
-        const hits = await readJson<GuideHit[]>((path) => fetch(path), url.href);
+        const hits = await readJson<GuideHit[]>((path) => fetch(path, { signal }), url.href);
         return hits.map(guideResult);
     }
 }

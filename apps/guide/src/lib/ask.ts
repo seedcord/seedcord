@@ -3,8 +3,10 @@ import { GUIDE } from '@seedcord/ui/sites';
 
 import { loadOnce } from './loadOnce';
 
+import type { Assets } from '@seedcord/ui/fetchAsset';
+
 export interface GuideEnv {
-    ASSETS: { fetch(request: Request): Promise<Response> };
+    ASSETS: Assets;
     AI: { run(model: typeof embedding.model, input: { text: string[] }): Promise<{ data: number[][] }> };
     ASK_LIMIT: { limit(options: { key: string }): Promise<{ success: boolean }> };
 }

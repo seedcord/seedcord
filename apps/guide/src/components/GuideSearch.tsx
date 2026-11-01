@@ -14,7 +14,7 @@ import {
 } from '@seedcord/ui';
 import { ArrowDown, ArrowUp, CornerDownLeft } from 'lucide-react';
 import { useRouter } from 'next/navigation';
-import { useCallback, useMemo, useRef, useState } from 'react';
+import { useCallback, useMemo, useRef, useState, useTransition } from 'react';
 
 import { SearchResultRow } from './SearchResultRow';
 import { SearchResultsSkeleton } from './SearchResultsSkeleton';
@@ -156,11 +156,14 @@ export function GuideSearch({ open, onOpenChange: setOpen }: GuideSearchProps): 
 
     useSearchHotkey(() => setOpen(!open));
 
+    const [, startTransition] = useTransition();
+    // react commits this close together with the pushed page
     const select = useCallback(
-        (result: GuideResult) => {
-            setOpen(false);
-            router.push(result.path);
-        },
+        (result: GuideResult) =>
+            startTransition(() => {
+                router.push(result.path);
+                setOpen(false);
+            }),
         [router, setOpen]
     );
 
