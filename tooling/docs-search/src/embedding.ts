@@ -1,6 +1,6 @@
 import type { GuideSection } from '#src/guideSections';
 
-// search was tested at 1600. longer sections are untested
+// search was only tested on sections up to 1600 chars
 const DOCUMENT_CHARS = 1600;
 
 export const embedding = {

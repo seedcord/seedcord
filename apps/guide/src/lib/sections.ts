@@ -9,7 +9,9 @@ import type { GuideSection } from '@seedcord/docs-search';
 export function allGuideSections(): GuideSection[] {
     return source.getPages().flatMap((page) => {
         const tab = TAB_OF_PAGE.get(page.url);
-        if (tab === undefined) throw new Error(`${page.url} is in no tab of the guide's page tree`);
+        if (tab === undefined) {
+            throw new Error(`${page.url} isn't in any tab of the guide. List it in the meta.json of a tab folder.`);
+        }
 
         return guideSections({
             path: withTrailingSlash(page.url),

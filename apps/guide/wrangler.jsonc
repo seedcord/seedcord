@@ -28,7 +28,7 @@
                 { "pattern": "preview.seedcord.org/guide", "zone_name": "seedcord.org" },
                 { "pattern": "preview.seedcord.org/guide/*", "zone_name": "seedcord.org" }
             ],
-            // wrangler copies no binding into an env
+            // wrangler doesn't copy top-level bindings into an env
             "ai": { "binding": "AI" },
             "ratelimits": [{ "name": "ASK_LIMIT", "namespace_id": "1002", "simple": { "limit": 30, "period": 60 } }]
         }

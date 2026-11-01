@@ -15,7 +15,7 @@ const CommandPaletteContext = createContext<CommandPaletteOpen | null>(null);
 
 export function useCommandPaletteOpen(): CommandPaletteOpen {
     const value = use(CommandPaletteContext);
-    if (value === null) throw new Error('useCommandPaletteOpen needs a CommandPaletteProvider above it');
+    if (value === null) throw new Error('useCommandPaletteOpen must be called inside a CommandPaletteProvider');
     return value;
 }
 

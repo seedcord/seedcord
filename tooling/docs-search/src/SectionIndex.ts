@@ -45,7 +45,9 @@ export class SectionIndex {
         const vectors = new Float32Array(buffer);
         const count = vectors.length / embedding.dimensions;
         if (count !== sections.length) {
-            throw new Error(`${GUIDE_VECTORS_PATH} holds ${count} vectors for ${sections.length} sections`);
+            throw new Error(
+                `${GUIDE_VECTORS_PATH} holds ${count} vectors for ${sections.length} sections. Run pnpm guide:embed after building the guide.`
+            );
         }
         return new SectionIndex(sections, vectors, await versionOf(JSON.stringify(sections), buffer));
     }
