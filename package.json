@@ -50,7 +50,8 @@
         "docs:purge": "pnpm tsx scripts/src/docs/purge-cdn-cache.ts",
         "docs:upload": "pnpm tsx scripts/src/docs/upload-docs-site.ts",
         "docs:prune": "pnpm tsx scripts/src/docs/prune-docs-site.ts",
-        "docs:preview": "pnpm tsx scripts/src/docs/preview-docs.ts"
+        "docs:preview": "pnpm tsx scripts/src/docs/preview-docs.ts",
+        "guide:embed": "pnpm tsx scripts/src/guide/embed-guide-sections.ts"
     },
     "keywords": [
         "discord",

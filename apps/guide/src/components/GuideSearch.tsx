@@ -1,6 +1,6 @@
 'use client';
 
-import { GUIDE_SEARCH_URL, GuideSearch as GuideSearchClient, stripStopwords } from '@seedcord/docs-search';
+import { QUESTION_LENGTH } from '@seedcord/docs-search';
 import {
     SearchDialog,
     SearchField,
@@ -10,28 +10,25 @@ import {
     useRovingList,
     useSearchHotkey
 } from '@seedcord/ui';
-import { useDocsSearch } from 'fumadocs-core/search/client';
 import { useRouter } from 'next/navigation';
-import { useCallback, useMemo, useRef, useState } from 'react';
+import { useCallback, useRef, useState } from 'react';
 
 import { SearchResultRow } from './SearchResultRow';
+import { useGuideSearch } from './useGuideSearch';
 
-import type { SortedResult } from 'fumadocs-core/search';
+import type { GuideResult } from '@seedcord/docs-search';
 import type { ReactElement } from 'react';
 
 const LISTBOX_ID = 'guide-search-results';
 
 export const SEARCH_LABEL = 'Search the guide';
 
-const NO_RESULTS: SortedResult[] = [];
-
-function optionId(id: string): string {
-    return `guide-search-${id}`;
+function optionId(path: string): string {
+    return `guide-search-${path}`;
 }
 
 function Results({
     results,
-    query,
     activeIndex,
     isFirst,
     isLast,
@@ -39,17 +36,16 @@ function Results({
     onActivate,
     emptyMessage
 }: {
-    results: SortedResult[];
-    query: string;
+    results: GuideResult[];
     activeIndex: number;
     isFirst: boolean;
     isLast: boolean;
-    onSelect: (result: SortedResult) => void;
+    onSelect: (result: GuideResult) => void;
     onActivate: (index: number) => void;
     emptyMessage: string | null;
 }): ReactElement | null {
     const active = results[activeIndex];
-    useActiveRowScroll(active ? optionId(active.id) : undefined, isFirst, isLast);
+    useActiveRowScroll(active ? optionId(active.path) : undefined, isFirst, isLast);
 
     // a null child collapses the animated panel back to the bare bar
     if (emptyMessage === null && results.length === 0) return null;
@@ -63,11 +59,10 @@ function Results({
                 <div id={LISTBOX_ID} role="listbox" aria-label="Search results">
                     {results.map((result, index) => (
                         <SearchResultRow
-                            key={result.id}
+                            key={result.path}
                             result={result}
-                            query={query}
                             isActive={index === activeIndex}
-                            optionId={optionId(result.id)}
+                            optionId={optionId(result.path)}
                             index={index}
                             onSelect={onSelect}
                             onActivate={onActivate}
@@ -89,28 +84,14 @@ export function GuideSearch({ open, onOpenChange: setOpen }: GuideSearchProps): 
     const inputRef = useRef<HTMLInputElement>(null);
     const router = useRouter();
 
-    const search = useMemo(() => new GuideSearchClient(new URL(GUIDE_SEARCH_URL).pathname), []);
-    const { setSearch, query } = useDocsSearch({ client: search.client });
-
-    const onValueChange = useCallback(
-        (value: string) => {
-            setTyped(value);
-            setSearch(stripStopwords(value));
-        },
-        [setSearch]
-    );
+    const { asking, results, searching, failed } = useGuideSearch(typed);
 
     useSearchHotkey(() => setOpen(!open));
 
-    const found = query.data === 'empty' || query.data === undefined ? NO_RESULTS : query.data;
-    const terms = useMemo(() => stripStopwords(typed), [typed]);
-    // useRovingList keys an effect on this array's identity
-    const results = useMemo(() => search.rank(found, terms), [search, found, terms]);
-
     const select = useCallback(
-        (result: SortedResult) => {
+        (result: GuideResult) => {
             setOpen(false);
-            router.push(result.url);
+            router.push(result.path);
         },
         [router, setOpen]
     );
@@ -120,10 +101,9 @@ export function GuideSearch({ open, onOpenChange: setOpen }: GuideSearchProps): 
         onSelect: select
     });
 
-    const asked = typed.trim().length > 0;
     let emptyMessage: string | null = null;
-    if (!asked) emptyMessage = 'Type to search every page in the guide.';
-    else if (!query.isLoading && results.length === 0) emptyMessage = `Nothing on any page matches "${typed.trim()}".`;
+    if (!asking) emptyMessage = 'Ask anything about seedcord, or type a term.';
+    else if (failed) emptyMessage = 'Search is unavailable right now. Try again in a minute.';
 
     const active = results[activeIndex];
 
@@ -140,22 +120,22 @@ export function GuideSearch({ open, onOpenChange: setOpen }: GuideSearchProps): 
                     <SearchField
                         inputRef={inputRef}
                         value={typed}
-                        onValueChange={onValueChange}
+                        onValueChange={setTyped}
                         onKeyDown={onKeyDown}
                         onClose={() => setOpen(false)}
                         label={SEARCH_LABEL}
                         closeLabel="Close search"
                         placeholder="Search the guide"
+                        maxLength={QUESTION_LENGTH.max}
                         listboxId={LISTBOX_ID}
                         listExpanded={results.length > 0}
-                        isSearching={query.isLoading}
-                        {...(active ? { activeId: optionId(active.id) } : {})}
+                        isSearching={searching}
+                        {...(active ? { activeId: optionId(active.path) } : {})}
                     />
                 }
             >
                 <Results
                     results={results}
-                    query={terms}
                     activeIndex={activeIndex}
                     isFirst={isFirst}
                     isLast={isLast}

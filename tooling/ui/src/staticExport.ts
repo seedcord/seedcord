@@ -1,5 +1,7 @@
 import { PHASE_DEVELOPMENT_SERVER, PHASE_PRODUCTION_BUILD } from 'next/constants';
 
+import { exportDir } from './exportDir';
+
 import type { SiteAddress } from '@seedcord/brand';
 import type { NextConfig } from 'next';
 
@@ -17,7 +19,7 @@ export function staticExport(
         pageExtensions: dev ? [...PAGE_EXTENSIONS, ...DEV_ONLY_EXTENSIONS] : PAGE_EXTENSIONS,
         basePath: site.path,
         output: 'export',
-        ...(phase === PHASE_PRODUCTION_BUILD && { distDir: `dist${site.path}` }),
+        ...(phase === PHASE_PRODUCTION_BUILD && { distDir: exportDir(site) }),
         images: { unoptimized: true }
     };
 }

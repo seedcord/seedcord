@@ -1,0 +1,34 @@
+const CF_API = 'https://api.cloudflare.com/client/v4';
+
+interface HttpResponse {
+    ok: boolean;
+    status: number;
+    json: () => Promise<unknown>;
+}
+
+export type HttpFetch = (
+    url: string,
+    init?: { method?: string; headers?: Record<string, string>; body?: string }
+) => Promise<HttpResponse>;
+
+export class CloudflareApi {
+    constructor(
+        private readonly token: string,
+        private readonly http: HttpFetch = fetch
+    ) {}
+
+    async post<Result>(label: string, path: string, body: unknown): Promise<Result> {
+        const response = await this.http(`${CF_API}${path}`, {
+            method: 'POST',
+            headers: { authorization: `Bearer ${this.token}`, 'content-type': 'application/json' },
+            body: JSON.stringify(body)
+        });
+
+        // justified: the cloudflare api returns untyped JSON
+        const payload = (await response.json()) as { success?: boolean; result?: Result; errors?: unknown[] };
+        if (!response.ok || payload.success !== true || payload.result === undefined) {
+            throw new Error(`Cloudflare ${label} failed (HTTP ${response.status}): ${JSON.stringify(payload.errors)}`);
+        }
+        return payload.result;
+    }
+}

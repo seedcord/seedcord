@@ -1,41 +1,34 @@
 import { GUIDE } from '@seedcord/ui/sites';
-import { staticClient } from 'fumadocs-core/search/client/orama-static';
 
-import { GUIDE_SEARCH_URL } from '#src/files';
-import { firstPages } from '#src/firstPages';
-import { rankByCoverage } from '#src/rankByCoverage';
-import { stripStopwords } from '#src/stripStopwords';
+import { GUIDE_ASK_URL } from '#src/files';
 
-import type { SortedResult } from 'fumadocs-core/search';
+import type { GuideHit } from '#src/SectionIndex';
 
-// a common term matches most of the guide
-const MAX_PAGES = 16;
-
-export class GuideSearch {
-    readonly client: ReturnType<typeof staticClient>;
-
-    constructor(
-        endpoint = GUIDE_SEARCH_URL,
-        private readonly limits: { pages?: number; rows?: number } = {}
-    ) {
-        // tolerance is the edit distance zbsearch allows. 1 covers a single typo
-        this.client = staticClient({
-            from: endpoint,
-            search: { tolerance: 1, ...(limits.rows !== undefined && { limit: limits.rows }) }
-        });
-    }
-
-    rank(results: readonly SortedResult[], terms: string): SortedResult[] {
-        return firstPages(rankByCoverage(results, terms), this.limits.pages ?? MAX_PAGES);
-    }
-
-    async search(query: string): Promise<SortedResult[]> {
-        const terms = stripStopwords(query);
-        if (terms.length === 0) return [];
-
-        const results = await this.client.search(terms);
-        return this.rank(results, terms).map((result) => ({ ...result, url: GUIDE.at(result.url) }));
-    }
+export interface GuideResult extends GuideHit {
+    url: string;
 }
 
-export type GuideSearchResult = Awaited<ReturnType<GuideSearch['search']>>[number];
+export const QUESTION_LENGTH = { min: 2, max: 200 } as const;
+
+export function parseQuestion(input: string): string | undefined {
+    const question = input.trim();
+    return question.length >= QUESTION_LENGTH.min && question.length <= QUESTION_LENGTH.max ? question : undefined;
+}
+
+export class GuideSearch {
+    constructor(private readonly endpoint = GUIDE_ASK_URL) {}
+
+    async search(input: string): Promise<GuideResult[]> {
+        const question = parseQuestion(input);
+        if (question === undefined) return [];
+
+        const url = new URL(this.endpoint);
+        url.searchParams.set('q', question);
+        const response = await fetch(url);
+        if (!response.ok) throw new Error(`Guide search failed with status ${response.status}`);
+
+        // the guide worker writes this from the same type
+        const hits = (await response.json()) as GuideHit[];
+        return hits.map((hit) => ({ ...hit, url: GUIDE.at(hit.path) }));
+    }
+}

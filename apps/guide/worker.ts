@@ -1,13 +1,11 @@
 import { PRODUCTION_ORIGIN } from '@seedcord/brand';
+import { GUIDE_ASK_PATH } from '@seedcord/docs-search';
 import { agentLinkHeader } from '@seedcord/ui/agents';
 import { PageAsset, TWIN } from '@seedcord/ui/PageAsset';
 import { GUIDE } from '@seedcord/ui/sites';
 
+import { ask, type GuideEnv, type WorkerContext } from './src/lib/ask';
 import { redirectFor } from './src/lib/redirects';
-
-interface Env {
-    ASSETS: { fetch(request: Request): Promise<Response> };
-}
 
 const TRAILING_SLASH_REDIRECT = 307;
 const PERMANENT_REDIRECT = 308;
@@ -21,8 +19,7 @@ const HTML = 'text/html';
 // cloudflare serves the extension-less files next writes here with no content-type at all
 const TYPED_PATHS: Record<string, string> = {
     '/icon': 'image/png',
-    '/apple-icon': 'image/png',
-    '/api/search': 'application/json'
+    '/apple-icon': 'image/png'
 };
 
 // RFC 9110 reads an absent q as 1. q=0 rejects the type outright
@@ -53,7 +50,7 @@ function at(request: Request, pathname: string): Request {
 }
 
 // a real file in public/ wins over a page's generated card or twin
-async function fromAssets(env: Env, request: Request, page: string): Promise<Response> {
+async function fromAssets(env: GuideEnv, request: Request, page: string): Promise<Response> {
     // only a page has a twin. every other url falls through to the file itself
     if (wantsMarkdown(request)) {
         const twin = await env.ASSETS.fetch(at(request, GUIDE.path + TWIN.exportPath(page)));
@@ -68,10 +65,11 @@ async function fromAssets(env: Env, request: Request, page: string): Promise<Res
 }
 
 const handler = {
-    async fetch(request: Request, env: Env): Promise<Response> {
+    async fetch(request: Request, env: GuideEnv, context: WorkerContext): Promise<Response> {
         const { hostname, pathname } = new URL(request.url);
         // the zone routes only /guide and /guide/* here
         const page = pathname.slice(GUIDE.path.length) || '/';
+        if (page === GUIDE_ASK_PATH) return ask(request, env, context);
 
         const moved = redirectFor(page);
         if (moved !== undefined)

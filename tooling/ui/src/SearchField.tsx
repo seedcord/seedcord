@@ -47,6 +47,7 @@ export interface SearchFieldProps {
     label: string;
     closeLabel: string;
     placeholder?: string;
+    maxLength?: number;
     listboxId: string;
     listExpanded: boolean;
     activeId?: string | undefined;
@@ -65,6 +66,7 @@ export function SearchField({
     label,
     closeLabel,
     placeholder = 'Search…',
+    maxLength,
     listboxId,
     listExpanded,
     activeId,
@@ -88,6 +90,7 @@ export function SearchField({
                 onChange={(event) => onValueChange(event.target.value)}
                 onKeyDown={onKeyDown}
                 placeholder={placeholder}
+                maxLength={maxLength}
                 aria-label={label}
                 variant="ghost"
                 className={cn(

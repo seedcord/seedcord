@@ -1780,12 +1780,21 @@ importers:
       '@manypkg/get-packages':
         specifier: ^3.1.0
         version: 3.1.0
+      '@seedcord/brand':
+        specifier: workspace:^
+        version: link:../tooling/brand
       '@seedcord/docs-engine':
         specifier: workspace:^
         version: link:../tooling/docs-engine
       '@seedcord/docs-generator':
         specifier: workspace:^
         version: link:../tooling/docs-generator
+      '@seedcord/docs-search':
+        specifier: workspace:^
+        version: link:../tooling/docs-search
+      '@seedcord/ui':
+        specifier: workspace:^
+        version: link:../tooling/ui
       envapt:
         specifier: catalog:peer
         version: 9.2.0

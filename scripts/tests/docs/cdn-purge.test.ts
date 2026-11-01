@@ -66,7 +66,7 @@ describe('CdnPurge.bodyFor', () => {
 
 describe('CdnPurge.purge', () => {
     it('posts the body to the zone', async () => {
-        const { calls, fetcher } = recorder(ok({ success: true }));
+        const { calls, fetcher } = recorder(ok({ success: true, result: { id: 'purge-1' } }));
 
         await new CdnPurge('zone-1', 'secret', fetcher).purge({ prefixes: ['docs.seedcord.org'] });
 

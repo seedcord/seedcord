@@ -61,7 +61,7 @@ function buildIndexes(root: DocNode, manifest: DocManifestPackage): DocIndexes {
     return { byId, bySlug, byQName, byKind, search };
 }
 
-const SENTENCE_END = /^.*?(?<!\b(?:e\.g|i\.e))[.!?](?=\s|$)/;
+const SENTENCE_END = /^.*?(?<!\b(?:e\.g|i\.e|etc))[.!?](?=\s|$)/i;
 
 function firstSentence(summary: string): string {
     const paragraph =

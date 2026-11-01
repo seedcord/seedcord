@@ -176,9 +176,9 @@ describe('buildPackageFromModel search summary', () => {
             'Extracts the constructor type.'
         ],
         [
-            'an e.g. inside the first sentence',
-            'The full route, e.g. ban/user. The rest follows.',
-            'The full route, e.g. ban/user.'
+            'abbreviations inside the first sentence',
+            'E.g. ban/user, i.e. a route, kick, etc. all work. The rest follows.',
+            'E.g. ban/user, i.e. a route, kick, etc. all work.'
         ],
         ['a dotted name', 'Reads this.event.options once. Then caches it.', 'Reads this.event.options once.']
     ])('ends the first sentence correctly for %s', (_, summary, first) => {
