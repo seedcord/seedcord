@@ -21,7 +21,7 @@ export class Timezone extends SlashHandler<'timezone'> {
         const preferences =
             this.core.kv.collection<Preferences>('preferences');
 
-        await preferences.set(this.event.user.id, {
+        await preferences.set(this.user.id, {
             timezone: this.options.getString('zone'),
             updatedAt: new Date()
         });
@@ -103,7 +103,7 @@ export class Daily extends SlashHandler<'daily'> {
         const claims =
             this.core.kv.collection<number>('daily-claims');
         const total = await claims.update(
-            this.event.user.id,
+            this.user.id,
             (count) => (count ?? 0) + 1
             //^?
         );

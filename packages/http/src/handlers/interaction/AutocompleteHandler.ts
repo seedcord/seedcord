@@ -4,6 +4,7 @@ import { SeedcordErrorCode } from '@seedcord/errors';
 import { SeedcordError, SeedcordTypeError } from '@seedcord/errors/internal';
 import { InteractionResponseType, Routes } from 'discord-api-types/v10';
 
+import { interactionUser } from '#handlers/interactionUser';
 import { HttpSlashOptions } from '#inputs/HttpSlashOptions';
 import { apiFor } from '#src/api';
 
@@ -13,7 +14,8 @@ import type { AutocompleteOptions, DispatchContext, SlashRegistry } from '@seedc
 import type { AutocompletableNames, ChoiceValueOf, EntryFor, FocusedField } from '@seedcord/core/internal';
 import type {
     APIApplicationCommandOptionChoice,
-    APIApplicationCommandAutocompleteInteraction
+    APIApplicationCommandAutocompleteInteraction,
+    APIUser
 } from 'discord-api-types/v10';
 import type { Promisable } from 'type-fest';
 
@@ -53,6 +55,11 @@ export abstract class AutocompleteHandler<Route extends keyof SlashRegistry> ext
      */
     protected get api(): API {
         return apiFor(this.core.rest);
+    }
+
+    /** The user who sent this interaction, read from `member.user` in a guild and `user` in a DM. */
+    protected get user(): APIUser {
+        return interactionUser(this.event);
     }
 
     private resolver?: HttpSlashOptions;

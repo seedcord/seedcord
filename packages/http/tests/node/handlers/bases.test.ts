@@ -14,7 +14,8 @@ import type { REST } from '@discordjs/rest';
 import type {
     APIChatInputApplicationCommandInteraction,
     APIMessageComponentButtonInteraction,
-    APIModalSubmitInteraction
+    APIModalSubmitInteraction,
+    APIUser
 } from 'discord-api-types/v10';
 
 const dispatch = new DispatchContext('slash', 'probe');
@@ -287,5 +288,23 @@ describe('base member delegation', () => {
         await new Remove(slashEvent(), coreWith(rest), dispatch).execute();
 
         expect(rest.delete.mock.calls[0]?.[0]).toBe(`${WEBHOOK_ROUTE}/messages/earlier-1`);
+    });
+});
+
+describe('this.user', () => {
+    class WhoRan extends SlashHandler<never> {
+        async execute(): Promise<void> {}
+        public read(): APIUser {
+            return this.user;
+        }
+    }
+
+    it.each([
+        { where: 'a guild', fields: { member: { user: { id: 'u-guild' } } }, id: 'u-guild' },
+        { where: 'a DM', fields: { user: { id: 'u-dm' } }, id: 'u-dm' }
+    ])('reads the user who sent the interaction in $where', ({ fields, id }) => {
+        // justified: the getter reads only member and user off the payload
+        const event = { ...baseEvent(), ...fields } as unknown as APIChatInputApplicationCommandInteraction;
+        expect(new WhoRan(event, coreWith(restMock()), dispatch).read().id).toBe(id);
     });
 });

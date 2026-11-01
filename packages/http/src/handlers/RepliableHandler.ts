@@ -3,11 +3,14 @@ import { RepliableHandler as CoreRepliableHandler } from '@seedcord/core';
 import { ReplySender } from '#reply/ReplySender';
 import { apiFor } from '#src/api';
 
+import { interactionUser } from './interactionUser';
+
 import type { Core } from '#interfaces/Core';
 import type { SentMessage } from '#reply/ReplySender';
 import type { Repliables } from './interactionTypes';
 import type { API } from '@discordjs/core/http-only';
 import type { DispatchContext } from '@seedcord/core';
+import type { APIUser } from 'discord-api-types/v10';
 
 /**
  * Shared base the repliable HTTP interaction handlers extend.
@@ -29,6 +32,11 @@ export abstract class RepliableHandler<Event extends Repliables> extends CoreRep
     /** @internal */
     public getEvent(): Event {
         return this.event;
+    }
+
+    /** The user who sent this interaction, read from `member.user` in a guild and `user` in a DM. */
+    protected get user(): APIUser {
+        return interactionUser(this.event);
     }
 
     protected buildSender(event: Event, core: Core, dispatch: DispatchContext): ReplySender {

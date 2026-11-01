@@ -214,7 +214,7 @@ class Leaderboard extends SlashHandler<'leaderboard'> {
         // ---cut---
         const found =
             await this.core.db.services.users.findByDiscordId(
-                this.event.user.id
+                this.user.id
             );
 
         await this.reply(

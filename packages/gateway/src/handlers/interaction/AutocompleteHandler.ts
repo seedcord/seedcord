@@ -7,7 +7,7 @@ import { BaseHandler } from '#src/handlers/BaseHandler';
 import type { Core } from '#interfaces/Core';
 import type { AutocompleteOptions, DispatchContext, SlashRegistry } from '@seedcord/core';
 import type { AutocompletableNames, CacheFor, ChoiceValueOf, EntryFor, FocusedField } from '@seedcord/core/internal';
-import type { ApplicationCommandOptionChoiceData, AutocompleteInteraction, CacheType } from 'discord.js';
+import type { ApplicationCommandOptionChoiceData, AutocompleteInteraction, CacheType, User } from 'discord.js';
 import type { Promisable } from 'type-fest';
 
 type FocusedCases<Route extends keyof SlashRegistry, Ret> = {
@@ -52,6 +52,11 @@ export abstract class AutocompleteHandler<
     // keep this ctor. inheriting BaseHandler's protected one collapses HandlerConstructor to never.
     constructor(event: AutocompleteInteraction<Cache>, core: Core, dispatch: DispatchContext) {
         super(event, core, dispatch, 'interactions');
+    }
+
+    /** The user who sent this interaction. */
+    protected get user(): User {
+        return this.event.user;
     }
 
     private decodedFocused?: { name: string; value: string };

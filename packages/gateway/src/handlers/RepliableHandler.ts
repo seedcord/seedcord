@@ -7,6 +7,7 @@ import type { Core } from '#interfaces/Core';
 import type { GatewayFile } from '#interfaces/ReplyResponse';
 import type { Repliables } from './interactionTypes';
 import type { DispatchContext } from '@seedcord/core';
+import type { User } from 'discord.js';
 
 /**
  * Shared base the repliable interaction handlers extend.
@@ -28,6 +29,11 @@ export abstract class RepliableHandler<Event extends Repliables> extends CoreRep
     /** @internal */
     public getEvent(): Event {
         return this.event;
+    }
+
+    /** The user who sent this interaction. */
+    protected get user(): User {
+        return this.event.user;
     }
 
     protected buildSender(event: Event, core: Core, dispatch: DispatchContext): ReplySender {
