@@ -2,7 +2,7 @@ import { afterEach, describe, expect, it, vi } from 'vitest';
 
 import { GuideSearch, QUESTION_LENGTH } from '#src/GuideSearch';
 
-import type { GuideHit } from '#src/SectionIndex';
+import type { GuideHit } from '#src/guideSections';
 
 afterEach(() => vi.unstubAllGlobals());
 

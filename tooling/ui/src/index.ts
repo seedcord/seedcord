@@ -31,6 +31,7 @@ export * from './SettingsPopover';
 export * from './SiteMark';
 export * from './sites';
 export * from './SiteSwitcher';
+export * from './Skeleton';
 export * from './SkipLink';
 export * from './structuredData';
 export * from './Switch';

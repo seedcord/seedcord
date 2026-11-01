@@ -1,7 +1,13 @@
 import { existsSync } from 'node:fs';
 import { resolve } from 'node:path';
 
-import { embedding, GUIDE_SECTIONS_PATH, GUIDE_VECTORS_PATH, QUESTION_LENGTH } from '@seedcord/docs-search';
+import {
+    embedding,
+    GUIDE_SECTIONS_PATH,
+    GUIDE_TITLES_PATH,
+    GUIDE_VECTORS_PATH,
+    QUESTION_LENGTH
+} from '@seedcord/docs-search';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
 // eslint-disable-next-line no-restricted-imports -- the app root has no alias
@@ -303,8 +309,10 @@ describe('the ask endpoint', () => {
     });
     afterEach(() => vi.unstubAllGlobals());
 
-    it('reads sections from the path the route exports to', () => {
-        expect(existsSync(resolve(import.meta.dirname, `../src/app${GUIDE_SECTIONS_PATH}/route.ts`))).toBe(true);
+    it('reads sections and titles from the paths their routes export to', () => {
+        for (const path of [GUIDE_SECTIONS_PATH, GUIDE_TITLES_PATH]) {
+            expect(existsSync(resolve(import.meta.dirname, `../src/app${path}/route.ts`)), path).toBe(true);
+        }
     });
 
     it('answers with the closest sections and lets any site read them', async () => {

@@ -5,13 +5,15 @@ export { embedding } from '#src/embedding';
 export {
     GUIDE_ASK_PATH,
     GUIDE_SECTIONS_PATH,
+    GUIDE_TITLES_PATH,
     GUIDE_VECTORS_PATH,
     REFERENCE_SEARCH_URL,
     searchFileName,
     versionFromFile
 } from '#src/files';
 export { GuideSearch, parseQuestion, QUESTION_LENGTH, type GuideResult } from '#src/GuideSearch';
-export { guideSections, type GuideSection } from '#src/guideSections';
+export { guideHit, guideSections, type GuideSection } from '#src/guideSections';
+export { GuideTitles } from '#src/GuideTitles';
 export { ReferenceSearch } from '#src/ReferenceSearch';
 export { ALL_PACKAGES, SearchCatalog } from '#src/SearchCatalog';
 export { SearchResults } from '#src/SearchResults';

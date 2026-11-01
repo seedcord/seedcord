@@ -2,11 +2,13 @@ import { GUIDE } from '@seedcord/ui/sites';
 
 import { GUIDE_ASK_URL } from '#src/files';
 
-import type { GuideHit } from '#src/SectionIndex';
+import type { GuideHit } from '#src/guideSections';
 
 export interface GuideResult extends GuideHit {
     url: string;
 }
+
+export const guideResult = (hit: GuideHit): GuideResult => ({ ...hit, url: GUIDE.at(hit.path) });
 
 export const QUESTION_LENGTH = { min: 2, max: 200 } as const;
 
@@ -29,6 +31,6 @@ export class GuideSearch {
 
         // the guide worker writes this from the same type
         const hits = (await response.json()) as GuideHit[];
-        return hits.map((hit) => ({ ...hit, url: GUIDE.at(hit.path) }));
+        return hits.map(guideResult);
     }
 }

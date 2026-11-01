@@ -7,6 +7,12 @@ export interface GuideSection {
     text: string;
 }
 
+export type GuideHit = Pick<GuideSection, 'page' | 'heading'> & { path: string };
+
+export function guideHit({ url, page, heading }: GuideSection): GuideHit {
+    return { path: url, page, ...(heading !== undefined && { heading }) };
+}
+
 interface GuidePage {
     url: string;
     title: string;

@@ -8,6 +8,11 @@ const SHELL_PIECES = [
         href: '/dev/mdx-kit',
         label: 'The mdx kit',
         description: 'every element the guide component map renders, with the source that produced it'
+    },
+    {
+        href: '/dev/search-results',
+        label: 'Search results',
+        description: 'result rows next to the placeholder rows the search dialog shows while it loads'
     }
 ] as const;
 

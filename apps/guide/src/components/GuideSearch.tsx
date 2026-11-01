@@ -11,11 +11,13 @@ import {
     useSearchHotkey
 } from '@seedcord/ui';
 import { useRouter } from 'next/navigation';
-import { useCallback, useRef, useState } from 'react';
+import { useCallback, useMemo, useRef, useState } from 'react';
 
 import { SearchResultRow } from './SearchResultRow';
+import { SearchResultsSkeleton } from './SearchResultsSkeleton';
 import { useGuideSearch } from './useGuideSearch';
 
+import type { ResultGroup } from './useGuideSearch';
 import type { GuideResult } from '@seedcord/docs-search';
 import type { ReactElement } from 'react';
 
@@ -27,46 +29,94 @@ function optionId(path: string): string {
     return `guide-search-${path}`;
 }
 
-function Results({
-    results,
-    activeIndex,
-    isFirst,
-    isLast,
-    onSelect,
-    onActivate,
-    emptyMessage
-}: {
-    results: GuideResult[];
+interface PlacedRow {
+    result: GuideResult;
+    index: number;
+}
+
+interface PlacedGroup {
+    label: string;
+    pending: boolean;
+    rows: PlacedRow[];
+}
+
+interface ResultList {
+    groups: PlacedGroup[];
+    rows: GuideResult[];
+    groupStarts: number[];
+}
+
+function placeGroups(groups: readonly ResultGroup[]): ResultList {
+    const placed: PlacedGroup[] = [];
+    const rows: GuideResult[] = [];
+    const groupStarts: number[] = [];
+    for (const { label, pending, results } of groups) {
+        if (results.length > 0) groupStarts.push(rows.length);
+        placed.push({
+            label,
+            pending,
+            rows: results.map((result, offset) => ({ result, index: rows.length + offset }))
+        });
+        rows.push(...results);
+    }
+    return { groups: placed, rows, groupStarts };
+}
+
+interface RowEvents {
     activeIndex: number;
-    isFirst: boolean;
-    isLast: boolean;
     onSelect: (result: GuideResult) => void;
     onActivate: (index: number) => void;
+}
+
+function Group({ group, activeIndex, onSelect, onActivate }: RowEvents & { group: PlacedGroup }): ReactElement {
+    return (
+        <div role="group" aria-label={group.label} className={cn('mt-3 first:mt-0')}>
+            <div aria-hidden className={cn('text-subtle px-3 pb-1 text-xs font-medium tracking-wide uppercase')}>
+                {group.label}
+            </div>
+            {group.pending ? <SearchResultsSkeleton /> : null}
+            {group.rows.map(({ result, index }) => (
+                <SearchResultRow
+                    key={result.path}
+                    result={result}
+                    isActive={index === activeIndex}
+                    optionId={optionId(result.path)}
+                    index={index}
+                    onSelect={onSelect}
+                    onActivate={onActivate}
+                />
+            ))}
+        </div>
+    );
+}
+
+function Results({
+    list,
+    isFirst,
+    isLast,
+    emptyMessage,
+    ...rowEvents
+}: RowEvents & {
+    list: ResultList;
+    isFirst: boolean;
+    isLast: boolean;
     emptyMessage: string | null;
 }): ReactElement | null {
-    const active = results[activeIndex];
+    const active = list.rows[rowEvents.activeIndex];
     useActiveRowScroll(active ? optionId(active.path) : undefined, isFirst, isLast);
 
-    // a null child collapses the animated panel back to the bare bar
-    if (emptyMessage === null && results.length === 0) return null;
+    // a null child collapses the animated panel back to just the bar with the hint
+    if (emptyMessage === null && list.groups.length === 0) return null;
 
     return (
         <div className={cn('py-3')}>
             {emptyMessage === null ? null : (
                 <div className={cn('text-subtle px-3 py-8 text-center text-sm')}>{emptyMessage}</div>
             )}
-            {results.length > 0 ? (
+            {list.groups.length > 0 ? (
                 <div id={LISTBOX_ID} role="listbox" aria-label="Search results">
-                    {results.map((result, index) => (
-                        <SearchResultRow
-                            key={result.path}
-                            result={result}
-                            isActive={index === activeIndex}
-                            optionId={optionId(result.path)}
-                            index={index}
-                            onSelect={onSelect}
-                            onActivate={onActivate}
-                        />
+                    {list.groups.map((group) => (
+                        <Group key={group.label} group={group} {...rowEvents} />
                     ))}
                 </div>
             ) : null}
@@ -84,7 +134,9 @@ export function GuideSearch({ open, onOpenChange: setOpen }: GuideSearchProps): 
     const inputRef = useRef<HTMLInputElement>(null);
     const router = useRouter();
 
-    const { asking, results, searching, failed } = useGuideSearch(typed);
+    const { groups, searching, failed } = useGuideSearch(typed);
+    // useRovingList tracks the rows by identity
+    const list = useMemo(() => placeGroups(groups), [groups]);
 
     useSearchHotkey(() => setOpen(!open));
 
@@ -97,15 +149,16 @@ export function GuideSearch({ open, onOpenChange: setOpen }: GuideSearchProps): 
     );
 
     const { activeIndex, isFirst, isLast, setActiveIndex, onKeyDown } = useRovingList({
-        items: results,
+        items: list.rows,
+        groupStarts: list.groupStarts,
         onSelect: select
     });
 
     let emptyMessage: string | null = null;
-    if (!asking) emptyMessage = 'Ask anything about seedcord, or type a term.';
+    if (typed.trim() === '') emptyMessage = 'Ask anything about seedcord, or type a term.';
     else if (failed) emptyMessage = 'Search is unavailable right now. Try again in a minute.';
 
-    const active = results[activeIndex];
+    const active = list.rows[activeIndex];
 
     return (
         <>
@@ -128,14 +181,14 @@ export function GuideSearch({ open, onOpenChange: setOpen }: GuideSearchProps): 
                         placeholder="Search the guide"
                         maxLength={QUESTION_LENGTH.max}
                         listboxId={LISTBOX_ID}
-                        listExpanded={results.length > 0}
+                        listExpanded={list.rows.length > 0}
                         isSearching={searching}
                         {...(active ? { activeId: optionId(active.path) } : {})}
                     />
                 }
             >
                 <Results
-                    results={results}
+                    list={list}
                     activeIndex={activeIndex}
                     isFirst={isFirst}
                     isLast={isLast}

@@ -1,13 +1,8 @@
 import { embedding } from '#src/embedding';
 import { GUIDE_SECTIONS_PATH, GUIDE_VECTORS_PATH } from '#src/files';
+import { guideHit } from '#src/guideSections';
 
-import type { GuideSection } from '#src/guideSections';
-
-export interface GuideHit {
-    path: string;
-    page: string;
-    heading?: string;
-}
+import type { GuideHit, GuideSection } from '#src/guideSections';
 
 type ReadAsset = (path: string) => Promise<Response>;
 
@@ -79,10 +74,6 @@ export class SectionIndex {
             })
             .sort((a, b) => b.score - a.score)
             .slice(0, limit)
-            .map(({ section: { url, page, heading } }) => ({
-                path: url,
-                page,
-                ...(heading !== undefined && { heading })
-            }));
+            .map(({ section }) => guideHit(section));
     }
 }

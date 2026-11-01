@@ -7,12 +7,16 @@ import type { KeyboardEvent } from 'react';
 
 const ITEMS: readonly string[] = ['a', 'b', 'c'];
 
-function keyEvent(key: string): KeyboardEvent<HTMLElement> {
-    return { key, preventDefault: vi.fn() } as unknown as KeyboardEvent<HTMLElement>;
+function keyEvent(key: string, shiftKey = false, preventDefault = vi.fn()): KeyboardEvent<HTMLElement> {
+    // the hook reads only key, shiftKey, and preventDefault
+    return { key, shiftKey, preventDefault } as unknown as KeyboardEvent<HTMLElement>;
 }
 
 function press(result: { current: ReturnType<typeof useRovingList> }, ...keys: string[]): void {
-    for (const key of keys) act(() => result.current.onKeyDown(keyEvent(key)));
+    for (const key of keys) {
+        const shifted = key.startsWith('Shift+');
+        act(() => result.current.onKeyDown(keyEvent(shifted ? key.slice('Shift+'.length) : key, shifted)));
+    }
 }
 
 describe('useRovingList', () => {
@@ -81,5 +85,40 @@ describe('useRovingList', () => {
 
         rerender({ items: ['x', 'y'] });
         expect(result.current.activeIndex).toBe(0);
+    });
+
+    it('keeps the active item when the new list still holds it', () => {
+        const { result, rerender } = renderHook(({ items }) => useRovingList({ items, onSelect: vi.fn() }), {
+            initialProps: { items: ['a', 'b'] }
+        });
+
+        press(result, 'ArrowDown');
+        rerender({ items: ['a', 'b', 'c'] });
+
+        expect(result.current.activeIndex).toBe(1);
+    });
+
+    it('moves between group starts with Tab and Shift+Tab, wrapping at either end', () => {
+        const items = ['a', 'b', 'c', 'd'];
+        const groupStarts = [0, 2];
+        const { result } = renderHook(() => useRovingList({ items, groupStarts, onSelect: vi.fn() }));
+
+        press(result, 'ArrowDown', 'Tab');
+        expect(result.current.activeIndex).toBe(2);
+
+        press(result, 'Tab');
+        expect(result.current.activeIndex).toBe(0);
+
+        press(result, 'Shift+Tab');
+        expect(result.current.activeIndex).toBe(2);
+    });
+
+    it('leaves Tab to the browser when there is one group', () => {
+        const { result } = renderHook(() => useRovingList({ items: ITEMS, groupStarts: [0], onSelect: vi.fn() }));
+        const preventDefault = vi.fn();
+
+        act(() => result.current.onKeyDown(keyEvent('Tab', false, preventDefault)));
+
+        expect(preventDefault).not.toHaveBeenCalled();
     });
 });
