@@ -2,6 +2,7 @@ import { execFileSync } from 'node:child_process';
 import { readFileSync } from 'node:fs';
 import path from 'node:path';
 
+import { PRODUCTION_SITES } from '@seedcord/brand';
 import { SiteBuild } from '@seedcord/docs-engine';
 import { parse } from 'jsonc-parser';
 
@@ -35,7 +36,7 @@ const INIT_CWD = process.env.INIT_CWD ? path.resolve(process.env.INIT_CWD) : pro
 export const DOCS_APP = path.resolve(INIT_CWD, 'apps/docs');
 
 export function exportedFiles(): Promise<DocsSiteFile[]> {
-    return new DocsSiteFiles(path.join(DOCS_APP, 'dist/docs')).list();
+    return new DocsSiteFiles(path.join(DOCS_APP, PRODUCTION_SITES.docs.exportDir)).list();
 }
 
 export function buildOfHead(): SiteBuild {

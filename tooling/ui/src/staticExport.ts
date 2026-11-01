@@ -17,7 +17,7 @@ export function staticExport(
         pageExtensions: dev ? [...PAGE_EXTENSIONS, ...DEV_ONLY_EXTENSIONS] : PAGE_EXTENSIONS,
         basePath: site.path,
         output: 'export',
-        ...(phase === PHASE_PRODUCTION_BUILD && { distDir: `dist${site.path}` }),
+        ...(phase === PHASE_PRODUCTION_BUILD && { distDir: site.exportDir }),
         images: { unoptimized: true }
     };
 }

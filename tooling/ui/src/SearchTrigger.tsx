@@ -4,6 +4,7 @@ import { Search } from 'lucide-react';
 
 import { Button } from './Button';
 import { Icon } from './Icon';
+import { Kbd } from './Kbd';
 import { cn } from './lib/cn';
 import { useIsMac } from './lib/useIsMac';
 
@@ -33,16 +34,10 @@ export function SearchTrigger({ label, onOpen }: SearchTriggerProps): ReactEleme
                 <Icon icon={Search} size={16} />
                 <span>{label}</span>
             </span>
-            <kbd
-                aria-label={isMac ? 'Command K' : 'Control K'}
-                className={cn(
-                    'inline-flex items-center rounded-md border border-(--border) bg-(--surface-moderate) px-2 py-1',
-                    'font-sans text-xs leading-none font-semibold tracking-wide text-(--text-muted)'
-                )}
-            >
+            <Kbd aria-label={isMac ? 'Command K' : 'Control K'}>
                 {/* ⌘ (U+2318) is a system-font glyph that aligns baseline + cap-height with the letter. an SVG icon does not. */}
                 <span aria-hidden="true">{isMac ? '⌘K' : 'Ctrl+K'}</span>
-            </kbd>
+            </Kbd>
         </Button>
     );
 }

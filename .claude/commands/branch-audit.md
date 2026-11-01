@@ -48,6 +48,7 @@ Treat those files as the rules. Do not substitute your own taste where they alre
     - More things that the skill mentions
 3. Comments per code-commenting-guidelines, and all prose (comments, README, changesets, CLI output text, error messages) per writing-voice and guide-voice. Apply them at their strictest.
     - Any comments that could be removed by using better naming, refactoring, or code structure.
+    - Any comments that are justifying bad code or design choices. The bad code should be refactored from the root rather than explained away.
 4. Tests per the tdd skill. Specifically hunt for:
     - bogus tests that would pass even if the behavior broke
     - tests that don't check behavior

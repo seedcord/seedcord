@@ -13,6 +13,10 @@ export class SiteAddress {
         return new URL(this.url).pathname.replace(/\/$/, '');
     }
 
+    get exportDir(): string {
+        return `dist${this.path}`;
+    }
+
     at(path: string): string {
         if (path === '') return this.url;
         return `${this.url}/${path.replace(/^\/+/, '')}`;
