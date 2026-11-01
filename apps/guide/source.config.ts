@@ -28,6 +28,9 @@ export default defineConfig({
                     inlineCode: (node) => node.value,
                     emphasis: (node, _, state, info) => state.containerPhrasing(node, info),
                     strong: (node, _, state, info) => state.containerPhrasing(node, info),
+                    delete: (node, _, state, info) => state.containerPhrasing(node, info),
+                    linkReference: (node, _, state, info) => state.containerPhrasing(node, info),
+                    blockquote: (node, _, state, info) => state.containerFlow(node, info),
                     table: (node: Table, _, state, info) =>
                         node.children
                             .map((row) => row.children.map((cell) => state.containerPhrasing(cell, info)).join(' · '))

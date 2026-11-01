@@ -1,6 +1,7 @@
 import { afterEach, describe, expect, it, vi } from 'vitest';
 
-import { GuideSearch, QUESTION_LENGTH, TooManySearches } from '#src/GuideSearch';
+import { GuideSearch, TooManySearches } from '#src/GuideSearch';
+import { QUESTION_LENGTH } from '#src/question';
 
 import type { GuideHit } from '#src/guideSections';
 

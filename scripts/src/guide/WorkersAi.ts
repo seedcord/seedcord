@@ -1,7 +1,6 @@
 import { embedding } from '@seedcord/docs-search';
-import { Converters, Envapter } from 'envapt';
 
-import { CloudflareApi, type HttpFetch } from '#src/lib/CloudflareApi';
+import type { CloudflareApi } from '#src/lib/CloudflareApi';
 
 // embeddinggemma's schema takes at most 100 texts a call
 const BATCH = 100;
@@ -17,21 +16,10 @@ function isEmbeddings(result: unknown): result is { data: number[][] } {
 }
 
 export class WorkersAi {
-    private readonly api: CloudflareApi;
-
-    // the token needs the Account > Workers AI permission
-    static fromEnv(): WorkersAi {
-        const read = (key: string): string => Envapter.getRequired(key, Converters.String);
-        return new WorkersAi(read('CLOUDFLARE_ACCOUNT_ID'), read('CLOUDFLARE_API_TOKEN'));
-    }
-
     constructor(
         private readonly accountId: string,
-        token: string,
-        http?: HttpFetch
-    ) {
-        this.api = new CloudflareApi(token, http);
-    }
+        private readonly api: CloudflareApi
+    ) {}
 
     async embed(texts: readonly string[]): Promise<number[][]> {
         const vectors: number[][] = [];

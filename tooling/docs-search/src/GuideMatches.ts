@@ -2,8 +2,8 @@ import { GUIDE } from '@seedcord/ui/sites';
 
 import { GUIDE_SECTIONS_PATH } from '#src/files';
 import { guideResult } from '#src/GuideResult';
-import { collapseSpaces, parseQuestion } from '#src/GuideSearch';
 import { guideHit } from '#src/guideSections';
+import { collapseSpaces, parseQuestion } from '#src/question';
 import { readJson } from '#src/readAsset';
 
 import type { GuideResult } from '#src/GuideResult';
@@ -36,15 +36,11 @@ export function findWordStart(text: string, term: string, from = 0): number {
     return -1;
 }
 
-// undefined when a typed word starts none of the title's words
-function wholeWordsIn(section: Section, typed: readonly string[]): number | undefined {
-    let whole = 0;
-    for (const word of typed) {
-        if (section.words.includes(word)) whole += 1;
-        else if (!section.words.some((titleWord) => titleWord.startsWith(word))) return undefined;
-    }
-    return whole;
-}
+const startsTitleWords = (section: Section, typed: readonly string[]): boolean =>
+    typed.every((word) => section.words.some((titleWord) => titleWord.startsWith(word)));
+
+const wholeWordsIn = (section: Section, typed: readonly string[]): number =>
+    typed.filter((word) => section.words.includes(word)).length;
 
 function excerpt(text: string, at: number): string {
     const start = text.lastIndexOf(' ', at - EXCERPT_LEAD) + 1;
@@ -67,7 +63,7 @@ export class GuideMatches {
         });
     }
 
-    // the page's own origin
+    // a relative url, read from whichever site serves the page
     static async load(): Promise<GuideMatches> {
         return new GuideMatches(await readJson<GuideSection[]>(`${GUIDE.path}${GUIDE_SECTIONS_PATH}`));
     }
@@ -84,10 +80,8 @@ export class GuideMatches {
         if (typed.length === 0) return [];
 
         return this.sections
-            .flatMap((section) => {
-                const wholeWords = wholeWordsIn(section, typed);
-                return wholeWords === undefined ? [] : [{ section, wholeWords }];
-            })
+            .filter((section) => startsTitleWords(section, typed))
+            .map((section) => ({ section, wholeWords: wholeWordsIn(section, typed) }))
             .sort((a, b) => Number(b.section.isPage) - Number(a.section.isPage) || b.wholeWords - a.wholeWords)
             .slice(0, TITLE_RESULTS)
             .map(({ section }) => section);

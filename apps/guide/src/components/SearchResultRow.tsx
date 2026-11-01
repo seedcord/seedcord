@@ -16,20 +16,18 @@ export const ROW_SUBTITLE = tw`text-subtle truncate text-xs`;
 
 const UNMARKED: readonly string[] = [];
 
-export interface SearchResultRowProps {
+interface SearchResultRowProps {
     result: GuideResult;
     isActive: boolean;
     optionId: string;
-    index: number;
     onSelect: (result: GuideResult) => void;
-    onActivate: (index: number) => void;
+    onActivate: (result: GuideResult) => void;
 }
 
 export function SearchResultRow({
     result,
     isActive,
     optionId,
-    index,
     onSelect,
     onActivate
 }: SearchResultRowProps): ReactElement {
@@ -46,7 +44,7 @@ export function SearchResultRow({
             label={[title, ...trail].join(', ')}
             isActive={isActive}
             onSelect={() => onSelect(result)}
-            onActivate={() => onActivate(index)}
+            onActivate={() => onActivate(result)}
         >
             <Icon icon={icon} className={cn(ROW_ICON)} aria-hidden />
             <div className={cn(ROW_TEXT)}>

@@ -335,8 +335,7 @@ describe('the ask endpoint', () => {
 
         expect(response.headers.get('access-control-allow-origin')).toBe('*');
         expect(await response.json()).toEqual([
-            { path: '/checks/cooldown#the-duration', tab: 'Checks', page: 'Cooldowns', heading: 'The duration' },
-            { path: '/components/buttons', tab: 'Components', page: 'Buttons' }
+            { path: '/checks/cooldown#the-duration', tab: 'Checks', page: 'Cooldowns', heading: 'The duration' }
         ]);
     });
 
@@ -368,6 +367,7 @@ describe('the ask endpoint', () => {
         expect(response.status).toBe(429);
         expect(env.embedded).toEqual([]);
 
+        // wrangler validates this file on every deploy
         const config = parse(
             readFileSync(resolve(import.meta.dirname, '../wrangler.jsonc'), 'utf8')
         ) as Unstable_RawConfig;

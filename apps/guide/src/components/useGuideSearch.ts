@@ -33,7 +33,7 @@ interface Answer {
     state: State<'failed' | 'done'>;
 }
 
-type Loaded = State<'pending' | 'failed'> | { status: 'ready'; matches: GuideMatches };
+type Loaded = TaggedUnion<'status', Pick<States, 'pending' | 'failed'> & { ready: { matches: GuideMatches } }>;
 
 const PENDING = { status: 'pending' } as const;
 const NOT_ASKED: GroupState = { status: 'done', results: NO_RESULTS };
@@ -41,7 +41,7 @@ const NOT_ASKED: GroupState = { status: 'done', results: NO_RESULTS };
 function noticeFor(error: unknown, results: string): string {
     if (error instanceof TooManySearches) return error.message;
     // fetch rejects with a TypeError when the request never reaches the server
-    if (error instanceof TypeError) return `${results} need a network connection.`;
+    if (error instanceof TypeError) return `${results} can't load without a network connection.`;
     return `${results} are unavailable right now. Try again in a minute.`;
 }
 
@@ -58,6 +58,12 @@ function relatedState(question: string | undefined, answer: Answer | null): Grou
 function withoutShown(state: GroupState, shown: ReadonlySet<string>): GroupState {
     if (state.status !== 'done') return state;
     return { status: 'done', results: state.results.filter((result) => !shown.has(result.path)) };
+}
+
+export function emptyMessage(typed: string, groups: readonly ResultGroup[]): string | undefined {
+    const query = typed.trim();
+    if (query === '') return 'Ask anything about seedcord, or type a term.';
+    return groups.length === 0 ? `No matches for “${query}”.` : undefined;
 }
 
 function useMatches(open: boolean): Loaded {
@@ -108,14 +114,14 @@ export function useGuideSearch(typed: string, open: boolean): ResultGroup[] {
     }, [question]);
 
     const related = relatedState(question, answer);
+    const matched = useMemo(() => matchesState(typed, loaded), [typed, loaded]);
 
     return useMemo(() => {
-        const matched = matchesState(typed, loaded);
         const shown = new Set(matched.status === 'done' ? matched.results.map((result) => result.path) : []);
         const groups: ResultGroup[] = [
             { label: 'Matches', ...matched },
             { label: 'Related', ...withoutShown(related, shown) }
         ];
         return groups.filter((group) => group.status !== 'done' || group.results.length > 0);
-    }, [typed, loaded, related]);
+    }, [matched, related]);
 }

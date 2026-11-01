@@ -45,8 +45,7 @@ interface CommandListItemProps {
     onSelect: (action: CommandAction) => void;
     isActive: boolean;
     optionId: string;
-    index: number;
-    onActivate: (index: number) => void;
+    onActivate: (action: CommandAction) => void;
 }
 
 export function CommandListItem({
@@ -54,7 +53,6 @@ export function CommandListItem({
     onSelect,
     isActive,
     optionId,
-    index,
     onActivate
 }: CommandListItemProps): ReactElement {
     const ItemIcon = SEARCH_KIND_ICONS[action.kind];
@@ -72,7 +70,7 @@ export function CommandListItem({
             label={action.label}
             isActive={isActive}
             onSelect={() => onSelect(action)}
-            onActivate={() => onActivate(index)}
+            onActivate={() => onActivate(action)}
             className={cn('group/item items-start', toneStyles?.active)}
         >
             <span className={cn(iconClasses)}>

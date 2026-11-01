@@ -1,18 +1,10 @@
 import { GUIDE_ASK_URL } from '#src/files';
 import { guideResult } from '#src/GuideResult';
+import { parseQuestion } from '#src/question';
 import { readJson } from '#src/readAsset';
 
 import type { GuideResult } from '#src/GuideResult';
 import type { GuideHit } from '#src/guideSections';
-
-export const QUESTION_LENGTH = { min: 2, max: 200 } as const;
-
-export const collapseSpaces = (text: string): string => text.replaceAll(/\s+/g, ' ');
-
-export function parseQuestion(input: string): string | undefined {
-    const question = collapseSpaces(input.trim());
-    return question.length >= QUESTION_LENGTH.min && question.length <= QUESTION_LENGTH.max ? question : undefined;
-}
 
 const TOO_MANY_REQUESTS = 429;
 

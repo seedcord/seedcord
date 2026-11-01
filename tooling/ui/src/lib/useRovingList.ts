@@ -4,12 +4,14 @@ import { useCallback, useState } from 'react';
 
 import type { KeyboardEvent } from 'react';
 
-export type RovingGroup = { loading: false; start: number } | { loading: true };
+export interface RovingGroup<TItem> {
+    items: readonly TItem[];
+    loading: boolean;
+}
 
 export interface RovingListOptions<TItem> {
-    items: readonly TItem[];
+    groups: readonly RovingGroup<TItem>[];
     onSelect: (item: TItem) => void;
-    groups?: readonly RovingGroup[];
 }
 
 export interface RowPosition {
@@ -21,41 +23,64 @@ export interface RowPosition {
 
 type RovingKey = Pick<KeyboardEvent, 'key' | 'shiftKey' | 'preventDefault'>;
 
-export interface RovingList extends RowPosition {
-    activeIndex: number;
-    pointAt: (index: number) => void;
+export interface RovingList<TItem> extends RowPosition {
+    active: TItem | undefined;
+    hasGroups: boolean;
+    isActive: (item: TItem) => boolean;
+    pointAt: (item: TItem) => void;
     onKeyDown: (event: RovingKey) => void;
 }
 
-const NO_GROUPS: readonly RovingGroup[] = [];
+interface TabStop {
+    start: number;
+    loading: boolean;
+}
+
+interface Layout<TItem> {
+    items: TItem[];
+    stops: TabStop[];
+}
+
+interface Picked<TItem> {
+    item: TItem | undefined;
+    pickedByPointer: boolean;
+}
+
+function layout<TItem>(groups: readonly RovingGroup<TItem>[]): Layout<TItem> {
+    const items: TItem[] = [];
+    const stops: TabStop[] = [];
+    for (const group of groups) {
+        if (group.loading || group.items.length > 0) stops.push({ start: items.length, loading: group.loading });
+        items.push(...group.items);
+    }
+    return { items, stops };
+}
 
 function clamp(index: number, total: number): number {
     if (index < 0) return 0;
     return Math.min(index, total - 1);
 }
 
-function nextGroup(groups: readonly RovingGroup[], activeIndex: number, step: 1 | -1): RovingGroup | undefined {
-    const current = groups.findLastIndex((group) => !group.loading && group.start <= activeIndex);
-    return groups.at((current + step) % groups.length);
+function nextStop(stops: readonly TabStop[], activeIndex: number, step: 1 | -1): TabStop | undefined {
+    const current = stops.findLastIndex((stop) => !stop.loading && stop.start <= activeIndex);
+    return stops.at((current + step) % stops.length);
 }
 
-export function useRovingList<TItem>({ items, onSelect, groups = NO_GROUPS }: RovingListOptions<TItem>): RovingList {
-    const [{ activeIndex, pickedByPointer }, setActive] = useState({ activeIndex: 0, pickedByPointer: false });
-    const setActiveIndex = useCallback(
-        (index: number) => setActive({ activeIndex: index, pickedByPointer: false }),
-        []
-    );
-    const pointAt = useCallback((index: number) => setActive({ activeIndex: index, pickedByPointer: true }), []);
+function pick<TItem>(item: TItem | undefined, pickedByPointer: boolean) {
+    return (previous: Picked<TItem>): Picked<TItem> =>
+        previous.item === item && previous.pickedByPointer === pickedByPointer ? previous : { item, pickedByPointer };
+}
 
-    // adjusting state during render skips the extra render an effect would cost
-    const [trackedItems, setTrackedItems] = useState(items);
-    if (trackedItems !== items) {
-        setTrackedItems(items);
-        const active = trackedItems[activeIndex];
-        setActiveIndex(active === undefined ? 0 : Math.max(0, items.indexOf(active)));
-    }
+export function useRovingList<TItem>({ groups, onSelect }: RovingListOptions<TItem>): RovingList<TItem> {
+    const { items, stops } = layout(groups);
+    const [picked, setPicked] = useState<Picked<TItem>>({ item: undefined, pickedByPointer: false });
 
+    // if the picked item leaves the list, the first row is active until it comes back
+    const activeIndex = Math.max(0, picked.item === undefined ? 0 : items.indexOf(picked.item));
+    const active = items[activeIndex];
     const total = items.length;
+
+    const pointAt = useCallback((item: TItem) => setPicked(pick(item, true)), []);
 
     const onKeyDown = useCallback(
         (event: RovingKey): void => {
@@ -63,7 +88,7 @@ export function useRovingList<TItem>({ items, onSelect, groups = NO_GROUPS }: Ro
 
             const move = (next: number): void => {
                 event.preventDefault();
-                setActiveIndex(clamp(next, total));
+                setPicked(pick(items[clamp(next, total)], false));
             };
 
             switch (event.key) {
@@ -84,15 +109,14 @@ export function useRovingList<TItem>({ items, onSelect, groups = NO_GROUPS }: Ro
                     break;
                 }
                 case 'Tab': {
-                    if (groups.length < 2) break;
+                    if (stops.length < 2) break;
                     event.preventDefault();
-                    const next = nextGroup(groups, activeIndex, event.shiftKey ? -1 : 1);
-                    if (next?.loading === false) setActiveIndex(next.start);
+                    const next = nextStop(stops, activeIndex, event.shiftKey ? -1 : 1);
+                    if (next?.loading === false) move(next.start);
                     break;
                 }
                 case 'Enter': {
                     event.preventDefault();
-                    const active = items[activeIndex];
                     if (active !== undefined) onSelect(active);
                     break;
                 }
@@ -101,15 +125,17 @@ export function useRovingList<TItem>({ items, onSelect, groups = NO_GROUPS }: Ro
                 }
             }
         },
-        [activeIndex, groups, items, onSelect, total, setActiveIndex]
+        [active, activeIndex, items, onSelect, stops, total]
     );
 
     return {
-        activeIndex,
-        isFirst: activeIndex === 0,
+        active,
+        hasGroups: stops.length > 1,
+        isActive: (item) => item === active,
+        isFirst: total > 0 && activeIndex === 0,
         isLast: total > 0 && activeIndex === total - 1,
-        isGroupStart: groups.some((group) => !group.loading && group.start === activeIndex),
-        pickedByPointer,
+        isGroupStart: stops.some((stop) => !stop.loading && stop.start === activeIndex),
+        pickedByPointer: picked.pickedByPointer,
         pointAt,
         onKeyDown
     };

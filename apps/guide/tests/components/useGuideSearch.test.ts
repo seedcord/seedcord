@@ -1,7 +1,7 @@
 import { act, renderHook } from '@testing-library/react';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
-import { useGuideSearch } from '#components/useGuideSearch';
+import { emptyMessage, useGuideSearch } from '#components/useGuideSearch';
 
 import type { ResultGroup } from '#components/useGuideSearch';
 import type { GuideSection } from '@seedcord/docs-search';
@@ -92,7 +92,35 @@ afterEach(() => {
     vi.unstubAllGlobals();
 });
 
+const matchedRows = (groups: readonly ResultGroup[]): readonly unknown[] => {
+    const group = groupOf(groups, 'Matches');
+    return group?.status === 'done' ? group.results : [];
+};
+
 describe('useGuideSearch', () => {
+    it('keeps the same match rows while related results arrive', async () => {
+        const { answer } = serving([Response.json(SECTIONS)]);
+        const search = await freshSearch();
+        const { result } = renderHook(() => search('cooldown', true));
+        await act(() => vi.advanceTimersByTimeAsync(0));
+        const [before] = matchedRows(result.current);
+
+        await pauseTyping();
+        await answer('cooldown');
+
+        expect(groupOf(result.current, 'Related')?.status).toBe('done');
+        expect(matchedRows(result.current)[0]).toBe(before);
+    });
+
+    it('says nothing matched once every group comes back empty', async () => {
+        serving([Response.json(SECTIONS)]);
+        const search = await freshSearch();
+        const { result } = renderHook(() => search('z', true));
+        await act(() => vi.advanceTimersByTimeAsync(0));
+
+        expect(emptyMessage('z', result.current)).toBe('No matches for “z”.');
+    });
+
     it('shows related results only for the question typed now', async () => {
         const { answer } = serving();
         const { result, rerender } = renderHook(({ typed }) => useGuideSearch(typed, true), {
@@ -134,7 +162,7 @@ describe('useGuideSearch', () => {
         rerender({ typed: 'kysely' });
         await pauseTyping();
         await answer('kysely', new TypeError('Failed to fetch'));
-        expect(noticeOf(result.current, 'Related')).toBe('Related results need a network connection.');
+        expect(noticeOf(result.current, 'Related')).toBe("Related results can't load without a network connection.");
     });
 
     it('loads the guide sections once the dialog opens, and again on the next open after a failure', async () => {

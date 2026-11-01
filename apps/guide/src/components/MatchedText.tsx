@@ -5,7 +5,6 @@ import { useCallback } from 'react';
 
 import type { ReactElement } from 'react';
 
-// globals.css styles ::highlight(search-match)
 const HIGHLIGHT = 'search-match';
 
 function searchHighlight(): Highlight {
@@ -32,7 +31,7 @@ function rangesOf(node: Text, text: string, terms: readonly string[]): Range[] {
     return ranges;
 }
 
-export interface MatchedTextProps {
+interface MatchedTextProps {
     text: string;
     terms: readonly string[];
     className: string;

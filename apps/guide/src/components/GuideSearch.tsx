@@ -14,15 +14,15 @@ import {
     useSearchHotkey
 } from '@seedcord/ui';
 import { useRouter } from 'next/navigation';
-import { useCallback, useMemo, useRef, useState } from 'react';
+import { useCallback, useRef, useState } from 'react';
 
 import { SearchResultRow } from './SearchResultRow';
 import { SearchResultsSkeleton } from './SearchResultsSkeleton';
-import { useGuideSearch } from './useGuideSearch';
+import { emptyMessage, useGuideSearch } from './useGuideSearch';
 
 import type { ResultGroup } from './useGuideSearch';
 import type { GuideResult } from '@seedcord/docs-search';
-import type { RovingGroup, RowPosition } from '@seedcord/ui';
+import type { RovingGroup, RovingList } from '@seedcord/ui';
 import type { ReactElement } from 'react';
 
 const LISTBOX_ID = 'guide-search-results';
@@ -33,44 +33,22 @@ function optionId(path: string): string {
     return `guide-search-${path}`;
 }
 
-interface PlacedGroup {
+const NO_ROWS: readonly GuideResult[] = [];
+
+function rovingGroups(groups: readonly ResultGroup[]): RovingGroup<GuideResult>[] {
+    return groups.map((group) => ({
+        items: group.status === 'done' ? group.results : NO_ROWS,
+        loading: group.status === 'pending'
+    }));
+}
+
+interface GroupProps {
     group: ResultGroup;
-    start: number;
-}
-
-interface ResultList {
-    groups: PlacedGroup[];
-    rows: GuideResult[];
-    roving: RovingGroup[];
-}
-
-function placeGroups(groups: readonly ResultGroup[]): ResultList {
-    const placed: PlacedGroup[] = [];
-    const rows: GuideResult[] = [];
-    const roving: RovingGroup[] = [];
-    for (const group of groups) {
-        placed.push({ group, start: rows.length });
-        if (group.status === 'pending') roving.push({ loading: true });
-        if (group.status === 'done') {
-            roving.push({ loading: false, start: rows.length });
-            rows.push(...group.results);
-        }
-    }
-    return { groups: placed, rows, roving };
-}
-
-interface RowEvents {
-    activeIndex: number;
+    roving: RovingList<GuideResult>;
     onSelect: (result: GuideResult) => void;
-    onActivate: (index: number) => void;
 }
 
-function GroupBody({
-    placed: { group, start },
-    activeIndex,
-    onSelect,
-    onActivate
-}: RowEvents & { placed: PlacedGroup }): ReactElement | ReactElement[] {
+function GroupBody({ group, roving, onSelect }: GroupProps): ReactElement | ReactElement[] {
     if (group.status === 'pending') return <SearchResultsSkeleton />;
     if (group.status === 'failed') {
         return (
@@ -79,59 +57,48 @@ function GroupBody({
             </p>
         );
     }
-    return group.results.map((result, offset) => (
+    return group.results.map((result) => (
         <SearchResultRow
             key={result.path}
             result={result}
-            isActive={start + offset === activeIndex}
+            isActive={roving.isActive(result)}
             optionId={optionId(result.path)}
-            index={start + offset}
             onSelect={onSelect}
-            onActivate={onActivate}
+            onActivate={roving.pointAt}
         />
     ));
 }
 
-function Group(props: RowEvents & { placed: PlacedGroup }): ReactElement {
-    const { label } = props.placed.group;
+function Group(props: GroupProps): ReactElement {
     return (
-        <div role="group" aria-label={label} className={cn('mt-3 first:mt-0')}>
+        <div role="group" aria-label={props.group.label} className={cn('mt-3 first:mt-0')}>
             <div aria-hidden className={cn(SECTION_LABEL, 'px-3 pb-2')}>
-                {label}
+                {props.group.label}
             </div>
             <GroupBody {...props} />
         </div>
     );
 }
 
-function Results({
-    list,
-    position,
-    emptyMessage,
-    ...rowEvents
-}: RowEvents & {
-    list: ResultList;
-    position: RowPosition;
-    emptyMessage: string | null;
-}): ReactElement | null {
-    const active = list.rows[rowEvents.activeIndex];
-    useActiveRowScroll(active ? optionId(active.path) : undefined, position);
+interface ResultsProps extends Omit<GroupProps, 'group'> {
+    groups: readonly ResultGroup[];
+    message: string | undefined;
+}
 
-    // a null child collapses the animated panel to only the bar with the hint
-    if (emptyMessage === null && list.groups.length === 0) return null;
+function Results({ groups, message, roving, onSelect }: ResultsProps): ReactElement {
+    useActiveRowScroll(roving.active ? optionId(roving.active.path) : undefined, roving);
 
     return (
         <div className={cn('py-3')}>
-            {emptyMessage === null ? null : (
-                <div className={cn('text-subtle px-3 py-8 text-center text-sm')}>{emptyMessage}</div>
-            )}
-            {list.groups.length > 0 ? (
+            {message === undefined ? (
                 <div id={LISTBOX_ID} role="listbox" aria-label="Search results">
-                    {list.groups.map((placed) => (
-                        <Group key={placed.group.label} placed={placed} {...rowEvents} />
+                    {groups.map((group) => (
+                        <Group key={group.label} group={group} roving={roving} onSelect={onSelect} />
                     ))}
                 </div>
-            ) : null}
+            ) : (
+                <div className={cn('text-subtle px-3 py-8 text-center text-sm')}>{message}</div>
+            )}
         </div>
     );
 }
@@ -147,22 +114,13 @@ export function GuideSearch({ open, onOpenChange: setOpen }: GuideSearchProps): 
     const navigate = useNavigateAndClose(useRouter(), setOpen);
 
     const groups = useGuideSearch(typed, open);
-    // useRovingList tracks the rows by identity
-    const list = useMemo(() => placeGroups(groups), [groups]);
 
     useSearchHotkey(() => setOpen(!open));
 
     const select = useCallback((result: GuideResult) => navigate(result.path), [navigate]);
 
-    const { activeIndex, pointAt, onKeyDown, ...position } = useRovingList({
-        items: list.rows,
-        groups: list.roving,
-        onSelect: select
-    });
-
-    const emptyMessage = typed.trim() === '' ? 'Ask anything about seedcord, or type a term.' : null;
-
-    const active = list.rows[activeIndex];
+    const roving = useRovingList({ groups: rovingGroups(groups), onSelect: select });
+    const { active } = roving;
 
     return (
         <>
@@ -173,33 +131,26 @@ export function GuideSearch({ open, onOpenChange: setOpen }: GuideSearchProps): 
                 onClose={() => setOpen(false)}
                 title="Search"
                 description="Search every page in the seedcord guide."
-                footer={list.rows.length === 0 ? undefined : <SearchKeyLegend hasGroups={list.roving.length > 1} />}
+                footer={active === undefined ? undefined : <SearchKeyLegend hasGroups={roving.hasGroups} />}
                 field={
                     <SearchField
                         inputRef={inputRef}
                         value={typed}
                         onValueChange={setTyped}
-                        onKeyDown={onKeyDown}
+                        onKeyDown={roving.onKeyDown}
                         onClose={() => setOpen(false)}
                         label={SEARCH_LABEL}
                         closeLabel="Close search"
                         placeholder="Search the guide"
                         maxLength={QUESTION_LENGTH.max}
                         listboxId={LISTBOX_ID}
-                        listExpanded={list.rows.length > 0}
+                        listExpanded={active !== undefined}
                         isSearching={groups.some((group) => group.status === 'pending')}
                         {...(active ? { activeId: optionId(active.path) } : {})}
                     />
                 }
             >
-                <Results
-                    list={list}
-                    activeIndex={activeIndex}
-                    position={position}
-                    onSelect={select}
-                    onActivate={pointAt}
-                    emptyMessage={emptyMessage}
-                />
+                <Results groups={groups} message={emptyMessage(typed, groups)} roving={roving} onSelect={select} />
                 {/* a screen reader announces a change inside a status region that already exists */}
                 <p role="status" className={cn('sr-only')}>
                     {groups.find((group) => group.status === 'failed')?.notice}

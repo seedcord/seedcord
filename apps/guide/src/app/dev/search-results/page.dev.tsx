@@ -58,7 +58,6 @@ function SearchResultsPreview(): ReactElement {
                         result={result}
                         isActive={index === 0}
                         optionId={`preview-${result.path}`}
-                        index={index}
                         onSelect={noop}
                         onActivate={noop}
                     />

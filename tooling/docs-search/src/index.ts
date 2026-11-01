@@ -11,7 +11,8 @@ export {
     versionFromFile
 } from '#src/files';
 export type { GuideResult } from '#src/GuideResult';
-export { GuideSearch, parseQuestion, QUESTION_LENGTH, TooManySearches } from '#src/GuideSearch';
+export { GuideSearch, TooManySearches } from '#src/GuideSearch';
+export { parseQuestion, QUESTION_LENGTH } from '#src/question';
 export { guideSections, type GuideSection } from '#src/guideSections';
 export { findWordStart, GuideMatches } from '#src/GuideMatches';
 export { readJson, type ReadAsset } from '#src/readAsset';

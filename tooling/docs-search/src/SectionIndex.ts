@@ -8,6 +8,8 @@ import type { ReadAsset } from '#src/readAsset';
 
 const VERSION_CHARS = 16;
 const HEX = 16;
+// measured on every 10th guide section: real questions scored 0.53 to 0.69, keyboard mash at most 0.26
+const MIN_SCORE = 0.3;
 
 async function versionOf(...files: (string | ArrayBuffer)[]): Promise<string> {
     const digest = new Uint8Array(await crypto.subtle.digest('SHA-256', await new Blob(files).arrayBuffer()));
@@ -19,7 +21,7 @@ async function versionOf(...files: (string | ArrayBuffer)[]): Promise<string> {
 interface Row {
     section: GuideSection;
     vector: Float32Array;
-    length: number;
+    norm: number;
 }
 
 export class SectionIndex {
@@ -32,7 +34,7 @@ export class SectionIndex {
     ) {
         this.rows = sections.map((section, index) => {
             const vector = vectors.subarray(index * embedding.dimensions, (index + 1) * embedding.dimensions);
-            return { section, vector, length: Math.hypot(...vector) };
+            return { section, vector, norm: Math.hypot(...vector) };
         });
     }
 
@@ -58,12 +60,13 @@ export class SectionIndex {
                 `A question vector has ${question.length} values. ${embedding.model} makes ${embedding.dimensions}.`
             );
         }
-        const questionLength = Math.hypot(...question);
+        const questionNorm = Math.hypot(...question);
         return this.rows
-            .map(({ section, vector, length }) => {
+            .map(({ section, vector, norm }) => {
                 const dot = vector.reduce((sum, value, d) => sum + value * (question[d] ?? 0), 0);
-                return { section, score: dot / (length * questionLength) };
+                return { section, score: dot / (norm * questionNorm) };
             })
+            .filter(({ score }) => score >= MIN_SCORE)
             .sort((a, b) => b.score - a.score)
             .slice(0, limit)
             .map(({ section }) => guideHit(section));

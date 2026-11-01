@@ -26,6 +26,12 @@ describe('the text search reads', () => {
         expect(code).toContain('"content": "Use per with a sliding window."');
         expect(code).toContain('"content": "key · means; per · who shares"');
     });
+
+    it('drops quote markers, reference links, and strikethrough', async () => {
+        const code = await compileGuideMdx('> See the [store][s] and ~~old~~ text.\n\n[s]: /checks/rate-limiter');
+
+        expect(code).toContain('"content": "See the store and old text."');
+    });
 });
 
 describe('heading depth', () => {

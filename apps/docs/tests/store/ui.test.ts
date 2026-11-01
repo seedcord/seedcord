@@ -61,11 +61,13 @@ describe('useUIStore', () => {
         });
 
         it('preserves unrelated fields when memberAccessLevel changes', () => {
+            useUIStore.setState({ isMobileNavOpen: true });
+
             useUIStore.getState().setMemberAccessLevel('public');
 
             const snapshot = useUIStore.getState();
             expect(snapshot.memberAccessLevel).toBe('public');
-            expect(snapshot.isMobileNavOpen).toBe(false);
+            expect(snapshot.isMobileNavOpen).toBe(true);
         });
     });
 

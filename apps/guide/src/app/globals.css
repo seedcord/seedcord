@@ -56,7 +56,6 @@
         }
     }
 
-    /* MatchedText registers this highlight */
     ::highlight(search-match) {
         background-color: var(--outline-accent-b-moderate);
         color: var(--text);

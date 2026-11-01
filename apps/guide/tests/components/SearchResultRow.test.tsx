@@ -1,3 +1,6 @@
+import { readFileSync } from 'node:fs';
+import { resolve } from 'node:path';
+
 import { render, screen, type RenderResult } from '@testing-library/react';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 
@@ -19,14 +22,7 @@ const RESULT: GuideResult = {
 
 function row(result: GuideResult): ReactElement {
     return (
-        <SearchResultRow
-            result={result}
-            isActive={false}
-            optionId="row"
-            index={0}
-            onSelect={() => {}}
-            onActivate={() => {}}
-        />
+        <SearchResultRow result={result} isActive={false} optionId="row" onSelect={() => {}} onActivate={() => {}} />
     );
 }
 
@@ -35,31 +31,36 @@ function renderRow(result: GuideResult = RESULT): RenderResult {
 }
 
 // jsdom has no CSS Custom Highlight API
-function stubHighlights(): () => string[] {
+function stubHighlights(): Map<string, Set<Range>> {
     const highlights = new Map<string, Set<Range>>();
     vi.stubGlobal('CSS', { highlights });
     vi.stubGlobal('Highlight', Set);
-    return () => [...(highlights.get('search-match') ?? [])].map(String);
+    return highlights;
 }
+
+const highlightedText = (highlights: Map<string, Set<Range>>): string[] =>
+    [...highlights.values()].flatMap((ranges) => [...ranges].map(String));
 
 afterEach(() => vi.unstubAllGlobals());
 
 describe('SearchResultRow', () => {
-    it('highlights only the phrase that matched in the excerpt', () => {
-        const highlighted = stubHighlights();
+    it('highlights only the phrase that matched in the excerpt, under a name globals.css styles', () => {
+        const highlights = stubHighlights();
+        const css = readFileSync(resolve(import.meta.dirname, '../../src/app/globals.css'), 'utf8');
 
         renderRow();
 
-        expect(highlighted()).toEqual(['a sliding window']);
+        expect(highlightedText(highlights)).toEqual(['a sliding window']);
+        for (const name of highlights.keys()) expect(css).toContain(`::highlight(${name})`);
     });
 
     it('moves the highlight when the excerpt changes under the same phrase', () => {
-        const highlighted = stubHighlights();
+        const highlights = stubHighlights();
         const { rerender } = renderRow();
 
         rerender(row({ ...RESULT, excerpt: 'Pick a sliding window here.' }));
 
-        expect(highlighted()).toEqual(['a sliding window']);
+        expect(highlightedText(highlights)).toEqual(['a sliding window']);
     });
 
     it('still renders in a browser without the highlight API', () => {

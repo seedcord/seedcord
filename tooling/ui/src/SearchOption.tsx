@@ -54,7 +54,7 @@ export function SearchOption({
             className={cn(
                 SEARCH_OPTION_BOX,
                 'text-(--text) outline-hidden transition',
-                // scrollIntoView block:'nearest' stops at this margin, keeping the list's own padding
+                // scrollIntoView block:'nearest' stops at this margin
                 'scroll-my-3',
                 ACTIVE,
                 className
