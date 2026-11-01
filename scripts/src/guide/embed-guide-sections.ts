@@ -1,5 +1,8 @@
 /* eslint-disable no-console -- CLI script */
 import { readFile, writeFile } from 'node:fs/promises';
+import { homedir } from 'node:os';
+import { join } from 'node:path';
+import { pathToFileURL } from 'node:url';
 
 import { PRODUCTION_SITES } from '@seedcord/brand';
 import {
@@ -19,8 +22,7 @@ import { WorkersAi } from '#src/guide/WorkersAi';
 import { CloudflareApi } from '#src/lib/CloudflareApi';
 
 const EXPORT = new URL(`../../../apps/guide/${exportDir(PRODUCTION_SITES.guide)}/`, import.meta.url);
-// site-deploy.yml restores this folder between runs
-const CACHE = new URL('../../../.cache/guide-embeddings/', import.meta.url);
+const CACHE = pathToFileURL(join(homedir(), '.cache/seedcord/guide-embeddings/'));
 
 const exported = (path: string): URL => new URL(`.${path}`, EXPORT);
 const fromExport: ReadAsset = async (path) => new Response(await readFile(exported(path)));
@@ -37,12 +39,12 @@ function embed(documents: readonly string[]): Promise<number[][]> {
 
 async function main(): Promise<void> {
     const sections = await readJson<GuideSection[]>(GUIDE_SECTIONS_PATH, fromExport);
-    const { bytes, reused } = await new EmbeddingCache(CACHE).vectors(sections.map(embedding.document), embed);
+    const { bytes, embedded } = await new EmbeddingCache(CACHE).vectors(sections.map(embedding.document), embed);
     await writeFile(exported(GUIDE_VECTORS_PATH), bytes);
 
     // the worker loads them like this too. a mismatch throws here in CI, before any deploy
     await SectionIndex.load(fromExport);
-    console.log(`✅ ${reused ? 'reused the vectors for' : 'embedded'} ${sections.length} guide sections`);
+    console.log(`✅ embedded ${embedded} of ${sections.length} guide sections, the rest came from the cache`);
 }
 
 main().catch((error: unknown) => {

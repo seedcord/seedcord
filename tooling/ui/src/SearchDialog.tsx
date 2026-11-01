@@ -9,13 +9,14 @@ import { cn } from './lib/cn';
 import { easeOutStrong } from './lib/motion';
 
 import type { RowPosition } from './lib/useRovingList';
-import type { ReactElement, ReactNode } from 'react';
+import type { ReactElement, ReactNode, RefObject } from 'react';
 
 const HEIGHT_ANIMATION_S = 0.2;
 
 export interface SearchDialogScroll {
     toTop: () => void;
     toBottom: () => void;
+    toTopOf: (element: Element) => void;
 }
 
 interface SearchDialogHandles {
@@ -23,7 +24,7 @@ interface SearchDialogHandles {
     scroll: SearchDialogScroll;
 }
 
-const NO_SCROLL: SearchDialogScroll = { toTop: () => {}, toBottom: () => {} };
+const NO_SCROLL: SearchDialogScroll = { toTop: () => {}, toBottom: () => {}, toTopOf: () => {} };
 
 const SearchDialogContext = createContext<SearchDialogHandles>({ container: null, scroll: NO_SCROLL });
 
@@ -56,10 +57,24 @@ export function useActiveRowScroll(
             return;
         }
         const row = document.getElementById(activeId);
-        // a group's first row brings its heading and as many of its rows as fit
-        if (isGroupStart) row?.closest('[role="group"]')?.scrollIntoView({ block: 'start' });
+        const group = isGroupStart ? row?.closest('[role="group"]') : null;
+        // scrollIntoView with block start also scrolls the overflow-hidden panel, which pushes the field out of view
+        if (group) scroll.toTopOf(group);
         else row?.scrollIntoView({ block: 'nearest' });
     }, [activeId, isFirst, isLast, isGroupStart, pickedByPointer, scroll]);
+}
+
+function listScroll(scrollRef: RefObject<HTMLDivElement | null>): SearchDialogScroll {
+    return {
+        toTop: () => scrollRef.current?.scrollTo({ top: 0 }),
+        toBottom: () => scrollRef.current?.scrollTo({ top: scrollRef.current.scrollHeight }),
+        toTopOf: (element) => {
+            const scroller = scrollRef.current;
+            if (!scroller) return;
+            const offset = element.getBoundingClientRect().top - scroller.getBoundingClientRect().top;
+            scroller.scrollTo({ top: scroller.scrollTop + offset });
+        }
+    };
 }
 
 // picking a filter inside a popover reads as an outside interaction
@@ -120,10 +135,7 @@ export function SearchDialog({
     const handles = useMemo<SearchDialogHandles>(
         () => ({
             container,
-            scroll: {
-                toTop: () => scrollRef.current?.scrollTo({ top: 0 }),
-                toBottom: () => scrollRef.current?.scrollTo({ top: scrollRef.current.scrollHeight })
-            }
+            scroll: listScroll(scrollRef)
         }),
         [container]
     );

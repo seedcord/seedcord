@@ -15,8 +15,11 @@ async function tempFolder(): Promise<AsyncDisposable & { url: URL }> {
     };
 }
 
+// each document's vector carries its first character code
 const vectorsFor = (documents: readonly string[]): Promise<number[][]> =>
-    Promise.resolve(documents.map((_, index) => [index, 1]));
+    Promise.resolve(documents.map((document) => [document.charCodeAt(0), 1]));
+
+const decoded = (bytes: Uint8Array): number[] => [...new Float32Array(new Uint8Array(bytes).buffer)];
 
 describe('EmbeddingCache', () => {
     it('embeds once, then reuses the vectors for the same documents', async () => {
@@ -28,21 +31,20 @@ describe('EmbeddingCache', () => {
         const again = await cache.vectors(['a', 'b'], embed);
 
         expect(embed).toHaveBeenCalledOnce();
-        expect(first.reused).toBe(false);
-        expect(again.reused).toBe(true);
-        expect([...again.bytes]).toEqual([...first.bytes]);
+        expect([first.embedded, again.embedded]).toEqual([2, 0]);
+        expect(decoded(again.bytes)).toEqual([97, 1, 98, 1]);
     });
 
-    it('embeds again once a document changes, and drops the vectors for the old list', async () => {
+    it('embeds only the documents that changed, and deletes the ones that are gone', async () => {
         await using folder = await tempFolder();
         const embed = vi.fn(vectorsFor);
         const cache = new EmbeddingCache(folder.url);
 
         await cache.vectors(['a', 'b'], embed);
-        await cache.vectors(['a', 'c'], embed);
-        const old = await cache.vectors(['a', 'b'], embed);
+        const edited = await cache.vectors(['a', 'c'], embed);
+        await cache.vectors(['a', 'b'], embed);
 
-        expect(embed).toHaveBeenCalledTimes(3);
-        expect(old.reused).toBe(false);
+        expect(embed.mock.calls).toEqual([[['a', 'b']], [['c']], [['b']]]);
+        expect(decoded(edited.bytes)).toEqual([97, 1, 99, 1]);
     });
 });

@@ -1,6 +1,6 @@
 import { createHash } from 'node:crypto';
 import { existsSync } from 'node:fs';
-import { mkdir, readFile, rm, writeFile } from 'node:fs/promises';
+import { mkdir, readdir, readFile, rm, writeFile } from 'node:fs/promises';
 
 import { embedding } from '@seedcord/docs-search';
 
@@ -8,22 +8,38 @@ type Embed = (documents: readonly string[]) => Promise<number[][]>;
 
 interface Vectors {
     bytes: Uint8Array;
-    reused: boolean;
+    embedded: number;
 }
+
+const fileName = (document: string): string =>
+    `${createHash('sha256').update(embedding.model).update('\0').update(document).digest('hex')}.bin`;
 
 export class EmbeddingCache {
     constructor(private readonly folder: URL) {}
 
     async vectors(documents: readonly string[], embed: Embed): Promise<Vectors> {
-        const key = createHash('sha256').update(embedding.model).update(JSON.stringify(documents)).digest('hex');
-        const file = new URL(`${key}.bin`, this.folder);
-        if (existsSync(file)) return { bytes: await readFile(file), reused: true };
-
-        const embedded = await embed(documents);
-        const bytes = new Uint8Array(new Float32Array(embedded.flat()).buffer);
-        await rm(this.folder, { recursive: true, force: true });
         await mkdir(this.folder, { recursive: true });
-        await writeFile(file, bytes);
-        return { bytes, reused: false };
+        const entries = documents.map((document) => ({ document, name: fileName(document) }));
+        const missing = entries.filter(({ name }) => !existsSync(this.file(name)));
+
+        const fresh = missing.length > 0 ? await embed(missing.map(({ document }) => document)) : [];
+        for (const [index, { name }] of missing.entries()) {
+            const vector = fresh[index];
+            if (vector === undefined)
+                throw new Error(`embed returned ${fresh.length} vectors for ${missing.length} texts`);
+            await writeFile(this.file(name), new Float32Array(vector));
+        }
+
+        const keep = new Set(entries.map(({ name }) => name));
+        for (const name of await readdir(this.folder)) {
+            if (!keep.has(name)) await rm(this.file(name));
+        }
+
+        const bytes = Buffer.concat(await Promise.all(entries.map(({ name }) => readFile(this.file(name)))));
+        return { bytes, embedded: missing.length };
+    }
+
+    private file(name: string): URL {
+        return new URL(name, this.folder);
     }
 }
