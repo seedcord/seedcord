@@ -1,4 +1,4 @@
-export const DEV_PACKAGES = [
+const DEV_PACKAGES = [
     '@seedcord/eslint-config',
     '@seedcord/tsconfig',
     '@types/node',
@@ -13,7 +13,7 @@ export const DEV_PACKAGES = [
 const EDGE_DEV_PACKAGES = ['cf@1.0.0-beta.26', '@cloudflare/vite-plugin@2.0.0-beta.v.8'];
 const SHARED_PACKAGES = ['@discordjs/builders', 'discord-api-types', 'envapt'];
 
-export interface DependencyManifest {
+interface DependencyManifest {
     dependencies: Record<string, string>;
     devDependencies: Record<string, string>;
 }
