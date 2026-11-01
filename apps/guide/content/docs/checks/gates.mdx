@@ -62,12 +62,13 @@ A second `@Gated` on the same class adds its gates to the list. TypeScript appli
 | [`Cooldown(duration)`](ref:core/Cooldown) | uses remain in the current window |
 | [`Nsfw()`](ref:gateway/Nsfw) | the channel is age-restricted. Gateway interaction handlers only, modals excluded |
 | [`IgnoreBots`](ref:gateway/IgnoreBots) | the actor is a person. Gateway only, and event handlers only |
+| [`MentionPrefix`](ref:gateway/MentionPrefix) | the message starts with a mention of your bot, like `@bot ping`. `messageCreate` and `messageUpdate` handlers only |
 
 {/* prettier-ignore-end */}
 
 <Callout type="transport" only="gateway">
 
-`Nsfw` and `IgnoreBots` ship in `@seedcord/gateway` alone. `Nsfw` reads the discord.js channel object on the interaction, and `IgnoreBots` attaches to event handlers, which an http bot doesn't have.
+`Nsfw`, `IgnoreBots`, and `MentionPrefix` ship in `@seedcord/gateway` alone. `Nsfw` reads the discord.js channel object on the interaction. `IgnoreBots` and `MentionPrefix` attach to event handlers, which an http bot doesn't have.
 
 </Callout>
 

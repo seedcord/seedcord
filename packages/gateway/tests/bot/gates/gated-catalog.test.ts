@@ -15,7 +15,7 @@ import { PermissionFlagsBits } from 'discord.js';
 import { describe, expect, it } from 'vitest';
 
 import { Gated } from '#bDecorators/Gated';
-import { IgnoreBots, Nsfw } from '#bot/gates';
+import { IgnoreBots, MentionPrefix, Nsfw } from '#bot/gates';
 import { EventHandler } from '#handlers/event';
 import { AutocompleteHandler } from '#handlers/interaction/AutocompleteHandler';
 import { ModalHandler } from '#handlers/interaction/components';
@@ -165,6 +165,23 @@ class RejectsIgnoreBotsSlashHandler extends SlashHandler<'catalogprobe'> {
     }
 }
 void RejectsIgnoreBotsSlashHandler;
+
+@Gated(IgnoreBots, MentionPrefix)
+class AttachesMentionPrefixMessageHandler extends EventHandler<Events.MessageCreate | Events.MessageUpdate> {
+    async execute(): Promise<void> {
+        await Promise.resolve();
+    }
+}
+void AttachesMentionPrefixMessageHandler;
+
+// @ts-expect-error guildMemberAdd doesn't carry a message
+@Gated(MentionPrefix)
+class RejectsMentionPrefixMemberHandler extends EventHandler<Events.GuildMemberAdd> {
+    async execute(): Promise<void> {
+        await Promise.resolve();
+    }
+}
+void RejectsMentionPrefixMemberHandler;
 
 @Gated(and(GuildOnly(), RequirePermissions([PermissionFlagsBits.BanMembers])))
 class AcceptsAgnosticRequirePermissions extends SlashHandler<'catalogprobe'> {
