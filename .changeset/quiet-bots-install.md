@@ -2,4 +2,4 @@
 'create-seedcord': patch
 ---
 
-Fixed declined dependency installation leaving the generated `package.json` without its dependency packages.
+Fixed the generated `package.json` missing its dependencies when you skipped the install step.
