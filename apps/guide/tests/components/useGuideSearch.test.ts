@@ -150,19 +150,26 @@ describe('useGuideSearch', () => {
         expect(signals.get('cooldown')?.aborted).toBe(true);
     });
 
-    it('says why related results failed', async () => {
+    it('says why related results failed, and asks again on the next open', async () => {
         const { answer } = serving();
-        const { result, rerender } = renderHook(({ typed }) => useGuideSearch(typed, true), {
-            initialProps: { typed: 'cooldown' }
+        const { result, rerender } = renderHook(({ typed, open }) => useGuideSearch(typed, open), {
+            initialProps: { typed: 'cooldown', open: true }
         });
         await pauseTyping();
         await answer('cooldown', new Response(null, { status: 429, headers: { 'retry-after': '60' } }));
         expect(noticeOf(result.current, 'Related')).toBe('Too many searches. Try again in 1 minute.');
 
-        rerender({ typed: 'kysely' });
+        rerender({ typed: 'kysely', open: true });
         await pauseTyping();
         await answer('kysely', new TypeError('Failed to fetch'));
         expect(noticeOf(result.current, 'Related')).toBe("Related results can't load without a network connection.");
+
+        rerender({ typed: 'kysely', open: false });
+        rerender({ typed: 'kysely', open: true });
+        expect(groupOf(result.current, 'Related')?.status).toBe('pending');
+        await pauseTyping();
+        await answer('kysely');
+        expect(shown(result.current)).toEqual([{ label: 'Related', status: 'done', paths: ['/plugins/kysely'] }]);
     });
 
     it('loads the guide sections once the dialog opens, and again on the next open after a failure', async () => {

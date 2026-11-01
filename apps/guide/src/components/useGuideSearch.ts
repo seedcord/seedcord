@@ -26,29 +26,29 @@ type GroupState = State<keyof States>;
 
 export type ResultGroup = { label: string } & GroupState;
 
-interface Answer {
-    question: string;
-    state: State<'failed' | 'done'>;
+type Loaded = TaggedUnion<'status', Pick<States, 'pending' | 'failed'> & { ready: { matches: GuideMatches } }>;
+
+interface Settled<Value extends { status: string }> {
+    duringOpen: number;
+    state: Value;
 }
 
-type Loaded = TaggedUnion<'status', Pick<States, 'pending' | 'failed'> & { ready: { matches: GuideMatches } }>;
+interface Answer extends Settled<State<'failed' | 'done'>> {
+    question: string;
+}
+
+// a reopened dialog retries whatever failed during an earlier open
+const failedBefore = (settled: Settled<{ status: string }>, opens: number): boolean =>
+    settled.state.status === 'failed' && settled.duringOpen !== opens;
 
 const PENDING = { status: 'pending' } as const;
 const NOT_ASKED: GroupState = { status: 'done', results: NO_RESULTS };
 
-interface Failing {
-    results: string;
-    retry: string;
-}
-
-const RELATED: Failing = { results: 'Related results', retry: 'Try again in a minute.' };
-const MATCHES: Failing = { results: 'Matches', retry: 'Close and reopen search to try again.' };
-
-function noticeFor(error: unknown, { results, retry }: Failing): string {
+function noticeFor(error: unknown, results: string): string {
     if (error instanceof TooManySearches) return error.message;
     // fetch rejects with a TypeError when the request never reaches the server
     if (error instanceof TypeError) return `${results} can't load without a network connection.`;
-    return `${results} are unavailable right now. ${retry}`;
+    return `${results} are unavailable right now. Close and reopen search to try again.`;
 }
 
 function matchesState(typed: string, loaded: Loaded): GroupState {
@@ -56,9 +56,9 @@ function matchesState(typed: string, loaded: Loaded): GroupState {
     return loaded.status === 'ready' ? { status: 'done', results: loaded.matches.match(typed) } : loaded;
 }
 
-function relatedState(question: string | undefined, answer: Answer | null): GroupState {
+function relatedState(question: string | undefined, answer: Answer | null, opens: number): GroupState {
     if (question === undefined) return NOT_ASKED;
-    return answer?.question === question ? answer.state : PENDING;
+    return answer?.question === question && !failedBefore(answer, opens) ? answer.state : PENDING;
 }
 
 function withoutShown(state: GroupState, shown: ReadonlySet<string>): GroupState {
@@ -72,49 +72,54 @@ export function emptyMessage(typed: string, groups: readonly ResultGroup[]): str
     return groups.length === 0 ? `No matches for “${query}”.` : undefined;
 }
 
-function useMatches(open: boolean): Loaded {
-    const [loaded, setLoaded] = useState<Loaded>(PENDING);
-    const [wasOpen, setWasOpen] = useState(open);
-    if (open !== wasOpen) {
-        setWasOpen(open);
-        if (open && loaded.status === 'failed') setLoaded(PENDING);
-    }
-    const ready = loaded.status === 'ready';
+function useOpens(open: boolean): number {
+    const [seen, setSeen] = useState({ open, opens: 0 });
+    if (seen.open !== open) setSeen({ open, opens: open ? seen.opens + 1 : seen.opens });
+    return seen.opens;
+}
+
+function useMatches(open: boolean, opens: number): Loaded {
+    const [loaded, setLoaded] = useState<Settled<Loaded>>({ duringOpen: opens, state: PENDING });
+    const ready = loaded.state.status === 'ready';
     useEffect(() => {
         if (!open || ready) return undefined;
         let cancelled = false;
         loadMatches().then(
             (matches) => {
-                if (!cancelled) setLoaded({ status: 'ready', matches });
+                if (!cancelled) setLoaded({ duringOpen: opens, state: { status: 'ready', matches } });
             },
             (error: unknown) => {
-                if (!cancelled) setLoaded({ status: 'failed', notice: noticeFor(error, MATCHES) });
+                if (cancelled) return;
+                setLoaded({ duringOpen: opens, state: { status: 'failed', notice: noticeFor(error, 'Matches') } });
             }
         );
         return () => {
             cancelled = true;
         };
-    }, [open, ready]);
-    return loaded;
+    }, [open, opens, ready]);
+    return failedBefore(loaded, opens) ? PENDING : loaded.state;
 }
 
 export function useGuideSearch(typed: string, open: boolean): ResultGroup[] {
-    const loaded = useMatches(open);
+    const opens = useOpens(open);
+    const loaded = useMatches(open, opens);
     const [answer, setAnswer] = useState<Answer | null>(null);
     const question = parseQuestion(typed);
 
     useEffect(() => {
-        if (question === undefined) return undefined;
+        if (question === undefined || !open) return undefined;
 
         const replaced = new AbortController();
         const timer = setTimeout(() => {
             search.search(question, replaced.signal).then(
                 (results) => {
-                    if (!replaced.signal.aborted) setAnswer({ question, state: { status: 'done', results } });
+                    if (replaced.signal.aborted) return;
+                    setAnswer({ question, duringOpen: opens, state: { status: 'done', results } });
                 },
                 (error: unknown) => {
                     if (replaced.signal.aborted) return;
-                    setAnswer({ question, state: { status: 'failed', notice: noticeFor(error, RELATED) } });
+                    const state = { status: 'failed', notice: noticeFor(error, 'Related results') } as const;
+                    setAnswer({ question, duringOpen: opens, state });
                 }
             );
         }, TYPING_PAUSE_MS);
@@ -122,9 +127,9 @@ export function useGuideSearch(typed: string, open: boolean): ResultGroup[] {
             replaced.abort();
             clearTimeout(timer);
         };
-    }, [question]);
+    }, [question, open, opens]);
 
-    const related = relatedState(question, answer);
+    const related = relatedState(question, answer, opens);
     const matched = useMemo(() => matchesState(typed, loaded), [typed, loaded]);
 
     return useMemo(() => {

@@ -83,8 +83,10 @@ export class GuideMatches {
         if (typed.length === 0) return [];
 
         return this.sections
-            .filter((section) => section.startsTitle(typed))
-            .map((section) => ({ section, wholeWords: section.wholeWords(typed) }))
+            .reduce<{ section: Section; wholeWords: number }[]>((scored, section) => {
+                if (section.startsTitle(typed)) scored.push({ section, wholeWords: section.wholeWords(typed) });
+                return scored;
+            }, [])
             .sort((a, b) => Number(b.section.isPage) - Number(a.section.isPage) || b.wholeWords - a.wholeWords)
             .slice(0, TITLE_RESULTS)
             .map(({ section }) => section);
@@ -92,10 +94,11 @@ export class GuideMatches {
 
     private matchText(phrase: string, titled: readonly Section[]): GuideResult[] {
         const terms = [phrase] as const;
+        const shown = new Set(titled);
         const found: GuideResult[] = [];
         for (const section of this.sections) {
-            if (titled.length + found.length === MATCH_RESULTS) break;
-            const excerpt = titled.includes(section) ? undefined : section.findExcerpt(phrase);
+            if (shown.size + found.length === MATCH_RESULTS) break;
+            const excerpt = shown.has(section) ? undefined : section.findExcerpt(phrase);
             if (excerpt !== undefined) found.push(guideResult(section.hit, { by: 'text', excerpt, terms }));
         }
         return found;
