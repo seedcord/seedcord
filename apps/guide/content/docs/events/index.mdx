@@ -92,7 +92,7 @@ export const seedcord = new Seedcord({
 
 If your bot has no event handlers, set `events: { path: null }`. seedcord then skips the scan.
 
-## Intents
+## Intents, and a handler that never runs
 
 Discord sends an event to your bot only if the bot asked for it with an intent. You list intents in `clientOptions.intents`. The `bot.ts` sample lists `GuildMembers` because the `Welcome` handler at the top of the page listens for member joins. Without that intent, `Welcome` never runs.
 

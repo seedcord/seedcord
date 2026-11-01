@@ -125,7 +125,7 @@ The Administrator rule from [permissions](/checks/permissions) applies here too.
 
 ## Replacing the refusal card
 
-The default card says which permissions are missing. When your command needs its own wording, like "You can't ban a moderator", pass your own card. Each of the two refusals has its own override, and each takes a `Notice` subclass.
+The default card says which permissions are missing. When your command needs its own wording, like "You can't ban a moderator", pass your own `Notice`. Each of the two refusals has its own override, and each takes a `Notice` subclass.
 
 - `missingNotice` replaces the refusal for missing permissions.
 - `dangerousNotice` replaces the `inverse: true` refusal for permissions the subject holds.

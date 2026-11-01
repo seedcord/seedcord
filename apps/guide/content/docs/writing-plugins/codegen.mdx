@@ -1,6 +1,6 @@
 ---
 title: Writing types from codegen
-description: Give your plugin's methods exact types for what it reads from the bot's project, like the keys in its locale files, with a codegen() method.
+description: Give your plugin's methods autocomplete and exact types for what it reads from the bot's project, like locale file keys, using codegen().
 ---
 
 Say your plugin translates messages. A bot calls `t('greet')`, and your plugin looks up `greet` in the bot's `locales/en.json`. You write the plugin before any bot exists, so its types can't list which keys a bot's locale files will hold. Without codegen, `t()` takes any `string`. The bot's author gets no suggestions, and a typo like `t('gret')` only shows up when a user sees the wrong message.

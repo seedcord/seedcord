@@ -1,6 +1,6 @@
 ---
 title: Your own gates
-description: Write a gate of your own with defineGate() when the shipped ones don't fit your rule, and limit it to the handlers it fits.
+description: Write your own gate with defineGate() when the shipped ones don't fit your rule, and limit it to the handlers it fits.
 ---
 
 Some checks belong to your bot alone, like keeping a command to one channel or requiring a linked account. The shipped gates cover owners, roles, permissions, and cooldowns, so a check like that would otherwise go back to the top of every handler that needs it. [`defineGate`](ref:core/defineGate) turns that check into a gate you attach with the rest.
@@ -198,6 +198,6 @@ Gates run one after another, so the `await bans.has` above delays every gate beh
 
 ## What to throw
 
-If you throw a [`Notice`](ref:core/Notice), seedcord replies with the card its `render()` builds. If you throw a [`Silence`](ref:core/Silence), seedcord drops the request without replying, which suits an event handler. [Throwing](/replying/throwing) has both in full, plus what a check throwing anything else produces.
+If you throw a [`Notice`](ref:core/Notice), seedcord replies with what its `render()` builds. If you throw a [`Silence`](ref:core/Silence), seedcord drops the request without replying, which suits an event handler. [Throwing](/replying/throwing) has both in full, plus what a check throwing anything else produces.
 
 If you plan to pass a gate to an [`or`](ref:core/or), set `summary` in your `Notice`'s constructor, as in `this.summary = 'run it in #bots'`. When every arm refuses, the `or` [lists each arm's summary](/checks/combining#the-refusal-when-every-arm-refuses). If one arm doesn't set a summary, the `or` shows a generic refusal.

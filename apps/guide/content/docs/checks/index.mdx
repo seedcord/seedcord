@@ -7,7 +7,7 @@ Most commands need a few things settled before they run. Is the caller in a serv
 
 ## What a dispatch is
 
-A _dispatch_ is one interaction arriving and everything seedcord runs for it, from building your handler to the last `after()` call. Every click, command, and modal submit is its own dispatch. Each one runs in this order.
+When someone runs a command, clicks a button, or submits a modal, seedcord runs a series of steps, from your handler's constructor to the last `after()` call. That run is a _dispatch_. Each one runs in this order.
 
 ```txt output
 an interaction arrives

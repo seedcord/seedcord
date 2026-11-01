@@ -1,6 +1,6 @@
 ---
 title: Replying
-description: Answer an interaction from its handler with reply(), defer(), edit(), and followUp(), and build each reply from components.
+description: Answer a slash command, button, or other interaction with reply(), defer(), edit(), and followUp(), and build each reply from components.
 ---
 
 Discord gives your bot three seconds to answer an interaction. seedcord puts the methods for answering on the handler. [`this.reply()`](ref:gateway/RepliableHandler.reply) sends the first response. [`this.defer()`](ref:gateway/RepliableHandler.defer) shows a thinking placeholder while you work, then [`this.edit()`](ref:gateway/RepliableHandler.edit) fills it in. [`this.followUp()`](ref:gateway/RepliableHandler.followUp) sends another message after either one.
@@ -39,7 +39,7 @@ That holds while every answer goes through the handler. `this.event.reply()` rea
 
 ## A reply is a list of components
 
-A string gives you one block of text. A heading, a card, or a row of buttons goes in `components`, one entry per top-level component.
+seedcord sends every reply with Discord's [Components V2](https://docs.discord.com/developers/components/overview) flag, which rules out `content` and `embeds`. A string gives you one block of text. Anything more, like a container or a row of buttons, goes in `components`, one entry per top-level component.
 
 ```ts twoslash hovers title="src/handlers/Ban.ts"
 import {
@@ -70,7 +70,7 @@ export class Ban extends SlashHandler<'ban'> {
 }
 ```
 
-[`BuilderComponent`](ref:core/BuilderComponent) wraps a discord.js builder, and `.component` gives you the builder to put in `components`. A card that only `Ban` sends can stay in its file. Move `BanCard` to a file of its own once a second handler sends one, so rewording it takes one edit.
+[`BuilderComponent`](ref:core/BuilderComponent) wraps a discord.js builder, and `.component` gives you the builder to put in `components`. A component that only `Ban` sends can stay in its file. Move `BanCard` to a file of its own once a second handler sends one, so rewording it takes one edit.
 
 `files` uploads bytes alongside the components, covered in [Files and attachments](/replying/files). The whole shape is [`ReplyResponse`](ref:types/ReplyResponse). Put it on a helper's return type when the helper builds a reply, so a wrong field fails inside the helper.
 

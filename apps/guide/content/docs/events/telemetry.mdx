@@ -111,7 +111,7 @@ A dispatch can be slow because one Discord call was slow. `responseAttempted` ti
 
 `messageId` carries an id for `reply`, `update`, `followUp`, and `edit`. Every other method reports `null`, as does a failed write.
 
-### Catching a failed write
+### Catching a failed reply or other write
 
 Your handler sees its own failed write as a throw. seedcord also sends writes of its own, like the error card after a throw. Those don't run through your handler. When any write throws, seedcord publishes `outcome` `failed` with the throw on `error`. Check `outcome` first, because only the failed shape carries an `error` field.
 

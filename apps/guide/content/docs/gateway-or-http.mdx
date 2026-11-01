@@ -29,7 +29,7 @@ The URL can point at any of these:
 
 Some bots act without anyone running a command. Welcoming a member who joins needs an event that arrives over the websocket, and so does logging a deleted message. A bot that needs events like these is a gateway bot.
 
-A bot that only answers commands, buttons, and modals runs on either one. For those bots, the deciding question is where the bot runs. Gateway needs a process that is up all the time. Http needs a URL Discord can reach. It also fits a host that starts your code for each request, because a websocket can't stay open there.
+A bot that only answers commands, buttons, and modals runs on either one. For those bots, the deciding question is where the bot runs. Gateway needs a process that is up all the time. Http needs a URL Discord can reach. It also fits a serverless host that starts your code for each request, because a websocket can't stay open there.
 
 Gateway also fits a bot that reads server state often, because discord.js serves those reads from its cache. On http, each read is a REST call.
 

@@ -1,6 +1,6 @@
 ---
 title: A Node or Bun server
-description: Build your bot into one folder you copy to a VPS or a container and start with node, or compile it into a single Bun binary that needs no node_modules.
+description: Deploy your bot to a VPS or a container by building one folder you copy over and start with node, or a single Bun binary with no node_modules.
 ---
 
 A host like a VPS, a container, or Railway runs one process for you. You give it a folder and one command that starts it, and that folder shouldn't carry your `src`, your dev dependencies, or the seedcord CLI.
@@ -43,7 +43,7 @@ seedcord v0.21.5  build
   compile  bun build --compile dist/index.mjs --outfile my-bot
 ```
 
-Each `✔︎` line is one step. The three that do the work:
+Each `✔︎` line of the build output is one step. The three that do the work:
 
 - **load bot** imports your `instance` file and constructs the bot, the same way `seedcord dev` does. An env value your config reads at construction has to exist in CI too, or the build stops here.
 - **type check** runs `tsc --noEmit` against the `tsconfig.json` beside `seedcord.config.ts`, from your project's own `typescript`. [`build.tsconfig`](/build/config) points it at another file.

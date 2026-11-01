@@ -1,6 +1,6 @@
 ---
 title: Migrations
-description: Create and change your Postgres tables with Kysely migrations in the kysely plugin, and control when they run.
+description: Create and change your Postgres tables with Kysely migrations, so every database gets the same tables, and control when they run.
 ---
 
 Your bot's tables have to exist on every database it uses, like your laptop, a teammate's machine, and production. If you create them by running `CREATE TABLE` yourself, each database needs the same statements in the same order. If you miss one, your bot fails at the first query that touches a table or column that database doesn't have.
@@ -30,7 +30,7 @@ export async function down(db: Kysely<any>): Promise<void> {
 
 `up` creates the `users` table, while `down` drops it. Both take `Kysely<any>`, because each migration runs against whatever tables the migrations before it created. [Your schema](/plugins/kysely-schema) describes the tables as they are once every migration has run.
 
-## Where to put the files
+## Where to put the files and how to order them
 
 The plugin reads one folder, the `dir` under `migrations`, and its subfolders too. A relative `dir` is relative to `root` and has to point inside it, as [the folder rules](/plugins) describe. With `root: './src'`, `'./migrations'` means `src/migrations`.
 

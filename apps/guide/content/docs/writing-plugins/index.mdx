@@ -136,7 +136,7 @@ When you publish a plugin, its base decides which bots can attach it. One on the
 
 ## What the constructor takes
 
-Most plugins need settings, like a connection string or a label. The constructor's first parameter is the bot, which seedcord passes in when you call `attach`. The samples call it `host`. Type it as `CoreBase` and pass it to `super`. Every parameter after it is yours, and you pass their values to `attach` after the plugin class, where TypeScript checks their types. If you type the first parameter as a transport's `Core`, the `attach` call fails to compile. [Typing what you ship](/writing-plugins/typing#why-the-first-parameter-is-corebase) explains why.
+Most plugins need options, like a connection string or a label. The constructor's first parameter is the bot, which seedcord passes in when you call `attach`. The samples call it `host`. Type it as `CoreBase` and pass it to `super`. Every parameter after it is yours, and you pass their values to `attach` after the plugin class, where TypeScript checks their types. If you type the first parameter as a transport's `Core`, the `attach` call fails to compile. [Typing what you ship](/writing-plugins/typing#why-the-first-parameter-is-corebase) explains why.
 
 ```ts twoslash
 import { Plugin } from '@seedcord/gateway';

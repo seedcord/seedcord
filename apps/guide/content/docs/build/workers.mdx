@@ -120,6 +120,8 @@ const environment = env.ENV;
 
 On your machine, a declared secret takes its value from a `.dev.vars` file, or from your `.env` files when there isn't one. [On Cloudflare Workers](/build/env#on-cloudflare-workers) has that order. The scaffold's `.gitignore` already leaves out `.env*` and `.dev.vars*`.
 
+### A KV or D1 binding is undefined in codegen
+
 [`seedcord codegen`](/tooling/codegen#codegen-constructs-your-bot), `seedcord commands`, and the build's `load bot` step load your bot in node, where `env` holds only the `text`, `json`, and `secret` bindings. A KV namespace, a D1 database, or any other resource binding is `undefined` there, while workerd under `seedcord dev` gives you the real one. Read a resource binding inside a handler, and leave it out of anything `bot.ts` runs while it loads.
 
 ### Values per environment

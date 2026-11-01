@@ -1,7 +1,9 @@
 ---
 title: When a custom id goes stale
-description: Handle a click on a component your bot sent before its custom id changed shape, and choose what that user sees.
+description: Learn why old buttons and select menus show an Outdated card after a deploy, and choose what your user sees when one does.
 ---
+
+A deploy can leave the buttons and select menus on your bot's older messages broken. Clicking one shows an **Outdated** card.
 
 A message with a button or a select menu on it stays in the channel until someone deletes it. Your shape changes on the next deploy. Decoded against the new shape, an old button's values would fill the wrong fields, and your handler would use them.
 
@@ -71,7 +73,7 @@ Something went wrong. Please try again.
 
 ## Replacing both cards
 
-Both cards above use seedcord's wording. Replace them when your bot needs its own, like a card naming the command that sends a fresh menu.
+Both cards above use seedcord's wording. Replace them when your bot needs its own, like a refusal naming the command that sends a fresh menu.
 
 The defaults are `Notice` subclasses seedcord registers when it loads. [`setCustomIdErrors`](ref:custom-id/setCustomIdErrors) replaces them with yours.
 

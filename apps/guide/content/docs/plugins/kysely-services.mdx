@@ -53,6 +53,8 @@ Here's what each part of `Users.ts` does.
 
 The plugin builds your services itself, after it has connected and run your startup migrations, so `this.db` has a working connection by the time any method runs. It imports every code file under the `dir` you gave the [kysely plugin](/plugins/kysely), including subfolders, in order of path. That covers `.ts`, `.tsx`, `.mts`, `.js`, `.jsx`, and `.mjs`, and skips type declarations, dotfiles, dot-folders, and `node_modules`. For each exported class that extends `KyselyService` and carries the decorator, it constructs the class. That constructor call adds the instance to the plugin's `services` map under its key.
 
+### When a service reads undefined
+
 <Callout type="warning">
 
 If a class isn't exported or has no [`@RegisterKyselyService`](ref:plugin-kysely-postgres/RegisterKyselyService), the plugin skips it without throwing or logging anything, and `services.users` reads `undefined`. Codegen skips the class too, so once it has run, `services.users` fails to compile.

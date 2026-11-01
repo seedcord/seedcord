@@ -1,6 +1,6 @@
 ---
 title: Handling messages
-description: Read the text of messages in a gateway event handler, and turn on the Message Content intent that Discord requires for it.
+description: Read what people type in chat, like a !ping prefix command, in a gateway event handler, and turn on the Message Content intent Discord requires.
 ---
 
 Most bots start by reacting to what people type. With the `GuildMessages` intent, a `messageCreate` handler runs for every message in every server your bot is in. Reading what that message says is a separate permission Discord controls. If `@RegisterEvent` and `this.event` are new to you, start with [Your first event handler](/events).

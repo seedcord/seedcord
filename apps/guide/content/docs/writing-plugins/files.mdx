@@ -1,6 +1,6 @@
 ---
 title: Loading a bot's files
-description: Load a folder of the bot's code or data from a plugin with importFiles and readFiles, in dev, in tests, and in a built bot.
+description: Load a folder of the bot's classes or data files from a plugin with importFiles and readFiles, in dev, in tests, and in a built bot.
 ---
 
 Say your plugin takes a folder, like `./jobs` or `./locales`, and loads what's in it. With plain `fs`, a relative path starts at the working directory, which differs between `seedcord dev`, a built bot, and a test. A built bot ships `dist`, and the source folder isn't in it.

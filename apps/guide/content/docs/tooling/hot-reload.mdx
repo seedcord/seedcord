@@ -15,13 +15,13 @@ A saved file reloads when it holds one of these.
 - a bus subscriber
 - files a plugin loads itself, if the plugin implements `onHmr`. Saving the plugin's own file asks for a restart. [Plugins and hot reload](/writing-plugins/hot-reload) has both
 
-Any other file, like a card or a helper, reloads through the files that import it. A file that none of those groups imports has nothing to reload. Reloading works only in the `development` and `test` modes, so `ENV=staging seedcord dev` reloads nothing.
+Any other file, like a component or a helper, reloads through the files that import it. A file that none of those groups imports has nothing to reload. Reloading works only in the `development` and `test` modes, so `ENV=staging seedcord dev` reloads nothing.
 
 ## How it works
 
 Node can't unload a module once it has imported it. A plain watcher like `node --watch`, `nodemon`, or `tsx watch` works around that by restarting the process, which for a gateway bot means logging in to Discord again, and Discord limits how many [sessions](https://discord.com/developers/docs/events/gateway#session-start-limit-object) a bot may start per day. `seedcord dev` runs your bot inside Vite's module runner instead, which keeps its own graph of the modules it evaluated. seedcord removes the saved file from that graph and imports it again, inside the process that's already running.
 
-The graph also records which modules imported which, so seedcord reloads the modules that imported your saved file, and the ones that imported those. Saving a card every handler builds therefore updates all of them. Vite's watcher reports each save, its transform step reads your TypeScript and your tsconfig paths, and its message channel carries what the CLI and your bot say to each other, like the restart prompt below.
+The graph also records which modules imported which, so seedcord reloads the modules that imported your saved file, and the ones that imported those. Saving a component every handler builds therefore updates all of them. Vite's watcher reports each save, its transform step reads your TypeScript and your tsconfig paths, and its message channel carries what the CLI and your bot say to each other, like the restart prompt below.
 
 A few files can't be swapped this way, because something read them once when the bot started.
 

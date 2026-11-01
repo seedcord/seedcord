@@ -152,7 +152,7 @@ Every middleware runs _before_ the first gate, which is what makes this read saf
 
 ### Reading it from a `Notice`
 
-[`RenderContext`](ref:types/RenderContext) carries the bag too, which matters most when seedcord builds the reply itself, like the one for an unknown fault. seedcord constructs that `Notice` with only the fault's uuid, so `render(ctx)` is the one place your code reads the dispatch.
+[`RenderContext`](ref:types/RenderContext) carries the bag too, so a `Notice` can read the locale or any other value while it renders. That matters most when seedcord builds the reply itself, like the one for an unknown fault. seedcord constructs that `Notice` with only the fault's uuid, so `render(ctx)` is the one place your code reads the dispatch.
 
 ```ts twoslash title="src/errors/TranslatedNotice.ts"
 import { Notice } from '@seedcord/gateway';

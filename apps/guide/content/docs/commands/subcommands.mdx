@@ -54,7 +54,7 @@ You put [`@RegisterCommand`](ref:core/RegisterCommand) on the parent alone, sinc
 
 ## The route
 
-Discord shows this as `/role add`. seedcord flattens it to `role/add`. You write that string on both the decorator and the generic, so a mismatch is a compile error.
+Discord shows this as `/role add`. seedcord flattens it to the route string `role/add`. You write that string on both the decorator and the generic, so a mismatch is a compile error.
 
 ```ts twoslash hovers title="src/handlers/AddRole.ts"
 import { SlashHandler, SlashRoute } from '@seedcord/gateway';

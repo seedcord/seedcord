@@ -5,7 +5,7 @@ description: Reload the files your plugin loads when you save them under seedcor
 
 Under [`seedcord dev`](/tooling/dev), a save swaps the file into the running bot. A plugin that loaded the file itself, like a service class from its folder, keeps the old copy, because seedcord has no record that the plugin read that file. Restarting for every edit costs the connection you were trying to keep.
 
-## What reaches onHmr
+## What reaches onHmr when a file is saved
 
 Every save sends your plugin an [`HmrUpdateEvent`](ref:types/HmrUpdateEvent) through [`onHmr`](ref:core/Plugin.onHmr). `file` is the saved path, and `type` is `create`, `createDir`, `update`, `delete`, or `deleteDir`. `affectedModules` lists the file and every file that imports it, and `rollback` says whether a failed reload keeps the last working version. The default `onHmr` does nothing, and it never runs outside `seedcord dev`. If your `onHmr` throws, seedcord logs the error and the bot's other reloaders still run.
 
