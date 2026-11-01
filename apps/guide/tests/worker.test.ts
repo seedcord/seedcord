@@ -280,9 +280,9 @@ describe('the guide worker', () => {
 
 describe('the ask endpoint', () => {
     const SECTIONS = [
-        { url: '/components/buttons', tab: 'Components', page: 'Buttons', text: 'buttons' },
+        { path: '/components/buttons', tab: 'Components', page: 'Buttons', text: 'buttons' },
         {
-            url: '/checks/cooldown#the-duration',
+            path: '/checks/cooldown#the-duration',
             tab: 'Checks',
             page: 'Cooldowns',
             heading: 'The duration',

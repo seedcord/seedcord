@@ -1,4 +1,3 @@
-import { matchTerms } from '@seedcord/docs-search';
 import { render, screen } from '@testing-library/react';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 
@@ -12,14 +11,15 @@ const RESULT: GuideResult = {
     page: 'Cooldowns',
     heading: 'Several uses per window',
     url: 'https://seedcord.org/guide/checks/cooldown/#several-uses-per-window',
-    excerpt: '…one window with limit. The window is a sliding window, so each use counts after it happens.'
+    by: 'text',
+    excerpt: '…one window with limit. The window is a sliding window, so each use counts after it happens.',
+    terms: ['a sliding window']
 };
 
 function renderRow(): void {
     render(
         <SearchResultRow
             result={RESULT}
-            terms={matchTerms('a sliding window')}
             isActive={false}
             optionId="row"
             index={0}

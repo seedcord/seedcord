@@ -6,7 +6,7 @@ import { guideHit } from '#src/guideSections';
 import { readJson } from '#src/readAsset';
 
 import type { GuideResult } from '#src/GuideSearch';
-import type { GuideSection } from '#src/guideSections';
+import type { GuideHit, GuideSection } from '#src/guideSections';
 
 const TITLE_RESULTS = 3;
 // five rows with excerpts kept the Related heading in view on a laptop screen
@@ -15,25 +15,14 @@ const MATCH_RESULTS = 5;
 const EXCERPT_LEAD = 40;
 
 interface Section {
-    result: GuideResult;
+    hit: GuideHit;
     isPage: boolean;
     words: string[];
     text: string;
     lowered: string;
 }
 
-// lowercase terms. a title marks each typed word; an excerpt marks the whole phrase
-export interface MatchTerms {
-    title: readonly string[];
-    text: readonly string[];
-}
-
 const searchWords = (text: string): string[] => text.toLowerCase().match(/[\p{L}\p{N}]+/gu) ?? [];
-
-export function matchTerms(input: string): MatchTerms {
-    const phrase = parseQuestion(input)?.toLowerCase();
-    return { title: searchWords(input), text: phrase === undefined ? [] : [phrase] };
-}
 
 const isWordCharacter = (character: string): boolean => searchWords(character).length > 0;
 
@@ -68,7 +57,7 @@ export class GuideMatches {
         this.sections = sections.map((section) => {
             const text = section.text.replaceAll(/\s+/g, ' ');
             return {
-                result: guideResult(guideHit(section)),
+                hit: guideHit(section),
                 isPage: section.heading === undefined,
                 words: searchWords(section.heading ?? section.page),
                 text,
@@ -83,13 +72,14 @@ export class GuideMatches {
     }
 
     match(input: string): GuideResult[] {
-        const { title, text } = matchTerms(input);
-        const titles = this.matchTitles(title);
-        const [phrase] = text;
-        return phrase === undefined ? titles : [...titles, ...this.matchText(phrase, titles)];
+        const words = searchWords(input);
+        const titled = this.matchTitles(words);
+        const titles = titled.map((section) => guideResult(section.hit, { by: 'title', terms: words }));
+        const phrase = parseQuestion(input)?.toLowerCase();
+        return phrase === undefined ? titles : [...titles, ...this.matchText(phrase, titled)];
     }
 
-    private matchTitles(typed: readonly string[]): GuideResult[] {
+    private matchTitles(typed: readonly string[]): Section[] {
         if (typed.length === 0) return [];
 
         return this.sections
@@ -99,15 +89,18 @@ export class GuideMatches {
             })
             .sort((a, b) => Number(b.section.isPage) - Number(a.section.isPage) || b.wholeWords - a.wholeWords)
             .slice(0, TITLE_RESULTS)
-            .map(({ section }) => section.result);
+            .map(({ section }) => section);
     }
 
-    private matchText(phrase: string, titles: readonly GuideResult[]): GuideResult[] {
+    private matchText(phrase: string, titled: readonly Section[]): GuideResult[] {
+        const terms = [phrase] as const;
         const found: GuideResult[] = [];
         for (const section of this.sections) {
-            if (titles.length + found.length === MATCH_RESULTS) break;
-            const at = titles.includes(section.result) ? -1 : findWordStart(section.lowered, phrase);
-            if (at !== -1) found.push({ ...section.result, excerpt: excerpt(section.text, at) });
+            if (titled.length + found.length === MATCH_RESULTS) break;
+            const at = titled.includes(section) ? -1 : findWordStart(section.lowered, phrase);
+            if (at !== -1) {
+                found.push(guideResult(section.hit, { by: 'text', excerpt: excerpt(section.text, at), terms }));
+            }
         }
         return found;
     }

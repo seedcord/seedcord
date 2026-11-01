@@ -81,7 +81,6 @@ function Group({ group, activeIndex, onSelect, onActivate }: RowEvents & { group
                 <SearchResultRow
                     key={result.path}
                     result={result}
-                    terms={group.terms}
                     isActive={index === activeIndex}
                     optionId={optionId(result.path)}
                     index={index}

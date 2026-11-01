@@ -12,7 +12,7 @@ export function allGuideSections(): GuideSection[] {
         if (tab === undefined) throw new Error(`${page.url} is in no tab of the guide's page tree`);
 
         return guideSections({
-            url: withTrailingSlash(page.url),
+            path: withTrailingSlash(page.url),
             tab,
             title: page.data.title,
             description: page.data.description,

@@ -5,7 +5,7 @@ import { ChevronRight, FileText, Hash } from 'lucide-react';
 
 import { MatchedText } from './MatchedText';
 
-import type { GuideResult, MatchTerms } from '@seedcord/docs-search';
+import type { GuideResult } from '@seedcord/docs-search';
 import type { ReactElement } from 'react';
 
 export const ROW_ICON = tw`text-subtle size-4 shrink-0`;
@@ -13,12 +13,10 @@ export const ROW_TEXT = tw`flex min-w-0 flex-1 flex-col gap-0.5`;
 export const ROW_TITLE = tw`truncate font-medium`;
 export const ROW_SUBTITLE = tw`text-subtle truncate text-xs`;
 
-// a row with an excerpt matched on its text
 const UNMARKED: readonly string[] = [];
 
 export interface SearchResultRowProps {
     result: GuideResult;
-    terms: MatchTerms;
     isActive: boolean;
     optionId: string;
     index: number;
@@ -28,7 +26,6 @@ export interface SearchResultRowProps {
 
 export function SearchResultRow({
     result,
-    terms,
     isActive,
     optionId,
     index,
@@ -51,7 +48,7 @@ export function SearchResultRow({
             <div className={cn(ROW_TEXT)}>
                 <MatchedText
                     text={title}
-                    terms={result.excerpt === undefined ? terms.title : UNMARKED}
+                    terms={result.by === 'title' ? result.terms : UNMARKED}
                     className={cn(ROW_TITLE)}
                 />
                 <span className={cn(ROW_SUBTITLE, 'flex items-center gap-1')}>
@@ -63,9 +60,9 @@ export function SearchResultRow({
                         </>
                     )}
                 </span>
-                {result.excerpt === undefined ? null : (
-                    <MatchedText text={result.excerpt} terms={terms.text} className={cn(ROW_SUBTITLE)} />
-                )}
+                {result.by === 'text' ? (
+                    <MatchedText text={result.excerpt} terms={result.terms} className={cn(ROW_SUBTITLE)} />
+                ) : null}
             </div>
         </SearchOption>
     );

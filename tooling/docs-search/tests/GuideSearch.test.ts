@@ -29,7 +29,7 @@ describe('GuideSearch', () => {
         const asked = answering(Response.json([hit]));
 
         expect(await new GuideSearch(ENDPOINT).search('  how do i make a button ', SIGNAL)).toEqual([
-            { ...hit, url: 'https://seedcord.org/guide/components/buttons#one-handler' }
+            { ...hit, url: 'https://seedcord.org/guide/components/buttons#one-handler', by: 'meaning' }
         ]);
         expect(asked).toEqual([`${ENDPOINT}?q=how+do+i+make+a+button`]);
     });

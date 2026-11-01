@@ -5,19 +5,19 @@ import { GuideMatches } from '#src/GuideMatches';
 import type { GuideSection } from '#src/guideSections';
 
 const SECTIONS: GuideSection[] = [
-    { url: '/events/', tab: 'Events', page: 'Event handlers', text: 'Listen to a gateway event.' },
+    { path: '/events/', tab: 'Events', page: 'Event handlers', text: 'Listen to a gateway event.' },
     {
-        url: '/events/#several-handlers-for-one-event',
+        path: '/events/#several-handlers-for-one-event',
         tab: 'Events',
         page: 'Event handlers',
         heading: 'Several handlers for one event',
         text: 'Register two classes on the same event.'
     },
-    { url: '/checks/cooldown/', tab: 'Checks', page: 'Cooldowns', text: 'Stop someone spamming a command.' }
+    { path: '/checks/cooldown/', tab: 'Checks', page: 'Cooldowns', text: 'Stop someone spamming a command.' }
 ];
 
-const heading = (url: string, page: string, title: string): GuideSection => ({
-    url,
+const heading = (path: string, page: string, title: string): GuideSection => ({
+    path,
     tab: 'Checks',
     page,
     heading: title,
@@ -44,7 +44,9 @@ describe('GuideMatches', () => {
                 path: '/checks/cooldown/',
                 tab: 'Checks',
                 page: 'Cooldowns',
-                url: 'https://seedcord.org/guide/checks/cooldown/'
+                url: 'https://seedcord.org/guide/checks/cooldown/',
+                by: 'title',
+                terms: ['cool']
             }
         ]);
     });
@@ -96,7 +98,9 @@ describe('GuideMatches', () => {
         expect(matches.match("per: 'guild'")).toEqual([
             expect.objectContaining({
                 path: '/checks/cooldown/#who-shares-a-window',
-                excerpt: "…gets their own window. Cooldown('1h', { per: 'guild' });"
+                by: 'text',
+                excerpt: "…gets their own window. Cooldown('1h', { per: 'guild' });",
+                terms: ["per: 'guild'"]
             })
         ]);
         expect(paths(matches, 'event')).toEqual(['/events/', '/events/#several-handlers-for-one-event']);
@@ -119,8 +123,6 @@ describe('GuideMatches', () => {
             }))
         );
 
-        const isTitleMatch = matches.match('window').map((result) => result.excerpt === undefined);
-
-        expect(isTitleMatch).toEqual([true, true, true, false, false]);
+        expect(matches.match('window').map((result) => result.by)).toEqual(['title', 'title', 'title', 'text', 'text']);
     });
 });

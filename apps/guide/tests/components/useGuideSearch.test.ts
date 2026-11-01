@@ -64,7 +64,7 @@ const matchedPaths = (groups: readonly ResultGroup[]): string[] =>
     shown(groups).find((group) => group.label === 'Matches')?.paths ?? [];
 
 const SECTIONS: GuideSection[] = [
-    { url: '/checks/cooldown/', tab: 'Checks', page: 'Cooldowns', text: 'Limit how often a command runs.' }
+    { path: '/checks/cooldown/', tab: 'Checks', page: 'Cooldowns', text: 'Limit how often a command runs.' }
 ];
 
 // the hook keeps the loaded sections for the life of the module

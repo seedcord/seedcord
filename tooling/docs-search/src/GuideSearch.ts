@@ -5,12 +5,19 @@ import { readJson } from '#src/readAsset';
 
 import type { GuideHit } from '#src/guideSections';
 
-export interface GuideResult extends GuideHit {
-    url: string;
-    excerpt?: string;
-}
+// lowercase terms. a title match marks each typed word; a text match marks the whole phrase
+type FoundBy =
+    | { by: 'title'; terms: readonly string[] }
+    | { by: 'text'; excerpt: string; terms: readonly [string] }
+    | { by: 'meaning' };
 
-export const guideResult = (hit: GuideHit): GuideResult => ({ ...hit, url: GUIDE.at(hit.path) });
+export type GuideResult = GuideHit & { url: string } & FoundBy;
+
+export const guideResult = (hit: GuideHit, found: FoundBy): GuideResult => ({
+    ...hit,
+    url: GUIDE.at(hit.path),
+    ...found
+});
 
 export const QUESTION_LENGTH = { min: 2, max: 200 } as const;
 
@@ -47,6 +54,6 @@ export class GuideSearch {
         const url = new URL(this.endpoint);
         url.searchParams.set('q', question);
         const hits = await readJson<GuideHit[]>(url.href, (path) => fetchAnswer(path, signal));
-        return hits.map(guideResult);
+        return hits.map((hit) => guideResult(hit, { by: 'meaning' }));
     }
 }

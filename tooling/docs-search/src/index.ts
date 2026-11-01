@@ -12,7 +12,7 @@ export {
 } from '#src/files';
 export { GuideSearch, parseQuestion, QUESTION_LENGTH, TooManySearches, type GuideResult } from '#src/GuideSearch';
 export { guideSections, type GuideSection } from '#src/guideSections';
-export { findWordStart, GuideMatches, matchTerms, type MatchTerms } from '#src/GuideMatches';
+export { findWordStart, GuideMatches } from '#src/GuideMatches';
 export { readJson, type ReadAsset } from '#src/readAsset';
 export { ReferenceSearch } from '#src/ReferenceSearch';
 export { ALL_PACKAGES, SearchCatalog } from '#src/SearchCatalog';

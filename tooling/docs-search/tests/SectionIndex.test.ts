@@ -7,16 +7,16 @@ import { SectionIndex } from '#src/SectionIndex';
 import type { GuideSection } from '#src/guideSections';
 
 const SECTIONS: GuideSection[] = [
-    { url: '/components/buttons', tab: 'Components', page: 'Buttons', text: 'button text' },
+    { path: '/components/buttons', tab: 'Components', page: 'Buttons', text: 'button text' },
     {
-        url: '/checks/cooldown#the-duration',
+        path: '/checks/cooldown#the-duration',
         tab: 'Checks',
         page: 'Cooldowns',
         heading: 'The duration',
         text: 'cooldown text'
     },
     {
-        url: '/plugins/lifecycle#timeouts',
+        path: '/plugins/lifecycle#timeouts',
         tab: 'Writing plugins',
         page: 'The lifecycle',
         heading: 'Timeouts',
@@ -59,7 +59,7 @@ describe('SectionIndex', () => {
         const first = await SectionIndex.load(assets(SECTIONS, VECTORS));
         const again = await SectionIndex.load(assets(SECTIONS, VECTORS));
         const newVectors = await SectionIndex.load(assets(SECTIONS, [zeroPadded(1, 0), ...VECTORS.slice(1)]));
-        const moved = SECTIONS.map((section, index) => (index === 0 ? { ...section, url: '/moved' } : section));
+        const moved = SECTIONS.map((section, index) => (index === 0 ? { ...section, path: '/moved' } : section));
         const newSections = await SectionIndex.load(assets(moved, VECTORS));
 
         expect(again.version).toBe(first.version);
