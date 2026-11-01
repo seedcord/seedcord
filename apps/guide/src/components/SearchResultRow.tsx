@@ -2,6 +2,7 @@
 
 import { Icon, SearchOption, cn, tw } from '@seedcord/ui';
 import { ChevronRight, FileText, Hash } from 'lucide-react';
+import { Fragment } from 'react';
 
 import { MatchedText } from './MatchedText';
 
@@ -32,14 +33,17 @@ export function SearchResultRow({
     onSelect,
     onActivate
 }: SearchResultRowProps): ReactElement {
-    const { icon, title } =
-        result.heading === undefined ? { icon: FileText, title: result.page } : { icon: Hash, title: result.heading };
+    const { icon, title, trail } =
+        result.heading === undefined
+            ? { icon: FileText, title: result.page, trail: [result.tab] }
+            : { icon: Hash, title: result.heading, trail: [result.tab, result.page] };
+    const [first, ...rest] = trail;
 
     return (
         <SearchOption
             id={optionId}
             href={result.url}
-            label={title}
+            label={[title, ...trail].join(', ')}
             isActive={isActive}
             onSelect={() => onSelect(result)}
             onActivate={() => onActivate(index)}
@@ -52,13 +56,13 @@ export function SearchResultRow({
                     className={cn(ROW_TITLE)}
                 />
                 <span className={cn(ROW_SUBTITLE, 'flex items-center gap-1')}>
-                    {result.tab}
-                    {result.heading === undefined ? null : (
-                        <>
+                    {first}
+                    {rest.map((crumb) => (
+                        <Fragment key={crumb}>
                             <Icon icon={ChevronRight} size={12} aria-hidden />
-                            {result.page}
-                        </>
-                    )}
+                            {crumb}
+                        </Fragment>
+                    ))}
                 </span>
                 {result.by === 'text' ? (
                     <MatchedText text={result.excerpt} terms={result.terms} className={cn(ROW_SUBTITLE)} />

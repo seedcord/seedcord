@@ -16,10 +16,10 @@ const RESULT: GuideResult = {
     terms: ['a sliding window']
 };
 
-function renderRow(): void {
+function renderRow(result: GuideResult = RESULT): void {
     render(
         <SearchResultRow
-            result={RESULT}
+            result={result}
             isActive={false}
             optionId="row"
             index={0}
@@ -48,6 +48,14 @@ describe('SearchResultRow', () => {
 
         renderRow();
 
-        expect(screen.getByRole('option', { name: 'Several uses per window' })).toBeInTheDocument();
+        expect(screen.getByRole('option', { name: 'Several uses per window, Checks, Cooldowns' })).toBeInTheDocument();
+    });
+
+    it('labels a page row with its tab', () => {
+        vi.stubGlobal('CSS', {});
+
+        renderRow({ path: '/checks/cooldown/', tab: 'Checks', page: 'Cooldowns', url: '', by: 'meaning' });
+
+        expect(screen.getByRole('option', { name: 'Cooldowns, Checks' })).toBeInTheDocument();
     });
 });
