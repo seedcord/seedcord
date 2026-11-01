@@ -174,7 +174,7 @@ class Locked extends Notice {
         super('caller is not a maintainer');
     }
 
-    public render(): ReplyResponse {
+    public override render(): ReplyResponse {
         return { components: [new LockedCard().component] };
     }
 }

@@ -37,7 +37,7 @@ class WrongChannel extends Notice {
         super(`caller was outside ${channelId}`);
     }
 
-    public render(): ReplyResponse {
+    public override render(): ReplyResponse {
         return {
             components: [
                 new WrongChannelCard(this.channelId).component
@@ -100,7 +100,7 @@ Leaving the `ctx` parameter unannotated makes it a [`GateContextBase`](ref:core/
 
 A gate that reads _only_ these fields fits any handler you attach it to. `InChannel` above reads one of them, so it works on a slash command, a button, and a message event.
 
-Discord sends your bot's permissions in the invoked channel only with an interaction. To read them, annotate `ctx` with [`AppPermissionsContext`](ref:core/AppPermissionsContext) and read `ctx.appPermissions`. The gate then fits interaction handlers only.
+Discord sends your bot's permissions in the invoked channel only with an interaction, as its [`app_permissions`](https://discord.com/developers/docs/interactions/receiving-and-responding#interaction-object-interaction-structure) field. To read them, annotate `ctx` with [`AppPermissionsContext`](ref:core/AppPermissionsContext) and read `ctx.appPermissions`. The gate then fits interaction handlers only.
 
 ## Narrowing what the gate accepts
 
@@ -183,7 +183,7 @@ class Banned extends Notice {
         super('caller is on the ban list');
     }
 
-    public render(): ReplyResponse {
+    public override render(): ReplyResponse {
         return { components };
     }
 }

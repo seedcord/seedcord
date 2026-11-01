@@ -1,11 +1,11 @@
 import { DispatchContext, RequirePermissions } from '@seedcord/core';
-import { GuildMember, PermissionFlagsBits } from 'discord.js';
+import { GuildMember, Message, PermissionFlagsBits } from 'discord.js';
 import { describe, it, expect } from 'vitest';
 
 import { eventGateContext, interactionGateContext } from '#bot/gates/runGates';
 
 import type { Core } from '#interfaces/Core';
-import type { ButtonInteraction } from 'discord.js';
+import type { ButtonInteraction, User } from 'discord.js';
 
 const dispatch = new DispatchContext('button:probe');
 
@@ -156,6 +156,28 @@ describe('eventGateContext', () => {
         expect(built.memberPermissions).toBe(4n);
         expect(built.memberGuildPermissions).toBe(4n);
         expect(built.appGuildPermissions).toBe(2n);
+    });
+
+    it('reads the actor off the edited message when the old one is an authorless partial', () => {
+        // partial, guild and member are getters on the real prototype
+        function message(author: User | null): Message {
+            return Object.defineProperties(Object.create(Message.prototype) as Message, {
+                author: { value: author },
+                content: { value: author ? 'hi' : null },
+                guild: { value: null },
+                member: { value: null },
+                channelId: { value: 'c1' }
+            });
+        }
+        const author = { id: 'b1', bot: true } as User;
+        const payload = [message(null), message(author)] as unknown as Parameters<typeof eventGateContext>[1];
+
+        const built = eventGateContext('messageUpdate', payload, {} as unknown as Core, dispatch);
+
+        expect(built.user).toBe(author);
+
+        const deleted = [message(null)] as unknown as Parameters<typeof eventGateContext>[1];
+        expect(eventGateContext('messageDelete', deleted, {} as unknown as Core, dispatch).channelId).toBe('c1');
     });
 });
 

@@ -101,7 +101,7 @@ class Outdated extends Notice {
         super(message);
     }
 
-    public render(): ReplyResponse {
+    public override render(): ReplyResponse {
         return {
             components: [
                 new OutdatedCard(

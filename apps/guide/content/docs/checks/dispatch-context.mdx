@@ -184,7 +184,7 @@ export class TranslatedNotice extends Notice {
         super(`unknown fault ${uuid}`);
     }
 
-    public render(ctx: RenderContext): ReplyResponse {
+    public override render(ctx: RenderContext): ReplyResponse {
         const locale = ctx.dispatch.get('locale') ?? 'en';
         const text = translate(locale, 'fault.generic');
 

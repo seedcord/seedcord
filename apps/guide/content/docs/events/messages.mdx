@@ -71,7 +71,9 @@ export class Mentioned extends EventHandler<Events.MessageCreate> {
 }
 ```
 
-Your handler only runs for a message that starts with a mention of your bot. It ignores a reply that pings your bot and a message that mentions your bot later in the text. If an edit should run the command, register `messageUpdate` too. The gate then passes an edit only when the edit adds the mention. If the message already started with the mention, editing it doesn't run the command again. If discord.js didn't cache the old message, that edit runs it again.
+Your handler only runs for a message that starts with a mention of your bot. It ignores a reply that pings your bot and a message that mentions your bot later in the text. If an edit should run the command, register `messageUpdate` too and handle both events with [`this.match()`](/events/several-events). The gate then passes an edit only when the edit adds the mention.
+
+If the message already started with the mention, editing it doesn't run the command again. With `Partials.Message` on, discord.js also emits an edit to a message it didn't cache. That edit runs the command again.
 
 [`@Gated`](ref:gateway/Gated) with [`IgnoreBots`](ref:gateway/IgnoreBots) stops the handler on a message from any bot, including your own. Without it, `Mentioned` would answer another bot that mentions yours. Two bots like that can reply to each other forever. The [gate catalog](/checks/gates) lists the other checks.
 

@@ -154,7 +154,7 @@ class SlowDown extends Notice {
         );
     }
 
-    public render(): ReplyResponse {
+    public override render(): ReplyResponse {
         return { components };
     }
 }
@@ -162,7 +162,7 @@ class SlowDown extends Notice {
 Cooldown('10s', { per: 'channel', notice: SlowDown });
 ```
 
-Discord's `<t:...:R>` markup takes seconds. [`toEpochSeconds`](ref:utils/toEpochSeconds) converts a millisecond timestamp to them. The default card already prints a relative time.
+Discord's [`<t:...:R>` markup](https://discord.com/developers/docs/reference#message-formatting-timestamp-styles) takes seconds. [`toEpochSeconds`](ref:utils/toEpochSeconds) converts a millisecond timestamp to them. The default card already prints a relative time.
 
 ## Putting it together
 
