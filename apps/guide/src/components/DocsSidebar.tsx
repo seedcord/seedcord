@@ -1,6 +1,6 @@
 'use client';
 
-import { cn, isActiveHref, tw } from '@seedcord/ui';
+import { SECTION_LABEL, cn, isActiveHref, tw } from '@seedcord/ui';
 import Link from 'next/link';
 
 import type { ReactElement } from 'react';
@@ -22,7 +22,7 @@ export interface DocsSidebarProps {
     className?: string | undefined;
 }
 
-const sectionLabelClassName = tw`mb-2 px-3 text-xs font-semibold tracking-widest text-(--text-faint) uppercase`;
+const sectionLabelClassName = cn(SECTION_LABEL, 'mb-2 px-3');
 
 const linkClassName = cn(
     tw`block rounded-md px-3 py-2 text-sm`,

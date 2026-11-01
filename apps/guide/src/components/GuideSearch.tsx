@@ -3,6 +3,7 @@
 import { QUESTION_LENGTH } from '@seedcord/docs-search';
 import {
     KeyLegend,
+    SECTION_LABEL,
     SearchDialog,
     SearchField,
     SearchTrigger,
@@ -86,7 +87,7 @@ interface RowEvents {
 function Group({ group, activeIndex, onSelect, onActivate }: RowEvents & { group: PlacedGroup }): ReactElement {
     return (
         <div role="group" aria-label={group.label} className={cn('mt-3 first:mt-0')}>
-            <div aria-hidden className={cn('text-subtle px-3 pb-1 text-xs font-medium tracking-wide uppercase')}>
+            <div aria-hidden className={cn(SECTION_LABEL, 'px-3 pb-2')}>
                 {group.label}
             </div>
             {group.pending ? <SearchResultsSkeleton /> : null}
