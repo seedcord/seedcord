@@ -224,6 +224,27 @@ export enum SeedcordErrorCode {
     /** Creating the target Postgres database failed. */
     PluginKyselyBootstrapFailed = 2206,
 
+    /** A `Tasks` method got a task class that its `path` did not load. */
+    PluginTasksNotLoaded = 2301,
+    /** Two task classes use one key. */
+    PluginTasksDuplicateKey = 2302,
+    /** croner rejected a task's cron pattern. */
+    PluginTasksInvalidPattern = 2303,
+    /** A task's cron pattern is a date, which croner would run once. */
+    PluginTasksDateAsPattern = 2304,
+    /** A task's `timezone` is not an IANA timezone. */
+    PluginTasksInvalidTimezone = 2305,
+    /** `pause`, `resume`, or `nextRun` got a task without a cron pattern. */
+    PluginTasksPatternMissing = 2306,
+    /** `schedule` got an `at` that is not a valid date. */
+    PluginTasksInvalidDate = 2307,
+    /** `schedule` got an `at` number too small to be milliseconds since the epoch. */
+    PluginTasksAtInSeconds = 2308,
+    /** `schedule` got an `in` that `parseDuration` can't read. */
+    PluginTasksInvalidDuration = 2309,
+    /** `schedule` got `data` that has no JSON form. */
+    PluginTasksDataNotJson = 2310,
+
     /** Someone pressed Ctrl-C at a prompt in `seedcord` or `create-seedcord`. */
     CliCancelled = 3001,
 

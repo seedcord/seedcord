@@ -16,6 +16,9 @@
 '📦 plugin-kysely-postgres':
   - changed-files:
       - any-glob-to-any-file: 'plugins/kysely-postgres/**'
+'📦 plugin-tasks':
+  - changed-files:
+      - any-glob-to-any-file: 'plugins/tasks/**'
 '📦 custom-id':
   - changed-files:
       - any-glob-to-any-file: 'packages/custom-id/**'

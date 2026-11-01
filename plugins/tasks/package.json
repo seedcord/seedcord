@@ -1,0 +1,103 @@
+{
+    "name": "@seedcord/plugin-tasks",
+    "type": "module",
+    "version": "0.0.0",
+    "description": "Run cron and scheduled tasks in a seedcord bot",
+    "keywords": [
+        "discord-bot",
+        "seedcord",
+        "plugin",
+        "cron",
+        "scheduler",
+        "tasks"
+    ],
+    "engines": {
+        "node": "^24.22.1 || >=26.12.1",
+        "bun": ">=1.4.2"
+    },
+    "repository": {
+        "type": "git",
+        "url": "https://github.com/seedcord/seedcord.git",
+        "directory": "plugins/tasks"
+    },
+    "homepage": "https://seedcord.org",
+    "bugs": "https://github.com/seedcord/seedcord/issues",
+    "license": "Apache-2.0",
+    "author": "Dhruv <materwelondhruv@gmail.com> (https://materwelon.dev)",
+    "funding": "https://github.com/sponsors/materwelonDhruv",
+    "types": "./dist/index.d.mts",
+    "exports": {
+        ".": {
+            "import": {
+                "types": "./dist/index.d.mts",
+                "default": "./dist/index.mjs"
+            }
+        },
+        "./gateway": {
+            "import": {
+                "types": "./dist/gateway.index.d.mts",
+                "default": "./dist/gateway.index.mjs"
+            }
+        },
+        "./http": {
+            "import": {
+                "types": "./dist/http.index.d.mts",
+                "default": "./dist/http.index.mjs"
+            }
+        }
+    },
+    "files": [
+        "dist",
+        "package.json",
+        "README.md",
+        "LICENSE"
+    ],
+    "scripts": {
+        "build": "tsdown",
+        "clean": "rm -rf dist",
+        "lint": "eslint '**/*.{ts,tsx}' --cache --no-error-on-unmatched-pattern",
+        "lint:fix": "eslint '**/*.{ts,tsx}' --fix --cache --no-error-on-unmatched-pattern",
+        "fmt": "prettier --write '**/*.{ts,tsx,json,md}' --cache --no-error-on-unmatched-pattern",
+        "fmt:check": "prettier --check '**/*.{ts,tsx,json,md}' --cache --no-error-on-unmatched-pattern",
+        "tc": "tsgo --noEmit",
+        "test": "vitest run",
+        "test:watch": "vitest dev",
+        "coverage": "vitest run --coverage"
+    },
+    "peerDependencies": {
+        "@seedcord/core": "workspace:>=0.12.0-next.0",
+        "@seedcord/gateway": "workspace:>=0.9.0-next.0",
+        "@seedcord/http": "workspace:>=0.12.0-next.0",
+        "typescript": "catalog:consumerTypes"
+    },
+    "peerDependenciesMeta": {
+        "@seedcord/gateway": {
+            "optional": true
+        },
+        "@seedcord/http": {
+            "optional": true
+        }
+    },
+    "dependencies": {
+        "@seedcord/errors": "workspace:^",
+        "@seedcord/logger": "workspace:^",
+        "@seedcord/utils": "workspace:^",
+        "croner": "^11.0.0",
+        "type-fest": "catalog:deps"
+    },
+    "devDependencies": {
+        "@seedcord/core": "workspace:^",
+        "@seedcord/eslint-config": "workspace:^",
+        "@seedcord/gateway": "workspace:^",
+        "@seedcord/http": "workspace:^",
+        "@seedcord/tsconfig": "workspace:^",
+        "@seedcord/tsdown-config": "workspace:^",
+        "@seedcord/types": "workspace:^",
+        "@seedcord/vitest-config": "workspace:^",
+        "envapt": "catalog:peer"
+    },
+    "publishConfig": {
+        "access": "public",
+        "provenance": true
+    }
+}

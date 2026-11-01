@@ -257,6 +257,27 @@ const messages = {
     [SeedcordErrorCode.PluginKyselyBootstrapFailed]: (databaseName: string) =>
         `Could not create the database ${paint.sky(databaseName)}. Check that the database user may create databases, or create it yourself.`,
 
+    [SeedcordErrorCode.PluginTasksNotLoaded]: (key: string, path: string) =>
+        `${paint.sky(key)} is not a loaded task. Export it from a file under ${paint.path(path)} with ${paint.bold('@RegisterTask')}.`,
+    [SeedcordErrorCode.PluginTasksDuplicateKey]: (key: string, file: string) =>
+        `Two tasks use the key ${paint.sky(key)}. Rename the one in ${paint.path(file)}, or pass it a ${paint.bold('key')}.`,
+    [SeedcordErrorCode.PluginTasksInvalidPattern]: (key: string, file: string, pattern: string) =>
+        `The task ${paint.sky(key)} in ${paint.path(file)} has the cron pattern ${paint.sky(pattern)}, which croner can't parse. Write five or six fields, like ${paint.sky("'0 * * * *'")}.`,
+    [SeedcordErrorCode.PluginTasksDateAsPattern]: (key: string, file: string, pattern: string) =>
+        `The task ${paint.sky(key)} in ${paint.path(file)} has ${paint.sky(pattern)} as its pattern, which is a date. For a task that runs once, call ${paint.bold('schedule()')}.`,
+    [SeedcordErrorCode.PluginTasksInvalidTimezone]: (key: string, file: string, timezone: string) =>
+        `The task ${paint.sky(key)} in ${paint.path(file)} has the timezone ${paint.sky(timezone)}, which is not an IANA timezone. Write one like ${paint.sky("'Europe/Sarajevo'")} or ${paint.sky("'UTC'")}.`,
+    [SeedcordErrorCode.PluginTasksPatternMissing]: (key: string) =>
+        `${paint.sky(key)} has no cron pattern. Pass one to ${paint.bold('@RegisterTask')} to pause, resume, or read its next run.`,
+    [SeedcordErrorCode.PluginTasksInvalidDate]: (key: string) =>
+        `${paint.bold('schedule()')} got an invalid date for ${paint.sky(key)}. Pass ${paint.bold('at')} a valid ${paint.bold('Date')} or a number of milliseconds since the epoch.`,
+    [SeedcordErrorCode.PluginTasksAtInSeconds]: (at: number) =>
+        `${paint.iris(at)} looks like seconds. Pass ${paint.bold('at')} milliseconds, like ${paint.sky('Date.now() + 60_000')}.`,
+    [SeedcordErrorCode.PluginTasksInvalidDuration]: (duration: string) =>
+        `${paint.sky(duration)} isn't a duration. Write a whole number above 0 and a unit (ms, s, m, h or d), like ${paint.sky("'90s'")} or ${paint.sky("'2h'")}.`,
+    [SeedcordErrorCode.PluginTasksDataNotJson]: (key: string) =>
+        `${paint.bold('schedule()')} could not turn the data for ${paint.sky(key)} into JSON, which is how a scheduled job reaches the store. Remove any circular reference or ${paint.bold('bigint')} from it.`,
+
     [SeedcordErrorCode.CliCancelled]: () => 'Cancelled.',
 
     [SeedcordErrorCode.CliConfigInvalidExport]: () =>

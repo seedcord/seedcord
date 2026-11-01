@@ -1,0 +1,56 @@
+import type { TaskContext, TaskData, TaskTrigger } from './types/Tasks';
+import type { CoreBase } from '@seedcord/core';
+import type { Logger } from '@seedcord/logger';
+
+/**
+ * Base class for a task. Each run gets a fresh instance, so a field doesn't keep its value between
+ * runs.
+ *
+ * Import it from `@seedcord/plugin-tasks/gateway` or `/http` to type `this.core` as your bot's `Core`.
+ *
+ * @typeParam TData - The payload `schedule()` passes. A cron task takes none.
+ * @typeParam TCore - The `Core` that `this.core` has. The transport subpaths set it.
+ * @example
+ * ```ts
+ * \@RegisterTask()
+ * export class Unban extends Task<{ guildId: string; userId: string }> {
+ *     public async execute(): Promise<void> {
+ *         const { guildId, userId } = this.data;
+ *         await this.core.bot.client.guilds.cache.get(guildId)?.bans.remove(userId);
+ *     }
+ * }
+ * ```
+ */
+export abstract class Task<TData = void, TCore extends CoreBase = CoreBase> {
+    /** The task's key, from `@RegisterTask` or the class name. */
+    public readonly key: string;
+    protected readonly core: TCore;
+    /** Logs under the task's key, on the channel of the plugin's attach key. */
+    protected readonly logger: Logger;
+    /** The scheduled payload after its trip through the store. */
+    protected readonly data: TaskData<TData>;
+    /** Aborts when the bot shuts down. Pass it to anything slow. */
+    protected readonly signal: AbortSignal;
+    protected readonly startedAt: Date;
+    protected readonly trigger: TaskTrigger;
+
+    public constructor(context: TaskContext<TData>) {
+        this.key = context.key;
+        // justified: the transport subpaths bind TCore to the Core their bot passes
+        this.core = context.core as TCore;
+        this.logger = context.logger;
+        this.data = context.data;
+        this.signal = context.signal;
+        this.startedAt = context.startedAt;
+        this.trigger = context.trigger;
+    }
+
+    /** The task's work. A throw gets logged, published as `taskFailed`, and passed to `onError()`. */
+    public abstract execute(): Promise<void>;
+
+    /** Runs after `execute()` throws, once the plugin has logged the error. */
+    public onError?(error: Error): Promise<void>;
+
+    /** Runs in place of `execute()` when a `protect`ed cron task fires during its last run. */
+    public onOverrun?(): Promise<void>;
+}
