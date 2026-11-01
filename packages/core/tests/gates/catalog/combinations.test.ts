@@ -92,7 +92,7 @@ describe('catalog gate combinators', () => {
         expect(thrown).toBeInstanceOf(NeedsAny);
     });
 
-    it('or names a shared requirement once when two gates refuse for the same reason', async () => {
+    it('or lists a shared requirement once when two gates refuse for the same reason', async () => {
         // RequireRole refuses with NotInGuild before it reads the role, the same way GuildOnly does
         const thrown = await or(OwnerOnly(), RequireRole('r1'), GuildOnly())
             .check(ctxOf({ guild: false, userId: 'u2', owners: ['o1'] }))

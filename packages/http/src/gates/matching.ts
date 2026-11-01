@@ -67,7 +67,7 @@ type KindName<Ctx> = Ctx extends Ungateable
                       : Repliable extends APIModalSubmitInteraction
                         ? 'Modal'
                         : 'generic interaction'
-        : 'an agnostic';
+        : 'any';
 
 export type FitAll<TCtor extends AnyHandlerCtor, Gates extends readonly Gate<GateContextBase>[]> = {
     [Index in keyof Gates]: GateFitsWith<

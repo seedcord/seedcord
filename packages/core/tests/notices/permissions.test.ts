@@ -10,7 +10,7 @@ describe('MissingPermissions', () => {
         expect(text).toContain('• Ban Members');
     });
 
-    it('names the subject when one is given', () => {
+    it('puts the subject in the text when one is given', () => {
         const text = cardJson(new MissingPermissions('<@123>', ['Ban Members']).render());
         expect(text).toContain('<@123> is missing the following permission entries:');
     });

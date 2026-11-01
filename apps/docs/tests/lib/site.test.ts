@@ -117,7 +117,7 @@ describe('the card each page kind draws', () => {
         expect(card.meta).toEqual(['0.13.0']);
     });
 
-    it('falls back to naming the symbol when it carries no summary', () => {
+    it('falls back to the symbol name when it lacks a summary', () => {
         expect(entityCard(entity('Logger', ''), VERSION).description).toBe('Logger, a class in @seedcord/core.');
     });
 

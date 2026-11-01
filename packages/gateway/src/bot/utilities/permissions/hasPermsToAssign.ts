@@ -33,7 +33,7 @@ function botRoleOf(guild: Guild): Role {
  * integration manages it, or when the bot lacks Manage Roles.
  *
  * @throws A {@link Notice} when the check refuses.
- * @throws A **SeedcordError** when the guild's caches have no role or no member for the bot.
+ * @throws A **SeedcordError** when the guild's caches don't hold the bot's role or member.
  *
  * @example
  * ```ts

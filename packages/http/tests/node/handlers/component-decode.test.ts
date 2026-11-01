@@ -108,7 +108,7 @@ describe('button decode', () => {
         await expect(new Review(buttonEvent(wire), core, dispatch).run()).resolves.toBe('rejected 42');
     });
 
-    it('throws MatchCaseMissing when the minted route has no case', async () => {
+    it('throws MatchCaseMissing when the minted route lacks a case', async () => {
         @ButtonRoute(ApproveId, RejectId)
         class Review extends ButtonHandler<[typeof ApproveId, typeof RejectId]> {
             async execute(): Promise<void> {

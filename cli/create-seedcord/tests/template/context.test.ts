@@ -32,7 +32,7 @@ const EXTRAS = { developerUsername: 'dhruv', agent: 'pnpm' } as const;
 describe('buildContext on gateway', () => {
     const context = buildContext(GATEWAY, EXTRAS);
 
-    it('names the project after the last part of the directory', () => {
+    it('takes the project name from the last part of the directory', () => {
         expect(context.projectName).toBe('my-bot');
     });
 

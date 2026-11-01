@@ -31,7 +31,7 @@ type GateMismatch<
     Name extends string,
     Want extends string,
     Got extends string
-> = `gate '${Name}' requires a ${Want} handler, but this handler is ${Got}`;
+> = `gate '${Name}' needs a handler of kind ${Want}, but this handler's kind is ${Got}`;
 
 // without the brackets a union Provided distributes and passes on a partial fit
 // TS prints a Constructor tuple inline and truncates a raw context type

@@ -183,7 +183,7 @@ checkPermissions({
 
 ## Checking your own bot
 
-A gate checks your bot's permissions in the channel where the command ran. If your handler posts in a different channel, check that channel. [`checkBotPermissions`](ref:gateway/checkBotPermissions) runs the same check on your bot's member. It takes no `for`, and its `in` is required: the guild for your bot's base set, or a channel or thread.
+A gate checks your bot's permissions in the channel where the command ran. If your handler posts in a different channel, check that channel. [`checkBotPermissions`](ref:gateway/checkBotPermissions) runs the same check on your bot's member. It doesn't take `for`, and its `in` is required: the guild for your bot's base set, or a channel or thread.
 
 ```ts twoslash
 import { checkBotPermissions } from '@seedcord/gateway';

@@ -104,7 +104,7 @@ describe('RequirePermissions', () => {
         ).resolves.toBeUndefined();
     });
 
-    it('names the missing permissions on the refusal', async () => {
+    it('lists the missing permissions on the refusal', async () => {
         let caught: unknown;
         await RequirePermissions([BanMembers, KickMembers])
             .check(permCtx({ memberPermissions: 0n }))
@@ -157,7 +157,7 @@ describe('RequireBotPermissions', () => {
         );
     });
 
-    it('names the bot as the subject on the refusal', async () => {
+    it('puts the bot as the subject on the refusal', async () => {
         let caught: unknown;
         await RequireBotPermissions([BanMembers])
             .check(permCtx({ appPermissions: 0n }))
@@ -198,7 +198,7 @@ describe('RequireBotPermissions', () => {
         ).resolves.toBeUndefined();
     });
 
-    it('names the bot as the subject on the guild-scope refusal', async () => {
+    it('puts the bot as the subject on the guild-scope refusal', async () => {
         let caught: unknown;
         await RequireBotPermissions([BanMembers], { in: 'guild' })
             .check(permCtx({ appGuildPermissions: 0n }))

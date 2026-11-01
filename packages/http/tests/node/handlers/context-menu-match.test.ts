@@ -141,7 +141,7 @@ describe('http context menu match', () => {
         await expect(new Tools(messageMenuEvent('hb Pin'), core, dispatch).run()).resolves.toBe('pinned msg1');
     });
 
-    it('throws when the selected command has no case', async () => {
+    it('throws when the selected command lacks a case', async () => {
         await expect(new Menu(userMenuEvent('hb Greet'), core, dispatch).runPartial()).rejects.toSatisfy(
             (error: unknown) => isSeedcordError(error, 'SeedcordTypeError', SeedcordErrorCode.MatchCaseMissing)
         );

@@ -79,7 +79,7 @@ async function main(): Promise<void> {
 
         const { version } = pkg.manifest;
         const folder = formatDisplayPackageName(fullName);
-        // The extractor names api.json after the unscoped package name, which diverges from the
+        // The extractor writes api.json under the unscoped package name, which diverges from the
         // display folder when a displayName override is set.
         const apiSource = path.join(GENERATED_ROOT, `${fullName.split('/').pop() ?? fullName}.api.json`);
         const file = serializeProject(pkg);

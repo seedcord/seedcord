@@ -123,7 +123,7 @@ describe('http fault publishing', () => {
         expect(logged.find((record) => record.args?.includes(unknown[0]?.error))).toBeDefined();
     });
 
-    it('names the dispatch route as the fault origin, so a subscriber can group faults', async () => {
+    it('sets the dispatch route as the fault origin, so a subscriber can group faults', async () => {
         const { unknown } = await faultsFor(BoomHandler);
 
         expect(unknown[0]?.origin).toBe('slash:ok');

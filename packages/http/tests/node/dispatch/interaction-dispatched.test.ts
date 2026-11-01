@@ -319,7 +319,7 @@ describe('interactionDispatched from the http dispatcher', () => {
     });
 
     // a customId seedcord never minted reads an empty key, which both transports render as unrouted
-    it('names an unmintable customId unrouted', async () => {
+    it('labels an unmintable customId unrouted', async () => {
         const match: ResolvedRoute = {
             kind: InteractionKind.Button,
             routeId: null,

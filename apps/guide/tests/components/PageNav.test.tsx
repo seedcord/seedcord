@@ -17,7 +17,7 @@ describe('PageNav', () => {
         expect(screen.getByRole('link', { name: /Plugins/ })).toHaveAttribute('href', '/plugins');
     });
 
-    it('names the tab the neighbour sits under', () => {
+    it('shows the tab the neighbour is under', () => {
         render(<PageNav previous={PREVIOUS} />);
 
         expect(screen.getByText('Previous · Gates')).toBeInTheDocument();

@@ -148,7 +148,7 @@ No tautological tests. If a test can only fail when someone edits the value it c
 
 Nothing gets a test for staying absent. A deleted export leaves no caller that compiles, and that is the proof.
 
-A fixture cast is fine with a short comment naming what makes it safe. `any` stays banned in tests.
+A fixture cast is fine with a short comment saying what makes it safe. `any` stays banned in tests.
 
 ### Trying a feature on a mock
 

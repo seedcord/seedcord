@@ -45,6 +45,8 @@ interface LiveTunnel {
     readonly attempt: AbortController;
 }
 
+export const TUNNEL_FAILED = 'Tunnel setup failed, so the bot runs without a public endpoint';
+
 function elapsedSince(startedAt: number): () => string {
     return () => paint.mute(`+${formatUptime(Date.now() - startedAt)}`);
 }
@@ -121,7 +123,7 @@ export class TunnelCoordinator {
 
     private reportFailure(error: unknown, patched: boolean): void {
         this.deps.onStatus(null);
-        this.deps.logger.error('Tunnel setup failed, the bot runs without a public endpoint', error);
+        this.deps.logger.error(TUNNEL_FAILED, error);
         const hint = this.deps.kind.failureHint(patched);
         if (hint) this.deps.logger.info(hint);
     }

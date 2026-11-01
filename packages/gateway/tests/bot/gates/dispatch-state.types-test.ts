@@ -7,7 +7,7 @@ import { ButtonHandler } from '#handlers/interaction/components/ButtonHandler';
 import type { EventGateContext, InteractionGateContext } from '#src/bot/gates/Gate';
 import type { GateContextBase } from '@seedcord/core';
 
-// what a bot writes to put its own keys on the bag, naming its transport package instead
+// what a bot writes to put its own keys on the bag, with its transport package as the module
 declare module '@seedcord/types' {
     interface DispatchState {
         actor: string;

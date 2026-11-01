@@ -83,7 +83,10 @@ export class LoggerChannelRegistry {
         if (this.broken.has(sink)) return;
         this.broken.add(sink);
         // eslint-disable-next-line no-console -- console because the log pipeline is the thing that broke
-        console.error('[seedcord] a log sink threw, dropping its output for this process', error);
+        console.error(
+            '[seedcord] a log sink threw, so seedcord stops writing to it for the rest of this process',
+            error
+        );
     }
 
     /** Installs a capture sink (the dev TUI, a remote drain). Survives a `configure` replace. */

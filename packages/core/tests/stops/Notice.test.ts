@@ -38,7 +38,7 @@ describe('Notice', () => {
         expect(new TestNotice(cause).cause).toBe(cause);
     });
 
-    it('names itself after the concrete subclass, not Error', () => {
+    it('takes its name from the concrete subclass', () => {
         expect(new TestNotice().name).toBe('TestNotice');
         expect(new ReportingNotice().name).toBe('ReportingNotice');
     });

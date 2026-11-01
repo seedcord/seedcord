@@ -1,4 +1,4 @@
-import { CustomId, defineGate, RequireBotPermissions } from '@seedcord/core';
+import { CustomId, defineGate, RequireBotPermissions, RequirePermissions } from '@seedcord/core';
 import { PermissionFlagsBits } from 'discord.js';
 import { expectTypeOf } from 'vitest';
 
@@ -38,7 +38,10 @@ const anyInteraction = defineGate('AnyInteraction', (ctx: InteractionGateContext
     void ctx;
 });
 
-type Mismatch<Got extends string> = `gate 'Probe' requires a messageCreate event handler, but this handler is ${Got}`;
+const guildScoped = RequirePermissions([PermissionFlagsBits.BanMembers], { in: 'guild' });
+
+type Mismatch<Got extends string> =
+    `gate 'Probe' needs a handler of kind messageCreate event, but this handler's kind is ${Got}`;
 
 type LabelOf<TCtor extends AnyHandlerCtor> =
     FitAll<TCtor, [typeof messageOnly]>[0] extends Constructor<[infer Message]> ? Message : never;
@@ -133,12 +136,15 @@ function typeChecks(): void {
         FitAll<typeof ProbeMemberEvent, [typeof channelScoped]>[0] extends Constructor<[infer Message]>
             ? Message
             : never
-    >().toEqualTypeOf<"gate 'RequireBotPermissions' requires a generic interaction handler, but this handler is guildMemberAdd event">();
+    >().toEqualTypeOf<"gate 'RequireBotPermissions' needs a handler of kind generic interaction, but this handler's kind is guildMemberAdd event">();
     expectTypeOf<
         FitAll<typeof ProbeMemberEvent, [typeof anyInteraction]>[0] extends Constructor<[infer Message]>
             ? Message
             : never
-    >().toEqualTypeOf<"gate 'AnyInteraction' requires a generic interaction handler, but this handler is guildMemberAdd event">();
+    >().toEqualTypeOf<"gate 'AnyInteraction' needs a handler of kind generic interaction, but this handler's kind is guildMemberAdd event">();
+    expectTypeOf<
+        FitAll<typeof ProbeAutocomplete, [typeof guildScoped]>[0] extends Constructor<[infer Message]> ? Message : never
+    >().toEqualTypeOf<"gate 'RequirePermissions' needs a handler of kind any, but this handler's kind is autocomplete">();
 }
 
 // no-unused-vars does not count a name used only in a type position
@@ -147,6 +153,7 @@ void [
     messageOnly,
     channelScoped,
     anyInteraction,
+    guildScoped,
     typeChecks,
     ProbeSlash,
     ProbeMessageMenu,

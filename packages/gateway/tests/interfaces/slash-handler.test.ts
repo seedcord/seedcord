@@ -73,7 +73,7 @@ class CrossRoute extends SlashHandler<'kick' | 'warn'> {
     async execute(): Promise<void> {
         await this.match({
             kick: (options) => {
-                // @ts-expect-error 'kick' has no string option, so getString does not exist on its case.
+                // @ts-expect-error 'kick' doesn't declare a string option, so getString does not exist on its case.
                 void options.getString;
             },
             warn: (options) => {

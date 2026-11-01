@@ -47,7 +47,7 @@ describe('ReleaseEntries', () => {
         expect(entries.minor).toHaveLength(2);
     });
 
-    it('names every package sharing one summary', () => {
+    it('lists every package sharing one summary', () => {
         const entries = new ReleaseEntries([
             { name: '@seedcord/core', version: '0.7.0', changelog: CORE },
             { name: '@seedcord/gateway', version: '0.6.0', changelog: GATEWAY }

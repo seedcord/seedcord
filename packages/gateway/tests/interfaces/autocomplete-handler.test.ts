@@ -249,7 +249,7 @@ describe('AutocompleteHandler', () => {
         expect(captured).toEqual([{ name: 'sp', value: 'sp' }]);
     });
 
-    it('throws MatchCaseMissing when the focused field has no case', async () => {
+    it('throws MatchCaseMissing when the focused field lacks a case', async () => {
         // a stale-deployed field arrives that the handler does not branch on
         const handler = new SearchMatch(autocompleteRespond('ghost', 'x', []), core, dispatch);
         await expect(handler.execute()).rejects.toMatchObject({

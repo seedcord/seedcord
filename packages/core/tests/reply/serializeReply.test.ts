@@ -62,7 +62,7 @@ describe('serializeReply', () => {
         expect(result.files).toBeUndefined();
     });
 
-    it('translates a component throw into a coded error naming its index', () => {
+    it('translates a component throw into a coded error with its index', () => {
         const response: ReplyResponse = {
             components: [new TextDisplayBuilder().setContent('ok'), new TextDisplayBuilder()]
         };

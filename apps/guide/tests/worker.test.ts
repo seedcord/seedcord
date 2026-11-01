@@ -88,13 +88,13 @@ describe('the guide worker', () => {
         expect(response.headers.get('Link')).toBeNull();
     });
 
-    it('names the type of the extension-less search index next writes', async () => {
+    it('sets the content type of the extension-less search index next writes', async () => {
         const response = await get('/api/search', serving(new Response('{}')));
 
         expect(response.headers.get('Content-Type')).toBe('application/json');
     });
 
-    it('names the type of the extension-less png next writes for the favicon', async () => {
+    it('sets the content type of the extension-less png next writes for the favicon', async () => {
         const response = await get('/icon', serving(new Response('')));
 
         expect(response.headers.get('Content-Type')).toBe('image/png');

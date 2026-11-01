@@ -82,7 +82,7 @@ describe('noticesOf', () => {
         expect(keysOf(store.getState())).toStrictEqual(['restart']);
     });
 
-    it('names the key each notice answers to', () => {
+    it('shows the key each notice answers to', () => {
         const store = running();
         store.setError(new Error('boom'));
         store.apply({ type: 'restart-required' });

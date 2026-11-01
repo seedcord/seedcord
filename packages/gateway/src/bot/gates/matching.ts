@@ -67,7 +67,7 @@ type KindName<Ctx> = Ctx extends Ungateable
         ? `${N & string} event`
         : Ctx extends AppPermissionsContext
           ? 'generic interaction'
-          : 'an agnostic';
+          : 'any';
 
 // core defines the fit and this labels the kinds
 export type FitAll<TCtor extends AnyHandlerCtor, Gates extends readonly Gate<GateContextBase>[]> = {

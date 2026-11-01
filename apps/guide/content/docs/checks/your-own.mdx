@@ -195,7 +195,7 @@ export const NotBanned = defineGate('NotBanned', async (ctx) => {
 });
 ```
 
-Gates run one after another, so the `await bans.has` above delays every gate behind it until the lookup returns. Discord gives you three seconds to answer an interaction, and the checks use part of it. seedcord logs a warning naming each gate's share when one handler's checks total more than 750ms. That warning is off in production.
+Gates run one after another, so the `await bans.has` above delays every gate behind it until the lookup returns. Discord gives you three seconds to answer an interaction, and the checks use part of it. seedcord logs a warning that lists each gate's share when one handler's checks total more than 750ms. That warning is off in production.
 
 ## What to throw
 

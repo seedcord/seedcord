@@ -3,11 +3,11 @@ import { describe, expect, it } from 'vitest';
 import { pillFor } from '#lib/og/card';
 
 describe('the pill on a guide card', () => {
-    it('names the tab a page belongs to', () => {
+    it('shows the tab a page belongs to', () => {
         expect(pillFor({ slugs: ['commands', 'options'], path: 'commands/options.mdx' })).toBe('commands');
     });
 
-    it('names the tab on the tab index itself', () => {
+    it('shows the tab on the tab index itself', () => {
         expect(pillFor({ slugs: ['commands'], path: 'commands/index.mdx' })).toBe('commands');
     });
 
@@ -16,7 +16,7 @@ describe('the pill on a guide card', () => {
         expect(pillFor({ slugs: ['first-bot'], path: 'first-bot.mdx' })).toBe('start');
     });
 
-    it('names the site on the root page', () => {
+    it('shows the site name on the root page', () => {
         expect(pillFor({ slugs: [], path: 'index.mdx' })).toBe('guide');
     });
 });

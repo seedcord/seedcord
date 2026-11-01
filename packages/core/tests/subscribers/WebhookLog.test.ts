@@ -164,7 +164,7 @@ describe('WebhookLog', () => {
         warnSpy.mockRestore();
     });
 
-    it('sends every event when the reporter names no throttle key', async () => {
+    it('sends every event when the reporter leaves the throttle key unset', async () => {
         @Subscribe('unknownException')
         @WebhookUrl('REPORTER_WEBHOOK_URL')
         class Chatty extends WebhookLog<'unknownException', CoreBase> {

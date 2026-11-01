@@ -203,7 +203,7 @@ describe('EventHandler.match', () => {
         expect(handler.read()).toHaveLength(1);
     });
 
-    it('throws MatchCaseMissing when the current event has no case', async () => {
+    it('throws MatchCaseMissing when the current event lacks a case', async () => {
         // a stale-deployed event arrives that the handler does not branch on
         const handler = new PingMulti(createPayload(fakeMessage()), core, dispatch, 'ghost' as Events.MessageCreate);
         await expect(handler.execute()).rejects.toMatchObject({ code: SeedcordErrorCode.MatchCaseMissing });

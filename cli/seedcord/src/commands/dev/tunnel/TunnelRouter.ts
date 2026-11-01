@@ -1,4 +1,5 @@
 import { missingCloudflaredHint } from './createTunnelCoordinator';
+import { TUNNEL_FAILED } from './TunnelCoordinator';
 
 import type { ResolvedTunnel } from '#core/config/schema';
 import type { TunnelCoordinator } from './TunnelCoordinator';
@@ -22,7 +23,7 @@ export class TunnelRouter {
     // the dev session calls this from a sync callback where a rejection would end up unhandled
     public route(tunnel: ResolvedTunnel, port: number | false, instance: SeedcordInstance): Promise<void> {
         return this.routeTo(tunnel, port, instance).catch((error: unknown) => {
-            this.logger.error('Tunnel setup failed, the bot runs without a public endpoint', error);
+            this.logger.error(TUNNEL_FAILED, error);
         });
     }
 

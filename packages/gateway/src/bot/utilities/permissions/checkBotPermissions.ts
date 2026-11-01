@@ -25,7 +25,7 @@ function botMemberOf(guild: Guild): GuildMember {
  * in `scope` is missing, or with `inverse` when one is present.
  *
  * @throws A {@link Notice} when the check refuses. It lists the missing or present permissions.
- * @throws A **SeedcordError** when the guild's member cache has no member for the bot.
+ * @throws A **SeedcordError** when the guild's member cache doesn't hold the bot's member.
  *
  * @example
  * ```ts

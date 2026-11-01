@@ -69,7 +69,7 @@ describe('the page a whole phrase should land on', () => {
     });
 });
 
-describe('the page a query names outright', () => {
+describe('the page a query asks for by name', () => {
     it('puts a title that covers the query above a page that only mentions it', () => {
         const rows: Row[] = [
             page('lint', 'Linting'),

@@ -88,7 +88,7 @@ describe('dashboardToggles', () => {
         expect(dashboardToggles(['guild-messages', 'reactions'])).toEqual([]);
     });
 
-    it('names the toggle behind each privileged pick', () => {
+    it('shows the toggle behind each privileged pick', () => {
         const lines = dashboardToggles(['message-text', 'members', 'presence']).join('\n');
 
         expect(lines).toContain('Message Content');

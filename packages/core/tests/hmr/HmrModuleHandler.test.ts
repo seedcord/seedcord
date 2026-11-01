@@ -208,7 +208,7 @@ describe('HmrModuleHandler', () => {
         expect(debugLines(spies).some((m) => m.includes('Unloaded') && m.includes('FixtureHandler'))).toBe(true);
     });
 
-    it('reports one line naming the file count when a save fans out', async () => {
+    it('reports one line with the file count when a save fans out', async () => {
         const { logger, spies } = fakeLogger();
         const withSpies = new HmrModuleHandler<TestHandler>({
             handlersDir,

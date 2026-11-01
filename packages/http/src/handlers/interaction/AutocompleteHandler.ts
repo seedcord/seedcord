@@ -84,7 +84,7 @@ export abstract class AutocompleteHandler<Route extends keyof SlashRegistry> ext
      *
      * @param cases - One handler per autocompletable field, keyed by field name.
      * @returns The result of the case that ran.
-     * @throws A **SeedcordTypeError** with `MatchCaseMissing` when the focused field has no case. Only a stale-deployed command can send one.
+     * @throws A **SeedcordTypeError** with `MatchCaseMissing` when the focused field doesn't have a case. Only a stale-deployed command can send one.
      */
     protected async match<Ret>(cases: FocusedCases<Route, Ret>): Promise<Ret> {
         const { name, value } = this.focused;

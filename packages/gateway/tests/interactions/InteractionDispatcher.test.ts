@@ -209,7 +209,7 @@ describe('InteractionDispatcher Integration', () => {
         expect(() => fire?.(fakeSlash('ping'))).not.toThrow();
     });
 
-    it('throws when two handlers register the same interaction route, naming both', async ({ testEnv }) => {
+    it('throws when two handlers register the same interaction route, listing both', async ({ testEnv }) => {
         const interactionsDir = 'interactions';
         await testEnv.createFile(
             `${interactionsDir}/PingOne.ts`,

@@ -57,7 +57,7 @@ describe('and', () => {
         expect(order).toEqual(['a']);
     });
 
-    it('names itself after its gates at runtime, matching the type-level name', () => {
+    it('builds its name from its gates at runtime, matching the type-level name', () => {
         const A = defineGate('a', () => {});
         const B = defineGate('b', () => {});
 
@@ -197,7 +197,7 @@ describe('or', () => {
         expect(description).toContain('be a bot owner');
     });
 
-    it('falls back to the neutral refusal when a gate has no summary', async () => {
+    it('falls back to the neutral refusal when a gate leaves summary unset', async () => {
         const A = defineGate('a', () => {
             const notice = new TestNotice('a');
             notice.summary = 'Manage Server';

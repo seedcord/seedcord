@@ -26,7 +26,7 @@ describe('readPublished', () => {
         ]);
     });
 
-    it('throws naming both flags when neither is passed', async () => {
+    it('throws listing both flags when neither is passed', async () => {
         await expect(readPublished({})).rejects.toThrow(/--published-file/);
     });
 

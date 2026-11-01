@@ -123,7 +123,7 @@ Nine checks.
    teaches, open its declaration in packages/gateway/src and in packages/http/src
    and compare. A symbol declared in one package only, or declared in both with
    different types, is a transport difference and needs a
-   <Callout type="transport"> naming both types by name.
+   <Callout type="transport"> that gives both type names.
 
    Check each member separately. One callout covering a class does not cover a
    second member on it that differs on its own.
@@ -137,7 +137,7 @@ Nine checks.
 
 7. Internal surface.
 
-   Report any symbol the page names that is reachable only through the package's
+   Report any symbol the page mentions that is reachable only through the package's
    ./internal entry. Read the exports map in the package's package.json to tell.
    That split exists because JavaScript does not have package-private, which
    makes it a packaging detail. Name the public surface that replaces it.
@@ -161,7 +161,7 @@ Nine checks.
    review. The ref: link targets, the import-line cut convention, the fence type
    against what the paragraph is about, the twoslash ceiling, a config key
    without a real constructor sample around it, a raw discord.js builder where
-   BuilderComponent belongs, and prose naming code that a cut hides.
+   BuilderComponent belongs, and prose that mentions code a cut hides.
 
    Check the completion marker by name. `^?` answers "what type is this" and
    `^|` draws the list an editor would offer at that point. Report every place

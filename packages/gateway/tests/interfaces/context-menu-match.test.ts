@@ -132,7 +132,7 @@ describe('context menu match', () => {
         await expect(new Tools(messageMenu('Pin Message'), core, dispatch).run()).resolves.toBe('pinned msg1');
     });
 
-    it('throws when the selected command has no case', async () => {
+    it('throws when the selected command lacks a case', async () => {
         let caught: unknown;
         try {
             await new Menu(userMenu('Say Hello'), core, dispatch).runPartial();

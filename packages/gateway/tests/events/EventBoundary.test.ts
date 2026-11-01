@@ -166,7 +166,7 @@ describe('handleEventFault', () => {
         expect(publish).toHaveBeenCalledTimes(2);
     });
 
-    it('names the event and the handler that threw as the origin', () => {
+    it('sets the event and the handler that threw as the origin', () => {
         handleEventFault(new Error('boom'), 'messageCreate', 'Starboard', [{}], mockCore(publish));
 
         const [, payload] = publish.mock.calls[0] as [string, SubscriptionData<'unknownException'>];

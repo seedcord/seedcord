@@ -60,7 +60,7 @@ describe('DependencyIndex', () => {
         expect(index.refsFor('left-pad')).toEqual([]);
     });
 
-    it('names every dep it saw', () => {
+    it('lists every dep it saw', () => {
         expect(index.names().sort()).toEqual(['discord-api-types', 'next', 'vitest']);
     });
 });

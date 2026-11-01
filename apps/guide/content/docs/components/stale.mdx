@@ -73,7 +73,7 @@ Something went wrong. Please try again.
 
 ## Replacing both cards
 
-Both cards above use seedcord's wording. Replace them when your bot needs its own, like a refusal naming the command that sends a fresh menu.
+Both cards above use seedcord's wording. Replace them when your bot needs its own, like a refusal that points to the command that sends a fresh menu.
 
 The defaults are `Notice` subclasses seedcord registers when it loads. [`setCustomIdErrors`](ref:custom-id/setCustomIdErrors) replaces them with yours.
 
@@ -120,4 +120,4 @@ setCustomIdErrors({
 
 Call it once, before your bot starts. A click that arrives before the call still gets the built-in card. One registration covers every `CustomId` in the process, and a later call replaces the earlier one.
 
-The `stale` callback receives the route prefix. The `invalid` callback receives a detail string naming what failed. Neither callback receives the interaction. The `Notice` you return still gets a [`RenderContext`](ref:types/RenderContext) when seedcord calls its `render()`, carrying the fault's `uuid` and the [dispatch context](/checks/dispatch-context) your gates and middleware filled, so read per-user details there. Return a `Notice` from both callbacks. A plain `Error` sends the generic fault card.
+The `stale` callback receives the route prefix. The `invalid` callback receives a detail string saying what failed. Neither callback receives the interaction. The `Notice` you return still gets a [`RenderContext`](ref:types/RenderContext) when seedcord calls its `render()`, carrying the fault's `uuid` and the [dispatch context](/checks/dispatch-context) your gates and middleware filled, so read per-user details there. Return a `Notice` from both callbacks. A plain `Error` sends the generic fault card.

@@ -80,7 +80,7 @@ export abstract class AutocompleteHandler<
      *
      * @param cases - One handler per autocompletable field, keyed by field name.
      * @returns The result of the case that ran.
-     * @throws A **SeedcordTypeError** with `MatchCaseMissing` when the focused field has no case. Only a stale-deployed command can send one.
+     * @throws A **SeedcordTypeError** with `MatchCaseMissing` when the focused field doesn't have a case. Only a stale-deployed command can send one.
      *
      * @example
      * ```ts

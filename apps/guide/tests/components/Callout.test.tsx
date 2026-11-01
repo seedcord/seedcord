@@ -6,7 +6,7 @@ import { Callout } from '#components/Callout';
 import type { CalloutProps } from '#components/Callout';
 
 describe('Callout', () => {
-    it('names its kind above the body', () => {
+    it('labels its kind above the body', () => {
         render(<Callout type="note">Codegen runs first.</Callout>);
 
         expect(screen.getByText('Note')).toBeInTheDocument();
@@ -26,7 +26,7 @@ describe('Callout', () => {
         expect(screen.getByText(label)).toBeInTheDocument();
     });
 
-    it('says both differ when the transport callout names no side', () => {
+    it('says both differ when the transport callout picks neither side', () => {
         render(<Callout type="transport">A difference.</Callout>);
 
         expect(screen.getByText('Gateway and http differ')).toBeInTheDocument();
@@ -45,7 +45,7 @@ describe('Callout', () => {
         expect(() => render(<Callout {...wrong}>A body.</Callout>)).toThrow('websocket');
     });
 
-    it('refuses only on a kind that names no transport', () => {
+    it('refuses only on a kind without a transport', () => {
         const wrong = { type: 'danger', only: 'gateway' } as unknown as CalloutProps;
 
         expect(() => render(<Callout {...wrong}>A body.</Callout>)).toThrow('transport');

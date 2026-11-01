@@ -134,7 +134,7 @@ export class WriteAudit extends Subscriber<'responseAttempted'> {
 
 `WriteAudit` returns early on `'sent'`, so TypeScript knows `write.error` exists on the next line.
 
-Discord can return a `reply` or an `update` without the message it should carry. seedcord throws `ReplyCallbackMissingMessage` there. That write doesn't publish anything, since the call itself succeeded without naming a message.
+Discord can return a `reply` or an `update` without the message it should carry. seedcord throws `ReplyCallbackMissingMessage` there. That write doesn't publish anything, since the call itself succeeded. Only the message was missing from Discord's response.
 
 ## What one `eventDispatched` reports
 

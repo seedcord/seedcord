@@ -7,7 +7,7 @@ The `guide-voice` skill and its two review prompts decide what a page says. This
 ## 1. Settle the structure (with the maintainer)
 
 1. Read the research reports, the guide notes file, and every pending changeset.
-2. List the pages the release makes stale, the facts that have no page yet, and the gaps users reported. A gap the maintainer names counts too, like "writing a plugin needs its own pages".
+2. List the pages the release makes stale, the facts that have no page yet, and the gaps users reported. A gap the maintainer brings up counts too, like "writing a plugin needs its own pages".
 3. Propose the structure: the pages to rewrite, add, merge or delete, and any new tab. Present it as a table, then ask the open decisions through `AskUserQuestion`.
 
 Done when the maintainer signs off on the page list. Settle where shared facts live too. On the Vite release, envapt got a short mention where a first bot reads config and a full page in Build & deploy, and `seedcord commands` got a CLI page in Tooling plus a "how commands reach Discord" page in Commands. From here the run can go unattended, so it can't wait on an approval prompt. Run every command the hooks pass ([SESSIONS.md](SESSIONS.md#hook-safe-commands)), and give every agent the same rule.

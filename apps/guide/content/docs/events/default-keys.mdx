@@ -126,7 +126,7 @@ seedcord publishes `handledException` on a [`Notice`](ref:core/Notice) with `rep
 
 {/* prettier-ignore-end */}
 
-An event `origin` carries a third segment naming the handler, since one dispatch runs several of them.
+An event `origin` carries a third segment with the handler's name, since one dispatch runs several of them.
 
 seedcord ships a subscriber for each of these keys and registers it for you. Each one [posts a card to a Discord webhook](/replying/reporting) once you set its environment variable.
 

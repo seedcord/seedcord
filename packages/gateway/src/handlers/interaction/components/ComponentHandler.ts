@@ -81,7 +81,7 @@ export abstract class ComponentHandler<Event extends ComponentInteraction, Defs 
      *
      * @param cases - One callback per registered route, keyed by prefix.
      * @returns The result of the case that ran.
-     * @throws A **SeedcordTypeError** with `MatchCaseMissing` when the wire's prefix has no case.
+     * @throws A **SeedcordTypeError** with `MatchCaseMissing` when the wire's prefix doesn't have a case.
      * @throws A **StaleCustomId** when the wire was encoded under an older shape.
      * @throws An **InvalidCustomId** when the wire is corrupt.
      *

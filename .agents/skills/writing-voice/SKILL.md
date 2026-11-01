@@ -137,6 +137,26 @@ A generic subject with a present-tense verb reads as a fact about how the code b
 
 Ask who does the verb. If it's the reader, write the imperative or `you`. If it's advice, write `should`. Keep the generic subject only when the code does the thing.
 
+### Point every `which`, `it`, and `that` at the right noun
+
+A reader attaches `which` to the noun right before it, and `it` to the last noun that fits. When that noun is the wrong one, the sentence says something false. The reader only finds out after misreading it.
+
+<!--prettier-ignore-start-->
+
+| Points at the wrong noun | Fixed |
+|---|---|
+| Pass the URL from the channel's Integrations settings, which looks like https://… | Pass the webhook URL from the channel's Integrations settings. It looks like https://… |
+| update() was called on a modal opened from a command, which has no source message. | update() was called on a modal that a command opened. That modal doesn't have a source message. |
+| Press q in that session, or delete dev.lock if it is no longer running. | …or delete dev.lock if that session is no longer running. |
+
+<!--prettier-ignore-end-->
+
+For every `which`, `it`, `this`, and `that`, find the noun it lands on by that rule. If it's the wrong one, repeat the right noun or split the sentence.
+
+### Give a trailing participle its subject
+
+An `-ing` phrase after a comma borrows the sentence's subject. When the subject doesn't do that action, the reader has to guess who does. "ban is deployed to multiple guilds, falling back to plain text" leaves them asking what falls back. Write the result as a clause with its own subject: "ban is deployed to multiple guilds, so its mention stays plain text."
+
 ---
 
 ## 3. Anthropomorphism, with a test you can apply
@@ -268,7 +288,7 @@ Comma splices are banned. A comma cannot join two complete clauses. Every comma 
 **Fix a splice by rewriting it shorter, in this order.**
 
 1. **Collapse to one clause.** Most splices are one fact stretched over two. This is almost always the best result and the one to try first.
-2. **Add the connector that names the real relation** (`because`, `since`, `and`, `then`). Keeps one sentence when both halves genuinely earn their place.
+2. **Add the connector for the real relation** (`because`, `since`, `so`, `but`, `if`, `then`, or `and` when the second half adds more of the same). Keeps one sentence when both halves genuinely earn their place. The next section has the test.
 3. **Two sentences.** The fallback when the halves are independent facts that both matter.
 
 Going to a period first produces two stubby sentences carrying what one short line said better.
@@ -283,7 +303,7 @@ Going to a period first produces two stubby sentences carrying what one short li
 ```ts
 // Bad: two facts jammed with a comma
 // the cache is keyed by file, a rename lands as a fresh entry
-// Good (2): the connector names the relation
+// Good (2): the connector says how the halves relate
 // a rename lands as a fresh entry because the cache is keyed by file
 ```
 
@@ -296,9 +316,27 @@ Going to a period first produces two stubby sentences carrying what one short li
 - BAD, stacked: "binds a source per file and restore it after any swap and later tests see a clean default".
 - GOOD: "binds a source per file. Tests here swap it, then restore it for a clean default."
 
+### Pick the connector for the relation that's there
+
+A connector tells the reader where the sentence goes before they read it. `and` promises more of the same, `but` a contrast, `so` a result, `because` or `since` a reason, `if` a condition, `then` a step after a step, `while` two things at once. A wrong one sends the reader the wrong way. `and` goes wrong most often, since it fits anywhere.
+
+<!--prettier-ignore-start-->
+
+| Written | What the halves really are | Fixed |
+|---|---|---|
+| The plugins are both Mongoose, and their codegen() results differ. | a contrast | …both Mongoose, but their codegen() results differ. |
+| make asks for every value first, and it can't tell how deep the partial goes. | a result | …asks for every value first, so it can't tell… |
+| Try again, and check discordstatus.com if it keeps failing. | a condition, then a step | Try again. If it keeps failing, check discordstatus.com. |
+| The command registers to the config guilds while commands.guilds is empty. | a contrast | …registers to the config guilds, but commands.guilds is empty. |
+| Send with reply() first, then edit() rewrites it. | a fact about edit(), with no step after the step | Send with reply() first. After that, edit() rewrites it. |
+
+<!--prettier-ignore-end-->
+
+The test: read what follows the connector on its own, say out loud how it relates to the first half, then check that the word you wrote means that. When no word fits, write two sentences.
+
 ### Contrast
 
-State the positive claim on its own. Defining a thing by first naming what it is not costs the reader a rejected idea they then have to discard. This covers "not X, but Y", "X, not Y", "rather than X", "instead of X", and every variant.
+State the positive claim on its own. Defining a thing by first saying what it is not costs the reader a rejected idea they then have to discard. This covers "not X, but Y", "X, not Y", "rather than X", "instead of X", and every variant.
 
 - BAD: "the slot is load-bearing, not decoration".
 - GOOD: "the slot keeps the ids unique".
@@ -307,7 +345,7 @@ When a contrast genuinely carries weight, write two plain sentences.
 
 **One test separates the tic from a real substitution. Was the reader already holding the alternative?**
 
-An `instead of` naming a swap the reader is actually making stays, since naming what they replace is the instruction. "Pass a `CustomId` instead of a string" is written for someone passing a string right now. The ban covers an alternative nobody raised, as in "the codec is a real format instead of string concatenation", where the reader loads concatenation and then throws it away.
+An `instead of` that points at a swap the reader is actually making stays, since saying what they replace is the instruction. "Pass a `CustomId` instead of a string" is written for someone passing a string right now. The ban covers an alternative nobody raised, as in "the codec is a real format instead of string concatenation", where the reader loads concatenation and then throws it away.
 
 ### Exclusivity tails
 
@@ -387,6 +425,19 @@ Two or more named things go in a list, never in a prose sentence. Counted things
 Acknowledge in as few words as possible, then go to the content. No opener rating the question, no flag about being honest, no repeating the correction back.
 
 ---
+
+## Before it ships
+
+Run these on every piece of prose before it's written to disk, whatever the surface: a comment, TSDoc, an error message, a log line, a CLI string, a changeset, a README, a guide page, or a commit. Each one catches a mistake the others miss. Reading for meaning alone misses all of them.
+
+1. **Negation.** Find every verb followed by `no`, as in "has no", "takes no", "sets no". Negate the verb or state the positive fact (section 5).
+2. **Connectors.** Read each `and`, `but`, `so`, `because`, `since`, `while`, `then`, and `which` against the relation its two halves really have (section 6).
+3. **Pointers.** For each `which`, `it`, `this`, and `that`, find the noun it lands on (section 2).
+4. **Who does it.** For each sentence with a generic subject, ask who performs the verb (section 2).
+5. **One read at speed.** Read the text once as someone who has never seen it. Rewrite every sentence where you stopped and started over.
+6. **The bans.** Section 6 punctuation, anthropomorphism, contrast-negation, and every section 7 word, starting with `names` as a verb.
+
+A quoted message, such as an error in a doc's output block, matches the source string exactly, line breaks included.
 
 ## The test
 

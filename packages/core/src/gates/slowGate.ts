@@ -16,7 +16,7 @@ function logger(): Logger {
 
 /**
  * collects each gate check's elapsed time for one dispatch. `report` warns once when the checks sum
- * past the threshold, naming the total, the route, and each gate's share.
+ * past the threshold, listing the total, the route, and each gate's share.
  */
 export interface SlowGateMonitor {
     readonly observe: GateObserver;

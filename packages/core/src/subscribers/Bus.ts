@@ -116,7 +116,7 @@ export class Bus extends TypedEventEmitter<SubscriptionTuples> {
         const envKey = WebhookLog.envKeyOf(ctor);
         const url = WebhookLog.urlOf(envKey);
         if (url === null) {
-            this.logger.warn(`${paint.sky.bold(ctor.name)} disabled, ${paint.amber.bold(envKey)} is not set`);
+            this.logger.warn(`${paint.sky.bold(ctor.name)} is off because ${paint.amber.bold(envKey)} is not set`);
             return false;
         }
         const envKeys = this.webhookProbes.get(url) ?? [];

@@ -107,7 +107,7 @@ describe('Bus webhook reporter registration', () => {
         expect(get).toHaveBeenCalledTimes(2);
     });
 
-    it('names every env key behind one dead url at verify', async ({ testEnv }) => {
+    it('lists every env key behind one dead url at verify', async ({ testEnv }) => {
         await testEnv.createFile(
             'subscribers/SharedUrlReporters.ts',
             `

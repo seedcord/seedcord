@@ -258,7 +258,7 @@ describe('handler gates', () => {
         expect(executed()).toBe(true);
     });
 
-    it('renders a core catalog RequireBotPermissions refusal naming the bot as the subject', async () => {
+    it('renders a core catalog RequireBotPermissions refusal with the bot as the subject', async () => {
         const { classes, executed } = gated([RequireBotPermissions([PermissionFlagsBits.BanMembers])]);
         using engine = await readyEngine(classes);
         const { signer, handle } = engine;

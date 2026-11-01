@@ -2,7 +2,7 @@
 
 ## Helper sessions
 
-The maintainer opens a second Claude session and names it, like "guide helper". The main session reaches it with `ListAgents`, then `SendMessage` to that name. The helper replies the same way, and its message arrives in the main session's turn.
+The maintainer opens a second Claude session and gives it a name, like "guide helper". The main session reaches it with `ListAgents`, then `SendMessage` to that name. The helper replies the same way, and its message arrives in the main session's turn.
 
 - A helper may be busy with the maintainer's own work. When it says so, ask the maintainer to open another one, and send the job there.
 - A renamed session keeps its address under the new name. Run `ListAgents` again when a send fails.
@@ -25,7 +25,7 @@ Paste this line into every agent prompt and every helper job:
 
 > Never use `sed -i` or `perl -i` on any file, temp files included, and never write a file from the shell (no `>` into a file, no heredoc that writes). Use the Write and Edit tools for every file change. Pipe plain `sed` or `awk` to stdout for transforms.
 
-The maintainer's `no-shell-file-writes` hook asks for approval when `sed -i` shares a command with `grep`, `find` or a glob, unless every file the command names is a scratch file. That one prompt holds the whole session until someone answers it. Other hooks deny outright, which only costs a retry.
+The maintainer's `no-shell-file-writes` hook asks for approval when `sed -i` shares a command with `grep`, `find` or a glob, unless every file in the command is a scratch file. That one prompt holds the whole session until someone answers it. Other hooks deny outright, which only costs a retry.
 
 Also keep these off the autonomous path:
 

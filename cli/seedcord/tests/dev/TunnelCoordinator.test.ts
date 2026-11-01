@@ -87,7 +87,7 @@ describe('TunnelCoordinator', () => {
         expect(order).toEqual(['open', 'set']);
     });
 
-    it('names the port it is opening before the wait starts', async () => {
+    it('logs the port it is opening before the wait starts', async () => {
         const info = vi.fn();
         const coordinator = new TunnelCoordinator(deps({ logger: { ...silentLogger, info } }));
 
