@@ -181,7 +181,7 @@ Before you open a PR, run [`/branch-audit`](../.claude/commands/branch-audit.md)
 
 ## CI
 
-[`checks.yml`](workflows/checks.yml) runs on every PR, drafts included, and [`commitlint.yml`](workflows/commitlint.yml) checks every commit in it. CI runs the checks from `pnpm prePush:all` on every package. A PR that fails CI won't get a detailed review.
+[`checks.yml`](workflows/checks.yml) runs on every PR, drafts included, and [`commitlint.yml`](workflows/commitlint.yml) checks its title. CI runs the checks from `pnpm prePush:all` on every package. A PR that fails CI won't get a detailed review.
 
 ## Questions
 
