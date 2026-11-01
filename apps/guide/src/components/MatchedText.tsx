@@ -17,11 +17,12 @@ function searchHighlight(): Highlight {
     return created;
 }
 
-function rangesOf(node: Text, terms: readonly string[]): Range[] {
-    const text = node.data.toLowerCase();
+function rangesOf(node: Text, text: string, terms: readonly string[]): Range[] {
+    // GuideMatches lowercases every term
+    const lowered = text.toLowerCase();
     const ranges: Range[] = [];
     for (const term of terms) {
-        for (let at = findWordStart(text, term); at !== -1; at = findWordStart(text, term, at + term.length)) {
+        for (let at = findWordStart(lowered, term); at !== -1; at = findWordStart(lowered, term, at + term.length)) {
             const range = new Range();
             range.setStart(node, at);
             range.setEnd(node, at + term.length);
@@ -45,13 +46,13 @@ export function MatchedText({ text, terms, className }: MatchedTextProps): React
             if (!(node instanceof Text) || CSS.highlights === undefined) return undefined;
 
             const highlight = searchHighlight();
-            const ranges = rangesOf(node, terms);
+            const ranges = rangesOf(node, text, terms);
             for (const range of ranges) highlight.add(range);
             return () => {
                 for (const range of ranges) highlight.delete(range);
             };
         },
-        [terms]
+        [text, terms]
     );
 
     return (

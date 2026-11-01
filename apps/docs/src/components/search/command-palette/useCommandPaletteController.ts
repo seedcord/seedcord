@@ -1,8 +1,9 @@
 'use client';
 
 import { ALL_PACKAGES } from '@seedcord/docs-search';
+import { useNavigateAndClose } from '@seedcord/ui';
 import { usePathname, useRouter } from 'next/navigation';
-import { useCallback, useEffect, useRef, useState, useTransition, type RefObject } from 'react';
+import { useCallback, useEffect, useRef, useState, type RefObject } from 'react';
 
 import { useCommandPaletteOpen } from '#components/providers/CommandPaletteProvider';
 import { log } from '#lib/logger';
@@ -97,8 +98,7 @@ export interface CommandPaletteController {
 
 export function useCommandPaletteController(): CommandPaletteController {
     const { open, setOpen } = useCommandPaletteOpen();
-    const [, startTransition] = useTransition();
-    const router = useRouter();
+    const navigate = useNavigateAndClose(useRouter(), setOpen);
     const pathname = usePathname();
     const inputRef = useRef<HTMLInputElement>(null);
     const [searchValue, setSearchValue] = useState('');
@@ -148,13 +148,9 @@ export function useCommandPaletteController(): CommandPaletteController {
                 return;
             }
 
-            // react commits this close together with the pushed page
-            startTransition(() => {
-                router.push(buildNavigationHref(action, window.location.origin));
-                setOpen(false);
-            });
+            navigate(buildNavigationHref(action, window.location.origin));
         },
-        [router, setOpen]
+        [navigate, setOpen]
     );
 
     return {

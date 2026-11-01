@@ -28,6 +28,7 @@ dist/
 *.bun-build
 .wrangler/
 .cloudflare/
+.cache/
 .seedcord/
 
 # Ignore IDE specific files

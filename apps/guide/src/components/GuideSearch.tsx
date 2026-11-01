@@ -9,11 +9,12 @@ import {
     SearchTrigger,
     cn,
     useActiveRowScroll,
+    useNavigateAndClose,
     useRovingList,
     useSearchHotkey
 } from '@seedcord/ui';
 import { useRouter } from 'next/navigation';
-import { useCallback, useMemo, useRef, useState, useTransition } from 'react';
+import { useCallback, useMemo, useRef, useState } from 'react';
 
 import { SearchResultRow } from './SearchResultRow';
 import { SearchResultsSkeleton } from './SearchResultsSkeleton';
@@ -143,7 +144,7 @@ export interface GuideSearchProps {
 export function GuideSearch({ open, onOpenChange: setOpen }: GuideSearchProps): ReactElement {
     const [typed, setTyped] = useState('');
     const inputRef = useRef<HTMLInputElement>(null);
-    const router = useRouter();
+    const navigate = useNavigateAndClose(useRouter(), setOpen);
 
     const groups = useGuideSearch(typed, open);
     // useRovingList tracks the rows by identity
@@ -151,16 +152,7 @@ export function GuideSearch({ open, onOpenChange: setOpen }: GuideSearchProps): 
 
     useSearchHotkey(() => setOpen(!open));
 
-    const [, startTransition] = useTransition();
-    // react commits this close together with the pushed page
-    const select = useCallback(
-        (result: GuideResult) =>
-            startTransition(() => {
-                router.push(result.path);
-                setOpen(false);
-            }),
-        [router, setOpen]
-    );
+    const select = useCallback((result: GuideResult) => navigate(result.path), [navigate]);
 
     const { activeIndex, pointAt, onKeyDown, ...position } = useRovingList({
         items: list.rows,

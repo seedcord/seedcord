@@ -6,6 +6,7 @@ import { useEffect, useMemo, useState } from 'react';
 import { loadOnce } from '#lib/loadOnce';
 
 import type { GuideResult } from '@seedcord/docs-search';
+import type { TaggedUnion } from 'type-fest';
 
 const TYPING_PAUSE_MS = 250;
 
@@ -15,24 +16,38 @@ const search = new GuideSearch();
 
 const loadMatches = loadOnce(() => GuideMatches.load());
 
-type GroupState =
-    { status: 'pending' } | { status: 'failed'; notice: string } | { status: 'done'; results: GuideResult[] };
+type States = {
+    pending: Record<never, never>;
+    failed: { notice: string };
+    done: { results: GuideResult[] };
+};
+
+type State<Name extends keyof States> = TaggedUnion<'status', Pick<States, Name>>;
+
+type GroupState = State<keyof States>;
 
 export type ResultGroup = { label: string } & GroupState;
 
 interface Answer {
     question: string;
-    state: Exclude<GroupState, { status: 'pending' }>;
+    state: State<'failed' | 'done'>;
 }
 
-const PENDING: GroupState = { status: 'pending' };
+type Loaded = State<'pending' | 'failed'> | { status: 'ready'; matches: GuideMatches };
+
+const PENDING = { status: 'pending' } as const;
 const NOT_ASKED: GroupState = { status: 'done', results: NO_RESULTS };
 
-function noticeFor(error: unknown): string {
+function noticeFor(error: unknown, results: string): string {
     if (error instanceof TooManySearches) return error.message;
     // fetch rejects with a TypeError when the request never reaches the server
-    if (error instanceof TypeError) return 'Related results need a network connection.';
-    return 'Related results are unavailable right now. Try again in a minute.';
+    if (error instanceof TypeError) return `${results} need a network connection.`;
+    return `${results} are unavailable right now. Try again in a minute.`;
+}
+
+function matchesState(typed: string, loaded: Loaded): GroupState {
+    if (typed.trim() === '') return NOT_ASKED;
+    return loaded.status === 'ready' ? { status: 'done', results: loaded.matches.match(typed) } : loaded;
 }
 
 function relatedState(question: string | undefined, answer: Answer | null): GroupState {
@@ -45,28 +60,29 @@ function withoutShown(state: GroupState, shown: ReadonlySet<string>): GroupState
     return { status: 'done', results: state.results.filter((result) => !shown.has(result.path)) };
 }
 
-function useMatches(open: boolean): GuideMatches | undefined {
-    const [matches, setMatches] = useState<GuideMatches>();
-    const loaded = matches !== undefined;
+function useMatches(open: boolean): Loaded {
+    const [loaded, setLoaded] = useState<Loaded>(PENDING);
+    const ready = loaded.status === 'ready';
     useEffect(() => {
-        if (!open || loaded) return undefined;
+        if (!open || ready) return undefined;
         let cancelled = false;
-        // a failed load leaves Matches empty until the dialog opens again
         loadMatches().then(
-            (sections) => {
-                if (!cancelled) setMatches(sections);
+            (matches) => {
+                if (!cancelled) setLoaded({ status: 'ready', matches });
             },
-            () => undefined
+            (error: unknown) => {
+                if (!cancelled) setLoaded({ status: 'failed', notice: noticeFor(error, 'Matches') });
+            }
         );
         return () => {
             cancelled = true;
         };
-    }, [open, loaded]);
-    return matches;
+    }, [open, ready]);
+    return loaded;
 }
 
 export function useGuideSearch(typed: string, open: boolean): ResultGroup[] {
-    const matches = useMatches(open);
+    const loaded = useMatches(open);
     const [answer, setAnswer] = useState<Answer | null>(null);
     const question = parseQuestion(typed);
 
@@ -81,7 +97,7 @@ export function useGuideSearch(typed: string, open: boolean): ResultGroup[] {
                 },
                 (error: unknown) => {
                     if (replaced.signal.aborted) return;
-                    setAnswer({ question, state: { status: 'failed', notice: noticeFor(error) } });
+                    setAnswer({ question, state: { status: 'failed', notice: noticeFor(error, 'Related results') } });
                 }
             );
         }, TYPING_PAUSE_MS);
@@ -92,14 +108,14 @@ export function useGuideSearch(typed: string, open: boolean): ResultGroup[] {
     }, [question]);
 
     const related = relatedState(question, answer);
-    const matched = useMemo(() => matches?.match(typed) ?? NO_RESULTS, [matches, typed]);
 
     return useMemo(() => {
-        const shown = new Set(matched.map((result) => result.path));
+        const matched = matchesState(typed, loaded);
+        const shown = new Set(matched.status === 'done' ? matched.results.map((result) => result.path) : []);
         const groups: ResultGroup[] = [
-            { label: 'Matches', status: 'done', results: matched },
+            { label: 'Matches', ...matched },
             { label: 'Related', ...withoutShown(related, shown) }
         ];
         return groups.filter((group) => group.status !== 'done' || group.results.length > 0);
-    }, [matched, related]);
+    }, [typed, loaded, related]);
 }

@@ -1,11 +1,12 @@
 import { GUIDE } from '@seedcord/ui/sites';
 
 import { GUIDE_SECTIONS_PATH } from '#src/files';
-import { guideResult, parseQuestion } from '#src/GuideSearch';
+import { guideResult } from '#src/GuideResult';
+import { collapseSpaces, parseQuestion } from '#src/GuideSearch';
 import { guideHit } from '#src/guideSections';
 import { readJson } from '#src/readAsset';
 
-import type { GuideResult } from '#src/GuideSearch';
+import type { GuideResult } from '#src/GuideResult';
 import type { GuideHit, GuideSection } from '#src/guideSections';
 
 const TITLE_RESULTS = 3;
@@ -55,7 +56,7 @@ export class GuideMatches {
 
     constructor(sections: readonly GuideSection[]) {
         this.sections = sections.map((section) => {
-            const text = section.text.replaceAll(/\s+/g, ' ');
+            const text = collapseSpaces(section.text);
             return {
                 hit: guideHit(section),
                 isPage: section.heading === undefined,
@@ -66,7 +67,7 @@ export class GuideMatches {
         });
     }
 
-    // the page's own origin, since the same build wrote this file
+    // the page's own origin
     static async load(): Promise<GuideMatches> {
         return new GuideMatches(await readJson<GuideSection[]>(`${GUIDE.path}${GUIDE_SECTIONS_PATH}`));
     }

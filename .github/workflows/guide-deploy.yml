@@ -7,7 +7,7 @@ on:
       - 'apps/guide/**'
       - 'tooling/docs-search/**'
       - 'scripts/src/guide/**'
-      - 'scripts/src/lib/**'
+      - 'scripts/src/lib/CloudflareApi.ts'
       - 'tooling/ui/**'
       - 'pnpm-workspace.yaml'
       - '.github/workflows/guide-deploy.yml'

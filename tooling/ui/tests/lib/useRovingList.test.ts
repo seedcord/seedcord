@@ -3,13 +3,12 @@ import { describe, expect, it, vi } from 'vitest';
 
 import { useRovingList } from '#src/lib/useRovingList';
 
-import type { KeyboardEvent } from 'react';
+import type { RovingList } from '#src/lib/useRovingList';
 
 const ITEMS: readonly string[] = ['a', 'b', 'c'];
 
-function keyEvent(key: string, shiftKey = false, preventDefault = vi.fn()): KeyboardEvent<HTMLElement> {
-    // the hook reads only key, shiftKey, and preventDefault
-    return { key, shiftKey, preventDefault } as unknown as KeyboardEvent<HTMLElement>;
+function keyEvent(key: string, shiftKey = false, preventDefault = vi.fn()): Parameters<RovingList['onKeyDown']>[0] {
+    return { key, shiftKey, preventDefault };
 }
 
 function press(result: { current: ReturnType<typeof useRovingList> }, ...keys: string[]): void {

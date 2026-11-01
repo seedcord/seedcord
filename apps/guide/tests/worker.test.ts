@@ -1,11 +1,14 @@
-import { existsSync } from 'node:fs';
+import { existsSync, readFileSync } from 'node:fs';
 import { resolve } from 'node:path';
 
 import { embedding, GUIDE_SECTIONS_PATH, GUIDE_VECTORS_PATH, QUESTION_LENGTH } from '@seedcord/docs-search';
+import { parse } from 'jsonc-parser';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
 // eslint-disable-next-line no-restricted-imports -- the app root has no alias
 import handler from '../worker';
+
+import type { Unstable_RawConfig } from 'wrangler';
 
 type Env = Parameters<typeof handler.fetch>[1];
 
@@ -341,7 +344,7 @@ describe('the ask endpoint', () => {
         const env = searching();
 
         await get('/api/ask?q=make+a+button', env);
-        await Promise.all(pending);
+        await Promise.all(pending.splice(0));
         const again = await get('/api/ask?q=+make+a+button+', env);
 
         expect(again.status).toBe(200);
@@ -363,7 +366,15 @@ describe('the ask endpoint', () => {
         const response = await get('/api/ask?q=button', env);
 
         expect(response.status).toBe(429);
-        expect(response.headers.get('retry-after')).toBe('60');
         expect(env.embedded).toEqual([]);
+
+        const config = parse(
+            readFileSync(resolve(import.meta.dirname, '../wrangler.jsonc'), 'utf8')
+        ) as Unstable_RawConfig;
+        const periods = [config, config.env?.preview].map(
+            (environment) => environment?.ratelimits?.find(({ name }) => name === 'ASK_LIMIT')?.simple.period
+        );
+        const retryAfter = Number(response.headers.get('retry-after'));
+        expect(periods).toEqual([retryAfter, retryAfter]);
     });
 });

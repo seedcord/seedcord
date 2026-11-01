@@ -1,9 +1,10 @@
-import { render, screen } from '@testing-library/react';
+import { render, screen, type RenderResult } from '@testing-library/react';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 
 import { SearchResultRow } from '#components/SearchResultRow';
 
 import type { GuideResult } from '@seedcord/docs-search';
+import type { ReactElement } from 'react';
 
 const RESULT: GuideResult = {
     path: '/checks/cooldown/#several-uses-per-window',
@@ -16,8 +17,8 @@ const RESULT: GuideResult = {
     terms: ['a sliding window']
 };
 
-function renderRow(result: GuideResult = RESULT): void {
-    render(
+function row(result: GuideResult): ReactElement {
+    return (
         <SearchResultRow
             result={result}
             isActive={false}
@@ -29,18 +30,36 @@ function renderRow(result: GuideResult = RESULT): void {
     );
 }
 
+function renderRow(result: GuideResult = RESULT): RenderResult {
+    return render(row(result));
+}
+
+// jsdom has no CSS Custom Highlight API
+function stubHighlights(): () => string[] {
+    const highlights = new Map<string, Set<Range>>();
+    vi.stubGlobal('CSS', { highlights });
+    vi.stubGlobal('Highlight', Set);
+    return () => [...(highlights.get('search-match') ?? [])].map(String);
+}
+
 afterEach(() => vi.unstubAllGlobals());
 
 describe('SearchResultRow', () => {
     it('highlights only the phrase that matched in the excerpt', () => {
-        // jsdom has no CSS Custom Highlight API
-        const highlights = new Map<string, Set<Range>>();
-        vi.stubGlobal('CSS', { highlights });
-        vi.stubGlobal('Highlight', Set);
+        const highlighted = stubHighlights();
 
         renderRow();
 
-        expect([...(highlights.get('search-match') ?? [])].map(String)).toEqual(['a sliding window']);
+        expect(highlighted()).toEqual(['a sliding window']);
+    });
+
+    it('moves the highlight when the excerpt changes under the same phrase', () => {
+        const highlighted = stubHighlights();
+        const { rerender } = renderRow();
+
+        rerender(row({ ...RESULT, excerpt: 'Pick a sliding window here.' }));
+
+        expect(highlighted()).toEqual(['a sliding window']);
     });
 
     it('still renders in a browser without the highlight API', () => {

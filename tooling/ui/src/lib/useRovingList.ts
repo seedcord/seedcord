@@ -4,7 +4,6 @@ import { useCallback, useState } from 'react';
 
 import type { KeyboardEvent } from 'react';
 
-// Tab jumps to the start of each group and holds still on a group that's loading
 export type RovingGroup = { loading: false; start: number } | { loading: true };
 
 export interface RovingListOptions<TItem> {
@@ -20,10 +19,12 @@ export interface RowPosition {
     pickedByPointer: boolean;
 }
 
+type RovingKey = Pick<KeyboardEvent, 'key' | 'shiftKey' | 'preventDefault'>;
+
 export interface RovingList extends RowPosition {
     activeIndex: number;
     pointAt: (index: number) => void;
-    onKeyDown: (event: KeyboardEvent<HTMLElement>) => void;
+    onKeyDown: (event: RovingKey) => void;
 }
 
 const NO_GROUPS: readonly RovingGroup[] = [];
@@ -57,7 +58,7 @@ export function useRovingList<TItem>({ items, onSelect, groups = NO_GROUPS }: Ro
     const total = items.length;
 
     const onKeyDown = useCallback(
-        (event: KeyboardEvent<HTMLElement>): void => {
+        (event: RovingKey): void => {
             if (total === 0) return;
 
             const move = (next: number): void => {

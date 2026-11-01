@@ -103,6 +103,7 @@ describe('GuideMatches', () => {
                 terms: ["per: 'guild'"]
             })
         ]);
+        expect(paths(matches, "per:   'guild'")).toEqual(['/checks/cooldown/#who-shares-a-window']);
         expect(paths(matches, 'event')).toEqual(['/events/', '/events/#several-handlers-for-one-event']);
     });
 

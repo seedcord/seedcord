@@ -54,9 +54,12 @@ function serving(sections: Response[] = []): Server {
     };
 }
 
-const relatedNotice = (groups: readonly ResultGroup[]): string | undefined => {
-    const related = groups.find((group) => group.label === 'Related');
-    return related?.status === 'failed' ? related.notice : undefined;
+const groupOf = (groups: readonly ResultGroup[], label: string): ResultGroup | undefined =>
+    groups.find((group) => group.label === label);
+
+const noticeOf = (groups: readonly ResultGroup[], label: string): string | undefined => {
+    const group = groupOf(groups, label);
+    return group?.status === 'failed' ? group.notice : undefined;
 };
 
 const shown = (groups: readonly ResultGroup[]): { label: string; status: ResultGroup['status']; paths: string[] }[] =>
@@ -126,12 +129,12 @@ describe('useGuideSearch', () => {
         });
         await pauseTyping();
         await answer('cooldown', new Response(null, { status: 429, headers: { 'retry-after': '60' } }));
-        expect(relatedNotice(result.current)).toBe('Too many searches. Try again in 60 seconds.');
+        expect(noticeOf(result.current, 'Related')).toBe('Too many searches. Try again in 60 seconds.');
 
         rerender({ typed: 'kysely' });
         await pauseTyping();
         await answer('kysely', new TypeError('Failed to fetch'));
-        expect(relatedNotice(result.current)).toBe('Related results need a network connection.');
+        expect(noticeOf(result.current, 'Related')).toBe('Related results need a network connection.');
     });
 
     it('loads the guide sections once the dialog opens, and again on the next open after a failure', async () => {
@@ -142,8 +145,9 @@ describe('useGuideSearch', () => {
         expect(sectionLoads()).toBe(0);
 
         rerender({ open: true });
+        expect(groupOf(result.current, 'Matches')?.status).toBe('pending');
         await act(() => vi.advanceTimersByTimeAsync(0));
-        expect(matchedPaths(result.current)).toEqual([]);
+        expect(noticeOf(result.current, 'Matches')).toBe('Matches are unavailable right now. Try again in a minute.');
 
         rerender({ open: false });
         rerender({ open: true });

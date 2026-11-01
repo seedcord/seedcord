@@ -182,7 +182,8 @@ describe('buildPackageFromModel search summary', () => {
         ],
         ['a dotted name', 'Reads this.event.options once. Then caches it.', 'Reads this.event.options once.'],
         ['a numbered step', '1. Creates a client. Then logs in.', '1. Creates a client.'],
-        ['vs.', 'Pick one vs. the other. The rest follows.', 'Pick one vs. the other.']
+        ['vs.', 'Pick one vs. the other. The rest follows.', 'Pick one vs. the other.'],
+        ['etc. before a new sentence', 'Reads ids, names, etc. The rest follows.', 'Reads ids, names, etc.']
     ])('ends the first sentence correctly for %s', (_, summary, first) => {
         expect(searchEntryFor(summary)?.summary).toBe(first);
     });

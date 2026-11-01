@@ -10,7 +10,6 @@ interface CommandPaletteOpen {
     setOpen: (open: boolean) => void;
 }
 
-// zustand applies an update at once, even inside startTransition
 const CommandPaletteContext = createContext<CommandPaletteOpen | null>(null);
 
 export function useCommandPaletteOpen(): CommandPaletteOpen {
