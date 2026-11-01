@@ -2,7 +2,7 @@ import { mkdir, mkdtempDisposable, readdir, readFile, writeFile } from 'node:fs/
 import { tmpdir } from 'node:os';
 import { join, resolve } from 'node:path';
 
-import { describe, expect, it, onTestFinished } from 'vitest';
+import { afterEach, describe, expect, it, onTestFinished, vi } from 'vitest';
 
 import { scaffold } from '#scaffold/scaffold';
 import { BOT_TOKEN } from '#tests/token';
@@ -16,6 +16,10 @@ async function scaffolded(...args: Parameters<typeof scaffold>): Promise<Extract
     if (!result.created) throw new Error('scaffold wrote nothing');
     return result;
 }
+
+afterEach(() => {
+    vi.unstubAllEnvs();
+});
 
 const TEMPLATES = resolve(import.meta.dirname, '../../templates');
 const STARTERS = resolve(import.meta.dirname, '../../starters');
@@ -280,35 +284,76 @@ describe('scaffold', () => {
         expect(runtime).toContain('discord-api-types');
     });
 
-    it('skips install, format, and codegen when install is off', async () => {
+    it('installs the next framework line when the scaffolder is a prerelease', async () => {
+        vi.stubEnv('PACKAGE_VERSION', '0.6.0-next.0');
         const target = await scratchTarget();
         const { runner, calls } = recorder();
 
-        await scaffold({ ...baseInput(target), answers: { ...GATEWAY, install: false } }, runner);
+        await scaffold({ ...baseInput(target), answers: EDGE }, runner);
 
-        expect(calls.map((call) => call.command)).toEqual(['git', 'git', 'git']);
+        const { runtime, dev } = installs(calls);
+        expect(dev).toContain('seedcord@next');
+        expect(runtime).toContain('@seedcord/http@next');
+        expect(dev).toContain('@seedcord/eslint-config');
+        expect(dev).not.toContain('@seedcord/eslint-config@next');
     });
 
-    it('writes runtime and dev dependencies when install is off', async () => {
+    it.each([
+        ['pnpm', '--lockfile-only'],
+        ['npm', '--package-lock-only'],
+        ['bun', '--lockfile-only']
+    ] as const)('runs both adds with the %s lockfile-only flag when install is off', async (agent, flag) => {
         const target = await scratchTarget();
-        const { runner } = recorder();
+        const { runner, calls } = recorder();
 
-        await scaffold({ ...baseInput(target), answers: { ...GATEWAY, install: false } }, runner);
+        const result = await scaffolded(
+            { ...baseInput(target), agent, answers: { ...GATEWAY, install: false } },
+            runner
+        );
 
-        const manifest = JSON.parse(await readFile(join(target, 'package.json'), 'utf8')) as {
-            dependencies: Record<string, string>;
-            devDependencies: Record<string, string>;
-        };
-        expect(manifest.dependencies).toMatchObject({
-            '@seedcord/gateway': 'latest',
-            'discord.js': 'latest',
-            envapt: 'latest'
-        });
-        expect(manifest.devDependencies).toMatchObject({
-            seedcord: 'latest',
-            typescript: '~6.0',
-            vite: '^8.3.4'
-        });
+        expect(result.installed).toBe(false);
+        expect(result.failed).toBe(false);
+
+        const adds = calls.filter(({ command }) => command !== 'git');
+        expect(adds).toHaveLength(2);
+        expect(adds.some(({ args }) => args.includes('-D'))).toBe(true);
+        expect(adds.some(({ args }) => args.includes('@seedcord/gateway'))).toBe(true);
+        for (const add of adds) expect(add.args).toContain(flag);
+    });
+
+    it('runs both adds with the berry lockfile-only flag when install is off', async () => {
+        vi.stubEnv('npm_config_user_agent', 'yarn/4.18.1 npm/? node/v25.9.0 darwin arm64');
+        const target = await scratchTarget();
+        const { runner, calls } = recorder();
+
+        const result = await scaffolded(
+            { ...baseInput(target), agent: 'yarn', answers: { ...GATEWAY, install: false } },
+            runner
+        );
+
+        expect(result.failed).toBe(false);
+
+        const adds = calls.filter(({ command }) => command !== 'git');
+        expect(adds).toHaveLength(2);
+        for (const add of adds) expect(add.args).toContain('--mode=update-lockfile');
+    });
+
+    it('skips the adds and the later steps when the manager has no lockfile-only add', async () => {
+        vi.stubEnv('npm_config_user_agent', 'yarn/1.22.22 npm/? node/v25.9.0 darwin arm64');
+        const target = await scratchTarget();
+        const { runner, calls } = recorder();
+        const { steps, seen } = stepRecorder();
+
+        const result = await scaffolded(
+            { ...baseInput(target, steps), agent: 'yarn', answers: { ...GATEWAY, install: false } },
+            runner
+        );
+
+        expect(result.failed).toBe(false);
+        expect(calls.map((call) => call.command)).toEqual(['git', 'git', 'git']);
+        expect(seen).toContain('skipped: deps');
+        expect(seen).toContain('skipped: format');
+        expect(seen).toContain('skipped: types');
     });
 
     it('reports every step in order', async () => {
@@ -321,8 +366,8 @@ describe('scaffold', () => {
         expect(seen).toEqual([
             'files',
             'done: files',
-            'install',
-            'done: install',
+            'deps',
+            'done: deps',
             'format',
             'done: format',
             'types',
@@ -353,7 +398,7 @@ describe('scaffold', () => {
 
         expect(result.installed).toBe(false);
         expect(result.failed).toBe(true);
-        expect(seen).toContain('failed: install');
+        expect(seen).toContain('failed: deps');
         expect(result.notices.join('\n')).not.toContain('-D blew up');
         expect(calls.map((call) => call.command)).toContain('git');
     });
@@ -399,14 +444,14 @@ describe('scaffold', () => {
         expect(calls.map((call) => call.args.join(' ')).some((args) => args.includes('codegen'))).toBe(true);
     });
 
-    it('marks the three install steps skipped rather than dropping them', async () => {
+    it('runs the lockfile adds and marks only format and types skipped when install is off', async () => {
         const target = await scratchTarget();
         const { runner } = recorder();
         const { steps, seen } = stepRecorder();
 
         await scaffold({ ...baseInput(target, steps), answers: { ...GATEWAY, install: false } }, runner);
 
-        expect(seen).toContain('skipped: install');
+        expect(seen).toContain('done: deps');
         expect(seen).toContain('skipped: format');
         expect(seen).toContain('skipped: types');
     });

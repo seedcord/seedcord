@@ -1,8 +1,8 @@
 import { mkdir, rm, writeFile } from 'node:fs/promises';
 import { dirname, join } from 'node:path';
 
-import { addCommand, execCommand } from '#cli/packageManager';
-import { devPackages, runtimePackages } from '#scaffold/dependencies';
+import { execCommand } from '#cli/packageManager';
+import { dependencyCommands, lockfileDependencyCommands } from '#scaffold/dependencies';
 import { gitPlanFrom, probeGit } from '#scaffold/git';
 import { claimTarget } from '#scaffold/target';
 import { buildContext } from '#template/context';
@@ -11,7 +11,7 @@ import { copyStarters, renderTemplates } from '#template/render';
 import type { StepLabel, StepUi } from '#cli/steps';
 import type { GitPlan } from '#scaffold/git';
 import type { ScaffoldAnswers, TemplateContext } from '#template/context';
-import type { AgentName } from 'package-manager-detector';
+import type { AgentName, ResolvedCommand } from 'package-manager-detector';
 
 // the resolved string is a warning worth printing
 export type CommandRunner = (command: string, args: string[], cwd: string) => Promise<string | null>;
@@ -75,9 +75,32 @@ interface InstallOutcome {
 }
 
 function skipInstallSteps(steps: StepUi): InstallOutcome {
-    for (const label of ['install', 'format', 'types'] as const) steps.skip(label);
+    for (const label of ['deps', 'format', 'types'] as const) steps.skip(label);
 
     return { installed: false, notices: [], failed: false };
+}
+
+interface AddOutcome {
+    added: boolean;
+    notices: string[];
+}
+
+async function runAdds(
+    steps: StepUi,
+    run: CommandRunner,
+    target: string,
+    commands: readonly ResolvedCommand[]
+): Promise<AddOutcome> {
+    const notices: string[] = [];
+    const collect = (warning: string | null): void => {
+        if (warning !== null) notices.push(warning);
+    };
+
+    const added = await succeeded(steps, 'deps', async () => {
+        for (const command of commands) collect(await run(command.command, command.args, target));
+    });
+
+    return { added, notices };
 }
 
 async function runInstallSteps(
@@ -87,28 +110,21 @@ async function runInstallSteps(
 ): Promise<InstallOutcome> {
     const { agent, steps, target } = input;
 
-    const deps = addCommand(agent, runtimePackages(context.isGateway), false);
-    const dev = addCommand(agent, devPackages(context.isEdge), true);
     const format = execCommand(agent, ['prettier', '--write', '.']);
     const codegen = execCommand(agent, ['seedcord', 'codegen']);
-
-    const warnings: string[] = [];
-    const collect = (warning: string | null): void => {
-        if (warning !== null) warnings.push(warning);
-    };
-
-    // cf goes in the first add, since bun runs the project's postinstall after every one
-    const installed = await succeeded(steps, 'install', async () => {
-        collect(await run(dev.command, dev.args, target));
-        collect(await run(deps.command, deps.args, target));
-    });
+    const { added, notices } = await runAdds(
+        steps,
+        run,
+        target,
+        dependencyCommands(agent, context.isGateway, context.isEdge)
+    );
 
     // npx and bun x fetch a missing binary from the registry
-    if (!installed) {
+    if (!added) {
         steps.skip('format');
         steps.skip('types');
 
-        return { installed: false, notices: warnings, failed: true };
+        return { installed: false, notices, failed: true };
     }
 
     const formatted = await succeeded(steps, 'format', () => run(format.command, format.args, target));
@@ -121,7 +137,23 @@ async function runInstallSteps(
         await run(bindingTypes.command, bindingTypes.args, target);
     });
 
-    return { installed: true, notices: warnings, failed: !formatted || !generated };
+    return { installed: true, notices, failed: !formatted || !generated };
+}
+
+async function resolveDependencies(
+    input: ScaffoldInput,
+    run: CommandRunner,
+    context: TemplateContext
+): Promise<InstallOutcome> {
+    const commands = lockfileDependencyCommands(input.agent, context.isGateway, context.isEdge);
+    if (commands === null) return skipInstallSteps(input.steps);
+
+    const { added, notices } = await runAdds(input.steps, run, input.target, commands);
+
+    input.steps.skip('format');
+    input.steps.skip('types');
+
+    return { installed: false, notices, failed: !added };
 }
 
 // scaffold deletes this directory when writing fails; every step after it keeps the tree
@@ -155,7 +187,9 @@ export async function scaffold(input: ScaffoldInput, run: CommandRunner): Promis
     const context = buildContext(input.answers, { developerUsername: plan.developerUsername, agent: input.agent });
     if (!(await writeProject(input, context, existed))) return { created: false };
 
-    const outcome = input.answers.install ? await runInstallSteps(input, run, context) : skipInstallSteps(input.steps);
+    const outcome = input.answers.install
+        ? await runInstallSteps(input, run, context)
+        : await resolveDependencies(input, run, context);
 
     const gitNotice = await gitNoticeFor(input, run, plan);
 

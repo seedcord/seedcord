@@ -1,7 +1,7 @@
 import { execFileSync } from 'node:child_process';
 import { stripVTControlCharacters } from 'node:util';
 
-import { describe, expect, it } from 'vitest';
+import { afterEach, describe, expect, it, vi } from 'vitest';
 
 import { parseInput } from '#cli/parseInput';
 import { dashboardToggles, nextSteps as paintedSteps, reproducingCommand } from '#cli/summary';
@@ -10,6 +10,10 @@ import { STEPS } from '#interview/steps';
 import { BOT_TOKEN } from '#tests/token';
 
 import type { ScaffoldAnswers } from '#template/context';
+
+afterEach(() => {
+    vi.unstubAllEnvs();
+});
 
 function shellWordsAfter(program: string, line: string): string[] {
     expect(line.startsWith(`${program} `)).toBe(true);
@@ -69,6 +73,22 @@ describe('nextSteps', () => {
 
     it('leaves the install out when it already ran', () => {
         expect(nextSteps(GATEWAY, { agent: 'pnpm', installed: true })).not.toContain('pnpm install');
+    });
+
+    it('still asks for the install when install is off and the manager wrote the lockfile', () => {
+        const steps = nextSteps({ ...GATEWAY, install: false }, { agent: 'pnpm', installed: false });
+
+        expect(steps).toContain('pnpm install');
+        expect(steps.filter((step) => step.startsWith('pnpm add'))).toEqual([]);
+    });
+
+    it('prints the add commands when install is off and the manager has no lockfile-only add', () => {
+        vi.stubEnv('npm_config_user_agent', 'yarn/1.22.22 npm/? node/v25.9.0 darwin arm64');
+        const steps = nextSteps({ ...GATEWAY, install: false }, { agent: 'yarn', installed: false });
+
+        expect(steps.some((step) => step.startsWith('yarn add -D '))).toBe(true);
+        expect(steps.some((step) => step.startsWith('yarn add ') && !step.includes(' -D '))).toBe(true);
+        expect(steps).not.toContain('yarn install');
     });
 
     it('asks for nothing in .env when every secret was pasted', () => {

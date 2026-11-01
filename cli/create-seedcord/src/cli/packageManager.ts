@@ -9,6 +9,27 @@ const FALLBACK: AgentName = 'npm';
 // the templates need the part of a resolved command in front of this placeholder
 const PROBE = 'dev';
 
+const LOCKFILE_ONLY: Partial<Record<AgentName, readonly string[]>> = {
+    bun: ['--lockfile-only'],
+    npm: ['--package-lock-only'],
+    pnpm: ['--lockfile-only'],
+    yarn: ['--mode=update-lockfile']
+};
+
+// yarn classic ignores --mode=update-lockfile and installs anyway
+function yarnMajorVersion(): number {
+    const entry = process.env.npm_config_user_agent?.split(' ').find((part) => part.startsWith('yarn/'));
+    return Number.parseInt(entry?.slice('yarn/'.length) ?? '', 10);
+}
+
+function flagsFor(agent: AgentName): readonly string[] | null {
+    const flags = LOCKFILE_ONLY[agent];
+    if (flags === undefined) return null;
+    if (agent === 'yarn') return yarnMajorVersion() > 1 ? flags : null;
+
+    return flags;
+}
+
 export function runningAgent(): AgentName {
     return getUserAgent() ?? FALLBACK;
 }
@@ -35,4 +56,15 @@ export function addCommand(agent: AgentName, packages: string[], dev: boolean): 
 
 export function execCommand(agent: AgentName, args: string[]): ResolvedCommand {
     return resolveCommand(agent, 'execute-local', args) ?? { command: agent, args: ['exec', ...args] };
+}
+
+export function supportsLockfileOnly(agent: AgentName): boolean {
+    return flagsFor(agent) !== null;
+}
+
+export function lockfileOnly(agent: AgentName, command: ResolvedCommand): ResolvedCommand | null {
+    const flags = flagsFor(agent);
+    if (flags === null) return null;
+
+    return { command: command.command, args: [...command.args, ...flags] };
 }

@@ -1,13 +1,15 @@
 import { paint } from '@seedcord/errors';
 
-import { runPrefix } from '#cli/packageManager';
+import { runPrefix, supportsLockfileOnly } from '#cli/packageManager';
 import { version } from '#cli/version';
 import { noFlagName } from '#interview/applyFlags';
 import { privilegedFor } from '#interview/capabilities';
+import { dependencyCommands } from '#scaffold/dependencies';
+import { transportValuesOf } from '#template/context';
 
 import type { ScaffoldAnswers } from '#template/context';
 import type { BotToken } from '@seedcord/errors/internal';
-import type { AgentName } from 'package-manager-detector';
+import type { AgentName, ResolvedCommand } from 'package-manager-detector';
 
 const PORTAL = 'https://discord.com/developers/applications';
 
@@ -26,8 +28,20 @@ function shellWord(value: string): string {
     return PLAIN_WORD.test(value) ? value : `"${value}"`;
 }
 
+function spoken(command: ResolvedCommand): string {
+    return [command.command, ...command.args].join(' ');
+}
+
+// a manager without a lockfile-only add needs the add lines it could not run
+function installSteps(answers: ScaffoldAnswers, agent: AgentName): string[] {
+    if (answers.install || supportsLockfileOnly(agent)) return [paint.bold(`${agent} install`)];
+
+    const { isGateway, isEdge } = transportValuesOf(answers);
+    return dependencyCommands(agent, isGateway, isEdge).map((command) => paint.bold(spoken(command)));
+}
+
 export function nextSteps(answers: ScaffoldAnswers, run: { agent: AgentName; installed: boolean }): string[] {
-    const install = run.installed ? [] : [paint.bold(`${run.agent} install`)];
+    const install = run.installed ? [] : installSteps(answers, run.agent);
     const fill = answers.token === null ? [paint.mute('add DISCORD_BOT_TOKEN to .env')] : [];
 
     const cd = paint.bold(`cd ${shellWord(answers.directory)}`);

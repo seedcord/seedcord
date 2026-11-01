@@ -1,3 +1,8 @@
+import { addCommand, lockfileOnly } from '#cli/packageManager';
+import { releaseTag } from '#cli/version';
+
+import type { AgentName, ResolvedCommand } from 'package-manager-detector';
+
 const DEV_PACKAGES = [
     '@seedcord/eslint-config',
     '@seedcord/tsconfig',
@@ -5,7 +10,6 @@ const DEV_PACKAGES = [
     'eslint',
     'jiti',
     'prettier',
-    'seedcord',
     'typescript@~6.0',
     'vite@^8.3.4'
 ];
@@ -13,32 +17,47 @@ const DEV_PACKAGES = [
 const EDGE_DEV_PACKAGES = ['cf@1.0.0-beta.26', '@cloudflare/vite-plugin@2.0.0-beta.v.8'];
 const SHARED_PACKAGES = ['@discordjs/builders', 'discord-api-types', 'envapt'];
 
-interface DependencyManifest {
-    dependencies: Record<string, string>;
-    devDependencies: Record<string, string>;
+function tagged(name: string, tag: 'next' | null): string {
+    return tag === null ? name : `${name}@${tag}`;
 }
 
-function packageParts(spec: string): [name: string, version: string] {
-    const at = spec.startsWith('@') ? spec.indexOf('@', 1) : spec.indexOf('@');
-    return at === -1 ? [spec, 'latest'] : [spec.slice(0, at), spec.slice(at + 1)];
-}
-
-function manifestEntries(packages: string[]): Record<string, string> {
-    return Object.fromEntries(packages.map(packageParts));
-}
-
-export function runtimePackages(isGateway: boolean): string[] {
-    const transport = isGateway ? ['@seedcord/gateway', 'discord.js'] : ['@seedcord/http'];
+function runtimePackages(isGateway: boolean, tag: 'next' | null): string[] {
+    const transport = isGateway ? [tagged('@seedcord/gateway', tag), 'discord.js'] : [tagged('@seedcord/http', tag)];
     return [...transport, ...SHARED_PACKAGES];
 }
 
-export function devPackages(isEdge: boolean): string[] {
-    return isEdge ? [...DEV_PACKAGES, ...EDGE_DEV_PACKAGES] : DEV_PACKAGES;
+function devPackages(isEdge: boolean, tag: 'next' | null): string[] {
+    const packages = [tagged('seedcord', tag), ...DEV_PACKAGES];
+    return isEdge ? [...packages, ...EDGE_DEV_PACKAGES] : packages;
 }
 
-export function dependencyManifest(isGateway: boolean, isEdge: boolean): DependencyManifest {
-    return {
-        dependencies: manifestEntries(runtimePackages(isGateway)),
-        devDependencies: manifestEntries(devPackages(isEdge))
-    };
+// cf goes in the first add, since bun runs the project's postinstall after every one
+export function dependencyCommands(
+    agent: AgentName,
+    isGateway: boolean,
+    isEdge: boolean,
+    tag: 'next' | null = releaseTag()
+): readonly ResolvedCommand[] {
+    return [
+        addCommand(agent, devPackages(isEdge, tag), true),
+        addCommand(agent, runtimePackages(isGateway, tag), false)
+    ];
+}
+
+export function lockfileDependencyCommands(
+    agent: AgentName,
+    isGateway: boolean,
+    isEdge: boolean,
+    tag: 'next' | null = releaseTag()
+): readonly ResolvedCommand[] | null {
+    const commands: ResolvedCommand[] = [];
+
+    for (const command of dependencyCommands(agent, isGateway, isEdge, tag)) {
+        const lockfile = lockfileOnly(agent, command);
+        if (lockfile === null) return null;
+
+        commands.push(lockfile);
+    }
+
+    return commands;
 }
