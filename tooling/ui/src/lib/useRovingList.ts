@@ -11,10 +11,14 @@ export interface RovingListOptions<TItem> {
     groupStarts?: readonly number[];
 }
 
-export interface RovingList {
-    activeIndex: number;
+export interface RowPosition {
     isFirst: boolean;
     isLast: boolean;
+    isGroupStart: boolean;
+}
+
+export interface RovingList extends RowPosition {
+    activeIndex: number;
     setActiveIndex: (index: number) => void;
     onKeyDown: (event: KeyboardEvent<HTMLElement>) => void;
 }
@@ -98,6 +102,7 @@ export function useRovingList<TItem>({
         activeIndex,
         isFirst: activeIndex === 0,
         isLast: total > 0 && activeIndex === total - 1,
+        isGroupStart: groupStarts.includes(activeIndex),
         setActiveIndex,
         onKeyDown
     };

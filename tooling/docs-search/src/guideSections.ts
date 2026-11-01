@@ -2,19 +2,21 @@ import type { StructuredData } from 'fumadocs-core/mdx-plugins';
 
 export interface GuideSection {
     url: string;
+    tab: string;
     page: string;
     heading?: string;
     text: string;
 }
 
-export type GuideHit = Pick<GuideSection, 'page' | 'heading'> & { path: string };
+export type GuideHit = Pick<GuideSection, 'tab' | 'page' | 'heading'> & { path: string };
 
-export function guideHit({ url, page, heading }: GuideSection): GuideHit {
-    return { path: url, page, ...(heading !== undefined && { heading }) };
+export function guideHit({ url, tab, page, heading }: GuideSection): GuideHit {
+    return { path: url, tab, page, ...(heading !== undefined && { heading }) };
 }
 
 interface GuidePage {
     url: string;
+    tab: string;
     title: string;
     description?: string | undefined;
     structuredData: StructuredData;
@@ -22,12 +24,12 @@ interface GuidePage {
 
 type Collecting = Omit<GuideSection, 'text'> & { lines: string[] };
 
-export function guideSections({ url, title, description, structuredData }: GuidePage): GuideSection[] {
-    const intro: Collecting = { url, page: title, lines: description ? [description] : [] };
+export function guideSections({ url, tab, title, description, structuredData }: GuidePage): GuideSection[] {
+    const intro: Collecting = { url, tab, page: title, lines: description ? [description] : [] };
     const headings = new Map(
         structuredData.headings.map(({ id, content }): [string, Collecting] => [
             id,
-            { url: `${url}#${id}`, page: title, heading: content, lines: [] }
+            { url: `${url}#${id}`, tab, page: title, heading: content, lines: [] }
         ])
     );
 

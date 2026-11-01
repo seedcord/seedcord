@@ -7,7 +7,6 @@ export const REFERENCE_SEARCH_URL = PRODUCTION_SITES.docs.at('/api/search');
 export const GUIDE_ASK_PATH = '/api/ask';
 export const GUIDE_ASK_URL = GUIDE.at(GUIDE_ASK_PATH);
 export const GUIDE_SECTIONS_PATH = '/api/sections.json';
-export const GUIDE_TITLES_PATH = '/api/titles.json';
 export const GUIDE_VECTORS_PATH = '/api/vectors.bin';
 
 export const searchFileName = (version: string): string => `${version}${EXTENSION}`;

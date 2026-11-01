@@ -6,6 +6,7 @@ it('throws when text sits under a heading the page does not list', () => {
     expect(() =>
         guideSections({
             url: '/build/config',
+            tab: 'Build & deploy',
             title: 'seedcord.config.ts',
             structuredData: { headings: [], contents: [{ heading: 'gone', content: 'orphaned text' }] }
         })
@@ -15,6 +16,7 @@ it('throws when text sits under a heading the page does not list', () => {
 it('gives the page intro and each heading its own section, with the text under it', () => {
     const sections = guideSections({
         url: '/build/config',
+        tab: 'Build & deploy',
         title: 'seedcord.config.ts',
         description: 'Tell the CLI where your bot lives.',
         structuredData: {
@@ -30,11 +32,13 @@ it('gives the page intro and each heading its own section, with the text under i
     expect(sections).toEqual([
         {
             url: '/build/config',
+            tab: 'Build & deploy',
             page: 'seedcord.config.ts',
             text: 'Tell the CLI where your bot lives.\nThe config file sits at the root.'
         },
         {
             url: '/build/config#every-key',
+            tab: 'Build & deploy',
             page: 'seedcord.config.ts',
             heading: 'Every key',
             text: 'root sets the folder.\noutDir sets the build folder.'

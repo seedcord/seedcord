@@ -45,6 +45,23 @@ export const GUIDE_TABS: readonly GuideTab[] = TAB_ROOTS.reduce<GuideTab[]>((tab
     return tabs;
 }, []);
 
+function pageUrls(node: TabRoot): string[] {
+    // eslint-disable-next-line @typescript-eslint/no-unnecessary-condition -- fumadocs assigns undefined when pagesIndex resolves to nothing
+    const urls = 'index' in node && node.index ? [node.index.url] : [];
+    for (const child of node.children) {
+        if (child.type === 'page') urls.push(child.url);
+        if (child.type === 'folder' && !child.root) urls.push(...pageUrls(child));
+    }
+    return urls;
+}
+
+export const TAB_OF_PAGE: ReadonlyMap<string, string> = new Map(
+    TAB_ROOTS.flatMap((node) => {
+        const tab = text(node.name);
+        return tab === undefined ? [] : pageUrls(node).map((url): [string, string] => [url, tab]);
+    })
+);
+
 interface DraftSection {
     label?: string | undefined;
     links: SidebarLink[];

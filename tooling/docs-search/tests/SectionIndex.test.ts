@@ -7,9 +7,21 @@ import { SectionIndex } from '#src/SectionIndex';
 import type { GuideSection } from '#src/guideSections';
 
 const SECTIONS: GuideSection[] = [
-    { url: '/components/buttons', page: 'Buttons', text: 'button text' },
-    { url: '/checks/cooldown#the-duration', page: 'Cooldowns', heading: 'The duration', text: 'cooldown text' },
-    { url: '/plugins/lifecycle#timeouts', page: 'The lifecycle', heading: 'Timeouts', text: 'timeout text' }
+    { url: '/components/buttons', tab: 'Components', page: 'Buttons', text: 'button text' },
+    {
+        url: '/checks/cooldown#the-duration',
+        tab: 'Checks',
+        page: 'Cooldowns',
+        heading: 'The duration',
+        text: 'cooldown text'
+    },
+    {
+        url: '/plugins/lifecycle#timeouts',
+        tab: 'Writing plugins',
+        page: 'The lifecycle',
+        heading: 'Timeouts',
+        text: 'timeout text'
+    }
 ];
 
 function zeroPadded(...front: number[]): number[] {
@@ -32,8 +44,8 @@ describe('SectionIndex', () => {
         const index = await SectionIndex.load(assets(SECTIONS, VECTORS));
 
         expect(index.rank(zeroPadded(0.1, 2), 2)).toEqual([
-            { path: '/checks/cooldown#the-duration', page: 'Cooldowns', heading: 'The duration' },
-            { path: '/plugins/lifecycle#timeouts', page: 'The lifecycle', heading: 'Timeouts' }
+            { path: '/checks/cooldown#the-duration', tab: 'Checks', page: 'Cooldowns', heading: 'The duration' },
+            { path: '/plugins/lifecycle#timeouts', tab: 'Writing plugins', page: 'The lifecycle', heading: 'Timeouts' }
         ]);
     });
 

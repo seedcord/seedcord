@@ -5,15 +5,14 @@ export { embedding } from '#src/embedding';
 export {
     GUIDE_ASK_PATH,
     GUIDE_SECTIONS_PATH,
-    GUIDE_TITLES_PATH,
     GUIDE_VECTORS_PATH,
     REFERENCE_SEARCH_URL,
     searchFileName,
     versionFromFile
 } from '#src/files';
 export { GuideSearch, parseQuestion, QUESTION_LENGTH, type GuideResult } from '#src/GuideSearch';
-export { guideHit, guideSections, type GuideSection } from '#src/guideSections';
-export { GuideTitles } from '#src/GuideTitles';
+export { guideSections, type GuideSection } from '#src/guideSections';
+export { findWordStart, GuideMatches, matchTerms, type MatchTerms } from '#src/GuideMatches';
 export { readJson, type ReadAsset } from '#src/readAsset';
 export { ReferenceSearch } from '#src/ReferenceSearch';
 export { ALL_PACKAGES, SearchCatalog } from '#src/SearchCatalog';

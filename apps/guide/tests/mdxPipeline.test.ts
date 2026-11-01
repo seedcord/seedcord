@@ -17,6 +17,17 @@ describe('a markdown image', () => {
     });
 });
 
+describe('the text search reads', () => {
+    it('drops markdown syntax and keeps each table row together', async () => {
+        const code = await compileGuideMdx(
+            'Use `per` with *a sliding window*.\n\n| key | means |\n| --- | --- |\n| per | who shares |\n'
+        );
+
+        expect(code).toContain('"content": "Use per with a sliding window."');
+        expect(code).toContain('"content": "key · means; per · who shares"');
+    });
+});
+
 describe('heading depth', () => {
     it('takes h2 through h4', async () => {
         await expect(compileGuideMdx(['## two', '', '### three', '', '#### four'].join('\n'))).resolves.toContain(

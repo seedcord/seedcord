@@ -3,6 +3,8 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
 import { useGuideSearch } from '#components/useGuideSearch';
 
+import type { ResultGroup } from '#components/useGuideSearch';
+
 const TYPING_PAUSE_MS = 250;
 
 const ANSWERS: Record<string, { path: string; page: string }[]> = {
@@ -15,13 +17,13 @@ interface Server {
     signals: Map<string, AbortSignal | undefined>;
 }
 
-// titles.json answers right away. each question waits until the test answers it
+// sections.json answers right away. each question waits until the test answers it
 function serving(): Server {
     const pending = new Map<string, () => void>();
     const signals = new Map<string, AbortSignal | undefined>();
     vi.stubGlobal('fetch', (input: string | URL, init?: RequestInit) => {
         const url = new URL(input, 'https://seedcord.org');
-        if (url.pathname.endsWith('/titles.json')) return Promise.resolve(Response.json([]));
+        if (url.pathname.endsWith('/sections.json')) return Promise.resolve(Response.json([]));
         const question = url.searchParams.get('q') ?? '';
         signals.set(question, init?.signal ?? undefined);
         return new Promise<Response>((resolve) => {
@@ -38,6 +40,9 @@ function serving(): Server {
         }
     };
 }
+
+const shown = (groups: readonly ResultGroup[]): { label: string; pending: boolean; paths: string[] }[] =>
+    groups.map(({ label, pending, results }) => ({ label, pending, paths: results.map((result) => result.path) }));
 
 async function pauseTyping(): Promise<void> {
     await act(() => vi.advanceTimersByTimeAsync(TYPING_PAUSE_MS));
@@ -57,17 +62,17 @@ describe('useGuideSearch', () => {
         });
         await pauseTyping();
         await answer('cooldown');
-        expect(result.current.groups).toEqual([
-            { label: 'Related', pending: false, results: [expect.objectContaining({ path: '/checks/cooldown' })] }
+        expect(shown(result.current.groups)).toEqual([
+            { label: 'Related', pending: false, paths: ['/checks/cooldown'] }
         ]);
 
         rerender({ typed: 'kysely' });
-        expect(result.current.groups).toEqual([{ label: 'Related', pending: true, results: [] }]);
+        expect(shown(result.current.groups)).toEqual([{ label: 'Related', pending: true, paths: [] }]);
 
         await pauseTyping();
         await answer('kysely');
-        expect(result.current.groups).toEqual([
-            { label: 'Related', pending: false, results: [expect.objectContaining({ path: '/plugins/kysely' })] }
+        expect(shown(result.current.groups)).toEqual([
+            { label: 'Related', pending: false, paths: ['/plugins/kysely'] }
         ]);
     });
 

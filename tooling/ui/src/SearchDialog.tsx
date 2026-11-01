@@ -8,6 +8,7 @@ import { Card } from './Card';
 import { cn } from './lib/cn';
 import { easeOutStrong } from './lib/motion';
 
+import type { RowPosition } from './lib/useRovingList';
 import type { ReactElement, ReactNode } from 'react';
 
 const HEIGHT_ANIMATION_S = 0.2;
@@ -36,7 +37,7 @@ export function useSearchDialogScroll(): SearchDialogScroll {
 }
 
 // useLayoutEffect puts the scroll in the same frame as the moved selection. useEffect paints them one apart
-export function useActiveRowScroll(activeId: string | undefined, isFirst: boolean, isLast: boolean): void {
+export function useActiveRowScroll(activeId: string | undefined, { isFirst, isLast, isGroupStart }: RowPosition): void {
     const scroll = useSearchDialogScroll();
 
     useLayoutEffect(() => {
@@ -50,8 +51,11 @@ export function useActiveRowScroll(activeId: string | undefined, isFirst: boolea
             scroll.toBottom();
             return;
         }
-        document.getElementById(activeId)?.scrollIntoView({ block: 'nearest' });
-    }, [activeId, isFirst, isLast, scroll]);
+        const row = document.getElementById(activeId);
+        // a group's first row brings its heading and as many of its rows as fit
+        if (isGroupStart) row?.closest('[role="group"]')?.scrollIntoView({ block: 'start' });
+        else row?.scrollIntoView({ block: 'nearest' });
+    }, [activeId, isFirst, isLast, isGroupStart, scroll]);
 }
 
 // picking a filter inside a popover reads as an outside interaction

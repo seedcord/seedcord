@@ -20,7 +20,12 @@ function answering(response: Response): string[] {
 
 describe('GuideSearch', () => {
     it('asks the endpoint and gives each hit its full url', async () => {
-        const hit: GuideHit = { path: '/components/buttons#one-handler', page: 'Buttons', heading: 'One handler' };
+        const hit: GuideHit = {
+            path: '/components/buttons#one-handler',
+            tab: 'Components',
+            page: 'Buttons',
+            heading: 'One handler'
+        };
         const asked = answering(Response.json([hit]));
 
         expect(await new GuideSearch(ENDPOINT).search('  how do i make a button ', SIGNAL)).toEqual([

@@ -22,7 +22,7 @@ import { useGuideSearch } from './useGuideSearch';
 
 import type { ResultGroup } from './useGuideSearch';
 import type { GuideResult } from '@seedcord/docs-search';
-import type { KeyHint } from '@seedcord/ui';
+import type { KeyHint, RowPosition } from '@seedcord/ui';
 import type { ReactElement } from 'react';
 
 const LISTBOX_ID = 'guide-search-results';
@@ -50,9 +50,7 @@ interface PlacedRow {
     index: number;
 }
 
-interface PlacedGroup {
-    label: string;
-    pending: boolean;
+interface PlacedGroup extends Omit<ResultGroup, 'results'> {
     rows: PlacedRow[];
 }
 
@@ -66,13 +64,9 @@ function placeGroups(groups: readonly ResultGroup[]): ResultList {
     const placed: PlacedGroup[] = [];
     const rows: GuideResult[] = [];
     const groupStarts: number[] = [];
-    for (const { label, pending, results } of groups) {
+    for (const { results, ...group } of groups) {
         if (results.length > 0) groupStarts.push(rows.length);
-        placed.push({
-            label,
-            pending,
-            rows: results.map((result, offset) => ({ result, index: rows.length + offset }))
-        });
+        placed.push({ ...group, rows: results.map((result, offset) => ({ result, index: rows.length + offset })) });
         rows.push(...results);
     }
     return { groups: placed, rows, groupStarts };
@@ -95,6 +89,7 @@ function Group({ group, activeIndex, onSelect, onActivate }: RowEvents & { group
                 <SearchResultRow
                     key={result.path}
                     result={result}
+                    terms={group.terms}
                     isActive={index === activeIndex}
                     optionId={optionId(result.path)}
                     index={index}
@@ -108,18 +103,16 @@ function Group({ group, activeIndex, onSelect, onActivate }: RowEvents & { group
 
 function Results({
     list,
-    isFirst,
-    isLast,
+    position,
     emptyMessage,
     ...rowEvents
 }: RowEvents & {
     list: ResultList;
-    isFirst: boolean;
-    isLast: boolean;
+    position: RowPosition;
     emptyMessage: string | null;
 }): ReactElement | null {
     const active = list.rows[rowEvents.activeIndex];
-    useActiveRowScroll(active ? optionId(active.path) : undefined, isFirst, isLast);
+    useActiveRowScroll(active ? optionId(active.path) : undefined, position);
 
     // a null child collapses the animated panel back to just the bar with the hint
     if (emptyMessage === null && list.groups.length === 0) return null;
@@ -167,7 +160,7 @@ export function GuideSearch({ open, onOpenChange: setOpen }: GuideSearchProps): 
         [router, setOpen]
     );
 
-    const { activeIndex, isFirst, isLast, setActiveIndex, onKeyDown } = useRovingList({
+    const { activeIndex, setActiveIndex, onKeyDown, ...position } = useRovingList({
         items: list.rows,
         groupStarts: list.groupStarts,
         onSelect: select
@@ -214,8 +207,7 @@ export function GuideSearch({ open, onOpenChange: setOpen }: GuideSearchProps): 
                 <Results
                     list={list}
                     activeIndex={activeIndex}
-                    isFirst={isFirst}
-                    isLast={isLast}
+                    position={position}
                     onSelect={select}
                     onActivate={setActiveIndex}
                     emptyMessage={emptyMessage}

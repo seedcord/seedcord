@@ -8,7 +8,9 @@ import { remarkNoMappedJsx } from './src/lib/remarkNoMappedJsx';
 import { remarkPageLinks } from './src/lib/remarkPageLinks';
 import { remarkRefLinks } from './src/lib/remarkRefLinks';
 
-const STRUCTURE_TYPES = ['heading', 'paragraph', 'blockquote', 'tableCell', 'mdxJsxFlowElement', 'code'];
+import type { Table } from 'mdast';
+
+const STRUCTURE_TYPES = ['heading', 'paragraph', 'blockquote', 'table', 'mdxJsxFlowElement', 'code'];
 
 export default defineConfig({
     mdxOptions: {
@@ -21,7 +23,16 @@ export default defineConfig({
             types: STRUCTURE_TYPES,
             stringify: {
                 // a fence indexes as the reader sees it without twoslash markings
-                stringify: (node) => (node.type === 'code' ? cleanFence(node.value) : undefined)
+                stringify: (node) => (node.type === 'code' ? cleanFence(node.value) : undefined),
+                handlers: {
+                    inlineCode: (node) => node.value,
+                    emphasis: (node, _, state, info) => state.containerPhrasing(node, info),
+                    strong: (node, _, state, info) => state.containerPhrasing(node, info),
+                    table: (node: Table, _, state, info) =>
+                        node.children
+                            .map((row) => row.children.map((cell) => state.containerPhrasing(cell, info)).join(' · '))
+                            .join('; ')
+                }
             }
         },
         remarkPlugins: [

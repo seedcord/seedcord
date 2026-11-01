@@ -9,6 +9,7 @@ import { COMMAND_LISTBOX_ID, MIN_SEARCH_QUERY_LENGTH } from './constants';
 import { useCommandPaletteSearch } from './useCommandPaletteSearch';
 
 import type { CommandAction } from './types';
+import type { RowPosition } from '@seedcord/ui';
 import type { CommandPaletteController } from './useCommandPaletteController';
 import type { ReactElement } from 'react';
 
@@ -22,8 +23,7 @@ interface CommandListContentProps {
     errorMessage?: string;
     results: CommandAction[];
     activeIndex: number;
-    isFirst: boolean;
-    isLast: boolean;
+    position: RowPosition;
     onSelect: (action: CommandAction) => void;
     onActivate: (index: number) => void;
 }
@@ -34,13 +34,12 @@ function CommandListContent({
     errorMessage,
     results,
     activeIndex,
-    isFirst,
-    isLast,
+    position,
     onSelect,
     onActivate
 }: CommandListContentProps): ReactElement | null {
     const active = results[activeIndex];
-    useActiveRowScroll(active ? optionId(active.id) : undefined, isFirst, isLast);
+    useActiveRowScroll(active ? optionId(active.id) : undefined, position);
 
     const hasResults = results.length > 0;
     // the isSearching guard keeps "no results" from flashing between keystrokes
@@ -94,7 +93,7 @@ function CommandListContent({
 function deriveListProps(
     searchState: ReturnType<typeof useCommandPaletteSearch>,
     normalizedSearch: string
-): Omit<CommandListContentProps, 'activeIndex' | 'isFirst' | 'isLast' | 'onSelect' | 'onActivate'> {
+): Omit<CommandListContentProps, 'activeIndex' | 'position' | 'onSelect' | 'onActivate'> {
     const showInitialHint = normalizedSearch.length < MIN_SEARCH_QUERY_LENGTH;
     const isSearching = searchState.status === 'loading';
     const resolvedError =
@@ -121,7 +120,7 @@ export function CommandPaletteDialog({ controller }: { controller: CommandPalett
     const listProps = deriveListProps(searchState, normalizedSearch);
     const { results } = listProps;
 
-    const { activeIndex, isFirst, isLast, setActiveIndex, onKeyDown } = useRovingList({
+    const { activeIndex, setActiveIndex, onKeyDown, ...position } = useRovingList({
         items: results,
         onSelect: handleSelect
     });
@@ -161,8 +160,7 @@ export function CommandPaletteDialog({ controller }: { controller: CommandPalett
             <CommandListContent
                 {...listProps}
                 activeIndex={activeIndex}
-                isFirst={isFirst}
-                isLast={isLast}
+                position={position}
                 onSelect={handleSelect}
                 onActivate={setActiveIndex}
             />

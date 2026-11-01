@@ -55,4 +55,10 @@
             scroll-margin-top: calc(var(--nav-h, 0px) + var(--heading-gap) + 1.5rem);
         }
     }
+
+    /* MatchedText registers this highlight */
+    ::highlight(search-match) {
+        background-color: var(--outline-accent-b-moderate);
+        color: var(--text);
+    }
 }

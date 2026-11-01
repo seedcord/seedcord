@@ -7,6 +7,7 @@ import type { GuideHit } from '#src/guideSections';
 
 export interface GuideResult extends GuideHit {
     url: string;
+    excerpt?: string;
 }
 
 export const guideResult = (hit: GuideHit): GuideResult => ({ ...hit, url: GUIDE.at(hit.path) });
