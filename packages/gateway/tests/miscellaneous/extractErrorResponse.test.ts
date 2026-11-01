@@ -11,7 +11,7 @@ import type { Core } from '#interfaces/Core';
 import type { Repliables } from '#src/handlers/interactionTypes';
 import type { SubscriptionData } from '@seedcord/core';
 import type { LogRecord } from '@seedcord/types';
-import type { Guild, User } from 'discord.js';
+import type { AutocompleteInteraction, Guild, User } from 'discord.js';
 
 const dispatch = new DispatchContext('slash', 'ban');
 
@@ -20,7 +20,7 @@ function mockCore(publish: ReturnType<typeof vi.fn>): Core {
     return { bus: { [PublishDefault]: publish }, config: { errors: {}, notifications: {} } } as unknown as Core;
 }
 
-function slashInteraction(): Repliables {
+function slashInteraction(actors: { guild?: Guild; user?: User } = {}): Repliables {
     // justified: the fixture implements only the Repliables surface buildInteractionSource reads.
     return {
         isCommand: () => true,
@@ -29,23 +29,25 @@ function slashInteraction(): Repliables {
         isButton: () => false,
         isAnySelectMenu: () => false,
         isModalSubmit: () => false,
-        user: { id: 'u1' },
+        user: actors.user ?? { id: 'u1' },
+        guild: actors.guild ?? null,
         guildId: 'g1',
         channelId: 'c1',
         id: 'i1'
     } as unknown as Repliables;
 }
 
+// justified: the autocomplete path reads only guild and user off the interaction
+const autocomplete = { guild: null, user: { id: 'u1', username: 'uname' } } as unknown as AutocompleteInteraction;
+
 describe('extractErrorResponse', () => {
     it('publishes handledException for a reporting denial with the uuid the reply shows', () => {
         const publish = vi.fn();
         const denial = new Fault({ cause: new Error('write failed') });
         const result = extractErrorResponse(denial, mockCore(publish), {
+            kind: 'interaction',
             interaction: slashInteraction(),
-            origin: 'slash:ban',
-            dispatch,
-            guild: null,
-            user: null
+            dispatch
         });
 
         expect(publish).toHaveBeenCalledTimes(1);
@@ -53,6 +55,7 @@ describe('extractErrorResponse', () => {
         expect(event).toBe('handledException');
         expect(payload.denial).toBe(denial);
         expect(payload.uuid).toBe(result.uuid);
+        expect(payload.origin).toBe('slash:ban');
         if (payload.source.kind !== 'interaction') throw new Error('expected interaction source');
         expect(payload.source.command).toBe('ban');
 
@@ -65,39 +68,30 @@ describe('extractErrorResponse', () => {
         using _capture = LoggerChannelRegistry.instance.installSink({ kind: 'capture', onLog: (r) => logged.push(r) });
         const thrown = new Error('a bug');
         const result = extractErrorResponse(thrown, mockCore(publish), {
-            origin: 'autocomplete:raw-probe',
-            dispatch,
-            guild: null,
-            user: null
+            kind: 'autocomplete',
+            interaction: autocomplete,
+            dispatch
         });
 
         expect(publish).toHaveBeenCalledWith('unknownException', expect.objectContaining({ uuid: result.uuid }));
         expect(logged.at(-1)?.args).toEqual([thrown]);
     });
 
-    it('publishes the origin it was given, so a subscriber can group faults by route', () => {
+    it('publishes unknownException for a reporting denial on an autocomplete, which has no typed source', () => {
         const publish = vi.fn();
-        extractErrorResponse(new Error('a bug'), mockCore(publish), {
-            origin: 'slash:route-probe',
-            dispatch,
-            guild: null,
-            user: null
-        });
+        const denial = new Fault({ cause: new Error('lookup failed') });
+        extractErrorResponse(denial, mockCore(publish), { kind: 'autocomplete', interaction: autocomplete, dispatch });
 
-        const [, payload] = publish.mock.calls[0] as [string, SubscriptionData<'unknownException'>];
-        expect(payload.origin).toBe('slash:route-probe');
+        const [event, payload] = publish.mock.calls[0] as [string, SubscriptionData<'unknownException'>];
+        expect(event).toBe('unknownException');
+        expect(payload.error).toBe(denial);
+        expect(payload.origin).toBe('slash:ban');
     });
 
     it('publishes both bugs when one route throws two different errors', () => {
         const publish = vi.fn();
         const core = mockCore(publish);
-        const origin = {
-            interaction: slashInteraction(),
-            origin: 'slash:profile',
-            dispatch,
-            guild: null,
-            user: null
-        };
+        const origin = { kind: 'interaction', interaction: slashInteraction(), dispatch } as const;
 
         extractErrorResponse(new Error('avatar fetch failed'), core, origin);
         extractErrorResponse(new Error('rank lookup failed'), core, origin);
@@ -115,10 +109,9 @@ describe('extractErrorResponse', () => {
         const user = { id: 'u1', username: 'uname', client: {} } as unknown as User;
 
         extractErrorResponse(new Error('a bug'), mockCore(publish), {
-            origin: 'slash:scalar-probe',
-            dispatch,
-            guild,
-            user
+            kind: 'interaction',
+            interaction: slashInteraction({ guild, user }),
+            dispatch
         });
 
         const [, payload] = publish.mock.calls[0] as [string, SubscriptionData<'unknownException'>];
@@ -129,11 +122,9 @@ describe('extractErrorResponse', () => {
     it('publishes nothing for a non-reporting denial', () => {
         const publish = vi.fn();
         extractErrorResponse(new TestNotice(), mockCore(publish), {
+            kind: 'interaction',
             interaction: slashInteraction(),
-            origin: 'slash:quiet-probe',
-            dispatch,
-            guild: null,
-            user: null
+            dispatch
         });
 
         expect(publish).not.toHaveBeenCalled();
@@ -143,16 +134,22 @@ describe('extractErrorResponse', () => {
         const publish = vi.fn();
         const denial = new Fault({ cause: new Error('write failed') });
         extractErrorResponse(denial, mockCore(publish), {
-            event: { name: 'messageCreate', handler: 'Starboard', args: [{}], channelId: 'ch1' },
-            origin: 'event:messageCreate:Starboard',
+            kind: 'event',
             dispatch,
-            guild: null,
-            user: null
+            event: {
+                name: 'messageCreate',
+                handler: 'Starboard',
+                args: [{}],
+                channelId: 'ch1',
+                guild: null,
+                user: null
+            }
         });
 
         const [event, payload] = publish.mock.calls[0] as [string, SubscriptionData<'handledException'>];
         expect(event).toBe('handledException');
         expect(payload.denial).toBe(denial);
+        expect(payload.origin).toBe('event:messageCreate:Starboard');
         if (payload.source.kind !== 'event') throw new Error('expected event source');
         expect(payload.source.eventName).toBe('messageCreate');
         expect(payload.source.handler).toBe('Starboard');

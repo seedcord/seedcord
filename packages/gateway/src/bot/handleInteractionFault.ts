@@ -23,7 +23,6 @@ export async function handleInteractionFault(
     dispatch: DispatchContext,
     sender?: ReplySender
 ): Promise<void> {
-    const { routeId } = dispatch;
     if (caught instanceof Silence) {
         if (caught.reason !== undefined && (core.config.errors?.logSilences ?? true)) {
             logger.debug(`Silence: ${caught.reason}`);
@@ -40,26 +39,13 @@ export async function handleInteractionFault(
 
     // discord does not accept a message on an autocomplete. the fault is only reported.
     if (interaction.isAutocomplete()) {
-        extractErrorResponse(error, core, {
-            origin: routeId,
-            dispatch,
-            guild: interaction.guild,
-            user: interaction.user,
-            metadata: interaction
-        });
+        extractErrorResponse(error, core, { kind: 'autocomplete', interaction, dispatch });
         // empty choices clear the client's loading spinner
         await sendEmptyChoices(interaction, core, dispatch);
         return;
     }
 
-    const { response } = extractErrorResponse(error, core, {
-        interaction,
-        origin: routeId,
-        dispatch,
-        guild: interaction.guild,
-        user: interaction.user,
-        metadata: interaction
-    });
+    const { response } = extractErrorResponse(error, core, { kind: 'interaction', interaction, dispatch });
     // the handler's own sender carries its ack state. a middleware throw arrives without one
     const liveSender = sender ?? new ReplySender(interaction, dispatch, core.bus);
     await sendGuarded(() => liveSender.send(response, { ephemeral: error instanceof Notice ? error.ephemeral : true }));

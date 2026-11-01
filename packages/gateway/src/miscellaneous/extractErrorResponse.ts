@@ -3,13 +3,15 @@ import * as crypto from 'node:crypto';
 import { Notice, Fault } from '@seedcord/core';
 import { logUnknownFault, PublishDefault } from '@seedcord/core/internal';
 import { Logger } from '@seedcord/logger';
+import { assertNever } from '@seedcord/utils';
 
 import type { Core } from '#interfaces/Core';
 import type { Repliables } from '#src/handlers/interactionTypes';
-import type { DispatchContext, FaultSource, SubscriptionData } from '@seedcord/core';
+import type { DispatchContext, FaultSource } from '@seedcord/core';
 import type { RenderContext, ReplyResponse, Nullable } from '@seedcord/types';
-import type { Guild, User } from 'discord.js';
+import type { AutocompleteInteraction, Guild, User } from 'discord.js';
 import type { UUID } from 'node:crypto';
+import type { TaggedUnion } from 'type-fest';
 
 type InteractionFaultSource = Extract<FaultSource, { kind: 'interaction' }>;
 type EventFaultSource = Extract<FaultSource, { kind: 'event' }>;
@@ -21,16 +23,26 @@ interface EventOrigin {
     handler: string;
     args: unknown;
     channelId: string | null;
-}
-
-export interface ErrorOrigin {
-    interaction?: Repliables;
-    event?: EventOrigin;
-    origin: string;
-    dispatch: DispatchContext;
     guild: Nullable<Guild>;
     user: Nullable<User>;
-    metadata?: unknown;
+}
+
+export type ErrorOrigin = { dispatch: DispatchContext } & TaggedUnion<
+    'kind',
+    {
+        interaction: { interaction: Repliables };
+        autocomplete: { interaction: AutocompleteInteraction };
+        event: { event: EventOrigin };
+    }
+>;
+
+interface FaultFacts {
+    origin: string;
+    guild: Nullable<Guild>;
+    user: Nullable<User>;
+    metadata: unknown;
+    // an autocomplete throw doesn't have a typed source
+    source: (() => FaultSource) | null;
 }
 
 export interface ExtractedErrorResponse {
@@ -41,16 +53,29 @@ export interface ExtractedErrorResponse {
 export function extractErrorResponse(error: Error, core: Core, fault: ErrorOrigin): ExtractedErrorResponse {
     const uuid = crypto.randomUUID();
     const { dispatch } = fault;
+    const facts = factsOf(fault);
     const developerUsername = core.config.notifications?.developerUsername;
     const ctx: RenderContext =
         developerUsername === undefined ? { uuid, dispatch } : { uuid, developerUsername, dispatch };
 
     if (error instanceof Notice) {
-        if (error.report) reportFault(error, core, fault, uuid);
+        if (error.report) {
+            logger.error(`${error.name}: ${uuid}`, error);
+            if (facts.source) {
+                core.bus[PublishDefault]('handledException', {
+                    denial: error,
+                    uuid,
+                    dispatchId: dispatch.id,
+                    origin: facts.origin,
+                    source: facts.source()
+                });
+            } else publishUnknown(error, core, dispatch, facts, uuid);
+        }
         return { uuid, response: error.render(ctx) };
     }
 
-    reportRawFault(error, core, fault, uuid);
+    logUnknownFault(logger, uuid, error, core.config.errors);
+    publishUnknown(error, core, dispatch, facts, uuid);
 
     const Override = core.config.errors?.defaultError;
     const response = Override ? new Override(uuid).render(ctx) : new Fault().render(ctx);
@@ -58,71 +83,64 @@ export function extractErrorResponse(error: Error, core: Core, fault: ErrorOrigi
     return { uuid, response };
 }
 
-function reportFault(denial: Notice, core: Core, fault: ErrorOrigin, uuid: UUID): void {
-    logger.error(`${denial.name}: ${uuid}`, denial);
-
-    if (fault.interaction) {
-        core.bus[PublishDefault]('handledException', {
-            denial,
-            uuid,
-            dispatchId: fault.dispatch.id,
-            origin: fault.origin,
-            source: buildInteractionSource(fault.interaction, fault.dispatch)
-        });
-    } else if (fault.event) {
-        core.bus[PublishDefault]('handledException', {
-            denial,
-            uuid,
-            dispatchId: fault.dispatch.id,
-            origin: fault.origin,
-            source: buildEventSource(fault.event, fault)
-        });
-    } else {
-        // an autocomplete throw has no typed source. unknownException is the only channel left
-        core.bus[PublishDefault]('unknownException', {
-            uuid,
-            dispatchId: fault.dispatch.id,
-            error: denial,
-            origin: fault.origin,
-            ...scalarActors(fault),
-            metadata: metadataFor(fault)
-        });
+function factsOf(fault: ErrorOrigin): FaultFacts {
+    switch (fault.kind) {
+        case 'event': {
+            const { event } = fault;
+            return {
+                origin: `event:${event.name}:${event.handler}`,
+                guild: event.guild,
+                user: event.user,
+                metadata: { eventName: event.name, handler: event.handler, args: event.args },
+                source: () => buildEventSource(event)
+            };
+        }
+        case 'interaction': {
+            const { interaction, dispatch } = fault;
+            return {
+                origin: dispatch.routeId,
+                guild: interaction.guild,
+                user: interaction.user,
+                metadata: interaction,
+                source: () => buildInteractionSource(interaction, dispatch)
+            };
+        }
+        case 'autocomplete': {
+            return {
+                origin: fault.dispatch.routeId,
+                guild: fault.interaction.guild,
+                user: fault.interaction.user,
+                metadata: fault.interaction,
+                source: null
+            };
+        }
+        default: {
+            return assertNever(fault);
+        }
     }
 }
 
-function reportRawFault(error: Error, core: Core, fault: ErrorOrigin, uuid: UUID): void {
-    logUnknownFault(logger, uuid, error, core.config.errors);
-
+function publishUnknown(error: Error, core: Core, dispatch: DispatchContext, facts: FaultFacts, uuid: UUID): void {
+    const { origin, guild, user, metadata } = facts;
     core.bus[PublishDefault]('unknownException', {
         uuid,
-        dispatchId: fault.dispatch.id,
+        dispatchId: dispatch.id,
         error,
-        origin: fault.origin,
-        ...scalarActors(fault),
-        metadata: metadataFor(fault)
+        origin,
+        // the bus payload must stay djs-free
+        guild: guild ? { id: guild.id, name: guild.name } : undefined,
+        user: user ? { id: user.id, username: user.username } : undefined,
+        metadata
     });
 }
 
-// the bus payload must stay djs-free
-function scalarActors(fault: ErrorOrigin): Pick<SubscriptionData<'unknownException'>, 'guild' | 'user'> {
-    return {
-        guild: fault.guild ? { id: fault.guild.id, name: fault.guild.name } : undefined,
-        user: fault.user ? { id: fault.user.id, username: fault.user.username } : undefined
-    };
-}
-
-function metadataFor(fault: ErrorOrigin): unknown {
-    if (fault.event) return { eventName: fault.event.name, handler: fault.event.handler, args: fault.event.args };
-    return fault.metadata;
-}
-
-function buildEventSource(event: EventOrigin, fault: ErrorOrigin): EventFaultSource {
+function buildEventSource(event: EventOrigin): EventFaultSource {
     return {
         kind: 'event',
         eventName: event.name,
         handler: event.handler,
-        userId: fault.user?.id ?? null,
-        guildId: fault.guild?.id ?? null,
+        userId: event.user?.id ?? null,
+        guildId: event.guild?.id ?? null,
         channelId: event.channelId,
         raw: event.args
     };
