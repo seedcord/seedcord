@@ -1,32 +1,14 @@
 'use client';
 
-import {
-    Button,
-    GithubIcon,
-    Icon,
-    MAIN_CONTENT_ID,
-    MobileNavButton,
-    MobilePanel,
-    Navbar,
-    NavTabs,
-    ScrollToTopButton,
-    SearchIconButton,
-    SiteSwitcher,
-    ThemeToggle,
-    cn,
-    matchActiveHref,
-    tw
-} from '@seedcord/ui';
+import { MAIN_CONTENT_ID, MobilePanel, ScrollToTopButton, cn, matchActiveHref, tw } from '@seedcord/ui';
 import { AnchorProvider, useActiveAnchor } from 'fumadocs-core/toc';
-import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { useMemo, useState } from 'react';
 
-import { DOCS_URL, HOME_URL, REPO_URL, SITE_URL } from '#lib/site';
 import { useVisibleHeadingIds } from '#lib/visibleHeadings';
 
 import { DocsSidebar } from './DocsSidebar';
-import { GuideSearch, SEARCH_LABEL } from './GuideSearch';
+import { GithubLink, GuideNavbar } from './GuideNavbar';
 import { MobileNav } from './MobileNav';
 import { PageActions } from './PageActions';
 import { StarCard } from './StarCard';
@@ -35,49 +17,11 @@ import { TocBar } from './TocBar';
 
 import type { GuideTab, SidebarsByTab } from '#lib/nav';
 import type { PageActionProps } from '#lib/pageActions';
-import type { SiteDestination } from '@seedcord/ui';
 import type { TocBarProps } from './TocBar';
 import type { TOCItemType } from 'fumadocs-core/toc';
 import type { ReactElement, ReactNode } from 'react';
 
-const DESTINATIONS: readonly SiteDestination[] = [
-    { label: 'Home', href: HOME_URL },
-    { label: 'Guide', href: SITE_URL, current: true },
-    { label: 'Reference', href: DOCS_URL }
-];
-
 const NO_TOC: readonly TOCItemType[] = [];
-
-function GithubLink(): ReactElement {
-    return (
-        <Button asChild variant="ghost" size="icon" aria-label="Open GitHub repository" className={cn('text-(--text)')}>
-            <Link href={REPO_URL} target="_blank" rel="noreferrer">
-                <Icon icon={GithubIcon} size={20} />
-            </Link>
-        </Button>
-    );
-}
-
-function NavActions({
-    navOpen,
-    onNavOpen,
-    onSearchOpen
-}: {
-    navOpen: boolean;
-    onNavOpen: () => void;
-    onSearchOpen: () => void;
-}): ReactElement {
-    return (
-        <>
-            <SearchIconButton label={SEARCH_LABEL} onOpen={onSearchOpen} />
-            <span className={cn('hidden lg:flex')}>
-                <GithubLink />
-            </span>
-            <ThemeToggle />
-            <MobileNavButton open={navOpen} onOpen={onNavOpen} className={cn('lg:hidden')} />
-        </>
-    );
-}
 
 function ContentsBar({ items, pageTitle }: Omit<TocBarProps, 'activeIds' | 'currentId' | 'className'>): ReactElement {
     const activeIds = useVisibleHeadingIds(items);
@@ -143,7 +87,6 @@ export function GuideShell({
     const current = usePathname();
     const pathname = override ?? current;
     const [navOpen, setNavOpen] = useState(false);
-    const [searchOpen, setSearchOpen] = useState(false);
     // AnchorProvider re-observes every heading whenever this array changes identity
     const anchors = useMemo(() => [...toc], [toc]);
 
@@ -156,18 +99,11 @@ export function GuideShell({
 
     return (
         <>
-            <Navbar
-                mark={<SiteSwitcher site="guide" destinations={DESTINATIONS} linkAs={Link} />}
-                center={<GuideSearch open={searchOpen} onOpenChange={setSearchOpen} />}
-                actions={
-                    <NavActions
-                        navOpen={navOpen}
-                        onNavOpen={() => setNavOpen(true)}
-                        onSearchOpen={() => setSearchOpen(true)}
-                    />
-                }
-                tabsClassName={cn('hidden lg:flex')}
-                tabs={<NavTabs items={tabs} activeHref={activeHref ?? ''} linkAs={Link} />}
+            <GuideNavbar
+                tabs={tabs}
+                activeHref={activeHref ?? ''}
+                navOpen={navOpen}
+                onNavOpen={() => setNavOpen(true)}
             />
 
             <AnchorProvider toc={anchors}>

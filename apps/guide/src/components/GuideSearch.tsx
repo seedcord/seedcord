@@ -10,8 +10,7 @@ import {
     cn,
     useActiveRowScroll,
     useNavigateAndClose,
-    useRovingList,
-    useSearchHotkey
+    useRovingList
 } from '@seedcord/ui';
 import { useRouter } from 'next/navigation';
 import { useCallback, useRef, useState } from 'react';
@@ -114,8 +113,6 @@ export function GuideSearch({ open, onOpenChange: setOpen }: GuideSearchProps): 
     const navigate = useNavigateAndClose(useRouter(), setOpen);
 
     const groups = useGuideSearch(typed, open);
-
-    useSearchHotkey(() => setOpen(!open));
 
     const select = useCallback((result: GuideResult) => navigate(result.path), [navigate]);
 
