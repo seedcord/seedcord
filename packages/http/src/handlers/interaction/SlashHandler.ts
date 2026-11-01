@@ -4,7 +4,6 @@ import { SeedcordTypeError } from '@seedcord/errors/internal';
 
 import { InteractionHandler } from '#handlers/interaction/InteractionHandler';
 import { HttpSlashOptions } from '#inputs/HttpSlashOptions';
-import { slashRouteOf } from '#src/dispatch/slashRouteOf';
 
 import type { SlashOptions } from '#inputs/SlashOptions';
 import type { SlashRegistry } from '@seedcord/core';
@@ -33,7 +32,7 @@ export abstract class SlashHandler<
 
     /** The selected command's path, such as `search/docs`, without the interaction-kind prefix. */
     protected get route(): Route {
-        return slashRouteOf(this.event.data) as Route;
+        return this.dispatch.route as Route;
     }
 
     private resolver?: HttpSlashOptions;

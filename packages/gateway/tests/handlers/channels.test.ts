@@ -15,7 +15,7 @@ import type { InteractionKind } from '@seedcord/core';
 import type { ILogSink, LogRecord } from '@seedcord/types';
 import type { AutocompleteInteraction, ChatInputCommandInteraction, ClientEvents } from 'discord.js';
 
-const dispatch = new DispatchContext('test:probe');
+const dispatch = new DispatchContext('slash', 'probe');
 
 class FakeSink implements ILogSink {
     public readonly records: LogRecord[] = [];
@@ -75,7 +75,7 @@ class Ban extends SlashHandler<never> {
 
 describe('gateway handler log channels', () => {
     it('puts both event bases on the events channel', async () => {
-        const dispatch = new DispatchContext('event:messageCreate');
+        const dispatch = new DispatchContext('event', 'messageCreate');
         await new Greet(messagePayload, core, dispatch).execute();
         await new Filter(messagePayload, core, dispatch).execute();
 
@@ -89,7 +89,7 @@ describe('gateway handler log channels', () => {
         await new Guard(
             interaction as unknown as ChatInputCommandInteraction,
             core,
-            new DispatchContext('slash:ban'),
+            new DispatchContext('slash', 'ban'),
             // justified: this probe only reads the logger channel, no reply member runs
             {} as ReplySender
         ).execute();

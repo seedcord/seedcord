@@ -88,7 +88,7 @@ export abstract class UserContextMenuHandler<
 
     /** The selected context-menu command's name, without the interaction-kind prefix. */
     protected get route(): Names {
-        return this.event.commandName as Names;
+        return this.dispatch.route as Names;
     }
 
     /**
@@ -156,7 +156,7 @@ export abstract class MessageContextMenuHandler<
 
     /** The selected context-menu command's name, without the interaction-kind prefix. */
     protected get route(): Names {
-        return this.event.commandName as Names;
+        return this.dispatch.route as Names;
     }
 
     /**

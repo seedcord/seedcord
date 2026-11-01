@@ -17,7 +17,7 @@ import type {
     APIModalSubmitInteraction
 } from 'discord-api-types/v10';
 
-const dispatch = new DispatchContext('test:probe');
+const dispatch = new DispatchContext('slash', 'probe');
 
 const CALLBACK_ROUTE = '/interactions/int-1/tok/callback';
 const WEBHOOK_ROUTE = '/webhooks/app-1/tok';

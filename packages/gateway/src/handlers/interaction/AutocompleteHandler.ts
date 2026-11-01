@@ -2,7 +2,6 @@ import { AutocompleteRouteBrand, reportedWrite } from '@seedcord/core/internal';
 import { SeedcordErrorCode } from '@seedcord/errors';
 import { SeedcordTypeError } from '@seedcord/errors/internal';
 
-import { slashRouteOf } from '#bUtilities/miscellaneous/slashRouteOf';
 import { BaseHandler } from '#src/handlers/BaseHandler';
 
 import type { Core } from '#interfaces/Core';
@@ -127,7 +126,7 @@ export abstract class AutocompleteHandler<
 
     /** The selected command's path, such as `search/docs`, without the interaction-kind prefix. */
     protected get route(): Route {
-        return slashRouteOf(this.event) as Route;
+        return this.dispatch.route as Route;
     }
 
     /**

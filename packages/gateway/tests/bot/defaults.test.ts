@@ -11,7 +11,7 @@ import { mockInteraction } from '#tests/utils/senderMock';
 import type { Core } from '#interfaces/Core';
 import type { AutocompleteInteraction, ChatInputCommandInteraction } from 'discord.js';
 
-const dispatch = new DispatchContext('test:probe');
+const dispatch = new DispatchContext('slash', 'probe');
 
 // justified: the defaults read only the interaction, the rest of Core is unused here.
 // justified: a real Core always carries a bus, the handlers publish through it

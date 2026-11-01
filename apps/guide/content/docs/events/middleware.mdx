@@ -45,7 +45,7 @@ That stops one [event dispatch](/events#several-handlers-for-one-event). The nex
 
 You write the events twice, once in `{ events }` and once in the generic on [`EventMiddleware`](ref:gateway/EventMiddleware). If the two differ, the decorator line fails to compile. `SkipMuted` lists one event, so [`this.event`](ref:gateway/EventMiddleware.event) is that event's payload.
 
-With several events, the payload could be any of them, so `this.event` is `never`. [`this.eventName`](ref:gateway/EventMiddleware.eventName) returns the current event's name, which is enough for work that doesn't read the payload, like counting.
+With several events, the payload could be any of them, so `this.event` is `never`. [`this.route`](ref:gateway/EventMiddleware.route) returns the current event's name, which is enough for work that doesn't read the payload, like counting.
 
 ```ts twoslash title="src/events/middlewares/CountMessages.ts"
 import {
@@ -62,7 +62,7 @@ export class CountMessages extends EventMiddleware<
     Events.MessageCreate | Events.MessageDelete
 > {
     public async execute(): Promise<void> {
-        const name = this.eventName;
+        const name = this.route;
         //    ^?
         this.logger.debug(`Received ${name}`);
     }
@@ -80,12 +80,12 @@ import {
 @RegisterEventMiddleware({ priority: 2 })
 export class Trace extends EventMiddleware {
     public async execute(): Promise<void> {
-        this.logger.debug(`${this.eventName} reached the chain`);
+        this.logger.debug(`${this.route} reached the chain`);
     }
 }
 ```
 
-`Trace` reads only `this.eventName`, which is all a catchall can read. An event middleware doesn't have `match`, because it runs the same code for every event it lists. When your check reads the payload of several events, write one middleware class per event.
+`Trace` reads only `this.route`, which is all a catchall can read. An event middleware doesn't have `match`, because it runs the same code for every event it lists. When your check reads the payload of several events, write one middleware class per event.
 
 ## Order
 
@@ -162,7 +162,7 @@ export class Timing extends EventMiddleware {
         );
 
         this.logger.debug(
-            `${this.eventName}: ${result.handlers.length} in ${elapsed}ms`
+            `${this.route}: ${result.handlers.length} in ${elapsed}ms`
         );
         await Promise.resolve();
     }

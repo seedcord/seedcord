@@ -13,9 +13,10 @@ import type { APIInteraction } from 'discord-api-types/v10';
 /** A registered handler matched to an incoming interaction, under the keys the gateway dispatcher uses. */
 export interface ResolvedRoute {
     readonly kind: InteractionKind;
-    /** The stable dispatch id, `kind:key` (`slash:ban`). The unhandled default carries null. */
-    readonly routeId: string | null;
-    readonly attemptedKey?: string;
+    /** The slash path, command name, or custom-ID prefix the interaction carried. */
+    readonly route: string;
+    /** True when no handler registered this route and the unhandled default runs. */
+    readonly fallback: boolean;
     readonly ctor: HandlerConstructor;
 }
 
@@ -91,11 +92,11 @@ export function emptyRouteMaps(): RouteMaps {
     };
 }
 
-function unhandled(kind: InteractionKind, attemptedKey: string): ResolvedRoute {
+function unhandled(kind: InteractionKind, route: string): ResolvedRoute {
     return {
         kind,
-        routeId: null,
-        attemptedKey,
+        route,
+        fallback: true,
         ctor: kind === InteractionKind.Autocomplete ? UnhandledAutocomplete : UnhandledRepliable
     };
 }

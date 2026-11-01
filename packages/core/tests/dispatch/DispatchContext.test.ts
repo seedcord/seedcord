@@ -15,38 +15,50 @@ function bagOf(ctx: DispatchContext): LooseBag {
 }
 
 describe('DispatchContext', () => {
+    it('keeps the route and builds the route id from the kind and the route', () => {
+        const dispatch = new DispatchContext('slash', 'ban');
+        expect(dispatch.route).toBe('ban');
+        expect(dispatch.routeId).toBe('slash:ban');
+    });
+
+    it('marks an empty route unrouted in the route id', () => {
+        const dispatch = new DispatchContext('button', '');
+        expect(dispatch.route).toBe('');
+        expect(dispatch.routeId).toBe('button:unrouted');
+    });
+
     it('round-trips a value through set and get', () => {
-        const bag = bagOf(new DispatchContext('slash:test'));
+        const bag = bagOf(new DispatchContext('slash', 'test'));
         bag.set('locale', 'en');
         expect(bag.get('locale')).toBe('en');
     });
 
     it('returns a set value through require', () => {
-        const bag = bagOf(new DispatchContext('slash:test'));
+        const bag = bagOf(new DispatchContext('slash', 'test'));
         bag.set('locale', 'en');
         expect(bag.require('locale')).toBe('en');
     });
 
     it('throws DispatchStateMissing when nothing set the key', () => {
-        const bag = bagOf(new DispatchContext('slash:test'));
+        const bag = bagOf(new DispatchContext('slash', 'test'));
         expect(() => bag.require('locale')).toThrow(
             expect.objectContaining({ code: SeedcordErrorCode.DispatchStateMissing })
         );
     });
 
     it('quotes the missing key in the message', () => {
-        const bag = bagOf(new DispatchContext('slash:test'));
+        const bag = bagOf(new DispatchContext('slash', 'test'));
         expect(() => bag.require('locale')).toThrow(/locale/);
     });
 
     it('returns a key set to null', () => {
-        const bag = bagOf(new DispatchContext('slash:test'));
+        const bag = bagOf(new DispatchContext('slash', 'test'));
         bag.set('locale', null);
         expect(bag.require('locale')).toBeNull();
     });
 
     it('treats a key set to undefined as missing', () => {
-        const bag = bagOf(new DispatchContext('slash:test'));
+        const bag = bagOf(new DispatchContext('slash', 'test'));
         bag.set('locale', undefined);
         expect(() => bag.require('locale')).toThrow(
             expect.objectContaining({ code: SeedcordErrorCode.DispatchStateMissing })
@@ -54,21 +66,21 @@ describe('DispatchContext', () => {
     });
 
     it.each(['constructor', 'toString', 'valueOf', 'hasOwnProperty'])('treats %s as missing', (key) => {
-        const bag = bagOf(new DispatchContext('slash:test'));
+        const bag = bagOf(new DispatchContext('slash', 'test'));
         expect(() => bag.require(key)).toThrow(
             expect.objectContaining({ code: SeedcordErrorCode.DispatchStateMissing })
         );
     });
 
     it('stores __proto__ as a value', () => {
-        const bag = bagOf(new DispatchContext('slash:test'));
+        const bag = bagOf(new DispatchContext('slash', 'test'));
         bag.set('__proto__', 'en');
         expect(bag.require('__proto__')).toBe('en');
     });
 
     it('gives every dispatch its own id', () => {
-        const first = new DispatchContext('slash:test');
-        const second = new DispatchContext('slash:test');
+        const first = new DispatchContext('slash', 'test');
+        const second = new DispatchContext('slash', 'test');
 
         expect(first.id).not.toBe(second.id);
         expect(first.id).toBe(first.id);

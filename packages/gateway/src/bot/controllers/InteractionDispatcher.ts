@@ -78,8 +78,7 @@ interface DispatchReportRow {
     readonly fallback: boolean;
     readonly startedAt: number;
     readonly queuedMs: number;
-    readonly dispatchId: string;
-    readonly routeId: string;
+    readonly dispatch: DispatchContext;
 }
 
 interface BeforeHandler {
@@ -89,7 +88,7 @@ interface BeforeHandler {
     readonly dispatch: DispatchContext;
     readonly sender: ReplySender | undefined;
     readonly ran: InteractionMiddleware[];
-    readonly declaredRoute: string | undefined;
+    readonly declaredRoute: string | null;
 }
 
 export class InteractionDispatcher implements Initializeable, HmrAware {
@@ -393,16 +392,14 @@ export class InteractionDispatcher implements Initializeable, HmrAware {
         const matched = this.maps[kind].get(key);
 
         const HandlerCtor = matched ?? fallback;
-        // an empty key means a customId seedcord never minted
-        const dispatch = new DispatchContext(`${kind}:${key || 'unrouted'}`);
+        const dispatch = new DispatchContext(kind, key);
         const report = this.reporterFor({
             interaction,
             kind,
             fallback: !matched,
             startedAt,
             queuedMs,
-            dispatchId: dispatch.id,
-            routeId: dispatch.routeId
+            dispatch
         });
 
         // outside the try so the fault boundary keeps the handler's ack state
@@ -420,7 +417,7 @@ export class InteractionDispatcher implements Initializeable, HmrAware {
                 dispatch,
                 sender,
                 ran,
-                declaredRoute: matched ? dispatch.routeId : undefined
+                declaredRoute: matched ? dispatch.routeId : null
             });
             if (refusal) {
                 result = resultFor(refusal.caught);
@@ -474,8 +471,7 @@ export class InteractionDispatcher implements Initializeable, HmrAware {
             if (reported) return;
             reported = true;
             reportDispatch(this.core.bus, {
-                dispatchId: row.dispatchId,
-                routeId: row.routeId,
+                dispatch: row.dispatch,
                 interactionId: row.interaction.id,
                 kind: row.kind,
                 outcome,
@@ -526,14 +522,13 @@ export class InteractionDispatcher implements Initializeable, HmrAware {
         HandlerCtor: HandlerConstructor,
         interaction: Repliables,
         dispatch: DispatchContext,
-        declaredRoute: string | undefined
+        declaredRoute: string | null
     ): Promise<{ caught: unknown } | null> {
         const monitor = slowGateMonitor();
         try {
             await runHandlerGates(
                 HandlerCtor,
-                interactionGateContext(interaction, this.core, dispatch),
-                declaredRoute,
+                interactionGateContext(interaction, this.core, dispatch, declaredRoute),
                 monitor?.observe
             );
             return null;
@@ -541,7 +536,7 @@ export class InteractionDispatcher implements Initializeable, HmrAware {
             return { caught };
         } finally {
             // a refusing gate spent budget too
-            monitor?.report(declaredRoute ?? null);
+            monitor?.report(declaredRoute);
         }
     }
 

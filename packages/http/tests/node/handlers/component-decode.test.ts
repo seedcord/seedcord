@@ -17,7 +17,7 @@ import type {
     Snowflake
 } from 'discord-api-types/v10';
 
-const dispatch = new DispatchContext('test:probe');
+const dispatch = new DispatchContext('slash', 'probe');
 
 type UserSelectEvent = APIMessageComponentSelectMenuInteraction & { data: APIMessageUserSelectInteractionData };
 

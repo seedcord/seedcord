@@ -47,14 +47,9 @@ export abstract class ComponentHandler<Event extends ComponentInteraction, Defs 
         return this.decoded;
     }
 
-    /**
-     * The matched custom-ID prefix, such as `approve`, without encoded params.
-     *
-     * @throws A **StaleCustomId** when the wire was encoded under an older shape.
-     * @throws An **InvalidCustomId** when the wire is corrupt.
-     */
+    /** The matched custom-ID prefix, such as `approve`, without encoded params. */
     protected get route(): Defs[number]['prefix'] {
-        return this.decodedRoute.prefix;
+        return this.dispatch.route;
     }
 
     /**

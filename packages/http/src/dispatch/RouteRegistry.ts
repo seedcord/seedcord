@@ -53,9 +53,8 @@ export class RouteRegistry {
         if (writes.length === 0) return false;
 
         for (const { kind, key } of writes) {
-            const routeId = `${kind}:${key}`;
-            this.maps[kind].set(key, { kind, routeId, ctor });
-            this.owners.set(routeId, { ctor, kind, key, from });
+            this.maps[kind].set(key, { kind, route: key, fallback: false, ctor });
+            this.owners.set(`${kind}:${key}`, { ctor, kind, key, from });
         }
         return true;
     }

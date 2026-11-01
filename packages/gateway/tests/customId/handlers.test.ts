@@ -8,7 +8,7 @@ import type { Core } from '#interfaces/Core';
 import type { MatchCases } from '@seedcord/core/internal';
 import type { ButtonInteraction, ModalSubmitInteraction, UserSelectMenuInteraction } from 'discord.js';
 
-const dispatch = new DispatchContext('test:probe');
+const dispatch = new DispatchContext('slash', 'probe');
 
 const USER = '853472916483920128';
 const GUILD = '697894561234567890';

@@ -12,7 +12,7 @@ import type {
     UserContextMenuCommandInteraction
 } from 'discord.js';
 
-const dispatch = new DispatchContext('test:probe');
+const dispatch = new DispatchContext('slash', 'probe');
 
 // the execute() bodies are typechecked and never run. discord lets a user command and a message command
 // share a name.

@@ -12,7 +12,7 @@ import type {
     APIChatInputApplicationCommandInteraction
 } from 'discord-api-types/v10';
 
-const dispatch = new DispatchContext('test:probe');
+const dispatch = new DispatchContext('slash', 'probe');
 
 class FakeSink implements ILogSink {
     public readonly records: LogRecord[] = [];

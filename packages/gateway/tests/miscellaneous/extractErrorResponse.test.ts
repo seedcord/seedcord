@@ -13,23 +13,22 @@ import type { SubscriptionData } from '@seedcord/core';
 import type { LogRecord } from '@seedcord/types';
 import type { Guild, User } from 'discord.js';
 
-const dispatch = new DispatchContext('slash:probe');
+const dispatch = new DispatchContext('slash', 'ban');
 
 function mockCore(publish: ReturnType<typeof vi.fn>): Core {
     // justified: the fixture implements only the Core surface extractErrorResponse reads.
     return { bus: { [PublishDefault]: publish }, config: { errors: {}, notifications: {} } } as unknown as Core;
 }
 
-function slashInteraction(commandName = 'ban'): Repliables {
+function slashInteraction(): Repliables {
     // justified: the fixture implements only the Repliables surface buildInteractionSource reads.
     return {
+        isCommand: () => true,
         isChatInputCommand: () => true,
         isContextMenuCommand: () => false,
         isButton: () => false,
         isAnySelectMenu: () => false,
         isModalSubmit: () => false,
-        commandName,
-        options: { getSubcommand: () => null, getSubcommandGroup: () => null },
         user: { id: 'u1' },
         guildId: 'g1',
         channelId: 'c1',
@@ -93,7 +92,7 @@ describe('extractErrorResponse', () => {
         const publish = vi.fn();
         const core = mockCore(publish);
         const origin = {
-            interaction: slashInteraction('profile'),
+            interaction: slashInteraction(),
             origin: 'slash:profile',
             dispatch,
             guild: null,

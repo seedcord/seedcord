@@ -2,7 +2,6 @@ import { SlashRouteBrand } from '@seedcord/core/internal';
 import { SeedcordErrorCode } from '@seedcord/errors';
 import { SeedcordTypeError } from '@seedcord/errors/internal';
 
-import { slashRouteOf } from '#bUtilities/miscellaneous/slashRouteOf';
 import { InteractionHandler } from '#handlers/interaction/InteractionHandler';
 
 import type { SlashOptions } from '#inputs/SlashOptions';
@@ -46,7 +45,7 @@ export abstract class SlashHandler<
 
     /** The selected command's path, such as `search/docs`. */
     protected get route(): Route {
-        return slashRouteOf(this.event) as Route;
+        return this.dispatch.route as Route;
     }
 
     /**

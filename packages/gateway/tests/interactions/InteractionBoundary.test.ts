@@ -30,12 +30,11 @@ function mockInteraction() {
         isMessageComponent: vi.fn().mockReturnValue(false),
         isModalSubmit: vi.fn().mockReturnValue(false),
         isFromMessage: vi.fn().mockReturnValue(false),
+        isCommand: vi.fn().mockReturnValue(true),
         isChatInputCommand: vi.fn().mockReturnValue(true),
         isContextMenuCommand: vi.fn().mockReturnValue(false),
         isButton: vi.fn().mockReturnValue(false),
         isAnySelectMenu: vi.fn().mockReturnValue(false),
-        commandName: 'test',
-        options: { getSubcommand: () => null, getSubcommandGroup: () => null },
         user: { id: 'u1' },
         guild: null,
         guildId: 'g1',
@@ -63,14 +62,14 @@ function handleInteractionFault(
     interaction: ValidInteractionTypes,
     core: Core,
     sender?: ReplySender,
-    dispatch = new DispatchContext('slash:test')
+    dispatch = new DispatchContext('slash', 'test')
 ): Promise<void> {
     return boundary(caught, interaction, core, dispatch, sender);
 }
 
-function senderFor(mock: ReturnType<typeof mockInteraction>, routeId: string): ReplySender {
+function senderFor(mock: ReturnType<typeof mockInteraction>, route: string): ReplySender {
     // justified: the fixture implements only the Repliables surface the sender reads.
-    return new ReplySender(mock as unknown as Repliables, new DispatchContext(routeId), stubBus());
+    return new ReplySender(mock as unknown as Repliables, new DispatchContext('slash', route), stubBus());
 }
 
 describe('handleInteractionFault', () => {
@@ -101,7 +100,7 @@ describe('handleInteractionFault', () => {
     });
 
     it('renders a notice against the dispatch context the caller passed', async () => {
-        const dispatch = new DispatchContext('slash:test');
+        const dispatch = new DispatchContext('slash', 'test');
         dispatch.set('actor', 'from-middleware');
         let saw: string | undefined;
 
@@ -311,7 +310,7 @@ describe('handleInteractionFault', () => {
     describe('live sender', () => {
         it('sends the fault card through the passed sender, following up after the handler already acked', async () => {
             // pre-reply puts the live sender in the replied state, so the fault card follows up
-            const sender = senderFor(mock, 'slash:boom');
+            const sender = senderFor(mock, 'boom');
             await sender.reply('done');
             mock.reply.mockClear();
 

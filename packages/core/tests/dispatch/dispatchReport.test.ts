@@ -4,6 +4,7 @@ import { Logger, LoggerChannelRegistry } from '@seedcord/logger';
 import { timestampFromSnowflake } from '@seedcord/utils';
 import { afterEach, describe, expect, it, vi, type MockInstance } from 'vitest';
 
+import { DispatchContext } from '#src/dispatch/DispatchContext';
 import { reportDispatch } from '#src/dispatch/dispatchReport';
 import { InteractionKind } from '#src/metadataKeys';
 import { Bus } from '#subscribers/Bus';
@@ -28,8 +29,7 @@ class Refusal extends Notice {
 
 function reportFor(queuedMs = 0): Parameters<typeof reportDispatch>[1] {
     return {
-        dispatchId: 'd-1',
-        routeId: 'slash:ping',
+        dispatch: new DispatchContext('slash', 'ping'),
         interactionId: 'i1',
         kind: InteractionKind.Slash,
         outcome: 'handled',

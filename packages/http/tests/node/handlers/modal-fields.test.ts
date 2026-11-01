@@ -9,7 +9,7 @@ import { ModalRoute } from '#src/index';
 import type { Core } from '#interfaces/Core';
 import type { APIModalSubmitInteraction } from 'discord-api-types/v10';
 
-const dispatch = new DispatchContext('test:probe');
+const dispatch = new DispatchContext('slash', 'probe');
 
 const ConfigId = new CustomId('config').str('guildId');
 

@@ -130,8 +130,8 @@ class ButtonOnly extends InteractionMiddleware<InteractionKind.Button> {
 // type 4 is an autocomplete, and resolve keys it off the same command data a slash carries
 const autocompletePayload = (): object => ({ ...slashPayload('search'), type: 4 });
 
-function routeFor(routeId: string | null, ctor: HandlerConstructor): ResolvedRoute {
-    return { kind: InteractionKind.Slash, routeId, ctor };
+function routeFor(route: string, ctor: HandlerConstructor): ResolvedRoute {
+    return { kind: InteractionKind.Slash, route, fallback: false, ctor };
 }
 
 async function dispatchedFor(route: ResolvedRoute): Promise<SubscriptionData<'interactionDispatched'>[]> {
@@ -164,7 +164,7 @@ async function dispatchedThrough(middleware: InteractionMiddlewareConstructor): 
     middlewares.register(middleware);
 
     const execute = await dispatchInteraction({
-        match: routeFor('slash:ok', OkHandler),
+        match: routeFor('ok', OkHandler),
         payload: slashPayload('ok') as ValidInteractionTypes,
         core,
         middlewares
@@ -179,7 +179,7 @@ afterEach(() => {
 
 describe('interactionDispatched from the http dispatcher', () => {
     it('reports a handled dispatch with its route and no fallback', async () => {
-        const published = await dispatchedFor(routeFor('slash:ok', OkHandler));
+        const published = await dispatchedFor(routeFor('ok', OkHandler));
 
         expect(published).toHaveLength(1);
         expect(published[0]).toMatchObject({
@@ -238,7 +238,7 @@ describe('interactionDispatched from the http dispatcher', () => {
         } as unknown as ValidInteractionTypes;
 
         const execute = await dispatchInteraction({
-            match: routeFor('slash:ok', OkHandler),
+            match: routeFor('ok', OkHandler),
             payload,
             core,
             middlewares: new MiddlewareRegistry<InteractionMiddlewareConstructor>(interactionMiddleware)
@@ -259,8 +259,8 @@ describe('interactionDispatched from the http dispatcher', () => {
 
         const match: ResolvedRoute = {
             kind: InteractionKind.Slash,
-            routeId: null,
-            attemptedKey: 'unregistered',
+            route: 'unregistered',
+            fallback: true,
             ctor: OkHandler
         };
         const execute = await dispatchInteraction({
@@ -276,28 +276,28 @@ describe('interactionDispatched from the http dispatcher', () => {
     });
 
     it('reports failed when the handler throws', async () => {
-        const published = await dispatchedFor(routeFor('slash:boom', BoomHandler));
+        const published = await dispatchedFor(routeFor('boom', BoomHandler));
 
         expect(published).toHaveLength(1);
         expect(published[0]).toMatchObject({ routeId: 'slash:boom', outcome: 'failed' });
     });
 
     it('reports refused when a gate stops the handler', async () => {
-        const published = await dispatchedFor(routeFor('slash:guarded', GuardedHandler));
+        const published = await dispatchedFor(routeFor('guarded', GuardedHandler));
 
         expect(published).toHaveLength(1);
         expect(published[0]).toMatchObject({ routeId: 'slash:guarded', outcome: 'refused' });
     });
 
     it('reports refused when the handler throws a Silence, which is a deliberate stop', async () => {
-        const published = await dispatchedFor(routeFor('slash:silent', SilentHandler));
+        const published = await dispatchedFor(routeFor('silent', SilentHandler));
 
         expect(published).toHaveLength(1);
         expect(published[0]).toMatchObject({ routeId: 'slash:silent', outcome: 'refused' });
     });
 
     it('reports failed when a gate throws a reporting Fault, since the gate itself broke', async () => {
-        const published = await dispatchedFor(routeFor('slash:brokengate', BrokenGateHandler));
+        const published = await dispatchedFor(routeFor('brokengate', BrokenGateHandler));
 
         expect(published).toHaveLength(1);
         expect(published[0]).toMatchObject({ routeId: 'slash:brokengate', outcome: 'failed' });
@@ -305,14 +305,14 @@ describe('interactionDispatched from the http dispatcher', () => {
 
     // the type-based rule is the same on both transports, so a constructor Silence matches gateway
     it('reports refused when the handler constructor throws a Silence', async () => {
-        const published = await dispatchedFor(routeFor('slash:ctorsilent', CtorSilentHandler));
+        const published = await dispatchedFor(routeFor('ctorsilent', CtorSilentHandler));
 
         expect(published).toHaveLength(1);
         expect(published[0]).toMatchObject({ routeId: 'slash:ctorsilent', outcome: 'refused' });
     });
 
     it('reports failed when the handler constructor throws', async () => {
-        const published = await dispatchedFor(routeFor('slash:ctorboom', CtorBoomHandler));
+        const published = await dispatchedFor(routeFor('ctorboom', CtorBoomHandler));
 
         expect(published).toHaveLength(1);
         expect(published[0]).toMatchObject({ routeId: 'slash:ctorboom', outcome: 'failed' });
@@ -322,8 +322,8 @@ describe('interactionDispatched from the http dispatcher', () => {
     it('labels an unmintable customId unrouted', async () => {
         const match: ResolvedRoute = {
             kind: InteractionKind.Button,
-            routeId: null,
-            attemptedKey: '',
+            route: '',
+            fallback: true,
             ctor: OkHandler
         };
         const published = await dispatchedFor(match);
@@ -335,8 +335,8 @@ describe('interactionDispatched from the http dispatcher', () => {
     it('flags the unhandled default as a fallback and keeps the attempted key', async () => {
         const match: ResolvedRoute = {
             kind: InteractionKind.Slash,
-            routeId: null,
-            attemptedKey: 'unregistered',
+            route: 'unregistered',
+            fallback: true,
             ctor: OkHandler
         };
         const published = await dispatchedFor(match);
@@ -351,7 +351,7 @@ describe('interactionDispatched from the http dispatcher', () => {
         const sent: SubscriptionData<'responseAttempted'>[] = [];
         core.bus.on('responseAttempted', (payload) => sent.push(payload));
 
-        const match = routeFor('slash:ok', OkHandler);
+        const match = routeFor('ok', OkHandler);
         const execute = await dispatchInteraction({
             match,
             payload: slashPayload('ok') as ValidInteractionTypes,
@@ -378,7 +378,8 @@ describe('interactionDispatched from the http dispatcher', () => {
 
         const match: ResolvedRoute = {
             kind: InteractionKind.Autocomplete,
-            routeId: 'autocomplete:search',
+            route: 'search',
+            fallback: false,
             ctor: SearchAutocomplete
         };
         const execute = await dispatchInteraction({
@@ -400,7 +401,7 @@ describe('interactionDispatched from the http dispatcher', () => {
     });
 
     it('reports a zero queue time for an id that is not a snowflake', async () => {
-        const published = await dispatchedFor(routeFor('slash:ok', OkHandler));
+        const published = await dispatchedFor(routeFor('ok', OkHandler));
 
         // the harness payload id is 'int-1', so the snowflake read cannot resolve a timestamp
         expect(published[0]?.queuedMs).toBe(0);

@@ -11,7 +11,9 @@ import type { ReplyResponse } from '@seedcord/types';
 import type { ClientEvents } from 'discord.js';
 
 const core = {} as unknown as Core;
-const dispatch = new DispatchContext('event:test');
+function eventDispatch(name: string): DispatchContext {
+    return new DispatchContext('event', name);
+}
 
 // a minimal Message-shaped fake, the cases only call reply on it
 function fakeMessage(): { reply: ReturnType<typeof vi.fn> } {
@@ -178,13 +180,13 @@ void ThrowingMulti;
 
 describe('EventHandler.match', () => {
     it('propagates a throw from a match case out of execute, where the controller boundary catches it', async () => {
-        const handler = new ThrowingMulti(createPayload(fakeMessage()), core, dispatch, Events.MessageCreate);
+        const handler = new ThrowingMulti(createPayload(fakeMessage()), core, eventDispatch(Events.MessageCreate));
         await expect(handler.execute()).rejects.toBeInstanceOf(BoomError);
     });
 
     it('routes by the current event name, not the payload shape', async () => {
         const created = fakeMessage();
-        await new PingMulti(createPayload(created), core, dispatch, Events.MessageCreate).execute();
+        await new PingMulti(createPayload(created), core, eventDispatch(Events.MessageCreate)).execute();
         expect(created.reply).toHaveBeenCalledWith('created');
         expect(created.reply).not.toHaveBeenCalledWith('updated');
 
@@ -192,25 +194,20 @@ describe('EventHandler.match', () => {
         const oldMsg = fakeMessage();
         const newMsg = fakeMessage();
         const updatePayload = [oldMsg, newMsg] as unknown as ClientEvents[Events.MessageCreate];
-        await new PingMulti(updatePayload, core, dispatch, 'messageUpdate' as Events.MessageCreate).execute();
+        await new PingMulti(updatePayload, core, eventDispatch('messageUpdate')).execute();
         expect(newMsg.reply).toHaveBeenCalledWith('updated');
         expect(oldMsg.reply).not.toHaveBeenCalled();
     });
 
     it('reads this.event directly on a single-event handler', () => {
         const m = fakeMessage();
-        const handler = new SingleRead(createPayload(m), core, dispatch, Events.MessageCreate);
+        const handler = new SingleRead(createPayload(m), core, eventDispatch(Events.MessageCreate));
         expect(handler.read()).toHaveLength(1);
     });
 
     it('throws MatchCaseMissing when the current event lacks a case', async () => {
         // a stale-deployed event arrives that the handler does not branch on
-        const handler = new PingMulti(createPayload(fakeMessage()), core, dispatch, 'ghost' as Events.MessageCreate);
+        const handler = new PingMulti(createPayload(fakeMessage()), core, eventDispatch('ghost'));
         await expect(handler.execute()).rejects.toMatchObject({ code: SeedcordErrorCode.MatchCaseMissing });
-    });
-
-    it('throws EventNameUnavailable when constructed without an event name', async () => {
-        const handler = new PingMulti(createPayload(fakeMessage()), core, dispatch);
-        await expect(handler.execute()).rejects.toMatchObject({ code: SeedcordErrorCode.EventNameUnavailable });
     });
 });

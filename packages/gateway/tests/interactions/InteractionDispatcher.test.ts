@@ -874,14 +874,14 @@ describe('InteractionDispatcher Integration', () => {
             expect(interaction.reply).toHaveBeenCalledTimes(1);
         });
 
-        it('hands a gate the same dispatch context a middleware wrote to', async ({ testEnv }) => {
+        it('hands a gate the matched route and the dispatch context a middleware wrote to', async ({ testEnv }) => {
             await testEnv.createFile(
                 'interactions/GateReads.ts',
                 `
                 import { defineGate, Gated, SlashHandler, SlashRoute } from '${seedcordPath}';
 
                 const ReadsDispatch = defineGate('ReadsDispatch', (ctx) => {
-                    globalThis.gateSaw.push(ctx.dispatch.get('actor'));
+                    globalThis.gateSaw.push(ctx.dispatch.get('actor'), ctx.declaredRoute);
                 });
 
                 @Gated(ReadsDispatch)
@@ -920,7 +920,7 @@ describe('InteractionDispatcher Integration', () => {
 
             await controller.handleSlashCommand(fakeSlash('gatereads'));
 
-            expect((globalThis as { gateSaw?: unknown[] }).gateSaw).toEqual(['from-middleware']);
+            expect((globalThis as { gateSaw?: unknown[] }).gateSaw).toEqual(['from-middleware', 'slash:gatereads']);
         });
 
         it('a real OwnerOnly catalog gate passes a configured owner through the dispatcher', async ({ testEnv }) => {

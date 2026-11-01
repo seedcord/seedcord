@@ -4,8 +4,6 @@ import { Notice, Fault } from '@seedcord/core';
 import { logUnknownFault, PublishDefault } from '@seedcord/core/internal';
 import { Logger } from '@seedcord/logger';
 
-import { slashRouteOf } from '#bot/utilities/miscellaneous/slashRouteOf';
-
 import type { Core } from '#interfaces/Core';
 import type { Repliables } from '#src/handlers/interactionTypes';
 import type { DispatchContext, FaultSource, SubscriptionData } from '@seedcord/core';
@@ -69,7 +67,7 @@ function reportFault(denial: Notice, core: Core, fault: ErrorOrigin, uuid: UUID)
             uuid,
             dispatchId: fault.dispatch.id,
             origin: fault.origin,
-            source: buildInteractionSource(fault.interaction)
+            source: buildInteractionSource(fault.interaction, fault.dispatch)
         });
     } else if (fault.event) {
         core.bus[PublishDefault]('handledException', {
@@ -130,12 +128,8 @@ function buildEventSource(event: EventOrigin, fault: ErrorOrigin): EventFaultSou
     };
 }
 
-function buildInteractionSource(interaction: Repliables): InteractionFaultSource {
-    const command = interaction.isChatInputCommand()
-        ? slashRouteOf(interaction)
-        : interaction.isContextMenuCommand()
-          ? interaction.commandName
-          : null;
+function buildInteractionSource(interaction: Repliables, dispatch: DispatchContext): InteractionFaultSource {
+    const command = interaction.isCommand() ? dispatch.route : null;
     const customId =
         interaction.isButton() || interaction.isAnySelectMenu() || interaction.isModalSubmit()
             ? interaction.customId

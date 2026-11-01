@@ -1,5 +1,5 @@
 import { SeedcordErrorCode } from '@seedcord/errors';
-import { SeedcordError, SeedcordTypeError } from '@seedcord/errors/internal';
+import { SeedcordTypeError } from '@seedcord/errors/internal';
 import { Logger } from '@seedcord/logger';
 
 import type { CoreBase } from '#interfaces/CoreBase';
@@ -28,9 +28,6 @@ export abstract class Subscriber<in out Keys extends SubscriptionKey, TCore exte
     /** The published payload. It's `never` on a subscriber for several keys, where `this.match` reads it. */
     protected readonly data: SingleKeyData<Keys>;
 
-    // undefined when a test constructs the subscriber directly
-    private readonly firedKey: Keys | undefined;
-
     /**
      * Instantiates the subscriber with event data and core.
      *
@@ -41,11 +38,10 @@ export abstract class Subscriber<in out Keys extends SubscriptionKey, TCore exte
     constructor(
         private readonly payload: AllSubscriptions[Keys],
         protected readonly core: TCore,
-        key?: Keys
+        protected readonly key: Keys
     ) {
         this.logger = new Logger(this.constructor.name, { channel: 'subscribers' });
         this.data = payload;
-        this.firedKey = key;
     }
 
     /**
@@ -62,7 +58,6 @@ export abstract class Subscriber<in out Keys extends SubscriptionKey, TCore exte
      *
      * @param cases - One handler per registered key.
      * @returns The result of the case that ran.
-     * @throws A **SeedcordError** with `EventNameUnavailable` when the subscriber was constructed without the key.
      * @throws A **SeedcordTypeError** with `MatchCaseMissing` when the published key doesn't have a case.
      *
      * @example
@@ -79,15 +74,7 @@ export abstract class Subscriber<in out Keys extends SubscriptionKey, TCore exte
      * ```
      */
     protected async match<Ret>(cases: SubscriberMatchCases<Keys, Ret>): Promise<Ret> {
-        const key = this.firedKey;
-        if (key === undefined) {
-            throw new SeedcordError(SeedcordErrorCode.EventNameUnavailable, [
-                this.constructor.name,
-                'match()',
-                'subscription key',
-                'third'
-            ]);
-        }
+        const { key } = this;
         // hasOwn, since a plain lookup for a key named `toString` returns Object.prototype's
         const callback = Object.hasOwn(cases, key) ? (cases as Record<string, unknown>)[key] : undefined;
         if (typeof callback !== 'function')

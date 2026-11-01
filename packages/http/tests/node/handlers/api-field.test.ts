@@ -10,7 +10,7 @@ import { nullPathConfig, VALID_TOKEN } from '#tests/helpers/fixtures';
 import type { ValidInteractionTypes } from '#handlers/interactionTypes';
 import type { Core } from '#interfaces/Core';
 
-const dispatch = new DispatchContext('test:probe');
+const dispatch = new DispatchContext('slash', 'probe');
 
 declare module '@seedcord/core' {
     interface SlashRegistry {

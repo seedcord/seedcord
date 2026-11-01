@@ -74,11 +74,11 @@ describe('getConfirmation', () => {
     // justified: the fixture implements only the surface getConfirmation reads off a handler
     function handlerFor(
         source: object,
-        routeId = 'confirm-test',
+        route = 'confirm-test',
         bus: Bus = stubBus()
     ): RepliableHandler<NonModalInteraction> {
         const interaction = source as NonModalInteraction;
-        const sender = new ReplySender(interaction, new DispatchContext(routeId), bus);
+        const sender = new ReplySender(interaction, new DispatchContext('slash', route), bus);
         return {
             getEvent: () => interaction,
             sender
@@ -93,7 +93,7 @@ describe('getConfirmation', () => {
         // justified: the sender reads only the publish slot off the bus
         const bus = { [PublishDefault]: publish } as unknown as Bus;
 
-        await (getConfirmation as ConfirmCall)(handlerFor(event, 'slash:ban', bus), v2Prompt);
+        await (getConfirmation as ConfirmCall)(handlerFor(event, 'ban', bus), v2Prompt);
 
         const sent = publish.mock.calls.find(([key]) => key === 'responseAttempted');
         expect(sent?.[1]).toMatchObject({ routeId: 'slash:ban' });
@@ -194,7 +194,7 @@ describe('getConfirmation', () => {
                 user: { id: userId },
                 reply: vi.fn().mockResolvedValue({ resource: { message } })
             };
-            return (getConfirmation as ConfirmCall)(handlerFor(ev, `slash:${userId}`), v2Prompt);
+            return (getConfirmation as ConfirmCall)(handlerFor(ev, userId), v2Prompt);
         }
         const [a, b] = await Promise.all([flow(confirmWire, 'userA'), flow(cancelWire, 'userB')]);
         expect(a).toBe(true);

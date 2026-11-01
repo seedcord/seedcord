@@ -23,7 +23,7 @@ import type { Repliables } from '#src/handlers/interactionTypes';
 import type { PageView } from '@seedcord/core';
 import type { APIContainerComponent, ButtonInteraction, Guild } from 'discord.js';
 
-const dispatch = new DispatchContext('test:probe');
+const dispatch = new DispatchContext('slash', 'probe');
 
 // justified: the paginator reads the interaction and the bus every write reports on
 const core = { bus: stubBus() } as unknown as Core;
@@ -126,7 +126,7 @@ function stubCore(): Core {
 function stubHandler(event: ReturnType<typeof startEvent>): RepliableHandler<Repliables> {
     const interaction = asRepliable(event);
     const core = stubCore();
-    const sender = new ReplySender(interaction, new DispatchContext('slash:page'), core.bus);
+    const sender = new ReplySender(interaction, new DispatchContext('slash', 'page'), core.bus);
     // justified: start reads only these three members off the handler
     return { core, getEvent: () => interaction, sender } as unknown as RepliableHandler<Repliables>;
 }

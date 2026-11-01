@@ -2,9 +2,7 @@ import { InteractionMiddleware, RegisterInteractionMiddleware } from '@seedcord/
 
 @RegisterInteractionMiddleware({ priority: 2 })
 export class InteractionLogger2 extends InteractionMiddleware {
-    public async execute(): Promise<void> {
+    public execute(): void {
         this.logger.info(`interaction received → Priority 2 by ${this.event.user.username} (${this.event.user.id})`);
-
-        await Promise.resolve();
     }
 }

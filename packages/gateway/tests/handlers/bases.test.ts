@@ -15,7 +15,7 @@ import type { Core } from '#interfaces/Core';
 import type { ModalLike } from '@seedcord/core';
 import type { ButtonInteraction, ChatInputCommandInteraction, ModalSubmitInteraction } from 'discord.js';
 
-const dispatch = new DispatchContext('test:probe');
+const dispatch = new DispatchContext('slash', 'probe');
 
 // a handler without a route doesn't get a guild guarantee
 type Slash = ChatInputCommandInteraction<undefined>;

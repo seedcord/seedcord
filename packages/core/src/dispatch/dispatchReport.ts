@@ -6,6 +6,7 @@ import { Notice } from '#stops/Notice';
 import { Silence } from '#stops/Silence';
 import { PublishDefault } from '#subscribers/publishDefault';
 
+import type { DispatchContext } from '#src/dispatch/DispatchContext';
 import type { InteractionKind } from '#src/metadataKeys';
 import type { Bus } from '#subscribers/Bus';
 import type { DispatchOutcome } from '#subscribers/types/Subscriptions';
@@ -29,8 +30,7 @@ export function outcomeFor(caught: unknown): Exclude<DispatchOutcome, 'handled'>
 }
 
 interface DispatchReport {
-    readonly dispatchId: string;
-    readonly routeId: string;
+    readonly dispatch: DispatchContext;
     readonly interactionId: string;
     readonly kind: `${InteractionKind}`;
     readonly outcome: DispatchOutcome;
@@ -62,8 +62,8 @@ export function queuedMsFor(interactionId: string): number {
 export function reportDispatch(bus: Bus, report: DispatchReport): void {
     const durationMs = performance.now() - report.startedAt;
     bus[PublishDefault]('interactionDispatched', {
-        dispatchId: report.dispatchId,
-        routeId: report.routeId,
+        dispatchId: report.dispatch.id,
+        routeId: report.dispatch.routeId,
         interactionId: report.interactionId,
         kind: report.kind,
         outcome: report.outcome,
@@ -76,6 +76,6 @@ export function reportDispatch(bus: Bus, report: DispatchReport): void {
 
     // a throwing log sink must not stop the publish above
     logger().trace(
-        `${paint.sky.bold(report.routeId)} ${report.outcome} ${paint.mute('in')} ${Math.round(durationMs)}ms`
+        `${paint.sky.bold(report.dispatch.routeId)} ${report.outcome} ${paint.mute('in')} ${Math.round(durationMs)}ms`
     );
 }

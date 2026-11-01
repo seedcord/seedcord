@@ -22,7 +22,7 @@ import {
 import type { Core } from '#interfaces/Core';
 import type { ModalSubmitInteraction } from 'discord.js';
 
-const dispatch = new DispatchContext('test:probe');
+const dispatch = new DispatchContext('slash', 'probe');
 
 const core = {} as unknown as Core;
 

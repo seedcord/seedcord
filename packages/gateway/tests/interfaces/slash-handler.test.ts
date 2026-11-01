@@ -8,7 +8,7 @@ import type { SlashOptions } from '#inputs/SlashOptions';
 import type { Core } from '#interfaces/Core';
 import type { ChatInputCommandInteraction, CommandInteractionOption, User } from 'discord.js';
 
-const dispatch = new DispatchContext('test:probe');
+const dispatch = new DispatchContext('slash', 'probe');
 
 // the execute() bodies are typechecked and never run. every guarded mistake below fails the build the day it
 // stops being a compile error. the routes differ from typed-options.test.ts to keep the augmentations apart.

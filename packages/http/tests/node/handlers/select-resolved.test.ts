@@ -25,7 +25,7 @@ import type {
     APIUser
 } from 'discord-api-types/v10';
 
-const dispatch = new DispatchContext('test:probe');
+const dispatch = new DispatchContext('slash', 'probe');
 
 const AssignId = new CustomId('assign').str('roleId');
 

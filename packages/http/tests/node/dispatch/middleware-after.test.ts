@@ -65,7 +65,7 @@ async function dispatchThrough(ctor: HandlerConstructor, ...ctors: InteractionMi
     const core = testCore(nullPathConfig, VALID_TOKEN);
 
     const execute = await dispatchInteraction({
-        match: { kind: InteractionKind.Slash, routeId: 'slash:ok', ctor },
+        match: { kind: InteractionKind.Slash, route: 'ok', fallback: false, ctor },
         payload: slashPayload('ok') as ValidInteractionTypes,
         core,
         middlewares: registry(...ctors)

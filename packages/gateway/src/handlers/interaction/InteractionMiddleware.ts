@@ -4,7 +4,7 @@ import type { ReplySender } from '#bot/ReplySender';
 import type { Core } from '#interfaces/Core';
 import type { InteractionOf } from './middlewareKinds';
 import type { DispatchContext, DispatchResult, MiddlewareKind } from '@seedcord/core';
-import type { MiddlewareKindsBrand } from '@seedcord/core/internal';
+import type { MiddlewareKindsBrand, MiddlewareRoute } from '@seedcord/core/internal';
 import type { Promisable } from 'type-fest';
 
 /**
@@ -35,6 +35,14 @@ export abstract class InteractionMiddleware<
 
     public constructor(event: InteractionOf<Kind>, core: Core, dispatch: DispatchContext, sender: ReplySender) {
         super(event, core, dispatch, sender);
+    }
+
+    /**
+     * The route this dispatch matched: a slash path, a context menu name, or a custom-ID prefix. On slash
+     * and context menu kinds, its type is the union of your registered commands.
+     */
+    protected get route(): MiddlewareRoute<Kind> {
+        return this.dispatch.route as MiddlewareRoute<Kind>;
     }
 
     /**

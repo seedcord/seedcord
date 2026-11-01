@@ -1,5 +1,4 @@
 import { DispatchContext, RegisterInteractionMiddleware } from '@seedcord/core';
-import { SeedcordErrorCode } from '@seedcord/errors';
 import { Events } from 'discord.js';
 import { describe, expect, expectTypeOf, it, vi } from 'vitest';
 
@@ -12,18 +11,18 @@ import type { ValidNonInteractionKeys } from '#src/handlers/interactionTypes';
 import type { ClientEvents } from 'discord.js';
 
 const core = {} as unknown as Core;
-const dispatch = new DispatchContext('event:test');
+const dispatch = new DispatchContext('event', Events.MessageCreate);
 
 function fakeMessage(): { reply: ReturnType<typeof vi.fn> } {
     return { reply: vi.fn() };
 }
 
-// the payload tuple is a fake, justified: the middleware only reads this.event/this.eventName, never Discord internals
+// the payload tuple is a fake, justified: the middleware only reads this.event/this.route, never Discord internals
 function createPayload(m: { reply: ReturnType<typeof vi.fn> }): ClientEvents[Events.MessageCreate] {
     return [m] as unknown as ClientEvents[Events.MessageCreate];
 }
 
-// a single-event middleware reads this.event as the concrete tuple and this.eventName as the current event name
+// a single-event middleware reads this.event as the concrete tuple and this.route as the current event name
 class SingleMw extends EventMiddleware<Events.MessageCreate> {
     async execute(): Promise<void> {
         await Promise.resolve();
@@ -32,17 +31,17 @@ class SingleMw extends EventMiddleware<Events.MessageCreate> {
         return this.event;
     }
     readName(): Events.MessageCreate {
-        return this.eventName;
+        return this.route;
     }
 }
 
-// a catchall middleware (no generic) reads only this.eventName, this.event is never
+// a catchall middleware (no generic) reads only this.route, this.event is never
 class CatchallMw extends EventMiddleware {
     async execute(): Promise<void> {
         await Promise.resolve();
     }
     readName(): ValidNonInteractionKeys {
-        return this.eventName;
+        return this.route;
     }
 }
 
@@ -51,7 +50,7 @@ class CatchallMw extends EventMiddleware {
 class SingleType extends EventMiddleware<Events.MessageCreate> {
     async execute(): Promise<void> {
         expectTypeOf(this.event).toEqualTypeOf<ClientEvents[Events.MessageCreate]>();
-        expectTypeOf(this.eventName).toEqualTypeOf<Events.MessageCreate>();
+        expectTypeOf(this.route).toEqualTypeOf<Events.MessageCreate>();
         await Promise.resolve();
     }
 }
@@ -60,7 +59,7 @@ void SingleType;
 class MultiType extends EventMiddleware<Events.MessageCreate | Events.MessageUpdate> {
     async execute(): Promise<void> {
         expectTypeOf(this.event).toEqualTypeOf<never>();
-        // @ts-expect-error this.event is never on a multi-event middleware, read this.eventName instead.
+        // @ts-expect-error this.event is never on a multi-event middleware, read this.route instead.
         const [first] = this.event;
         void first;
         await Promise.resolve();
@@ -71,31 +70,26 @@ void MultiType;
 class CatchallType extends EventMiddleware {
     async execute(): Promise<void> {
         expectTypeOf(this.event).toEqualTypeOf<never>();
-        expectTypeOf(this.eventName).toEqualTypeOf<ValidNonInteractionKeys>();
+        expectTypeOf(this.route).toEqualTypeOf<ValidNonInteractionKeys>();
         await Promise.resolve();
     }
 }
 void CatchallType;
 
 describe('EventMiddleware', () => {
-    it('threads the current event name into the ctor', () => {
-        const mw = new SingleMw(createPayload(fakeMessage()), core, dispatch, Events.MessageCreate);
+    it('reads the current event name from the dispatch', () => {
+        const mw = new SingleMw(createPayload(fakeMessage()), core, dispatch);
         expect(mw.readName()).toBe(Events.MessageCreate);
     });
 
     it('reads this.event as the concrete tuple on a single-event middleware', () => {
-        const mw = new SingleMw(createPayload(fakeMessage()), core, dispatch, Events.MessageCreate);
+        const mw = new SingleMw(createPayload(fakeMessage()), core, dispatch);
         expect(mw.readEvent()).toHaveLength(1);
     });
 
     it('exposes the current event name on a catchall middleware', () => {
-        const mw = new CatchallMw(createPayload(fakeMessage()), core, dispatch, Events.MessageCreate);
+        const mw = new CatchallMw(createPayload(fakeMessage()), core, dispatch);
         expect(mw.readName()).toBe(Events.MessageCreate);
-    });
-
-    it('throws when the current event name is unavailable', () => {
-        const mw = new SingleMw(createPayload(fakeMessage()), core, dispatch);
-        expect(() => mw.readName()).toThrow(expect.objectContaining({ code: SeedcordErrorCode.EventNameUnavailable }));
     });
 });
 

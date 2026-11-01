@@ -316,6 +316,7 @@ describe('fault boundary', () => {
             id: 'int-1',
             application_id: 'app-1',
             token: 'tok',
+            user: { id: 'u1', username: 'tester' },
             data: { type: 1, name: 'search', options: [{ type: 3, name: 'q', value: 'x', focused: true }] }
         };
         const ctx = capturingCtx();

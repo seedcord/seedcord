@@ -8,7 +8,7 @@ import { AutocompleteHandler } from '#handlers/interaction/AutocompleteHandler';
 import type { Core } from '#interfaces/Core';
 import type { ApplicationCommandOptionChoiceData, AutocompleteInteraction } from 'discord.js';
 
-const dispatch = new DispatchContext('test:probe');
+const dispatch = new DispatchContext('slash', 'probe');
 
 // fixtures for the autocomplete suite, distinct routes from the other interface test files so the registry
 // augmentation does not collide.

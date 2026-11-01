@@ -1,5 +1,5 @@
 import { SeedcordErrorCode } from '@seedcord/errors';
-import { SeedcordError, SeedcordTypeError } from '@seedcord/errors/internal';
+import { SeedcordTypeError } from '@seedcord/errors/internal';
 
 import { BaseHandler } from '#src/handlers/BaseHandler';
 
@@ -40,16 +40,17 @@ type EventMatchCases<Names extends ValidNonInteractionKeys, Ret> = {
 export abstract class EventHandler<in out Names extends ValidNonInteractionKeys> extends BaseHandler<
     ClientEvents[Names]
 > {
-    // the controller threads this in, undefined when a test constructs the handler directly
-    private readonly firedEvent: Names | undefined;
-
-    constructor(event: ClientEvents[Names], core: Core, dispatch: DispatchContext, eventName?: Names) {
+    constructor(event: ClientEvents[Names], core: Core, dispatch: DispatchContext) {
         super(event, core, dispatch, 'events');
-        this.firedEvent = eventName;
     }
 
     // never on a multi-event handler, where reading it is a compile error
     declare protected readonly event: SingleEventPayload<Names>;
+
+    /** The event this dispatch is for, one of the names in the generic. */
+    protected get route(): Names {
+        return this.dispatch.route as Names;
+    }
 
     /**
      * Run the case for the current event. Use this only when the handler is registered for several
@@ -77,15 +78,7 @@ export abstract class EventHandler<in out Names extends ValidNonInteractionKeys>
      * ```
      */
     protected async match<Ret>(cases: EventMatchCases<Names, Ret>): Promise<Ret> {
-        const name = this.firedEvent;
-        if (name === undefined) {
-            throw new SeedcordError(SeedcordErrorCode.EventNameUnavailable, [
-                this.constructor.name,
-                'match()',
-                'event name',
-                'fourth'
-            ]);
-        }
+        const name = this.route;
         // hasOwn, since a plain lookup for an event named `toString` returns Object.prototype's
         const callback = Object.hasOwn(cases, name) ? (cases as Record<string, unknown>)[name] : undefined;
         if (typeof callback !== 'function')

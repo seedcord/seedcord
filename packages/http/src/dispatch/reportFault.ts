@@ -2,7 +2,7 @@ import { Notice } from '@seedcord/core';
 import { PublishDefault } from '@seedcord/core/internal';
 import { ApplicationCommandType, ComponentType, InteractionType } from 'discord-api-types/v10';
 
-import { slashRouteOf } from './slashRouteOf';
+import { interactionUser } from '#handlers/interactionUser';
 
 import type { ValidInteractionTypes } from '#handlers/interactionTypes';
 import type { Core } from '#interfaces/Core';
@@ -19,7 +19,7 @@ export function reportFault(
     payload: ValidInteractionTypes,
     core: Core
 ): void {
-    const source = interactionSource(payload);
+    const source = interactionSource(payload, dispatch);
     const from = { uuid, dispatchId: dispatch.id, origin: dispatch.routeId };
     if (error instanceof Notice && source)
         core.bus[PublishDefault]('handledException', { denial: error, ...from, source });
@@ -28,18 +28,14 @@ export function reportFault(
 
 // the raw payload has guild_id and no guild name
 function actors(payload: ValidInteractionTypes): Pick<SubscriptionData<'unknownException'>, 'guild' | 'user'> {
-    const user = payload.member?.user ?? payload.user;
-    return { guild: undefined, user: user ? { id: user.id, username: user.username } : undefined };
+    const { id, username } = interactionUser(payload);
+    return { guild: undefined, user: { id, username } };
 }
 
-function interactionSource(payload: ValidInteractionTypes): InteractionFaultSource | null {
-    // discord sends member.user in a guild and user in a dm
-    const user = payload.member?.user ?? payload.user;
-    if (!user) return null;
-
+function interactionSource(payload: ValidInteractionTypes, dispatch: DispatchContext): InteractionFaultSource | null {
     const common = {
         kind: 'interaction',
-        userId: user.id,
+        userId: interactionUser(payload).id,
         guildId: payload.guild_id ?? null,
         channelId: payload.channel?.id ?? null,
         interactionId: payload.id,
@@ -52,7 +48,7 @@ function interactionSource(payload: ValidInteractionTypes): InteractionFaultSour
         return {
             ...common,
             interactionKind: isSlash ? 'slash' : 'context-menu',
-            command: isSlash ? slashRouteOf(data) : data.name,
+            command: dispatch.route,
             customId: null
         };
     }

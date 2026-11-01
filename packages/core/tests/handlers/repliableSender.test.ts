@@ -43,7 +43,7 @@ beforeEach(() => {
 
 describe('RepliableHandler sender', () => {
     it('builds one when the caller passes none', () => {
-        const handler = new Probe(new DispatchContext('slash:ping'));
+        const handler = new Probe(new DispatchContext('slash', 'ping'));
 
         expect(handler.sender).toMatchObject({ tag: 'built' });
         expect(built).toBe(1);
@@ -52,7 +52,7 @@ describe('RepliableHandler sender', () => {
     it('takes the sender the caller passes', () => {
         const injected = fakeSender('injected');
 
-        const handler = new Probe(new DispatchContext('slash:ping'), injected);
+        const handler = new Probe(new DispatchContext('slash', 'ping'), injected);
 
         expect(handler.sender).toBe(injected);
         expect(built).toBe(0);

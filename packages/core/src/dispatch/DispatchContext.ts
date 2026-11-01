@@ -1,6 +1,7 @@
 import { SeedcordErrorCode } from '@seedcord/errors';
 import { SeedcordError } from '@seedcord/errors/internal';
 
+import type { InteractionKind } from '#src/metadataKeys';
 import type { DispatchBag, DispatchState } from '@seedcord/types';
 
 /** State shared by middleware and handlers during one dispatch. */
@@ -11,13 +12,21 @@ export class DispatchContext implements DispatchBag {
     public readonly id = crypto.randomUUID();
 
     /**
+     * @param kind - The interaction kind, or `'event'` for a gateway event.
+     * @param route - The slash path, context menu name, custom-ID prefix, or event name that this dispatch
+     * matched. It's empty if seedcord didn't mint the interaction's custom ID.
+     */
+    constructor(
+        public readonly kind: `${InteractionKind}` | 'event',
+        public readonly route: string
+    ) {}
+
+    /**
      * The dispatch identifier, such as `slash:search/docs`, `button:approve`, or `event:messageCreate`.
      * Component identifiers contain the custom-ID prefix without encoded params.
      */
-    public readonly routeId: string;
-
-    constructor(routeId: string) {
-        this.routeId = routeId;
+    public get routeId(): string {
+        return `${this.kind}:${this.route || 'unrouted'}`;
     }
 
     set<Key extends keyof DispatchState>(key: Key, value: DispatchState[Key]): void {

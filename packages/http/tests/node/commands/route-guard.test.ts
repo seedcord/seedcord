@@ -12,7 +12,7 @@ const HANDLERS_DIR = path.resolve(__dirname, '../discovery/fixtures/handlers');
 
 function route(kind: ResolvedRoute['kind'], key: string): ResolvedRoute {
     // the guard reads map membership only
-    return { kind, routeId: `${kind}:${key}`, ctor: UnhandledRepliable };
+    return { kind, route: key, fallback: false, ctor: UnhandledRepliable };
 }
 
 function dispatcherWith(seed: (d: InteractionDispatcher) => void): {

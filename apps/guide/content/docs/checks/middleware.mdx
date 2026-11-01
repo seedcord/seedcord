@@ -66,13 +66,13 @@ export class ComponentTrace extends InteractionMiddleware<
     InteractionKind.Button | InteractionKind.Modal
 > {
     public async execute(): Promise<void> {
-        this.logger.debug(`component on ${this.dispatch.routeId}`);
+        this.logger.debug(`component on ${this.route}`);
         await Promise.resolve();
     }
 }
 ```
 
-`ComponentTrace` runs for buttons and modals, and its `this.event` is a union of those two payloads. Every kind seedcord routes is a member of [`InteractionKind`](ref:core/InteractionKind).
+`ComponentTrace` runs for buttons and modals, and its `this.event` is a union of those two payloads. [`this.route`](ref:gateway/InteractionMiddleware.route) is the custom-ID prefix the interaction matched. On slash and context menu kinds, it's typed to the commands you registered. Every kind seedcord routes is a member of [`InteractionKind`](ref:core/InteractionKind).
 
 ```ts twoslash
 // @noErrors

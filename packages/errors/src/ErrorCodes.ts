@@ -151,8 +151,6 @@ export enum SeedcordErrorCode {
     CustomIdHandlerRouteMissing = 1607,
     /** A handler's `match()` doesn't have a case for the current route, field, event, or command. */
     MatchCaseMissing = 1608,
-    /** An event handler, middleware, or subscriber read the name it fired on but was constructed without one. */
-    EventNameUnavailable = 1609,
     /** Discord sent an autocomplete payload with no focused option. */
     AutocompleteNoFocusedOption = 1610,
     /** The submitted modal has no field with the requested custom id. */

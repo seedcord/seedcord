@@ -40,11 +40,10 @@ export async function runGates(
 export async function runHandlerGates(
     handlerCtor: object,
     ctx: GateContextBase,
-    declaredRoute?: string,
     observe?: GateObserver
 ): Promise<void> {
     // justified: getMetadata returns any, and this key only ever stores the @Gated gate array
     const gates = Reflect.getMetadata(GatedMetadataKey, handlerCtor) as readonly Gate<GateContextBase>[] | undefined;
     if (!gates) return;
-    await runGates(gates, { ...ctx, declaredRoute: declaredRoute ?? null }, observe);
+    await runGates(gates, ctx, observe);
 }

@@ -7,7 +7,7 @@ import { eventGateContext, interactionGateContext } from '#bot/gates/runGates';
 import type { Core } from '#interfaces/Core';
 import type { ButtonInteraction, User } from 'discord.js';
 
-const dispatch = new DispatchContext('button:probe');
+const dispatch = new DispatchContext('button', 'probe');
 
 // a real GuildMember instance for the builder's instanceof guard, carrying only what the builder reads
 function fakeMember(roleIds: string[], permissionBits: bigint): GuildMember {
@@ -33,7 +33,7 @@ describe('interactionGateContext', () => {
         // the builder never reads core
         const core = {} as unknown as Core;
 
-        const built = interactionGateContext(interaction, core, dispatch);
+        const built = interactionGateContext(interaction, core, dispatch, null);
 
         expect(built.kind).toBe('interaction');
         expect(built.interaction).toBe(interaction);
@@ -61,7 +61,7 @@ describe('interactionGateContext', () => {
         } as unknown as ButtonInteraction<'cached'>;
         const core = {} as unknown as Core;
 
-        const built = interactionGateContext(interaction, core, dispatch);
+        const built = interactionGateContext(interaction, core, dispatch, null);
 
         expect(built.member).toBe(member);
         expect(built.memberRoleIds).toEqual(['r1', 'r2']);
@@ -86,7 +86,7 @@ describe('interactionGateContext', () => {
         } as unknown as ButtonInteraction<'cached'>;
         const core = {} as unknown as Core;
 
-        const built = interactionGateContext(interaction, core, dispatch);
+        const built = interactionGateContext(interaction, core, dispatch, null);
 
         expect(built.memberRoleIds).toEqual(['r1']);
     });
@@ -103,7 +103,7 @@ describe('interactionGateContext', () => {
         } as unknown as ButtonInteraction;
         const core = {} as unknown as Core;
 
-        const built = interactionGateContext(interaction, core, dispatch);
+        const built = interactionGateContext(interaction, core, dispatch, null);
 
         expect(built.member).toBeNull();
         expect(built.memberRoleIds).toEqual(['r3']);
@@ -193,7 +193,7 @@ describe('core permission gate over a djs-built context', () => {
             memberPermissions: { bitfield: channelPerms },
             appPermissions: { bitfield: 0n }
         } as unknown as ButtonInteraction<'cached'>;
-        return interactionGateContext(interaction, {} as unknown as Core, dispatch);
+        return interactionGateContext(interaction, {} as unknown as Core, dispatch, null);
     }
 
     it('passes when the member holds the scoped channel permission', async () => {

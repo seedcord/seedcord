@@ -64,7 +64,7 @@ describe('WebhookLog', () => {
             }
         }
 
-        await new CustomReporter(data, core).execute();
+        await new CustomReporter(data, core, 'unknownException').execute();
 
         const [route, options] = post.mock.calls[0] as [string, { body: { username: string } }];
         expect(route).toBe('/webhooks/77/tok-en');
@@ -80,7 +80,7 @@ describe('WebhookLog', () => {
             }
         }
 
-        await new NamedReporter(data, core).execute();
+        await new NamedReporter(data, core, 'unknownException').execute();
 
         const [, options] = post.mock.calls[0] as [string, { body: { username: string } }];
         expect(options.body.username).toBe('NamedReporter');
@@ -103,8 +103,8 @@ describe('WebhookLog', () => {
             }
         }
 
-        await new Faced(data, freshCore()).execute();
-        await new Plain(data, freshCore()).execute();
+        await new Faced(data, freshCore(), 'unknownException').execute();
+        await new Plain(data, freshCore(), 'unknownException').execute();
 
         const bodies = post.mock.calls.map(([, options]) => (options as SentBody).body);
         expect(bodies[0]?.avatar_url).toBe('https://cdn.example/av.png');
@@ -120,8 +120,8 @@ describe('WebhookLog', () => {
             }
         }
 
-        await new RepeatReporter(data, core).execute();
-        await new RepeatReporter(data, core).execute();
+        await new RepeatReporter(data, core, 'unknownException').execute();
+        await new RepeatReporter(data, core, 'unknownException').execute();
 
         expect(post).toHaveBeenCalledTimes(2);
         expect(post.mock.contexts[1]).toBe(post.mock.contexts[0]);
@@ -139,7 +139,7 @@ describe('WebhookLog', () => {
         post.mockRejectedValueOnce(new Error('down'));
         const errorSpy = vi.spyOn(Logger.prototype, 'error').mockImplementation(() => undefined);
 
-        await expect(new FailingReporter(data, core).execute()).resolves.toBeUndefined();
+        await expect(new FailingReporter(data, core, 'unknownException').execute()).resolves.toBeUndefined();
         expect(errorSpy).toHaveBeenCalled();
         errorSpy.mockRestore();
     });
@@ -174,8 +174,8 @@ describe('WebhookLog', () => {
         }
 
         const own = freshCore();
-        await new Chatty(data, own).execute();
-        await new Chatty(data, own).execute();
+        await new Chatty(data, own, 'unknownException').execute();
+        await new Chatty(data, own, 'unknownException').execute();
 
         expect(post).toHaveBeenCalledTimes(2);
     });
@@ -195,10 +195,10 @@ describe('WebhookLog', () => {
 
         const own = freshCore();
         vi.useFakeTimers();
-        await new Grouped(data, own).execute();
-        await new Grouped(data, own).execute();
+        await new Grouped(data, own, 'unknownException').execute();
+        await new Grouped(data, own, 'unknownException').execute();
         vi.advanceTimersByTime(61_000);
-        await new Grouped(data, own).execute();
+        await new Grouped(data, own, 'unknownException').execute();
         vi.useRealTimers();
 
         const sent = post.mock.calls.map(([, options]) => (options as SentBody).body.username);
@@ -223,10 +223,10 @@ describe('WebhookLog', () => {
         post.mockRejectedValueOnce(new Error('down'));
 
         vi.useFakeTimers();
-        await new Retried(data, own).execute();
-        await new Retried(data, own).execute();
+        await new Retried(data, own, 'unknownException').execute();
+        await new Retried(data, own, 'unknownException').execute();
         vi.advanceTimersByTime(61_000);
-        await new Retried(data, own).execute();
+        await new Retried(data, own, 'unknownException').execute();
         vi.useRealTimers();
 
         const sent = post.mock.calls.map(([, options]) => (options as SentBody).body.username);
@@ -255,9 +255,9 @@ describe('WebhookLog', () => {
         const errorSpy = vi.spyOn(Logger.prototype, 'error').mockImplementation(() => undefined);
 
         vi.useFakeTimers();
-        await new Flaky(data, own).execute();
+        await new Flaky(data, own, 'unknownException').execute();
         vi.advanceTimersByTime(61_000);
-        await new Flaky(data, own).execute();
+        await new Flaky(data, own, 'unknownException').execute();
         vi.useRealTimers();
 
         const sent = post.mock.calls.map(([, options]) => (options as SentBody).body.username);
@@ -274,7 +274,7 @@ describe('WebhookLog', () => {
             }
         }
 
-        await expect(new UndeclaredReporter(data, core).execute()).rejects.toThrow();
+        await expect(new UndeclaredReporter(data, core, 'unknownException').execute()).rejects.toThrow();
     });
 });
 

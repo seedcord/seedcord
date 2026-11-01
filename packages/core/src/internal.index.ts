@@ -67,6 +67,7 @@ export { slashRouteLeaves } from '#src/commands/slashRouteLeaves';
 export type { CommandBuilder, DeployResult } from '#src/commands/types';
 
 export type { GateFitsWith } from '#gates/matching';
+export type { MiddlewareRoute } from '#src/handlers/middlewareRoute';
 
 export { getDevChannel, setDevChannel } from '#hmr/devChannel';
 export { connectDevChannel, HmrManager } from '#hmr/HmrManager';

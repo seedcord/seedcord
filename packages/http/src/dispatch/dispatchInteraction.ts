@@ -16,6 +16,7 @@ import { Logger } from '@seedcord/logger';
 import { asError } from '@seedcord/utils/internal';
 import { InteractionResponseType, InteractionType, RESTJSONErrorCodes, Routes } from 'discord-api-types/v10';
 
+import { interactionUser } from '#handlers/interactionUser';
 import { RepliableHandler } from '#handlers/RepliableHandler';
 import { ReplySender } from '#reply/ReplySender';
 import { interactionGateContext } from '#src/gates/context';
@@ -46,7 +47,6 @@ function logger(): Logger {
 interface FaultScope {
     readonly core: Core;
     readonly payload: ValidInteractionTypes;
-    readonly routeId: string;
     readonly dispatch: DispatchContext;
     // null on autocomplete, whose only legal refusal is an empty type 8
     readonly sender: ReplySender | null;
@@ -94,11 +94,11 @@ async function handleNotice(notice: Notice, uuid: RenderContext['uuid'], scope: 
     }
     const { sender } = scope;
     if (!sender) {
-        await sendGuarded(scope.routeId, () => respondEmptyChoices(scope));
+        await sendGuarded(scope.dispatch.routeId, () => respondEmptyChoices(scope));
         return;
     }
     const response = notice.render(renderContext(scope, uuid));
-    await sendGuarded(scope.routeId, () => sender.send(response, { ephemeral: notice.ephemeral }));
+    await sendGuarded(scope.dispatch.routeId, () => sender.send(response, { ephemeral: notice.ephemeral }));
 }
 
 async function handleRawFault(error: Error, uuid: RenderContext['uuid'], scope: FaultScope): Promise<void> {
@@ -109,14 +109,14 @@ async function handleRawFault(error: Error, uuid: RenderContext['uuid'], scope: 
     reportFault(error, uuid, scope.dispatch, scope.payload, core);
 
     if (!sender) {
-        await sendGuarded(scope.routeId, () => respondEmptyChoices(scope));
+        await sendGuarded(scope.dispatch.routeId, () => respondEmptyChoices(scope));
         return;
     }
 
     const Override = core.config.errors?.defaultError;
     const card = Override ? new Override(uuid) : new Fault();
     const response = card.render(renderContext(scope, uuid));
-    await sendGuarded(scope.routeId, () => sender.send(response, { ephemeral: true }));
+    await sendGuarded(scope.dispatch.routeId, () => sender.send(response, { ephemeral: true }));
 }
 
 async function handleFault(caught: unknown, scope: FaultScope): Promise<void> {
@@ -151,13 +151,6 @@ interface DispatchArgs {
     readonly middlewares: MiddlewareRegistry<InteractionMiddlewareConstructor>;
 }
 
-function unhandledRouteId(match: ResolvedRoute): string {
-    if (match.routeId) return match.routeId;
-    // an empty key means a customId seedcord never minted
-    const key = match.attemptedKey ?? '';
-    return `${match.kind}:${key.length > 0 ? key : 'unrouted'}`;
-}
-
 // a fresh sender can still reply the card because nothing is acked yet here
 function freshScope(
     match: ResolvedRoute,
@@ -166,11 +159,9 @@ function freshScope(
     dispatch: DispatchContext
 ): FaultScope {
     const ref = { application_id: payload.application_id, id: payload.id, token: payload.token };
-    const routeId = unhandledRouteId(match);
     return {
         core,
         payload,
-        routeId,
         dispatch,
         sender: match.kind === InteractionKind.Autocomplete ? null : new ReplySender(ref, core.rest, dispatch, core.bus)
     };
@@ -180,20 +171,18 @@ function dispatchReporter(
     match: ResolvedRoute,
     payload: ValidInteractionTypes,
     core: Core,
-    dispatchId: string
+    dispatch: DispatchContext
 ): (outcome: DispatchOutcome) => void {
     const startedAt = performance.now();
     const queuedMs = queuedMsFor(payload.id);
     return (outcome) => {
         reportDispatch(core.bus, {
-            dispatchId,
-            routeId: unhandledRouteId(match),
+            dispatch,
             interactionId: payload.id,
             kind: match.kind,
             outcome,
-            fallback: match.routeId === null,
-            // discord sends member.user in a guild and user in a dm
-            userId: (payload.member?.user ?? payload.user)?.id ?? null,
+            fallback: match.fallback,
+            userId: interactionUser(payload).id,
             guildId: payload.guild_id ?? null,
             startedAt,
             queuedMs
@@ -253,13 +242,12 @@ async function refusalBeforeHandler(step: BeforeHandler): Promise<{ caught: unkn
 // a null return means the refusal is already sent
 export async function dispatchInteraction(args: DispatchArgs): Promise<(() => Promise<void>) | null> {
     const { match, payload, core } = args;
-    const routeId = unhandledRouteId(match);
     // every fault path below renders against this one context
-    const dispatch = new DispatchContext(routeId);
-    const report = dispatchReporter(match, payload, core, dispatch.id);
+    const dispatch = new DispatchContext(match.kind, match.route);
+    const report = dispatchReporter(match, payload, core, dispatch);
 
     const Handler = match.ctor;
-    logger().trace(`Processing ${paint.sky.bold(routeId)} with ${paint.mute(Handler.name)}`);
+    logger().trace(`Processing ${paint.sky.bold(dispatch.routeId)} with ${paint.mute(Handler.name)}`);
 
     let handler: InstanceType<ConstructableHandler>;
     try {
@@ -272,7 +260,6 @@ export async function dispatchInteraction(args: DispatchArgs): Promise<(() => Pr
     const scope: FaultScope = {
         core,
         payload,
-        routeId,
         dispatch,
         sender: handler instanceof RepliableHandler ? handler.sender : null
     };
@@ -311,11 +298,11 @@ async function gateRefusal(step: BeforeHandler): Promise<{ caught: unknown } | n
     if (match.kind === InteractionKind.Autocomplete || payload.type === InteractionType.ApplicationCommandAutocomplete)
         return null;
     const monitor = slowGateMonitor();
+    const declaredRoute = match.fallback ? null : dispatch.routeId;
     try {
         await runHandlerGates(
             Handler,
-            interactionGateContext(payload, core, dispatch),
-            match.routeId ?? undefined,
+            interactionGateContext(payload, core, dispatch, declaredRoute),
             monitor?.observe
         );
         return null;
@@ -323,6 +310,6 @@ async function gateRefusal(step: BeforeHandler): Promise<{ caught: unknown } | n
         return { caught };
     } finally {
         // a refusing gate spent budget too
-        monitor?.report(match.routeId);
+        monitor?.report(declaredRoute);
     }
 }

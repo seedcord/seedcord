@@ -6,7 +6,6 @@ import { InteractionResponseType, Routes } from 'discord-api-types/v10';
 
 import { HttpSlashOptions } from '#inputs/HttpSlashOptions';
 import { apiFor } from '#src/api';
-import { slashRouteOf } from '#src/dispatch/slashRouteOf';
 
 import type { Core } from '#interfaces/Core';
 import type { API } from '@discordjs/core/http-only';
@@ -118,7 +117,7 @@ export abstract class AutocompleteHandler<Route extends keyof SlashRegistry> ext
 
     /** The selected command's path, such as `search/docs`, without the interaction-kind prefix. */
     protected get route(): Route {
-        return slashRouteOf(this.event.data) as Route;
+        return this.dispatch.route as Route;
     }
 
     /**

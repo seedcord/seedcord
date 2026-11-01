@@ -22,10 +22,9 @@ class Watcher extends EventHandler<Events.MessageCreate> {
     }
 }
 
-// justified: only a cast can pass a name outside ClientEvents
 function watcherFiring(name: string): Watcher {
     const payload = [message] as unknown as ClientEvents[Events.MessageCreate];
-    return new Watcher(payload, core, new DispatchContext(`event:${name}`), name as Events.MessageCreate);
+    return new Watcher(payload, core, new DispatchContext('event', name));
 }
 
 describe('EventHandler.match', () => {

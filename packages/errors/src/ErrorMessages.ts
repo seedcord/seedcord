@@ -184,8 +184,6 @@ const messages = {
         `${paint.sky(className)} is missing its route decorator. Add the one that matches its base, for example ${paint.bold('@ButtonRoute')} or ${paint.bold('@UserMenuRoute')}.`,
     [SeedcordErrorCode.MatchCaseMissing]: (handler: string, kind: string, value: string) =>
         `${paint.bold(handler)}'s match() doesn't have a case for the ${kind} ${quoted(value)}. Add one to the object you pass to match().`,
-    [SeedcordErrorCode.EventNameUnavailable]: (handler: string, read: string, name: string, position: string) =>
-        `${paint.sky(handler)} read ${paint.bold(read)}, but it was constructed without its ${name}. seedcord passes the ${name} when it constructs the class. If you construct it yourself, pass the ${name} as its ${position} constructor argument.`,
     [SeedcordErrorCode.AutocompleteNoFocusedOption]: () =>
         'Discord sent an autocomplete payload with no focused option.',
     [SeedcordErrorCode.ModalFieldNotFound]: (customId: string) =>

@@ -114,6 +114,8 @@ Everything `this.dispatch` carries:
 | [`set(key, value)`](ref:core/DispatchContext.set) | writes a value for the rest of this dispatch |
 | [`get(key)`](ref:core/DispatchContext.get) | reads a value, or `undefined` if it isn't set |
 | [`require(key)`](ref:core/DispatchContext.require) | reads a value, throws `DispatchStateMissing` if it's `undefined` |
+| [`kind`](ref:core/DispatchContext.kind) | the interaction kind, or `event` for a gateway event |
+| [`route`](ref:core/DispatchContext.route) | the slash path, context menu name, custom-ID prefix, or event name |
 | [`routeId`](ref:core/DispatchContext.routeId) | the dispatched handler as `kind:route`, like `slash:daily` |
 
 {/* prettier-ignore-end */}
