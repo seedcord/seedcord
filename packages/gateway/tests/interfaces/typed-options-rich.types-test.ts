@@ -166,7 +166,7 @@ function rawCacheVariant(options: SlashOptions<'report', 'raw'>): void {
     >();
 }
 
-function mentionableHasMemberArm(options: SlashOptions<'purge'>): void {
+function mentionableIncludesGuildMember(options: SlashOptions<'purge'>): void {
     expectTypeOf(options.getMentionable('anyone')).extract<GuildMember>().toEqualTypeOf<GuildMember>();
     expectTypeOf(options.getMentionable('anyone')).not.toEqualTypeOf<Role | User>();
     expectTypeOf(options.getUser('who')).not.toEqualTypeOf<GuildMember | Role | User>();
@@ -223,7 +223,7 @@ void memberAlwaysNullable;
 void channelIsWide;
 void channelNarrowsToDeclaredTypes;
 void rawCacheVariant;
-void mentionableHasMemberArm;
+void mentionableIncludesGuildMember;
 void onlyPresentKindGetters;
 void unknownNameRejected;
 void wrongKindRejected;

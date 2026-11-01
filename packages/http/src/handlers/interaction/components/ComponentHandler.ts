@@ -5,7 +5,7 @@ import { SeedcordTypeError } from '@seedcord/errors/internal';
 import { InteractionHandler } from '#handlers/interaction/InteractionHandler';
 
 import type { SentMessage } from '#reply/ReplySender';
-import type { DecodedComponentRoute, HasComponentDefs, MatchArms, SingleParams } from '@seedcord/core/internal';
+import type { DecodedComponentRoute, HasComponentDefs, MatchCases, SingleParams } from '@seedcord/core/internal';
 import type { AnyCustomId } from '@seedcord/custom-id';
 import type { ReplyResponse } from '@seedcord/types';
 import type { APIMessageComponentInteraction, APIModalSubmitInteraction } from 'discord-api-types/v10';
@@ -73,17 +73,17 @@ export abstract class ComponentHandler<
     }
 
     /**
-     * Run the arm for whichever route the component was minted from. Use this only when the handler is
+     * Run the case for whichever route the component was minted from. Use this only when the handler is
      * registered for several routes. A single-route handler reads `this.params` directly. On a multi-route
      * handler `this.params` is `never`, so match is the only way to read the decoded params.
      *
-     * Provide one arm per registered route, keyed by its prefix, and each arm receives that route's own
-     * decoded params. The compiler checks that the arms cover every registered route prefix. `match`
-     * decodes the wire before it runs an arm.
+     * Provide one case per registered route, keyed by its prefix, and each case receives that route's own
+     * decoded params. The compiler checks that the cases cover every registered route prefix. `match`
+     * decodes the wire before it runs a case.
      *
-     * @param arms - One callback per registered route, keyed by prefix.
-     * @returns The result of the arm that ran.
-     * @throws A **SeedcordTypeError** with `MatchArmMissing` when the wire's prefix has no arm.
+     * @param cases - One callback per registered route, keyed by prefix.
+     * @returns The result of the case that ran.
+     * @throws A **SeedcordTypeError** with `MatchCaseMissing` when the wire's prefix has no case.
      * @throws A **StaleCustomId** when the wire was encoded under an older shape.
      * @throws An **InvalidCustomId** when the wire is corrupt.
      *
@@ -100,18 +100,18 @@ export abstract class ComponentHandler<
      * }
      * ```
      */
-    protected async match<Ret>(arms: MatchArms<Defs, Ret>): Promise<Ret> {
+    protected async match<Ret>(cases: MatchCases<Defs, Ret>): Promise<Ret> {
         const { prefix, params } = this.decodedRoute;
-        // justified: MatchArms is keyed by prefix literals, the Record cast indexes it with the runtime prefix.
-        const arm = Object.hasOwn(arms, prefix)
-            ? (arms as Record<string, (params: Record<string, unknown>) => Promisable<Ret>>)[prefix]
+        // justified: MatchCases is keyed by prefix literals, the Record cast indexes it with the runtime prefix.
+        const callback = Object.hasOwn(cases, prefix)
+            ? (cases as Record<string, (params: Record<string, unknown>) => Promisable<Ret>>)[prefix]
             : undefined;
-        if (!arm)
-            throw new SeedcordTypeError(SeedcordErrorCode.MatchArmMissing, [
+        if (!callback)
+            throw new SeedcordTypeError(SeedcordErrorCode.MatchCaseMissing, [
                 this.constructor.name,
                 'component route',
                 prefix
             ]);
-        return await arm(params);
+        return await callback(params);
     }
 }

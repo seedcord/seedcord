@@ -165,7 +165,7 @@ export function SlashRoute<const Route extends keyof SlashRegistry>(...routes: R
  * Routes one or more commands' autocomplete to an `AutocompleteHandler`.
  *
  * Pass the same command route string(s) as the handler's generic. One command branches with `this.match`
- * over its autocompletable fields, several commands share one handler whose arms span every command's
+ * over its autocompletable fields, several commands share one handler whose cases span every command's
  * fields. Listing fewer or more commands than the handler declares is a compile error, since the
  * decorator routes and the generic must match exactly.
  *

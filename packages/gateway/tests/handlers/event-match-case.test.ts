@@ -29,7 +29,7 @@ function watcherFiring(name: string): Watcher {
 }
 
 describe('EventHandler.match', () => {
-    it('runs the arm for the current event', async () => {
+    it('runs the case for the current event', async () => {
         await expect(watcherFiring('messageCreate').run()).resolves.toBe('created');
     });
 
@@ -41,6 +41,6 @@ describe('EventHandler.match', () => {
             caught = error;
         }
 
-        expect(isSeedcordError(caught, 'SeedcordTypeError', SeedcordErrorCode.MatchArmMissing)).toBe(true);
+        expect(isSeedcordError(caught, 'SeedcordTypeError', SeedcordErrorCode.MatchCaseMissing)).toBe(true);
     });
 });

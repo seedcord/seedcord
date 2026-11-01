@@ -126,7 +126,7 @@ export const TYPESCRIPT_RULES: Linter.RulesRecord = {
             selector: 'property',
             format: null
         },
-        // match arms key on route strings and context menu names. prettier unquotes a one-word name like `Report`
+        // match cases key on route strings and context menu names. prettier unquotes a one-word name like `Report`
         {
             selector: ['objectLiteralMethod', 'typeMethod'],
             modifiers: ['requiresQuotes'],

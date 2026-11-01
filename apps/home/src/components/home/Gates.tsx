@@ -9,8 +9,8 @@ import { gatesSample } from '#lib/code/samples';
 import type { ReactNode } from 'react';
 
 const CHIPS = [
-    { combinator: 'and()', note: 'every arm passes' },
-    { combinator: 'or()', note: 'any one arm passes' }
+    { combinator: 'and()', note: 'every gate passes' },
+    { combinator: 'or()', note: 'any one gate passes' }
 ] as const;
 
 export function Gates(): ReactNode {

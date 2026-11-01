@@ -99,7 +99,7 @@ describe('SlashHandler options and match', () => {
         expect(seen).toBe('spam');
     });
 
-    it('dispatches the arm for the selected route with its own typed options', async () => {
+    it('dispatches the case for the selected route with its own typed options', async () => {
         class Mod extends SlashHandler<'hbBan' | 'hbKick'> {
             async execute(): Promise<void> {}
             run(): Promise<string> {
@@ -117,7 +117,7 @@ describe('SlashHandler options and match', () => {
         await expect(new Mod(event, coreMock().core, dispatch).run()).resolves.toBe('kick:bye');
     });
 
-    it('throws MatchArmMissing for a route with no arm', async () => {
+    it('throws MatchCaseMissing for a route with no case', async () => {
         class Ban extends SlashHandler<'hbBan'> {
             async execute(): Promise<void> {
                 await this.match({ hbBan: () => undefined });
@@ -126,11 +126,11 @@ describe('SlashHandler options and match', () => {
         const event = slashEvent({ name: 'hbGhost', options: [] });
 
         await expect(new Ban(event, coreMock().core, dispatch).execute()).rejects.toSatisfy((e: unknown) =>
-            isSeedcordError(e, 'SeedcordTypeError', SeedcordErrorCode.MatchArmMissing)
+            isSeedcordError(e, 'SeedcordTypeError', SeedcordErrorCode.MatchCaseMissing)
         );
     });
 
-    it('throws MatchArmMissing for a prototype-named route with no arm', async () => {
+    it('throws MatchCaseMissing for a prototype-named route with no case', async () => {
         class Ban extends SlashHandler<'hbBan'> {
             async execute(): Promise<void> {
                 await this.match({ hbBan: () => undefined });
@@ -139,7 +139,7 @@ describe('SlashHandler options and match', () => {
         const event = slashEvent({ name: 'constructor', options: [] });
 
         await expect(new Ban(event, coreMock().core, dispatch).execute()).rejects.toSatisfy((e: unknown) =>
-            isSeedcordError(e, 'SeedcordTypeError', SeedcordErrorCode.MatchArmMissing)
+            isSeedcordError(e, 'SeedcordTypeError', SeedcordErrorCode.MatchCaseMissing)
         );
     });
 });
@@ -153,7 +153,7 @@ describe('AutocompleteHandler focused, match, options, route', () => {
         ]
     });
 
-    it('exposes the focused field and dispatches its arm through respond', async () => {
+    it('exposes the focused field and dispatches its case through respond', async () => {
         class Search extends AutocompleteHandler<'hbSearch'> {
             async execute(): Promise<void> {
                 await this.match({
@@ -188,7 +188,7 @@ describe('AutocompleteHandler focused, match, options, route', () => {
         expect(route).toBe('hbSearch');
     });
 
-    it('throws MatchArmMissing for a focused field with no arm', async () => {
+    it('throws MatchCaseMissing for a focused field with no case', async () => {
         class Search extends AutocompleteHandler<'hbSearch'> {
             async execute(): Promise<void> {
                 await this.match({
@@ -203,11 +203,11 @@ describe('AutocompleteHandler focused, match, options, route', () => {
         });
 
         await expect(new Search(event, coreMock().core, dispatch).execute()).rejects.toSatisfy((e: unknown) =>
-            isSeedcordError(e, 'SeedcordTypeError', SeedcordErrorCode.MatchArmMissing)
+            isSeedcordError(e, 'SeedcordTypeError', SeedcordErrorCode.MatchCaseMissing)
         );
     });
 
-    it('throws MatchArmMissing for a prototype-named focused field', async () => {
+    it('throws MatchCaseMissing for a prototype-named focused field', async () => {
         class Search extends AutocompleteHandler<'hbSearch'> {
             async execute(): Promise<void> {
                 await this.match({
@@ -222,7 +222,7 @@ describe('AutocompleteHandler focused, match, options, route', () => {
         });
 
         await expect(new Search(event, coreMock().core, dispatch).execute()).rejects.toSatisfy((e: unknown) =>
-            isSeedcordError(e, 'SeedcordTypeError', SeedcordErrorCode.MatchArmMissing)
+            isSeedcordError(e, 'SeedcordTypeError', SeedcordErrorCode.MatchCaseMissing)
         );
     });
 

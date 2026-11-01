@@ -28,7 +28,7 @@ function flagTypeState(type: ts.Type | undefined): FlagState {
     if (type.isNumberLiteral()) return bitState(type.value);
     if (type.isStringLiteral()) {
         if (type.value === 'IsComponentsV2') return 'present';
-        // the `${bigint}` resolvable arm, e.g. flags: '32768'
+        // the `${bigint}` member of the resolvable union, e.g. flags: '32768'
         if (/^\d+$/u.test(type.value)) return bitState(Number(type.value));
         return 'absent';
     }

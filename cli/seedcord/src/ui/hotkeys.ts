@@ -186,10 +186,10 @@ export function dispatchHotkey(ctx: HotkeyContext): void {
     const found = BINDINGS.get(keyIdOf(ctx.input, ctx.key));
     const binding = found && isLive(found, ctx) ? found : undefined;
 
-    if (binding?.confirm && ctx.state.armed !== binding.confirm) {
-        ctx.store.setArmed(binding.confirm);
+    if (binding?.confirm && ctx.state.pendingConfirm !== binding.confirm) {
+        ctx.store.setPendingConfirm(binding.confirm);
         return;
     }
-    if (ctx.state.armed !== null) ctx.store.setArmed(null);
+    if (ctx.state.pendingConfirm !== null) ctx.store.setPendingConfirm(null);
     binding?.run(ctx);
 }

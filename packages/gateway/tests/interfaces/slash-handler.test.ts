@@ -40,7 +40,7 @@ class KickHandler extends SlashHandler<'kick'> {
 }
 void KickHandler;
 
-// a multi-command handler branches with match, each arm typed for its own route
+// a multi-command handler branches with match, each case typed for its own route
 class ModerationHandler extends SlashHandler<'kick' | 'warn'> {
     async execute(): Promise<void> {
         await this.match({
@@ -55,10 +55,10 @@ class ModerationHandler extends SlashHandler<'kick' | 'warn'> {
 }
 void ModerationHandler;
 
-// every route needs an arm
-class MissingArm extends SlashHandler<'kick' | 'warn'> {
+// every route needs a case
+class MissingCase extends SlashHandler<'kick' | 'warn'> {
     async execute(): Promise<void> {
-        // @ts-expect-error the 'warn' arm is missing.
+        // @ts-expect-error the 'warn' case is missing.
         await this.match({
             kick: (options) => {
                 void options.getUser('member');
@@ -66,14 +66,14 @@ class MissingArm extends SlashHandler<'kick' | 'warn'> {
         });
     }
 }
-void MissingArm;
+void MissingCase;
 
-// an arm cannot reach another route's option
+// a case cannot reach another route's option
 class CrossRoute extends SlashHandler<'kick' | 'warn'> {
     async execute(): Promise<void> {
         await this.match({
             kick: (options) => {
-                // @ts-expect-error 'kick' has no string option, so getString does not exist on its arm.
+                // @ts-expect-error 'kick' has no string option, so getString does not exist on its case.
                 void options.getString;
             },
             warn: (options) => {
@@ -134,8 +134,8 @@ class UnionOptionsHandler extends SlashHandler<'mute' | 'note'> {
     }
 }
 
-// each match arm is typed for its own route, recovering getters the union view drops
-class PerArmNarrowing extends SlashHandler<'mute' | 'note'> {
+// each match case is typed for its own route, recovering getters the union view drops
+class PerCaseNarrowing extends SlashHandler<'mute' | 'note'> {
     async execute(): Promise<void> {
         await this.match({
             mute: (options) => {
@@ -148,8 +148,8 @@ class PerArmNarrowing extends SlashHandler<'mute' | 'note'> {
     }
 }
 
-// an arm keyed by a route outside the handler's union is rejected
-class ExtraArmHandler extends SlashHandler<'mute' | 'note'> {
+// a case keyed by a route outside the handler's union is rejected
+class ExtraCaseHandler extends SlashHandler<'mute' | 'note'> {
     async execute(): Promise<void> {
         await this.match({
             mute: (options) => {
@@ -204,7 +204,7 @@ function slashInteraction(commandName: string): ChatInputCommandInteraction<'cac
 }
 
 describe('SlashHandler', () => {
-    it('throws MatchArmMissing for a prototype-named route with no arm', async () => {
+    it('throws MatchCaseMissing for a prototype-named route with no case', async () => {
         class Mod extends SlashHandler<'kick' | 'warn'> {
             async execute(): Promise<void> {
                 await this.match({
@@ -215,15 +215,15 @@ describe('SlashHandler', () => {
         }
         const handler = new Mod(slashInteraction('constructor'), core, dispatch);
         await expect(handler.execute()).rejects.toMatchObject({
-            code: SeedcordErrorCode.MatchArmMissing
+            code: SeedcordErrorCode.MatchCaseMissing
         });
     });
 });
 
 void [
     UnionOptionsHandler,
-    PerArmNarrowing,
-    ExtraArmHandler,
+    PerCaseNarrowing,
+    ExtraCaseHandler,
     SubcommandHandler,
     UnknownDecoratorRoute,
     UnknownGenericRoute

@@ -8,7 +8,7 @@ type PresetOptions = Parameters<typeof mdxPreset>[0];
 
 export async function compileGuideMdx(source: string): Promise<string> {
     const authored = typeof config.mdxOptions === 'function' ? await config.mdxOptions() : config.mdxOptions;
-    // source.config.ts never picks the 'minimal' preset, the other arm of the declared type
+    // source.config.ts never picks the 'minimal' preset, the other member of the declared union
     const options = await mdxPreset(authored as PresetOptions);
     const file = { value: source, path: 'content/docs/sample.mdx' };
 

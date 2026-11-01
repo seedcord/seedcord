@@ -238,7 +238,7 @@ describe('handleInteractionFault', () => {
         expect(mock.reply).toHaveBeenCalledTimes(1);
     });
 
-    describe('autocomplete arm', () => {
+    describe('autocomplete interactions', () => {
         beforeEach(() => {
             mock.isAutocomplete.mockReturnValue(true);
         });

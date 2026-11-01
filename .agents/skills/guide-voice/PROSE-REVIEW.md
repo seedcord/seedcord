@@ -154,7 +154,7 @@ finding, and a tic is a habit rather than a single sentence.
    collapsing into "discord-api-types payloads". Widening needs a table.
 
    Two more shapes of the same miss. A sentence saying what a surface lacks
-   and stopping, as in "Neither arm receives the interaction", where the
+   and stopping, as in "Neither callback receives the interaction", where the
    reader needs to know what it gets instead. And a number the reader matches
    in code with its name left out, as in 10062 with no `UnknownInteraction`.
 

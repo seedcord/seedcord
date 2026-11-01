@@ -369,7 +369,7 @@ describe('radio groups and checkboxes', () => {
 
 describe('payloads the pinned types forbid', () => {
     it('reports a component kind newer than the pinned discord-api-types', () => {
-        // justified: no arm of the union covers an unknown type
+        // justified: no member of the union covers an unknown type
         const future = { type: 99, id: 2, custom_id: 'weird', value: 'z' } as unknown as ModalSubmitComponent;
         const fields = new ModalFields(submission([labelled(1, future)]));
 

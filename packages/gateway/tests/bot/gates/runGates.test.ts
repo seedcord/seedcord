@@ -113,7 +113,7 @@ describe('interactionGateContext', () => {
 });
 
 describe('eventGateContext', () => {
-    it('builds the event arm and yields a null actor when the args carry no carrier', () => {
+    it('builds the event context and yields a null actor when the args carry no carrier', () => {
         // empty payload, so deriveEventActor finds no Message, GuildMember, or User to read
         const payload = [] as unknown as Parameters<typeof eventGateContext>[1];
         // the builder never reads core

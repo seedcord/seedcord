@@ -52,6 +52,6 @@ export type SingleParams<Defs extends readonly AnyCustomId[]> = Defs extends rea
     : never;
 
 /** @internal */
-export type MatchArms<Defs extends readonly AnyCustomId[], Ret> = {
+export type MatchCases<Defs extends readonly AnyCustomId[], Ret> = {
     [Def in Defs[number] as Def['prefix']]: (params: DecodedParams<Def['shape']>) => Promisable<Ret>;
 };

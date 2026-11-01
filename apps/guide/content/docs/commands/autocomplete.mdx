@@ -88,11 +88,11 @@ export class SearchAutocomplete extends AutocompleteHandler<'search'> {
 
 Discord sends one of these every time the person edits the field, so `value` is whatever they've typed so far.
 
-## One arm per field
+## One case per field
 
-An autocomplete interaction says which field is focused, so every handler branches on it. `this.match` takes one arm per autocompletable field, and an arm you leave out fails to compile.
+An autocomplete interaction says which field is focused, so every handler branches on it. `this.match` takes one case per autocompletable field, and a case you leave out fails to compile.
 
-Each arm receives the partial value and a `respond` typed to that field's choice values.
+Each case receives the partial value and a `respond` typed to that field's choice values.
 
 Typing the opening quote shows the fields that command declared.
 
@@ -116,9 +116,9 @@ class SearchAutocomplete extends AutocompleteHandler<'search'> {
 
 ## One handler for several commands
 
-Name every command in the decorator, and repeat those names in the generic, so the arms reach every autocompletable field across all of them.
+Name every command in the decorator, and repeat those names in the generic, so the cases reach every autocompletable field across all of them.
 
-`search` completes `query` and `limit`. A second command, `probe`, completes `query`, `count`, and `ratio`. One handler for both needs four arms.
+`search` completes `query` and `limit`. A second command, `probe`, completes `query`, `count`, and `ratio`. One handler for both needs four cases.
 
 ```ts twoslash
 import {
@@ -141,7 +141,7 @@ export class Catalog extends AutocompleteHandler<
 }
 ```
 
-Both commands complete `query`, so its arm reads `this.route` to tell them apart.
+Both commands complete `query`, so its case reads `this.route` to tell them apart.
 
 ```ts twoslash
 import {

@@ -86,7 +86,7 @@ class FocusedTypes extends AutocompleteHandler<'search'> {
 }
 void FocusedTypes;
 
-// match branches by focused field, each arm gets the partial value (string) and a respond pinned to the field's kind
+// match branches by focused field, each case gets the partial value (string) and a respond pinned to the field's kind
 class SearchMatch extends AutocompleteHandler<'search'> {
     async execute(): Promise<void> {
         await this.match({
@@ -99,16 +99,16 @@ class SearchMatch extends AutocompleteHandler<'search'> {
     }
 }
 
-// every autocompletable field needs an arm
-class MissingArm extends AutocompleteHandler<'search'> {
+// every autocompletable field needs a case
+class MissingCase extends AutocompleteHandler<'search'> {
     async execute(): Promise<void> {
-        // @ts-expect-error the 'limit' arm is missing.
+        // @ts-expect-error the 'limit' case is missing.
         await this.match({
             query: (value, respond) => respond([{ name: value, value }])
         });
     }
 }
-void MissingArm;
+void MissingCase;
 
 // respond choice values are pinned to the focused field's kind
 class BadRespond extends AutocompleteHandler<'search'> {
@@ -151,7 +151,7 @@ class RouteTyped extends AutocompleteHandler<'search' | 'find'> {
 }
 void RouteTyped;
 
-// a multi-command handler's arms span every autocompletable field across both commands
+// a multi-command handler's cases span every autocompletable field across both commands
 class MultiCommand extends AutocompleteHandler<'search' | 'find'> {
     async execute(): Promise<void> {
         await this.match({
@@ -243,24 +243,24 @@ describe('AutocompleteHandler', () => {
         expect(handler.read()).toBe(handler.read());
     });
 
-    it('runs the arm for the focused field with the partial value', async () => {
+    it('runs the case for the focused field with the partial value', async () => {
         const captured: ApplicationCommandOptionChoiceData[] = [];
         await new SearchMatch(autocompleteRespond('query', 'sp', captured), core, dispatch).execute();
         expect(captured).toEqual([{ name: 'sp', value: 'sp' }]);
     });
 
-    it('throws MatchArmMissing when the focused field has no arm', async () => {
+    it('throws MatchCaseMissing when the focused field has no case', async () => {
         // a stale-deployed field arrives that the handler does not branch on
         const handler = new SearchMatch(autocompleteRespond('ghost', 'x', []), core, dispatch);
         await expect(handler.execute()).rejects.toMatchObject({
-            code: SeedcordErrorCode.MatchArmMissing
+            code: SeedcordErrorCode.MatchCaseMissing
         });
     });
 
-    it('throws MatchArmMissing for a prototype-named focused field', async () => {
+    it('throws MatchCaseMissing for a prototype-named focused field', async () => {
         const handler = new SearchMatch(autocompleteRespond('constructor', 'x', []), core, dispatch);
         await expect(handler.execute()).rejects.toMatchObject({
-            code: SeedcordErrorCode.MatchArmMissing
+            code: SeedcordErrorCode.MatchCaseMissing
         });
     });
 

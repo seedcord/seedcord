@@ -182,8 +182,8 @@ const messages = {
         `A customId encoded by ${quoted(prefix)} is ${length} characters, but Discord allows at most 100. Shorten the prefix, or move a field out of the customId.`,
     [SeedcordErrorCode.CustomIdHandlerRouteMissing]: (className: string) =>
         `${paint.sky(className)} is missing its route decorator. Add the one that matches its base, for example ${paint.bold('@ButtonRoute')} or ${paint.bold('@UserMenuRoute')}.`,
-    [SeedcordErrorCode.MatchArmMissing]: (handler: string, kind: string, value: string) =>
-        `${paint.bold(handler)}'s match() has no arm for the ${kind} ${quoted(value)}. Add one to the object you pass to match().`,
+    [SeedcordErrorCode.MatchCaseMissing]: (handler: string, kind: string, value: string) =>
+        `${paint.bold(handler)}'s match() has no case for the ${kind} ${quoted(value)}. Add one to the object you pass to match().`,
     [SeedcordErrorCode.EventNameUnavailable]: (handler: string, read: string) =>
         `${paint.sky(handler)} read ${paint.bold(read)}, but it was constructed without an event name. The event controller passes that name. A handler or middleware you construct yourself takes it as the fourth constructor argument.`,
     [SeedcordErrorCode.AutocompleteNoFocusedOption]: () =>

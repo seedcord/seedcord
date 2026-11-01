@@ -77,7 +77,7 @@ export class Leaderboard extends SlashHandler<'leaderboard'> {
 }
 ```
 
-The `'InChannel'` string you passed to `defineGate` appears in the compile error when you attach the gate to a handler it doesn't fit. [`and`](ref:core/and) and [`or`](ref:core/or) join the names of their arms into one.
+The `'InChannel'` string you passed to `defineGate` appears in the compile error when you attach the gate to a handler it doesn't fit. [`and`](ref:core/and) and [`or`](ref:core/or) join the names of their gates into one.
 
 ## What a check reads
 
@@ -133,7 +133,7 @@ export const NoAttachments = defineGate(
 
 </Callout>
 
-The two gateway arms carry different fields. Narrow on `ctx.kind` before reading either set.
+The two gateway contexts carry different fields. Narrow on `ctx.kind` before reading either set.
 
 {/* prettier-ignore-start */}
 
@@ -144,7 +144,7 @@ The two gateway arms carry different fields. Narrow on `ctx.kind` before reading
 | `InteractionGateContext<ButtonInteraction>` | button handlers | the same, with `interaction` typed to a button |
 | [`EventGateContext`](ref:gateway/EventGateContext) | any event handler | `eventName`, `payload`, `user`, `guild`, `member` |
 | `EventGateContext<Events.MessageCreate>` | that one event | the same, with `payload` typed to its tuple |
-| [`GateContext`](ref:gateway/GateContext) | either arm | the union of the two rows above |
+| [`GateContext`](ref:gateway/GateContext) | either context | the union of the two rows above |
 
 {/* prettier-ignore-end */}
 
@@ -201,4 +201,4 @@ Gates run one after another, so the `await bans.has` above delays every gate beh
 
 If you throw a [`Notice`](ref:core/Notice), seedcord replies with what its `render()` builds. If you throw a [`Silence`](ref:core/Silence), seedcord drops the request without replying, which suits an event handler. [Throwing](/replying/throwing) has both in full, plus what a check throwing anything else produces.
 
-If you plan to pass a gate to an [`or`](ref:core/or), set `summary` in your `Notice`'s constructor, as in `this.summary = 'run it in #bots'`. When every arm refuses, the `or` [lists each arm's summary](/checks/combining#the-refusal-when-every-arm-refuses). If one arm doesn't set a summary, the `or` shows a generic refusal.
+If you plan to pass a gate to an [`or`](ref:core/or), set `summary` in your `Notice`'s constructor, as in `this.summary = 'run it in #bots'`. When every gate refuses, the `or` [lists each gate's summary](/checks/combining#the-refusal-when-every-gate-refuses). If one gate doesn't set a summary, the `or` shows a generic refusal.

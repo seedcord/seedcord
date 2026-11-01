@@ -29,7 +29,7 @@ expectTypeOf(or(and(AgnosticGate, or(AgnosticGate, AgnosticGate)), AgnosticGate)
 expectTypeOf<RequiredOf<string>>().toEqualTypeOf<never>();
 
 describe('and', () => {
-    it('runs every arm in order and passes when all pass', async () => {
+    it('runs every gate in order and passes when all pass', async () => {
         const order: string[] = [];
         const A = defineGate('a', () => {
             order.push('a');
@@ -57,7 +57,7 @@ describe('and', () => {
         expect(order).toEqual(['a']);
     });
 
-    it('names itself after its arms at runtime, matching the type-level name', () => {
+    it('names itself after its gates at runtime, matching the type-level name', () => {
         const A = defineGate('a', () => {});
         const B = defineGate('b', () => {});
 
@@ -88,7 +88,7 @@ describe('and', () => {
 });
 
 describe('or', () => {
-    it('passes on the first arm that passes and skips the rest', async () => {
+    it('passes on the first gate that passes and skips the rest', async () => {
         const order: string[] = [];
         const A = defineGate('a', () => {
             order.push('a');
@@ -102,7 +102,7 @@ describe('or', () => {
         expect(order).toEqual(['a']);
     });
 
-    it('catches a report-false refusal and tries the next arm', async () => {
+    it('catches a report-false refusal and tries the next gate', async () => {
         const order: string[] = [];
         const A = defineGate('a', () => {
             order.push('a');
@@ -159,7 +159,7 @@ describe('or', () => {
         await expect(or(A, B).check(ctx)).rejects.toThrow('boom');
     });
 
-    it('throws a refusal when every arm refuses', async () => {
+    it('throws a refusal when every gate refuses', async () => {
         const A = defineGate('a', () => {
             throw new TestNotice('a refused');
         });
@@ -170,7 +170,7 @@ describe('or', () => {
         await expect(or(A, B).check(ctx)).rejects.toBeInstanceOf(Notice);
     });
 
-    it('lists each arm summary when every refusing arm has one', async () => {
+    it('lists each gate summary when every refusing gate has one', async () => {
         const A = defineGate('a', () => {
             const notice = new TestNotice('a');
             notice.summary = 'Manage Server';
@@ -197,7 +197,7 @@ describe('or', () => {
         expect(description).toContain('be a bot owner');
     });
 
-    it('falls back to the neutral refusal when an arm has no summary', async () => {
+    it('falls back to the neutral refusal when a gate has no summary', async () => {
         const A = defineGate('a', () => {
             const notice = new TestNotice('a');
             notice.summary = 'Manage Server';
@@ -222,7 +222,7 @@ describe('or', () => {
         expect(description).toContain('not allowed');
     });
 
-    it('throws the author fail notice when every arm refuses', async () => {
+    it('throws the author fail notice when every gate refuses', async () => {
         const A = defineGate('a', () => {
             throw new TestNotice('a');
         });
@@ -234,7 +234,7 @@ describe('or', () => {
         await expect(or(A, B, { fail }).check(ctx)).rejects.toBe(fail);
     });
 
-    it('calls the author fail factory with ctx when every arm refuses', async () => {
+    it('calls the author fail factory with ctx when every gate refuses', async () => {
         const A = defineGate('a', () => {
             throw new TestNotice('a');
         });
@@ -264,22 +264,22 @@ describe('or', () => {
 });
 
 describe('combinator typing on the scalar base', () => {
-    it('rejects or() with no arms at compile time', () => {
-        // @ts-expect-error or requires at least two arms
+    it('rejects or() with no gates at compile time', () => {
+        // @ts-expect-error or requires at least two gates
         or();
     });
 
-    it('rejects and() with no arms at compile time', () => {
-        // @ts-expect-error and requires at least two arms
+    it('rejects and() with no gates at compile time', () => {
+        // @ts-expect-error and requires at least two gates
         and();
     });
 
-    it('rejects or() with one arm at compile time', () => {
+    it('rejects or() with one gate at compile time', () => {
         // @ts-expect-error or of one gate is just that gate, so it requires at least two
         or(AgnosticGate);
     });
 
-    it('rejects and() with one arm at compile time', () => {
+    it('rejects and() with one gate at compile time', () => {
         // @ts-expect-error and of one gate is just that gate, so it requires at least two
         and(AgnosticGate);
     });

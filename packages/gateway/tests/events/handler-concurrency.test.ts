@@ -11,7 +11,7 @@ import type { SubscriptionData } from '@seedcord/core';
 
 // A loads before B
 async function writeHandlers(testEnv: TestEnvironment, armA: string, armB: string): Promise<void> {
-    const handler = (name: string, arm: string): string => `
+    const handler = (name: string, body: string): string => `
         import { EventHandler, Notice, RegisterEvent } from '${seedcordPath}';
         import { Events } from 'discord.js';
 
@@ -28,7 +28,7 @@ async function writeHandlers(testEnv: TestEnvironment, armA: string, armB: strin
         @RegisterEvent(['messageCreate'])
         export class ${name} extends EventHandler<Events.MessageCreate> {
             public async execute() {
-                await this.match({ messageCreate: (message) => ${arm} });
+                await this.match({ messageCreate: (message) => ${body} });
             }
         }
     `;

@@ -13,12 +13,12 @@ import type { ClientEvents } from 'discord.js';
 const core = {} as unknown as Core;
 const dispatch = new DispatchContext('event:test');
 
-// a minimal Message-shaped fake, the arms only call reply on it
+// a minimal Message-shaped fake, the cases only call reply on it
 function fakeMessage(): { reply: ReturnType<typeof vi.fn> } {
     return { reply: vi.fn() };
 }
 
-// the message-event payload tuples are fakes, justified: match only reads getEvent() and hands the tuple to the arm
+// the message-event payload tuples are fakes, justified: match only reads getEvent() and hands the tuple to the case
 function createPayload(m: { reply: ReturnType<typeof vi.fn> }): ClientEvents[Events.MessageCreate] {
     return [m] as unknown as ClientEvents[Events.MessageCreate];
 }
@@ -64,10 +64,10 @@ class MultiNever extends EventHandler<Events.MessageCreate | Events.MessageUpdat
     }
 }
 
-// every registered event needs an arm
-class MissingArm extends EventHandler<Events.MessageCreate | Events.MessageUpdate> {
+// every registered event needs a case
+class MissingCase extends EventHandler<Events.MessageCreate | Events.MessageUpdate> {
     async execute(): Promise<void> {
-        // @ts-expect-error the messageUpdate arm is missing.
+        // @ts-expect-error the messageUpdate case is missing.
         await this.match({
             [Events.MessageCreate]: () => {
                 /* noop */
@@ -76,8 +76,8 @@ class MissingArm extends EventHandler<Events.MessageCreate | Events.MessageUpdat
     }
 }
 
-// each arm receives the event's payload as named params, so a param past the tuple's arity is a compile error
-class ArmArity extends EventHandler<Events.MessageCreate | Events.MessageUpdate> {
+// each case receives the event's payload as named params, so a param past the tuple's arity is a compile error
+class CaseArity extends EventHandler<Events.MessageCreate | Events.MessageUpdate> {
     async execute(): Promise<void> {
         await this.match({
             // @ts-expect-error messageCreate delivers one element, a second param is rejected.
@@ -91,8 +91,8 @@ class ArmArity extends EventHandler<Events.MessageCreate | Events.MessageUpdate>
     }
 }
 
-// each arm's named params are typed from the event's payload tuple, in order
-class ArmParamTypes extends EventHandler<Events.MessageCreate | Events.MessageUpdate> {
+// each case's named params are typed from the event's payload tuple, in order
+class CaseParamTypes extends EventHandler<Events.MessageCreate | Events.MessageUpdate> {
     async execute(): Promise<void> {
         await this.match({
             [Events.MessageCreate]: (message) => {
@@ -166,9 +166,9 @@ void MultiNever;
 
 void PingMulti;
 void SingleRead;
-void MissingArm;
-void ArmArity;
-void ArmParamTypes;
+void MissingCase;
+void CaseArity;
+void CaseParamTypes;
 void GoodSingle;
 void GoodMulti;
 void DecoratorSuperset;
@@ -177,7 +177,7 @@ void BoomError;
 void ThrowingMulti;
 
 describe('EventHandler.match', () => {
-    it('propagates a throw from a match arm out of execute, where the controller boundary catches it', async () => {
+    it('propagates a throw from a match case out of execute, where the controller boundary catches it', async () => {
         const handler = new ThrowingMulti(createPayload(fakeMessage()), core, dispatch, Events.MessageCreate);
         await expect(handler.execute()).rejects.toBeInstanceOf(BoomError);
     });
@@ -203,10 +203,10 @@ describe('EventHandler.match', () => {
         expect(handler.read()).toHaveLength(1);
     });
 
-    it('throws MatchArmMissing when the current event has no arm', async () => {
+    it('throws MatchCaseMissing when the current event has no case', async () => {
         // a stale-deployed event arrives that the handler does not branch on
         const handler = new PingMulti(createPayload(fakeMessage()), core, dispatch, 'ghost' as Events.MessageCreate);
-        await expect(handler.execute()).rejects.toMatchObject({ code: SeedcordErrorCode.MatchArmMissing });
+        await expect(handler.execute()).rejects.toMatchObject({ code: SeedcordErrorCode.MatchCaseMissing });
     });
 
     it('throws EventNameUnavailable when constructed without an event name', async () => {

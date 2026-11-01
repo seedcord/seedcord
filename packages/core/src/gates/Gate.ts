@@ -5,7 +5,7 @@ import type { Promisable } from 'type-fest';
 /**
  * The transport-agnostic gate context, the scalar identity of the acting user resolvable from any
  * transport's payload. Every field except `core` is nullable, since an event or DM may carry no
- * guild or member. Each transport extends it with its own arm. For example, the gateway adds the djs
+ * guild or member. Each transport extends it with its own context. For example, the gateway adds the djs
  * `user`/`guild`/`member` objects and the live interaction or event payload.
  *
  * @example
@@ -198,7 +198,7 @@ export function defineGate<const Name extends string, Ctx extends GateContextBas
 /**
  * Builds an {@link EffectGate} from a `check` and a `commit`. `check` peeks and refuses by throwing, and
  * `commit` applies the side effect, running only once the whole gate set passes so a later refusal never
- * commits. In an `or`, a refusing arm's queued commit is rolled back. This is how {@link Cooldown} peeks
+ * commits. In an `or`, seedcord rolls back the commit a refusing gate queued. This is how {@link Cooldown} peeks
  * in `check` and charges the slot in `commit`.
  *
  * @typeParam Name - The gate's literal name, used to name a mismatch error.

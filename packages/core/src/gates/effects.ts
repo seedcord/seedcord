@@ -34,12 +34,12 @@ export function discardCommits(ctx: GateContextBase): void {
     commitQueues.delete(ctx);
 }
 
-// an `or` arm takes this mark before it runs
+// each gate in an `or` takes this mark before it runs
 export function markCommits(ctx: GateContextBase): number {
     return commitQueues.get(ctx)?.length ?? 0;
 }
 
-// and rolls back to it when the arm refuses, leaving no commit behind
+// and rolls back to it when the gate refuses, leaving no commit behind
 export function rollbackCommits(ctx: GateContextBase, mark: number): void {
     const queue = commitQueues.get(ctx);
     if (queue && queue.length > mark) queue.length = mark;

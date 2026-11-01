@@ -19,7 +19,7 @@ import type {
 } from 'discord.js';
 import type { Promisable } from 'type-fest';
 
-type UserMenuArms<Names extends NamesFor<ApplicationCommandType.User>, Ret> = {
+type UserMenuCases<Names extends NamesFor<ApplicationCommandType.User>, Ret> = {
     [Name in Names]: (
         target: User,
         member: CacheTypeReducer<
@@ -30,22 +30,22 @@ type UserMenuArms<Names extends NamesFor<ApplicationCommandType.User>, Ret> = {
     ) => Promisable<Ret>;
 };
 
-type MessageMenuArms<Names extends NamesFor<ApplicationCommandType.Message>, Ret> = {
+type MessageMenuCases<Names extends NamesFor<ApplicationCommandType.Message>, Ret> = {
     [Name in Names]: (
         target: Message<BooleanCache<MenuCacheFor<ApplicationCommandType.Message, Name>>>
     ) => Promisable<Ret>;
 };
 
-function armFor<Ret>(handler: object, arms: object, name: string): (...args: never[]) => Promisable<Ret> {
+function caseFor<Ret>(handler: object, cases: object, name: string): (...args: never[]) => Promisable<Ret> {
     // hasOwn, since a plain lookup for a command named `constructor` returns Object.prototype's
-    const arm = Object.hasOwn(arms, name) ? (arms as Record<string, unknown>)[name] : undefined;
-    if (typeof arm !== 'function')
-        throw new SeedcordTypeError(SeedcordErrorCode.MatchArmMissing, [
+    const callback = Object.hasOwn(cases, name) ? (cases as Record<string, unknown>)[name] : undefined;
+    if (typeof callback !== 'function')
+        throw new SeedcordTypeError(SeedcordErrorCode.MatchCaseMissing, [
             handler.constructor.name,
             'context menu command',
             name
         ]);
-    return arm as (...args: never[]) => Promisable<Ret>;
+    return callback as (...args: never[]) => Promisable<Ret>;
 }
 
 /**
@@ -92,16 +92,16 @@ export abstract class UserContextMenuHandler<
     }
 
     /**
-     * Run the arm for the selected command. Use this only when the handler is registered for several
+     * Run the case for the selected command. Use this only when the handler is registered for several
      * names.
      *
-     * Provide one arm per registered name, keyed by the name Discord shows in the right-click menu. Each
-     * arm receives the clicked user and that user's guild member, both narrowed to the cache state of that
-     * one command. The arms must cover every name in the generic. A missing name or an unknown key is a
+     * Provide one case per registered name, keyed by the name Discord shows in the right-click menu. Each
+     * case receives the clicked user and that user's guild member, both narrowed to the cache state of that
+     * one command. The cases must cover every name in the generic. A missing name or an unknown key is a
      * compile error.
      *
-     * @param arms - One handler per registered command name.
-     * @returns The result of the arm that ran.
+     * @param cases - One handler per registered command name.
+     * @returns The result of the case that ran.
      *
      * @example
      * ```ts
@@ -116,9 +116,9 @@ export abstract class UserContextMenuHandler<
      * }
      * ```
      */
-    protected async match<Ret>(arms: UserMenuArms<Names, Ret>): Promise<Ret> {
-        const arm = armFor<Ret>(this, arms, this.route);
-        return await (arm as (target: User, member: unknown) => Promisable<Ret>)(this.target, this.targetMember);
+    protected async match<Ret>(cases: UserMenuCases<Names, Ret>): Promise<Ret> {
+        const callback = caseFor<Ret>(this, cases, this.route);
+        return await (callback as (target: User, member: unknown) => Promisable<Ret>)(this.target, this.targetMember);
     }
 }
 
@@ -160,15 +160,15 @@ export abstract class MessageContextMenuHandler<
     }
 
     /**
-     * Run the arm for the selected command. Use this only when the handler is registered for several
+     * Run the case for the selected command. Use this only when the handler is registered for several
      * names.
      *
-     * Provide one arm per registered name, keyed by the name Discord shows in the right-click menu. Each
-     * arm receives the clicked message, narrowed to the cache state of that one command. The arms must
+     * Provide one case per registered name, keyed by the name Discord shows in the right-click menu. Each
+     * case receives the clicked message, narrowed to the cache state of that one command. The cases must
      * cover every name in the generic. A missing name or an unknown key is a compile error.
      *
-     * @param arms - One handler per registered command name.
-     * @returns The result of the arm that ran.
+     * @param cases - One handler per registered command name.
+     * @returns The result of the case that ran.
      *
      * @example
      * ```ts
@@ -183,8 +183,8 @@ export abstract class MessageContextMenuHandler<
      * }
      * ```
      */
-    protected async match<Ret>(arms: MessageMenuArms<Names, Ret>): Promise<Ret> {
-        const arm = armFor<Ret>(this, arms, this.route);
-        return await (arm as (target: Message<BooleanCache<Cache>>) => Promisable<Ret>)(this.target);
+    protected async match<Ret>(cases: MessageMenuCases<Names, Ret>): Promise<Ret> {
+        const callback = caseFor<Ret>(this, cases, this.route);
+        return await (callback as (target: Message<BooleanCache<Cache>>) => Promisable<Ret>)(this.target);
     }
 }

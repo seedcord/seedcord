@@ -113,14 +113,14 @@ export class Review extends ButtonHandler<
 }
 ```
 
-You key each arm by its route's prefix, and each one receives that route's own values. `reject` reads a `reason` that `approve` never declared. Both arms pass `update` a plain string, which seedcord wraps in one text component. Leave an arm out and the build stops, since the compiler requires one per registered prefix.
+You key each case by its route's prefix, and each one receives that route's own values. `reject` reads a `reason` that `approve` never declared. Both cases pass `update` a plain string, which seedcord wraps in one text component. Leave a case out and the build stops, since the compiler requires one per registered prefix.
 
-Keep two buttons in one handler when both arms need the same code first, like a check that the clicker is staff. Two buttons that share nothing belong in two handlers, where each file holds only the code its own button runs.
+Keep two buttons in one handler when both cases need the same code first, like a check that the clicker is staff. Two buttons that share nothing belong in two handlers, where each file holds only the code its own button runs.
 
 <Callout type="warning">
 
 `this.params` is `never` on a handler registered for several routes, since the decoded shape depends on which button someone clicked. `this.match` is the only read there.
 
-Decoding runs once, before any arm, so a wire from an [older shape](/components/stale) throws before your code executes.
+Decoding runs once, before any case, so a wire from an [older shape](/components/stale) throws before your code executes.
 
 </Callout>

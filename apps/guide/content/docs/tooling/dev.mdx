@@ -51,11 +51,11 @@ Once it starts, your terminal turns into a console for the bot. The wide pane on
 | key | what it does |
 | --- | --- |
 | `q` | quits |
-| `Ctrl-C` | one press arms it, a second quits. Any other key in between disarms it |
+| `Ctrl-C` | the second press quits. Any other key in between cancels it |
 | `r` | stops the bot, then starts it again from a fresh read of `seedcord.config.ts` |
 | `g` | runs [codegen](/tooling/codegen) for the running bot. Attaching a plugin or renaming its key still needs `r`, since dev keeps the bot it loaded at startup |
 | `d` | stops a running bot but leaves the terminal up. The status then reads "Disconnected. Press r to restart." |
-| `Ctrl-D` | one press arms it, a second does what `d` does. Any other key in between disarms it |
+| `Ctrl-D` | the second press does what `d` does. Any other key in between cancels it |
 | `c` | empties the log pane |
 | `f` | opens the [filter chips](#when-the-terminal-is-small), or closes them again |
 | `s` | hides the side rail so the logs get the full width, or brings it back. Needs 80 columns or more |

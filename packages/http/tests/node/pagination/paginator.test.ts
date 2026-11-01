@@ -42,7 +42,7 @@ function pagerFor(ephemeral?: boolean): Paginator<string, 'letters'> {
     });
 }
 
-// the guild payload, the DM arm of contextOf drops member and guild_id for a top-level user
+// the guild payload, the DM branch of contextOf drops member and guild_id for a top-level user
 function guildPayload(): Repliables {
     // justified: the paginator reads only the guild id and the acting user off the payload
     return { guild_id: 'g1', member: { user: { id: 'u1' } } } as unknown as Repliables;

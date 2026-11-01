@@ -95,7 +95,7 @@ export {
     decodeComponentRoute,
     type DecodedComponentRoute,
     type HasComponentDefs,
-    type MatchArms,
+    type MatchCases,
     type SingleParams
 } from '#customId/routing';
 

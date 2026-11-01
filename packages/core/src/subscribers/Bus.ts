@@ -205,7 +205,7 @@ export class Bus extends TypedEventEmitter<SubscriptionTuples> {
         // named outside the try so the catch can say which subscriber threw
         let name = '<unresolved>';
         try {
-            // data matches this ctor's payload arm because the registration keyed it to its subscriptions
+            // data matches this ctor's payload type because the registration keyed it to its subscriptions
             const Ctor = entry.ctor as TypedConstructor<typeof Subscriber>;
             name = Ctor.name;
             await new Ctor(data, this.core).execute();

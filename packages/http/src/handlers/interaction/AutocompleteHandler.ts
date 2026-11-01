@@ -18,7 +18,7 @@ import type {
 } from 'discord-api-types/v10';
 import type { Promisable } from 'type-fest';
 
-type FocusedArms<Route extends keyof SlashRegistry, Ret> = {
+type FocusedCases<Route extends keyof SlashRegistry, Ret> = {
     [Name in AutocompletableNames<Route>]: (
         value: string,
         respond: (
@@ -75,33 +75,33 @@ export abstract class AutocompleteHandler<Route extends keyof SlashRegistry> ext
     }
 
     /**
-     * Run the arm for the focused field. An autocomplete always dispatches by which field is focused.
+     * Run the case for the focused field. An autocomplete always dispatches by which field is focused.
      * Match is how you read it.
      *
-     * Provide one arm per autocompletable field across the registered commands, keyed by field name. Each
-     * arm receives the focused partial value and a `respond` typed to that field's choice value. The
-     * arms must cover every autocompletable field. A missing field or an unknown key is a compile error.
+     * Provide one case per autocompletable field across the registered commands, keyed by field name. Each
+     * case receives the focused partial value and a `respond` typed to that field's choice value. The
+     * cases must cover every autocompletable field. A missing field or an unknown key is a compile error.
      *
-     * @param arms - One handler per autocompletable field, keyed by field name.
-     * @returns The result of the arm that ran.
-     * @throws A **SeedcordTypeError** with `MatchArmMissing` when the focused field has no arm. Only a stale-deployed command can send one.
+     * @param cases - One handler per autocompletable field, keyed by field name.
+     * @returns The result of the case that ran.
+     * @throws A **SeedcordTypeError** with `MatchCaseMissing` when the focused field has no case. Only a stale-deployed command can send one.
      */
-    protected async match<Ret>(arms: FocusedArms<Route, Ret>): Promise<Ret> {
+    protected async match<Ret>(cases: FocusedCases<Route, Ret>): Promise<Ret> {
         const { name, value } = this.focused;
         const respond = (choices: readonly APIApplicationCommandOptionChoice[]): Promise<void> => this.respond(choices);
-        // justified: FocusedArms is keyed by field literals, the Record cast indexes it with the runtime field name.
-        type Arm = (
+        // justified: FocusedCases is keyed by field literals, the Record cast indexes it with the runtime field name.
+        type Case = (
             value: string,
             respond: (choices: readonly APIApplicationCommandOptionChoice[]) => Promise<void>
         ) => Promisable<Ret>;
-        const arm = Object.hasOwn(arms, name) ? (arms as Record<string, Arm>)[name] : undefined;
-        if (!arm)
-            throw new SeedcordTypeError(SeedcordErrorCode.MatchArmMissing, [
+        const callback = Object.hasOwn(cases, name) ? (cases as Record<string, Case>)[name] : undefined;
+        if (!callback)
+            throw new SeedcordTypeError(SeedcordErrorCode.MatchCaseMissing, [
                 this.constructor.name,
                 'focused field',
                 name
             ]);
-        return await arm(value, respond);
+        return await callback(value, respond);
     }
 
     /** Send autocomplete suggestions, callback type 8. Prefer {@link match}, which restricts each field's choices to its declared type. */

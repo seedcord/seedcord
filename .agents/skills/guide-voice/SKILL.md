@@ -350,7 +350,7 @@ A sentence can be correct and short and still take the reader two reads. It happ
 | packed | what the reader has to unpack | unpacked |
 | --- | --- | --- |
 | "A commit that throws stops the rest and the handler" | a condition inside the subject | "If a commit throws, the commits after it don't run, and neither does your handler" |
-| "one arm without a summary drops the list to a generic refusal" | a condition inside the subject | "If one arm doesn't set a summary, the `or` shows a generic refusal" |
+| "one gate without a summary drops the list to a generic refusal" | a condition inside the subject | "If one gate doesn't set a summary, the `or` shows a generic refusal" |
 | "`ArraySource` opens the last page for a number past the end" | a condition after the result | "If the number is higher than the last page, `ArraySource` opens the last page" |
 | "every handler repeats them above its real work" | a position word standing in for where the code goes | "every handler starts with its own copy of them" |
 | "an effect gate nested two levels inside an `or`" | a position word standing in for how the code is built | "passes `SpendCredit` to an `and`, and passes that `and` to an `or`" |

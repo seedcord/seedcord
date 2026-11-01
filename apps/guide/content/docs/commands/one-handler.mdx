@@ -24,7 +24,7 @@ export class Moderation extends SlashHandler<'ban' | 'kick'> {
 }
 ```
 
-Each arm receives that route's own options, so `reason` is there in the `ban` arm even though `kick` never declares it.
+Each case receives that route's own options, so `reason` is there in the `ban` case even though `kick` never declares it.
 
 ## Subcommands work the same way
 
@@ -79,7 +79,7 @@ class Moderation extends SlashHandler<'ban' | 'kick'> {
 }
 ```
 
-`reason` belongs to `ban` alone, so you read it inside that arm.
+`reason` belongs to `ban` alone, so you read it inside that case.
 
 ## Both lists must carry the same routes
 
@@ -101,7 +101,7 @@ class Moderation extends SlashHandler<'ban' | 'kick'> {
 }
 ```
 
-## Every route needs an arm
+## Every route needs a case
 
 Your editor lists the routes still waiting for one.
 
