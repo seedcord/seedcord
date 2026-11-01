@@ -1,4 +1,5 @@
 import { PACKAGES_FILE_NAME, REFERENCE_SEARCH_URL, searchFileUrl } from '#src/files';
+import { loadOnce } from '#src/loadOnce';
 import { readJson } from '#src/readAsset';
 import { ALL_PACKAGES, SearchCatalog } from '#src/SearchCatalog';
 import { SearchResults } from '#src/SearchResults';
@@ -6,16 +7,15 @@ import { SearchResults } from '#src/SearchResults';
 import type { SearchIndexEntry, SearchPackage, SearchViewedPackage } from '#src/types';
 
 class DownloadCache<Value> {
-    private readonly downloads = new Map<string, Promise<Value>>();
+    private readonly downloads = new Map<string, () => Promise<Value>>();
 
     get(url: string, download: (url: string) => Promise<Value>): Promise<Value> {
-        const cached = this.downloads.get(url);
-        if (cached) return cached;
-
-        const pending = download(url);
-        pending.catch(() => this.downloads.delete(url));
-        this.downloads.set(url, pending);
-        return pending;
+        let once = this.downloads.get(url);
+        if (!once) {
+            once = loadOnce(() => download(url));
+            this.downloads.set(url, once);
+        }
+        return once();
     }
 }
 

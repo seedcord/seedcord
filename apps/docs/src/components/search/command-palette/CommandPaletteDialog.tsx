@@ -129,7 +129,7 @@ export function CommandPaletteDialog({ controller }: { controller: CommandPalett
             onClose={handleClose}
             title="Command palette"
             description="Search documentation content and navigation items."
-            footer={listExpanded ? <SearchKeyLegend hasGroups={false} /> : undefined}
+            footer={listExpanded ? <SearchKeyLegend hasGroups={roving.hasGroups} /> : undefined}
             field={
                 <CommandHeader
                     inputRef={inputRef}

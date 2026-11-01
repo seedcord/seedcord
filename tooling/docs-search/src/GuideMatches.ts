@@ -15,14 +15,6 @@ const MATCH_RESULTS = 5;
 // about one line of context before the match in a search row
 const EXCERPT_LEAD = 40;
 
-interface Section {
-    hit: GuideHit;
-    isPage: boolean;
-    words: string[];
-    text: string;
-    lowered: string;
-}
-
 const searchWords = (text: string): string[] => text.toLowerCase().match(/[\p{L}\p{N}]+/gu) ?? [];
 
 const isWordCharacter = (character: string): boolean => searchWords(character).length > 0;
@@ -36,31 +28,42 @@ export function findWordStart(text: string, term: string, from = 0): number {
     return -1;
 }
 
-const startsTitleWords = (section: Section, typed: readonly string[]): boolean =>
-    typed.every((word) => section.words.some((titleWord) => titleWord.startsWith(word)));
+class Section {
+    readonly hit: GuideHit;
+    readonly isPage: boolean;
+    private readonly words: string[];
+    private readonly text: string;
+    private readonly lowered: string;
 
-const wholeWordsIn = (section: Section, typed: readonly string[]): number =>
-    typed.filter((word) => section.words.includes(word)).length;
+    constructor(section: GuideSection) {
+        this.hit = guideHit(section);
+        this.isPage = section.heading === undefined;
+        this.words = searchWords(section.heading ?? section.page);
+        this.text = collapseSpaces(section.text);
+        this.lowered = this.text.toLowerCase();
+    }
 
-function excerpt(text: string, at: number): string {
-    const start = text.lastIndexOf(' ', at - EXCERPT_LEAD) + 1;
-    return start === 0 ? text : `…${text.slice(start)}`;
+    startsTitle(typed: readonly string[]): boolean {
+        return typed.every((word) => this.words.some((titleWord) => titleWord.startsWith(word)));
+    }
+
+    wholeWords(typed: readonly string[]): number {
+        return typed.filter((word) => this.words.includes(word)).length;
+    }
+
+    findExcerpt(phrase: string): string | undefined {
+        const at = findWordStart(this.lowered, phrase);
+        if (at === -1) return undefined;
+        const start = this.text.lastIndexOf(' ', at - EXCERPT_LEAD) + 1;
+        return start === 0 ? this.text : `…${this.text.slice(start)}`;
+    }
 }
 
 export class GuideMatches {
     private readonly sections: Section[];
 
     constructor(sections: readonly GuideSection[]) {
-        this.sections = sections.map((section) => {
-            const text = collapseSpaces(section.text);
-            return {
-                hit: guideHit(section),
-                isPage: section.heading === undefined,
-                words: searchWords(section.heading ?? section.page),
-                text,
-                lowered: text.toLowerCase()
-            };
-        });
+        this.sections = sections.map((section) => new Section(section));
     }
 
     // a relative url, read from whichever site serves the page
@@ -80,8 +83,8 @@ export class GuideMatches {
         if (typed.length === 0) return [];
 
         return this.sections
-            .filter((section) => startsTitleWords(section, typed))
-            .map((section) => ({ section, wholeWords: wholeWordsIn(section, typed) }))
+            .filter((section) => section.startsTitle(typed))
+            .map((section) => ({ section, wholeWords: section.wholeWords(typed) }))
             .sort((a, b) => Number(b.section.isPage) - Number(a.section.isPage) || b.wholeWords - a.wholeWords)
             .slice(0, TITLE_RESULTS)
             .map(({ section }) => section);
@@ -92,10 +95,8 @@ export class GuideMatches {
         const found: GuideResult[] = [];
         for (const section of this.sections) {
             if (titled.length + found.length === MATCH_RESULTS) break;
-            const at = titled.includes(section) ? -1 : findWordStart(section.lowered, phrase);
-            if (at !== -1) {
-                found.push(guideResult(section.hit, { by: 'text', excerpt: excerpt(section.text, at), terms }));
-            }
+            const excerpt = titled.includes(section) ? undefined : section.findExcerpt(phrase);
+            if (excerpt !== undefined) found.push(guideResult(section.hit, { by: 'text', excerpt, terms }));
         }
         return found;
     }

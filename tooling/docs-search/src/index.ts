@@ -15,6 +15,7 @@ export { GuideSearch, TooManySearches } from '#src/GuideSearch';
 export { parseQuestion, QUESTION_LENGTH } from '#src/question';
 export { guideSections, type GuideSection } from '#src/guideSections';
 export { findWordStart, GuideMatches } from '#src/GuideMatches';
+export { loadOnce } from '#src/loadOnce';
 export { readJson, type ReadAsset } from '#src/readAsset';
 export { ReferenceSearch } from '#src/ReferenceSearch';
 export { ALL_PACKAGES, SearchCatalog } from '#src/SearchCatalog';

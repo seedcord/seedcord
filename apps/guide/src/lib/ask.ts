@@ -1,7 +1,5 @@
-import { embedding, parseQuestion, QUESTION_LENGTH, SectionIndex } from '@seedcord/docs-search';
+import { embedding, loadOnce, parseQuestion, QUESTION_LENGTH, SectionIndex } from '@seedcord/docs-search';
 import { GUIDE } from '@seedcord/ui/sites';
-
-import { loadOnce } from './loadOnce';
 
 import type { Assets } from '@seedcord/ui/fetchAsset';
 

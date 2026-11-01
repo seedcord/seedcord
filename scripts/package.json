@@ -33,7 +33,6 @@
         "@seedcord/docs-engine": "workspace:^",
         "@seedcord/docs-generator": "workspace:^",
         "@seedcord/docs-search": "workspace:^",
-        "@seedcord/ui": "workspace:^",
         "envapt": "catalog:peer",
         "yaml": "catalog:deps"
     },

@@ -153,7 +153,7 @@ export function GuideSearch({ open, onOpenChange: setOpen }: GuideSearchProps): 
                 <Results groups={groups} message={emptyMessage(typed, groups)} roving={roving} onSelect={select} />
                 {/* a screen reader announces a change inside a status region that already exists */}
                 <p role="status" className={cn('sr-only')}>
-                    {groups.find((group) => group.status === 'failed')?.notice}
+                    {groups.flatMap((group) => (group.status === 'failed' ? [group.notice] : [])).join(' ')}
                 </p>
             </SearchDialog>
         </>

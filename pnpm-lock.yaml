@@ -1801,9 +1801,6 @@ importers:
       '@seedcord/docs-search':
         specifier: workspace:^
         version: link:../tooling/docs-search
-      '@seedcord/ui':
-        specifier: workspace:^
-        version: link:../tooling/ui
       envapt:
         specifier: catalog:peer
         version: 9.2.0

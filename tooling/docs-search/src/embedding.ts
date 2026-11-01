@@ -8,6 +8,6 @@ export const embedding = {
     dimensions: 768,
     // embeddinggemma's model card asks for these prefixes
     document: ({ page, heading, text }: GuideSection): string =>
-        `title: ${heading ? `${page} > ${heading}` : page} | text: ${text}`.slice(0, DOCUMENT_CHARS),
+        `title: ${heading === undefined ? page : `${page} > ${heading}`} | text: ${text}`.slice(0, DOCUMENT_CHARS),
     query: (question: string): string => `task: search result | query: ${question}`
 } as const;

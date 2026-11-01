@@ -1,9 +1,7 @@
 'use client';
 
-import { GuideMatches, GuideSearch, parseQuestion, TooManySearches } from '@seedcord/docs-search';
+import { GuideMatches, GuideSearch, loadOnce, parseQuestion, TooManySearches } from '@seedcord/docs-search';
 import { useEffect, useMemo, useState } from 'react';
-
-import { loadOnce } from '#lib/loadOnce';
 
 import type { GuideResult } from '@seedcord/docs-search';
 import type { TaggedUnion } from 'type-fest';
@@ -76,6 +74,11 @@ export function emptyMessage(typed: string, groups: readonly ResultGroup[]): str
 
 function useMatches(open: boolean): Loaded {
     const [loaded, setLoaded] = useState<Loaded>(PENDING);
+    const [wasOpen, setWasOpen] = useState(open);
+    if (open !== wasOpen) {
+        setWasOpen(open);
+        if (open && loaded.status === 'failed') setLoaded(PENDING);
+    }
     const ready = loaded.status === 'ready';
     useEffect(() => {
         if (!open || ready) return undefined;

@@ -181,6 +181,7 @@ describe('useGuideSearch', () => {
 
         rerender({ open: false });
         rerender({ open: true });
+        expect(groupOf(result.current, 'Matches')?.status).toBe('pending');
         await act(() => vi.advanceTimersByTimeAsync(0));
         expect(matchedPaths(result.current)).toEqual(['/checks/cooldown/']);
     });

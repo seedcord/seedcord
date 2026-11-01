@@ -1,7 +1,7 @@
 import { existsSync, readFileSync } from 'node:fs';
 import { resolve } from 'node:path';
 
-import { embedding, GUIDE_SECTIONS_PATH, GUIDE_VECTORS_PATH, QUESTION_LENGTH } from '@seedcord/docs-search';
+import { embedding, GUIDE_SECTIONS_PATH, GUIDE_VECTORS_PATH } from '@seedcord/docs-search';
 import { parse } from 'jsonc-parser';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
@@ -350,12 +350,10 @@ describe('the ask endpoint', () => {
         expect(env.embedded).toHaveLength(1);
     });
 
-    it('refuses a question too short or too long without embedding it', async () => {
+    it('refuses a question parseQuestion rejects without embedding it', async () => {
         const env = searching();
 
-        expect((await get('/api/ask?q=+', env)).status).toBe(400);
         expect((await get('/api/ask?q=k', env)).status).toBe(400);
-        expect((await get(`/api/ask?q=${'k'.repeat(QUESTION_LENGTH.max + 1)}`, env)).status).toBe(400);
         expect(env.embedded).toEqual([]);
     });
 

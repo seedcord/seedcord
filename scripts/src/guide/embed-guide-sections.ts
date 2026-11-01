@@ -14,14 +14,13 @@ import {
     type GuideSection,
     type ReadAsset
 } from '@seedcord/docs-search';
-import { exportDir } from '@seedcord/ui/exportDir';
 import { Converters, Envapter } from 'envapt';
 
 import { EmbeddingCache } from '#src/guide/EmbeddingCache';
 import { WorkersAi } from '#src/guide/WorkersAi';
 import { CloudflareApi } from '#src/lib/CloudflareApi';
 
-const EXPORT = new URL(`../../../apps/guide/${exportDir(PRODUCTION_SITES.guide)}/`, import.meta.url);
+const EXPORT = new URL(`../../../apps/guide/${PRODUCTION_SITES.guide.exportDir}/`, import.meta.url);
 const CACHE = pathToFileURL(join(homedir(), '.cache/seedcord/guide-embeddings/'));
 
 const exported = (path: string): URL => new URL(`.${path}`, EXPORT);
@@ -44,7 +43,7 @@ async function main(): Promise<void> {
 
     // the worker loads them like this too. a mismatch throws here in CI, before any deploy
     await SectionIndex.load(fromExport);
-    console.log(`✅ embedded ${embedded} of ${sections.length} guide sections, the rest came from the cache`);
+    console.log(`✅ embedded ${embedded} of ${sections.length} guide sections. The rest came from the cache.`);
 }
 
 main().catch((error: unknown) => {

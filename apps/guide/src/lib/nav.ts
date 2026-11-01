@@ -18,9 +18,16 @@ function text(name: Node['name'] | Root['name']): string | undefined {
     return typeof name === 'string' ? name : undefined;
 }
 
-function firstUrl(node: TabRoot): string | undefined {
+const isOwnTab = (node: Node): boolean => node.type === 'folder' && node.root === true;
+
+function indexUrl(node: TabRoot): string | undefined {
     // eslint-disable-next-line @typescript-eslint/no-unnecessary-condition -- fumadocs assigns undefined when pagesIndex resolves to nothing
-    if ('index' in node && node.index) return node.index.url;
+    return 'index' in node && node.index ? node.index.url : undefined;
+}
+
+function firstUrl(node: TabRoot): string | undefined {
+    const index = indexUrl(node);
+    if (index !== undefined) return index;
     for (const child of node.children) {
         if (child.type === 'page') return child.url;
         if (child.type === 'folder') {
@@ -46,11 +53,11 @@ export const GUIDE_TABS: readonly GuideTab[] = TAB_ROOTS.reduce<GuideTab[]>((tab
 }, []);
 
 function pageUrls(node: TabRoot): string[] {
-    // eslint-disable-next-line @typescript-eslint/no-unnecessary-condition -- fumadocs assigns undefined when pagesIndex resolves to nothing
-    const urls = 'index' in node && node.index ? [node.index.url] : [];
+    const index = indexUrl(node);
+    const urls = index === undefined ? [] : [index];
     for (const child of node.children) {
         if (child.type === 'page') urls.push(child.url);
-        if (child.type === 'folder' && !child.root) urls.push(...pageUrls(child));
+        if (child.type === 'folder' && !isOwnTab(child)) urls.push(...pageUrls(child));
     }
     return urls;
 }
@@ -75,8 +82,7 @@ function sectionsOf(node: TabRoot): readonly SidebarSection[] {
             drafts.push({ label: text(child.name), links: [] });
             continue;
         }
-        // a nested root is its own tab
-        if (child.type === 'folder' && child.root) continue;
+        if (isOwnTab(child)) continue;
 
         const label = text(child.name);
         const href = child.type === 'page' ? child.url : firstUrl(child);

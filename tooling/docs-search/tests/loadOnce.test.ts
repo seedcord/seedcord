@@ -1,6 +1,6 @@
 import { describe, expect, it, vi } from 'vitest';
 
-import { loadOnce } from '#lib/loadOnce';
+import { loadOnce } from '#src/loadOnce';
 
 describe('loadOnce', () => {
     it('loads once and hands every later call the same result', async () => {
