@@ -37,7 +37,7 @@ class WrongChannel extends Notice {
         super(`caller was outside ${channelId}`);
     }
 
-    public render(): ReplyResponse {
+    public override render(): ReplyResponse {
         return {
             components: [
                 new WrongChannelCard(this.channelId).component
@@ -93,13 +93,14 @@ Leaving the `ctx` parameter unannotated makes it a [`GateContextBase`](ref:core/
 | `channelId` | `string \| null` | the channel id, null when the source carries none |
 | `memberRoleIds` | `readonly string[]` | the caller's role ids without the everyone role, empty outside a server |
 | `memberPermissions` | `bigint \| null` | the caller's permission bits, channel-scoped on an interaction and role-derived on a gateway event, null outside a server |
-| `appPermissions` | `bigint \| null` | your bot's permission bits in the invoked channel, null on gateway events |
 | `declaredRoute` | `string \| null` | the route this dispatch matched, such as `slash:daily`, null off a route |
 | `dispatch` | `DispatchContext` | the [dispatch context](/checks/dispatch-context), holding what a middleware wrote before the first gate ran |
 
 {/* prettier-ignore-end */}
 
 A gate that reads _only_ these fields fits any handler you attach it to. `InChannel` above reads one of them, so it works on a slash command, a button, and a message event.
+
+Discord sends your bot's permissions in the invoked channel only with an interaction, as its [`app_permissions`](https://discord.com/developers/docs/interactions/receiving-and-responding#interaction-object-interaction-structure) field. To read them, annotate `ctx` with [`AppPermissionsContext`](ref:core/AppPermissionsContext) and read `ctx.appPermissions`. The gate then fits interaction handlers only.
 
 ## Narrowing what the gate accepts
 
@@ -138,7 +139,7 @@ The two gateway arms carry different fields. Narrow on `ctx.kind` before reading
 
 | annotation | fits | adds |
 | --- | --- | --- |
-| `GateContextBase` | every handler, both transports | the nine fields above |
+| `GateContextBase` | every handler, both transports | the eight fields above |
 | [`InteractionGateContext`](ref:gateway/InteractionGateContext) | any interaction handler | `interaction`, `user`, `guild`, `member` |
 | `InteractionGateContext<ButtonInteraction>` | button handlers | the same, with `interaction` typed to a button |
 | [`EventGateContext`](ref:gateway/EventGateContext) | any event handler | `eventName`, `payload`, `user`, `guild`, `member` |
@@ -182,7 +183,7 @@ class Banned extends Notice {
         super('caller is on the ban list');
     }
 
-    public render(): ReplyResponse {
+    public override render(): ReplyResponse {
         return { components };
     }
 }

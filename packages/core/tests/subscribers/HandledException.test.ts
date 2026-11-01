@@ -16,7 +16,7 @@ class TestFault extends Notice {
     constructor(message = 'boom', cause?: unknown) {
         super(message, cause === undefined ? undefined : { cause });
     }
-    render(): ReplyResponse {
+    override render(): ReplyResponse {
         return { components: [] };
     }
 }

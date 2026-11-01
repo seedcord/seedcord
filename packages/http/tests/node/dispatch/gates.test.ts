@@ -27,7 +27,7 @@ class TestNotice extends Notice {
         super(message);
     }
 
-    public render(_ctx: RenderContext): ReplyResponse {
+    public override render(_ctx: RenderContext): ReplyResponse {
         return { components: [new TextDisplayBuilder().setContent('you shall not pass')] };
     }
 }

@@ -148,7 +148,7 @@ describe('after() on the http interaction chain', () => {
                 super('refused');
             }
 
-            public render(): ReplyResponse {
+            public override render(): ReplyResponse {
                 throw new Error('render exploded');
             }
         }

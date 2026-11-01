@@ -36,7 +36,7 @@ export class Fault extends Notice {
         this.report = options?.report ?? true;
     }
 
-    public render(ctx: RenderContext): ReplyResponse {
+    public override render(ctx: RenderContext): ReplyResponse {
         const contact = ctx.developerUsername ?? 'the developer';
         const card = new NoticeCard(
             `Something went wrong. Please reach out to ${contact} with a way to reproduce the error and the following:\n### UUID: \`${ctx.uuid}\``,

@@ -16,7 +16,7 @@ class CustomRefusal extends Notice {
     constructor(public readonly at: number) {
         super(`wait ${at}`);
     }
-    render(): ReplyResponse {
+    override render(): ReplyResponse {
         return { components: [] };
     }
 }
@@ -130,33 +130,16 @@ describe('Cooldown', () => {
         expect((caught as OnCooldown).resetAt).toBe(1_700_000_000_000);
     });
 
-    it('rewords the refusal with the message factory, receiving the retry-after', async () => {
+    it('refuses with the notice class it was given, built with the retry time', async () => {
         const rl = { peek: () => ({ limited: true, resetAt: 1_700_000_000_000 }), charge: vi.fn() };
         let caught: unknown;
-        await Cooldown(5, { message: (resetAt) => `back at ${resetAt}` })
+        await Cooldown(5, { notice: CustomRefusal })
             .check(cdCtx(rl))
             .catch((error: unknown) => {
                 caught = error;
             });
-        expect((caught as OnCooldown).message).toBe('back at 1700000000000');
-    });
-
-    it('replaces the refusal entirely with the notice factory, receiving the retry-after', async () => {
-        const rl = { peek: () => ({ limited: true, resetAt: 1_700_000_000_000 }), charge: vi.fn() };
-        let received: number | undefined;
-        let caught: unknown;
-        await Cooldown(5, {
-            notice: (resetAt) => {
-                received = resetAt;
-                return new CustomRefusal(resetAt);
-            }
-        })
-            .check(cdCtx(rl))
-            .catch((error: unknown) => {
-                caught = error;
-            });
-        expect(received).toBe(1_700_000_000_000);
         expect(caught).toBeInstanceOf(CustomRefusal);
+        expect((caught as CustomRefusal).at).toBe(1_700_000_000_000);
     });
 
     it('accepts a duration string and converts it to the window length', async () => {

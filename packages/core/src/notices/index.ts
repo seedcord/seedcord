@@ -5,29 +5,23 @@ import { NoticeCard } from '#stops/NoticeCard';
 
 import type { EpochMs, ReplyResponse } from '@seedcord/types';
 
-export abstract class GateNotice extends Notice {
-    public render(): ReplyResponse {
-        return { components: [new NoticeCard(this.message).component] };
-    }
-}
-
-export class NotOwner extends GateNotice {
-    public constructor(message = 'Only the bot owner can use this.') {
-        super(message);
+export class NotOwner extends Notice {
+    public constructor() {
+        super('Only the bot owner can use this.');
         this.summary = 'be the bot owner';
     }
 }
 
-export class NotInGuild extends GateNotice {
-    public constructor(message = 'This can only be used in a server.') {
-        super(message);
+export class NotInGuild extends Notice {
+    public constructor() {
+        super('This can only be used in a server.');
         this.summary = 'be in a server';
     }
 }
 
-export class NotInDm extends GateNotice {
-    public constructor(message = 'This can only be used in a direct message.') {
-        super(message);
+export class NotInDm extends Notice {
+    public constructor() {
+        super('This can only be used in a direct message.');
         this.summary = 'be in a direct message';
     }
 }
@@ -36,12 +30,9 @@ function retryAt(resetAt: EpochMs): string {
     return `<t:${toEpochSeconds(resetAt)}:R>`;
 }
 
-export class OnCooldown extends GateNotice {
-    public constructor(
-        public readonly resetAt: EpochMs,
-        message?: string
-    ) {
-        super(message ?? `You are doing that too fast. Try again ${retryAt(resetAt)}.`);
+export class OnCooldown extends Notice {
+    public constructor(public readonly resetAt: EpochMs) {
+        super(`You are doing that too fast. Try again ${retryAt(resetAt)}.`);
         this.summary = `try again ${retryAt(resetAt)}`;
     }
 }
@@ -51,7 +42,7 @@ export class NotAllowed extends Notice {
         super('not allowed');
     }
 
-    public render(): ReplyResponse {
+    public override render(): ReplyResponse {
         return { components: [new NoticeCard('You are not allowed to use this command.').component] };
     }
 }
@@ -61,69 +52,74 @@ export class NeedsAny extends Notice {
 
     public constructor(summaries: readonly string[]) {
         super('not allowed');
-        // two arms can refuse with the same summary
+        // two gates in an or can refuse with the same summary
         this.summaries = [...new Set(summaries)];
     }
 
-    public render(): ReplyResponse {
+    public override render(): ReplyResponse {
         const bullets = this.summaries.map((summary) => `• ${summary}`).join('\n');
         return { components: [new NoticeCard(`You need to meet at least one of these:\n${bullets}`).component] };
     }
 }
 
-export class MissingRole extends GateNotice {
-    public constructor(message: string | undefined, roleId: string | null) {
-        super(
-            message ?? (roleId ? `You need the <@&${roleId}> role to use this.` : 'You do not have the required role.')
-        );
-        this.summary = roleId ? `hold the <@&${roleId}> role` : 'hold the required role';
+export class MissingRole extends Notice {
+    public constructor(roleId: string) {
+        super(`You need the <@&${roleId}> role to use this.`);
+        this.summary = `hold the <@&${roleId}> role`;
     }
 }
 
-export class MissingPermissions extends Notice {
-    private readonly customLead: string | undefined;
-
-    public constructor(
-        message: string | undefined,
-        private readonly subject: string | null,
-        private readonly missingPerms: readonly string[]
-    ) {
-        super(message ?? 'A required permission is missing.');
-        this.customLead = message;
-        const names = missingPerms.join(', ');
-        this.summary = subject === null ? `hold ${names}` : `${subject} needs ${names}`;
-    }
-
-    public render(): ReplyResponse {
-        const bullets = this.missingPerms.map((perm) => `• ${perm}`).join('\n');
-        const lead =
-            this.customLead ??
-            `${this.subject === null ? 'You are' : `${this.subject} is`} missing the following permission entries:`;
-        return {
-            components: [new NoticeCard(`${lead}\n${bullets}`).component]
-        };
+export class PermissionsUnresolved extends Notice {
+    public constructor() {
+        super('Your server member data could not be resolved. Try again.');
     }
 }
 
-export class HasDangerousPermissions extends Notice {
-    private readonly customLead: string | undefined;
+interface Wording {
+    lead: string;
+    summary: string;
+}
 
-    public constructor(
-        message: string | undefined,
-        private readonly subject: string,
-        private readonly dangerousPerms: readonly string[]
+interface ListWording {
+    caller: Wording;
+    subject: Wording;
+}
+
+abstract class PermissionListNotice extends Notice {
+    private readonly lead: string;
+
+    protected constructor(
+        message: string,
+        subject: string | null,
+        private readonly permissions: readonly string[],
+        wording: ListWording
     ) {
-        super(message ?? 'A dangerous permission is enabled.');
-        this.customLead = message;
-        this.summary = `${subject} must not hold ${dangerousPerms.join(', ')}`;
+        super(message);
+        const [prefix, words] = subject === null ? ['', wording.caller] : [`${subject} `, wording.subject];
+        this.lead = `${prefix}${words.lead}`;
+        this.summary = `${prefix}${words.summary} ${permissions.join(', ')}`;
     }
 
-    public render(): ReplyResponse {
-        const bullets = this.dangerousPerms.map((perm) => `• ${perm}`).join('\n');
-        const lead =
-            this.customLead ?? `${this.subject} has the following permission entries that must not be enabled:`;
-        return {
-            components: [new NoticeCard(`${lead}\n${bullets}`).component]
-        };
+    public override render(): ReplyResponse {
+        const bullets = this.permissions.map((perm) => `• ${perm}`).join('\n');
+        return { components: [new NoticeCard(`${this.lead}\n${bullets}`).component] };
+    }
+}
+
+export class MissingPermissions extends PermissionListNotice {
+    public constructor(subject: string | null, permissions: readonly string[]) {
+        super('A required permission is missing.', subject, permissions, {
+            caller: { lead: 'You are missing the following permission entries:', summary: 'hold' },
+            subject: { lead: 'is missing the following permission entries:', summary: 'needs' }
+        });
+    }
+}
+
+export class HasPresentPermissions extends PermissionListNotice {
+    public constructor(subject: string | null, permissions: readonly string[]) {
+        super('A refused permission is held.', subject, permissions, {
+            caller: { lead: "You hold permissions that aren't allowed here:", summary: 'not hold' },
+            subject: { lead: "holds permissions that aren't allowed here:", summary: 'must not hold' }
+        });
     }
 }

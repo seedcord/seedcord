@@ -1,31 +1,33 @@
-import { HasDangerousPermissions, MissingPermissions } from '#notices/index';
+import { HasPresentPermissions, MissingPermissions } from '#notices/index';
 
-import { hasAll, missingNames, presentNames } from './bits';
+import { missingNames, presentNames } from './bits';
 
-import type { Notice } from '#stops/Notice';
+import type { NoticeConstructor } from '#stops/Notice';
 import type { PermissionScope } from './bits';
 
-/** Replacement notices for the two refusals {@link assertPermissions} raises. */
-export interface PermissionNoticeOverrides {
-    missingNotice?: new (message: string | undefined, subject: string, missingPerms: readonly string[]) => Notice;
-    dangerousNotice?: new (message: string | undefined, subject: string, dangerousPerms: readonly string[]) => Notice;
-}
+/**
+ * A Notice class for a permission refusal. seedcord constructs it with the subject and the permission names
+ * the refusal lists. A null subject is the caller.
+ */
+export type PermissionNoticeConstructor = NoticeConstructor<[subject: string | null, permissions: readonly string[]]>;
 
 /** The check {@link assertPermissions} runs. */
-export interface PermissionAssertion extends PermissionNoticeOverrides {
-    /** Mention string for who is checked, used as the refusal's subject. */
-    subject: string;
+export interface PermissionAssertion {
+    /** Mention string for who is checked, used as the refusal's subject. Null addresses the caller. */
+    subject: string | null;
     /** The effective permission bitfield the subject holds, computed by the caller. */
     permissions: bigint;
     /** The permission flag bits to check. */
     scope: PermissionScope;
     /** Refuse when the subject holds a scope bit. */
     inverse?: boolean;
+    /** Your Notice class, thrown in place of the default refusal. seedcord constructs it with the missing names, or the held ones under `inverse`. */
+    notice?: PermissionNoticeConstructor | undefined;
 }
 
 /**
  * Refuses when the subject is missing a permission in `scope`, or with `inverse` when it holds one.
- * The Administrator bit passes any scope, and on the inverse arm it reports every bit in `scope`.
+ * The Administrator bit passes any scope, and with `inverse` it reports every bit in `scope`.
  *
  * The caller computes `permissions`, gateway off a discord.js role, member, or channel, and HTTP off the
  * bitfield the interaction payload carries.
@@ -70,14 +72,12 @@ export interface PermissionAssertion extends PermissionNoticeOverrides {
  * ```ts
  * import { Notice } from '@seedcord/core';
  *
- * // a replacement notice takes the same three arguments the default one does
  * class CannotBan extends Notice {
  *     public constructor(
- *         message: string | undefined,
- *         private readonly subject: string,
+ *         private readonly subject: string | null,
  *         private readonly missing: readonly string[]
  *     ) {
- *         super(message ?? 'You cannot ban here.');
+ *         super('You cannot ban here.');
  *     }
  *
  *     public render(): ReplyResponse {
@@ -89,21 +89,14 @@ export interface PermissionAssertion extends PermissionNoticeOverrides {
  *     subject: `<@${member.id}>`,
  *     permissions: member.permissions.bitfield,
  *     scope: [PermissionFlagsBits.BanMembers],
- *     missingNotice: CannotBan
+ *     notice: CannotBan
  * });
  * ```
  */
-export function assertPermissions(check: PermissionAssertion): void {
-    const { subject, permissions, scope, inverse = false, missingNotice, dangerousNotice } = check;
-
-    if (inverse) {
-        const present = presentNames(permissions, scope);
-        if (present.length === 0) return;
-        const Dangerous = dangerousNotice ?? HasDangerousPermissions;
-        throw new Dangerous(undefined, subject, present);
-    }
-
-    if (hasAll(permissions, scope)) return;
-    const Missing = missingNotice ?? MissingPermissions;
-    throw new Missing(undefined, subject, missingNames(permissions, scope));
+export function assertPermissions({ subject, permissions, scope, inverse = false, notice }: PermissionAssertion): void {
+    const [refused, Default] = inverse
+        ? [presentNames(permissions, scope), HasPresentPermissions]
+        : [missingNames(permissions, scope), MissingPermissions];
+    if (refused.length === 0) return;
+    throw new (notice ?? Default)(subject, refused);
 }

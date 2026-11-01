@@ -48,9 +48,9 @@ describe('resolveInlineHref search fallback', () => {
 
     it('does not link when the only hit is a fuzzy, non-exact match', () => {
         // {@link ButtonStyle.Danger} is an external discord.js ref the index cannot resolve, the fuzzy
-        // top hit (HasDangerousPermissions) must not become the link target.
+        // top hit (HasPresentPermissions) must not become the link target.
         const ctx = makeContext([
-            { name: 'HasDangerousPermissions', slug: 'classes/has-dangerous-permissions', packageName: 'seedcord' }
+            { name: 'HasPresentPermissions', slug: 'classes/has-present-permissions', packageName: 'seedcord' }
         ]);
         expect(resolveInlineHref(linkPart('ButtonStyle.Danger'), ctx)).toBeNull();
     });

@@ -36,10 +36,6 @@ export interface GateContextBase {
      */
     readonly memberPermissions: bigint | null;
     /**
-     * The bot's permissions in the invoked channel, the wire `app_permissions` value. Null on gateway events.
-     */
-    readonly appPermissions: bigint | null;
-    /**
      * The handler's own route, as `kind:route` (`slash:daily`, `button:confirm`). A handler registered
      * on several reports the one this dispatch matched. Null when the handler declares none, which
      * covers a plain event handler, the unhandled default, and a gate run outside a handler.
@@ -70,9 +66,25 @@ export interface GuildPermissionsContext extends GateContextBase {
      */
     readonly memberGuildPermissions: bigint | null;
     /**
-     * The bot's base permission set from the transport's cache. Null when the cached member is unavailable.
+     * The bot's base permission set from the transport's cache. It's `0n` in a guild the bot isn't in. It's null
+     * when the guild is cached but the bot's member isn't.
      */
     readonly appGuildPermissions: bigint | null;
+}
+
+/**
+ * The context an interaction provides on both transports, where Discord always sends the bot's channel
+ * permissions. A gate that requires it fits no event handler.
+ *
+ * @example
+ * ```ts
+ * // the default channel scope returns a Gate<AppPermissionsContext>
+ * \@Gated(RequireBotPermissions([PermissionFlagsBits.ManageMessages]))
+ * ```
+ */
+export interface AppPermissionsContext extends GateContextBase {
+    /** The bot's permissions in the invoked channel, the wire `app_permissions` value. */
+    readonly appPermissions: bigint;
 }
 
 // phantom brand rejects a bare check function or plain object where a Gate is expected

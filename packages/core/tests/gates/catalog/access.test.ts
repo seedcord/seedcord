@@ -43,22 +43,11 @@ describe('OwnerOnly', () => {
         await expect(OwnerOnly().check(ownerCtx(null, ['o1']))).rejects.toBeInstanceOf(NotOwner);
     });
 
-    it('throws the override notice when given one', async () => {
-        const custom = new NotOwner('nope');
-        await expect(OwnerOnly({ notice: custom }).check(ownerCtx('u2', ['o1']))).rejects.toBe(custom);
-    });
-
-    it('rewords the refusal with the message override and keeps the or summary', async () => {
-        let caught: unknown;
-        await OwnerOnly({ message: 'Admins only.' })
-            .check(ownerCtx('u2', ['o1']))
-            .catch((error: unknown) => {
-                caught = error;
-            });
-        expect(caught).toBeInstanceOf(NotOwner);
-        expect((caught as NotOwner).message).toBe('Admins only.');
-        // a custom message is a whole sentence and would read wrong as a bullet in the or list
-        expect((caught as NotOwner).summary).toBe(new NotOwner().summary);
+    it('refuses with the notice class it was given', async () => {
+        class AdminsOnly extends NotOwner {}
+        await expect(OwnerOnly({ notice: AdminsOnly }).check(ownerCtx('u2', ['o1']))).rejects.toBeInstanceOf(
+            AdminsOnly
+        );
     });
 });
 

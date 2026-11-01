@@ -87,7 +87,7 @@ export class BrandedFault extends Notice {
         super(`unknown fault ${uuid}`);
     }
 
-    public render(): ReplyResponse {
+    public override render(): ReplyResponse {
         return {
             components: [new BrandedCard(this.uuid).component]
         };

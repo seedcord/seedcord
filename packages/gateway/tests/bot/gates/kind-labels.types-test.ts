@@ -1,4 +1,5 @@
-import { CustomId, defineGate } from '@seedcord/core';
+import { CustomId, defineGate, RequireBotPermissions } from '@seedcord/core';
+import { PermissionFlagsBits } from 'discord.js';
 import { expectTypeOf } from 'vitest';
 
 import { EventHandler } from '#handlers/event/EventHandler';
@@ -16,7 +17,7 @@ import { UserContextMenuHandler, MessageContextMenuHandler } from '#handlers/int
 import { SlashHandler } from '#handlers/interaction/SlashHandler';
 
 import type { AnyHandlerCtor, FitAll } from '#bot/gates/matching';
-import type { EventGateContext } from '#src/bot/gates/Gate';
+import type { EventGateContext, InteractionGateContext } from '#src/bot/gates/Gate';
 import type { Constructor } from 'type-fest';
 
 declare module '@seedcord/core' {
@@ -31,7 +32,13 @@ const messageOnly = defineGate('Probe', (ctx: EventGateContext<'messageCreate'>)
     void ctx;
 });
 
-type Mismatch<Got extends string> = `gate 'Probe' requires a messageCreate event handler, and this handler is ${Got}`;
+const channelScoped = RequireBotPermissions([PermissionFlagsBits.BanMembers]);
+
+const anyInteraction = defineGate('AnyInteraction', (ctx: InteractionGateContext) => {
+    void ctx;
+});
+
+type Mismatch<Got extends string> = `gate 'Probe' requires a messageCreate event handler, but this handler is ${Got}`;
 
 type LabelOf<TCtor extends AnyHandlerCtor> =
     FitAll<TCtor, [typeof messageOnly]>[0] extends Constructor<[infer Message]> ? Message : never;
@@ -122,12 +129,24 @@ function typeChecks(): void {
     expectTypeOf<LabelOf<typeof ProbeModal>>().toEqualTypeOf<Mismatch<'Modal'>>();
     expectTypeOf<LabelOf<typeof ProbeAutocomplete>>().toEqualTypeOf<Mismatch<'autocomplete'>>();
     expectTypeOf<LabelOf<typeof ProbeMemberEvent>>().toEqualTypeOf<Mismatch<'guildMemberAdd event'>>();
+    expectTypeOf<
+        FitAll<typeof ProbeMemberEvent, [typeof channelScoped]>[0] extends Constructor<[infer Message]>
+            ? Message
+            : never
+    >().toEqualTypeOf<"gate 'RequireBotPermissions' requires a generic interaction handler, but this handler is guildMemberAdd event">();
+    expectTypeOf<
+        FitAll<typeof ProbeMemberEvent, [typeof anyInteraction]>[0] extends Constructor<[infer Message]>
+            ? Message
+            : never
+    >().toEqualTypeOf<"gate 'AnyInteraction' requires a generic interaction handler, but this handler is guildMemberAdd event">();
 }
 
 // no-unused-vars does not count a name used only in a type position
 void [
     ProbeId,
     messageOnly,
+    channelScoped,
+    anyInteraction,
     typeChecks,
     ProbeSlash,
     ProbeMessageMenu,

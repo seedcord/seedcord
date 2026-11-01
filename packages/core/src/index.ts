@@ -50,22 +50,34 @@ export type { CoreBase } from '#interfaces/CoreBase';
 export { ShutdownPhase, StartupPhase } from '#src/lifecycle/phases';
 
 export { defineEffectGate, defineGate } from '#gates/Gate';
-export type { EffectGate, Gate, GateContextBase, GuildPermissionsContext, RequiredOf } from '#gates/Gate';
+export type {
+    AppPermissionsContext,
+    EffectGate,
+    Gate,
+    GateContextBase,
+    GuildPermissionsContext,
+    RequiredOf
+} from '#gates/Gate';
 export { and, or } from '#gates/combinators';
 export { DmOnly, GuildOnly, OwnerOnly } from '#gates/catalog/access';
 export { Cooldown, type CooldownOptions } from '#gates/catalog/Cooldown';
 export { RequireBotPermissions, RequirePermissions, RequireRole } from '#gates/catalog/permissions';
-export type { PermissionScope, RequirePermissionsOptions, RequireRoleOptions } from '#gates/catalog/permissions';
+export type {
+    PermissionScope,
+    RequireBotPermissionsOptions,
+    RequirePermissionsOptions,
+    RequireRoleOptions
+} from '#gates/catalog/permissions';
 export type { GateNoticeOptions } from '#gates/catalog/options';
 
 export { assertPermissions } from '#src/permissions/assert';
-export type { PermissionAssertion, PermissionNoticeOverrides } from '#src/permissions/assert';
+export type { PermissionAssertion, PermissionNoticeConstructor } from '#src/permissions/assert';
 export { mergeRoles } from '#src/permissions/mergeRoles';
 
 export { BuilderComponent, RowComponent } from '#components/Component';
 export { type RowType, type BuilderType } from '#components/builderTypes';
 
-export { Notice } from '#stops/Notice';
+export { Notice, type NoticeConstructor } from '#stops/Notice';
 export { Fault } from '#stops/Fault';
 export { Silence } from '#stops/Silence';
 

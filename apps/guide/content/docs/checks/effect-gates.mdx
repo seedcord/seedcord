@@ -26,7 +26,7 @@ class OutOfCredits extends Notice {
         this.summary = 'have a credit left';
     }
 
-    public render(): ReplyResponse {
+    public override render(): ReplyResponse {
         return { components };
     }
 }
