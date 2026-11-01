@@ -79,7 +79,12 @@ export abstract class EventHandler<in out Names extends ValidNonInteractionKeys>
     protected async match<Ret>(cases: EventMatchCases<Names, Ret>): Promise<Ret> {
         const name = this.firedEvent;
         if (name === undefined) {
-            throw new SeedcordError(SeedcordErrorCode.EventNameUnavailable, [this.constructor.name, 'match()']);
+            throw new SeedcordError(SeedcordErrorCode.EventNameUnavailable, [
+                this.constructor.name,
+                'match()',
+                'event name',
+                'fourth'
+            ]);
         }
         // hasOwn, since a plain lookup for an event named `toString` returns Object.prototype's
         const callback = Object.hasOwn(cases, name) ? (cases as Record<string, unknown>)[name] : undefined;

@@ -6,7 +6,7 @@ import { afterAll, afterEach, beforeEach, describe, expect, it, vi, type MockIns
 
 import { PublishDefault } from '#src/subscribers/publishDefault';
 import { WebhookLog } from '#subscribers/bases/WebhookLog';
-import { Bus, registrationFor } from '#subscribers/Bus';
+import { Bus, registrationsFor } from '#subscribers/Bus';
 import { Subscribe } from '#subscribers/decorators/Subscribe';
 import { WebhookUrl } from '#subscribers/decorators/WebhookUrl';
 import { RegisterSubscriber } from '#subscribers/slots';
@@ -56,7 +56,7 @@ afterEach(() => {
 
 describe('WebhookLog', () => {
     it('sends the report to the url from the decorated env key', async () => {
-        @Subscribe('unknownException')
+        @Subscribe(['unknownException'])
         @WebhookUrl('REPORTER_WEBHOOK_URL')
         class CustomReporter extends WebhookLog<'unknownException', CoreBase> {
             report(): WebhookReport {
@@ -72,7 +72,7 @@ describe('WebhookLog', () => {
     });
 
     it('defaults the username to the class name', async () => {
-        @Subscribe('unknownException')
+        @Subscribe(['unknownException'])
         @WebhookUrl('REPORTER_WEBHOOK_URL')
         class NamedReporter extends WebhookLog<'unknownException', CoreBase> {
             report(): WebhookReport {
@@ -87,7 +87,7 @@ describe('WebhookLog', () => {
     });
 
     it('sends the avatar url only when the report carries one', async () => {
-        @Subscribe('unknownException')
+        @Subscribe(['unknownException'])
         @WebhookUrl('REPORTER_WEBHOOK_URL')
         class Faced extends WebhookLog<'unknownException', CoreBase> {
             report(): WebhookReport {
@@ -95,7 +95,7 @@ describe('WebhookLog', () => {
             }
         }
 
-        @Subscribe('unknownException')
+        @Subscribe(['unknownException'])
         @WebhookUrl('REPORTER_WEBHOOK_URL')
         class Plain extends WebhookLog<'unknownException', CoreBase> {
             report(): WebhookReport {
@@ -112,7 +112,7 @@ describe('WebhookLog', () => {
     });
 
     it('reuses one sender per url across instances', async () => {
-        @Subscribe('unknownException')
+        @Subscribe(['unknownException'])
         @WebhookUrl('REPORTER_REUSE_WEBHOOK_URL')
         class RepeatReporter extends WebhookLog<'unknownException', CoreBase> {
             report(): WebhookReport {
@@ -128,7 +128,7 @@ describe('WebhookLog', () => {
     });
 
     it('logs a send failure and resolves', async () => {
-        @Subscribe('unknownException')
+        @Subscribe(['unknownException'])
         @WebhookUrl('REPORTER_WEBHOOK_URL')
         class FailingReporter extends WebhookLog<'unknownException', CoreBase> {
             report(): WebhookReport {
@@ -145,7 +145,7 @@ describe('WebhookLog', () => {
     });
 
     it('warns at registration and never registers a reporter whose env var is unset', () => {
-        @Subscribe('unknownException')
+        @Subscribe(['unknownException'])
         @WebhookUrl('NEVER_SET_WEBHOOK_URL')
         class UnsetReporter extends WebhookLog<'unknownException', CoreBase> {
             report(): WebhookReport {
@@ -156,7 +156,7 @@ describe('WebhookLog', () => {
         const warnSpy = vi.spyOn(Logger.prototype, 'warn').mockImplementation(() => undefined);
         const bus = new Bus(core);
 
-        bus[RegisterSubscriber](registrationFor(UnsetReporter));
+        for (const registration of registrationsFor(UnsetReporter)) bus[RegisterSubscriber](registration);
         bus[PublishDefault]('unknownException', data);
 
         expect(warnSpy).toHaveBeenCalledWith(expect.stringContaining('UnsetReporter'));
@@ -165,7 +165,7 @@ describe('WebhookLog', () => {
     });
 
     it('sends every event when the reporter leaves the throttle key unset', async () => {
-        @Subscribe('unknownException')
+        @Subscribe(['unknownException'])
         @WebhookUrl('REPORTER_WEBHOOK_URL')
         class Chatty extends WebhookLog<'unknownException', CoreBase> {
             report(): WebhookReport {
@@ -181,7 +181,7 @@ describe('WebhookLog', () => {
     });
 
     it('puts the suppressed count on the next card', async () => {
-        @Subscribe('unknownException')
+        @Subscribe(['unknownException'])
         @WebhookUrl('REPORTER_WEBHOOK_URL')
         class Grouped extends WebhookLog<'unknownException', CoreBase> {
             protected override throttleKey(): string {
@@ -206,7 +206,7 @@ describe('WebhookLog', () => {
     });
 
     it('waits out the window after a failed send, carrying the lost card into the next one', async () => {
-        @Subscribe('unknownException')
+        @Subscribe(['unknownException'])
         @WebhookUrl('REPORTER_WEBHOOK_URL')
         class Retried extends WebhookLog<'unknownException', CoreBase> {
             protected override throttleKey(): string {
@@ -237,7 +237,7 @@ describe('WebhookLog', () => {
     it('counts a card that report threw on, so the next one carries it', async () => {
         let calls = 0;
 
-        @Subscribe('unknownException')
+        @Subscribe(['unknownException'])
         @WebhookUrl('REPORTER_WEBHOOK_URL')
         class Flaky extends WebhookLog<'unknownException', CoreBase> {
             protected override throttleKey(): string {
@@ -266,7 +266,7 @@ describe('WebhookLog', () => {
     });
 
     it('throws at execute when the decorator is missing', async () => {
-        @Subscribe('unknownException')
+        @Subscribe(['unknownException'])
         // eslint-disable-next-line @seedcord/subscriber-missing-decorators -- the missing @WebhookUrl is the case under test
         class UndeclaredReporter extends WebhookLog<'unknownException', CoreBase> {
             report(): WebhookReport {

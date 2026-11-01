@@ -42,7 +42,12 @@ export abstract class EventMiddleware<
      */
     protected get eventName(): EventName {
         if (this.firedEvent === undefined) {
-            throw new SeedcordError(SeedcordErrorCode.EventNameUnavailable, [this.constructor.name, 'this.eventName']);
+            throw new SeedcordError(SeedcordErrorCode.EventNameUnavailable, [
+                this.constructor.name,
+                'this.eventName',
+                'event name',
+                'fourth'
+            ]);
         }
         return this.firedEvent;
     }

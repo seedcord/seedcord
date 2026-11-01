@@ -12,7 +12,7 @@ import type { WebhookReport } from '#subscribers/bases/WebhookLog';
 import type { AllSubscriptions } from '#subscribers/types/Subscriptions';
 
 // no UNKNOWN_EXCEPTION_WEBHOOK_URL disables the reporter with a boot warning
-@Subscribe('unknownException')
+@Subscribe(['unknownException'])
 @WebhookUrl('UNKNOWN_EXCEPTION_WEBHOOK_URL')
 export class UnknownException extends WebhookLog<'unknownException', CoreBase> {
     protected override throttleKey(): string {

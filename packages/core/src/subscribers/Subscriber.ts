@@ -1,35 +1,101 @@
+import { SeedcordErrorCode } from '@seedcord/errors';
+import { SeedcordError, SeedcordTypeError } from '@seedcord/errors/internal';
 import { Logger } from '@seedcord/logger';
 
 import type { CoreBase } from '#interfaces/CoreBase';
 import type { SubscriptionKey, AllSubscriptions } from './types/Subscriptions';
+import type { IsUnion, Promisable } from 'type-fest';
+
+type SubscriberMatchCases<Keys extends SubscriptionKey, Ret> = {
+    [Key in Keys]: (data: AllSubscriptions[Key]) => Promisable<Ret>;
+};
+
+// match reads the payload on a class with several keys
+type SingleKeyData<Keys extends SubscriptionKey> = IsUnion<Keys> extends true ? never : AllSubscriptions[Keys];
 
 /**
  * Abstract base class for handling application subscribers.
  *
- * Provides type-safe access to subscribers data and the core framework instance.
- * Extend this class to create custom subscriber handlers.
+ * Pass the subscription key(s) as the generic, the same one(s) as `@Subscribe`. On a single-key subscriber, read
+ * `this.data` directly. On a subscriber for several keys, branch with `this.match`, keyed by subscription key.
  *
- * @typeParam KeyOfSubscribers - The specific subscriber type this handler processes
+ * @typeParam Keys - One or more subscription keys, like `'userJoin'` or `'userJoin' | 'userLeave'`.
  * @typeParam TCore - The transport's Core
  */
-export abstract class Subscriber<KeyOfSubscribers extends SubscriptionKey, TCore extends CoreBase> {
+export abstract class Subscriber<in out Keys extends SubscriptionKey, TCore extends CoreBase> {
     protected readonly logger: Logger;
+
+    /** The published payload. It's `never` on a subscriber for several keys, where `this.match` reads it. */
+    protected readonly data: SingleKeyData<Keys>;
+
+    // undefined when a test constructs the subscriber directly
+    private readonly firedKey: Keys | undefined;
 
     /**
      * Instantiates the subscriber with event data and core.
      *
-     * @param data - The subscriber event data
+     * @param payload - The published payload
      * @param core - The core framework instance
+     * @param key - The key the bus published.
      */
     constructor(
-        protected readonly data: AllSubscriptions[KeyOfSubscribers],
-        protected readonly core: TCore
+        private readonly payload: AllSubscriptions[Keys],
+        protected readonly core: TCore,
+        key?: Keys
     ) {
         this.logger = new Logger(this.constructor.name, { channel: 'subscribers' });
+        this.data = payload;
+        this.firedKey = key;
     }
 
     /**
      * Executes the subscriber handler logic.
      */
     abstract execute(): Promise<void>;
+
+    /**
+     * Run the case for the key that was published. Use this only when the subscriber is registered for several
+     * keys. On a single-key subscriber, read `this.data` directly.
+     *
+     * Provide one case per registered key. Each case receives that key's own payload. A missing key or an unknown
+     * key is a compile error.
+     *
+     * @param cases - One handler per registered key.
+     * @returns The result of the case that ran.
+     * @throws A **SeedcordError** with `EventNameUnavailable` when the subscriber was constructed without the key.
+     * @throws A **SeedcordTypeError** with `MatchCaseMissing` when the published key doesn't have a case.
+     *
+     * @example
+     * ```ts
+     * \@Subscribe(['interactionDispatched'], ['eventDispatched'])
+     * class Metrics extends Subscriber<'interactionDispatched' | 'eventDispatched'> {
+     *     async execute() {
+     *         await this.match({
+     *             interactionDispatched: (data) => this.logger.info(data.routeId),
+     *             eventDispatched: (data) => this.logger.info(data.eventName)
+     *         });
+     *     }
+     * }
+     * ```
+     */
+    protected async match<Ret>(cases: SubscriberMatchCases<Keys, Ret>): Promise<Ret> {
+        const key = this.firedKey;
+        if (key === undefined) {
+            throw new SeedcordError(SeedcordErrorCode.EventNameUnavailable, [
+                this.constructor.name,
+                'match()',
+                'subscription key',
+                'third'
+            ]);
+        }
+        // hasOwn, since a plain lookup for a key named `toString` returns Object.prototype's
+        const callback = Object.hasOwn(cases, key) ? (cases as Record<string, unknown>)[key] : undefined;
+        if (typeof callback !== 'function')
+            throw new SeedcordTypeError(SeedcordErrorCode.MatchCaseMissing, [
+                this.constructor.name,
+                'subscription key',
+                key
+            ]);
+        return await (callback as (data: AllSubscriptions[Keys]) => Promisable<Ret>)(this.payload);
+    }
 }

@@ -33,7 +33,7 @@ function publish(bus: Bus): void {
 
 function onceCounter(): { Counted: StoredSubscriberCtor; runs: () => number } {
     let runs = 0;
-    @Subscribe('unknownException', { frequency: 'once' })
+    @Subscribe(['unknownException', { frequency: 'once' }])
     class Counted extends Subscriber<'unknownException', CoreBase> {
         public execute(): Promise<void> {
             runs += 1;
@@ -48,7 +48,7 @@ describe("Bus 'once' subscribers", () => {
         const bus = busWithCore();
 
         let runs = 0;
-        @Subscribe('unknownException', { frequency: 'once' })
+        @Subscribe(['unknownException', { frequency: 'once' }])
         class ReentrantOnce extends Subscriber<'unknownException', CoreBase> {
             public execute(): Promise<void> {
                 runs += 1;
@@ -58,7 +58,7 @@ describe("Bus 'once' subscribers", () => {
             }
         }
 
-        bus[RegisterSubscriber]({ keys: ['unknownException'], frequency: 'once', ctor: ReentrantOnce });
+        bus[RegisterSubscriber]({ key: 'unknownException', frequency: 'once', ctor: ReentrantOnce });
         publish(bus);
 
         expect(runs).toBe(1);
@@ -68,10 +68,10 @@ describe("Bus 'once' subscribers", () => {
         const bus = busWithCore();
         const { Counted, runs } = onceCounter();
 
-        bus[RegisterSubscriber]({ keys: ['unknownException'], frequency: 'once', ctor: Counted });
+        bus[RegisterSubscriber]({ key: 'unknownException', frequency: 'once', ctor: Counted });
         publish(bus);
         bus[UnregisterSubscriber](Counted);
-        bus[RegisterSubscriber]({ keys: ['unknownException'], frequency: 'once', ctor: Counted });
+        bus[RegisterSubscriber]({ key: 'unknownException', frequency: 'once', ctor: Counted });
         publish(bus);
 
         expect(runs()).toBe(1);
@@ -82,10 +82,10 @@ describe("Bus 'once' subscribers", () => {
         const before = onceCounter();
         const after = onceCounter();
 
-        bus[RegisterSubscriber]({ keys: ['unknownException'], frequency: 'once', ctor: before.Counted });
+        bus[RegisterSubscriber]({ key: 'unknownException', frequency: 'once', ctor: before.Counted });
         publish(bus);
         bus[UnregisterSubscriber](before.Counted);
-        bus[RegisterSubscriber]({ keys: ['unknownException'], frequency: 'once', ctor: after.Counted });
+        bus[RegisterSubscriber]({ key: 'unknownException', frequency: 'once', ctor: after.Counted });
         publish(bus);
 
         expect([before.runs(), after.runs()]).toEqual([1, 1]);
