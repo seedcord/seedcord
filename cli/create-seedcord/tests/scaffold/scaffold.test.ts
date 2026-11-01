@@ -289,6 +289,28 @@ describe('scaffold', () => {
         expect(calls.map((call) => call.command)).toEqual(['git', 'git', 'git']);
     });
 
+    it('writes runtime and dev dependencies when install is off', async () => {
+        const target = await scratchTarget();
+        const { runner } = recorder();
+
+        await scaffold({ ...baseInput(target), answers: { ...GATEWAY, install: false } }, runner);
+
+        const manifest = JSON.parse(await readFile(join(target, 'package.json'), 'utf8')) as {
+            dependencies: Record<string, string>;
+            devDependencies: Record<string, string>;
+        };
+        expect(manifest.dependencies).toMatchObject({
+            '@seedcord/gateway': 'latest',
+            'discord.js': 'latest',
+            envapt: 'latest'
+        });
+        expect(manifest.devDependencies).toMatchObject({
+            seedcord: 'latest',
+            typescript: '~6.0',
+            vite: '^8.3.4'
+        });
+    });
+
     it('reports every step in order', async () => {
         const target = await scratchTarget();
         const { runner } = recorder();

@@ -2,6 +2,7 @@ import { mkdir, rm, writeFile } from 'node:fs/promises';
 import { dirname, join } from 'node:path';
 
 import { addCommand, execCommand } from '#cli/packageManager';
+import { devPackages, runtimePackages } from '#scaffold/dependencies';
 import { gitPlanFrom, probeGit } from '#scaffold/git';
 import { claimTarget } from '#scaffold/target';
 import { buildContext } from '#template/context';
@@ -32,36 +33,6 @@ export type ScaffoldResult =
           notices: string[];
           failed: boolean;
       };
-
-const DEV_PACKAGES = [
-    '@seedcord/eslint-config',
-    '@seedcord/tsconfig',
-    // @seedcord/tsconfig sets types: ['node']
-    '@types/node',
-    // @seedcord/eslint-config takes this as a required peer
-    'eslint',
-    // eslint reads eslint.config.ts through jiti
-    'jiti',
-    'prettier',
-    'seedcord',
-    // typescript-eslint 8 caps typescript below 6.1
-    'typescript@~6.0',
-    // seedcord's peer range
-    'vite@^8.3.4'
-];
-// both are betas, pinned to the versions seedcord's own edge tests run on
-const EDGE_DEV_PACKAGES = ['cf@1.0.0-beta.26', '@cloudflare/vite-plugin@2.0.0-beta.v.8'];
-// the starters import ButtonStyle and TextInputStyle from discord-api-types
-const SHARED_PACKAGES = ['@discordjs/builders', 'discord-api-types', 'envapt'];
-
-function runtimePackages({ isGateway }: TemplateContext): string[] {
-    const transport = isGateway ? ['@seedcord/gateway', 'discord.js'] : ['@seedcord/http'];
-    return [...transport, ...SHARED_PACKAGES];
-}
-
-function devPackages({ isEdge }: TemplateContext): string[] {
-    return isEdge ? [...DEV_PACKAGES, ...EDGE_DEV_PACKAGES] : DEV_PACKAGES;
-}
 
 async function writeTree(target: string, files: { path: string; contents: string }[]): Promise<void> {
     for (const file of files) {
@@ -116,8 +87,8 @@ async function runInstallSteps(
 ): Promise<InstallOutcome> {
     const { agent, steps, target } = input;
 
-    const deps = addCommand(agent, runtimePackages(context), false);
-    const dev = addCommand(agent, devPackages(context), true);
+    const deps = addCommand(agent, runtimePackages(context.isGateway), false);
+    const dev = addCommand(agent, devPackages(context.isEdge), true);
     const format = execCommand(agent, ['prettier', '--write', '.']);
     const codegen = execCommand(agent, ['seedcord', 'codegen']);
 

@@ -28,5 +28,15 @@
         "fmt:check": "prettier --check \"src/**/*.{ts,json,md}\" --cache",
         "check": "{{ pm.run }} tc && {{ pm.run }} lint && {{ pm.run }} fmt:check"{{#if isEdge}},
         "postinstall": "cf workers types"{{/if}}
+    },
+    "dependencies": {
+{{#each dependencies}}
+        "{{@key}}": "{{this}}"{{#unless @last}},{{/unless}}
+{{/each}}
+    },
+    "devDependencies": {
+{{#each devDependencies}}
+        "{{@key}}": "{{this}}"{{#unless @last}},{{/unless}}
+{{/each}}
     }
 }

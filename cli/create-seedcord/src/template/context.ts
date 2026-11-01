@@ -9,6 +9,7 @@ import ownPackage from '#package' with { type: 'json' };
 import { execPrefix, runPrefix } from '#cli/packageManager';
 import { intentsFor, partialsFor } from '#interview/capabilities';
 import { STEPS } from '#interview/steps';
+import { dependencyManifest } from '#scaffold/dependencies';
 
 import type { Answers } from '#interview/types';
 import type { TransportVariables } from '@seedcord/cli-templates';
@@ -39,6 +40,8 @@ export interface TemplateContext extends TransportVariables {
     cliOnBun: boolean;
     pm: { run: string; exec: string; isPnpm: boolean };
     engines: { node: string; bun: string };
+    dependencies: Record<string, string>;
+    devDependencies: Record<string, string>;
 }
 
 function required<Key extends keyof Answers>(answers: Partial<Answers>, key: Key): Answers[Key] {
@@ -77,6 +80,7 @@ export function buildContext(
     );
     const { isGateway, isEdge } = transportValues;
     const capabilities = capabilitiesOf(answers);
+    const manifest = dependencyManifest(isGateway, isEdge);
 
     return {
         projectName: basename(answers.directory),
@@ -91,6 +95,7 @@ export function buildContext(
         // cloudflare's config loader throws on bun
         cliOnBun: extras.agent === 'bun' && !isEdge,
         pm: { run: runPrefix(extras.agent), exec: execPrefix(extras.agent), isPnpm: extras.agent === 'pnpm' },
-        engines: ownPackage.engines
+        engines: ownPackage.engines,
+        ...manifest
     };
 }
