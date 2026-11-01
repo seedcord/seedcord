@@ -8,8 +8,7 @@ import {
     reportedWrite,
     resultFor,
     runAfter,
-    runHandlerGates,
-    slowGateMonitor
+    runInteractionGates
 } from '@seedcord/core/internal';
 import { paint } from '@seedcord/errors';
 import { Logger } from '@seedcord/logger';
@@ -297,19 +296,11 @@ async function gateRefusal(step: BeforeHandler): Promise<{ caught: unknown } | n
     // match.kind comes from payload.type in the router. the second clause narrows the payload to Repliables.
     if (match.kind === InteractionKind.Autocomplete || payload.type === InteractionType.ApplicationCommandAutocomplete)
         return null;
-    const monitor = slowGateMonitor();
     const declaredRoute = match.fallback ? null : dispatch.routeId;
     try {
-        await runHandlerGates(
-            Handler,
-            interactionGateContext(payload, core, dispatch, declaredRoute),
-            monitor?.observe
-        );
+        await runInteractionGates(Handler, interactionGateContext(payload, core, dispatch, declaredRoute));
         return null;
     } catch (caught) {
         return { caught };
-    } finally {
-        // a refusing gate spent budget too
-        monitor?.report(declaredRoute);
     }
 }

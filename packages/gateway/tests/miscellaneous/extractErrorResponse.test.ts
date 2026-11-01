@@ -8,10 +8,10 @@ import { cardJson } from '#tests/utils/cardText';
 import { TestNotice } from '#tests/utils/TestNotice';
 
 import type { Core } from '#interfaces/Core';
-import type { Repliables } from '#src/handlers/interactionTypes';
+import type { ValidInteractionTypes } from '#src/handlers/interactionTypes';
 import type { SubscriptionData } from '@seedcord/core';
 import type { LogRecord } from '@seedcord/types';
-import type { AutocompleteInteraction, Guild, User } from 'discord.js';
+import type { Guild, User } from 'discord.js';
 
 const dispatch = new DispatchContext('slash', 'ban');
 
@@ -20,25 +20,16 @@ function mockCore(publish: ReturnType<typeof vi.fn>): Core {
     return { bus: { [PublishDefault]: publish }, config: { errors: {}, notifications: {} } } as unknown as Core;
 }
 
-function slashInteraction(actors: { guild?: Guild; user?: User } = {}): Repliables {
-    // justified: the fixture implements only the Repliables surface buildInteractionSource reads.
+function slashInteraction(actors: { guild?: Guild; user?: User } = {}): ValidInteractionTypes {
+    // justified: the fixture implements only the interaction fields extractErrorResponse reads.
     return {
-        isCommand: () => true,
-        isChatInputCommand: () => true,
-        isContextMenuCommand: () => false,
-        isButton: () => false,
-        isAnySelectMenu: () => false,
-        isModalSubmit: () => false,
         user: actors.user ?? { id: 'u1' },
         guild: actors.guild ?? null,
         guildId: 'g1',
         channelId: 'c1',
         id: 'i1'
-    } as unknown as Repliables;
+    } as unknown as ValidInteractionTypes;
 }
-
-// justified: the autocomplete path reads only guild and user off the interaction
-const autocomplete = { guild: null, user: { id: 'u1', username: 'uname' } } as unknown as AutocompleteInteraction;
 
 describe('extractErrorResponse', () => {
     it('publishes handledException for a reporting denial with the uuid the reply shows', () => {
@@ -68,8 +59,8 @@ describe('extractErrorResponse', () => {
         using _capture = LoggerChannelRegistry.instance.installSink({ kind: 'capture', onLog: (r) => logged.push(r) });
         const thrown = new Error('a bug');
         const result = extractErrorResponse(thrown, mockCore(publish), {
-            kind: 'autocomplete',
-            interaction: autocomplete,
+            kind: 'interaction',
+            interaction: slashInteraction(),
             dispatch
         });
 
@@ -80,12 +71,16 @@ describe('extractErrorResponse', () => {
     it('publishes unknownException for a reporting denial on an autocomplete, which has no typed source', () => {
         const publish = vi.fn();
         const denial = new Fault({ cause: new Error('lookup failed') });
-        extractErrorResponse(denial, mockCore(publish), { kind: 'autocomplete', interaction: autocomplete, dispatch });
+        extractErrorResponse(denial, mockCore(publish), {
+            kind: 'interaction',
+            interaction: slashInteraction(),
+            dispatch: new DispatchContext('autocomplete', 'search')
+        });
 
         const [event, payload] = publish.mock.calls[0] as [string, SubscriptionData<'unknownException'>];
         expect(event).toBe('unknownException');
         expect(payload.error).toBe(denial);
-        expect(payload.origin).toBe('slash:ban');
+        expect(payload.origin).toBe('autocomplete:search');
     });
 
     it('publishes both bugs when one route throws two different errors', () => {

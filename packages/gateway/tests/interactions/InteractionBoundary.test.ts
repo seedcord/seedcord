@@ -30,7 +30,6 @@ function mockInteraction() {
         isMessageComponent: vi.fn().mockReturnValue(false),
         isModalSubmit: vi.fn().mockReturnValue(false),
         isFromMessage: vi.fn().mockReturnValue(false),
-        isCommand: vi.fn().mockReturnValue(true),
         isChatInputCommand: vi.fn().mockReturnValue(true),
         isContextMenuCommand: vi.fn().mockReturnValue(false),
         isButton: vi.fn().mockReturnValue(false),
@@ -62,7 +61,7 @@ function handleInteractionFault(
     interaction: ValidInteractionTypes,
     core: Core,
     sender?: ReplySender,
-    dispatch = new DispatchContext('slash', 'test')
+    dispatch = new DispatchContext(interaction.isAutocomplete() ? 'autocomplete' : 'slash', 'test')
 ): Promise<void> {
     return boundary(caught, interaction, core, dispatch, sender);
 }

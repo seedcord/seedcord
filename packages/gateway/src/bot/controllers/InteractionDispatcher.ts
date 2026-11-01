@@ -13,8 +13,7 @@ import {
     PublishDefault,
     resultFor,
     runAfter,
-    runHandlerGates,
-    slowGateMonitor
+    runInteractionGates
 } from '@seedcord/core/internal';
 import { prefixOf } from '@seedcord/custom-id';
 import { SeedcordErrorCode, paint } from '@seedcord/errors';
@@ -524,19 +523,14 @@ export class InteractionDispatcher implements Initializeable, HmrAware {
         dispatch: DispatchContext,
         declaredRoute: string | null
     ): Promise<{ caught: unknown } | null> {
-        const monitor = slowGateMonitor();
         try {
-            await runHandlerGates(
+            await runInteractionGates(
                 HandlerCtor,
-                interactionGateContext(interaction, this.core, dispatch, declaredRoute),
-                monitor?.observe
+                interactionGateContext(interaction, this.core, dispatch, declaredRoute)
             );
             return null;
         } catch (caught) {
             return { caught };
-        } finally {
-            // a refusing gate spent budget too
-            monitor?.report(declaredRoute);
         }
     }
 

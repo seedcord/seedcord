@@ -33,8 +33,7 @@ export {
     type RoutableConstructor
 } from '#decorators/interactionRoutes';
 
-export { runGates, runHandlerGates } from '#gates/runGates';
-export { slowGateMonitor, type SlowGateMonitor } from '#gates/slowGate';
+export { runGates, runHandlerGates, runInteractionGates } from '#gates/runGates';
 export type { GateObserver } from '#gates/runGates';
 export { accessorStore, clearStore, guardedAccessor } from '#src/miscellaneous/guarded';
 export { isEmojiTuple } from '#src/miscellaneous/emojiConfig';
@@ -131,4 +130,6 @@ export { eventResultFor, resultFor, runAfter } from '#src/dispatch/runAfter';
 export { OnceTracker } from '#src/dispatch/OnceTracker';
 // each transport declaration-merges its own default keys into this
 export type { DefaultSubscriptions } from '#subscribers/types/Subscriptions';
+export type { EventFaultSource } from '#subscribers/types/Subscriptions';
+export { interactionFaultSource } from '#subscribers/interactionFaultSource';
 export type { Initializeable } from '#src/plugin/Plugin';

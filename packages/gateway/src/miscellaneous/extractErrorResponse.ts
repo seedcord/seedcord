@@ -1,20 +1,18 @@
 import * as crypto from 'node:crypto';
 
 import { Notice, Fault } from '@seedcord/core';
-import { logUnknownFault, PublishDefault } from '@seedcord/core/internal';
+import { interactionFaultSource, logUnknownFault, PublishDefault } from '@seedcord/core/internal';
 import { Logger } from '@seedcord/logger';
 import { assertNever } from '@seedcord/utils';
 
 import type { Core } from '#interfaces/Core';
-import type { Repliables } from '#src/handlers/interactionTypes';
+import type { ValidInteractionTypes } from '#src/handlers/interactionTypes';
 import type { DispatchContext, FaultSource } from '@seedcord/core';
+import type { EventFaultSource } from '@seedcord/core/internal';
 import type { RenderContext, ReplyResponse, Nullable } from '@seedcord/types';
-import type { AutocompleteInteraction, Guild, User } from 'discord.js';
+import type { Guild, User } from 'discord.js';
 import type { UUID } from 'node:crypto';
 import type { TaggedUnion } from 'type-fest';
-
-type InteractionFaultSource = Extract<FaultSource, { kind: 'interaction' }>;
-type EventFaultSource = Extract<FaultSource, { kind: 'event' }>;
 
 const logger = new Logger('ErrorsHandling', { channel: 'errors' });
 
@@ -30,8 +28,7 @@ interface EventOrigin {
 export type ErrorOrigin = { dispatch: DispatchContext } & TaggedUnion<
     'kind',
     {
-        interaction: { interaction: Repliables };
-        autocomplete: { interaction: AutocompleteInteraction };
+        interaction: { interaction: ValidInteractionTypes };
         event: { event: EventOrigin };
     }
 >;
@@ -41,8 +38,7 @@ interface FaultFacts {
     guild: Nullable<Guild>;
     user: Nullable<User>;
     metadata: unknown;
-    // an autocomplete throw doesn't have a typed source
-    source: (() => FaultSource) | null;
+    source: FaultSource | null;
 }
 
 export interface ExtractedErrorResponse {
@@ -61,13 +57,14 @@ export function extractErrorResponse(error: Error, core: Core, fault: ErrorOrigi
     if (error instanceof Notice) {
         if (error.report) {
             logger.error(`${error.name}: ${uuid}`, error);
-            if (facts.source) {
+            const { origin, source } = facts;
+            if (source) {
                 core.bus[PublishDefault]('handledException', {
                     denial: error,
                     uuid,
                     dispatchId: dispatch.id,
-                    origin: facts.origin,
-                    source: facts.source()
+                    origin,
+                    source
                 });
             } else publishUnknown(error, core, dispatch, facts, uuid);
         }
@@ -92,7 +89,7 @@ function factsOf(fault: ErrorOrigin): FaultFacts {
                 guild: event.guild,
                 user: event.user,
                 metadata: { eventName: event.name, handler: event.handler, args: event.args },
-                source: () => buildEventSource(event)
+                source: buildEventSource(event)
             };
         }
         case 'interaction': {
@@ -102,16 +99,14 @@ function factsOf(fault: ErrorOrigin): FaultFacts {
                 guild: interaction.guild,
                 user: interaction.user,
                 metadata: interaction,
-                source: () => buildInteractionSource(interaction, dispatch)
-            };
-        }
-        case 'autocomplete': {
-            return {
-                origin: fault.dispatch.routeId,
-                guild: fault.interaction.guild,
-                user: fault.interaction.user,
-                metadata: fault.interaction,
-                source: null
+                source: interactionFaultSource(dispatch, {
+                    customId: 'customId' in interaction ? interaction.customId : null,
+                    userId: interaction.user.id,
+                    guildId: interaction.guildId,
+                    channelId: interaction.channelId,
+                    interactionId: interaction.id,
+                    raw: interaction
+                })
             };
         }
         default: {
@@ -144,32 +139,4 @@ function buildEventSource(event: EventOrigin): EventFaultSource {
         channelId: event.channelId,
         raw: event.args
     };
-}
-
-function buildInteractionSource(interaction: Repliables, dispatch: DispatchContext): InteractionFaultSource {
-    const command = interaction.isCommand() ? dispatch.route : null;
-    const customId =
-        interaction.isButton() || interaction.isAnySelectMenu() || interaction.isModalSubmit()
-            ? interaction.customId
-            : null;
-
-    return {
-        kind: 'interaction',
-        interactionKind: interactionKind(interaction),
-        command,
-        customId,
-        userId: interaction.user.id,
-        guildId: interaction.guildId,
-        channelId: interaction.channelId,
-        interactionId: interaction.id,
-        raw: interaction
-    };
-}
-
-function interactionKind(interaction: Repliables): InteractionFaultSource['interactionKind'] {
-    if (interaction.isChatInputCommand()) return 'slash';
-    if (interaction.isContextMenuCommand()) return 'context-menu';
-    if (interaction.isButton()) return 'button';
-    if (interaction.isAnySelectMenu()) return 'select';
-    return 'modal';
 }

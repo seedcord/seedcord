@@ -37,15 +37,12 @@ export async function handleInteractionFault(
         return;
     }
 
-    // discord does not accept a message on an autocomplete. the fault is only reported.
+    const { response } = extractErrorResponse(error, core, { kind: 'interaction', interaction, dispatch });
+    // discord does not accept a message on an autocomplete. empty choices clear the client's loading spinner.
     if (interaction.isAutocomplete()) {
-        extractErrorResponse(error, core, { kind: 'autocomplete', interaction, dispatch });
-        // empty choices clear the client's loading spinner
         await sendEmptyChoices(interaction, core, dispatch);
         return;
     }
-
-    const { response } = extractErrorResponse(error, core, { kind: 'interaction', interaction, dispatch });
     // the handler's own sender carries its ack state. a middleware throw arrives without one
     const liveSender = sender ?? new ReplySender(interaction, dispatch, core.bus);
     await sendGuarded(() => liveSender.send(response, { ephemeral: error instanceof Notice ? error.ephemeral : true }));

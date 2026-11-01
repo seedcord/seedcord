@@ -3,6 +3,7 @@ import 'reflect-metadata';
 import { GatedMetadataKey } from '#src/metadataKeys';
 
 import { discardCommits, runCheck, runCommits } from './effects';
+import { slowGateMonitor } from './slowGate';
 
 import type { Gate, GateContextBase } from './Gate';
 
@@ -46,4 +47,15 @@ export async function runHandlerGates(
     const gates = Reflect.getMetadata(GatedMetadataKey, handlerCtor) as readonly Gate<GateContextBase>[] | undefined;
     if (!gates) return;
     await runGates(gates, ctx, observe);
+}
+
+// discord drops an interaction that isn't acked within 3s
+export async function runInteractionGates(handlerCtor: object, ctx: GateContextBase): Promise<void> {
+    const monitor = slowGateMonitor();
+    try {
+        await runHandlerGates(handlerCtor, ctx, monitor?.observe);
+    } finally {
+        // a refusing gate spent budget too
+        monitor?.report(ctx.declaredRoute);
+    }
 }
