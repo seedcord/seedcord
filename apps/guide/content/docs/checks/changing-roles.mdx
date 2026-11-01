@@ -28,7 +28,7 @@ import type { Role } from 'discord.js';
 declare const role: Role;
 // ---cut-end---
 
-hasPermsToAssign(role);
+hasPermsToAssign({ role });
 ```
 
 To compare positions, `hasPermsToAssign` reads your bot's own role from the guild's role cache. If the cache doesn't have it, the call throws a `SeedcordError` with the code `CoreBotRoleMissing`.
@@ -41,35 +41,31 @@ To compare positions, `hasPermsToAssign` reads your bot's own role from the guil
 
 ## Replacing the notices
 
-The default cards say what went wrong in general terms. If you want to tell the caller something specific, like which role to move up in server settings, pass your own. You pass an options object with the role and a replacement for any refusal you want to reword. Every replacement constructor takes a message first.
+The default cards say what went wrong in general terms. If you want to tell the caller something specific, like which role to move up in server settings, pass your own `Notice` class next to `role` for any refusal you want to replace. seedcord constructs it with the arguments below.
 
 {/* prettier-ignore-start */}
 
-| override | constructor takes after the message |
-| --- | --- |
-| `higherNotice` | the target role, then the bot's role |
-| `managedNotice` | nothing |
-| `missingNotice` | the subject, then the permission names |
+| field | refuses when | constructed with |
+| --- | --- | --- |
+| `higher` | the role is at or above your bot's | the role, then your bot's role |
+| `managed` | an integration manages the role | the role |
+| `missing` | your bot lacks Manage Roles | your bot's mention, then the permission names |
 
 {/* prettier-ignore-end */}
 
 ```ts twoslash
-import { hasPermsToAssign, Notice } from '@seedcord/gateway';
+import { hasPermsToAssign } from '@seedcord/gateway';
 
+import type { NoticeConstructor } from '@seedcord/gateway';
 import type { Role } from 'discord.js';
 
 declare const role: Role;
-declare const TooHigh: new (
-    message: string,
-    role: Role,
-    botRole: Role
-) => Notice;
+declare const TooHigh: NoticeConstructor<
+    [role: Role, botRole: Role]
+>;
 
 // ---cut---
-hasPermsToAssign({
-    targetRole: role,
-    noticeOverrides: { higherNotice: TooHigh }
-});
+hasPermsToAssign({ role, higher: TooHigh });
 ```
 
 `TooHigh` replaces only the position refusal. The other two refusals keep their default cards.
@@ -101,7 +97,7 @@ export class AddRole extends SlashHandler<'role/add'> {
             return;
         }
 
-        hasPermsToAssign(role);
+        hasPermsToAssign({ role });
 
         const ids = member.roles.cache.map((held) => held.id);
         await member.roles.set(mergeRoles(ids, [role.id], []));

@@ -16,7 +16,7 @@ class ProfileCooldown extends Notice {
     }
 }
 
-@Gated(Cooldown('1m', { limit: 2, notice: (resetAt) => new ProfileCooldown(resetAt) }))
+@Gated(Cooldown('1m', { limit: 2, notice: ProfileCooldown }))
 @UserContextMenuRoute('View Profile')
 export class ViewProfile extends UserContextMenuHandler<'View Profile'> {
     public async execute(): Promise<void> {

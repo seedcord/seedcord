@@ -89,6 +89,8 @@ const messages = {
         `${paint.bold('collection.entries()')} reads the key list of the Keyv store in ${paint.bold('config.kv')}, but that store can't list its keys. Cache adapters like ${paint.bold('@keyv/memcache')} never can. Pass an adapter that can, like ${paint.bold('@keyv/redis')} or ${paint.bold('@keyv/sqlite')}.`,
     [SeedcordErrorCode.CoreKvDriverFailed]: (operation: 'read' | 'write' | 'delete' | 'list', key: string) =>
         `The driver in ${paint.bold('config.kv')} failed to ${operation} ${paint.sky(key)}. Check that the storage it connects to is reachable.`,
+    [SeedcordErrorCode.CoreBotMemberMissing]: (guildId: string) =>
+        `The member cache of guild ${paint.sky(guildId)} has no member for the bot, so seedcord can't read the bot's permissions there. If ${paint.bold('clientOptions.makeCache')} limits ${paint.bold('GuildMemberManager')}, keep the bot's member with ${paint.sky('keepOverLimit: (member) => member.id === member.client.user.id')}.`,
     [SeedcordErrorCode.CorePluginKvOutsideAttach]: (plugin: string) =>
         `${paint.bold(plugin)} read ${paint.bold('this.kv')} on an instance that ${paint.bold('attach()')} didn't build. ${paint.bold('this.kv')} stores a plugin's records under its attach key, which only ${paint.bold('attach()')} gives it. Attach the class with ${paint.bold(`seedcord.attach('key', ${plugin})`)}.`,
     [SeedcordErrorCode.CorePluginGroupTaken]: (head: string, key: string) =>
@@ -205,7 +207,6 @@ const messages = {
 
     [SeedcordErrorCode.GateInvalidCooldownDuration]: (input: string) =>
         `The cooldown duration ${quoted(input)} is not valid. Pass a positive number of seconds, or a duration string like '30m', '24h', or '500ms'.`,
-
     [SeedcordErrorCode.PaginationInvalidPerPage]: (perPage: number) =>
         `perPage is ${perPage}. Pass a positive integer.`,
     [SeedcordErrorCode.PaginationControlCount]: (count: number, max: number) =>

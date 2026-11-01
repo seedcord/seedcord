@@ -104,14 +104,16 @@ class AttachesRequireBotPermissions extends ModalHandler<[typeof ModalProbeId]> 
         await Promise.resolve();
     }
 }
+void AttachesRequireBotPermissions;
+
+// @ts-expect-error an event doesn't carry app_permissions
 @Gated(RequireBotPermissions([PermissionFlagsBits.BanMembers]))
-class AttachesRequireBotPermissions2 extends EventHandler<Events.MessageCreate> {
+class RejectsChannelScopedRequireBotPermissionsOnEvent extends EventHandler<Events.MessageCreate> {
     async execute(): Promise<void> {
         await Promise.resolve();
     }
 }
-void AttachesRequireBotPermissions;
-void AttachesRequireBotPermissions2;
+void RejectsChannelScopedRequireBotPermissionsOnEvent;
 
 // @ts-expect-error autocomplete handlers take no gates, a refusal has no reply target there
 @Gated(RequireBotPermissions([PermissionFlagsBits.BanMembers]))

@@ -1,4 +1,5 @@
 import type { RenderContext, ReplyResponse } from '@seedcord/types';
+import type { Constructor } from 'type-fest';
 
 /**
  * Base class for a user-facing refusal or a reported fault.
@@ -75,3 +76,24 @@ export abstract class Notice extends Error {
      */
     public abstract render(ctx: RenderContext): ReplyResponse;
 }
+
+/**
+ * A Notice class thrown in place of a default refusal. seedcord constructs it with the data that refusal
+ * carries, like the retry time for `Cooldown` or the subject and permission names for a permission check.
+ *
+ * @example
+ * ```ts
+ * class OwnersOnly extends Notice {
+ *     public constructor() {
+ *         super('Owners only.');
+ *     }
+ *
+ *     public render(): ReplyResponse {
+ *         return { components: [new OwnersOnlyCard().component] };
+ *     }
+ * }
+ *
+ * OwnerOnly({ notice: OwnersOnly });
+ * ```
+ */
+export type NoticeConstructor<Args extends unknown[] = []> = Constructor<Notice, Args>;

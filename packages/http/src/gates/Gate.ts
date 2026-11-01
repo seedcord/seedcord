@@ -1,10 +1,10 @@
 import type { Core } from '#interfaces/Core';
 import type { Repliables } from '#src/handlers/interactionTypes';
-import type { GateContextBase } from '@seedcord/core';
+import type { AppPermissionsContext } from '@seedcord/core';
 import type { APIInteractionGuildMember, APIUser } from 'discord-api-types/v10';
 
 /**
- * The interaction gate context on the HTTP transport. It extends the scalar {@link GateContextBase} with the
+ * The interaction gate context on the HTTP transport. It extends the scalar {@link AppPermissionsContext} with the
  * raw interaction payload and the user and member the payload carries. A gate reading button fields, inferred
  * from its `ctx` annotation, is rejected on a slash handler.
  *
@@ -24,7 +24,7 @@ import type { APIInteractionGuildMember, APIUser } from 'discord-api-types/v10';
  * });
  * ```
  */
-export interface InteractionGateContext<Repliable extends Repliables = Repliables> extends GateContextBase {
+export interface InteractionGateContext<Repliable extends Repliables = Repliables> extends AppPermissionsContext {
     /** Narrow on this before reading `interaction`. */
     readonly kind: 'interaction';
     readonly core: Core;

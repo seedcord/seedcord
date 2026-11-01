@@ -2,7 +2,7 @@ import type { EventHandler } from '#handlers/event';
 import type { InteractionHandler } from '#handlers/interaction/InteractionHandler';
 import type { ValidEventTypes } from '#src/handlers/interactionTypes';
 import type { EventGateContext, InteractionGateContext } from './Gate';
-import type { Gate, GateContextBase, RequiredOf } from '@seedcord/core';
+import type { AppPermissionsContext, Gate, GateContextBase, RequiredOf } from '@seedcord/core';
 import type { GateFitsWith } from '@seedcord/core/internal';
 import type {
     ButtonInteraction,
@@ -63,7 +63,9 @@ type KindName<Ctx> = Ctx extends Ungateable
                             : 'an interaction'
       : Ctx extends EventGateContext<infer N>
         ? `${N & string} event`
-        : 'an agnostic';
+        : Ctx extends AppPermissionsContext
+          ? 'gateway interaction'
+          : 'an agnostic';
 
 // core defines the fit and this labels the kinds
 export type FitAll<TCtor extends AnyHandlerCtor, Gates extends readonly Gate<GateContextBase>[]> = {

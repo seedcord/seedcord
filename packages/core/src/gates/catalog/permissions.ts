@@ -1,54 +1,24 @@
+import { SeedcordErrorCode } from '@seedcord/errors';
+import { SeedcordError } from '@seedcord/errors/internal';
+
 import { defineGate } from '#gates/Gate';
-import { MissingPermissions, MissingRole, NotInGuild } from '#notices/index';
-import { hasAll, missingNames } from '#src/permissions/bits';
+import { MissingRole, NotInGuild, PermissionsUnresolved } from '#notices/index';
+import { assertPermissions } from '#src/permissions/assert';
 
-import { pickNotice } from './options';
-
-import type { Gate, GateContextBase, GuildPermissionsContext } from '#gates/Gate';
+import type { AppPermissionsContext, Gate, GateContextBase, GuildPermissionsContext } from '#gates/Gate';
+import type { PermissionNoticeConstructor } from '#src/permissions/assert';
 import type { PermissionScope } from '#src/permissions/bits';
-import type { GateNoticeOptions } from './options';
+import type { NoticeConstructor } from '#stops/Notice';
 
 export type { PermissionScope } from '#src/permissions/bits';
 export { PermissionNames } from '#src/permissions/bits';
 
-interface PermCheckKind {
-    unresolved: string;
-    subject: string | null;
-}
-
-const MEMBER_CHECK: PermCheckKind = {
-    unresolved: 'Your server member data could not be resolved. Try again.',
-    subject: null
-};
-const BOT_CHECK: PermCheckKind = {
-    unresolved: "The bot's permissions could not be resolved. Try again.",
-    subject: 'The bot'
-};
-
-function refusePermissions(
-    held: bigint | null,
-    scope: PermissionScope,
-    options: RequirePermissionsOptions | undefined,
-    guildId: string | null,
-    kind: PermCheckKind
-): void {
-    if (held === null) {
-        throw pickNotice(
-            options?.notInGuild,
-            (message) => new NotInGuild(message ?? (guildId ? kind.unresolved : undefined))
-        );
-    }
-    if (hasAll(held, scope)) return;
-    throw pickNotice(
-        options?.missing,
-        (message) => new MissingPermissions(message, kind.subject, missingNames(held, scope))
-    );
-}
+const BOT_SUBJECT = 'The bot';
 
 /**
- * Options for {@link RequirePermissions} and {@link RequireBotPermissions}.
+ * Options for {@link RequireBotPermissions}.
  */
-export interface RequirePermissionsOptions {
+export interface RequireBotPermissionsOptions {
     /**
      * The set the check reads. `'channel'` reads the effective channel set the payload carries, what
      * Discord enforces in the invoked channel. `'guild'` reads the base set from roles, available on the
@@ -57,32 +27,62 @@ export interface RequirePermissionsOptions {
      * @defaultValue `'channel'`
      */
     in?: 'channel' | 'guild';
-    /** Reword or replace the refusal shown when the set is unavailable (outside a guild, or unresolved inside one). */
-    notInGuild?: GateNoticeOptions;
-    /** Reword or replace the refusal shown when a permission is missing. */
-    missing?: GateNoticeOptions;
+    /** Thrown in place of the refusal outside a guild. */
+    notInGuild?: NoticeConstructor;
+    /** Thrown in place of the refusal when a permission is missing. */
+    missing?: PermissionNoticeConstructor;
+}
+
+/**
+ * Options for {@link RequirePermissions}.
+ */
+export interface RequirePermissionsOptions extends RequireBotPermissionsOptions {
+    /** Thrown in place of the refusal when the member's permissions are unavailable inside a guild. */
+    unresolved?: NoticeConstructor;
 }
 
 /**
  * Options for {@link RequireRole}.
  */
 export interface RequireRoleOptions {
-    /** Reword or replace the refusal shown outside a guild. */
-    notInGuild?: GateNoticeOptions;
-    /** Reword or replace the refusal shown when the caller lacks the role. */
-    missingRole?: GateNoticeOptions;
+    /** Thrown in place of the refusal outside a guild. */
+    notInGuild?: NoticeConstructor;
+    /** Thrown in place of the refusal when the caller lacks the role, constructed with the role id. */
+    missingRole?: NoticeConstructor<[roleId: string]>;
+}
+
+interface HeldCheck {
+    guildId: string | null;
+    subject: string | null;
+    // throws when the guild's set is unavailable
+    read: (guildId: string) => bigint;
+}
+
+function requireHeld(
+    { guildId, subject, read }: HeldCheck,
+    scope: PermissionScope,
+    options: RequireBotPermissionsOptions | undefined
+): void {
+    if (!guildId) throw new (options?.notInGuild ?? NotInGuild)();
+    const permissions = read(guildId);
+    assertPermissions({ subject, permissions, scope, ...(options?.missing && { notice: options.missing }) });
+}
+
+function botMemberMissing(guildId: string): never {
+    throw new SeedcordError(SeedcordErrorCode.CoreBotMemberMissing, [guildId]);
 }
 
 /**
- * Requires the caller to hold every permission in `scope`. Refuses outside a guild first, then when a
- * permission is missing. The Administrator bit passes any scope.
+ * Requires the caller to hold every permission in `scope`. Refuses outside a guild first, then when the
+ * member's permissions are unavailable, then when a permission is missing. The Administrator bit passes any
+ * scope.
  *
  * The default `'channel'` scope reads the effective channel set the payload carries, what Discord enforces
  * in the invoked channel. The `'guild'` scope reads the base set from roles and requires a
  * {@link GuildPermissionsContext}, so it fits a gateway handler only.
  *
  * @param scope - The permission flag bits the caller must all hold.
- * @param options - Pick the scope with `in`, and override each refusal with `notInGuild` or `missing`.
+ * @param options - Pick the scope with `in`. Replace a refusal with a Notice class as `notInGuild`, `unresolved`, or `missing`.
  *
  * @see the `@Gated` decorator from your transport package
  *
@@ -117,13 +117,19 @@ export function RequirePermissions(
     scope: PermissionScope,
     options?: RequirePermissionsOptions
 ): Gate<GuildPermissionsContext, 'RequirePermissions'> | Gate<GateContextBase, 'RequirePermissions'> {
+    const resolved = (held: bigint | null): bigint => {
+        if (held === null) throw new (options?.unresolved ?? PermissionsUnresolved)();
+        return held;
+    };
     if (options?.in === 'guild') {
         return defineGate('RequirePermissions', (ctx: GuildPermissionsContext) => {
-            refusePermissions(ctx.memberGuildPermissions, scope, options, ctx.guildId, MEMBER_CHECK);
+            const read = (): bigint => resolved(ctx.memberGuildPermissions);
+            requireHeld({ guildId: ctx.guildId, subject: null, read }, scope, options);
         });
     }
     return defineGate('RequirePermissions', (ctx: GateContextBase) => {
-        refusePermissions(ctx.memberPermissions, scope, options, ctx.guildId, MEMBER_CHECK);
+        const read = (): bigint => resolved(ctx.memberPermissions);
+        requireHeld({ guildId: ctx.guildId, subject: null, read }, scope, options);
     });
 }
 
@@ -133,12 +139,12 @@ export function RequirePermissions(
  *
  * The default `'channel'` scope reads the bot's effective channel set (wire `app_permissions`), what
  * Discord enforces in the invoked channel. The `'guild'` scope reads the bot's base set from roles and
- * requires a {@link GuildPermissionsContext}, fitting a gateway handler only. `app_permissions` is
- * absent on gateway events, the channel scope refuses there as unresolved, use `in: 'guild'` on an
- * event handler.
+ * requires a {@link GuildPermissionsContext}, fitting a gateway handler only. The channel scope requires an
+ * {@link AppPermissionsContext}. An event handler takes `in: 'guild'`.
  *
  * @param scope - The permission flag bits the bot must all hold.
- * @param options - Pick the scope with `in`, and override each refusal with `notInGuild` or `missing`.
+ * @param options - Pick the scope with `in`. Replace a refusal with a Notice class as `notInGuild` or `missing`.
+ * @throws A **SeedcordError** when the `'guild'` scope runs and the bot's own member isn't cached.
  *
  * @see the `@Gated` decorator from your transport package
  *
@@ -157,23 +163,24 @@ export function RequirePermissions(
  */
 export function RequireBotPermissions(
     scope: PermissionScope,
-    options: RequirePermissionsOptions & { in: 'guild' }
+    options: RequireBotPermissionsOptions & { in: 'guild' }
 ): Gate<GuildPermissionsContext, 'RequireBotPermissions'>;
 export function RequireBotPermissions(
     scope: PermissionScope,
-    options?: RequirePermissionsOptions & { in?: 'channel' }
-): Gate<GateContextBase, 'RequireBotPermissions'>;
+    options?: RequireBotPermissionsOptions & { in?: 'channel' }
+): Gate<AppPermissionsContext, 'RequireBotPermissions'>;
 export function RequireBotPermissions(
     scope: PermissionScope,
-    options?: RequirePermissionsOptions
-): Gate<GuildPermissionsContext, 'RequireBotPermissions'> | Gate<GateContextBase, 'RequireBotPermissions'> {
+    options?: RequireBotPermissionsOptions
+): Gate<GuildPermissionsContext, 'RequireBotPermissions'> | Gate<AppPermissionsContext, 'RequireBotPermissions'> {
     if (options?.in === 'guild') {
         return defineGate('RequireBotPermissions', (ctx: GuildPermissionsContext) => {
-            refusePermissions(ctx.appGuildPermissions, scope, options, ctx.guildId, BOT_CHECK);
+            const read = (guildId: string): bigint => ctx.appGuildPermissions ?? botMemberMissing(guildId);
+            requireHeld({ guildId: ctx.guildId, subject: BOT_SUBJECT, read }, scope, options);
         });
     }
-    return defineGate('RequireBotPermissions', (ctx: GateContextBase) => {
-        refusePermissions(ctx.appPermissions, scope, options, ctx.guildId, BOT_CHECK);
+    return defineGate('RequireBotPermissions', (ctx: AppPermissionsContext) => {
+        requireHeld({ guildId: ctx.guildId, subject: BOT_SUBJECT, read: () => ctx.appPermissions }, scope, options);
     });
 }
 
@@ -182,7 +189,7 @@ export function RequireBotPermissions(
  * then when the role is missing. Roles are guild-global, so there is no scope dimension.
  *
  * @param roleId - The role snowflake the caller must hold.
- * @param options - Override each refusal, the outside-guild one with `notInGuild` and the missing-role one with `missingRole`.
+ * @param options - Replace a refusal with a Notice class as `notInGuild` or `missingRole`.
  *
  * @see the `@Gated` decorator from your transport package
  *
@@ -199,8 +206,8 @@ export function RequireBotPermissions(
  */
 export function RequireRole(roleId: string, options?: RequireRoleOptions): Gate<GateContextBase, 'RequireRole'> {
     return defineGate('RequireRole', (ctx) => {
-        if (!ctx.guildId) throw pickNotice(options?.notInGuild, (message) => new NotInGuild(message));
+        if (!ctx.guildId) throw new (options?.notInGuild ?? NotInGuild)();
         if (ctx.memberRoleIds.includes(roleId)) return;
-        throw pickNotice(options?.missingRole, (message) => new MissingRole(message, roleId));
+        throw new (options?.missingRole ?? MissingRole)(roleId);
     });
 }

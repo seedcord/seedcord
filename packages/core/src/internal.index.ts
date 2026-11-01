@@ -66,7 +66,6 @@ export { isCommandClass, type CommandCtor } from '#src/commands/isCommandClass';
 export { slashRouteLeaves } from '#src/commands/slashRouteLeaves';
 export type { CommandBuilder, DeployResult } from '#src/commands/types';
 
-export { pickNotice } from '#gates/catalog/options';
 export { PermissionNames } from '#gates/catalog/permissions';
 export type { GateFitsWith } from '#gates/matching';
 
@@ -78,7 +77,7 @@ export { forwardLogsToCli } from '#hmr/forwardLogsToCli';
 
 export {
     GateNotice,
-    HasDangerousPermissions,
+    HasPresentPermissions,
     MissingPermissions,
     MissingRole,
     NeedsAny,

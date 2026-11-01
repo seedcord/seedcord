@@ -129,11 +129,11 @@ An interaction payload carries both channel sets. A gateway event doesn't carry 
 | on an event, `in: 'channel'` | what happens |
 | --- | --- |
 | `RequirePermissions` | reads the caller's role-derived set, the same value `'guild'` reads. Channel overwrites go uncounted |
-| `RequireBotPermissions` | reads `app_permissions`, which an event never carries, so it refuses every time and reports the set as unresolved |
+| `RequireBotPermissions` | doesn't compile, since it reads `app_permissions` and an event never carries it |
 
 {/* prettier-ignore-end */}
 
-Use `in: 'guild'` on an event handler. On the caller side it reads the same set `'channel'` would there, and on the bot side it's the only scope that can pass.
+Use `in: 'guild'` on an event handler. On the caller side it reads the same set `'channel'` would there, and on the bot side it's the only scope that compiles.
 
 ```ts twoslash
 import { RequireBotPermissions } from '@seedcord/gateway';
@@ -168,37 +168,45 @@ export class Roles extends SlashHandler<'roles'> {
 
 Combine several with [`or`](ref:core/or) when holding any one of the roles is enough.
 
-## Wording each refusal
+## Replacing each refusal
 
-Each of these gates refuses for two different reasons. Its options carry one slot per reason, and each slot takes the `message` and `notice` pair from [Gates](/checks/gates).
+Each of these gates refuses for more than one reason. It takes one option per reason, and each option takes a `Notice` class you wrote, the same as the `notice` option in [Gates](/checks/gates). seedcord constructs the class with the arguments in the last column.
 
 {/* prettier-ignore-start */}
 
-| gate | slot | refuses when |
-| --- | --- | --- |
-| `RequirePermissions` | `notInGuild` | the set is unavailable, outside a server or unresolved inside one |
-| `RequirePermissions` | `missing` | a bit in the scope is absent |
-| `RequireBotPermissions` | `notInGuild` | the same, for your bot's set |
-| `RequireBotPermissions` | `missing` | the same, for your bot's bits |
-| `RequireRole` | `notInGuild` | the call came from outside a server |
-| `RequireRole` | `missingRole` | the caller lacks the role |
+| gate | option | refuses when | constructed with |
+| --- | --- | --- | --- |
+| `RequirePermissions` | `notInGuild` | the call came from outside a server | nothing |
+| `RequirePermissions` | `unresolved` | the member's set is missing inside a server | nothing |
+| `RequirePermissions` | `missing` | a bit in the scope is absent | `null` for the caller, then the missing names |
+| `RequireBotPermissions` | `notInGuild` | the call came from outside a server | nothing |
+| `RequireBotPermissions` | `missing` | a bit in the scope is absent from your bot's set | `'The bot'`, then the missing names |
+| `RequireRole` | `notInGuild` | the call came from outside a server | nothing |
+| `RequireRole` | `missingRole` | the caller lacks the role | the role id |
 
 {/* prettier-ignore-end */}
 
 ```ts twoslash
 import { RequirePermissions, RequireRole } from '@seedcord/gateway';
 import { PermissionFlagsBits } from 'discord.js';
+
+import type {
+    NoticeConstructor,
+    PermissionNoticeConstructor
+} from '@seedcord/gateway';
+
+declare const OutsideServer: NoticeConstructor;
+declare const CannotBan: PermissionNoticeConstructor;
+declare const SubscribersOnly: NoticeConstructor<[roleId: string]>;
 // ---cut---
 RequirePermissions([PermissionFlagsBits.BanMembers], {
-    notInGuild: { message: 'Run this in a server.' },
-    missing: { message: 'You cannot ban here.' }
+    notInGuild: OutsideServer,
+    missing: CannotBan
 });
 
-RequireRole('221439658686939136', {
-    missingRole: { message: 'Subscribers only.' }
-});
+RequireRole('221439658686939136', { missingRole: SubscribersOnly });
 ```
 
-Leaving a slot out keeps the default card. The permission gates list every missing bit on it by name, and `RequireRole` mentions the role.
+Leaving an option out keeps the default card. The permission gates list every missing bit on it by name, and `RequireRole` mentions the role.
 
 A check these gates don't cover, like whether the caller linked an account, is [a gate you write yourself](/checks/your-own).

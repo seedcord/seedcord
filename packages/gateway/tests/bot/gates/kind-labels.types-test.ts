@@ -1,4 +1,5 @@
-import { CustomId, defineGate } from '@seedcord/core';
+import { CustomId, defineGate, RequireBotPermissions } from '@seedcord/core';
+import { PermissionFlagsBits } from 'discord.js';
 import { expectTypeOf } from 'vitest';
 
 import { EventHandler } from '#handlers/event/EventHandler';
@@ -30,6 +31,8 @@ const ProbeId = new CustomId('gwkindprobe').str('x');
 const messageOnly = defineGate('Probe', (ctx: EventGateContext<'messageCreate'>) => {
     void ctx;
 });
+
+const channelScoped = RequireBotPermissions([PermissionFlagsBits.BanMembers]);
 
 type Mismatch<Got extends string> = `gate 'Probe' requires a messageCreate event handler, and this handler is ${Got}`;
 
@@ -122,12 +125,18 @@ function typeChecks(): void {
     expectTypeOf<LabelOf<typeof ProbeModal>>().toEqualTypeOf<Mismatch<'Modal'>>();
     expectTypeOf<LabelOf<typeof ProbeAutocomplete>>().toEqualTypeOf<Mismatch<'autocomplete'>>();
     expectTypeOf<LabelOf<typeof ProbeMemberEvent>>().toEqualTypeOf<Mismatch<'guildMemberAdd event'>>();
+    expectTypeOf<
+        FitAll<typeof ProbeMemberEvent, [typeof channelScoped]>[0] extends Constructor<[infer Message]>
+            ? Message
+            : never
+    >().toEqualTypeOf<"gate 'RequireBotPermissions' requires a gateway interaction handler, and this handler is guildMemberAdd event">();
 }
 
 // no-unused-vars does not count a name used only in a type position
 void [
     ProbeId,
     messageOnly,
+    channelScoped,
     typeChecks,
     ProbeSlash,
     ProbeMessageMenu,

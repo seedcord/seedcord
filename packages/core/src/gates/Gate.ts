@@ -75,6 +75,21 @@ export interface GuildPermissionsContext extends GateContextBase {
     readonly appGuildPermissions: bigint | null;
 }
 
+/**
+ * The context an interaction provides on both transports, where Discord always sends the bot's channel
+ * permissions. A gate that requires it fits no event handler.
+ *
+ * @example
+ * ```ts
+ * // the default channel scope returns a Gate<AppPermissionsContext>
+ * \@Gated(RequireBotPermissions([PermissionFlagsBits.ManageMessages]))
+ * ```
+ */
+export interface AppPermissionsContext extends GateContextBase {
+    /** The bot's permissions in the invoked channel, the wire `app_permissions` value. */
+    readonly appPermissions: bigint;
+}
+
 // phantom brand rejects a bare check function or plain object where a Gate is expected
 declare const GateBrand: unique symbol;
 

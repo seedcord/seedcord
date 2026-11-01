@@ -108,6 +108,8 @@ export enum SeedcordErrorCode {
     CorePluginKvOutsideAttach = 1233,
     /** The driver in `config.kv` threw, or reported a write as failed. */
     CoreKvDriverFailed = 1234,
+    /** The bot's own member is missing from the guild's member cache. */
+    CoreBotMemberMissing = 1235,
 
     /** A command class carries `@RegisterCommand` twice. */
     DecoratorCommandAlreadyRegistered = 1301,

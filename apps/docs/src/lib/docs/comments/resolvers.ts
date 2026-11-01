@@ -79,7 +79,7 @@ export function resolveInlineHref(part: InlineTagPart, context: FormatContext): 
         const [candidate] = context.engine.search(trimmedLabel, context.manifestPackage);
         if (!candidate) return null;
         // only an exact name match. an unresolved external ref like ButtonStyle.Danger otherwise takes the
-        // fuzzy top hit (HasDangerousPermissions) as its target and links to an unrelated local symbol.
+        // fuzzy top hit (HasPresentPermissions) as its target and links to an unrelated local symbol.
         if (candidate.name !== trimmedLabel) return null;
 
         const node =
