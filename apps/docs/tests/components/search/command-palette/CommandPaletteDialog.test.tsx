@@ -93,6 +93,12 @@ describe('CommandPaletteDialog', () => {
         expect(labels).toEqual(['Alpha', 'Beta', 'Gamma']);
     });
 
+    it('links each option to its page under the docs base path', () => {
+        renderDialog(makeController());
+
+        expect(screen.getByRole('option', { name: 'Alpha' })).toHaveAttribute('href', '/docs/a');
+    });
+
     it('starts with the first option active', () => {
         renderDialog(makeController());
         expect(combobox()).toHaveAttribute('aria-activedescendant', optionId('a'));

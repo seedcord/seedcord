@@ -37,11 +37,15 @@ export function useSearchDialogScroll(): SearchDialogScroll {
 }
 
 // useLayoutEffect puts the scroll in the same frame as the moved selection. useEffect paints them one apart
-export function useActiveRowScroll(activeId: string | undefined, { isFirst, isLast, isGroupStart }: RowPosition): void {
+export function useActiveRowScroll(
+    activeId: string | undefined,
+    { isFirst, isLast, isGroupStart, pickedByPointer }: RowPosition
+): void {
     const scroll = useSearchDialogScroll();
 
     useLayoutEffect(() => {
-        if (activeId === undefined) return;
+        // a row under the pointer is already on screen
+        if (activeId === undefined || pickedByPointer) return;
         // scrolling the whole way at the ends keeps the list's own padding in view
         if (isFirst) {
             scroll.toTop();
@@ -55,7 +59,7 @@ export function useActiveRowScroll(activeId: string | undefined, { isFirst, isLa
         // a group's first row brings its heading and as many of its rows as fit
         if (isGroupStart) row?.closest('[role="group"]')?.scrollIntoView({ block: 'start' });
         else row?.scrollIntoView({ block: 'nearest' });
-    }, [activeId, isFirst, isLast, isGroupStart, scroll]);
+    }, [activeId, isFirst, isLast, isGroupStart, pickedByPointer, scroll]);
 }
 
 // picking a filter inside a popover reads as an outside interaction

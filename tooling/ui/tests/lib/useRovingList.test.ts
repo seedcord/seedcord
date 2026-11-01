@@ -122,6 +122,16 @@ describe('useRovingList', () => {
         expect(preventDefault).not.toHaveBeenCalled();
     });
 
+    it('marks a row the pointer picked so the list leaves its scroll alone', () => {
+        const { result } = renderHook(() => useRovingList({ items: ITEMS, onSelect: vi.fn() }));
+
+        act(() => result.current.pointAt(2));
+        expect(result.current.pickedByPointer).toBe(true);
+
+        press(result, 'ArrowUp');
+        expect(result.current.pickedByPointer).toBe(false);
+    });
+
     it('holds Tab in place while the next group is still loading', () => {
         const { result } = renderHook(() =>
             useRovingList({ items: ITEMS, groupStarts: [0, ITEMS.length], onSelect: vi.fn() })

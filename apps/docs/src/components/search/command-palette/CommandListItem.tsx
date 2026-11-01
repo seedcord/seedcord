@@ -2,6 +2,7 @@
 
 import { cn, tw, Icon, SearchOption } from '@seedcord/ui';
 
+import { toPageHref } from '#lib/docs/pageHref';
 import { getToneConfig } from '#lib/tonePresentation';
 
 import { SEARCH_KIND_ICONS } from './constants';
@@ -67,7 +68,7 @@ export function CommandListItem({
     return (
         <SearchOption
             id={optionId}
-            href={action.href}
+            href={toPageHref(action.href)}
             label={action.label}
             isActive={isActive}
             onSelect={() => onSelect(action)}

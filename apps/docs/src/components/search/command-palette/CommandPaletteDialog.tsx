@@ -1,6 +1,6 @@
 'use client';
 
-import { SearchDialog, cn, useActiveRowScroll, useRovingList } from '@seedcord/ui';
+import { SearchDialog, SearchKeyLegend, cn, useActiveRowScroll, useRovingList } from '@seedcord/ui';
 import { useMemo } from 'react';
 
 import { CommandHeader } from './CommandHeader';
@@ -120,7 +120,7 @@ export function CommandPaletteDialog({ controller }: { controller: CommandPalett
     const listProps = deriveListProps(searchState, normalizedSearch);
     const { results } = listProps;
 
-    const { activeIndex, setActiveIndex, onKeyDown, ...position } = useRovingList({
+    const { activeIndex, pointAt, onKeyDown, ...position } = useRovingList({
         items: results,
         onSelect: handleSelect
     });
@@ -136,6 +136,7 @@ export function CommandPaletteDialog({ controller }: { controller: CommandPalett
             onClose={handleClose}
             title="Command palette"
             description="Search documentation content and navigation items."
+            footer={listExpanded ? <SearchKeyLegend hasGroups={false} /> : undefined}
             field={
                 <CommandHeader
                     inputRef={inputRef}
@@ -162,7 +163,7 @@ export function CommandPaletteDialog({ controller }: { controller: CommandPalett
                 activeIndex={activeIndex}
                 position={position}
                 onSelect={handleSelect}
-                onActivate={setActiveIndex}
+                onActivate={pointAt}
             />
         </SearchDialog>
     );

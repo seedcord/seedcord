@@ -2,17 +2,16 @@
 
 import { QUESTION_LENGTH } from '@seedcord/docs-search';
 import {
-    KeyLegend,
     SECTION_LABEL,
     SearchDialog,
     SearchField,
+    SearchKeyLegend,
     SearchTrigger,
     cn,
     useActiveRowScroll,
     useRovingList,
     useSearchHotkey
 } from '@seedcord/ui';
-import { ArrowDown, ArrowUp, CornerDownLeft } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import { useCallback, useMemo, useRef, useState, useTransition } from 'react';
 
@@ -22,22 +21,10 @@ import { useGuideSearch } from './useGuideSearch';
 
 import type { ResultGroup } from './useGuideSearch';
 import type { GuideResult } from '@seedcord/docs-search';
-import type { KeyHint, RowPosition } from '@seedcord/ui';
+import type { RowPosition } from '@seedcord/ui';
 import type { ReactElement } from 'react';
 
 const LISTBOX_ID = 'guide-search-results';
-
-const ROW_HINTS: readonly KeyHint[] = [
-    {
-        keys: [
-            { label: 'Up', icon: ArrowUp },
-            { label: 'Down', icon: ArrowDown }
-        ],
-        action: 'move'
-    },
-    { keys: [{ label: 'Enter', icon: CornerDownLeft }], action: 'open' }
-];
-const GROUP_HINTS: readonly KeyHint[] = [...ROW_HINTS, { keys: [{ label: 'Tab' }], action: 'next group' }];
 
 export const SEARCH_LABEL = 'Search the guide';
 
@@ -161,7 +148,7 @@ export function GuideSearch({ open, onOpenChange: setOpen }: GuideSearchProps): 
         [router, setOpen]
     );
 
-    const { activeIndex, setActiveIndex, onKeyDown, ...position } = useRovingList({
+    const { activeIndex, pointAt, onKeyDown, ...position } = useRovingList({
         items: list.rows,
         groupStarts: list.groupStarts,
         onSelect: select
@@ -181,9 +168,7 @@ export function GuideSearch({ open, onOpenChange: setOpen }: GuideSearchProps): 
                 title="Search"
                 description="Search every page in the seedcord guide."
                 footer={
-                    list.rows.length === 0 ? undefined : (
-                        <KeyLegend hints={list.groupStarts.length > 1 ? GROUP_HINTS : ROW_HINTS} />
-                    )
+                    list.rows.length === 0 ? undefined : <SearchKeyLegend hasGroups={list.groupStarts.length > 1} />
                 }
                 field={
                     <SearchField
@@ -208,7 +193,7 @@ export function GuideSearch({ open, onOpenChange: setOpen }: GuideSearchProps): 
                     activeIndex={activeIndex}
                     position={position}
                     onSelect={select}
-                    onActivate={setActiveIndex}
+                    onActivate={pointAt}
                     emptyMessage={emptyMessage}
                 />
             </SearchDialog>

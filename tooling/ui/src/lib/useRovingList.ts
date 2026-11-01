@@ -15,11 +15,12 @@ export interface RowPosition {
     isFirst: boolean;
     isLast: boolean;
     isGroupStart: boolean;
+    pickedByPointer: boolean;
 }
 
 export interface RovingList extends RowPosition {
     activeIndex: number;
-    setActiveIndex: (index: number) => void;
+    pointAt: (index: number) => void;
     onKeyDown: (event: KeyboardEvent<HTMLElement>) => void;
 }
 
@@ -40,7 +41,12 @@ export function useRovingList<TItem>({
     onSelect,
     groupStarts = NO_GROUPS
 }: RovingListOptions<TItem>): RovingList {
-    const [activeIndex, setActiveIndex] = useState(0);
+    const [{ activeIndex, pickedByPointer }, setActive] = useState({ activeIndex: 0, pickedByPointer: false });
+    const setActiveIndex = useCallback(
+        (index: number) => setActive({ activeIndex: index, pickedByPointer: false }),
+        []
+    );
+    const pointAt = useCallback((index: number) => setActive({ activeIndex: index, pickedByPointer: true }), []);
 
     // react's adjust-state-during-render pattern, an effect here would cost a second pass
     const [trackedItems, setTrackedItems] = useState(items);
@@ -96,7 +102,7 @@ export function useRovingList<TItem>({
                 }
             }
         },
-        [activeIndex, groupStarts, items, onSelect, total]
+        [activeIndex, groupStarts, items, onSelect, total, setActiveIndex]
     );
 
     return {
@@ -104,7 +110,8 @@ export function useRovingList<TItem>({
         isFirst: activeIndex === 0,
         isLast: total > 0 && activeIndex === total - 1,
         isGroupStart: groupStarts.includes(activeIndex),
-        setActiveIndex,
+        pickedByPointer,
+        pointAt,
         onKeyDown
     };
 }
