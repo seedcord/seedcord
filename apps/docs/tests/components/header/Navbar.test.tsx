@@ -1,3 +1,4 @@
+import { TooltipProvider } from '@seedcord/ui';
 import { fireEvent, render, screen, within } from '@testing-library/react';
 import { describe, expect, it, vi } from 'vitest';
 
@@ -15,10 +16,12 @@ function OpenState(): ReactElement {
 
 function renderNavbar(): void {
     render(
-        <CommandPaletteProvider>
-            <Navbar />
-            <OpenState />
-        </CommandPaletteProvider>
+        <TooltipProvider>
+            <CommandPaletteProvider>
+                <Navbar />
+                <OpenState />
+            </CommandPaletteProvider>
+        </TooltipProvider>
     );
 }
 

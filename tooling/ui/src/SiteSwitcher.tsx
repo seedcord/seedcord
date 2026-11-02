@@ -4,8 +4,10 @@ import { ArrowUpRight, Check } from 'lucide-react';
 import { useId } from 'react';
 
 import { CaretTrigger } from './CaretTrigger';
+import { HotkeyHint } from './HotkeyHint';
 import { cn } from './lib/cn';
 import { PlainLink } from './lib/navLink';
+import { SWITCH_SITE } from './lib/siteHotkeys';
 import { useRovingList } from './lib/useRovingList';
 import { Popover, PopoverContent, PopoverTrigger } from './Popover';
 import { SiteMark } from './SiteMark';
@@ -139,17 +141,19 @@ export function SiteSwitcher({ site, destinations, open, onOpenChange, linkAs }:
                 /
             </span>
             <Popover open={open} onOpenChange={onOpenChange}>
-                <PopoverTrigger asChild>
-                    <CaretTrigger
-                        label={site}
-                        open={open}
-                        variant="ghost"
-                        aria-haspopup="listbox"
-                        aria-controls={listId}
-                        aria-label="Switch site"
-                        className={cn('font-display text-lg')}
-                    />
-                </PopoverTrigger>
+                <HotkeyHint hotkey={SWITCH_SITE}>
+                    <PopoverTrigger asChild>
+                        <CaretTrigger
+                            label={site}
+                            open={open}
+                            variant="ghost"
+                            aria-haspopup="listbox"
+                            aria-controls={listId}
+                            aria-label="Switch site"
+                            className={cn('font-display text-lg')}
+                        />
+                    </PopoverTrigger>
+                </HotkeyHint>
                 <PopoverContent align="start" sideOffset={10} className={cn('w-56 p-1')}>
                     <SiteList id={listId} destinations={destinations} onClose={() => onOpenChange(false)} />
                 </PopoverContent>

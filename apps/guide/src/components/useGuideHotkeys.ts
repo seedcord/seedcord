@@ -4,6 +4,8 @@ import { clickCopyAnchor, siteHotkeys, useHotkeys } from '@seedcord/ui';
 import { useActiveAnchor } from 'fumadocs-core/toc';
 import { useRouter } from 'next/navigation';
 
+import { GUIDE_KEYS } from '#lib/guideKeys';
+
 import { SEARCH_LABEL } from './GuideSearch';
 import { useSectionCursor } from './useSectionCursor';
 
@@ -34,13 +36,13 @@ export function guideHotkeys(actions: GuideHotkeyActions, { tabs, activeHref, ne
     };
 
     return siteHotkeys(SEARCH_LABEL, actions, [
-        { key: 'ArrowLeft', description: 'Previous page', run: () => go(neighbours.previous?.href) },
-        { key: 'ArrowRight', description: 'Next page', run: () => go(neighbours.next?.href) },
-        { key: 'ArrowLeft', shift: true, description: 'Previous tab', run: () => go(tabs[tabAt - 1]?.href) },
-        { key: 'ArrowRight', shift: true, description: 'Next tab', run: () => go(tabs[tabAt + 1]?.href) },
-        { key: 'j', description: 'Next section', run: () => actions.stepSection(1) },
-        { key: 'k', description: 'Previous section', run: () => actions.stepSection(-1) },
-        { key: 'y', description: 'Copy a link to this section', run: actions.copySection }
+        { ...GUIDE_KEYS.previousPage, run: () => go(neighbours.previous?.href) },
+        { ...GUIDE_KEYS.nextPage, run: () => go(neighbours.next?.href) },
+        { ...GUIDE_KEYS.previousTab, run: () => go(tabs[tabAt - 1]?.href) },
+        { ...GUIDE_KEYS.nextTab, run: () => go(tabs[tabAt + 1]?.href) },
+        { ...GUIDE_KEYS.nextSection, run: () => actions.stepSection(1) },
+        { ...GUIDE_KEYS.previousSection, run: () => actions.stepSection(-1) },
+        { ...GUIDE_KEYS.copySection, run: actions.copySection }
     ]);
 }
 

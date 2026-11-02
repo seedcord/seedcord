@@ -4,12 +4,15 @@ import { useEffect, useEffectEvent } from 'react';
 
 import type { KeyName } from '#src/KeyCap';
 
-export interface Hotkey {
+export interface HotkeySpec {
     key: KeyName;
     mod?: boolean; // Cmd on a mac, Ctrl everywhere else
     // ignored for a key that types a character, since keyboard layouts put `?` and `/` on different keys
     shift?: boolean;
     description: string;
+}
+
+export interface Hotkey extends HotkeySpec {
     run: () => void;
 }
 

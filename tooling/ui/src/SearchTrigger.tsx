@@ -3,9 +3,11 @@
 import { Search } from 'lucide-react';
 
 import { Button } from './Button';
+import { ariaKeyshortcuts } from './HotkeyKeys';
 import { Icon } from './Icon';
 import { Kbd } from './Kbd';
 import { cn } from './lib/cn';
+import { searchKeys } from './lib/siteHotkeys';
 import { useIsMac } from './lib/useIsMac';
 
 import type { ReactElement } from 'react';
@@ -23,6 +25,7 @@ export function SearchTrigger({ label, onOpen }: SearchTriggerProps): ReactEleme
             variant="field"
             onClick={onOpen}
             aria-label={label}
+            aria-keyshortcuts={ariaKeyshortcuts(searchKeys(label), isMac)}
             className={cn('group hidden w-90 max-w-full justify-between gap-4 px-3 py-2 lg:flex')}
         >
             <span

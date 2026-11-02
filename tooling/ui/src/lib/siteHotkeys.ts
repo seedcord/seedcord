@@ -1,4 +1,4 @@
-import type { Hotkey } from './useHotkeys';
+import type { Hotkey, HotkeySpec } from './useHotkeys';
 
 export interface SiteHotkeyActions {
     toggleSearch: () => void;
@@ -7,16 +7,26 @@ export interface SiteHotkeyActions {
     showHotkeys: () => void;
 }
 
+export const searchKeys = (label: string): [toggle: HotkeySpec, open: HotkeySpec] => [
+    { key: 'k', mod: true, description: label },
+    { key: '/', description: label }
+];
+
+export const SWITCH_SITE: HotkeySpec = { key: 's', description: 'Switch site' };
+
+const SHOW_HOTKEYS: HotkeySpec = { key: '?', description: 'Show keyboard shortcuts' };
+
 export function siteHotkeys(
     searchLabel: string,
     actions: SiteHotkeyActions,
     pageRows: readonly Hotkey[] = []
 ): Hotkey[] {
+    const [toggleSearch, openSearch] = searchKeys(searchLabel);
     return [
-        { key: 'k', mod: true, description: searchLabel, run: actions.toggleSearch },
-        { key: '/', description: searchLabel, run: actions.openSearch },
-        { key: 's', description: 'Switch site', run: actions.openSites },
+        { ...toggleSearch, run: actions.toggleSearch },
+        { ...openSearch, run: actions.openSearch },
+        { ...SWITCH_SITE, run: actions.openSites },
         ...pageRows,
-        { key: '?', description: 'Show keyboard shortcuts', run: actions.showHotkeys }
+        { ...SHOW_HOTKEYS, run: actions.showHotkeys }
     ];
 }

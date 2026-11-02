@@ -4,6 +4,7 @@ import { useState } from 'react';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 
 import { SiteSwitcher } from '#src/SiteSwitcher';
+import { TooltipProvider } from '#src/Tooltip';
 
 import type { SiteDestination } from '#src/SiteSwitcher';
 import type { ReactElement } from 'react';
@@ -16,7 +17,11 @@ const DESTINATIONS: readonly SiteDestination[] = [
 
 function Switcher(): ReactElement {
     const [open, setOpen] = useState(false);
-    return <SiteSwitcher site="guide" destinations={DESTINATIONS} open={open} onOpenChange={setOpen} />;
+    return (
+        <TooltipProvider>
+            <SiteSwitcher site="guide" destinations={DESTINATIONS} open={open} onOpenChange={setOpen} />
+        </TooltipProvider>
+    );
 }
 
 afterEach(() => vi.unstubAllGlobals());
