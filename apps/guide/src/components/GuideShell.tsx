@@ -14,6 +14,7 @@ import { PageActions } from './PageActions';
 import { StarCard } from './StarCard';
 import { idOf, TableOfContents } from './TableOfContents';
 import { TocBar } from './TocBar';
+import { useScrollMemory } from './useScrollMemory';
 
 import type { GuideTab, SidebarsByTab } from '#lib/nav';
 import type { PageNeighbours } from '#lib/neighbours';
@@ -91,6 +92,7 @@ export function GuideShell({
 }: GuideShellProps): ReactElement {
     const current = usePathname();
     const pathname = override ?? current;
+    useScrollMemory(pathname);
     const [navOpen, setNavOpen] = useState(false);
     // AnchorProvider re-observes every heading whenever this array changes identity
     const anchors = useMemo(() => [...toc], [toc]);
