@@ -10,8 +10,9 @@ export {
     searchFileName,
     versionFromFile
 } from '#src/files';
-export type { GuideResult } from '#src/GuideResult';
+export { guideResult, type GuideResult } from '#src/GuideResult';
 export { GuideSearch, TooManySearches } from '#src/GuideSearch';
+export type { GuideAnswer, GuideService } from '#src/GuideService';
 export { parseQuestion, QUESTION_LENGTH } from '#src/question';
 export { guideSections, type GuideSection } from '#src/guideSections';
 export { findWordStart, GuideMatches } from '#src/GuideMatches';

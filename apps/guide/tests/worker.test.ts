@@ -2,8 +2,11 @@ import { existsSync, readFileSync } from 'node:fs';
 import { resolve } from 'node:path';
 
 import { embedding, GUIDE_SECTIONS_PATH, GUIDE_VECTORS_PATH } from '@seedcord/docs-search';
+import { GUIDE as guideSite } from '@seedcord/ui/sites';
 import { parse } from 'jsonc-parser';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
+
+import { GuideAnswers } from '#lib/GuideAnswers';
 
 // eslint-disable-next-line no-restricted-imports -- the app root has no alias
 import handler from '../worker';
@@ -65,7 +68,7 @@ function asking(path: string, accept: string): Request {
 
 describe('search indexing', () => {
     it('is off on every host except production', async () => {
-        const preview = await send(new Request('https://preview.seedcord.org/guide/'), serving(html()));
+        const preview = await send(new Request('https://next.seedcord.org/guide/'), serving(html()));
         const production = await get('/', serving(html()));
 
         expect(preview.headers.get('x-robots-tag')).toBe('noindex, nofollow');
@@ -370,6 +373,35 @@ describe('the ask endpoint', () => {
         expect(response.status).toBe(503);
         expect(response.headers.get('retry-after')).toBe(String(7 * 60 * 60));
         expect(response.headers.get('access-control-allow-origin')).toBe('*');
+    });
+
+    it('answers another worker with results it can link to', async () => {
+        const env = searching();
+
+        await expect(new GuideAnswers(env).ask(' how long is  a cooldown ')).resolves.toEqual({
+            hits: [
+                {
+                    path: '/checks/cooldown#the-duration',
+                    tab: 'Checks',
+                    page: 'Cooldowns',
+                    heading: 'The duration',
+                    url: guideSite.at('/checks/cooldown#the-duration'),
+                    by: 'meaning'
+                }
+            ]
+        });
+        await expect(new GuideAnswers(env).ask('k')).rejects.toThrow('2 to 200 characters');
+        expect(env.embedded).toHaveLength(1);
+    });
+
+    it('tells another worker when the daily allowance resets', async () => {
+        vi.useFakeTimers({ now: new Date('2026-11-01T17:00:00Z'), toFake: ['Date'] });
+        const usedUp = new Error('4006: you have used up your daily free allocation of 10,000 neurons');
+
+        const refused = await new GuideAnswers(searching({ aiError: usedUp })).ask('button');
+        vi.useRealTimers();
+
+        expect(refused).toEqual({ retryAfterSeconds: 7 * 60 * 60 });
     });
 
     it('refuses once the visitor runs out of searches', async () => {

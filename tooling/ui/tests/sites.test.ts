@@ -16,14 +16,14 @@ describe('the three sites', () => {
     });
 
     it('move home and the guide to NEXT_PUBLIC_SITE_ORIGIN, and the chat link stays on production', async () => {
-        vi.stubEnv('NEXT_PUBLIC_SITE_ORIGIN', 'https://preview.seedcord.org');
+        vi.stubEnv('NEXT_PUBLIC_SITE_ORIGIN', 'https://next.seedcord.org');
 
         const { HOME_URL, GUIDE_URL, DISCORD_URL, IS_PRODUCTION } = await import('#src/sites');
 
         expect(IS_PRODUCTION).toBe(false);
         expect([HOME_URL, GUIDE_URL, DISCORD_URL]).toEqual([
-            'https://preview.seedcord.org',
-            'https://preview.seedcord.org/guide',
+            'https://next.seedcord.org',
+            'https://next.seedcord.org/guide',
             'https://seedcord.org/chat/'
         ]);
     });
