@@ -48,9 +48,7 @@ export abstract class ComponentHandler<
     }
 
     /** The matched custom-ID prefix, such as `approve`, without encoded params. */
-    protected get route(): Defs[number]['prefix'] {
-        return this.dispatch.route;
-    }
+    declare protected readonly route: Defs[number]['prefix'];
 
     /**
      * The decoded params of the single route this handler is registered for.

@@ -32,9 +32,7 @@ export abstract class EventMiddleware<
      * The event that started this dispatch, one of the names in the generic. Read it on a catchall or multi-event
      * middleware, where `this.event` is `never`, to do work that doesn't depend on the payload shape.
      */
-    protected get route(): EventName {
-        return this.dispatch.route as EventName;
-    }
+    declare protected readonly route: EventName;
 
     /**
      * Runs once the event finishes, newest middleware first. Every middleware whose `execute()`

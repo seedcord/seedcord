@@ -47,9 +47,7 @@ export abstract class EventHandler<in out Names extends ValidNonInteractionKeys>
     declare protected readonly event: SingleEventPayload<Names>;
 
     /** The event that started this dispatch, one of the names in the generic. */
-    protected get route(): Names {
-        return this.dispatch.route as Names;
-    }
+    declare protected readonly route: Names;
 
     /**
      * Run the case for the current event. Use this only when the handler is registered for several

@@ -116,9 +116,7 @@ export abstract class AutocompleteHandler<
     }
 
     /** The selected command's path, such as `search/docs`, without the interaction-kind prefix. */
-    protected get route(): Route {
-        return this.dispatch.route as Route;
-    }
+    declare protected readonly route: Route;
 
     /**
      * The already-entered options on this command, restricted to the kinds Discord resolves during autocomplete

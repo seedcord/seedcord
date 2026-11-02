@@ -73,9 +73,7 @@ export abstract class UserContextMenuHandler<
     }
 
     /** The selected context-menu command's name, without the interaction-kind prefix. */
-    protected get route(): Names {
-        return this.dispatch.route as Names;
-    }
+    declare protected readonly route: Names;
 
     /**
      * Run the case for the selected command. Use this only when the handler is registered for several
@@ -140,9 +138,7 @@ export abstract class MessageContextMenuHandler<
     }
 
     /** The selected context-menu command's name, without the interaction-kind prefix. */
-    protected get route(): Names {
-        return this.dispatch.route as Names;
-    }
+    declare protected readonly route: Names;
 
     /**
      * Run the case for the selected command. Use this only when the handler is registered for several

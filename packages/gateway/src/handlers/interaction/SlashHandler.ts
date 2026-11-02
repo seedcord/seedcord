@@ -42,9 +42,7 @@ export abstract class SlashHandler<
     declare readonly [SlashRouteBrand]?: Route;
 
     /** The selected command's path, such as `search/docs`. */
-    protected get route(): Route {
-        return this.dispatch.route as Route;
-    }
+    declare protected readonly route: Route;
 
     /**
      * The typed options for this command's route. Only the getters for kinds this command declares appear.

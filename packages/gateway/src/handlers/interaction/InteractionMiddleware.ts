@@ -44,9 +44,7 @@ export abstract class InteractionMiddleware<
      * handler matched, like on a command you deleted that Discord still shows. It's empty if seedcord didn't
      * make the interaction's custom ID.
      */
-    protected get route(): MiddlewareRoute<Kind> {
-        return this.dispatch.route as MiddlewareRoute<Kind>;
-    }
+    declare protected readonly route: MiddlewareRoute<Kind>;
 
     /**
      * Runs once the handler settles, newest middleware first. A refusal or a throw still reaches it,
