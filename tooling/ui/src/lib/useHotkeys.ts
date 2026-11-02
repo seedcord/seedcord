@@ -2,8 +2,10 @@
 
 import { useEffect, useEffectEvent } from 'react';
 
+import type { KeyName } from '#src/KeyCap';
+
 export interface Hotkey {
-    key: string;
+    key: KeyName;
     mod?: boolean; // Cmd on a mac, Ctrl everywhere else
     description: string;
     run: () => void;

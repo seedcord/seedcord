@@ -3,6 +3,7 @@
 import {
     Button,
     GithubIcon,
+    HotkeysDialog,
     Icon,
     MobileNavButton,
     Navbar,
@@ -50,32 +51,39 @@ export interface GuideNavbarProps {
 export function GuideNavbar({ tabs, activeHref, navOpen, onNavOpen }: GuideNavbarProps): ReactElement {
     const [searchOpen, setSearchOpen] = useState(false);
     const [sitesOpen, setSitesOpen] = useState(false);
-    useGuideHotkeys({ toggleSearch: () => setSearchOpen((open) => !open) });
+    const [hotkeysOpen, setHotkeysOpen] = useState(false);
+    const hotkeys = useGuideHotkeys({
+        toggleSearch: () => setSearchOpen((open) => !open),
+        showHotkeys: () => setHotkeysOpen(true)
+    });
 
     return (
-        <Navbar
-            mark={
-                <SiteSwitcher
-                    site="guide"
-                    destinations={DESTINATIONS}
-                    open={sitesOpen}
-                    onOpenChange={setSitesOpen}
-                    linkAs={Link}
-                />
-            }
-            center={<GuideSearch open={searchOpen} onOpenChange={setSearchOpen} />}
-            actions={
-                <>
-                    <SearchIconButton label={SEARCH_LABEL} onOpen={() => setSearchOpen(true)} />
-                    <span className={cn('hidden lg:flex')}>
-                        <GithubLink />
-                    </span>
-                    <ThemeToggle />
-                    <MobileNavButton open={navOpen} onOpen={onNavOpen} className={cn('lg:hidden')} />
-                </>
-            }
-            tabsClassName={cn('hidden lg:flex')}
-            tabs={<NavTabs items={tabs} activeHref={activeHref} linkAs={Link} />}
-        />
+        <>
+            <HotkeysDialog open={hotkeysOpen} onOpenChange={setHotkeysOpen} hotkeys={hotkeys} />
+            <Navbar
+                mark={
+                    <SiteSwitcher
+                        site="guide"
+                        destinations={DESTINATIONS}
+                        open={sitesOpen}
+                        onOpenChange={setSitesOpen}
+                        linkAs={Link}
+                    />
+                }
+                center={<GuideSearch open={searchOpen} onOpenChange={setSearchOpen} />}
+                actions={
+                    <>
+                        <SearchIconButton label={SEARCH_LABEL} onOpen={() => setSearchOpen(true)} />
+                        <span className={cn('hidden lg:flex')}>
+                            <GithubLink />
+                        </span>
+                        <ThemeToggle />
+                        <MobileNavButton open={navOpen} onOpen={onNavOpen} className={cn('lg:hidden')} />
+                    </>
+                }
+                tabsClassName={cn('hidden lg:flex')}
+                tabs={<NavTabs items={tabs} activeHref={activeHref} linkAs={Link} />}
+            />
+        </>
     );
 }
