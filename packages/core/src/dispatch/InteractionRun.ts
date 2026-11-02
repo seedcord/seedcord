@@ -10,13 +10,11 @@ import { resultFor, runAfter } from './runAfter';
 import type { GateContextBase } from '#gates/Gate';
 import type { CoreBase } from '#interfaces/CoreBase';
 import type { MiddlewareKind } from '#src/metadataKeys';
-import type { ApiErrorClass, FaultTarget } from '#src/notices/FaultBoundary';
-import type { FaultDetails } from '#src/notices/reportFault';
+import type { ApiErrorClass, FaultDetails, FaultSender } from '#src/notices/FaultBoundary';
 import type { DispatchOutcome } from '#subscribers/types/Subscriptions';
 import type { InteractionDispatch } from './DispatchContext';
 import type { DispatchResult } from './dispatchResult';
 import type { Logger } from '@seedcord/logger';
-import type { ReplyResponse } from '@seedcord/types';
 import type { Promisable } from 'type-fest';
 
 interface RunnableHandler {
@@ -27,9 +25,7 @@ interface RunnableMiddleware extends RunnableHandler {
     after?(result: DispatchResult): Promisable<void>;
 }
 
-interface FaultSender {
-    send(response: ReplyResponse, options: { ephemeral: boolean }): Promise<unknown>;
-}
+type Answer = (caught: unknown) => Promise<void>;
 
 type Built<Instance> = new (...args: never[]) => Instance;
 
@@ -65,45 +61,57 @@ export class InteractionRun {
     private readonly boundary: FaultBoundary;
 
     constructor(private readonly config: InteractionRunConfig) {
-        const { core, apiError, interactionId } = config;
+        const { core, apiError, interactionId, dispatch } = config;
         this.queuedMs = queuedMsFor(interactionId);
-        this.boundary = new FaultBoundary(core, core.config.errors?.ignoreApiCodes, apiError);
+        this.boundary = new FaultBoundary(core, core.config.errors?.ignoreApiCodes, apiError, dispatch, () =>
+            config.faultDetails()
+        );
     }
 
     // a null return means the run already answered a throw or a refusal
     public async prepare(): Promise<(() => Promise<void>) | null> {
-        let handler: RunnableHandler;
-        try {
-            handler = this.buildHandler();
-        } catch (caught) {
-            await this.answer(caught, undefined);
-            return null;
-        }
+        const { target } = this.config;
+        return 'clearChoices' in target ? this.prepareAutocomplete(target) : this.prepareRepliable(target);
+    }
+
+    private async prepareAutocomplete(target: AutocompleteTarget): Promise<(() => Promise<void>) | null> {
+        const answer: Answer = (caught) => this.boundary.answerWithEmptyChoices(caught, () => target.clearChoices());
+        const handler = await this.builtHandler(answer);
+        return handler && (() => this.start(handler, answer));
+    }
+
+    private async prepareRepliable(target: RepliableTarget): Promise<(() => Promise<void>) | null> {
+        const handler = await this.builtHandler((caught) => this.boundary.answerWithReply(caught, target.newSender()));
+        if (!handler) return null;
 
         // justified: instanceof widens the base's sender generic to any
-        const sender = handler instanceof RepliableHandler ? (handler.sender as FaultSender) : undefined;
-        const refusal = await this.refusal(sender);
+        const sender = handler instanceof RepliableHandler ? (handler.sender as FaultSender) : target.newSender();
+        const answer: Answer = (caught) => this.boundary.answerWithReply(caught, sender);
+        const refusal = await this.refusal(target, sender);
         if (refusal) {
-            await this.answer(refusal.caught, sender);
+            await this.answered(answer, refusal.caught);
             await runAfter(this.ran, resultFor(refusal.caught), this.config.logger);
             return null;
         }
-        return () => this.start(handler, sender);
+        return () => this.start(handler, answer);
     }
 
-    private buildHandler(): RunnableHandler {
+    private async builtHandler(answer: Answer): Promise<RunnableHandler | null> {
         const { HandlerCtor, event, core, dispatch, logger } = this.config;
         logger.trace(`Processing ${paint.sky.bold(dispatch.routeId)} with ${paint.mute(HandlerCtor.name)}`);
-        // justified: each transport's route maps pair a kind with the class that takes its event
-        return new HandlerCtor(event as never, core as never, dispatch as never);
+        try {
+            // justified: each transport's route maps pair a kind with the class that takes its event
+            return new HandlerCtor(event as never, core as never, dispatch as never);
+        } catch (caught) {
+            await this.answered(answer, caught);
+            return null;
+        }
     }
 
-    private async refusal(sender: FaultSender | undefined): Promise<{ caught: unknown } | null> {
-        const { target, HandlerCtor } = this.config;
-        if ('clearChoices' in target) return null;
+    private async refusal(target: RepliableTarget, sender: FaultSender): Promise<{ caught: unknown } | null> {
         try {
-            await this.runMiddlewares(sender ?? target.newSender());
-            await runInteractionGates(HandlerCtor, target.gateContext());
+            await this.runMiddlewares(sender);
+            await runInteractionGates(this.config.HandlerCtor, target.gateContext());
             return null;
         } catch (caught) {
             return { caught };
@@ -122,34 +130,22 @@ export class InteractionRun {
         }
     }
 
-    private async start(handler: RunnableHandler, sender: FaultSender | undefined): Promise<void> {
+    private async start(handler: RunnableHandler, answer: Answer): Promise<void> {
         let result: DispatchResult = { outcome: 'handled' };
         try {
             await handler.execute();
             this.report('handled');
         } catch (caught) {
             result = resultFor(caught);
-            await this.answer(caught, sender);
+            await this.answered(answer, caught);
         } finally {
             await runAfter(this.ran, result, this.config.logger);
         }
     }
 
-    private async answer(caught: unknown, sender: FaultSender | undefined): Promise<void> {
-        const { dispatch } = this.config;
-        await this.boundary.answer(
-            caught,
-            dispatch.routeId,
-            () => this.config.faultDetails(),
-            this.faultTarget(sender)
-        );
+    private async answered(answer: Answer, caught: unknown): Promise<void> {
+        await answer(caught);
         this.report(outcomeFor(caught));
-    }
-
-    private faultTarget(sender: FaultSender | undefined): FaultTarget {
-        const { target } = this.config;
-        if ('clearChoices' in target) return target;
-        return { reply: (response, options) => (sender ?? target.newSender()).send(response, options) };
     }
 
     private report(outcome: DispatchOutcome): void {

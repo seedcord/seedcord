@@ -1,7 +1,6 @@
 import { interactionFaultSource } from '@seedcord/core/internal';
 
 import type { ValidInteractionTypes } from '#src/handlers/interactionTypes';
-import type { DispatchContext } from '@seedcord/core';
 import type { FaultDetails, InteractionDispatch } from '@seedcord/core/internal';
 import type { Nullable } from '@seedcord/types';
 import type { Guild, User } from 'discord.js';
@@ -20,7 +19,6 @@ export function interactionFaultReport(
     dispatch: InteractionDispatch
 ): FaultDetails {
     return {
-        dispatch,
         origin: dispatch.routeId,
         source: interactionFaultSource(dispatch, {
             customId: 'customId' in interaction ? interaction.customId : null,
@@ -35,9 +33,8 @@ export function interactionFaultReport(
     };
 }
 
-export function eventFaultReport(event: EventOrigin, dispatch: DispatchContext): FaultDetails {
+export function eventFaultReport(event: EventOrigin): FaultDetails {
     return {
-        dispatch,
         origin: `event:${event.name}:${event.handler}`,
         source: {
             kind: 'event',

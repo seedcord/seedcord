@@ -35,7 +35,7 @@ describe('fault reports', () => {
             guild: null,
             user: null
         };
-        const report = eventFaultReport(event, new DispatchContext('event', 'messageCreate'));
+        const report = eventFaultReport(event);
 
         expect(report).toMatchObject({
             origin: 'event:messageCreate:Starboard',

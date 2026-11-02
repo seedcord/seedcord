@@ -1,21 +1,39 @@
 import { paint } from '@seedcord/errors';
+import { Logger } from '@seedcord/logger';
 import { asError } from '@seedcord/utils/internal';
 import { RESTJSONErrorCodes } from 'discord-api-types/v10';
 
+import { Fault } from '#stops/Fault';
 import { Notice } from '#stops/Notice';
 import { Silence } from '#stops/Silence';
+import { PublishDefault } from '#subscribers/publishDefault';
 
-import { faultResponse } from './faultResponse';
-import { faultLogger, reportFault } from './reportFault';
+import { logUnknownFault } from './logUnknownFault';
 
 import type { CoreBase } from '#interfaces/CoreBase';
-import type { FaultDetails } from './reportFault';
-import type { ReplyResponse } from '@seedcord/types';
+import type { DispatchContext } from '#src/dispatch/DispatchContext';
+import type { FaultSource, SubscriptionData } from '#subscribers/types/Subscriptions';
+import type { RenderContext, ReplyResponse } from '@seedcord/types';
 
 // each transport passes the DiscordAPIError that its discord client throws
 export type ApiErrorClass = abstract new (...args: never[]) => { readonly code: number | string };
 
-type ReportOf = () => FaultDetails;
+export interface FaultDetails extends Pick<SubscriptionData<'unknownException'>, 'guild' | 'user'> {
+    readonly origin: string;
+    readonly source: FaultSource | null;
+    readonly metadata: unknown;
+}
+
+export interface FaultSender {
+    send(response: ReplyResponse, options: { ephemeral: boolean }): Promise<unknown>;
+}
+
+// lazy, env binds after this module loads
+let cachedLogger: Logger | undefined;
+function logger(): Logger {
+    cachedLogger ??= new Logger('Faults', { channel: 'errors' });
+    return cachedLogger;
+}
 
 const HARMLESS_API_CODES: ReadonlySet<number | string> = new Set([
     RESTJSONErrorCodes.UnknownInteraction, // interaction expired
@@ -23,18 +41,14 @@ const HARMLESS_API_CODES: ReadonlySet<number | string> = new Set([
     RESTJSONErrorCodes.UnknownMessage // message was lost
 ]);
 
-// discord doesn't accept a message on an autocomplete. empty choices clear the client's loading spinner.
-export type FaultTarget =
-    | { reply(response: ReplyResponse, options: { ephemeral: boolean }): Promise<unknown> }
-    | { clearChoices(): Promise<unknown> };
+interface ReportedFault {
+    readonly error: Error;
+    readonly uuid: RenderContext['uuid'];
+}
 
 interface FaultReply {
     readonly response: ReplyResponse;
     readonly ephemeral: boolean;
-}
-
-interface ReportedFault {
-    reply(): FaultReply;
 }
 
 export class FaultBoundary {
@@ -43,80 +57,100 @@ export class FaultBoundary {
     constructor(
         private readonly core: CoreBase,
         ignoredCodes: readonly (number | string)[] | undefined,
-        private readonly apiError: ApiErrorClass
+        private readonly apiError: ApiErrorClass,
+        private readonly dispatch: DispatchContext,
+        private readonly detailsOf: () => FaultDetails
     ) {
         this.ignoredCodes = new Set(ignoredCodes);
     }
 
     // null when the fault is a Silence or carries an ignored api code
-    public report(caught: unknown, reportOf: ReportOf): ReportedFault | null {
+    public report(caught: unknown): ReportedFault | null {
         const { config } = this.core;
         if (caught instanceof Silence) {
             if (caught.reason !== undefined && (config.errors?.logSilences ?? true)) {
-                faultLogger().debug(`Silence: ${caught.reason}`);
+                logger().debug(`Silence: ${caught.reason}`);
             }
             return null;
         }
 
         const error = asError(caught);
         if (error instanceof this.apiError && this.ignoredCodes.has(error.code)) {
-            faultLogger().debug(`swallowed api code ${paint.amber(String(error.code))}`);
+            logger().debug(`swallowed api code ${paint.amber(String(error.code))}`);
             return null;
         }
 
-        const report = { uuid: crypto.randomUUID(), ...reportOf() };
-        reportFault(this.core.bus, config.errors, error, report);
-        return {
-            reply: () => ({
-                response: faultResponse(error, report.uuid, report.dispatch, config),
-                ephemeral: error instanceof Notice ? error.ephemeral : true
-            })
-        };
+        const uuid = crypto.randomUUID();
+        this.publish(error, uuid);
+        return { error, uuid };
     }
 
-    public async answer(caught: unknown, routeId: string, reportOf: ReportOf, target: FaultTarget): Promise<void> {
-        // discord expects a response to every autocomplete, whatever the fault was
-        if ('clearChoices' in target) {
-            this.report(caught, reportOf);
-            await this.sendGuarded(routeId, () => target.clearChoices());
-            return;
-        }
-
-        const fault = this.report(caught, reportOf);
-        if (!fault) return;
-
-        const reply = this.rendered(fault, routeId, reportOf);
-        if (!reply) return;
-        await this.sendGuarded(routeId, () => target.reply(reply.response, { ephemeral: reply.ephemeral }));
+    public async answerWithReply(caught: unknown, sender: FaultSender): Promise<void> {
+        const fault = this.report(caught);
+        const reply = fault && this.rendered(fault);
+        if (reply) await this.sendGuarded(() => sender.send(reply.response, { ephemeral: reply.ephemeral }));
     }
 
-    private rendered(fault: ReportedFault, routeId: string, reportOf: ReportOf): FaultReply | null {
+    // discord expects a response to every autocomplete, whatever the fault was
+    public async answerWithEmptyChoices(caught: unknown, clearChoices: () => Promise<unknown>): Promise<void> {
+        this.report(caught);
+        await this.sendGuarded(clearChoices);
+    }
+
+    private publish(error: Error, uuid: RenderContext['uuid']): void {
+        if (error instanceof Notice && !error.report) return;
+        const { bus, config } = this.core;
+        const { origin, source, guild, user, metadata } = this.detailsOf();
+        const from = { uuid, dispatchId: this.dispatch.id, origin };
+        if (error instanceof Notice) {
+            logger().error(`${error.name}: ${paint.mute(uuid)}`, error);
+            if (source) {
+                bus[PublishDefault]('handledException', { denial: error, ...from, source });
+                return;
+            }
+        } else logUnknownFault(logger(), paint.mute(uuid), error, config.errors);
+        bus[PublishDefault]('unknownException', { ...from, error, guild, user, metadata });
+    }
+
+    private rendered(fault: ReportedFault): FaultReply | null {
         try {
-            return fault.reply();
+            return this.render(fault);
         } catch (renderError) {
-            return this.fallbackReply(renderError, routeId, reportOf);
+            return this.fallbackReply(renderError);
         }
     }
 
-    private fallbackReply(renderError: unknown, routeId: string, reportOf: ReportOf): FaultReply | null {
+    private fallbackReply(renderError: unknown): FaultReply | null {
         try {
-            return this.report(renderError, reportOf)?.reply() ?? null;
+            const fallback = this.report(renderError);
+            return fallback && this.render(fallback);
         } catch (error) {
-            faultLogger().error(`could not render a fault card for route ${paint.sky.bold(routeId)}`, error);
+            logger().error(`could not render a fault card for route ${paint.sky.bold(this.dispatch.routeId)}`, error);
             return null;
         }
+    }
+
+    private render({ error, uuid }: ReportedFault): FaultReply {
+        const { dispatch } = this;
+        const { errors, notifications } = this.core.config;
+        const developerUsername = notifications?.developerUsername;
+        const ctx: RenderContext =
+            developerUsername === undefined ? { uuid, dispatch } : { uuid, developerUsername, dispatch };
+        if (error instanceof Notice) return { response: error.render(ctx), ephemeral: error.ephemeral };
+        const Override = errors?.defaultError;
+        return { response: (Override ? new Override(uuid) : new Fault()).render(ctx), ephemeral: true };
     }
 
     // only this send swallows the harmless codes. a handler's own write still reports them
-    private async sendGuarded(routeId: string, send: () => Promise<unknown>): Promise<void> {
+    private async sendGuarded(send: () => Promise<unknown>): Promise<void> {
         try {
             await send();
         } catch (error) {
             if (error instanceof this.apiError && HARMLESS_API_CODES.has(error.code)) {
-                faultLogger().debug(`fault reply hit harmless code ${paint.amber(String(error.code))}`);
+                logger().debug(`fault reply hit harmless code ${paint.amber(String(error.code))}`);
                 return;
             }
-            faultLogger().error(`could not send a fault reply for route ${paint.sky.bold(routeId)}`, error);
+            logger().error(`could not send a fault reply for route ${paint.sky.bold(this.dispatch.routeId)}`, error);
         }
     }
 }

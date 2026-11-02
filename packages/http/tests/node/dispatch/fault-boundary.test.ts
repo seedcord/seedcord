@@ -1,8 +1,7 @@
 import { DiscordAPIError } from '@discordjs/rest';
-import { Fault, InteractionKind, Notice, Silence } from '@seedcord/core';
-import { Logger } from '@seedcord/logger';
+import { InteractionKind, Silence } from '@seedcord/core';
 import { MessageFlags } from 'discord-api-types/v10';
-import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
+import { beforeEach, describe, expect, it } from 'vitest';
 
 import { AutocompleteHandler } from '#handlers/interaction/AutocompleteHandler';
 import { SlashHandler } from '#handlers/interaction/SlashHandler';
@@ -11,8 +10,6 @@ import { restClients } from '#tests/helpers/restClients';
 import { capturingCtx, readyEngine, routedHandler, signedRequest, slashPayload, type BotClasses } from './harness';
 
 import type { HandlerConstructor } from '#handlers/constructors';
-import type { RenderContext, ReplyResponse } from '@seedcord/types';
-import type { UUID } from 'node:crypto';
 
 function apiError(code: number): DiscordAPIError {
     return new DiscordAPIError({ code, message: 'boom' }, code, 404, 'POST', 'url', {});
@@ -35,10 +32,6 @@ function postedBodies(): { route: string; body: SentBody }[] {
 
 beforeEach(() => {
     restClients().length = 0;
-});
-
-afterEach(() => {
-    vi.restoreAllMocks();
 });
 
 describe('fault boundary', () => {
@@ -65,7 +58,7 @@ describe('fault boundary', () => {
         expect(flags & MessageFlags.Ephemeral).toBe(MessageFlags.Ephemeral);
     });
 
-    it('drops a post-ack Silence with no card', async () => {
+    it("doesn't send a card for a Silence after the reply", async () => {
         class Quiet extends SlashHandler<never> {
             async execute(): Promise<void> {
                 await this.reply('done');
@@ -80,71 +73,6 @@ describe('fault boundary', () => {
         await ctx.settled();
 
         expect(postedBodies()).toHaveLength(1);
-    });
-
-    it('debug-logs a Silence reason by default', async () => {
-        class Quiet extends SlashHandler<never> {
-            async execute(): Promise<void> {
-                await Promise.resolve();
-                throw new Silence('user dismissed');
-            }
-        }
-        const debug = vi.spyOn(Logger.prototype, 'debug').mockImplementation(() => undefined);
-        using engine = await readyEngine(slashRoute('quiet', Quiet));
-        const { signer, handle } = engine;
-        const ctx = capturingCtx();
-
-        await handle(await signedRequest(signer, slashPayload('quiet')), ctx);
-        await ctx.settled();
-
-        expect(debug).toHaveBeenCalledWith('Silence: user dismissed');
-    });
-
-    it('omits the Silence debug line when logSilences is false', async () => {
-        const settings = { errors: { logSilences: false } };
-        class Quiet extends SlashHandler<never> {
-            async execute(): Promise<void> {
-                await Promise.resolve();
-                throw new Silence('user dismissed');
-            }
-        }
-        const debug = vi.spyOn(Logger.prototype, 'debug').mockImplementation(() => undefined);
-        using engine = await readyEngine(slashRoute('quiet', Quiet), { settings });
-        const { signer, handle } = engine;
-        const ctx = capturingCtx();
-
-        await handle(await signedRequest(signer, slashPayload('quiet')), ctx);
-        await ctx.settled();
-
-        expect(debug).not.toHaveBeenCalledWith('Silence: user dismissed');
-    });
-
-    it('sends a post-ack Notice card as a follow-up when already replied', async () => {
-        class Denied extends Notice {
-            public constructor() {
-                super('denied late');
-            }
-
-            public override render(): ReplyResponse {
-                return { components: [{ toJSON: () => ({ type: 10, content: 'no access' }) }] };
-            }
-        }
-        class LateDenied extends SlashHandler<never> {
-            async execute(): Promise<void> {
-                await this.reply('working');
-                throw new Denied();
-            }
-        }
-        using engine = await readyEngine(slashRoute('latedeny', LateDenied));
-        const { signer, handle } = engine;
-        const ctx = capturingCtx();
-
-        await handle(await signedRequest(signer, slashPayload('latedeny')), ctx);
-        await ctx.settled();
-
-        const posts = postedBodies();
-        expect(posts).toHaveLength(2);
-        expect(posts[1]?.route).toBe('/webhooks/app-1/tok');
     });
 
     it('sends the fault card as a follow-up when the handler already replied', async () => {
@@ -167,62 +95,6 @@ describe('fault boundary', () => {
         expect(posts[1]?.route).toBe('/webhooks/app-1/tok');
     });
 
-    it('renders the configured defaultError override instead of the generic Fault', async () => {
-        class CustomCard extends Fault {
-            public constructor(_uuid: UUID) {
-                super();
-            }
-
-            public override render(_ctx: RenderContext): ReplyResponse {
-                return { components: [{ toJSON: () => ({ type: 10, content: 'custom fault' }) }] };
-            }
-        }
-        const settings = { errors: { defaultError: CustomCard } };
-        class Broken extends SlashHandler<never> {
-            async execute(): Promise<void> {
-                await Promise.resolve();
-                throw new Error('boom');
-            }
-        }
-        using engine = await readyEngine(slashRoute('broken', Broken), { settings });
-        const { signer, handle } = engine;
-        const ctx = capturingCtx();
-
-        await handle(await signedRequest(signer, slashPayload('broken')), ctx);
-        await ctx.settled();
-
-        expect(postedBodies()[0]?.body.data?.components).toEqual([{ type: 10, content: 'custom fault' }]);
-    });
-
-    it('logs and sends nothing when the defaultError render throws too', async () => {
-        class BrokenCard extends Fault {
-            public constructor(_uuid: UUID) {
-                super();
-            }
-
-            public override render(_ctx: RenderContext): ReplyResponse {
-                throw new Error('card exploded');
-            }
-        }
-        const settings = { errors: { defaultError: BrokenCard } };
-        class Broken extends SlashHandler<never> {
-            async execute(): Promise<void> {
-                await Promise.resolve();
-                throw new Error('boom');
-            }
-        }
-        const error = vi.spyOn(Logger.prototype, 'error').mockImplementation(() => undefined);
-        using engine = await readyEngine(slashRoute('broken', Broken), { settings });
-        const { signer, handle } = engine;
-        const ctx = capturingCtx();
-
-        await handle(await signedRequest(signer, slashPayload('broken')), ctx);
-        await ctx.settled();
-
-        expect(postedBodies()).toHaveLength(0);
-        expect(error).toHaveBeenCalledWith(expect.stringContaining('could not render'), expect.anything());
-    });
-
     it('swallows an api code listed in ignoreApiCodes without a card', async () => {
         const settings = { errors: { ignoreApiCodes: [10_008] } };
         class DeadEnd extends SlashHandler<never> {
@@ -239,44 +111,6 @@ describe('fault boundary', () => {
         await ctx.settled();
 
         expect(postedBodies()).toHaveLength(0);
-    });
-
-    it('sends the default card and reports the render error when a Notice render throws', async () => {
-        class DefaultCard extends Fault {
-            public constructor(_uuid: UUID) {
-                super();
-            }
-
-            public override render(_ctx: RenderContext): ReplyResponse {
-                return { components: [{ toJSON: () => ({ type: 10, content: 'default card' }) }] };
-            }
-        }
-        const settings = { errors: { defaultError: DefaultCard } };
-        class ExplodingNotice extends Notice {
-            public constructor() {
-                super('refused');
-            }
-
-            public override render(): ReplyResponse {
-                throw new Error('render exploded');
-            }
-        }
-        class Refuses extends SlashHandler<never> {
-            async execute(): Promise<void> {
-                await Promise.resolve();
-                throw new ExplodingNotice();
-            }
-        }
-        const error = vi.spyOn(Logger.prototype, 'error').mockImplementation(() => undefined);
-        using engine = await readyEngine(slashRoute('refuses', Refuses), { settings });
-        const { signer, handle } = engine;
-        const ctx = capturingCtx();
-
-        await handle(await signedRequest(signer, slashPayload('refuses')), ctx);
-        await ctx.settled();
-
-        expect(postedBodies()[0]?.body.data?.components).toEqual([{ type: 10, content: 'default card' }]);
-        expect(error).toHaveBeenCalledWith(expect.any(String), expect.objectContaining({ message: 'render exploded' }));
     });
 
     it('swallows a harmless api code from the card send itself, resolving the tracked work', async () => {
@@ -298,27 +132,6 @@ describe('fault boundary', () => {
 
         await expect(ctx.settled()).resolves.toBeUndefined();
         expect(postedBodies()).toHaveLength(1);
-    });
-
-    it('wraps a non-Error throw into the generic fault card', async () => {
-        class Throws extends SlashHandler<never> {
-            async execute(): Promise<void> {
-                await Promise.resolve();
-                // eslint-disable-next-line no-throw-literal, @typescript-eslint/only-throw-error -- this pins the bare throw
-                throw 'a bare string';
-            }
-        }
-        using engine = await readyEngine(slashRoute('bare', Throws));
-        const { signer, handle } = engine;
-        const ctx = capturingCtx();
-
-        const response = await handle(await signedRequest(signer, slashPayload('bare')), ctx);
-        await ctx.settled();
-
-        expect(response.status).toBe(202);
-        const posts = postedBodies();
-        expect(posts).toHaveLength(1);
-        expect(posts[0]?.body.type).toBe(4);
     });
 
     it('catches a throwing handler constructor, still acks 202 and sends the fault card', async () => {

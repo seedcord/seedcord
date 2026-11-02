@@ -16,9 +16,9 @@ interface EventFault {
 // a generic event has no reply target
 export function handleEventFault(caught: unknown, fault: EventFault, core: Core): void {
     const { handlerName, args, dispatch } = fault;
-    const boundary = new FaultBoundary(core, core.config.errors?.ignoreEventApiCodes, DiscordAPIError);
-    boundary.report(caught, () => {
+    const boundary = new FaultBoundary(core, core.config.errors?.ignoreEventApiCodes, DiscordAPIError, dispatch, () => {
         const { channelId, guild, user } = deriveEventActor(args);
-        return eventFaultReport({ name: dispatch.route, handler: handlerName, args, channelId, guild, user }, dispatch);
+        return eventFaultReport({ name: dispatch.route, handler: handlerName, args, channelId, guild, user });
     });
+    boundary.report(caught);
 }

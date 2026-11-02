@@ -14,8 +14,7 @@ export type { InteractionMiddlewareMetadata } from '#decorators/middleware';
 export { interactionMiddleware, MiddlewareRegistry } from '#src/dispatch/MiddlewareRegistry';
 export type { MiddlewareRegistration, MiddlewareRegistrationOf } from '#src/dispatch/MiddlewareRegistry';
 export { bindBotColor } from '#components/botColorHolder';
-export { FaultBoundary, type FaultTarget } from '#src/notices/FaultBoundary';
-export type { FaultDetails } from '#src/notices/reportFault';
+export { FaultBoundary, type FaultDetails } from '#src/notices/FaultBoundary';
 
 export { FixedScope } from '#src/plugin/Plugin';
 export type { PluginArgs, PluginCtor } from '#src/plugin/Plugin';

@@ -8,7 +8,6 @@ import type { FaultDetails, InteractionDispatch } from '@seedcord/core/internal'
 export function interactionFaultReport(payload: ValidInteractionTypes, dispatch: InteractionDispatch): FaultDetails {
     const { id, username } = interactionUser(payload);
     return {
-        dispatch,
         origin: dispatch.routeId,
         source: interactionFaultSource(dispatch, {
             customId: 'custom_id' in payload.data ? payload.data.custom_id : null,
