@@ -1,10 +1,9 @@
 import { CustomId, InteractionKind } from '@seedcord/core';
-import { storeInteractionRoute } from '@seedcord/core/internal';
+import { RouteRegistry, storeInteractionRoute } from '@seedcord/core/internal';
 import { describe, expect, it } from 'vitest';
 
 import { UnhandledRepliable } from '#handlers/defaults/UnhandledRepliable';
 import { resolve } from '#src/dispatch/resolve';
-import { RouteRegistry } from '#src/dispatch/RouteRegistry';
 
 import { FROM } from './harness';
 
@@ -21,7 +20,7 @@ function handlerNamed(name: string): HandlerConstructor {
 }
 
 function mapsWith(...registrations: Registration[]): RouteMaps {
-    const registry = new RouteRegistry();
+    const registry = new RouteRegistry<HandlerConstructor>();
     for (const [kind, key, className] of registrations) {
         const ctor = handlerNamed(className ?? `${key}:${kind}`);
         storeInteractionRoute(kind, key, ctor);

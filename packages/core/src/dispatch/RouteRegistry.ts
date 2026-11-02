@@ -1,35 +1,56 @@
-import { interactionRoutesOf, routeIdOf } from '@seedcord/core/internal';
 import { SeedcordErrorCode, paint } from '@seedcord/errors';
 import { SeedcordTypeError } from '@seedcord/errors/internal';
 
-import { emptyRouteMaps } from './resolve';
+import { interactionRoutesOf } from '#decorators/interactionRoutes';
+import { InteractionKind } from '#src/metadataKeys';
 
-import type { HandlerConstructor } from '#handlers/constructors';
-import type { RouteMaps } from './resolve';
-import type { InteractionKind } from '@seedcord/core';
+import { routeIdOf } from './routeIdOf';
 
-interface Owner {
-    readonly ctor: HandlerConstructor;
+import type { RoutableConstructor } from '#decorators/interactionRoutes';
+
+export interface RegisteredRoute<Ctor> {
+    readonly kind: InteractionKind;
+    readonly route: string;
+    readonly fallback: boolean;
+    readonly ctor: Ctor;
+}
+
+export type RouteMaps<Ctor> = Readonly<Record<InteractionKind, Map<string, RegisteredRoute<Ctor>>>>;
+
+export function emptyRouteMaps<Ctor>(): RouteMaps<Ctor> {
+    return {
+        [InteractionKind.Slash]: new Map(),
+        [InteractionKind.UserContextMenu]: new Map(),
+        [InteractionKind.MessageContextMenu]: new Map(),
+        [InteractionKind.Autocomplete]: new Map(),
+        [InteractionKind.Button]: new Map(),
+        [InteractionKind.StringMenu]: new Map(),
+        [InteractionKind.UserMenu]: new Map(),
+        [InteractionKind.RoleMenu]: new Map(),
+        [InteractionKind.ChannelMenu]: new Map(),
+        [InteractionKind.MentionableMenu]: new Map(),
+        [InteractionKind.Modal]: new Map()
+    };
+}
+
+interface Owner<Ctor> {
+    readonly ctor: Ctor;
     readonly kind: InteractionKind;
     readonly key: string;
     readonly from: string;
 }
 
-export class RouteRegistry {
-    public readonly maps: RouteMaps = emptyRouteMaps();
+export class RouteRegistry<Ctor extends RoutableConstructor> {
+    public readonly maps: RouteMaps<Ctor> = emptyRouteMaps();
 
-    private readonly owners = new Map<string, Owner>();
+    private readonly owners = new Map<string, Owner<Ctor>>();
 
     public get size(): number {
         return this.owners.size;
     }
 
-    /**
-     * Writes every route the class declares. A class declaring none returns false.
-     *
-     * @throws A **SeedcordTypeError** when another class already holds one of them.
-     */
-    public register(ctor: HandlerConstructor, from: string): boolean {
+    // returns whether the class declared any route
+    public register(ctor: Ctor, from: string): boolean {
         // nothing is written until every route clears the check below
         const writes: { kind: InteractionKind; key: string; routeId: string }[] = [];
 
@@ -60,7 +81,7 @@ export class RouteRegistry {
         return true;
     }
 
-    public unregister(ctor: HandlerConstructor, routeIds?: readonly string[]): void {
+    public unregister(ctor: Ctor, routeIds?: readonly string[]): void {
         for (const routeId of routeIds ?? this.routesOf(ctor)) {
             const owner = this.owners.get(routeId);
             if (owner?.ctor !== ctor) continue;
@@ -69,7 +90,7 @@ export class RouteRegistry {
         }
     }
 
-    public routesOf(ctor: HandlerConstructor): string[] {
+    public routesOf(ctor: Ctor): string[] {
         const routeIds: string[] = [];
         for (const [routeId, owner] of this.owners) {
             if (owner.ctor === ctor) routeIds.push(routeId);

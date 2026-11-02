@@ -4,7 +4,8 @@ import {
     interactionMiddleware,
     InteractionMetadataKey,
     InteractionMiddlewareMetadataKey,
-    MiddlewareRegistry
+    MiddlewareRegistry,
+    RouteRegistry
 } from '@seedcord/core/internal';
 import { paint } from '@seedcord/errors';
 import { Logger } from '@seedcord/logger';
@@ -14,7 +15,6 @@ import { Envapter } from 'envapt';
 import { AutocompleteHandler } from '#handlers/interaction/AutocompleteHandler';
 import { InteractionHandler } from '#handlers/interaction/InteractionHandler';
 import { InteractionMiddleware } from '#handlers/interaction/InteractionMiddleware';
-import { RouteRegistry } from '#src/dispatch/RouteRegistry';
 
 import type { HandlerConstructor, InteractionMiddlewareConstructor } from '#handlers/constructors';
 import type { RouteMap, RouteMaps } from '#src/dispatch/resolve';
@@ -29,7 +29,7 @@ export class InteractionDispatcher implements Initializeable, HmrAware {
     /** @internal */
     public readonly logger = new Logger('Interactions', { channel: 'interactions' });
 
-    private readonly routes = new RouteRegistry();
+    private readonly routes = new RouteRegistry<HandlerConstructor>();
 
     public get maps(): RouteMaps {
         return this.routes.maps;
