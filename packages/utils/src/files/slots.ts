@@ -1,6 +1,9 @@
 import { existsSync } from 'node:fs';
 import * as path from 'node:path';
 
+import { SeedcordErrorCode } from '@seedcord/errors';
+import { SeedcordError } from '@seedcord/errors/internal';
+
 import { BotLayout } from './BotLayout';
 
 import type { BotLayoutData } from './BotLayout';
@@ -33,6 +36,12 @@ export const BUILT_FILES_READY_KEY = 'seedcord:utils:built-files-ready';
 
 export function botFilesSlot(): BotFilesSlot | undefined {
     return Reflect.get(globalThis, Symbol.for(BOT_FILES_KEY)) as BotFilesSlot | undefined;
+}
+
+export function builtRoot(): string {
+    const slot = botFilesSlot();
+    if (!slot) throw new SeedcordError(SeedcordErrorCode.CoreBuiltModuleRanDirectly);
+    return slot.root;
 }
 
 function builtSlot(): BuiltSlot | undefined {

@@ -110,6 +110,8 @@ export enum SeedcordErrorCode {
     CoreKvDriverFailed = 1234,
     /** The bot's own member is missing from the guild's member cache. */
     CoreBotMemberMissing = 1235,
+    /** A module from a build read its path, but the build's `index.mjs` didn't run first. */
+    CoreBuiltModuleRanDirectly = 1236,
 
     /** A command class carries `@RegisterCommand` twice. */
     DecoratorCommandAlreadyRegistered = 1301,

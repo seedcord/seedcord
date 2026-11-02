@@ -15,7 +15,7 @@ const ENTRY_DECLARATIONS_NAME = ENTRY_FILE_NAME.replace(/\.mjs$/, '.d.mts');
 
 export class ExportBuild extends ServerBuild {
     public nextCommands(): NextCommand[] {
-        return [];
+        return [['start', 'this build only exports your bot. set build.start to run it with node']];
     }
 
     public bundle(): Promise<BundleStats> {
