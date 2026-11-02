@@ -1,14 +1,14 @@
 import { LoggerChannelRegistry } from '@seedcord/logger';
-import { describe, expect, it, vi } from 'vitest';
+import { describe, expect, it } from 'vitest';
 
 import { DispatchContext } from '#src/dispatch/DispatchContext';
 import { reportFault } from '#src/notices/reportFault';
 import { Fault } from '#stops/Fault';
-import { PublishDefault } from '#subscribers/publishDefault';
+import { Bus } from '#subscribers/Bus';
 import { TestNotice } from '#tests/utils/TestNotice';
 
+import type { CoreBase } from '#interfaces/CoreBase';
 import type { FaultReport } from '#src/notices/reportFault';
-import type { Bus } from '#subscribers/Bus';
 import type { FaultSource } from '#subscribers/types/Subscriptions';
 import type { LogRecord } from '@seedcord/types';
 
@@ -38,47 +38,46 @@ function reportWith(fields: Partial<FaultReport> = {}): FaultReport {
     };
 }
 
-function busWith(publish: ReturnType<typeof vi.fn>): Bus {
-    // justified: reportFault only publishes through the bus
-    return { [PublishDefault]: publish } as unknown as Bus;
+// reports a fault through a real bus and returns every payload it published, keyed by event
+function published(error: Error, report: FaultReport): [string, unknown][] {
+    // justified: the Bus only stores core, no member is read during publish
+    const bus = new Bus({} as unknown as CoreBase);
+    const seen: [string, unknown][] = [];
+    bus.on('handledException', (payload) => seen.push(['handledException', payload]));
+    bus.on('unknownException', (payload) => seen.push(['unknownException', payload]));
+    reportFault(bus, undefined, error, report);
+    return seen;
 }
 
 describe('reportFault', () => {
     it('publishes handledException for a reporting Notice that has a source', () => {
-        const publish = vi.fn();
         const denial = new Fault({ cause: new Error('write failed') });
 
-        reportFault(busWith(publish), undefined, denial, reportWith());
-
-        expect(publish).toHaveBeenCalledWith('handledException', expect.objectContaining({ denial, uuid, source }));
+        expect(published(denial, reportWith())).toEqual([
+            ['handledException', expect.objectContaining({ denial, uuid, source })]
+        ]);
     });
 
     it('publishes unknownException for a reporting Notice without a source', () => {
-        const publish = vi.fn();
         const denial = new Fault({ cause: new Error('lookup failed') });
 
-        reportFault(busWith(publish), undefined, denial, reportWith({ source: null }));
-
-        expect(publish).toHaveBeenCalledWith('unknownException', expect.objectContaining({ error: denial, uuid }));
+        expect(published(denial, reportWith({ source: null }))).toEqual([
+            ['unknownException', expect.objectContaining({ error: denial, uuid })]
+        ]);
     });
 
     it('publishes unknownException for a raw throw and logs its stack', () => {
-        const publish = vi.fn();
         const logged: LogRecord[] = [];
         using _capture = LoggerChannelRegistry.instance.installSink({ kind: 'capture', onLog: (r) => logged.push(r) });
         const thrown = new Error('a bug');
 
-        reportFault(busWith(publish), undefined, thrown, reportWith());
-
-        expect(publish).toHaveBeenCalledWith('unknownException', expect.objectContaining({ error: thrown, uuid }));
+        expect(published(thrown, reportWith())).toEqual([
+            ['unknownException', expect.objectContaining({ error: thrown, uuid })]
+        ]);
         expect(logged.at(-1)?.args).toEqual([thrown]);
     });
 
     it('publishes nothing for a Notice that does not report', () => {
-        const publish = vi.fn();
-
-        reportFault(busWith(publish), undefined, new TestNotice(), reportWith());
-
-        expect(publish).not.toHaveBeenCalled();
+        expect(published(new TestNotice(), reportWith())).toEqual([]);
     });
 });

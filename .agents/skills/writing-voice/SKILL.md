@@ -123,6 +123,29 @@ A noun made from a verb can take the subject slot, and then a clause slips in be
 
 The tell is a subject that is an action, a noun made from a verb, like "a scan of the root throws" or "a save that early never reaches vite". Find who does the action and make that the subject. In a code comment that is usually a function, so name it: "assertNoHashPaths throws on this folder". Then read the draft once at speed. If you stop and start over, rewrite the sentence.
 
+### Keep the `that` in a relative clause
+
+Banned outright. A clause that describes a noun opens with `that`, `which`, or `who`. English lets you leave the `that` out, as in "a helper they share". The reader then meets a noun followed straight away by another subject and its verb, and has to work out that a clause started. A reader who learned English second often reads the two nouns as a list.
+
+<!--prettier-ignore-start-->
+
+| Dropped `that` | Fixed |
+|---|---|
+| two classes and a helper they share | two classes and a shared helper |
+| run the case for the key the bus published | run the case for the published key |
+| a reply the whole channel sees | a reply that everyone in the channel can see |
+| the raw payload discord sent back | the raw payload that discord sent back |
+
+<!--prettier-ignore-end-->
+
+The tell is a noun followed directly by a second noun or a pronoun and then its verb, with no `that`, `which`, or `who` between them. Fix it in this order:
+
+1. Fold it into one word. A participle or an adjective in front of the noun does the job, like "a shared helper" or "the published key".
+2. Put the `that` back.
+3. Give the clause its own sentence, with its actor as the subject.
+
+An indirect question keeps its shape, because a question word already opens it, as in "depends on which key the bus published".
+
 ### Write an instruction as an instruction
 
 A generic subject with a present-tense verb reads as a fact about how the code behaves. When the reader is the one who has to do the thing, they wait for something that never happens. The sentence usually turns into a garden path too, because the clause that picks the subject sits between it and its verb.
@@ -432,7 +455,7 @@ Run these on every piece of prose before it's written to disk, whatever the surf
 
 1. **Negation.** Find every verb followed by `no`, as in "has no", "takes no", "sets no". Negate the verb or state the positive fact (section 5).
 2. **Connectors.** Read each `and`, `but`, `so`, `because`, `since`, `while`, `then`, and `which` against the relation its two halves really have (section 6).
-3. **Pointers.** For each `which`, `it`, `this`, and `that`, find the noun it lands on (section 2).
+3. **Pointers.** For each `which`, `it`, `this`, and `that`, find the noun it lands on (section 2). Then find every noun followed directly by another subject and its verb, and put the dropped `that` back or fold the clause into one word (section 2).
 4. **Who does it.** For each sentence with a generic subject, ask who performs the verb (section 2).
 5. **One read at speed.** Read the text once as someone who has never seen it. Rewrite every sentence where you stopped and started over.
 6. **The bans.** Section 6 punctuation, anthropomorphism, contrast-negation, and every section 7 word, starting with `names` as a verb.

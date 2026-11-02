@@ -30,7 +30,7 @@ import type { Constructor } from 'type-fest';
 export type StoredSubscriberCtor = Constructor<{ execute(): Promise<void> }, never[]>;
 
 /** @internal */
-export interface SubscriberRegistration {
+interface SubscriberRegistration {
     readonly key: SubscriptionKey;
     readonly frequency: EventFrequency;
     readonly ctor: StoredSubscriberCtor;

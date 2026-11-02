@@ -211,4 +211,15 @@ describe('EventHandler.match', () => {
         const handler = new PingMulti(createPayload(fakeMessage()), core, eventDispatch('ghost'));
         await expect(handler.execute()).rejects.toMatchObject({ code: SeedcordErrorCode.MatchCaseMissing });
     });
+
+    it('throws DecoratorDuplicateKey for an event listed twice, across stacked decorators too', () => {
+        expect(() => {
+            @RegisterEvent([Events.MessageCreate])
+            @RegisterEvent([Events.MessageCreate, { frequency: 'once' }])
+            class Twice extends EventHandler<Events.MessageCreate> {
+                async execute(): Promise<void> {}
+            }
+            void Twice;
+        }).toThrow(expect.objectContaining({ code: SeedcordErrorCode.DecoratorDuplicateKey }));
+    });
 });

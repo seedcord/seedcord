@@ -1,20 +1,18 @@
 import { DiscordAPIError } from '@discordjs/rest';
-import { InteractionKind, Notice, Silence } from '@seedcord/core';
+import { InteractionKind } from '@seedcord/core';
 import {
     DispatchContext,
-    faultResponse,
+    FaultBoundary,
     outcomeFor,
     queuedMsFor,
     reportDispatch,
     reportedWrite,
-    reportFault,
     resultFor,
     runAfter,
     runInteractionGates
 } from '@seedcord/core/internal';
 import { paint } from '@seedcord/errors';
 import { Logger } from '@seedcord/logger';
-import { asError } from '@seedcord/utils/internal';
 import { InteractionResponseType, InteractionType, RESTJSONErrorCodes, Routes } from 'discord-api-types/v10';
 
 import { interactionUser } from '#handlers/interactionUser';
@@ -83,29 +81,15 @@ async function respondEmptyChoices(scope: FaultScope): Promise<void> {
 
 async function handleFault(caught: unknown, scope: FaultScope): Promise<void> {
     const { core, dispatch, payload, sender } = scope;
-    if (caught instanceof Silence) {
-        if (caught.reason !== undefined && (core.config.errors?.logSilences ?? true)) {
-            logger().debug(`Silence: ${caught.reason}`);
-        }
-        return;
-    }
-
-    const error = asError(caught);
-    const ignore = new Set<number | string>(core.config.errors?.ignoreApiCodes ?? []);
-    if (error instanceof DiscordAPIError && ignore.has(error.code)) {
-        logger().debug(`swallowed api code ${paint.amber(String(error.code))}`);
-        return;
-    }
-
-    const uuid = crypto.randomUUID();
-    reportFault(core.bus, core.config.errors, error, faultReportOf(payload, dispatch, uuid));
+    const boundary = new FaultBoundary(core, core.config.errors?.ignoreApiCodes, DiscordAPIError, logger());
+    const fault = boundary.report(caught, (uuid) => faultReportOf(payload, dispatch, uuid));
+    if (!fault) return;
     if (!sender) {
         await sendGuarded(dispatch.routeId, () => respondEmptyChoices(scope));
         return;
     }
-    const response = faultResponse(error, uuid, dispatch, core.config);
-    const ephemeral = error instanceof Notice ? error.ephemeral : true;
-    await sendGuarded(dispatch.routeId, () => sender.send(response, { ephemeral }));
+    const response = fault.response();
+    await sendGuarded(dispatch.routeId, () => sender.send(response, { ephemeral: fault.ephemeral }));
 }
 
 interface DispatchArgs {

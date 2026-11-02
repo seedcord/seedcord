@@ -130,7 +130,7 @@ seedcord marks `FirstLevel` as run as soon as it starts. If it throws partway th
 
 ## One class for several keys
 
-Without a subscriber for several keys, two keys that need the same follow-up, like logging both a level-up and a level reset, take two classes and a helper they share. Pass `@Subscribe` one tuple per key, and list the same keys as a union in the generic.
+If two keys need the same follow-up, like logging both a level-up and a level reset, one subscriber can list both keys. You don't need two classes and a shared helper. Pass `@Subscribe` one tuple per key, and list the same keys as a union in the generic.
 
 ```ts twoslash title="src/subscribers/LevelLog.ts"
 import { Subscribe, Subscriber } from '@seedcord/gateway';
@@ -158,7 +158,7 @@ export class LevelLog extends Subscriber<'levelUp' | 'levelReset'> {
 }
 ```
 
-`this.data` is `never` on `LevelLog`, since its type depends on which key was published. [`this.key`](ref:core/Subscriber.key) holds that key. [`this.match`](ref:core/Subscriber.match) runs the case for that key, and each case receives that key's payload. A missing case or a case for a key the generic doesn't list fails to compile. Each tuple keeps its own `frequency`, so `levelReset` runs once while `levelUp` runs every time.
+`this.data` is `never` on `LevelLog`, since its type depends on which key the bus published. [`this.key`](ref:core/Subscriber.key) holds that key. [`this.match`](ref:core/Subscriber.match) runs the case for that key, and each case receives that key's payload. A missing case or a case for a key the generic doesn't list fails to compile. Each tuple keeps its own `frequency`, so `levelReset` runs once while `levelUp` runs every time.
 
 ## Where to put subscribers
 

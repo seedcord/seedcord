@@ -13,6 +13,7 @@ import {
     MiddlewareRegistry,
     PublishDefault,
     resultFor,
+    routeIdOf,
     runAfter,
     runInteractionGates
 } from '@seedcord/core/internal';
@@ -316,7 +317,7 @@ export class InteractionDispatcher implements Initializeable, HmrAware {
                 if (existing && existing !== handlerClass) {
                     throw new SeedcordTypeError(SeedcordErrorCode.CoreDuplicateName, [
                         'route',
-                        `${kind}:${route}`,
+                        routeIdOf(kind, route),
                         [
                             // a stale hmr artifact list can leave a class in a route map after its entry here is gone
                             `${paint.bold(existing.name)} (${paint.path(this.handlerFiles.get(existing) ?? 'unknown file')})`,

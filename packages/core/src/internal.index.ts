@@ -14,8 +14,8 @@ export type { InteractionMiddlewareMetadata } from '#decorators/middleware';
 export { interactionMiddleware, MiddlewareRegistry } from '#src/dispatch/MiddlewareRegistry';
 export type { MiddlewareRegistration, MiddlewareRegistrationOf } from '#src/dispatch/MiddlewareRegistry';
 export { bindBotColor } from '#components/botColorHolder';
-export { faultResponse } from '#src/notices/faultResponse';
-export { reportFault, type FaultReport } from '#src/notices/reportFault';
+export { FaultBoundary } from '#src/notices/FaultBoundary';
+export type { FaultReport } from '#src/notices/reportFault';
 
 export { FixedScope } from '#src/plugin/Plugin';
 export type { PluginArgs, PluginCtor } from '#src/plugin/Plugin';
@@ -67,6 +67,7 @@ export { slashRouteLeaves } from '#src/commands/slashRouteLeaves';
 export type { CommandBuilder, DeployResult } from '#src/commands/types';
 
 export type { GateFitsWith } from '#gates/matching';
+export { assertUniqueKeys } from '#src/decorators/assertUniqueKeys';
 export { caseFor } from '#src/handlers/caseFor';
 export type { MiddlewareRoute } from '#src/handlers/middlewareRoute';
 
@@ -128,11 +129,11 @@ export {
     VerifyWebhooks
 } from '#subscribers/slots';
 export { DispatchContext } from '#src/dispatch/DispatchContext';
+export { routeIdOf } from '#src/dispatch/routeIdOf';
 export { outcomeFor, queuedMsFor, reportDispatch } from '#src/dispatch/dispatchReport';
 export { eventResultFor, resultFor, runAfter } from '#src/dispatch/runAfter';
 export { OnceTracker } from '#src/dispatch/OnceTracker';
 // each transport declaration-merges its own default keys into this
 export type { DefaultSubscriptions } from '#subscribers/types/Subscriptions';
-export type { EventFaultSource } from '#subscribers/types/Subscriptions';
 export { interactionFaultSource } from '#subscribers/interactionFaultSource';
 export type { Initializeable } from '#src/plugin/Plugin';

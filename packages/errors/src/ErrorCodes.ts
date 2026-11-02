@@ -123,6 +123,8 @@ export enum SeedcordErrorCode {
     DecoratorWebhookUrlMissing = 1305,
     /** A middleware decorator got an empty filter array. */
     DecoratorEmptyMiddlewareFilter = 1306,
+    /** `@Subscribe` or `@RegisterEvent` lists the same key twice. */
+    DecoratorDuplicateKey = 1307,
 
     /** A reply method was called in an ack state where Discord rejects it. */
     ReplyIllegalAckState = 1501,

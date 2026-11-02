@@ -39,9 +39,9 @@ export abstract class InteractionMiddleware<
 
     /**
      * What the interaction came in on: a slash command path like `config/set`, a context menu command's
-     * name, or a custom-ID prefix. On slash and context menu kinds, your editor offers your registered
-     * commands. It can still be any string, since middleware also runs when no handler matched, like on a
-     * command you deleted that Discord still shows.
+     * name, or a custom-ID prefix. When the generic lists only slash or context menu kinds, your editor
+     * offers your registered commands. It can still be any string, since middleware also runs when no
+     * handler matched, like on a command you deleted that Discord still shows.
      */
     protected get route(): MiddlewareRoute<Kind> {
         return this.dispatch.route as MiddlewareRoute<Kind>;

@@ -29,7 +29,7 @@ export abstract class Subscriber<in out Keys extends SubscriptionKey, TCore exte
      *
      * @param payload - The published payload
      * @param core - The core framework instance
-     * @param key - The key the bus published.
+     * @param key - The published key
      */
     constructor(
         private readonly payload: AllSubscriptions[Keys],
@@ -50,7 +50,7 @@ export abstract class Subscriber<in out Keys extends SubscriptionKey, TCore exte
     abstract execute(): Promise<void>;
 
     /**
-     * Run the case for the key that was published. Use this only when the subscriber is registered for several
+     * Run the case for the published key. Use this only when the subscriber is registered for several
      * keys. On a single-key subscriber, read `this.data` directly.
      *
      * Provide one case per registered key. Each case receives that key's own payload. A missing key or an unknown

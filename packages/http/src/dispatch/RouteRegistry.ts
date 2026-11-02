@@ -1,4 +1,4 @@
-import { interactionRoutesOf } from '@seedcord/core/internal';
+import { interactionRoutesOf, routeIdOf } from '@seedcord/core/internal';
 import { SeedcordErrorCode, paint } from '@seedcord/errors';
 import { SeedcordTypeError } from '@seedcord/errors/internal';
 
@@ -35,11 +35,11 @@ export class RouteRegistry {
 
         for (const [kind, keys] of interactionRoutesOf(ctor)) {
             for (const key of keys) {
-                const existing = this.owners.get(`${kind}:${key}`);
+                const existing = this.owners.get(routeIdOf(kind, key));
                 if (existing && existing.ctor !== ctor) {
                     throw new SeedcordTypeError(SeedcordErrorCode.CoreDuplicateName, [
                         'route',
-                        `${kind}:${key}`,
+                        routeIdOf(kind, key),
                         [
                             `${paint.bold(existing.ctor.name)} (${paint.path(existing.from)})`,
                             `${paint.bold(ctor.name)} (${paint.path(from)})`
@@ -54,7 +54,7 @@ export class RouteRegistry {
 
         for (const { kind, key } of writes) {
             this.maps[kind].set(key, { kind, route: key, fallback: false, ctor });
-            this.owners.set(`${kind}:${key}`, { ctor, kind, key, from });
+            this.owners.set(routeIdOf(kind, key), { ctor, kind, key, from });
         }
         return true;
     }

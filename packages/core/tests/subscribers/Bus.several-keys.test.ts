@@ -1,5 +1,5 @@
 import { SeedcordErrorCode } from '@seedcord/errors';
-import { describe, expect, expectTypeOf, it } from 'vitest';
+import { describe, expect, expectTypeOf, it, vi } from 'vitest';
 
 import { Subscribe } from '#subscribers/decorators/Subscribe';
 import { PublishDefault } from '#subscribers/publishDefault';
@@ -16,10 +16,6 @@ const unknown: AllSubscriptions['unknownException'] = {
     origin: 'slash:probe'
 };
 const unhandled: AllSubscriptions['unhandledInteractionError'] = { error: new Error('unhandled boom') };
-
-function settle(): Promise<void> {
-    return new Promise((resolve) => setTimeout(resolve, 0));
-}
 
 describe('a subscriber on several keys', () => {
     it("runs the case for the published key, with that key's payload", async () => {
@@ -38,9 +34,7 @@ describe('a subscriber on several keys', () => {
         const bus = busWith(Both);
         bus[PublishDefault]('unknownException', unknown);
         bus[PublishDefault]('unhandledInteractionError', unhandled);
-        await settle();
-
-        expect(seen).toEqual(['unknown slash:probe', 'unhandled unhandled boom']);
+        await vi.waitFor(() => expect(seen).toEqual(['unknown slash:probe', 'unhandled unhandled boom']));
     });
 
     it('spends a once key without spending an on key of the same class', async () => {
@@ -61,9 +55,17 @@ describe('a subscriber on several keys', () => {
             bus[PublishDefault]('unknownException', unknown);
             bus[PublishDefault]('unhandledInteractionError', unhandled);
         }
-        await settle();
+        await vi.waitFor(() => expect(runs).toEqual(['once', 'on', 'on']));
+    });
 
-        expect(runs).toEqual(['once', 'on', 'on']);
+    it('throws DecoratorDuplicateKey for a key listed twice', () => {
+        expect(() => {
+            @Subscribe(['unknownException'], ['unknownException', { frequency: 'once' }])
+            class Twice extends Subscriber<'unknownException', CoreBase> {
+                async execute(): Promise<void> {}
+            }
+            void Twice;
+        }).toThrow(expect.objectContaining({ code: SeedcordErrorCode.DecoratorDuplicateKey }));
     });
 
     it('throws MatchCaseMissing for a published key without a case', async () => {

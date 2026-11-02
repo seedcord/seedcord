@@ -1,6 +1,8 @@
 import { SeedcordErrorCode } from '@seedcord/errors';
 import { SeedcordError } from '@seedcord/errors/internal';
 
+import { routeIdOf } from './routeIdOf';
+
 import type { InteractionKind } from '#src/metadataKeys';
 import type { DispatchBag, DispatchState } from '@seedcord/types';
 
@@ -27,7 +29,7 @@ export class DispatchContext implements DispatchBag {
      * Component identifiers contain the custom-ID prefix without encoded params.
      */
     public get routeId(): string {
-        return `${this.kind}:${this.route || 'unrouted'}`;
+        return routeIdOf(this.kind, this.route);
     }
 
     /** The {@link routeId} of the handler's own route. It's `null` on an event and on the unhandled default. */

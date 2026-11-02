@@ -1,4 +1,4 @@
-import { EventMetadataKey } from '@seedcord/core/internal';
+import { assertUniqueKeys, EventMetadataKey } from '@seedcord/core/internal';
 
 import type { EventHandler } from '#handlers/event';
 import type { ValidNonInteractionKeys } from '#src/handlers/interactionTypes';
@@ -82,7 +82,13 @@ export function RegisterEvent<const Defs extends readonly EventSpec<ValidNonInte
             event,
             frequency: options?.frequency ?? 'on'
         }));
+        const all = [...existing, ...entries];
+        assertUniqueKeys(
+            '@RegisterEvent',
+            constructor,
+            all.map((entry) => entry.event)
+        );
 
-        Reflect.defineMetadata(EventMetadataKey, [...existing, ...entries], constructor);
+        Reflect.defineMetadata(EventMetadataKey, all, constructor);
     };
 }

@@ -1,6 +1,7 @@
 // the default reporters are decorated at Bus module load, before any entry's own polyfill import runs
 import 'reflect-metadata';
 
+import { assertUniqueKeys } from '#src/decorators/assertUniqueKeys';
 import { SubscribeMetadataKey } from '#src/metadataKeys';
 
 import type { CoreBase } from '#interfaces/CoreBase';
@@ -67,6 +68,11 @@ export function Subscribe<const Defs extends readonly SubscribeSpec<Subscription
             key,
             frequency: options?.frequency ?? 'on'
         }));
+        assertUniqueKeys(
+            '@Subscribe',
+            constructor,
+            entries.map((entry) => entry.key)
+        );
         Reflect.defineMetadata(SubscribeMetadataKey, entries, constructor);
     };
 }

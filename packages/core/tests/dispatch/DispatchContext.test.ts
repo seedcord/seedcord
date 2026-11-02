@@ -15,9 +15,8 @@ function bagOf(ctx: DispatchContext): LooseBag {
 }
 
 describe('DispatchContext', () => {
-    it('keeps the route and builds the route id from the kind and the route', () => {
+    it('builds the route id from the kind and the route', () => {
         const dispatch = new DispatchContext('slash', 'ban');
-        expect(dispatch.route).toBe('ban');
         expect(dispatch.routeId).toBe('slash:ban');
         expect(dispatch.declaredRoute).toBe('slash:ban');
     });
@@ -29,7 +28,6 @@ describe('DispatchContext', () => {
 
     it('marks an empty route unrouted in the route id', () => {
         const dispatch = new DispatchContext('button', '');
-        expect(dispatch.route).toBe('');
         expect(dispatch.routeId).toBe('button:unrouted');
     });
 

@@ -1,3 +1,4 @@
+import { paint } from '@seedcord/errors';
 import { Logger } from '@seedcord/logger';
 
 import { Notice } from '#stops/Notice';
@@ -22,7 +23,6 @@ export interface FaultReport extends Pick<SubscriptionData<'unknownException'>, 
     readonly uuid: RenderContext['uuid'];
     readonly dispatch: DispatchContext;
     readonly origin: string;
-    // an autocomplete throw doesn't have a typed source
     readonly source: FaultSource | null;
     readonly metadata: unknown;
 }
@@ -33,11 +33,11 @@ export function reportFault(bus: Bus, errors: ErrorsConfig | undefined, error: E
     const { uuid, dispatch, origin, source, guild, user, metadata } = report;
     const from = { uuid, dispatchId: dispatch.id, origin };
     if (error instanceof Notice) {
-        logger().error(`${error.name}: ${uuid}`, error);
+        logger().error(`${error.name}: ${paint.mute(uuid)}`, error);
         if (source) {
             bus[PublishDefault]('handledException', { denial: error, ...from, source });
             return;
         }
-    } else logUnknownFault(logger(), uuid, error, errors);
+    } else logUnknownFault(logger(), paint.mute(uuid), error, errors);
     bus[PublishDefault]('unknownException', { ...from, error, guild, user, metadata });
 }
