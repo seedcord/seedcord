@@ -6,8 +6,16 @@ import { routeIdOf } from './routeIdOf';
 import type { InteractionKind } from '#src/metadataKeys';
 import type { DispatchBag, DispatchState } from '@seedcord/types';
 
-/** State shared by middleware and handlers during one dispatch. */
-export class DispatchContext implements DispatchBag {
+type DispatchKind = `${InteractionKind}` | 'event';
+
+export type InteractionDispatch = DispatchContext<Exclude<DispatchKind, 'event'>>;
+
+/**
+ * State shared by middleware, gates, and handlers during one dispatch.
+ *
+ * @typeParam Kind - What started this dispatch, an interaction kind or `event`.
+ */
+export class DispatchContext<Kind extends DispatchKind = DispatchKind> implements DispatchBag {
     // a {} here would let a key named toString or __proto__ reach Object.prototype
     private readonly state = Object.create(null) as Partial<DispatchState>;
 
@@ -19,7 +27,7 @@ export class DispatchContext implements DispatchBag {
      * @param fallback - True when no handler registered the route.
      */
     constructor(
-        public readonly kind: `${InteractionKind}` | 'event',
+        public readonly kind: Kind,
         public readonly route: string,
         public readonly fallback = false
     ) {}

@@ -6,7 +6,6 @@ import { afterEach, describe, expect, it, vi, type MockInstance } from 'vitest';
 
 import { DispatchContext } from '#src/dispatch/DispatchContext';
 import { reportDispatch } from '#src/dispatch/dispatchReport';
-import { InteractionKind } from '#src/metadataKeys';
 import { Bus } from '#subscribers/Bus';
 
 import type { CoreBase } from '#interfaces/CoreBase';
@@ -31,7 +30,6 @@ function reportFor(queuedMs = 0): Parameters<typeof reportDispatch>[1] {
     return {
         dispatch: new DispatchContext('slash', 'ping'),
         interactionId: 'i1',
-        kind: InteractionKind.Slash,
         outcome: 'handled',
         userId: 'u0',
         guildId: null,

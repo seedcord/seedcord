@@ -240,11 +240,7 @@ export class EventDispatcher implements Initializeable, HmrAware {
                 ran.push(middleware);
                 await middleware.execute();
             } catch (caught) {
-                handleEventFault(
-                    caught,
-                    { eventName: String(eventName), handlerName: Middleware.name, args, dispatch },
-                    this.core
-                );
+                handleEventFault(caught, { handlerName: Middleware.name, args, dispatch }, this.core);
                 return { caught };
             }
         }
@@ -376,11 +372,7 @@ export class EventDispatcher implements Initializeable, HmrAware {
             await handler.execute();
             return { handler: Ctor.name, outcome: 'handled' };
         } catch (caught) {
-            handleEventFault(
-                caught,
-                { eventName: String(eventName), handlerName: Ctor.name, args, dispatch },
-                this.core
-            );
+            handleEventFault(caught, { handlerName: Ctor.name, args, dispatch }, this.core);
             return { handler: Ctor.name, ...resultFor(caught) };
         }
     }

@@ -6,8 +6,7 @@ import { Notice } from '#stops/Notice';
 import { Silence } from '#stops/Silence';
 import { PublishDefault } from '#subscribers/publishDefault';
 
-import type { DispatchContext } from '#src/dispatch/DispatchContext';
-import type { InteractionKind } from '#src/metadataKeys';
+import type { InteractionDispatch } from '#src/dispatch/DispatchContext';
 import type { Bus } from '#subscribers/Bus';
 import type { DispatchOutcome } from '#subscribers/types/Subscriptions';
 
@@ -30,9 +29,8 @@ export function outcomeFor(caught: unknown): Exclude<DispatchOutcome, 'handled'>
 }
 
 interface DispatchReport {
-    readonly dispatch: DispatchContext;
+    readonly dispatch: InteractionDispatch;
     readonly interactionId: string;
-    readonly kind: `${InteractionKind}`;
     readonly outcome: DispatchOutcome;
     readonly userId: string | null;
     readonly guildId: string | null;
@@ -63,7 +61,7 @@ export function reportDispatch(bus: Bus, report: DispatchReport): void {
         dispatchId: report.dispatch.id,
         routeId: report.dispatch.routeId,
         interactionId: report.interactionId,
-        kind: report.kind,
+        kind: report.dispatch.kind,
         outcome: report.outcome,
         fallback: report.dispatch.fallback,
         userId: report.userId,

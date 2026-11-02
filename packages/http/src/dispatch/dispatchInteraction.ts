@@ -33,7 +33,7 @@ import type { ValidInteractionTypes } from '#handlers/interactionTypes';
 import type { Core } from '#interfaces/Core';
 import type { ResolvedRoute } from './resolve';
 import type { DispatchOutcome, DispatchResult, MiddlewareKind } from '@seedcord/core';
-import type { FaultTarget, MiddlewareRegistry } from '@seedcord/core/internal';
+import type { FaultTarget, InteractionDispatch, MiddlewareRegistry } from '@seedcord/core/internal';
 
 // lazy, env binds after this module loads
 let dispatchLogger: Logger | undefined;
@@ -45,7 +45,7 @@ function logger(): Logger {
 interface FaultScope {
     readonly core: Core;
     readonly payload: ValidInteractionTypes;
-    readonly dispatch: DispatchContext;
+    readonly dispatch: InteractionDispatch;
     // null on autocomplete, whose only legal refusal is an empty type 8
     readonly sender: ReplySender | null;
 }
@@ -72,7 +72,7 @@ function freshScope(
     match: ResolvedRoute,
     payload: ValidInteractionTypes,
     core: Core,
-    dispatch: DispatchContext
+    dispatch: InteractionDispatch
 ): FaultScope {
     const ref = { application_id: payload.application_id, id: payload.id, token: payload.token };
     return {
@@ -84,10 +84,9 @@ function freshScope(
 }
 
 function dispatchReporter(
-    match: ResolvedRoute,
     payload: ValidInteractionTypes,
     core: Core,
-    dispatch: DispatchContext
+    dispatch: InteractionDispatch
 ): (outcome: DispatchOutcome) => void {
     const startedAt = performance.now();
     const queuedMs = queuedMsFor(payload.id);
@@ -95,7 +94,6 @@ function dispatchReporter(
         reportDispatch(core.bus, {
             dispatch,
             interactionId: payload.id,
-            kind: match.kind,
             outcome,
             userId: interactionUser(payload).id,
             guildId: payload.guild_id ?? null,
@@ -156,7 +154,7 @@ export async function dispatchInteraction(args: DispatchArgs): Promise<(() => Pr
     const { match, payload, core } = args;
     // every fault path below renders against this one context
     const dispatch = new DispatchContext(match.kind, match.route, match.fallback);
-    const report = dispatchReporter(match, payload, core, dispatch);
+    const report = dispatchReporter(payload, core, dispatch);
 
     const Handler = match.ctor;
     logger().trace(`Processing ${paint.sky.bold(dispatch.routeId)} with ${paint.mute(Handler.name)}`);

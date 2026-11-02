@@ -1,10 +1,10 @@
-import type { DispatchContext } from '#src/dispatch/DispatchContext';
+import type { InteractionDispatch } from '#src/dispatch/DispatchContext';
 import type { InteractionFaultSource } from '#subscribers/types/Subscriptions';
 import type { TypedOmit } from '@seedcord/types';
 
 type FaultKind = InteractionFaultSource['interactionKind'];
 
-const FAULT_KINDS: Record<DispatchContext['kind'], FaultKind | null> = {
+const FAULT_KINDS: Record<InteractionDispatch['kind'], FaultKind | null> = {
     slash: 'slash',
     userContextMenu: 'context-menu',
     messageContextMenu: 'context-menu',
@@ -16,13 +16,11 @@ const FAULT_KINDS: Record<DispatchContext['kind'], FaultKind | null> = {
     mentionableMenu: 'select',
     modal: 'modal',
     // an autocomplete throw has no typed source
-    autocomplete: null,
-    // events report an EventFaultSource
-    event: null
+    autocomplete: null
 };
 
 export function interactionFaultSource(
-    dispatch: DispatchContext,
+    dispatch: InteractionDispatch,
     fields: TypedOmit<InteractionFaultSource, 'kind' | 'interactionKind' | 'command'>
 ): InteractionFaultSource | null {
     const interactionKind = FAULT_KINDS[dispatch.kind];

@@ -6,14 +6,13 @@ import { interactionFaultReport } from '#miscellaneous/faultReports';
 
 import type { Core } from '#interfaces/Core';
 import type { ValidInteractionTypes } from '#src/handlers/interactionTypes';
-import type { DispatchContext } from '@seedcord/core';
-import type { FaultTarget } from '@seedcord/core/internal';
+import type { FaultTarget, InteractionDispatch } from '@seedcord/core/internal';
 
 export async function handleInteractionFault(
     caught: unknown,
     interaction: ValidInteractionTypes,
     core: Core,
-    dispatch: DispatchContext,
+    dispatch: InteractionDispatch,
     sender?: ReplySender
 ): Promise<void> {
     const boundary = new FaultBoundary(core, core.config.errors?.ignoreApiCodes, DiscordAPIError);
@@ -27,7 +26,7 @@ export async function handleInteractionFault(
 function faultTarget(
     interaction: ValidInteractionTypes,
     core: Core,
-    dispatch: DispatchContext,
+    dispatch: InteractionDispatch,
     sender?: ReplySender
 ): FaultTarget {
     if (interaction.isAutocomplete()) {

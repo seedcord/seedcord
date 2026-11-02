@@ -45,7 +45,7 @@ import type { InteractionOf } from '#handlers/interaction/middlewareKinds';
 import type { Core } from '#interfaces/Core';
 import type { Repliables, ValidInteractionTypes } from '#src/handlers/interactionTypes';
 import type { DispatchOutcome, DispatchResult, MiddlewareKind } from '@seedcord/core';
-import type { Initializeable, ContextMenuLeaves } from '@seedcord/core/internal';
+import type { ContextMenuLeaves, Initializeable, InteractionDispatch } from '@seedcord/core/internal';
 import type { InFlight } from '@seedcord/core/node/internal';
 import type { CustomIdMatcher, HmrAware, HmrUpdateEvent } from '@seedcord/types';
 import type {
@@ -75,17 +75,15 @@ interface DispatchedHandler {
 
 interface DispatchReportRow {
     readonly interaction: Interaction;
-    readonly kind: InteractionKind;
     readonly startedAt: number;
     readonly queuedMs: number;
-    readonly dispatch: DispatchContext;
+    readonly dispatch: InteractionDispatch;
 }
 
 interface BeforeHandler {
     readonly HandlerCtor: HandlerConstructor;
-    readonly kind: InteractionKind;
     readonly interaction: Interaction;
-    readonly dispatch: DispatchContext;
+    readonly dispatch: DispatchContext<InteractionKind>;
     readonly sender: ReplySender | undefined;
     readonly ran: InteractionMiddleware[];
 }
@@ -391,7 +389,7 @@ export class InteractionDispatcher implements Initializeable, HmrAware {
 
         const HandlerCtor = matched ?? fallback;
         const dispatch = new DispatchContext(kind, key, !matched);
-        const report = this.reporterFor({ interaction, kind, startedAt, queuedMs, dispatch });
+        const report = this.reporterFor({ interaction, startedAt, queuedMs, dispatch });
 
         // outside the try so the fault boundary keeps the handler's ack state
         let sender: ReplySender | undefined;
@@ -401,7 +399,7 @@ export class InteractionDispatcher implements Initializeable, HmrAware {
             const handler = this.buildHandler(HandlerCtor, interaction as Repliables, dispatch);
             if (handler instanceof RepliableHandler) sender = handler.sender;
 
-            const refusal = await this.refusalBeforeHandler({ HandlerCtor, kind, interaction, dispatch, sender, ran });
+            const refusal = await this.refusalBeforeHandler({ HandlerCtor, interaction, dispatch, sender, ran });
             if (refusal) {
                 result = resultFor(refusal.caught);
                 await this.answer(refusal.caught, interaction as ValidInteractionTypes, dispatch, sender, report);
@@ -420,7 +418,7 @@ export class InteractionDispatcher implements Initializeable, HmrAware {
     private async answer(
         caught: unknown,
         interaction: ValidInteractionTypes,
-        dispatch: DispatchContext,
+        dispatch: InteractionDispatch,
         sender: ReplySender | undefined,
         report: (outcome: DispatchOutcome) => void
     ): Promise<void> {
@@ -447,7 +445,6 @@ export class InteractionDispatcher implements Initializeable, HmrAware {
             reportDispatch(this.core.bus, {
                 dispatch: row.dispatch,
                 interactionId: row.interaction.id,
-                kind: row.kind,
                 outcome,
                 startedAt: row.startedAt,
                 userId: row.interaction.user.id,
@@ -459,7 +456,8 @@ export class InteractionDispatcher implements Initializeable, HmrAware {
 
     // a returned value is the throw that stops the dispatch before the handler runs
     private async refusalBeforeHandler(step: BeforeHandler): Promise<{ caught: unknown } | null> {
-        const { HandlerCtor, kind, interaction, dispatch, sender, ran } = step;
+        const { HandlerCtor, interaction, dispatch, sender, ran } = step;
+        const { kind } = dispatch;
 
         if (kind !== InteractionKind.Autocomplete && sender) {
             try {

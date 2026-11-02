@@ -2,7 +2,7 @@ import { interactionFaultSource } from '@seedcord/core/internal';
 
 import type { ValidInteractionTypes } from '#src/handlers/interactionTypes';
 import type { DispatchContext } from '@seedcord/core';
-import type { FaultReport } from '@seedcord/core/internal';
+import type { FaultReport, InteractionDispatch } from '@seedcord/core/internal';
 import type { Nullable, RenderContext } from '@seedcord/types';
 import type { Guild, User } from 'discord.js';
 
@@ -17,7 +17,7 @@ interface EventOrigin {
 
 export function interactionFaultReport(
     interaction: ValidInteractionTypes,
-    dispatch: DispatchContext,
+    dispatch: InteractionDispatch,
     uuid: RenderContext['uuid']
 ): FaultReport {
     return {

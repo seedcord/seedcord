@@ -127,7 +127,7 @@ export {
     UnregisterSubscriber,
     VerifyWebhooks
 } from '#subscribers/slots';
-export { DispatchContext } from '#src/dispatch/DispatchContext';
+export { DispatchContext, type InteractionDispatch } from '#src/dispatch/DispatchContext';
 export { routeIdOf } from '#src/dispatch/routeIdOf';
 export { outcomeFor, queuedMsFor, reportDispatch } from '#src/dispatch/dispatchReport';
 export { eventResultFor, resultFor, runAfter } from '#src/dispatch/runAfter';
