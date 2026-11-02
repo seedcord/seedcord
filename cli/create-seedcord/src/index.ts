@@ -11,10 +11,10 @@ import { helpText } from '#cli/help';
 import { inviteUrl } from '#cli/invite';
 import { messageOf } from '#cli/messageOf';
 import { CreateOutput } from '#cli/output';
-import { runningAgent } from '#cli/packageManager';
+import { PackageManager } from '#cli/PackageManager';
 import { parseInput, wantsHelp, wantsVerbose, wantsVersion } from '#cli/parseInput';
 import { STEP_LABELS } from '#cli/steps';
-import { dashboardToggles, nextSteps, reproducingCommand } from '#cli/summary';
+import { dashboardToggles, nextSteps, pendingNotice, reproducingCommand } from '#cli/summary';
 import { version } from '#cli/version';
 import { runFlow } from '#interview/runFlow';
 import { STEPS } from '#interview/steps';
@@ -25,7 +25,7 @@ import { capabilitiesOf, requireScaffoldAnswers } from '#template/context';
 
 import type { FlowMode } from '#interview/runFlow';
 import type { ScaffoldAnswers } from '#template/context';
-import type { AgentName, ResolvedCommand } from 'package-manager-detector';
+import type { ResolvedCommand } from 'package-manager-detector';
 
 // dist/index.mjs and src/index.ts are both one level under the package root
 const TEMPLATES = resolve(import.meta.dirname, '../templates');
@@ -70,7 +70,7 @@ async function main(output: CreateOutput): Promise<void> {
 
     const answers = requireScaffoldAnswers(await runFlow(STEPS, parseInput(argv), flowMode(interactive, output)));
     const target = resolve(process.cwd(), answers.directory);
-    const agent = runningAgent();
+    const manager = PackageManager.running();
 
     if (interactive) output.line();
 
@@ -80,7 +80,7 @@ async function main(output: CreateOutput): Promise<void> {
             templatesRoot: TEMPLATES,
             startersRoot: STARTERS,
             answers,
-            agent,
+            manager,
             steps: interactive ? output.stepRows() : output.plainSteps()
         },
         createExecRunner({ verbose: wantsVerbose(argv), color: Boolean(process.stdout.isTTY) })
@@ -94,7 +94,12 @@ async function main(output: CreateOutput): Promise<void> {
 
     for (const notice of result.notices) output.warn(notice);
 
-    if (interactive) await reportOutcome(output, answers, agent, result.pending);
+    if (interactive) {
+        await reportOutcome(output, answers, manager, result.pending);
+    } else {
+        const notice = pendingNotice(result.pending);
+        if (notice !== null) output.warn(notice);
+    }
 
     // a wrapper chaining `&& cd my-bot && pnpm dev` has to stop here
     if (result.failed) process.exitCode = 1;
@@ -103,7 +108,7 @@ async function main(output: CreateOutput): Promise<void> {
 async function reportOutcome(
     output: CreateOutput,
     answers: ScaffoldAnswers,
-    agent: AgentName,
+    manager: PackageManager,
     pending: readonly ResolvedCommand[]
 ): Promise<void> {
     if (answers.transport === 'http' && !(await probeCloudflared())) {
@@ -117,14 +122,14 @@ async function reportOutcome(
     }
 
     output.line();
-    output.row('next', nextSteps(answers, { agent, pending }));
+    output.row('next', nextSteps(answers, { manager, pending }));
     output.line();
 
     const invite = inviteUrl(answers.token);
     if (invite !== null) output.row('invite', [paint.sky(invite)]);
 
     // powershell and cmd split a command wrapped with a trailing `\`
-    output.row('again', [paint.bold(reproducingCommand(answers, agent))]);
+    output.row('again', [paint.bold(reproducingCommand(answers, manager.name))]);
     output.row('guide', [paint.sky(PRODUCTION_SITES.guide.url)]);
     output.line();
     output.line(

@@ -2,4 +2,4 @@
 'create-seedcord': patch
 ---
 
-Fixed `pnpm create seedcord@next` installing the stable `seedcord` and transport package, which lag behind its templates. It now installs their `next` releases.
+Fixed `pnpm create seedcord@next` installing the stable `seedcord` and transport packages. It now installs the `next` release of both.

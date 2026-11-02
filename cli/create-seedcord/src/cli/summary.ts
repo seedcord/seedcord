@@ -1,10 +1,11 @@
 import { paint } from '@seedcord/errors';
 
-import { runPrefix } from '#cli/packageManager';
+import { commandLine, shellWord } from '#cli/shellWord';
 import { version } from '#cli/version';
 import { noFlagName } from '#interview/applyFlags';
 import { privilegedFor } from '#interview/capabilities';
 
+import type { PackageManager } from '#cli/PackageManager';
 import type { ScaffoldAnswers } from '#template/context';
 import type { BotToken } from '@seedcord/errors/internal';
 import type { AgentName, ResolvedCommand } from 'package-manager-detector';
@@ -18,27 +19,24 @@ const TOGGLE_LABELS: Record<string, string> = {
     MessageContent: 'Message Content Intent'
 };
 
-const PLAIN_WORD = /^[\w@+=:./-]+$/;
-
-// sh, powershell and cmd all read a double-quoted `#`, space or comma as part of one word
-// parseDirectory refuses the characters that aren't safe on all major shells
-function shellWord(value: string): string {
-    return PLAIN_WORD.test(value) ? value : `"${value}"`;
-}
-
-function commandLine({ command, args }: ResolvedCommand): string {
-    return [command, ...args].map(shellWord).join(' ');
-}
-
 export function nextSteps(
     answers: ScaffoldAnswers,
-    run: { agent: AgentName; pending: readonly ResolvedCommand[] }
+    run: { manager: PackageManager; pending: readonly ResolvedCommand[] }
 ): string[] {
-    const pending = run.pending.map((command) => paint.bold(commandLine(command)));
+    const pending = run.pending.map(({ command, args }) => paint.bold(commandLine(command, args)));
     const fill = answers.token === null ? [paint.mute('add DISCORD_BOT_TOKEN to .env')] : [];
 
     const cd = paint.bold(`cd ${shellWord(answers.directory)}`);
-    return [cd, ...pending, ...fill, paint.bold(`${runPrefix(run.agent)} dev`)];
+    return [cd, ...pending, ...fill, paint.bold(`${run.manager.runPrefix()} dev`)];
+}
+
+export function pendingNotice(pending: readonly ResolvedCommand[]): string | null {
+    if (pending.length === 0) return null;
+
+    return [
+        'Run these in the project before starting the bot:',
+        ...pending.map(({ command, args }) => commandLine(command, args))
+    ].join('\n');
 }
 
 function secretFlag(value: BotToken | null, flag: string, placeholder: string): string {
