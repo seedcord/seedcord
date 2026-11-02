@@ -1,4 +1,5 @@
-import { DispatchContext, UserContextMenuRoute, MessageContextMenuRoute } from '@seedcord/core';
+import { UserContextMenuRoute, MessageContextMenuRoute } from '@seedcord/core';
+import { DispatchContext } from '@seedcord/core/internal';
 import { describe, expect, expectTypeOf, it } from 'vitest';
 
 import { UserContextMenuHandler, MessageContextMenuHandler } from '#handlers/interaction/ContextMenuHandler';

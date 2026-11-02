@@ -1,6 +1,7 @@
 import { DiscordAPIError } from '@discordjs/rest';
-import { DispatchContext, Fault, InteractionKind, Notice, Silence } from '@seedcord/core';
+import { Fault, InteractionKind, Notice, Silence } from '@seedcord/core';
 import {
+    DispatchContext,
     logUnknownFault,
     outcomeFor,
     queuedMsFor,

@@ -1,5 +1,6 @@
-import { DispatchContext, ButtonRoute, InteractionKind } from '@seedcord/core';
+import { ButtonRoute, InteractionKind } from '@seedcord/core';
 import {
+    DispatchContext,
     ComponentDefsKey,
     InteractionMetadataKey,
     InteractionRouteKeys,

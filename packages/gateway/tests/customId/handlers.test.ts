@@ -1,4 +1,5 @@
-import { DispatchContext, Notice, CustomId, ButtonRoute, ModalRoute, UserMenuRoute } from '@seedcord/core';
+import { Notice, CustomId, ButtonRoute, ModalRoute, UserMenuRoute } from '@seedcord/core';
+import { DispatchContext } from '@seedcord/core/internal';
 import { SeedcordErrorCode } from '@seedcord/errors';
 import { describe, expect, it } from 'vitest';
 

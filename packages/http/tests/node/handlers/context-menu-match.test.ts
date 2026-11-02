@@ -1,4 +1,4 @@
-import { DispatchContext } from '@seedcord/core';
+import { DispatchContext } from '@seedcord/core/internal';
 import { isSeedcordError, SeedcordErrorCode } from '@seedcord/errors';
 import { ApplicationCommandType } from 'discord-api-types/v10';
 import { describe, expect, expectTypeOf, it } from 'vitest';
@@ -30,8 +30,8 @@ const core = {} as unknown as Core;
 
 const user: APIUser = { id: 'u1', username: 'dhruv', discriminator: '0', global_name: null, avatar: null };
 
-function userMenuEvent(name: string): APIUserApplicationCommandInteraction {
-    return {
+function userMenu(name: string): [APIUserApplicationCommandInteraction, Core, DispatchContext] {
+    const event = {
         application_id: 'app-1',
         id: 'int-1',
         token: 'tok',
@@ -39,15 +39,15 @@ function userMenuEvent(name: string): APIUserApplicationCommandInteraction {
         data: {
             id: 'c1',
             type: ApplicationCommandType.User,
-            name,
             target_id: 'u1',
             resolved: { users: { u1: user }, members: { u1: { nick: 'dee' } } }
         }
     } as unknown as APIUserApplicationCommandInteraction;
+    return [event, core, new DispatchContext('userContextMenu', name)];
 }
 
-function messageMenuEvent(name: string): APIMessageApplicationCommandInteraction {
-    return {
+function messageMenu(name: string): [APIMessageApplicationCommandInteraction, Core, DispatchContext] {
+    const event = {
         application_id: 'app-1',
         id: 'int-1',
         token: 'tok',
@@ -55,11 +55,11 @@ function messageMenuEvent(name: string): APIMessageApplicationCommandInteraction
         data: {
             id: 'c1',
             type: ApplicationCommandType.Message,
-            name,
             target_id: 'msg1',
             resolved: { messages: { msg1: { id: 'msg1' } } }
         }
     } as unknown as APIMessageApplicationCommandInteraction;
+    return [event, core, new DispatchContext('messageContextMenu', name)];
 }
 
 class Menu extends UserContextMenuHandler<'hb Profile' | 'hb Greet'> {
@@ -131,39 +131,27 @@ void UnknownCase;
 
 describe('http context menu match', () => {
     it('runs the case for the selected command', async () => {
-        await expect(
-            new Menu(userMenuEvent('hb Profile'), core, new DispatchContext('userContextMenu', 'hb Profile')).run()
-        ).resolves.toBe('profile:dhruv:dee');
-        await expect(
-            new Menu(userMenuEvent('hb Greet'), core, new DispatchContext('userContextMenu', 'hb Greet')).run()
-        ).resolves.toBe('greet:dhruv');
+        await expect(new Menu(...userMenu('hb Profile')).run()).resolves.toBe('profile:dhruv:dee');
+        await expect(new Menu(...userMenu('hb Greet')).run()).resolves.toBe('greet:dhruv');
     });
 
     it('hands a message case the clicked message', async () => {
-        await expect(
-            new Tools(messageMenuEvent('hb Pin'), core, new DispatchContext('messageContextMenu', 'hb Pin')).run()
-        ).resolves.toBe('pinned msg1');
+        await expect(new Tools(...messageMenu('hb Pin')).run()).resolves.toBe('pinned msg1');
     });
 
     it('throws when the selected command lacks a case', async () => {
-        await expect(
-            new Menu(userMenuEvent('hb Greet'), core, new DispatchContext('userContextMenu', 'hb Greet')).runPartial()
-        ).rejects.toSatisfy((error: unknown) =>
+        await expect(new Menu(...userMenu('hb Greet')).runPartial()).rejects.toSatisfy((error: unknown) =>
             isSeedcordError(error, 'SeedcordTypeError', SeedcordErrorCode.MatchCaseMissing)
         );
     });
 
     it('throws for a command named after an Object.prototype member', async () => {
-        await expect(
-            new Menu(userMenuEvent('constructor'), core, new DispatchContext('userContextMenu', 'constructor')).run()
-        ).rejects.toSatisfy((error: unknown) =>
+        await expect(new Menu(...userMenu('constructor')).run()).rejects.toSatisfy((error: unknown) =>
             isSeedcordError(error, 'SeedcordTypeError', SeedcordErrorCode.MatchCaseMissing)
         );
     });
 
     it('reads the selected command name without a case', () => {
-        expect(
-            new Menu(userMenuEvent('hb Greet'), core, new DispatchContext('userContextMenu', 'hb Greet')).readName()
-        ).toBe('hb Greet');
+        expect(new Menu(...userMenu('hb Greet')).readName()).toBe('hb Greet');
     });
 });

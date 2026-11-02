@@ -1,7 +1,6 @@
 /* eslint-disable max-lines -- one suite per sender, splitting fragments the shared rest mock and body fixtures */
 import { TextDisplayBuilder } from '@discordjs/builders';
-import { DispatchContext } from '@seedcord/core';
-import { AckTrace, serializeReply } from '@seedcord/core/internal';
+import { DispatchContext, AckTrace, serializeReply } from '@seedcord/core/internal';
 import { isSeedcordError, SeedcordErrorCode } from '@seedcord/errors';
 import { MessageFlags } from 'discord-api-types/v10';
 import { describe, expect, it, vi } from 'vitest';

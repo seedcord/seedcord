@@ -1,4 +1,5 @@
-import { DispatchContext, CustomId } from '@seedcord/core';
+import { CustomId } from '@seedcord/core';
+import { DispatchContext } from '@seedcord/core/internal';
 import { ComponentType } from 'discord-api-types/v10';
 import { describe, expect, it } from 'vitest';
 

@@ -1,7 +1,7 @@
 import { Readable } from 'node:stream';
 
 import { TextDisplayBuilder } from '@discordjs/builders';
-import { DispatchContext } from '@seedcord/core';
+import { DispatchContext } from '@seedcord/core/internal';
 import { describe, expect, it, vi } from 'vitest';
 
 import { ReplySender } from '#reply/ReplySender';

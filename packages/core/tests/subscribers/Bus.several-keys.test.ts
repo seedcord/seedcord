@@ -1,3 +1,4 @@
+import { SeedcordErrorCode } from '@seedcord/errors';
 import { describe, expect, expectTypeOf, it } from 'vitest';
 
 import { Subscribe } from '#subscribers/decorators/Subscribe';
@@ -21,7 +22,7 @@ function settle(): Promise<void> {
 }
 
 describe('a subscriber on several keys', () => {
-    it('runs the case for the key that fired, with that key payload', async () => {
+    it("runs the case for the published key, with that key's payload", async () => {
         const seen: string[] = [];
 
         @Subscribe(['unknownException'], ['unhandledInteractionError'])
@@ -63,6 +64,22 @@ describe('a subscriber on several keys', () => {
         await settle();
 
         expect(runs).toEqual(['once', 'on', 'on']);
+    });
+
+    it('throws MatchCaseMissing for a published key without a case', async () => {
+        @Subscribe(['unknownException'], ['unhandledInteractionError'])
+        class Partial extends Subscriber<'unknownException' | 'unhandledInteractionError', CoreBase> {
+            async execute(): Promise<void> {
+                const cases = { unknownException: () => undefined, unhandledInteractionError: () => undefined };
+                Reflect.deleteProperty(cases, 'unhandledInteractionError');
+                await this.match(cases);
+            }
+        }
+
+        // justified: match reads only the key and the payload
+        const subscriber = new Partial(unhandled, {} as unknown as CoreBase, 'unhandledInteractionError');
+
+        await expect(subscriber.execute()).rejects.toMatchObject({ code: SeedcordErrorCode.MatchCaseMissing });
     });
 });
 

@@ -1,6 +1,5 @@
 import { ContainerBuilder } from '@discordjs/builders';
-import { DispatchContext } from '@seedcord/core';
-import { PublishDefault, serializeReply } from '@seedcord/core/internal';
+import { DispatchContext, PublishDefault, serializeReply } from '@seedcord/core/internal';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
 import { getConfirmation } from '#bot/confirm';

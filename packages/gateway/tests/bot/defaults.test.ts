@@ -1,6 +1,5 @@
 import { TextDisplayBuilder } from '@discordjs/builders';
-import { DispatchContext } from '@seedcord/core';
-import { PublishDefault } from '@seedcord/core/internal';
+import { DispatchContext, PublishDefault } from '@seedcord/core/internal';
 import { MessageFlags } from 'discord.js';
 import { describe, expect, it, vi } from 'vitest';
 

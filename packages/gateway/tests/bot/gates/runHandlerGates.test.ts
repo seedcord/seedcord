@@ -1,5 +1,5 @@
-import { DispatchContext, Notice, defineGate } from '@seedcord/core';
-import { runHandlerGates } from '@seedcord/core/internal';
+import { Notice, defineGate } from '@seedcord/core';
+import { DispatchContext, runHandlerGates } from '@seedcord/core/internal';
 import { describe, expect, it } from 'vitest';
 
 import { Gated } from '#bDecorators/Gated';

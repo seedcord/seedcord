@@ -10,7 +10,6 @@ type SubscriberMatchCases<Keys extends SubscriptionKey, Ret> = {
     [Key in Keys]: (data: AllSubscriptions[Key]) => Promisable<Ret>;
 };
 
-// match reads the payload on a class with several keys
 type SingleKeyData<Keys extends SubscriptionKey> = IsUnion<Keys> extends true ? never : AllSubscriptions[Keys];
 
 /**
@@ -25,9 +24,6 @@ type SingleKeyData<Keys extends SubscriptionKey> = IsUnion<Keys> extends true ? 
 export abstract class Subscriber<in out Keys extends SubscriptionKey, TCore extends CoreBase> {
     protected readonly logger: Logger;
 
-    /** The published payload. It's `never` on a subscriber for several keys, where `this.match` reads it. */
-    protected readonly data: SingleKeyData<Keys>;
-
     /**
      * Instantiates the subscriber with event data and core.
      *
@@ -41,7 +37,11 @@ export abstract class Subscriber<in out Keys extends SubscriptionKey, TCore exte
         protected readonly key: Keys
     ) {
         this.logger = new Logger(this.constructor.name, { channel: 'subscribers' });
-        this.data = payload;
+    }
+
+    /** The published payload. It's `never` on a subscriber for several keys, where `this.match` reads it. */
+    protected get data(): SingleKeyData<Keys> {
+        return this.payload;
     }
 
     /**
@@ -62,6 +62,8 @@ export abstract class Subscriber<in out Keys extends SubscriptionKey, TCore exte
      *
      * @example
      * ```ts
+     * import { Subscribe, Subscriber } from '@seedcord/gateway';
+     *
      * \@Subscribe(['interactionDispatched'], ['eventDispatched'])
      * class Metrics extends Subscriber<'interactionDispatched' | 'eventDispatched'> {
      *     async execute() {

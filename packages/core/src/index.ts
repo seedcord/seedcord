@@ -36,7 +36,7 @@ export type { MiddlewareKind } from '#src/metadataKeys';
 export { RegisterInteractionMiddleware } from '#decorators/middleware';
 export type { InteractionMiddlewareOptions } from '#decorators/middleware';
 
-export { DispatchContext } from '#src/dispatch/DispatchContext';
+export type { DispatchContext } from '#src/dispatch/DispatchContext';
 export type { DispatchResult, EventDispatchResult, HandlerOutcome, HandlerResult } from '#src/dispatch/dispatchResult';
 
 export { BaseHandler } from '#src/handlers/BaseHandler';

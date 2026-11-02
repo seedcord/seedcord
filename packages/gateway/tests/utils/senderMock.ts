@@ -1,4 +1,4 @@
-import { DispatchContext } from '@seedcord/core';
+import { DispatchContext } from '@seedcord/core/internal';
 import { vi } from 'vitest';
 
 import { ReplySender } from '#bot/ReplySender';

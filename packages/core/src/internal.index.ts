@@ -125,6 +125,7 @@ export {
     UnregisterSubscriber,
     VerifyWebhooks
 } from '#subscribers/slots';
+export { DispatchContext } from '#src/dispatch/DispatchContext';
 export { outcomeFor, queuedMsFor, reportDispatch } from '#src/dispatch/dispatchReport';
 export { eventResultFor, resultFor, runAfter } from '#src/dispatch/runAfter';
 export { OnceTracker } from '#src/dispatch/OnceTracker';

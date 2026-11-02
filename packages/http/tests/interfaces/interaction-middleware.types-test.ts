@@ -9,6 +9,7 @@ import type {
     APIMessageComponentButtonInteraction,
     APIModalSubmitInteraction
 } from 'discord-api-types/v10';
+import type { LiteralUnion } from 'type-fest';
 
 class ButtonOnly extends InteractionMiddleware<InteractionKind.Button> {
     public execute(): Promise<void> {
@@ -22,7 +23,7 @@ void ButtonOnly;
 class SlashOnly extends InteractionMiddleware<InteractionKind.Slash> {
     public execute(): Promise<void> {
         expectTypeOf(this.event).toEqualTypeOf<APIChatInputApplicationCommandInteraction>();
-        expectTypeOf(this.route).toEqualTypeOf<keyof SlashRegistry>();
+        expectTypeOf(this.route).toEqualTypeOf<LiteralUnion<keyof SlashRegistry, string>>();
         return Promise.resolve();
     }
 }

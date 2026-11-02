@@ -1,4 +1,4 @@
-import { DispatchContext } from '@seedcord/core';
+import { DispatchContext } from '@seedcord/core/internal';
 import { LoggerChannelRegistry } from '@seedcord/logger';
 import { beforeEach, describe, expect, it } from 'vitest';
 

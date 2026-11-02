@@ -1,5 +1,5 @@
-import { DispatchContext, Fault } from '@seedcord/core';
-import { PublishDefault } from '@seedcord/core/internal';
+import { Fault } from '@seedcord/core';
+import { DispatchContext, PublishDefault } from '@seedcord/core/internal';
 import { LoggerChannelRegistry } from '@seedcord/logger';
 import { describe, expect, it, vi } from 'vitest';
 

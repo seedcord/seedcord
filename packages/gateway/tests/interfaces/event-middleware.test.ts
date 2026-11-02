@@ -1,4 +1,5 @@
-import { DispatchContext, RegisterInteractionMiddleware } from '@seedcord/core';
+import { RegisterInteractionMiddleware } from '@seedcord/core';
+import { DispatchContext } from '@seedcord/core/internal';
 import { Events } from 'discord.js';
 import { describe, expect, expectTypeOf, it, vi } from 'vitest';
 

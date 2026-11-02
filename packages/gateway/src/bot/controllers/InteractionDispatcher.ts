@@ -1,7 +1,8 @@
 /* eslint-disable max-lines -- one handler method per interaction type keeps the router in one file */
-import { DispatchContext, InteractionKind } from '@seedcord/core';
+import { InteractionKind } from '@seedcord/core';
 import { HmrModuleHandler } from '@seedcord/core/hmr';
 import {
+    DispatchContext,
     InteractionMetadataKey,
     interactionRoutesOf,
     outcomeFor,

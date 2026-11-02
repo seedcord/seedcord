@@ -1,5 +1,6 @@
 import { Collection } from '@discordjs/collection';
-import { DispatchContext, CustomId } from '@seedcord/core';
+import { CustomId } from '@seedcord/core';
+import { DispatchContext } from '@seedcord/core/internal';
 import { describe, expect, it } from 'vitest';
 
 import {

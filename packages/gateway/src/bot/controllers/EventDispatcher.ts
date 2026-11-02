@@ -1,6 +1,6 @@
-import { DispatchContext } from '@seedcord/core';
 import { HmrModuleHandler } from '@seedcord/core/hmr';
 import {
+    DispatchContext,
     EventMetadataKey,
     EventMiddlewareMetadataKey,
     eventResultFor,

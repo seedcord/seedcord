@@ -1,4 +1,5 @@
-import { DispatchContext, RequirePermissions } from '@seedcord/core';
+import { RequirePermissions } from '@seedcord/core';
+import { DispatchContext } from '@seedcord/core/internal';
 import { GuildMember, Message, PermissionFlagsBits } from 'discord.js';
 import { describe, it, expect } from 'vitest';
 

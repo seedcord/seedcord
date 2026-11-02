@@ -12,9 +12,8 @@ export class DispatchContext implements DispatchBag {
     public readonly id = crypto.randomUUID();
 
     /**
-     * @param kind - The interaction kind, or `'event'` for a gateway event.
-     * @param route - The slash path, context menu name, custom-ID prefix, or event name that this dispatch
-     * matched. It's empty if seedcord didn't mint the interaction's custom ID.
+     * @param route - The slash path, context menu name, custom-ID prefix, or event name this dispatch is for.
+     * It's empty if seedcord didn't mint the interaction's custom ID.
      */
     constructor(
         public readonly kind: `${InteractionKind}` | 'event',

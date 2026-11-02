@@ -21,8 +21,7 @@ export interface SubscribeOptions {
     readonly frequency?: EventFrequency | undefined;
 }
 
-/** Tuple describing one subscription key and optional options. */
-export type SubscribeSpec<Key extends SubscriptionKey> = readonly [key: Key, options?: SubscribeOptions];
+type SubscribeSpec<Key extends SubscriptionKey> = readonly [key: Key, options?: SubscribeOptions];
 
 /** @internal */
 export interface SubscribeMetadataEntry {

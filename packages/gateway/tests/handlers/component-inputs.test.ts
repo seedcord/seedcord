@@ -5,9 +5,9 @@ import {
     ModalRoute,
     RoleMenuRoute,
     StringMenuRoute,
-    UserMenuRoute,
-    DispatchContext
+    UserMenuRoute
 } from '@seedcord/core';
+import { DispatchContext } from '@seedcord/core/internal';
 import { describe, expect, it } from 'vitest';
 
 import {

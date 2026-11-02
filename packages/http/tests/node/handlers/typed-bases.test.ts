@@ -1,5 +1,4 @@
-import { DispatchContext } from '@seedcord/core';
-import { PublishDefault } from '@seedcord/core/internal';
+import { DispatchContext, PublishDefault } from '@seedcord/core/internal';
 import { isSeedcordError, SeedcordErrorCode } from '@seedcord/errors';
 import { ApplicationCommandOptionType, ApplicationCommandType } from 'discord-api-types/v10';
 import { describe, expect, expectTypeOf, it, vi } from 'vitest';
@@ -88,7 +87,6 @@ describe('SlashHandler options and match', () => {
             }
         }
         const event = slashEvent({
-            name: 'hbBan',
             options: [{ name: 'reason', type: ApplicationCommandOptionType.String, value: 'spam' }]
         });
 
@@ -108,7 +106,6 @@ describe('SlashHandler options and match', () => {
             }
         }
         const event = slashEvent({
-            name: 'hbKick',
             options: [{ name: 'note', type: ApplicationCommandOptionType.String, value: 'bye' }]
         });
 
@@ -123,7 +120,7 @@ describe('SlashHandler options and match', () => {
                 await this.match({ hbBan: () => undefined });
             }
         }
-        const event = slashEvent({ name: 'hbGhost', options: [] });
+        const event = slashEvent({ options: [] });
 
         await expect(
             new Ban(event, coreMock().core, new DispatchContext('slash', 'hbGhost')).execute()
@@ -138,7 +135,7 @@ describe('SlashHandler options and match', () => {
                 await this.match({ hbBan: () => undefined });
             }
         }
-        const event = slashEvent({ name: 'constructor', options: [] });
+        const event = slashEvent({ options: [] });
 
         await expect(
             new Ban(event, coreMock().core, new DispatchContext('slash', 'constructor')).execute()
@@ -150,7 +147,6 @@ describe('SlashHandler options and match', () => {
 
 describe('AutocompleteHandler focused, match, options, route', () => {
     const searchEvent = autoEvent({
-        name: 'hbSearch',
         options: [
             { name: 'query', type: ApplicationCommandOptionType.String, value: 'par', focused: true },
             { name: 'limit', type: ApplicationCommandOptionType.Integer, value: '5' }
@@ -203,7 +199,6 @@ describe('AutocompleteHandler focused, match, options, route', () => {
             }
         }
         const event = autoEvent({
-            name: 'hbSearch',
             options: [{ name: 'ghost', type: ApplicationCommandOptionType.String, value: 'x', focused: true }]
         });
 
@@ -222,7 +217,6 @@ describe('AutocompleteHandler focused, match, options, route', () => {
             }
         }
         const event = autoEvent({
-            name: 'hbSearch',
             options: [{ name: 'constructor', type: ApplicationCommandOptionType.String, value: 'x', focused: true }]
         });
 
@@ -239,7 +233,6 @@ describe('AutocompleteHandler focused, match, options, route', () => {
             }
         }
         const event = autoEvent({
-            name: 'hbSearch',
             options: [{ name: 'limit', type: ApplicationCommandOptionType.Integer, value: '4' }]
         });
 
@@ -264,7 +257,6 @@ describe('ContextMenuHandler target', () => {
             type: 2,
             data: {
                 id: 'c1',
-                name: 'View Profile',
                 type: ApplicationCommandType.User,
                 target_id: 'u1',
                 resolved: { users: { u1: user }, members: { u1: { nick: 'nick', roles: [], permissions: '0' } } }
@@ -280,7 +272,6 @@ describe('ContextMenuHandler target', () => {
             type: 2,
             data: {
                 id: 'c1',
-                name: 'Report Message',
                 type: ApplicationCommandType.Message,
                 target_id: 'm1',
                 resolved: { messages: { m1: message } }

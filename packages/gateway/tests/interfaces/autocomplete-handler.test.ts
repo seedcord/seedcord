@@ -1,5 +1,5 @@
-import { DispatchContext, AutocompleteRoute } from '@seedcord/core';
-import { PublishDefault } from '@seedcord/core/internal';
+import { AutocompleteRoute } from '@seedcord/core';
+import { DispatchContext, PublishDefault } from '@seedcord/core/internal';
 import { SeedcordErrorCode } from '@seedcord/errors';
 import { describe, expect, expectTypeOf, it } from 'vitest';
 

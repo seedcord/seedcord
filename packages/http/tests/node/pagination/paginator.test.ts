@@ -1,5 +1,4 @@
-import { DispatchContext } from '@seedcord/core';
-import { serializeReply } from '@seedcord/core/internal';
+import { DispatchContext, serializeReply } from '@seedcord/core/internal';
 import { ComponentType, InteractionResponseType, MessageFlags } from 'discord-api-types/v10';
 import { describe, expect, expectTypeOf, it, vi } from 'vitest';
 

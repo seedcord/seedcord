@@ -1,4 +1,5 @@
-import { DispatchContext, Notice } from '@seedcord/core';
+import { Notice } from '@seedcord/core';
+import { DispatchContext } from '@seedcord/core/internal';
 import { SeedcordErrorCode } from '@seedcord/errors';
 import { Events } from 'discord.js';
 import { describe, expect, expectTypeOf, it, vi } from 'vitest';
