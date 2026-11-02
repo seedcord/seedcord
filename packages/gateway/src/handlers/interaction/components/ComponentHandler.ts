@@ -1,6 +1,4 @@
-import { ComponentDefsBrand, decodeComponentRoute } from '@seedcord/core/internal';
-import { SeedcordErrorCode } from '@seedcord/errors';
-import { SeedcordTypeError } from '@seedcord/errors/internal';
+import { caseFor, ComponentDefsBrand, decodeComponentRoute } from '@seedcord/core/internal';
 
 import { InteractionHandler } from '#handlers/interaction/InteractionHandler';
 
@@ -95,16 +93,7 @@ export abstract class ComponentHandler<Event extends ComponentInteraction, Defs 
      */
     protected async match<Ret>(cases: MatchCases<Defs, Ret>): Promise<Ret> {
         const { prefix, params } = this.decodedRoute;
-        // justified: MatchCases is keyed by prefix literals, so the Record cast indexes it with the runtime prefix
-        const callback = Object.hasOwn(cases, prefix)
-            ? (cases as Record<string, (params: Record<string, unknown>) => Promisable<Ret>>)[prefix]
-            : undefined;
-        if (!callback)
-            throw new SeedcordTypeError(SeedcordErrorCode.MatchCaseMissing, [
-                this.constructor.name,
-                'component route',
-                prefix
-            ]);
-        return await callback(params);
+        type Case = (params: Record<string, unknown>) => Promisable<Ret>;
+        return await caseFor<Case>(this, cases, 'component route', prefix)(params);
     }
 }

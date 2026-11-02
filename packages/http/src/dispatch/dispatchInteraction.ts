@@ -1,12 +1,13 @@
 import { DiscordAPIError } from '@discordjs/rest';
-import { Fault, InteractionKind, Notice, Silence } from '@seedcord/core';
+import { InteractionKind, Notice, Silence } from '@seedcord/core';
 import {
     DispatchContext,
-    logUnknownFault,
+    faultResponse,
     outcomeFor,
     queuedMsFor,
     reportDispatch,
     reportedWrite,
+    reportFault,
     resultFor,
     runAfter,
     runInteractionGates
@@ -21,7 +22,7 @@ import { RepliableHandler } from '#handlers/RepliableHandler';
 import { ReplySender } from '#reply/ReplySender';
 import { interactionGateContext } from '#src/gates/context';
 
-import { reportFault } from './reportFault';
+import { faultReportOf } from './faultReportOf';
 
 import type {
     ConstructableHandler,
@@ -35,7 +36,6 @@ import type { Core } from '#interfaces/Core';
 import type { ResolvedRoute } from './resolve';
 import type { DispatchOutcome, DispatchResult, MiddlewareKind } from '@seedcord/core';
 import type { MiddlewareRegistry } from '@seedcord/core/internal';
-import type { RenderContext } from '@seedcord/types';
 
 // lazy, env binds after this module loads
 let dispatchLogger: Logger | undefined;
@@ -81,67 +81,31 @@ async function respondEmptyChoices(scope: FaultScope): Promise<void> {
     );
 }
 
-function renderContext(scope: FaultScope, uuid: RenderContext['uuid']): RenderContext {
-    const { dispatch } = scope;
-    const developerUsername = scope.core.config.notifications?.developerUsername;
-    return developerUsername === undefined ? { uuid, dispatch } : { uuid, developerUsername, dispatch };
-}
-
-async function handleNotice(notice: Notice, uuid: RenderContext['uuid'], scope: FaultScope): Promise<void> {
-    if (notice.report) {
-        logger().error(`${notice.name}: ${paint.mute(uuid)}`, notice);
-        reportFault(notice, uuid, scope.dispatch, scope.payload, scope.core);
-    }
-    const { sender } = scope;
-    if (!sender) {
-        await sendGuarded(scope.dispatch.routeId, () => respondEmptyChoices(scope));
-        return;
-    }
-    const response = notice.render(renderContext(scope, uuid));
-    await sendGuarded(scope.dispatch.routeId, () => sender.send(response, { ephemeral: notice.ephemeral }));
-}
-
-async function handleRawFault(error: Error, uuid: RenderContext['uuid'], scope: FaultScope): Promise<void> {
-    const { core, sender } = scope;
-
-    logUnknownFault(logger(), paint.mute(uuid), error, core.config.errors);
-
-    reportFault(error, uuid, scope.dispatch, scope.payload, core);
-
-    if (!sender) {
-        await sendGuarded(scope.dispatch.routeId, () => respondEmptyChoices(scope));
-        return;
-    }
-
-    const Override = core.config.errors?.defaultError;
-    const card = Override ? new Override(uuid) : new Fault();
-    const response = card.render(renderContext(scope, uuid));
-    await sendGuarded(scope.dispatch.routeId, () => sender.send(response, { ephemeral: true }));
-}
-
 async function handleFault(caught: unknown, scope: FaultScope): Promise<void> {
+    const { core, dispatch, payload, sender } = scope;
     if (caught instanceof Silence) {
-        if (caught.reason !== undefined && (scope.core.config.errors?.logSilences ?? true)) {
+        if (caught.reason !== undefined && (core.config.errors?.logSilences ?? true)) {
             logger().debug(`Silence: ${caught.reason}`);
         }
         return;
     }
 
-    const uuid = crypto.randomUUID();
-    if (caught instanceof Notice) {
-        await handleNotice(caught, uuid, scope);
-        return;
-    }
-
     const error = asError(caught);
-
-    const ignore = new Set<number | string>(scope.core.config.errors?.ignoreApiCodes ?? []);
+    const ignore = new Set<number | string>(core.config.errors?.ignoreApiCodes ?? []);
     if (error instanceof DiscordAPIError && ignore.has(error.code)) {
         logger().debug(`swallowed api code ${paint.amber(String(error.code))}`);
         return;
     }
 
-    await handleRawFault(error, uuid, scope);
+    const uuid = crypto.randomUUID();
+    reportFault(core.bus, core.config.errors, error, faultReportOf(payload, dispatch, uuid));
+    if (!sender) {
+        await sendGuarded(dispatch.routeId, () => respondEmptyChoices(scope));
+        return;
+    }
+    const response = faultResponse(error, uuid, dispatch, core.config);
+    const ephemeral = error instanceof Notice ? error.ephemeral : true;
+    await sendGuarded(dispatch.routeId, () => sender.send(response, { ephemeral }));
 }
 
 interface DispatchArgs {
@@ -181,7 +145,6 @@ function dispatchReporter(
             interactionId: payload.id,
             kind: match.kind,
             outcome,
-            fallback: match.fallback,
             userId: interactionUser(payload).id,
             guildId: payload.guild_id ?? null,
             startedAt,
@@ -243,7 +206,7 @@ async function refusalBeforeHandler(step: BeforeHandler): Promise<{ caught: unkn
 export async function dispatchInteraction(args: DispatchArgs): Promise<(() => Promise<void>) | null> {
     const { match, payload, core } = args;
     // every fault path below renders against this one context
-    const dispatch = new DispatchContext(match.kind, match.route);
+    const dispatch = new DispatchContext(match.kind, match.route, match.fallback);
     const report = dispatchReporter(match, payload, core, dispatch);
 
     const Handler = match.ctor;
@@ -297,9 +260,8 @@ async function gateRefusal(step: BeforeHandler): Promise<{ caught: unknown } | n
     // match.kind comes from payload.type in the router. the second clause narrows the payload to Repliables.
     if (match.kind === InteractionKind.Autocomplete || payload.type === InteractionType.ApplicationCommandAutocomplete)
         return null;
-    const declaredRoute = match.fallback ? null : dispatch.routeId;
     try {
-        await runInteractionGates(Handler, interactionGateContext(payload, core, dispatch, declaredRoute));
+        await runInteractionGates(Handler, interactionGateContext(payload, core, dispatch));
         return null;
     } catch (caught) {
         return { caught };

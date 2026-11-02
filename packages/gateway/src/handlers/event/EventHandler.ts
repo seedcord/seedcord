@@ -1,5 +1,4 @@
-import { SeedcordErrorCode } from '@seedcord/errors';
-import { SeedcordTypeError } from '@seedcord/errors/internal';
+import { caseFor } from '@seedcord/core/internal';
 
 import { BaseHandler } from '#src/handlers/BaseHandler';
 
@@ -78,12 +77,8 @@ export abstract class EventHandler<in out Names extends ValidNonInteractionKeys>
      * ```
      */
     protected async match<Ret>(cases: EventMatchCases<Names, Ret>): Promise<Ret> {
-        const name = this.route;
-        // hasOwn, since a plain lookup for an event named `toString` returns Object.prototype's
-        const callback = Object.hasOwn(cases, name) ? (cases as Record<string, unknown>)[name] : undefined;
-        if (typeof callback !== 'function')
-            throw new SeedcordTypeError(SeedcordErrorCode.MatchCaseMissing, [this.constructor.name, 'event', name]);
+        const callback = caseFor<(...args: unknown[]) => Promisable<Ret>>(this, cases, 'event', this.route);
         // this.event is never on a multi-event handler. getEvent() returns the real tuple.
-        return await (callback as (...args: unknown[]) => Promisable<Ret>)(...this.getEvent());
+        return await callback(...this.getEvent());
     }
 }

@@ -14,7 +14,8 @@ export type { InteractionMiddlewareMetadata } from '#decorators/middleware';
 export { interactionMiddleware, MiddlewareRegistry } from '#src/dispatch/MiddlewareRegistry';
 export type { MiddlewareRegistration, MiddlewareRegistrationOf } from '#src/dispatch/MiddlewareRegistry';
 export { bindBotColor } from '#components/botColorHolder';
-export { logUnknownFault } from '#src/notices/logUnknownFault';
+export { faultResponse } from '#src/notices/faultResponse';
+export { reportFault, type FaultReport } from '#src/notices/reportFault';
 
 export { FixedScope } from '#src/plugin/Plugin';
 export type { PluginArgs, PluginCtor } from '#src/plugin/Plugin';
@@ -66,6 +67,7 @@ export { slashRouteLeaves } from '#src/commands/slashRouteLeaves';
 export type { CommandBuilder, DeployResult } from '#src/commands/types';
 
 export type { GateFitsWith } from '#gates/matching';
+export { caseFor } from '#src/handlers/caseFor';
 export type { MiddlewareRoute } from '#src/handlers/middlewareRoute';
 
 export { getDevChannel, setDevChannel } from '#hmr/devChannel';
@@ -115,7 +117,7 @@ export { reportedWrite, type ReplyTelemetry } from '#reply/responseReport';
 export { translateSerializationError } from '#reply/translateSerialization';
 export { serializeReply, type SerializedReply } from '#reply/serializeReply';
 
-export { type StoredSubscriberCtor, type SubscriberRegistration } from '#subscribers/Bus';
+export { type StoredSubscriberCtor } from '#subscribers/Bus';
 export { ReportThrottle } from '#subscribers/ReportThrottle';
 export { PublishDefault } from '#subscribers/publishDefault';
 export {

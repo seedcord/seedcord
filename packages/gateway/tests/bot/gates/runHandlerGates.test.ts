@@ -46,7 +46,7 @@ describe('runHandlerGates', () => {
         }
 
         await expect(
-            runHandlerGates(Handler, interactionGateContext(fakeInteraction(), core, dispatch, null))
+            runHandlerGates(Handler, interactionGateContext(fakeInteraction(), core, dispatch))
         ).rejects.toBeInstanceOf(Notice);
     });
 
@@ -58,7 +58,7 @@ describe('runHandlerGates', () => {
         }
 
         await expect(
-            runHandlerGates(Handler, interactionGateContext(fakeInteraction(), core, dispatch, null))
+            runHandlerGates(Handler, interactionGateContext(fakeInteraction(), core, dispatch))
         ).resolves.toBeUndefined();
     });
 

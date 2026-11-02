@@ -81,7 +81,7 @@ export class SubscriberLoader implements Initializeable, HmrAware {
     }
 
     private registerSubscriber(ctor: StoredSubscriberCtor): void {
-        for (const registration of registrationsFor(ctor)) this.bus[RegisterSubscriber](registration);
+        this.bus[RegisterSubscriber](ctor);
     }
 
     private unregisterSubscriber(ctor: StoredSubscriberCtor, artifacts?: SubscriberArtifact): void {

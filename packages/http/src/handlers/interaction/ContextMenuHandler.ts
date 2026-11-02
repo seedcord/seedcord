@@ -1,6 +1,4 @@
-import { ContextMenuKindBrand, ContextMenuNamesBrand } from '@seedcord/core/internal';
-import { SeedcordErrorCode } from '@seedcord/errors';
-import { SeedcordTypeError } from '@seedcord/errors/internal';
+import { caseFor, ContextMenuKindBrand, ContextMenuNamesBrand } from '@seedcord/core/internal';
 
 import { InteractionHandler } from '#handlers/interaction/InteractionHandler';
 
@@ -24,18 +22,6 @@ type MessageMenuCases<Names extends NamesFor<ApplicationCommandType.Message>, Re
     Names,
     (target: APIMessage) => Promisable<Ret>
 >;
-
-function caseFor<Ret>(handler: object, cases: object, name: string): (...args: never[]) => Promisable<Ret> {
-    // hasOwn, since a plain lookup for a command named `constructor` returns Object.prototype's
-    const callback = Object.hasOwn(cases, name) ? (cases as Record<string, unknown>)[name] : undefined;
-    if (typeof callback !== 'function')
-        throw new SeedcordTypeError(SeedcordErrorCode.MatchCaseMissing, [
-            handler.constructor.name,
-            'context menu command',
-            name
-        ]);
-    return callback as (...args: never[]) => Promisable<Ret>;
-}
 
 /**
  * Base class for a user context-menu command handler on the HTTP transport (right-click a user).
@@ -96,10 +82,8 @@ export abstract class UserContextMenuHandler<
      * ```
      */
     protected async match<Ret>(cases: UserMenuCases<Names, Ret>): Promise<Ret> {
-        const callback = caseFor<Ret>(this, cases, this.route);
-        return await (
-            callback as (target: APIUser, member: APIInteractionDataResolvedGuildMember | null) => Promisable<Ret>
-        )(this.target, this.targetMember);
+        type Case = (target: APIUser, member: APIInteractionDataResolvedGuildMember | null) => Promisable<Ret>;
+        return await caseFor<Case>(this, cases, 'context menu command', this.route)(this.target, this.targetMember);
     }
 }
 
@@ -155,7 +139,7 @@ export abstract class MessageContextMenuHandler<
      * ```
      */
     protected async match<Ret>(cases: MessageMenuCases<Names, Ret>): Promise<Ret> {
-        const callback = caseFor<Ret>(this, cases, this.route);
-        return await (callback as (target: APIMessage) => Promisable<Ret>)(this.target);
+        type Case = (target: APIMessage) => Promisable<Ret>;
+        return await caseFor<Case>(this, cases, 'context menu command', this.route)(this.target);
     }
 }

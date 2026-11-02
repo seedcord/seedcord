@@ -1,6 +1,4 @@
-import { SlashRouteBrand } from '@seedcord/core/internal';
-import { SeedcordErrorCode } from '@seedcord/errors';
-import { SeedcordTypeError } from '@seedcord/errors/internal';
+import { caseFor, SlashRouteBrand } from '@seedcord/core/internal';
 
 import { InteractionHandler } from '#handlers/interaction/InteractionHandler';
 import { HttpSlashOptions } from '#inputs/HttpSlashOptions';
@@ -67,17 +65,7 @@ export abstract class SlashHandler<
      * @returns The result of the case that ran.
      */
     protected async match<Ret>(cases: SlashMatchCases<Route, Ret>): Promise<Ret> {
-        const route = this.route;
-        // justified: SlashMatchCases is keyed by Route literals, the Record cast indexes it with the runtime route string.
-        const callback = Object.hasOwn(cases, route)
-            ? (cases as Record<string, (options: SlashOptions<Route>) => Promisable<Ret>>)[route]
-            : undefined;
-        if (!callback)
-            throw new SeedcordTypeError(SeedcordErrorCode.MatchCaseMissing, [
-                this.constructor.name,
-                'command route',
-                route
-            ]);
-        return await callback(this.options);
+        type Case = (options: SlashOptions<Route>) => Promisable<Ret>;
+        return await caseFor<Case>(this, cases, 'command route', this.route)(this.options);
     }
 }

@@ -75,7 +75,6 @@ interface DispatchedHandler {
 interface DispatchReportRow {
     readonly interaction: Interaction;
     readonly kind: InteractionKind;
-    readonly fallback: boolean;
     readonly startedAt: number;
     readonly queuedMs: number;
     readonly dispatch: DispatchContext;
@@ -88,7 +87,6 @@ interface BeforeHandler {
     readonly dispatch: DispatchContext;
     readonly sender: ReplySender | undefined;
     readonly ran: InteractionMiddleware[];
-    readonly declaredRoute: string | null;
 }
 
 export class InteractionDispatcher implements Initializeable, HmrAware {
@@ -392,33 +390,18 @@ export class InteractionDispatcher implements Initializeable, HmrAware {
         const matched = this.maps[kind].get(key);
 
         const HandlerCtor = matched ?? fallback;
-        const dispatch = new DispatchContext(kind, key);
-        const report = this.reporterFor({
-            interaction,
-            kind,
-            fallback: !matched,
-            startedAt,
-            queuedMs,
-            dispatch
-        });
+        const dispatch = new DispatchContext(kind, key, !matched);
+        const report = this.reporterFor({ interaction, kind, startedAt, queuedMs, dispatch });
 
         // outside the try so the fault boundary keeps the handler's ack state
         let sender: ReplySender | undefined;
         const ran: InteractionMiddleware[] = [];
         let result: DispatchResult = { outcome: 'handled' };
         try {
-            const handler = this.buildHandler(HandlerCtor, interaction as Repliables, dispatch, key, !matched);
+            const handler = this.buildHandler(HandlerCtor, interaction as Repliables, dispatch);
             if (handler instanceof RepliableHandler) sender = handler.sender;
 
-            const refusal = await this.refusalBeforeHandler({
-                HandlerCtor,
-                kind,
-                interaction,
-                dispatch,
-                sender,
-                ran,
-                declaredRoute: matched ? dispatch.routeId : null
-            });
+            const refusal = await this.refusalBeforeHandler({ HandlerCtor, kind, interaction, dispatch, sender, ran });
             if (refusal) {
                 result = resultFor(refusal.caught);
                 await this.answer(refusal.caught, interaction as ValidInteractionTypes, dispatch, sender, report);
@@ -452,14 +435,13 @@ export class InteractionDispatcher implements Initializeable, HmrAware {
     private buildHandler(
         HandlerCtor: HandlerConstructor,
         interaction: Repliables,
-        dispatch: DispatchContext,
-        key: string,
-        isFallback: boolean
+        dispatch: DispatchContext
     ): DispatchedHandler {
-        if (isFallback) {
-            this.logger.warn(`No handler found for key ${paint.sky.bold(key)}. Falling back to ${HandlerCtor.name}.`);
+        const { route } = dispatch;
+        if (dispatch.fallback) {
+            this.logger.warn(`No handler found for key ${paint.sky.bold(route)}. Falling back to ${HandlerCtor.name}.`);
         }
-        this.logger.trace(`Processing ${paint.sky.bold(key)} with ${paint.mute(HandlerCtor.name)}`);
+        this.logger.trace(`Processing ${paint.sky.bold(route)} with ${paint.mute(HandlerCtor.name)}`);
         // in a union of both handler bases, the event parameter is never. the maps pair each kind with its class.
         return new (HandlerCtor as ConstructableHandler)(interaction as never, this.core, dispatch);
     }
@@ -476,7 +458,6 @@ export class InteractionDispatcher implements Initializeable, HmrAware {
                 kind: row.kind,
                 outcome,
                 startedAt: row.startedAt,
-                fallback: row.fallback,
                 userId: row.interaction.user.id,
                 guildId: row.interaction.guildId,
                 queuedMs: row.queuedMs
@@ -486,7 +467,7 @@ export class InteractionDispatcher implements Initializeable, HmrAware {
 
     // a returned value is the throw that stops the dispatch before the handler runs
     private async refusalBeforeHandler(step: BeforeHandler): Promise<{ caught: unknown } | null> {
-        const { HandlerCtor, kind, interaction, dispatch, sender, ran, declaredRoute } = step;
+        const { HandlerCtor, kind, interaction, dispatch, sender, ran } = step;
 
         if (kind !== InteractionKind.Autocomplete && sender) {
             try {
@@ -498,7 +479,7 @@ export class InteractionDispatcher implements Initializeable, HmrAware {
 
         // @Gated rejects autocomplete at compile time, since it has no reply target. this is the backstop
         if (interaction.isAutocomplete()) return null;
-        return this.gateRefusal(HandlerCtor, interaction as Repliables, dispatch, declaredRoute);
+        return this.gateRefusal(HandlerCtor, interaction as Repliables, dispatch);
     }
 
     private async runMiddlewares(
@@ -521,14 +502,10 @@ export class InteractionDispatcher implements Initializeable, HmrAware {
     private async gateRefusal(
         HandlerCtor: HandlerConstructor,
         interaction: Repliables,
-        dispatch: DispatchContext,
-        declaredRoute: string | null
+        dispatch: DispatchContext
     ): Promise<{ caught: unknown } | null> {
         try {
-            await runInteractionGates(
-                HandlerCtor,
-                interactionGateContext(interaction, this.core, dispatch, declaredRoute)
-            );
+            await runInteractionGates(HandlerCtor, interactionGateContext(interaction, this.core, dispatch));
             return null;
         } catch (caught) {
             return { caught };

@@ -33,7 +33,6 @@ function reportFor(queuedMs = 0): Parameters<typeof reportDispatch>[1] {
         interactionId: 'i1',
         kind: InteractionKind.Slash,
         outcome: 'handled',
-        fallback: false,
         userId: 'u0',
         guildId: null,
         startedAt: performance.now(),

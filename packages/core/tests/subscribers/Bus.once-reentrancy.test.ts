@@ -58,7 +58,7 @@ describe("Bus 'once' subscribers", () => {
             }
         }
 
-        bus[RegisterSubscriber]({ key: 'unknownException', frequency: 'once', ctor: ReentrantOnce });
+        bus[RegisterSubscriber](ReentrantOnce);
         publish(bus);
 
         expect(runs).toBe(1);
@@ -68,10 +68,10 @@ describe("Bus 'once' subscribers", () => {
         const bus = busWithCore();
         const { Counted, runs } = onceCounter();
 
-        bus[RegisterSubscriber]({ key: 'unknownException', frequency: 'once', ctor: Counted });
+        bus[RegisterSubscriber](Counted);
         publish(bus);
         bus[UnregisterSubscriber](Counted);
-        bus[RegisterSubscriber]({ key: 'unknownException', frequency: 'once', ctor: Counted });
+        bus[RegisterSubscriber](Counted);
         publish(bus);
 
         expect(runs()).toBe(1);
@@ -82,10 +82,10 @@ describe("Bus 'once' subscribers", () => {
         const before = onceCounter();
         const after = onceCounter();
 
-        bus[RegisterSubscriber]({ key: 'unknownException', frequency: 'once', ctor: before.Counted });
+        bus[RegisterSubscriber](before.Counted);
         publish(bus);
         bus[UnregisterSubscriber](before.Counted);
-        bus[RegisterSubscriber]({ key: 'unknownException', frequency: 'once', ctor: after.Counted });
+        bus[RegisterSubscriber](after.Counted);
         publish(bus);
 
         expect([before.runs(), after.runs()]).toEqual([1, 1]);

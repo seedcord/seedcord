@@ -14,10 +14,12 @@ export class DispatchContext implements DispatchBag {
     /**
      * @param route - The slash path, context menu name, custom-ID prefix, or event name this dispatch is for.
      * It's empty if seedcord didn't mint the interaction's custom ID.
+     * @param fallback - True when no handler registered the route.
      */
     constructor(
         public readonly kind: `${InteractionKind}` | 'event',
-        public readonly route: string
+        public readonly route: string,
+        public readonly fallback = false
     ) {}
 
     /**
@@ -26,6 +28,11 @@ export class DispatchContext implements DispatchBag {
      */
     public get routeId(): string {
         return `${this.kind}:${this.route || 'unrouted'}`;
+    }
+
+    /** The {@link routeId} of the handler's own route. It's `null` on an event and on the unhandled default. */
+    public get declaredRoute(): string | null {
+        return this.kind === 'event' || this.fallback ? null : this.routeId;
     }
 
     set<Key extends keyof DispatchState>(key: Key, value: DispatchState[Key]): void {

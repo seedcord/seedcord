@@ -376,16 +376,11 @@ export class EventDispatcher implements Initializeable, HmrAware {
             await handler.execute();
             return { handler: Ctor.name, outcome: 'handled' };
         } catch (caught) {
-            try {
-                handleEventFault(
-                    caught,
-                    { eventName: String(eventName), handlerName: Ctor.name, args, dispatch },
-                    this.core
-                );
-            } catch (reportFailed) {
-                // a Notice's render() is user code
-                this.reportUnhandled(reportFailed);
-            }
+            handleEventFault(
+                caught,
+                { eventName: String(eventName), handlerName: Ctor.name, args, dispatch },
+                this.core
+            );
             return { handler: Ctor.name, ...resultFor(caught) };
         }
     }

@@ -34,8 +34,6 @@ interface DispatchReport {
     readonly interactionId: string;
     readonly kind: `${InteractionKind}`;
     readonly outcome: DispatchOutcome;
-    /** True when no route matched and the unhandled default ran. */
-    readonly fallback: boolean;
     readonly userId: string | null;
     readonly guildId: string | null;
     /** `performance.now()` captured as the dispatch began. */
@@ -67,7 +65,7 @@ export function reportDispatch(bus: Bus, report: DispatchReport): void {
         interactionId: report.interactionId,
         kind: report.kind,
         outcome: report.outcome,
-        fallback: report.fallback,
+        fallback: report.dispatch.fallback,
         userId: report.userId,
         guildId: report.guildId,
         durationMs,

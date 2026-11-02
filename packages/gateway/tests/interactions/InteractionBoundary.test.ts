@@ -262,8 +262,18 @@ describe('handleInteractionFault', () => {
         });
 
         // the only legal autocomplete response, and it clears the client's loading spinner
-        it('responds with empty choices, so the dropdown stops spinning', async () => {
-            await handleInteractionFault(new Error('boom'), asInteraction(mock), mockCore(publish));
+        it('responds with empty choices without rendering a card, so the dropdown stops spinning', async () => {
+            class Unrenderable extends Notice {
+                constructor() {
+                    super('nope');
+                }
+
+                override render(): ReplyResponse {
+                    throw new Error('render ran');
+                }
+            }
+
+            await handleInteractionFault(new Unrenderable(), asInteraction(mock), mockCore(publish));
 
             expect(mock.respond).toHaveBeenCalledWith([]);
         });

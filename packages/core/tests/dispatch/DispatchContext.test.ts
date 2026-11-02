@@ -19,6 +19,12 @@ describe('DispatchContext', () => {
         const dispatch = new DispatchContext('slash', 'ban');
         expect(dispatch.route).toBe('ban');
         expect(dispatch.routeId).toBe('slash:ban');
+        expect(dispatch.declaredRoute).toBe('slash:ban');
+    });
+
+    it('leaves the declared route null on an event and on the unhandled default', () => {
+        expect(new DispatchContext('event', 'messageCreate').declaredRoute).toBeNull();
+        expect(new DispatchContext('slash', 'stale', true).declaredRoute).toBeNull();
     });
 
     it('marks an empty route unrouted in the route id', () => {

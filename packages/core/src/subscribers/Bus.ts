@@ -59,21 +59,21 @@ export class Bus extends TypedEventEmitter<SubscriptionTuples> {
 
     /** @internal keep this inside start(). a bad webhook url thrown outside it never resets the singleton guard */
     public [RegisterDefaults](): void {
-        for (const ctor of [UnknownException, HandledException]) {
-            for (const registration of registrationsFor(ctor)) this[RegisterSubscriber](registration);
-        }
+        for (const ctor of [UnknownException, HandledException]) this[RegisterSubscriber](ctor);
     }
 
     /** @internal */
-    public [RegisterSubscriber](registration: SubscriberRegistration): void {
-        if (!this.probeWebhook(registration.ctor)) return;
+    public [RegisterSubscriber](ctor: StoredSubscriberCtor): void {
+        if (!this.probeWebhook(ctor)) return;
 
-        let registrations = this.subscribersMap.get(registration.key);
-        if (!registrations) {
-            registrations = [];
-            this.subscribersMap.set(registration.key, registrations);
+        for (const registration of registrationsFor(ctor)) {
+            let registrations = this.subscribersMap.get(registration.key);
+            if (!registrations) {
+                registrations = [];
+                this.subscribersMap.set(registration.key, registrations);
+            }
+            registrations.push(registration);
         }
-        registrations.push(registration);
     }
 
     /** @internal */
@@ -88,7 +88,7 @@ export class Bus extends TypedEventEmitter<SubscriptionTuples> {
 
     /** @internal */
     public get [RegisteredCount](): number {
-        return [...this.subscribersMap.values()].reduce((total, entries) => total + entries.length, 0);
+        return new Set([...this.subscribersMap.values()].flat().map((entry) => entry.ctor)).size;
     }
 
     /** @internal registration already dropped every reporter with no url set */

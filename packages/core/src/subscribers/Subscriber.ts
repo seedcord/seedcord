@@ -1,6 +1,6 @@
-import { SeedcordErrorCode } from '@seedcord/errors';
-import { SeedcordTypeError } from '@seedcord/errors/internal';
 import { Logger } from '@seedcord/logger';
+
+import { caseFor } from '#src/handlers/caseFor';
 
 import type { CoreBase } from '#interfaces/CoreBase';
 import type { SubscriptionKey, AllSubscriptions } from './types/Subscriptions';
@@ -76,15 +76,7 @@ export abstract class Subscriber<in out Keys extends SubscriptionKey, TCore exte
      * ```
      */
     protected async match<Ret>(cases: SubscriberMatchCases<Keys, Ret>): Promise<Ret> {
-        const { key } = this;
-        // hasOwn, since a plain lookup for a key named `toString` returns Object.prototype's
-        const callback = Object.hasOwn(cases, key) ? (cases as Record<string, unknown>)[key] : undefined;
-        if (typeof callback !== 'function')
-            throw new SeedcordTypeError(SeedcordErrorCode.MatchCaseMissing, [
-                this.constructor.name,
-                'subscription key',
-                key
-            ]);
-        return await (callback as (data: AllSubscriptions[Keys]) => Promisable<Ret>)(this.payload);
+        type Case = (data: AllSubscriptions[Keys]) => Promisable<Ret>;
+        return await caseFor<Case>(this, cases, 'subscription key', this.key)(this.payload);
     }
 }

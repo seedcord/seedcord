@@ -9,8 +9,7 @@ import type { DispatchContext } from '@seedcord/core';
 export function interactionGateContext(
     payload: Repliables,
     core: Core,
-    dispatch: DispatchContext,
-    declaredRoute: string | null
+    dispatch: DispatchContext
 ): InteractionGateContext {
     const member = payload.member ?? null;
     const user = interactionUser(payload);
@@ -28,6 +27,6 @@ export function interactionGateContext(
         memberPermissions: member ? BigInt(member.permissions) : null,
         // app_permissions is present on every interaction Discord delivers, including DMs
         appPermissions: BigInt(payload.app_permissions),
-        declaredRoute
+        declaredRoute: dispatch.declaredRoute
     };
 }

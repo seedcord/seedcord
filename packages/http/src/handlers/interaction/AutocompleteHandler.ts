@@ -1,7 +1,7 @@
 import { BaseHandler } from '@seedcord/core';
-import { AutocompleteRouteBrand, reportedWrite } from '@seedcord/core/internal';
+import { AutocompleteRouteBrand, caseFor, reportedWrite } from '@seedcord/core/internal';
 import { SeedcordErrorCode } from '@seedcord/errors';
-import { SeedcordError, SeedcordTypeError } from '@seedcord/errors/internal';
+import { SeedcordError } from '@seedcord/errors/internal';
 import { InteractionResponseType, Routes } from 'discord-api-types/v10';
 
 import { interactionUser } from '#handlers/interactionUser';
@@ -95,19 +95,11 @@ export abstract class AutocompleteHandler<Route extends keyof SlashRegistry> ext
     protected async match<Ret>(cases: FocusedCases<Route, Ret>): Promise<Ret> {
         const { name, value } = this.focused;
         const respond = (choices: readonly APIApplicationCommandOptionChoice[]): Promise<void> => this.respond(choices);
-        // justified: FocusedCases is keyed by field literals, the Record cast indexes it with the runtime field name.
         type Case = (
             value: string,
             respond: (choices: readonly APIApplicationCommandOptionChoice[]) => Promise<void>
         ) => Promisable<Ret>;
-        const callback = Object.hasOwn(cases, name) ? (cases as Record<string, Case>)[name] : undefined;
-        if (!callback)
-            throw new SeedcordTypeError(SeedcordErrorCode.MatchCaseMissing, [
-                this.constructor.name,
-                'focused field',
-                name
-            ]);
-        return await callback(value, respond);
+        return await caseFor<Case>(this, cases, 'focused field', name)(value, respond);
     }
 
     /** Send autocomplete suggestions, callback type 8. Prefer {@link match}, which restricts each field's choices to its declared type. */

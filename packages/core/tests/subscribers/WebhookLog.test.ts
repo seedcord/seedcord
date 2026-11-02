@@ -6,7 +6,7 @@ import { afterAll, afterEach, beforeEach, describe, expect, it, vi, type MockIns
 
 import { PublishDefault } from '#src/subscribers/publishDefault';
 import { WebhookLog } from '#subscribers/bases/WebhookLog';
-import { Bus, registrationsFor } from '#subscribers/Bus';
+import { Bus } from '#subscribers/Bus';
 import { Subscribe } from '#subscribers/decorators/Subscribe';
 import { WebhookUrl } from '#subscribers/decorators/WebhookUrl';
 import { RegisterSubscriber } from '#subscribers/slots';
@@ -144,10 +144,10 @@ describe('WebhookLog', () => {
         errorSpy.mockRestore();
     });
 
-    it('warns at registration and never registers a reporter whose env var is unset', () => {
-        @Subscribe(['unknownException'])
+    it('warns once at registration and never registers a reporter whose env var is unset', () => {
+        @Subscribe(['unknownException'], ['handledException'])
         @WebhookUrl('NEVER_SET_WEBHOOK_URL')
-        class UnsetReporter extends WebhookLog<'unknownException', CoreBase> {
+        class UnsetReporter extends WebhookLog<'unknownException' | 'handledException', CoreBase> {
             report(): WebhookReport {
                 return { components: [] };
             }
@@ -156,9 +156,10 @@ describe('WebhookLog', () => {
         const warnSpy = vi.spyOn(Logger.prototype, 'warn').mockImplementation(() => undefined);
         const bus = new Bus(core);
 
-        for (const registration of registrationsFor(UnsetReporter)) bus[RegisterSubscriber](registration);
+        bus[RegisterSubscriber](UnsetReporter);
         bus[PublishDefault]('unknownException', data);
 
+        expect(warnSpy).toHaveBeenCalledOnce();
         expect(warnSpy).toHaveBeenCalledWith(expect.stringContaining('UnsetReporter'));
         expect(post).not.toHaveBeenCalled();
         warnSpy.mockRestore();

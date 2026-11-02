@@ -1,11 +1,11 @@
 import { Notice, Silence } from '@seedcord/core';
-import { reportedWrite } from '@seedcord/core/internal';
+import { faultResponse, reportedWrite, reportFault } from '@seedcord/core/internal';
 import { Logger } from '@seedcord/logger';
 import { asError } from '@seedcord/utils/internal';
 import { DiscordAPIError } from 'discord.js';
 
 import { ReplySender } from '#bot/ReplySender';
-import { extractErrorResponse } from '#miscellaneous/extractErrorResponse';
+import { faultReportOf } from '#miscellaneous/faultReportOf';
 
 import { HARMLESS_API_CODES } from './harmlessApiCodes';
 
@@ -37,12 +37,19 @@ export async function handleInteractionFault(
         return;
     }
 
-    const { response } = extractErrorResponse(error, core, { kind: 'interaction', interaction, dispatch });
+    const uuid = crypto.randomUUID();
+    reportFault(
+        core.bus,
+        core.config.errors,
+        error,
+        faultReportOf({ kind: 'interaction', interaction, dispatch }, uuid)
+    );
     // discord does not accept a message on an autocomplete. empty choices clear the client's loading spinner.
     if (interaction.isAutocomplete()) {
         await sendEmptyChoices(interaction, core, dispatch);
         return;
     }
+    const response = faultResponse(error, uuid, dispatch, core.config);
     // the handler's own sender carries its ack state. a middleware throw arrives without one
     const liveSender = sender ?? new ReplySender(interaction, dispatch, core.bus);
     await sendGuarded(() => liveSender.send(response, { ephemeral: error instanceof Notice ? error.ephemeral : true }));

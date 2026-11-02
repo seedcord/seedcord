@@ -1,10 +1,11 @@
-import { Notice, Silence } from '@seedcord/core';
+import { Silence } from '@seedcord/core';
+import { reportFault } from '@seedcord/core/internal';
 import { Logger } from '@seedcord/logger';
 import { asError } from '@seedcord/utils/internal';
 import { DiscordAPIError } from 'discord.js';
 
 import { deriveEventActor } from '#miscellaneous/deriveEventActor';
-import { extractErrorResponse } from '#miscellaneous/extractErrorResponse';
+import { faultReportOf } from '#miscellaneous/faultReportOf';
 
 import type { Core } from '#interfaces/Core';
 import type { DispatchContext } from '@seedcord/core';
@@ -35,19 +36,12 @@ export function handleEventFault(caught: unknown, fault: EventFault, core: Core)
         return;
     }
 
-    if (error instanceof Notice && !error.report) return;
-
-    const actor = deriveEventActor(args);
-    extractErrorResponse(error, core, {
-        kind: 'event',
-        dispatch,
-        event: {
-            name: eventName,
-            handler: handlerName,
-            args,
-            channelId: actor.channelId,
-            guild: actor.guild,
-            user: actor.user
-        }
-    });
+    const { channelId, guild, user } = deriveEventActor(args);
+    const event = { name: eventName, handler: handlerName, args, channelId, guild, user };
+    reportFault(
+        core.bus,
+        core.config.errors,
+        error,
+        faultReportOf({ kind: 'event', dispatch, event }, crypto.randomUUID())
+    );
 }

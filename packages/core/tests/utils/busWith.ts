@@ -1,4 +1,4 @@
-import { Bus, registrationsFor } from '#subscribers/Bus';
+import { Bus } from '#subscribers/Bus';
 import { RegisterSubscriber } from '#subscribers/slots';
 
 import type { CoreBase } from '#interfaces/CoreBase';
@@ -7,8 +7,6 @@ import type { StoredSubscriberCtor } from '#subscribers/Bus';
 export function busWith(...ctors: StoredSubscriberCtor[]): Bus {
     // justified: the Bus only stores core, no member is read during publish
     const bus = new Bus({} as CoreBase);
-    for (const ctor of ctors) {
-        for (const registration of registrationsFor(ctor)) bus[RegisterSubscriber](registration);
-    }
+    for (const ctor of ctors) bus[RegisterSubscriber](ctor);
     return bus;
 }
