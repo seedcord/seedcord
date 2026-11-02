@@ -479,14 +479,26 @@ describe('runPlain, with no terminal to answer prompts', () => {
         await running;
     });
 
-    it('accepts a command refresh', async () => {
+    it('refreshes commands once, after a burst of saves stops', async () => {
         const store = new DevStore();
-        const runtime = fakeRuntime({ default: readyBot }, { type: 'command-update-prompt', files: ['ban.ts'] });
+        const runtime = fakeRuntime({ default: readyBot });
         const refresh = vi.spyOn(runtime, 'refreshCommands');
         const runner = makeRunner({ store, runtime: () => runtime });
 
         const running = runPlain(store, runner, new PassThrough());
-        await vi.waitFor(() => expect(refresh).toHaveBeenCalledWith(true));
+        await vi.waitFor(() => expect(store.getState().phase).toBe('running'));
+
+        vi.useFakeTimers({ toFake: ['setTimeout', 'clearTimeout'] });
+        store.apply({ type: 'command-update-prompt', files: ['ban.ts'] });
+        vi.advanceTimersByTime(1500);
+        store.apply({ type: 'command-update-prompt', files: ['ban.ts', 'kick.ts'] });
+        vi.advanceTimersByTime(1500);
+        expect(refresh).not.toHaveBeenCalled();
+
+        vi.advanceTimersByTime(500);
+        vi.useRealTimers();
+        expect(refresh).toHaveBeenCalledExactlyOnceWith(true);
+
         await runner.quit();
         await running;
     });
