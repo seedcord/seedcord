@@ -68,10 +68,10 @@ function asking(path: string, accept: string): Request {
 
 describe('search indexing', () => {
     it('is off on every host except production', async () => {
-        const preview = await send(new Request('https://next.seedcord.org/guide/'), serving(html()));
+        const next = await send(new Request('https://next.seedcord.org/guide/'), serving(html()));
         const production = await get('/', serving(html()));
 
-        expect(preview.headers.get('x-robots-tag')).toBe('noindex, nofollow');
+        expect(next.headers.get('x-robots-tag')).toBe('noindex, nofollow');
         expect(production.headers.get('x-robots-tag')).toBeNull();
     });
 });
@@ -416,7 +416,7 @@ describe('the ask endpoint', () => {
         const config = parse(
             readFileSync(resolve(import.meta.dirname, '../wrangler.jsonc'), 'utf8')
         ) as Unstable_RawConfig;
-        const periods = [config, config.env?.preview].map(
+        const periods = [config, config.env?.next].map(
             (environment) => environment?.ratelimits?.find(({ name }) => name === 'ASK_LIMIT')?.simple.period
         );
         const retryAfter = Number(response.headers.get('retry-after'));
