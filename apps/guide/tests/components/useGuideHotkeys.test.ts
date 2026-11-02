@@ -11,8 +11,8 @@ function actions(): GuideHotkeyActions {
         openSites: vi.fn(),
         showHotkeys: vi.fn(),
         go: vi.fn(),
-        scrollTo: vi.fn(),
-        copyLink: vi.fn()
+        stepSection: vi.fn(),
+        copySection: vi.fn()
     };
 }
 
@@ -26,9 +26,7 @@ const PLACE: GuidePlace = {
     neighbours: {
         previous: { label: 'Core', href: '/core', tab: 'Start' },
         next: { label: 'Options', href: '/commands/options', tab: 'Commands' }
-    },
-    headingIds: ['setup', 'options', 'replies'],
-    currentId: 'options'
+    }
 };
 
 function press(acting: GuideHotkeyActions, place: GuidePlace, key: string, shift = false): void {
@@ -60,15 +58,14 @@ describe('guideHotkeys', () => {
         expect(acting.go).not.toHaveBeenCalled();
     });
 
-    it('moves between the sections around the one in view and copies its link', () => {
+    it('steps through sections with j and k and copies the section link with y', () => {
         const acting = actions();
 
         press(acting, PLACE, 'j');
         press(acting, PLACE, 'k');
         press(acting, PLACE, 'y');
-        press(acting, { ...PLACE, currentId: undefined }, 'j');
 
-        expect(vi.mocked(acting.scrollTo).mock.calls).toEqual([['replies'], ['setup'], ['setup']]);
-        expect(acting.copyLink).toHaveBeenCalledWith('options');
+        expect(vi.mocked(acting.stepSection).mock.calls).toEqual([[1], [-1]]);
+        expect(acting.copySection).toHaveBeenCalledOnce();
     });
 });
