@@ -5,6 +5,8 @@ import { stripVTControlCharacters } from 'node:util';
 import { SeedcordErrorCode } from '@seedcord/errors';
 import { SeedcordError } from '@seedcord/errors/internal';
 
+import { commandLine } from '#cli/shellWord';
+
 import type { CommandRunner } from '#scaffold/scaffold';
 
 // an install logs hundreds of lines before the one that says what broke
@@ -83,7 +85,7 @@ export function spawnSpec(command: string, args: string[], platform: NodeJS.Plat
     if (!shell) return { command, args, shell };
 
     // node prints DEP0190 when args are passed with shell: true
-    return { command: [command, ...args].join(' '), args: [], shell };
+    return { command: commandLine(command, args), args: [], shell };
 }
 
 interface ExecOptions {

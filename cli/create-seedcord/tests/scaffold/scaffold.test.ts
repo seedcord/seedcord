@@ -2,8 +2,9 @@ import { mkdir, mkdtempDisposable, readdir, readFile, writeFile } from 'node:fs/
 import { tmpdir } from 'node:os';
 import { join, resolve } from 'node:path';
 
-import { describe, expect, it, onTestFinished } from 'vitest';
+import { afterEach, describe, expect, it, onTestFinished, vi } from 'vitest';
 
+import { PackageManager } from '#cli/PackageManager';
 import { scaffold } from '#scaffold/scaffold';
 import { BOT_TOKEN } from '#tests/token';
 
@@ -16,6 +17,10 @@ async function scaffolded(...args: Parameters<typeof scaffold>): Promise<Extract
     if (!result.created) throw new Error('scaffold wrote nothing');
     return result;
 }
+
+afterEach(() => {
+    vi.unstubAllEnvs();
+});
 
 const TEMPLATES = resolve(import.meta.dirname, '../../templates');
 const STARTERS = resolve(import.meta.dirname, '../../starters');
@@ -145,7 +150,7 @@ function baseInput(target: string, steps: StepUi = stepRecorder().steps): Parame
         templatesRoot: TEMPLATES,
         startersRoot: STARTERS,
         answers: GATEWAY,
-        agent: 'pnpm',
+        manager: new PackageManager('pnpm'),
         steps
     };
 }
@@ -229,7 +234,7 @@ describe('scaffold', () => {
 
         for (const command of commands) {
             const binary = command.trim().split(' ')[0] ?? '';
-            if (BUILT_IN.has(binary) || binary === input.agent) continue;
+            if (BUILT_IN.has(binary) || binary === input.manager.name) continue;
 
             const pkg = PACKAGE_OF[binary];
             expect(pkg, `${binary} maps to no package`).toBeDefined();
@@ -280,13 +285,52 @@ describe('scaffold', () => {
         expect(runtime).toContain('discord-api-types');
     });
 
-    it('skips install, format, and codegen when install is off', async () => {
+    it('installs the next releases when the scaffolder is a prerelease', async () => {
+        // version.ts reads the version once, when it loads
+        vi.stubEnv('PACKAGE_VERSION', '0.6.0-next.0');
+        vi.resetModules();
+        const { scaffold: prereleaseScaffold } = await import('#scaffold/scaffold');
         const target = await scratchTarget();
         const { runner, calls } = recorder();
 
-        await scaffold({ ...baseInput(target), answers: { ...GATEWAY, install: false } }, runner);
+        await prereleaseScaffold({ ...baseInput(target), answers: EDGE }, runner);
 
-        expect(calls.map((call) => call.command)).toEqual(['git', 'git', 'git']);
+        const { runtime, dev } = installs(calls);
+        expect(dev).toContain('seedcord@next');
+        expect(runtime).toContain('@seedcord/http@next');
+        expect(dev).toContain('@seedcord/eslint-config');
+    });
+
+    it('writes only the lockfile when install is off, and leaves the install for the user', async () => {
+        const target = await scratchTarget();
+        const { runner, calls } = recorder();
+        const { steps, seen } = stepRecorder();
+
+        const result = await scaffolded(
+            { ...baseInput(target, steps), answers: { ...GATEWAY, install: false } },
+            runner
+        );
+
+        const adds = calls.filter(({ command }) => command !== 'git');
+        expect(adds).toHaveLength(2);
+        for (const add of adds) expect(add.args).toContain('--lockfile-only');
+        expect(seen).toEqual(expect.arrayContaining(['done: deps', 'skipped: format', 'skipped: types']));
+        expect(result.pending).toEqual([{ command: 'pnpm', args: ['i'] }]);
+        expect(result.failed).toBe(false);
+    });
+
+    it('leaves the plain adds for the user when the lockfile-only add fails', async () => {
+        const target = await scratchTarget();
+        const { runner } = recorder('--lockfile-only');
+
+        const result = await scaffolded({ ...baseInput(target), answers: { ...GATEWAY, install: false } }, runner);
+
+        expect(result.pending).toHaveLength(2);
+        for (const add of result.pending) {
+            expect(add.args[0]).toBe('add');
+            expect(add.args).not.toContain('--lockfile-only');
+        }
+        expect(result.failed).toBe(true);
     });
 
     it('reports every step in order', async () => {
@@ -299,8 +343,8 @@ describe('scaffold', () => {
         expect(seen).toEqual([
             'files',
             'done: files',
-            'install',
-            'done: install',
+            'deps',
+            'done: deps',
             'format',
             'done: format',
             'types',
@@ -322,25 +366,18 @@ describe('scaffold', () => {
         await expect(readdir(target)).resolves.toContain('package.json');
     });
 
-    it('keeps going to git and the summary when the install fails', async () => {
+    it('skips format and codegen, then keeps going to git and the summary, when the install fails', async () => {
         const target = await scratchTarget();
         const { runner, calls } = recorder('-D');
         const { steps, seen } = stepRecorder();
 
         const result = await scaffolded(baseInput(target, steps), runner);
 
-        expect(result.installed).toBe(false);
+        expect(result.pending.map((add) => add.args[0])).toEqual(['add', 'add']);
         expect(result.failed).toBe(true);
-        expect(seen).toContain('failed: install');
+        expect(seen).toContain('failed: deps');
         expect(result.notices.join('\n')).not.toContain('-D blew up');
         expect(calls.map((call) => call.command)).toContain('git');
-    });
-
-    it('leaves format and codegen alone when the install fails', async () => {
-        const target = await scratchTarget();
-        const { runner, calls } = recorder('-D');
-
-        await scaffold(baseInput(target), runner);
 
         const spoken = calls.map((call) => call.args.join(' '));
         expect(spoken.some((args) => args.includes('prettier --write'))).toBe(false);
@@ -353,7 +390,7 @@ describe('scaffold', () => {
 
         const result = await scaffolded(baseInput(target), runner);
 
-        expect(result.installed).toBe(true);
+        expect(result.pending).toEqual([]);
         expect(result.failed).toBe(false);
         expect(result.notices.join('\n')).toContain('skipped a build script');
 
@@ -370,41 +407,21 @@ describe('scaffold', () => {
 
         const result = await scaffolded(baseInput(target, steps), runner);
 
-        expect(result.installed).toBe(true);
+        expect(result.pending).toEqual([]);
         expect(result.failed).toBe(true);
         expect(seen).toContain('failed: format');
         expect(result.notices.join('\n')).not.toContain('prettier --write blew up');
         expect(calls.map((call) => call.args.join(' ')).some((args) => args.includes('codegen'))).toBe(true);
     });
 
-    it('marks the three install steps skipped rather than dropping them', async () => {
+    it('skips git when git is off', async () => {
         const target = await scratchTarget();
-        const { runner } = recorder();
-        const { steps, seen } = stepRecorder();
-
-        await scaffold({ ...baseInput(target, steps), answers: { ...GATEWAY, install: false } }, runner);
-
-        expect(seen).toContain('skipped: install');
-        expect(seen).toContain('skipped: format');
-        expect(seen).toContain('skipped: types');
-    });
-
-    it('marks git skipped when git is off', async () => {
-        const target = await scratchTarget();
-        const { runner } = recorder();
+        const { runner, calls } = recorder();
         const { steps, seen } = stepRecorder();
 
         await scaffold({ ...baseInput(target, steps), answers: { ...GATEWAY, git: false } }, runner);
 
         expect(seen).toContain('skipped: git');
-    });
-
-    it('skips git when git is off', async () => {
-        const target = await scratchTarget();
-        const { runner, calls } = recorder();
-
-        await scaffold({ ...baseInput(target), answers: { ...GATEWAY, git: false } }, runner);
-
         expect(calls.every((call) => call.command !== 'git')).toBe(true);
     });
 
@@ -435,7 +452,7 @@ describe('scaffold cleanup', () => {
 
         const result = await scaffolded(baseInput(target), runner);
 
-        expect(result.installed).toBe(false);
+        expect(result.failed).toBe(true);
         await expect(readdir(target)).resolves.toContain('package.json');
     });
 
@@ -446,7 +463,7 @@ describe('scaffold cleanup', () => {
 
         const result = await scaffolded(baseInput(target), runner);
 
-        expect(result.installed).toBe(false);
+        expect(result.failed).toBe(true);
         await expect(readdir(target)).resolves.toContain('package.json');
     });
 
