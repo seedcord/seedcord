@@ -35,17 +35,15 @@ export class ProjectFiles {
 
     public async foldersIncludingEmpty(): Promise<string[]> {
         const entries = await this.entries();
-        return entries
-            .filter(({ isFolder }) => isFolder)
-            .map(({ path }) => this.layout.keyOf(path))
-            .toSorted();
+        return entries.flatMap(({ isFolder, path }) => (isFolder ? [this.layout.keyOf(path)] : [])).toSorted();
     }
 
     public async pathsWithHash(): Promise<string[]> {
         const entries = await this.entries();
         return entries
-            .map(({ path }) => path)
-            .filter((path) => basename(path).includes('#') && !relative(this.layout.root, dirname(path)).includes('#'))
+            .flatMap(({ path }) =>
+                basename(path).includes('#') && !relative(this.layout.root, dirname(path)).includes('#') ? [path] : []
+            )
             .toSorted();
     }
 

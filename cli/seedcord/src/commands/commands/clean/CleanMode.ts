@@ -29,9 +29,10 @@ export class CleanMode extends RemoveMode {
 
     public select(scan: Scan): ScopedCommands[] {
         const globalKeys = new Set(scan.global.map(commandKey));
-        return scan.guilds
-            .map(({ scope, commands }) => ({ scope, commands: commands.filter((c) => globalKeys.has(commandKey(c))) }))
-            .filter(({ commands }) => commands.length > 0);
+        return scan.guilds.flatMap(({ scope, commands }) => {
+            const alsoGlobal = commands.filter((c) => globalKeys.has(commandKey(c)));
+            return alsoGlobal.length > 0 ? [{ scope, commands: alsoGlobal }] : [];
+        });
     }
 
     public remove(session: DiscordSession, selected: readonly ScopedCommands[]): Promise<RemoveResult> {
