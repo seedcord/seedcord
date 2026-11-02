@@ -1,3 +1,4 @@
+import { SeedcordErrorCode } from '@seedcord/errors';
 import { ApplicationCommandType } from 'discord-api-types/v10';
 import { describe, expect, it } from 'vitest';
 
@@ -59,6 +60,18 @@ describe('storeComponentRoute multi-def', () => {
         storeComponentRoute(InteractionKind.Button, [a, b], Handler);
         expect(Reflect.getMetadata(InteractionRouteKeys[InteractionKind.Button], Handler)).toEqual(['inv', 'shop']);
         expect(Reflect.getMetadata(ComponentDefsKey, Handler)).toEqual([a, b]);
+    });
+
+    it('throws CoreDuplicateName for two definitions with the same prefix', () => {
+        class Handler {
+            execute(): void {}
+        }
+        // justified: only the prefix is read by the writer
+        const a = { prefix: 'inv' } as unknown as AnyCustomId;
+        const b = { prefix: 'inv' } as unknown as AnyCustomId;
+        expect(() => storeComponentRoute(InteractionKind.Button, [a, b], Handler)).toThrow(
+            expect.objectContaining({ code: SeedcordErrorCode.CoreDuplicateName })
+        );
     });
 
     it('accumulates prefixes across calls while the defs key holds the last set', () => {

@@ -1,9 +1,12 @@
 import 'reflect-metadata';
 
+import { SeedcordErrorCode, paint } from '@seedcord/errors';
+import { SeedcordTypeError } from '@seedcord/errors/internal';
 import { isStringArray } from '@seedcord/utils/internal';
 import { ApplicationCommandType } from 'discord-api-types/v10';
 
 import { ComponentDefsKey } from '#customId/routing';
+import { firstRepeat } from '#src/decorators/assertUniqueKeys';
 import { InteractionMetadataKey, InteractionRouteKeys, InteractionKind } from '#src/metadataKeys';
 
 import type { ContextMenuKind } from '#registries/ContextMenuRegistry';
@@ -40,11 +43,17 @@ export function storeComponentRoute(
     defs: readonly AnyCustomId[],
     constructor: RoutableConstructor
 ): void {
-    storeInteractionRoute(
-        route,
-        defs.map((def) => def.prefix),
-        constructor
-    );
+    const prefixes = defs.map((def) => def.prefix);
+    const repeated = firstRepeat(prefixes);
+    if (repeated !== undefined) {
+        throw new SeedcordTypeError(SeedcordErrorCode.CoreDuplicateName, [
+            'customId prefix',
+            repeated,
+            [],
+            `${paint.sky(constructor.name)} lists two customIds with it.`
+        ]);
+    }
+    storeInteractionRoute(route, prefixes, constructor);
     Reflect.defineMetadata(ComponentDefsKey, defs, constructor);
 }
 
