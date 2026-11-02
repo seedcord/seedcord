@@ -83,11 +83,13 @@ function handleInteractionFault(
         middlewares: new MiddlewareRegistry<InteractionMiddlewareConstructor>(interactionMiddleware),
         logger: new Logger('Test')
     });
-    const target: FaultTarget = interaction.isAutocomplete()
-        ? { clearChoices: () => config.clearChoices() }
-        : { reply: (response, options) => (sender ?? config.newSender()).send(response, options) };
+    const { target } = config;
+    const faultTarget: FaultTarget =
+        'clearChoices' in target
+            ? target
+            : { reply: (response, options) => (sender ?? target.newSender()).send(response, options) };
     const boundary = new FaultBoundary(core, core.config.errors?.ignoreApiCodes, DiscordAPIError);
-    return boundary.answer(caught, () => config.faultDetails(), target);
+    return boundary.answer(caught, dispatch.routeId, () => config.faultDetails(), faultTarget);
 }
 
 function senderFor(mock: ReturnType<typeof mockInteraction>, route: string): ReplySender {
@@ -242,22 +244,24 @@ describe('handleInteractionFault', () => {
         expect(options.flags & MessageFlags.Ephemeral).toBe(0);
     });
 
-    it('swallows a harmless api code thrown by its own fault-card send', async () => {
-        mock.reply.mockRejectedValueOnce(harmlessError());
+    it.each([
+        { failure: new Error('network down'), reported: true },
+        { failure: harmlessError(), reported: false }
+    ])('reports a fault-card send failure only when unexpected ($reported)', async ({ failure, reported }) => {
+        const failures: unknown[] = [];
+        using _sink = LoggerChannelRegistry.instance.installSink({
+            kind: 'capture',
+            onLog: (record) => {
+                if (record.level === 'error') failures.push(...(record.args ?? []));
+            }
+        });
+        mock.reply.mockRejectedValueOnce(failure);
 
         await expect(
             handleInteractionFault(new Error('boom'), asInteraction(mock), mockCore(publish))
         ).resolves.toBeUndefined();
-        expect(mock.reply).toHaveBeenCalledTimes(1);
-    });
 
-    it('swallows an unexpected failure from its own fault-card send', async () => {
-        mock.reply.mockRejectedValueOnce(new Error('network down'));
-
-        await expect(
-            handleInteractionFault(new Error('boom'), asInteraction(mock), mockCore(publish))
-        ).resolves.toBeUndefined();
-        expect(mock.reply).toHaveBeenCalledTimes(1);
+        expect(failures.includes(failure)).toBe(reported);
     });
 
     describe('autocomplete interactions', () => {

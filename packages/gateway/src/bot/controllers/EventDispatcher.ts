@@ -15,7 +15,7 @@ import { SeedcordErrorCode, paint } from '@seedcord/errors';
 import { SeedcordError } from '@seedcord/errors/internal';
 import { Logger } from '@seedcord/logger';
 import { formatFilePath, hasKeys, importFiles } from '@seedcord/utils';
-import { asError, isStringArray } from '@seedcord/utils/internal';
+import { asError } from '@seedcord/utils/internal';
 import { Envapter } from 'envapt';
 
 import { eventMiddlewareMetaOf } from '#bDecorators/Middlewares';
@@ -259,7 +259,10 @@ export class EventDispatcher implements Initializeable, HmrAware {
     }
 
     private registerHandler(handlerClass: EventHandlerConstructor, relativePath: string): void {
-        const raw = Reflect.getMetadata(EventMetadataKey, handlerClass) as unknown;
+        // justified: @RegisterEvent is the only writer of this key
+        const entries = Reflect.getMetadata(EventMetadataKey, handlerClass) as RegisterEventMetadataEntry<
+            keyof ClientEvents
+        >[];
 
         const register = (key: keyof ClientEvents, frequency: EventFrequency): void => {
             let handlers = this.eventMap.get(key);
@@ -279,17 +282,7 @@ export class EventDispatcher implements Initializeable, HmrAware {
             }
         };
 
-        if (Array.isArray(raw)) {
-            for (const entry of raw as RegisterEventMetadataEntry<keyof ClientEvents>[]) {
-                register(entry.event, entry.frequency);
-            }
-        } else {
-            const names = isStringArray(raw) ? raw : typeof raw === 'string' ? [raw] : [];
-
-            for (const name of names) {
-                register(name as keyof ClientEvents, 'on');
-            }
-        }
+        for (const entry of entries) register(entry.event, entry.frequency);
 
         const from = formatFilePath(relativePath);
         if (this.loading) this.loadedHandlers.push({ name: handlerClass.name, from });

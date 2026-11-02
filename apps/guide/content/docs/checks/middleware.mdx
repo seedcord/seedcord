@@ -72,7 +72,7 @@ export class ComponentTrace extends InteractionMiddleware<
 }
 ```
 
-`ComponentTrace` runs for buttons and modals, and its `this.event` is a union of those two payloads. [`this.route`](ref:gateway/InteractionMiddleware.route) is the custom-ID prefix that the interaction carried. It's empty if seedcord didn't make that custom ID. When the generic lists only slash or context menu kinds, your editor will suggest your registered commands.
+`ComponentTrace` runs for buttons and modals, and its `this.event` is a union of those two payloads. [`this.route`](ref:gateway/InteractionMiddleware.route) is the custom-ID prefix that the interaction carried. It's empty if seedcord didn't make that custom ID. When the generic lists only slash or context menu kinds, your editor suggests your registered commands.
 
 Every kind seedcord routes is a member of [`InteractionKind`](ref:core/InteractionKind).
 

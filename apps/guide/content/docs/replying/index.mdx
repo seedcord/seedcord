@@ -152,6 +152,16 @@ class Ban extends SlashHandler<'ban'> {
 
 `reply()` resolves to the message it created. Keep that message and you can rewrite or delete it later, which [Follow-ups and edits](/replying/more-messages) shows.
 
+## Who sent the interaction
+
+[`this.user`](ref:gateway/RepliableHandler.user) is the user who sent it, on every interaction handler and middleware.
+
+<Callout type="transport">
+
+`this.user` is a discord.js `User` on gateway and an `APIUser` on http. On http, `this.event.user` is undefined in a server, because Discord sends `member.user` there. `this.user` reads whichever one Discord sent.
+
+</Callout>
+
 ```ts twoslash
 import { SlashHandler, SlashRoute } from '@seedcord/gateway';
 

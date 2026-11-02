@@ -17,7 +17,7 @@ export abstract class BaseHandler<Event, TCore extends CoreBase> {
     protected readonly logger: Logger;
     /** The bag for this dispatch. Each interaction gets its own. Every handler for one event shares a single bag. */
     protected readonly dispatch: DispatchContext;
-    /** The route this dispatch came in on. Each handler base narrows it to its own routes. */
+    /** The route that started this dispatch. Each handler base narrows it to its own routes. */
     protected readonly route: string;
 
     protected constructor(

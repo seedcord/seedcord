@@ -285,7 +285,7 @@ describe('InteractionDispatcher Integration', () => {
 
         expect(interaction.reply).toHaveBeenCalledTimes(1);
         expect(boundaryError).not.toHaveBeenCalledWith(
-            expect.stringContaining('boundary send failed'),
+            expect.stringContaining('could not send a fault reply'),
             expect.anything()
         );
     });
@@ -324,7 +324,7 @@ describe('InteractionDispatcher Integration', () => {
         expect(interaction.editReply).toHaveBeenCalledTimes(1);
         expect(interaction.reply).not.toHaveBeenCalled();
         expect(boundaryError).not.toHaveBeenCalledWith(
-            expect.stringContaining('boundary send failed'),
+            expect.stringContaining('could not send a fault reply'),
             expect.anything()
         );
     });

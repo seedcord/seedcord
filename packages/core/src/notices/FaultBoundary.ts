@@ -34,7 +34,6 @@ interface FaultReply {
 }
 
 interface ReportedFault {
-    readonly routeId: string;
     reply(): FaultReply;
 }
 
@@ -68,7 +67,6 @@ export class FaultBoundary {
         const report = { uuid: crypto.randomUUID(), ...reportOf() };
         reportFault(this.core.bus, config.errors, error, report);
         return {
-            routeId: report.dispatch.routeId,
             reply: () => ({
                 response: faultResponse(error, report.uuid, report.dispatch, config),
                 ephemeral: error instanceof Notice ? error.ephemeral : true
@@ -76,24 +74,27 @@ export class FaultBoundary {
         };
     }
 
-    public async answer(caught: unknown, reportOf: ReportOf, target: FaultTarget): Promise<void> {
-        const fault = this.report(caught, reportOf);
-        if (!fault) return;
-
+    public async answer(caught: unknown, routeId: string, reportOf: ReportOf, target: FaultTarget): Promise<void> {
+        // discord expects a response to every autocomplete, whatever the fault was
         if ('clearChoices' in target) {
-            await this.sendGuarded(fault.routeId, () => target.clearChoices());
+            this.report(caught, reportOf);
+            await this.sendGuarded(routeId, () => target.clearChoices());
             return;
         }
 
-        const reply = this.rendered(fault, reportOf);
+        const fault = this.report(caught, reportOf);
+        if (!fault) return;
+
+        const reply = this.rendered(fault, routeId, reportOf);
         if (!reply) return;
-        await this.sendGuarded(fault.routeId, () => target.reply(reply.response, { ephemeral: reply.ephemeral }));
+        await this.sendGuarded(routeId, () => target.reply(reply.response, { ephemeral: reply.ephemeral }));
     }
-    private rendered(fault: ReportedFault, reportOf: ReportOf): FaultReply | null {
+
+    private rendered(fault: ReportedFault, routeId: string, reportOf: ReportOf): FaultReply | null {
         try {
             return fault.reply();
         } catch (renderError) {
-            return this.fallbackReply(renderError, fault.routeId, reportOf);
+            return this.fallbackReply(renderError, routeId, reportOf);
         }
     }
 
@@ -112,10 +113,10 @@ export class FaultBoundary {
             await send();
         } catch (error) {
             if (error instanceof this.apiError && HARMLESS_API_CODES.has(error.code)) {
-                faultLogger().debug(`boundary send hit harmless code ${paint.amber(String(error.code))}`);
+                faultLogger().debug(`fault reply hit harmless code ${paint.amber(String(error.code))}`);
                 return;
             }
-            faultLogger().error(`boundary send failed for route ${paint.sky.bold(routeId)}`, error);
+            faultLogger().error(`could not send a fault reply for route ${paint.sky.bold(routeId)}`, error);
         }
     }
 }

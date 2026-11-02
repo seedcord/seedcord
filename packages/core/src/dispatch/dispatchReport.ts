@@ -32,7 +32,6 @@ interface DispatchReport {
     readonly queuedMs: number;
 }
 
-// call this at dispatch entry, since a later read counts the handler run into the queue time
 export function queuedMsFor(interactionId: string): number {
     // timestampFromSnowflake throws on a malformed id
     try {

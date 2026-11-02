@@ -2,7 +2,6 @@ import { paint } from '@seedcord/errors';
 
 import { runInteractionGates } from '#gates/runGates';
 import { RepliableHandler } from '#src/handlers/RepliableHandler';
-import { InteractionKind } from '#src/metadataKeys';
 import { FaultBoundary } from '#src/notices/FaultBoundary';
 
 import { outcomeFor, queuedMsFor, reportDispatch } from './dispatchReport';
@@ -34,7 +33,17 @@ interface FaultSender {
 
 type Built<Instance> = new (...args: never[]) => Instance;
 
-export interface InteractionRunConfig<Sender extends FaultSender> {
+interface RepliableTarget {
+    gateContext(): GateContextBase;
+    newSender(): FaultSender;
+}
+
+// discord doesn't give autocomplete a reply target. @Gated rejects a gate on it at compile time.
+interface AutocompleteTarget {
+    clearChoices(): Promise<unknown>;
+}
+
+export interface InteractionRunConfig {
     readonly dispatch: InteractionDispatch;
     readonly core: CoreBase;
     readonly event: unknown;
@@ -45,25 +54,20 @@ export interface InteractionRunConfig<Sender extends FaultSender> {
     readonly interactionId: string;
     readonly userId: string;
     readonly guildId: string | null;
-    gateContext(): GateContextBase;
+    readonly target: RepliableTarget | AutocompleteTarget;
     faultDetails(): FaultDetails;
-    newSender(): Sender;
-    clearChoices(): Promise<unknown>;
 }
 
-export class InteractionRun<Sender extends FaultSender> {
+export class InteractionRun {
     private readonly ran: RunnableMiddleware[] = [];
     private readonly startedAt = performance.now();
     private readonly queuedMs: number;
     private readonly boundary: FaultBoundary;
-    // discord doesn't give autocomplete a reply target. @Gated rejects it at compile time.
-    private readonly repliableKind: MiddlewareKind | null;
 
-    constructor(private readonly config: InteractionRunConfig<Sender>) {
-        const { core, dispatch, apiError, interactionId } = config;
+    constructor(private readonly config: InteractionRunConfig) {
+        const { core, apiError, interactionId } = config;
         this.queuedMs = queuedMsFor(interactionId);
         this.boundary = new FaultBoundary(core, core.config.errors?.ignoreApiCodes, apiError);
-        this.repliableKind = dispatch.kind === InteractionKind.Autocomplete ? null : dispatch.kind;
     }
 
     // a null return means the run already answered a throw or a refusal
@@ -76,8 +80,8 @@ export class InteractionRun<Sender extends FaultSender> {
             return null;
         }
 
-        // justified: each transport's handlers carry that transport's sender
-        const sender = handler instanceof RepliableHandler ? (handler.sender as Sender) : undefined;
+        // justified: instanceof widens the base's sender generic to any
+        const sender = handler instanceof RepliableHandler ? (handler.sender as FaultSender) : undefined;
         const refusal = await this.refusal(sender);
         if (refusal) {
             await this.answer(refusal.caught, sender);
@@ -94,20 +98,22 @@ export class InteractionRun<Sender extends FaultSender> {
         return new HandlerCtor(event as never, core as never, dispatch as never);
     }
 
-    private async refusal(sender: Sender | undefined): Promise<{ caught: unknown } | null> {
-        if (!this.repliableKind || !sender) return null;
+    private async refusal(sender: FaultSender | undefined): Promise<{ caught: unknown } | null> {
+        const { target, HandlerCtor } = this.config;
+        if ('clearChoices' in target) return null;
         try {
-            await this.runMiddlewares(this.repliableKind, sender);
-            await runInteractionGates(this.config.HandlerCtor, this.config.gateContext());
+            await this.runMiddlewares(sender ?? target.newSender());
+            await runInteractionGates(HandlerCtor, target.gateContext());
             return null;
         } catch (caught) {
             return { caught };
         }
     }
 
-    private async runMiddlewares(kind: MiddlewareKind, sender: Sender): Promise<void> {
+    private async runMiddlewares(sender: FaultSender): Promise<void> {
         const { middlewares, event, core, dispatch } = this.config;
-        for (const Middleware of middlewares.chainFor(kind)) {
+        // justified: a repliable target means a MiddlewareKind
+        for (const Middleware of middlewares.chainFor(dispatch.kind as MiddlewareKind)) {
             // justified: chainFor picked this kind. the event is the one the class declares.
             const middleware = new Middleware(event as never, core as never, dispatch as never, sender as never);
             // pushed before the await because a middleware that throws still gets its after()
@@ -116,7 +122,7 @@ export class InteractionRun<Sender extends FaultSender> {
         }
     }
 
-    private async start(handler: RunnableHandler, sender: Sender | undefined): Promise<void> {
+    private async start(handler: RunnableHandler, sender: FaultSender | undefined): Promise<void> {
         let result: DispatchResult = { outcome: 'handled' };
         try {
             await handler.execute();
@@ -129,14 +135,21 @@ export class InteractionRun<Sender extends FaultSender> {
         }
     }
 
-    private async answer(caught: unknown, sender: Sender | undefined): Promise<void> {
-        await this.boundary.answer(caught, () => this.config.faultDetails(), this.faultTarget(sender));
+    private async answer(caught: unknown, sender: FaultSender | undefined): Promise<void> {
+        const { dispatch } = this.config;
+        await this.boundary.answer(
+            caught,
+            dispatch.routeId,
+            () => this.config.faultDetails(),
+            this.faultTarget(sender)
+        );
         this.report(outcomeFor(caught));
     }
 
-    private faultTarget(sender: Sender | undefined): FaultTarget {
-        if (!this.repliableKind) return { clearChoices: () => this.config.clearChoices() };
-        return { reply: (response, options) => (sender ?? this.config.newSender()).send(response, options) };
+    private faultTarget(sender: FaultSender | undefined): FaultTarget {
+        const { target } = this.config;
+        if ('clearChoices' in target) return target;
+        return { reply: (response, options) => (sender ?? target.newSender()).send(response, options) };
     }
 
     private report(outcome: DispatchOutcome): void {

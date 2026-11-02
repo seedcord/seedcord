@@ -21,14 +21,15 @@ export class DispatchContext<Kind extends DispatchKind = DispatchKind> implement
 
     public readonly id = crypto.randomUUID();
 
-    /**
-     * @param route - The slash path, context menu name, custom-ID prefix, or event name that started this dispatch.
-     * It's empty if seedcord didn't make the interaction's custom ID.
-     * @param fallback - True when no handler registered the route.
-     */
     constructor(
+        /** What started this dispatch, an interaction kind or `event`. */
         public readonly kind: Kind,
+        /**
+         * The slash path, context menu name, custom-ID prefix, or event name that started this dispatch.
+         * It's empty if seedcord didn't make the interaction's custom ID.
+         */
         public readonly route: string,
+        /** True when this route doesn't have a registered handler. */
         public readonly fallback = false
     ) {}
 

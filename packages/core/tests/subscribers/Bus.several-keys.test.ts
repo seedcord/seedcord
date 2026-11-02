@@ -59,17 +59,32 @@ describe('a subscriber on several keys', () => {
         await vi.waitFor(() => expect(runs).toEqual(['once', 'on', 'on']));
     });
 
-    it('counts a class on several keys once and unregisters it from every key', () => {
+    it('counts a class on several keys once and unregisters it from every key', async () => {
+        const ran: string[] = [];
+
         @Subscribe(['unknownException'], ['unhandledInteractionError'])
         class Both extends Subscriber<'unknownException' | 'unhandledInteractionError', CoreBase> {
-            async execute(): Promise<void> {}
+            async execute(): Promise<void> {
+                await Promise.resolve();
+                ran.push('both');
+            }
         }
 
-        const bus = busWith(Both);
-        expect(bus[RegisteredCount]).toBe(1);
+        @Subscribe(['unknownException'])
+        class Witness extends Subscriber<'unknownException', CoreBase> {
+            async execute(): Promise<void> {
+                await Promise.resolve();
+                ran.push('witness');
+            }
+        }
+
+        const bus = busWith(Both, Witness);
+        expect(bus[RegisteredCount]).toBe(2);
 
         bus[UnregisterSubscriber](Both, ['unknownException', 'unhandledInteractionError']);
-        expect(bus[RegisteredCount]).toBe(0);
+        bus[PublishDefault]('unknownException', unknown);
+
+        await vi.waitFor(() => expect(ran).toEqual(['witness']));
     });
 
     it('throws DecoratorDuplicateKey for a key listed twice', () => {
