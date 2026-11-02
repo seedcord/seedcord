@@ -2,9 +2,10 @@ import { mkdir, mkdtemp, rm, writeFile } from 'node:fs/promises';
 import { join } from 'node:path';
 
 import { SeedcordErrorCode } from '@seedcord/errors';
+import { LoggerChannelRegistry } from '@seedcord/logger';
 import { HostListenHost, HostShutdown } from '@seedcord/types/internal';
 import { readFiles } from '@seedcord/utils';
-import { afterAll, describe, expect, it, vi } from 'vitest';
+import { afterAll, describe, expect, it, onTestFinished, vi } from 'vitest';
 
 import { ServerDevRuntime } from '#commands/dev/runtime/ServerDevRuntime';
 import { ProjectFiles } from '#core/project/ProjectFiles';
@@ -15,6 +16,7 @@ import { fakeBot } from './fakes';
 
 import type { StartedRuntime } from '#commands/dev/runtime/BaseDevRuntime';
 import type { DevRuntimeContext } from '#commands/dev/runtime/DevRuntime';
+import type { ILogSink } from '@seedcord/types';
 import type { SeedcordInstance } from '@seedcord/types/internal';
 
 const SCRATCH_ROOT = join(import.meta.dirname, '.root-fixture');
@@ -192,6 +194,24 @@ export const runtime = Envapter.get('RUNTIME_GREETING');
         await runtime.stop();
 
         expect(shutdown).toHaveBeenCalledOnce();
+    }, 60_000);
+
+    it("closes the bot's log sinks and stops sending them records when it stops", async () => {
+        await mkdir(SCRATCH_ROOT, { recursive: true });
+        const dir = await mkdtemp(join(SCRATCH_ROOT, 'dev-'));
+        await writeProject(dir);
+        const registry = LoggerChannelRegistry.instance;
+        onTestFinished(() => registry.configure({}));
+        const botSink = { kind: 'console', onLog: vi.fn(), dispose: vi.fn() } satisfies ILogSink;
+
+        const runtime = new ServerDevRuntime();
+        await runtime.start(devContextFor(dir, 'index.ts'));
+        registry.configure({ level: 'warn', sinks: [botSink] });
+        await runtime.stop();
+        registry.dispatch({ level: 'error', message: 'after', label: 'Dev', channel: 'cli', timestamp: 0 });
+
+        expect(botSink.dispose).toHaveBeenCalledOnce();
+        expect(botSink.onLog).not.toHaveBeenCalled();
     }, 60_000);
 
     it('closes what it opened when the start throws', async () => {

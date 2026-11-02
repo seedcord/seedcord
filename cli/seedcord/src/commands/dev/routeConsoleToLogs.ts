@@ -7,8 +7,7 @@ import { CONSOLE_LEVEL, CONSOLE_METHODS, consoleRecord, routeConsole, traceError
 
 import type { LogLevel } from '@seedcord/types';
 
-// ink's alternate screen hides the cloudflare plugin's and the bot's own console output
-export function routeConsoleToLogs(): () => void {
+export function routeConsoleToLogs(): Disposable {
     let level: LogLevel = 'info';
     const toLogs = new Writable({
         write(chunk: Buffer, _encoding, done) {

@@ -1,5 +1,6 @@
 import { SeedcordErrorCode } from '@seedcord/errors';
 import { SeedcordError } from '@seedcord/errors/internal';
+import { LoggerChannelRegistry } from '@seedcord/logger';
 import { setDevFiles } from '@seedcord/utils/internal';
 
 import { instanceModule } from '#core/modules/importInstance';
@@ -38,6 +39,8 @@ export abstract class BaseDevRuntime<TStarted extends StartedRuntime = StartedRu
     private async openWithCleanup(context: DevRuntimeContext): Promise<TStarted> {
         const resources = new AsyncDisposableStack();
         try {
+            // a bot's logger config stops applying with its session
+            resources.defer(() => LoggerChannelRegistry.instance.configure({}));
             resources.use(setDevFiles(context.files.layout.toJSON()));
             return await this.open(context, resources);
         } catch (error: unknown) {

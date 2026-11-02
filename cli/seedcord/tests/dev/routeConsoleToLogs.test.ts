@@ -1,7 +1,7 @@
 import { LoggerChannelRegistry } from '@seedcord/logger';
 import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 
-import { routeConsoleToLogs } from '#ui/stores/routeConsole';
+import { routeConsoleToLogs } from '#commands/dev/routeConsoleToLogs';
 
 import type { LogRecord, LogSinkHandle } from '@seedcord/types';
 
@@ -11,7 +11,7 @@ const terminal = console;
 describe('routeConsoleToLogs', () => {
     let records: LogRecord[];
     let sink: LogSinkHandle;
-    let restore: () => void;
+    let route: Disposable;
 
     beforeEach(() => {
         records = [];
@@ -19,11 +19,11 @@ describe('routeConsoleToLogs', () => {
             { kind: 'capture', onLog: (record) => records.push(record) },
             { muteConsole: true }
         );
-        restore = routeConsoleToLogs();
+        route = routeConsoleToLogs();
     });
 
     afterEach(() => {
-        restore();
+        route[Symbol.dispose]();
         sink.dispose();
     });
 
@@ -45,7 +45,7 @@ describe('routeConsoleToLogs', () => {
             .flatMap((record) => record.args ?? [])
             .find((arg): arg is Error => Error.isError(arg) && arg.name === 'Trace');
         expect(trace?.message).toBe('cache miss 3');
-        expect(trace?.stack?.split('\n')[1]).toContain('routeConsole.test.ts');
+        expect(trace?.stack?.split('\n')[1]).toContain('routeConsoleToLogs.test.ts');
     });
 
     it('indents a log inside console.group', () => {
@@ -68,9 +68,8 @@ describe('routeConsoleToLogs', () => {
         expect(records.map((record) => record.message)).toEqual(['first']);
     });
 
-    it('stops routing once restored', () => {
-        restore();
-        restore = () => undefined;
+    it('stops routing once disposed', () => {
+        route[Symbol.dispose]();
         terminal.table([{ id: 7 }]);
         expect(records).toEqual([]);
     });
