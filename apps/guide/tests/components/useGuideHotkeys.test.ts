@@ -8,7 +8,7 @@ function actions(): GuideHotkeyActions {
     return {
         toggleSearch: vi.fn(),
         openSearch: vi.fn(),
-        openSites: vi.fn(),
+        toggleSites: vi.fn(),
         showHotkeys: vi.fn(),
         go: vi.fn(),
         stepSection: vi.fn(),

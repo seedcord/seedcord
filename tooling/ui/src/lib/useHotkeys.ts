@@ -21,16 +21,17 @@ const typesCharacter = (key: string): boolean => key.length === 1;
 // caret browsing moves and extends a selection with the arrows
 const hasTextSelection = (): boolean => globalThis.getSelection()?.isCollapsed === false;
 
-const FIELD_OR_DIALOG = 'input, textarea, select, [contenteditable=""], [contenteditable="true"], [role="dialog"]';
+// Dialog and SearchDialog set aria-modal
+const FIELD_OR_MODAL = 'input, textarea, select, [contenteditable=""], [contenteditable="true"], [aria-modal="true"]';
 
-const inFieldOrDialog = (target: EventTarget | null): boolean =>
-    target instanceof Element && target.closest(FIELD_OR_DIALOG) !== null;
+const inFieldOrModal = (target: EventTarget | null): boolean =>
+    target instanceof Element && target.closest(FIELD_OR_MODAL) !== null;
 
 function matches(hotkey: Hotkey, event: KeyboardEvent): boolean {
     const modHeld = event.metaKey || event.ctrlKey;
     if (hotkey.mod === true) return modHeld && event.key.toLowerCase() === hotkey.key;
     if (modHeld || event.altKey || event.defaultPrevented) return false;
-    if (event.key !== hotkey.key || inFieldOrDialog(event.target)) return false;
+    if (event.key !== hotkey.key || inFieldOrModal(event.target)) return false;
     if (typesCharacter(hotkey.key)) return true;
     return event.shiftKey === (hotkey.shift === true) && !hasTextSelection();
 }

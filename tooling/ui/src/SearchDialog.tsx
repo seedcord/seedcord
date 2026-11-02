@@ -149,6 +149,7 @@ export function SearchDialog({
                 />
                 <Dialog.Content
                     ref={setContainer}
+                    aria-modal
                     data-command-content
                     className={cn(
                         'fixed inset-0 z-70 flex items-start justify-center px-4 pt-20 pb-8',

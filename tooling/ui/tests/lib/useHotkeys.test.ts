@@ -40,7 +40,7 @@ describe('useHotkeys', () => {
         expect(switcher).not.toHaveBeenCalled();
     });
 
-    it('leaves a plain key to a field, a dialog, or a control that already took it', () => {
+    it('leaves a plain key to a field, a modal dialog, or a control that already took it', () => {
         const toggle = vi.fn();
         const switcher = vi.fn();
         renderHook(() =>
@@ -53,19 +53,22 @@ describe('useHotkeys', () => {
             <input id="input" />
             <textarea id="textarea"></textarea>
             <div id="editable" contenteditable="true"></div>
-            <div role="dialog"><button id="in-dialog"></button></div>
+            <div role="dialog" aria-modal="true"><button id="in-modal"></button></div>
+            <div role="dialog"><button id="in-popover"></button></div>
             <button id="taken"></button>
         `;
         const byId = (id: string): HTMLElement => document.getElementById(id) ?? document.body;
         byId('taken').addEventListener('keydown', (event) => event.preventDefault());
 
-        for (const id of ['input', 'textarea', 'editable', 'in-dialog', 'taken']) {
+        for (const id of ['input', 'textarea', 'editable', 'in-modal', 'taken']) {
             fireEvent.keyDown(byId(id), { key: 's' });
         }
         fireEvent.keyDown(byId('input'), { key: 'k', metaKey: true });
-
         expect(switcher).not.toHaveBeenCalled();
         expect(toggle).toHaveBeenCalledOnce();
+
+        fireEvent.keyDown(byId('in-popover'), { key: 's' });
+        expect(switcher).toHaveBeenCalledOnce();
     });
 
     it('tells ← from ⇧← and ignores Shift on keys that type a character', () => {

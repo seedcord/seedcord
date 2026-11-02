@@ -114,6 +114,34 @@ describe('Popover controlled vs uncontrolled', () => {
         expect(trigger).toHaveAttribute('aria-expanded', 'false');
     });
 
+    it('gives focus back to the control that opened it from outside its trigger', async () => {
+        const user = userEvent.setup();
+        function OpenedElsewhere(): ReactElement {
+            const [open, setOpen] = useState(false);
+            return (
+                <>
+                    <Popover open={open} onOpenChange={setOpen}>
+                        <PopoverTrigger>Open</PopoverTrigger>
+                        <PopoverContent>
+                            <button type="button">Inside</button>
+                        </PopoverContent>
+                    </Popover>
+                    <button type="button" onClick={() => setOpen(true)}>
+                        Elsewhere
+                    </button>
+                </>
+            );
+        }
+        render(<OpenedElsewhere />);
+        const elsewhere = screen.getByRole('button', { name: 'Elsewhere' });
+
+        await user.click(elsewhere);
+        expect(screen.getByRole('button', { name: 'Inside' })).toHaveFocus();
+        await user.keyboard('{Escape}');
+
+        expect(elsewhere).toHaveFocus();
+    });
+
     it('controlled: parent can force open=false even if Trigger was clicked without state sync', async () => {
         const user = userEvent.setup();
         render(

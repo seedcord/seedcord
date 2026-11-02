@@ -39,12 +39,13 @@ describe('Navbar', () => {
         expect(screen.getByText('open')).toBeInTheDocument();
     });
 
-    it('opens the site switcher on s and the key list on ?', () => {
+    it('toggles the site switcher on s and opens the key list on ?', () => {
         renderNavbar();
 
         fireEvent.keyDown(window, { key: 's' });
         expect(screen.getByRole('listbox', { name: 'Sites' })).toBeInTheDocument();
-        fireEvent.keyDown(screen.getByRole('listbox', { name: 'Sites' }), { key: 'Escape' });
+        fireEvent.keyDown(screen.getByRole('listbox', { name: 'Sites' }), { key: 's' });
+        expect(screen.queryByRole('listbox', { name: 'Sites' })).toBeNull();
 
         fireEvent.keyDown(window, { key: '?', shiftKey: true });
         const shortcuts = screen.getByRole('dialog', { name: 'Keyboard shortcuts' });
@@ -53,7 +54,6 @@ describe('Navbar', () => {
                 .getAllByRole('listitem')
                 .map((row) => row.textContent)
         ).toEqual([
-            expect.stringContaining('Search docs'),
             expect.stringContaining('Search docs'),
             expect.stringContaining('Switch site'),
             expect.stringContaining('Show keyboard shortcuts')

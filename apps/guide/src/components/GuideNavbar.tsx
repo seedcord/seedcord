@@ -55,7 +55,7 @@ export function GuideNavbar({ page, navOpen, onNavOpen }: GuideNavbarProps): Rea
         {
             toggleSearch: () => setSearchOpen((open) => !open),
             openSearch: () => setSearchOpen(true),
-            openSites: () => setSitesOpen(true),
+            toggleSites: () => setSitesOpen((open) => !open),
             showHotkeys: () => setHotkeysOpen(true)
         },
         page

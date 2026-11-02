@@ -1,9 +1,8 @@
 'use client';
 
 import * as RadixDialog from '@radix-ui/react-dialog';
-import { X } from 'lucide-react';
 
-import { Button } from './Button';
+import { CloseControls } from './CloseControls';
 import { cn } from './lib/cn';
 import { tw } from './lib/tw';
 
@@ -26,6 +25,12 @@ export interface DialogProps {
     placement?: DialogPlacement;
     closeLabel?: string;
     ref?: Ref<HTMLDivElement>;
+}
+
+// radix focuses the close button by default
+function focusTheBox(event: Event): void {
+    event.preventDefault();
+    if (event.currentTarget instanceof HTMLElement) event.currentTarget.focus();
 }
 
 export function Dialog({
@@ -51,8 +56,10 @@ export function Dialog({
                 />
                 <RadixDialog.Content
                     ref={ref}
+                    aria-modal
+                    onOpenAutoFocus={focusTheBox}
                     className={cn(
-                        'border-border shadow-soft fixed z-60 flex flex-col border bg-(--bg-dim-subtle)',
+                        'border-border shadow-soft fixed z-60 flex flex-col border bg-(--bg-dim-subtle) outline-hidden',
                         'data-[state=closed]:animate-out data-[state=open]:animate-in',
                         PLACEMENTS[placement]
                     )}
@@ -62,11 +69,7 @@ export function Dialog({
                         <RadixDialog.Title className={cn('text-subtle text-sm font-semibold tracking-wide uppercase')}>
                             {title}
                         </RadixDialog.Title>
-                        <RadixDialog.Close asChild>
-                            <Button variant="ghost" size="icon" aria-label={closeLabel} className={cn('text-subtle')}>
-                                <X className={cn('size-4')} aria-hidden />
-                            </Button>
-                        </RadixDialog.Close>
+                        <CloseControls onClose={() => onOpenChange(false)} label={closeLabel} />
                     </div>
                     <div className={cn('flex min-h-0 flex-col')}>{children}</div>
                     {footer ? <div className={cn('shrink-0 pt-2')}>{footer}</div> : null}

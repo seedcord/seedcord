@@ -1,17 +1,25 @@
 'use client';
 
+import { Fragment } from 'react';
+
 import { Dialog } from './Dialog';
 import { HotkeyKeys, keyCaps } from './HotkeyKeys';
 import { cn } from './lib/cn';
 import { useIsMac } from './lib/useIsMac';
 
-import type { Hotkey } from './lib/useHotkeys';
+import type { HotkeySpec } from './lib/useHotkeys';
 import type { ReactElement } from 'react';
+
+function byDescription(hotkeys: readonly HotkeySpec[]): Map<string, HotkeySpec[]> {
+    const rows = new Map<string, HotkeySpec[]>();
+    for (const hotkey of hotkeys) rows.set(hotkey.description, [...(rows.get(hotkey.description) ?? []), hotkey]);
+    return rows;
+}
 
 export interface HotkeysDialogProps {
     open: boolean;
     onOpenChange: (open: boolean) => void;
-    hotkeys: readonly Hotkey[];
+    hotkeys: readonly HotkeySpec[];
 }
 
 export function HotkeysDialog({ open, onOpenChange, hotkeys }: HotkeysDialogProps): ReactElement {
@@ -25,15 +33,24 @@ export function HotkeysDialog({ open, onOpenChange, hotkeys }: HotkeysDialogProp
             description="Keys you can press on this site."
         >
             <ul className={cn('nice-scroll min-h-0 space-y-1 overflow-y-auto')}>
-                {hotkeys.map((hotkey) => (
+                {[...byDescription(hotkeys)].map(([description, shortcuts]) => (
                     <li
-                        key={keyCaps(hotkey, isMac)
-                            .map((cap) => cap.label)
-                            .join('+')}
+                        key={description}
                         className={cn('flex items-center justify-between gap-4 py-1.5 text-sm text-(--text)')}
                     >
-                        {hotkey.description}
-                        <HotkeyKeys hotkey={hotkey} isMac={isMac} size="md" />
+                        {description}
+                        <span className={cn('text-subtle flex items-center gap-2 text-xs')}>
+                            {shortcuts.map((hotkey, index) => (
+                                <Fragment
+                                    key={keyCaps(hotkey, isMac)
+                                        .map((cap) => cap.label)
+                                        .join('+')}
+                                >
+                                    {index > 0 ? 'or' : null}
+                                    <HotkeyKeys hotkey={hotkey} isMac={isMac} size="md" />
+                                </Fragment>
+                            ))}
+                        </span>
                     </li>
                 ))}
             </ul>

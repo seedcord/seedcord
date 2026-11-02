@@ -57,7 +57,7 @@ export function Navbar(): ReactElement {
     const hotkeys = siteHotkeys(SEARCH_LABEL, {
         toggleSearch,
         openSearch: () => palette.setOpen(true),
-        openSites: () => setSitesOpen(true),
+        toggleSites: () => setSitesOpen((open) => !open),
         showHotkeys: () => setHotkeysOpen(true)
     });
     useHotkeys(hotkeys);

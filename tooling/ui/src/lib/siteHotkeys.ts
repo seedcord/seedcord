@@ -3,7 +3,7 @@ import type { Hotkey, HotkeySpec } from './useHotkeys';
 export interface SiteHotkeyActions {
     toggleSearch: () => void;
     openSearch: () => void;
-    openSites: () => void;
+    toggleSites: () => void;
     showHotkeys: () => void;
 }
 
@@ -25,7 +25,7 @@ export function siteHotkeys(
     return [
         { ...toggleSearch, run: actions.toggleSearch },
         { ...openSearch, run: actions.openSearch },
-        { ...SWITCH_SITE, run: actions.openSites },
+        { ...SWITCH_SITE, run: actions.toggleSites },
         ...pageRows,
         { ...SHOW_HOTKEYS, run: actions.showHotkeys }
     ];

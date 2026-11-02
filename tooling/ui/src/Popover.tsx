@@ -1,6 +1,7 @@
 'use client';
 
 import * as PopoverPrimitive from '@radix-ui/react-popover';
+import { useRef } from 'react';
 
 import { cn } from './lib/cn';
 import { tw } from './lib/tw';
@@ -34,12 +35,32 @@ interface PopoverContentProps extends ComponentPropsWithoutRef<typeof PopoverPri
     container?: HTMLElement | null;
 }
 
-export function PopoverContent({ className, sideOffset = 8, container, ...props }: PopoverContentProps): ReactElement {
+export function PopoverContent({
+    className,
+    sideOffset = 8,
+    container,
+    onOpenAutoFocus,
+    onCloseAutoFocus,
+    ...props
+}: PopoverContentProps): ReactElement {
+    const focusedBeforeOpen = useRef<Element | null>(null);
+
     return (
         <PopoverPrimitive.Portal container={container ?? undefined}>
             <PopoverPrimitive.Content
                 sideOffset={sideOffset}
                 className={cn(popoverContentBaseClassName, className)}
+                onOpenAutoFocus={(event) => {
+                    focusedBeforeOpen.current = document.activeElement;
+                    onOpenAutoFocus?.(event);
+                }}
+                // radix sends focus to the trigger even when a hotkey opened the popover
+                onCloseAutoFocus={(event) => {
+                    onCloseAutoFocus?.(event);
+                    if (event.defaultPrevented) return;
+                    event.preventDefault();
+                    if (focusedBeforeOpen.current instanceof HTMLElement) focusedBeforeOpen.current.focus();
+                }}
                 {...props}
             />
         </PopoverPrimitive.Portal>

@@ -24,7 +24,9 @@ describe('MobilePanel', () => {
         expect(panel).toHaveTextContent('links');
         expect(screen.getByText('dialog')).toBeInTheDocument();
 
-        await userEvent.setup().click(screen.getByRole('button', { name: 'Close panel' }));
+        // jsdom ignores the css that hides one of the two close buttons
+        const [closeButton] = screen.getAllByRole('button', { name: 'Close panel' });
+        await userEvent.setup().click(closeButton ?? document.body);
         expect(onOpenChange).toHaveBeenCalledWith(false);
     });
 });
