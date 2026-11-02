@@ -33,7 +33,9 @@
         "vitest.config.ts",
         "source.config.ts",
         ".next/types/**/*.ts",
-        "worker.ts"
+        "worker.ts",
+        "entrypoint.ts",
+        "cloudflare-workers.d.ts"
     ],
     "exclude": ["node_modules", "dist"]
 }

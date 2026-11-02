@@ -2,7 +2,7 @@
     "$schema": "node_modules/wrangler/config-schema.json",
     "name": "seedcord-guide",
     "compatibility_date": "2026-08-04",
-    "main": "./worker.ts",
+    "main": "./entrypoint.ts",
     // a route takes precedence over the home worker's custom domain on the same host
     "routes": [
         { "pattern": "seedcord.org/guide", "zone_name": "seedcord.org" },
