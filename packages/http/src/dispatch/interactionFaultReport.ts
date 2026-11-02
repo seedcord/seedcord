@@ -3,17 +3,11 @@ import { interactionFaultSource } from '@seedcord/core/internal';
 import { interactionUser } from '#handlers/interactionUser';
 
 import type { ValidInteractionTypes } from '#handlers/interactionTypes';
-import type { FaultReport, InteractionDispatch } from '@seedcord/core/internal';
-import type { RenderContext } from '@seedcord/types';
+import type { FaultDetails, InteractionDispatch } from '@seedcord/core/internal';
 
-export function faultReportOf(
-    payload: ValidInteractionTypes,
-    dispatch: InteractionDispatch,
-    uuid: RenderContext['uuid']
-): FaultReport {
+export function interactionFaultReport(payload: ValidInteractionTypes, dispatch: InteractionDispatch): FaultDetails {
     const { id, username } = interactionUser(payload);
     return {
-        uuid,
         dispatch,
         origin: dispatch.routeId,
         source: interactionFaultSource(dispatch, {

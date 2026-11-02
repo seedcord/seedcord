@@ -6,7 +6,7 @@ import { resultFor, runAfter } from './runAfter';
 import type { MiddlewareKind } from '#src/metadataKeys';
 import type { Bus } from '#subscribers/Bus';
 import type { DispatchOutcome } from '#subscribers/types/Subscriptions';
-import type { DispatchContext } from './DispatchContext';
+import type { InteractionDispatch } from './DispatchContext';
 import type { DispatchResult } from './dispatchResult';
 import type { Logger } from '@seedcord/logger';
 import type { Promisable } from 'type-fest';
@@ -19,9 +19,8 @@ interface RunnableMiddleware extends RunnableHandler {
     after?(result: DispatchResult): Promisable<void>;
 }
 
-// what differs between the transports for one interaction
 export interface InteractionRunAdapter<Sender> {
-    readonly dispatch: DispatchContext<InteractionKind>;
+    readonly dispatch: InteractionDispatch;
     readonly bus: Bus;
     readonly logger: Logger;
     readonly interactionId: string;

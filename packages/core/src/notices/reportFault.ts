@@ -9,7 +9,7 @@ import { logUnknownFault } from './logUnknownFault';
 import type { DispatchContext } from '#src/dispatch/DispatchContext';
 import type { Bus } from '#subscribers/Bus';
 import type { FaultSource, SubscriptionData } from '#subscribers/types/Subscriptions';
-import type { ErrorsConfig, RenderContext } from '@seedcord/types';
+import type { ErrorsConfig, RenderContext, TypedOmit } from '@seedcord/types';
 
 // lazy, env binds after this module loads
 let cachedLogger: Logger | undefined;
@@ -25,6 +25,8 @@ export interface FaultReport extends Pick<SubscriptionData<'unknownException'>, 
     readonly source: FaultSource | null;
     readonly metadata: unknown;
 }
+
+export type FaultDetails = TypedOmit<FaultReport, 'uuid'>;
 
 export function reportFault(bus: Bus, errors: ErrorsConfig | undefined, error: Error, report: FaultReport): void {
     if (error instanceof Notice && !error.report) return;

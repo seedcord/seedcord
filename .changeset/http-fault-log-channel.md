@@ -1,5 +1,6 @@
 ---
+'@seedcord/gateway': patch
 '@seedcord/http': patch
 ---
 
-http now logs every fault line on the `errors` channel as `Faults`, the same as gateway. It used to log them on `interactions` as `Dispatcher`.
+Both transports now log every fault line on the `errors` channel as `Faults`. http used to log them on `interactions` as `Dispatcher`, and gateway labelled some of them `ErrorsHandling`.

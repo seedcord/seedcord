@@ -1,3 +1,4 @@
+import { InteractionKind } from '@seedcord/core';
 import { DispatchContext } from '@seedcord/core/internal';
 import { describe, expect, it } from 'vitest';
 
@@ -5,8 +6,6 @@ import { eventFaultReport, interactionFaultReport } from '#miscellaneous/faultRe
 
 import type { ValidInteractionTypes } from '#src/handlers/interactionTypes';
 import type { Guild, User } from 'discord.js';
-
-const uuid = '11111111-2222-3333-4444-555555555555';
 
 // justified: the fixtures carry the fields the mapping reads plus djs baggage it must strip
 const guild = { id: 'g1', name: 'Guild One', members: {} } as unknown as Guild;
@@ -17,10 +16,9 @@ const interaction = { user, guild, guildId: 'g1', channelId: 'c1', id: 'i1' } as
 
 describe('fault reports', () => {
     it('reports an interaction under its route, with scalar actors and the command from the dispatch', () => {
-        const report = interactionFaultReport(interaction, new DispatchContext('slash', 'ban'), uuid);
+        const report = interactionFaultReport(interaction, new DispatchContext(InteractionKind.Slash, 'ban'));
 
         expect(report).toMatchObject({
-            uuid,
             origin: 'slash:ban',
             source: { kind: 'interaction', interactionKind: 'slash', command: 'ban', userId: 'u1' }
         });
@@ -37,7 +35,7 @@ describe('fault reports', () => {
             guild: null,
             user: null
         };
-        const report = eventFaultReport(event, new DispatchContext('event', 'messageCreate'), uuid);
+        const report = eventFaultReport(event, new DispatchContext('event', 'messageCreate'));
 
         expect(report).toMatchObject({
             origin: 'event:messageCreate:Starboard',

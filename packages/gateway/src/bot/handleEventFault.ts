@@ -17,12 +17,8 @@ interface EventFault {
 export function handleEventFault(caught: unknown, fault: EventFault, core: Core): void {
     const { handlerName, args, dispatch } = fault;
     const boundary = new FaultBoundary(core, core.config.errors?.ignoreEventApiCodes, DiscordAPIError);
-    boundary.report(caught, (uuid) => {
+    boundary.report(caught, () => {
         const { channelId, guild, user } = deriveEventActor(args);
-        return eventFaultReport(
-            { name: dispatch.route, handler: handlerName, args, channelId, guild, user },
-            dispatch,
-            uuid
-        );
+        return eventFaultReport({ name: dispatch.route, handler: handlerName, args, channelId, guild, user }, dispatch);
     });
 }

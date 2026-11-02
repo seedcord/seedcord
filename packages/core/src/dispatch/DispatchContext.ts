@@ -8,7 +8,7 @@ import type { DispatchBag, DispatchState } from '@seedcord/types';
 
 type DispatchKind = `${InteractionKind}` | 'event';
 
-export type InteractionDispatch = DispatchContext<Exclude<DispatchKind, 'event'>>;
+export type InteractionDispatch = DispatchContext<InteractionKind>;
 
 /**
  * State shared by middleware, gates, and handlers during one dispatch.

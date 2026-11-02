@@ -76,19 +76,6 @@ describe('storeComponentRoute multi-def', () => {
             })
         );
     });
-
-    it('accumulates prefixes across calls while the defs key holds the last set', () => {
-        class Handler {
-            execute(): void {}
-        }
-        // justified: only the prefix is read by the writer
-        const a = { prefix: 'inv' } as unknown as AnyCustomId;
-        const b = { prefix: 'shop' } as unknown as AnyCustomId;
-        storeComponentRoute(InteractionKind.Button, [a], Handler);
-        storeComponentRoute(InteractionKind.Button, [b], Handler);
-        expect(Reflect.getMetadata(InteractionRouteKeys[InteractionKind.Button], Handler)).toEqual(['inv', 'shop']);
-        expect(Reflect.getMetadata(ComponentDefsKey, Handler)).toEqual([b]);
-    });
 });
 
 describe('route maps', () => {

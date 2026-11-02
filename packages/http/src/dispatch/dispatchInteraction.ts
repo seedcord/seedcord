@@ -16,7 +16,7 @@ import { RepliableHandler } from '#handlers/RepliableHandler';
 import { ReplySender } from '#reply/ReplySender';
 import { interactionGateContext } from '#src/gates/context';
 
-import { faultReportOf } from './faultReportOf';
+import { interactionFaultReport } from './interactionFaultReport';
 
 import type { ConstructableHandler, InteractionMiddlewareConstructor } from '#handlers/constructors';
 import type { InteractionOf } from '#handlers/interaction/middlewareKinds';
@@ -24,7 +24,12 @@ import type { Repliables, ValidInteractionTypes } from '#handlers/interactionTyp
 import type { Core } from '#interfaces/Core';
 import type { ResolvedRoute } from './resolve';
 import type { MiddlewareKind } from '@seedcord/core';
-import type { FaultTarget, InteractionRunAdapter, MiddlewareRegistry } from '@seedcord/core/internal';
+import type {
+    FaultTarget,
+    InteractionDispatch,
+    InteractionRunAdapter,
+    MiddlewareRegistry
+} from '@seedcord/core/internal';
 
 // lazy, env binds after this module loads
 let dispatchLogger: Logger | undefined;
@@ -43,7 +48,7 @@ interface DispatchArgs {
 function faultTarget(
     payload: ValidInteractionTypes,
     core: Core,
-    dispatch: DispatchContext<InteractionKind>,
+    dispatch: InteractionDispatch,
     sender: ReplySender | undefined
 ): FaultTarget {
     if (dispatch.kind === InteractionKind.Autocomplete) {
@@ -96,14 +101,13 @@ function httpRunAdapter(args: DispatchArgs): InteractionRunAdapter<ReplySender> 
             const boundary = new FaultBoundary(core, core.config.errors?.ignoreApiCodes, DiscordAPIError);
             await boundary.answer(
                 caught,
-                (uuid) => faultReportOf(payload, dispatch, uuid),
+                () => interactionFaultReport(payload, dispatch),
                 faultTarget(payload, core, dispatch, sender)
             );
         }
     };
 }
 
-// a null return means the refusal is already sent
 export function dispatchInteraction(args: DispatchArgs): Promise<(() => Promise<void>) | null> {
     return new InteractionRun(httpRunAdapter(args)).prepare();
 }

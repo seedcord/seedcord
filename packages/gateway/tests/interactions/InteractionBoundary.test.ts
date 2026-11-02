@@ -1,4 +1,4 @@
-import { Notice, Silence, Fault } from '@seedcord/core';
+import { InteractionKind, Notice, Silence, Fault } from '@seedcord/core';
 import { DispatchContext, PublishDefault } from '@seedcord/core/internal';
 import { Logger, LoggerChannelRegistry } from '@seedcord/logger';
 import { MessageFlags, RESTJSONErrorCodes } from 'discord.js';
@@ -61,7 +61,10 @@ function handleInteractionFault(
     interaction: ValidInteractionTypes,
     core: Core,
     sender?: ReplySender,
-    dispatch = new DispatchContext(interaction.isAutocomplete() ? 'autocomplete' : 'slash', 'test')
+    dispatch = new DispatchContext(
+        interaction.isAutocomplete() ? InteractionKind.Autocomplete : InteractionKind.Slash,
+        'test'
+    )
 ): Promise<void> {
     return boundary(caught, interaction, core, dispatch, sender);
 }
@@ -99,7 +102,7 @@ describe('handleInteractionFault', () => {
     });
 
     it('renders a notice against the dispatch context the caller passed', async () => {
-        const dispatch = new DispatchContext('slash', 'test');
+        const dispatch = new DispatchContext(InteractionKind.Slash, 'test');
         dispatch.set('actor', 'from-middleware');
         let saw: string | undefined;
 

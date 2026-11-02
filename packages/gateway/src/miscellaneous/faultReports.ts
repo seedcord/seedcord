@@ -2,8 +2,8 @@ import { interactionFaultSource } from '@seedcord/core/internal';
 
 import type { ValidInteractionTypes } from '#src/handlers/interactionTypes';
 import type { DispatchContext } from '@seedcord/core';
-import type { FaultReport, InteractionDispatch } from '@seedcord/core/internal';
-import type { Nullable, RenderContext } from '@seedcord/types';
+import type { FaultDetails, InteractionDispatch } from '@seedcord/core/internal';
+import type { Nullable } from '@seedcord/types';
 import type { Guild, User } from 'discord.js';
 
 interface EventOrigin {
@@ -17,11 +17,9 @@ interface EventOrigin {
 
 export function interactionFaultReport(
     interaction: ValidInteractionTypes,
-    dispatch: InteractionDispatch,
-    uuid: RenderContext['uuid']
-): FaultReport {
+    dispatch: InteractionDispatch
+): FaultDetails {
     return {
-        uuid,
         dispatch,
         origin: dispatch.routeId,
         source: interactionFaultSource(dispatch, {
@@ -37,13 +35,8 @@ export function interactionFaultReport(
     };
 }
 
-export function eventFaultReport(
-    event: EventOrigin,
-    dispatch: DispatchContext,
-    uuid: RenderContext['uuid']
-): FaultReport {
+export function eventFaultReport(event: EventOrigin, dispatch: DispatchContext): FaultDetails {
     return {
-        uuid,
         dispatch,
         origin: `event:${event.name}:${event.handler}`,
         source: {
@@ -61,7 +54,7 @@ export function eventFaultReport(
 }
 
 // the bus payload must stay djs-free
-function scalarActors(guild: Nullable<Guild>, user: Nullable<User>): Pick<FaultReport, 'guild' | 'user'> {
+function scalarActors(guild: Nullable<Guild>, user: Nullable<User>): Pick<FaultDetails, 'guild' | 'user'> {
     return {
         guild: guild ? { id: guild.id, name: guild.name } : undefined,
         user: user ? { id: user.id, username: user.username } : undefined

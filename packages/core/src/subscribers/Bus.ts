@@ -90,7 +90,7 @@ export class Bus extends TypedEventEmitter<SubscriptionTuples> {
         return new Set([...this.subscribersMap.values()].flat().map((entry) => entry.ctor)).size;
     }
 
-    /** @internal registration already dropped every reporter with no url set */
+    /** @internal registration already skipped every reporter with no url set */
     public async [VerifyWebhooks](): Promise<void> {
         const missing: string[] = [];
         await Promise.all(

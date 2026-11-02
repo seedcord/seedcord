@@ -9,13 +9,13 @@ import { faultResponse } from './faultResponse';
 import { faultLogger, reportFault } from './reportFault';
 
 import type { CoreBase } from '#interfaces/CoreBase';
-import type { FaultReport } from './reportFault';
-import type { RenderContext, ReplyResponse } from '@seedcord/types';
+import type { FaultDetails } from './reportFault';
+import type { ReplyResponse } from '@seedcord/types';
 
 // each transport passes the DiscordAPIError that its discord client throws
 type ApiErrorClass = abstract new (...args: never[]) => { readonly code: number | string };
 
-type ReportOf = (uuid: RenderContext['uuid']) => FaultReport;
+type ReportOf = () => FaultDetails;
 
 const HARMLESS_API_CODES: ReadonlySet<number | string> = new Set([
     RESTJSONErrorCodes.UnknownInteraction, // interaction expired
@@ -65,7 +65,7 @@ export class FaultBoundary {
             return null;
         }
 
-        const report = reportOf(crypto.randomUUID());
+        const report = { uuid: crypto.randomUUID(), ...reportOf() };
         reportFault(this.core.bus, config.errors, error, report);
         return {
             routeId: report.dispatch.routeId,

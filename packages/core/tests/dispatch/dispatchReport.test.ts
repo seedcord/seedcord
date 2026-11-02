@@ -4,6 +4,7 @@ import { afterEach, describe, expect, it, vi, type MockInstance } from 'vitest';
 
 import { DispatchContext } from '#src/dispatch/DispatchContext';
 import { outcomeFor, queuedMsFor, reportDispatch } from '#src/dispatch/dispatchReport';
+import { InteractionKind } from '#src/metadataKeys';
 import { Fault } from '#stops/Fault';
 import { Notice } from '#stops/Notice';
 import { Silence } from '#stops/Silence';
@@ -16,7 +17,6 @@ import type { LogRecord, ReplyResponse } from '@seedcord/types';
 // 2022-01-01, so the gap to now is always positive
 const SNOWFLAKE = '926845371392000000';
 
-// subclassed off the package entry, so this shares the Notice identity outcomeFor reads
 class Refusal extends Notice {
     constructor() {
         super('not allowed');
@@ -29,7 +29,7 @@ class Refusal extends Notice {
 
 function reportFor(queuedMs = 0): Parameters<typeof reportDispatch>[1] {
     return {
-        dispatch: new DispatchContext('slash', 'ping'),
+        dispatch: new DispatchContext(InteractionKind.Slash, 'ping'),
         interactionId: 'i1',
         outcome: 'handled',
         userId: 'u0',

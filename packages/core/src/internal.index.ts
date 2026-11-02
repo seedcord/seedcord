@@ -15,7 +15,7 @@ export { interactionMiddleware, MiddlewareRegistry } from '#src/dispatch/Middlew
 export type { MiddlewareRegistration, MiddlewareRegistrationOf } from '#src/dispatch/MiddlewareRegistry';
 export { bindBotColor } from '#components/botColorHolder';
 export { FaultBoundary, type FaultTarget } from '#src/notices/FaultBoundary';
-export type { FaultReport } from '#src/notices/reportFault';
+export type { FaultDetails } from '#src/notices/reportFault';
 
 export { FixedScope } from '#src/plugin/Plugin';
 export type { PluginArgs, PluginCtor } from '#src/plugin/Plugin';

@@ -18,7 +18,7 @@ export async function handleInteractionFault(
     const boundary = new FaultBoundary(core, core.config.errors?.ignoreApiCodes, DiscordAPIError);
     await boundary.answer(
         caught,
-        (uuid) => interactionFaultReport(interaction, dispatch, uuid),
+        () => interactionFaultReport(interaction, dispatch),
         faultTarget(interaction, core, dispatch, sender)
     );
 }

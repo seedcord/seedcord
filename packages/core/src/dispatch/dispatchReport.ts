@@ -16,12 +16,6 @@ function logger(): Logger {
     return dispatchLogger;
 }
 
-/**
- * Classifies a caught stop for `interactionDispatched` so a gate and a
- * handler label the same stop identically.
- *
- * @internal
- */
 export function outcomeFor(caught: unknown): Exclude<DispatchOutcome, 'handled'> {
     if (caught instanceof Silence) return 'refused';
     if (caught instanceof Notice) return caught.report ? 'failed' : 'refused';
@@ -32,20 +26,13 @@ interface DispatchReport {
     readonly dispatch: InteractionDispatch;
     readonly interactionId: string;
     readonly outcome: DispatchOutcome;
-    readonly userId: string | null;
+    readonly userId: string;
     readonly guildId: string | null;
-    /** `performance.now()` captured as the dispatch began. */
     readonly startedAt: number;
-    /** {@link queuedMsFor} read at the same moment as `startedAt`. */
     readonly queuedMs: number;
 }
 
-/**
- * Discord's interaction creation to now, read from the snowflake. Called at dispatch entry, since
- * a later read would count the handler run into the queue time as well.
- *
- * @internal
- */
+// call this at dispatch entry, since a later read counts the handler run into the queue time
 export function queuedMsFor(interactionId: string): number {
     // timestampFromSnowflake throws on a malformed id
     try {

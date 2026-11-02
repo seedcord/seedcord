@@ -14,15 +14,15 @@ import type {
 import type { InteractionOf } from '#handlers/interaction/middlewareKinds';
 import type { Core } from '#interfaces/Core';
 import type { Repliables, ValidInteractionTypes } from '#src/handlers/interactionTypes';
-import type { DispatchContext, InteractionKind, MiddlewareKind } from '@seedcord/core';
-import type { InteractionRunAdapter, MiddlewareRegistry } from '@seedcord/core/internal';
+import type { MiddlewareKind } from '@seedcord/core';
+import type { InteractionDispatch, InteractionRunAdapter, MiddlewareRegistry } from '@seedcord/core/internal';
 import type { Logger } from '@seedcord/logger';
 import type { Interaction } from 'discord.js';
 
 interface GatewayRun {
     readonly interaction: Interaction;
     readonly core: Core;
-    readonly dispatch: DispatchContext<InteractionKind>;
+    readonly dispatch: InteractionDispatch;
     readonly HandlerCtor: HandlerConstructor;
     readonly middlewares: MiddlewareRegistry<InteractionMiddlewareConstructor>;
     readonly logger: Logger;

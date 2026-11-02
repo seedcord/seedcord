@@ -39,7 +39,7 @@ export abstract class SlashHandler<
      * The typed options for this command's route. Only the getters for kinds this command declares appear.
      * Each getter's name argument is restricted to that command's options of its kind.
      *
-     * - A required option drops the null.
+     * - A required option's getter never returns `null`.
      *
      * - Choices narrow to their literal union.
      *

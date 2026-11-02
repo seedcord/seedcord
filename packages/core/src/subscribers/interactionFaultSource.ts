@@ -1,10 +1,11 @@
 import type { InteractionDispatch } from '#src/dispatch/DispatchContext';
+import type { InteractionKind } from '#src/metadataKeys';
 import type { InteractionFaultSource } from '#subscribers/types/Subscriptions';
 import type { TypedOmit } from '@seedcord/types';
 
 type FaultKind = InteractionFaultSource['interactionKind'];
 
-const FAULT_KINDS: Record<InteractionDispatch['kind'], FaultKind | null> = {
+const FAULT_KINDS: Record<`${InteractionKind}`, FaultKind | null> = {
     slash: 'slash',
     userContextMenu: 'context-menu',
     messageContextMenu: 'context-menu',

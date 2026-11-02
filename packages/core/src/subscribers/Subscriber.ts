@@ -23,6 +23,7 @@ type SingleKeyData<Keys extends SubscriptionKey> = IsUnion<Keys> extends true ? 
  */
 export abstract class Subscriber<in out Keys extends SubscriptionKey, TCore extends CoreBase> {
     protected readonly logger: Logger;
+    readonly #payload: AllSubscriptions[Keys];
 
     /**
      * Instantiates the subscriber with event data and core.
@@ -32,16 +33,17 @@ export abstract class Subscriber<in out Keys extends SubscriptionKey, TCore exte
      * @param key - The published key
      */
     constructor(
-        private readonly payload: AllSubscriptions[Keys],
+        payload: AllSubscriptions[Keys],
         protected readonly core: TCore,
         protected readonly key: Keys
     ) {
+        this.#payload = payload;
         this.logger = new Logger(this.constructor.name, { channel: 'subscribers' });
     }
 
     /** The published payload. It's `never` on a subscriber for several keys, where `this.match` reads it. */
     protected get data(): SingleKeyData<Keys> {
-        return this.payload;
+        return this.#payload;
     }
 
     /**
@@ -74,6 +76,6 @@ export abstract class Subscriber<in out Keys extends SubscriptionKey, TCore exte
      * ```
      */
     protected async match<Ret>(cases: SubscriberMatchCases<Keys, Ret>): Promise<Ret> {
-        return await caseFor(this, cases, 'subscription key', this.key)(this.payload);
+        return await caseFor(this, cases, 'subscription key', this.key)(this.#payload);
     }
 }
