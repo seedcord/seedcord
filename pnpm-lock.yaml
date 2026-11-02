@@ -2350,6 +2350,9 @@ importers:
       tw-animate-css:
         specifier: ^1.4.0
         version: 1.4.0
+      type-fest:
+        specifier: catalog:deps
+        version: 5.10.0
       unist-util-visit:
         specifier: catalog:deps
         version: 5.1.0

@@ -1,6 +1,15 @@
 import { BRAND_COLORS } from '@seedcord/brand';
 import { APPLE_ICON_SIZE, FAVICON_SIZE } from '@seedcord/ui/MaterwelonFavicon';
-import { AgentLinks, GUIDE, MotionProvider, SkipLink, ThemeProvider, cn, seedcordJsonLd } from '@seedcord/ui';
+import {
+    AgentLinks,
+    GUIDE,
+    MotionProvider,
+    SkipLink,
+    ThemeProvider,
+    TooltipProvider,
+    cn,
+    seedcordJsonLd
+} from '@seedcord/ui';
 import { Space_Grotesk } from 'next/font/google';
 
 import './globals.css';
@@ -52,7 +61,9 @@ function RootLayout({ children }: RootLayoutProps): ReactNode {
                 <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: jsonLd }} />
                 <ThemeProvider>
                     <SkipLink />
-                    <MotionProvider>{children}</MotionProvider>
+                    <MotionProvider>
+                        <TooltipProvider>{children}</TooltipProvider>
+                    </MotionProvider>
                 </ThemeProvider>
             </body>
         </html>

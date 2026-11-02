@@ -1,83 +1,29 @@
 'use client';
 
-import {
-    Button,
-    GithubIcon,
-    Icon,
-    MAIN_CONTENT_ID,
-    MobileNavButton,
-    MobilePanel,
-    Navbar,
-    NavTabs,
-    ScrollToTopButton,
-    SearchIconButton,
-    SiteSwitcher,
-    ThemeToggle,
-    cn,
-    matchActiveHref,
-    tw
-} from '@seedcord/ui';
+import { MAIN_CONTENT_ID, MobilePanel, ScrollToTopButton, cn, matchActiveHref, tw } from '@seedcord/ui';
 import { AnchorProvider, useActiveAnchor } from 'fumadocs-core/toc';
-import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { useMemo, useState } from 'react';
 
-import { DOCS_URL, HOME_URL, REPO_URL, SITE_URL } from '#lib/site';
 import { useVisibleHeadingIds } from '#lib/visibleHeadings';
 
 import { DocsSidebar } from './DocsSidebar';
-import { GuideSearch, SEARCH_LABEL } from './GuideSearch';
+import { GithubLink, GuideNavbar } from './GuideNavbar';
 import { MobileNav } from './MobileNav';
 import { PageActions } from './PageActions';
 import { StarCard } from './StarCard';
-import { TableOfContents } from './TableOfContents';
+import { idOf, TableOfContents } from './TableOfContents';
 import { TocBar } from './TocBar';
+import { useScrollMemory } from './useScrollMemory';
 
 import type { GuideTab, SidebarsByTab } from '#lib/nav';
+import type { PageNeighbours } from '#lib/neighbours';
 import type { PageActionProps } from '#lib/pageActions';
-import type { SiteDestination } from '@seedcord/ui';
 import type { TocBarProps } from './TocBar';
 import type { TOCItemType } from 'fumadocs-core/toc';
 import type { ReactElement, ReactNode } from 'react';
 
-const DESTINATIONS: readonly SiteDestination[] = [
-    { label: 'Home', href: HOME_URL },
-    { label: 'Guide', href: SITE_URL, current: true },
-    { label: 'Reference', href: DOCS_URL }
-];
-
 const NO_TOC: readonly TOCItemType[] = [];
-
-function GithubLink(): ReactElement {
-    return (
-        <Button asChild variant="ghost" size="icon" aria-label="Open GitHub repository" className={cn('text-(--text)')}>
-            <Link href={REPO_URL} target="_blank" rel="noreferrer">
-                <Icon icon={GithubIcon} size={20} />
-            </Link>
-        </Button>
-    );
-}
-
-function NavActions({
-    navOpen,
-    onNavOpen,
-    onSearchOpen
-}: {
-    navOpen: boolean;
-    onNavOpen: () => void;
-    onSearchOpen: () => void;
-}): ReactElement {
-    return (
-        <>
-            <SearchIconButton label={SEARCH_LABEL} onOpen={onSearchOpen} />
-            <span className={cn('hidden lg:flex')}>
-                <GithubLink />
-            </span>
-            <ThemeToggle />
-            <MobileNavButton open={navOpen} onOpen={onNavOpen} className={cn('lg:hidden')} />
-        </>
-    );
-}
 
 function ContentsBar({ items, pageTitle }: Omit<TocBarProps, 'activeIds' | 'currentId' | 'className'>): ReactElement {
     const activeIds = useVisibleHeadingIds(items);
@@ -127,9 +73,12 @@ export interface GuideShellProps {
     toc?: readonly TOCItemType[] | undefined;
     pageTitle?: string | undefined;
     actions?: PageActionProps | undefined;
+    neighbours?: PageNeighbours | undefined;
     pathname?: string | undefined;
     children: ReactNode;
 }
+
+const NO_NEIGHBOURS: PageNeighbours = {};
 
 export function GuideShell({
     tabs,
@@ -137,13 +86,14 @@ export function GuideShell({
     toc = NO_TOC,
     pageTitle = '',
     actions,
+    neighbours = NO_NEIGHBOURS,
     pathname: override,
     children
 }: GuideShellProps): ReactElement {
     const current = usePathname();
     const pathname = override ?? current;
+    useScrollMemory(pathname);
     const [navOpen, setNavOpen] = useState(false);
-    const [searchOpen, setSearchOpen] = useState(false);
     // AnchorProvider re-observes every heading whenever this array changes identity
     const anchors = useMemo(() => [...toc], [toc]);
 
@@ -155,44 +105,39 @@ export function GuideShell({
     const hasContents = toc.length > 0;
 
     return (
-        <>
-            <Navbar
-                mark={<SiteSwitcher site="guide" destinations={DESTINATIONS} linkAs={Link} />}
-                center={<GuideSearch open={searchOpen} onOpenChange={setSearchOpen} />}
-                actions={
-                    <NavActions
-                        navOpen={navOpen}
-                        onNavOpen={() => setNavOpen(true)}
-                        onSearchOpen={() => setSearchOpen(true)}
-                    />
-                }
-                tabsClassName={cn('hidden lg:flex')}
-                tabs={<NavTabs items={tabs} activeHref={activeHref ?? ''} linkAs={Link} />}
+        <AnchorProvider toc={anchors}>
+            <GuideNavbar
+                targets={{
+                    tabs,
+                    activeHref: activeHref ?? '',
+                    neighbours,
+                    headingIds: toc.map((item) => idOf(item.url))
+                }}
+                navOpen={navOpen}
+                onNavOpen={() => setNavOpen(true)}
             />
 
-            <AnchorProvider toc={anchors}>
-                <div className={cn('pt-(--nav-h)')}>
-                    {hasContents ? <ContentsBar items={toc} pageTitle={pageTitle} /> : null}
-                    <div className={cn('mx-auto flex w-full max-w-(--content-max) gap-10 px-(--page-gutter)')}>
-                        {sections.length > 0 ? (
-                            <DocsSidebar
-                                sections={sections}
-                                activeHref={pathname}
-                                className={cn(
-                                    'nice-scroll sticky top-(--nav-h) hidden h-[calc(100dvh-var(--nav-h))] w-64 shrink-0 overflow-y-auto py-10 lg:block'
-                                )}
-                            />
-                        ) : null}
-                        {/* below lg the floating button would cover PageNav */}
-                        <main id={MAIN_CONTENT_ID} className={cn(mainClassName)}>
-                            {children}
-                        </main>
-                        {hasContents ? <ContentsColumn items={toc} actions={actions} /> : null}
-                    </div>
+            <div className={cn('pt-(--nav-h)')}>
+                {hasContents ? <ContentsBar items={toc} pageTitle={pageTitle} /> : null}
+                <div className={cn('mx-auto flex w-full max-w-(--content-max) gap-10 px-(--page-gutter)')}>
+                    {sections.length > 0 ? (
+                        <DocsSidebar
+                            sections={sections}
+                            activeHref={pathname}
+                            className={cn(
+                                'nice-scroll sticky top-(--nav-h) hidden h-[calc(100dvh-var(--nav-h))] w-64 shrink-0 overflow-y-auto py-10 lg:block'
+                            )}
+                        />
+                    ) : null}
+                    {/* below lg the floating button would cover PageNav */}
+                    <main id={MAIN_CONTENT_ID} className={cn(mainClassName)}>
+                        {children}
+                    </main>
+                    {hasContents ? <ContentsColumn items={toc} actions={actions} /> : null}
                 </div>
-                {/* the contents column carries its own from lg up */}
-                <ScrollToTopButton className={cn('right-(--page-gutter) lg:hidden')} />
-            </AnchorProvider>
+            </div>
+            {/* the contents column carries its own from lg up */}
+            <ScrollToTopButton className={cn('right-(--page-gutter) lg:hidden')} />
 
             <MobilePanel
                 open={navOpen}
@@ -213,6 +158,6 @@ export function GuideShell({
                     onNavigate={() => setNavOpen(false)}
                 />
             </MobilePanel>
-        </>
+        </AnchorProvider>
     );
 }

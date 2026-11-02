@@ -10,7 +10,8 @@ export interface RovingGroup<TItem> {
 }
 
 export interface RovingListOptions<TItem> {
-    query: string;
+    // a new query moves the highlight back to the first row
+    query?: string;
     groups: readonly RovingGroup<TItem>[];
     onSelect: (item: TItem) => void;
 }
@@ -77,7 +78,7 @@ function pick<TItem>(next: Picked<TItem>) {
             : next;
 }
 
-export function useRovingList<TItem>({ query, groups, onSelect }: RovingListOptions<TItem>): RovingList<TItem> {
+export function useRovingList<TItem>({ query = '', groups, onSelect }: RovingListOptions<TItem>): RovingList<TItem> {
     const { items, stops } = layout(groups);
     const [picked, setPicked] = useState<Picked<TItem>>({ query, item: undefined, pickedByPointer: false });
     const current = picked.query === query ? picked : undefined;
