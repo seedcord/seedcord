@@ -135,7 +135,7 @@ Both transports return a `Collection` keyed by id. The values differ. Gateway re
 
 ## One handler, several menus
 
-Two menus of the same kind can share one class. Name every id on the decorator, then give `this.match` an arm per prefix.
+Two menus of the same kind can share one class. Name every id on the decorator, then give `this.match` a case per prefix.
 
 ```ts twoslash title="src/handlers/Filters.ts"
 import {
@@ -164,9 +164,9 @@ export class Filters extends StringMenuHandler<
 }
 ```
 
-`picked` is read once, before `match`, and both arms use it. Share a class like this when both menus run the same code first. Two menus that share nothing read better as two handlers, one file each.
+`picked` is read once, before `match`, and both cases use it. Share a class like this when both menus run the same code first. Two menus that share nothing read better as two handlers, one file each.
 
-`this.match` takes one arm for each id in the generic, keyed by that id's prefix, so your editor offers `region` and `language`.
+`this.match` takes one case for each id in the generic, keyed by that id's prefix, so your editor offers `region` and `language`.
 
 ```ts twoslash
 // @noErrors

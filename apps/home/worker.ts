@@ -1,15 +1,14 @@
 import { agentLinkHeader } from '@seedcord/ui/agents';
+import { fetchAsset, type Assets } from '@seedcord/ui/fetchAsset';
 
 interface Env {
-    ASSETS: { fetch(request: Request): Promise<Response> };
+    ASSETS: Assets;
 }
 
 // every other host serves the same content, so it gets an X-Robots-Tag noindex to keep duplicates out of Google
 const PRODUCTION_HOST = 'seedcord.org';
 const WWW_HOST = `www.${PRODUCTION_HOST}`;
 
-const TRAILING_SLASH_REDIRECT = 307;
-const PERMANENT_REDIRECT = 308;
 const MOVED_PERMANENTLY = 301;
 
 const LINK_HEADER = agentLinkHeader('home');
@@ -25,21 +24,15 @@ const handler = {
             return Response.redirect(url.toString(), MOVED_PERMANENTLY);
         }
 
-        const asset = await env.ASSETS.fetch(request);
+        const asset = await fetchAsset(env.ASSETS, request);
 
-        // collapse the slash/non-slash duplicate into one permanent redirect
-        const normalized =
-            asset.status === TRAILING_SLASH_REDIRECT && asset.headers.has('location')
-                ? new Response(null, { status: PERMANENT_REDIRECT, headers: asset.headers })
-                : asset;
-
-        const isHtml = (normalized.headers.get('content-type') ?? '').includes('text/html');
+        const isHtml = (asset.headers.get('content-type') ?? '').includes('text/html');
         const isProduction = url.hostname === PRODUCTION_HOST;
         const isIcon = url.pathname === ICON_PATH;
 
-        if (isProduction && !isHtml && !isIcon) return normalized;
+        if (isProduction && !isHtml && !isIcon) return asset;
 
-        const response = new Response(normalized.body, normalized);
+        const response = new Response(asset.body, asset);
         if (isIcon) response.headers.set('Content-Type', 'image/png');
         if (isHtml) response.headers.set('Link', LINK_HEADER);
         if (!isProduction) response.headers.set('X-Robots-Tag', 'noindex, nofollow');

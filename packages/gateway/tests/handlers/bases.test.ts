@@ -17,7 +17,7 @@ import type { ButtonInteraction, ChatInputCommandInteraction, ModalSubmitInterac
 
 const dispatch = new DispatchContext('test:probe');
 
-// a handler naming no route carries no guild guarantee
+// a handler without a route doesn't get a guild guarantee
 type Slash = ChatInputCommandInteraction<undefined>;
 type Button = ButtonInteraction<'cached'>;
 type Modal = ModalSubmitInteraction<'cached'>;
@@ -154,7 +154,7 @@ describe('ModalHandler base', () => {
     });
 
     // the missing source outranks the ack state, matching http where the handler checks before the sender runs
-    it('names the missing source on a command-opened modal that already replied', async () => {
+    it('reports the missing source on a command-opened modal that already replied', async () => {
         const mock = mockInteraction({
             isMessageComponent: false,
             isModalSubmit: true,

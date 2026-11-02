@@ -55,7 +55,7 @@ class TagNotice extends Notice {
         super('refused');
     }
 
-    public render(ctx: RenderContext): ReplyResponse {
+    public override render(ctx: RenderContext): ReplyResponse {
         rendered.push(ctx.dispatch.get('actor'));
         return { components: [new TextDisplayBuilder().setContent('nope')] };
     }

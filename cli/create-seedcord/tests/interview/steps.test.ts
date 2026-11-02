@@ -63,7 +63,7 @@ describe('transportStep', () => {
         expect(transportStep.flag.parse('Gateway')).toBe('gateway');
     });
 
-    it('names both options when the value is neither', () => {
+    it('lists both options when the value is neither', () => {
         expect(() => transportStep.flag.parse('websocket')).toThrow(/http.*gateway/);
     });
 });

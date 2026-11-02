@@ -32,7 +32,7 @@ describe('Fault', () => {
         expect(cardJson(response)).not.toContain('secret-driver-detail');
     });
 
-    it('names the configured developer as the contact', () => {
+    it('shows the configured developer as the contact', () => {
         const response = new Fault().render({ uuid: ctx.uuid, developerUsername: 'maintainer#1', dispatch });
         expect(cardJson(response)).toContain('maintainer#1');
     });

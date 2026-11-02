@@ -11,7 +11,7 @@ import type { NonEmptyTuple } from 'type-fest';
  * handler) is a compile error at this line, and the error message shows the gate and the handler kind. Place it
  * above the route decorator.
  *
- * Combine gates with {@link and} or {@link or} to build a single gate from multiple arms.
+ * Combine gates into a single gate with {@link and} or {@link or}.
  *
  * @example
  * ```ts

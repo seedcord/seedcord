@@ -32,11 +32,11 @@ Ask what a sentence does before you flag it. A familiar opening word is not a
 finding, and a tic is a habit rather than a single sentence.
 
 1. A sentence about the page instead of a sentence with a fact. A line that only
-   restates the heading. Headings that perform instead of naming. Announcing a
+   restates the heading. Headings that perform and never say what the section covers. Announcing a
    list and then not delivering one. Test: delete the first sentence under a
    heading and see whether anything is lost.
 
-   Two things survive that test. A line naming what a fence shows, since
+   Two things survive that test. A line saying what a fence shows, since
    deleting it leaves the reader in code with nothing saying what it is. And a
    sentence setting up a problem the section then solves, as in "Say a command
    costs one credit. Your gate reads the balance and deducts one. A later gate
@@ -86,7 +86,7 @@ finding, and a tic is a habit rather than a single sentence.
 
    The same shape runs at page scale. Read every paragraph against the headings
    below it and report one that announces what a later section covers. A why
-   added to the top of the hot-reload page named which saves need a restart,
+   added to the top of the hot-reload page listed which saves need a restart,
    which the paragraph under it closes on and a heading further down covers in
    full.
 
@@ -148,19 +148,19 @@ finding, and a tic is a habit rather than a single sentence.
 7. A claim about behavior with the value left out. The sentence says something
    happens and leaves out the argument, the type, the default, or the option set
    the reader would act on. Telling the reader they can change something without
-   naming what to change it to. Test: could a reader predict the exact behavior
+   saying what to change it to. Test: could a reader predict the exact behavior
    from the sentence, or do they only learn that something happens? A claim that
    grew to cover more cases and lost its values counts, as in three named types
    collapsing into "discord-api-types payloads". Widening needs a table.
 
    Two more shapes of the same miss. A sentence saying what a surface lacks
-   and stopping, as in "Neither arm receives the interaction", where the
+   and stopping, as in "Neither callback receives the interaction", where the
    reader needs to know what it gets instead. And a number the reader matches
    in code with its name left out, as in 10062 with no `UnknownInteraction`.
 
-   A third shape points at a symbol without naming it. "Write the method
+   A third shape points at a symbol without writing it out. "Write the method
    itself" told the reader to call something and left "itself" pointing at
-   nothing, where the repair names `reply()` and `edit()`. Report any noun
+   nothing, where the repair writes out `reply()` and `edit()`. Report any noun
    phrase standing in for a symbol the reader has to type.
 
 8. An example picked because it was available to name. A section covers a
@@ -181,7 +181,7 @@ finding, and a tic is a habit rather than a single sentence.
     it by hand, the reader waits on something the framework never does. "the
     generic on EventMiddleware lists the same ones" is this finding, since the
     decorator option and the generic are both hand-written and have to agree.
-    Give the repair, which names the obligation and what enforces it.
+    Give the repair, which states the obligation and what enforces it.
 
 11. A rule with the reason left out. The page tells the reader to do something a
     certain way and never says what goes wrong otherwise. A recommendation
@@ -210,8 +210,8 @@ finding, and a tic is a habit rather than a single sentence.
 
 14. A design presented as a list of its good properties. Where a page asks the
     reader to adopt a shape nothing forces on them, a run of sentences each
-    naming one nice thing about that shape reads as marketing and leaves the
-    reader with no reason to want it. The repair names the moment the reader is
+    each giving one nice thing about that shape reads as marketing and leaves the
+    reader with no reason to want it. The repair states the moment the reader is
     in, the decision they are making, what the choice does to their code, what
     it costs, and when to skip it. Report the run and say which of those five
     the page never says. A page covering something the framework forces is
@@ -316,7 +316,7 @@ on its own, report it whatever the page's totals say.
 Then a pass numbered 21, on shape. Start with the page whole, then set the
 content aside.
 
-Check one seam by name first. Where a section opens by naming the problem the
+Check one seam by name first. Where a section opens by stating the problem the
 feature solves, the paragraph after it has to answer that problem in its first
 words, usually by repeating a noun the complaint just used. A section that ends
 the problem and opens the next paragraph on the instruction leaves the reader to
@@ -341,7 +341,7 @@ the tell. For each one, quote the run and name the join that is missing.
 
 Then name the relation between each pair of neighbouring sentences. The same
 fact twice wants one clause. A second fact following from the first wants a
-connector naming how. Two independent facts want two sentences. Report a
+connector saying how. Two independent facts want two sentences. Report a
 paragraph whose every pair answers "another fact", which is a list wearing
 prose.
 
@@ -379,7 +379,7 @@ section has the table.
 
 Report `where` standing in for `when` or `if`. "Where a handler only ever
 reaches that line in one state" and "even where you meant it as a new message"
-both point the reader at a place and hand them a condition. `where` naming a
+both point the reader at a place and hand them a condition. `where` pointing at a
 real place is correct and stays, as in "where the type-aware rules look for
 tsconfig.json". The repair is `if` or `when`, with the condition first.
 

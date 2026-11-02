@@ -5,11 +5,11 @@ description: Combine gates with or() and and() to let a command run when any one
 
 [`@Gated`](ref:gateway/Gated) requires every gate you list. A command that a bot owner or a moderator can run needs only one of those two checks to pass.
 
-[`or`](ref:core/or) combines gates into one that passes when any arm passes. [`and`](ref:core/and) combines them into one that needs every arm. The result goes on a handler like any other gate, or inside another combinator. Both take two arms or more.
+[`or`](ref:core/or) combines gates into one that passes when any gate passes. [`and`](ref:core/and) combines them into one that needs every gate. The result goes on a handler like any other gate, or inside another combinator. Both take two gates or more.
 
 ## or, when any one of them is enough
 
-`or` runs each arm in order and stops at the first one that passes. The rest never run.
+`or` runs each gate in order and stops at the first one that passes. The rest never run.
 
 ```ts twoslash title="src/handlers/Award.ts"
 import {
@@ -32,7 +32,7 @@ export class Award extends SlashHandler<'award'> {
 }
 ```
 
-A bot owner passes the first arm and never reaches the role check. Anyone holding the role passes the second.
+A bot owner passes the first gate and never reaches the role check. Anyone holding the role passes the second.
 
 ## and, to treat several gates as one
 
@@ -53,9 +53,9 @@ const staffOrOwner = or(staff, OwnerOnly());
 //    ^?
 ```
 
-`staff` runs `GuildOnly` before `RequireRole`, since arms run left to right. The first refusal stops the rest.
+`staff` runs `GuildOnly` before `RequireRole`, since gates run left to right. The first refusal stops the rest.
 
-The combined gate carries the names of its arms, joined with `&` for an `and` and `|` for an `or`. A combinator nested inside another gets parentheses around its name, which is why `staffOrOwner` above reads `(GuildOnly & RequireRole) | OwnerOnly`.
+The combined gate carries the names of its gates, joined with `&` for an `and` and `|` for an `or`. A combinator nested inside another gets parentheses around its name, which is why `staffOrOwner` above reads `(GuildOnly & RequireRole) | OwnerOnly`.
 
 ```ts twoslash
 import { GuildOnly, OwnerOnly, and } from '@seedcord/gateway';
@@ -68,14 +68,14 @@ A compile error prints that name when the gate goes on a handler it doesn't fit.
 
 ## What each one accepts
 
-The arms decide which handlers the combined gate fits.
+The gates decide which handlers the combined gate fits.
 
 {/* prettier-ignore-start */}
 
 | | required context | a handler fits when |
 | --- | --- | --- |
-| `and` | the intersection of every arm | it satisfies all of them |
-| `or` | the union of every arm | it satisfies at least one |
+| `and` | the intersection of every gate | it satisfies all of them |
+| `or` | the union of every gate | it satisfies at least one |
 
 {/* prettier-ignore-end */}
 
@@ -83,13 +83,13 @@ An `and` of an event-only gate and an interaction-only gate doesn't fit any hand
 
 ## What counts as declining
 
-An `or` arm declines _only_ when it throws a [`Notice`](ref:core/Notice) with `report` left at `false`. Anything else stops the whole `or`, and the user sees whatever that throw produces.
+A gate inside an `or` declines _only_ when it throws a [`Notice`](ref:core/Notice) with `report` left at `false`. Anything else stops the whole `or`, and the user sees whatever that throw produces.
 
 {/* prettier-ignore-start */}
 
-| an arm throws | `or` does |
+| a gate throws | `or` does |
 | --- | --- |
-| a `Notice` with `report` false | tries the next arm |
+| a `Notice` with `report` false | tries the next gate |
 | a `Notice` with `report` true | stops, reports it, shows that Notice |
 | a [`Fault`](ref:core/Fault) | stops, shows the generic card, reports it unless its `report` is false |
 | a [`Silence`](ref:core/Silence) | stops, and your bot doesn't reply |
@@ -97,14 +97,14 @@ An `or` arm declines _only_ when it throws a [`Notice`](ref:core/Notice) with `r
 
 {/* prettier-ignore-end */}
 
-Setting `report = true` on your own `Notice` to get a refusal into your logs takes that arm out of the decline path.
+Setting `report = true` on your own `Notice` to get a refusal into your logs takes that gate out of the decline path.
 
-## The refusal when every arm refuses
+## The refusal when every gate refuses
 
 `or` picks what to throw in three steps.
 
 1. The `fail` option, when you passed one.
-2. A list of what each arm needed, when every refusal carried a `summary`.
+2. A list of what each gate needed, when every refusal carried a `summary`.
 3. A generic refusal reading "You are not allowed to use this command."
 
 Every catalog gate that refuses with a `Notice` sets a `summary`, so an `or` built from those alone reaches step two. A `notice` you pass to a catalog gate replaces its default, summary included.
@@ -115,11 +115,11 @@ You need to meet at least one of these:
 • hold the <@&221439658686939136> role
 ```
 
-A [gate of your own](/checks/your-own) joins that list once its `Notice` sets `summary`. A single arm without a summary drops the whole list to the generic refusal, since a partial list would mislead by leaving an option out.
+A [gate of your own](/checks/your-own) joins that list once its `Notice` sets `summary`. A single gate without a summary drops the whole list to the generic refusal, since a partial list would mislead by leaving an option out.
 
 ## Wording it yourself
 
-The summary list reads as a checklist in seedcord's wording. When the caller needs one sentence instead, like "Staff only" or a note on how to get the role, pass `fail` in a trailing options object after the arms. Pass a `Notice` for a fixed refusal.
+The summary list reads as a checklist in seedcord's wording. When the caller needs one sentence instead, like "Staff only" or a note on how to get the role, pass `fail` in a trailing options object after the gates. Pass a `Notice` for a fixed refusal.
 
 ```ts twoslash
 import {
@@ -138,7 +138,7 @@ class StaffOnly extends Notice {
         super(reason);
     }
 
-    public render(): ReplyResponse {
+    public override render(): ReplyResponse {
         return { components };
     }
 }
@@ -149,7 +149,7 @@ or(OwnerOnly(), RequireRole('221439658686939136'), {
 });
 ```
 
-Pass a function when the refusal needs to read the context. It receives the same `ctx` the arms did.
+Pass a function when the refusal needs to read the context. It receives the same `ctx` the gates did.
 
 ```ts twoslash
 import {
@@ -168,7 +168,7 @@ class StaffOnly extends Notice {
         super(reason);
     }
 
-    public render(): ReplyResponse {
+    public override render(): ReplyResponse {
         return { components };
     }
 }
@@ -181,9 +181,9 @@ or(OwnerOnly(), RequireRole('221439658686939136'), {
 
 `or` throws `fail` first and never builds the summary list.
 
-## Two arms, at least
+## Two gates, at least
 
-You can pass `and` or `or` as many arms as you like past two. With one arm, either is that gate on its own, so the compiler rejects it.
+You can pass `and` or `or` as many gates as you like past two. With one gate, either is that gate on its own, so the compiler rejects it.
 
 ```ts twoslash
 // @errors: 2555
@@ -193,4 +193,4 @@ import { OwnerOnly, or } from '@seedcord/gateway';
 or(OwnerOnly());
 ```
 
-The options object never counts as an arm, so `or(A(), { fail })` fails the same way.
+The options object never counts as a gate, so `or(A(), { fail })` fails the same way.

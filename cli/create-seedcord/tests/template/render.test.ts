@@ -199,7 +199,7 @@ describe('the agent instructions', () => {
         expect(agents).toContain('https://seedcord.org/guide/commands/options.md');
     });
 
-    it('names the transport this project picked', async () => {
+    it('writes the transport this project picked', async () => {
         expect(await renderOne(GATEWAY, 'AGENTS.md')).toContain('`@seedcord/gateway`');
         expect(await renderOne(HTTP, 'AGENTS.md')).toContain('`@seedcord/http`');
     });

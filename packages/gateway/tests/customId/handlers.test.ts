@@ -5,7 +5,7 @@ import { describe, expect, it } from 'vitest';
 import { ButtonHandler, ModalHandler, UserMenuHandler } from '#handlers/interaction/components';
 
 import type { Core } from '#interfaces/Core';
-import type { MatchArms } from '@seedcord/core/internal';
+import type { MatchCases } from '@seedcord/core/internal';
 import type { ButtonInteraction, ModalSubmitInteraction, UserSelectMenuInteraction } from 'discord.js';
 
 const dispatch = new DispatchContext('test:probe');
@@ -145,18 +145,18 @@ describe('this.params on a single-route handler', () => {
         expect(denialNameFrom(() => handler.read())).toBe('InvalidCustomId');
     });
 
-    it('throws MatchArmMissing for a prototype-named prefix with no arm', async () => {
+    it('throws MatchCaseMissing for a prototype-named prefix with no case', async () => {
         const Ctor = new CustomId('constructor').snowflake('userId');
         @ButtonRoute(Ctor)
         class WeirdButton extends ButtonHandler<[typeof Ctor]> {
             async execute(): Promise<void> {
                 // justified: omit the prefix to test the runtime backstop
-                await this.match({} as unknown as MatchArms<[typeof Ctor], undefined>);
+                await this.match({} as unknown as MatchCases<[typeof Ctor], undefined>);
             }
         }
         const handler = new WeirdButton(button(Ctor.encode({ userId: USER })), core, dispatch);
         await expect(handler.execute()).rejects.toMatchObject({
-            code: SeedcordErrorCode.MatchArmMissing
+            code: SeedcordErrorCode.MatchCaseMissing
         });
     });
 
@@ -173,13 +173,13 @@ describe('this.params on a single-route handler', () => {
 });
 
 describe('this.match on a multi-route handler', () => {
-    it('runs the sync arm of the route the wire was minted from', async () => {
+    it('runs the sync case of the route the wire was minted from', async () => {
         const handler = new NavButtons(button(Page.encode({ index: 7 })), core, dispatch);
         await handler.execute();
         expect(handler.log).toBe('page 7');
     });
 
-    it('runs the async arm of the other route', async () => {
+    it('runs the async case of the other route', async () => {
         const handler = new NavButtons(button(Jump.encode({ messageId: MSG })), core, dispatch);
         await handler.execute();
         expect(handler.log).toBe(`jump ${MSG}`);

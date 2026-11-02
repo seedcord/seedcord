@@ -110,7 +110,7 @@ describe('handleInteractionFault', () => {
                 super('reads the bag');
             }
 
-            public render(ctx: RenderContext): ReplyResponse {
+            public override render(ctx: RenderContext): ReplyResponse {
                 saw = ctx.dispatch.get('actor');
                 return { components: [] };
             }
@@ -238,7 +238,7 @@ describe('handleInteractionFault', () => {
         expect(mock.reply).toHaveBeenCalledTimes(1);
     });
 
-    describe('autocomplete arm', () => {
+    describe('autocomplete interactions', () => {
         beforeEach(() => {
             mock.isAutocomplete.mockReturnValue(true);
         });

@@ -210,7 +210,7 @@ class AcceptsOrInteractionEventInteraction extends ButtonHandler<[typeof ProbeId
 }
 void AcceptsOrInteractionEventInteraction;
 
-// @ts-expect-error a slash handler matches neither the button nor the event arm
+// @ts-expect-error a slash handler matches neither the button gate nor the event gate
 @Gated(or(ButtonGate, MessageGate))
 class RejectsOrInteractionEventHandler extends SlashHandler<'gateprobe'> {
     async execute(): Promise<void> {

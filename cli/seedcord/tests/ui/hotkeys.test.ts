@@ -41,7 +41,7 @@ function makeCtx(overrides: Partial<Ctx>): Ctx {
     return {
         input: '',
         key: key(),
-        state: { armed: null, commandUpdatePrompt: null, phase: 'running' },
+        state: { pendingConfirm: null, commandUpdatePrompt: null, phase: 'running' },
         interactive: true,
         scroll: {},
         store: {},
@@ -105,7 +105,7 @@ describe('session keys while the bot starts', () => {
 
         for (const input of ['r', 'd', 'c', 'g']) dispatchHotkey(makeCtx({ ...ctx, input }));
         dispatchHotkey(makeCtx({ ...ctx, input: 'd', key: key({ ctrl: true }) }));
-        expect(store.getState().armed).toBeNull();
+        expect(store.getState().pendingConfirm).toBeNull();
         dispatchHotkey(makeCtx({ ...ctx, input: 't' }));
         dispatchHotkey(makeCtx({ ...ctx, input: 'y' }));
         dispatchHotkey(makeCtx({ ...ctx, input: 'q' }));
@@ -305,9 +305,9 @@ describe('filter cursor keys', () => {
     });
 });
 
-// justified: the confirm path reads only the phase, the prompt, and the armed key off the state
-function armedState(armed: Ctx['state']['armed']): Ctx['state'] {
-    return { armed, commandUpdatePrompt: null, phase: 'running' } as unknown as Ctx['state'];
+// justified: the confirm path reads only the phase, the prompt, and the pending confirm key off the state
+function pendingState(pendingConfirm: Ctx['state']['pendingConfirm']): Ctx['state'] {
+    return { pendingConfirm, commandUpdatePrompt: null, phase: 'running' } as unknown as Ctx['state'];
 }
 
 function storeSpy(spies: Record<string, unknown>): Ctx['store'] {
@@ -318,13 +318,15 @@ describe.each([
     { input: 'c', confirm: 'quit', begin: 'beginQuit', callback: 'onQuit' },
     { input: 'd', confirm: 'disconnect', begin: 'beginDisconnect', callback: 'onDisconnect' }
 ] as const)('dispatchHotkey ctrl-$input', ({ input, confirm, begin, callback }) => {
-    it(`arms ${confirm} on the first press without running it`, () => {
+    it(`waits for a second ${confirm} press without running it`, () => {
         const run = vi.fn();
-        const setArmed = vi.fn();
+        const setPendingConfirm = vi.fn();
 
-        dispatchHotkey(makeCtx({ input, key: key({ ctrl: true }), store: storeSpy({ setArmed }), [callback]: run }));
+        dispatchHotkey(
+            makeCtx({ input, key: key({ ctrl: true }), store: storeSpy({ setPendingConfirm }), [callback]: run })
+        );
 
-        expect(setArmed).toHaveBeenCalledWith(confirm);
+        expect(setPendingConfirm).toHaveBeenCalledWith(confirm);
         expect(run).not.toHaveBeenCalled();
     });
 
@@ -336,8 +338,8 @@ describe.each([
             makeCtx({
                 input,
                 key: key({ ctrl: true }),
-                state: armedState(confirm),
-                store: storeSpy({ [begin]: beginSpy, setArmed: vi.fn() }),
+                state: pendingState(confirm),
+                store: storeSpy({ [begin]: beginSpy, setPendingConfirm: vi.fn() }),
                 [callback]: run
             })
         );
@@ -346,18 +348,18 @@ describe.each([
         expect(run).toHaveBeenCalledOnce();
     });
 
-    it('disarms when any other key follows', () => {
-        const setArmed = vi.fn();
+    it('cancels the pending confirm when any other key follows', () => {
+        const setPendingConfirm = vi.fn();
 
         dispatchHotkey(
             makeCtx({
                 key: key({ downArrow: true }),
-                state: armedState(confirm),
-                store: storeSpy({ setArmed }),
+                state: pendingState(confirm),
+                store: storeSpy({ setPendingConfirm }),
                 scroll: scrollSpy()
             })
         );
 
-        expect(setArmed).toHaveBeenCalledWith(null);
+        expect(setPendingConfirm).toHaveBeenCalledWith(null);
     });
 });

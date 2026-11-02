@@ -1,4 +1,5 @@
 import type { RepliableHandler } from '#handlers/RepliableHandler';
+import type { Repliables } from '#src/handlers/interactionTypes';
 import type { InteractionGateContext } from './Gate';
 import type { Gate, GateContextBase, GuildPermissionsContext, RequiredOf } from '@seedcord/core';
 import type { GateFitsWith } from '@seedcord/core/internal';
@@ -41,7 +42,7 @@ type SelectKindName<Data> = Data extends APIMessageStringSelectInteractionData
           ? 'ChannelMenu'
           : Data extends APIMessageMentionableSelectInteractionData
             ? 'MentionableMenu'
-            : 'an interaction';
+            : 'generic interaction';
 
 // TS truncates the raw API type in a mismatch error
 type KindName<Ctx> = Ctx extends Ungateable
@@ -50,21 +51,23 @@ type KindName<Ctx> = Ctx extends Ungateable
       Ctx extends GuildPermissionsContext
       ? 'gateway (guild permissions)'
       : Ctx extends InteractionGateContext<infer Repliable>
-        ? Repliable extends APIChatInputApplicationCommandInteraction
-            ? 'Slash'
-            : Repliable extends APIMessageApplicationCommandInteraction
-              ? 'MessageContextMenu'
-              : Repliable extends APIUserApplicationCommandInteraction
-                ? 'UserContextMenu'
-                : // keep this guard. SelectData is never for a button, and never is assignable to StringSelect.
-                  Repliable extends APIMessageComponentSelectMenuInteraction
-                  ? SelectKindName<SelectData<Repliable>>
-                  : Repliable extends APIMessageComponentButtonInteraction
-                    ? 'Button'
-                    : Repliable extends APIModalSubmitInteraction
-                      ? 'Modal'
-                      : 'an interaction'
-        : 'an agnostic';
+        ? Repliables extends Repliable
+            ? 'generic interaction'
+            : Repliable extends APIChatInputApplicationCommandInteraction
+              ? 'Slash'
+              : Repliable extends APIMessageApplicationCommandInteraction
+                ? 'MessageContextMenu'
+                : Repliable extends APIUserApplicationCommandInteraction
+                  ? 'UserContextMenu'
+                  : // keep this guard. SelectData is never for a button, and never is assignable to StringSelect.
+                    Repliable extends APIMessageComponentSelectMenuInteraction
+                    ? SelectKindName<SelectData<Repliable>>
+                    : Repliable extends APIMessageComponentButtonInteraction
+                      ? 'Button'
+                      : Repliable extends APIModalSubmitInteraction
+                        ? 'Modal'
+                        : 'generic interaction'
+        : 'any';
 
 export type FitAll<TCtor extends AnyHandlerCtor, Gates extends readonly Gate<GateContextBase>[]> = {
     [Index in keyof Gates]: GateFitsWith<

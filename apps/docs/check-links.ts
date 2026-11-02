@@ -1,6 +1,8 @@
+import { PRODUCTION_SITES } from '@seedcord/brand';
+
 import { LinkChecker } from '#lib/export/LinkChecker';
 
-const EXPORT_DIR = 'dist/docs';
+const EXPORT_DIR = PRODUCTION_SITES.docs.exportDir;
 
 const broken = await new LinkChecker(EXPORT_DIR).broken();
 

@@ -1,6 +1,8 @@
-import { Button, Icon, cn, tw } from '@seedcord/ui';
+import { Button, HotkeyHint, Icon, cn, tw } from '@seedcord/ui';
 import { ChevronLeft, ChevronRight } from 'lucide-react';
 import Link from 'next/link';
+
+import { GUIDE_KEYS } from '#lib/guideKeys';
 
 import type { OrderedPage, PageNeighbours } from '#lib/neighbours';
 import type { ReactElement } from 'react';
@@ -9,6 +11,7 @@ const DIRECTIONS = {
     prev: {
         label: 'Previous',
         icon: ChevronLeft,
+        hotkey: GUIDE_KEYS.previousPage,
         stackClassName: tw`items-start`,
         // cancels the 6px of blank lucide leaves beside the chevron
         iconClassName: tw`-ms-1.5`,
@@ -17,6 +20,7 @@ const DIRECTIONS = {
     next: {
         label: 'Next',
         icon: ChevronRight,
+        hotkey: GUIDE_KEYS.nextPage,
         stackClassName: tw`items-end`,
         iconClassName: tw`-me-1.5`,
         // the first page of the guide has no previous card to push this one across
@@ -27,22 +31,24 @@ const DIRECTIONS = {
 type Direction = keyof typeof DIRECTIONS;
 
 function Neighbour({ rel, page }: { rel: Direction; page: OrderedPage }): ReactElement {
-    const { label, icon, stackClassName, iconClassName, cardClassName } = DIRECTIONS[rel];
+    const { label, icon, hotkey, stackClassName, iconClassName, cardClassName } = DIRECTIONS[rel];
     const chevron = <Icon icon={icon} size={16} className={cn(iconClassName)} />;
 
     return (
-        <Button asChild variant="outline" size="none" className={cn('w-full px-4 py-3', cardClassName)}>
-            <Link href={page.href} rel={rel}>
-                <span className={cn('flex w-full min-w-0 flex-col gap-0.5', stackClassName)}>
-                    <span className={cn('flex items-center gap-0.5 text-xs text-(--text-faint)')}>
-                        {rel === 'prev' ? chevron : null}
-                        {page.tab === page.label ? label : `${label} · ${page.tab}`}
-                        {rel === 'next' ? chevron : null}
+        <HotkeyHint hotkey={hotkey}>
+            <Button asChild variant="outline" size="none" className={cn('w-full px-4 py-3', cardClassName)}>
+                <Link href={page.href} rel={rel}>
+                    <span className={cn('flex w-full min-w-0 flex-col gap-0.5', stackClassName)}>
+                        <span className={cn('flex items-center gap-0.5 text-xs text-(--text-faint)')}>
+                            {rel === 'prev' ? chevron : null}
+                            {page.tab === page.label ? label : `${label} · ${page.tab}`}
+                            {rel === 'next' ? chevron : null}
+                        </span>
+                        <span className={cn('max-w-full truncate text-sm')}>{page.label}</span>
                     </span>
-                    <span className={cn('max-w-full truncate text-sm')}>{page.label}</span>
-                </span>
-            </Link>
-        </Button>
+                </Link>
+            </Button>
+        </HotkeyHint>
     );
 }
 

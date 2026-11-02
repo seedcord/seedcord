@@ -7,7 +7,7 @@ import { MAPPED_TAGS } from '#lib/remarkNoMappedJsx';
 const { Image, pre: Fence, a: Link, Shell } = mdxComponents;
 
 describe('the rejected jsx tag list', () => {
-    it('names every lowercase tag the map claims', () => {
+    it('lists every lowercase tag the map claims', () => {
         const mapped = Object.keys(mdxComponents).filter((tag) => tag === tag.toLowerCase());
 
         expect([...MAPPED_TAGS].sort()).toEqual(mapped.sort());

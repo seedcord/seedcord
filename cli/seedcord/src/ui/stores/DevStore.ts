@@ -26,7 +26,7 @@ export interface DevState {
     readonly commandUpdatePrompt: string[] | null;
     readonly port: number | false | null;
     readonly tunnel: TunnelStatus | null;
-    readonly armed: Confirmable | null;
+    readonly pendingConfirm: Confirmable | null;
     readonly idleAnimation: boolean;
     readonly liveSinceMs: number | null;
 }
@@ -41,7 +41,7 @@ const INITIAL: DevState = {
     commandUpdatePrompt: null,
     port: null,
     tunnel: null,
-    armed: null,
+    pendingConfirm: null,
     idleAnimation: true,
     liveSinceMs: null
 };
@@ -78,8 +78,8 @@ export class DevStore extends ChangeStore {
         this.patch({ tunnel });
     }
 
-    public setArmed(armed: Confirmable | null): void {
-        this.patch({ armed });
+    public setPendingConfirm(pendingConfirm: Confirmable | null): void {
+        this.patch({ pendingConfirm });
     }
 
     public setIdleAnimation(idleAnimation: boolean): void {
@@ -148,8 +148,8 @@ export class DevStore extends ChangeStore {
     private patch(next: Partial<DevState>): void {
         const merged = { ...this.state, ...next };
         const liveSinceMs = isSessionLive(merged.phase) ? (this.state.liveSinceMs ?? Date.now()) : null;
-        const armed = merged.phase === this.state.phase ? merged.armed : null;
-        this.state = { ...merged, liveSinceMs, armed };
+        const pendingConfirm = merged.phase === this.state.phase ? merged.pendingConfirm : null;
+        this.state = { ...merged, liveSinceMs, pendingConfirm };
         this.emit('change');
     }
 }

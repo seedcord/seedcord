@@ -21,7 +21,7 @@ class Refusal extends Notice {
         super('not allowed');
     }
 
-    render(): ReplyResponse {
+    override render(): ReplyResponse {
         return { components: [] };
     }
 }

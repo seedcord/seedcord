@@ -28,8 +28,7 @@ Discord accepts the first line. The second throws.
 
 ```txt output
 edit() was called when nothing has been sent yet.
-Send with reply() or defer() first, then edit() rewrites it.
-(route slash:ban)
+Send with reply() or defer() first. After that, edit() rewrites it. (route slash:ban)
 ```
 
 Every later call reads that same stale state, so [`followUp()`](ref:gateway/RepliableHandler.followUp) and [`delete()`](ref:gateway/RepliableHandler.delete) throw too.

@@ -15,7 +15,7 @@ export class StaleCustomId extends Notice {
         super(`Stale customId for "${prefix}".`);
     }
 
-    render(): ReplyResponse {
+    override render(): ReplyResponse {
         const card = new NoticeCard(
             'This button or menu is from an older version. Please run the command again.',
             'Outdated'
@@ -35,7 +35,7 @@ export class InvalidCustomId extends Notice {
         this.report = true;
     }
 
-    render(): ReplyResponse {
+    override render(): ReplyResponse {
         const card = new NoticeCard('Something went wrong. Please try again.');
         return { components: [card.component] };
     }

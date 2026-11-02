@@ -1,30 +1,24 @@
-import { MissingPermissions } from '@seedcord/core/internal';
 import { SeedcordErrorCode } from '@seedcord/errors';
 import { SeedcordError } from '@seedcord/errors/internal';
-import { PermissionFlagsBits, Role } from 'discord.js';
+import { PermissionFlagsBits } from 'discord.js';
 
 import { CannotAssignBotRole, RoleHigherThanMe } from '#bot/notices';
 
 import { checkBotPermissions } from './checkBotPermissions';
 
-import type { Notice } from '@seedcord/core';
-import type { Guild } from 'discord.js';
+import type { NoticeConstructor, PermissionNoticeConstructor } from '@seedcord/core';
+import type { Guild, Role } from 'discord.js';
 
-/**
- * Optional custom error constructors for {@link HasPermsToAssignOptions}.
- */
-export interface AssignRoleNoticeOverrides {
-    higherNotice?: new (message: string, role: Role, botRole: Role) => Notice;
-    managedNotice?: new (message: string) => Notice;
-    missingNotice?: new (message: string | undefined, subject: string, missingPerms: readonly string[]) => Notice;
-}
-
-/**
- * Options for {@link hasPermsToAssign}.
- */
+/** Options for {@link hasPermsToAssign}. */
 export interface HasPermsToAssignOptions {
-    targetRole: Role;
-    noticeOverrides?: AssignRoleNoticeOverrides;
+    /** The role the bot would assign. */
+    role: Role;
+    /** Your Notice class, constructed with both roles and thrown in place of the refusal when the role is at or above the bot's. */
+    higher?: NoticeConstructor<[role: Role, botRole: Role]>;
+    /** Your Notice class, constructed with the role and thrown in place of the refusal when an integration manages the role. */
+    managed?: NoticeConstructor<[role: Role]>;
+    /** Your Notice class, thrown when the bot lacks Manage Roles. seedcord constructs it with the bot's mention and that permission's name. */
+    missing?: PermissionNoticeConstructor;
 }
 
 // botRoleFor searches the guild's role cache, so a cold cache returns null
@@ -35,52 +29,29 @@ function botRoleOf(guild: Guild): Role {
 }
 
 /**
- * Validates that the bot can assign a target role. Refuses when the target role is above the bot's, is managed, or the bot lacks Manage Roles.
+ * Validates that the bot can assign a role. Refuses when the role is at or above the bot's, when an
+ * integration manages it, or when the bot lacks Manage Roles.
  *
- * @param roleOrOptions - Target role or complete options for the check
  * @throws A {@link Notice} when the check refuses.
- * @throws A **SeedcordError** when the bot has no role in the guild's role cache.
+ * @throws A **SeedcordError** when the guild's caches don't hold the bot's role or member.
  *
  * @example
  * ```ts
  * import { hasPermsToAssign } from '@seedcord/gateway';
  *
- * // Check if the bot can assign a specific role
- * hasPermsToAssign(role);
+ * hasPermsToAssign({ role });
  *
- * // Check with custom error handling
- * hasPermsToAssign({
- *   targetRole: role,
- *   noticeOverrides: {
- *     higherNotice: CustomHigherNotice,
- *     managedNotice: CustomManagedNotice,
- *     missingNotice: CustomMissingPermissionsNotice
- *   }
- * });
+ * // with your own Notice classes
+ * hasPermsToAssign({ role, higher: RoleTooHigh, managed: RoleIsManaged, missing: CannotManageRoles });
  * ```
  */
-export function hasPermsToAssign(roleOrOptions: Role | HasPermsToAssignOptions): void {
-    const { targetRole, noticeOverrides: errors } =
-        roleOrOptions instanceof Role
-            ? {
-                  targetRole: roleOrOptions,
-                  noticeOverrides: undefined
-              }
-            : roleOrOptions;
-
-    const HigherNotice = errors?.higherNotice ?? RoleHigherThanMe;
-    const ManagedNotice = errors?.managedNotice ?? CannotAssignBotRole;
-    const MissingNotice = errors?.missingNotice ?? MissingPermissions;
-
-    const botRole = botRoleOf(targetRole.guild);
-
-    if (targetRole.comparePositionTo(botRole) >= 0) {
-        throw new HigherNotice('Role is higher than me', targetRole, botRole);
-    }
-
-    if (targetRole.managed) {
-        throw new ManagedNotice(`Cannot assign managed role ${targetRole.name}`);
-    }
-
-    checkBotPermissions(targetRole.guild, [PermissionFlagsBits.ManageRoles], false, { missingNotice: MissingNotice });
+export function hasPermsToAssign({ role, higher, managed, missing }: HasPermsToAssignOptions): void {
+    const botRole = botRoleOf(role.guild);
+    if (role.comparePositionTo(botRole) >= 0) throw new (higher ?? RoleHigherThanMe)(role, botRole);
+    if (role.managed) throw new (managed ?? CannotAssignBotRole)(role);
+    checkBotPermissions({
+        in: role.guild,
+        scope: [PermissionFlagsBits.ManageRoles],
+        notice: missing
+    });
 }

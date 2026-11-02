@@ -7,8 +7,7 @@ import { PermissionFlagsBits } from 'discord-api-types/v10';
  */
 export type PermissionScope = readonly bigint[];
 
-// permission bit to its prettified human-readable name
-export const PermissionNames = new Map<bigint, string>(
+const PermissionNames = new Map<bigint, string>(
     Object.entries(PermissionFlagsBits).map(([key, bit]) => [bit, prettify(key)])
 );
 
@@ -23,23 +22,19 @@ function holds(held: bigint, bit: bigint): boolean {
     return (held & ADMINISTRATOR) === ADMINISTRATOR || (held & bit) === bit;
 }
 
-/** @internal */
-export function hasAll(held: bigint, scope: PermissionScope): boolean {
-    return scope.every((bit) => holds(held, bit));
-}
-
-/** @internal only reached once hasAll failed, so the administrator bit is absent */
-export function missingNames(held: bigint, scope: PermissionScope): string[] {
+function namesWhere(held: bigint, scope: PermissionScope, isHeld: boolean): string[] {
     return scope.reduce<string[]>((names, bit) => {
-        if ((held & bit) !== bit) names.push(nameOf(bit));
+        if (holds(held, bit) === isHeld) names.push(nameOf(bit));
         return names;
     }, []);
+}
+
+/** @internal */
+export function missingNames(held: bigint, scope: PermissionScope): string[] {
+    return namesWhere(held, scope, false);
 }
 
 /** @internal */
 export function presentNames(held: bigint, scope: PermissionScope): string[] {
-    return scope.reduce<string[]>((names, bit) => {
-        if (holds(held, bit)) names.push(nameOf(bit));
-        return names;
-    }, []);
+    return namesWhere(held, scope, true);
 }

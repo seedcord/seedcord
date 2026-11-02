@@ -189,7 +189,7 @@ describe('the per-dispatch event context', () => {
         expect(fireCalls()).toEqual(['refused:0']);
     });
 
-    withBoot('names a failing handler in the list and still runs the rest', async ({ boot }) => {
+    withBoot('lists a failing handler and still runs the rest', async ({ boot }) => {
         const events = await boot(
             `
             import { EventHandler, RegisterEvent } from '${seedcordPath}';

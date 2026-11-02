@@ -81,12 +81,12 @@ class Menu extends UserContextMenuHandler<'hb Profile' | 'hb Greet'> {
     }
 
     public runPartial(): Promise<string> {
-        const arms = {
+        const cases = {
             'hb Profile': (): string => 'profile',
             'hb Greet': (): string => 'greet'
         };
-        Reflect.deleteProperty(arms, 'hb Greet');
-        return this.match(arms);
+        Reflect.deleteProperty(cases, 'hb Greet');
+        return this.match(cases);
     }
 
     public readName(): 'hb Profile' | 'hb Greet' {
@@ -110,17 +110,17 @@ class Tools extends MessageContextMenuHandler<'hb Report' | 'hb Pin'> {
     }
 }
 
-class MissingArm extends UserContextMenuHandler<'hb Profile' | 'hb Greet'> {
+class MissingCase extends UserContextMenuHandler<'hb Profile' | 'hb Greet'> {
     public async execute(): Promise<void> {
-        // @ts-expect-error every name in the generic needs an arm.
+        // @ts-expect-error every name in the generic needs a case.
         await this.match({
             'hb Profile': () => undefined
         });
     }
 }
-void MissingArm;
+void MissingCase;
 
-class UnknownArm extends UserContextMenuHandler<'hb Profile'> {
+class UnknownCase extends UserContextMenuHandler<'hb Profile'> {
     public async execute(): Promise<void> {
         await this.match({
             'hb Profile': () => undefined,
@@ -129,31 +129,31 @@ class UnknownArm extends UserContextMenuHandler<'hb Profile'> {
         });
     }
 }
-void UnknownArm;
+void UnknownCase;
 
 describe('http context menu match', () => {
-    it('runs the arm for the selected command', async () => {
+    it('runs the case for the selected command', async () => {
         await expect(new Menu(userMenuEvent('hb Profile'), core, dispatch).run()).resolves.toBe('profile:dhruv:dee');
         await expect(new Menu(userMenuEvent('hb Greet'), core, dispatch).run()).resolves.toBe('greet:dhruv');
     });
 
-    it('hands a message arm the clicked message', async () => {
+    it('hands a message case the clicked message', async () => {
         await expect(new Tools(messageMenuEvent('hb Pin'), core, dispatch).run()).resolves.toBe('pinned msg1');
     });
 
-    it('throws when the selected command has no arm', async () => {
+    it('throws when the selected command lacks a case', async () => {
         await expect(new Menu(userMenuEvent('hb Greet'), core, dispatch).runPartial()).rejects.toSatisfy(
-            (error: unknown) => isSeedcordError(error, 'SeedcordTypeError', SeedcordErrorCode.MatchArmMissing)
+            (error: unknown) => isSeedcordError(error, 'SeedcordTypeError', SeedcordErrorCode.MatchCaseMissing)
         );
     });
 
     it('throws for a command named after an Object.prototype member', async () => {
         await expect(new Menu(userMenuEvent('constructor'), core, dispatch).run()).rejects.toSatisfy((error: unknown) =>
-            isSeedcordError(error, 'SeedcordTypeError', SeedcordErrorCode.MatchArmMissing)
+            isSeedcordError(error, 'SeedcordTypeError', SeedcordErrorCode.MatchCaseMissing)
         );
     });
 
-    it('reads the selected command name without an arm', () => {
+    it('reads the selected command name without a case', () => {
         expect(new Menu(userMenuEvent('hb Greet'), core, dispatch).readName()).toBe('hb Greet');
     });
 });

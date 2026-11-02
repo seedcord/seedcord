@@ -97,8 +97,8 @@ export interface SeedcordMakeConfig {
 }
 
 /**
- * The `seedcord.config.ts` of a bot that runs on Cloudflare Workers. A bot that runs on node or
- * bun uses {@link SeedcordServerConfig}. Its `build` also takes `outDir` and `start`.
+ * The `seedcord.config.ts` of a bot that runs on Cloudflare Workers. For a bot on node or bun, use
+ * {@link SeedcordServerConfig}. Its `build` also takes `outDir` and `start`.
  */
 export interface SeedcordConfig {
     /**
@@ -172,7 +172,7 @@ export interface SeedcordServerConfig extends SeedcordConfig {
      */
     build?: SeedcordBuildConfig;
     /**
-     * A node http bot sets its port in `new Seedcord({ port })`.
+     * A node http bot takes its port in `new Seedcord({ port })`.
      */
     port?: never;
 }

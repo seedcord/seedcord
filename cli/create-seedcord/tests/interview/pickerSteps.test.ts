@@ -16,7 +16,7 @@ describe('capabilitiesStep', () => {
         expect(capabilitiesStep.flag.parse('')).toEqual([]);
     });
 
-    it('names the offender when an id matches no capability', () => {
+    it('quotes the offender when an id matches no capability', () => {
         expect(() => capabilitiesStep.flag.parse('reactions,telepathy')).toThrow(/telepathy/);
     });
 
@@ -41,7 +41,7 @@ describe('botColorStep', () => {
         expect(botColorStep.flag.parse('DARKAQUA')).toBe('DarkAqua');
     });
 
-    it('names the offender when the color is unknown', () => {
+    it('quotes the offender when the color is unknown', () => {
         expect(() => botColorStep.flag.parse('burple')).toThrow(/burple/);
     });
 

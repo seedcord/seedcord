@@ -25,7 +25,7 @@ let active: CustomIdErrors = defaults;
  *
  * A [seedcord](https://seedcord.org) bot already calls this at import, swapping both defaults for `Notice`
  * subclasses that render a card. Call it again with your own to change what the user reads. Return a
- * `Notice` subclass from each arm. A plain `Error` would otherwise reach the user as the generic fault card.
+ * `Notice` subclass from each callback. A plain `Error` would otherwise reach the user as the generic fault card.
  *
  * @param errors - Constructors for the two failure cases.
  *

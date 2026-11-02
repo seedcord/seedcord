@@ -33,7 +33,7 @@ describe('the links an agent follows out of llms.txt', () => {
         );
     });
 
-    it('names the root page index', () => {
+    it('builds the root page index path', () => {
         expect(twinLinks('- [Introduction](/): What it does.')).toBe(
             '- [Introduction](https://seedcord.org/guide/index.md): What it does.'
         );

@@ -1,5 +1,4 @@
 import { defineGate } from '@seedcord/core';
-import { pickNotice } from '@seedcord/core/internal';
 
 import { NotNsfw } from '#bot/notices';
 
@@ -15,11 +14,11 @@ function channelIsNsfw(channel: InteractionGateContext['interaction']['channel']
 }
 
 /**
- * Requires an age-restricted channel, else refuses. Pass {@link GateNoticeOptions} to reword or replace the refusal.
+ * Requires an age-restricted channel, else refuses. Pass a Notice class as `notice` to replace the refusal.
  *
  * A thread inherits its parent channel's nsfw flag. ModalSubmit has no reliable channel, so it is excluded.
  *
- * @param options - Reword the default refusal with `message`, or replace it with `notice`.
+ * @param options - Replace the refusal with a Notice class as `notice`.
  *
  * @see {@link Gated}
  *
@@ -37,6 +36,6 @@ function channelIsNsfw(channel: InteractionGateContext['interaction']['channel']
 export function Nsfw(options?: GateNoticeOptions): Gate<InteractionGateContext<NonModalInteraction>, 'Nsfw'> {
     return defineGate('Nsfw', (ctx: InteractionGateContext<NonModalInteraction>) => {
         if (channelIsNsfw(ctx.interaction.channel)) return;
-        throw pickNotice(options, (message) => new NotNsfw(message));
+        throw new (options?.notice ?? NotNsfw)();
     });
 }

@@ -97,7 +97,7 @@ describe('effect gates', () => {
         expect(committed).toEqual(['charge']);
     });
 
-    it('commits only the winning arm of an or', async () => {
+    it('commits only the winning gate of an or', async () => {
         const committed: string[] = [];
         const chargeA = defineEffectGate(
             'chargeA',
@@ -142,7 +142,7 @@ describe('effect gates', () => {
         expect(committed).toEqual([]);
     });
 
-    it('rolls back the effect of a refused or arm, so a later arm winning does not commit it', async () => {
+    it('rolls back the effect of a gate that refused inside an or, so a later gate winning does not commit it', async () => {
         const committed: string[] = [];
         const charge = defineEffectGate(
             'charge',
@@ -158,7 +158,7 @@ describe('effect gates', () => {
 
         await runGates([or(and(charge, refuse), pass)], ctx);
 
-        // the first arm queued charge then refused, the or moved to pass, so charge must not commit
+        // the first gate queued charge then refused, the or moved to pass, so charge must not commit
         expect(committed).toEqual([]);
     });
 });

@@ -34,7 +34,7 @@ describe('SearchResults.rank', () => {
         expect(results.rank('log', 'member').map(({ action }) => action.kind)).toEqual(['method']);
     });
 
-    it('collapses overloads that share package, slug and kind', () => {
+    it('lists an overloaded method once', () => {
         const results = new SearchResults([entry('logger/log', 'method'), entry('logger/log', 'method')]);
         expect(results.rank('log', 'all')).toHaveLength(1);
     });
@@ -49,5 +49,15 @@ describe('SearchResults.rank', () => {
         expect(results.rank('entry', 'all')).toHaveLength(24);
         expect(results.rank('entry', 'all', 25)).toHaveLength(25);
         expect(results.rank('entry', 'all', 0)).toEqual([]);
+    });
+});
+
+describe('SearchResults.get', () => {
+    it('returns the result rank gave for its id, and undefined for an unknown id', () => {
+        const results = new SearchResults([entry('logger', 'class'), entry('logger/log', 'method')]);
+        const [picked] = results.rank('log', 'member');
+        expect(picked).toBeDefined();
+        expect(results.get(picked?.action.id ?? '')).toEqual(picked);
+        expect(results.get('seedcord:missing:class')).toBeUndefined();
     });
 });

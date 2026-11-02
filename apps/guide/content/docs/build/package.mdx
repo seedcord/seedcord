@@ -65,7 +65,7 @@ console.log(bot.stats.uptime.sinceStart());
 }
 ```
 
-`@discordjs/builders` and `discord-api-types` stand in for whatever your own handlers import. Every package your bot imports at runtime goes in `dependencies`. `dist` leaves them as imports that resolve from `node_modules`, and `index.d.mts` imports its types from `@seedcord/http` or `@seedcord/gateway`. If you leave one in `devDependencies`, the installing project doesn't get it, so the first import of it fails there.
+`@discordjs/builders` and `discord-api-types` stand in for whatever your own handlers import. Put every package your bot imports at runtime in `dependencies`. `dist` leaves them as imports that resolve from `node_modules`, and `index.d.mts` imports its types from `@seedcord/http` or `@seedcord/gateway`. If you leave one in `devDependencies`, the installing project doesn't get it, so the first import of it fails there.
 
 Keep the CLI, `vite`, and `typescript` in `devDependencies`, since only your own build uses them.
 

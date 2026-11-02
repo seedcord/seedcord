@@ -6,21 +6,23 @@ import { defineEffectGate } from '#gates/Gate';
 import { OnCooldown } from '#notices/index';
 
 import type { EffectGate, GateContextBase } from '#gates/Gate';
-import type { Notice } from '#stops/Notice';
+import type { NoticeConstructor } from '#stops/Notice';
 import type { EpochMs } from '@seedcord/types';
 
 /**
  * Options for {@link Cooldown}. `per` sets the bucket the window applies to and `limit` the uses allowed per
- * window. `message` rewords the refusal and `notice` replaces it, both receiving the epoch ms the key frees
- * up so the refusal can show the retry time.
+ * window. `notice` replaces the refusal.
  *
  * @example
  * ```ts
- * // one use per channel, rewording the refusal with the retry time
- * Cooldown('10s', {
- *     per: 'channel',
- *     message: (resetAt) => `Slow down. Try again <t:${Math.round(resetAt / 1000)}:R>.`
- * });
+ * // one use per channel, refusing with your own Notice class
+ * class SlowDown extends Notice {
+ *     public constructor(resetAt: EpochMs) {
+ *         super(`Slow down. Try again <t:${toEpochSeconds(resetAt)}:R>.`);
+ *     }
+ * }
+ *
+ * Cooldown('10s', { per: 'channel', notice: SlowDown });
  * ```
  *
  * @example
@@ -42,16 +44,8 @@ export interface CooldownOptions {
      * @defaultValue `1`
      */
     limit?: number;
-    /**
-     * Reword the refusal, keeping the standard notice card. Receives the epoch ms the key frees up, to
-     * show the retry time with `<t:${Math.round(resetAt / 1000)}:R>`.
-     */
-    message?: (resetAt: EpochMs) => string;
-    /**
-     * Replace the refusal Notice entirely, for full control or a translated copy. Receives the epoch ms the
-     * key frees up.
-     */
-    notice?: (resetAt: EpochMs) => Notice;
+    /** Your Notice class, constructed with the epoch ms the key frees up and thrown in place of the default refusal. */
+    notice?: NoticeConstructor<[resetAt: EpochMs]>;
 }
 
 // off-route ctxs have no route to key on. each Cooldown() call gets its own id to keep unrelated event handlers isolated
@@ -69,10 +63,10 @@ function scopeValue(ctx: GateContextBase, per: 'user' | 'guild' | 'channel'): st
  * so a later refusal never burns the cooldown.
  * That split also means two requests racing the same key can both pass before either charges the slot.
  * The key combines the handler's route with the window settings, keeping two different handlers on separate
- * windows. Reword the refusal with {@link CooldownOptions.message} or replace it with {@link CooldownOptions.notice}.
+ * windows. Replace the refusal with {@link CooldownOptions.notice}.
  *
  * @param duration - A number is seconds, and a string is a duration like `30m` or `24h`.
- * @param options - Sets the scope with `per`, the uses per window with `limit`, and the refusal text with `message` or `notice`.
+ * @param options - Sets the scope with `per`, the uses per window with `limit`, and the refusal with `notice`.
  * @throws A **SeedcordTypeError** when `duration` is a string that doesn't parse.
  * @throws A **SeedcordRangeError** when `duration` is zero or negative.
  *
@@ -139,8 +133,7 @@ export function Cooldown(
         async (ctx) => {
             const result = await ctx.core.rateLimiter.peek(keyOf(ctx), window);
             if (!result.limited) return;
-            if (options?.notice) throw options.notice(result.resetAt);
-            throw new OnCooldown(result.resetAt, options?.message?.(result.resetAt));
+            throw new (options?.notice ?? OnCooldown)(result.resetAt);
         },
         async (ctx) => {
             await ctx.core.rateLimiter.charge(keyOf(ctx), window);

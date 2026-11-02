@@ -15,12 +15,11 @@ The helpers on this page do that comparison inside your handler and throw the sa
 
 | field | type | holds |
 | --- | --- | --- |
-| `subject` | `string` | who is checked, printed at the start of the refusal |
+| `subject` | `string \| null` | who is checked, printed at the start of the refusal. `null` addresses the caller as "You" |
 | `permissions` | `bigint` | the permission bits the subject holds, which you compute |
 | `scope` | `readonly bigint[]` | the `PermissionFlagsBits` values to check |
 | `inverse` | `boolean`, optional | refuses when the subject holds a bit in `scope`, see [refusing a permission they hold](#refusing-a-permission-they-hold) |
-| `missingNotice` | `Notice` subclass, optional | replaces the refusal for missing bits, see [replacing the refusal card](#replacing-the-refusal-card) |
-| `dangerousNotice` | `Notice` subclass, optional | replaces the `inverse` refusal |
+| `notice` | `Notice` class, optional | replaces the refusal, see [replacing the refusal card](#replacing-the-refusal-card) |
 
 {/* prettier-ignore-end */}
 
@@ -125,89 +124,66 @@ The Administrator rule from [permissions](/checks/permissions) applies here too.
 
 ## Replacing the refusal card
 
-The default card says which permissions are missing. When your command needs its own wording, like "You can't ban a moderator", pass your own `Notice`. Each of the two refusals has its own override, and each takes a `Notice` subclass.
-
-- `missingNotice` replaces the refusal for missing permissions.
-- `dangerousNotice` replaces the `inverse: true` refusal for permissions the subject holds.
-
-Both constructors receive the same three arguments: a message, the `subject` string, and the permission names. seedcord passes `undefined` as the message, so give your class its own wording.
+The default card says which permissions are missing. When your command needs its own wording, like "You can't ban a moderator", pass a `Notice` class you wrote as `notice`. It replaces the refusal with or without `inverse: true`. seedcord constructs it with `subject` and the permission names: the missing ones, or the held ones under `inverse: true`.
 
 [Throwing](/replying/throwing) shows how to write one.
 
 ```ts twoslash
-import { assertPermissions, Notice } from '@seedcord/gateway';
+import { assertPermissions } from '@seedcord/gateway';
 import { PermissionFlagsBits } from 'discord.js';
 
+import type { PermissionNoticeConstructor } from '@seedcord/gateway';
 import type { GuildMember } from 'discord.js';
 
 declare const target: GuildMember;
-declare const CannotBan: new (
-    message: string | undefined,
-    subject: string,
-    missing: readonly string[]
-) => Notice;
+declare const CannotBan: PermissionNoticeConstructor;
 
 // ---cut---
 assertPermissions({
     subject: `<@${target.id}>`,
     permissions: target.permissions.bitfield,
     scope: [PermissionFlagsBits.BanMembers],
-    missingNotice: CannotBan
+    notice: CannotBan
 });
 ```
 
 ## Checking a role or member
 
-On gateway you already hold a discord.js member or role, so you can skip reading its bitfield and writing its mention. [`checkPermissions`](ref:gateway/checkPermissions) computes the bitfield, builds `subject` as `<@id>` or `<@&id>`, and calls `assertPermissions` with both. What it computes depends on the second argument.
+On gateway you already hold a discord.js member or role, so you can skip reading its bitfield and writing its mention. [`checkPermissions`](ref:gateway/checkPermissions) takes the member or role as `for`, computes the bitfield, builds `subject` as `<@id>` or `<@&id>`, and calls `assertPermissions` with both. Its other fields match `assertPermissions`.
 
-{/* prettier-ignore-start */}
-
-| second argument | reads |
-| --- | --- |
-| a `Guild` | the base bits from the target's roles, before any channel overwrite |
-| a `TextChannel` | the set that channel's overwrites resolve to |
-
-{/* prettier-ignore-end */}
-
-Pass a `Guild` for a server-wide permission like Kick Members. Pass a channel for a permission that channel overwrites can change, like Send Messages. `checkPermissions` has three call shapes: the guild form, the channel form, and an options object.
+Leave `in` out for a server-wide permission like Kick Members, and `checkPermissions` reads the base set from the target's roles. Pass a channel or thread as `in` for a permission its overwrites can change, like Send Messages.
 
 ```ts twoslash
 import { checkPermissions } from '@seedcord/gateway';
 import { PermissionFlagsBits } from 'discord.js';
 
-import type { Guild, GuildMember, TextChannel } from 'discord.js';
+import type { GuildMember, TextChannel } from 'discord.js';
 
-declare const guild: Guild;
 declare const channel: TextChannel;
 declare const member: GuildMember;
 
 // ---cut---
-checkPermissions(member, guild, [PermissionFlagsBits.KickMembers]);
-
-checkPermissions(member, channel, [
-    PermissionFlagsBits.SendMessages
-]);
-
-checkPermissions(
-    member,
-    guild,
-    [PermissionFlagsBits.Administrator],
-    true
-);
+checkPermissions({
+    for: member,
+    scope: [PermissionFlagsBits.KickMembers]
+});
 
 checkPermissions({
     for: member,
     in: channel,
-    scope: [PermissionFlagsBits.SendMessages],
+    scope: [PermissionFlagsBits.SendMessages]
+});
+
+checkPermissions({
+    for: member,
+    scope: [PermissionFlagsBits.Administrator],
     inverse: true
 });
 ```
 
-A positional call takes `inverse` fourth and an object of notice overrides fifth. The object form takes them as fields: `inverse`, `missingNotice`, and `dangerousNotice`.
-
 ## Checking your own bot
 
-A gate checks your bot's permissions in the channel where the command ran. If your handler posts in a different channel, check that channel. [`checkBotPermissions`](ref:gateway/checkBotPermissions) runs the same check on your bot's member. It takes the guild or the channel, without a target.
+A gate checks your bot's permissions in the channel where the command ran. If your handler posts in a different channel, check that channel. [`checkBotPermissions`](ref:gateway/checkBotPermissions) runs the same check on your bot's member. It doesn't take `for`, and its `in` is required: the guild for your bot's base set, or a channel or thread.
 
 ```ts twoslash
 import { checkBotPermissions } from '@seedcord/gateway';
@@ -218,14 +194,15 @@ import type { TextChannel } from 'discord.js';
 declare const channel: TextChannel;
 
 // ---cut---
-checkBotPermissions(channel, [
-    PermissionFlagsBits.SendMessages,
-    PermissionFlagsBits.ViewChannel
-]);
+checkBotPermissions({
+    in: channel,
+    scope: [
+        PermissionFlagsBits.SendMessages,
+        PermissionFlagsBits.ViewChannel
+    ]
+});
 ```
 
-Its arguments after `scope` match `checkPermissions`, with `inverse` third and an object of notice overrides fourth.
-
-If your bot's member isn't cached, the refusal lists every permission in `scope` as missing. The channel form also logs a warning on the `errors` log channel.
+If your bot's own member isn't in the member cache, `checkBotPermissions` throws `CoreBotMemberMissing`. The error says how to keep it there.
 
 A passing check for Manage Roles still leaves role position to check. Discord rejects a role your bot assigns if that role is at or above the bot's highest role. [Changing roles](/checks/changing-roles) covers that check.

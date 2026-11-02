@@ -1,6 +1,6 @@
 'use client';
 
-import { SearchDialog, cn, useActiveRowScroll, useRovingList } from '@seedcord/ui';
+import { SearchDialog, SearchKeyLegend, cn, useActiveRowScroll, useRovingList } from '@seedcord/ui';
 import { useMemo } from 'react';
 
 import { CommandHeader } from './CommandHeader';
@@ -9,6 +9,7 @@ import { COMMAND_LISTBOX_ID, MIN_SEARCH_QUERY_LENGTH } from './constants';
 import { useCommandPaletteSearch } from './useCommandPaletteSearch';
 
 import type { CommandAction } from './types';
+import type { RovingList } from '@seedcord/ui';
 import type { CommandPaletteController } from './useCommandPaletteController';
 import type { ReactElement } from 'react';
 
@@ -21,11 +22,8 @@ interface CommandListContentProps {
     isSearching: boolean;
     errorMessage?: string;
     results: CommandAction[];
-    activeIndex: number;
-    isFirst: boolean;
-    isLast: boolean;
+    roving: RovingList<CommandAction>;
     onSelect: (action: CommandAction) => void;
-    onActivate: (index: number) => void;
 }
 
 function CommandListContent({
@@ -33,14 +31,10 @@ function CommandListContent({
     isSearching,
     errorMessage,
     results,
-    activeIndex,
-    isFirst,
-    isLast,
-    onSelect,
-    onActivate
+    roving,
+    onSelect
 }: CommandListContentProps): ReactElement | null {
-    const active = results[activeIndex];
-    useActiveRowScroll(active ? optionId(active.id) : undefined, isFirst, isLast);
+    useActiveRowScroll(roving.active ? optionId(roving.active.id) : undefined, roving);
 
     const hasResults = results.length > 0;
     // the isSearching guard keeps "no results" from flashing between keystrokes
@@ -74,15 +68,14 @@ function CommandListContent({
             {emptyContent}
             {shouldShowItems ? (
                 <div id={COMMAND_LISTBOX_ID} role="listbox" aria-label="Search results">
-                    {results.map((action, index) => (
+                    {results.map((action) => (
                         <CommandListItem
                             key={action.id}
                             action={action}
                             onSelect={onSelect}
-                            isActive={index === activeIndex}
+                            isActive={roving.isActive(action)}
                             optionId={optionId(action.id)}
-                            index={index}
-                            onActivate={onActivate}
+                            onActivate={roving.pointAt}
                         />
                     ))}
                 </div>
@@ -94,7 +87,7 @@ function CommandListContent({
 function deriveListProps(
     searchState: ReturnType<typeof useCommandPaletteSearch>,
     normalizedSearch: string
-): Omit<CommandListContentProps, 'activeIndex' | 'isFirst' | 'isLast' | 'onSelect' | 'onActivate'> {
+): Omit<CommandListContentProps, 'roving' | 'onSelect'> {
     const showInitialHint = normalizedSearch.length < MIN_SEARCH_QUERY_LENGTH;
     const isSearching = searchState.status === 'loading';
     const resolvedError =
@@ -121,13 +114,12 @@ export function CommandPaletteDialog({ controller }: { controller: CommandPalett
     const listProps = deriveListProps(searchState, normalizedSearch);
     const { results } = listProps;
 
-    const { activeIndex, isFirst, isLast, setActiveIndex, onKeyDown } = useRovingList({
-        items: results,
+    const roving = useRovingList({
+        query: normalizedSearch,
+        groups: [{ items: results, loading: false }],
         onSelect: handleSelect
     });
-
-    const activeAction = results[activeIndex];
-    const activeId = activeAction ? optionId(activeAction.id) : undefined;
+    const activeId = roving.active ? optionId(roving.active.id) : undefined;
     const listExpanded = !listProps.showInitialHint && !listProps.errorMessage && results.length > 0;
 
     return (
@@ -137,12 +129,13 @@ export function CommandPaletteDialog({ controller }: { controller: CommandPalett
             onClose={handleClose}
             title="Command palette"
             description="Search documentation content and navigation items."
+            footer={listExpanded ? <SearchKeyLegend hasGroups={roving.hasGroups} /> : undefined}
             field={
                 <CommandHeader
                     inputRef={inputRef}
                     onClose={handleClose}
                     onValueChange={handleValueChange}
-                    onKeyDown={onKeyDown}
+                    onKeyDown={roving.onKeyDown}
                     searchValue={searchValue}
                     isSearching={listProps.isSearching}
                     activeId={activeId}
@@ -158,14 +151,7 @@ export function CommandPaletteDialog({ controller }: { controller: CommandPalett
                 />
             }
         >
-            <CommandListContent
-                {...listProps}
-                activeIndex={activeIndex}
-                isFirst={isFirst}
-                isLast={isLast}
-                onSelect={handleSelect}
-                onActivate={setActiveIndex}
-            />
+            <CommandListContent {...listProps} roving={roving} onSelect={handleSelect} />
         </SearchDialog>
     );
 }

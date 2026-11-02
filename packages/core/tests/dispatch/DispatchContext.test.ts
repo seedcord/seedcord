@@ -34,7 +34,7 @@ describe('DispatchContext', () => {
         );
     });
 
-    it('names the missing key in the message', () => {
+    it('quotes the missing key in the message', () => {
         const bag = bagOf(new DispatchContext('slash:test'));
         expect(() => bag.require('locale')).toThrow(/locale/);
     });

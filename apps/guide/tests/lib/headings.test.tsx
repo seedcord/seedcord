@@ -16,7 +16,7 @@ describe('a heading', () => {
         expect(screen.getByRole('button', { name: /Copy link to A command needs a route/ })).toBeInTheDocument();
     });
 
-    it('still names itself without reading the control inside it', () => {
+    it('keeps its accessible name without reading the control inside it', () => {
         render(<H2 id="a-command-needs-a-route">A command needs a route</H2>);
 
         expect(screen.getByRole('heading', { name: 'A command needs a route' })).toBeInTheDocument();

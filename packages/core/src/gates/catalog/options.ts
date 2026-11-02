@@ -1,29 +1,7 @@
-import type { Notice } from '#stops/Notice';
+import type { NoticeConstructor } from '#stops/Notice';
 
-/**
- * The override a catalog gate accepts. A one-line `message` reword or a full `notice` replacement. Accepted by
- * the agnostic catalog gates and, nested per refusal, by {@link RequireRole}. {@link RequirePermissions} and
- * {@link RequireBotPermissions} take `RequirePermissionsOptions` instead.
- *
- * @example
- * ```ts
- * // reword the default refusal
- * OwnerOnly({ message: 'Bot owners only.' });
- * ```
- *
- * @example
- * ```ts
- * // replace the refusal entirely, for example a translated Notice
- * GuildOnly({ notice: new MyTranslatedNotice() });
- * ```
- */
+/** The override a gate with a single refusal accepts. */
 export interface GateNoticeOptions {
-    /** Reword the default refusal, keeping its embed styling. */
-    message?: string;
-    /** Replace the default refusal Notice entirely, for full control or a translated copy. */
-    notice?: Notice;
-}
-
-export function pickNotice(options: GateNoticeOptions | undefined, makeDefault: (message?: string) => Notice): Notice {
-    return options?.notice ?? makeDefault(options?.message);
+    /** Your Notice class, constructed and thrown in place of the default refusal. */
+    notice?: NoticeConstructor;
 }

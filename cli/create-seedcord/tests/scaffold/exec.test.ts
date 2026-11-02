@@ -121,7 +121,7 @@ describe('execRunner', () => {
         expect(captured).not.toContain('Progress: resolved');
     });
 
-    it('reports an indented line once when it names an error the header already covered', async () => {
+    it('reports an indented line once when it repeats an error the header already covered', async () => {
         const captured = await capturedBy(
             `console.error('Error: the build died');`,
             `console.error('    at ERR_boom (/x.js:1:1)');`,
@@ -141,11 +141,11 @@ describe('execRunner', () => {
         expect(captured).toContain('E404');
     });
 
-    it('falls back to the tail when no line names itself an error', async () => {
+    it('falls back to the tail when no line reports an error', async () => {
         expect(await capturedBy(noise('plain output', 40))).toContain('plain output 39');
     });
 
-    it('names the command that failed', async () => {
+    it('shows the command that failed', async () => {
         expect(await failureOf('')).toContain(process.execPath);
     });
 

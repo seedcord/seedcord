@@ -7,7 +7,7 @@ import { cn } from './lib/cn';
 import { layoutSpring } from './lib/motion';
 import { tw } from './lib/tw';
 
-import type { ReactElement, ReactNode } from 'react';
+import type { KeyboardEvent, ReactElement, ReactNode } from 'react';
 
 const segmentedControlContainerClassName = cn(
     tw`inline-flex items-stretch border border-(--border) bg-(--surface-subtle)`,
@@ -52,6 +52,8 @@ const segmentedControlOptionSizeClasses = {
 
 export type SegmentedControlSize = keyof typeof segmentedControlOptionSizeClasses;
 
+const ARROW_STEPS: Partial<Record<string, 1 | -1>> = { ArrowRight: 1, ArrowDown: 1, ArrowLeft: -1, ArrowUp: -1 };
+
 export interface SegmentedControlOption<TValue extends string> {
     value: TValue;
     label: ReactNode;
@@ -86,11 +88,24 @@ export function SegmentedControl<TValue extends string>({
     const isPill = variant === 'pill';
     const styles = segmentedControlVariants[variant];
 
+    const moveSelection = (event: KeyboardEvent<HTMLDivElement>): void => {
+        const step = ARROW_STEPS[event.key];
+        if (step === undefined) return;
+        event.preventDefault();
+        const enabled = options.filter((opt) => opt.disabled !== true);
+        const at = enabled.findIndex((opt) => opt.value === value);
+        const next = enabled[(at + step + enabled.length) % enabled.length];
+        if (next === undefined) return;
+        onChange(next.value);
+        event.currentTarget.querySelectorAll<HTMLElement>('[role="radio"]')[options.indexOf(next)]?.focus();
+    };
+
     return (
         <LayoutGroup id={layoutId}>
             <div
                 role="radiogroup"
                 aria-label={ariaLabel}
+                onKeyDown={moveSelection}
                 className={cn(
                     styles.container,
                     isPill && segmentedControlContainerSizeClasses[size],
@@ -106,6 +121,7 @@ export function SegmentedControl<TValue extends string>({
                             type="button"
                             role="radio"
                             aria-checked={isActive}
+                            tabIndex={isActive ? 0 : -1}
                             disabled={opt.disabled}
                             onClick={() => onChange(opt.value)}
                             className={cn(

@@ -31,7 +31,7 @@ export default createVitestConfig(import.meta.url, {
                             ssr: {
                                 enabled: true,
                                 // the pool's cjs interop resolves discord-api-types' runtime enums to
-                                // undefined, pre-bundling picks the esm arm. builders hits the same
+                                // undefined, pre-bundling picks the esm build. builders hits the same
                                 // interop at module init, and its pre-bundle inlines shapeshift already.
                                 include: ['discord-api-types/v10', '@discordjs/builders']
                             }

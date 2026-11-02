@@ -41,7 +41,7 @@ function dispatcherLines(): string[] {
 }
 
 describe('dispatch logging', () => {
-    it('names the route and the handler that ran', async () => {
+    it('logs the route and the handler that ran', async () => {
         using engine = await readyEngine(banClasses());
         const { signer, handle } = engine;
         const ctx = capturingCtx();

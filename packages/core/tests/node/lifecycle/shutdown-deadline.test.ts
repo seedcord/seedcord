@@ -150,7 +150,7 @@ describe('CoordinatedShutdown deadline', () => {
         expect(reported).toBe(true);
     });
 
-    it('names the phase that was running when the deadline passed', async () => {
+    it('reports the phase that was running when the deadline passed', async () => {
         const errors = vi.spyOn(Logger.prototype, 'error').mockImplementation(() => undefined);
         const shutdown = new CoordinatedShutdown();
         shutdown.removeSignalHandlers();

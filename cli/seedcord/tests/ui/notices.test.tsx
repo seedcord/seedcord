@@ -22,10 +22,10 @@ describe('noticesOf', () => {
     it.each([
         ['quit', 'press Ctrl-C again'],
         ['disconnect', 'press Ctrl-D again']
-    ] as const)('ranks an armed %s first and gives it a card', (confirm, action) => {
+    ] as const)('ranks a pending %s confirm first and gives it a card', (confirm, action) => {
         const store = running();
         store.setError(new Error('boom'));
-        store.setArmed(confirm);
+        store.setPendingConfirm(confirm);
 
         const [top] = noticesOf(store.getState());
 
@@ -82,7 +82,7 @@ describe('noticesOf', () => {
         expect(keysOf(store.getState())).toStrictEqual(['restart']);
     });
 
-    it('names the key each notice answers to', () => {
+    it('shows the key each notice answers to', () => {
         const store = running();
         store.setError(new Error('boom'));
         store.apply({ type: 'restart-required' });

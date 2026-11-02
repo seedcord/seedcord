@@ -19,7 +19,7 @@ describe('installHint', () => {
 });
 
 describe('missingNotice', () => {
-    it('names the command that needs it', () => {
+    it('shows the command that needs it', () => {
         expect(missingNotice('darwin')).toContain('seedcord dev');
     });
 

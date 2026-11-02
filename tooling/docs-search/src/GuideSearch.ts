@@ -1,41 +1,54 @@
-import { GUIDE } from '@seedcord/ui/sites';
-import { staticClient } from 'fumadocs-core/search/client/orama-static';
+import { GUIDE_ASK_URL } from '#src/files';
+import { guideResult } from '#src/GuideResult';
+import { parseQuestion } from '#src/question';
+import { readJson } from '#src/readAsset';
 
-import { GUIDE_SEARCH_URL } from '#src/files';
-import { firstPages } from '#src/firstPages';
-import { rankByCoverage } from '#src/rankByCoverage';
-import { stripStopwords } from '#src/stripStopwords';
+import type { GuideResult } from '#src/GuideResult';
+import type { GuideHit } from '#src/guideSections';
 
-import type { SortedResult } from 'fumadocs-core/search';
+const TOO_MANY_REQUESTS = 429;
+const SERVICE_UNAVAILABLE = 503;
+// ask.ts sends 429 for one visitor's limit and 503 for the site's daily Workers AI allowance
+const WAIT_STATUSES = new Set([TOO_MANY_REQUESTS, SERVICE_UNAVAILABLE]);
 
-// a common term matches most of the guide
-const MAX_PAGES = 16;
+const UNITS = [
+    { unit: 'hour', seconds: 3600 },
+    { unit: 'minute', seconds: 60 }
+] as const;
 
-export class GuideSearch {
-    readonly client: ReturnType<typeof staticClient>;
+const relative = new Intl.RelativeTimeFormat('en', { numeric: 'always' });
 
-    constructor(
-        endpoint = GUIDE_SEARCH_URL,
-        private readonly limits: { pages?: number; rows?: number } = {}
-    ) {
-        // tolerance is the edit distance zbsearch allows. 1 covers a single typo
-        this.client = staticClient({
-            from: endpoint,
-            search: { tolerance: 1, ...(limits.rows !== undefined && { limit: limits.rows }) }
-        });
-    }
+function wait(seconds: number): string {
+    const fits = UNITS.find((size) => seconds >= size.seconds);
+    return fits ? relative.format(Math.ceil(seconds / fits.seconds), fits.unit) : relative.format(seconds, 'second');
+}
 
-    rank(results: readonly SortedResult[], terms: string): SortedResult[] {
-        return firstPages(rankByCoverage(results, terms), this.limits.pages ?? MAX_PAGES);
-    }
-
-    async search(query: string): Promise<SortedResult[]> {
-        const terms = stripStopwords(query);
-        if (terms.length === 0) return [];
-
-        const results = await this.client.search(terms);
-        return this.rank(results, terms).map((result) => ({ ...result, url: GUIDE.at(result.url) }));
+export class TooManySearches extends Error {
+    constructor(readonly retryAfterSeconds: number) {
+        super(`Too many searches. Try again ${wait(retryAfterSeconds)}.`);
     }
 }
 
-export type GuideSearchResult = Awaited<ReturnType<GuideSearch['search']>>[number];
+async function fetchAnswer(url: string, signal: AbortSignal): Promise<Response> {
+    const response = await fetch(url, { signal });
+    // retry-after may also hold an HTTP date
+    const retryAfter = Number(response.headers.get('retry-after'));
+    if (WAIT_STATUSES.has(response.status) && Number.isSafeInteger(retryAfter) && retryAfter > 0) {
+        throw new TooManySearches(retryAfter);
+    }
+    return response;
+}
+
+export class GuideSearch {
+    constructor(private readonly endpoint = GUIDE_ASK_URL) {}
+
+    async search(input: string, signal: AbortSignal): Promise<GuideResult[]> {
+        const question = parseQuestion(input);
+        if (question === undefined) return [];
+
+        const url = new URL(this.endpoint);
+        url.searchParams.set('q', question);
+        const hits = await readJson<GuideHit[]>(url.href, (path) => fetchAnswer(path, signal));
+        return hits.map((hit) => guideResult(hit, { by: 'meaning' }));
+    }
+}

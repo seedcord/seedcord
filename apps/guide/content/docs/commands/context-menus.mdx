@@ -120,7 +120,7 @@ class ViewProfile extends UserContextMenuHandler<'View Profile'> {
 
 ## Several commands in one handler
 
-You put both commands on one class. Write every name in its decorator, then repeat them in its generic. Each arm then receives the clicked user and their server member, narrowed to that one command.
+You put both commands on one class. Write every name in its decorator, then repeat them in its generic. Each case then receives the clicked user and their server member, narrowed to that one command.
 
 ```ts twoslash title="src/handlers/Moderation.ts"
 import {
@@ -145,11 +145,11 @@ export class Moderation extends UserContextMenuHandler<
 }
 ```
 
-Leaving `Warn` out of the arms is a compile error, the same as it is on a slash handler.
+Leaving `Warn` out of the cases is a compile error, the same as it is on a slash handler.
 
 `this.route` contains the name of the command the user selected.
 
-Message commands work the same way, and each of your arms receives the clicked message.
+Message commands work the same way, and each of your cases receives the clicked message.
 
 ## Each kind keeps its own names
 

@@ -17,7 +17,7 @@ class TestNotice extends Notice {
         super('refused');
     }
 
-    public render(_ctx: RenderContext): ReplyResponse {
+    public override render(_ctx: RenderContext): ReplyResponse {
         return { components: [] };
     }
 }

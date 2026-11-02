@@ -46,6 +46,33 @@ jobs:
           APP: ${{ inputs.app }}
           NEXT_PUBLIC_SITE_ORIGIN: ${{ inputs.preview && 'https://preview.seedcord.org' || 'https://seedcord.org' }}
 
+      - name: Restore guide embeddings
+        if: inputs.app == 'guide'
+        uses: actions/cache/restore@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
+        with:
+          path: ~/.cache/seedcord/guide-embeddings
+          key: guide-embeddings-${{ github.run_id }}
+          restore-keys: guide-embeddings-
+
+      - name: Embed guide sections
+        if: inputs.app == 'guide'
+        run: pnpm guide:embed
+        env:
+          CLOUDFLARE_ACCOUNT_ID: ${{ vars.CLOUDFLARE_ACCOUNT_ID }}
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+
+      - name: Hash guide embeddings
+        if: inputs.app == 'guide'
+        id: embeddings
+        run: echo "key=$(find ~/.cache/seedcord/guide-embeddings -name '*.bin' -printf '%f\n' | sort | sha256sum | cut -c1-16)" >> "$GITHUB_OUTPUT"
+
+      - name: Save guide embeddings
+        if: inputs.app == 'guide'
+        uses: actions/cache/save@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
+        with:
+          path: ~/.cache/seedcord/guide-embeddings
+          key: guide-embeddings-${{ steps.embeddings.outputs.key }}
+
       - name: Deploy
         uses: cloudflare/wrangler-action@ebbaa1584979971c8614a24965b4405ff95890e0 # v4.0.0
         with:

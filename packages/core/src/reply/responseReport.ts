@@ -76,7 +76,7 @@ export async function reportedWrite<Result>(
     return result;
 }
 
-// publishes the failed arm when write() throws, since the caller's success report sits after the write and a throw skips it
+// publishes the failed outcome when write() throws, since the caller's success report sits after the write and a throw skips it
 export async function attemptWrite<Result>(
     telemetry: ReplyTelemetry,
     method: WriteMethod,

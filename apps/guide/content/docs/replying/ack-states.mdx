@@ -126,7 +126,6 @@ Your handler can't cause this throw. The callback carries that message on every 
 `update()` rewrites the message that a component came from. A modal that your command opened does not carry one.
 
 ```txt output
-update() was called on a modal opened from a command, which has no
-source message.
-Use reply() or defer() instead. (route slash:ban)
+update() was called on a modal that a command opened. That modal doesn't have a source message.
+Use reply() or defer(). (route slash:ban)
 ```

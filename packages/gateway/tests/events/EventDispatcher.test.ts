@@ -117,7 +117,7 @@ describe('EventDispatcher Integration', () => {
         expect(seen[0]?.args[0]).toBe(message);
     });
 
-    it('threads the current event name into the handler so match routes to the right arm', async ({ testEnv }) => {
+    it('threads the current event name into the handler so match routes to the right case', async ({ testEnv }) => {
         const eventsDir = 'events';
         await testEnv.createFile(
             `${eventsDir}/PingMulti.ts`,

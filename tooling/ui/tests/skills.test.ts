@@ -13,7 +13,7 @@ interface AgentIndex {
 }
 
 describe('the v0.2.0 index', () => {
-    it('names the schema a client matches against', async () => {
+    it('sets the schema a client matches against', async () => {
         const index = (await agentSkillsIndex([SEEDCORD_SKILL])) as AgentIndex;
 
         expect(index.$schema).toBe('https://schemas.agentskills.io/discovery/0.2.0/schema.json');

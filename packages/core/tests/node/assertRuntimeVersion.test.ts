@@ -56,12 +56,12 @@ describe('the runtime check on node', () => {
         expect(onRuntime({ node: '27.0.0' })).not.toThrow();
     });
 
-    it('reads a range that names only a major', () => {
+    it('reads a range with only a major', () => {
         expectUnsupported(onRuntime({ nodeRange: '>=24', node: '22.18.0' }));
         expect(onRuntime({ nodeRange: '>=24', node: '24.0.0' })).not.toThrow();
     });
 
-    it('reads a range that names a patch, and a range written with a space', () => {
+    it('reads a range with a patch, and a range written with a space', () => {
         expectUnsupported(onRuntime({ nodeRange: '>=24.11.1', node: '24.11.0' }));
         expectUnsupported(onRuntime({ nodeRange: '>= 24.11', node: '22.18.0' }));
     });

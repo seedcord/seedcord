@@ -1,4 +1,4 @@
-import { render, screen } from '@testing-library/react';
+import { fireEvent, render, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { useState } from 'react';
 import { describe, expect, it, vi } from 'vitest';
@@ -85,6 +85,42 @@ describe('SegmentedControl selection callback', () => {
 });
 
 describe('SegmentedControl keyboard interaction', () => {
+    it('moves the selection with the arrow keys, wrapping at the ends, and keeps only it in the tab order', async () => {
+        const user = userEvent.setup();
+        render(<Harness />);
+        const radio = (name: string): HTMLElement => screen.getByRole('radio', { name });
+        radio('List').focus();
+
+        await user.keyboard('{ArrowRight}');
+        expect(radio('Grid')).toHaveFocus();
+        expect(radio('Grid')).toHaveAttribute('aria-checked', 'true');
+        expect(screen.getAllByRole('radio').map((r) => r.tabIndex)).toEqual([-1, 0, -1]);
+
+        await user.keyboard('{ArrowRight}{ArrowRight}');
+        expect(radio('List')).toHaveFocus();
+        await user.keyboard('{ArrowUp}');
+        expect(radio('Table')).toHaveAttribute('aria-checked', 'true');
+    });
+
+    it('skips a disabled option and marks the arrow press as handled', () => {
+        const spy = vi.fn();
+        render(
+            <SegmentedControl
+                aria-label="View mode"
+                options={[
+                    { value: 'list', label: 'List' },
+                    { value: 'grid', label: 'Grid', disabled: true },
+                    { value: 'table', label: 'Table' }
+                ]}
+                value="list"
+                onChange={spy}
+            />
+        );
+
+        expect(fireEvent.keyDown(screen.getByRole('radio', { name: 'List' }), { key: 'ArrowRight' })).toBe(false);
+        expect(spy).toHaveBeenCalledWith('table');
+    });
+
     it('selects via Enter on a focused radio', async () => {
         const user = userEvent.setup();
         const spy = vi.fn();

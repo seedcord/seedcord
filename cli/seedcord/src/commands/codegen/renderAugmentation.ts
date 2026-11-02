@@ -73,7 +73,7 @@ function groupNames(keys: readonly string[]): string[] {
 }
 
 // the indexed access defers resolution. an `extends Pick<typeof Bot, ...>` clause resolves while the bot
-// constant is still being inferred, and a plugin ctor naming Core closes that loop (TS7022).
+// constant is still being inferred, and a plugin ctor that references Core closes that loop (TS7022).
 function coreRows(groups: readonly string[]): Row[] {
     return groups.map((key) => [key, `(typeof ${BOT_BINDING})['${escapeLiteral(key)}']`]);
 }

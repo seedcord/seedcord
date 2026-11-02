@@ -16,14 +16,14 @@ describe('DevStore', () => {
         });
     });
 
-    it('drops an armed confirm once the phase changes under it', () => {
+    it('drops a pending confirm once the phase changes under it', () => {
         const store = new DevStore();
         store.setPhase('running');
-        store.setArmed('disconnect');
+        store.setPendingConfirm('disconnect');
 
         store.setPhase('disconnected');
 
-        expect(store.getState().armed).toBeNull();
+        expect(store.getState().pendingConfirm).toBeNull();
     });
 
     it('scalar setters patch their field and emit one change each', () => {

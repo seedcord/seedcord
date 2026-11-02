@@ -7,13 +7,13 @@ Someone looking for a plugin searches npm for seedcord, and that search reads pa
 
 ## The peer entry
 
-Whichever package you import `Plugin` from goes in `peerDependencies`, with the versions you tested against. A peer dependency is a package your plugin expects the bot to install, so your plugin uses the bot's copy. Mongoose declares `@seedcord/core` at `>=0.2.0 <1.0.0`, since it extends the base from `@seedcord/core/plugin`. Below 1.0, a breaking change can ship in a minor, so a plugin written for 0.2 can break on 0.3. The range tells people which versions work before they install. Keep the same package in `devDependencies` for your own builds.
+Put whichever package you import `Plugin` from in `peerDependencies`, with the versions you tested against. A peer dependency is a package your plugin expects the bot to install, so your plugin uses the bot's copy. Mongoose declares `@seedcord/core` at `>=0.2.0 <1.0.0`, since it extends the base from `@seedcord/core/plugin`. Below 1.0, a breaking change can ship in a minor, so a plugin written for 0.2 can break on 0.3. The range tells people which versions work before they install. Keep the same package in `devDependencies` for your own builds.
 
 The entry also decides how the `seedcord` CLI loads your plugin. `seedcord dev`, `build`, and `codegen` run the bot [through Vite](/build), which evaluates the bot's `@seedcord/*` packages itself. They read each installed package's `dependencies` and `peerDependencies`, and load one that lists a `@seedcord/*` package through Vite too. A package that lists none is loaded by Node. In a test, such a plugin attached fine from a plain Node script, then failed under `seedcord codegen` with `CorePluginFromOtherCore`. Node and Vite each held an instance of `@seedcord/core`, though only one copy was installed. A `devDependencies` entry doesn't count.
 
 ## A minimal package
 
-This package holds a plugin on the `@seedcord/core/plugin` base that reads files through `readFiles`, so it lists both packages that supply those imports as peers. A plugin on the gateway or http base lists that one package instead.
+This package holds a plugin on the `@seedcord/core/plugin` base that reads files through `readFiles`, so it lists both packages that supply those imports as peers. For a plugin on the gateway or http base, list only that one package.
 
 ```json title="package.json"
 {

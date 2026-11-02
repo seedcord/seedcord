@@ -88,7 +88,7 @@ describe('Mongoose lifecycle', () => {
     });
 
     describe('model registration', () => {
-        it('names the model after the modelName override when the key differs', async () => {
+        it('takes the model name from the modelName override when the key differs', async () => {
             await testEnv.createFile(
                 'services/UserService.ts',
                 `

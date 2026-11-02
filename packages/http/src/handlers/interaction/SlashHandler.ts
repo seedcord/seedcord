@@ -11,7 +11,7 @@ import type { SlashRegistry } from '@seedcord/core';
 import type { APIChatInputApplicationCommandInteraction } from 'discord-api-types/v10';
 import type { Promisable } from 'type-fest';
 
-type SlashMatchArms<Route extends keyof SlashRegistry, Ret> = {
+type SlashMatchCases<Route extends keyof SlashRegistry, Ret> = {
     [Key in Route]: (options: SlashOptions<Key>) => Promisable<Ret>;
 };
 
@@ -57,28 +57,28 @@ export abstract class SlashHandler<
     }
 
     /**
-     * Run the arm for the selected command. Use this only when the handler is registered for several
+     * Run the case for the selected command. Use this only when the handler is registered for several
      * routes.
      *
-     * Provide one arm per registered route, keyed by its route string, and each arm receives that route's
-     * own narrowed options. The arms must cover every route in the generic, a missing route or an unknown
+     * Provide one case per registered route, keyed by its route string, and each case receives that route's
+     * own narrowed options. The cases must cover every route in the generic, a missing route or an unknown
      * key is a compile error.
      *
-     * @param arms - One handler per registered route, keyed by route string.
-     * @returns The result of the arm that ran.
+     * @param cases - One handler per registered route, keyed by route string.
+     * @returns The result of the case that ran.
      */
-    protected async match<Ret>(arms: SlashMatchArms<Route, Ret>): Promise<Ret> {
+    protected async match<Ret>(cases: SlashMatchCases<Route, Ret>): Promise<Ret> {
         const route = this.route;
-        // justified: SlashMatchArms is keyed by Route literals, the Record cast indexes it with the runtime route string.
-        const arm = Object.hasOwn(arms, route)
-            ? (arms as Record<string, (options: SlashOptions<Route>) => Promisable<Ret>>)[route]
+        // justified: SlashMatchCases is keyed by Route literals, the Record cast indexes it with the runtime route string.
+        const callback = Object.hasOwn(cases, route)
+            ? (cases as Record<string, (options: SlashOptions<Route>) => Promisable<Ret>>)[route]
             : undefined;
-        if (!arm)
-            throw new SeedcordTypeError(SeedcordErrorCode.MatchArmMissing, [
+        if (!callback)
+            throw new SeedcordTypeError(SeedcordErrorCode.MatchCaseMissing, [
                 this.constructor.name,
                 'command route',
                 route
             ]);
-        return await arm(this.options);
+        return await callback(this.options);
     }
 }

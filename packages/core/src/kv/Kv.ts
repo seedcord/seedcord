@@ -26,7 +26,7 @@ type CollectionName<TRecord> = unknown extends TRecord
     ? 'Pass the record type, like kv.collection<Profile>(name).'
     : [TRecord] extends [JsonSafe<TRecord>]
       ? string
-      : 'This record type holds a value JSON cannot keep, like a function, Map, Set, or bigint.';
+      : 'This record type holds a value that JSON cannot keep, like a function, Map, Set, or bigint.';
 
 // unescaped, every key under `user:settings:` would also start with `user:`
 function keyPrefix(path: readonly string[]): string {

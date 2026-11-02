@@ -33,12 +33,12 @@ describe('ChangelogFile sections', () => {
         expect(new ChangelogFile(changelog).sectionFor('9.9.9')).toBeUndefined();
     });
 
-    it('names the version released before a given one', () => {
+    it('finds the version released before a given one', () => {
         expect(new ChangelogFile(changelog).versionBefore('0.7.0')).toBe('0.6.0');
         expect(new ChangelogFile(changelog).versionBefore('0.6.0')).toBeUndefined();
     });
 
-    it('skips prerelease sections when naming the stable version before a stable one', () => {
+    it('skips prerelease sections when finding the stable version before a stable one', () => {
         const text = lines('# @seedcord/core', '', '## 0.4.0', '', '## 0.3.1-next.0', '', '## 0.3.0', '');
 
         expect(new ChangelogFile(text).versionBefore('0.4.0')).toBe('0.3.0');

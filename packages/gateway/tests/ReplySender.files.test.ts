@@ -123,7 +123,7 @@ describe('the discord.js file forms', () => {
 });
 
 describe('what the types allow', () => {
-    it('accepts a reply a shared notice or page render built, which names the portable type', () => {
+    it('accepts a reply a shared notice or page render built, which uses the portable type', () => {
         const shared: ReplyResponse = { components, files: [{ data: BYTES, name: 'a.png' }] };
         const bound: GatewayReplyResponse = shared;
         void bound;

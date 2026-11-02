@@ -1,11 +1,12 @@
+import { SeedcordErrorCode } from '@seedcord/errors';
 import { PermissionFlagsBits } from 'discord-api-types/v10';
 import { describe, it, expect, expectTypeOf } from 'vitest';
 
 import { RequireBotPermissions, RequirePermissions, RequireRole } from '#gates/catalog/permissions';
-import { MissingPermissions, MissingRole, NotInGuild } from '#notices/index';
+import { MissingPermissions, MissingRole, NotInGuild, PermissionsUnresolved } from '#notices/index';
 import { cardJson } from '#tests/utils/cardText';
 
-import type { Gate, GateContextBase, GuildPermissionsContext } from '#gates/Gate';
+import type { AppPermissionsContext, Gate, GateContextBase, GuildPermissionsContext } from '#gates/Gate';
 
 const { Administrator, BanMembers, KickMembers } = PermissionFlagsBits;
 
@@ -18,16 +19,16 @@ interface CtxFields {
     memberRoleIds?: readonly string[];
 }
 
-function permCtx(fields: CtxFields = {}): GuildPermissionsContext {
+function permCtx(fields: CtxFields = {}): GuildPermissionsContext & AppPermissionsContext {
     // the permission gates read only the permission scalars and guild fields, so a minimal cast stands in
     return {
         memberPermissions: fields.memberPermissions ?? null,
         memberGuildPermissions: fields.memberGuildPermissions ?? null,
-        appPermissions: fields.appPermissions ?? null,
+        appPermissions: fields.appPermissions ?? 0n,
         appGuildPermissions: fields.appGuildPermissions ?? null,
         guildId: 'guildId' in fields ? fields.guildId : 'g1',
         memberRoleIds: fields.memberRoleIds ?? []
-    } as unknown as GuildPermissionsContext;
+    } as unknown as GuildPermissionsContext & AppPermissionsContext;
 }
 
 expectTypeOf(RequirePermissions([BanMembers])).toEqualTypeOf<Gate<GateContextBase, 'RequirePermissions'>>();
@@ -35,7 +36,7 @@ expectTypeOf(RequirePermissions([BanMembers], { in: 'guild' })).toEqualTypeOf<
     Gate<GuildPermissionsContext, 'RequirePermissions'>
 >();
 
-expectTypeOf(RequireBotPermissions([BanMembers])).toEqualTypeOf<Gate<GateContextBase, 'RequireBotPermissions'>>();
+expectTypeOf(RequireBotPermissions([BanMembers])).toEqualTypeOf<Gate<AppPermissionsContext, 'RequireBotPermissions'>>();
 expectTypeOf(RequireBotPermissions([BanMembers], { in: 'guild' })).toEqualTypeOf<
     Gate<GuildPermissionsContext, 'RequireBotPermissions'>
 >();
@@ -53,13 +54,13 @@ describe('RequirePermissions', () => {
         ).rejects.toBeInstanceOf(MissingPermissions);
     });
 
-    it('refuses with NotInGuild when the channel set is null', async () => {
+    it('refuses with PermissionsUnresolved when the channel set is null inside a guild', async () => {
         await expect(
             RequirePermissions([BanMembers]).check(permCtx({ memberPermissions: null }))
-        ).rejects.toBeInstanceOf(NotInGuild);
+        ).rejects.toBeInstanceOf(PermissionsUnresolved);
     });
 
-    it('reads the guild set on the guild arm', async () => {
+    it('reads the guild set with the guild scope', async () => {
         await expect(
             RequirePermissions([BanMembers], { in: 'guild' }).check(
                 permCtx({ memberGuildPermissions: BanMembers, memberPermissions: null })
@@ -67,7 +68,7 @@ describe('RequirePermissions', () => {
         ).resolves.toBeUndefined();
     });
 
-    it('leads with "You are missing" on the guild-arm refusal', async () => {
+    it('leads with "You are missing" on the guild-scope refusal', async () => {
         let caught: unknown;
         await RequirePermissions([BanMembers], { in: 'guild' })
             .check(permCtx({ memberGuildPermissions: 0n }))
@@ -79,39 +80,31 @@ describe('RequirePermissions', () => {
         expect(text).not.toContain('The bot');
     });
 
-    it('refuses with NotInGuild when the guild set is null', async () => {
+    it('refuses with PermissionsUnresolved when the guild set is null inside a guild', async () => {
         await expect(
             RequirePermissions([BanMembers], { in: 'guild' }).check(permCtx({ memberGuildPermissions: null }))
+        ).rejects.toBeInstanceOf(PermissionsUnresolved);
+    });
+
+    it('refuses with NotInGuild outside a guild', async () => {
+        await expect(
+            RequirePermissions([BanMembers]).check(permCtx({ memberPermissions: null, guildId: null }))
         ).rejects.toBeInstanceOf(NotInGuild);
     });
 
-    it('says the member data is unresolved when the set is null inside a guild', async () => {
-        await expect(
-            RequirePermissions([BanMembers], { in: 'guild' }).check(
-                permCtx({ memberGuildPermissions: null, guildId: 'g1' })
-            )
-        ).rejects.toThrow('Your server member data could not be resolved. Try again.');
-    });
-
-    it('keeps the not-in-guild default when the set is null outside a guild', async () => {
-        await expect(
-            RequirePermissions([BanMembers]).check(permCtx({ memberPermissions: null, guildId: null }))
-        ).rejects.toThrow('This can only be used in a server.');
-    });
-
-    it('passes any scope when the Administrator bit is held (channel arm)', async () => {
+    it('passes any scope when the Administrator bit is held (channel scope)', async () => {
         await expect(
             RequirePermissions([BanMembers, KickMembers]).check(permCtx({ memberPermissions: Administrator }))
         ).resolves.toBeUndefined();
     });
 
-    it('passes any scope when the Administrator bit is held (guild arm)', async () => {
+    it('passes any scope when the Administrator bit is held (guild scope)', async () => {
         await expect(
             RequirePermissions([BanMembers], { in: 'guild' }).check(permCtx({ memberGuildPermissions: Administrator }))
         ).resolves.toBeUndefined();
     });
 
-    it('names the missing permissions on the refusal', async () => {
+    it('lists the missing permissions on the refusal', async () => {
         let caught: unknown;
         await RequirePermissions([BanMembers, KickMembers])
             .check(permCtx({ memberPermissions: 0n }))
@@ -123,26 +116,31 @@ describe('RequirePermissions', () => {
         expect(text).toContain('• Kick Members');
     });
 
-    it('rewords the missing refusal with the message override', async () => {
+    it('refuses with the missing class it was given, built with the subject and the missing names', async () => {
+        class NoDice extends MissingPermissions {
+            public constructor(
+                public readonly subject: string | null,
+                public readonly names: readonly string[]
+            ) {
+                super(subject, names);
+            }
+        }
         let caught: unknown;
-        await RequirePermissions([BanMembers], { missing: { message: 'no dice' } })
-            .check(permCtx({ memberPermissions: 0n }))
+        await RequirePermissions([BanMembers, KickMembers], { missing: NoDice })
+            .check(permCtx({ memberPermissions: KickMembers }))
             .catch((error: unknown) => {
                 caught = error;
             });
-        expect((caught as MissingPermissions).message).toBe('no dice');
-        const text = cardJson((caught as MissingPermissions).render());
-        expect(text).toContain('no dice');
-        expect(text).not.toContain('missing the following permission entries');
+        expect(caught).toBeInstanceOf(NoDice);
+        expect(caught).toMatchObject({ subject: null, names: ['Ban Members'] });
     });
 
-    it('replaces the not-in-guild refusal with the notice override', async () => {
-        const custom = new NotInGuild('outside');
-        await expect(
-            RequirePermissions([BanMembers], { notInGuild: { notice: custom } }).check(
-                permCtx({ memberPermissions: null })
-            )
-        ).rejects.toBe(custom);
+    it('refuses with the notInGuild and unresolved classes it was given', async () => {
+        class Outside extends NotInGuild {}
+        class Unknown extends PermissionsUnresolved {}
+        const gate = RequirePermissions([BanMembers], { notInGuild: Outside, unresolved: Unknown });
+        await expect(gate.check(permCtx({ guildId: null }))).rejects.toBeInstanceOf(Outside);
+        await expect(gate.check(permCtx({ memberPermissions: null }))).rejects.toBeInstanceOf(Unknown);
     });
 });
 
@@ -159,7 +157,7 @@ describe('RequireBotPermissions', () => {
         );
     });
 
-    it('names the bot as the subject on the refusal', async () => {
+    it('puts the bot as the subject on the refusal', async () => {
         let caught: unknown;
         await RequireBotPermissions([BanMembers])
             .check(permCtx({ appPermissions: 0n }))
@@ -182,31 +180,25 @@ describe('RequireBotPermissions', () => {
         expect((caught as MissingPermissions).summary).toBe('The bot needs Ban Members');
     });
 
-    it('refuses with NotInGuild when the bot channel set is null', async () => {
+    it('throws CoreBotMemberMissing when the guild set is null inside a guild', async () => {
         await expect(
-            RequireBotPermissions([BanMembers]).check(permCtx({ appPermissions: null }))
+            RequireBotPermissions([BanMembers], { in: 'guild' }).check(permCtx({ appGuildPermissions: null }))
+        ).rejects.toMatchObject({ code: SeedcordErrorCode.CoreBotMemberMissing });
+    });
+
+    it('refuses with NotInGuild outside a guild', async () => {
+        await expect(
+            RequireBotPermissions([BanMembers]).check(permCtx({ appPermissions: BanMembers, guildId: null }))
         ).rejects.toBeInstanceOf(NotInGuild);
     });
 
-    it('says the bot set is unresolved when null inside a guild', async () => {
-        await expect(
-            RequireBotPermissions([BanMembers]).check(permCtx({ appPermissions: null, guildId: 'g1' }))
-        ).rejects.toThrow("The bot's permissions could not be resolved. Try again.");
-    });
-
-    it('keeps the not-in-guild default when the bot set is null outside a guild', async () => {
-        await expect(
-            RequireBotPermissions([BanMembers]).check(permCtx({ appPermissions: null, guildId: null }))
-        ).rejects.toThrow('This can only be used in a server.');
-    });
-
-    it('reads the bot guild set on the guild arm', async () => {
+    it('reads the bot guild set with the guild scope', async () => {
         await expect(
             RequireBotPermissions([BanMembers], { in: 'guild' }).check(permCtx({ appGuildPermissions: BanMembers }))
         ).resolves.toBeUndefined();
     });
 
-    it('names the bot as the subject on the guild-arm refusal', async () => {
+    it('puts the bot as the subject on the guild-scope refusal', async () => {
         let caught: unknown;
         await RequireBotPermissions([BanMembers], { in: 'guild' })
             .check(permCtx({ appGuildPermissions: 0n }))
@@ -246,5 +238,16 @@ describe('RequireRole', () => {
                 caught = error;
             });
         expect((caught as MissingRole).message).toBe('You need the <@&r1> role to use this.');
+    });
+
+    it('refuses with the missingRole class it was given, built with the role id', async () => {
+        class MembersOnly extends MissingRole {
+            public constructor(public readonly roleId: string) {
+                super(roleId);
+            }
+        }
+        await expect(
+            RequireRole('r1', { missingRole: MembersOnly }).check(permCtx({ memberRoleIds: [] }))
+        ).rejects.toMatchObject({ roleId: 'r1' });
     });
 });

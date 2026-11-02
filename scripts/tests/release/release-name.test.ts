@@ -5,7 +5,7 @@ import { ReleaseName } from '#src/release/ReleaseName';
 const AT = Temporal.Instant.from('2026-09-11T02:03:07Z');
 
 describe('ReleaseName', () => {
-    it('names the tag and the title from the utc date', () => {
+    it('builds the tag and the title from the utc date', () => {
         const name = ReleaseName.next(AT, []);
 
         expect(name.tag).toBe('release-2026.09.11');

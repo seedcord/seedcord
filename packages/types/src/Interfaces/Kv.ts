@@ -1,8 +1,8 @@
 import type { Promisable } from 'type-fest';
 
 /**
- * The backend behind `config.kv`. A driver stores and returns strings, because seedcord turns every
- * value into JSON before it calls the driver. Each method may return its result directly or as a
+ * The backend behind `config.kv`. seedcord turns every value into JSON before it calls the driver, so
+ * a driver only stores and returns strings. Each method may return its result directly or as a
  * promise.
  *
  * `config.kv` also requires `Disposable` or `AsyncDisposable` on the driver. A node bot calls it
