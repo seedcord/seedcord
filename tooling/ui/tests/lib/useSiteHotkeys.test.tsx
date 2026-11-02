@@ -41,13 +41,13 @@ describe('useSiteHotkeys', () => {
 
         expect(nextPage).not.toHaveBeenCalled();
         expect(screen.queryByRole('listbox')).toBeNull();
-        expect(screen.getByRole('button', { name: 'Switch site' })).not.toHaveFocus();
+        expect(screen.getByRole('button', { name: 'guide, Switch site' })).not.toHaveFocus();
     });
 
     it('gives focus back to the switcher after a click opened it', async () => {
         const user = userEvent.setup();
         render(<Site />);
-        const trigger = screen.getByRole('button', { name: 'Switch site' });
+        const trigger = screen.getByRole('button', { name: 'guide, Switch site' });
 
         await user.click(trigger);
         await user.keyboard('{Escape}');

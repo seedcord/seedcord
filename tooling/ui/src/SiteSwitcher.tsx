@@ -154,7 +154,7 @@ export function SiteSwitcher({
                             variant="ghost"
                             aria-haspopup="listbox"
                             aria-controls={listId}
-                            aria-label={SWITCH_SITE.description}
+                            aria-label={`${site}, ${SWITCH_SITE.description}`}
                             className={cn('font-display text-lg')}
                         />
                     </PopoverTrigger>

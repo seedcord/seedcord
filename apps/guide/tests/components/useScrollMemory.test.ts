@@ -45,6 +45,19 @@ describe('useScrollMemory', () => {
         expect(scrollTo).not.toHaveBeenCalled();
     });
 
+    it('stops saving once a write fails, like on a full sessionStorage', () => {
+        const setItem = vi.fn(() => {
+            throw new DOMException('The quota has been exceeded.', 'QuotaExceededError');
+        });
+        vi.stubGlobal('sessionStorage', { getItem: () => null, setItem });
+        renderHook(() => useScrollMemory('/core/'));
+
+        scrollPageTo(400);
+        scrollPageTo(800);
+
+        expect(setItem).toHaveBeenCalledOnce();
+    });
+
     it('keeps the page working when the browser blocks storage', () => {
         vi.stubGlobal('sessionStorage', undefined);
         Object.defineProperty(globalThis, 'sessionStorage', {

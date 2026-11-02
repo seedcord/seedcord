@@ -8,11 +8,11 @@ import { useIsMac } from './lib/useIsMac';
 import { Tooltip } from './Tooltip';
 
 import type { HotkeySpec } from './lib/useHotkeys';
-import type { ReactElement, ReactNode } from 'react';
+import type { ReactElement } from 'react';
 
 export interface HotkeyHintProps {
     hotkey: HotkeySpec;
-    children: ReactNode;
+    children: ReactElement;
 }
 
 export function HotkeyHint({ hotkey, children }: HotkeyHintProps): ReactElement {

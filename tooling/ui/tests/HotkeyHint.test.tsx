@@ -48,7 +48,7 @@ describe('HotkeyHint', () => {
             )
         );
 
-        expect(screen.getByRole('button', { name: 'Switch site' })).toHaveAttribute('aria-keyshortcuts', 'S');
+        expect(screen.getByRole('button', { name: 'guide, Switch site' })).toHaveAttribute('aria-keyshortcuts', 'S');
         expect(screen.getByRole('button', { name: 'Search the guide' })).toHaveAttribute(
             'aria-keyshortcuts',
             'Control+K /'

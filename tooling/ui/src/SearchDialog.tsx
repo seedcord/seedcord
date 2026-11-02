@@ -7,6 +7,7 @@ import { createContext, use, useCallback, useLayoutEffect, useMemo, useRef, useS
 import { Card } from './Card';
 import { cn } from './lib/cn';
 import { easeOutStrong } from './lib/motion';
+import { useFocusReturn } from './lib/useFocusReturn';
 
 import type { RowPosition } from './lib/useRovingList';
 import type { ReactElement, ReactNode, RefObject } from 'react';
@@ -132,6 +133,7 @@ export function SearchDialog({
     const scrollRef = useRef<HTMLDivElement | null>(null);
     const [container, setContainer] = useState<HTMLElement | null>(null);
     const [contentHeight, measureRef] = useMeasuredHeight();
+    const focusReturn = useFocusReturn();
     const handles = useMemo<SearchDialogHandles>(
         () => ({
             container,
@@ -150,6 +152,7 @@ export function SearchDialog({
                 <Dialog.Content
                     ref={setContainer}
                     aria-modal
+                    {...focusReturn}
                     data-command-content
                     className={cn(
                         'fixed inset-0 z-70 flex items-start justify-center px-4 pt-20 pb-8',

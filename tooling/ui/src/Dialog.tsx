@@ -5,6 +5,7 @@ import * as RadixDialog from '@radix-ui/react-dialog';
 import { CloseControls } from './CloseControls';
 import { cn } from './lib/cn';
 import { tw } from './lib/tw';
+import { useFocusReturn } from './lib/useFocusReturn';
 
 import type { ReactElement, ReactNode, Ref } from 'react';
 
@@ -44,6 +45,8 @@ export function Dialog({
     closeLabel = 'Close',
     ref
 }: DialogProps): ReactElement {
+    const focusReturn = useFocusReturn();
+
     return (
         <RadixDialog.Root open={open} onOpenChange={onOpenChange}>
             <RadixDialog.Portal>
@@ -57,7 +60,11 @@ export function Dialog({
                 <RadixDialog.Content
                     ref={ref}
                     aria-modal
-                    onOpenAutoFocus={focusTheBox}
+                    onOpenAutoFocus={(event) => {
+                        focusReturn.onOpenAutoFocus();
+                        focusTheBox(event);
+                    }}
+                    onCloseAutoFocus={focusReturn.onCloseAutoFocus}
                     className={cn(
                         'border-border shadow-soft fixed z-60 flex flex-col border bg-(--bg-dim-subtle) outline-hidden',
                         'data-[state=closed]:animate-out data-[state=open]:animate-in',

@@ -33,7 +33,7 @@ describe('SiteSwitcher', () => {
         const user = userEvent.setup();
         render(<Switcher />);
 
-        await user.click(screen.getByRole('button', { name: 'Switch site' }));
+        await user.click(screen.getByRole('button', { name: 'guide, Switch site' }));
         await user.keyboard('{ArrowDown}{Enter}');
 
         expect(open).toHaveBeenCalledWith('https://seedcord.org/docs', '_blank', 'noreferrer');
