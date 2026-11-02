@@ -3,7 +3,7 @@ import { DispatchContext } from '@seedcord/core/internal';
 import { GuildMember, Message, PermissionFlagsBits } from 'discord.js';
 import { describe, it, expect } from 'vitest';
 
-import { eventGateContext, interactionGateContext } from '#bot/gates/runGates';
+import { eventGateContext, interactionGateContext } from '#bot/gates/context';
 
 import type { Core } from '#interfaces/Core';
 import type { ButtonInteraction, User } from 'discord.js';

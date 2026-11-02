@@ -71,8 +71,6 @@ export function reportDispatch(bus: Bus, report: DispatchReport): void {
         durationMs,
         queuedMs: report.queuedMs
     });
-
-    // a throwing log sink must not stop the publish above
     logger().trace(
         `${paint.sky.bold(report.dispatch.routeId)} ${report.outcome} ${paint.mute('in')} ${Math.round(durationMs)}ms`
     );

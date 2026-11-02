@@ -222,7 +222,7 @@ describe('EventHandler.match', () => {
         }).toThrow(expect.objectContaining({ code: SeedcordErrorCode.DecoratorDuplicateKey }));
     });
 
-    it("registers a subclass's event once when the parent lists the same event", () => {
+    it("keeps only a subclass's own entry when the parent lists the same event", () => {
         @RegisterEvent([Events.MessageCreate])
         class Parent extends EventHandler<Events.MessageCreate> {
             async execute(): Promise<void> {}

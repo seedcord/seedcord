@@ -5,4 +5,4 @@
 '@seedcord/http': minor
 ---
 
-**BREAKING:** Event middleware now reads its event name from `this.route` instead of `this.eventName`, the same getter interaction handlers have. Event handlers and interaction middleware now have `this.route` too.
+**BREAKING:** Read an event middleware's event name from `this.route` now, in place of `this.eventName`. Event handlers and interaction middleware now have `this.route` too, the same as interaction handlers.

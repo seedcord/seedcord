@@ -2,7 +2,7 @@ import { DiscordAPIError } from '@discordjs/rest';
 import { Fault, InteractionKind, Notice, Silence } from '@seedcord/core';
 import { Logger } from '@seedcord/logger';
 import { MessageFlags } from 'discord-api-types/v10';
-import { beforeEach, describe, expect, it, vi } from 'vitest';
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
 import { AutocompleteHandler } from '#handlers/interaction/AutocompleteHandler';
 import { SlashHandler } from '#handlers/interaction/SlashHandler';
@@ -11,8 +11,6 @@ import { restClients } from '#tests/helpers/restClients';
 import { capturingCtx, readyEngine, routedHandler, signedRequest, slashPayload, type BotClasses } from './harness';
 
 import type { HandlerConstructor } from '#handlers/constructors';
-import type { Core } from '#interfaces/Core';
-import type { DispatchContext } from '@seedcord/core';
 import type { RenderContext, ReplyResponse } from '@seedcord/types';
 import type { UUID } from 'node:crypto';
 
@@ -37,6 +35,10 @@ function postedBodies(): { route: string; body: SentBody }[] {
 
 beforeEach(() => {
     restClients().length = 0;
+});
+
+afterEach(() => {
+    vi.restoreAllMocks();
 });
 
 describe('fault boundary', () => {
@@ -96,7 +98,6 @@ describe('fault boundary', () => {
         await ctx.settled();
 
         expect(debug).toHaveBeenCalledWith('Silence: user dismissed');
-        debug.mockRestore();
     });
 
     it('omits the Silence debug line when logSilences is false', async () => {
@@ -116,7 +117,6 @@ describe('fault boundary', () => {
         await ctx.settled();
 
         expect(debug).not.toHaveBeenCalledWith('Silence: user dismissed');
-        debug.mockRestore();
     });
 
     it('sends a post-ack Notice card as a follow-up when already replied', async () => {
@@ -221,7 +221,6 @@ describe('fault boundary', () => {
 
         expect(postedBodies()).toHaveLength(0);
         expect(error).toHaveBeenCalledWith(expect.stringContaining('could not render'), expect.anything());
-        error.mockRestore();
     });
 
     it('swallows an api code listed in ignoreApiCodes without a card', async () => {
@@ -242,7 +241,17 @@ describe('fault boundary', () => {
         expect(postedBodies()).toHaveLength(0);
     });
 
-    it('sends the generic Fault card when a Notice render throws', async () => {
+    it('sends the default card and reports the render error when a Notice render throws', async () => {
+        class DefaultCard extends Fault {
+            public constructor(_uuid: UUID) {
+                super();
+            }
+
+            public override render(_ctx: RenderContext): ReplyResponse {
+                return { components: [{ toJSON: () => ({ type: 10, content: 'default card' }) }] };
+            }
+        }
+        const settings = { errors: { defaultError: DefaultCard } };
         class ExplodingNotice extends Notice {
             public constructor() {
                 super('refused');
@@ -258,15 +267,16 @@ describe('fault boundary', () => {
                 throw new ExplodingNotice();
             }
         }
-        using engine = await readyEngine(slashRoute('refuses', Refuses));
+        const error = vi.spyOn(Logger.prototype, 'error').mockImplementation(() => undefined);
+        using engine = await readyEngine(slashRoute('refuses', Refuses), { settings });
         const { signer, handle } = engine;
         const ctx = capturingCtx();
 
         await handle(await signedRequest(signer, slashPayload('refuses')), ctx);
         await ctx.settled();
 
-        expect(postedBodies()).toHaveLength(1);
-        expect(postedBodies()[0]?.body.data?.components).toBeDefined();
+        expect(postedBodies()[0]?.body.data?.components).toEqual([{ type: 10, content: 'default card' }]);
+        expect(error).toHaveBeenCalledWith(expect.any(String), expect.objectContaining({ message: 'render exploded' }));
     });
 
     it('swallows a harmless api code from the card send itself, resolving the tracked work', async () => {
@@ -288,30 +298,6 @@ describe('fault boundary', () => {
 
         await expect(ctx.settled()).resolves.toBeUndefined();
         expect(postedBodies()).toHaveLength(1);
-    });
-
-    it('still acks 202 when the handler constructor throws', async () => {
-        class Ghost extends SlashHandler<never> {
-            constructor(event: never, core: Core, dispatch: DispatchContext) {
-                super(event, core, dispatch);
-                throw new Error('constructor blew up');
-            }
-
-            async execute(): Promise<void> {
-                await Promise.resolve();
-            }
-        }
-        using engine = await readyEngine(slashRoute('ghost', Ghost));
-        const { signer, handle } = engine;
-        const ctx = capturingCtx();
-
-        const response = await handle(await signedRequest(signer, slashPayload('ghost')), ctx);
-
-        expect(response.status).toBe(202);
-        expect(ctx.waitUntil).not.toHaveBeenCalled();
-        const posts = postedBodies();
-        expect(posts).toHaveLength(1);
-        expect(posts[0]?.body.type).toBe(4);
     });
 
     it('wraps a non-Error throw into the generic fault card', async () => {

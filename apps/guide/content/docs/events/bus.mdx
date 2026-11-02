@@ -130,7 +130,7 @@ seedcord marks `FirstLevel` as run as soon as it starts. If it throws partway th
 
 ## One class for several keys
 
-If two keys need the same follow-up, like logging both a level-up and a level reset, one subscriber can list both keys. You don't need two classes and a shared helper. Pass `@Subscribe` one tuple per key, and list the same keys as a union in the generic.
+If two keys need the same follow-up, like logging both a level-up and a level reset, one subscriber can list both keys. Pass `@Subscribe` one tuple per key, and list the same keys as a union in the generic.
 
 ```ts twoslash title="src/subscribers/LevelLog.ts"
 import { Subscribe, Subscriber } from '@seedcord/gateway';

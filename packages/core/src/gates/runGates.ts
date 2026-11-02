@@ -49,13 +49,13 @@ export async function runHandlerGates(
     await runGates(gates, ctx, observe);
 }
 
-// discord drops an interaction that isn't acked within 3s
+// discord rejects a response to an interaction that isn't acked within 3s
 export async function runInteractionGates(handlerCtor: object, ctx: GateContextBase): Promise<void> {
     const monitor = slowGateMonitor();
     try {
         await runHandlerGates(handlerCtor, ctx, monitor?.observe);
     } finally {
         // a refusing gate spent budget too
-        monitor?.report(ctx.declaredRoute);
+        monitor?.report(ctx.dispatch.declaredRoute);
     }
 }

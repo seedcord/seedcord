@@ -56,8 +56,6 @@ export abstract class Subscriber<in out Keys extends SubscriptionKey, TCore exte
      * Provide one case per registered key. Each case receives that key's own payload. A missing key or an unknown
      * key is a compile error.
      *
-     * @param cases - One handler per registered key.
-     * @returns The result of the case that ran.
      * @throws A **SeedcordTypeError** with `MatchCaseMissing` when the published key doesn't have a case.
      *
      * @example
@@ -69,14 +67,13 @@ export abstract class Subscriber<in out Keys extends SubscriptionKey, TCore exte
      *     async execute() {
      *         await this.match({
      *             interactionDispatched: (data) => this.logger.info(data.routeId),
-     *             eventDispatched: (data) => this.logger.info(data.eventName)
+     *             eventDispatched: (data) => this.logger.info(data.name)
      *         });
      *     }
      * }
      * ```
      */
     protected async match<Ret>(cases: SubscriberMatchCases<Keys, Ret>): Promise<Ret> {
-        type Case = (data: AllSubscriptions[Keys]) => Promisable<Ret>;
-        return await caseFor<Case>(this, cases, 'subscription key', this.key)(this.payload);
+        return await caseFor(this, cases, 'subscription key', this.key)(this.payload);
     }
 }

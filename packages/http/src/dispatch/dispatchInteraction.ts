@@ -107,7 +107,7 @@ function dispatchReporter(
 
 async function answer(caught: unknown, scope: FaultScope, report: (outcome: DispatchOutcome) => void): Promise<void> {
     const { core, dispatch, payload, sender } = scope;
-    const boundary = new FaultBoundary(core, core.config.errors?.ignoreApiCodes, DiscordAPIError, logger());
+    const boundary = new FaultBoundary(core, core.config.errors?.ignoreApiCodes, DiscordAPIError);
     const target: FaultTarget = sender
         ? { reply: (response, options) => sender.send(response, options) }
         : { clearChoices: () => respondEmptyChoices(scope) };

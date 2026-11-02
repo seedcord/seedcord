@@ -34,7 +34,7 @@ export interface WebhookReport {
  * resolves the url, validates it, reuses one sender per url, and sends. Registration skips a reporter
  * whose variable is unset and warns at boot.
  *
- * @typeParam KeyOfSubscribers - The subscription key or keys this reporter receives, the same ones as `@Subscribe`
+ * @typeParam KeyOfSubscribers - The subscription key or keys that this reporter receives, the same ones as `@Subscribe`
  * @typeParam TCore - The transport's Core
  */
 export abstract class WebhookLog<KeyOfSubscribers extends SubscriptionKey, TCore extends CoreBase> extends Subscriber<

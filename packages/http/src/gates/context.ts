@@ -26,7 +26,6 @@ export function interactionGateContext(
         memberRoleIds: member?.roles ?? [],
         memberPermissions: member ? BigInt(member.permissions) : null,
         // app_permissions is present on every interaction Discord delivers, including DMs
-        appPermissions: BigInt(payload.app_permissions),
-        declaredRoute: dispatch.declaredRoute
+        appPermissions: BigInt(payload.app_permissions)
     };
 }

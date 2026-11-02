@@ -28,7 +28,7 @@ import { Envapter } from 'envapt';
 
 import { CONFIRM_DEF } from '#bot/confirm/reserved';
 import { UnhandledAutocomplete, UnhandledRepliable } from '#bot/defaults';
-import { interactionGateContext } from '#bot/gates/runGates';
+import { interactionGateContext } from '#bot/gates/context';
 import { handleInteractionFault } from '#bot/handleInteractionFault';
 import { slashRouteOf } from '#bUtilities/miscellaneous/slashRouteOf';
 import { AutocompleteHandler, InteractionMiddleware } from '#handlers/interaction';
@@ -376,16 +376,15 @@ export class InteractionDispatcher implements Initializeable, HmrAware {
         if (!prefix)
             this.logger.warn(`${paint.sky.bold(kind)} has invalid customId: ${paint.mute(interaction.customId)}`);
 
-        await this.processInteraction(interaction, kind, () => prefix);
+        await this.processInteraction(interaction, kind, prefix);
     }
 
-    private async processInteraction<TInteraction extends Interaction>(
-        interaction: TInteraction,
+    private async processInteraction(
+        interaction: Interaction,
         kind: InteractionKind,
-        extractKey: (i: TInteraction) => string,
+        key: string,
         fallback: HandlerConstructor = UnhandledRepliable
     ): Promise<void> {
-        const key = extractKey(interaction);
         const startedAt = performance.now();
         const queuedMs = queuedMsFor(interaction.id);
         const matched = this.maps[kind].get(key);
@@ -560,7 +559,7 @@ export class InteractionDispatcher implements Initializeable, HmrAware {
 
     private async handleSlashCommand(interaction: ChatInputCommandInteraction): Promise<void> {
         const route = slashRouteOf(interaction);
-        await this.processInteraction(interaction, InteractionKind.Slash, () => route);
+        await this.processInteraction(interaction, InteractionKind.Slash, route);
     }
 
     private async handleButton(interaction: ButtonInteraction): Promise<void> {
@@ -592,15 +591,15 @@ export class InteractionDispatcher implements Initializeable, HmrAware {
     }
 
     private async handleMessageContextMenu(interaction: MessageContextMenuCommandInteraction): Promise<void> {
-        await this.processInteraction(interaction, InteractionKind.MessageContextMenu, () => interaction.commandName);
+        await this.processInteraction(interaction, InteractionKind.MessageContextMenu, interaction.commandName);
     }
 
     private async handleUserContextMenu(interaction: UserContextMenuCommandInteraction): Promise<void> {
-        await this.processInteraction(interaction, InteractionKind.UserContextMenu, () => interaction.commandName);
+        await this.processInteraction(interaction, InteractionKind.UserContextMenu, interaction.commandName);
     }
 
     private async handleAutocomplete(interaction: AutocompleteInteraction): Promise<void> {
         const route = slashRouteOf(interaction);
-        await this.processInteraction(interaction, InteractionKind.Autocomplete, () => route, UnhandledAutocomplete);
+        await this.processInteraction(interaction, InteractionKind.Autocomplete, route, UnhandledAutocomplete);
     }
 }

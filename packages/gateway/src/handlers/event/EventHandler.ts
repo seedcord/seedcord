@@ -57,7 +57,7 @@ export abstract class EventHandler<in out Names extends ValidNonInteractionKeys>
      * `never`, so match is the only way to read the payload.
      *
      * Provide one case per registered event, keyed by its name, and each case receives that event's own
-     * payload tuple. The cases must cover every event in the generic, a missing event or an unknown key is a
+     * payload tuple. The cases must cover every event in the generic. A missing event or an unknown key is a
      * compile error.
      *
      * @param cases - One handler per registered event, keyed by event name.
@@ -77,7 +77,7 @@ export abstract class EventHandler<in out Names extends ValidNonInteractionKeys>
      * ```
      */
     protected async match<Ret>(cases: EventMatchCases<Names, Ret>): Promise<Ret> {
-        const callback = caseFor<(...args: unknown[]) => Promisable<Ret>>(this, cases, 'event', this.route);
+        const callback = caseFor(this, cases, 'event', this.route);
         // this.event is never on a multi-event handler. getEvent() returns the real tuple.
         return await callback(...this.getEvent());
     }

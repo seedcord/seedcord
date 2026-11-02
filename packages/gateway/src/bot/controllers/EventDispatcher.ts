@@ -19,7 +19,7 @@ import { asError, isStringArray } from '@seedcord/utils/internal';
 import { Envapter } from 'envapt';
 
 import { eventMiddlewareMetaOf } from '#bDecorators/Middlewares';
-import { eventGateContext } from '#bot/gates/runGates';
+import { eventGateContext } from '#bot/gates/context';
 import { handleEventFault } from '#bot/handleEventFault';
 import { reportEventDispatched, reportEventDispatching } from '#bot/reportEventDispatch';
 import { EventHandler, EventMiddleware } from '#handlers/event';

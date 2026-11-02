@@ -32,7 +32,7 @@ function cdCtx(
         userId: ids.userId ?? 'u1',
         guildId: ids.guildId ?? 'g1',
         channelId: ids.channelId ?? 'c1',
-        declaredRoute: ids.declaredRoute ?? null
+        dispatch: { declaredRoute: ids.declaredRoute ?? null }
     } as unknown as GateContextBase;
 }
 
@@ -206,7 +206,8 @@ describe('Cooldown', () => {
             core: { rateLimiter: { peek, charge: vi.fn() } },
             userId: null,
             guildId: 'g1',
-            channelId: 'c1'
+            channelId: 'c1',
+            dispatch: { declaredRoute: null }
         } as unknown as GateContextBase;
 
         await Cooldown(5).check(ctx);

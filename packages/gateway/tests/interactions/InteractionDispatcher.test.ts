@@ -887,7 +887,7 @@ describe('InteractionDispatcher Integration', () => {
                 import { defineGate, Gated, SlashHandler, SlashRoute } from '${seedcordPath}';
 
                 const ReadsDispatch = defineGate('ReadsDispatch', (ctx) => {
-                    globalThis.gateSaw.push(ctx.dispatch.get('actor'), ctx.declaredRoute);
+                    globalThis.gateSaw.push(ctx.dispatch.get('actor'), ctx.dispatch.declaredRoute);
                 });
 
                 @Gated(ReadsDispatch)

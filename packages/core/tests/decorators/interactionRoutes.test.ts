@@ -69,8 +69,11 @@ describe('storeComponentRoute multi-def', () => {
         // justified: only the prefix is read by the writer
         const a = { prefix: 'inv' } as unknown as AnyCustomId;
         const b = { prefix: 'inv' } as unknown as AnyCustomId;
-        expect(() => storeComponentRoute(InteractionKind.Button, [a, b], Handler)).toThrow(
-            expect.objectContaining({ code: SeedcordErrorCode.DecoratorDuplicateKey })
+        expect(() => storeComponentRoute(InteractionKind.StringMenu, [a, b], Handler)).toThrow(
+            expect.objectContaining({
+                code: SeedcordErrorCode.DecoratorDuplicateKey,
+                message: expect.stringMatching(/@StringMenuRoute.*own prefix/) as string
+            })
         );
     });
 

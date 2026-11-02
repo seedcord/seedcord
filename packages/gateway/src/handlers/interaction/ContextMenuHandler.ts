@@ -103,8 +103,7 @@ export abstract class UserContextMenuHandler<
      * ```
      */
     protected async match<Ret>(cases: UserMenuCases<Names, Ret>): Promise<Ret> {
-        type Case = (target: User, member: unknown) => Promisable<Ret>;
-        return await caseFor<Case>(this, cases, 'context menu command', this.route)(this.target, this.targetMember);
+        return await caseFor(this, cases, 'context menu command', this.route)(this.target, this.targetMember);
     }
 }
 
@@ -170,7 +169,8 @@ export abstract class MessageContextMenuHandler<
      * ```
      */
     protected async match<Ret>(cases: MessageMenuCases<Names, Ret>): Promise<Ret> {
-        type Case = (target: Message<BooleanCache<Cache>>) => Promisable<Ret>;
-        return await caseFor<Case>(this, cases, 'context menu command', this.route)(this.target);
+        // justified: Cache defaults to the cache that the cases are typed with
+        const target = this.target as Message<BooleanCache<MenuCacheFor<ApplicationCommandType.Message, Names>>>;
+        return await caseFor(this, cases, 'context menu command', this.route)(target);
     }
 }

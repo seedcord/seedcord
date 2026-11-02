@@ -42,7 +42,12 @@ export function storeComponentRoute(
     constructor: RoutableConstructor
 ): void {
     const prefixes = defs.map((def) => def.prefix);
-    assertUniqueKeys('The route decorator', constructor, prefixes);
+    assertUniqueKeys(
+        `@${route.charAt(0).toUpperCase()}${route.slice(1)}Route`,
+        constructor,
+        prefixes,
+        'Remove the repeat, or give each customId its own prefix.'
+    );
     storeInteractionRoute(route, prefixes, constructor);
     Reflect.defineMetadata(ComponentDefsKey, defs, constructor);
 }

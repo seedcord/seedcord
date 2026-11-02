@@ -93,7 +93,8 @@ export abstract class ComponentHandler<Event extends ComponentInteraction, Defs 
      */
     protected async match<Ret>(cases: MatchCases<Defs, Ret>): Promise<Ret> {
         const { prefix, params } = this.decodedRoute;
-        type Case = (params: Record<string, unknown>) => Promisable<Ret>;
-        return await caseFor<Case>(this, cases, 'component route', prefix)(params);
+        // justified: decoding picked this prefix and its params together, which two separate fields lose
+        const byPrefix = cases as Record<string, (params: Record<string, unknown>) => Promisable<Ret>>;
+        return await caseFor(this, byPrefix, 'component route', prefix)(params);
     }
 }

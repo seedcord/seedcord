@@ -34,8 +34,7 @@ export {
     type RoutableConstructor
 } from '#decorators/interactionRoutes';
 
-export { runGates, runHandlerGates, runInteractionGates } from '#gates/runGates';
-export type { GateObserver } from '#gates/runGates';
+export { runHandlerGates, runInteractionGates } from '#gates/runGates';
 export { accessorStore, clearStore, guardedAccessor } from '#src/miscellaneous/guarded';
 export { isEmojiTuple } from '#src/miscellaneous/emojiConfig';
 export { currentApplication } from '#src/miscellaneous/currentApplication';

@@ -82,8 +82,7 @@ export abstract class UserContextMenuHandler<
      * ```
      */
     protected async match<Ret>(cases: UserMenuCases<Names, Ret>): Promise<Ret> {
-        type Case = (target: APIUser, member: APIInteractionDataResolvedGuildMember | null) => Promisable<Ret>;
-        return await caseFor<Case>(this, cases, 'context menu command', this.route)(this.target, this.targetMember);
+        return await caseFor(this, cases, 'context menu command', this.route)(this.target, this.targetMember);
     }
 }
 
@@ -139,7 +138,6 @@ export abstract class MessageContextMenuHandler<
      * ```
      */
     protected async match<Ret>(cases: MessageMenuCases<Names, Ret>): Promise<Ret> {
-        type Case = (target: APIMessage) => Promisable<Ret>;
-        return await caseFor<Case>(this, cases, 'context menu command', this.route)(this.target);
+        return await caseFor(this, cases, 'context menu command', this.route)(this.target);
     }
 }

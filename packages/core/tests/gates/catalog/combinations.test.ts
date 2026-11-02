@@ -113,7 +113,8 @@ describe('catalog gate combinators', () => {
             core: { rateLimiter, config: { ownerIds: [] } },
             userId: 'u1',
             guildId: 'g1',
-            channelId: 'c1'
+            channelId: 'c1',
+            dispatch: { declaredRoute: null }
         } as unknown as GateContextBase;
 
         await runGates([and(GuildOnly(), Cooldown(5))], ctx);

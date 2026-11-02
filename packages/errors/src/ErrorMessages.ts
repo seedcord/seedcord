@@ -151,8 +151,8 @@ const messages = {
         `${paint.sky(className)} extends WebhookLog without a ${paint.bold('@WebhookUrl')} decorator. Add one with the name of the env var that holds the webhook URL.`,
     [SeedcordErrorCode.DecoratorEmptyMiddlewareFilter]: (className: string, key: string) =>
         `${paint.sky(className)} passes an empty array as ${paint.bold(key)}. Remove the key to run the middleware on everything.`,
-    [SeedcordErrorCode.DecoratorDuplicateKey]: (decorator: string, className: string, key: string) =>
-        `${paint.bold(decorator)} on ${paint.sky(className)} lists ${quoted(key)} twice. Keep one, or give each customId its own prefix.`,
+    [SeedcordErrorCode.DecoratorDuplicateKey]: (decorator: string, className: string, key: string, fix: string) =>
+        `${paint.bold(decorator)} on ${paint.sky(className)} lists ${quoted(key)} twice. ${fix}`,
 
     [SeedcordErrorCode.ReplyIllegalAckState]: (method: string, reason: string, alternative: string, routeId: string) =>
         `${paint.sky(`${method}()`)} was called when ${reason}.\n${alternative} (route ${paint.mute(routeId)})`,

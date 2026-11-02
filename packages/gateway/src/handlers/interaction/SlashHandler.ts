@@ -69,7 +69,7 @@ export abstract class SlashHandler<
      * routes.
      *
      * Provide one case per registered route, keyed by its route string, and each case receives that route's
-     * own narrowed options. The cases must cover every route in the generic, a missing route or an unknown
+     * own narrowed options. The cases must cover every route in the generic. A missing route or an unknown
      * key is a compile error.
      *
      * @param cases - One handler per registered route, keyed by route string.
@@ -89,7 +89,6 @@ export abstract class SlashHandler<
      * ```
      */
     protected async match<Ret>(cases: SlashMatchCases<Route, Cache, Ret>): Promise<Ret> {
-        type Case = (options: SlashOptions<Route, Cache>) => Promisable<Ret>;
-        return await caseFor<Case>(this, cases, 'command route', this.route)(this.options);
+        return await caseFor(this, cases, 'command route', this.route)(this.options);
     }
 }

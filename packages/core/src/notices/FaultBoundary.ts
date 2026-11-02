@@ -6,11 +6,10 @@ import { Notice } from '#stops/Notice';
 import { Silence } from '#stops/Silence';
 
 import { faultResponse } from './faultResponse';
-import { reportFault } from './reportFault';
+import { faultLogger, reportFault } from './reportFault';
 
 import type { CoreBase } from '#interfaces/CoreBase';
 import type { FaultReport } from './reportFault';
-import type { Logger } from '@seedcord/logger';
 import type { RenderContext, ReplyResponse } from '@seedcord/types';
 
 // each transport passes the DiscordAPIError that its discord client throws
@@ -18,11 +17,10 @@ type ApiErrorClass = abstract new (...args: never[]) => { readonly code: number 
 
 type ReportOf = (uuid: RenderContext['uuid']) => FaultReport;
 
-// each one means the interaction is already gone
 const HARMLESS_API_CODES: ReadonlySet<number | string> = new Set([
-    RESTJSONErrorCodes.UnknownInteraction,
-    RESTJSONErrorCodes.InteractionHasAlreadyBeenAcknowledged,
-    RESTJSONErrorCodes.UnknownMessage
+    RESTJSONErrorCodes.UnknownInteraction, // interaction expired
+    RESTJSONErrorCodes.InteractionHasAlreadyBeenAcknowledged, // interaction was already answered
+    RESTJSONErrorCodes.UnknownMessage // message was lost
 ]);
 
 // discord doesn't accept a message on an autocomplete. empty choices clear the client's loading spinner.
@@ -46,8 +44,7 @@ export class FaultBoundary {
     constructor(
         private readonly core: CoreBase,
         ignoredCodes: readonly (number | string)[] | undefined,
-        private readonly apiError: ApiErrorClass,
-        private readonly logger: Logger
+        private readonly apiError: ApiErrorClass
     ) {
         this.ignoredCodes = new Set(ignoredCodes);
     }
@@ -57,14 +54,14 @@ export class FaultBoundary {
         const { config } = this.core;
         if (caught instanceof Silence) {
             if (caught.reason !== undefined && (config.errors?.logSilences ?? true)) {
-                this.logger.debug(`Silence: ${caught.reason}`);
+                faultLogger().debug(`Silence: ${caught.reason}`);
             }
             return null;
         }
 
         const error = asError(caught);
         if (error instanceof this.apiError && this.ignoredCodes.has(error.code)) {
-            this.logger.debug(`swallowed api code ${paint.amber(String(error.code))}`);
+            faultLogger().debug(`swallowed api code ${paint.amber(String(error.code))}`);
             return null;
         }
 
@@ -92,8 +89,6 @@ export class FaultBoundary {
         if (!reply) return;
         await this.sendGuarded(fault.routeId, () => target.reply(reply.response, { ephemeral: reply.ephemeral }));
     }
-
-    // the reply shows the card for whatever render() threw
     private rendered(fault: ReportedFault, reportOf: ReportOf): FaultReply | null {
         try {
             return fault.reply();
@@ -106,7 +101,7 @@ export class FaultBoundary {
         try {
             return this.report(renderError, reportOf)?.reply() ?? null;
         } catch (error) {
-            this.logger.error(`could not render a fault card for route ${paint.sky.bold(routeId)}`, error);
+            faultLogger().error(`could not render a fault card for route ${paint.sky.bold(routeId)}`, error);
             return null;
         }
     }
@@ -117,10 +112,10 @@ export class FaultBoundary {
             await send();
         } catch (error) {
             if (error instanceof this.apiError && HARMLESS_API_CODES.has(error.code)) {
-                this.logger.debug(`boundary send hit harmless code ${paint.amber(String(error.code))}`);
+                faultLogger().debug(`boundary send hit harmless code ${paint.amber(String(error.code))}`);
                 return;
             }
-            this.logger.error(`boundary send failed for route ${paint.sky.bold(routeId)}`, error);
+            faultLogger().error(`boundary send failed for route ${paint.sky.bold(routeId)}`, error);
         }
     }
 }

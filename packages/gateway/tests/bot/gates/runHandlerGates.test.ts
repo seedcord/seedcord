@@ -3,7 +3,7 @@ import { DispatchContext, runHandlerGates } from '@seedcord/core/internal';
 import { describe, expect, it } from 'vitest';
 
 import { Gated } from '#bDecorators/Gated';
-import { eventGateContext, interactionGateContext } from '#bot/gates/runGates';
+import { eventGateContext, interactionGateContext } from '#bot/gates/context';
 import { EventHandler } from '#handlers/event';
 import { SlashHandler } from '#handlers/interaction/SlashHandler';
 import { TestNotice } from '#tests/utils/TestNotice';

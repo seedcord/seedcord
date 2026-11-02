@@ -15,7 +15,7 @@ export class DispatchContext implements DispatchBag {
 
     /**
      * @param route - The slash path, context menu name, custom-ID prefix, or event name that started this dispatch.
-     * It's empty if seedcord didn't mint the interaction's custom ID.
+     * It's empty if seedcord didn't make the interaction's custom ID.
      * @param fallback - True when no handler registered the route.
      */
     constructor(

@@ -16,7 +16,7 @@ type SlashMatchCases<Route extends keyof SlashRegistry, Ret> = {
  * Base class for a chat-input (slash) command handler on the HTTP transport.
  *
  * Pass the route from the generated registry as the generic, then read `this.options` for a single
- * command or `this.match` for several. Command authoring stays plain discord.js, `seedcord codegen`
+ * command or `this.match` for several. Command authoring stays plain discord.js. `seedcord codegen`
  * reads its `toJSON()` to type these options.
  *
  * @typeParam Route - One or more route keys from {@link SlashRegistry}, e.g. `'ban'` or `'ban' | 'kick'`.
@@ -58,14 +58,13 @@ export abstract class SlashHandler<
      * routes.
      *
      * Provide one case per registered route, keyed by its route string, and each case receives that route's
-     * own narrowed options. The cases must cover every route in the generic, a missing route or an unknown
+     * own narrowed options. The cases must cover every route in the generic. A missing route or an unknown
      * key is a compile error.
      *
      * @param cases - One handler per registered route, keyed by route string.
      * @returns The result of the case that ran.
      */
     protected async match<Ret>(cases: SlashMatchCases<Route, Ret>): Promise<Ret> {
-        type Case = (options: SlashOptions<Route>) => Promisable<Ret>;
-        return await caseFor<Case>(this, cases, 'command route', this.route)(this.options);
+        return await caseFor(this, cases, 'command route', this.route)(this.options);
     }
 }
