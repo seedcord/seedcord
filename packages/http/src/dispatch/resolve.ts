@@ -13,7 +13,7 @@ import type { APIInteraction } from 'discord-api-types/v10';
 /** A registered handler matched to an incoming interaction, under the keys the gateway dispatcher uses. */
 export interface ResolvedRoute {
     readonly kind: InteractionKind;
-    /** The slash path, command name, or custom-ID prefix the interaction carried. */
+    /** The slash path, command name, or custom-ID prefix that the interaction carried. */
     readonly route: string;
     /** True when no handler registered this route and the unhandled default runs. */
     readonly fallback: boolean;

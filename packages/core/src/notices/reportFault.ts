@@ -18,7 +18,6 @@ function logger(): Logger {
     return faultLogger;
 }
 
-/** @internal */
 export interface FaultReport extends Pick<SubscriptionData<'unknownException'>, 'guild' | 'user'> {
     readonly uuid: RenderContext['uuid'];
     readonly dispatch: DispatchContext;
@@ -27,7 +26,6 @@ export interface FaultReport extends Pick<SubscriptionData<'unknownException'>, 
     readonly metadata: unknown;
 }
 
-/** @internal */
 export function reportFault(bus: Bus, errors: ErrorsConfig | undefined, error: Error, report: FaultReport): void {
     if (error instanceof Notice && !error.report) return;
     const { uuid, dispatch, origin, source, guild, user, metadata } = report;

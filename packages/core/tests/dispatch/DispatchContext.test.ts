@@ -87,6 +87,5 @@ describe('DispatchContext', () => {
         const second = new DispatchContext('slash', 'test');
 
         expect(first.id).not.toBe(second.id);
-        expect(first.id).toBe(first.id);
     });
 });

@@ -74,21 +74,15 @@ export function RegisterEvent<const Defs extends readonly EventSpec<ValidNonInte
     // EventHandler is invariant in its Names generic (match puts Names in the cases, a contravariant position), so
     // this single constraint rejects a handler whose generic and decorator list different events, both directions.
     return function <HandlerCtor extends Constructor<EventHandler<EventKey>>>(constructor: HandlerCtor): void {
-        const saved = Reflect.getMetadata(EventMetadataKey, constructor) as
-            RegisterEventMetadataEntry<EventKey>[] | undefined;
-        const existing = saved ?? [];
-
         const entries = defs.map<RegisterEventMetadataEntry<EventKey>>(([event, options]) => ({
             event,
             frequency: options?.frequency ?? 'on'
         }));
-        const all = [...existing, ...entries];
         assertUniqueKeys(
             '@RegisterEvent',
             constructor,
-            all.map((entry) => entry.event)
+            entries.map((entry) => entry.event)
         );
-
-        Reflect.defineMetadata(EventMetadataKey, all, constructor);
+        Reflect.defineMetadata(EventMetadataKey, entries, constructor);
     };
 }

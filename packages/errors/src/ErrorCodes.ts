@@ -94,7 +94,7 @@ export enum SeedcordErrorCode {
     CoreWebhookUrlInvalid = 1226,
     /** Reading from Discord with `DISCORD_BOT_TOKEN` failed, like the application, its public key, or its commands. */
     CoreDiscordReadFailed = 1227,
-    /** Two routes, commands, migrations, customId fields, or customId prefixes on one handler have the same name, or two code files build to the same file. */
+    /** Two routes, commands, migrations, or customId fields have the same name, or two code files build to the same file. */
     CoreDuplicateName = 1228,
     /** A Vite plugin from `vitePlugins` threw while Vite started or loaded a file, or failed when seedcord called `vitePlugins`. */
     CoreVitePluginThrew = 1229,
@@ -123,7 +123,7 @@ export enum SeedcordErrorCode {
     DecoratorWebhookUrlMissing = 1305,
     /** A middleware decorator got an empty filter array. */
     DecoratorEmptyMiddlewareFilter = 1306,
-    /** `@Subscribe` or `@RegisterEvent` lists the same key twice. */
+    /** `@Subscribe`, `@RegisterEvent`, or a component route decorator lists the same key or customId prefix twice. */
     DecoratorDuplicateKey = 1307,
 
     /** A reply method was called in an ack state where Discord rejects it. */

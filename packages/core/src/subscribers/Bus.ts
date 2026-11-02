@@ -29,7 +29,6 @@ import type { Constructor } from 'type-fest';
 /** @internal */
 export type StoredSubscriberCtor = Constructor<{ execute(): Promise<void> }, never[]>;
 
-/** @internal */
 interface SubscriberRegistration {
     readonly key: SubscriptionKey;
     readonly frequency: EventFrequency;

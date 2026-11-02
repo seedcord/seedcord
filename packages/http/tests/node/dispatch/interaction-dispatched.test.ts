@@ -248,8 +248,7 @@ describe('interactionDispatched from the http dispatcher', () => {
         expect(published[0]).toMatchObject({ userId: 'guild-user', guildId: 'g1' });
     });
 
-    // an unmatched route carries no routeId, so the handler's own sender has none from the dispatch
-    it('publishes one route id across both keys for an unmatched route', async () => {
+    it('flags an unmatched route as a fallback and publishes one route id across both keys', async () => {
         Envapter.useSource(new PortableSource({}));
         const core = testCore(nullPathConfig, VALID_TOKEN);
         const dispatched: SubscriptionData<'interactionDispatched'>[] = [];
@@ -271,7 +270,8 @@ describe('interactionDispatched from the http dispatcher', () => {
         });
         await execute?.();
 
-        expect(dispatched[0]?.routeId).toBe('slash:unregistered');
+        expect(dispatched).toHaveLength(1);
+        expect(dispatched[0]).toMatchObject({ routeId: 'slash:unregistered', fallback: true });
         expect(written[0]?.routeId).toBe('slash:unregistered');
     });
 
@@ -329,20 +329,6 @@ describe('interactionDispatched from the http dispatcher', () => {
         const published = await dispatchedFor(match);
 
         expect(published[0]).toMatchObject({ routeId: 'button:unrouted', fallback: true });
-    });
-
-    // the same shape gateway emits
-    it('flags the unhandled default as a fallback and keeps the attempted key', async () => {
-        const match: ResolvedRoute = {
-            kind: InteractionKind.Slash,
-            route: 'unregistered',
-            fallback: true,
-            ctor: OkHandler
-        };
-        const published = await dispatchedFor(match);
-
-        expect(published).toHaveLength(1);
-        expect(published[0]).toMatchObject({ routeId: 'slash:unregistered', fallback: true });
     });
 
     it('publishes responseAttempted from the handler own reply, carrying the route id', async () => {

@@ -411,8 +411,7 @@ export class InteractionDispatcher implements Initializeable, HmrAware {
             await handler.execute();
             report('handled');
         } catch (caught) {
-            // a refusal already labelled the dispatch. a throw from answering it must not relabel.
-            if (result.outcome === 'handled') result = resultFor(caught);
+            result = resultFor(caught);
             await this.answer(caught, interaction as ValidInteractionTypes, dispatch, sender, report);
         } finally {
             await runAfter(ran, result, this.logger);
@@ -426,11 +425,8 @@ export class InteractionDispatcher implements Initializeable, HmrAware {
         sender: ReplySender | undefined,
         report: (outcome: DispatchOutcome) => void
     ): Promise<void> {
-        try {
-            await handleInteractionFault(caught, interaction, this.core, dispatch, sender);
-        } finally {
-            report(outcomeFor(caught));
-        }
+        await handleInteractionFault(caught, interaction, this.core, dispatch, sender);
+        report(outcomeFor(caught));
     }
 
     private buildHandler(
@@ -447,12 +443,8 @@ export class InteractionDispatcher implements Initializeable, HmrAware {
         return new (HandlerCtor as ConstructableHandler)(interaction as never, this.core, dispatch);
     }
 
-    // answering a refusal can throw into the catch and report twice
     private reporterFor(row: DispatchReportRow): (outcome: DispatchOutcome) => void {
-        let reported = false;
         return (outcome) => {
-            if (reported) return;
-            reported = true;
             reportDispatch(this.core.bus, {
                 dispatch: row.dispatch,
                 interactionId: row.interaction.id,

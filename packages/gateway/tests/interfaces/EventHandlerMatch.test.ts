@@ -1,5 +1,5 @@
 import { Notice } from '@seedcord/core';
-import { DispatchContext } from '@seedcord/core/internal';
+import { DispatchContext, EventMetadataKey } from '@seedcord/core/internal';
 import { SeedcordErrorCode } from '@seedcord/errors';
 import { Events } from 'discord.js';
 import { describe, expect, expectTypeOf, it, vi } from 'vitest';
@@ -212,14 +212,26 @@ describe('EventHandler.match', () => {
         await expect(handler.execute()).rejects.toMatchObject({ code: SeedcordErrorCode.MatchCaseMissing });
     });
 
-    it('throws DecoratorDuplicateKey for an event listed twice, across stacked decorators too', () => {
+    it('throws DecoratorDuplicateKey for an event listed twice', () => {
         expect(() => {
-            @RegisterEvent([Events.MessageCreate])
-            @RegisterEvent([Events.MessageCreate, { frequency: 'once' }])
+            @RegisterEvent([Events.MessageCreate], [Events.MessageCreate, { frequency: 'once' }])
             class Twice extends EventHandler<Events.MessageCreate> {
                 async execute(): Promise<void> {}
             }
             void Twice;
         }).toThrow(expect.objectContaining({ code: SeedcordErrorCode.DecoratorDuplicateKey }));
+    });
+
+    it("registers a subclass's event once when the parent lists the same event", () => {
+        @RegisterEvent([Events.MessageCreate])
+        class Parent extends EventHandler<Events.MessageCreate> {
+            async execute(): Promise<void> {}
+        }
+        @RegisterEvent([Events.MessageCreate, { frequency: 'once' }])
+        class Child extends Parent {}
+
+        expect(Reflect.getMetadata(EventMetadataKey, Child)).toEqual([
+            { event: Events.MessageCreate, frequency: 'once' }
+        ]);
     });
 });

@@ -29,7 +29,7 @@ export abstract class EventMiddleware<
     declare protected readonly event: SingleEventPayload<EventName>;
 
     /**
-     * The event this dispatch is for, one of the names in the generic. Read it on a catchall or multi-event
+     * The event that started this dispatch, one of the names in the generic. Read it on a catchall or multi-event
      * middleware, where `this.event` is `never`, to do work that doesn't depend on the payload shape.
      */
     protected get route(): EventName {

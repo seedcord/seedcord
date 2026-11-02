@@ -62,7 +62,7 @@ describe('storeComponentRoute multi-def', () => {
         expect(Reflect.getMetadata(ComponentDefsKey, Handler)).toEqual([a, b]);
     });
 
-    it('throws CoreDuplicateName for two definitions with the same prefix', () => {
+    it('throws DecoratorDuplicateKey for two definitions with the same prefix', () => {
         class Handler {
             execute(): void {}
         }
@@ -70,7 +70,7 @@ describe('storeComponentRoute multi-def', () => {
         const a = { prefix: 'inv' } as unknown as AnyCustomId;
         const b = { prefix: 'inv' } as unknown as AnyCustomId;
         expect(() => storeComponentRoute(InteractionKind.Button, [a, b], Handler)).toThrow(
-            expect.objectContaining({ code: SeedcordErrorCode.CoreDuplicateName })
+            expect.objectContaining({ code: SeedcordErrorCode.DecoratorDuplicateKey })
         );
     });
 

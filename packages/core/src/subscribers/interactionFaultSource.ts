@@ -21,7 +21,6 @@ const FAULT_KINDS: Record<DispatchContext['kind'], FaultKind | null> = {
     event: null
 };
 
-/** @internal */
 export function interactionFaultSource(
     dispatch: DispatchContext,
     fields: TypedOmit<InteractionFaultSource, 'kind' | 'interactionKind' | 'command'>

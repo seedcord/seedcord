@@ -14,7 +14,7 @@ export class DispatchContext implements DispatchBag {
     public readonly id = crypto.randomUUID();
 
     /**
-     * @param route - The slash path, context menu name, custom-ID prefix, or event name this dispatch is for.
+     * @param route - The slash path, context menu name, custom-ID prefix, or event name that started this dispatch.
      * It's empty if seedcord didn't mint the interaction's custom ID.
      * @param fallback - True when no handler registered the route.
      */

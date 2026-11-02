@@ -194,6 +194,36 @@ describe('fault boundary', () => {
         expect(postedBodies()[0]?.body.data?.components).toEqual([{ type: 10, content: 'custom fault' }]);
     });
 
+    it('logs and sends nothing when the defaultError render throws too', async () => {
+        class BrokenCard extends Fault {
+            public constructor(_uuid: UUID) {
+                super();
+            }
+
+            public override render(_ctx: RenderContext): ReplyResponse {
+                throw new Error('card exploded');
+            }
+        }
+        const settings = { errors: { defaultError: BrokenCard } };
+        class Broken extends SlashHandler<never> {
+            async execute(): Promise<void> {
+                await Promise.resolve();
+                throw new Error('boom');
+            }
+        }
+        const error = vi.spyOn(Logger.prototype, 'error').mockImplementation(() => undefined);
+        using engine = await readyEngine(slashRoute('broken', Broken), { settings });
+        const { signer, handle } = engine;
+        const ctx = capturingCtx();
+
+        await handle(await signedRequest(signer, slashPayload('broken')), ctx);
+        await ctx.settled();
+
+        expect(postedBodies()).toHaveLength(0);
+        expect(error).toHaveBeenCalledWith(expect.stringContaining('could not render'), expect.anything());
+        error.mockRestore();
+    });
+
     it('swallows an api code listed in ignoreApiCodes without a card', async () => {
         const settings = { errors: { ignoreApiCodes: [10_008] } };
         class DeadEnd extends SlashHandler<never> {
@@ -210,6 +240,33 @@ describe('fault boundary', () => {
         await ctx.settled();
 
         expect(postedBodies()).toHaveLength(0);
+    });
+
+    it('sends the generic Fault card when a Notice render throws', async () => {
+        class ExplodingNotice extends Notice {
+            public constructor() {
+                super('refused');
+            }
+
+            public override render(): ReplyResponse {
+                throw new Error('render exploded');
+            }
+        }
+        class Refuses extends SlashHandler<never> {
+            async execute(): Promise<void> {
+                await Promise.resolve();
+                throw new ExplodingNotice();
+            }
+        }
+        using engine = await readyEngine(slashRoute('refuses', Refuses));
+        const { signer, handle } = engine;
+        const ctx = capturingCtx();
+
+        await handle(await signedRequest(signer, slashPayload('refuses')), ctx);
+        await ctx.settled();
+
+        expect(postedBodies()).toHaveLength(1);
+        expect(postedBodies()[0]?.body.data?.components).toBeDefined();
     });
 
     it('swallows a harmless api code from the card send itself, resolving the tracked work', async () => {

@@ -3,6 +3,7 @@ import { describe, expect, expectTypeOf, it, vi } from 'vitest';
 
 import { Subscribe } from '#subscribers/decorators/Subscribe';
 import { PublishDefault } from '#subscribers/publishDefault';
+import { RegisteredCount, UnregisterSubscriber } from '#subscribers/slots';
 import { Subscriber } from '#subscribers/Subscriber';
 import { busWith } from '#tests/utils/busWith';
 
@@ -56,6 +57,19 @@ describe('a subscriber on several keys', () => {
             bus[PublishDefault]('unhandledInteractionError', unhandled);
         }
         await vi.waitFor(() => expect(runs).toEqual(['once', 'on', 'on']));
+    });
+
+    it('counts a class on several keys once and unregisters it from every key', () => {
+        @Subscribe(['unknownException'], ['unhandledInteractionError'])
+        class Both extends Subscriber<'unknownException' | 'unhandledInteractionError', CoreBase> {
+            async execute(): Promise<void> {}
+        }
+
+        const bus = busWith(Both);
+        expect(bus[RegisteredCount]).toBe(1);
+
+        bus[UnregisterSubscriber](Both, ['unknownException', 'unhandledInteractionError']);
+        expect(bus[RegisteredCount]).toBe(0);
     });
 
     it('throws DecoratorDuplicateKey for a key listed twice', () => {

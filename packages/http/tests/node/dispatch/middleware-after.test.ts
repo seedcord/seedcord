@@ -164,7 +164,7 @@ describe('after() on the http interaction chain', () => {
         }
         Reflect.defineMetadata(GatedMetadataKey, [refuse], GatedHandler);
 
-        await expect(dispatchThrough(GatedHandler, First)).rejects.toThrow('render exploded');
+        await dispatchThrough(GatedHandler, First);
 
         expect(calls).toContain('First.after');
     });

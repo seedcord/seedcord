@@ -284,7 +284,10 @@ describe('InteractionDispatcher Integration', () => {
         await controller.handleSlashCommand(interaction);
 
         expect(interaction.reply).toHaveBeenCalledTimes(1);
-        expect(boundaryError).not.toHaveBeenCalledWith('reply send failed', expect.anything());
+        expect(boundaryError).not.toHaveBeenCalledWith(
+            expect.stringContaining('boundary send failed'),
+            expect.anything()
+        );
     });
 
     it("passes the handler's live sender to the boundary, so a defer-then-throw follows up through its ack state", async ({
@@ -320,7 +323,10 @@ describe('InteractionDispatcher Integration', () => {
         expect(interaction.deferReply).toHaveBeenCalledTimes(1);
         expect(interaction.editReply).toHaveBeenCalledTimes(1);
         expect(interaction.reply).not.toHaveBeenCalled();
-        expect(boundaryError).not.toHaveBeenCalledWith('reply send failed', expect.anything());
+        expect(boundaryError).not.toHaveBeenCalledWith(
+            expect.stringContaining('boundary send failed'),
+            expect.anything()
+        );
     });
 
     it('dispatches UnhandledAutocomplete for an autocomplete with no registered handler, responding empty', async ({

@@ -117,6 +117,8 @@ Everything `this.dispatch` carries:
 | [`kind`](ref:core/DispatchContext.kind) | the interaction kind, or `event` for a gateway event |
 | [`route`](ref:core/DispatchContext.route) | the slash path, context menu name, custom-ID prefix, or event name |
 | [`routeId`](ref:core/DispatchContext.routeId) | the dispatched handler as `kind:route`, like `slash:daily` |
+| [`fallback`](ref:core/DispatchContext.fallback) | `true` when no handler registered the route and the unhandled default runs |
+| [`declaredRoute`](ref:core/DispatchContext.declaredRoute) | the `routeId` of the handler's own route, or `null` on an event and on the unhandled default |
 
 {/* prettier-ignore-end */}
 

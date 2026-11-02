@@ -4,10 +4,9 @@ import { describe, expect, it } from 'vitest';
 import { DispatchContext } from '#src/dispatch/DispatchContext';
 import { reportFault } from '#src/notices/reportFault';
 import { Fault } from '#stops/Fault';
-import { Bus } from '#subscribers/Bus';
+import { busWith } from '#tests/utils/busWith';
 import { TestNotice } from '#tests/utils/TestNotice';
 
-import type { CoreBase } from '#interfaces/CoreBase';
 import type { FaultReport } from '#src/notices/reportFault';
 import type { FaultSource } from '#subscribers/types/Subscriptions';
 import type { LogRecord } from '@seedcord/types';
@@ -40,8 +39,7 @@ function reportWith(fields: Partial<FaultReport> = {}): FaultReport {
 
 // reports a fault through a real bus and returns every payload it published, keyed by event
 function published(error: Error, report: FaultReport): [string, unknown][] {
-    // justified: the Bus only stores core, no member is read during publish
-    const bus = new Bus({} as unknown as CoreBase);
+    const bus = busWith();
     const seen: [string, unknown][] = [];
     bus.on('handledException', (payload) => seen.push(['handledException', payload]));
     bus.on('unknownException', (payload) => seen.push(['unknownException', payload]));

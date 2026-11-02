@@ -28,7 +28,7 @@ export abstract class SlashHandler<
     /** @internal */
     declare readonly [SlashRouteBrand]?: Route;
 
-    /** The selected command's path, such as `search/docs`, without the interaction-kind prefix. */
+    /** The selected command's path, such as `search/docs`. */
     protected get route(): Route {
         return this.dispatch.route as Route;
     }

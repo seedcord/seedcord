@@ -152,7 +152,7 @@ const messages = {
     [SeedcordErrorCode.DecoratorEmptyMiddlewareFilter]: (className: string, key: string) =>
         `${paint.sky(className)} passes an empty array as ${paint.bold(key)}. Remove the key to run the middleware on everything.`,
     [SeedcordErrorCode.DecoratorDuplicateKey]: (decorator: string, className: string, key: string) =>
-        `${paint.bold(decorator)} on ${paint.sky(className)} lists ${quoted(key)} twice. Remove one of the two tuples.`,
+        `${paint.bold(decorator)} on ${paint.sky(className)} lists ${quoted(key)} twice. Keep one, or give each customId its own prefix.`,
 
     [SeedcordErrorCode.ReplyIllegalAckState]: (method: string, reason: string, alternative: string, routeId: string) =>
         `${paint.sky(`${method}()`)} was called when ${reason}.\n${alternative} (route ${paint.mute(routeId)})`,

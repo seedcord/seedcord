@@ -14,7 +14,7 @@ export type { InteractionMiddlewareMetadata } from '#decorators/middleware';
 export { interactionMiddleware, MiddlewareRegistry } from '#src/dispatch/MiddlewareRegistry';
 export type { MiddlewareRegistration, MiddlewareRegistrationOf } from '#src/dispatch/MiddlewareRegistry';
 export { bindBotColor } from '#components/botColorHolder';
-export { FaultBoundary } from '#src/notices/FaultBoundary';
+export { FaultBoundary, type FaultTarget } from '#src/notices/FaultBoundary';
 export type { FaultReport } from '#src/notices/reportFault';
 
 export { FixedScope } from '#src/plugin/Plugin';
@@ -69,7 +69,7 @@ export type { CommandBuilder, DeployResult } from '#src/commands/types';
 export type { GateFitsWith } from '#gates/matching';
 export { assertUniqueKeys } from '#src/decorators/assertUniqueKeys';
 export { caseFor } from '#src/handlers/caseFor';
-export type { MiddlewareRoute } from '#src/handlers/middlewareRoute';
+export type { MiddlewareRoute } from '#src/handlers/MiddlewareRoute';
 
 export { getDevChannel, setDevChannel } from '#hmr/devChannel';
 export { connectDevChannel, HmrManager } from '#hmr/HmrManager';

@@ -1,7 +1,6 @@
 import { SeedcordErrorCode } from '@seedcord/errors';
 import { SeedcordTypeError } from '@seedcord/errors/internal';
 
-/** @internal */
 export function caseFor<Case extends (...args: never[]) => unknown>(
     handler: object,
     cases: object,

@@ -10,7 +10,6 @@ interface RegisteredRoutes {
     [InteractionKind.MessageContextMenu]: NamesFor<ApplicationCommandType.Message>;
 }
 
-/** @internal */
 export type MiddlewareRoute<Kind extends MiddlewareKind> = Kind extends keyof RegisteredRoutes
     ? // middleware also runs when no handler matched, like on a stale command
       LiteralUnion<RegisteredRoutes[Kind], string>

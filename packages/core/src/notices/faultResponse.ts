@@ -4,7 +4,6 @@ import { Notice } from '#stops/Notice';
 import type { DispatchContext } from '#src/dispatch/DispatchContext';
 import type { Config, RenderContext, ReplyResponse } from '@seedcord/types';
 
-/** @internal */
 export function faultResponse(
     error: Error,
     uuid: RenderContext['uuid'],

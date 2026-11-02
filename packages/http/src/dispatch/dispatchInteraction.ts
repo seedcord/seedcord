@@ -13,7 +13,7 @@ import {
 } from '@seedcord/core/internal';
 import { paint } from '@seedcord/errors';
 import { Logger } from '@seedcord/logger';
-import { InteractionResponseType, InteractionType, RESTJSONErrorCodes, Routes } from 'discord-api-types/v10';
+import { InteractionResponseType, InteractionType, Routes } from 'discord-api-types/v10';
 
 import { interactionUser } from '#handlers/interactionUser';
 import { RepliableHandler } from '#handlers/RepliableHandler';
@@ -33,7 +33,7 @@ import type { ValidInteractionTypes } from '#handlers/interactionTypes';
 import type { Core } from '#interfaces/Core';
 import type { ResolvedRoute } from './resolve';
 import type { DispatchOutcome, DispatchResult, MiddlewareKind } from '@seedcord/core';
-import type { MiddlewareRegistry } from '@seedcord/core/internal';
+import type { FaultTarget, MiddlewareRegistry } from '@seedcord/core/internal';
 
 // lazy, env binds after this module loads
 let dispatchLogger: Logger | undefined;
@@ -50,25 +50,6 @@ interface FaultScope {
     readonly sender: ReplySender | null;
 }
 
-// each one means the interaction is already gone
-const HARMLESS_API_CODES: ReadonlySet<number | string> = new Set([
-    RESTJSONErrorCodes.UnknownInteraction,
-    RESTJSONErrorCodes.InteractionHasAlreadyBeenAcknowledged,
-    RESTJSONErrorCodes.UnknownMessage
-]);
-
-async function sendGuarded(routeId: string, send: () => Promise<unknown>): Promise<void> {
-    try {
-        await send();
-    } catch (error) {
-        if (error instanceof DiscordAPIError && HARMLESS_API_CODES.has(error.code)) {
-            logger().debug(`boundary send hit harmless code ${paint.amber(String(error.code))}`);
-            return;
-        }
-        logger().error(`boundary send failed for route ${paint.sky.bold(routeId)}`, error);
-    }
-}
-
 // empty choices are the only legal way to clear a pending autocomplete
 async function respondEmptyChoices(scope: FaultScope): Promise<void> {
     const telemetry = { bus: scope.core.bus, dispatch: scope.dispatch, interactionId: scope.payload.id };
@@ -77,19 +58,6 @@ async function respondEmptyChoices(scope: FaultScope): Promise<void> {
             body: { type: InteractionResponseType.ApplicationCommandAutocompleteResult, data: { choices: [] } }
         })
     );
-}
-
-async function handleFault(caught: unknown, scope: FaultScope): Promise<void> {
-    const { core, dispatch, payload, sender } = scope;
-    const boundary = new FaultBoundary(core, core.config.errors?.ignoreApiCodes, DiscordAPIError, logger());
-    const fault = boundary.report(caught, (uuid) => faultReportOf(payload, dispatch, uuid));
-    if (!fault) return;
-    if (!sender) {
-        await sendGuarded(dispatch.routeId, () => respondEmptyChoices(scope));
-        return;
-    }
-    const response = fault.response();
-    await sendGuarded(dispatch.routeId, () => sender.send(response, { ephemeral: fault.ephemeral }));
 }
 
 interface DispatchArgs {
@@ -137,17 +105,14 @@ function dispatchReporter(
     };
 }
 
-async function answer(
-    caught: unknown,
-    scope: FaultScope,
-    report: (outcome: DispatchOutcome) => void,
-    outcome: DispatchOutcome = outcomeFor(caught)
-): Promise<void> {
-    try {
-        await handleFault(caught, scope);
-    } finally {
-        report(outcome);
-    }
+async function answer(caught: unknown, scope: FaultScope, report: (outcome: DispatchOutcome) => void): Promise<void> {
+    const { core, dispatch, payload, sender } = scope;
+    const boundary = new FaultBoundary(core, core.config.errors?.ignoreApiCodes, DiscordAPIError, logger());
+    const target: FaultTarget = sender
+        ? { reply: (response, options) => sender.send(response, options) }
+        : { clearChoices: () => respondEmptyChoices(scope) };
+    await boundary.answer(caught, (uuid) => faultReportOf(payload, dispatch, uuid), target);
+    report(outcomeFor(caught));
 }
 
 interface BeforeHandler {
@@ -214,12 +179,8 @@ export async function dispatchInteraction(args: DispatchArgs): Promise<(() => Pr
     const ran: InteractionMiddleware[] = [];
     const refusal = await refusalBeforeHandler({ args, Handler, dispatch, scope, ran });
     if (refusal) {
-        try {
-            // a throwing render() inside answer() must not skip the after() calls
-            await answer(refusal.caught, scope, report);
-        } finally {
-            await runAfter(ran, resultFor(refusal.caught), logger());
-        }
+        await answer(refusal.caught, scope, report);
+        await runAfter(ran, resultFor(refusal.caught), logger());
         return null;
     }
 

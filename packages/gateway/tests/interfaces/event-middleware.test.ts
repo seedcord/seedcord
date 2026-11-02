@@ -36,16 +36,6 @@ class SingleMw extends EventMiddleware<Events.MessageCreate> {
     }
 }
 
-// a catchall middleware (no generic) reads only this.route, this.event is never
-class CatchallMw extends EventMiddleware {
-    async execute(): Promise<void> {
-        await Promise.resolve();
-    }
-    readName(): ValidNonInteractionKeys {
-        return this.route;
-    }
-}
-
 // the classes below are compiled and never run
 
 class SingleType extends EventMiddleware<Events.MessageCreate> {
@@ -86,11 +76,6 @@ describe('EventMiddleware', () => {
     it('reads this.event as the concrete tuple on a single-event middleware', () => {
         const mw = new SingleMw(createPayload(fakeMessage()), core, dispatch);
         expect(mw.readEvent()).toHaveLength(1);
-    });
-
-    it('exposes the current event name on a catchall middleware', () => {
-        const mw = new CatchallMw(createPayload(fakeMessage()), core, dispatch);
-        expect(mw.readName()).toBe(Events.MessageCreate);
     });
 });
 

@@ -31,30 +31,31 @@ export class RouteRegistry {
      */
     public register(ctor: HandlerConstructor, from: string): boolean {
         // nothing is written until every route clears the check below
-        const writes: { kind: InteractionKind; key: string }[] = [];
+        const writes: { kind: InteractionKind; key: string; routeId: string }[] = [];
 
         for (const [kind, keys] of interactionRoutesOf(ctor)) {
             for (const key of keys) {
-                const existing = this.owners.get(routeIdOf(kind, key));
+                const routeId = routeIdOf(kind, key);
+                const existing = this.owners.get(routeId);
                 if (existing && existing.ctor !== ctor) {
                     throw new SeedcordTypeError(SeedcordErrorCode.CoreDuplicateName, [
                         'route',
-                        routeIdOf(kind, key),
+                        routeId,
                         [
                             `${paint.bold(existing.ctor.name)} (${paint.path(existing.from)})`,
                             `${paint.bold(ctor.name)} (${paint.path(from)})`
                         ]
                     ]);
                 }
-                writes.push({ kind, key });
+                writes.push({ kind, key, routeId });
             }
         }
 
         if (writes.length === 0) return false;
 
-        for (const { kind, key } of writes) {
+        for (const { kind, key, routeId } of writes) {
             this.maps[kind].set(key, { kind, route: key, fallback: false, ctor });
-            this.owners.set(routeIdOf(kind, key), { ctor, kind, key, from });
+            this.owners.set(routeId, { ctor, kind, key, from });
         }
         return true;
     }
