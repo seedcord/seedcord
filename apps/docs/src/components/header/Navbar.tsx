@@ -13,10 +13,12 @@ import {
     HOME_URL,
     REPO_URL,
     ThemeToggle,
-    cn
+    cn,
+    useHotkeys
 } from '@seedcord/ui';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
+import { useState } from 'react';
 
 import { hasMobileNavPanel } from '#components/layout/sidebar/utils/hasMobileNavPanel';
 import { useCommandPaletteOpen } from '#components/providers/CommandPaletteProvider';
@@ -42,15 +44,26 @@ export function Navbar(): ReactElement {
     const isMobileNavOpen = useUIStore((state) => state.isMobileNavOpen);
     const palette = useCommandPaletteOpen();
     const showMobileNavButton = hasMobileNavPanel(usePathname());
+    const [sitesOpen, setSitesOpen] = useState(false);
 
+    const toggleSearch = (): void => palette.setOpen(!palette.open);
     const openSearch = (): void => {
         log('Search button clicked');
-        palette.setOpen(!palette.open);
+        toggleSearch();
     };
+    useHotkeys([{ key: 'k', mod: true, description: SEARCH_LABEL, run: toggleSearch }]);
 
     return (
         <NavbarShell
-            mark={<SiteSwitcher site="docs" destinations={DESTINATIONS} linkAs={Link} />}
+            mark={
+                <SiteSwitcher
+                    site="docs"
+                    destinations={DESTINATIONS}
+                    open={sitesOpen}
+                    onOpenChange={setSitesOpen}
+                    linkAs={Link}
+                />
+            }
             center={<SearchTrigger label={SEARCH_LABEL} onOpen={openSearch} />}
             actions={
                 <>

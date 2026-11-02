@@ -61,22 +61,14 @@ function combobox(): HTMLElement {
     return screen.getByRole('combobox');
 }
 
-class StubResizeObserver {
-    observe(): void {}
-    unobserve(): void {}
-    disconnect(): void {}
-}
-
 describe('CommandPaletteDialog', () => {
     beforeEach(() => {
         searchHook.mockReturnValue({ results: RESULTS, status: 'success' });
-        vi.stubGlobal('ResizeObserver', StubResizeObserver);
         window.HTMLElement.prototype.scrollIntoView = vi.fn();
         window.HTMLElement.prototype.scrollTo = vi.fn();
     });
 
     afterEach(() => {
-        vi.unstubAllGlobals();
         vi.clearAllMocks();
     });
 

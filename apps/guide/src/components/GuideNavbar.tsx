@@ -49,11 +49,20 @@ export interface GuideNavbarProps {
 
 export function GuideNavbar({ tabs, activeHref, navOpen, onNavOpen }: GuideNavbarProps): ReactElement {
     const [searchOpen, setSearchOpen] = useState(false);
+    const [sitesOpen, setSitesOpen] = useState(false);
     useGuideHotkeys({ toggleSearch: () => setSearchOpen((open) => !open) });
 
     return (
         <Navbar
-            mark={<SiteSwitcher site="guide" destinations={DESTINATIONS} linkAs={Link} />}
+            mark={
+                <SiteSwitcher
+                    site="guide"
+                    destinations={DESTINATIONS}
+                    open={sitesOpen}
+                    onOpenChange={setSitesOpen}
+                    linkAs={Link}
+                />
+            }
             center={<GuideSearch open={searchOpen} onOpenChange={setSearchOpen} />}
             actions={
                 <>
