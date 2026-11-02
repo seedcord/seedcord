@@ -5,7 +5,7 @@ function builtVersion(): string {
 
 export const version = builtVersion();
 
-// a prerelease scaffolder belongs to the next line of the framework packages
+// changesets publishes prereleases under the next dist-tag
 export function releaseTag(): 'next' | null {
     return builtVersion().includes('-next.') ? 'next' : null;
 }
