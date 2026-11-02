@@ -25,7 +25,7 @@ import { capabilitiesOf, requireScaffoldAnswers } from '#template/context';
 
 import type { FlowMode } from '#interview/runFlow';
 import type { ScaffoldAnswers } from '#template/context';
-import type { AgentName } from 'package-manager-detector';
+import type { AgentName, ResolvedCommand } from 'package-manager-detector';
 
 // dist/index.mjs and src/index.ts are both one level under the package root
 const TEMPLATES = resolve(import.meta.dirname, '../templates');
@@ -94,7 +94,7 @@ async function main(output: CreateOutput): Promise<void> {
 
     for (const notice of result.notices) output.warn(notice);
 
-    if (interactive) await reportOutcome(output, answers, agent, result.installed);
+    if (interactive) await reportOutcome(output, answers, agent, result.pending);
 
     // a wrapper chaining `&& cd my-bot && pnpm dev` has to stop here
     if (result.failed) process.exitCode = 1;
@@ -104,7 +104,7 @@ async function reportOutcome(
     output: CreateOutput,
     answers: ScaffoldAnswers,
     agent: AgentName,
-    installed: boolean
+    pending: readonly ResolvedCommand[]
 ): Promise<void> {
     if (answers.transport === 'http' && !(await probeCloudflared())) {
         output.warn(missingNotice(process.platform));
@@ -117,7 +117,7 @@ async function reportOutcome(
     }
 
     output.line();
-    output.row('next', nextSteps(answers, { agent, installed }));
+    output.row('next', nextSteps(answers, { agent, pending }));
     output.line();
 
     const invite = inviteUrl(answers.token);

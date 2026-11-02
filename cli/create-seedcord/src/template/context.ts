@@ -67,18 +67,14 @@ export function requireScaffoldAnswers(answers: Partial<Answers>): ScaffoldAnswe
         : { ...shared, transport: 'http', runtime: required(answers, 'runtime') };
 }
 
-export function transportValuesOf(answers: ScaffoldAnswers): TransportVariables {
-    return transportVariables(
-        `@seedcord/${answers.transport}`,
-        answers.transport === 'http' ? answers.runtime : 'server'
-    );
-}
-
 export function buildContext(
     answers: ScaffoldAnswers,
     extras: { developerUsername: string; agent: AgentName }
 ): TemplateContext {
-    const transportValues = transportValuesOf(answers);
+    const transportValues = transportVariables(
+        `@seedcord/${answers.transport}`,
+        answers.transport === 'http' ? answers.runtime : 'server'
+    );
     const { isGateway, isEdge } = transportValues;
     const capabilities = capabilitiesOf(answers);
 

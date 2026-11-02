@@ -285,11 +285,14 @@ describe('scaffold', () => {
     });
 
     it('installs the next framework line when the scaffolder is a prerelease', async () => {
+        // version.ts reads the version once, when it loads
         vi.stubEnv('PACKAGE_VERSION', '0.6.0-next.0');
+        vi.resetModules();
+        const { scaffold: prereleaseScaffold } = await import('#scaffold/scaffold');
         const target = await scratchTarget();
         const { runner, calls } = recorder();
 
-        await scaffold({ ...baseInput(target), answers: EDGE }, runner);
+        await prereleaseScaffold({ ...baseInput(target), answers: EDGE }, runner);
 
         const { runtime, dev } = installs(calls);
         expect(dev).toContain('seedcord@next');
@@ -298,47 +301,39 @@ describe('scaffold', () => {
         expect(dev).not.toContain('@seedcord/eslint-config@next');
     });
 
-    it.each([
-        ['pnpm', '--lockfile-only'],
-        ['npm', '--package-lock-only'],
-        ['bun', '--lockfile-only']
-    ] as const)('runs both adds with the %s lockfile-only flag when install is off', async (agent, flag) => {
+    it('writes only the lockfile when install is off, and leaves the install for the user', async () => {
         const target = await scratchTarget();
         const { runner, calls } = recorder();
+        const { steps, seen } = stepRecorder();
 
         const result = await scaffolded(
-            { ...baseInput(target), agent, answers: { ...GATEWAY, install: false } },
+            { ...baseInput(target, steps), answers: { ...GATEWAY, install: false } },
             runner
         );
 
-        expect(result.installed).toBe(false);
-        expect(result.failed).toBe(false);
-
         const adds = calls.filter(({ command }) => command !== 'git');
         expect(adds).toHaveLength(2);
-        expect(adds.some(({ args }) => args.includes('-D'))).toBe(true);
-        expect(adds.some(({ args }) => args.includes('@seedcord/gateway'))).toBe(true);
-        for (const add of adds) expect(add.args).toContain(flag);
+        for (const add of adds) expect(add.args).toContain('--lockfile-only');
+        expect(seen).toEqual(expect.arrayContaining(['done: deps', 'skipped: format', 'skipped: types']));
+        expect(result.pending).toEqual([{ command: 'pnpm', args: ['i'] }]);
+        expect(result.failed).toBe(false);
     });
 
-    it('runs both adds with the berry lockfile-only flag when install is off', async () => {
-        vi.stubEnv('npm_config_user_agent', 'yarn/4.18.1 npm/? node/v25.9.0 darwin arm64');
+    it('leaves the plain adds for the user when the lockfile-only add fails', async () => {
         const target = await scratchTarget();
-        const { runner, calls } = recorder();
+        const { runner } = recorder('--lockfile-only');
 
-        const result = await scaffolded(
-            { ...baseInput(target), agent: 'yarn', answers: { ...GATEWAY, install: false } },
-            runner
-        );
+        const result = await scaffolded({ ...baseInput(target), answers: { ...GATEWAY, install: false } }, runner);
 
+        expect(result.pending).toHaveLength(2);
+        for (const add of result.pending) {
+            expect(add.args[0]).toBe('add');
+            expect(add.args).not.toContain('--lockfile-only');
+        }
         expect(result.failed).toBe(false);
-
-        const adds = calls.filter(({ command }) => command !== 'git');
-        expect(adds).toHaveLength(2);
-        for (const add of adds) expect(add.args).toContain('--mode=update-lockfile');
     });
 
-    it('skips the adds and the later steps when the manager has no lockfile-only add', async () => {
+    it('runs no adds and leaves them for the user when yarn 1 has no lockfile-only add', async () => {
         vi.stubEnv('npm_config_user_agent', 'yarn/1.22.22 npm/? node/v25.9.0 darwin arm64');
         const target = await scratchTarget();
         const { runner, calls } = recorder();
@@ -349,11 +344,10 @@ describe('scaffold', () => {
             runner
         );
 
-        expect(result.failed).toBe(false);
         expect(calls.map((call) => call.command)).toEqual(['git', 'git', 'git']);
-        expect(seen).toContain('skipped: deps');
-        expect(seen).toContain('skipped: format');
-        expect(seen).toContain('skipped: types');
+        expect(seen).toEqual(expect.arrayContaining(['skipped: deps', 'skipped: format', 'skipped: types']));
+        expect(result.pending.map((add) => add.args[0])).toEqual(['add', 'add']);
+        expect(result.failed).toBe(false);
     });
 
     it('reports every step in order', async () => {
@@ -396,7 +390,7 @@ describe('scaffold', () => {
 
         const result = await scaffolded(baseInput(target, steps), runner);
 
-        expect(result.installed).toBe(false);
+        expect(result.pending.map((add) => add.args[0])).toEqual(['add', 'add']);
         expect(result.failed).toBe(true);
         expect(seen).toContain('failed: deps');
         expect(result.notices.join('\n')).not.toContain('-D blew up');
@@ -420,7 +414,7 @@ describe('scaffold', () => {
 
         const result = await scaffolded(baseInput(target), runner);
 
-        expect(result.installed).toBe(true);
+        expect(result.pending).toEqual([]);
         expect(result.failed).toBe(false);
         expect(result.notices.join('\n')).toContain('skipped a build script');
 
@@ -437,23 +431,11 @@ describe('scaffold', () => {
 
         const result = await scaffolded(baseInput(target, steps), runner);
 
-        expect(result.installed).toBe(true);
+        expect(result.pending).toEqual([]);
         expect(result.failed).toBe(true);
         expect(seen).toContain('failed: format');
         expect(result.notices.join('\n')).not.toContain('prettier --write blew up');
         expect(calls.map((call) => call.args.join(' ')).some((args) => args.includes('codegen'))).toBe(true);
-    });
-
-    it('runs the lockfile adds and marks only format and types skipped when install is off', async () => {
-        const target = await scratchTarget();
-        const { runner } = recorder();
-        const { steps, seen } = stepRecorder();
-
-        await scaffold({ ...baseInput(target, steps), answers: { ...GATEWAY, install: false } }, runner);
-
-        expect(seen).toContain('done: deps');
-        expect(seen).toContain('skipped: format');
-        expect(seen).toContain('skipped: types');
     });
 
     it('marks git skipped when git is off', async () => {
@@ -502,7 +484,7 @@ describe('scaffold cleanup', () => {
 
         const result = await scaffolded(baseInput(target), runner);
 
-        expect(result.installed).toBe(false);
+        expect(result.failed).toBe(true);
         await expect(readdir(target)).resolves.toContain('package.json');
     });
 
@@ -513,7 +495,7 @@ describe('scaffold cleanup', () => {
 
         const result = await scaffolded(baseInput(target), runner);
 
-        expect(result.installed).toBe(false);
+        expect(result.failed).toBe(true);
         await expect(readdir(target)).resolves.toContain('package.json');
     });
 

@@ -341,22 +341,6 @@ describe('the rendered edge project', () => {
     });
 });
 
-describe('the rendered manifest', () => {
-    it.each([
-        ['gateway', GATEWAY],
-        ['http', HTTP],
-        ['edge', EDGE]
-    ])('leaves the %s dependency maps for the package manager to fill', async (_kind, answers) => {
-        const manifest = JSON.parse(await renderOne(answers, 'package.json')) as {
-            dependencies: Record<string, string>;
-            devDependencies: Record<string, string>;
-        };
-
-        expect(manifest.dependencies).toEqual({});
-        expect(manifest.devDependencies).toEqual({});
-    });
-});
-
 describe('the rendered scripts', () => {
     it.each([
         ['gateway', GATEWAY],

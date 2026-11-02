@@ -1,14 +1,6 @@
 import { afterEach, describe, expect, it, vi } from 'vitest';
 
-import {
-    addCommand,
-    execCommand,
-    execPrefix,
-    lockfileOnly,
-    runPrefix,
-    runningAgent,
-    supportsLockfileOnly
-} from '#cli/packageManager';
+import { addCommand, execCommand, execPrefix, lockfileOnlyFlag, runPrefix, runningAgent } from '#cli/packageManager';
 
 afterEach(() => {
     vi.unstubAllEnvs();
@@ -82,31 +74,16 @@ describe('execCommand', () => {
     });
 });
 
-describe('lockfileOnly', () => {
-    it.each([
-        ['pnpm', ['add', 'discord.js', '--lockfile-only']],
-        ['npm', ['i', 'discord.js', '--package-lock-only']],
-        ['bun', ['add', 'discord.js', '--lockfile-only']]
-    ] as const)('tells %s to write only the lockfile', (agent, args) => {
-        expect(supportsLockfileOnly(agent)).toBe(true);
-        expect(lockfileOnly(agent, addCommand(agent, ['discord.js'], false))?.args).toEqual(args);
+describe('lockfileOnlyFlag', () => {
+    it.each(['yarn/3.0.0', 'yarn/4.18.1'])('has a lockfile-only add for %s', (version) => {
+        vi.stubEnv('npm_config_user_agent', `${version} npm/? node/v25.9.0 darwin arm64`);
+
+        expect(lockfileOnlyFlag('yarn')).not.toBeNull();
     });
 
-    it('uses the berry flag on yarn 2 and up', () => {
-        vi.stubEnv('npm_config_user_agent', 'yarn/4.18.1 npm/? node/v25.9.0 darwin arm64');
+    it.each(['yarn/1.22.22', 'yarn/2.4.3', 'yarn'])('has none for %s', (version) => {
+        vi.stubEnv('npm_config_user_agent', `${version} npm/? node/v25.9.0 darwin arm64`);
 
-        expect(supportsLockfileOnly('yarn')).toBe(true);
-        expect(lockfileOnly('yarn', addCommand('yarn', ['discord.js'], false))?.args).toEqual([
-            'add',
-            'discord.js',
-            '--mode=update-lockfile'
-        ]);
-    });
-
-    it('has no lockfile-only add for yarn classic', () => {
-        vi.stubEnv('npm_config_user_agent', 'yarn/1.22.22 npm/? node/v25.9.0 darwin arm64');
-
-        expect(supportsLockfileOnly('yarn')).toBe(false);
-        expect(lockfileOnly('yarn', addCommand('yarn', ['discord.js'], false))).toBeNull();
+        expect(lockfileOnlyFlag('yarn')).toBeNull();
     });
 });

@@ -9,25 +9,19 @@ const FALLBACK: AgentName = 'npm';
 // the templates need the part of a resolved command in front of this placeholder
 const PROBE = 'dev';
 
-const LOCKFILE_ONLY: Partial<Record<AgentName, readonly string[]>> = {
-    bun: ['--lockfile-only'],
-    npm: ['--package-lock-only'],
-    pnpm: ['--lockfile-only'],
-    yarn: ['--mode=update-lockfile']
+const LOCKFILE_ONLY_FLAG: Partial<Record<AgentName, string>> = {
+    bun: '--lockfile-only',
+    npm: '--package-lock-only',
+    pnpm: '--lockfile-only',
+    yarn: '--mode=update-lockfile'
 };
 
-// yarn classic ignores --mode=update-lockfile and installs anyway
-function yarnMajorVersion(): number {
+// --mode arrived in yarn 3.0
+const FIRST_YARN_WITH_MODE = 3;
+
+function yarnHasMode(): boolean {
     const entry = process.env.npm_config_user_agent?.split(' ').find((part) => part.startsWith('yarn/'));
-    return Number.parseInt(entry?.slice('yarn/'.length) ?? '', 10);
-}
-
-function flagsFor(agent: AgentName): readonly string[] | null {
-    const flags = LOCKFILE_ONLY[agent];
-    if (flags === undefined) return null;
-    if (agent === 'yarn') return yarnMajorVersion() > 1 ? flags : null;
-
-    return flags;
+    return Number.parseInt(entry?.slice('yarn/'.length) ?? '', 10) >= FIRST_YARN_WITH_MODE;
 }
 
 export function runningAgent(): AgentName {
@@ -54,17 +48,16 @@ export function addCommand(agent: AgentName, packages: string[], dev: boolean): 
     return resolveCommand(agent, 'add', args) ?? { command: agent, args: ['add', ...args] };
 }
 
+export function installCommand(agent: AgentName): ResolvedCommand {
+    return resolveCommand(agent, 'install', []) ?? { command: agent, args: ['install'] };
+}
+
 export function execCommand(agent: AgentName, args: string[]): ResolvedCommand {
     return resolveCommand(agent, 'execute-local', args) ?? { command: agent, args: ['exec', ...args] };
 }
 
-export function supportsLockfileOnly(agent: AgentName): boolean {
-    return flagsFor(agent) !== null;
-}
+export function lockfileOnlyFlag(agent: AgentName): string | null {
+    if (agent === 'yarn' && !yarnHasMode()) return null;
 
-export function lockfileOnly(agent: AgentName, command: ResolvedCommand): ResolvedCommand | null {
-    const flags = flagsFor(agent);
-    if (flags === null) return null;
-
-    return { command: command.command, args: [...command.args, ...flags] };
+    return LOCKFILE_ONLY_FLAG[agent] ?? null;
 }

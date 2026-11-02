@@ -1,7 +1,7 @@
 import { execFileSync } from 'node:child_process';
 import { stripVTControlCharacters } from 'node:util';
 
-import { afterEach, describe, expect, it, vi } from 'vitest';
+import { describe, expect, it } from 'vitest';
 
 import { parseInput } from '#cli/parseInput';
 import { dashboardToggles, nextSteps as paintedSteps, reproducingCommand } from '#cli/summary';
@@ -10,10 +10,6 @@ import { STEPS } from '#interview/steps';
 import { BOT_TOKEN } from '#tests/token';
 
 import type { ScaffoldAnswers } from '#template/context';
-
-afterEach(() => {
-    vi.unstubAllEnvs();
-});
 
 function shellWordsAfter(program: string, line: string): string[] {
     expect(line.startsWith(`${program} `)).toBe(true);
@@ -50,53 +46,45 @@ const HTTP: ScaffoldAnswers = {
 
 describe('nextSteps', () => {
     it('opens with the directory to change into', () => {
-        expect(nextSteps(GATEWAY, { agent: 'pnpm', installed: true })[0]).toBe('cd my-bot');
+        expect(nextSteps(GATEWAY, { agent: 'pnpm', pending: [] })[0]).toBe('cd my-bot');
     });
 
     it('keeps a spaced directory whole when a shell reads the cd line', () => {
-        const [cd = ''] = nextSteps({ ...GATEWAY, directory: 'my bots/bot' }, { agent: 'pnpm', installed: true });
+        const [cd = ''] = nextSteps({ ...GATEWAY, directory: 'my bots/bot' }, { agent: 'pnpm', pending: [] });
 
         expect(shellWordsAfter('cd', cd)).toEqual(['my bots/bot']);
     });
 
     it('uses the running package manager for the dev script', () => {
-        expect(nextSteps(GATEWAY, { agent: 'npm', installed: true })).toContain('npm run dev');
-        expect(nextSteps(GATEWAY, { agent: 'pnpm', installed: true })).toContain('pnpm run dev');
+        expect(nextSteps(GATEWAY, { agent: 'npm', pending: [] })).toContain('npm run dev');
+        expect(nextSteps(GATEWAY, { agent: 'pnpm', pending: [] })).toContain('pnpm run dev');
     });
 
-    it('adds the install when the run skipped it', () => {
-        const steps = nextSteps(GATEWAY, { agent: 'pnpm', installed: false });
+    it('lists every pending command before the dev script', () => {
+        const pending = [
+            { command: 'pnpm', args: ['add', '-D', 'seedcord'] },
+            { command: 'pnpm', args: ['add', 'envapt'] }
+        ];
+        const steps = nextSteps(GATEWAY, { agent: 'pnpm', pending });
 
-        expect(steps).toContain('pnpm install');
-        expect(steps.indexOf('pnpm install')).toBeLessThan(steps.indexOf('pnpm run dev'));
+        expect(steps).toEqual(['cd my-bot', 'pnpm add -D seedcord', 'pnpm add envapt', 'pnpm run dev']);
     });
 
-    it('leaves the install out when it already ran', () => {
-        expect(nextSteps(GATEWAY, { agent: 'pnpm', installed: true })).not.toContain('pnpm install');
-    });
+    // cmd reads a bare ^ as its escape character
+    it('keeps a range whole when a shell reads a pending command', () => {
+        const pending = [{ command: 'pnpm', args: ['add', '-D', 'vite@^8.3.4'] }];
+        const [, add = ''] = nextSteps(GATEWAY, { agent: 'pnpm', pending });
 
-    it('still asks for the install when install is off and the manager wrote the lockfile', () => {
-        const steps = nextSteps({ ...GATEWAY, install: false }, { agent: 'pnpm', installed: false });
-
-        expect(steps).toContain('pnpm install');
-        expect(steps.filter((step) => step.startsWith('pnpm add'))).toEqual([]);
-    });
-
-    it('prints the add commands when install is off and the manager has no lockfile-only add', () => {
-        vi.stubEnv('npm_config_user_agent', 'yarn/1.22.22 npm/? node/v25.9.0 darwin arm64');
-        const steps = nextSteps({ ...GATEWAY, install: false }, { agent: 'yarn', installed: false });
-
-        expect(steps.some((step) => step.startsWith('yarn add -D '))).toBe(true);
-        expect(steps.some((step) => step.startsWith('yarn add ') && !step.includes(' -D '))).toBe(true);
-        expect(steps).not.toContain('yarn install');
+        expect(add).toContain('"vite@^8.3.4"');
+        expect(shellWordsAfter('pnpm', add)).toEqual(['add', '-D', 'vite@^8.3.4']);
     });
 
     it('asks for nothing in .env when every secret was pasted', () => {
-        expect(nextSteps(HTTP, { agent: 'pnpm', installed: true }).join('\n')).not.toContain('.env');
+        expect(nextSteps(HTTP, { agent: 'pnpm', pending: [] }).join('\n')).not.toContain('.env');
     });
 
     it('lists a step to add the token to .env before the dev script when you skipped it', () => {
-        const steps = nextSteps({ ...HTTP, token: null }, { agent: 'pnpm', installed: true });
+        const steps = nextSteps({ ...HTTP, token: null }, { agent: 'pnpm', pending: [] });
 
         expect(steps).toContain('add DISCORD_BOT_TOKEN to .env');
         expect(steps.indexOf('add DISCORD_BOT_TOKEN to .env')).toBeLessThan(steps.indexOf('pnpm run dev'));
