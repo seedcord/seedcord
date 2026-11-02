@@ -28,8 +28,6 @@ import { SITE_URL } from '#lib/site';
 import { log } from '#lib/logger';
 import { useUIStore } from '#store/ui';
 
-import { HeaderSettingsPopover } from './HeaderSettingsPopover';
-
 import type { SiteDestination } from '@seedcord/ui';
 import type { ReactElement } from 'react';
 
@@ -79,9 +77,8 @@ export function Navbar(): ReactElement {
                 actions={
                     <>
                         <SearchIconButton label={SEARCH_LABEL} onOpen={onSearchClick} />
-                        {/* the burger panel's footer repeats these two */}
+                        {/* the burger panel's footer repeats this link */}
                         <span className={cn(showMobileNavButton ? 'hidden lg:flex' : 'flex', 'items-center gap-2')}>
-                            <HeaderSettingsPopover />
                             <Button
                                 asChild
                                 variant="ghost"

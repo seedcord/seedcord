@@ -33,7 +33,6 @@ export * from './SearchOption';
 export * from './SearchTrigger';
 export * from './sectionLabel';
 export * from './SegmentedControl';
-export * from './SettingsPopover';
 export * from './SiteMark';
 export * from './sites';
 export * from './SiteSwitcher';
