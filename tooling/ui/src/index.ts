@@ -48,6 +48,7 @@ export * from './lib/cn';
 export * from './lib/copyLink';
 export * from './lib/motion';
 export * from './lib/navLink';
+export * from './lib/siteHotkeys';
 export * from './lib/tw';
 export * from './lib/useHotkeys';
 export * from './lib/useIsMac';

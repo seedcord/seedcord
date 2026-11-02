@@ -3,6 +3,7 @@
 import {
     Button,
     GithubIcon,
+    HotkeysDialog,
     Icon,
     MobileNavButton,
     Navbar as NavbarShell,
@@ -14,6 +15,7 @@ import {
     REPO_URL,
     ThemeToggle,
     cn,
+    siteHotkeys,
     useHotkeys
 } from '@seedcord/ui';
 import Link from 'next/link';
@@ -45,55 +47,65 @@ export function Navbar(): ReactElement {
     const palette = useCommandPaletteOpen();
     const showMobileNavButton = hasMobileNavPanel(usePathname());
     const [sitesOpen, setSitesOpen] = useState(false);
+    const [hotkeysOpen, setHotkeysOpen] = useState(false);
 
     const toggleSearch = (): void => palette.setOpen(!palette.open);
-    const openSearch = (): void => {
+    const onSearchClick = (): void => {
         log('Search button clicked');
         toggleSearch();
     };
-    useHotkeys([{ key: 'k', mod: true, description: SEARCH_LABEL, run: toggleSearch }]);
+    const hotkeys = siteHotkeys(SEARCH_LABEL, {
+        toggleSearch,
+        openSearch: () => palette.setOpen(true),
+        openSites: () => setSitesOpen(true),
+        showHotkeys: () => setHotkeysOpen(true)
+    });
+    useHotkeys(hotkeys);
 
     return (
-        <NavbarShell
-            mark={
-                <SiteSwitcher
-                    site="docs"
-                    destinations={DESTINATIONS}
-                    open={sitesOpen}
-                    onOpenChange={setSitesOpen}
-                    linkAs={Link}
-                />
-            }
-            center={<SearchTrigger label={SEARCH_LABEL} onOpen={openSearch} />}
-            actions={
-                <>
-                    <SearchIconButton label={SEARCH_LABEL} onOpen={openSearch} />
-                    {/* the burger panel's footer repeats these two */}
-                    <span className={cn(showMobileNavButton ? 'hidden lg:flex' : 'flex', 'items-center gap-2')}>
-                        <HeaderSettingsPopover />
-                        <Button
-                            asChild
-                            variant="ghost"
-                            size="icon"
-                            aria-label="Open GitHub repository"
-                            className={cn('text-(--text)')}
-                        >
-                            <Link href={REPO_URL} target="_blank" rel="noreferrer">
-                                <Icon icon={GithubIcon} size={20} />
-                            </Link>
-                        </Button>
-                    </span>
-                    {/* moving this into the span above loses it on mobile */}
-                    <ThemeToggle />
-                    {showMobileNavButton ? (
-                        <MobileNavButton
-                            open={isMobileNavOpen}
-                            onOpen={() => setMobileNavOpen(true)}
-                            className={cn('lg:hidden')}
-                        />
-                    ) : null}
-                </>
-            }
-        />
+        <>
+            <HotkeysDialog open={hotkeysOpen} onOpenChange={setHotkeysOpen} hotkeys={hotkeys} />
+            <NavbarShell
+                mark={
+                    <SiteSwitcher
+                        site="docs"
+                        destinations={DESTINATIONS}
+                        open={sitesOpen}
+                        onOpenChange={setSitesOpen}
+                        linkAs={Link}
+                    />
+                }
+                center={<SearchTrigger label={SEARCH_LABEL} onOpen={onSearchClick} />}
+                actions={
+                    <>
+                        <SearchIconButton label={SEARCH_LABEL} onOpen={onSearchClick} />
+                        {/* the burger panel's footer repeats these two */}
+                        <span className={cn(showMobileNavButton ? 'hidden lg:flex' : 'flex', 'items-center gap-2')}>
+                            <HeaderSettingsPopover />
+                            <Button
+                                asChild
+                                variant="ghost"
+                                size="icon"
+                                aria-label="Open GitHub repository"
+                                className={cn('text-(--text)')}
+                            >
+                                <Link href={REPO_URL} target="_blank" rel="noreferrer">
+                                    <Icon icon={GithubIcon} size={20} />
+                                </Link>
+                            </Button>
+                        </span>
+                        {/* moving this into the span above loses it on mobile */}
+                        <ThemeToggle />
+                        {showMobileNavButton ? (
+                            <MobileNavButton
+                                open={isMobileNavOpen}
+                                onOpen={() => setMobileNavOpen(true)}
+                                className={cn('lg:hidden')}
+                            />
+                        ) : null}
+                    </>
+                }
+            />
+        </>
     );
 }
