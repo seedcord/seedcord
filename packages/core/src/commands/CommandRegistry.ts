@@ -19,6 +19,7 @@ import { putCommands } from '#src/commands/putCommands';
 import { readCommands } from '#src/commands/readCommands';
 import { GLOBAL_ID, scopeIdsOf } from '#src/commands/scopes';
 import { slashRouteLeaves } from '#src/commands/slashRouteLeaves';
+import { KeyedQueue } from '#src/kv/KeyedQueue';
 import { CommandMetadataKey } from '#src/metadataKeys';
 import { PublishDefault } from '#subscribers/publishDefault';
 
@@ -71,6 +72,7 @@ export class CommandRegistry implements Initializeable, HmrAware {
 
     private readonly hmrHandler?: HmrModuleHandler<CommandCtor, void, CommandArtifact | undefined>;
     private readonly pendingEvents = new Map<string, HmrUpdateEvent>();
+    private readonly refreshes = new KeyedQueue();
     private readonly injector = new CommandInjector();
     private readonly lastDeploy = new LastDeploy();
     private readonly reporter = new DeployReporter(this.logger);
@@ -117,7 +119,9 @@ export class CommandRegistry implements Initializeable, HmrAware {
         this.reportLoad();
 
         getDevChannel()?.on('seedcord:refresh-commands', (data) => {
-            void this.refresh(data.shouldRefresh);
+            this.refresh(data.shouldRefresh).catch((error: unknown) => {
+                this.logger.error('Failed to refresh commands', error);
+            });
         });
     }
 
@@ -151,7 +155,11 @@ export class CommandRegistry implements Initializeable, HmrAware {
     }
 
     /** @internal */
-    public async refresh(shouldRefresh = true): Promise<void> {
+    public refresh(shouldRefresh = true): Promise<void> {
+        return this.refreshes.run('refresh', () => this.applyPendingEvents(shouldRefresh));
+    }
+
+    private async applyPendingEvents(shouldRefresh: boolean): Promise<void> {
         if (!shouldRefresh) {
             this.logger.debug(paint.italic('Command refresh cancelled.'));
             this.pendingEvents.clear();

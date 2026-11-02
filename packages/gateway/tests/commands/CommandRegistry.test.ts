@@ -357,6 +357,36 @@ describe('CommandRegistry Integration', () => {
         expect(registryOf(seedcord).scopedCommands.get(GLOBAL_ID)?.[0]?.name).toBe('pong');
     });
 
+    it('registers a new command once when two refreshes overlap', async ({ testEnv }) => {
+        const command = (name: string): string => `
+            import { BuilderComponent, RegisterCommand } from '${seedcordPath}';
+
+            @RegisterCommand('global')
+            export class ${name}Command extends BuilderComponent<'command'> {
+                constructor() {
+                    super('command');
+                    this.instance.setName('${name.toLowerCase()}').setDescription('Replies');
+                }
+            }
+            `;
+        await testEnv.createFile('commands/PingCommand.ts', command('Ping'));
+
+        await using seedcord = new Seedcord(testConfig({ commands: testEnv.resolvePath('commands') }));
+        await registryOf(seedcord).init();
+        // the mock client's rest only has put, and the second refresh reads what the first one deployed
+        const client = seedcord.bot.client as unknown as { rest: { get: Mock } };
+        client.rest.get = vi.fn().mockResolvedValue([]);
+        const added = await testEnv.createFile('commands/KickCommand.ts', command('Kick'));
+        await registryOf(seedcord).onHmr({ file: added, type: 'create' });
+
+        await Promise.all([registryOf(seedcord).refresh(), registryOf(seedcord).refresh()]);
+
+        const names = registryOf(seedcord)
+            .scopedCommands.get(GLOBAL_ID)
+            ?.map((builder) => builder.name);
+        expect(names?.toSorted()).toEqual(['kick', 'ping']);
+    });
+
     it('sends no refresh prompt for a file saved in a dot-folder, which startup skips', async ({ testEnv }) => {
         using _dev = setDevFiles({
             root: testEnv.rootDir,
