@@ -68,7 +68,7 @@ function asking(path: string, accept: string): Request {
 
 describe('search indexing', () => {
     it('is off on every host except production', async () => {
-        const preview = await send(new Request('https://preview.seedcord.org/guide/'), serving(html()));
+        const preview = await send(new Request('https://next.seedcord.org/guide/'), serving(html()));
         const production = await get('/', serving(html()));
 
         expect(preview.headers.get('x-robots-tag')).toBe('noindex, nofollow');

@@ -18,7 +18,7 @@
     },
     "env": {
         "preview": {
-            "routes": [{ "pattern": "preview.seedcord.org", "custom_domain": true }]
+            "routes": [{ "pattern": "next.seedcord.org", "custom_domain": true }]
         }
     }
 }
