@@ -6,6 +6,7 @@ import { type ReactElement, useCallback } from 'react';
 import { Button } from './Button';
 import { IconSwap } from './IconSwap';
 import { cn } from './lib/cn';
+import { copyLink } from './lib/copyLink';
 import { useTimedToggle } from './lib/useTimedToggle';
 
 const ICON_FLIP_DURATION_MS = 1400;
@@ -13,7 +14,6 @@ const FEEDBACK_HOLD_DURATION_MS = 2000;
 const DEFAULT_ICON_SIZE = 16;
 
 export interface CopyAnchorButtonProps {
-    // leave it out to copy the page url with no fragment
     anchorId?: string;
     label: string;
     iconSize?: number;
@@ -31,20 +31,13 @@ export function CopyAnchorButton({
     const [feedbackHold, markFeedbackHold] = useTimedToggle(FEEDBACK_HOLD_DURATION_MS);
 
     const handleCopyLink = useCallback(() => {
-        try {
-            const url = new URL(globalThis.location.href);
-            url.hash = anchorId ?? '';
-
-            if (typeof navigator !== 'undefined' && 'clipboard' in navigator) {
-                void navigator.clipboard
-                    .writeText(url.toString())
-                    .then(() => {
-                        markIconCopied();
-                        markFeedbackHold();
-                    })
-                    .catch(() => {});
-            }
-        } catch {}
+        copyLink(anchorId).then(
+            () => {
+                markIconCopied();
+                markFeedbackHold();
+            },
+            () => {}
+        );
     }, [anchorId, markIconCopied, markFeedbackHold]);
 
     return (

@@ -67,4 +67,47 @@ describe('useHotkeys', () => {
         expect(switcher).not.toHaveBeenCalled();
         expect(toggle).toHaveBeenCalledOnce();
     });
+
+    it('tells ← from ⇧← and ignores Shift on keys that type a character', () => {
+        const page = vi.fn();
+        const tab = vi.fn();
+        const shortcuts = vi.fn();
+        renderHook(() =>
+            useHotkeys([
+                { key: 'ArrowRight', description: 'Next page', run: page },
+                { key: 'ArrowRight', shift: true, description: 'Next tab', run: tab },
+                { key: '?', description: 'Show keyboard shortcuts', run: shortcuts }
+            ])
+        );
+
+        fireEvent.keyDown(document.body, { key: 'ArrowRight' });
+        fireEvent.keyDown(document.body, { key: 'ArrowRight', shiftKey: true });
+        fireEvent.keyDown(document.body, { key: '?', shiftKey: true });
+
+        expect(page).toHaveBeenCalledOnce();
+        expect(tab).toHaveBeenCalledOnce();
+        expect(shortcuts).toHaveBeenCalledOnce();
+    });
+
+    it('leaves the arrows to a text selection', () => {
+        const page = vi.fn();
+        const search = vi.fn();
+        renderHook(() =>
+            useHotkeys([
+                { key: 'ArrowRight', description: 'Next page', run: page },
+                { key: '/', description: 'Search', run: search }
+            ])
+        );
+        document.body.innerHTML = '<p id="text">some selected words</p>';
+        const text = document.getElementById('text')?.firstChild ?? document.body;
+        globalThis.getSelection()?.setBaseAndExtent(text, 0, text, 4);
+
+        fireEvent.keyDown(document.body, { key: 'ArrowRight' });
+        fireEvent.keyDown(document.body, { key: 'ArrowRight', shiftKey: true });
+        fireEvent.keyDown(document.body, { key: '/' });
+
+        expect(page).not.toHaveBeenCalled();
+        expect(search).toHaveBeenCalledOnce();
+        globalThis.getSelection()?.removeAllRanges();
+    });
 });

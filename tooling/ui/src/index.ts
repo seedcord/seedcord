@@ -45,6 +45,7 @@ export * from './ThemeToggle';
 export * from './Tooltip';
 export * from './lib/activeHref';
 export * from './lib/cn';
+export * from './lib/copyLink';
 export * from './lib/motion';
 export * from './lib/navLink';
 export * from './lib/tw';

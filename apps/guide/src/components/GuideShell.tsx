@@ -12,10 +12,11 @@ import { GithubLink, GuideNavbar } from './GuideNavbar';
 import { MobileNav } from './MobileNav';
 import { PageActions } from './PageActions';
 import { StarCard } from './StarCard';
-import { TableOfContents } from './TableOfContents';
+import { idOf, TableOfContents } from './TableOfContents';
 import { TocBar } from './TocBar';
 
 import type { GuideTab, SidebarsByTab } from '#lib/nav';
+import type { PageNeighbours } from '#lib/neighbours';
 import type { PageActionProps } from '#lib/pageActions';
 import type { TocBarProps } from './TocBar';
 import type { TOCItemType } from 'fumadocs-core/toc';
@@ -71,9 +72,12 @@ export interface GuideShellProps {
     toc?: readonly TOCItemType[] | undefined;
     pageTitle?: string | undefined;
     actions?: PageActionProps | undefined;
+    neighbours?: PageNeighbours | undefined;
     pathname?: string | undefined;
     children: ReactNode;
 }
+
+const NO_NEIGHBOURS: PageNeighbours = {};
 
 export function GuideShell({
     tabs,
@@ -81,6 +85,7 @@ export function GuideShell({
     toc = NO_TOC,
     pageTitle = '',
     actions,
+    neighbours = NO_NEIGHBOURS,
     pathname: override,
     children
 }: GuideShellProps): ReactElement {
@@ -98,37 +103,34 @@ export function GuideShell({
     const hasContents = toc.length > 0;
 
     return (
-        <>
+        <AnchorProvider toc={anchors}>
             <GuideNavbar
-                tabs={tabs}
-                activeHref={activeHref ?? ''}
+                page={{ tabs, activeHref: activeHref ?? '', neighbours, headingIds: toc.map((item) => idOf(item.url)) }}
                 navOpen={navOpen}
                 onNavOpen={() => setNavOpen(true)}
             />
 
-            <AnchorProvider toc={anchors}>
-                <div className={cn('pt-(--nav-h)')}>
-                    {hasContents ? <ContentsBar items={toc} pageTitle={pageTitle} /> : null}
-                    <div className={cn('mx-auto flex w-full max-w-(--content-max) gap-10 px-(--page-gutter)')}>
-                        {sections.length > 0 ? (
-                            <DocsSidebar
-                                sections={sections}
-                                activeHref={pathname}
-                                className={cn(
-                                    'nice-scroll sticky top-(--nav-h) hidden h-[calc(100dvh-var(--nav-h))] w-64 shrink-0 overflow-y-auto py-10 lg:block'
-                                )}
-                            />
-                        ) : null}
-                        {/* below lg the floating button would cover PageNav */}
-                        <main id={MAIN_CONTENT_ID} className={cn(mainClassName)}>
-                            {children}
-                        </main>
-                        {hasContents ? <ContentsColumn items={toc} actions={actions} /> : null}
-                    </div>
+            <div className={cn('pt-(--nav-h)')}>
+                {hasContents ? <ContentsBar items={toc} pageTitle={pageTitle} /> : null}
+                <div className={cn('mx-auto flex w-full max-w-(--content-max) gap-10 px-(--page-gutter)')}>
+                    {sections.length > 0 ? (
+                        <DocsSidebar
+                            sections={sections}
+                            activeHref={pathname}
+                            className={cn(
+                                'nice-scroll sticky top-(--nav-h) hidden h-[calc(100dvh-var(--nav-h))] w-64 shrink-0 overflow-y-auto py-10 lg:block'
+                            )}
+                        />
+                    ) : null}
+                    {/* below lg the floating button would cover PageNav */}
+                    <main id={MAIN_CONTENT_ID} className={cn(mainClassName)}>
+                        {children}
+                    </main>
+                    {hasContents ? <ContentsColumn items={toc} actions={actions} /> : null}
                 </div>
-                {/* the contents column carries its own from lg up */}
-                <ScrollToTopButton className={cn('right-(--page-gutter) lg:hidden')} />
-            </AnchorProvider>
+            </div>
+            {/* the contents column carries its own from lg up */}
+            <ScrollToTopButton className={cn('right-(--page-gutter) lg:hidden')} />
 
             <MobilePanel
                 open={navOpen}
@@ -149,6 +151,6 @@ export function GuideShell({
                     onNavigate={() => setNavOpen(false)}
                 />
             </MobilePanel>
-        </>
+        </AnchorProvider>
     );
 }

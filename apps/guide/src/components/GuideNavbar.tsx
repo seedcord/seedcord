@@ -21,7 +21,7 @@ import { DOCS_URL, HOME_URL, REPO_URL, SITE_URL } from '#lib/site';
 import { GuideSearch, SEARCH_LABEL } from './GuideSearch';
 import { useGuideHotkeys } from './useGuideHotkeys';
 
-import type { GuideTab } from '#lib/nav';
+import type { GuidePage } from './useGuideHotkeys';
 import type { SiteDestination } from '@seedcord/ui';
 import type { ReactElement } from 'react';
 
@@ -42,20 +42,24 @@ export function GithubLink(): ReactElement {
 }
 
 export interface GuideNavbarProps {
-    tabs: readonly GuideTab[];
-    activeHref: string;
+    page: GuidePage;
     navOpen: boolean;
     onNavOpen: () => void;
 }
 
-export function GuideNavbar({ tabs, activeHref, navOpen, onNavOpen }: GuideNavbarProps): ReactElement {
+export function GuideNavbar({ page, navOpen, onNavOpen }: GuideNavbarProps): ReactElement {
     const [searchOpen, setSearchOpen] = useState(false);
     const [sitesOpen, setSitesOpen] = useState(false);
     const [hotkeysOpen, setHotkeysOpen] = useState(false);
-    const hotkeys = useGuideHotkeys({
-        toggleSearch: () => setSearchOpen((open) => !open),
-        showHotkeys: () => setHotkeysOpen(true)
-    });
+    const hotkeys = useGuideHotkeys(
+        {
+            toggleSearch: () => setSearchOpen((open) => !open),
+            openSearch: () => setSearchOpen(true),
+            openSites: () => setSitesOpen(true),
+            showHotkeys: () => setHotkeysOpen(true)
+        },
+        page
+    );
 
     return (
         <>
@@ -82,7 +86,7 @@ export function GuideNavbar({ tabs, activeHref, navOpen, onNavOpen }: GuideNavba
                     </>
                 }
                 tabsClassName={cn('hidden lg:flex')}
-                tabs={<NavTabs items={tabs} activeHref={activeHref} linkAs={Link} />}
+                tabs={<NavTabs items={page.tabs} activeHref={page.activeHref} linkAs={Link} />}
             />
         </>
     );
