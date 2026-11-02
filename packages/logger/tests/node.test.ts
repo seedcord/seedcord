@@ -11,7 +11,14 @@ import { Envapter } from 'envapt';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 
 import { LoggerChannelRegistry } from '#src/LoggerChannelRegistry';
-import { formatBody, formatPretty, installNodeDefaults, WinstonConsoleSink, WinstonFileSink } from '#src/node';
+import {
+    formatBody,
+    formatPretty,
+    installNodeConsole,
+    installNodeDefaults,
+    WinstonConsoleSink,
+    WinstonFileSink
+} from '#src/node';
 
 import type { ILogSink, LogRecord } from '@seedcord/types';
 
@@ -194,6 +201,18 @@ describe('winston sinks', () => {
 
         expect(line).toMatchObject({ message, stack: expect.stringContaining('TypeError: boom') as unknown });
         expect(line).not.toHaveProperty('extras');
+    });
+
+    it('configure without sinks falls back to the node console once installNodeConsole has run', () => {
+        installNodeConsole();
+        registry.configure({ level: 'trace' });
+        const objectSink = vi.spyOn(console, 'info').mockImplementation(() => undefined);
+
+        const output = consoleOutputOf({ message: 'after teardown' });
+
+        expect(objectSink).not.toHaveBeenCalled();
+        expect(plain(output)).toContain('after teardown');
+        objectSink.mockRestore();
     });
 
     it('the console sink stops writing once its stdout closes', async () => {

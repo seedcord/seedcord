@@ -28,8 +28,10 @@ export function installNodeDefaults(overrides?: LoggerConfig): void {
 }
 
 /**
- * Installs only the node console sink.
+ * Installs only the node console sink, and makes it the sink `configure` falls back to when a config omits `sinks`.
  */
 export function installNodeConsole(): void {
-    LoggerChannelRegistry.instance.configure({ sinks: [new WinstonConsoleSink()] });
+    const registry = LoggerChannelRegistry.instance;
+    registry.setDefaultSinks(() => [new WinstonConsoleSink()]);
+    registry.configure({});
 }

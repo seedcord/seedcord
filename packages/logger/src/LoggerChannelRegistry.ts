@@ -8,7 +8,8 @@ interface CaptureEntry {
     readonly muteConsole: boolean;
 }
 
-function defaultSinks(): ILogSink[] {
+// the node entry replaces this default through setDefaultSinks
+function objectConsoleSinks(): ILogSink[] {
     return [new ObjectConsoleSink()];
 }
 
@@ -27,7 +28,8 @@ export class LoggerChannelRegistry {
     private static _instance: LoggerChannelRegistry | null = null;
 
     private level: LogLevel = defaultLevel();
-    private sinks: ILogSink[] = defaultSinks();
+    private buildDefaultSinks = objectConsoleSinks;
+    private sinks: ILogSink[] = this.buildDefaultSinks();
     private channels: NonNullable<LoggerConfig['channels']> = {};
 
     private nextCaptureId = 1;
@@ -40,7 +42,7 @@ export class LoggerChannelRegistry {
 
     /** Full-replaces the config layer. Omitted fields reset to their defaults. */
     public configure(config: LoggerConfig): void {
-        const nextSinks = config.sinks ?? defaultSinks();
+        const nextSinks = config.sinks ?? this.buildDefaultSinks();
         const nextChannels = config.channels ?? {};
         const retained = new Set<ILogSink>([...nextSinks, ...channelSinks(nextChannels)]);
         // winston file handles close on dispose
@@ -50,6 +52,11 @@ export class LoggerChannelRegistry {
         this.level = config.level ?? defaultLevel();
         this.sinks = nextSinks;
         this.channels = nextChannels;
+    }
+
+    /** @internal */
+    public setDefaultSinks(build: () => ILogSink[]): void {
+        this.buildDefaultSinks = build;
     }
 
     public dispatch(record: LogRecord): void {
@@ -105,7 +112,8 @@ export class LoggerChannelRegistry {
         // dispose the config-layer sinks so a reset after a live install closes winston handles
         for (const sink of new Set([...this.sinks, ...channelSinks(this.channels)])) sink.dispose?.();
         this.level = defaultLevel();
-        this.sinks = defaultSinks();
+        this.buildDefaultSinks = objectConsoleSinks;
+        this.sinks = this.buildDefaultSinks();
         this.channels = {};
         this.captures.clear();
         this.nextCaptureId = 1;
