@@ -1,18 +1,27 @@
 import { InteractionKind, Notice, Silence, Fault } from '@seedcord/core';
-import { DispatchContext, PublishDefault } from '@seedcord/core/internal';
+import {
+    DispatchContext,
+    FaultBoundary,
+    interactionMiddleware,
+    MiddlewareRegistry,
+    PublishDefault
+} from '@seedcord/core/internal';
 import { Logger, LoggerChannelRegistry } from '@seedcord/logger';
-import { MessageFlags, RESTJSONErrorCodes } from 'discord.js';
+import { DiscordAPIError, MessageFlags, RESTJSONErrorCodes } from 'discord.js';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
-import { handleInteractionFault as boundary } from '#bot/handleInteractionFault';
+import { gatewayRunConfig } from '#bot/controllers/gatewayRunConfig';
+import { UnhandledRepliable } from '#bot/defaults';
 import { ReplySender } from '#bot/ReplySender';
 import { harmlessError } from '#tests/utils/harmlessError';
 import { stubBus } from '#tests/utils/stubBus';
 import { TestNotice } from '#tests/utils/TestNotice';
 
+import type { InteractionMiddlewareConstructor } from '#handlers/constructors';
 import type { Core } from '#interfaces/Core';
 import type { Repliables, ValidInteractionTypes } from '#src/handlers/interactionTypes';
 import type { SubscriptionData } from '@seedcord/core';
+import type { FaultTarget } from '@seedcord/core/internal';
 import type { RenderContext, ReplyResponse } from '@seedcord/types';
 
 const withResponse = { resource: { message: { id: 'sent' } } };
@@ -55,7 +64,7 @@ function asInteraction(mock: ReturnType<typeof mockInteraction>): ValidInteracti
     return mock as unknown as ValidInteractionTypes;
 }
 
-// the dispatcher supplies the per-dispatch context
+// InteractionRun picks the target the same way
 function handleInteractionFault(
     caught: unknown,
     interaction: ValidInteractionTypes,
@@ -66,7 +75,19 @@ function handleInteractionFault(
         'test'
     )
 ): Promise<void> {
-    return boundary(caught, interaction, core, dispatch, sender);
+    const config = gatewayRunConfig({
+        interaction,
+        core,
+        dispatch,
+        HandlerCtor: UnhandledRepliable,
+        middlewares: new MiddlewareRegistry<InteractionMiddlewareConstructor>(interactionMiddleware),
+        logger: new Logger('Test')
+    });
+    const target: FaultTarget = interaction.isAutocomplete()
+        ? { clearChoices: () => config.clearChoices() }
+        : { reply: (response, options) => (sender ?? config.newSender()).send(response, options) };
+    const boundary = new FaultBoundary(core, core.config.errors?.ignoreApiCodes, DiscordAPIError);
+    return boundary.answer(caught, () => config.faultDetails(), target);
 }
 
 function senderFor(mock: ReturnType<typeof mockInteraction>, route: string): ReplySender {

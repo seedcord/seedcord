@@ -13,7 +13,7 @@ import type { FaultDetails } from './reportFault';
 import type { ReplyResponse } from '@seedcord/types';
 
 // each transport passes the DiscordAPIError that its discord client throws
-type ApiErrorClass = abstract new (...args: never[]) => { readonly code: number | string };
+export type ApiErrorClass = abstract new (...args: never[]) => { readonly code: number | string };
 
 type ReportOf = () => FaultDetails;
 

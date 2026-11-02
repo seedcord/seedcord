@@ -128,7 +128,7 @@ export {
     VerifyWebhooks
 } from '#subscribers/slots';
 export { DispatchContext, type InteractionDispatch } from '#src/dispatch/DispatchContext';
-export { InteractionRun, type InteractionRunAdapter } from '#src/dispatch/InteractionRun';
+export { InteractionRun, type InteractionRunConfig } from '#src/dispatch/InteractionRun';
 export { routeIdOf } from '#src/dispatch/routeIdOf';
 export { eventResultFor, resultFor, runAfter } from '#src/dispatch/runAfter';
 export { OnceTracker } from '#src/dispatch/OnceTracker';

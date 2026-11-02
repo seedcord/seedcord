@@ -1,14 +1,23 @@
+import { paint } from '@seedcord/errors';
+
+import { runInteractionGates } from '#gates/runGates';
+import { RepliableHandler } from '#src/handlers/RepliableHandler';
 import { InteractionKind } from '#src/metadataKeys';
+import { FaultBoundary } from '#src/notices/FaultBoundary';
 
 import { outcomeFor, queuedMsFor, reportDispatch } from './dispatchReport';
 import { resultFor, runAfter } from './runAfter';
 
+import type { GateContextBase } from '#gates/Gate';
+import type { CoreBase } from '#interfaces/CoreBase';
 import type { MiddlewareKind } from '#src/metadataKeys';
-import type { Bus } from '#subscribers/Bus';
+import type { ApiErrorClass, FaultTarget } from '#src/notices/FaultBoundary';
+import type { FaultDetails } from '#src/notices/reportFault';
 import type { DispatchOutcome } from '#subscribers/types/Subscriptions';
 import type { InteractionDispatch } from './DispatchContext';
 import type { DispatchResult } from './dispatchResult';
 import type { Logger } from '@seedcord/logger';
+import type { ReplyResponse } from '@seedcord/types';
 import type { Promisable } from 'type-fest';
 
 interface RunnableHandler {
@@ -19,56 +28,77 @@ interface RunnableMiddleware extends RunnableHandler {
     after?(result: DispatchResult): Promisable<void>;
 }
 
-export interface InteractionRunAdapter<Sender> {
+interface FaultSender {
+    send(response: ReplyResponse, options: { ephemeral: boolean }): Promise<unknown>;
+}
+
+type Built<Instance> = new (...args: never[]) => Instance;
+
+export interface InteractionRunConfig<Sender extends FaultSender> {
     readonly dispatch: InteractionDispatch;
-    readonly bus: Bus;
+    readonly core: CoreBase;
+    readonly event: unknown;
+    readonly HandlerCtor: Built<RunnableHandler>;
+    readonly middlewares: { chainFor(kind: MiddlewareKind): readonly Built<RunnableMiddleware>[] };
+    readonly apiError: ApiErrorClass;
     readonly logger: Logger;
     readonly interactionId: string;
     readonly userId: string;
     readonly guildId: string | null;
-    buildHandler(): RunnableHandler;
-    senderOf(handler: RunnableHandler): Sender | undefined;
-    middlewares(kind: MiddlewareKind, sender: Sender): Iterable<RunnableMiddleware>;
-    runGates(): Promise<void>;
-    answer(caught: unknown, sender: Sender | undefined): Promise<void>;
+    gateContext(): GateContextBase;
+    faultDetails(): FaultDetails;
+    newSender(): Sender;
+    clearChoices(): Promise<unknown>;
 }
 
-export class InteractionRun<Sender> {
+export class InteractionRun<Sender extends FaultSender> {
     private readonly ran: RunnableMiddleware[] = [];
     private readonly startedAt = performance.now();
     private readonly queuedMs: number;
+    private readonly boundary: FaultBoundary;
+    // discord doesn't give autocomplete a reply target. @Gated rejects it at compile time.
+    private readonly repliableKind: MiddlewareKind | null;
 
-    constructor(private readonly adapter: InteractionRunAdapter<Sender>) {
-        this.queuedMs = queuedMsFor(adapter.interactionId);
+    constructor(private readonly config: InteractionRunConfig<Sender>) {
+        const { core, dispatch, apiError, interactionId } = config;
+        this.queuedMs = queuedMsFor(interactionId);
+        this.boundary = new FaultBoundary(core, core.config.errors?.ignoreApiCodes, apiError);
+        this.repliableKind = dispatch.kind === InteractionKind.Autocomplete ? null : dispatch.kind;
     }
 
     // a null return means the run already answered a throw or a refusal
     public async prepare(): Promise<(() => Promise<void>) | null> {
         let handler: RunnableHandler;
         try {
-            handler = this.adapter.buildHandler();
+            handler = this.buildHandler();
         } catch (caught) {
             await this.answer(caught, undefined);
             return null;
         }
 
-        const sender = this.adapter.senderOf(handler);
+        // justified: each transport's handlers carry that transport's sender
+        const sender = handler instanceof RepliableHandler ? (handler.sender as Sender) : undefined;
         const refusal = await this.refusal(sender);
         if (refusal) {
             await this.answer(refusal.caught, sender);
-            await runAfter(this.ran, resultFor(refusal.caught), this.adapter.logger);
+            await runAfter(this.ran, resultFor(refusal.caught), this.config.logger);
             return null;
         }
         return () => this.start(handler, sender);
     }
 
-    // discord doesn't give autocomplete a reply target. @Gated rejects it at compile time.
+    private buildHandler(): RunnableHandler {
+        const { HandlerCtor, event, core, dispatch, logger } = this.config;
+        logger.trace(`Processing ${paint.sky.bold(dispatch.routeId)} with ${paint.mute(HandlerCtor.name)}`);
+        // justified: each transport's route maps pair a kind with the class that takes its event
+        return new HandlerCtor(event as never, core as never, dispatch as never);
+    }
+
     private async refusal(sender: Sender | undefined): Promise<{ caught: unknown } | null> {
-        const { kind } = this.adapter.dispatch;
-        if (kind === InteractionKind.Autocomplete) return null;
+        if (!this.repliableKind || !sender) return null;
         try {
-            if (sender) await this.runMiddlewares(kind, sender);
-            await this.adapter.runGates();
+            await this.runMiddlewares(this.repliableKind, sender);
+            await runInteractionGates(this.config.HandlerCtor, this.config.gateContext());
             return null;
         } catch (caught) {
             return { caught };
@@ -76,7 +106,10 @@ export class InteractionRun<Sender> {
     }
 
     private async runMiddlewares(kind: MiddlewareKind, sender: Sender): Promise<void> {
-        for (const middleware of this.adapter.middlewares(kind, sender)) {
+        const { middlewares, event, core, dispatch } = this.config;
+        for (const Middleware of middlewares.chainFor(kind)) {
+            // justified: chainFor picked this kind. the event is the one the class declares.
+            const middleware = new Middleware(event as never, core as never, dispatch as never, sender as never);
             // pushed before the await because a middleware that throws still gets its after()
             this.ran.push(middleware);
             await middleware.execute();
@@ -92,18 +125,23 @@ export class InteractionRun<Sender> {
             result = resultFor(caught);
             await this.answer(caught, sender);
         } finally {
-            await runAfter(this.ran, result, this.adapter.logger);
+            await runAfter(this.ran, result, this.config.logger);
         }
     }
 
     private async answer(caught: unknown, sender: Sender | undefined): Promise<void> {
-        await this.adapter.answer(caught, sender);
+        await this.boundary.answer(caught, () => this.config.faultDetails(), this.faultTarget(sender));
         this.report(outcomeFor(caught));
     }
 
+    private faultTarget(sender: Sender | undefined): FaultTarget {
+        if (!this.repliableKind) return { clearChoices: () => this.config.clearChoices() };
+        return { reply: (response, options) => (sender ?? this.config.newSender()).send(response, options) };
+    }
+
     private report(outcome: DispatchOutcome): void {
-        const { bus, dispatch, interactionId, userId, guildId } = this.adapter;
-        reportDispatch(bus, {
+        const { core, dispatch, interactionId, userId, guildId } = this.config;
+        reportDispatch(core.bus, {
             dispatch,
             interactionId,
             outcome,

@@ -22,7 +22,7 @@ import { Events } from 'discord.js';
 import { Envapter } from 'envapt';
 
 import { CONFIRM_DEF } from '#bot/confirm/reserved';
-import { gatewayRunAdapter } from '#bot/controllers/gatewayRunAdapter';
+import { gatewayRunConfig } from '#bot/controllers/gatewayRunConfig';
 import { UnhandledAutocomplete, UnhandledRepliable } from '#bot/defaults';
 import { slashRouteOf } from '#bUtilities/miscellaneous/slashRouteOf';
 import { AutocompleteHandler, InteractionMiddleware } from '#handlers/interaction';
@@ -30,6 +30,7 @@ import { InteractionHandler } from '#handlers/interaction/InteractionHandler';
 
 import type { HandlerConstructor, InteractionMiddlewareConstructor } from '#handlers/constructors';
 import type { Core } from '#interfaces/Core';
+import type { ValidInteractionTypes } from '#src/handlers/interactionTypes';
 import type { ContextMenuLeaves, Initializeable } from '@seedcord/core/internal';
 import type { InFlight } from '@seedcord/core/node/internal';
 import type { CustomIdMatcher, HmrAware, HmrUpdateEvent } from '@seedcord/types';
@@ -327,8 +328,8 @@ export class InteractionDispatcher implements Initializeable, HmrAware {
         });
     }
 
-    private async handleCustomIdInteraction<TInteraction extends Interaction & { customId: string }>(
-        interaction: TInteraction,
+    private async handleCustomIdInteraction(
+        interaction: Extract<ValidInteractionTypes, { customId: string }>,
         kind: InteractionKind
     ): Promise<void> {
         if ([...this.keysToIgnore].some((matcher) => matcher.owns(interaction.customId))) return;
@@ -343,21 +344,25 @@ export class InteractionDispatcher implements Initializeable, HmrAware {
     }
 
     private async processInteraction(
-        interaction: Interaction,
+        interaction: ValidInteractionTypes,
         kind: InteractionKind,
         key: string,
         fallback: HandlerConstructor = UnhandledRepliable
     ): Promise<void> {
         const matched = this.maps[kind].get(key);
-        const adapter = gatewayRunAdapter({
+        const HandlerCtor = matched ?? fallback;
+        if (!matched) {
+            this.logger.warn(`No handler found for key ${paint.sky.bold(key)}. Falling back to ${HandlerCtor.name}.`);
+        }
+        const config = gatewayRunConfig({
             interaction,
             core: this.core,
             dispatch: new DispatchContext(kind, key, !matched),
-            HandlerCtor: matched ?? fallback,
+            HandlerCtor,
             middlewares: this.middlewares,
             logger: this.logger
         });
-        const start = await new InteractionRun(adapter).prepare();
+        const start = await new InteractionRun(config).prepare();
         await start?.();
     }
 
