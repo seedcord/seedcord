@@ -1,11 +1,12 @@
-import { Fault, Notice, Silence } from '@seedcord/core';
-import { outcomeFor, queuedMsFor } from '@seedcord/core/internal';
 import { Logger, LoggerChannelRegistry } from '@seedcord/logger';
 import { timestampFromSnowflake } from '@seedcord/utils';
 import { afterEach, describe, expect, it, vi, type MockInstance } from 'vitest';
 
 import { DispatchContext } from '#src/dispatch/DispatchContext';
-import { reportDispatch } from '#src/dispatch/dispatchReport';
+import { outcomeFor, queuedMsFor, reportDispatch } from '#src/dispatch/dispatchReport';
+import { Fault } from '#stops/Fault';
+import { Notice } from '#stops/Notice';
+import { Silence } from '#stops/Silence';
 import { Bus } from '#subscribers/Bus';
 
 import type { CoreBase } from '#interfaces/CoreBase';

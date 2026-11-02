@@ -3,17 +3,13 @@ import { InteractionKind } from '@seedcord/core';
 import {
     DispatchContext,
     FaultBoundary,
-    outcomeFor,
-    queuedMsFor,
-    reportDispatch,
+    InteractionRun,
     reportedWrite,
-    resultFor,
-    runAfter,
     runInteractionGates
 } from '@seedcord/core/internal';
 import { paint } from '@seedcord/errors';
 import { Logger } from '@seedcord/logger';
-import { InteractionResponseType, InteractionType, Routes } from 'discord-api-types/v10';
+import { InteractionResponseType, Routes } from 'discord-api-types/v10';
 
 import { interactionUser } from '#handlers/interactionUser';
 import { RepliableHandler } from '#handlers/RepliableHandler';
@@ -22,42 +18,19 @@ import { interactionGateContext } from '#src/gates/context';
 
 import { faultReportOf } from './faultReportOf';
 
-import type {
-    ConstructableHandler,
-    HandlerConstructor,
-    InteractionMiddlewareConstructor
-} from '#handlers/constructors';
-import type { InteractionMiddleware } from '#handlers/interaction/InteractionMiddleware';
+import type { ConstructableHandler, InteractionMiddlewareConstructor } from '#handlers/constructors';
 import type { InteractionOf } from '#handlers/interaction/middlewareKinds';
-import type { ValidInteractionTypes } from '#handlers/interactionTypes';
+import type { Repliables, ValidInteractionTypes } from '#handlers/interactionTypes';
 import type { Core } from '#interfaces/Core';
 import type { ResolvedRoute } from './resolve';
-import type { DispatchOutcome, DispatchResult, MiddlewareKind } from '@seedcord/core';
-import type { FaultTarget, InteractionDispatch, MiddlewareRegistry } from '@seedcord/core/internal';
+import type { MiddlewareKind } from '@seedcord/core';
+import type { FaultTarget, InteractionRunAdapter, MiddlewareRegistry } from '@seedcord/core/internal';
 
 // lazy, env binds after this module loads
 let dispatchLogger: Logger | undefined;
 function logger(): Logger {
     dispatchLogger ??= new Logger('Dispatcher', { channel: 'interactions' });
     return dispatchLogger;
-}
-
-interface FaultScope {
-    readonly core: Core;
-    readonly payload: ValidInteractionTypes;
-    readonly dispatch: InteractionDispatch;
-    // null on autocomplete, whose only legal refusal is an empty type 8
-    readonly sender: ReplySender | null;
-}
-
-// empty choices are the only legal way to clear a pending autocomplete
-async function respondEmptyChoices(scope: FaultScope): Promise<void> {
-    const telemetry = { bus: scope.core.bus, dispatch: scope.dispatch, interactionId: scope.payload.id };
-    await reportedWrite(telemetry, 'respond', () =>
-        scope.core.rest.post(Routes.interactionCallback(scope.payload.id, scope.payload.token), {
-            body: { type: InteractionResponseType.ApplicationCommandAutocompleteResult, data: { choices: [] } }
-        })
-    );
 }
 
 interface DispatchArgs {
@@ -67,146 +40,70 @@ interface DispatchArgs {
     readonly middlewares: MiddlewareRegistry<InteractionMiddlewareConstructor>;
 }
 
-// a fresh sender can still reply the card because nothing is acked yet here
-function freshScope(
-    match: ResolvedRoute,
+function faultTarget(
     payload: ValidInteractionTypes,
     core: Core,
-    dispatch: InteractionDispatch
-): FaultScope {
+    dispatch: DispatchContext<InteractionKind>,
+    sender: ReplySender | undefined
+): FaultTarget {
+    if (dispatch.kind === InteractionKind.Autocomplete) {
+        const telemetry = { bus: core.bus, dispatch, interactionId: payload.id };
+        return {
+            clearChoices: () =>
+                reportedWrite(telemetry, 'respond', () =>
+                    core.rest.post(Routes.interactionCallback(payload.id, payload.token), {
+                        body: {
+                            type: InteractionResponseType.ApplicationCommandAutocompleteResult,
+                            data: { choices: [] }
+                        }
+                    })
+                )
+        };
+    }
+    // a fresh sender can still reply the card because nothing is acked yet when the constructor threw
     const ref = { application_id: payload.application_id, id: payload.id, token: payload.token };
+    const replySender = sender ?? new ReplySender(ref, core.rest, dispatch, core.bus);
+    return { reply: (response, options) => replySender.send(response, options) };
+}
+
+function httpRunAdapter(args: DispatchArgs): InteractionRunAdapter<ReplySender> {
+    const { match, payload, core, middlewares } = args;
+    // every fault path renders against this one context
+    const dispatch = new DispatchContext(match.kind, match.route, match.fallback);
+    const Handler = match.ctor;
     return {
-        core,
-        payload,
         dispatch,
-        sender: match.kind === InteractionKind.Autocomplete ? null : new ReplySender(ref, core.rest, dispatch, core.bus)
-    };
-}
-
-function dispatchReporter(
-    payload: ValidInteractionTypes,
-    core: Core,
-    dispatch: InteractionDispatch
-): (outcome: DispatchOutcome) => void {
-    const startedAt = performance.now();
-    const queuedMs = queuedMsFor(payload.id);
-    return (outcome) => {
-        reportDispatch(core.bus, {
-            dispatch,
-            interactionId: payload.id,
-            outcome,
-            userId: interactionUser(payload).id,
-            guildId: payload.guild_id ?? null,
-            startedAt,
-            queuedMs
-        });
-    };
-}
-
-async function answer(caught: unknown, scope: FaultScope, report: (outcome: DispatchOutcome) => void): Promise<void> {
-    const { core, dispatch, payload, sender } = scope;
-    const boundary = new FaultBoundary(core, core.config.errors?.ignoreApiCodes, DiscordAPIError);
-    const target: FaultTarget = sender
-        ? { reply: (response, options) => sender.send(response, options) }
-        : { clearChoices: () => respondEmptyChoices(scope) };
-    await boundary.answer(caught, (uuid) => faultReportOf(payload, dispatch, uuid), target);
-    report(outcomeFor(caught));
-}
-
-interface BeforeHandler {
-    readonly args: DispatchArgs;
-    readonly Handler: HandlerConstructor;
-    readonly dispatch: DispatchContext;
-    readonly scope: FaultScope;
-    readonly ran: InteractionMiddleware[];
-}
-
-async function runMiddlewares(step: BeforeHandler, kind: MiddlewareKind, sender: ReplySender): Promise<void> {
-    const { args, dispatch, ran } = step;
-    for (const Middleware of args.middlewares.chainFor(kind)) {
-        // chainFor picked this kind. the payload is the one the class declares.
-        const event = args.payload as InteractionOf<MiddlewareKind>;
-        const instance = new Middleware(event, args.core, dispatch, sender);
-        // pushed before the await because a middleware that throws still gets its after()
-        ran.push(instance);
-        await instance.execute();
-    }
-}
-
-// a returned value is the throw that stops the dispatch before the handler runs
-async function refusalBeforeHandler(step: BeforeHandler): Promise<{ caught: unknown } | null> {
-    const { args, scope } = step;
-    const { kind } = args.match;
-
-    if (kind !== InteractionKind.Autocomplete && scope.sender) {
-        try {
-            await runMiddlewares(step, kind, scope.sender);
-        } catch (caught) {
-            return { caught };
+        logger: logger(),
+        bus: core.bus,
+        interactionId: payload.id,
+        userId: interactionUser(payload).id,
+        guildId: payload.guild_id ?? null,
+        buildHandler() {
+            logger().trace(`Processing ${paint.sky.bold(dispatch.routeId)} with ${paint.mute(Handler.name)}`);
+            // in a union of both handler bases, the event parameter is never. the route pairs each kind with its class.
+            return new (Handler as ConstructableHandler)(payload as never, core, dispatch);
+        },
+        senderOf: (handler) => (handler instanceof RepliableHandler ? handler.sender : undefined),
+        *middlewares(kind, sender) {
+            for (const Middleware of middlewares.chainFor(kind)) {
+                // chainFor picked this kind. the payload is the one the class declares.
+                yield new Middleware(payload as InteractionOf<MiddlewareKind>, core, dispatch, sender);
+            }
+        },
+        // justified: the run skips gates on autocomplete, the one payload outside Repliables
+        runGates: () => runInteractionGates(Handler, interactionGateContext(payload as Repliables, core, dispatch)),
+        answer: async (caught, sender) => {
+            const boundary = new FaultBoundary(core, core.config.errors?.ignoreApiCodes, DiscordAPIError);
+            await boundary.answer(
+                caught,
+                (uuid) => faultReportOf(payload, dispatch, uuid),
+                faultTarget(payload, core, dispatch, sender)
+            );
         }
-    }
-
-    return gateRefusal(step);
+    };
 }
 
 // a null return means the refusal is already sent
-export async function dispatchInteraction(args: DispatchArgs): Promise<(() => Promise<void>) | null> {
-    const { match, payload, core } = args;
-    // every fault path below renders against this one context
-    const dispatch = new DispatchContext(match.kind, match.route, match.fallback);
-    const report = dispatchReporter(payload, core, dispatch);
-
-    const Handler = match.ctor;
-    logger().trace(`Processing ${paint.sky.bold(dispatch.routeId)} with ${paint.mute(Handler.name)}`);
-
-    let handler: InstanceType<ConstructableHandler>;
-    try {
-        // in a union of both handler bases, the event parameter is never. the route pairs each kind with its class.
-        handler = new (Handler as ConstructableHandler)(payload as never, core, dispatch);
-    } catch (caught) {
-        await answer(caught, freshScope(match, payload, core, dispatch), report);
-        return null;
-    }
-    const scope: FaultScope = {
-        core,
-        payload,
-        dispatch,
-        sender: handler instanceof RepliableHandler ? handler.sender : null
-    };
-
-    const ran: InteractionMiddleware[] = [];
-    const refusal = await refusalBeforeHandler({ args, Handler, dispatch, scope, ran });
-    if (refusal) {
-        await answer(refusal.caught, scope, report);
-        await runAfter(ran, resultFor(refusal.caught), logger());
-        return null;
-    }
-
-    return async () => {
-        let result: DispatchResult = { outcome: 'handled' };
-        try {
-            await handler.execute();
-            report('handled');
-        } catch (caught) {
-            result = resultFor(caught);
-            await answer(caught, scope, report);
-        } finally {
-            await runAfter(ran, result, logger());
-        }
-    };
-}
-
-// autocomplete has no reply target. @Gated already rejects a gate on one at compile time.
-async function gateRefusal(step: BeforeHandler): Promise<{ caught: unknown } | null> {
-    const { Handler, dispatch } = step;
-    const { match, payload, core } = step.args;
-    // match.kind comes from payload.type in the router. the second clause narrows the payload to Repliables.
-    if (match.kind === InteractionKind.Autocomplete || payload.type === InteractionType.ApplicationCommandAutocomplete)
-        return null;
-    try {
-        await runInteractionGates(Handler, interactionGateContext(payload, core, dispatch));
-        return null;
-    } catch (caught) {
-        return { caught };
-    }
+export function dispatchInteraction(args: DispatchArgs): Promise<(() => Promise<void>) | null> {
+    return new InteractionRun(httpRunAdapter(args)).prepare();
 }

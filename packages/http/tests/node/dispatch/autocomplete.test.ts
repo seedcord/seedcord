@@ -28,6 +28,7 @@ function autocompletePayload(name: string): object {
         id: 'int-1',
         application_id: 'app-1',
         token: 'tok',
+        user: { id: 'u-1', username: 'someone' },
         data: { type: 1, name, options: [{ type: 3, name: 'query', value: 'ap', focused: true }] }
     };
 }

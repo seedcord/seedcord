@@ -3,19 +3,14 @@ import { InteractionKind } from '@seedcord/core';
 import { HmrModuleHandler } from '@seedcord/core/hmr';
 import {
     DispatchContext,
+    InteractionRun,
     InteractionMetadataKey,
     interactionRoutesOf,
-    outcomeFor,
-    queuedMsFor,
-    reportDispatch,
     interactionMiddleware,
     InteractionMiddlewareMetadataKey,
     MiddlewareRegistry,
     PublishDefault,
-    resultFor,
-    routeIdOf,
-    runAfter,
-    runInteractionGates
+    routeIdOf
 } from '@seedcord/core/internal';
 import { prefixOf } from '@seedcord/custom-id';
 import { SeedcordErrorCode, paint } from '@seedcord/errors';
@@ -27,25 +22,15 @@ import { Events } from 'discord.js';
 import { Envapter } from 'envapt';
 
 import { CONFIRM_DEF } from '#bot/confirm/reserved';
+import { gatewayRunAdapter } from '#bot/controllers/gatewayRunAdapter';
 import { UnhandledAutocomplete, UnhandledRepliable } from '#bot/defaults';
-import { interactionGateContext } from '#bot/gates/context';
-import { handleInteractionFault } from '#bot/handleInteractionFault';
 import { slashRouteOf } from '#bUtilities/miscellaneous/slashRouteOf';
 import { AutocompleteHandler, InteractionMiddleware } from '#handlers/interaction';
 import { InteractionHandler } from '#handlers/interaction/InteractionHandler';
-import { RepliableHandler } from '#handlers/RepliableHandler';
 
-import type { ReplySender } from '#bot/ReplySender';
-import type {
-    ConstructableHandler,
-    HandlerConstructor,
-    InteractionMiddlewareConstructor
-} from '#handlers/constructors';
-import type { InteractionOf } from '#handlers/interaction/middlewareKinds';
+import type { HandlerConstructor, InteractionMiddlewareConstructor } from '#handlers/constructors';
 import type { Core } from '#interfaces/Core';
-import type { Repliables, ValidInteractionTypes } from '#src/handlers/interactionTypes';
-import type { DispatchOutcome, DispatchResult, MiddlewareKind } from '@seedcord/core';
-import type { ContextMenuLeaves, Initializeable, InteractionDispatch } from '@seedcord/core/internal';
+import type { ContextMenuLeaves, Initializeable } from '@seedcord/core/internal';
 import type { InFlight } from '@seedcord/core/node/internal';
 import type { CustomIdMatcher, HmrAware, HmrUpdateEvent } from '@seedcord/types';
 import type {
@@ -62,30 +47,10 @@ import type {
     UserContextMenuCommandInteraction,
     UserSelectMenuInteraction
 } from 'discord.js';
-import type { Promisable } from 'type-fest';
 
 interface InteractionArtifact {
     routeType: InteractionKind;
     routes: string[];
-}
-
-interface DispatchedHandler {
-    execute(): Promisable<void>;
-}
-
-interface DispatchReportRow {
-    readonly interaction: Interaction;
-    readonly startedAt: number;
-    readonly queuedMs: number;
-    readonly dispatch: InteractionDispatch;
-}
-
-interface BeforeHandler {
-    readonly HandlerCtor: HandlerConstructor;
-    readonly interaction: Interaction;
-    readonly dispatch: DispatchContext<InteractionKind>;
-    readonly sender: ReplySender | undefined;
-    readonly ran: InteractionMiddleware[];
 }
 
 export class InteractionDispatcher implements Initializeable, HmrAware {
@@ -383,123 +348,17 @@ export class InteractionDispatcher implements Initializeable, HmrAware {
         key: string,
         fallback: HandlerConstructor = UnhandledRepliable
     ): Promise<void> {
-        const startedAt = performance.now();
-        const queuedMs = queuedMsFor(interaction.id);
         const matched = this.maps[kind].get(key);
-
-        const HandlerCtor = matched ?? fallback;
-        const dispatch = new DispatchContext(kind, key, !matched);
-        const report = this.reporterFor({ interaction, startedAt, queuedMs, dispatch });
-
-        // outside the try so the fault boundary keeps the handler's ack state
-        let sender: ReplySender | undefined;
-        const ran: InteractionMiddleware[] = [];
-        let result: DispatchResult = { outcome: 'handled' };
-        try {
-            const handler = this.buildHandler(HandlerCtor, interaction as Repliables, dispatch);
-            if (handler instanceof RepliableHandler) sender = handler.sender;
-
-            const refusal = await this.refusalBeforeHandler({ HandlerCtor, interaction, dispatch, sender, ran });
-            if (refusal) {
-                result = resultFor(refusal.caught);
-                await this.answer(refusal.caught, interaction as ValidInteractionTypes, dispatch, sender, report);
-                return;
-            }
-            await handler.execute();
-            report('handled');
-        } catch (caught) {
-            result = resultFor(caught);
-            await this.answer(caught, interaction as ValidInteractionTypes, dispatch, sender, report);
-        } finally {
-            await runAfter(ran, result, this.logger);
-        }
-    }
-
-    private async answer(
-        caught: unknown,
-        interaction: ValidInteractionTypes,
-        dispatch: InteractionDispatch,
-        sender: ReplySender | undefined,
-        report: (outcome: DispatchOutcome) => void
-    ): Promise<void> {
-        await handleInteractionFault(caught, interaction, this.core, dispatch, sender);
-        report(outcomeFor(caught));
-    }
-
-    private buildHandler(
-        HandlerCtor: HandlerConstructor,
-        interaction: Repliables,
-        dispatch: DispatchContext
-    ): DispatchedHandler {
-        const { route } = dispatch;
-        if (dispatch.fallback) {
-            this.logger.warn(`No handler found for key ${paint.sky.bold(route)}. Falling back to ${HandlerCtor.name}.`);
-        }
-        this.logger.trace(`Processing ${paint.sky.bold(route)} with ${paint.mute(HandlerCtor.name)}`);
-        // in a union of both handler bases, the event parameter is never. the maps pair each kind with its class.
-        return new (HandlerCtor as ConstructableHandler)(interaction as never, this.core, dispatch);
-    }
-
-    private reporterFor(row: DispatchReportRow): (outcome: DispatchOutcome) => void {
-        return (outcome) => {
-            reportDispatch(this.core.bus, {
-                dispatch: row.dispatch,
-                interactionId: row.interaction.id,
-                outcome,
-                startedAt: row.startedAt,
-                userId: row.interaction.user.id,
-                guildId: row.interaction.guildId,
-                queuedMs: row.queuedMs
-            });
-        };
-    }
-
-    // a returned value is the throw that stops the dispatch before the handler runs
-    private async refusalBeforeHandler(step: BeforeHandler): Promise<{ caught: unknown } | null> {
-        const { HandlerCtor, interaction, dispatch, sender, ran } = step;
-        const { kind } = dispatch;
-
-        if (kind !== InteractionKind.Autocomplete && sender) {
-            try {
-                await this.runMiddlewares(kind, interaction as Repliables, dispatch, sender, ran);
-            } catch (caught) {
-                return { caught };
-            }
-        }
-
-        // @Gated rejects autocomplete at compile time, since it has no reply target. this is the backstop
-        if (interaction.isAutocomplete()) return null;
-        return this.gateRefusal(HandlerCtor, interaction as Repliables, dispatch);
-    }
-
-    private async runMiddlewares(
-        kind: MiddlewareKind,
-        interaction: Repliables,
-        dispatch: DispatchContext,
-        sender: ReplySender,
-        ran: InteractionMiddleware[]
-    ): Promise<void> {
-        for (const Middleware of this.middlewares.chainFor(kind)) {
-            // chainFor picked this kind. the interaction is the one the class declares.
-            const event = interaction as InteractionOf<MiddlewareKind>;
-            const middleware = new Middleware(event, this.core, dispatch, sender);
-            // pushed before the await because a middleware that throws still gets its after()
-            ran.push(middleware);
-            await middleware.execute();
-        }
-    }
-
-    private async gateRefusal(
-        HandlerCtor: HandlerConstructor,
-        interaction: Repliables,
-        dispatch: DispatchContext
-    ): Promise<{ caught: unknown } | null> {
-        try {
-            await runInteractionGates(HandlerCtor, interactionGateContext(interaction, this.core, dispatch));
-            return null;
-        } catch (caught) {
-            return { caught };
-        }
+        const adapter = gatewayRunAdapter({
+            interaction,
+            core: this.core,
+            dispatch: new DispatchContext(kind, key, !matched),
+            HandlerCtor: matched ?? fallback,
+            middlewares: this.middlewares,
+            logger: this.logger
+        });
+        const start = await new InteractionRun(adapter).prepare();
+        await start?.();
     }
 
     private async handleInteraction(interaction: Interaction): Promise<void> {
