@@ -1,5 +1,24 @@
 # @seedcord/http
 
+## 0.12.0-next.1
+
+### 💥 Breaking
+
+- Plugin `init()`, `ready()`, `dispose()` and `onHmr()`, handler `execute()`, and middleware `after()` can now return without a promise. Code that calls one of them directly and chains `.then()` must `await` it or wrap it in `Promise.resolve()`. ([#424](https://github.com/seedcord/seedcord/pull/424), thanks [@lunaradev1](https://github.com/lunaradev1))
+
+### 🩹 Patch
+
+- Reworded error messages and log lines that joined their parts with the wrong word or read two ways. The gate mismatch compile error now reads like `needs a handler of kind Slash, but this handler's kind is Button`. ([`6f71a86`](https://github.com/seedcord/seedcord/commit/6f71a868e39df8cff3b857688544404113d46596))
+- Fixed the compile error for a gate attached to a handler it doesn't fit. A gate typed with `InteractionGateContext` now prints one message, where it printed one per interaction kind and one of them read "requires a an interaction handler". ([#432](https://github.com/seedcord/seedcord/pull/432))
+
+#### 📦 Seedcord packages
+
+- `@seedcord/errors` 0.15.0-next.0 → 0.15.0-next.1
+- `@seedcord/custom-id` 0.3.1-next.0 → 0.3.1-next.1
+- `@seedcord/core` 0.12.0-next.0 → 0.12.0-next.1
+- `@seedcord/logger` 0.6.0-next.0 → 0.6.0-next.1
+- `@seedcord/types` 0.16.0-next.0 → 0.16.0-next.1
+
 ## 0.12.0-next.0
 
 ### 💥 Breaking

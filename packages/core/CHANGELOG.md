@@ -1,5 +1,27 @@
 # @seedcord/core
 
+## 0.12.0-next.1
+
+### 💥 Breaking
+
+- Plugin `init()`, `ready()`, `dispose()` and `onHmr()`, handler `execute()`, and middleware `after()` can now return without a promise. Code that calls one of them directly and chains `.then()` must `await` it or wrap it in `Promise.resolve()`. ([#424](https://github.com/seedcord/seedcord/pull/424), thanks [@lunaradev1](https://github.com/lunaradev1))
+- `RequirePermissions` has a new `unresolved` option for the refusal it throws when a member's permissions don't resolve inside a server. That refusal used to come from `notInGuild`. ([#432](https://github.com/seedcord/seedcord/pull/432))
+- The override options on every gate and permission helper now take a `Notice` class for seedcord to construct with that refusal's data, like the missing permission names or a cooldown's `resetAt`. Write a small class where you passed `{ message }`, a `Notice` instance, or Cooldown's functions. `missingNotice` and `dangerousNotice` became one `notice` that also covers `inverse`. ([#432](https://github.com/seedcord/seedcord/pull/432))
+- A permission check on a bot whose own member isn't cached now throws `CoreBotMemberMissing`, where it used to refuse as if every permission were missing. `RequireBotPermissions` without `in: 'guild'` no longer compiles on an event handler, where it used to refuse every event. ([#432](https://github.com/seedcord/seedcord/pull/432))
+
+### 🩹 Patch
+
+- Reworded error messages and log lines that joined their parts with the wrong word or read two ways. The gate mismatch compile error now reads like `needs a handler of kind Slash, but this handler's kind is Button`. ([`6f71a86`](https://github.com/seedcord/seedcord/commit/6f71a868e39df8cff3b857688544404113d46596))
+- Fixed the compile error for a gate attached to a handler it doesn't fit. A gate typed with `InteractionGateContext` now prints one message, where it printed one per interaction kind and one of them read "requires a an interaction handler". ([#432](https://github.com/seedcord/seedcord/pull/432))
+- Fixed the compile error for a route decorator that doesn't match its handler's generic. It now shows both values, like `{ decorator: "roster"; generic: "ping" }`, and a misspelled command gives one error that quotes it. ([`87e61bb`](https://github.com/seedcord/seedcord/commit/87e61bb7bc30ad07ccfbfb66d4b02103761f4b87))
+
+#### 📦 Seedcord packages
+
+- `@seedcord/errors` 0.15.0-next.0 → 0.15.0-next.1
+- `@seedcord/custom-id` 0.3.1-next.0 → 0.3.1-next.1
+- `@seedcord/logger` 0.6.0-next.0 → 0.6.0-next.1
+- `@seedcord/types` 0.16.0-next.0 → 0.16.0-next.1
+
 ## 0.12.0-next.0
 
 ### 💥 Breaking

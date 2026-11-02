@@ -1,5 +1,17 @@
 # @seedcord/plugin-mongoose
 
+## 0.7.0-next.1
+
+### 🩹 Patch
+
+- Updated some documentation. ([`bb8ee7c`](https://github.com/seedcord/seedcord/commit/bb8ee7cfcfedf4b70765ca547f191b68958553fa))
+
+#### 📦 Seedcord packages
+
+- `@seedcord/errors` 0.15.0-next.0 → 0.15.0-next.1
+- `@seedcord/logger` 0.6.0-next.0 → 0.6.0-next.1
+- `@seedcord/types` 0.16.0-next.0 → 0.16.0-next.1
+
 ## 0.7.0-next.0
 
 ### ✨ Minor

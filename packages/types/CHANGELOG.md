@@ -1,5 +1,11 @@
 # @seedcord/types
 
+## 0.16.0-next.1
+
+### 💥 Breaking
+
+- Plugin `init()`, `ready()`, `dispose()` and `onHmr()`, handler `execute()`, and middleware `after()` can now return without a promise. Code that calls one of them directly and chains `.then()` must `await` it or wrap it in `Promise.resolve()`. ([#424](https://github.com/seedcord/seedcord/pull/424), thanks [@lunaradev1](https://github.com/lunaradev1))
+
 ## 0.16.0-next.0
 
 ### 💥 Breaking

@@ -1,5 +1,16 @@
 # @seedcord/errors
 
+## 0.15.0-next.1
+
+### 💥 Breaking
+
+- `SeedcordErrorCode.MatchArmMissing` is now `MatchCaseMissing`, with the same number. Rename it wherever you check for it. ([`6f6cc3a`](https://github.com/seedcord/seedcord/commit/6f6cc3a4948b97969d7d42067543c4cac924eccb))
+
+### 🩹 Patch
+
+- `@seedcord/core` and `@seedcord/gateway` now throw the new `CoreBotMemberMissing` code from here. ([#432](https://github.com/seedcord/seedcord/pull/432))
+- Reworded error messages and log lines that joined their parts with the wrong word or read two ways. The gate mismatch compile error now reads like `needs a handler of kind Slash, but this handler's kind is Button`. ([`6f71a86`](https://github.com/seedcord/seedcord/commit/6f71a868e39df8cff3b857688544404113d46596))
+
 ## 0.15.0-next.0
 
 ### 💥 Breaking
