@@ -11,17 +11,20 @@ import {
     SearchIconButton,
     SiteSwitcher,
     ThemeToggle,
-    cn
+    cn,
+    useSiteHotkeys
 } from '@seedcord/ui';
+import { useActiveAnchor } from 'fumadocs-core/toc';
 import Link from 'next/link';
+import { useRouter } from 'next/navigation';
 import { useState } from 'react';
 
 import { DOCS_URL, HOME_URL, REPO_URL, SITE_URL } from '#lib/site';
 
 import { GuideSearch, SEARCH_LABEL } from './GuideSearch';
-import { useGuideHotkeys } from './useGuideHotkeys';
+import { useGuidePageKeys } from './useGuidePageKeys';
 
-import type { GuidePage } from './useGuideHotkeys';
+import type { PageKeyTargets } from './useGuidePageKeys';
 import type { SiteDestination } from '@seedcord/ui';
 import type { ReactElement } from 'react';
 
@@ -42,38 +45,27 @@ export function GithubLink(): ReactElement {
 }
 
 export interface GuideNavbarProps {
-    page: GuidePage;
+    targets: PageKeyTargets;
     navOpen: boolean;
     onNavOpen: () => void;
 }
 
-export function GuideNavbar({ page, navOpen, onNavOpen }: GuideNavbarProps): ReactElement {
+export function GuideNavbar({ targets, navOpen, onNavOpen }: GuideNavbarProps): ReactElement {
     const [searchOpen, setSearchOpen] = useState(false);
-    const [sitesOpen, setSitesOpen] = useState(false);
-    const [hotkeysOpen, setHotkeysOpen] = useState(false);
-    const hotkeys = useGuideHotkeys(
-        {
-            toggleSearch: () => setSearchOpen((open) => !open),
-            openSearch: () => setSearchOpen(true),
-            toggleSites: () => setSitesOpen((open) => !open),
-            showHotkeys: () => setHotkeysOpen(true)
-        },
-        page
-    );
+    // GuideShell renders this navbar inside fumadocs' AnchorProvider
+    const pageRows = useGuidePageKeys(useRouter(), targets, useActiveAnchor());
+    const site = useSiteHotkeys({
+        searchLabel: SEARCH_LABEL,
+        search: { open: searchOpen, setOpen: setSearchOpen },
+        panelOpen: navOpen,
+        pageRows
+    });
 
     return (
         <>
-            <HotkeysDialog open={hotkeysOpen} onOpenChange={setHotkeysOpen} hotkeys={hotkeys} />
+            <HotkeysDialog {...site.hotkeysDialog} />
             <Navbar
-                mark={
-                    <SiteSwitcher
-                        site="guide"
-                        destinations={DESTINATIONS}
-                        open={sitesOpen}
-                        onOpenChange={setSitesOpen}
-                        linkAs={Link}
-                    />
-                }
+                mark={<SiteSwitcher site="guide" destinations={DESTINATIONS} linkAs={Link} {...site.switcher} />}
                 center={<GuideSearch open={searchOpen} onOpenChange={setSearchOpen} />}
                 actions={
                     <>
@@ -86,7 +78,7 @@ export function GuideNavbar({ page, navOpen, onNavOpen }: GuideNavbarProps): Rea
                     </>
                 }
                 tabsClassName={cn('hidden lg:flex')}
-                tabs={<NavTabs items={page.tabs} activeHref={page.activeHref} linkAs={Link} />}
+                tabs={<NavTabs items={targets.tabs} activeHref={targets.activeHref} linkAs={Link} />}
             />
         </>
     );

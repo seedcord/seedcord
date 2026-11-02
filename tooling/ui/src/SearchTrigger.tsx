@@ -7,8 +7,8 @@ import { ariaKeyshortcuts } from './HotkeyKeys';
 import { Icon } from './Icon';
 import { Kbd } from './Kbd';
 import { cn } from './lib/cn';
-import { searchKeys } from './lib/siteHotkeys';
 import { useIsMac } from './lib/useIsMac';
+import { searchKeys } from './lib/useSiteHotkeys';
 
 import type { ReactElement } from 'react';
 
@@ -46,12 +46,15 @@ export function SearchTrigger({ label, onOpen }: SearchTriggerProps): ReactEleme
 }
 
 export function SearchIconButton({ label, onOpen }: SearchTriggerProps): ReactElement {
+    const isMac = useIsMac();
+
     return (
         <Button
             variant="ghost"
             size="icon"
             onClick={onOpen}
             aria-label={label}
+            aria-keyshortcuts={ariaKeyshortcuts(searchKeys(label), isMac)}
             className={cn('text-(--text) lg:hidden')}
         >
             <Icon icon={Search} size={16} />

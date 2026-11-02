@@ -19,7 +19,7 @@ function Switcher(): ReactElement {
     const [open, setOpen] = useState(false);
     return (
         <TooltipProvider>
-            <SiteSwitcher site="guide" destinations={DESTINATIONS} open={open} onOpenChange={setOpen} />
+            <SiteSwitcher site="guide" destinations={DESTINATIONS} open={open} onOpenChange={setOpen} returnFocus />
         </TooltipProvider>
     );
 }

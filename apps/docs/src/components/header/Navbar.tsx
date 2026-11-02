@@ -15,12 +15,10 @@ import {
     REPO_URL,
     ThemeToggle,
     cn,
-    siteHotkeys,
-    useHotkeys
+    useSiteHotkeys
 } from '@seedcord/ui';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import { useState } from 'react';
 
 import { hasMobileNavPanel } from '#components/layout/sidebar/utils/hasMobileNavPanel';
 import { useCommandPaletteOpen } from '#components/providers/CommandPaletteProvider';
@@ -44,35 +42,18 @@ export function Navbar(): ReactElement {
     const isMobileNavOpen = useUIStore((state) => state.isMobileNavOpen);
     const palette = useCommandPaletteOpen();
     const showMobileNavButton = hasMobileNavPanel(usePathname());
-    const [sitesOpen, setSitesOpen] = useState(false);
-    const [hotkeysOpen, setHotkeysOpen] = useState(false);
+    const site = useSiteHotkeys({ searchLabel: SEARCH_LABEL, search: palette, panelOpen: isMobileNavOpen });
 
-    const toggleSearch = (): void => palette.setOpen(!palette.open);
     const onSearchClick = (): void => {
         log('Search button clicked');
-        toggleSearch();
+        palette.setOpen(!palette.open);
     };
-    const hotkeys = siteHotkeys(SEARCH_LABEL, {
-        toggleSearch,
-        openSearch: () => palette.setOpen(true),
-        toggleSites: () => setSitesOpen((open) => !open),
-        showHotkeys: () => setHotkeysOpen(true)
-    });
-    useHotkeys(hotkeys);
 
     return (
         <>
-            <HotkeysDialog open={hotkeysOpen} onOpenChange={setHotkeysOpen} hotkeys={hotkeys} />
+            <HotkeysDialog {...site.hotkeysDialog} />
             <NavbarShell
-                mark={
-                    <SiteSwitcher
-                        site="docs"
-                        destinations={DESTINATIONS}
-                        open={sitesOpen}
-                        onOpenChange={setSitesOpen}
-                        linkAs={Link}
-                    />
-                }
+                mark={<SiteSwitcher site="docs" destinations={DESTINATIONS} linkAs={Link} {...site.switcher} />}
                 center={<SearchTrigger label={SEARCH_LABEL} onOpen={onSearchClick} />}
                 actions={
                     <>

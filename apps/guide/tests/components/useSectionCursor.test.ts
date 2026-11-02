@@ -26,7 +26,10 @@ beforeEach(() => {
 });
 
 // the worker runs other files after this one
-afterEach(() => Reflect.deleteProperty(Element.prototype, 'scrollIntoView'));
+afterEach(() => {
+    Reflect.deleteProperty(Element.prototype, 'scrollIntoView');
+    document.body.innerHTML = '';
+});
 
 describe('useSectionCursor', () => {
     it('steps one heading per press, even before the heading in view catches up', () => {

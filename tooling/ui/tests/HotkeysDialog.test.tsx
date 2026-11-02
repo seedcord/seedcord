@@ -25,12 +25,10 @@ describe('HotkeysDialog', () => {
             expect.stringContaining('Show keyboard shortcuts'),
             expect.stringContaining('Next tab')
         ]);
-        expect(within(rows[0] ?? document.body).getByLabelText('Control')).toBeInTheDocument();
-        expect(within(rows[0] ?? document.body).getByText('K')).toBeInTheDocument();
-        expect(within(rows[0] ?? document.body).getByText('/')).toBeInTheDocument();
-        expect(within(rows[1] ?? document.body).getByLabelText('Left')).toBeInTheDocument();
-        expect(within(rows[2] ?? document.body).getByText('?')).toBeInTheDocument();
-        expect(within(rows[3] ?? document.body).getByLabelText('Shift')).toBeInTheDocument();
-        expect(within(rows[3] ?? document.body).getByLabelText('Right')).toBeInTheDocument();
+        // key names come from screen-reader-only text
+        expect(rows[0]).toHaveTextContent(/Control.*K.*or.*\//);
+        expect(rows[1]).toHaveTextContent('Left');
+        expect(rows[2]).toHaveTextContent('?');
+        expect(rows[3]).toHaveTextContent(/Shift.*Right/);
     });
 });

@@ -1,7 +1,13 @@
 import { fireEvent, renderHook } from '@testing-library/react';
-import { describe, expect, it, vi } from 'vitest';
+import { afterEach, describe, expect, it, vi } from 'vitest';
 
 import { useHotkeys } from '#src/lib/useHotkeys';
+
+// the worker runs other files in this document after these tests
+afterEach(() => {
+    document.body.innerHTML = '';
+    globalThis.getSelection()?.removeAllRanges();
+});
 
 describe('useHotkeys', () => {
     it('runs the row whose key was pressed', () => {
@@ -40,7 +46,7 @@ describe('useHotkeys', () => {
         expect(switcher).not.toHaveBeenCalled();
     });
 
-    it('leaves a plain key to a field, a modal dialog, or a control that already took it', () => {
+    it('leaves a plain key to a field or a control that already took it', () => {
         const toggle = vi.fn();
         const switcher = vi.fn();
         renderHook(() =>
@@ -53,22 +59,18 @@ describe('useHotkeys', () => {
             <input id="input" />
             <textarea id="textarea"></textarea>
             <div id="editable" contenteditable="true"></div>
-            <div role="dialog" aria-modal="true"><button id="in-modal"></button></div>
-            <div role="dialog"><button id="in-popover"></button></div>
             <button id="taken"></button>
         `;
         const byId = (id: string): HTMLElement => document.getElementById(id) ?? document.body;
         byId('taken').addEventListener('keydown', (event) => event.preventDefault());
 
-        for (const id of ['input', 'textarea', 'editable', 'in-modal', 'taken']) {
+        for (const id of ['input', 'textarea', 'editable', 'taken']) {
             fireEvent.keyDown(byId(id), { key: 's' });
         }
         fireEvent.keyDown(byId('input'), { key: 'k', metaKey: true });
+
         expect(switcher).not.toHaveBeenCalled();
         expect(toggle).toHaveBeenCalledOnce();
-
-        fireEvent.keyDown(byId('in-popover'), { key: 's' });
-        expect(switcher).toHaveBeenCalledOnce();
     });
 
     it('tells ← from ⇧← and ignores Shift on keys that type a character', () => {
@@ -94,10 +96,12 @@ describe('useHotkeys', () => {
 
     it('leaves the arrows to a text selection', () => {
         const page = vi.fn();
+        const tab = vi.fn();
         const search = vi.fn();
         renderHook(() =>
             useHotkeys([
                 { key: 'ArrowRight', description: 'Next page', run: page },
+                { key: 'ArrowRight', shift: true, description: 'Next tab', run: tab },
                 { key: '/', description: 'Search', run: search }
             ])
         );
@@ -110,7 +114,7 @@ describe('useHotkeys', () => {
         fireEvent.keyDown(document.body, { key: '/' });
 
         expect(page).not.toHaveBeenCalled();
+        expect(tab).not.toHaveBeenCalled();
         expect(search).toHaveBeenCalledOnce();
-        globalThis.getSelection()?.removeAllRanges();
     });
 });

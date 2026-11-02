@@ -7,8 +7,8 @@ import { CaretTrigger } from './CaretTrigger';
 import { HotkeyHint } from './HotkeyHint';
 import { cn } from './lib/cn';
 import { PlainLink } from './lib/navLink';
-import { SWITCH_SITE } from './lib/siteHotkeys';
 import { useRovingList } from './lib/useRovingList';
+import { SWITCH_SITE } from './lib/useSiteHotkeys';
 import { Popover, PopoverContent, PopoverTrigger } from './Popover';
 import { SiteMark } from './SiteMark';
 
@@ -26,6 +26,8 @@ export interface SiteSwitcherProps {
     destinations: readonly SiteDestination[];
     open: boolean;
     onOpenChange: (open: boolean) => void;
+    // closing leaves focus on the page when false
+    returnFocus: boolean;
     linkAs?: NavLinkComponent | undefined;
 }
 
@@ -33,9 +35,6 @@ const rowClassName = cn(
     'flex w-full items-center justify-between gap-3 rounded-md px-3 py-2 text-sm',
     'transition-colors duration-100 ease-out'
 );
-
-// nothing filters this list
-const NO_QUERY = '';
 
 interface SiteOptionProps {
     destination: SiteDestination;
@@ -89,7 +88,6 @@ interface SiteListProps {
 function SiteList({ id, destinations, onClose }: SiteListProps): ReactElement {
     const others = destinations.filter((destination) => destination.current !== true);
     const roving = useRovingList({
-        query: NO_QUERY,
         groups: [{ items: others, loading: false }],
         onSelect: (destination) => {
             globalThis.open(destination.href, '_blank', 'noreferrer');
@@ -128,7 +126,14 @@ function SiteList({ id, destinations, onClose }: SiteListProps): ReactElement {
     );
 }
 
-export function SiteSwitcher({ site, destinations, open, onOpenChange, linkAs }: SiteSwitcherProps): ReactElement {
+export function SiteSwitcher({
+    site,
+    destinations,
+    open,
+    onOpenChange,
+    returnFocus,
+    linkAs
+}: SiteSwitcherProps): ReactElement {
     const Link = linkAs ?? PlainLink;
     const listId = useId();
 
@@ -149,12 +154,17 @@ export function SiteSwitcher({ site, destinations, open, onOpenChange, linkAs }:
                             variant="ghost"
                             aria-haspopup="listbox"
                             aria-controls={listId}
-                            aria-label="Switch site"
+                            aria-label={SWITCH_SITE.description}
                             className={cn('font-display text-lg')}
                         />
                     </PopoverTrigger>
                 </HotkeyHint>
-                <PopoverContent align="start" sideOffset={10} className={cn('w-56 p-1')}>
+                <PopoverContent
+                    align="start"
+                    sideOffset={10}
+                    className={cn('w-56 p-1')}
+                    onCloseAutoFocus={returnFocus ? undefined : (event) => event.preventDefault()}
+                >
                     <SiteList id={listId} destinations={destinations} onClose={() => onOpenChange(false)} />
                 </PopoverContent>
             </Popover>

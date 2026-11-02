@@ -4,22 +4,22 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { useScrollMemory } from '#components/useScrollMemory';
 
 function scrollPageTo(top: number): void {
-    Object.defineProperty(globalThis, 'scrollY', { value: top, configurable: true });
+    vi.stubGlobal('scrollY', top);
     fireEvent.scroll(globalThis.window);
 }
 
 let scrollTo: ReturnType<typeof vi.fn>;
 
 beforeEach(() => {
+    // another file in this worker can leave a #hash in the url
+    history.replaceState(null, '', '/');
     scrollTo = vi.fn();
     vi.stubGlobal('scrollTo', scrollTo);
 });
 
 afterEach(() => {
     vi.unstubAllGlobals();
-    Reflect.deleteProperty(globalThis, 'scrollY');
     sessionStorage.clear();
-    history.replaceState(null, '', '/');
 });
 
 describe('useScrollMemory', () => {
@@ -43,5 +43,21 @@ describe('useScrollMemory', () => {
         rerender({ path: '/core/' });
 
         expect(scrollTo).not.toHaveBeenCalled();
+    });
+
+    it('keeps the page working when the browser blocks storage', () => {
+        vi.stubGlobal('sessionStorage', undefined);
+        Object.defineProperty(globalThis, 'sessionStorage', {
+            configurable: true,
+            get: () => {
+                throw new DOMException('The operation is insecure.', 'SecurityError');
+            }
+        });
+
+        expect(() => {
+            const { rerender } = renderHook(({ path }) => useScrollMemory(path), { initialProps: { path: '/core/' } });
+            scrollPageTo(1200);
+            rerender({ path: '/commands/' });
+        }).not.toThrow();
     });
 });

@@ -35,17 +35,14 @@ describe('HotkeyHint', () => {
             vi.advanceTimersByTime(TOOLTIP_DELAY_MS);
         });
 
-        const tooltip = screen.getByRole('tooltip');
-        expect(tooltip).toHaveTextContent('Next tab');
-        expect(screen.getAllByLabelText('Shift').length).toBeGreaterThan(0);
-        expect(screen.getAllByLabelText('Right').length).toBeGreaterThan(0);
+        expect(screen.getByRole('tooltip')).toHaveTextContent(/Next tab.*Shift.*Right/);
     });
 
     it('puts the site keys on the controls they open', () => {
         render(
             withTooltips(
                 <>
-                    <SiteSwitcher site="guide" destinations={[]} open={false} onOpenChange={vi.fn()} />
+                    <SiteSwitcher site="guide" destinations={[]} open={false} onOpenChange={vi.fn()} returnFocus />
                     <SearchTrigger label="Search the guide" onOpen={vi.fn()} />
                 </>
             )

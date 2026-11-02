@@ -107,7 +107,12 @@ export function GuideShell({
     return (
         <AnchorProvider toc={anchors}>
             <GuideNavbar
-                page={{ tabs, activeHref: activeHref ?? '', neighbours, headingIds: toc.map((item) => idOf(item.url)) }}
+                targets={{
+                    tabs,
+                    activeHref: activeHref ?? '',
+                    neighbours,
+                    headingIds: toc.map((item) => idOf(item.url))
+                }}
                 navOpen={navOpen}
                 onNavOpen={() => setNavOpen(true)}
             />

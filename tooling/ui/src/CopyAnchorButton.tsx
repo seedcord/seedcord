@@ -19,7 +19,6 @@ async function copyLink(anchorId: string | undefined): Promise<void> {
     await navigator.clipboard.writeText(url.toString());
 }
 
-// runs the same copy and feedback as clicking the button for that anchor
 export function clickCopyAnchor(anchorId: string | undefined): void {
     document.querySelector<HTMLElement>(`[data-copy-anchor="${CSS.escape(anchorId ?? '')}"]`)?.click();
 }

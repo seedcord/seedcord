@@ -10,21 +10,23 @@ import type { KeyCap } from './KeyCap';
 import type { HotkeySpec } from './lib/useHotkeys';
 import type { ReactElement } from 'react';
 
-const SHIFT: KeyCap = { label: 'Shift', face: ArrowBigUp };
+const SHIFT: KeyCap = { label: 'Shift', face: ArrowBigUp, aria: 'Shift' };
+const COMMAND: KeyCap = { label: 'Command', face: Command, aria: 'Meta' };
+const CONTROL: KeyCap = { label: 'Control', face: 'Ctrl', aria: 'Control' };
 
 export function keyCaps({ key, mod, shift }: HotkeySpec, isMac: boolean): KeyCap[] {
-    const modifier: KeyCap = isMac ? { label: 'Command', face: Command } : { label: 'Control', face: 'Ctrl' };
-    return [...(mod === true ? [modifier] : []), ...(shift === true ? [SHIFT] : []), keyCap(key)];
+    return [...(mod === true ? [isMac ? COMMAND : CONTROL] : []), ...(shift === true ? [SHIFT] : []), keyCap(key)];
 }
 
-// aria-keyshortcuts modifiers are Meta, Control and Shift, joined to the key with +
-function ariaKeyshortcut({ key, mod, shift }: HotkeySpec, isMac: boolean): string {
-    const modifiers = [...(mod === true ? [isMac ? 'Meta' : 'Control'] : []), ...(shift === true ? ['Shift'] : [])];
-    return [...modifiers, key.length === 1 ? key.toUpperCase() : key].join('+');
-}
-
+// aria-keyshortcuts joins a shortcut's keys with + and separate shortcuts with a space
 export function ariaKeyshortcuts(hotkeys: readonly HotkeySpec[], isMac: boolean): string {
-    return hotkeys.map((hotkey) => ariaKeyshortcut(hotkey, isMac)).join(' ');
+    return hotkeys
+        .map((hotkey) =>
+            keyCaps(hotkey, isMac)
+                .map((cap) => cap.aria)
+                .join('+')
+        )
+        .join(' ');
 }
 
 export function HotkeyKeys({
