@@ -54,6 +54,20 @@ afterEach(() => {
 });
 
 describe('StepPrinter', () => {
+    it('runs a step without printing its row when the printer hides rows', async () => {
+        const steps = new StepPrinter({
+            command: 'ask',
+            labels: ['search'],
+            verbose: false,
+            stdout,
+            stderr,
+            rows: false
+        });
+
+        expect(await steps.step('search', () => Promise.resolve('found'))).toBe('found');
+        expect(stdout.text()).toBe('');
+    });
+
     it('pads each label to the longest one and right-aligns the time after it', async () => {
         const steps = printer();
 

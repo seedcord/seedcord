@@ -6,6 +6,7 @@ import { CloseControls } from './CloseControls';
 import { IconSwap } from './IconSwap';
 import { Input } from './Input';
 import { cn } from './lib/cn';
+import { useSearchDialogListExpanded } from './SearchDialog';
 
 import type { KeyboardEvent, ReactElement, ReactNode, RefObject } from 'react';
 
@@ -20,7 +21,6 @@ export interface SearchFieldProps {
     placeholder?: string;
     maxLength?: number;
     listboxId: string;
-    listExpanded: boolean;
     activeId?: string | undefined;
     isSearching?: boolean;
     leading?: ReactNode;
@@ -39,15 +39,16 @@ export function SearchField({
     placeholder = 'Search…',
     maxLength,
     listboxId,
-    listExpanded,
     activeId,
     isSearching = false,
     leading,
     trailing,
     aboveOnMobile
 }: SearchFieldProps): ReactElement {
+    const listExpanded = useSearchDialogListExpanded();
+
     return (
-        <div className={cn('px-4 py-3', listExpanded && 'border-border border-b')}>
+        <>
             {aboveOnMobile ? <div className={cn('mb-2 sm:hidden')}>{aboveOnMobile}</div> : null}
             <Input
                 ref={inputRef}
@@ -91,6 +92,6 @@ export function SearchField({
                     </span>
                 }
             />
-        </div>
+        </>
     );
 }

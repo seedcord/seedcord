@@ -143,7 +143,6 @@ describe('Paginator.start', () => {
         expect(event.reply).toHaveBeenCalledOnce();
         const options = event.reply.mock.calls[0]?.[0] as { components: unknown[]; flags: number };
         expect(options.flags & MessageFlags.IsComponentsV2).toBeTruthy();
-        expect(options.flags & MessageFlags.Ephemeral).toBeFalsy();
         expect(containerText(options.components)).toBe('a\nb');
     });
 
@@ -163,17 +162,22 @@ describe('Paginator.start', () => {
         expect(containerText(options.components)).toBe('e');
     });
 
-    it('honors an ephemeral paginator', async () => {
-        const ephemeral = new Paginator({
+    it('sends an ephemeral first page unless the config sets ephemeral to false', async () => {
+        const defaultEvent = startEvent();
+        await pager.start(stubHandler(defaultEvent));
+        const defaultOptions = defaultEvent.reply.mock.calls[0]?.[0] as { flags: number };
+        expect(defaultOptions.flags & MessageFlags.Ephemeral).toBeTruthy();
+
+        const board = new Paginator({
             prefix: 'invites',
             source: new ArraySource(() => letters, { perPage: 2 }),
             renderItem: (letter) => letter,
-            ephemeral: true
+            ephemeral: false
         });
-        const event = startEvent();
-        await ephemeral.start(stubHandler(event));
-        const options = event.reply.mock.calls[0]?.[0] as { flags: number };
-        expect(options.flags & MessageFlags.Ephemeral).toBeTruthy();
+        const boardEvent = startEvent();
+        await board.start(stubHandler(boardEvent));
+        const boardOptions = boardEvent.reply.mock.calls[0]?.[0] as { flags: number };
+        expect(boardOptions.flags & MessageFlags.Ephemeral).toBeFalsy();
     });
 });
 

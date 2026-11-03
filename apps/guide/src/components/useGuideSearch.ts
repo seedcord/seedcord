@@ -1,18 +1,29 @@
 'use client';
 
-import { GuideMatches, GuideSearch, loadOnce, parseQuestion, TooManySearches } from '@seedcord/docs-search';
+import {
+    GuideMatches,
+    GuideSearch,
+    loadOnce,
+    parseQuestion,
+    SearchUnavailable,
+    SiteUnreachable
+} from '@seedcord/docs-search';
+import { GUIDE } from '@seedcord/ui/sites';
 import { useEffect, useMemo, useState } from 'react';
 
-import type { GuideResult } from '@seedcord/docs-search';
+import { ERROR_CODES } from '#lib/errorCodes';
+
+import type { CodeMentions, GuideResult } from '@seedcord/docs-search';
 import type { TaggedUnion } from 'type-fest';
 
 const TYPING_PAUSE_MS = 250;
 
 const NO_RESULTS: GuideResult[] = [];
+const NO_CODES: CodeMentions = { swapped: [], hints: [] };
 
-const search = new GuideSearch();
+const search = new GuideSearch(GUIDE);
 
-const loadMatches = loadOnce(() => GuideMatches.load());
+const loadMatches = loadOnce(() => GuideMatches.load(GUIDE));
 
 type States = {
     pending: Record<never, never>;
@@ -33,13 +44,18 @@ interface Answer {
     state: State<'failed' | 'done'>;
 }
 
+interface GuideSearchState {
+    groups: ResultGroup[];
+    codes: CodeMentions;
+}
+
 const PENDING = { status: 'pending' } as const;
-const NOT_ASKED: GroupState = { status: 'done', results: NO_RESULTS };
+const NOT_ASKED: State<'done'> = { status: 'done', results: NO_RESULTS };
+const NO_ANSWER: Answer = { question: '', state: NOT_ASKED };
 
 function noticeFor(error: unknown, results: string): string {
-    if (error instanceof TooManySearches) return error.message;
-    // fetch rejects with a TypeError when the request never reaches the server
-    if (error instanceof TypeError) return `${results} can't load without a network connection.`;
+    if (error instanceof SearchUnavailable) return error.message;
+    if (error instanceof SiteUnreachable) return `${results} can't load without a network connection.`;
     return `${results} are unavailable right now. Close and reopen search to try again.`;
 }
 
@@ -48,9 +64,9 @@ function matchesState(typed: string, loaded: Loaded): GroupState {
     return loaded.status === 'ready' ? { status: 'done', results: loaded.matches.match(typed) } : loaded;
 }
 
-function relatedState(question: string | undefined, answer: Answer | null): GroupState {
+function relatedState(question: string | undefined, latest: Answer): GroupState {
     if (question === undefined) return NOT_ASKED;
-    return answer?.question === question ? answer.state : PENDING;
+    return latest.question === question ? latest.state : PENDING;
 }
 
 function withoutShown(state: GroupState, shown: ReadonlySet<string>): GroupState {
@@ -85,11 +101,11 @@ function useMatches(open: boolean): Loaded {
     return loaded;
 }
 
-export function useGuideSearch(typed: string, open: boolean): ResultGroup[] {
+export function useGuideSearch(typed: string, open: boolean): GuideSearchState {
     const loaded = useMatches(open);
-    const [answer, setAnswer] = useState<Answer | null>(null);
+    const [latest, setLatest] = useState(NO_ANSWER);
     const question = parseQuestion(typed);
-    const answered = answer?.state.status === 'done' && answer.question === question;
+    const answered = latest.state.status === 'done' && latest.question === question;
 
     useEffect(() => {
         if (question === undefined || !open || answered) return undefined;
@@ -99,11 +115,11 @@ export function useGuideSearch(typed: string, open: boolean): ResultGroup[] {
             search.search(question, replaced.signal).then(
                 (results) => {
                     if (replaced.signal.aborted) return;
-                    setAnswer({ question, state: { status: 'done', results } });
+                    setLatest({ question, state: { status: 'done', results } });
                 },
                 (error: unknown) => {
                     if (replaced.signal.aborted) return;
-                    setAnswer({ question, state: { status: 'failed', notice: noticeFor(error, 'Related results') } });
+                    setLatest({ question, state: { status: 'failed', notice: noticeFor(error, 'Related results') } });
                 }
             );
         }, TYPING_PAUSE_MS);
@@ -113,15 +129,17 @@ export function useGuideSearch(typed: string, open: boolean): ResultGroup[] {
         };
     }, [question, open, answered]);
 
-    const related = relatedState(question, answer);
+    const related = relatedState(question, latest);
     const matched = useMemo(() => matchesState(typed, loaded), [typed, loaded]);
 
-    return useMemo(() => {
+    const groups = useMemo(() => {
         const shown = new Set(matched.status === 'done' ? matched.results.map((result) => result.path) : []);
-        const groups: ResultGroup[] = [
+        const all: ResultGroup[] = [
             { label: 'Matches', ...matched },
             { label: 'Related', ...withoutShown(related, shown) }
         ];
-        return groups.filter((group) => group.status !== 'done' || group.results.length > 0);
+        return all.filter((group) => group.status !== 'done' || group.results.length > 0);
     }, [matched, related]);
+
+    return { groups, codes: question === undefined ? NO_CODES : ERROR_CODES.read(question) };
 }

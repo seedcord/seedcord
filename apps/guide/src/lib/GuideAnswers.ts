@@ -1,8 +1,10 @@
 import { PRODUCTION_ORIGIN } from '@seedcord/brand';
-import { embedding, guideResult, loadOnce, parseQuestion, QUESTION_LENGTH, SectionIndex } from '@seedcord/docs-search';
+import { embedding, guideResult, loadOnce, parseQuestion, QUESTION_RULE, SectionIndex } from '@seedcord/docs-search';
 import { GUIDE } from '@seedcord/ui/sites';
 
-import type { GuideAnswer, GuideService } from '@seedcord/docs-search';
+import { ERROR_CODES } from '#lib/errorCodes';
+
+import type { GuideAnswer, GuideService, Question } from '@seedcord/docs-search';
 import type { Assets } from '@seedcord/ui/fetchAsset';
 
 export interface AnswerEnv {
@@ -10,9 +12,7 @@ export interface AnswerEnv {
     AI: { run(model: typeof embedding.model, input: { text: string[] }): Promise<{ data: number[][] }> };
 }
 
-type Ranked = { hits: ReturnType<SectionIndex['rank']> } | { retryAfterSeconds: number };
-
-export const QUESTION_RULE = `${QUESTION_LENGTH.min} to ${QUESTION_LENGTH.max} characters`;
+type Ranked = { hits: ReturnType<SectionIndex['rank']> } | Extract<GuideAnswer, { retryAfterSeconds: number }>;
 
 const RESULTS = 8;
 const SECOND_MS = 1000;
@@ -36,7 +36,8 @@ export class GuideAnswers implements GuideService {
         return indexFor(this.env);
     }
 
-    async rank(question: string, index: SectionIndex): Promise<Ranked> {
+    async rank(asked: Question, index: SectionIndex): Promise<Ranked> {
+        const { question } = ERROR_CODES.read(asked);
         let data: number[][];
         try {
             ({ data } = await this.env.AI.run(embedding.model, { text: [embedding.query(question)] }));
@@ -56,6 +57,6 @@ export class GuideAnswers implements GuideService {
 
         const ranked = await this.rank(question, await this.index());
         if ('retryAfterSeconds' in ranked) return ranked;
-        return { hits: ranked.hits.map((hit) => guideResult(hit, { by: 'meaning' })) };
+        return { hits: ranked.hits.map((hit) => guideResult(hit, { by: 'meaning' }, GUIDE)) };
     }
 }

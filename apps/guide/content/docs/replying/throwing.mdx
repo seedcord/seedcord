@@ -1,11 +1,15 @@
 ---
 title: Throwing
-description: Refuse a request from any handler by throwing a Notice, so the user sees why on a card and your code stops there.
+description: Refuse a request by throwing a Notice from any handler or helper, so your code stops there and the user sees why.
 ---
 
-Say your ban handler checks for an open case in a helper. Returning a flag means `execute()` has to check it, and every caller of every helper that can refuse has to check one too. Throw from the helper and the handler stops at the line that found the problem.
+Sometimes you need to stop a command and tell the user why, like when they don't have a profile, aren't allowed to do something, or can't afford it, etc.
+
+Replying with an error message and returning only stops the function you're in. Say your ban handler checks for an open case in a helper. Returning a flag means `execute()` has to check it, and every caller of every helper that can refuse has to check one too. Throw from the helper instead. The handler stops at the line that found the problem, and nothing has to pass a value up a few layers to check it. This also makes the code easier to read and reason about.
 
 seedcord catches that throw at one boundary and sends the reply through the handler, so the class you throw sets what the reply says. A gate throws into the same boundary, and its refusal reaches the user the same way.
+
+## Writing a Notice
 
 You write a refusal as a [`Notice`](ref:core/Notice) subclass.
 

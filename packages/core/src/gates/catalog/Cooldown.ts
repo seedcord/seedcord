@@ -61,7 +61,7 @@ function scopeValue(ctx: GateContextBase, per: 'user' | 'guild' | 'channel'): st
  * Allows `limit` uses per window, scoped by `per`. A number `duration` is **seconds**, and a string is
  * a duration like `30m` or `24h`. The slot is charged in commit, only after the whole gate set passes,
  * so a later refusal never burns the cooldown.
- * That split also means two requests racing the same key can both pass before either charges the slot.
+ * If two requests in one process pass the check together, the commit refuses the one that goes over `limit`.
  * The key combines the handler's route with the window settings, keeping two different handlers on separate
  * windows. Replace the refusal with {@link CooldownOptions.notice}.
  *
@@ -128,15 +128,17 @@ export function Cooldown(
     const keyOf = (ctx: GateContextBase): string =>
         `cooldown:${ctx.dispatch.declaredRoute ?? `anon${anonId}`}:${per}:w${windowMs}:l${options?.limit ?? 1}:${scopeValue(ctx, per)}`;
 
+    const Refusal = options?.notice ?? OnCooldown;
+
     return defineEffectGate(
         'Cooldown',
         async (ctx) => {
             const result = await ctx.core.rateLimiter.peek(keyOf(ctx), window);
-            if (!result.limited) return;
-            throw new (options?.notice ?? OnCooldown)(result.resetAt);
+            if (result.limited) throw new Refusal(result.resetAt);
         },
         async (ctx) => {
-            await ctx.core.rateLimiter.charge(keyOf(ctx), window);
+            const result = await ctx.core.rateLimiter.charge(keyOf(ctx), window);
+            if (result.limited) throw new Refusal(result.resetAt);
         }
     );
 }

@@ -1,8 +1,9 @@
-import { parseQuestion } from '@seedcord/docs-search';
+import { ASK_WAIT_STATUS, parseQuestion, QUESTION_RULE, waitMessage } from '@seedcord/docs-search';
 
-import { GuideAnswers, QUESTION_RULE } from '#lib/GuideAnswers';
+import { GuideAnswers } from '#lib/GuideAnswers';
 
 import type { AnswerEnv } from '#lib/GuideAnswers';
+import type { AskWaitStatus } from '@seedcord/docs-search';
 
 export interface GuideEnv extends AnswerEnv {
     ASK_LIMIT: { limit(options: { key: string }): Promise<{ success: boolean }> };
@@ -15,8 +16,6 @@ export interface WorkerContext {
 // 5 minutes caps how long a browser shows paths from the last deploy. the edge key carries the index version
 const CACHE_CONTROL = 'public, max-age=300, s-maxage=86400';
 const BAD_REQUEST = 400;
-const TOO_MANY_REQUESTS = 429;
-const SERVICE_UNAVAILABLE = 503;
 // the ASK_LIMIT period in wrangler.jsonc
 const LIMIT_PERIOD_SECONDS = 60;
 
@@ -27,10 +26,14 @@ function refuse(status: number, error: string, headers: Record<string, string> =
     return Response.json({ error }, { status, headers: { ...CORS, ...headers } });
 }
 
+function refuseWithWait(status: AskWaitStatus, seconds: number): Response {
+    return refuse(status, waitMessage(status, seconds), { 'retry-after': String(seconds) });
+}
+
 export async function ask(request: Request, env: GuideEnv, context: WorkerContext): Promise<Response> {
     const url = new URL(request.url);
     const question = parseQuestion(url.searchParams.get('q') ?? '');
-    if (question === undefined) return refuse(BAD_REQUEST, `Pass a question of ${QUESTION_RULE} as ?q=.`);
+    if (question === undefined) return refuse(BAD_REQUEST, `Pass a question as ?q=. It has to be ${QUESTION_RULE}.`);
 
     const answers = new GuideAnswers(env);
     const index = await answers.index();
@@ -43,18 +46,10 @@ export async function ask(request: Request, env: GuideEnv, context: WorkerContex
     if (cached) return cached;
 
     const { success } = await env.ASK_LIMIT.limit({ key: request.headers.get('cf-connecting-ip') ?? 'unknown' });
-    if (!success) {
-        return refuse(TOO_MANY_REQUESTS, 'Too many searches. Try again in a minute.', {
-            'retry-after': String(LIMIT_PERIOD_SECONDS)
-        });
-    }
+    if (!success) return refuseWithWait(ASK_WAIT_STATUS.tooManySearches, LIMIT_PERIOD_SECONDS);
 
     const ranked = await answers.rank(question, index);
-    if ('retryAfterSeconds' in ranked) {
-        return refuse(SERVICE_UNAVAILABLE, 'Search used up its daily Workers AI allowance.', {
-            'retry-after': String(ranked.retryAfterSeconds)
-        });
-    }
+    if ('retryAfterSeconds' in ranked) return refuseWithWait(ASK_WAIT_STATUS.outOfAllowance, ranked.retryAfterSeconds);
 
     const response = Response.json(ranked.hits, { headers: { ...CORS, 'cache-control': CACHE_CONTROL } });
     context.waitUntil(cache.put(key, response.clone()));

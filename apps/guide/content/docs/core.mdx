@@ -117,6 +117,16 @@ On [Cloudflare Workers](/build/workers), startup tasks run on the first POST req
 
 </Callout>
 
+## One bot per process
+
+A process runs one `Seedcord`. If you construct a second before the first has shut down, the constructor throws `CoreSingletonViolation`. Import the instance that you already have, like the one that `src/bot.ts` exports, or run the second bot in its own process.
+
+A script that starts a bot for one job can shut it down with `await using`, which runs the shutdown when the block ends. You can construct a new `Seedcord` after that. This only works on a server, since an edge bot doesn't have a shutdown.
+
+```ts
+await using bot = await new Seedcord(config).start();
+```
+
 ## Attach a plugin to the core
 
 If you construct a plugin yourself, you pass it down through imports and order its setup by hand. Attaching it puts it on the core, so every handler already reads it from `this.core`.

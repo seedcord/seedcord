@@ -40,6 +40,14 @@ Two bot folders can read the same token, like a second copy of your project wher
 
 A bot with its own application and token can run `seedcord dev` at the same time. seedcord writes the locks to your temp folder, under `seedcord-dev-<your user id>`, or `seedcord-dev` on Windows. If a session crashed and left its lock behind, the next `seedcord dev` deletes it and logs "Removed a stale dev session lock".
 
+## When your bot fails to start
+
+If your bot throws while it starts, `seedcord dev` stops with `CliStartFailed`. The text after the colon says what went wrong. These are some common ones:
+
+- **On gateway, "An invalid token was provided."** discord.js rejected `DISCORD_BOT_TOKEN`. Copy a new one from [Get the token](/discord-application#get-the-token).
+- **On gateway, "Used disallowed intents".** `clientOptions` lists an intent whose switch is off. Turn it on in [the portal](/discord-application#turn-on-the-intents-you-need).
+- **"Could not connect to" and a service.** A plugin can't reach its database. Start that service, or fix its connection string.
+
 ## What the terminal shows
 
 Once it starts, your terminal turns into a console for the bot. The wide pane on the right shows every line logged through seedcord's logger, plus the `console` output from your bot and its libraries under the `Console` label. It keeps the most recent 1,000 lines. A narrow sidebar on the left shows which phase the bot is in, whether it runs on a server or the edge, how long it has been up, the log filters, and the keys you can press.

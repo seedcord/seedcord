@@ -1,7 +1,8 @@
 import { existsSync, readFileSync } from 'node:fs';
 import { resolve } from 'node:path';
 
-import { embedding, GUIDE_SECTIONS_PATH, GUIDE_VECTORS_PATH } from '@seedcord/docs-search';
+import { NEXT_GUIDE } from '@seedcord/brand';
+import { embedding, GUIDE_SECTIONS_PATH, GUIDE_VECTORS_PATH, QUESTION_RULE } from '@seedcord/docs-search';
 import { GUIDE as guideSite } from '@seedcord/ui/sites';
 import { parse } from 'jsonc-parser';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
@@ -345,6 +346,15 @@ describe('the ask endpoint', () => {
         ]);
     });
 
+    it('embeds the name of a certain error code and leaves a number that only might be one', async () => {
+        const env = searching();
+
+        await get('/api/ask?q=%5B3116%5D', env);
+        await new GuideAnswers(env).ask('what does 3102 mean');
+
+        expect(env.embedded).toEqual([embedding.query('CliDependencyMissing'), embedding.query('what does 3102 mean')]);
+    });
+
     it('answers a repeated question from the cache without embedding it again', async () => {
         const env = searching();
 
@@ -373,6 +383,7 @@ describe('the ask endpoint', () => {
         expect(response.status).toBe(503);
         expect(response.headers.get('retry-after')).toBe(String(7 * 60 * 60));
         expect(response.headers.get('access-control-allow-origin')).toBe('*');
+        expect(await response.json()).toEqual({ error: 'The guide search hit its daily limit. Try again in 7 hours.' });
     });
 
     it('answers another worker with results it can link to', async () => {
@@ -390,7 +401,7 @@ describe('the ask endpoint', () => {
                 }
             ]
         });
-        await expect(new GuideAnswers(env).ask('k')).rejects.toThrow('2 to 200 characters');
+        await expect(new GuideAnswers(env).ask('k')).rejects.toThrow(QUESTION_RULE);
         expect(env.embedded).toHaveLength(1);
     });
 
@@ -412,14 +423,23 @@ describe('the ask endpoint', () => {
         expect(response.status).toBe(429);
         expect(env.embedded).toEqual([]);
 
-        // wrangler validates this file on every deploy
-        const config = parse(
-            readFileSync(resolve(import.meta.dirname, '../wrangler.jsonc'), 'utf8')
-        ) as Unstable_RawConfig;
+        const config = wranglerConfig();
         const periods = [config, config.env?.next].map(
             (environment) => environment?.ratelimits?.find(({ name }) => name === 'ASK_LIMIT')?.simple.period
         );
         const retryAfter = Number(response.headers.get('retry-after'));
         expect(periods).toEqual([retryAfter, retryAfter]);
     });
+
+    it('serves the next environment from the address the CLI searches', () => {
+        expect(wranglerConfig().env?.next?.routes).toContainEqual({
+            pattern: NEXT_GUIDE.label,
+            zone_name: 'seedcord.org'
+        });
+    });
 });
+
+// wrangler validates this file on every deploy
+function wranglerConfig(): Unstable_RawConfig {
+    return parse(readFileSync(resolve(import.meta.dirname, '../wrangler.jsonc'), 'utf8')) as Unstable_RawConfig;
+}

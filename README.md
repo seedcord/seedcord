@@ -82,6 +82,7 @@ export class Ping extends SlashHandler<'ping'> {
 - `seedcord commands` to deploy, list, and clean up your commands on Discord
 - `seedcord codegen --check` for CI
 - `seedcord make` to write new files from your own templates
+- `seedcord ask` to search the guide from your terminal in natural language
 - ESLint rules for seedcord and discord.js mistakes
 
 **Runtime**

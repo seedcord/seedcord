@@ -1,9 +1,9 @@
 import { PRODUCTION_SITES } from '@seedcord/brand';
 
-declare const PAGE_HREF: unique symbol;
+import type { Tagged } from 'type-fest';
 
 // next puts its basePath on <Link> and router paths only. html and plain anchors need this form
-export type PageHref = string & { readonly [PAGE_HREF]: true };
+export type PageHref = Tagged<string, 'PageHref'>;
 
 export function toPageHref(href: string): PageHref {
     // the brand exists only at compile time

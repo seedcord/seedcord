@@ -1,6 +1,6 @@
 'use client';
 
-import { QUESTION_LENGTH } from '@seedcord/docs-search';
+import { errorCodeQuestion, QUESTION_LENGTH } from '@seedcord/docs-search';
 import {
     SECTION_LABEL,
     SearchDialog,
@@ -15,12 +15,13 @@ import {
 import { useRouter } from 'next/navigation';
 import { useCallback, useRef, useState } from 'react';
 
+import { CodeNotes, codeNotesText, hasCodes } from './CodeNotes';
 import { SearchResultRow } from './SearchResultRow';
 import { SearchResultsSkeleton } from './SearchResultsSkeleton';
 import { emptyMessage, useGuideSearch } from './useGuideSearch';
 
 import type { ResultGroup } from './useGuideSearch';
-import type { GuideResult } from '@seedcord/docs-search';
+import type { CodeMention, GuideResult } from '@seedcord/docs-search';
 import type { RovingGroup, RovingList } from '@seedcord/ui';
 import type { ReactElement } from 'react';
 
@@ -88,7 +89,7 @@ function Results({ groups, message, roving, onSelect }: ResultsProps): ReactElem
     useActiveRowScroll(roving.active ? optionId(roving.active.path) : undefined, roving);
 
     return (
-        <div className={cn('py-3')}>
+        <div className={cn('py-2')}>
             {message === undefined ? (
                 <div id={LISTBOX_ID} role="listbox" aria-label="Search results">
                     {groups.map((group) => (
@@ -112,9 +113,14 @@ export function GuideSearch({ open, onOpenChange: setOpen }: GuideSearchProps): 
     const inputRef = useRef<HTMLInputElement>(null);
     const navigate = useNavigateAndClose(useRouter(), setOpen);
 
-    const groups = useGuideSearch(typed, open);
+    const { groups, codes } = useGuideSearch(typed, open);
 
     const select = useCallback((result: GuideResult) => navigate(result.path), [navigate]);
+
+    const searchForCode = useCallback(({ code }: CodeMention) => {
+        setTyped(errorCodeQuestion(code));
+        inputRef.current?.focus();
+    }, []);
 
     const roving = useRovingList({ query: typed, groups: rovingGroups(groups), onSelect: select });
     const { active } = roving;
@@ -128,7 +134,9 @@ export function GuideSearch({ open, onOpenChange: setOpen }: GuideSearchProps): 
                 onClose={() => setOpen(false)}
                 title="Search"
                 description="Search every page in the seedcord guide."
-                footer={active === undefined ? undefined : <SearchKeyLegend hasGroups={roving.hasGroups} />}
+                fieldNote={hasCodes(codes) ? <CodeNotes codes={codes} onSearch={searchForCode} /> : undefined}
+                listExpanded={active !== undefined}
+                footer={<SearchKeyLegend hasGroups={roving.hasGroups} />}
                 field={
                     <SearchField
                         inputRef={inputRef}
@@ -141,7 +149,6 @@ export function GuideSearch({ open, onOpenChange: setOpen }: GuideSearchProps): 
                         placeholder="Search the guide"
                         maxLength={QUESTION_LENGTH.max}
                         listboxId={LISTBOX_ID}
-                        listExpanded={active !== undefined}
                         isSearching={groups.some((group) => group.status === 'pending')}
                         {...(active ? { activeId: optionId(active.path) } : {})}
                     />
@@ -150,7 +157,10 @@ export function GuideSearch({ open, onOpenChange: setOpen }: GuideSearchProps): 
                 <Results groups={groups} message={emptyMessage(typed, groups)} roving={roving} onSelect={select} />
                 {/* a screen reader announces a change inside a status region that already exists */}
                 <p role="status" className={cn('sr-only')}>
-                    {groups.flatMap((group) => (group.status === 'failed' ? [group.notice] : [])).join(' ')}
+                    {[
+                        codeNotesText(codes),
+                        ...groups.flatMap((group) => (group.status === 'failed' ? [group.notice] : []))
+                    ].join(' ')}
                 </p>
             </SearchDialog>
         </>

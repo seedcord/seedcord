@@ -12,6 +12,10 @@ The API reference is at <https://seedcord.org/docs>, one page per symbol.
 
 This project runs on the {{#if isGateway}}gateway{{else}}http{{/if}} transport{{#if isEdge}} on Cloudflare Workers{{/if}} and imports everything from `{{ transport }}`. A page marks anything that differs between the two transports.
 
+## Before you write it by hand
+
+`tc` and lint pass even when you hand-write something that seedcord already has. Before you write anything more than a plain reply, ask questions via `{{ pm.run }} ask "<question>"`. It searches the guide and prints the matching pages with their `.md` links. It also takes a pasted error or an error code like `3116`.
+
 ## How a command works here
 
 A command takes two files. One declares what Discord shows people. The other answers it, as a handler class carrying a route decorator. seedcord reads those decorators at startup and dispatches every interaction itself.
@@ -39,6 +43,8 @@ Run `{{ pm.run }} codegen` after you add a command or change its options. It wri
 Anything that holds a connection, keeps state between interactions, or runs in the background belongs in a plugin, either an existing one or your own. Read <https://seedcord.org/guide/plugins.md> and <https://seedcord.org/guide/writing-plugins.md> before you add one.
 
 ## Imports
+
+Before you install another seedcord package, check whether `{{ transport }}` already exports what you need since the transports re-export most packages.
 
 Never import from a seedcord path ending in `/internal`, like `@seedcord/core/internal`. Those paths wire seedcord's own packages together and change without notice. If the only way to do something is through one of those imports, tell the user so they can open an issue at <https://github.com/seedcord/seedcord/issues>.
 
