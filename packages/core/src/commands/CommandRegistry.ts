@@ -156,25 +156,25 @@ export class CommandRegistry implements Initializeable, HmrAware {
 
     /** @internal */
     public refresh(shouldRefresh = true): Promise<void> {
-        return this.afterRunningDeploy(() => this.applyPendingEvents(shouldRefresh));
+        const answeredEvents = [...this.pendingEvents.values()];
+        this.pendingEvents.clear();
+        return this.afterRunningDeploy(() => this.applyEvents(answeredEvents, shouldRefresh));
     }
 
     private afterRunningDeploy<TResult>(task: () => Promise<TResult>): Promise<TResult> {
         return this.deploys.run('commands', task);
     }
 
-    private async applyPendingEvents(shouldRefresh: boolean): Promise<void> {
+    private async applyEvents(events: readonly HmrUpdateEvent[], shouldRefresh: boolean): Promise<void> {
         if (!shouldRefresh) {
             this.logger.debug(paint.italic('Command refresh cancelled.'));
-            this.pendingEvents.clear();
             return;
         }
 
         this.logger.debug(paint.italic('Refreshing commands...'));
-        for (const event of this.pendingEvents.values()) {
+        for (const event of events) {
             await this.hmrHandler?.handle(event);
         }
-        this.pendingEvents.clear();
         await this.setCommands();
     }
 

@@ -508,10 +508,8 @@ describe('runPlain, with no terminal to answer prompts', () => {
 
     it.each(['restart', 'disconnect'] as const)('forgets a pending command refresh on %s', async (leave) => {
         const store = new DevStore();
-        const stillOpening = new ServerDevRuntime();
-        stillOpening.start = () => new Promise<void>(() => undefined);
-        const runtimes = [fakeRuntime({ default: readyBot }), stillOpening];
-        const runner = makeRunner({ store, runtime: () => runtimes.shift() ?? stillOpening });
+        const runner = makeRunner({ store, runtime: () => fakeRuntime({ default: readyBot }) });
+        const refresh = vi.spyOn(runner, 'refreshCommands');
 
         const running = runPlain(store, runner, new PassThrough());
         await vi.waitFor(() => expect(store.getState().phase).toBe('running'));
@@ -521,7 +519,8 @@ describe('runPlain, with no terminal to answer prompts', () => {
         await runner[leave]();
         await vi.waitFor(() => expect(store.getState().commandUpdatePrompt).toBeNull());
 
-        expect(() => vi.advanceTimersByTime(2000)).not.toThrow();
+        vi.advanceTimersByTime(2000);
+        expect(refresh).not.toHaveBeenCalled();
 
         await runner.quit();
         await running;

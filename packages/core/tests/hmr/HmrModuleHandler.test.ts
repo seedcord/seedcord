@@ -277,13 +277,21 @@ describe('HmrModuleHandler', () => {
             await handler.handle({ file: newFile, type: 'create' });
             owner = undefined;
             await handler.handle({ file: newFile, type: 'update' });
-            const other = join(handlersDir, 'Other.mjs');
-            writeFileSync(other, 'export const value = 1;\n');
             registerHandler.mockClear();
 
-            await handler.handle({ file: other, type: 'update' });
+            await handler.handle({ file: oldFile, type: 'delete' });
 
             expect(registerHandler).not.toHaveBeenCalled();
+        });
+
+        it('retries a blocked file listed before the file that frees its route in one save', async () => {
+            await handler.handle({ file: oldFile, type: 'update' });
+            await handler.handle({ file: newFile, type: 'create' });
+            writeFileSync(oldFile, 'export const value = 1;\n');
+
+            await handler.handle({ file: oldFile, type: 'update', affectedModules: [newFile, oldFile] });
+
+            expect(owner?.name).toBe('Versions');
         });
 
         it('logs one failure per save while the other file still holds the route', async () => {

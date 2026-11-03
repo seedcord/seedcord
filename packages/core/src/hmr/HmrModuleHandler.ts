@@ -38,17 +38,17 @@ interface HmrModuleHandlerOptions<THandler, TMiddleware = void, TArtifacts = unk
  * This is only useful during development.
  */
 export class HmrModuleHandler<THandler, TMiddleware = void, TArtifacts = unknown> {
-    private readonly store: HmrStore<THandler, TMiddleware, TArtifacts>;
-    private readonly options: HmrModuleHandlerOptions<THandler, TMiddleware, TArtifacts>;
+    readonly #store: HmrStore<THandler, TMiddleware, TArtifacts>;
+    readonly #options: HmrModuleHandlerOptions<THandler, TMiddleware, TArtifacts>;
     // a moved handler's new file can load before its old file unloads
-    private readonly blockedFiles = new Set<string>();
+    readonly #blockedFiles = new Set<string>();
 
     constructor(options: HmrModuleHandlerOptions<THandler, TMiddleware, TArtifacts>) {
-        this.options = { ...options, logger: options.logger.withChannel('hmr') };
+        this.#options = { ...options, logger: options.logger.withChannel('hmr') };
 
         // no import.meta.hot.data stash needed because a leaf reload never reconstructs the singleton
         // holding these Maps
-        this.store = {
+        this.#store = {
             fileToHandlers: new Map(),
             fileToMiddlewares: new Map(),
             handlerArtifacts: new Map()
@@ -67,12 +67,13 @@ export class HmrModuleHandler<THandler, TMiddleware = void, TArtifacts = unknown
 
         const removed = type === 'delete' || type === 'deleteDir';
         const affected = affectedModules?.length ? affectedModules : [file];
-        const freesNames = affected.some((candidate) => this.holdsUnits(candidate));
-        if (removed) this.report('Unloaded', this.unload(file), [file]);
-        this.blockedFiles.delete(file);
+        const freesNames = affected.some((candidate) => this.#holdsUnits(candidate));
+        if (removed) this.#report('Unloaded', this.#unload(file), [file]);
+        this.#blockedFiles.delete(file);
 
-        const filesToReload = new Set([...(removed ? [] : affected), ...(freesNames ? this.blockedFiles : [])]);
-        filesToReload.forEach((reloading) => this.blockedFiles.delete(reloading));
+        const holdersFirst = affected.toSorted((a, b) => Number(this.#holdsUnits(b)) - Number(this.#holdsUnits(a)));
+        const filesToReload = new Set([...(removed ? [] : holdersFirst), ...(freesNames ? this.#blockedFiles : [])]);
+        filesToReload.forEach((reloading) => this.#blockedFiles.delete(reloading));
 
         const rollbackEnabled = event.rollback ?? true;
         const startedAt = Date.now();
@@ -80,107 +81,107 @@ export class HmrModuleHandler<THandler, TMiddleware = void, TArtifacts = unknown
         const touched: string[] = [];
 
         for (const fileToReload of filesToReload) {
-            if (!this.inScope(fileToReload)) continue;
+            if (!this.#inScope(fileToReload)) continue;
 
-            const reloaded = await this.reloadWithRollback(fileToReload, rollbackEnabled);
+            const reloaded = await this.#reloadWithRollback(fileToReload, rollbackEnabled);
             if (reloaded.length === 0) continue;
 
             names.push(...reloaded);
             touched.push(fileToReload);
         }
 
-        this.report(type === 'create' ? 'Registered' : 'Reloaded', names, touched, Date.now() - startedAt);
+        this.#report(type === 'create' ? 'Registered' : 'Reloaded', names, touched, Date.now() - startedAt);
     }
 
-    private holdsUnits(file: string): boolean {
-        return this.store.fileToHandlers.has(file) || this.store.fileToMiddlewares.has(file);
+    #holdsUnits(file: string): boolean {
+        return this.#store.fileToHandlers.has(file) || this.#store.fileToMiddlewares.has(file);
     }
 
-    private inScope(file: string): boolean {
-        const { handlersDir, middlewaresDir } = this.options;
+    #inScope(file: string): boolean {
+        const { handlersDir, middlewaresDir } = this.#options;
 
         if (botFolder(handlersDir).holdsModule(file)) return true;
         return middlewaresDir ? botFolder(middlewaresDir).holdsModule(file) : false;
     }
 
     // one line per save, since one edit can reload every module that imports the file
-    private report(verb: string, names: string[], files: string[], elapsedMs?: number): void {
+    #report(verb: string, names: string[], files: string[], elapsedMs?: number): void {
         if (names.length === 0) return;
 
         const from = files.length === 1 ? formatFilePath(files[0] ?? '') : `${String(files.length)} files`;
         const timing = elapsedMs === undefined ? '' : ` ${paint.mute('in')} ${String(elapsedMs)}ms`;
-        this.options.logger.debug(`${verb} ${paint.sky.bold(names.join(', '))} from ${paint.mute(from)}${timing}`);
+        this.#options.logger.debug(`${verb} ${paint.sky.bold(names.join(', '))} from ${paint.mute(from)}${timing}`);
     }
 
-    private async reloadWithRollback(file: string, rollbackEnabled: boolean): Promise<string[]> {
-        const { logger } = this.options;
-        const snapshot = this.snapshotUnits(file);
-        this.unload(file);
+    async #reloadWithRollback(file: string, rollbackEnabled: boolean): Promise<string[]> {
+        const { logger } = this.#options;
+        const snapshot = this.#snapshotUnits(file);
+        this.#unload(file);
 
-        const reloaded = await this.reloadFile(file);
+        const reloaded = await this.#reloadFile(file);
         if (reloaded !== null) return reloaded;
 
         // a failed reload can leave a partial registration
-        this.unload(file);
+        this.#unload(file);
         if (!rollbackEnabled) return [];
         if (snapshot.handlers.length === 0 && snapshot.middlewares.length === 0) return [];
 
         // a typo keeps the last-good units live until the next good save
-        this.restoreUnits(file, snapshot);
+        this.#restoreUnits(file, snapshot);
         logger.warn(`${paint.amber.bold('Rolled back')} ${paint.mute(formatFilePath(file))} to the last-good version`);
         return [];
     }
 
     /** Links the handler to its source file so a later update can unload it. */
     public trackHandler(file: string, handler: THandler): void {
-        let set = this.store.fileToHandlers.get(file);
+        let set = this.#store.fileToHandlers.get(file);
         if (!set) {
             set = new Set();
-            this.store.fileToHandlers.set(file, set);
+            this.#store.fileToHandlers.set(file, set);
         }
         set.add(handler);
 
-        if (!this.options.getArtifacts) return;
-        this.store.handlerArtifacts.set(handler, this.options.getArtifacts(handler));
+        if (!this.#options.getArtifacts) return;
+        this.#store.handlerArtifacts.set(handler, this.#options.getArtifacts(handler));
     }
 
     /** Links the middleware to its source file so a later update can unload it. */
     public trackMiddleware(file: string, middleware: TMiddleware): void {
-        let set = this.store.fileToMiddlewares.get(file);
+        let set = this.#store.fileToMiddlewares.get(file);
         if (!set) {
             set = new Set();
-            this.store.fileToMiddlewares.set(file, set);
+            this.#store.fileToMiddlewares.set(file, set);
         }
         set.add(middleware);
     }
 
-    private unload(file: string): string[] {
+    #unload(file: string): string[] {
         const names: string[] = [];
-        const handlers = this.store.fileToHandlers.get(file);
+        const handlers = this.#store.fileToHandlers.get(file);
         if (handlers) {
             for (const handler of handlers) {
-                const artifacts = this.store.handlerArtifacts.get(handler);
-                this.options.unregisterHandler(handler, artifacts);
-                this.store.handlerArtifacts.delete(handler);
+                const artifacts = this.#store.handlerArtifacts.get(handler);
+                this.#options.unregisterHandler(handler, artifacts);
+                this.#store.handlerArtifacts.delete(handler);
                 names.push(displayName(handler, 'Handler'));
             }
-            this.store.fileToHandlers.delete(file);
+            this.#store.fileToHandlers.delete(file);
         }
 
-        const middlewares = this.store.fileToMiddlewares.get(file);
+        const middlewares = this.#store.fileToMiddlewares.get(file);
         if (middlewares) {
             for (const middleware of middlewares) {
-                this.options.unregisterMiddleware?.(middleware);
+                this.#options.unregisterMiddleware?.(middleware);
                 names.push(displayName(middleware, 'Middleware'));
             }
-            this.store.fileToMiddlewares.delete(file);
+            this.#store.fileToMiddlewares.delete(file);
         }
 
         return names;
     }
 
-    private async reloadFile(file: string): Promise<string[] | null> {
-        const { logger, isHandler, isMiddleware, registerHandler, registerMiddleware } = this.options;
+    async #reloadFile(file: string): Promise<string[] | null> {
+        const { logger, isHandler, isMiddleware, registerHandler, registerMiddleware } = this.#options;
 
         try {
             let fileUrl = pathToFileURL(file).href;
@@ -207,29 +208,29 @@ export class HmrModuleHandler<THandler, TMiddleware = void, TArtifacts = unknown
         } catch (error) {
             logger.error(`Failed to reload file: ${formatFilePath(file)}`, vitePluginThrew(error) ?? error);
             if (isSeedcordError(error, 'SeedcordTypeError', SeedcordErrorCode.CoreDuplicateName)) {
-                this.blockedFiles.add(file);
+                this.#blockedFiles.add(file);
             }
             return null;
         }
     }
 
     // these are the same class objects, which is how a live db connection survives a rollback
-    private snapshotUnits(file: string): { handlers: THandler[]; middlewares: TMiddleware[] } {
+    #snapshotUnits(file: string): { handlers: THandler[]; middlewares: TMiddleware[] } {
         return {
-            handlers: [...(this.store.fileToHandlers.get(file) ?? [])],
-            middlewares: [...(this.store.fileToMiddlewares.get(file) ?? [])]
+            handlers: [...(this.#store.fileToHandlers.get(file) ?? [])],
+            middlewares: [...(this.#store.fileToMiddlewares.get(file) ?? [])]
         };
     }
 
-    private restoreUnits(file: string, snapshot: { handlers: THandler[]; middlewares: TMiddleware[] }): void {
+    #restoreUnits(file: string, snapshot: { handlers: THandler[]; middlewares: TMiddleware[] }): void {
         for (const handler of snapshot.handlers) {
-            this.options.registerHandler(handler, file);
+            this.#options.registerHandler(handler, file);
             this.trackHandler(file, handler);
         }
 
-        if (this.options.registerMiddleware) {
+        if (this.#options.registerMiddleware) {
             for (const middleware of snapshot.middlewares) {
-                this.options.registerMiddleware(middleware, file);
+                this.#options.registerMiddleware(middleware, file);
                 this.trackMiddleware(file, middleware);
             }
         }

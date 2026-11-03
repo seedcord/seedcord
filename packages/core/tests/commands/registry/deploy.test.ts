@@ -294,12 +294,14 @@ describe('CommandRegistry.deploy', () => {
         const deploying = registry.deploy(new AbortController().signal, {});
         await vi.waitFor(() => expect(put).toHaveBeenCalledOnce());
 
+        const setCommands = vi.spyOn(registry, 'setCommands');
+
         const refreshing = registry.refresh();
-        // an unqueued refresh reaches its put within 50ms. setImmediate is too soon to catch it
-        await new Promise((resolve) => setTimeout(resolve, 50));
-        expect(put).toHaveBeenCalledOnce();
+        await new Promise(setImmediate);
+        expect(setCommands).not.toHaveBeenCalled();
 
         startupPut.resolve(BARE);
         await Promise.all([deploying, refreshing]);
+        expect(setCommands).toHaveBeenCalledOnce();
     });
 });
