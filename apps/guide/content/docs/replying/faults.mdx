@@ -3,7 +3,7 @@ title: Faults
 description: See how a user still gets an answer when your handler throws an error it doesn't catch, and change the card seedcord shows.
 ---
 
-Some calls fail in ways the user can't fix, like a database write. Catch the error and throw a [`Fault`](ref:core/Fault). The user gets a generic card with a tracking id, and the error you caught goes to your fault report along with the command and the user who ran it.
+Some calls fail in ways the user can't fix, like a database write. Catch the error and throw a [`Fault`](ref:core/Fault). The user gets a generic card with a tracking id, and the error you caught goes to your fault report along with the command and the user who ran it. If the user can fix the problem, like by creating a profile, [throw a `Notice`](/replying/throwing) that tells them how.
 
 ```ts twoslash title="src/handlers/Ban.ts"
 import { Fault, SlashHandler, SlashRoute } from '@seedcord/gateway';
