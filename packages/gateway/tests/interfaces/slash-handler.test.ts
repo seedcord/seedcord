@@ -4,6 +4,7 @@ import { SeedcordErrorCode } from '@seedcord/errors';
 import { describe, expect, expectTypeOf, it } from 'vitest';
 
 import { SlashHandler } from '#handlers/interaction/SlashHandler';
+import { built } from '#tests/utils/built';
 
 import type { SlashOptions } from '#inputs/SlashOptions';
 import type { Core } from '#interfaces/Core';
@@ -214,7 +215,7 @@ describe('SlashHandler', () => {
                 });
             }
         }
-        const handler = new Mod(slashInteraction('constructor'), core, dispatch);
+        const handler = built(Mod, slashInteraction('constructor'), core, dispatch);
         await expect(handler.execute()).rejects.toMatchObject({
             code: SeedcordErrorCode.MatchCaseMissing
         });

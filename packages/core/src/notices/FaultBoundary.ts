@@ -121,24 +121,27 @@ export class FaultBoundary {
     }
 
     private fallbackReply(renderError: unknown): FaultReply | null {
+        const fallback = this.report(renderError);
+        if (!fallback) return null;
         try {
-            const fallback = this.report(renderError);
-            return fallback && this.render(fallback);
+            return this.render(fallback);
         } catch (error) {
             logger().error(`could not render a fault card for route ${paint.sky.bold(this.dispatch.routeId)}`, error);
-            return null;
+            return { response: new Fault().render(this.renderContext(fallback.uuid)), ephemeral: true };
         }
     }
 
     private render({ error, uuid }: ReportedFault): FaultReply {
-        const { dispatch } = this;
-        const { errors, notifications } = this.core.config;
-        const developerUsername = notifications?.developerUsername;
-        const ctx: RenderContext =
-            developerUsername === undefined ? { uuid, dispatch } : { uuid, developerUsername, dispatch };
+        const ctx = this.renderContext(uuid);
         if (error instanceof Notice) return { response: error.render(ctx), ephemeral: error.ephemeral };
-        const Override = errors?.defaultError;
+        const Override = this.core.config.errors?.defaultError;
         return { response: (Override ? new Override(uuid) : new Fault()).render(ctx), ephemeral: true };
+    }
+
+    private renderContext(uuid: RenderContext['uuid']): RenderContext {
+        const { dispatch } = this;
+        const developerUsername = this.core.config.notifications?.developerUsername;
+        return developerUsername === undefined ? { uuid, dispatch } : { uuid, developerUsername, dispatch };
     }
 
     // only this send swallows the harmless codes. a handler's own write still reports them

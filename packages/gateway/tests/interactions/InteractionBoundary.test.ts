@@ -1,4 +1,4 @@
-import { InteractionKind, Fault } from '@seedcord/core';
+import { InteractionKind, Fault, Silence } from '@seedcord/core';
 import {
     DispatchContext,
     InteractionRun,
@@ -190,6 +190,19 @@ describe('gateway fault answers', () => {
             const [event, payload] = publish.mock.calls[0] as [string, SubscriptionData<'unknownException'>];
             expect(event).toBe('unknownException');
             expect(payload.metadata).toBe(interaction);
+        });
+
+        it('does not send empty choices after the handler already responded', async () => {
+            class RespondsThenStops extends UnhandledAutocomplete {
+                override async execute(): Promise<void> {
+                    await this.respond([{ name: 'a', value: 'a' }]);
+                    throw new Silence('done');
+                }
+            }
+
+            await runHandler(RespondsThenStops, asInteraction(mock), mockCore(publish));
+
+            expect(mock.respond).toHaveBeenCalledTimes(1);
         });
 
         it('publishes responseAttempted for the empty-choices send', async () => {

@@ -1,9 +1,10 @@
 import { DiscordAPIError } from '@discordjs/rest';
-import { DispatchContext, InteractionRun, reportedWrite } from '@seedcord/core/internal';
+import { DispatchContext, InteractionRun } from '@seedcord/core/internal';
 import { Logger } from '@seedcord/logger';
-import { InteractionResponseType, InteractionType, Routes } from 'discord-api-types/v10';
+import { InteractionType } from 'discord-api-types/v10';
 
 import { interactionUser } from '#handlers/interactionUser';
+import { autocompleteResponder } from '#reply/autocompleteResponder';
 import { ReplySender } from '#reply/ReplySender';
 import { interactionGateContext } from '#src/gates/context';
 
@@ -13,7 +14,7 @@ import type { InteractionMiddlewareConstructor } from '#handlers/constructors';
 import type { ValidInteractionTypes } from '#handlers/interactionTypes';
 import type { Core } from '#interfaces/Core';
 import type { ResolvedRoute } from './resolve';
-import type { InteractionDispatch, InteractionRunConfig, MiddlewareRegistry } from '@seedcord/core/internal';
+import type { InteractionRunConfig, MiddlewareRegistry } from '@seedcord/core/internal';
 
 // lazy, env binds after this module loads
 let dispatchLogger: Logger | undefined;
@@ -27,15 +28,6 @@ interface DispatchArgs {
     readonly payload: ValidInteractionTypes;
     readonly core: Core;
     readonly middlewares: MiddlewareRegistry<InteractionMiddlewareConstructor>;
-}
-
-function clearChoices(payload: ValidInteractionTypes, core: Core, dispatch: InteractionDispatch): Promise<unknown> {
-    const telemetry = { bus: core.bus, dispatch, interactionId: payload.id };
-    return reportedWrite(telemetry, 'respond', () =>
-        core.rest.post(Routes.interactionCallback(payload.id, payload.token), {
-            body: { type: InteractionResponseType.ApplicationCommandAutocompleteResult, data: { choices: [] } }
-        })
-    );
 }
 
 function httpRunConfig(args: DispatchArgs): InteractionRunConfig {
@@ -55,13 +47,15 @@ function httpRunConfig(args: DispatchArgs): InteractionRunConfig {
         faultDetails: () => interactionFaultReport(payload, dispatch),
         target:
             payload.type === InteractionType.ApplicationCommandAutocomplete
-                ? { clearChoices: () => clearChoices(payload, core, dispatch) }
+                ? { responder: autocompleteResponder(payload, core, dispatch) }
                 : {
                       gateContext: () => interactionGateContext(payload, core, dispatch),
-                      newSender() {
-                          const ref = { application_id: payload.application_id, id: payload.id, token: payload.token };
-                          return new ReplySender(ref, core.rest, dispatch, core.bus);
-                      }
+                      sender: new ReplySender(
+                          { application_id: payload.application_id, id: payload.id, token: payload.token },
+                          core.rest,
+                          dispatch,
+                          core.bus
+                      )
                   }
     };
 }

@@ -4,6 +4,7 @@ import { ApplicationCommandType } from 'discord-api-types/v10';
 import { describe, expect, expectTypeOf, it } from 'vitest';
 
 import { MessageContextMenuHandler, UserContextMenuHandler } from '#handlers/interaction/ContextMenuHandler';
+import { built } from '#tests/helpers/built';
 
 import type { Core } from '#interfaces/Core';
 import type {
@@ -131,27 +132,27 @@ void UnknownCase;
 
 describe('http context menu match', () => {
     it('runs the case for the selected command', async () => {
-        await expect(new Menu(...userMenu('hb Profile')).run()).resolves.toBe('profile:dhruv:dee');
-        await expect(new Menu(...userMenu('hb Greet')).run()).resolves.toBe('greet:dhruv');
+        await expect(built(Menu, ...userMenu('hb Profile')).run()).resolves.toBe('profile:dhruv:dee');
+        await expect(built(Menu, ...userMenu('hb Greet')).run()).resolves.toBe('greet:dhruv');
     });
 
     it('hands a message case the clicked message', async () => {
-        await expect(new Tools(...messageMenu('hb Pin')).run()).resolves.toBe('pinned msg1');
+        await expect(built(Tools, ...messageMenu('hb Pin')).run()).resolves.toBe('pinned msg1');
     });
 
     it('throws when the selected command lacks a case', async () => {
-        await expect(new Menu(...userMenu('hb Greet')).runPartial()).rejects.toSatisfy((error: unknown) =>
+        await expect(built(Menu, ...userMenu('hb Greet')).runPartial()).rejects.toSatisfy((error: unknown) =>
             isSeedcordError(error, 'SeedcordTypeError', SeedcordErrorCode.MatchCaseMissing)
         );
     });
 
     it('throws for a command named after an Object.prototype member', async () => {
-        await expect(new Menu(...userMenu('constructor')).run()).rejects.toSatisfy((error: unknown) =>
+        await expect(built(Menu, ...userMenu('constructor')).run()).rejects.toSatisfy((error: unknown) =>
             isSeedcordError(error, 'SeedcordTypeError', SeedcordErrorCode.MatchCaseMissing)
         );
     });
 
     it('reads the selected command name without a case', () => {
-        expect(new Menu(...userMenu('hb Greet')).readName()).toBe('hb Greet');
+        expect(built(Menu, ...userMenu('hb Greet')).readName()).toBe('hb Greet');
     });
 });

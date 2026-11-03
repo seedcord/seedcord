@@ -4,6 +4,7 @@ import { beforeEach, describe, expect, it } from 'vitest';
 
 import { AutocompleteHandler } from '#handlers/interaction/AutocompleteHandler';
 import { SlashHandler } from '#handlers/interaction/SlashHandler';
+import { built } from '#tests/helpers/built';
 
 import type { Core } from '#interfaces/Core';
 import type { ILogSink, LogRecord } from '@seedcord/types';
@@ -52,8 +53,13 @@ class Suggest extends AutocompleteHandler<never> {
 describe('http handler log channels', () => {
     it('puts both interaction bases on the interactions channel', async () => {
         // justified: the fixture carries only the fields these bases read
-        await new Ban(payload as unknown as APIChatInputApplicationCommandInteraction, core, dispatch).execute();
-        await new Suggest(payload as unknown as APIApplicationCommandAutocompleteInteraction, core, dispatch).execute();
+        await built(Ban, payload as unknown as APIChatInputApplicationCommandInteraction, core, dispatch).execute();
+        await built(
+            Suggest,
+            payload as unknown as APIApplicationCommandAutocompleteInteraction,
+            core,
+            dispatch
+        ).execute();
 
         expect(sink.records.map((record) => record.channel)).toEqual(['interactions', 'interactions']);
     });

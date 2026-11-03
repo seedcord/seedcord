@@ -7,6 +7,7 @@ import { EventMiddleware } from '#handlers/event/EventMiddleware';
 import { AutocompleteHandler } from '#handlers/interaction/AutocompleteHandler';
 import { InteractionMiddleware } from '#handlers/interaction/InteractionMiddleware';
 import { SlashHandler } from '#handlers/interaction/SlashHandler';
+import { built } from '#tests/utils/built';
 import { mockInteraction } from '#tests/utils/senderMock';
 
 import type { ReplySender } from '#bot/ReplySender';
@@ -93,8 +94,8 @@ describe('gateway handler log channels', () => {
             // justified: this probe only reads the logger channel, no reply member runs
             {} as ReplySender
         ).execute();
-        await new Suggest(interaction as unknown as AutocompleteInteraction<undefined>, core, dispatch).execute();
-        await new Ban(interaction as unknown as ChatInputCommandInteraction<undefined>, core, dispatch).execute();
+        await built(Suggest, interaction as unknown as AutocompleteInteraction<undefined>, core, dispatch).execute();
+        await built(Ban, interaction as unknown as ChatInputCommandInteraction<undefined>, core, dispatch).execute();
 
         expect(sink.records.map((record) => record.channel)).toEqual(['interactions', 'interactions', 'interactions']);
     });

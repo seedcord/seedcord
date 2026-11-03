@@ -58,23 +58,6 @@ describe('fault boundary', () => {
         expect(flags & MessageFlags.Ephemeral).toBe(MessageFlags.Ephemeral);
     });
 
-    it("doesn't send a card for a Silence after the reply", async () => {
-        class Quiet extends SlashHandler<never> {
-            async execute(): Promise<void> {
-                await this.reply('done');
-                throw new Silence('user dismissed');
-            }
-        }
-        using engine = await readyEngine(slashRoute('quiet', Quiet));
-        const { signer, handle } = engine;
-        const ctx = capturingCtx();
-
-        await handle(await signedRequest(signer, slashPayload('quiet')), ctx);
-        await ctx.settled();
-
-        expect(postedBodies()).toHaveLength(1);
-    });
-
     it('sends the fault card as a follow-up when the handler already replied', async () => {
         class RepliedThenBroke extends SlashHandler<never> {
             async execute(): Promise<void> {
@@ -158,15 +141,7 @@ describe('fault boundary', () => {
         expect(posts[0]?.body.type).toBe(4);
     });
 
-    it('answers an autocomplete execute fault with an empty type 8', async () => {
-        class Search extends AutocompleteHandler<never> {
-            async execute(): Promise<void> {
-                await Promise.resolve();
-                throw new Error('lookup failed');
-            }
-        }
-        using engine = await readyEngine(routedHandler(InteractionKind.Autocomplete, 'search', Search));
-        const { signer, handle } = engine;
+    describe('autocomplete', () => {
         const payload = {
             type: 4,
             id: 'int-1',
@@ -175,14 +150,42 @@ describe('fault boundary', () => {
             user: { id: 'u1', username: 'tester' },
             data: { type: 1, name: 'search', options: [{ type: 3, name: 'q', value: 'x', focused: true }] }
         };
-        const ctx = capturingCtx();
 
-        await handle(await signedRequest(signer, payload), ctx);
-        await ctx.settled();
+        it('answers an execute fault with an empty type 8', async () => {
+            class Search extends AutocompleteHandler<never> {
+                async execute(): Promise<void> {
+                    await Promise.resolve();
+                    throw new Error('lookup failed');
+                }
+            }
+            using engine = await readyEngine(routedHandler(InteractionKind.Autocomplete, 'search', Search));
+            const { signer, handle } = engine;
+            const ctx = capturingCtx();
 
-        const posts = postedBodies();
-        expect(posts).toHaveLength(1);
-        expect(posts[0]?.body.type).toBe(8);
-        expect(posts[0]?.body.data?.choices).toEqual([]);
+            await handle(await signedRequest(signer, payload), ctx);
+            await ctx.settled();
+
+            const posts = postedBodies();
+            expect(posts).toHaveLength(1);
+            expect(posts[0]?.body.type).toBe(8);
+            expect(posts[0]?.body.data?.choices).toEqual([]);
+        });
+
+        it('does not send empty choices after the handler already responded', async () => {
+            class Search extends AutocompleteHandler<never> {
+                async execute(): Promise<void> {
+                    await this.respond([{ name: 'a', value: 'a' }]);
+                    throw new Silence('done');
+                }
+            }
+            using engine = await readyEngine(routedHandler(InteractionKind.Autocomplete, 'search', Search));
+            const { signer, handle } = engine;
+            const ctx = capturingCtx();
+
+            await handle(await signedRequest(signer, payload), ctx);
+            await ctx.settled();
+
+            expect(postedBodies()).toHaveLength(1);
+        });
     });
 });

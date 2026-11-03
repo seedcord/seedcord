@@ -1579,7 +1579,6 @@ describe('InteractionDispatcher Integration', () => {
             expect(published[0]).toMatchObject({ routeId: 'button:unrouted', kind: 'button', fallback: true });
         });
 
-        // the production buildSender wiring, so dropping core.bus from RepliableHandler fails here
         it('publishes responseAttempted from the handler own reply, carrying the route id', async ({ testEnv }) => {
             await testEnv.createFile(
                 'interactions/Route.ts',

@@ -17,9 +17,8 @@ function configFor(
     HandlerCtor: InteractionRunConfig['HandlerCtor'],
     target: InteractionRunConfig['target']
 ): InteractionRunConfig {
-    const dispatch = new DispatchContext(kind, 'probe');
     return {
-        dispatch,
+        dispatch: new DispatchContext(kind, 'probe'),
         // justified: the run reads only core.config.errors and core.bus
         core: { bus: busWith(), config: {} } as unknown as CoreBase,
         event: {},
@@ -34,7 +33,6 @@ function configFor(
         guildId: null,
         target,
         faultDetails: () => ({
-            dispatch,
             origin: 'probe',
             source: null,
             guild: undefined,
@@ -45,25 +43,34 @@ function configFor(
 }
 
 describe('InteractionRun', () => {
-    it('runs the gates on a repliable kind even when the handler has no sender', async () => {
-        const execute = vi.fn();
+    it('still runs after() when reporting a refusal throws', async () => {
+        const after = vi.fn();
         const gate = defineGate('Refuse', () => {
-            throw new Silence('refused');
+            throw new Error('refused');
         });
-        class Plain {
-            execute = execute;
+        class Refused {
+            execute = vi.fn();
         }
-        Reflect.defineMetadata(GatedMetadataKey, [gate], Plain);
+        class Audit {
+            execute = vi.fn();
+            after = after;
+        }
+        Reflect.defineMetadata(GatedMetadataKey, [gate], Refused);
 
-        const config = configFor(InteractionKind.Slash, Plain, {
-            // justified: the gate above doesn't read its context
-            gateContext: () => ({}) as GateContextBase,
-            newSender: () => ({ send: vi.fn().mockResolvedValue(undefined) })
-        });
-        const start = await new InteractionRun(config).prepare();
+        const config = {
+            ...configFor(InteractionKind.Slash, Refused, {
+                // justified: the gate above doesn't read its context
+                gateContext: () => ({}) as GateContextBase,
+                sender: { send: vi.fn().mockResolvedValue(undefined) }
+            }),
+            middlewares: { chainFor: () => [Audit] },
+            faultDetails: () => {
+                throw new Error('details failed');
+            }
+        };
 
-        expect(start).toBeNull();
-        expect(execute).not.toHaveBeenCalled();
+        await expect(new InteractionRun(config).prepare()).rejects.toThrow('details failed');
+        expect(after).toHaveBeenCalledOnce();
     });
 
     it('clears the choices when an autocomplete handler throws a Silence', async () => {
@@ -72,13 +79,13 @@ describe('InteractionRun', () => {
                 throw new Silence('nothing to suggest');
             }
         }
-        const clearChoices = vi.fn().mockResolvedValue(undefined);
+        const clear = vi.fn().mockResolvedValue(undefined);
 
         const start = await new InteractionRun(
-            configFor(InteractionKind.Autocomplete, Quiet, { clearChoices })
+            configFor(InteractionKind.Autocomplete, Quiet, { responder: { clear } })
         ).prepare();
         await start?.();
 
-        expect(clearChoices).toHaveBeenCalledOnce();
+        expect(clear).toHaveBeenCalledOnce();
     });
 });

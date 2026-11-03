@@ -2,6 +2,7 @@ import { RepliableHandler } from '#handlers/RepliableHandler';
 
 import type { Repliables } from '#handlers/interactionTypes';
 import type { Core } from '#interfaces/Core';
+import type { ReplySender } from '#reply/ReplySender';
 import type { DispatchContext, ModalLike } from '@seedcord/core';
 import type { APIModalSubmitInteraction } from 'discord-api-types/v10';
 
@@ -16,8 +17,8 @@ import type { APIModalSubmitInteraction } from 'discord-api-types/v10';
  */
 export abstract class InteractionHandler<Event extends Repliables> extends RepliableHandler<Event> {
     // the dispatcher needs a public construct signature, but RepliableHandler's ctor is protected
-    constructor(event: Event, core: Core, dispatch: DispatchContext) {
-        super(event, core, dispatch);
+    constructor(event: Event, core: Core, dispatch: DispatchContext, sender: ReplySender) {
+        super(event, core, dispatch, sender);
     }
 
     /**

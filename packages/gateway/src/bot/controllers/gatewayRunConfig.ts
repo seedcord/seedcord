@@ -1,6 +1,6 @@
-import { reportedWrite } from '@seedcord/core/internal';
 import { DiscordAPIError } from 'discord.js';
 
+import { autocompleteResponder } from '#bot/autocompleteResponder';
 import { interactionGateContext } from '#bot/gates/context';
 import { ReplySender } from '#bot/ReplySender';
 import { interactionFaultReport } from '#miscellaneous/faultReports';
@@ -22,7 +22,6 @@ interface GatewayRun {
 
 export function gatewayRunConfig(run: GatewayRun): InteractionRunConfig {
     const { interaction, core, dispatch, HandlerCtor, middlewares, logger } = run;
-    const telemetry = { bus: core.bus, dispatch, interactionId: interaction.id };
     return {
         dispatch,
         core,
@@ -36,10 +35,10 @@ export function gatewayRunConfig(run: GatewayRun): InteractionRunConfig {
         guildId: interaction.guildId,
         faultDetails: () => interactionFaultReport(interaction, dispatch),
         target: interaction.isAutocomplete()
-            ? { clearChoices: () => reportedWrite(telemetry, 'respond', () => interaction.respond([])) }
+            ? { responder: autocompleteResponder(interaction, core, dispatch) }
             : {
                   gateContext: () => interactionGateContext(interaction, core, dispatch),
-                  newSender: () => new ReplySender(interaction, dispatch, core.bus)
+                  sender: new ReplySender(interaction, dispatch, core.bus)
               }
     };
 }
