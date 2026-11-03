@@ -246,6 +246,9 @@ The commands step deploys with `--yes`, which skips the preview, and Discord rep
 | `compatibilityFlags` holds `'no_nodejs_compat'` | `CliEdgeNodeCompatOff` |
 | `compatibilityDate` is before `2026-08-04` without `'nodejs_compat'` | `CliEdgeCompatDateTooOld` |
 | a command in your code isn't on Discord yet | `CliEdgeCommandsNotDeployed` |
+| the worker didn't load when the build started it | `CliEdgeBootFailed` |
 | the deployed worker didn't come from `seedcord build` | `CoreEdgeUnbuilt`, on the first request |
 
 {/* prettier-ignore-end */}
+
+`seedcord build` starts the worker once and sends it a test request, so code that throws while the worker loads stops the build. `CliEdgeBootFailed` prints workerd's output when it has some. If its message says to run `seedcord dev`, that command shows the full output.

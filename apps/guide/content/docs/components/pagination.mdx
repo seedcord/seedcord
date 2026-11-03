@@ -81,7 +81,7 @@ The loader receives a [`PageContext`](ref:gateway/PageContext), which carries `g
 
 {/* prettier-ignore-end */}
 
-Every nav click edits the message `start()` sent. One `ephemeral` covers the whole run.
+Every nav click edits the message `start()` sent. One `ephemeral` covers the whole run. If you leave it off, anyone who can see the message can click a nav button, and the click changes the page for everyone. `Roles` sets `ephemeral: true` so each person browses their own copy.
 
 ## Rendering each item
 

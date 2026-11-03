@@ -94,6 +94,8 @@ An autocomplete interaction says which field is focused, so your handler has to 
 
 Each case receives the partial value and a `respond` typed to that field's choice values.
 
+If Discord still offers a field that you've removed from your code, `this.match` throws `MatchCaseMissing` at run time. [Deploy your commands](/tooling/commands#deploy-your-commands) again to remove the field from Discord.
+
 Typing the opening quote shows the fields that command declared.
 
 ```ts twoslash

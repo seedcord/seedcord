@@ -196,6 +196,6 @@ class Ban extends SlashHandler<'ban'> {
 
 <Callout type="transport">
 
-`this.user` is a discord.js `User` on gateway and an `APIUser` on http.
+`this.user` is a discord.js `User` on gateway and an `APIUser` on http. Separately, the server id comes from the event, as `this.event.guildId` on gateway and `this.event.guild_id` on http.
 
 </Callout>
