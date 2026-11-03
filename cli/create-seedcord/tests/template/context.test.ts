@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest';
 
+import { PackageManager } from '#cli/PackageManager';
 import { buildContext } from '#template/context';
 import { BOT_TOKEN } from '#tests/token';
 
@@ -27,7 +28,7 @@ const HTTP: ScaffoldAnswers = {
     git: true
 };
 
-const EXTRAS = { developerUsername: 'dhruv', agent: 'pnpm' } as const;
+const EXTRAS = { developerUsername: 'dhruv', manager: new PackageManager('pnpm') };
 
 describe('buildContext on gateway', () => {
     const context = buildContext(GATEWAY, EXTRAS);

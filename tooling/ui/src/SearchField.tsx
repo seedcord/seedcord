@@ -1,42 +1,13 @@
 'use client';
 
-import { LoaderCircle, Search, X } from 'lucide-react';
+import { LoaderCircle, Search } from 'lucide-react';
 
-import { Button } from './Button';
-import { Icon } from './Icon';
+import { CloseControls } from './CloseControls';
 import { IconSwap } from './IconSwap';
 import { Input } from './Input';
 import { cn } from './lib/cn';
 
 import type { KeyboardEvent, ReactElement, ReactNode, RefObject } from 'react';
-
-function CloseControls({ onClose, label }: { onClose: () => void; label: string }): ReactElement {
-    return (
-        <>
-            <Button
-                variant="ghost"
-                size="icon"
-                onClick={onClose}
-                aria-label={label}
-                className={cn('text-subtle size-9 rounded-md hover:text-(--text) sm:hidden')}
-            >
-                <Icon icon={X} size={16} aria-hidden />
-            </Button>
-            <Button
-                variant="ghost"
-                onClick={onClose}
-                aria-label={label}
-                className={cn(
-                    'text-subtle hidden h-auto items-center rounded-md border border-(--border)',
-                    'bg-(--surface-moderate) px-2 py-1 text-xs leading-none font-semibold tracking-wide uppercase',
-                    'hover:bg-(--surface-moderate) hover:text-(--text) sm:inline-flex'
-                )}
-            >
-                Esc
-            </Button>
-        </>
-    );
-}
 
 export interface SearchFieldProps {
     inputRef: RefObject<HTMLInputElement | null>;
@@ -47,6 +18,7 @@ export interface SearchFieldProps {
     label: string;
     closeLabel: string;
     placeholder?: string;
+    maxLength?: number;
     listboxId: string;
     listExpanded: boolean;
     activeId?: string | undefined;
@@ -65,6 +37,7 @@ export function SearchField({
     label,
     closeLabel,
     placeholder = 'Search…',
+    maxLength,
     listboxId,
     listExpanded,
     activeId,
@@ -88,6 +61,7 @@ export function SearchField({
                 onChange={(event) => onValueChange(event.target.value)}
                 onKeyDown={onKeyDown}
                 placeholder={placeholder}
+                maxLength={maxLength}
                 aria-label={label}
                 variant="ghost"
                 className={cn(

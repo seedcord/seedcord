@@ -152,6 +152,23 @@ async function postToPreview(projectDir: string, sign: SignRequest): Promise<str
 }
 
 describe('a built edge worker', () => {
+    it('boots a worker with a remote binding without a Cloudflare login', async () => {
+        const projectDir = await copyEdgeBotForTest();
+        await writeCloudflareConfig(projectDir, {
+            env: { GUIDE: bindings.worker({ worker: 'seedcord-guide', dev: { remote: true } }) }
+        });
+        vi.stubEnv('HOME', projectDir);
+        vi.stubEnv('XDG_CONFIG_HOME', projectDir);
+        vi.stubEnv('CLOUDFLARE_API_TOKEN', '');
+        vi.stubEnv('CI', 'true');
+        onTestFinished(() => {
+            vi.unstubAllEnvs();
+        });
+        const signing = await writeSigningEnv(projectDir);
+
+        await expect(edgeBuildRunner(fakeDiscord(signing.publicKey)).run(projectDir)).resolves.toBeDefined();
+    }, 120_000);
+
     it('reports a handler it fails to load by its path under the bot root', async () => {
         const projectDir = await copyEdgeBotForTest();
         await writeFile(

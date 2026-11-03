@@ -1,5 +1,32 @@
 # @seedcord/gateway
 
+## 0.9.0-next.1
+
+### 💥 Breaking
+
+- Plugin `init()`, `ready()`, `dispose()` and `onHmr()`, handler `execute()`, and middleware `after()` can now return without a promise. Code that calls one of them directly and chains `.then()` must `await` it or wrap it in `Promise.resolve()`. ([#424](https://github.com/seedcord/seedcord/pull/424), thanks [@lunaradev1](https://github.com/lunaradev1))
+- `checkPermissions` and `checkBotPermissions` now take one options object, like `checkPermissions({ for: member, in: channel, scope })`. `hasPermsToAssign` no longer takes a bare `Role`, and its options now read `{ role, higher, managed, missing }` where they read `{ targetRole, noticeOverrides }`. ([#432](https://github.com/seedcord/seedcord/pull/432))
+- The override options on every gate and permission helper now take a `Notice` class for seedcord to construct with that refusal's data, like the missing permission names or a cooldown's `resetAt`. Write a small class where you passed `{ message }`, a `Notice` instance, or Cooldown's functions. `missingNotice` and `dangerousNotice` became one `notice` that also covers `inverse`. ([#432](https://github.com/seedcord/seedcord/pull/432))
+- A permission check on a bot whose own member isn't cached now throws `CoreBotMemberMissing`, where it used to refuse as if every permission were missing. `RequireBotPermissions` without `in: 'guild'` no longer compiles on an event handler, where it used to refuse every event. ([#432](https://github.com/seedcord/seedcord/pull/432))
+
+### ✨ Minor
+
+- Added the `MentionPrefix` gate. A message handler behind it runs only for a message that starts with a mention of the bot, like `@bot ping`. ([#432](https://github.com/seedcord/seedcord/pull/432))
+
+### 🩹 Patch
+
+- Reworded error messages and log lines that joined their parts with the wrong word or read two ways. The gate mismatch compile error now reads like `needs a handler of kind Slash, but this handler's kind is Button`. ([`6f71a86`](https://github.com/seedcord/seedcord/commit/6f71a868e39df8cff3b857688544404113d46596))
+- Fixed the compile error for a gate attached to a handler it doesn't fit. A gate typed with `InteractionGateContext` now prints one message, where it printed one per interaction kind and one of them read "requires a an interaction handler". ([#432](https://github.com/seedcord/seedcord/pull/432))
+- Fixed `IgnoreBots` letting a bot's message edit through when `Partials.Message` is on and discord.js hadn't cached the old message. ([#432](https://github.com/seedcord/seedcord/pull/432))
+
+#### 📦 Seedcord packages
+
+- `@seedcord/errors` 0.15.0-next.0 → 0.15.0-next.1
+- `@seedcord/custom-id` 0.3.1-next.0 → 0.3.1-next.1
+- `@seedcord/core` 0.12.0-next.0 → 0.12.0-next.1
+- `@seedcord/logger` 0.6.0-next.0 → 0.6.0-next.1
+- `@seedcord/types` 0.16.0-next.0 → 0.16.0-next.1
+
 ## 0.9.0-next.0
 
 ### 💥 Breaking

@@ -37,8 +37,10 @@ describe('SiteAddress', () => {
         expect(new SiteAddress('http://localhost:3001/docs').label).toBe('localhost:3001/docs');
     });
 
-    it('gives its base path, empty at the origin root', () => {
-        expect(guide.path).toBe('/guide');
-        expect(new SiteAddress('https://seedcord.org').path).toBe('');
+    it('gives its base path and export folder, both without a base at the origin root', () => {
+        const home = new SiteAddress('https://seedcord.org');
+
+        expect([guide.path, guide.exportDir]).toEqual(['/guide', 'dist/guide']);
+        expect([home.path, home.exportDir]).toEqual(['', 'dist']);
     });
 });

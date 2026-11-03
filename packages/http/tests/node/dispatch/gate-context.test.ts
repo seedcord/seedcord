@@ -16,8 +16,6 @@ import { slashPayload } from './harness';
 
 import type { InteractionMiddlewareConstructor } from '#handlers/constructors';
 import type { ValidInteractionTypes } from '#handlers/interactionTypes';
-import type { Core } from '#interfaces/Core';
-import type { DispatchContext } from '@seedcord/core';
 import type { RenderableNotice, RenderContext, ReplyResponse } from '@seedcord/types';
 
 // a bot augments its own transport package here. both re-export the interface from @seedcord/types
@@ -128,8 +126,8 @@ describe('the dispatch context on a rendered notice', () => {
         }
 
         class Exploding extends SlashHandler<never> {
-            constructor(event: never, core: Core, dispatch: DispatchContext) {
-                super(event, core, dispatch);
+            constructor(...args: ConstructorParameters<typeof SlashHandler<never>>) {
+                super(...args);
                 throw new Error('constructor blew up');
             }
 

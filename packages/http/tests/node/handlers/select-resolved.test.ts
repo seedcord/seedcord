@@ -11,6 +11,7 @@ import {
     UserMenuHandler
 } from '#handlers/interaction/components/SelectMenuHandler';
 import { ChannelMenuRoute, MentionableMenuRoute, RoleMenuRoute, StringMenuRoute, UserMenuRoute } from '#src/index';
+import { built } from '#tests/helpers/built';
 
 import type { Core } from '#interfaces/Core';
 import type {
@@ -74,7 +75,7 @@ describe('picked ids', () => {
             component_type: 3,
             values: ['red', 'blue']
         });
-        await new Assign(event, core, dispatch).execute();
+        await built(Assign, event, core, dispatch).execute();
 
         expect(values).toEqual(['red', 'blue']);
     });
@@ -98,7 +99,7 @@ describe('a payload carrying no values key', () => {
             component_type: 5,
             resolved: { users: { u1: ada } }
         });
-        await new Assign(event, core, dispatch).execute();
+        await built(Assign, event, core, dispatch).execute();
 
         expect(values).toEqual([]);
         expect(users).toEqual(new Collection());
@@ -124,7 +125,7 @@ describe('a payload carrying no resolved key', () => {
             component_type: 5,
             values: []
         });
-        await new Assign(event, core, dispatch).execute();
+        await built(Assign, event, core, dispatch).execute();
 
         expect(users).toEqual(new Collection());
         expect(members).toEqual(new Collection());
@@ -145,7 +146,7 @@ describe('a payload carrying no resolved key', () => {
             component_type: 6,
             values: []
         });
-        await new Grant(event, core, dispatch).execute();
+        await built(Grant, event, core, dispatch).execute();
 
         expect(roles).toEqual(new Collection());
     });
@@ -165,7 +166,7 @@ describe('a payload carrying no resolved key', () => {
             component_type: 8,
             values: []
         });
-        await new LogTarget(event, core, dispatch).execute();
+        await built(LogTarget, event, core, dispatch).execute();
 
         expect(channels).toEqual(new Collection());
     });
@@ -185,7 +186,7 @@ describe('a payload carrying no resolved key', () => {
             component_type: 7,
             values: []
         });
-        await new Invite(event, core, dispatch).execute();
+        await built(Invite, event, core, dispatch).execute();
 
         expect(picked).toEqual([new Collection(), new Collection(), new Collection()]);
     });
@@ -210,7 +211,7 @@ describe('user select', () => {
             values: ['u1'],
             resolved: { users: { u1: ada }, members: { u1: boss } }
         });
-        await new Assign(event, core, dispatch).execute();
+        await built(Assign, event, core, dispatch).execute();
 
         expect(users).toEqual(new Collection([['u1', ada]]));
         expect(members).toEqual(new Collection([['u1', boss]]));
@@ -232,7 +233,7 @@ describe('user select', () => {
             values: ['u1'],
             resolved: { users: { u1: ada } }
         });
-        await new Assign(event, core, dispatch).execute();
+        await built(Assign, event, core, dispatch).execute();
 
         expect(members).toEqual(new Collection());
     });
@@ -255,7 +256,7 @@ describe('role and channel selects', () => {
             values: ['r1'],
             resolved: { roles: { r1: mods } }
         });
-        await new Assign(event, core, dispatch).execute();
+        await built(Assign, event, core, dispatch).execute();
 
         expect(roles).toEqual(new Collection([['r1', mods]]));
     });
@@ -276,7 +277,7 @@ describe('role and channel selects', () => {
             values: ['c1'],
             resolved: { channels: { c1: general } }
         });
-        await new Assign(event, core, dispatch).execute();
+        await built(Assign, event, core, dispatch).execute();
 
         expect(channels).toEqual(new Collection([['c1', general]]));
     });
@@ -303,7 +304,7 @@ describe('mentionable select', () => {
             values: ['u1', 'r1'],
             resolved: { users: { u1: ada }, members: { u1: boss }, roles: { r1: mods } }
         });
-        await new Assign(event, core, dispatch).execute();
+        await built(Assign, event, core, dispatch).execute();
 
         expect(users).toEqual(new Collection([['u1', ada]]));
         expect(members).toEqual(new Collection([['u1', boss]]));

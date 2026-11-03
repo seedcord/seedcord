@@ -1,4 +1,4 @@
-export const STEP_LABELS = ['files', 'install', 'format', 'types', 'git'] as const;
+export const STEP_LABELS = ['files', 'deps', 'format', 'types', 'git'] as const;
 
 export type StepLabel = (typeof STEP_LABELS)[number];
 

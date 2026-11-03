@@ -3,6 +3,7 @@ import { isSeedcordError, SeedcordErrorCode } from '@seedcord/errors';
 import { describe, expect, expectTypeOf, it } from 'vitest';
 
 import { MessageContextMenuHandler, UserContextMenuHandler } from '#handlers/interaction/ContextMenuHandler';
+import { built } from '#tests/utils/built';
 
 import type { Core } from '#interfaces/Core';
 import type {
@@ -122,18 +123,18 @@ void UnknownCase;
 
 describe('context menu match', () => {
     it('runs the case for the selected command', async () => {
-        await expect(new Menu(...userMenu('View Profile')).run()).resolves.toBe('profile');
-        await expect(new Menu(...userMenu('Say Hello')).run()).resolves.toBe('hello');
+        await expect(built(Menu, ...userMenu('View Profile')).run()).resolves.toBe('profile');
+        await expect(built(Menu, ...userMenu('Say Hello')).run()).resolves.toBe('hello');
     });
 
     it('hands a message case the clicked message', async () => {
-        await expect(new Tools(...messageMenu('Pin Message')).run()).resolves.toBe('pinned msg1');
+        await expect(built(Tools, ...messageMenu('Pin Message')).run()).resolves.toBe('pinned msg1');
     });
 
     it('throws when the selected command lacks a case', async () => {
         let caught: unknown;
         try {
-            await new Menu(...userMenu('Say Hello')).runPartial();
+            await built(Menu, ...userMenu('Say Hello')).runPartial();
         } catch (error) {
             caught = error;
         }
@@ -144,7 +145,7 @@ describe('context menu match', () => {
     it('throws for a command named after an Object.prototype member', async () => {
         let caught: unknown;
         try {
-            await new Menu(...userMenu('constructor')).run();
+            await built(Menu, ...userMenu('constructor')).run();
         } catch (error) {
             caught = error;
         }
@@ -153,6 +154,6 @@ describe('context menu match', () => {
     });
 
     it('reads the selected command name without a case', () => {
-        expect(new Menu(...userMenu('Say Hello')).readName()).toBe('Say Hello');
+        expect(built(Menu, ...userMenu('Say Hello')).readName()).toBe('Say Hello');
     });
 });

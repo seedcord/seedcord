@@ -1,4 +1,4 @@
-import { AutocompleteRouteBrand, reportedWrite, runCase } from '@seedcord/core/internal';
+import { AutocompleteRouteBrand, runCase } from '@seedcord/core/internal';
 
 import { BaseHandler } from '#src/handlers/BaseHandler';
 
@@ -6,6 +6,7 @@ import type { Core } from '#interfaces/Core';
 import type { AutocompleteOptions, DispatchContext, SlashRegistry } from '@seedcord/core';
 import type {
     AutocompletableNames,
+    AutocompleteResponder,
     CacheFor,
     CaseReturn,
     ChoiceValueOf,
@@ -56,9 +57,17 @@ export abstract class AutocompleteHandler<
     declare readonly [AutocompleteRouteBrand]?: Route;
 
     // keep this ctor. inheriting BaseHandler's protected one collapses HandlerConstructor to never.
-    constructor(event: AutocompleteInteraction<Cache>, core: Core, dispatch: DispatchContext) {
+    constructor(
+        event: AutocompleteInteraction<Cache>,
+        core: Core,
+        dispatch: DispatchContext,
+        responder: AutocompleteResponder<ApplicationCommandOptionChoiceData>
+    ) {
         super(event, core, dispatch, 'interactions');
+        this.#responder = responder;
     }
+
+    readonly #responder: AutocompleteResponder<ApplicationCommandOptionChoiceData>;
 
     /** The user who sent this interaction. */
     protected get user(): User {
@@ -116,14 +125,8 @@ export abstract class AutocompleteHandler<
     }
 
     /** Send autocomplete suggestions, callback type 8. Prefer {@link match}, which restricts each field's choices to its declared type. */
-    protected async respond(choices: readonly ApplicationCommandOptionChoiceData[]): Promise<void> {
-        await reportedWrite(
-            { bus: this.core.bus, dispatch: this.dispatch, interactionId: this.event.id },
-            'respond',
-            () =>
-                // eslint-disable-next-line @seedcord/no-raw-interaction-acks -- this is the base respond and calls djs directly
-                this.event.respond(choices)
-        );
+    protected respond(choices: readonly ApplicationCommandOptionChoiceData[]): Promise<void> {
+        return this.#responder.respond(choices);
     }
 
     /** The selected command's path, such as `search/docs`, without the interaction-kind prefix. */

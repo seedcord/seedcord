@@ -1,6 +1,7 @@
 import { InteractionKind } from '@seedcord/core';
+import { componentKindOf, matchRoute } from '@seedcord/core/internal';
 import { prefixOf } from '@seedcord/custom-id';
-import { ApplicationCommandType, ComponentType, InteractionType } from 'discord-api-types/v10';
+import { ApplicationCommandType, InteractionType } from 'discord-api-types/v10';
 
 import { UnhandledAutocomplete } from '#handlers/defaults/UnhandledAutocomplete';
 import { UnhandledRepliable } from '#handlers/defaults/UnhandledRepliable';
@@ -8,34 +9,15 @@ import { UnhandledRepliable } from '#handlers/defaults/UnhandledRepliable';
 import { slashRouteOf } from './slashRouteOf';
 
 import type { HandlerConstructor } from '#handlers/constructors';
+import type { RegisteredRoute, RouteMaps as CoreRouteMaps } from '@seedcord/core/internal';
 import type { APIInteraction } from 'discord-api-types/v10';
 
-/** A registered handler matched to an incoming interaction, under the keys the gateway dispatcher uses. */
-export interface ResolvedRoute {
-    readonly kind: InteractionKind;
-    readonly route: string;
-    readonly fallback: boolean;
-    readonly ctor: HandlerConstructor;
-}
+export type ResolvedRoute = RegisteredRoute<HandlerConstructor>;
 
-/** @internal */
-export type RouteMap = Map<string, ResolvedRoute>;
-
-type ComponentMapKey = Exclude<
-    InteractionKind,
-    | InteractionKind.Slash
-    | InteractionKind.Autocomplete
-    | InteractionKind.UserContextMenu
-    | InteractionKind.MessageContextMenu
->;
-
-export type RouteMaps = Readonly<Record<InteractionKind, RouteMap>>;
+export type RouteMaps = CoreRouteMaps<HandlerConstructor>;
 
 function commandKind(type: ApplicationCommandType): InteractionKind | null {
     switch (type) {
-        case ApplicationCommandType.ChatInput: {
-            return InteractionKind.Slash;
-        }
         case ApplicationCommandType.User: {
             return InteractionKind.UserContextMenu;
         }
@@ -48,56 +30,10 @@ function commandKind(type: ApplicationCommandType): InteractionKind | null {
     }
 }
 
-function componentMapKey(type: ComponentType): Exclude<ComponentMapKey, InteractionKind.Modal> | null {
-    switch (type) {
-        case ComponentType.Button: {
-            return InteractionKind.Button;
-        }
-        case ComponentType.StringSelect: {
-            return InteractionKind.StringMenu;
-        }
-        case ComponentType.UserSelect: {
-            return InteractionKind.UserMenu;
-        }
-        case ComponentType.RoleSelect: {
-            return InteractionKind.RoleMenu;
-        }
-        case ComponentType.ChannelSelect: {
-            return InteractionKind.ChannelMenu;
-        }
-        case ComponentType.MentionableSelect: {
-            return InteractionKind.MentionableMenu;
-        }
-        default: {
-            return null;
-        }
-    }
-}
-
-export function emptyRouteMaps(): RouteMaps {
-    return {
-        [InteractionKind.Slash]: new Map(),
-        [InteractionKind.UserContextMenu]: new Map(),
-        [InteractionKind.MessageContextMenu]: new Map(),
-        [InteractionKind.Autocomplete]: new Map(),
-        [InteractionKind.Button]: new Map(),
-        [InteractionKind.StringMenu]: new Map(),
-        [InteractionKind.UserMenu]: new Map(),
-        [InteractionKind.RoleMenu]: new Map(),
-        [InteractionKind.ChannelMenu]: new Map(),
-        [InteractionKind.MentionableMenu]: new Map(),
-        [InteractionKind.Modal]: new Map()
-    };
-}
-
-function unhandled(kind: InteractionKind, route: string): ResolvedRoute {
-    return {
-        kind,
-        route,
-        fallback: true,
-        ctor: kind === InteractionKind.Autocomplete ? UnhandledAutocomplete : UnhandledRepliable
-    };
-}
+const UNHANDLED: { repliable: HandlerConstructor; autocomplete: HandlerConstructor } = {
+    repliable: UnhandledRepliable,
+    autocomplete: UnhandledAutocomplete
+};
 
 /**
  * Matches a verified non-PING interaction to a registered handler. A known kind with no handler resolves
@@ -109,25 +45,20 @@ export function resolve(maps: RouteMaps, interaction: APIInteraction): ResolvedR
     switch (interaction.type) {
         case InteractionType.ApplicationCommand: {
             if (interaction.data.type === ApplicationCommandType.ChatInput) {
-                const route = slashRouteOf(interaction.data);
-                return maps[InteractionKind.Slash].get(route) ?? unhandled(InteractionKind.Slash, route);
+                return matchRoute(maps, InteractionKind.Slash, slashRouteOf(interaction.data), UNHANDLED);
             }
             const kind = commandKind(interaction.data.type);
-            return kind ? (maps[kind].get(interaction.data.name) ?? unhandled(kind, interaction.data.name)) : null;
+            return kind && matchRoute(maps, kind, interaction.data.name, UNHANDLED);
         }
         case InteractionType.ApplicationCommandAutocomplete: {
-            const route = slashRouteOf(interaction.data);
-            return maps[InteractionKind.Autocomplete].get(route) ?? unhandled(InteractionKind.Autocomplete, route);
+            return matchRoute(maps, InteractionKind.Autocomplete, slashRouteOf(interaction.data), UNHANDLED);
         }
         case InteractionType.MessageComponent: {
-            const key = componentMapKey(interaction.data.component_type);
-            if (!key) return null;
-            const prefix = prefixOf(interaction.data.custom_id);
-            return maps[key].get(prefix) ?? unhandled(key, prefix);
+            const kind = componentKindOf(interaction.data.component_type);
+            return kind && matchRoute(maps, kind, prefixOf(interaction.data.custom_id), UNHANDLED);
         }
         case InteractionType.ModalSubmit: {
-            const prefix = prefixOf(interaction.data.custom_id);
-            return maps[InteractionKind.Modal].get(prefix) ?? unhandled(InteractionKind.Modal, prefix);
+            return matchRoute(maps, InteractionKind.Modal, prefixOf(interaction.data.custom_id), UNHANDLED);
         }
         default: {
             return null;

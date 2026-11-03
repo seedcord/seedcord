@@ -26,7 +26,7 @@ export class DispatchContext<Kind extends DispatchKind = DispatchKind> implement
         public readonly kind: Kind,
         /**
          * The slash path, context menu name, custom-ID prefix, or event name that started this dispatch.
-         * It's empty if seedcord didn't make the interaction's custom ID.
+         * For a custom ID that seedcord didn't make, it can be empty or a cut-off piece of that ID.
          */
         public readonly route: string,
         /** True when this route doesn't have a registered handler. */

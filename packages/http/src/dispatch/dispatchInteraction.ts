@@ -1,9 +1,9 @@
 import { DiscordAPIError } from '@discordjs/rest';
-import { DispatchContext, InteractionRun, reportedWrite } from '@seedcord/core/internal';
-import { Logger } from '@seedcord/logger';
-import { InteractionResponseType, InteractionType, Routes } from 'discord-api-types/v10';
+import { DispatchContext, InteractionRun, lazyLogger } from '@seedcord/core/internal';
+import { InteractionType } from 'discord-api-types/v10';
 
 import { interactionUser } from '#handlers/interactionUser';
+import { autocompleteResponder } from '#reply/autocompleteResponder';
 import { ReplySender } from '#reply/ReplySender';
 import { interactionGateContext } from '#src/gates/context';
 
@@ -13,29 +13,15 @@ import type { InteractionMiddlewareConstructor } from '#handlers/constructors';
 import type { ValidInteractionTypes } from '#handlers/interactionTypes';
 import type { Core } from '#interfaces/Core';
 import type { ResolvedRoute } from './resolve';
-import type { InteractionDispatch, InteractionRunConfig, MiddlewareRegistry } from '@seedcord/core/internal';
+import type { InteractionRunConfig, MiddlewareRegistry } from '@seedcord/core/internal';
 
-// lazy, env binds after this module loads
-let dispatchLogger: Logger | undefined;
-function logger(): Logger {
-    dispatchLogger ??= new Logger('Dispatcher', { channel: 'interactions' });
-    return dispatchLogger;
-}
+const logger = lazyLogger('Interactions', { channel: 'interactions' });
 
 interface DispatchArgs {
     readonly match: ResolvedRoute;
     readonly payload: ValidInteractionTypes;
     readonly core: Core;
     readonly middlewares: MiddlewareRegistry<InteractionMiddlewareConstructor>;
-}
-
-function clearChoices(payload: ValidInteractionTypes, core: Core, dispatch: InteractionDispatch): Promise<unknown> {
-    const telemetry = { bus: core.bus, dispatch, interactionId: payload.id };
-    return reportedWrite(telemetry, 'respond', () =>
-        core.rest.post(Routes.interactionCallback(payload.id, payload.token), {
-            body: { type: InteractionResponseType.ApplicationCommandAutocompleteResult, data: { choices: [] } }
-        })
-    );
 }
 
 function httpRunConfig(args: DispatchArgs): InteractionRunConfig {
@@ -52,20 +38,23 @@ function httpRunConfig(args: DispatchArgs): InteractionRunConfig {
         interactionId: payload.id,
         userId: interactionUser(payload).id,
         guildId: payload.guild_id ?? null,
+        customId: 'custom_id' in payload.data ? payload.data.custom_id : null,
         faultDetails: () => interactionFaultReport(payload, dispatch),
         target:
             payload.type === InteractionType.ApplicationCommandAutocomplete
-                ? { clearChoices: () => clearChoices(payload, core, dispatch) }
+                ? { responder: autocompleteResponder(payload, core, dispatch) }
                 : {
                       gateContext: () => interactionGateContext(payload, core, dispatch),
-                      newSender() {
-                          const ref = { application_id: payload.application_id, id: payload.id, token: payload.token };
-                          return new ReplySender(ref, core.rest, dispatch, core.bus);
-                      }
+                      sender: new ReplySender(
+                          { application_id: payload.application_id, id: payload.id, token: payload.token },
+                          core.rest,
+                          dispatch,
+                          core.bus
+                      )
                   }
     };
 }
 
-export function dispatchInteraction(args: DispatchArgs): Promise<(() => Promise<void>) | null> {
+export function dispatchInteraction(args: DispatchArgs): ReturnType<InteractionRun['prepare']> {
     return new InteractionRun(httpRunConfig(args)).prepare();
 }

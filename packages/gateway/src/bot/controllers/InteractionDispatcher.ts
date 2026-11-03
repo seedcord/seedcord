@@ -1,25 +1,24 @@
-/* eslint-disable max-lines -- one handler method per interaction type keeps the router in one file */
 import { InteractionKind } from '@seedcord/core';
-import { HmrModuleHandler } from '@seedcord/core/hmr';
 import {
+    componentKindOf,
     DispatchContext,
+    HandlerLoader,
     InteractionRun,
     InteractionMetadataKey,
-    interactionRoutesOf,
     interactionMiddleware,
     InteractionMiddlewareMetadataKey,
+    matchRoute,
     MiddlewareRegistry,
     PublishDefault,
-    routeIdOf
+    RouteRegistry
 } from '@seedcord/core/internal';
 import { prefixOf } from '@seedcord/custom-id';
 import { SeedcordErrorCode, paint } from '@seedcord/errors';
-import { SeedcordError, SeedcordTypeError } from '@seedcord/errors/internal';
+import { SeedcordError } from '@seedcord/errors/internal';
 import { Logger } from '@seedcord/logger';
-import { formatFilePath, hasKeys, importFiles } from '@seedcord/utils';
+import { hasKeys } from '@seedcord/utils';
 import { asError } from '@seedcord/utils/internal';
 import { Events } from 'discord.js';
-import { Envapter } from 'envapt';
 
 import { CONFIRM_DEF } from '#bot/confirm/reserved';
 import { gatewayRunConfig } from '#bot/controllers/gatewayRunConfig';
@@ -31,61 +30,35 @@ import { InteractionHandler } from '#handlers/interaction/InteractionHandler';
 import type { HandlerConstructor, InteractionMiddlewareConstructor } from '#handlers/constructors';
 import type { Core } from '#interfaces/Core';
 import type { ValidInteractionTypes } from '#src/handlers/interactionTypes';
-import type { ContextMenuLeaves, Initializeable } from '@seedcord/core/internal';
+import type { MiddlewareKind } from '@seedcord/core';
+import type { ContextMenuLeaves, Initializeable, RegisteredRoute, RouteMaps } from '@seedcord/core/internal';
 import type { InFlight } from '@seedcord/core/node/internal';
 import type { CustomIdMatcher, HmrAware, HmrUpdateEvent } from '@seedcord/types';
-import type {
-    AutocompleteInteraction,
-    ButtonInteraction,
-    ChannelSelectMenuInteraction,
-    ChatInputCommandInteraction,
-    Interaction,
-    MentionableSelectMenuInteraction,
-    MessageContextMenuCommandInteraction,
-    ModalSubmitInteraction,
-    RoleSelectMenuInteraction,
-    StringSelectMenuInteraction,
-    UserContextMenuCommandInteraction,
-    UserSelectMenuInteraction
-} from 'discord.js';
+import type { Interaction } from 'discord.js';
 
-interface InteractionArtifact {
-    routeType: InteractionKind;
-    routes: string[];
-}
+const UNHANDLED: { repliable: HandlerConstructor; autocomplete: HandlerConstructor } = {
+    repliable: UnhandledRepliable,
+    autocomplete: UnhandledAutocomplete
+};
 
 export class InteractionDispatcher implements Initializeable, HmrAware {
     private readonly logger = new Logger('Interactions', { channel: 'interactions' });
     private isInitialized = false;
 
-    private readonly maps: Record<InteractionKind, Map<string, HandlerConstructor>> = {
-        [InteractionKind.Slash]: new Map(),
-        [InteractionKind.Button]: new Map(),
-        [InteractionKind.Modal]: new Map(),
-        [InteractionKind.StringMenu]: new Map(),
-        [InteractionKind.UserMenu]: new Map(),
-        [InteractionKind.RoleMenu]: new Map(),
-        [InteractionKind.ChannelMenu]: new Map(),
-        [InteractionKind.MentionableMenu]: new Map(),
-        [InteractionKind.MessageContextMenu]: new Map(),
-        [InteractionKind.UserContextMenu]: new Map(),
-        [InteractionKind.Autocomplete]: new Map()
-    };
+    private readonly routes = new RouteRegistry<HandlerConstructor>();
 
-    private readonly handlerFiles = new Map<HandlerConstructor, string>();
+    private get maps(): RouteMaps<HandlerConstructor> {
+        return this.routes.maps;
+    }
 
     private readonly keysToIgnore = new Set<CustomIdMatcher>();
     private readonly middlewares = new MiddlewareRegistry<InteractionMiddlewareConstructor>(interactionMiddleware);
 
-    // a reload reports on the hmr channel
-    private loading = false;
-    private readonly loadedHandlers: { name: string; from: string }[] = [];
-    private readonly loadedMiddlewares: { name: string; from: string }[] = [];
-
-    private readonly hmrHandler?: HmrModuleHandler<
+    private readonly loader: HandlerLoader<
         HandlerConstructor,
         InteractionMiddlewareConstructor,
-        InteractionArtifact[]
+        MiddlewareKind,
+        RegisteredRoute<HandlerConstructor>[]
     >;
 
     constructor(
@@ -110,53 +83,27 @@ export class InteractionDispatcher implements Initializeable, HmrAware {
             ]);
         }
 
-        if (!Envapter.isDevelopment && !Envapter.isTest) return;
-        this.hmrHandler = new HmrModuleHandler({
+        this.loader = new HandlerLoader({
             handlersDir: interactionsDir,
-            ...(hasKeys(this.core.config.bot.interactions, ['middlewares']) &&
-                this.core.config.bot.interactions.middlewares && {
-                    middlewaresDir: this.core.config.bot.interactions.middlewares
-                }),
-            isHandler: this.isHandlerClass.bind(this),
-            isMiddleware: this.isMiddlewareClass.bind(this),
-            registerHandler: this.registerHandler.bind(this),
-            registerMiddleware: this.registerMiddleware.bind(this),
-            unregisterHandler: this.unregisterHandler.bind(this),
-            unregisterMiddleware: this.unregisterMiddleware.bind(this),
-            getArtifacts: this.getArtifacts.bind(this),
-            logger: this.logger
+            middlewaresDir: hasKeys(this.core.config.bot.interactions, ['middlewares'])
+                ? this.core.config.bot.interactions.middlewares
+                : undefined,
+            middlewares: this.middlewares,
+            logger: this.logger,
+            isHandler: (value): value is HandlerConstructor => this.isHandlerClass(value),
+            isMiddleware: (value): value is InteractionMiddlewareConstructor => this.isMiddlewareClass(value),
+            storeHandler: (ctor, from) => this.routes.register(ctor, from),
+            removeHandler: (ctor, routes) => this.routes.unregister(ctor, routes),
+            artifactsOf: (ctor) => this.routes.routesOf(ctor)
         });
     }
 
     public warnUnhandledRoutes(commandLeaves: Iterable<string>): void {
-        for (const route of commandLeaves) {
-            if (!this.maps[InteractionKind.Slash].has(route)) {
-                this.logger.warn(
-                    `Slash route ${paint.sky.bold(route)} has no registered ${paint.bold('@SlashRoute')} handler.`
-                );
-            }
-        }
+        this.routes.warnUnhandledRoutes(this.logger, commandLeaves);
     }
 
     public warnUnhandledContextMenuRoutes(leaves: ContextMenuLeaves): void {
-        for (const name of leaves.user) {
-            if (!this.maps[InteractionKind.UserContextMenu].has(name)) {
-                this.logger.warn(
-                    `User context menu ${paint.sky.bold(name)} has no registered ${paint.bold('@ContextMenuRoute')} handler.`
-                );
-            }
-        }
-        for (const name of leaves.message) {
-            if (!this.maps[InteractionKind.MessageContextMenu].has(name)) {
-                this.logger.warn(
-                    `Message context menu ${paint.sky.bold(name)} has no registered ${paint.bold('@ContextMenuRoute')} handler.`
-                );
-            }
-        }
-    }
-
-    private getArtifacts(handlerClass: HandlerConstructor): InteractionArtifact[] {
-        return interactionRoutesOf(handlerClass).map(([routeType, routes]) => ({ routeType, routes }));
+        this.routes.warnUnhandledContextMenuRoutes(this.logger, leaves);
     }
 
     public async init(): Promise<void> {
@@ -164,45 +111,29 @@ export class InteractionDispatcher implements Initializeable, HmrAware {
 
         this.isInitialized = true;
 
-        const handlersDir = this.core.config.bot.interactions.path;
-        // the constructor already threw on this
-        if (!handlersDir) return;
-
-        const middlewareDir = hasKeys(this.core.config.bot.interactions, ['middlewares'])
-            ? this.core.config.bot.interactions.middlewares
-            : undefined;
-
-        this.loading = true;
-        this.loadedHandlers.length = 0;
-        this.loadedMiddlewares.length = 0;
-        try {
-            if (middlewareDir) await this.loadMiddlewares(middlewareDir);
-            await this.loadHandlers(handlersDir);
-        } finally {
-            this.loading = false;
-        }
-
+        await this.loader.load();
         this.attachToClient();
         this.reportLoad();
     }
 
     private reportLoad(): void {
         const { utils } = this.logger;
+        const { loadedHandlers, loadedMiddlewares } = this.loader;
 
         utils.summary(
             'Loaded',
-            { 'interaction handlers': this.loadedHandlers.length, middlewares: this.loadedMiddlewares.length },
+            { 'interaction handlers': loadedHandlers.length, middlewares: loadedMiddlewares.length },
             'debug'
         );
 
-        if (this.loadedMiddlewares.length > 0) {
-            utils.block('Loaded middlewares', utils.entries(this.loadedMiddlewares), 'debug');
+        if (loadedMiddlewares.length > 0) {
+            utils.block('Loaded middlewares', utils.entries(loadedMiddlewares), 'debug');
         }
 
         utils.block(
             'Loaded interaction handlers',
             [
-                ...utils.entries(this.loadedHandlers),
+                ...utils.entries(loadedHandlers),
                 ...utils.counts({
                     slash: this.maps[InteractionKind.Slash].size,
                     buttons: this.maps[InteractionKind.Button].size,
@@ -221,39 +152,6 @@ export class InteractionDispatcher implements Initializeable, HmrAware {
         );
     }
 
-    private async loadHandlers(dir: string): Promise<void> {
-        for await (const { fullPath, relativePath, imported } of importFiles(dir)) {
-            for (const val of Object.values(imported)) {
-                if (!this.isHandlerClass(val)) continue;
-                this.registerHandler(val, relativePath);
-                this.hmrHandler?.trackHandler(fullPath, val);
-            }
-        }
-    }
-
-    private async loadMiddlewares(dir: string): Promise<void> {
-        for await (const { fullPath, relativePath, imported } of importFiles(dir)) {
-            for (const val of Object.values(imported)) {
-                if (!this.isMiddlewareClass(val)) continue;
-
-                this.registerMiddleware(val, relativePath);
-                this.hmrHandler?.trackMiddleware(fullPath, val);
-            }
-        }
-    }
-
-    private registerMiddleware(middlewareCtor: InteractionMiddlewareConstructor, relativePath: string): void {
-        const metadata = this.middlewares.register(middlewareCtor);
-        if (!metadata || !this.loading) return;
-
-        // the kinds are the only place a dev sees that a middleware is scoped
-        const scope = metadata.keys ? `${metadata.priority}, ${metadata.keys.join(', ')}` : metadata.priority;
-        this.loadedMiddlewares.push({
-            name: `${middlewareCtor.name} (${String(scope)})`,
-            from: formatFilePath(relativePath)
-        });
-    }
-
     private isHandlerClass(obj: unknown): obj is HandlerConstructor {
         if (typeof obj !== 'function') return false;
         return (
@@ -269,50 +167,8 @@ export class InteractionDispatcher implements Initializeable, HmrAware {
         );
     }
 
-    private registerHandler(handlerClass: HandlerConstructor, relativePath: string): void {
-        const from = formatFilePath(relativePath);
-        // a partial registration would orphan routes and break hmr rollback
-        const writes: { kind: InteractionKind; route: string }[] = [];
-
-        for (const [kind, routes] of interactionRoutesOf(handlerClass)) {
-            for (const route of routes) {
-                const existing = this.maps[kind].get(route);
-                // a different class on the same route would silently shadow (last write wins)
-                if (existing && existing !== handlerClass) {
-                    throw new SeedcordTypeError(SeedcordErrorCode.CoreDuplicateName, [
-                        'route',
-                        routeIdOf(kind, route),
-                        [
-                            // a stale hmr artifact list can leave a class in a route map after its entry here is gone
-                            `${paint.bold(existing.name)} (${paint.path(this.handlerFiles.get(existing) ?? 'unknown file')})`,
-                            `${paint.bold(handlerClass.name)} (${paint.path(from)})`
-                        ]
-                    ]);
-                }
-                writes.push({ kind, route });
-            }
-        }
-
-        if (writes.length === 0) return;
-        for (const { kind, route } of writes) this.maps[kind].set(route, handlerClass);
-        this.handlerFiles.set(handlerClass, from);
-
-        if (this.loading) this.loadedHandlers.push({ name: handlerClass.name, from });
-    }
-
     public async onHmr(event: HmrUpdateEvent): Promise<void> {
-        await this.hmrHandler?.handle(event);
-    }
-
-    private unregisterHandler(handlerClass: HandlerConstructor, artifacts?: InteractionArtifact[]): void {
-        this.handlerFiles.delete(handlerClass);
-        for (const { routeType, routes } of artifacts ?? this.getArtifacts(handlerClass)) {
-            for (const route of routes) this.maps[routeType].delete(route);
-        }
-    }
-
-    private unregisterMiddleware(middlewareCtor: InteractionMiddlewareConstructor): void {
-        this.middlewares.unregister(middlewareCtor);
+        await this.loader.onHmr(event);
     }
 
     private attachToClient(): void {
@@ -335,29 +191,19 @@ export class InteractionDispatcher implements Initializeable, HmrAware {
         if ([...this.keysToIgnore].some((matcher) => matcher.owns(interaction.customId))) return;
 
         // the stable prefix (the routeKey minus its shape hash) routes an older-shape wire to its handler
-        const prefix = prefixOf(interaction.customId);
-        // no route matches an empty prefix. the unhandled default answers it like http does
-        if (!prefix)
-            this.logger.warn(`${paint.sky.bold(kind)} has invalid customId: ${paint.mute(interaction.customId)}`);
-
-        await this.processInteraction(interaction, kind, prefix);
+        await this.processInteraction(interaction, kind, prefixOf(interaction.customId));
     }
 
     private async processInteraction(
         interaction: ValidInteractionTypes,
         kind: InteractionKind,
-        key: string,
-        fallback: HandlerConstructor = UnhandledRepliable
+        key: string
     ): Promise<void> {
-        const matched = this.maps[kind].get(key);
-        const HandlerCtor = matched ?? fallback;
-        if (!matched) {
-            this.logger.warn(`No handler found for key ${paint.sky.bold(key)}. Falling back to ${HandlerCtor.name}.`);
-        }
+        const { fallback, ctor: HandlerCtor } = matchRoute(this.maps, kind, key, UNHANDLED);
         const config = gatewayRunConfig({
             interaction,
             core: this.core,
-            dispatch: new DispatchContext(kind, key, !matched),
+            dispatch: new DispatchContext(kind, key, fallback),
             HandlerCtor,
             middlewares: this.middlewares,
             logger: this.logger
@@ -367,101 +213,21 @@ export class InteractionDispatcher implements Initializeable, HmrAware {
     }
 
     private async handleInteraction(interaction: Interaction): Promise<void> {
-        switch (true) {
-            case interaction.isChatInputCommand(): {
-                await this.handleSlashCommand(interaction);
-                break;
-            }
-            case interaction.isButton(): {
-                await this.handleButton(interaction);
-                break;
-            }
-            case interaction.isModalSubmit(): {
-                await this.handleModal(interaction);
-                break;
-            }
-            case interaction.isStringSelectMenu(): {
-                await this.handleStringSelectMenu(interaction);
-                break;
-            }
-            case interaction.isUserSelectMenu(): {
-                await this.handleUserSelectMenu(interaction);
-                break;
-            }
-            case interaction.isRoleSelectMenu(): {
-                await this.handleRoleSelectMenu(interaction);
-                break;
-            }
-            case interaction.isChannelSelectMenu(): {
-                await this.handleChannelSelectMenu(interaction);
-                break;
-            }
-            case interaction.isMentionableSelectMenu(): {
-                await this.handleMentionableSelectMenu(interaction);
-                break;
-            }
-            case interaction.isMessageContextMenuCommand(): {
-                await this.handleMessageContextMenu(interaction);
-                break;
-            }
-            case interaction.isUserContextMenuCommand(): {
-                await this.handleUserContextMenu(interaction);
-                break;
-            }
-            case interaction.isAutocomplete(): {
-                await this.handleAutocomplete(interaction);
-                break;
-            }
-            default: {
-                this.logger.warn(`Unhandled interaction type: ${interaction.type}`);
-                break;
-            }
+        if (interaction.isChatInputCommand()) {
+            await this.processInteraction(interaction, InteractionKind.Slash, slashRouteOf(interaction));
+        } else if (interaction.isAutocomplete()) {
+            await this.processInteraction(interaction, InteractionKind.Autocomplete, slashRouteOf(interaction));
+        } else if (interaction.isModalSubmit()) {
+            await this.handleCustomIdInteraction(interaction, InteractionKind.Modal);
+        } else if (interaction.isButton() || interaction.isAnySelectMenu()) {
+            const kind = componentKindOf(interaction.componentType);
+            if (kind) await this.handleCustomIdInteraction(interaction, kind);
+        } else if (interaction.isMessageContextMenuCommand()) {
+            await this.processInteraction(interaction, InteractionKind.MessageContextMenu, interaction.commandName);
+        } else if (interaction.isUserContextMenuCommand()) {
+            await this.processInteraction(interaction, InteractionKind.UserContextMenu, interaction.commandName);
+        } else {
+            this.logger.warn(`Unhandled interaction type: ${interaction.type}`);
         }
-    }
-
-    private async handleSlashCommand(interaction: ChatInputCommandInteraction): Promise<void> {
-        const route = slashRouteOf(interaction);
-        await this.processInteraction(interaction, InteractionKind.Slash, route);
-    }
-
-    private async handleButton(interaction: ButtonInteraction): Promise<void> {
-        await this.handleCustomIdInteraction(interaction, InteractionKind.Button);
-    }
-
-    private async handleModal(interaction: ModalSubmitInteraction): Promise<void> {
-        await this.handleCustomIdInteraction(interaction, InteractionKind.Modal);
-    }
-
-    private async handleStringSelectMenu(interaction: StringSelectMenuInteraction): Promise<void> {
-        await this.handleCustomIdInteraction(interaction, InteractionKind.StringMenu);
-    }
-
-    private async handleUserSelectMenu(interaction: UserSelectMenuInteraction): Promise<void> {
-        await this.handleCustomIdInteraction(interaction, InteractionKind.UserMenu);
-    }
-
-    private async handleRoleSelectMenu(interaction: RoleSelectMenuInteraction): Promise<void> {
-        await this.handleCustomIdInteraction(interaction, InteractionKind.RoleMenu);
-    }
-
-    private async handleChannelSelectMenu(interaction: ChannelSelectMenuInteraction): Promise<void> {
-        await this.handleCustomIdInteraction(interaction, InteractionKind.ChannelMenu);
-    }
-
-    private async handleMentionableSelectMenu(interaction: MentionableSelectMenuInteraction): Promise<void> {
-        await this.handleCustomIdInteraction(interaction, InteractionKind.MentionableMenu);
-    }
-
-    private async handleMessageContextMenu(interaction: MessageContextMenuCommandInteraction): Promise<void> {
-        await this.processInteraction(interaction, InteractionKind.MessageContextMenu, interaction.commandName);
-    }
-
-    private async handleUserContextMenu(interaction: UserContextMenuCommandInteraction): Promise<void> {
-        await this.processInteraction(interaction, InteractionKind.UserContextMenu, interaction.commandName);
-    }
-
-    private async handleAutocomplete(interaction: AutocompleteInteraction): Promise<void> {
-        const route = slashRouteOf(interaction);
-        await this.processInteraction(interaction, InteractionKind.Autocomplete, route, UnhandledAutocomplete);
     }
 }

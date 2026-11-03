@@ -6,6 +6,7 @@ import { describe, expect, expectTypeOf, it, vi } from 'vitest';
 import { AutocompleteHandler } from '#handlers/interaction/AutocompleteHandler';
 import { UserContextMenuHandler, MessageContextMenuHandler } from '#handlers/interaction/ContextMenuHandler';
 import { SlashHandler } from '#handlers/interaction/SlashHandler';
+import { built } from '#tests/helpers/built';
 
 import type { Core } from '#interfaces/Core';
 import type { REST } from '@discordjs/rest';
@@ -90,7 +91,7 @@ describe('SlashHandler options and match', () => {
             options: [{ name: 'reason', type: ApplicationCommandOptionType.String, value: 'spam' }]
         });
 
-        await new Ban(event, coreMock().core, new DispatchContext('slash', 'hbBan')).execute();
+        await built(Ban, event, coreMock().core, new DispatchContext('slash', 'hbBan')).execute();
 
         expect(seen).toBe('spam');
     });
@@ -109,7 +110,7 @@ describe('SlashHandler options and match', () => {
             options: [{ name: 'note', type: ApplicationCommandOptionType.String, value: 'bye' }]
         });
 
-        await expect(new Mod(event, coreMock().core, new DispatchContext('slash', 'hbKick')).run()).resolves.toBe(
+        await expect(built(Mod, event, coreMock().core, new DispatchContext('slash', 'hbKick')).run()).resolves.toBe(
             'kick:bye'
         );
     });
@@ -133,10 +134,10 @@ describe('SlashHandler options and match', () => {
             }
         }
 
-        const event = slashEvent({ name: 'hbKick', options: [] });
-        await expect(new Mod(event, coreMock().core, new DispatchContext('slash', 'hbKick')).run()).resolves.toEqual({
-            text: 'b'
-        });
+        const event = slashEvent({ options: [] });
+        await expect(built(Mod, event, coreMock().core, new DispatchContext('slash', 'hbKick')).run()).resolves.toEqual(
+            { text: 'b' }
+        );
     });
 
     it('throws MatchCaseMissing for a route with no case', async () => {
@@ -148,7 +149,7 @@ describe('SlashHandler options and match', () => {
         const event = slashEvent({ options: [] });
 
         await expect(
-            new Ban(event, coreMock().core, new DispatchContext('slash', 'hbGhost')).execute()
+            built(Ban, event, coreMock().core, new DispatchContext('slash', 'hbGhost')).execute()
         ).rejects.toSatisfy((e: unknown) =>
             isSeedcordError(e, 'SeedcordTypeError', SeedcordErrorCode.MatchCaseMissing)
         );
@@ -163,7 +164,7 @@ describe('SlashHandler options and match', () => {
         const event = slashEvent({ options: [] });
 
         await expect(
-            new Ban(event, coreMock().core, new DispatchContext('slash', 'constructor')).execute()
+            built(Ban, event, coreMock().core, new DispatchContext('slash', 'constructor')).execute()
         ).rejects.toSatisfy((e: unknown) =>
             isSeedcordError(e, 'SeedcordTypeError', SeedcordErrorCode.MatchCaseMissing)
         );
@@ -190,7 +191,7 @@ describe('AutocompleteHandler focused, match, options, route', () => {
         }
         const { core, post } = coreMock();
 
-        await new Search(searchEvent, core, searchDispatch).execute();
+        await built(Search, searchEvent, core, searchDispatch).execute();
 
         const [route, options] = post.mock.calls[0] as [string, { body: { type: number; data: unknown } }];
         expect(route).toBe('/interactions/int-1/tok/callback');
@@ -210,7 +211,9 @@ describe('AutocompleteHandler focused, match, options, route', () => {
             }
         }
 
-        await expect(new Search(searchEvent, coreMock().core, searchDispatch).run()).resolves.toEqual({ hits: ['a'] });
+        await expect(built(Search, searchEvent, coreMock().core, searchDispatch).run()).resolves.toEqual({
+            hits: ['a']
+        });
     });
 
     it('reads entered siblings and the selected route', async () => {
@@ -224,7 +227,7 @@ describe('AutocompleteHandler focused, match, options, route', () => {
             }
         }
 
-        await new Search(searchEvent, coreMock().core, searchDispatch).execute();
+        await built(Search, searchEvent, coreMock().core, searchDispatch).execute();
 
         expect(sibling).toBe(5);
         expect(route).toBe('hbSearch');
@@ -243,7 +246,7 @@ describe('AutocompleteHandler focused, match, options, route', () => {
             options: [{ name: 'ghost', type: ApplicationCommandOptionType.String, value: 'x', focused: true }]
         });
 
-        await expect(new Search(event, coreMock().core, searchDispatch).execute()).rejects.toSatisfy((e: unknown) =>
+        await expect(built(Search, event, coreMock().core, searchDispatch).execute()).rejects.toSatisfy((e: unknown) =>
             isSeedcordError(e, 'SeedcordTypeError', SeedcordErrorCode.MatchCaseMissing)
         );
     });
@@ -261,7 +264,7 @@ describe('AutocompleteHandler focused, match, options, route', () => {
             options: [{ name: 'constructor', type: ApplicationCommandOptionType.String, value: 'x', focused: true }]
         });
 
-        await expect(new Search(event, coreMock().core, searchDispatch).execute()).rejects.toSatisfy((e: unknown) =>
+        await expect(built(Search, event, coreMock().core, searchDispatch).execute()).rejects.toSatisfy((e: unknown) =>
             isSeedcordError(e, 'SeedcordTypeError', SeedcordErrorCode.MatchCaseMissing)
         );
     });
@@ -279,7 +282,7 @@ describe('AutocompleteHandler focused, match, options, route', () => {
 
         let caught: unknown = null;
         try {
-            void new Search(event, coreMock().core, searchDispatch).execute();
+            void built(Search, event, coreMock().core, searchDispatch).execute();
         } catch (error) {
             caught = error;
         }
@@ -331,7 +334,8 @@ describe('ContextMenuHandler target', () => {
             }
         }
 
-        await new Profile(
+        await built(
+            Profile,
             userMenuEvent(),
             coreMock().core,
             new DispatchContext('userContextMenu', 'View Profile')
@@ -351,7 +355,8 @@ describe('ContextMenuHandler target', () => {
             }
         }
 
-        await new Report(
+        await built(
+            Report,
             messageMenuEvent(),
             coreMock().core,
             new DispatchContext('messageContextMenu', 'Report Message')

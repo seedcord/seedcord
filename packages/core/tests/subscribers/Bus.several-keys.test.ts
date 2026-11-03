@@ -92,6 +92,7 @@ describe('a subscriber on several keys', () => {
         expect(bus[RegisteredCount]).toBe(2);
 
         bus[UnregisterSubscriber](Both, ['unknownException', 'unhandledInteractionError']);
+        bus[PublishDefault]('unhandledInteractionError', unhandled);
         bus[PublishDefault]('unknownException', unknown);
 
         await vi.waitFor(() => expect(ran).toEqual(['witness']));

@@ -7,14 +7,17 @@ import { createContext, use, useCallback, useLayoutEffect, useMemo, useRef, useS
 import { Card } from './Card';
 import { cn } from './lib/cn';
 import { easeOutStrong } from './lib/motion';
+import { useFocusReturn } from './lib/useFocusReturn';
 
-import type { ReactElement, ReactNode } from 'react';
+import type { RowPosition } from './lib/useRovingList';
+import type { ReactElement, ReactNode, RefObject } from 'react';
 
 const HEIGHT_ANIMATION_S = 0.2;
 
 export interface SearchDialogScroll {
     toTop: () => void;
     toBottom: () => void;
+    toTopOf: (element: Element) => void;
 }
 
 interface SearchDialogHandles {
@@ -22,7 +25,7 @@ interface SearchDialogHandles {
     scroll: SearchDialogScroll;
 }
 
-const NO_SCROLL: SearchDialogScroll = { toTop: () => {}, toBottom: () => {} };
+const NO_SCROLL: SearchDialogScroll = { toTop: () => {}, toBottom: () => {}, toTopOf: () => {} };
 
 const SearchDialogContext = createContext<SearchDialogHandles>({ container: null, scroll: NO_SCROLL });
 
@@ -36,11 +39,15 @@ export function useSearchDialogScroll(): SearchDialogScroll {
 }
 
 // useLayoutEffect puts the scroll in the same frame as the moved selection. useEffect paints them one apart
-export function useActiveRowScroll(activeId: string | undefined, isFirst: boolean, isLast: boolean): void {
+export function useActiveRowScroll(
+    activeId: string | undefined,
+    { isFirst, isLast, isGroupStart, pickedByPointer }: RowPosition
+): void {
     const scroll = useSearchDialogScroll();
 
     useLayoutEffect(() => {
-        if (activeId === undefined) return;
+        // a row under the pointer is already on screen
+        if (activeId === undefined || pickedByPointer) return;
         // scrolling the whole way at the ends keeps the list's own padding in view
         if (isFirst) {
             scroll.toTop();
@@ -50,8 +57,25 @@ export function useActiveRowScroll(activeId: string | undefined, isFirst: boolea
             scroll.toBottom();
             return;
         }
-        document.getElementById(activeId)?.scrollIntoView({ block: 'nearest' });
-    }, [activeId, isFirst, isLast, scroll]);
+        const row = document.getElementById(activeId);
+        const group = isGroupStart ? row?.closest('[role="group"]') : null;
+        // scrollIntoView with block start also scrolls the overflow-hidden panel
+        if (group) scroll.toTopOf(group);
+        else row?.scrollIntoView({ block: 'nearest' });
+    }, [activeId, isFirst, isLast, isGroupStart, pickedByPointer, scroll]);
+}
+
+function listScroll(scrollRef: RefObject<HTMLDivElement | null>): SearchDialogScroll {
+    return {
+        toTop: () => scrollRef.current?.scrollTo({ top: 0 }),
+        toBottom: () => scrollRef.current?.scrollTo({ top: scrollRef.current.scrollHeight }),
+        toTopOf: (element) => {
+            const scroller = scrollRef.current;
+            if (!scroller) return;
+            const offset = element.getBoundingClientRect().top - scroller.getBoundingClientRect().top;
+            scroller.scrollTo({ top: scroller.scrollTop + offset });
+        }
+    };
 }
 
 // picking a filter inside a popover reads as an outside interaction
@@ -79,6 +103,11 @@ function useMeasuredHeight(): [number, (el: HTMLDivElement | null) => void] {
     return [height, measureRef];
 }
 
+function Footer({ children }: { children: ReactNode }): ReactElement | null {
+    if (children === undefined) return null;
+    return <div className={cn('border-border hidden shrink-0 border-t px-4 py-2 sm:block')}>{children}</div>;
+}
+
 export interface SearchDialogProps {
     open: boolean;
     onOpenChange: (open: boolean) => void;
@@ -86,6 +115,7 @@ export interface SearchDialogProps {
     title: string;
     description: string;
     field: ReactNode;
+    footer?: ReactNode;
     children?: ReactNode;
 }
 
@@ -96,19 +126,18 @@ export function SearchDialog({
     title,
     description,
     field,
+    footer,
     children
 }: SearchDialogProps): ReactElement {
     const panelRef = useRef<HTMLDivElement | null>(null);
     const scrollRef = useRef<HTMLDivElement | null>(null);
     const [container, setContainer] = useState<HTMLElement | null>(null);
     const [contentHeight, measureRef] = useMeasuredHeight();
+    const focusReturn = useFocusReturn();
     const handles = useMemo<SearchDialogHandles>(
         () => ({
             container,
-            scroll: {
-                toTop: () => scrollRef.current?.scrollTo({ top: 0 }),
-                toBottom: () => scrollRef.current?.scrollTo({ top: scrollRef.current.scrollHeight })
-            }
+            scroll: listScroll(scrollRef)
         }),
         [container]
     );
@@ -122,6 +151,8 @@ export function SearchDialog({
                 />
                 <Dialog.Content
                     ref={setContainer}
+                    aria-modal
+                    {...focusReturn}
                     data-command-content
                     className={cn(
                         'fixed inset-0 z-70 flex items-start justify-center px-4 pt-20 pb-8',
@@ -143,11 +174,11 @@ export function SearchDialog({
                     <Card
                         size="none"
                         className={cn(
-                            'mx-auto max-h-[78vh] w-full max-w-xl overflow-hidden bg-(--bg-dim) text-(--text)',
-                            'transition sm:max-w-2xl md:max-w-3xl'
+                            'mx-auto flex max-h-[78vh] w-full max-w-xl flex-col overflow-hidden bg-(--bg-dim)',
+                            'text-(--text) transition sm:max-w-2xl md:max-w-3xl'
                         )}
                     >
-                        <div ref={panelRef} className={cn('flex h-full flex-col')}>
+                        <div ref={panelRef} className={cn('flex min-h-0 flex-col')}>
                             <Dialog.Title className={cn('sr-only')}>{title}</Dialog.Title>
                             <Dialog.Description className={cn('sr-only')}>{description}</Dialog.Description>
                             <SearchDialogContext.Provider value={handles}>
@@ -156,10 +187,11 @@ export function SearchDialog({
                                     ref={scrollRef}
                                     animate={{ height: contentHeight }}
                                     transition={{ duration: HEIGHT_ANIMATION_S, ease: [...easeOutStrong] }}
-                                    className={cn('max-h-[calc(78vh-5.25rem)] overflow-y-auto overscroll-contain px-2')}
+                                    className={cn('min-h-0 overflow-y-auto overscroll-contain px-2')}
                                 >
                                     <div ref={measureRef}>{children}</div>
                                 </m.div>
+                                <Footer>{footer}</Footer>
                             </SearchDialogContext.Provider>
                         </div>
                     </Card>

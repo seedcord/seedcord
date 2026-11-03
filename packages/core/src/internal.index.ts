@@ -36,6 +36,7 @@ export {
 export { runHandlerGates } from '#gates/runGates';
 export { accessorStore, clearStore, guardedAccessor } from '#src/miscellaneous/guarded';
 export { isEmojiTuple } from '#src/miscellaneous/emojiConfig';
+export { lazyLogger } from '#src/miscellaneous/lazyLogger';
 export { currentApplication } from '#src/miscellaneous/currentApplication';
 export { readBotToken } from '#src/miscellaneous/readBotToken';
 export { bindEnv } from '#src/miscellaneous/bindViteEnv';
@@ -112,6 +113,7 @@ export { PAGE_MAX, pageCursor, type PageCursor } from '#pagination/cursor';
 export { deferFlags, sendFlags } from '#reply/flags';
 export { checkAckLegality, sendTarget, type AckState, type ReplyMethod } from '#reply/ackLegality';
 export { AckTrace } from '#reply/AckTrace';
+export { AutocompleteResponder } from '#reply/AutocompleteResponder';
 export { reportedWrite, type ReplyTelemetry } from '#reply/responseReport';
 export { translateSerializationError } from '#reply/translateSerialization';
 export { serializeReply, type SerializedReply } from '#reply/serializeReply';
@@ -128,7 +130,15 @@ export {
 } from '#subscribers/slots';
 export { DispatchContext, type InteractionDispatch } from '#src/dispatch/DispatchContext';
 export { InteractionRun, type InteractionRunConfig } from '#src/dispatch/InteractionRun';
-export { routeIdOf } from '#src/dispatch/routeIdOf';
+export { componentKindOf } from '#src/dispatch/componentKindOf';
+export { HandlerLoader } from '#src/dispatch/HandlerLoader';
+export {
+    emptyRouteMaps,
+    matchRoute,
+    RouteRegistry,
+    type RegisteredRoute,
+    type RouteMaps
+} from '#src/dispatch/RouteRegistry';
 export { eventResultFor, resultFor, runAfter } from '#src/dispatch/runAfter';
 export { OnceTracker } from '#src/dispatch/OnceTracker';
 // each transport declaration-merges its own default keys into this

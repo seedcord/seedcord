@@ -4,6 +4,7 @@ import { describe, expect, it } from 'vitest';
 
 import { AutocompleteHandler } from '#handlers/interaction/AutocompleteHandler';
 import { SlashHandler } from '#handlers/interaction/SlashHandler';
+import { built } from '#tests/helpers/built';
 import { testCore } from '#tests/helpers/core';
 import { nullPathConfig, VALID_TOKEN } from '#tests/helpers/fixtures';
 
@@ -49,7 +50,7 @@ describe('handler api field', () => {
     it('constructs the typed api over the core rest client', () => {
         const shared = core();
         // justified: the probe ctor accepts the narrowed payload type at runtime
-        const handler = new SlashProbe(payload as never, shared, dispatch);
+        const handler = built(SlashProbe, payload as never, shared, dispatch);
 
         expect(handler.exposedApi()).toBeInstanceOf(API);
     });
@@ -57,8 +58,8 @@ describe('handler api field', () => {
     it('caches one api per core across handlers', () => {
         const shared = core();
         // justified: the probe ctors accept the narrowed payload types at runtime
-        const slash = new SlashProbe(payload as never, shared, dispatch);
-        const autocomplete = new AutocompleteProbe(payload as never, shared, dispatch);
+        const slash = built(SlashProbe, payload as never, shared, dispatch);
+        const autocomplete = built(AutocompleteProbe, payload as never, shared, dispatch);
 
         expect(slash.exposedApi()).toBe(autocomplete.exposedApi());
     });

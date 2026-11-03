@@ -1,8 +1,7 @@
 import { BaseHandler } from '@seedcord/core';
-import { AutocompleteRouteBrand, reportedWrite, runCase } from '@seedcord/core/internal';
+import { AutocompleteRouteBrand, runCase } from '@seedcord/core/internal';
 import { SeedcordErrorCode } from '@seedcord/errors';
 import { SeedcordError } from '@seedcord/errors/internal';
-import { InteractionResponseType, Routes } from 'discord-api-types/v10';
 
 import { interactionUser } from '#handlers/interactionUser';
 import { HttpSlashOptions } from '#inputs/HttpSlashOptions';
@@ -13,6 +12,7 @@ import type { API } from '@discordjs/core/http-only';
 import type { AutocompleteOptions, DispatchContext, SlashRegistry } from '@seedcord/core';
 import type {
     AutocompletableNames,
+    AutocompleteResponder,
     CaseReturn,
     ChoiceValueOf,
     EntryFor,
@@ -49,9 +49,17 @@ export abstract class AutocompleteHandler<Route extends keyof SlashRegistry> ext
     Core
 > {
     // keep this ctor. inheriting BaseHandler's protected one collapses the handler ctor type to never.
-    constructor(event: APIApplicationCommandAutocompleteInteraction, core: Core, dispatch: DispatchContext) {
+    constructor(
+        event: APIApplicationCommandAutocompleteInteraction,
+        core: Core,
+        dispatch: DispatchContext,
+        responder: AutocompleteResponder<APIApplicationCommandOptionChoice>
+    ) {
         super(event, core, dispatch, 'interactions');
+        this.#responder = responder;
     }
+
+    readonly #responder: AutocompleteResponder<APIApplicationCommandOptionChoice>;
 
     // phantom, never set at runtime.
     /** @internal */
@@ -109,15 +117,8 @@ export abstract class AutocompleteHandler<Route extends keyof SlashRegistry> ext
     }
 
     /** Send autocomplete suggestions, callback type 8. Prefer {@link match}, which restricts each field's choices to its declared type. */
-    protected async respond(choices: readonly APIApplicationCommandOptionChoice[]): Promise<void> {
-        await reportedWrite(
-            { bus: this.core.bus, dispatch: this.dispatch, interactionId: this.event.id },
-            'respond',
-            () =>
-                this.core.rest.post(Routes.interactionCallback(this.event.id, this.event.token), {
-                    body: { type: InteractionResponseType.ApplicationCommandAutocompleteResult, data: { choices } }
-                })
-        );
+    protected respond(choices: readonly APIApplicationCommandOptionChoice[]): Promise<void> {
+        return this.#responder.respond(choices);
     }
 
     /** The selected command's path, such as `search/docs`, without the interaction-kind prefix. */

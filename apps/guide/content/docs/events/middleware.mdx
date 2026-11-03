@@ -85,7 +85,7 @@ export class Trace extends EventMiddleware {
 }
 ```
 
-`Trace` reads only `this.route`, which is all a catchall can read. An event middleware doesn't have `match`, because it runs the same code for every event it lists. When your check reads the payload of several events, write one middleware class per event.
+`Trace` reads `this.route` because a catchall can't read the payload. An event middleware doesn't have `match`, because it runs the same code for every event it lists. When your check reads the payload of several events, write one middleware class per event.
 
 ## Order
 

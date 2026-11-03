@@ -14,6 +14,7 @@ import { fixtureCopy, GATEWAY_BOT, HTTP_BOT } from './fixtureCopy';
 import { quickBuildRunner } from './quickBuildRunner';
 import { smoke } from './smoke';
 
+import type { NextCommand } from '#commands/build/builder/TargetBuild';
 import type { BuildStep } from '#commands/build/BuildRunner';
 import type { Steps } from '#core/output/Steps';
 
@@ -84,6 +85,7 @@ async function writeExportProject(
 
 describe('seedcord build without build.start on an http bot', () => {
     let projectDir = '';
+    let nextCommands: NextCommand[] = [];
 
     beforeAll(async () => {
         await using cleanup = new AsyncDisposableStack();
@@ -92,10 +94,14 @@ describe('seedcord build without build.start on an http bot', () => {
         const botFile = join(projectDir, 'src/bot.ts');
         const source = await readFile(botFile, 'utf8');
         await writeFile(botFile, source.replace('port: 0', 'port: false'));
-        await quickBuildRunner().run(projectDir);
+        ({ nextCommands } = await quickBuildRunner().run(projectDir));
         const owned = cleanup.move();
         return () => owned.disposeAsync();
     }, 120_000);
+
+    it('points at build.start in the summary', () => {
+        expect(nextCommands.flat().join(' ')).toContain('build.start');
+    });
 
     it("serves the bot through the fetch of a plain node server's own port", async () => {
         const output = await smoke('http', process.execPath, [join(projectDir, 'server.mjs')]);

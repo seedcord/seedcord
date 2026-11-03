@@ -16,7 +16,7 @@ const FAULT_KINDS: Record<`${InteractionKind}`, FaultKind | null> = {
     channelMenu: 'select',
     mentionableMenu: 'select',
     modal: 'modal',
-    // an autocomplete throw has no typed source
+    // an autocomplete throw doesn't have a typed source
     autocomplete: null
 };
 

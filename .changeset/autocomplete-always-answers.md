@@ -3,4 +3,4 @@
 '@seedcord/http': patch
 ---
 
-Fixed an autocomplete handler that throws a `Silence` or an ignored API code leaving Discord without a response. seedcord now sends empty choices on every autocomplete fault.
+Fixed an autocomplete handler that throws a `Silence` or an ignored API code leaving Discord without a response. seedcord now sends empty choices on a fault if the handler hasn't responded yet.

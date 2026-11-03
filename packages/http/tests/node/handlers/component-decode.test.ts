@@ -7,6 +7,7 @@ import { ButtonHandler } from '#handlers/interaction/components/ButtonHandler';
 import { ModalHandler } from '#handlers/interaction/components/ModalHandler';
 import { UserMenuHandler } from '#handlers/interaction/components/SelectMenuHandler';
 import { ButtonRoute, ModalRoute, UserMenuRoute } from '#src/index';
+import { built } from '#tests/helpers/built';
 
 import type { Core } from '#interfaces/Core';
 import type { MatchCases } from '@seedcord/core/internal';
@@ -84,7 +85,7 @@ describe('button decode', () => {
             }
         }
 
-        await new Approve(buttonEvent(ApproveId.encode({ userId: '853472916483920128' })), core, dispatch).execute();
+        await built(Approve, buttonEvent(ApproveId.encode({ userId: '853472916483920128' })), core, dispatch).execute();
 
         expect(seen).toBe('853472916483920128');
     });
@@ -106,7 +107,7 @@ describe('button decode', () => {
         }
 
         const wire = RejectId.encode({ userId: '42' });
-        await expect(new Review(buttonEvent(wire), core, dispatch).run()).resolves.toBe('rejected 42');
+        await expect(built(Review, buttonEvent(wire), core, dispatch).run()).resolves.toBe('rejected 42');
     });
 
     it('throws MatchCaseMissing when the minted route lacks a case', async () => {
@@ -123,7 +124,7 @@ describe('button decode', () => {
         }
 
         const wire = RejectId.encode({ userId: '42' });
-        await expect(new Review(buttonEvent(wire), core, dispatch).execute()).rejects.toSatisfy((e: unknown) =>
+        await expect(built(Review, buttonEvent(wire), core, dispatch).execute()).rejects.toSatisfy((e: unknown) =>
             isSeedcordError(e, 'SeedcordTypeError', SeedcordErrorCode.MatchCaseMissing)
         );
     });
@@ -140,7 +141,7 @@ describe('button decode', () => {
             }
         }
 
-        await new Approve(buttonEvent(ApproveId.encode({ userId: '7' })), core, dispatch).execute();
+        await built(Approve, buttonEvent(ApproveId.encode({ userId: '7' })), core, dispatch).execute();
 
         expect(first).toBe(second);
     });
@@ -157,7 +158,9 @@ describe('button decode', () => {
         }
 
         expect(
-            noticeNameFrom(() => new Approve(buttonEvent(OldApprove.encode({ userId: '1' })), core, dispatch).execute())
+            noticeNameFrom(() =>
+                built(Approve, buttonEvent(OldApprove.encode({ userId: '1' })), core, dispatch).execute()
+            )
         ).toBe('StaleCustomId');
     });
 
@@ -171,7 +174,9 @@ describe('button decode', () => {
         }
 
         const wire = `${ApproveId.encode({ userId: '1' })}\u{1F}JUNK`;
-        expect(noticeNameFrom(() => new Approve(buttonEvent(wire), core, dispatch).execute())).toBe('InvalidCustomId');
+        expect(noticeNameFrom(() => built(Approve, buttonEvent(wire), core, dispatch).execute())).toBe(
+            'InvalidCustomId'
+        );
     });
 
     it('throws MatchCaseMissing for a prototype-named prefix with no case', async () => {
@@ -184,8 +189,10 @@ describe('button decode', () => {
             }
         }
 
-        await expect(new Weird(buttonEvent(Ctor.encode({ userId: '1' })), core, dispatch).execute()).rejects.toSatisfy(
-            (e: unknown) => isSeedcordError(e, 'SeedcordTypeError', SeedcordErrorCode.MatchCaseMissing)
+        await expect(
+            built(Weird, buttonEvent(Ctor.encode({ userId: '1' })), core, dispatch).execute()
+        ).rejects.toSatisfy((e: unknown) =>
+            isSeedcordError(e, 'SeedcordTypeError', SeedcordErrorCode.MatchCaseMissing)
         );
     });
 
@@ -199,7 +206,7 @@ describe('button decode', () => {
 
         let caught: unknown = null;
         try {
-            void new Bare(buttonEvent(ApproveId.encode({ userId: '1' })), core, dispatch).execute();
+            void built(Bare, buttonEvent(ApproveId.encode({ userId: '1' })), core, dispatch).execute();
         } catch (error) {
             caught = error;
         }
@@ -221,7 +228,7 @@ describe('select menu decode', () => {
             }
         }
 
-        await new Assign(selectEvent(AssignId.encode({ roleId: '99' }), ['u1', 'u2']), core, dispatch).execute();
+        await built(Assign, selectEvent(AssignId.encode({ roleId: '99' }), ['u1', 'u2']), core, dispatch).execute();
 
         expect(role).toBe('99');
         expect(picked).toEqual(['u1', 'u2']);
@@ -239,7 +246,7 @@ describe('modal decode', () => {
             }
         }
 
-        await new Config(modalEvent(ConfigId.encode({ name: 'staging' })), core, dispatch).execute();
+        await built(Config, modalEvent(ConfigId.encode({ name: 'staging' })), core, dispatch).execute();
 
         expect(name).toBe('staging');
     });

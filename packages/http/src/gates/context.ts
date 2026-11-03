@@ -5,7 +5,6 @@ import type { Repliables } from '#src/handlers/interactionTypes';
 import type { InteractionGateContext } from './Gate';
 import type { DispatchContext } from '@seedcord/core';
 
-// autocomplete is skipped before gates run, so the payload here always carries a reply target
 export function interactionGateContext(
     payload: Repliables,
     core: Core,

@@ -2,7 +2,6 @@ import { LoggerChannelRegistry } from '@seedcord/logger';
 import { formatBody } from '@seedcord/logger/node';
 
 import { ChangeStore } from './ChangeStore';
-import { routeConsoleToLogs } from './routeConsole';
 
 import type { ILogSink, LogLevel, LogRecord, LogSinkHandle } from '@seedcord/types';
 
@@ -34,7 +33,6 @@ export class LogStore extends ChangeStore implements ILogSink {
     private buffer: LogEntry[] = [];
     private nextId = 1;
     private sinkHandle: LogSinkHandle | null = null;
-    private restoreConsole: (() => void) | null = null;
     private pendingUpdate = false;
     private flushTimer: ReturnType<typeof setTimeout> | null = null;
     private readonly MAX_LOGS = 1000;
@@ -53,13 +51,10 @@ export class LogStore extends ChangeStore implements ILogSink {
         this.sinkHandle = LoggerChannelRegistry.instance.installSink(this, {
             muteConsole: true
         });
-        this.restoreConsole = routeConsoleToLogs();
     }
 
     public unmount(): void {
         if (!this.sinkHandle) return;
-        this.restoreConsole?.();
-        this.restoreConsole = null;
         this.sinkHandle.dispose();
         this.sinkHandle = null;
     }

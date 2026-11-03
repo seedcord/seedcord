@@ -243,14 +243,18 @@ describe('FaultBoundary', () => {
             expect(published).toMatchObject([{ event: 'unknownException', error: { message: 'render exploded' } }]);
         });
 
-        it('logs and sends nothing when the defaultError render throws too', async () => {
+        it('logs the error and sends the built-in Fault card when the defaultError render throws too', async () => {
             const { boundary, send } = harness({ defaultError: BrokenCard });
-            const error = vi.spyOn(Logger.prototype, 'error').mockImplementation(() => undefined);
+            using log = logCapture('error');
 
             await boundary.answerWithReply(new Error('boom'), { send });
 
-            expect(send).not.toHaveBeenCalled();
-            expect(error).toHaveBeenCalledWith(expect.stringContaining('could not render'), expect.anything());
+            expect(send).toHaveBeenCalledWith(expect.objectContaining({ components: expect.any(Array) as unknown }), {
+                ephemeral: true
+            });
+            expect(log.lines.flatMap((line) => line.args ?? [])).toContainEqual(
+                expect.objectContaining({ message: 'card exploded' })
+            );
         });
 
         it.each([

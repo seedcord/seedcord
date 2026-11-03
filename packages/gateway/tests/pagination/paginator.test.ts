@@ -14,6 +14,7 @@ import { ReplySender } from '#bot/ReplySender';
 import { InteractionHandler } from '#handlers/interaction/InteractionHandler';
 import { Paginator } from '#pagination/Paginator';
 import { ArraySource } from '#pagination/sources';
+import { built } from '#tests/utils/built';
 import { stubBus } from '#tests/utils/stubBus';
 
 import type { RepliableHandler } from '#handlers/RepliableHandler';
@@ -218,7 +219,7 @@ describe('Paginator nav handler', () => {
 
     it('acks, decodes the target page off the wire, and edits @original in place', async () => {
         const event = navEvent(pager.cursor.encode({ page: 2, slot: 0 }));
-        await new BansNav(asButton(event), core, dispatch).execute();
+        await built(BansNav, asButton(event), core, dispatch).execute();
 
         expect(event.deferUpdate).toHaveBeenCalledOnce();
         // the bare edit rewrites @original (the source message) via editReply in the deferred-update state
@@ -245,7 +246,7 @@ describe('Paginator context', () => {
     it('threads the interaction user and guild (DM null) into the PageContext it builds', async () => {
         seenContexts.length = 0;
         const event = navEvent(Reminders.cursor.encode({ page: 0, slot: 0 }));
-        await new RemindersNav(asButton(event), core, dispatch).execute();
+        await built(RemindersNav, asButton(event), core, dispatch).execute();
 
         const ctx = seenContexts[0];
         expect(ctx?.interaction).toBe(event);

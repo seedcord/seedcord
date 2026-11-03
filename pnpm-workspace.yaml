@@ -63,6 +63,7 @@ catalogs:
     fumadocs-mdx: 15.4.6
     handlebars: ^4.7.10
     ink: ^8.0.0
+    jsonc-parser: ^3.3.1
     keyv: 6.1.0
     lucide-react: ^1.51.0
     mdast-util-to-hast: ^13.2.1

@@ -6,6 +6,7 @@ import { ReplySender } from '#reply/ReplySender';
 import { ButtonRoute } from '#src/index';
 import { Paginator } from '#src/pagination/Paginator';
 import { ArraySource } from '#src/pagination/sources';
+import { built } from '#tests/helpers/built';
 import { stubBus } from '#tests/helpers/fixtures';
 
 import type { RepliableHandler } from '#handlers/RepliableHandler';
@@ -209,7 +210,7 @@ describe('http Paginator nav handler', () => {
         // justified: the nav handler reads rest and the bus
         const core = { rest: { post, patch }, bus: stubBus() } as unknown as Core;
 
-        await new LettersNav(navEvent(pager.cursor.encode({ page: 2, slot: 0 })), core, dispatch).execute();
+        await built(LettersNav, navEvent(pager.cursor.encode({ page: 2, slot: 0 })), core, dispatch).execute();
 
         expect(post).toHaveBeenCalledOnce();
         expect(post.mock.calls[0]?.[0]).toBe(CALLBACK_ROUTE);

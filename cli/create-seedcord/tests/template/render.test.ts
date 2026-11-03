@@ -5,6 +5,7 @@ import { join, resolve } from 'node:path';
 import { Template } from '@seedcord/cli-templates';
 import { describe, expect, it } from 'vitest';
 
+import { PackageManager } from '#cli/PackageManager';
 import { buildContext } from '#template/context';
 import { copyStarters, renderTemplates } from '#template/render';
 import { BOT_TOKEN } from '#tests/token';
@@ -14,7 +15,7 @@ import type { InputShape } from '@seedcord/cli-templates';
 
 const TEMPLATES = resolve(import.meta.dirname, '../../templates');
 const STARTERS = resolve(import.meta.dirname, '../../starters');
-const EXTRAS = { developerUsername: 'dhruv', agent: 'pnpm' } as const;
+const EXTRAS = { developerUsername: 'dhruv', manager: new PackageManager('pnpm') };
 
 const GATEWAY: ScaffoldAnswers = {
     directory: 'my-bot',
@@ -61,13 +62,16 @@ async function scriptsOf(answers: ScaffoldAnswers): Promise<Record<string, strin
 
 describe('renderTemplates', () => {
     it('writes a bunfig.toml that runs the cli on Bun for a Bun project', async () => {
-        const files = await renderTemplates(TEMPLATES, buildContext(GATEWAY, { ...EXTRAS, agent: 'bun' }));
+        const files = await renderTemplates(
+            TEMPLATES,
+            buildContext(GATEWAY, { ...EXTRAS, manager: new PackageManager('bun') })
+        );
 
         expect(files.find((file) => file.path === 'bunfig.toml')?.contents).toBe('[run]\nbun = true\n');
     });
 
     it('writes a pnpm-workspace.yaml that ignores unrs-resolver scripts for a pnpm project', async () => {
-        const files = await renderTemplates(TEMPLATES, buildContext(GATEWAY, { ...EXTRAS, agent: 'pnpm' }));
+        const files = await renderTemplates(TEMPLATES, buildContext(GATEWAY, EXTRAS));
 
         expect(files.find((file) => file.path === 'pnpm-workspace.yaml')?.contents).toBe(
             'allowBuilds:\n    unrs-resolver: false\n'
@@ -79,8 +83,11 @@ describe('renderTemplates', () => {
             engines: { node: string; bun: string };
         };
 
-        const engines = async (agent: 'bun' | 'pnpm'): Promise<unknown> => {
-            const files = await renderTemplates(TEMPLATES, buildContext(GATEWAY, { ...EXTRAS, agent }));
+        const engines = async (name: 'bun' | 'pnpm'): Promise<unknown> => {
+            const files = await renderTemplates(
+                TEMPLATES,
+                buildContext(GATEWAY, { ...EXTRAS, manager: new PackageManager(name) })
+            );
             const manifest = files.find((file) => file.path === 'package.json')?.contents ?? '{}';
             return (JSON.parse(manifest) as { engines?: unknown }).engines;
         };
@@ -91,21 +98,30 @@ describe('renderTemplates', () => {
 
     it('runs the cli of an edge bot on Node in a Bun project', async () => {
         const own = createRequire(import.meta.url)('../../package.json') as { engines: { node: string } };
-        const files = await renderTemplates(TEMPLATES, buildContext(EDGE, { ...EXTRAS, agent: 'bun' }));
+        const files = await renderTemplates(
+            TEMPLATES,
+            buildContext(EDGE, { ...EXTRAS, manager: new PackageManager('bun') })
+        );
         const manifest = files.find((file) => file.path === 'package.json')?.contents ?? '{}';
 
         expect(files.find((file) => file.path === 'bunfig.toml')).toBeUndefined();
         expect((JSON.parse(manifest) as { engines?: unknown }).engines).toEqual({ node: own.engines.node });
     });
 
-    it.each(['npm', 'yarn', 'pnpm'] as const)('writes no bunfig.toml for %s projects', async (agent) => {
-        const files = await renderTemplates(TEMPLATES, buildContext(GATEWAY, { ...EXTRAS, agent }));
+    it.each(['npm', 'yarn', 'pnpm'] as const)("doesn't write a bunfig.toml for %s projects", async (name) => {
+        const files = await renderTemplates(
+            TEMPLATES,
+            buildContext(GATEWAY, { ...EXTRAS, manager: new PackageManager(name) })
+        );
 
         expect(files.find((file) => file.path === 'bunfig.toml')).toBeUndefined();
     });
 
-    it.each(['npm', 'yarn', 'bun'] as const)('writes no pnpm-workspace.yaml for %s projects', async (agent) => {
-        const files = await renderTemplates(TEMPLATES, buildContext(GATEWAY, { ...EXTRAS, agent }));
+    it.each(['npm', 'yarn', 'bun'] as const)("doesn't write a pnpm-workspace.yaml for %s projects", async (name) => {
+        const files = await renderTemplates(
+            TEMPLATES,
+            buildContext(GATEWAY, { ...EXTRAS, manager: new PackageManager(name) })
+        );
 
         expect(files.find((file) => file.path === 'pnpm-workspace.yaml')).toBeUndefined();
     });

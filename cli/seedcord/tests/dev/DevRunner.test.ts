@@ -503,16 +503,19 @@ describe('runPlain, with no terminal to answer prompts', () => {
         await running;
     });
 
-    it('runs restart, disconnect and quit lines from the input and ignores the rest', async () => {
+    it('runs restart, codegen, disconnect and quit lines from the input and ignores the rest', async () => {
         const store = new DevStore();
         const runner = makeRunner({ store });
         const restart = vi.spyOn(runner, 'restart');
         const disconnect = vi.spyOn(runner, 'disconnect');
+        const writeTypes = vi.spyOn(runner, 'writeTypes');
         const input = new PassThrough();
 
         const running = runPlain(store, runner, input);
         input.write('not json\nnull\n{"do":"nope"}\n{"do":"constructor"}\n{"do":"restart"}\n');
         await vi.waitFor(() => expect(restart).toHaveBeenCalledOnce());
+        input.write('{"do":"codegen"}\n');
+        await vi.waitFor(() => expect(writeTypes).toHaveBeenCalledOnce());
         input.write('{"do":"disconnect"}\n');
         await vi.waitFor(() => expect(disconnect).toHaveBeenCalledOnce());
         input.write('{"do":"quit"}\n');

@@ -9,7 +9,7 @@ import { preconnect } from 'react-dom';
 import './globals.css';
 
 import { Navbar } from '#components/header/Navbar';
-import { HotkeyProvider } from '#components/providers/HotkeyProvider';
+import { CommandPaletteProvider } from '#components/providers/CommandPaletteProvider';
 import { MotionProvider } from '#components/providers/MotionProvider';
 import { CommandPalette } from '#components/search/command-palette';
 import { CARD } from '@seedcord/ui/PageAsset';
@@ -124,14 +124,14 @@ function RootLayout({ children }: RootLayoutProps): ReactNode {
                 <ThemeProvider>
                     <MotionProvider>
                         <TooltipProvider>
-                            <HotkeyProvider>
+                            <CommandPaletteProvider>
                                 <CommandPalette />
                                 <SkipLink />
                                 <div className={cn('flex min-h-screen flex-col')}>
                                     <Navbar />
                                     <div className={cn('flex-1 pt-(--nav-h)')}>{children}</div>
                                 </div>
-                            </HotkeyProvider>
+                            </CommandPaletteProvider>
                         </TooltipProvider>
                     </MotionProvider>
                 </ThemeProvider>

@@ -1,7 +1,7 @@
 import { paint } from '@seedcord/errors';
-import { Logger } from '@seedcord/logger';
 import { timestampFromSnowflake } from '@seedcord/utils';
 
+import { lazyLogger } from '#src/miscellaneous/lazyLogger';
 import { Notice } from '#stops/Notice';
 import { Silence } from '#stops/Silence';
 import { PublishDefault } from '#subscribers/publishDefault';
@@ -10,11 +10,7 @@ import type { InteractionDispatch } from '#src/dispatch/DispatchContext';
 import type { Bus } from '#subscribers/Bus';
 import type { DispatchOutcome } from '#subscribers/types/Subscriptions';
 
-let dispatchLogger: Logger | undefined;
-function logger(): Logger {
-    dispatchLogger ??= new Logger('Dispatch', { channel: 'interactions' });
-    return dispatchLogger;
-}
+const logger = lazyLogger('Dispatch', { channel: 'interactions' });
 
 export function outcomeFor(caught: unknown): Exclude<DispatchOutcome, 'handled'> {
     if (caught instanceof Silence) return 'refused';

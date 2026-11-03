@@ -3,6 +3,7 @@ import { DispatchContext } from '@seedcord/core/internal';
 import { describe, expect, expectTypeOf, it } from 'vitest';
 
 import { UserContextMenuHandler, MessageContextMenuHandler } from '#handlers/interaction/ContextMenuHandler';
+import { built } from '#tests/utils/built';
 
 import type { Core } from '#interfaces/Core';
 import type {
@@ -119,12 +120,12 @@ describe('ContextMenuHandler', () => {
     it('reads the right target member per kind', () => {
         const user = { id: 'u1' } as unknown as User;
         const member = { id: 'm1' } as unknown as GuildMember;
-        const handler = new ViewProfile(userMenu(user, member), core, dispatch);
+        const handler = built(ViewProfile, userMenu(user, member), core, dispatch);
         expect(handler.readTarget()).toBe(user);
         expect(handler.readMember()).toBe(member);
 
         const message = { id: 'msg1' } as unknown as Message<true>;
-        expect(new ReportMessage(messageMenu(message), core, dispatch).readTarget()).toBe(message);
+        expect(built(ReportMessage, messageMenu(message), core, dispatch).readTarget()).toBe(message);
     });
 });
 
