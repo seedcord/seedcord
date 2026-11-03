@@ -39,7 +39,12 @@ async function run() {
     const distEntry = resolve(here, '../dist/cli.mjs');
     if (existsSync(distEntry)) {
         await import(pathToFileURL(distEntry).href);
+        return;
     }
+
+    // eslint-disable-next-line no-console -- the bin has no logger
+    console.error('seedcord must be built before running this command.');
+    process.exit(1);
 }
 
 const unsupported = unsupportedRuntime();
