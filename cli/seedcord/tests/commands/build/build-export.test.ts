@@ -1,3 +1,4 @@
+import { spawnSync } from 'node:child_process';
 import { readFile, writeFile } from 'node:fs/promises';
 import { join } from 'node:path';
 
@@ -100,6 +101,13 @@ describe('seedcord build without build.start on an http bot', () => {
         const output = await smoke('http', process.execPath, [join(projectDir, 'server.mjs')]);
 
         expect(output).toContain('fixture:text hello from the text table');
+        expect(output).not.toContain('only exports your bot');
+    }, 120_000);
+
+    it('warns when you run dist/index.mjs itself, because nothing starts the bot', () => {
+        const { stderr } = spawnSync(process.execPath, [join(projectDir, 'dist/index.mjs')], { encoding: 'utf8' });
+
+        expect(stderr).toContain('only exports your bot');
     }, 120_000);
 
     it('still loads its folders once a bundler leaves import.meta.dirname undefined', async () => {
