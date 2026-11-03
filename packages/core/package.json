@@ -88,11 +88,11 @@
         "coverage": "vitest run --coverage"
     },
     "peerDependencies": {
+        "@discordjs/builders": "catalog:peer",
         "envapt": "catalog:peer",
         "typescript": "catalog:consumerTypes"
     },
     "dependencies": {
-        "@discordjs/builders": "catalog:deps",
         "@discordjs/rest": "catalog:deps",
         "@seedcord/custom-id": "workspace:^",
         "@seedcord/errors": "workspace:^",
@@ -106,6 +106,7 @@
         "verkit": "catalog:deps"
     },
     "devDependencies": {
+        "@discordjs/builders": "catalog:peer",
         "@seedcord/eslint-config": "workspace:^",
         "@seedcord/tsconfig": "workspace:^",
         "@seedcord/tsdown-config": "workspace:^",

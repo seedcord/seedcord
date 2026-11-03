@@ -172,9 +172,6 @@ catalogs:
       specifier: ^5.9.3 || ^6.0.0 || ^7.0.0
       version: 7.0.2
   deps:
-    '@discordjs/builders':
-      specifier: ^1.14.1
-      version: 1.14.1
     '@discordjs/rest':
       specifier: ^2.6.3
       version: 2.6.3
@@ -348,6 +345,9 @@ catalogs:
     '@cloudflare/vite-plugin':
       specifier: 2.0.0-beta.v.8
       version: 2.0.0-beta.v.8
+    '@discordjs/builders':
+      specifier: ^1.14.1
+      version: 1.14.1
     discord.js:
       specifier: ^14.27.0
       version: 14.27.0
@@ -682,7 +682,7 @@ importers:
         version: 0.3.9
     devDependencies:
       '@discordjs/builders':
-        specifier: catalog:deps
+        specifier: catalog:peer
         version: 1.14.1
       '@keyv/sqlite':
         specifier: 6.1.0
@@ -1140,7 +1140,7 @@ importers:
   mocks/edge:
     dependencies:
       '@discordjs/builders':
-        specifier: catalog:deps
+        specifier: catalog:peer
         version: 1.14.1
       '@seedcord/http':
         specifier: workspace:^
@@ -1180,7 +1180,7 @@ importers:
   mocks/gateway:
     dependencies:
       '@discordjs/builders':
-        specifier: catalog:deps
+        specifier: catalog:peer
         version: 1.14.1
       '@seedcord/gateway':
         specifier: workspace:^
@@ -1214,7 +1214,7 @@ importers:
   mocks/http:
     dependencies:
       '@discordjs/builders':
-        specifier: catalog:deps
+        specifier: catalog:peer
         version: 1.14.1
       '@seedcord/http':
         specifier: workspace:^
@@ -1241,9 +1241,6 @@ importers:
 
   packages/core:
     dependencies:
-      '@discordjs/builders':
-        specifier: catalog:deps
-        version: 1.14.1
       '@discordjs/rest':
         specifier: catalog:deps
         version: 2.6.3
@@ -1281,6 +1278,9 @@ importers:
         specifier: catalog:deps
         version: 0.5.0
     devDependencies:
+      '@discordjs/builders':
+        specifier: catalog:peer
+        version: 1.14.1
       '@seedcord/eslint-config':
         specifier: workspace:^
         version: link:../../tooling/eslint-config
@@ -1416,9 +1416,6 @@ importers:
 
   packages/gateway:
     dependencies:
-      '@discordjs/builders':
-        specifier: catalog:deps
-        version: 1.14.1
       '@discordjs/rest':
         specifier: catalog:deps
         version: 2.6.3
@@ -1453,6 +1450,9 @@ importers:
         specifier: catalog:consumerTypes
         version: 7.0.2
     devDependencies:
+      '@discordjs/builders':
+        specifier: catalog:peer
+        version: 1.14.1
       '@seedcord/eslint-config':
         specifier: workspace:^
         version: link:../../tooling/eslint-config
@@ -1521,7 +1521,7 @@ importers:
         specifier: ^0.22.0
         version: 0.22.0(@types/node@26.1.2)(@vitest/runner@4.1.12)(@vitest/snapshot@4.1.12)(vitest@4.1.12)
       '@discordjs/builders':
-        specifier: catalog:deps
+        specifier: catalog:peer
         version: 1.14.1
       '@seedcord/eslint-config':
         specifier: workspace:^

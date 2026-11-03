@@ -72,12 +72,13 @@
         "type-fest": "catalog:deps"
     },
     "peerDependencies": {
+        "@discordjs/builders": "catalog:peer",
         "envapt": "catalog:peer",
         "typescript": "catalog:consumerTypes"
     },
     "devDependencies": {
         "@cloudflare/vitest-pool-workers": "^0.22.0",
-        "@discordjs/builders": "catalog:deps",
+        "@discordjs/builders": "catalog:peer",
         "@seedcord/eslint-config": "workspace:^",
         "@seedcord/tsconfig": "workspace:^",
         "@seedcord/tsdown-config": "workspace:^",

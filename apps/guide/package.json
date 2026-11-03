@@ -41,7 +41,7 @@
         "twoslash-protocol": "0.3.9"
     },
     "devDependencies": {
-        "@discordjs/builders": "catalog:deps",
+        "@discordjs/builders": "catalog:peer",
         "@keyv/sqlite": "6.1.0",
         "@mdx-js/mdx": "catalog:deps",
         "@seedcord/core": "workspace:^",

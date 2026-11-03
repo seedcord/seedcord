@@ -29,7 +29,7 @@
         "typescript": "catalog:peer"
     },
     "dependencies": {
-        "@discordjs/builders": "catalog:deps",
+        "@discordjs/builders": "catalog:peer",
         "@seedcord/gateway": "workspace:^",
         "@seedcord/plugin-mongoose": "workspace:^",
         "discord.js": "catalog:peer",
