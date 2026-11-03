@@ -25,13 +25,6 @@ export abstract class Subscriber<in out Keys extends SubscriptionKey, TCore exte
     protected readonly logger: Logger;
     readonly #payload: AllSubscriptions[Keys];
 
-    /**
-     * Instantiates the subscriber with event data and core.
-     *
-     * @param payload - The published payload
-     * @param core - The core framework instance
-     * @param key - The published key
-     */
     constructor(
         payload: AllSubscriptions[Keys],
         protected readonly core: TCore,

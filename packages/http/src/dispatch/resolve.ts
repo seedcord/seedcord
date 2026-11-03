@@ -18,9 +18,6 @@ export type RouteMaps = CoreRouteMaps<HandlerConstructor>;
 
 function commandKind(type: ApplicationCommandType): InteractionKind | null {
     switch (type) {
-        case ApplicationCommandType.ChatInput: {
-            return InteractionKind.Slash;
-        }
         case ApplicationCommandType.User: {
             return InteractionKind.UserContextMenu;
         }

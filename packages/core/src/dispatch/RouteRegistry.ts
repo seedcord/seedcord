@@ -1,12 +1,13 @@
 import { SeedcordErrorCode, paint } from '@seedcord/errors';
 import { SeedcordTypeError } from '@seedcord/errors/internal';
 
-import { interactionRoutesOf } from '#decorators/interactionRoutes';
+import { interactionRoutesOf, routeDecoratorOf } from '#decorators/interactionRoutes';
 import { InteractionKind } from '#src/metadataKeys';
 
 import { routeIdOf } from './routeIdOf';
 
 import type { RoutableConstructor } from '#decorators/interactionRoutes';
+import type { ContextMenuLeaves } from '#src/commands/contextMenuLeaves';
 import type { Logger } from '@seedcord/logger';
 
 export interface RegisteredRoute<Ctor> {
@@ -16,9 +17,11 @@ export interface RegisteredRoute<Ctor> {
     readonly ctor: Ctor;
 }
 
-export type RouteMaps<Ctor> = Readonly<Record<InteractionKind, Map<string, RegisteredRoute<Ctor>>>>;
+type KindMaps<Entry> = Readonly<Record<InteractionKind, Map<string, Entry>>>;
 
-export function emptyRouteMaps<Ctor>(): RouteMaps<Ctor> {
+export type RouteMaps<Ctor> = KindMaps<RegisteredRoute<Ctor>>;
+
+export function emptyRouteMaps<Entry>(): KindMaps<Entry> {
     return {
         [InteractionKind.Slash]: new Map(),
         [InteractionKind.UserContextMenu]: new Map(),
@@ -50,78 +53,71 @@ export function matchRoute<Ctor>(
     );
 }
 
-interface Owner<Ctor> extends RegisteredRoute<Ctor> {
+interface LoadedRoute<Ctor> extends RegisteredRoute<Ctor> {
     readonly from: string;
 }
 
 export class RouteRegistry<Ctor extends RoutableConstructor> {
-    public readonly maps: RouteMaps<Ctor> = emptyRouteMaps();
+    public readonly maps: KindMaps<LoadedRoute<Ctor>> = emptyRouteMaps();
 
-    private readonly owners = new Map<string, Owner<Ctor>>();
+    private get allRoutes(): LoadedRoute<Ctor>[] {
+        return Object.values(this.maps).flatMap((routes) => [...routes.values()]);
+    }
 
     public get size(): number {
-        return this.owners.size;
+        return this.allRoutes.length;
     }
 
     // returns whether the class declared any route
     public register(ctor: Ctor, from: string): boolean {
-        // nothing is written until every route clears the check below
-        const writes: { routeId: string; owner: Owner<Ctor> }[] = [];
+        // a partial registration would orphan routes and break hmr rollback
+        const writes: LoadedRoute<Ctor>[] = [];
 
         for (const [kind, routes] of interactionRoutesOf(ctor)) {
             for (const route of routes) {
-                const routeId = routeIdOf(kind, route);
-                const existing = this.owners.get(routeId);
+                const existing = this.maps[kind].get(route);
                 if (existing && existing.ctor !== ctor) {
                     throw new SeedcordTypeError(SeedcordErrorCode.CoreDuplicateName, [
                         'route',
-                        routeId,
+                        routeIdOf(kind, route),
                         [
                             `${paint.bold(existing.ctor.name)} (${paint.path(existing.from)})`,
                             `${paint.bold(ctor.name)} (${paint.path(from)})`
                         ]
                     ]);
                 }
-                writes.push({ routeId, owner: { kind, route, fallback: false, ctor, from } });
+                writes.push({ kind, route, fallback: false, ctor, from });
             }
         }
 
-        if (writes.length === 0) return false;
-
-        for (const { routeId, owner } of writes) {
-            this.maps[owner.kind].set(owner.route, owner);
-            this.owners.set(routeId, owner);
-        }
-        return true;
+        for (const write of writes) this.maps[write.kind].set(write.route, write);
+        return writes.length > 0;
     }
 
-    public unregister(ctor: Ctor, routeIds?: readonly string[]): void {
-        for (const routeId of routeIds ?? this.routesOf(ctor)) {
-            const owner = this.owners.get(routeId);
-            if (owner?.ctor !== ctor) continue;
-            this.owners.delete(routeId);
-            this.maps[owner.kind].delete(owner.route);
+    public unregister(ctor: Ctor, routes: readonly RegisteredRoute<Ctor>[] = this.routesOf(ctor)): void {
+        for (const { kind, route } of routes) {
+            if (this.maps[kind].get(route)?.ctor === ctor) this.maps[kind].delete(route);
         }
     }
 
-    public warnMissing(
-        logger: Logger,
-        names: Iterable<string>,
-        kind: InteractionKind,
-        label: string,
-        decorator: string
-    ): void {
+    public routesOf(ctor: Ctor): RegisteredRoute<Ctor>[] {
+        return this.allRoutes.filter((route) => route.ctor === ctor);
+    }
+
+    public warnUnhandledRoutes(logger: Logger, leaves: Iterable<string>): void {
+        this.warnMissing(logger, leaves, InteractionKind.Slash, 'Slash route');
+    }
+
+    public warnUnhandledContextMenuRoutes(logger: Logger, leaves: ContextMenuLeaves): void {
+        this.warnMissing(logger, leaves.user, InteractionKind.UserContextMenu, 'User context menu');
+        this.warnMissing(logger, leaves.message, InteractionKind.MessageContextMenu, 'Message context menu');
+    }
+
+    private warnMissing(logger: Logger, names: Iterable<string>, kind: InteractionKind, label: string): void {
+        const decorator = paint.bold(routeDecoratorOf(kind));
         for (const name of names) {
             if (this.maps[kind].has(name)) continue;
-            logger.warn(`${label} ${paint.sky.bold(name)} doesn't have a registered ${paint.bold(decorator)} handler.`);
+            logger.warn(`${label} ${paint.sky.bold(name)} doesn't have a registered ${decorator} handler.`);
         }
-    }
-
-    public routesOf(ctor: Ctor): string[] {
-        const routeIds: string[] = [];
-        for (const [routeId, owner] of this.owners) {
-            if (owner.ctor === ctor) routeIds.push(routeId);
-        }
-        return routeIds;
     }
 }

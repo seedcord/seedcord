@@ -59,10 +59,13 @@ export abstract class AutocompleteHandler<
         event: AutocompleteInteraction<Cache>,
         core: Core,
         dispatch: DispatchContext,
-        private readonly responder: AutocompleteResponder<ApplicationCommandOptionChoiceData>
+        responder: AutocompleteResponder<ApplicationCommandOptionChoiceData>
     ) {
         super(event, core, dispatch, 'interactions');
+        this.#responder = responder;
     }
+
+    readonly #responder: AutocompleteResponder<ApplicationCommandOptionChoiceData>;
 
     /** The user who sent this interaction. */
     protected get user(): User {
@@ -118,7 +121,7 @@ export abstract class AutocompleteHandler<
 
     /** Send autocomplete suggestions, callback type 8. Prefer {@link match}, which restricts each field's choices to its declared type. */
     protected respond(choices: readonly ApplicationCommandOptionChoiceData[]): Promise<void> {
-        return this.responder.respond(choices);
+        return this.#responder.respond(choices);
     }
 
     /** The selected command's path, such as `search/docs`, without the interaction-kind prefix. */

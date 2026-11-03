@@ -35,7 +35,6 @@ export interface SubscribeMetadataEntry {
  *
  * Supply one `[key, options?]` tuple per key. The subscriber's generic must list the same keys.
  *
- * @param defs - One `[key, options?]` tuple per subscription key.
  * @decorator
  * @example
  * ```ts

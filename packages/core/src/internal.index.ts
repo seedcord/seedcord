@@ -36,6 +36,7 @@ export {
 export { runHandlerGates } from '#gates/runGates';
 export { accessorStore, clearStore, guardedAccessor } from '#src/miscellaneous/guarded';
 export { isEmojiTuple } from '#src/miscellaneous/emojiConfig';
+export { lazyLogger } from '#src/miscellaneous/lazyLogger';
 export { currentApplication } from '#src/miscellaneous/currentApplication';
 export { readBotToken } from '#src/miscellaneous/readBotToken';
 export { bindEnv } from '#src/miscellaneous/bindViteEnv';

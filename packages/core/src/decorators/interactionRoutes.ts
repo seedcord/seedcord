@@ -23,15 +23,23 @@ export function interactionRoutesOf(constructor: RoutableConstructor): [Interact
     return pairs;
 }
 
+export function routeDecoratorOf(kind: InteractionKind): string {
+    return `@${kind.charAt(0).toUpperCase()}${kind.slice(1)}Route`;
+}
+
 export function storeInteractionRoute(
     route: InteractionKind,
     routes: string | readonly string[],
-    constructor: RoutableConstructor
+    constructor: RoutableConstructor,
+    fix = 'Remove the repeat.'
 ): void {
     const key = InteractionRouteKeys[route];
     const saved: unknown = Reflect.getMetadata(key, constructor);
     const existing = isStringArray(saved) ? saved : [];
     const toStore = typeof routes === 'string' ? [routes] : routes;
+    // own metadata, since a subclass can list a route that its parent lists
+    const own: unknown = Reflect.getOwnMetadata(key, constructor);
+    assertUniqueKeys(routeDecoratorOf(route), constructor, [...(isStringArray(own) ? own : []), ...toStore], fix);
     Reflect.defineMetadata(key, [...existing, ...toStore], constructor);
     Reflect.defineMetadata(InteractionMetadataKey, true, constructor);
 }
@@ -41,14 +49,12 @@ export function storeComponentRoute(
     defs: readonly AnyCustomId[],
     constructor: RoutableConstructor
 ): void {
-    const prefixes = defs.map((def) => def.prefix);
-    assertUniqueKeys(
-        `@${route.charAt(0).toUpperCase()}${route.slice(1)}Route`,
+    storeInteractionRoute(
+        route,
+        defs.map((def) => def.prefix),
         constructor,
-        prefixes,
         'Remove the repeat, or give each customId its own prefix.'
     );
-    storeInteractionRoute(route, prefixes, constructor);
     Reflect.defineMetadata(ComponentDefsKey, defs, constructor);
 }
 

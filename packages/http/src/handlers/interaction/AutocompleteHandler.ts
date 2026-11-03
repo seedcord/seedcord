@@ -51,10 +51,13 @@ export abstract class AutocompleteHandler<Route extends keyof SlashRegistry> ext
         event: APIApplicationCommandAutocompleteInteraction,
         core: Core,
         dispatch: DispatchContext,
-        private readonly responder: AutocompleteResponder<APIApplicationCommandOptionChoice>
+        responder: AutocompleteResponder<APIApplicationCommandOptionChoice>
     ) {
         super(event, core, dispatch, 'interactions');
+        this.#responder = responder;
     }
+
+    readonly #responder: AutocompleteResponder<APIApplicationCommandOptionChoice>;
 
     // phantom, never set at runtime.
     /** @internal */
@@ -110,7 +113,7 @@ export abstract class AutocompleteHandler<Route extends keyof SlashRegistry> ext
 
     /** Send autocomplete suggestions, callback type 8. Prefer {@link match}, which restricts each field's choices to its declared type. */
     protected respond(choices: readonly APIApplicationCommandOptionChoice[]): Promise<void> {
-        return this.responder.respond(choices);
+        return this.#responder.respond(choices);
     }
 
     /** The selected command's path, such as `search/docs`, without the interaction-kind prefix. */

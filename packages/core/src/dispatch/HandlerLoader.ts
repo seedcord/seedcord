@@ -35,8 +35,7 @@ export class HandlerLoader<
     public readonly loadedHandlers: LoadedUnit[] = [];
     public readonly loadedMiddlewares: LoadedUnit[] = [];
 
-    // a reload reports on the hmr channel
-    private loading = false;
+    private initialLoad = false;
     private readonly hmr?: HmrModuleHandler<Handler, Middleware, Artifacts>;
 
     constructor(private readonly options: HandlerLoaderOptions<Handler, Middleware, Key, Artifacts>) {
@@ -59,14 +58,14 @@ export class HandlerLoader<
 
     public async load(): Promise<void> {
         const { handlersDir, middlewaresDir } = this.options;
-        this.loading = true;
+        this.initialLoad = true;
         this.loadedHandlers.length = 0;
         this.loadedMiddlewares.length = 0;
         try {
             if (middlewaresDir) await this.loadMiddlewares(middlewaresDir);
             await this.loadHandlers(handlersDir);
         } finally {
-            this.loading = false;
+            this.initialLoad = false;
         }
     }
 
@@ -97,12 +96,12 @@ export class HandlerLoader<
     private registerHandler(handler: Handler, relativePath: string): void {
         const from = formatFilePath(relativePath);
         if (!this.options.storeHandler(handler, from)) return;
-        if (this.loading) this.loadedHandlers.push({ name: handler.name, from });
+        if (this.initialLoad) this.loadedHandlers.push({ name: handler.name, from });
     }
 
     private registerMiddleware(middleware: Middleware, relativePath: string): void {
         const registration = this.options.middlewares.register(middleware);
-        if (!registration || !this.loading) return;
+        if (!registration || !this.initialLoad) return;
 
         // the keys are the only place a dev sees that a middleware is scoped
         const scope = registration.keys

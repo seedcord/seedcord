@@ -12,7 +12,8 @@ import { nullPathConfig, VALID_TOKEN } from '#tests/helpers/fixtures';
 
 import { signedRequest, slashPayload } from './harness';
 
-import type { HandlerConstructor, InteractionMiddlewareConstructor } from '#handlers/constructors';
+import type { InteractionMiddlewareConstructor } from '#handlers/constructors';
+import type { ResolvedRoute } from '#src/dispatch/resolve';
 import type { SubscriptionData } from '@seedcord/core';
 
 afterEach(() => {
@@ -31,7 +32,7 @@ async function routerThrows(thrown: unknown): Promise<{
     const seen: SubscriptionData<'unhandledInteractionError'>[] = [];
     core.bus.on('unhandledInteractionError', (payload) => seen.push(payload));
 
-    const maps = emptyRouteMaps<HandlerConstructor>();
+    const maps = emptyRouteMaps<ResolvedRoute>();
     vi.spyOn(maps[InteractionKind.Slash], 'get').mockImplementation(() => {
         throw thrown;
     });

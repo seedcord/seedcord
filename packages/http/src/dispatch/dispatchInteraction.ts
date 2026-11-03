@@ -1,6 +1,5 @@
 import { DiscordAPIError } from '@discordjs/rest';
-import { DispatchContext, InteractionRun } from '@seedcord/core/internal';
-import { Logger } from '@seedcord/logger';
+import { DispatchContext, InteractionRun, lazyLogger } from '@seedcord/core/internal';
 import { InteractionType } from 'discord-api-types/v10';
 
 import { interactionUser } from '#handlers/interactionUser';
@@ -16,12 +15,7 @@ import type { Core } from '#interfaces/Core';
 import type { ResolvedRoute } from './resolve';
 import type { InteractionRunConfig, MiddlewareRegistry } from '@seedcord/core/internal';
 
-// lazy, env binds after this module loads
-let dispatchLogger: Logger | undefined;
-function logger(): Logger {
-    dispatchLogger ??= new Logger('Dispatcher', { channel: 'interactions' });
-    return dispatchLogger;
-}
+const logger = lazyLogger('Interactions', { channel: 'interactions' });
 
 interface DispatchArgs {
     readonly match: ResolvedRoute;
@@ -44,6 +38,7 @@ function httpRunConfig(args: DispatchArgs): InteractionRunConfig {
         interactionId: payload.id,
         userId: interactionUser(payload).id,
         guildId: payload.guild_id ?? null,
+        customId: 'custom_id' in payload.data ? payload.data.custom_id : null,
         faultDetails: () => interactionFaultReport(payload, dispatch),
         target:
             payload.type === InteractionType.ApplicationCommandAutocomplete
@@ -60,6 +55,6 @@ function httpRunConfig(args: DispatchArgs): InteractionRunConfig {
     };
 }
 
-export function dispatchInteraction(args: DispatchArgs): Promise<(() => Promise<void>) | null> {
+export function dispatchInteraction(args: DispatchArgs): ReturnType<InteractionRun['prepare']> {
     return new InteractionRun(httpRunConfig(args)).prepare();
 }

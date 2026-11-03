@@ -1,4 +1,3 @@
-import { InteractionKind } from '@seedcord/core';
 import {
     HandlerLoader,
     interactionMiddleware,
@@ -14,7 +13,7 @@ import { InteractionHandler } from '#handlers/interaction/InteractionHandler';
 import { InteractionMiddleware } from '#handlers/interaction/InteractionMiddleware';
 
 import type { HandlerConstructor, InteractionMiddlewareConstructor } from '#handlers/constructors';
-import type { RouteMaps } from '#src/dispatch/resolve';
+import type { ResolvedRoute, RouteMaps } from '#src/dispatch/resolve';
 import type { MiddlewareKind } from '@seedcord/core';
 import type { Initializeable, ContextMenuLeaves } from '@seedcord/core/internal';
 import type { HmrAware, HmrUpdateEvent } from '@seedcord/types';
@@ -38,7 +37,7 @@ export class InteractionDispatcher implements Initializeable, HmrAware {
         HandlerConstructor,
         InteractionMiddlewareConstructor,
         MiddlewareKind,
-        string[]
+        ResolvedRoute[]
     >;
 
     constructor(handlersDir: string, middlewaresDir?: string) {
@@ -50,7 +49,7 @@ export class InteractionDispatcher implements Initializeable, HmrAware {
             isHandler: (value): value is HandlerConstructor => this.isHandler(value),
             isMiddleware: (value): value is InteractionMiddlewareConstructor => this.isMiddleware(value),
             storeHandler: (ctor, from) => this.routes.register(ctor, from),
-            removeHandler: (ctor, routeIds) => this.routes.unregister(ctor, routeIds),
+            removeHandler: (ctor, routes) => this.routes.unregister(ctor, routes),
             artifactsOf: (ctor) => this.routes.routesOf(ctor)
         });
     }
@@ -85,25 +84,11 @@ export class InteractionDispatcher implements Initializeable, HmrAware {
     }
 
     public warnUnhandledRoutes(commandLeaves: Iterable<string>): void {
-        this.routes.warnMissing(this.logger, commandLeaves, InteractionKind.Slash, 'Slash route', '@SlashRoute');
+        this.routes.warnUnhandledRoutes(this.logger, commandLeaves);
     }
 
     public warnUnhandledContextMenuRoutes(leaves: ContextMenuLeaves): void {
-        const { logger, routes } = this;
-        routes.warnMissing(
-            logger,
-            leaves.user,
-            InteractionKind.UserContextMenu,
-            'User context menu',
-            '@ContextMenuRoute'
-        );
-        routes.warnMissing(
-            logger,
-            leaves.message,
-            InteractionKind.MessageContextMenu,
-            'Message context menu',
-            '@ContextMenuRoute'
-        );
+        this.routes.warnUnhandledContextMenuRoutes(this.logger, leaves);
     }
 
     // a gateway class carries the same core metadata on a different base class

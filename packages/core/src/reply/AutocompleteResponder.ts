@@ -11,8 +11,14 @@ export class AutocompleteResponder<Choice> {
     ) {}
 
     public async respond(choices: readonly Choice[]): Promise<void> {
-        await reportedWrite(this.telemetry, 'respond', () => this.post(choices));
+        // set before the post because a handler can throw without awaiting this call
         this.responded = true;
+        try {
+            await reportedWrite(this.telemetry, 'respond', () => this.post(choices));
+        } catch (error) {
+            this.responded = false;
+            throw error;
+        }
     }
 
     // discord rejects a second response to one autocomplete

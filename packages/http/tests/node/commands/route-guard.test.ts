@@ -1,7 +1,8 @@
 import path from 'node:path';
 
 import { InteractionKind } from '@seedcord/core';
-import { describe, expect, it, vi } from 'vitest';
+import { Logger } from '@seedcord/logger';
+import { afterEach, describe, expect, it, vi, type MockInstance } from 'vitest';
 
 import { UnhandledRepliable } from '#handlers/defaults/UnhandledRepliable';
 import { InteractionDispatcher } from '#src/dispatch/InteractionDispatcher';
@@ -17,14 +18,16 @@ function route(kind: ResolvedRoute['kind'], key: string): ResolvedRoute {
 
 function dispatcherWith(seed: (d: InteractionDispatcher) => void): {
     dispatcher: InteractionDispatcher;
-    warn: ReturnType<typeof vi.fn>;
+    warn: MockInstance<Logger['warn']>;
 } {
     const dispatcher = new InteractionDispatcher(HANDLERS_DIR);
     seed(dispatcher);
-    const warn = vi.fn();
-    Object.assign(dispatcher.logger, { warn });
-    return { dispatcher, warn };
+    return { dispatcher, warn: vi.spyOn(Logger.prototype, 'warn').mockImplementation(() => undefined) };
 }
+
+afterEach(() => {
+    vi.restoreAllMocks();
+});
 
 describe('warnUnhandledRoutes', () => {
     it('warns for a deployed route with no registered handler', () => {
@@ -81,6 +84,6 @@ describe('warnUnhandledContextMenuRoutes', () => {
         const message = String(warn.mock.calls[0]?.[0]);
         expect(message).toContain('Message context menu');
         expect(message).toContain('Report');
-        expect(message).toContain('@ContextMenuRoute');
+        expect(message).toContain('@MessageContextMenuRoute');
     });
 });

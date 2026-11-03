@@ -175,7 +175,7 @@ class Ban extends SlashHandler<'ban'> {
 
 ## Who sent the interaction
 
-[`this.user`](ref:gateway/RepliableHandler.user) is the user who sent the interaction, on every interaction handler and middleware.
+On http, `this.event.user` is undefined in a server, because Discord sends `member.user` there. Use [`this.user`](ref:gateway/RepliableHandler.user) because it reads whichever one Discord sent, on every interaction handler and middleware.
 
 ```ts twoslash
 import { SlashHandler, SlashRoute } from '@seedcord/gateway';
@@ -192,6 +192,6 @@ class Ban extends SlashHandler<'ban'> {
 
 <Callout type="transport">
 
-`this.user` is a discord.js `User` on gateway and an `APIUser` on http. On http, `this.event.user` is undefined in a server, because Discord sends `member.user` there. `this.user` reads whichever one Discord sent.
+`this.user` is a discord.js `User` on gateway and an `APIUser` on http.
 
 </Callout>

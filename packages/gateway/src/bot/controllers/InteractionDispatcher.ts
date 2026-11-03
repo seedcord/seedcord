@@ -31,10 +31,15 @@ import type { HandlerConstructor, InteractionMiddlewareConstructor } from '#hand
 import type { Core } from '#interfaces/Core';
 import type { ValidInteractionTypes } from '#src/handlers/interactionTypes';
 import type { MiddlewareKind } from '@seedcord/core';
-import type { ContextMenuLeaves, Initializeable, RouteMaps } from '@seedcord/core/internal';
+import type { ContextMenuLeaves, Initializeable, RegisteredRoute, RouteMaps } from '@seedcord/core/internal';
 import type { InFlight } from '@seedcord/core/node/internal';
 import type { CustomIdMatcher, HmrAware, HmrUpdateEvent } from '@seedcord/types';
 import type { Interaction } from 'discord.js';
+
+const UNHANDLED: { repliable: HandlerConstructor; autocomplete: HandlerConstructor } = {
+    repliable: UnhandledRepliable,
+    autocomplete: UnhandledAutocomplete
+};
 
 export class InteractionDispatcher implements Initializeable, HmrAware {
     private readonly logger = new Logger('Interactions', { channel: 'interactions' });
@@ -53,7 +58,7 @@ export class InteractionDispatcher implements Initializeable, HmrAware {
         HandlerConstructor,
         InteractionMiddlewareConstructor,
         MiddlewareKind,
-        string[]
+        RegisteredRoute<HandlerConstructor>[]
     >;
 
     constructor(
@@ -88,31 +93,17 @@ export class InteractionDispatcher implements Initializeable, HmrAware {
             isHandler: (value): value is HandlerConstructor => this.isHandlerClass(value),
             isMiddleware: (value): value is InteractionMiddlewareConstructor => this.isMiddlewareClass(value),
             storeHandler: (ctor, from) => this.routes.register(ctor, from),
-            removeHandler: (ctor, routeIds) => this.routes.unregister(ctor, routeIds),
+            removeHandler: (ctor, routes) => this.routes.unregister(ctor, routes),
             artifactsOf: (ctor) => this.routes.routesOf(ctor)
         });
     }
 
     public warnUnhandledRoutes(commandLeaves: Iterable<string>): void {
-        this.routes.warnMissing(this.logger, commandLeaves, InteractionKind.Slash, 'Slash route', '@SlashRoute');
+        this.routes.warnUnhandledRoutes(this.logger, commandLeaves);
     }
 
     public warnUnhandledContextMenuRoutes(leaves: ContextMenuLeaves): void {
-        const { logger, routes } = this;
-        routes.warnMissing(
-            logger,
-            leaves.user,
-            InteractionKind.UserContextMenu,
-            'User context menu',
-            '@ContextMenuRoute'
-        );
-        routes.warnMissing(
-            logger,
-            leaves.message,
-            InteractionKind.MessageContextMenu,
-            'Message context menu',
-            '@ContextMenuRoute'
-        );
+        this.routes.warnUnhandledContextMenuRoutes(this.logger, leaves);
     }
 
     public async init(): Promise<void> {
@@ -200,12 +191,7 @@ export class InteractionDispatcher implements Initializeable, HmrAware {
         if ([...this.keysToIgnore].some((matcher) => matcher.owns(interaction.customId))) return;
 
         // the stable prefix (the routeKey minus its shape hash) routes an older-shape wire to its handler
-        const prefix = prefixOf(interaction.customId);
-        // no route matches an empty prefix. the unhandled default answers it
-        if (!prefix)
-            this.logger.warn(`${paint.sky.bold(kind)} has invalid customId: ${paint.mute(interaction.customId)}`);
-
-        await this.processInteraction(interaction, kind, prefix);
+        await this.processInteraction(interaction, kind, prefixOf(interaction.customId));
     }
 
     private async processInteraction(
@@ -213,13 +199,7 @@ export class InteractionDispatcher implements Initializeable, HmrAware {
         kind: InteractionKind,
         key: string
     ): Promise<void> {
-        const { fallback, ctor: HandlerCtor } = matchRoute<HandlerConstructor>(this.maps, kind, key, {
-            repliable: UnhandledRepliable,
-            autocomplete: UnhandledAutocomplete
-        });
-        if (fallback) {
-            this.logger.warn(`No handler found for key ${paint.sky.bold(key)}. Falling back to ${HandlerCtor.name}.`);
-        }
+        const { fallback, ctor: HandlerCtor } = matchRoute(this.maps, kind, key, UNHANDLED);
         const config = gatewayRunConfig({
             interaction,
             core: this.core,

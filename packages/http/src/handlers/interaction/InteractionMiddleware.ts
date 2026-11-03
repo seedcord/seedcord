@@ -42,8 +42,8 @@ export abstract class InteractionMiddleware<
      * What started this dispatch: a slash command path like `config/set`, a context menu command's
      * name, or a custom-ID prefix. When the generic lists only slash or context menu kinds, your editor
      * offers your registered commands. It can still be any string, since middleware also runs when no
-     * handler matched, like on a command you deleted that Discord still shows. It can be empty or meaningless
-     * for a custom ID that seedcord didn't make.
+     * handler matched, like on a deleted command that Discord still shows. For a custom ID that seedcord
+     * didn't make, it can be empty or a cut-off piece of that ID.
      */
     declare protected readonly route: MiddlewareRoute<Kind>;
 

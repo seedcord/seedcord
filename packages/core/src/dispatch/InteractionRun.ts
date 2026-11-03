@@ -14,7 +14,7 @@ import type { DispatchOutcome } from '#subscribers/types/Subscriptions';
 import type { InteractionDispatch } from './DispatchContext';
 import type { DispatchResult } from './dispatchResult';
 import type { Logger } from '@seedcord/logger';
-import type { Promisable } from 'type-fest';
+import type { Constructor, Promisable } from 'type-fest';
 
 interface RunnableHandler {
     execute(): Promisable<void>;
@@ -25,8 +25,6 @@ interface RunnableMiddleware extends RunnableHandler {
 }
 
 type Answer = (caught: unknown) => Promise<void>;
-
-type Built<Instance> = new (...args: never[]) => Instance;
 
 // null when the run already answered a throw or a refusal
 type PreparedRun = (() => Promise<void>) | null;
@@ -45,8 +43,9 @@ export interface InteractionRunConfig {
     readonly dispatch: InteractionDispatch;
     readonly core: CoreBase;
     readonly event: unknown;
-    readonly HandlerCtor: Built<RunnableHandler>;
-    readonly middlewares: { chainFor(kind: MiddlewareKind): readonly Built<RunnableMiddleware>[] };
+    readonly customId: string | null;
+    readonly HandlerCtor: Constructor<RunnableHandler, never[]>;
+    readonly middlewares: { chainFor(kind: MiddlewareKind): readonly Constructor<RunnableMiddleware, never[]>[] };
     readonly apiError: ApiErrorClass;
     readonly logger: Logger;
     readonly interactionId: string;
@@ -72,7 +71,19 @@ export class InteractionRun {
 
     public async prepare(): Promise<PreparedRun> {
         const { target } = this.config;
+        this.warnIfUnhandled();
         return 'responder' in target ? this.prepareAutocomplete(target) : this.prepareRepliable(target);
+    }
+
+    private warnIfUnhandled(): void {
+        const { dispatch, customId, HandlerCtor, logger } = this.config;
+        if (!dispatch.fallback) return;
+        // an empty route means seedcord didn't make the interaction's custom ID
+        if (dispatch.route === '') {
+            logger.warn(`${paint.sky.bold(dispatch.kind)} has invalid customId: ${paint.mute(String(customId))}`);
+            return;
+        }
+        logger.warn(`No handler found for ${paint.sky.bold(dispatch.routeId)}. Falling back to ${HandlerCtor.name}.`);
     }
 
     private async prepareAutocomplete({ responder }: AutocompleteTarget): Promise<PreparedRun> {
@@ -121,7 +132,7 @@ export class InteractionRun {
         const { middlewares, event, core, dispatch } = this.config;
         // justified: a repliable target means a MiddlewareKind
         for (const Middleware of middlewares.chainFor(dispatch.kind as MiddlewareKind)) {
-            // justified: chainFor picked this kind. the event is the one the class declares.
+            // justified: chainFor picked this kind. the class declares this event type.
             const middleware = new Middleware(event as never, core as never, dispatch as never, sender as never);
             // pushed before the await because a middleware that throws still gets its after()
             this.ran.push(middleware);

@@ -47,7 +47,7 @@ interface RegisteredEventHandlerEntry {
     readonly frequency: EventFrequency;
 }
 
-type EventArtifact = string;
+type EventArtifact = keyof ClientEvents;
 
 /**
  * Interactions route through InteractionDispatcher.
@@ -144,7 +144,7 @@ export class EventDispatcher implements Initializeable, HmrAware {
     private unregisterHandler(handlerClass: EventHandlerConstructor, artifacts?: EventArtifact[]): void {
         const events = artifacts ?? [...this.eventMap.keys()];
         for (const event of events) {
-            const handlers = this.eventMap.get(event as keyof ClientEvents);
+            const handlers = this.eventMap.get(event);
             if (!handlers) continue;
             const index = handlers.findIndex((h) => h.ctor === handlerClass);
             if (!(index !== -1)) {
@@ -153,7 +153,7 @@ export class EventDispatcher implements Initializeable, HmrAware {
 
             handlers.splice(index, 1);
             if (handlers.length === 0) {
-                this.eventMap.delete(event as keyof ClientEvents);
+                this.eventMap.delete(event);
             }
         }
     }

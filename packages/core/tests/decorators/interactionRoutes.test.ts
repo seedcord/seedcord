@@ -27,6 +27,37 @@ describe('storeInteractionRoute', () => {
         expect(Reflect.getMetadata(InteractionRouteKeys[InteractionKind.Slash], Handler)).toEqual(['ban', 'kick']);
     });
 
+    it('throws DecoratorDuplicateKey for a repeated route, including across stacked calls', () => {
+        class Repeats {
+            execute(): void {}
+        }
+        class Stacks {
+            execute(): void {}
+        }
+        function expectDuplicate(store: () => void): void {
+            expect(store).toThrow(
+                expect.objectContaining({
+                    code: SeedcordErrorCode.DecoratorDuplicateKey,
+                    message: expect.stringContaining('@SlashRoute') as string
+                })
+            );
+        }
+        storeInteractionRoute(InteractionKind.Slash, ['ban'], Stacks);
+
+        expectDuplicate(() => storeInteractionRoute(InteractionKind.Slash, ['ban', 'ban'], Repeats));
+        expectDuplicate(() => storeInteractionRoute(InteractionKind.Slash, ['ban'], Stacks));
+    });
+
+    it("lets a subclass list its parent's route", () => {
+        class Parent {
+            execute(): void {}
+        }
+        class Child extends Parent {}
+        storeInteractionRoute(InteractionKind.Slash, ['ban'], Parent);
+
+        expect(() => storeInteractionRoute(InteractionKind.Slash, ['ban'], Child)).not.toThrow();
+    });
+
     it('accepts a single route string', () => {
         class Handler {
             execute(): void {}

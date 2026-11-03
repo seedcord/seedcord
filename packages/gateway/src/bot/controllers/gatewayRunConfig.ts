@@ -33,6 +33,7 @@ export function gatewayRunConfig(run: GatewayRun): InteractionRunConfig {
         interactionId: interaction.id,
         userId: interaction.user.id,
         guildId: interaction.guildId,
+        customId: 'customId' in interaction ? interaction.customId : null,
         faultDetails: () => interactionFaultReport(interaction, dispatch),
         target: interaction.isAutocomplete()
             ? { responder: autocompleteResponder(interaction, core, dispatch) }

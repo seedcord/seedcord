@@ -1,8 +1,8 @@
 import { paint } from '@seedcord/errors';
-import { Logger } from '@seedcord/logger';
 import { asError } from '@seedcord/utils/internal';
 import { RESTJSONErrorCodes } from 'discord-api-types/v10';
 
+import { lazyLogger } from '#src/miscellaneous/lazyLogger';
 import { Fault } from '#stops/Fault';
 import { Notice } from '#stops/Notice';
 import { Silence } from '#stops/Silence';
@@ -28,12 +28,7 @@ export interface FaultSender {
     send(response: ReplyResponse, options: { ephemeral: boolean }): Promise<unknown>;
 }
 
-// lazy, env binds after this module loads
-let cachedLogger: Logger | undefined;
-function logger(): Logger {
-    cachedLogger ??= new Logger('Faults', { channel: 'errors' });
-    return cachedLogger;
-}
+const logger = lazyLogger('Faults', { channel: 'errors' });
 
 const HARMLESS_API_CODES: ReadonlySet<number | string> = new Set([
     RESTJSONErrorCodes.UnknownInteraction, // interaction expired

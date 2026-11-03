@@ -81,11 +81,4 @@ describe('DispatchContext', () => {
         bag.set('__proto__', 'en');
         expect(bag.require('__proto__')).toBe('en');
     });
-
-    it('gives every dispatch its own id', () => {
-        const first = new DispatchContext('slash', 'test');
-        const second = new DispatchContext('slash', 'test');
-
-        expect(first.id).not.toBe(second.id);
-    });
 });

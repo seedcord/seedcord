@@ -36,7 +36,7 @@ describe('RouteRegistry', () => {
         registry.register(keeper, 'Keeper.ts');
         registry.register(stale, 'Stale.ts');
 
-        registry.unregister(stale, ['button:shared', 'button:own']);
+        registry.unregister(stale, [...registry.routesOf(keeper), ...registry.routesOf(stale)]);
 
         expect(registry.maps[InteractionKind.Button].get('shared')?.ctor).toBe(keeper);
         expect(registry.maps[InteractionKind.Button].has('own')).toBe(false);

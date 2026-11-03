@@ -31,6 +31,7 @@ function configFor(
         interactionId: 'i1',
         userId: 'u1',
         guildId: null,
+        customId: null,
         target,
         faultDetails: () => ({
             origin: 'probe',
@@ -45,8 +46,9 @@ function configFor(
 describe('InteractionRun', () => {
     it('still runs after() when reporting a refusal throws', async () => {
         const after = vi.fn();
+        const refused = new Error('refused');
         const gate = defineGate('Refuse', () => {
-            throw new Error('refused');
+            throw refused;
         });
         class Refused {
             execute = vi.fn();
@@ -59,8 +61,9 @@ describe('InteractionRun', () => {
 
         const config = {
             ...configFor(InteractionKind.Slash, Refused, {
-                // justified: the gate above doesn't read its context
-                gateContext: () => ({}) as GateContextBase,
+                // justified: runInteractionGates reads only dispatch from this context
+                gateContext: () =>
+                    ({ dispatch: new DispatchContext(InteractionKind.Slash, 'probe') }) as GateContextBase,
                 sender: { send: vi.fn().mockResolvedValue(undefined) }
             }),
             middlewares: { chainFor: () => [Audit] },
@@ -70,7 +73,27 @@ describe('InteractionRun', () => {
         };
 
         await expect(new InteractionRun(config).prepare()).rejects.toThrow('details failed');
-        expect(after).toHaveBeenCalledOnce();
+        expect(after).toHaveBeenCalledWith({ outcome: 'failed', caught: refused });
+    });
+
+    it.each([
+        { route: 'gone', customId: null, warning: 'No handler found' },
+        { route: '', customId: 'vote', warning: 'vote' }
+    ])('warns on a fallback dispatch for route "$route"', async ({ route, customId, warning }) => {
+        class Unhandled {
+            execute = vi.fn();
+        }
+        const warn = vi.spyOn(Logger.prototype, 'warn').mockImplementation(() => undefined);
+        const config = {
+            ...configFor(InteractionKind.Button, Unhandled, { responder: { clear: vi.fn() } }),
+            dispatch: new DispatchContext(InteractionKind.Button, route, true),
+            customId
+        };
+
+        await new InteractionRun(config).prepare();
+
+        expect(warn).toHaveBeenCalledWith(expect.stringContaining(warning));
+        warn.mockRestore();
     });
 
     it('clears the choices when an autocomplete handler throws a Silence', async () => {
