@@ -5,12 +5,12 @@ authors: [materwelonDhruv]
 created: 2026-11-02
 cover:
     src: ./cover.webp
-    alt: The seedcord logo and 0.23 next to a long paper receipt listing the new features, 76 total changes, and change due your bot
+    alt: The seedcord logo and 0.23 next to a long paper receipt listing the new features, 74 total changes, and change due your bot
 thumbnail: ./thumbnail.webp
 keywords: [release, kv store, guide search, seedcord make, plugin codegen, mention prefix]
 ---
 
-That's the bill for this release. 76 changes since v0.22, and 18 of them are breaking, so your bot is paying for some of it. It's less scary than it looks though. More on that at the end.
+That's the bill for this release. 74 changes since v0.22, and 19 of them are breaking, so your bot is paying for some of it. It's less scary than it looks though. More on that at the end.
 
 This all started as a short list of things to fix before the release, and it kept growing. One PR ended up titled "`feat: refactor? chore? fix? god pr`", which tells you how that went.
 
@@ -227,7 +227,7 @@ pnpm update --latest seedcord @seedcord/gateway # or @seedcord/http
 pnpm exec seedcord codegen
 ```
 
-Update any seedcord plugins you use too. Now, those 18 breaking changes. Most of them only matter if you use that exact API, and your compiler points right at those. Two are worth knowing up front:
+Update any seedcord plugins you use too. Now, those 19 breaking changes. Most of them only matter if you use that exact API, and your compiler points right at those. Two are worth knowing up front:
 
 - `seedcord-gen.d.ts` is now `seedcord-gen.ts`. Delete the old file, run codegen once, and rename it in your eslint ignores, `.prettierignore`, `.gitattributes`, and editor settings.
 - Handlers on the same event now run at the same time. Nothing warns you about this one. If one handler reads what another one writes, it can get old values, so check those.
