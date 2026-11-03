@@ -1,6 +1,6 @@
 'use client';
 
-import { tw, Button, Tooltip, TooltipContent, TooltipRoot, TooltipTrigger, GithubIcon, cn } from '@seedcord/ui';
+import { tw, Button, Kbd, Tooltip, TooltipContent, TooltipRoot, TooltipTrigger, GithubIcon, cn } from '@seedcord/ui';
 import { Info, Settings } from 'lucide-react';
 
 import type { ReactElement, ReactNode } from 'react';
@@ -46,13 +46,7 @@ function CompoundShape(): ReactElement {
                     </Button>
                 </TooltipTrigger>
                 <TooltipContent side="top">
-                    <span className={cn('font-medium')}>Press</span>{' '}
-                    <kbd
-                        className={cn('rounded-sm border border-(--border) bg-(--surface-subtle) px-1 text-[0.65rem]')}
-                    >
-                        ⌘K
-                    </kbd>{' '}
-                    to search
+                    <span className={cn('font-medium')}>Press</span> <Kbd size="sm">⌘K</Kbd> to search
                 </TooltipContent>
             </TooltipRoot>
             <TooltipRoot>

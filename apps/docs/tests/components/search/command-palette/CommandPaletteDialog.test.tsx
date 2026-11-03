@@ -61,22 +61,14 @@ function combobox(): HTMLElement {
     return screen.getByRole('combobox');
 }
 
-class StubResizeObserver {
-    observe(): void {}
-    unobserve(): void {}
-    disconnect(): void {}
-}
-
 describe('CommandPaletteDialog', () => {
     beforeEach(() => {
         searchHook.mockReturnValue({ results: RESULTS, status: 'success' });
-        vi.stubGlobal('ResizeObserver', StubResizeObserver);
         window.HTMLElement.prototype.scrollIntoView = vi.fn();
         window.HTMLElement.prototype.scrollTo = vi.fn();
     });
 
     afterEach(() => {
-        vi.unstubAllGlobals();
         vi.clearAllMocks();
     });
 
@@ -91,6 +83,12 @@ describe('CommandPaletteDialog', () => {
             .getAllByRole('option')
             .map((option) => option.getAttribute('aria-label'));
         expect(labels).toEqual(['Alpha', 'Beta', 'Gamma']);
+    });
+
+    it('links each option to its page under the docs base path', () => {
+        renderDialog(makeController());
+
+        expect(screen.getByRole('option', { name: 'Alpha' })).toHaveAttribute('href', '/docs/a');
     });
 
     it('starts with the first option active', () => {
@@ -156,20 +154,13 @@ describe('CommandPaletteDialog', () => {
         expect(screen.queryAllByRole('switch', { name: 'Pre-release' })).not.toHaveLength(0);
     });
 
-    it('re-anchors the active option to the first when the results identity changes', () => {
+    it('moves the active option back to the first when the query changes, even if the old one is still listed', () => {
         const { rerender } = renderDialog(makeController());
         fireEvent.keyDown(combobox(), { key: 'ArrowDown' });
         expect(combobox()).toHaveAttribute('aria-activedescendant', optionId('b'));
 
-        searchHook.mockReturnValue({
-            results: [
-                { id: 'x', label: 'Xi', path: '/x', href: '/x', kind: 'page' },
-                { id: 'y', label: 'Psi', path: '/y', href: '/y', kind: 'class' }
-            ],
-            status: 'success'
-        });
-        rerender(makeController());
+        rerender(makeController({ searchValue: 'alph' }));
 
-        expect(combobox()).toHaveAttribute('aria-activedescendant', optionId('x'));
+        expect(combobox()).toHaveAttribute('aria-activedescendant', optionId('a'));
     });
 });

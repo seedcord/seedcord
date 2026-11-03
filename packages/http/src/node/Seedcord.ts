@@ -21,8 +21,6 @@ import { toWebRequest, writeWebResponse } from './webBridge';
 
 import type { HttpServerConfig } from '#interfaces/Config';
 import type { REST } from '@discordjs/rest';
-import type { Bus } from '@seedcord/core';
-import type { IRateLimiter } from '@seedcord/types';
 import type { SeedcordInstance } from '@seedcord/types/internal';
 import type { Server } from 'node:http';
 import type { AddressInfo } from 'node:net';
@@ -51,12 +49,6 @@ export class Seedcord extends ServerHost<'http'> implements SeedcordInstance {
     /** Discord REST client built from `bot.restOptions`. `start()` sets the token. */
     public readonly rest: REST;
 
-    /** @see {@link IRateLimiter} */
-    public readonly rateLimiter: IRateLimiter;
-
-    /** @see {@link Bus} */
-    public readonly bus: Bus;
-
     readonly #service: InteractionsService;
     readonly #endpoint: NodeEndpoint;
     readonly #hmrManager: HmrManager;
@@ -73,15 +65,13 @@ export class Seedcord extends ServerHost<'http'> implements SeedcordInstance {
      * @throws A **SeedcordError** when the running Node or Bun is older than the range in `engines`.
      */
     constructor(config: HttpServerConfig) {
-        super('http', new CoordinatedShutdown(config.lifecycle?.shutdownDeadline), new CoordinatedStartup());
+        super('http', new CoordinatedShutdown(config.lifecycle?.shutdownDeadline), new CoordinatedStartup(), config.kv);
         this.config = config;
 
         bindBotColor(() => this.config.botColor);
 
         this.#service = new InteractionsService(this, config, config.bot.restOptions);
         this.rest = this.#service.rest;
-        this.rateLimiter = this.#service.rateLimiter;
-        this.bus = this.#service.bus;
         this.#endpoint = new NodeEndpoint(
             this.#service,
             this.#logger,
@@ -110,9 +100,7 @@ export class Seedcord extends ServerHost<'http'> implements SeedcordInstance {
      * Starts the host and runs the startup tasks.
      */
     public start(): Promise<this> {
-        const starting = this.init();
-        this.#endpoint.startWith(starting);
-        return starting;
+        return this.init();
     }
 
     /**
@@ -120,8 +108,8 @@ export class Seedcord extends ServerHost<'http'> implements SeedcordInstance {
      * config sets `port: false`.
      *
      * Rejects with `CoreFetchBeforeStart` until `start()` is called. A request that arrives while
-     * `start()` runs waits for all of startup, the command deploy included. Answers 503 once
-     * shutdown begins or `start()` fails.
+     * `start()` runs waits until the command deploy finishes. Answers 503 once shutdown begins or
+     * `start()` fails.
      *
      * @example
      * ```ts
@@ -164,9 +152,15 @@ export class Seedcord extends ServerHost<'http'> implements SeedcordInstance {
         // the Login tasks read the token authenticate sets
         tasks.addDiscordTasks();
 
-        this.startup.addTask(StartupPhase.Ready, 'http-server', () => {
+        this.startup.addTask(StartupPhase.Ready, 'open-endpoint', () => {
+            this.#endpoint.open();
+            return Promise.resolve();
+        });
+
+        this.startup.addTask(StartupPhase.Ready, 'http-server', async () => {
             const { port = DEFAULT_PORT } = this.config;
-            return port === false ? Promise.resolve() : this.#listen(port);
+            if (port !== false) await this.#listen(port);
+            getDevChannel()?.send('seedcord:server-port', { port: this.#boundPort ?? false });
         });
 
         if (!Envapter.isTest) {
@@ -195,7 +189,7 @@ export class Seedcord extends ServerHost<'http'> implements SeedcordInstance {
     async #listen(port: number): Promise<void> {
         const server = createServer((incoming, outgoing) => {
             void (async () => {
-                const response = await this.#endpoint.answer(await toWebRequest(incoming));
+                const response = await this.#endpoint.fetch(await toWebRequest(incoming));
                 // node's close() leaves a busy connection open once it goes idle
                 if (!server.listening) outgoing.setHeader('connection', 'close');
                 await writeWebResponse(response, outgoing);
@@ -216,7 +210,6 @@ export class Seedcord extends ServerHost<'http'> implements SeedcordInstance {
         // justified: address() is AddressInfo once a TCP server is listening
         this.#boundPort = (server.address() as AddressInfo).port;
         this.#logger.info(`Interactions server listening on port ${paint.sky.bold(String(this.#boundPort))}`);
-        getDevChannel()?.send('seedcord:server-listening', { port: this.#boundPort });
 
         this.shutdown.addTask(
             ShutdownPhase.Unbind,

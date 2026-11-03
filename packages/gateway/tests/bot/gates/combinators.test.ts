@@ -96,7 +96,7 @@ expectTypeOf(and(EffectButtonGate, AgnosticGate)).toEqualTypeOf<
 expectTypeOf<Gate<GateContextBase> extends Gate<GateContext> ? true : false>().toEqualTypeOf<true>();
 expectTypeOf<Gate<GateContext> extends Gate<GateContextBase> ? true : false>().toEqualTypeOf<true>();
 
-describe('combinator result types on the gateway arms', () => {
+describe('combinator result types on the gateway contexts', () => {
     it('disjoint interaction-kind gates are not mutually assignable', () => {
         // @ts-expect-error a button gate is not a slash gate
         const gSlash: Gate<InteractionGateContext<ChatInputCommandInteraction>> = ButtonGate;

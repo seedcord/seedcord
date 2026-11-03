@@ -4,7 +4,7 @@ import { SeedcordRangeError, SeedcordTypeError } from '@seedcord/errors/internal
 import { computeLayoutHash, decodeBody, encodeBody, HASH_LENGTH } from './codec';
 import { invalidError, staleError } from './errors';
 
-import type { CustomIdField, CustomIdShape, DecodedParams } from './Field';
+import type { CustomIdField, CustomIdShape, DecodedParams, WithField } from './Field';
 import type { Snowflake } from 'discord-api-types/v10';
 import type { NonEmptyTuple } from 'type-fest';
 
@@ -125,16 +125,14 @@ export class CustomId<Prefix extends string, Shape extends CustomIdShape = {}> {
     private add<Name extends string, Decoded>(
         name: Name,
         field: CustomIdField<Decoded>
-    ): CustomId<Prefix, Shape & Record<Name, CustomIdField<Decoded>>> {
+    ): CustomId<Prefix, WithField<Shape, Name, Decoded>> {
         if (/^(?:0|[1-9]\d*)$/.test(name))
             throw new SeedcordTypeError(SeedcordErrorCode.CustomIdReservedFieldName, [name]);
         // a repeat name collapses the decoded type to never and overwrites the earlier field at runtime.
         if (name in this.shape) {
             throw new SeedcordTypeError(SeedcordErrorCode.CoreDuplicateName, [`customId ${this.prefix} field`, name]);
         }
-        // justified: the spread plus a computed key cannot be proven to the exact intersection
-        const shape = { ...this.shape, [name]: field } as Shape & Record<Name, CustomIdField<Decoded>>;
-        return new CustomId(this.prefix, shape);
+        return new CustomId(this.prefix, { ...this.shape, [name]: field });
     }
 
     /**
@@ -148,7 +146,7 @@ export class CustomId<Prefix extends string, Shape extends CustomIdShape = {}> {
     snowflake<Name extends string, const Nullable extends boolean = false>(
         name: Name,
         opts?: FieldOptions<Nullable>
-    ): CustomId<Prefix, Shape & Record<Name, CustomIdField<Nullish<Snowflake, Nullable>>>> {
+    ): CustomId<Prefix, WithField<Shape, Name, Nullish<Snowflake, Nullable>>> {
         return this.add<Name, Nullish<Snowflake, Nullable>>(name, { ...opts, kind: 'snowflake' });
     }
 
@@ -163,7 +161,7 @@ export class CustomId<Prefix extends string, Shape extends CustomIdShape = {}> {
     uuid<Name extends string, const Nullable extends boolean = false>(
         name: Name,
         opts?: FieldOptions<Nullable>
-    ): CustomId<Prefix, Shape & Record<Name, CustomIdField<Nullish<string, Nullable>>>> {
+    ): CustomId<Prefix, WithField<Shape, Name, Nullish<string, Nullable>>> {
         return this.add<Name, Nullish<string, Nullable>>(name, { ...opts, kind: 'uuid' });
     }
 
@@ -178,7 +176,7 @@ export class CustomId<Prefix extends string, Shape extends CustomIdShape = {}> {
     int<Name extends string, const Nullable extends boolean = false>(
         name: Name,
         opts?: FieldOptions<Nullable>
-    ): CustomId<Prefix, Shape & Record<Name, CustomIdField<Nullish<number, Nullable>>>>;
+    ): CustomId<Prefix, WithField<Shape, Name, Nullish<number, Nullable>>>;
     /**
      * Add an integer field bounded by min and max, so it packs into fewer characters on the wire.
      *
@@ -192,13 +190,13 @@ export class CustomId<Prefix extends string, Shape extends CustomIdShape = {}> {
         min: number,
         max: number,
         opts?: FieldOptions<Nullable>
-    ): CustomId<Prefix, Shape & Record<Name, CustomIdField<Nullish<number, Nullable>>>>;
+    ): CustomId<Prefix, WithField<Shape, Name, Nullish<number, Nullable>>>;
     int<Name extends string, const Nullable extends boolean = false>(
         name: Name,
         minOrOpts?: number | FieldOptions<Nullable>,
         max?: number,
         opts?: FieldOptions<Nullable>
-    ): CustomId<Prefix, Shape & Record<Name, CustomIdField<Nullish<number, Nullable>>>> {
+    ): CustomId<Prefix, WithField<Shape, Name, Nullish<number, Nullable>>> {
         const min = typeof minOrOpts === 'number' ? minOrOpts : undefined;
         if (min !== undefined && max !== undefined && min > max) {
             throw new SeedcordRangeError(SeedcordErrorCode.CustomIdInvalidBounds, [name, min, max]);
@@ -219,7 +217,7 @@ export class CustomId<Prefix extends string, Shape extends CustomIdShape = {}> {
     bool<Name extends string, const Nullable extends boolean = false>(
         name: Name,
         opts?: FieldOptions<Nullable>
-    ): CustomId<Prefix, Shape & Record<Name, CustomIdField<Nullish<boolean, Nullable>>>> {
+    ): CustomId<Prefix, WithField<Shape, Name, Nullish<boolean, Nullable>>> {
         return this.add<Name, Nullish<boolean, Nullable>>(name, { ...opts, kind: 'bool' });
     }
 
@@ -235,7 +233,7 @@ export class CustomId<Prefix extends string, Shape extends CustomIdShape = {}> {
         name: Name,
         choices: Choices,
         opts?: FieldOptions<Nullable>
-    ): CustomId<Prefix, Shape & Record<Name, CustomIdField<Nullish<Choices[number], Nullable>>>> {
+    ): CustomId<Prefix, WithField<Shape, Name, Nullish<Choices[number], Nullable>>> {
         if (choices.length === 0) throw new SeedcordRangeError(SeedcordErrorCode.CustomIdEmptyChoices, [name, 'oneOf']);
         return this.add<Name, Nullish<Choices[number], Nullable>>(name, { ...opts, kind: 'oneOf', choices });
     }
@@ -257,7 +255,7 @@ export class CustomId<Prefix extends string, Shape extends CustomIdShape = {}> {
         name: Name,
         choices: Choices,
         opts?: FieldOptions<Nullable>
-    ): CustomId<Prefix, Shape & Record<Name, CustomIdField<Nullish<Choices[number][], Nullable>>>> {
+    ): CustomId<Prefix, WithField<Shape, Name, Nullish<Choices[number][], Nullable>>> {
         if (choices.length === 0)
             throw new SeedcordRangeError(SeedcordErrorCode.CustomIdEmptyChoices, [name, 'someOf']);
         return this.add<Name, Nullish<Choices[number][], Nullable>>(name, { ...opts, kind: 'someOf', choices });
@@ -275,7 +273,7 @@ export class CustomId<Prefix extends string, Shape extends CustomIdShape = {}> {
     str<Name extends string, const Nullable extends boolean = false>(
         name: Name,
         opts?: FieldOptions<Nullable>
-    ): CustomId<Prefix, Shape & Record<Name, CustomIdField<Nullish<string, Nullable>>>> {
+    ): CustomId<Prefix, WithField<Shape, Name, Nullish<string, Nullable>>> {
         return this.add<Name, Nullish<string, Nullable>>(name, { ...opts, kind: 'string' });
     }
 

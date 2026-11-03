@@ -12,7 +12,7 @@ export function RestartRequiredCard(): ReactElement {
                 Restart required
             </Text>
             <Text>
-                A change needs a full restart. press{' '}
+                A change needs a full restart. Press{' '}
                 <Text color={ui.warn} bold>
                     r
                 </Text>{' '}

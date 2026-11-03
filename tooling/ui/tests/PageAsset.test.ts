@@ -7,11 +7,11 @@ describe('the file a page asset is written to', () => {
         expect(TWIN.fileSegments(['commands', 'options'])).toEqual(['commands', 'options.md']);
     });
 
-    it('names a tab index after the tab', () => {
+    it('takes a tab index file name from the tab', () => {
         expect(CARD.fileSegments(['commands'])).toEqual(['commands.png']);
     });
 
-    it('names the root page index', () => {
+    it('builds the root page index path', () => {
         expect(TWIN.fileSegments([])).toEqual(['index.md']);
     });
 });

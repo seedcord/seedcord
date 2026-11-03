@@ -39,7 +39,7 @@ describe('maxBump', () => {
         expect(() => maxBump(['just a summary, no frontmatter'])).toThrow(/frontmatter/);
     });
 
-    it('throws on a frontmatter value that names no bump', () => {
+    it('throws on a frontmatter value that lacks a bump', () => {
         expect(() => maxBump([changeset("'@seedcord/a': patch\nnote: ignore me")])).toThrow(/version type/);
     });
 });

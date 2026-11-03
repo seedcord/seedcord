@@ -1,5 +1,6 @@
+import { BRAND_COLORS } from '@seedcord/brand';
 import { OgFooter, OgFrame, OgMark } from '@seedcord/ui/OgCard';
-import { BRAND } from '@seedcord/ui/palette';
+import { SUB_TEXT } from '@seedcord/ui/palette';
 
 import type { ReactElement } from 'react';
 
@@ -15,14 +16,14 @@ function Headline(): ReactElement {
                 fontSize: 56,
                 lineHeight: 1,
                 letterSpacing: -1.7,
-                color: BRAND.seedDark
+                color: BRAND_COLORS.seedDark
             }}
         >
             <div style={{ display: 'flex' }}>The whole Discord bot,</div>
             <div style={{ display: 'flex', gap: 18, marginTop: 8 }}>
-                <span style={{ color: BRAND.rindDeep }}>typed</span>
+                <span style={{ color: BRAND_COLORS.rindDeep }}>typed</span>
                 <div style={{ display: 'flex' }}>
-                    <span style={{ color: BRAND.fleshDeep }}>end to end</span>
+                    <span style={{ color: BRAND_COLORS.fleshDeep }}>end to end</span>
                     <span>.</span>
                 </div>
             </div>
@@ -40,7 +41,7 @@ function Footer(): ReactElement {
                     fontWeight: 600,
                     fontSize: 40,
                     letterSpacing: -1.2,
-                    color: BRAND.seedDark
+                    color: BRAND_COLORS.seedDark
                 }}
             >
                 seedcord
@@ -50,15 +51,15 @@ function Footer(): ReactElement {
                     display: 'flex',
                     fontFamily: 'JetBrains Mono',
                     fontSize: 23,
-                    backgroundColor: BRAND.seedDark,
-                    color: BRAND.pith,
+                    backgroundColor: BRAND_COLORS.seedDark,
+                    color: BRAND_COLORS.pith,
                     padding: '13px 22px',
                     borderRadius: 4
                 }}
             >
                 pnpm create seedcord
             </div>
-            <div style={{ display: 'flex', fontFamily: 'JetBrains Mono', fontSize: 23, color: BRAND.seedDark }}>
+            <div style={{ display: 'flex', fontFamily: 'JetBrains Mono', fontSize: 23, color: BRAND_COLORS.seedDark }}>
                 seedcord.org
             </div>
         </OgFooter>
@@ -89,7 +90,7 @@ export function OgCard(): ReactElement {
                         fontFamily: 'Hanken Grotesk',
                         fontSize: 25,
                         lineHeight: 1.34,
-                        color: BRAND.sub
+                        color: SUB_TEXT
                     }}
                 >
                     <div style={{ display: 'flex' }}>

@@ -33,7 +33,7 @@ Run the phases in this order. Each one ends when the maintainer commits it, and 
 ## Who does what
 
 - **The main session** is the editor. It writes the positioning (the root README, the two transport READMEs, the CLI README, and the home page), makes the design calls, reads every helper's diff, checks their claims at source, and stages each batch.
-- **Helper sessions** are other Claude sessions the maintainer opens and names. Long batch jobs go to them, like the other READMEs or a library bug fix. A helper keeps its loaded skills between jobs, so a second job costs less than a fresh agent. [SESSIONS.md](SESSIONS.md) covers how to use them.
+- **Helper sessions** are other Claude sessions the maintainer opens and gives a name. Long batch jobs go to them, like the other READMEs or a library bug fix. A helper keeps its loaded skills between jobs, so a second job costs less than a fresh agent. [SESSIONS.md](SESSIONS.md) covers how to use them.
 - **Subagents** do research and review, always on Sonnet.
 
 ## Token budget

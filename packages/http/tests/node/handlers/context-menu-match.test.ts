@@ -1,9 +1,10 @@
-import { DispatchContext } from '@seedcord/core';
+import { DispatchContext } from '@seedcord/core/internal';
 import { isSeedcordError, SeedcordErrorCode } from '@seedcord/errors';
 import { ApplicationCommandType } from 'discord-api-types/v10';
 import { describe, expect, expectTypeOf, it } from 'vite-plus/test';
 
 import { MessageContextMenuHandler, UserContextMenuHandler } from '#handlers/interaction/ContextMenuHandler';
+import { built } from '#tests/helpers/built';
 
 import type { Core } from '#interfaces/Core';
 import type {
@@ -13,8 +14,6 @@ import type {
     APIUser,
     APIUserApplicationCommandInteraction
 } from 'discord-api-types/v10';
-
-const dispatch = new DispatchContext('test:probe');
 
 declare module '@seedcord/core' {
     interface UserContextMenuRegistry {
@@ -32,8 +31,8 @@ const core = {} as unknown as Core;
 
 const user: APIUser = { id: 'u1', username: 'dhruv', discriminator: '0', global_name: null, avatar: null };
 
-function userMenuEvent(name: string): APIUserApplicationCommandInteraction {
-    return {
+function userMenu(name: string): [APIUserApplicationCommandInteraction, Core, DispatchContext] {
+    const event = {
         application_id: 'app-1',
         id: 'int-1',
         token: 'tok',
@@ -41,15 +40,15 @@ function userMenuEvent(name: string): APIUserApplicationCommandInteraction {
         data: {
             id: 'c1',
             type: ApplicationCommandType.User,
-            name,
             target_id: 'u1',
             resolved: { users: { u1: user }, members: { u1: { nick: 'dee' } } }
         }
     } as unknown as APIUserApplicationCommandInteraction;
+    return [event, core, new DispatchContext('userContextMenu', name)];
 }
 
-function messageMenuEvent(name: string): APIMessageApplicationCommandInteraction {
-    return {
+function messageMenu(name: string): [APIMessageApplicationCommandInteraction, Core, DispatchContext] {
+    const event = {
         application_id: 'app-1',
         id: 'int-1',
         token: 'tok',
@@ -57,11 +56,11 @@ function messageMenuEvent(name: string): APIMessageApplicationCommandInteraction
         data: {
             id: 'c1',
             type: ApplicationCommandType.Message,
-            name,
             target_id: 'msg1',
             resolved: { messages: { msg1: { id: 'msg1' } } }
         }
     } as unknown as APIMessageApplicationCommandInteraction;
+    return [event, core, new DispatchContext('messageContextMenu', name)];
 }
 
 class Menu extends UserContextMenuHandler<'hb Profile' | 'hb Greet'> {
@@ -81,12 +80,17 @@ class Menu extends UserContextMenuHandler<'hb Profile' | 'hb Greet'> {
     }
 
     public runPartial(): Promise<string> {
-        const arms = {
+        const cases = {
             'hb Profile': (): string => 'profile',
             'hb Greet': (): string => 'greet'
         };
-        Reflect.deleteProperty(arms, 'hb Greet');
-        return this.match(arms);
+        Reflect.deleteProperty(cases, 'hb Greet');
+        return this.match(cases);
+    }
+
+    public async runMixed(): Promise<void> {
+        const result = await this.match({ 'hb Profile': () => 'profile', 'hb Greet': () => 1 });
+        expectTypeOf(result).toEqualTypeOf<string | number>();
     }
 
     public readName(): 'hb Profile' | 'hb Greet' {
@@ -97,6 +101,11 @@ class Menu extends UserContextMenuHandler<'hb Profile' | 'hb Greet'> {
 class Tools extends MessageContextMenuHandler<'hb Report' | 'hb Pin'> {
     public async execute(): Promise<void> {
         await Promise.resolve();
+    }
+
+    public async runMixed(): Promise<void> {
+        const result = await this.match({ 'hb Report': () => 'reported', 'hb Pin': () => 1 });
+        expectTypeOf(result).toEqualTypeOf<string | number>();
     }
 
     public run(): Promise<string> {
@@ -110,17 +119,17 @@ class Tools extends MessageContextMenuHandler<'hb Report' | 'hb Pin'> {
     }
 }
 
-class MissingArm extends UserContextMenuHandler<'hb Profile' | 'hb Greet'> {
+class MissingCase extends UserContextMenuHandler<'hb Profile' | 'hb Greet'> {
     public async execute(): Promise<void> {
-        // @ts-expect-error every name in the generic needs an arm.
+        // @ts-expect-error every name in the generic needs a case.
         await this.match({
             'hb Profile': () => undefined
         });
     }
 }
-void MissingArm;
+void MissingCase;
 
-class UnknownArm extends UserContextMenuHandler<'hb Profile'> {
+class UnknownCase extends UserContextMenuHandler<'hb Profile'> {
     public async execute(): Promise<void> {
         await this.match({
             'hb Profile': () => undefined,
@@ -129,31 +138,31 @@ class UnknownArm extends UserContextMenuHandler<'hb Profile'> {
         });
     }
 }
-void UnknownArm;
+void UnknownCase;
 
 describe('http context menu match', () => {
-    it('runs the arm for the selected command', async () => {
-        await expect(new Menu(userMenuEvent('hb Profile'), core, dispatch).run()).resolves.toBe('profile:dhruv:dee');
-        await expect(new Menu(userMenuEvent('hb Greet'), core, dispatch).run()).resolves.toBe('greet:dhruv');
+    it('runs the case for the selected command', async () => {
+        await expect(built(Menu, ...userMenu('hb Profile')).run()).resolves.toBe('profile:dhruv:dee');
+        await expect(built(Menu, ...userMenu('hb Greet')).run()).resolves.toBe('greet:dhruv');
     });
 
-    it('hands a message arm the clicked message', async () => {
-        await expect(new Tools(messageMenuEvent('hb Pin'), core, dispatch).run()).resolves.toBe('pinned msg1');
+    it('hands a message case the clicked message', async () => {
+        await expect(built(Tools, ...messageMenu('hb Pin')).run()).resolves.toBe('pinned msg1');
     });
 
-    it('throws when the selected command has no arm', async () => {
-        await expect(new Menu(userMenuEvent('hb Greet'), core, dispatch).runPartial()).rejects.toSatisfy(
-            (error: unknown) => isSeedcordError(error, 'SeedcordTypeError', SeedcordErrorCode.MatchArmMissing)
+    it('throws when the selected command lacks a case', async () => {
+        await expect(built(Menu, ...userMenu('hb Greet')).runPartial()).rejects.toSatisfy((error: unknown) =>
+            isSeedcordError(error, 'SeedcordTypeError', SeedcordErrorCode.MatchCaseMissing)
         );
     });
 
     it('throws for a command named after an Object.prototype member', async () => {
-        await expect(new Menu(userMenuEvent('constructor'), core, dispatch).run()).rejects.toSatisfy((error: unknown) =>
-            isSeedcordError(error, 'SeedcordTypeError', SeedcordErrorCode.MatchArmMissing)
+        await expect(built(Menu, ...userMenu('constructor')).run()).rejects.toSatisfy((error: unknown) =>
+            isSeedcordError(error, 'SeedcordTypeError', SeedcordErrorCode.MatchCaseMissing)
         );
     });
 
-    it('reads the selected command name without an arm', () => {
-        expect(new Menu(userMenuEvent('hb Greet'), core, dispatch).readName()).toBe('hb Greet');
+    it('reads the selected command name without a case', () => {
+        expect(built(Menu, ...userMenu('hb Greet')).readName()).toBe('hb Greet');
     });
 });

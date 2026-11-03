@@ -1,8 +1,13 @@
-import { describe, expect, it } from 'vite-plus/test';
+import { describe, expect, it, vi } from 'vite-plus/test';
 
 import { createTunnelCoordinator, missingCloudflaredHint } from '#commands/dev/tunnel/createTunnelCoordinator';
 import { TunnelCoordinator } from '#commands/dev/tunnel/TunnelCoordinator';
 import { silentLogger } from '#tests/silentLogger';
+
+import type { SeedcordInstance } from '@seedcord/types/internal';
+
+// justified: the coordinator hands the instance to the endpoint untouched
+const INSTANCE = {} as SeedcordInstance;
 
 describe('createTunnelCoordinator', () => {
     it('builds nothing when the tunnel is off', () => {
@@ -29,6 +34,20 @@ describe('createTunnelCoordinator', () => {
         );
 
         expect(coordinator).toBeInstanceOf(TunnelCoordinator);
+    });
+
+    it('warns that a quick tunnel needs the bot to listen on a port', async () => {
+        const warn = vi.fn();
+        const coordinator = createTunnelCoordinator(
+            { ...silentLogger, warn },
+            () => undefined,
+            { mode: 'quick' },
+            () => '/opt/homebrew/bin/cloudflared'
+        );
+
+        await coordinator?.onPort(false, INSTANCE);
+
+        expect(warn).toHaveBeenCalledExactlyOnceWith(expect.stringContaining('port: false'));
     });
 
     it('builds a coordinator for a configured url without looking for cloudflared', () => {

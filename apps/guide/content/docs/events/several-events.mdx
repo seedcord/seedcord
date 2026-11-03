@@ -5,7 +5,7 @@ description: Run one handler class for several discord.js events with this.match
 
 A member log might post when someone joins and again when someone changes their profile. Two handler classes would each need the posting code, so you'd pull it into a shared helper that both files import.
 
-One class can answer both instead. [`@RegisterEvent`](ref:gateway/RegisterEvent) takes as many event tuples as you pass it. [`this.match`](ref:gateway/EventHandler.match) runs the arm for the current event.
+One class can answer both instead. [`@RegisterEvent`](ref:gateway/RegisterEvent) takes as many event tuples as you pass it. [`this.match`](ref:gateway/EventHandler.match) runs the case for the current event.
 
 ```ts twoslash hovers title="src/events/MemberLog.ts"
 import { EventHandler, RegisterEvent } from '@seedcord/gateway';
@@ -35,17 +35,17 @@ export class MemberLog extends EventHandler<
 }
 ```
 
-You write the events twice. `MemberLog` passes `@RegisterEvent` one tuple for each event, then lists the same two events as a union in the `EventHandler` generic. If the decorator and the generic list different events, the class fails to compile. Both arms call the same private `post`, so you write the posting code once.
+You write the events twice. `MemberLog` passes `@RegisterEvent` one tuple for each event, then lists the same two events as a union in the `EventHandler` generic. If the decorator and the generic list different events, the class fails to compile. Both cases call the same private `post`, so you write the posting code once.
 
 <Callout type="warning">
 
-[`this.event`](ref:gateway/EventHandler.event) is `never` on a handler registered for several events, since the payload depends on the event's name. Read the payload through `this.match` there.
+[`this.event`](ref:gateway/EventHandler.event) is `never` on a handler registered for several events, since the payload depends on the event's name. Read the payload through `this.match` there. [`this.route`](ref:gateway/EventHandler.route) holds the event's name, for work that doesn't read the payload.
 
 </Callout>
 
-## What an arm receives
+## What a case receives
 
-An arm takes that event's own payload, spread into parameters. That's one member for `guildMemberAdd` and two for `guildMemberUpdate`, under the names discord.js uses.
+A case takes that event's own payload, spread into parameters. That's one member for `guildMemberAdd` and two for `guildMemberUpdate`, under the names discord.js uses.
 
 ```ts twoslash
 import { EventHandler, RegisterEvent } from '@seedcord/gateway';
@@ -73,9 +73,9 @@ class MemberLog extends EventHandler<
 
 `before` is `GuildMember | PartialGuildMember`. discord.js builds `before` from its cache. If discord.js hadn't cached the member, `before` is a partial whose `joinedAt`, `joinedTimestamp`, and `pending` are `null`.
 
-## Every arm is required
+## Every case is required
 
-Without `match`, you'd branch with a `switch` on the event name. Then you add a third event to the decorator and forget its case. That event then silently does nothing. `match` checks the arms against the union, so a missing arm fails to compile.
+Without `match`, you'd branch with a `switch` on the event name. Then you add a third event to the decorator and forget its case. That event then silently does nothing. `match` checks the cases against the union, so a missing case fails to compile.
 
 ```ts twoslash
 // @errors: 2345
@@ -100,11 +100,11 @@ export class MemberLog extends EventHandler<
 }
 ```
 
-The second line of that error says which arm is missing, here `[Events.GuildMemberUpdate]`. If you write an arm for an event that the generic doesn't list, that fails to compile too.
+The second line of that error says which case is missing, here `[Events.GuildMemberUpdate]`. If you write a case for an event that the generic doesn't list, that fails to compile too.
 
-## Arms return values
+## Cases return values
 
-Often only a small part differs between events, like the wording of a log line. `match` returns the value from the arm that ran, so each arm can return only the part that differs. The shared work runs once after `match`.
+Often only a small part differs between events, like the wording of a log line. `match` returns the value from the case that ran, so each case can return only the part that differs. The shared work runs once after `match`.
 
 ```ts twoslash
 import { EventHandler, RegisterEvent } from '@seedcord/gateway';
@@ -144,14 +144,6 @@ Each tuple carries its own options, so one event's handler can run once while th
 )
 ```
 
-Here the join arm runs for the first member and never again. The update arm runs every time.
-
-<Callout type="warning">
-
-seedcord records a `once` run against the whole class. If one class marks two different events as `once`, like `guildMemberAdd` and `guildMemberUpdate`, seedcord marks the class as run when it processes either event. The other event's arm then won't run until your bot restarts. Put each run-once event in its own class.
-
-An arm on that class without `once` still runs every time. Another class registered for the same event keeps its own record and follows its own `frequency`.
-
-</Callout>
+Here the join case runs for the first member and never again. The update case runs every time.
 
 When several handlers need the same check before they run, like skipping muted members, an [event middleware](/events/middleware) runs it once ahead of all of them.

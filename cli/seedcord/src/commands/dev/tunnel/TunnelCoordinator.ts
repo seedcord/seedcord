@@ -2,23 +2,33 @@ import { paint } from '@seedcord/errors';
 
 import { formatUptime } from '#ui/format.ts';
 
-import type { CloudflaredTunnel } from './CloudflaredTunnel';
 import type { InteractionsEndpoint } from './InteractionsEndpoint';
 import type { ILogger } from '@seedcord/types';
 import type { SeedcordInstance } from '@seedcord/types/internal';
 
-const PASTE_HINT = 'The tunnel is still up, so try pasting that URL into the dashboard.';
-const RESTART_HINT = 'Restart for a fresh hostname, or set `tunnel` to an https URL you already serve.';
+interface CoordinatorTunnel {
+    open(signal: AbortSignal, onResolving?: () => void): Promise<string>;
+    stop(): void;
+}
 
-export type CoordinatorTunnel = Pick<CloudflaredTunnel, 'open' | 'stop'>;
+type TunnelSetup =
+    | {
+          readonly opening: string;
+          readonly makeTunnel: (onLost: () => void) => CoordinatorTunnel;
+      }
+    | { readonly warning: string };
+
+export interface TunnelKind {
+    prepare(port: number | false): TunnelSetup;
+    failureHint(tunnelStopped: boolean): string | undefined;
+    readonly clearsEndpointOnStop: boolean;
+}
 
 export type TunnelPhase = 'opening' | 'resolving' | 'registering';
 export type TunnelStatus = TunnelPhase | 'live' | 'lost';
 
 export interface CoordinatorDeps {
-    readonly makeTunnel: (onLost: () => void) => CoordinatorTunnel;
-    // a quick hostname lasts only as long as this process, so quit clears the endpoint
-    readonly kind: 'quick' | 'configured';
+    readonly kind: TunnelKind;
     readonly endpoint: Pick<InteractionsEndpoint, 'set' | 'clear' | 'reuse'>;
     readonly onStatus: (status: TunnelStatus | null) => void;
     readonly logger: ILogger;
@@ -29,15 +39,13 @@ function superseded(attempt: AbortController): boolean {
     return attempt.signal.aborted;
 }
 
-function opening(kind: CoordinatorDeps['kind']): string {
-    return kind === 'quick' ? 'Requesting a cloudflared tunnel to port' : 'Checking if your tunnel reaches port';
-}
-
 interface LiveTunnel {
-    readonly port: number;
+    readonly port: number | false;
     readonly url: string;
     readonly attempt: AbortController;
 }
+
+export const TUNNEL_FAILED = 'Tunnel setup failed, so the bot runs without a public endpoint';
 
 function elapsedSince(startedAt: number): () => string {
     return () => paint.mute(`+${formatUptime(Date.now() - startedAt)}`);
@@ -49,21 +57,28 @@ export class TunnelCoordinator {
 
     constructor(private readonly deps: CoordinatorDeps) {}
 
-    public async onPort(port: number, instance: SeedcordInstance): Promise<void> {
+    public async onPort(port: number | false, instance: SeedcordInstance): Promise<void> {
         if (this.live?.port === port) return this.registerAgain(this.live, instance);
+
+        const setup = this.deps.kind.prepare(port);
+        if ('warning' in setup) {
+            await this.stop();
+            this.deps.logger.warn(setup.warning);
+            return;
+        }
 
         this.live = undefined;
         const attempt = this.begin();
         const since = elapsedSince(Date.now());
-        const tunnel = this.deps.makeTunnel(() => this.reportLost(attempt));
+        const tunnel = setup.makeTunnel(() => this.reportLost(attempt));
         // a later onPort has no handle on this tunnel. the abort is the only way back to stop it.
         attempt.signal.addEventListener('abort', () => tunnel.stop(), { once: true });
         let patched = false;
 
         try {
             this.deps.onStatus('opening');
-            this.deps.logger.info(`${opening(this.deps.kind)} ${paint.sky.bold(String(port))}`);
-            const url = await tunnel.open(attempt.signal, port, () => this.deps.onStatus('resolving'));
+            this.deps.logger.info(setup.opening);
+            const url = await tunnel.open(attempt.signal, () => this.deps.onStatus('resolving'));
             if (superseded(attempt)) return;
             this.deps.logger.info(`Reachable at ${paint.sky.bold(url)} ${since()}`);
 
@@ -108,9 +123,9 @@ export class TunnelCoordinator {
 
     private reportFailure(error: unknown, patched: boolean): void {
         this.deps.onStatus(null);
-        this.deps.logger.error('Tunnel setup failed, the bot runs without a public endpoint', error);
-        // patched means the abort above stopped the tunnel. the paste hint only holds while it is up.
-        if (this.deps.kind === 'quick') this.deps.logger.info(patched ? RESTART_HINT : PASTE_HINT);
+        this.deps.logger.error(TUNNEL_FAILED, error);
+        const hint = this.deps.kind.failureHint(patched);
+        if (hint) this.deps.logger.info(hint);
     }
 
     public async stop(): Promise<void> {
@@ -120,7 +135,7 @@ export class TunnelCoordinator {
         this.current.abort();
         this.current = undefined;
         this.deps.onStatus(null);
-        if (this.deps.kind === 'configured') return;
+        if (!this.deps.kind.clearsEndpointOnStop) return;
 
         try {
             await this.deps.endpoint.clear();

@@ -1,15 +1,9 @@
+import { BRAND_COLORS } from '@seedcord/brand';
 import chalk from 'chalk';
 
 import { displayPath } from './displayPath';
 
 import type { ColorSupportLevel } from 'chalk';
-
-// @seedcord/ui carries the same three for the web
-export const BRAND = {
-    flesh: '#f04e36',
-    rind: '#6fab49',
-    pith: '#f8f6e8'
-} as const;
 
 // chalk turns color on only for a chromium user agent outside node
 export function setColorLevel(level: ColorSupportLevel): void {
@@ -44,13 +38,13 @@ export const paint = {
     },
     // brand marks
     get flesh() {
-        return chalk.hex(BRAND.flesh);
+        return chalk.hex(BRAND_COLORS.flesh);
     },
     get rind() {
-        return chalk.hex(BRAND.rind);
+        return chalk.hex(BRAND_COLORS.rind);
     },
     get pith() {
-        return chalk.hex(BRAND.pith);
+        return chalk.hex(BRAND_COLORS.pith);
     },
     // context around the subject
     mute: chalk.dim,

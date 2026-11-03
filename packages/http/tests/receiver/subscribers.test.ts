@@ -11,7 +11,7 @@ import type { CoreBase, SubscriptionData } from '@seedcord/core';
 
 const ran: string[] = [];
 
-@Subscribe('unknownException')
+@Subscribe(['unknownException'])
 class EdgeReporter extends Subscriber<'unknownException', CoreBase> {
     execute(): Promise<void> {
         ran.push('edge');
@@ -19,7 +19,7 @@ class EdgeReporter extends Subscriber<'unknownException', CoreBase> {
     }
 }
 
-@Subscribe('unknownException')
+@Subscribe(['unknownException'])
 @WebhookUrl('EDGE_UNSET_WEBHOOK_URL')
 class UnsetReporter extends WebhookLog<'unknownException', CoreBase> {
     report(): { components: [] } {
@@ -27,7 +27,7 @@ class UnsetReporter extends WebhookLog<'unknownException', CoreBase> {
     }
 }
 
-@Subscribe('unknownException')
+@Subscribe(['unknownException'])
 @WebhookUrl('EDGE_BAD_WEBHOOK_URL')
 class MalformedReporter extends WebhookLog<'unknownException', CoreBase> {
     report(): { components: [] } {

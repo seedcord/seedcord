@@ -3,6 +3,7 @@ import { SeedcordError, SeedcordTypeError } from '@seedcord/errors/internal';
 import { TypedEventEmitter } from '@seedcord/event-emitter';
 import { Logger } from '@seedcord/logger';
 
+import { OnceTracker } from '#src/dispatch/OnceTracker';
 import { SubscribeMetadataKey } from '#src/metadataKeys';
 
 import { WebhookLog } from './bases/WebhookLog';
@@ -24,13 +25,12 @@ import type {
 import type { EventFrequency, TypedConstructor } from '@seedcord/types';
 import type { Constructor } from 'type-fest';
 
-// typed construct parameters would exclude every subscriber that narrows them
+// structural because Subscriber is invariant in its keys
 /** @internal */
-export type StoredSubscriberCtor = Constructor<Subscriber<SubscriptionKey, CoreBase>, never[]>;
+export type StoredSubscriberCtor = Constructor<{ execute(): Promise<void> }, never[]>;
 
-/** @internal */
-export interface SubscriberRegistration {
-    readonly keys: readonly SubscriptionKey[];
+interface SubscriberRegistration {
+    readonly key: SubscriptionKey;
     readonly frequency: EventFrequency;
     readonly ctor: StoredSubscriberCtor;
 }
@@ -48,7 +48,7 @@ export class Bus extends TypedEventEmitter<SubscriptionTuples> {
     readonly [loggerSlot]: Logger = this.logger;
 
     private readonly subscribersMap = new Map<SubscriptionKey, SubscriberRegistration[]>();
-    private readonly executedOnce = new Set<SubscriberRegistration>();
+    private readonly onceRuns = new OnceTracker();
     // url -> env keys
     private readonly webhookProbes = new Map<string, string[]>();
 
@@ -58,19 +58,18 @@ export class Bus extends TypedEventEmitter<SubscriptionTuples> {
 
     /** @internal keep this inside start(). a bad webhook url thrown outside it never resets the singleton guard */
     public [RegisterDefaults](): void {
-        this[RegisterSubscriber](registrationFor(UnknownException));
-        this[RegisterSubscriber](registrationFor(HandledException));
+        for (const ctor of [UnknownException, HandledException]) this[RegisterSubscriber](ctor);
     }
 
     /** @internal */
-    public [RegisterSubscriber](registration: SubscriberRegistration): void {
-        if (!this.probeWebhook(registration.ctor)) return;
+    public [RegisterSubscriber](ctor: StoredSubscriberCtor): void {
+        if (!this.probeWebhook(ctor)) return;
 
-        for (const key of registration.keys) {
-            let registrations = this.subscribersMap.get(key);
+        for (const registration of registrationsFor(ctor)) {
+            let registrations = this.subscribersMap.get(registration.key);
             if (!registrations) {
                 registrations = [];
-                this.subscribersMap.set(key, registrations);
+                this.subscribersMap.set(registration.key, registrations);
             }
             registrations.push(registration);
         }
@@ -84,15 +83,14 @@ export class Bus extends TypedEventEmitter<SubscriptionTuples> {
             const index = registrations.findIndex((entry) => entry.ctor === ctor);
             if (index !== -1) registrations.splice(index, 1);
         }
-        // a re-registered subscriber runs again because executedOnce is keyed by registration identity
     }
 
     /** @internal */
     public get [RegisteredCount](): number {
-        return [...this.subscribersMap.values()].reduce((total, entries) => total + entries.length, 0);
+        return new Set([...this.subscribersMap.values()].flat().map((entry) => entry.ctor)).size;
     }
 
-    /** @internal registration already dropped every reporter with no url set */
+    /** @internal registration already skipped every reporter with no url set */
     public async [VerifyWebhooks](): Promise<void> {
         const missing: string[] = [];
         await Promise.all(
@@ -105,7 +103,7 @@ export class Bus extends TypedEventEmitter<SubscriptionTuples> {
                     );
             })
         );
-        // collected first so one throw names every missing webhook
+        // collected first so one throw lists every missing webhook
         if (missing.length > 0) throw new SeedcordError(SeedcordErrorCode.ConfigWebhookNotFound, [missing.join(', ')]);
     }
 
@@ -116,7 +114,7 @@ export class Bus extends TypedEventEmitter<SubscriptionTuples> {
         const envKey = WebhookLog.envKeyOf(ctor);
         const url = WebhookLog.urlOf(envKey);
         if (url === null) {
-            this.logger.warn(`${paint.sky.bold(ctor.name)} disabled, ${paint.amber.bold(envKey)} is not set`);
+            this.logger.warn(`${paint.sky.bold(ctor.name)} is off because ${paint.amber.bold(envKey)} is not set`);
             return false;
         }
         const envKeys = this.webhookProbes.get(url) ?? [];
@@ -188,11 +186,8 @@ export class Bus extends TypedEventEmitter<SubscriptionTuples> {
         if (!registrations) return;
 
         const pending = registrations.reduce<Promise<void>[]>((acc, entry) => {
-            if (entry.frequency === 'once') {
-                if (this.executedOnce.has(entry)) return acc;
-                // mark before awaiting, so a re-entrant publish can't run a 'once' subscriber twice mid-flight
-                this.executedOnce.add(entry);
-            }
+            // claimed before awaiting so a re-entrant publish can't run it twice mid-flight
+            if (!this.onceRuns.claim(entry, subscriberName)) return acc;
             acc.push(this.runSubscriber(entry, subscriberName, data));
             return acc;
         }, []);
@@ -208,10 +203,10 @@ export class Bus extends TypedEventEmitter<SubscriptionTuples> {
         // named outside the try so the catch can say which subscriber threw
         let name = '<unresolved>';
         try {
-            // data matches this ctor's payload arm because the registration keyed it to its subscriptions
+            // data matches this ctor's payload type because the registration keyed it to its subscriptions
             const Ctor = entry.ctor as TypedConstructor<typeof Subscriber>;
             name = Ctor.name;
-            await new Ctor(data, this.core).execute();
+            await new Ctor(data, this.core, subscriberName).execute();
         } catch (err) {
             this.logger.error(
                 `Error in subscriber ${paint.mute(String(subscriberName))} handler ${paint.sky.bold(name)}:`,
@@ -222,10 +217,9 @@ export class Bus extends TypedEventEmitter<SubscriptionTuples> {
 }
 
 // every caller already checked that the Subscribe metadata is there
-/** @internal */
-export function registrationFor(ctor: StoredSubscriberCtor): SubscriberRegistration {
-    const meta = Reflect.getMetadata(SubscribeMetadataKey, ctor) as SubscribeMetadataEntry;
-    return { keys: [meta.subscriber], frequency: meta.frequency ?? 'on', ctor };
+export function registrationsFor(ctor: StoredSubscriberCtor): SubscriberRegistration[] {
+    const entries = Reflect.getMetadata(SubscribeMetadataKey, ctor) as SubscribeMetadataEntry[];
+    return entries.map(({ key, frequency }) => ({ key, frequency, ctor }));
 }
 
 /** @internal */

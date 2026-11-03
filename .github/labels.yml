@@ -18,9 +18,6 @@
   description: typed customId codec
 - name: '📦 errors'
   color: 6ebc62
-- name: '📦 rate-limiter'
-  color: 62bc6a
-  description: in-memory rate limiter and key helper
 - name: '📦 event-emitter'
   color: 62bcaa
   description: typed cross-runtime event emitter
@@ -50,6 +47,9 @@
 - name: '📦 eslint-utils'
   color: 6278bc
   description: Internal shared utilities for the eslint plugins
+- name: '📦 brand'
+  color: 6278bc
+  description: Internal brand colors and site addresses
 - name: '📦 cli-prompts'
   color: 6278bc
   description: Internal Ink prompts both CLIs bundle

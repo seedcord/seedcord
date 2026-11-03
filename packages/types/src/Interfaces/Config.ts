@@ -2,8 +2,8 @@ import type { BotColor } from '#src/Types/Colors';
 import type { CustomIdMatcher } from './CustomId';
 import type { EmojiConfig } from './EmojiMap';
 import type { ErrorsConfig } from './Errors';
+import type { KvDriver, KvTypes } from './Kv';
 import type { LoggerConfig } from './LogSink';
-import type { Store } from './Store';
 
 // interactions, commands, services, bus subscribers
 
@@ -135,8 +135,27 @@ export interface NotificationsConfig {
     developerUsername?: string;
 }
 
+type DisposableKvDriver = KvDriver & (Disposable | AsyncDisposable);
+
+interface KvField {
+    /**
+     * Where seedcord, plugins, and your handlers keep state. The default `MemoryDriver` loses
+     * everything on restart. Pass a `KeyvDriver`, an `UnstorageDriver`, or your own driver to keep it.
+     */
+    kv?: DisposableKvDriver;
+}
+
+interface RegisteredKvField<TDriver extends DisposableKvDriver> {
+    /** The driver you registered in {@link KvTypes}. */
+    kv: TDriver;
+}
+
+type ConfigKv = KvTypes extends { driver: infer TDriver extends DisposableKvDriver }
+    ? RegisteredKvField<TDriver>
+    : KvField;
+
 /** Main configuration object for Seedcord bot */
-export interface Config {
+export interface Config extends ConfigKv {
     bot: BotConfig;
     subscribers: SubscribersConfig;
 
@@ -161,12 +180,6 @@ export interface Config {
      * User ids the `OwnerOnly` gate treats as bot owners.
      */
     ownerIds?: string[];
-
-    /**
-     * The in-memory default resets on restart and is per-isolate on serverless. Pass a durable store
-     * to keep framework state across restarts and isolates.
-     */
-    store?: Store<'charge'>;
 
     /**
      * Logging level, sinks, and per-channel overrides. Omitted fields keep the transport's defaults.

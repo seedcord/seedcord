@@ -1,10 +1,11 @@
+import { PRODUCTION_SITES } from '@seedcord/brand';
 import { PREVIEW_EMOJI, SITE_ACCENT } from '@seedcord/ui/LinkPreview';
 import { readTimeLabel } from '@seedcord/ui/readingTime';
 
 import { BLOG_DESCRIPTION, BLOG_NAME } from '#lib/blog/about.ts';
 import { joinList } from '#lib/blog/summary.ts';
 import { BLOG_PATH, twinPath } from '#lib/blog/paths.ts';
-import { canonicalUrl, CDN_URL, DOCS_URL, GUIDE_URL, REPO_URL, SITE_NAME, SITE_URL } from '#lib/site.ts';
+import { canonicalUrl, CDN_URL, GUIDE_URL, REPO_URL, SITE_NAME, SITE_URL } from '#lib/site.ts';
 
 import type { PostSummary } from '#lib/blog/summary.ts';
 import type { PreviewCardProps, PreviewLink } from '@seedcord/ui/LinkPreview';
@@ -14,7 +15,7 @@ const THUMBNAIL = { url: `${CDN_URL}/assets/logo.png`, description: 'the seedcor
 const SITE_LINKS: readonly PreviewLink[] = [
     { emoji: PREVIEW_EMOJI.home, label: 'Home', url: SITE_URL },
     { emoji: PREVIEW_EMOJI.guide, label: 'Guide', url: GUIDE_URL },
-    { emoji: PREVIEW_EMOJI.docs, label: 'Docs', url: DOCS_URL },
+    { emoji: PREVIEW_EMOJI.docs, label: 'Docs', url: PRODUCTION_SITES.docs.url },
     { emoji: PREVIEW_EMOJI.github, label: 'GitHub', url: REPO_URL }
 ];
 

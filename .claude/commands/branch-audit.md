@@ -48,6 +48,7 @@ Treat those files as the rules. Do not substitute your own taste where they alre
     - More things that the skill mentions
 3. Comments per code-commenting-guidelines, and all prose (comments, README, changesets, CLI output text, error messages) per writing-voice and guide-voice. Apply them at their strictest.
     - Any comments that could be removed by using better naming, refactoring, or code structure.
+    - Any comments that are justifying bad code or design choices. The bad code should be refactored from the root rather than explained away.
 4. Tests per the tdd skill. Specifically hunt for:
     - bogus tests that would pass even if the behavior broke
     - tests that don't check behavior
@@ -61,6 +62,7 @@ Treat those files as the rules. Do not substitute your own taste where they alre
 7. Exports: every export added or changed, whether anything outside its file uses it, whether it belongs on the public surface, and whether the package.json exports map and README agree.
 8. Code that's staggered across functions that could be consolidated for clarity and maintainability by refactoring into an OOP-based design.
 9. Refactors: if the changes read as a set of patches, list each patch with its file:line and propose the refactor that would replace them, with its scope.
+    - A member handled outside the structure its siblings use: a flag, a field, a branch, or a copied rule that gives one item a behavior the others get from the existing model (a phase, a registry, a pipeline). Name the structure it belongs in.
 
 ## Output
 

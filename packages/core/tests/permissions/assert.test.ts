@@ -1,7 +1,7 @@
 import { PermissionFlagsBits } from 'discord-api-types/v10';
 import { describe, expect, it } from 'vite-plus/test';
 
-import { HasDangerousPermissions, MissingPermissions } from '#notices/index';
+import { HasPresentPermissions, MissingPermissions } from '#notices/index';
 import { assertPermissions } from '#src/permissions/assert';
 
 const { BanMembers, KickMembers, Administrator, ManageRoles } = PermissionFlagsBits;
@@ -33,7 +33,7 @@ describe('assertPermissions', () => {
         ).not.toThrow();
     });
 
-    it('refuses through the inverse arm when a scope bit is present', () => {
+    it('refuses through the inverse check when a scope bit is present', () => {
         expect(() =>
             assertPermissions({
                 subject: '<@&2>',
@@ -41,10 +41,10 @@ describe('assertPermissions', () => {
                 scope: [Administrator],
                 inverse: true
             })
-        ).toThrow(HasDangerousPermissions);
+        ).toThrow(HasPresentPermissions);
     });
 
-    it('passes the inverse arm when no scope bit is present', () => {
+    it('passes the inverse check when no scope bit is present', () => {
         expect(() =>
             assertPermissions({
                 subject: '<@&2>',
@@ -55,8 +55,8 @@ describe('assertPermissions', () => {
         ).not.toThrow();
     });
 
-    // an administrator effectively holds every permission, so the inverse arm reports them all
-    it('reports every scope bit on the inverse arm for an administrator', () => {
+    // an administrator effectively holds every permission, so the inverse check reports them all
+    it('reports every scope bit on the inverse check for an administrator', () => {
         expect(() =>
             assertPermissions({
                 subject: '<@&2>',
@@ -64,19 +64,42 @@ describe('assertPermissions', () => {
                 scope: [BanMembers],
                 inverse: true
             })
-        ).toThrow(HasDangerousPermissions);
+        ).toThrow(HasPresentPermissions);
     });
 
-    it('uses a supplied notice over the default', () => {
-        class Custom extends MissingPermissions {}
+    it('refuses with the supplied notice with and without inverse, built with the subject and the refused names', () => {
+        class Custom extends MissingPermissions {
+            public constructor(
+                public readonly subject: string | null,
+                public readonly names: readonly string[]
+            ) {
+                super(subject, names);
+            }
+        }
+        const refusalOf = (check: Parameters<typeof assertPermissions>[0]): unknown => {
+            try {
+                assertPermissions(check);
+            } catch (caught) {
+                return caught;
+            }
+            return expect.unreachable('expected a refusal');
+        };
 
-        expect(() =>
-            assertPermissions({
-                subject: '<@1>',
-                permissions: 0n,
-                scope: [BanMembers],
-                missingNotice: Custom
-            })
-        ).toThrow(Custom);
+        const missing = refusalOf({
+            subject: '<@1>',
+            permissions: bits(KickMembers),
+            scope: [BanMembers, KickMembers],
+            notice: Custom
+        });
+        const present = refusalOf({
+            subject: '<@&2>',
+            permissions: bits(KickMembers),
+            scope: [BanMembers, KickMembers],
+            inverse: true,
+            notice: Custom
+        });
+
+        expect(missing).toMatchObject({ subject: '<@1>', names: ['Ban Members'] });
+        expect(present).toMatchObject({ subject: '<@&2>', names: ['Kick Members'] });
     });
 });

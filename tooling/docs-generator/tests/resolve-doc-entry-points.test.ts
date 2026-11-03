@@ -29,7 +29,7 @@ beforeEach(async () => {
 });
 
 describe('resolveDocEntryPoints', () => {
-    it('names the package and the subpath when a declared entry is not built', async () => {
+    it('reports the package and the subpath when a declared entry is not built', async () => {
         const manifest = manifestWith({ '.': { import: { types: './dist/index.d.mts' } } });
 
         await expect(resolveDocEntryPoints(packageDir, manifest)).rejects.toThrow(

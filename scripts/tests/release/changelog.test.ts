@@ -3,7 +3,7 @@ import { describe, expect, it } from 'vite-plus/test';
 import changelog from '#src/release/changelog';
 
 describe('changelog module', () => {
-    it('throws naming the missing repo option', () => {
+    it('throws with the missing repo option in the message', () => {
         expect(() => changelog.getReleaseLine({ summary: 'A thing changed.' }, 'patch', null)).toThrow(/repo/);
     });
 

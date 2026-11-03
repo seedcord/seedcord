@@ -1,4 +1,4 @@
-import { DispatchContext } from '@seedcord/core';
+import { DispatchContext } from '@seedcord/core/internal';
 import { LoggerChannelRegistry } from '@seedcord/logger';
 import { beforeEach, describe, expect, it } from 'vite-plus/test';
 
@@ -7,6 +7,7 @@ import { EventMiddleware } from '#handlers/event/EventMiddleware';
 import { AutocompleteHandler } from '#handlers/interaction/AutocompleteHandler';
 import { InteractionMiddleware } from '#handlers/interaction/InteractionMiddleware';
 import { SlashHandler } from '#handlers/interaction/SlashHandler';
+import { built } from '#tests/utils/built';
 import { mockInteraction } from '#tests/utils/senderMock';
 
 import type { ReplySender } from '#bot/ReplySender';
@@ -15,7 +16,7 @@ import type { InteractionKind } from '@seedcord/core';
 import type { ILogSink, LogRecord } from '@seedcord/types';
 import type { AutocompleteInteraction, ChatInputCommandInteraction, ClientEvents } from 'discord.js';
 
-const dispatch = new DispatchContext('test:probe');
+const dispatch = new DispatchContext('slash', 'probe');
 
 class FakeSink implements ILogSink {
     public readonly records: LogRecord[] = [];
@@ -75,7 +76,7 @@ class Ban extends SlashHandler<never> {
 
 describe('gateway handler log channels', () => {
     it('puts both event bases on the events channel', async () => {
-        const dispatch = new DispatchContext('event:messageCreate');
+        const dispatch = new DispatchContext('event', 'messageCreate');
         await new Greet(messagePayload, core, dispatch).execute();
         await new Filter(messagePayload, core, dispatch).execute();
 
@@ -89,12 +90,12 @@ describe('gateway handler log channels', () => {
         await new Guard(
             interaction as unknown as ChatInputCommandInteraction,
             core,
-            new DispatchContext('slash:ban'),
+            new DispatchContext('slash', 'ban'),
             // justified: this probe only reads the logger channel, no reply member runs
             {} as ReplySender
         ).execute();
-        await new Suggest(interaction as unknown as AutocompleteInteraction<undefined>, core, dispatch).execute();
-        await new Ban(interaction as unknown as ChatInputCommandInteraction<undefined>, core, dispatch).execute();
+        await built(Suggest, interaction as unknown as AutocompleteInteraction<undefined>, core, dispatch).execute();
+        await built(Ban, interaction as unknown as ChatInputCommandInteraction<undefined>, core, dispatch).execute();
 
         expect(sink.records.map((record) => record.channel)).toEqual(['interactions', 'interactions', 'interactions']);
     });

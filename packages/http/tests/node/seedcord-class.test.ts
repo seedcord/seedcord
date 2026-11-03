@@ -1,5 +1,6 @@
 import path from 'node:path';
 
+import { MemoryDriver } from '@seedcord/core';
 import { ShutdownPhase, shutdownOf } from '@seedcord/core/node/internal';
 import { describe, expect, it } from 'vite-plus/test';
 
@@ -35,6 +36,13 @@ describe('http Seedcord class', () => {
         const response = await postSigned(host, signer, JSON.stringify(slashPayload('ping')));
 
         expect(response.status).toBe(202);
+    });
+
+    it('backs core.kv with config.kv', async () => {
+        const driver = new MemoryDriver();
+        await using host = new Seedcord({ ...config(), kv: driver });
+
+        expect(host.kv.driver).toBe(driver);
     });
 
     it('shutdown closes the server', async () => {

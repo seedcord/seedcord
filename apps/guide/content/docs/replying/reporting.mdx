@@ -51,7 +51,7 @@ The `unknownException` card shows the guild and the user, then the uuid with the
 An unset variable disables its reporter and logs one line.
 
 ```txt output
-HandledException disabled, HANDLED_EXCEPTION_WEBHOOK_URL is not set
+HandledException is off because HANDLED_EXCEPTION_WEBHOOK_URL is not set
 ```
 
 <Callout type="warning">
@@ -86,7 +86,7 @@ class MirrorCard extends BuilderComponent<'container'> {
 }
 // ---cut-end---
 
-@Subscribe('handledException')
+@Subscribe(['handledException'])
 @WebhookUrl('FAULT_MIRROR_WEBHOOK_URL')
 export class FaultMirror extends WebhookLog<'handledException'> {
     public report(): WebhookReport {
@@ -173,7 +173,7 @@ class MirrorCard extends BuilderComponent<'container'> {
     }
 }
 // ---cut---
-@Subscribe('handledException')
+@Subscribe(['handledException'])
 @WebhookUrl('FAULT_MIRROR_WEBHOOK_URL')
 export class FaultMirror extends WebhookLog<'handledException'> {
     protected override throttleKey(): string {

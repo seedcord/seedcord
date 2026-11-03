@@ -1,9 +1,10 @@
-import { DispatchContext } from '@seedcord/core';
+import { DispatchContext } from '@seedcord/core/internal';
 import { LoggerChannelRegistry } from '@seedcord/logger';
 import { beforeEach, describe, expect, it } from 'vite-plus/test';
 
 import { AutocompleteHandler } from '#handlers/interaction/AutocompleteHandler';
 import { SlashHandler } from '#handlers/interaction/SlashHandler';
+import { built } from '#tests/helpers/built';
 
 import type { Core } from '#interfaces/Core';
 import type { ILogSink, LogRecord } from '@seedcord/types';
@@ -12,7 +13,7 @@ import type {
     APIChatInputApplicationCommandInteraction
 } from 'discord-api-types/v10';
 
-const dispatch = new DispatchContext('test:probe');
+const dispatch = new DispatchContext('slash', 'probe');
 
 class FakeSink implements ILogSink {
     public readonly records: LogRecord[] = [];
@@ -52,8 +53,13 @@ class Suggest extends AutocompleteHandler<never> {
 describe('http handler log channels', () => {
     it('puts both interaction bases on the interactions channel', async () => {
         // justified: the fixture carries only the fields these bases read
-        await new Ban(payload as unknown as APIChatInputApplicationCommandInteraction, core, dispatch).execute();
-        await new Suggest(payload as unknown as APIApplicationCommandAutocompleteInteraction, core, dispatch).execute();
+        await built(Ban, payload as unknown as APIChatInputApplicationCommandInteraction, core, dispatch).execute();
+        await built(
+            Suggest,
+            payload as unknown as APIApplicationCommandAutocompleteInteraction,
+            core,
+            dispatch
+        ).execute();
 
         expect(sink.records.map((record) => record.channel)).toEqual(['interactions', 'interactions']);
     });

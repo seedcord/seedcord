@@ -1,8 +1,8 @@
-import { render, screen, waitFor } from '@testing-library/react';
+import { act, render, screen, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { describe, expect, it, vi } from 'vite-plus/test';
 
-import { CopyAnchorButton } from '#src/CopyAnchorButton.tsx';
+import { clickCopyAnchor, CopyAnchorButton } from '#src/CopyAnchorButton.tsx';
 
 function stubClipboard(): ReturnType<typeof vi.fn> {
     const writeText = vi.fn(async () => {});
@@ -31,5 +31,26 @@ describe('CopyAnchorButton', () => {
         await waitFor(() => {
             expect(writeText).toHaveBeenCalledWith(`${globalThis.location.origin}/`);
         });
+    });
+
+    it('clicks the button for an anchor, or the page button for none', async () => {
+        const writeText = stubClipboard();
+        render(
+            <>
+                <CopyAnchorButton label="Commands" />
+                <CopyAnchorButton anchorId="options" label="Options" />
+            </>
+        );
+
+        act(() => clickCopyAnchor('options'));
+        act(() => clickCopyAnchor(undefined));
+
+        await waitFor(() => {
+            expect(writeText.mock.calls).toEqual([
+                [`${globalThis.location.origin}/#options`],
+                [`${globalThis.location.origin}/`]
+            ]);
+        });
+        expect(screen.getByRole('button', { name: 'Copied link to Options' })).toBeInTheDocument();
     });
 });

@@ -1,7 +1,7 @@
-import { SiteAddress } from '@seedcord/ui';
+import { BRAND_COLORS } from '@seedcord/brand';
+import { SiteAddress } from '@seedcord/brand';
 import { OgPageCard } from '@seedcord/ui/OgCard';
 import { loadOgFonts, OG_SIZE } from '@seedcord/ui/og';
-import { BRAND } from '@seedcord/ui/palette';
 import { ImageResponse } from 'takumi-js/response';
 
 import { BLOG_PATH } from '#lib/blog/paths.ts';
@@ -20,7 +20,7 @@ export async function GET(_request: Request, route: PostParams): Promise<ImageRe
     return new ImageResponse(
         <OgPageCard
             pill={OG_PILL}
-            accent={BRAND.seedDark}
+            accent={BRAND_COLORS.seedDark}
             meta={ogMeta(post)}
             name={post.title}
             description={post.description}

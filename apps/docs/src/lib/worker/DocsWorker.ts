@@ -1,7 +1,7 @@
+import { PRODUCTION_SITES } from '@seedcord/brand';
 import { DEFAULT_VERSION, replacementVersion, validateIndex } from '@seedcord/docs-engine/client';
 import { agentLinkHeader } from '@seedcord/ui/agents';
 import { PageAsset, TWIN } from '@seedcord/ui/PageAsset';
-import { DOCS } from '@seedcord/ui/sites';
 
 import type { IndexJson } from '@seedcord/docs-engine/client';
 
@@ -16,7 +16,7 @@ export interface DocsBucket {
 
 const PERMANENT_REDIRECT = 308;
 const NOT_FOUND = 404;
-const PRODUCTION_HOST = new URL(DOCS.url).hostname;
+const PRODUCTION_HOST = new URL(PRODUCTION_SITES.docs.url).hostname;
 
 const HTML = 'text/html; charset=utf-8';
 
@@ -79,14 +79,15 @@ export class DocsWorker {
 
     async respond(request: Request): Promise<Response> {
         const url = new URL(request.url);
-        if (!url.pathname.startsWith(DOCS.path)) return this.notFound(url);
-        const below = url.pathname.slice(DOCS.path.length);
+        if (!url.pathname.startsWith(PRODUCTION_SITES.docs.path)) return this.notFound(url);
+        const below = url.pathname.slice(PRODUCTION_SITES.docs.path.length);
 
         // next fetches the root's navigation payload from /docs.txt
         if (below === '.txt') return this.serve(new DocsPath('index.txt'), url);
         // the zone route seedcord.org/docs* also matches /docsfoo
         if (below !== '' && !below.startsWith('/')) return this.notFound(url);
-        if (below.endsWith('/')) return DocsWorker.redirect(`${DOCS.path}${below.replace(/\/+$/, '')}${url.search}`);
+        if (below.endsWith('/'))
+            return DocsWorker.redirect(`${PRODUCTION_SITES.docs.path}${below.replace(/\/+$/, '')}${url.search}`);
 
         return this.serve(new DocsPath(below.slice(1)), url);
     }
@@ -101,7 +102,7 @@ export class DocsWorker {
             'cache-control': path.key.startsWith(HASHED_BUILD_FILES) ? IMMUTABLE : SHORT_LIVED
         });
         if (path.contentType === HTML) {
-            const twin = path.isPackagePage ? `${DOCS.path}${TWIN.publicPath(path.path)}` : undefined;
+            const twin = path.isPackagePage ? `${PRODUCTION_SITES.docs.path}${TWIN.publicPath(path.path)}` : undefined;
             headers.set('link', agentLinkHeader('docs', twin));
         }
         if (path.key.startsWith('search/')) headers.set('x-robots-tag', 'noindex');
@@ -124,7 +125,7 @@ export class DocsWorker {
         if (replacement === null) return null;
 
         const moved = [root, packageId, `${replacement}${extension}`, ...rest].join('/');
-        return DocsWorker.redirect(`${DOCS.path}/${moved}${url.search}`);
+        return DocsWorker.redirect(`${PRODUCTION_SITES.docs.path}/${moved}${url.search}`);
     }
 
     private async index(): Promise<IndexJson | null> {

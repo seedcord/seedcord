@@ -1,6 +1,6 @@
 {
     "name": "@seedcord/mock-gateway",
-    "version": "0.2.35",
+    "version": "0.2.36-next.0",
     "private": true,
     "description": "Gateway-transport mock bot for demonstration and testing",
     "repository": {
@@ -21,7 +21,7 @@
         "tc:watch": "tsc --noEmit --watch"
     },
     "dependencies": {
-        "@discordjs/builders": "catalog:deps",
+        "@discordjs/builders": "catalog:peer",
         "@seedcord/gateway": "workspace:^",
         "@seedcord/plugin-mongoose": "workspace:^",
         "discord.js": "catalog:peer",

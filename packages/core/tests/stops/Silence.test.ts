@@ -9,7 +9,7 @@ class NoopDenial extends Notice {
     constructor() {
         super('noop');
     }
-    render(): ReplyResponse {
+    override render(): ReplyResponse {
         return { components: [] };
     }
 }

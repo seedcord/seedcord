@@ -34,7 +34,7 @@ describe('ChangelogRenderer release line', () => {
         );
     });
 
-    it('links the commit when its subject names no pull request', async () => {
+    it('links the commit when its subject lacks a pull request number', async () => {
         const line = await renderer.releaseLine({
             summary: 'The transport packages now export `prefixOf`.',
             commit: '0988f67'
@@ -67,7 +67,7 @@ describe('ChangelogRenderer contributor credit', () => {
         maintainers: ['materwelonDhruv']
     });
 
-    it('names one contributor', async () => {
+    it('credits one contributor', async () => {
         const line = await crediting.releaseLine({ summary: 'A thing changed.', commit: 'aaa1111' });
 
         expect(line).toBe(

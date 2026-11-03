@@ -1,10 +1,11 @@
 import type { CoreBase } from '#interfaces/CoreBase';
 import type { DispatchContext } from '#src/dispatch/DispatchContext';
+import type { Promisable } from 'type-fest';
 
 /**
  * The transport-agnostic gate context, the scalar identity of the acting user resolvable from any
  * transport's payload. Every field except `core` is nullable, since an event or DM may carry no
- * guild or member. Each transport extends it with its own arm. For example, the gateway adds the djs
+ * guild or member. Each transport extends it with its own context. For example, the gateway adds the djs
  * `user`/`guild`/`member` objects and the live interaction or event payload.
  *
  * @example
@@ -35,18 +36,8 @@ export interface GateContextBase {
      */
     readonly memberPermissions: bigint | null;
     /**
-     * The bot's permissions in the invoked channel, the wire `app_permissions` value. Null on gateway events.
-     */
-    readonly appPermissions: bigint | null;
-    /**
-     * The handler's own route, as `kind:route` (`slash:daily`, `button:confirm`). A handler registered
-     * on several reports the one this dispatch matched. Null when the handler declares none, which
-     * covers a plain event handler, the unhandled default, and a gate run outside a handler.
-     */
-    readonly declaredRoute: string | null;
-    /**
      * The bag for this dispatch, the same instance the handler and its middleware hold. Every middleware
-     * runs before the first gate. A gate therefore reads what a middleware wrote.
+     * runs before the first gate. A gate can therefore read what a middleware wrote.
      */
     readonly dispatch: DispatchContext;
 }
@@ -69,9 +60,25 @@ export interface GuildPermissionsContext extends GateContextBase {
      */
     readonly memberGuildPermissions: bigint | null;
     /**
-     * The bot's base permission set from the transport's cache. Null when the cached member is unavailable.
+     * The bot's base permission set from the transport's cache. It's `0n` in a guild the bot isn't in. It's null
+     * when the guild is cached but the bot's member isn't.
      */
     readonly appGuildPermissions: bigint | null;
+}
+
+/**
+ * The context an interaction provides on both transports, where Discord always sends the bot's channel
+ * permissions. A gate that requires it fits no event handler.
+ *
+ * @example
+ * ```ts
+ * // the default channel scope returns a Gate<AppPermissionsContext>
+ * \@Gated(RequireBotPermissions([PermissionFlagsBits.ManageMessages]))
+ * ```
+ */
+export interface AppPermissionsContext extends GateContextBase {
+    /** The bot's permissions in the invoked channel, the wire `app_permissions` value. */
+    readonly appPermissions: bigint;
 }
 
 // phantom brand rejects a bare check function or plain object where a Gate is expected
@@ -114,7 +121,7 @@ export interface Gate<Ctx extends GateContextBase = GateContextBase, Name extend
  * {@link defineEffectGate}.
  *
  * @typeParam Ctx - The context both `check` and `commit` require. A field missing from it fails to compile.
- * @typeParam Name - The gate's literal name, shown when a mismatch error names the gate.
+ * @typeParam Name - The literal name a mismatch error prints.
  *
  * @example
  * ```ts
@@ -177,7 +184,7 @@ export interface EffectGate<Ctx extends GateContextBase = GateContextBase, Name 
  */
 export function defineGate<const Name extends string, Ctx extends GateContextBase = GateContextBase>(
     name: Name,
-    fn: (ctx: Ctx) => void | Promise<void>
+    fn: (ctx: Ctx) => Promisable<void>
 ): Gate<Ctx, Name> {
     return { name, check: async (ctx) => fn(ctx) } as Gate<Ctx, Name>;
 }
@@ -185,7 +192,7 @@ export function defineGate<const Name extends string, Ctx extends GateContextBas
 /**
  * Builds an {@link EffectGate} from a `check` and a `commit`. `check` peeks and refuses by throwing, and
  * `commit` applies the side effect, running only once the whole gate set passes so a later refusal never
- * commits. In an `or`, a refusing arm's queued commit is rolled back. This is how {@link Cooldown} peeks
+ * commits. In an `or`, seedcord rolls back the commit a refusing gate queued. This is how {@link Cooldown} peeks
  * in `check` and charges the slot in `commit`.
  *
  * @typeParam Name - The gate's literal name, used to name a mismatch error.
@@ -219,8 +226,8 @@ export function defineGate<const Name extends string, Ctx extends GateContextBas
  */
 export function defineEffectGate<const Name extends string, Ctx extends GateContextBase = GateContextBase>(
     name: Name,
-    check: (ctx: Ctx) => void | Promise<void>,
-    commit: (ctx: Ctx) => void | Promise<void>
+    check: (ctx: Ctx) => Promisable<void>,
+    commit: (ctx: Ctx) => Promisable<void>
 ): EffectGate<Ctx, Name> {
     return {
         name,

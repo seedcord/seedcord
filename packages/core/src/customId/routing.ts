@@ -5,8 +5,8 @@ import { SeedcordErrorCode } from '@seedcord/errors';
 import { SeedcordTypeError } from '@seedcord/errors/internal';
 
 import type { ComponentDefsBrand } from '#src/decorators/brands';
+import type { CaseReturn } from '#src/handlers/runCase';
 import type { AnyCustomId, DecodedParams } from '@seedcord/custom-id';
-import type { Promisable } from 'type-fest';
 
 /**
  * route decorators store a handler's customId defs here, so the component base can decode
@@ -52,6 +52,6 @@ export type SingleParams<Defs extends readonly AnyCustomId[]> = Defs extends rea
     : never;
 
 /** @internal */
-export type MatchArms<Defs extends readonly AnyCustomId[], Ret> = {
-    [Def in Defs[number] as Def['prefix']]: (params: DecodedParams<Def['shape']>) => Promisable<Ret>;
+export type MatchCases<Defs extends readonly AnyCustomId[], Ret> = {
+    [Def in Defs[number] as Def['prefix']]: (params: DecodedParams<Def['shape']>) => CaseReturn<Ret>;
 };

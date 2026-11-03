@@ -1,4 +1,4 @@
-import { DOCS } from '@seedcord/ui/sites';
+import { PRODUCTION_SITES } from '@seedcord/brand';
 
 declare const PAGE_HREF: unique symbol;
 
@@ -7,5 +7,5 @@ export type PageHref = string & { readonly [PAGE_HREF]: true };
 
 export function toPageHref(href: string): PageHref {
     // the brand exists only at compile time
-    return (href.startsWith('/') ? `${DOCS.path}${href}` : href) as PageHref;
+    return (href.startsWith('/') ? `${PRODUCTION_SITES.docs.path}${href}` : href) as PageHref;
 }

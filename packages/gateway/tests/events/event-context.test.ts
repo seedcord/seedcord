@@ -1,28 +1,16 @@
 import { afterEach, beforeEach, describe, expect, vi } from 'vite-plus/test';
 
-import { eventsOf } from '#bot/Bot';
+import { dispatcherOf } from '#tests/utils/dispatcherOf';
 import { seedcordPath } from '#tests/utils/source-path';
 import { testConfig } from '#tests/utils/test-config';
 import { it } from '#tests/utils/test-env';
-
-import type { Seedcord } from '#src/Seedcord';
-
-interface PrivateEventDispatcher {
-    init(): Promise<void>;
-    processEvent(eventName: string, args: unknown[]): Promise<void>;
-}
-
-// justified: processEvent is private on the dispatcher
-function dispatcherOf(instance: Seedcord): PrivateEventDispatcher {
-    return eventsOf(instance.bot) as unknown as PrivateEventDispatcher;
-}
 
 // a global is the only channel back to the test, since the fixture compiles into a temp dir
 function fireCalls(): string[] {
     return (globalThis as { fireCalls?: string[] }).fireCalls ?? [];
 }
 
-type Boot = (handlers: string, middlewares?: string) => Promise<PrivateEventDispatcher>;
+type Boot = (handlers: string, middlewares?: string) => Promise<ReturnType<typeof dispatcherOf>>;
 
 const withBoot = it.extend<{ boot: Boot }>({
     boot: async ({ testEnv, seedcordWith }, use) => {
@@ -201,7 +189,7 @@ describe('the per-dispatch event context', () => {
         expect(fireCalls()).toEqual(['refused:0']);
     });
 
-    withBoot('names a failing handler in the list and still runs the rest', async ({ boot }) => {
+    withBoot('lists a failing handler and still runs the rest', async ({ boot }) => {
         const events = await boot(
             `
             import { EventHandler, RegisterEvent } from '${seedcordPath}';

@@ -44,16 +44,21 @@ describe('Logger dispatch', () => {
         expect(sink.records[0]?.args).toBeUndefined();
     });
 
-    it('routes inChannel and setChannel to the record channel', () => {
+    it('routes withChannel, withLabel, and setChannel to the record', () => {
         const sink = new FakeSink();
         registry.configure({ level: 'trace', sinks: [sink] });
 
         const base = new Logger('Bot');
-        base.inChannel('hmr').warn('a');
+        base.withChannel('hmr').warn('a');
         base.setChannel('events');
         base.warn('b');
+        base.withLabel('Cron').warn('c');
 
-        expect(sink.records.map((r) => r.channel)).toEqual(['hmr', 'events']);
+        expect(sink.records.map((r) => [r.label, r.channel])).toEqual([
+            ['Bot', 'hmr'],
+            ['Bot', 'events'],
+            ['Cron', 'events']
+        ]);
     });
 });
 

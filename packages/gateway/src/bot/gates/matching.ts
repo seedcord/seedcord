@@ -1,8 +1,8 @@
 import type { EventHandler } from '#handlers/event/index';
 import type { InteractionHandler } from '#handlers/interaction/InteractionHandler';
-import type { ValidEventTypes } from '#src/handlers/interactionTypes';
+import type { Repliables, ValidEventTypes } from '#src/handlers/interactionTypes';
 import type { EventGateContext, InteractionGateContext } from './Gate';
-import type { Gate, GateContextBase, RequiredOf } from '@seedcord/core';
+import type { AppPermissionsContext, Gate, GateContextBase, RequiredOf } from '@seedcord/core';
 import type { GateFitsWith } from '@seedcord/core/internal';
 import type {
     ButtonInteraction,
@@ -40,30 +40,34 @@ type ProvidedContext<TCtor extends AnyHandlerCtor> =
 type KindName<Ctx> = Ctx extends Ungateable
     ? 'autocomplete'
     : Ctx extends InteractionGateContext<infer R>
-      ? R extends ChatInputCommandInteraction
-          ? 'Slash'
-          : R extends MessageContextMenuCommandInteraction
-            ? 'MessageContextMenu'
-            : R extends UserContextMenuCommandInteraction
-              ? 'UserContextMenu'
-              : R extends StringSelectMenuInteraction
-                ? 'StringMenu'
-                : R extends UserSelectMenuInteraction
-                  ? 'UserMenu'
-                  : R extends RoleSelectMenuInteraction
-                    ? 'RoleMenu'
-                    : R extends ChannelSelectMenuInteraction
-                      ? 'ChannelMenu'
-                      : R extends MentionableSelectMenuInteraction
-                        ? 'MentionableMenu'
-                        : R extends ButtonInteraction
-                          ? 'Button'
-                          : R extends ModalSubmitInteraction
-                            ? 'Modal'
-                            : 'an interaction'
+      ? Repliables extends R
+          ? 'generic interaction'
+          : R extends ChatInputCommandInteraction
+            ? 'Slash'
+            : R extends MessageContextMenuCommandInteraction
+              ? 'MessageContextMenu'
+              : R extends UserContextMenuCommandInteraction
+                ? 'UserContextMenu'
+                : R extends StringSelectMenuInteraction
+                  ? 'StringMenu'
+                  : R extends UserSelectMenuInteraction
+                    ? 'UserMenu'
+                    : R extends RoleSelectMenuInteraction
+                      ? 'RoleMenu'
+                      : R extends ChannelSelectMenuInteraction
+                        ? 'ChannelMenu'
+                        : R extends MentionableSelectMenuInteraction
+                          ? 'MentionableMenu'
+                          : R extends ButtonInteraction
+                            ? 'Button'
+                            : R extends ModalSubmitInteraction
+                              ? 'Modal'
+                              : 'generic interaction'
       : Ctx extends EventGateContext<infer N>
         ? `${N & string} event`
-        : 'an agnostic';
+        : Ctx extends AppPermissionsContext
+          ? 'generic interaction'
+          : 'any';
 
 // core defines the fit and this labels the kinds
 export type FitAll<TCtor extends AnyHandlerCtor, Gates extends readonly Gate<GateContextBase>[]> = {

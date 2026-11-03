@@ -1,7 +1,7 @@
 import { Readable } from 'node:stream';
 
 import { TextDisplayBuilder } from '@discordjs/builders';
-import { DispatchContext } from '@seedcord/core';
+import { DispatchContext } from '@seedcord/core/internal';
 import { describe, expect, it, vi } from 'vite-plus/test';
 
 import { ReplySender } from '#reply/ReplySender';
@@ -29,7 +29,7 @@ function restMock(): RestMock {
 
 // justified: the fixture implements only the REST surface ReplySender reads
 function senderFor(rest: RestMock): ReplySender {
-    return new ReplySender(ref, rest as unknown as REST, new DispatchContext('slash:ban'), stubBus());
+    return new ReplySender(ref, rest as unknown as REST, new DispatchContext('slash', 'ban'), stubBus());
 }
 
 function sentFiles(rest: RestMock): RawFile[] | undefined {

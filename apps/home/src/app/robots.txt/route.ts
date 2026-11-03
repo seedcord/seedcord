@@ -1,4 +1,5 @@
-import { DOCS, GUIDE, IS_PRODUCTION } from '@seedcord/ui';
+import { PRODUCTION_SITES } from '@seedcord/brand';
+import { GUIDE, IS_PRODUCTION } from '@seedcord/ui';
 
 import { canonicalUrl } from '#lib/site.ts';
 
@@ -11,7 +12,7 @@ const SITEMAPS = IS_PRODUCTION
     ? `
 Sitemap: ${canonicalUrl('/sitemap.xml')}
 Sitemap: ${GUIDE.at('sitemap.xml')}
-Sitemap: ${DOCS.at('sitemap.xml')}
+Sitemap: ${PRODUCTION_SITES.docs.at('sitemap.xml')}
 `
     : '';
 
@@ -23,7 +24,7 @@ const BODY = `# Content Signals Policy (https://contentsignals.org)
 User-agent: *
 Content-Signal: search=${SIGNAL}, ai-train=${SIGNAL}, ai-input=${SIGNAL}
 Allow: /
-Disallow: ${DOCS.path}/dev
+Disallow: ${PRODUCTION_SITES.docs.path}/dev
 ${SITEMAPS}`;
 
 export function GET(): Response {

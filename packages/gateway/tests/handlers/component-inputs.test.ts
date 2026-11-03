@@ -5,9 +5,9 @@ import {
     ModalRoute,
     RoleMenuRoute,
     StringMenuRoute,
-    UserMenuRoute,
-    DispatchContext
+    UserMenuRoute
 } from '@seedcord/core';
+import { DispatchContext } from '@seedcord/core/internal';
 import { describe, expect, it } from 'vite-plus/test';
 
 import {
@@ -18,11 +18,12 @@ import {
     StringMenuHandler,
     UserMenuHandler
 } from '#handlers/interaction/components/index';
+import { built } from '#tests/utils/built';
 
 import type { Core } from '#interfaces/Core';
 import type { ModalSubmitInteraction } from 'discord.js';
 
-const dispatch = new DispatchContext('test:probe');
+const dispatch = new DispatchContext('slash', 'probe');
 
 const core = {} as unknown as Core;
 
@@ -57,7 +58,7 @@ describe('modal fields', () => {
 
         const event = modal(ConfigId.encode({ guildId: 'g1' }), { name: 'seedcord' });
 
-        expect(new ConfigModal(event, core, dispatch).read()).toBe('seedcord');
+        expect(built(ConfigModal, event, core, dispatch).read()).toBe('seedcord');
     });
 });
 
@@ -76,7 +77,7 @@ describe('every menu base reads its own members', () => {
             }
         }
 
-        expect(new Topics(select(wire, ['releases', 'outages']), core, dispatch).read()).toEqual([
+        expect(built(Topics, select(wire, ['releases', 'outages']), core, dispatch).read()).toEqual([
             'releases',
             'outages'
         ]);
@@ -97,7 +98,7 @@ describe('every menu base reads its own members', () => {
             }
         }
 
-        const handler = new Assign(select(wire, ['u1'], { users, members }), core, dispatch);
+        const handler = built(Assign, select(wire, ['u1'], { users, members }), core, dispatch);
 
         expect(handler.read()).toEqual([['u1'], users, members]);
     });
@@ -116,7 +117,7 @@ describe('every menu base reads its own members', () => {
             }
         }
 
-        expect(new Grant(select(wire, ['r9'], { roles }), core, dispatch).read()).toEqual(roles);
+        expect(built(Grant, select(wire, ['r9'], { roles }), core, dispatch).read()).toEqual(roles);
     });
 
     it('a channel menu reads the resolved channels', () => {
@@ -133,7 +134,7 @@ describe('every menu base reads its own members', () => {
             }
         }
 
-        expect(new LogTarget(select(wire, ['c4'], { channels }), core, dispatch).read()).toEqual(channels);
+        expect(built(LogTarget, select(wire, ['c4'], { channels }), core, dispatch).read()).toEqual(channels);
     });
 
     it('a mentionable menu reads users, members, and roles together', () => {
@@ -152,7 +153,7 @@ describe('every menu base reads its own members', () => {
             }
         }
 
-        const handler = new Invite(select(wire, ['u1', 'r9'], { users, members, roles }), core, dispatch);
+        const handler = built(Invite, select(wire, ['u1', 'r9'], { users, members, roles }), core, dispatch);
 
         expect(handler.read()).toEqual([users, members, roles]);
     });

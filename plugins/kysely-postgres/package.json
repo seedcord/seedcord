@@ -1,6 +1,6 @@
 {
     "name": "@seedcord/plugin-kysely-postgres",
-    "version": "0.7.0",
+    "version": "0.8.0-next.2",
     "description": "Connect a seedcord bot to Postgres with Kysely",
     "keywords": [
         "database",
@@ -76,7 +76,7 @@
         "vitest": "catalog:test"
     },
     "peerDependencies": {
-        "@seedcord/core": "workspace:>=0.11.0-next.0",
+        "@seedcord/core": "workspace:>=0.12.0-next.0",
         "envapt": "catalog:peer",
         "kysely": "catalog:peer",
         "pg": "catalog:peer",

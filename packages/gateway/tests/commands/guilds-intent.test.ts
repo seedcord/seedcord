@@ -28,7 +28,7 @@ describe('assertGuildsIntent', () => {
         expect(check([], guildOnly)).toThrow(expect.objectContaining({ code: SeedcordErrorCode.MissingGuildsIntent }));
     });
 
-    it('names every command that needs the intent', () => {
+    it('lists every command that needs the intent', () => {
         expect(check([], guildOnly, dmOnly)).toThrow(/ban/);
         expect(check([], guildOnly, dmOnly)).not.toThrow(/help/);
     });

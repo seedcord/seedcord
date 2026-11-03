@@ -16,7 +16,7 @@ class Boom extends Notice {
         super('boom');
     }
 
-    render(): ReplyResponse {
+    override render(): ReplyResponse {
         return { components: [] };
     }
 }
@@ -46,10 +46,15 @@ describe('the two default reporters', () => {
         const origin = 'slash:ban';
         const dispatchId = 'd-1';
 
-        await new UnknownException({ uuid: randomUUID(), dispatchId, error: new Boom(), origin }, core).execute();
+        await new UnknownException(
+            { uuid: randomUUID(), dispatchId, error: new Boom(), origin },
+            core,
+            'unknownException'
+        ).execute();
         await new HandledException(
             { denial: new Boom(), uuid: randomUUID(), dispatchId, origin, source },
-            core
+            core,
+            'handledException'
         ).execute();
 
         expect(post).toHaveBeenCalledTimes(2);

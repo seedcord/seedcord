@@ -1,11 +1,4 @@
-// copied from styles/tokens.css. og images and viewport.themeColor need plain hex
-// tests/palette.test.ts checks they still match
-const PITH = '#f8f6e8';
-const SEED_DARK = '#2d3328';
-const FLESH = '#f04e36';
-const FLESH_DEEP = '#c8341f';
-const RIND = '#6fab49';
-const RIND_DEEP = '#4d7d33';
+import { BRAND_COLORS } from '@seedcord/brand';
 
 function withAlpha(hex: string, alpha: number): string {
     // eslint-disable-next-line no-magic-numbers -- hex color channels
@@ -15,13 +8,4 @@ function withAlpha(hex: string, alpha: number): string {
 
 const SUB_ALPHA = 0.85;
 
-export const BRAND = {
-    pith: PITH,
-    seedDark: SEED_DARK,
-    flesh: FLESH,
-    fleshDeep: FLESH_DEEP,
-    rind: RIND,
-    rindDeep: RIND_DEEP,
-    // body copy on the cream ground, softened so it sits under the headline
-    sub: withAlpha(SEED_DARK, SUB_ALPHA)
-} as const;
+export const SUB_TEXT = withAlpha(BRAND_COLORS.seedDark, SUB_ALPHA);

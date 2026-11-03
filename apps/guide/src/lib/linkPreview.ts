@@ -1,4 +1,5 @@
-import { DOCS_URL, HOME_URL } from '@seedcord/ui';
+import { PRODUCTION_SITES } from '@seedcord/brand';
+import { HOME_URL } from '@seedcord/ui';
 import { PREVIEW_EMOJI, SITE_ACCENT } from '@seedcord/ui/LinkPreview';
 import { readingMinutes, readTimeLabel } from '@seedcord/ui/readingTime';
 
@@ -11,7 +12,7 @@ import type { PreviewCardProps, PreviewLink } from '@seedcord/ui/LinkPreview';
 
 const SITE_LINKS: readonly PreviewLink[] = [
     { emoji: PREVIEW_EMOJI.home, label: 'Home', url: HOME_URL },
-    { emoji: PREVIEW_EMOJI.docs, label: 'Docs', url: DOCS_URL }
+    { emoji: PREVIEW_EMOJI.docs, label: 'Docs', url: PRODUCTION_SITES.docs.url }
 ];
 
 interface GuidePreviewSource {

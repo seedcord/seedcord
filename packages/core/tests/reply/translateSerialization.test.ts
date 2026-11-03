@@ -25,7 +25,7 @@ function messageOf(thrown: unknown, componentClass: string, index: number): stri
 }
 
 describe('translateSerializationError', () => {
-    it('names the component, index, and route', () => {
+    it('reports the component, index, and route', () => {
         const thrown = captureThrow(() => new TextDisplayBuilder().toJSON());
         const message = messageOf(thrown, 'TextDisplayBuilder', 0);
         expect(message).toContain('TextDisplayBuilder');
@@ -58,7 +58,7 @@ describe('translateSerializationError', () => {
         expect(message).toContain('need at most 16777215, got 16777216');
     });
 
-    it('names the accepted classes when an instance check fails', () => {
+    it('lists the accepted classes when an instance check fails', () => {
         const thrown = captureThrow(() =>
             new SectionBuilder().addTextDisplayComponents(new TextDisplayBuilder().setContent('hi')).toJSON()
         );

@@ -1,4 +1,3 @@
-import { Bus } from '@seedcord/core';
 import {
     attachmentsOf,
     bindBotColor,
@@ -9,7 +8,6 @@ import {
 } from '@seedcord/core/internal';
 import { CoordinatedShutdown, CoordinatedStartup, ServerHost } from '@seedcord/core/node';
 import { HealthCheck, shutdownOf, StartupPhase } from '@seedcord/core/node/internal';
-import { MemoryRateLimiter } from '@seedcord/rate-limiter';
 import { HostAugmentTarget, HostVersion, SeedcordBrand } from '@seedcord/types/internal';
 import { Envapter } from 'envapt';
 
@@ -18,7 +16,6 @@ import { version as packageVersion } from './version';
 
 import type { GatewayConfig } from './interfaces/Config';
 import type { REST } from '@discordjs/rest';
-import type { IRateLimiter } from '@seedcord/types';
 import type { SeedcordInstance } from '@seedcord/types/internal';
 
 /**
@@ -38,9 +35,6 @@ export class Seedcord extends ServerHost<'gateway'> implements SeedcordInstance 
     readonly #healthCheck?: HealthCheck | undefined;
     readonly #hmrManager: HmrManager;
 
-    /** @see {@link Bus} */
-    public readonly bus: Bus;
-
     readonly #subscribers: SubscriberLoader;
 
     /** @see {@link Bot} */
@@ -54,26 +48,26 @@ export class Seedcord extends ServerHost<'gateway'> implements SeedcordInstance 
         return this.bot.applicationId;
     }
 
-    /** @see {@link IRateLimiter} */
-    public readonly rateLimiter: IRateLimiter;
-
     /**
      * @param config - Bot configuration including paths and Discord client options
      * @throws A **SeedcordError** when another `Seedcord` exists in this process and has not shut down.
      * @throws A **SeedcordError** when the running Node or Bun is older than the range in `engines`.
      */
     constructor(public readonly config: GatewayConfig) {
-        super('gateway', new CoordinatedShutdown(config.lifecycle?.shutdownDeadline), new CoordinatedStartup());
+        super(
+            'gateway',
+            new CoordinatedShutdown(config.lifecycle?.shutdownDeadline),
+            new CoordinatedStartup(),
+            config.kv
+        );
 
         bindBotColor(() => this.config.botColor);
 
         this.#hmrManager = new HmrManager();
         this.#hmrManager.init(connectDevChannel());
-        this.bus = new Bus(this);
         this.#subscribers = new SubscriberLoader(this.bus, config.subscribers.path);
         this.bot = new Bot(this);
         this.rest = this.bot.client.rest;
-        this.rateLimiter = config.store ?? new MemoryRateLimiter();
         this.#healthCheck = HealthCheck.fromOption(shutdownOf(this), config.healthCheck);
 
         this.#registerStartupTasks();

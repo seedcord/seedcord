@@ -1,4 +1,5 @@
-import { DISCORD_URL, DOCS_URL, GUIDE_URL, REPO_URL } from '#lib/site.ts';
+import { PRODUCTION_SITES } from '@seedcord/brand';
+import { DISCORD_URL, GUIDE_URL, REPO_URL } from '#lib/site.ts';
 
 // wordmark art for the devtools console, pre-rendered from assets/wordmark-{dark,light}.svg.
 // each cell is a half-block glyph carrying two vertical pixels, encoded as runs of
@@ -112,7 +113,7 @@ const LIGHT: WordmarkArt = {
 const COPY = [
     'a typed framework for Discord bots',
     '',
-    `docs     ${DOCS_URL}`,
+    `docs     ${PRODUCTION_SITES.docs.url}`,
     `guide    ${GUIDE_URL}`,
     `github   ${REPO_URL}`,
     `discord  ${DISCORD_URL}`

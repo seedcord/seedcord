@@ -11,7 +11,7 @@ function stubBus(): Bus {
 }
 
 describe('Bus default reporters', () => {
-    // construction runs inside the host constructor, past the point that arms the singleton guard, so a
+    // construction runs inside the host constructor, past the point that sets the singleton guard, so a
     // reporter url error there escapes before start() can reset it
     it('registers nothing until the host asks for the defaults', () => {
         const bus = stubBus();

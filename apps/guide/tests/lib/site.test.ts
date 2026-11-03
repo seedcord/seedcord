@@ -11,7 +11,7 @@ describe('the canonical url for a path', () => {
         expect(canonicalUrl('/tooling/')).toBe('https://seedcord.org/guide/tooling/');
     });
 
-    it('names the root with one slash', () => {
+    it('writes the root as one slash', () => {
         expect(canonicalUrl('/')).toBe('https://seedcord.org/guide/');
     });
 

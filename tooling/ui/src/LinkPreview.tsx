@@ -1,3 +1,4 @@
+import { BRAND_COLORS } from '@seedcord/brand';
 import {
     ComponentEmbedError,
     Container,
@@ -9,8 +10,6 @@ import {
     Thumbnail,
     toComponentEmbedJson
 } from 'discord-component-embed';
-
-import { BRAND } from './palette';
 
 import type { ReactElement } from 'react';
 
@@ -35,9 +34,9 @@ export const PREVIEW_EMOJI = {
 export const accentColor = (hex: string): number => Number.parseInt(hex.slice(1), 16);
 
 export const SITE_ACCENT = {
-    home: accentColor(BRAND.pith),
-    guide: accentColor(BRAND.rind),
-    docs: accentColor(BRAND.flesh)
+    home: accentColor(BRAND_COLORS.pith),
+    guide: accentColor(BRAND_COLORS.rind),
+    docs: accentColor(BRAND_COLORS.flesh)
 } as const;
 
 export interface PreviewLink {

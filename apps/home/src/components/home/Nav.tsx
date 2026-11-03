@@ -1,3 +1,4 @@
+import { PRODUCTION_SITES } from '@seedcord/brand';
 import { cn, GithubIcon } from '@seedcord/ui';
 import { Materwelon } from '@seedcord/ui/Materwelon';
 import Link from 'next/link';
@@ -8,13 +9,13 @@ import { PosterButton } from '#components/ui/PosterButton.tsx';
 import { pressable } from '#components/ui/press.ts';
 import { SiteLink } from '#components/ui/SiteLink.tsx';
 import { BLOG_PATH } from '#lib/blog/paths.ts';
-import { DOCS_URL, GUIDE_URL, REPO_URL } from '#lib/site.ts';
+import { GUIDE_URL, REPO_URL } from '#lib/site.ts';
 
 import type { ReactNode } from 'react';
 
 const SITES = [
     { label: 'Guide', href: GUIDE_URL },
-    { label: 'Docs', href: DOCS_URL }
+    { label: 'Docs', href: PRODUCTION_SITES.docs.url }
 ] as const;
 
 function NavLink({ label, href }: (typeof SITES)[number]): ReactNode {

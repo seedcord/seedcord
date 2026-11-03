@@ -46,7 +46,7 @@ describe('findCloudflared', () => {
 });
 
 describe('installHint', () => {
-    it('names the package manager for macos and windows', () => {
+    it('suggests the package manager for macos and windows', () => {
         expect(installHint('darwin')).toBe('brew install cloudflared');
         expect(installHint('win32')).toBe('winget install -e --id Cloudflare.cloudflared');
     });

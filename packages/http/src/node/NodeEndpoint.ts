@@ -16,43 +16,32 @@ function unavailable(): Response {
 
 export class NodeEndpoint implements EngineContext {
     private readonly inFlight: InFlight;
-    private started?: Promise<void>;
 
     constructor(
         private readonly service: InteractionsService,
         logger: Logger,
         private readonly health: HealthResponder | undefined,
-        private readonly startup: Pick<CoordinatedStartup, 'isReady'>
+        private readonly startup: Pick<CoordinatedStartup, 'isReady' | 'hasBegun'>
     ) {
         this.inFlight = new InFlight(logger, 'Interactions');
     }
 
-    public startWith(starting: Promise<unknown>): void {
-        this.started = starting.then(
-            () => undefined,
-            // the caller of start() gets the error
-            () => this.close()
-        );
-    }
-
     public async fetch(request: Request): Promise<Response> {
-        if (!this.started) throw new SeedcordError(SeedcordErrorCode.CoreFetchBeforeStart);
-        await this.started;
-        return await this.answer(request);
+        if (!this.startup.hasBegun) throw new SeedcordError(SeedcordErrorCode.CoreFetchBeforeStart);
+        return (await this.inFlight.admit(() => this.respond(request))) ?? unavailable();
     }
 
-    // the built-in server calls this directly because it binds in Ready, before start() resolves
-    public async answer(request: Request): Promise<Response> {
-        if (this.inFlight.closed) return unavailable();
+    private respond(request: Request): Promise<Response> {
         const health = this.health?.answer(request, this.startup.isReady);
-        if (health) return health;
-        const answering = this.service.engine(request, this);
-        this.inFlight.track(answering);
-        return answering;
+        return health ? Promise.resolve(health) : this.service.engine(request, this);
     }
 
     public waitUntil(work: Promise<unknown>): void {
         this.inFlight.track(work);
+    }
+
+    public open(): void {
+        this.inFlight.open();
     }
 
     public close(): void {

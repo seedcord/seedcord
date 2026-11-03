@@ -8,10 +8,7 @@ declare module '@seedcord/http' {
 
 @RegisterInteractionMiddleware({ priority: 1 })
 export class Actor extends InteractionMiddleware {
-    public async execute(): Promise<void> {
-        const user = this.event.member?.user ?? this.event.user;
-        this.dispatch.set('actor', user?.username ?? 'someone');
-
-        await Promise.resolve();
+    public execute(): void {
+        this.dispatch.set('actor', this.user.username);
     }
 }

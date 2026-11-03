@@ -6,6 +6,8 @@ on:
     paths:
       - 'apps/guide/**'
       - 'tooling/docs-search/**'
+      - 'scripts/src/guide/**'
+      - 'scripts/src/lib/CloudflareApi.ts'
       - 'tooling/ui/**'
       - 'pnpm-workspace.yaml'
       - '.github/workflows/guide-deploy.yml'
@@ -24,7 +26,7 @@ jobs:
     uses: $/.github/workflows/site-deploy.yml
     with:
       app: guide
-      preview: ${{ github.ref_name != 'main' }}
+      next: ${{ github.ref_name != 'main' }}
     secrets:
       CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
       TURBO_TOKEN: ${{ secrets.TURBO_TOKEN }}

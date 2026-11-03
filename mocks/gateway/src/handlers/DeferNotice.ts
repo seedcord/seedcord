@@ -9,7 +9,7 @@ class ProbeNotice extends Notice {
         this.ephemeral = false;
     }
 
-    public render(): ReplyResponse {
+    public override render(): ReplyResponse {
         return {
             components: [
                 new TextDisplayBuilder().setContent(

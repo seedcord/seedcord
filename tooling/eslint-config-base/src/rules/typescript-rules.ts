@@ -57,7 +57,8 @@ export const TYPESCRIPT_RULES: Linter.RulesRecord = {
             // emojis have toString that works correctly in template literals
             allow: [
                 { name: ['Error', 'URL', 'URLSearchParams'], from: 'lib' },
-                { name: 'ResolvedEmoji', from: 'package', package: '@seedcord/http' },
+                'ResolvedEmoji',
+                'GatewayEmoji',
                 { name: ['GuildEmoji', 'ApplicationEmoji'], from: 'package', package: 'discord.js' }
             ],
             allowAny: true,
@@ -126,7 +127,7 @@ export const TYPESCRIPT_RULES: Linter.RulesRecord = {
             selector: 'property',
             format: null
         },
-        // match arms key on route strings and context menu names. prettier unquotes a one-word name like `Report`
+        // match cases key on route strings and context menu names. prettier unquotes a one-word name like `Report`
         {
             selector: ['objectLiteralMethod', 'typeMethod'],
             modifiers: ['requiresQuotes'],

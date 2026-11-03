@@ -38,7 +38,7 @@ pnpm add @seedcord/http @discordjs/builders envapt
 pnpm add -D seedcord vite typescript
 ```
 
-`envapt` and `typescript` are peer dependencies. `seedcord` is the CLI that runs the bot in dev and builds it. In dev, it also opens a cloudflared tunnel and sets your app's interactions URL to it.
+`@discordjs/builders`, `envapt`, and `typescript` are peer dependencies. `seedcord` is the CLI that runs the bot in dev and builds it. In dev, it also opens a cloudflared tunnel and sets your app's interactions URL to it.
 
 ## Usage
 

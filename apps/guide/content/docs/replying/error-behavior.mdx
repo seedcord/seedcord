@@ -65,7 +65,7 @@ export const seedcord = new Seedcord({
 
 Every unknown fault shows the same generic card, asking the user to contact the person set in `notifications.developerUsername`. Replace it when your bot needs its own wording, or an action the user can take from the card.
 
-`defaultError` takes a class that seedcord constructs with the fault's uuid and then renders. Subclass [`Notice`](ref:core/Notice) and build your own card.
+`defaultError` takes a class that seedcord constructs with the fault's uuid and then renders. Subclass [`Notice`](ref:core/Notice) and return your own components from `render()`.
 
 ```ts twoslash title="src/stops/BrandedFault.ts"
 import { BuilderComponent, Notice } from '@seedcord/gateway';
@@ -87,7 +87,7 @@ export class BrandedFault extends Notice {
         super(`unknown fault ${uuid}`);
     }
 
-    public render(): ReplyResponse {
+    public override render(): ReplyResponse {
         return {
             components: [new BrandedCard(this.uuid).component]
         };

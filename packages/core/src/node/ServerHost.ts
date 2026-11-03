@@ -6,14 +6,16 @@ import { HostShutdown, HostStartup } from '@seedcord/types/internal';
 import { runsUnderSeedcordDev } from '@seedcord/utils/internal';
 
 import { assertDeclaredRuntime } from '#node/assertRuntimeVersion';
+import { ShutdownPhase } from '#src/lifecycle/phases';
 import { PluginLifecycle } from '#src/lifecycle/PluginLifecycle';
 import { attachmentsOf, PluginHost, sealAttachments } from '#src/plugin/PluginHost';
 
 import { registerProcessErrors } from './processErrors';
 
-import type { CoordinatedShutdown } from '#node/Lifecycle/CoordinatedShutdown';
-import type { CoordinatedStartup } from '#src/lifecycle/CoordinatedStartup';
+import type { CoordinatedShutdown, ShutdownTasks } from '#node/Lifecycle/CoordinatedShutdown';
+import type { CoordinatedStartup, StartupTasks } from '#src/lifecycle/CoordinatedStartup';
 import type { Transport } from '#src/plugin/options';
+import type { Config } from '@seedcord/types';
 import type { Promisable } from 'type-fest';
 
 /** Base class for a transport `Seedcord` class that runs as a long-lived node or bun process. */
@@ -24,10 +26,10 @@ export abstract class ServerHost<BotT extends Transport> extends PluginHost<BotT
     readonly [HostStartup]: CoordinatedStartup;
 
     /** Add a task that runs while the bot shuts down. */
-    public readonly shutdown: Pick<CoordinatedShutdown, 'addTask'>;
+    public readonly shutdown: ShutdownTasks;
 
     /** Add a task that runs while the bot starts. */
-    public readonly startup: Pick<CoordinatedStartup, 'addTask'>;
+    public readonly startup: StartupTasks;
 
     readonly #lifecycle: PluginLifecycle;
     #startFailed = false;
@@ -38,10 +40,10 @@ export abstract class ServerHost<BotT extends Transport> extends PluginHost<BotT
     static #liveShutdown?: CoordinatedShutdown | undefined;
     static #liveProcessErrors?: (() => void) | undefined;
 
-    constructor(transport: BotT, shutdown: CoordinatedShutdown, startup: CoordinatedStartup) {
+    constructor(transport: BotT, shutdown: CoordinatedShutdown, startup: CoordinatedStartup, driver: Config['kv']) {
         // a `sideEffects: false` build would drop the same call in the node entry
         assertDeclaredRuntime();
-        super(transport, 'server');
+        super(transport, 'server', driver);
 
         if (ServerHost.#isInstantiated) throw new SeedcordError(SeedcordErrorCode.CoreSingletonViolation);
 
@@ -57,6 +59,9 @@ export abstract class ServerHost<BotT extends Transport> extends PluginHost<BotT
         this.shutdown = { addTask: shutdown.addTask.bind(shutdown) };
         this.startup = { addTask: startup.addTask.bind(startup) };
         this.#lifecycle = new PluginLifecycle(this.startup, this.shutdown);
+        shutdown.addTask(ShutdownPhase.Release, 'close-kv', async () => {
+            await using _driver = this.kv.driver;
+        });
     }
 
     /** @internal */

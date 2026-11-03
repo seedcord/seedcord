@@ -1,5 +1,33 @@
 # @seedcord/logger
 
+## 0.6.0-next.1
+
+### 🩹 Patch
+
+- Reworded error messages and log lines that joined their parts with the wrong word or read two ways. The gate mismatch compile error now reads like `needs a handler of kind Slash, but this handler's kind is Button`. ([`6f71a86`](https://github.com/seedcord/seedcord/commit/6f71a868e39df8cff3b857688544404113d46596))
+- Fixed `Logger.configure({ level: 'debug' })` on node swapping the winston console for the edge console sink, which printed each log as a multi-line object. A config without `sinks` now falls back to the node console. ([#436](https://github.com/seedcord/seedcord/pull/436))
+
+#### 📦 Seedcord packages
+
+- `@seedcord/errors` 0.15.0-next.0 → 0.15.0-next.1
+- `@seedcord/types` 0.16.0-next.0 → 0.16.0-next.1
+
+## 0.6.0-next.0
+
+### 💥 Breaking
+
+- `Logger.inChannel()` is now `withChannel()`. The new `withLabel()` returns a logger on the same channel with a different label, like one per job a plugin runs. ([`3eecb63`](https://github.com/seedcord/seedcord/commit/3eecb63cf7f8443534469a537f898bd7c9ef9b01))
+
+### 🩹 Patch
+
+- Fixed the edge logger losing a `Date` passed to a log call, and spreading a class instance's fields into the top level. Both now go in `args`. ([#426](https://github.com/seedcord/seedcord/pull/426))
+
+#### 📦 Seedcord packages
+
+- `@seedcord/utils` 0.9.0 → 0.9.1-next.0
+- `@seedcord/types` 0.15.0 → 0.16.0-next.0
+- `@seedcord/errors` 0.14.0 → 0.15.0-next.0
+
 ## 0.5.0
 
 ### 💥 Breaking

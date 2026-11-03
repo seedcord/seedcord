@@ -1,5 +1,26 @@
 # @seedcord/custom-id
 
+## 0.3.1-next.1
+
+### 🩹 Patch
+
+- Updated some documentation. ([`bb8ee7c`](https://github.com/seedcord/seedcord/commit/bb8ee7cfcfedf4b70765ca547f191b68958553fa))
+
+#### 📦 Seedcord packages
+
+- `@seedcord/errors` 0.15.0-next.0 → 0.15.0-next.1
+
+## 0.3.1-next.0
+
+### 🩹 Patch
+
+- Hovering a `CustomId`, its decoded `this.params` or a `match` arm, or an autocomplete's `this.focused` now shows the plain fields, like `{ userId: string; amount: number }`. ([`b3b4489`](https://github.com/seedcord/seedcord/commit/b3b44898c3738ffaa3546319703f545c4feb3f46))
+- Fixed the `type-fest` types in the published declarations failing to resolve, since each package listed `type-fest` only as a dev dependency. ([`50db882`](https://github.com/seedcord/seedcord/commit/50db8827aca008f874bf60e5796a696c894056cc))
+
+#### 📦 Seedcord packages
+
+- `@seedcord/errors` 0.14.0 → 0.15.0-next.0
+
 ## 0.3.0
 
 ### 💥 Breaking

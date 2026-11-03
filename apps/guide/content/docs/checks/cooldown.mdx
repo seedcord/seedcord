@@ -1,9 +1,9 @@
 ---
 title: Cooldowns
-description: Limit how often someone can run a command with the Cooldown() gate, choose who shares a window, and keep windows across restarts.
+description: Stop someone spamming a command by limiting how often they can run it with Cooldown(), choose who shares a window, and keep windows across restarts.
 ---
 
-A command that calls a paid API or posts in a channel needs a limit, or one person can run it dozens of times a minute. By hand, that's a map of last-use times in every handler that needs one, plus a reply telling the caller when to try again.
+A command that calls a paid API or posts in a channel needs a limit, or one person can spam it dozens of times a minute. By hand, that's a map of last-use times in every handler that needs one, plus a reply telling the caller when to try again.
 
 [`Cooldown`](ref:core/Cooldown) is that limit as a gate. It allows a set number of uses per window and refuses once they're used up, with a card that shows when the caller can try again.
 
@@ -132,24 +132,16 @@ With `per: 'guild'`, every caller outside a server shares one global window. If 
 
 If two handlers use the same settings, they still get separate windows, since the key includes the route. If one handler has two `Cooldown` calls with different settings, their windows stay separate too.
 
-### Wording the refusal
+### Replacing the refusal
 
-`message` rewords the refusal. `notice` replaces it with a `Notice` you write. If you set both, seedcord uses `notice`. Both take a function, and seedcord calls it with `resetAt`. That's the time the caller can use the command again, as an `EpochMs` number of milliseconds since 1970.
-
-```ts twoslash
-import { Cooldown, toEpochSeconds } from '@seedcord/gateway';
-
-Cooldown('10s', {
-    per: 'channel',
-    message: (resetAt) =>
-        `Slow down. Try again <t:${toEpochSeconds(resetAt)}:R>.`
-});
-```
-
-Discord's `<t:...:R>` markup takes seconds. [`toEpochSeconds`](ref:utils/toEpochSeconds) converts a millisecond timestamp to them. The default card already prints a relative time.
+`notice` takes a `Notice` class you write, and seedcord constructs it with `resetAt`. That's the time the caller can use the command again, as an `EpochMs` number of milliseconds since 1970.
 
 ```ts twoslash
-import { Cooldown, Notice } from '@seedcord/gateway';
+import {
+    Cooldown,
+    Notice,
+    toEpochSeconds
+} from '@seedcord/gateway';
 
 import type { EpochMs, ReplyResponse } from '@seedcord/gateway';
 
@@ -157,39 +149,34 @@ declare const components: ReplyResponse['components'];
 
 class SlowDown extends Notice {
     public constructor(resetAt: EpochMs) {
-        super(`caller is limited until ${String(resetAt)}`);
+        super(
+            `Slow down. Try again <t:${toEpochSeconds(resetAt)}:R>.`
+        );
     }
 
-    public render(): ReplyResponse {
+    public override render(): ReplyResponse {
         return { components };
     }
 }
 
-// ---cut---
-Cooldown('1m', { notice: (resetAt) => new SlowDown(resetAt) });
+Cooldown('10s', { per: 'channel', notice: SlowDown });
 ```
+
+Discord's [`<t:...:R>` markup](https://discord.com/developers/docs/reference#message-formatting-timestamp-styles) takes seconds. [`toEpochSeconds`](ref:utils/toEpochSeconds) converts a millisecond timestamp to them. The default card already prints a relative time.
 
 ## Putting it together
 
-This handler sets every option that works together. Each server gets three feeds every ten minutes. When a server has used all three, the refusal says when the caller can try again.
+This handler sets `limit` and `per` together. Each server gets three feeds every ten minutes. When a server has used all three, the refusal says when the caller can try again.
 
 ```ts twoslash title="src/handlers/Feed.ts"
 import {
     Cooldown,
     Gated,
     SlashHandler,
-    SlashRoute,
-    toEpochSeconds
+    SlashRoute
 } from '@seedcord/gateway';
 
-@Gated(
-    Cooldown('10m', {
-        limit: 3,
-        per: 'guild',
-        message: (resetAt) =>
-            `Out of feeds. Try again <t:${toEpochSeconds(resetAt)}:R>.`
-    })
-)
+@Gated(Cooldown('10m', { limit: 3, per: 'guild' }))
 @SlashRoute('feed')
 export class Feed extends SlashHandler<'feed'> {
     public async execute(): Promise<void> {
@@ -198,20 +185,18 @@ export class Feed extends SlashHandler<'feed'> {
 }
 ```
 
-It sets `message` and leaves `notice` out, since `notice` would replace the reworded refusal.
-
-## When the slot is charged
+## When a use is charged
 
 `Cooldown` is an effect gate. It reads the window during the check and records the use only after every gate on the handler has passed. If a later gate refuses, the commit never runs, so the caller keeps their use.
 
 <Callout type="note">
 
-If two requests for the same key arrive at the same moment, both can read a free slot before either records its use. A tight burst can go over `limit` that way. Every [effect gate](/checks/effect-gates) has this gap between its check and its commit.
+If two requests for the same key arrive at the same moment, both can find room in the window before either records its use. A tight burst can go over `limit` that way. Every [effect gate](/checks/effect-gates) has this gap between its check and its commit.
 
-`Cooldown` doesn't guard against it, since bursts that tight are rare. If your command can't allow even one extra use, write your own effect gate. In its `commit`, call [`ctx.core.rateLimiter.charge`](ref:types/IRateLimiter.charge), which records a use only when a slot is free. Throw when `result.limited` comes back `true`, and put that gate first so no other commit runs before it.
+`Cooldown` doesn't guard against it, since bursts that tight are rare. If your command can't allow even one extra use, write your own effect gate. In its `commit`, call [`ctx.core.rateLimiter.charge`](ref:types/IRateLimiter.charge), which records a use only when the window still has room. Throw when `result.limited` comes back `true`, and put that gate first so no other commit runs before it.
 
 </Callout>
 
 ## Keeping windows across restarts
 
-[`core.rateLimiter`](ref:types/IRateLimiter) holds the cooldown windows and counts them in memory by default. A restart clears every cooldown, and on a serverless deploy each running copy keeps its own counts. A durable [`store`](/checks/rate-limiter) keeps the windows through both.
+[`core.rateLimiter`](ref:types/IRateLimiter) holds the cooldown windows and counts them in memory by default. A restart clears every cooldown, and on a serverless deploy each running copy keeps its own counts. A [`kv` driver](/built-ins/drivers) over a file or a database keeps the windows through both.

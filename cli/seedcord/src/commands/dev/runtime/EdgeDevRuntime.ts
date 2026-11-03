@@ -2,7 +2,6 @@ import { basename, dirname } from 'node:path';
 
 import { fromWireError, wrapHot } from '@seedcord/core/internal';
 import { displayPath } from '@seedcord/errors/internal';
-import { LoggerChannelRegistry } from '@seedcord/logger';
 import { installNodeDefaults } from '@seedcord/logger/node';
 import { filterCirculars } from '@seedcord/utils';
 import { BotLayout } from '@seedcord/utils/internal';
@@ -13,7 +12,6 @@ import { workerEntry } from '#commands/build/builder/workerEntry';
 import { listenHostFor } from '#commands/dev/tunnel/listenHost';
 import { rethrowVitePluginError } from '#core/config/vitePlugins';
 import { BOT_ENVIRONMENT, botEnvironment } from '#core/modules/botEnvironment';
-import { reportWorkerExports } from '#core/modules/cloudflarePlugin';
 import { openModuleLoader } from '#core/modules/openModuleLoader';
 import { openViteServer } from '#core/modules/openViteServer';
 import { mergeViteConfig } from '#core/modules/userCodeConfig';
@@ -64,12 +62,6 @@ function invokeErrorsAsJson(): Plugin {
     };
 }
 
-// ServerHost installs these for a server bot. the edge Seedcord never does
-function installCliLogSinks(stack: AsyncDisposableStack): void {
-    installNodeDefaults();
-    stack.defer(() => LoggerChannelRegistry.instance.configure({}));
-}
-
 export class EdgeDevRuntime extends BaseDevRuntime<EdgeStarted> {
     private settleStart?: (() => void) | undefined;
 
@@ -82,7 +74,8 @@ export class EdgeDevRuntime extends BaseDevRuntime<EdgeStarted> {
         const { files } = context;
         const { viteRoot } = this.target;
         resources.use(fenceSignals());
-        installCliLogSinks(resources);
+        // ServerHost installs these for a server bot. the edge Seedcord does not
+        installNodeDefaults();
         this.emit(context, { type: 'progress', status: 'Loading Cloudflare plugin…' });
         const [folders, cloudflare, workerEnv] = await Promise.all([
             files.foldersIncludingEmpty(),
@@ -136,7 +129,6 @@ export class EdgeDevRuntime extends BaseDevRuntime<EdgeStarted> {
         const { instance } = context.config;
         this.emit(context, { type: 'progress', status: `Importing ${displayPath(instance)}…` });
         const names = await functionExportsOf(modules, instance);
-        reportWorkerExports(names);
         this.emit(context, { type: 'progress', status: 'Starting workerd…' });
         return names;
     }
@@ -149,7 +141,7 @@ export class EdgeDevRuntime extends BaseDevRuntime<EdgeStarted> {
             this.settleStart = () => resolve(undefined);
             cli.on('seedcord:started', ({ username }) => {
                 // discord pings the endpoint as soon as the tunnel points it here
-                this.emit(context, { type: 'server-listening', port });
+                this.emit(context, { type: 'server-port', port });
                 resolve(username);
             });
             cli.on('seedcord:start-failed', ({ error }) => reject(fromWireError(error)));

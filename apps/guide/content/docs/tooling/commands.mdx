@@ -63,7 +63,7 @@ If Discord refuses to list one server's commands, usually because the bot isn't 
 
 ## Delete what your code no longer sends
 
-`clean` and `purge` differ in what they pick.
+A command that shows twice in the picker, or one you deleted from your code, can stay on Discord until you remove it. `clean` and `purge` differ in what they pick.
 
 - `clean` deletes a server's copy of a command only when a global command has the same name and type. That's the double entry in the picker after you change a command's decorator from `'guild'` to `'global'`. It never touches a global command.
 - `purge` deletes every command in the scopes you pass. `--global` adds the global scope. It clears each scope with one request, so the scope stays empty until the next deploy.
@@ -122,6 +122,6 @@ A non-empty `CI` counts as no terminal even when stdin and stdout are real, so a
 
 <Shell exec="seedcord commands deploy --yes" />
 
-With `DISCORD_BOT_TOKEN` set, that line is a complete CI step. `deploy` reads `commands.guilds` from the bot it imports. A job that deploys your production application leaves `TESTING_GUILD_IDS` unset, so the commands go out globally. An edge bot runs the step before `seedcord build`, because the build reads the deployed command ids from Discord.
+With `DISCORD_BOT_TOKEN` set, that line is a complete CI step. `deploy` reads `commands.guilds` from the bot it imports. In the job that deploys your production application, leave `TESTING_GUILD_IDS` unset so the commands go out globally. An edge bot runs the step before `seedcord build`, because the build reads the deployed command ids from Discord.
 
 A package script passes extra arguments through. With pnpm, write `pnpm commands clean --yes --all-guilds`, and leave out the `--`, since pnpm hands it to the CLI as one more argument. npm needs the `--`.

@@ -83,7 +83,7 @@ When someone asks how seedcord does something, answer for gateway and for http. 
         Read it back as the developer who just got it at 2am, and cut anything they cannot use. Two throw sites that mean different things get different codes or better message arguments, because one message covering both tells the reader nothing.
 - **Routes, class names, ids, paths, and package names get a `paint` tone** from `@seedcord/errors`. A package name gets `bold`. `paint` also carries `bold`, `italic` and `underline` for the parts that use no color. Multi-line output goes through `logger.utils`.
 - **Derive types from their source.** A constructor shape is `TypedConstructor<typeof X>`. A member union comes from `keyof`, an indexed access, or `TypedExtract`. A hand-written copy drifts.
-- **Check what a dependency exports before you write it yourself.** [Check 9](.agents/skills/code-quality/PREVENT-REINVENTION.md#9-does-a-dependency-already-in-the-tree-export-it) has the steps.
+- **Check what a dependency exports before you write it yourself.** Look in `es-toolkit` for runtime helpers and in `type-fest` for utility types. [Check 9](.agents/skills/code-quality/PREVENT-REINVENTION.md#9-does-a-dependency-already-in-the-tree-export-it) has the steps.
 - **Write each rule once.** When two places have to compute the same answer, like a path, a cache key, a wire format, or a validity check, both call one function/method. A comment like "keep in sync with X" means the rule exists twice. Extract the function and delete the comment. When the two copies can't share code, like a value the build writes into generated source and the runtime reads back, add a test that fails once they disagree. Without one, nothing catches two copies drifting apart. Each side's tests still pass, and someone reading one copy has no way to find the other.
 - **Use what the language and the runtime already ship.** Before writing any helper, go looking for a built-in that does the job. Memory lags behind both, so search MDN and the Node docs, and read the `lib` declarations TypeScript ships. A hand-rolled copy of something the platform provides handles fewer cases and has no test suite behind it.
     - **Suspect your own helper first.** Code that formats, parses, compares, or walks plain data, etc, is usually something the platform already does. Search for it before you write it, and look again when you read one that already exists.
@@ -148,7 +148,11 @@ No tautological tests. If a test can only fail when someone edits the value it c
 
 Nothing gets a test for staying absent. A deleted export leaves no caller that compiles, and that is the proof.
 
-A fixture cast is fine with a short comment naming what makes it safe. `any` stays banned in tests.
+A fixture cast is fine with a short comment saying what makes it safe. `any` stays banned in tests.
+
+### Trying a feature on a mock
+
+The bots in `mocks/` are there to show a feature working against Discord. Add the feature to the mock for its transport, put a test bot's token in that mock's `.env`, and run `pnpm -C mocks/<name> dev` in the background. Without a terminal it prints JSON log lines and takes commands like `{"do":"restart"}` on stdin. The [dev page](apps/guide/content/docs/tooling/dev.mdx) lists them. Ask the maintainer to run the command in Discord, then check the logs or the state the bot wrote.
 
 ---
 

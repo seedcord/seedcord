@@ -12,6 +12,9 @@ const RESOLVED_ENTRY_ID = `\0${ENTRY_ID}`;
 // undefined once next.js bundles the entry
 const ROOT_EXPRESSION = `import.meta.dirname ?? ${JSON.stringify(PLACEHOLDER_ROOT)}`;
 
+const ONLY_EXPORTS_WARNING =
+    "This build only exports your bot, so running it doesn't start your bot. Set build.start in seedcord.config.ts and build again, or import this file from your app.";
+
 type EntryBuiltFiles = TypedOmit<Parameters<typeof builtFilesSource>[0], 'rootExpression' | 'sourcePaths'>;
 
 export function isServerEntry(moduleId: string | null | undefined): boolean {
@@ -24,7 +27,11 @@ export function runStartFile(startKey: string): string[] {
 }
 
 export function exportInstance(instanceKey: string): string[] {
-    return [`const { default: bot } = await import(${JSON.stringify(instanceKey)});`, 'export default bot;'];
+    return [
+        `const { default: bot } = await import(${JSON.stringify(instanceKey)});`,
+        `if (import.meta.main) console.warn(${JSON.stringify(ONLY_EXPORTS_WARNING)});`,
+        'export default bot;'
+    ];
 }
 
 export function serverEntry(builtFiles: EntryBuiltFiles, importBot: string[]): EntryPlugins {

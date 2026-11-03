@@ -43,7 +43,7 @@ describe('gitPlanFrom', () => {
         expect(plan.developerUsername).toBe('dhruv');
     });
 
-    it('names the knock-on when git is absent', () => {
+    it('explains what breaks when git is absent', () => {
         const plan = gitPlanFrom({ installed: false, insideRepo: false, userName: null }, true);
 
         expect(plan.init).toBe(false);

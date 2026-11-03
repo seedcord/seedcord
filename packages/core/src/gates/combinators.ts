@@ -16,12 +16,12 @@ function joinNames(gates: readonly Gate<GateContextBase>[], separator: string): 
 }
 
 /**
- * Runs each gate in order and refuses on the first refusal. Takes two or more arms. The required
- * context is the intersection of the arms, so an event-only and an interaction-only gate cannot be
+ * Runs each gate in order and refuses on the first refusal. Takes two or more gates. The required
+ * context is the intersection of their contexts, so an event-only and an interaction-only gate cannot be
  * combined.
  *
- * @typeParam Gates - The tuple of two or more gate arms, run left to right.
- * @param gates - The gate arms to run in order, all refused on the first refusal.
+ * @typeParam Gates - The tuple of two or more gates, run left to right.
+ * @param gates - The gates to run in order, all refused on the first refusal.
  *
  * @see {@link or}
  *
@@ -58,13 +58,13 @@ function isOrOptions(arg: Gate<GateContextBase> | OrOptions): arg is OrOptions {
 }
 
 /**
- * Runs each gate in order and passes on the first arm that passes. Takes two or more arms. The
- * required context is the union of the arms. A handler that matches any one arm fits. When every
- * arm refuses it throws the trailing {@link OrOptions} `fail` if given, else a list built from each
- * refusal's `summary`, else a default refusal. The trailing options object does not count as an arm.
+ * Runs each gate in order and passes on the first gate that passes. Takes two or more gates. The
+ * required context is the union of their contexts. A handler that matches any one gate fits. When every
+ * gate refuses it throws the trailing {@link OrOptions} `fail` if given, else a list built from each
+ * refusal's `summary`, else a default refusal. The trailing options object does not count as a gate.
  *
- * @typeParam Gates - The tuple of two or more gate arms, tried left to right.
- * @param gates - The gate arms to try in order, with an optional trailing {@link OrOptions} object.
+ * @typeParam Gates - The tuple of two or more gates, tried left to right.
+ * @param gates - The gates to try in order, with an optional trailing {@link OrOptions} object.
  *
  * @see {@link and}
  *
@@ -85,7 +85,7 @@ export function or<Gates extends TwoOrMore<Gate<GateContextBase>>>(
 /**
  * @example
  * ```ts
- * // custom refusal when every arm refuses
+ * // custom refusal when every gate refuses
  * or(OwnerOnly(), RequireRole('123456789012345678'), { fail: new NotAllowedNotice() });
  * ```
  */
@@ -106,9 +106,9 @@ export function or(...args: readonly (Gate<GateContextBase> | OrOptions)[]): Gat
                 await runCheck(gate, ctx);
                 return;
             } catch (error) {
-                // only a refusal counts as an arm declining. a Fault (even report-false), a Silence, or a raw error stops everything
+                // only a refusal counts as a gate declining. a Fault (even report-false), a Silence, or a raw error stops everything
                 if (error instanceof Notice && !(error instanceof Fault) && !error.report) {
-                    // the arm may have queued an effect's commit before it refused
+                    // the gate may have queued an effect's commit before it refused
                     rollbackCommits(ctx, mark);
                     if (error.summary === undefined) everyArmHasSummary = false;
                     else summaries.push(error.summary);

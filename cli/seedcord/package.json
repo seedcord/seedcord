@@ -1,6 +1,6 @@
 {
     "name": "seedcord",
-    "version": "0.22.0",
+    "version": "0.23.0-next.2",
     "description": "The seedcord CLI. Dev server, build, and codegen for a typed Discord bot.",
     "keywords": [
         "cli",
@@ -71,8 +71,8 @@
         "coverage": "vp test run --coverage"
     },
     "dependencies": {
-        "@cloudflare/build-output-utils": "0.9.2",
-        "@cloudflare/config": "0.26.0",
+        "@cloudflare/build-output-utils": "0.9.6",
+        "@cloudflare/config": "0.29.0",
         "@commander-js/extra-typings": "^15.0.0",
         "@discordjs/rest": "catalog:deps",
         "@leeoniya/ufuzzy": "catalog:deps",
@@ -99,6 +99,7 @@
     "devDependencies": {
         "@cloudflare/vite-plugin": "catalog:peer",
         "@eslint-react/eslint-plugin": "catalog:eslint",
+        "@seedcord/brand": "workspace:^",
         "@seedcord/cli-prompts": "workspace:^",
         "@seedcord/cli-templates": "workspace:^",
         "@seedcord/eslint-config": "workspace:^",

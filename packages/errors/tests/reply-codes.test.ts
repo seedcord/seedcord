@@ -7,7 +7,7 @@ import { SeedcordError } from '#src/internal.index';
 const stripAnsi = (input: string): string => input.replaceAll(/\[[0-9;]*m/g, '');
 
 describe('reply surface error codes', () => {
-    it('names the illegal method, reason, alternative, and route in an ack-state message', () => {
+    it('puts the illegal method, reason, alternative, and route in an ack-state message', () => {
         const error = new SeedcordError(SeedcordErrorCode.ReplyIllegalAckState, [
             'reply',
             'this interaction was already replied to',
@@ -22,7 +22,7 @@ describe('reply surface error codes', () => {
         expect(message).toContain('route slash:ban');
     });
 
-    it('names the component class, index, failing detail, and route in a serialization message', () => {
+    it('puts the component class, index, failing detail, and route in a serialization message', () => {
         const error = new SeedcordError(SeedcordErrorCode.ReplyComponentSerialization, [
             'TextDisplayBuilder',
             0,
@@ -37,7 +37,7 @@ describe('reply surface error codes', () => {
         expect(message).toContain('route slash:ban');
     });
 
-    it('names the calling method, the foreign id, and the accepted sources in a foreign target message', () => {
+    it('puts the calling method, the foreign id, and the accepted sources in a foreign target message', () => {
         const error = new SeedcordError(SeedcordErrorCode.ReplyForeignEditTarget, ['edit', 'msg-9', 'slash:ban']);
 
         const message = stripAnsi(error.message);
@@ -67,7 +67,7 @@ describe('reply surface error codes', () => {
         expect(message).toContain('route slash:ban');
     });
 
-    it('names the method whose callback carried no message', () => {
+    it('reports the method whose callback came back without a message', () => {
         const error = new SeedcordError(SeedcordErrorCode.ReplyCallbackMissingMessage, ['reply', 'slash:ban']);
 
         const message = stripAnsi(error.message);

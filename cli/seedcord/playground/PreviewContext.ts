@@ -14,7 +14,7 @@ export function createPreviewContext(store: DevStore, abortRef: AbortRef): Previ
     function loggerFor(channel: string): Logger {
         let logger = byChannel.get(channel);
         if (!logger) {
-            logger = base.inChannel(channel);
+            logger = base.withChannel(channel);
             byChannel.set(channel, logger);
         }
         return logger;

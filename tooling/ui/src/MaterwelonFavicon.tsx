@@ -1,5 +1,6 @@
+import { BRAND_COLORS } from '@seedcord/brand';
+
 import { MaterwelonGlyph } from './MaterwelonGlyph';
-import { BRAND } from './palette';
 
 import type { ReactElement } from 'react';
 
@@ -31,14 +32,19 @@ export function MaterwelonFavicon({ ring, size = FAVICON_SIZE.width }: Materwelo
                 justifyContent: 'center',
                 width: size,
                 height: size,
-                backgroundColor: BRAND.seedDark,
+                backgroundColor: BRAND_COLORS.seedDark,
                 border: `${ringWidth}px solid ${ring}`,
                 borderRadius: corner
             }}
         >
             <MaterwelonGlyph
                 width={GLYPH_WIDTH * scale}
-                fills={{ flesh: BRAND.flesh, seeds: BRAND.seedDark, rind: BRAND.rind, pith: BRAND.pith }}
+                fills={{
+                    flesh: BRAND_COLORS.flesh,
+                    seeds: BRAND_COLORS.seedDark,
+                    rind: BRAND_COLORS.rind,
+                    pith: BRAND_COLORS.pith
+                }}
             />
         </div>
     );

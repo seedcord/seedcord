@@ -23,6 +23,7 @@ export const FEATURES = [
     'HTTP health check',
     'logger with named channels',
     'typed pub/sub bus',
+    'typed kv store',
     'interaction & event middleware',
     'typed event handlers & waitFor',
     'Vite HMR hot reload, gateway stays alive',

@@ -1,4 +1,4 @@
-import { DOCS } from '@seedcord/ui/sites';
+import { PRODUCTION_SITES } from '@seedcord/brand';
 
 import type { KindFilter, ReferenceSearchResult, SearchIndexEntry, SearchResultKind } from '#src/types';
 
@@ -16,28 +16,34 @@ const MEMBER_KINDS = new Set<SearchResultKind>([
 ]);
 
 export class SearchResults {
+    private readonly byId: Map<string, SearchIndexEntry>;
     private readonly search: DocSearch<SearchIndexEntry>;
 
     constructor(entries: readonly SearchIndexEntry[]) {
-        this.search = new DocSearch(entries);
+        // overload signatures share one id
+        this.byId = new Map(entries.map((entry) => [entry.action.id, entry]));
+        this.search = new DocSearch([...this.byId.values()]);
+    }
+
+    get(id: string): ReferenceSearchResult | undefined {
+        const entry = this.byId.get(id);
+        return entry && SearchResults.result(entry);
     }
 
     rank(query: string, kind: KindFilter = 'all', limit = MAX_RESULTS): ReferenceSearchResult[] {
         if (limit <= 0) return [];
-        // overload signatures share package, slug and kind
-        const seen = new Set<string>();
         const results: ReferenceSearchResult[] = [];
         for (const entry of this.search.search(query)) {
             if (!SearchResults.matchesKind(entry.action.kind, kind)) continue;
 
-            const key = `${entry.packageName}::${entry.slug}::${entry.action.kind}`;
-            if (seen.has(key)) continue;
-            seen.add(key);
-
-            results.push({ ...entry, url: DOCS.at(entry.action.href) });
+            results.push(SearchResults.result(entry));
             if (results.length >= limit) break;
         }
         return results;
+    }
+
+    private static result(entry: SearchIndexEntry): ReferenceSearchResult {
+        return { ...entry, url: PRODUCTION_SITES.docs.at(entry.action.href) };
     }
 
     private static matchesKind(kind: SearchResultKind, filter: KindFilter): boolean {

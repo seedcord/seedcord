@@ -62,7 +62,8 @@
         "docs:purge": "vpx scripts/src/docs/purge-cdn-cache.ts",
         "docs:upload": "vpx scripts/src/docs/upload-docs-site.ts",
         "docs:prune": "vpx scripts/src/docs/prune-docs-site.ts",
-        "docs:preview": "vpx scripts/src/docs/preview-docs.ts"
+        "docs:preview": "vpx scripts/src/docs/preview-docs.ts",
+        "guide:embed": "vpx scripts/src/guide/embed-guide-sections.ts"
     },
     "devDependencies": {
         "@changesets/cli": "^3.0.2",

@@ -99,7 +99,7 @@ Without an outcome option, send the result with a fresh [`this.followUp()`](ref:
 
 ## Building the prompt yourself
 
-The string form draws one line of text above **Confirm** and **Cancel**. For a card, an image, or a summary of what's about to change, use the second form. You pass a function, and seedcord hands it the two button ids. Put them on your own buttons and return the whole reply.
+The string form draws one line of text above **Confirm** and **Cancel**. For more than one line, like an image or a summary of what's about to change, use the second form. You pass a function, and seedcord hands it the two button ids. Put them on your own buttons and return the whole reply.
 
 ```ts twoslash
 import { ButtonBuilder } from '@discordjs/builders';

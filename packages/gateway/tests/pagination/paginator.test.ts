@@ -1,5 +1,6 @@
-import { DispatchContext, ButtonRoute, InteractionKind } from '@seedcord/core';
+import { ButtonRoute, InteractionKind } from '@seedcord/core';
 import {
+    DispatchContext,
     ComponentDefsKey,
     InteractionMetadataKey,
     InteractionRouteKeys,
@@ -13,6 +14,7 @@ import { ReplySender } from '#bot/ReplySender';
 import { InteractionHandler } from '#handlers/interaction/InteractionHandler';
 import { Paginator } from '#pagination/Paginator';
 import { ArraySource } from '#pagination/sources';
+import { built } from '#tests/utils/built';
 import { stubBus } from '#tests/utils/stubBus';
 
 import type { RepliableHandler } from '#handlers/RepliableHandler';
@@ -23,7 +25,7 @@ import type { Repliables } from '#src/handlers/interactionTypes';
 import type { PageView } from '@seedcord/core';
 import type { APIContainerComponent, ButtonInteraction, Guild } from 'discord.js';
 
-const dispatch = new DispatchContext('test:probe');
+const dispatch = new DispatchContext('slash', 'probe');
 
 // justified: the paginator reads the interaction and the bus every write reports on
 const core = { bus: stubBus() } as unknown as Core;
@@ -126,7 +128,7 @@ function stubCore(): Core {
 function stubHandler(event: ReturnType<typeof startEvent>): RepliableHandler<Repliables> {
     const interaction = asRepliable(event);
     const core = stubCore();
-    const sender = new ReplySender(interaction, new DispatchContext('slash:page'), core.bus);
+    const sender = new ReplySender(interaction, new DispatchContext('slash', 'page'), core.bus);
     // justified: start reads only these three members off the handler
     return { core, getEvent: () => interaction, sender } as unknown as RepliableHandler<Repliables>;
 }
@@ -217,7 +219,7 @@ describe('Paginator nav handler', () => {
 
     it('acks, decodes the target page off the wire, and edits @original in place', async () => {
         const event = navEvent(pager.cursor.encode({ page: 2, slot: 0 }));
-        await new BansNav(asButton(event), core, dispatch).execute();
+        await built(BansNav, asButton(event), core, dispatch).execute();
 
         expect(event.deferUpdate).toHaveBeenCalledOnce();
         // the bare edit rewrites @original (the source message) via editReply in the deferred-update state
@@ -244,7 +246,7 @@ describe('Paginator context', () => {
     it('threads the interaction user and guild (DM null) into the PageContext it builds', async () => {
         seenContexts.length = 0;
         const event = navEvent(Reminders.cursor.encode({ page: 0, slot: 0 }));
-        await new RemindersNav(asButton(event), core, dispatch).execute();
+        await built(RemindersNav, asButton(event), core, dispatch).execute();
 
         const ctx = seenContexts[0];
         expect(ctx?.interaction).toBe(event);

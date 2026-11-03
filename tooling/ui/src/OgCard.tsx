@@ -1,6 +1,8 @@
+import { BRAND_COLORS } from '@seedcord/brand';
+
 import { MaterwelonGlyph } from './MaterwelonGlyph';
 import { GLYPH_SIZE, OG_SIZE } from './og';
-import { BRAND } from './palette';
+import { SUB_TEXT } from './palette';
 
 import type { CSSProperties, ReactElement, ReactNode } from 'react';
 
@@ -8,7 +10,7 @@ const INSET = 48;
 const RADIUS = 4;
 const DROP = 10;
 
-const BORDER = `3px solid ${BRAND.seedDark}`;
+const BORDER = `3px solid ${BRAND_COLORS.seedDark}`;
 
 const panelBase: CSSProperties = {
     position: 'absolute',
@@ -21,7 +23,7 @@ const panelBase: CSSProperties = {
 
 // takumi's drop-shadow offset ignores a parent scale()
 export function OgMark({ width, offset }: { width: number; offset: number }): ReactElement {
-    const ink = BRAND.seedDark;
+    const ink = BRAND_COLORS.seedDark;
     const height = (width * GLYPH_SIZE.height) / GLYPH_SIZE.width;
 
     return (
@@ -40,7 +42,12 @@ export function OgMark({ width, offset }: { width: number; offset: number }): Re
             </div>
             <MaterwelonGlyph
                 width={width}
-                fills={{ flesh: BRAND.flesh, seeds: BRAND.seedDark, rind: BRAND.rind, pith: BRAND.pith }}
+                fills={{
+                    flesh: BRAND_COLORS.flesh,
+                    seeds: BRAND_COLORS.seedDark,
+                    rind: BRAND_COLORS.rind,
+                    pith: BRAND_COLORS.pith
+                }}
             />
         </div>
     );
@@ -56,12 +63,16 @@ const badgeBase: CSSProperties = {
 };
 
 function Pill({ label, accent }: { label: string; accent: string }): ReactElement {
-    return <div style={{ ...badgeBase, color: BRAND.pith, backgroundColor: accent, padding: '6px 15px' }}>{label}</div>;
+    return (
+        <div style={{ ...badgeBase, color: BRAND_COLORS.pith, backgroundColor: accent, padding: '6px 15px' }}>
+            {label}
+        </div>
+    );
 }
 
 function Badge({ label }: { label: string }): ReactElement {
     return (
-        <div style={{ ...badgeBase, color: BRAND.sub, border: '2px solid rgba(45,51,40,0.28)', padding: '5px 14px' }}>
+        <div style={{ ...badgeBase, color: SUB_TEXT, border: '2px solid rgba(45,51,40,0.28)', padding: '5px 14px' }}>
             {label}
         </div>
     );
@@ -79,13 +90,13 @@ function PageFooter({ domain }: { domain: string }): ReactElement {
                         fontWeight: 600,
                         fontSize: 31,
                         letterSpacing: -1.2,
-                        color: BRAND.seedDark
+                        color: BRAND_COLORS.seedDark
                     }}
                 >
                     seedcord
                 </div>
             </div>
-            <div style={{ display: 'flex', fontFamily: 'JetBrains Mono', fontSize: 20, color: BRAND.seedDark }}>
+            <div style={{ display: 'flex', fontFamily: 'JetBrains Mono', fontSize: 20, color: BRAND_COLORS.seedDark }}>
                 {domain}
             </div>
         </OgFooter>
@@ -148,7 +159,7 @@ function PageBody({ pill, accent, meta, name, description }: OgPageCardProps): R
                     fontFamily: 'Hanken Grotesk',
                     fontSize: 32,
                     lineHeight: 1.4,
-                    color: BRAND.sub,
+                    color: SUB_TEXT,
                     lineClamp: descLines
                 }}
             >
@@ -216,13 +227,13 @@ export function OgFrame({ children }: { children: ReactNode }): ReactElement {
                 display: 'flex',
                 width: OG_SIZE.width,
                 height: OG_SIZE.height,
-                backgroundColor: BRAND.pith
+                backgroundColor: BRAND_COLORS.pith
             }}
         >
             <div
                 style={{
                     ...panelBase,
-                    backgroundColor: BRAND.seedDark,
+                    backgroundColor: BRAND_COLORS.seedDark,
                     transform: `translate(${DROP}px, ${DROP}px)`
                 }}
             />
@@ -231,7 +242,7 @@ export function OgFrame({ children }: { children: ReactNode }): ReactElement {
                     ...panelBase,
                     display: 'flex',
                     flexDirection: 'column',
-                    backgroundColor: BRAND.pith,
+                    backgroundColor: BRAND_COLORS.pith,
                     border: BORDER
                 }}
             >

@@ -1,7 +1,9 @@
 import { act, renderHook, waitFor } from '@testing-library/react';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vite-plus/test';
 
+import type { CommandPaletteController } from '#components/search/command-palette/useCommandPaletteController.ts';
 import type { SearchPackage } from '@seedcord/docs-search';
+import type { RenderHookResult } from '@testing-library/react';
 
 vi.mock('next/navigation', () => ({ useRouter: () => ({ push: vi.fn() }), usePathname: () => '/docs' }));
 
@@ -10,11 +12,13 @@ const PACKAGES: SearchPackage[] = [
 ];
 
 // referenceSearch keeps each download for the life of the module
-async function freshController(): Promise<
-    typeof import('#components/search/command-palette/useCommandPaletteController.ts')
-> {
+async function freshController(): Promise<() => RenderHookResult<CommandPaletteController, unknown>> {
     vi.resetModules();
-    return import('#components/search/command-palette/useCommandPaletteController.ts');
+    const [{ useCommandPaletteController }, { CommandPaletteProvider }] = await Promise.all([
+        import('#components/search/command-palette/useCommandPaletteController.ts'),
+        import('#components/providers/CommandPaletteProvider.tsx')
+    ]);
+    return () => renderHook(() => useCommandPaletteController(), { wrapper: CommandPaletteProvider });
 }
 
 describe('useCommandPaletteController', () => {
@@ -30,8 +34,8 @@ describe('useCommandPaletteController', () => {
     });
 
     it('offers the pre-release toggle before the palette opens', async () => {
-        const { useCommandPaletteController } = await freshController();
-        const { result } = renderHook(() => useCommandPaletteController());
+        const render = await freshController();
+        const { result } = render();
 
         await waitFor(() => expect(result.current.hasPrerelease).toBe(true));
         expect(result.current.packages).toEqual([{ folder: 'core', label: 'core' }]);
@@ -39,8 +43,8 @@ describe('useCommandPaletteController', () => {
 
     it('loads the packages again on open after the first download failed', async () => {
         vi.mocked(fetch).mockRejectedValueOnce(new Error('offline'));
-        const { useCommandPaletteController } = await freshController();
-        const { result } = renderHook(() => useCommandPaletteController());
+        const render = await freshController();
+        const { result } = render();
         await waitFor(() => expect(fetch).toHaveBeenCalledTimes(1));
 
         act(() => result.current.handleOpenChange(true));
@@ -51,8 +55,8 @@ describe('useCommandPaletteController', () => {
     it('loads the packages again when the first download fails after the palette opened', async () => {
         const first = Promise.withResolvers<Response>();
         vi.mocked(fetch).mockReturnValueOnce(first.promise);
-        const { useCommandPaletteController } = await freshController();
-        const { result } = renderHook(() => useCommandPaletteController());
+        const render = await freshController();
+        const { result } = render();
 
         act(() => result.current.handleOpenChange(true));
         await act(() => {
@@ -65,8 +69,8 @@ describe('useCommandPaletteController', () => {
 
     it('waits for the palette to open before it loads a failed download again', async () => {
         vi.mocked(fetch).mockRejectedValueOnce(new Error('offline'));
-        const { useCommandPaletteController } = await freshController();
-        renderHook(() => useCommandPaletteController());
+        const render = await freshController();
+        render();
         await waitFor(() => expect(fetch).toHaveBeenCalledTimes(1));
 
         await act(() => new Promise((resolve) => setTimeout(resolve, 50)));

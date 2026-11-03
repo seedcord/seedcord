@@ -48,7 +48,7 @@ describe('engine request logging', () => {
         vi.restoreAllMocks();
     });
 
-    it('names why each request got its status', async () => {
+    it('explains why each request got its status', async () => {
         const trace = vi.spyOn(Logger.prototype, 'trace').mockReturnValue(undefined);
         const { handle } = await readySeedcord();
 

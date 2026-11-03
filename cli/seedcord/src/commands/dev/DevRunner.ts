@@ -26,7 +26,7 @@ import type { TypedOmit } from '@seedcord/types';
 
 const TUNNEL_TEARDOWN_MS = 3000;
 
-export interface DevRunnerDeps extends TypedOmit<DevSessionDeps, 'onListening'> {
+export interface DevRunnerDeps extends TypedOmit<DevSessionDeps, 'onServerPort'> {
     readonly projectLoader: Pick<ProjectLoader, 'readConfig'>;
     readonly tunnel: TunnelRouter;
     readonly runtime: (target: ResolvedTarget) => DevRuntime;
@@ -114,7 +114,7 @@ export class DevRunner {
         store.setIdleAnimation(config.idleAnimation);
         this.currentSession = new DevSession(config, files, this.deps.runtime(config.target), {
             ...this.deps,
-            onListening: (port, instance) => void tunnel.route(config.tunnel, port, instance)
+            onServerPort: (port, instance) => void tunnel.route(config.tunnel, port, instance)
         });
 
         try {
@@ -123,6 +123,7 @@ export class DevRunner {
             store.setBusy(true);
             await this.currentSession.stop();
             this.currentSession = null;
+            store.clearPrompt();
         }
     }
 

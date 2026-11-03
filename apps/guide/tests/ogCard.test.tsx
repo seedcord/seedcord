@@ -1,7 +1,7 @@
 // @vitest-environment node
+import { BRAND_COLORS } from '@seedcord/brand';
 import { OgPageCard } from '@seedcord/ui/OgCard';
 import { loadOgFonts, OG_SIZE } from '@seedcord/ui/og';
-import { BRAND } from '@seedcord/ui/palette';
 import { ImageResponse } from 'takumi-js/response';
 import { describe, expect, it } from 'vite-plus/test';
 
@@ -14,7 +14,7 @@ async function cardWithDescription(description: string): Promise<Buffer> {
     const response = new ImageResponse(
         <OgPageCard
             pill="commands"
-            accent={BRAND.seedDark}
+            accent={BRAND_COLORS.seedDark}
             meta={[]}
             name="Commands"
             description={description}

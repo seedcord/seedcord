@@ -14,7 +14,7 @@ describe('CAPABILITIES', () => {
 });
 
 describe('isPrivileged', () => {
-    it('names the three the dashboard gates and nothing else', () => {
+    it('lists only the three the dashboard gates', () => {
         expect(CAPABILITIES.filter((c) => isPrivileged(c.id)).map((c) => c.id)).toEqual([
             'message-text',
             'members',
@@ -82,7 +82,7 @@ describe('partialsFor', () => {
 });
 
 describe('privilegedFor', () => {
-    it('names only the three the dashboard gates', () => {
+    it('lists only the three the dashboard gates, in order', () => {
         expect(privilegedFor(CAPABILITIES.map((c) => c.id))).toEqual([
             'MessageContent',
             'GuildMembers',

@@ -1,11 +1,11 @@
 import { isSeedcordError, SeedcordErrorCode } from '@seedcord/errors';
-import { MemoryRateLimiter } from '@seedcord/rate-limiter';
 import { describe, it, expect, vi } from 'vite-plus/test';
 
 import { Cooldown } from '#gates/catalog/Cooldown';
 import { runGates } from '#gates/runGates';
 import { OnCooldown } from '#notices/index';
 import { Notice } from '#stops/Notice';
+import { memoryRateLimiter } from '#tests/utils/memoryRateLimiter';
 
 import type { GateContextBase } from '#gates/Gate';
 import type { CoreBase } from '#interfaces/CoreBase';
@@ -16,7 +16,7 @@ class CustomRefusal extends Notice {
     constructor(public readonly at: number) {
         super(`wait ${at}`);
     }
-    render(): ReplyResponse {
+    override render(): ReplyResponse {
         return { components: [] };
     }
 }
@@ -32,7 +32,7 @@ function cdCtx(
         userId: ids.userId ?? 'u1',
         guildId: ids.guildId ?? 'g1',
         channelId: ids.channelId ?? 'c1',
-        declaredRoute: ids.declaredRoute ?? null
+        dispatch: { declaredRoute: ids.declaredRoute ?? null }
     } as unknown as GateContextBase;
 }
 
@@ -107,7 +107,7 @@ describe('Cooldown', () => {
     });
 
     it('allows `limit` uses within one window, then refuses', async () => {
-        const rl = new MemoryRateLimiter();
+        const rl = memoryRateLimiter();
         const gate = Cooldown(60, { limit: 3 });
         const ctx = cdCtx(rl);
 
@@ -130,33 +130,16 @@ describe('Cooldown', () => {
         expect((caught as OnCooldown).resetAt).toBe(1_700_000_000_000);
     });
 
-    it('rewords the refusal with the message factory, receiving the retry-after', async () => {
+    it('refuses with the notice class it was given, built with the retry time', async () => {
         const rl = { peek: () => ({ limited: true, resetAt: 1_700_000_000_000 }), charge: vi.fn() };
         let caught: unknown;
-        await Cooldown(5, { message: (resetAt) => `back at ${resetAt}` })
+        await Cooldown(5, { notice: CustomRefusal })
             .check(cdCtx(rl))
             .catch((error: unknown) => {
                 caught = error;
             });
-        expect((caught as OnCooldown).message).toBe('back at 1700000000000');
-    });
-
-    it('replaces the refusal entirely with the notice factory, receiving the retry-after', async () => {
-        const rl = { peek: () => ({ limited: true, resetAt: 1_700_000_000_000 }), charge: vi.fn() };
-        let received: number | undefined;
-        let caught: unknown;
-        await Cooldown(5, {
-            notice: (resetAt) => {
-                received = resetAt;
-                return new CustomRefusal(resetAt);
-            }
-        })
-            .check(cdCtx(rl))
-            .catch((error: unknown) => {
-                caught = error;
-            });
-        expect(received).toBe(1_700_000_000_000);
         expect(caught).toBeInstanceOf(CustomRefusal);
+        expect((caught as CustomRefusal).at).toBe(1_700_000_000_000);
     });
 
     it('accepts a duration string and converts it to the window length', async () => {
@@ -209,7 +192,7 @@ describe('Cooldown', () => {
 
     // flips when the limiter gets an atomic reserve, the peek/charge split admits both rn
     it.fails('admits exactly one of two requests racing the same key', async () => {
-        const rl = new MemoryRateLimiter();
+        const rl = memoryRateLimiter();
         const gate = Cooldown(60);
 
         const results = await Promise.allSettled([runGates([gate], cdCtx(rl)), runGates([gate], cdCtx(rl))]);
@@ -223,7 +206,8 @@ describe('Cooldown', () => {
             core: { rateLimiter: { peek, charge: vi.fn() } },
             userId: null,
             guildId: 'g1',
-            channelId: 'c1'
+            channelId: 'c1',
+            dispatch: { declaredRoute: null }
         } as unknown as GateContextBase;
 
         await Cooldown(5).check(ctx);

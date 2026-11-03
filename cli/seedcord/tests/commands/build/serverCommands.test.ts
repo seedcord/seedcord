@@ -26,13 +26,13 @@ describe('serverCommands', () => {
         expect(commands.get('compile')).toMatch(/--outfile my-bot$/);
     });
 
-    it('names the binary bot when package.json is missing', async () => {
+    it('uses bot as the binary name when package.json is missing', async () => {
         const commands = await commandsFor();
 
         expect(commands.get('compile')).toMatch(/--outfile bot$/);
     });
 
-    it('names the binary bot when package.json has no name', async () => {
+    it('uses bot as the binary name when package.json lacks a name', async () => {
         const commands = await commandsFor({ private: true });
 
         expect(commands.get('compile')).toMatch(/--outfile bot$/);

@@ -33,8 +33,9 @@ Other code reaches the same object. A gate, which is a check that runs before a 
 | --- | --- |
 | `config` | the object you passed to `new Seedcord()` |
 | `rest` | Discord's REST client, which is the discord.js client's own on gateway |
-| `applicationId` | your bot's Discord application id |
+| `applicationId` | your bot's Discord application id. On gateway, reading it before the Login phase throws |
 | `rateLimiter` | the counters behind [`Cooldown`](/checks/cooldown), which you can also use directly |
+| `kv` | the [key-value store](/built-ins/), where your handlers keep records between interactions |
 | `bus` | [publishing and subscribing](/events/bus) for framework and application events |
 | `startup` | `addTask`, for work that runs while your bot starts |
 | `shutdown` | `addTask`, for work that runs while it stops |

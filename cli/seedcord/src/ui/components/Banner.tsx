@@ -1,4 +1,4 @@
-import { BRAND } from '@seedcord/errors/internal';
+import { BRAND_COLORS } from '@seedcord/brand';
 import { Text } from 'ink';
 import React from 'react';
 
@@ -11,13 +11,13 @@ interface BannerProps {
 export function Banner({ version }: BannerProps): ReactElement {
     return (
         <Text>
-            <Text bold color={BRAND.flesh}>
+            <Text bold color={BRAND_COLORS.flesh}>
                 seed
             </Text>
-            <Text bold color={BRAND.rind}>
+            <Text bold color={BRAND_COLORS.rind}>
                 cord
             </Text>
-            {version === null ? null : <Text color={BRAND.pith}> • v{version}</Text>}
+            {version === null ? null : <Text color={BRAND_COLORS.pith}> • v{version}</Text>}
         </Text>
     );
 }

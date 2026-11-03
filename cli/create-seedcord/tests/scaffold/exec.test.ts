@@ -63,6 +63,17 @@ describe('spawnSpec', () => {
         expect(spec.args).toEqual([]);
     });
 
+    // cmd reads a bare ^ as its escape character
+    it('quotes a version range for the windows shell', () => {
+        expect(spawnSpec('npm', ['i', 'vite@^8.3.4'], 'win32').command).toBe('npm i "vite@^8.3.4"');
+    });
+
+    it.runIf(process.platform === 'win32')('gets a caret through cmd to the program', async () => {
+        const script = `process.exit(process.argv[1] === 'a^b' ? 0 : 1)`;
+
+        await expect(execRunner('pnpm', ['exec', 'node', '-e', script, 'a^b'], process.cwd())).resolves.toBeNull();
+    });
+
     it('uses no shell anywhere else', () => {
         expect(spawnSpec('npm', ['i'], 'darwin').shell).toBe(false);
     });
@@ -121,7 +132,7 @@ describe('execRunner', () => {
         expect(captured).not.toContain('Progress: resolved');
     });
 
-    it('reports an indented line once when it names an error the header already covered', async () => {
+    it('reports an indented line once when it repeats an error the header already covered', async () => {
         const captured = await capturedBy(
             `console.error('Error: the build died');`,
             `console.error('    at ERR_boom (/x.js:1:1)');`,
@@ -141,11 +152,11 @@ describe('execRunner', () => {
         expect(captured).toContain('E404');
     });
 
-    it('falls back to the tail when no line names itself an error', async () => {
+    it('falls back to the tail when no line reports an error', async () => {
         expect(await capturedBy(noise('plain output', 40))).toContain('plain output 39');
     });
 
-    it('names the command that failed', async () => {
+    it('shows the command that failed', async () => {
         expect(await failureOf('')).toContain(process.execPath);
     });
 

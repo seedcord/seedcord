@@ -161,7 +161,7 @@ describe('DevApp tiers', () => {
         app.unmount();
     });
 
-    it('names the pending notice on the status line', async () => {
+    it('shows the pending notice on the status line', async () => {
         const store = runningStore();
         store.apply({ type: 'command-update-prompt', files: ['a.ts', 'b.ts'] });
         const { lastFrame, unmount } = view(LOGS, { store });

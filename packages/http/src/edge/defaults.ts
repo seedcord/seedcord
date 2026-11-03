@@ -3,9 +3,9 @@ import { SeedcordError } from '@seedcord/errors/internal';
 
 import type { EdgeSweeperKey } from '#interfaces/Config';
 import type { RESTOptions } from '@discordjs/rest';
-import type { CoordinatedShutdown } from '@seedcord/core/node';
+import type { ShutdownTasks } from '@seedcord/core/node';
 
-export const edgeShutdown: Pick<CoordinatedShutdown, 'addTask'> = {
+export const edgeShutdown: ShutdownTasks = {
     addTask: () => {
         throw new SeedcordError(SeedcordErrorCode.CoreLifecycleUnavailable);
     }

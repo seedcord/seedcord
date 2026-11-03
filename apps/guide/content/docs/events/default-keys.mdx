@@ -48,7 +48,7 @@ declare const topgg: {
 };
 // ---cut-end---
 
-@Subscribe('commandsDeployed')
+@Subscribe(['commandsDeployed'])
 export class ListCommands extends Subscriber<'commandsDeployed'> {
     public async execute(): Promise<void> {
         // topgg is a client from Top.gg's own SDK
@@ -66,7 +66,7 @@ A trace of everything your bot receives helps when a command doesn't seem to run
 ```ts twoslash title="src/subscribers/Trace.ts"
 import { Subscribe, Subscriber } from '@seedcord/gateway';
 // ---cut---
-@Subscribe('eventDispatching')
+@Subscribe(['eventDispatching'])
 export class Trace extends Subscriber<'eventDispatching'> {
     public async execute(): Promise<void> {
         const { name, args } = this.data;
@@ -126,7 +126,7 @@ seedcord publishes `handledException` on a [`Notice`](ref:core/Notice) with `rep
 
 {/* prettier-ignore-end */}
 
-An event `origin` carries a third segment naming the handler, since one dispatch runs several of them.
+An event `origin` carries a third segment with the handler's name, since one dispatch runs several of them.
 
 seedcord ships a subscriber for each of these keys and registers it for you. Each one [posts a card to a Discord webhook](/replying/reporting) once you set its environment variable.
 

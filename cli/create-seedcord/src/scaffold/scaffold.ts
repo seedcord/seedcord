@@ -1,16 +1,17 @@
 import { mkdir, rm, writeFile } from 'node:fs/promises';
 import { dirname, join } from 'node:path';
 
-import { addCommand, execCommand } from '#cli/packageManager';
+import { isPrerelease } from '#cli/version';
 import { gitPlanFrom, probeGit } from '#scaffold/git';
 import { claimTarget } from '#scaffold/target';
 import { buildContext } from '#template/context';
 import { copyStarters, renderTemplates } from '#template/render';
 
+import type { PackageManager } from '#cli/PackageManager';
 import type { StepLabel, StepUi } from '#cli/steps';
 import type { GitPlan } from '#scaffold/git';
 import type { ScaffoldAnswers, TemplateContext } from '#template/context';
-import type { AgentName } from 'package-manager-detector';
+import type { ResolvedCommand } from 'package-manager-detector';
 
 // the resolved string is a warning worth printing
 export type CommandRunner = (command: string, args: string[], cwd: string) => Promise<string | null>;
@@ -20,18 +21,17 @@ export interface ScaffoldInput {
     templatesRoot: string;
     startersRoot: string;
     answers: ScaffoldAnswers;
-    agent: AgentName;
+    manager: PackageManager;
     steps: StepUi;
 }
 
-export type ScaffoldResult =
-    | { created: false }
-    | {
-          created: true;
-          installed: boolean;
-          notices: string[];
-          failed: boolean;
-      };
+interface DependencyOutcome {
+    pending: ResolvedCommand[];
+    notices: string[];
+    failed: boolean;
+}
+
+export type ScaffoldResult = { created: false } | ({ created: true } & DependencyOutcome);
 
 const DEV_PACKAGES = [
     '@seedcord/eslint-config',
@@ -50,9 +50,11 @@ const DEV_PACKAGES = [
     'vite@^8.3.4'
 ];
 // both are betas, pinned to the versions seedcord's own edge tests run on
-const EDGE_DEV_PACKAGES = ['cf@1.0.0-beta.17', '@cloudflare/vite-plugin@2.0.0-beta.v.0'];
+const EDGE_DEV_PACKAGES = ['cf@1.0.0-beta.26', '@cloudflare/vite-plugin@2.0.0-beta.v.8'];
 // the starters import ButtonStyle and TextInputStyle from discord-api-types
 const SHARED_PACKAGES = ['@discordjs/builders', 'discord-api-types', 'envapt'];
+
+const NEXT_TAGGED_PACKAGES = new Set(['seedcord', '@seedcord/gateway', '@seedcord/http']);
 
 function runtimePackages({ isGateway }: TemplateContext): string[] {
     const transport = isGateway ? ['@seedcord/gateway', 'discord.js'] : ['@seedcord/http'];
@@ -61,6 +63,18 @@ function runtimePackages({ isGateway }: TemplateContext): string[] {
 
 function devPackages({ isEdge }: TemplateContext): string[] {
     return isEdge ? [...DEV_PACKAGES, ...EDGE_DEV_PACKAGES] : DEV_PACKAGES;
+}
+
+function withReleaseTag(name: string): string {
+    return isPrerelease && NEXT_TAGGED_PACKAGES.has(name) ? `${name}@next` : name;
+}
+
+// cf goes in the first add, since bun runs the project's postinstall after every one
+function addCommands(manager: PackageManager, context: TemplateContext): ResolvedCommand[] {
+    return [
+        manager.add(devPackages(context).map(withReleaseTag), true),
+        manager.add(runtimePackages(context).map(withReleaseTag), false)
+    ];
 }
 
 async function writeTree(target: string, files: { path: string; contents: string }[]): Promise<void> {
@@ -97,60 +111,53 @@ async function gitNoticeFor(input: ScaffoldInput, run: CommandRunner, plan: GitP
     return committed ? plan.notice : 'The project is complete and uncommitted.';
 }
 
-interface InstallOutcome {
-    installed: boolean;
-    notices: string[];
-    failed: boolean;
-}
-
-function skipInstallSteps(steps: StepUi): InstallOutcome {
-    for (const label of ['install', 'format', 'types'] as const) steps.skip(label);
-
-    return { installed: false, notices: [], failed: false };
-}
-
-async function runInstallSteps(
-    input: ScaffoldInput,
+async function formatAndWriteTypes(
+    { manager, steps, target }: ScaffoldInput,
     run: CommandRunner,
-    context: TemplateContext
-): Promise<InstallOutcome> {
-    const { agent, steps, target } = input;
-
-    const deps = addCommand(agent, runtimePackages(context), false);
-    const dev = addCommand(agent, devPackages(context), true);
-    const format = execCommand(agent, ['prettier', '--write', '.']);
-    const codegen = execCommand(agent, ['seedcord', 'codegen']);
-
-    const warnings: string[] = [];
-    const collect = (warning: string | null): void => {
-        if (warning !== null) warnings.push(warning);
-    };
-
-    // cf goes in the first add, since bun runs the project's postinstall after every one
-    const installed = await succeeded(steps, 'install', async () => {
-        collect(await run(dev.command, dev.args, target));
-        collect(await run(deps.command, deps.args, target));
-    });
-
-    // npx and bun x fetch a missing binary from the registry
-    if (!installed) {
-        steps.skip('format');
-        steps.skip('types');
-
-        return { installed: false, notices: warnings, failed: true };
-    }
+    { isEdge }: TemplateContext
+): Promise<boolean> {
+    const format = manager.exec(['prettier', '--write', '.']);
+    const codegen = manager.exec(['seedcord', 'codegen']);
 
     const formatted = await succeeded(steps, 'format', () => run(format.command, format.args, target));
     const generated = await succeeded(steps, 'types', async () => {
         await run(codegen.command, codegen.args, target);
-        if (!context.isEdge) return;
+        if (!isEdge) return;
 
         // pnpm and npm skip the project's postinstall on an add
-        const bindingTypes = execCommand(agent, ['cf', 'workers', 'types']);
+        const bindingTypes = manager.exec(['cf', 'workers', 'types']);
         await run(bindingTypes.command, bindingTypes.args, target);
     });
 
-    return { installed: true, notices: warnings, failed: !formatted || !generated };
+    return formatted && generated;
+}
+
+async function setUpDependencies(
+    input: ScaffoldInput,
+    run: CommandRunner,
+    context: TemplateContext
+): Promise<DependencyOutcome> {
+    const { answers, manager, steps, target } = input;
+
+    const adds = addCommands(manager, context);
+    const commands = answers.install ? adds : adds.map((add) => manager.lockfileOnly(add));
+
+    const notices: string[] = [];
+    const added = await succeeded(steps, 'deps', async () => {
+        for (const { command, args } of commands) {
+            const warning = await run(command, args, target);
+            if (warning !== null) notices.push(warning);
+        }
+    });
+
+    // npx and bun x fetch a missing binary from the registry
+    if (!added || !answers.install) {
+        steps.skip('format');
+        steps.skip('types');
+        return { pending: added ? [manager.install()] : adds, notices, failed: !added };
+    }
+
+    return { pending: [], notices, failed: !(await formatAndWriteTypes(input, run, context)) };
 }
 
 // scaffold deletes this directory when writing fails; every step after it keeps the tree
@@ -181,17 +188,15 @@ export async function scaffold(input: ScaffoldInput, run: CommandRunner): Promis
     await mkdir(parent, { recursive: true });
 
     const plan = gitPlanFrom(await probeGit(parent), input.answers.git);
-    const context = buildContext(input.answers, { developerUsername: plan.developerUsername, agent: input.agent });
+    const context = buildContext(input.answers, { developerUsername: plan.developerUsername, manager: input.manager });
     if (!(await writeProject(input, context, existed))) return { created: false };
 
-    const outcome = input.answers.install ? await runInstallSteps(input, run, context) : skipInstallSteps(input.steps);
-
+    const outcome = await setUpDependencies(input, run, context);
     const gitNotice = await gitNoticeFor(input, run, plan);
 
     return {
         created: true,
-        installed: outcome.installed,
-        notices: gitNotice === null ? outcome.notices : [...outcome.notices, gitNotice],
-        failed: outcome.failed
+        ...outcome,
+        notices: gitNotice === null ? outcome.notices : [...outcome.notices, gitNotice]
     };
 }

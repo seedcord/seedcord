@@ -19,7 +19,7 @@ export interface DeployedHashes {
 export interface SeedcordFrameworkEvents {
     'seedcord:register-critical-files': { patterns: string[] };
     'seedcord:commands-update-prompt': { files: string[] };
-    'seedcord:server-listening': { port: number };
+    'seedcord:server-port': { port: number | false };
     'seedcord:started': { username: string | undefined };
     'seedcord:start-failed': { error: WireError };
     'seedcord:read-deployed': { applicationId: string };

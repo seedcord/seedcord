@@ -12,7 +12,7 @@ import type { WebhookReport } from '#subscribers/bases/WebhookLog';
 import type { AllSubscriptions, FaultSource } from '#subscribers/types/Subscriptions';
 
 // no HANDLED_EXCEPTION_WEBHOOK_URL disables the reporter with a boot warning
-@Subscribe('handledException')
+@Subscribe(['handledException'])
 @WebhookUrl('HANDLED_EXCEPTION_WEBHOOK_URL')
 export class HandledException extends WebhookLog<'handledException', CoreBase> {
     protected override throttleKey(): string {

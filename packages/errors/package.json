@@ -1,6 +1,6 @@
 {
     "name": "@seedcord/errors",
-    "version": "0.14.0",
+    "version": "0.15.0-next.2",
     "description": "Typed errors with registered codes for seedcord bots",
     "keywords": [
         "discord-bot",
@@ -61,6 +61,7 @@
         "chalk": "catalog:deps"
     },
     "devDependencies": {
+        "@seedcord/brand": "workspace:^",
         "@seedcord/eslint-config": "workspace:^",
         "@seedcord/tsconfig": "workspace:^",
         "@seedcord/tsdown-config": "workspace:^",

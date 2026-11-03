@@ -70,7 +70,7 @@ describe('what an agent reads instead of the page', () => {
         expect(twin).toBe('> **Warning**\n>\n> Mind the cap.\n');
     });
 
-    it('names which transport a transport callout applies to', async () => {
+    it('says which transport a transport callout applies to', async () => {
         const twin = await twinOf('<Callout type="transport" only="gateway">\n\nOnly here.\n\n</Callout>\n');
 
         expect(twin).toContain('> **Gateway only**');

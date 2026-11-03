@@ -1,7 +1,8 @@
 'use client';
 
-import { cn, tw, Icon } from '@seedcord/ui';
+import { cn, tw, Icon, SearchOption } from '@seedcord/ui';
 
+import { toPageHref } from '#lib/docs/pageHref';
 import { getToneConfig } from '#lib/tonePresentation';
 
 import { SEARCH_KIND_ICONS } from './constants';
@@ -31,8 +32,6 @@ const RESULT_TONE: Partial<Record<SearchResultKind, EntityTone>> = {
     enumMember: 'enum'
 };
 
-const ACCENT_ACTIVE = tw`data-[active=true]:border-(--rind)/38 data-[active=true]:bg-(--rind)/16`;
-
 const NON_ENTITY_BADGES: Record<NonEntityResultKind, string> = {
     package: tw`border-(--badge-package-border) bg-(--badge-package-bg) text-(--badge-package-text)`,
     page: tw`border-(--badge-page-border) bg-(--badge-page-bg) text-(--badge-page-text)`,
@@ -46,8 +45,7 @@ interface CommandListItemProps {
     onSelect: (action: CommandAction) => void;
     isActive: boolean;
     optionId: string;
-    index: number;
-    onActivate: (index: number) => void;
+    onActivate: (action: CommandAction) => void;
 }
 
 export function CommandListItem({
@@ -55,7 +53,6 @@ export function CommandListItem({
     onSelect,
     isActive,
     optionId,
-    index,
     onActivate
 }: CommandListItemProps): ReactElement {
     const ItemIcon = SEARCH_KIND_ICONS[action.kind];
@@ -65,22 +62,16 @@ export function CommandListItem({
         BASE_ICON_CLASSES,
         toneStyles ? toneStyles.badge : NON_ENTITY_BADGES[action.kind as NonEntityResultKind]
     );
-    const activeHighlight = toneStyles?.active ?? ACCENT_ACTIVE;
 
     return (
-        <div
+        <SearchOption
             id={optionId}
-            role="option"
-            aria-selected={isActive}
-            data-active={isActive || undefined}
-            data-command-id={action.id}
-            aria-label={action.label}
-            onClick={() => onSelect(action)}
-            onMouseMove={() => onActivate(index)}
-            className={cn(
-                'group/item mt-1 flex cursor-pointer items-start gap-3 rounded-md border border-transparent bg-transparent p-3 text-sm text-(--text) outline-hidden transition first:mt-0',
-                activeHighlight
-            )}
+            href={toPageHref(action.href)}
+            label={action.label}
+            isActive={isActive}
+            onSelect={() => onSelect(action)}
+            onActivate={() => onActivate(action)}
+            className={cn('group/item items-start', toneStyles?.active)}
         >
             <span className={cn(iconClasses)}>
                 <Icon icon={ItemIcon} size={18} aria-hidden />
@@ -104,6 +95,6 @@ export function CommandListItem({
             {action.isExternal ? (
                 <Icon icon={SEARCH_KIND_ICONS.resource} size={16} className={cn('text-subtle mt-1')} aria-hidden />
             ) : null}
-        </div>
+        </SearchOption>
     );
 }

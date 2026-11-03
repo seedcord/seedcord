@@ -1,5 +1,5 @@
 import type { OptionKind, SlashRegistry } from '#registries/SlashRegistry';
-import type { IsNever } from 'type-fest';
+import type { IsNever, Simplify } from 'type-fest';
 
 type Row<Route extends keyof SlashRegistry> = SlashRegistry[Route]['options'];
 
@@ -23,10 +23,10 @@ export type ChoiceValueOf<Entry> = Entry extends { kind: 'string' }
       : never;
 
 /** the focused option. `value` is the raw partial discord delivers mid-type, always a string regardless of kind. */
-export interface FocusedField<Route extends keyof SlashRegistry> {
+export type FocusedField<Route extends keyof SlashRegistry> = Simplify<{
     name: AutocompletableNames<Route>;
     value: string;
-}
+}>;
 
 type NamesOfKind<Route extends keyof SlashRegistry, Kind extends OptionKind> = Route extends unknown
     ? {

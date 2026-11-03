@@ -37,8 +37,13 @@ export class Logger implements ILogger {
     }
 
     /** Returns a new logger for this label on the given channel. */
-    public inChannel(channel: LoggerChannelId): Logger {
+    public withChannel(channel: LoggerChannelId): Logger {
         return new Logger(this.label, { channel });
+    }
+
+    /** Returns a new logger on this channel with the given label. */
+    public withLabel(label: string): Logger {
+        return new Logger(label, { channel: this.channel });
     }
 
     public error(msg: string, ...args: unknown[]): void {

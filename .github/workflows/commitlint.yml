@@ -2,10 +2,9 @@ name: commitlint
 
 on:
   pull_request:
-    types: [opened, reopened, synchronize, ready_for_review]
+    types: [opened, reopened, edited, synchronize, ready_for_review]
   push:
-    branches-ignore:
-      - 'dependabot/**'
+    branches: [next, main]
 
 permissions:
   contents: read
@@ -21,7 +20,6 @@ jobs:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           persist-credentials: false
-          fetch-depth: 0
 
       - uses: $/.github/actions/setup
         with:
@@ -34,6 +32,8 @@ jobs:
         if: github.event_name == 'push'
         run: vp exec commitlint --last --verbose
 
-      - name: Lint PR commit range
+      - name: Lint PR title
         if: github.event_name == 'pull_request'
-        run: vp exec commitlint --from "${{ github.event.pull_request.base.sha }}" --to "${{ github.event.pull_request.head.sha }}" --verbose
+        env:
+          TITLE: ${{ github.event.pull_request.title }}
+        run: printf '%s\n' "$TITLE" | vp exec commitlint --verbose

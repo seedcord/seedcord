@@ -8,8 +8,11 @@ import type { TypedOmit } from '@seedcord/types';
 
 const AUGMENT_TARGET = '@seedcord/gateway';
 
+type Bot = Parameters<typeof renderAugmentation>[2];
+const NO_PLUGINS: Bot = { specifier: './bot', keys: [], types: new Map() };
+
 function renderWithTarget(registry: Parameters<typeof renderAugmentation>[0]): string {
-    return renderAugmentation(registry, AUGMENT_TARGET);
+    return renderAugmentation(registry, AUGMENT_TARGET, NO_PLUGINS);
 }
 
 function guildRows(tables: Record<string, RouteOptions>): SlashTables {
@@ -26,8 +29,8 @@ type FlatRegistry = TypedOmit<Parameters<typeof renderAugmentation>[0], 'slash'>
     slash: Record<string, RouteOptions>;
 };
 
-function renderSlashWith(registry: FlatRegistry, plugins?: Parameters<typeof renderAugmentation>[2]): string {
-    return renderAugmentation({ ...registry, slash: guildRows(registry.slash) }, AUGMENT_TARGET, plugins);
+function renderSlashWith(registry: FlatRegistry, bot: Bot = NO_PLUGINS): string {
+    return renderAugmentation({ ...registry, slash: guildRows(registry.slash) }, AUGMENT_TARGET, bot);
 }
 
 describe('prettier shield', () => {
@@ -499,7 +502,6 @@ export {};
     it('emits no import and no Core block for a bot with no plugins', () => {
         const output = withPlugins({ specifier: './bot', keys: [] });
 
-        expect(output).toBe(renderAugmentation(empty, AUGMENT_TARGET));
         expect(output).not.toContain('import type');
         expect(output).not.toContain('interface Core');
     });

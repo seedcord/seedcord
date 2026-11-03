@@ -1,12 +1,12 @@
-import { BRAND } from './palette';
+import { BRAND_COLORS } from '@seedcord/brand';
 
 // the light theme takes the darker value of each pair, since it renders on cream
 const HUES = {
-    ground: { dark: BRAND.seedDark, light: BRAND.pith },
+    ground: { dark: BRAND_COLORS.seedDark, light: BRAND_COLORS.pith },
     text: { dark: '#f4f0df', light: '#3a4233' },
     comment: { dark: '#7d8675', light: '#8a9079' },
     linen: { dark: '#ecebd9', light: '#4a5142' },
-    rind: { dark: BRAND.rind, light: '#3f7d2e' },
+    rind: { dark: BRAND_COLORS.rind, light: '#3f7d2e' },
     teal: { dark: '#5fb3ab', light: '#2f7b76' },
     amber: { dark: '#e3b552', light: '#a8781a' },
     coral: { dark: '#ea8568', light: '#bf5a3c' },

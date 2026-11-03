@@ -1,4 +1,5 @@
-import { DispatchContext, Notice } from '@seedcord/core';
+import { Notice } from '@seedcord/core';
+import { DispatchContext } from '@seedcord/core/internal';
 import { SeedcordErrorCode } from '@seedcord/errors';
 import { Events } from 'discord.js';
 import { describe, expect, expectTypeOf, it, vi } from 'vite-plus/test';
@@ -11,14 +12,16 @@ import type { ReplyResponse } from '@seedcord/types';
 import type { ClientEvents } from 'discord.js';
 
 const core = {} as unknown as Core;
-const dispatch = new DispatchContext('event:test');
+function eventDispatch(name: string): DispatchContext {
+    return new DispatchContext('event', name);
+}
 
-// a minimal Message-shaped fake, the arms only call reply on it
+// a minimal Message-shaped fake, the cases only call reply on it
 function fakeMessage(): { reply: ReturnType<typeof vi.fn> } {
     return { reply: vi.fn() };
 }
 
-// the message-event payload tuples are fakes, justified: match only reads getEvent() and hands the tuple to the arm
+// the message-event payload tuples are fakes, justified: match only reads getEvent() and hands the tuple to the case
 function createPayload(m: { reply: ReturnType<typeof vi.fn> }): ClientEvents[Events.MessageCreate] {
     return [m] as unknown as ClientEvents[Events.MessageCreate];
 }
@@ -64,10 +67,10 @@ class MultiNever extends EventHandler<Events.MessageCreate | Events.MessageUpdat
     }
 }
 
-// every registered event needs an arm
-class MissingArm extends EventHandler<Events.MessageCreate | Events.MessageUpdate> {
+// every registered event needs a case
+class MissingCase extends EventHandler<Events.MessageCreate | Events.MessageUpdate> {
     async execute(): Promise<void> {
-        // @ts-expect-error the messageUpdate arm is missing.
+        // @ts-expect-error the messageUpdate case is missing.
         await this.match({
             [Events.MessageCreate]: () => {
                 /* noop */
@@ -76,8 +79,8 @@ class MissingArm extends EventHandler<Events.MessageCreate | Events.MessageUpdat
     }
 }
 
-// each arm receives the event's payload as named params, so a param past the tuple's arity is a compile error
-class ArmArity extends EventHandler<Events.MessageCreate | Events.MessageUpdate> {
+// each case receives the event's payload as named params, so a param past the tuple's arity is a compile error
+class CaseArity extends EventHandler<Events.MessageCreate | Events.MessageUpdate> {
     async execute(): Promise<void> {
         await this.match({
             // @ts-expect-error messageCreate delivers one element, a second param is rejected.
@@ -91,8 +94,8 @@ class ArmArity extends EventHandler<Events.MessageCreate | Events.MessageUpdate>
     }
 }
 
-// each arm's named params are typed from the event's payload tuple, in order
-class ArmParamTypes extends EventHandler<Events.MessageCreate | Events.MessageUpdate> {
+// each case's named params are typed from the event's payload tuple, in order
+class CaseParamTypes extends EventHandler<Events.MessageCreate | Events.MessageUpdate> {
     async execute(): Promise<void> {
         await this.match({
             [Events.MessageCreate]: (message) => {
@@ -143,7 +146,7 @@ class BoomError extends Notice {
     constructor() {
         super('boom');
     }
-    render(): ReplyResponse {
+    override render(): ReplyResponse {
         return { components: [] };
     }
 }
@@ -166,9 +169,9 @@ void MultiNever;
 
 void PingMulti;
 void SingleRead;
-void MissingArm;
-void ArmArity;
-void ArmParamTypes;
+void MissingCase;
+void CaseArity;
+void CaseParamTypes;
 void GoodSingle;
 void GoodMulti;
 void DecoratorSuperset;
@@ -177,14 +180,14 @@ void BoomError;
 void ThrowingMulti;
 
 describe('EventHandler.match', () => {
-    it('propagates a throw from a match arm out of execute, where the controller boundary catches it', async () => {
-        const handler = new ThrowingMulti(createPayload(fakeMessage()), core, dispatch, Events.MessageCreate);
+    it('propagates a throw from a match case out of execute, where the controller boundary catches it', async () => {
+        const handler = new ThrowingMulti(createPayload(fakeMessage()), core, eventDispatch(Events.MessageCreate));
         await expect(handler.execute()).rejects.toBeInstanceOf(BoomError);
     });
 
     it('routes by the current event name, not the payload shape', async () => {
         const created = fakeMessage();
-        await new PingMulti(createPayload(created), core, dispatch, Events.MessageCreate).execute();
+        await new PingMulti(createPayload(created), core, eventDispatch(Events.MessageCreate)).execute();
         expect(created.reply).toHaveBeenCalledWith('created');
         expect(created.reply).not.toHaveBeenCalledWith('updated');
 
@@ -192,25 +195,30 @@ describe('EventHandler.match', () => {
         const oldMsg = fakeMessage();
         const newMsg = fakeMessage();
         const updatePayload = [oldMsg, newMsg] as unknown as ClientEvents[Events.MessageCreate];
-        await new PingMulti(updatePayload, core, dispatch, 'messageUpdate' as Events.MessageCreate).execute();
+        await new PingMulti(updatePayload, core, eventDispatch('messageUpdate')).execute();
         expect(newMsg.reply).toHaveBeenCalledWith('updated');
         expect(oldMsg.reply).not.toHaveBeenCalled();
     });
 
     it('reads this.event directly on a single-event handler', () => {
         const m = fakeMessage();
-        const handler = new SingleRead(createPayload(m), core, dispatch, Events.MessageCreate);
+        const handler = new SingleRead(createPayload(m), core, eventDispatch(Events.MessageCreate));
         expect(handler.read()).toHaveLength(1);
     });
 
-    it('throws MatchArmMissing when the current event has no arm', async () => {
+    it('throws MatchCaseMissing when the current event lacks a case', async () => {
         // a stale-deployed event arrives that the handler does not branch on
-        const handler = new PingMulti(createPayload(fakeMessage()), core, dispatch, 'ghost' as Events.MessageCreate);
-        await expect(handler.execute()).rejects.toMatchObject({ code: SeedcordErrorCode.MatchArmMissing });
+        const handler = new PingMulti(createPayload(fakeMessage()), core, eventDispatch('ghost'));
+        await expect(handler.execute()).rejects.toMatchObject({ code: SeedcordErrorCode.MatchCaseMissing });
     });
 
-    it('throws EventNameUnavailable when constructed without an event name', async () => {
-        const handler = new PingMulti(createPayload(fakeMessage()), core, dispatch);
-        await expect(handler.execute()).rejects.toMatchObject({ code: SeedcordErrorCode.EventNameUnavailable });
+    it('throws DecoratorDuplicateKey for an event listed twice', () => {
+        expect(() => {
+            @RegisterEvent([Events.MessageCreate], [Events.MessageCreate, { frequency: 'once' }])
+            class Twice extends EventHandler<Events.MessageCreate> {
+                async execute(): Promise<void> {}
+            }
+            void Twice;
+        }).toThrow(expect.objectContaining({ code: SeedcordErrorCode.DecoratorDuplicateKey }));
     });
 });

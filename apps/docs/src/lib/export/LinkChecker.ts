@@ -1,7 +1,8 @@
+import { PRODUCTION_SITES } from '@seedcord/brand';
 import { readdir, readFile } from 'node:fs/promises';
 import path from 'node:path';
 
-import { DOCS, GUIDE } from '@seedcord/ui/sites';
+import { GUIDE } from '@seedcord/ui/sites';
 
 import { DocsWorker } from '#lib/worker/DocsWorker';
 
@@ -20,13 +21,13 @@ interface FoundLink {
 }
 
 const HREF = /href=["']([^"'#?]*)/g;
-const ORIGIN = new URL(DOCS.url).origin;
+const ORIGIN = new URL(PRODUCTION_SITES.docs.url).origin;
 const MAX_REDIRECTS = 3;
 
 const isUnder = (href: string, site: string): boolean => href === site || href.startsWith(`${site}/`);
 
 function sitePath(href: string): string | null {
-    if (href.startsWith(DOCS.url)) return href.slice(ORIGIN.length);
+    if (href.startsWith(PRODUCTION_SITES.docs.url)) return href.slice(ORIGIN.length);
     if (!href.startsWith('/') || href.startsWith('//') || isUnder(href, GUIDE.path)) return null;
     return href;
 }

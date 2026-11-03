@@ -1,6 +1,6 @@
 ---
 title: Throwing
-description: Refuse a request from a handler by throwing a Notice, so the user sees your reason on a card and your code stops there.
+description: Refuse a request from any handler by throwing a Notice, so the user sees why on a card and your code stops there.
 ---
 
 Say your ban handler checks for an open case in a helper. Returning a flag means `execute()` has to check it, and every caller of every helper that can refuse has to check one too. Throw from the helper and the handler stops at the line that found the problem.
@@ -39,7 +39,7 @@ class OpenCaseExists extends Notice {
         super(`user ${id} has an open case`);
     }
 
-    public render(): ReplyResponse {
+    public override render(): ReplyResponse {
         return { components: [new OpenCaseCard().component] };
     }
 }
@@ -60,7 +60,7 @@ export class Ban extends SlashHandler<'ban'> {
 }
 ```
 
-Your logs and your fault reports read the string you pass to `super()`. The user never sees it, so the id goes there. `render()` builds the reply and returns a [`ReplyResponse`](ref:types/ReplyResponse), the same `{ components }` shape that [`this.reply()`](ref:gateway/RepliableHandler.reply) takes.
+Your logs and your fault reports read the string you pass to `super()`. Since `OpenCaseExists` overrides `render()`, the user never sees that string, so the id can go there. `render()` builds the reply and returns a [`ReplyResponse`](ref:types/ReplyResponse), the same `{ components }` shape that [`this.reply()`](ref:gateway/RepliableHandler.reply) takes. If you leave `render()` out, seedcord replies with its own refusal card and your `super()` string as the text.
 
 `assertNoOpenCase` refuses on its own. `execute()` calls it and continues, since a refusal never comes back as a return value.
 
@@ -68,22 +68,12 @@ Your logs and your fault reports read the string you pass to `super()`. The user
 
 ```ts twoslash
 import { Notice } from '@seedcord/gateway';
-
-import type { ReplyResponse } from '@seedcord/gateway';
-
-declare const components: ReplyResponse['components'];
 // ---cut---
 class ProfileUnavailable extends Notice {
     constructor(cause: unknown) {
         super('the profile lookup failed', { cause });
         this.report = true;
     }
-    // ---cut-start---
-
-    public render(): ReplyResponse {
-        return { components };
-    }
-    // ---cut-end---
 }
 ```
 
@@ -95,7 +85,7 @@ class ProfileUnavailable extends Notice {
 
 | you throw | the user sees | reported |
 | --- | --- | --- |
-| a `Notice` subclass | whatever your `render()` returns | when you set `report` |
+| a `Notice` subclass | what your `render()` returns, or seedcord's refusal card holding your `super()` string | when you set `report` |
 | a [`Fault`](ref:core/Fault) | a generic card carrying a tracking uuid | yes, by default |
 | a [`Silence`](ref:core/Silence) | nothing | no |
 | any other error | that same generic card | yes |
@@ -104,7 +94,7 @@ class ProfileUnavailable extends Notice {
 
 Reported means seedcord logs the throw and puts it on the bus, where a [webhook reporter](/replying/reporting) can send it to a Discord channel. [Faults](/replying/faults) explains the bottom three rows.
 
-## The fields on a Notice
+## The fields on a Notice, and who sees the card
 
 ```ts twoslash
 import { Notice } from '@seedcord/gateway';
@@ -124,7 +114,7 @@ class OpenCaseExists extends Notice {
     }
     // ---cut-after---
 
-    public render(): ReplyResponse {
+    public override render(): ReplyResponse {
         return { components };
     }
 }
@@ -188,7 +178,7 @@ class LookupFailed extends Notice {
     }
 
     // ---cut---
-    public render(ctx: RenderContext): ReplyResponse {
+    public override render(ctx: RenderContext): ReplyResponse {
         const contact = ctx.developerUsername ?? 'the developer';
 
         return {

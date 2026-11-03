@@ -27,7 +27,7 @@ class TestNotice extends Notice {
         super(message);
     }
 
-    public render(_ctx: RenderContext): ReplyResponse {
+    public override render(_ctx: RenderContext): ReplyResponse {
         return { components: [new TextDisplayBuilder().setContent('you shall not pass')] };
     }
 }
@@ -138,9 +138,9 @@ describe('handler gates', () => {
             guildId: 'g-1',
             channelId: 'c-1',
             memberRoleIds: ['r-1', 'r-2'],
-            memberPermissions: 2048n,
-            declaredRoute: 'slash:guarded'
+            memberPermissions: 2048n
         });
+        expect(seen?.dispatch.declaredRoute).toBe('slash:guarded');
     });
 
     it('reads the invoking user for a DM payload that carries no member', async () => {
@@ -258,7 +258,7 @@ describe('handler gates', () => {
         expect(executed()).toBe(true);
     });
 
-    it('renders a core catalog RequireBotPermissions refusal naming the bot as the subject', async () => {
+    it('renders a core catalog RequireBotPermissions refusal with the bot as the subject', async () => {
         const { classes, executed } = gated([RequireBotPermissions([PermissionFlagsBits.BanMembers])]);
         using engine = await readyEngine(classes);
         const { signer, handle } = engine;

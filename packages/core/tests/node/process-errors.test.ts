@@ -1,47 +1,22 @@
-import { REST } from '@discordjs/rest';
 import { LoggerChannelRegistry } from '@seedcord/logger';
-import { MemoryRateLimiter } from '@seedcord/rate-limiter';
 import { describe, it, expect, afterEach, vi } from 'vite-plus/test';
 
 import { CoordinatedShutdown } from '#node/Lifecycle/CoordinatedShutdown';
-import { ServerHost } from '#node/ServerHost';
 import { CoordinatedStartup } from '#src/lifecycle/CoordinatedStartup';
 import { StartupPhase } from '#src/lifecycle/phases';
-import { Bus } from '#subscribers/Bus';
+import { TestServerHost } from '#tests/utils/TestServerHost';
 
 import type { SubscriptionData } from '#subscribers/types/Subscriptions';
-import type { Config, IRateLimiter, LogRecord } from '@seedcord/types';
-
-class TestHost extends ServerHost<'gateway'> {
-    public readonly config: Config;
-    public readonly rest = new REST();
-    public readonly applicationId = 'app-1';
-    public readonly rateLimiter: IRateLimiter = new MemoryRateLimiter();
-    public readonly bus: Bus;
-
-    constructor(shutdown: CoordinatedShutdown, startup: CoordinatedStartup, config: Config) {
-        super('gateway', shutdown, startup);
-        this.config = config;
-        this.bus = new Bus(this);
-    }
-
-    public run(): Promise<this> {
-        return this.init();
-    }
-
-    public static resetHost(): void {
-        ServerHost.reset();
-    }
-}
+import type { Config, LogRecord } from '@seedcord/types';
 
 // justified: this startup path reads config.errors and nothing else on Config
 async function startHost(config: Config = {} as Config): Promise<{
-    host: TestHost;
+    host: TestServerHost;
     shutdown: CoordinatedShutdown;
     reported: SubscriptionData<'unknownException'>[];
 }> {
     const shutdown = new CoordinatedShutdown();
-    const host = new TestHost(shutdown, new CoordinatedStartup(), config);
+    const host = new TestServerHost(shutdown, new CoordinatedStartup(), config);
     const reported: SubscriptionData<'unknownException'>[] = [];
     host.bus.on('unknownException', (payload) => reported.push(payload));
 
@@ -63,7 +38,7 @@ function fireRejection(reason: Error): void {
 
 describe('process error handlers', () => {
     afterEach(() => {
-        TestHost.resetHost();
+        TestServerHost.resetHost();
         vi.restoreAllMocks();
     });
 
@@ -124,19 +99,19 @@ describe('process error handlers', () => {
         const exceptions = process.listenerCount('uncaughtException');
         const rejections = process.listenerCount('unhandledRejection');
 
-        const host = new TestHost(new CoordinatedShutdown(), new CoordinatedStartup(), {} as Config);
+        const host = new TestServerHost(new CoordinatedShutdown(), new CoordinatedStartup(), {} as Config);
         await Promise.all([host.run(), host.run()]);
 
         expect(process.listenerCount('uncaughtException')).toBe(exceptions + 1);
 
-        TestHost.resetHost();
+        TestServerHost.resetHost();
 
         expect(process.listenerCount('uncaughtException')).toBe(exceptions);
         expect(process.listenerCount('unhandledRejection')).toBe(rejections);
     });
 
     it('a racing start sees the same startup failure', async () => {
-        const host = new TestHost(new CoordinatedShutdown(), new CoordinatedStartup(), {} as Config);
+        const host = new TestServerHost(new CoordinatedShutdown(), new CoordinatedStartup(), {} as Config);
         host.startup.addTask(StartupPhase.Configuration, 'boom', () => Promise.reject(new Error('boot failed')));
 
         const settled = await Promise.allSettled([host.run(), host.run()]);
@@ -148,7 +123,7 @@ describe('process error handlers', () => {
         const exceptions = process.listenerCount('uncaughtException');
         const rejections = process.listenerCount('unhandledRejection');
 
-        const host = new TestHost(new CoordinatedShutdown(), new CoordinatedStartup(), {} as Config);
+        const host = new TestServerHost(new CoordinatedShutdown(), new CoordinatedStartup(), {} as Config);
         host.startup.addTask(StartupPhase.Configuration, 'boom', () => Promise.reject(new Error('boot failed')));
         await expect(host.run()).rejects.toThrow();
 
@@ -162,7 +137,7 @@ describe('process error handlers', () => {
         await startHost();
         expect(process.listenerCount('uncaughtException')).toBe(exceptions + 1);
 
-        TestHost.resetHost();
+        TestServerHost.resetHost();
 
         expect(process.listenerCount('uncaughtException')).toBe(exceptions);
         expect(process.listenerCount('unhandledRejection')).toBe(rejections);

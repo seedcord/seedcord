@@ -1,6 +1,6 @@
 {
     "name": "@seedcord/cli-prompts",
-    "version": "0.0.2",
+    "version": "0.0.3-next.0",
     "private": true,
     "description": "The Ink prompts and step spinner both seedcord CLIs bundle",
     "repository": {

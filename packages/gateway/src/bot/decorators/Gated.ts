@@ -8,10 +8,10 @@ import type { NonEmptyTuple } from 'type-fest';
  * Attaches gates to a handler. The gates run before `execute`, and a gate refusing stops the handler with
  * the reply or drop the gate threw. Multiple gates are ANDed, so each must pass. A gate that requires a
  * context the handler does not provide (a button gate on a slash handler, an interaction gate on an event
- * handler) is a compile error at this line, and the error names the gate and the handler kind. Place it
+ * handler) is a compile error at this line, and the error message shows the gate and the handler kind. Place it
  * above the route decorator.
  *
- * Combine gates with {@link and} or {@link or} to build a single gate from multiple arms.
+ * Combine gates into a single gate with {@link and} or {@link or}.
  *
  * @example
  * ```ts
@@ -36,7 +36,7 @@ import type { NonEmptyTuple } from 'type-fest';
  * @decorator
  */
 export function Gated<const Gates extends NonEmptyTuple<Gate<GateContextBase>>>(...gates: Gates) {
-    // mismatch resolves to the error tuple, so the class fails to assign and TS names the gate
+    // a mismatch resolves to the error tuple. the TS error then shows the gate
     return function <TCtor extends AnyHandlerCtor>(
         ctor: FitAll<TCtor, Gates> extends Gates ? TCtor : FitAll<TCtor, Gates>
     ): void {

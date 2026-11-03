@@ -6,7 +6,7 @@ import { cardJson } from '#tests/utils/cardText';
 
 import type { RenderContext } from '@seedcord/types';
 
-const dispatch = new DispatchContext('slash:probe');
+const dispatch = new DispatchContext('slash', 'probe');
 const ctx: RenderContext = { uuid: '11111111-2222-3333-4444-555555555555', dispatch };
 
 describe('Fault', () => {
@@ -32,7 +32,7 @@ describe('Fault', () => {
         expect(cardJson(response)).not.toContain('secret-driver-detail');
     });
 
-    it('names the configured developer as the contact', () => {
+    it('shows the configured developer as the contact', () => {
         const response = new Fault().render({ uuid: ctx.uuid, developerUsername: 'maintainer#1', dispatch });
         expect(cardJson(response)).toContain('maintainer#1');
     });

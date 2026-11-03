@@ -1,6 +1,6 @@
 {
     "name": "@seedcord/core",
-    "version": "0.11.0",
+    "version": "0.12.0-next.2",
     "description": "Foundational code shared by both transports",
     "keywords": [
         "discord",
@@ -104,7 +104,6 @@
         "coverage": "vp test run --coverage"
     },
     "dependencies": {
-        "@discordjs/builders": "catalog:deps",
         "@discordjs/rest": "catalog:deps",
         "@seedcord/custom-id": "workspace:^",
         "@seedcord/errors": "workspace:^",
@@ -118,16 +117,20 @@
         "verkit": "catalog:deps"
     },
     "devDependencies": {
+        "@discordjs/builders": "catalog:peer",
         "@seedcord/eslint-config": "workspace:^",
-        "@seedcord/rate-limiter": "workspace:^",
         "@seedcord/tsconfig": "workspace:^",
         "@seedcord/tsdown-config": "workspace:^",
         "@seedcord/vitest-config": "workspace:^",
         "envapt": "catalog:peer",
+        "keyv": "catalog:deps",
+        "unstorage": "catalog:deps",
+        "unstorage-v1": "npm:unstorage@1.17.6",
         "vite": "catalog:deps",
         "vitest": "catalog:test"
     },
     "peerDependencies": {
+        "@discordjs/builders": "catalog:peer",
         "envapt": "catalog:peer",
         "typescript": "catalog:consumerTypes"
     },

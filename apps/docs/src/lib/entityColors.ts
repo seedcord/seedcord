@@ -1,4 +1,4 @@
-import { BRAND } from '@seedcord/ui/palette';
+import { BRAND_COLORS } from '@seedcord/brand';
 
 import type { EntityTone } from '@seedcord/docs-engine/client';
 
@@ -13,4 +13,4 @@ export const ENTITY_TONE_HEX = {
 } as const satisfies Record<EntityTone, { light: string; dark: string }>;
 
 // the page foreground (--color-text), used as the theme-color on non-entity pages (root, overview, 404)
-export const FOREGROUND_HEX = { light: BRAND.seedDark, dark: BRAND.pith } as const;
+export const FOREGROUND_HEX = { light: BRAND_COLORS.seedDark, dark: BRAND_COLORS.pith } as const;

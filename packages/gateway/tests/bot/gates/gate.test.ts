@@ -25,7 +25,7 @@ function InfersPerInteractionKindRequired(): void {
 }
 void InfersPerInteractionKindRequired;
 
-describe('defineGate arm inference', () => {
+describe('defineGate context inference', () => {
     it('infers the required context from the ctx annotation', () => {
         const InteractionGate = defineGate('perms', (ctx: InteractionGateContext) => {
             // an interaction gate reaches ctx.interaction with no kind narrowing

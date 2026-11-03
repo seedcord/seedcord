@@ -54,7 +54,7 @@ export interface EventFaultSource {
 }
 
 /**
- * The fields both `responseAttempted` arms carry.
+ * The fields both `responseAttempted` shapes carry.
  */
 export interface AttemptedWrite {
     /** The dispatch this write belongs to, for joining against every other key it published. */

@@ -160,7 +160,7 @@ export function TocBar({ items, activeIds, currentId, pageTitle, className }: To
         <div ref={ref} className={cn(className)}>
             <Disclosure open={open} onOpenChange={setOpen} className={cn(barClassName, open && barOpenClassName)}>
                 <DisclosureTrigger ref={triggerRef} className={cn(triggerHeight, 'gap-2 px-4 text-sm md:px-6')}>
-                    {/* the visible label names a heading and never this control */}
+                    {/* screen readers hear this before the heading the visible label shows */}
                     <span className={cn('sr-only')}>On this page: </span>
                     <LabelSwap
                         active={open}

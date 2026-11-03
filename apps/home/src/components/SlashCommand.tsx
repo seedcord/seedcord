@@ -1,11 +1,12 @@
 'use client';
 
+import { PRODUCTION_SITES } from '@seedcord/brand';
 import { cn, useTimedToggle } from '@seedcord/ui';
 import { Materwelon } from '@seedcord/ui/Materwelon';
 import { useEffect, useRef, useState } from 'react';
 
 import { linkKind } from '#lib/links.ts';
-import { DISCORD_URL, DOCS_URL, GUIDE_URL, NPM_URL, REPO_URL } from '#lib/site.ts';
+import { DISCORD_URL, GUIDE_URL, NPM_URL, REPO_URL } from '#lib/site.ts';
 
 import type { KeyboardEvent as ReactKeyboardEvent, ReactNode } from 'react';
 
@@ -17,7 +18,7 @@ interface SlashCommandDef {
 
 const COMMANDS: readonly SlashCommandDef[] = [
     { name: 'ping', description: 'measure the reply time' },
-    { name: 'docs', description: 'open the API reference', href: DOCS_URL },
+    { name: 'docs', description: 'open the API reference', href: PRODUCTION_SITES.docs.url },
     { name: 'guide', description: 'open the guide', href: GUIDE_URL },
     { name: 'github', description: 'open the repo', href: REPO_URL },
     { name: 'npm', description: 'open the npm package', href: NPM_URL },

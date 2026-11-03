@@ -5,7 +5,7 @@ import { describe, expect, it, vi } from 'vite-plus/test';
 import { TunnelCoordinator } from '#commands/dev/tunnel/TunnelCoordinator';
 import { silentLogger } from '#tests/silentLogger';
 
-import type { CoordinatorDeps, CoordinatorTunnel } from '#commands/dev/tunnel/TunnelCoordinator';
+import type { CoordinatorDeps, TunnelKind } from '#commands/dev/tunnel/TunnelCoordinator';
 import type { SeedcordInstance } from '@seedcord/types/internal';
 
 // justified: the coordinator passes the instance through to the endpoint untouched
@@ -15,17 +15,44 @@ function urlFor(port: number): string {
     return `https://p${String(port)}.trycloudflare.com`;
 }
 
-type DepsOverrides = Partial<Omit<CoordinatorDeps, 'endpoint'>> & {
+// shaped like the cloudflared tunnel the quick kind wraps
+interface PortTunnel {
+    open(signal: AbortSignal, port: number, onResolving?: () => void): Promise<string>;
+    stop(): void;
+}
+
+type DepsOverrides = Partial<Omit<CoordinatorDeps, 'endpoint' | 'kind'>> & {
     endpoint?: Partial<CoordinatorDeps['endpoint']>;
+    kind?: Partial<TunnelKind>;
+    makeTunnel?: (onLost: () => void) => PortTunnel;
 };
 
-function deps({ endpoint, ...overrides }: DepsOverrides = {}): CoordinatorDeps {
+function portKind(makeTunnel: (onLost: () => void) => PortTunnel): TunnelKind {
     return {
-        makeTunnel: () => ({
-            open: (_signal, port) => Promise.resolve(urlFor(port)),
-            stop: () => undefined
-        }),
-        kind: 'quick',
+        prepare: (port) => {
+            if (port === false) return { warning: 'no port' };
+            return {
+                opening: `opening ${String(port)}`,
+                makeTunnel: (onLost) => {
+                    const tunnel = makeTunnel(onLost);
+                    return {
+                        open: (signal, onResolving) => tunnel.open(signal, port, onResolving),
+                        stop: () => tunnel.stop()
+                    };
+                }
+            };
+        },
+        failureHint: (tunnelStopped) => (tunnelStopped ? 'restart' : 'paste'),
+        clearsEndpointOnStop: true
+    };
+}
+
+function deps({ endpoint, kind, makeTunnel, ...overrides }: DepsOverrides = {}): CoordinatorDeps {
+    const tunnelFor =
+        makeTunnel ??
+        ((): PortTunnel => ({ open: (_signal, port) => Promise.resolve(urlFor(port)), stop: () => undefined }));
+    return {
+        kind: { ...portKind(tunnelFor), ...kind },
         endpoint: { set: () => Promise.resolve(), clear: () => Promise.resolve(), reuse: () => true, ...endpoint },
         onStatus: () => undefined,
         logger: silentLogger,
@@ -60,7 +87,7 @@ describe('TunnelCoordinator', () => {
         expect(order).toEqual(['open', 'set']);
     });
 
-    it('names the port it is opening before the wait starts', async () => {
+    it('logs the port it is opening before the wait starts', async () => {
         const info = vi.fn();
         const coordinator = new TunnelCoordinator(deps({ logger: { ...silentLogger, info } }));
 
@@ -112,7 +139,7 @@ describe('TunnelCoordinator', () => {
         await coordinator.onPort(3000, INSTANCE);
 
         expect(stop).toHaveBeenCalledOnce();
-        expect(info.mock.calls.at(-1)?.[0]).toContain('Restart');
+        expect(info.mock.calls.at(-1)?.[0]).toBe('restart');
     });
 
     it('leaves the tunnel running when it never became reachable and offers the paste', async () => {
@@ -134,7 +161,7 @@ describe('TunnelCoordinator', () => {
 
         expect(set).not.toHaveBeenCalled();
         expect(stop).not.toHaveBeenCalled();
-        expect(info.mock.calls.at(-1)?.[0]).toContain('pasting');
+        expect(info.mock.calls.at(-1)?.[0]).toBe('paste');
     });
 
     it('stops a tunnel that survived a failed attempt', async () => {
@@ -156,7 +183,7 @@ describe('TunnelCoordinator', () => {
     });
 
     it('opens a replacement after a loss on the same port', async () => {
-        const open = vi.fn<CoordinatorTunnel['open']>().mockResolvedValue(urlFor(3000));
+        const open = vi.fn<PortTunnel['open']>().mockResolvedValue(urlFor(3000));
         let lose = (): void => undefined;
         const coordinator = new TunnelCoordinator(
             deps({
@@ -196,7 +223,7 @@ describe('TunnelCoordinator', () => {
     it('leaves a configured endpoint in place on stop', async () => {
         const clear = vi.fn<CoordinatorDeps['endpoint']['clear']>().mockResolvedValue();
         const coordinator = new TunnelCoordinator(
-            deps({ kind: 'configured', endpoint: { set: () => Promise.resolve(), clear } })
+            deps({ kind: { clearsEndpointOnStop: false }, endpoint: { set: () => Promise.resolve(), clear } })
         );
         await coordinator.onPort(3000, INSTANCE);
 
@@ -215,7 +242,7 @@ describe('TunnelCoordinator', () => {
     });
 
     it('leaves the tunnel alone when the port is unchanged', async () => {
-        const open = vi.fn<CoordinatorTunnel['open']>().mockResolvedValue(urlFor(3000));
+        const open = vi.fn<PortTunnel['open']>().mockResolvedValue(urlFor(3000));
         const coordinator = new TunnelCoordinator(deps({ makeTunnel: () => ({ open, stop: () => undefined }) }));
 
         await coordinator.onPort(3000, INSTANCE);
@@ -225,7 +252,7 @@ describe('TunnelCoordinator', () => {
     });
 
     it('hands a restarted bot to the endpoint it kept, and sets the url again once the endpoint lost it', async () => {
-        const open = vi.fn<CoordinatorTunnel['open']>().mockResolvedValue(urlFor(3000));
+        const open = vi.fn<PortTunnel['open']>().mockResolvedValue(urlFor(3000));
         const set = vi.fn<CoordinatorDeps['endpoint']['set']>().mockResolvedValue();
         const reuse = vi.fn<CoordinatorDeps['endpoint']['reuse']>().mockReturnValue(true);
         const coordinator = new TunnelCoordinator(
@@ -272,7 +299,7 @@ describe('TunnelCoordinator', () => {
     });
 
     it('replaces the tunnel when a restart binds a different port', async () => {
-        const open = vi.fn<CoordinatorTunnel['open']>().mockResolvedValue(urlFor(1));
+        const open = vi.fn<PortTunnel['open']>().mockResolvedValue(urlFor(1));
         const stop = vi.fn();
         const coordinator = new TunnelCoordinator(deps({ makeTunnel: () => ({ open, stop }) }));
 
@@ -281,6 +308,37 @@ describe('TunnelCoordinator', () => {
 
         expect(stop).toHaveBeenCalledOnce();
         expect(open).toHaveBeenCalledTimes(2);
+    });
+
+    describe('when the kind has nothing to tunnel to', () => {
+        it('stops the live tunnel and warns', async () => {
+            const stop = vi.fn();
+            const clear = vi.fn<CoordinatorDeps['endpoint']['clear']>().mockResolvedValue();
+            const warn = vi.fn();
+            const coordinator = new TunnelCoordinator(
+                deps({
+                    makeTunnel: () => ({ open: (_signal, port) => Promise.resolve(urlFor(port)), stop }),
+                    endpoint: { set: () => Promise.resolve(), clear },
+                    logger: { ...silentLogger, warn }
+                })
+            );
+
+            await coordinator.onPort(3000, INSTANCE);
+            await coordinator.onPort(false, INSTANCE);
+
+            expect(stop).toHaveBeenCalledOnce();
+            expect(clear).toHaveBeenCalledOnce();
+            expect(warn).toHaveBeenCalledExactlyOnceWith('no port');
+        });
+
+        it('leaves the endpoint alone when no tunnel ran before', async () => {
+            const clear = vi.fn<CoordinatorDeps['endpoint']['clear']>().mockResolvedValue();
+            const coordinator = new TunnelCoordinator(deps({ endpoint: { set: () => Promise.resolve(), clear } }));
+
+            await coordinator.onPort(false, INSTANCE);
+
+            expect(clear).not.toHaveBeenCalled();
+        });
     });
 
     it('a superseded attempt stops its own tunnel and reports nothing', async () => {
@@ -339,7 +397,7 @@ describe('TunnelCoordinator', () => {
     });
 
     it('retries the same port after a failure', async () => {
-        const open = vi.fn<CoordinatorTunnel['open']>().mockResolvedValue(urlFor(3000));
+        const open = vi.fn<PortTunnel['open']>().mockResolvedValue(urlFor(3000));
         const set = vi
             .fn<CoordinatorDeps['endpoint']['set']>()
             .mockRejectedValueOnce(new Error('403'))

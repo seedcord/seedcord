@@ -102,6 +102,16 @@ export enum SeedcordErrorCode {
     CoreDirectoryNotListed = 1230,
     /** A folder is inside one that `seedcord build` skips, like a dot-folder, `node_modules`, `outDir` or the logs folder. */
     CoreDirectorySkipped = 1231,
+    /** `collection.entries()` ran on a Keyv store in `config.kv` that can't list its keys. */
+    CoreKvKeysUnsupported = 1232,
+    /** A plugin built with `new` outside `attach()` read `this.kv`. */
+    CorePluginKvOutsideAttach = 1233,
+    /** The driver in `config.kv` threw, or reported a write as failed. */
+    CoreKvDriverFailed = 1234,
+    /** The bot's own member is missing from the guild's member cache. */
+    CoreBotMemberMissing = 1235,
+    /** A module from a build read its path, but the build's `index.mjs` didn't run first. */
+    CoreBuiltModuleRanDirectly = 1236,
 
     /** A command class carries `@RegisterCommand` twice. */
     DecoratorCommandAlreadyRegistered = 1301,
@@ -115,6 +125,8 @@ export enum SeedcordErrorCode {
     DecoratorWebhookUrlMissing = 1305,
     /** A middleware decorator got an empty filter array. */
     DecoratorEmptyMiddlewareFilter = 1306,
+    /** `@Subscribe`, `@RegisterEvent`, or a component route decorator lists the same key or customId prefix twice. */
+    DecoratorDuplicateKey = 1307,
 
     /** A reply method was called in an ack state where Discord rejects it. */
     ReplyIllegalAckState = 1501,
@@ -141,10 +153,8 @@ export enum SeedcordErrorCode {
     CustomIdWireTooLong = 1606,
     /** A component handler is missing the route decorator that matches its base. */
     CustomIdHandlerRouteMissing = 1607,
-    /** A handler's `match()` has no arm for the current route, field, event, or command. */
-    MatchArmMissing = 1608,
-    /** An event handler or middleware read the event name but was constructed without one. */
-    EventNameUnavailable = 1609,
+    /** A handler's `match()` doesn't have a case for the current route, field, event, or command. */
+    MatchCaseMissing = 1608,
     /** Discord sent an autocomplete payload with no focused option. */
     AutocompleteNoFocusedOption = 1610,
     /** The submitted modal has no field with the requested custom id. */

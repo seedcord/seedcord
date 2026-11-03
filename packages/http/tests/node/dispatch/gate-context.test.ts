@@ -16,8 +16,6 @@ import { slashPayload } from './harness';
 
 import type { InteractionMiddlewareConstructor } from '#handlers/constructors';
 import type { ValidInteractionTypes } from '#handlers/interactionTypes';
-import type { Core } from '#interfaces/Core';
-import type { DispatchContext } from '@seedcord/core';
 import type { RenderableNotice, RenderContext, ReplyResponse } from '@seedcord/types';
 
 // a bot augments its own transport package here. both re-export the interface from @seedcord/types
@@ -55,7 +53,7 @@ class TagNotice extends Notice {
         super('refused');
     }
 
-    public render(ctx: RenderContext): ReplyResponse {
+    public override render(ctx: RenderContext): ReplyResponse {
         rendered.push(ctx.dispatch.get('actor'));
         return { components: [new TextDisplayBuilder().setContent('nope')] };
     }
@@ -81,7 +79,7 @@ async function dispatchThrough(
     for (const ctor of ctors) middlewares.register(ctor);
 
     const execute = await dispatchInteraction({
-        match: { kind: InteractionKind.Slash, routeId: 'slash:guarded', ctor: Handler },
+        match: { kind: InteractionKind.Slash, route: 'guarded', fallback: false, ctor: Handler },
         payload: slashPayload('guarded') as ValidInteractionTypes,
         core: testCore(nullPathConfig, VALID_TOKEN),
         middlewares
@@ -128,8 +126,8 @@ describe('the dispatch context on a rendered notice', () => {
         }
 
         class Exploding extends SlashHandler<never> {
-            constructor(event: never, core: Core, dispatch: DispatchContext) {
-                super(event, core, dispatch);
+            constructor(...args: ConstructorParameters<typeof SlashHandler<never>>) {
+                super(...args);
                 throw new Error('constructor blew up');
             }
 
@@ -140,7 +138,7 @@ describe('the dispatch context on a rendered notice', () => {
 
         Envapter.useSource(new PortableSource({}));
         await dispatchInteraction({
-            match: { kind: InteractionKind.Slash, routeId: 'slash:guarded', ctor: Exploding },
+            match: { kind: InteractionKind.Slash, route: 'guarded', fallback: false, ctor: Exploding },
             payload: slashPayload('guarded') as ValidInteractionTypes,
             core: testCore({ ...nullPathConfig, errors: { defaultError: RecordingCard } }, VALID_TOKEN),
             middlewares: new MiddlewareRegistry<InteractionMiddlewareConstructor>(interactionMiddleware)

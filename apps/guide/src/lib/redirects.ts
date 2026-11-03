@@ -22,7 +22,9 @@ export const RENAMED_PAGES: Record<string, string> = {
     '/gates/changing-roles': '/checks/changing-roles',
     '/plugins/your-own': '/writing-plugins',
     '/writing-plugins/local-testing': '/writing-plugins/publishing',
-    '/tooling/build': '/build/server'
+    '/tooling/build': '/build/server',
+    '/tooling/logging': '/built-ins/logging',
+    '/tooling/logger-config': '/built-ins/logger-config'
 };
 
 function withoutTrailingSlash(pathname: string): string {

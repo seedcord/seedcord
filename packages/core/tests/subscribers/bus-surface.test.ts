@@ -13,7 +13,7 @@ function stubBus(): Bus {
 }
 
 describe('the Bus surface a bot author reaches', () => {
-    it('names publish and nothing else', () => {
+    it('exposes only publish', () => {
         const bus = stubBus();
 
         for (const name of ['register', 'unregister', 'registerDefaults', 'verifyWebhooks', 'registeredCount']) {

@@ -27,7 +27,7 @@ class Reported extends Notice {
         super('reported through the boundary');
     }
 
-    render(): ReplyResponse {
+    override render(): ReplyResponse {
         return { components: [] };
     }
 }
@@ -71,7 +71,7 @@ function watched(): { core: Core; published: Published } {
 }
 
 async function dispatchThrough(core: Core, handler: HandlerConstructor): Promise<void> {
-    const match: ResolvedRoute = { kind: InteractionKind.Slash, routeId: 'slash:ok', ctor: handler };
+    const match: ResolvedRoute = { kind: InteractionKind.Slash, route: 'ok', fallback: false, ctor: handler };
     const execute = await dispatchInteraction({
         match,
         payload: slashPayload('ok') as ValidInteractionTypes,
@@ -123,7 +123,7 @@ describe('http fault publishing', () => {
         expect(logged.find((record) => record.args?.includes(unknown[0]?.error))).toBeDefined();
     });
 
-    it('names the dispatch route as the fault origin, so a subscriber can group faults', async () => {
+    it('sets the dispatch route as the fault origin, so a subscriber can group faults', async () => {
         const { unknown } = await faultsFor(BoomHandler);
 
         expect(unknown[0]?.origin).toBe('slash:ok');

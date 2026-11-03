@@ -17,13 +17,16 @@
         "start": "vp dlx serve dist",
         "preview": "wrangler dev",
         "deploy": "wrangler deploy",
+        "types": "wrangler types workerd/worker-configuration.d.ts",
+        "postinstall": "wrangler types workerd/worker-configuration.d.ts",
         "lint": "eslint '**/*.{ts,tsx}' --cache --no-error-on-unmatched-pattern",
         "lint:fix": "eslint '**/*.{ts,tsx}' --fix --cache --no-error-on-unmatched-pattern",
-        "tc": "fumadocs-mdx && tsgo --noEmit",
+        "tc": "fumadocs-mdx && tsgo --noEmit && tsgo -p workerd --noEmit",
         "test": "vp test run",
         "test:watch": "vp test dev"
     },
     "dependencies": {
+        "@seedcord/brand": "workspace:^",
         "@seedcord/docs-engine": "workspace:^",
         "@seedcord/docs-search": "workspace:^",
         "@seedcord/ui": "workspace:^",
@@ -39,10 +42,12 @@
         "react-dom": "catalog:react",
         "takumi-js": "catalog:deps",
         "twoslash": "0.3.9",
-        "twoslash-protocol": "0.3.9"
+        "twoslash-protocol": "0.3.9",
+        "type-fest": "catalog:deps"
     },
     "devDependencies": {
-        "@discordjs/builders": "catalog:deps",
+        "@discordjs/builders": "catalog:peer",
+        "@keyv/sqlite": "6.1.0",
         "@mdx-js/mdx": "catalog:deps",
         "@seedcord/core": "workspace:^",
         "@seedcord/eslint-config": "workspace:^",
@@ -64,6 +69,7 @@
         "@types/react": "catalog:react",
         "@types/react-dom": "catalog:react",
         "cross-env": "catalog:deps",
+        "db0": "catalog:deps",
         "discord-api-types": "catalog:deps",
         "discord.js": "catalog:peer",
         "envapt": "catalog:peer",
@@ -72,6 +78,8 @@
         "eslint-plugin-better-tailwindcss": "catalog:eslint",
         "eslint-plugin-tailwind-canonical-classes": "catalog:eslint",
         "jsdom": "catalog:test",
+        "jsonc-parser": "catalog:deps",
+        "keyv": "catalog:deps",
         "kysely": "catalog:peer",
         "mdast-util-mdx": "^3.0.0",
         "mdast-util-to-markdown": "catalog:deps",
@@ -84,6 +92,7 @@
         "tailwindcss": "catalog:deps",
         "typescript": "catalog:peer",
         "unified": "^11.0.5",
+        "unstorage": "catalog:deps",
         "vfile": "catalog:deps",
         "vitest": "catalog:test",
         "wrangler": "catalog:peer"

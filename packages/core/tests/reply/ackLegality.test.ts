@@ -58,7 +58,7 @@ describe('checkAckLegality', () => {
         }
     }
 
-    it('names the illegal method and the route in the message', () => {
+    it('puts the illegal method and the route in the message', () => {
         const message = captureMessage('reply', 'replied');
         expect(message).toContain('reply()');
         expect(message).toContain(ROUTE);
@@ -97,7 +97,7 @@ describe('checkAckLegality', () => {
         expect(message).toContain('Ack first with reply() or defer().');
     });
 
-    it('names the deferral rule for the whole defer family', () => {
+    it('states the deferral rule for the whole defer family', () => {
         const message = captureMessage('defer', 'replied');
         expect(message).toContain('A deferral can only be the initial response.');
     });

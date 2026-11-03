@@ -18,6 +18,7 @@ interface PullRequest {
     draft: boolean;
     user: Account | null;
     requested_reviewers: Account[];
+    head: { sha: string };
 }
 
 const humanLogin = (account: Account | null | undefined): string | undefined =>
@@ -46,6 +47,34 @@ export class GitHubApi {
     async pullRequestAuthor(pull: number): Promise<string | undefined> {
         const { user } = await this.pullRequest(pull);
         return humanLogin(user);
+    }
+
+    pullRequest(pull: number): Promise<PullRequest> {
+        return this.get(`pulls/${String(pull)}`, `reading pull request #${String(pull)}`);
+    }
+
+    async collaboratorRole(login: string): Promise<string> {
+        const { role_name: role } = await this.get<{ role_name: string }>(
+            `collaborators/${encodeURIComponent(login)}/permission`,
+            `reading the role of ${login}`
+        );
+        return role;
+    }
+
+    async lastSuccessfulPullRequestRun(workflow: string, sha: string): Promise<number | undefined> {
+        const { workflow_runs: runs } = await this.get<{ workflow_runs: { id: number }[] }>(
+            `actions/workflows/${workflow}/runs?head_sha=${sha}&event=pull_request&status=success&per_page=1`,
+            `listing ${workflow} runs for ${sha}`
+        );
+        return runs[0]?.id;
+    }
+
+    async artifactNames(run: number): Promise<string[]> {
+        const { artifacts } = await this.get<{ artifacts: { name: string }[] }>(
+            `actions/runs/${String(run)}/artifacts`,
+            `listing artifacts of run ${String(run)}`
+        );
+        return artifacts.map(({ name }) => name);
     }
 
     async requestMissingReviews(pull: number, reviewers: readonly string[]): Promise<void> {
@@ -102,10 +131,6 @@ export class GitHubApi {
             `issues/${String(issue)}/labels/${encodeURIComponent(label)}`,
             `removing ${label} from #${String(issue)}`
         );
-    }
-
-    private pullRequest(pull: number): Promise<PullRequest> {
-        return this.get(`pulls/${String(pull)}`, `reading pull request #${String(pull)}`);
     }
 
     private async get<Payload>(path: string, what: string): Promise<Payload> {

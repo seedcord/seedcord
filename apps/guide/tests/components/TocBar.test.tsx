@@ -40,13 +40,13 @@ function pressEscape(): void {
 }
 
 describe('TocBar', () => {
-    it('names the heading you are in', () => {
+    it('shows the heading you are in', () => {
         renderBar();
 
         expect(trigger()).toHaveTextContent('Do this');
     });
 
-    it('names itself without reading the label it is hiding', () => {
+    it('keeps its accessible name without reading the label it hides', () => {
         renderBar();
 
         expect(screen.getByRole('button', { name: /On this page:\s*Do this/ })).toBeInTheDocument();

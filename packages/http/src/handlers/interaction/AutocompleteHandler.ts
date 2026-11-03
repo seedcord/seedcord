@@ -1,30 +1,38 @@
 import { BaseHandler } from '@seedcord/core';
-import { AutocompleteRouteBrand, reportedWrite } from '@seedcord/core/internal';
+import { AutocompleteRouteBrand, runCase } from '@seedcord/core/internal';
 import { SeedcordErrorCode } from '@seedcord/errors';
-import { SeedcordError, SeedcordTypeError } from '@seedcord/errors/internal';
-import { InteractionResponseType, Routes } from 'discord-api-types/v10';
+import { SeedcordError } from '@seedcord/errors/internal';
 
+import { interactionUser } from '#handlers/interactionUser';
 import { HttpSlashOptions } from '#inputs/HttpSlashOptions';
 import { apiFor } from '#src/api';
-import { slashRouteOf } from '#src/dispatch/slashRouteOf';
 
 import type { Core } from '#interfaces/Core';
 import type { API } from '@discordjs/core/http-only';
 import type { AutocompleteOptions, DispatchContext, SlashRegistry } from '@seedcord/core';
-import type { AutocompletableNames, ChoiceValueOf, EntryFor, FocusedField } from '@seedcord/core/internal';
+import type {
+    AutocompletableNames,
+    AutocompleteResponder,
+    CaseReturn,
+    ChoiceValueOf,
+    EntryFor,
+    FocusedField,
+    MatchResult,
+    OnlyCases
+} from '@seedcord/core/internal';
 import type {
     APIApplicationCommandOptionChoice,
-    APIApplicationCommandAutocompleteInteraction
+    APIApplicationCommandAutocompleteInteraction,
+    APIUser
 } from 'discord-api-types/v10';
-import type { Promisable } from 'type-fest';
 
-type FocusedArms<Route extends keyof SlashRegistry, Ret> = {
+type FocusedCases<Route extends keyof SlashRegistry, Ret> = {
     [Name in AutocompletableNames<Route>]: (
         value: string,
         respond: (
             choices: readonly APIApplicationCommandOptionChoice<ChoiceValueOf<EntryFor<Route, Name>>>[]
         ) => Promise<void>
-    ) => Promisable<Ret>;
+    ) => CaseReturn<Ret>;
 };
 
 /**
@@ -41,9 +49,17 @@ export abstract class AutocompleteHandler<Route extends keyof SlashRegistry> ext
     Core
 > {
     // keep this ctor. inheriting BaseHandler's protected one collapses the handler ctor type to never.
-    constructor(event: APIApplicationCommandAutocompleteInteraction, core: Core, dispatch: DispatchContext) {
+    constructor(
+        event: APIApplicationCommandAutocompleteInteraction,
+        core: Core,
+        dispatch: DispatchContext,
+        responder: AutocompleteResponder<APIApplicationCommandOptionChoice>
+    ) {
         super(event, core, dispatch, 'interactions');
+        this.#responder = responder;
     }
+
+    readonly #responder: AutocompleteResponder<APIApplicationCommandOptionChoice>;
 
     // phantom, never set at runtime.
     /** @internal */
@@ -54,6 +70,11 @@ export abstract class AutocompleteHandler<Route extends keyof SlashRegistry> ext
      */
     protected get api(): API {
         return apiFor(this.core.rest);
+    }
+
+    /** The user who sent this interaction, read from `member.user` in a guild and `user` in a DM. */
+    protected get user(): APIUser {
+        return interactionUser(this.event);
     }
 
     private resolver?: HttpSlashOptions;
@@ -75,51 +96,33 @@ export abstract class AutocompleteHandler<Route extends keyof SlashRegistry> ext
     }
 
     /**
-     * Run the arm for the focused field. An autocomplete always dispatches by which field is focused.
+     * Run the case for the focused field. An autocomplete always dispatches by which field is focused.
      * Match is how you read it.
      *
-     * Provide one arm per autocompletable field across the registered commands, keyed by field name. Each
-     * arm receives the focused partial value and a `respond` typed to that field's choice value. The
-     * arms must cover every autocompletable field. A missing field or an unknown key is a compile error.
+     * Provide one case per autocompletable field across the registered commands, keyed by field name. Each
+     * case receives the focused partial value and a `respond` typed to that field's choice value. The
+     * cases must cover every autocompletable field. A missing field or an unknown key is a compile error.
      *
-     * @param arms - One handler per autocompletable field, keyed by field name.
-     * @returns The result of the arm that ran.
-     * @throws A **SeedcordTypeError** with `MatchArmMissing` when the focused field has no arm. Only a stale-deployed command can send one.
+     * @param cases - One handler per autocompletable field, keyed by field name.
+     * @typeParam Ret - The type that every case must return. Leave it out to get the union of what the cases return.
+     * @returns The result of the case that ran.
+     * @throws A **SeedcordTypeError** with `MatchCaseMissing` when the focused field doesn't have a case. Only a stale-deployed command can send one.
      */
-    protected async match<Ret>(arms: FocusedArms<Route, Ret>): Promise<Ret> {
+    protected async match<Ret = never, Cases extends FocusedCases<Route, Ret> = FocusedCases<Route, Ret>>(
+        cases: OnlyCases<Cases, FocusedCases<Route, Ret>>
+    ): Promise<MatchResult<Ret, Cases>> {
         const { name, value } = this.focused;
         const respond = (choices: readonly APIApplicationCommandOptionChoice[]): Promise<void> => this.respond(choices);
-        // justified: FocusedArms is keyed by field literals, the Record cast indexes it with the runtime field name.
-        type Arm = (
-            value: string,
-            respond: (choices: readonly APIApplicationCommandOptionChoice[]) => Promise<void>
-        ) => Promisable<Ret>;
-        const arm = Object.hasOwn(arms, name) ? (arms as Record<string, Arm>)[name] : undefined;
-        if (!arm)
-            throw new SeedcordTypeError(SeedcordErrorCode.MatchArmMissing, [
-                this.constructor.name,
-                'focused field',
-                name
-            ]);
-        return await arm(value, respond);
+        return await runCase<MatchResult<Ret, Cases>>(this, cases, 'focused field', name, value, respond);
     }
 
     /** Send autocomplete suggestions, callback type 8. Prefer {@link match}, which restricts each field's choices to its declared type. */
-    protected async respond(choices: readonly APIApplicationCommandOptionChoice[]): Promise<void> {
-        await reportedWrite(
-            { bus: this.core.bus, dispatch: this.dispatch, interactionId: this.event.id },
-            'respond',
-            () =>
-                this.core.rest.post(Routes.interactionCallback(this.event.id, this.event.token), {
-                    body: { type: InteractionResponseType.ApplicationCommandAutocompleteResult, data: { choices } }
-                })
-        );
+    protected respond(choices: readonly APIApplicationCommandOptionChoice[]): Promise<void> {
+        return this.#responder.respond(choices);
     }
 
     /** The selected command's path, such as `search/docs`, without the interaction-kind prefix. */
-    protected get route(): Route {
-        return slashRouteOf(this.event.data) as Route;
-    }
+    declare protected readonly route: Route;
 
     /**
      * The already-entered options on this command, restricted to the kinds Discord resolves during autocomplete

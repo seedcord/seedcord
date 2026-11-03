@@ -64,7 +64,7 @@ function buildToneCandidates(value: string): string[] {
     return [...candidates];
 }
 
-// Returns null when the input names no entity tone. resolveEntityTone defaults that to 'class' for
+// Returns null when the input doesn't match an entity tone. resolveEntityTone defaults that to 'class' for
 // URL assembly. Membership and parse callers use this strict form, so a non-entity kind (method,
 // accessor, namespace) does not silently collapse into the 'class' bucket.
 export function resolveEntityToneStrict(input?: string | null): EntityTone | null {

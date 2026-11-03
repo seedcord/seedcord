@@ -149,7 +149,7 @@ ${text}`
             const types = events.map((event) => event.type);
             const steps = events.flatMap((event) => (event.type === 'progress' ? [event.status] : []));
 
-            expect(types.lastIndexOf('progress')).toBeLessThan(types.indexOf('server-listening'));
+            expect(types.lastIndexOf('progress')).toBeLessThan(types.indexOf('server-port'));
             expect(steps).toContainEqual(
                 expect.stringContaining(posixRelative(process.cwd(), join(projectDir, 'src/bot.ts')))
             );

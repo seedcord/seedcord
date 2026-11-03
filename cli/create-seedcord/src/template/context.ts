@@ -6,13 +6,12 @@ import { SeedcordTypeError } from '@seedcord/errors/internal';
 
 import ownPackage from '#package' with { type: 'json' };
 
-import { execPrefix, runPrefix } from '#cli/packageManager';
 import { intentsFor, partialsFor } from '#interview/capabilities';
 import { STEPS } from '#interview/steps/index';
 
+import type { PackageManager } from '#cli/PackageManager';
 import type { Answers } from '#interview/types';
 import type { TransportVariables } from '@seedcord/cli-templates';
-import type { AgentName } from 'package-manager-detector';
 
 type SharedAnswers = Omit<Answers, 'transport' | 'runtime' | 'capabilities'>;
 
@@ -69,7 +68,7 @@ export function requireScaffoldAnswers(answers: Partial<Answers>): ScaffoldAnswe
 
 export function buildContext(
     answers: ScaffoldAnswers,
-    extras: { developerUsername: string; agent: AgentName }
+    extras: { developerUsername: string; manager: PackageManager }
 ): TemplateContext {
     const transportValues = transportVariables(
         `@seedcord/${answers.transport}`,
@@ -89,8 +88,12 @@ export function buildContext(
         botColor: answers.botColor,
         developerUsername: extras.developerUsername,
         // cloudflare's config loader throws on bun
-        cliOnBun: extras.agent === 'bun' && !isEdge,
-        pm: { run: runPrefix(extras.agent), exec: execPrefix(extras.agent), isPnpm: extras.agent === 'pnpm' },
+        cliOnBun: extras.manager.name === 'bun' && !isEdge,
+        pm: {
+            run: extras.manager.runPrefix(),
+            exec: extras.manager.execPrefix(),
+            isPnpm: extras.manager.name === 'pnpm'
+        },
         engines: ownPackage.engines
     };
 }

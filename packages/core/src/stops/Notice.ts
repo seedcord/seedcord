@@ -1,4 +1,7 @@
+import { NoticeCard } from './NoticeCard';
+
 import type { RenderContext, ReplyResponse } from '@seedcord/types';
+import type { Constructor } from 'type-fest';
 
 /**
  * Base class for a user-facing refusal or a reported fault.
@@ -28,7 +31,7 @@ import type { RenderContext, ReplyResponse } from '@seedcord/types';
  *         super(`balance ${balance} is below the cost`);
  *     }
  *
- *     render(_ctx: RenderContext): ReplyResponse {
+ *     override render(_ctx: RenderContext): ReplyResponse {
  *         return { components: [new TooPoorCard(this.balance).component] };
  *     }
  * }
@@ -55,7 +58,7 @@ export abstract class Notice extends Error {
     public ephemeral = true;
 
     /**
-     * A short one-line reason. When every arm of an {@link or} gate refuses and each one sets this, `or`
+     * A short one-line reason. When every gate in an {@link or} refuses and each one sets this, `or`
      * throws a refusal listing them under `You need to meet at least one of these:`. Write a verb phrase that
      * finishes that line, for example, "be the bot owner".
      */
@@ -71,7 +74,27 @@ export abstract class Notice extends Error {
 
     /**
      * Builds what the user sees. Called fresh each time the denial is shown, so the builders are new
-     * and the bot color resolves at render time.
+     * and the bot color resolves at render time. By default it returns seedcord's refusal card with the message as
+     * its text. Override it to show your own components.
      */
-    public abstract render(ctx: RenderContext): ReplyResponse;
+    public render(_ctx: RenderContext): ReplyResponse {
+        return { components: [new NoticeCard(this.message).component] };
+    }
 }
+
+/**
+ * A Notice class that seedcord constructs and throws in place of a default refusal. It passes the data that
+ * refusal carries, like the retry time for `Cooldown` or the subject and permission names for a permission check.
+ *
+ * @example
+ * ```ts
+ * class OwnersOnly extends Notice {
+ *     public constructor() {
+ *         super('Owners only.');
+ *     }
+ * }
+ *
+ * OwnerOnly({ notice: OwnersOnly });
+ * ```
+ */
+export type NoticeConstructor<Args extends unknown[] = []> = Constructor<Notice, Args>;

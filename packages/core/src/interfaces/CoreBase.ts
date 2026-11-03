@@ -1,3 +1,4 @@
+import type { Kv } from '#src/kv/Kv';
 import type { Bus } from '#subscribers/Bus';
 import type { REST } from '@discordjs/rest';
 import type { Config, IRateLimiter } from '@seedcord/types';
@@ -21,4 +22,6 @@ export interface CoreBase {
     readonly rateLimiter: IRateLimiter;
     /** Publish and subscribe to framework and application events. */
     readonly bus: Bus;
+    /** Your handlers' records in `config.kv`, under the `app:` prefix. */
+    readonly kv: Kv;
 }

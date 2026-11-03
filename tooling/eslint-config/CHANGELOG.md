@@ -1,5 +1,30 @@
 # @seedcord/eslint-config
 
+## 3.0.1-next.2
+
+### 🩹 Patch
+
+- Fixed `restrict-template-expressions` rejecting an emoji in a template string, like `${Emojis.Streak}`, on both transports. ([#438](https://github.com/seedcord/seedcord/pull/438))
+
+## 3.0.1-next.1
+
+### 🩹 Patch
+
+#### 📦 Seedcord packages
+
+- `eslint-plugin-discordjs` 0.2.0 → 0.2.1-next.0
+- `@seedcord/eslint-plugin` 0.5.1-next.0 → 0.5.1-next.1
+
+## 3.0.1-next.0
+
+### 🩹 Patch
+
+- Fixed a type issue in the prettier config of @seedcord/eslint-config. It's now fully typed and not labeled as unknown. ([#421](https://github.com/seedcord/seedcord/pull/421), thanks [@lunaradev1](https://github.com/lunaradev1))
+
+#### 📦 Seedcord packages
+
+- `@seedcord/eslint-plugin` 0.5.0 → 0.5.1-next.0
+
 ## 3.0.0
 
 ### 💥 Breaking

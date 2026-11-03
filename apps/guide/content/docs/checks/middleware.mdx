@@ -1,13 +1,13 @@
 ---
 title: Interaction middleware
-description: Run code before and after your interaction handlers with middleware, or stop a dispatch before it reaches them.
+description: Run code before and after your commands and other interaction handlers with middleware, or refuse an interaction before it reaches them.
 ---
 
 A middleware runs before your handler. Write one when several handlers all need the same thing done first, like loading the caller's record, or when you want to refuse an interaction before it reaches your code.
 
 A middleware runs for every handler of the kinds it lists, without being attached to any of them. A [gate](/checks/gates) runs _only_ on the handlers you put it on. Put work that every [dispatch](/checks#what-a-dispatch-is) needs in a middleware. Put a check that only some commands need in a gate on those commands.
 
-A middleware's `execute()` runs after seedcord builds your handler and before any gate.
+seedcord builds your handler first, so its constructor runs even if a middleware or gate then refuses. A middleware's `execute()` runs next, before any gate.
 
 The smallest middleware is a class with the decorator and an `execute()`. `Trace` logs the route every dispatch matched.
 
@@ -66,13 +66,15 @@ export class ComponentTrace extends InteractionMiddleware<
     InteractionKind.Button | InteractionKind.Modal
 > {
     public async execute(): Promise<void> {
-        this.logger.debug(`component on ${this.dispatch.routeId}`);
+        this.logger.debug(`component on ${this.route}`);
         await Promise.resolve();
     }
 }
 ```
 
-`ComponentTrace` runs for buttons and modals, and its `this.event` is a union of those two payloads. Every kind seedcord routes is a member of [`InteractionKind`](ref:core/InteractionKind).
+`ComponentTrace` runs for buttons and modals, and its `this.event` is a union of those two payloads. [`this.route`](ref:gateway/InteractionMiddleware.route) is the custom-ID prefix that the interaction carried. For a custom ID that seedcord didn't make, it can be empty or a cut-off piece of that ID.
+
+Every kind seedcord routes is a member of [`InteractionKind`](ref:core/InteractionKind).
 
 ```ts twoslash
 // @noErrors
@@ -82,7 +84,7 @@ InteractionKind.
 //              ^|
 ```
 
-`Autocomplete` is the one a middleware can't list, since Discord accepts only a list of choices in reply to one.
+`Autocomplete` is the one a middleware can't list, since Discord accepts only a list of choices in reply to one. When the generic lists only slash or context menu kinds, your editor suggests your registered commands for `this.route`.
 
 <Callout type="transport">
 

@@ -1,7 +1,7 @@
 import path from 'node:path';
 
-// next loads this file with require. ./sites and ./static-export have a bare default export for that condition
-import { DOCS } from '@seedcord/ui/sites';
+// next loads this file with require. each package below needs a bare default export condition
+import { PRODUCTION_SITES } from '@seedcord/brand';
 import { staticExport } from '@seedcord/ui/staticExport';
 
 import type { NextConfig } from 'next';
@@ -15,7 +15,7 @@ function buildCpus(): number {
 }
 
 const config = (phase: string): NextConfig => ({
-    ...staticExport(phase, DOCS),
+    ...staticExport(phase, PRODUCTION_SITES.docs),
     // workspace:* deps resolve into the build only from the monorepo root
     outputFileTracingRoot: path.join(import.meta.dirname, '../..'),
     serverExternalPackages: [

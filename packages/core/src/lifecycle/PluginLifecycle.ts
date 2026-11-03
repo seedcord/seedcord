@@ -7,28 +7,29 @@ import { pluginLoggerOf } from '#src/plugin/Plugin';
 
 import { withTimeout } from './withTimeout';
 
-import type { CoordinatedShutdown } from '#node/Lifecycle/CoordinatedShutdown';
-import type { ShutdownPhase } from '#src/lifecycle/phases';
+import type { ShutdownTasks } from '#node/Lifecycle/CoordinatedShutdown';
+import type { TaskShutdownPhase } from '#src/lifecycle/phases';
 import type { Attachment } from '#src/plugin/PluginHost';
-import type { CoordinatedStartup } from './CoordinatedStartup';
+import type { StartupTasks } from './CoordinatedStartup';
+import type { Promisable } from 'type-fest';
 
 interface ReadyStep {
     readonly key: string;
-    readonly run: () => Promise<void>;
+    readonly run: () => Promisable<void>;
     readonly timeout: number;
 }
 
 export class PluginLifecycle {
     private readonly logger = new Logger('Plugins', { channel: 'plugins' });
     private readonly completedInits = new Set<Attachment>();
-    private readonly disposePhases = new Set<ShutdownPhase>();
+    private readonly disposePhases = new Set<TaskShutdownPhase>();
     private readonly timedOutInits = new Set<Promise<void>>();
     private attachments: readonly Attachment[] = [];
     private registered = false;
 
     constructor(
-        private readonly startup: Pick<CoordinatedStartup, 'addTask'>,
-        private readonly shutdown: Pick<CoordinatedShutdown, 'addTask'>
+        private readonly startup: StartupTasks,
+        private readonly shutdown: ShutdownTasks
     ) {}
 
     // one combined task per phase keeps plugin inits sequential while the phase's other tasks run concurrently
@@ -45,7 +46,6 @@ export class PluginLifecycle {
             const budget = group.reduce((sum, a) => sum + a.spec.init.timeout, 0);
             this.startup.addTask(phase, 'plugins-init', () => this.runInits(group), budget);
         }
-
         this.registerReadyTask(groups.get(StartupPhase.Ready) ?? []);
     }
 
@@ -74,7 +74,7 @@ export class PluginLifecycle {
                 await withTimeout(`Plugin (${key})`, () => running, spec.init.timeout);
             } catch (caught) {
                 if (isSeedcordError(caught, undefined, SeedcordErrorCode.LifecycleTaskTimeout)) {
-                    this.disposeWhenInitResolves(attachment, running);
+                    this.disposeWhenInitResolves(attachment, Promise.resolve(running));
                 }
                 throw caught;
             }
@@ -105,11 +105,11 @@ export class PluginLifecycle {
     private registerReadyTask(readyInits: readonly Attachment[]): void {
         const steps = this.attachments.reduce<ReadyStep[]>((acc, { key, instance, spec }) => {
             const ready = instance.ready?.bind(instance);
+
             if (ready) acc.push({ key, run: ready, timeout: spec.ready.timeout });
             return acc;
         }, []);
         if (readyInits.length === 0 && steps.length === 0) return;
-
         const budget =
             readyInits.reduce((sum, a) => sum + a.spec.init.timeout, 0) +
             steps.reduce((sum, step) => sum + step.timeout, 0);
@@ -126,7 +126,7 @@ export class PluginLifecycle {
         );
     }
 
-    private registerDisposeTask(phase: ShutdownPhase): void {
+    private registerDisposeTask(phase: TaskShutdownPhase): void {
         if (this.disposePhases.has(phase)) return;
         this.disposePhases.add(phase);
 
@@ -138,14 +138,14 @@ export class PluginLifecycle {
         this.shutdown.addTask(phase, 'plugins-dispose', () => this.runDisposals(phase), budget);
     }
 
-    private async runDisposals(phase: ShutdownPhase): Promise<void> {
+    private async runDisposals(phase: TaskShutdownPhase): Promise<void> {
         const failures: unknown[] = [];
         await this.disposeCompleted(phase, (caught) => failures.push(caught));
         throwSingleOrAggregate(failures, SeedcordErrorCode.PluginDisposeFailures);
     }
 
     private async disposeCompleted(
-        phase: ShutdownPhase | undefined,
+        phase: TaskShutdownPhase | undefined,
         onError: (caught: unknown) => void
     ): Promise<void> {
         for (const attachment of [...this.attachments].reverse()) {

@@ -1,10 +1,10 @@
 import type { Core } from '#interfaces/Core';
 import type { Repliables, ValidNonInteractionKeys } from '#src/handlers/interactionTypes';
-import type { GuildPermissionsContext } from '@seedcord/core';
+import type { AppPermissionsContext, GuildPermissionsContext } from '@seedcord/core';
 import type { ClientEvents, Guild, GuildMember, User } from 'discord.js';
 
 /**
- * The interaction arm. It extends {@link GuildPermissionsContext} with the live interaction and
+ * The context a gate gets on an interaction. It extends {@link GuildPermissionsContext} with the live interaction and
  * the djs objects resolved from the gateway cache. `Repliable` is the interaction type the gate
  * supports, inferred from the `ctx` annotation, so a gate reading button-specific fields is rejected
  * on a slash handler. `interaction` is the reply target, so `user` is always present. Use
@@ -23,7 +23,8 @@ import type { ClientEvents, Guild, GuildMember, User } from 'discord.js';
  * });
  * ```
  */
-export interface InteractionGateContext<Repliable extends Repliables = Repliables> extends GuildPermissionsContext {
+export interface InteractionGateContext<Repliable extends Repliables = Repliables>
+    extends GuildPermissionsContext, AppPermissionsContext {
     /** The literal `'interaction'`. Narrow on it before reading `interaction`. */
     readonly kind: 'interaction';
     /** The running framework, with the gateway's bot and bus. */
@@ -39,12 +40,12 @@ export interface InteractionGateContext<Repliable extends Repliables = Repliable
 }
 
 /**
- * The event arm. It extends {@link GuildPermissionsContext} with the event payload and the djs
+ * The context a gate gets on an event. It extends {@link GuildPermissionsContext} with the event payload and the djs
  * objects derived from it. `Names` is the event(s) the gate supports, inferred from the `ctx`
  * annotation, so a gate that reads one event's `payload` is rejected on a handler for a different
  * event. The default supports every event.
  *
- * @typeParam Names - The event name or names the gate reads, typing `payload` to that event's args tuple.
+ * @typeParam Names - One event or a union of the events the gate reads. `payload` gets that event's args tuple.
  *
  * @example
  * ```ts
@@ -84,7 +85,7 @@ export interface EventGateContext<
  *
  * @example
  * ```ts
- * // a gate that handles either arm narrows on ctx.kind
+ * // a gate that takes either context narrows on ctx.kind
  * const Either = defineGate('either', (ctx: GateContext) => {
  *     if (ctx.kind === 'interaction') void ctx.interaction;
  *     else void ctx.payload;

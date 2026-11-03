@@ -63,8 +63,8 @@ function formatErrorName(name: string, _identifier: SeedcordErrorIdentifier, cod
 }
 
 /**
- * String literal type for Seedcord error class names. Names the `type` argument of
- * {@link isSeedcordError}.
+ * The Seedcord error class names as string literals. {@link isSeedcordError} takes one as its `type`
+ * argument.
  */
 export type SeedcordErrorTypeString = `Seedcord${'Error' | 'TypeError' | 'RangeError' | 'AggregateError'}`;
 

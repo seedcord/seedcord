@@ -1,3 +1,4 @@
+import { SeedcordErrorCode } from '@seedcord/errors';
 import { ApplicationCommandType } from 'discord-api-types/v10';
 import { describe, expect, it } from 'vite-plus/test';
 
@@ -24,6 +25,37 @@ describe('storeInteractionRoute', () => {
         storeInteractionRoute(InteractionKind.Slash, ['ban'], Handler);
         storeInteractionRoute(InteractionKind.Slash, ['kick'], Handler);
         expect(Reflect.getMetadata(InteractionRouteKeys[InteractionKind.Slash], Handler)).toEqual(['ban', 'kick']);
+    });
+
+    it('throws DecoratorDuplicateKey for a repeated route, including across stacked calls', () => {
+        class Repeats {
+            execute(): void {}
+        }
+        class Stacks {
+            execute(): void {}
+        }
+        function expectDuplicate(store: () => void): void {
+            expect(store).toThrow(
+                expect.objectContaining({
+                    code: SeedcordErrorCode.DecoratorDuplicateKey,
+                    message: expect.stringContaining('@SlashRoute') as string
+                })
+            );
+        }
+        storeInteractionRoute(InteractionKind.Slash, ['ban'], Stacks);
+
+        expectDuplicate(() => storeInteractionRoute(InteractionKind.Slash, ['ban', 'ban'], Repeats));
+        expectDuplicate(() => storeInteractionRoute(InteractionKind.Slash, ['ban'], Stacks));
+    });
+
+    it("lets a subclass list its parent's route", () => {
+        class Parent {
+            execute(): void {}
+        }
+        class Child extends Parent {}
+        storeInteractionRoute(InteractionKind.Slash, ['ban'], Parent);
+
+        expect(() => storeInteractionRoute(InteractionKind.Slash, ['ban'], Child)).not.toThrow();
     });
 
     it('accepts a single route string', () => {
@@ -61,17 +93,19 @@ describe('storeComponentRoute multi-def', () => {
         expect(Reflect.getMetadata(ComponentDefsKey, Handler)).toEqual([a, b]);
     });
 
-    it('accumulates prefixes across calls while the defs key holds the last set', () => {
+    it('throws DecoratorDuplicateKey for two definitions with the same prefix', () => {
         class Handler {
             execute(): void {}
         }
         // justified: only the prefix is read by the writer
         const a = { prefix: 'inv' } as unknown as AnyCustomId;
-        const b = { prefix: 'shop' } as unknown as AnyCustomId;
-        storeComponentRoute(InteractionKind.Button, [a], Handler);
-        storeComponentRoute(InteractionKind.Button, [b], Handler);
-        expect(Reflect.getMetadata(InteractionRouteKeys[InteractionKind.Button], Handler)).toEqual(['inv', 'shop']);
-        expect(Reflect.getMetadata(ComponentDefsKey, Handler)).toEqual([b]);
+        const b = { prefix: 'inv' } as unknown as AnyCustomId;
+        expect(() => storeComponentRoute(InteractionKind.StringMenu, [a, b], Handler)).toThrow(
+            expect.objectContaining({
+                code: SeedcordErrorCode.DecoratorDuplicateKey,
+                message: expect.stringMatching(/@StringMenuRoute.*own prefix/) as string
+            })
+        );
     });
 });
 

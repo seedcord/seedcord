@@ -9,7 +9,7 @@ import { ChangesetRule } from '#src/release/ChangesetRule';
 import type { Violation } from '#src/release/ChangesetRule';
 
 const MESSAGES: Record<Violation['reason'], string> = {
-    'unknown-package': 'names a package outside the workspace',
+    'unknown-package': 'lists a package outside the workspace',
     'pre-1.0-major': 'asks for a major bump on a 0.x package without saying it goes to 1.0.0',
     'unmarked-major': 'asks for a major bump past 1.0 without **BREAKING:** opening the summary',
     'empty-summary': 'has no summary',

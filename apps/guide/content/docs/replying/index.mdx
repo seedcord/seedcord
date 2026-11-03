@@ -1,6 +1,6 @@
 ---
 title: Replying
-description: Answer an interaction from its handler with reply(), defer(), edit(), and followUp(), and build each reply from components.
+description: Answer a slash command, button, or other interaction with reply(), defer(), edit(), and followUp(), and build each reply from components.
 ---
 
 Discord gives your bot three seconds to answer an interaction. seedcord puts the methods for answering on the handler. [`this.reply()`](ref:gateway/RepliableHandler.reply) sends the first response. [`this.defer()`](ref:gateway/RepliableHandler.defer) shows a thinking placeholder while you work, then [`this.edit()`](ref:gateway/RepliableHandler.edit) fills it in. [`this.followUp()`](ref:gateway/RepliableHandler.followUp) sends another message after either one.
@@ -39,7 +39,7 @@ That holds while every answer goes through the handler. `this.event.reply()` rea
 
 ## A reply is a list of components
 
-A string gives you one block of text. A heading, a card, or a row of buttons goes in `components`, one entry per top-level component.
+seedcord sends every reply with Discord's [Components V2](https://docs.discord.com/developers/components/overview) flag, which rules out `content` and `embeds`. A string gives you one block of text. Anything more, like a container or a row of buttons, goes in `components`, one entry per top-level component.
 
 ```ts twoslash hovers title="src/handlers/Ban.ts"
 import {
@@ -70,7 +70,7 @@ export class Ban extends SlashHandler<'ban'> {
 }
 ```
 
-[`BuilderComponent`](ref:core/BuilderComponent) wraps a discord.js builder, and `.component` gives you the builder to put in `components`. A card that only `Ban` sends can stay in its file. Move `BanCard` to a file of its own once a second handler sends one, so rewording it takes one edit.
+[`BuilderComponent`](ref:core/BuilderComponent) wraps a discord.js builder, and `.component` gives you the builder to put in `components`. A component that only `Ban` sends can stay in its file. Move `BanCard` to a file of its own once a second handler sends one, so rewording it takes one edit.
 
 `files` uploads bytes alongside the components, covered in [Files and attachments](/replying/files). The whole shape is [`ReplyResponse`](ref:types/ReplyResponse). Put it on a helper's return type when the helper builds a reply, so a wrong field fails inside the helper.
 
@@ -171,4 +171,27 @@ class Ban extends SlashHandler<'ban'> {
     `APIMessage`, which is Discord's raw payload. `followUp()`,
     `edit()`, and [`update()`](ref:gateway/ComponentHandler.update)
     all return the same type.
+</Callout>
+
+## Who sent the interaction
+
+On http, `this.event.user` is undefined in a server, because Discord sends `member.user` there. Use [`this.user`](ref:gateway/RepliableHandler.user) because it reads whichever one Discord sent, on every interaction handler and middleware.
+
+```ts twoslash
+import { SlashHandler, SlashRoute } from '@seedcord/gateway';
+
+@SlashRoute('ban')
+class Ban extends SlashHandler<'ban'> {
+    public async execute(): Promise<void> {
+        // ---cut---
+        await this.reply(`Banned by ${this.user.id}.`);
+        // ---cut-after---
+    }
+}
+```
+
+<Callout type="transport">
+
+`this.user` is a discord.js `User` on gateway and an `APIUser` on http.
+
 </Callout>

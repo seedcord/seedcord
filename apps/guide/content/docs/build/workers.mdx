@@ -15,7 +15,7 @@ Only an http bot runs on Workers. `@seedcord/gateway` holds a websocket to Disco
 
 A Worker has no process that starts once. The bot starts on the first POST that reaches each isolate. That request loads your handlers, runs the startup tasks, and runs every plugin's [`init()`](/plugins/lifecycle#on-cloudflare-workers), and any request that arrives meanwhile waits for it. Cloudflare can start a new isolate whenever it likes, and each new one pays that cost again.
 
-Anything the bot keeps in memory lives in one isolate. The default `store` behind [cooldowns and charges](/checks/rate-limiter) resets with each new isolate, and two isolates keep separate counts. Pass a durable `store` in the bot's config if a limit has to hold across them.
+Each isolate has its own memory. By default, [`core.kv`](/built-ins/) and [cooldowns](/checks/rate-limiter) keep their records there, so a new isolate starts with none and two isolates can't see each other's. To share them, store them in D1, as [Drivers](/built-ins/drivers#on-cloudflare-workers) shows.
 
 An isolate also stops without warning, since Cloudflare doesn't give a worker a shutdown hook. `shutdown.addTask` throws there, and the config doesn't take `lifecycle` or `port`. Some plugins need a server too. [Mongoose](/plugins/mongoose) and [Kysely](/plugins/kysely) declare themselves server-only, so attaching either one to an edge bot fails.
 
@@ -29,7 +29,7 @@ A bot from `pnpm create seedcord` that picked Cloudflare Workers already has eve
 
 A `cloudflare.config.ts` beside `seedcord.config.ts` turns your bot into an edge bot. Install the two packages that read it, the Cloudflare Vite plugin and `cf`, Cloudflare's CLI:
 
-<Shell add="-D @cloudflare/vite-plugin@2.0.0-beta.v.0 cf@1.0.0-beta.17" />
+<Shell add="-D @cloudflare/vite-plugin@2.0.0-beta.v.8 cf@1.0.0-beta.26" />
 
 seedcord's CLI runs your bot through the Vite plugin, and `cloudflare.config.ts` imports its helpers from `cf`. If either one is missing, `seedcord dev` and `seedcord build` throw `CliDependencyMissing` with the package to add.
 
@@ -119,6 +119,8 @@ const environment = env.ENV;
 ```
 
 On your machine, a declared secret takes its value from a `.dev.vars` file, or from your `.env` files when there isn't one. [On Cloudflare Workers](/build/env#on-cloudflare-workers) has that order. The scaffold's `.gitignore` already leaves out `.env*` and `.dev.vars*`.
+
+### A KV or D1 binding is undefined in codegen
 
 [`seedcord codegen`](/tooling/codegen#codegen-constructs-your-bot), `seedcord commands`, and the build's `load bot` step load your bot in node, where `env` holds only the `text`, `json`, and `secret` bindings. A KV namespace, a D1 database, or any other resource binding is `undefined` there, while workerd under `seedcord dev` gives you the real one. Read a resource binding inside a handler, and leave it out of anything `bot.ts` runs while it loads.
 

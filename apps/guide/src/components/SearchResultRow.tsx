@@ -1,94 +1,71 @@
 'use client';
 
-import { Icon, cn, tw } from '@seedcord/ui';
-import { FileText, Hash, TextQuote } from 'lucide-react';
+import { Icon, SearchOption, cn, tw } from '@seedcord/ui';
+import { ChevronRight, FileText, Hash } from 'lucide-react';
+import { Fragment } from 'react';
 
-import { highlightSegments, matchWindow } from '#lib/searchHighlight.ts';
+import { MatchedText } from './MatchedText';
 
-import type { HighlightSegment } from '#lib/searchHighlight.ts';
-import type { IconComponent } from '@seedcord/ui';
-import type { SortedResult } from 'fumadocs-core/search';
+import type { GuideResult } from '@seedcord/docs-search';
 import type { ReactElement } from 'react';
 
-// a text result is a paragraph, a table cell, or a code fence
-const KIND_ICONS: Record<SortedResult['type'], IconComponent> = { page: FileText, heading: Hash, text: TextQuote };
+export const ROW_ICON = tw`text-subtle size-4 shrink-0`;
+export const ROW_TEXT = tw`flex min-w-0 flex-1 flex-col gap-0.5`;
+export const ROW_TITLE = tw`truncate font-medium`;
+export const ROW_SUBTITLE = tw`text-subtle truncate text-xs`;
 
-const ACTIVE = tw`data-[active=true]:border-(--rind)/38 data-[active=true]:bg-(--rind)/16`;
+const UNMARKED: readonly string[] = [];
 
-// 24 chars of lead keeps the match near the left where a reader looks first
-const LEAD = 24;
-const WIDTH = 150;
-
-// one result can mark the same word twice. the text alone would collide as a key
-function keyed(segments: readonly HighlightSegment[]): { key: string; segment: HighlightSegment }[] {
-    let at = 0;
-
-    return segments.map((segment) => {
-        const key = `${String(at)}-${segment.text}`;
-        at += segment.text.length;
-        return { key, segment };
-    });
-}
-
-export interface SearchResultRowProps {
-    result: SortedResult;
-    query: string;
+interface SearchResultRowProps {
+    result: GuideResult;
     isActive: boolean;
     optionId: string;
-    index: number;
-    onSelect: (result: SortedResult) => void;
-    onActivate: (index: number) => void;
+    onSelect: (result: GuideResult) => void;
+    onActivate: (result: GuideResult) => void;
 }
 
 export function SearchResultRow({
     result,
-    query,
     isActive,
     optionId,
-    index,
     onSelect,
     onActivate
 }: SearchResultRowProps): ReactElement {
-    const isPage = result.type === 'page';
-    const segments = matchWindow(highlightSegments(result.content, query), LEAD, WIDTH);
+    const { icon, title, trail } =
+        result.heading === undefined
+            ? { icon: FileText, title: result.page, trail: [result.tab] }
+            : { icon: Hash, title: result.heading, trail: [result.tab, result.page] };
+    const [first, ...rest] = trail;
 
     return (
-        <div
+        <SearchOption
             id={optionId}
-            role="option"
-            aria-selected={isActive}
-            data-active={isActive || undefined}
-            onClick={() => onSelect(result)}
-            onMouseMove={() => onActivate(index)}
-            className={cn(
-                'group/row mt-1 flex cursor-pointer items-center gap-3 rounded-md border border-transparent',
-                'p-3 text-sm text-(--text) outline-hidden transition first:mt-0',
-                // scrollIntoView block:'nearest' stops at this margin, keeping the list's own padding
-                'scroll-my-3',
-                isPage ? null : tw`ms-4`,
-                ACTIVE
-            )}
+            href={result.url}
+            label={[title, ...trail].join(', ')}
+            isActive={isActive}
+            onSelect={() => onSelect(result)}
+            onActivate={() => onActivate(result)}
         >
-            <Icon icon={KIND_ICONS[result.type]} size={16} className={cn('text-subtle shrink-0')} aria-hidden />
-            <div className={cn('flex min-w-0 flex-1 flex-col gap-0.5')}>
-                <span className={cn('truncate', isPage ? tw`font-medium` : tw`text-(--text-muted)`)}>
-                    {keyed(segments).map(({ key, segment }) => {
-                        const Tag = segment.match ? 'mark' : 'span';
-                        return (
-                            <Tag
-                                key={key}
-                                className={cn(
-                                    segment.match ? tw`bg-(--rind)/25 text-(--text)` : null,
-                                    segment.code ? tw`font-mono text-[0.9em]` : null
-                                )}
-                            >
-                                {segment.text}
-                            </Tag>
-                        );
-                    })}
+            <Icon icon={icon} className={cn(ROW_ICON)} aria-hidden />
+            <div className={cn(ROW_TEXT)}>
+                <MatchedText
+                    text={title}
+                    terms={result.by === 'title' ? result.terms : UNMARKED}
+                    className={cn(ROW_TITLE)}
+                />
+                <span className={cn(ROW_SUBTITLE, 'flex items-center gap-1')}>
+                    {first}
+                    {rest.map((crumb) => (
+                        <Fragment key={crumb}>
+                            <Icon icon={ChevronRight} size={12} aria-hidden />
+                            {crumb}
+                        </Fragment>
+                    ))}
                 </span>
-                {isPage ? <span className={cn('text-subtle truncate font-mono text-xs')}>{result.url}</span> : null}
+                {result.by === 'text' ? (
+                    <MatchedText text={result.excerpt} terms={result.terms} className={cn(ROW_SUBTITLE)} />
+                ) : null}
             </div>
-        </div>
+        </SearchOption>
     );
 }

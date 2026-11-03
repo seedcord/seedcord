@@ -1,6 +1,6 @@
 {
     "name": "@seedcord/mock-http",
-    "version": "0.0.15",
+    "version": "0.0.16-next.0",
     "private": true,
     "description": "Http-transport mock bot for demonstration and testing",
     "repository": {
@@ -21,7 +21,7 @@
         "tc:watch": "tsc --noEmit --watch"
     },
     "dependencies": {
-        "@discordjs/builders": "catalog:deps",
+        "@discordjs/builders": "catalog:peer",
         "@seedcord/http": "workspace:^",
         "discord-api-types": "catalog:deps",
         "envapt": "catalog:peer"

@@ -99,7 +99,7 @@ describe('kind mismatch', () => {
         expect(codeFrom(() => fields.getTextInputValue('agree'))).toBe(SeedcordErrorCode.ModalFieldWrongKind);
     });
 
-    it('names the getter reading the kind the field holds', () => {
+    it('points to the getter that reads the kind the field holds', () => {
         let message = '';
         try {
             fields.getTextInputValue('agree');
@@ -295,7 +295,7 @@ describe('channel select', () => {
         expect(codeFrom(() => empty.getSelectedChannels('where', true))).toBe(SeedcordErrorCode.ModalFieldEmpty);
     });
 
-    it('names the type that failed', () => {
+    it('reports the type that failed', () => {
         let message = '';
         try {
             fields.getSelectedChannels('where', false, [ChannelType.GuildText]);
@@ -369,7 +369,7 @@ describe('radio groups and checkboxes', () => {
 
 describe('payloads the pinned types forbid', () => {
     it('reports a component kind newer than the pinned discord-api-types', () => {
-        // justified: no arm of the union covers an unknown type
+        // justified: no member of the union covers an unknown type
         const future = { type: 99, id: 2, custom_id: 'weird', value: 'z' } as unknown as ModalSubmitComponent;
         const fields = new ModalFields(submission([labelled(1, future)]));
 
@@ -385,7 +385,7 @@ describe('payloads the pinned types forbid', () => {
         expect(message).toContain('none of the getters read that kind');
     });
 
-    it('names a channel type the pinned enum does not carry', () => {
+    it('reports a channel type the pinned enum lacks', () => {
         const odd = channel('c1', 999 as ChannelType);
         const fields = new ModalFields({
             custom_id: 'form',

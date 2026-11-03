@@ -1,6 +1,6 @@
+import { BRAND_COLORS } from '@seedcord/brand';
 import { buildPackageBasePath, DEFAULT_VERSION } from '@seedcord/docs-engine/client';
 import { ogPageCardAlt } from '@seedcord/ui/OgCard';
-import { BRAND } from '@seedcord/ui/palette';
 
 import { CARD, TWIN } from '@seedcord/ui/PageAsset';
 import { plainSummary } from '#lib/docs/plainSummary';
@@ -14,13 +14,13 @@ import type { Metadata } from 'next';
 export type DocsCard = Omit<OgPageCardProps, 'domain'>;
 
 export function rootCard(): DocsCard {
-    return { pill: 'docs', accent: BRAND.seedDark, meta: [], name: 'Reference', description: SITE_DESCRIPTION };
+    return { pill: 'docs', accent: BRAND_COLORS.seedDark, meta: [], name: 'Reference', description: SITE_DESCRIPTION };
 }
 
 export function packageCard(entry: PackageCatalogEntry, version: PackageVersionCatalog): DocsCard {
     return {
         pill: 'package',
-        accent: BRAND.seedDark,
+        accent: BRAND_COLORS.seedDark,
         meta: [version.label],
         name: entry.label,
         description: entry.description
@@ -41,7 +41,7 @@ export function entityCard(entity: EntityModel, version: PackageVersionCatalog):
 export function notFoundCard(): DocsCard {
     return {
         pill: '404',
-        accent: BRAND.seedDark,
+        accent: BRAND_COLORS.seedDark,
         meta: [],
         name: 'Not found',
         description: 'This documentation page does not exist.'

@@ -153,7 +153,9 @@ export class AugmentationBuilder {
     private warnEmptyGroups(json: RESTPostAPIChatInputApplicationCommandsJSONBody): void {
         for (const option of json.options ?? []) {
             if (option.type === ApplicationCommandOptionType.SubcommandGroup && (option.options ?? []).length === 0) {
-                this.logger.warn(`Slash group \`${json.name}/${option.name}\` has no subcommands and will not deploy.`);
+                this.logger.warn(
+                    `Slash group \`${json.name}/${option.name}\` doesn't have any subcommands, so it won't deploy.`
+                );
             }
         }
     }

@@ -48,4 +48,4 @@ logger.info('starting'); // hidden, since sync only shows warn and above
 logger.warn('retrying after a timeout');
 ```
 
-The [logging guide](https://seedcord.org/guide/tooling/logging) covers channels, and the [logger config guide](https://seedcord.org/guide/tooling/logger-config) covers levels and sinks.
+The [logging guide](https://seedcord.org/guide/built-ins/logging) covers channels, and the [logger config guide](https://seedcord.org/guide/built-ins/logger-config) covers levels and sinks.

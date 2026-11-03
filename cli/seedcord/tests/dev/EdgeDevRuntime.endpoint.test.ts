@@ -99,7 +99,7 @@ describe('EdgeDevRuntime endpoint', () => {
             const unsigned = await fetch(`http://localhost:${port}/`, { method: 'POST', body: '{}' });
 
             expect(port).toBeGreaterThan(0);
-            expect(eventsBeforeBot).not.toContainEqual({ type: 'server-listening', port });
+            expect(eventsBeforeBot).not.toContainEqual({ type: 'server-port', port });
             // the bot answers an unsigned interaction with 401
             expect(unsigned.status).toBe(401);
         });

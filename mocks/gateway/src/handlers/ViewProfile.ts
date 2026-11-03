@@ -8,7 +8,7 @@ class ProfileCooldown extends Notice {
         super('profile lookups are rate limited');
     }
 
-    public render(): ReplyResponse {
+    public override render(): ReplyResponse {
         const text = new TextDisplayBuilder().setContent(
             `Slow down. You can view another profile <t:${Math.round(this.resetAt / 1000)}:R>.`
         );
@@ -16,7 +16,7 @@ class ProfileCooldown extends Notice {
     }
 }
 
-@Gated(Cooldown('1m', { limit: 2, notice: (resetAt) => new ProfileCooldown(resetAt) }))
+@Gated(Cooldown('1m', { limit: 2, notice: ProfileCooldown }))
 @UserContextMenuRoute('View Profile')
 export class ViewProfile extends UserContextMenuHandler<'View Profile'> {
     public async execute(): Promise<void> {

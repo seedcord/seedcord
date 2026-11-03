@@ -1,0 +1,163 @@
+name: site-preview
+
+on:
+  pull_request:
+    types: [opened, synchronize, reopened]
+  issue_comment: # zizmor: ignore[dangerous-triggers] this only deploys a built artifact and never runs the pull request's code
+    types: [created]
+
+permissions:
+  contents: read
+
+jobs:
+  plan:
+    if: >-
+      (github.event_name == 'pull_request' && github.event.pull_request.user.type != 'Bot') || (github.event.issue.pull_request && github.event.comment.body == '/preview')
+    runs-on: ubuntu-latest
+    permissions:
+      actions: read
+      contents: read
+      pull-requests: read
+    outputs:
+      pr: ${{ steps.plan.outputs.pr }}
+      sha: ${{ steps.plan.outputs.sha }}
+      apps: ${{ steps.plan.outputs.apps }}
+      artifact_run: ${{ steps.plan.outputs.artifact_run }}
+      worker_ref: ${{ steps.plan.outputs.worker_ref }}
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+
+      - name: Setup workspace
+        uses: $/.github/actions/setup
+
+      - name: Plan the preview
+        id: plan
+        run: vpx scripts/src/site-preview-plan.ts
+        env:
+          GITHUB_TOKEN: ${{ github.token }}
+          PR_NUMBER: ${{ github.event.pull_request.number || github.event.issue.number }}
+          COMMENTER: ${{ github.event.comment.user.login }}
+
+  # plan and build run a fork's code, and github gives a fork's run no secrets
+  build:
+    needs: plan
+    if: github.event_name == 'pull_request' && needs.plan.outputs.apps != '[]'
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    concurrency:
+      group: site-preview-build-${{ needs.plan.outputs.pr }}-${{ matrix.app }}
+      cancel-in-progress: true
+    strategy:
+      matrix:
+        app: ${{ fromJSON(needs.plan.outputs.apps) }}
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+          fetch-depth: 0
+
+      - name: Turbo cache
+        uses: $/.github/actions/turbo-cache
+        with:
+          turbo_token: ${{ secrets.TURBO_TOKEN }}
+          turbo_team: ${{ vars.TURBO_TEAM }}
+
+      - name: Setup workspace
+        uses: $/.github/actions/setup
+
+      - name: Build
+        run: vp exec turbo build --filter="@seedcord/$APP..."
+        env:
+          APP: ${{ matrix.app }}
+          NEXT_PUBLIC_SITE_ORIGIN: https://pr${{ needs.plan.outputs.pr }}.seedcord.org
+
+      - name: Upload the site
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        with:
+          name: ${{ matrix.app }}
+          path: apps/${{ matrix.app }}/dist
+          retention-days: 7
+
+  # /preview deploys a fork's dist with worker.ts and wrangler.jsonc from next
+  deploy:
+    needs: [plan, build]
+    if: >-
+      !cancelled() && needs.plan.result == 'success' && needs.plan.outputs.apps != '[]' && (needs.build.result == 'success' || needs.build.result == 'skipped') && (github.event_name == 'issue_comment' || github.event.pull_request.head.repo.full_name == github.repository)
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    environment:
+      name: preview
+      url: https://pr${{ needs.plan.outputs.pr }}.seedcord.org${{ matrix.app == 'guide' && '/guide/' || '/' }}
+    concurrency:
+      group: site-preview-deploy-${{ needs.plan.outputs.pr }}-${{ matrix.app }}
+      cancel-in-progress: true
+    permissions:
+      actions: read
+      contents: read
+    strategy:
+      matrix:
+        app: ${{ fromJSON(needs.plan.outputs.apps) }}
+    steps:
+      - name: Check out the worker
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+          ref: ${{ needs.plan.outputs.worker_ref }}
+
+      - name: Turbo cache
+        uses: $/.github/actions/turbo-cache
+        with:
+          turbo_token: ${{ secrets.TURBO_TOKEN }}
+          turbo_team: ${{ vars.TURBO_TEAM }}
+
+      - name: Setup workspace
+        uses: $/.github/actions/setup
+
+      - name: Build the worker's packages
+        run: vp exec turbo build --filter="@seedcord/$APP^..."
+        env:
+          APP: ${{ matrix.app }}
+
+      - name: Download the site
+        uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8.0.2
+        with:
+          name: ${{ matrix.app }}
+          path: apps/${{ matrix.app }}/dist
+          run-id: ${{ needs.plan.outputs.artifact_run }}
+          github-token: ${{ github.token }}
+
+      - name: Guide embeddings
+        if: matrix.app == 'guide'
+        uses: $/.github/actions/guide-embeddings
+        with:
+          cloudflare_account_id: ${{ vars.CLOUDFLARE_ACCOUNT_ID }}
+          cloudflare_api_token: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+
+      - name: Deploy
+        uses: cloudflare/wrangler-action@ebbaa1584979971c8614a24965b4405ff95890e0 # v4.0.0
+        with:
+          apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          accountId: ${{ vars.CLOUDFLARE_ACCOUNT_ID }}
+          workingDirectory: apps/${{ matrix.app }}
+          packageManager: pnpm
+          command: deploy --env next --name seedcord-${{ matrix.app }}-pr${{ needs.plan.outputs.pr }} --route pr${{ needs.plan.outputs.pr }}.seedcord.org/${{ matrix.app == 'guide' && 'guide*' || '*' }}
+
+  # a /preview deployment runs on the default branch, so github doesn't show its button on the pull request
+  comment:
+    needs: [plan, deploy]
+    if: ${{ !cancelled() && github.event_name == 'issue_comment' && needs.deploy.result == 'success' }}
+    runs-on: ubuntu-latest
+    permissions:
+      pull-requests: write
+    steps:
+      - name: Post the preview link
+        run: gh pr comment "$PR" --repo "$GITHUB_REPOSITORY" --edit-last --create-if-none --body "Preview of $SHA at https://pr$PR.seedcord.org$PAGE"
+        env:
+          GH_TOKEN: ${{ github.token }}
+          PR: ${{ needs.plan.outputs.pr }}
+          SHA: ${{ needs.plan.outputs.sha }}
+          PAGE: ${{ contains(needs.plan.outputs.apps, 'home') && '/' || '/guide/' }}

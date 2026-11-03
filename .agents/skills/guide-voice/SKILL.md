@@ -9,21 +9,20 @@ A guide page teaches. Someone reads it on purpose, having chosen to spend their 
 
 This skill sits on top of [`writing-voice`](../writing-voice/SKILL.md), which still applies in full. Plain words over compressed abstractions, a verb in place of an invented noun, the anthropomorphism test, the punctuation bans, and the ban-list all hold here.
 
-Three rules in it change on a guide page, and every change is stated where it applies.
+Two rules in it change on a guide page, and every change is stated where it applies.
 
 1. **One claim per sentence, cut at the connective.** Right for a comment, a changeset, and a commit. On a guide page it deletes the reason, because a reason attaches at a connective by construction. Effective Go reads "This rule arises because pointer methods can modify the receiver," and cutting at the connective leaves half of it.
-2. **`and` as a splice repair.** `writing-voice` lists it among the connectors that name a real relation. On a guide page `and` leaves the relation unstated, so the prose review reads every connector against the relation it promises and the writer picks the one that says how the halves relate.
-3. **Present tense for everything.** Right for behavior, which is most of a page. A complaint the page's feature takes away belongs in past tense, since that is what tells the reader it is over. Section 1 has the test.
+2. **Present tense for everything.** Right for behavior, which is most of a page. A complaint the page's feature takes away belongs in past tense, since that is what tells the reader it is over. Section 1 has the test.
 
 ---
 
 ## 1. Three kinds of why which should go in different places
 
-**A reason that names a mechanism goes on the page, beside the thing it explains.** One or two sentences. This is most of them. Real one, from the pagination page:
+**A reason built on a mechanism goes on the page, beside the thing it explains.** One or two sentences. This is most of them. Real one, from the pagination page:
 
 > Every button carries its target page inside the custom id, so a click still works after your bot restarts.
 
-**Every feature says what it is for, at the top of the section that teaches it.** One or two sentences naming what the reader does without it and what that costs them. This covers every feature in the guide, and the five arguments below are the few that need more than a paragraph.
+**Every feature says what it is for, at the top of the section that teaches it.** One or two sentences saying what the reader does without it and what that costs them. This covers every feature in the guide, and the five arguments below are the few that need more than a paragraph.
 
 A section opening on how to configure a thing tells a reader who already wanted it how to get it. It tells everyone else nothing, and everyone else is most of them.
 
@@ -121,13 +120,13 @@ The failure is a sentence that states a true general fact beside a fence and nev
 
 Test: could this paragraph sit under a different sample without changing a word? Then it is written beside the code rather than about it.
 
-The sentence saying what a sample's code does goes right after the fence too, where the reader can find what it names. Before the fence keep only the rule or the question the sample answers.
+The sentence saying what a sample's code does goes right after the fence too, where the reader can find what it mentions. Before the fence keep only the rule or the question the sample answers.
 
 The same holds for a hand-written version set against a sample. The custom-ids page showed `ticket:123:close` beside a declaration carrying three fields, so the comparison hid the cost it was there to show. `ticket:184580573574955008:close:true` carries all three, and the reader sees every value come back as text.
 
 ### A forced decision argues differently from a chosen one
 
-Codegen is forced. TypeScript cannot evaluate a builder call, so the page shows the wall, names the tool that gets past it, and states the cost. The reader had no choice to make.
+Codegen is forced. TypeScript cannot evaluate a builder call, so the page shows the wall, points to the tool that gets past it, and states the cost. The reader had no choice to make.
 
 Subclassing a component base is a choice. Nothing stops anyone building a `ContainerBuilder` inline in a handler. A page covering that kind of decision earns it instead of asserting it:
 
@@ -144,13 +143,13 @@ A list of the design's good properties skips all five and reads as marketing. Th
 
 ### Say what was declined
 
-An argument is worth more when it names the alternative that lost and why.
+An argument is worth more when it says which alternative lost and why.
 
 The route being written twice, once in the decorator and once in the generic, is the clearest case. A form that writes it once was built and measured, and it was declined for v1 because a call in an `extends` clause reads as mixin machinery and go-to-definition lands on a synthesized base. Assert types check that the pair agrees. A reader who wondered why they type the route twice now has their answer.
 
 Never invent one. Where no alternative was weighed, state the reason and stop.
 
-### Set up the problem before naming the mechanism
+### Set up the problem before the mechanism
 
 The Rust Book's ownership chapter builds a problem the reader can feel across several sections before the rule falls out as the answer. A guide page has less room, and a few sentences usually do it. Real one, from the effect-gates page:
 
@@ -290,6 +289,8 @@ Run these one at a time and apply each pass's fixes before starting the next. Ea
 
     That ban came out of a wider rule. **One word does one job across the whole guide.** `verb` meant a reply method on the Replying tab and a store operation on the rate-limiter page, so a reader who met both learned neither. The repair picked a plain word for each, `method` and `operation`, rather than defining the same word twice.
 
+    `card` is the other case. It fits the messages seedcord builds for you, like a `Notice` refusal, a fault, and the Outdated message, since `NoticeCard` is a container. Spread over the reader's own components, it taught that every reply needs a container. A text display or a plain string works too. For the reader's own components, write the name of what the code builds, and write `component` when the sentence covers any of them. Swapping every `card` for `container` repeats the mistake under a new word.
+
     **A term the guide leans on gets defined the first time a reader can reach it, and that is tab order rather than the order you wrote the pages in.** `verb` debuted in a heading on `more-messages`, while `ack-states`, the page that could have defined it, sits after it in `meta.json`. A reviewer reading one page cannot catch this, so check it yourself against the tab's `meta.json` whenever you introduce a word the reader has to learn. Where no page is a good home for the definition, that is the sign to stop using the word.
 
     Read `fire` and `settle` in the same pass. "One fire of the event" and "once the handlers settle" make the reader translate a picture back into the fact, so write "dispatch" and "finishes".
@@ -299,7 +300,7 @@ Run these one at a time and apply each pass's fixes before starting the next. Ea
     - A cleft that parks the verb behind an `is`.
     - Two question-word clauses fronted as one subject, with the verb last. "Which of your calls answered it, and which method works from here, are both yours to work out" makes the reader hold both before learning what they are for. Open on the handoff: "That leaves you to work out which of your calls answered it, and which method works from here."
     - A trailing participle whose subject the reader has to guess.
-    - A connector naming a relation the sentence does not have. See below, since this one has its own section.
+    - A connector that claims a relation the sentence does not have. See below, since this one has its own section.
 
 ### A connector promises a relation. Write the one that is there
 
@@ -312,7 +313,7 @@ Real ones, all caught by the maintainer, all in prose written the same week:
 | written | what it promised | the real relation |
 | --- | --- | --- |
 | "A card needs a builder. Then you decide where that builder's code lives." | a second step | no sequence at all. Needing a builder is the moment. Cut the connector |
-| "`this.instance` there is a `ContainerBuilder` and `setTitle` would stop the build" | a second item on that noun | opposition. The first names what works, the second what fails |
+| "`this.instance` there is a `ContainerBuilder` and `setTitle` would stop the build" | a second item on that noun | opposition. The first says what works, the second what fails |
 | "The next handler imports the same file, and changing the wording is one edit" | more of the same | consequence, so `so` |
 | "Reword the card later and you edit `BanCard.ts` once" | more of the same | condition, so `if` |
 | "the class decides what a ban card looks like, and a setter at the call site splits that description" | more of the same | contrast. The second clause is the case being argued against |
@@ -327,11 +328,11 @@ An imperative joined to its result by `and` hides the relation every time, even 
 
 A verb makes the same kind of promise. "Discord also allows one select menu per row" reads as an extra capability, and the fact is a limit. Write the limit as one: "A select menu takes a whole row."
 
-`where` standing in for `when` or `if` is the same defect wearing a place word, and it is a habit worth watching for. "Where a handler only ever reaches that line in one state" and "even where you meant it as a new message" both point the reader at a location and hand them a condition. `where` earns its place naming a real place, as in "where the type-aware rules look for `tsconfig.json`". Say the condition out loud and the wrong one gives itself away, since nobody speaks either of those sentences.
+`where` standing in for `when` or `if` is the same defect wearing a place word, and it is a habit worth watching for. "Where a handler only ever reaches that line in one state" and "even where you meant it as a new message" both point the reader at a location and hand them a condition. `where` earns its place pointing at a real place, as in "where the type-aware rules look for `tsconfig.json`". Say the condition out loud and the wrong one gives itself away, since nobody speaks either of those sentences.
 
 **The test.** Read what follows the connector on its own. Ask what relation the word just promised, then ask what relation the two halves actually have. Where they differ, the reader pays for it.
 
-The repairs, by relation. A result takes `so`. A reason takes `because` or `since`. A condition takes `if`, with the condition first. A contrast becomes two sentences, since naming the rejected case inside one sentence runs into the contrast ban. Where no relation exists, delete the connector and let the sentence stand on its own.
+The repairs, by relation. A result takes `so`. A reason takes `because` or `since`. A condition takes `if`, with the condition first. A contrast becomes two sentences, since putting the rejected case inside one sentence runs into the contrast ban. Where no relation exists, delete the connector and let the sentence stand on its own.
 
 `and` carries most of these, and it hides in sentences that already spent a `so` or a `because`, where it becomes the place a third clause gets dumped. A sequence word is the other common one, since a page of steps makes `then` feel free to type.
 
@@ -348,7 +349,7 @@ A sentence can be correct and short and still take the reader two reads. It happ
 | packed | what the reader has to unpack | unpacked |
 | --- | --- | --- |
 | "A commit that throws stops the rest and the handler" | a condition inside the subject | "If a commit throws, the commits after it don't run, and neither does your handler" |
-| "one arm without a summary drops the list to a generic refusal" | a condition inside the subject | "If one arm doesn't set a summary, the `or` shows a generic refusal" |
+| "one gate without a summary drops the list to a generic refusal" | a condition inside the subject | "If one gate doesn't set a summary, the `or` shows a generic refusal" |
 | "`ArraySource` opens the last page for a number past the end" | a condition after the result | "If the number is higher than the last page, `ArraySource` opens the last page" |
 | "every handler repeats them above its real work" | a position word standing in for where the code goes | "every handler starts with its own copy of them" |
 | "an effect gate nested two levels inside an `or`" | a position word standing in for how the code is built | "passes `SpendCredit` to an `and`, and passes that `and` to an `or`" |
@@ -380,11 +381,11 @@ A count tells you which word to look at. It never decides whether one sentence i
 
 **A correction is a count too.** Being corrected on one sentence tells you which construction to go and look at. It never says every instance of it is wrong. Run that construction's own test on each one you find, since the rule catching the bad instance usually carries the exception protecting the good one.
 
-`instead` came out of "Handler files go under the `interactions` path instead", where the reader held no alternative for it to point at. The same cut then landed on "Instead, just handle both in a single handler class", where the sentence before it had described the two handler classes and the shared helper. The maintainer put that one back, then put it back a second time after a later sweep cut it again. `writing-voice` states the test in the same breath as the ban: an `instead` naming a swap the reader is actually making stays. Read `instead` as a transition first, since a word joining two paragraphs is doing a job no wordlist can see.
+`instead` came out of "Handler files go under the `interactions` path instead", where the reader held no alternative for it to point at. The same cut then landed on "Instead, just handle both in a single handler class", where the sentence before it had described the two handler classes and the shared helper. The maintainer put that one back, then put it back a second time after a later sweep cut it again. `writing-voice` states the test in the same breath as the ban: an `instead` that points at a swap the reader is actually making stays. Read `instead` as a transition first, since a word joining two paragraphs is doing a job no wordlist can see.
 
 `just` came off that same sentence both times, and it belongs there too. `writing-voice` bans the `just` that rates how hard a step is for someone whose keyboard you are not at. In "just handle both in a single handler class" the step really is one class, and the word says how little is left once seedcord holds the rest. Keep it where the sentence above has already shown the work it replaces.
 
-**Say how little is left.** A paragraph answering a complaint earns a few words naming what the reader does now. [`getConfirmation`](ref:gateway/getConfirmation) "does all of that in one `await`". `mergeRoles` "does that in one call". The scaffold's eslint file "is one call instead". `CustomId` "declares what the string carries, once". Where the answer states the mechanism and stops, the reader works the saving out on their own. Vary the words. `for you` already runs about twenty times across the guide, so the twenty-first turns it into a chant.
+**Say how little is left.** A paragraph answering a complaint earns a few words saying what the reader does now. [`getConfirmation`](ref:gateway/getConfirmation) "does all of that in one `await`". `mergeRoles` "does that in one call". The scaffold's eslint file "is one call instead". `CustomId` "declares what the string carries, once". Where the answer states the mechanism and stops, the reader works the saving out on their own. Vary the words. `for you` already runs about twenty times across the guide, so the twenty-first turns it into a chant.
 
 **A repeated phrase is a count too.** Finding the same words twice tells you to go and look. It never says the second one is wrong. Ask what job each sentence is doing first, because two sentences doing different jobs can need the same words, and the repeat is the cheapest part of either one.
 
@@ -419,7 +420,12 @@ Writing from the framework's side is the failure that keeps recurring, and it co
 The content review checks this section as a list. A page that breaks one of these still renders, which is why nothing else catches them.
 
 - **The frontmatter `description` says what the reader does with the feature, in one sentence of 100 to 160 characters.** It becomes the meta description, the link preview, the lede under the page title, and the first line of the page's Markdown copy, so the reader deciding whether to open the page reads it with nothing else. Someone who has never heard of seedcord should get the gist from it alone. Lead with the task in the reader's words, and add the one detail that no neighbouring page shares. "Upload files with a reply and show them in the message through a file, thumbnail, or media gallery component" tells someone in a search result that this is their page. The page's sharpest fact belongs in the body. "Discord hides an upload that no component references" is a fact the files page proves. Leave out a list of what the page covers, since the table of contents already shows the headings and Google cuts a snippet at about 155 characters. The "from X to Y and Z" shape is that list in disguise, so rewrite it around the task. Keep a colon followed by a space out of it, since the value is unquoted YAML. Backticks don't render in a description, so write a function name as `or()` to keep it from reading as the English word.
-- **A seedcord symbol named in prose gets a `ref:` link on its first mention.** `[BuilderComponent](ref:core/BuilderComponent)`, package segment then symbol. A fence tagged `hovers` already links its own tokens. A table links every symbol in it again, since a reader lands on one row without the paragraph that held the first link.
+
+    Keep the description as wide as the page. A rewrite aimed at one reader's question can shrink the claim to that question. The combining page's description became "Let either the owner or a moderator run a command with or()", which reads as if gates only check roles. Put the reader's case in as an example beside the general claim, marked with `like`: "to let a command run when any one passes, like the owner or a moderator, or to group checks you reuse".
+
+- **Headings and openers use the words a reader types into search.** The guide's search matches meaning. It still misses a page whose words never meet the reader's. Someone asking how to stop people spamming a command found nothing until the cooldown page said "spam". The reader's word goes in beside the precise term, so a reader who already knows the term still finds the page. It never narrows what the sentence covers. Adding "spam" to a sentence about limiting uses keeps the sentence true for every caller. Rewriting a heading or a description around one search question makes it cover only that question, which is the narrowing the description rule above warns about.
+- **Renaming a heading changes its anchor.** Search the guide for links to the old anchor and update them in the same change.
+- **A seedcord symbol mentioned in prose gets a `ref:` link on its first mention.** `[BuilderComponent](ref:core/BuilderComponent)`, package segment then symbol. A fence tagged `hovers` already links its own tokens. A table links every symbol in it again, since a reader lands on one row without the paragraph that held the first link.
 - **Emphasis earns its place per word.** Italic stresses a word a reader would misread without it, as in "Routing reads the prefix _alone_". Bold marks a Discord UI label, like **Confirm**, or a list label. There is no quota, and most paragraphs carry none.
 - **The import line shows on the first fence and gets cut on the rest**, with `// ---cut---` under it. A later fence keeps its imports when its symbols are new to the page. Start-tab pages keep imports on every fence. Prose around a fence can only name what the fence still shows, since a cut hides those lines from everyone except the writer.
 - **A fence states how it shows types.** `^?` when the prose is about one or two of them. `hovers` when the reader has a shape worth exploring, at roughly five times the bytes and build time. `^|` when the reader's question is what they can type here. A bare `twoslash` with no marker when the sample only needs checking, which is most samples. Leave `twoslash` off when the sample is a fragment that cannot compile alone.
@@ -431,13 +437,13 @@ The content review checks this section as a list. A page that breaks one of thes
 - **A config key appears inside a real `new Seedcord({ ... })` sample**, on the page that teaches its subject, with any note as a `//` comment on the line.
 - **A sample reads like shipped code.** Oxfmt prints a fence at 68 columns, so work done inline in a callback buries the lesson under four levels of indent. Pull it into a private method.
 - **A sample builds components through `BuilderComponent`**, never a raw discord.js builder inline. A page teaching the framework while using the thing the framework replaces teaches the anti-pattern.
-- **A symbol whose type differs between the two transport packages takes a `<Callout type="transport">` naming both types.** Check each member separately, since one callout over a class does not cover a second member that differs on its own.
-- **No page names an `./internal` entry**, or a symbol reachable only through one. Read the `exports` map in the package's `package.json` to tell. Name the public surface and stop.
+- **A symbol whose type differs between the two transport packages takes a `<Callout type="transport">` that gives both types.** Check each member separately, since one callout over a class does not cover a second member that differs on its own.
+- **No page mentions an `./internal` entry**, or a symbol reachable only through one. Read the `exports` map in the package's `package.json` to tell. Point to the public surface and stop.
 - **Inline code stays short.** Backticks do not wrap, so a full error message or a chained expression pushes past the column on a narrow screen. Use quotes, a fence, or a table cell.
 - **A trap uses the exact error string as its heading**, so a pasted error hits an anchor. When two related errors share causes, like the global and the guild command deploy refusals, put what they share in one paragraph above both headings. Each heading then holds what differs for that error, in whole sentences that make sense when someone lands on that anchor from a search.
 - **A claim about Discord links Discord's docs, or comes off the page.** A limit, a threshold, or how the client behaves is Discord's to state. The content review can check a claim against seedcord's code, and nothing in the repo proves a claim about Discord, so an old page's line about Discord gets checked against Discord's docs before a rewrite keeps it.
 - **A section that narrows the one above it takes an H3.** One option inside "Adding options" nests under that H2, so the table of contents shows which section it belongs to.
 - **A callout takes whole blocks, including a fence.** Use the blank-line form: `<Callout type="warning">`, a blank line, the blocks, a blank line, the close.
 - **A callout's type matches what it holds.** A warning holds a trap the reader will hit and break on, so a trap like that never sits in plain prose. A tip holds something optional, and a note holds context. A one-line fact with nothing to act on stays in prose. When most sections carry a callout, none of them stand out, so keep the ones a reader would regret skipping.
-- **A page outside the Start tab assumes no prior page was read.** Someone opens it cold from search or the sidebar, so it names what it needs and links the rest. The Start tab is an ordered path and its pages do build on each other, which is how the core page opens on the ping handler two pages earlier.
+- **A page outside the Start tab assumes no prior page was read.** Someone opens it cold from search or the sidebar, so it says what it needs and links the rest. The Start tab is an ordered path and its pages do build on each other, which is how the core page opens on the ping handler two pages earlier.
 - **No page's code sample depends on a prior page**, wherever the page sits.

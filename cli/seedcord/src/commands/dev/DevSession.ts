@@ -30,7 +30,7 @@ export interface DevSessionDeps {
     readonly codegenLogger: ILogger;
     readonly state: StateFolder;
     readonly lock: DevLock;
-    readonly onListening: (port: number, instance: SeedcordInstance) => void;
+    readonly onServerPort: (port: number | false, instance: SeedcordInstance) => void;
 }
 
 export class DevSession {
@@ -59,7 +59,7 @@ export class DevSession {
             state: this.deps.state,
             onEvent: (event) => {
                 this.deps.store.apply(event);
-                if (event.type === 'server-listening') this.deps.onListening(event.port, this.startedInstance());
+                if (event.type === 'server-port') this.deps.onServerPort(event.port, this.startedInstance());
             }
         });
         profileMark('vite');
@@ -67,7 +67,7 @@ export class DevSession {
 
     // only a bot that run() loaded and started can report a port
     private startedInstance(): SeedcordInstance {
-        if (!this.instance) throw new SeedcordError(SeedcordErrorCode.CliDevRuntimeNotRunning, ['onListening']);
+        if (!this.instance) throw new SeedcordError(SeedcordErrorCode.CliDevRuntimeNotRunning, ['onServerPort']);
         return this.instance;
     }
 

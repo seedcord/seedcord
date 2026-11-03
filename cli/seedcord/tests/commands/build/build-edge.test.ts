@@ -78,6 +78,15 @@ if (Envapter.get('RUNTIME_GREETING') !== env.RUNTIME_GREETING) throw new Error('
 if (Envapter.environment !== 'production') throw new Error('Worker mode disagrees');
 ${await readFile(bot, 'utf8')}`
         );
+        await writeFile(
+            join(projectDir, 'src/handlers/Pinned.ts'),
+            `const pinned =
+    import.meta.dirname.endsWith('/handlers') &&
+    import.meta.filename.endsWith('/handlers/Pinned.js') &&
+    import.meta.url.startsWith('file:');
+if (navigator.userAgent === 'Cloudflare-Workers' && !pinned) throw new Error('import.meta holds the wrong path');
+`
+        );
         result = await edgeBuildRunner(fakeDiscord(signing.publicKey)).run(projectDir);
         await writeFile(
             join(projectDir, '.env'),
@@ -90,7 +99,7 @@ ${await readFile(bot, 'utf8')}`
 
     it('reports the worker it bundled for the summary', () => {
         expect(result.bundle).toEqual({
-            modules: 2,
+            modules: 3,
             listedFiles: 1,
             bytes: expect.any(Number) as number,
             entry: expect.stringMatching(/index\.mjs$/) as string
@@ -152,6 +161,23 @@ async function postToPreview(projectDir: string, sign: SignRequest): Promise<str
 }
 
 describe('a built edge worker', () => {
+    it('boots a worker with a remote binding without a Cloudflare login', async () => {
+        const projectDir = await copyEdgeBotForTest();
+        await writeCloudflareConfig(projectDir, {
+            env: { GUIDE: bindings.worker({ worker: 'seedcord-guide', dev: { remote: true } }) }
+        });
+        vi.stubEnv('HOME', projectDir);
+        vi.stubEnv('XDG_CONFIG_HOME', projectDir);
+        vi.stubEnv('CLOUDFLARE_API_TOKEN', '');
+        vi.stubEnv('CI', 'true');
+        onTestFinished(() => {
+            vi.unstubAllEnvs();
+        });
+        const signing = await writeSigningEnv(projectDir);
+
+        await expect(edgeBuildRunner(fakeDiscord(signing.publicKey)).run(projectDir)).resolves.toBeDefined();
+    }, 120_000);
+
     it('reports a handler it fails to load by its path under the bot root', async () => {
         const projectDir = await copyEdgeBotForTest();
         await writeFile(

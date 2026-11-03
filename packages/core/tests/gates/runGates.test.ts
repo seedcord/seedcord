@@ -97,7 +97,7 @@ describe('effect gates', () => {
         expect(committed).toEqual(['charge']);
     });
 
-    it('commits only the winning arm of an or', async () => {
+    it('commits only the winning gate of an or', async () => {
         const committed: string[] = [];
         const chargeA = defineEffectGate(
             'chargeA',
@@ -142,7 +142,7 @@ describe('effect gates', () => {
         expect(committed).toEqual([]);
     });
 
-    it('rolls back the effect of a refused or arm, so a later arm winning does not commit it', async () => {
+    it('rolls back the effect of a gate that refused inside an or, so a later gate winning does not commit it', async () => {
         const committed: string[] = [];
         const charge = defineEffectGate(
             'charge',
@@ -158,7 +158,7 @@ describe('effect gates', () => {
 
         await runGates([or(and(charge, refuse), pass)], ctx);
 
-        // the first arm queued charge then refused, the or moved to pass, so charge must not commit
+        // the first gate queued charge then refused, the or moved to pass, so charge must not commit
         expect(committed).toEqual([]);
     });
 });
@@ -210,39 +210,10 @@ describe('gate observer', () => {
         const handler = {};
         Reflect.defineMetadata(GatedMetadataKey, [probe], handler);
 
-        await runHandlerGates(handler, ctx, undefined, (name) => {
+        await runHandlerGates(handler, ctx, (name) => {
             seen.push(name);
         });
 
         expect(seen).toEqual(['probe']);
-    });
-});
-
-describe('runHandlerGates', () => {
-    it('puts the route the dispatcher matched onto the context', async () => {
-        let seen: string | null | undefined;
-        const probe = defineGate('probe', (c: GateContextBase) => {
-            seen = c.declaredRoute;
-        });
-        // runHandlerGates only reads metadata off the ctor, so a plain object stands in for the handler class
-        const dailyHandler = {};
-        Reflect.defineMetadata(GatedMetadataKey, [probe], dailyHandler);
-
-        await runHandlerGates(dailyHandler, ctx, 'slash:daily');
-
-        expect(seen).toBe('slash:daily');
-    });
-
-    it('leaves declaredRoute null when the dispatcher matched no route', async () => {
-        let seen: string | null | undefined = 'unset';
-        const probe = defineGate('probe', (c: GateContextBase) => {
-            seen = c.declaredRoute;
-        });
-        const plain = {};
-        Reflect.defineMetadata(GatedMetadataKey, [probe], plain);
-
-        await runHandlerGates(plain, ctx);
-
-        expect(seen).toBeNull();
     });
 });

@@ -172,9 +172,9 @@ export async function startedRuntime(
         files: files.map((folder) => realPath(folder))
     });
     const runtime = new EdgeDevRuntime(target);
-    let listening: number | undefined;
+    let listening: number | false | undefined;
     const recordPort: DevEventHandler = (event) => {
-        if (event.type === 'server-listening') listening = event.port;
+        if (event.type === 'server-port') listening = event.port;
         onEvent?.(event);
     };
     await using cleanup = new AsyncDisposableStack();
@@ -188,7 +188,7 @@ export async function startedRuntime(
     const { module } = await runtime.loadEntry();
     const instance = toSeedcordInstance(await resolveDefaultExport(module), config.instance);
     const port = (): number => {
-        if (listening === undefined) throw new Error('The endpoint is not listening yet. Await startBot first.');
+        if (typeof listening !== 'number') throw new Error('The endpoint is not listening yet. Await startBot first.');
         return listening;
     };
     const owned = cleanup.move();

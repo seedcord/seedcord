@@ -43,7 +43,7 @@ describe('Bus Integration', () => {
             `
             import { Subscriber, Subscribe } from '${seedcordPath}';
 
-            @Subscribe('unknownException')
+            @Subscribe(['unknownException'])
             export class LogSubscriber extends Subscriber {
                 public async execute() {
                     console.log('Subscriber executed');
@@ -69,7 +69,7 @@ describe('Bus Integration', () => {
             `
             import { Subscriber, Subscribe } from '${seedcordPath}';
 
-            @Subscribe('unknownException')
+            @Subscribe(['unknownException'])
             export class LogSubscriber extends Subscriber {
                 public async execute() {
                     console.log('Subscriber executed');
@@ -94,7 +94,7 @@ describe('Bus Integration', () => {
             `
             import { Subscriber, Subscribe } from '${seedcordPath}';
 
-            @Subscribe('unknownException')
+            @Subscribe(['unknownException'])
             export class LogSubscriber extends Subscriber {
                 public async execute() {
                     console.log('Subscriber updated');
@@ -123,7 +123,7 @@ describe('Bus Integration', () => {
             `
             import { Subscriber, Subscribe } from '${seedcordPath}';
 
-            @Subscribe('unknownException')
+            @Subscribe(['unknownException'])
             export class LogSubscriber extends Subscriber {
                 public async execute() {
                     console.log('Subscriber executed');

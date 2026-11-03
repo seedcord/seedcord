@@ -467,7 +467,7 @@ describe('CustomId encode guards', () => {
 });
 
 describe('CustomId rejection messages', () => {
-    it('names the type a bool expects and quotes the string it got', () => {
+    it('states the type a bool expects and quotes the string it got', () => {
         const Flag = new CustomId('flag').bool('silent');
         const message = thrownMessage(() =>
             Flag.encode({
@@ -479,12 +479,12 @@ describe('CustomId rejection messages', () => {
         expect(message).toContain('"false"');
     });
 
-    it('names the declared bounds an int expects', () => {
+    it('states the declared bounds an int expects', () => {
         const Page = new CustomId('page').int('index', 0, 7);
         expect(thrownMessage(() => Page.encode({ index: 50 }))).toContain('expects an integer from 0 to 7');
     });
 
-    it('names the choices a oneOf expects', () => {
+    it('lists the choices a oneOf expects', () => {
         const Poll = new CustomId('poll').oneOf('choice', ['yes', 'no']);
         expect(
             thrownMessage(() =>
@@ -496,7 +496,7 @@ describe('CustomId rejection messages', () => {
         ).toContain('expects one of "yes", "no"');
     });
 
-    it('names what a str expects', () => {
+    it('states what a str expects', () => {
         const Note = new CustomId('note').str('body');
         expect(
             thrownMessage(() =>
@@ -543,7 +543,7 @@ describe('CustomId definition guards', () => {
         );
     });
 
-    it('names the method that was called with no choices', () => {
+    it('reports the method that was called without choices', () => {
         const empty = [] as unknown as [string]; // fixture cast, bypass NonEmptyTuple to reach the runtime guard
         expect(thrownMessage(() => new CustomId('assign').someOf('roles', empty))).toContain('someOf()');
         expect(thrownMessage(() => new CustomId('poll').oneOf('choice', empty))).toContain('oneOf()');

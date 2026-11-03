@@ -38,7 +38,7 @@ pnpm add @seedcord/gateway discord.js @discordjs/builders envapt
 pnpm add -D seedcord vite typescript
 ```
 
-`discord.js`, `envapt`, and `typescript` are peer dependencies. `seedcord` is the CLI that runs the bot in dev and builds it.
+`discord.js`, `@discordjs/builders`, `envapt`, and `typescript` are peer dependencies. `seedcord` is the CLI that runs the bot in dev and builds it.
 
 ## Usage
 
@@ -65,7 +65,7 @@ export default new Seedcord({
 
 Read your environment through [envapt](https://envapt.materwelon.dev), the way `TESTING_GUILD_IDS` is read above. seedcord loads your `.env` files into envapt, and reads `DISCORD_BOT_TOKEN` from it too. envapt also reads your shell's variables, while `process.env` misses everything in your `.env` files.
 
-A file in `events/` reacts to any discord.js client event. Its handler reads the same arguments discord.js passes to `client.on()`:
+A file in `events/` reacts to any discord.js client event. Its handler receives the same arguments discord.js passes to `client.on()`:
 
 ```ts
 import { EventHandler, RegisterEvent } from '@seedcord/gateway';

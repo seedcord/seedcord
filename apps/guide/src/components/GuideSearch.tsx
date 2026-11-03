@@ -1,80 +1,103 @@
 'use client';
 
-import { GUIDE_SEARCH_URL, GuideSearch as GuideSearchClient, stripStopwords } from '@seedcord/docs-search';
+import { QUESTION_LENGTH } from '@seedcord/docs-search';
 import {
+    SECTION_LABEL,
     SearchDialog,
     SearchField,
+    SearchKeyLegend,
     SearchTrigger,
     cn,
     useActiveRowScroll,
-    useRovingList,
-    useSearchHotkey
+    useNavigateAndClose,
+    useRovingList
 } from '@seedcord/ui';
-import { useDocsSearch } from 'fumadocs-core/search/client';
 import { useRouter } from 'next/navigation';
-import { useCallback, useMemo, useRef, useState } from 'react';
+import { useCallback, useRef, useState } from 'react';
 
 import { SearchResultRow } from './SearchResultRow';
+import { SearchResultsSkeleton } from './SearchResultsSkeleton';
+import { emptyMessage, useGuideSearch } from './useGuideSearch';
 
-import type { SortedResult } from 'fumadocs-core/search';
+import type { ResultGroup } from './useGuideSearch';
+import type { GuideResult } from '@seedcord/docs-search';
+import type { RovingGroup, RovingList } from '@seedcord/ui';
 import type { ReactElement } from 'react';
 
 const LISTBOX_ID = 'guide-search-results';
 
 export const SEARCH_LABEL = 'Search the guide';
 
-const NO_RESULTS: SortedResult[] = [];
-
-function optionId(id: string): string {
-    return `guide-search-${id}`;
+function optionId(path: string): string {
+    return `guide-search-${path}`;
 }
 
-function Results({
-    results,
-    query,
-    activeIndex,
-    isFirst,
-    isLast,
-    onSelect,
-    onActivate,
-    emptyMessage
-}: {
-    results: SortedResult[];
-    query: string;
-    activeIndex: number;
-    isFirst: boolean;
-    isLast: boolean;
-    onSelect: (result: SortedResult) => void;
-    onActivate: (index: number) => void;
-    emptyMessage: string | null;
-}): ReactElement | null {
-    const active = results[activeIndex];
-    useActiveRowScroll(active ? optionId(active.id) : undefined, isFirst, isLast);
+const NO_ROWS: readonly GuideResult[] = [];
 
-    // a null child collapses the animated panel back to the bare bar
-    if (emptyMessage === null && results.length === 0) return null;
+function rovingGroups(groups: readonly ResultGroup[]): RovingGroup<GuideResult>[] {
+    return groups.map((group) => ({
+        items: group.status === 'done' ? group.results : NO_ROWS,
+        loading: group.status === 'pending'
+    }));
+}
+
+interface GroupProps {
+    group: ResultGroup;
+    roving: RovingList<GuideResult>;
+    onSelect: (result: GuideResult) => void;
+}
+
+function GroupBody({ group, roving, onSelect }: GroupProps): ReactElement | ReactElement[] {
+    if (group.status === 'pending') return <SearchResultsSkeleton />;
+    if (group.status === 'failed') {
+        return (
+            <p aria-hidden className={cn('text-subtle px-3 py-2 text-sm')}>
+                {group.notice}
+            </p>
+        );
+    }
+    return group.results.map((result) => (
+        <SearchResultRow
+            key={result.path}
+            result={result}
+            isActive={roving.isActive(result)}
+            optionId={optionId(result.path)}
+            onSelect={onSelect}
+            onActivate={roving.pointAt}
+        />
+    ));
+}
+
+function Group(props: GroupProps): ReactElement {
+    return (
+        <div role="group" aria-label={props.group.label} className={cn('mt-3 first:mt-0')}>
+            <div aria-hidden className={cn(SECTION_LABEL, 'px-3 pb-2')}>
+                {props.group.label}
+            </div>
+            <GroupBody {...props} />
+        </div>
+    );
+}
+
+interface ResultsProps extends Omit<GroupProps, 'group'> {
+    groups: readonly ResultGroup[];
+    message: string | undefined;
+}
+
+function Results({ groups, message, roving, onSelect }: ResultsProps): ReactElement {
+    useActiveRowScroll(roving.active ? optionId(roving.active.path) : undefined, roving);
 
     return (
         <div className={cn('py-3')}>
-            {emptyMessage === null ? null : (
-                <div className={cn('text-subtle px-3 py-8 text-center text-sm')}>{emptyMessage}</div>
-            )}
-            {results.length > 0 ? (
+            {message === undefined ? (
                 <div id={LISTBOX_ID} role="listbox" aria-label="Search results">
-                    {results.map((result, index) => (
-                        <SearchResultRow
-                            key={result.id}
-                            result={result}
-                            query={query}
-                            isActive={index === activeIndex}
-                            optionId={optionId(result.id)}
-                            index={index}
-                            onSelect={onSelect}
-                            onActivate={onActivate}
-                        />
+                    {groups.map((group) => (
+                        <Group key={group.label} group={group} roving={roving} onSelect={onSelect} />
                     ))}
                 </div>
-            ) : null}
+            ) : (
+                <div className={cn('text-subtle px-3 py-8 text-center text-sm')}>{message}</div>
+            )}
         </div>
     );
 }
@@ -87,45 +110,14 @@ export interface GuideSearchProps {
 export function GuideSearch({ open, onOpenChange: setOpen }: GuideSearchProps): ReactElement {
     const [typed, setTyped] = useState('');
     const inputRef = useRef<HTMLInputElement>(null);
-    const router = useRouter();
+    const navigate = useNavigateAndClose(useRouter(), setOpen);
 
-    const search = useMemo(() => new GuideSearchClient(new URL(GUIDE_SEARCH_URL).pathname), []);
-    const { setSearch, query } = useDocsSearch({ client: search.client });
+    const groups = useGuideSearch(typed, open);
 
-    const onValueChange = useCallback(
-        (value: string) => {
-            setTyped(value);
-            setSearch(stripStopwords(value));
-        },
-        [setSearch]
-    );
+    const select = useCallback((result: GuideResult) => navigate(result.path), [navigate]);
 
-    useSearchHotkey(() => setOpen(!open));
-
-    const found = query.data === 'empty' || query.data === undefined ? NO_RESULTS : query.data;
-    const terms = useMemo(() => stripStopwords(typed), [typed]);
-    // useRovingList keys an effect on this array's identity
-    const results = useMemo(() => search.rank(found, terms), [search, found, terms]);
-
-    const select = useCallback(
-        (result: SortedResult) => {
-            setOpen(false);
-            router.push(result.url);
-        },
-        [router, setOpen]
-    );
-
-    const { activeIndex, isFirst, isLast, setActiveIndex, onKeyDown } = useRovingList({
-        items: results,
-        onSelect: select
-    });
-
-    const asked = typed.trim().length > 0;
-    let emptyMessage: string | null = null;
-    if (!asked) emptyMessage = 'Type to search every page in the guide.';
-    else if (!query.isLoading && results.length === 0) emptyMessage = `Nothing on any page matches "${typed.trim()}".`;
-
-    const active = results[activeIndex];
+    const roving = useRovingList({ query: typed, groups: rovingGroups(groups), onSelect: select });
+    const { active } = roving;
 
     return (
         <>
@@ -136,33 +128,30 @@ export function GuideSearch({ open, onOpenChange: setOpen }: GuideSearchProps): 
                 onClose={() => setOpen(false)}
                 title="Search"
                 description="Search every page in the seedcord guide."
+                footer={active === undefined ? undefined : <SearchKeyLegend hasGroups={roving.hasGroups} />}
                 field={
                     <SearchField
                         inputRef={inputRef}
                         value={typed}
-                        onValueChange={onValueChange}
-                        onKeyDown={onKeyDown}
+                        onValueChange={setTyped}
+                        onKeyDown={roving.onKeyDown}
                         onClose={() => setOpen(false)}
                         label={SEARCH_LABEL}
                         closeLabel="Close search"
                         placeholder="Search the guide"
+                        maxLength={QUESTION_LENGTH.max}
                         listboxId={LISTBOX_ID}
-                        listExpanded={results.length > 0}
-                        isSearching={query.isLoading}
-                        {...(active ? { activeId: optionId(active.id) } : {})}
+                        listExpanded={active !== undefined}
+                        isSearching={groups.some((group) => group.status === 'pending')}
+                        {...(active ? { activeId: optionId(active.path) } : {})}
                     />
                 }
             >
-                <Results
-                    results={results}
-                    query={terms}
-                    activeIndex={activeIndex}
-                    isFirst={isFirst}
-                    isLast={isLast}
-                    onSelect={select}
-                    onActivate={setActiveIndex}
-                    emptyMessage={emptyMessage}
-                />
+                <Results groups={groups} message={emptyMessage(typed, groups)} roving={roving} onSelect={select} />
+                {/* a screen reader announces a change inside a status region that already exists */}
+                <p role="status" className={cn('sr-only')}>
+                    {groups.flatMap((group) => (group.status === 'failed' ? [group.notice] : [])).join(' ')}
+                </p>
             </SearchDialog>
         </>
     );

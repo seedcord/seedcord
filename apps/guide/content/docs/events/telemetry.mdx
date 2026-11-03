@@ -12,7 +12,7 @@ import { Subscribe, Subscriber } from '@seedcord/gateway';
 
 const SLOW_MS = 2000;
 
-@Subscribe('interactionDispatched')
+@Subscribe(['interactionDispatched'])
 export class SlowDispatch extends Subscriber<'interactionDispatched'> {
     public async execute(): Promise<void> {
         const { routeId, outcome, durationMs } = this.data;
@@ -111,14 +111,14 @@ A dispatch can be slow because one Discord call was slow. `responseAttempted` ti
 
 `messageId` carries an id for `reply`, `update`, `followUp`, and `edit`. Every other method reports `null`, as does a failed write.
 
-### Catching a failed write
+### Catching a failed reply or other write
 
 Your handler sees its own failed write as a throw. seedcord also sends writes of its own, like the error card after a throw. Those don't run through your handler. When any write throws, seedcord publishes `outcome` `failed` with the throw on `error`. Check `outcome` first, because only the failed shape carries an `error` field.
 
 ```ts twoslash title="src/subscribers/WriteAudit.ts"
 import { Subscribe, Subscriber } from '@seedcord/gateway';
 // ---cut---
-@Subscribe('responseAttempted')
+@Subscribe(['responseAttempted'])
 export class WriteAudit extends Subscriber<'responseAttempted'> {
     public async execute(): Promise<void> {
         const write = this.data;
@@ -134,7 +134,7 @@ export class WriteAudit extends Subscriber<'responseAttempted'> {
 
 `WriteAudit` returns early on `'sent'`, so TypeScript knows `write.error` exists on the next line.
 
-Discord can return a `reply` or an `update` without the message it should carry. seedcord throws `ReplyCallbackMissingMessage` there. That write doesn't publish anything, since the call itself succeeded without naming a message.
+Discord can return a `reply` or an `update` without the message it should carry. seedcord throws `ReplyCallbackMissingMessage` there. That write doesn't publish anything, since the call itself succeeded. Only the message was missing from Discord's response.
 
 ## What one `eventDispatched` reports
 
@@ -153,7 +153,7 @@ When discord.js emits an event, seedcord runs every handler you registered for i
 | `dispatchId` | `string` | this dispatch of the event, the same id `eventDispatching` published |
 | `name` | `keyof ClientEvents` | the event, `messageCreate` shaped |
 | `outcome` | [`DispatchOutcome`](ref:core/DispatchOutcome) | how the middleware chain ended |
-| `handlers` | [`HandlerOutcome[]`](ref:core/HandlerOutcome) | one entry per handler that ran, in order |
+| `handlers` | [`HandlerOutcome[]`](ref:core/HandlerOutcome) | one entry per handler that ran, in load order |
 | `durationMs` | `number` | dispatch entry until every handler finishes, monotonic |
 
 {/* prettier-ignore-end */}
@@ -163,7 +163,7 @@ When discord.js emits an event, seedcord runs every handler you registered for i
 ```ts twoslash title="src/subscribers/FlakyHandlers.ts"
 import { Subscribe, Subscriber } from '@seedcord/gateway';
 // ---cut---
-@Subscribe('eventDispatched')
+@Subscribe(['eventDispatched'])
 export class FlakyHandlers extends Subscriber<'eventDispatched'> {
     public async execute(): Promise<void> {
         const { name, handlers } = this.data;
@@ -227,7 +227,7 @@ On the subscriber side, write `dispatchId` as a column in every row and query on
 import { Subscribe, Subscriber } from '@seedcord/gateway';
 declare const db: { insert(row: object): Promise<void> };
 // ---cut---
-@Subscribe('interactionDispatched')
+@Subscribe(['interactionDispatched'])
 export class Dispatches extends Subscriber<'interactionDispatched'> {
     public async execute(): Promise<void> {
         const { dispatchId, routeId, outcome, durationMs } =
@@ -241,7 +241,7 @@ export class Dispatches extends Subscriber<'interactionDispatched'> {
     }
 }
 
-@Subscribe('unknownException')
+@Subscribe(['unknownException'])
 export class Faults extends Subscriber<'unknownException'> {
     public async execute(): Promise<void> {
         const { dispatchId, uuid, error } = this.data;

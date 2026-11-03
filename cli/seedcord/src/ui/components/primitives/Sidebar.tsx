@@ -57,6 +57,10 @@ function tunnelValue(status: TunnelStatus): string {
     return status === 'live' || status === 'lost' ? status : `${status}…`;
 }
 
+function portValue(port: number | false): string {
+    return port === false ? 'off' : String(port);
+}
+
 function transportLabel({ name }: DevTransport): string {
     return name.replace('@seedcord/', '');
 }
@@ -76,7 +80,8 @@ export function statusFacts(state: DevState, uptimeMs: number | null, withTarget
                   value: withTarget ? `v${transport.version} · ${transport.target}` : `v${transport.version}`
               },
         uptimeMs === null ? null : { label: 'up', value: formatUptime(uptimeMs) },
-        port === null ? null : { label: 'port', value: String(port) }, // only the http host reports one
+        // only the http host reports one
+        port === null ? null : { label: 'port', value: portValue(port) },
         tunnel === null ? null : { label: 'tunnel', value: tunnelValue(tunnel) },
         { label: 'logs', value: LOG_DIR }
     ];

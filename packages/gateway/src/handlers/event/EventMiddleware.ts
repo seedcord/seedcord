@@ -1,6 +1,3 @@
-import { SeedcordErrorCode } from '@seedcord/errors';
-import { SeedcordError } from '@seedcord/errors/internal';
-
 import { BaseHandler } from '#src/handlers/BaseHandler';
 
 import type { Core } from '#interfaces/Core';
@@ -8,43 +5,34 @@ import type { ValidNonInteractionKeys } from '#src/handlers/interactionTypes';
 import type { SingleEventPayload } from './payload';
 import type { DispatchContext, EventDispatchResult } from '@seedcord/core';
 import type { ClientEvents } from 'discord.js';
+import type { Promisable } from 'type-fest';
 
 /**
  * Base class for Discord event middleware.
  *
  * Middleware runs before event handlers and can stop the event by throwing a `Silence`. Unlike `EventHandler`, it
  * runs the SAME for every event it is registered for, so it has no `match`. Specify a single event in the
- * generic and `{ events }` to read `this.event` fully typed. Span several events (or omit `{ events }` for a
- * catchall) and `this.event` narrows to `never`, read `this.eventName` and do work that does not depend on the
- * payload shape. A middleware that needs each event's payload is written one event per class.
+ * generic and `{ events }` to read `this.event` fully typed. If you span several events (or omit `{ events }` for
+ * a catchall), `this.event` narrows to `never`. Read `this.route` there, for work that doesn't depend on the
+ * payload shape. Write one class per event for a middleware that needs each event's payload.
  *
  * @typeParam EventName - One or more `ClientEvents` keys. Defaults to every event (catchall).
  */
 export abstract class EventMiddleware<
     in out EventName extends ValidNonInteractionKeys = ValidNonInteractionKeys
 > extends BaseHandler<ClientEvents[EventName]> {
-    // the controller threads this in, undefined when a test constructs the middleware directly
-    private readonly firedEvent: EventName | undefined;
-
-    constructor(event: ClientEvents[EventName], core: Core, dispatch: DispatchContext, eventName?: EventName) {
+    constructor(event: ClientEvents[EventName], core: Core, dispatch: DispatchContext) {
         super(event, core, dispatch, 'events');
-        this.firedEvent = eventName;
     }
 
     // a concrete tuple for one event only, so reading it on a multi-event middleware is a compile error
     declare protected readonly event: SingleEventPayload<EventName>;
 
     /**
-     * The name of the event being processed. Read it on a catchall or multi-event middleware, where `this.event`
-     * is `never`, to do work that does not depend on the payload shape. A single-event middleware reads
-     * `this.event` directly and does not need this.
+     * The event that started this dispatch, one of the names in the generic. Read it on a catchall or multi-event
+     * middleware, where `this.event` is `never`, to do work that doesn't depend on the payload shape.
      */
-    protected get eventName(): EventName {
-        if (this.firedEvent === undefined) {
-            throw new SeedcordError(SeedcordErrorCode.EventNameUnavailable, [this.constructor.name, 'this.eventName']);
-        }
-        return this.firedEvent;
-    }
+    declare protected readonly route: EventName;
 
     /**
      * Runs once the event finishes, newest middleware first. Every middleware whose `execute()`
@@ -62,5 +50,5 @@ export abstract class EventMiddleware<
      * }
      * ```
      */
-    public after?(result: EventDispatchResult): Promise<void>;
+    public after?(result: EventDispatchResult): Promisable<void>;
 }

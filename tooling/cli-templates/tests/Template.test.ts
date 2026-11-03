@@ -388,7 +388,7 @@ describe('TemplateOutput.inputs', () => {
         );
     });
 
-    it('throws MakeTemplateFailed, naming the file, when a template does not parse', async () => {
+    it('throws MakeTemplateFailed with the file name when a template does not parse', async () => {
         const error = await inputsFor({ 'handlers/x.ts.hbs': '{{#if ready}}' }).catch((thrown: unknown) => thrown);
 
         assert(isSeedcordError(error, 'SeedcordTypeError', SeedcordErrorCode.MakeTemplateFailed));

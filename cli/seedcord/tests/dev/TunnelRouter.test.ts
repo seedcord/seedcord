@@ -57,7 +57,7 @@ describe('TunnelRouter', () => {
         expect(warn).not.toHaveBeenCalled();
     });
 
-    it('names the install command once when cloudflared is absent', async () => {
+    it('shows the install command once when cloudflared is absent', async () => {
         const warn = vi.fn();
         const routing = router(undefined, { ...silentLogger, warn });
 

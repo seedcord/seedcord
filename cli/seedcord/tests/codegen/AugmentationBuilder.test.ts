@@ -118,7 +118,7 @@ describe('AugmentationBuilder', () => {
         expect(tables.search?.plain).not.toHaveProperty('autocomplete');
     });
 
-    it('throws naming both source files when two commands resolve to the same route', () => {
+    it('throws with both source files when two commands resolve to the same route', () => {
         const generator = new AugmentationBuilder(silentLogger);
         const commands = [
             {
@@ -371,7 +371,7 @@ describe('AugmentationBuilder', () => {
         expect(tables).toEqual({ 'demo/noop': {} });
     });
 
-    it('warns naming the group and emits no leaf for an empty group while keeping a sibling sub', () => {
+    it('warns with the group name and skips the leaf of an empty group while keeping a sibling sub', () => {
         const warnings: string[] = [];
         const logger: ILogger = { ...silentLogger, warn: (message) => warnings.push(String(message)) };
         const json = new SlashCommandBuilder()
@@ -388,7 +388,7 @@ describe('AugmentationBuilder', () => {
         expect(warnings.some((warning) => warning.includes('admin/empty'))).toBe(true);
     });
 
-    it('throws CoreDuplicateName naming both files when a flat command and a group leaf collide', () => {
+    it('throws CoreDuplicateName with both files when a flat command and a group leaf collide', () => {
         const generator = new AugmentationBuilder(silentLogger);
         const commands = [
             {
@@ -468,7 +468,7 @@ describe('AugmentationBuilder', () => {
         expect(registry.messageContextMenus).toEqual({ Report: { cache: undefined } });
     });
 
-    it('throws naming both files when two user context menus share a name', () => {
+    it('throws with both files when two user context menus share a name', () => {
         const generator = new AugmentationBuilder(silentLogger);
         const commands = [
             {
@@ -502,7 +502,7 @@ describe('AugmentationBuilder', () => {
         expect(message).toContain('commands/view-b.ts');
     });
 
-    it('throws naming both files when two message context menus share a name', () => {
+    it('throws with both files when two message context menus share a name', () => {
         const generator = new AugmentationBuilder(silentLogger);
         const commands = [
             {

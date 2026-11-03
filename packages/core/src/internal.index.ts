@@ -1,4 +1,4 @@
-export { busLoggerOf, registrationFor } from '#subscribers/Bus';
+export { busLoggerOf } from '#subscribers/Bus';
 export { SubscriberLoader } from '#subscribers/SubscriberLoader';
 export {
     AutocompleteRouteBrand,
@@ -14,14 +14,14 @@ export type { InteractionMiddlewareMetadata } from '#decorators/middleware';
 export { interactionMiddleware, MiddlewareRegistry } from '#src/dispatch/MiddlewareRegistry';
 export type { MiddlewareRegistration, MiddlewareRegistrationOf } from '#src/dispatch/MiddlewareRegistry';
 export { bindBotColor } from '#components/botColorHolder';
-export { logUnknownFault } from '#src/notices/logUnknownFault';
+export { FaultBoundary, type FaultDetails } from '#src/notices/FaultBoundary';
 
 export { FixedScope } from '#src/plugin/Plugin';
 export type { PluginArgs, PluginCtor } from '#src/plugin/Plugin';
 export type { Runtime, Transport } from '#src/plugin/options';
 export { attachmentsOf, sealAttachments } from '#src/plugin/PluginHost';
 export { splitPluginKey } from '#src/plugin/splitPluginKey';
-export { CoordinatedStartup } from '#src/lifecycle/CoordinatedStartup';
+export { CoordinatedStartup, type StartupTasks } from '#src/lifecycle/CoordinatedStartup';
 export { PluginLifecycle } from '#src/lifecycle/PluginLifecycle';
 
 export type { CommandMeta } from '#decorators/Command';
@@ -33,11 +33,10 @@ export {
     type RoutableConstructor
 } from '#decorators/interactionRoutes';
 
-export { runGates, runHandlerGates } from '#gates/runGates';
-export { slowGateMonitor, type SlowGateMonitor } from '#gates/slowGate';
-export type { GateObserver } from '#gates/runGates';
+export { runHandlerGates } from '#gates/runGates';
 export { accessorStore, clearStore, guardedAccessor } from '#src/miscellaneous/guarded';
 export { isEmojiTuple } from '#src/miscellaneous/emojiConfig';
+export { lazyLogger } from '#src/miscellaneous/lazyLogger';
 export { currentApplication } from '#src/miscellaneous/currentApplication';
 export { readBotToken } from '#src/miscellaneous/readBotToken';
 export { bindEnv } from '#src/miscellaneous/bindViteEnv';
@@ -66,9 +65,10 @@ export { isCommandClass, type CommandCtor } from '#src/commands/isCommandClass';
 export { slashRouteLeaves } from '#src/commands/slashRouteLeaves';
 export type { CommandBuilder, DeployResult } from '#src/commands/types';
 
-export { pickNotice } from '#gates/catalog/options';
-export { PermissionNames } from '#gates/catalog/permissions';
 export type { GateFitsWith } from '#gates/matching';
+export { assertUniqueKeys } from '#src/decorators/assertUniqueKeys';
+export { runCase, type CaseReturn, type MatchResult, type OnlyCases } from '#src/handlers/runCase';
+export type { MiddlewareRoute } from '#src/handlers/MiddlewareRoute';
 
 export { getDevChannel, setDevChannel } from '#hmr/devChannel';
 export { connectDevChannel, HmrManager } from '#hmr/HmrManager';
@@ -76,18 +76,7 @@ export { wrapHot } from '#hmr/wrapHot';
 export { fromDevLogLine, fromWireError, toWireError } from '#hmr/wire';
 export { forwardLogsToCli } from '#hmr/forwardLogsToCli';
 
-export {
-    GateNotice,
-    HasDangerousPermissions,
-    MissingPermissions,
-    MissingRole,
-    NeedsAny,
-    NotAllowed,
-    NotInDm,
-    NotInGuild,
-    NotOwner,
-    OnCooldown
-} from '#notices/index';
+export { MissingRole, NeedsAny, NotAllowed, NotInDm, NotInGuild, NotOwner, OnCooldown } from '#notices/index';
 
 export {
     CommandMetadataKey,
@@ -108,7 +97,7 @@ export {
     decodeComponentRoute,
     type DecodedComponentRoute,
     type HasComponentDefs,
-    type MatchArms,
+    type MatchCases,
     type SingleParams
 } from '#customId/routing';
 
@@ -124,11 +113,12 @@ export { PAGE_MAX, pageCursor, type PageCursor } from '#pagination/cursor';
 export { deferFlags, sendFlags } from '#reply/flags';
 export { checkAckLegality, sendTarget, type AckState, type ReplyMethod } from '#reply/ackLegality';
 export { AckTrace } from '#reply/AckTrace';
+export { AutocompleteResponder } from '#reply/AutocompleteResponder';
 export { reportedWrite, type ReplyTelemetry } from '#reply/responseReport';
 export { translateSerializationError } from '#reply/translateSerialization';
 export { serializeReply, type SerializedReply } from '#reply/serializeReply';
 
-export { type StoredSubscriberCtor, type SubscriberRegistration } from '#subscribers/Bus';
+export { type StoredSubscriberCtor } from '#subscribers/Bus';
 export { ReportThrottle } from '#subscribers/ReportThrottle';
 export { PublishDefault } from '#subscribers/publishDefault';
 export {
@@ -138,8 +128,20 @@ export {
     UnregisterSubscriber,
     VerifyWebhooks
 } from '#subscribers/slots';
-export { outcomeFor, queuedMsFor, reportDispatch } from '#src/dispatch/dispatchReport';
+export { DispatchContext, type InteractionDispatch } from '#src/dispatch/DispatchContext';
+export { InteractionRun, type InteractionRunConfig } from '#src/dispatch/InteractionRun';
+export { componentKindOf } from '#src/dispatch/componentKindOf';
+export { HandlerLoader } from '#src/dispatch/HandlerLoader';
+export {
+    emptyRouteMaps,
+    matchRoute,
+    RouteRegistry,
+    type RegisteredRoute,
+    type RouteMaps
+} from '#src/dispatch/RouteRegistry';
 export { eventResultFor, resultFor, runAfter } from '#src/dispatch/runAfter';
+export { OnceTracker } from '#src/dispatch/OnceTracker';
 // each transport declaration-merges its own default keys into this
 export type { DefaultSubscriptions } from '#subscribers/types/Subscriptions';
+export { interactionFaultSource } from '#subscribers/interactionFaultSource';
 export type { Initializeable } from '#src/plugin/Plugin';

@@ -16,14 +16,14 @@ describe('DevStore', () => {
         });
     });
 
-    it('drops an armed confirm once the phase changes under it', () => {
+    it('drops a pending confirm once the phase changes under it', () => {
         const store = new DevStore();
         store.setPhase('running');
-        store.setArmed('disconnect');
+        store.setPendingConfirm('disconnect');
 
         store.setPhase('disconnected');
 
-        expect(store.getState().armed).toBeNull();
+        expect(store.getState().pendingConfirm).toBeNull();
     });
 
     it('scalar setters patch their field and emit one change each', () => {
@@ -120,16 +120,16 @@ describe('DevStore', () => {
 
     it.each(['beginRestart', 'beginDisconnect'] as const)('%s drops the port of the run that ended', (method) => {
         const store = new DevStore();
-        store.apply({ type: 'server-listening', port: 4321 });
+        store.apply({ type: 'server-port', port: 4321 });
 
         store[method]();
 
         expect(store.getState().port).toBeNull();
     });
 
-    it('apply reduces server-listening into the bound port', () => {
+    it('apply reduces server-port into the bound port', () => {
         const store = new DevStore();
-        store.apply({ type: 'server-listening', port: 4000 });
+        store.apply({ type: 'server-port', port: 4000 });
 
         expect(store.getState().port).toBe(4000);
     });

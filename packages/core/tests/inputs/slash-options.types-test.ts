@@ -131,7 +131,7 @@ function unknownAndWrongKind(o: SlashOptions<'coreReq', StubLens>): void {
 }
 
 // a union route is the safe intersection view: only names shared across every route with one kind,
-// required only when required everywhere. per-route getters come from match's per-arm narrowing.
+// required only when required everywhere. per-route getters come from match's per-case narrowing.
 function unionRouteIntersects(o: SlashOptions<'coreReq' | 'coreOpt', StubLens>): void {
     // 'who' is a user option on both routes, required on one, nullable on the union
     expectTypeOf(o.getUser('who')).toEqualTypeOf<StubUser | null>();

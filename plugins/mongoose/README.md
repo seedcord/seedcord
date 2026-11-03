@@ -23,7 +23,7 @@
 
 ## About
 
-`@seedcord/plugin-mongoose` connects a seedcord bot to MongoDB through Mongoose. It connects when the bot starts, loads your service classes, and disconnects when the bot shuts down. Handlers reach each service through `this.core`.
+`@seedcord/plugin-mongoose` connects a seedcord bot to MongoDB through Mongoose. It connects when the bot starts, loads your service classes, and disconnects when the bot shuts down. Handlers can reach each service through `this.core`.
 
 Install it when your bot stores data in MongoDB. It works with a gateway bot and with an http bot on your own server. On a Cloudflare Workers bot, attaching it is a compile error.
 
@@ -37,7 +37,7 @@ pnpm add @seedcord/plugin-mongoose mongoose
 
 ## Usage
 
-Attach the plugin in `bot.ts`. Handlers read it from `this.core` under the key you pass:
+Attach the plugin in `bot.ts`. Read it from `this.core` in a handler, under the key you pass:
 
 ```ts
 // bot.ts
@@ -86,4 +86,4 @@ export class Users extends MongooseService<IUser> {
 }
 ```
 
-Run `seedcord codegen` after you add or rename a service. It adds the service's key to `MongooseServices`, the type behind the decorator and `core.db.services`. A handler then calls `await this.core.db.services.users.findByUserId(this.event.user.id)`. The [Mongoose guide](https://seedcord.org/guide/plugins/mongoose) covers the options, services, and errors.
+Run `seedcord codegen` after you add or rename a service. It adds the service's key to `MongooseServices`, the type behind the decorator and `core.db.services`. Then call `await this.core.db.services.users.findByUserId(this.user.id)` from a handler. The [Mongoose guide](https://seedcord.org/guide/plugins/mongoose) covers the options, services, and errors.

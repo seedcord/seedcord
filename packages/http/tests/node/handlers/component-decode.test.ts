@@ -1,4 +1,5 @@
-import { DispatchContext, CustomId, Notice } from '@seedcord/core';
+import { CustomId, Notice } from '@seedcord/core';
+import { DispatchContext } from '@seedcord/core/internal';
 import { isSeedcordError, SeedcordErrorCode } from '@seedcord/errors';
 import { describe, expect, expectTypeOf, it } from 'vite-plus/test';
 
@@ -6,9 +7,10 @@ import { ButtonHandler } from '#handlers/interaction/components/ButtonHandler';
 import { ModalHandler } from '#handlers/interaction/components/ModalHandler';
 import { UserMenuHandler } from '#handlers/interaction/components/SelectMenuHandler';
 import { ButtonRoute, ModalRoute, UserMenuRoute } from '#src/index';
+import { built } from '#tests/helpers/built';
 
 import type { Core } from '#interfaces/Core';
-import type { MatchArms } from '@seedcord/core/internal';
+import type { MatchCases } from '@seedcord/core/internal';
 import type {
     APIMessageComponentButtonInteraction,
     APIMessageComponentSelectMenuInteraction,
@@ -17,7 +19,7 @@ import type {
     Snowflake
 } from 'discord-api-types/v10';
 
-const dispatch = new DispatchContext('test:probe');
+const dispatch = new DispatchContext('slash', 'probe');
 
 type UserSelectEvent = APIMessageComponentSelectMenuInteraction & { data: APIMessageUserSelectInteractionData };
 
@@ -83,12 +85,12 @@ describe('button decode', () => {
             }
         }
 
-        await new Approve(buttonEvent(ApproveId.encode({ userId: '853472916483920128' })), core, dispatch).execute();
+        await built(Approve, buttonEvent(ApproveId.encode({ userId: '853472916483920128' })), core, dispatch).execute();
 
         expect(seen).toBe('853472916483920128');
     });
 
-    it('dispatches the arm for the minted route on a multi-def handler', async () => {
+    it('dispatches the case for the minted route on a multi-def handler', async () => {
         @ButtonRoute(ApproveId, RejectId)
         class Review extends ButtonHandler<[typeof ApproveId, typeof RejectId]> {
             execute(): Promise<void> {
@@ -102,28 +104,33 @@ describe('button decode', () => {
                     reject: ({ userId }) => `rejected ${userId}`
                 });
             }
-        }
 
-        const wire = RejectId.encode({ userId: '42' });
-        await expect(new Review(buttonEvent(wire), core, dispatch).run()).resolves.toBe('rejected 42');
-    });
-
-    it('throws MatchArmMissing when the minted route has no arm', async () => {
-        @ButtonRoute(ApproveId, RejectId)
-        class Review extends ButtonHandler<[typeof ApproveId, typeof RejectId]> {
-            async execute(): Promise<void> {
-                // justified: the arms omit 'reject' to reach the runtime backstop the type layer forbids
-                const arms = { approve: () => undefined } as unknown as MatchArms<
-                    [typeof ApproveId, typeof RejectId],
-                    undefined
-                >;
-                await this.match(arms);
+            async runMixed(): Promise<void> {
+                const result = await this.match({ approve: () => 'approved', reject: () => 1 });
+                expectTypeOf(result).toEqualTypeOf<string | number>();
             }
         }
 
         const wire = RejectId.encode({ userId: '42' });
-        await expect(new Review(buttonEvent(wire), core, dispatch).execute()).rejects.toSatisfy((e: unknown) =>
-            isSeedcordError(e, 'SeedcordTypeError', SeedcordErrorCode.MatchArmMissing)
+        await expect(built(Review, buttonEvent(wire), core, dispatch).run()).resolves.toBe('rejected 42');
+    });
+
+    it('throws MatchCaseMissing when the minted route lacks a case', async () => {
+        @ButtonRoute(ApproveId, RejectId)
+        class Review extends ButtonHandler<[typeof ApproveId, typeof RejectId]> {
+            async execute(): Promise<void> {
+                // justified: the cases omit 'reject' to reach the runtime backstop the type layer forbids
+                const cases = { approve: () => undefined } as unknown as MatchCases<
+                    [typeof ApproveId, typeof RejectId],
+                    undefined
+                >;
+                await this.match(cases);
+            }
+        }
+
+        const wire = RejectId.encode({ userId: '42' });
+        await expect(built(Review, buttonEvent(wire), core, dispatch).execute()).rejects.toSatisfy((e: unknown) =>
+            isSeedcordError(e, 'SeedcordTypeError', SeedcordErrorCode.MatchCaseMissing)
         );
     });
 
@@ -139,7 +146,7 @@ describe('button decode', () => {
             }
         }
 
-        await new Approve(buttonEvent(ApproveId.encode({ userId: '7' })), core, dispatch).execute();
+        await built(Approve, buttonEvent(ApproveId.encode({ userId: '7' })), core, dispatch).execute();
 
         expect(first).toBe(second);
     });
@@ -156,7 +163,9 @@ describe('button decode', () => {
         }
 
         expect(
-            noticeNameFrom(() => new Approve(buttonEvent(OldApprove.encode({ userId: '1' })), core, dispatch).execute())
+            noticeNameFrom(() =>
+                built(Approve, buttonEvent(OldApprove.encode({ userId: '1' })), core, dispatch).execute()
+            )
         ).toBe('StaleCustomId');
     });
 
@@ -170,21 +179,25 @@ describe('button decode', () => {
         }
 
         const wire = `${ApproveId.encode({ userId: '1' })}\u{1F}JUNK`;
-        expect(noticeNameFrom(() => new Approve(buttonEvent(wire), core, dispatch).execute())).toBe('InvalidCustomId');
+        expect(noticeNameFrom(() => built(Approve, buttonEvent(wire), core, dispatch).execute())).toBe(
+            'InvalidCustomId'
+        );
     });
 
-    it('throws MatchArmMissing for a prototype-named prefix with no arm', async () => {
+    it('throws MatchCaseMissing for a prototype-named prefix with no case', async () => {
         const Ctor = new CustomId('constructor').snowflake('userId');
         @ButtonRoute(Ctor)
         class Weird extends ButtonHandler<[typeof Ctor]> {
             async execute(): Promise<void> {
                 // justified: omit the prefix to test the runtime backstop
-                await this.match({} as unknown as MatchArms<[typeof Ctor], undefined>);
+                await this.match({} as MatchCases<[typeof Ctor], undefined>);
             }
         }
 
-        await expect(new Weird(buttonEvent(Ctor.encode({ userId: '1' })), core, dispatch).execute()).rejects.toSatisfy(
-            (e: unknown) => isSeedcordError(e, 'SeedcordTypeError', SeedcordErrorCode.MatchArmMissing)
+        await expect(
+            built(Weird, buttonEvent(Ctor.encode({ userId: '1' })), core, dispatch).execute()
+        ).rejects.toSatisfy((e: unknown) =>
+            isSeedcordError(e, 'SeedcordTypeError', SeedcordErrorCode.MatchCaseMissing)
         );
     });
 
@@ -198,7 +211,7 @@ describe('button decode', () => {
 
         let caught: unknown = null;
         try {
-            void new Bare(buttonEvent(ApproveId.encode({ userId: '1' })), core, dispatch).execute();
+            void built(Bare, buttonEvent(ApproveId.encode({ userId: '1' })), core, dispatch).execute();
         } catch (error) {
             caught = error;
         }
@@ -220,7 +233,7 @@ describe('select menu decode', () => {
             }
         }
 
-        await new Assign(selectEvent(AssignId.encode({ roleId: '99' }), ['u1', 'u2']), core, dispatch).execute();
+        await built(Assign, selectEvent(AssignId.encode({ roleId: '99' }), ['u1', 'u2']), core, dispatch).execute();
 
         expect(role).toBe('99');
         expect(picked).toEqual(['u1', 'u2']);
@@ -238,7 +251,7 @@ describe('modal decode', () => {
             }
         }
 
-        await new Config(modalEvent(ConfigId.encode({ name: 'staging' })), core, dispatch).execute();
+        await built(Config, modalEvent(ConfigId.encode({ name: 'staging' })), core, dispatch).execute();
 
         expect(name).toBe('staging');
     });

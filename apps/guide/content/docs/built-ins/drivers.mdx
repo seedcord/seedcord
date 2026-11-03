@@ -1,0 +1,209 @@
+---
+title: Drivers
+description: Keep core.kv records through a restart by passing a Keyv or unstorage driver as config.kv, over SQLite, Redis, the filesystem, or D1 on Workers.
+---
+
+The [kv store](/built-ins/) keeps its records in memory until you give it a driver. Without one, a restart empties every saved setting and every counter, and on a serverless host each running copy of your bot keeps its own records.
+
+A driver connects the store to storage that keeps the records after the process stops. You pass one as `kv` in your bot's config. Every collection, a plugin's `this.kv`, and the [rate limiter](/checks/rate-limiter) all store their records with it.
+
+[`KeyvDriver`](ref:core/KeyvDriver) and [`UnstorageDriver`](ref:core/UnstorageDriver) each wrap a library you install. [Keyv](https://keyv.org) connects to SQLite, Redis, Postgres, MongoDB, and others through one adapter package per database. [unstorage](https://unstorage.unjs.io) has its own drivers for the filesystem, Redis, and other hosted stores, plus D1 through db0. Pick the one with an adapter for the storage you already run. On a server with no storage yet, Keyv over SQLite keeps everything in one file.
+
+## Keyv
+
+<Shell add="keyv @keyv/sqlite" />
+
+```ts twoslash title="src/bot.ts"
+import KeyvSqlite from '@keyv/sqlite';
+import { KeyvDriver, Seedcord } from '@seedcord/gateway';
+import { GatewayIntentBits } from 'discord.js';
+import Keyv from 'keyv';
+
+export const seedcord = new Seedcord({
+    kv: new KeyvDriver(
+        new Keyv(new KeyvSqlite('sqlite://./kv.sqlite'))
+    ),
+    bot: {
+        clientOptions: { intents: [GatewayIntentBits.Guilds] },
+        interactions: { path: './handlers' },
+        commands: { path: './commands' },
+        events: { path: null }
+    },
+    subscribers: { path: null }
+});
+
+export default seedcord;
+```
+
+The records go into `kv.sqlite`, in the folder you start the bot from. If you swap `KeyvSqlite` for another adapter, like `@keyv/redis` or `@keyv/postgres`, the rest of your bot stays the same.
+
+[`entries()`](/built-ins/#reading-every-record) needs an adapter that can list its keys. A cache adapter like `@keyv/memcache` can't, so `entries()` throws a `SeedcordError` with the code `CoreKvKeysUnsupported`. `get`, `set`, `update`, and `delete` still work on it.
+
+<Callout type="warning">
+
+If you listen for Keyv's `error` event, Keyv stops throwing when the store fails. While the store is down, every read returns `undefined`, as if the record didn't exist. An `update` at that moment starts from `undefined` and writes over the real record. A failed write still throws `CoreKvDriverFailed`.
+
+</Callout>
+
+## unstorage
+
+<Shell add="unstorage" />
+
+```ts twoslash title="src/bot.ts"
+import { Seedcord, UnstorageDriver } from '@seedcord/gateway';
+import { GatewayIntentBits } from 'discord.js';
+import { createStorage } from 'unstorage';
+import fsDriver from 'unstorage/drivers/fs';
+
+export const seedcord = new Seedcord({
+    kv: new UnstorageDriver(
+        createStorage({ driver: fsDriver({ base: './.kv' }) })
+    ),
+    bot: {
+        clientOptions: { intents: [GatewayIntentBits.Guilds] },
+        interactions: { path: './handlers' },
+        commands: { path: './commands' },
+        events: { path: null }
+    },
+    subscribers: { path: null }
+});
+
+export default seedcord;
+```
+
+Each record becomes a file under `.kv`. `UnstorageDriver` takes a storage from unstorage 1 or 2.
+
+## On Cloudflare Workers
+
+A worker has no disk that keeps files between requests, and each isolate (one running copy of your worker) has its own memory. [D1](https://developers.cloudflare.com/d1/) is Cloudflare's SQL database. Every isolate uses the same one, so a record one isolate saves is there for the next. Connect to it through unstorage's db0 driver:
+
+<Shell add="unstorage db0" />
+
+Declare the database as a binding in `cloudflare.config.ts`, the same way the [Workers page](/build/workers) declares `DISCORD_BOT_TOKEN`. A binding is the name your worker reads a Cloudflare resource under:
+
+```ts title="cloudflare.config.ts"
+env: {
+    DB: bindings.d1(),
+    DISCORD_BOT_TOKEN: bindings.secret()
+}
+```
+
+Then build the storage over it in `bot.ts`:
+
+```ts twoslash title="src/bot.ts"
+import { Seedcord, UnstorageDriver } from '@seedcord/http';
+import { createDatabase } from 'db0';
+import cloudflareD1 from 'db0/connectors/cloudflare-d1';
+import { createStorage } from 'unstorage';
+import db0Driver from 'unstorage/drivers/db0';
+
+const database = createDatabase(
+    cloudflareD1({ bindingName: 'DB' })
+);
+
+export default new Seedcord({
+    kv: new UnstorageDriver(
+        createStorage({ driver: db0Driver({ database }) })
+    ),
+    bot: {
+        interactions: { path: './handlers' },
+        commands: { path: './commands' }
+    },
+    subscribers: { path: null }
+});
+```
+
+`bindingName` has to match the key under `env`, here `DB`. The db0 driver creates its table on the first query, so you don't write a migration.
+
+`createDatabase` doesn't touch D1 yet. db0 looks for the binding when it runs its first query, and queries only run inside the Workers runtime. That matters because [`seedcord codegen`](/tooling/codegen) and the build load `bot.ts` in node, where `DB` doesn't exist. A query at the top level of `bot.ts` would run there too and find no binding, so keep queries inside handlers and tasks.
+
+D1 gives every isolate the same records. Two isolates can still update one record at the same moment, and then one change is lost, as [the kv store](/built-ins/#changing-a-record-two-interactions-share) explains.
+
+<Callout type="warning">
+
+Cloudflare's own [KV](https://developers.cloudflare.com/kv/concepts/how-kv-works/) store is a poor place for cooldowns and counts. A write can take 60 seconds or more to reach other locations, and Cloudflare accepts [one write per second](https://developers.cloudflare.com/kv/platform/limits/) to a key. If you keep a cooldown there, a second use can pass in another isolate.
+
+</Callout>
+
+## Calling the library through `core.kv.driver`
+
+`core.kv.driver` is typed as a plain [`KvDriver`](ref:types/KvDriver), so a handler can't call a Keyv method like `clear()` on it. Register your driver's type in [`KvTypes`](ref:types/KvTypes) to change that:
+
+```ts twoslash title="src/kv.ts"
+import KeyvSqlite from '@keyv/sqlite';
+import { KeyvDriver } from '@seedcord/gateway';
+import Keyv from 'keyv';
+
+export const driver = new KeyvDriver(
+    new Keyv(new KeyvSqlite('sqlite://./kv.sqlite'))
+);
+
+declare module '@seedcord/gateway' {
+    interface KvTypes {
+        driver: typeof driver;
+    }
+}
+```
+
+Pass `driver` as `kv` in your config. After that, `core.kv.driver.keyv` is your Keyv instance with its full type:
+
+```ts twoslash
+import KeyvSqlite from '@keyv/sqlite';
+import { KeyvDriver } from '@seedcord/gateway';
+import Keyv from 'keyv';
+
+import type { CoreBase } from '@seedcord/gateway';
+
+const driver = new KeyvDriver(
+    new Keyv(new KeyvSqlite('sqlite://./kv.sqlite'))
+);
+
+declare module '@seedcord/gateway' {
+    interface KvTypes {
+        driver: typeof driver;
+    }
+}
+
+declare const core: CoreBase;
+// ---cut---
+const keyv = core.kv.driver.keyv;
+//    ^?
+await keyv.clear();
+```
+
+An `UnstorageDriver` holds its storage as `.storage` the same way. Registering a driver also makes `kv` required in your config, and `kv` then accepts only that driver's type. Without that, a bot could leave `kv` out and get a `MemoryDriver` where its types promise Keyv.
+
+Declare `KvTypes` on the package your bot imports from, `@seedcord/gateway` or `@seedcord/http`.
+
+## Two bots on one database
+
+Every bot writes its keys under the same prefixes, like `app:` for `core.kv` and `seedcord:` for the rate limiter. If two bots share one database and use the same collection name and id, they read and overwrite each other's records. A dev bot and a production bot that use the same Redis do exactly that.
+
+Give each bot its own prefix. Keyv takes it as the `namespace` option:
+
+```ts twoslash
+import KeyvSqlite from '@keyv/sqlite';
+import Keyv from 'keyv';
+// ---cut---
+const keyv = new Keyv(new KeyvSqlite('sqlite://./kv.sqlite'), {
+    namespace: 'staging'
+});
+```
+
+With unstorage, wrap the storage in `prefixStorage` before you pass it to `UnstorageDriver`:
+
+```ts twoslash
+import { createStorage, prefixStorage } from 'unstorage';
+import fsDriver from 'unstorage/drivers/fs';
+// ---cut---
+const storage = prefixStorage(
+    createStorage({ driver: fsDriver({ base: './.kv' }) }),
+    'staging'
+);
+```
+
+## Closing the connection
+
+seedcord closes your driver in the `Release` [shutdown phase](/plugins/lifecycle) of a node bot, after every plugin has stopped. `KeyvDriver` calls Keyv's `disconnect()`, and `UnstorageDriver` calls the storage's `dispose()`. A Workers bot has no shutdown phase, so its driver stays open until Cloudflare stops the isolate.
+
+For storage neither library supports, [write your own driver](/built-ins/your-driver).

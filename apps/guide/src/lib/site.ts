@@ -1,6 +1,9 @@
-import { DOCS, DOCS_URL as DOCS_PRODUCTION, GUIDE } from '@seedcord/ui';
+import { PRODUCTION_SITES } from '@seedcord/brand';
+import { GUIDE } from '@seedcord/ui';
 import { ogPageCardAlt } from '@seedcord/ui/OgCard';
 import { CARD, TWIN } from '@seedcord/ui/PageAsset';
+
+import { withTrailingSlash } from './trailingSlash';
 
 import type { Metadata, MetadataRoute } from 'next';
 
@@ -10,20 +13,16 @@ export const SITE_DESCRIPTION = 'The guide to building Discord bots with seedcor
 export { HOME_URL, REPO_URL } from '@seedcord/ui';
 
 // run the docs app on 3001 next to the guide to check docs links in dev mode
-const DOCS_FALLBACK = process.env.NODE_ENV === 'development' ? `http://localhost:3001${DOCS.path}` : DOCS_PRODUCTION;
+const { docs } = PRODUCTION_SITES;
+const DOCS_FALLBACK = process.env.NODE_ENV === 'development' ? `http://localhost:3001${docs.path}` : docs.url;
 
 export const DOCS_URL = process.env.NEXT_PUBLIC_DOCS_URL ?? DOCS_FALLBACK;
 
 const OG_IMAGE_W = 1200;
 const OG_IMAGE_H = 630;
 
-// /tooling redirects to /tooling/ under trailingSlash
 export function canonicalUrl(path: string): string {
-    const suffixAt = path.search(/[?#]/);
-    const [route, suffix] = suffixAt === -1 ? [path, ''] : [path.slice(0, suffixAt), path.slice(suffixAt)];
-    const hasExtension = /\.[a-z0-9]+$/i.test(route);
-    const slashed = route.endsWith('/') || hasExtension ? route : `${route}/`;
-    return GUIDE.at(`${slashed}${suffix}`);
+    return GUIDE.at(withTrailingSlash(path));
 }
 
 function ogImageUrl(path: string): string {

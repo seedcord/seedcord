@@ -1,34 +1,10 @@
 import { createRequire } from 'node:module';
 
-import { REST } from '@discordjs/rest';
 import { SeedcordErrorCode } from '@seedcord/errors';
-import { MemoryRateLimiter } from '@seedcord/rate-limiter';
 import { afterEach, describe, expect, it, vi } from 'vite-plus/test';
 
 import { assertDeclaredRuntime } from '#node/assertRuntimeVersion';
-import { CoordinatedShutdown } from '#node/Lifecycle/CoordinatedShutdown';
-import { ServerHost } from '#node/ServerHost';
-import { CoordinatedStartup } from '#src/lifecycle/CoordinatedStartup';
-import { Bus } from '#subscribers/Bus';
-
-import type { Config, IRateLimiter } from '@seedcord/types';
-
-class TestHost extends ServerHost<'gateway'> {
-    public readonly config = {} as Config;
-    public readonly rest = new REST();
-    public readonly applicationId = 'app-1';
-    public readonly rateLimiter: IRateLimiter = new MemoryRateLimiter();
-    public readonly bus: Bus;
-
-    constructor() {
-        super('gateway', new CoordinatedShutdown(), new CoordinatedStartup());
-        this.bus = new Bus(this);
-    }
-
-    public static resetHost(): void {
-        ServerHost.reset();
-    }
-}
+import { TestServerHost } from '#tests/utils/TestServerHost';
 
 interface Runtime {
     nodeRange?: string;
@@ -64,7 +40,7 @@ afterEach(() => {
     vi.unstubAllEnvs();
     if (realNode) Object.defineProperty(process.versions, 'node', realNode);
     Reflect.deleteProperty(process.versions, 'bun');
-    TestHost.resetHost();
+    TestServerHost.resetHost();
 });
 
 describe('the runtime check on node', () => {
@@ -80,12 +56,12 @@ describe('the runtime check on node', () => {
         expect(onRuntime({ node: '27.0.0' })).not.toThrow();
     });
 
-    it('reads a range that names only a major', () => {
+    it('reads a range with only a major', () => {
         expectUnsupported(onRuntime({ nodeRange: '>=24', node: '22.18.0' }));
         expect(onRuntime({ nodeRange: '>=24', node: '24.0.0' })).not.toThrow();
     });
 
-    it('reads a range that names a patch, and a range written with a space', () => {
+    it('reads a range with a patch, and a range written with a space', () => {
         expectUnsupported(onRuntime({ nodeRange: '>=24.11.1', node: '24.11.0' }));
         expectUnsupported(onRuntime({ nodeRange: '>= 24.11', node: '22.18.0' }));
     });
@@ -139,18 +115,18 @@ describe('a host constructed on an unsupported runtime', () => {
     it('throws on node before the host reaches its own setup', () => {
         onRuntime({ nodeRange: '>=99.0' });
 
-        expectUnsupported(() => new TestHost());
+        expectUnsupported(() => new TestServerHost());
     });
 
     it('throws on bun older than its own range, whatever node version it reports', () => {
         onRuntime({ nodeRange: '>=1.0', bun: '1.4.1' });
 
-        expectUnsupported(() => new TestHost());
+        expectUnsupported(() => new TestServerHost());
     });
 
     it('constructs when the running version meets the range', () => {
         onRuntime({ nodeRange: '>=1.0' });
 
-        expect(() => new TestHost()).not.toThrow();
+        expect(() => new TestServerHost()).not.toThrow();
     });
 });

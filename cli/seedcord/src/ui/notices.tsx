@@ -34,12 +34,12 @@ function openingPhase(status: TunnelStatus | null): TunnelPhase | null {
 export function noticesOf(state: DevState): readonly Notice[] {
     const notices: Notice[] = [];
 
-    if (state.armed) {
+    if (state.pendingConfirm) {
         notices.push({
-            key: state.armed,
-            summary: CONFIRMS[state.armed].title,
-            action: `press ${confirmKeyLabel(state.armed)} again`,
-            card: <ConfirmCard confirm={state.armed} />
+            key: state.pendingConfirm,
+            summary: CONFIRMS[state.pendingConfirm].title,
+            action: `press ${confirmKeyLabel(state.pendingConfirm)} again`,
+            card: <ConfirmCard confirm={state.pendingConfirm} />
         });
     }
 

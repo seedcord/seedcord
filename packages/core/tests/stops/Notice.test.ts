@@ -9,7 +9,7 @@ class TestNotice extends Notice {
     constructor(cause?: unknown) {
         super('test denial', cause === undefined ? undefined : { cause });
     }
-    render(c: RenderContext): ReplyResponse {
+    override render(c: RenderContext): ReplyResponse {
         return { components: [new TextDisplayBuilder().setContent(c.uuid)] };
     }
 }
@@ -19,7 +19,7 @@ class ReportingNotice extends Notice {
         super('reported fault');
         this.report = true;
     }
-    render(): ReplyResponse {
+    override render(): ReplyResponse {
         return { components: [] };
     }
 }
@@ -38,7 +38,7 @@ describe('Notice', () => {
         expect(new TestNotice(cause).cause).toBe(cause);
     });
 
-    it('names itself after the concrete subclass, not Error', () => {
+    it('takes its name from the concrete subclass', () => {
         expect(new TestNotice().name).toBe('TestNotice');
         expect(new ReportingNotice().name).toBe('ReportingNotice');
     });

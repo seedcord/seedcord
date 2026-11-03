@@ -112,6 +112,7 @@ describe('engine dispatch', () => {
             application_id: 'app-1',
             token: 'tok',
             app_permissions: '0',
+            user: { id: 'u1', username: 'tester' },
             data: { component_type: 2, custom_id: approveId.encode({ userId: '9' }) }
         };
         const response = await handle(await signedRequest(signer, payload), ctx);
@@ -149,6 +150,7 @@ describe('engine dispatch', () => {
             id: 'int-1',
             application_id: 'app-1',
             token: 'tok',
+            user: { id: 'u-1', username: 'someone' },
             data: { type: 1, name: 'ghost', options: [{ type: 3, name: 'q', value: 'x', focused: true }] }
         };
         const ctx = capturingCtx();

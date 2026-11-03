@@ -23,7 +23,7 @@
 
 ## About
 
-`@seedcord/plugin-kysely-postgres` connects a seedcord bot to Postgres through Kysely. It opens a connection pool when the bot starts, runs your migrations, loads your service classes, and closes the pool when the bot shuts down. Handlers reach each service through `this.core`. You declare your database schema once, and Kysely types every query from it.
+`@seedcord/plugin-kysely-postgres` connects a seedcord bot to Postgres through Kysely. It opens a connection pool when the bot starts, runs your migrations, loads your service classes, and closes the pool when the bot shuts down. Handlers can reach each service through `this.core`. You declare your database schema once, and Kysely types every query from it.
 
 Install it when your bot stores data in Postgres. It works with a gateway bot and with an http bot on your own server. On a Cloudflare Workers bot, attaching it is a compile error.
 
@@ -37,7 +37,7 @@ pnpm add @seedcord/plugin-kysely-postgres kysely pg
 
 ## Usage
 
-Attach the plugin in `bot.ts`. Handlers read it from `this.core` under the key you pass:
+Attach the plugin in `bot.ts`. Read it from `this.core` in a handler, under the key you pass:
 
 ```ts
 // bot.ts
@@ -83,4 +83,4 @@ declare module '@seedcord/plugin-kysely-postgres' {
 }
 ```
 
-Run `seedcord codegen` after you add or rename a service. It adds the service's key to `KyselyServices`, the type behind the decorator and `core.sql.services`. A handler then calls `await this.core.sql.services.users.findByUserId(this.event.user.id)`. The [Kysely guide](https://seedcord.org/guide/plugins/kysely) covers the options, the schema, services, and migrations.
+Run `seedcord codegen` after you add or rename a service. It adds the service's key to `KyselyServices`, the type behind the decorator and `core.sql.services`. Then call `await this.core.sql.services.users.findByUserId(this.user.id)` from a handler. The [Kysely guide](https://seedcord.org/guide/plugins/kysely) covers the options, the schema, services, and migrations.

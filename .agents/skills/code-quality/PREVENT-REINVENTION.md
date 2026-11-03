@@ -23,7 +23,7 @@ If you're about to write a string utility, number helper, object helper, type-fe
 - `packages/types/src/index.ts` exports shared TypeScript `Types` and `Interfaces`. Use `import type { … } from '@seedcord/types'` for the existing alias. Do not define the same alias locally.
 - `@seedcord/core/node`, `HealthCheck` and the lifecycle coordinators. `@seedcord/logger`, the `Logger`. Compose these. Do not parallel-implement them inside a bot or plugin.
 - `packages/event-emitter/src/index.ts`, `TypedEventEmitter`, the typed cross-runtime event emitter. Extend it for typed events. Do not hand-roll an emitter or add `mitt` / `eventemitter3`.
-- `packages/seedcord/src/{bot,bus,hmr,interfaces,miscellaneous,Seedcord.ts}` is the framework surface. The bus (`core.bus`, `Subscriber<K>`, `@Subscribe(...)`, `BusEvents` augmentation), interfaces, and the `Seedcord` orchestrator are first-class, public APIs.
+- `packages/core/src/subscribers` holds the bus: `core.bus`, `Subscriber`, `@Subscribe(...)`, and the `Subscriptions` interface a bot augments with its own events. Both transports re-export it. Extend it before building another event channel.
 - `plugins/*` holds the first-party plugin packages. If your "feature" is really a plugin, it becomes a package there. The contract itself is `@seedcord/core/plugin`.
 - `packages/cli/src` is the seedcord CLI built on Commander + Ink. CLI-shaped features extend this. Do not build a new ad-hoc CLI.
 
@@ -136,7 +136,7 @@ For targeted guidance on specific topics, see:
 
 Framework / packages:
 
-- **Hand-rolled rate limiters, logger wrappers, lifecycle managers, or error hierarchies** when `@seedcord/rate-limiter`, `@seedcord/logger`, `@seedcord/core/node`, and `@seedcord/errors` already provide them.
+- **Hand-rolled rate limiters, logger wrappers, lifecycle managers, or error hierarchies** when `core.rateLimiter`, `@seedcord/logger`, `@seedcord/core/node`, and `@seedcord/errors` already provide them.
 - **Duplicate type aliases** in app or package code when `@seedcord/types` already exposes the same shape.
 - **Local string/number/object helpers** that already live in `@seedcord/utils`.
 - **Parallel CLI flows.** Extend `@seedcord/cli`'s Commander + Ink structure.
@@ -180,7 +180,7 @@ If no existing surface fits and there is no clean shared extension path, stop an
 1. **Add it in the shared package.** Do not add it in the consuming app or downstream package.
     - Pure type / interface: `@seedcord/types`
     - Pure helper (string/number/object/brand/misc): `@seedcord/utils`
-    - Runtime service (logger, rate limiter, lifecycle, error class, health check): `@seedcord/logger` / `@seedcord/rate-limiter` / `@seedcord/core/node` / `@seedcord/errors`
+    - Runtime service (logger, rate limiter, lifecycle, error class, health check): `@seedcord/logger` / `@seedcord/core` / `@seedcord/core/node` / `@seedcord/errors`
     - Typed event emitter: `@seedcord/event-emitter`
     - Framework-level bus event, interface, or orchestrator hook: `@seedcord/seedcord`
     - Plugin-shaped behavior: a package under `plugins/`

@@ -22,9 +22,6 @@
 '📦 errors':
   - changed-files:
       - any-glob-to-any-file: 'packages/errors/**'
-'📦 rate-limiter':
-  - changed-files:
-      - any-glob-to-any-file: 'packages/rate-limiter/**'
 '📦 event-emitter':
   - changed-files:
       - any-glob-to-any-file: 'packages/event-emitter/**'
@@ -58,6 +55,9 @@
 '📦 eslint-utils':
   - changed-files:
       - any-glob-to-any-file: 'tooling/eslint-utils/**'
+'📦 brand':
+  - changed-files:
+      - any-glob-to-any-file: 'tooling/brand/**'
 '📦 cli-prompts':
   - changed-files:
       - any-glob-to-any-file: 'tooling/cli-prompts/**'

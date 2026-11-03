@@ -1,5 +1,7 @@
 // the field types a customId carries. the chain methods on CustomId build these at runtime.
 
+import type { Simplify } from 'type-fest';
+
 /**
  * One field in a customId shape, its wire kind plus the type it decodes to.
  *
@@ -36,6 +38,11 @@ export interface CustomIdField<Decoded> {
  */
 export type CustomIdShape = Record<string, CustomIdField<unknown>>;
 
+// Simplify flattens the chain of Record intersections the builders make, for a readable hover
+export type WithField<Shape extends CustomIdShape, Name extends string, Decoded> = Simplify<
+    Shape & Record<Name, CustomIdField<Decoded>>
+>;
+
 /**
  * The decoded result, each field name mapped to its decoded type.
  *
@@ -47,6 +54,6 @@ export type CustomIdShape = Record<string, CustomIdField<unknown>>;
  * function open(params: DecodedParams<(typeof Ticket)['shape']>) {}
  * ```
  */
-export type DecodedParams<Shape extends CustomIdShape> = {
+export type DecodedParams<Shape extends CustomIdShape> = Simplify<{
     [Name in keyof Shape]: Shape[Name] extends CustomIdField<infer Decoded> ? Decoded : never;
-};
+}>;

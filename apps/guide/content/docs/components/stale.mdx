@@ -1,7 +1,9 @@
 ---
 title: When a custom id goes stale
-description: Handle a click on a component your bot sent before its custom id changed shape, and choose what that user sees.
+description: Learn why old buttons and select menus show an Outdated card after a deploy, and choose what your user sees when one does.
 ---
+
+A deploy can leave the buttons and select menus on your bot's older messages broken. Clicking one shows an **Outdated** card.
 
 A message with a button or a select menu on it stays in the channel until someone deletes it. Your shape changes on the next deploy. Decoded against the new shape, an old button's values would fill the wrong fields, and your handler would use them.
 
@@ -71,7 +73,7 @@ Something went wrong. Please try again.
 
 ## Replacing both cards
 
-Both cards above use seedcord's wording. Replace them when your bot needs its own, like a card naming the command that sends a fresh menu.
+Both cards above use seedcord's wording. Replace them when your bot needs its own, like a refusal that points to the command that sends a fresh menu.
 
 The defaults are `Notice` subclasses seedcord registers when it loads. [`setCustomIdErrors`](ref:custom-id/setCustomIdErrors) replaces them with yours.
 
@@ -99,7 +101,7 @@ class Outdated extends Notice {
         super(message);
     }
 
-    public render(): ReplyResponse {
+    public override render(): ReplyResponse {
         return {
             components: [
                 new OutdatedCard(
@@ -118,4 +120,4 @@ setCustomIdErrors({
 
 Call it once, before your bot starts. A click that arrives before the call still gets the built-in card. One registration covers every `CustomId` in the process, and a later call replaces the earlier one.
 
-The stale arm receives the route prefix. The invalid arm receives a detail string naming what failed. Neither arm receives the interaction. The `Notice` you return still gets a [`RenderContext`](ref:types/RenderContext) when seedcord calls its `render()`, carrying the fault's `uuid` and the [dispatch context](/checks/dispatch-context) your gates and middleware filled, so read per-user details there. Return a `Notice` from both arms. A plain `Error` sends the generic fault card.
+The `stale` callback receives the route prefix. The `invalid` callback receives a detail string saying what failed. Neither callback receives the interaction. The `Notice` you return still gets a [`RenderContext`](ref:types/RenderContext) when seedcord calls its `render()`, carrying the fault's `uuid` and the [dispatch context](/checks/dispatch-context) your gates and middleware filled, so read per-user details there. Return a `Notice` from both callbacks. A plain `Error` sends the generic fault card.

@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vite-plus/test';
 
 import { CdnPurge } from '#src/docs/CdnPurge';
+import { CloudflareApi } from '#src/lib/CloudflareApi';
 
 interface Call {
     url: string;
@@ -66,9 +67,9 @@ describe('CdnPurge.bodyFor', () => {
 
 describe('CdnPurge.purge', () => {
     it('posts the body to the zone', async () => {
-        const { calls, fetcher } = recorder(ok({ success: true }));
+        const { calls, fetcher } = recorder(ok({ success: true, result: { id: 'purge-1' } }));
 
-        await new CdnPurge('zone-1', 'secret', fetcher).purge({ prefixes: ['docs.seedcord.org'] });
+        await new CdnPurge('zone-1', new CloudflareApi('secret', fetcher)).purge({ prefixes: ['docs.seedcord.org'] });
 
         expect(calls[0]?.url).toBe('https://api.cloudflare.com/client/v4/zones/zone-1/purge_cache');
         expect(calls[0]?.method).toBe('POST');
@@ -83,16 +84,16 @@ describe('CdnPurge.purge', () => {
             json: (): Promise<unknown> => Promise.resolve({ success: false, errors: [{ code: 1012 }] })
         });
 
-        await expect(new CdnPurge('zone-1', 'secret', fetcher).purge({ purge_everything: true })).rejects.toThrow(
-            /403/
-        );
+        await expect(
+            new CdnPurge('zone-1', new CloudflareApi('secret', fetcher)).purge({ purge_everything: true })
+        ).rejects.toThrow(/403/);
     });
 
     it('throws when the reply is ok but success is false', async () => {
         const { fetcher } = recorder(ok({ success: false, errors: [] }));
 
-        await expect(new CdnPurge('zone-1', 'secret', fetcher).purge({ purge_everything: true })).rejects.toThrow(
-            /Cloudflare purge failed/
-        );
+        await expect(
+            new CdnPurge('zone-1', new CloudflareApi('secret', fetcher)).purge({ purge_everything: true })
+        ).rejects.toThrow(/Cloudflare purge failed/);
     });
 });

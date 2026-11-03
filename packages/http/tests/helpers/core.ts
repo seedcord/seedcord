@@ -1,31 +1,30 @@
 import { REST } from '@discordjs/rest';
-import { Bus } from '@seedcord/core';
+import { PluginHost } from '@seedcord/core/plugin';
 import { validateDiscordToken } from '@seedcord/errors/internal';
-import { MemoryRateLimiter } from '@seedcord/rate-limiter';
 
 import { edgeRestOptions, edgeShutdown } from '#src/edge/defaults';
 
 import type { HttpConfig } from '#interfaces/Config';
 import type { Core } from '#interfaces/Core';
-import type { IRateLimiter, TypedOmit } from '@seedcord/types';
 
-type CoreDraft = TypedOmit<Core, 'bus'> & { bus: Bus };
+class TestCore extends PluginHost<'http', 'edge'> implements Core {
+    public readonly rest: REST;
+    public readonly startup: Core['startup'] = { addTask: () => undefined };
+    public readonly shutdown = edgeShutdown;
 
-// a Core for tests that call dispatchInteraction directly, with no host behind it
+    constructor(
+        public readonly config: HttpConfig,
+        private readonly token: string
+    ) {
+        super('http', 'edge', config.kv);
+        this.rest = new REST(edgeRestOptions(config.bot.restOptions)).setToken(token);
+    }
+
+    public get applicationId(): string {
+        return validateDiscordToken(this.token).applicationId;
+    }
+}
+
 export function testCore(config: HttpConfig, token: string): Core {
-    const rateLimiter: IRateLimiter = config.store ?? new MemoryRateLimiter();
-    const startup: Core['startup'] = { addTask: () => undefined };
-    // justified: bus completes the shape on the next line. the Bus reads core at dispatch, never here.
-    const draft = {
-        config,
-        rateLimiter,
-        rest: new REST(edgeRestOptions(config.bot.restOptions)).setToken(token),
-        shutdown: edgeShutdown,
-        startup,
-        get applicationId(): string {
-            return validateDiscordToken(token).applicationId;
-        }
-    } as CoreDraft;
-    draft.bus = new Bus(draft);
-    return draft;
+    return new TestCore(config, token);
 }

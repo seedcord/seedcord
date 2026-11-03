@@ -40,7 +40,7 @@ export class Users extends MongooseService<IUser> {
 - **[`@RegisterMongooseService('users')`](ref:plugin-mongoose/RegisterMongooseService)** gives the class its key. Your handlers read the service from `services` under that key, typed as `Users` once [codegen has run](#typing-the-registry).
 - **`MongooseService<IUser>`** is the base class. Passing `IUser` types `this.model` as `Model<IUser>`, so TypeScript checks the fields in every query on that model against `username` and `streak`. Without the type argument, the model's type only has `_id`.
 - **`schema`** is the Mongoose schema the plugin builds the model from. Make sure it's `static`, because the decorator fails to compile without it.
-- **`findByName`** keeps the lookup inside the class. A handler calls that method and never writes the query itself.
+- **`findByName`** keeps the lookup inside the class. Your handlers call that method, so none of them writes the query.
 
 ## You never construct a service
 

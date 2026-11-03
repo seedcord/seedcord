@@ -1,7 +1,6 @@
 /* eslint-disable max-lines -- one suite per sender, splitting fragments the shared rest mock and body fixtures */
 import { TextDisplayBuilder } from '@discordjs/builders';
-import { DispatchContext } from '@seedcord/core';
-import { AckTrace, serializeReply } from '@seedcord/core/internal';
+import { DispatchContext, AckTrace, serializeReply } from '@seedcord/core/internal';
 import { isSeedcordError, SeedcordErrorCode } from '@seedcord/errors';
 import { MessageFlags } from 'discord-api-types/v10';
 import { describe, expect, it, vi } from 'vite-plus/test';
@@ -46,7 +45,7 @@ const ref: InteractionRef = { application_id: APP_ID, id: INTERACTION_ID, token:
 
 // justified: the fixture implements only the REST surface ReplySender reads.
 function senderFor(rest: RestMock): ReplySender {
-    return new ReplySender(ref, rest as unknown as REST, new DispatchContext(ROUTE), stubBus());
+    return new ReplySender(ref, rest as unknown as REST, new DispatchContext('slash', 'ban'), stubBus());
 }
 
 const reply: ReplyResponse = { components: [new TextDisplayBuilder().setContent('hi')] };
@@ -622,7 +621,7 @@ describe('ReplySender.send', () => {
         expect(patchCall(rest, 1).route).toBe(ORIGINAL_ROUTE);
     });
 
-    it('drops send opts when the deferred-reply arm edits', async () => {
+    it('drops send opts when the deferred-reply path edits', async () => {
         const rest = restMock();
         const sender = senderFor(rest);
         await sender.defer();

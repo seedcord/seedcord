@@ -1,4 +1,5 @@
-import { AgentLinks, DOCS, SkipLink, ThemeProvider, TooltipProvider, cn, seedcordJsonLd } from '@seedcord/ui';
+import { PRODUCTION_SITES } from '@seedcord/brand';
+import { AgentLinks, SkipLink, ThemeProvider, TooltipProvider, cn, seedcordJsonLd } from '@seedcord/ui';
 import { FAVICON_SIZE } from '@seedcord/ui/MaterwelonFavicon';
 import { ogPageCardAlt } from '@seedcord/ui/OgCard';
 import { Space_Grotesk } from 'next/font/google';
@@ -8,7 +9,7 @@ import { preconnect } from 'react-dom';
 import './globals.css';
 
 import { Navbar } from '#components/header/Navbar.tsx';
-import { HotkeyProvider } from '#components/providers/HotkeyProvider.tsx';
+import { CommandPaletteProvider } from '#components/providers/CommandPaletteProvider.tsx';
 import { MotionProvider } from '#components/providers/MotionProvider.tsx';
 import { CommandPalette } from '#components/search/command-palette/index.tsx';
 import { CARD } from '@seedcord/ui/PageAsset';
@@ -25,7 +26,11 @@ const ROOT_CARD = CARD.publicPath('/');
 const ROOT_CARD_ALT = ogPageCardAlt({ pill: 'docs', name: 'Reference', meta: [] });
 
 // next 16.3.8 leaves basePath off icon urls in metadata and off a file-based icon under turbopack
-const ICON = { url: `${DOCS.path}/icon`, type: 'image/png', sizes: `${FAVICON_SIZE.width}x${FAVICON_SIZE.height}` };
+const ICON = {
+    url: `${PRODUCTION_SITES.docs.path}/icon`,
+    type: 'image/png',
+    sizes: `${FAVICON_SIZE.width}x${FAVICON_SIZE.height}`
+};
 
 export const metadata: Metadata = {
     metadataBase: new URL(SITE_URL),
@@ -119,14 +124,14 @@ function RootLayout({ children }: RootLayoutProps): ReactNode {
                 <ThemeProvider>
                     <MotionProvider>
                         <TooltipProvider>
-                            <HotkeyProvider>
+                            <CommandPaletteProvider>
                                 <CommandPalette />
                                 <SkipLink />
                                 <div className={cn('flex min-h-screen flex-col')}>
                                     <Navbar />
                                     <div className={cn('flex-1 pt-(--nav-h)')}>{children}</div>
                                 </div>
-                            </HotkeyProvider>
+                            </CommandPaletteProvider>
                         </TooltipProvider>
                     </MotionProvider>
                 </ThemeProvider>

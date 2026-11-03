@@ -228,7 +228,7 @@ A TSDoc block needs a caller who would read the signature and still guess wrong.
 - A comment explaining a type that sits two lines above. Fix the type name.
 - Per-overload captions. One block on the implementation signature covers the family.
 - Commented-out code.
-- A comment naming a symbol that no longer exists. Every refactor leaves these. Grep the names you removed. A function that exists is fine to name, and it is often the clearest subject a comment has.
+- A comment that mentions a symbol that no longer exists. Every refactor leaves these. Grep the names you removed. A function that exists is fine to mention, and it is often the clearest subject a comment has.
 - Bug history tied to one incident, unless the incident is the reason the code is shaped that way.
 
 ---

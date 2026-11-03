@@ -45,11 +45,11 @@ const UNCHANGED = { outputPath: 'seedcord-gen.ts', changed: false };
 
 function sessionDeps(
     store = new DevStore(),
-    onListening: DevSessionDeps['onListening'] = () => undefined
+    onServerPort: DevSessionDeps['onServerPort'] = () => undefined
 ): DevSessionDeps {
     return {
         store,
-        onListening,
+        onServerPort,
         codegen: { writeFrom: () => Promise.resolve(UNCHANGED) },
         codegenLogger: silentLogger,
         state: new StateFolder(process.cwd(), silentLogger),
@@ -130,18 +130,18 @@ describe('DevSession', () => {
         expect(start).not.toHaveBeenCalled();
     });
 
-    it('hands the port the bot listens on to the store and to onListening with the bot it loaded', async () => {
+    it('hands the port the bot listens on to the store and to onServerPort with the bot it loaded', async () => {
         const store = new DevStore();
         const bot = fakeBot();
-        const onListening = vi.fn();
+        const onServerPort = vi.fn();
         const session = new DevSession(
             ...withFiles(config()),
-            fakeRuntime({ default: bot }, { type: 'server-listening', port: 4321 }),
-            sessionDeps(store, onListening)
+            fakeRuntime({ default: bot }, { type: 'server-port', port: 4321 }),
+            sessionDeps(store, onServerPort)
         );
 
         const running = session.start();
-        await vi.waitFor(() => expect(onListening).toHaveBeenCalledExactlyOnceWith(4321, bot));
+        await vi.waitFor(() => expect(onServerPort).toHaveBeenCalledExactlyOnceWith(4321, bot));
         expect(store.getState().port).toBe(4321);
 
         await session.stop();

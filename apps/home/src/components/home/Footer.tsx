@@ -1,3 +1,4 @@
+import { PRODUCTION_SITES } from '@seedcord/brand';
 import { cn } from '@seedcord/ui';
 import { Materwelon } from '@seedcord/ui/Materwelon';
 import { skillUrl } from '@seedcord/ui/skills';
@@ -10,7 +11,6 @@ import {
     AUTHOR_GITHUB_URL,
     AUTHOR_URL,
     DISCORD_URL,
-    DOCS_URL,
     GUIDE_URL,
     NPM_ORG_URL,
     REPO_URL,
@@ -23,7 +23,7 @@ const COLUMNS = [
     {
         title: 'Documentation',
         links: [
-            { label: 'API reference', href: DOCS_URL },
+            { label: 'API reference', href: PRODUCTION_SITES.docs.url },
             { label: 'Agent skill', href: skillUrl(SEEDCORD_SKILL) },
             { label: 'Guide', href: GUIDE_URL }
         ]

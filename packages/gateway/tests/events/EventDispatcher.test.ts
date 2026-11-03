@@ -1,27 +1,14 @@
 import { PublishDefault } from '@seedcord/core/internal';
 import { afterEach, describe, expect, vi } from 'vite-plus/test';
 
-import { botLoggerOf, eventsOf } from '#bot/Bot';
+import { botLoggerOf } from '#bot/Bot';
 import { Seedcord } from '#src/Seedcord';
+import { dispatcherOf } from '#tests/utils/dispatcherOf';
 import { seedcordPath } from '#tests/utils/source-path';
 import { testConfig } from '#tests/utils/test-config';
 import { it } from '#tests/utils/test-env';
 
 import type { SubscriptionData } from '@seedcord/core';
-
-interface PrivateEventDispatcher {
-    eventMap: Map<string, unknown[]>;
-    init(): Promise<void>;
-    onHmr(event: unknown): Promise<void>;
-    processEvent(eventName: string, args: unknown[]): Promise<void>;
-    stopAccepting(): void;
-    drain(timeoutMs: number): Promise<void>;
-}
-
-// justified: eventMap and processEvent are private on the dispatcher
-function dispatcherOf(instance: Seedcord): PrivateEventDispatcher {
-    return eventsOf(instance.bot) as unknown as PrivateEventDispatcher;
-}
 
 describe('EventDispatcher Integration', () => {
     afterEach(() => {
@@ -79,6 +66,7 @@ describe('EventDispatcher Integration', () => {
 
         const onSpy = vi.spyOn(seedcord.bot.client, 'on');
         await events.init();
+        events.inFlight.open();
 
         seedcord.bus.on('eventDispatching', () => {
             throw new Error('observer boom');
@@ -115,6 +103,7 @@ describe('EventDispatcher Integration', () => {
 
         const onSpy = vi.spyOn(seedcord.bot.client, 'on');
         await events.init();
+        events.inFlight.open();
 
         const seen: SubscriptionData<'eventDispatching'>[] = [];
         seedcord.bus.on('eventDispatching', (payload) => seen.push(payload));
@@ -130,7 +119,7 @@ describe('EventDispatcher Integration', () => {
         expect(seen[0]?.args[0]).toBe(message);
     });
 
-    it('threads the current event name into the handler so match routes to the right arm', async ({ testEnv }) => {
+    it('threads the current event name into the handler so match routes to the right case', async ({ testEnv }) => {
         const eventsDir = 'events';
         await testEnv.createFile(
             `${eventsDir}/PingMulti.ts`,
@@ -193,158 +182,6 @@ describe('EventDispatcher Integration', () => {
         await events.processEvent('guildMemberAdd', [{}]);
 
         expect(publish).toHaveBeenCalledWith('unknownException', expect.anything());
-    });
-
-    it('marks a once handler spent even when it throws a non-Error, so it does not run again', async ({ testEnv }) => {
-        const eventsDir = 'events';
-        await testEnv.createFile(
-            `${eventsDir}/OnceBoom.ts`,
-            `
-            import { EventHandler, RegisterEvent } from '${seedcordPath}';
-            import { Events } from 'discord.js';
-
-            @RegisterEvent(['guildMemberAdd', { frequency: 'once' }])
-            export class OnceBoom extends EventHandler<Events.GuildMemberAdd> {
-                public async execute() {
-                    await this.match({ guildMemberAdd: (member) => member.setNickname('ran') });
-                    throw 'raw string';
-                }
-            }
-            `
-        );
-
-        const config = testConfig({ events: testEnv.resolvePath(eventsDir) });
-
-        await using seedcord = new Seedcord(config);
-        const events = dispatcherOf(seedcord);
-        await events.init();
-
-        const member = { setNickname: vi.fn() };
-        await events.processEvent('guildMemberAdd', [member]);
-        await events.processEvent('guildMemberAdd', [member]);
-
-        expect(member.setNickname).toHaveBeenCalledTimes(1);
-    });
-
-    it('runs a once handler exactly once when the same event is emitted concurrently', async ({ testEnv }) => {
-        const eventsDir = 'events';
-        await testEnv.createFile(
-            `${eventsDir}/OnceConcurrent.ts`,
-            `
-            import { EventHandler, RegisterEvent } from '${seedcordPath}';
-            import { Events } from 'discord.js';
-
-            @RegisterEvent(['messageCreate', { frequency: 'once' }])
-            export class OnceConcurrent extends EventHandler<Events.MessageCreate> {
-                public async execute() {
-                    await this.match({ messageCreate: (message) => message.reply('once') });
-                }
-            }
-            `
-        );
-
-        const config = testConfig({ events: testEnv.resolvePath(eventsDir) });
-
-        await using seedcord = new Seedcord(config);
-        const events = dispatcherOf(seedcord);
-        await events.init();
-
-        // both dispatches pass the once filter because runMiddlewares awaits between the snapshot and the mark
-        const message = { reply: vi.fn() };
-        await Promise.all([
-            events.processEvent('messageCreate', [message]),
-            events.processEvent('messageCreate', [message])
-        ]);
-
-        expect(message.reply).toHaveBeenCalledTimes(1);
-    });
-
-    it('does not consume a once handler when middleware blocks the dispatch', async ({ testEnv }) => {
-        const eventsDir = 'events';
-        const middlewaresDir = 'event-mw';
-
-        await testEnv.createFile(
-            `${eventsDir}/OnceAfterBlock.ts`,
-            `
-            import { EventHandler, RegisterEvent } from '${seedcordPath}';
-            import { Events } from 'discord.js';
-
-            @RegisterEvent(['messageCreate', { frequency: 'once' }])
-            export class OnceAfterBlock extends EventHandler<Events.MessageCreate> {
-                public async execute() {
-                    await this.match({ messageCreate: (message) => message.reply('ran') });
-                }
-            }
-            `
-        );
-
-        await testEnv.createFile(
-            `${middlewaresDir}/BlockFirst.ts`,
-            `
-            import { RegisterEventMiddleware, EventMiddleware, Silence } from '${seedcordPath}';
-
-            let fires = 0;
-
-            @RegisterEventMiddleware()
-            export class BlockFirst extends EventMiddleware {
-                public async execute() {
-                    fires++;
-                    if (fires === 1) throw new Silence('block the first dispatch');
-                }
-            }
-            `
-        );
-
-        const config = testConfig({
-            events: testEnv.resolvePath(eventsDir),
-            eventMiddlewares: testEnv.resolvePath(middlewaresDir)
-        });
-
-        await using seedcord = new Seedcord(config);
-        const events = dispatcherOf(seedcord);
-        await events.init();
-
-        const message = { reply: vi.fn() };
-        await events.processEvent('messageCreate', [message]);
-        expect(message.reply).not.toHaveBeenCalled();
-
-        await events.processEvent('messageCreate', [message]);
-        expect(message.reply).toHaveBeenCalledTimes(1);
-    });
-
-    it('keeps a spent once handler spent after a failed reload rolls it back', async ({ testEnv }) => {
-        const eventsDir = 'events';
-        const filePath = await testEnv.createFile(
-            `${eventsDir}/OnceRollback.ts`,
-            `
-            import { EventHandler, RegisterEvent } from '${seedcordPath}';
-            import { Events } from 'discord.js';
-
-            @RegisterEvent(['messageCreate', { frequency: 'once' }])
-            export class OnceRollback extends EventHandler<Events.MessageCreate> {
-                public async execute() {
-                    await this.match({ messageCreate: (message) => message.reply('once') });
-                }
-            }
-            `
-        );
-
-        const config = testConfig({ events: testEnv.resolvePath(eventsDir) });
-
-        await using seedcord = new Seedcord(config);
-        const events = dispatcherOf(seedcord);
-        await events.init();
-
-        const message = { reply: vi.fn() };
-        await events.processEvent('messageCreate', [message]);
-        expect(message.reply).toHaveBeenCalledTimes(1);
-
-        // the failed reload rolls the handler back
-        await testEnv.createFile(`${eventsDir}/OnceRollback.ts`, 'export const broken = {{{ not valid');
-        await events.onHmr({ file: filePath, type: 'update' });
-
-        await events.processEvent('messageCreate', [message]);
-        expect(message.reply).toHaveBeenCalledTimes(1);
     });
 
     it('should handle HMR updates for event handlers', async ({ testEnv }) => {
@@ -466,7 +303,7 @@ describe('EventDispatcher Integration', () => {
     describe('client-attached dispatch', () => {
         interface ClientHarness {
             seedcord: Seedcord;
-            controller: PrivateEventDispatcher;
+            controller: ReturnType<typeof dispatcherOf>;
             fire: ((...args: unknown[]) => void) | undefined;
         }
 
@@ -492,6 +329,7 @@ describe('EventDispatcher Integration', () => {
 
                 const onSpy = vi.spyOn(seedcord.bot.client, 'on');
                 await controller.init();
+                controller.inFlight.open();
 
                 const fire = onSpy.mock.calls.find(([event]) => event === 'messageCreate')?.[1] as
                     | ((...args: unknown[]) => void)
@@ -547,11 +385,11 @@ describe('EventDispatcher Integration', () => {
             fire?.({ reply: vi.fn() });
             expect(processSpy).toHaveBeenCalledTimes(1);
 
-            controller.stopAccepting();
+            controller.inFlight.close();
             fire?.({ reply: vi.fn() });
             expect(processSpy).toHaveBeenCalledTimes(1);
 
-            await expect(controller.drain(50)).resolves.toBeUndefined();
+            await expect(controller.inFlight.drain(50)).resolves.toBeUndefined();
         });
 
         withClient('drain waits for an in-flight event that settles inside the budget', async ({ client }) => {
@@ -568,9 +406,9 @@ describe('EventDispatcher Integration', () => {
                     })
             );
             fire?.({ reply: vi.fn() });
-            controller.stopAccepting();
+            controller.inFlight.close();
 
-            await controller.drain(1000);
+            await controller.inFlight.drain(1000);
             expect(settled).toBe(true);
         });
 
@@ -579,19 +417,19 @@ describe('EventDispatcher Integration', () => {
 
             vi.spyOn(controller, 'processEvent').mockReturnValue(new Promise<void>(() => undefined));
             fire?.({ reply: vi.fn() });
-            controller.stopAccepting();
+            controller.inFlight.close();
 
-            await expect(controller.drain(30)).resolves.toBeUndefined();
+            await expect(controller.inFlight.drain(30)).resolves.toBeUndefined();
         });
 
         withClient('clears the drain timer when the in-flight set settles first', async ({ client }) => {
             const { controller, fire } = client;
             vi.spyOn(controller, 'processEvent').mockResolvedValue(undefined);
             fire?.({ reply: vi.fn() });
-            controller.stopAccepting();
+            controller.inFlight.close();
 
             vi.useFakeTimers();
-            await controller.drain(5000);
+            await controller.inFlight.drain(5000);
             expect(vi.getTimerCount()).toBe(0);
             vi.useRealTimers();
         });

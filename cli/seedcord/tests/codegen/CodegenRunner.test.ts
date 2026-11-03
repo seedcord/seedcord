@@ -237,7 +237,7 @@ describe('CodegenRunner', () => {
         expect(written).toContain("declare module '@seedcord/gateway'");
     });
 
-    it('--check throws and names the fix when the registry is stale', async () => {
+    it('--check throws and states the fix when the registry is stale', async () => {
         const root = await tempDir('codegen-');
         await writeFile(resolve(root, OUTPUT), 'stale content', 'utf8');
 
@@ -458,7 +458,7 @@ describe('CodegenRunner', () => {
         );
     });
 
-    it('throws and names the command when a registered command constructor throws', async () => {
+    it('throws with the command name when a registered command constructor throws', async () => {
         const root = await tempDir('codegen-');
         const cmdDir = await commandsUnder(root);
         await writeFile(join(cmdDir, 'broken.ts'), 'export {};', 'utf8');

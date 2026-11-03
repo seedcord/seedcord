@@ -12,7 +12,7 @@ function messageOf(error: unknown): string {
 }
 
 describe('vitePluginThrew', () => {
-    it('names the plugin that threw when its error passes through another plugin hook', () => {
+    it('reports the plugin that threw when its error passes through another plugin hook', () => {
         const thrown = recordThrownBy(new Error('bad yaml'), {
             plugin: 'inner-yaml',
             hook: 'load',

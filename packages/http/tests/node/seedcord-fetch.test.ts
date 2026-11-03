@@ -35,12 +35,12 @@ describe('http Seedcord.fetch on node', () => {
         );
     });
 
-    it('waits for start() before answering', async () => {
+    it('waits for the Login phase before answering', async () => {
         const signer = await bindSignedEnv();
         await using host = new Seedcord(config());
         const request = await signedRequest(signer, PING);
         const held = Promise.withResolvers<undefined>();
-        host.startup.addTask(StartupPhase.Ready, 'held', () => held.promise);
+        host.startup.addTask(StartupPhase.Login, 'held', () => held.promise);
         const order: string[] = [];
 
         const starting = host.start();

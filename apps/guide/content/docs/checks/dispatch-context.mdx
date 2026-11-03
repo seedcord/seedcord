@@ -49,7 +49,7 @@ declare module '@seedcord/gateway' {
 @RegisterInteractionMiddleware({ priority: -10 })
 export class Actor extends InteractionMiddleware {
     public async execute(): Promise<void> {
-        this.dispatch.set('actor', this.event.user.username);
+        this.dispatch.set('actor', this.user.username);
         await Promise.resolve();
     }
 }
@@ -114,7 +114,11 @@ Everything `this.dispatch` carries:
 | [`set(key, value)`](ref:core/DispatchContext.set) | writes a value for the rest of this dispatch |
 | [`get(key)`](ref:core/DispatchContext.get) | reads a value, or `undefined` if it isn't set |
 | [`require(key)`](ref:core/DispatchContext.require) | reads a value, throws `DispatchStateMissing` if it's `undefined` |
+| [`kind`](ref:core/DispatchContext.kind) | the interaction kind, or `event` for a gateway event |
+| [`route`](ref:core/DispatchContext.route) | the slash path, context menu name, custom-ID prefix, or event name |
 | [`routeId`](ref:core/DispatchContext.routeId) | the dispatched handler as `kind:route`, like `slash:daily` |
+| [`fallback`](ref:core/DispatchContext.fallback) | `true` when no handler registered the route and the unhandled default runs |
+| [`declaredRoute`](ref:core/DispatchContext.declaredRoute) | the `routeId` of the handler's own route, or `null` on an event and on the unhandled default |
 
 {/* prettier-ignore-end */}
 
@@ -152,7 +156,7 @@ Every middleware runs _before_ the first gate, which is what makes this read saf
 
 ### Reading it from a `Notice`
 
-[`RenderContext`](ref:types/RenderContext) carries the bag too, which matters most when seedcord builds the reply itself, like the one for an unknown fault. seedcord constructs that `Notice` with only the fault's uuid, so `render(ctx)` is the one place your code reads the dispatch.
+[`RenderContext`](ref:types/RenderContext) carries the bag too, so a `Notice` can read the locale or any other value while it renders. That matters most when seedcord builds the reply itself, like the one for an unknown fault. seedcord constructs that `Notice` with only the fault's uuid, so `render(ctx)` is the one place your code reads the dispatch.
 
 ```ts twoslash title="src/errors/TranslatedNotice.ts"
 import { Notice } from '@seedcord/gateway';
@@ -184,7 +188,7 @@ export class TranslatedNotice extends Notice {
         super(`unknown fault ${uuid}`);
     }
 
-    public render(ctx: RenderContext): ReplyResponse {
+    public override render(ctx: RenderContext): ReplyResponse {
         const locale = ctx.dispatch.get('locale') ?? 'en';
         const text = translate(locale, 'fault.generic');
 

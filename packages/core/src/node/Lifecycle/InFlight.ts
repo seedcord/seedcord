@@ -4,7 +4,8 @@ import type { Logger } from '@seedcord/logger';
 
 export class InFlight {
     private readonly running = new Set<Promise<unknown>>();
-    private isClosed = false;
+    private readonly opening = Promise.withResolvers<boolean>();
+    private state: 'held' | 'open' | 'closed' = 'held';
 
     constructor(
         private readonly logger: Logger,
@@ -12,11 +13,26 @@ export class InFlight {
     ) {}
 
     public get closed(): boolean {
-        return this.isClosed;
+        return this.state === 'closed';
+    }
+
+    public open(): void {
+        if (this.state !== 'held') return;
+        this.state = 'open';
+        this.opening.resolve(true);
     }
 
     public close(): void {
-        this.isClosed = true;
+        this.state = 'closed';
+        this.opening.resolve(false);
+    }
+
+    public admit<Result>(work: () => Promise<Result>): Promise<Result | undefined> {
+        if (this.state === 'closed') return Promise.resolve(undefined);
+        const admitted =
+            this.state === 'open' ? work() : this.opening.promise.then((opened) => (opened ? work() : undefined));
+        this.track(admitted);
+        return admitted;
     }
 
     public track(work: Promise<unknown>): void {

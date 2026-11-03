@@ -10,9 +10,11 @@ import type { Promisable } from 'type-fest';
 
 const PHASE_ORDER: StartupPhase[] = [StartupPhase.Configuration, StartupPhase.Login, StartupPhase.Ready];
 
+/** Adds work to a bot's startup. */
+export type StartupTasks = Pick<CoordinatedStartup, 'addTask'>;
+
 export class CoordinatedStartup extends CoordinatedLifecycle<StartupPhase> {
-    #isStartingUp = false;
-    #hasStarted = false;
+    #state: 'idle' | 'running' | 'stopped' | 'finished' = 'idle';
 
     public constructor() {
         super('Startup', PHASE_ORDER, StartupPhase);
@@ -32,11 +34,11 @@ export class CoordinatedStartup extends CoordinatedLifecycle<StartupPhase> {
     }
 
     protected canAddTask(): boolean {
-        if (this.#hasStarted) {
+        if (this.#state === 'finished') {
             throw new SeedcordError(SeedcordErrorCode.LifecycleTaskChangeRejected, ['add', 'finished']);
         }
 
-        if (this.#isStartingUp) {
+        if (this.#state === 'running') {
             throw new SeedcordError(SeedcordErrorCode.LifecycleTaskChangeRejected, ['add', 'running']);
         }
 
@@ -44,7 +46,7 @@ export class CoordinatedStartup extends CoordinatedLifecycle<StartupPhase> {
     }
 
     protected canRemoveTask(): boolean {
-        if (this.#isStartingUp) {
+        if (this.#state === 'running') {
             throw new SeedcordError(SeedcordErrorCode.LifecycleTaskChangeRejected, ['remove', 'running']);
         }
 
@@ -66,17 +68,17 @@ export class CoordinatedStartup extends CoordinatedLifecycle<StartupPhase> {
     // each phase completes fully before the next begins
     /** @internal */
     public async run(afterReady?: () => Promisable<void>): Promise<void> {
-        if (this.#hasStarted) {
+        if (this.#state === 'finished') {
             this.logger.warn('Startup sequence has already completed');
             return;
         }
 
-        if (this.#isStartingUp) {
+        if (this.#state === 'running') {
             this.logger.warn('Startup sequence already in progress');
             return;
         }
 
-        this.#isStartingUp = true;
+        this.#state = 'running';
         this.beginRun();
         this.logger.info(`${paint.mint.bold('Starting')} coordinated startup sequence`);
 
@@ -86,43 +88,45 @@ export class CoordinatedStartup extends CoordinatedLifecycle<StartupPhase> {
         try {
             for (const step of steps) {
                 await step();
-                // eslint-disable-next-line @typescript-eslint/no-unnecessary-condition -- abort() can flip isStartingUp to false mid-loop from the cli
-                if (!this.#isStartingUp) {
+                if (this.isAborted()) {
                     this.logger.warn('Startup sequence aborted');
                     return;
                 }
             }
 
-            this.#hasStarted = true;
+            this.#state = 'finished';
             this.logger.info(`${paint.mint.bold('Coordinated startup completed')} successfully`);
         } catch (error) {
-            // eslint-disable-next-line @typescript-eslint/no-unnecessary-condition -- abort() can flip isStartingUp to false before this catch runs
-            if (!this.#isStartingUp) {
+            if (this.isAborted()) {
                 this.logger.warn('Startup sequence aborted during error handling');
                 return;
             }
+            this.#state = 'stopped';
             this.logger.error(`${paint.coral.bold('Coordinated startup failed')}`);
             throw error;
-        } finally {
-            this.#isStartingUp = false;
         }
     }
 
     protected override isAborted(): boolean {
-        return !this.#isStartingUp;
+        return this.#state !== 'running';
     }
 
     /** @internal */
     public abort(): void {
-        if (!this.#isStartingUp) return;
+        if (this.#state !== 'running') return;
 
-        this.#isStartingUp = false;
+        this.#state = 'stopped';
         this.abortRun();
         this.logger.warn('Aborting coordinated startup sequence');
     }
 
     /** @internal */
     public get isReady(): boolean {
-        return this.#hasStarted;
+        return this.#state === 'finished';
+    }
+
+    /** @internal */
+    public get hasBegun(): boolean {
+        return this.#state !== 'idle';
     }
 }

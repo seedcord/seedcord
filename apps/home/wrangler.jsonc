@@ -17,8 +17,8 @@
         "run_worker_first": ["/*", "!/_next/static/*"]
     },
     "env": {
-        "preview": {
-            "routes": [{ "pattern": "preview.seedcord.org", "custom_domain": true }]
+        "next": {
+            "routes": [{ "pattern": "next.seedcord.org", "custom_domain": true }]
         }
     }
 }

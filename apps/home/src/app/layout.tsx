@@ -1,4 +1,4 @@
-import { BRAND } from '@seedcord/ui/palette';
+import { BRAND_COLORS } from '@seedcord/brand';
 import { AgentLinks, cn, HOME_URL, MotionProvider, seedcordJsonLd, SkipLink } from '@seedcord/ui';
 import { JetBrains_Mono, Space_Grotesk } from 'next/font/google';
 
@@ -40,8 +40,8 @@ export const metadata: Metadata = {
 
 export const viewport: Viewport = {
     themeColor: [
-        { media: '(prefers-color-scheme: light)', color: BRAND.seedDark },
-        { media: '(prefers-color-scheme: dark)', color: BRAND.pith }
+        { media: '(prefers-color-scheme: light)', color: BRAND_COLORS.seedDark },
+        { media: '(prefers-color-scheme: dark)', color: BRAND_COLORS.pith }
     ]
 };
 

@@ -63,7 +63,7 @@ const ILLEGAL: Record<Exclude<ReplyMethod, 'send'>, Partial<Record<AckState, Ill
     update: {
         'deferred-reply': {
             reason: 'this interaction was deferred as a reply',
-            alternative: 'The placeholder is yours via edit(). update() rewrites a source message.'
+            alternative: 'update() only rewrites a source message. Use edit() to fill the placeholder.'
         },
         replied: {
             reason: 'this interaction was already replied to',
@@ -79,13 +79,13 @@ const ILLEGAL: Record<Exclude<ReplyMethod, 'send'>, Partial<Record<AckState, Ill
     edit: {
         unacked: {
             reason: 'nothing has been sent yet',
-            alternative: 'Send with reply() or defer() first, then edit() rewrites it.'
+            alternative: 'Send with reply() or defer() first. After that, edit() rewrites it.'
         }
     },
     delete: {
         unacked: {
             reason: 'nothing has been sent yet',
-            alternative: 'Acknowledge first with reply() or defer(), then delete() removes it.'
+            alternative: 'Acknowledge first with reply() or defer(). After that, delete() removes the reply.'
         }
     },
     showModal: {

@@ -1,3 +1,5 @@
+import type { Promisable } from 'type-fest';
+
 /** File-watcher event kinds used by an {@link HmrUpdateEvent}. */
 export type HmrEventType = 'create' | 'createDir' | 'update' | 'delete' | 'deleteDir';
 
@@ -13,5 +15,5 @@ export interface HmrUpdateEvent {
 
 /** A module that receives dev-mode hot updates through `onHmr`. */
 export interface HmrAware {
-    onHmr(event: HmrUpdateEvent): Promise<void>;
+    onHmr(event: HmrUpdateEvent): Promisable<void>;
 }

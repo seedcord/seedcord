@@ -13,14 +13,17 @@ describe('http dev channel', () => {
         setDevChannel(undefined);
     });
 
-    it('reports the bound port once the server is listening', async () => {
+    it.each([
+        ['the bound port once the server is listening', 0],
+        ['false when the config turns the server off', false]
+    ] as const)('reports %s', async (_label, port) => {
         const sent: [string, unknown][] = [];
         setDevChannel({ send: (event, data) => sent.push([event, data]), on: () => undefined, off: () => undefined });
 
         await bindSignedEnv();
-        await using host = new Seedcord(serverConfig({ interactions: { path: HANDLERS_DIR } }));
+        await using host = new Seedcord({ ...serverConfig({ interactions: { path: HANDLERS_DIR } }), port });
         await host.start();
 
-        expect(sent).toContainEqual(['seedcord:server-listening', { port: host.port }]);
+        expect(sent).toContainEqual(['seedcord:server-port', { port: host.port ?? false }]);
     });
 });

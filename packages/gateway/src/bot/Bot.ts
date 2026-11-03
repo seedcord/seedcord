@@ -1,5 +1,11 @@
 import { COMMAND_DEPLOY_TIMEOUT_MS, CommandRegistry, readBotToken } from '@seedcord/core/internal';
-import { DRAIN_TASK_TIMEOUT_MS, DRAIN_WINDOW_MS, ShutdownPhase, StartupPhase } from '@seedcord/core/node/internal';
+import {
+    DRAIN_TASK_TIMEOUT_MS,
+    DRAIN_WINDOW_MS,
+    InFlight,
+    ShutdownPhase,
+    StartupPhase
+} from '@seedcord/core/node/internal';
 import { SeedcordErrorCode, paint } from '@seedcord/errors';
 import { SeedcordError } from '@seedcord/errors/internal';
 import { Logger } from '@seedcord/logger';
@@ -39,6 +45,7 @@ export class Bot implements HmrAware {
 
     /** @internal */
     readonly [loggerSlot]: Logger = this.#logger;
+    readonly #inFlight = new InFlight(this.#logger, 'Dispatch');
     #isInitialized = false;
     readonly #readyToDeploy = Promise.withResolvers<boolean>();
 
@@ -62,10 +69,10 @@ export class Bot implements HmrAware {
         this.#client = new Client(core.config.bot.clientOptions);
 
         if (core.config.bot.interactions.path) {
-            this.#interactions = new InteractionDispatcher(core);
+            this.#interactions = new InteractionDispatcher(core, this.#inFlight);
         }
         if (core.config.bot.events.path) {
-            this.#events = new EventDispatcher(core);
+            this.#events = new EventDispatcher(core, this.#inFlight);
         }
 
         if (core.config.bot.commands.path) this.#commandRegistry = new CommandRegistry(core);
@@ -89,6 +96,13 @@ export class Bot implements HmrAware {
     }
 
     #registerStartupTasks(core: Core): void {
+        const interactions = this.#interactions;
+        if (interactions) {
+            core.startup.addTask(StartupPhase.Configuration, 'interactions-initialization', () => interactions.init());
+        }
+        const events = this.#events;
+        if (events) core.startup.addTask(StartupPhase.Configuration, 'events-initialization', () => events.init());
+
         core.startup.addTask(StartupPhase.Login, 'bot-initialization', async (signal) => {
             this.#logger.utils.initialization('Bot', 'start');
             await this.#init(signal);
@@ -96,13 +110,19 @@ export class Bot implements HmrAware {
         });
 
         const registry = this.#commandRegistry;
-        if (!registry) return;
-        core.startup.addTask(
-            StartupPhase.Login,
-            'command-deploy',
-            (signal) => this.#deployCommands(registry, signal),
-            COMMAND_DEPLOY_TIMEOUT_MS
-        );
+        if (registry) {
+            core.startup.addTask(
+                StartupPhase.Login,
+                'command-deploy',
+                (signal) => this.#deployCommands(registry, signal),
+                COMMAND_DEPLOY_TIMEOUT_MS
+            );
+        }
+
+        core.startup.addTask(StartupPhase.Ready, 'start-dispatch', () => {
+            this.#inFlight.open();
+            return Promise.resolve();
+        });
     }
 
     #registerShutdownTasks(core: Core): void {
@@ -110,23 +130,18 @@ export class Bot implements HmrAware {
             ShutdownPhase.Unbind,
             'stop-dispatch',
             () => {
-                this.#stopAccepting();
+                this.#inFlight.close();
                 return Promise.resolve();
             },
             UNBIND_TIMEOUT_MS
         );
-        core.shutdown.addTask(ShutdownPhase.Drain, 'drain-dispatch', () => this.#drain(), DRAIN_TASK_TIMEOUT_MS);
+        core.shutdown.addTask(
+            ShutdownPhase.Drain,
+            'drain-dispatch',
+            () => this.#inFlight.drain(DRAIN_WINDOW_MS),
+            DRAIN_TASK_TIMEOUT_MS
+        );
         core.shutdown.addTask(ShutdownPhase.Logout, 'stop-bot', async () => await this.#stop(), LOGOUT_TIMEOUT_MS);
-    }
-
-    #stopAccepting(): void {
-        this.#interactions?.stopAccepting();
-        this.#events?.stopAccepting();
-    }
-
-    async #drain(): Promise<void> {
-        // runs through allSettled since a rejecting drain must not abort the other dispatcher's drain
-        await Promise.allSettled([this.#interactions?.drain(DRAIN_WINDOW_MS), this.#events?.drain(DRAIN_WINDOW_MS)]);
     }
 
     async #init(signal: AbortSignal): Promise<void> {
@@ -137,12 +152,7 @@ export class Bot implements HmrAware {
         signal.addEventListener('abort', () => this.#readyToDeploy.resolve(false), { once: true });
 
         try {
-            const token = this.botToken;
-
-            if (this.#interactions) await this.#interactions.init();
-            if (this.#events) await this.#events.init();
-
-            await this.#login(token);
+            await this.#login(this.botToken);
             await this.#emojiInjector.init();
         } catch (error) {
             this.#readyToDeploy.resolve(false);

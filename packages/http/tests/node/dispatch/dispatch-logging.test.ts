@@ -8,13 +8,12 @@ import { capturingCtx, readyEngine, routedHandler, signedRequest, slashPayload, 
 
 import type { LogRecord, LogSinkHandle } from '@seedcord/types';
 
-class Ban extends SlashHandler<never> {
-    async execute(): Promise<void> {
-        await this.reply('done');
-    }
-}
-
 function banClasses(): BotClasses {
+    class Ban extends SlashHandler<never> {
+        async execute(): Promise<void> {
+            await this.reply('done');
+        }
+    }
     return routedHandler(InteractionKind.Slash, 'ban', Ban);
 }
 
@@ -41,7 +40,7 @@ function dispatcherLines(): string[] {
 }
 
 describe('dispatch logging', () => {
-    it('names the route and the handler that ran', async () => {
+    it('logs the route and the handler that ran', async () => {
         using engine = await readyEngine(banClasses());
         const { signer, handle } = engine;
         const ctx = capturingCtx();

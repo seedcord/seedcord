@@ -1,11 +1,12 @@
 import { TextDisplayBuilder } from '@discordjs/builders';
-import { DispatchContext } from '@seedcord/core';
+import { DispatchContext } from '@seedcord/core/internal';
 import { isSeedcordError, SeedcordErrorCode } from '@seedcord/errors';
 import { describe, expect, it, vi } from 'vite-plus/test';
 
 import { ButtonHandler } from '#handlers/interaction/components/ButtonHandler';
 import { ModalHandler } from '#handlers/interaction/components/ModalHandler';
 import { SlashHandler } from '#handlers/interaction/SlashHandler';
+import { built } from '#tests/helpers/built';
 import { stubBus } from '#tests/helpers/fixtures';
 
 import type { Core } from '#interfaces/Core';
@@ -14,10 +15,11 @@ import type { REST } from '@discordjs/rest';
 import type {
     APIChatInputApplicationCommandInteraction,
     APIMessageComponentButtonInteraction,
-    APIModalSubmitInteraction
+    APIModalSubmitInteraction,
+    APIUser
 } from 'discord-api-types/v10';
 
-const dispatch = new DispatchContext('test:probe');
+const dispatch = new DispatchContext('slash', 'probe');
 
 const CALLBACK_ROUTE = '/interactions/int-1/tok/callback';
 const WEBHOOK_ROUTE = '/webhooks/app-1/tok';
@@ -96,7 +98,7 @@ describe('SlashHandler base', () => {
     it('routes reply through the sender to a type 4 callback', async () => {
         const rest = restMock();
 
-        await new Ban(slashEvent(), coreWith(rest), dispatch).execute();
+        await built(Ban, slashEvent(), coreWith(rest), dispatch).execute();
 
         const [route, options] = rest.post.mock.calls[0] as [string, { body: { type: number } }];
         expect(route).toBe(CALLBACK_ROUTE);
@@ -111,7 +113,7 @@ describe('SlashHandler base', () => {
         }
         const rest = restMock();
 
-        await new Open(slashEvent(), coreWith(rest), dispatch).execute();
+        await built(Open, slashEvent(), coreWith(rest), dispatch).execute();
 
         const [, options] = rest.post.mock.calls[0] as [string, { body: { type: number } }];
         expect(options.body.type).toBe(9);
@@ -128,7 +130,7 @@ describe('ButtonHandler base', () => {
     it('routes update through the sender to a type 7 callback', async () => {
         const rest = restMock();
 
-        await new Page(buttonEvent(), coreWith(rest), dispatch).execute();
+        await built(Page, buttonEvent(), coreWith(rest), dispatch).execute();
 
         const [route, options] = rest.post.mock.calls[0] as [
             string,
@@ -152,7 +154,7 @@ describe('ModalHandler base', () => {
         const rest = restMock();
         const event = modalEvent({ message: { id: 'src-1' } });
 
-        await new Save(event, coreWith(rest), dispatch).execute();
+        await built(Save, event, coreWith(rest), dispatch).execute();
 
         expect(rest.post.mock.calls[0]?.[1]).toMatchObject({ body: { type: 6 } });
         expect(rest.patch.mock.calls[0]?.[0]).toBe(ORIGINAL_ROUTE);
@@ -161,7 +163,7 @@ describe('ModalHandler base', () => {
     it('throws ReplyUpdateWithoutSource when the modal was opened from a command', async () => {
         const rest = restMock();
 
-        await expect(new Save(modalEvent(), coreWith(rest), dispatch).execute()).rejects.toSatisfy((e: unknown) =>
+        await expect(built(Save, modalEvent(), coreWith(rest), dispatch).execute()).rejects.toSatisfy((e: unknown) =>
             isSeedcordError(e, 'SeedcordError', SeedcordErrorCode.ReplyUpdateWithoutSource)
         );
         expect(rest.post).not.toHaveBeenCalled();
@@ -177,7 +179,7 @@ describe('base member delegation', () => {
         }
         const rest = restMock();
 
-        await new Wait(slashEvent(), coreWith(rest), dispatch).execute();
+        await built(Wait, slashEvent(), coreWith(rest), dispatch).execute();
 
         const [route, options] = rest.post.mock.calls[0] as [string, { body: { type: number } }];
         expect(route).toBe(CALLBACK_ROUTE);
@@ -193,7 +195,7 @@ describe('base member delegation', () => {
         }
         const rest = restMock();
 
-        await new After(slashEvent(), coreWith(rest), dispatch).execute();
+        await built(After, slashEvent(), coreWith(rest), dispatch).execute();
 
         expect(rest.post.mock.calls[1]?.[0]).toBe(WEBHOOK_ROUTE);
     });
@@ -207,7 +209,7 @@ describe('base member delegation', () => {
         }
         const rest = restMock();
 
-        await new Fill(slashEvent(), coreWith(rest), dispatch).execute();
+        await built(Fill, slashEvent(), coreWith(rest), dispatch).execute();
 
         expect(rest.patch.mock.calls[0]?.[0]).toBe(ORIGINAL_ROUTE);
     });
@@ -223,7 +225,7 @@ describe('base member delegation', () => {
         const rest = restMock();
         rest.post.mockResolvedValueOnce(withResponse).mockResolvedValueOnce({ id: 'earlier-1' });
 
-        await new Rewrite(slashEvent(), coreWith(rest), dispatch).execute();
+        await built(Rewrite, slashEvent(), coreWith(rest), dispatch).execute();
 
         expect(rest.patch.mock.calls[0]?.[0]).toBe(`${WEBHOOK_ROUTE}/messages/earlier-1`);
     });
@@ -238,7 +240,7 @@ describe('base member delegation', () => {
         }
         const rest = restMock();
 
-        await expect(new Rewrite(slashEvent(), coreWith(rest), dispatch).execute()).rejects.toSatisfy((e: unknown) =>
+        await expect(built(Rewrite, slashEvent(), coreWith(rest), dispatch).execute()).rejects.toSatisfy((e: unknown) =>
             isSeedcordError(e, 'SeedcordError', SeedcordErrorCode.ReplyForeignEditTarget)
         );
         expect(rest.patch).not.toHaveBeenCalled();
@@ -252,7 +254,7 @@ describe('base member delegation', () => {
         }
         const rest = restMock();
 
-        await new Show(slashEvent(), coreWith(rest), dispatch).execute();
+        await built(Show, slashEvent(), coreWith(rest), dispatch).execute();
 
         const [route, options] = rest.post.mock.calls[0] as [string, { body: { type: number } }];
         expect(route).toBe(CALLBACK_ROUTE);
@@ -268,7 +270,7 @@ describe('base member delegation', () => {
         }
         const rest = restMock();
 
-        await new Remove(slashEvent(), coreWith(rest), dispatch).execute();
+        await built(Remove, slashEvent(), coreWith(rest), dispatch).execute();
 
         expect(rest.delete.mock.calls[0]?.[0]).toBe(ORIGINAL_ROUTE);
     });
@@ -284,8 +286,26 @@ describe('base member delegation', () => {
         const rest = restMock();
         rest.post.mockResolvedValueOnce(withResponse).mockResolvedValueOnce({ id: 'earlier-1' });
 
-        await new Remove(slashEvent(), coreWith(rest), dispatch).execute();
+        await built(Remove, slashEvent(), coreWith(rest), dispatch).execute();
 
         expect(rest.delete.mock.calls[0]?.[0]).toBe(`${WEBHOOK_ROUTE}/messages/earlier-1`);
+    });
+});
+
+describe('this.user', () => {
+    class WhoRan extends SlashHandler<never> {
+        async execute(): Promise<void> {}
+        public read(): APIUser {
+            return this.user;
+        }
+    }
+
+    it.each([
+        { where: 'a guild', fields: { member: { user: { id: 'u-guild' } } }, id: 'u-guild' },
+        { where: 'a DM', fields: { user: { id: 'u-dm' } }, id: 'u-dm' }
+    ])('reads the user who sent the interaction in $where', ({ fields, id }) => {
+        // justified: the getter reads only member and user off the payload
+        const event = { ...baseEvent(), ...fields } as unknown as APIChatInputApplicationCommandInteraction;
+        expect(built(WhoRan, event, coreWith(restMock()), dispatch).read().id).toBe(id);
     });
 });

@@ -1,8 +1,8 @@
+import { PRODUCTION_SITES } from '@seedcord/brand';
 import { formatDisplayPackageName } from '@seedcord/docs-engine/client';
-import { DOCS } from '@seedcord/ui/sites';
 
 // rendered html carries hrefs with the /docs basePath
-const PACKAGES_PREFIX = `${DOCS.path}/packages/`;
+const PACKAGES_PREFIX = `${PRODUCTION_SITES.docs.path}/packages/`;
 const EXTERNAL_HREF = /^https?:\/\//i;
 
 export function isExternalHref(href: string): boolean {

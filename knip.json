@@ -1,7 +1,7 @@
 {
     "$schema": "https://unpkg.com/knip@latest/schema.json",
     "ignoreBinaries": ["seedcord"],
-    "ignoreDependencies": ["fallow"],
+    "ignoreDependencies": ["ink"],
     "ignoreWorkspaces": ["mocks/*"],
     "rules": {
         "optionalPeerDependencies": "off"
@@ -16,6 +16,7 @@
                 "src/*.ts",
                 "src/docs/{build-docs-artifacts,extract-docs,published-payload,preview-docs,prune-docs-site,purge-cdn-cache,sync-docs-to-artifacts,upload-docs-site}.ts",
                 "src/release/{changelog,lint-changesets,release-notes,tidy-changelogs}.ts",
+                "src/guide/embed-guide-sections.ts",
                 "tests/**/*.test.ts"
             ],
             "project": ["**/*.ts"],
@@ -28,22 +29,27 @@
         },
         "apps/guide": {
             "entry": ["src/app/**/{page,layout,route,not-found,sitemap}{,.dev}.{ts,tsx}", "tests/**/*.test.{ts,tsx}"],
-            "project": ["src/**/*.{ts,tsx,css}", "tests/**/*.{ts,tsx}"],
+            "project": ["worker.ts", "src/**/*.{ts,tsx,css}", "tests/**/*.{ts,tsx}"],
             "ignoreDependencies": [
+                "cloudflare",
                 "@seedcord/gateway",
                 "@seedcord/http",
                 "@discordjs/builders",
                 "@seedcord/core",
+                "@keyv/sqlite",
                 "@seedcord/plugin-kysely-postgres",
                 "@seedcord/plugin-mongoose",
                 "@types/pg",
+                "db0",
                 "discord-api-types",
                 "discord.js",
                 "envapt",
+                "keyv",
                 "kysely",
                 "mongoose",
                 "pg",
-                "seedcord"
+                "seedcord",
+                "unstorage"
             ]
         },
         "apps/home": {
@@ -69,6 +75,7 @@
             "ignoreDependencies": ["discord.js"]
         },
         "tooling/eslint-utils": {},
+        "tooling/brand": {},
         "tooling/cli-prompts": {},
         "tooling/cli-templates": {},
         "packages/event-emitter": {
@@ -90,7 +97,6 @@
             "entry": ["**/*.types-test.ts", "tests/fixtures/*.ts"],
             "ignoreDependencies": ["tsx"]
         },
-        "packages/rate-limiter": {},
         "packages/types": {
             "entry": ["**/*.types-test.ts"]
         },

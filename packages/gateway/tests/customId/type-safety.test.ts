@@ -25,19 +25,36 @@ class MismatchedButton extends ButtonHandler<[typeof Approve]> {
     }
 }
 
-// a multi-route handler must provide an arm for every route.
+// a multi-route handler must provide a case for every route.
 @ButtonRoute(Approve, Deny)
-class MissingArm extends ButtonHandler<[typeof Approve, typeof Deny]> {
+class MissingCase extends ButtonHandler<[typeof Approve, typeof Deny]> {
     async execute(): Promise<void> {
-        // @ts-expect-error the 'deny' arm is missing.
+        // @ts-expect-error the 'deny' case is missing.
         await this.match({
             approve: (params) => params.userId
         });
     }
 }
 
+@ButtonRoute(Approve, Deny)
+class MixedReturns extends ButtonHandler<[typeof Approve, typeof Deny]> {
+    async execute(): Promise<void> {
+        const result = await this.match({
+            approve: (params) => ({ id: params.userId }),
+            deny: (params) => Promise.resolve({ reason: params.reason })
+        });
+        expectTypeOf(result).toEqualTypeOf<{ id: string } | { reason: string }>();
+
+        await this.match<string>({
+            approve: (params) => params.userId,
+            // @ts-expect-error this case returns a number.
+            deny: () => 1
+        });
+    }
+}
+
 @ButtonRoute(Approve)
-class ExtraArm extends ButtonHandler<[typeof Approve]> {
+class ExtraCase extends ButtonHandler<[typeof Approve]> {
     async execute(): Promise<void> {
         await this.match({
             approve: (params) => params.userId,
@@ -86,8 +103,9 @@ describe('customId handler type safety', () => {
         const classes = [
             GoodButton,
             MismatchedButton,
-            MissingArm,
-            ExtraArm,
+            MissingCase,
+            MixedReturns,
+            ExtraCase,
             WrongField,
             MultiParams,
             MismatchedSelect,

@@ -79,7 +79,7 @@ describe('PluginHost', () => {
                 }
             }
 
-            expect(() => new TestPluginHost().attach('kv', FromOtherCore)).toThrow(
+            expect(() => new TestPluginHost().attach('other', FromOtherCore)).toThrow(
                 expect.objectContaining({ code: SeedcordErrorCode.CorePluginFromOtherCore })
             );
             expect(constructed).not.toHaveBeenCalled();

@@ -16,7 +16,7 @@ class TestFault extends Notice {
     constructor(message = 'boom', cause?: unknown) {
         super(message, cause === undefined ? undefined : { cause });
     }
-    render(): ReplyResponse {
+    override render(): ReplyResponse {
         return { components: [] };
     }
 }
@@ -48,7 +48,7 @@ const core = {} as unknown as CoreBase;
 
 function handledReport(denial: Notice, source: FaultSource, suppressed = 0): WebhookReport {
     const data = { denial, uuid: randomUUID(), dispatchId: 'd-1', origin: 'slash:probe', source };
-    return new HandledException(data, core).report(suppressed);
+    return new HandledException(data, core, 'handledException').report(suppressed);
 }
 
 function reportText(denial: Notice, source: FaultSource): string {

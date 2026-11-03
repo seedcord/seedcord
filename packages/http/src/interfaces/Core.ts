@@ -1,6 +1,6 @@
 import type { HttpConfig } from '#interfaces/Config';
 import type { CoreBase } from '@seedcord/core';
-import type { CoordinatedShutdown, CoordinatedStartup } from '@seedcord/core/node';
+import type { ShutdownTasks, StartupTasks } from '@seedcord/core/node';
 
 /**
  * Main interface for Seedcord core functionality on the HTTP transport.
@@ -18,8 +18,8 @@ import type { CoordinatedShutdown, CoordinatedStartup } from '@seedcord/core/nod
  * ```
  */
 export interface Core extends CoreBase {
-    readonly startup: Pick<CoordinatedStartup, 'addTask'>;
-    readonly shutdown: Pick<CoordinatedShutdown, 'addTask'>; // throws on an edge bot
+    readonly startup: StartupTasks;
+    readonly shutdown: ShutdownTasks; // throws on an edge bot
 
     readonly config: HttpConfig;
 }

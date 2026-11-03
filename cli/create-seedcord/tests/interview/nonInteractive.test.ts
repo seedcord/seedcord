@@ -26,7 +26,7 @@ describe('runFlow with no terminal', () => {
         expect(answers.directory).toBe('my-bot');
     });
 
-    it('names the flag that would have to supply a missing answer', async () => {
+    it('points to the flag that would supply a missing answer', async () => {
         const thrown = await runFlow([neverAsks('transport', 'transport')], {}, NO_TERMINAL).catch(
             (error: unknown) => error
         );

@@ -1,17 +1,15 @@
 import { defineGate } from '#gates/Gate';
 import { NotInDm, NotInGuild, NotOwner } from '#notices/index';
 
-import { pickNotice } from './options';
-
 import type { Gate, GateContextBase } from '#gates/Gate';
 import type { GateNoticeOptions } from './options';
 
 /**
  * Passes only for a user id listed in `config.ownerIds`, else refuses.
  *
- * Agnostic, so it attaches to interaction and event handlers alike. With no `ownerIds` configured it refuses every caller. Pass {@link GateNoticeOptions} to reword or replace the refusal.
+ * Agnostic, so it attaches to interaction and event handlers alike. With no `ownerIds` configured it refuses every caller. Pass a Notice class as `notice` to replace the refusal.
  *
- * @param options - Reword the default refusal with `message`, or replace it with `notice`.
+ * @param options - Replace the refusal with a Notice class as `notice`.
  *
  * @see the `@Gated` decorator from your transport package
  *
@@ -28,15 +26,15 @@ import type { GateNoticeOptions } from './options';
  *
  * @example
  * ```ts
- * // reword the refusal, keeping the embed styling
- * OwnerOnly({ message: 'Owners only.' });
+ * // OwnersOnly is your own Notice class
+ * OwnerOnly({ notice: OwnersOnly });
  * ```
  */
 export function OwnerOnly(options?: GateNoticeOptions): Gate<GateContextBase, 'OwnerOnly'> {
     return defineGate('OwnerOnly', (ctx) => {
         const owners = ctx.core.config.ownerIds ?? [];
         if (ctx.userId !== null && owners.includes(ctx.userId)) return;
-        throw pickNotice(options, (message) => new NotOwner(message));
+        throw new (options?.notice ?? NotOwner)();
     });
 }
 
@@ -45,7 +43,7 @@ export function OwnerOnly(options?: GateNoticeOptions): Gate<GateContextBase, 'O
  *
  * Agnostic. Attaches to any handler kind. Often paired with `RequirePermissions` in an {@link and}.
  *
- * @param options - Reword the default refusal with `message`, or replace it with `notice`.
+ * @param options - Replace the refusal with a Notice class as `notice`.
  *
  * @see the `@Gated` decorator from your transport package
  *
@@ -65,7 +63,7 @@ export function OwnerOnly(options?: GateNoticeOptions): Gate<GateContextBase, 'O
 export function GuildOnly(options?: GateNoticeOptions): Gate<GateContextBase, 'GuildOnly'> {
     return defineGate('GuildOnly', (ctx) => {
         if (ctx.guildId) return;
-        throw pickNotice(options, (message) => new NotInGuild(message));
+        throw new (options?.notice ?? NotInGuild)();
     });
 }
 
@@ -74,7 +72,7 @@ export function GuildOnly(options?: GateNoticeOptions): Gate<GateContextBase, 'G
  *
  * Agnostic, fitting any handler kind. The inverse of {@link GuildOnly}, so combining the two in an {@link and} can never pass.
  *
- * @param options - Reword the default refusal with `message`, or replace it with `notice`.
+ * @param options - Replace the refusal with a Notice class as `notice`.
  *
  * @see the `@Gated` decorator from your transport package
  *
@@ -92,6 +90,6 @@ export function GuildOnly(options?: GateNoticeOptions): Gate<GateContextBase, 'G
 export function DmOnly(options?: GateNoticeOptions): Gate<GateContextBase, 'DmOnly'> {
     return defineGate('DmOnly', (ctx) => {
         if (!ctx.guildId) return;
-        throw pickNotice(options, (message) => new NotInDm(message));
+        throw new (options?.notice ?? NotInDm)();
     });
 }

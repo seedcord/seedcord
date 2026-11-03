@@ -57,7 +57,7 @@ function httpState(): DevState {
     store.setBusy(false);
     store.setStatus('Connected as TestBot');
     store.setTransport({ name: '@seedcord/http', version: '0.2.3', target: 'server' });
-    store.apply({ type: 'server-listening', port: 4321 });
+    store.apply({ type: 'server-port', port: 4321 });
     store.setTunnel('live');
     return store.getState();
 }

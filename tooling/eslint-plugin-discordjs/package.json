@@ -1,6 +1,6 @@
 {
     "name": "eslint-plugin-discordjs",
-    "version": "0.2.0",
+    "version": "0.2.1-next.0",
     "description": "ESLint rules for discord.js bots",
     "keywords": [
         "discord-bot",

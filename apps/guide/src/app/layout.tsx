@@ -1,6 +1,15 @@
+import { BRAND_COLORS } from '@seedcord/brand';
 import { APPLE_ICON_SIZE, FAVICON_SIZE } from '@seedcord/ui/MaterwelonFavicon';
-import { BRAND } from '@seedcord/ui/palette';
-import { AgentLinks, GUIDE, MotionProvider, SkipLink, ThemeProvider, cn, seedcordJsonLd } from '@seedcord/ui';
+import {
+    AgentLinks,
+    GUIDE,
+    MotionProvider,
+    SkipLink,
+    ThemeProvider,
+    TooltipProvider,
+    cn,
+    seedcordJsonLd
+} from '@seedcord/ui';
 import { Space_Grotesk } from 'next/font/google';
 
 import './globals.css';
@@ -29,8 +38,8 @@ export const metadata: Metadata = {
 
 export const viewport: Viewport = {
     themeColor: [
-        { media: '(prefers-color-scheme: light)', color: BRAND.seedDark },
-        { media: '(prefers-color-scheme: dark)', color: BRAND.pith }
+        { media: '(prefers-color-scheme: light)', color: BRAND_COLORS.seedDark },
+        { media: '(prefers-color-scheme: dark)', color: BRAND_COLORS.pith }
     ]
 };
 
@@ -52,7 +61,9 @@ function RootLayout({ children }: RootLayoutProps): ReactNode {
                 <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: jsonLd }} />
                 <ThemeProvider>
                     <SkipLink />
-                    <MotionProvider>{children}</MotionProvider>
+                    <MotionProvider>
+                        <TooltipProvider>{children}</TooltipProvider>
+                    </MotionProvider>
                 </ThemeProvider>
             </body>
         </html>

@@ -40,7 +40,7 @@ describe('the twoslash transformer', () => {
         expect(html).not.toContain('twoslash-error-line');
     });
 
-    it('names an undeclared error instead of falling back to plain text', async () => {
+    it('reports an undeclared error in place of plain text', async () => {
         await expect(render('const count: number = "twelve";')).rejects.toThrow('not marked as being expected: 2322');
     });
 
@@ -139,7 +139,7 @@ describe('the twoslash transformer', () => {
             return html ?? '';
         }
 
-        it('names an undeclared error', async () => {
+        it('reports an undeclared error', async () => {
             await expect(checked('const count: number = "twelve";')).rejects.toThrow(
                 'not marked as being expected: 2322'
             );

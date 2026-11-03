@@ -1,10 +1,11 @@
+import { PRODUCTION_SITES } from '@seedcord/brand';
 import { readFileSync } from 'node:fs';
 import path from 'node:path';
 
 import { agentRules, readmeFeatures } from '@seedcord/ui/agents';
 
 import { FEED_PATH, twinPath } from '#lib/blog/paths.ts';
-import { canonicalUrl, DOCS_URL, GUIDE_URL, REPO_URL, SITE_DESCRIPTION, SITE_URL } from '#lib/site.ts';
+import { canonicalUrl, GUIDE_URL, REPO_URL, SITE_DESCRIPTION, SITE_URL } from '#lib/site.ts';
 
 import type { PostSummary } from '#lib/blog/summary.ts';
 
@@ -38,7 +39,7 @@ ${bullets(readmeFeatures(readFileSync(README, 'utf8')))}
 
 - Site: ${SITE_URL}
 - Guide index: ${GUIDE_URL}/llms.txt
-- Docs index: ${DOCS_URL}/llms.txt
+- Docs index: ${PRODUCTION_SITES.docs.url}/llms.txt
 - Blog feed: ${canonicalUrl(FEED_PATH)}
 - Source: ${REPO_URL}
 - License: Apache-2.0

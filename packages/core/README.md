@@ -32,14 +32,14 @@ seedcord is pre-1.0, so a minor version can break your plugin. Each release's ch
 ## Installation
 
 ```sh
-pnpm add -D @seedcord/core envapt typescript
+pnpm add -D @seedcord/core @discordjs/builders envapt typescript
 ```
 
 Also list `@seedcord/core` in your plugin's `peerDependencies`, with the versions you tested against. A plugin that extends a different copy of core than the bot's throws `CorePluginFromOtherCore` when the bot attaches it.
 
 ## Usage
 
-A plugin extends `Plugin` from `@seedcord/core/plugin` and implements `init()`:
+To write a plugin, extend `Plugin` from `@seedcord/core/plugin` and implement `init()`:
 
 ```ts
 import { Plugin } from '@seedcord/core/plugin';
@@ -57,4 +57,4 @@ export class Uptime extends Plugin {
 }
 ```
 
-A gateway or http bot attaches it with `.attach('uptime', Uptime)`, and handlers call `this.core.uptime.elapsed()`. The [Writing plugins guide](https://seedcord.org/guide/writing-plugins) covers options, lifecycle phases, testing a plugin locally, and publishing.
+Attach it to a gateway or http bot with `.attach('uptime', Uptime)`, then call `this.core.uptime.elapsed()` from a handler. The [Writing plugins guide](https://seedcord.org/guide/writing-plugins) covers options, lifecycle phases, testing a plugin locally, and publishing.

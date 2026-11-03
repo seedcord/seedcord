@@ -1,3 +1,4 @@
+import { spawnSync } from 'node:child_process';
 import { readFile, writeFile } from 'node:fs/promises';
 import { join } from 'node:path';
 
@@ -13,6 +14,7 @@ import { fixtureCopy, GATEWAY_BOT, HTTP_BOT } from './fixtureCopy';
 import { quickBuildRunner } from './quickBuildRunner';
 import { smoke } from './smoke';
 
+import type { NextCommand } from '#commands/build/builder/TargetBuild';
 import type { BuildStep } from '#commands/build/BuildRunner';
 import type { Steps } from '#core/output/Steps';
 
@@ -83,6 +85,7 @@ async function writeExportProject(
 
 describe('seedcord build without build.start on an http bot', () => {
     let projectDir = '';
+    let nextCommands: NextCommand[] = [];
 
     beforeAll(async () => {
         await using cleanup = new AsyncDisposableStack();
@@ -91,15 +94,30 @@ describe('seedcord build without build.start on an http bot', () => {
         const botFile = join(projectDir, 'src/bot.ts');
         const source = await readFile(botFile, 'utf8');
         await writeFile(botFile, source.replace('port: 0', 'port: false'));
-        await quickBuildRunner().run(projectDir);
+        ({ nextCommands } = await quickBuildRunner().run(projectDir));
         const owned = cleanup.move();
         return () => owned.disposeAsync();
     }, 120_000);
+
+    it('points at build.start in the summary', () => {
+        expect(nextCommands.flat().join(' ')).toContain('build.start');
+    });
 
     it("serves the bot through the fetch of a plain node server's own port", async () => {
         const output = await smoke('http', process.execPath, [join(projectDir, 'server.mjs')]);
 
         expect(output).toContain('fixture:text hello from the text table');
+        expect(output).not.toContain('only exports your bot');
+    }, 120_000);
+
+    it('warns when you run dist/index.mjs itself, because nothing starts the bot', () => {
+        const { status, stderr } = spawnSync(process.execPath, [join(projectDir, 'dist/index.mjs')], {
+            encoding: 'utf8',
+            timeout: 60_000
+        });
+
+        expect(status, stderr).toBe(0);
+        expect(stderr).toContain('only exports your bot');
     }, 120_000);
 
     it('still loads its folders once a bundler leaves import.meta.dirname undefined', async () => {

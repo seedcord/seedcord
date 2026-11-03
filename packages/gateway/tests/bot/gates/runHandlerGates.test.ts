@@ -1,9 +1,9 @@
-import { DispatchContext, Notice, defineGate } from '@seedcord/core';
-import { runHandlerGates } from '@seedcord/core/internal';
+import { Notice, defineGate } from '@seedcord/core';
+import { DispatchContext, runHandlerGates } from '@seedcord/core/internal';
 import { describe, expect, it } from 'vite-plus/test';
 
 import { Gated } from '#bDecorators/Gated';
-import { eventGateContext, interactionGateContext } from '#bot/gates/runGates';
+import { eventGateContext, interactionGateContext } from '#bot/gates/context';
 import { EventHandler } from '#handlers/event/index';
 import { SlashHandler } from '#handlers/interaction/SlashHandler';
 import { TestNotice } from '#tests/utils/TestNotice';
@@ -31,7 +31,7 @@ const fakeInteraction = (): Repliables =>
 describe('runHandlerGates', () => {
     // gates under test never read core
     const core = {} as unknown as Core;
-    const dispatch = new DispatchContext('slash:runprobe');
+    const dispatch = new DispatchContext('slash', 'runprobe');
 
     it("runs a handler's gates and propagates a refusal", async () => {
         const Refusing = defineGate('refuse', () => {

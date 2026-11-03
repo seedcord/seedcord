@@ -1,6 +1,6 @@
 {
     "name": "@seedcord/mock-edge",
-    "version": "0.0.1",
+    "version": "0.0.2-next.0",
     "private": true,
     "description": "Edge mock bot on Cloudflare Workers for demonstration and testing",
     "repository": {
@@ -23,10 +23,12 @@
         "tc": "tsgo --noEmit"
     },
     "dependencies": {
-        "@discordjs/builders": "catalog:deps",
+        "@discordjs/builders": "catalog:peer",
         "@seedcord/http": "workspace:^",
+        "db0": "catalog:deps",
         "discord-api-types": "catalog:deps",
-        "envapt": "catalog:peer"
+        "envapt": "catalog:peer",
+        "unstorage": "catalog:deps"
     },
     "devDependencies": {
         "@cloudflare/vite-plugin": "catalog:peer",

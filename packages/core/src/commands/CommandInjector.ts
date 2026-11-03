@@ -110,8 +110,8 @@ const KIND_LABELS: Record<ApplicationCommandType, string> = {
 function multiGuildWarning({ name, type }: CommandRef): string {
     const consequence =
         type === ApplicationCommandType.ChatInput
-            ? 'falling back to plain text (not clickable)'
-            : 'leaving its id unset';
+            ? 'so its mention stays plain text (not clickable)'
+            : 'so its id stays unset';
     return `${paint.sky.bold(name)} is deployed to multiple guilds, ${consequence}.`;
 }
 

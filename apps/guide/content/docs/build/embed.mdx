@@ -28,19 +28,21 @@ export default new Seedcord({
 
 Your server imports the built bot, by its package name if you published it, or from its `dist/index.mjs`. The samples below import `@acme/my-bot`. In your server, call `start()` once, then hand every request on your interactions route to [`fetch()`](ref:http/Seedcord.fetch), which takes a web `Request` and returns the `Response` to send back.
 
+Point your application's interactions endpoint URL in the [Discord developer portal](https://discord.com/developers/applications) at the route, like `https://example.com/interactions`.
+
+Any server works if it can hand `fetch()` a web `Request` and send back the `Response` it returns. Hono, a Next.js route handler, and a plain Bun or Deno server already use web `Request` objects, so they pass theirs straight through. A Node framework like Express or Fastify takes a few lines to convert its own request and response. The samples below show Hono and Next.js for the first kind, and Express for the second.
+
+## Call start() before fetch()
+
 `start()` loads your handlers and deploys your commands to Discord, the same as a bot on its own port. It deploys on every start, so a server that restarts often can hit Discord's limit on replacing commands. [When a deploy happens](/commands/deployed#when-a-deploy-happens) covers that.
 
-A request that arrives while `start()` runs waits for startup to finish. A request that reaches `fetch()` before you called `start()` gets an error:
+A request that arrives while `start()` runs waits until your commands finish deploying. A request that reaches `fetch()` before you called `start()` gets an error:
 
 ```txt output
 [1221] fetch() ran before start(). Call await seedcord.start() before your server passes requests to fetch().
 ```
 
 Once shutdown begins, or if `start()` failed, `fetch()` answers 503.
-
-Point your application's interactions endpoint URL in the [Discord developer portal](https://discord.com/developers/applications) at the route, like `https://example.com/interactions`.
-
-Any server works if it can hand `fetch()` a web `Request` and send back the `Response` it returns. Hono, a Next.js route handler, and a plain Bun or Deno server already use web `Request` objects, so they pass theirs straight through. A Node framework like Express or Fastify takes a few lines to convert its own request and response. The samples below show Hono and Next.js for the first kind, and Express for the second.
 
 ## Hono
 
@@ -59,7 +61,7 @@ app.post('/interactions', (c) => bot.fetch(c.req.raw));
 serve({ fetch: app.fetch, port: 3000 });
 ```
 
-## Next.js
+## Next.js route handler
 
 Keep the bot in its own package, with its own `package.json`, `seedcord.config.ts`, and `src`. In a monorepo that's a folder beside the Next app, like `packages/bot`, and the app depends on it as `"@acme/my-bot": "workspace:*"`. The bot's `root` then never overlaps the app's `src`, which matters because [every code file under root](/build/config#keep-tool-files-outside-root) goes into the bot's build. Build the bot before the app, so `dist` exists when Next.js imports it.
 

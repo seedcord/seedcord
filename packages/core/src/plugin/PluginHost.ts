@@ -3,11 +3,15 @@ import { SeedcordError, SeedcordTypeError } from '@seedcord/errors/internal';
 import { FRAMEWORK_CHANNELS } from '@seedcord/logger';
 import { HostPluginKeys } from '@seedcord/types/internal';
 
-import { declaredScopeOf, extendsThisCorePlugin, pluginLoggerOf, resolvedLifecycleSpecOf } from './Plugin';
+import { Kv } from '#src/kv/Kv';
+import { MemoryDriver } from '#src/kv/MemoryDriver';
+import { KvRateLimiter } from '#src/rateLimiter/KvRateLimiter';
+import { Bus } from '#subscribers/Bus';
+
+import { constructAttached, declaredScopeOf, extendsThisCorePlugin, resolvedLifecycleSpecOf } from './Plugin';
 import { splitPluginKey } from './splitPluginKey';
 
 import type { CoreBase } from '#interfaces/CoreBase';
-import type { Bus } from '#subscribers/Bus';
 import type { ResolvedPluginLifecycleSpec } from './lifecycle';
 import type { DeclaredScope, Runtime, Transport } from './options';
 import type { AttachableCtor, Attached, AttachKeyAssert, PluginArgs, PluginCtor, PluginLike } from './Plugin';
@@ -30,16 +34,25 @@ export abstract class PluginHost<BotT extends Transport, BotRt extends Runtime> 
     public abstract readonly config: Config;
     public abstract readonly rest: REST;
     public abstract readonly applicationId: string;
-    public abstract readonly rateLimiter: IRateLimiter;
-    public abstract readonly bus: Bus;
+
+    /** @see {@link Bus} */
+    public readonly bus: Bus;
+    /** @see {@link Kv} */
+    public readonly kv: Kv;
+    /** @see {@link IRateLimiter} */
+    public readonly rateLimiter: IRateLimiter;
 
     #sealed = false;
     readonly #attachments: Attachment[] = [];
     readonly #groups = new Map<string, Record<string, PluginLike>>();
     readonly #scope: { readonly transport: BotT; readonly runtime: BotRt };
 
-    constructor(transport: BotT, runtime: BotRt) {
+    constructor(transport: BotT, runtime: BotRt, driver: Config['kv']) {
         this.#scope = { transport, runtime };
+        this.bus = new Bus(this);
+        const kvDriver = driver ?? new MemoryDriver();
+        this.kv = new Kv(kvDriver, 'app');
+        this.rateLimiter = new KvRateLimiter(new Kv(kvDriver, 'seedcord'));
     }
 
     /** @internal */
@@ -68,7 +81,7 @@ export abstract class PluginHost<BotT extends Transport, BotRt extends Runtime> 
      * `start()`. An edge bot starts on its first request.
      *
      * Attaching a plugin whose `transport` or `runtime` differs from this host fails to compile.
-     * Your constructor takes `CoreBase` as its first parameter (you don't need to pass it though).
+     * Take `CoreBase` as your constructor's first parameter. `attach()` passes it, so you don't.
      * A narrower one fails to compile here.
      *
      * @param key - Also the channel the plugin logs on, dots included.
@@ -117,9 +130,9 @@ export abstract class PluginHost<BotT extends Transport, BotRt extends Runtime> 
             throw new SeedcordTypeError(SeedcordErrorCode.CorePluginFromOtherCore, [Plugin.name]);
         }
 
-        const instance = new Plugin(this, ...args);
+        const kv = new Kv(this.kv.driver, 'plugins', key);
+        const instance = constructAttached(key, kv, () => new Plugin(this, ...args));
         this.#assertScope(Plugin.name, declaredScopeOf(instance));
-        pluginLoggerOf(instance).setChannel(key);
         this.#attachments.push({ key, instance, spec: resolvedLifecycleSpecOf(instance) });
 
         if (leaf === undefined) {

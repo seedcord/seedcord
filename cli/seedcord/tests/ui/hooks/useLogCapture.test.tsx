@@ -3,6 +3,7 @@ import { render } from 'ink-testing-library';
 import React from 'react';
 import { afterEach, describe, expect, it, vi } from 'vite-plus/test';
 
+import { cliLogger } from '#core/cliLogger';
 import { useLogCapture } from '#ui/hooks/useLogCapture.ts';
 import { LogStore } from '#ui/stores/LogStore.ts';
 
@@ -22,8 +23,7 @@ describe('useLogCapture', () => {
         const { rerender, unmount } = render(<Harness onReady={first} />);
 
         rerender(<Harness onReady={second} />);
-        // eslint-disable-next-line no-console -- capture routes console output into the store
-        console.log('still captured');
+        cliLogger('Test').info('still captured');
         await LogStore.instance.flush();
         unmount();
 

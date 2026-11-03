@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vite-plus/test';
 
+import { PackageManager } from '#cli/PackageManager';
 import { buildContext } from '#template/context';
 import { BOT_TOKEN } from '#tests/token';
 
@@ -27,12 +28,12 @@ const HTTP: ScaffoldAnswers = {
     git: true
 };
 
-const EXTRAS = { developerUsername: 'dhruv', agent: 'pnpm' } as const;
+const EXTRAS = { developerUsername: 'dhruv', manager: new PackageManager('pnpm') };
 
 describe('buildContext on gateway', () => {
     const context = buildContext(GATEWAY, EXTRAS);
 
-    it('names the project after the last part of the directory', () => {
+    it('takes the project name from the last part of the directory', () => {
         expect(context.projectName).toBe('my-bot');
     });
 

@@ -71,7 +71,7 @@ describe('CommandRegistry.setCommands', () => {
         expect(heard).toHaveBeenCalledWith({ global: [expect.objectContaining({ id: '123' })], guilds: {} });
     });
 
-    it('keys the published guild arm by guild id', async () => {
+    it('keys the published guild result by guild id', async () => {
         const put = vi.fn().mockResolvedValue(deployedAs('g-1', 'config'));
         const core = coreWith(put);
         const registry = new CommandRegistry(core);

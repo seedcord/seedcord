@@ -1,5 +1,5 @@
 import { CustomId } from '@seedcord/custom-id';
-import { describe, expect, it } from 'vite-plus/test';
+import { describe, expect, expectTypeOf, it } from 'vite-plus/test';
 
 import { ComponentDefsKey } from '#customId/routing';
 import {
@@ -29,6 +29,7 @@ import type { HasComponentDefs } from '#customId/routing';
 import type { SlashRegistry } from '#registries/SlashRegistry';
 import type { AnyCustomId } from '@seedcord/custom-id';
 import type { ApplicationCommandType } from 'discord-api-types/v10';
+import type { Constructor } from 'type-fest';
 
 declare module '#registries/SlashRegistry' {
     interface SlashRegistry {
@@ -80,55 +81,101 @@ function routes(route: InteractionKind, ctor: object): unknown {
     return Reflect.getMetadata(InteractionRouteKeys[route], ctor);
 }
 
-// @ts-expect-error the decorator lists a route the handler does not declare
-@SlashRoute('rtKick')
-class RejectsMismatchesAtCompile extends SlashBase<'rtBan'> {
+class Ban extends SlashBase<'rtBan'> {
+    async execute(): Promise<void> {}
+}
+class BanKick extends SlashBase<'rtBan' | 'rtKick'> {
+    async execute(): Promise<void> {}
+}
+class Find extends AutocompleteBase<'rtFind'> {
+    async execute(): Promise<void> {}
+}
+class Profile extends ContextMenuBase<ApplicationCommandType.User, 'View Profile'> {
+    async execute(): Promise<void> {}
+}
+class Approve extends ComponentBase<InteractionKind.Button, [typeof ApproveId]> {
+    async execute(): Promise<void> {}
+}
+class ApproveModal extends ComponentBase<InteractionKind.Modal, [typeof ApproveId]> {
     async execute(): Promise<void> {}
 }
 
-// @ts-expect-error the handler declares a route the decorator omits
-@SlashRoute('rtBan')
-class RejectsMismatchesAtCompile2 extends SlashBase<'rtBan' | 'rtKick'> {
-    async execute(): Promise<void> {}
+const slashKick = SlashRoute('rtKick');
+const slashBan = SlashRoute('rtBan');
+const slashTypo = SlashRoute('/rtBan');
+const autocompleteKick = AutocompleteRoute('rtKick');
+const reportMenu = MessageContextMenuRoute('Report Message');
+const profileTypo = UserContextMenuRoute('View Profil');
+const approveRejectButton = ButtonRoute(ApproveId, RejectId);
+const approveButton = ButtonRoute(ApproveId);
+
+// compile-only. each decorator's parameter type is the error the author reads.
+function rejectionMessages(): void {
+    expectTypeOf<Parameters<typeof slashKick<typeof Ban>>[0]>().toEqualTypeOf<
+        Constructor<['SlashRoute does not match the SlashHandler generic', { decorator: 'rtKick'; generic: 'rtBan' }]>
+    >();
+    expectTypeOf<Parameters<typeof slashBan<typeof BanKick>>[0]>().toEqualTypeOf<
+        Constructor<
+            ['SlashRoute does not match the SlashHandler generic', { decorator: 'rtBan'; generic: 'rtBan' | 'rtKick' }]
+        >
+    >();
+    expectTypeOf<Parameters<typeof slashTypo<typeof Ban>>[0]>().toEqualTypeOf<
+        Constructor<['SlashRoute lists a command that is not registered', '/rtBan']>
+    >();
+    expectTypeOf<Parameters<typeof autocompleteKick<typeof Find>>[0]>().toEqualTypeOf<
+        Constructor<
+            [
+                'AutocompleteRoute does not match the AutocompleteHandler generic',
+                { decorator: 'rtKick'; generic: 'rtFind' }
+            ]
+        >
+    >();
+    expectTypeOf<Parameters<typeof reportMenu<typeof Profile>>[0]>().toEqualTypeOf<
+        Constructor<
+            [
+                'ContextMenuRoute does not match the ContextMenuHandler kind',
+                { decorator: ApplicationCommandType.Message; generic: ApplicationCommandType.User }
+            ]
+        >
+    >();
+    expectTypeOf<Parameters<typeof profileTypo<typeof Profile>>[0]>().toEqualTypeOf<
+        Constructor<['ContextMenuRoute lists a command that is not registered', 'View Profil']>
+    >();
+    expectTypeOf<Parameters<typeof approveRejectButton<typeof Approve>>[0]>().toEqualTypeOf<
+        Constructor<
+            [
+                'the customId definitions do not match the handler generic',
+                { decorator: readonly [typeof ApproveId, typeof RejectId]; generic: [typeof ApproveId] }
+            ]
+        >
+    >();
+    expectTypeOf<Parameters<typeof approveButton<typeof ApproveModal>>[0]>().toEqualTypeOf<
+        Constructor<
+            [
+                'the decorator does not match the handler kind',
+                { decorator: InteractionKind.Button; generic: InteractionKind.Modal }
+            ]
+        >
+    >();
 }
 
-// @ts-expect-error a slash decorator rejects an autocomplete handler
-@SlashRoute('rtFind')
-class RejectsMismatchesAtCompile3 extends AutocompleteBase<'rtFind'> {
-    async execute(): Promise<void> {}
-}
-
-// @ts-expect-error the kind does not match the handler generic
-@MessageContextMenuRoute('Report Message')
-class RejectsMismatchesAtCompile4 extends ContextMenuBase<ApplicationCommandType.User, 'Report Message'> {
-    async execute(): Promise<void> {}
-}
-
-// @ts-expect-error a button decorator rejects a modal handler
-@ButtonRoute(ApproveId)
-class RejectsMismatchesAtCompile5 extends ComponentBase<InteractionKind.Modal, [typeof ApproveId]> {
-    async execute(): Promise<void> {}
-}
-
-// @ts-expect-error the defs do not match the handler generic
-@ButtonRoute(ApproveId)
-class RejectsMismatchesAtCompile6 extends ComponentBase<InteractionKind.Button, [typeof ApproveId, typeof RejectId]> {
-    async execute(): Promise<void> {}
-}
-
-// @ts-expect-error a role menu decorator rejects a user menu handler
-@RoleMenuRoute(ApproveId)
-class RejectsMismatchesAtCompile7 extends ComponentBase<InteractionKind.UserMenu, [typeof ApproveId]> {
-    async execute(): Promise<void> {}
-}
-
-void RejectsMismatchesAtCompile;
-void RejectsMismatchesAtCompile2;
-void RejectsMismatchesAtCompile3;
-void RejectsMismatchesAtCompile4;
-void RejectsMismatchesAtCompile5;
-void RejectsMismatchesAtCompile6;
-void RejectsMismatchesAtCompile7;
+void [
+    Ban,
+    BanKick,
+    Find,
+    Profile,
+    Approve,
+    ApproveModal,
+    slashKick,
+    slashBan,
+    slashTypo,
+    autocompleteKick,
+    reportMenu,
+    profileTypo,
+    approveRejectButton,
+    approveButton,
+    rejectionMessages
+];
 
 describe('route metadata writes', () => {
     it('SlashRoute stores the routes under the slash key', () => {

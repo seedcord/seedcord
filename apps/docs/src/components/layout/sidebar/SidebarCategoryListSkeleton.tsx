@@ -1,4 +1,4 @@
-import { cn } from '@seedcord/ui';
+import { Skeleton, cn } from '@seedcord/ui';
 
 import type { ReactElement } from 'react';
 
@@ -7,12 +7,12 @@ const ITEMS = ['a', 'b', 'c', 'd'] as const;
 
 export function SidebarCategoryListSkeleton(): ReactElement {
     return (
-        <div className={cn('animate-pulse space-y-6 p-1')} aria-hidden>
+        <div className={cn('space-y-6 p-1')}>
             {GROUPS.map((group) => (
                 <div key={group} className={cn('space-y-2')}>
-                    <div className={cn('h-3 w-2/5 rounded bg-(--surface-moderate)')} />
+                    <Skeleton tone="moderate" className={cn('h-3 w-2/5')} />
                     {ITEMS.map((item) => (
-                        <div key={`${group}-${item}`} className={cn('h-8 w-full rounded-md bg-(--surface-subtle)')} />
+                        <Skeleton key={`${group}-${item}`} className={cn('h-8 w-full rounded-md')} />
                     ))}
                 </div>
             ))}

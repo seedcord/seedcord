@@ -1,5 +1,5 @@
-import { DispatchContext, Silence, Fault } from '@seedcord/core';
-import { PublishDefault } from '@seedcord/core/internal';
+import { Silence, Fault } from '@seedcord/core';
+import { DispatchContext, PublishDefault } from '@seedcord/core/internal';
 import { Logger } from '@seedcord/logger';
 import { DiscordAPIError, RESTJSONErrorCodes } from 'discord.js';
 import { beforeEach, describe, expect, it, vi } from 'vite-plus/test';
@@ -12,7 +12,7 @@ import type { SubscriptionData } from '@seedcord/core';
 
 // the dispatcher supplies the per-dispatch context
 function handleEventFault(caught: unknown, eventName: string, handlerName: string, args: unknown, core: Core): void {
-    boundary(caught, { eventName, handlerName, args, dispatch: new DispatchContext(`event:${eventName}`) }, core);
+    boundary(caught, { handlerName, args, dispatch: new DispatchContext('event', eventName) }, core);
 }
 
 function deadResourceError(): DiscordAPIError {
@@ -166,7 +166,7 @@ describe('handleEventFault', () => {
         expect(publish).toHaveBeenCalledTimes(2);
     });
 
-    it('names the event and the handler that threw as the origin', () => {
+    it('sets the event and the handler that threw as the origin', () => {
         handleEventFault(new Error('boom'), 'messageCreate', 'Starboard', [{}], mockCore(publish));
 
         const [, payload] = publish.mock.calls[0] as [string, SubscriptionData<'unknownException'>];

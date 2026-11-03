@@ -8,6 +8,7 @@ import { RuntimeBrand, TransportBrand } from './brands';
 import { resolveLifecycleSpec } from './lifecycle';
 
 import type { CoreBase } from '#interfaces/CoreBase';
+import type { Kv } from '#src/kv/Kv';
 import type { ScopedSpec } from './brands';
 import type { ResolvedPluginLifecycleSpec, PluginLifecycleSpec } from './lifecycle';
 import type {
@@ -23,9 +24,18 @@ import type {
     TransportAssert
 } from './options';
 import type { Tail, FrameworkChannel, HmrAware, HmrUpdateEvent } from '@seedcord/types';
+import type { Promisable } from 'type-fest';
+
+interface Attaching {
+    readonly key: string;
+    readonly kv: Kv;
+}
+
+// set only while attach() runs `new Plugin()`
+let attaching: Attaching | undefined;
 
 export interface Initializeable {
-    init(): Promise<void>;
+    init(): Promisable<void>;
 }
 
 /** @internal */
@@ -41,7 +51,7 @@ export const FixedScope = Symbol('seedcord:plugin:fixed-scope');
  * Base class for a seedcord plugin. Extend it and implement `init()`. `this.core` is the running
  * bot.
  *
- * Your constructor takes the host first and passes it to `super()`. Add your own parameters after
+ * Take the host as your constructor's first parameter and pass it to `super()`. Add your own parameters after
  * it. `attach()` types them at the call site.
  *
  * A plugin that narrows `transport` or `runtime` in `Opts` passes the same values to `super()`.
@@ -95,12 +105,19 @@ export abstract class Plugin<
     /** Logs under the plugin's class name, on the channel its attach key sets. */
     protected readonly logger: Logger;
 
+    readonly #kv: Kv | undefined;
+
     // CoreBase here keeps the augmented Core out of ConstructorParameters, which attach reads
     constructor(
         private readonly host: CoreBase,
         ...[spec]: PluginSpecArgs<Opts, Fixed>
     ) {
-        this.logger = new Logger(this.constructor.name);
+        // cleared here. a plugin this constructor builds by hand doesn't get the outer key
+        const attachment = attaching;
+        attaching = undefined;
+        this.#kv = attachment?.kv;
+
+        this.logger = new Logger(this.constructor.name, attachment && { channel: attachment.key });
         this[loggerSlot] = this.logger;
         this[resolvedSpecSlot] = resolveLifecycleSpec(spec, this.constructor.name);
 
@@ -119,10 +136,28 @@ export abstract class Plugin<
     }
 
     /**
+     * This plugin's records in the bot's `config.kv`, stored under its attach key. Two attachments of
+     * one plugin class each get their own records. Renaming the attach key leaves the records under
+     * the old key behind.
+     *
+     * @throws A **SeedcordTypeError** when something built the plugin with `new` outside `attach()`.
+     * @example
+     * ```ts
+     * // works in a field initializer, the constructor, and every method
+     * private readonly jobs = this.kv.collection<Job>('job');
+     * ```
+     */
+    protected get kv(): Kv {
+        if (!this.#kv)
+            throw new SeedcordTypeError(SeedcordErrorCode.CorePluginKvOutsideAttach, [this.constructor.name]);
+        return this.#kv;
+    }
+
+    /**
      * Runs in `StartupPhase.Configuration` by default.
      * Move it to a different phase with the {@link PluginLifecycleSpec}.
      */
-    abstract init(): Promise<void>;
+    abstract init(): Promisable<void>;
 
     /**
      * Runs in the Ready phase, after every attached plugin's `init()` has resolved. The other Ready
@@ -130,7 +165,7 @@ export abstract class Plugin<
      *
      * Override it when your work needs a logged-in client or a resolved application id.
      */
-    ready?(): Promise<void>;
+    ready?(): Promisable<void>;
 
     /**
      * Runs during teardown, in `ShutdownPhase.Disconnect` by default. seedcord skips it when `init()`
@@ -139,7 +174,7 @@ export abstract class Plugin<
      * When `init()` outlasts its timeout, seedcord calls this once that `init()` resolves, outside any
      * shutdown phase. The process must still be alive for that call to happen.
      */
-    dispose?(): Promise<void>;
+    dispose?(): Promisable<void>;
 
     /**
      * Returns data that `seedcord codegen` writes into the bot's `seedcord-gen.ts` as a type.
@@ -162,7 +197,7 @@ export abstract class Plugin<
     }
 
     /** Override to reload plugin state on an HMR update. */
-    public onHmr(_event: HmrUpdateEvent): Promise<void> {
+    public onHmr(_event: HmrUpdateEvent): Promisable<void> {
         return Promise.resolve();
     }
 
@@ -193,6 +228,16 @@ export function pluginLoggerOf(plugin: PluginLike): Logger {
 /** @internal */
 export function declaredScopeOf(plugin: PluginLike): DeclaredScope {
     return plugin[scopeSlot];
+}
+
+/** @internal */
+export function constructAttached<TPlugin>(key: string, kv: Kv, construct: () => TPlugin): TPlugin {
+    attaching = { key, kv };
+    try {
+        return construct();
+    } finally {
+        attaching = undefined;
+    }
 }
 
 export type { PluginLifecycleSpec } from './lifecycle';

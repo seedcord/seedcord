@@ -1,10 +1,8 @@
-import { ContextMenuKindBrand, ContextMenuNamesBrand } from '@seedcord/core/internal';
-import { SeedcordErrorCode } from '@seedcord/errors';
-import { SeedcordTypeError } from '@seedcord/errors/internal';
+import { ContextMenuKindBrand, ContextMenuNamesBrand, runCase } from '@seedcord/core/internal';
 
 import { InteractionHandler } from '#handlers/interaction/InteractionHandler';
 
-import type { NamesFor } from '@seedcord/core/internal';
+import type { CaseReturn, MatchResult, NamesFor, OnlyCases } from '@seedcord/core/internal';
 import type {
     APIInteractionDataResolvedGuildMember,
     APIMessage,
@@ -13,29 +11,16 @@ import type {
     APIUserApplicationCommandInteraction,
     ApplicationCommandType
 } from 'discord-api-types/v10';
-import type { Promisable } from 'type-fest';
 
-type UserMenuArms<Names extends NamesFor<ApplicationCommandType.User>, Ret> = Record<
+type UserMenuCases<Names extends NamesFor<ApplicationCommandType.User>, Ret> = Record<
     Names,
-    (target: APIUser, member: APIInteractionDataResolvedGuildMember | null) => Promisable<Ret>
+    (target: APIUser, member: APIInteractionDataResolvedGuildMember | null) => CaseReturn<Ret>
 >;
 
-type MessageMenuArms<Names extends NamesFor<ApplicationCommandType.Message>, Ret> = Record<
+type MessageMenuCases<Names extends NamesFor<ApplicationCommandType.Message>, Ret> = Record<
     Names,
-    (target: APIMessage) => Promisable<Ret>
+    (target: APIMessage) => CaseReturn<Ret>
 >;
-
-function armFor<Ret>(handler: object, arms: object, name: string): (...args: never[]) => Promisable<Ret> {
-    // hasOwn, since a plain lookup for a command named `constructor` returns Object.prototype's
-    const arm = Object.hasOwn(arms, name) ? (arms as Record<string, unknown>)[name] : undefined;
-    if (typeof arm !== 'function')
-        throw new SeedcordTypeError(SeedcordErrorCode.MatchArmMissing, [
-            handler.constructor.name,
-            'context menu command',
-            name
-        ]);
-    return arm as (...args: never[]) => Promisable<Ret>;
-}
 
 /**
  * Base class for a user context-menu command handler on the HTTP transport (right-click a user).
@@ -67,20 +52,19 @@ export abstract class UserContextMenuHandler<
     }
 
     /** The selected context-menu command's name, without the interaction-kind prefix. */
-    protected get route(): Names {
-        return this.event.data.name as Names;
-    }
+    declare protected readonly route: Names;
 
     /**
-     * Run the arm for the selected command. Use this only when the handler is registered for several
+     * Run the case for the selected command. Use this only when the handler is registered for several
      * names.
      *
-     * Provide one arm per registered name, keyed by the name Discord shows in the right-click menu. Each
-     * arm receives the clicked user and that user's guild member. The arms must cover every name in the
+     * Provide one case per registered name, keyed by the name Discord shows in the right-click menu. Each
+     * case receives the clicked user and that user's guild member. The cases must cover every name in the
      * generic. A missing name or an unknown key is a compile error.
      *
-     * @param arms - One handler per registered command name.
-     * @returns The result of the arm that ran.
+     * @param cases - One handler per registered command name.
+     * @typeParam Ret - The type that every case must return. Leave it out to get the union of what the cases return.
+     * @returns The result of the case that ran.
      *
      * @example
      * ```ts
@@ -95,11 +79,17 @@ export abstract class UserContextMenuHandler<
      * }
      * ```
      */
-    protected async match<Ret>(arms: UserMenuArms<Names, Ret>): Promise<Ret> {
-        const arm = armFor<Ret>(this, arms, this.route);
-        return await (
-            arm as (target: APIUser, member: APIInteractionDataResolvedGuildMember | null) => Promisable<Ret>
-        )(this.target, this.targetMember);
+    protected async match<Ret = never, Cases extends UserMenuCases<Names, Ret> = UserMenuCases<Names, Ret>>(
+        cases: OnlyCases<Cases, UserMenuCases<Names, Ret>>
+    ): Promise<MatchResult<Ret, Cases>> {
+        return await runCase<MatchResult<Ret, Cases>>(
+            this,
+            cases,
+            'context menu command',
+            this.route,
+            this.target,
+            this.targetMember
+        );
     }
 }
 
@@ -126,20 +116,19 @@ export abstract class MessageContextMenuHandler<
     }
 
     /** The selected context-menu command's name, without the interaction-kind prefix. */
-    protected get route(): Names {
-        return this.event.data.name as Names;
-    }
+    declare protected readonly route: Names;
 
     /**
-     * Run the arm for the selected command. Use this only when the handler is registered for several
+     * Run the case for the selected command. Use this only when the handler is registered for several
      * names.
      *
-     * Provide one arm per registered name, keyed by the name Discord shows in the right-click menu. Each
-     * arm receives the clicked message. The arms must cover every name in the generic. A missing name or
+     * Provide one case per registered name, keyed by the name Discord shows in the right-click menu. Each
+     * case receives the clicked message. The cases must cover every name in the generic. A missing name or
      * an unknown key is a compile error.
      *
-     * @param arms - One handler per registered command name.
-     * @returns The result of the arm that ran.
+     * @param cases - One handler per registered command name.
+     * @typeParam Ret - The type that every case must return. Leave it out to get the union of what the cases return.
+     * @returns The result of the case that ran.
      *
      * @example
      * ```ts
@@ -154,8 +143,9 @@ export abstract class MessageContextMenuHandler<
      * }
      * ```
      */
-    protected async match<Ret>(arms: MessageMenuArms<Names, Ret>): Promise<Ret> {
-        const arm = armFor<Ret>(this, arms, this.route);
-        return await (arm as (target: APIMessage) => Promisable<Ret>)(this.target);
+    protected async match<Ret = never, Cases extends MessageMenuCases<Names, Ret> = MessageMenuCases<Names, Ret>>(
+        cases: OnlyCases<Cases, MessageMenuCases<Names, Ret>>
+    ): Promise<MatchResult<Ret, Cases>> {
+        return await runCase<MatchResult<Ret, Cases>>(this, cases, 'context menu command', this.route, this.target);
     }
 }

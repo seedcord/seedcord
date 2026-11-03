@@ -1,4 +1,4 @@
-import { DOCS } from '@seedcord/ui';
+import { PRODUCTION_SITES } from '@seedcord/brand';
 import { OgPageCard } from '@seedcord/ui/OgCard';
 import { OG_SIZE } from '@seedcord/ui/og';
 import { CARD } from '@seedcord/ui/PageAsset';
@@ -15,11 +15,14 @@ import type { DocsCard } from '#lib/docs/DocsPage';
 export const dynamic = 'force-static';
 
 function render(card: DocsCard): ImageResponse {
-    return new ImageResponse(<OgPageCard {...card} domain={DOCS.label} />, { ...OG_SIZE, fonts: OG_FONTS });
+    return new ImageResponse(<OgPageCard {...card} domain={PRODUCTION_SITES.docs.label} />, {
+        ...OG_SIZE,
+        fonts: OG_FONTS
+    });
 }
 
 function missing(): ImageResponse {
-    return new ImageResponse(<OgPageCard {...notFoundCard()} domain={DOCS.label} />, {
+    return new ImageResponse(<OgPageCard {...notFoundCard()} domain={PRODUCTION_SITES.docs.label} />, {
         ...OG_SIZE,
         fonts: OG_FONTS,
         status: 404

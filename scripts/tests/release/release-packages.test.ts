@@ -66,7 +66,7 @@ describe('resolvePackages', () => {
         expect(resolved.map((pkg) => pkg.commandOnly)).toEqual([true, undefined]);
     });
 
-    it('throws naming a package the workspace lacks', async () => {
+    it('throws listing a package the workspace lacks', async () => {
         const workspace = await workspaceWith({});
 
         await expect(resolvePackages(workspace, [{ name: '@seedcord/nope', version: '1.0.0' }])).rejects.toThrow(

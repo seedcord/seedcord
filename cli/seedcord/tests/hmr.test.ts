@@ -177,9 +177,9 @@ describe('HmrPlugin', () => {
     it('relays the bound port the framework reports', () => {
         const { listeners, events } = configuredPlugin(mockConfig);
 
-        listeners.get('seedcord:server-listening')?.({ port: 4000 });
+        listeners.get('seedcord:server-port')?.({ port: 4000 });
 
-        expect(events).toContainEqual({ type: 'server-listening', port: 4000 });
+        expect(events).toContainEqual({ type: 'server-port', port: 4000 });
     });
 
     describe('the last deploy', () => {

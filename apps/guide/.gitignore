@@ -15,6 +15,7 @@
 
 # cloudflare
 /.wrangler/
+/workerd/worker-configuration.d.ts
 
 # production
 /build
