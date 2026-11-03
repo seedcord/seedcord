@@ -1,0 +1,241 @@
+---
+title: seedcord v0.23 release
+description: A key-value store, a guide you can search by asking it questions, templates for new files, plugins that write their own types, and ~40 fixes.
+authors: [materwelonDhruv]
+created: 2026-11-02
+cover:
+    src: ./cover.webp
+    alt: The seedcord logo and 0.23 next to a long paper receipt listing the new features, 76 total changes, and change due your bot
+thumbnail: ./thumbnail.webp
+keywords: [release, kv store, guide search, seedcord make, plugin codegen, mention prefix]
+---
+
+That's the bill for this release. 76 changes since v0.22, and 18 of them are breaking, so your bot is paying for some of it. It's less scary than it looks though. More on that at the end.
+
+This all started as a short list of things to fix before the release, and it kept growing. One PR ended up titled "`feat: refactor? chore? fix? god pr`", which tells you how that went.
+
+Here's the good stuff.
+
+---
+
+## You can ask the guide questions now
+
+Docs search only works when you already know the word the docs use. You want to stop people spamming a command, and the page you need is called Cooldowns. If nobody ever told you that's what it's called, good luck.
+
+So now you can type what you'd ask a person. Press `Cmd+K` or `/` on [the guide](https://seedcord.org/guide/) and try it. These are real searches, with the top result each one got:
+
+```txt
+how do i stop people from spamming a command  👉🏻  Cooldowns
+how do i know which button someone clicked    👉🏻  Buttons
+```
+
+Text matches show up right away under **Matches**. Once you stop typing, your question goes to Cloudflare Workers AI, which turns it into a vector with EmbeddingGemma. The guide sections closest in meaning come back under **Related**.
+
+I think this matters more than anything else on _the bill of changes_ above. When you're looking something up you're usually stuck, and you don't know the right word yet.
+
+The guide got keyboard shortcuts too:
+
+- Left and right change pages
+- Shift plus left or right changes tabs
+- `j` and `k` move between sections
+- `y` copies a link to the section you're on
+- `s` switches sites
+- `?` shows all of them
+
+---
+
+## We launched a bot
+
+Meet seed, our own Discord bot. It's built with seedcord, it runs on Cloudflare Workers, and you can [add it to a server or install it on your account](https://discord.com/oauth2/authorize?client_id=1195232619718254663).
+
+It brings that same search into Discord, so you can look stuff up without leaving the conversation:
+
+- `/search guide` takes a question in your own words.
+- `/search docs` finds a symbol by name. Set `prerelease` to search the `@next` versions.
+- **Answer with docs** is a right-click on someone's message. You pick a guide section that answers it, and seed posts the link and mentions them.
+- `/versions` shows the latest and next version of each seedcord package.
+
+Both `/search` commands reply only to you by default. Set `public` when everyone in the channel should see the answer.
+
+There's also some nice emoji utility built into the bot, and we'll continue adding helpful features like this over time.
+
+---
+
+## A key-value store
+
+Bots have to remember stuff, like a member's timezone or a reminder due tomorrow. Most of us start with a `Map` at the top of a file, and it's empty again the moment the bot restarts.
+
+Every bot now has `core.kv`. You ask it for a collection, then read and write records by id:
+
+```ts title="src/handlers/Timezone.ts"
+@SlashRoute('timezone')
+export class Timezone extends SlashHandler<'timezone'> {
+    public async execute(): Promise<void> {
+        const preferences = this.core.kv.collection<Preferences>('preferences');
+
+        await preferences.set(this.user.id, {
+            timezone: this.options.getString('zone'),
+            updatedAt: new Date()
+        });
+        await this.reply('Saved.');
+    }
+}
+```
+
+Leave `kv` out of your config and records stay in memory. To keep them through a restart, pass a driver:
+
+```ts title="src/bot.ts"
+export const seedcord = new Seedcord({
+    kv: new KeyvDriver(new Keyv(new KeyvSqlite('sqlite://./kv.sqlite')))
+    // ...
+});
+```
+
+`KeyvDriver` and `UnstorageDriver` wrap those two libraries, so you get SQLite, Redis, Postgres, the filesystem, D1 on Workers, and more. You can also write your own driver.
+
+Records go through JSON, and the types know that. If your record holds a `Set` or a `Map`, the `collection()` call doesn't compile. A `Date` reads back as a `string`, and `get` shows it that way. Plugins read the same store through `this.kv`, and the rate limiter keeps its counts there too.
+
+[The guide page](https://seedcord.org/guide/built-ins/) has the rest, like records that expire.
+
+---
+
+## `seedcord make`
+
+I've started way too many buttons by copying the last one, renaming everything, and then fixing the import path because the copy was one folder deeper. Then I'd do it all again for the handler.
+
+`seedcord make` writes those files from templates that you keep in your project. A template is a folder of [Handlebars](https://handlebarsjs.com/guide/) files:
+
+```txt
+templates/
+└─ Button/
+   ├─ components/
+   │  └─ {{pascal name}}.ts.hbs
+   └─ handlers/
+      └─ {{pascal name}}.ts.hbs
+```
+
+You pick `Button` and type `tickets/Appeal` as the name. It then asks for each value the templates read, and writes both files:
+
+```txt
+src/components/tickets/Appeal.ts
+src/handlers/tickets/Appeal.ts
+```
+
+New projects start with templates for a slash command, a button, a select menu, a modal, and on gateway an event. Installed plugins can ship templates too. [Here's how to write your own](https://seedcord.org/guide/tooling/make/).
+
+---
+
+## Plugins can write types now
+
+Say your plugin translates messages, and a bot calls `t('greet')`. You wrote that plugin before any bot existed, so all it can type is `string`. A typo only shows up when a user sees the wrong message.
+
+Plugins can now define `codegen()`. Whatever it returns ends up in the bot's generated types, built from that bot's own files:
+
+```txt
+1. your codegen() returns a value
+   { messages: { greet: true, bye: true } }
+
+2. seedcord codegen writes it as a type into the bot's seedcord-gen.ts
+   'seedcord-locales': { messages: { bye: true; greet: true } }
+
+3. your plugin reads it back with Generated<typeof Locales>['messages']
+   { bye: true; greet: true }
+```
+
+The Mongoose and Kysely plugins use this already, so you can delete the `declare module` blocks that list your services.
+
+Two more things came with it. `seedcord dev` has a `g` key that runs codegen without restarting your bot. The generated file is also `seedcord-gen.ts` now, because `skipLibCheck` skipped the old `.d.ts`, and a stale row in there quietly turned into `any`. Now `tc` reports it.
+
+[Writing types from codegen](https://seedcord.org/guide/writing-plugins/codegen/) walks through a whole plugin.
+
+---
+
+## Smaller things I really like
+
+**`this.user`** is on every interaction handler and middleware. On http in a server, `this.event.user` is undefined and you had to go through `member.user`. Now you don't have to think about it.
+
+**`this.route`** works on event handlers and on event and interaction middleware too, the same as interaction handlers.
+
+**`this.match()` returns what its cases return**, including async ones:
+
+```ts
+const outcome = await this.match({
+    ban: () => ({ banned: true }),
+    kick: async () => ({ notified: true })
+});
+```
+
+`outcome` is a union of both shapes. Pass `this.match<string>()` if you want every case to return one type, and TypeScript reports the case that doesn't.
+
+**One subscriber can listen to several keys:**
+
+```ts
+@Subscribe(['levelUp'], ['levelReset'])
+export class LevelLog extends Subscriber<'levelUp' | 'levelReset'> {
+    public async execute(): Promise<void> {
+        await this.match({
+            levelUp: (data) => this.log(data.userId, `reached ${data.level}`),
+            levelReset: (data) => this.log(data.userId, 'was reset')
+        });
+    }
+}
+```
+
+**`MentionPrefix`** is a new gateway gate for commands like `@bot ping`. Discord sends the full text of a message that mentions your bot, even without the Message Content intent, so this gets you message commands without that intent:
+
+```ts
+@Gated(IgnoreBots, MentionPrefix)
+@RegisterEvent([Events.MessageCreate])
+export class Mentioned extends EventHandler<Events.MessageCreate> {
+    public async execute(): Promise<void> {
+        const [message] = this.event;
+        await message.reply(`hey ${message.author.displayName}`);
+    }
+}
+```
+
+And finally, **replies can now take raw component json** next to builders, like `{ type: 10, content: 'hi' }`. That means you can use libraries like `@dressed/react` and write your components in `.tsx` files!
+
+---
+
+## `seedcord dev` without a terminal
+
+When stdin or stdout is a pipe, or `CI` is set, `seedcord dev` skips the TUI and prints each log line as JSON. You can drive it by writing lines like `{"do":"restart"}` or `{"do":"codegen"}` to its stdin.
+
+That means a script, a container, or a coding agent can run your bot properly. A new project's `AGENTS.md` now tells an agent to do exactly that, then ask you to run the command in Discord. I test features on real bots this way all the time. [The dev page](https://seedcord.org/guide/tooling/dev/) lists every command.
+
+---
+
+## ~40 fixes
+
+Way too many to list, so here are a few you might have hit:
+
+- A refused Discord login, like a bad token or disallowed intents, used to sit through the whole 10 second startup timeout. Startup now fails right away with Discord's reason.
+- Moving a handler to a new file in `seedcord dev` left its route without a handler until you restarted.
+- `seedcord dev` could register a new command twice.
+- An autocomplete handler that threw could leave Discord without a response.
+- Handlers could read `Emojis` before startup filled it, if an interaction came in right after login.
+
+That god PR from earlier added 3 features and fixed 5 bugs, and it finished at +3,262 / -3,250. I'm very proud of those 12 lines.
+
+---
+
+## Updating
+
+```sh
+pnpm update --latest seedcord @seedcord/gateway # or @seedcord/http
+pnpm exec seedcord codegen
+```
+
+Update any seedcord plugins you use too. Now, those 18 breaking changes. Most of them only matter if you use that exact API, and your compiler points right at those. Two are worth knowing up front:
+
+- `seedcord-gen.d.ts` is now `seedcord-gen.ts`. Delete the old file, run codegen once, and rename it in your eslint ignores, `.prettierignore`, `.gitattributes`, and editor settings.
+- Handlers on the same event now run at the same time. Nothing warns you about this one. If one handler reads what another one writes, it can get old values, so check those.
+
+[The changelog](https://github.com/seedcord/seedcord/releases/latest) has everything else.
+
+---
+
+Also thanks to [lunaradev1](https://github.com/lunaradev1), [KTrain5169](https://github.com/KTrain5169), and [SerenModz21](https://github.com/SerenModz21) for their help on this release!
+
+New to seedcord? [Start here](https://seedcord.org/guide/). Come say hi in [the Discord server](https://seedcord.org/chat) too.
