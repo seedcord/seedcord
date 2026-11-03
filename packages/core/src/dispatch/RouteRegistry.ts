@@ -7,6 +7,7 @@ import { InteractionKind } from '#src/metadataKeys';
 import { routeIdOf } from './routeIdOf';
 
 import type { RoutableConstructor } from '#decorators/interactionRoutes';
+import type { Logger } from '@seedcord/logger';
 
 export interface RegisteredRoute<Ctor> {
     readonly kind: InteractionKind;
@@ -100,6 +101,19 @@ export class RouteRegistry<Ctor extends RoutableConstructor> {
             if (owner?.ctor !== ctor) continue;
             this.owners.delete(routeId);
             this.maps[owner.kind].delete(owner.route);
+        }
+    }
+
+    public warnMissing(
+        logger: Logger,
+        names: Iterable<string>,
+        kind: InteractionKind,
+        label: string,
+        decorator: string
+    ): void {
+        for (const name of names) {
+            if (this.maps[kind].has(name)) continue;
+            logger.warn(`${label} ${paint.sky.bold(name)} doesn't have a registered ${paint.bold(decorator)} handler.`);
         }
     }
 

@@ -1,8 +1,8 @@
 import { InteractionKind } from '@seedcord/core';
-import { HmrModuleHandler } from '@seedcord/core/hmr';
 import {
     componentKindOf,
     DispatchContext,
+    HandlerLoader,
     InteractionRun,
     InteractionMetadataKey,
     interactionMiddleware,
@@ -16,10 +16,9 @@ import { prefixOf } from '@seedcord/custom-id';
 import { SeedcordErrorCode, paint } from '@seedcord/errors';
 import { SeedcordError } from '@seedcord/errors/internal';
 import { Logger } from '@seedcord/logger';
-import { formatFilePath, hasKeys, importFiles } from '@seedcord/utils';
+import { hasKeys } from '@seedcord/utils';
 import { asError } from '@seedcord/utils/internal';
 import { Events } from 'discord.js';
-import { Envapter } from 'envapt';
 
 import { CONFIRM_DEF } from '#bot/confirm/reserved';
 import { gatewayRunConfig } from '#bot/controllers/gatewayRunConfig';
@@ -31,6 +30,7 @@ import { InteractionHandler } from '#handlers/interaction/InteractionHandler';
 import type { HandlerConstructor, InteractionMiddlewareConstructor } from '#handlers/constructors';
 import type { Core } from '#interfaces/Core';
 import type { ValidInteractionTypes } from '#src/handlers/interactionTypes';
+import type { MiddlewareKind } from '@seedcord/core';
 import type { ContextMenuLeaves, Initializeable, RouteMaps } from '@seedcord/core/internal';
 import type { InFlight } from '@seedcord/core/node/internal';
 import type { CustomIdMatcher, HmrAware, HmrUpdateEvent } from '@seedcord/types';
@@ -49,12 +49,12 @@ export class InteractionDispatcher implements Initializeable, HmrAware {
     private readonly keysToIgnore = new Set<CustomIdMatcher>();
     private readonly middlewares = new MiddlewareRegistry<InteractionMiddlewareConstructor>(interactionMiddleware);
 
-    // a reload reports on the hmr channel
-    private loading = false;
-    private readonly loadedHandlers: { name: string; from: string }[] = [];
-    private readonly loadedMiddlewares: { name: string; from: string }[] = [];
-
-    private readonly hmrHandler?: HmrModuleHandler<HandlerConstructor, InteractionMiddlewareConstructor, string[]>;
+    private readonly loader: HandlerLoader<
+        HandlerConstructor,
+        InteractionMiddlewareConstructor,
+        MiddlewareKind,
+        string[]
+    >;
 
     constructor(
         protected core: Core,
@@ -78,49 +78,41 @@ export class InteractionDispatcher implements Initializeable, HmrAware {
             ]);
         }
 
-        if (!Envapter.isDevelopment && !Envapter.isTest) return;
-        this.hmrHandler = new HmrModuleHandler({
+        this.loader = new HandlerLoader({
             handlersDir: interactionsDir,
-            ...(hasKeys(this.core.config.bot.interactions, ['middlewares']) &&
-                this.core.config.bot.interactions.middlewares && {
-                    middlewaresDir: this.core.config.bot.interactions.middlewares
-                }),
-            isHandler: this.isHandlerClass.bind(this),
-            isMiddleware: this.isMiddlewareClass.bind(this),
-            registerHandler: this.registerHandler.bind(this),
-            registerMiddleware: this.registerMiddleware.bind(this),
-            unregisterHandler: this.routes.unregister.bind(this.routes),
-            unregisterMiddleware: this.unregisterMiddleware.bind(this),
-            getArtifacts: this.routes.routesOf.bind(this.routes),
-            logger: this.logger
+            middlewaresDir: hasKeys(this.core.config.bot.interactions, ['middlewares'])
+                ? this.core.config.bot.interactions.middlewares
+                : undefined,
+            middlewares: this.middlewares,
+            logger: this.logger,
+            isHandler: (value): value is HandlerConstructor => this.isHandlerClass(value),
+            isMiddleware: (value): value is InteractionMiddlewareConstructor => this.isMiddlewareClass(value),
+            storeHandler: (ctor, from) => this.routes.register(ctor, from),
+            removeHandler: (ctor, routeIds) => this.routes.unregister(ctor, routeIds),
+            artifactsOf: (ctor) => this.routes.routesOf(ctor)
         });
     }
 
     public warnUnhandledRoutes(commandLeaves: Iterable<string>): void {
-        for (const route of commandLeaves) {
-            if (!this.maps[InteractionKind.Slash].has(route)) {
-                this.logger.warn(
-                    `Slash route ${paint.sky.bold(route)} has no registered ${paint.bold('@SlashRoute')} handler.`
-                );
-            }
-        }
+        this.routes.warnMissing(this.logger, commandLeaves, InteractionKind.Slash, 'Slash route', '@SlashRoute');
     }
 
     public warnUnhandledContextMenuRoutes(leaves: ContextMenuLeaves): void {
-        for (const name of leaves.user) {
-            if (!this.maps[InteractionKind.UserContextMenu].has(name)) {
-                this.logger.warn(
-                    `User context menu ${paint.sky.bold(name)} has no registered ${paint.bold('@ContextMenuRoute')} handler.`
-                );
-            }
-        }
-        for (const name of leaves.message) {
-            if (!this.maps[InteractionKind.MessageContextMenu].has(name)) {
-                this.logger.warn(
-                    `Message context menu ${paint.sky.bold(name)} has no registered ${paint.bold('@ContextMenuRoute')} handler.`
-                );
-            }
-        }
+        const { logger, routes } = this;
+        routes.warnMissing(
+            logger,
+            leaves.user,
+            InteractionKind.UserContextMenu,
+            'User context menu',
+            '@ContextMenuRoute'
+        );
+        routes.warnMissing(
+            logger,
+            leaves.message,
+            InteractionKind.MessageContextMenu,
+            'Message context menu',
+            '@ContextMenuRoute'
+        );
     }
 
     public async init(): Promise<void> {
@@ -128,45 +120,29 @@ export class InteractionDispatcher implements Initializeable, HmrAware {
 
         this.isInitialized = true;
 
-        const handlersDir = this.core.config.bot.interactions.path;
-        // the constructor already threw on this
-        if (!handlersDir) return;
-
-        const middlewareDir = hasKeys(this.core.config.bot.interactions, ['middlewares'])
-            ? this.core.config.bot.interactions.middlewares
-            : undefined;
-
-        this.loading = true;
-        this.loadedHandlers.length = 0;
-        this.loadedMiddlewares.length = 0;
-        try {
-            if (middlewareDir) await this.loadMiddlewares(middlewareDir);
-            await this.loadHandlers(handlersDir);
-        } finally {
-            this.loading = false;
-        }
-
+        await this.loader.load();
         this.attachToClient();
         this.reportLoad();
     }
 
     private reportLoad(): void {
         const { utils } = this.logger;
+        const { loadedHandlers, loadedMiddlewares } = this.loader;
 
         utils.summary(
             'Loaded',
-            { 'interaction handlers': this.loadedHandlers.length, middlewares: this.loadedMiddlewares.length },
+            { 'interaction handlers': loadedHandlers.length, middlewares: loadedMiddlewares.length },
             'debug'
         );
 
-        if (this.loadedMiddlewares.length > 0) {
-            utils.block('Loaded middlewares', utils.entries(this.loadedMiddlewares), 'debug');
+        if (loadedMiddlewares.length > 0) {
+            utils.block('Loaded middlewares', utils.entries(loadedMiddlewares), 'debug');
         }
 
         utils.block(
             'Loaded interaction handlers',
             [
-                ...utils.entries(this.loadedHandlers),
+                ...utils.entries(loadedHandlers),
                 ...utils.counts({
                     slash: this.maps[InteractionKind.Slash].size,
                     buttons: this.maps[InteractionKind.Button].size,
@@ -185,39 +161,6 @@ export class InteractionDispatcher implements Initializeable, HmrAware {
         );
     }
 
-    private async loadHandlers(dir: string): Promise<void> {
-        for await (const { fullPath, relativePath, imported } of importFiles(dir)) {
-            for (const val of Object.values(imported)) {
-                if (!this.isHandlerClass(val)) continue;
-                this.registerHandler(val, relativePath);
-                this.hmrHandler?.trackHandler(fullPath, val);
-            }
-        }
-    }
-
-    private async loadMiddlewares(dir: string): Promise<void> {
-        for await (const { fullPath, relativePath, imported } of importFiles(dir)) {
-            for (const val of Object.values(imported)) {
-                if (!this.isMiddlewareClass(val)) continue;
-
-                this.registerMiddleware(val, relativePath);
-                this.hmrHandler?.trackMiddleware(fullPath, val);
-            }
-        }
-    }
-
-    private registerMiddleware(middlewareCtor: InteractionMiddlewareConstructor, relativePath: string): void {
-        const metadata = this.middlewares.register(middlewareCtor);
-        if (!metadata || !this.loading) return;
-
-        // the kinds are the only place a dev sees that a middleware is scoped
-        const scope = metadata.keys ? `${metadata.priority}, ${metadata.keys.join(', ')}` : metadata.priority;
-        this.loadedMiddlewares.push({
-            name: `${middlewareCtor.name} (${String(scope)})`,
-            from: formatFilePath(relativePath)
-        });
-    }
-
     private isHandlerClass(obj: unknown): obj is HandlerConstructor {
         if (typeof obj !== 'function') return false;
         return (
@@ -233,18 +176,8 @@ export class InteractionDispatcher implements Initializeable, HmrAware {
         );
     }
 
-    private registerHandler(handlerClass: HandlerConstructor, relativePath: string): void {
-        const from = formatFilePath(relativePath);
-        if (!this.routes.register(handlerClass, from)) return;
-        if (this.loading) this.loadedHandlers.push({ name: handlerClass.name, from });
-    }
-
     public async onHmr(event: HmrUpdateEvent): Promise<void> {
-        await this.hmrHandler?.handle(event);
-    }
-
-    private unregisterMiddleware(middlewareCtor: InteractionMiddlewareConstructor): void {
-        this.middlewares.unregister(middlewareCtor);
+        await this.loader.onHmr(event);
     }
 
     private attachToClient(): void {

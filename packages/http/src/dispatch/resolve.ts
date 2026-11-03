@@ -14,9 +14,6 @@ import type { APIInteraction } from 'discord-api-types/v10';
 
 export type ResolvedRoute = RegisteredRoute<HandlerConstructor>;
 
-/** @internal */
-export type RouteMap = Map<string, ResolvedRoute>;
-
 export type RouteMaps = CoreRouteMaps<HandlerConstructor>;
 
 function commandKind(type: ApplicationCommandType): InteractionKind | null {
