@@ -9,6 +9,6 @@ export default defineConfig({
     }),
     pack: createTsdownConfig({
         entry: ['src/index.ts'],
-        deps: { neverBundle: true, alwaysBundle: ['@seedcord/brand', '@seedcord/ui/sites'] }
+        deps: { neverBundle: true, alwaysBundle: ['@seedcord/brand'] }
     })
 });

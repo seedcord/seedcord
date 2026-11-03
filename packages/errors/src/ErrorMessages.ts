@@ -325,6 +325,12 @@ const messages = {
         `The ${paint.bold('codegen()')} of the plugin attached at ${paint.sky(key)} (${paint.sky(id)}) returned ${value} at ${paint.bold(path)}. Codegen can't write that value as a type. It writes plain data, and classes or objects that a project file or the plugin's package exports. Export the value from a file, or return plain data.`,
     [SeedcordErrorCode.CliPluginCodegenConflict]: (id: string, first: string, second: string, path: string) =>
         `The plugins attached at ${paint.sky(first)} and ${paint.sky(second)} are both ${paint.bold(id)}, but their ${paint.bold('codegen()')} results differ at ${paint.bold(path)}. Every attachment of one plugin shares one type, so both have to return the same value there. Change that value in the files one of them reads, or attach the plugin once.`,
+    [SeedcordErrorCode.CliAskBadQuestion]: (minLength: number) =>
+        `${paint.bold('seedcord ask')} takes a question of at least ${minLength} characters, with a letter or a number in them. Run something like ${paint.bold('seedcord ask "how do i refuse a command"')}.`,
+    [SeedcordErrorCode.CliAskHasToWait]: (wait: string, guide: string) =>
+        `${wait} You can read the guide at ${paint.sky(guide)} in the meantime.`,
+    [SeedcordErrorCode.CliAskFailed]: (reason: string, guide: string) =>
+        `The guide search failed. ${reason}. Try again, or read the guide at ${paint.sky(guide)}.`,
     [SeedcordErrorCode.CliCodegenOutOfDate]: (outputPath: string) =>
         `${paint.path(outputPath)} is out of date. Run ${paint.bold('seedcord codegen')} and commit it.`,
     [SeedcordErrorCode.CliEdgeWithoutWorkerdCondition]: (cloudflareConfig: string, tsconfig: string) =>

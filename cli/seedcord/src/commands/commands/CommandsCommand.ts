@@ -72,11 +72,8 @@ export class CommandsCommand extends BaseCommand {
         this.prompter = prompter;
     }
 
-    public register(program: Command): void {
-        const commands = program
-            .command(this.name)
-            .description(this.description)
-            .action((_options, command) => this.openMenu(command));
+    public register(program: Command): CommandUnknownOpts {
+        const commands = this.define(program).action((_options, command) => this.openMenu(command));
 
         commands
             .command('deploy')
@@ -115,6 +112,8 @@ export class CommandsCommand extends BaseCommand {
             .addOption(allGuildsOption('Delete every command in every guild the bot is in'))
             .option('--yes', 'Delete the commands without asking')
             .action((flags, command) => this.remove(command, flags, new PurgeMode(flags.global ?? false), askPurge));
+
+        return commands;
     }
 
     private async openMenu(command: CommandUnknownOpts): Promise<void> {

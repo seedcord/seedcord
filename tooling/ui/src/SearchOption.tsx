@@ -55,7 +55,7 @@ export function SearchOption({
                 SEARCH_OPTION_BOX,
                 'text-(--text) outline-hidden transition',
                 // scrollIntoView block:'nearest' stops at this margin
-                'scroll-my-3',
+                'scroll-my-2',
                 ACTIVE,
                 className
             )}

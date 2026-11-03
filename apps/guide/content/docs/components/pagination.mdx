@@ -22,8 +22,7 @@ export const Roles = new Paginator({
         (ctx) => [...(ctx.guild?.roles.cache.values() ?? [])],
         { perPage: 15 }
     ),
-    renderItem: (role, index) => `${index + 1}. ${role.name}`,
-    ephemeral: true
+    renderItem: (role, index) => `${index + 1}. ${role.name}`
 });
 
 @ButtonRoute(Roles.cursor)
@@ -77,11 +76,11 @@ The loader receives a [`PageContext`](ref:gateway/PageContext), which carries `g
 | `source` | where one page of items comes from |
 | `renderItem` | turns one item into a line, `String(item)` when left out, ignored once `render` is set |
 | `render` | replaces the whole page, covered in [Custom rendering](/components/pagination-render) |
-| `ephemeral` | whether the first page is ephemeral, `false` by default |
+| `ephemeral` | whether the first page is ephemeral, `true` by default |
 
 {/* prettier-ignore-end */}
 
-Every nav click edits the message `start()` sent. One `ephemeral` covers the whole run.
+Every nav click edits the message `start()` sent. One `ephemeral` covers the whole run. Only the person who ran the command sees an ephemeral list, so each person browses their own copy. If you set `ephemeral: false` to post the list publicly, anyone who can see the message can click a nav button, and the click changes the page for everyone. To keep the list public and let only one person click, [page it yourself](/components/pagination-headless) with their id in the custom id, then compare it to `this.user.id` as [Who can click a button](/components/buttons#who-can-click-a-button) shows.
 
 ## Rendering each item
 

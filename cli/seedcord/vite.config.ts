@@ -12,7 +12,13 @@ export default defineConfig({
         format: ['esm'],
         deps: {
             neverBundle: true,
-            alwaysBundle: ['@seedcord/brand', '@seedcord/cli-prompts', /^@seedcord\/cli-templates/]
+            alwaysBundle: [
+                '@seedcord/brand',
+                '@seedcord/cli-prompts',
+                /^@seedcord\/cli-templates/,
+                '@seedcord/docs-search',
+                /^@seedcord\/ui/
+            ]
         }
     })
 });

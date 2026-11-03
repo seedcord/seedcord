@@ -625,6 +625,9 @@ importers:
       '@seedcord/docs-search':
         specifier: workspace:^
         version: link:../../tooling/docs-search
+      '@seedcord/errors':
+        specifier: workspace:^
+        version: link:../../packages/errors
       '@seedcord/ui':
         specifier: workspace:^
         version: link:../../tooling/ui
@@ -1078,6 +1081,9 @@ importers:
       '@seedcord/cli-templates':
         specifier: workspace:^
         version: link:../../tooling/cli-templates
+      '@seedcord/docs-search':
+        specifier: workspace:^
+        version: link:../../tooling/docs-search
       '@seedcord/eslint-config':
         specifier: workspace:^
         version: link:../../tooling/eslint-config
@@ -1093,6 +1099,9 @@ importers:
       '@seedcord/tsdown-config':
         specifier: workspace:^
         version: link:../../tooling/tsdown-config
+      '@seedcord/ui':
+        specifier: workspace:^
+        version: link:../../tooling/ui
       '@seedcord/vitest-config':
         specifier: workspace:^
         version: link:../../tooling/vitest-config
@@ -2047,12 +2056,12 @@ importers:
       '@seedcord/tsdown-config':
         specifier: workspace:^
         version: link:../tsdown-config
-      '@seedcord/ui':
-        specifier: workspace:^
-        version: link:../ui
       '@seedcord/vitest-config':
         specifier: workspace:^
         version: link:../vitest-config
+      type-fest:
+        specifier: catalog:deps
+        version: 5.10.0
 
   tooling/eslint-config:
     dependencies:

@@ -15,6 +15,7 @@
         "LICENSE"
     ],
     "type": "module",
+    "sideEffects": false,
     "types": "./dist/index.d.mts",
     "imports": {
         "#tests/*": "./tests/*.ts",
@@ -47,8 +48,8 @@
         "@seedcord/eslint-config": "workspace:^",
         "@seedcord/tsconfig": "workspace:^",
         "@seedcord/tsdown-config": "workspace:^",
-        "@seedcord/ui": "workspace:^",
-        "@seedcord/vitest-config": "workspace:^"
+        "@seedcord/vitest-config": "workspace:^",
+        "type-fest": "catalog:deps"
     },
     "engines": {
         "bun": ">=1.4.2",

@@ -1,6 +1,6 @@
 ---
 title: Buttons
-description: Answer a button click with ButtonHandler, read the values its custom id carries, and rewrite the message the click came from.
+description: Answer a button click with ButtonHandler, read the values in its custom id, update the message, and limit who can click and how often.
 ---
 
 Discord hands your bot one string when someone clicks, so which button they pressed and what it was pointed at both have to be inside it.
@@ -34,7 +34,7 @@ A click is an interaction like any other, so every [reply method](/replying) wor
 
 <Callout type="transport" only="gateway">
 
-A gateway `ButtonHandler` takes a second type argument, discord.js's `CacheType`, which defaults to `'cached'`. That default types `this.event.member` as a `GuildMember`, but seedcord doesn't check it at runtime. A button in a DM has no member, so pass `'raw'` or `CacheType` for a handler that can get one. An http `ButtonHandler` takes only the route tuple.
+A gateway `ButtonHandler` takes a second type argument, discord.js's `CacheType`, which defaults to `'cached'`. That default types `this.event.member` as a `GuildMember`, but seedcord doesn't check it at runtime. A button in a DM has no member, so pass `CacheType` for a handler that can get one. An http `ButtonHandler` takes only the route tuple.
 
 </Callout>
 
@@ -124,3 +124,101 @@ Keep two buttons in one handler when both cases need the same code first, like a
 Decoding runs once, before any case, so a wire from an [older shape](/components/stale) throws before your code executes.
 
 </Callout>
+
+## Who can click a button
+
+You posted a ticket with a **Close** button, and someone else in the channel closed it. seedcord runs your handler for every click, whoever clicked.
+
+If only one person needs the buttons, send them in [an ephemeral reply](/replying#only-the-person-who-ran-the-command-sees-it), which nobody else can see. To keep the message public, put that person's id in the custom id and compare it to the clicker.
+
+```ts twoslash title="src/handlers/CloseTicket.ts"
+import {
+    ButtonHandler,
+    ButtonRoute,
+    CustomId
+} from '@seedcord/gateway';
+// ---cut-start---
+import type { Notice } from '@seedcord/gateway';
+declare const NotYourTicket: new () => Notice;
+// ---cut-end---
+
+const CloseTicketId = new CustomId('close-ticket').snowflake(
+    'ownerId'
+);
+
+@ButtonRoute(CloseTicketId)
+export class CloseTicket extends ButtonHandler<
+    [typeof CloseTicketId]
+> {
+    public async execute(): Promise<void> {
+        const { ownerId } = this.params;
+        if (this.user.id !== ownerId) throw new NotYourTicket();
+
+        await this.update('Ticket closed.');
+    }
+}
+```
+
+`NotYourTicket` is a [`Notice`](ref:core/Notice), so seedcord [sends its refusal](/replying/throwing) to the person who clicked and leaves the message as it was.
+
+<Callout type="transport">
+    [`this.user`](ref:gateway/RepliableHandler.user) is a discord.js
+    `User` on gateway and an `APIUser` on http. Both have `id`.
+</Callout>
+
+## When someone clicks twice
+
+Each click runs your handler, so a double click can run it twice at the same moment. That's a problem if the handler gives out a reward or writes to your database.
+
+To stop the second click, call `charge` on [the rate limiter](/checks/rate-limiter) first in `execute()`, with a window that allows one use.
+
+```ts twoslash title="src/handlers/ClaimReward.ts"
+import {
+    buildKey,
+    ButtonHandler,
+    ButtonRoute,
+    CustomId
+} from '@seedcord/gateway';
+
+import type { RateLimitWindow } from '@seedcord/gateway';
+// ---cut-start---
+declare const rewards: {
+    give(rewardId: string, userId: string): Promise<void>;
+};
+// ---cut-end---
+
+const ClaimRewardId = new CustomId('claim-reward').str('rewardId');
+const ONE_CLAIM: RateLimitWindow = { windowMs: 60_000 };
+
+@ButtonRoute(ClaimRewardId)
+export class ClaimReward extends ButtonHandler<
+    [typeof ClaimRewardId]
+> {
+    public async execute(): Promise<void> {
+        const { rewardId } = this.params;
+        const key = buildKey('claim-reward', rewardId);
+        const { limited } = await this.core.rateLimiter.charge(
+            key,
+            ONE_CLAIM
+        );
+        if (limited) {
+            await this.deferUpdate();
+            return;
+        }
+
+        try {
+            await rewards.give(rewardId, this.user.id);
+        } catch (error: unknown) {
+            await this.core.rateLimiter.reset(key);
+            throw error;
+        }
+        await this.update('Claimed.');
+    }
+}
+```
+
+`charge` counts one click at a time, and `ONE_CLAIM` leaves out `limit`, which defaults to one use. The second click gets `limited` as `true`, and [`deferUpdate()`](ref:gateway/ComponentHandler.deferUpdate) answers it without changing the message. That click still shows a result, because `update()` on the first click replaces the button with `Claimed.` for everyone. [`buildKey`](ref:core/buildKey) includes `rewardId`, so claiming one reward doesn't block the next one. If `rewards.give` throws, `reset` clears the charge so that the next click can try again.
+
+`ONE_CLAIM` expires after a minute, so it only stops a double click. To stop a second claim for later, keep a record of who claimed in your database, or in [the kv store](/built-ins/) with a driver.
+
+A [`Cooldown`](ref:core/Cooldown) gate also refuses the second click, but it shows a refusal card and counts every use of the route per person, server, or channel. `charge` with your own key limits one reward and answers the second click silently.

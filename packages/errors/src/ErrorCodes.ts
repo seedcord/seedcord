@@ -321,6 +321,12 @@ export enum SeedcordErrorCode {
     CliPluginCodegenValue = 3145,
     /** Two attachments of one plugin class returned different values at one key from `codegen()`. */
     CliPluginCodegenConflict = 3146,
+    /** The text passed to `seedcord ask` isn't a question the guide search accepts. */
+    CliAskBadQuestion = 3147,
+    /** The guide search refused `seedcord ask` until a search limit resets. */
+    CliAskHasToWait = 3148,
+    /** The guide search failed for a reason other than a search limit. */
+    CliAskFailed = 3149,
 
     /** A flag answers a question that the earlier answers skip. */
     CreateFlagNotApplicable = 3201,

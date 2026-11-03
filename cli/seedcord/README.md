@@ -50,6 +50,7 @@ Run it through your project's scripts, like `pnpm dev`. A global `seedcord` thro
 | `seedcord codegen` | writes the typed augmentations for your commands and config |
 | `seedcord commands` | deploys, lists and cleans up your commands on Discord |
 | `seedcord make` | writes new files from one of your Handlebars templates, or one an installed plugin ships |
+| `seedcord ask` | searches the guide for a question, a pasted error, or an error code, and works outside a project |
 
 <!-- prettier-ignore-end -->
 

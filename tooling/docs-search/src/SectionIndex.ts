@@ -8,8 +8,10 @@ import type { ReadAsset } from '#src/readAsset';
 
 const VERSION_CHARS = 16;
 const HEX = 16;
-// measured on every 10th guide section: real questions scored 0.53 to 0.69, keyboard mash at most 0.26
-const MIN_SCORE = 0.3;
+
+// this kinda messes up in weird places: "list 50 items" scores 0.28 and "zzzzz" 0.27
+// but a weak result for junk costs less than nothing for a real question so its fine
+const MIN_SCORE = 0.25;
 
 async function versionOf(...files: (string | ArrayBuffer)[]): Promise<string> {
     const digest = new Uint8Array(await crypto.subtle.digest('SHA-256', await new Blob(files).arrayBuffer()));

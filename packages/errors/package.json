@@ -41,6 +41,12 @@
                 "types": "./dist/internal.index.d.mts",
                 "default": "./dist/internal.index.mjs"
             }
+        },
+        "./codes": {
+            "import": {
+                "types": "./dist/ErrorCodes.d.mts",
+                "default": "./dist/ErrorCodes.mjs"
+            }
         }
     },
     "publishConfig": {

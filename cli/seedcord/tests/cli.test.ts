@@ -22,19 +22,31 @@ function jsonLine(line: string): unknown {
     }
 }
 
-async function codegenIn(projectDir: string): Promise<{ code: number; stderr: string }> {
-    return run(process.execPath, [BIN, 'codegen'], { cwd: projectDir }).then(
+async function cliIn(projectDir: string, ...args: string[]): Promise<{ code: number; stderr: string }> {
+    return run(process.execPath, [BIN, ...args], { cwd: projectDir }).then(
         (ok) => ({ code: 0, stderr: ok.stderr }),
         (failed: { code: number; stderr: string }) => ({ code: failed.code, stderr: failed.stderr })
     );
 }
 
+const codegenIn = (projectDir: string): Promise<{ code: number; stderr: string }> => cliIn(projectDir, 'codegen');
+
 describe('the seedcord CLI', () => {
-    it('refuses to run in a project with no seedcord installed', async () => {
-        const { code, stderr } = await codegenIn(tempProject());
+    it.each([[['codegen']], [['commands', 'list']]])(
+        'refuses to run %j in a project with no seedcord installed',
+        async (args) => {
+            const { code, stderr } = await cliIn(tempProject(), ...args);
+
+            expect(code).toBe(1);
+            expect(stderr).toContain(`[${SeedcordErrorCode.CliDependencyMissing}]`);
+        }
+    );
+
+    it.each(['!!!', '--!'])('runs ask outside a project and reads %s as the question', async (question) => {
+        const { code, stderr } = await cliIn(tempProject(), 'ask', question);
 
         expect(code).toBe(1);
-        expect(stderr).toContain(`[${SeedcordErrorCode.CliDependencyMissing}]`);
+        expect(stderr).toContain(`[${SeedcordErrorCode.CliAskBadQuestion}]`);
     });
 
     it('refuses to run from an install other than the project', async () => {

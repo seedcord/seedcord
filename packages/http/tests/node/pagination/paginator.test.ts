@@ -81,14 +81,14 @@ function textLines(container?: APIContainerComponent): string[] {
 }
 
 describe('http Paginator.start', () => {
-    it('sends page 0 with the components-v2 flag', async () => {
+    it('sends page 0 as ephemeral with the components-v2 flag', async () => {
         const post = vi.fn().mockResolvedValue({ resource: { message: { id: 'm-1' } } });
 
         await pagerFor().start(stubHandler(post));
 
         const { data } = callbackBody(post);
         expect((data?.flags ?? 0) & MessageFlags.IsComponentsV2).toBeTruthy();
-        expect((data?.flags ?? 0) & MessageFlags.Ephemeral).toBeFalsy();
+        expect((data?.flags ?? 0) & MessageFlags.Ephemeral).toBeTruthy();
         expect(textLines(data?.components?.[0])).toEqual(['a\nb']);
     });
 

@@ -128,22 +128,27 @@ describe('useRovingList', () => {
         expect(result.current.active).toBe(matches[1]);
     });
 
-    it('moves between group starts with Tab and Shift+Tab, wrapping at either end', () => {
+    it('moves between group starts with Tab and Shift+Tab, and leaves Tab to the browser at either end', () => {
         const groups = [
             { items: ['a', 'b'], loading: false },
             { items: ['c', 'd'], loading: false }
         ];
         const { result } = renderHook(() => useRovingList({ query: 'q', groups, onSelect: vi.fn() }));
+        const preventDefault = vi.fn();
 
         press(result, 'ArrowDown', 'Tab');
         expect(result.current.active).toBe('c');
+        expect(result.current.hasGroups).toBe(true);
 
-        press(result, 'Tab');
-        expect(result.current.active).toBe('a');
+        act(() => result.current.onKeyDown(keyEvent('Tab', false, preventDefault)));
+        expect(result.current.active).toBe('c');
 
         press(result, 'Shift+Tab');
-        expect(result.current.active).toBe('c');
-        expect(result.current.hasGroups).toBe(true);
+        expect(result.current.active).toBe('a');
+
+        act(() => result.current.onKeyDown(keyEvent('Tab', true, preventDefault)));
+        expect(result.current.active).toBe('a');
+        expect(preventDefault).not.toHaveBeenCalled();
     });
 
     it('leaves Tab to the browser when there is one group', () => {

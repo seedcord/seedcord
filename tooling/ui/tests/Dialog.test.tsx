@@ -29,6 +29,8 @@ const DIALOGS: [string, Opener][] = [
                 title="Keys"
                 description="Every key"
                 field={<input aria-label="Query" />}
+                listExpanded={false}
+                footer={null}
             />
         )
     ]
