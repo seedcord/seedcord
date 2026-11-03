@@ -3,6 +3,7 @@ import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 
 import { SeedcordErrorCode } from '@seedcord/errors';
+import { SeedcordTypeError } from '@seedcord/errors/internal';
 import { setDevFiles } from '@seedcord/utils/internal';
 import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
 
@@ -59,6 +60,18 @@ describe('HmrModuleHandler', () => {
         rmSync(dir, { recursive: true, force: true });
     });
 
+    function handlerWithSpies(): { withSpies: HmrModuleHandler<TestHandler>; spies: LoggerSpy } {
+        const { logger, spies } = fakeLogger();
+        const withSpies = new HmrModuleHandler<TestHandler>({
+            handlersDir,
+            isHandler,
+            registerHandler,
+            unregisterHandler,
+            logger
+        });
+        return { withSpies, spies };
+    }
+
     it('ignores a sibling directory that shares the handlers-dir prefix', async () => {
         const siblingDir = join(dir, 'commands-extra');
         mkdirSync(siblingDir);
@@ -108,14 +121,7 @@ describe('HmrModuleHandler', () => {
     );
 
     it('skips a created directory without logging a failed reload', async () => {
-        const { logger, spies } = fakeLogger();
-        const withSpies = new HmrModuleHandler<TestHandler>({
-            handlersDir,
-            isHandler,
-            registerHandler,
-            unregisterHandler,
-            logger
-        });
+        const { withSpies, spies } = handlerWithSpies();
         const newDir = join(handlersDir, 'nested');
         mkdirSync(newDir);
 
@@ -156,96 +162,77 @@ describe('HmrModuleHandler', () => {
         expect(registerHandler).toHaveBeenCalledTimes(1);
     });
 
-    it('reports the reload with how long it took', async () => {
-        const { logger, spies } = fakeLogger();
-        const timed = new HmrModuleHandler<TestHandler>({
-            handlersDir,
-            isHandler,
-            registerHandler,
-            unregisterHandler,
-            logger
+    describe('log lines', () => {
+        it('reports the reload with how long it took', async () => {
+            const { logger, spies } = fakeLogger();
+            const timed = new HmrModuleHandler<TestHandler>({
+                handlersDir,
+                isHandler,
+                registerHandler,
+                unregisterHandler,
+                logger
+            });
+            const file = join(handlersDir, 'Ping.mjs');
+            writeFileSync(file, 'export class Ping {}\n');
+
+            await timed.handle({ file, type: 'update' });
+
+            const line = spies.debug.mock.calls.map(([message]) => String(message)).find((m) => m.includes('Reloaded'));
+            expect(line).toMatch(/in \d+ms/);
         });
-        const file = join(handlersDir, 'Ping.mjs');
-        writeFileSync(file, 'export class Ping {}\n');
 
-        await timed.handle({ file, type: 'update' });
+        it('reports a new file as registered', async () => {
+            const { withSpies, spies } = handlerWithSpies();
+            const file = join(handlersDir, 'Ping.mjs');
+            writeFileSync(file, 'export class Ping {}\n');
 
-        const line = spies.debug.mock.calls.map(([message]) => String(message)).find((m) => m.includes('Reloaded'));
-        expect(line).toMatch(/in \d+ms/);
-    });
+            await withSpies.handle({ file, type: 'create' });
 
-    it('reports a new file as registered', async () => {
-        const { logger, spies } = fakeLogger();
-        const withSpies = new HmrModuleHandler<TestHandler>({
-            handlersDir,
-            isHandler,
-            registerHandler,
-            unregisterHandler,
-            logger
+            expect(debugLines(spies).some((m) => m.includes('Registered') && m.includes('Ping'))).toBe(true);
         });
-        const file = join(handlersDir, 'Ping.mjs');
-        writeFileSync(file, 'export class Ping {}\n');
 
-        await withSpies.handle({ file, type: 'create' });
+        it('reports a deleted file as unloaded', async () => {
+            const { withSpies, spies } = handlerWithSpies();
+            const file = join(handlersDir, 'Ping.mjs');
+            withSpies.trackHandler(file, FixtureHandler);
 
-        expect(debugLines(spies).some((m) => m.includes('Registered') && m.includes('Ping'))).toBe(true);
-    });
+            await withSpies.handle({ file, type: 'delete' });
 
-    it('reports a deleted file as unloaded', async () => {
-        const { logger, spies } = fakeLogger();
-        const withSpies = new HmrModuleHandler<TestHandler>({
-            handlersDir,
-            isHandler,
-            registerHandler,
-            unregisterHandler,
-            logger
+            expect(debugLines(spies).some((m) => m.includes('Unloaded') && m.includes('FixtureHandler'))).toBe(true);
         });
-        const file = join(handlersDir, 'Ping.mjs');
-        withSpies.trackHandler(file, FixtureHandler);
 
-        await withSpies.handle({ file, type: 'delete' });
+        it('reports one line with the file count when a save fans out', async () => {
+            const { withSpies, spies } = handlerWithSpies();
+            const shared = join(handlersDir, 'shared.mjs');
+            const first = join(handlersDir, 'Ping.mjs');
+            const second = join(handlersDir, 'Pong.mjs');
+            writeFileSync(shared, 'export const value = 1;\n');
+            writeFileSync(first, 'export class Ping {}\n');
+            writeFileSync(second, 'export class Pong {}\n');
 
-        expect(debugLines(spies).some((m) => m.includes('Unloaded') && m.includes('FixtureHandler'))).toBe(true);
-    });
+            await withSpies.handle({ file: shared, type: 'update', affectedModules: [shared, first, second] });
 
-    it('reports one line with the file count when a save fans out', async () => {
-        const { logger, spies } = fakeLogger();
-        const withSpies = new HmrModuleHandler<TestHandler>({
-            handlersDir,
-            isHandler,
-            registerHandler,
-            unregisterHandler,
-            logger
+            const lines = debugLines(spies).filter((m) => m.includes('Reloaded'));
+            expect(lines).toHaveLength(1);
+            expect(lines[0]).toContain('2 files');
         });
-        const shared = join(handlersDir, 'shared.mjs');
-        const first = join(handlersDir, 'Ping.mjs');
-        const second = join(handlersDir, 'Pong.mjs');
-        writeFileSync(shared, 'export const value = 1;\n');
-        writeFileSync(first, 'export class Ping {}\n');
-        writeFileSync(second, 'export class Pong {}\n');
 
-        await withSpies.handle({ file: shared, type: 'update', affectedModules: [shared, first, second] });
+        it('stays quiet when the file registers nothing', async () => {
+            const { logger, spies } = fakeLogger();
+            const timed = new HmrModuleHandler<TestHandler>({
+                handlersDir,
+                isHandler,
+                registerHandler,
+                unregisterHandler,
+                logger
+            });
+            const file = join(handlersDir, 'Empty.mjs');
+            writeFileSync(file, 'export const value = 1;\n');
 
-        const lines = debugLines(spies).filter((m) => m.includes('Reloaded'));
-        expect(lines).toHaveLength(1);
-        expect(lines[0]).toContain('2 files');
-    });
+            await timed.handle({ file, type: 'update' });
 
-    it('stays quiet when the file registers nothing', async () => {
-        const { logger, spies } = fakeLogger();
-        const timed = new HmrModuleHandler<TestHandler>({
-            handlersDir,
-            isHandler,
-            registerHandler,
-            unregisterHandler,
-            logger
+            expect(spies.debug.mock.calls.some(([message]) => String(message).includes('Reloaded'))).toBe(false);
         });
-        const file = join(handlersDir, 'Empty.mjs');
-        writeFileSync(file, 'export const value = 1;\n');
-
-        await timed.handle({ file, type: 'update' });
-
-        expect(spies.debug.mock.calls.some(([message]) => String(message).includes('Reloaded'))).toBe(false);
     });
 
     it('unloads a tracked handler on delete', async () => {
@@ -267,6 +254,73 @@ describe('HmrModuleHandler', () => {
         expect(unregisterHandler).toHaveBeenCalledWith(FixtureHandler, undefined);
     });
 
+    describe('a file that fails because another file holds its route', () => {
+        let owner: TestHandler | undefined;
+        let oldFile: string;
+        let newFile: string;
+
+        beforeEach(() => {
+            owner = undefined;
+            registerHandler.mockImplementation((ctor) => {
+                if (owner && owner !== ctor) {
+                    throw new SeedcordTypeError(SeedcordErrorCode.CoreDuplicateName, ['route', 'slash:versions']);
+                }
+                owner = ctor;
+            });
+            unregisterHandler.mockImplementation((ctor) => {
+                if (owner === ctor) owner = undefined;
+            });
+            oldFile = join(handlersDir, 'Old.mjs');
+            newFile = join(handlersDir, 'Versions.mjs');
+            writeFileSync(oldFile, 'export class Old {}\n');
+            writeFileSync(newFile, 'export class Versions {}\n');
+        });
+
+        it('loads once the other file unloads', async () => {
+            await handler.handle({ file: oldFile, type: 'update' });
+            await handler.handle({ file: newFile, type: 'create' });
+            expect(owner?.name).toBe('Old');
+
+            await handler.handle({ file: oldFile, type: 'delete' });
+
+            expect(owner?.name).toBe('Versions');
+        });
+
+        it('stops retrying once a save of the file itself loads it', async () => {
+            await handler.handle({ file: oldFile, type: 'update' });
+            await handler.handle({ file: newFile, type: 'create' });
+            owner = undefined;
+            await handler.handle({ file: newFile, type: 'update' });
+            const other = join(handlersDir, 'Other.mjs');
+            writeFileSync(other, 'export const value = 1;\n');
+            registerHandler.mockClear();
+
+            await handler.handle({ file: other, type: 'update' });
+
+            expect(registerHandler).not.toHaveBeenCalled();
+        });
+
+        it('logs one failure per save while the other file still holds the route', async () => {
+            const { withSpies, spies } = handlerWithSpies();
+            await withSpies.handle({ file: oldFile, type: 'update' });
+
+            await withSpies.handle({ file: newFile, type: 'create' });
+
+            expect(spies.error).toHaveBeenCalledTimes(1);
+        });
+
+        it('leaves a file alone when it failed for another reason', async () => {
+            const { withSpies, spies } = handlerWithSpies();
+            writeFileSync(newFile, 'export class Versions {\n');
+            await withSpies.handle({ file: newFile, type: 'create' });
+            await withSpies.handle({ file: oldFile, type: 'update' });
+
+            await withSpies.handle({ file: oldFile, type: 'delete' });
+
+            expect(spies.error).toHaveBeenCalledTimes(1);
+        });
+    });
+
     it('restores the last-good handler when a reload fails', async () => {
         const file = join(handlersDir, 'Broken.mjs');
         handler.trackHandler(file, FixtureHandler);
@@ -279,14 +333,7 @@ describe('HmrModuleHandler', () => {
     });
 
     it('does not log a rollback for a file that had no working version', async () => {
-        const { logger, spies } = fakeLogger();
-        const withSpies = new HmrModuleHandler<TestHandler>({
-            handlersDir,
-            isHandler,
-            registerHandler,
-            unregisterHandler,
-            logger
-        });
+        const { withSpies, spies } = handlerWithSpies();
         const file = join(handlersDir, 'Fresh.mjs');
         writeFileSync(file, "throw new Error('boom');\n");
 
@@ -308,14 +355,7 @@ describe('HmrModuleHandler', () => {
     });
 
     it('logs CoreVitePluginThrew when a plugin from vitePlugins throws during a reload', async () => {
-        const { logger, spies } = fakeLogger();
-        const withSpies = new HmrModuleHandler<TestHandler>({
-            handlersDir,
-            isHandler,
-            registerHandler,
-            unregisterHandler,
-            logger
-        });
+        const { withSpies, spies } = handlerWithSpies();
         const file = join(handlersDir, 'Shop.mjs');
         const utils = import.meta.resolve('@seedcord/utils/internal');
         const thrownBy = { plugin: 'shop-loader', hook: 'load', configFile: join(dir, 'seedcord.config.ts') };

@@ -1,6 +1,6 @@
 import { pathToFileURL } from 'node:url';
 
-import { paint } from '@seedcord/errors';
+import { isSeedcordError, paint, SeedcordErrorCode } from '@seedcord/errors';
 import { formatFilePath } from '@seedcord/utils';
 import { botFolder, vitePluginThrew } from '@seedcord/utils/internal';
 
@@ -40,6 +40,8 @@ interface HmrModuleHandlerOptions<THandler, TMiddleware = void, TArtifacts = unk
 export class HmrModuleHandler<THandler, TMiddleware = void, TArtifacts = unknown> {
     private readonly store: HmrStore<THandler, TMiddleware, TArtifacts>;
     private readonly options: HmrModuleHandlerOptions<THandler, TMiddleware, TArtifacts>;
+    // a moved handler's new file can load before its old file unloads
+    private readonly blockedFiles = new Set<string>();
 
     constructor(options: HmrModuleHandlerOptions<THandler, TMiddleware, TArtifacts>) {
         this.options = { ...options, logger: options.logger.withChannel('hmr') };
@@ -53,8 +55,23 @@ export class HmrModuleHandler<THandler, TMiddleware = void, TArtifacts = unknown
         };
     }
 
-    /** Unloads or reloads the modules affected by an {@link HmrUpdateEvent}, scoped to the handler and middleware directories. */
+    /**
+     * Unloads or reloads the modules affected by an {@link HmrUpdateEvent}, scoped to the handler and middleware directories.
+     * Then retries every file that failed earlier because another file defined the same name.
+     */
     public async handle(event: HmrUpdateEvent): Promise<void> {
+        const rollbackEnabled = event.rollback ?? true;
+        const waiting = [...this.blockedFiles].filter((file) => file !== event.file);
+        this.blockedFiles.clear();
+        await this.apply(event, rollbackEnabled);
+
+        for (const file of waiting) {
+            const names = await this.reloadWithRollback(file, rollbackEnabled);
+            this.report('Registered', names, [file]);
+        }
+    }
+
+    private async apply(event: HmrUpdateEvent, rollbackEnabled: boolean): Promise<void> {
         const { file, affectedModules, type } = event;
 
         if (type === 'delete' || type === 'deleteDir') {
@@ -65,7 +82,6 @@ export class HmrModuleHandler<THandler, TMiddleware = void, TArtifacts = unknown
         // a directory is never importable. its files arrive as their own create events
         if (type === 'createDir') return;
 
-        const rollbackEnabled = event.rollback ?? true;
         const filesToReload = affectedModules && affectedModules.length > 0 ? affectedModules : [file];
 
         const startedAt = Date.now();
@@ -195,6 +211,9 @@ export class HmrModuleHandler<THandler, TMiddleware = void, TArtifacts = unknown
             return names;
         } catch (error) {
             logger.error(`Failed to reload file: ${formatFilePath(file)}`, vitePluginThrew(error) ?? error);
+            if (isSeedcordError(error, 'SeedcordTypeError', SeedcordErrorCode.CoreDuplicateName)) {
+                this.blockedFiles.add(file);
+            }
             return null;
         }
     }
