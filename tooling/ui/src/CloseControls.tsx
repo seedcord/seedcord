@@ -13,10 +13,13 @@ export function CloseControls({ onClose, label }: { onClose: () => void; label: 
         <>
             <Button
                 variant="ghost"
-                size="icon"
+                size="none"
                 onClick={onClose}
                 aria-label={label}
-                className={cn('text-subtle -mr-2.5 size-9 rounded-md hover:text-(--text) sm:hidden')}
+                className={cn(
+                    'text-subtle relative border-0 hover:bg-transparent hover:text-(--text) sm:hidden',
+                    'after:absolute after:-inset-2.5'
+                )}
             >
                 <Icon icon={X} size={16} aria-hidden />
             </Button>

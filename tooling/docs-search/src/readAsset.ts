@@ -2,8 +2,24 @@ export type ReadAsset = (path: string) => Promise<Response>;
 
 const fetchPath: ReadAsset = (path) => fetch(path);
 
+export class SiteUnreachable extends Error {
+    constructor(path: string, cause: TypeError) {
+        super(`${path} failed to load because the request never reached the server`, { cause });
+    }
+}
+
+async function requestReachingServer(path: string, read: ReadAsset): Promise<Response> {
+    try {
+        return await read(path);
+    } catch (error) {
+        // fetch rejects with a TypeError when the request never reaches the server
+        if (error instanceof TypeError) throw new SiteUnreachable(path, error);
+        throw error;
+    }
+}
+
 export async function readAsset(path: string, read: ReadAsset = fetchPath): Promise<Response> {
-    const response = await read(path);
+    const response = await requestReachingServer(path, read);
     if (!response.ok) throw new Error(`${path} failed to load with status ${response.status}`);
     return response;
 }

@@ -641,6 +641,9 @@ importers:
       '@seedcord/docs-search':
         specifier: workspace:^
         version: link:../../tooling/docs-search
+      '@seedcord/errors':
+        specifier: workspace:^
+        version: link:../../packages/errors
       '@seedcord/ui':
         specifier: workspace:^
         version: link:../../tooling/ui
@@ -2039,6 +2042,9 @@ importers:
       '@seedcord/vitest-config':
         specifier: workspace:^
         version: link:../vitest-config
+      type-fest:
+        specifier: catalog:deps
+        version: 5.10.0
 
   tooling/eslint-config:
     dependencies:

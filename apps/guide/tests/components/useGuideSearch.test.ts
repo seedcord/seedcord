@@ -101,7 +101,7 @@ describe('useGuideSearch', () => {
     it('keeps the same match rows while related results arrive', async () => {
         const { answer } = serving([Response.json(SECTIONS)]);
         const search = await freshSearch();
-        const { result } = renderHook(() => search('cooldown', true));
+        const { result } = renderHook(() => search('cooldown', true).groups);
         await act(() => vi.advanceTimersByTimeAsync(0));
         const [before] = matchedRows(result.current);
 
@@ -115,7 +115,7 @@ describe('useGuideSearch', () => {
     it('says nothing matched once every group comes back empty', async () => {
         serving([Response.json(SECTIONS)]);
         const search = await freshSearch();
-        const { result } = renderHook(() => search('z', true));
+        const { result } = renderHook(() => search('z', true).groups);
         await act(() => vi.advanceTimersByTimeAsync(0));
 
         expect(emptyMessage('z', result.current)).toBe('No matches for “z”.');
@@ -123,7 +123,7 @@ describe('useGuideSearch', () => {
 
     it('shows related results only for the question typed now', async () => {
         const { answer } = serving();
-        const { result, rerender } = renderHook(({ typed }) => useGuideSearch(typed, true), {
+        const { result, rerender } = renderHook(({ typed }) => useGuideSearch(typed, true).groups, {
             initialProps: { typed: 'cooldown' }
         });
         await pauseTyping();
@@ -136,6 +136,23 @@ describe('useGuideSearch', () => {
         await pauseTyping();
         await answer('kysely');
         expect(shown(result.current)).toEqual([{ label: 'Related', status: 'done', paths: ['/plugins/kysely'] }]);
+    });
+
+    it('reads the error codes from what is typed now, without waiting for an answer', () => {
+        serving();
+        const { result, rerender } = renderHook(({ typed }) => useGuideSearch(typed, true), {
+            initialProps: { typed: 'what does 3102 mean' }
+        });
+        const mention = { code: 3102, name: 'CliConfigNotFound' };
+        expect(result.current.codes).toMatchObject({ swapped: [], hints: [mention] });
+
+        rerender({ typed: 'error 3102' });
+        expect(result.current.codes).toMatchObject({ swapped: [mention], hints: [] });
+
+        for (const typed of ['what', '']) {
+            rerender({ typed });
+            expect(result.current.codes).toMatchObject({ swapped: [], hints: [] });
+        }
     });
 
     it('cancels the request for a question the reader typed past', async () => {
@@ -152,7 +169,7 @@ describe('useGuideSearch', () => {
 
     it('says why related results failed, asks again on the next open, and keeps an answer it has', async () => {
         const { answer, signals } = serving();
-        const { result, rerender } = renderHook(({ typed, open }) => useGuideSearch(typed, open), {
+        const { result, rerender } = renderHook(({ typed, open }) => useGuideSearch(typed, open).groups, {
             initialProps: { typed: 'cooldown', open: true }
         });
         await pauseTyping();
@@ -177,10 +194,23 @@ describe('useGuideSearch', () => {
         expect(signals.get('kysely')).toBe(answered);
     });
 
+    it('blames the network only when the request never reached the server', async () => {
+        const { answer } = serving();
+        const { result } = renderHook(() => useGuideSearch('cooldown', true).groups);
+        await pauseTyping();
+        await answer('cooldown', Response.json({ error: 'not a list of hits' }));
+
+        expect(noticeOf(result.current, 'Related')).toBe(
+            'Related results are unavailable right now. Close and reopen search to try again.'
+        );
+    });
+
     it('loads the guide sections once the dialog opens, and again on the next open after a failure', async () => {
         const { sectionLoads } = serving([new Response(null, { status: 503 }), Response.json(SECTIONS)]);
         const search = await freshSearch();
-        const { result, rerender } = renderHook(({ open }) => search('cool', open), { initialProps: { open: false } });
+        const { result, rerender } = renderHook(({ open }) => search('cool', open).groups, {
+            initialProps: { open: false }
+        });
         await act(() => vi.advanceTimersByTimeAsync(0));
         expect(sectionLoads()).toBe(0);
 

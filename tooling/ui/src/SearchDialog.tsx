@@ -15,8 +15,9 @@ import type { Transition } from 'motion/react';
 import type { ReactElement, ReactNode, RefObject } from 'react';
 
 const HEIGHT_TRANSITION: Transition = { duration: 0.2, ease: [...easeOutStrong] };
-const EDGE = tw`px-2`;
-const DIALOG_CARD = tw`mx-auto flex max-h-[78vh] w-full max-w-xl flex-col bg-(--bg-dim) text-(--text) transition sm:max-w-2xl md:max-w-3xl`;
+const EDGE = tw`px-(--field-inset)`;
+const DIALOG_POSITION = tw`fixed inset-0 z-70 flex items-start justify-center px-4 pt-(--dialog-top) pb-8 [--dialog-top:--spacing(20)] sm:px-6 sm:[--dialog-top:--spacing(24)] md:pb-12 md:[--dialog-top:--spacing(28)] lg:pb-16 lg:[--dialog-top:--spacing(32)]`;
+const DIALOG_CARD = tw`mx-auto flex max-h-[78vh] w-full max-w-xl flex-col bg-(--bg-dim) text-(--text) transition [--field-inset:--spacing(2)] sm:max-w-2xl md:max-w-3xl`;
 
 export interface SearchDialogScroll {
     toTop: () => void;
@@ -129,7 +130,7 @@ interface FieldAreaProps {
 function FieldArea({ note, lineShown, children }: FieldAreaProps): ReactElement {
     return (
         <div className={cn('relative shrink-0')}>
-            <div className={cn(EDGE, 'py-2')}>{children}</div>
+            <div className={cn(EDGE, 'py-(--field-inset)')}>{children}</div>
             <AnimatePresence initial={false}>
                 {note === undefined ? null : (
                     <m.div
@@ -140,11 +141,20 @@ function FieldArea({ note, lineShown, children }: FieldAreaProps): ReactElement 
                         transition={HEIGHT_TRANSITION}
                         className={cn(
                             'overflow-hidden border-(--border)',
-                            'sm:absolute sm:-inset-x-px sm:bottom-full sm:-mb-2 sm:min-h-2.25 sm:rounded-t-md',
-                            'sm:border sm:border-b-0 sm:bg-(--bg-dim)'
+                            'sm:absolute sm:-inset-x-px sm:bottom-full sm:-mb-(--field-inset) sm:rounded-t-md',
+                            'sm:min-h-[calc(var(--field-inset)+1px)] sm:border sm:border-b-0 sm:bg-(--bg-dim)'
                         )}
                     >
-                        <div className={cn(EDGE, 'pb-2 sm:pt-2')}>{note}</div>
+                        <div
+                            className={cn(
+                                EDGE,
+                                'pb-(--field-inset) sm:pt-(--field-inset)',
+                                'max-h-[calc(var(--dialog-top)+var(--field-inset)/2)] overflow-y-auto overscroll-contain',
+                                'mask-[linear-gradient(black_calc(100%-var(--field-inset)),transparent)]'
+                            )}
+                        >
+                            {note}
+                        </div>
                     </m.div>
                 )}
             </AnimatePresence>
@@ -209,10 +219,7 @@ export function SearchDialog({
                     aria-modal
                     {...focusReturn}
                     data-command-content
-                    className={cn(
-                        'fixed inset-0 z-70 flex items-start justify-center px-4 pt-20 pb-8',
-                        'sm:px-6 sm:pt-24 md:pt-28 md:pb-12 lg:pt-32 lg:pb-16'
-                    )}
+                    className={DIALOG_POSITION}
                     onInteractOutside={(event) => {
                         if (isWithinPopover(event.detail.originalEvent.target)) {
                             event.preventDefault();
