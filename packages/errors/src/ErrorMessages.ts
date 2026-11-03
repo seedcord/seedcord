@@ -78,7 +78,7 @@ const messages = {
     [SeedcordErrorCode.CorePathOutsideRoot]: (path: string, root: string) =>
         `${paint.path(path)} is outside ${paint.bold('root')} (${paint.path(root)}). ${paint.bold('seedcord build')} bundles only the files under ${paint.bold('root')}. Move it under ${paint.bold('root')}, or set ${paint.bold('root')} in seedcord.config.ts to a folder that holds it.`,
     [SeedcordErrorCode.CoreDirectoryRootUnknown]: (dir: string) =>
-        `${paint.path(dir)} is relative to ${paint.bold('root')}, but nothing set ${paint.bold('root')} in this process. The ${paint.bold('seedcord')} CLI sets it, but a plain script or a test doesn't. Pass an absolute path instead, like ${paint.sky(`resolve(import.meta.dirname, '${dir}')`)}.`,
+        `${paint.path(dir)} is relative to ${paint.bold('root')}, but nothing set ${paint.bold('root')} in this process. The ${paint.bold('seedcord')} CLI sets it, but a plain script or a test doesn't. Pass an absolute path instead, like ${paint.sky(`resolve(import.meta.dirname, '${dir}')`)}. If you ran a file from your build folder, run ${paint.path('index.mjs')} from that folder instead.`,
     [SeedcordErrorCode.CoreDirectoryNotBuilt]: (dir: string, root: string) =>
         `When ${paint.bold('seedcord build')} ran, ${paint.path(dir)} was neither a folder under ${paint.bold('root')} (${paint.path(root)}) nor one listed in ${paint.bold('files')}, so the build holds none of its files. Create the folder, then build again.`,
     [SeedcordErrorCode.CoreDirectoryNotListed]: (dir: string) =>
@@ -91,6 +91,8 @@ const messages = {
         `The driver in ${paint.bold('config.kv')} failed to ${operation} ${paint.sky(key)}. Check that the storage it connects to is reachable.`,
     [SeedcordErrorCode.CoreBotMemberMissing]: (guildId: string) =>
         `The member cache of guild ${paint.sky(guildId)} doesn't hold the bot's member, so seedcord can't read the bot's permissions there. If ${paint.bold('clientOptions.makeCache')} limits ${paint.bold('GuildMemberManager')}, keep the bot's member with ${paint.sky('keepOverLimit: (member) => member.id === member.client.user.id')}.`,
+    [SeedcordErrorCode.CoreBuiltModuleRanDirectly]: () =>
+        `A module from your build read its path from ${paint.bold('import.meta')}, but nothing set that path because ${paint.path('index.mjs')} didn't run first. Run ${paint.path('index.mjs')} instead of the module, like ${paint.bold('node dist/index.mjs')}.`,
     [SeedcordErrorCode.CorePluginKvOutsideAttach]: (plugin: string) =>
         `${paint.bold(plugin)} read ${paint.bold('this.kv')} on an instance that ${paint.bold('attach()')} didn't build. ${paint.bold('this.kv')} stores a plugin's records under its attach key, which only ${paint.bold('attach()')} gives it. Attach the class with ${paint.bold(`seedcord.attach('key', ${plugin})`)}.`,
     [SeedcordErrorCode.CorePluginGroupTaken]: (head: string, key: string) =>

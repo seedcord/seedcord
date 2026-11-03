@@ -1,5 +1,11 @@
 # eslint-plugin-discordjs
 
+## 0.2.1-next.0
+
+### 🩹 Patch
+
+- Updated some documentation. ([`bb8ee7c`](https://github.com/seedcord/seedcord/commit/bb8ee7cfcfedf4b70765ca547f191b68958553fa))
+
 ## 0.2.0
 
 ### 💥 Breaking

@@ -12,8 +12,7 @@ import { renderError } from '#core/output/renderError';
 import { widthOf } from '#core/output/terminal';
 import { assertProjectInstall } from '#core/project/assertProjectInstall';
 import { addVerboseOption, isVerbose } from '#core/verbose';
-
-import { version } from '.';
+import { version } from '#core/version';
 
 async function main(): Promise<void> {
     installNodeConsole();

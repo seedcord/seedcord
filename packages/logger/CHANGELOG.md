@@ -1,5 +1,17 @@
 # @seedcord/logger
 
+## 0.6.0-next.1
+
+### 🩹 Patch
+
+- Reworded error messages and log lines that joined their parts with the wrong word or read two ways. The gate mismatch compile error now reads like `needs a handler of kind Slash, but this handler's kind is Button`. ([`6f71a86`](https://github.com/seedcord/seedcord/commit/6f71a868e39df8cff3b857688544404113d46596))
+- Fixed `Logger.configure({ level: 'debug' })` on node swapping the winston console for the edge console sink, which printed each log as a multi-line object. A config without `sinks` now falls back to the node console. ([#436](https://github.com/seedcord/seedcord/pull/436))
+
+#### 📦 Seedcord packages
+
+- `@seedcord/errors` 0.15.0-next.0 → 0.15.0-next.1
+- `@seedcord/types` 0.16.0-next.0 → 0.16.0-next.1
+
 ## 0.6.0-next.0
 
 ### 💥 Breaking

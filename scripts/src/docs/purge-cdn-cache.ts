@@ -3,6 +3,7 @@ import { Converters, Envapter } from 'envapt';
 
 import { CdnPurge } from '#src/docs/CdnPurge';
 import { CliFlags } from '#src/lib/CliFlags';
+import { CloudflareApi } from '#src/lib/CloudflareApi';
 
 const flags = new CliFlags('pnpm docs:purge [options]', {
     prefixes: {
@@ -13,8 +14,6 @@ const flags = new CliFlags('pnpm docs:purge [options]', {
     files: { type: 'string', multiple: true, describe: 'Full URL to purge, repeat for several' },
     'dry-run': { type: 'boolean', describe: 'Print the request and send nothing' }
 });
-
-const read = (key: string): string => Envapter.getRequired(key, Converters.String);
 
 async function main(): Promise<void> {
     const argv = process.argv.slice(2);
@@ -29,8 +28,12 @@ async function main(): Promise<void> {
     console.log(`${dryRun ? '[dry-run] would purge' : 'purging'}: ${JSON.stringify(body)}`);
     if (dryRun) return;
 
-    // the token needs the Zone > Cache Purge permission
-    await new CdnPurge(read('CLOUDFLARE_ZONE_ID'), read('CLOUDFLARE_CACHE_PURGE_TOKEN')).purge(body);
+    const env = Envapter.getRequiredAll({
+        CLOUDFLARE_ZONE_ID: Converters.String,
+        // the token needs the Zone > Cache Purge permission
+        CLOUDFLARE_CACHE_PURGE_TOKEN: Converters.String
+    });
+    await new CdnPurge(env.CLOUDFLARE_ZONE_ID, new CloudflareApi(env.CLOUDFLARE_CACHE_PURGE_TOKEN)).purge(body);
     console.log('✅ Cloudflare cache purged');
 }
 

@@ -63,7 +63,7 @@ export function traceError(message: string, invoked: PatchedMethod): Error {
     return trace;
 }
 
-class ConsoleRoute {
+class ConsoleRoute implements Disposable {
     private readonly target = console;
     private readonly originals: Map<ConsoleMethod, PropertyDescriptor | undefined>;
     private routing = false;
@@ -85,7 +85,7 @@ class ConsoleRoute {
         }
     }
 
-    public restore(): void {
+    public [Symbol.dispose](): void {
         for (const [method, own] of this.originals) {
             // workerd keeps console's methods on its prototype, where deleting the patch exposes them again
             if (own) Object.defineProperty(this.target, method, own);
@@ -113,10 +113,8 @@ class ConsoleRoute {
     }
 }
 
-type RestoreConsole = () => void;
-
-export function routeConsole(methods: readonly ConsoleMethod[], route: Route): RestoreConsole {
+export function routeConsole(methods: readonly ConsoleMethod[], route: Route): Disposable {
     const consoleRoute = new ConsoleRoute(methods, route);
     consoleRoute.install();
-    return () => consoleRoute.restore();
+    return consoleRoute;
 }

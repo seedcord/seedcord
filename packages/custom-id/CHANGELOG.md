@@ -1,5 +1,15 @@
 # @seedcord/custom-id
 
+## 0.3.1-next.1
+
+### 🩹 Patch
+
+- Updated some documentation. ([`bb8ee7c`](https://github.com/seedcord/seedcord/commit/bb8ee7cfcfedf4b70765ca547f191b68958553fa))
+
+#### 📦 Seedcord packages
+
+- `@seedcord/errors` 0.15.0-next.0 → 0.15.0-next.1
+
 ## 0.3.1-next.0
 
 ### 🩹 Patch

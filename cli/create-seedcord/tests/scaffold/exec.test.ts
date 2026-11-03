@@ -63,6 +63,17 @@ describe('spawnSpec', () => {
         expect(spec.args).toEqual([]);
     });
 
+    // cmd reads a bare ^ as its escape character
+    it('quotes a version range for the windows shell', () => {
+        expect(spawnSpec('npm', ['i', 'vite@^8.3.4'], 'win32').command).toBe('npm i "vite@^8.3.4"');
+    });
+
+    it.runIf(process.platform === 'win32')('gets a caret through cmd to the program', async () => {
+        const script = `process.exit(process.argv[1] === 'a^b' ? 0 : 1)`;
+
+        await expect(execRunner('pnpm', ['exec', 'node', '-e', script, 'a^b'], process.cwd())).resolves.toBeNull();
+    });
+
     it('uses no shell anywhere else', () => {
         expect(spawnSpec('npm', ['i'], 'darwin').shell).toBe(false);
     });

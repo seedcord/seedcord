@@ -45,6 +45,18 @@ export default createConfig({
             rules: { 'import/no-default-export': 'off' }
         },
 
-        { ignores: ['.next/**', '.source/**', '.wrangler/**', 'build/**', 'next-env.d.ts'] }
+        // workerd/tsconfig.json leaves out the DOM lib, which clashes with cloudflare's types
+        { files: ['workerd/**/*.ts'], languageOptions: { parserOptions: { project: ['./workerd/tsconfig.json'] } } },
+
+        {
+            ignores: [
+                '.next/**',
+                '.source/**',
+                '.wrangler/**',
+                'build/**',
+                'next-env.d.ts',
+                'workerd/worker-configuration.d.ts'
+            ]
+        }
     ]
 });

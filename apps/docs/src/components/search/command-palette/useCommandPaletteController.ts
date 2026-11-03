@@ -1,13 +1,13 @@
 'use client';
 
 import { ALL_PACKAGES } from '@seedcord/docs-search';
+import { useNavigateAndClose } from '@seedcord/ui';
 import { usePathname, useRouter } from 'next/navigation';
 import { useCallback, useEffect, useRef, useState, type RefObject } from 'react';
-import { useShallow } from 'zustand/react/shallow';
 
+import { useCommandPaletteOpen } from '#components/providers/CommandPaletteProvider';
 import { log } from '#lib/logger';
 import { referenceSearch } from '#lib/search/referenceSearch';
-import { useUIStore, type UIStore } from '#store/ui';
 
 import { FOCUS_DELAY_MS, isKindFilter } from './constants';
 
@@ -97,13 +97,8 @@ export interface CommandPaletteController {
 }
 
 export function useCommandPaletteController(): CommandPaletteController {
-    const { open, setCommandPaletteOpen } = useUIStore(
-        useShallow((state: UIStore) => ({
-            open: state.isCommandPaletteOpen,
-            setCommandPaletteOpen: state.setCommandPaletteOpen
-        }))
-    );
-    const router = useRouter();
+    const { open, setOpen } = useCommandPaletteOpen();
+    const navigate = useNavigateAndClose(useRouter(), setOpen);
     const pathname = usePathname();
     const inputRef = useRef<HTMLInputElement>(null);
     const [searchValue, setSearchValue] = useState('');
@@ -136,32 +131,26 @@ export function useCommandPaletteController(): CommandPaletteController {
                 setSearchValue('');
                 resetFilters();
             }
-            setCommandPaletteOpen(next);
+            setOpen(next);
         },
-        [setCommandPaletteOpen, resetFilters]
+        [setOpen, resetFilters]
     );
 
-    const handleClose = useCallback(() => setCommandPaletteOpen(false), [setCommandPaletteOpen]);
+    const handleClose = useCallback(() => setOpen(false), [setOpen]);
 
     const handleSelect = useCallback(
         (action: CommandAction): void => {
             log('Command palette item selected', action);
-            handleClose();
 
             if (action.isExternal) {
+                setOpen(false);
                 window.open(action.href, '_blank', 'noopener');
                 return;
             }
 
-            if (typeof window !== 'undefined') {
-                const targetHref = buildNavigationHref(action, window.location.origin);
-                router.push(targetHref);
-                return;
-            }
-
-            router.push(action.href);
+            navigate(buildNavigationHref(action, window.location.origin));
         },
-        [handleClose, router]
+        [navigate, setOpen]
     );
 
     return {

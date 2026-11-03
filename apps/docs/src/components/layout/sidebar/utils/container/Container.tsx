@@ -3,7 +3,6 @@
 import { Button, GithubIcon, Icon, MobilePanel, cn, ScrollToTopButton } from '@seedcord/ui';
 import Link from 'next/link';
 
-import { ClearHistoryRow } from '#components/header/settings/ClearHistoryRow';
 import { Sidebar } from '#components/layout/sidebar/Sidebar';
 import { SIDEBAR_WIDTH } from '#components/layout/sidebar/utils/constants';
 import { useUIStore } from '#store/ui';
@@ -14,10 +13,7 @@ import type { DocsCatalog } from '#lib/docs/types';
 import type { CSSProperties, ReactNode } from 'react';
 
 const mobilePanelFooter = (
-    <div className={cn('flex items-center gap-2')}>
-        <div className={cn('min-w-0 flex-1')}>
-            <ClearHistoryRow />
-        </div>
+    <div className={cn('flex items-center justify-end gap-2')}>
         <Button asChild variant="ghost" size="icon" aria-label="Open GitHub repository">
             <Link href="https://github.com/seedcord/seedcord" target="_blank" rel="noreferrer">
                 <Icon icon={GithubIcon} size={18} />

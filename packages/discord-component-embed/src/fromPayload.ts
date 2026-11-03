@@ -111,12 +111,15 @@ function buildElement(node: unknown, path: Path, walk: Walk): EmbedElement {
     switch (node.type) {
         case TYPE.Container: {
             checkKeys(node, 'A container', ['type', 'id', 'accent_color', 'spoiler', 'components'], path);
-            return createElement(Container, {
-                // discord-api-types allows null
-                accentColor: node.accent_color ?? undefined,
-                spoiler: node.spoiler,
-                children: list({ node, name: 'A container', path }, 'components', walk, toElement)
-            });
+            return createElement(
+                Container,
+                {
+                    // discord-api-types allows null
+                    accentColor: node.accent_color ?? undefined,
+                    spoiler: node.spoiler
+                },
+                list({ node, name: 'A container', path }, 'components', walk, toElement)
+            );
         }
         case TYPE.TextDisplay: {
             checkKeys(node, 'A text display', ['type', 'id', 'content'], path);
@@ -127,15 +130,20 @@ function buildElement(node: unknown, path: Path, walk: Walk): EmbedElement {
                     { path }
                 );
             }
-            return createElement(TextDisplay, { children: node.content });
+            return createElement(TextDisplay, null, node.content);
         }
         case TYPE.Section: {
             checkKeys(node, 'A section', ['type', 'id', 'components', 'accessory'], path);
-            return createElement(Section, {
-                accessory:
-                    node.accessory === undefined ? undefined : toElement(node.accessory, [...path, 'accessory'], walk),
-                children: list({ node, name: 'A section', path }, 'components', walk, toElement)
-            });
+            return createElement(
+                Section,
+                {
+                    accessory:
+                        node.accessory === undefined
+                            ? undefined
+                            : toElement(node.accessory, [...path, 'accessory'], walk)
+                },
+                list({ node, name: 'A section', path }, 'components', walk, toElement)
+            );
         }
         case TYPE.Thumbnail: {
             checkKeys(node, 'A thumbnail', ['type', 'id', 'media', 'description', 'spoiler'], path);
@@ -143,9 +151,11 @@ function buildElement(node: unknown, path: Path, walk: Walk): EmbedElement {
         }
         case TYPE.MediaGallery: {
             checkKeys(node, 'A media gallery', ['type', 'id', 'items'], path);
-            return createElement(MediaGallery, {
-                children: list({ node, name: 'A media gallery', path }, 'items', walk, toGalleryItem)
-            });
+            return createElement(
+                MediaGallery,
+                null,
+                list({ node, name: 'A media gallery', path }, 'items', walk, toGalleryItem)
+            );
         }
         case TYPE.Separator: {
             checkKeys(node, 'A separator', ['type', 'id', 'divider', 'spacing'], path);
@@ -153,9 +163,11 @@ function buildElement(node: unknown, path: Path, walk: Walk): EmbedElement {
         }
         case TYPE.ActionRow: {
             checkKeys(node, 'An action row', ['type', 'id', 'components'], path);
-            return createElement(ActionRow, {
-                children: list({ node, name: 'An action row', path }, 'components', walk, toElement)
-            });
+            return createElement(
+                ActionRow,
+                null,
+                list({ node, name: 'An action row', path }, 'components', walk, toElement)
+            );
         }
         case TYPE.Button: {
             return toLinkButton(node, path);

@@ -1,5 +1,21 @@
 # seedcord
 
+## 0.23.0-next.1
+
+### 🩹 Patch
+
+- Fixed `seedcord dev` without a terminal printing `console` calls as raw text. A `console.log` from a Vite plugin or your bot now comes out as a JSON line. ([#436](https://github.com/seedcord/seedcord/pull/436))
+- Fixed `seedcord dev` without a terminal ending on a raw `dev stopped` line. That line is now a log record, so it's JSON without a terminal and has the usual log prefix in one. ([#436](https://github.com/seedcord/seedcord/pull/436))
+- Updated some documentation. ([`bb8ee7c`](https://github.com/seedcord/seedcord/commit/bb8ee7cfcfedf4b70765ca547f191b68958553fa))
+- Reworded error messages and log lines that joined their parts with the wrong word or read two ways. The gate mismatch compile error now reads like `needs a handler of kind Slash, but this handler's kind is Button`. ([`6f71a86`](https://github.com/seedcord/seedcord/commit/6f71a868e39df8cff3b857688544404113d46596))
+
+#### 📦 Seedcord packages
+
+- `@seedcord/errors` 0.15.0-next.0 → 0.15.0-next.1
+- `@seedcord/core` 0.12.0-next.0 → 0.12.0-next.1
+- `@seedcord/logger` 0.6.0-next.0 → 0.6.0-next.1
+- `@seedcord/types` 0.16.0-next.0 → 0.16.0-next.1
+
 ## 0.23.0-next.0
 
 ### 💥 Breaking

@@ -1,5 +1,13 @@
 # @seedcord/eslint-plugin
 
+## 0.5.1-next.1
+
+### 🩹 Patch
+
+#### 📦 Seedcord packages
+
+- `eslint-plugin-discordjs` 0.2.0 → 0.2.1-next.0
+
 ## 0.5.1-next.0
 
 ### 🩹 Patch

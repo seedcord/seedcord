@@ -3,8 +3,9 @@ import { stripVTControlCharacters } from 'node:util';
 
 import { describe, expect, it } from 'vitest';
 
+import { PackageManager } from '#cli/PackageManager';
 import { parseInput } from '#cli/parseInput';
-import { dashboardToggles, nextSteps as paintedSteps, reproducingCommand } from '#cli/summary';
+import { dashboardToggles, nextSteps as paintedSteps, pendingNotice, reproducingCommand } from '#cli/summary';
 import { version } from '#cli/version';
 import { STEPS } from '#interview/steps';
 import { BOT_TOKEN } from '#tests/token';
@@ -44,42 +45,66 @@ const HTTP: ScaffoldAnswers = {
     git: true
 };
 
+const PNPM = new PackageManager('pnpm');
+
 describe('nextSteps', () => {
     it('opens with the directory to change into', () => {
-        expect(nextSteps(GATEWAY, { agent: 'pnpm', installed: true })[0]).toBe('cd my-bot');
+        expect(nextSteps(GATEWAY, { manager: PNPM, pending: [] })[0]).toBe('cd my-bot');
     });
 
     it('keeps a spaced directory whole when a shell reads the cd line', () => {
-        const [cd = ''] = nextSteps({ ...GATEWAY, directory: 'my bots/bot' }, { agent: 'pnpm', installed: true });
+        const [cd = ''] = nextSteps({ ...GATEWAY, directory: 'my bots/bot' }, { manager: PNPM, pending: [] });
 
         expect(shellWordsAfter('cd', cd)).toEqual(['my bots/bot']);
     });
 
     it('uses the running package manager for the dev script', () => {
-        expect(nextSteps(GATEWAY, { agent: 'npm', installed: true })).toContain('npm run dev');
-        expect(nextSteps(GATEWAY, { agent: 'pnpm', installed: true })).toContain('pnpm run dev');
+        expect(nextSteps(GATEWAY, { manager: new PackageManager('npm'), pending: [] })).toContain('npm run dev');
+        expect(nextSteps(GATEWAY, { manager: PNPM, pending: [] })).toContain('pnpm run dev');
     });
 
-    it('adds the install when the run skipped it', () => {
-        const steps = nextSteps(GATEWAY, { agent: 'pnpm', installed: false });
+    it('lists every pending command before the dev script', () => {
+        const pending = [
+            { command: 'pnpm', args: ['add', '-D', 'seedcord'] },
+            { command: 'pnpm', args: ['add', 'envapt'] }
+        ];
+        const steps = nextSteps(GATEWAY, { manager: PNPM, pending });
 
-        expect(steps).toContain('pnpm install');
-        expect(steps.indexOf('pnpm install')).toBeLessThan(steps.indexOf('pnpm run dev'));
+        expect(steps).toEqual(['cd my-bot', 'pnpm add -D seedcord', 'pnpm add envapt', 'pnpm run dev']);
     });
 
-    it('leaves the install out when it already ran', () => {
-        expect(nextSteps(GATEWAY, { agent: 'pnpm', installed: true })).not.toContain('pnpm install');
+    it('keeps a range whole when a shell reads a pending command', () => {
+        const pending = [{ command: 'pnpm', args: ['add', '-D', 'vite@^8.3.4'] }];
+        const [, add = ''] = nextSteps(GATEWAY, { manager: PNPM, pending });
+
+        expect(add).toContain('"vite@^8.3.4"');
     });
 
     it('asks for nothing in .env when every secret was pasted', () => {
-        expect(nextSteps(HTTP, { agent: 'pnpm', installed: true }).join('\n')).not.toContain('.env');
+        expect(nextSteps(HTTP, { manager: PNPM, pending: [] }).join('\n')).not.toContain('.env');
     });
 
     it('lists a step to add the token to .env before the dev script when you skipped it', () => {
-        const steps = nextSteps({ ...HTTP, token: null }, { agent: 'pnpm', installed: true });
+        const steps = nextSteps({ ...HTTP, token: null }, { manager: PNPM, pending: [] });
 
         expect(steps).toContain('add DISCORD_BOT_TOKEN to .env');
         expect(steps.indexOf('add DISCORD_BOT_TOKEN to .env')).toBeLessThan(steps.indexOf('pnpm run dev'));
+    });
+});
+
+describe('pendingNotice', () => {
+    it('lists the pending commands', () => {
+        const notice = pendingNotice([
+            { command: 'yarn', args: ['add', '-D', 'seedcord'] },
+            { command: 'yarn', args: ['add', 'envapt'] }
+        ]);
+
+        expect(notice).toContain('yarn add -D seedcord\n');
+        expect(notice).toContain('yarn add envapt');
+    });
+
+    it('returns null when nothing is pending', () => {
+        expect(pendingNotice([])).toBeNull();
     });
 });
 
