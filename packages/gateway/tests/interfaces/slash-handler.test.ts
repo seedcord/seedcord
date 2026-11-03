@@ -8,7 +8,7 @@ import { built } from '#tests/utils/built';
 
 import type { SlashOptions } from '#inputs/SlashOptions';
 import type { Core } from '#interfaces/Core';
-import type { ChatInputCommandInteraction, CommandInteractionOption, User } from 'discord.js';
+import type { CacheType, ChatInputCommandInteraction, CommandInteractionOption, User } from 'discord.js';
 
 const dispatch = new DispatchContext('slash', 'probe');
 
@@ -30,8 +30,12 @@ declare module '@seedcord/core' {
             cache: 'cached';
         };
         'demo/setup': { options: { channel: { kind: 'channel'; required: true } }; cache: 'cached' };
+        guildOnlyRole: { options: { role: { kind: 'role'; required: true } }; cache: 'cached' };
+        anywhereRole: { options: { role: { kind: 'role'; required: true } }; cache: undefined };
     }
 }
+
+type RoleIn<Cache extends CacheType> = NonNullable<CommandInteractionOption<Cache>['role']>;
 
 // a single-command handler reads this.options typed for its route
 class KickHandler extends SlashHandler<'kick'> {
@@ -150,6 +154,59 @@ class PerCaseNarrowing extends SlashHandler<'mute' | 'note'> {
     }
 }
 
+class PerRouteCache extends SlashHandler<'guildOnlyRole' | 'anywhereRole'> {
+    async execute(): Promise<void> {
+        expectTypeOf(this.options.getRole('role')).toEqualTypeOf<RoleIn<undefined>>();
+        await this.match({
+            guildOnlyRole: (options) => {
+                expectTypeOf(options.getRole('role')).toEqualTypeOf<RoleIn<'cached'>>();
+            },
+            anywhereRole: (options) => {
+                expectTypeOf(options.getRole('role')).toEqualTypeOf<RoleIn<undefined>>();
+            }
+        });
+    }
+}
+
+class WrittenCacheWins extends SlashHandler<'guildOnlyRole' | 'anywhereRole', 'cached'> {
+    async execute(): Promise<void> {
+        await this.match({
+            guildOnlyRole: (options) => {
+                expectTypeOf(options.getRole('role')).toEqualTypeOf<RoleIn<'cached'>>();
+            },
+            anywhereRole: (options) => {
+                expectTypeOf(options.getRole('role')).toEqualTypeOf<RoleIn<'cached'>>();
+            }
+        });
+    }
+}
+
+class MixedReturns extends SlashHandler<'mute' | 'note'> {
+    async execute(): Promise<void> {
+        const result = await this.match({
+            mute: (options) => ({ minutes: options.getInteger('minutes') }),
+            note: (options) => Promise.resolve({ text: options.getString('text') })
+        });
+        expectTypeOf(result).toEqualTypeOf<{ minutes: number } | { text: string }>();
+    }
+}
+
+class DeclaredReturn extends SlashHandler<'mute' | 'note'> {
+    async execute(): Promise<void> {
+        const result = await this.match<{ text: string }>({
+            mute: (options) => ({ text: String(options.getInteger('minutes')) }),
+            note: (options) => Promise.resolve({ text: options.getString('text') })
+        });
+        expectTypeOf(result).toEqualTypeOf<{ text: string }>();
+
+        await this.match<string>({
+            mute: () => 'muted',
+            // @ts-expect-error this case returns a number.
+            note: () => 1
+        });
+    }
+}
+
 // a case keyed by a route outside the handler's union is rejected
 class ExtraCaseHandler extends SlashHandler<'mute' | 'note'> {
     async execute(): Promise<void> {
@@ -165,6 +222,15 @@ class ExtraCaseHandler extends SlashHandler<'mute' | 'note'> {
                 void 0;
             }
         });
+    }
+}
+
+// a named map skips TypeScript's excess property check on object literals
+class NamedExtraCaseHandler extends SlashHandler<'mute' | 'note'> {
+    async execute(): Promise<void> {
+        const cases = { mute: () => 1, note: () => 'a', warn: () => true };
+        // @ts-expect-error 'warn' is not a route this handler is registered for.
+        await this.match(cases);
     }
 }
 
@@ -225,7 +291,12 @@ describe('SlashHandler', () => {
 void [
     UnionOptionsHandler,
     PerCaseNarrowing,
+    PerRouteCache,
+    WrittenCacheWins,
+    MixedReturns,
+    DeclaredReturn,
     ExtraCaseHandler,
+    NamedExtraCaseHandler,
     SubcommandHandler,
     UnknownDecoratorRoute,
     UnknownGenericRoute

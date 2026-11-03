@@ -36,6 +36,23 @@ class MissingCase extends ButtonHandler<[typeof Approve, typeof Deny]> {
     }
 }
 
+@ButtonRoute(Approve, Deny)
+class MixedReturns extends ButtonHandler<[typeof Approve, typeof Deny]> {
+    async execute(): Promise<void> {
+        const result = await this.match({
+            approve: (params) => ({ id: params.userId }),
+            deny: (params) => Promise.resolve({ reason: params.reason })
+        });
+        expectTypeOf(result).toEqualTypeOf<{ id: string } | { reason: string }>();
+
+        await this.match<string>({
+            approve: (params) => params.userId,
+            // @ts-expect-error this case returns a number.
+            deny: () => 1
+        });
+    }
+}
+
 @ButtonRoute(Approve)
 class ExtraCase extends ButtonHandler<[typeof Approve]> {
     async execute(): Promise<void> {
@@ -87,6 +104,7 @@ describe('customId handler type safety', () => {
             GoodButton,
             MismatchedButton,
             MissingCase,
+            MixedReturns,
             ExtraCase,
             WrongField,
             MultiParams,

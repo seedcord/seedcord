@@ -88,6 +88,11 @@ class Menu extends UserContextMenuHandler<'hb Profile' | 'hb Greet'> {
         return this.match(cases);
     }
 
+    public async runMixed(): Promise<void> {
+        const result = await this.match({ 'hb Profile': () => 'profile', 'hb Greet': () => 1 });
+        expectTypeOf(result).toEqualTypeOf<string | number>();
+    }
+
     public readName(): 'hb Profile' | 'hb Greet' {
         return this.route;
     }
@@ -96,6 +101,11 @@ class Menu extends UserContextMenuHandler<'hb Profile' | 'hb Greet'> {
 class Tools extends MessageContextMenuHandler<'hb Report' | 'hb Pin'> {
     public async execute(): Promise<void> {
         await Promise.resolve();
+    }
+
+    public async runMixed(): Promise<void> {
+        const result = await this.match({ 'hb Report': () => 'reported', 'hb Pin': () => 1 });
+        expectTypeOf(result).toEqualTypeOf<string | number>();
     }
 
     public run(): Promise<string> {

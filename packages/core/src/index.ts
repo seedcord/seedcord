@@ -3,6 +3,8 @@ import 'reflect-metadata';
 // Errors.ts registers the two notices thrown by a failed decode
 import '#customId/Errors';
 
+export type { REST } from '@discordjs/rest';
+
 export type { MessageContextMenuRegistry, UserContextMenuRegistry } from '#registries/ContextMenuRegistry';
 export type { SlashRegistry } from '#registries/SlashRegistry';
 

@@ -21,7 +21,8 @@ describe('a built module that runs without the entry', () => {
         await quickBuildRunner().run(projectDir);
 
         const { status, stderr } = spawnSync(process.execPath, [join(projectDir, 'dist/index.js')], {
-            encoding: 'utf8'
+            encoding: 'utf8',
+            timeout: 60_000
         });
 
         expect(status).toBe(1);

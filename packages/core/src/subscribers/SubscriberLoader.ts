@@ -33,11 +33,13 @@ export class SubscriberLoader implements Initializeable, HmrAware {
         if (!Envapter.isDevelopment && !Envapter.isTest) return;
 
         this.hmrHandler = new HmrModuleHandler({
-            handlersDir: this.directory,
-            isHandler: this.isSubscriber.bind(this),
-            registerHandler: this.registerSubscriber.bind(this),
-            unregisterHandler: this.unregisterSubscriber.bind(this),
-            getArtifacts: this.getArtifacts.bind(this),
+            handlers: {
+                dir: this.directory,
+                is: this.isSubscriber.bind(this),
+                register: this.registerSubscriber.bind(this),
+                unregister: this.unregisterSubscriber.bind(this),
+                getArtifacts: this.getArtifacts.bind(this)
+            },
             logger: busLoggerOf(this.bus)
         });
     }

@@ -30,7 +30,7 @@
         "typescript": "catalog:peer"
     },
     "dependencies": {
-        "@discordjs/builders": "catalog:deps",
+        "@discordjs/builders": "catalog:peer",
         "@seedcord/http": "workspace:^",
         "discord-api-types": "catalog:deps",
         "envapt": "catalog:peer"

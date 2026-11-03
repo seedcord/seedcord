@@ -67,7 +67,7 @@ export type { CommandBuilder, DeployResult } from '#src/commands/types';
 
 export type { GateFitsWith } from '#gates/matching';
 export { assertUniqueKeys } from '#src/decorators/assertUniqueKeys';
-export { caseFor } from '#src/handlers/caseFor';
+export { runCase, type CaseReturn, type MatchResult, type OnlyCases } from '#src/handlers/runCase';
 export type { MiddlewareRoute } from '#src/handlers/MiddlewareRoute';
 
 export { getDevChannel, setDevChannel } from '#hmr/devChannel';

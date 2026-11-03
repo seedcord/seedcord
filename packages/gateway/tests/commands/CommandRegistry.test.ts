@@ -29,6 +29,20 @@ function rejectWhenAborted(signal: AbortSignal): Promise<never> {
     });
 }
 
+function commandSource(name: string): string {
+    return `
+            import { BuilderComponent, RegisterCommand } from '${seedcordPath}';
+
+            @RegisterCommand('global')
+            export class ${name}Command extends BuilderComponent<'command'> {
+                constructor() {
+                    super('command');
+                    this.instance.setName('${name.toLowerCase()}').setDescription('Replies');
+                }
+            }
+            `;
+}
+
 describe('CommandRegistry Integration', () => {
     afterEach(() => {
         vi.clearAllMocks();
@@ -355,6 +369,55 @@ describe('CommandRegistry Integration', () => {
         expect(registryOf(seedcord).scopedCommands.get(GLOBAL_ID)?.[0]?.name).toBe('ping');
         await registryOf(seedcord).refresh();
         expect(registryOf(seedcord).scopedCommands.get(GLOBAL_ID)?.[0]?.name).toBe('pong');
+    });
+
+    it('registers a new command once when two refreshes overlap', async ({ testEnv }) => {
+        await testEnv.createFile('commands/PingCommand.ts', commandSource('Ping'));
+
+        await using seedcord = new Seedcord(testConfig({ commands: testEnv.resolvePath('commands') }));
+        await registryOf(seedcord).init();
+        // the mock client's rest only has put, and the second refresh reads what the first one deployed
+        const client = seedcord.bot.client as unknown as { rest: { get: Mock } };
+        client.rest.get = vi.fn().mockResolvedValue([]);
+        const added = await testEnv.createFile('commands/KickCommand.ts', commandSource('Kick'));
+        await registryOf(seedcord).onHmr({ file: added, type: 'create' });
+
+        await Promise.all([registryOf(seedcord).refresh(), registryOf(seedcord).refresh()]);
+
+        const names = registryOf(seedcord)
+            .scopedCommands.get(GLOBAL_ID)
+            ?.map((builder) => builder.name);
+        expect(names?.toSorted()).toEqual(['kick', 'ping']);
+    });
+
+    it('keeps a save made after a declined refresh while an earlier refresh still runs', async ({ testEnv }) => {
+        await testEnv.createFile('commands/PingCommand.ts', commandSource('Ping'));
+
+        await using seedcord = new Seedcord(testConfig({ commands: testEnv.resolvePath('commands') }));
+        const registry = registryOf(seedcord);
+        await registry.init();
+        const earlierPut = Promise.withResolvers<unknown[]>();
+        // the mock client's rest only has put, and a later refresh reads what the first one deployed
+        const client = seedcord.bot.client as unknown as { rest: { get: Mock; put: Mock } };
+        client.rest.get = vi.fn().mockResolvedValue([]);
+        client.rest.put = vi.fn().mockReturnValueOnce(earlierPut.promise).mockResolvedValue([]);
+        const save = async (name: string): Promise<void> => {
+            const file = await testEnv.createFile(`commands/${name}Command.ts`, commandSource(name));
+            await registry.onHmr({ file, type: 'create' });
+        };
+
+        await save('Kick');
+        const earlier = registry.refresh();
+        await vi.waitFor(() => expect(client.rest.put).toHaveBeenCalledOnce());
+        await save('Ban');
+        const declined = registry.refresh(false);
+        await save('Mute');
+        earlierPut.resolve([]);
+        await Promise.all([earlier, declined]);
+        await registry.refresh();
+
+        const names = registry.scopedCommands.get(GLOBAL_ID)?.map((builder) => builder.name);
+        expect(names?.toSorted()).toEqual(['kick', 'mute', 'ping']);
     });
 
     it('sends no refresh prompt for a file saved in a dot-folder, which startup skips', async ({ testEnv }) => {

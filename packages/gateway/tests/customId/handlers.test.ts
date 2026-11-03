@@ -153,7 +153,7 @@ describe('this.params on a single-route handler', () => {
         class WeirdButton extends ButtonHandler<[typeof Ctor]> {
             async execute(): Promise<void> {
                 // justified: omit the prefix to test the runtime backstop
-                await this.match({} as unknown as MatchCases<[typeof Ctor], undefined>);
+                await this.match({} as MatchCases<[typeof Ctor], undefined>);
             }
         }
         const handler = built(WeirdButton, button(Ctor.encode({ userId: USER })), core, dispatch);

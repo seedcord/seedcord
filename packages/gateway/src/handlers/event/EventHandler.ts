@@ -1,4 +1,4 @@
-import { caseFor } from '@seedcord/core/internal';
+import { runCase } from '@seedcord/core/internal';
 
 import { BaseHandler } from '#src/handlers/BaseHandler';
 
@@ -6,12 +6,12 @@ import type { Core } from '#interfaces/Core';
 import type { ValidNonInteractionKeys } from '#src/handlers/interactionTypes';
 import type { SingleEventPayload } from './payload';
 import type { DispatchContext } from '@seedcord/core';
+import type { CaseReturn, MatchResult, OnlyCases } from '@seedcord/core/internal';
 import type { ClientEvents } from 'discord.js';
-import type { Promisable } from 'type-fest';
 
 // a single tuple param would drop the discord.js labels from editor signature help
 type EventMatchCases<Names extends ValidNonInteractionKeys, Ret> = {
-    [Name in Names]: (...args: ClientEvents[Name]) => Promisable<Ret>;
+    [Name in Names]: (...args: ClientEvents[Name]) => CaseReturn<Ret>;
 };
 
 /**
@@ -59,6 +59,7 @@ export abstract class EventHandler<in out Names extends ValidNonInteractionKeys>
      * compile error.
      *
      * @param cases - One handler per registered event, keyed by event name.
+     * @typeParam Ret - The type that every case must return. Leave it out to get the union of what the cases return.
      * @returns The result of the case that ran.
      *
      * @example
@@ -74,9 +75,10 @@ export abstract class EventHandler<in out Names extends ValidNonInteractionKeys>
      * }
      * ```
      */
-    protected async match<Ret>(cases: EventMatchCases<Names, Ret>): Promise<Ret> {
-        const callback = caseFor(this, cases, 'event', this.route);
+    protected async match<Ret = never, Cases extends EventMatchCases<Names, Ret> = EventMatchCases<Names, Ret>>(
+        cases: OnlyCases<Cases, EventMatchCases<Names, Ret>>
+    ): Promise<MatchResult<Ret, Cases>> {
         // this.event is never on a multi-event handler. getEvent() returns the real tuple.
-        return await callback(...this.getEvent());
+        return await runCase<MatchResult<Ret, Cases>>(this, cases, 'event', this.route, ...this.getEvent());
     }
 }

@@ -98,6 +98,11 @@ class SearchMatch extends AutocompleteHandler<'search'> {
             limit: (value, respond) => respond([{ name: value, value: 10 }])
         });
     }
+
+    async runMixed(): Promise<void> {
+        const result = await this.match({ query: () => 'query', limit: () => 1 });
+        expectTypeOf(result).toEqualTypeOf<string | number>();
+    }
 }
 
 // every autocompletable field needs a case

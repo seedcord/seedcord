@@ -53,12 +53,12 @@
         "coverage": "vitest run --coverage"
     },
     "peerDependencies": {
+        "@discordjs/builders": "catalog:peer",
         "discord.js": "catalog:peer",
         "envapt": "catalog:peer",
         "typescript": "catalog:consumerTypes"
     },
     "dependencies": {
-        "@discordjs/builders": "catalog:deps",
         "@discordjs/rest": "catalog:deps",
         "@seedcord/core": "workspace:^",
         "@seedcord/custom-id": "workspace:^",
@@ -71,6 +71,7 @@
         "type-fest": "catalog:deps"
     },
     "devDependencies": {
+        "@discordjs/builders": "catalog:peer",
         "@seedcord/eslint-config": "workspace:^",
         "@seedcord/tsconfig": "workspace:^",
         "@seedcord/tsdown-config": "workspace:^",

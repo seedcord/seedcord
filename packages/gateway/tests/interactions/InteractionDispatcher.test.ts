@@ -479,6 +479,46 @@ describe('InteractionDispatcher Integration', () => {
         expect(controller.maps[InteractionKind.Slash].has('ping')).toBe(true);
     });
 
+    it('ignores a middleware saved beside the handlers when the config has no middlewares folder', async ({
+        testEnv
+    }) => {
+        await testEnv.createFile(
+            'interactions/Ok.ts',
+            `
+            import { SlashHandler, SlashRoute } from '${seedcordPath}';
+
+            @SlashRoute('ok')
+            export class OkHandler extends SlashHandler<'ok'> {
+                public async execute() {
+                    await this.send('done');
+                }
+            }
+            `
+        );
+        const saved = await testEnv.createFile(
+            'interactions/Audit.ts',
+            `
+            import { InteractionMiddleware, RegisterInteractionMiddleware } from '${seedcordPath}';
+
+            @RegisterInteractionMiddleware()
+            export class Audit extends InteractionMiddleware {
+                public async execute() {
+                    await this.defer();
+                }
+            }
+            `
+        );
+        await using seedcord = new Seedcord(testConfig({ interactions: testEnv.resolvePath('interactions') }));
+        const controller = controllerOf(seedcord);
+        await controller.init();
+
+        await controller.onHmr({ file: saved, type: 'update' });
+
+        const slash = fakeSlash('ok');
+        await controller.handleInteraction(slash);
+        expect(slash.deferReply).not.toHaveBeenCalled();
+    });
+
     it('rebuilds the kind chains when a middleware reloads', async ({ testEnv }) => {
         const interactionsDir = 'interactions';
         const middlewaresDir = 'interaction-mw';

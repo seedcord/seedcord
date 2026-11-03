@@ -78,11 +78,13 @@ export class KyselyPostgres extends Plugin<{ transport: 'any'; runtime: 'server'
         super.registerCriticalFiles([path.posix.join(this.options.migrations.dir, '**')]);
 
         this.hmrHandler = new HmrModuleHandler({
-            handlersDir: this.options.dir,
-            isHandler: this.serviceRegistry.isServiceClass.bind(this.serviceRegistry),
-            registerHandler: this.serviceRegistry.initializeService.bind(this.serviceRegistry),
-            unregisterHandler: this.serviceRegistry.unregister.bind(this.serviceRegistry),
-            getArtifacts: this.getArtifacts.bind(this),
+            handlers: {
+                dir: this.options.dir,
+                is: this.serviceRegistry.isServiceClass.bind(this.serviceRegistry),
+                register: this.serviceRegistry.initializeService.bind(this.serviceRegistry),
+                unregister: this.serviceRegistry.unregister.bind(this.serviceRegistry),
+                getArtifacts: this.getArtifacts.bind(this)
+            },
             logger: this.logger
         });
     }

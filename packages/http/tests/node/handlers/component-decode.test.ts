@@ -104,6 +104,11 @@ describe('button decode', () => {
                     reject: ({ userId }) => `rejected ${userId}`
                 });
             }
+
+            async runMixed(): Promise<void> {
+                const result = await this.match({ approve: () => 'approved', reject: () => 1 });
+                expectTypeOf(result).toEqualTypeOf<string | number>();
+            }
         }
 
         const wire = RejectId.encode({ userId: '42' });
@@ -185,7 +190,7 @@ describe('button decode', () => {
         class Weird extends ButtonHandler<[typeof Ctor]> {
             async execute(): Promise<void> {
                 // justified: omit the prefix to test the runtime backstop
-                await this.match({} as unknown as MatchCases<[typeof Ctor], undefined>);
+                await this.match({} as MatchCases<[typeof Ctor], undefined>);
             }
         }
 

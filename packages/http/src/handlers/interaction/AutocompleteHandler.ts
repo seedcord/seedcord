@@ -1,5 +1,5 @@
 import { BaseHandler } from '@seedcord/core';
-import { AutocompleteRouteBrand, caseFor } from '@seedcord/core/internal';
+import { AutocompleteRouteBrand, runCase } from '@seedcord/core/internal';
 import { SeedcordErrorCode } from '@seedcord/errors';
 import { SeedcordError } from '@seedcord/errors/internal';
 
@@ -13,16 +13,18 @@ import type { AutocompleteOptions, DispatchContext, SlashRegistry } from '@seedc
 import type {
     AutocompletableNames,
     AutocompleteResponder,
+    CaseReturn,
     ChoiceValueOf,
     EntryFor,
-    FocusedField
+    FocusedField,
+    MatchResult,
+    OnlyCases
 } from '@seedcord/core/internal';
 import type {
     APIApplicationCommandOptionChoice,
     APIApplicationCommandAutocompleteInteraction,
     APIUser
 } from 'discord-api-types/v10';
-import type { Promisable } from 'type-fest';
 
 type FocusedCases<Route extends keyof SlashRegistry, Ret> = {
     [Name in AutocompletableNames<Route>]: (
@@ -30,7 +32,7 @@ type FocusedCases<Route extends keyof SlashRegistry, Ret> = {
         respond: (
             choices: readonly APIApplicationCommandOptionChoice<ChoiceValueOf<EntryFor<Route, Name>>>[]
         ) => Promise<void>
-    ) => Promisable<Ret>;
+    ) => CaseReturn<Ret>;
 };
 
 /**
@@ -102,13 +104,16 @@ export abstract class AutocompleteHandler<Route extends keyof SlashRegistry> ext
      * cases must cover every autocompletable field. A missing field or an unknown key is a compile error.
      *
      * @param cases - One handler per autocompletable field, keyed by field name.
+     * @typeParam Ret - The type that every case must return. Leave it out to get the union of what the cases return.
      * @returns The result of the case that ran.
      * @throws A **SeedcordTypeError** with `MatchCaseMissing` when the focused field doesn't have a case. Only a stale-deployed command can send one.
      */
-    protected async match<Ret>(cases: FocusedCases<Route, Ret>): Promise<Ret> {
+    protected async match<Ret = never, Cases extends FocusedCases<Route, Ret> = FocusedCases<Route, Ret>>(
+        cases: OnlyCases<Cases, FocusedCases<Route, Ret>>
+    ): Promise<MatchResult<Ret, Cases>> {
         const { name, value } = this.focused;
         const respond = (choices: readonly APIApplicationCommandOptionChoice[]): Promise<void> => this.respond(choices);
-        return await caseFor(this, cases, 'focused field', name)(value, respond);
+        return await runCase<MatchResult<Ret, Cases>>(this, cases, 'focused field', name, value, respond);
     }
 
     /** Send autocomplete suggestions, callback type 8. Prefer {@link match}, which restricts each field's choices to its declared type. */

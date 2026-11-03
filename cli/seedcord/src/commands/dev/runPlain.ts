@@ -1,5 +1,7 @@
 import { createInterface } from 'node:readline';
 
+import { debounce } from 'es-toolkit';
+
 import { cliLogger } from '#core/cliLogger';
 
 import type { DevStore } from '#ui/stores/DevStore';
@@ -10,6 +12,8 @@ import type { Promisable } from 'type-fest';
 type Command = (runner: DevRunner) => Promisable<void>;
 
 const logger = cliLogger('Dev');
+
+const COMMAND_SAVES_QUIET_MS = 2000;
 
 const COMMANDS = new Map<unknown, Command>([
     ['restart', (runner) => runner.restart()],
@@ -32,10 +36,17 @@ function leaveToRun(command: Promisable<void>): void {
 
 // runs dev without the TUI, answering the prompts nobody is there to press a key for
 export async function runPlain(store: DevStore, runner: DevRunner, input: Readable): Promise<void> {
+    const refreshCommands = debounce(() => runner.refreshCommands(true), COMMAND_SAVES_QUIET_MS);
+    let promptedFiles: string[] | null = null;
     let failure: Error | undefined;
+
     const answer = (): void => {
         const { phase, commandUpdatePrompt, error } = store.getState();
-        if (commandUpdatePrompt !== null) runner.refreshCommands(true);
+        if (commandUpdatePrompt !== promptedFiles) {
+            promptedFiles = commandUpdatePrompt;
+            if (promptedFiles) refreshCommands();
+            else refreshCommands.cancel();
+        }
         if (phase === 'restart-required') {
             logger.info('Restarting to pick up the change');
             leaveToRun(runner.restart());
@@ -57,6 +68,7 @@ export async function runPlain(store: DevStore, runner: DevRunner, input: Readab
     try {
         await runner.run();
     } finally {
+        refreshCommands.cancel();
         store.off('change', answer);
     }
     if (failure) throw failure;

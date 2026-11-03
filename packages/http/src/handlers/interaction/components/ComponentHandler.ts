@@ -1,13 +1,19 @@
-import { caseFor, ComponentDefsBrand, decodeComponentRoute } from '@seedcord/core/internal';
+import { ComponentDefsBrand, decodeComponentRoute, runCase } from '@seedcord/core/internal';
 
 import { InteractionHandler } from '#handlers/interaction/InteractionHandler';
 
 import type { SentMessage } from '#reply/ReplySender';
-import type { DecodedComponentRoute, HasComponentDefs, MatchCases, SingleParams } from '@seedcord/core/internal';
+import type {
+    DecodedComponentRoute,
+    HasComponentDefs,
+    MatchCases,
+    MatchResult,
+    OnlyCases,
+    SingleParams
+} from '@seedcord/core/internal';
 import type { AnyCustomId } from '@seedcord/custom-id';
 import type { ReplyResponse } from '@seedcord/types';
 import type { APIMessageComponentInteraction, APIModalSubmitInteraction } from 'discord-api-types/v10';
-import type { Promisable } from 'type-fest';
 
 /**
  * Shared base the customId-routed component handlers extend on the HTTP transport.
@@ -73,6 +79,7 @@ export abstract class ComponentHandler<
      * decodes the wire before it runs a case.
      *
      * @param cases - One callback per registered route, keyed by prefix.
+     * @typeParam Ret - The type that every case must return. Leave it out to get the union of what the cases return.
      * @returns The result of the case that ran.
      * @throws A **SeedcordTypeError** with `MatchCaseMissing` when the wire's prefix doesn't have a case.
      * @throws A **StaleCustomId** when the wire was encoded under an older shape.
@@ -91,10 +98,10 @@ export abstract class ComponentHandler<
      * }
      * ```
      */
-    protected async match<Ret>(cases: MatchCases<Defs, Ret>): Promise<Ret> {
+    protected async match<Ret = never, Cases extends MatchCases<Defs, Ret> = MatchCases<Defs, Ret>>(
+        cases: OnlyCases<Cases, MatchCases<Defs, Ret>>
+    ): Promise<MatchResult<Ret, Cases>> {
         const { prefix, params } = this.decodedRoute;
-        // justified: the types can't tie a decoded prefix to its params
-        const byPrefix = cases as Record<string, (params: Record<string, unknown>) => Promisable<Ret>>;
-        return await caseFor(this, byPrefix, 'component route', prefix)(params);
+        return await runCase<MatchResult<Ret, Cases>>(this, cases, 'component route', prefix, params);
     }
 }

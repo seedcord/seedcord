@@ -115,6 +115,8 @@ seedcord ships [`getConfirmation`](ref:gateway/getConfirmation) for the common c
 
 Http adds [`this.api`](ref:http/RepliableHandler.api), a typed REST client over `core.rest` from `@discordjs/core/http-only`. Use it for Discord calls beyond the reply surface, such as `this.api.guilds.editMember()`.
 
+To pass `this.api` to a helper, import its type, `API`, from `@seedcord/http`. `core.rest` works the same way with `REST`. If you install `@discordjs/core` or `@discordjs/rest` yourself, your copy can resolve to a different version, and TypeScript then rejects the value because the two types don't match.
+
 The callbacks on `api.interactions` answer the interaction directly, which leaves the state stale the same way. The lint rule reads discord.js interaction types alone, so those calls pass it.
 
 </Callout>

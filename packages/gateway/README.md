@@ -38,7 +38,7 @@ pnpm add @seedcord/gateway discord.js @discordjs/builders envapt
 pnpm add -D seedcord vite typescript
 ```
 
-`discord.js`, `envapt`, and `typescript` are peer dependencies. `seedcord` is the CLI that runs the bot in dev and builds it.
+`discord.js`, `@discordjs/builders`, `envapt`, and `typescript` are peer dependencies. `seedcord` is the CLI that runs the bot in dev and builds it.
 
 ## Usage
 

@@ -1,6 +1,7 @@
 import { setDevChannel } from '@seedcord/core/internal';
 import { Plugin } from '@seedcord/core/plugin';
-import { describe, expect, afterEach, vi } from 'vitest';
+import { Logger } from '@seedcord/logger';
+import { describe, expect, afterEach, onTestFinished, vi } from 'vitest';
 
 import { commandRegistryOf } from '#bot/Bot';
 import { Seedcord } from '#src/Seedcord';
@@ -27,7 +28,7 @@ function fakeChannel(): { channel: FrameworkChannel; send: SendMock; on: OnMock 
     const send = vi.fn<(event: string, data: unknown) => void>();
     const on = vi.fn<(event: string, cb: (data: unknown) => void) => void>();
     // justified: a minimal stand-in for the dev wire so routing can be asserted without a vite server
-    const channel = { send, on } as unknown as FrameworkChannel;
+    const channel = { send, on, off: vi.fn() } as unknown as FrameworkChannel;
     return { channel, send, on };
 }
 
@@ -80,6 +81,28 @@ describe('dev channel routing', () => {
         await registryOf(seedcord).init();
 
         expect(on).toHaveBeenCalledWith('seedcord:refresh-commands', expect.any(Function));
+    });
+
+    it('CommandRegistry logs a refresh that discord refuses', async ({ testEnv }) => {
+        const { channel, send, on } = fakeChannel();
+        const listener = (event: string): ((data: unknown) => void) | undefined =>
+            on.mock.calls.findLast(([name]) => name === event)?.[1];
+        send.mockImplementation((event) => {
+            if (event === 'seedcord:read-deployed') listener('seedcord:last-deploy')?.({ deployed: undefined });
+        });
+        setDevChannel(channel);
+        const errorLog = vi.spyOn(Logger.prototype, 'error').mockImplementation(() => undefined);
+        onTestFinished(() => errorLog.mockRestore());
+
+        await testEnv.createFile('commands/Ping.ts', PING_COMMAND);
+        await using seedcord = new Seedcord(testConfig({ commands: testEnv.resolvePath('commands') }));
+        await registryOf(seedcord).init();
+        const client = seedcord.bot.client as unknown as { rest: { put: Mock } };
+        client.rest.put.mockRejectedValue(new Error('refused'));
+
+        listener('seedcord:refresh-commands')?.({ shouldRefresh: true });
+
+        await vi.waitFor(() => expect(errorLog).toHaveBeenCalledWith('Failed to refresh commands', expect.anything()));
     });
 
     it('CommandRegistry.onHmr prompts a commands update through the dev channel', async ({ testEnv }) => {

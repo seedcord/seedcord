@@ -19,6 +19,7 @@ import { putCommands } from '#src/commands/putCommands';
 import { readCommands } from '#src/commands/readCommands';
 import { GLOBAL_ID, scopeIdsOf } from '#src/commands/scopes';
 import { slashRouteLeaves } from '#src/commands/slashRouteLeaves';
+import { KeyedQueue } from '#src/kv/KeyedQueue';
 import { CommandMetadataKey } from '#src/metadataKeys';
 import { PublishDefault } from '#subscribers/publishDefault';
 
@@ -71,6 +72,7 @@ export class CommandRegistry implements Initializeable, HmrAware {
 
     private readonly hmrHandler?: HmrModuleHandler<CommandCtor, void, CommandArtifact | undefined>;
     private readonly pendingEvents = new Map<string, HmrUpdateEvent>();
+    private readonly deploys = new KeyedQueue();
     private readonly injector = new CommandInjector();
     private readonly lastDeploy = new LastDeploy();
     private readonly reporter = new DeployReporter(this.logger);
@@ -88,11 +90,13 @@ export class CommandRegistry implements Initializeable, HmrAware {
 
         if (!Envapter.isDevelopment && !Envapter.isTest) return;
         this.hmrHandler = new HmrModuleHandler<CommandCtor, void, CommandArtifact | undefined>({
-            handlersDir: this.dir,
-            isHandler: isCommandClass,
-            registerHandler: this.registerCommand.bind(this),
-            unregisterHandler: this.unregisterCommand.bind(this),
-            getArtifacts: this.getArtifacts.bind(this),
+            handlers: {
+                dir: this.dir,
+                is: isCommandClass,
+                register: this.registerCommand.bind(this),
+                unregister: this.unregisterCommand.bind(this),
+                getArtifacts: this.getArtifacts.bind(this)
+            },
             logger: this.logger
         });
     }
@@ -117,7 +121,9 @@ export class CommandRegistry implements Initializeable, HmrAware {
         this.reportLoad();
 
         getDevChannel()?.on('seedcord:refresh-commands', (data) => {
-            void this.refresh(data.shouldRefresh);
+            this.refresh(data.shouldRefresh).catch((error: unknown) => {
+                this.logger.error('Failed to refresh commands', error);
+            });
         });
     }
 
@@ -151,18 +157,27 @@ export class CommandRegistry implements Initializeable, HmrAware {
     }
 
     /** @internal */
-    public async refresh(shouldRefresh = true): Promise<void> {
+    public refresh(shouldRefresh = true): Promise<void> {
+        const answeredEvents = [...this.pendingEvents.values()];
+        this.pendingEvents.clear();
+
+        return this.afterRunningDeploy(() => this.applyEvents(answeredEvents, shouldRefresh));
+    }
+
+    private afterRunningDeploy<TResult>(task: () => Promise<TResult>): Promise<TResult> {
+        return this.deploys.run('commands', task);
+    }
+
+    private async applyEvents(events: readonly HmrUpdateEvent[], shouldRefresh: boolean): Promise<void> {
         if (!shouldRefresh) {
             this.logger.debug(paint.italic('Command refresh cancelled.'));
-            this.pendingEvents.clear();
             return;
         }
 
         this.logger.debug(paint.italic('Refreshing commands...'));
-        for (const event of this.pendingEvents.values()) {
+        for (const event of events) {
             await this.hmrHandler?.handle(event);
         }
-        this.pendingEvents.clear();
         await this.setCommands();
     }
 
@@ -229,7 +244,7 @@ export class CommandRegistry implements Initializeable, HmrAware {
     public async deploy(signal: AbortSignal, { routes, check }: DeployHooks): Promise<void> {
         await this.init();
         check?.(this.allCommands());
-        await this.setCommands(signal);
+        await this.afterRunningDeploy(() => this.setCommands(signal));
         routes?.warnUnhandledRoutes(this.routeLeaves());
         routes?.warnUnhandledContextMenuRoutes(this.contextMenuLeaves());
     }
