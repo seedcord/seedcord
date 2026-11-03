@@ -7,8 +7,15 @@ import type { SlashRegistry } from '@seedcord/core';
 import type { CacheFor, CaseReturn, MatchResult, OnlyCases } from '@seedcord/core/internal';
 import type { CacheType, ChatInputCommandInteraction } from 'discord.js';
 
+// a Cache written on the class wins over the cache of each route
+type CaseCache<Route extends keyof SlashRegistry, Cache extends CacheType, Key extends Route> = [Cache] extends [
+    CacheFor<Route>
+]
+    ? CacheFor<Key>
+    : Cache;
+
 type SlashMatchCases<Route extends keyof SlashRegistry, Cache extends CacheType, Ret> = {
-    [Key in Route]: (options: SlashOptions<Key, Cache>) => CaseReturn<Ret>;
+    [Key in Route]: (options: SlashOptions<Key, CaseCache<Route, Cache, Key>>) => CaseReturn<Ret>;
 };
 
 /**
