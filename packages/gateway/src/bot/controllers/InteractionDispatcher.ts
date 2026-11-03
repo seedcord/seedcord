@@ -7,6 +7,7 @@ import {
     InteractionMetadataKey,
     interactionMiddleware,
     InteractionMiddlewareMetadataKey,
+    matchRoute,
     MiddlewareRegistry,
     PublishDefault,
     RouteRegistry
@@ -267,7 +268,7 @@ export class InteractionDispatcher implements Initializeable, HmrAware {
 
         // the stable prefix (the routeKey minus its shape hash) routes an older-shape wire to its handler
         const prefix = prefixOf(interaction.customId);
-        // no route matches an empty prefix. the unhandled default answers it like http does
+        // no route matches an empty prefix. the unhandled default answers it
         if (!prefix)
             this.logger.warn(`${paint.sky.bold(kind)} has invalid customId: ${paint.mute(interaction.customId)}`);
 
@@ -277,18 +278,19 @@ export class InteractionDispatcher implements Initializeable, HmrAware {
     private async processInteraction(
         interaction: ValidInteractionTypes,
         kind: InteractionKind,
-        key: string,
-        fallback: HandlerConstructor = UnhandledRepliable
+        key: string
     ): Promise<void> {
-        const matched = this.maps[kind].get(key);
-        const HandlerCtor = matched?.ctor ?? fallback;
-        if (!matched) {
+        const { fallback, ctor: HandlerCtor } = matchRoute<HandlerConstructor>(this.maps, kind, key, {
+            repliable: UnhandledRepliable,
+            autocomplete: UnhandledAutocomplete
+        });
+        if (fallback) {
             this.logger.warn(`No handler found for key ${paint.sky.bold(key)}. Falling back to ${HandlerCtor.name}.`);
         }
         const config = gatewayRunConfig({
             interaction,
             core: this.core,
-            dispatch: new DispatchContext(kind, key, !matched),
+            dispatch: new DispatchContext(kind, key, fallback),
             HandlerCtor,
             middlewares: this.middlewares,
             logger: this.logger
@@ -301,8 +303,7 @@ export class InteractionDispatcher implements Initializeable, HmrAware {
         if (interaction.isChatInputCommand()) {
             await this.processInteraction(interaction, InteractionKind.Slash, slashRouteOf(interaction));
         } else if (interaction.isAutocomplete()) {
-            const route = slashRouteOf(interaction);
-            await this.processInteraction(interaction, InteractionKind.Autocomplete, route, UnhandledAutocomplete);
+            await this.processInteraction(interaction, InteractionKind.Autocomplete, slashRouteOf(interaction));
         } else if (interaction.isModalSubmit()) {
             await this.handleCustomIdInteraction(interaction, InteractionKind.Modal);
         } else if (interaction.isButton() || interaction.isAnySelectMenu()) {

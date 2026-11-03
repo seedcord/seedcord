@@ -129,9 +129,14 @@ export {
 } from '#subscribers/slots';
 export { DispatchContext, type InteractionDispatch } from '#src/dispatch/DispatchContext';
 export { InteractionRun, type InteractionRunConfig } from '#src/dispatch/InteractionRun';
-export { routeIdOf } from '#src/dispatch/routeIdOf';
 export { componentKindOf } from '#src/dispatch/componentKindOf';
-export { emptyRouteMaps, RouteRegistry, type RegisteredRoute, type RouteMaps } from '#src/dispatch/RouteRegistry';
+export {
+    emptyRouteMaps,
+    matchRoute,
+    RouteRegistry,
+    type RegisteredRoute,
+    type RouteMaps
+} from '#src/dispatch/RouteRegistry';
 export { eventResultFor, resultFor, runAfter } from '#src/dispatch/runAfter';
 export { OnceTracker } from '#src/dispatch/OnceTracker';
 // each transport declaration-merges its own default keys into this

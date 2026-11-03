@@ -33,10 +33,23 @@ export function emptyRouteMaps<Ctor>(): RouteMaps<Ctor> {
     };
 }
 
-interface Owner<Ctor> {
-    readonly ctor: Ctor;
-    readonly kind: InteractionKind;
-    readonly key: string;
+export function matchRoute<Ctor>(
+    maps: RouteMaps<Ctor>,
+    kind: InteractionKind,
+    route: string,
+    unhandled: { readonly repliable: Ctor; readonly autocomplete: Ctor }
+): RegisteredRoute<Ctor> {
+    return (
+        maps[kind].get(route) ?? {
+            kind,
+            route,
+            fallback: true,
+            ctor: kind === InteractionKind.Autocomplete ? unhandled.autocomplete : unhandled.repliable
+        }
+    );
+}
+
+interface Owner<Ctor> extends RegisteredRoute<Ctor> {
     readonly from: string;
 }
 
@@ -52,11 +65,11 @@ export class RouteRegistry<Ctor extends RoutableConstructor> {
     // returns whether the class declared any route
     public register(ctor: Ctor, from: string): boolean {
         // nothing is written until every route clears the check below
-        const writes: { kind: InteractionKind; key: string; routeId: string }[] = [];
+        const writes: { routeId: string; owner: Owner<Ctor> }[] = [];
 
-        for (const [kind, keys] of interactionRoutesOf(ctor)) {
-            for (const key of keys) {
-                const routeId = routeIdOf(kind, key);
+        for (const [kind, routes] of interactionRoutesOf(ctor)) {
+            for (const route of routes) {
+                const routeId = routeIdOf(kind, route);
                 const existing = this.owners.get(routeId);
                 if (existing && existing.ctor !== ctor) {
                     throw new SeedcordTypeError(SeedcordErrorCode.CoreDuplicateName, [
@@ -68,15 +81,15 @@ export class RouteRegistry<Ctor extends RoutableConstructor> {
                         ]
                     ]);
                 }
-                writes.push({ kind, key, routeId });
+                writes.push({ routeId, owner: { kind, route, fallback: false, ctor, from } });
             }
         }
 
         if (writes.length === 0) return false;
 
-        for (const { kind, key, routeId } of writes) {
-            this.maps[kind].set(key, { kind, route: key, fallback: false, ctor });
-            this.owners.set(routeId, { ctor, kind, key, from });
+        for (const { routeId, owner } of writes) {
+            this.maps[owner.kind].set(owner.route, owner);
+            this.owners.set(routeId, owner);
         }
         return true;
     }
@@ -86,7 +99,7 @@ export class RouteRegistry<Ctor extends RoutableConstructor> {
             const owner = this.owners.get(routeId);
             if (owner?.ctor !== ctor) continue;
             this.owners.delete(routeId);
-            this.maps[owner.kind].delete(owner.key);
+            this.maps[owner.kind].delete(owner.route);
         }
     }
 
