@@ -1,5 +1,6 @@
 ---
 '@seedcord/core': minor
+'@seedcord/errors': minor
 '@seedcord/gateway': minor
 ---
 

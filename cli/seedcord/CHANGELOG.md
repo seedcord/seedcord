@@ -1,5 +1,24 @@
 # seedcord
 
+## 0.23.0-next.2
+
+### ✨ Minor
+
+- Added `{"do":"codegen"}` to the commands that `seedcord dev` reads from stdin in JSON mode. It runs codegen for the running bot, like pressing `g`. ([`78a96a9`](https://github.com/seedcord/seedcord/commit/78a96a9777582cef5ad4e84bfa3ff39f4e309a60))
+
+### 🩹 Patch
+
+- Fixed `node dist/index.js` crashing with `Cannot read properties of undefined (reading 'root')` when your code reads `import.meta.dirname`. It now throws `CoreBuiltModuleRanDirectly`, which tells you to run `dist/index.mjs`. ([`c5ba606`](https://github.com/seedcord/seedcord/commit/c5ba60619473410e2ee65801a830f290fae6d71d))
+- Fixed `seedcord build` never exiting on an edge bot with a remote binding, and failing without a Cloudflare login. The boot check now runs the worker without connecting to Cloudflare. ([`20a9bb4`](https://github.com/seedcord/seedcord/commit/20a9bb4b5404a36b6c8c98b15dd25fb187d4cd3d))
+- Fixed a build without `build.start` never saying that it doesn't start your bot. The `seedcord build` summary now says so, and `node dist/index.mjs` warns and tells you to set `build.start`. ([#438](https://github.com/seedcord/seedcord/pull/438))
+- Fixed `seedcord dev` in JSON mode refreshing commands once per saved file, which could deploy a command halfway through an edit across files. It now refreshes once, 2 seconds after your last save. ([#438](https://github.com/seedcord/seedcord/pull/438))
+
+#### 📦 Seedcord packages
+
+- `@seedcord/core` 0.12.0-next.1 → 0.12.0-next.2
+- `@seedcord/errors` 0.15.0-next.1 → 0.15.0-next.2
+- `@seedcord/utils` 0.9.1-next.0 → 0.9.1-next.1
+
 ## 0.23.0-next.1
 
 ### 🩹 Patch

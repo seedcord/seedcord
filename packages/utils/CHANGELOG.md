@@ -1,5 +1,15 @@
 # @seedcord/utils
 
+## 0.9.1-next.1
+
+### 🩹 Patch
+
+- Fixed `node dist/index.js` crashing with `Cannot read properties of undefined (reading 'root')` when your code reads `import.meta.dirname`. It now throws `CoreBuiltModuleRanDirectly`, which tells you to run `dist/index.mjs`. ([`c5ba606`](https://github.com/seedcord/seedcord/commit/c5ba60619473410e2ee65801a830f290fae6d71d))
+
+#### 📦 Seedcord packages
+
+- `@seedcord/errors` 0.15.0-next.1 → 0.15.0-next.2
+
 ## 0.9.1-next.0
 
 ### 🩹 Patch

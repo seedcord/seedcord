@@ -1,5 +1,11 @@
 # @seedcord/eslint-config
 
+## 3.0.1-next.2
+
+### 🩹 Patch
+
+- Fixed `restrict-template-expressions` rejecting an emoji in a template string, like `${Emojis.Streak}`, on both transports. ([#438](https://github.com/seedcord/seedcord/pull/438))
+
 ## 3.0.1-next.1
 
 ### 🩹 Patch

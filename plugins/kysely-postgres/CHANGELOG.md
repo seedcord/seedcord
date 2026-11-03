@@ -1,5 +1,16 @@
 # @seedcord/plugin-kysely-postgres
 
+## 0.8.0-next.2
+
+### 🩹 Patch
+
+- Updated hot reload to the new `HmrModuleHandler` options in `@seedcord/core`. ([#438](https://github.com/seedcord/seedcord/pull/438))
+
+#### 📦 Seedcord packages
+
+- `@seedcord/errors` 0.15.0-next.1 → 0.15.0-next.2
+- `@seedcord/utils` 0.9.1-next.0 → 0.9.1-next.1
+
 ## 0.8.0-next.1
 
 ### 🩹 Patch

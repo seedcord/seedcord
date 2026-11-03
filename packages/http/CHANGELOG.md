@@ -1,5 +1,35 @@
 # @seedcord/http
 
+## 0.12.0-next.2
+
+### 💥 Breaking
+
+- Fixed `Cannot properly serialize component type: undefined` when your bot and seedcord resolved different versions of `@discordjs/builders`. It's now a peer dependency, so seedcord uses your bot's copy. On Yarn, add it to your bot's dependencies. ([#438](https://github.com/seedcord/seedcord/pull/438))
+- Fixed `StaleCustomId` on every click of the second component when a handler lists two customIds with the same prefix. Every route decorator now throws `DecoratorDuplicateKey` for a repeated route or prefix when the file loads. ([#437](https://github.com/seedcord/seedcord/pull/437))
+- Read an event middleware's event name from `this.route` now, in place of `this.eventName`. Event handlers and interaction middleware now have `this.route` too, the same as interaction handlers. ([#437](https://github.com/seedcord/seedcord/pull/437))
+- Read a gate's route from `ctx.dispatch.declaredRoute` now, since `ctx.declaredRoute` no longer exists. ([#437](https://github.com/seedcord/seedcord/pull/437))
+- `HmrModuleHandler` now takes `handlers: { dir, is, register, unregister, getArtifacts }` and `middlewares: { dir, is, register, unregister }` instead of flat options like `handlersDir` and `isHandler`. Upgrade your plugins if you use this. Also bump official plugin versions that you're using. ([#438](https://github.com/seedcord/seedcord/pull/438))
+- `@Subscribe` now takes one `[key, options?]` tuple per key, the same shape as `@RegisterEvent`. Change `@Subscribe('levelUp', { frequency: 'once' })` to `@Subscribe(['levelUp', { frequency: 'once' }])`. One subscriber can now list several keys, branch on the published one with `this.match`, and read it from `this.key`. ([#437](https://github.com/seedcord/seedcord/pull/437))
+
+### ✨ Minor
+
+- Added the `REST` type to both transports and the `API` type to `@seedcord/http`, for helpers that take `core.rest` or `this.api`. ([#438](https://github.com/seedcord/seedcord/pull/438))
+- `this.match()` now resolves to the union of what its cases return, so cases can return different types. A named case map with an extra key no longer compiles, unless you pass `Ret`. With `this.match<Ret>()`, each case must still return `Ret`. ([#438](https://github.com/seedcord/seedcord/pull/438))
+- Interaction handlers and middleware now have `this.user`, the user who sent the interaction. On http it reads `member.user` in a guild, where `this.event.user` is undefined. ([#437](https://github.com/seedcord/seedcord/pull/437))
+
+### 🩹 Patch
+
+- Fixed an autocomplete handler that throws a `Silence` or an ignored API code leaving Discord without a response. seedcord now sends empty choices on a fault if the handler hasn't responded yet. ([#437](https://github.com/seedcord/seedcord/pull/437))
+- Fixed http not logging a warning when an interaction reaches the unhandled default or carries a custom ID that seedcord can't route. It now warns the same as gateway. ([#437](https://github.com/seedcord/seedcord/pull/437))
+- Both transports now log handler faults on the `errors` channel as `Faults`. http used to log them on `interactions` as `Dispatcher`, and gateway labelled some of them `ErrorsHandling`. ([#437](https://github.com/seedcord/seedcord/pull/437))
+- Fixed a `Notice` whose `render()` throws leaving the user with no reply. The user now gets the default fault card on both transports. ([#437](https://github.com/seedcord/seedcord/pull/437))
+
+#### 📦 Seedcord packages
+
+- `@seedcord/core` 0.12.0-next.1 → 0.12.0-next.2
+- `@seedcord/errors` 0.15.0-next.1 → 0.15.0-next.2
+- `@seedcord/utils` 0.9.1-next.0 → 0.9.1-next.1
+
 ## 0.12.0-next.1
 
 ### 💥 Breaking

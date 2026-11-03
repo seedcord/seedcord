@@ -1,5 +1,13 @@
 # create-seedcord
 
+## 0.6.0-next.1
+
+### 🩹 Patch
+
+- Fixed `pnpm create seedcord@next` installing the stable `seedcord` and transport packages. It now installs the `next` release of both. ([#431](https://github.com/seedcord/seedcord/pull/431), thanks [@KTrain5169](https://github.com/KTrain5169))
+- Fixed the generated `package.json` missing its dependencies when you skipped the install step. ([#431](https://github.com/seedcord/seedcord/pull/431), thanks [@KTrain5169](https://github.com/KTrain5169))
+- Fixed a new bot on Windows getting an exact `vite` version, because cmd removed the `^` from `vite@^8.3.4` during the install. ([#431](https://github.com/seedcord/seedcord/pull/431), thanks [@KTrain5169](https://github.com/KTrain5169))
+
 ## 0.6.0-next.0
 
 ### 💥 Breaking
