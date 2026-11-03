@@ -166,6 +166,24 @@ describe('a built edge worker', () => {
         expect(body).not.toContain('../');
     }, 120_000);
 
+    it('gives a handler its built path through import.meta', async () => {
+        const projectDir = await copyEdgeBotForTest();
+        await writeFile(
+            join(projectDir, 'src/handlers/Pinned.ts'),
+            `const pinned =
+    import.meta.dirname.endsWith('/handlers') &&
+    import.meta.filename.endsWith('/handlers/Pinned.js') &&
+    import.meta.url.startsWith('file:');
+if (navigator.userAgent === 'Cloudflare-Workers' && !pinned) throw new Error('import.meta holds the wrong path');
+`
+        );
+        const signing = await writeSigningEnv(projectDir);
+        await edgeBuildRunner(fakeDiscord(signing.publicKey)).run(projectDir);
+        const body = await postToPreview(projectDir, signing.sign);
+
+        expect(body).not.toContain('Could not import handlers/Pinned.js');
+    }, 120_000);
+
     it('reads text and binary files from a listed folder byte for byte', async () => {
         const projectDir = await copyEdgeBotForTest();
         const binary = Buffer.from([0x89, 0x50, 0x4e, 0x47, 0x00, 0xff]);
