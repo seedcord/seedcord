@@ -34,6 +34,9 @@ describe('questionFromText', () => {
             '[3116] Add seedcord to ./ as a dev dependency',
             '    at assertProjectInstall (file:///bot/node_modules/seedcord/dist/cli.mjs:12:9)',
             '    at file:///bot/src/bot.ts:3:1',
+            '    at async Promise.all (index 0)',
+            '    at new Promise (<anonymous>)',
+            '    at <anonymous>',
             'at what point does this run'
         ].join('\n');
 

@@ -28,13 +28,31 @@ export abstract class BaseCommand {
         return program.command(this.name).description(this.description);
     }
 
-    protected async runSteps<Label extends string>(
+    protected runSteps<Label extends string>(
         command: CommandUnknownOpts,
         labels: readonly Label[],
         run: (printer: StepPrinter<Label>) => Promise<void>
     ): Promise<void> {
         const printer = new StepPrinter({ command: this.name, labels, verbose: isVerbose(command) });
         printer.header();
+        return this.runOn(printer, run);
+    }
+
+    protected runQuietSteps<Label extends string>(
+        command: CommandUnknownOpts,
+        labels: readonly Label[],
+        run: (printer: StepPrinter<Label>) => Promise<void>
+    ): Promise<void> {
+        return this.runOn(
+            new StepPrinter({ command: this.name, labels, verbose: isVerbose(command), rows: false }),
+            run
+        );
+    }
+
+    private async runOn<Label extends string>(
+        printer: StepPrinter<Label>,
+        run: (printer: StepPrinter<Label>) => Promise<void>
+    ): Promise<void> {
         try {
             await run(printer);
         } catch (error: unknown) {

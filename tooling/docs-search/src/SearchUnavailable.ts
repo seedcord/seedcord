@@ -6,7 +6,7 @@ export type AskWaitStatus = ValueOf<typeof ASK_WAIT_STATUS>;
 
 const WAIT_REASONS: Record<AskWaitStatus, string> = {
     [ASK_WAIT_STATUS.tooManySearches]: 'Too many searches.',
-    [ASK_WAIT_STATUS.outOfAllowance]: 'Search used up its daily allowance.'
+    [ASK_WAIT_STATUS.outOfAllowance]: 'The guide search hit its daily limit.'
 };
 
 export const isAskWaitStatus = (status: number): status is AskWaitStatus => status in WAIT_REASONS;

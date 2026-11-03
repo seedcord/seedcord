@@ -362,11 +362,11 @@ describe('the rendered scripts', () => {
         ['gateway', GATEWAY],
         ['http', HTTP],
         ['edge', EDGE]
-    ])('give the %s bot commands and ask scripts and a check that runs only scripts it has', async (_kind, answers) => {
+    ])('give the %s bot commands scripts and a check that runs only scripts it has', async (_kind, answers) => {
         const scripts = await scriptsOf(answers);
         const checked = (scripts.check ?? '').split('&&').map((step) => step.trim().replace(/^pnpm run /, ''));
 
-        expect(Object.keys(scripts)).toEqual(expect.arrayContaining(['commands', 'commands:deploy', 'ask']));
+        expect(Object.keys(scripts)).toEqual(expect.arrayContaining(['commands', 'commands:deploy']));
         expect(checked.length).toBeGreaterThan(1);
         for (const name of checked) expect(scripts[name], name).toBeDefined();
     });

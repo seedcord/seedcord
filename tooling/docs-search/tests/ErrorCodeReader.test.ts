@@ -21,11 +21,17 @@ describe('ErrorCodeReader', () => {
     it.each([
         ['3116', 'CliDependencyMissing'],
         ['[3116]', 'CliDependencyMissing'],
-        ['seedcord error 3116', 'seedcord error CliDependencyMissing'],
-        ['getting ERROR CODE: 3116 in dev', 'getting ERROR CODE: CliDependencyMissing in dev'],
         ['[3116] Add seedcord to ./ as a dev dependency', 'CliDependencyMissing Add seedcord to ./ as a dev dependency']
     ])('swaps the code in %s for its name', (input, question) => {
         expect(read(input)).toEqual({ question, swapped: [DEPENDENCY], hints: [] });
+    });
+
+    it.each([
+        ['seedcord error 3116', 'seedcord error 3116 CliDependencyMissing', DEPENDENCY],
+        ['getting ERROR CODE: 3116 in dev', 'getting ERROR CODE: 3116 CliDependencyMissing in dev', DEPENDENCY],
+        ['websocket error 1006', 'websocket error 1006 ConfigMissingEnv', { code: 1006, name: 'ConfigMissingEnv' }]
+    ])('keeps the code in %s and adds its name, since it may belong to something else', (input, question, mention) => {
+        expect(read(input)).toEqual({ question, swapped: [mention], hints: [] });
     });
 
     it.each([
@@ -37,16 +43,25 @@ describe('ErrorCodeReader', () => {
         expect(read(input)).toEqual({ question: input, swapped: [], hints: [hint] });
     });
 
-    it.each(['[9999]', 'error 9999', '9999', 'my bot has 40000 users', 'released 2026-11-03', 'at Ban.ts:3102:5'])(
-        'ignores %s',
-        (input) => {
-            expect(read(input)).toEqual({ question: input, swapped: [], hints: [] });
-        }
-    );
+    it.each([
+        '[9999]',
+        'error 9999',
+        '9999',
+        'my bot has 40000 users',
+        'released 2026-11-03',
+        'at Ban.ts:3102:5',
+        'abc3102',
+        'v3102 of my bot',
+        'id a3102f',
+        '3102ms',
+        'https://x.dev/a3102'
+    ])('ignores %s', (input) => {
+        expect(read(input)).toEqual({ question: input, swapped: [], hints: [] });
+    });
 
     it('reports a code once however often it appears', () => {
         expect(read('[3116] and error 3116')).toEqual({
-            question: 'CliDependencyMissing and error CliDependencyMissing',
+            question: 'CliDependencyMissing and error 3116 CliDependencyMissing',
             swapped: [DEPENDENCY],
             hints: []
         });

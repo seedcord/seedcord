@@ -18,7 +18,7 @@ export function parseQuestion(input: string): Question | undefined {
     return isQuestion(question) ? question : undefined;
 }
 
-const STACK_FRAME = /^\s*at .*:\d+:\d+\)?\s*$/gm;
+const STACK_FRAME = /^\s*at .*(?::\d+:\d+\)?|<anonymous>\)?|\(index \d+\))\s*$/gm;
 
 function cutAtWord(text: string, max: number): string {
     if (text.length <= max) return text;

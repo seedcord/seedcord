@@ -383,7 +383,7 @@ describe('the ask endpoint', () => {
         expect(response.status).toBe(503);
         expect(response.headers.get('retry-after')).toBe(String(7 * 60 * 60));
         expect(response.headers.get('access-control-allow-origin')).toBe('*');
-        expect(await response.json()).toEqual({ error: 'Search used up its daily allowance. Try again in 7 hours.' });
+        expect(await response.json()).toEqual({ error: 'The guide search hit its daily limit. Try again in 7 hours.' });
     });
 
     it('answers another worker with results it can link to', async () => {

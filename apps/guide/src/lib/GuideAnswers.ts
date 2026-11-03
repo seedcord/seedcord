@@ -12,7 +12,7 @@ export interface AnswerEnv {
     AI: { run(model: typeof embedding.model, input: { text: string[] }): Promise<{ data: number[][] }> };
 }
 
-type Ranked = { hits: ReturnType<SectionIndex['rank']> } | Exclude<GuideAnswer, { hits: unknown }>;
+type Ranked = { hits: ReturnType<SectionIndex['rank']> } | Extract<GuideAnswer, { retryAfterSeconds: number }>;
 
 const RESULTS = 8;
 const SECOND_MS = 1000;

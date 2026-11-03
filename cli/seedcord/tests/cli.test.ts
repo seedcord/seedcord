@@ -41,8 +41,8 @@ describe('the seedcord CLI', () => {
         }
     );
 
-    it('runs ask outside a project', async () => {
-        const { code, stderr } = await cliIn(tempProject(), 'ask', '!!!');
+    it.each(['!!!', '--!'])('runs ask outside a project and reads %s as the question', async (question) => {
+        const { code, stderr } = await cliIn(tempProject(), 'ask', question);
 
         expect(code).toBe(1);
         expect(stderr).toContain(`[${SeedcordErrorCode.CliAskBadQuestion}]`);

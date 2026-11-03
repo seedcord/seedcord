@@ -41,7 +41,7 @@ describe('GuideSearch', () => {
 
     it.each([
         [ASK_WAIT_STATUS.tooManySearches, '45', 'Too many searches. Try again in 45 seconds.'],
-        [ASK_WAIT_STATUS.outOfAllowance, '25200', 'Search used up its daily allowance. Try again in 7 hours.']
+        [ASK_WAIT_STATUS.outOfAllowance, '25200', 'The guide search hit its daily limit. Try again in 7 hours.']
     ])('says why it has to wait and for how long on a %i', async (status, retryAfter, message) => {
         answering(new Response(null, { status, headers: { 'retry-after': retryAfter } }));
 

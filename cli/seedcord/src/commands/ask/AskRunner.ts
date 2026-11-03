@@ -1,4 +1,4 @@
-import { ErrorCodeReader, QUESTION_RULE, questionFromText, SearchUnavailable } from '@seedcord/docs-search';
+import { ErrorCodeReader, QUESTION_LENGTH, questionFromText, SearchUnavailable } from '@seedcord/docs-search';
 import { SeedcordErrorCode } from '@seedcord/errors';
 import { SeedcordError, SeedcordTypeError } from '@seedcord/errors/internal';
 import { asError } from '@seedcord/utils/internal';
@@ -10,7 +10,6 @@ import type { AskFormat, AskStep } from './AskPresenter';
 import type { SiteAddress } from '@seedcord/brand';
 import type { GuideResult, GuideSearch, Question } from '@seedcord/docs-search';
 
-// an uncached search takes about 0.6s
 const SEARCH_TIMEOUT_MS = 10_000;
 
 const CODE_READER = new ErrorCodeReader(SeedcordErrorCode);
@@ -23,7 +22,9 @@ export class AskRunner {
 
     public async run(output: PresenterOutput<AskStep>, format: AskFormat, text: string): Promise<void> {
         const { question, shortened } = questionFromText(text);
-        if (question === undefined) throw new SeedcordTypeError(SeedcordErrorCode.CliAskBadQuestion, [QUESTION_RULE]);
+        if (question === undefined) {
+            throw new SeedcordTypeError(SeedcordErrorCode.CliAskBadQuestion, [QUESTION_LENGTH.min]);
+        }
 
         const presenter = new AskPresenter(output, format, this.site);
         presenter.detail('site', this.site.url);
