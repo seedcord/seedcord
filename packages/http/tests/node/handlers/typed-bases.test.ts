@@ -114,6 +114,31 @@ describe('SlashHandler options and match', () => {
         );
     });
 
+    it('resolves to the union of what its cases return', async () => {
+        class Mod extends SlashHandler<'hbBan' | 'hbKick'> {
+            async execute(): Promise<void> {}
+            async run(): Promise<unknown> {
+                const result = await this.match({
+                    hbBan: () => ({ hits: ['a'] }),
+                    hbKick: () => Promise.resolve({ text: 'b' })
+                });
+                expectTypeOf(result).toEqualTypeOf<{ hits: string[] } | { text: string }>();
+
+                await this.match<string>({
+                    hbBan: () => 'banned',
+                    // @ts-expect-error this case returns a number.
+                    hbKick: () => 1
+                });
+                return result;
+            }
+        }
+
+        const event = slashEvent({ name: 'hbKick', options: [] });
+        await expect(new Mod(event, coreMock().core, new DispatchContext('slash', 'hbKick')).run()).resolves.toEqual({
+            text: 'b'
+        });
+    });
+
     it('throws MatchCaseMissing for a route with no case', async () => {
         class Ban extends SlashHandler<'hbBan'> {
             async execute(): Promise<void> {
@@ -170,6 +195,22 @@ describe('AutocompleteHandler focused, match, options, route', () => {
         const [route, options] = post.mock.calls[0] as [string, { body: { type: number; data: unknown } }];
         expect(route).toBe('/interactions/int-1/tok/callback');
         expect(options.body).toEqual({ type: 8, data: { choices: [{ name: 'par', value: 'par' }] } });
+    });
+
+    it('resolves to the union of what its cases return', async () => {
+        class Search extends AutocompleteHandler<'hbSearch'> {
+            async execute(): Promise<void> {}
+            async run(): Promise<unknown> {
+                const result = await this.match({
+                    query: () => ({ hits: ['a'] }),
+                    tag: () => Promise.resolve({ text: 'b' })
+                });
+                expectTypeOf(result).toEqualTypeOf<{ hits: string[] } | { text: string }>();
+                return result;
+            }
+        }
+
+        await expect(new Search(searchEvent, coreMock().core, searchDispatch).run()).resolves.toEqual({ hits: ['a'] });
     });
 
     it('reads entered siblings and the selected route', async () => {

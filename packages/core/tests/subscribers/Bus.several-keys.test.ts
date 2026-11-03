@@ -25,9 +25,19 @@ describe('a subscriber on several keys', () => {
         @Subscribe(['unknownException'], ['unhandledInteractionError'])
         class Both extends Subscriber<'unknownException' | 'unhandledInteractionError', CoreBase> {
             async execute(): Promise<void> {
-                await this.match({
+                const result = await this.match({
                     unknownException: (data) => seen.push(`unknown ${data.origin}`),
-                    unhandledInteractionError: (data) => seen.push(`unhandled ${data.error.message}`)
+                    unhandledInteractionError: (data) => {
+                        seen.push(`unhandled ${data.error.message}`);
+                        return Promise.resolve('done');
+                    }
+                });
+                expectTypeOf(result).toEqualTypeOf<number | string>();
+
+                await this.match<string>({
+                    unknownException: () => 'unknown',
+                    // @ts-expect-error this case returns a number.
+                    unhandledInteractionError: () => 1
                 });
             }
         }

@@ -1,13 +1,14 @@
 import { Logger } from '@seedcord/logger';
 
-import { caseFor } from '#src/handlers/caseFor';
+import { runCase } from '#src/handlers/runCase';
 
 import type { CoreBase } from '#interfaces/CoreBase';
+import type { CaseReturn, MatchResult, OnlyCases } from '#src/handlers/runCase';
 import type { SubscriptionKey, AllSubscriptions } from './types/Subscriptions';
-import type { IsUnion, Promisable } from 'type-fest';
+import type { IsUnion } from 'type-fest';
 
 type SubscriberMatchCases<Keys extends SubscriptionKey, Ret> = {
-    [Key in Keys]: (data: AllSubscriptions[Key]) => Promisable<Ret>;
+    [Key in Keys]: (data: AllSubscriptions[Key]) => CaseReturn<Ret>;
 };
 
 type SingleKeyData<Keys extends SubscriptionKey> = IsUnion<Keys> extends true ? never : AllSubscriptions[Keys];
@@ -58,6 +59,7 @@ export abstract class Subscriber<in out Keys extends SubscriptionKey, TCore exte
      * Provide one case per registered key. Each case receives that key's own payload. A missing key or an unknown
      * key is a compile error.
      *
+     * @typeParam Ret - The type that every case must return. Leave it out to get the union of what the cases return.
      * @throws A **SeedcordTypeError** with `MatchCaseMissing` when the published key doesn't have a case.
      *
      * @example
@@ -75,7 +77,9 @@ export abstract class Subscriber<in out Keys extends SubscriptionKey, TCore exte
      * }
      * ```
      */
-    protected async match<Ret>(cases: SubscriberMatchCases<Keys, Ret>): Promise<Ret> {
-        return await caseFor(this, cases, 'subscription key', this.key)(this.#payload);
+    protected async match<Ret = never, Cases extends SubscriberMatchCases<Keys, Ret> = SubscriberMatchCases<Keys, Ret>>(
+        cases: OnlyCases<Cases, SubscriberMatchCases<Keys, Ret>>
+    ): Promise<MatchResult<Ret, Cases>> {
+        return await runCase<MatchResult<Ret, Cases>>(this, cases, 'subscription key', this.key, this.#payload);
     }
 }

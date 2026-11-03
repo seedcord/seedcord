@@ -138,3 +138,53 @@ class Moderation extends SlashHandler<'ban' | 'kick'> {
     }
 }
 ```
+
+## Use what the cases return
+
+The code after [`match`](ref:gateway/SlashHandler.match) often needs a value that each case worked out. If you assign that value to a `let` above `match`, TypeScript reports the `let` as used before it's assigned, because it doesn't follow assignments inside the callbacks.
+
+Return the value from each case. `match` resolves to what the case returned.
+
+```ts twoslash
+import { SlashHandler, SlashRoute } from '@seedcord/gateway';
+
+@SlashRoute('ban', 'kick')
+class Moderation extends SlashHandler<'ban' | 'kick'> {
+    public async execute(): Promise<void> {
+        // ---cut---
+        const outcome = await this.match({
+            //  ^?
+            ban: () => ({ banned: true }),
+            kick: async () => ({ notified: true })
+        });
+        // ---cut-after---
+    }
+}
+```
+
+`outcome` is a union of both shapes, because each case returned its own. `kick` returns a promise, and `match` waits for it before it resolves.
+
+### Make every case return the same type
+
+A union accepts whatever each case returns, so TypeScript only reports a wrong return at the code that reads the result. To get the error on the case itself, pass the type that every case must return.
+
+```ts twoslash
+// @errors: 2322
+import { SlashHandler, SlashRoute } from '@seedcord/gateway';
+
+// ---cut---
+@SlashRoute('ban', 'kick')
+class Moderation extends SlashHandler<'ban' | 'kick'> {
+    public async execute(): Promise<void> {
+        const summary = await this.match<string>({
+            ban: () => 'Banned.',
+            kick: () => 1
+        });
+        await this.reply(summary);
+    }
+}
+```
+
+TypeScript reports the error on `kick`, which returns a number. `summary` is a `string`, the type you passed.
+
+Write the cases inline when you pass a type. If you pass a map stored in a variable, TypeScript doesn't check its keys, so an extra key compiles and never runs.

@@ -1,15 +1,14 @@
-import { caseFor, SlashRouteBrand } from '@seedcord/core/internal';
+import { runCase, SlashRouteBrand } from '@seedcord/core/internal';
 
 import { InteractionHandler } from '#handlers/interaction/InteractionHandler';
 
 import type { SlashOptions } from '#inputs/SlashOptions';
 import type { SlashRegistry } from '@seedcord/core';
-import type { CacheFor } from '@seedcord/core/internal';
+import type { CacheFor, CaseReturn, MatchResult, OnlyCases } from '@seedcord/core/internal';
 import type { CacheType, ChatInputCommandInteraction } from 'discord.js';
-import type { Promisable } from 'type-fest';
 
 type SlashMatchCases<Route extends keyof SlashRegistry, Cache extends CacheType, Ret> = {
-    [Key in Route]: (options: SlashOptions<Key, Cache>) => Promisable<Ret>;
+    [Key in Route]: (options: SlashOptions<Key, Cache>) => CaseReturn<Ret>;
 };
 
 /**
@@ -70,6 +69,7 @@ export abstract class SlashHandler<
      * key is a compile error.
      *
      * @param cases - One handler per registered route, keyed by route string.
+     * @typeParam Ret - The type that every case must return. Leave it out to get the union of what the cases return.
      * @returns The result of the case that ran.
      *
      * @example
@@ -85,7 +85,10 @@ export abstract class SlashHandler<
      * }
      * ```
      */
-    protected async match<Ret>(cases: SlashMatchCases<Route, Cache, Ret>): Promise<Ret> {
-        return await caseFor(this, cases, 'command route', this.route)(this.options);
+    protected async match<
+        Ret = never,
+        Cases extends SlashMatchCases<Route, Cache, Ret> = SlashMatchCases<Route, Cache, Ret>
+    >(cases: OnlyCases<Cases, SlashMatchCases<Route, Cache, Ret>>): Promise<MatchResult<Ret, Cases>> {
+        return await runCase<MatchResult<Ret, Cases>>(this, cases, 'command route', this.route, this.options);
     }
 }
