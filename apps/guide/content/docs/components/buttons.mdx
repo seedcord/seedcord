@@ -168,7 +168,7 @@ export class CloseTicket extends ButtonHandler<
 
 ## When someone clicks twice
 
-Each click is its own interaction, so a double click can run your handler twice at the same moment. If you disable the button in `update()`, a click made before Discord applies that change still reaches your bot. That's a problem if the handler gives out a reward or writes to your database.
+Each click runs your handler, so a double click can run it twice at the same moment. That's a problem if the handler gives out a reward or writes to your database.
 
 To stop the second click, call `charge` on [the rate limiter](/checks/rate-limiter) first in `execute()`, with a window that allows one use.
 
