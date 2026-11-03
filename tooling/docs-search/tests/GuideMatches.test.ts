@@ -1,8 +1,12 @@
+import { PRODUCTION_SITES } from '@seedcord/brand';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 
 import { GuideMatches } from '#src/GuideMatches';
 
 import type { GuideSection } from '#src/guideSections';
+
+const SITE = PRODUCTION_SITES.guide;
+const matchesIn = (sections: readonly GuideSection[]): GuideMatches => new GuideMatches(sections, SITE);
 
 const SECTIONS: GuideSection[] = [
     { path: '/events/', tab: 'Events', page: 'Event handlers', text: 'Listen to a gateway event.' },
@@ -36,7 +40,7 @@ describe('GuideMatches', () => {
             return Promise.resolve(Response.json(SECTIONS));
         });
 
-        const matches = await GuideMatches.load();
+        const matches = await GuideMatches.load(SITE);
 
         expect(asked).toEqual(['/guide/api/sections.json']);
         expect(matches.match('cool')).toEqual([
@@ -54,18 +58,18 @@ describe('GuideMatches', () => {
     it('throws with the status when the sections file fails to load', async () => {
         vi.stubGlobal('fetch', () => Promise.resolve(new Response(null, { status: 404 })));
 
-        await expect(GuideMatches.load()).rejects.toThrow(/404/);
+        await expect(GuideMatches.load(SITE)).rejects.toThrow(/404/);
     });
 
     it('matches a title only when every typed word starts one of its words', () => {
-        const matches = new GuideMatches(SECTIONS);
+        const matches = matchesIn(SECTIONS);
 
         expect(paths(matches, 'event han')).toEqual(['/events/', '/events/#several-handlers-for-one-event']);
         expect(paths(matches, 'event cooldown')).toEqual([]);
     });
 
     it('puts a page ahead of a heading, then a whole word ahead of a word it only starts', () => {
-        const matches = new GuideMatches([
+        const matches = matchesIn([
             heading('/checks/effect-gates/#cooldown', 'Effect gates', 'Cooldown'),
             heading('/checks/rate-limiter/#cooldowns-by-hand', 'Rate limiter', 'Cooldowns by hand'),
             ...SECTIONS
@@ -79,7 +83,7 @@ describe('GuideMatches', () => {
     });
 
     it('finds text pasted from a section, after the title matches, with an excerpt starting near it', () => {
-        const matches = new GuideMatches([
+        const matches = matchesIn([
             ...SECTIONS,
             {
                 ...heading('/checks/cooldown/#who-shares-a-window', 'Cooldowns', 'Who shares a window'),
@@ -100,7 +104,7 @@ describe('GuideMatches', () => {
     });
 
     it('matches text only where the typed phrase starts a word', () => {
-        const matches = new GuideMatches([
+        const matches = matchesIn([
             { ...heading('/build/config/#tools', 'Config', 'Tools'), text: 'Keep eslint.config.ts outside root.' },
             { ...heading('/checks/cooldown/#window', 'Cooldowns', 'Window'), text: 'The window is a sliding window.' }
         ]);
@@ -109,7 +113,7 @@ describe('GuideMatches', () => {
     });
 
     it('returns at most five matches, titles first', () => {
-        const matches = new GuideMatches(
+        const matches = matchesIn(
             ['one', 'two', 'three', 'four', 'five', 'six'].map((n) => ({
                 ...heading(`/checks/cooldown/#${n}`, 'Cooldowns', `Window ${n}`),
                 text: 'Every use counts inside the window.'

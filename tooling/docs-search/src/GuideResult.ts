@@ -1,5 +1,3 @@
-import { GUIDE } from '@seedcord/ui/sites';
-
 import type { GuideHit } from '#src/guideSections';
 import type { SiteAddress } from '@seedcord/brand';
 
@@ -10,7 +8,7 @@ type FoundBy =
 
 export type GuideResult = GuideHit & { url: string } & FoundBy;
 
-export const guideResult = (hit: GuideHit, found: FoundBy, site: SiteAddress = GUIDE): GuideResult => ({
+export const guideResult = (hit: GuideHit, found: FoundBy, site: SiteAddress): GuideResult => ({
     ...hit,
     url: site.at(hit.path),
     ...found

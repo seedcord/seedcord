@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 
-import { parseQuestion, QUESTION_LENGTH } from '#src/question';
+import { parseQuestion, QUESTION_LENGTH, questionFromText } from '#src/question';
 
 describe('parseQuestion', () => {
     it('trims a question and collapses its whitespace', () => {
@@ -25,5 +25,43 @@ describe('parseQuestion', () => {
         ['only punctuation', '!!!!']
     ])('rejects a question that is %s', (_, input) => {
         expect(parseQuestion(input)).toBeUndefined();
+    });
+});
+
+describe('questionFromText', () => {
+    it('removes stack frames from a pasted error and leaves lines that only start with at', () => {
+        const pasted = [
+            '[3116] Add seedcord to ./ as a dev dependency',
+            '    at assertProjectInstall (file:///bot/node_modules/seedcord/dist/cli.mjs:12:9)',
+            '    at file:///bot/src/bot.ts:3:1',
+            'at what point does this run'
+        ].join('\n');
+
+        expect(questionFromText(pasted)).toEqual({
+            question: '[3116] Add seedcord to ./ as a dev dependency at what point does this run',
+            shortened: false
+        });
+    });
+
+    it('cuts a long paste at a word and says it did', () => {
+        const { question, shortened } = questionFromText('word '.repeat(QUESTION_LENGTH.max));
+
+        expect(shortened).toBe(true);
+        expect(question?.length).toBeLessThanOrEqual(QUESTION_LENGTH.max);
+        expect(question?.endsWith('word')).toBe(true);
+    });
+
+    it('cuts a long paste with no spaces at the limit', () => {
+        const { question, shortened } = questionFromText('k'.repeat(QUESTION_LENGTH.max + 1));
+
+        expect(shortened).toBe(true);
+        expect(question).toHaveLength(QUESTION_LENGTH.max);
+    });
+
+    it('has no question when only punctuation is left', () => {
+        expect(questionFromText('    at file:///bot/src/bot.ts:3:1\n!!!')).toEqual({
+            question: undefined,
+            shortened: false
+        });
     });
 });

@@ -57,6 +57,6 @@ export class GuideAnswers implements GuideService {
 
         const ranked = await this.rank(question, await this.index());
         if ('retryAfterSeconds' in ranked) return ranked;
-        return { hits: ranked.hits.map((hit) => guideResult(hit, { by: 'meaning' })) };
+        return { hits: ranked.hits.map((hit) => guideResult(hit, { by: 'meaning' }, GUIDE)) };
     }
 }

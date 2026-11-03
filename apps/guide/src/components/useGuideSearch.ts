@@ -8,6 +8,7 @@ import {
     SearchUnavailable,
     SiteUnreachable
 } from '@seedcord/docs-search';
+import { GUIDE } from '@seedcord/ui/sites';
 import { useEffect, useMemo, useState } from 'react';
 
 import { ERROR_CODES } from '#lib/errorCodes';
@@ -20,9 +21,9 @@ const TYPING_PAUSE_MS = 250;
 const NO_RESULTS: GuideResult[] = [];
 const NO_CODES: CodeMentions = { swapped: [], hints: [] };
 
-const search = new GuideSearch();
+const search = new GuideSearch(GUIDE);
 
-const loadMatches = loadOnce(() => GuideMatches.load());
+const loadMatches = loadOnce(() => GuideMatches.load(GUIDE));
 
 type States = {
     pending: Record<never, never>;

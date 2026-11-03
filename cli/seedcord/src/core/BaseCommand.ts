@@ -12,12 +12,21 @@ function exitFor(error: unknown): void {
 }
 
 export abstract class BaseCommand {
+    public readonly needsProject: boolean;
+
     constructor(
         public readonly name: string,
-        public readonly description: string
-    ) {}
+        public readonly description: string,
+        { needsProject = true }: { needsProject?: boolean } = {}
+    ) {
+        this.needsProject = needsProject;
+    }
 
-    public abstract register(program: Command): void;
+    public abstract register(program: Command): CommandUnknownOpts;
+
+    protected define(program: Command): Command {
+        return program.command(this.name).description(this.description);
+    }
 
     protected async runSteps<Label extends string>(
         command: CommandUnknownOpts,

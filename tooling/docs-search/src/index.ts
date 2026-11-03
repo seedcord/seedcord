@@ -15,7 +15,7 @@ export {
 export { guideResult, type GuideResult } from '#src/GuideResult';
 export { GuideSearch } from '#src/GuideSearch';
 export type { GuideAnswer, GuideService } from '#src/GuideService';
-export { parseQuestion, QUESTION_LENGTH, QUESTION_RULE, type Question } from '#src/question';
+export { parseQuestion, QUESTION_LENGTH, QUESTION_RULE, questionFromText, type Question } from '#src/question';
 export { guideSections, type GuideSection } from '#src/guideSections';
 export { findWordStart, GuideMatches } from '#src/GuideMatches';
 export { loadOnce } from '#src/loadOnce';

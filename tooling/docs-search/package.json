@@ -45,10 +45,10 @@
         "@seedcord/eslint-config": "workspace:^",
         "@seedcord/tsconfig": "workspace:^",
         "@seedcord/tsdown-config": "workspace:^",
-        "@seedcord/ui": "workspace:^",
         "@seedcord/vitest-config": "workspace:^",
         "type-fest": "catalog:deps"
     },
+    "sideEffects": false,
     "dependencies": {
         "@leeoniya/ufuzzy": "catalog:deps",
         "fumadocs-core": "catalog:deps"

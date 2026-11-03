@@ -62,9 +62,19 @@ describe('GuideSearch', () => {
         }
     });
 
-    it('throws with the status when the endpoint fails another way', async () => {
+    it('throws with the status and leaves the question out when the endpoint fails another way', async () => {
         answering(new Response(null, { status: 500 }));
 
-        await expect(new GuideSearch(SITE).search(askedQuestion('button'), SIGNAL)).rejects.toThrow(/500/);
+        await expect(new GuideSearch(SITE).search(askedQuestion('button'), SIGNAL)).rejects.toThrow(
+            new Error(`${ENDPOINT} failed to load with status 500`)
+        );
+    });
+
+    it('leaves the question out when the request never reaches the server', async () => {
+        vi.stubGlobal('fetch', () => Promise.reject(new TypeError('fetch failed')));
+
+        await expect(new GuideSearch(SITE).search(askedQuestion('button'), SIGNAL)).rejects.toThrow(
+            new Error(`${ENDPOINT} failed to load because the request never reached the server`)
+        );
     });
 });

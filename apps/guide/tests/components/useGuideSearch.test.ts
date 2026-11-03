@@ -194,7 +194,7 @@ describe('useGuideSearch', () => {
         expect(signals.get('kysely')).toBe(answered);
     });
 
-    it('blames the network only when the request never reached the server', async () => {
+    it('says there is no connection only when the request never reached the server', async () => {
         const { answer } = serving();
         const { result } = renderHook(() => useGuideSearch('cooldown', true).groups);
         await pauseTyping();

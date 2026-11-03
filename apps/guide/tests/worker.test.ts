@@ -1,6 +1,7 @@
 import { existsSync, readFileSync } from 'node:fs';
 import { resolve } from 'node:path';
 
+import { NEXT_GUIDE } from '@seedcord/brand';
 import { embedding, GUIDE_SECTIONS_PATH, GUIDE_VECTORS_PATH, QUESTION_RULE } from '@seedcord/docs-search';
 import { GUIDE as guideSite } from '@seedcord/ui/sites';
 import { parse } from 'jsonc-parser';
@@ -422,14 +423,23 @@ describe('the ask endpoint', () => {
         expect(response.status).toBe(429);
         expect(env.embedded).toEqual([]);
 
-        // wrangler validates this file on every deploy
-        const config = parse(
-            readFileSync(resolve(import.meta.dirname, '../wrangler.jsonc'), 'utf8')
-        ) as Unstable_RawConfig;
+        const config = wranglerConfig();
         const periods = [config, config.env?.next].map(
             (environment) => environment?.ratelimits?.find(({ name }) => name === 'ASK_LIMIT')?.simple.period
         );
         const retryAfter = Number(response.headers.get('retry-after'));
         expect(periods).toEqual([retryAfter, retryAfter]);
     });
+
+    it('serves the next environment from the address the CLI searches', () => {
+        expect(wranglerConfig().env?.next?.routes).toContainEqual({
+            pattern: NEXT_GUIDE.label,
+            zone_name: 'seedcord.org'
+        });
+    });
 });
+
+// wrangler validates this file on every deploy
+function wranglerConfig(): Unstable_RawConfig {
+    return parse(readFileSync(resolve(import.meta.dirname, '../wrangler.jsonc'), 'utf8')) as Unstable_RawConfig;
+}

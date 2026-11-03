@@ -17,3 +17,17 @@ export function parseQuestion(input: string): Question | undefined {
     const question = collapseSpaces(input.trim());
     return isQuestion(question) ? question : undefined;
 }
+
+const STACK_FRAME = /^\s*at .*:\d+:\d+\)?\s*$/gm;
+
+function cutAtWord(text: string, max: number): string {
+    if (text.length <= max) return text;
+    const lastSpace = text.lastIndexOf(' ', max);
+    return text.slice(0, lastSpace > 0 ? lastSpace : max);
+}
+
+export function questionFromText(text: string): { question: Question | undefined; shortened: boolean } {
+    const withoutFrames = collapseSpaces(text.replaceAll(STACK_FRAME, '').trim());
+    const kept = cutAtWord(withoutFrames, QUESTION_LENGTH.max);
+    return { question: parseQuestion(kept), shortened: kept.length < withoutFrames.length };
+}

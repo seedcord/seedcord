@@ -2,9 +2,11 @@ export type ReadAsset = (path: string) => Promise<Response>;
 
 const fetchPath: ReadAsset = (path) => fetch(path);
 
+const withoutQuery = (path: string): string => path.replace(/\?.*$/, '');
+
 export class SiteUnreachable extends Error {
     constructor(path: string, cause: TypeError) {
-        super(`${path} failed to load because the request never reached the server`, { cause });
+        super(`${withoutQuery(path)} failed to load because the request never reached the server`, { cause });
     }
 }
 
@@ -20,7 +22,7 @@ async function requestReachingServer(path: string, read: ReadAsset): Promise<Res
 
 export async function readAsset(path: string, read: ReadAsset = fetchPath): Promise<Response> {
     const response = await requestReachingServer(path, read);
-    if (!response.ok) throw new Error(`${path} failed to load with status ${response.status}`);
+    if (!response.ok) throw new Error(`${withoutQuery(path)} failed to load with status ${response.status}`);
     return response;
 }
 

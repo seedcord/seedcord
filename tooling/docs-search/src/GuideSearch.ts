@@ -1,5 +1,3 @@
-import { GUIDE } from '@seedcord/ui/sites';
-
 import { GUIDE_ASK_PATH } from '#src/files';
 import { guideResult } from '#src/GuideResult';
 import { readJson } from '#src/readAsset';
@@ -21,7 +19,7 @@ async function fetchAnswer(url: string, signal: AbortSignal): Promise<Response> 
 }
 
 export class GuideSearch {
-    constructor(private readonly site: SiteAddress = GUIDE) {}
+    constructor(private readonly site: SiteAddress) {}
 
     async search(question: Question, signal: AbortSignal): Promise<GuideResult[]> {
         const url = new URL(this.site.at(GUIDE_ASK_PATH));
