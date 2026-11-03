@@ -69,7 +69,7 @@ export class Jobs extends Plugin {
 }
 ```
 
-`init()` calls `trackHandler` for each class it registers. If you skip that call, a save has nothing to unregister, and the old class stays beside the new one. `handlersDir` limits the handler to files under `dir`, so saves elsewhere pass through it. `isHandler` sees every export of a file, so it has to pick out your classes from helpers and constants.
+`init()` calls `trackHandler` for each class it registers. If you skip that call, a save has nothing to unregister, and the old class stays beside the new one. `handlers.dir` limits the handler to files under that folder, so saves elsewhere pass through it. `handlers.is` receives every export of a file, so it has to pick out your classes from helpers and constants.
 
 ### What each save does
 
