@@ -57,33 +57,24 @@ export class HmrModuleHandler<THandler, TMiddleware = void, TArtifacts = unknown
 
     /**
      * Unloads or reloads the modules affected by an {@link HmrUpdateEvent}, scoped to the handler and middleware directories.
-     * Then retries every file that failed earlier because another file defined the same name.
+     * When that unloads something, it also retries every file that failed earlier on a duplicate name.
      */
     public async handle(event: HmrUpdateEvent): Promise<void> {
-        const rollbackEnabled = event.rollback ?? true;
-        const waiting = [...this.blockedFiles].filter((file) => file !== event.file);
-        this.blockedFiles.clear();
-        await this.apply(event, rollbackEnabled);
-
-        for (const file of waiting) {
-            const names = await this.reloadWithRollback(file, rollbackEnabled);
-            this.report('Registered', names, [file]);
-        }
-    }
-
-    private async apply(event: HmrUpdateEvent, rollbackEnabled: boolean): Promise<void> {
         const { file, affectedModules, type } = event;
-
-        if (type === 'delete' || type === 'deleteDir') {
-            this.report('Unloaded', this.unload(file), [file]);
-            return;
-        }
 
         // a directory is never importable. its files arrive as their own create events
         if (type === 'createDir') return;
 
-        const filesToReload = affectedModules && affectedModules.length > 0 ? affectedModules : [file];
+        const removed = type === 'delete' || type === 'deleteDir';
+        const affected = affectedModules?.length ? affectedModules : [file];
+        const freesNames = affected.some((candidate) => this.holdsUnits(candidate));
+        if (removed) this.report('Unloaded', this.unload(file), [file]);
+        this.blockedFiles.delete(file);
 
+        const filesToReload = new Set([...(removed ? [] : affected), ...(freesNames ? this.blockedFiles : [])]);
+        filesToReload.forEach((reloading) => this.blockedFiles.delete(reloading));
+
+        const rollbackEnabled = event.rollback ?? true;
         const startedAt = Date.now();
         const names: string[] = [];
         const touched: string[] = [];
@@ -99,6 +90,10 @@ export class HmrModuleHandler<THandler, TMiddleware = void, TArtifacts = unknown
         }
 
         this.report(type === 'create' ? 'Registered' : 'Reloaded', names, touched, Date.now() - startedAt);
+    }
+
+    private holdsUnits(file: string): boolean {
+        return this.store.fileToHandlers.has(file) || this.store.fileToMiddlewares.has(file);
     }
 
     private inScope(file: string): boolean {

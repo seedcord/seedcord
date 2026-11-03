@@ -466,6 +466,10 @@ describe('DevRunner run', () => {
 });
 
 describe('runPlain, with no terminal to answer prompts', () => {
+    afterEach(() => {
+        vi.useRealTimers();
+    });
+
     it('restarts the bot when a save needs a restart', async () => {
         const store = new DevStore();
         let sessions = 0;
@@ -496,8 +500,28 @@ describe('runPlain, with no terminal to answer prompts', () => {
         expect(refresh).not.toHaveBeenCalled();
 
         vi.advanceTimersByTime(500);
-        vi.useRealTimers();
         expect(refresh).toHaveBeenCalledExactlyOnceWith(true);
+
+        await runner.quit();
+        await running;
+    });
+
+    it.each(['restart', 'disconnect'] as const)('forgets a pending command refresh on %s', async (leave) => {
+        const store = new DevStore();
+        const stillOpening = new ServerDevRuntime();
+        stillOpening.start = () => new Promise<void>(() => undefined);
+        const runtimes = [fakeRuntime({ default: readyBot }), stillOpening];
+        const runner = makeRunner({ store, runtime: () => runtimes.shift() ?? stillOpening });
+
+        const running = runPlain(store, runner, new PassThrough());
+        await vi.waitFor(() => expect(store.getState().phase).toBe('running'));
+
+        vi.useFakeTimers({ toFake: ['setTimeout', 'clearTimeout'] });
+        store.apply({ type: 'command-update-prompt', files: ['ban.ts'] });
+        await runner[leave]();
+        await vi.waitFor(() => expect(store.getState().commandUpdatePrompt).toBeNull());
+
+        expect(() => vi.advanceTimersByTime(2000)).not.toThrow();
 
         await runner.quit();
         await running;

@@ -78,6 +78,15 @@ if (Envapter.get('RUNTIME_GREETING') !== env.RUNTIME_GREETING) throw new Error('
 if (Envapter.environment !== 'production') throw new Error('Worker mode disagrees');
 ${await readFile(bot, 'utf8')}`
         );
+        await writeFile(
+            join(projectDir, 'src/handlers/Pinned.ts'),
+            `const pinned =
+    import.meta.dirname.endsWith('/handlers') &&
+    import.meta.filename.endsWith('/handlers/Pinned.js') &&
+    import.meta.url.startsWith('file:');
+if (navigator.userAgent === 'Cloudflare-Workers' && !pinned) throw new Error('import.meta holds the wrong path');
+`
+        );
         result = await edgeBuildRunner(fakeDiscord(signing.publicKey)).run(projectDir);
         await writeFile(
             join(projectDir, '.env'),
@@ -90,7 +99,7 @@ ${await readFile(bot, 'utf8')}`
 
     it('reports the worker it bundled for the summary', () => {
         expect(result.bundle).toEqual({
-            modules: 2,
+            modules: 3,
             listedFiles: 1,
             bytes: expect.any(Number) as number,
             entry: expect.stringMatching(/index\.mjs$/) as string
@@ -181,24 +190,6 @@ describe('a built edge worker', () => {
 
         expect(body).toContain('Could not import handlers/Broken.js');
         expect(body).not.toContain('../');
-    }, 120_000);
-
-    it('gives a handler its built path through import.meta', async () => {
-        const projectDir = await copyEdgeBotForTest();
-        await writeFile(
-            join(projectDir, 'src/handlers/Pinned.ts'),
-            `const pinned =
-    import.meta.dirname.endsWith('/handlers') &&
-    import.meta.filename.endsWith('/handlers/Pinned.js') &&
-    import.meta.url.startsWith('file:');
-if (navigator.userAgent === 'Cloudflare-Workers' && !pinned) throw new Error('import.meta holds the wrong path');
-`
-        );
-        const signing = await writeSigningEnv(projectDir);
-        await edgeBuildRunner(fakeDiscord(signing.publicKey)).run(projectDir);
-        const body = await postToPreview(projectDir, signing.sign);
-
-        expect(body).not.toContain('Could not import handlers/Pinned.js');
     }, 120_000);
 
     it('reads text and binary files from a listed folder byte for byte', async () => {

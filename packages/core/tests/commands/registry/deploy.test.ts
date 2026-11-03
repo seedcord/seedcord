@@ -286,4 +286,20 @@ describe('CommandRegistry.deploy', () => {
 
         expect(put).toHaveBeenCalledOnce();
     });
+
+    it('holds a refresh until the startup deploy finishes', async () => {
+        const startupPut = Promise.withResolvers<APIApplicationCommand[]>();
+        const put = vi.fn().mockReturnValueOnce(startupPut.promise).mockResolvedValue(BARE);
+        const registry = registryWith(put);
+        const deploying = registry.deploy(new AbortController().signal, {});
+        await vi.waitFor(() => expect(put).toHaveBeenCalledOnce());
+
+        const refreshing = registry.refresh();
+        // an unqueued refresh reaches its put within 50ms. setImmediate is too soon to catch it
+        await new Promise((resolve) => setTimeout(resolve, 50));
+        expect(put).toHaveBeenCalledOnce();
+
+        startupPut.resolve(BARE);
+        await Promise.all([deploying, refreshing]);
+    });
 });

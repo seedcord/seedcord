@@ -104,6 +104,11 @@ describe('button decode', () => {
                     reject: ({ userId }) => `rejected ${userId}`
                 });
             }
+
+            async runMixed(): Promise<void> {
+                const result = await this.match({ approve: () => 'approved', reject: () => 1 });
+                expectTypeOf(result).toEqualTypeOf<string | number>();
+            }
         }
 
         const wire = RejectId.encode({ userId: '42' });

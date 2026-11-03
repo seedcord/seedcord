@@ -164,14 +164,7 @@ describe('HmrModuleHandler', () => {
 
     describe('log lines', () => {
         it('reports the reload with how long it took', async () => {
-            const { logger, spies } = fakeLogger();
-            const timed = new HmrModuleHandler<TestHandler>({
-                handlersDir,
-                isHandler,
-                registerHandler,
-                unregisterHandler,
-                logger
-            });
+            const { withSpies: timed, spies } = handlerWithSpies();
             const file = join(handlersDir, 'Ping.mjs');
             writeFileSync(file, 'export class Ping {}\n');
 
@@ -218,14 +211,7 @@ describe('HmrModuleHandler', () => {
         });
 
         it('stays quiet when the file registers nothing', async () => {
-            const { logger, spies } = fakeLogger();
-            const timed = new HmrModuleHandler<TestHandler>({
-                handlersDir,
-                isHandler,
-                registerHandler,
-                unregisterHandler,
-                logger
-            });
+            const { withSpies: timed, spies } = handlerWithSpies();
             const file = join(handlersDir, 'Empty.mjs');
             writeFileSync(file, 'export const value = 1;\n');
 
@@ -307,6 +293,28 @@ describe('HmrModuleHandler', () => {
             await withSpies.handle({ file: newFile, type: 'create' });
 
             expect(spies.error).toHaveBeenCalledTimes(1);
+        });
+
+        it('waits for a save that unloads something before it retries', async () => {
+            const { withSpies, spies } = handlerWithSpies();
+            await withSpies.handle({ file: oldFile, type: 'update' });
+            await withSpies.handle({ file: newFile, type: 'create' });
+            const other = join(handlersDir, 'Other.mjs');
+            writeFileSync(other, 'export const value = 1;\n');
+
+            await withSpies.handle({ file: other, type: 'update' });
+
+            expect(spies.error).toHaveBeenCalledTimes(1);
+        });
+
+        it('reloads a blocked file once when a save also lists it as affected', async () => {
+            const { withSpies, spies } = handlerWithSpies();
+            await withSpies.handle({ file: oldFile, type: 'update' });
+            await withSpies.handle({ file: newFile, type: 'create' });
+
+            await withSpies.handle({ file: oldFile, type: 'update', affectedModules: [oldFile, newFile] });
+
+            expect(spies.error).toHaveBeenCalledTimes(2);
         });
 
         it('leaves a file alone when it failed for another reason', async () => {

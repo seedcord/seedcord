@@ -38,18 +38,15 @@ function leaveToRun(command: Promisable<void>): void {
 export async function runPlain(store: DevStore, runner: DevRunner, input: Readable): Promise<void> {
     const refreshCommands = debounce(() => runner.refreshCommands(true), COMMAND_SAVES_QUIET_MS);
     let promptedFiles: string[] | null = null;
-
-    const answerPrompt = (): void => {
-        const { commandUpdatePrompt } = store.getState();
-        if (commandUpdatePrompt === promptedFiles) return;
-        promptedFiles = commandUpdatePrompt;
-        if (promptedFiles) refreshCommands();
-        else refreshCommands.cancel();
-    };
-
     let failure: Error | undefined;
+
     const answer = (): void => {
-        const { phase, error } = store.getState();
+        const { phase, commandUpdatePrompt, error } = store.getState();
+        if (commandUpdatePrompt !== promptedFiles) {
+            promptedFiles = commandUpdatePrompt;
+            if (promptedFiles) refreshCommands();
+            else refreshCommands.cancel();
+        }
         if (phase === 'restart-required') {
             logger.info('Restarting to pick up the change');
             leaveToRun(runner.restart());
@@ -67,13 +64,11 @@ export async function runPlain(store: DevStore, runner: DevRunner, input: Readab
         else logger.warn(`Ignoring stdin line: ${line}`);
     });
 
-    store.on('change', answerPrompt);
     store.on('change', answer);
     try {
         await runner.run();
     } finally {
         refreshCommands.cancel();
-        store.off('change', answerPrompt);
         store.off('change', answer);
     }
     if (failure) throw failure;

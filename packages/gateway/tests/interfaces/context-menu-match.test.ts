@@ -65,6 +65,11 @@ class Menu extends UserContextMenuHandler<'View Profile' | 'Say Hello'> {
         return this.match(cases);
     }
 
+    public async runMixed(): Promise<void> {
+        const result = await this.match({ 'View Profile': () => 'profile', 'Say Hello': () => 1 });
+        expectTypeOf(result).toEqualTypeOf<string | number>();
+    }
+
     public readName(): 'View Profile' | 'Say Hello' {
         return this.route;
     }
@@ -80,6 +85,11 @@ class Tools extends MessageContextMenuHandler<'Report Message' | 'Pin Message'> 
             'Report Message': (message) => `reported ${message.id}`,
             'Pin Message': (message) => `pinned ${message.id}`
         });
+    }
+
+    public async runMixed(): Promise<void> {
+        const result = await this.match({ 'Report Message': () => 'reported', 'Pin Message': () => 1 });
+        expectTypeOf(result).toEqualTypeOf<string | number>();
     }
 }
 

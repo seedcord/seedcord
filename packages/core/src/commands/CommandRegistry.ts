@@ -72,7 +72,7 @@ export class CommandRegistry implements Initializeable, HmrAware {
 
     private readonly hmrHandler?: HmrModuleHandler<CommandCtor, void, CommandArtifact | undefined>;
     private readonly pendingEvents = new Map<string, HmrUpdateEvent>();
-    private readonly refreshes = new KeyedQueue();
+    private readonly deploys = new KeyedQueue();
     private readonly injector = new CommandInjector();
     private readonly lastDeploy = new LastDeploy();
     private readonly reporter = new DeployReporter(this.logger);
@@ -156,7 +156,11 @@ export class CommandRegistry implements Initializeable, HmrAware {
 
     /** @internal */
     public refresh(shouldRefresh = true): Promise<void> {
-        return this.refreshes.run('refresh', () => this.applyPendingEvents(shouldRefresh));
+        return this.afterRunningDeploy(() => this.applyPendingEvents(shouldRefresh));
+    }
+
+    private afterRunningDeploy<TResult>(task: () => Promise<TResult>): Promise<TResult> {
+        return this.deploys.run('commands', task);
     }
 
     private async applyPendingEvents(shouldRefresh: boolean): Promise<void> {
@@ -237,7 +241,7 @@ export class CommandRegistry implements Initializeable, HmrAware {
     public async deploy(signal: AbortSignal, { routes, check }: DeployHooks): Promise<void> {
         await this.init();
         check?.(this.allCommands());
-        await this.setCommands(signal);
+        await this.afterRunningDeploy(() => this.setCommands(signal));
         routes?.warnUnhandledRoutes(this.routeLeaves());
         routes?.warnUnhandledContextMenuRoutes(this.contextMenuLeaves());
     }

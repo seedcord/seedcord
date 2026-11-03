@@ -111,7 +111,10 @@ describe('seedcord build without build.start on an http bot', () => {
     }, 120_000);
 
     it('warns when you run dist/index.mjs itself, because nothing starts the bot', () => {
-        const { stderr } = spawnSync(process.execPath, [join(projectDir, 'dist/index.mjs')], { encoding: 'utf8' });
+        const { stderr } = spawnSync(process.execPath, [join(projectDir, 'dist/index.mjs')], {
+            encoding: 'utf8',
+            timeout: 60_000
+        });
 
         expect(stderr).toContain('only exports your bot');
     }, 120_000);

@@ -102,7 +102,7 @@ describe('dev channel routing', () => {
 
         listener('seedcord:refresh-commands')?.({ shouldRefresh: true });
 
-        await vi.waitFor(() => expect(errorLog).toHaveBeenCalled());
+        await vi.waitFor(() => expect(errorLog).toHaveBeenCalledWith('Failed to refresh commands', expect.anything()));
     });
 
     it('CommandRegistry.onHmr prompts a commands update through the dev channel', async ({ testEnv }) => {

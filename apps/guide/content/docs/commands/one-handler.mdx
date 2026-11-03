@@ -187,4 +187,4 @@ class Moderation extends SlashHandler<'ban' | 'kick'> {
 
 TypeScript reports the error on `kick`, which returns a number. `summary` is a `string`, the type you passed.
 
-Write the cases inline when you pass a type. If you pass a map stored in a variable, TypeScript doesn't check its keys, so an extra key compiles and never runs.
+Write the cases inline when you pass a type. If you pass a map stored in a variable, TypeScript doesn't reject an extra key, so that key compiles and never runs.

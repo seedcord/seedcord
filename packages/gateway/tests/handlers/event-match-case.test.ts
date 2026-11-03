@@ -1,6 +1,6 @@
 import { DispatchContext } from '@seedcord/core/internal';
 import { isSeedcordError, SeedcordErrorCode } from '@seedcord/errors';
-import { describe, expect, it } from 'vitest';
+import { describe, expect, expectTypeOf, it } from 'vitest';
 
 import { EventHandler } from '#handlers/event/EventHandler';
 
@@ -21,6 +21,14 @@ class Watcher extends EventHandler<Events.MessageCreate> {
         return this.match({ messageCreate: () => 'created' });
     }
 }
+
+class MixedReturns extends EventHandler<Events.MessageCreate | Events.MessageDelete> {
+    public async execute(): Promise<void> {
+        const result = await this.match({ messageCreate: () => 'created', messageDelete: () => 1 });
+        expectTypeOf(result).toEqualTypeOf<string | number>();
+    }
+}
+void MixedReturns;
 
 function watcherFiring(name: string): Watcher {
     const payload = [message] as unknown as ClientEvents[Events.MessageCreate];
