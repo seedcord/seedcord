@@ -221,4 +221,4 @@ export class ClaimReward extends ButtonHandler<
 
 `ONE_CLAIM` expires after a minute, so it only stops a double click. To stop a second claim for later, keep a record of who claimed in your database, or in [the kv store](/built-ins/) with a driver.
 
-A [`Cooldown`](ref:core/Cooldown) gate doesn't cover this case. It reads the count with `peek` before it charges, so two clicks at the same moment can both pass. If several copies of your bot run at once, each copy counts its own clicks one at a time, so two clicks that reach different copies can both pass.
+A [`Cooldown`](ref:core/Cooldown) gate also refuses the second click, but it shows a refusal card and counts every use of the route per person, server, or channel. `charge` with your own key limits one reward and answers the second click silently.
