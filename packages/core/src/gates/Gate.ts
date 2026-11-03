@@ -36,12 +36,6 @@ export interface GateContextBase {
      */
     readonly memberPermissions: bigint | null;
     /**
-     * The handler's own route, as `kind:route` (`slash:daily`, `button:confirm`). A handler registered
-     * on several reports the one this dispatch matched. Null when the handler declares none, which
-     * covers a plain event handler, the unhandled default, and a gate run outside a handler.
-     */
-    readonly declaredRoute: string | null;
-    /**
      * The bag for this dispatch, the same instance the handler and its middleware hold. Every middleware
      * runs before the first gate. A gate can therefore read what a middleware wrote.
      */

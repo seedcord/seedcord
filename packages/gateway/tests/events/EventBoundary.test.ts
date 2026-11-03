@@ -1,5 +1,5 @@
-import { DispatchContext, Silence, Fault } from '@seedcord/core';
-import { PublishDefault } from '@seedcord/core/internal';
+import { Silence, Fault } from '@seedcord/core';
+import { DispatchContext, PublishDefault } from '@seedcord/core/internal';
 import { Logger } from '@seedcord/logger';
 import { DiscordAPIError, RESTJSONErrorCodes } from 'discord.js';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
@@ -12,7 +12,7 @@ import type { SubscriptionData } from '@seedcord/core';
 
 // the dispatcher supplies the per-dispatch context
 function handleEventFault(caught: unknown, eventName: string, handlerName: string, args: unknown, core: Core): void {
-    boundary(caught, { eventName, handlerName, args, dispatch: new DispatchContext(`event:${eventName}`) }, core);
+    boundary(caught, { handlerName, args, dispatch: new DispatchContext('event', eventName) }, core);
 }
 
 function deadResourceError(): DiscordAPIError {

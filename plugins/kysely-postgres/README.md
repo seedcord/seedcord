@@ -83,4 +83,4 @@ declare module '@seedcord/plugin-kysely-postgres' {
 }
 ```
 
-Run `seedcord codegen` after you add or rename a service. It adds the service's key to `KyselyServices`, the type behind the decorator and `core.sql.services`. Then call `await this.core.sql.services.users.findByUserId(this.event.user.id)` from a handler. The [Kysely guide](https://seedcord.org/guide/plugins/kysely) covers the options, the schema, services, and migrations.
+Run `seedcord codegen` after you add or rename a service. It adds the service's key to `KyselyServices`, the type behind the decorator and `core.sql.services`. Then call `await this.core.sql.services.users.findByUserId(this.user.id)` from a handler. The [Kysely guide](https://seedcord.org/guide/plugins/kysely) covers the options, the schema, services, and migrations.

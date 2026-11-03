@@ -13,7 +13,7 @@ The decorators match by origin. A seedcord, relative, or tsconfig-alias import c
 ```ts
 import { WebhookLog, Subscribe } from 'seedcord';
 
-@Subscribe('memberBanned')
+@Subscribe(['memberBanned'])
 export class BanLog extends WebhookLog<'memberBanned'> {}
 ```
 
@@ -22,7 +22,7 @@ export class BanLog extends WebhookLog<'memberBanned'> {}
 ```ts
 import { WebhookLog, Subscribe, WebhookUrl } from 'seedcord';
 
-@Subscribe('memberBanned')
+@Subscribe(['memberBanned'])
 @WebhookUrl('BAN_LOG_WEBHOOK_URL')
 export class BanLog extends WebhookLog<'memberBanned'> {}
 ```

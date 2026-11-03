@@ -172,3 +172,26 @@ class Ban extends SlashHandler<'ban'> {
     `edit()`, and [`update()`](ref:gateway/ComponentHandler.update)
     all return the same type.
 </Callout>
+
+## Who sent the interaction
+
+On http, `this.event.user` is undefined in a server, because Discord sends `member.user` there. Use [`this.user`](ref:gateway/RepliableHandler.user) because it reads whichever one Discord sent, on every interaction handler and middleware.
+
+```ts twoslash
+import { SlashHandler, SlashRoute } from '@seedcord/gateway';
+
+@SlashRoute('ban')
+class Ban extends SlashHandler<'ban'> {
+    public async execute(): Promise<void> {
+        // ---cut---
+        await this.reply(`Banned by ${this.user.id}.`);
+        // ---cut-after---
+    }
+}
+```
+
+<Callout type="transport">
+
+`this.user` is a discord.js `User` on gateway and an `APIUser` on http.
+
+</Callout>

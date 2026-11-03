@@ -5,7 +5,7 @@ import { Envapter } from 'envapt';
 import { HmrModuleHandler } from '#hmr/HmrModuleHandler';
 import { SubscribeMetadataKey } from '#src/metadataKeys';
 import { busLoggerOf } from '#subscribers/Bus';
-import { registrationFor, Subscriber } from '#subscribers/index';
+import { registrationsFor, Subscriber } from '#subscribers/index';
 import {
     RegisterDefaults,
     RegisteredCount,
@@ -15,7 +15,6 @@ import {
 } from '#subscribers/slots';
 
 import type { Initializeable } from '#src/plugin/Plugin';
-import type { SubscribeMetadataEntry } from '#subscribers/decorators/Subscribe';
 import type { StoredSubscriberCtor, Bus } from '#subscribers/index';
 import type { SubscriptionKey } from '#subscribers/types/Subscriptions';
 import type { HmrAware, HmrUpdateEvent } from '@seedcord/types';
@@ -82,7 +81,7 @@ export class SubscriberLoader implements Initializeable, HmrAware {
     }
 
     private registerSubscriber(ctor: StoredSubscriberCtor): void {
-        this.bus[RegisterSubscriber](registrationFor(ctor));
+        this.bus[RegisterSubscriber](ctor);
     }
 
     private unregisterSubscriber(ctor: StoredSubscriberCtor, artifacts?: SubscriberArtifact): void {
@@ -90,8 +89,7 @@ export class SubscriberLoader implements Initializeable, HmrAware {
     }
 
     private getArtifacts(ctor: StoredSubscriberCtor): SubscriberArtifact {
-        const meta = Reflect.getMetadata(SubscribeMetadataKey, ctor) as SubscribeMetadataEntry;
-        return [meta.subscriber];
+        return registrationsFor(ctor).map((registration) => registration.key);
     }
 
     private isSubscriber(value: unknown): value is StoredSubscriberCtor {

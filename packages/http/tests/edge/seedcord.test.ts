@@ -245,7 +245,7 @@ describe('the edge Seedcord', () => {
 
     it('runs a subscriber from the built files', async () => {
         const seen: string[] = [];
-        @Subscribe('anyInteraction')
+        @Subscribe(['anyInteraction'])
         class Seen extends Subscriber<'anyInteraction', CoreBase> {
             public execute(): Promise<void> {
                 seen.push(String(this.data.interaction.type));

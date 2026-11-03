@@ -153,6 +153,8 @@ const messages = {
         `${paint.sky(className)} extends WebhookLog without a ${paint.bold('@WebhookUrl')} decorator. Add one with the name of the env var that holds the webhook URL.`,
     [SeedcordErrorCode.DecoratorEmptyMiddlewareFilter]: (className: string, key: string) =>
         `${paint.sky(className)} passes an empty array as ${paint.bold(key)}. Remove the key to run the middleware on everything.`,
+    [SeedcordErrorCode.DecoratorDuplicateKey]: (decorator: string, className: string, key: string, fix: string) =>
+        `${paint.bold(decorator)} on ${paint.sky(className)} lists ${quoted(key)} twice. ${fix}`,
 
     [SeedcordErrorCode.ReplyIllegalAckState]: (method: string, reason: string, alternative: string, routeId: string) =>
         `${paint.sky(`${method}()`)} was called when ${reason}.\n${alternative} (route ${paint.mute(routeId)})`,
@@ -186,8 +188,6 @@ const messages = {
         `${paint.sky(className)} is missing its route decorator. Add the one that matches its base, for example ${paint.bold('@ButtonRoute')} or ${paint.bold('@UserMenuRoute')}.`,
     [SeedcordErrorCode.MatchCaseMissing]: (handler: string, kind: string, value: string) =>
         `${paint.bold(handler)}'s match() doesn't have a case for the ${kind} ${quoted(value)}. Add one to the object you pass to match().`,
-    [SeedcordErrorCode.EventNameUnavailable]: (handler: string, read: string) =>
-        `${paint.sky(handler)} read ${paint.bold(read)}, but it was constructed without an event name. The event controller passes that name. If you construct a handler or middleware yourself, pass the event name as its fourth constructor argument.`,
     [SeedcordErrorCode.AutocompleteNoFocusedOption]: () =>
         'Discord sent an autocomplete payload with no focused option.',
     [SeedcordErrorCode.ModalFieldNotFound]: (customId: string) =>

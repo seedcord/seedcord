@@ -71,7 +71,7 @@ function watched(): { core: Core; published: Published } {
 }
 
 async function dispatchThrough(core: Core, handler: HandlerConstructor): Promise<void> {
-    const match: ResolvedRoute = { kind: InteractionKind.Slash, routeId: 'slash:ok', ctor: handler };
+    const match: ResolvedRoute = { kind: InteractionKind.Slash, route: 'ok', fallback: false, ctor: handler };
     const execute = await dispatchInteraction({
         match,
         payload: slashPayload('ok') as ValidInteractionTypes,

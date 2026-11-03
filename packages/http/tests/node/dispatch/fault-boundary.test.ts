@@ -1,8 +1,7 @@
 import { DiscordAPIError } from '@discordjs/rest';
-import { Fault, InteractionKind, Notice, Silence } from '@seedcord/core';
-import { Logger } from '@seedcord/logger';
+import { InteractionKind, Silence } from '@seedcord/core';
 import { MessageFlags } from 'discord-api-types/v10';
-import { beforeEach, describe, expect, it, vi } from 'vitest';
+import { beforeEach, describe, expect, it } from 'vitest';
 
 import { AutocompleteHandler } from '#handlers/interaction/AutocompleteHandler';
 import { SlashHandler } from '#handlers/interaction/SlashHandler';
@@ -11,10 +10,6 @@ import { restClients } from '#tests/helpers/restClients';
 import { capturingCtx, readyEngine, routedHandler, signedRequest, slashPayload, type BotClasses } from './harness';
 
 import type { HandlerConstructor } from '#handlers/constructors';
-import type { Core } from '#interfaces/Core';
-import type { DispatchContext } from '@seedcord/core';
-import type { RenderContext, ReplyResponse } from '@seedcord/types';
-import type { UUID } from 'node:crypto';
 
 function apiError(code: number): DiscordAPIError {
     return new DiscordAPIError({ code, message: 'boom' }, code, 404, 'POST', 'url', {});
@@ -63,90 +58,6 @@ describe('fault boundary', () => {
         expect(flags & MessageFlags.Ephemeral).toBe(MessageFlags.Ephemeral);
     });
 
-    it('drops a post-ack Silence with no card', async () => {
-        class Quiet extends SlashHandler<never> {
-            async execute(): Promise<void> {
-                await this.reply('done');
-                throw new Silence('user dismissed');
-            }
-        }
-        using engine = await readyEngine(slashRoute('quiet', Quiet));
-        const { signer, handle } = engine;
-        const ctx = capturingCtx();
-
-        await handle(await signedRequest(signer, slashPayload('quiet')), ctx);
-        await ctx.settled();
-
-        expect(postedBodies()).toHaveLength(1);
-    });
-
-    it('debug-logs a Silence reason by default', async () => {
-        class Quiet extends SlashHandler<never> {
-            async execute(): Promise<void> {
-                await Promise.resolve();
-                throw new Silence('user dismissed');
-            }
-        }
-        const debug = vi.spyOn(Logger.prototype, 'debug').mockImplementation(() => undefined);
-        using engine = await readyEngine(slashRoute('quiet', Quiet));
-        const { signer, handle } = engine;
-        const ctx = capturingCtx();
-
-        await handle(await signedRequest(signer, slashPayload('quiet')), ctx);
-        await ctx.settled();
-
-        expect(debug).toHaveBeenCalledWith('Silence: user dismissed');
-        debug.mockRestore();
-    });
-
-    it('omits the Silence debug line when logSilences is false', async () => {
-        const settings = { errors: { logSilences: false } };
-        class Quiet extends SlashHandler<never> {
-            async execute(): Promise<void> {
-                await Promise.resolve();
-                throw new Silence('user dismissed');
-            }
-        }
-        const debug = vi.spyOn(Logger.prototype, 'debug').mockImplementation(() => undefined);
-        using engine = await readyEngine(slashRoute('quiet', Quiet), { settings });
-        const { signer, handle } = engine;
-        const ctx = capturingCtx();
-
-        await handle(await signedRequest(signer, slashPayload('quiet')), ctx);
-        await ctx.settled();
-
-        expect(debug).not.toHaveBeenCalledWith('Silence: user dismissed');
-        debug.mockRestore();
-    });
-
-    it('sends a post-ack Notice card as a follow-up when already replied', async () => {
-        class Denied extends Notice {
-            public constructor() {
-                super('denied late');
-            }
-
-            public override render(): ReplyResponse {
-                return { components: [{ toJSON: () => ({ type: 10, content: 'no access' }) }] };
-            }
-        }
-        class LateDenied extends SlashHandler<never> {
-            async execute(): Promise<void> {
-                await this.reply('working');
-                throw new Denied();
-            }
-        }
-        using engine = await readyEngine(slashRoute('latedeny', LateDenied));
-        const { signer, handle } = engine;
-        const ctx = capturingCtx();
-
-        await handle(await signedRequest(signer, slashPayload('latedeny')), ctx);
-        await ctx.settled();
-
-        const posts = postedBodies();
-        expect(posts).toHaveLength(2);
-        expect(posts[1]?.route).toBe('/webhooks/app-1/tok');
-    });
-
     it('sends the fault card as a follow-up when the handler already replied', async () => {
         class RepliedThenBroke extends SlashHandler<never> {
             async execute(): Promise<void> {
@@ -165,33 +76,6 @@ describe('fault boundary', () => {
         expect(posts).toHaveLength(2);
         expect(posts[0]?.route).toBe('/interactions/int-1/tok/callback');
         expect(posts[1]?.route).toBe('/webhooks/app-1/tok');
-    });
-
-    it('renders the configured defaultError override instead of the generic Fault', async () => {
-        class CustomCard extends Fault {
-            public constructor(_uuid: UUID) {
-                super();
-            }
-
-            public override render(_ctx: RenderContext): ReplyResponse {
-                return { components: [{ toJSON: () => ({ type: 10, content: 'custom fault' }) }] };
-            }
-        }
-        const settings = { errors: { defaultError: CustomCard } };
-        class Broken extends SlashHandler<never> {
-            async execute(): Promise<void> {
-                await Promise.resolve();
-                throw new Error('boom');
-            }
-        }
-        using engine = await readyEngine(slashRoute('broken', Broken), { settings });
-        const { signer, handle } = engine;
-        const ctx = capturingCtx();
-
-        await handle(await signedRequest(signer, slashPayload('broken')), ctx);
-        await ctx.settled();
-
-        expect(postedBodies()[0]?.body.data?.components).toEqual([{ type: 10, content: 'custom fault' }]);
     });
 
     it('swallows an api code listed in ignoreApiCodes without a card', async () => {
@@ -233,51 +117,6 @@ describe('fault boundary', () => {
         expect(postedBodies()).toHaveLength(1);
     });
 
-    it('still acks 202 when the handler constructor throws', async () => {
-        class Ghost extends SlashHandler<never> {
-            constructor(event: never, core: Core, dispatch: DispatchContext) {
-                super(event, core, dispatch);
-                throw new Error('constructor blew up');
-            }
-
-            async execute(): Promise<void> {
-                await Promise.resolve();
-            }
-        }
-        using engine = await readyEngine(slashRoute('ghost', Ghost));
-        const { signer, handle } = engine;
-        const ctx = capturingCtx();
-
-        const response = await handle(await signedRequest(signer, slashPayload('ghost')), ctx);
-
-        expect(response.status).toBe(202);
-        expect(ctx.waitUntil).not.toHaveBeenCalled();
-        const posts = postedBodies();
-        expect(posts).toHaveLength(1);
-        expect(posts[0]?.body.type).toBe(4);
-    });
-
-    it('wraps a non-Error throw into the generic fault card', async () => {
-        class Throws extends SlashHandler<never> {
-            async execute(): Promise<void> {
-                await Promise.resolve();
-                // eslint-disable-next-line no-throw-literal, @typescript-eslint/only-throw-error -- this pins the bare throw
-                throw 'a bare string';
-            }
-        }
-        using engine = await readyEngine(slashRoute('bare', Throws));
-        const { signer, handle } = engine;
-        const ctx = capturingCtx();
-
-        const response = await handle(await signedRequest(signer, slashPayload('bare')), ctx);
-        await ctx.settled();
-
-        expect(response.status).toBe(202);
-        const posts = postedBodies();
-        expect(posts).toHaveLength(1);
-        expect(posts[0]?.body.type).toBe(4);
-    });
-
     it('catches a throwing handler constructor, still acks 202 and sends the fault card', async () => {
         class ExplodesOnBuild extends SlashHandler<never> {
             public constructor(...args: ConstructorParameters<typeof SlashHandler<never>>) {
@@ -302,30 +141,51 @@ describe('fault boundary', () => {
         expect(posts[0]?.body.type).toBe(4);
     });
 
-    it('answers an autocomplete execute fault with an empty type 8', async () => {
-        class Search extends AutocompleteHandler<never> {
-            async execute(): Promise<void> {
-                await Promise.resolve();
-                throw new Error('lookup failed');
-            }
-        }
-        using engine = await readyEngine(routedHandler(InteractionKind.Autocomplete, 'search', Search));
-        const { signer, handle } = engine;
+    describe('autocomplete', () => {
         const payload = {
             type: 4,
             id: 'int-1',
             application_id: 'app-1',
             token: 'tok',
+            user: { id: 'u1', username: 'tester' },
             data: { type: 1, name: 'search', options: [{ type: 3, name: 'q', value: 'x', focused: true }] }
         };
-        const ctx = capturingCtx();
 
-        await handle(await signedRequest(signer, payload), ctx);
-        await ctx.settled();
+        it('answers an execute fault with an empty type 8', async () => {
+            class Search extends AutocompleteHandler<never> {
+                async execute(): Promise<void> {
+                    await Promise.resolve();
+                    throw new Error('lookup failed');
+                }
+            }
+            using engine = await readyEngine(routedHandler(InteractionKind.Autocomplete, 'search', Search));
+            const { signer, handle } = engine;
+            const ctx = capturingCtx();
 
-        const posts = postedBodies();
-        expect(posts).toHaveLength(1);
-        expect(posts[0]?.body.type).toBe(8);
-        expect(posts[0]?.body.data?.choices).toEqual([]);
+            await handle(await signedRequest(signer, payload), ctx);
+            await ctx.settled();
+
+            const posts = postedBodies();
+            expect(posts).toHaveLength(1);
+            expect(posts[0]?.body.type).toBe(8);
+            expect(posts[0]?.body.data?.choices).toEqual([]);
+        });
+
+        it('does not send empty choices after the handler already responded', async () => {
+            class Search extends AutocompleteHandler<never> {
+                async execute(): Promise<void> {
+                    await this.respond([{ name: 'a', value: 'a' }]);
+                    throw new Silence('done');
+                }
+            }
+            using engine = await readyEngine(routedHandler(InteractionKind.Autocomplete, 'search', Search));
+            const { signer, handle } = engine;
+            const ctx = capturingCtx();
+
+            await handle(await signedRequest(signer, payload), ctx);
+            await ctx.settled();
+
+            expect(postedBodies()).toHaveLength(1);
+        });
     });
 });

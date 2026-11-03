@@ -93,7 +93,6 @@ Leaving the `ctx` parameter unannotated makes it a [`GateContextBase`](ref:core/
 | `channelId` | `string \| null` | the channel id, null when the source carries none |
 | `memberRoleIds` | `readonly string[]` | the caller's role ids without the everyone role, empty outside a server |
 | `memberPermissions` | `bigint \| null` | the caller's permission bits, channel-scoped on an interaction and role-derived on a gateway event, null outside a server |
-| `declaredRoute` | `string \| null` | the route this dispatch matched, such as `slash:daily`, null off a route |
 | `dispatch` | `DispatchContext` | the [dispatch context](/checks/dispatch-context), holding what a middleware wrote before the first gate ran |
 
 {/* prettier-ignore-end */}

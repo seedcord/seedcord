@@ -1,13 +1,14 @@
-import { DispatchContext, RequirePermissions } from '@seedcord/core';
+import { RequirePermissions } from '@seedcord/core';
+import { DispatchContext } from '@seedcord/core/internal';
 import { GuildMember, Message, PermissionFlagsBits } from 'discord.js';
 import { describe, it, expect } from 'vitest';
 
-import { eventGateContext, interactionGateContext } from '#bot/gates/runGates';
+import { eventGateContext, interactionGateContext } from '#bot/gates/context';
 
 import type { Core } from '#interfaces/Core';
 import type { ButtonInteraction, User } from 'discord.js';
 
-const dispatch = new DispatchContext('button:probe');
+const dispatch = new DispatchContext('button', 'probe');
 
 // a real GuildMember instance for the builder's instanceof guard, carrying only what the builder reads
 function fakeMember(roleIds: string[], permissionBits: bigint): GuildMember {

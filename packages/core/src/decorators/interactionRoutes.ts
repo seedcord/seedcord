@@ -4,6 +4,7 @@ import { isStringArray } from '@seedcord/utils/internal';
 import { ApplicationCommandType } from 'discord-api-types/v10';
 
 import { ComponentDefsKey } from '#customId/routing';
+import { assertUniqueKeys } from '#src/decorators/assertUniqueKeys';
 import { InteractionMetadataKey, InteractionRouteKeys, InteractionKind } from '#src/metadataKeys';
 
 import type { ContextMenuKind } from '#registries/ContextMenuRegistry';
@@ -22,15 +23,23 @@ export function interactionRoutesOf(constructor: RoutableConstructor): [Interact
     return pairs;
 }
 
+export function routeDecoratorOf(kind: InteractionKind): string {
+    return `@${kind.charAt(0).toUpperCase()}${kind.slice(1)}Route`;
+}
+
 export function storeInteractionRoute(
     route: InteractionKind,
     routes: string | readonly string[],
-    constructor: RoutableConstructor
+    constructor: RoutableConstructor,
+    fix = 'Remove the repeat.'
 ): void {
     const key = InteractionRouteKeys[route];
     const saved: unknown = Reflect.getMetadata(key, constructor);
     const existing = isStringArray(saved) ? saved : [];
     const toStore = typeof routes === 'string' ? [routes] : routes;
+    // own metadata, since a subclass can list a route that its parent lists
+    const own: unknown = Reflect.getOwnMetadata(key, constructor);
+    assertUniqueKeys(routeDecoratorOf(route), constructor, [...(isStringArray(own) ? own : []), ...toStore], fix);
     Reflect.defineMetadata(key, [...existing, ...toStore], constructor);
     Reflect.defineMetadata(InteractionMetadataKey, true, constructor);
 }
@@ -43,7 +52,8 @@ export function storeComponentRoute(
     storeInteractionRoute(
         route,
         defs.map((def) => def.prefix),
-        constructor
+        constructor,
+        'Remove the repeat, or give each customId its own prefix.'
     );
     Reflect.defineMetadata(ComponentDefsKey, defs, constructor);
 }

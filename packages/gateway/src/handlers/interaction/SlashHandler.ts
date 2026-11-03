@@ -1,8 +1,5 @@
-import { SlashRouteBrand } from '@seedcord/core/internal';
-import { SeedcordErrorCode } from '@seedcord/errors';
-import { SeedcordTypeError } from '@seedcord/errors/internal';
+import { caseFor, SlashRouteBrand } from '@seedcord/core/internal';
 
-import { slashRouteOf } from '#bUtilities/miscellaneous/slashRouteOf';
 import { InteractionHandler } from '#handlers/interaction/InteractionHandler';
 
 import type { SlashOptions } from '#inputs/SlashOptions';
@@ -20,7 +17,7 @@ type SlashMatchCases<Route extends keyof SlashRegistry, Cache extends CacheType,
  *
  * Pass the route from the generated registry as the generic, the same string as `@SlashRoute`, then read
  * `this.options` for a single command or `this.match` for several. Command authoring stays plain
- * discord.js, `seedcord codegen` reads its `toJSON()` to type these options.
+ * discord.js. `seedcord codegen` reads its `toJSON()` to type these options.
  *
  * @typeParam Route - One or more route keys from {@link SlashRegistry}, e.g. `'ban'` or `'ban' | 'kick'`.
  * @typeParam Cache - The interaction cache state. The command's contexts set it.
@@ -45,22 +42,19 @@ export abstract class SlashHandler<
     declare readonly [SlashRouteBrand]?: Route;
 
     /** The selected command's path, such as `search/docs`. */
-    protected get route(): Route {
-        return slashRouteOf(this.event) as Route;
-    }
+    declare protected readonly route: Route;
 
     /**
      * The typed options for this command's route. Only the getters for kinds this command declares appear.
      * Each getter's name argument is restricted to that command's options of its kind.
      *
-     * - A required option drops the null.
+     * - A required option's getter never returns `null`.
      *
      * - Choices narrow to their literal union.
      *
      * - A channel option declared with `addChannelTypes` narrows to those types.
      *
      * Use `this.event.options` directly for anything outside this view, such as `getSubcommand()`.
-     * However, for the common case, the methods in this would suffice.
      */
     protected get options(): SlashOptions<Route, Cache> {
         // the djs resolver already carries every getter. SlashOptions is its stricter registry-typed view.
@@ -72,7 +66,7 @@ export abstract class SlashHandler<
      * routes.
      *
      * Provide one case per registered route, keyed by its route string, and each case receives that route's
-     * own narrowed options. The cases must cover every route in the generic, a missing route or an unknown
+     * own narrowed options. The cases must cover every route in the generic. A missing route or an unknown
      * key is a compile error.
      *
      * @param cases - One handler per registered route, keyed by route string.
@@ -92,17 +86,6 @@ export abstract class SlashHandler<
      * ```
      */
     protected async match<Ret>(cases: SlashMatchCases<Route, Cache, Ret>): Promise<Ret> {
-        const route = this.route;
-        // justified: SlashMatchCases is keyed by Route literals, so the Record cast indexes it with the runtime route string.
-        const callback = Object.hasOwn(cases, route)
-            ? (cases as Record<string, (options: SlashOptions<Route, Cache>) => Promisable<Ret>>)[route]
-            : undefined;
-        if (!callback)
-            throw new SeedcordTypeError(SeedcordErrorCode.MatchCaseMissing, [
-                this.constructor.name,
-                'command route',
-                route
-            ]);
-        return await callback(this.options);
+        return await caseFor(this, cases, 'command route', this.route)(this.options);
     }
 }

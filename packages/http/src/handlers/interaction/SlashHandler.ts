@@ -1,10 +1,7 @@
-import { SlashRouteBrand } from '@seedcord/core/internal';
-import { SeedcordErrorCode } from '@seedcord/errors';
-import { SeedcordTypeError } from '@seedcord/errors/internal';
+import { caseFor, SlashRouteBrand } from '@seedcord/core/internal';
 
 import { InteractionHandler } from '#handlers/interaction/InteractionHandler';
 import { HttpSlashOptions } from '#inputs/HttpSlashOptions';
-import { slashRouteOf } from '#src/dispatch/slashRouteOf';
 
 import type { SlashOptions } from '#inputs/SlashOptions';
 import type { SlashRegistry } from '@seedcord/core';
@@ -19,7 +16,7 @@ type SlashMatchCases<Route extends keyof SlashRegistry, Ret> = {
  * Base class for a chat-input (slash) command handler on the HTTP transport.
  *
  * Pass the route from the generated registry as the generic, then read `this.options` for a single
- * command or `this.match` for several. Command authoring stays plain discord.js, `seedcord codegen`
+ * command or `this.match` for several. Command authoring stays plain discord.js. `seedcord codegen`
  * reads its `toJSON()` to type these options.
  *
  * @typeParam Route - One or more route keys from {@link SlashRegistry}, e.g. `'ban'` or `'ban' | 'kick'`.
@@ -31,10 +28,8 @@ export abstract class SlashHandler<
     /** @internal */
     declare readonly [SlashRouteBrand]?: Route;
 
-    /** The selected command's path, such as `search/docs`, without the interaction-kind prefix. */
-    protected get route(): Route {
-        return slashRouteOf(this.event.data) as Route;
-    }
+    /** The selected command's path, such as `search/docs`. */
+    declare protected readonly route: Route;
 
     private resolver?: HttpSlashOptions;
 
@@ -42,7 +37,7 @@ export abstract class SlashHandler<
      * The typed options for this command's route. Only the getters for kinds this command declares appear.
      * Each getter's name argument is restricted to that command's options of its kind.
      *
-     * - A required option drops the null.
+     * - A required option's getter never returns `null`.
      *
      * - Choices narrow to their literal union.
      *
@@ -61,24 +56,13 @@ export abstract class SlashHandler<
      * routes.
      *
      * Provide one case per registered route, keyed by its route string, and each case receives that route's
-     * own narrowed options. The cases must cover every route in the generic, a missing route or an unknown
+     * own narrowed options. The cases must cover every route in the generic. A missing route or an unknown
      * key is a compile error.
      *
      * @param cases - One handler per registered route, keyed by route string.
      * @returns The result of the case that ran.
      */
     protected async match<Ret>(cases: SlashMatchCases<Route, Ret>): Promise<Ret> {
-        const route = this.route;
-        // justified: SlashMatchCases is keyed by Route literals, the Record cast indexes it with the runtime route string.
-        const callback = Object.hasOwn(cases, route)
-            ? (cases as Record<string, (options: SlashOptions<Route>) => Promisable<Ret>>)[route]
-            : undefined;
-        if (!callback)
-            throw new SeedcordTypeError(SeedcordErrorCode.MatchCaseMissing, [
-                this.constructor.name,
-                'command route',
-                route
-            ]);
-        return await callback(this.options);
+        return await caseFor(this, cases, 'command route', this.route)(this.options);
     }
 }

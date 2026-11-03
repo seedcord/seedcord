@@ -1,5 +1,4 @@
-import { DispatchContext } from '@seedcord/core';
-import { serializeReply } from '@seedcord/core/internal';
+import { DispatchContext, serializeReply } from '@seedcord/core/internal';
 import { ComponentType, InteractionResponseType, MessageFlags } from 'discord-api-types/v10';
 import { describe, expect, expectTypeOf, it, vi } from 'vitest';
 
@@ -7,6 +6,7 @@ import { ReplySender } from '#reply/ReplySender';
 import { ButtonRoute } from '#src/index';
 import { Paginator } from '#src/pagination/Paginator';
 import { ArraySource } from '#src/pagination/sources';
+import { built } from '#tests/helpers/built';
 import { stubBus } from '#tests/helpers/fixtures';
 
 import type { RepliableHandler } from '#handlers/RepliableHandler';
@@ -23,7 +23,7 @@ import type {
     APIMessageComponentButtonInteraction
 } from 'discord-api-types/v10';
 
-const dispatch = new DispatchContext('test:probe');
+const dispatch = new DispatchContext('slash', 'probe');
 
 const APP_ID = '111';
 const TOKEN = 'tok';
@@ -55,7 +55,7 @@ function dmPayload(): Repliables {
 function stubHandler(post: ReturnType<typeof vi.fn>, interaction = guildPayload()): RepliableHandler<Repliables> {
     const core = { bus: stubBus() } as Core;
     // justified: the fixture implements only the REST surface ReplySender reads
-    const sender = new ReplySender(ref, { post } as unknown as REST, new DispatchContext('slash:page'), core.bus);
+    const sender = new ReplySender(ref, { post } as unknown as REST, new DispatchContext('slash', 'page'), core.bus);
     // justified: start reads only these three members off the handler
     return {
         core,
@@ -210,7 +210,7 @@ describe('http Paginator nav handler', () => {
         // justified: the nav handler reads rest and the bus
         const core = { rest: { post, patch }, bus: stubBus() } as unknown as Core;
 
-        await new LettersNav(navEvent(pager.cursor.encode({ page: 2, slot: 0 })), core, dispatch).execute();
+        await built(LettersNav, navEvent(pager.cursor.encode({ page: 2, slot: 0 })), core, dispatch).execute();
 
         expect(post).toHaveBeenCalledOnce();
         expect(post.mock.calls[0]?.[0]).toBe(CALLBACK_ROUTE);

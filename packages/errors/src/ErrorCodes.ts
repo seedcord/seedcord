@@ -125,6 +125,8 @@ export enum SeedcordErrorCode {
     DecoratorWebhookUrlMissing = 1305,
     /** A middleware decorator got an empty filter array. */
     DecoratorEmptyMiddlewareFilter = 1306,
+    /** `@Subscribe`, `@RegisterEvent`, or a component route decorator lists the same key or customId prefix twice. */
+    DecoratorDuplicateKey = 1307,
 
     /** A reply method was called in an ack state where Discord rejects it. */
     ReplyIllegalAckState = 1501,
@@ -153,8 +155,6 @@ export enum SeedcordErrorCode {
     CustomIdHandlerRouteMissing = 1607,
     /** A handler's `match()` doesn't have a case for the current route, field, event, or command. */
     MatchCaseMissing = 1608,
-    /** An event handler or middleware read the event name but was constructed without one. */
-    EventNameUnavailable = 1609,
     /** Discord sent an autocomplete payload with no focused option. */
     AutocompleteNoFocusedOption = 1610,
     /** The submitted modal has no field with the requested custom id. */

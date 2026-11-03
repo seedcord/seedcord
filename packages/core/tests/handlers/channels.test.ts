@@ -27,7 +27,7 @@ beforeEach(() => {
 
 // justified: the bases reach nothing on core in these probes
 const core = {} as CoreBase;
-const dispatch = new DispatchContext('probe:channels');
+const dispatch = new DispatchContext('slash', 'channels');
 
 class Eventish extends BaseHandler<string, CoreBase> {
     constructor(event: string) {
@@ -91,7 +91,7 @@ describe('handler log channels', () => {
 describe('subscriber log channel', () => {
     it('emits on the subscribers channel', async () => {
         // justified: execute reaches nothing on the payload or core
-        await new Reporter({} as ConstructorParameters<typeof Reporter>[0], core).execute();
+        await new Reporter({} as ConstructorParameters<typeof Reporter>[0], core, 'unknownException').execute();
 
         expect(sink.records[0]?.channel).toBe('subscribers');
         expect(sink.records[0]?.label).toBe('Reporter');

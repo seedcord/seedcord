@@ -54,7 +54,7 @@ describe('Bus webhook reporter registration', () => {
             `
             import { WebhookLog, WebhookUrl, Subscribe } from '${seedcordPath}';
 
-            @Subscribe('unknownException')
+            @Subscribe(['unknownException'])
             @WebhookUrl('UNSET_REPORTER_WEBHOOK_URL')
             export class QuietReporter extends WebhookLog<'unknownException'> {
                 public report() {
@@ -81,7 +81,7 @@ describe('Bus webhook reporter registration', () => {
             `
             import { WebhookLog, WebhookUrl, Subscribe } from '${seedcordPath}';
 
-            @Subscribe('unknownException')
+            @Subscribe(['unknownException'])
             @WebhookUrl('MALFORMED_REPORTER_WEBHOOK_URL')
             export class BadUrlReporter extends WebhookLog<'unknownException'> {
                 public report() {
@@ -113,7 +113,7 @@ describe('Bus webhook reporter registration', () => {
             `
             import { WebhookLog, WebhookUrl, Subscribe } from '${seedcordPath}';
 
-            @Subscribe('unknownException')
+            @Subscribe(['unknownException'])
             @WebhookUrl('DUPLICATE_A_WEBHOOK_URL')
             export class ReporterA extends WebhookLog<'unknownException'> {
                 public report() {
@@ -121,7 +121,7 @@ describe('Bus webhook reporter registration', () => {
                 }
             }
 
-            @Subscribe('unknownException')
+            @Subscribe(['unknownException'])
             @WebhookUrl('DUPLICATE_B_WEBHOOK_URL')
             export class ReporterB extends WebhookLog<'unknownException'> {
                 public report() {
@@ -156,7 +156,7 @@ describe('Bus webhook reporter registration', () => {
             `
             import { WebhookLog, Subscribe } from '${seedcordPath}';
 
-            @Subscribe('unknownException')
+            @Subscribe(['unknownException'])
             export class UndeclaredReporter extends WebhookLog<'unknownException'> {
                 public report() {
                     return { components: [] };

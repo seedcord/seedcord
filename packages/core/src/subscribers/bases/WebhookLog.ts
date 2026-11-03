@@ -34,7 +34,7 @@ export interface WebhookReport {
  * resolves the url, validates it, reuses one sender per url, and sends. Registration skips a reporter
  * whose variable is unset and warns at boot.
  *
- * @typeParam KeyOfSubscribers - The subscription key this reporter receives
+ * @typeParam KeyOfSubscribers - The subscription key or keys that this reporter receives, the same ones as `@Subscribe`
  * @typeParam TCore - The transport's Core
  */
 export abstract class WebhookLog<KeyOfSubscribers extends SubscriptionKey, TCore extends CoreBase> extends Subscriber<
@@ -60,7 +60,7 @@ export abstract class WebhookLog<KeyOfSubscribers extends SubscriptionKey, TCore
     async execute(): Promise<void> {
         const envKey = WebhookLog.envKeyOf(this.constructor);
         const url = WebhookLog.urlOf(envKey);
-        // Bus.probeWebhook dropped every url-less reporter at registration. reaching this means the env changed since.
+        // Bus.probeWebhook skipped every url-less reporter at registration. reaching this means the env changed since.
         if (url === null) throw new SeedcordError(SeedcordErrorCode.ConfigMissingEnv, [envKey]);
 
         const key = this.throttleKey();

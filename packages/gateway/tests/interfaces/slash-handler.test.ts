@@ -1,14 +1,16 @@
-import { DispatchContext, SlashRoute } from '@seedcord/core';
+import { SlashRoute } from '@seedcord/core';
+import { DispatchContext } from '@seedcord/core/internal';
 import { SeedcordErrorCode } from '@seedcord/errors';
 import { describe, expect, expectTypeOf, it } from 'vitest';
 
 import { SlashHandler } from '#handlers/interaction/SlashHandler';
+import { built } from '#tests/utils/built';
 
 import type { SlashOptions } from '#inputs/SlashOptions';
 import type { Core } from '#interfaces/Core';
 import type { ChatInputCommandInteraction, CommandInteractionOption, User } from 'discord.js';
 
-const dispatch = new DispatchContext('test:probe');
+const dispatch = new DispatchContext('slash', 'probe');
 
 // the execute() bodies are typechecked and never run. every guarded mistake below fails the build the day it
 // stops being a compile error. the routes differ from typed-options.test.ts to keep the augmentations apart.
@@ -213,7 +215,7 @@ describe('SlashHandler', () => {
                 });
             }
         }
-        const handler = new Mod(slashInteraction('constructor'), core, dispatch);
+        const handler = built(Mod, slashInteraction('constructor'), core, dispatch);
         await expect(handler.execute()).rejects.toMatchObject({
             code: SeedcordErrorCode.MatchCaseMissing
         });

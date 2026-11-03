@@ -32,7 +32,7 @@ describe('reply timing', () => {
         });
 
         publishResponse(
-            { bus: stubBus(), dispatch: new DispatchContext('slash:ban'), interactionId: 'i1' },
+            { bus: stubBus(), dispatch: new DispatchContext('slash', 'ban'), interactionId: 'i1' },
             { method: 'reply', startedAt: performance.now(), outcome: 'sent', messageId: 'm1' }
         );
 
@@ -50,7 +50,7 @@ describe('reply timing', () => {
         clock += 88;
 
         publishResponse(
-            { bus: stubBus(), dispatch: new DispatchContext('slash:ban'), interactionId: 'i1' },
+            { bus: stubBus(), dispatch: new DispatchContext('slash', 'ban'), interactionId: 'i1' },
             { method: 'reply', startedAt, outcome: 'sent', messageId: 'm1' }
         );
 
@@ -66,7 +66,7 @@ describe('reply timing', () => {
         const trace = traceSpy();
 
         publishResponse(
-            { bus: stubBus(), dispatch: new DispatchContext('slash:ban'), interactionId: 'i1' },
+            { bus: stubBus(), dispatch: new DispatchContext('slash', 'ban'), interactionId: 'i1' },
             {
                 method: 'respond',
                 startedAt: performance.now(),

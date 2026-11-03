@@ -17,7 +17,7 @@ import type { Constructor } from 'type-fest';
  * @decorator
  * @example
  * ```ts
- * \@Subscribe('memberBanned')
+ * \@Subscribe(['memberBanned'])
  * \@WebhookUrl('BAN_LOG_WEBHOOK_URL')
  * class BanLog extends WebhookLog<'memberBanned'> {
  *   report() {
@@ -27,9 +27,7 @@ import type { Constructor } from 'type-fest';
  * ```
  */
 export function WebhookUrl(envKey: string) {
-    return function <HandlerCtor extends Constructor<WebhookLog<SubscriptionKey, CoreBase>>>(
-        constructor: HandlerCtor
-    ): void {
+    return function <Keys extends SubscriptionKey>(constructor: Constructor<WebhookLog<Keys, CoreBase>>): void {
         Reflect.defineMetadata(WebhookUrlMetadataKey, envKey, constructor);
     };
 }

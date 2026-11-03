@@ -41,8 +41,7 @@ export function interactionGateContext(
         // discord.js caches only guilds the bot is in
         appGuildPermissions: interaction.guild
             ? (interaction.guild.members.me?.permissions.bitfield ?? null)
-            : NO_PERMISSIONS,
-        declaredRoute: null // runHandlerGates overwrites this with the matched route
+            : NO_PERMISSIONS
     };
 }
 
@@ -69,7 +68,6 @@ export function eventGateContext(
         memberRoleIds: actor.member ? [...actor.member.roles.cache.keys()].filter((id) => id !== actor.guild?.id) : [],
         memberPermissions: actor.member?.permissions.bitfield ?? null,
         memberGuildPermissions: actor.member?.permissions.bitfield ?? null,
-        appGuildPermissions: actor.guild?.members.me?.permissions.bitfield ?? null,
-        declaredRoute: null // an event handler doesn't declare a route
+        appGuildPermissions: actor.guild?.members.me?.permissions.bitfield ?? null
     };
 }

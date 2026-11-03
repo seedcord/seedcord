@@ -210,39 +210,10 @@ describe('gate observer', () => {
         const handler = {};
         Reflect.defineMetadata(GatedMetadataKey, [probe], handler);
 
-        await runHandlerGates(handler, ctx, undefined, (name) => {
+        await runHandlerGates(handler, ctx, (name) => {
             seen.push(name);
         });
 
         expect(seen).toEqual(['probe']);
-    });
-});
-
-describe('runHandlerGates', () => {
-    it('puts the route the dispatcher matched onto the context', async () => {
-        let seen: string | null | undefined;
-        const probe = defineGate('probe', (c: GateContextBase) => {
-            seen = c.declaredRoute;
-        });
-        // runHandlerGates only reads metadata off the ctor, so a plain object stands in for the handler class
-        const dailyHandler = {};
-        Reflect.defineMetadata(GatedMetadataKey, [probe], dailyHandler);
-
-        await runHandlerGates(dailyHandler, ctx, 'slash:daily');
-
-        expect(seen).toBe('slash:daily');
-    });
-
-    it('leaves declaredRoute null when the dispatcher matched no route', async () => {
-        let seen: string | null | undefined = 'unset';
-        const probe = defineGate('probe', (c: GateContextBase) => {
-            seen = c.declaredRoute;
-        });
-        const plain = {};
-        Reflect.defineMetadata(GatedMetadataKey, [probe], plain);
-
-        await runHandlerGates(plain, ctx);
-
-        expect(seen).toBeNull();
     });
 });

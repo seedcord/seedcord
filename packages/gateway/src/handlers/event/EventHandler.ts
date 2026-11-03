@@ -1,5 +1,4 @@
-import { SeedcordErrorCode } from '@seedcord/errors';
-import { SeedcordError, SeedcordTypeError } from '@seedcord/errors/internal';
+import { caseFor } from '@seedcord/core/internal';
 
 import { BaseHandler } from '#src/handlers/BaseHandler';
 
@@ -40,16 +39,15 @@ type EventMatchCases<Names extends ValidNonInteractionKeys, Ret> = {
 export abstract class EventHandler<in out Names extends ValidNonInteractionKeys> extends BaseHandler<
     ClientEvents[Names]
 > {
-    // the controller threads this in, undefined when a test constructs the handler directly
-    private readonly firedEvent: Names | undefined;
-
-    constructor(event: ClientEvents[Names], core: Core, dispatch: DispatchContext, eventName?: Names) {
+    constructor(event: ClientEvents[Names], core: Core, dispatch: DispatchContext) {
         super(event, core, dispatch, 'events');
-        this.firedEvent = eventName;
     }
 
     // never on a multi-event handler, where reading it is a compile error
     declare protected readonly event: SingleEventPayload<Names>;
+
+    /** The event that started this dispatch, one of the names in the generic. */
+    declare protected readonly route: Names;
 
     /**
      * Run the case for the current event. Use this only when the handler is registered for several
@@ -57,7 +55,7 @@ export abstract class EventHandler<in out Names extends ValidNonInteractionKeys>
      * `never`, so match is the only way to read the payload.
      *
      * Provide one case per registered event, keyed by its name, and each case receives that event's own
-     * payload tuple. The cases must cover every event in the generic, a missing event or an unknown key is a
+     * payload tuple. The cases must cover every event in the generic. A missing event or an unknown key is a
      * compile error.
      *
      * @param cases - One handler per registered event, keyed by event name.
@@ -77,15 +75,8 @@ export abstract class EventHandler<in out Names extends ValidNonInteractionKeys>
      * ```
      */
     protected async match<Ret>(cases: EventMatchCases<Names, Ret>): Promise<Ret> {
-        const name = this.firedEvent;
-        if (name === undefined) {
-            throw new SeedcordError(SeedcordErrorCode.EventNameUnavailable, [this.constructor.name, 'match()']);
-        }
-        // hasOwn, since a plain lookup for an event named `toString` returns Object.prototype's
-        const callback = Object.hasOwn(cases, name) ? (cases as Record<string, unknown>)[name] : undefined;
-        if (typeof callback !== 'function')
-            throw new SeedcordTypeError(SeedcordErrorCode.MatchCaseMissing, [this.constructor.name, 'event', name]);
+        const callback = caseFor(this, cases, 'event', this.route);
         // this.event is never on a multi-event handler. getEvent() returns the real tuple.
-        return await (callback as (...args: unknown[]) => Promisable<Ret>)(...this.getEvent());
+        return await callback(...this.getEvent());
     }
 }
