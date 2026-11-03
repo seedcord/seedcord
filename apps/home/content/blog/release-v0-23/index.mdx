@@ -5,12 +5,12 @@ authors: [materwelonDhruv]
 created: 2026-11-02
 cover:
     src: ./cover.webp
-    alt: The seedcord logo and 0.23 next to a long paper receipt listing the new features, 74 total changes, and change due your bot
+    alt: The seedcord logo and 0.23 next to a long paper receipt listing the new features, 78 total changes, and change due your bot
 thumbnail: ./thumbnail.webp
-keywords: [release, kv store, guide search, seedcord make, plugin codegen, mention prefix]
+keywords: [release, kv store, guide search, seedcord ask, seedcord make, plugin codegen, mention prefix]
 ---
 
-That's the bill for this release. 74 changes since v0.22, and 19 of them are breaking, so your bot is paying for some of it. It's less scary than it looks though. More on that at the end.
+That's the bill for this release. 78 changes since v0.22, and 20 of them are breaking, so your bot is paying for some of it. It's less scary than it looks though. More on that at the end.
 
 This all started as a short list of things to fix before the release, and it kept growing. One PR ended up titled "`feat: refactor? chore? fix? god pr`", which tells you how that went.
 
@@ -32,6 +32,16 @@ how do i know which button someone clicked    👉🏻  Buttons
 Text matches show up right away under **Matches**. Once you stop typing, your question goes to Cloudflare Workers AI, which turns it into a vector with EmbeddingGemma. The guide sections closest in meaning come back under **Related**.
 
 I think this matters more than anything else on _the bill of changes_ above. When you're looking something up you're usually stuck, and you don't know the right word yet.
+
+You can run the same search from a terminal too, even outside a project:
+
+```sh
+pnpm exec seedcord ask how do i stop someone spamming a command
+```
+
+It prints the matching pages with a link to each section. It also takes a pasted error, or an error code like `3116`.
+
+This one's really useful for coding agents. I found that out working on a bot of my own. The agent hand-wrote pagination and refusal replies, and both of those ship with seedcord. `tc` and lint pass either way, so nothing told it otherwise. Now a new project has an `ask` script, and its `AGENTS.md` tells agents to search the guide before they hand-write something. Without a terminal, the command links each page's Markdown copy, so an agent can read the page directly. [Here's some more about it](https://seedcord.org/guide/tooling/ask/).
 
 The guide got keyboard shortcuts too:
 
@@ -227,10 +237,11 @@ pnpm update --latest seedcord @seedcord/gateway # or @seedcord/http
 pnpm exec seedcord codegen
 ```
 
-Update any seedcord plugins you use too. Now, those 19 breaking changes. Most of them only matter if you use that exact API, and your compiler points right at those. Two are worth knowing up front:
+Update any seedcord plugins you use too. Now, those 20 breaking changes. Most of them only matter if you use that exact API, and your compiler points right at those. Three are worth knowing up front:
 
 - `seedcord-gen.d.ts` is now `seedcord-gen.ts`. Delete the old file, run codegen once, and rename it in your eslint ignores, `.prettierignore`, `.gitattributes`, and editor settings.
 - Handlers on the same event now run at the same time. Nothing warns you about this one. If one handler reads what another one writes, it can get old values, so check those.
+- `Paginator` now sends an ephemeral first page by default. Nothing warns you about this one either. Pass `ephemeral: false` to keep a list public.
 
 [The changelog](https://github.com/seedcord/seedcord/releases/latest) has everything else.
 
