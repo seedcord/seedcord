@@ -38,10 +38,12 @@ export class Jobs extends Plugin {
     ) {
         super(host);
         this.reloader = new HmrModuleHandler({
-            handlersDir: dir,
-            isHandler: isJob,
-            registerHandler: (job) => this.jobs.set(job.name, job),
-            unregisterHandler: (job) => this.jobs.delete(job.name),
+            handlers: {
+                dir,
+                is: isJob,
+                register: (job) => this.jobs.set(job.name, job),
+                unregister: (job) => this.jobs.delete(job.name)
+            },
             logger: this.logger
         });
     }
@@ -77,7 +79,7 @@ export class Jobs extends Plugin {
 
 | type | what `handle()` does |
 | --- | --- |
-| `create`, `update` | re-imports the saved file and every file in `affectedModules` that sits under `handlersDir` or `middlewaresDir`, unregisters the classes each one held before, and registers what it exports now |
+| `create`, `update` | re-imports the saved file and every file in `affectedModules` that sits under `handlers.dir` or `middlewares.dir`, unregisters the classes each one held before, and registers what it exports now |
 | `delete`, `deleteDir` | unregisters the classes it tracked for that path |
 | `createDir` | nothing. Each file in the new folder arrives as its own `create` event |
 
@@ -89,7 +91,7 @@ Each reload logs one line at debug level on your plugin's logger, in the `hmr` c
 
 ### Undoing what a registration made
 
-`unregisterHandler` gets the old class. That's enough for `Jobs`, since registering only stored the class in a map. If registering creates something you have to undo later, return it from `getArtifacts`. The handler calls `getArtifacts` each time it tracks a class, then passes the result to `unregisterHandler` as its second argument. Here `schedule()` starts a timer for each job, and the timer is the artifact:
+`unregister` gets the old class. That's enough for `Jobs`, since registering only stored the class in a map. If registering creates something you have to undo later, return it from `getArtifacts`. The handler calls `getArtifacts` each time it tracks a class, then passes the result to `unregister` as its second argument. Here `schedule()` starts a timer for each job, and the timer is the artifact:
 
 ```ts twoslash title="src/plugins/Jobs.ts"
 import { HmrModuleHandler, Plugin } from '@seedcord/gateway';
@@ -112,13 +114,15 @@ class Jobs extends Plugin {
         super(host);
         // ---cut---
         this.reloader = new HmrModuleHandler({
-            handlersDir: dir,
-            isHandler: isJob,
-            registerHandler: (job) => this.schedule(job),
-            getArtifacts: (job) => this.timers.get(job),
-            unregisterHandler: (job, timer) => {
-                clearInterval(timer);
-                this.timers.delete(job);
+            handlers: {
+                dir,
+                is: isJob,
+                register: (job) => this.schedule(job),
+                getArtifacts: (job) => this.timers.get(job),
+                unregister: (job, timer) => {
+                    clearInterval(timer);
+                    this.timers.delete(job);
+                }
             },
             logger: this.logger
         });
@@ -134,11 +138,11 @@ class Jobs extends Plugin {
 }
 ```
 
-A save to a job file clears the old class's timer before the new class starts its own. Without `clearInterval` in `unregisterHandler`, every save would leave one more timer running the old code. seedcord's own `CommandRegistry` keeps each command's name and target servers as its artifact the same way, since it has to construct the class to learn them.
+A save to a job file clears the old class's timer before the new class starts its own. Without `clearInterval` in `unregister`, every save would leave one more timer running the old code. seedcord's own `CommandRegistry` keeps each command's name and target servers as its artifact the same way, since it has to construct the class to learn them.
 
 ### Handlers and middleware
 
-A second folder can hold a second kind of class, the way seedcord's own dispatchers reload handlers and the middleware around them. Pass `middlewaresDir` with its own check and register functions. The second type argument types them:
+A second folder can hold a second kind of class, the way seedcord's own dispatchers reload handlers and the middleware around them. Pass `middlewares` with the same keys as `handlers`, apart from `getArtifacts`. The second type argument types them:
 
 ```ts twoslash title="src/plugins/Jobs.ts"
 import { HmrModuleHandler, Plugin } from '@seedcord/gateway';
@@ -164,14 +168,18 @@ class Jobs extends Plugin {
         super(host);
         // ---cut---
         this.reloader = new HmrModuleHandler<JobClass, HookClass>({
-            handlersDir: dir,
-            middlewaresDir: hooksDir,
-            isHandler: isJob,
-            isMiddleware: isHook,
-            registerHandler: (job) => this.jobs.set(job.name, job),
-            unregisterHandler: (job) => this.jobs.delete(job.name),
-            registerMiddleware: (hook) => this.hooks.add(hook),
-            unregisterMiddleware: (hook) => this.hooks.delete(hook),
+            handlers: {
+                dir,
+                is: isJob,
+                register: (job) => this.jobs.set(job.name, job),
+                unregister: (job) => this.jobs.delete(job.name)
+            },
+            middlewares: {
+                dir: hooksDir,
+                is: isHook,
+                register: (hook) => this.hooks.add(hook),
+                unregister: (hook) => this.hooks.delete(hook)
+            },
             logger: this.logger
         });
         // ---cut-after---

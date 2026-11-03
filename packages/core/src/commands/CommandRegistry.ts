@@ -90,11 +90,13 @@ export class CommandRegistry implements Initializeable, HmrAware {
 
         if (!Envapter.isDevelopment && !Envapter.isTest) return;
         this.hmrHandler = new HmrModuleHandler<CommandCtor, void, CommandArtifact | undefined>({
-            handlersDir: this.dir,
-            isHandler: isCommandClass,
-            registerHandler: this.registerCommand.bind(this),
-            unregisterHandler: this.unregisterCommand.bind(this),
-            getArtifacts: this.getArtifacts.bind(this),
+            handlers: {
+                dir: this.dir,
+                is: isCommandClass,
+                register: this.registerCommand.bind(this),
+                unregister: this.unregisterCommand.bind(this),
+                getArtifacts: this.getArtifacts.bind(this)
+            },
             logger: this.logger
         });
     }
@@ -158,6 +160,7 @@ export class CommandRegistry implements Initializeable, HmrAware {
     public refresh(shouldRefresh = true): Promise<void> {
         const answeredEvents = [...this.pendingEvents.values()];
         this.pendingEvents.clear();
+
         return this.afterRunningDeploy(() => this.applyEvents(answeredEvents, shouldRefresh));
     }
 

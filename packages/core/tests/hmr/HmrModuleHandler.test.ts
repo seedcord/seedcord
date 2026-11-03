@@ -48,10 +48,7 @@ describe('HmrModuleHandler', () => {
         registerHandler = vi.fn<(handler: TestHandler, file: string) => void>();
         unregisterHandler = vi.fn<(handler: TestHandler, artifacts?: unknown) => void>();
         handler = new HmrModuleHandler<TestHandler>({
-            handlersDir,
-            isHandler,
-            registerHandler,
-            unregisterHandler,
+            handlers: { dir: handlersDir, is: isHandler, register: registerHandler, unregister: unregisterHandler },
             logger: fakeLogger().logger
         });
     });
@@ -63,10 +60,7 @@ describe('HmrModuleHandler', () => {
     function handlerWithSpies(): { withSpies: HmrModuleHandler<TestHandler>; spies: LoggerSpy } {
         const { logger, spies } = fakeLogger();
         const withSpies = new HmrModuleHandler<TestHandler>({
-            handlersDir,
-            isHandler,
-            registerHandler,
-            unregisterHandler,
+            handlers: { dir: handlersDir, is: isHandler, register: registerHandler, unregister: unregisterHandler },
             logger
         });
         return { withSpies, spies };
@@ -92,13 +86,13 @@ describe('HmrModuleHandler', () => {
         writeFileSync(siblingFile, 'export class UtilThing {}\n');
         const registerMiddleware = vi.fn<(middleware: TestHandler, file: string) => void>();
         const withMiddlewares = new HmrModuleHandler<TestHandler, TestHandler>({
-            handlersDir,
-            middlewaresDir,
-            isHandler: (_val): _val is TestHandler => false,
-            isMiddleware: isHandler,
-            registerHandler,
-            registerMiddleware,
-            unregisterHandler,
+            handlers: {
+                dir: handlersDir,
+                is: (_val): _val is TestHandler => false,
+                register: registerHandler,
+                unregister: unregisterHandler
+            },
+            middlewares: { dir: middlewaresDir, is: isHandler, register: registerMiddleware, unregister: vi.fn() },
             logger: fakeLogger().logger
         });
 
@@ -148,10 +142,7 @@ describe('HmrModuleHandler', () => {
             skippedFolders: []
         });
         const relative = new HmrModuleHandler<TestHandler>({
-            handlersDir: './commands',
-            isHandler,
-            registerHandler,
-            unregisterHandler,
+            handlers: { dir: './commands', is: isHandler, register: registerHandler, unregister: unregisterHandler },
             logger: fakeLogger().logger
         });
         const file = join(handlersDir, 'Ping.mjs');
@@ -284,14 +275,53 @@ describe('HmrModuleHandler', () => {
             expect(registerHandler).not.toHaveBeenCalled();
         });
 
-        it('retries a blocked file listed before the file that frees its route in one save', async () => {
-            await handler.handle({ file: oldFile, type: 'update' });
-            await handler.handle({ file: newFile, type: 'create' });
-            writeFileSync(oldFile, 'export const value = 1;\n');
+        it('loads routes that move between files in one save, whatever order the save lists them', async () => {
+            const owners = new Map<string, string>();
+            // justified: every class that these fixture files export has a static route
+            const routeOf = (ctor: TestHandler): string => (ctor as unknown as { route: string }).route;
+            registerHandler.mockImplementation((ctor) => {
+                if (owners.has(routeOf(ctor))) {
+                    throw new SeedcordTypeError(SeedcordErrorCode.CoreDuplicateName, ['route', routeOf(ctor)]);
+                }
+                owners.set(routeOf(ctor), ctor.name);
+            });
+            unregisterHandler.mockImplementation((ctor) => {
+                owners.delete(routeOf(ctor));
+            });
+            const write = (name: string, route: string): string => {
+                const file = join(handlersDir, `${name}.mjs`);
+                writeFileSync(file, `export class ${name} { static route = '${route}'; }\n`);
+                return file;
+            };
+            const first = write('First', 'a');
+            const second = write('Second', 'b');
+            const blocked = write('Blocked', 'b');
+            await handler.handle({ file: first, type: 'update' });
+            await handler.handle({ file: second, type: 'update' });
+            await handler.handle({ file: blocked, type: 'create' });
+            write('First', 'c');
+            write('Second', 'a');
 
-            await handler.handle({ file: oldFile, type: 'update', affectedModules: [newFile, oldFile] });
+            await handler.handle({ file: first, type: 'update', affectedModules: [blocked, second, first] });
+
+            expect(Object.fromEntries(owners)).toEqual({ a: 'Second', b: 'Blocked', c: 'First' });
+        });
+
+        it('blocks a file that fails while another file in the save took its route', async () => {
+            const { withSpies, spies } = handlerWithSpies();
+            await withSpies.handle({ file: oldFile, type: 'update' });
+            await withSpies.handle({ file: newFile, type: 'create' });
+            writeFileSync(oldFile, "throw new Error('typo');\n");
+
+            await withSpies.handle({ file: oldFile, type: 'update', affectedModules: [newFile, oldFile] });
 
             expect(owner?.name).toBe('Versions');
+            expect(spies.warn).not.toHaveBeenCalled();
+
+            writeFileSync(oldFile, 'export class Old {}\n');
+            await withSpies.handle({ file: newFile, type: 'delete' });
+
+            expect(owner?.name).toBe('Old');
         });
 
         it('logs one failure per save while the other file still holds the route', async () => {

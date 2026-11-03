@@ -43,15 +43,21 @@ export class HandlerLoader<
 
         const { handlersDir, middlewaresDir, middlewares, logger } = options;
         this.hmr = new HmrModuleHandler({
-            handlersDir,
-            ...(middlewaresDir && { middlewaresDir }),
-            isHandler: (value): value is Handler => options.isHandler(value),
-            isMiddleware: (value): value is Middleware => options.isMiddleware(value),
-            registerHandler: (handler, file) => this.registerHandler(handler, file),
-            registerMiddleware: (middleware, file) => this.registerMiddleware(middleware, file),
-            unregisterHandler: (handler, artifacts) => options.removeHandler(handler, artifacts),
-            unregisterMiddleware: (middleware) => middlewares.unregister(middleware),
-            getArtifacts: (handler) => options.artifactsOf(handler),
+            handlers: {
+                dir: handlersDir,
+                is: (value): value is Handler => options.isHandler(value),
+                register: (handler, file) => this.registerHandler(handler, file),
+                unregister: (handler, artifacts) => options.removeHandler(handler, artifacts),
+                getArtifacts: (handler) => options.artifactsOf(handler)
+            },
+            ...(middlewaresDir && {
+                middlewares: {
+                    dir: middlewaresDir,
+                    is: (value): value is Middleware => options.isMiddleware(value),
+                    register: (middleware, file) => this.registerMiddleware(middleware, file),
+                    unregister: (middleware) => middlewares.unregister(middleware)
+                }
+            }),
             logger
         });
     }
