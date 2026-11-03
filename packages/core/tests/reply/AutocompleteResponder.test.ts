@@ -30,4 +30,15 @@ describe('AutocompleteResponder', () => {
 
         expect(post).toHaveBeenLastCalledWith([]);
     });
+
+    it('clears after an unawaited respond that fails', async () => {
+        const post = vi.fn().mockRejectedValueOnce(new Error('bad choices')).mockResolvedValue(undefined);
+        const responder = responderWith(post);
+
+        const pending = responder.respond(['a']);
+        await responder.clear();
+
+        await expect(pending).rejects.toThrow('bad choices');
+        expect(post).toHaveBeenLastCalledWith([]);
+    });
 });
