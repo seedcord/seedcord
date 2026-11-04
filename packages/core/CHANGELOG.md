@@ -1,5 +1,19 @@
 # @seedcord/core
 
+## 0.12.0-next.3
+
+### 💥 Breaking
+
+- `Paginator` now sends an ephemeral first page by default, where it used to post a public message that anyone could click through. Pass `ephemeral: false` to keep a public list. ([#440](https://github.com/seedcord/seedcord/pull/440))
+
+### 🩹 Patch
+
+- Fixed a handler behind `Cooldown` running twice when two uses arrive at the same moment, like a double click. The second one now gets the refusal, unless it reaches another copy of your bot. ([#440](https://github.com/seedcord/seedcord/pull/440))
+
+#### 📦 Seedcord packages
+
+- `@seedcord/errors` 0.15.0-next.2 → 0.15.0-next.3
+
 ## 0.12.0-next.2
 
 ### 💥 Breaking

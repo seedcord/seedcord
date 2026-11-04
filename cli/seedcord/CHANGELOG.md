@@ -1,5 +1,18 @@
 # seedcord
 
+## 0.23.0-next.3
+
+### ✨ Minor
+
+- Added `seedcord ask "<question>"`, which searches the guide from a terminal, even outside a project. It takes a question, a pasted error, or an error code like `3116`, and prints the matching pages with their links. ([#440](https://github.com/seedcord/seedcord/pull/440))
+
+### 🩹 Patch
+
+#### 📦 Seedcord packages
+
+- `@seedcord/core` 0.12.0-next.2 → 0.12.0-next.3
+- `@seedcord/errors` 0.15.0-next.2 → 0.15.0-next.3
+
 ## 0.23.0-next.2
 
 ### ✨ Minor

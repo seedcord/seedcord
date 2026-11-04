@@ -1,5 +1,11 @@
 # create-seedcord
 
+## 0.6.0-next.2
+
+### ✨ Minor
+
+- A new project now has an `ask` script that runs `seedcord ask`, and its `AGENTS.md` instructs a coding agent to search the guide before it writes something by hand that seedcord already ships. ([#440](https://github.com/seedcord/seedcord/pull/440))
+
 ## 0.6.0-next.1
 
 ### 🩹 Patch
