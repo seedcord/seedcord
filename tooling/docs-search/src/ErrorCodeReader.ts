@@ -15,16 +15,24 @@ const digitsAndName = (digits: string, name: string): string => `${digits} ${nam
 
 const CERTAIN_CODES = [
     { pattern: /\[(\d{4})\]/g, rewrite: nameOnly },
-    { pattern: /^(\d{4})$/g, rewrite: nameOnly },
     { pattern: /(?<=\berror(?: code)?\W{0,3})(\d{4})\b/gi, rewrite: digitsAndName }
 ];
 
 const FOUR_DIGITS_ON_THEIR_OWN = /(?<![\w.:/#-])\d{4}(?![\w:/-]|\.\d)/g;
 
+const WORD = /[\p{L}']+/gu;
+
+const WORDS_ABOUT_A_CODE = new Set(
+    "what what's whats is does do mean means i got get getting a an the error code this about explain".split(' ')
+);
+
 export class ErrorCodeReader {
     constructor(private readonly codeNames: Readonly<Record<number, string>>) {}
 
     read(question: Question): CodeMentions & { question: string } {
+        const asked = this.onlyCodeIn(question);
+        if (asked !== undefined) return { question: asked.name, swapped: [asked], hints: [] };
+
         const swapped = new Map<number, CodeMention>();
         let withNames: string = question;
         for (const { pattern, rewrite } of CERTAIN_CODES) {
@@ -43,6 +51,14 @@ export class ErrorCodeReader {
         }
 
         return { question: withNames, swapped: [...swapped.values()], hints: [...hints.values()] };
+    }
+
+    private onlyCodeIn(question: string): CodeMention | undefined {
+        const [digits, ...others] = question.match(FOUR_DIGITS_ON_THEIR_OWN) ?? [];
+        if (digits === undefined || others.length > 0) return undefined;
+
+        const words = question.toLowerCase().match(WORD) ?? [];
+        return words.every((word) => WORDS_ABOUT_A_CODE.has(word)) ? this.mentionOf(digits) : undefined;
     }
 
     private mentionOf(digits: string): CodeMention | undefined {

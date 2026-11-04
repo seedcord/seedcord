@@ -49,7 +49,7 @@ interface GroupProps {
 }
 
 function GroupBody({ group, roving, onSelect }: GroupProps): ReactElement | ReactElement[] {
-    if (group.status === 'pending') return <SearchResultsSkeleton />;
+    if (group.status === 'pending' && group.results.length === 0) return <SearchResultsSkeleton />;
     if (group.status === 'failed') {
         return (
             <p aria-hidden className={cn('text-subtle px-3 py-2 text-sm')}>
@@ -135,7 +135,7 @@ export function GuideSearch({ open, onOpenChange: setOpen }: GuideSearchProps): 
                 title="Search"
                 description="Search every page in the seedcord guide."
                 fieldNote={hasCodes(codes) ? <CodeNotes codes={codes} onSearch={searchForCode} /> : undefined}
-                listExpanded={active !== undefined}
+                listExpanded={groups.some((group) => group.status !== 'failed' && group.results.length > 0)}
                 footer={<SearchKeyLegend hasGroups={roving.hasGroups} />}
                 field={
                     <SearchField

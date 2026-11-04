@@ -21,7 +21,16 @@ describe('ErrorCodeReader', () => {
     it.each([
         ['3116', 'CliDependencyMissing'],
         ['[3116]', 'CliDependencyMissing'],
-        ['[3116] Add seedcord to ./ as a dev dependency', 'CliDependencyMissing Add seedcord to ./ as a dev dependency']
+        [
+            '[3116] Add seedcord to ./ as a dev dependency',
+            'CliDependencyMissing Add seedcord to ./ as a dev dependency'
+        ],
+        ['error 3116', 'CliDependencyMissing'],
+        ['Error code: 3116', 'CliDependencyMissing'],
+        ['what is 3116', 'CliDependencyMissing'],
+        ["what's error 3116?", 'CliDependencyMissing'],
+        ['what does 3116 mean', 'CliDependencyMissing'],
+        ['i got 3116.', 'CliDependencyMissing']
     ])('swaps the code in %s for its name', (input, question) => {
         expect(read(input)).toEqual({ question, swapped: [DEPENDENCY], hints: [] });
     });
@@ -35,8 +44,7 @@ describe('ErrorCodeReader', () => {
     });
 
     it.each([
-        ['what does 3102 mean', CONFIG],
-        ['i got 3102.', CONFIG],
+        ['does 3102 work on bun', CONFIG],
         ['port 3001 is already in use', { code: 3001, name: 'CliCancelled' }],
         ['close code 1006 from the websocket', { code: 1006, name: 'ConfigMissingEnv' }]
     ])('leaves a number that only might be a code in %s and hints at it', (input, hint) => {

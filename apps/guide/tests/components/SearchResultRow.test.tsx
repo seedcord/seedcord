@@ -71,6 +71,22 @@ describe('SearchResultRow', () => {
         expect(screen.getByRole('option', { name: 'Several uses per window, Checks, Cooldowns' })).toBeInTheDocument();
     });
 
+    it('shows the opening text of a section found by meaning, with nothing highlighted', () => {
+        const highlights = stubHighlights();
+
+        renderRow({
+            path: '/checks/cooldown/',
+            tab: 'Checks',
+            page: 'Cooldowns',
+            url: '',
+            by: 'meaning',
+            excerpt: 'Stop someone spamming a command.'
+        });
+
+        expect(screen.getByText('Stop someone spamming a command.')).toBeInTheDocument();
+        expect(highlightedText(highlights)).toEqual([]);
+    });
+
     it('labels a page row with its tab', () => {
         vi.stubGlobal('CSS', {});
 

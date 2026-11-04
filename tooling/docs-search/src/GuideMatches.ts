@@ -50,6 +50,10 @@ class Section {
         return typed.filter((word) => this.words.includes(word)).length;
     }
 
+    get opening(): string | undefined {
+        return this.text === '' ? undefined : this.text;
+    }
+
     findExcerpt(phrase: string): string | undefined {
         const at = findWordStart(this.lowered, phrase);
         if (at === -1) return undefined;
@@ -60,12 +64,14 @@ class Section {
 
 export class GuideMatches {
     private readonly sections: Section[];
+    private readonly byPath: ReadonlyMap<string, Section>;
 
     constructor(
         sections: readonly GuideSection[],
         private readonly site: SiteAddress
     ) {
         this.sections = sections.map((section) => new Section(section));
+        this.byPath = new Map(this.sections.map((section) => [section.hit.path, section]));
     }
 
     // a relative url, read from whichever site serves the page
@@ -79,6 +85,13 @@ export class GuideMatches {
         const titles = titled.map((section) => guideResult(section.hit, { by: 'title', terms: words }, this.site));
         const phrase = parseQuestion(input)?.toLowerCase();
         return phrase === undefined ? titles : [...titles, ...this.matchText(phrase, titled)];
+    }
+
+    withOpenings(results: readonly GuideResult[]): GuideResult[] {
+        return results.map((result) => {
+            const opening = this.byPath.get(result.path)?.opening;
+            return result.by === 'meaning' && opening !== undefined ? { ...result, excerpt: opening } : result;
+        });
     }
 
     private matchTitles(typed: readonly string[]): Section[] {
