@@ -5,6 +5,7 @@ import { AnimatePresence, m } from 'motion/react';
 import { createContext, use, useCallback, useLayoutEffect, useMemo, useRef, useState } from 'react';
 
 import { Card } from './Card';
+import { DIALOG_OVERLAY } from './Dialog';
 import { cn } from './lib/cn';
 import { easeOutStrong } from './lib/motion';
 import { tw } from './lib/tw';
@@ -210,10 +211,7 @@ export function SearchDialog({
     return (
         <Dialog.Root open={open} onOpenChange={onOpenChange}>
             <Dialog.Portal>
-                <Dialog.Overlay
-                    data-command-overlay
-                    className={cn('fixed inset-0 z-60 bg-(--command-overlay)/70 backdrop-blur-sm')}
-                />
+                <Dialog.Overlay data-command-overlay className={cn(DIALOG_OVERLAY, 'z-60')} />
                 <Dialog.Content
                     ref={setContainer}
                     aria-modal
