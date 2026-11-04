@@ -77,7 +77,6 @@
         "@seedcord/tsdown-config": "workspace:^",
         "@seedcord/vitest-config": "workspace:^",
         "envapt": "catalog:peer",
-        "jiti": "catalog:deps",
         "vitest": "catalog:test"
     },
     "peerDependencies": {
