@@ -18,8 +18,11 @@ beforeEach(() => {
     document.body.innerHTML = HEADINGS.map((id) => `<h2 id="${id}">${id}</h2>`).join('');
     HEADINGS.forEach((id, index) => placeHeading(id, index * 400));
     scrolled.length = 0;
-    vi.stubGlobal('scrollY', 0);
-    vi.stubGlobal('scrollTo', () => scrolled.push('page top'));
+    vi.stubGlobal('scrollY', 300);
+    vi.stubGlobal('scrollTo', ({ top }: { top: number }) => {
+        scrolled.push(top === 0 ? 'page top' : 'page bottom');
+        vi.stubGlobal('scrollY', top);
+    });
     // jsdom omits scrollIntoView. a real scroll moves the heading to the top of the screen
     Element.prototype.scrollIntoView = function (this: Element) {
         scrolled.push(this.id);
@@ -30,6 +33,7 @@ beforeEach(() => {
 // the worker runs other files after this one
 afterEach(() => {
     vi.unstubAllGlobals();
+    Reflect.deleteProperty(document.documentElement, 'scrollHeight');
     Reflect.deleteProperty(Element.prototype, 'scrollIntoView');
     document.body.innerHTML = '';
 });
@@ -52,9 +56,38 @@ describe('useSectionCursor', () => {
 
         act(() => result.current.step(-1));
         act(() => result.current.step(-1));
+        expect(result.current.section()).toBe('');
+
         act(() => result.current.step(1));
 
         expect(scrolled).toEqual(['page top', 'setup']);
+    });
+
+    it('jumps to the bottom on the last heading and to the top from anywhere', () => {
+        Object.defineProperty(document.documentElement, 'scrollHeight', { value: 5000, configurable: true });
+        const { result } = renderHook(() => useSectionCursor(HEADINGS, 'setup'));
+
+        act(() => result.current.toBottom());
+        placeHeading('replies', 100);
+        expect(result.current.section()).toBe('replies');
+
+        act(() => result.current.step(-1));
+        act(() => result.current.toTop());
+
+        expect(scrolled).toEqual(['page bottom', 'options', 'page top']);
+        expect(result.current.section()).toBe('');
+    });
+
+    it('reads a page opened at the top as the page title, ahead of the heading in view', () => {
+        vi.stubGlobal('scrollY', 0);
+        const { result } = renderHook(() => useSectionCursor(HEADINGS, 'setup'));
+
+        expect(result.current.section()).toBe('');
+
+        act(() => result.current.step(1));
+
+        expect(scrolled).toEqual(['setup']);
+        expect(result.current.section()).toBe('setup');
     });
 
     it('starts from the heading in view once you scroll away from the top', () => {
