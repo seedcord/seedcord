@@ -103,17 +103,11 @@ When someone asks how seedcord does something, answer for gateway and for http. 
 Run from the repo root. `pnpm -C <package> <script>` targets one package.
 
 ```sh
-pnpm -C <pkg> lint:fix   # always lint:fix, never plain lint
-pnpm -C <pkg> tc
-pnpm -C <pkg> test       # after lint and tc pass
+pnpm check --filter=<pkg>   # lint:fix, tc and test, after building what <pkg> depends on
+pnpm check --affected       # the same for everything changed since next
 ```
 
-Rebuild a shared package before you check its dependents:
-
-```sh
-pnpm -C packages/<name> build
-pnpm -C packages/<dependent> tc
-```
+It prints only the tasks that fail and exits non-zero. Use `--filter=...<pkg>` to check a package's dependents too.
 
 Two whole-workspace gates exist and they differ:
 

@@ -202,7 +202,7 @@ const BUTTON_STYLE_LINK = 5; // discord's wire value, stable since v8
 
 A comment inline gets deleted with its line. A block at the top of a function goes stale as the body changes underneath it, because no sentence in it belongs to any one line.
 
-Keep a block comment only for something the whole function rests on, an invariant every line depends on or a wire format the whole body implements. `packages/core/src/customId/codec.ts:10` is a fair example, because the format description belongs to the module.
+Keep a block comment only for something the whole function rests on, an invariant every line depends on or a wire format the whole body implements. `packages/custom-id/src/codec.ts:8` is a fair example, because the format description belongs to the module.
 
 Break a multi-clause header into per-line comments. Any clause that only restates its line disappears during the move, which is the point.
 

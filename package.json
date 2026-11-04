@@ -19,6 +19,7 @@
         "tc": "turbo tc",
         "tc:root": "tsgo --noEmit -p tsconfig.json",
         "test": "turbo test",
+        "check": "cross-env TURBO_SCM_BASE=next turbo lint:fix tc test --output-logs=errors-only",
         "check:catalog": "tsx scripts/src/check-workspace-catalog.ts",
         "check:typescript-floor": "tsx scripts/src/check-typescript-floor.ts",
         "lint:changesets": "tsx scripts/src/release/lint-changesets.ts",

@@ -54,6 +54,14 @@ No em dash in JSX text. Use a comma or parentheses.
 
 ---
 
+## Before you show a UI change
+
+Load the `frontend-iteration` skill before you build user-facing UI.
+
+Open the real page, through its worker when the feature calls one. Take a phone screenshot at 390px wide and a desktop one at 1280px, then look at both. Fix what looks wrong before you show it.
+
+---
+
 ## Design fidelity
 
 When a mock is provided, treat it as ground truth. Every visible difference between the mock and the build is a bug until someone writes it down as descoped. A deviation needs a justification in the PR description.
