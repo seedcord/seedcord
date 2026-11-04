@@ -136,30 +136,25 @@ export class ReleaseNotes {
         const own = this.ownChanges(pkg);
         if (own.length === 0) return '';
 
-        const groups = KINDS.flatMap((kind) => {
-            const ofKind = own.filter((change) => change.kind === kind);
-            if (ofKind.length === 0) return [];
-
-            return [`**${kind} ${LABEL[kind]}**`, ofKind.map((change) => `- ${change.text}`).join('\n')];
-        });
-
-        return [`### \`${pkg.name}\``, `<sub>${versionsOf(pkg)}</sub>`, ...groups].join('\n\n');
+        return [
+            `### \`${pkg.name}\``,
+            `<sub>${versionsOf(pkg)}</sub>`,
+            ...groupedByKind(own, (change) => `- ${change.text}`)
+        ].join('\n\n');
     }
 
     private sharedSection(): string {
         const shared = this.sharedChanges();
         if (shared.length === 0) return '';
 
-        const blocks = shared.map((change) => {
-            const names = change.packages.map((name) => `\`${shortName(name)}\``).toSorted();
+        return [
+            `## ${SHARED} Shared changes`,
+            ...groupedByKind(shared, (change) => {
+                const names = change.packages.map((name) => `\`${shortName(name)}\``).toSorted();
 
-            // prettier indents a later paragraph 4 spaces under its list item
-            const paragraphs = lineOf(change).replaceAll('\n    ', '\n');
-
-            return `#### ${paragraphs}\n\n${names.join(' ')}`;
-        });
-
-        return [`## ${SHARED} Shared changes`, ...blocks].join('\n\n');
+                return `- ${change.text}\n\n    ${names.join(' ')}`;
+            })
+        ].join('\n\n');
     }
 
     private footer(): string {
@@ -199,8 +194,13 @@ function fence(command: string): string {
     return `\`\`\`sh\n${command}\n\`\`\``;
 }
 
-function lineOf(change: Change): string {
-    return `${change.kind} ${change.text}`;
+function groupedByKind(changes: readonly Change[], bullet: (change: Change) => string): string[] {
+    return KINDS.flatMap((kind) => {
+        const ofKind = changes.filter((change) => change.kind === kind);
+        if (ofKind.length === 0) return [];
+
+        return [`**${kind} ${LABEL[kind]}**`, ofKind.map(bullet).join('\n')];
+    });
 }
 
 function byFolderThenName(a: FiledPackage, b: FiledPackage): number {

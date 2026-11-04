@@ -85,7 +85,7 @@ function headingFor(tag: keyof typeof HEADINGS): (props: ComponentProps<'h2'>) =
             <AnchoredHeading
                 {...props}
                 as={tag}
-                wrapperClassName={cn('flex items-center gap-1', HEADINGS[tag].className)}
+                wrapperClassName={HEADINGS[tag].className}
                 className={cn('font-display scroll-mt-24 font-semibold tracking-tight text-(--seed-dark)')}
                 anchorSize={HEADINGS[tag].anchorSize}
                 anchorClassName={cn('text-(--seed-dark)/40 hover:text-(--flesh-deep)')}

@@ -1,6 +1,6 @@
 {
     "name": "@seedcord/mock-edge",
-    "version": "0.0.2-next.0",
+    "version": "0.0.2",
     "private": true,
     "description": "Edge mock bot on Cloudflare Workers for demonstration and testing",
     "repository": {

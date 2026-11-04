@@ -156,10 +156,18 @@ describe('ReleaseNotes', () => {
             entries: new ReleaseEntries(both)
         }).body();
 
-        expect(body.indexOf('#### 🐛 Fixed the TypeScript')).toBeLessThan(body.indexOf('#### 🔧 Reworded'));
+        expect(body).toContain(
+            [
+                '## 👥 Shared changes',
+                '**🐛 Fixed**',
+                '- Fixed the TypeScript 5.9 peer conflict.\n\n    `core` `errors`',
+                '**🔧 Changed**',
+                '- Reworded the README.\n\n    `core` `errors`'
+            ].join('\n\n')
+        );
     });
 
-    it('keeps the later paragraphs of a shared change out of a code block', () => {
+    it('keeps the later paragraphs of a shared change inside its bullet', () => {
         const entry = '- Added `shutdownDeadline`. ([#309](url))\n\n    A zero deadline throws.';
         const both = ['@seedcord/core', '@seedcord/errors'].map((name) => ({
             name,
@@ -176,7 +184,7 @@ describe('ReleaseNotes', () => {
         }).body();
 
         expect(body).toContain(
-            '#### ✨ Added `shutdownDeadline`. ([#309](url))\n\nA zero deadline throws.\n\n`core` `errors`'
+            '**✨ Minor**\n\n- Added `shutdownDeadline`. ([#309](url))\n\n    A zero deadline throws.\n\n    `core` `errors`'
         );
     });
 
@@ -371,7 +379,7 @@ describe('ReleaseNotes', () => {
             '### `@seedcord/core`\n\n<sub>0.6.0 → 0.7.0</sub>\n\n**💥 Breaking**\n\n- Renamed `routeId` to `origin`.'
         );
         expect(body).toContain(
-            '## 👥 Shared changes\n\n#### ✨ Added `dispatchId` to every bus key. ([#311](url))\n\n`core` `gateway`'
+            '## 👥 Shared changes\n\n**✨ Minor**\n\n- Added `dispatchId` to every bus key. ([#311](url))\n\n    `core` `gateway`'
         );
         expect(body.match(/Added `dispatchId`/g)).toHaveLength(1);
     });

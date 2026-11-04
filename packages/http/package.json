@@ -1,6 +1,6 @@
 {
     "name": "@seedcord/http",
-    "version": "0.12.0-next.2",
+    "version": "0.12.0",
     "description": "HTTP interactions transport for seedcord bots",
     "keywords": [
         "discord",

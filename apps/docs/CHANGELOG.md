@@ -1,12 +1,12 @@
 # @seedcord/docs
 
-## 0.1.21-next.0
+## 0.1.21
 
 ### 🩹 Patch
 
 #### 📦 Seedcord packages
 
-- `@seedcord/eslint-config` 3.0.0 → 3.0.1-next.0
+- `@seedcord/eslint-config` 3.0.1-next.2 → 3.0.1
 
 ## 0.1.20
 

@@ -1,6 +1,6 @@
 {
     "name": "@seedcord/cli-templates",
-    "version": "0.0.1-next.0",
+    "version": "0.0.1",
     "private": true,
     "description": "Reads and renders the Handlebars templates seedcord make writes files from",
     "repository": {

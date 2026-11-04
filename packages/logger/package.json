@@ -1,6 +1,6 @@
 {
     "name": "@seedcord/logger",
-    "version": "0.6.0-next.1",
+    "version": "0.6.0",
     "description": "Channelled logging for seedcord bots",
     "keywords": [
         "discord-bot",

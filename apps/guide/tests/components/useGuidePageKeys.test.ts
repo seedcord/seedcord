@@ -29,6 +29,8 @@ function pressed(targets: PageKeyTargets, keys: { key: string; shiftKey?: boolea
 }
 
 afterEach(() => {
+    vi.unstubAllGlobals();
+    Reflect.deleteProperty(document.documentElement, 'scrollHeight');
     document.body.innerHTML = '';
 });
 
@@ -58,13 +60,31 @@ describe('useGuidePageKeys', () => {
         expect(outside).toEqual([]);
     });
 
-    it('copies the link to the section in view with y', () => {
-        document.body.innerHTML = '<button data-copy-anchor="options"></button>';
-        const copy = vi.fn();
-        document.querySelector('button')?.addEventListener('click', copy);
+    it('scrolls to the bottom with Shift+J and the top with Shift+K', () => {
+        Object.defineProperty(document.documentElement, 'scrollHeight', { value: 5000, configurable: true });
+        const scrollTo = vi.fn();
+        vi.stubGlobal('scrollTo', scrollTo);
 
+        pressed(TARGETS, [
+            { key: 'J', shiftKey: true },
+            { key: 'K', shiftKey: true }
+        ]);
+
+        expect(scrollTo.mock.calls.map(([options]: { top: number }[]) => options?.top)).toEqual([5000, 0]);
+    });
+
+    it('copies the link to the page title at the top and to the section in view further down with y', () => {
+        document.body.innerHTML = '<button data-copy-anchor=""></button><button data-copy-anchor="options"></button>';
+        const copied: (string | undefined)[] = [];
+        for (const button of document.querySelectorAll('button')) {
+            button.addEventListener('click', () => copied.push(button.dataset.copyAnchor));
+        }
+
+        vi.stubGlobal('scrollY', 0);
+        pressed(TARGETS, [{ key: 'y' }], 'options');
+        vi.stubGlobal('scrollY', 300);
         pressed(TARGETS, [{ key: 'y' }], 'options');
 
-        expect(copy).toHaveBeenCalledOnce();
+        expect(copied).toEqual(['', 'options']);
     });
 });

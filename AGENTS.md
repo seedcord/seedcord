@@ -103,17 +103,11 @@ When someone asks how seedcord does something, answer for gateway and for http. 
 Run from the repo root. `vp -C <package> run <script>` targets one package.
 
 ```sh
-vp -C <pkg> run lint:fix   # always lint:fix, never plain lint
-vp -C <pkg> run tc
-vp -C <pkg> test           # after lint and tc pass
+vp run check --filter=<pkg>   # lint:fix, tc and test, after building what <pkg> depends on
+vp run check --affected       # the same for everything changed since next
 ```
 
-Rebuild a shared package before you check its dependents:
-
-```sh
-vp -C packages/<name> run build
-vp -C packages/<dependent> run tc
-```
+It prints only the tasks that fail and exits non-zero. Use `--filter=...<pkg>` to check a package's dependents too.
 
 Two whole-workspace gates exist and they differ:
 
@@ -152,7 +146,7 @@ A fixture cast is fine with a short comment saying what makes it safe. `any` sta
 
 ### Trying a feature on a mock
 
-The bots in `mocks/` are there to show a feature working against Discord. Add the feature to the mock for its transport, put a test bot's token in that mock's `.env`, and run `pnpm -C mocks/<name> dev` in the background. Without a terminal it prints JSON log lines and takes commands like `{"do":"restart"}` on stdin. The [dev page](apps/guide/content/docs/tooling/dev.mdx) lists them. Ask the maintainer to run the command in Discord, then check the logs or the state the bot wrote.
+The bots in `mocks/` are there to show a feature working against Discord. Add the feature to the mock for its transport, put a test bot's token in that mock's `.env`, and run `vp -C mocks/<name> run dev` in the background. Without a terminal it prints JSON log lines and takes commands like `{"do":"restart"}` on stdin. The [dev page](apps/guide/content/docs/tooling/dev.mdx) lists them. Ask the maintainer to run the command in Discord, then check the logs or the state the bot wrote.
 
 ---
 

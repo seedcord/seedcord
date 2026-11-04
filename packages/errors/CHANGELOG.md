@@ -1,36 +1,24 @@
 # @seedcord/errors
 
-## 0.15.0-next.2
+## 0.15.0
 
 ### 💥 Breaking
 
 - Read an event middleware's event name from `this.route` now, in place of `this.eventName`. Event handlers and interaction middleware now have `this.route` too, the same as interaction handlers. ([#437](https://github.com/seedcord/seedcord/pull/437))
-
-### 🩹 Patch
-
-- Fixed `node dist/index.js` crashing with `Cannot read properties of undefined (reading 'root')` when your code reads `import.meta.dirname`. It now throws `CoreBuiltModuleRanDirectly`, which tells you to run `dist/index.mjs`. ([`c5ba606`](https://github.com/seedcord/seedcord/commit/c5ba60619473410e2ee65801a830f290fae6d71d))
-
-## 0.15.0-next.1
-
-### 💥 Breaking
-
-- `SeedcordErrorCode.MatchArmMissing` is now `MatchCaseMissing`, with the same number. Rename it wherever you check for it. ([`6f6cc3a`](https://github.com/seedcord/seedcord/commit/6f6cc3a4948b97969d7d42067543c4cac924eccb))
-
-### 🩹 Patch
-
-- `@seedcord/core` and `@seedcord/gateway` now throw the new `CoreBotMemberMissing` code from here. ([#432](https://github.com/seedcord/seedcord/pull/432))
-- Reworded error messages and log lines that joined their parts with the wrong word or read two ways. The gate mismatch compile error now reads like `needs a handler of kind Slash, but this handler's kind is Button`. ([`6f71a86`](https://github.com/seedcord/seedcord/commit/6f71a868e39df8cff3b857688544404113d46596))
-
-## 0.15.0-next.0
-
-### 💥 Breaking
-
 - `config.store` is now `config.kv`, and your handlers and plugins read it through `core.kv` and `this.kv`. Leave it out to keep everything in memory, or pass a `KeyvDriver`, an `UnstorageDriver`, or your own driver. Import `buildKey` from your transport package, and rename any plugin attached as `kv`. ([#429](https://github.com/seedcord/seedcord/pull/429))
+- `SeedcordErrorCode.MatchArmMissing` is now `MatchCaseMissing`, with the same number. Rename it wherever you check for it. ([`6f6cc3a`](https://github.com/seedcord/seedcord/commit/6f6cc3a4948b97969d7d42067543c4cac924eccb))
+- A permission check on a bot whose own member isn't cached now throws `CoreBotMemberMissing`, where it used to refuse as if every permission were missing. `RequireBotPermissions` without `in: 'guild'` no longer compiles on an event handler, where it used to refuse every event. ([#432](https://github.com/seedcord/seedcord/pull/432))
 
 ### ✨ Minor
 
 - Plugins can now define `codegen()`, and `seedcord codegen` writes what it returns into `seedcord-gen.ts`. A plugin reads that back with `Generated<typeof ThePlugin>`, keyed by its `static readonly id`. ([#426](https://github.com/seedcord/seedcord/pull/426))
+- Added `seedcord ask "<question>"`, which searches the guide from a terminal, even outside a project. It takes a question, a pasted error, or an error code like `3116`, and prints the matching pages with their links. ([#440](https://github.com/seedcord/seedcord/pull/440))
 - Added `seedcord make`, which writes new files from the Handlebars templates in your `templates` folder or in an installed plugin. It asks for each value the templates read. Your own helpers go under `make.helpers` in `seedcord.config.ts`. ([#425](https://github.com/seedcord/seedcord/pull/425))
+
+### 🩹 Patch
+
+- Fixed `node dist/index.js` crashing with `Cannot read properties of undefined (reading 'root')` when your code reads `import.meta.dirname`. It now throws `CoreBuiltModuleRanDirectly`, which tells you to run `dist/index.mjs`. ([`c5ba606`](https://github.com/seedcord/seedcord/commit/c5ba60619473410e2ee65801a830f290fae6d71d))
+- Reworded error messages and log lines that joined their parts with the wrong word or read two ways. ([`6f71a86`](https://github.com/seedcord/seedcord/commit/6f71a868e39df8cff3b857688544404113d46596))
 
 ## 0.14.0
 

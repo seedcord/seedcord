@@ -140,7 +140,7 @@ function headingFor(tag: keyof typeof HEADINGS): (props: ComponentProps<'h2'>) =
                 {...props}
                 as={tag}
                 wrapperClassName={HEADINGS[tag].className}
-                className={cn('font-display inline font-semibold text-(--text)')}
+                className={cn('font-display font-semibold text-(--text)')}
                 anchorSize={HEADINGS[tag].anchorSize}
                 anchorClassName={HEADINGS[tag].anchorDrop}
             />

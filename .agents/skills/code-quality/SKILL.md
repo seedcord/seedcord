@@ -1,6 +1,6 @@
 ---
 name: code-quality
-description: Use this when asked to write code, or audit, sweep, or fix code quality across the seedcord monorepo. Covers the React 19 / TypeScript antipatterns to catch by hand, the dead-code checks to perform per package, and deciding when to parallelize work with subagents. Also use when onboarding any agent to this repo's quality standards.
+description: Use this when asked to write code, or audit, sweep, or fix code quality across the seedcord monorepo. Covers the layered checks and the React 19 antipatterns to catch by hand. Also use when onboarding any agent to this repo's quality standards.
 ---
 
 # Code Quality Sweep
@@ -11,11 +11,11 @@ The seedcord monorepo enforces quality through layered checks. Most are tool-enf
 
 | Layer | What it catches | How to run today |
 | --- | --- | --- |
-| **ESLint + TypeScript** (tool) | Type errors, lint violations, import order, formatting, rule violations | `vp -C <pkg> run lint:fix && vp -C <pkg> run tc` (or `vp run lint:fix && vp run tc` from repo root via turbo) |
-| **Vitest** (tool) | Behavior regressions | `vp -C <pkg> test` (only after lint + tc pass) |
-| **Oxfmt** (tool) | Formatting | `vp fmt` / `vp fmt --check` |
+| **ESLint + TypeScript** (tool) | Type errors, lint violations, import order, formatting, rule violations | `vp run check --filter=<pkg>` |
+| **Vitest** (tool) | Behavior regressions | `vp run check --filter=<pkg>` |
+| **Prettier** (tool) | Formatting | `vp fmt` / `vp fmt --check` |
 | **changesets** (tool) | Missing version bump on published packages | `vp run cs` when touching a published package. `vp run cs:status` to check |
-| **React 19 antipatterns** (tool) | Mutable deps, index keys, deprecated APIs, hydration mismatches, hand-rolled `useContext`, giant components | `vp run react-doctor` from repo root. Configured via `doctor.config.ts`. Run deliberately, NOT on every `prePush` (it's slow + interactive). Use the verbose flag for per-file diagnostics. |
+| **React 19 antipatterns** (tool) | Mutable deps, index keys, deprecated APIs, hydration mismatches, hand-rolled `useContext`, giant components | `vp run react-doctor --verbose` from repo root. Configured via `doctor.config.ts`. Run deliberately, NOT on every `prePush` (it's slow + interactive). Use the verbose flag for per-file diagnostics. |
 | **Dead code / unused deps** (tool) | Unused files, exports, types, deps, devDeps, binaries | `vp run knip` from repo root. Configured via `knip.json`. Run deliberately, NOT on every `prePush`. Triage false positives into `knip.json` `ignoreDependencies` / `ignoreBinaries` / extra `entry` patterns with a comment explaining why. |
 | **Cross-package source paths** (review) | `paths` or `include` reaching into another package's `src` | Manual review of every new/changed `tsconfig.json` and `vite.config.ts`. |
 
@@ -28,21 +28,11 @@ The only acceptable end state for a PR is: **lint:fix and tc exit clean for ever
 ## Running the Per-Package Gates
 
 ```sh
-# Always lint:fix (never plain lint).
-vp -C <pkg> run lint:fix
-
-# Then typecheck — must pass before running tests.
-vp -C <pkg> run tc
-
-# Then tests, if the package has any.
-vp -C <pkg> test
-
-# From the repo root, turbo runs the script across every workspace:
-vp run lint:fix
-vp run tc
-vp run test
-vp run prePush      # every check, on the packages changed since next
-vp run prePush:all  # every check, on every package
+vp run check --filter=<pkg>      # lint:fix, tc and test, after building what <pkg> depends on
+vp run check --filter=...<pkg>   # the same, plus everything that depends on <pkg>
+vp run check --affected          # the same, for everything changed since next
+vp run prePush                   # every check, on the packages changed since next
+vp run prePush:all               # every check, on every package
 ```
 
 Vite+ runs `vp staged` (configured in `vite.config.ts`) on commit, and commitlint on the message. No hook runs on push, so run `vp run prePush` yourself. Don't bypass the hooks.
@@ -51,7 +41,7 @@ Vite+ runs `vp staged` (configured in `vite.config.ts`) on commit, and commitlin
 
 ## React 19 / Next.js 16 Antipatterns to Catch by Hand
 
-These apply to every component in `apps/{docs,guide,home}/src` and to the Ink CLI components in `packages/cli/src` (Ink uses the same React reconciler). They are not currently auto-detected, so read for them when you review a diff.
+These apply to every component in `apps/{docs,guide,home}/src` and to the Ink CLI components in `cli/seedcord/src` (Ink uses the same React reconciler). They are not currently auto-detected, so read for them when you review a diff.
 
 ### Bugs: must fix before merge
 
@@ -226,104 +216,21 @@ import { useAuthStore } from '../store';
 import { useAuthStore } from '../store/useAuthStore';
 ```
 
-**Em dash (`—`) in JSX text** Use comma, colon, semicolon, or parentheses. The em dash visually crowds inline UI text.
+**Em dash (`—`) in JSX text** Use a comma or parentheses.
 
 **Giant components (~200+ lines)** Extract focused sub-components. The parent orchestrates state, effects, and composition. Children own a single visual concern.
 
 ---
 
-## Dead-Code Sweep (per package, manual)
+## Dead code
 
-Until a dead-code scanner is wired into the repo, run this checklist on the package you've been editing before opening a PR:
-
-1. **Unused dependency check.** For each entry in `dependencies` and `devDependencies` of the package you've touched:
-
-    ```sh
-    # CLI / runtime deps
-    rg "from ['\"]<pkg>" packages/<pkg>/src packages/<pkg>/tests --type ts --type tsx
-    rg "require\(['\"]<pkg>" packages/<pkg>/src
-    # CLI deps invoked via vp exec
-    rg "<pkg>" packages/<pkg>/package.json
-    ```
-
-    - Nothing found in src/tests and nothing in scripts → **remove from package.json**, then `vp install`.
-    - Nothing found in src/tests but it appears as a `vp exec <pkg>` in scripts → it's a CLI dep, so leave it.
-
-2. **Unused exports.** Before adding `export` to a symbol, verify it's consumed outside the file. After moving code, re-grep:
-
-    ```sh
-    rg "import.*<symbol>.*from.*<pkg-or-path>"
-    ```
-
-    If only the defining file uses it, remove the `export`. If nothing uses it, delete the symbol.
-
-3. **Unused files.** If you replaced a module, check it's still referenced before leaving the file in tree:
-
-    ```sh
-    rg "from ['\"].*<old-file-name>"
-    ```
-
-4. **Workspace catalog duplication.** If the dep appears in 2+ packages, lift it to `pnpm-workspace.yaml`'s `catalogs:` and reference it as `catalog:<name>` everywhere.
-
-Track candidates in a scratch note while you sweep, so you fix them together in one focused commit.
-
----
-
-## When to Use Subagents
-
-For large sweeps (20+ issues across multiple packages or apps), parallelize across the natural package boundaries:
-
-```
-Subagent A → packages/seedcord + packages/core + packages/utils
-Subagent B → packages/gateway + packages/plugins
-Subagent C → packages/docs-engine + packages/docs-generator
-Subagent D → apps/docs (largest app today)
-```
-
-Each subagent should:
-
-1. List the antipatterns / dead-code candidates for its package(s)
-2. Fix every issue found
-3. Run `vp -C <pkg> run lint:fix && vp -C <pkg> run tc && vp -C <pkg> test`
-4. Confirm 0 errors before reporting back
-5. Do not commit here. The orchestrator commits after all subagents complete
-
-For small sweeps (under ~10 issues, 1 to 2 packages), fix inline, since subagent overhead isn't worth it. Read [`../../skills/subagent-context-management/SKILL.md`](../subagent-context-management/SKILL.md) before spawning anything.
-
----
-
-## Cross-Package Build Validation
-
-When you change a package that others depend on, rebuild and verify dependents before declaring done:
-
-```sh
-vp -C packages/<changed-pkg> run build
-vp -C packages/<dependent-pkg> run tc
-vp -C apps/<dependent-app> run tc
-```
-
-`packages/seedcord` depends on `services`, `utils`, `types`, `cli` (workspace), `discord.js`, `chalk`, `envapt`, `type-fest`, `reflect-metadata`. The apps consume `docs-engine`, `docs-generator`, `types`, and `eslint-config`. Mental-model that graph before changing a leaf.
-
----
-
-## Commit Strategy
-
-Commit after each well-defined phase clears all gates. Don't wait until everything is done at the end.
-
-Example milestones:
-
-- `fix(<pkg>): react-19 antipatterns + warnings`, used after a package or app is clean
-- `chore: remove unused deps and dead code`, used after a dead-code sweep
-- `chore(<pkg>): tighten tsconfig / lint config`, used when adopting stricter rules
-- `chore: add changeset for <pkg>`, used when bumping a published package
-
-For any change touching a package under `packages/` (other than `tsconfig`, `tsup-config`, `eslint-config` which are workspace-internal), add a changeset via `vp run cs` so the release pipeline can publish correctly.
+`vp run knip` covers unused files, exports, types and dependencies. If a dependency appears in two or more packages, lift it to `pnpm-workspace.yaml`'s `catalogs:` and reference it as `catalog:<name>` everywhere.
 
 ---
 
 ## Related Skills (in this folder)
 
-- **[`PREVENT-REINVENTION.md`](./PREVENT-REINVENTION.md)** covers checks to run before writing new code (reuse `@seedcord/{types,utils,services,plugins,cli}`, app-local `lib/`, `components/ui/`)
+- **[`PREVENT-REINVENTION.md`](./PREVENT-REINVENTION.md)** covers checks to run before writing new code (reuse `@seedcord/{types,utils,core,errors}`, `@seedcord/ui`, app-local `lib/`)
 - **[`TAILWIND.md`](./TAILWIND.md)** covers Tailwind v4 CSS-first setup, `cn()`, `@theme`, opacity modifiers, responsive discipline, and v4 gotchas vs v3 (applies to `apps/{docs,guide,home}`)
 - **[`REACT19.md`](./REACT19.md)** covers `use()` vs `useContext`, ref as prop, `useTransition` / `useActionState` / `useOptimistic`, deprecated APIs, and React Compiler
 - **[`TYPESCRIPT.md`](./TYPESCRIPT.md)** covers type narrowing, discriminated unions, generics, `satisfies`, const assertions, branded types, and utility types from `type-fest`
