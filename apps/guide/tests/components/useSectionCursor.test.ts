@@ -1,5 +1,5 @@
 import { act, renderHook } from '@testing-library/react';
-import { afterEach, beforeEach, describe, expect, it } from 'vitest';
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
 import { useSectionCursor } from '#components/useSectionCursor';
 
@@ -18,6 +18,8 @@ beforeEach(() => {
     document.body.innerHTML = HEADINGS.map((id) => `<h2 id="${id}">${id}</h2>`).join('');
     HEADINGS.forEach((id, index) => placeHeading(id, index * 400));
     scrolled.length = 0;
+    vi.stubGlobal('scrollY', 0);
+    vi.stubGlobal('scrollTo', () => scrolled.push('page top'));
     // jsdom omits scrollIntoView. a real scroll moves the heading to the top of the screen
     Element.prototype.scrollIntoView = function (this: Element) {
         scrolled.push(this.id);
@@ -27,6 +29,7 @@ beforeEach(() => {
 
 // the worker runs other files after this one
 afterEach(() => {
+    vi.unstubAllGlobals();
     Reflect.deleteProperty(Element.prototype, 'scrollIntoView');
     document.body.innerHTML = '';
 });
@@ -42,6 +45,26 @@ describe('useSectionCursor', () => {
 
         expect(scrolled).toEqual(['options', 'replies', 'options']);
         expect(result.current.section()).toBe('options');
+    });
+
+    it('goes from the first section to the top of the page and back', () => {
+        const { result } = renderHook(() => useSectionCursor(HEADINGS, 'setup'));
+
+        act(() => result.current.step(-1));
+        act(() => result.current.step(-1));
+        act(() => result.current.step(1));
+
+        expect(scrolled).toEqual(['page top', 'setup']);
+    });
+
+    it('starts from the heading in view once you scroll away from the top', () => {
+        const { result } = renderHook(() => useSectionCursor(HEADINGS, 'setup'));
+        act(() => result.current.step(-1));
+
+        vi.stubGlobal('scrollY', 300);
+        act(() => result.current.step(1));
+
+        expect(scrolled).toEqual(['page top', 'options']);
     });
 
     it('starts from the heading in view once the cursor scrolled off screen', () => {
