@@ -1,20 +1,6 @@
 # create-seedcord
 
-## 0.6.0-next.2
-
-### ✨ Minor
-
-- A new project now has an `ask` script that runs `seedcord ask`, and its `AGENTS.md` instructs a coding agent to search the guide before it writes something by hand that seedcord already ships. ([#440](https://github.com/seedcord/seedcord/pull/440))
-
-## 0.6.0-next.1
-
-### 🩹 Patch
-
-- Fixed `pnpm create seedcord@next` installing the stable `seedcord` and transport packages. It now installs the `next` release of both. ([#431](https://github.com/seedcord/seedcord/pull/431), thanks [@KTrain5169](https://github.com/KTrain5169))
-- Fixed the generated `package.json` missing its dependencies when you skipped the install step. ([#431](https://github.com/seedcord/seedcord/pull/431), thanks [@KTrain5169](https://github.com/KTrain5169))
-- Fixed a new bot on Windows getting an exact `vite` version, because cmd removed the `^` from `vite@^8.3.4` during the install. ([#431](https://github.com/seedcord/seedcord/pull/431), thanks [@KTrain5169](https://github.com/KTrain5169))
-
-## 0.6.0-next.0
+## 0.6.0
 
 ### 💥 Breaking
 
@@ -23,12 +9,16 @@
 ### ✨ Minor
 
 - New projects now start with `seedcord make` templates for a slash command, a button, a select menu, a modal, and on gateway an event, plus a `make` script to run it. ([#425](https://github.com/seedcord/seedcord/pull/425))
+- A new project now has an `ask` script that runs `seedcord ask`, and its `AGENTS.md` instructs a coding agent to search the guide before it writes something by hand that seedcord already ships. ([#440](https://github.com/seedcord/seedcord/pull/440))
 
 ### 🩹 Patch
 
 - A new project's `AGENTS.md` now tells a coding agent to try a change by running `dev` in the background, driving it over stdin, and asking you to run the command in Discord. ([`f911ad1`](https://github.com/seedcord/seedcord/commit/f911ad1835bcdf65ce1031fad231fd73ba4cb6dd))
 - A new edge bot now gets `@cloudflare/vite-plugin@2.0.0-beta.v.8` and `cf@1.0.0-beta.26`. ([`f8ba5ff`](https://github.com/seedcord/seedcord/commit/f8ba5ff9f49c827339a323b7029a15ac9a06e63a))
 - Fixed `--dir` on a folder create-seedcord can't read. It now reports node's error as a bad `--dir` answer and tells you to pick a folder you can create files in. ([#425](https://github.com/seedcord/seedcord/pull/425))
+- Fixed `pnpm create seedcord@next` installing the stable `seedcord` and transport packages. It now installs the `next` release of both. ([#431](https://github.com/seedcord/seedcord/pull/431), thanks [@KTrain5169](https://github.com/KTrain5169))
+- Fixed the generated `package.json` missing its dependencies when you skipped the install step. ([#431](https://github.com/seedcord/seedcord/pull/431), thanks [@KTrain5169](https://github.com/KTrain5169))
+- Fixed a new bot on Windows getting an exact `vite` version, because cmd removed the `^` from `vite@^8.3.4` during the install. ([#431](https://github.com/seedcord/seedcord/pull/431), thanks [@KTrain5169](https://github.com/KTrain5169))
 
 ## 0.5.0
 
