@@ -33,6 +33,21 @@ describe('useCommandPaletteController', () => {
         vi.unstubAllGlobals();
     });
 
+    it('keeps the text and the filters when the palette closes and opens again', async () => {
+        const render = await freshController();
+        const { result } = render();
+
+        act(() => {
+            result.current.handleOpenChange(true);
+            result.current.handleValueChange('clamp');
+            result.current.handleKindChange('class');
+        });
+        act(() => result.current.handleOpenChange(false));
+        act(() => result.current.handleOpenChange(true));
+
+        expect(result.current).toMatchObject({ open: true, searchValue: 'clamp', kind: 'class' });
+    });
+
     it('offers the pre-release toggle before the palette opens', async () => {
         const render = await freshController();
         const { result } = render();

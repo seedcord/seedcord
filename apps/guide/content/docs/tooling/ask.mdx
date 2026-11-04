@@ -25,8 +25,11 @@ A seedcord error starts with its code in brackets, like `[3116]`. The guide's pa
 
 | you run | what it searches for |
 | --- | --- |
-| `seedcord ask "[3116]"` or `seedcord ask 3116` | `CliDependencyMissing` |
-| `seedcord ask error 3116` | `error 3116 CliDependencyMissing` |
+| `seedcord ask "[3116]"` | `CliDependencyMissing` |
+| `seedcord ask 3116` | `CliDependencyMissing` |
+| `seedcord ask error 3116` | `CliDependencyMissing` |
+| `seedcord ask what is 3116` | `CliDependencyMissing` |
+| `seedcord ask seedcord error 3116` | `seedcord error 3116 CliDependencyMissing` |
 
 {/* prettier-ignore-end */}
 

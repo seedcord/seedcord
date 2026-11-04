@@ -3,6 +3,7 @@ import { afterEach, describe, expect, it, vi } from 'vite-plus/test';
 
 import { GuideMatches } from '#src/GuideMatches';
 
+import type { GuideResult } from '#src/GuideResult';
 import type { GuideSection } from '#src/guideSections';
 
 const SITE = PRODUCTION_SITES.guide;
@@ -33,6 +34,25 @@ const paths = (matches: GuideMatches, input: string): string[] => matches.match(
 afterEach(() => vi.unstubAllGlobals());
 
 describe('GuideMatches', () => {
+    it('adds the opening text of its section to a result found by meaning', () => {
+        const matches = matchesIn([...SECTIONS, heading('/checks/empty/', 'Empty', 'Nothing here')]);
+        const result = (path: string): GuideResult => ({
+            path,
+            tab: 'Checks',
+            page: 'Page',
+            url: '',
+            by: 'meaning'
+        });
+
+        const opened = matches.withOpenings([result('/checks/cooldown/'), result('/checks/empty/'), result('/gone/')]);
+
+        expect(opened.map((found) => (found.by === 'meaning' ? found.excerpt : undefined))).toEqual([
+            'Stop someone spamming a command.',
+            undefined,
+            undefined
+        ]);
+    });
+
     it('loads the sections file from the site it runs on', async () => {
         const asked: string[] = [];
         vi.stubGlobal('fetch', (path: string) => {

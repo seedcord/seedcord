@@ -66,7 +66,7 @@ const shown = (groups: readonly ResultGroup[]): { label: string; status: ResultG
     groups.map((group) => ({
         label: group.label,
         status: group.status,
-        paths: group.status === 'done' ? group.results.map((result) => result.path) : []
+        paths: group.status === 'failed' ? [] : group.results.map((result) => result.path)
     }));
 
 const matchedPaths = (groups: readonly ResultGroup[]): string[] =>
@@ -121,7 +121,7 @@ describe('useGuideSearch', () => {
         expect(emptyMessage('z', result.current)).toBe('No matches for “z”.');
     });
 
-    it('shows related results only for the question typed now', async () => {
+    it('keeps the last related results on screen until the next answer arrives', async () => {
         const { answer } = serving();
         const { result, rerender } = renderHook(({ typed }) => useGuideSearch(typed, true).groups, {
             initialProps: { typed: 'cooldown' }
@@ -131,17 +131,67 @@ describe('useGuideSearch', () => {
         expect(shown(result.current)).toEqual([{ label: 'Related', status: 'done', paths: ['/checks/cooldown'] }]);
 
         rerender({ typed: 'kysely' });
-        expect(shown(result.current)).toEqual([{ label: 'Related', status: 'pending', paths: [] }]);
+        expect(shown(result.current)).toEqual([{ label: 'Related', status: 'pending', paths: ['/checks/cooldown'] }]);
 
         await pauseTyping();
         await answer('kysely');
         expect(shown(result.current)).toEqual([{ label: 'Related', status: 'done', paths: ['/plugins/kysely'] }]);
     });
 
+    it('forgets the last related results once the box is empty', async () => {
+        const { answer } = serving();
+        const { result, rerender } = renderHook(({ typed }) => useGuideSearch(typed, true).groups, {
+            initialProps: { typed: 'cooldown' }
+        });
+        await pauseTyping();
+        await answer('cooldown');
+
+        rerender({ typed: '' });
+        rerender({ typed: 'kysely' });
+
+        expect(shown(result.current)).toEqual([{ label: 'Related', status: 'pending', paths: [] }]);
+    });
+
+    it('answers a question it already asked right away, without asking again', async () => {
+        const { answer, signals } = serving();
+        const { result, rerender } = renderHook(({ typed }) => useGuideSearch(typed, true).groups, {
+            initialProps: { typed: 'cooldown' }
+        });
+        await pauseTyping();
+        await answer('cooldown');
+        const asked = signals.get('cooldown');
+
+        rerender({ typed: 'cooldow' });
+        await pauseTyping();
+        await answer('cooldow');
+        rerender({ typed: 'cooldown' });
+        expect(shown(result.current)).toEqual([{ label: 'Related', status: 'done', paths: ['/checks/cooldown'] }]);
+
+        await pauseTyping();
+        expect(signals.get('cooldown')).toBe(asked);
+    });
+
+    it('adds the opening text of each related section once the sections load', async () => {
+        const { answer } = serving([Response.json(SECTIONS)]);
+        const search = await freshSearch();
+        const { result } = renderHook(() => search('slow them down', true).groups);
+        await act(() => vi.advanceTimersByTimeAsync(0));
+        await pauseTyping();
+        await answer(
+            'slow them down',
+            Response.json([{ path: '/checks/cooldown/', tab: 'Checks', page: 'Cooldowns' }])
+        );
+
+        expect(groupOf(result.current, 'Related')).toMatchObject({
+            status: 'done',
+            results: [{ excerpt: 'Limit how often a command runs.' }]
+        });
+    });
+
     it('reads the error codes from what is typed now, without waiting for an answer', () => {
         serving();
         const { result, rerender } = renderHook(({ typed }) => useGuideSearch(typed, true), {
-            initialProps: { typed: 'what does 3102 mean' }
+            initialProps: { typed: 'port 3102 is busy' }
         });
         const mention = { code: 3102, name: 'CliConfigNotFound' };
         expect(result.current.codes).toMatchObject({ swapped: [], hints: [mention] });

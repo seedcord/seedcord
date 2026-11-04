@@ -350,9 +350,9 @@ describe('the ask endpoint', () => {
         const env = searching();
 
         await get('/api/ask?q=%5B3116%5D', env);
-        await new GuideAnswers(env).ask('what does 3102 mean');
+        await new GuideAnswers(env).ask('port 3102 is busy');
 
-        expect(env.embedded).toEqual([embedding.query('CliDependencyMissing'), embedding.query('what does 3102 mean')]);
+        expect(env.embedded).toEqual([embedding.query('CliDependencyMissing'), embedding.query('port 3102 is busy')]);
     });
 
     it('answers a repeated question from the cache without embedding it again', async () => {

@@ -17,6 +17,8 @@ function optionId(id: string): string {
     return `command-option-${id}`;
 }
 
+const NO_RESULTS: readonly CommandAction[] = [];
+
 interface CommandListContentProps {
     showInitialHint: boolean;
     isSearching: boolean;
@@ -112,11 +114,11 @@ export function CommandPaletteDialog({ controller }: { controller: CommandPalett
         prerelease: controller.prerelease
     });
     const listProps = deriveListProps(searchState, normalizedSearch);
-    const { results } = listProps;
+    const { results, isSearching } = listProps;
 
     const roving = useRovingList({
         query: normalizedSearch,
-        groups: [{ items: results, loading: false }],
+        groups: [{ items: isSearching ? NO_RESULTS : results, loading: isSearching }],
         onSelect: handleSelect
     });
     const activeId = roving.active ? optionId(roving.active.id) : undefined;

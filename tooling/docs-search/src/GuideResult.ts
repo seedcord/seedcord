@@ -4,7 +4,7 @@ import type { SiteAddress } from '@seedcord/brand';
 type FoundBy =
     | { by: 'title'; terms: readonly string[] }
     | { by: 'text'; excerpt: string; terms: readonly [string] }
-    | { by: 'meaning' };
+    | { by: 'meaning'; excerpt?: string };
 
 export type GuideResult = GuideHit & { url: string } & FoundBy;
 

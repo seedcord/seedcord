@@ -131,6 +131,19 @@ describe('CommandPaletteDialog', () => {
         expect(handleSelect).toHaveBeenCalledWith(RESULTS[1]);
     });
 
+    it('shows the old options while new results load, and opens one only on a click', () => {
+        searchHook.mockReturnValue({ results: RESULTS, status: 'loading' });
+        const handleSelect = vi.fn();
+        renderDialog(makeController({ handleSelect }));
+
+        fireEvent.keyDown(combobox(), { key: 'Enter' });
+        expect(handleSelect).not.toHaveBeenCalled();
+        expect(combobox()).not.toHaveAttribute('aria-activedescendant');
+
+        fireEvent.click(screen.getByRole('option', { name: 'Gamma' }));
+        expect(handleSelect).toHaveBeenCalledWith(RESULTS[2]);
+    });
+
     it('click selects the option', () => {
         const handleSelect = vi.fn();
         renderDialog(makeController({ handleSelect }));
