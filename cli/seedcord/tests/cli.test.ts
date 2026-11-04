@@ -77,7 +77,11 @@ describe('the seedcord CLI', () => {
     it('prints only JSON lines from dev without a terminal, including a vite plugin that calls console', async () => {
         const projectDir = await copyEdgeBotForTest();
         await mkdir(join(projectDir, 'node_modules'));
-        await symlink(PACKAGE_DIR, join(projectDir, 'node_modules', 'seedcord'), 'dir');
+        await symlink(
+            PACKAGE_DIR,
+            join(projectDir, 'node_modules', 'seedcord'),
+            process.platform === 'win32' ? 'junction' : 'dir'
+        );
         await writeFile(
             join(projectDir, 'seedcord.config.ts'),
             `export default {
