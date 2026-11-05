@@ -254,11 +254,13 @@ describe('a driver that throws', () => {
 describe('a driver that writes in two steps', () => {
     it('reads the finished record when a get or an entries call lands during a set', async () => {
         const records = new Map<string, string>();
+        const writeStarted = Promise.withResolvers<undefined>();
         const finishWrite = Promise.withResolvers<undefined>();
         const driver: NonNullable<Config['kv']> = {
             get: (key) => records.get(key),
             set: async (key, value) => {
                 records.set(key, '');
+                writeStarted.resolve(undefined);
                 await finishWrite.promise;
                 records.set(key, value);
             },
@@ -269,7 +271,7 @@ describe('a driver that writes in two steps', () => {
         const notes = new Kv(driver).collection<string>('note');
 
         const writing = notes.set('k', 'finished');
-        await vi.waitFor(() => expect(records.size).toBe(1));
+        await writeStarted.promise;
         const reading = notes.get('k');
         const listing = Array.fromAsync(notes.entries());
         finishWrite.resolve(undefined);
@@ -297,19 +299,21 @@ describe('a driver that writes in two steps', () => {
             [Symbol.asyncDispose]: () => Promise.resolve()
         };
         const notes = new Kv(driver).collection<string>('note');
+        // the collection holds one record, stored as a json envelope
+        const storedValue = (): unknown => (JSON.parse([...records.values()].join('')) as { value: unknown }).value;
         await notes.set('k', 'old');
 
         const stillReading = notes.get('k');
         await expect(notes.get('k')).rejects.toMatchObject({ cause: down });
         const writing = notes.set('k', 'new');
         await new Promise((resolve) => setImmediate(resolve));
-        expect(JSON.stringify([...records.values()])).toContain('old');
+        expect(storedValue()).toBe('old');
 
         finishReads.resolve(undefined);
         await writing;
 
         await expect(stillReading).resolves.toBe('old');
-        expect(JSON.stringify([...records.values()])).toContain('new');
+        expect(storedValue()).toBe('new');
     });
 });
 

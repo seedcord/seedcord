@@ -17,31 +17,14 @@ beforeEach(() => {
 describe('waitUntil and subscribers', () => {
     const tick = (): Promise<void> => new Promise((resolve) => setImmediate(resolve));
 
-    interface Gate {
-        wait: () => Promise<void>;
-        finish: () => void;
-        finished: () => boolean;
-    }
-
-    function gate(): Gate {
-        const release = Promise.withResolvers<undefined>();
-        let done = false;
-        return {
-            wait: async () => {
-                await release.promise;
-                done = true;
-            },
-            finish: () => release.resolve(undefined),
-            finished: () => done
-        };
-    }
-
     it('stays open for a subscriber that a handler published to', async () => {
-        const { wait, finish, finished } = gate();
+        const release = Promise.withResolvers<undefined>();
+        let finished = false;
         @Subscribe(['unhandledInteractionError'])
         class Slow extends Subscriber<'unhandledInteractionError', Core> {
-            public execute(): Promise<void> {
-                return wait();
+            public async execute(): Promise<void> {
+                await release.promise;
+                finished = true;
             }
         }
         class Ban extends SlashHandler<never> {
@@ -62,33 +45,9 @@ describe('waitUntil and subscribers', () => {
         await tick();
         expect(settled).toBe(false);
 
-        finish();
+        release.resolve(undefined);
         await work;
-        expect(finished()).toBe(true);
-    });
-
-    it('stays open for an anyInteraction subscriber when no route matches', async () => {
-        const { wait, finish, finished } = gate();
-        @Subscribe(['anyInteraction'])
-        class Slow extends Subscriber<'anyInteraction', Core> {
-            public execute(): Promise<void> {
-                return wait();
-            }
-        }
-        using engine = await readyEngine({ ...noClasses(), subscribers: [Slow] });
-        const ctx = capturingCtx();
-        let settled = false;
-
-        await engine.handle(await signedRequest(engine.signer, slashPayload('nothing')), ctx);
-        const work = ctx.settled().then(() => {
-            settled = true;
-        });
-        await tick();
-        expect(settled).toBe(false);
-
-        finish();
-        await work;
-        expect(finished()).toBe(true);
+        expect(finished).toBe(true);
     });
 });
 

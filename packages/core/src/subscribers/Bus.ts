@@ -45,7 +45,7 @@ interface SubscriberRegistration {
 
 const loggerSlot = Symbol('seedcord:bus:logger');
 
-// every publish goes through emitSafe, which awaits what this returns and ignores the value
+// unknown, because emitSafe only catches a rejected promise and ignores any other value
 type BusListener<KeyOfSubscribers extends SubscriptionKey> = (...args: SubscriptionTuples[KeyOfSubscribers]) => unknown;
 
 /**
@@ -194,6 +194,14 @@ export class Bus extends TypedEventEmitter<SubscriptionTuples> {
         listener: BusListener<KeyOfSubscribers>
     ): this {
         return super.off(event, listener);
+    }
+
+    /** Alias of {@link Bus.off}. */
+    public override removeListener<KeyOfSubscribers extends SubscriptionKey>(
+        event: KeyOfSubscribers,
+        listener: BusListener<KeyOfSubscribers>
+    ): this {
+        return super.removeListener(event, listener);
     }
 
     /** @internal the framework's own publish path, keyed by a symbol no public entry exports */

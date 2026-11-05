@@ -66,7 +66,7 @@ function config(folders: Folders = {}): HttpEdgeConfig {
 }
 
 function settledWithin(ctx: CapturedCtx): Promise<string> {
-    const stillWaiting = new Promise<string>((resolve) => setTimeout(() => resolve('still waiting'), 300));
+    const stillWaiting = new Promise<string>((resolve) => setTimeout(() => resolve('still waiting'), 0));
     return Promise.race([ctx.settled().then(() => 'finished'), stillWaiting]);
 }
 
@@ -324,6 +324,21 @@ describe('the edge Seedcord', () => {
         await ctx.settled();
     });
 
+    it('holds the first request open while startup runs', async () => {
+        const release = Promise.withResolvers<undefined>();
+        const signer = await signedEnv();
+        const seedcord = new Seedcord(config());
+        seedcord.startup.addTask(StartupPhase.Configuration, 'slow', () => release.promise);
+        const ctx = capturingCtx();
+
+        const answered = seedcord.fetch(await signedRequest(signer, unrouted), undefined, ctx);
+
+        expect(await settledWithin(ctx)).toBe('still waiting');
+        release.resolve(undefined);
+        await answered;
+        await ctx.settled();
+    });
+
     it('holds waitUntil open for a subscriber that a startup task published to', async () => {
         const release = Promise.withResolvers<undefined>();
         @Subscribe(['anyInteraction'])
@@ -394,9 +409,9 @@ describe('the edge Seedcord', () => {
         );
     });
 
-    it('retries a timed-out init on the next request, and the old init cannot dispose the retry', async () => {
+    describe('after a plugin init times out', () => {
         const calls: string[] = [];
-        const hung = Promise.withResolvers<undefined>();
+        let hung = Promise.withResolvers<undefined>();
         let first = true;
         class Slow extends Plugin {
             constructor(host: CoreBase) {
@@ -413,16 +428,49 @@ describe('the edge Seedcord', () => {
                 return Promise.resolve();
             }
         }
-        const signer = await signedEnv();
-        const seedcord = new Seedcord(config()).attach('slow', Slow);
 
-        await expect(seedcord.fetch(await signedRequest(signer, ping), undefined, capturingCtx())).rejects.toThrow();
-        const retried = await seedcord.fetch(await signedRequest(signer, ping), undefined, capturingCtx());
-        hung.resolve(undefined);
-        await new Promise((resolve) => setTimeout(resolve, 20));
+        afterEach(() => {
+            calls.length = 0;
+            hung = Promise.withResolvers<undefined>();
+            first = true;
+            vi.useRealTimers();
+        });
 
-        expect(retried.status).toBe(200);
-        expect(calls).toEqual(['init', 'init']);
+        it('waits for the old init to finish and dispose before it retries', async () => {
+            const signer = await signedEnv();
+            const seedcord = new Seedcord(config()).attach('slow', Slow);
+            const failed = capturingCtx();
+
+            await expect(seedcord.fetch(await signedRequest(signer, ping), undefined, failed)).rejects.toThrow();
+            await expect(
+                seedcord.fetch(await signedRequest(signer, ping), undefined, capturingCtx())
+            ).rejects.toThrow();
+            hung.resolve(undefined);
+            await failed.settled();
+            const retried = await seedcord.fetch(await signedRequest(signer, ping), undefined, capturingCtx());
+
+            expect(retried.status).toBe(200);
+            expect(calls).toEqual(['init', 'dispose', 'init']);
+        });
+
+        it('retries 25s after the timeout when the old init never settles', async () => {
+            const signer = await signedEnv();
+            const seedcord = new Seedcord(config()).attach('slow', Slow);
+            const failed = capturingCtx();
+            const firstRequest = await signedRequest(signer, ping);
+            vi.useFakeTimers({ toFake: ['setTimeout', 'clearTimeout', 'performance'] });
+
+            const rejected = expect(seedcord.fetch(firstRequest, undefined, failed)).rejects.toThrow();
+            await vi.advanceTimersByTimeAsync(20);
+            await rejected;
+            await vi.advanceTimersByTimeAsync(25_000);
+            await failed.settled();
+            vi.useRealTimers();
+            const retried = await seedcord.fetch(await signedRequest(signer, ping), undefined, capturingCtx());
+
+            expect(retried.status).toBe(200);
+            expect(calls).toEqual(['init', 'init']);
+        });
     });
 
     it('refuses a plugin attached while startup runs', async () => {

@@ -1,5 +1,6 @@
 import type { CoreBase } from '#interfaces/CoreBase';
 import type { DispatchContext } from '#src/dispatch/DispatchContext';
+import type { Promisable } from 'type-fest';
 
 /**
  * The transport-agnostic gate context, the scalar identity of the acting user resolvable from any
@@ -183,14 +184,9 @@ export interface EffectGate<Ctx extends GateContextBase = GateContextBase, Name 
  */
 export function defineGate<const Name extends string, Ctx extends GateContextBase = GateContextBase>(
     name: Name,
-    fn: (ctx: Ctx) => unknown
+    fn: (ctx: Ctx) => Promisable<void>
 ): Gate<Ctx, Name> {
-    return {
-        name,
-        check: async (ctx) => {
-            await fn(ctx);
-        }
-    } as Gate<Ctx, Name>;
+    return { name, check: async (ctx) => fn(ctx) } as Gate<Ctx, Name>;
 }
 
 /**
@@ -230,17 +226,13 @@ export function defineGate<const Name extends string, Ctx extends GateContextBas
  */
 export function defineEffectGate<const Name extends string, Ctx extends GateContextBase = GateContextBase>(
     name: Name,
-    check: (ctx: Ctx) => unknown,
-    commit: (ctx: Ctx) => unknown
+    check: (ctx: Ctx) => Promisable<void>,
+    commit: (ctx: Ctx) => Promisable<void>
 ): EffectGate<Ctx, Name> {
     return {
         name,
-        check: async (ctx) => {
-            await check(ctx);
-        },
-        commit: async (ctx) => {
-            await commit(ctx);
-        }
+        check: async (ctx) => check(ctx),
+        commit: async (ctx) => commit(ctx)
     } as EffectGate<Ctx, Name>;
 }
 

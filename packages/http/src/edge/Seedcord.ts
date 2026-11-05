@@ -34,6 +34,9 @@ import type { REST } from '@discordjs/rest';
 import type { StartupTasks, BakedIds } from '@seedcord/core/internal';
 import type { DevChannel, SeedcordCliEvents, SeedcordFrameworkEvents } from '@seedcord/types/internal';
 
+// cloudflare cancels waitUntil work 30s after the response, this timer included, so the wait has to end before then
+const TIMED_OUT_INIT_WAIT_MS = 25_000;
+
 // seedcord build's worker entry writes these before bot.ts loads
 function bakedIds(): BakedIds {
     const ids = Reflect.get(globalThis, Symbol.for(BAKED_IDS_KEY)) as BakedIds | undefined;
@@ -155,8 +158,9 @@ export class Seedcord extends PluginHost<'http', 'edge'> {
 
     async #start(): Promise<void> {
         const starting = this.#startOnce();
-        // every later request awaits this promise, and workers cancels it if discord drops the first request
-        keepRequestOpenFor(starting);
+        // if discord drops the first request, workers cancels startup and every later request waits on it forever.
+        // the await below already throws a failed startup, so waitUntil gets one that never rejects
+        keepRequestOpenFor(starting.catch(() => undefined));
         await starting;
     }
 
@@ -189,8 +193,11 @@ export class Seedcord extends PluginHost<'http', 'edge'> {
             await this.#startup.run();
         } catch (caught) {
             await this.#plugins.rollback();
-            // workers cancels a timed-out init when this request ends, so the next request can start over
-            this.#started = undefined;
+            keepRequestOpenFor(
+                this.#plugins.timedOutInitsSettled(TIMED_OUT_INIT_WAIT_MS).then(() => {
+                    this.#started = undefined;
+                })
+            );
             throw caught;
         }
     }

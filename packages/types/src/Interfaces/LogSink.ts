@@ -44,7 +44,7 @@ export interface ILogSink {
      * like the dev terminal's. `'file'` and `'capture'` sinks keep getting them.
      */
     readonly kind: LogSinkKind;
-    /** Can be async. seedcord waits for a returned promise and ignores any other value. */
+    /** Can be async. seedcord doesn't await it, and an edge bot keeps the request open until it finishes. */
     onLog(record: LogRecord): unknown;
     /** Runs when a later logger config leaves this sink out. Close a file handle or a connection here. */
     dispose?(): void;

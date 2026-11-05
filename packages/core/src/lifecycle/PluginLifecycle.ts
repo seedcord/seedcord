@@ -5,7 +5,7 @@ import { Logger } from '@seedcord/logger';
 import { StartupPhase } from '#src/lifecycle/phases';
 import { pluginLoggerOf } from '#src/plugin/Plugin';
 
-import { withTimeout } from './withTimeout';
+import { settleWithin, withTimeout } from './withTimeout';
 
 import type { ShutdownTasks } from '#node/Lifecycle/CoordinatedShutdown';
 import type { TaskShutdownPhase } from '#src/lifecycle/phases';
@@ -23,6 +23,7 @@ export class PluginLifecycle {
     private readonly logger = new Logger('Plugins', { channel: 'plugins' });
     private readonly completedInits = new Set<Attachment>();
     private readonly disposePhases = new Set<TaskShutdownPhase>();
+    private readonly timedOutInits = new Set<Promise<void>>();
     private attachments: readonly Attachment[] = [];
     private registered = false;
 
@@ -55,6 +56,10 @@ export class PluginLifecycle {
         this.completedInits.clear();
     }
 
+    public timedOutInitsSettled(capMs: number): Promise<void> {
+        return settleWithin(Promise.allSettled(this.timedOutInits), capMs);
+    }
+
     private async runInits(group: readonly Attachment[]): Promise<void> {
         for (const attachment of group) {
             const { key, instance, spec } = attachment;
@@ -81,7 +86,7 @@ export class PluginLifecycle {
         const { key, instance, spec } = attachment;
         const dispose = instance.dispose?.bind(instance);
 
-        void running.then(
+        const settled = running.then(
             async () => {
                 // the edge host retries init() on this same instance.
                 // after a retry succeeds, this dispose would tear down the working plugin
@@ -92,6 +97,8 @@ export class PluginLifecycle {
             },
             (caught: unknown) => this.logger.warn(`${key} init failed after its timeout`, caught)
         );
+        this.timedOutInits.add(settled);
+        void settled.finally(() => this.timedOutInits.delete(settled));
     }
 
     private registerReadyTask(readyInits: readonly Attachment[]): void {
