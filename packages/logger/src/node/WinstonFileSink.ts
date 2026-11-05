@@ -16,7 +16,6 @@ import type { Logger as Winston } from 'winston';
 /** Node file sink. One combined file for every channel, `channel` carried as a field. */
 export class WinstonFileSink implements ILogSink {
     public readonly kind = 'file';
-    public readonly node = true;
 
     private readonly filename: string;
     private readonly format: FileSinkFormat;
