@@ -42,7 +42,7 @@ export class KvCollection<TRecord> {
     /** Reads the record stored under `id`. Resolves to `undefined` when nothing is there or the record expired. */
     public async get(id: string): Promise<Stored<TRecord> | undefined> {
         const key = this.#prefix + id;
-        const raw = await this.#driver.get(key);
+        const raw = await this.#updates.read(key, async () => this.#driver.get(key));
         const value = this.#liveValue(raw);
         if (raw !== undefined && value === undefined) await this.#deleteExpired(key);
         return value;

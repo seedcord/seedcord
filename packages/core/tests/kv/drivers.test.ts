@@ -229,6 +229,66 @@ describe('a driver that throws', () => {
     });
 });
 
+describe('a driver that writes in two steps', () => {
+    it('reads the finished record when a get lands during a set', async () => {
+        const records = new Map<string, string>();
+        const finishWrite = Promise.withResolvers<undefined>();
+        const driver: NonNullable<Config['kv']> = {
+            get: (key) => records.get(key),
+            set: async (key, value) => {
+                records.set(key, '');
+                await finishWrite.promise;
+                records.set(key, value);
+            },
+            delete: (key) => void records.delete(key),
+            entries: () => records,
+            [Symbol.asyncDispose]: () => Promise.resolve()
+        };
+        const notes = new Kv(driver).collection<string>('note');
+
+        const writing = notes.set('k', 'finished');
+        await vi.waitFor(() => expect(records.size).toBe(1));
+        const reading = notes.get('k');
+        finishWrite.resolve(undefined);
+
+        await writing;
+        await expect(reading).resolves.toBe('finished');
+    });
+
+    it('runs gets of one key together and makes a set wait for them, even when one fails', async () => {
+        const records = new Map<string, string>();
+        const finishReads = Promise.withResolvers<undefined>();
+        const down = new Error('down');
+        let readsStarted = 0;
+        const driver: NonNullable<Config['kv']> = {
+            get: async (key) => {
+                readsStarted += 1;
+                if (readsStarted === 2) throw down;
+                await finishReads.promise;
+                return records.get(key);
+            },
+            set: (key, value) => void records.set(key, value),
+            delete: (key) => void records.delete(key),
+            entries: () => records,
+            [Symbol.asyncDispose]: () => Promise.resolve()
+        };
+        const notes = new Kv(driver).collection<string>('note');
+        await notes.set('k', 'old');
+
+        const stillReading = notes.get('k');
+        await expect(notes.get('k')).rejects.toMatchObject({ cause: down });
+        const writing = notes.set('k', 'new');
+        await new Promise((resolve) => setImmediate(resolve));
+        expect(JSON.stringify([...records.values()])).toContain('old');
+
+        finishReads.resolve(undefined);
+        await writing;
+
+        await expect(stillReading).resolves.toBe('old');
+        expect(JSON.stringify([...records.values()])).toContain('new');
+    });
+});
+
 describe('UnstorageDriver', () => {
     it('passes Cloudflare KV a ttl of at least 60 seconds', async () => {
         const ttls: (number | undefined)[] = [];
