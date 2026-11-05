@@ -30,6 +30,7 @@ export class HmrManager {
 
         this.logger.debug('Enabled');
         channel.on('seedcord:hmr', (payload) => void this.handleUpdate(payload));
+        channel.on('vite:beforeFullReload', () => channel.send('seedcord:full-reload', {}));
     }
 
     public register(listener: HmrAware): void {

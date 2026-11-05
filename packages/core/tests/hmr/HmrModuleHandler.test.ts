@@ -114,6 +114,23 @@ describe('HmrModuleHandler', () => {
         }
     );
 
+    it('warns when a saved file loses its last handler, and stays quiet for a file that never had one', async () => {
+        const { withSpies, spies } = handlerWithSpies();
+        const file = join(handlersDir, 'Ping.mjs');
+        withSpies.trackHandler(file, FixtureHandler);
+        writeFileSync(file, 'export const notAHandler = 1;\n');
+
+        await withSpies.handle({ file, type: 'update' });
+
+        expect(registerHandler).not.toHaveBeenCalled();
+        expect(spies.warn).toHaveBeenCalledOnce();
+        expect(spies.warn.mock.calls[0]?.[0]).toContain('FixtureHandler');
+        expect(spies.warn.mock.calls[0]?.[0]).toContain('Ping.mjs');
+
+        await withSpies.handle({ file, type: 'update' });
+        expect(spies.warn).toHaveBeenCalledOnce();
+    });
+
     it('skips a created directory without logging a failed reload', async () => {
         const { withSpies, spies } = handlerWithSpies();
         const newDir = join(handlersDir, 'nested');
