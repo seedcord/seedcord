@@ -34,7 +34,7 @@ export interface SeedcordCliEvents {
     // eslint-disable-next-line no-magic-numbers -- chalk's ColorSupportLevel for the CLI's terminal, copied to keep chalk out of types
     'seedcord:start': { colorLevel: 0 | 1 | 2 | 3 };
     'seedcord:last-deploy': { deployed: DeployedHashes | undefined };
-    // vite's module runner sends this one, right before it clears every evaluated module
+    // vite sends this one, right before it reloads every module
     'vite:beforeFullReload': unknown;
 }
 

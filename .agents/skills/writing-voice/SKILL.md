@@ -232,7 +232,7 @@ Discord, Cloudflare, and a browser vendor are people and servers. They do act. "
 
 Write the claim and end the sentence. Reach for a second clause only when the reader would get the first one wrong without it.
 
-Before a sentence ships, cut it at the connective and read what is left. When the shorter version still carries the point, that was the sentence.
+Before a sentence ships, cut it at the connective and read what is left. When the shorter version still carries the point, that was the sentence. A code comment follows section 4 of `code-commenting-guidelines` here, since its second clause is often the reason it exists.
 
 Prose written to a rule set collapses toward whichever single form satisfies every rule, and the collapse is invisible from inside one sentence. So judge it as a block, a paragraph or a changeset or a file's comments read end to end.
 
@@ -302,7 +302,7 @@ A code comment _may_ use one, if appropriate, under one shape: two short clauses
 // scaffold deletes this directory when writing fails; later failures keep it
 ```
 
-Cut the comment at the semicolon and read the right half. Where it opens with `so`, `therefore`, `thus`, `hence`, `meaning`, `this means`, `and`, etc., the second half is explaining the first, which section 4 already covers. Rewrite those.
+Cut the comment at the semicolon and read the right half. Where it opens with `so`, `therefore`, `thus`, `hence`, `meaning`, `this means`, `and`, etc., the second half is explaining the first. Rewrite those without the semicolon, and keep the explanation if it says what breaks or why.
 
 Comma splices are banned. A comma cannot join two complete clauses. Every comma carries a connector after it, separates list items, or becomes a period.
 
