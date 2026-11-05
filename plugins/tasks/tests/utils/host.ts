@@ -72,6 +72,8 @@ export class TestHost extends PluginHost<'gateway', 'server'> {
     public readonly runs: Run[] = [];
     public release: () => void = () => undefined;
     public gate: Promise<void> = Promise.resolve();
+    /** Each run of a task that reads it takes the next gate, so runs can finish out of order. */
+    public readonly gates: Promise<void>[] = [];
     public releaseOverrun: () => void = () => undefined;
     public overrunGate: Promise<void> = Promise.resolve();
 

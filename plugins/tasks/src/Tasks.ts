@@ -238,7 +238,10 @@ export class Tasks extends Plugin<{ transport: 'any'; runtime: 'server' }> {
         const key = taskKey(Task);
         const registered = this.tasks.get(key);
 
-        if (!registered) throw new SeedcordError(SeedcordErrorCode.PluginTasksNotLoaded, [key, this.options.path]);
+        // a class from another folder can share the key, and its data would reach the loaded class
+        if (registered?.Task !== Task) {
+            throw new SeedcordError(SeedcordErrorCode.PluginTasksNotLoaded, [key, this.options.path]);
+        }
 
         return registered;
     }

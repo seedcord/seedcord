@@ -21,7 +21,7 @@ export const seedcord = new Seedcord({
         commands: { path: './commands' },
         events: { path: null }
     },
-    subscribers: { path: null }
+    subscribers: { path: './subscribers' }
 }).attach('tasks', Tasks, {
     path: './tasks',
     timezone: 'UTC',
@@ -211,7 +211,7 @@ import { Subscribe, Subscriber } from '@seedcord/gateway';
 import type {} from '@seedcord/plugin-tasks';
 // ---cut-end---
 
-@Subscribe('taskFailed')
+@Subscribe(['taskFailed'])
 export class ReportTaskFailure extends Subscriber<'taskFailed'> {
     public async execute(): Promise<void> {
         const { key, trigger, durationMs, error } = this.data;
@@ -230,27 +230,10 @@ The `taskFailed` payload also has `jobId`, which is `null` unless the run came f
 
 A task that posts to a channel keeps posting while you fix that channel, unless a handler can pause it. Every attached plugin is on `this.core` under its key, so a handler reaches this one as `this.core.tasks`.
 
-```ts twoslash title="src/handlers/PauseDigest.ts"
+```ts title="src/handlers/PauseDigest.ts"
 import { SlashHandler, SlashRoute } from '@seedcord/gateway';
-// ---cut-start---
-import { RegisterTask, Task } from '@seedcord/plugin-tasks/gateway';
 
-import type { Tasks } from '@seedcord/plugin-tasks';
-
-declare module '@seedcord/gateway' {
-    interface Core {
-        tasks: Tasks;
-    }
-    interface SlashRegistry {
-        'pause-digest': { options: {}; cache: 'cached' };
-    }
-}
-
-@RegisterTask('0 9 * * *')
-class Digest extends Task {
-    public async execute(): Promise<void> {}
-}
-// ---cut-end---
+import { Digest } from '../tasks/Digest';
 
 @SlashRoute('pause-digest')
 export class PauseDigest extends SlashHandler<'pause-digest'> {
@@ -262,7 +245,7 @@ export class PauseDigest extends SlashHandler<'pause-digest'> {
 }
 ```
 
-`pause` takes the `Digest` class, which you import from the task's file, and looks up its key from the decorator. `this.core.tasks` only has a type once you've run [`seedcord codegen`](/plugins/typing).
+`pause` takes the `Digest` class, imported from the task's file, and looks up its key from the decorator. `this.core.tasks` only has a type once you've run [`seedcord codegen`](/plugins/typing).
 
 {/* prettier-ignore-start */}
 

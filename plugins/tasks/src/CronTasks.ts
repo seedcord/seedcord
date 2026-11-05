@@ -16,11 +16,12 @@ interface CronEntry {
     readonly timezone: string | undefined;
     readonly protect: boolean;
     paused: boolean;
-    current: Promise<RunOutcome> | undefined;
 }
 
 export class CronTasks {
     private readonly entries = new Map<string, CronEntry>();
+    // keyed by task key, not entry, so a save that replaces the entry still sees the runs in progress
+    private readonly running = new Map<string, Set<Promise<RunOutcome>>>();
     private started = false;
 
     constructor(
@@ -69,7 +70,7 @@ export class CronTasks {
         }
 
         const { paused = false, protect = true } = meta;
-        this.entries.set(key, { registered, job, timezone, paused, protect, current: undefined });
+        this.entries.set(key, { registered, job, timezone, paused, protect });
 
         if (this.started && !paused) job.resume();
     }
@@ -115,12 +116,12 @@ export class CronTasks {
     }
 
     public list(): CronStatus[] {
-        return [...this.entries].map(([key, { job, timezone, current, paused }]) => ({
+        return [...this.entries].map(([key, { job, timezone, paused }]) => ({
             key,
             pattern: job.getPattern() ?? '',
             timezone,
             scheduled: job.isRunning(),
-            busy: current !== undefined,
+            busy: this.running.has(key),
             nextRun: paused ? null : job.nextRun(),
             previousRun: job.previousRun()
         }));
@@ -130,7 +131,7 @@ export class CronTasks {
         const entry = this.entries.get(key);
         if (!entry) return;
 
-        if (entry.current && entry.protect) {
+        if (entry.protect && this.running.has(key)) {
             this.logger.warn(`skipped a run of ${paint.sky(key)}, the previous one is still going`);
             await this.runner.overrun(entry.registered, trigger);
 
@@ -138,12 +139,14 @@ export class CronTasks {
         }
 
         const run = this.runner.run(entry.registered, trigger, undefined, null);
-        entry.current = run;
+        const runs = this.running.get(key) ?? new Set();
+        this.running.set(key, runs.add(run));
 
         try {
             await run;
         } finally {
-            if (entry.current === run) entry.current = undefined;
+            runs.delete(run);
+            if (runs.size === 0) this.running.delete(key);
         }
     }
 }

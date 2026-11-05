@@ -10,6 +10,7 @@ import { Abortable } from '#tests/fixtures/jobs/Abortable';
 import { Boom } from '#tests/fixtures/jobs/Boom';
 import { Note } from '#tests/fixtures/jobs/Note';
 import { Reminder } from '#tests/fixtures/jobs/Reminder';
+import { Reminder as TwinReminder } from '#tests/fixtures/twin/Reminder';
 import { FakeDriver, TestHost } from '#tests/utils/host';
 
 import type { LogLevel, LogRecord } from '@seedcord/types';
@@ -449,6 +450,15 @@ describe('Tasks job upkeep', () => {
 
             await expect(tasks.schedule(Note, { in: '1s', data })).rejects.toMatchObject({
                 code: SeedcordErrorCode.PluginTasksDataNotJson
+            });
+            expect(driver.stored.size).toBe(0);
+        });
+
+        it('a class that shares its key with a loaded task, and stores nothing', async () => {
+            const { tasks } = await start(driver);
+
+            await expect(tasks.schedule(TwinReminder, { in: '1s', data: { text: 'hi' } })).rejects.toMatchObject({
+                code: SeedcordErrorCode.PluginTasksNotLoaded
             });
             expect(driver.stored.size).toBe(0);
         });

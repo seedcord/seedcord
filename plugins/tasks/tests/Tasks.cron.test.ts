@@ -9,6 +9,7 @@ import { Reminder } from '#tests/fixtures/jobs/Reminder';
 import { Idle } from '#tests/fixtures/tasks/Idle';
 import { Slow } from '#tests/fixtures/tasks/Slow';
 import { Tick } from '#tests/fixtures/tasks/Tick';
+import { Loose } from '#tests/fixtures/unprotected/Loose';
 import { FakeDriver, TestHost } from '#tests/utils/host';
 
 import type { TasksOptions } from '#src/types/Tasks';
@@ -184,6 +185,37 @@ describe('Tasks cron tasks', () => {
         host.releaseOverrun();
         await Promise.all([second, disposing]);
         expect(disposed).toBe(true);
+    });
+
+    it('stays busy until every unprotected run finishes', async () => {
+        const { host, tasks } = await start({ path: path.join(fixtures, 'unprotected') });
+        const long = Promise.withResolvers<undefined>();
+        const short = Promise.withResolvers<undefined>();
+        host.gates.push(long.promise, short.promise);
+
+        const first = tasks.trigger(Loose);
+        const second = tasks.trigger(Loose);
+        short.resolve(undefined);
+        await second;
+        expect(tasks.list()[0]?.busy).toBe(true);
+
+        long.resolve(undefined);
+        await first;
+        expect(tasks.list()[0]?.busy).toBe(false);
+        await tasks.dispose();
+    });
+
+    it('keeps a running task busy across a save', async () => {
+        const { host, tasks } = await start();
+        host.hold();
+        const run = tasks.trigger(Slow);
+
+        await tasks.onHmr({ file: path.join(taskFolder, 'Slow.ts'), type: 'update' });
+        expect(tasks.list().find((status) => status.key === 'slow')?.busy).toBe(true);
+
+        host.release();
+        await run;
+        await tasks.dispose();
     });
 
     it('reports its state through list and nextRun', async () => {
