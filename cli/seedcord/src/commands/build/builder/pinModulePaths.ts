@@ -1,7 +1,7 @@
+import { fileURLToPath } from 'node:url';
+
 import { BotLayout } from '@seedcord/utils/internal';
 import { Visitor } from 'vite';
-
-import { BOT_FILES_SLOT } from './builtFiles';
 
 import type { Plugin } from 'vite';
 
@@ -33,11 +33,14 @@ function importMetaPaths(program: Parameters<Visitor['visit']>[0]): Rewrite[] {
 
 const FILE_URL = '__seedcordPathToFileURL';
 const FILE_URL_IMPORT = `import { pathToFileURL as ${FILE_URL} } from 'node:url';`;
+const BUILT_ROOT = '__seedcordBuiltRoot';
 
 // bun --compile gives every module the entry's import.meta
 // an edge bot's files have no path on disk
 export function pinModulePaths(layout: BotLayout): Plugin {
-    const builtRoot = `${BOT_FILES_SLOT}.root`;
+    const utilsPath = fileURLToPath(import.meta.resolve('@seedcord/utils/internal'));
+    const builtRootImport = `import { builtRoot as ${BUILT_ROOT} } from ${JSON.stringify(utilsPath)};`;
+    const builtRoot = `${BUILT_ROOT}()`;
 
     return {
         name: 'seedcord:pin-module-paths',
@@ -61,6 +64,7 @@ export function pinModulePaths(layout: BotLayout): Plugin {
             for (const { start, end, key } of rewrites.toReversed()) {
                 rewritten = rewritten.slice(0, start) + values[key] + rewritten.slice(end);
             }
+            rewritten = builtRootImport + rewritten;
             if (rewrites.some(({ key }) => key === 'url')) rewritten = FILE_URL_IMPORT + rewritten;
             // keeps line numbers right. columns after a rewrite shift
             return { code: rewritten, map: null };

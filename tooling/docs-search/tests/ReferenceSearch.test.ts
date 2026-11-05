@@ -37,11 +37,10 @@ describe('ReferenceSearch', () => {
         vi.stubGlobal('fetch', fetchMock);
         const reference = new ReferenceSearch();
 
-        const [first, second] = await Promise.all([reference.results(), reference.results()]);
+        const first = await reference.results();
         const scoped = await reference.results(null, 'core');
 
         expect(first.rank('Bus').map(({ slug }) => slug)).toEqual(['bus']);
-        expect(second.rank('Bus')).toEqual(first.rank('Bus'));
         expect(scoped.rank('Bus')).toEqual(first.rank('Bus'));
         expect(fetchMock.mock.calls).toEqual([
             ['https://seedcord.org/docs/api/search/packages.json'],

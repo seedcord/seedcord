@@ -1,11 +1,56 @@
 ---
-title: Throwing
-description: Refuse a request from any handler by throwing a Notice, so the user sees why on a card and your code stops there.
+title: Refusing a request
+description: Refuse a request by throwing a Notice from any handler or helper, so your code stops there and the user sees why.
 ---
 
-Say your ban handler checks for an open case in a helper. Returning a flag means `execute()` has to check it, and every caller of every helper that can refuse has to check one too. Throw from the helper and the handler stops at the line that found the problem.
+Sometimes you need to stop a command and tell the user why, like when they don't have a profile, aren't allowed to do something, or can't afford it, etc. You do that by throwing a [`Notice`](ref:core/Notice).
 
 seedcord catches that throw at one boundary and sends the reply through the handler, so the class you throw sets what the reply says. A gate throws into the same boundary, and its refusal reaches the user the same way.
+
+## Why not reply and return?
+
+An early return works while the check sits in `execute()`.
+
+```ts twoslash
+import { SlashHandler, SlashRoute } from '@seedcord/gateway';
+// ---cut-start---
+declare const profiles: {
+    find(id: string): Promise<object | null>;
+};
+// ---cut-end---
+
+@SlashRoute('ban')
+export class Ban extends SlashHandler<'ban'> {
+    public async execute(): Promise<void> {
+        // ---cut---
+        const profile = await profiles.find(this.user.id);
+        if (!profile) {
+            await this.reply('Create a profile first.');
+            return;
+        }
+        // ---cut-after---
+    }
+}
+```
+
+Throwing does the same in one line.
+
+```ts twoslash
+import { Notice } from '@seedcord/gateway';
+
+declare class NoProfile extends Notice {
+    constructor();
+}
+declare const profile: object | null;
+// ---cut---
+if (!profile) throw new NoProfile();
+```
+
+`NoProfile` is a `Notice` like the one in the next section.
+
+Replying with an error message and returning only stops the function you're in. Say your ban handler checks for an open case in a helper. Returning a flag means `execute()` has to check it, and every caller of every helper that can refuse has to check one too. Throw from the helper instead. The handler stops at the line that found the problem, and nothing has to pass a value up a few layers to check it.
+
+## Writing a Notice
 
 You write a refusal as a [`Notice`](ref:core/Notice) subclass.
 
@@ -140,7 +185,7 @@ Throwing a custom `Notice` for a real bug shows its card and produces nothing el
 
 ## What render receives
 
-`render()` takes a [`RenderContext`](ref:types/RenderContext). Leave the parameter off when you don't read any of its fields, as the first sample does.
+`render()` takes a [`RenderContext`](ref:types/RenderContext). Leave the parameter off when you don't read any of its fields, as `OpenCaseExists` does.
 
 {/* prettier-ignore-start */}
 

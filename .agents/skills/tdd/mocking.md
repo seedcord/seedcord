@@ -2,9 +2,9 @@
 
 Mock at system boundaries only:
 
-- The Discord gateway and REST client (the seedcord tests stub the client; `mock/` runs a real one for integration).
-- Time and randomness (`vi.useFakeTimers()`, see the CooldownManager tests).
-- The filesystem, sometimes (the command/event loaders read from a temp dir via `TestEnvironment`).
+- The Discord gateway and REST client (the seedcord tests stub the client; the bots in `mocks/` run a real one).
+- Time and randomness (`vi.useFakeTimers()`).
+- The filesystem, sometimes.
 
 Do not mock:
 

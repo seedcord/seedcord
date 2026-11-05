@@ -123,6 +123,7 @@ export class DevRunner {
             store.setBusy(true);
             await this.currentSession.stop();
             this.currentSession = null;
+            store.clearPrompt();
         }
     }
 

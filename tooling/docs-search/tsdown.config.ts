@@ -2,5 +2,5 @@ import { createTsdownConfig } from '@seedcord/tsdown-config';
 
 export default createTsdownConfig({
     entry: ['src/index.ts'],
-    deps: { neverBundle: true, alwaysBundle: ['@seedcord/brand', '@seedcord/ui/sites'] }
+    deps: { neverBundle: true, alwaysBundle: ['@seedcord/brand'] }
 });

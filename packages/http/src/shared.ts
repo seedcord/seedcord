@@ -19,6 +19,7 @@ export type { SelectedMentionables } from '#inputs/ModalFields';
 export { Emojis } from '#src/emojis/EmojiInjector';
 export type { InjectedEmojiMap } from '#src/emojis/EmojiInjector';
 
+export type { API } from '@discordjs/core/http-only';
 export * from '@seedcord/core';
 export { HmrModuleHandler } from '@seedcord/core/hmr';
 export * from '@seedcord/errors';

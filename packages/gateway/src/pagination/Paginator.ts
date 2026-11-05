@@ -78,6 +78,6 @@ export class Paginator<Item, const Prefix extends string> extends PaginatorBase<
      */
     async start(handler: RepliableHandler<Repliables>, n = 0): Promise<SentMessage> {
         const response = await this.page(handler, n);
-        return handler.sender.send(response, { ephemeral: this.config.ephemeral ?? false });
+        return handler.sender.send(response, { ephemeral: this.ephemeral });
     }
 }

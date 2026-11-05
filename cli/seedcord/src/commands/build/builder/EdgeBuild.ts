@@ -165,7 +165,8 @@ export class EdgeBuild extends TargetBuild {
         await bootWorker({
             root: this.target.viteRoot,
             mode: this.project.config.viteMode,
-            plugins: [cloudflare.plugins({ persistState: false })],
+            // loading the worker doesn't need a remote session, and one needs a login and keeps the build alive (workers-sdk#15173)
+            plugins: [cloudflare.plugins({ persistState: false, remoteBindings: false })],
             environments: workerEnvironment()
         });
     }

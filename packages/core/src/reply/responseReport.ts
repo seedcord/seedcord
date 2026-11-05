@@ -1,18 +1,14 @@
 import { paint } from '@seedcord/errors';
-import { Logger } from '@seedcord/logger';
 import { asError } from '@seedcord/utils/internal';
 
+import { lazyLogger } from '#src/miscellaneous/lazyLogger';
 import { PublishDefault } from '#subscribers/publishDefault';
 
 import type { DispatchContext } from '#src/dispatch/DispatchContext';
 import type { Bus } from '#subscribers/Bus';
 import type { ReplyMethod } from './ackLegality';
 
-let replyLogger: Logger | undefined;
-function logger(): Logger {
-    replyLogger ??= new Logger('Reply', { channel: 'interactions' });
-    return replyLogger;
-}
+const logger = lazyLogger('Reply', { channel: 'interactions' });
 
 export interface ReplyTelemetry {
     readonly bus: Bus;

@@ -1,6 +1,7 @@
 // the default reporters are decorated at Bus module load, before any entry's own polyfill import runs
 import 'reflect-metadata';
 
+import { assertUniqueKeys } from '#src/decorators/assertUniqueKeys';
 import { SubscribeMetadataKey } from '#src/metadataKeys';
 
 import type { CoreBase } from '#interfaces/CoreBase';
@@ -21,46 +22,56 @@ export interface SubscribeOptions {
     readonly frequency?: EventFrequency | undefined;
 }
 
+type SubscribeSpec<Key extends SubscriptionKey> = readonly [key: Key, options?: SubscribeOptions];
+
 /** @internal */
 export interface SubscribeMetadataEntry {
-    readonly subscriber: SubscriptionKey;
-    readonly frequency?: EventFrequency | undefined;
+    readonly key: SubscriptionKey;
+    readonly frequency: EventFrequency;
 }
 
 /**
- * Registers a subscriber handler class with a specific subscriber event.
+ * Registers a subscriber class with one or more subscription keys.
  *
- * Associates the decorated class with a subscriber event type for automatic
- * registration and execution when the subscriber is emitted.
+ * Supply one `[key, options?]` tuple per key. The subscriber's generic must list the same keys.
  *
- * @typeParam TSubscriber - The subscriber event name to register for
- * @param subscriber - The subscriber event name to register for
- * @param options - Options to configure the subscriber handler registration.
  * @decorator
  * @example
- * ```typescript
- * \@Subscribe('userJoin')
+ * ```ts
+ * \@Subscribe(['userJoin'])
  * class WelcomeHandler extends Subscriber<'userJoin'> {
- *   async execute() {
- *   }
+ *     async execute() {
+ *         this.logger.info(`${this.data.userId} joined`);
+ *     }
  * }
  * ```
  * @example
  * ```ts
- * \@Subscribe('userJoin', { frequency: 'once' })
- * // or
- * \@Subscribe('userJoin')
+ * \@Subscribe(['userJoin', { frequency: 'once' }], ['userLeave'])
+ * class Presence extends Subscriber<'userJoin' | 'userLeave'> {
+ *     async execute() {
+ *         await this.match({
+ *             userJoin: (data) => this.logger.info(`${data.userId} joined`),
+ *             userLeave: (data) => this.logger.info(`${data.userId} left`)
+ *         });
+ *     }
+ * }
  * ```
  */
-export function Subscribe<TSubscriber extends SubscriptionKey>(subscriber: TSubscriber, options?: SubscribeOptions) {
-    return function <HandlerCtor extends Constructor<Subscriber<TSubscriber, CoreBase>>>(
-        constructor: HandlerCtor
-    ): void {
-        const meta: SubscribeMetadataEntry = {
-            subscriber,
-            frequency: options?.frequency
-        };
+export function Subscribe<const Defs extends readonly SubscribeSpec<SubscriptionKey>[]>(...defs: Defs) {
+    type Key = Defs[number][0];
 
-        Reflect.defineMetadata(SubscribeMetadataKey, meta, constructor);
+    // an invariant key generic on Subscriber makes this reject a mismatch in either direction
+    return function <HandlerCtor extends Constructor<Subscriber<Key, CoreBase>>>(constructor: HandlerCtor): void {
+        const entries = defs.map<SubscribeMetadataEntry>(([key, options]) => ({
+            key,
+            frequency: options?.frequency ?? 'on'
+        }));
+        assertUniqueKeys(
+            '@Subscribe',
+            constructor,
+            entries.map((entry) => entry.key)
+        );
+        Reflect.defineMetadata(SubscribeMetadataKey, entries, constructor);
     };
 }

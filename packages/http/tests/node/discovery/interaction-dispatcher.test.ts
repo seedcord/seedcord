@@ -24,7 +24,7 @@ function slashPayload(name: string): APIInteraction {
 
 function registeredClassName(dispatcher: InteractionDispatcher, payload: APIInteraction): string | null {
     const match = resolve(dispatcher.maps, payload);
-    if (!match?.routeId) return null;
+    if (!match || match.fallback) return null;
     return match.ctor.name;
 }
 
@@ -80,7 +80,7 @@ describe('http InteractionDispatcher discovery', () => {
         const dispatcher = await readyDispatcher();
 
         const match = resolve(dispatcher.maps, slashPayload('missing'));
-        expect(match?.routeId).toBeNull();
+        expect(match?.fallback).toBe(true);
     });
 
     it('drops every route a handler owned when its file goes away', async () => {
@@ -89,6 +89,6 @@ describe('http InteractionDispatcher discovery', () => {
         await dispatcher.onHmr({ type: 'delete', file: path.join(HANDLERS_DIR, 'PingCommand.ts') });
 
         const match = resolve(dispatcher.maps, slashPayload('ping'));
-        expect(match?.routeId).toBeNull();
+        expect(match?.fallback).toBe(true);
     });
 });

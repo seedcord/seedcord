@@ -286,4 +286,22 @@ describe('CommandRegistry.deploy', () => {
 
         expect(put).toHaveBeenCalledOnce();
     });
+
+    it('holds a refresh until the startup deploy finishes', async () => {
+        const startupPut = Promise.withResolvers<APIApplicationCommand[]>();
+        const put = vi.fn().mockReturnValueOnce(startupPut.promise).mockResolvedValue(BARE);
+        const registry = registryWith(put);
+        const deploying = registry.deploy(new AbortController().signal, {});
+        await vi.waitFor(() => expect(put).toHaveBeenCalledOnce());
+
+        const setCommands = vi.spyOn(registry, 'setCommands');
+
+        const refreshing = registry.refresh();
+        await new Promise(setImmediate);
+        expect(setCommands).not.toHaveBeenCalled();
+
+        startupPut.resolve(BARE);
+        await Promise.all([deploying, refreshing]);
+        expect(setCommands).toHaveBeenCalledOnce();
+    });
 });

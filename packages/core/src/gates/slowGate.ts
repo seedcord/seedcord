@@ -1,24 +1,20 @@
 import { paint } from '@seedcord/errors';
-import { Logger } from '@seedcord/logger';
 import { Envapter } from 'envapt';
+
+import { lazyLogger } from '#src/miscellaneous/lazyLogger';
 
 import type { GateObserver } from './runGates';
 
 // combined check time slower than this cuts into the 3s interaction-ack budget
 const SLOW_GATE_MS = 750;
 
-// lazy because the logger reads the environment, which binds after this module loads
-let gateLogger: Logger | undefined;
-function logger(): Logger {
-    gateLogger ??= new Logger('Gates', { channel: 'gates' });
-    return gateLogger;
-}
+const logger = lazyLogger('Gates', { channel: 'gates' });
 
 /**
  * collects each gate check's elapsed time for one dispatch. `report` warns once when the checks sum
  * past the threshold, listing the total, the route, and each gate's share.
  */
-export interface SlowGateMonitor {
+interface SlowGateMonitor {
     readonly observe: GateObserver;
     report(declaredRoute: string | null): void;
 }

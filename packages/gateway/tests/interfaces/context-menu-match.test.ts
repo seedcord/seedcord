@@ -1,8 +1,9 @@
-import { DispatchContext } from '@seedcord/core';
+import { DispatchContext } from '@seedcord/core/internal';
 import { isSeedcordError, SeedcordErrorCode } from '@seedcord/errors';
 import { describe, expect, expectTypeOf, it } from 'vitest';
 
 import { MessageContextMenuHandler, UserContextMenuHandler } from '#handlers/interaction/ContextMenuHandler';
+import { built } from '#tests/utils/built';
 
 import type { Core } from '#interfaces/Core';
 import type {
@@ -13,8 +14,6 @@ import type {
     User,
     UserContextMenuCommandInteraction
 } from 'discord.js';
-
-const dispatch = new DispatchContext('test:probe');
 
 declare module '@seedcord/core' {
     interface UserContextMenuRegistry {
@@ -30,19 +29,19 @@ declare module '@seedcord/core' {
 // justified: nothing on this path reads core
 const core = {} as unknown as Core;
 
-function userMenu(name: string): UserContextMenuCommandInteraction<undefined> {
-    return {
-        commandName: name,
+function userMenu(name: string): [UserContextMenuCommandInteraction<undefined>, Core, DispatchContext] {
+    const event = {
         targetUser: { id: 'u1' } as unknown as User,
         targetMember: { id: 'm1' } as unknown as GuildMember
     } as unknown as UserContextMenuCommandInteraction<undefined>;
+    return [event, core, new DispatchContext('userContextMenu', name)];
 }
 
-function messageMenu(name: string): MessageContextMenuCommandInteraction<undefined> {
-    return {
-        commandName: name,
+function messageMenu(name: string): [MessageContextMenuCommandInteraction<undefined>, Core, DispatchContext] {
+    const event = {
         targetMessage: { id: 'msg1' } as unknown as Message
     } as unknown as MessageContextMenuCommandInteraction<undefined>;
+    return [event, core, new DispatchContext('messageContextMenu', name)];
 }
 
 class Menu extends UserContextMenuHandler<'View Profile' | 'Say Hello'> {
@@ -66,6 +65,11 @@ class Menu extends UserContextMenuHandler<'View Profile' | 'Say Hello'> {
         return this.match(cases);
     }
 
+    public async runMixed(): Promise<void> {
+        const result = await this.match({ 'View Profile': () => 'profile', 'Say Hello': () => 1 });
+        expectTypeOf(result).toEqualTypeOf<string | number>();
+    }
+
     public readName(): 'View Profile' | 'Say Hello' {
         return this.route;
     }
@@ -81,6 +85,11 @@ class Tools extends MessageContextMenuHandler<'Report Message' | 'Pin Message'> 
             'Report Message': (message) => `reported ${message.id}`,
             'Pin Message': (message) => `pinned ${message.id}`
         });
+    }
+
+    public async runMixed(): Promise<void> {
+        const result = await this.match({ 'Report Message': () => 'reported', 'Pin Message': () => 1 });
+        expectTypeOf(result).toEqualTypeOf<string | number>();
     }
 }
 
@@ -124,18 +133,18 @@ void UnknownCase;
 
 describe('context menu match', () => {
     it('runs the case for the selected command', async () => {
-        await expect(new Menu(userMenu('View Profile'), core, dispatch).run()).resolves.toBe('profile');
-        await expect(new Menu(userMenu('Say Hello'), core, dispatch).run()).resolves.toBe('hello');
+        await expect(built(Menu, ...userMenu('View Profile')).run()).resolves.toBe('profile');
+        await expect(built(Menu, ...userMenu('Say Hello')).run()).resolves.toBe('hello');
     });
 
     it('hands a message case the clicked message', async () => {
-        await expect(new Tools(messageMenu('Pin Message'), core, dispatch).run()).resolves.toBe('pinned msg1');
+        await expect(built(Tools, ...messageMenu('Pin Message')).run()).resolves.toBe('pinned msg1');
     });
 
     it('throws when the selected command lacks a case', async () => {
         let caught: unknown;
         try {
-            await new Menu(userMenu('Say Hello'), core, dispatch).runPartial();
+            await built(Menu, ...userMenu('Say Hello')).runPartial();
         } catch (error) {
             caught = error;
         }
@@ -146,7 +155,7 @@ describe('context menu match', () => {
     it('throws for a command named after an Object.prototype member', async () => {
         let caught: unknown;
         try {
-            await new Menu(userMenu('constructor'), core, dispatch).run();
+            await built(Menu, ...userMenu('constructor')).run();
         } catch (error) {
             caught = error;
         }
@@ -155,6 +164,6 @@ describe('context menu match', () => {
     });
 
     it('reads the selected command name without a case', () => {
-        expect(new Menu(userMenu('Say Hello'), core, dispatch).readName()).toBe('Say Hello');
+        expect(built(Menu, ...userMenu('Say Hello')).readName()).toBe('Say Hello');
     });
 });

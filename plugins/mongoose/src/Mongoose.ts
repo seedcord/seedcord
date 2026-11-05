@@ -65,11 +65,13 @@ export class Mongoose extends Plugin<{ transport: 'any'; runtime: 'server' }> {
 
         if (!Envapter.isDevelopment) return;
         this.hmrHandler = new HmrModuleHandler({
-            handlersDir: this.options.dir,
-            isHandler: this.serviceRegistry.isServiceClass.bind(this.serviceRegistry),
-            registerHandler: this.serviceRegistry.initializeService.bind(this.serviceRegistry),
-            unregisterHandler: this.serviceRegistry.unregister.bind(this.serviceRegistry),
-            getArtifacts: this.serviceRegistry.getArtifacts.bind(this.serviceRegistry),
+            handlers: {
+                dir: this.options.dir,
+                is: this.serviceRegistry.isServiceClass.bind(this.serviceRegistry),
+                register: this.serviceRegistry.initializeService.bind(this.serviceRegistry),
+                unregister: this.serviceRegistry.unregister.bind(this.serviceRegistry),
+                getArtifacts: this.serviceRegistry.getArtifacts.bind(this.serviceRegistry)
+            },
             logger: this.logger
         });
     }

@@ -2,7 +2,6 @@ import { basename, dirname } from 'node:path';
 
 import { fromWireError, wrapHot } from '@seedcord/core/internal';
 import { displayPath } from '@seedcord/errors/internal';
-import { LoggerChannelRegistry } from '@seedcord/logger';
 import { installNodeDefaults } from '@seedcord/logger/node';
 import { filterCirculars } from '@seedcord/utils';
 import { BotLayout } from '@seedcord/utils/internal';
@@ -63,12 +62,6 @@ function invokeErrorsAsJson(): Plugin {
     };
 }
 
-// ServerHost installs these for a server bot. the edge Seedcord never does
-function installCliLogSinks(stack: AsyncDisposableStack): void {
-    installNodeDefaults();
-    stack.defer(() => LoggerChannelRegistry.instance.configure({}));
-}
-
 export class EdgeDevRuntime extends BaseDevRuntime<EdgeStarted> {
     private settleStart?: (() => void) | undefined;
 
@@ -81,7 +74,8 @@ export class EdgeDevRuntime extends BaseDevRuntime<EdgeStarted> {
         const { files } = context;
         const { viteRoot } = this.target;
         resources.use(fenceSignals());
-        installCliLogSinks(resources);
+        // ServerHost installs these for a server bot. the edge Seedcord does not
+        installNodeDefaults();
         this.emit(context, { type: 'progress', status: 'Loading Cloudflare plugin…' });
         const [folders, cloudflare, workerEnv] = await Promise.all([
             files.foldersIncludingEmpty(),

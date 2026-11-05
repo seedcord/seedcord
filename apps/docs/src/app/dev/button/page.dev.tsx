@@ -7,7 +7,7 @@ import Link from 'next/link';
 import type { ReactElement } from 'react';
 
 const VARIANTS = ['primary', 'secondary', 'outline', 'ghost'] as const satisfies readonly ButtonVariant[];
-const SIZES = ['sm', 'md', 'lg', 'icon'] as const satisfies readonly ButtonSize[];
+const SIZES = ['xs', 'sm', 'md', 'lg', 'icon'] as const satisfies readonly ButtonSize[];
 
 function Section({ title, children }: { title: string; children: ReactElement | ReactElement[] }): ReactElement {
     return (

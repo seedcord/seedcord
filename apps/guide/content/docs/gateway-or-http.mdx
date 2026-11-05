@@ -41,7 +41,7 @@ Code that uses discord.js types needs changes. So do the few things that exist o
 
 <Callout type="transport">
 
-`getUser` returns a discord.js `User` on gateway and an `APIUser` on http. `getMember`, `getChannel`, `getRole`, and the other getters that return a Discord object change type the same way. `this.event` is a discord.js `ChatInputCommandInteraction` on gateway and Discord's raw `APIChatInputApplicationCommandInteraction` on http. If you call a method only discord.js has, rewrite that call for http.
+`getUser` returns a discord.js `User` on gateway and an `APIUser` on http. `getMember`, `getChannel`, `getRole`, and the other option getters that return a Discord object change type the same way. So does [`this.user`](ref:gateway/RepliableHandler.user). `this.event` is a discord.js `ChatInputCommandInteraction` on gateway and Discord's raw `APIChatInputApplicationCommandInteraction` on http. If you call a method only discord.js has, rewrite that call for http.
 
 </Callout>
 

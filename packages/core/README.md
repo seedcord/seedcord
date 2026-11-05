@@ -32,7 +32,7 @@ seedcord is pre-1.0, so a minor version can break your plugin. Each release's ch
 ## Installation
 
 ```sh
-pnpm add -D @seedcord/core envapt typescript
+pnpm add -D @seedcord/core @discordjs/builders envapt typescript
 ```
 
 Also list `@seedcord/core` in your plugin's `peerDependencies`, with the versions you tested against. A plugin that extends a different copy of core than the bot's throws `CorePluginFromOtherCore` when the bot attaches it.

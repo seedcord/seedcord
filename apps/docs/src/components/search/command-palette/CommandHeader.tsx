@@ -67,7 +67,19 @@ function PrereleaseToggle({
     checked: boolean;
     onChange: (next: boolean) => void;
 }): ReactElement {
-    return <Switch size="sm" checked={checked} onCheckedChange={onChange} label="Pre-release" />;
+    return (
+        <Switch
+            size="sm"
+            checked={checked}
+            onCheckedChange={onChange}
+            aria-label="Pre-release"
+            label={
+                <>
+                    Pre<span className={cn('max-sm:hidden')}>-release</span>
+                </>
+            }
+        />
+    );
 }
 
 interface CommandHeaderProps {
@@ -78,7 +90,6 @@ interface CommandHeaderProps {
     searchValue: string;
     isSearching: boolean;
     activeId: string | undefined;
-    listExpanded: boolean;
     scope: string;
     kind: KindFilter;
     prerelease: boolean;
@@ -97,7 +108,6 @@ export function CommandHeader({
     searchValue,
     isSearching,
     activeId,
-    listExpanded,
     scope,
     kind,
     prerelease,
@@ -120,7 +130,6 @@ export function CommandHeader({
             label="Search documentation"
             closeLabel="Close command palette"
             listboxId={COMMAND_LISTBOX_ID}
-            listExpanded={listExpanded}
             activeId={activeId}
             isSearching={isSearching}
             leading={<SearchLeading {...filters} />}

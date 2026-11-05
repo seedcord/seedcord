@@ -1,40 +1,14 @@
 'use client';
 
-import { LoaderCircle, Search, X } from 'lucide-react';
+import { LoaderCircle, Search } from 'lucide-react';
 
-import { Button } from './Button';
-import { Icon } from './Icon';
+import { CloseControls } from './CloseControls';
 import { IconSwap } from './IconSwap';
 import { Input } from './Input';
-import { Kbd } from './Kbd';
 import { cn } from './lib/cn';
+import { useSearchDialogListExpanded } from './SearchDialog';
 
 import type { KeyboardEvent, ReactElement, ReactNode, RefObject } from 'react';
-
-function CloseControls({ onClose, label }: { onClose: () => void; label: string }): ReactElement {
-    return (
-        <>
-            <Button
-                variant="ghost"
-                size="icon"
-                onClick={onClose}
-                aria-label={label}
-                className={cn('text-subtle size-9 rounded-md hover:text-(--text) sm:hidden')}
-            >
-                <Icon icon={X} size={16} aria-hidden />
-            </Button>
-            <Button
-                variant="ghost"
-                size="none"
-                onClick={onClose}
-                aria-label={label}
-                className={cn('group hidden hover:bg-transparent sm:inline-flex')}
-            >
-                <Kbd className={cn('uppercase group-hover:text-(--text)')}>Esc</Kbd>
-            </Button>
-        </>
-    );
-}
 
 export interface SearchFieldProps {
     inputRef: RefObject<HTMLInputElement | null>;
@@ -47,7 +21,6 @@ export interface SearchFieldProps {
     placeholder?: string;
     maxLength?: number;
     listboxId: string;
-    listExpanded: boolean;
     activeId?: string | undefined;
     isSearching?: boolean;
     leading?: ReactNode;
@@ -66,15 +39,16 @@ export function SearchField({
     placeholder = 'Search…',
     maxLength,
     listboxId,
-    listExpanded,
     activeId,
     isSearching = false,
     leading,
     trailing,
     aboveOnMobile
 }: SearchFieldProps): ReactElement {
+    const listExpanded = useSearchDialogListExpanded();
+
     return (
-        <div className={cn('px-4 py-3', listExpanded && 'border-border border-b')}>
+        <>
             {aboveOnMobile ? <div className={cn('mb-2 sm:hidden')}>{aboveOnMobile}</div> : null}
             <Input
                 ref={inputRef}
@@ -118,6 +92,6 @@ export function SearchField({
                     </span>
                 }
             />
-        </div>
+        </>
     );
 }

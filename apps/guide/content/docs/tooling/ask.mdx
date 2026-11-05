@@ -1,0 +1,56 @@
+---
+title: Searching the guide
+description: Search the guide from your terminal with seedcord ask, using a question, a pasted error, or an error code, and get links to the sections that match.
+---
+
+`seedcord ask` searches the guide from your terminal. Use it to look up an error you just hit, or to check whether seedcord already ships something before you write it yourself. It's also great for agents as they're able to query the guide programmatically on the spot.
+
+It runs the search behind the **Related** results in the guide's search dialog. That search matches by meaning, so your question doesn't have to use the guide's words.
+
+<Shell exec="seedcord ask how do i stop someone spamming a command" />
+
+The answer lists each matching page with its matching sections, and a link to each section. You can run it outside a project too, before your bot exists.
+
+Quote the question if it contains `--verbose` or `--help`, which the CLI reads as flags, or a character that your shell treats as special, like `?` or `[` in zsh. Other words that look like flags stay in the question.
+
+A stable release of the CLI searches `seedcord.org/guide`. A prerelease searches `next.seedcord.org/guide`, because that site has the pages for code that isn't in a stable release yet.
+
+## Pasting an error
+
+Paste the whole error as the question. `seedcord ask` removes the stack frames, then searches the first 500 characters of what remains. If the command shortens your text, the answer says so.
+
+A seedcord error starts with its code in brackets, like `[3116]`. The guide's pages use the error's name, so the command looks up the name for you:
+
+{/* prettier-ignore-start */}
+
+| you run | what it searches for |
+| --- | --- |
+| `seedcord ask "[3116]"` | `CliDependencyMissing` |
+| `seedcord ask 3116` | `CliDependencyMissing` |
+| `seedcord ask error 3116` | `CliDependencyMissing` |
+| `seedcord ask what is 3116` | `CliDependencyMissing` |
+| `seedcord ask seedcord error 3116` | `seedcord error 3116 CliDependencyMissing` |
+
+{/* prettier-ignore-end */}
+
+The answer starts with `3116 is CliDependencyMissing`. Inside a longer question, a four-digit number stays as you wrote it, since it could be a port, year, or something else entirely. If that number is also an error code, the answer adds the command that looks up the code.
+
+## Running it from a script or an agent
+
+With no terminal attached, or with `CI` set, `seedcord ask` prints only the answer. Each page in it links to its Markdown copy and lists the matching headings, so that a coding agent can read the page without its HTML. If nothing matches, the answer links `llms.txt`, the list of every page in the guide. If the search fails, the command exits with code 1.
+
+A project from `create-seedcord` tells coding agents to use this command in its `AGENTS.md`.
+
+## When it fails
+
+{/* prettier-ignore-start */}
+
+| what happened | the error |
+| --- | --- |
+| your question is under 2 characters, or doesn't contain a letter or a number | `CliAskBadQuestion` |
+| the guide search got too many requests or hit its daily limit, and the message says when to try again | `CliAskHasToWait` |
+| the request failed, or took longer than 10 seconds | `CliAskFailed` |
+
+{/* prettier-ignore-end */}
+
+`CliAskHasToWait` and `CliAskFailed` print the guide's address, so you can open the guide and read it yourself.

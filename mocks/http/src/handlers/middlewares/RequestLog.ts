@@ -3,8 +3,7 @@ import { InteractionMiddleware, RegisterInteractionMiddleware } from '@seedcord/
 @RegisterInteractionMiddleware()
 export class RequestLog extends InteractionMiddleware {
     public async execute(): Promise<void> {
-        const user = this.event.member?.user ?? this.event.user;
-        this.logger.info(`${this.dispatch.routeId} from ${user?.username ?? 'unknown'}`);
+        this.logger.info(`${this.dispatch.routeId} from ${this.user.username}`);
 
         await Promise.resolve();
     }

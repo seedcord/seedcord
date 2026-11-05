@@ -1,6 +1,8 @@
+import { spawnSync } from 'node:child_process';
 import { appendFile, cp, mkdir, mkdtempDisposable, readFile, rename, writeFile } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
+import { stripVTControlCharacters } from 'node:util';
 
 import { describe, expect, it, onTestFinished, vi } from 'vitest';
 
@@ -10,6 +12,23 @@ import { linkPackages } from '#tests/edgeFolder';
 import { builtSource, copyFixture, FLAT_BOT, GATEWAY_BOT, HTTP_BOT } from './fixtureCopy';
 import { quickBuildRunner } from './quickBuildRunner';
 import { smoke } from './smoke';
+
+describe('a built module that runs without the entry', () => {
+    it('says to run index.mjs when the module reads import.meta.dirname', async () => {
+        const projectDir = await copyFixture(HTTP_BOT);
+        const start = join(projectDir, 'src/index.ts');
+        await writeFile(start, `console.log(import.meta.dirname);\n${await readFile(start, 'utf8')}`);
+        await quickBuildRunner().run(projectDir);
+
+        const { status, stderr } = spawnSync(process.execPath, [join(projectDir, 'dist/index.js')], {
+            encoding: 'utf8',
+            timeout: 60_000
+        });
+
+        expect(status).toBe(1);
+        expect(stripVTControlCharacters(stderr)).toContain('Run index.mjs');
+    }, 120_000);
+});
 
 describe('seedcord build mode on a node bot', () => {
     it.each([

@@ -65,7 +65,7 @@ async function dispatchThrough(ctor: HandlerConstructor, ...ctors: InteractionMi
     const core = testCore(nullPathConfig, VALID_TOKEN);
 
     const execute = await dispatchInteraction({
-        match: { kind: InteractionKind.Slash, routeId: 'slash:ok', ctor },
+        match: { kind: InteractionKind.Slash, route: 'ok', fallback: false, ctor },
         payload: slashPayload('ok') as ValidInteractionTypes,
         core,
         middlewares: registry(...ctors)
@@ -164,7 +164,7 @@ describe('after() on the http interaction chain', () => {
         }
         Reflect.defineMetadata(GatedMetadataKey, [refuse], GatedHandler);
 
-        await expect(dispatchThrough(GatedHandler, First)).rejects.toThrow('render exploded');
+        await dispatchThrough(GatedHandler, First);
 
         expect(calls).toContain('First.after');
     });

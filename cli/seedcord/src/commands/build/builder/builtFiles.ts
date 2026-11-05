@@ -5,7 +5,7 @@ import { BOT_FILES_KEY, BUILT_FILES_READY_KEY, encodeFile, withoutQuery } from '
 import type { BotLayout } from '@seedcord/utils/internal';
 import type { Plugin } from 'vite';
 
-export const BOT_FILES_SLOT = `globalThis[Symbol.for(${JSON.stringify(BOT_FILES_KEY)})]`;
+const BOT_FILES_SLOT = `globalThis[Symbol.for(${JSON.stringify(BOT_FILES_KEY)})]`;
 
 export const PLACEHOLDER_ROOT = '/bot';
 

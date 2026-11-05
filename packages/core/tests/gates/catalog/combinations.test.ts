@@ -107,13 +107,14 @@ describe('catalog gate combinators', () => {
     });
 
     it('commits a real Cooldown nested in an and after the whole set passes', async () => {
-        const charge = vi.fn();
+        const charge = vi.fn().mockReturnValue({ limited: false });
         const rateLimiter = { peek: () => ({ limited: false }), charge };
         const ctx = {
             core: { rateLimiter, config: { ownerIds: [] } },
             userId: 'u1',
             guildId: 'g1',
-            channelId: 'c1'
+            channelId: 'c1',
+            dispatch: { declaredRoute: null }
         } as unknown as GateContextBase;
 
         await runGates([and(GuildOnly(), Cooldown(5))], ctx);

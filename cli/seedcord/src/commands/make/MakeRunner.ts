@@ -105,7 +105,7 @@ export class MakeRunner {
         await steps.step(
             'write',
             async () => {
-                for (const file of files) await writeNew(file);
+                await Promise.all(files.map((file) => writeNew(file)));
             },
             () => paint.mute(plural(files.length, 'file')),
             () => files.map((file) => paint.path(file.path))

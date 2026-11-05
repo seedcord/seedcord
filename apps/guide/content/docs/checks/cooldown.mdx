@@ -191,9 +191,9 @@ export class Feed extends SlashHandler<'feed'> {
 
 <Callout type="note">
 
-If two requests for the same key arrive at the same moment, both can find room in the window before either records its use. A tight burst can go over `limit` that way. Every [effect gate](/checks/effect-gates) has this gap between its check and its commit.
+If two requests for the same key arrive at the same moment, both can find room in the window before either records its use. `Cooldown` then refuses the one that goes over `limit` in its commit, through [`ctx.core.rateLimiter.charge`](ref:types/IRateLimiter.charge), which records a use only when the window still has room. Put `Cooldown` before your other [effect gates](/checks/effect-gates), because seedcord doesn't undo a commit that already ran.
 
-`Cooldown` doesn't guard against it, since bursts that tight are rare. If your command can't allow even one extra use, write your own effect gate. In its `commit`, call [`ctx.core.rateLimiter.charge`](ref:types/IRateLimiter.charge), which records a use only when the window still has room. Throw when `result.limited` comes back `true`, and put that gate first so no other commit runs before it.
+If several copies of your bot run at once, each copy records its own uses one at a time, so a tight burst across copies can go over `limit`.
 
 </Callout>
 

@@ -1,5 +1,6 @@
 import { RepliableHandler } from '#handlers/RepliableHandler';
 
+import type { ReplySender } from '#bot/ReplySender';
 import type { Core } from '#interfaces/Core';
 import type { NonModalInteraction, Repliables } from '#src/handlers/interactionTypes';
 import type { DispatchContext, ModalLike } from '@seedcord/core';
@@ -15,8 +16,8 @@ import type { DispatchContext, ModalLike } from '@seedcord/core';
  */
 export abstract class InteractionHandler<Repliable extends Repliables> extends RepliableHandler<Repliable> {
     // keep this ctor. inheriting RepliableHandler's protected one collapses HandlerConstructor to never.
-    constructor(event: Repliable, core: Core, dispatch: DispatchContext) {
-        super(event, core, dispatch);
+    constructor(event: Repliable, core: Core, dispatch: DispatchContext, sender: ReplySender) {
+        super(event, core, dispatch, sender);
     }
 
     /**

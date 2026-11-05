@@ -1,7 +1,7 @@
 {
     "name": "@seedcord/mock-http",
     "type": "module",
-    "version": "0.0.16-next.0",
+    "version": "0.0.16",
     "engines": {
         "node": "^24.22.1 || >=26.12.1",
         "bun": ">=1.4.2"
@@ -30,7 +30,7 @@
         "typescript": "catalog:peer"
     },
     "dependencies": {
-        "@discordjs/builders": "catalog:deps",
+        "@discordjs/builders": "catalog:peer",
         "@seedcord/http": "workspace:^",
         "discord-api-types": "catalog:deps",
         "envapt": "catalog:peer"

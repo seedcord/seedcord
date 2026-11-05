@@ -12,7 +12,7 @@ import { Subscribe, Subscriber } from '@seedcord/gateway';
 
 const SLOW_MS = 2000;
 
-@Subscribe('interactionDispatched')
+@Subscribe(['interactionDispatched'])
 export class SlowDispatch extends Subscriber<'interactionDispatched'> {
     public async execute(): Promise<void> {
         const { routeId, outcome, durationMs } = this.data;
@@ -118,7 +118,7 @@ Your handler sees its own failed write as a throw. seedcord also sends writes of
 ```ts twoslash title="src/subscribers/WriteAudit.ts"
 import { Subscribe, Subscriber } from '@seedcord/gateway';
 // ---cut---
-@Subscribe('responseAttempted')
+@Subscribe(['responseAttempted'])
 export class WriteAudit extends Subscriber<'responseAttempted'> {
     public async execute(): Promise<void> {
         const write = this.data;
@@ -163,7 +163,7 @@ When discord.js emits an event, seedcord runs every handler you registered for i
 ```ts twoslash title="src/subscribers/FlakyHandlers.ts"
 import { Subscribe, Subscriber } from '@seedcord/gateway';
 // ---cut---
-@Subscribe('eventDispatched')
+@Subscribe(['eventDispatched'])
 export class FlakyHandlers extends Subscriber<'eventDispatched'> {
     public async execute(): Promise<void> {
         const { name, handlers } = this.data;
@@ -227,7 +227,7 @@ On the subscriber side, write `dispatchId` as a column in every row and query on
 import { Subscribe, Subscriber } from '@seedcord/gateway';
 declare const db: { insert(row: object): Promise<void> };
 // ---cut---
-@Subscribe('interactionDispatched')
+@Subscribe(['interactionDispatched'])
 export class Dispatches extends Subscriber<'interactionDispatched'> {
     public async execute(): Promise<void> {
         const { dispatchId, routeId, outcome, durationMs } =
@@ -241,7 +241,7 @@ export class Dispatches extends Subscriber<'interactionDispatched'> {
     }
 }
 
-@Subscribe('unknownException')
+@Subscribe(['unknownException'])
 export class Faults extends Subscriber<'unknownException'> {
     public async execute(): Promise<void> {
         const { dispatchId, uuid, error } = this.data;

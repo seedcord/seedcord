@@ -58,7 +58,6 @@ interface SearchFilters extends FilterValues {
     handleScopeChange: (scope: string) => void;
     handleKindChange: (kind: string) => void;
     handlePrereleaseChange: (prerelease: boolean) => void;
-    resetFilters: () => void;
 }
 
 const DEFAULT_FILTERS: FilterValues = { scope: ALL_PACKAGES, kind: 'all', prerelease: false };
@@ -73,8 +72,7 @@ function useSearchFilters(): SearchFilters {
         (prerelease: boolean) => setFilters((prev) => ({ ...prev, prerelease })),
         []
     );
-    const resetFilters = useCallback(() => setFilters(DEFAULT_FILTERS), []);
-    return { ...filters, handleScopeChange, handleKindChange, handlePrereleaseChange, resetFilters };
+    return { ...filters, handleScopeChange, handleKindChange, handlePrereleaseChange };
 }
 
 export interface CommandPaletteController {
@@ -102,8 +100,7 @@ export function useCommandPaletteController(): CommandPaletteController {
     const pathname = usePathname();
     const inputRef = useRef<HTMLInputElement>(null);
     const [searchValue, setSearchValue] = useState('');
-    const { scope, kind, prerelease, handleScopeChange, handleKindChange, handlePrereleaseChange, resetFilters } =
-        useSearchFilters();
+    const { scope, kind, prerelease, handleScopeChange, handleKindChange, handlePrereleaseChange } = useSearchFilters();
     const [mounted] = useState(() => typeof window !== 'undefined');
     const catalog = useSearchCatalog(open);
 
@@ -124,17 +121,6 @@ export function useCommandPaletteController(): CommandPaletteController {
         log('Command palette closed');
         return undefined;
     }, [mounted, open, pathname]);
-
-    const handleOpenChange = useCallback(
-        (next: boolean): void => {
-            if (next) {
-                setSearchValue('');
-                resetFilters();
-            }
-            setOpen(next);
-        },
-        [setOpen, resetFilters]
-    );
 
     const handleClose = useCallback(() => setOpen(false), [setOpen]);
 
@@ -163,7 +149,7 @@ export function useCommandPaletteController(): CommandPaletteController {
         hasPrerelease: catalog?.hasPrerelease ?? false,
         packages: catalog?.options ?? [],
         inputRef,
-        handleOpenChange,
+        handleOpenChange: setOpen,
         handleValueChange: setSearchValue,
         handleScopeChange,
         handleKindChange,

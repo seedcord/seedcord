@@ -6,7 +6,7 @@ import type { HTMLAttributes, ReactElement } from 'react';
 const kbdBaseClassName = tw`inline-flex items-center border border-(--border) font-sans leading-none text-(--text-muted)`;
 
 const kbdSizeClasses = {
-    md: tw`rounded-md bg-(--surface-moderate) px-2 py-1 text-xs font-semibold tracking-wide`,
+    md: tw`h-6 min-w-6 justify-center rounded-md bg-(--surface-moderate) px-2 text-xs font-semibold tracking-wide`,
     sm: tw`h-5 min-w-5 justify-center rounded-sm bg-(--surface-subtle) px-1 text-[0.65rem]`
 } as const;
 

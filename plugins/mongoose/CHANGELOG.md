@@ -1,6 +1,6 @@
 # @seedcord/plugin-mongoose
 
-## 0.7.0-next.0
+## 0.7.0
 
 ### ✨ Minor
 
@@ -8,15 +8,16 @@
 
 ### 🩹 Patch
 
+- Updated some documentation. ([`bb8ee7c`](https://github.com/seedcord/seedcord/commit/bb8ee7cfcfedf4b70765ca547f191b68958553fa))
+- Updated hot reload to the new `HmrModuleHandler` options in `@seedcord/core`. ([#438](https://github.com/seedcord/seedcord/pull/438))
 - Fixed the `type-fest` types in the published declarations failing to resolve, since each package listed `type-fest` only as a dev dependency. ([`50db882`](https://github.com/seedcord/seedcord/commit/50db8827aca008f874bf60e5796a696c894056cc))
 
 #### 📦 Seedcord packages
 
-- `@seedcord/logger` 0.5.0 → 0.6.0-next.0
-- `@seedcord/utils` 0.9.0 → 0.9.1-next.0
-- `@seedcord/core` 0.11.0 → 0.12.0-next.0
-- `@seedcord/types` 0.15.0 → 0.16.0-next.0
-- `@seedcord/errors` 0.14.0 → 0.15.0-next.0
+- `@seedcord/errors` 0.15.0-next.3 → 0.15.0
+- `@seedcord/utils` 0.9.1-next.1 → 0.9.1
+- `@seedcord/logger` 0.6.0-next.1 → 0.6.0
+- `@seedcord/types` 0.16.0-next.1 → 0.16.0
 
 ## 0.6.0
 

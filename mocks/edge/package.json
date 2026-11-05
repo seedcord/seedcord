@@ -1,7 +1,7 @@
 {
     "name": "@seedcord/mock-edge",
     "type": "module",
-    "version": "0.0.2-next.0",
+    "version": "0.0.2",
     "private": true,
     "description": "Edge mock bot on Cloudflare Workers for demonstration and testing",
     "repository": {
@@ -28,7 +28,7 @@
         "typescript": "catalog:peer"
     },
     "dependencies": {
-        "@discordjs/builders": "catalog:deps",
+        "@discordjs/builders": "catalog:peer",
         "@seedcord/http": "workspace:^",
         "db0": "catalog:deps",
         "discord-api-types": "catalog:deps",

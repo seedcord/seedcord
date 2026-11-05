@@ -18,6 +18,7 @@ interface StepPrinterOptions<Label extends string> {
     command: string;
     labels: readonly Label[];
     verbose: boolean;
+    rows?: boolean;
     stdout?: Terminal;
     stderr?: Terminal;
 }
@@ -28,6 +29,7 @@ export class StepPrinter<Label extends string> implements Steps<Label> {
     private readonly command: string;
     private readonly labelWidth: number;
     private readonly verbose: boolean;
+    private readonly rows: boolean;
     private readonly stdout: Terminal;
     private readonly stderr: Terminal;
 
@@ -35,12 +37,14 @@ export class StepPrinter<Label extends string> implements Steps<Label> {
         command,
         labels,
         verbose,
+        rows = true,
         stdout = process.stdout,
         stderr = process.stderr
     }: StepPrinterOptions<Label>) {
         this.command = command;
         this.labelWidth = Math.max(...labels.map((label) => label.length));
         this.verbose = verbose;
+        this.rows = rows;
         this.stdout = stdout;
         this.stderr = stderr;
     }
@@ -55,6 +59,8 @@ export class StepPrinter<Label extends string> implements Steps<Label> {
         note?: (result: Result) => string,
         lines?: (result: Result) => readonly string[]
     ): Promise<Result> {
+        if (!this.rows) return task();
+
         // bound before holdOutput swaps stdout.write for its own
         const write = this.stdout.write.bind(this.stdout);
         const row = new StepRow({ write, label, labelWidth: this.labelWidth, animate: Boolean(this.stdout.isTTY) });

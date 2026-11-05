@@ -126,7 +126,7 @@ The Administrator rule from [permissions](/checks/permissions) applies here too.
 
 The default card says which permissions are missing. When your command needs its own wording, like "You can't ban a moderator", pass a `Notice` class you wrote as `notice`. It replaces the refusal with or without `inverse: true`. seedcord constructs it with `subject` and the permission names: the missing ones, or the held ones under `inverse: true`.
 
-[Throwing](/replying/throwing) shows how to write one.
+[Refusing a request](/replying/throwing) shows how to write one.
 
 ```ts twoslash
 import { assertPermissions } from '@seedcord/gateway';

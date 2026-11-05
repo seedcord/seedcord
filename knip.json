@@ -29,8 +29,9 @@
         },
         "apps/guide": {
             "entry": ["src/app/**/{page,layout,route,not-found,sitemap}{,.dev}.{ts,tsx}", "tests/**/*.test.{ts,tsx}"],
-            "project": ["src/**/*.{ts,tsx,css}", "tests/**/*.{ts,tsx}"],
+            "project": ["worker.ts", "src/**/*.{ts,tsx,css}", "tests/**/*.{ts,tsx}"],
             "ignoreDependencies": [
+                "cloudflare",
                 "@seedcord/gateway",
                 "@seedcord/http",
                 "@discordjs/builders",

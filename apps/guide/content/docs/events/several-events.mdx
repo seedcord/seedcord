@@ -39,7 +39,7 @@ You write the events twice. `MemberLog` passes `@RegisterEvent` one tuple for ea
 
 <Callout type="warning">
 
-[`this.event`](ref:gateway/EventHandler.event) is `never` on a handler registered for several events, since the payload depends on the event's name. Read the payload through `this.match` there.
+[`this.event`](ref:gateway/EventHandler.event) is `never` on a handler registered for several events, since the payload depends on the event's name. Read the payload through `this.match` there. [`this.route`](ref:gateway/EventHandler.route) holds the event's name, for work that doesn't read the payload.
 
 </Callout>
 

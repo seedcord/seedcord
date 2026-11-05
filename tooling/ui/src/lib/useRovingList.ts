@@ -10,7 +10,8 @@ export interface RovingGroup<TItem> {
 }
 
 export interface RovingListOptions<TItem> {
-    query: string;
+    // a new query moves the highlight back to the first row
+    query?: string;
     groups: readonly RovingGroup<TItem>[];
     onSelect: (item: TItem) => void;
 }
@@ -65,7 +66,7 @@ function clamp(index: number, total: number): number {
 
 function nextStop(stops: readonly TabStop[], activeIndex: number, step: 1 | -1): TabStop | undefined {
     const current = stops.findLastIndex((stop) => !stop.loading && stop.start <= activeIndex);
-    return stops.at((current + step) % stops.length);
+    return stops[current + step];
 }
 
 function pick<TItem>(next: Picked<TItem>) {
@@ -77,7 +78,7 @@ function pick<TItem>(next: Picked<TItem>) {
             : next;
 }
 
-export function useRovingList<TItem>({ query, groups, onSelect }: RovingListOptions<TItem>): RovingList<TItem> {
+export function useRovingList<TItem>({ query = '', groups, onSelect }: RovingListOptions<TItem>): RovingList<TItem> {
     const { items, stops } = layout(groups);
     const [picked, setPicked] = useState<Picked<TItem>>({ query, item: undefined, pickedByPointer: false });
     const current = picked.query === query ? picked : undefined;
@@ -115,10 +116,10 @@ export function useRovingList<TItem>({ query, groups, onSelect }: RovingListOpti
                 break;
             }
             case 'Tab': {
-                if (stops.length < 2) break;
-                event.preventDefault();
                 const next = nextStop(stops, activeIndex, event.shiftKey ? -1 : 1);
-                if (next?.loading === false) move(next.start);
+                if (next === undefined) break;
+                event.preventDefault();
+                if (!next.loading) move(next.start);
                 break;
             }
             case 'Enter': {

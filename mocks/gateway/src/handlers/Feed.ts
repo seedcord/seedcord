@@ -20,8 +20,7 @@ function fetchEvents(page: number, perPage: number): { items: FeedEvent[]; hasNe
 export const Feed = new Paginator({
     prefix: 'feed',
     source: new CursorSource((_ctx, page, perPage) => fetchEvents(page, perPage), { perPage: 5 }),
-    render: (view, controls) => [new FeedCard(view, controls).component],
-    ephemeral: true
+    render: (view, controls) => [new FeedCard(view, controls).component]
 });
 
 @ButtonRoute(Feed.cursor)

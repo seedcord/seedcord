@@ -7,6 +7,16 @@ import type { Skill } from '#src/skills';
 const DESCRIPTION =
     'Build a Discord bot with seedcord, a TypeScript framework for gateway and http bots, typed end to end. Covers picking a transport, declaring slash commands with generated option types, replying, components, gates, events, plugins, the CLI, and building for a server or Cloudflare Workers.';
 
+export const SEARCH_RULE =
+    'Before you write anything more than a plain reply, ask questions in the guide with `seedcord ask "<question>"`, or `pnpm dlx seedcord ask "<question>"` outside a project. `seedcord ask` also takes a pasted error or an error code like `3116`. The type-check and lint pass even when you hand-write something that seedcord already has.';
+
+export const CODEGEN_RULE =
+    '`seedcord codegen` writes the typed tables for slash commands, user and message context menus, emojis, and plugin keys. Run it after changing any of those.';
+
+export const SCAFFOLD_RULE = 'Run `pnpm create seedcord --help`, then scaffold the bot with every flag set.';
+
+export const DEV_RULE = `When a change is ready to try against Discord, run \`seedcord dev\` in the background without waiting to be asked, and keep its stdin open so you can send it commands. Ask the user to run the slash command, then read what \`seedcord dev\` logged, including any warnings. Without a terminal it logs JSON lines and takes commands on stdin, like \`{"do":"restart"}\`. ${GUIDE}/tooling/dev.md lists those commands.`;
+
 const BODY = `---
 name: seedcord
 description: ${DESCRIPTION}
@@ -22,11 +32,11 @@ metadata:
 
 ## 1. Read the rules
 
-Fetch ${GUIDE}/llms.txt. It holds every rule that stops you inventing seedcord, and the index of every page. seedcord is absent from training data, so anything you recall about it is invented.
+Fetch ${GUIDE}/llms.txt. It holds every rule that stops you inventing seedcord, and the index of every page.
 
 ## 2. Scaffold the project
 
-Run \`pnpm create seedcord\`. It asks where the project goes, which transport, and your bot token. Then it installs, formats, runs codegen, and makes a git commit.
+${SCAFFOLD_RULE} Every question that the interview asks has a flag, so passing them all skips the interview. By default it then installs, formats, runs codegen, and makes a git commit. Read the AGENTS.md that it writes.
 
 ## 3. Write a command
 
@@ -34,15 +44,17 @@ A command file declares the command. A handler class replies to it. Read ${GUIDE
 
 ## 4. Run codegen
 
-Run \`seedcord codegen\` after you add or change a command. The handler generics read the tables it writes.
+${CODEGEN_RULE}
 
 ## 5. Try it against Discord
 
-Run \`seedcord dev\` in the background. Without a terminal it prints each log line as JSON and takes commands on stdin, like \`{"do":"restart"}\`. Ask the user to run the command in Discord, then read what it logged. ${GUIDE}/tooling/dev.md lists the commands.
+${DEV_RULE}
 
 ## 6. Check every claim before you write it
 
-Fetch the page for the surface you are using. Every page answers at its own url plus \`.md\`, so ${GUIDE}/checks/gates.md is the Gates page.
+${SEARCH_RULE}
+
+Then fetch the page for the surface you are using. Every page answers at its own url plus \`.md\`, so ${GUIDE}/checks/gates.md is the Gates page.
 
 ## 7. Build for production
 

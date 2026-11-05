@@ -138,9 +138,9 @@ describe('handler gates', () => {
             guildId: 'g-1',
             channelId: 'c-1',
             memberRoleIds: ['r-1', 'r-2'],
-            memberPermissions: 2048n,
-            declaredRoute: 'slash:guarded'
+            memberPermissions: 2048n
         });
+        expect(seen?.dispatch.declaredRoute).toBe('slash:guarded');
     });
 
     it('reads the invoking user for a DM payload that carries no member', async () => {

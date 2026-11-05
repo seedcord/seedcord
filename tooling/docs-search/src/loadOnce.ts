@@ -2,12 +2,10 @@
 export function loadOnce<Args extends unknown[], Loaded>(
     load: (...args: Args) => Promise<Loaded>
 ): (...args: Args) => Promise<Loaded> {
-    let loading: Promise<Loaded> | undefined;
-    return (...args) => {
-        loading ??= load(...args).catch((error: unknown) => {
-            loading = undefined;
-            throw error;
-        });
-        return loading;
+    // cloudflare cancels a load when the client that started it disconnects. requests waiting on that load would hang
+    let loaded: { value: Loaded } | undefined;
+    return async (...args) => {
+        loaded ??= { value: await load(...args) };
+        return loaded.value;
     };
 }

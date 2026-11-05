@@ -26,6 +26,7 @@ That starts the dev server with hot reload{{#unless isGateway}} and opens a tunn
 {{/if}}
 | `{{ pm.run }} codegen` | regenerate `src/seedcord-gen.ts` |
 | `{{ pm.run }} make` | write a new command, button, select menu{{#if isGateway}}, modal, or event{{else}}, or modal{{/if}} from `templates/` |
+| `{{ pm.run }} ask "<question>"` | search the guide for a question, a pasted error, or an error code |
 {{#if isEdge}}
 | `{{ pm.run }} types` | regenerate the binding types in `.cloudflare/types/` |
 {{/if}}

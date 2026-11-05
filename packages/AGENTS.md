@@ -59,6 +59,6 @@ A change to an `./internal` entry gets a patch changeset once another package im
 
 ## Tests
 
-Tests live in `<package>/tests/` mirroring `src/`. Run `lint:fix`, then `tc`, then `test`.
+Tests live in `<package>/tests/` mirroring `src/`. Run `pnpm check --filter=<package>`.
 
 `id` on a discord.js structure is a prototype getter, so build a stub with `Object.create(proto)`. A plain object literal leaves `id` undefined.

@@ -5,7 +5,7 @@ export class Ping extends SlashHandler<'ping'> {
     public async execute(): Promise<void> {
         const roundtrip = Date.now() - timestampFromSnowflake(this.event.id);
         const lines = [
-            `### ${this.core.i18n.t('greet', { name: this.event.user.username })}`,
+            `### ${this.core.i18n.t('greet', { name: this.user.username })}`,
             `Roundtrip **${roundtrip}ms**`
         ];
 

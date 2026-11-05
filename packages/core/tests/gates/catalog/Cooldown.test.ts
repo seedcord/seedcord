@@ -2,6 +2,7 @@ import { isSeedcordError, SeedcordErrorCode } from '@seedcord/errors';
 import { describe, it, expect, vi } from 'vitest';
 
 import { Cooldown } from '#gates/catalog/Cooldown';
+import { defineEffectGate } from '#gates/Gate';
 import { runGates } from '#gates/runGates';
 import { OnCooldown } from '#notices/index';
 import { Notice } from '#stops/Notice';
@@ -32,7 +33,7 @@ function cdCtx(
         userId: ids.userId ?? 'u1',
         guildId: ids.guildId ?? 'g1',
         channelId: ids.channelId ?? 'c1',
-        declaredRoute: ids.declaredRoute ?? null
+        dispatch: { declaredRoute: ids.declaredRoute ?? null }
     } as unknown as GateContextBase;
 }
 
@@ -48,7 +49,7 @@ describe('Cooldown', () => {
     });
 
     it('charges the key on commit, not on check', async () => {
-        const charge = vi.fn();
+        const charge = vi.fn().mockReturnValue({ limited: false });
         await Cooldown(5).commit(cdCtx({ peek: () => ({ limited: false }), charge }));
         expect(charge).toHaveBeenCalledTimes(1);
     });
@@ -190,14 +191,17 @@ describe('Cooldown', () => {
         expect(String(peek.mock.calls[0]?.[0])).toContain(expected);
     });
 
-    // flips when the limiter gets an atomic reserve, the peek/charge split admits both rn
-    it.fails('admits exactly one of two requests racing the same key', async () => {
+    it('admits one of two requests racing the same key, and stops the later commits of the other', async () => {
         const rl = memoryRateLimiter();
-        const gate = Cooldown(60);
+        const laterCommit = vi.fn();
+        const gates = [Cooldown(60), defineEffectGate('Later', () => undefined, laterCommit)];
 
-        const results = await Promise.allSettled([runGates([gate], cdCtx(rl)), runGates([gate], cdCtx(rl))]);
-        const refused = results.filter((result) => result.status === 'rejected');
-        expect(refused).toHaveLength(1);
+        const settled = await Promise.allSettled([runGates(gates, cdCtx(rl)), runGates(gates, cdCtx(rl))]);
+        const refusals = settled.flatMap((result) => (result.status === 'rejected' ? [result.reason as unknown] : []));
+
+        expect(refusals).toHaveLength(1);
+        expect(refusals[0]).toBeInstanceOf(OnCooldown);
+        expect(laterCommit).toHaveBeenCalledTimes(1);
     });
 
     it('falls back to the global bucket when the scope value is missing', async () => {
@@ -206,7 +210,8 @@ describe('Cooldown', () => {
             core: { rateLimiter: { peek, charge: vi.fn() } },
             userId: null,
             guildId: 'g1',
-            channelId: 'c1'
+            channelId: 'c1',
+            dispatch: { declaredRoute: null }
         } as unknown as GateContextBase;
 
         await Cooldown(5).check(ctx);

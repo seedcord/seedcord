@@ -1,6 +1,6 @@
-import { DispatchContext } from '@seedcord/core';
+import { DispatchContext } from '@seedcord/core/internal';
 import { isSeedcordError, SeedcordErrorCode } from '@seedcord/errors';
-import { describe, expect, it } from 'vitest';
+import { describe, expect, expectTypeOf, it } from 'vitest';
 
 import { EventHandler } from '#handlers/event/EventHandler';
 
@@ -22,10 +22,17 @@ class Watcher extends EventHandler<Events.MessageCreate> {
     }
 }
 
-// justified: only a cast can pass a name outside ClientEvents
+class MixedReturns extends EventHandler<Events.MessageCreate | Events.MessageDelete> {
+    public async execute(): Promise<void> {
+        const result = await this.match({ messageCreate: () => 'created', messageDelete: () => 1 });
+        expectTypeOf(result).toEqualTypeOf<string | number>();
+    }
+}
+void MixedReturns;
+
 function watcherFiring(name: string): Watcher {
     const payload = [message] as unknown as ClientEvents[Events.MessageCreate];
-    return new Watcher(payload, core, new DispatchContext(`event:${name}`), name as Events.MessageCreate);
+    return new Watcher(payload, core, new DispatchContext('event', name));
 }
 
 describe('EventHandler.match', () => {

@@ -1,6 +1,5 @@
 'use client';
 
-import { useSearchHotkey } from '@seedcord/ui';
 import { createContext, use, useMemo, useState } from 'react';
 
 import type { ReactNode } from 'react';
@@ -20,7 +19,6 @@ export function useCommandPaletteOpen(): CommandPaletteOpen {
 
 export function CommandPaletteProvider({ children }: { children: ReactNode }): ReactNode {
     const [open, setOpen] = useState(false);
-    useSearchHotkey(() => setOpen((wasOpen) => !wasOpen));
     const value = useMemo(() => ({ open, setOpen }), [open]);
 
     return <CommandPaletteContext value={value}>{children}</CommandPaletteContext>;

@@ -25,13 +25,12 @@ import type {
 import type { EventFrequency, TypedConstructor } from '@seedcord/types';
 import type { Constructor } from 'type-fest';
 
-// typed construct parameters would exclude every subscriber that narrows them
+// structural because Subscriber is invariant in its keys
 /** @internal */
-export type StoredSubscriberCtor = Constructor<Subscriber<SubscriptionKey, CoreBase>, never[]>;
+export type StoredSubscriberCtor = Constructor<{ execute(): Promise<void> }, never[]>;
 
-/** @internal */
-export interface SubscriberRegistration {
-    readonly keys: readonly SubscriptionKey[];
+interface SubscriberRegistration {
+    readonly key: SubscriptionKey;
     readonly frequency: EventFrequency;
     readonly ctor: StoredSubscriberCtor;
 }
@@ -59,19 +58,18 @@ export class Bus extends TypedEventEmitter<SubscriptionTuples> {
 
     /** @internal keep this inside start(). a bad webhook url thrown outside it never resets the singleton guard */
     public [RegisterDefaults](): void {
-        this[RegisterSubscriber](registrationFor(UnknownException));
-        this[RegisterSubscriber](registrationFor(HandledException));
+        for (const ctor of [UnknownException, HandledException]) this[RegisterSubscriber](ctor);
     }
 
     /** @internal */
-    public [RegisterSubscriber](registration: SubscriberRegistration): void {
-        if (!this.probeWebhook(registration.ctor)) return;
+    public [RegisterSubscriber](ctor: StoredSubscriberCtor): void {
+        if (!this.probeWebhook(ctor)) return;
 
-        for (const key of registration.keys) {
-            let registrations = this.subscribersMap.get(key);
+        for (const registration of registrationsFor(ctor)) {
+            let registrations = this.subscribersMap.get(registration.key);
             if (!registrations) {
                 registrations = [];
-                this.subscribersMap.set(key, registrations);
+                this.subscribersMap.set(registration.key, registrations);
             }
             registrations.push(registration);
         }
@@ -89,10 +87,10 @@ export class Bus extends TypedEventEmitter<SubscriptionTuples> {
 
     /** @internal */
     public get [RegisteredCount](): number {
-        return [...this.subscribersMap.values()].reduce((total, entries) => total + entries.length, 0);
+        return new Set([...this.subscribersMap.values()].flat().map((entry) => entry.ctor)).size;
     }
 
-    /** @internal registration already dropped every reporter with no url set */
+    /** @internal registration already skipped every reporter with no url set */
     public async [VerifyWebhooks](): Promise<void> {
         const missing: string[] = [];
         await Promise.all(
@@ -208,7 +206,7 @@ export class Bus extends TypedEventEmitter<SubscriptionTuples> {
             // data matches this ctor's payload type because the registration keyed it to its subscriptions
             const Ctor = entry.ctor as TypedConstructor<typeof Subscriber>;
             name = Ctor.name;
-            await new Ctor(data, this.core).execute();
+            await new Ctor(data, this.core, subscriberName).execute();
         } catch (err) {
             this.logger.error(
                 `Error in subscriber ${paint.mute(String(subscriberName))} handler ${paint.sky.bold(name)}:`,
@@ -219,10 +217,9 @@ export class Bus extends TypedEventEmitter<SubscriptionTuples> {
 }
 
 // every caller already checked that the Subscribe metadata is there
-/** @internal */
-export function registrationFor(ctor: StoredSubscriberCtor): SubscriberRegistration {
-    const meta = Reflect.getMetadata(SubscribeMetadataKey, ctor) as SubscribeMetadataEntry;
-    return { keys: [meta.subscriber], frequency: meta.frequency ?? 'on', ctor };
+export function registrationsFor(ctor: StoredSubscriberCtor): SubscriberRegistration[] {
+    const entries = Reflect.getMetadata(SubscribeMetadataKey, ctor) as SubscribeMetadataEntry[];
+    return entries.map(({ key, frequency }) => ({ key, frequency, ctor }));
 }
 
 /** @internal */

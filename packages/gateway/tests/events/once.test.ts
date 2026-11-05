@@ -35,6 +35,36 @@ describe('once event handlers', () => {
         expect(member.setNickname).toHaveBeenCalledTimes(1);
     });
 
+    it("uses a subclass's frequency when its parent lists the same event", async ({ testEnv }) => {
+        await testEnv.createFile(
+            'events/OnceChild.ts',
+            `
+            import { EventHandler, RegisterEvent } from '${seedcordPath}';
+            import { Events } from 'discord.js';
+
+            @RegisterEvent(['messageCreate'])
+            class Parent extends EventHandler<Events.MessageCreate> {
+                public async execute() {
+                    await this.match({ messageCreate: (message) => message.reply('ran') });
+                }
+            }
+
+            @RegisterEvent(['messageCreate', { frequency: 'once' }])
+            export class OnceChild extends Parent {}
+            `
+        );
+
+        await using seedcord = new Seedcord(testConfig({ events: testEnv.resolvePath('events') }));
+        const events = dispatcherOf(seedcord);
+        await events.init();
+
+        const message = { reply: vi.fn() };
+        await events.processEvent('messageCreate', [message]);
+        await events.processEvent('messageCreate', [message]);
+
+        expect(message.reply).toHaveBeenCalledTimes(1);
+    });
+
     it('runs a once handler exactly once when the same event is emitted concurrently', async ({ testEnv }) => {
         await testEnv.createFile(
             'events/OnceConcurrent.ts',

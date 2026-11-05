@@ -466,6 +466,10 @@ describe('DevRunner run', () => {
 });
 
 describe('runPlain, with no terminal to answer prompts', () => {
+    afterEach(() => {
+        vi.useRealTimers();
+    });
+
     it('restarts the bot when a save needs a restart', async () => {
         const store = new DevStore();
         let sessions = 0;
@@ -479,28 +483,62 @@ describe('runPlain, with no terminal to answer prompts', () => {
         await running;
     });
 
-    it('accepts a command refresh', async () => {
+    it('refreshes commands once, after a burst of saves stops', async () => {
         const store = new DevStore();
-        const runtime = fakeRuntime({ default: readyBot }, { type: 'command-update-prompt', files: ['ban.ts'] });
+        const runtime = fakeRuntime({ default: readyBot });
         const refresh = vi.spyOn(runtime, 'refreshCommands');
         const runner = makeRunner({ store, runtime: () => runtime });
 
         const running = runPlain(store, runner, new PassThrough());
-        await vi.waitFor(() => expect(refresh).toHaveBeenCalledWith(true));
+        await vi.waitFor(() => expect(store.getState().phase).toBe('running'));
+
+        vi.useFakeTimers({ toFake: ['setTimeout', 'clearTimeout'] });
+        store.apply({ type: 'command-update-prompt', files: ['ban.ts'] });
+        vi.advanceTimersByTime(1500);
+        store.apply({ type: 'command-update-prompt', files: ['ban.ts', 'kick.ts'] });
+        vi.advanceTimersByTime(1500);
+        expect(refresh).not.toHaveBeenCalled();
+
+        vi.advanceTimersByTime(500);
+        expect(refresh).toHaveBeenCalledExactlyOnceWith(true);
+
         await runner.quit();
         await running;
     });
 
-    it('runs restart, disconnect and quit lines from the input and ignores the rest', async () => {
+    it.each(['restart', 'disconnect'] as const)('forgets a pending command refresh on %s', async (leave) => {
+        const store = new DevStore();
+        const runner = makeRunner({ store, runtime: () => fakeRuntime({ default: readyBot }) });
+        const refresh = vi.spyOn(runner, 'refreshCommands');
+
+        const running = runPlain(store, runner, new PassThrough());
+        await vi.waitFor(() => expect(store.getState().phase).toBe('running'));
+
+        vi.useFakeTimers({ toFake: ['setTimeout', 'clearTimeout'] });
+        store.apply({ type: 'command-update-prompt', files: ['ban.ts'] });
+        await runner[leave]();
+        await vi.waitFor(() => expect(store.getState().commandUpdatePrompt).toBeNull());
+
+        vi.advanceTimersByTime(2000);
+        expect(refresh).not.toHaveBeenCalled();
+
+        await runner.quit();
+        await running;
+    });
+
+    it('runs restart, codegen, disconnect and quit lines from the input and ignores the rest', async () => {
         const store = new DevStore();
         const runner = makeRunner({ store });
         const restart = vi.spyOn(runner, 'restart');
         const disconnect = vi.spyOn(runner, 'disconnect');
+        const writeTypes = vi.spyOn(runner, 'writeTypes');
         const input = new PassThrough();
 
         const running = runPlain(store, runner, input);
         input.write('not json\nnull\n{"do":"nope"}\n{"do":"constructor"}\n{"do":"restart"}\n');
         await vi.waitFor(() => expect(restart).toHaveBeenCalledOnce());
+        input.write('{"do":"codegen"}\n');
+        await vi.waitFor(() => expect(writeTypes).toHaveBeenCalledOnce());
         input.write('{"do":"disconnect"}\n');
         await vi.waitFor(() => expect(disconnect).toHaveBeenCalledOnce());
         input.write('{"do":"quit"}\n');

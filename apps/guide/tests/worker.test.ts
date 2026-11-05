@@ -1,9 +1,13 @@
 import { existsSync, readFileSync } from 'node:fs';
 import { resolve } from 'node:path';
 
-import { embedding, GUIDE_SECTIONS_PATH, GUIDE_VECTORS_PATH } from '@seedcord/docs-search';
+import { NEXT_GUIDE } from '@seedcord/brand';
+import { embedding, GUIDE_SECTIONS_PATH, GUIDE_VECTORS_PATH, QUESTION_RULE } from '@seedcord/docs-search';
+import { GUIDE as guideSite } from '@seedcord/ui/sites';
 import { parse } from 'jsonc-parser';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
+
+import { GuideAnswers } from '#lib/GuideAnswers';
 
 // eslint-disable-next-line no-restricted-imports -- the app root has no alias
 import handler from '../worker';
@@ -65,10 +69,10 @@ function asking(path: string, accept: string): Request {
 
 describe('search indexing', () => {
     it('is off on every host except production', async () => {
-        const preview = await send(new Request('https://preview.seedcord.org/guide/'), serving(html()));
+        const next = await send(new Request('https://next.seedcord.org/guide/'), serving(html()));
         const production = await get('/', serving(html()));
 
-        expect(preview.headers.get('x-robots-tag')).toBe('noindex, nofollow');
+        expect(next.headers.get('x-robots-tag')).toBe('noindex, nofollow');
         expect(production.headers.get('x-robots-tag')).toBeNull();
     });
 });
@@ -342,6 +346,15 @@ describe('the ask endpoint', () => {
         ]);
     });
 
+    it('embeds the name of a certain error code and leaves a number that only might be one', async () => {
+        const env = searching();
+
+        await get('/api/ask?q=%5B3116%5D', env);
+        await new GuideAnswers(env).ask('port 3102 is busy');
+
+        expect(env.embedded).toEqual([embedding.query('CliDependencyMissing'), embedding.query('port 3102 is busy')]);
+    });
+
     it('answers a repeated question from the cache without embedding it again', async () => {
         const env = searching();
 
@@ -370,6 +383,36 @@ describe('the ask endpoint', () => {
         expect(response.status).toBe(503);
         expect(response.headers.get('retry-after')).toBe(String(7 * 60 * 60));
         expect(response.headers.get('access-control-allow-origin')).toBe('*');
+        expect(await response.json()).toEqual({ error: 'The guide search hit its daily limit. Try again in 7 hours.' });
+    });
+
+    it('answers another worker with results it can link to', async () => {
+        const env = searching();
+
+        await expect(new GuideAnswers(env).ask(' how long is  a cooldown ')).resolves.toEqual({
+            hits: [
+                {
+                    path: '/checks/cooldown#the-duration',
+                    tab: 'Checks',
+                    page: 'Cooldowns',
+                    heading: 'The duration',
+                    url: guideSite.at('/checks/cooldown#the-duration'),
+                    by: 'meaning'
+                }
+            ]
+        });
+        await expect(new GuideAnswers(env).ask('k')).rejects.toThrow(QUESTION_RULE);
+        expect(env.embedded).toHaveLength(1);
+    });
+
+    it('tells another worker when the daily allowance resets', async () => {
+        vi.useFakeTimers({ now: new Date('2026-11-01T17:00:00Z'), toFake: ['Date'] });
+        const usedUp = new Error('4006: you have used up your daily free allocation of 10,000 neurons');
+
+        const refused = await new GuideAnswers(searching({ aiError: usedUp })).ask('button');
+        vi.useRealTimers();
+
+        expect(refused).toEqual({ retryAfterSeconds: 7 * 60 * 60 });
     });
 
     it('refuses once the visitor runs out of searches', async () => {
@@ -380,14 +423,23 @@ describe('the ask endpoint', () => {
         expect(response.status).toBe(429);
         expect(env.embedded).toEqual([]);
 
-        // wrangler validates this file on every deploy
-        const config = parse(
-            readFileSync(resolve(import.meta.dirname, '../wrangler.jsonc'), 'utf8')
-        ) as Unstable_RawConfig;
-        const periods = [config, config.env?.preview].map(
+        const config = wranglerConfig();
+        const periods = [config, config.env?.next].map(
             (environment) => environment?.ratelimits?.find(({ name }) => name === 'ASK_LIMIT')?.simple.period
         );
         const retryAfter = Number(response.headers.get('retry-after'));
         expect(periods).toEqual([retryAfter, retryAfter]);
     });
+
+    it('serves the next environment from the address the CLI searches', () => {
+        expect(wranglerConfig().env?.next?.routes).toContainEqual({
+            pattern: NEXT_GUIDE.label,
+            zone_name: 'seedcord.org'
+        });
+    });
 });
+
+// wrangler validates this file on every deploy
+function wranglerConfig(): Unstable_RawConfig {
+    return parse(readFileSync(resolve(import.meta.dirname, '../wrangler.jsonc'), 'utf8')) as Unstable_RawConfig;
+}

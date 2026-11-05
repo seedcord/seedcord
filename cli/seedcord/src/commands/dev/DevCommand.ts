@@ -14,9 +14,10 @@ import { LogStore } from '#ui/stores/LogStore';
 
 import { DevRunner } from './DevRunner';
 import { DevSignals } from './DevSignals';
+import { routeConsoleToLogs } from './routeConsoleToLogs';
 import { runPlain } from './runPlain';
 
-import type { Command } from '@commander-js/extra-typings';
+import type { Command, CommandUnknownOpts } from '@commander-js/extra-typings';
 
 export class DevCommand extends BaseCommand {
     private readonly logger = cliLogger('Dev');
@@ -25,49 +26,43 @@ export class DevCommand extends BaseCommand {
         super('dev', 'Run the bot from the config file');
     }
 
-    public register(program: Command): void {
-        program
-            .command(this.name)
-            .description(this.description)
-            .action(async () => {
-                profileStdout();
-                const store = new DevStore();
-                const stateFolder = new StateFolder(process.cwd(), this.logger);
-                const runner = DevRunner.create(store, stateFolder);
+    public register(program: Command): CommandUnknownOpts {
+        return this.define(program).action(async () => {
+            profileStdout();
+            const store = new DevStore();
+            const stateFolder = new StateFolder(process.cwd(), this.logger);
+            const runner = DevRunner.create(store, stateFolder);
 
-                try {
-                    // ink takes Ctrl-C itself in raw mode
-                    using _signals = DevSignals.own(() => void runner.quit());
-                    await (isInteractive()
-                        ? this.runDevApp(store, runner, stateFolder)
-                        : runPlain(store, runner, process.stdin));
-                } catch (error: unknown) {
-                    this.logger.error(`${WORDMARK} dev failed`, error);
-                    process.exitCode = 1;
-                }
+            try {
+                // ink takes Ctrl-C itself in raw mode
+                using _signals = DevSignals.own(() => void runner.quit());
+                using _console = routeConsoleToLogs();
+                await (isInteractive()
+                    ? this.runDevApp(store, runner, stateFolder)
+                    : runPlain(store, runner, process.stdin));
+            } catch (error: unknown) {
+                this.logger.error(`${WORDMARK} dev failed`, error);
+                process.exitCode = 1;
+            }
 
-                // the in-ui logs went with the unmount
-                await this.printLogLocation();
+            // the in-ui logs went with the unmount
+            await this.printLogLocation();
 
-                // ink's raw stdin and vite's dev server keep the event loop alive after teardown
-                process.exit();
-            });
-    }
-
-    // process.exit() drops whatever a piped stdout has not flushed
-    private async write(text: string): Promise<void> {
-        return new Promise((resolve) => {
-            process.stdout.write(text, () => {
-                resolve();
-            });
+            // ink's raw stdin and vite's dev server keep the event loop alive after teardown
+            process.exit();
         });
     }
 
     private async printLogLocation(): Promise<void> {
-        await this.write(`${WORDMARK} dev stopped. logs: logs/\n`);
+        this.logger.info(`${WORDMARK} dev stopped. logs: logs/`);
 
         const report = profileReport();
-        if (report !== null) await this.write(`${report}\n`);
+        if (report !== null) this.logger.info(report);
+
+        // process.exit() discards whatever a piped stdout has not flushed
+        await new Promise((resolve) => {
+            process.stdout.write('', resolve);
+        });
     }
 
     private async runDevApp(store: DevStore, runner: DevRunner, stateFolder: StateFolder): Promise<void> {
@@ -103,7 +98,7 @@ export class DevCommand extends BaseCommand {
             // the alternate screen restores the terminal and scrollback on quit, without ink's ESC[3J purge
             {
                 exitOnCtrlC: false,
-                // LogStore turns console calls into log records
+                // routeConsoleToLogs turns console calls into log records
                 patchConsole: false,
                 alternateScreen: true,
                 onRender: ({ renderTime }) => {

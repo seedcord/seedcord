@@ -61,22 +61,14 @@ function combobox(): HTMLElement {
     return screen.getByRole('combobox');
 }
 
-class StubResizeObserver {
-    observe(): void {}
-    unobserve(): void {}
-    disconnect(): void {}
-}
-
 describe('CommandPaletteDialog', () => {
     beforeEach(() => {
         searchHook.mockReturnValue({ results: RESULTS, status: 'success' });
-        vi.stubGlobal('ResizeObserver', StubResizeObserver);
         window.HTMLElement.prototype.scrollIntoView = vi.fn();
         window.HTMLElement.prototype.scrollTo = vi.fn();
     });
 
     afterEach(() => {
-        vi.unstubAllGlobals();
         vi.clearAllMocks();
     });
 
@@ -137,6 +129,19 @@ describe('CommandPaletteDialog', () => {
         fireEvent.keyDown(combobox(), { key: 'ArrowDown' });
         fireEvent.keyDown(combobox(), { key: 'Enter' });
         expect(handleSelect).toHaveBeenCalledWith(RESULTS[1]);
+    });
+
+    it('shows the old options while new results load, and opens one only on a click', () => {
+        searchHook.mockReturnValue({ results: RESULTS, status: 'loading' });
+        const handleSelect = vi.fn();
+        renderDialog(makeController({ handleSelect }));
+
+        fireEvent.keyDown(combobox(), { key: 'Enter' });
+        expect(handleSelect).not.toHaveBeenCalled();
+        expect(combobox()).not.toHaveAttribute('aria-activedescendant');
+
+        fireEvent.click(screen.getByRole('option', { name: 'Gamma' }));
+        expect(handleSelect).toHaveBeenCalledWith(RESULTS[2]);
     });
 
     it('click selects the option', () => {

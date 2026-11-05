@@ -14,10 +14,10 @@ import type { APIContainerComponent } from 'discord.js';
 interface PrivateDispatcher {
     maps: Record<InteractionKind, Map<string, unknown>>;
     init(): Promise<void>;
-    handleButton(interaction: unknown): Promise<void>;
+    handleInteraction(interaction: unknown): Promise<void>;
 }
 
-// justified: buttonMap and handleButton are private on the dispatcher
+// justified: the route maps and handleInteraction are private on the dispatcher
 function dispatcherOf(instance: Seedcord): PrivateDispatcher {
     return interactionsOf(instance.bot) as unknown as PrivateDispatcher;
 }
@@ -27,6 +27,7 @@ function dispatcherOf(instance: Seedcord): PrivateDispatcher {
 function fakeButton(customId: string) {
     return {
         customId,
+        componentType: 2,
         isAutocomplete: () => false,
         isButton: () => true,
         isChatInputCommand: () => false,
@@ -95,7 +96,7 @@ describe('Paginator end-to-end through the real dispatcher', () => {
 
         // a click minted from page 2's wire (pageCursor is deterministic, same prefix + layout) routes through.
         const click = fakeButton(pageCursor('e2e-letters').encode({ page: 2, slot: 0 }));
-        await controller.handleButton(click);
+        await controller.handleInteraction(click);
 
         expect(click.deferUpdate).toHaveBeenCalledOnce();
         // the bare edit rewrites @original (the source message) via editReply in the deferred-update state

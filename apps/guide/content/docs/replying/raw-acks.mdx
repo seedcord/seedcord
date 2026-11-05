@@ -1,6 +1,6 @@
 ---
 title: Raw acks
-description: Reply through discord.js's own methods on this.event, and see what seedcord stops tracking when you do.
+description: Call discord.js or Discord's API directly from a handler, and see what seedcord stops tracking when you reply that way.
 ---
 
 Lets assume you want your ban command to end by asking the server whether to make it permanent, in a poll. Every seedcord reply carries the ComponentsV2 flag, and Discord forbids a poll on a message that has it.
@@ -65,10 +65,11 @@ The rule resolves the receiver's type, which is how it reports `this.event.reply
 
 ## When you actually need one
 
-- **An embed or a poll.** The ComponentsV2 flag on every seedcord reply forbids both. `this.event.reply()` sends them.
+- **An embed or a poll.** The ComponentsV2 flag on every seedcord reply forbids both. `this.event.reply()` sends them on gateway, and `this.api.interactions.reply()` sends them on http.
+- **A link with a preview.** Discord doesn't show a preview for a link in a Text Display, so send the link as `content` through the same call. If the link goes to your own site, [`discord-component-embed`](ref:discord-component-embed) replaces that preview with a card you build.
 - **A click you collected yourself.** Gateway only. `message.awaitMessageComponent()` hands you a component interaction that never reached seedcord's dispatcher, so no handler and no sender exist for it. That click is its own interaction. Answering it leaves your handler's state where it was. A collector needs a process that stays alive between interactions, but an http bot answers each interaction in its own request.
 
-seedcord has a replacement for each. Text Display and Container are Discord's replacements for `content` and `embeds` under the flag. seedcord routes a click by its customId to a [`ButtonHandler`](ref:gateway/ButtonHandler), for example, which any process can answer. A collector runs in the process that opened it, so a restart drops every prompt still waiting.
+Apart from a poll and a link preview, seedcord has a replacement for each. Text Display and Container are Discord's replacements for `content` and `embeds` under the flag. seedcord routes a click by its customId to a [`ButtonHandler`](ref:gateway/ButtonHandler), for example, which any process can answer. A collector runs in the process that opened it, so a restart drops every prompt still waiting.
 
 For the interaction that seedcord dispatched, pass the handler's [`sender`](ref:gateway/RepliableHandler.sender) to your helper. It's public. When your helper replies through it, the ack state your handler reads moves too.
 
@@ -111,9 +112,21 @@ export async function acknowledgeClick(
 
 seedcord ships [`getConfirmation`](ref:gateway/getConfirmation) for the common confirm-then-act case, which collects the click and answers it for you.
 
+## Calling Discord's API directly
+
+Some Discord calls have nothing to do with replying, like editing a member or adding an emoji to a server.
+
+<Callout type="transport" only="gateway">
+
+`this.core.bot.client` holds the discord.js client, and you make these calls through it.
+
+</Callout>
+
 <Callout type="transport" only="http">
 
-Http adds [`this.api`](ref:http/RepliableHandler.api), a typed REST client over `core.rest` from `@discordjs/core/http-only`. Use it for Discord calls beyond the reply surface, such as `this.api.guilds.editMember()`.
+For http, you make these through [`this.api`](ref:http/RepliableHandler.api), a typed REST client over `core.rest` from `@discordjs/core/http-only`, as in `this.api.guilds.editMember()`.
+
+To pass `this.api` to a helper, import its type, `API`, from `@seedcord/http`. `core.rest` works the same way with `REST`. If you install `@discordjs/core` or `@discordjs/rest` yourself, your copy can resolve to a different version, and TypeScript then rejects the value because the two types don't match.
 
 The callbacks on `api.interactions` answer the interaction directly, which leaves the state stale the same way. The lint rule reads discord.js interaction types alone, so those calls pass it.
 

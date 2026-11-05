@@ -1,10 +1,9 @@
 import 'reflect-metadata';
 
-import { interactionMiddleware, MiddlewareRegistry } from '@seedcord/core/internal';
+import { emptyRouteMaps, interactionMiddleware, MiddlewareRegistry } from '@seedcord/core/internal';
 import { Envapter, PortableSource } from 'envapt';
 import { afterEach, describe, expect, it } from 'vitest';
 
-import { emptyRouteMaps } from '#src/dispatch/resolve';
 import { buildEngine } from '#src/engine';
 import { testCore } from '#tests/helpers/core';
 import { createSigner } from '#tests/helpers/ed25519';

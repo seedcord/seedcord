@@ -54,12 +54,12 @@ export class Ping extends SlashHandler<'ping'> {
         // ---cut---
         this.logger.debug(
             '%s ran %s',
-            this.event.user.username,
+            this.user.username,
             this.event.commandName
         );
 
         this.logger.info('replying', {
-            userId: this.event.user.id
+            userId: this.user.id
         });
 
         try {

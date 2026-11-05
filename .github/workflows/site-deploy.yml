@@ -7,8 +7,8 @@ on:
         description: The app folder under apps/ to deploy
         required: true
         type: string
-      preview:
-        description: Deploy to the preview environment at preview.seedcord.org
+      next:
+        description: Deploy to the next environment at next.seedcord.org
         type: boolean
         default: false
     secrets:
@@ -44,34 +44,14 @@ jobs:
         run: pnpm turbo build --filter="@seedcord/$APP..."
         env:
           APP: ${{ inputs.app }}
-          NEXT_PUBLIC_SITE_ORIGIN: ${{ inputs.preview && 'https://preview.seedcord.org' || 'https://seedcord.org' }}
+          NEXT_PUBLIC_SITE_ORIGIN: ${{ inputs.next && 'https://next.seedcord.org' || 'https://seedcord.org' }}
 
-      - name: Restore guide embeddings
+      - name: Guide embeddings
         if: inputs.app == 'guide'
-        uses: actions/cache/restore@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
+        uses: $/.github/actions/guide-embeddings
         with:
-          path: ~/.cache/seedcord/guide-embeddings
-          key: guide-embeddings-${{ github.run_id }}
-          restore-keys: guide-embeddings-
-
-      - name: Embed guide sections
-        if: inputs.app == 'guide'
-        run: pnpm guide:embed
-        env:
-          CLOUDFLARE_ACCOUNT_ID: ${{ vars.CLOUDFLARE_ACCOUNT_ID }}
-          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
-
-      - name: Hash guide embeddings
-        if: inputs.app == 'guide'
-        id: embeddings
-        run: echo "key=$(find ~/.cache/seedcord/guide-embeddings -name '*.bin' -printf '%f\n' | sort | sha256sum | cut -c1-16)" >> "$GITHUB_OUTPUT"
-
-      - name: Save guide embeddings
-        if: inputs.app == 'guide'
-        uses: actions/cache/save@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
-        with:
-          path: ~/.cache/seedcord/guide-embeddings
-          key: guide-embeddings-${{ steps.embeddings.outputs.key }}
+          cloudflare_account_id: ${{ vars.CLOUDFLARE_ACCOUNT_ID }}
+          cloudflare_api_token: ${{ secrets.CLOUDFLARE_API_TOKEN }}
 
       - name: Deploy
         uses: cloudflare/wrangler-action@ebbaa1584979971c8614a24965b4405ff95890e0 # v4.0.0
@@ -80,4 +60,4 @@ jobs:
           accountId: ${{ vars.CLOUDFLARE_ACCOUNT_ID }}
           workingDirectory: apps/${{ inputs.app }}
           packageManager: pnpm
-          command: ${{ inputs.preview && 'deploy --env preview' || 'deploy' }}
+          command: ${{ inputs.next && 'deploy --env next' || 'deploy' }}

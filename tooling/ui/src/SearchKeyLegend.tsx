@@ -1,16 +1,8 @@
-import { ArrowDown, ArrowUp, CornerDownLeft } from 'lucide-react';
-
-import { Icon } from './Icon';
-import { Kbd } from './Kbd';
+import { Cap, keyCap } from './KeyCap';
 import { cn } from './lib/cn';
 
-import type { IconComponent } from './Icon';
+import type { KeyCap } from './KeyCap';
 import type { ReactElement } from 'react';
-
-interface KeyCap {
-    label: string;
-    icon?: IconComponent;
-}
 
 interface KeyHint {
     keys: readonly KeyCap[];
@@ -18,25 +10,10 @@ interface KeyHint {
 }
 
 const ROW_HINTS: readonly KeyHint[] = [
-    {
-        keys: [
-            { label: 'Up', icon: ArrowUp },
-            { label: 'Down', icon: ArrowDown }
-        ],
-        action: 'move'
-    },
-    { keys: [{ label: 'Enter', icon: CornerDownLeft }], action: 'open' }
+    { keys: [keyCap('ArrowUp'), keyCap('ArrowDown')], action: 'move' },
+    { keys: [keyCap('Enter')], action: 'open' }
 ];
-const GROUP_HINTS: readonly KeyHint[] = [...ROW_HINTS, { keys: [{ label: 'Tab' }], action: 'next group' }];
-
-function Cap({ label, icon }: KeyCap): ReactElement {
-    if (icon === undefined) return <Kbd size="sm">{label}</Kbd>;
-    return (
-        <Kbd size="sm" aria-label={label}>
-            <Icon icon={icon} size={10} />
-        </Kbd>
-    );
-}
+const GROUP_HINTS: readonly KeyHint[] = [...ROW_HINTS, { keys: [keyCap('Tab')], action: 'next group' }];
 
 export function SearchKeyLegend({ hasGroups }: { hasGroups: boolean }): ReactElement {
     return (
@@ -44,8 +21,8 @@ export function SearchKeyLegend({ hasGroups }: { hasGroups: boolean }): ReactEle
             {(hasGroups ? GROUP_HINTS : ROW_HINTS).map(({ keys, action }) => (
                 <li key={action} className={cn('flex items-center gap-1.5')}>
                     <span className={cn('flex items-center gap-1')}>
-                        {keys.map((key) => (
-                            <Cap key={key.label} {...key} />
+                        {keys.map((cap) => (
+                            <Cap key={cap.label} cap={cap} />
                         ))}
                     </span>
                     {action}

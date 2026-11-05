@@ -1,15 +1,19 @@
-import { ComponentDefsBrand, decodeComponentRoute } from '@seedcord/core/internal';
-import { SeedcordErrorCode } from '@seedcord/errors';
-import { SeedcordTypeError } from '@seedcord/errors/internal';
+import { ComponentDefsBrand, decodeComponentRoute, runCase } from '@seedcord/core/internal';
 
 import { InteractionHandler } from '#handlers/interaction/InteractionHandler';
 
 import type { SentMessage } from '#reply/ReplySender';
-import type { DecodedComponentRoute, HasComponentDefs, MatchCases, SingleParams } from '@seedcord/core/internal';
+import type {
+    DecodedComponentRoute,
+    HasComponentDefs,
+    MatchCases,
+    MatchResult,
+    OnlyCases,
+    SingleParams
+} from '@seedcord/core/internal';
 import type { AnyCustomId } from '@seedcord/custom-id';
 import type { ReplyResponse } from '@seedcord/types';
 import type { APIMessageComponentInteraction, APIModalSubmitInteraction } from 'discord-api-types/v10';
-import type { Promisable } from 'type-fest';
 
 /**
  * Shared base the customId-routed component handlers extend on the HTTP transport.
@@ -49,15 +53,8 @@ export abstract class ComponentHandler<
         return this.decoded;
     }
 
-    /**
-     * The matched custom-ID prefix, such as `approve`, without encoded params.
-     *
-     * @throws A **StaleCustomId** when the wire was encoded under an older shape.
-     * @throws An **InvalidCustomId** when the wire is corrupt.
-     */
-    protected get route(): Defs[number]['prefix'] {
-        return this.decodedRoute.prefix;
-    }
+    /** The matched custom-ID prefix, such as `approve`, without encoded params. */
+    declare protected readonly route: Defs[number]['prefix'];
 
     /**
      * The decoded params of the single route this handler is registered for.
@@ -82,6 +79,7 @@ export abstract class ComponentHandler<
      * decodes the wire before it runs a case.
      *
      * @param cases - One callback per registered route, keyed by prefix.
+     * @typeParam Ret - The type that every case must return. Leave it out to get the union of what the cases return.
      * @returns The result of the case that ran.
      * @throws A **SeedcordTypeError** with `MatchCaseMissing` when the wire's prefix doesn't have a case.
      * @throws A **StaleCustomId** when the wire was encoded under an older shape.
@@ -100,18 +98,10 @@ export abstract class ComponentHandler<
      * }
      * ```
      */
-    protected async match<Ret>(cases: MatchCases<Defs, Ret>): Promise<Ret> {
+    protected async match<Ret = never, Cases extends MatchCases<Defs, Ret> = MatchCases<Defs, Ret>>(
+        cases: OnlyCases<Cases, MatchCases<Defs, Ret>>
+    ): Promise<MatchResult<Ret, Cases>> {
         const { prefix, params } = this.decodedRoute;
-        // justified: MatchCases is keyed by prefix literals, the Record cast indexes it with the runtime prefix.
-        const callback = Object.hasOwn(cases, prefix)
-            ? (cases as Record<string, (params: Record<string, unknown>) => Promisable<Ret>>)[prefix]
-            : undefined;
-        if (!callback)
-            throw new SeedcordTypeError(SeedcordErrorCode.MatchCaseMissing, [
-                this.constructor.name,
-                'component route',
-                prefix
-            ]);
-        return await callback(params);
+        return await runCase<MatchResult<Ret, Cases>>(this, cases, 'component route', prefix, params);
     }
 }

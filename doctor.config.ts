@@ -124,6 +124,70 @@ export default defineConfig({
                 // react 19 calls the cleanup a ref callback returns
                 files: ['**/useSidebarPersistence.tsx'],
                 rules: ['react-doctor/effect-needs-cleanup']
+            },
+            {
+                // prompts ask one question at a time and the dev loop runs one session after another
+                files: ['**/make/InputQuestions.ts', '**/dev/DevRunner.ts'],
+                rules: ['react-doctor/async-await-in-loop']
+            },
+            {
+                // ink reads two keys left in the stream together as one pasted string
+                files: ['**/PromptTerminal.ts'],
+                rules: ['react-doctor/async-await-in-loop']
+            },
+            {
+                // import order sets the order of the generated types
+                files: ['**/modules/CommandScanner.ts', '**/codegen/PluginTypesCollector.ts'],
+                rules: ['react-doctor/async-await-in-loop']
+            },
+            {
+                // bulk deletes go one call at a time to stay under discord's rate limit
+                files: ['**/commands/DiscordSession.ts'],
+                rules: ['react-doctor/async-await-in-loop']
+            },
+            {
+                // FolderBucket reads a failed open as a missing page, which would report a good link as broken
+                files: ['**/export/LinkChecker.ts'],
+                rules: ['react-doctor/async-await-in-loop']
+            },
+            {
+                // the step printer shows these lines in order
+                files: ['**/codegen/CodegenRunner.ts'],
+                rules: ['react-doctor/server-sequential-independent-await']
+            },
+            {
+                files: ['**/modules/ModuleExports.ts'],
+                rules: ['react-doctor/js-combine-iterations']
+            },
+            {
+                // at most 7 keys
+                files: ['**/fromPayload.ts'],
+                rules: ['react-doctor/js-combine-iterations', 'react-doctor/js-set-map-lookups']
+            },
+            {
+                // a rel attribute holds a few tokens
+                files: ['src/check.ts'],
+                rules: ['react-doctor/js-set-map-lookups']
+            },
+            {
+                // scriptSafeJson escapes < before the json reaches the script tag
+                files: ['**/react.index.ts'],
+                rules: ['react-doctor/dangerous-html-sink']
+            },
+            {
+                // freePort closes this socket as soon as it reads the port number
+                files: ['**/tunnel/CloudflaredTunnel.ts'],
+                rules: ['react-doctor/local-rpc-native-bridge-risk']
+            },
+            {
+                // a malformed NEXT_PUBLIC_SITE_ORIGIN should stop the build
+                files: ['src/sites.ts'],
+                rules: ['react-doctor/no-unguarded-throwing-parse-call']
+            },
+            {
+                // outcome comes out of the reducer, which can't call onEnd itself
+                files: ['**/usePrompt.ts'],
+                rules: ['react-doctor/no-pass-data-to-parent']
             }
         ]
     },

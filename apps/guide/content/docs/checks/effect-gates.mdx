@@ -128,11 +128,11 @@ declare const SpendCredit: EffectGate<
 // ---cut---
 @Gated(
     GuildOnly(),
+    Cooldown('1m'),
     or(
         and(SpendCredit, RequireRole('221439658686939136')),
         OwnerOnly()
-    ),
-    Cooldown('1m')
+    )
 )
 @SlashRoute('history')
 export class History extends SlashHandler<'history'> {
@@ -147,16 +147,16 @@ A bot owner who lacks that role runs it. Read the checks down, then the commits.
 ```txt output
 1. every check, left to right
 ├─ GuildOnly            pass
-├─ or
-│  ├─ and
-│  │  ├─ SpendCredit    pass, commit queued
-│  │  └─ RequireRole    refuse
-│  │
-│  │  the and refuses, so this gate refuses
-│  │  seedcord drops the queued commit
-│  │
-│  └─ OwnerOnly         pass, so the or passes
-└─ Cooldown             pass, commit queued
+├─ Cooldown             pass, commit queued
+└─ or
+   ├─ and
+   │  ├─ SpendCredit    pass, commit queued
+   │  └─ RequireRole    refuse
+   │
+   │  the and refuses, so this gate refuses
+   │  seedcord drops the queued commit
+   │
+   └─ OwnerOnly         pass, so the or passes
 
 2. every queued commit
 └─ Cooldown             charges the slot
@@ -198,3 +198,5 @@ export const CountUse = defineEffectGate(
 ## Cooldown
 
 [`Cooldown`](ref:core/Cooldown) is an effect gate. It reads the window in `check` and charges the slot in `commit`, which is why a later refusal never records a use.
+
+If two requests arrive at the same moment, both can pass a `check`. [When a use is charged](/checks/cooldown#when-a-use-is-charged) shows how `Cooldown` refuses the one that goes over `limit` in its `commit`.

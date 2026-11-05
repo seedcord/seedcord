@@ -8,8 +8,10 @@ import type { ReadAsset } from '#src/readAsset';
 
 const VERSION_CHARS = 16;
 const HEX = 16;
-// measured on every 10th guide section: real questions scored 0.53 to 0.69, keyboard mash at most 0.26
-const MIN_SCORE = 0.3;
+
+// the weakest real question in a 231 query test scored 0.413. "tsx jsx components" scored 0.376
+// 0.40 hides "embed". 10 rarely covered error codes lose their rows at this value
+const MIN_SCORE = 0.38;
 
 async function versionOf(...files: (string | ArrayBuffer)[]): Promise<string> {
     const digest = new Uint8Array(await crypto.subtle.digest('SHA-256', await new Blob(files).arrayBuffer()));

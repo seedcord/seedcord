@@ -7,7 +7,11 @@ function yesOrNo(answer: boolean): string {
 export const installStep: Step<'install'> = {
     key: 'install',
     label: 'install',
-    flag: { name: 'install', description: 'install dependencies', noFlag: 'skip installing dependencies' },
+    flag: {
+        name: 'install',
+        description: 'install dependencies',
+        noFlag: 'add dependencies to package.json without installing them'
+    },
     answerWithoutTerminal: true,
     ask: (_answers, prompter) => prompter.confirm({ message: 'Install dependencies now?', initial: true }),
     shown: yesOrNo

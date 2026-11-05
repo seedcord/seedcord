@@ -1,7 +1,7 @@
 {
     "name": "@seedcord/http",
     "type": "module",
-    "version": "0.12.0-next.0",
+    "version": "0.12.0",
     "description": "HTTP interactions transport for seedcord bots",
     "keywords": [
         "discord",
@@ -72,12 +72,13 @@
         "type-fest": "catalog:deps"
     },
     "peerDependencies": {
+        "@discordjs/builders": "catalog:peer",
         "envapt": "catalog:peer",
         "typescript": "catalog:consumerTypes"
     },
     "devDependencies": {
         "@cloudflare/vitest-pool-workers": "^0.22.0",
-        "@discordjs/builders": "catalog:deps",
+        "@discordjs/builders": "catalog:peer",
         "@seedcord/eslint-config": "workspace:^",
         "@seedcord/tsconfig": "workspace:^",
         "@seedcord/tsdown-config": "workspace:^",

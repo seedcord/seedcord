@@ -1,13 +1,11 @@
 ---
 name: react19
-description: Use this when writing React components in seedcord. Covers the React 19 APIs in use here, including use() for context, ref as a plain prop, useTransition with async, useActionState, and useOptimistic, plus what's deprecated or removed. This is a client-only Vite SPA. Server actions and RSC do not apply.
+description: Use this when writing React components in seedcord. Covers the React 19 APIs in use here, including use() for context, ref as a plain prop, useTransition with async, useActionState, and useOptimistic, plus what's deprecated or removed.
 ---
 
 # React 19: Seedcord Conventions
 
-This repo runs **React 19.x.x** across all packages. It is a **client-only Vite SPA** with no server components and no RSC. State: Zustand (client) + TanStack Query (server).
-
-**Form strategy:** Complex forms (checkout, auth) use `react-hook-form` + Zod for field-level validation and per-input error state. Simple one-action mutations ("set default address", "cancel order") should use `useTransition` with async or `useActionState`, the native React 19 pattern. Don't reach for react-hook-form when there's no validation to manage.
+The three sites in `apps/` run **Next.js 16 and React 19**. A component is a server component until its file opens with `'use client'`. `apps/docs` keeps client state in Zustand. The CLI's Ink components use the same React.
 
 ---
 
@@ -243,7 +241,7 @@ React 19 hoists `<title>`, `<meta>`, and `<link>` to `<head>` automatically. Ded
 function ProductPage({ product }: { product: Product }) {
     return (
         <article>
-            <title>{product.name} — Seedcord</title>
+            <title>{product.name} | Seedcord</title>
             <meta name="description" content={product.subtitle} />
             <h1>{product.name}</h1>
         </article>
@@ -270,14 +268,6 @@ function ProductPage({ product }: { product: Product }) {
 
 ---
 
-## React Compiler (recommended, pending install)
+## React Compiler
 
-`eslint-plugin-react-compiler` is **not currently installed** in the seedcord apps. When it is added to `apps/{docs,guide,home}`, run it at warning level and treat its warnings as errors. They indicate components that won't benefit from automatic memoization.
-
-Key rules the compiler enforces:
-
-- No mutation of props or state during render
-- Hooks called in consistent order (no conditional hooks)
-- Stable identities for values used in deps arrays
-
-Once the compiler is installed, **do not** add `useMemo` or `useCallback` manually unless the compiler flags a specific case. The compiler handles memoization automatically for compliant components. Until then, prefer simple, correctly-shaped components over scattering manual memo hooks "just in case."
+The React Compiler is **not installed** in the seedcord apps. Prefer simple, correctly-shaped components over scattering manual memo hooks "just in case."

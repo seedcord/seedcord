@@ -1,21 +1,32 @@
 'use client';
 
-import { GuideMatches, GuideSearch, loadOnce, parseQuestion, TooManySearches } from '@seedcord/docs-search';
+import {
+    GuideMatches,
+    GuideSearch,
+    loadOnce,
+    parseQuestion,
+    SearchUnavailable,
+    SiteUnreachable
+} from '@seedcord/docs-search';
+import { GUIDE } from '@seedcord/ui/sites';
 import { useEffect, useMemo, useState } from 'react';
 
-import type { GuideResult } from '@seedcord/docs-search';
+import { ERROR_CODES } from '#lib/errorCodes';
+
+import type { CodeMentions, GuideResult } from '@seedcord/docs-search';
 import type { TaggedUnion } from 'type-fest';
 
 const TYPING_PAUSE_MS = 250;
 
 const NO_RESULTS: GuideResult[] = [];
+const NO_CODES: CodeMentions = { swapped: [], hints: [] };
 
-const search = new GuideSearch();
+const search = new GuideSearch(GUIDE);
 
-const loadMatches = loadOnce(() => GuideMatches.load());
+const loadMatches = loadOnce(() => GuideMatches.load(GUIDE));
 
 type States = {
-    pending: Record<never, never>;
+    pending: { results: GuideResult[] };
     failed: { notice: string };
     done: { results: GuideResult[] };
 };
@@ -28,18 +39,20 @@ export type ResultGroup = { label: string } & GroupState;
 
 type Loaded = TaggedUnion<'status', Pick<States, 'pending' | 'failed'> & { ready: { matches: GuideMatches } }>;
 
-interface Answer {
-    question: string;
-    state: State<'failed' | 'done'>;
+type Answer = State<'failed' | 'done'>;
+
+interface GuideSearchState {
+    groups: ResultGroup[];
+    codes: CodeMentions;
 }
 
-const PENDING = { status: 'pending' } as const;
-const NOT_ASKED: GroupState = { status: 'done', results: NO_RESULTS };
+const PENDING: State<'pending'> = { status: 'pending', results: NO_RESULTS };
+const NOT_ASKED: State<'done'> = { status: 'done', results: NO_RESULTS };
+const NO_ANSWERS: ReadonlyMap<string, Answer> = new Map();
 
 function noticeFor(error: unknown, results: string): string {
-    if (error instanceof TooManySearches) return error.message;
-    // fetch rejects with a TypeError when the request never reaches the server
-    if (error instanceof TypeError) return `${results} can't load without a network connection.`;
+    if (error instanceof SearchUnavailable) return error.message;
+    if (error instanceof SiteUnreachable) return `${results} can't load without a network connection.`;
     return `${results} are unavailable right now. Close and reopen search to try again.`;
 }
 
@@ -48,14 +61,10 @@ function matchesState(typed: string, loaded: Loaded): GroupState {
     return loaded.status === 'ready' ? { status: 'done', results: loaded.matches.match(typed) } : loaded;
 }
 
-function relatedState(question: string | undefined, answer: Answer | null): GroupState {
-    if (question === undefined) return NOT_ASKED;
-    return answer?.question === question ? answer.state : PENDING;
-}
-
-function withoutShown(state: GroupState, shown: ReadonlySet<string>): GroupState {
-    if (state.status !== 'done') return state;
-    return { status: 'done', results: state.results.filter((result) => !shown.has(result.path)) };
+function relatedRows(state: GroupState, shown: ReadonlySet<string>, loaded: Loaded): GroupState {
+    if (state.status === 'failed') return state;
+    const results = state.results.filter((result) => !shown.has(result.path));
+    return { ...state, results: loaded.status === 'ready' ? loaded.matches.withOpenings(results) : results };
 }
 
 export function emptyMessage(typed: string, groups: readonly ResultGroup[]): string | undefined {
@@ -85,26 +94,27 @@ function useMatches(open: boolean): Loaded {
     return loaded;
 }
 
-export function useGuideSearch(typed: string, open: boolean): ResultGroup[] {
+export function useGuideSearch(typed: string, open: boolean): GuideSearchState {
     const loaded = useMatches(open);
-    const [answer, setAnswer] = useState<Answer | null>(null);
+    const [answers, setAnswers] = useState(NO_ANSWERS);
+    const [lastRows, setLastRows] = useState(NO_RESULTS);
     const question = parseQuestion(typed);
-    const answered = answer?.state.status === 'done' && answer.question === question;
+    const answer = question === undefined ? NOT_ASKED : answers.get(question);
+    const answered = answer?.status === 'done';
+
+    if (answered && answer.results !== lastRows) setLastRows(answer.results);
 
     useEffect(() => {
         if (question === undefined || !open || answered) return undefined;
 
         const replaced = new AbortController();
+        const remember = (state: Answer): void => {
+            if (!replaced.signal.aborted) setAnswers((known) => new Map(known).set(question, state));
+        };
         const timer = setTimeout(() => {
             search.search(question, replaced.signal).then(
-                (results) => {
-                    if (replaced.signal.aborted) return;
-                    setAnswer({ question, state: { status: 'done', results } });
-                },
-                (error: unknown) => {
-                    if (replaced.signal.aborted) return;
-                    setAnswer({ question, state: { status: 'failed', notice: noticeFor(error, 'Related results') } });
-                }
+                (results) => remember({ status: 'done', results }),
+                (error: unknown) => remember({ status: 'failed', notice: noticeFor(error, 'Related results') })
             );
         }, TYPING_PAUSE_MS);
         return () => {
@@ -113,15 +123,17 @@ export function useGuideSearch(typed: string, open: boolean): ResultGroup[] {
         };
     }, [question, open, answered]);
 
-    const related = relatedState(question, answer);
     const matched = useMemo(() => matchesState(typed, loaded), [typed, loaded]);
 
-    return useMemo(() => {
+    const groups = useMemo(() => {
         const shown = new Set(matched.status === 'done' ? matched.results.map((result) => result.path) : []);
-        const groups: ResultGroup[] = [
+        const related = answer ?? { status: 'pending', results: lastRows };
+        const all: ResultGroup[] = [
             { label: 'Matches', ...matched },
-            { label: 'Related', ...withoutShown(related, shown) }
+            { label: 'Related', ...relatedRows(related, shown, loaded) }
         ];
-        return groups.filter((group) => group.status !== 'done' || group.results.length > 0);
-    }, [matched, related]);
+        return all.filter((group) => group.status !== 'done' || group.results.length > 0);
+    }, [matched, answer, lastRows, loaded]);
+
+    return { groups, codes: question === undefined ? NO_CODES : ERROR_CODES.read(question) };
 }

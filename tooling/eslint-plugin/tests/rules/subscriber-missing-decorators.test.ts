@@ -9,7 +9,7 @@ ruleTester.run('subscriber-missing-decorators', rule, {
     valid: [
         dedent`
             import { Subscriber, Subscribe } from 'seedcord';
-            @Subscribe('unknownException')
+            @Subscribe(['unknownException'])
             export class LogSub extends Subscriber<'unknownException'> {}
         `,
         // an aliased decorator import still counts
@@ -22,12 +22,12 @@ ruleTester.run('subscriber-missing-decorators', rule, {
         dedent`
             import { Subscriber } from 'seedcord';
             import { Subscribe } from './decorators/Subscribe';
-            @Subscribe('unknownException')
+            @Subscribe(['unknownException'])
             export class LogSub extends Subscriber<'unknownException'> {}
         `,
         dedent`
             import { WebhookLog, Subscribe, WebhookUrl } from 'seedcord';
-            @Subscribe('memberBanned')
+            @Subscribe(['memberBanned'])
             @WebhookUrl('BAN_LOG_WEBHOOK_URL')
             export class BanLog extends WebhookLog<'memberBanned'> {}
         `,
@@ -39,7 +39,7 @@ ruleTester.run('subscriber-missing-decorators', rule, {
         dedent`
             import { Subscriber, Subscribe } from 'seedcord';
             abstract class BaseSub extends Subscriber<'unknownException'> {}
-            @Subscribe('unknownException')
+            @Subscribe(['unknownException'])
             export class LogSub extends BaseSub {}
         `,
         // a same-named base from a non-seedcord module
@@ -60,7 +60,7 @@ ruleTester.run('subscriber-missing-decorators', rule, {
         {
             code: dedent`
                 import { WebhookLog, Subscribe } from 'seedcord';
-                @Subscribe('memberBanned')
+                @Subscribe(['memberBanned'])
                 export class BanLog extends WebhookLog<'memberBanned'> {}
             `,
             errors: [{ messageId: 'missingWebhookUrl' }]
@@ -78,7 +78,7 @@ ruleTester.run('subscriber-missing-decorators', rule, {
             code: dedent`
                 import { Subscriber } from 'seedcord';
                 import { Subscribe } from 'some-other-lib';
-                @Subscribe('unknownException')
+                @Subscribe(['unknownException'])
                 export class LogSub extends Subscriber<'unknownException'> {}
             `,
             errors: [{ messageId: 'missingSubscribe' }]
@@ -88,7 +88,7 @@ ruleTester.run('subscriber-missing-decorators', rule, {
             code: dedent`
                 import { WebhookLog } from 'seedcord';
                 import { Subscribe, WebhookUrl } from 'some-other-lib';
-                @Subscribe('memberBanned')
+                @Subscribe(['memberBanned'])
                 @WebhookUrl('BAN_LOG_WEBHOOK_URL')
                 export class BanLog extends WebhookLog<'memberBanned'> {}
             `,
@@ -108,7 +108,7 @@ ruleTester.run('subscriber-missing-decorators', rule, {
             code: dedent`
                 import { Subscribe } from 'seedcord';
                 import { BaseReporter } from './project-bases';
-                @Subscribe('unknownException')
+                @Subscribe(['unknownException'])
                 export class BanLog extends BaseReporter {}
             `,
             errors: [{ messageId: 'missingWebhookUrl' }]
@@ -132,7 +132,7 @@ ruleTester.run('subscriber-missing-decorators', rule, {
             code: dedent`
                 import { WebhookLog, Subscribe } from 'seedcord';
                 export abstract class BaseLog extends WebhookLog<'memberBanned'> {}
-                @Subscribe('memberBanned')
+                @Subscribe(['memberBanned'])
                 export class BanLog extends BaseLog {}
             `,
             errors: [{ messageId: 'missingWebhookUrl' }]

@@ -1,15 +1,21 @@
-import { AutocompleteRouteBrand, reportedWrite } from '@seedcord/core/internal';
-import { SeedcordErrorCode } from '@seedcord/errors';
-import { SeedcordTypeError } from '@seedcord/errors/internal';
+import { AutocompleteRouteBrand, runCase } from '@seedcord/core/internal';
 
-import { slashRouteOf } from '#bUtilities/miscellaneous/slashRouteOf';
 import { BaseHandler } from '#src/handlers/BaseHandler';
 
 import type { Core } from '#interfaces/Core';
 import type { AutocompleteOptions, DispatchContext, SlashRegistry } from '@seedcord/core';
-import type { AutocompletableNames, CacheFor, ChoiceValueOf, EntryFor, FocusedField } from '@seedcord/core/internal';
-import type { ApplicationCommandOptionChoiceData, AutocompleteInteraction, CacheType } from 'discord.js';
-import type { Promisable } from 'type-fest';
+import type {
+    AutocompletableNames,
+    AutocompleteResponder,
+    CacheFor,
+    CaseReturn,
+    ChoiceValueOf,
+    EntryFor,
+    FocusedField,
+    MatchResult,
+    OnlyCases
+} from '@seedcord/core/internal';
+import type { ApplicationCommandOptionChoiceData, AutocompleteInteraction, CacheType, User } from 'discord.js';
 
 type FocusedCases<Route extends keyof SlashRegistry, Ret> = {
     [Name in AutocompletableNames<Route>]: (
@@ -17,7 +23,7 @@ type FocusedCases<Route extends keyof SlashRegistry, Ret> = {
         respond: (
             choices: readonly ApplicationCommandOptionChoiceData<ChoiceValueOf<EntryFor<Route, Name>>>[]
         ) => Promise<void>
-    ) => Promisable<Ret>;
+    ) => CaseReturn<Ret>;
 };
 
 /**
@@ -51,8 +57,21 @@ export abstract class AutocompleteHandler<
     declare readonly [AutocompleteRouteBrand]?: Route;
 
     // keep this ctor. inheriting BaseHandler's protected one collapses HandlerConstructor to never.
-    constructor(event: AutocompleteInteraction<Cache>, core: Core, dispatch: DispatchContext) {
+    constructor(
+        event: AutocompleteInteraction<Cache>,
+        core: Core,
+        dispatch: DispatchContext,
+        responder: AutocompleteResponder<ApplicationCommandOptionChoiceData>
+    ) {
         super(event, core, dispatch, 'interactions');
+        this.#responder = responder;
+    }
+
+    readonly #responder: AutocompleteResponder<ApplicationCommandOptionChoiceData>;
+
+    /** The user who sent this interaction. */
+    protected get user(): User {
+        return this.event.user;
     }
 
     private decodedFocused?: { name: string; value: string };
@@ -79,6 +98,7 @@ export abstract class AutocompleteHandler<
      * cases must cover every autocompletable field. A missing field or an unknown key is a compile error.
      *
      * @param cases - One handler per autocompletable field, keyed by field name.
+     * @typeParam Ret - The type that every case must return. Leave it out to get the union of what the cases return.
      * @returns The result of the case that ran.
      * @throws A **SeedcordTypeError** with `MatchCaseMissing` when the focused field doesn't have a case. Only a stale-deployed command can send one.
      *
@@ -95,40 +115,22 @@ export abstract class AutocompleteHandler<
      * }
      * ```
      */
-    protected async match<Ret>(cases: FocusedCases<Route, Ret>): Promise<Ret> {
+    protected async match<Ret = never, Cases extends FocusedCases<Route, Ret> = FocusedCases<Route, Ret>>(
+        cases: OnlyCases<Cases, FocusedCases<Route, Ret>>
+    ): Promise<MatchResult<Ret, Cases>> {
         const { name, value } = this.focused;
         const respond = (choices: readonly ApplicationCommandOptionChoiceData[]): Promise<void> =>
             this.respond(choices);
-        // justified: FocusedCases is keyed by field literals, so the Record cast indexes it with the runtime field name.
-        type Case = (
-            value: string,
-            respond: (choices: readonly ApplicationCommandOptionChoiceData[]) => Promise<void>
-        ) => Promisable<Ret>;
-        const callback = Object.hasOwn(cases, name) ? (cases as Record<string, Case>)[name] : undefined;
-        if (!callback)
-            throw new SeedcordTypeError(SeedcordErrorCode.MatchCaseMissing, [
-                this.constructor.name,
-                'focused field',
-                name
-            ]);
-        return await callback(value, respond);
+        return await runCase<MatchResult<Ret, Cases>>(this, cases, 'focused field', name, value, respond);
     }
 
     /** Send autocomplete suggestions, callback type 8. Prefer {@link match}, which restricts each field's choices to its declared type. */
-    protected async respond(choices: readonly ApplicationCommandOptionChoiceData[]): Promise<void> {
-        await reportedWrite(
-            { bus: this.core.bus, dispatch: this.dispatch, interactionId: this.event.id },
-            'respond',
-            () =>
-                // eslint-disable-next-line @seedcord/no-raw-interaction-acks -- this is the base respond and calls djs directly
-                this.event.respond(choices)
-        );
+    protected respond(choices: readonly ApplicationCommandOptionChoiceData[]): Promise<void> {
+        return this.#responder.respond(choices);
     }
 
     /** The selected command's path, such as `search/docs`, without the interaction-kind prefix. */
-    protected get route(): Route {
-        return slashRouteOf(this.event) as Route;
-    }
+    declare protected readonly route: Route;
 
     /**
      * The already-entered options on this command, restricted to the kinds Discord resolves during autocomplete

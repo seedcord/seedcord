@@ -73,20 +73,20 @@ describe('CreateOutput', () => {
 
     it('prints a failed command and its output under the row, leaving the row to say it failed', async () => {
         const { stdout, text } = captured();
-        const failing = new CreateOutput(['install'], stdout)
+        const failing = new CreateOutput(['deps'], stdout)
             .stepRows()
-            .run('install', () => Promise.reject(new CommandFailed('pnpm add envapt', ['ERR_PNPM_FETCH_404'])));
+            .run('deps', () => Promise.reject(new CommandFailed('pnpm add envapt', ['ERR_PNPM_FETCH_404'])));
 
         await expect(failing).rejects.toThrow();
 
-        expect(text()).toMatch(/✘ install .*\n\s+│ pnpm add envapt\n\s+│ ERR_PNPM_FETCH_404\n$/);
+        expect(text()).toMatch(/✘ deps .*\n\s+│ pnpm add envapt\n\s+│ ERR_PNPM_FETCH_404\n$/);
     });
 
     it('prints a failed step as a warning when there are no rows', async () => {
         const { stdout, text } = captured();
-        const failing = new CreateOutput(['install'], stdout)
+        const failing = new CreateOutput(['deps'], stdout)
             .plainSteps()
-            .run('install', () => Promise.reject(new Error('`pnpm add` failed.\nERR_PNPM_FETCH_404')));
+            .run('deps', () => Promise.reject(new Error('`pnpm add` failed.\nERR_PNPM_FETCH_404')));
 
         await expect(failing).rejects.toThrow();
 
@@ -96,8 +96,8 @@ describe('CreateOutput', () => {
     it('marks a skipped step as skipped', () => {
         const { stdout, text } = captured();
 
-        new CreateOutput(['install'], stdout).stepRows().skip('install');
+        new CreateOutput(['deps'], stdout).stepRows().skip('deps');
 
-        expect(text()).toMatch(/install\s+skipped/);
+        expect(text()).toMatch(/deps\s+skipped/);
     });
 });
