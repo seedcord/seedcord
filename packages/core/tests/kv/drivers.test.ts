@@ -227,6 +227,28 @@ describe('a driver that throws', () => {
             cause: down
         });
     });
+
+    it('leaves the key usable for calls queued after a failed set', async () => {
+        const down = new Error('store down');
+        let failNextSet = true;
+        class FlakyDriver extends MemoryDriver {
+            public override set(key: string, value: string, ttlMs?: number): void {
+                if (!failNextSet) return super.set(key, value, ttlMs);
+                failNextSet = false;
+                throw down;
+            }
+        }
+        const notes = new Kv(new FlakyDriver()).collection<string>('note');
+
+        const failed = notes.set('k', 'lost');
+        const reading = notes.get('k');
+        const writing = notes.set('k', 'kept');
+
+        await expect(failed).rejects.toMatchObject({ cause: down });
+        await expect(reading).resolves.toBeUndefined();
+        await writing;
+        await expect(notes.get('k')).resolves.toBe('kept');
+    });
 });
 
 describe('a driver that writes in two steps', () => {
