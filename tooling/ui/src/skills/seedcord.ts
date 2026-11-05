@@ -13,7 +13,7 @@ export const SEARCH_RULE =
 export const CODEGEN_RULE =
     '`seedcord codegen` writes the typed tables for slash commands, user and message context menus, emojis, and plugin keys. Run it after changing any of those.';
 
-export const DEV_RULE = `To try a change against Discord, run \`seedcord dev\` in the background, ask the user to run the slash command, then read what \`seedcord dev\` logged. Without a terminal it logs JSON lines and takes commands on stdin, like \`{"do":"restart"}\`. ${GUIDE}/tooling/dev.md lists those commands.`;
+export const DEV_RULE = `When a change is ready to try against Discord, run \`seedcord dev\` in the background without waiting to be asked, and keep its stdin open so you can send it commands. Ask the user to run the slash command, then read what \`seedcord dev\` logged, including any warnings. Without a terminal it logs JSON lines and takes commands on stdin, like \`{"do":"restart"}\`. ${GUIDE}/tooling/dev.md lists those commands.`;
 
 const BODY = `---
 name: seedcord

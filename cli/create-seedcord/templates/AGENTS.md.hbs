@@ -50,7 +50,7 @@ Never import from a seedcord path ending in `/internal`, like `@seedcord/core/in
 
 ## Trying a change
 
-`{{ pm.run }} dev` runs the bot against Discord and swaps in a handler when you save it. When you start it without a terminal, it prints each log line as JSON and takes commands on stdin, like `{"do":"restart"}`. Run it in the background, ask the user to run the command in Discord, then read the lines it logged. <https://seedcord.org/guide/tooling/dev.md> lists the commands.
+`{{ pm.run }} dev` runs the bot against Discord and swaps in a handler when you save it. When you start it without a terminal, it prints each log line as JSON and takes commands on stdin, like `{"do":"restart"}`. When a change is ready to try, run it in the background without waiting to be asked, and keep its stdin open so you can send those commands. Ask the user to run the command in Discord, then read the lines it logged, including any warnings. <https://seedcord.org/guide/tooling/dev.md> lists the commands.
 
 ## Before you call it done
 
