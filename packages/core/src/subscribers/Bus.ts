@@ -49,16 +49,16 @@ const loggerSlot = Symbol('seedcord:bus:logger');
  * Accessed via `core.bus`. Do not construct it directly.
  */
 export class Bus extends TypedEventEmitter<SubscriptionTuples> {
-    private readonly logger = new Logger('Subscribers', { channel: 'subscribers' });
+    readonly #logger = new Logger('Subscribers', { channel: 'subscribers' });
 
     /** @internal */
-    readonly [loggerSlot]: Logger = this.logger;
+    readonly [loggerSlot]: Logger = this.#logger;
 
-    private readonly subscribersMap = new Map<SubscriptionKey, SubscriberRegistration[]>();
-    private readonly onceRuns = new OnceTracker();
+    readonly #subscribersMap = new Map<SubscriptionKey, SubscriberRegistration[]>();
+    readonly #onceRuns = new OnceTracker();
     // url -> env keys
-    private readonly webhookProbes = new Map<string, string[]>();
-    private onSubscriberRun?: ((run: Promise<void>) => void) | undefined;
+    readonly #webhookProbes = new Map<string, string[]>();
+    #onSubscriberRun?: ((run: Promise<void>) => void) | undefined;
 
     constructor(protected core: CoreBase) {
         super();
@@ -71,13 +71,13 @@ export class Bus extends TypedEventEmitter<SubscriptionTuples> {
 
     /** @internal */
     public [RegisterSubscriber](ctor: StoredSubscriberCtor): void {
-        if (!this.probeWebhook(ctor)) return;
+        if (!this.#probeWebhook(ctor)) return;
 
         for (const registration of registrationsFor(ctor)) {
-            let registrations = this.subscribersMap.get(registration.key);
+            let registrations = this.#subscribersMap.get(registration.key);
             if (!registrations) {
                 registrations = [];
-                this.subscribersMap.set(registration.key, registrations);
+                this.#subscribersMap.set(registration.key, registrations);
             }
             registrations.push(registration);
         }
@@ -85,8 +85,8 @@ export class Bus extends TypedEventEmitter<SubscriptionTuples> {
 
     /** @internal */
     public [UnregisterSubscriber](ctor: StoredSubscriberCtor, keys?: readonly SubscriptionKey[]): void {
-        for (const key of keys ?? [...this.subscribersMap.keys()]) {
-            const registrations = this.subscribersMap.get(key);
+        for (const key of keys ?? [...this.#subscribersMap.keys()]) {
+            const registrations = this.#subscribersMap.get(key);
             if (!registrations) continue;
             const index = registrations.findIndex((entry) => entry.ctor === ctor);
             if (index !== -1) registrations.splice(index, 1);
@@ -95,18 +95,18 @@ export class Bus extends TypedEventEmitter<SubscriptionTuples> {
 
     /** @internal */
     public get [RegisteredCount](): number {
-        return new Set([...this.subscribersMap.values()].flat().map((entry) => entry.ctor)).size;
+        return new Set([...this.#subscribersMap.values()].flat().map((entry) => entry.ctor)).size;
     }
 
     /** @internal registration already skipped every reporter with no url set */
     public async [VerifyWebhooks](): Promise<void> {
         const missing: string[] = [];
         await Promise.all(
-            [...this.webhookProbes].map(async ([url, envKeys]) => {
+            [...this.#webhookProbes].map(async ([url, envKeys]) => {
                 const result = await WebhookLog.senderFor(url).verify();
                 if (result === 'missing') missing.push(...envKeys);
                 else if (result === 'unreachable')
-                    this.logger.warn(
+                    this.#logger.warn(
                         `could not verify webhook at ${envKeys.map((key) => paint.amber.bold(key)).join(', ')}`
                     );
             })
@@ -116,18 +116,18 @@ export class Bus extends TypedEventEmitter<SubscriptionTuples> {
     }
 
     // true means the class registers
-    private probeWebhook(ctor: StoredSubscriberCtor): boolean {
+    #probeWebhook(ctor: StoredSubscriberCtor): boolean {
         if (!(ctor.prototype instanceof WebhookLog)) return true;
 
         const envKey = WebhookLog.envKeyOf(ctor);
         const url = WebhookLog.urlOf(envKey);
         if (url === null) {
-            this.logger.warn(`${paint.sky.bold(ctor.name)} is off because ${paint.amber.bold(envKey)} is not set`);
+            this.#logger.warn(`${paint.sky.bold(ctor.name)} is off because ${paint.amber.bold(envKey)} is not set`);
             return false;
         }
-        const envKeys = this.webhookProbes.get(url) ?? [];
+        const envKeys = this.#webhookProbes.get(url) ?? [];
         if (!envKeys.includes(envKey)) envKeys.push(envKey);
-        this.webhookProbes.set(url, envKeys);
+        this.#webhookProbes.set(url, envKeys);
         return true;
     }
 
@@ -151,7 +151,7 @@ export class Bus extends TypedEventEmitter<SubscriptionTuples> {
         event: KeyOfSubscribers,
         data: AllSubscriptions[KeyOfSubscribers]
     ): boolean {
-        return this.dispatchKey(event, data);
+        return this.#dispatchKey(event, data);
     }
 
     /**
@@ -170,46 +170,46 @@ export class Bus extends TypedEventEmitter<SubscriptionTuples> {
         event: KeyOfSubscribers,
         data: AllSubscriptions[KeyOfSubscribers]
     ): boolean {
-        return this.dispatchKey(event, data);
+        return this.#dispatchKey(event, data);
     }
 
     /** @internal the http engine passes each run to the request that published it */
     public set [OnSubscriberRun](listener: (run: Promise<void>) => void) {
-        this.onSubscriberRun = listener;
+        this.#onSubscriberRun = listener;
     }
 
-    private dispatchKey<KeyOfSubscribers extends SubscriptionKey>(
+    #dispatchKey<KeyOfSubscribers extends SubscriptionKey>(
         event: KeyOfSubscribers,
         data: AllSubscriptions[KeyOfSubscribers]
     ): boolean {
-        const run = this.processSubscriber(event, data);
-        this.onSubscriberRun?.(run);
+        const run = this.#processSubscriber(event, data);
+        this.#onSubscriberRun?.(run);
         // justified: a generic key can't reduce SubscriptionTuples[K], but data is this event's payload by the signature
         return this.emitSafe(event, ...([data] as SubscriptionTuples[KeyOfSubscribers]));
     }
 
     protected override onListenerError(error: unknown, event: string | symbol): void {
-        this.logger.error(`listener for ${String(event)} threw`, error);
+        this.#logger.error(`listener for ${String(event)} threw`, error);
     }
 
-    private async processSubscriber<KeyOfSubscribers extends SubscriptionKey>(
+    async #processSubscriber<KeyOfSubscribers extends SubscriptionKey>(
         subscriberName: KeyOfSubscribers,
         data: AllSubscriptions[KeyOfSubscribers]
     ): Promise<void> {
-        const registrations = this.subscribersMap.get(subscriberName);
+        const registrations = this.#subscribersMap.get(subscriberName);
         if (!registrations) return;
 
         const pending = registrations.reduce<Promise<void>[]>((acc, entry) => {
             // claimed before awaiting so a re-entrant publish can't run it twice mid-flight
-            if (!this.onceRuns.claim(entry, subscriberName)) return acc;
-            acc.push(this.runSubscriber(entry, subscriberName, data));
+            if (!this.#onceRuns.claim(entry, subscriberName)) return acc;
+            acc.push(this.#runSubscriber(entry, subscriberName, data));
             return acc;
         }, []);
 
         await Promise.allSettled(pending);
     }
 
-    private async runSubscriber<KeyOfSubscribers extends SubscriptionKey>(
+    async #runSubscriber<KeyOfSubscribers extends SubscriptionKey>(
         entry: SubscriberRegistration,
         subscriberName: KeyOfSubscribers,
         data: AllSubscriptions[KeyOfSubscribers]
@@ -222,7 +222,7 @@ export class Bus extends TypedEventEmitter<SubscriptionTuples> {
             name = Ctor.name;
             await new Ctor(data, this.core, subscriberName).execute();
         } catch (err) {
-            this.logger.error(
+            this.#logger.error(
                 `Error in subscriber ${paint.mute(String(subscriberName))} handler ${paint.sky.bold(name)}:`,
                 err
             );

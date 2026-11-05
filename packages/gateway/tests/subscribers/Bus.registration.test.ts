@@ -1,5 +1,5 @@
 import { DiscordAPIError, REST } from '@discordjs/rest';
-import { busLoggerOf, VerifyWebhooks, SubscriberLoader } from '@seedcord/core/internal';
+import { busLoggerOf, RegisteredCount, VerifyWebhooks, SubscriberLoader } from '@seedcord/core/internal';
 import { describe, expect, afterAll, afterEach, vi, type MockInstance } from 'vitest';
 
 import { Seedcord } from '#src/Seedcord';
@@ -34,10 +34,6 @@ function discordRejectsWebhookGet(error: Error): MockInstance<REST['get']> {
 const unknownWebhook = (): DiscordAPIError =>
     new DiscordAPIError({ message: 'Unknown Webhook', code: 10_015 }, 10_015, 404, 'GET', 'url', {});
 
-interface PrivateBus {
-    subscribersMap: Map<string, { ctor: unknown }[]>;
-}
-
 describe('Bus webhook reporter registration', () => {
     afterEach(() => {
         vi.restoreAllMocks();
@@ -68,10 +64,8 @@ describe('Bus webhook reporter registration', () => {
         const warnSpy = vi.spyOn(busLoggerOf(seedcord.bus), 'warn');
         await loaderOf(seedcord).init();
 
-        // justified: PrivateBus exposes the private subscribersMap for assertion
-        const bus = seedcord.bus as unknown as PrivateBus;
-        // the default UnknownException only, the url-less reporter is skipped
-        expect(bus.subscribersMap.get('unknownException')).toHaveLength(1);
+        // UnknownException and HandledException. the url-less reporter is skipped
+        expect(seedcord.bus[RegisteredCount]).toBe(2);
         expect(warnSpy).toHaveBeenCalledWith(expect.stringContaining('UNSET_REPORTER_WEBHOOK_URL'));
     });
 
