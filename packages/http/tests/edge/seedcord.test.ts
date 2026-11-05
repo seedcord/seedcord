@@ -299,8 +299,22 @@ describe('the edge Seedcord', () => {
         const release = Promise.withResolvers<undefined>();
         const signer = await signedEnv();
         const seedcord = new Seedcord(config());
-        // eslint-disable-next-line @typescript-eslint/no-misused-promises -- the Bus awaits and catches what a listener returns
         seedcord.bus.on('anyInteraction', () => release.promise);
+        const ctx = capturingCtx();
+
+        await seedcord.fetch(await signedRequest(signer, unrouted), undefined, ctx);
+
+        expect(await settledWithin(ctx)).toBe('still waiting');
+        release.resolve(undefined);
+        await ctx.settled();
+    });
+
+    it('holds waitUntil open for an async log sink', async () => {
+        const release = Promise.withResolvers<undefined>();
+        const signer = await signedEnv();
+        const seedcord = new Seedcord(config());
+        using _sink = LoggerChannelRegistry.instance.installSink({ kind: 'capture', onLog: () => release.promise });
+        seedcord.bus.on('anyInteraction', () => new Logger('Spike').info('logged'));
         const ctx = capturingCtx();
 
         await seedcord.fetch(await signedRequest(signer, unrouted), undefined, ctx);

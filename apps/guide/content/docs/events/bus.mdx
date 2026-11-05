@@ -213,7 +213,7 @@ const [data] = await core.bus.waitFor('levelUp', {
 });
 ```
 
-`on`, `once`, and `off` each take a key and a callback. `waitFor` resolves with the next payload. Its optional second argument takes three fields:
+`on`, `once`, and `off` each take a key and a callback. The callback can be async. seedcord catches anything it throws, and an edge bot keeps the request open until it finishes. `waitFor` resolves with the next payload. Its optional second argument takes three fields:
 
 - `filter`, a function that receives the payload and returns a boolean
 - `timeoutMs`, how long to wait

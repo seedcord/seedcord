@@ -45,6 +45,9 @@ interface SubscriberRegistration {
 
 const loggerSlot = Symbol('seedcord:bus:logger');
 
+// every publish goes through emitSafe, which awaits what this returns and ignores the value
+type BusListener<KeyOfSubscribers extends SubscriptionKey> = (...args: SubscriptionTuples[KeyOfSubscribers]) => unknown;
+
 /**
  * Registers and dispatches subscribers. Subscribers run on a programmatic or framework publish.
  * Accessed via `core.bus`. Do not construct it directly.
@@ -164,6 +167,33 @@ export class Bus extends TypedEventEmitter<SubscriptionTuples> {
         ..._args: SubscriptionTuples[KeyOfSubscribers]
     ): never {
         throw new SeedcordTypeError(SeedcordErrorCode.CoreBusEmitUnavailable, [String(event)]);
+    }
+
+    /**
+     * Registers a listener that runs on every publish of the key. The listener can be async. `publish`
+     * catches what it throws, and an edge bot keeps the request open until it finishes.
+     */
+    public override on<KeyOfSubscribers extends SubscriptionKey>(
+        event: KeyOfSubscribers,
+        listener: BusListener<KeyOfSubscribers>
+    ): this {
+        return super.on(event, listener);
+    }
+
+    /** Registers a listener that runs on the next publish of the key only. It can be async, like {@link Bus.on}. */
+    public override once<KeyOfSubscribers extends SubscriptionKey>(
+        event: KeyOfSubscribers,
+        listener: BusListener<KeyOfSubscribers>
+    ): this {
+        return super.once(event, listener);
+    }
+
+    /** Removes a listener that {@link Bus.on} or {@link Bus.once} registered. */
+    public override off<KeyOfSubscribers extends SubscriptionKey>(
+        event: KeyOfSubscribers,
+        listener: BusListener<KeyOfSubscribers>
+    ): this {
+        return super.off(event, listener);
     }
 
     /** @internal the framework's own publish path, keyed by a symbol no public entry exports */

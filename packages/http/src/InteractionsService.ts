@@ -8,6 +8,7 @@ import {
 } from '@seedcord/core/internal';
 import { SeedcordErrorCode } from '@seedcord/errors';
 import { SeedcordError } from '@seedcord/errors/internal';
+import { LoggerChannelRegistry } from '@seedcord/logger';
 
 import { InteractionDispatcher } from '#src/dispatch/InteractionDispatcher';
 import { InteractionEngine } from '#src/InteractionEngine';
@@ -34,6 +35,7 @@ export class InteractionsService {
     ) {
         this.rest = rest;
         host.bus[OnRun] = keepRequestOpenFor;
+        LoggerChannelRegistry.instance.trackSinkRuns(keepRequestOpenFor);
         this.subscribers = new SubscriberLoader(host.bus, config.subscribers.path);
 
         const interactions = config.bot.interactions;
