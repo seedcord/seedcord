@@ -2,7 +2,7 @@ import { mkdir, mkdtemp, rm, writeFile } from 'node:fs/promises';
 import { dirname, join } from 'node:path';
 import { pathToFileURL } from 'node:url';
 
-import { afterAll, describe, expect, it } from 'vite-plus/test';
+import { afterAll, describe, expect, it, vi } from 'vite-plus/test';
 
 import { ServerDevRuntime } from '#commands/dev/runtime/ServerDevRuntime';
 
@@ -96,6 +96,16 @@ describe('dev runtime hot reload', () => {
     async function saveUntilRestartRequired(file: string, text: string, events: DevEvent[]): Promise<void> {
         await saveUntil(file, text, () => expect(events).toContainEqual({ type: 'restart-required' }));
     }
+
+    it('asks for a restart when the bot reports a full reload', async () => {
+        const { runtime, events } = await startedProject({
+            'index.ts': "import.meta.hot?.send('seedcord:full-reload', {});\nexport const ready = true;\n"
+        });
+
+        await runtime.loadEntry();
+
+        await vi.waitFor(() => expect(events).toContainEqual({ type: 'restart-required' }));
+    }, 60_000);
 
     it('asks for a restart when a file the entry imports is saved', async () => {
         const { src, runtime, events } = await startedProject({

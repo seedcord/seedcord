@@ -172,6 +172,7 @@ export class HmrModuleHandler<THandler, TMiddleware = void, TArtifacts = unknown
         try {
             const units = await this.#importUnits(file);
             this.#register(file, units);
+            if (hasUnits(lastGood) && !hasUnits(units)) this.#warnUnitsLost(file, lastGood);
             return unitNames(units);
         } catch (error) {
             const path = formatFilePath(file);
@@ -181,6 +182,14 @@ export class HmrModuleHandler<THandler, TMiddleware = void, TArtifacts = unknown
 
         if (rollback && hasUnits(lastGood)) this.#rollBack(file, lastGood);
         return [];
+    }
+
+    #warnUnitsLost(file: string, lost: FileUnits<THandler, TMiddleware>): void {
+        const names = paint.sky.bold(unitNames(lost).join(', '));
+        const path = paint.mute(formatFilePath(file));
+        this.#options.logger.warn(
+            `${paint.amber.bold('Unloaded')} ${names} because reloading ${path} didn't find them. If the file still exports them, restart dev.`
+        );
     }
 
     async #importUnits(file: string): Promise<FileUnits<THandler, TMiddleware>> {
