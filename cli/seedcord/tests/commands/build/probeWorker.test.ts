@@ -1,7 +1,7 @@
 import { once } from 'node:events';
 import { createServer } from 'node:http';
 
-import { describe, expect, it } from 'vitest';
+import { describe, expect, it, vi } from 'vitest';
 
 import { probeWorker } from '#commands/build/builder/probeWorker';
 
@@ -56,6 +56,45 @@ describe('probeWorker', () => {
 
         await expect(probeWorker(worker.url, 50)).resolves.toMatchObject({
             reason: expect.stringContaining('0.05s') as string
+        });
+    });
+
+    describe('when fetch fails', () => {
+        // what undici throws when a socket takes more than its 10s to connect
+        const connectTimedOut = new TypeError('fetch failed', {
+            cause: Object.assign(new Error('Connect Timeout Error'), { code: 'UND_ERR_CONNECT_TIMEOUT' })
+        });
+        const PROBE_URL = 'http://127.0.0.1:1/';
+
+        it('tries again after a connect timeout', async () => {
+            using fetchSpy = vi
+                .spyOn(globalThis, 'fetch')
+                .mockRejectedValueOnce(connectTimedOut)
+                .mockResolvedValueOnce(new Response(null, { status: 405 }));
+
+            await expect(probeWorker(PROBE_URL)).resolves.toBeUndefined();
+            expect(fetchSpy).toHaveBeenCalledTimes(2);
+        });
+
+        it('reports the wait when every connect attempt times out', async () => {
+            using _fetchSpy = vi.spyOn(globalThis, 'fetch').mockImplementation(async (_url, init) => {
+                await new Promise((resolve) => setImmediate(resolve));
+                init?.signal?.throwIfAborted();
+                throw connectTimedOut;
+            });
+
+            await expect(probeWorker(PROBE_URL, 50)).resolves.toMatchObject({
+                reason: expect.stringContaining('0.05s') as string
+            });
+        });
+
+        it('stops right away when the worker closes the connection', async () => {
+            using fetchSpy = vi.spyOn(globalThis, 'fetch').mockRejectedValue(new TypeError('fetch failed'));
+
+            await expect(probeWorker(PROBE_URL)).resolves.toMatchObject({
+                reason: expect.stringContaining('closed the connection') as string
+            });
+            expect(fetchSpy).toHaveBeenCalledOnce();
         });
     });
 });
