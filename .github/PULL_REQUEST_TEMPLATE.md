@@ -10,5 +10,5 @@
 
 - [ ] Tests cover the change
 - [ ] I ran the change in a mock bot and tried it like someone building a bot would (if relevant)
-- [ ] `pnpm prePush` is green
-- [ ] Changeset added with `pnpm cs`, for any change to a published package
+- [ ] `vp run prePush` is green
+- [ ] Changeset added with `vp run cs`, for any change to a published package

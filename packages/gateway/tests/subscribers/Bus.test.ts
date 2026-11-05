@@ -1,5 +1,5 @@
 import { HmrManager, SubscriberLoader } from '@seedcord/core/internal';
-import { describe, expect, afterEach, vi } from 'vitest';
+import { describe, expect, afterEach, vi } from 'vite-plus/test';
 
 import { Seedcord } from '#src/Seedcord';
 import { seedcordPath } from '#tests/utils/source-path';

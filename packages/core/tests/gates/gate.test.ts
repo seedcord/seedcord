@@ -1,4 +1,4 @@
-import { describe, it, expect, expectTypeOf } from 'vitest';
+import { describe, it, expect, expectTypeOf } from 'vite-plus/test';
 
 import { defineGate } from '#gates/Gate';
 import { Notice } from '#stops/Notice';

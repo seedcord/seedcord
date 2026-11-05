@@ -1,14 +1,14 @@
 import { cn, tw } from '@seedcord/ui';
 import { FolderInput, Layers, Puzzle, Zap } from 'lucide-react';
 
-import { CodeCard } from '#components/code/CodeCard';
-import { SECTION_HEADING, Section } from '#components/home/Section';
-import { Chips } from '#components/ui/Chips';
-import { Code } from '#components/ui/Code';
-import { SiteLink } from '#components/ui/SiteLink';
-import { CODE_MARK_INK } from '#lib/code/marks';
-import { viteConfig, viteHandler } from '#lib/code/samples';
-import { ENVAPT_URL, VITE_PLUGINS_URL } from '#lib/site';
+import { CodeCard } from '#components/code/CodeCard.tsx';
+import { SECTION_HEADING, Section } from '#components/home/Section.tsx';
+import { Chips } from '#components/ui/Chips.tsx';
+import { Code } from '#components/ui/Code.tsx';
+import { SiteLink } from '#components/ui/SiteLink.tsx';
+import { CODE_MARK_INK } from '#lib/code/marks.ts';
+import { viteConfig, viteHandler } from '#lib/code/samples.ts';
+import { ENVAPT_URL, VITE_PLUGINS_URL } from '#lib/site.ts';
 
 import type { ReactNode } from 'react';
 

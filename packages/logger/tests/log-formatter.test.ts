@@ -1,7 +1,7 @@
 import { Writable } from 'node:stream';
 
 import chalk from 'chalk';
-import { afterEach, beforeEach, describe, expect, it } from 'vitest';
+import { afterEach, beforeEach, describe, expect, it } from 'vite-plus/test';
 import winston from 'winston';
 
 import { LogFormatter } from '#src/node/LogFormatter';

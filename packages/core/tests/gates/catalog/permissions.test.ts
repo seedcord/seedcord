@@ -1,6 +1,6 @@
 import { SeedcordErrorCode } from '@seedcord/errors';
 import { PermissionFlagsBits } from 'discord-api-types/v10';
-import { describe, it, expect, expectTypeOf } from 'vitest';
+import { describe, it, expect, expectTypeOf } from 'vite-plus/test';
 
 import { RequireBotPermissions, RequirePermissions, RequireRole } from '#gates/catalog/permissions';
 import { MissingPermissions, MissingRole, NotInGuild, PermissionsUnresolved } from '#notices/index';

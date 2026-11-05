@@ -1,9 +1,9 @@
-import { describe, expect, it } from 'vitest';
+import { describe, expect, it } from 'vite-plus/test';
+
+import type { SearchAction, SearchIndexEntry } from '#src/types';
 
 import { DocKind } from '#src/DocKind';
 import { SearchResults } from '#src/SearchResults';
-
-import type { SearchAction, SearchIndexEntry } from '#src/types';
 
 function entry(slug: string, kind: SearchAction['kind'], packageName = 'seedcord'): SearchIndexEntry {
     const name = slug.split('/').at(-1) ?? slug;

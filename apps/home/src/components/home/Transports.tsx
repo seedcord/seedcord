@@ -1,7 +1,7 @@
 import { cn, Icon } from '@seedcord/ui';
 import { PlugZap, Radio } from 'lucide-react';
 
-import { SECTION_HEADING, Section } from '#components/home/Section';
+import { SECTION_HEADING, Section } from '#components/home/Section.tsx';
 
 import type { ReactNode } from 'react';
 

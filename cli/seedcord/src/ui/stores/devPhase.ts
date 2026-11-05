@@ -1,6 +1,6 @@
 import { paint } from '@seedcord/errors';
 
-import { ui } from '#ui/palette';
+import { ui } from '#ui/palette.ts';
 
 import type { TextProps } from 'ink';
 

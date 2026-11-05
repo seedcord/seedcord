@@ -1,5 +1,5 @@
 import { EventHandler } from '#handlers/event/EventHandler';
-import { AutocompleteHandler } from '#handlers/interaction';
+import { AutocompleteHandler } from '#handlers/interaction/index';
 import { SlashHandler } from '#handlers/interaction/SlashHandler';
 
 import type { EventHandlerConstructor, HandlerConstructor } from '#handlers/constructors';

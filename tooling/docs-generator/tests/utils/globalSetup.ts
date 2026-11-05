@@ -3,6 +3,7 @@ import { existsSync } from 'node:fs';
 import { mkdir, rm, symlink } from 'node:fs/promises';
 import { createRequire } from 'node:module';
 import { resolve } from 'node:path';
+import process from 'node:process';
 
 import { ApiDocsGenerator } from '#src/ApiDocsGenerator';
 
@@ -23,7 +24,7 @@ function buildDeclarations(packageDir: string): void {
 async function linkMockBase(): Promise<void> {
     await rm(MOCK_BASE_LINK, { force: true });
     await mkdir(resolve(MOCK_BASE_LINK, '..'), { recursive: true });
-    await symlink(MOCK_BASE_DIR, MOCK_BASE_LINK, 'dir');
+    await symlink(MOCK_BASE_DIR, MOCK_BASE_LINK, process.platform === 'win32' ? 'junction' : 'dir');
 }
 
 export async function setup(): Promise<void> {

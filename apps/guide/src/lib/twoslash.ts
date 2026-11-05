@@ -6,12 +6,12 @@ import ts from 'typescript';
 import { createTwoslasher } from 'twoslash';
 import { removeCodeRanges, resolveNodePositions, splitLines } from 'twoslash-protocol';
 
-import { commonIndent } from '#lib/dedent';
-import { DocsLinks } from '#lib/DocsLinks';
-import { cleanFence } from '#lib/fence';
-import { formatHoverType } from '#lib/formatHoverType';
-import { SAMPLE_AUGMENTATION } from '#lib/sampleTypes';
-import { SymbolRef } from '#lib/SymbolRef';
+import { commonIndent } from '#lib/dedent.ts';
+import { DocsLinks } from '#lib/DocsLinks.ts';
+import { cleanFence } from '#lib/fence.ts';
+import { formatHoverType } from '#lib/formatHoverType.ts';
+import { SAMPLE_AUGMENTATION } from '#lib/sampleTypes.ts';
+import { SymbolRef } from '#lib/SymbolRef.ts';
 
 import type {
     TwoslashRenderer,

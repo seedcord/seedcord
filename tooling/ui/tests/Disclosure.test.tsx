@@ -1,8 +1,8 @@
 import { render, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
-import { describe, expect, it } from 'vitest';
+import { describe, expect, it } from 'vite-plus/test';
 
-import { Disclosure, DisclosurePanel, DisclosureTrigger } from '#src/Disclosure';
+import { Disclosure, DisclosurePanel, DisclosureTrigger } from '#src/Disclosure.tsx';
 
 import type { RenderResult } from '@testing-library/react';
 import type { ComponentProps } from 'react';

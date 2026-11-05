@@ -1,6 +1,6 @@
-import { PackageOverviewTabs } from '#components/docs/PackageOverviewTabs';
-import { PackageVersionOverview } from '#components/docs/PackageVersionOverview';
-import { ReadmeBlock } from '#components/docs/ReadmeBlock';
+import { PackageOverviewTabs } from '#components/docs/PackageOverviewTabs.tsx';
+import { PackageVersionOverview } from '#components/docs/PackageVersionOverview.tsx';
+import { ReadmeBlock } from '#components/docs/ReadmeBlock.tsx';
 import { loadActiveVersion } from '#lib/docs/ActiveVersion';
 import { DocsPage } from '#lib/docs/DocsPage';
 import { packagePreview } from '#lib/docs/linkPreview';

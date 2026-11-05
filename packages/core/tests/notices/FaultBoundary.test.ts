@@ -1,6 +1,6 @@
 import { Logger, LoggerChannelRegistry } from '@seedcord/logger';
 import { RESTJSONErrorCodes } from 'discord-api-types/v10';
-import { afterEach, describe, expect, it, vi, type Mock } from 'vitest';
+import { afterEach, describe, expect, it, vi, type Mock } from 'vite-plus/test';
 
 import { DispatchContext } from '#src/dispatch/DispatchContext';
 import { InteractionKind } from '#src/metadataKeys';

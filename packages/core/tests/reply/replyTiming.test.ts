@@ -1,5 +1,5 @@
 import { Logger, LoggerChannelRegistry } from '@seedcord/logger';
-import { afterEach, describe, expect, it, vi, type MockInstance } from 'vitest';
+import { afterEach, describe, expect, it, vi, type MockInstance } from 'vite-plus/test';
 
 import { publishResponse } from '#reply/responseReport';
 import { DispatchContext } from '#src/dispatch/DispatchContext';

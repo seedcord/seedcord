@@ -1,4 +1,4 @@
-import { describe, expect, it, vi } from 'vitest';
+import { describe, expect, it, vi } from 'vite-plus/test';
 
 import type { NavigationEntityItem, PackageCatalogEntry } from '#lib/docs/types';
 
@@ -38,7 +38,7 @@ vi.mock('#lib/docs/ActiveVersion', () => ({
     ActiveVersion: { open: () => Promise.resolve({ pages: PAGES }) }
 }));
 
-const { default: sitemap } = await import('#src/app/sitemap');
+const { default: sitemap } = await import('#src/app/sitemap.ts');
 
 describe('sitemap', () => {
     it('lists each package page at its latest url and leaves re-exports to their own package', async () => {

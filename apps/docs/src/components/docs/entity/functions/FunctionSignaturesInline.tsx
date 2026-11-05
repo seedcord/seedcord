@@ -1,7 +1,7 @@
 'use client';
 
-import { SignatureSelector } from '#components/docs/entity/signatures/SignatureSelector';
-import { useActiveSignatureList } from '#components/docs/entity/utils/useActiveSignatureList';
+import { SignatureSelector } from '#components/docs/entity/signatures/SignatureSelector.tsx';
+import { useActiveSignatureList } from '#components/docs/entity/utils/useActiveSignatureList.tsx';
 
 import type { FunctionSignatureModel } from '#lib/docs/types';
 import type { ReactElement } from 'react';

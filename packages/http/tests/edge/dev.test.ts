@@ -5,7 +5,7 @@ import { SeedcordErrorCode } from '@seedcord/errors';
 import { Logger, LoggerChannelRegistry } from '@seedcord/logger';
 import { ApplicationCommandType, Routes } from 'discord-api-types/v10';
 import { Envapter, PortableSource } from 'envapt';
-import { afterEach, describe, expect, it, onTestFinished, vi } from 'vitest';
+import { afterEach, describe, expect, it, onTestFinished, vi } from 'vite-plus/test';
 
 import { Seedcord } from '#src/edge/Seedcord';
 import { BUILT_ROOT, clearBuiltFiles, registerBuiltFiles } from '#tests/helpers/builtFiles';

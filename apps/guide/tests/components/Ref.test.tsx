@@ -1,7 +1,7 @@
 import { render, screen } from '@testing-library/react';
-import { describe, expect, it } from 'vitest';
+import { describe, expect, it } from 'vite-plus/test';
 
-import { Ref } from '#components/Ref';
+import { Ref } from '#components/Ref.tsx';
 
 describe('Ref', () => {
     it('opens the reference site in a new tab', () => {

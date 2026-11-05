@@ -2,7 +2,7 @@ import { writeFile } from 'node:fs/promises';
 import { join } from 'node:path';
 
 import { Envapter, PortableSource } from 'envapt';
-import { describe, expect, it, onTestFinished, vi } from 'vitest';
+import { describe, expect, it, onTestFinished, vi } from 'vite-plus/test';
 
 import { openModuleLoader } from '#core/modules/openModuleLoader';
 import { realPath } from '#core/project/realPath';

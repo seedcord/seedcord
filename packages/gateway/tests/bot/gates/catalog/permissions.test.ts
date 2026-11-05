@@ -1,9 +1,9 @@
 import { Notice } from '@seedcord/core';
 import { SeedcordErrorCode } from '@seedcord/errors';
 import { Guild, GuildMember, PermissionFlagsBits, PermissionsBitField, Role, TextChannel } from 'discord.js';
-import { describe, it, expect } from 'vitest';
+import { describe, it, expect } from 'vite-plus/test';
 
-import { CannotAssignBotRole, RoleHigherThanMe } from '#bot/notices';
+import { CannotAssignBotRole, RoleHigherThanMe } from '#bot/notices/index';
 import { checkBotPermissions } from '#bUtilities/permissions/checkBotPermissions';
 import { checkPermissions } from '#bUtilities/permissions/checkPermissions';
 import { hasPermsToAssign } from '#bUtilities/permissions/hasPermsToAssign';

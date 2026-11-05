@@ -1,10 +1,10 @@
 import { cn, tw } from '@seedcord/ui';
 
-import { CodeCard } from '#components/code/CodeCard';
-import { SECTION_HEADING, Section } from '#components/home/Section';
-import { Code } from '#components/ui/Code';
-import { CODE_MARK_LIGHT } from '#lib/code/marks';
-import { pluginAttach, pluginSource, pluginUsage } from '#lib/code/samples';
+import { CodeCard } from '#components/code/CodeCard.tsx';
+import { SECTION_HEADING, Section } from '#components/home/Section.tsx';
+import { Code } from '#components/ui/Code.tsx';
+import { CODE_MARK_LIGHT } from '#lib/code/marks.ts';
+import { pluginAttach, pluginSource, pluginUsage } from '#lib/code/samples.ts';
 
 import type { ReactNode } from 'react';
 

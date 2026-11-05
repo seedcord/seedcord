@@ -2,7 +2,7 @@ import 'reflect-metadata';
 
 import { emptyRouteMaps, interactionMiddleware, MiddlewareRegistry } from '@seedcord/core/internal';
 import { Envapter, PortableSource } from 'envapt';
-import { afterEach, describe, expect, it } from 'vitest';
+import { afterEach, describe, expect, it } from 'vite-plus/test';
 
 import { buildEngine } from '#src/engine';
 import { testCore } from '#tests/helpers/core';

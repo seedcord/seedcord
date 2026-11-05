@@ -1,6 +1,6 @@
 import { Logger } from '@seedcord/logger';
 import mongoose from 'mongoose';
-import { describe, it, expect, afterEach, vi } from 'vitest';
+import { describe, it, expect, afterEach, vi } from 'vite-plus/test';
 
 import { RegisterMongooseService } from '#src/decorators/RegisterMongooseService';
 import { MongooseService } from '#src/MongooseService';

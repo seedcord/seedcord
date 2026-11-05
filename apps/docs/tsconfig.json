@@ -11,15 +11,7 @@
                 "name": "next"
             }
         ],
-        "paths": {
-            "#tests/*": ["./tests/*"],
-            "#src/*": ["./src/*"],
-            "#components/*": ["./src/components/*"],
-            "#ui/*": ["./src/components/ui/*"],
-            "#lib/*": ["./src/lib/*"],
-            "#store/*": ["./src/store/*"],
-            "#styles/*": ["./src/app/*"]
-        },
+        "allowImportingTsExtensions": true,
         "incremental": true,
         "esModuleInterop": true
     },
@@ -30,9 +22,8 @@
         "tests/**/*.ts",
         "tests/**/*.tsx",
         "eslint.config.ts",
-        "prettier.config.ts",
         "next.config.ts",
-        "vitest.config.ts",
+        "vite.config.ts",
         ".next/types/**/*.ts",
         "worker.ts",
         "check-links.ts"

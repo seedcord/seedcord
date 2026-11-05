@@ -1,4 +1,4 @@
-import { allGuideSections } from '#lib/sections';
+import { allGuideSections } from '#lib/sections.ts';
 
 export const dynamic = 'force-static';
 

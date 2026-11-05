@@ -4,7 +4,7 @@ import { basename, join } from 'node:path';
 
 import { bindings } from 'cf/config';
 import { Routes } from 'discord-api-types/v10';
-import { onTestFinished } from 'vitest';
+import { onTestFinished } from 'vite-plus/test';
 
 import { EdgeBuild } from '#commands/build/builder/EdgeBuild';
 import { ShellMode } from '#src/core/ShellMode';

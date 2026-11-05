@@ -1,10 +1,10 @@
 import { TooltipProvider } from '@seedcord/ui';
 import { render, screen } from '@testing-library/react';
-import { describe, expect, it } from 'vitest';
+import { describe, expect, it } from 'vite-plus/test';
 
-import { PageNav } from '#components/PageNav';
+import { PageNav } from '#components/PageNav.tsx';
 
-import type { PageNeighbours } from '#lib/neighbours';
+import type { PageNeighbours } from '#lib/neighbours.ts';
 import type { RenderResult } from '@testing-library/react';
 
 const PREVIOUS = { tab: 'Gates', label: 'Permissions in a handler', href: '/gates/in-handler-permissions' };

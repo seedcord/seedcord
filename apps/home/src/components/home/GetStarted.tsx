@@ -1,10 +1,10 @@
 import { cn } from '@seedcord/ui';
 
-import { CodeCard } from '#components/code/CodeCard';
-import { SECTION_HEADING_LG, Section } from '#components/home/Section';
-import { PosterButton } from '#components/ui/PosterButton';
-import { startTerminal } from '#lib/code/samples';
-import { DISCORD_URL, REPO_URL } from '#lib/site';
+import { CodeCard } from '#components/code/CodeCard.tsx';
+import { SECTION_HEADING_LG, Section } from '#components/home/Section.tsx';
+import { PosterButton } from '#components/ui/PosterButton.tsx';
+import { startTerminal } from '#lib/code/samples.ts';
+import { DISCORD_URL, REPO_URL } from '#lib/site.ts';
 
 import type { ReactNode } from 'react';
 

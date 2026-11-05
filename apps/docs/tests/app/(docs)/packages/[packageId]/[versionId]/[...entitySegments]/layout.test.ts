@@ -1,4 +1,4 @@
-import { describe, expect, it, vi } from 'vitest';
+import { describe, expect, it, vi } from 'vite-plus/test';
 
 import type { ResolvedEntity } from '#lib/docs/resolveEntity';
 
@@ -7,7 +7,7 @@ const resolveEntity = vi.fn<() => Promise<ResolvedEntity | null>>();
 vi.mock('#lib/docs/resolveEntity', () => ({ resolveEntity }));
 
 const { default: EntityLayout } =
-    await import('#src/app/(docs)/packages/[packageId]/[versionId]/[...entitySegments]/layout');
+    await import('#src/app/(docs)/packages/[packageId]/[versionId]/[...entitySegments]/layout.tsx');
 
 const PARAMS = Promise.resolve({ packageId: 'utils', versionId: '0.8.14', entitySegments: ['interfaces', 'gone'] });
 

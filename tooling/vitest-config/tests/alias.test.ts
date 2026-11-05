@@ -1,11 +1,8 @@
 import { fileURLToPath } from 'node:url';
 
-import { afterAll, beforeAll, describe, expect, it } from 'vitest';
-import { createViteServer } from 'vitest/node';
+import { afterAll, beforeAll, describe, expect, it } from 'vite-plus/test';
+import { createViteServer } from 'vite-plus/test/node';
 
-import { createVitestConfig } from '#src/index';
-
-const fixtureConfigUrl = new URL('./fixtures/vitest.config.ts', import.meta.url).toString();
 const fixture = (path: string): string => fileURLToPath(new URL(`./fixtures/${path}`, import.meta.url));
 
 describe('createVitestConfig aliases', () => {
@@ -16,8 +13,7 @@ describe('createVitestConfig aliases', () => {
             configFile: false,
             root: fixture(''),
             logLevel: 'silent',
-            server: { middlewareMode: true },
-            resolve: { alias: createVitestConfig(fixtureConfigUrl).resolve?.alias ?? [] }
+            server: { middlewareMode: true }
         });
     });
 

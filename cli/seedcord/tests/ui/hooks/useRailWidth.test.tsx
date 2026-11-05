@@ -2,11 +2,11 @@ import { settled } from '@seedcord/cli-prompts/testing';
 import { Box, Text } from 'ink';
 import { render } from 'ink-testing-library';
 import React, { useRef } from 'react';
-import { describe, expect, it } from 'vitest';
+import { describe, expect, it } from 'vite-plus/test';
 
-import { useRailWidth } from '#ui/hooks/useRailWidth';
+import { useRailWidth } from '#ui/hooks/useRailWidth.ts';
 
-import type { DevPhase } from '#ui/stores/devPhase';
+import type { DevPhase } from '#ui/stores/devPhase.ts';
 import type { DOMElement } from 'ink';
 import type { ReactElement } from 'react';
 

@@ -1,11 +1,11 @@
 import React, { useCallback, useEffect, useRef } from 'react';
 
-import { DevApp } from '#ui/DevApp';
-import { devPrefsFile } from '#ui/devPrefs';
+import { DevApp } from '#ui/DevApp.tsx';
+import { devPrefsFile } from '#ui/devPrefs.ts';
 
 import { createPreviewContext } from './PreviewContext';
 
-import type { DevStore } from '#ui/stores/DevStore';
+import type { DevStore } from '#ui/stores/DevStore.ts';
 import type { Scenario } from './scenarios/types';
 import type { ReactElement } from 'react';
 

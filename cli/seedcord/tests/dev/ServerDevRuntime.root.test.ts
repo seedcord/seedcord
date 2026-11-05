@@ -5,7 +5,7 @@ import { SeedcordErrorCode } from '@seedcord/errors';
 import { LoggerChannelRegistry } from '@seedcord/logger';
 import { HostListenHost, HostShutdown } from '@seedcord/types/internal';
 import { readFiles } from '@seedcord/utils';
-import { afterAll, describe, expect, it, onTestFinished, vi } from 'vitest';
+import { afterAll, describe, expect, it, onTestFinished, vi } from 'vite-plus/test';
 
 import { ServerDevRuntime } from '#commands/dev/runtime/ServerDevRuntime';
 import { ProjectFiles } from '#core/project/ProjectFiles';

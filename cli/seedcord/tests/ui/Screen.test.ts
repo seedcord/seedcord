@@ -1,6 +1,6 @@
-import { describe, expect, it } from 'vitest';
+import { describe, expect, it } from 'vite-plus/test';
 
-import { COMPACT_ROWS, FULL_ROWS, Screen } from '#ui/Screen';
+import { COMPACT_ROWS, FULL_ROWS, Screen } from '#ui/Screen.ts';
 
 const FULL = { rail: 'sidebar', filters: 'rail-always' } as const;
 const COMPACT = { rail: 'sidebar', filters: 'rail-on-f' } as const;

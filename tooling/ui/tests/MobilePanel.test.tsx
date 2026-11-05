@@ -1,8 +1,8 @@
 import { render, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
-import { describe, expect, it, vi } from 'vitest';
+import { describe, expect, it, vi } from 'vite-plus/test';
 
-import { MobilePanel, useMobilePanelContainer } from '#src/MobilePanel';
+import { MobilePanel, useMobilePanelContainer } from '#src/MobilePanel.tsx';
 
 import type { ReactElement } from 'react';
 

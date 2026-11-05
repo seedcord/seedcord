@@ -1,6 +1,6 @@
-import { describe, expect, it } from 'vitest';
+import { describe, expect, it } from 'vite-plus/test';
 
-import { hasMobileNavPanel } from '#components/layout/sidebar/utils/hasMobileNavPanel';
+import { hasMobileNavPanel } from '#components/layout/sidebar/utils/hasMobileNavPanel.ts';
 
 describe('hasMobileNavPanel', () => {
     it('is true on a package version page', () => {

@@ -1,7 +1,7 @@
 import { CustomId, ModalRoute } from '@seedcord/core';
-import { expectTypeOf } from 'vitest';
+import { expectTypeOf } from 'vite-plus/test';
 
-import { ModalHandler } from '#handlers/interaction/components';
+import { ModalHandler } from '#handlers/interaction/components/index';
 
 import type { ModalSubmitFields } from 'discord.js';
 

@@ -1,6 +1,6 @@
 import { cn, tw } from '@seedcord/ui';
 
-import { PROSE_CODE_BLOCK } from '#components/docs/proseCodeBlock';
+import { PROSE_CODE_BLOCK } from '#components/docs/proseCodeBlock.ts';
 
 import type { ReactElement } from 'react';
 

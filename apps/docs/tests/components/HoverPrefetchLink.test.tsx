@@ -1,7 +1,7 @@
 import { fireEvent, render, screen } from '@testing-library/react';
-import { describe, expect, it, vi } from 'vitest';
+import { describe, expect, it, vi } from 'vite-plus/test';
 
-import { HoverPrefetchLink } from '#components/HoverPrefetchLink';
+import { HoverPrefetchLink } from '#components/HoverPrefetchLink.tsx';
 
 import type { ReactElement, ReactNode } from 'react';
 

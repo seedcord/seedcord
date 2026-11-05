@@ -1,7 +1,7 @@
 import { DEFAULT_VERSION } from '@seedcord/docs-engine';
 
-import { PageTransition } from '#components/layout/PageTransition';
-import { Container } from '#components/layout/sidebar/utils/container/Container';
+import { PageTransition } from '#components/layout/PageTransition.tsx';
+import { Container } from '#components/layout/sidebar/utils/container/Container.tsx';
 import { loadActiveVersion } from '#lib/docs/ActiveVersion';
 import { loadDocsCatalog, servedAtLatest, withVersion } from '#lib/docs/catalog';
 import { getCatalogContext } from '#lib/docs/pageContext';

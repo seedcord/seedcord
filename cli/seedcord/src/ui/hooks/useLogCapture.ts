@@ -1,6 +1,6 @@
 import { useEffect, useEffectEvent } from 'react';
 
-import { LogStore } from '#ui/stores/LogStore';
+import { LogStore } from '#ui/stores/LogStore.ts';
 
 export function useLogCapture(onReady: () => void): void {
     const ready = useEffectEvent(onReady);

@@ -5,9 +5,7 @@
         "rootDir": "./",
         "outDir": "./dist",
         "jsx": "react",
-        "paths": {
-            "#src/*": ["./src/*"]
-        }
+        "allowImportingTsExtensions": true
     },
     "include": [
         "src/**/*.ts",
@@ -15,8 +13,7 @@
         "tests/**/*.ts",
         "playground/**/*.ts",
         "eslint.config.ts",
-        "tsdown.config.ts",
-        "vitest.config.ts"
+        "vite.config.ts"
     ],
     "exclude": ["node_modules", "dist"]
 }

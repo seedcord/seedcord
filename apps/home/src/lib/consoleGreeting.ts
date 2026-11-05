@@ -1,5 +1,5 @@
 import { PRODUCTION_SITES } from '@seedcord/brand';
-import { DISCORD_URL, GUIDE_URL, REPO_URL } from '#lib/site';
+import { DISCORD_URL, GUIDE_URL, REPO_URL } from '#lib/site.ts';
 
 // wordmark art for the devtools console, pre-rendered from assets/wordmark-{dark,light}.svg.
 // each cell is a half-block glyph carrying two vertical pixels, encoded as runs of

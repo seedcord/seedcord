@@ -1,9 +1,9 @@
 import { assertNever } from '@seedcord/utils';
 
-import { formatClock } from '#ui/format';
+import { formatClock } from '#ui/format.ts';
 
-import type { ClockPrecision } from '#ui/format';
-import type { LogEntry } from '#ui/stores/LogStore';
+import type { ClockPrecision } from '#ui/format.ts';
+import type { LogEntry } from '#ui/stores/LogStore.ts';
 import type { LogLevel } from '@seedcord/types';
 
 export type PrefixCell =

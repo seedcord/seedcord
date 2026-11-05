@@ -6,14 +6,14 @@ import './subscriptions';
 
 export * from '#bDecorators/index';
 
-export * from '#bot/gates';
+export * from '#bot/gates/index';
 
 export * from '#bot/injectors/index';
 
 export * from '#bUtilities/index';
 
-export { getConfirmation } from '#bot/confirm';
-export type { ConfirmOptions, DefaultConfirmOptions } from '#bot/confirm';
+export { getConfirmation } from '#bot/confirm/index';
+export type { ConfirmOptions, DefaultConfirmOptions } from '#bot/confirm/index';
 
 export type * from '#interfaces/index';
 

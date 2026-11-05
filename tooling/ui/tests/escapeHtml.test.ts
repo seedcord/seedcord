@@ -1,6 +1,6 @@
-import { describe, expect, it } from 'vitest';
+import { describe, expect, it } from 'vite-plus/test';
 
-import { escapeHtml } from '#src/escapeHtml';
+import { escapeHtml } from '#src/escapeHtml.ts';
 
 describe('escapeHtml', () => {
     it('escapes all five characters in one pass', () => {

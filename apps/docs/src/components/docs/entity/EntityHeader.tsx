@@ -2,8 +2,8 @@ import { formatVersionLabel } from '@seedcord/docs-engine/client';
 import { Badge, Button, Card, Icon, type IconComponent, cn } from '@seedcord/ui';
 import { ArrowUpRight } from 'lucide-react';
 
-import { SeeAlso } from '#components/docs/SeeAlso';
-import { TagPills } from '#components/docs/TagPills';
+import { SeeAlso } from '#components/docs/SeeAlso.tsx';
+import { TagPills } from '#components/docs/TagPills.tsx';
 import { getToneConfig } from '#lib/tonePresentation';
 
 import { CommentExamples } from './comments/CommentExamples';

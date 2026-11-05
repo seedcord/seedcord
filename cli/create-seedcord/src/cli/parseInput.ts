@@ -4,7 +4,7 @@ import { SeedcordErrorCode } from '@seedcord/errors';
 import { SeedcordTypeError } from '@seedcord/errors/internal';
 
 import { applyFlags, noFlagName } from '#interview/applyFlags';
-import { STEPS } from '#interview/steps';
+import { STEPS } from '#interview/steps/index';
 
 import type { Answers } from '#interview/types';
 

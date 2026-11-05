@@ -1,5 +1,5 @@
 import { CustomId, InteractionKind } from '@seedcord/core';
-import { beforeEach, describe, expect, it, vi } from 'vitest';
+import { beforeEach, describe, expect, it, vi } from 'vite-plus/test';
 
 import { ButtonHandler } from '#handlers/interaction/components/ButtonHandler';
 import { SlashHandler } from '#handlers/interaction/SlashHandler';

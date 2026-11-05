@@ -6,6 +6,11 @@
     "engines": {
         {{#if cliOnBun}}"bun": "{{ engines.bun }}"{{else}}"node": "{{ engines.node }}"{{/if}}
     },
+    "imports": {
+        "#src/*": "./src/*",
+        "#components/*": "./src/components/*",
+        "#plugins/*": "./src/plugins/*"
+    },
     "scripts": {
         "dev": "seedcord dev",
         "build": "seedcord build",

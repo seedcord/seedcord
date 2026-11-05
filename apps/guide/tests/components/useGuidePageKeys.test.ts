@@ -1,10 +1,10 @@
 import { useHotkeys } from '@seedcord/ui';
 import { fireEvent, renderHook } from '@testing-library/react';
-import { afterEach, describe, expect, it, vi } from 'vitest';
+import { afterEach, describe, expect, it, vi } from 'vite-plus/test';
 
-import { useGuidePageKeys } from '#components/useGuidePageKeys';
+import { useGuidePageKeys } from '#components/useGuidePageKeys.ts';
 
-import type { PageKeyTargets } from '#components/useGuidePageKeys';
+import type { PageKeyTargets } from '#components/useGuidePageKeys.ts';
 
 const TARGETS: PageKeyTargets = {
     tabs: [

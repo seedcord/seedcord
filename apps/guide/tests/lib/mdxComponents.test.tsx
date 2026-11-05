@@ -1,8 +1,8 @@
 import { render, screen } from '@testing-library/react';
-import { describe, expect, it } from 'vitest';
+import { describe, expect, it } from 'vite-plus/test';
 
-import { mdxComponents } from '#lib/mdxComponents';
-import { MAPPED_TAGS } from '#lib/remarkNoMappedJsx';
+import { mdxComponents } from '#lib/mdxComponents.tsx';
+import { MAPPED_TAGS } from '#lib/remarkNoMappedJsx.ts';
 
 const { Image, pre: Fence, a: Link, Shell } = mdxComponents;
 

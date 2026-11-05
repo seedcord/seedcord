@@ -2,8 +2,8 @@ import { paint } from '@seedcord/errors';
 import { Box, Text } from 'ink';
 import React from 'react';
 
-import { Spinner } from '#ui/components/primitives/Spinner';
-import { ui } from '#ui/palette';
+import { Spinner } from '#ui/components/primitives/Spinner.tsx';
+import { ui } from '#ui/palette.ts';
 
 import type { TunnelPhase } from '#commands/dev/tunnel/TunnelCoordinator';
 import type { ReactElement } from 'react';

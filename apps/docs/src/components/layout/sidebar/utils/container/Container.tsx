@@ -3,8 +3,8 @@
 import { Button, GithubIcon, Icon, MobilePanel, cn, ScrollToTopButton } from '@seedcord/ui';
 import Link from 'next/link';
 
-import { Sidebar } from '#components/layout/sidebar/Sidebar';
-import { SIDEBAR_WIDTH } from '#components/layout/sidebar/utils/constants';
+import { Sidebar } from '#components/layout/sidebar/Sidebar.tsx';
+import { SIDEBAR_WIDTH } from '#components/layout/sidebar/utils/constants.ts';
 import { useUIStore } from '#store/ui';
 
 import { DesktopSidebarFrame } from './DesktopSidebarFrame';

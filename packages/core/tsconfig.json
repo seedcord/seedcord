@@ -3,26 +3,8 @@
     "extends": "@seedcord/tsconfig/node",
     "compilerOptions": {
         "rootDir": "./",
-        "outDir": "./dist",
-        "paths": {
-            "#tests/*": ["./tests/*"],
-            "#src/*": ["./src/*"],
-            "#components/*": ["./src/components/*"],
-            "#customId/*": ["./src/customId/*"],
-            "#decorators/*": ["./src/decorators/*"],
-            "#gates/*": ["./src/gates/*"],
-            "#hmr/*": ["./src/hmr/*"],
-            "#inputs/*": ["./src/inputs/*"],
-            "#interfaces/*": ["./src/interfaces/*"],
-            "#node/*": ["./src/node/*"],
-            "#notices/*": ["./src/notices/*"],
-            "#pagination/*": ["./src/pagination/*"],
-            "#registries/*": ["./src/registries/*"],
-            "#reply/*": ["./src/reply/*"],
-            "#stops/*": ["./src/stops/*"],
-            "#subscribers/*": ["./src/subscribers/*"]
-        }
+        "outDir": "./dist"
     },
-    "include": ["src/**/*.ts", "tests/**/*.ts", "eslint.config.ts", "tsdown.config.ts", "vitest.config.ts"],
+    "include": ["src/**/*.ts", "tests/**/*.ts", "eslint.config.ts", "vite.config.ts"],
     "exclude": ["node_modules", "dist"]
 }

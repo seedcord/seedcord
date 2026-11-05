@@ -1,13 +1,13 @@
 import { fireEvent, render, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { useState } from 'react';
-import { describe, expect, it, vi } from 'vitest';
+import { describe, expect, it, vi } from 'vite-plus/test';
 
-import { useSiteHotkeys } from '#src/lib/useSiteHotkeys';
-import { SiteSwitcher } from '#src/SiteSwitcher';
-import { TooltipProvider } from '#src/Tooltip';
+import { useSiteHotkeys } from '#src/lib/useSiteHotkeys.ts';
+import { SiteSwitcher } from '#src/SiteSwitcher.tsx';
+import { TooltipProvider } from '#src/Tooltip.tsx';
 
-import type { Hotkey } from '#src/lib/useHotkeys';
+import type { Hotkey } from '#src/lib/useHotkeys.ts';
 import type { ReactElement } from 'react';
 
 const nextPage = vi.fn();

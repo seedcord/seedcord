@@ -1,10 +1,11 @@
 import { execFile } from 'node:child_process';
 import { mkdir, symlink, writeFile } from 'node:fs/promises';
 import { join } from 'node:path';
+import process from 'node:process';
 import { promisify } from 'node:util';
 
 import { SeedcordErrorCode } from '@seedcord/errors';
-import { describe, expect, it } from 'vitest';
+import { describe, expect, it } from 'vite-plus/test';
 
 import { copyEdgeBotForTest } from './commands/build/edgeBot';
 import { tempProject } from './core/config/projectLoaderFixtures';
@@ -62,7 +63,11 @@ describe('the seedcord CLI', () => {
 
     it('runs from a symlinked project install and goes on to look for the config', async () => {
         const project = tempProject();
-        await symlink(PACKAGE_DIR, join(project, 'node_modules', 'seedcord'), 'dir');
+        await symlink(
+            PACKAGE_DIR,
+            join(project, 'node_modules', 'seedcord'),
+            process.platform === 'win32' ? 'junction' : 'dir'
+        );
 
         const { stderr } = await codegenIn(project);
 
@@ -72,7 +77,11 @@ describe('the seedcord CLI', () => {
     it('prints only JSON lines from dev without a terminal, including a vite plugin that calls console', async () => {
         const projectDir = await copyEdgeBotForTest();
         await mkdir(join(projectDir, 'node_modules'));
-        await symlink(PACKAGE_DIR, join(projectDir, 'node_modules', 'seedcord'), 'dir');
+        await symlink(
+            PACKAGE_DIR,
+            join(projectDir, 'node_modules', 'seedcord'),
+            process.platform === 'win32' ? 'junction' : 'dir'
+        );
         await writeFile(
             join(projectDir, 'seedcord.config.ts'),
             `export default {

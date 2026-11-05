@@ -1,11 +1,11 @@
-import { afterEach, describe, expect, it, vi } from 'vitest';
+import { afterEach, describe, expect, it, vi } from 'vite-plus/test';
 
-import { INITIAL_CURSOR } from '#ui/filterCursor';
-import { acceptsSessionKeys, dispatchHotkey } from '#ui/hotkeys';
-import { DevStore } from '#ui/stores/DevStore';
-import { LogStore } from '#ui/stores/LogStore';
+import { INITIAL_CURSOR } from '#ui/filterCursor.ts';
+import { acceptsSessionKeys, dispatchHotkey } from '#ui/hotkeys.ts';
+import { DevStore } from '#ui/stores/DevStore.ts';
+import { LogStore } from '#ui/stores/LogStore.ts';
 
-import type { LogFilters } from '#ui/devPrefs';
+import type { LogFilters } from '#ui/devPrefs.ts';
 import type { LogLevel, LogRecord } from '@seedcord/types';
 import type { Key } from 'ink';
 

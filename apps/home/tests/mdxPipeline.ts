@@ -7,7 +7,7 @@ import { mdxPreset } from 'fumadocs-core/content/mdx/preset-bundler';
 import { remarkLLMs } from 'fumadocs-core/mdx-plugins/remark-llms';
 import { VFile } from 'vfile';
 
-import { TWIN_OPTIONS } from '#lib/blog/twinOptions';
+import { TWIN_OPTIONS } from '#lib/blog/twinOptions.ts';
 
 // eslint-disable-next-line no-restricted-imports -- fumadocs-mdx loads source.config.ts from the app root
 import config from '../source.config';

@@ -1,7 +1,7 @@
 import { fireEvent, render, within } from '@testing-library/react';
-import { describe, expect, it, vi } from 'vitest';
+import { describe, expect, it, vi } from 'vite-plus/test';
 
-import { CodeNotes } from '#components/CodeNotes';
+import { CodeNotes } from '#components/CodeNotes.tsx';
 
 const SWAPPED = { code: 3119, name: 'CliCodegenOutOfDate' };
 const HINTED = { code: 3102, name: 'CliConfigNotFound' };

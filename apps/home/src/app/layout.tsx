@@ -4,8 +4,8 @@ import { JetBrains_Mono, Space_Grotesk } from 'next/font/google';
 
 import './globals.css';
 
-import { ConsoleGreeting } from '#components/ConsoleGreeting';
-import { DEFAULT_OG_IMAGE, SITE_DESCRIPTION, SITE_NAME, SITE_URL } from '#lib/site';
+import { ConsoleGreeting } from '#components/ConsoleGreeting.tsx';
+import { DEFAULT_OG_IMAGE, SITE_DESCRIPTION, SITE_NAME, SITE_URL } from '#lib/site.ts';
 
 import type { Metadata, Viewport } from 'next';
 import type { ReactNode } from 'react';

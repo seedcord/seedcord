@@ -1,5 +1,5 @@
-import { rssFeed } from '#lib/blog/feed';
-import { listedPosts } from '#lib/blog/posts';
+import { rssFeed } from '#lib/blog/feed.ts';
+import { listedPosts } from '#lib/blog/posts.ts';
 
 export const dynamic = 'force-static';
 export const revalidate = false;

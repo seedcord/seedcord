@@ -1,7 +1,7 @@
 import { renderHook } from '@testing-library/react';
-import { afterEach, describe, expect, it, vi } from 'vitest';
+import { afterEach, describe, expect, it, vi } from 'vite-plus/test';
 
-import { useIsMac } from '#src/lib/useIsMac';
+import { useIsMac } from '#src/lib/useIsMac.ts';
 
 function withNavigator(nav: { platform?: string; userAgent?: string }): boolean {
     vi.stubGlobal('navigator', nav);

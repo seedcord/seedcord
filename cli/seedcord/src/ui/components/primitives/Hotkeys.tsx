@@ -1,13 +1,13 @@
 import { Box, Text } from 'ink';
 import React from 'react';
 
-import { sessionKeyIsLive } from '#ui/hotkeys';
-import { nextDetailMode } from '#ui/LogLayout';
-import { ui } from '#ui/palette';
+import { sessionKeyIsLive } from '#ui/hotkeys.ts';
+import { nextDetailMode } from '#ui/LogLayout.ts';
+import { ui } from '#ui/palette.ts';
 
-import type { SessionGate } from '#ui/hotkeys';
-import type { DetailMode } from '#ui/LogLayout';
-import type { DevPhase } from '#ui/stores/devPhase';
+import type { SessionGate } from '#ui/hotkeys.ts';
+import type { DetailMode } from '#ui/LogLayout.ts';
+import type { DevPhase } from '#ui/stores/devPhase.ts';
 import type { ReactElement } from 'react';
 
 interface HotkeyProps {

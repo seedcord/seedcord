@@ -1,9 +1,9 @@
 import { existsSync } from 'node:fs';
 import { resolve } from 'node:path';
 
-import { describe, expect, it } from 'vitest';
+import { describe, expect, it } from 'vite-plus/test';
 
-import { RENAMED_PAGES, redirectFor } from '#lib/redirects';
+import { RENAMED_PAGES, redirectFor } from '#lib/redirects.ts';
 
 const DOCS = resolve(import.meta.dirname, '../../content/docs');
 

@@ -1,9 +1,9 @@
-import { describe, expect, it } from 'vitest';
+import { describe, expect, it } from 'vite-plus/test';
 
-import { noticesOf } from '#ui/notices';
-import { DevStore } from '#ui/stores/DevStore';
+import { noticesOf } from '#ui/notices.tsx';
+import { DevStore } from '#ui/stores/DevStore.ts';
 
-import type { DevState } from '#ui/stores/DevStore';
+import type { DevState } from '#ui/stores/DevStore.ts';
 
 function running(): DevStore {
     const store = new DevStore();

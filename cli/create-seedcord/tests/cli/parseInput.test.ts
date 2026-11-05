@@ -1,5 +1,5 @@
 import { SeedcordErrorCode, isSeedcordError } from '@seedcord/errors';
-import { describe, expect, it } from 'vitest';
+import { describe, expect, it } from 'vite-plus/test';
 
 import { parseInput, wantsHelp, wantsVerbose, wantsVersion } from '#cli/parseInput';
 import { thrownBy } from '#tests/thrownBy';

@@ -2,7 +2,7 @@
 
 import { useEffect, useEffectEvent } from 'react';
 
-import type { KeyName } from '#src/KeyCap';
+import type { KeyName } from '#src/KeyCap.tsx';
 
 export interface HotkeySpec {
     key: KeyName;

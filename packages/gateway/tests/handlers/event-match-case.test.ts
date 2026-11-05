@@ -1,6 +1,6 @@
 import { DispatchContext } from '@seedcord/core/internal';
 import { isSeedcordError, SeedcordErrorCode } from '@seedcord/errors';
-import { describe, expect, expectTypeOf, it } from 'vitest';
+import { describe, expect, expectTypeOf, it } from 'vite-plus/test';
 
 import { EventHandler } from '#handlers/event/EventHandler';
 

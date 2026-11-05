@@ -1,6 +1,6 @@
 import { SeedcordErrorCode } from '@seedcord/errors';
 import { ApplicationCommandType } from 'discord-api-types/v10';
-import { describe, expect, it } from 'vitest';
+import { describe, expect, it } from 'vite-plus/test';
 
 import { CleanMode } from '#commands/commands/clean/CleanMode';
 import { slash } from '#tests/commands/commands/fakeBot';

@@ -1,5 +1,5 @@
 import { LoggerChannelRegistry } from '@seedcord/logger';
-import { describe, it, expect, afterEach, vi } from 'vitest';
+import { describe, it, expect, afterEach, vi } from 'vite-plus/test';
 
 import { CoordinatedShutdown } from '#node/Lifecycle/CoordinatedShutdown';
 import { CoordinatedStartup } from '#src/lifecycle/CoordinatedStartup';

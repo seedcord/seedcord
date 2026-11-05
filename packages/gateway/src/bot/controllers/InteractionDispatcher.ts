@@ -22,9 +22,9 @@ import { Events } from 'discord.js';
 
 import { CONFIRM_DEF } from '#bot/confirm/reserved';
 import { gatewayRunConfig } from '#bot/controllers/gatewayRunConfig';
-import { UnhandledAutocomplete, UnhandledRepliable } from '#bot/defaults';
+import { UnhandledAutocomplete, UnhandledRepliable } from '#bot/defaults/index';
 import { slashRouteOf } from '#bUtilities/miscellaneous/slashRouteOf';
-import { AutocompleteHandler, InteractionMiddleware } from '#handlers/interaction';
+import { AutocompleteHandler, InteractionMiddleware } from '#handlers/interaction/index';
 import { InteractionHandler } from '#handlers/interaction/InteractionHandler';
 
 import type { HandlerConstructor, InteractionMiddlewareConstructor } from '#handlers/constructors';

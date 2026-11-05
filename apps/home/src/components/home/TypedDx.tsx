@@ -1,11 +1,11 @@
 import { cn, Icon } from '@seedcord/ui';
 import { Braces, RefreshCw, ShieldCheck } from 'lucide-react';
 
-import { CodeCard } from '#components/code/CodeCard';
-import { SECTION_HEADING, Section } from '#components/home/Section';
-import { Code } from '#components/ui/Code';
-import { CODE_MARK_LIGHT } from '#lib/code/marks';
-import { codegenOutput, typedDxCommand, typedDxHandler } from '#lib/code/samples';
+import { CodeCard } from '#components/code/CodeCard.tsx';
+import { SECTION_HEADING, Section } from '#components/home/Section.tsx';
+import { Code } from '#components/ui/Code.tsx';
+import { CODE_MARK_LIGHT } from '#lib/code/marks.ts';
+import { codegenOutput, typedDxCommand, typedDxHandler } from '#lib/code/samples.ts';
 
 import type { ReactNode } from 'react';
 

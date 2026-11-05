@@ -1,7 +1,7 @@
 import { TextDisplayBuilder } from '@discordjs/builders';
 import { DispatchContext, PublishDefault } from '@seedcord/core/internal';
 import { MessageFlags } from 'discord.js';
-import { describe, expect, it, vi } from 'vitest';
+import { describe, expect, it, vi } from 'vite-plus/test';
 
 import { UnhandledAutocomplete } from '#bot/defaults/UnhandledAutocomplete';
 import { UnhandledRepliable } from '#bot/defaults/UnhandledRepliable';

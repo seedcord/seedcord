@@ -1,13 +1,13 @@
-import { describe, expect, it } from 'vitest';
+import { describe, expect, it } from 'vite-plus/test';
 
-import { computeScrollView } from '#ui/hooks/useScroll';
-import { LogLayout } from '#ui/LogLayout';
-import { expandRows, rowKey, wrapRows } from '#ui/logRows';
+import { computeScrollView } from '#ui/hooks/useScroll.ts';
+import { LogLayout } from '#ui/LogLayout.ts';
+import { expandRows, rowKey, wrapRows } from '#ui/logRows.ts';
 
 import { logEntry as entry } from './logEntry';
 
-import type { LogRow } from '#ui/logRows';
-import type { LogEntry } from '#ui/stores/LogStore';
+import type { LogRow } from '#ui/logRows.ts';
+import type { LogEntry } from '#ui/stores/LogStore.ts';
 
 const LABEL_WIDTH = 3;
 // every width below stays under the step that shows the clock

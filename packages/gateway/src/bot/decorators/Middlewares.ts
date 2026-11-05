@@ -2,7 +2,7 @@ import { EventMiddlewareMetadataKey } from '@seedcord/core/internal';
 import { SeedcordErrorCode } from '@seedcord/errors';
 import { SeedcordTypeError } from '@seedcord/errors/internal';
 
-import type { EventMiddleware } from '#handlers/event';
+import type { EventMiddleware } from '#handlers/event/index';
 import type { ValidNonInteractionKeys } from '#src/handlers/interactionTypes';
 import type { Constructor, NonEmptyTuple } from 'type-fest';
 

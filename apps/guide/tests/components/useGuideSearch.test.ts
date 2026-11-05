@@ -1,9 +1,9 @@
 import { act, renderHook } from '@testing-library/react';
-import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vite-plus/test';
 
-import { emptyMessage, useGuideSearch } from '#components/useGuideSearch';
+import { emptyMessage, useGuideSearch } from '#components/useGuideSearch.ts';
 
-import type { ResultGroup } from '#components/useGuideSearch';
+import type { ResultGroup } from '#components/useGuideSearch.ts';
 import type { GuideSection } from '@seedcord/docs-search';
 
 const TYPING_PAUSE_MS = 250;
@@ -79,7 +79,7 @@ const SECTIONS: GuideSection[] = [
 // the hook keeps the loaded sections for the life of the module
 async function freshSearch(): Promise<typeof useGuideSearch> {
     vi.resetModules();
-    return (await import('#components/useGuideSearch')).useGuideSearch;
+    return (await import('#components/useGuideSearch.ts')).useGuideSearch;
 }
 
 async function pauseTyping(): Promise<void> {

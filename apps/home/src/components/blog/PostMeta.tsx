@@ -2,12 +2,12 @@ import { cn } from '@seedcord/ui';
 import { readTimeLabel } from '@seedcord/ui/readingTime';
 import Image from 'next/image';
 
-import { SiteLink } from '#components/ui/SiteLink';
-import { formatPostDate, listSeparators } from '#lib/blog/summary';
+import { SiteLink } from '#components/ui/SiteLink.tsx';
+import { formatPostDate, listSeparators } from '#lib/blog/summary.ts';
 
 import { Fragment } from 'react';
 
-import type { PostAuthor, PostSummary } from '#lib/blog/summary';
+import type { PostAuthor, PostSummary } from '#lib/blog/summary.ts';
 import type { ReactNode } from 'react';
 
 const AVATAR_PX = 28;

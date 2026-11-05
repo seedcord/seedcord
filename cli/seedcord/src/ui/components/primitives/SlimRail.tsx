@@ -1,7 +1,7 @@
 import { Box } from 'ink';
 import React from 'react';
 
-import { Banner } from '#ui/components/Banner';
+import { Banner } from '#ui/components/Banner.tsx';
 
 import { FiltersKey, SessionKeys, ViewKeys } from './Hotkeys';
 import { LiveFooter, StatusBlock } from './Sidebar';

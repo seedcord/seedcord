@@ -1,7 +1,7 @@
 import { fireEvent, renderHook } from '@testing-library/react';
-import { afterEach, describe, expect, it, vi } from 'vitest';
+import { afterEach, describe, expect, it, vi } from 'vite-plus/test';
 
-import { useHotkeys } from '#src/lib/useHotkeys';
+import { useHotkeys } from '#src/lib/useHotkeys.ts';
 
 // the worker runs other files in this document after these tests
 afterEach(() => {

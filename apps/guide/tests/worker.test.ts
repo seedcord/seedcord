@@ -5,9 +5,9 @@ import { NEXT_GUIDE } from '@seedcord/brand';
 import { embedding, GUIDE_SECTIONS_PATH, GUIDE_VECTORS_PATH, QUESTION_RULE } from '@seedcord/docs-search';
 import { GUIDE as guideSite } from '@seedcord/ui/sites';
 import { parse } from 'jsonc-parser';
-import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vite-plus/test';
 
-import { GuideAnswers } from '#lib/GuideAnswers';
+import { GuideAnswers } from '#lib/GuideAnswers.ts';
 
 // eslint-disable-next-line no-restricted-imports -- the app root has no alias
 import handler from '../worker';

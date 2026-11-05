@@ -1,0 +1,5 @@
+#!/bin/sh
+
+echo "Pre-commit hook triggered."
+
+vp staged

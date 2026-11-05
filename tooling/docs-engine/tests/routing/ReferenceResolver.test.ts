@@ -1,5 +1,5 @@
 import { DocKind } from '@seedcord/docs-search';
-import { describe, expect, it, vi } from 'vitest';
+import { describe, expect, it, vi } from 'vite-plus/test';
 
 import { AnchorStrategy } from '#routing/AnchorStrategy';
 import { ReferenceResolver } from '#routing/ReferenceResolver';

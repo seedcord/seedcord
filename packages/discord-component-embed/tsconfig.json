@@ -9,20 +9,11 @@
         "rootDir": "./",
         "outDir": "./dist",
         "paths": {
-            "#src/*": ["./src/*"],
             "discord-component-embed": ["./src/index.ts"],
             "discord-component-embed/jsx-runtime": ["./src/jsx-runtime.ts"],
             "discord-component-embed/jsx-dev-runtime": ["./src/jsx-dev-runtime.ts"]
         }
     },
-    "include": [
-        "src/**/*.ts",
-        "src/**/*.tsx",
-        "tests/**/*.ts",
-        "tests/**/*.tsx",
-        "eslint.config.ts",
-        "tsdown.config.ts",
-        "vitest.config.ts"
-    ],
+    "include": ["src/**/*.ts", "src/**/*.tsx", "tests/**/*.ts", "tests/**/*.tsx", "eslint.config.ts", "vite.config.ts"],
     "exclude": ["node_modules", "dist"]
 }

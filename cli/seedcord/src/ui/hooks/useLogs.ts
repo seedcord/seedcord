@@ -1,8 +1,8 @@
 import { useMemo, useSyncExternalStore } from 'react';
 
-import { LogStore } from '#ui/stores/LogStore';
+import { LogStore } from '#ui/stores/LogStore.ts';
 
-import type { LogEntry } from '#ui/stores/LogStore';
+import type { LogEntry } from '#ui/stores/LogStore.ts';
 import type { LogLevel } from '@seedcord/types';
 
 const EMPTY_CHANNELS: ReadonlySet<string> = new Set();

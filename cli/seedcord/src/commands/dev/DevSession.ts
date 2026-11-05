@@ -7,7 +7,7 @@ import { HostAugmentTarget, HostVersion, type SeedcordInstance } from '@seedcord
 import { asError, unlessAborted } from '@seedcord/utils/internal';
 
 import { toSeedcordInstance } from '#core/modules/importInstance';
-import { profileMark } from '#ui/profile';
+import { profileMark } from '#ui/profile.ts';
 import { resolveDefaultExport } from '#utils/resolveDefaultExport';
 
 import { TscRunner } from './TscRunner';
@@ -17,7 +17,7 @@ import type { ResolvedSeedcordConfig } from '#core/config/schema';
 import type { ProjectFiles } from '#core/project/ProjectFiles';
 import type { DevLock } from '#core/state/DevLock';
 import type { StateFolder } from '#core/state/StateFolder';
-import type { DevStore } from '#ui/stores/DevStore';
+import type { DevStore } from '#ui/stores/DevStore.ts';
 import type { DevRuntime } from './runtime/DevRuntime';
 import type { ILogger } from '@seedcord/types';
 

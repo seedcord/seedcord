@@ -5,18 +5,18 @@ import { Rss } from 'lucide-react';
 import Image from 'next/image';
 import Link from 'next/link';
 
-import { Byline, PostDates } from '#components/blog/PostMeta';
-import { Footer } from '#components/home/Footer';
-import { Nav } from '#components/home/Nav';
-import { SECTION_HEADING_LG, Section } from '#components/home/Section';
-import { PosterButton } from '#components/ui/PosterButton';
-import { BLOG_DESCRIPTION } from '#lib/blog/about';
-import { listedPosts } from '#lib/blog/posts';
-import { FEED_PATH } from '#lib/blog/paths';
-import { BLOG_METADATA, blogJsonLd } from '#lib/blog/seo';
-import { BLOG_PREVIEW } from '#lib/linkPreview';
+import { Byline, PostDates } from '#components/blog/PostMeta.tsx';
+import { Footer } from '#components/home/Footer.tsx';
+import { Nav } from '#components/home/Nav.tsx';
+import { SECTION_HEADING_LG, Section } from '#components/home/Section.tsx';
+import { PosterButton } from '#components/ui/PosterButton.tsx';
+import { BLOG_DESCRIPTION } from '#lib/blog/about.ts';
+import { listedPosts } from '#lib/blog/posts.ts';
+import { FEED_PATH } from '#lib/blog/paths.ts';
+import { BLOG_METADATA, blogJsonLd } from '#lib/blog/seo.ts';
+import { BLOG_PREVIEW } from '#lib/linkPreview.ts';
 
-import type { PostSummary } from '#lib/blog/summary';
+import type { PostSummary } from '#lib/blog/summary.ts';
 import type { Metadata } from 'next';
 import type { ReactNode } from 'react';
 

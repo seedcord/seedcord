@@ -1,8 +1,8 @@
 import { guideSections } from '@seedcord/docs-search';
 
-import { TAB_OF_PAGE } from '#lib/nav';
-import { source } from '#lib/source';
-import { withTrailingSlash } from '#lib/trailingSlash';
+import { TAB_OF_PAGE } from '#lib/nav.ts';
+import { source } from '#lib/source.ts';
+import { withTrailingSlash } from '#lib/trailingSlash.ts';
 
 import type { GuideSection } from '@seedcord/docs-search';
 

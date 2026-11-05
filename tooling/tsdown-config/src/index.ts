@@ -1,9 +1,9 @@
 import { readFileSync } from 'node:fs';
 import { resolve } from 'node:path';
 
-import { defineConfig } from 'tsdown';
+import { defineConfig } from 'vite-plus/pack';
 
-import type { UserConfig } from 'tsdown';
+import type { UserConfig } from 'vite-plus/pack';
 
 export type TsdownOptions = UserConfig;
 

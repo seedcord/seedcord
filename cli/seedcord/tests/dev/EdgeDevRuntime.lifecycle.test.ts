@@ -6,7 +6,7 @@ import { isSeedcordError, SeedcordErrorCode } from '@seedcord/errors';
 import { posixRelative } from '@seedcord/utils/internal';
 import { bindings, exports } from 'cf/config';
 import { Envapter } from 'envapt';
-import { assert, beforeAll, describe, expect, it, onTestFinished, vi } from 'vitest';
+import { assert, beforeAll, describe, expect, it, onTestFinished, vi } from 'vite-plus/test';
 
 import { CodegenRunner } from '#commands/codegen/CodegenRunner';
 import { DevRunner } from '#commands/dev/DevRunner';
@@ -24,7 +24,7 @@ import { loadedConfig } from '#tests/loadedConfig';
 import { lockDir } from '#tests/lockDir';
 import { silentLogger } from '#tests/silentLogger';
 import { vitePluginsOf } from '#tests/vitePluginsOf';
-import { DevStore } from '#ui/stores/DevStore';
+import { DevStore } from '#ui/stores/DevStore.ts';
 
 import {
     captureLogs,

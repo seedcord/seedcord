@@ -11,7 +11,7 @@ import {
 import { GUIDE } from '@seedcord/ui/sites';
 import { useEffect, useMemo, useState } from 'react';
 
-import { ERROR_CODES } from '#lib/errorCodes';
+import { ERROR_CODES } from '#lib/errorCodes.ts';
 
 import type { CodeMentions, GuideResult } from '@seedcord/docs-search';
 import type { TaggedUnion } from 'type-fest';

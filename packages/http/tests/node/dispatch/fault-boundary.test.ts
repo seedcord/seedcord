@@ -1,7 +1,7 @@
 import { DiscordAPIError } from '@discordjs/rest';
 import { InteractionKind, Silence } from '@seedcord/core';
 import { MessageFlags } from 'discord-api-types/v10';
-import { beforeEach, describe, expect, it } from 'vitest';
+import { beforeEach, describe, expect, it } from 'vite-plus/test';
 
 import { AutocompleteHandler } from '#handlers/interaction/AutocompleteHandler';
 import { SlashHandler } from '#handlers/interaction/SlashHandler';

@@ -1,4 +1,4 @@
-import { describe, expect, it } from 'vitest';
+import { describe, expect, it } from 'vite-plus/test';
 
 import { ReleaseEntries } from '#src/release/ReleaseEntries';
 import { ReleaseNotes } from '#src/release/ReleaseNotes';

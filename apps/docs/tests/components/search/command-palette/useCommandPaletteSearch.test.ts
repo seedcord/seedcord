@@ -1,8 +1,8 @@
 import { DocKind } from '@seedcord/docs-search';
 import { renderHook, waitFor } from '@testing-library/react';
-import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vite-plus/test';
 
-import type { useCommandPaletteSearch as UseSearch } from '#components/search/command-palette/useCommandPaletteSearch';
+import type { useCommandPaletteSearch as UseSearch } from '#components/search/command-palette/useCommandPaletteSearch.ts';
 import type { SearchIndexEntry, SearchPackage } from '@seedcord/docs-search';
 
 const router = vi.hoisted(() => ({ pathname: '/' }));
@@ -52,7 +52,7 @@ beforeEach(async () => {
 
     // referenceSearch keeps its downloads for the life of the module
     vi.resetModules();
-    ({ useCommandPaletteSearch } = await import('#components/search/command-palette/useCommandPaletteSearch'));
+    ({ useCommandPaletteSearch } = await import('#components/search/command-palette/useCommandPaletteSearch.ts'));
 });
 
 afterEach(() => {

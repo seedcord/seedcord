@@ -1,7 +1,7 @@
 import { act, renderHook, waitFor } from '@testing-library/react';
-import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vite-plus/test';
 
-import type { CommandPaletteController } from '#components/search/command-palette/useCommandPaletteController';
+import type { CommandPaletteController } from '#components/search/command-palette/useCommandPaletteController.ts';
 import type { SearchPackage } from '@seedcord/docs-search';
 import type { RenderHookResult } from '@testing-library/react';
 
@@ -15,8 +15,8 @@ const PACKAGES: SearchPackage[] = [
 async function freshController(): Promise<() => RenderHookResult<CommandPaletteController, unknown>> {
     vi.resetModules();
     const [{ useCommandPaletteController }, { CommandPaletteProvider }] = await Promise.all([
-        import('#components/search/command-palette/useCommandPaletteController'),
-        import('#components/providers/CommandPaletteProvider')
+        import('#components/search/command-palette/useCommandPaletteController.ts'),
+        import('#components/providers/CommandPaletteProvider.tsx')
     ]);
     return () => renderHook(() => useCommandPaletteController(), { wrapper: CommandPaletteProvider });
 }

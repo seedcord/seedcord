@@ -5,15 +5,15 @@ import { highlightInlineToHtml } from '@seedcord/ui/shiki';
 import { ArrowUpRight } from 'lucide-react';
 import Link from 'next/link';
 
-import { Callout } from '#components/Callout';
-import { HoverHint } from '#components/HoverHint';
-import { Shell } from '#components/Shell';
-import { LINK, Ref } from '#components/Ref';
-import { TypeHover } from '#components/TypeHover';
-import { FENCE_ATTR } from '#lib/rehypeFenceMeta';
-import { twoslashBlock } from '#lib/twoslash';
+import { Callout } from '#components/Callout.tsx';
+import { HoverHint } from '#components/HoverHint.tsx';
+import { Shell } from '#components/Shell.tsx';
+import { LINK, Ref } from '#components/Ref.tsx';
+import { TypeHover } from '#components/TypeHover.tsx';
+import { FENCE_ATTR } from '#lib/rehypeFenceMeta.ts';
+import { twoslashBlock } from '#lib/twoslash.ts';
 
-import type { FenceMode } from '#lib/twoslash';
+import type { FenceMode } from '#lib/twoslash.ts';
 import type { MDXComponents } from 'mdx/types';
 import type { HighlightLanguage } from '@seedcord/ui/shiki';
 import type { ComponentProps, ReactElement, ReactNode } from 'react';

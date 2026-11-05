@@ -1,13 +1,13 @@
 import { useMemo } from 'react';
 
-import { LogLayout } from '#ui/LogLayout';
-import { expandRows, wrapRows } from '#ui/logRows';
-import { profileWrap } from '#ui/profile';
-import { LogStore } from '#ui/stores/LogStore';
+import { LogLayout } from '#ui/LogLayout.ts';
+import { expandRows, wrapRows } from '#ui/logRows.ts';
+import { profileWrap } from '#ui/profile.ts';
+import { LogStore } from '#ui/stores/LogStore.ts';
 
-import type { DetailMode } from '#ui/LogLayout';
-import type { LogRow } from '#ui/logRows';
-import type { LogEntry } from '#ui/stores/LogStore';
+import type { DetailMode } from '#ui/LogLayout.ts';
+import type { LogRow } from '#ui/logRows.ts';
+import type { LogEntry } from '#ui/stores/LogStore.ts';
 
 interface LogRows {
     readonly logLayout: LogLayout;

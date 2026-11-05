@@ -1,20 +1,20 @@
 {
     "name": "@seedcord/tsdown-config",
-    "type": "module",
     "version": "2.0.1",
-    "engines": {
-        "node": "^24.22.1 || >=26.12.1",
-        "bun": ">=1.4.2"
-    },
     "private": true,
     "description": "Internal tsdown preset for seedcord packages",
-    "main": "./dist/index.mjs",
-    "types": "./dist/index.d.mts",
     "repository": {
         "type": "git",
         "url": "https://github.com/seedcord/seedcord.git",
         "directory": "tooling/tsdown-config"
     },
+    "files": [
+        "dist",
+        "src"
+    ],
+    "type": "module",
+    "main": "./dist/index.mjs",
+    "types": "./dist/index.d.mts",
     "exports": {
         ".": {
             "import": {
@@ -23,26 +23,22 @@
             }
         }
     },
-    "files": [
-        "dist",
-        "src"
-    ],
     "scripts": {
-        "build": "tsdown",
+        "build": "vp pack",
         "clean": "rm -rf dist",
         "lint": "eslint '**/*.ts' --cache --no-error-on-unmatched-pattern",
         "lint:fix": "eslint '**/*.ts' --fix --cache --no-error-on-unmatched-pattern",
-        "fmt": "prettier --write '**/*.{ts,json,md}' --cache --no-error-on-unmatched-pattern",
-        "fmt:check": "prettier --check '**/*.{ts,json,md}' --cache --no-error-on-unmatched-pattern",
         "tc": "tsgo --noEmit"
     },
-    "dependencies": {
-        "tsdown": "catalog:deps"
-    },
+    "dependencies": {},
     "devDependencies": {
         "@seedcord/eslint-config-base": "workspace:^",
         "@seedcord/tsconfig": "workspace:^",
         "@types/node": "catalog:deps",
         "typescript": "catalog:peer"
+    },
+    "engines": {
+        "bun": ">=1.4.2",
+        "node": "^24.22.1 || >=26.12.1"
     }
 }

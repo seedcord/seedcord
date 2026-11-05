@@ -1,9 +1,9 @@
 import { cn } from '@seedcord/ui';
 
-import { SECTION_HEADING, Section } from '#components/home/Section';
-import { Code } from '#components/ui/Code';
-import { CODE_MARK_INK } from '#lib/code/marks';
-import { CDN_URL } from '#lib/site';
+import { SECTION_HEADING, Section } from '#components/home/Section.tsx';
+import { Code } from '#components/ui/Code.tsx';
+import { CODE_MARK_INK } from '#lib/code/marks.ts';
+import { CDN_URL } from '#lib/site.ts';
 
 import type { ReactNode } from 'react';
 

@@ -1,9 +1,9 @@
 import { render, screen, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { useState } from 'react';
-import { describe, expect, it, vi } from 'vitest';
+import { describe, expect, it, vi } from 'vite-plus/test';
 
-import { Dropdown, type DropdownGroup, type DropdownOption } from '#src/Dropdown';
+import { Dropdown, type DropdownGroup, type DropdownOption } from '#src/Dropdown.tsx';
 
 const options: readonly DropdownOption[] = [
     { value: 'one', label: 'One' },

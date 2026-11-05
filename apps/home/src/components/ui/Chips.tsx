@@ -1,6 +1,6 @@
 import { cn, Icon, tw } from '@seedcord/ui';
 
-import type { Ground } from '#components/home/Section';
+import type { Ground } from '#components/home/Section.tsx';
 import type { LucideIcon } from 'lucide-react';
 import type { ReactNode } from 'react';
 

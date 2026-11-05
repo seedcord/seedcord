@@ -1,8 +1,8 @@
-import { GuideShell } from '#components/GuideShell';
-import { GUIDE_TABS, guideOrder, sidebarsByTab } from '#lib/nav';
-import { neighboursOf } from '#lib/neighbours';
-import { pageActionsFor } from '#lib/pageActions';
-import { source } from '#lib/source';
+import { GuideShell } from '#components/GuideShell.tsx';
+import { GUIDE_TABS, guideOrder, sidebarsByTab } from '#lib/nav.ts';
+import { neighboursOf } from '#lib/neighbours.ts';
+import { pageActionsFor } from '#lib/pageActions.ts';
+import { source } from '#lib/source.ts';
 
 import type { ReactNode } from 'react';
 

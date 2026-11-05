@@ -2,7 +2,7 @@
 
 import { cn } from '@seedcord/ui';
 
-import { HoverPrefetchLink } from '#components/HoverPrefetchLink';
+import { HoverPrefetchLink } from '#components/HoverPrefetchLink.tsx';
 import { log } from '#lib/logger';
 
 import type { SidebarItemProps } from './types';

@@ -1,7 +1,7 @@
 import { render, screen } from '@testing-library/react';
-import { describe, expect, it } from 'vitest';
+import { describe, expect, it } from 'vite-plus/test';
 
-import { mdxComponents } from '#lib/mdxComponents';
+import { mdxComponents } from '#lib/mdxComponents.tsx';
 
 const { h2: H2, h3: H3, h4: H4 } = mdxComponents;
 

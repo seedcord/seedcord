@@ -1,9 +1,9 @@
 import { highlightToHtml } from '@seedcord/ui/shiki';
 
-import { ShellTabs } from '#components/ShellTabs';
-import { commandLines, MANAGERS, VERBS } from '#lib/packageManager';
+import { ShellTabs } from '#components/ShellTabs.tsx';
+import { commandLines, MANAGERS, VERBS } from '#lib/packageManager.ts';
 
-import type { Manager, Verb } from '#lib/packageManager';
+import type { Manager, Verb } from '#lib/packageManager.ts';
 import type { ReactElement } from 'react';
 
 export type ShellProps = Partial<Record<Verb, string>> & {

@@ -10,7 +10,7 @@
     // cloudflare keys this cache by worker version. each deploy sets a new BUILD_ID and starts empty
     "cache": { "enabled": true },
     "env": {
-        // pnpm docs:preview writes the bucket layout to .preview
+        // vp run docs:preview writes the bucket layout to .preview
         "preview": {
             "r2_buckets": [],
             "assets": {

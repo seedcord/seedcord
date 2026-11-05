@@ -94,15 +94,13 @@
             "entry": ["**/*.types-test.ts"]
         },
         "packages/logger": {
-            "entry": ["**/*.types-test.ts", "tests/fixtures/*.ts"],
-            "ignoreDependencies": ["tsx"]
+            "entry": ["**/*.types-test.ts", "tests/fixtures/*.ts"]
         },
         "packages/types": {
             "entry": ["**/*.types-test.ts"]
         },
         "packages/utils": {
-            "ignore": ["tests/files/fixtures/**"],
-            "ignoreDependencies": ["tsx"]
+            "ignore": ["tests/files/fixtures/**"]
         },
         "plugins/kysely-postgres": {
             "entry": ["**/*.types-test.ts"]

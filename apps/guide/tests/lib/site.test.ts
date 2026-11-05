@@ -1,6 +1,6 @@
-import { afterEach, describe, expect, it, vi } from 'vitest';
+import { afterEach, describe, expect, it, vi } from 'vite-plus/test';
 
-import { canonicalUrl, pageMetadata, shownTitle, sitemapEntries } from '#lib/site';
+import { canonicalUrl, pageMetadata, shownTitle, sitemapEntries } from '#lib/site.ts';
 
 describe('the canonical url for a path', () => {
     it('keeps the trailing slash the export actually serves', () => {
@@ -140,7 +140,7 @@ describe('the reference links in development', () => {
         vi.stubEnv('NODE_ENV', 'development');
         vi.resetModules();
 
-        const { DOCS_URL } = await import('#lib/site');
+        const { DOCS_URL } = await import('#lib/site.ts');
 
         expect(DOCS_URL).toBe('http://localhost:3001/docs');
     });

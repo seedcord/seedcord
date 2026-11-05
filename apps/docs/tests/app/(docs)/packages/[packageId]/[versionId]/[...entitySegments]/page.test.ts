@@ -1,4 +1,4 @@
-import { describe, expect, it, vi } from 'vitest';
+import { describe, expect, it, vi } from 'vite-plus/test';
 
 import type { ResolvedEntity } from '#lib/docs/resolveEntity';
 import type { PackageIndexEntry } from '@seedcord/docs-engine';
@@ -49,7 +49,8 @@ vi.mock('#lib/docs/engine', () => ({
     getDocsEngine: () => Promise.resolve({ getEntry: () => Promise.resolve(INDEX_ENTRY) })
 }));
 
-const { generateMetadata } = await import('#src/app/(docs)/packages/[packageId]/[versionId]/[...entitySegments]/page');
+const { generateMetadata } =
+    await import('#src/app/(docs)/packages/[packageId]/[versionId]/[...entitySegments]/page.tsx');
 
 describe('entity page metadata', () => {
     it('points an older version at the latest url of the same symbol', async () => {

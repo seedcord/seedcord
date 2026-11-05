@@ -1,6 +1,6 @@
 import { BuilderComponent, RegisterCommand } from '@seedcord/core';
 import { GLOBAL_ID } from '@seedcord/core/internal';
-import { describe, expect, it } from 'vitest';
+import { describe, expect, it } from 'vite-plus/test';
 
 import { loadCodeScopes, loadInstance } from '#commands/commands/codeScopes';
 import { quietSteps } from '#core/output/quietSteps';

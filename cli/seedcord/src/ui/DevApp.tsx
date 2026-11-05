@@ -1,26 +1,26 @@
 import { Box, useBoxMetrics, useInput, useWindowSize } from 'ink';
 import React, { useRef, useState } from 'react';
 
-import { Rule } from '#ui/components/primitives/Rule';
-import { INITIAL_CURSOR } from '#ui/filterCursor';
-import { useDevState } from '#ui/hooks/useDevState';
-import { useFilterPanel } from '#ui/hooks/useFilterPanel';
-import { useLogCapture } from '#ui/hooks/useLogCapture';
-import { useLogRows } from '#ui/hooks/useLogRows';
-import { useLogs } from '#ui/hooks/useLogs';
-import { usePanelFit } from '#ui/hooks/usePanelFit';
-import { usePrefs } from '#ui/hooks/usePrefs';
-import { useRailWidth } from '#ui/hooks/useRailWidth';
-import { useScroll } from '#ui/hooks/useScroll';
-import { useUptime } from '#ui/hooks/useUptime';
-import { acceptsSessionKeys, dispatchHotkey } from '#ui/hotkeys';
-import { DevLayout } from '#ui/layout/DevLayout';
-import { rowKey } from '#ui/logRows';
-import { noticesOf } from '#ui/notices';
-import { Screen } from '#ui/Screen';
+import { Rule } from '#ui/components/primitives/Rule.tsx';
+import { INITIAL_CURSOR } from '#ui/filterCursor.ts';
+import { useDevState } from '#ui/hooks/useDevState.ts';
+import { useFilterPanel } from '#ui/hooks/useFilterPanel.ts';
+import { useLogCapture } from '#ui/hooks/useLogCapture.ts';
+import { useLogRows } from '#ui/hooks/useLogRows.ts';
+import { useLogs } from '#ui/hooks/useLogs.ts';
+import { usePanelFit } from '#ui/hooks/usePanelFit.ts';
+import { usePrefs } from '#ui/hooks/usePrefs.ts';
+import { useRailWidth } from '#ui/hooks/useRailWidth.ts';
+import { useScroll } from '#ui/hooks/useScroll.ts';
+import { useUptime } from '#ui/hooks/useUptime.ts';
+import { acceptsSessionKeys, dispatchHotkey } from '#ui/hotkeys.ts';
+import { DevLayout } from '#ui/layout/DevLayout.tsx';
+import { rowKey } from '#ui/logRows.ts';
+import { noticesOf } from '#ui/notices.tsx';
+import { Screen } from '#ui/Screen.ts';
 
-import type { DevPrefs } from '#ui/devPrefs';
-import type { DevStore } from '#ui/stores/DevStore';
+import type { DevPrefs } from '#ui/devPrefs.ts';
+import type { DevStore } from '#ui/stores/DevStore.ts';
 import type { DOMElement } from 'ink';
 import type { ReactElement } from 'react';
 

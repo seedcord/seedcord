@@ -1,6 +1,6 @@
 import { assertUniqueKeys, EventMetadataKey } from '@seedcord/core/internal';
 
-import type { EventHandler } from '#handlers/event';
+import type { EventHandler } from '#handlers/event/index';
 import type { ValidNonInteractionKeys } from '#src/handlers/interactionTypes';
 import type { EventFrequency } from '@seedcord/types';
 import type { ClientEvents } from 'discord.js';

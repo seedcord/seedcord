@@ -1,9 +1,9 @@
 import { readFileSync } from 'node:fs';
 import { join } from 'node:path';
 
-import { describe, expect, it } from 'vitest';
+import { describe, expect, it } from 'vite-plus/test';
 
-import { easeDrawer, easeInOutStrong, easeOutStrong } from '#src/lib/motion';
+import { easeDrawer, easeInOutStrong, easeOutStrong } from '#src/lib/motion.ts';
 
 // the JS easing arrays mirror the --ease-* cubic-beziers in tokens.css, this catches a drift in either
 const tokens = readFileSync(join(import.meta.dirname, '../../src/styles/tokens.css'), 'utf8');

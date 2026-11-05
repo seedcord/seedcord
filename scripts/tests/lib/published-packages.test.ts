@@ -2,7 +2,7 @@ import { mkdir, mkdtempDisposable, writeFile } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import path from 'node:path';
 
-import { describe, expect, it } from 'vitest';
+import { describe, expect, it } from 'vite-plus/test';
 
 import { readPublished, readStatusReleases } from '#src/lib/published-packages';
 import { Workspace } from '#src/lib/Workspace';

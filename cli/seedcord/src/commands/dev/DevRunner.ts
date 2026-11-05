@@ -7,8 +7,8 @@ import { openModuleLoader } from '#core/modules/openModuleLoader';
 import { quietSteps } from '#core/output/quietSteps';
 import { DevLock } from '#core/state/DevLock';
 import { startupShell } from '#src/core/ShellMode';
-import { resetChannelColors } from '#ui/channelColor';
-import { profileMark } from '#ui/profile';
+import { resetChannelColors } from '#ui/channelColor.ts';
+import { profileMark } from '#ui/profile.ts';
 
 import { DevSession } from './DevSession';
 import { EdgeDevRuntime } from './runtime/EdgeDevRuntime';
@@ -18,7 +18,7 @@ import { TunnelRouter } from './tunnel/TunnelRouter';
 
 import type { ResolvedTarget, ResolvedTunnel } from '#core/config/schema';
 import type { StateFolder } from '#core/state/StateFolder';
-import type { DevStore } from '#ui/stores/DevStore';
+import type { DevStore } from '#ui/stores/DevStore.ts';
 import type { DevSessionDeps } from './DevSession';
 import type { DevRuntime } from './runtime/DevRuntime';
 import type { TunnelCoordinator } from './tunnel/TunnelCoordinator';

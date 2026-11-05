@@ -1,5 +1,5 @@
 import { SiteAddress } from '@seedcord/brand';
-import { afterEach, describe, expect, it, vi } from 'vitest';
+import { afterEach, describe, expect, it, vi } from 'vite-plus/test';
 
 import { GuideSearch } from '#src/GuideSearch';
 import { ASK_WAIT_STATUS, SearchUnavailable } from '#src/SearchUnavailable';

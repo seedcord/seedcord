@@ -1,7 +1,7 @@
 import { and, defineGate, or } from '@seedcord/core';
-import { describe, it, expectTypeOf } from 'vitest';
+import { describe, it, expectTypeOf } from 'vite-plus/test';
 
-import type { EventGateContext, GateContext, InteractionGateContext } from '#bot/gates';
+import type { EventGateContext, GateContext, InteractionGateContext } from '#bot/gates/index';
 import type { EffectGate, Gate, GateContextBase, RequiredOf } from '@seedcord/core';
 import type { ButtonInteraction, ChatInputCommandInteraction, Events } from 'discord.js';
 

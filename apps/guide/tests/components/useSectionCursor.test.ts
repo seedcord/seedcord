@@ -1,7 +1,7 @@
 import { act, renderHook } from '@testing-library/react';
-import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vite-plus/test';
 
-import { useSectionCursor } from '#components/useSectionCursor';
+import { useSectionCursor } from '#components/useSectionCursor.ts';
 
 const HEADINGS = ['setup', 'options', 'replies'] as const;
 

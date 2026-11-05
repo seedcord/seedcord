@@ -2,18 +2,8 @@
     "$schema": "https://json.schemastore.org/tsconfig",
     "extends": "@seedcord/tsconfig/node",
     "compilerOptions": {
-        "rootDir": ".",
-        "paths": {
-            "#tests/*": ["./tests/*"],
-            "#src/*": ["./src/*"],
-            "#model/*": ["./src/model/*"],
-            "#builders/*": ["./src/builders/*"],
-            "#routing/*": ["./src/routing/*"],
-            "#transformers/*": ["./src/transformers/*"],
-            "#packages/*": ["./src/packages/*"],
-            "#remote/*": ["./src/remote/*"]
-        }
+        "rootDir": "."
     },
-    "include": ["src/**/*.ts", "tests/**/*.ts", "eslint.config.ts", "tsdown.config.ts", "vitest.config.ts"],
+    "include": ["src/**/*.ts", "tests/**/*.ts", "eslint.config.ts", "vite.config.ts"],
     "exclude": ["node_modules", "dist", "generated"]
 }

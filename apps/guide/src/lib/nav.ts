@@ -2,8 +2,8 @@ import { getPageTreeRoots } from 'fumadocs-core/page-tree';
 
 import { source } from './source';
 
-import type { SidebarLink, SidebarSection } from '#components/DocsSidebar';
-import type { OrderedPage } from '#lib/neighbours';
+import type { SidebarLink, SidebarSection } from '#components/DocsSidebar.tsx';
+import type { OrderedPage } from '#lib/neighbours.ts';
 import type { Folder, Node, Root } from 'fumadocs-core/page-tree';
 
 export interface GuideTab {

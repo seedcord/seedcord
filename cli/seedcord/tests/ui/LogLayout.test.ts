@@ -1,6 +1,6 @@
-import { describe, expect, it } from 'vitest';
+import { describe, expect, it } from 'vite-plus/test';
 
-import { LogLayout } from '#ui/LogLayout';
+import { LogLayout } from '#ui/LogLayout.ts';
 
 function shape(layout: LogLayout): string {
     return layout.cells

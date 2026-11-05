@@ -1,6 +1,6 @@
-import { expectTypeOf } from 'vitest';
+import { expectTypeOf } from 'vite-plus/test';
 
-import { InteractionMiddleware } from '#handlers/interaction';
+import { InteractionMiddleware } from '#handlers/interaction/index';
 
 import type { InteractionKind, SlashRegistry } from '@seedcord/core';
 import type { ButtonInteraction, ChatInputCommandInteraction, ModalSubmitInteraction } from 'discord.js';

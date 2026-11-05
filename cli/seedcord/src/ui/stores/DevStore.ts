@@ -6,7 +6,7 @@ import { isSessionLive } from './devPhase';
 import type { DevEvent } from '#commands/dev/runtime/events';
 import type { TunnelStatus } from '#commands/dev/tunnel/TunnelCoordinator';
 import type { ResolvedTarget } from '#core/config/schema';
-import type { Confirmable } from '#ui/confirms';
+import type { Confirmable } from '#ui/confirms.ts';
 import type { DevPhase } from './devPhase';
 
 export interface DevTransport {

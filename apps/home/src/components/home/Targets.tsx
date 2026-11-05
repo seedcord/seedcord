@@ -1,11 +1,11 @@
 import { cn, Icon } from '@seedcord/ui';
 import { Binary, Cloud, PackageOpen, Route, Server } from 'lucide-react';
 
-import { CodeCard } from '#components/code/CodeCard';
-import { SECTION_HEADING, Section } from '#components/home/Section';
-import { Code } from '#components/ui/Code';
-import { CODE_MARK_INK, CODE_MARK_LIGHT } from '#lib/code/marks';
-import { packageConsumer } from '#lib/code/samples';
+import { CodeCard } from '#components/code/CodeCard.tsx';
+import { SECTION_HEADING, Section } from '#components/home/Section.tsx';
+import { Code } from '#components/ui/Code.tsx';
+import { CODE_MARK_INK, CODE_MARK_LIGHT } from '#lib/code/marks.ts';
+import { packageConsumer } from '#lib/code/samples.ts';
 
 import type { LucideIcon } from 'lucide-react';
 import type { ReactNode } from 'react';

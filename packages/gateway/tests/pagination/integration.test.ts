@@ -1,7 +1,7 @@
 import { InteractionKind } from '@seedcord/core';
 import { pageCursor } from '@seedcord/core/internal';
 import { ComponentType } from 'discord.js';
-import { afterEach, describe, expect, vi } from 'vitest';
+import { afterEach, describe, expect, vi } from 'vite-plus/test';
 
 import { interactionsOf } from '#bot/Bot';
 import { Seedcord } from '#src/Seedcord';

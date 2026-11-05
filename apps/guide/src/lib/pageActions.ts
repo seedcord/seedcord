@@ -1,7 +1,7 @@
 import { GUIDE } from '@seedcord/ui';
 import { TWIN } from '@seedcord/ui/PageAsset';
 
-import { markdownUrl, REPO_URL, SITE_NAME } from '#lib/site';
+import { markdownUrl, REPO_URL, SITE_NAME } from '#lib/site.ts';
 
 // pull requests merge into next
 const CONTENT_SOURCE = `${REPO_URL}/edit/next/apps/guide/content/docs`;

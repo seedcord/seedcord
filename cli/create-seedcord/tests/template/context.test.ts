@@ -1,4 +1,4 @@
-import { describe, expect, it } from 'vitest';
+import { describe, expect, it } from 'vite-plus/test';
 
 import { PackageManager } from '#cli/PackageManager';
 import { buildContext } from '#template/context';

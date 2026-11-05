@@ -2,12 +2,12 @@
 
 import { clickCopyAnchor } from '@seedcord/ui';
 
-import { GUIDE_KEYS } from '#lib/guideKeys';
+import { GUIDE_KEYS } from '#lib/guideKeys.ts';
 
 import { useSectionCursor } from './useSectionCursor';
 
-import type { GuideTab } from '#lib/nav';
-import type { PageNeighbours } from '#lib/neighbours';
+import type { GuideTab } from '#lib/nav.ts';
+import type { PageNeighbours } from '#lib/neighbours.ts';
 import type { Hotkey } from '@seedcord/ui';
 
 export interface PageKeyTargets {

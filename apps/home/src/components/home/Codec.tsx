@@ -1,12 +1,12 @@
 import { cn } from '@seedcord/ui';
 import { ArrowLeftFromLine, ArrowRightFromLine } from 'lucide-react';
 
-import { CodeCard } from '#components/code/CodeCard';
-import { SECTION_HEADING, Section } from '#components/home/Section';
-import { Chips } from '#components/ui/Chips';
-import { Code } from '#components/ui/Code';
-import { CODE_MARK_DARK } from '#lib/code/marks';
-import { codecComponent, codecHandler } from '#lib/code/samples';
+import { CodeCard } from '#components/code/CodeCard.tsx';
+import { SECTION_HEADING, Section } from '#components/home/Section.tsx';
+import { Chips } from '#components/ui/Chips.tsx';
+import { Code } from '#components/ui/Code.tsx';
+import { CODE_MARK_DARK } from '#lib/code/marks.ts';
+import { codecComponent, codecHandler } from '#lib/code/samples.ts';
 
 import type { ReactNode } from 'react';
 
