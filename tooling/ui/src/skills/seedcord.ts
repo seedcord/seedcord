@@ -13,6 +13,8 @@ export const SEARCH_RULE =
 export const CODEGEN_RULE =
     '`seedcord codegen` writes the typed tables for slash commands, user and message context menus, emojis, and plugin keys. Run it after changing any of those.';
 
+export const SCAFFOLD_RULE = 'Run `pnpm create seedcord --help`, then scaffold the bot with every flag set.';
+
 export const DEV_RULE = `When a change is ready to try against Discord, run \`seedcord dev\` in the background without waiting to be asked, and keep its stdin open so you can send it commands. Ask the user to run the slash command, then read what \`seedcord dev\` logged, including any warnings. Without a terminal it logs JSON lines and takes commands on stdin, like \`{"do":"restart"}\`. ${GUIDE}/tooling/dev.md lists those commands.`;
 
 const BODY = `---
@@ -34,7 +36,7 @@ Fetch ${GUIDE}/llms.txt. It holds every rule that stops you inventing seedcord, 
 
 ## 2. Scaffold the project
 
-Run \`pnpm create seedcord\`. It asks where the project goes, which transport, and your bot token. Then it installs, formats, runs codegen, and makes a git commit.
+${SCAFFOLD_RULE} Every question that the interview asks has a flag, so passing them all skips the interview. By default it then installs, formats, runs codegen, and makes a git commit. Read the AGENTS.md that it writes.
 
 ## 3. Write a command
 

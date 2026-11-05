@@ -29,6 +29,8 @@ Discord posts only interactions to that URL. Use [`@seedcord/gateway`](https://w
 
 seedcord is pre-1.0, so a minor version can break your bot. Each release's changelog says what changed and how to update.
 
+If you use a coding agent, point it at [`seedcord.org/guide/llms.txt`](https://seedcord.org/guide/llms.txt), which lists every page in the guide.
+
 ## Installation
 
 `pnpm create seedcord` sets up a new bot and asks where it runs. To add seedcord to an existing project:
