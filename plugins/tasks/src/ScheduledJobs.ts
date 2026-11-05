@@ -65,7 +65,8 @@ export class ScheduledJobs {
         this.pending.set(id, job);
         this.arm(job);
 
-        return { id, key, at };
+        // a copy, since the timer reads job.at and a caller may change what it gets back
+        return { id, key, at: new Date(at) };
     }
 
     public async cancel(id: string): Promise<boolean> {
@@ -94,7 +95,7 @@ export class ScheduledJobs {
     }
 
     public list(): ScheduledJob[] {
-        return [...this.pending.values()].map(({ id, key, at }) => ({ id, key, at }));
+        return [...this.pending.values()].map(({ id, key, at }) => ({ id, key, at: new Date(at) }));
     }
 
     private arm(job: Pending, delayMs = job.at.getTime() - Date.now()): void {

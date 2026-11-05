@@ -84,6 +84,17 @@ describe('Tasks scheduled jobs', () => {
         expect(driver.stored.size).toBe(0);
     });
 
+    it('keeps its time when a caller changes a returned date', async () => {
+        const { host, tasks } = await start(driver);
+
+        const job = await tasks.schedule(Reminder, { in: '1h' });
+        job.at.setTime(job.at.getTime() + DAY_MS);
+        tasks.jobs()[0]?.at.setTime(job.at.getTime() + DAY_MS);
+
+        await vi.advanceTimersByTimeAsync(HOUR_MS);
+        expect(host.runs).toHaveLength(1);
+    });
+
     it('stores the job before schedule resolves', async () => {
         const { tasks } = await start(driver);
 
