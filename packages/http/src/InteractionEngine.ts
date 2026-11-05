@@ -49,58 +49,29 @@ export interface EngineContext {
     waitUntil(promise: Promise<unknown>): void;
 }
 
-export type Engine = (request: Request, ctx?: EngineContext) => Promise<Response>;
+export class InteractionEngine {
+    private readonly verifier: Ed25519Verifier;
+    private readonly replays = new ReplayGuard();
+    private readonly logger = new Logger('Engine', { channel: 'bot' });
+    private readonly requestRuns = new AsyncLocalStorage<Set<Promise<void>>>();
 
-export function buildEngine(
-    core: Core,
-    maps: RouteMaps,
-    middlewares: MiddlewareRegistry<InteractionMiddlewareConstructor>,
-    publicKey: string
-): Engine {
-    const verifier = new Ed25519Verifier(publicKey);
-    const replays = new ReplayGuard();
-    // eager because env binds before this factory runs
-    const logger = new Logger('Engine', { channel: 'bot' });
-    const requestRuns = new AsyncLocalStorage<Set<Promise<void>>>();
-    core.bus[OnSubscriberRun] = (run) => requestRuns.getStore()?.add(run);
-
-    async function subscribersSettled(): Promise<void> {
-        // a Set's loop also reaches what a running subscriber publishes while it waits
-        for (const run of requestRuns.getStore() ?? []) await run.catch(() => undefined);
+    constructor(
+        private readonly core: Core,
+        private readonly maps: RouteMaps,
+        private readonly middlewares: MiddlewareRegistry<InteractionMiddlewareConstructor>,
+        publicKey: string
+    ) {
+        this.verifier = new Ed25519Verifier(publicKey);
+        core.bus[OnSubscriberRun] = (run) => this.requestRuns.getStore()?.add(run);
     }
 
-    function rootFault(caught: unknown): void {
-        const error = asError(caught);
-        logger.error('dispatch failed past the boundary', error);
-        core.bus[PublishDefault]('unhandledInteractionError', { error });
-    }
-
-    async function dispatch(interaction: APIInteraction, ctx: EngineContext | undefined): Promise<void> {
-        let work = Promise.resolve();
-        try {
-            core.bus[PublishDefault]('anyInteraction', { interaction });
-            const match = resolve(maps, interaction);
-            if (match) {
-                const payload = interaction as ValidInteractionTypes;
-                const start = await dispatchInteraction({ match, payload, core, middlewares });
-                // without this catch the rejection reaches the process unhandled
-                if (start) work = start().catch(rootFault);
-            }
-        } catch (caught) {
-            // the 202 has to go out either way or discord drops the interaction
-            rootFault(caught);
-        }
-        // workers ends a request once its waitUntil promises settle, and that cuts off a subscriber mid-send
-        ctx?.waitUntil(work.then(subscribersSettled));
-    }
-
-    const handle = async (request: Request, ctx?: EngineContext): Promise<Response> => {
-        const [response, outcome] = await requestRuns.run(new Set(), () => respond(request, ctx));
-        logger.trace(`${paint.sky.bold(request.method)} ${outcome} ${paint.amber(String(response.status))}`);
+    public async handle(request: Request, ctx?: EngineContext): Promise<Response> {
+        const [response, outcome] = await this.requestRuns.run(new Set(), () => this.respond(request, ctx));
+        this.logger.trace(`${paint.sky.bold(request.method)} ${outcome} ${paint.amber(String(response.status))}`);
         return response;
-    };
+    }
 
-    const respond = async (request: Request, ctx?: EngineContext): Promise<Answer> => {
+    private async respond(request: Request, ctx: EngineContext | undefined): Promise<Answer> {
         const notPost = rejectNonPost(request);
         if (notPost) return [notPost, 'not-post'];
 
@@ -108,11 +79,11 @@ export function buildEngine(
         const timestamp = request.headers.get(TIMESTAMP_HEADER);
         if (signature === null || timestamp === null) return [new Response(null, { status: UNAUTHORIZED }), 'unsigned'];
 
-        const timestampMs = replays.fresh(timestamp);
+        const timestampMs = this.replays.fresh(timestamp);
         if (timestampMs === null) return [new Response(null, { status: UNAUTHORIZED }), 'stale'];
 
         const body = new Uint8Array(await request.arrayBuffer());
-        if (!(await verifier.verify(signature, timestamp, body))) {
+        if (!(await this.verifier.verify(signature, timestamp, body))) {
             return [new Response(null, { status: UNAUTHORIZED }), 'bad-signature'];
         }
 
@@ -129,13 +100,48 @@ export function buildEngine(
             return [Response.json({ type: InteractionResponseType.Pong }), 'ping'];
         }
 
-        if (!replays.unseen(signature, timestampMs)) return [new Response(null, { status: UNAUTHORIZED }), 'replay'];
+        if (!this.replays.unseen(signature, timestampMs)) {
+            return [new Response(null, { status: UNAUTHORIZED }), 'replay'];
+        }
 
         // justified: the payload is signed by Discord, and the type field anchors the discriminated union
-        await dispatch(payload as APIInteraction, ctx);
+        await this.dispatch(payload as APIInteraction, ctx);
 
         return [new Response(null, { status: ACCEPTED }), 'dispatched'];
-    };
+    }
 
-    return handle;
+    private async dispatch(interaction: APIInteraction, ctx: EngineContext | undefined): Promise<void> {
+        let work = Promise.resolve();
+        try {
+            this.core.bus[PublishDefault]('anyInteraction', { interaction });
+            const match = resolve(this.maps, interaction);
+            if (match) {
+                const payload = interaction as ValidInteractionTypes;
+                const start = await dispatchInteraction({
+                    match,
+                    payload,
+                    core: this.core,
+                    middlewares: this.middlewares
+                });
+                // without this catch the rejection reaches the process unhandled
+                if (start) work = start().catch((caught: unknown) => this.rootFault(caught));
+            }
+        } catch (caught) {
+            // the 202 has to go out either way or discord drops the interaction
+            this.rootFault(caught);
+        }
+        // workers ends a request once its waitUntil promises settle, and that cuts off a subscriber mid-send
+        ctx?.waitUntil(work.then(() => this.subscribersSettled()));
+    }
+
+    private async subscribersSettled(): Promise<void> {
+        // a Set's loop also reaches what a running subscriber publishes while it waits
+        for (const run of this.requestRuns.getStore() ?? []) await run.catch(() => undefined);
+    }
+
+    private rootFault(caught: unknown): void {
+        const error = asError(caught);
+        this.logger.error('dispatch failed past the boundary', error);
+        this.core.bus[PublishDefault]('unhandledInteractionError', { error });
+    }
 }

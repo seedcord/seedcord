@@ -2,7 +2,7 @@ import { DRAIN_WINDOW_MS, InFlight } from '@seedcord/core/node/internal';
 import { SeedcordErrorCode } from '@seedcord/errors';
 import { SeedcordError } from '@seedcord/errors/internal';
 
-import type { EngineContext } from '#src/engine';
+import type { EngineContext } from '#src/InteractionEngine';
 import type { InteractionsService } from '#src/InteractionsService';
 import type { CoordinatedStartup } from '@seedcord/core/node';
 import type { HealthResponder } from '@seedcord/core/node/internal';
@@ -33,7 +33,7 @@ export class NodeEndpoint implements EngineContext {
 
     private respond(request: Request): Promise<Response> {
         const health = this.health?.answer(request, this.startup.isReady);
-        return health ? Promise.resolve(health) : this.service.engine(request, this);
+        return health ? Promise.resolve(health) : this.service.engine.handle(request, this);
     }
 
     public waitUntil(work: Promise<unknown>): void {

@@ -18,8 +18,8 @@ import { Logger } from '@seedcord/logger';
 import { HostAugmentTarget, HostVersion, SeedcordBrand } from '@seedcord/types/internal';
 
 import { installEmojis } from '#src/emojis/EmojiInjector';
-import { rejectNonPost } from '#src/engine';
 import { HttpStartupTasks } from '#src/HttpStartupTasks';
+import { rejectNonPost } from '#src/InteractionEngine';
 import { InteractionsService } from '#src/InteractionsService';
 import { usernameOf } from '#src/username';
 import { version as packageVersion } from '#src/version';
@@ -27,7 +27,7 @@ import { version as packageVersion } from '#src/version';
 import { edgeRestOptions, edgeShutdown } from './defaults';
 
 import type { HttpEdgeConfig } from '#interfaces/Config';
-import type { EngineContext } from '#src/engine';
+import type { EngineContext } from '#src/InteractionEngine';
 import type { REST } from '@discordjs/rest';
 import type { StartupTasks, BakedIds } from '@seedcord/core/internal';
 import type { DevChannel, SeedcordCliEvents, SeedcordFrameworkEvents } from '@seedcord/types/internal';
@@ -146,7 +146,7 @@ export class Seedcord extends PluginHost<'http', 'edge'> {
         if (notPost) return notPost;
 
         await this.#start();
-        return this.#service.engine(request, ctx);
+        return this.#service.engine.handle(request, ctx);
     }
 
     async #start(): Promise<void> {
