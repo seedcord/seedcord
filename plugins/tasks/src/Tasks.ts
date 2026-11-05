@@ -73,11 +73,13 @@ export class Tasks extends Plugin<{ transport: 'any'; runtime: 'server' }> {
         );
 
         this.reloader = new HmrModuleHandler<TaskClass, void, string>({
-            handlersDir: options.path,
-            isHandler: isTaskClass,
-            registerHandler: (Task, file) => this.register(Task, file),
-            getArtifacts: (Task) => taskKey(Task),
-            unregisterHandler: (_Task, key) => this.unregister(key),
+            handlers: {
+                dir: options.path,
+                is: isTaskClass,
+                register: (Task, file) => this.register(Task, file),
+                getArtifacts: (Task) => taskKey(Task),
+                unregister: (_Task, key) => this.unregister(key)
+            },
             logger: this.logger
         });
     }
