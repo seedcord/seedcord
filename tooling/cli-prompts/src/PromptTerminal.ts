@@ -1,6 +1,10 @@
 import { SeedcordErrorCode } from '@seedcord/errors';
 import { expect, vi } from 'vitest';
 
+// without these imports for tests, a slow machine's first prompt can miss press's 1s wait
+import 'ink';
+import './promptViews';
+
 import { Prompter } from './Prompter';
 import { KeyboardStdin, ScreenStdout } from './terminalStubs';
 
