@@ -244,6 +244,8 @@ export enum SeedcordErrorCode {
     PluginTasksInvalidDuration = 2309,
     /** `schedule` got `data` that has no JSON form. */
     PluginTasksDataNotJson = 2310,
+    /** `schedule` got an `in` that ends past the last date a `Date` can hold. */
+    PluginTasksDurationTooLong = 2311,
 
     /** Someone pressed Ctrl-C at a prompt in `seedcord` or `create-seedcord`. */
     CliCancelled = 3001,

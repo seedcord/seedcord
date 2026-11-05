@@ -12,6 +12,6 @@ export class Slow extends Task<void, TestHost> {
 
     public override async onOverrun(): Promise<void> {
         this.core.runs.push({ task: 'overrun', trigger: this.trigger, data: this.data });
-        await Promise.resolve();
+        await this.core.overrunGate;
     }
 }

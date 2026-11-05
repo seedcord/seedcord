@@ -3,7 +3,7 @@ title: Scheduling jobs
 description: Run a task once at a later time, like an unban a day from now, with jobs stored through a kv driver that keeps them across a restart.
 ---
 
-A `/tempban` command bans someone for a day, so something has to unban them tomorrow. With `setTimeout`, that unban waited in your bot's memory. A deploy that evening restarted the process and threw the timer away, so the ban stayed until a moderator noticed.
+A `/tempban` command bans someone for a day, so something has to unban them tomorrow. With `setTimeout`, that unban was a timer in your bot's memory. A deploy that evening restarted the process and threw the timer away, so the ban stayed until a moderator noticed.
 
 [`schedule()`](ref:plugin-tasks/Tasks.schedule) writes the job to your [kv store](/built-ins) before it sets a timer. With a [driver](/built-ins/drivers) that keeps its records, the job survives that deploy. This page assumes the [tasks plugin](/plugins/tasks) is attached under the key `tasks`, so a handler reaches it as `this.core.tasks` once you've run [`seedcord codegen`](/plugins/typing).
 
@@ -95,19 +95,20 @@ Await `schedule()`, because it resolves once your driver holds the job. If the d
 | if you pass | it throws |
 | --- | --- |
 | a `string` for `in` that isn't a duration | `PluginTasksInvalidDuration` |
+| an `in` so long it ends after the year 275760 | `PluginTasksDurationTooLong` |
 | an invalid `Date` or `NaN` for `at` | `PluginTasksInvalidDate` |
 | a number for `at` from before the year 2000 | `PluginTasksAtInSeconds` |
 | a class the plugin didn't load from `path` | `PluginTasksNotLoaded` |
 
 {/* prettier-ignore-end */}
 
-`Date.now()` counts milliseconds, while a Unix timestamp from another API usually counts seconds. Read as milliseconds, that timestamp falls in January 1970, so `schedule()` throws `PluginTasksAtInSeconds` for it. Any other time in the past runs the job right away.
+`Date.now()` counts milliseconds, while a Unix timestamp from another API usually counts seconds. Read as milliseconds, that timestamp is a date in January 1970, so `schedule()` throws `PluginTasksAtInSeconds` for it. Any other time in the past runs the job right away.
 
 `schedule()` also takes a cron task that declares no data, which adds one extra run at that time. That run ignores `protect`, so it can overlap a run from the pattern.
 
 ## Cancelling a job
 
-A moderator lifts the ban today, and tomorrow's job is still waiting. If nothing cancels it, it runs anyway. `schedule()` returns a [`ScheduledJob`](ref:plugin-tasks/ScheduledJob) with a generated `id`, which `TempBan` stored in the `unban-job` collection under the user's id.
+A moderator lifts the ban today, and tomorrow's job is still stored. If nothing cancels it, it runs anyway. `schedule()` returns a [`ScheduledJob`](ref:plugin-tasks/ScheduledJob) with a generated `id`, which `TempBan` stored in the `unban-job` collection under the user's id.
 
 ```ts twoslash title="src/handlers/LiftBan.ts"
 import { SlashHandler, SlashRoute } from '@seedcord/gateway';
@@ -149,11 +150,11 @@ export class LiftBan extends SlashHandler<'unban'> {
 
 `LiftBan` reads the id from `unban-job` and passes it to [`cancel()`](ref:plugin-tasks/Tasks.cancel), which deletes the job from your driver and resolves to `true`. It resolves to `false` if no job has that id, or if the job has already started, so a late cancel doesn't stop a run in progress.
 
-[`jobs()`](ref:plugin-tasks/Tasks.jobs) returns each job waiting to run in this process, with its `id`, `key`, and `at`.
+[`jobs()`](ref:plugin-tasks/Tasks.jobs) returns each job still pending in this process, with its `id`, `key`, and `at`.
 
 ## What JSON can store
 
-A job waits in your driver as JSON, so a restart gives `execute()` only what JSON can hold. `data` has to fit, and [`this.data`](ref:plugin-tasks/Task.data) has the type of what comes back.
+A job is stored in your driver as JSON, so a restart gives `execute()` only what JSON can hold. `data` has to fit, and [`this.data`](ref:plugin-tasks/Task.data) has the type of what comes back.
 
 ```ts twoslash title="src/tasks/Remind.ts"
 import { RegisterTask, Task } from '@seedcord/plugin-tasks/gateway';
@@ -172,7 +173,7 @@ export class Remind extends Task<{ text: string; sentAt: Date }> {
 
 ## Surviving a restart
 
-The kv store keeps its records in memory until you give it a [driver](/built-ins/drivers), so without one a restart deletes your jobs. The plugin logs a warning at shutdown if jobs are waiting in that memory store. To keep them, set `kv` on your `Seedcord` config.
+The kv store keeps its records in memory until you give it a [driver](/built-ins/drivers), so without one a restart deletes your jobs. The plugin logs a warning at shutdown if jobs are still in that memory store. To keep them, set `kv` on your `Seedcord` config.
 
 ```ts twoslash title="src/bot.ts"
 import KeyvSqlite from '@keyv/sqlite';

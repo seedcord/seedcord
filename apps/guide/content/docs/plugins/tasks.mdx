@@ -1,6 +1,6 @@
 ---
 title: Tasks
-description: Run code on a cron schedule in a gateway bot or a Node http bot, with literal patterns checked at compile time and time for runs to finish at shutdown.
+description: Run code on a cron schedule in a gateway or Node http bot, with literal patterns checked at compile time and running tasks given time to finish.
 ---
 
 Some of your bot's work has no command behind it, like a digest every morning or a cleanup every hour. Written by hand, that work was a `setInterval` in `bot.ts`. You started it after login, stopped it before the process exited, logged its errors, and made sure a slow run didn't overlap the next one.
@@ -37,7 +37,7 @@ This sample builds a gateway bot. The same `attach` call works on an http `Seedc
 
 | option | required | what it sets |
 | --- | --- | --- |
-| [`path`](ref:plugin-tasks/TasksOptions.path) | yes | the folder the plugin loads tasks from. A relative path is relative to `root`, and the folder has to sit inside it, as [the folder rules](/plugins) describe |
+| [`path`](ref:plugin-tasks/TasksOptions.path) | yes | the folder the plugin loads tasks from. A relative path is relative to `root`, and the folder has to be inside it, as [the folder rules](/plugins) describe |
 | [`timezone`](ref:plugin-tasks/TasksOptions.timezone) | no | the timezone for every cron task that doesn't set its own. Defaults to the system's timezone |
 | [`timeout`](ref:plugin-tasks/TasksOptions.timeout) | no | how long running tasks get to finish during shutdown, in milliseconds. Defaults to 10000 |
 
@@ -80,7 +80,7 @@ The `/gateway` import types `this.core` as the `Core` from `@seedcord/gateway`, 
 
 ### Writing a pattern
 
-With a plain cron library, a typo in a pattern waited until the bot started. `@RegisterTask` reads a literal pattern at compile time and reports the field that's wrong.
+With a plain cron library, a typo in a pattern only showed up when the bot started. `@RegisterTask` reads a literal pattern at compile time and reports the field that's wrong.
 
 ```ts twoslash
 // @errors: 2769
@@ -270,7 +270,7 @@ export class PauseDigest extends SlashHandler<'pause-digest'> {
 | --- | --- |
 | [`pause(Task)`](ref:plugin-tasks/Tasks.pause) | stops a cron task from running. After a restart, the task runs again |
 | [`resume(Task)`](ref:plugin-tasks/Tasks.resume) | starts a task that `pause()` or the `paused` option stopped |
-| [`nextRun(Task)`](ref:plugin-tasks/Tasks.nextRun) | returns the next run as a `Date`, or `null` if there are none left |
+| [`nextRun(Task)`](ref:plugin-tasks/Tasks.nextRun) | returns the next run as a `Date`, or `null` when the task won't run again, like when it's paused or has no runs left |
 | [`trigger(Task)`](ref:plugin-tasks/Tasks.trigger) | runs a task now. If `protect` is on and the task is running, the plugin skips this run |
 | [`list()`](ref:plugin-tasks/Tasks.list) | returns a [`CronStatus`](ref:plugin-tasks/CronStatus) for each cron task, with its `key`, `pattern`, `timezone`, `scheduled`, `busy`, `nextRun`, and `previousRun` |
 

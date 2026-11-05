@@ -35,12 +35,8 @@ export class TaskRunner {
         return this.track(this.execute(registered, trigger, data, jobId));
     }
 
-    public async overrun(registered: Registered): Promise<void> {
-        try {
-            await this.instantiate(registered, 'cron', undefined).onOverrun?.();
-        } catch (error) {
-            this.logger.error(`${paint.sky(registered.key)} threw during its overrun`, error);
-        }
+    public overrun(registered: Registered, trigger: TaskTrigger): Promise<void> {
+        return this.track(this.callOverrun(registered, trigger));
     }
 
     public track<TResult>(work: Promise<TResult>): Promise<TResult> {
@@ -53,6 +49,14 @@ export class TaskRunner {
     public async stop(): Promise<void> {
         this.shutdown.abort();
         await Promise.allSettled(this.running);
+    }
+
+    private async callOverrun(registered: Registered, trigger: TaskTrigger): Promise<void> {
+        try {
+            await this.instantiate(registered, trigger, undefined).onOverrun?.();
+        } catch (error) {
+            this.logger.error(`${paint.sky(registered.key)} threw during its overrun`, error);
+        }
     }
 
     private instantiate(registered: Registered, trigger: TaskTrigger, data: TaskData<unknown>): Task<unknown> {

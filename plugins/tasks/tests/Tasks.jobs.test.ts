@@ -2,7 +2,7 @@ import path from 'node:path';
 
 import { MemoryDriver } from '@seedcord/core';
 import { SeedcordErrorCode } from '@seedcord/errors';
-import { Logger } from '@seedcord/logger';
+import { LoggerChannelRegistry } from '@seedcord/logger';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
 import { Tasks } from '#src/Tasks';
@@ -12,7 +12,7 @@ import { Note } from '#tests/fixtures/jobs/Note';
 import { Reminder } from '#tests/fixtures/jobs/Reminder';
 import { FakeDriver, TestHost } from '#tests/utils/host';
 
-import type { MockInstance } from 'vitest';
+import type { LogLevel, LogRecord } from '@seedcord/types';
 
 const taskFolder = path.resolve(import.meta.dirname, 'fixtures/jobs');
 const partialFolder = path.resolve(import.meta.dirname, 'fixtures/partial');
@@ -43,18 +43,24 @@ async function start(driver: Driver, folder = taskFolder): Promise<Booted> {
 }
 
 let driver: FakeDriver;
-let errorLog: MockInstance;
-let warnLog: MockInstance;
+let logs: LogRecord[];
+let capture: Disposable;
+
+const logged = (level: LogLevel): string[] =>
+    logs.filter((record) => record.level === level).map((record) => record.message);
 
 beforeEach(() => {
     vi.useFakeTimers();
     vi.setSystemTime(new Date('2030-01-15T12:00:00Z'));
-    errorLog = vi.spyOn(Logger.prototype, 'error').mockImplementation(() => undefined);
-    warnLog = vi.spyOn(Logger.prototype, 'warn').mockImplementation(() => undefined);
+    logs = [];
+    LoggerChannelRegistry.instance.configure({ sinks: [] });
+    capture = LoggerChannelRegistry.instance.installSink({ kind: 'capture', onLog: (record) => logs.push(record) });
     driver = new FakeDriver();
 });
 
 afterEach(() => {
+    capture[Symbol.dispose]();
+    LoggerChannelRegistry.instance.configure({});
     vi.useRealTimers();
     vi.restoreAllMocks();
 });
@@ -286,6 +292,33 @@ describe('Tasks.cancel', () => {
         await expect(tasks.cancel('missing')).resolves.toBe(false);
     });
 
+    it('does not run a job that comes due while its cancel is deleting it', async () => {
+        const { host, tasks } = await start(driver);
+        const job = await tasks.schedule(Reminder, { in: '1s' });
+        await vi.advanceTimersByTimeAsync(SECOND_MS - 1);
+
+        const release = driver.holdDeletes();
+        const cancelling = tasks.cancel(job.id);
+        await vi.advanceTimersByTimeAsync(1);
+        release();
+
+        await expect(cancelling).resolves.toBe(true);
+        expect(host.runs).toEqual([]);
+        expect(driver.stored.size).toBe(0);
+    });
+
+    it('keeps a job whose cancel could not delete it', async () => {
+        const { host, tasks } = await start(driver);
+        const job = await tasks.schedule(Reminder, { in: '1s' });
+
+        driver.failDeletes = 1;
+        await expect(tasks.cancel(job.id)).rejects.toMatchObject({ code: SeedcordErrorCode.CoreKvDriverFailed });
+        expect(tasks.jobs()).toEqual([job]);
+
+        await vi.advanceTimersByTimeAsync(SECOND_MS);
+        expect(host.runs).toHaveLength(1);
+    });
+
     it('refuses to cancel a job that has started', async () => {
         const { host, tasks } = await start(driver);
         host.hold();
@@ -333,14 +366,14 @@ describe('Tasks job upkeep', () => {
 
     it('logs a failed delete and keeps the job for the next start', async () => {
         const { host, tasks } = await start(driver);
-        await tasks.schedule(Reminder, { in: '1s' });
+        const job = await tasks.schedule(Reminder, { in: '1s' });
 
         driver.failDeletes = 1;
         await vi.advanceTimersByTimeAsync(SECOND_MS);
 
         expect(host.runs).toHaveLength(1);
         expect(driver.stored.size).toBe(1);
-        expect(errorLog).toHaveBeenCalledOnce();
+        expect(logged('error')).toEqual([expect.stringContaining(job.id)]);
     });
 
     it('keeps two attachments in separate records', async () => {
@@ -360,7 +393,7 @@ describe('Tasks job upkeep', () => {
 
         await tasks.dispose();
 
-        expect(warnLog).toHaveBeenCalledOnce();
+        expect(logged('warn')).toEqual([expect.stringContaining('1 scheduled jobs end with this process')]);
     });
 
     it('stays quiet at shutdown on a driver that keeps its records', async () => {
@@ -369,7 +402,7 @@ describe('Tasks job upkeep', () => {
 
         await tasks.dispose();
 
-        expect(warnLog).not.toHaveBeenCalled();
+        expect(logged('warn')).toEqual([]);
     });
 
     describe('rejects', () => {
@@ -380,6 +413,16 @@ describe('Tasks job upkeep', () => {
             await expect(tasks.schedule(Reminder, { in: duration })).rejects.toMatchObject({
                 code: SeedcordErrorCode.PluginTasksInvalidDuration
             });
+        });
+
+        it('a duration that ends past the last date a Date can hold, and stores nothing', async () => {
+            const { tasks } = await start(driver);
+            const duration = String('100000001d');
+
+            await expect(tasks.schedule(Reminder, { in: duration })).rejects.toMatchObject({
+                code: SeedcordErrorCode.PluginTasksDurationTooLong
+            });
+            expect(driver.stored.size).toBe(0);
         });
 
         it('an at in seconds', async () => {

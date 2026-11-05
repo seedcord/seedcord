@@ -154,11 +154,36 @@ describe('Tasks cron tasks', () => {
         const first = tasks.trigger(Slow);
         await tasks.trigger(Slow);
 
-        expect(host.runs.map((run) => run.task)).toEqual(['slow', 'overrun']);
+        expect(host.runs).toEqual([
+            { task: 'slow', trigger: 'manual', data: undefined },
+            { task: 'overrun', trigger: 'manual', data: undefined }
+        ]);
 
         host.release();
         await first;
         await tasks.dispose();
+    });
+
+    it('waits for onOverrun during dispose', async () => {
+        const { host, tasks } = await start();
+        host.hold();
+        host.holdOverrun();
+
+        const first = tasks.trigger(Slow);
+        const second = tasks.trigger(Slow);
+        host.release();
+        await first;
+
+        let disposed = false;
+        const disposing = tasks.dispose().then(() => {
+            disposed = true;
+        });
+        await vi.advanceTimersByTimeAsync(SECOND_MS);
+        expect(disposed).toBe(false);
+
+        host.releaseOverrun();
+        await Promise.all([second, disposing]);
+        expect(disposed).toBe(true);
     });
 
     it('reports its state through list and nextRun', async () => {
@@ -179,6 +204,19 @@ describe('Tasks cron tasks', () => {
 
         host.release();
         await run;
+        await tasks.dispose();
+    });
+
+    it('reports no next run while a task is paused', async () => {
+        const { tasks } = await start();
+
+        tasks.pause(Slow);
+        expect(tasks.nextRun(Slow)).toBeNull();
+        expect(tasks.list().find((status) => status.key === 'slow')?.nextRun).toBeNull();
+
+        tasks.resume(Slow);
+        expect(tasks.nextRun(Slow)?.toISOString()).toBe('2030-12-31T23:00:00.000Z');
+
         await tasks.dispose();
     });
 

@@ -74,9 +74,21 @@ export class ScheduledJobs {
         const job = this.pending.get(id);
         if (!job && (await this.records.get(id)) === undefined) return false;
 
-        await this.records.delete(id);
-        clearTimeout(job?.timer);
-        this.pending.delete(id);
+        // the timer stops first, so the job can't come due while the delete is in flight
+        if (job) {
+            clearTimeout(job.timer);
+            this.pending.delete(id);
+        }
+
+        try {
+            await this.records.delete(id);
+        } catch (error) {
+            if (job) {
+                this.pending.set(id, job);
+                this.arm(job);
+            }
+            throw error;
+        }
 
         return true;
     }

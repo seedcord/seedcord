@@ -108,17 +108,20 @@ export class CronTasks {
     }
 
     public nextRun(key: string): Date | null {
-        return this.entries.get(key)?.job.nextRun() ?? null;
+        const entry = this.entries.get(key);
+        if (!entry || entry.paused) return null;
+
+        return entry.job.nextRun();
     }
 
     public list(): CronStatus[] {
-        return [...this.entries].map(([key, { job, timezone, current }]) => ({
+        return [...this.entries].map(([key, { job, timezone, current, paused }]) => ({
             key,
             pattern: job.getPattern() ?? '',
             timezone,
             scheduled: job.isRunning(),
             busy: current !== undefined,
-            nextRun: job.nextRun(),
+            nextRun: paused ? null : job.nextRun(),
             previousRun: job.previousRun()
         }));
     }
@@ -129,7 +132,7 @@ export class CronTasks {
 
         if (entry.current && entry.protect) {
             this.logger.warn(`skipped a run of ${paint.sky(key)}, the previous one is still going`);
-            await this.runner.overrun(entry.registered);
+            await this.runner.overrun(entry.registered, trigger);
 
             return;
         }

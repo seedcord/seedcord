@@ -143,7 +143,7 @@ export class Tasks extends Plugin<{ transport: 'any'; runtime: 'server' }> {
      * @param options - `in` or `at`, plus `data` when the task declares it.
      * @throws A **SeedcordError** when the plugin did not load `Task`.
      * @throws A **SeedcordTypeError** when `in` isn't a duration or `at` isn't a date.
-     * @throws A **SeedcordRangeError** when `at` is a number too small to be milliseconds.
+     * @throws A **SeedcordRangeError** when `at` is a number too small to be milliseconds, or `in` ends past the last date a `Date` can hold.
      * @throws A **SeedcordTypeError** when `data` has no JSON form.
      * @throws A **SeedcordError** with `CoreKvDriverFailed` when the driver can't store the job.
      * @example

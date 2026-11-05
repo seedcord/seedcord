@@ -2,4 +2,4 @@
 '@seedcord/core': minor
 ---
 
-Added the `JsonSafe` type to the public exports, so a plugin can reject a value at compile time when it wouldn't survive the JSON trip a `KvCollection` record takes.
+Added the `JsonSafe` type to the public exports. A plugin can use it to reject a value at compile time that `KvCollection` can't store as JSON.

@@ -33,7 +33,13 @@ function parseAt(key: string, at: Date | number): Date {
 }
 
 export function resolveAt(key: string, when: When): Date {
-    return when.in === undefined ? parseAt(key, when.at) : new Date(Date.now() + parseIn(when.in));
+    if (when.in === undefined) return parseAt(key, when.at);
+
+    const date = new Date(Date.now() + parseIn(when.in));
+    if (Number.isNaN(date.getTime())) {
+        throw new SeedcordRangeError(SeedcordErrorCode.PluginTasksDurationTooLong, [key, when.in]);
+    }
+    return date;
 }
 
 // the types reject most of what JSON can't keep. a cycle still compiles
