@@ -55,7 +55,7 @@ export class Prompter {
     }
 
     private async ask<Answer>(view: ViewOf<Answer>): Promise<Answer> {
-        // a static import here brings back the getOwner crash in seedcord build
+        // don't statically import these because ink loads react before seedcord build sets NODE_ENV
         const [{ render }, { promptViews: views }] = await Promise.all([import('ink'), import('./promptViews')]);
 
         const ended = Promise.withResolvers<Outcome<Answer>>();
