@@ -1,5 +1,15 @@
 # @seedcord/core
 
+## 0.12.1
+
+### 🩹 Patch
+
+- Fixed `seedcord dev` losing a handler with no error when you saved it after Vite reloaded every module, like after adding a new dependency. Dev now asks for a restart when that reload happens, and it warns when a saved file loses its last handler. ([`a2f3de2`](https://github.com/seedcord/seedcord/commit/a2f3de280818e2eb23d9b75f9cadc8b9f845025c))
+
+#### 📦 Seedcord packages
+
+- `@seedcord/types` 0.16.0 → 0.16.1
+
 ## 0.12.0
 
 ### 💥 Breaking

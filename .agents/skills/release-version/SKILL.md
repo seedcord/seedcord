@@ -58,7 +58,7 @@ Run on `main` so the clean version reaches `latest`. Exiting pre mode and versio
 ```sh
 git switch main && git pull
 git merge next                    # resolve any changelog or pre.json conflicts
-vp run cs:pre:exit                # set pre.json to exit mode, then review the changesets in .changeset/pre/
+vp run cs:exit                    # set pre.json to exit mode, then review the changesets in .changeset/pre/
 vp run cs:version                 # write the clean X.Y.Z and delete the superseded prerelease sections
 vp install                        # update the lockfile
 git add .changeset
@@ -79,7 +79,7 @@ Bring the clean version back and re-enter pre mode for the next cycle.
 ```sh
 git switch next && git pull
 git merge main                       # brings the clean versions and changelogs
-vp run cs:pre:enter                  # re-enter pre mode
+vp run cs:enter                      # re-enter pre mode
 git add .changeset/pre.json          # pre enter writes a new file, -a would skip it
 git commit -m "chore: re-enter pre mode"
 git push origin next

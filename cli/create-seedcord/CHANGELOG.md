@@ -1,5 +1,11 @@
 # create-seedcord
 
+## 0.6.1
+
+### 🩹 Patch
+
+- The `AGENTS.md` in a new project now tells agents to start the dev server without being asked, keep its stdin open, and read any warnings it logs. ([`d6b04e5`](https://github.com/seedcord/seedcord/commit/d6b04e5fc2bceecebafe23ae72a91eff49f20f85))
+
 ## 0.6.0
 
 ### 💥 Breaking

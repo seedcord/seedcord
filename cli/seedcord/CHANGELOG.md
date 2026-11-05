@@ -1,5 +1,17 @@
 # seedcord
 
+## 0.23.1
+
+### 🩹 Patch
+
+- `seedcord ask` now looks up the error's name when a question only asks about its code, like `what is 3116` or `error 3116`. ([`3475641`](https://github.com/seedcord/seedcord/commit/3475641de888e507e54b6d86fd430df0b0f8d2b3))
+- Fixed `seedcord dev` losing a handler with no error when you saved it after Vite reloaded every module, like after adding a new dependency. Dev now asks for a restart when that reload happens, and it warns when a saved file loses its last handler. ([`a2f3de2`](https://github.com/seedcord/seedcord/commit/a2f3de280818e2eb23d9b75f9cadc8b9f845025c))
+
+#### 📦 Seedcord packages
+
+- `@seedcord/core` 0.12.0 → 0.12.1
+- `@seedcord/types` 0.16.0 → 0.16.1
+
 ## 0.23.0
 
 ### 💥 Breaking
