@@ -263,6 +263,34 @@ describe('the edge Seedcord', () => {
         });
     });
 
+    it("holds each request's waitUntil open for its own subscribers only", async () => {
+        const release = Promise.withResolvers<undefined>();
+        let runs = 0;
+        @Subscribe(['anyInteraction'])
+        class FirstRunStuck extends Subscriber<'anyInteraction', CoreBase> {
+            public async execute(): Promise<void> {
+                runs += 1;
+                if (runs === 1) await release.promise;
+            }
+        }
+        registerBuiltFiles({ '/subscribers/FirstRunStuck.ts': { FirstRunStuck } });
+        const signer = await signedEnv();
+        const seedcord = new Seedcord(config({ subscribers: `${BUILT_ROOT}/subscribers` }));
+        const stuck = capturingCtx();
+        const free = capturingCtx();
+        const stillWaiting = (): Promise<string> =>
+            new Promise((resolve) => setTimeout(() => resolve('still waiting'), 500));
+
+        await seedcord.fetch(await signedRequest(signer, '{"type":99,"id":"stuck"}'), undefined, stuck);
+        await seedcord.fetch(await signedRequest(signer, '{"type":99,"id":"free"}'), undefined, free);
+
+        expect(await Promise.race([free.settled().then(() => 'finished'), stillWaiting()])).toBe('finished');
+        expect(await Promise.race([stuck.settled().then(() => 'finished'), stillWaiting()])).toBe('still waiting');
+
+        release.resolve(undefined);
+        await stuck.settled();
+    });
+
     it('refuses a plugin attached after the first request started it', async () => {
         const signer = await signedEnv();
         const seedcord = new Seedcord(config());

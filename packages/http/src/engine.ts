@@ -1,4 +1,6 @@
-import { PublishDefault } from '@seedcord/core/internal';
+import { AsyncLocalStorage } from 'node:async_hooks';
+
+import { OnSubscriberRun, PublishDefault } from '@seedcord/core/internal';
 import { paint } from '@seedcord/errors';
 import { Logger } from '@seedcord/logger';
 import { asError } from '@seedcord/utils/internal';
@@ -59,18 +61,12 @@ export function buildEngine(
     const replays = new ReplayGuard();
     // eager because env binds before this factory runs
     const logger = new Logger('Engine', { channel: 'bot' });
+    const requestRuns = new AsyncLocalStorage<Set<Promise<void>>>();
+    core.bus[OnSubscriberRun] = (run) => requestRuns.getStore()?.add(run);
 
-    async function dispatchMatched(
-        match: NonNullable<ReturnType<typeof resolve>>,
-        payload: ValidInteractionTypes,
-        ctx: EngineContext | undefined
-    ): Promise<void> {
-        const start = await dispatchInteraction({ match, payload, core, middlewares });
-        if (!start) return;
-
-        // without this catch the rejection reaches the process unhandled
-        const work = start().catch(rootFault);
-        ctx?.waitUntil(work);
+    async function subscribersSettled(): Promise<void> {
+        // a Set's loop also reaches what a running subscriber publishes while it waits
+        for (const run of requestRuns.getStore() ?? []) await run.catch(() => undefined);
     }
 
     function rootFault(caught: unknown): void {
@@ -79,8 +75,27 @@ export function buildEngine(
         core.bus[PublishDefault]('unhandledInteractionError', { error });
     }
 
+    async function dispatch(interaction: APIInteraction, ctx: EngineContext | undefined): Promise<void> {
+        let work = Promise.resolve();
+        try {
+            core.bus[PublishDefault]('anyInteraction', { interaction });
+            const match = resolve(maps, interaction);
+            if (match) {
+                const payload = interaction as ValidInteractionTypes;
+                const start = await dispatchInteraction({ match, payload, core, middlewares });
+                // without this catch the rejection reaches the process unhandled
+                if (start) work = start().catch(rootFault);
+            }
+        } catch (caught) {
+            // the 202 has to go out either way or discord drops the interaction
+            rootFault(caught);
+        }
+        // workers ends a request once its waitUntil promises settle, and that cuts off a subscriber mid-send
+        ctx?.waitUntil(work.then(subscribersSettled));
+    }
+
     const handle = async (request: Request, ctx?: EngineContext): Promise<Response> => {
-        const [response, outcome] = await respond(request, ctx);
+        const [response, outcome] = await requestRuns.run(new Set(), () => respond(request, ctx));
         logger.trace(`${paint.sky.bold(request.method)} ${outcome} ${paint.amber(String(response.status))}`);
         return response;
     };
@@ -116,15 +131,8 @@ export function buildEngine(
 
         if (!replays.unseen(signature, timestampMs)) return [new Response(null, { status: UNAUTHORIZED }), 'replay'];
 
-        try {
-            // justified: the payload is signed by Discord, and the type field anchors the discriminated union
-            core.bus[PublishDefault]('anyInteraction', { interaction: payload as APIInteraction });
-            const match = resolve(maps, payload as APIInteraction);
-            if (match) await dispatchMatched(match, payload as ValidInteractionTypes, ctx);
-        } catch (caught) {
-            // the 202 has to go out either way or discord drops the interaction
-            rootFault(caught);
-        }
+        // justified: the payload is signed by Discord, and the type field anchors the discriminated union
+        await dispatch(payload as APIInteraction, ctx);
 
         return [new Response(null, { status: ACCEPTED }), 'dispatched'];
     };

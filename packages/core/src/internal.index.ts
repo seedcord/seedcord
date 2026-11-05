@@ -122,6 +122,7 @@ export { type StoredSubscriberCtor } from '#subscribers/Bus';
 export { ReportThrottle } from '#subscribers/ReportThrottle';
 export { PublishDefault } from '#subscribers/publishDefault';
 export {
+    OnSubscriberRun,
     RegisterDefaults,
     RegisteredCount,
     RegisterSubscriber,

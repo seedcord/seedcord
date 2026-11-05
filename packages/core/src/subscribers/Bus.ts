@@ -10,7 +10,14 @@ import { WebhookLog } from './bases/WebhookLog';
 import { HandledException } from './default/HandledException';
 import { UnknownException } from './default/UnknownException';
 import { PublishDefault } from './publishDefault';
-import { RegisterDefaults, RegisteredCount, RegisterSubscriber, UnregisterSubscriber, VerifyWebhooks } from './slots';
+import {
+    OnSubscriberRun,
+    RegisterDefaults,
+    RegisteredCount,
+    RegisterSubscriber,
+    UnregisterSubscriber,
+    VerifyWebhooks
+} from './slots';
 
 import type { CoreBase } from '#interfaces/CoreBase';
 import type { SubscribeMetadataEntry } from './decorators/Subscribe';
@@ -51,6 +58,7 @@ export class Bus extends TypedEventEmitter<SubscriptionTuples> {
     private readonly onceRuns = new OnceTracker();
     // url -> env keys
     private readonly webhookProbes = new Map<string, string[]>();
+    private onSubscriberRun?: ((run: Promise<void>) => void) | undefined;
 
     constructor(protected core: CoreBase) {
         super();
@@ -165,11 +173,17 @@ export class Bus extends TypedEventEmitter<SubscriptionTuples> {
         return this.dispatchKey(event, data);
     }
 
+    /** @internal the http engine passes each run to the request that published it */
+    public set [OnSubscriberRun](listener: (run: Promise<void>) => void) {
+        this.onSubscriberRun = listener;
+    }
+
     private dispatchKey<KeyOfSubscribers extends SubscriptionKey>(
         event: KeyOfSubscribers,
         data: AllSubscriptions[KeyOfSubscribers]
     ): boolean {
-        void this.processSubscriber(event, data);
+        const run = this.processSubscriber(event, data);
+        this.onSubscriberRun?.(run);
         // justified: a generic key can't reduce SubscriptionTuples[K], but data is this event's payload by the signature
         return this.emitSafe(event, ...([data] as SubscriptionTuples[KeyOfSubscribers]));
     }

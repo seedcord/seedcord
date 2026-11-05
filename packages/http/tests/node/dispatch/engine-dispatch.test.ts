@@ -1,4 +1,5 @@
-import { CustomId, InteractionKind } from '@seedcord/core';
+import { CustomId, InteractionKind, Subscribe, Subscriber } from '@seedcord/core';
+import { PublishDefault } from '@seedcord/core/internal';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
 import { ButtonHandler } from '#handlers/interaction/components/ButtonHandler';
@@ -7,8 +8,88 @@ import { restClients } from '#tests/helpers/restClients';
 
 import { capturingCtx, noClasses, readyEngine, routedHandler, signedRequest, slashPayload } from './harness';
 
+import type { Core } from '#interfaces/Core';
+
 beforeEach(() => {
     restClients().length = 0;
+});
+
+describe('waitUntil and subscribers', () => {
+    const tick = (): Promise<void> => new Promise((resolve) => setImmediate(resolve));
+
+    interface Gate {
+        wait: () => Promise<void>;
+        finish: () => void;
+        finished: () => boolean;
+    }
+
+    function gate(): Gate {
+        const release = Promise.withResolvers<undefined>();
+        let done = false;
+        return {
+            wait: async () => {
+                await release.promise;
+                done = true;
+            },
+            finish: () => release.resolve(undefined),
+            finished: () => done
+        };
+    }
+
+    it('stays open for a subscriber that a handler published to', async () => {
+        const { wait, finish, finished } = gate();
+        @Subscribe(['unhandledInteractionError'])
+        class Slow extends Subscriber<'unhandledInteractionError', Core> {
+            public execute(): Promise<void> {
+                return wait();
+            }
+        }
+        class Ban extends SlashHandler<never> {
+            public async execute(): Promise<void> {
+                this.core.bus[PublishDefault]('unhandledInteractionError', { error: new Error('boom') });
+                await this.reply('done');
+            }
+        }
+        const classes = routedHandler(InteractionKind.Slash, 'ban', Ban);
+        using engine = await readyEngine({ ...classes, subscribers: [Slow] });
+        const ctx = capturingCtx();
+        let settled = false;
+
+        await engine.handle(await signedRequest(engine.signer, slashPayload('ban')), ctx);
+        const work = ctx.settled().then(() => {
+            settled = true;
+        });
+        await tick();
+        expect(settled).toBe(false);
+
+        finish();
+        await work;
+        expect(finished()).toBe(true);
+    });
+
+    it('stays open for an anyInteraction subscriber when no route matches', async () => {
+        const { wait, finish, finished } = gate();
+        @Subscribe(['anyInteraction'])
+        class Slow extends Subscriber<'anyInteraction', Core> {
+            public execute(): Promise<void> {
+                return wait();
+            }
+        }
+        using engine = await readyEngine({ ...noClasses(), subscribers: [Slow] });
+        const ctx = capturingCtx();
+        let settled = false;
+
+        await engine.handle(await signedRequest(engine.signer, slashPayload('nothing')), ctx);
+        const work = ctx.settled().then(() => {
+            settled = true;
+        });
+        await tick();
+        expect(settled).toBe(false);
+
+        finish();
+        await work;
+        expect(finished()).toBe(true);
+    });
 });
 
 describe('engine dispatch', () => {

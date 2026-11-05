@@ -4,3 +4,4 @@ export const VerifyWebhooks = Symbol('seedcord:bus:verify-webhooks');
 export const RegisteredCount = Symbol('seedcord:bus:registered-count');
 export const RegisterSubscriber = Symbol('seedcord:bus:register');
 export const UnregisterSubscriber = Symbol('seedcord:bus:unregister');
+export const OnSubscriberRun = Symbol('seedcord:bus:on-subscriber-run');
