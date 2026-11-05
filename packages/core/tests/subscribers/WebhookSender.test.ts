@@ -20,11 +20,11 @@ afterEach(() => {
 
 describe('WebhookSender', () => {
     it('throws on a url without a webhook id and token', () => {
-        expect(() => new WebhookSender('https://example.com/not-a-webhook')).toThrow();
+        expect(() => new WebhookSender(new REST(), 'https://example.com/not-a-webhook')).toThrow();
     });
 
     it('posts components and file metadata to the webhook route without auth', async () => {
-        const sender = new WebhookSender('https://discord.com/api/webhooks/123/abc-XY');
+        const sender = new WebhookSender(new REST(), 'https://discord.com/api/webhooks/123/abc-XY');
         await sender.send({
             flags: 32_768,
             username: 'Unknown Exception',
@@ -49,7 +49,7 @@ describe('WebhookSender', () => {
     });
 
     it('omits attachments and files when no files are given', async () => {
-        const sender = new WebhookSender('https://discord.com/api/webhooks/123/abc-XY');
+        const sender = new WebhookSender(new REST(), 'https://discord.com/api/webhooks/123/abc-XY');
         await sender.send({ flags: 32_768, username: 'Handled Exception', components: [] });
 
         const [, options] = postMock.mock.calls[0] as [string, Record<string, unknown>];
@@ -59,7 +59,7 @@ describe('WebhookSender', () => {
 });
 
 describe('WebhookSender.verify', () => {
-    const sender = (): WebhookSender => new WebhookSender('https://discord.com/api/webhooks/123/abc-XY');
+    const sender = (): WebhookSender => new WebhookSender(new REST(), 'https://discord.com/api/webhooks/123/abc-XY');
 
     it('resolves ok when the webhook answers', async () => {
         await expect(sender().verify()).resolves.toBe('ok');

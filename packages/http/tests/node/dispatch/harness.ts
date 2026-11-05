@@ -9,7 +9,7 @@ import { VALID_TOKEN } from '#tests/helpers/fixtures';
 
 import type { HandlerConstructor, InteractionMiddlewareConstructor } from '#handlers/constructors';
 import type { HttpEdgeConfig } from '#interfaces/Config';
-import type { InteractionEngine } from '#src/InteractionEngine';
+import type { EngineContext } from '#src/requestScope';
 import type { InteractionKind } from '@seedcord/core';
 import type { StoredSubscriberCtor } from '@seedcord/core/internal';
 import type { TypedOmit } from '@seedcord/types';
@@ -56,7 +56,7 @@ interface EngineOptions {
 
 interface ReadyEngine extends Disposable {
     readonly signer: Signer;
-    readonly handle: InteractionEngine['handle'];
+    readonly handle: (request: Request, ctx: EngineContext) => Promise<Response>;
 }
 
 // a fresh edge Seedcord per call, loading the classes from a fresh file table

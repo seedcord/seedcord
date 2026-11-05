@@ -2,8 +2,11 @@ import { DRAIN_WINDOW_MS, InFlight } from '@seedcord/core/node/internal';
 import { SeedcordErrorCode } from '@seedcord/errors';
 import { SeedcordError } from '@seedcord/errors/internal';
 
-import type { EngineContext } from '#src/InteractionEngine';
+import { rejectNonPost } from '#src/InteractionEngine';
+import { requestScope } from '#src/requestScope';
+
 import type { InteractionsService } from '#src/InteractionsService';
+import type { EngineContext } from '#src/requestScope';
 import type { CoordinatedStartup } from '@seedcord/core/node';
 import type { HealthResponder } from '@seedcord/core/node/internal';
 import type { Logger } from '@seedcord/logger';
@@ -31,9 +34,9 @@ export class NodeEndpoint implements EngineContext {
         return (await this.inFlight.admit(() => this.respond(request))) ?? unavailable();
     }
 
-    private respond(request: Request): Promise<Response> {
-        const health = this.health?.answer(request, this.startup.isReady);
-        return health ? Promise.resolve(health) : this.service.engine.handle(request, this);
+    private async respond(request: Request): Promise<Response> {
+        const answer = this.health?.answer(request, this.startup.isReady) ?? rejectNonPost(request);
+        return answer ?? requestScope.run(this, () => this.service.engine.handle(request));
     }
 
     public waitUntil(work: Promise<unknown>): void {

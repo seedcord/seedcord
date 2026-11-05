@@ -1,6 +1,6 @@
 import { CustomId, InteractionKind, Subscribe, Subscriber } from '@seedcord/core';
 import { PublishDefault } from '@seedcord/core/internal';
-import { beforeEach, describe, expect, it, vi } from 'vitest';
+import { beforeEach, describe, expect, it } from 'vitest';
 
 import { ButtonHandler } from '#handlers/interaction/components/ButtonHandler';
 import { SlashHandler } from '#handlers/interaction/SlashHandler';
@@ -132,30 +132,13 @@ describe('engine dispatch', () => {
         const response = await handle(await signedRequest(signer, slashPayload('slow')), ctx);
 
         expect(response.status).toBe(202);
-        expect(ctx.waitUntil).toHaveBeenCalledTimes(1);
+        expect(ctx.waitUntil).toHaveBeenCalled();
         expect(executeFinished).toBe(false);
 
         releaseExecute(null);
         await ctx.settled();
         expect(executeFinished).toBe(true);
         expect(restClients()[0]?.post).toHaveBeenCalledTimes(1);
-    });
-
-    it('completes the handler without a ctx, tracking the work in flight', async () => {
-        class Ping extends SlashHandler<never> {
-            async execute(): Promise<void> {
-                await this.reply('pong');
-            }
-        }
-        using engine = await readyEngine(routedHandler(InteractionKind.Slash, 'ping', Ping));
-        const { signer, handle } = engine;
-
-        const response = await handle(await signedRequest(signer, slashPayload('ping')));
-
-        expect(response.status).toBe(202);
-        await vi.waitFor(() => {
-            expect(restClients()[0]?.post).toHaveBeenCalledTimes(1);
-        });
     });
 
     it('threads the resolved route id into the handler dispatch context', async () => {

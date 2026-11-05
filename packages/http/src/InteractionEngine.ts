@@ -1,6 +1,4 @@
-import { AsyncLocalStorage } from 'node:async_hooks';
-
-import { OnSubscriberRun, PublishDefault } from '@seedcord/core/internal';
+import { PublishDefault } from '@seedcord/core/internal';
 import { paint } from '@seedcord/errors';
 import { Logger } from '@seedcord/logger';
 import { asError } from '@seedcord/utils/internal';
@@ -10,6 +8,7 @@ import { dispatchInteraction } from './dispatch/dispatchInteraction';
 import { resolve } from './dispatch/resolve';
 import { Ed25519Verifier } from './receiver/Ed25519Verifier';
 import { ReplayGuard } from './receiver/ReplayGuard';
+import { keepRequestOpenFor } from './requestScope';
 
 import type { InteractionMiddlewareConstructor } from '#handlers/constructors';
 import type { ValidInteractionTypes } from '#handlers/interactionTypes';
@@ -31,7 +30,7 @@ const PING: number = InteractionType.Ping;
 
 const decoder = new TextDecoder();
 
-type Outcome = 'not-post' | 'unsigned' | 'stale' | 'bad-signature' | 'bad-body' | 'ping' | 'replay' | 'dispatched';
+type Outcome = 'unsigned' | 'stale' | 'bad-signature' | 'bad-body' | 'ping' | 'replay' | 'dispatched';
 type Answer = readonly [Response, Outcome];
 
 // discord only POSTs to the interactions endpoint
@@ -44,16 +43,10 @@ function hasInteractionType(payload: unknown): payload is { type: number } {
     return typeof payload === 'object' && payload !== null && 'type' in payload && typeof payload.type === 'number';
 }
 
-/** Matches the shape of the Workers `ExecutionContext`. Work that continues after the 202 response runs under its `waitUntil`. */
-export interface EngineContext {
-    waitUntil(promise: Promise<unknown>): void;
-}
-
 export class InteractionEngine {
     private readonly verifier: Ed25519Verifier;
     private readonly replays = new ReplayGuard();
     private readonly logger = new Logger('Engine', { channel: 'bot' });
-    private readonly requestRuns = new AsyncLocalStorage<Set<Promise<void>>>();
 
     constructor(
         private readonly core: Core,
@@ -62,19 +55,16 @@ export class InteractionEngine {
         publicKey: string
     ) {
         this.verifier = new Ed25519Verifier(publicKey);
-        core.bus[OnSubscriberRun] = (run) => this.requestRuns.getStore()?.add(run);
     }
 
-    public async handle(request: Request, ctx?: EngineContext): Promise<Response> {
-        const [response, outcome] = await this.requestRuns.run(new Set(), () => this.respond(request, ctx));
+    public async handle(request: Request): Promise<Response> {
+        const [response, outcome] = await this.respond(request);
         this.logger.trace(`${paint.sky.bold(request.method)} ${outcome} ${paint.amber(String(response.status))}`);
         return response;
     }
 
-    private async respond(request: Request, ctx: EngineContext | undefined): Promise<Answer> {
-        const notPost = rejectNonPost(request);
-        if (notPost) return [notPost, 'not-post'];
-
+    // only POSTs get here. edge Seedcord.fetch and NodeEndpoint reject every other method first
+    private async respond(request: Request): Promise<Answer> {
         const signature = request.headers.get(SIGNATURE_HEADER);
         const timestamp = request.headers.get(TIMESTAMP_HEADER);
         if (signature === null || timestamp === null) return [new Response(null, { status: UNAUTHORIZED }), 'unsigned'];
@@ -105,13 +95,12 @@ export class InteractionEngine {
         }
 
         // justified: the payload is signed by Discord, and the type field anchors the discriminated union
-        await this.dispatch(payload as APIInteraction, ctx);
+        await this.dispatch(payload as APIInteraction);
 
         return [new Response(null, { status: ACCEPTED }), 'dispatched'];
     }
 
-    private async dispatch(interaction: APIInteraction, ctx: EngineContext | undefined): Promise<void> {
-        let work = Promise.resolve();
+    private async dispatch(interaction: APIInteraction): Promise<void> {
         try {
             this.core.bus[PublishDefault]('anyInteraction', { interaction });
             const match = resolve(this.maps, interaction);
@@ -124,19 +113,12 @@ export class InteractionEngine {
                     middlewares: this.middlewares
                 });
                 // without this catch the rejection reaches the process unhandled
-                if (start) work = start().catch((caught: unknown) => this.rootFault(caught));
+                if (start) keepRequestOpenFor(start().catch((caught: unknown) => this.rootFault(caught)));
             }
         } catch (caught) {
             // the 202 has to go out either way or discord drops the interaction
             this.rootFault(caught);
         }
-        // workers ends a request once its waitUntil promises settle, and that cuts off a subscriber mid-send
-        ctx?.waitUntil(work.then(() => this.subscribersSettled()));
-    }
-
-    private async subscribersSettled(): Promise<void> {
-        // a Set's loop also reaches what a running subscriber publishes while it waits
-        for (const run of this.requestRuns.getStore() ?? []) await run.catch(() => undefined);
     }
 
     private rootFault(caught: unknown): void {

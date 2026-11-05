@@ -1,4 +1,4 @@
-import { DiscordAPIError, REST } from '@discordjs/rest';
+import { DiscordAPIError } from '@discordjs/rest';
 import { busLoggerOf, RegisteredCount, VerifyWebhooks, SubscriberLoader } from '@seedcord/core/internal';
 import { describe, expect, afterAll, afterEach, vi, type MockInstance } from 'vitest';
 
@@ -6,6 +6,8 @@ import { Seedcord } from '#src/Seedcord';
 import { seedcordPath } from '#tests/utils/source-path';
 import { testConfig } from '#tests/utils/test-config';
 import { it } from '#tests/utils/test-env';
+
+import type { REST } from '@discordjs/rest';
 
 // Seedcord builds the same loader from its config
 function loaderOf(instance: Seedcord): SubscriberLoader {
@@ -26,9 +28,9 @@ const WEBHOOK_ENV = vi.hoisted(() => {
     return env;
 });
 
-// the webhook GET each sender's verify() sends to discord
-function discordRejectsWebhookGet(error: Error): MockInstance<REST['get']> {
-    return vi.spyOn(REST.prototype, 'get').mockRejectedValue(error);
+// the webhook GET each sender's verify() sends to discord through the bot's own client
+function discordRejectsWebhookGet(seedcord: Seedcord, error: Error): MockInstance<REST['get']> {
+    return vi.spyOn(seedcord.rest, 'get').mockRejectedValue(error);
 }
 
 const unknownWebhook = (): DiscordAPIError =>
@@ -93,7 +95,7 @@ describe('Bus webhook reporter registration', () => {
         await using seedcord = new Seedcord(testConfig({}));
         await loaderOf(seedcord).init();
 
-        const get = discordRejectsWebhookGet(unknownWebhook());
+        const get = discordRejectsWebhookGet(seedcord, unknownWebhook());
         // one boot reports every dead webhook, both default urls are mocked dead here
         await expect(seedcord.bus[VerifyWebhooks]()).rejects.toThrow(
             /UNKNOWN_EXCEPTION_WEBHOOK_URL.+HANDLED_EXCEPTION_WEBHOOK_URL/
@@ -128,7 +130,7 @@ describe('Bus webhook reporter registration', () => {
         await using seedcord = new Seedcord(testConfig({ subscribers: testEnv.resolvePath('subscribers') }));
         await loaderOf(seedcord).init();
 
-        discordRejectsWebhookGet(unknownWebhook());
+        discordRejectsWebhookGet(seedcord, unknownWebhook());
         await expect(seedcord.bus[VerifyWebhooks]()).rejects.toThrow(
             /DUPLICATE_A_WEBHOOK_URL.+DUPLICATE_B_WEBHOOK_URL/
         );
@@ -138,7 +140,7 @@ describe('Bus webhook reporter registration', () => {
         await using seedcord = new Seedcord(testConfig({}));
         await loaderOf(seedcord).init();
 
-        discordRejectsWebhookGet(new TypeError('fetch failed'));
+        discordRejectsWebhookGet(seedcord, new TypeError('fetch failed'));
         const warnSpy = vi.spyOn(busLoggerOf(seedcord.bus), 'warn');
         await expect(seedcord.bus[VerifyWebhooks]()).resolves.toBeUndefined();
         expect(warnSpy).toHaveBeenCalled();

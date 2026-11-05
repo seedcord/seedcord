@@ -7,11 +7,12 @@ import { OnceTracker } from '#src/dispatch/OnceTracker';
 import { SubscribeMetadataKey } from '#src/metadataKeys';
 
 import { WebhookLog } from './bases/WebhookLog';
+import { WebhookSender } from './bases/WebhookSender';
 import { HandledException } from './default/HandledException';
 import { UnknownException } from './default/UnknownException';
 import { PublishDefault } from './publishDefault';
 import {
-    OnSubscriberRun,
+    OnRun,
     RegisterDefaults,
     RegisteredCount,
     RegisterSubscriber,
@@ -58,7 +59,7 @@ export class Bus extends TypedEventEmitter<SubscriptionTuples> {
     readonly #onceRuns = new OnceTracker();
     // url -> env keys
     readonly #webhookProbes = new Map<string, string[]>();
-    #onSubscriberRun?: ((run: Promise<void>) => void) | undefined;
+    #onRun: (run: Promise<void>) => void = () => undefined;
 
     constructor(protected core: CoreBase) {
         super();
@@ -103,7 +104,7 @@ export class Bus extends TypedEventEmitter<SubscriptionTuples> {
         const missing: string[] = [];
         await Promise.all(
             [...this.#webhookProbes].map(async ([url, envKeys]) => {
-                const result = await WebhookLog.senderFor(url).verify();
+                const result = await new WebhookSender(this.core.rest, url).verify();
                 if (result === 'missing') missing.push(...envKeys);
                 else if (result === 'unreachable')
                     this.#logger.warn(
@@ -173,19 +174,22 @@ export class Bus extends TypedEventEmitter<SubscriptionTuples> {
         return this.#dispatchKey(event, data);
     }
 
-    /** @internal the http engine passes each run to the request that published it */
-    public set [OnSubscriberRun](listener: (run: Promise<void>) => void) {
-        this.#onSubscriberRun = listener;
+    /** @internal the http host keeps the publishing request open for each subscriber and listener run */
+    public set [OnRun](listener: (run: Promise<void>) => void) {
+        this.#onRun = listener;
     }
 
     #dispatchKey<KeyOfSubscribers extends SubscriptionKey>(
         event: KeyOfSubscribers,
         data: AllSubscriptions[KeyOfSubscribers]
     ): boolean {
-        const run = this.#processSubscriber(event, data);
-        this.#onSubscriberRun?.(run);
+        this.#onRun(this.#processSubscriber(event, data));
         // justified: a generic key can't reduce SubscriptionTuples[K], but data is this event's payload by the signature
         return this.emitSafe(event, ...([data] as SubscriptionTuples[KeyOfSubscribers]));
+    }
+
+    protected override onListenerRun(run: Promise<void>): void {
+        this.#onRun(run);
     }
 
     protected override onListenerError(error: unknown, event: string | symbol): void {

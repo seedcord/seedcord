@@ -23,7 +23,6 @@ export class PluginLifecycle {
     private readonly logger = new Logger('Plugins', { channel: 'plugins' });
     private readonly completedInits = new Set<Attachment>();
     private readonly disposePhases = new Set<TaskShutdownPhase>();
-    private readonly timedOutInits = new Set<Promise<void>>();
     private attachments: readonly Attachment[] = [];
     private registered = false;
 
@@ -56,14 +55,6 @@ export class PluginLifecycle {
         this.completedInits.clear();
     }
 
-    public afterTimedOutInits(run: () => void): void {
-        if (this.timedOutInits.size === 0) {
-            run();
-            return;
-        }
-        void Promise.allSettled(this.timedOutInits).then(run);
-    }
-
     private async runInits(group: readonly Attachment[]): Promise<void> {
         for (const attachment of group) {
             const { key, instance, spec } = attachment;
@@ -86,20 +77,21 @@ export class PluginLifecycle {
     }
 
     // disposeCompleted skips a plugin missing from completedInits
-    private disposeWhenInitResolves({ key, instance, spec }: Attachment, running: Promise<void>): void {
+    private disposeWhenInitResolves(attachment: Attachment, running: Promise<void>): void {
+        const { key, instance, spec } = attachment;
         const dispose = instance.dispose?.bind(instance);
 
-        const settled = running.then(
+        void running.then(
             async () => {
-                if (!dispose) return;
+                // the edge host retries init() on this same instance.
+                // after a retry succeeds, this dispose would tear down the working plugin
+                if (!dispose || this.completedInits.has(attachment)) return;
                 await withTimeout(`Plugin:${key}:dispose`, dispose, spec.dispose.timeout).catch((caught: unknown) =>
                     this.logger.warn(`${key} dispose failed after a timed-out init`, caught)
                 );
             },
             (caught: unknown) => this.logger.warn(`${key} init failed after its timeout`, caught)
         );
-        this.timedOutInits.add(settled);
-        void settled.finally(() => this.timedOutInits.delete(settled));
     }
 
     private registerReadyTask(readyInits: readonly Attachment[]): void {

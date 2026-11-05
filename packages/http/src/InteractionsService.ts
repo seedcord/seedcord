@@ -1,8 +1,8 @@
-import { REST } from '@discordjs/rest';
 import {
     emptyRouteMaps,
     interactionMiddleware,
     MiddlewareRegistry,
+    OnRun,
     readBotToken,
     SubscriberLoader
 } from '@seedcord/core/internal';
@@ -11,11 +11,12 @@ import { SeedcordError } from '@seedcord/errors/internal';
 
 import { InteractionDispatcher } from '#src/dispatch/InteractionDispatcher';
 import { InteractionEngine } from '#src/InteractionEngine';
+import { keepRequestOpenFor } from '#src/requestScope';
 
 import type { InteractionMiddlewareConstructor } from '#handlers/constructors';
 import type { HttpConfig } from '#interfaces/Config';
 import type { Core } from '#interfaces/Core';
-import type { RESTOptions } from '@discordjs/rest';
+import type { REST } from '@discordjs/rest';
 import type { BotToken } from '@seedcord/errors/internal';
 
 export class InteractionsService {
@@ -29,9 +30,10 @@ export class InteractionsService {
     constructor(
         private readonly host: Core,
         config: HttpConfig,
-        restOptions: Partial<RESTOptions> | undefined
+        rest: REST
     ) {
-        this.rest = new REST(restOptions);
+        this.rest = rest;
+        host.bus[OnRun] = keepRequestOpenFor;
         this.subscribers = new SubscriberLoader(host.bus, config.subscribers.path);
 
         const interactions = config.bot.interactions;
@@ -55,16 +57,11 @@ export class InteractionsService {
         return this.builtEngine;
     }
 
-    public prepareEngine(publicKey: string): InteractionEngine {
-        this.builtEngine ??= this.createEngine(publicKey);
-        return this.builtEngine;
-    }
-
-    private createEngine(publicKey: string): InteractionEngine {
-        const maps = this.interactions?.maps ?? emptyRouteMaps();
-        const middlewares =
-            this.interactions?.middlewares ??
-            new MiddlewareRegistry<InteractionMiddlewareConstructor>(interactionMiddleware);
-        return new InteractionEngine(this.host, maps, middlewares, publicKey);
+    public prepareEngine(publicKey: string): void {
+        const { maps, middlewares } = this.interactions ?? {
+            maps: emptyRouteMaps(),
+            middlewares: new MiddlewareRegistry<InteractionMiddlewareConstructor>(interactionMiddleware)
+        };
+        this.builtEngine ??= new InteractionEngine(this.host, maps, middlewares, publicKey);
     }
 }
