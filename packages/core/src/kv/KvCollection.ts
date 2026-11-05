@@ -107,7 +107,11 @@ export class KvCollection<TRecord> {
     public async *entries(): AsyncIterable<[id: string, record: Stored<TRecord>]> {
         const expired: string[] = [];
         try {
-            for await (const [key, raw] of this.#driver.entries(this.#prefix)) {
+            for await (const [key, listed] of this.#driver.entries(this.#prefix)) {
+                // a set still writing this key can leave a half-written record in the listing
+                const raw = this.#updates.isWriting(key)
+                    ? await this.#updates.read(key, async () => this.#driver.get(key))
+                    : listed;
                 const value = this.#liveValue(raw);
                 if (value === undefined) expired.push(key);
                 else yield [key.slice(this.#prefix.length), value];

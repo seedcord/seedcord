@@ -252,7 +252,7 @@ describe('a driver that throws', () => {
 });
 
 describe('a driver that writes in two steps', () => {
-    it('reads the finished record when a get lands during a set', async () => {
+    it('reads the finished record when a get or an entries call lands during a set', async () => {
         const records = new Map<string, string>();
         const finishWrite = Promise.withResolvers<undefined>();
         const driver: NonNullable<Config['kv']> = {
@@ -271,10 +271,12 @@ describe('a driver that writes in two steps', () => {
         const writing = notes.set('k', 'finished');
         await vi.waitFor(() => expect(records.size).toBe(1));
         const reading = notes.get('k');
+        const listing = Array.fromAsync(notes.entries());
         finishWrite.resolve(undefined);
 
         await writing;
         await expect(reading).resolves.toBe('finished');
+        await expect(listing).resolves.toEqual([['k', 'finished']]);
     });
 
     it('runs gets of one key together and makes a set wait for them, even when one fails', async () => {

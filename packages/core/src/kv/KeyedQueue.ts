@@ -22,6 +22,10 @@ export class KeyedQueue {
         return read;
     }
 
+    public isWriting(key: string): boolean {
+        return this.runTails.has(key);
+    }
+
     private track(tails: Map<string, Promise<void>>, key: string, tail: Promise<void>): void {
         tails.set(key, tail);
         void tail.then(() => {
