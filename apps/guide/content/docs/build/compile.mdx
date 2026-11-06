@@ -13,7 +13,7 @@ To properly compile your bot using SEA, you'll need to first create a SEA config
 
 ```json
 {
-    "main": "dist/index.js",
+    "main": "dist/index.mjs",
     "output": "bot" // On Windows, set this to bot.exe
 }
 ```
@@ -40,7 +40,7 @@ Bun comes built-in with its own compiler to generate a standalone binary.
 In order to compile with Bun, use the following command:
 
 ```sh
-bun build ./dist/index.js --compile --outfile bot # bot.exe on Windows
+bun build ./dist/index.mjs --compile --outfile bot # bot.exe on Windows
 ```
 
 Cross-compiling should use the `--target` flag. Read the [Bun documentation](https://bun.sh/docs/compiler/executables) to learn more about single-file executable compilation.

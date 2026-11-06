@@ -14,7 +14,14 @@ In order to containerize your application, you'll need the following prerequisit
 
 To containerize your application, you'll need to write a Dockerfile and, optionally, a Docker Compose file.
 
-To write a Dockerfile, first pull the image(s) you want, then perform copying and building steps within that image. Here's an example Dockerfile to get you started:
+To write a Dockerfile, first pull the image(s) you want, then perform copying and building steps within that image. Here's an example Dockerfile (and .dockerignore) to get you started:
+
+```gitignore
+node_modules
+dist
+**/.* # almost literally every dotfolder is not needed and can be excluded for maximum layer caching
+# add other files that you don't want to include in your image if you want to optimize caching
+```
 
 ```Dockerfile title=Dockerfile
 # Use the official Node.js image from Docker Hub
@@ -30,9 +37,13 @@ WORKDIR /app
 # Repeat this for as many package.jsons as you need to build your bot
 COPY ./package.json ./
 
-# Replace the line below with your package manager's lockfile + any other relevant files
-COPY ./pnpm-lock.yaml ./
+# Replace the lines below with your package manager's lockfile + any other relevant files
 COPY ./pnpm-workspace.yaml ./
+COPY ./pnpm-lock.yaml ./
+
+RUN pnpm install --frozen-lockfile
+
+COPY . .
 
 # Run the build script
 RUN pnpm run build
@@ -66,6 +77,7 @@ services:
             context: .
             dockerfile: ./Dockerfile
         container_name: discord-bot
+        network_mode: 'host' # or explicitly map ports via the ports: object
         env_file:
             - ./.env
 ```
@@ -81,9 +93,8 @@ services:
             context: .
             dockerfile: ./Dockerfile
         container_name: discord-bot
-        env_file:
-            - ./.env
-        mounts:
+        env_file: ./.env
+        volumes:
             - ./assets:/assets
             - bot-data:/data
 volumes:
@@ -99,10 +110,9 @@ services:
             context: .
             dockerfile: ./Dockerfile
         container_name: discord-bot
-        env_file:
-            - ./.env
+        env_file: ./.env
     postgres:
-        image: postgres/postgresql:latest
+        image: postgres:latest
         container_name: discord-bot-db
 ```
 
@@ -140,15 +150,19 @@ FROM node:24 AS dependencies
 # Or any other container with your dev tool
 # This step is only needed if you externalise dependencies
 
+COPY package.json ./
+COPY pnpm-lock.yaml ./
+COPY pnpm-workspace.yaml ./
+
 RUN npm install --production
 
 FROM node:24 AS runner
 # Here, you wouldn't use the container with your dev tools, just your production runner image
 # (i.e. use the Node.js image instead of e.x. Vite+ or pnpm images)
 
-COPY --from=build dist/
+COPY --from=build dist ./
 # Replace dist/ with the folder containing your bot
-COPY --from=dependencies node_modules
+COPY --from=dependencies node_modules ./
 # Only needed if you included the dependencies stage
 
 CMD ["node", "dist/index.js"]
@@ -162,7 +176,7 @@ The Dev Containers specification is made for development environments inside one
 
 To set up a dev container environment for a seedcord project, you'll need to define a couple files:
 
-```json title=devcontainers.json
+```json title=.devcontainer/devcontainer.json
 {
     "image": "node:latest", // or any development image like pnpm or Vite+
     // instead of image, you may alternatively specify either dockerComposeFile & service to use a Docker Compose, or build.dockerfile for direct usage of a Dockerfile.
