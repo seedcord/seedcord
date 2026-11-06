@@ -1,3 +1,7 @@
+import { SeedcordErrorCode } from '@seedcord/errors';
+import { SeedcordTypeError } from '@seedcord/errors/internal';
+import { asError } from '@seedcord/utils/internal';
+
 import type { KeyedQueue } from './KeyedQueue';
 import type { KvDriver } from '@seedcord/types';
 import type { Jsonify, Simplify } from 'type-fest';
@@ -9,6 +13,17 @@ type Stored<TRecord> = Simplify<Jsonify<TRecord>>;
 interface Envelope<TValue> {
     value: TValue;
     expiresAt?: number;
+}
+
+// the record types reject a function or a bigint, but a recursive type like `{ self?: Loop }` still compiles
+function serialized(key: string, envelope: Envelope<unknown>): string {
+    try {
+        return JSON.stringify(envelope);
+    } catch (error) {
+        throw new SeedcordTypeError(SeedcordErrorCode.CoreKvUnserializable, [key, asError(error).message], {
+            cause: error
+        });
+    }
 }
 
 /**
@@ -126,7 +141,7 @@ export class KvCollection<TRecord> {
 
     async #write(key: string, value: TRecord, ttlMs: number | undefined): Promise<void> {
         const envelope: Envelope<TRecord> = ttlMs === undefined ? { value } : { value, expiresAt: Date.now() + ttlMs };
-        await this.#driver.set(key, JSON.stringify(envelope), ttlMs);
+        await this.#driver.set(key, serialized(key, envelope), ttlMs);
     }
 
     // reads again in the queue. a set queued after the first read may have stored a live record

@@ -251,6 +251,22 @@ describe('a driver that throws', () => {
     });
 });
 
+describe('a record that JSON cannot hold', () => {
+    it('throws CoreKvUnserializable on set, with what JSON.stringify threw as the cause', async () => {
+        interface Loop {
+            self?: Loop;
+        }
+        const loop: Loop = {};
+        loop.self = loop;
+        const loops = new Kv(new MemoryDriver()).collection<Loop>('loop');
+
+        await expect(loops.set('k', loop)).rejects.toMatchObject({
+            code: SeedcordErrorCode.CoreKvUnserializable,
+            cause: { name: 'TypeError' }
+        });
+    });
+});
+
 describe('a driver that writes in two steps', () => {
     it('reads the finished record when a get or an entries call lands during a set', async () => {
         const records = new Map<string, string>();
