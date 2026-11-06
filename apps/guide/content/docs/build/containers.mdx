@@ -164,9 +164,9 @@ FROM node:24 AS runner
 # Here, you wouldn't use the container with your dev tools, just your production runner image
 # (i.e. use the Node.js image instead of e.x. Vite+ or pnpm images)
 
-COPY --from=build dist ./
+COPY --from=build dist ./dist/
 # Replace dist/ with the folder containing your bot
-COPY --from=dependencies node_modules ./
+COPY --from=dependencies node_modules ./node_modules/
 # Only needed if you included the dependencies stage
 
 CMD ["node", "dist/index.js"]
