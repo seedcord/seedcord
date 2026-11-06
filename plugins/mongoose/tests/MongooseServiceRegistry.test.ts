@@ -12,8 +12,7 @@ import { TestEnvironment } from './utils/test-env';
 import type { Mongoose } from '#src/Mongoose';
 import type { CoreBase } from '@seedcord/core';
 
-// justified: the registry only forwards these two into the service constructor
-const plugin = { _register: vi.fn() } as unknown as Mongoose;
+// justified: the registry only forwards this into the service constructor
 const core = {} as unknown as CoreBase;
 
 const ADOPTED = `
@@ -30,6 +29,11 @@ describe('MongooseServiceRegistry model ownership', () => {
     let testEnv: TestEnvironment;
     let file: string;
     let registry: MongooseServiceRegistry;
+    // justified: a service's constructor calls _register, the one member the registry passes it
+    const plugin = {
+        // eslint-disable-next-line @typescript-eslint/naming-convention -- the stub has to match Mongoose's own _register
+        _register: (key: string, instance: unknown) => registry.register(key, instance)
+    } as unknown as Mongoose;
 
     beforeEach(async () => {
         testEnv = new TestEnvironment('mongoose-registry-');
@@ -53,10 +57,12 @@ describe('MongooseServiceRegistry model ownership', () => {
     it('leaves a model another component already registered out of its cleanup', async () => {
         await registerAdoptedElsewhere();
         await registry.load();
+        expect(registry.map).toHaveProperty('adopted');
 
         registry.clearModels();
         await registry.onHmr({ file, type: 'delete' });
 
+        expect(registry.map).not.toHaveProperty('adopted');
         expect(vi.mocked(mongoose.deleteModel)).not.toHaveBeenCalledWith('adopted');
     });
 

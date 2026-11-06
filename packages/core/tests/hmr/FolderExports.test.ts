@@ -276,6 +276,20 @@ describe('FolderExports', () => {
             expect(unregistered()).toEqual(['Ping']);
         });
 
+        it('keeps a rolled-back value registered when its barrel is deleted after a broken save', async () => {
+            const { 'Ping.mjs': file = '', 'index.mjs': barrel = '' } = await loaded({
+                'Ping.mjs': 'export class Ping {}\n',
+                'index.mjs': "export { Ping } from './Ping.mjs';\n"
+            });
+            write('Ping.mjs', "throw new Error('typo');\n");
+            await folder.handle({ file, type: 'update', affectedModules: [file, barrel] });
+            unregister.mockClear();
+
+            await folder.handle({ file: barrel, type: 'delete' });
+
+            expect(unregister).not.toHaveBeenCalled();
+        });
+
         it('unregisters a value when its own file is deleted while a barrel still re-exports it', async () => {
             const { 'Ping.mjs': file = '', 'index.mjs': barrel = '' } = await loaded({
                 'Ping.mjs': 'export class Ping {}\n',

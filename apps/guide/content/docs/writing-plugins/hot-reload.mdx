@@ -53,7 +53,7 @@ export class Jobs extends Plugin {
 
 `init()` calls `load()`, which imports every file under `dir` and passes each export that `isJob` accepts to `register`. It runs the same way in production, so the bot registers its jobs through one path whether dev is running or not. `isJob` receives every value a file exports, helpers and constants included, so it has to pick out your classes.
 
-If `jobs/index.ts` re-exports a job, `load()` still registers it once. `handle()` unregisters it only after neither file exports it, so deleting the barrel leaves the job running.
+If `jobs/index.ts` re-exports a job, `load()` still only registers it once. `handle()` unregisters it only after neither file exports it, so deleting the barrel leaves the job running.
 
 ### What each save does
 

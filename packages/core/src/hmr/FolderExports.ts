@@ -86,7 +86,7 @@ export class FolderExports<TUnit> {
 
         if (type === 'delete' || type === 'deleteDir') {
             const deleted = new Set(this.#fileToUnits.get(file));
-            this.#report('Unloaded', this.#unload(file).map(displayName), [file]);
+            this.#report('Unloaded', this.#unload(file).released.map(displayName), [file]);
             const importers = affected.filter((candidate) => candidate !== file);
             await this.#reload([...importers, ...retried], event, deleted);
         } else {
@@ -113,9 +113,14 @@ export class FolderExports<TUnit> {
         deleted: ReadonlySet<TUnit> = new Set()
     ): Promise<void> {
         const files = [...new Set(candidates)].filter((file) => this.#holds(file));
-        // every file unloads before any file loads, so no file in this save can block another.
-        // a rollback leaves out what a deleted file exported, since a barrel re-exporting it can't import anymore
-        const lastGood = new Map(files.map((file) => [file, this.#unload(file).filter((unit) => !deleted.has(unit))]));
+        // unload everything first. if a class moved to another file in this save, loading it while the old file still has it registered throws a duplicate
+        const lastGood = new Map(
+            files.map((file) => [
+                file,
+                // what we roll back to if the new version throws. we skip the deleted file's stuff, since the barrel can't import it anymore anyway
+                this.#unload(file).held.filter((unit) => !deleted.has(unit))
+            ])
+        );
 
         const startedAt = Date.now();
         const names: string[] = [];
@@ -142,22 +147,22 @@ export class FolderExports<TUnit> {
         this.#hmrLogger.debug(`${verb} ${paint.sky.bold(names.join(', '))} from ${paint.mute(from)}${timing}`);
     }
 
-    // a rollback registers these same class objects again, so a db connection that a plugin keyed to one stays open
-    #unload(file: string): TUnit[] {
-        const units = [...(this.#fileToUnits.get(file) ?? [])];
+    #unload(file: string): { held: TUnit[]; released: TUnit[] } {
+        const held = [...(this.#fileToUnits.get(file) ?? [])];
         this.#fileToUnits.delete(file);
         this.#blockedFiles.delete(file);
 
-        const released = units.filter((unit) => !this.#isTracked(unit));
+        const released = held.filter((unit) => !this.#isTracked(unit));
         for (const unit of released) this.#options.unregister(unit);
-        return released;
+        return { held, released };
     }
 
     async #load(file: string, lastGood: TUnit[], rollback: boolean): Promise<string[]> {
         try {
             const units = this.#unitsIn(await this.#import(file));
             const registered = this.#register(file, units);
-            if (lastGood.length > 0 && units.length === 0) this.#warnUnitsLost(file, lastGood);
+            const lost = lastGood.filter((unit) => !this.#isTracked(unit));
+            if (lost.length > 0 && units.length === 0) this.#warnUnitsLost(file, lost);
             return registered.map(displayName);
         } catch (error) {
             const path = formatFilePath(file);
@@ -207,7 +212,8 @@ export class FolderExports<TUnit> {
         }
     }
 
-    // a typo keeps the last-good units live until the next good save
+    // a typo shouldn't knock a handler out until the next good save, so we put the old classes back.
+    // same objects too, so a db connection that a plugin opened for one just stays open
     #rollBack(file: string, lastGood: TUnit[]): void {
         const path = paint.mute(formatFilePath(file));
 
