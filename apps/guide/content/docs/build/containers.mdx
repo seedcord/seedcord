@@ -1,0 +1,191 @@
+---
+title: Containerization
+description: Containerize your seedcord bots and use them as images, for development or production.
+---
+
+In order to containerize your application, you'll need the following prerequisites:
+
+- Your .env file
+- Docker Engine
+- Access to Docker Hub (or the container registry you'd like to pull images from)
+- Dev Containers also need a dev container runner (such as VS Code via the [Dev Container](https://marketplace.visualstudio.com/items?itemName=ms-vscode-remote.remote-containers) extension)
+
+## Containerizing for production
+
+To containerize your application, you'll need to write a Dockerfile and, optionally, a Docker Compose file.
+
+To write a Dockerfile, first pull the image(s) you want, then perform copying and building steps within that image. Here's an example Dockerfile to get you started:
+
+```Dockerfile title=Dockerfile
+# Use the official Node.js image from Docker Hub
+# Replace :latest with the version you want to use, example: ":24"
+FROM node:latest
+# Or use something that can manage your Node runtime, like:
+# Vite+: FROM ghcr.io/voidzero-dev/vite-plus:latest
+# pnpm: FROM ghcr.io/pnpm/pnpm:latest
+
+# For the sake of organization, we'll use a workdir.
+WORKDIR /app
+
+# Repeat this for as many package.jsons as you need to build your bot
+COPY ./package.json ./
+
+# Replace the line below with your package manager's lockfile + any other relevant files
+COPY ./pnpm-lock.yaml ./
+COPY ./pnpm-workspace.yaml ./
+
+# Run the build script
+RUN pnpm run build
+
+# When this container is executed directly, it will run this command.
+# Replace with the appropriate run command (shown to you after building)
+CMD ["node", "dist/index.js"]
+```
+
+### Using a Docker Compose
+
+If you want to use a Docker Compose file, create a file named `docker-compose.yml` with the contents of either of these:
+
+```yml title=docker-compose.yml
+# Use this for Gateway bots
+services:
+    gateway-bot:
+        build:
+            context: .
+            dockerfile: ./Dockerfile
+        container_name: discord-bot
+        env_file:
+            - ./.env
+```
+
+```yml title=docker-compose.yml
+# Use this for HTTP bots
+services:
+    http-bot:
+        build:
+            context: .
+            dockerfile: ./Dockerfile
+        container_name: discord-bot
+        env_file:
+            - ./.env
+```
+
+This can be helpful for any non-trivial bot, such as for:
+
+- Mounting a directory or volume into the container:
+
+```yml title=docker-compose.yml
+services:
+    bot:
+        build:
+            context: .
+            dockerfile: ./Dockerfile
+        container_name: discord-bot
+        env_file:
+            - ./.env
+        mounts:
+            - ./assets:/assets
+            - bot-data:/data
+volumes:
+    bot-data:
+```
+
+- Starting other services (e.g. a database) alongside your bot
+
+```yml title=docker-compose.yml
+services:
+    bot:
+        build:
+            context: .
+            dockerfile: ./Dockerfile
+        container_name: discord-bot
+        env_file:
+            - ./.env
+    postgres:
+        image: postgres/postgresql:latest
+        container_name: discord-bot-db
+```
+
+- Passing in runtime secrets or variables (with or without the use of `.env`)
+
+```yml title=docker-compose.yml
+services:
+    bot:
+        build:
+            context: .
+            dockerfile: ./Dockerfile
+        container_name: discord-bot
+        env:
+            DISCORD_API_KEY: ${DISCORD_API_KEY}
+            DISCORD_CLIENT_ID: ${DISCORD_CLIENT_ID}
+            DISCORD_CLIENT_SECRET: ${DISCORD_CLIENT_SECRET}
+        # or, if you're brave, mount the `.env` file into the container
+        mounts:
+            - ./.env:/.env
+```
+
+### Multi-stage container builds
+
+You may want to use multi-stage container builds to reduce the amount of dependencies that is output in your image.
+
+When you want to do this, you'll need to define multiple stages:
+
+```Dockerfile title=Dockerfile
+FROM node:24 AS build
+# Or any other container with your dev tool
+
+# build steps go here
+
+FROM node:24 AS dependencies
+# Or any other container with your dev tool
+# This step is only needed if you externalise dependencies
+
+RUN npm install --production
+
+FROM node:24 AS runner
+# Here, you wouldn't use the container with your dev tools, just your production runner image
+# (i.e. use the Node.js image instead of e.x. Vite+ or pnpm images)
+
+COPY --from=build dist/
+# Replace dist/ with the folder containing your bot
+COPY --from=dependencies node_modules
+# Only needed if you included the dependencies stage
+
+CMD ["node", "dist/index.js"]
+```
+
+### Build image in CI
+
+## Configuring a dev container
+
+The Dev Containers specification is made for development environments inside one or more containers. This is helpful for quickly developing and iterating with all the tools you need, no prerequisite installations required.
+
+To set up a dev container environment for a seedcord project, you'll need to define a couple files:
+
+```json title=devcontainers.json
+{
+    "image": "node:latest", // or any development image like pnpm or Vite+
+    // instead of image, you may alternatively specify either dockerComposeFile & service to use a Docker Compose, or build.dockerfile for direct usage of a Dockerfile.
+    "postCreateCommand": "npm install", // optional
+    "postStartCommand": "npm exec seedcord codegen" // optional
+}
+```
+
+```yml title=docker-compose.yml
+# Only needed if dockerComposeFile specified in devcontainers.json
+services:
+    bot:
+        image: node:24 # or any dev image like pnpm or Vite+
+        container_name: discord-bot-dev
+    postgres: # Start a development PostgreSQL DB alongside your bot
+        image: postgresql:latest
+        container_name: discord-bot-dev-postgres
+```
+
+```Dockerfile title=Dockerfile
+# Only needed if specified in either devcontainers.json or docker-compose.yml
+FROM node:24
+# or any development image like pnpm or Vite+
+
+# Rest of steps should be similar to the container builds scenario above
+```

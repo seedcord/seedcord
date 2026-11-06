@@ -1,0 +1,46 @@
+---
+title: Single-binary compilation
+description: Compile your seedcord bot into one binary to run it on a server without a JavaScript runtime.
+---
+
+Depending on what runtime you're using, you have two options:
+
+## Node.js SEA (Single-Executable Application)
+
+You can compile your bot to a single binary using Node.js SEA.
+
+To properly compile your bot using SEA, you'll need to first create a SEA configuration file:
+
+```json
+{
+    "main": "dist/index.js",
+    "output": "bot" // On Windows, set this to bot.exe
+}
+```
+
+Then, use Node to compile the binary:
+
+```sh
+node --build-sea sea-config.json
+```
+
+And now you have a compiled executable with your seedcord bot.
+
+You can also bundle assets in and use them via the `node:sea` built-in module. Read the [Node.js documentation on SEA](https://nodejs.org/docs/latest/api/single-executable-applications.html) to learn more about SEA compilation.
+
+### Other tools that build executables on Node
+
+- tsdown has built-in support to compile Node apps via SEA [(docs)](https://tsdown.dev/options/exe).
+- `pkg` is a (now-deprecated) CLI for compiling Node apps via its own mechanism.
+
+## Bun single-file executable
+
+Bun comes built-in with its own compiler to generate a standalone binary.
+
+In order to compile with Bun, use the following command:
+
+```sh
+bun build ./dist/index.js --compile --outfile bot # bot.exe on Windows
+```
+
+Cross-compiling should use the `--target` flag. Read the [Bun documentation](https://bun.sh/docs/compiler/executables) to learn more about single-file executable compilation.
