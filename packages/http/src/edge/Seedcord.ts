@@ -9,6 +9,7 @@ import {
     installLinks,
     PluginLifecycle,
     sealAttachments,
+    settleWithin,
     toWireError
 } from '@seedcord/core/internal';
 import { PluginHost } from '@seedcord/core/plugin';
@@ -193,8 +194,13 @@ export class Seedcord extends PluginHost<'http', 'edge'> {
             await this.#startup.run();
         } catch (caught) {
             await this.#plugins.rollback();
+            const oldInits = this.#plugins.timedOutInitsSettled();
+            // cloudflare cancels a timed-out init once its request ends, so a retry can't overlap it there.
+            // seedcord dev starts outside a request and nothing cancels it, so dev just waits it out.
+            // we tried guarding overlapping inits on one plugin instead and every guard opened a new race. not worth it
+            const waited = requestScope.getStore() ? settleWithin(oldInits, TIMED_OUT_INIT_WAIT_MS) : oldInits;
             keepRequestOpenFor(
-                this.#plugins.timedOutInitsSettled(TIMED_OUT_INIT_WAIT_MS).then(() => {
+                waited.then(() => {
                     this.#started = undefined;
                 })
             );

@@ -5,7 +5,7 @@ import { Logger } from '@seedcord/logger';
 import { StartupPhase } from '#src/lifecycle/phases';
 import { pluginLoggerOf } from '#src/plugin/Plugin';
 
-import { settleWithin, withTimeout } from './withTimeout';
+import { withTimeout } from './withTimeout';
 
 import type { ShutdownTasks } from '#node/Lifecycle/CoordinatedShutdown';
 import type { TaskShutdownPhase } from '#src/lifecycle/phases';
@@ -24,7 +24,6 @@ export class PluginLifecycle {
     private readonly completedInits = new Set<Attachment>();
     private readonly disposePhases = new Set<TaskShutdownPhase>();
     private readonly timedOutInits = new Set<Promise<void>>();
-    private readonly latestInits = new Map<Attachment, Promise<void>>();
     private attachments: readonly Attachment[] = [];
     private registered = false;
 
@@ -57,8 +56,8 @@ export class PluginLifecycle {
         this.completedInits.clear();
     }
 
-    public timedOutInitsSettled(capMs: number): Promise<void> {
-        return settleWithin(Promise.allSettled(this.timedOutInits), capMs);
+    public async timedOutInitsSettled(): Promise<void> {
+        await Promise.allSettled(this.timedOutInits);
     }
 
     private async runInits(group: readonly Attachment[]): Promise<void> {
@@ -66,13 +65,12 @@ export class PluginLifecycle {
             const { key, instance, spec } = attachment;
 
             pluginLoggerOf(instance).utils.initialization(key, 'start');
-            const running = Promise.resolve(instance.init());
-            this.latestInits.set(attachment, running);
+            const running = instance.init();
             try {
                 await withTimeout(`Plugin (${key})`, () => running, spec.init.timeout);
             } catch (caught) {
                 if (isSeedcordError(caught, undefined, SeedcordErrorCode.LifecycleTaskTimeout)) {
-                    this.disposeWhenInitResolves(attachment, running);
+                    this.disposeWhenInitResolves(attachment, Promise.resolve(running));
                 }
                 throw caught;
             }
@@ -90,9 +88,7 @@ export class PluginLifecycle {
 
         const settled = running.then(
             async () => {
-                // the edge host can retry init() on this same instance before this one finishes.
-                // disposing then would tear down the retry
-                if (!dispose || this.latestInits.get(attachment) !== running) return;
+                if (!dispose) return;
                 await withTimeout(`Plugin:${key}:dispose`, dispose, spec.dispose.timeout).catch((caught: unknown) =>
                     this.logger.warn(`${key} dispose failed after a timed-out init`, caught)
                 );

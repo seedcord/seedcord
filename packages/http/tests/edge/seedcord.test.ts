@@ -412,22 +412,16 @@ describe('the edge Seedcord', () => {
     describe('after a plugin init times out', () => {
         const calls: string[] = [];
         let hung = Promise.withResolvers<undefined>();
-        let retryInit: Promise<unknown> = Promise.resolve();
-        let retryStarted = Promise.withResolvers<undefined>();
         let first = true;
         class Slow extends Plugin {
             constructor(host: CoreBase) {
                 super(host, { init: { timeout: 20 } });
             }
-            public async init(): Promise<void> {
+            public init(): Promise<void> {
                 calls.push('init');
-                if (!first) {
-                    retryStarted.resolve(undefined);
-                    await retryInit;
-                    return;
-                }
+                if (!first) return Promise.resolve();
                 first = false;
-                await hung.promise;
+                return hung.promise;
             }
             public override dispose(): Promise<void> {
                 calls.push('dispose');
@@ -438,8 +432,6 @@ describe('the edge Seedcord', () => {
         afterEach(() => {
             calls.length = 0;
             hung = Promise.withResolvers<undefined>();
-            retryInit = Promise.resolve();
-            retryStarted = Promise.withResolvers<undefined>();
             first = true;
             vi.useRealTimers();
         });
@@ -461,12 +453,10 @@ describe('the edge Seedcord', () => {
             expect(calls).toEqual(['init', 'dispose', 'init']);
         });
 
-        it('retries 25s after the timeout, and the old init finishing late leaves the retry alone', async () => {
+        it('retries 25s after the timeout when the old init never settles', async () => {
             const signer = await signedEnv();
             const seedcord = new Seedcord(config()).attach('slow', Slow);
             const failed = capturingCtx();
-            const holdRetry = Promise.withResolvers<undefined>();
-            retryInit = holdRetry.promise;
             const firstRequest = await signedRequest(signer, ping);
             vi.useFakeTimers({ toFake: ['setTimeout', 'clearTimeout', 'performance'] });
 
@@ -476,12 +466,7 @@ describe('the edge Seedcord', () => {
             await vi.advanceTimersByTimeAsync(25_000);
             await failed.settled();
             vi.useRealTimers();
-            const retrying = seedcord.fetch(await signedRequest(signer, ping), undefined, capturingCtx());
-            await retryStarted.promise;
-            hung.resolve(undefined);
-            await new Promise((resolve) => setTimeout(resolve, 0));
-            holdRetry.resolve(undefined);
-            const retried = await retrying;
+            const retried = await seedcord.fetch(await signedRequest(signer, ping), undefined, capturingCtx());
 
             expect(retried.status).toBe(200);
             expect(calls).toEqual(['init', 'init']);
