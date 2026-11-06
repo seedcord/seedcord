@@ -1,4 +1,10 @@
 import * as path from 'node:path';
+import { pathToFileURL } from 'node:url';
+
+// node reads a raw windows path's drive letter as a url protocol, so import() needs a file url
+export function fileUrl(file: string): string {
+    return pathToFileURL(file).href;
+}
 
 // true for the folder itself too
 export function isInside(folder: string, target: string): boolean {

@@ -1,12 +1,12 @@
 import { readFile } from 'node:fs/promises';
 import * as path from 'node:path';
-import { pathToFileURL } from 'node:url';
 
 import { SeedcordErrorCode } from '@seedcord/errors';
 import { SeedcordError } from '@seedcord/errors/internal';
 
 import { BotLayout } from './BotLayout';
 import { decodeFile } from './encodedFile';
+import { fileUrl } from './paths';
 import { botFilesSlot } from './slots';
 
 import type { BotFolder } from './BotLayout';
@@ -92,10 +92,9 @@ abstract class FileSource {
 class DiskFiles extends FileSource {
     protected async modulesIn(folder: string, layout: BotLayout): Promise<Loaders<ModuleLoader>> {
         const files = await layout.modulesUnder(folder);
-        // node reads a raw windows path's drive letter as a url protocol
         return files.map((file) => [
             file,
-            () => import(/* @vite-ignore */ pathToFileURL(file).href) as Promise<Record<string, unknown>>
+            () => import(/* @vite-ignore */ fileUrl(file)) as Promise<Record<string, unknown>>
         ]);
     }
 

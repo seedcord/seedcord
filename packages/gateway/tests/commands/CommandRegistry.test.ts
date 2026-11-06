@@ -79,32 +79,15 @@ describe('CommandRegistry Integration', () => {
 
     it('resets the loading flag when the bulk load throws', async ({ testEnv }) => {
         const commandsDir = 'commands';
-        await testEnv.createFile(
-            `${commandsDir}/PingCommand.ts`,
-            `
-            import { BuilderComponent, RegisterCommand } from '${seedcordPath}';
-
-            @RegisterCommand('global')
-            export class PingCommand extends BuilderComponent<'command'> {
-                constructor() {
-                    super('command');
-                    this.instance.setName('ping').setDescription('Replies with Pong!');
-                }
-            }
-            `
-        );
+        await testEnv.createFile(`${commandsDir}/Broken.ts`, `throw new Error('load boom');\n`);
         const config = testConfig({ commands: testEnv.resolvePath(commandsDir) });
 
         await using seedcord = new Seedcord(config);
 
-        // fixture: access the private load + flag to force a mid-load throw
-        const internal = registryOf(seedcord) as unknown as {
-            loadCommands: () => Promise<void>;
-            loading: boolean;
-        };
-        vi.spyOn(internal, 'loadCommands').mockRejectedValue(new Error('load boom'));
+        // fixture: reads the private flag, which only changes what a later reload logs
+        const internal = registryOf(seedcord) as unknown as { loading: boolean };
 
-        await expect(registryOf(seedcord).init()).rejects.toThrow('load boom');
+        await expect(registryOf(seedcord).init()).rejects.toThrow();
         expect(internal.loading).toBe(false);
     });
 

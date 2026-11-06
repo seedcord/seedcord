@@ -56,12 +56,6 @@
                 "default": "./dist/node.index.mjs"
             }
         },
-        "./hmr": {
-            "import": {
-                "types": "./dist/hmr.index.d.mts",
-                "default": "./dist/hmr.index.mjs"
-            }
-        },
         "./node/internal": {
             "import": {
                 "types": "./dist/node-internal.index.d.mts",

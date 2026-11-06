@@ -11,14 +11,10 @@ Every save sends your plugin an [`HmrUpdateEvent`](ref:types/HmrUpdateEvent) thr
 
 ## Reloading files the plugin loaded
 
-[`HmrModuleHandler`](ref:core/HmrModuleHandler) does the unloading and re-importing for a folder. Import it from your transport package, or from `@seedcord/core/hmr` on the `@seedcord/core/plugin` base. You give it the folder, a check for which exports count, and how to register and unregister one.
+[`FolderExports`](ref:core/FolderExports) registers what a folder's files export at startup, then reloads a file's exports each time you save it. Import it from your transport package, or from `@seedcord/core` on the `@seedcord/core/plugin` base. You give it the folder, a check for which exports count, and how to register and unregister one.
 
 ```ts twoslash title="src/plugins/Jobs.ts"
-import {
-    HmrModuleHandler,
-    importFiles,
-    Plugin
-} from '@seedcord/gateway';
+import { FolderExports, Plugin } from '@seedcord/gateway';
 
 import type { CoreBase, HmrUpdateEvent } from '@seedcord/gateway';
 
@@ -30,71 +26,61 @@ const isJob = (value: unknown): value is JobClass =>
 
 export class Jobs extends Plugin {
     private readonly jobs = new Map<string, JobClass>();
-    private readonly reloader: HmrModuleHandler<JobClass>;
+    private readonly jobFiles: FolderExports<JobClass>;
 
-    public constructor(
-        host: CoreBase,
-        private readonly dir: string
-    ) {
+    public constructor(host: CoreBase, dir: string) {
         super(host);
-        this.reloader = new HmrModuleHandler({
-            handlers: {
-                dir,
-                is: isJob,
-                register: (job) => this.jobs.set(job.name, job),
-                unregister: (job) => this.jobs.delete(job.name)
-            },
+        this.jobFiles = new FolderExports({
+            dir,
+            is: isJob,
+            register: (job) => this.jobs.set(job.name, job),
+            unregister: (job) => this.jobs.delete(job.name),
             logger: this.logger
         });
     }
 
     public async init(): Promise<void> {
-        for await (const { fullPath, imported } of importFiles(
-            this.dir
-        )) {
-            for (const exported of Object.values(imported).filter(
-                isJob
-            )) {
-                this.jobs.set(exported.name, exported);
-                this.reloader.trackHandler(fullPath, exported);
-            }
-        }
+        await this.jobFiles.load();
     }
 
     public override async onHmr(
         event: HmrUpdateEvent
     ): Promise<void> {
-        await this.reloader.handle(event);
+        await this.jobFiles.handle(event);
     }
 }
 ```
 
-`init()` calls `trackHandler` for each class it registers. If you skip that call, a save has nothing to unregister, and the old class stays beside the new one. `handlers.dir` limits the handler to files under that folder, so saves elsewhere pass through it. `handlers.is` receives every export of a file, so it has to pick out your classes from helpers and constants.
+`init()` calls `load()`, which imports every file under `dir` and passes each export that `isJob` accepts to `register`. It runs the same way in production, so the bot registers its jobs through one path whether dev is running or not. `isJob` receives every value a file exports, helpers and constants included, so it has to pick out your classes.
+
+If `jobs/index.ts` re-exports a job, `load()` still registers it once. `handle()` unregisters it only after neither file exports it, so deleting the barrel leaves the job running.
 
 ### What each save does
 
-`handle()` reads the event's `type`:
+`onHmr` passes each save to `handle()`, which ignores files outside `dir` and reads the event's `type`:
 
 {/* prettier-ignore-start */}
 
 | type | what `handle()` does |
 | --- | --- |
-| `create`, `update` | re-imports the saved file and every file in `affectedModules` that sits under `handlers.dir` or `middlewares.dir`, unregisters the classes each one held before, and registers what it exports now |
-| `delete`, `deleteDir` | unregisters the classes it tracked for that path |
+| `create`, `update` | re-imports the saved file and every file in `affectedModules` that sits under `dir`, unregisters what each one exported before, and registers what it exports now |
+| `delete`, `deleteDir` | unregisters what that path exported, apart from a value that another file still exports |
 | `createDir` | nothing. Each file in the new folder arrives as its own `create` event |
 
 {/* prettier-ignore-end */}
 
-If re-importing a file throws, the handler unregisters whatever the file half-registered. With `rollback` on, the default, it then registers the last working classes again and logs a warning. If you set [`hmr.rollback`](/build/config#every-key) to `false`, the file's classes stay unregistered until a save that imports cleanly. [A save that throws on import](/tooling/hot-reload#a-save-that-throws-on-import) walks through the same case for your own handlers.
+If a file throws while it imports, `handle()` has already unregistered its old exports. With `rollback` on, the default, it registers them again and logs a warning. If you set [`hmr.rollback`](/build/config#every-key) to `false`, `handle()` leaves them unregistered until a save that imports cleanly. [A save that throws on import](/tooling/hot-reload#a-save-that-throws-on-import) walks through the same case for your own handlers.
+
+If your `register` throws, `handle()` unregisters whatever that file registered before the throw. It tries the file again on the next save that unloads something. That covers moving a job to a new file, since the new file often loads before the old one unloads. If your `register` rejects a name that's already taken, the first try fails, and the retry succeeds after `handle()` unregisters the old file's job.
 
 Each reload logs one line at debug level on your plugin's logger, in the `hmr` channel, like "Reloaded ResetStreaks from jobs/ResetStreaks.ts in 4ms".
 
 ### Undoing what a registration made
 
-`unregister` gets the old class. That's enough for `Jobs`, since registering only stored the class in a map. If registering creates something you have to undo later, return it from `getArtifacts`. The handler calls `getArtifacts` each time it tracks a class, then passes the result to `unregister` as its second argument. Here `schedule()` starts a timer for each job, and the timer is the artifact:
+`unregister` gets the old value and nothing else. That's enough for `Jobs`, since registering only stored the class in a map. If registering creates something you have to undo later, keep it in a map keyed by the class and look it up in `unregister`. Here `schedule()` starts a timer for each job:
 
 ```ts twoslash title="src/plugins/Jobs.ts"
-import { HmrModuleHandler, Plugin } from '@seedcord/gateway';
+import { FolderExports, Plugin } from '@seedcord/gateway';
 
 import type { CoreBase } from '@seedcord/gateway';
 
@@ -104,32 +90,27 @@ declare const isJob: (value: unknown) => value is JobClass;
 
 class Jobs extends Plugin {
     private readonly timers = new Map<JobClass, NodeJS.Timeout>();
-    private readonly reloader: HmrModuleHandler<
-        JobClass,
-        void,
-        NodeJS.Timeout | undefined
-    >;
+    private readonly jobFiles: FolderExports<JobClass>;
 
     public constructor(host: CoreBase, dir: string) {
         super(host);
         // ---cut---
-        this.reloader = new HmrModuleHandler({
-            handlers: {
-                dir,
-                is: isJob,
-                register: (job) => this.schedule(job),
-                getArtifacts: (job) => this.timers.get(job),
-                unregister: (job, timer) => {
-                    clearInterval(timer);
-                    this.timers.delete(job);
-                }
+        this.jobFiles = new FolderExports({
+            dir,
+            is: isJob,
+            register: (job) => this.schedule(job),
+            unregister: (job) => {
+                clearInterval(this.timers.get(job));
+                this.timers.delete(job);
             },
             logger: this.logger
         });
         // ---cut-after---
     }
 
-    public async init(): Promise<void> {}
+    public async init(): Promise<void> {
+        await this.jobFiles.load();
+    }
 
     private schedule(job: JobClass): void {
         const run = (): void => void new job().run();
@@ -138,58 +119,11 @@ class Jobs extends Plugin {
 }
 ```
 
-A save to a job file clears the old class's timer before the new class starts its own. Without `clearInterval` in `unregister`, every save would leave one more timer running the old code. seedcord's own `CommandRegistry` keeps each command's name and target servers as its artifact the same way, since it has to construct the class to learn them.
+A save to a job file clears the old class's timer before the new class starts its own. Without `clearInterval` in `unregister`, every save would leave one more timer running the old code.
 
-### Handlers and middleware
+### More than one folder
 
-A second folder can hold a second kind of class, the way seedcord's own dispatchers reload handlers and the middleware around them. Pass `middlewares` with the same keys as `handlers`, apart from `getArtifacts`. The second type argument types them:
-
-```ts twoslash title="src/plugins/Jobs.ts"
-import { HmrModuleHandler, Plugin } from '@seedcord/gateway';
-
-import type { CoreBase } from '@seedcord/gateway';
-
-type JobClass = new () => { run(): Promise<void> };
-type HookClass = new () => { before(job: string): void };
-
-declare const isJob: (value: unknown) => value is JobClass;
-declare const isHook: (value: unknown) => value is HookClass;
-
-class Jobs extends Plugin {
-    private readonly jobs = new Map<string, JobClass>();
-    private readonly hooks = new Set<HookClass>();
-    private readonly reloader;
-
-    public constructor(
-        host: CoreBase,
-        dir: string,
-        hooksDir: string
-    ) {
-        super(host);
-        // ---cut---
-        this.reloader = new HmrModuleHandler<JobClass, HookClass>({
-            handlers: {
-                dir,
-                is: isJob,
-                register: (job) => this.jobs.set(job.name, job),
-                unregister: (job) => this.jobs.delete(job.name)
-            },
-            middlewares: {
-                dir: hooksDir,
-                is: isHook,
-                register: (hook) => this.hooks.add(hook),
-                unregister: (hook) => this.hooks.delete(hook)
-            },
-            logger: this.logger
-        });
-        // ---cut-after---
-    }
-
-    public async init(): Promise<void> {}
-}
-```
-
-In `init()`, call `trackMiddleware` for each hook you load, the way the first sample calls `trackHandler` for each job.
+A `FolderExports` covers one folder and one kind of value. For a second kind, like hooks that run around each job, make a second `FolderExports` with its own `is`, `register`, and `unregister`. Call `load()` on both in `init()` and `handle()` on both in `onHmr()`, since each one ignores saves outside its own folder.
 
 ## Files read once
 

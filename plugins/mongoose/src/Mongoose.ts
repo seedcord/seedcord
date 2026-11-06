@@ -1,6 +1,5 @@
 import 'reflect-metadata';
 
-import { HmrModuleHandler } from '@seedcord/core/hmr';
 import { Plugin } from '@seedcord/core/plugin';
 import { SeedcordErrorCode, paint } from '@seedcord/errors';
 import { SeedcordError } from '@seedcord/errors/internal';
@@ -10,18 +9,12 @@ import mongoose from 'mongoose';
 
 import { MongooseServiceRegistry } from './MongooseServiceRegistry';
 
-import type { MongooseServiceConstructor } from './MongooseService';
 import type { MongooseOptions } from './types/MongooseOptions';
 import type { MongooseServices } from './types/MongooseServices';
 import type { CoreBase } from '@seedcord/core';
 import type { HmrUpdateEvent } from '@seedcord/types';
 import type { Mongoose as MongooseInstance } from 'mongoose';
 import type { Constructor } from 'type-fest';
-
-export interface MongooseArtifact {
-    key?: string;
-    modelName?: string;
-}
 
 /**
  * MongoDB integration plugin for Seedcord.
@@ -53,7 +46,6 @@ export class Mongoose extends Plugin<{ transport: 'any'; runtime: 'server' }> {
 
     /** Exposed Mongoose instance once `init` completes. */
     declare public connection: MongooseInstance;
-    private readonly hmrHandler?: HmrModuleHandler<MongooseServiceConstructor, void, MongooseArtifact>;
 
     constructor(
         host: CoreBase,
@@ -61,24 +53,12 @@ export class Mongoose extends Plugin<{ transport: 'any'; runtime: 'server' }> {
     ) {
         super(host, { runtime: 'server', dispose: keepDefined({ timeout: options.timeout }) });
         this.uri = options.uri;
-        this.serviceRegistry = new MongooseServiceRegistry(this, this.core, this.logger);
-
-        if (!Envapter.isDevelopment) return;
-        this.hmrHandler = new HmrModuleHandler({
-            handlers: {
-                dir: this.options.dir,
-                is: this.serviceRegistry.isServiceClass.bind(this.serviceRegistry),
-                register: this.serviceRegistry.initializeService.bind(this.serviceRegistry),
-                unregister: this.serviceRegistry.unregister.bind(this.serviceRegistry),
-                getArtifacts: this.serviceRegistry.getArtifacts.bind(this.serviceRegistry)
-            },
-            logger: this.logger
-        });
+        this.serviceRegistry = new MongooseServiceRegistry(this, this.core, this.logger, options.dir);
     }
 
     /** @internal For use in dev mode */
     public override async onHmr(event: HmrUpdateEvent): Promise<void> {
-        await this.hmrHandler?.handle(event);
+        await this.serviceRegistry.onHmr(event);
     }
 
     public init(): Promise<void> {
@@ -93,7 +73,7 @@ export class Mongoose extends Plugin<{ transport: 'any'; runtime: 'server' }> {
     private async runInit(): Promise<void> {
         try {
             await this.connect();
-            await this.loadServices();
+            await this.serviceRegistry.load();
         } catch (caught) {
             // the host skips dispose for a plugin whose init rejected
             await this.disconnect().catch((error: unknown) => this.logger.error('failed to disconnect', error));
@@ -149,11 +129,6 @@ export class Mongoose extends Plugin<{ transport: 'any'; runtime: 'server' }> {
             });
     }
 
-    private async loadServices(): Promise<void> {
-        await this.serviceRegistry.loadFromDirectory(this.options.dir, (fullPath, Service) => {
-            this.hmrHandler?.trackHandler(fullPath, Service);
-        });
-    }
 
     /** @internal */
     _register(key: string, instance: unknown): void {
