@@ -114,6 +114,8 @@ services:
     postgres:
         image: postgres:latest
         container_name: discord-bot-db
+        environment:
+            - POSTGRES_PASWORD:some-password-here
 ```
 
 - Passing in runtime secrets or variables (with or without the use of `.env`)
@@ -125,7 +127,7 @@ services:
             context: .
             dockerfile: ./Dockerfile
         container_name: discord-bot
-        env:
+        environment:
             DISCORD_API_KEY: ${DISCORD_API_KEY}
             DISCORD_CLIENT_ID: ${DISCORD_CLIENT_ID}
             DISCORD_CLIENT_SECRET: ${DISCORD_CLIENT_SECRET}
@@ -194,6 +196,8 @@ services:
     postgres: # Start a development PostgreSQL DB alongside your bot
         image: postgresql:latest
         container_name: discord-bot-dev-postgres
+        environment:
+            - POSTGRES_PASSWORD:some-password-here
 ```
 
 ```Dockerfile title=Dockerfile
