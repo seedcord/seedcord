@@ -18,7 +18,8 @@ You can compile your bot to a single binary using Node.js SEA.
 Due to current limitations at the time of writing, to properly compile your bot using SEA, you'll need to re-bundle your bot to be a singular file. Use a bundler like `esbuild`:
 
 ```sh
-npx esbuild --bundle dist/index.mjs --outfile bin/index.js
+npm run build # use the build command with your package manager
+npx esbuild --bundle dist/index.mjs --outfile bin/index.js --platform=node --format=esm
 ```
 
 Create a SEA configuration file:
@@ -35,7 +36,6 @@ Create a SEA configuration file:
 Then, use Node to compile the binary:
 
 ```sh
-npm run build # use the build command with your package manager
 node --build-sea sea-config.json
 ```
 
