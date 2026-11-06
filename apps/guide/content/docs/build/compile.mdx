@@ -7,6 +7,12 @@ Depending on what runtime you're using, you have two options:
 
 ## Node.js SEA (Single-Executable Application)
 
+<Callout type="info">
+
+This page assumes Node.js 26+ for its simplicity. You'll need to follow different instructions for Node.js [22](https://nodejs.org/docs/latest-v22.x/api/single-executable-applications.html) and [24](https://nodejs.org/docs/latest-v24.x/api/single-executable-applications.html).
+
+</Callout>
+
 You can compile your bot to a single binary using Node.js SEA.
 
 To properly compile your bot using SEA, you'll need to first create a SEA configuration file:
@@ -15,6 +21,7 @@ To properly compile your bot using SEA, you'll need to first create a SEA config
 // Node.js does not accept JSONC; remove comments before usage.
 {
     "main": "dist/index.mjs",
+    "mainFormat": "module",
     "output": "bot" // On Windows, set this to bot.exe
 }
 ```
@@ -22,6 +29,7 @@ To properly compile your bot using SEA, you'll need to first create a SEA config
 Then, use Node to compile the binary:
 
 ```sh
+npm run build # use the build command with your package manager
 node --build-sea sea-config.json
 ```
 
@@ -41,6 +49,7 @@ Bun comes built-in with its own compiler to generate a standalone binary.
 In order to compile with Bun, use the following command:
 
 ```sh
+bun run build # Builds your bot first
 bun build ./dist/index.mjs --compile --outfile bot # bot.exe on Windows
 ```
 

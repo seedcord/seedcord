@@ -21,8 +21,10 @@ node_modules
 dist
 # almost literally every dotfolder is not needed and can be excluded for maximum layer caching
 **/.*
-.env*
-# add other files that you don't want to include in your image if you want to optimize caching
+# If you don't use build-time environment variables, uncomment the line below:
+# .env*
+
+# add other files that you don't need to include in your image if you want to optimize caching
 ```
 
 ```Dockerfile title=Dockerfile
@@ -79,9 +81,9 @@ services:
             context: .
             dockerfile: ./Dockerfile
         container_name: discord-bot
-        network_mode: 'host' # or explicitly map ports via the ports: object
-        env_file:
-            - ./.env
+        network_mode: 'host' # If using Docker Desktop, this requires host networking to be enabled
+        # you can also explicitly map ports via the ports: object
+        env_file: ./.env
 ```
 
 This can be helpful for any non-trivial bot, such as for:
@@ -130,12 +132,12 @@ services:
             dockerfile: ./Dockerfile
         container_name: discord-bot
         environment:
-            DISCORD_API_KEY: ${DISCORD_API_KEY}
+            DISCORD_BOT_TOKEN: ${DISCORD_BOT_TOKEN}
             DISCORD_CLIENT_ID: ${DISCORD_CLIENT_ID}
             DISCORD_CLIENT_SECRET: ${DISCORD_CLIENT_SECRET}
         # or, if you're brave, mount the `.env` file into the container
         mounts:
-            - ./.env:/.env
+            - ./.env:/app/.env
 ```
 
 ### Multi-stage container builds
@@ -169,7 +171,7 @@ COPY --from=build dist ./dist/
 COPY --from=dependencies node_modules ./node_modules/
 # Only needed if you included the dependencies stage
 
-CMD ["node", "dist/index.js"]
+CMD ["node", "dist/index.mjs"]
 ```
 
 ### Build image in CI
