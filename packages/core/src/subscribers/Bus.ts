@@ -88,10 +88,8 @@ export class Bus extends TypedEventEmitter<SubscriptionTuples> {
     }
 
     /** @internal */
-    public [UnregisterSubscriber](ctor: StoredSubscriberCtor, keys?: readonly SubscriptionKey[]): void {
-        for (const key of keys ?? [...this.#subscribersMap.keys()]) {
-            const registrations = this.#subscribersMap.get(key);
-            if (!registrations) continue;
+    public [UnregisterSubscriber](ctor: StoredSubscriberCtor): void {
+        for (const registrations of this.#subscribersMap.values()) {
             const index = registrations.findIndex((entry) => entry.ctor === ctor);
             if (index !== -1) registrations.splice(index, 1);
         }
@@ -273,7 +271,7 @@ export class Bus extends TypedEventEmitter<SubscriptionTuples> {
 }
 
 // every caller already checked that the Subscribe metadata is there
-export function registrationsFor(ctor: StoredSubscriberCtor): SubscriberRegistration[] {
+function registrationsFor(ctor: StoredSubscriberCtor): SubscriberRegistration[] {
     const entries = Reflect.getMetadata(SubscribeMetadataKey, ctor) as SubscribeMetadataEntry[];
     return entries.map(({ key, frequency }) => ({ key, frequency, ctor }));
 }
