@@ -41,13 +41,15 @@ let testImports = 0;
  */
 export class FolderExports<TUnit> {
     readonly #options: FolderExportsOptions<TUnit>;
+    readonly #hmrLogger: Logger;
     // no import.meta.hot.data stash needed because a leaf reload never reconstructs the singleton holding these
     readonly #fileToUnits = new Map<string, Set<TUnit>>();
     // a moved unit's new file can load before its old file unloads
     readonly #blockedFiles = new Set<string>();
 
     constructor(options: FolderExportsOptions<TUnit>) {
-        this.#options = { ...options, logger: options.logger.withChannel('hmr') };
+        this.#options = options;
+        this.#hmrLogger = options.logger.withChannel('hmr');
     }
 
     /**
@@ -60,6 +62,7 @@ export class FolderExports<TUnit> {
         // a plugin that disconnects and inits again registers the whole folder again
         this.#fileToUnits.clear();
         this.#blockedFiles.clear();
+        this.#options.logger.debug(paint.mute(this.#options.dir));
         for await (const { fullPath, imported } of importFiles(this.#options.dir)) {
             this.#register(fullPath, this.#unitsIn(imported));
         }
@@ -123,7 +126,7 @@ export class FolderExports<TUnit> {
         const [only, ...others] = files;
         const from = only && others.length === 0 ? formatFilePath(only) : `${String(files.length)} files`;
         const timing = elapsedMs === undefined ? '' : ` ${paint.mute('in')} ${String(elapsedMs)}ms`;
-        this.#options.logger.debug(`${verb} ${paint.sky.bold(names.join(', '))} from ${paint.mute(from)}${timing}`);
+        this.#hmrLogger.debug(`${verb} ${paint.sky.bold(names.join(', '))} from ${paint.mute(from)}${timing}`);
     }
 
     // a rollback registers the returned objects again, which is how a live db connection survives one
@@ -145,7 +148,7 @@ export class FolderExports<TUnit> {
             return units.map(displayName);
         } catch (error) {
             const path = formatFilePath(file);
-            this.#options.logger.error(`Failed to reload file: ${path}`, vitePluginThrew(error) ?? error);
+            this.#hmrLogger.error(`Failed to reload file: ${path}`, vitePluginThrew(error) ?? error);
         }
 
         if (rollback && lastGood.length > 0) this.#rollBack(file, lastGood);
@@ -155,7 +158,7 @@ export class FolderExports<TUnit> {
     #warnUnitsLost(file: string, lost: TUnit[]): void {
         const names = paint.sky.bold(lost.map(displayName).join(', '));
         const path = paint.mute(formatFilePath(file));
-        this.#options.logger.warn(
+        this.#hmrLogger.warn(
             `${paint.amber.bold('Unloaded')} ${names} because reloading ${path} didn't find them. If the file still exports them, restart dev.`
         );
     }
@@ -186,14 +189,13 @@ export class FolderExports<TUnit> {
 
     // a typo keeps the last-good units live until the next good save
     #rollBack(file: string, lastGood: TUnit[]): void {
-        const { logger } = this.#options;
         const path = paint.mute(formatFilePath(file));
 
         try {
             this.#register(file, lastGood);
-            logger.warn(`${paint.amber.bold('Rolled back')} ${path} to the last-good version`);
+            this.#hmrLogger.warn(`${paint.amber.bold('Rolled back')} ${path} to the last-good version`);
         } catch (error) {
-            logger.error(`Failed to roll back ${path}`, error);
+            this.#hmrLogger.error(`Failed to roll back ${path}`, error);
         }
     }
 }

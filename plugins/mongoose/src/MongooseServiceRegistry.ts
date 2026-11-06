@@ -35,7 +35,7 @@ export class MongooseServiceRegistry {
         private readonly plugin: Mongoose,
         private readonly core: CoreBase,
         private readonly logger: Logger,
-        private readonly dir: string
+        dir: string
     ) {
         this.serviceFiles = new FolderExports({
             dir,
@@ -78,7 +78,6 @@ export class MongooseServiceRegistry {
     }
 
     public async load(): Promise<void> {
-        this.logger.debug(paint.mute(this.dir));
         await this.serviceFiles.load();
         this.logger.utils.list(
             [`${paint.iris.bold(Object.keys(this.services).length)} services`],

@@ -20,7 +20,7 @@ import type { HmrAware, HmrUpdateEvent } from '@seedcord/types';
 
 export class SubscriberLoader implements Initializeable, HmrAware {
     private isInitialized = false;
-    private readonly folder?: { readonly dir: string; readonly exports: FolderExports<StoredSubscriberCtor> };
+    private readonly subscriberFiles?: FolderExports<StoredSubscriberCtor>;
 
     constructor(
         private readonly bus: Bus,
@@ -28,14 +28,13 @@ export class SubscriberLoader implements Initializeable, HmrAware {
     ) {
         if (!directory) return;
 
-        const exports = new FolderExports<StoredSubscriberCtor>({
+        this.subscriberFiles = new FolderExports({
             dir: directory,
             is: this.isSubscriber.bind(this),
             register: this.registerSubscriber.bind(this),
             unregister: (ctor) => this.bus[UnregisterSubscriber](ctor),
             logger: busLoggerOf(this.bus)
         });
-        this.folder = { dir: directory, exports };
     }
 
     /** @internal */
@@ -45,10 +44,8 @@ export class SubscriberLoader implements Initializeable, HmrAware {
 
         this.bus[RegisterDefaults]();
 
-        const { folder } = this;
-        if (folder) {
-            busLoggerOf(this.bus).debug(paint.mute(folder.dir));
-            await folder.exports.load();
+        if (this.subscriberFiles) {
+            await this.subscriberFiles.load();
             busLoggerOf(this.bus).utils.list(
                 [`${paint.iris.bold(this.bus[RegisteredCount])} subscribers`],
                 paint.mint.bold('Loaded'),
@@ -61,7 +58,7 @@ export class SubscriberLoader implements Initializeable, HmrAware {
 
     /** @internal */
     public async onHmr(event: HmrUpdateEvent): Promise<void> {
-        await this.folder?.exports.handle(event);
+        await this.subscriberFiles?.handle(event);
     }
 
     private registerSubscriber(ctor: StoredSubscriberCtor, file: string): void {
