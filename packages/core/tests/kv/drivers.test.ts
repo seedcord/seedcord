@@ -256,6 +256,7 @@ describe('a driver that writes in two steps', () => {
         const records = new Map<string, string>();
         const writeStarted = Promise.withResolvers<undefined>();
         const finishWrite = Promise.withResolvers<undefined>();
+        const yieldListed = Promise.withResolvers<undefined>();
         const driver: NonNullable<Config['kv']> = {
             get: (key) => records.get(key),
             set: async (key, value) => {
@@ -265,7 +266,13 @@ describe('a driver that writes in two steps', () => {
                 records.set(key, value);
             },
             delete: (key) => void records.delete(key),
-            entries: () => records,
+            // holds each value it read until the test lets it go, so a write can finish in between
+            entries: async function* () {
+                for (const [key, value] of records) {
+                    await yieldListed.promise;
+                    yield [key, value];
+                }
+            },
             [Symbol.asyncDispose]: () => Promise.resolve()
         };
         const notes = new Kv(driver).collection<string>('note');
@@ -275,8 +282,9 @@ describe('a driver that writes in two steps', () => {
         const reading = notes.get('k');
         const listing = Array.fromAsync(notes.entries());
         finishWrite.resolve(undefined);
-
         await writing;
+        yieldListed.resolve(undefined);
+
         await expect(reading).resolves.toBe('finished');
         await expect(listing).resolves.toEqual([['k', 'finished']]);
     });

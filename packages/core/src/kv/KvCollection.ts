@@ -106,10 +106,11 @@ export class KvCollection<TRecord> {
      */
     public async *entries(): AsyncIterable<[id: string, record: Stored<TRecord>]> {
         const expired: string[] = [];
+        const writes = this.#updates.watchWrites();
         try {
             for await (const [key, listed] of this.#driver.entries(this.#prefix)) {
-                // a set still writing this key can leave a half-written record in the listing
-                const raw = this.#updates.isWriting(key)
+                // a set that overlaps the driver's read can leave a half-written record in the listing
+                const raw = writes.overlaps(key)
                     ? await this.#updates.read(key, async () => this.#driver.get(key))
                     : listed;
                 const value = this.#liveValue(raw);
@@ -117,6 +118,7 @@ export class KvCollection<TRecord> {
                 else yield [key.slice(this.#prefix.length), value];
             }
         } finally {
+            writes.stop();
             // deletes wait until the listing ends. a driver may be reading from an open cursor
             await Promise.all(expired.map(async (key) => this.#deleteExpired(key)));
         }

@@ -24,6 +24,7 @@ export class PluginLifecycle {
     private readonly completedInits = new Set<Attachment>();
     private readonly disposePhases = new Set<TaskShutdownPhase>();
     private readonly timedOutInits = new Set<Promise<void>>();
+    private readonly latestInits = new Map<Attachment, Promise<void>>();
     private attachments: readonly Attachment[] = [];
     private registered = false;
 
@@ -65,12 +66,13 @@ export class PluginLifecycle {
             const { key, instance, spec } = attachment;
 
             pluginLoggerOf(instance).utils.initialization(key, 'start');
-            const running = instance.init();
+            const running = Promise.resolve(instance.init());
+            this.latestInits.set(attachment, running);
             try {
                 await withTimeout(`Plugin (${key})`, () => running, spec.init.timeout);
             } catch (caught) {
                 if (isSeedcordError(caught, undefined, SeedcordErrorCode.LifecycleTaskTimeout)) {
-                    this.disposeWhenInitResolves(attachment, Promise.resolve(running));
+                    this.disposeWhenInitResolves(attachment, running);
                 }
                 throw caught;
             }
@@ -88,9 +90,9 @@ export class PluginLifecycle {
 
         const settled = running.then(
             async () => {
-                // the edge host retries init() on this same instance.
-                // after a retry succeeds, this dispose would tear down the working plugin
-                if (!dispose || this.completedInits.has(attachment)) return;
+                // the edge host can retry init() on this same instance before this one finishes.
+                // disposing then would tear down the retry
+                if (!dispose || this.latestInits.get(attachment) !== running) return;
                 await withTimeout(`Plugin:${key}:dispose`, dispose, spec.dispose.timeout).catch((caught: unknown) =>
                     this.logger.warn(`${key} dispose failed after a timed-out init`, caught)
                 );

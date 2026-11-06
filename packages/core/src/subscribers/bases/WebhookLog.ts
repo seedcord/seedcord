@@ -31,7 +31,7 @@ export interface WebhookReport {
  * Base class for subscribers that deliver their event to a Discord webhook.
  *
  * Declare the url's environment variable with `@WebhookUrl` and implement {@link report}. The base
- * resolves the url, validates it, reuses one sender per url, and sends. Registration skips a reporter
+ * resolves the url, validates it, and sends through the bot's REST client. Registration skips a reporter
  * whose variable is unset and warns at boot.
  *
  * @typeParam KeyOfSubscribers - The subscription key or keys that this reporter receives, the same ones as `@Subscribe`
