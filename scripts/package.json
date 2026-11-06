@@ -34,6 +34,7 @@
         "@seedcord/docs-generator": "workspace:^",
         "@seedcord/docs-search": "workspace:^",
         "envapt": "catalog:peer",
+        "es-toolkit": "catalog:deps",
         "yaml": "catalog:deps"
     },
     "devDependencies": {

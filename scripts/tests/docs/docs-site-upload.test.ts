@@ -1,5 +1,5 @@
 import { SiteBuild } from '@seedcord/docs-engine';
-import { describe, expect, it } from 'vitest';
+import { describe, expect, it, vi } from 'vitest';
 
 import { DocsSiteUpload } from '#src/docs/DocsSiteUpload';
 
@@ -10,11 +10,14 @@ class FakeBucket implements SiteBucket {
     readonly written: string[] = [];
     readonly deleted = new Set<string>();
 
-    constructor(private readonly existing: SiteBuild[] = []) {}
+    constructor(
+        private readonly existing: SiteBuild[] = [],
+        private readonly answer: (key: string) => Promise<void> = () => Promise.resolve()
+    ) {}
 
     putFile(key: string): Promise<void> {
         this.written.push(key);
-        return Promise.resolve();
+        return this.answer(key);
     }
 
     folders(): Promise<string[]> {
@@ -31,6 +34,8 @@ const files = (...keys: string[]): DocsSiteFile[] => keys.map((key) => ({ key, p
 
 const build = (day: number): SiteBuild => new SiteBuild(`202610${String(day).padStart(2, '0')}T000000Z-abc1234`);
 
+const pages = (count: number): string[] => Array.from({ length: count }, (_, i) => `page-${String(i)}.html`);
+
 describe('DocsSiteUpload.upload', () => {
     it('writes every file into the folder of its build and deletes nothing', async () => {
         const bucket = new FakeBucket([build(1), build(2)]);
@@ -39,6 +44,32 @@ describe('DocsSiteUpload.upload', () => {
 
         expect(bucket.written).toEqual([build(5).key('index.html'), build(5).key('index.json')]);
         expect(bucket.deleted.size).toBe(0);
+    });
+
+    it('keeps writing the other files while one write is slow', async () => {
+        const { promise: slowWrite, resolve: finishSlowWrite } = Promise.withResolvers<undefined>();
+        const bucket = new FakeBucket([], (key) => (key.endsWith('slow.html') ? slowWrite : Promise.resolve()));
+        const keys = ['slow.html', 'index.json', ...pages(98)];
+
+        const uploading = new DocsSiteUpload(bucket).upload(build(5), files(...keys));
+        await vi.waitFor(() => expect(bucket.written).toHaveLength(keys.length));
+        finishSlowWrite(undefined);
+
+        await expect(uploading).resolves.toBe(keys.length);
+    });
+
+    it('runs at most 64 writes at once', async () => {
+        const { promise: r2Answers, resolve: answerAll } = Promise.withResolvers<undefined>();
+        const bucket = new FakeBucket([], () => r2Answers);
+        const keys = ['index.json', ...pages(99)];
+
+        const uploading = new DocsSiteUpload(bucket).upload(build(5), files(...keys));
+        await vi.waitFor(() => expect(bucket.written).toHaveLength(64));
+        await new Promise((resolve) => setImmediate(resolve));
+        expect(bucket.written).toHaveLength(64);
+        answerAll(undefined);
+
+        await expect(uploading).resolves.toBe(keys.length);
     });
 
     it('refuses an export without index.json before it touches the bucket', async () => {
