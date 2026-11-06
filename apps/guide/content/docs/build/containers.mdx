@@ -115,7 +115,7 @@ services:
         image: postgres:latest
         container_name: discord-bot-db
         environment:
-            - POSTGRES_PASWORD:some-password-here
+            - POSTGRES_PASSWORD=some-password-here
 ```
 
 - Passing in runtime secrets or variables (with or without the use of `.env`)
@@ -180,28 +180,40 @@ To set up a dev container environment for a seedcord project, you'll need to def
 
 ```json title=.devcontainer/devcontainer.json
 {
-    "image": "node:latest", // or any development image like pnpm or Vite+
-    // instead of image, you may alternatively specify either dockerComposeFile & service to use a Docker Compose, or build.dockerfile for direct usage of a Dockerfile.
+    // Open the bot service from the Docker Compose file below
+    "dockerComposeFile": "docker-compose.yml",
+    "service": "bot",
+    // Your editor opens the bot service's bind mount at this folder
+    "workspaceFolder": "/app",
+    // Instead of a Compose file, specify an image or build.dockerfile for direct usage of a Dockerfile, and drop the three keys above.
+    // "image": "node:latest", // or any development image like pnpm or Vite+
+    // build: { dockerfile: "./Dockerfile" }
     "postCreateCommand": "npm install", // optional
     "postStartCommand": "npm exec seedcord codegen" // optional
 }
 ```
 
 ```yml title=docker-compose.yml
-# Only needed if dockerComposeFile specified in devcontainers.json
+# Only needed if dockerComposeFile specified in devcontainer.json
 services:
     bot:
         image: node:24 # or any dev image like pnpm or Vite+
         container_name: discord-bot-dev
+        # Keep the container running so your editor can attach
+        command: sleep infinity
+        volumes:
+            - .:/app:cached
     postgres: # Start a development PostgreSQL DB alongside your bot
-        image: postgresql:latest
+        image: postgres:latest
         container_name: discord-bot-dev-postgres
         environment:
-            - POSTGRES_PASSWORD:some-password-here
+            - POSTGRES_PASSWORD=some-password-here
 ```
 
+`node:24` exits as soon as it starts, and your editor attaches to a running container, so `sleep infinity` holds the `bot` service open. The `volumes` entry mounts your project at `/app`, which is the `workspaceFolder` your editor opens.
+
 ```Dockerfile title=Dockerfile
-# Only needed if specified in either devcontainers.json or docker-compose.yml
+# Only needed if specified in either devcontainer.json or docker-compose.yml
 FROM node:24
 # or any development image like pnpm or Vite+
 
