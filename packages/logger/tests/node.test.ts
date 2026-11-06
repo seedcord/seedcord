@@ -334,11 +334,6 @@ describe('winston sinks', () => {
         const content = await readWhenWritten(join(folder.logs, 'scoped.log'));
         expect(content).toContain('scoped-write');
     });
-
-    it('marks node sinks with node: true', () => {
-        expect(new WinstonConsoleSink().node).toBe(true);
-        expect(new WinstonFileSink({ filename: 'x.log' }).node).toBe(true);
-    });
 });
 
 describe('installNodeDefaults', () => {

@@ -11,6 +11,7 @@ import { Seedcord } from '#src/edge/Seedcord';
 import { BUILT_ROOT, clearBuiltFiles, registerBuiltFiles } from '#tests/helpers/builtFiles';
 import { createSigner, signedRequest } from '#tests/helpers/ed25519';
 import { APP_ID, VALID_TOKEN } from '#tests/helpers/fixtures';
+import { capturingCtx } from '#tests/helpers/interactions';
 
 import type { HttpEdgeConfig } from '#interfaces/Config';
 import type { Signer } from '#tests/helpers/ed25519';
@@ -103,7 +104,7 @@ describe('the edge Seedcord under seedcord dev', () => {
         cli.start();
 
         await vi.waitFor(() => expect(cli.sent).toContainEqual(['seedcord:started', { username: 'wave-bot' }]));
-        const response = await seedcord.fetch(await signedRequest(signer, ping));
+        const response = await seedcord.fetch(await signedRequest(signer, ping), undefined, capturingCtx());
         expect(response.status).toBe(200);
     });
 
@@ -330,9 +331,8 @@ describe('the edge Seedcord under seedcord dev', () => {
         await vi.waitFor(() => expect(cli.events()).toEqual(['seedcord:start-failed']));
         const [, failed] = cli.sent.find(([event]) => event === 'seedcord:start-failed') ?? [];
         expect(failed).toHaveProperty(['error', 'code'], SeedcordErrorCode.ConfigMissingEnv);
-        await expect(seedcord.fetch(new Request('https://bot.example', { method: 'POST' }))).rejects.toHaveProperty(
-            'code',
-            SeedcordErrorCode.ConfigMissingEnv
-        );
+        await expect(
+            seedcord.fetch(new Request('https://bot.example', { method: 'POST' }), undefined, capturingCtx())
+        ).rejects.toHaveProperty('code', SeedcordErrorCode.ConfigMissingEnv);
     });
 });

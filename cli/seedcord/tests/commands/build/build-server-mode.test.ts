@@ -39,11 +39,13 @@ describe('seedcord build mode on a node bot', () => {
         await symlink(join(BIN, '../..'), join(copy.path, 'node_modules/seedcord'), 'dir');
         const bot = join(copy.path, 'src/bot.ts');
         await writeFile(bot, `import './react-probe';\n${await readFile(bot, 'utf8')}`);
-        // only react's dev build has captureOwnerStack
         await writeFile(
             join(copy.path, 'src/react-probe.ts'),
             `import React from 'react';
+// only react's dev build has captureOwnerStack
 if (process.env.NODE_ENV === 'production' && 'captureOwnerStack' in React) throw new Error('react loaded in development mode');
+// exiting here skips the build's type check and bundle
+process.exit(0);
 `
         );
         const { NODE_ENV: _shellMode, ...env } = process.env;

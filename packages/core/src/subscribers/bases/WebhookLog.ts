@@ -31,7 +31,7 @@ export interface WebhookReport {
  * Base class for subscribers that deliver their event to a Discord webhook.
  *
  * Declare the url's environment variable with `@WebhookUrl` and implement {@link report}. The base
- * resolves the url, validates it, reuses one sender per url, and sends. Registration skips a reporter
+ * resolves the url, validates it, and sends through the bot's REST client. Registration skips a reporter
  * whose variable is unset and warns at boot.
  *
  * @typeParam KeyOfSubscribers - The subscription key or keys that this reporter receives, the same ones as `@Subscribe`
@@ -41,8 +41,6 @@ export abstract class WebhookLog<KeyOfSubscribers extends SubscriptionKey, TCore
     KeyOfSubscribers,
     TCore
 > {
-    private static readonly senders = new Map<string, WebhookSender>();
-
     /**
      * Builds the message for one published event.
      *
@@ -73,7 +71,7 @@ export abstract class WebhookLog<KeyOfSubscribers extends SubscriptionKey, TCore
 
         try {
             const { username, avatarUrl, components, files } = await this.report(suppressed);
-            await WebhookLog.senderFor(url).send({
+            await new WebhookSender(this.core.rest, url).send({
                 flags: sendFlags({ ephemeral: false }),
                 username: username ?? this.constructor.name,
                 avatarUrl,
@@ -84,16 +82,6 @@ export abstract class WebhookLog<KeyOfSubscribers extends SubscriptionKey, TCore
             if (key !== null) throttle.restore(key, suppressed);
             this.logger.error('Webhook report failed', error);
         }
-    }
-
-    /** @internal */
-    static senderFor(url: string): WebhookSender {
-        let sender = WebhookLog.senders.get(url);
-        if (!sender) {
-            sender = new WebhookSender(url);
-            WebhookLog.senders.set(url, sender);
-        }
-        return sender;
     }
 
     /** @internal */

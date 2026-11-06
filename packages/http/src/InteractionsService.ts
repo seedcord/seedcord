@@ -1,22 +1,23 @@
-import { REST } from '@discordjs/rest';
 import {
     emptyRouteMaps,
     interactionMiddleware,
     MiddlewareRegistry,
+    OnRun,
     readBotToken,
     SubscriberLoader
 } from '@seedcord/core/internal';
 import { SeedcordErrorCode } from '@seedcord/errors';
 import { SeedcordError } from '@seedcord/errors/internal';
+import { LoggerChannelRegistry } from '@seedcord/logger';
 
 import { InteractionDispatcher } from '#src/dispatch/InteractionDispatcher';
-import { buildEngine } from '#src/engine';
+import { InteractionEngine } from '#src/InteractionEngine';
+import { keepRequestOpenFor } from '#src/requestScope';
 
 import type { InteractionMiddlewareConstructor } from '#handlers/constructors';
 import type { HttpConfig } from '#interfaces/Config';
 import type { Core } from '#interfaces/Core';
-import type { Engine } from '#src/engine';
-import type { RESTOptions } from '@discordjs/rest';
+import type { REST } from '@discordjs/rest';
 import type { BotToken } from '@seedcord/errors/internal';
 
 export class InteractionsService {
@@ -25,14 +26,16 @@ export class InteractionsService {
     public readonly interactions: InteractionDispatcher | undefined;
 
     private token?: BotToken;
-    private builtEngine?: Engine;
+    private builtEngine?: InteractionEngine;
 
     constructor(
         private readonly host: Core,
         config: HttpConfig,
-        restOptions: Partial<RESTOptions> | undefined
+        rest: REST
     ) {
-        this.rest = new REST(restOptions);
+        this.rest = rest;
+        host.bus[OnRun] = keepRequestOpenFor;
+        LoggerChannelRegistry.instance.trackSinkRuns(keepRequestOpenFor);
         this.subscribers = new SubscriberLoader(host.bus, config.subscribers.path);
 
         const interactions = config.bot.interactions;
@@ -51,21 +54,16 @@ export class InteractionsService {
         this.rest.setToken(this.token.value);
     }
 
-    public get engine(): Engine {
+    public get engine(): InteractionEngine {
         if (!this.builtEngine) throw new SeedcordError(SeedcordErrorCode.CoreFetchBeforeStart);
         return this.builtEngine;
     }
 
-    public prepareEngine(publicKey: string): Engine {
-        this.builtEngine ??= this.createEngine(publicKey);
-        return this.builtEngine;
-    }
-
-    private createEngine(publicKey: string): Engine {
-        const maps = this.interactions?.maps ?? emptyRouteMaps();
-        const middlewares =
-            this.interactions?.middlewares ??
-            new MiddlewareRegistry<InteractionMiddlewareConstructor>(interactionMiddleware);
-        return buildEngine(this.host, maps, middlewares, publicKey);
+    public prepareEngine(publicKey: string): void {
+        const { maps, middlewares } = this.interactions ?? {
+            maps: emptyRouteMaps(),
+            middlewares: new MiddlewareRegistry<InteractionMiddlewareConstructor>(interactionMiddleware)
+        };
+        this.builtEngine ??= new InteractionEngine(this.host, maps, middlewares, publicKey);
     }
 }

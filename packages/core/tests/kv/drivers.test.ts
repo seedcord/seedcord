@@ -227,6 +227,102 @@ describe('a driver that throws', () => {
             cause: down
         });
     });
+
+    it('leaves the key usable for calls queued after a failed set', async () => {
+        const down = new Error('store down');
+        let failNextSet = true;
+        class FlakyDriver extends MemoryDriver {
+            public override set(key: string, value: string, ttlMs?: number): void {
+                if (!failNextSet) return super.set(key, value, ttlMs);
+                failNextSet = false;
+                throw down;
+            }
+        }
+        const notes = new Kv(new FlakyDriver()).collection<string>('note');
+
+        const failed = notes.set('k', 'lost');
+        const reading = notes.get('k');
+        const writing = notes.set('k', 'kept');
+
+        await expect(failed).rejects.toMatchObject({ cause: down });
+        await expect(reading).resolves.toBeUndefined();
+        await writing;
+        await expect(notes.get('k')).resolves.toBe('kept');
+    });
+});
+
+describe('a driver that writes in two steps', () => {
+    it('reads the finished record when a get or an entries call lands during a set', async () => {
+        const records = new Map<string, string>();
+        const writeStarted = Promise.withResolvers<undefined>();
+        const finishWrite = Promise.withResolvers<undefined>();
+        const yieldListed = Promise.withResolvers<undefined>();
+        const driver: NonNullable<Config['kv']> = {
+            get: (key) => records.get(key),
+            set: async (key, value) => {
+                records.set(key, '');
+                writeStarted.resolve(undefined);
+                await finishWrite.promise;
+                records.set(key, value);
+            },
+            delete: (key) => void records.delete(key),
+            // holds each value it read until the test lets it go, so a write can finish in between
+            entries: async function* () {
+                for (const [key, value] of records) {
+                    await yieldListed.promise;
+                    yield [key, value];
+                }
+            },
+            [Symbol.asyncDispose]: () => Promise.resolve()
+        };
+        const notes = new Kv(driver).collection<string>('note');
+
+        const writing = notes.set('k', 'finished');
+        await writeStarted.promise;
+        const reading = notes.get('k');
+        const listing = Array.fromAsync(notes.entries());
+        finishWrite.resolve(undefined);
+        await writing;
+        yieldListed.resolve(undefined);
+
+        await expect(reading).resolves.toBe('finished');
+        await expect(listing).resolves.toEqual([['k', 'finished']]);
+    });
+
+    it('runs gets of one key together and makes a set wait for them, even when one fails', async () => {
+        const records = new Map<string, string>();
+        const finishReads = Promise.withResolvers<undefined>();
+        const down = new Error('down');
+        let readsStarted = 0;
+        const driver: NonNullable<Config['kv']> = {
+            get: async (key) => {
+                readsStarted += 1;
+                if (readsStarted === 2) throw down;
+                await finishReads.promise;
+                return records.get(key);
+            },
+            set: (key, value) => void records.set(key, value),
+            delete: (key) => void records.delete(key),
+            entries: () => records,
+            [Symbol.asyncDispose]: () => Promise.resolve()
+        };
+        const notes = new Kv(driver).collection<string>('note');
+        // the collection holds one record, stored as a json envelope
+        const storedValue = (): unknown => (JSON.parse([...records.values()].join('')) as { value: unknown }).value;
+        await notes.set('k', 'old');
+
+        const stillReading = notes.get('k');
+        await expect(notes.get('k')).rejects.toMatchObject({ cause: down });
+        const writing = notes.set('k', 'new');
+        await new Promise((resolve) => setImmediate(resolve));
+        expect(storedValue()).toBe('old');
+
+        finishReads.resolve(undefined);
+        await writing;
+
+        await expect(stillReading).resolves.toBe('old');
+        expect(storedValue()).toBe('new');
+    });
 });
 
 describe('UnstorageDriver', () => {

@@ -42,7 +42,7 @@ export class KvCollection<TRecord> {
     /** Reads the record stored under `id`. Resolves to `undefined` when nothing is there or the record expired. */
     public async get(id: string): Promise<Stored<TRecord> | undefined> {
         const key = this.#prefix + id;
-        const raw = await this.#driver.get(key);
+        const raw = await this.#updates.read(key, async () => this.#driver.get(key));
         const value = this.#liveValue(raw);
         if (raw !== undefined && value === undefined) await this.#deleteExpired(key);
         return value;
@@ -106,13 +106,19 @@ export class KvCollection<TRecord> {
      */
     public async *entries(): AsyncIterable<[id: string, record: Stored<TRecord>]> {
         const expired: string[] = [];
+        const writes = this.#updates.watchWrites();
         try {
-            for await (const [key, raw] of this.#driver.entries(this.#prefix)) {
+            for await (const [key, listed] of this.#driver.entries(this.#prefix)) {
+                // a set that overlaps the driver's read can leave a half-written record in the listing
+                const raw = writes.overlaps(key)
+                    ? await this.#updates.read(key, async () => this.#driver.get(key))
+                    : listed;
                 const value = this.#liveValue(raw);
                 if (value === undefined) expired.push(key);
                 else yield [key.slice(this.#prefix.length), value];
             }
         } finally {
+            writes.stop();
             // deletes wait until the listing ends. a driver may be reading from an open cursor
             await Promise.all(expired.map(async (key) => this.#deleteExpired(key)));
         }

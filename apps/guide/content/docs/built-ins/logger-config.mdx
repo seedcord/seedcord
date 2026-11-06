@@ -186,7 +186,7 @@ A [`LogRecord`](ref:types/LogRecord) carries the `level`, the `message`, the `la
 
 Four things shape how seedcord treats your sink.
 
-- **`onLog` can return a promise.** seedcord calls it and continues, so a slow sink does not delay the handler that logged.
+- **`onLog` can return a promise.** seedcord calls it and continues, so a slow sink does not delay the handler that logged. An edge bot keeps the request open until that promise finishes.
 - **A throw turns the sink off.** seedcord catches it, prints one console line with the error, and stops sending that sink records for the rest of the process. A rejected promise counts the same way. Catching inside `onLog` keeps that from happening, so write your retry or backoff there when a failed request shouldn't cost you every later line.
 - **`kind` decides which sinks the dev terminal silences.** The dev terminal silences every `'console'` sink from `config.logger` while it draws its own lines. `'file'` and `'capture'` keep writing.
 - **`dispose` is optional.** seedcord calls it when a later `logger` config drops the sink. The winston file handle closes this way.

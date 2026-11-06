@@ -9,6 +9,7 @@ import {
     installLinks,
     PluginLifecycle,
     sealAttachments,
+    settleWithin,
     toWireError
 } from '@seedcord/core/internal';
 import { PluginHost } from '@seedcord/core/plugin';
@@ -18,19 +19,24 @@ import { Logger } from '@seedcord/logger';
 import { HostAugmentTarget, HostVersion, SeedcordBrand } from '@seedcord/types/internal';
 
 import { installEmojis } from '#src/emojis/EmojiInjector';
-import { rejectNonPost } from '#src/engine';
 import { HttpStartupTasks } from '#src/HttpStartupTasks';
+import { rejectNonPost } from '#src/InteractionEngine';
 import { InteractionsService } from '#src/InteractionsService';
+import { keepRequestOpenFor, requestScope } from '#src/requestScope';
 import { usernameOf } from '#src/username';
 import { version as packageVersion } from '#src/version';
 
 import { edgeRestOptions, edgeShutdown } from './defaults';
+import { RequestRest } from './RequestRest';
 
 import type { HttpEdgeConfig } from '#interfaces/Config';
-import type { EngineContext } from '#src/engine';
+import type { EngineContext } from '#src/requestScope';
 import type { REST } from '@discordjs/rest';
 import type { StartupTasks, BakedIds } from '@seedcord/core/internal';
 import type { DevChannel, SeedcordCliEvents, SeedcordFrameworkEvents } from '@seedcord/types/internal';
+
+// cloudflare cancels waitUntil work 30s after the response, this timer included, so the wait has to end before then
+const TIMED_OUT_INIT_WAIT_MS = 25_000;
 
 // seedcord build's worker entry writes these before bot.ts loads
 function bakedIds(): BakedIds {
@@ -98,7 +104,7 @@ export class Seedcord extends PluginHost<'http', 'edge'> {
         this.startup = { addTask: this.#startup.addTask.bind(this.#startup) };
         bindBotColor(() => this.config.botColor);
 
-        this.#service = new InteractionsService(this, config, edgeRestOptions(config.bot.restOptions));
+        this.#service = new InteractionsService(this, config, new RequestRest(edgeRestOptions(config.bot.restOptions)));
         this.rest = this.#service.rest;
 
         const cli = connectDevChannel();
@@ -141,15 +147,25 @@ export class Seedcord extends PluginHost<'http', 'edge'> {
      * `cf workers types` writes their types. Work that continues after the 202 response runs under `ctx.waitUntil`. Any request
      * besides a POST gets a 405 before the bot starts.
      */
-    public async fetch(request: Request, _env?: unknown, ctx?: EngineContext): Promise<Response> {
+    public async fetch(request: Request, _env: unknown, ctx: EngineContext): Promise<Response> {
         const notPost = rejectNonPost(request);
         if (notPost) return notPost;
 
-        await this.#start();
-        return this.#service.engine(request, ctx);
+        return requestScope.run(ctx, async () => {
+            await this.#start();
+            return this.#service.engine.handle(request);
+        });
     }
 
     async #start(): Promise<void> {
+        const starting = this.#startOnce();
+        // if discord drops the first request, workers cancels startup and every later request waits on it forever.
+        // the await below already throws a failed startup, so waitUntil gets one that never rejects
+        keepRequestOpenFor(starting.catch(() => undefined));
+        await starting;
+    }
+
+    async #startOnce(): Promise<void> {
         this.#prepared ??= this.#prepare();
         await this.#prepared;
 
@@ -178,9 +194,16 @@ export class Seedcord extends PluginHost<'http', 'edge'> {
             await this.#startup.run();
         } catch (caught) {
             await this.#plugins.rollback();
-            this.#plugins.afterTimedOutInits(() => {
-                this.#started = undefined;
-            });
+            const oldInits = this.#plugins.timedOutInitsSettled();
+            // cloudflare cancels a timed-out init once its request ends, so a retry can't overlap it there.
+            // seedcord dev starts outside a request and nothing cancels it, so dev just waits it out.
+            // we tried guarding overlapping inits on one plugin instead and every guard opened a new race. not worth it
+            const waited = requestScope.getStore() ? settleWithin(oldInits, TIMED_OUT_INIT_WAIT_MS) : oldInits;
+            keepRequestOpenFor(
+                waited.then(() => {
+                    this.#started = undefined;
+                })
+            );
             throw caught;
         }
     }

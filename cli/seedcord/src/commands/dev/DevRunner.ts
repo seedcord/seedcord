@@ -1,4 +1,4 @@
-import { settleWithin } from '@seedcord/core/node/internal';
+import { settleWithin } from '@seedcord/core/internal';
 
 import { CodegenRunner } from '#commands/codegen/CodegenRunner';
 import { cliLogger } from '#core/cliLogger';

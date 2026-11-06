@@ -23,6 +23,7 @@ export { attachmentsOf, sealAttachments } from '#src/plugin/PluginHost';
 export { splitPluginKey } from '#src/plugin/splitPluginKey';
 export { CoordinatedStartup, type StartupTasks } from '#src/lifecycle/CoordinatedStartup';
 export { PluginLifecycle } from '#src/lifecycle/PluginLifecycle';
+export { settleWithin } from '#src/lifecycle/withTimeout';
 
 export type { CommandMeta } from '#decorators/Command';
 export {
@@ -122,6 +123,7 @@ export { type StoredSubscriberCtor } from '#subscribers/Bus';
 export { ReportThrottle } from '#subscribers/ReportThrottle';
 export { PublishDefault } from '#subscribers/publishDefault';
 export {
+    OnRun,
     RegisterDefaults,
     RegisteredCount,
     RegisterSubscriber,
