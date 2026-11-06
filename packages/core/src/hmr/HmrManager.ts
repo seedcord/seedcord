@@ -1,8 +1,10 @@
-// scoped here so import.meta.hot stays untyped in the rest of the package
+// import.meta.hot only really needs types in this file
 /// <reference types="vite/client" />
 import { paint } from '@seedcord/errors';
 import { Logger } from '@seedcord/logger';
 import { Envapter } from 'envapt';
+
+import { KeyedQueue } from '#src/kv/KeyedQueue';
 
 import { getDevChannel, setDevChannel } from './devChannel';
 import { wrapHot } from './wrapHot';
@@ -20,6 +22,7 @@ export function connectDevChannel(): CliChannel | undefined {
 export class HmrManager {
     private readonly logger = new Logger('HMR', { channel: 'hmr' });
     private readonly listeners = new Set<HmrAware>();
+    private readonly saves = new KeyedQueue();
 
     public init(channel: CliChannel | undefined): void {
         if (!channel) return;
@@ -29,7 +32,7 @@ export class HmrManager {
         }
 
         this.logger.debug('Enabled');
-        channel.on('seedcord:hmr', (payload) => void this.handleUpdate(payload));
+        channel.on('seedcord:hmr', (payload) => void this.saves.run('hmr', () => this.handleUpdate(payload)));
         channel.on('vite:beforeFullReload', () => channel.send('seedcord:full-reload', {}));
     }
 
