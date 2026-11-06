@@ -47,7 +47,7 @@ Each `✔︎` line of the build output is one step. The three that do the work:
 
 - **load bot** imports your `instance` file and constructs the bot, the same way `seedcord dev` does. An env value your config reads at construction has to exist in CI too, or the build stops here.
 - **type check** runs `tsc --noEmit` against the `tsconfig.json` beside `seedcord.config.ts`, from your project's own `typescript`. [`build.tsconfig`](/build/config) points it at another file.
-- **bundle** runs Vite and writes `dist`, with `index.mjs` as the entry, one `.js` file for each of your modules, and a source map beside each. The code stays unminified. [Every code file under `root`](/build/config#keep-tool-files-outside-root) builds, whether or not your bot imports it.
+- **bundle** runs Vite and writes `dist`, with `index.mjs` as the entry, one `.js` file for each of your modules, and a source map beside each. The code stays unminified. [Every code file under `root`](/build/config#keep-tool-files-outside-root) builds, whether or not your bot imports it. Always run `index.mjs`, because it sets the paths that the `.js` files read.
 
 The last two lines print the commands that start what it built. The `run` line uses the runtime the CLI ran on, so `bun --bun run build` prints `bun dist/index.mjs`. The `compile` line takes the binary's name from your `package.json`, without the scope, so `@acme/my-bot` builds to `my-bot`.
 

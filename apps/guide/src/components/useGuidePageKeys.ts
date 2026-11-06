@@ -36,6 +36,8 @@ export function useGuidePageKeys(
         { ...GUIDE_KEYS.nextTab, run: () => go(tabHref(1)) },
         { ...GUIDE_KEYS.nextSection, run: () => cursor.step(1) },
         { ...GUIDE_KEYS.previousSection, run: () => cursor.step(-1) },
+        { ...GUIDE_KEYS.pageBottom, run: cursor.toBottom },
+        { ...GUIDE_KEYS.pageTop, run: cursor.toTop },
         { ...GUIDE_KEYS.copySection, run: () => clickCopyAnchor(cursor.section()) }
     ];
 }

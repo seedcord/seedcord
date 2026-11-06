@@ -36,8 +36,8 @@ declare module '@seedcord/gateway' {
     }
 }
 // ---cut---
-@Subscribe('
-//          ^|
+@Subscribe(['
+//           ^|
 ```
 
 A subscriber class runs each time its key is published.
@@ -53,7 +53,7 @@ declare module '@seedcord/gateway' {
 }
 // ---cut-end---
 
-@Subscribe('levelUp')
+@Subscribe(['levelUp'])
 export class Announce extends Subscriber<'levelUp'> {
     public async execute(): Promise<void> {
         const { userId, level } = this.data;
@@ -63,7 +63,7 @@ export class Announce extends Subscriber<'levelUp'> {
 }
 ```
 
-You write the key in [`@Subscribe`](ref:core/Subscribe) and again in the generic on [`Subscriber`](ref:gateway/Subscriber). The generic sets the type of `this.data`, here `{ userId, level }`. If the key in `@Subscribe` and the generic differ, the class fails to compile.
+You write the key in a tuple in [`@Subscribe`](ref:core/Subscribe) and again in the generic on [`Subscriber`](ref:gateway/Subscriber). The generic sets the type of `this.data`, here `{ userId, level }`. If the keys in `@Subscribe` and the generic differ, the class fails to compile.
 
 ## Publishing
 
@@ -107,7 +107,7 @@ Subscribers on the same key start at the same time, so any of them can finish fi
 
 ## Running once
 
-Some follow-ups belong to the first publish only, like a "first level-up on the server" message. `@Subscribe` takes a `frequency` option for that, the same one [`@RegisterEvent`](ref:gateway/RegisterEvent) takes.
+Some follow-ups belong to the first publish only, like a "first level-up on the server" message. Each tuple in `@Subscribe` takes a `frequency` option for that, the same one [`@RegisterEvent`](ref:gateway/RegisterEvent) takes.
 
 ```ts twoslash
 import { Subscribe, Subscriber } from '@seedcord/gateway';
@@ -118,7 +118,7 @@ declare module '@seedcord/gateway' {
     }
 }
 // ---cut---
-@Subscribe('levelUp', { frequency: 'once' })
+@Subscribe(['levelUp', { frequency: 'once' }])
 export class FirstLevel extends Subscriber<'levelUp'> {
     public async execute(): Promise<void> {
         this.logger.info('somebody levelled for the first time');
@@ -127,6 +127,38 @@ export class FirstLevel extends Subscriber<'levelUp'> {
 ```
 
 seedcord marks `FirstLevel` as run as soon as it starts. If it throws partway through, it still counts as run. The next publish won't retry it.
+
+## One class for several keys
+
+If two keys need the same follow-up, like logging both a level-up and a level reset, one subscriber can list both keys. Pass `@Subscribe` one tuple per key, and list the same keys as a union in the generic.
+
+```ts twoslash title="src/subscribers/LevelLog.ts"
+import { Subscribe, Subscriber } from '@seedcord/gateway';
+
+declare module '@seedcord/gateway' {
+    interface Subscriptions {
+        levelUp: { userId: string; level: number };
+        levelReset: { userId: string };
+    }
+}
+// ---cut---
+@Subscribe(['levelUp'], ['levelReset'])
+export class LevelLog extends Subscriber<'levelUp' | 'levelReset'> {
+    public async execute(): Promise<void> {
+        await this.match({
+            levelUp: (data) =>
+                this.log(data.userId, `reached ${data.level}`),
+            levelReset: (data) => this.log(data.userId, 'was reset')
+        });
+    }
+
+    private log(userId: string, what: string): void {
+        this.logger.info(`${userId} ${what}`);
+    }
+}
+```
+
+`this.data` is `never` on `LevelLog`, since its type depends on which key the bus published. [`this.key`](ref:core/Subscriber.key) holds that key. [`this.match`](ref:core/Subscriber.match) runs the case for that key, and each case receives that key's payload. TypeScript reports an error if you leave out a case, or add a case for a key that the generic doesn't list. Set `frequency` per tuple, like `['levelUp', { frequency: 'once' }]`.
 
 ## Where to put subscribers
 
@@ -181,7 +213,7 @@ const [data] = await core.bus.waitFor('levelUp', {
 });
 ```
 
-`on`, `once`, and `off` each take a key and a callback. `waitFor` resolves with the next payload. Its optional second argument takes three fields:
+`on`, `once`, and `off` each take a key and a callback. The callback can be async. seedcord catches anything it throws, and an edge bot keeps the request open until it finishes. `waitFor` resolves with the next payload. Its optional second argument takes three fields:
 
 - `filter`, a function that receives the payload and returns a boolean
 - `timeoutMs`, how long to wait
@@ -204,7 +236,7 @@ seedcord publishes its own keys onto the same bus, like `interactionDispatched` 
 ```ts twoslash hovers
 import { Subscribe, Subscriber } from '@seedcord/gateway';
 // ---cut---
-@Subscribe('interactionDispatched')
+@Subscribe(['interactionDispatched'])
 export class DispatchTimes extends Subscriber<'interactionDispatched'> {
     public async execute(): Promise<void> {
         const { routeId, durationMs } = this.data;

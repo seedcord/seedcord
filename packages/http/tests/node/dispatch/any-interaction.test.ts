@@ -1,11 +1,10 @@
 import 'reflect-metadata';
 
-import { interactionMiddleware, MiddlewareRegistry } from '@seedcord/core/internal';
+import { emptyRouteMaps, interactionMiddleware, MiddlewareRegistry } from '@seedcord/core/internal';
 import { Envapter, PortableSource } from 'envapt';
 import { afterEach, describe, expect, it } from 'vitest';
 
-import { emptyRouteMaps } from '#src/dispatch/resolve';
-import { buildEngine } from '#src/engine';
+import { InteractionEngine } from '#src/InteractionEngine';
 import { testCore } from '#tests/helpers/core';
 import { createSigner } from '#tests/helpers/ed25519';
 import { nullPathConfig, VALID_TOKEN } from '#tests/helpers/fixtures';
@@ -23,13 +22,13 @@ async function published(payload: object): Promise<SubscriptionData<'anyInteract
     const seen: SubscriptionData<'anyInteraction'>[] = [];
     core.bus.on('anyInteraction', (data) => seen.push(data));
 
-    const handle = buildEngine(
+    const engine = new InteractionEngine(
         core,
         emptyRouteMaps(),
         new MiddlewareRegistry<InteractionMiddlewareConstructor>(interactionMiddleware),
         signer.publicKeyHex
     );
-    await handle(await signedRequest(signer, payload));
+    await engine.handle(await signedRequest(signer, payload));
     return seen;
 }
 

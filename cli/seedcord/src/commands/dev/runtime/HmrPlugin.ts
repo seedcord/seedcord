@@ -116,6 +116,11 @@ export class HmrPlugin extends TypedEventEmitter<{ event: [DevEvent] }> {
             this.restartFiles.addPatterns(data.patterns);
             this.logger.debug(`Registered ${String(data.patterns.length)} critical file patterns`);
         });
+
+        // a save after this imports a second copy of the framework and breaks the instanceof checks
+        this.dev?.on('seedcord:full-reload', () => {
+            this.requireRestart(paint.coral('Vite reloaded every module.'));
+        });
     }
 
     // per type, because an atomic save sends a delete then a create for the same file
@@ -129,9 +134,11 @@ export class HmrPlugin extends TypedEventEmitter<{ event: [DevEvent] }> {
     }
 
     private reportRestartRequired(file: string): void {
-        this.logger.warn(
-            `${paint.coral('Critical file changed:')} ${paint.sky.bold(displayPath(file))}. Restart required.`
-        );
+        this.requireRestart(`${paint.coral('Critical file changed:')} ${paint.sky.bold(displayPath(file))}.`);
+    }
+
+    private requireRestart(reason: string): void {
+        this.logger.warn(`${reason} Restart required.`);
         this.emit('event', { type: 'restart-required' });
     }
 

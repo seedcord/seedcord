@@ -1,7 +1,7 @@
 {
     "name": "@seedcord/eslint-config",
     "type": "module",
-    "version": "3.0.1-next.1",
+    "version": "3.0.1",
     "engines": {
         "node": "^24.22.1 || >=26.12.1",
         "bun": ">=1.4.2"
@@ -48,8 +48,8 @@
     "scripts": {
         "build": "tsdown",
         "clean": "rm -rf dist",
-        "lint": "eslint '**/*.ts' --cache --no-error-on-unmatched-pattern",
-        "lint:fix": "eslint '**/*.ts' --fix --cache --no-error-on-unmatched-pattern",
+        "lint": "eslint '**/*.ts' --max-warnings=0 --cache --no-error-on-unmatched-pattern",
+        "lint:fix": "eslint '**/*.ts' --fix --max-warnings=0 --cache --no-error-on-unmatched-pattern",
         "fmt": "prettier --write '**/*.{ts,json,md}' --cache --no-error-on-unmatched-pattern",
         "fmt:check": "prettier --check '**/*.{ts,json,md}' --cache --no-error-on-unmatched-pattern",
         "tc": "tsgo --noEmit",

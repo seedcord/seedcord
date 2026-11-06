@@ -7,7 +7,7 @@ import {
     Subscribe,
     Subscriber
 } from '@seedcord/core';
-import { storeInteractionRoute } from '@seedcord/core/internal';
+import { PublishDefault, storeInteractionRoute } from '@seedcord/core/internal';
 import { Plugin } from '@seedcord/core/plugin';
 import { SeedcordErrorCode } from '@seedcord/errors';
 import { Logger, LoggerChannelRegistry } from '@seedcord/logger';
@@ -25,6 +25,7 @@ import { capturingCtx, slashPayload } from '#tests/helpers/interactions';
 
 import type { HttpEdgeConfig } from '#interfaces/Config';
 import type { Signer } from '#tests/helpers/ed25519';
+import type { CapturedCtx } from '#tests/helpers/interactions';
 import type { CommandInfo, ContextMenuInfo, CoreBase, ResolvedEmoji } from '@seedcord/core';
 import type { BakedIds } from '@seedcord/core/internal';
 
@@ -64,6 +65,11 @@ function config(folders: Folders = {}): HttpEdgeConfig {
     };
 }
 
+function settledWithin(ctx: CapturedCtx): Promise<string> {
+    const stillWaiting = new Promise<string>((resolve) => setTimeout(() => resolve('still waiting'), 0));
+    return Promise.race([ctx.settled().then(() => 'finished'), stillWaiting]);
+}
+
 async function signedEnv(ids: Partial<BakedIds> = {}): Promise<Signer> {
     const signer = await createSigner();
     Envapter.useSource(new PortableSource({ DISCORD_BOT_TOKEN: VALID_TOKEN }));
@@ -87,7 +93,7 @@ describe('the edge Seedcord', () => {
             emojis: { Wave: { name: 'wave', id: '55', animated: false } }
         });
 
-        await new Seedcord(config()).fetch(await signedRequest(signer, ping));
+        await new Seedcord(config()).fetch(await signedRequest(signer, ping), undefined, capturingCtx());
 
         expect(commands.ping?.mention).toBe('</ping:7>');
         expect(userMenus.Profile?.id).toBe('8');
@@ -130,7 +136,7 @@ describe('the edge Seedcord', () => {
         Envapter.useSource(new PortableSource({}));
         const seedcord = new Seedcord(config()).attach('recorder', Recorder);
 
-        const response = await seedcord.fetch(new Request('https://bot.example.com/'));
+        const response = await seedcord.fetch(new Request('https://bot.example.com/'), undefined, capturingCtx());
 
         expect(response.status).toBe(405);
         expect(response.headers.get('allow')).toBe('POST');
@@ -148,7 +154,7 @@ describe('the edge Seedcord', () => {
         const seedcord = new Seedcord({ ...config(), logger: { level: 'warn' } });
 
         new Logger('Cli').info('after construction');
-        await seedcord.fetch(await signedRequest(signer, ping));
+        await seedcord.fetch(await signedRequest(signer, ping), undefined, capturingCtx());
         new Logger('Cli').info('after start');
 
         expect(written).toContain('after construction');
@@ -159,7 +165,7 @@ describe('the edge Seedcord', () => {
         const signer = await signedEnv();
         const seedcord = new Seedcord(config());
 
-        const response = await seedcord.fetch(await signedRequest(signer, ping));
+        const response = await seedcord.fetch(await signedRequest(signer, ping), undefined, capturingCtx());
 
         expect(response.status).toBe(200);
         await expect(response.json()).resolves.toEqual({ type: 1 });
@@ -181,8 +187,8 @@ describe('the edge Seedcord', () => {
         const seedcord = new Seedcord(config()).attach('counter', Counter);
 
         await Promise.all([
-            seedcord.fetch(await signedRequest(signer, ping)),
-            seedcord.fetch(await signedRequest(signer, ping))
+            seedcord.fetch(await signedRequest(signer, ping), undefined, capturingCtx()),
+            seedcord.fetch(await signedRequest(signer, ping), undefined, capturingCtx())
         ]);
 
         expect(calls).toEqual(['init', 'ready']);
@@ -207,7 +213,7 @@ describe('the edge Seedcord', () => {
         });
 
         expect(calls).toEqual([]);
-        await seedcord.fetch(await signedRequest(signer, ping));
+        await seedcord.fetch(await signedRequest(signer, ping), undefined, capturingCtx());
 
         expect(calls).toEqual(['startup task', 'plugin init']);
     });
@@ -236,8 +242,8 @@ describe('the edge Seedcord', () => {
         const signer = await signedEnv();
         const seedcord = new Seedcord(config()).attach('database', Database).attach('cache', Cache);
 
-        await expect(seedcord.fetch(await signedRequest(signer, ping))).rejects.toThrow();
-        const retried = await seedcord.fetch(await signedRequest(signer, ping));
+        await expect(seedcord.fetch(await signedRequest(signer, ping), undefined, capturingCtx())).rejects.toThrow();
+        const retried = await seedcord.fetch(await signedRequest(signer, ping), undefined, capturingCtx());
 
         expect(retried.status).toBe(200);
         expect(calls).toEqual(['database init', 'cache init', 'database dispose', 'database init', 'cache init']);
@@ -245,7 +251,7 @@ describe('the edge Seedcord', () => {
 
     it('runs a subscriber from the built files', async () => {
         const seen: string[] = [];
-        @Subscribe('anyInteraction')
+        @Subscribe(['anyInteraction'])
         class Seen extends Subscriber<'anyInteraction', CoreBase> {
             public execute(): Promise<void> {
                 seen.push(String(this.data.interaction.type));
@@ -256,17 +262,112 @@ describe('the edge Seedcord', () => {
         const signer = await signedEnv();
 
         const seedcord = new Seedcord(config({ subscribers: `${BUILT_ROOT}/subscribers` }));
-        await seedcord.fetch(await signedRequest(signer, unrouted));
+        await seedcord.fetch(await signedRequest(signer, unrouted), undefined, capturingCtx());
 
         await vi.waitFor(() => {
             expect(seen).toEqual(['99']);
         });
     });
 
+    it("holds each request's waitUntil open for its own subscribers only", async () => {
+        const release = Promise.withResolvers<undefined>();
+        let runs = 0;
+        @Subscribe(['anyInteraction'])
+        class FirstRunStuck extends Subscriber<'anyInteraction', CoreBase> {
+            public async execute(): Promise<void> {
+                runs += 1;
+                if (runs === 1) await release.promise;
+            }
+        }
+        registerBuiltFiles({ '/subscribers/FirstRunStuck.ts': { FirstRunStuck } });
+        const signer = await signedEnv();
+        const seedcord = new Seedcord(config({ subscribers: `${BUILT_ROOT}/subscribers` }));
+        const stuck = capturingCtx();
+        const free = capturingCtx();
+
+        await seedcord.fetch(await signedRequest(signer, '{"type":99,"id":"stuck"}'), undefined, stuck);
+        await seedcord.fetch(await signedRequest(signer, '{"type":99,"id":"free"}'), undefined, free);
+
+        expect(await settledWithin(free)).toBe('finished');
+        expect(await settledWithin(stuck)).toBe('still waiting');
+
+        release.resolve(undefined);
+        await stuck.settled();
+    });
+
+    it('holds waitUntil open for an async bus.on listener', async () => {
+        const release = Promise.withResolvers<undefined>();
+        const signer = await signedEnv();
+        const seedcord = new Seedcord(config());
+        seedcord.bus.on('anyInteraction', () => release.promise);
+        const ctx = capturingCtx();
+
+        await seedcord.fetch(await signedRequest(signer, unrouted), undefined, ctx);
+
+        expect(await settledWithin(ctx)).toBe('still waiting');
+        release.resolve(undefined);
+        await ctx.settled();
+    });
+
+    it('holds waitUntil open for an async log sink', async () => {
+        const release = Promise.withResolvers<undefined>();
+        const signer = await signedEnv();
+        const seedcord = new Seedcord(config());
+        using _sink = LoggerChannelRegistry.instance.installSink({ kind: 'capture', onLog: () => release.promise });
+        seedcord.bus.on('anyInteraction', () => new Logger('Spike').info('logged'));
+        const ctx = capturingCtx();
+
+        await seedcord.fetch(await signedRequest(signer, unrouted), undefined, ctx);
+
+        expect(await settledWithin(ctx)).toBe('still waiting');
+        release.resolve(undefined);
+        await ctx.settled();
+    });
+
+    it('holds the first request open while startup runs', async () => {
+        const release = Promise.withResolvers<undefined>();
+        const signer = await signedEnv();
+        const seedcord = new Seedcord(config());
+        seedcord.startup.addTask(StartupPhase.Configuration, 'slow', () => release.promise);
+        const ctx = capturingCtx();
+
+        const answered = seedcord.fetch(await signedRequest(signer, unrouted), undefined, ctx);
+
+        expect(await settledWithin(ctx)).toBe('still waiting');
+        release.resolve(undefined);
+        await answered;
+        await ctx.settled();
+    });
+
+    it('holds waitUntil open for a subscriber that a startup task published to', async () => {
+        const release = Promise.withResolvers<undefined>();
+        @Subscribe(['anyInteraction'])
+        class StuckAtStartup extends Subscriber<'anyInteraction', CoreBase> {
+            public async execute(): Promise<void> {
+                if (this.data.interaction.id === 'startup') await release.promise;
+            }
+        }
+        registerBuiltFiles({ '/subscribers/StuckAtStartup.ts': { StuckAtStartup } });
+        const signer = await signedEnv();
+        const seedcord = new Seedcord(config({ subscribers: `${BUILT_ROOT}/subscribers` }));
+        seedcord.startup.addTask(StartupPhase.Configuration, 'publishes', () => {
+            // justified: the subscriber reads only the id
+            seedcord.bus[PublishDefault]('anyInteraction', { interaction: { id: 'startup' } as never });
+            return Promise.resolve();
+        });
+        const ctx = capturingCtx();
+
+        await seedcord.fetch(await signedRequest(signer, unrouted), undefined, ctx);
+
+        expect(await settledWithin(ctx)).toBe('still waiting');
+        release.resolve(undefined);
+        await ctx.settled();
+    });
+
     it('refuses a plugin attached after the first request started it', async () => {
         const signer = await signedEnv();
         const seedcord = new Seedcord(config());
-        await seedcord.fetch(await signedRequest(signer, ping));
+        await seedcord.fetch(await signedRequest(signer, ping), undefined, capturingCtx());
 
         expect(() => seedcord.attach('late', Late)).toThrow(
             expect.objectContaining({ code: SeedcordErrorCode.CorePluginAfterInit })
@@ -296,7 +397,7 @@ describe('the edge Seedcord', () => {
         expect(() => seedcord.applicationId).toThrow(
             expect.objectContaining({ code: SeedcordErrorCode.CoreApplicationUnavailable })
         );
-        await seedcord.fetch(await signedRequest(signer, ping));
+        await seedcord.fetch(await signedRequest(signer, ping), undefined, capturingCtx());
 
         expect(seedcord.applicationId).toBe(APP_ID);
     });
@@ -308,9 +409,9 @@ describe('the edge Seedcord', () => {
         );
     });
 
-    it('waits for a timed-out init to finish before it retries the startup', async () => {
+    describe('after a plugin init times out', () => {
         const calls: string[] = [];
-        const hung = Promise.withResolvers<undefined>();
+        let hung = Promise.withResolvers<undefined>();
         let first = true;
         class Slow extends Plugin {
             constructor(host: CoreBase) {
@@ -327,19 +428,49 @@ describe('the edge Seedcord', () => {
                 return Promise.resolve();
             }
         }
-        const signer = await signedEnv();
-        const seedcord = new Seedcord(config()).attach('slow', Slow);
 
-        await expect(seedcord.fetch(await signedRequest(signer, ping))).rejects.toThrow();
-        await expect(seedcord.fetch(await signedRequest(signer, ping))).rejects.toThrow();
-        hung.resolve(undefined);
-        await vi.waitFor(() => {
-            expect(calls).toContain('dispose');
+        afterEach(() => {
+            calls.length = 0;
+            hung = Promise.withResolvers<undefined>();
+            first = true;
+            vi.useRealTimers();
         });
-        const retried = await seedcord.fetch(await signedRequest(signer, ping));
 
-        expect(retried.status).toBe(200);
-        expect(calls).toEqual(['init', 'dispose', 'init']);
+        it('waits for the old init to finish and dispose before it retries', async () => {
+            const signer = await signedEnv();
+            const seedcord = new Seedcord(config()).attach('slow', Slow);
+            const failed = capturingCtx();
+
+            await expect(seedcord.fetch(await signedRequest(signer, ping), undefined, failed)).rejects.toThrow();
+            await expect(
+                seedcord.fetch(await signedRequest(signer, ping), undefined, capturingCtx())
+            ).rejects.toThrow();
+            hung.resolve(undefined);
+            await failed.settled();
+            const retried = await seedcord.fetch(await signedRequest(signer, ping), undefined, capturingCtx());
+
+            expect(retried.status).toBe(200);
+            expect(calls).toEqual(['init', 'dispose', 'init']);
+        });
+
+        it('retries 25s after the timeout when the old init never settles', async () => {
+            const signer = await signedEnv();
+            const seedcord = new Seedcord(config()).attach('slow', Slow);
+            const failed = capturingCtx();
+            const firstRequest = await signedRequest(signer, ping);
+            vi.useFakeTimers({ toFake: ['setTimeout', 'clearTimeout', 'performance'] });
+
+            const rejected = expect(seedcord.fetch(firstRequest, undefined, failed)).rejects.toThrow();
+            await vi.advanceTimersByTimeAsync(20);
+            await rejected;
+            await vi.advanceTimersByTimeAsync(25_000);
+            await failed.settled();
+            vi.useRealTimers();
+            const retried = await seedcord.fetch(await signedRequest(signer, ping), undefined, capturingCtx());
+
+            expect(retried.status).toBe(200);
+            expect(calls).toEqual(['init', 'init']);
+        });
     });
 
     it('refuses a plugin attached while startup runs', async () => {
@@ -355,7 +486,7 @@ describe('the edge Seedcord', () => {
             return Promise.resolve();
         });
 
-        await seedcord.fetch(await signedRequest(signer, ping));
+        await seedcord.fetch(await signedRequest(signer, ping), undefined, capturingCtx());
 
         expect(caught).toMatchObject({ code: SeedcordErrorCode.CorePluginAfterInit });
     });
@@ -366,20 +497,22 @@ describe('the edge Seedcord', () => {
 
         const seedcord = new Seedcord(config());
 
-        await expect(seedcord.fetch(new Request('https://bot.example', { method: 'POST' }))).rejects.toThrow(
-            expect.objectContaining({ code: SeedcordErrorCode.ConfigMissingEnv })
-        );
+        await expect(
+            seedcord.fetch(new Request('https://bot.example', { method: 'POST' }), undefined, capturingCtx())
+        ).rejects.toThrow(expect.objectContaining({ code: SeedcordErrorCode.ConfigMissingEnv }));
     });
 
     it('rethrows a failed first request on every later one', async () => {
         Envapter.useSource(new PortableSource({}));
         const seedcord = new Seedcord(config());
         const first = await seedcord
-            .fetch(new Request('https://bot.example', { method: 'POST' }))
+            .fetch(new Request('https://bot.example', { method: 'POST' }), undefined, capturingCtx())
             .catch((caught: unknown) => caught);
 
         const signer = await signedEnv();
-        const second = await seedcord.fetch(await signedRequest(signer, ping)).catch((caught: unknown) => caught);
+        const second = await seedcord
+            .fetch(await signedRequest(signer, ping), undefined, capturingCtx())
+            .catch((caught: unknown) => caught);
 
         expect(second).toBe(first);
     });

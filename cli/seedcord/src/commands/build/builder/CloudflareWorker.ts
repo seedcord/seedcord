@@ -51,7 +51,7 @@ export class CloudflareWorker {
         return new CloudflareWorker(await loadPlugin(viteRoot, importPlugin), viteRoot);
     }
 
-    public plugins(options: Pick<PluginConfig, 'persistState'> = {}): Plugin[] {
+    public plugins(options: Pick<PluginConfig, 'persistState' | 'remoteBindings'> = {}): Plugin[] {
         return this.cloudflare({
             config: workerEntryConfig,
             viteEnvironment: { name: BOT_ENVIRONMENT },

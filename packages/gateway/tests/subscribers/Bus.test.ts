@@ -1,4 +1,4 @@
-import { HmrManager, SubscriberLoader } from '@seedcord/core/internal';
+import { HmrManager, PublishDefault, RegisteredCount, SubscriberLoader } from '@seedcord/core/internal';
 import { describe, expect, afterEach, vi } from 'vitest';
 
 import { Seedcord } from '#src/Seedcord';
@@ -7,15 +7,11 @@ import { testConfig } from '#tests/utils/test-config';
 import { it } from '#tests/utils/test-env';
 
 import type { HmrUpdateEvent } from '@seedcord/types';
+import type { Interaction } from 'discord.js';
 
-interface Registration {
-    ctor?: (new (...args: unknown[]) => unknown) | undefined;
-    frequency: string;
-}
-
-interface PrivateBus {
-    subscribersMap: Map<string, Registration[]>;
-}
+// UnknownException and HandledException
+const DEFAULT_SUBSCRIBERS = 2;
+const RUNS_SLOT = '__seedcordBusTestRuns';
 
 interface PrivateHmrManager {
     handleUpdate(event: HmrUpdateEvent): Promise<void>;
@@ -26,9 +22,17 @@ function loaderOf(instance: Seedcord): SubscriberLoader {
     return new SubscriberLoader(instance.bus, instance.config.subscribers.path);
 }
 
-// justified: PrivateBus exposes the private subscribersMap for assertion
-function registrationsOf(instance: Seedcord, key: string): Registration[] | undefined {
-    return (instance.bus as unknown as PrivateBus).subscribersMap.get(key);
+function fixtureRecording(label: string): string {
+    return `
+            import { Subscriber, Subscribe } from '${seedcordPath}';
+
+            @Subscribe(['anyInteraction'])
+            export class LogSubscriber extends Subscriber {
+                public async execute() {
+                    globalThis.${RUNS_SLOT}.push('${label}');
+                }
+            }
+            `;
 }
 
 describe('Bus Integration', () => {
@@ -43,7 +47,7 @@ describe('Bus Integration', () => {
             `
             import { Subscriber, Subscribe } from '${seedcordPath}';
 
-            @Subscribe('unknownException')
+            @Subscribe(['unknownException'])
             export class LogSubscriber extends Subscriber {
                 public async execute() {
                     console.log('Subscriber executed');
@@ -58,62 +62,35 @@ describe('Bus Integration', () => {
         // subscribers load in Configuration. Login rejects later without a real token
         await seedcord.start().catch(() => undefined);
 
-        // unknownException has a default handler (UnknownException), plus our custom one = 2
-        expect(registrationsOf(seedcord, 'unknownException')).toHaveLength(2);
+        expect(seedcord.bus[RegisteredCount]).toBe(DEFAULT_SUBSCRIBERS + 1);
     });
 
     it('should handle HMR updates for subscribers', async ({ testEnv }) => {
+        const runs: string[] = [];
+        Reflect.set(globalThis, RUNS_SLOT, runs);
+        using _runsSlot = { [Symbol.dispose]: () => Reflect.deleteProperty(globalThis, RUNS_SLOT) };
         const subscribersDir = 'subscribers';
-        const filePath = await testEnv.createFile(
-            `${subscribersDir}/LogSubscriber.ts`,
-            `
-            import { Subscriber, Subscribe } from '${seedcordPath}';
-
-            @Subscribe('unknownException')
-            export class LogSubscriber extends Subscriber {
-                public async execute() {
-                    console.log('Subscriber executed');
-                }
-            }
-            `
-        );
+        const filePath = await testEnv.createFile(`${subscribersDir}/LogSubscriber.ts`, fixtureRecording('before'));
 
         const config = testConfig({ subscribers: testEnv.resolvePath(subscribersDir) });
 
         await using seedcord = new Seedcord(config);
         const loader = loaderOf(seedcord);
         await loader.init();
+        // justified: the fixture subscriber ignores the payload
+        const interaction = {} as Interaction;
+        const publish = (): boolean => seedcord.bus[PublishDefault]('anyInteraction', { interaction });
 
-        const handlersBefore = registrationsOf(seedcord, 'unknownException');
+        publish();
+        await vi.waitFor(() => expect(runs).toEqual(['before']));
+        runs.length = 0;
 
-        expect(handlersBefore).toHaveLength(2);
-        const customHandlerBefore = handlersBefore?.[1]?.ctor;
+        await testEnv.createFile(`${subscribersDir}/LogSubscriber.ts`, fixtureRecording('after'));
+        await loader.onHmr({ file: filePath, type: 'update' });
 
-        await testEnv.createFile(
-            `${subscribersDir}/LogSubscriber.ts`,
-            `
-            import { Subscriber, Subscribe } from '${seedcordPath}';
-
-            @Subscribe('unknownException')
-            export class LogSubscriber extends Subscriber {
-                public async execute() {
-                    console.log('Subscriber updated');
-                }
-            }
-            `
-        );
-
-        await loader.onHmr({
-            file: filePath,
-            type: 'update'
-        });
-
-        const handlersAfter = registrationsOf(seedcord, 'unknownException');
-
-        expect(handlersAfter).toHaveLength(2);
-        const customHandlerAfter = handlersAfter?.[1]?.ctor;
-        expect(customHandlerAfter).not.toBe(customHandlerBefore);
-        expect(customHandlerAfter?.name).toBe('LogSubscriber');
+        expect(seedcord.bus[RegisteredCount]).toBe(DEFAULT_SUBSCRIBERS + 1);
+        publish();
+        await vi.waitFor(() => expect(runs).toEqual(['after']));
     });
 
     it('registers the Bus with the HMR manager, so an update dispatch reaches it', async ({ testEnv }) => {
@@ -123,7 +100,7 @@ describe('Bus Integration', () => {
             `
             import { Subscriber, Subscribe } from '${seedcordPath}';
 
-            @Subscribe('unknownException')
+            @Subscribe(['unknownException'])
             export class LogSubscriber extends Subscriber {
                 public async execute() {
                     console.log('Subscriber executed');

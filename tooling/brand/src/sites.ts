@@ -30,3 +30,5 @@ export const PRODUCTION_SITES = {
     guide: new SiteAddress(`${PRODUCTION_ORIGIN}/guide`),
     docs: new SiteAddress(`${PRODUCTION_ORIGIN}/docs`)
 } as const;
+
+export const NEXT_GUIDE = new SiteAddress(`https://next.seedcord.org${PRODUCTION_SITES.guide.path}`);

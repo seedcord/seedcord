@@ -1,55 +1,63 @@
 # @seedcord/core
 
-## 0.12.0-next.1
-
-### 💥 Breaking
-
-- Plugin `init()`, `ready()`, `dispose()` and `onHmr()`, handler `execute()`, and middleware `after()` can now return without a promise. Code that calls one of them directly and chains `.then()` must `await` it or wrap it in `Promise.resolve()`. ([#424](https://github.com/seedcord/seedcord/pull/424), thanks [@lunaradev1](https://github.com/lunaradev1))
-- `RequirePermissions` has a new `unresolved` option for the refusal it throws when a member's permissions don't resolve inside a server. That refusal used to come from `notInGuild`. ([#432](https://github.com/seedcord/seedcord/pull/432))
-- The override options on every gate and permission helper now take a `Notice` class for seedcord to construct with that refusal's data, like the missing permission names or a cooldown's `resetAt`. Write a small class where you passed `{ message }`, a `Notice` instance, or Cooldown's functions. `missingNotice` and `dangerousNotice` became one `notice` that also covers `inverse`. ([#432](https://github.com/seedcord/seedcord/pull/432))
-- A permission check on a bot whose own member isn't cached now throws `CoreBotMemberMissing`, where it used to refuse as if every permission were missing. `RequireBotPermissions` without `in: 'guild'` no longer compiles on an event handler, where it used to refuse every event. ([#432](https://github.com/seedcord/seedcord/pull/432))
+## 0.12.1
 
 ### 🩹 Patch
 
-- Reworded error messages and log lines that joined their parts with the wrong word or read two ways. The gate mismatch compile error now reads like `needs a handler of kind Slash, but this handler's kind is Button`. ([`6f71a86`](https://github.com/seedcord/seedcord/commit/6f71a868e39df8cff3b857688544404113d46596))
-- Fixed the compile error for a gate attached to a handler it doesn't fit. A gate typed with `InteractionGateContext` now prints one message, where it printed one per interaction kind and one of them read "requires a an interaction handler". ([#432](https://github.com/seedcord/seedcord/pull/432))
-- Fixed the compile error for a route decorator that doesn't match its handler's generic. It now shows both values, like `{ decorator: "roster"; generic: "ping" }`, and a misspelled command gives one error that quotes it. ([`87e61bb`](https://github.com/seedcord/seedcord/commit/87e61bb7bc30ad07ccfbfb66d4b02103761f4b87))
+- Fixed `seedcord dev` losing a handler with no error when you saved it after Vite reloaded every module, like after adding a new dependency. Dev now asks for a restart when that reload happens, and it warns when a saved file loses its last handler. ([`a2f3de2`](https://github.com/seedcord/seedcord/commit/a2f3de280818e2eb23d9b75f9cadc8b9f845025c))
 
 #### 📦 Seedcord packages
 
-- `@seedcord/errors` 0.15.0-next.0 → 0.15.0-next.1
-- `@seedcord/custom-id` 0.3.1-next.0 → 0.3.1-next.1
-- `@seedcord/logger` 0.6.0-next.0 → 0.6.0-next.1
-- `@seedcord/types` 0.16.0-next.0 → 0.16.0-next.1
+- `@seedcord/types` 0.16.0 → 0.16.1
 
-## 0.12.0-next.0
+## 0.12.0
 
 ### 💥 Breaking
 
-- Renamed context-menu handlers' `commandName` to `route` and removed handlers' `routeId`. Read the dispatch identifier from `this.dispatch.routeId`. ([#422](https://github.com/seedcord/seedcord/pull/422))
+- Fixed `Cannot properly serialize component type: undefined` when your bot and seedcord resolved different versions of `@discordjs/builders`. It's now a peer dependency, so seedcord uses your bot's copy. On Yarn, add it to your bot's dependencies. ([#438](https://github.com/seedcord/seedcord/pull/438))
+- Fixed `StaleCustomId` on every click of the second component when a handler lists two customIds with the same prefix. Every route decorator now throws `DecoratorDuplicateKey` for a repeated route or prefix when the file loads. ([#437](https://github.com/seedcord/seedcord/pull/437))
+- Read an event middleware's event name from `this.route` now, in place of `this.eventName`. Event handlers and interaction middleware now have `this.route` too, the same as interaction handlers. ([#437](https://github.com/seedcord/seedcord/pull/437))
+- Slash, context-menu, and component handlers now have a readonly `route` for the selected command's path, command name, or custom-ID prefix. It replaces `commandName` on context-menu handlers. Read the dispatch identifier from `this.dispatch.routeId` now, since handlers no longer have `routeId`. ([#422](https://github.com/seedcord/seedcord/pull/422))
+- Read a gate's route from `ctx.dispatch.declaredRoute` now, since `ctx.declaredRoute` no longer exists. ([#437](https://github.com/seedcord/seedcord/pull/437))
+- `HmrModuleHandler` now takes `handlers: { dir, is, register, unregister, getArtifacts }` and `middlewares: { dir, is, register, unregister }` instead of flat options like `handlersDir` and `isHandler`. Upgrade your plugins if you use this. Also bump official plugin versions that you're using. ([#438](https://github.com/seedcord/seedcord/pull/438))
 - `config.store` is now `config.kv`, and your handlers and plugins read it through `core.kv` and `this.kv`. Leave it out to keep everything in memory, or pass a `KeyvDriver`, an `UnstorageDriver`, or your own driver. Import `buildKey` from your transport package, and rename any plugin attached as `kv`. ([#429](https://github.com/seedcord/seedcord/pull/429))
+- Plugin `init()`, `ready()`, `dispose()` and `onHmr()`, handler `execute()`, and middleware `after()` can now return without a promise. Code that calls one of them directly and chains `.then()` must `await` it or wrap it in `Promise.resolve()`. ([#424](https://github.com/seedcord/seedcord/pull/424), thanks [@lunaradev1](https://github.com/lunaradev1))
+- `Paginator` now sends an ephemeral first page by default, where it used to post a public message that anyone could click through. Pass `ephemeral: false` to keep a public list. ([#440](https://github.com/seedcord/seedcord/pull/440))
+- `RequirePermissions` has a new `unresolved` option for the refusal it throws when a member's permissions don't resolve inside a server. That refusal used to come from `notInGuild`. ([#432](https://github.com/seedcord/seedcord/pull/432))
+- The override options on every gate and permission helper now take a `Notice` class for seedcord to construct with that refusal's data, like the missing permission names or a cooldown's `resetAt`. Write a small class where you passed `{ message }`, a `Notice` instance, or Cooldown's functions. `missingNotice` and `dangerousNotice` became one `notice` that also covers `inverse`. ([#432](https://github.com/seedcord/seedcord/pull/432))
+- `@Subscribe` now takes one `[key, options?]` tuple per key, the same shape as `@RegisterEvent`. Change `@Subscribe('levelUp', { frequency: 'once' })` to `@Subscribe(['levelUp', { frequency: 'once' }])`. One subscriber can now list several keys, branch on the published one with `this.match`, and read it from `this.key`. ([#437](https://github.com/seedcord/seedcord/pull/437))
+- A permission check on a bot whose own member isn't cached now throws `CoreBotMemberMissing`, where it used to refuse as if every permission were missing. `RequireBotPermissions` without `in: 'guild'` no longer compiles on an event handler, where it used to refuse every event. ([#432](https://github.com/seedcord/seedcord/pull/432))
 
 ### ✨ Minor
 
+- Added the `REST` type to both transports and the `API` type to `@seedcord/http`, for helpers that take `core.rest` or `this.api`. ([#438](https://github.com/seedcord/seedcord/pull/438))
+- `this.match()` now resolves to the union of what its cases return, so cases can return different types. A named case map with an extra key no longer compiles, unless you pass `Ret`. With `this.match<Ret>()`, each case must still return `Ret`. ([#438](https://github.com/seedcord/seedcord/pull/438))
 - Plugins can now define `codegen()`, and `seedcord codegen` writes what it returns into `seedcord-gen.ts`. A plugin reads that back with `Generated<typeof ThePlugin>`, keyed by its `static readonly id`. ([#426](https://github.com/seedcord/seedcord/pull/426))
 - `reply()`, `update()`, and the other reply methods now take raw component json next to builders, like `{ type: 10, content: 'hi' }` or the components `@dressed/react` renders. ([`ba8d7d0`](https://github.com/seedcord/seedcord/commit/ba8d7d0dbc0822861f3152f30df66b8f541450cc))
 
 ### 🩹 Patch
 
+- Fixed `seedcord dev` hiding a failed command refresh on an edge bot. The `Commands` logger now logs the error on every transport. ([#438](https://github.com/seedcord/seedcord/pull/438))
+- Fixed `seedcord dev` registering a new command twice when a command refresh started before the startup deploy or the previous refresh finished. They now run one at a time. ([#438](https://github.com/seedcord/seedcord/pull/438))
+- Fixed a handler behind `Cooldown` running twice when two uses arrive at the same moment, like a double click. The second one now gets the refusal, unless it reaches another copy of your bot. ([#440](https://github.com/seedcord/seedcord/pull/440))
+- Reworded error messages and log lines that joined their parts with the wrong word or read two ways. ([`6f71a86`](https://github.com/seedcord/seedcord/commit/6f71a868e39df8cff3b857688544404113d46596))
+- Fixed the compile error for a gate attached to a handler it doesn't fit. A gate typed with `InteractionGateContext` now prints one message, like `needs a handler of kind Slash, but this handler's kind is Button`, where it printed one per interaction kind and one of them read "requires a an interaction handler". ([#432](https://github.com/seedcord/seedcord/pull/432))
+- Fixed `seedcord dev` leaving a route without a handler when you move a handler to a new file. The new file now loads as soon as the old one unloads. ([#438](https://github.com/seedcord/seedcord/pull/438))
 - Fixed a `once` subscriber running again in `seedcord dev` when a broken save rolled its file back. ([#430](https://github.com/seedcord/seedcord/pull/430))
 - Fixed a plugin's constructor logging on the `default` channel. Those lines now use its attach key as their channel, like every other log line from the plugin. ([#429](https://github.com/seedcord/seedcord/pull/429))
 - Hovering a `CustomId`, its decoded `this.params` or a `match` arm, or an autocomplete's `this.focused` now shows the plain fields, like `{ userId: string; amount: number }`. ([`b3b4489`](https://github.com/seedcord/seedcord/commit/b3b44898c3738ffaa3546319703f545c4feb3f46))
 - Fixed a `null` or `undefined` entry in a reply's `components` crashing with a bare `TypeError`. It now throws seedcord's serialization error with the entry's index, like any other bad component. ([`ba8d7d0`](https://github.com/seedcord/seedcord/commit/ba8d7d0dbc0822861f3152f30df66b8f541450cc))
+- Fixed the compile error for a route decorator that doesn't match its handler's generic. It now shows both values, like `{ decorator: "roster"; generic: "ping" }`, and a misspelled command gives one error that quotes it. ([`87e61bb`](https://github.com/seedcord/seedcord/commit/87e61bb7bc30ad07ccfbfb66d4b02103761f4b87))
 - Fixed routine request and dispatch details appearing at `debug` instead of `trace`. ([#423](https://github.com/seedcord/seedcord/pull/423))
 - Fixed the `type-fest` types in the published declarations failing to resolve, since each package listed `type-fest` only as a dev dependency. ([`50db882`](https://github.com/seedcord/seedcord/commit/50db8827aca008f874bf60e5796a696c894056cc))
 
 #### 📦 Seedcord packages
 
-- `@seedcord/logger` 0.5.0 → 0.6.0-next.0
-- `@seedcord/utils` 0.9.0 → 0.9.1-next.0
-- `@seedcord/types` 0.15.0 → 0.16.0-next.0
-- `@seedcord/errors` 0.14.0 → 0.15.0-next.0
-- `@seedcord/custom-id` 0.3.0 → 0.3.1-next.0
+- `@seedcord/errors` 0.15.0-next.3 → 0.15.0
+- `@seedcord/utils` 0.9.1-next.1 → 0.9.1
+- `@seedcord/custom-id` 0.3.1-next.1 → 0.3.1
+- `@seedcord/logger` 0.6.0-next.1 → 0.6.0
+- `@seedcord/types` 0.16.0-next.1 → 0.16.0
 
 ## 0.11.0
 

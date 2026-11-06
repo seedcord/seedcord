@@ -6,8 +6,7 @@ const MEMBERS = Array.from({ length: 37 }, (_, index) => `Member ${index + 1}`);
 export const Roster = new Paginator({
     prefix: 'roster',
     source: new ArraySource(() => MEMBERS, { perPage: 8 }),
-    renderItem: (name, index) => `**${index + 1}.** ${name}`,
-    ephemeral: true
+    renderItem: (name, index) => `**${index + 1}.** ${name}`
 });
 
 @ButtonRoute(Roster.cursor)

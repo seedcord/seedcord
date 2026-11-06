@@ -290,3 +290,13 @@ A `[name, guildId]` emoji needs the `Guilds` intent, since seedcord reads that g
 On gateway, each one is a [`GatewayEmoji`](ref:gateway/GatewayEmoji). In the example above, `Emojis.Streak` carries a `.source` holding the live discord.js `GuildEmoji` or `ApplicationEmoji`, typed per key from the tag codegen wrote. On http it is a plain [`ResolvedEmoji`](ref:core/ResolvedEmoji) with the name, the id, and the animated flag. Both stringify and both pass to `setEmoji`.
 
 </Callout>
+
+## Writing components in TSX / JSX
+
+If you'd rather write a component in React, `renderFirstPaint` from [`@dressed/react`](https://www.npmjs.com/package/@dressed/react) turns JSX into the JSON that Discord's API takes, and seedcord's reply methods accept that JSON. `renderFirstPaint` needs version `2.1.0` or newer. seedcord doesn't maintain the package or test against it. Its own docs cover the setup.
+
+Three things differ from a `BuilderComponent`:
+
+- **On Workers, keep renders out of the files that `bot.ts` imports.** Those files load at global scope, where Cloudflare blocks random values, and the renderer generates random ids. Handler files can render while they load.
+- **Set the color yourself.** `botColor` only applies when you read `.component`, so pass `accent_color` on each `Container`.
+- **Answer clicks with a [button handler](/components/buttons).** Set the button's `custom_id` with `encode()` from a [`CustomId`](ref:custom-id/CustomId), since the handler's route only matches those. `onClick` requires dressed's own callback handler, which seedcord doesn't run, so leave that out.

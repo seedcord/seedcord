@@ -33,8 +33,8 @@ const source: InteractionFaultSource = {
     raw: {}
 };
 
-// justified: the Subscriber base only stores core
-const core = {} as unknown as CoreBase;
+// justified: WebhookLog reads only rest off the core
+const core = { rest: new REST() } as unknown as CoreBase;
 
 afterEach(() => {
     vi.restoreAllMocks();
@@ -46,10 +46,15 @@ describe('the two default reporters', () => {
         const origin = 'slash:ban';
         const dispatchId = 'd-1';
 
-        await new UnknownException({ uuid: randomUUID(), dispatchId, error: new Boom(), origin }, core).execute();
+        await new UnknownException(
+            { uuid: randomUUID(), dispatchId, error: new Boom(), origin },
+            core,
+            'unknownException'
+        ).execute();
         await new HandledException(
             { denial: new Boom(), uuid: randomUUID(), dispatchId, origin, source },
-            core
+            core,
+            'handledException'
         ).execute();
 
         expect(post).toHaveBeenCalledTimes(2);

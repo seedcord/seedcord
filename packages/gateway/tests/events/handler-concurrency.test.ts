@@ -10,20 +10,10 @@ import type { TestEnvironment } from '#tests/utils/test-env';
 import type { SubscriptionData } from '@seedcord/core';
 
 // A loads before B
-async function writeHandlers(testEnv: TestEnvironment, armA: string, armB: string): Promise<void> {
+async function writeHandlers(testEnv: TestEnvironment, bodyA: string, bodyB: string): Promise<void> {
     const handler = (name: string, body: string): string => `
-        import { EventHandler, Notice, RegisterEvent } from '${seedcordPath}';
+        import { EventHandler, Fault, RegisterEvent } from '${seedcordPath}';
         import { Events } from 'discord.js';
-
-        class BrokenReport extends Notice {
-            public override report = true;
-            public constructor() {
-                super('broken');
-            }
-            public render(): never {
-                throw new Error('render threw');
-            }
-        }
 
         @RegisterEvent(['messageCreate'])
         export class ${name} extends EventHandler<Events.MessageCreate> {
@@ -32,8 +22,8 @@ async function writeHandlers(testEnv: TestEnvironment, armA: string, armB: strin
             }
         }
     `;
-    await testEnv.createFile('events/A.ts', handler('A', armA));
-    await testEnv.createFile('events/B.ts', handler('B', armB));
+    await testEnv.createFile('events/A.ts', handler('A', bodyA));
+    await testEnv.createFile('events/B.ts', handler('B', bodyB));
 }
 
 async function bootWithReports(testEnv: TestEnvironment): Promise<{
@@ -65,17 +55,17 @@ describe('handlers for one event', () => {
         expect(reported[0]?.handlers.map((entry) => entry.handler)).toEqual(['A', 'B']);
     });
 
-    it('keep their own results when one fault report throws', async ({ testEnv }) => {
-        await writeHandlers(testEnv, 'Promise.reject(new BrokenReport())', 'message.wait()');
+    it('keep their own results when one fails while another is still running', async ({ testEnv }) => {
+        await writeHandlers(testEnv, 'Promise.reject(new Fault())', 'message.wait()');
         const { seedcord, events, reported } = await bootWithReports(testEnv);
         await using _seedcord = seedcord;
-        const unhandled: string[] = [];
-        seedcord.bus.on('unhandledEventError', ({ error }) => unhandled.push(error.message));
+        const faults: string[] = [];
+        seedcord.bus.on('handledException', ({ origin }) => faults.push(origin));
 
         const release = Promise.withResolvers<undefined>();
         const message = { wait: () => release.promise };
         const dispatching = events.processEvent('messageCreate', [message]);
-        await vi.waitFor(() => expect(unhandled).toEqual(['render threw']));
+        await vi.waitFor(() => expect(faults).toEqual(['event:messageCreate:A']));
         expect(reported).toHaveLength(0);
         release.resolve(undefined);
         await dispatching;

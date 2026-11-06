@@ -1,6 +1,7 @@
 import { PaginatorBase } from '@seedcord/core';
 
 import { ButtonHandler } from '#handlers/interaction/components';
+import { interactionUser } from '#handlers/interactionUser';
 
 import type { RepliableHandler } from '#handlers/RepliableHandler';
 import type { Core } from '#interfaces/Core';
@@ -10,7 +11,6 @@ import type { PageContext } from './PageContext';
 import type { PaginatorConfig } from '@seedcord/core';
 import type { PageCursor } from '@seedcord/core/internal';
 import type { ReplyResponse } from '@seedcord/types';
-import type { APIUser } from 'discord-api-types/v10';
 
 // `& { execute }` makes execute concrete. an empty `extends Bans.Handler {}` hits TS2515 without it.
 type PaginatorHandlerCtor<Prefix extends string> = new (
@@ -18,12 +18,9 @@ type PaginatorHandlerCtor<Prefix extends string> = new (
 ) => ButtonHandler<[PageCursor<Prefix>]> & { execute(): Promise<void> };
 
 function contextOf(interaction: Repliables, core: Core): PageContext {
-    // discord sends member.user in a guild and the top-level user in a dm
-    const resolved = interaction.member?.user ?? interaction.user;
     return {
         interaction,
-        // justified: every repliable interaction Discord delivers carries a user, and the wrapper types don't say so
-        user: resolved as APIUser,
+        user: interactionUser(interaction),
         guildId: interaction.guild_id ?? null,
         core
     };
@@ -86,6 +83,6 @@ export class Paginator<Item, const Prefix extends string> extends PaginatorBase<
      */
     async start(handler: RepliableHandler<Repliables>, n = 0): Promise<SentMessage> {
         const response = await this.page(handler, n);
-        return handler.sender.send(response, { ephemeral: this.config.ephemeral ?? false });
+        return handler.sender.send(response, { ephemeral: this.ephemeral });
     }
 }

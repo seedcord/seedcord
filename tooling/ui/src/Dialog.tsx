@@ -16,6 +16,8 @@ const PLACEMENTS = {
 
 export type DialogPlacement = keyof typeof PLACEMENTS;
 
+export const DIALOG_OVERLAY = tw`fixed inset-0 bg-(--command-overlay)/70 backdrop-blur-sm`;
+
 export interface DialogProps {
     open: boolean;
     onOpenChange: (open: boolean) => void;
@@ -52,7 +54,8 @@ export function Dialog({
             <RadixDialog.Portal>
                 <RadixDialog.Overlay
                     className={cn(
-                        'fixed inset-0 z-50 bg-(--overlay-dim)',
+                        DIALOG_OVERLAY,
+                        'z-50',
                         'data-[state=closed]:animate-out data-[state=closed]:fade-out',
                         'data-[state=open]:animate-in data-[state=open]:fade-in'
                     )}

@@ -1,4 +1,4 @@
-import { settleWithin } from '@seedcord/core/node/internal';
+import { settleWithin } from '@seedcord/core/internal';
 
 import { CodegenRunner } from '#commands/codegen/CodegenRunner';
 import { cliLogger } from '#core/cliLogger';
@@ -123,6 +123,7 @@ export class DevRunner {
             store.setBusy(true);
             await this.currentSession.stop();
             this.currentSession = null;
+            store.clearPrompt();
         }
     }
 

@@ -1,0 +1,38 @@
+name: Guide embeddings
+description: Embed the built guide's changed sections and keep the rest in the actions cache
+
+inputs:
+  cloudflare_account_id:
+    description: Cloudflare account that runs Workers AI
+    required: true
+  cloudflare_api_token:
+    description: Token with the Workers AI permission
+    required: true
+
+runs:
+  using: composite
+  steps:
+    - name: Restore guide embeddings
+      uses: actions/cache/restore@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
+      with:
+        path: ~/.cache/seedcord/guide-embeddings
+        key: guide-embeddings-${{ github.run_id }}
+        restore-keys: guide-embeddings-
+
+    - name: Embed guide sections
+      shell: bash
+      run: pnpm guide:embed
+      env:
+        CLOUDFLARE_ACCOUNT_ID: ${{ inputs.cloudflare_account_id }}
+        CLOUDFLARE_API_TOKEN: ${{ inputs.cloudflare_api_token }}
+
+    - name: Hash guide embeddings
+      id: embeddings
+      shell: bash
+      run: echo "key=$(find ~/.cache/seedcord/guide-embeddings -name '*.bin' -printf '%f\n' | sort | sha256sum | cut -c1-16)" >> "$GITHUB_OUTPUT"
+
+    - name: Save guide embeddings
+      uses: actions/cache/save@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
+      with:
+        path: ~/.cache/seedcord/guide-embeddings
+        key: guide-embeddings-${{ steps.embeddings.outputs.key }}

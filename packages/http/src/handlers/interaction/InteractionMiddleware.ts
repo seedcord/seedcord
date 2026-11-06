@@ -4,7 +4,7 @@ import type { Core } from '#interfaces/Core';
 import type { ReplySender } from '#reply/ReplySender';
 import type { InteractionOf } from './middlewareKinds';
 import type { DispatchContext, DispatchResult, MiddlewareKind } from '@seedcord/core';
-import type { MiddlewareKindsBrand } from '@seedcord/core/internal';
+import type { MiddlewareKindsBrand, MiddlewareRoute } from '@seedcord/core/internal';
 import type { Promisable } from 'type-fest';
 
 /**
@@ -37,6 +37,15 @@ export abstract class InteractionMiddleware<
     public constructor(event: InteractionOf<Kind>, core: Core, dispatch: DispatchContext, sender: ReplySender) {
         super(event, core, dispatch, sender);
     }
+
+    /**
+     * What started this dispatch: a slash command path like `config/set`, a context menu command's
+     * name, or a custom-ID prefix. When the generic lists only slash or context menu kinds, your editor
+     * offers your registered commands. It can still be any string, since middleware also runs when no
+     * handler matched, like on a deleted command that Discord still shows. For a custom ID that seedcord
+     * didn't make, it can be empty or a cut-off piece of that ID.
+     */
+    declare protected readonly route: MiddlewareRoute<Kind>;
 
     /**
      * Runs once the handler settles, newest middleware first. A refusal or a throw still reaches it,

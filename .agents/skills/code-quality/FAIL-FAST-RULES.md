@@ -5,8 +5,6 @@ description: Use this when writing, refactoring, or reviewing code paths that in
 
 # Fail-Fast Rules
 
-Extracted from AGENTS.md, section "Fail-Fast Principle".
-
 Do not silently swallow missing values. If a reference is assumed to exist, use it directly. If it's missing, let the error surface and fix the root cause. Do not paper over it with a cast or a silent fallback.
 
 **Explicit checks are only warranted in two cases:**

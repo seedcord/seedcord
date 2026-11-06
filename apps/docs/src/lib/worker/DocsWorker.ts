@@ -2,6 +2,7 @@ import { PRODUCTION_SITES } from '@seedcord/brand';
 import { DEFAULT_VERSION, replacementVersion, validateIndex } from '@seedcord/docs-engine/client';
 import { agentLinkHeader } from '@seedcord/ui/agents';
 import { PageAsset, TWIN } from '@seedcord/ui/PageAsset';
+import { wantsMarkdown } from '@seedcord/ui/wantsMarkdown';
 
 import type { IndexJson } from '@seedcord/docs-engine/client';
 
@@ -69,8 +70,20 @@ class DocsPath {
         return EXTENSIONLESS_ROUTES[key] ?? CONTENT_TYPES[extensionOf(key) ?? '.html'];
     }
 
+    private get inPackages(): boolean {
+        return this.path.startsWith('packages/');
+    }
+
     get isPackagePage(): boolean {
-        return this.path.startsWith('packages/') && extensionOf(this.key) === '.html';
+        return this.inPackages && extensionOf(this.key) === '.html';
+    }
+
+    get isPackageTwin(): boolean {
+        return this.inPackages && extensionOf(this.key) === TWIN.extension;
+    }
+
+    forRequest(request: Request): DocsPath {
+        return this.isPackagePage && wantsMarkdown(request) ? new DocsPath(TWIN.publicPath(this.path).slice(1)) : this;
     }
 }
 
@@ -89,7 +102,7 @@ export class DocsWorker {
         if (below.endsWith('/'))
             return DocsWorker.redirect(`${PRODUCTION_SITES.docs.path}${below.replace(/\/+$/, '')}${url.search}`);
 
-        return this.serve(new DocsPath(below.slice(1)), url);
+        return this.serve(new DocsPath(below.slice(1)).forRequest(request), url);
     }
 
     private async serve(path: DocsPath, url: URL): Promise<Response> {
@@ -105,6 +118,8 @@ export class DocsWorker {
             const twin = path.isPackagePage ? `${PRODUCTION_SITES.docs.path}${TWIN.publicPath(path.path)}` : undefined;
             headers.set('link', agentLinkHeader('docs', twin));
         }
+        // this url also serves markdown, depending on Accept
+        if (path.isPackagePage || path.isPackageTwin) headers.set('vary', 'Accept');
         if (path.key.startsWith('search/')) headers.set('x-robots-tag', 'noindex');
         DocsWorker.noindexOffProduction(headers, url);
 

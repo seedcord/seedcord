@@ -23,7 +23,7 @@
     // 30 searches a minute per visitor ip is a guess. nothing has measured real traffic yet
     "ratelimits": [{ "name": "ASK_LIMIT", "namespace_id": "1001", "simple": { "limit": 30, "period": 60 } }],
     "env": {
-        "preview": {
+        "next": {
             "routes": [
                 { "pattern": "next.seedcord.org/guide", "zone_name": "seedcord.org" },
                 { "pattern": "next.seedcord.org/guide/*", "zone_name": "seedcord.org" }

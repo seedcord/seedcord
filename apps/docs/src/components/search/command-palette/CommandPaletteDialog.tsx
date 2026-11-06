@@ -17,6 +17,8 @@ function optionId(id: string): string {
     return `command-option-${id}`;
 }
 
+const NO_RESULTS: readonly CommandAction[] = [];
+
 interface CommandListContentProps {
     showInitialHint: boolean;
     isSearching: boolean;
@@ -46,7 +48,7 @@ function CommandListContent({
         emptyContent = (
             <div
                 className={cn(
-                    'mx-2 rounded-md border border-(--border-accent-b-subtle) bg-(--surface-accent-b-subtle) px-3 py-2 text-sm text-(--text-accent-b-subtle)'
+                    'rounded-md border border-(--border-accent-b-subtle) bg-(--surface-accent-b-subtle) px-3 py-2 text-sm text-(--text-accent-b-subtle)'
                 )}
             >
                 {errorMessage}
@@ -64,7 +66,7 @@ function CommandListContent({
     if (!emptyContent && !shouldShowItems) return null;
 
     return (
-        <div className={cn('py-3')}>
+        <div className={cn('py-2')}>
             {emptyContent}
             {shouldShowItems ? (
                 <div id={COMMAND_LISTBOX_ID} role="listbox" aria-label="Search results">
@@ -112,11 +114,11 @@ export function CommandPaletteDialog({ controller }: { controller: CommandPalett
         prerelease: controller.prerelease
     });
     const listProps = deriveListProps(searchState, normalizedSearch);
-    const { results } = listProps;
+    const { results, isSearching } = listProps;
 
     const roving = useRovingList({
         query: normalizedSearch,
-        groups: [{ items: results, loading: false }],
+        groups: [{ items: isSearching ? NO_RESULTS : results, loading: isSearching }],
         onSelect: handleSelect
     });
     const activeId = roving.active ? optionId(roving.active.id) : undefined;
@@ -129,7 +131,8 @@ export function CommandPaletteDialog({ controller }: { controller: CommandPalett
             onClose={handleClose}
             title="Command palette"
             description="Search documentation content and navigation items."
-            footer={listExpanded ? <SearchKeyLegend hasGroups={roving.hasGroups} /> : undefined}
+            listExpanded={listExpanded}
+            footer={<SearchKeyLegend hasGroups={roving.hasGroups} />}
             field={
                 <CommandHeader
                     inputRef={inputRef}
@@ -139,7 +142,6 @@ export function CommandPaletteDialog({ controller }: { controller: CommandPalett
                     searchValue={searchValue}
                     isSearching={listProps.isSearching}
                     activeId={activeId}
-                    listExpanded={listExpanded}
                     scope={controller.scope}
                     kind={controller.kind}
                     prerelease={controller.prerelease}

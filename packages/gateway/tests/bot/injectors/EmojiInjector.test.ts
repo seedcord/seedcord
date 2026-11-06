@@ -76,7 +76,7 @@ describe('EmojiInjector', () => {
 
         expect(stored.Confirm).toMatchObject({ id: '1', name: 'check', animated: false });
         expect((stored.Confirm as GatewayEmoji).source).toBe(check);
-        expect(String(stored.Confirm)).toBe('<:check:1>');
+        expect(`${stored.Confirm as GatewayEmoji}`).toBe('<:check:1>');
     });
 
     it('stores an emoji that a discord.js builder accepts', async () => {

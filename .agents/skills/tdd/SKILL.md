@@ -43,20 +43,16 @@ RIGHT (vertical):
 
 Tests sit in `<package>/tests/`, mirroring `src/`. Never `src/**/*.test.ts`. A test for `packages/core/src/rateLimiter/KvRateLimiter.ts` is `packages/core/tests/rateLimiter/kv-rate-limiter.test.ts`.
 
-Vitest is the runner. `pnpm -C <pkg> test` runs the suite once. `pnpm -C <pkg> test:watch` watches and reruns on change, which is the loop you want during a TDD cycle.
-
-Run `lint:fix` and `tc` before you run tests. A test file that does not type-check has not run yet.
+Vitest is the runner. `pnpm -C <pkg> test:watch` watches and reruns on change, which is the loop you want during a TDD cycle.
 
 ```sh
-pnpm -C <pkg> lint:fix
-pnpm -C <pkg> tc
-pnpm -C <pkg> test:watch   # during the loop
-pnpm -C <pkg> test         # once before you commit
+pnpm -C <pkg> test:watch       # during the loop
+pnpm check --filter=<pkg>      # lint:fix, tc and test, once the slice is done
 ```
 
-Tests reach the framework through public exports (`@seedcord/types`, the package `@src` alias) and may use a pragmatic fixture cast (`as unknown as T`) with a one-line justification comment. No `as any` in tests. The ESLint rule rewrites `any` to `unknown`, which surfaces a real type error if the cast was wrong.
+Tests import through the package's `#src/*` alias and may use a pragmatic fixture cast (`as unknown as T`) with a one-line justification comment. No `as any` in tests. The ESLint rule rewrites `any` to `unknown`, which surfaces a real type error if the cast was wrong.
 
-For framework-level behavior that needs a running bot, `mock/` is the runnable Discord-bot harness. Wire integration tests into it rather than faking the client by hand.
+`mocks/` holds one runnable bot per transport. [Trying a feature on a mock](../../../AGENTS.md#trying-a-feature-on-a-mock) covers behavior that needs a real Discord connection.
 
 ## Workflow
 

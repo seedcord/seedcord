@@ -62,8 +62,12 @@ export function SearchResultRow({
                         </Fragment>
                     ))}
                 </span>
-                {result.by === 'text' ? (
-                    <MatchedText text={result.excerpt} terms={result.terms} className={cn(ROW_SUBTITLE)} />
+                {result.by !== 'title' && result.excerpt !== undefined ? (
+                    <MatchedText
+                        text={result.excerpt}
+                        terms={result.by === 'text' ? result.terms : UNMARKED}
+                        className={cn(ROW_SUBTITLE)}
+                    />
                 ) : null}
             </div>
         </SearchOption>

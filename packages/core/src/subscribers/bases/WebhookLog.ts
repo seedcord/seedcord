@@ -31,18 +31,16 @@ export interface WebhookReport {
  * Base class for subscribers that deliver their event to a Discord webhook.
  *
  * Declare the url's environment variable with `@WebhookUrl` and implement {@link report}. The base
- * resolves the url, validates it, reuses one sender per url, and sends. Registration skips a reporter
+ * resolves the url, validates it, and sends through the bot's REST client. Registration skips a reporter
  * whose variable is unset and warns at boot.
  *
- * @typeParam KeyOfSubscribers - The subscription key this reporter receives
+ * @typeParam KeyOfSubscribers - The subscription key or keys that this reporter receives, the same ones as `@Subscribe`
  * @typeParam TCore - The transport's Core
  */
 export abstract class WebhookLog<KeyOfSubscribers extends SubscriptionKey, TCore extends CoreBase> extends Subscriber<
     KeyOfSubscribers,
     TCore
 > {
-    private static readonly senders = new Map<string, WebhookSender>();
-
     /**
      * Builds the message for one published event.
      *
@@ -60,7 +58,7 @@ export abstract class WebhookLog<KeyOfSubscribers extends SubscriptionKey, TCore
     async execute(): Promise<void> {
         const envKey = WebhookLog.envKeyOf(this.constructor);
         const url = WebhookLog.urlOf(envKey);
-        // Bus.probeWebhook dropped every url-less reporter at registration. reaching this means the env changed since.
+        // Bus.probeWebhook skipped every url-less reporter at registration. reaching this means the env changed since.
         if (url === null) throw new SeedcordError(SeedcordErrorCode.ConfigMissingEnv, [envKey]);
 
         const key = this.throttleKey();
@@ -73,7 +71,7 @@ export abstract class WebhookLog<KeyOfSubscribers extends SubscriptionKey, TCore
 
         try {
             const { username, avatarUrl, components, files } = await this.report(suppressed);
-            await WebhookLog.senderFor(url).send({
+            await new WebhookSender(this.core.rest, url).send({
                 flags: sendFlags({ ephemeral: false }),
                 username: username ?? this.constructor.name,
                 avatarUrl,
@@ -84,16 +82,6 @@ export abstract class WebhookLog<KeyOfSubscribers extends SubscriptionKey, TCore
             if (key !== null) throttle.restore(key, suppressed);
             this.logger.error('Webhook report failed', error);
         }
-    }
-
-    /** @internal */
-    static senderFor(url: string): WebhookSender {
-        let sender = WebhookLog.senders.get(url);
-        if (!sender) {
-            sender = new WebhookSender(url);
-            WebhookLog.senders.set(url, sender);
-        }
-        return sender;
     }
 
     /** @internal */

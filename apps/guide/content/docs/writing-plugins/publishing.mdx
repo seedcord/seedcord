@@ -36,6 +36,7 @@ This package holds a plugin on the `@seedcord/core/plugin` base that reads files
         "@seedcord/utils": ">=0.8.0 <1.0.0"
     },
     "devDependencies": {
+        "@discordjs/builders": "^1.14.1",
         "@seedcord/core": "0.10.0",
         "@seedcord/utils": "0.8.17",
         "@types/node": "^24",
@@ -46,7 +47,7 @@ This package holds a plugin on the `@seedcord/core/plugin` base that reads files
 }
 ```
 
-`exports` lists `types` first, pointing at the declaration file that `tsdown` writes next to `index.mjs`. A bot reads your instance type from that file, and [Typing what you ship](/writing-plugins/typing) covers what reaches the bot's `Core`. `files` limits the tarball to `dist` plus `package.json`. The peers hold the ranges you tested, and `devDependencies` holds a version inside each range for your own builds. `envapt` is there because `@seedcord/core` peers on it.
+`exports` lists `types` first, pointing at the declaration file that `tsdown` writes next to `index.mjs`. A bot reads your instance type from that file, and [Typing what you ship](/writing-plugins/typing) covers what reaches the bot's `Core`. `files` limits the tarball to `dist` plus `package.json`. The peers hold the ranges you tested, and `devDependencies` holds a version inside each range for your own builds. `@discordjs/builders` and `envapt` are there because `@seedcord/core` peers on them.
 
 ```json title="tsconfig.json"
 {

@@ -1,7 +1,7 @@
 {
     "name": "seedcord",
     "type": "module",
-    "version": "0.23.0-next.1",
+    "version": "0.23.1",
     "engines": {
         "node": "^24.22.1 || >=26.12.1",
         "bun": ">=1.4.2"
@@ -54,8 +54,8 @@
         "preview:prompts": "tsx playground/prompts.ts",
         "build": "tsdown",
         "clean": "rm -rf dist",
-        "lint": "eslint '**/*.{ts,tsx}' 'bin/**/*.mjs' --cache --no-error-on-unmatched-pattern",
-        "lint:fix": "eslint '**/*.{ts,tsx}' 'bin/**/*.mjs' --fix --cache --no-error-on-unmatched-pattern",
+        "lint": "eslint '**/*.{ts,tsx}' 'bin/**/*.mjs' --max-warnings=0 --cache --no-error-on-unmatched-pattern",
+        "lint:fix": "eslint '**/*.{ts,tsx}' 'bin/**/*.mjs' --fix --max-warnings=0 --cache --no-error-on-unmatched-pattern",
         "fmt": "prettier --write '**/*.{ts,tsx,json,md}' 'bin/**/*.mjs' --cache --no-error-on-unmatched-pattern",
         "fmt:check": "prettier --check '**/*.{ts,tsx,json,md}' 'bin/**/*.mjs' --cache --no-error-on-unmatched-pattern",
         "tc": "tsgo --noEmit",
@@ -107,11 +107,13 @@
         "@seedcord/brand": "workspace:^",
         "@seedcord/cli-prompts": "workspace:^",
         "@seedcord/cli-templates": "workspace:^",
+        "@seedcord/docs-search": "workspace:^",
         "@seedcord/eslint-config": "workspace:^",
         "@seedcord/gateway": "workspace:^",
         "@seedcord/http": "workspace:^",
         "@seedcord/tsconfig": "workspace:^",
         "@seedcord/tsdown-config": "workspace:^",
+        "@seedcord/ui": "workspace:^",
         "@seedcord/vitest-config": "workspace:^",
         "@types/react": "catalog:react",
         "cf": "catalog:deps",

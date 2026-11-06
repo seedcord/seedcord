@@ -8,13 +8,12 @@ import { capturingCtx, readyEngine, routedHandler, signedRequest, slashPayload, 
 
 import type { LogRecord, LogSinkHandle } from '@seedcord/types';
 
-class Ban extends SlashHandler<never> {
-    async execute(): Promise<void> {
-        await this.reply('done');
-    }
-}
-
 function banClasses(): BotClasses {
+    class Ban extends SlashHandler<never> {
+        async execute(): Promise<void> {
+            await this.reply('done');
+        }
+    }
     return routedHandler(InteractionKind.Slash, 'ban', Ban);
 }
 

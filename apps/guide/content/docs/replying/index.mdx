@@ -37,6 +37,10 @@ The state matters most when your handler refuses. You refuse by throwing a [`Not
 
 That holds while every answer goes through the handler. `this.event.reply()` reaches Discord and leaves the state at `unacked`. A callback on `this.api.interactions` does the same on http. seedcord then sends a `Notice` thrown after it as a first reply, which Discord rejects because the interaction was already acknowledged. seedcord drops that rejection with a debug line. The person who ran the command sees your message and never sees the refusal.
 
+## Replying with an error
+
+To tell the user they can't do something, like when they don't have a profile or the item doesn't exist, throw a [`Notice`](ref:core/Notice) instead of replying and returning. seedcord sends it as the reply, and your handler stops at that line. [Refusing a request](/replying/throwing) shows how to write one.
+
 ## A reply is a list of components
 
 seedcord sends every reply with Discord's [Components V2](https://docs.discord.com/developers/components/overview) flag, which rules out `content` and `embeds`. A string gives you one block of text. Anything more, like a container or a row of buttons, goes in `components`, one entry per top-level component.
@@ -171,4 +175,27 @@ class Ban extends SlashHandler<'ban'> {
     `APIMessage`, which is Discord's raw payload. `followUp()`,
     `edit()`, and [`update()`](ref:gateway/ComponentHandler.update)
     all return the same type.
+</Callout>
+
+## Who sent the interaction
+
+On http, `this.event.user` is undefined in a server, because Discord sends `member.user` there. Use [`this.user`](ref:gateway/RepliableHandler.user) because it reads whichever one Discord sent, on every interaction handler and middleware.
+
+```ts twoslash
+import { SlashHandler, SlashRoute } from '@seedcord/gateway';
+
+@SlashRoute('ban')
+class Ban extends SlashHandler<'ban'> {
+    public async execute(): Promise<void> {
+        // ---cut---
+        await this.reply(`Banned by ${this.user.id}.`);
+        // ---cut-after---
+    }
+}
+```
+
+<Callout type="transport">
+
+`this.user` is a discord.js `User` on gateway and an `APIUser` on http. Separately, the server id comes from the event, as `this.event.guildId` on gateway and `this.event.guild_id` on http.
+
 </Callout>

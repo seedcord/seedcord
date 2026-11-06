@@ -12,6 +12,10 @@ The API reference is at <https://seedcord.org/docs>, one page per symbol.
 
 This project runs on the {{#if isGateway}}gateway{{else}}http{{/if}} transport{{#if isEdge}} on Cloudflare Workers{{/if}} and imports everything from `{{ transport }}`. A page marks anything that differs between the two transports.
 
+## Before you write it by hand
+
+`tc` and lint pass even when you hand-write something that seedcord already has. Before you write anything more than a plain reply, ask questions via `{{ pm.run }} ask "<question>"`. It searches the guide and prints the matching pages with their `.md` links. It also takes a pasted error or an error code like `3116`.
+
 ## How a command works here
 
 A command takes two files. One declares what Discord shows people. The other answers it, as a handler class carrying a route decorator. seedcord reads those decorators at startup and dispatches every interaction itself.
@@ -40,11 +44,13 @@ Anything that holds a connection, keeps state between interactions, or runs in t
 
 ## Imports
 
+Before you install another seedcord package, check whether `{{ transport }}` already exports what you need since the transports re-export most packages.
+
 Never import from a seedcord path ending in `/internal`, like `@seedcord/core/internal`. Those paths wire seedcord's own packages together and change without notice. If the only way to do something is through one of those imports, tell the user so they can open an issue at <https://github.com/seedcord/seedcord/issues>.
 
 ## Trying a change
 
-`{{ pm.run }} dev` runs the bot against Discord and swaps in a handler when you save it. When you start it without a terminal, it prints each log line as JSON and takes commands on stdin, like `{"do":"restart"}`. Run it in the background, ask the user to run the command in Discord, then read the lines it logged. <https://seedcord.org/guide/tooling/dev.md> lists the commands.
+`{{ pm.run }} dev` runs the bot against Discord and swaps in a handler when you save it. When you start it without a terminal, it prints each log line as JSON and takes commands on stdin, like `{"do":"restart"}`. When a change is ready to try, run it in the background without waiting to be asked, and keep its stdin open so you can send those commands. Ask the user to run the command in Discord, then read the lines it logged, including any warnings. <https://seedcord.org/guide/tooling/dev.md> lists the commands.
 
 ## Before you call it done
 

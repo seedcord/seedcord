@@ -58,7 +58,33 @@ function get(path: string, env: Env, host = DOCS): Promise<Response> {
     return handler.fetch(new Request(`${host}${path}`), env);
 }
 
+function asking(path: string, env: Env, accept: string): Promise<Response> {
+    return handler.fetch(new Request(`${DOCS}${path}`, { headers: { accept } }), env);
+}
+
 describe('the docs worker', () => {
+    it('serves the markdown copy of a package page only to a request that prefers markdown', async () => {
+        const env = bucket('packages/core/latest.html', 'llms/packages/core/latest.md');
+
+        const markdown = await asking('/packages/core/latest', env, 'text/markdown');
+        expect(markdown.headers.get('content-type')).toBe('text/markdown; charset=utf-8');
+        await expect(markdown.text()).resolves.toBe('llms/packages/core/latest.md');
+
+        for (const accept of ['*/*', 'text/html, text/markdown;q=0.5']) {
+            const html = await asking('/packages/core/latest', env, accept);
+            expect(html.headers.get('content-type')).toBe('text/html; charset=utf-8');
+            expect(html.headers.get('vary')).toBe('Accept');
+        }
+        expect(markdown.headers.get('vary')).toBe('Accept');
+    });
+
+    it('serves html for a markdown request to a page without a markdown copy', async () => {
+        const response = await asking('', bucket('index.html'), 'text/markdown');
+
+        expect(response.headers.get('content-type')).toBe('text/html; charset=utf-8');
+        expect(response.headers.get('vary')).toBeNull();
+    });
+
     it('serves a page from its html file', async () => {
         const response = await get(
             '/packages/core/latest/classes/base-handler',

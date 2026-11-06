@@ -81,7 +81,7 @@
             "dependsOn": ["^build", "@seedcord/eslint-config#build"]
         },
         "lint:fix": {
-            "dependsOn": ["@seedcord/eslint-config#build"],
+            "dependsOn": ["^build", "@seedcord/eslint-config#build"],
             "cache": false
         },
         "tc": {

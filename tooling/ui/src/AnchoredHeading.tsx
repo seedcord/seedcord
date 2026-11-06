@@ -26,7 +26,7 @@ export function AnchoredHeading({
 }: AnchoredHeadingProps): ReactElement {
     return (
         <div className={cn('group', wrapperClassName)}>
-            <Tag {...props} id={id} className={className}>
+            <Tag {...props} id={id} className={cn('inline', className)}>
                 {children}
             </Tag>
             {id === undefined ? null : (

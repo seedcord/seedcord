@@ -3,6 +3,8 @@ import 'reflect-metadata';
 // Errors.ts registers the two notices thrown by a failed decode
 import '#customId/Errors';
 
+export type { REST } from '@discordjs/rest';
+
 export type { MessageContextMenuRegistry, UserContextMenuRegistry } from '#registries/ContextMenuRegistry';
 export type { SlashRegistry } from '#registries/SlashRegistry';
 
@@ -36,7 +38,7 @@ export type { MiddlewareKind } from '#src/metadataKeys';
 export { RegisterInteractionMiddleware } from '#decorators/middleware';
 export type { InteractionMiddlewareOptions } from '#decorators/middleware';
 
-export { DispatchContext } from '#src/dispatch/DispatchContext';
+export type { DispatchContext } from '#src/dispatch/DispatchContext';
 export type { DispatchResult, EventDispatchResult, HandlerOutcome, HandlerResult } from '#src/dispatch/dispatchResult';
 
 export { BaseHandler } from '#src/handlers/BaseHandler';

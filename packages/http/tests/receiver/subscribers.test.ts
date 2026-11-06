@@ -1,5 +1,5 @@
 import { Bus, Subscriber, WebhookLog, WebhookUrl, Subscribe } from '@seedcord/core';
-import { PublishDefault, SubscriberLoader } from '@seedcord/core/internal';
+import { PublishDefault, RegisteredCount, SubscriberLoader } from '@seedcord/core/internal';
 import { SeedcordErrorCode } from '@seedcord/errors';
 import { Logger } from '@seedcord/logger';
 import { Envapter, PortableSource } from 'envapt';
@@ -11,7 +11,7 @@ import type { CoreBase, SubscriptionData } from '@seedcord/core';
 
 const ran: string[] = [];
 
-@Subscribe('unknownException')
+@Subscribe(['unknownException'])
 class EdgeReporter extends Subscriber<'unknownException', CoreBase> {
     execute(): Promise<void> {
         ran.push('edge');
@@ -19,7 +19,7 @@ class EdgeReporter extends Subscriber<'unknownException', CoreBase> {
     }
 }
 
-@Subscribe('unknownException')
+@Subscribe(['unknownException'])
 @WebhookUrl('EDGE_UNSET_WEBHOOK_URL')
 class UnsetReporter extends WebhookLog<'unknownException', CoreBase> {
     report(): { components: [] } {
@@ -27,7 +27,7 @@ class UnsetReporter extends WebhookLog<'unknownException', CoreBase> {
     }
 }
 
-@Subscribe('unknownException')
+@Subscribe(['unknownException'])
 @WebhookUrl('EDGE_BAD_WEBHOOK_URL')
 class MalformedReporter extends WebhookLog<'unknownException', CoreBase> {
     report(): { components: [] } {
@@ -75,15 +75,12 @@ describe('subscribers loaded from the built files on workerd', () => {
         const bus = stubBus();
         // the warn comes off the bus's own logger instance
         const warn = vi.spyOn(Logger.prototype, 'warn');
-        const sent = vi.spyOn(WebhookLog, 'senderFor');
 
         await loadInto(bus, UnsetReporter);
 
         expect(warn).toHaveBeenCalledWith(expect.stringContaining('UnsetReporter'));
-        bus[PublishDefault]('unknownException', payload());
-        expect(sent).not.toHaveBeenCalled();
+        expect(bus[RegisteredCount]).toBe(0);
         warn.mockRestore();
-        sent.mockRestore();
     });
 
     it('throws at registration for a malformed webhook url', async () => {

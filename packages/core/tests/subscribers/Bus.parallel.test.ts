@@ -1,13 +1,11 @@
 import { describe, it, expect } from 'vitest';
 
 import { Subscribe } from '#subscribers/decorators/Subscribe';
-import { Bus, registrationFor } from '#subscribers/index';
 import { PublishDefault } from '#subscribers/publishDefault';
-import { RegisterSubscriber } from '#subscribers/slots';
 import { Subscriber } from '#subscribers/Subscriber';
+import { busWith } from '#tests/utils/busWith';
 
 import type { CoreBase } from '#interfaces/CoreBase';
-import type { StoredSubscriberCtor } from '#subscribers/Bus';
 
 const order: string[] = [];
 
@@ -15,7 +13,7 @@ function delay(ms: number): Promise<void> {
     return new Promise((resolve) => setTimeout(resolve, ms));
 }
 
-@Subscribe('unknownException')
+@Subscribe(['unknownException'])
 class SlowSubscriber extends Subscriber<'unknownException', CoreBase> {
     async execute(): Promise<void> {
         await delay(30);
@@ -23,19 +21,12 @@ class SlowSubscriber extends Subscriber<'unknownException', CoreBase> {
     }
 }
 
-@Subscribe('unknownException')
+@Subscribe(['unknownException'])
 class FastSubscriber extends Subscriber<'unknownException', CoreBase> {
     execute(): Promise<void> {
         order.push('fast');
         return Promise.resolve();
     }
-}
-
-// justified: the Bus only stores core, no member is read during publish
-function busWith(...ctors: StoredSubscriberCtor[]): Bus {
-    const bus = new Bus({} as unknown as CoreBase);
-    for (const ctor of ctors) bus[RegisterSubscriber](registrationFor(ctor));
-    return bus;
 }
 
 describe('Bus subscriber concurrency', () => {

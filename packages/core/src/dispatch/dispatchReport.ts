@@ -1,27 +1,17 @@
 import { paint } from '@seedcord/errors';
-import { Logger } from '@seedcord/logger';
 import { timestampFromSnowflake } from '@seedcord/utils';
 
+import { lazyLogger } from '#src/miscellaneous/lazyLogger';
 import { Notice } from '#stops/Notice';
 import { Silence } from '#stops/Silence';
 import { PublishDefault } from '#subscribers/publishDefault';
 
-import type { InteractionKind } from '#src/metadataKeys';
+import type { InteractionDispatch } from '#src/dispatch/DispatchContext';
 import type { Bus } from '#subscribers/Bus';
 import type { DispatchOutcome } from '#subscribers/types/Subscriptions';
 
-let dispatchLogger: Logger | undefined;
-function logger(): Logger {
-    dispatchLogger ??= new Logger('Dispatch', { channel: 'interactions' });
-    return dispatchLogger;
-}
+const logger = lazyLogger('Dispatch', { channel: 'interactions' });
 
-/**
- * Classifies a caught stop for `interactionDispatched` so a gate and a
- * handler label the same stop identically.
- *
- * @internal
- */
 export function outcomeFor(caught: unknown): Exclude<DispatchOutcome, 'handled'> {
     if (caught instanceof Silence) return 'refused';
     if (caught instanceof Notice) return caught.report ? 'failed' : 'refused';
@@ -29,27 +19,15 @@ export function outcomeFor(caught: unknown): Exclude<DispatchOutcome, 'handled'>
 }
 
 interface DispatchReport {
-    readonly dispatchId: string;
-    readonly routeId: string;
+    readonly dispatch: InteractionDispatch;
     readonly interactionId: string;
-    readonly kind: `${InteractionKind}`;
     readonly outcome: DispatchOutcome;
-    /** True when no route matched and the unhandled default ran. */
-    readonly fallback: boolean;
-    readonly userId: string | null;
+    readonly userId: string;
     readonly guildId: string | null;
-    /** `performance.now()` captured as the dispatch began. */
     readonly startedAt: number;
-    /** {@link queuedMsFor} read at the same moment as `startedAt`. */
     readonly queuedMs: number;
 }
 
-/**
- * Discord's interaction creation to now, read from the snowflake. Called at dispatch entry, since
- * a later read would count the handler run into the queue time as well.
- *
- * @internal
- */
 export function queuedMsFor(interactionId: string): number {
     // timestampFromSnowflake throws on a malformed id
     try {
@@ -62,20 +40,18 @@ export function queuedMsFor(interactionId: string): number {
 export function reportDispatch(bus: Bus, report: DispatchReport): void {
     const durationMs = performance.now() - report.startedAt;
     bus[PublishDefault]('interactionDispatched', {
-        dispatchId: report.dispatchId,
-        routeId: report.routeId,
+        dispatchId: report.dispatch.id,
+        routeId: report.dispatch.routeId,
         interactionId: report.interactionId,
-        kind: report.kind,
+        kind: report.dispatch.kind,
         outcome: report.outcome,
-        fallback: report.fallback,
+        fallback: report.dispatch.fallback,
         userId: report.userId,
         guildId: report.guildId,
         durationMs,
         queuedMs: report.queuedMs
     });
-
-    // a throwing log sink must not stop the publish above
     logger().trace(
-        `${paint.sky.bold(report.routeId)} ${report.outcome} ${paint.mute('in')} ${Math.round(durationMs)}ms`
+        `${paint.sky.bold(report.dispatch.routeId)} ${report.outcome} ${paint.mute('in')} ${Math.round(durationMs)}ms`
     );
 }

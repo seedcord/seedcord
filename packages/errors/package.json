@@ -1,7 +1,7 @@
 {
     "name": "@seedcord/errors",
     "type": "module",
-    "version": "0.15.0-next.1",
+    "version": "0.15.0",
     "engines": {
         "node": "^24.22.1 || >=26.12.1",
         "bun": ">=1.4.2"
@@ -36,6 +36,12 @@
                 "types": "./dist/internal.index.d.mts",
                 "default": "./dist/internal.index.mjs"
             }
+        },
+        "./codes": {
+            "import": {
+                "types": "./dist/ErrorCodes.d.mts",
+                "default": "./dist/ErrorCodes.mjs"
+            }
         }
     },
     "files": [
@@ -47,8 +53,8 @@
     "scripts": {
         "build": "tsdown",
         "clean": "rm -rf dist",
-        "lint": "eslint '**/*.{ts,tsx}' --cache --no-error-on-unmatched-pattern",
-        "lint:fix": "eslint '**/*.{ts,tsx}' --fix --cache --no-error-on-unmatched-pattern",
+        "lint": "eslint '**/*.{ts,tsx}' --max-warnings=0 --cache --no-error-on-unmatched-pattern",
+        "lint:fix": "eslint '**/*.{ts,tsx}' --fix --max-warnings=0 --cache --no-error-on-unmatched-pattern",
         "fmt": "prettier --write '**/*.{ts,tsx,json,md}' --cache --no-error-on-unmatched-pattern",
         "fmt:check": "prettier --check '**/*.{ts,tsx,json,md}' --cache --no-error-on-unmatched-pattern",
         "tc": "tsgo --noEmit",

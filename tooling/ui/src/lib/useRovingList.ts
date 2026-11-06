@@ -66,7 +66,7 @@ function clamp(index: number, total: number): number {
 
 function nextStop(stops: readonly TabStop[], activeIndex: number, step: 1 | -1): TabStop | undefined {
     const current = stops.findLastIndex((stop) => !stop.loading && stop.start <= activeIndex);
-    return stops.at((current + step) % stops.length);
+    return stops[current + step];
 }
 
 function pick<TItem>(next: Picked<TItem>) {
@@ -116,10 +116,10 @@ export function useRovingList<TItem>({ query = '', groups, onSelect }: RovingLis
                 break;
             }
             case 'Tab': {
-                if (stops.length < 2) break;
-                event.preventDefault();
                 const next = nextStop(stops, activeIndex, event.shiftKey ? -1 : 1);
-                if (next?.loading === false) move(next.start);
+                if (next === undefined) break;
+                event.preventDefault();
+                if (!next.loading) move(next.start);
                 break;
             }
             case 'Enter': {

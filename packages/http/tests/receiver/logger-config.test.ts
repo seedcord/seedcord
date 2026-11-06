@@ -6,6 +6,7 @@ import { Seedcord } from '#src/edge/Seedcord';
 import { registerBakedIds } from '#tests/helpers/bakedIds';
 import { createSigner, signedRequest } from '#tests/helpers/ed25519';
 import { VALID_TOKEN } from '#tests/helpers/fixtures';
+import { capturingCtx } from '#tests/helpers/interactions';
 
 import type { HttpEdgeConfig } from '#src/interfaces/Config';
 import type { ILogSink, LogRecord, LoggerConfig } from '@seedcord/types';
@@ -38,7 +39,7 @@ async function startBot(config: HttpEdgeConfig): Promise<void> {
     Seedcord.reset();
     const signer = await createSigner();
     using _bakedIds = registerBakedIds({ publicKey: signer.publicKeyHex });
-    await new Seedcord(config).fetch(await signedRequest(signer, '{"type":1}'));
+    await new Seedcord(config).fetch(await signedRequest(signer, '{"type":1}'), undefined, capturingCtx());
 }
 
 beforeEach(() => {

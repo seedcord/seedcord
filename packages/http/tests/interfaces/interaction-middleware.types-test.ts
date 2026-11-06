@@ -3,16 +3,18 @@ import { expectTypeOf } from 'vitest';
 
 import { InteractionMiddleware } from '#handlers/interaction';
 
-import type { InteractionKind } from '@seedcord/core';
+import type { InteractionKind, SlashRegistry } from '@seedcord/core';
 import type {
     APIChatInputApplicationCommandInteraction,
     APIMessageComponentButtonInteraction,
     APIModalSubmitInteraction
 } from 'discord-api-types/v10';
+import type { LiteralUnion } from 'type-fest';
 
 class ButtonOnly extends InteractionMiddleware<InteractionKind.Button> {
     public execute(): Promise<void> {
         expectTypeOf(this.event).toEqualTypeOf<APIMessageComponentButtonInteraction>();
+        expectTypeOf(this.route).toEqualTypeOf<string>();
         return Promise.resolve();
     }
 }
@@ -21,6 +23,7 @@ void ButtonOnly;
 class SlashOnly extends InteractionMiddleware<InteractionKind.Slash> {
     public execute(): Promise<void> {
         expectTypeOf(this.event).toEqualTypeOf<APIChatInputApplicationCommandInteraction>();
+        expectTypeOf(this.route).toEqualTypeOf<LiteralUnion<keyof SlashRegistry, string>>();
         return Promise.resolve();
     }
 }

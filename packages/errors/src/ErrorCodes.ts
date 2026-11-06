@@ -110,6 +110,10 @@ export enum SeedcordErrorCode {
     CoreKvDriverFailed = 1234,
     /** The bot's own member is missing from the guild's member cache. */
     CoreBotMemberMissing = 1235,
+    /** A module from a build read its path, but the build's `index.mjs` didn't run first. */
+    CoreBuiltModuleRanDirectly = 1236,
+    /** `JSON.stringify` threw on a record passed to a kv collection's `set()` or `update()`, like one with a circular reference. */
+    CoreKvUnserializable = 1237,
 
     /** A command class carries `@RegisterCommand` twice. */
     DecoratorCommandAlreadyRegistered = 1301,
@@ -123,6 +127,8 @@ export enum SeedcordErrorCode {
     DecoratorWebhookUrlMissing = 1305,
     /** A middleware decorator got an empty filter array. */
     DecoratorEmptyMiddlewareFilter = 1306,
+    /** `@Subscribe`, `@RegisterEvent`, or a component route decorator lists the same key or customId prefix twice. */
+    DecoratorDuplicateKey = 1307,
 
     /** A reply method was called in an ack state where Discord rejects it. */
     ReplyIllegalAckState = 1501,
@@ -151,8 +157,6 @@ export enum SeedcordErrorCode {
     CustomIdHandlerRouteMissing = 1607,
     /** A handler's `match()` doesn't have a case for the current route, field, event, or command. */
     MatchCaseMissing = 1608,
-    /** An event handler or middleware read the event name but was constructed without one. */
-    EventNameUnavailable = 1609,
     /** Discord sent an autocomplete payload with no focused option. */
     AutocompleteNoFocusedOption = 1610,
     /** The submitted modal has no field with the requested custom id. */
@@ -319,6 +323,12 @@ export enum SeedcordErrorCode {
     CliPluginCodegenValue = 3145,
     /** Two attachments of one plugin class returned different values at one key from `codegen()`. */
     CliPluginCodegenConflict = 3146,
+    /** The text passed to `seedcord ask` isn't a question the guide search accepts. */
+    CliAskBadQuestion = 3147,
+    /** The guide search refused `seedcord ask` until a search limit resets. */
+    CliAskHasToWait = 3148,
+    /** The guide search failed for a reason other than a search limit. */
+    CliAskFailed = 3149,
 
     /** A flag answers a question that the earlier answers skip. */
     CreateFlagNotApplicable = 3201,

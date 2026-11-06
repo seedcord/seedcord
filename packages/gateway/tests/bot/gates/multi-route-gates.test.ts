@@ -12,10 +12,10 @@ import type { SubscriptionData } from '@seedcord/core';
 interface PrivateInteractionDispatcher {
     maps: Record<InteractionKind, Map<string, unknown>>;
     init(): Promise<void>;
-    handleButton(interaction: unknown): Promise<void>;
+    handleInteraction(interaction: unknown): Promise<void>;
 }
 
-// justified: the route maps and the button entry point are private on the dispatcher
+// justified: the route maps and the interaction entry point are private on the dispatcher
 function controllerOf(instance: Seedcord): PrivateInteractionDispatcher {
     return interactionsOf(instance.bot) as unknown as PrivateInteractionDispatcher;
 }
@@ -24,6 +24,7 @@ function controllerOf(instance: Seedcord): PrivateInteractionDispatcher {
 function fakeButton(customId: string) {
     return {
         customId,
+        componentType: 2,
         reply: vi.fn().mockResolvedValue({ resource: { message: { id: 'm-1' } } }),
         deferReply: vi.fn().mockResolvedValue(undefined),
         editReply: vi.fn().mockResolvedValue({ id: 'm-1' }),
@@ -98,8 +99,8 @@ describe('a handler registered on two routes', () => {
     withVote('reports the clicked route as the dispatch id', async ({ vote }) => {
         const { controller, published } = vote;
 
-        await controller.handleButton(fakeButton(Confirm.encode({})));
-        await controller.handleButton(fakeButton(Cancel.encode({})));
+        await controller.handleInteraction(fakeButton(Confirm.encode({})));
+        await controller.handleInteraction(fakeButton(Cancel.encode({})));
 
         expect(published.map((entry) => entry.routeId)).toEqual(['button:confirm', 'button:cancel']);
     });
@@ -107,8 +108,8 @@ describe('a handler registered on two routes', () => {
     withVote('cools down each route on its own', async ({ vote }) => {
         const { controller, published } = vote;
 
-        await controller.handleButton(fakeButton(Confirm.encode({})));
-        await controller.handleButton(fakeButton(Cancel.encode({})));
+        await controller.handleInteraction(fakeButton(Confirm.encode({})));
+        await controller.handleInteraction(fakeButton(Cancel.encode({})));
 
         expect(published.map((entry) => entry.outcome)).toEqual(['handled', 'handled']);
     });
@@ -116,8 +117,8 @@ describe('a handler registered on two routes', () => {
     withVote('still refuses a second click on the route that was already used', async ({ vote }) => {
         const { controller, published } = vote;
 
-        await controller.handleButton(fakeButton(Confirm.encode({})));
-        await controller.handleButton(fakeButton(Confirm.encode({})));
+        await controller.handleInteraction(fakeButton(Confirm.encode({})));
+        await controller.handleInteraction(fakeButton(Confirm.encode({})));
 
         expect(published.map((entry) => entry.outcome)).toEqual(['handled', 'refused']);
     });

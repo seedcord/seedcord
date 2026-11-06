@@ -1,18 +1,24 @@
 'use client';
 
 import * as Dialog from '@radix-ui/react-dialog';
-import { m } from 'motion/react';
+import { AnimatePresence, m } from 'motion/react';
 import { createContext, use, useCallback, useLayoutEffect, useMemo, useRef, useState } from 'react';
 
 import { Card } from './Card';
+import { DIALOG_OVERLAY } from './Dialog';
 import { cn } from './lib/cn';
 import { easeOutStrong } from './lib/motion';
+import { tw } from './lib/tw';
 import { useFocusReturn } from './lib/useFocusReturn';
 
 import type { RowPosition } from './lib/useRovingList';
+import type { Transition } from 'motion/react';
 import type { ReactElement, ReactNode, RefObject } from 'react';
 
-const HEIGHT_ANIMATION_S = 0.2;
+const HEIGHT_TRANSITION: Transition = { duration: 0.2, ease: [...easeOutStrong] };
+const EDGE = tw`px-(--field-inset)`;
+const DIALOG_POSITION = tw`fixed inset-0 z-70 flex items-start justify-center px-4 pt-(--dialog-top) pb-8 [--dialog-top:--spacing(20)] sm:px-6 sm:[--dialog-top:--spacing(24)] md:pb-12 md:[--dialog-top:--spacing(28)] lg:pb-16 lg:[--dialog-top:--spacing(32)]`;
+const DIALOG_CARD = tw`mx-auto flex max-h-[78vh] w-full max-w-xl flex-col bg-(--bg-dim) text-(--text) transition [--field-inset:--spacing(2)] sm:max-w-2xl md:max-w-3xl`;
 
 export interface SearchDialogScroll {
     toTop: () => void;
@@ -22,16 +28,25 @@ export interface SearchDialogScroll {
 
 interface SearchDialogHandles {
     container: HTMLElement | null;
+    listExpanded: boolean;
     scroll: SearchDialogScroll;
 }
 
 const NO_SCROLL: SearchDialogScroll = { toTop: () => {}, toBottom: () => {}, toTopOf: () => {} };
 
-const SearchDialogContext = createContext<SearchDialogHandles>({ container: null, scroll: NO_SCROLL });
+const SearchDialogContext = createContext<SearchDialogHandles>({
+    container: null,
+    listExpanded: false,
+    scroll: NO_SCROLL
+});
 
 // a popover inside the dialog portals to the body without this node
 export function useSearchDialogContainer(): HTMLElement | null {
     return use(SearchDialogContext).container;
+}
+
+export function useSearchDialogListExpanded(): boolean {
+    return use(SearchDialogContext).listExpanded;
 }
 
 export function useSearchDialogScroll(): SearchDialogScroll {
@@ -103,9 +118,55 @@ function useMeasuredHeight(): [number, (el: HTMLDivElement | null) => void] {
     return [height, measureRef];
 }
 
-function Footer({ children }: { children: ReactNode }): ReactElement | null {
-    if (children === undefined) return null;
-    return <div className={cn('border-border hidden shrink-0 border-t px-4 py-2 sm:block')}>{children}</div>;
+function Footer({ children }: { children: ReactNode }): ReactElement {
+    return <div className={cn(EDGE, 'border-border hidden shrink-0 border-t py-2 sm:block')}>{children}</div>;
+}
+
+interface FieldAreaProps {
+    note: ReactNode;
+    lineShown: boolean;
+    children: ReactNode;
+}
+
+function FieldArea({ note, lineShown, children }: FieldAreaProps): ReactElement {
+    return (
+        <div className={cn('relative shrink-0')}>
+            <div className={cn(EDGE, 'py-(--field-inset)')}>{children}</div>
+            <AnimatePresence initial={false}>
+                {note === undefined ? null : (
+                    <m.div
+                        key="note"
+                        initial={{ height: 0 }}
+                        animate={{ height: 'auto' }}
+                        exit={{ height: 0 }}
+                        transition={HEIGHT_TRANSITION}
+                        className={cn(
+                            'overflow-hidden border-(--border)',
+                            'sm:absolute sm:-inset-x-px sm:bottom-full sm:-mb-(--field-inset) sm:rounded-t-md',
+                            'sm:min-h-[calc(var(--field-inset)+1px)] sm:border sm:border-b-0 sm:bg-(--bg-dim)'
+                        )}
+                    >
+                        <div
+                            className={cn(
+                                EDGE,
+                                'pb-(--field-inset) sm:pt-(--field-inset)',
+                                'max-h-[calc(var(--dialog-top)+var(--field-inset)/2)] overflow-y-auto overscroll-contain',
+                                'mask-[linear-gradient(black_calc(100%-var(--field-inset)),transparent)]'
+                            )}
+                        >
+                            {note}
+                        </div>
+                    </m.div>
+                )}
+            </AnimatePresence>
+            <m.div
+                initial={false}
+                animate={{ opacity: lineShown ? 1 : 0 }}
+                transition={HEIGHT_TRANSITION}
+                className={cn('absolute inset-x-0 bottom-0 h-px bg-(--border)')}
+            />
+        </div>
+    );
 }
 
 export interface SearchDialogProps {
@@ -115,7 +176,9 @@ export interface SearchDialogProps {
     title: string;
     description: string;
     field: ReactNode;
-    footer?: ReactNode;
+    fieldNote?: ReactNode;
+    listExpanded: boolean;
+    footer: ReactNode;
     children?: ReactNode;
 }
 
@@ -126,6 +189,8 @@ export function SearchDialog({
     title,
     description,
     field,
+    fieldNote,
+    listExpanded,
     footer,
     children
 }: SearchDialogProps): ReactElement {
@@ -137,27 +202,22 @@ export function SearchDialog({
     const handles = useMemo<SearchDialogHandles>(
         () => ({
             container,
+            listExpanded,
             scroll: listScroll(scrollRef)
         }),
-        [container]
+        [container, listExpanded]
     );
 
     return (
         <Dialog.Root open={open} onOpenChange={onOpenChange}>
             <Dialog.Portal>
-                <Dialog.Overlay
-                    data-command-overlay
-                    className={cn('fixed inset-0 z-60 bg-(--command-overlay)/70 backdrop-blur-sm')}
-                />
+                <Dialog.Overlay data-command-overlay className={cn(DIALOG_OVERLAY, 'z-60')} />
                 <Dialog.Content
                     ref={setContainer}
                     aria-modal
                     {...focusReturn}
                     data-command-content
-                    className={cn(
-                        'fixed inset-0 z-70 flex items-start justify-center px-4 pt-20 pb-8',
-                        'sm:px-6 sm:pt-24 md:pt-28 md:pb-12 lg:pt-32 lg:pb-16'
-                    )}
+                    className={DIALOG_POSITION}
                     onInteractOutside={(event) => {
                         if (isWithinPopover(event.detail.originalEvent.target)) {
                             event.preventDefault();
@@ -171,27 +231,23 @@ export function SearchDialog({
                         if (!panelRef.current.contains(target) && !isWithinPopover(target)) onClose();
                     }}
                 >
-                    <Card
-                        size="none"
-                        className={cn(
-                            'mx-auto flex max-h-[78vh] w-full max-w-xl flex-col overflow-hidden bg-(--bg-dim)',
-                            'text-(--text) transition sm:max-w-2xl md:max-w-3xl'
-                        )}
-                    >
+                    <Card size="none" className={DIALOG_CARD}>
                         <div ref={panelRef} className={cn('flex min-h-0 flex-col')}>
                             <Dialog.Title className={cn('sr-only')}>{title}</Dialog.Title>
                             <Dialog.Description className={cn('sr-only')}>{description}</Dialog.Description>
                             <SearchDialogContext.Provider value={handles}>
-                                {field}
+                                <FieldArea note={fieldNote} lineShown={listExpanded}>
+                                    {field}
+                                </FieldArea>
                                 <m.div
                                     ref={scrollRef}
                                     animate={{ height: contentHeight }}
-                                    transition={{ duration: HEIGHT_ANIMATION_S, ease: [...easeOutStrong] }}
-                                    className={cn('min-h-0 overflow-y-auto overscroll-contain px-2')}
+                                    transition={HEIGHT_TRANSITION}
+                                    className={cn(EDGE, 'min-h-0 overflow-y-auto overscroll-contain')}
                                 >
                                     <div ref={measureRef}>{children}</div>
                                 </m.div>
-                                <Footer>{footer}</Footer>
+                                {listExpanded ? <Footer>{footer}</Footer> : null}
                             </SearchDialogContext.Provider>
                         </div>
                     </Card>

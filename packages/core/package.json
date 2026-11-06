@@ -1,7 +1,7 @@
 {
     "name": "@seedcord/core",
     "type": "module",
-    "version": "0.12.0-next.1",
+    "version": "0.12.1",
     "engines": {
         "node": "^24.22.1 || >=26.12.1",
         "bun": ">=1.4.2"
@@ -78,8 +78,8 @@
     "scripts": {
         "build": "tsdown",
         "clean": "rm -rf dist",
-        "lint": "eslint '**/*.{ts,tsx}' --cache --no-error-on-unmatched-pattern",
-        "lint:fix": "eslint '**/*.{ts,tsx}' --fix --cache --no-error-on-unmatched-pattern",
+        "lint": "eslint '**/*.{ts,tsx}' --max-warnings=0 --cache --no-error-on-unmatched-pattern",
+        "lint:fix": "eslint '**/*.{ts,tsx}' --fix --max-warnings=0 --cache --no-error-on-unmatched-pattern",
         "fmt": "prettier --write '**/*.{ts,tsx,json,md}' --cache --no-error-on-unmatched-pattern",
         "fmt:check": "prettier --check '**/*.{ts,tsx,json,md}' --cache --no-error-on-unmatched-pattern",
         "tc": "tsgo --noEmit",
@@ -88,11 +88,11 @@
         "coverage": "vitest run --coverage"
     },
     "peerDependencies": {
+        "@discordjs/builders": "catalog:peer",
         "envapt": "catalog:peer",
         "typescript": "catalog:consumerTypes"
     },
     "dependencies": {
-        "@discordjs/builders": "catalog:deps",
         "@discordjs/rest": "catalog:deps",
         "@seedcord/custom-id": "workspace:^",
         "@seedcord/errors": "workspace:^",
@@ -106,6 +106,7 @@
         "verkit": "catalog:deps"
     },
     "devDependencies": {
+        "@discordjs/builders": "catalog:peer",
         "@seedcord/eslint-config": "workspace:^",
         "@seedcord/tsconfig": "workspace:^",
         "@seedcord/tsdown-config": "workspace:^",

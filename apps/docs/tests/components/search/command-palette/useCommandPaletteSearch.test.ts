@@ -124,4 +124,17 @@ describe('useCommandPaletteSearch', () => {
         rerender({ query: 'seedcord' });
         expect(result.current.results.map((action) => action.label)).toEqual(['Seedcord']);
     });
+
+    it('keeps the old rows and reports loading while a new scope downloads', async () => {
+        const { result, rerender } = renderHook(
+            ({ scope }: { scope: string }) =>
+                useCommandPaletteSearch({ open: true, query: 'clamp', scope, kind: 'all', prerelease: false }),
+            { initialProps: { scope: 'all' } }
+        );
+        await waitFor(() => expect(result.current.status).toBe('success'));
+
+        rerender({ scope: 'utils' });
+
+        expect(result.current).toMatchObject({ status: 'loading', results: [{ label: 'Clamp' }] });
+    });
 });

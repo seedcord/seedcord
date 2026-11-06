@@ -43,8 +43,8 @@ describe('resolveEmojis', () => {
     it('resolves an application emoji by name, animated flag included', async () => {
         const resolved = await resolveEmojis(restWith().rest, APP, { Confirm: 'confirm', Spin: 'spin' });
 
-        expect(String(resolved.Confirm)).toBe('<:confirm:111>');
-        expect(String(resolved.Spin)).toBe('<a:spin:222>');
+        expect(`${resolved.Confirm}`).toBe('<:confirm:111>');
+        expect(`${resolved.Spin}`).toBe('<a:spin:222>');
     });
 
     it('resolves a guild emoji from a name and guild id', async () => {

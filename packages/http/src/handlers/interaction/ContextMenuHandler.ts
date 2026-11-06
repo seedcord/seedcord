@@ -1,10 +1,8 @@
-import { ContextMenuKindBrand, ContextMenuNamesBrand } from '@seedcord/core/internal';
-import { SeedcordErrorCode } from '@seedcord/errors';
-import { SeedcordTypeError } from '@seedcord/errors/internal';
+import { ContextMenuKindBrand, ContextMenuNamesBrand, runCase } from '@seedcord/core/internal';
 
 import { InteractionHandler } from '#handlers/interaction/InteractionHandler';
 
-import type { NamesFor } from '@seedcord/core/internal';
+import type { CaseReturn, MatchResult, NamesFor, OnlyCases } from '@seedcord/core/internal';
 import type {
     APIInteractionDataResolvedGuildMember,
     APIMessage,
@@ -13,29 +11,16 @@ import type {
     APIUserApplicationCommandInteraction,
     ApplicationCommandType
 } from 'discord-api-types/v10';
-import type { Promisable } from 'type-fest';
 
 type UserMenuCases<Names extends NamesFor<ApplicationCommandType.User>, Ret> = Record<
     Names,
-    (target: APIUser, member: APIInteractionDataResolvedGuildMember | null) => Promisable<Ret>
+    (target: APIUser, member: APIInteractionDataResolvedGuildMember | null) => CaseReturn<Ret>
 >;
 
 type MessageMenuCases<Names extends NamesFor<ApplicationCommandType.Message>, Ret> = Record<
     Names,
-    (target: APIMessage) => Promisable<Ret>
+    (target: APIMessage) => CaseReturn<Ret>
 >;
-
-function caseFor<Ret>(handler: object, cases: object, name: string): (...args: never[]) => Promisable<Ret> {
-    // hasOwn, since a plain lookup for a command named `constructor` returns Object.prototype's
-    const callback = Object.hasOwn(cases, name) ? (cases as Record<string, unknown>)[name] : undefined;
-    if (typeof callback !== 'function')
-        throw new SeedcordTypeError(SeedcordErrorCode.MatchCaseMissing, [
-            handler.constructor.name,
-            'context menu command',
-            name
-        ]);
-    return callback as (...args: never[]) => Promisable<Ret>;
-}
 
 /**
  * Base class for a user context-menu command handler on the HTTP transport (right-click a user).
@@ -67,9 +52,7 @@ export abstract class UserContextMenuHandler<
     }
 
     /** The selected context-menu command's name, without the interaction-kind prefix. */
-    protected get route(): Names {
-        return this.event.data.name as Names;
-    }
+    declare protected readonly route: Names;
 
     /**
      * Run the case for the selected command. Use this only when the handler is registered for several
@@ -80,6 +63,7 @@ export abstract class UserContextMenuHandler<
      * generic. A missing name or an unknown key is a compile error.
      *
      * @param cases - One handler per registered command name.
+     * @typeParam Ret - The type that every case must return. Leave it out to get the union of what the cases return.
      * @returns The result of the case that ran.
      *
      * @example
@@ -95,11 +79,17 @@ export abstract class UserContextMenuHandler<
      * }
      * ```
      */
-    protected async match<Ret>(cases: UserMenuCases<Names, Ret>): Promise<Ret> {
-        const callback = caseFor<Ret>(this, cases, this.route);
-        return await (
-            callback as (target: APIUser, member: APIInteractionDataResolvedGuildMember | null) => Promisable<Ret>
-        )(this.target, this.targetMember);
+    protected async match<Ret = never, Cases extends UserMenuCases<Names, Ret> = UserMenuCases<Names, Ret>>(
+        cases: OnlyCases<Cases, UserMenuCases<Names, Ret>>
+    ): Promise<MatchResult<Ret, Cases>> {
+        return await runCase<MatchResult<Ret, Cases>>(
+            this,
+            cases,
+            'context menu command',
+            this.route,
+            this.target,
+            this.targetMember
+        );
     }
 }
 
@@ -126,9 +116,7 @@ export abstract class MessageContextMenuHandler<
     }
 
     /** The selected context-menu command's name, without the interaction-kind prefix. */
-    protected get route(): Names {
-        return this.event.data.name as Names;
-    }
+    declare protected readonly route: Names;
 
     /**
      * Run the case for the selected command. Use this only when the handler is registered for several
@@ -139,6 +127,7 @@ export abstract class MessageContextMenuHandler<
      * an unknown key is a compile error.
      *
      * @param cases - One handler per registered command name.
+     * @typeParam Ret - The type that every case must return. Leave it out to get the union of what the cases return.
      * @returns The result of the case that ran.
      *
      * @example
@@ -154,8 +143,9 @@ export abstract class MessageContextMenuHandler<
      * }
      * ```
      */
-    protected async match<Ret>(cases: MessageMenuCases<Names, Ret>): Promise<Ret> {
-        const callback = caseFor<Ret>(this, cases, this.route);
-        return await (callback as (target: APIMessage) => Promisable<Ret>)(this.target);
+    protected async match<Ret = never, Cases extends MessageMenuCases<Names, Ret> = MessageMenuCases<Names, Ret>>(
+        cases: OnlyCases<Cases, MessageMenuCases<Names, Ret>>
+    ): Promise<MatchResult<Ret, Cases>> {
+        return await runCase<MatchResult<Ret, Cases>>(this, cases, 'context menu command', this.route, this.target);
     }
 }

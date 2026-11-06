@@ -4,6 +4,7 @@ import { agentLinkHeader } from '@seedcord/ui/agents';
 import { fetchAsset } from '@seedcord/ui/fetchAsset';
 import { PageAsset, TWIN } from '@seedcord/ui/PageAsset';
 import { GUIDE } from '@seedcord/ui/sites';
+import { MARKDOWN, wantsMarkdown } from '@seedcord/ui/wantsMarkdown';
 
 import { ask, type GuideEnv, type WorkerContext } from './src/lib/ask';
 import { redirectFor } from './src/lib/redirects';
@@ -13,35 +14,11 @@ const NOT_FOUND = 404;
 
 const PRODUCTION_HOST = new URL(PRODUCTION_ORIGIN).hostname;
 
-const MARKDOWN = 'text/markdown';
-const HTML = 'text/html';
-
 // cloudflare serves the extension-less files next writes here with no content-type at all
 const TYPED_PATHS: Record<string, string> = {
     '/icon': 'image/png',
     '/apple-icon': 'image/png'
 };
-
-// RFC 9110 reads an absent q as 1. q=0 rejects the type outright
-// a wildcard range scores 0 here. only an exact media type counts
-function quality(accept: string, type: string): number {
-    for (const range of accept.split(',')) {
-        const [media, ...params] = range.split(';').map((part) => part.trim());
-        if (media !== type) continue;
-
-        const q = params.find((param) => param.startsWith('q='));
-        return q === undefined ? 1 : Number(q.slice(2));
-    }
-
-    return 0;
-}
-
-// a browser ranks text/html at least as high as anything else it accepts
-function wantsMarkdown(request: Request): boolean {
-    const accept = request.headers.get('accept') ?? '';
-    const markdown = quality(accept, MARKDOWN);
-    return markdown > 0 && markdown > quality(accept, HTML);
-}
 
 function at(request: Request, pathname: string): Request {
     const url = new URL(request.url);

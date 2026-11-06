@@ -86,4 +86,4 @@ export class Users extends MongooseService<IUser> {
 }
 ```
 
-Run `seedcord codegen` after you add or rename a service. It adds the service's key to `MongooseServices`, the type behind the decorator and `core.db.services`. Then call `await this.core.db.services.users.findByUserId(this.event.user.id)` from a handler. The [Mongoose guide](https://seedcord.org/guide/plugins/mongoose) covers the options, services, and errors.
+Run `seedcord codegen` after you add or rename a service. It adds the service's key to `MongooseServices`, the type behind the decorator and `core.db.services`. Then call `await this.core.db.services.users.findByUserId(this.user.id)` from a handler. The [Mongoose guide](https://seedcord.org/guide/plugins/mongoose) covers the options, services, and errors.

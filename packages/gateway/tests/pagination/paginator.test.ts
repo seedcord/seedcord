@@ -1,5 +1,6 @@
-import { DispatchContext, ButtonRoute, InteractionKind } from '@seedcord/core';
+import { ButtonRoute, InteractionKind } from '@seedcord/core';
 import {
+    DispatchContext,
     ComponentDefsKey,
     InteractionMetadataKey,
     InteractionRouteKeys,
@@ -13,6 +14,7 @@ import { ReplySender } from '#bot/ReplySender';
 import { InteractionHandler } from '#handlers/interaction/InteractionHandler';
 import { Paginator } from '#pagination/Paginator';
 import { ArraySource } from '#pagination/sources';
+import { built } from '#tests/utils/built';
 import { stubBus } from '#tests/utils/stubBus';
 
 import type { RepliableHandler } from '#handlers/RepliableHandler';
@@ -23,7 +25,7 @@ import type { Repliables } from '#src/handlers/interactionTypes';
 import type { PageView } from '@seedcord/core';
 import type { APIContainerComponent, ButtonInteraction, Guild } from 'discord.js';
 
-const dispatch = new DispatchContext('test:probe');
+const dispatch = new DispatchContext('slash', 'probe');
 
 // justified: the paginator reads the interaction and the bus every write reports on
 const core = { bus: stubBus() } as unknown as Core;
@@ -126,7 +128,7 @@ function stubCore(): Core {
 function stubHandler(event: ReturnType<typeof startEvent>): RepliableHandler<Repliables> {
     const interaction = asRepliable(event);
     const core = stubCore();
-    const sender = new ReplySender(interaction, new DispatchContext('slash:page'), core.bus);
+    const sender = new ReplySender(interaction, new DispatchContext('slash', 'page'), core.bus);
     // justified: start reads only these three members off the handler
     return { core, getEvent: () => interaction, sender } as unknown as RepliableHandler<Repliables>;
 }
@@ -141,7 +143,6 @@ describe('Paginator.start', () => {
         expect(event.reply).toHaveBeenCalledOnce();
         const options = event.reply.mock.calls[0]?.[0] as { components: unknown[]; flags: number };
         expect(options.flags & MessageFlags.IsComponentsV2).toBeTruthy();
-        expect(options.flags & MessageFlags.Ephemeral).toBeFalsy();
         expect(containerText(options.components)).toBe('a\nb');
     });
 
@@ -161,17 +162,22 @@ describe('Paginator.start', () => {
         expect(containerText(options.components)).toBe('e');
     });
 
-    it('honors an ephemeral paginator', async () => {
-        const ephemeral = new Paginator({
+    it('sends an ephemeral first page unless the config sets ephemeral to false', async () => {
+        const defaultEvent = startEvent();
+        await pager.start(stubHandler(defaultEvent));
+        const defaultOptions = defaultEvent.reply.mock.calls[0]?.[0] as { flags: number };
+        expect(defaultOptions.flags & MessageFlags.Ephemeral).toBeTruthy();
+
+        const board = new Paginator({
             prefix: 'invites',
             source: new ArraySource(() => letters, { perPage: 2 }),
             renderItem: (letter) => letter,
-            ephemeral: true
+            ephemeral: false
         });
-        const event = startEvent();
-        await ephemeral.start(stubHandler(event));
-        const options = event.reply.mock.calls[0]?.[0] as { flags: number };
-        expect(options.flags & MessageFlags.Ephemeral).toBeTruthy();
+        const boardEvent = startEvent();
+        await board.start(stubHandler(boardEvent));
+        const boardOptions = boardEvent.reply.mock.calls[0]?.[0] as { flags: number };
+        expect(boardOptions.flags & MessageFlags.Ephemeral).toBeFalsy();
     });
 });
 
@@ -217,7 +223,7 @@ describe('Paginator nav handler', () => {
 
     it('acks, decodes the target page off the wire, and edits @original in place', async () => {
         const event = navEvent(pager.cursor.encode({ page: 2, slot: 0 }));
-        await new BansNav(asButton(event), core, dispatch).execute();
+        await built(BansNav, asButton(event), core, dispatch).execute();
 
         expect(event.deferUpdate).toHaveBeenCalledOnce();
         // the bare edit rewrites @original (the source message) via editReply in the deferred-update state
@@ -244,7 +250,7 @@ describe('Paginator context', () => {
     it('threads the interaction user and guild (DM null) into the PageContext it builds', async () => {
         seenContexts.length = 0;
         const event = navEvent(Reminders.cursor.encode({ page: 0, slot: 0 }));
-        await new RemindersNav(asButton(event), core, dispatch).execute();
+        await built(RemindersNav, asButton(event), core, dispatch).execute();
 
         const ctx = seenContexts[0];
         expect(ctx?.interaction).toBe(event);

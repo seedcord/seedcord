@@ -32,9 +32,9 @@ function freshCore(): { core: Core; published: SubscriptionData<'interactionDisp
     return { core, published };
 }
 
-async function dispatchRoute(core: Core, routeId: string): Promise<void> {
+async function dispatchRoute(core: Core, route: string): Promise<void> {
     const execute = await dispatchInteraction({
-        match: { kind: InteractionKind.Slash, routeId, ctor: Vote },
+        match: { kind: InteractionKind.Slash, route, fallback: false, ctor: Vote },
         payload: slashPayload('vote') as ValidInteractionTypes,
         core,
         middlewares: new MiddlewareRegistry<InteractionMiddlewareConstructor>(interactionMiddleware)
@@ -46,8 +46,8 @@ describe('a gate keyed on the route the router matched', () => {
     it('cools down each route on its own', async () => {
         const { core, published } = freshCore();
 
-        await dispatchRoute(core, 'slash:confirm');
-        await dispatchRoute(core, 'slash:cancel');
+        await dispatchRoute(core, 'confirm');
+        await dispatchRoute(core, 'cancel');
 
         expect(published.map((entry) => entry.outcome)).toEqual(['handled', 'handled']);
     });
@@ -55,8 +55,8 @@ describe('a gate keyed on the route the router matched', () => {
     it('still refuses a second run of the route that was already used', async () => {
         const { core, published } = freshCore();
 
-        await dispatchRoute(core, 'slash:confirm');
-        await dispatchRoute(core, 'slash:confirm');
+        await dispatchRoute(core, 'confirm');
+        await dispatchRoute(core, 'confirm');
 
         expect(published.map((entry) => entry.outcome)).toEqual(['handled', 'refused']);
     });

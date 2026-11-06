@@ -6,7 +6,7 @@ import { cardJson } from '#tests/utils/cardText';
 
 import type { RenderContext } from '@seedcord/types';
 
-const dispatch = new DispatchContext('slash:probe');
+const dispatch = new DispatchContext('slash', 'probe');
 const ctx: RenderContext = { uuid: '11111111-2222-3333-4444-555555555555', dispatch };
 
 describe('Fault', () => {
