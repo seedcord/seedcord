@@ -174,7 +174,7 @@ A reader attaches `which` to the noun right before it, and `it` to the last noun
 
 <!--prettier-ignore-end-->
 
-For every `which`, `it`, `this`, and `that`, find the noun it lands on by that rule. If it's the wrong one, repeat the right noun or split the sentence.
+For every `which`, `it`, `this`, and `that`, find the noun it points at by that rule. If it's the wrong one, repeat the right noun or split the sentence.
 
 ### Give a trailing participle its subject
 
@@ -236,7 +236,7 @@ Before a sentence ships, cut it at the connective and read what is left. When th
 
 Prose written to a rule set collapses toward whichever single form satisfies every rule, and the collapse is invisible from inside one sentence. So judge it as a block, a paragraph or a changeset or a file's comments read end to end.
 
-A person writes unevenly. Some sentences land in four words. One runs long because the thing was genuinely hard. One admits uncertainty. That unevenness gives it a natural feel.
+A person writes unevenly. Some sentences end in four words. One runs long because the thing was genuinely hard. One admits uncertainty. That unevenness gives it a natural feel.
 
 Aim for a spread in length, in how sentences open, and in what each one is doing. When two sentences in a row run the same length and turn at the same joint, rewrite one.
 
@@ -325,9 +325,9 @@ Going to a period first produces two stubby sentences carrying what one short li
 
 ```ts
 // Bad: two facts jammed with a comma
-// the cache is keyed by file, a rename lands as a fresh entry
+// the cache is keyed by file, a rename adds a fresh entry
 // Good (2): the connector says how the halves relate
-// a rename lands as a fresh entry because the cache is keyed by file
+// a rename adds a fresh entry because the cache is keyed by file
 ```
 
 **Replace a banned mark with punctuation that does the same job.** A `;` or `—` between two complete clauses is holding two thoughts apart, and a bare comma cannot do that. Use a period.
@@ -417,7 +417,11 @@ Illustrative. When a word is missing from the table, apply section 1 and the tes
 | names / naming, as a verb | banned. write the verb for what actually happens and rephrase the sentence in simple words if needed |
 | drop / dropped / dropping, standing in for a more exact verb | work out what happens to the thing in that sentence, then write the verb for it |
 | arm / arms / armed, standing in for a more exact thing | write the thing itself: a `match` case, a gate in an `or`, a union member, a callback, a pending confirm |
-| gone / is gone / goes away, standing in for what happened to a thing | write who did what to it: `stop()` closed the server, `runSession` set the field to `null`, the build deleted the file |
+| go / goes / gone / going, standing in for what happens to a thing (`can go`, `goes away`, `is gone`, `go through it`) | banned. write who does what to it: delete it, `stop()` closes the server, the build deletes the file, every caller uses it |
+| land / lands / landed / landing, in any form (`landed on next`, `lands in`, `the fix lands`) | banned. write what happened: merged into `next`, is defined in, the build writes it, the PR adds it |
+| fire / fires / fired / firing, standing in for what code does (`the event fires`, `the timer fires`, `one fire of the event`) | write the call: the client emits `ready`, the timer calls `run()`, the router dispatches the event. a variable or member called `firing` keeps its name |
+| agree / agrees / disagree, said of code or values (`the two agree`, `so the timestamps agree`) | say how they match: come from the same read, hold the same value, `durationMs` starts at `startedAt` |
+| survive / survives / survived / surviving, in any form (`survives a restart`, `survives a save`) | banned. say what keeps the thing: the driver stores the job, a save doesn't clear the map, the record is still there after a restart |
 | stays / stay / stayed / remains, in any form | banned. say what keeps the thing that way, or state the fact plainly: `load()` registers it once, the connection is still open, the file still exports it |
 | worth noting / surprisingly / you may notice | delete, state the fact |
 | good catch / fair point / great question | delete |
@@ -456,7 +460,7 @@ Run these on every piece of prose before it's written to disk, whatever the surf
 
 1. **Negation.** Find every verb followed by `no`, as in "has no", "takes no", "sets no". Negate the verb or state the positive fact (section 5).
 2. **Connectors.** Read each `and`, `but`, `so`, `because`, `since`, `while`, `then`, and `which` against the relation its two halves really have (section 6).
-3. **Pointers.** For each `which`, `it`, `this`, and `that`, find the noun it lands on (section 2). Then find every noun followed directly by another subject and its verb, and put the dropped `that` back or fold the clause into one word (section 2).
+3. **Pointers.** For each `which`, `it`, `this`, and `that`, find the noun it points at (section 2). Then find every noun followed directly by another subject and its verb, and put the dropped `that` back or fold the clause into one word (section 2).
 4. **Who does it.** For each sentence with a generic subject, ask who performs the verb (section 2).
 5. **One read at speed.** Read the text once as someone who has never seen it. Rewrite every sentence where you stopped and started over.
 6. **The bans.** Section 6 punctuation, anthropomorphism, contrast-negation, and every section 7 word, starting with `names` as a verb.
