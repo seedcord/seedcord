@@ -1,5 +1,4 @@
 import { paint } from '@seedcord/errors';
-import { displayPath } from '@seedcord/errors/internal';
 import { Envapter } from 'envapt';
 
 import { FolderExports } from '#hmr/FolderExports';
@@ -31,7 +30,7 @@ export class SubscriberLoader implements Initializeable, HmrAware {
         this.subscriberFiles = new FolderExports({
             dir: directory,
             is: this.isSubscriber.bind(this),
-            register: this.registerSubscriber.bind(this),
+            register: (ctor) => this.bus[RegisterSubscriber](ctor),
             unregister: (ctor) => this.bus[UnregisterSubscriber](ctor),
             logger: busLoggerOf(this.bus)
         });
@@ -59,11 +58,6 @@ export class SubscriberLoader implements Initializeable, HmrAware {
     /** @internal */
     public async onHmr(event: HmrUpdateEvent): Promise<void> {
         await this.subscriberFiles?.handle(event);
-    }
-
-    private registerSubscriber(ctor: StoredSubscriberCtor, file: string): void {
-        this.bus[RegisterSubscriber](ctor);
-        busLoggerOf(this.bus).utils.registration(ctor.name, displayPath(file), undefined, 'trace');
     }
 
     private isSubscriber(value: unknown): value is StoredSubscriberCtor {

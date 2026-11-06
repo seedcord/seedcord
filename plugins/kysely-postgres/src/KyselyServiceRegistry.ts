@@ -1,6 +1,5 @@
 import { FolderExports } from '@seedcord/core';
 import { paint } from '@seedcord/errors';
-import { displayPath } from '@seedcord/errors/internal';
 import { importFiles } from '@seedcord/utils';
 
 import { KyselyServiceMetadataKey } from './decorators/RegisterKyselyService';
@@ -15,8 +14,6 @@ import type { HmrUpdateEvent } from '@seedcord/types';
 
 interface FoundService {
     readonly key: string;
-    readonly fullPath: string;
-    readonly relativePath: string;
     readonly Service: KyselyServiceConstructor;
 }
 
@@ -38,7 +35,7 @@ export class KyselyServiceRegistry {
         this.serviceFiles = new FolderExports({
             dir,
             is: (value): value is KyselyServiceConstructor => this.isServiceClass(value),
-            register: (Service, file) => this.initializeService(Service, file),
+            register: (Service) => this.initializeService(Service),
             unregister: (Service) => this.unregister(Service),
             logger
         });
@@ -57,11 +54,11 @@ export class KyselyServiceRegistry {
     }
 
     public async *serviceClassesIn(dir: string): AsyncGenerator<FoundService> {
-        for await (const { fullPath, relativePath, imported } of importFiles(dir)) {
+        for await (const { imported } of importFiles(dir)) {
             for (const Service of Object.values(imported)) {
                 if (!this.isServiceClass(Service)) continue;
                 const key = serviceKeyOf(Service);
-                if (key !== undefined) yield { key, fullPath, relativePath, Service };
+                if (key !== undefined) yield { key, Service };
             }
         }
     }
@@ -84,10 +81,9 @@ export class KyselyServiceRegistry {
         if (key) Reflect.deleteProperty(this.services, key);
     }
 
-    private initializeService(Service: KyselyServiceConstructor, file: string): void {
+    private initializeService(Service: KyselyServiceConstructor): void {
         // eslint-disable-next-line no-new -- the base ctor calls _register, so constructing is the registration
         new Service(this.plugin, this.core);
-        this.logger.utils.registration(Service.name, displayPath(file), undefined, 'trace');
     }
 
     private isServiceClass(obj: unknown): obj is KyselyServiceConstructor {

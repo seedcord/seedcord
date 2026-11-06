@@ -129,7 +129,6 @@ export class Mongoose extends Plugin<{ transport: 'any'; runtime: 'server' }> {
             });
     }
 
-
     /** @internal */
     _register(key: string, instance: unknown): void {
         this.serviceRegistry.register(key, instance);

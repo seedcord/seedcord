@@ -1,4 +1,5 @@
 import { paint } from '@seedcord/errors';
+import { displayPath } from '@seedcord/errors/internal';
 import { formatFilePath, importFiles } from '@seedcord/utils';
 import { botFolder, fileUrl, vitePluginThrew } from '@seedcord/utils/internal';
 
@@ -7,6 +8,8 @@ import type { HmrUpdateEvent } from '@seedcord/types';
 
 interface FolderExportsOptions<TUnit> {
     dir: string;
+    /** Folders inside `dir` to skip, like a middlewares folder that a second `FolderExports` loads. */
+    exclude?: readonly string[];
     /** Receives every value a file exports. The ones it accepts are the folder's "units". */
     is: (value: unknown) => value is TUnit;
     register: (unit: TUnit, file: string) => void;
@@ -22,9 +25,8 @@ let testImports = 0;
  * Registers the values that the files in one folder export, and keeps them registered while you
  * edit those files under `seedcord dev`. `is` picks which exports count.
  *
- * A value that two files
- * export, like a class and the barrel that re-exports it, registers once and unregisters once
- * neither file exports it.
+ * A value that two files export, like a class and the barrel that re-exports it, registers once and
+ * unregisters once neither file exports it.
  *
  * Call `load()` from your plugin's `init()` and `handle()` from its `onHmr()`.
  *
@@ -64,7 +66,7 @@ export class FolderExports<TUnit> {
         this.#blockedFiles.clear();
         this.#options.logger.debug(paint.mute(this.#options.dir));
         for await (const { fullPath, imported } of importFiles(this.#options.dir)) {
-            this.#register(fullPath, this.#unitsIn(imported));
+            if (this.#holds(fullPath)) this.#register(fullPath, this.#unitsIn(imported));
         }
     }
 
@@ -83,11 +85,18 @@ export class FolderExports<TUnit> {
         const retried = freesNames ? [...this.#blockedFiles].filter((blocked) => blocked !== file) : [];
 
         if (type === 'delete' || type === 'deleteDir') {
+            const deleted = new Set(this.#fileToUnits.get(file));
             this.#report('Unloaded', this.#unload(file).map(displayName), [file]);
-            await this.#reload(retried, event);
+            const importers = affected.filter((candidate) => candidate !== file);
+            await this.#reload([...importers, ...retried], event, deleted);
         } else {
             await this.#reload([...affected, ...retried], event);
         }
+    }
+
+    #holds(file: string): boolean {
+        const { dir, exclude = [] } = this.#options;
+        return botFolder(dir).holdsModule(file) && !exclude.some((skipped) => botFolder(skipped).holds(file));
     }
 
     #isTracked(unit: TUnit): boolean {
@@ -98,11 +107,15 @@ export class FolderExports<TUnit> {
         return Object.values(imported).filter(this.#options.is);
     }
 
-    async #reload(candidates: Iterable<string>, { type, rollback = true }: HmrUpdateEvent): Promise<void> {
-        const inFolder = botFolder(this.#options.dir);
-        const files = [...new Set(candidates)].filter((file) => inFolder.holdsModule(file));
-        // every file unloads before any file loads, so no file in this save can block another
-        const lastGood = new Map(files.map((file) => [file, this.#unload(file)]));
+    async #reload(
+        candidates: Iterable<string>,
+        { type, rollback = true }: HmrUpdateEvent,
+        deleted: ReadonlySet<TUnit> = new Set()
+    ): Promise<void> {
+        const files = [...new Set(candidates)].filter((file) => this.#holds(file));
+        // every file unloads before any file loads, so no file in this save can block another.
+        // a rollback leaves out what a deleted file exported, since a barrel re-exporting it can't import anymore
+        const lastGood = new Map(files.map((file) => [file, this.#unload(file).filter((unit) => !deleted.has(unit))]));
 
         const startedAt = Date.now();
         const names: string[] = [];
@@ -129,7 +142,7 @@ export class FolderExports<TUnit> {
         this.#hmrLogger.debug(`${verb} ${paint.sky.bold(names.join(', '))} from ${paint.mute(from)}${timing}`);
     }
 
-    // a rollback registers the returned objects again, which is how a live db connection survives one
+    // a rollback registers these same class objects again, so a db connection that a plugin keyed to one stays open
     #unload(file: string): TUnit[] {
         const units = [...(this.#fileToUnits.get(file) ?? [])];
         this.#fileToUnits.delete(file);
@@ -143,9 +156,9 @@ export class FolderExports<TUnit> {
     async #load(file: string, lastGood: TUnit[], rollback: boolean): Promise<string[]> {
         try {
             const units = this.#unitsIn(await this.#import(file));
-            this.#register(file, units);
+            const registered = this.#register(file, units);
             if (lastGood.length > 0 && units.length === 0) this.#warnUnitsLost(file, lastGood);
-            return units.map(displayName);
+            return registered.map(displayName);
         } catch (error) {
             const path = formatFilePath(file);
             this.#hmrLogger.error(`Failed to reload file: ${path}`, vitePluginThrew(error) ?? error);
@@ -172,13 +185,20 @@ export class FolderExports<TUnit> {
         return (await import(/* @vite-ignore */ url)) as Record<string, unknown>;
     }
 
-    #register(file: string, units: TUnit[]): void {
+    // returns what it called register for, leaving out units another file already holds
+    #register(file: string, units: TUnit[]): TUnit[] {
+        const registered: TUnit[] = [];
         try {
             for (const unit of units) {
-                if (!this.#isTracked(unit)) this.#options.register(unit, file);
+                if (!this.#isTracked(unit)) {
+                    this.#options.register(unit, file);
+                    this.#options.logger.utils.registration(displayName(unit), displayPath(file), undefined, 'trace');
+                    registered.push(unit);
+                }
                 const tracked = this.#fileToUnits.get(file) ?? new Set();
                 this.#fileToUnits.set(file, tracked.add(unit));
             }
+            return registered;
         } catch (error) {
             // a failed register can leave part of the file registered, and the name it wanted may free up on a later save
             this.#unload(file);

@@ -128,9 +128,7 @@ export class EventDispatcher implements Initializeable, HmrAware {
     private unregisterHandler(handlerClass: EventHandlerConstructor): void {
         for (const [event, handlers] of this.eventMap) {
             const index = handlers.findIndex((h) => h.ctor === handlerClass);
-            if (!(index !== -1)) {
-                continue;
-            }
+            if (index === -1) continue;
 
             handlers.splice(index, 1);
             if (handlers.length === 0) {

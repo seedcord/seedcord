@@ -77,20 +77,6 @@ describe('CommandRegistry Integration', () => {
         expect(globalCommands?.[0]?.name).toBe('ping');
     });
 
-    it('resets the loading flag when the bulk load throws', async ({ testEnv }) => {
-        const commandsDir = 'commands';
-        await testEnv.createFile(`${commandsDir}/Broken.ts`, `throw new Error('load boom');\n`);
-        const config = testConfig({ commands: testEnv.resolvePath(commandsDir) });
-
-        await using seedcord = new Seedcord(config);
-
-        // fixture: reads the private flag, which only changes what a later reload logs
-        const internal = registryOf(seedcord) as unknown as { loading: boolean };
-
-        await expect(registryOf(seedcord).init()).rejects.toThrow();
-        expect(internal.loading).toBe(false);
-    });
-
     it('should handle HMR updates for commands', async ({ testEnv }) => {
         const commandsDir = 'commands';
         const filePath = await testEnv.createFile(

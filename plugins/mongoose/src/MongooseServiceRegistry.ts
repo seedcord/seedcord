@@ -1,6 +1,6 @@
 import { FolderExports } from '@seedcord/core';
 import { SeedcordErrorCode, paint } from '@seedcord/errors';
-import { displayPath, SeedcordError } from '@seedcord/errors/internal';
+import { SeedcordError } from '@seedcord/errors/internal';
 import { importFiles } from '@seedcord/utils';
 import mongoose from 'mongoose';
 
@@ -16,8 +16,6 @@ import type { HmrUpdateEvent } from '@seedcord/types';
 
 interface FoundService {
     readonly key: string;
-    readonly fullPath: string;
-    readonly relativePath: string;
     readonly Service: MongooseServiceConstructor;
 }
 
@@ -40,7 +38,7 @@ export class MongooseServiceRegistry {
         this.serviceFiles = new FolderExports({
             dir,
             is: (value): value is MongooseServiceConstructor => this.isServiceClass(value),
-            register: (Service, file) => this.initializeService(Service, file),
+            register: (Service) => this.initializeService(Service),
             unregister: (Service) => this.unregister(Service),
             logger
         });
@@ -68,11 +66,11 @@ export class MongooseServiceRegistry {
     }
 
     public async *serviceClassesIn(dir: string): AsyncGenerator<FoundService> {
-        for await (const { fullPath, relativePath, imported } of importFiles(dir)) {
+        for await (const { imported } of importFiles(dir)) {
             for (const Service of Object.values(imported)) {
                 if (!this.isServiceClass(Service)) continue;
                 const key = metadataString(ServiceMetadataKey, Service);
-                if (key !== undefined) yield { key, fullPath, relativePath, Service };
+                if (key !== undefined) yield { key, Service };
             }
         }
     }
@@ -90,7 +88,7 @@ export class MongooseServiceRegistry {
         await this.serviceFiles.handle(event);
     }
 
-    private initializeService(Service: MongooseServiceConstructor, file: string): void {
+    private initializeService(Service: MongooseServiceConstructor): void {
         // isServiceClass already checked ServiceMetadataKey exists, since the decorator writes both keys together
         const modelName = Reflect.getMetadata(ModelNameMetadataKey, Service) as string;
 
@@ -111,7 +109,6 @@ export class MongooseServiceRegistry {
 
         // eslint-disable-next-line no-new -- the base ctor calls _register, so constructing is the registration
         new Service(this.plugin, this.core, model);
-        this.logger.utils.registration(Service.name, displayPath(file), undefined, 'trace');
     }
 
     private unregister(Service: MongooseServiceConstructor): void {

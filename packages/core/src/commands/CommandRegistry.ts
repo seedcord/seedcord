@@ -1,6 +1,6 @@
 import { SlashCommandBuilder } from '@discordjs/builders';
 import { SeedcordErrorCode, paint } from '@seedcord/errors';
-import { SeedcordError } from '@seedcord/errors/internal';
+import { displayPath, SeedcordError } from '@seedcord/errors/internal';
 import { Logger } from '@seedcord/logger';
 import { formatFilePath } from '@seedcord/utils';
 import { botFolder } from '@seedcord/utils/internal';
@@ -204,7 +204,7 @@ export class CommandRegistry implements Initializeable, HmrAware {
         this.ctorToCommand.set(Ctor, { name: comp.name, ...target });
 
         if (this.loading) {
-            this.loadedCommands.push({ name: comp.name, from: formatFilePath(file), kind });
+            this.loadedCommands.push({ name: comp.name, from: displayPath(file), kind });
         }
     }
 

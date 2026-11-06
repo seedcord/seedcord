@@ -16,8 +16,8 @@ type LoggerSpy = Record<'debug' | 'info' | 'warn' | 'error', ReturnType<typeof v
 
 function fakeLogger(): { logger: Logger; spies: LoggerSpy } {
     const spies = { debug: vi.fn(), info: vi.fn(), warn: vi.fn(), error: vi.fn() };
-    const logger = { ...spies, withChannel: (): unknown => logger };
-    // justified: FolderExports reads only these levels and withChannel
+    const logger = { ...spies, utils: { registration: vi.fn() }, withChannel: (): unknown => logger };
+    // justified: FolderExports reads only these levels, utils.registration, and withChannel
     return { logger: logger as unknown as Logger, spies };
 }
 
@@ -90,24 +90,44 @@ describe('FolderExports', () => {
         });
     });
 
-    it('ignores a sibling directory that shares the folder prefix', async () => {
-        const siblingDir = join(dir, 'commands-extra');
-        mkdirSync(siblingDir);
-        const siblingFile = join(siblingDir, 'util.mjs');
-        writeFileSync(siblingFile, 'export class UtilThing {}\n');
+    describe('saves outside the folder', () => {
+        it('ignores a sibling directory that shares the folder prefix', async () => {
+            const siblingDir = join(dir, 'commands-extra');
+            mkdirSync(siblingDir);
+            const siblingFile = join(siblingDir, 'util.mjs');
+            writeFileSync(siblingFile, 'export class UtilThing {}\n');
 
-        await folder.handle({ file: siblingFile, type: 'update' });
+            await folder.handle({ file: siblingFile, type: 'update' });
 
-        expect(register).not.toHaveBeenCalled();
-    });
+            expect(register).not.toHaveBeenCalled();
+        });
 
-    it.each(['.drafts', 'node_modules/pkg'])('ignores a file saved under %s, which startup skips', async (sub) => {
-        mkdirSync(join(unitsDir, sub), { recursive: true });
-        const file = write(join(sub, 'Ping.mjs'), 'export class Ping {}\n');
+        it('ignores a save under an excluded subfolder, like middlewares that another instance loads', async () => {
+            const { logger, spies: nestedSpies } = fakeLogger();
+            const nested = new FolderExports<TestUnit>({
+                dir: unitsDir,
+                exclude: [join(unitsDir, 'middlewares')],
+                is: isUnit,
+                register,
+                unregister,
+                logger
+            });
+            mkdirSync(join(unitsDir, 'middlewares'));
+            const file = write(join('middlewares', 'Broken.mjs'), "throw new Error('typo');\n");
 
-        await folder.handle({ file, type: 'update' });
+            await nested.handle({ file, type: 'update' });
 
-        expect(register).not.toHaveBeenCalled();
+            expect(nestedSpies.error).not.toHaveBeenCalled();
+        });
+
+        it.each(['.drafts', 'node_modules/pkg'])('ignores a file saved under %s, which startup skips', async (sub) => {
+            mkdirSync(join(unitsDir, sub), { recursive: true });
+            const file = write(join(sub, 'Ping.mjs'), 'export class Ping {}\n');
+
+            await folder.handle({ file, type: 'update' });
+
+            expect(register).not.toHaveBeenCalled();
+        });
     });
 
     it('warns when a saved file loses its last export, and stays quiet for a file that never had one', async () => {
@@ -207,6 +227,23 @@ describe('FolderExports', () => {
             expect(lines[0]).toContain('2 files');
         });
 
+        it('reports a class once when the file exports it under two names', async () => {
+            const file = write('Ping.mjs', 'export class Ping {}\nexport { Ping as Pong };\n');
+
+            await folder.handle({ file, type: 'update' });
+
+            expect(debugLines(spies).find((line) => line.includes('Reloaded'))).toMatch(/Reloaded \S*Ping\S* from/);
+        });
+
+        it('stays quiet when a new barrel re-exports a class that is already registered', async () => {
+            await loaded({ 'Ping.mjs': 'export class Ping {}\n' });
+            const barrel = write('index.mjs', "export { Ping } from './Ping.mjs';\n");
+
+            await folder.handle({ file: barrel, type: 'create' });
+
+            expect(debugLines(spies).some((line) => line.includes('Registered'))).toBe(false);
+        });
+
         it('stays quiet when the file registers nothing', async () => {
             const file = write('Empty.mjs', 'export const value = 1;\n');
 
@@ -216,26 +253,67 @@ describe('FolderExports', () => {
         });
     });
 
-    it.each(['delete', 'deleteDir'] as const)('unregisters a loaded export on %s', async (type) => {
-        const { 'Ping.mjs': file = '' } = await loaded({ 'Ping.mjs': 'export class Ping {}\n' });
+    describe('deletes', () => {
+        it.each(['delete', 'deleteDir'] as const)('unregisters a loaded export on %s', async (type) => {
+            const { 'Ping.mjs': file = '' } = await loaded({ 'Ping.mjs': 'export class Ping {}\n' });
 
-        await folder.handle({ file, type });
+            await folder.handle({ file, type });
 
-        expect(unregistered()).toEqual(['Ping']);
-        expect(register).not.toHaveBeenCalled();
-    });
-
-    it('keeps a value registered until the last file that exports it is deleted', async () => {
-        const { 'Ping.mjs': file = '', 'index.mjs': barrel = '' } = await loaded({
-            'Ping.mjs': 'export class Ping {}\n',
-            'index.mjs': "export { Ping } from './Ping.mjs';\n"
+            expect(unregistered()).toEqual(['Ping']);
+            expect(register).not.toHaveBeenCalled();
         });
 
-        await folder.handle({ file: barrel, type: 'delete' });
-        expect(unregister).not.toHaveBeenCalled();
+        it('keeps a value registered until the last file that exports it is deleted', async () => {
+            const { 'Ping.mjs': file = '', 'index.mjs': barrel = '' } = await loaded({
+                'Ping.mjs': 'export class Ping {}\n',
+                'index.mjs': "export { Ping } from './Ping.mjs';\n"
+            });
 
-        await folder.handle({ file, type: 'delete' });
-        expect(unregistered()).toEqual(['Ping']);
+            await folder.handle({ file: barrel, type: 'delete' });
+            expect(unregister).not.toHaveBeenCalled();
+
+            await folder.handle({ file, type: 'delete' });
+            expect(unregistered()).toEqual(['Ping']);
+        });
+
+        it('unregisters a value when its own file is deleted while a barrel still re-exports it', async () => {
+            const { 'Ping.mjs': file = '', 'index.mjs': barrel = '' } = await loaded({
+                'Ping.mjs': 'export class Ping {}\n',
+                'index.mjs': "export { Ping } from './Ping.mjs';\n"
+            });
+            rmSync(file);
+
+            await folder.handle({ file, type: 'delete', affectedModules: [file, barrel] });
+
+            expect(unregistered()).toEqual(['Ping']);
+            expect(register).not.toHaveBeenCalled();
+        });
+    });
+
+    describe('a register that throws partway through a file', () => {
+        beforeEach(() => {
+            register.mockImplementation((unit) => {
+                if (unit.name === 'Second') throw new Error('Second is taken');
+            });
+            write('Pair.mjs', 'export class First {}\nexport class Second {}\n');
+            write('Other.mjs', 'export class Other {}\n');
+        });
+
+        it('unregisters what the file already registered', async () => {
+            await folder.handle({ file: join(unitsDir, 'Pair.mjs'), type: 'update' });
+
+            expect(registered()).toEqual(['First', 'Second']);
+            expect(unregistered()).toEqual(['First']);
+        });
+
+        it('rejects load() and retries the file once a later save unloads something', async () => {
+            await expect(folder.load()).rejects.toThrow('Second is taken');
+            register.mockReset();
+
+            await folder.handle({ file: join(unitsDir, 'Other.mjs'), type: 'delete' });
+
+            expect(registered()).toEqual(['First', 'Second']);
+        });
     });
 
     describe('a file whose register throws because another file holds its route', () => {
@@ -257,9 +335,13 @@ describe('FolderExports', () => {
             newFile = write('Versions.mjs', 'export class Versions {}\n');
         });
 
-        it('loads once the other file unloads', async () => {
+        async function oldHoldsTheRoute(): Promise<void> {
             await folder.handle({ file: oldFile, type: 'update' });
             await folder.handle({ file: newFile, type: 'create' });
+        }
+
+        it('loads once the other file unloads', async () => {
+            await oldHoldsTheRoute();
             expect(owner?.name).toBe('Old');
 
             await folder.handle({ file: oldFile, type: 'delete' });
@@ -268,8 +350,7 @@ describe('FolderExports', () => {
         });
 
         it('stops retrying once a save of the file itself loads it', async () => {
-            await folder.handle({ file: oldFile, type: 'update' });
-            await folder.handle({ file: newFile, type: 'create' });
+            await oldHoldsTheRoute();
             owner = undefined;
             await folder.handle({ file: newFile, type: 'update' });
             register.mockClear();
@@ -307,8 +388,7 @@ describe('FolderExports', () => {
         });
 
         it('blocks a file that fails while another file in the save took its route', async () => {
-            await folder.handle({ file: oldFile, type: 'update' });
-            await folder.handle({ file: newFile, type: 'create' });
+            await oldHoldsTheRoute();
             write('Old.mjs', "throw new Error('typo');\n");
 
             await folder.handle({ file: oldFile, type: 'update', affectedModules: [newFile, oldFile] });
@@ -323,16 +403,13 @@ describe('FolderExports', () => {
         });
 
         it('logs one failure per save while the other file still holds the route', async () => {
-            await folder.handle({ file: oldFile, type: 'update' });
-
-            await folder.handle({ file: newFile, type: 'create' });
+            await oldHoldsTheRoute();
 
             expect(spies.error).toHaveBeenCalledTimes(1);
         });
 
         it('waits for a save that unloads something before it retries', async () => {
-            await folder.handle({ file: oldFile, type: 'update' });
-            await folder.handle({ file: newFile, type: 'create' });
+            await oldHoldsTheRoute();
             const other = write('Other.mjs', 'export const value = 1;\n');
 
             await folder.handle({ file: other, type: 'update' });
@@ -341,8 +418,7 @@ describe('FolderExports', () => {
         });
 
         it('reloads a blocked file once when a save also lists it as affected', async () => {
-            await folder.handle({ file: oldFile, type: 'update' });
-            await folder.handle({ file: newFile, type: 'create' });
+            await oldHoldsTheRoute();
 
             await folder.handle({ file: oldFile, type: 'update', affectedModules: [oldFile, newFile] });
 
@@ -360,48 +436,50 @@ describe('FolderExports', () => {
         });
     });
 
-    it('restores the last-good export when a reload fails', async () => {
-        const { 'Broken.mjs': file = '' } = await loaded({ 'Broken.mjs': 'export class Broken {}\n' });
-        write('Broken.mjs', "throw new Error('boom');\n");
+    describe('a file that throws on import', () => {
+        it('restores the last-good export', async () => {
+            const { 'Broken.mjs': file = '' } = await loaded({ 'Broken.mjs': 'export class Broken {}\n' });
+            write('Broken.mjs', "throw new Error('boom');\n");
 
-        await folder.handle({ file, type: 'update' });
+            await folder.handle({ file, type: 'update' });
 
-        expect(unregistered()).toEqual(['Broken']);
-        expect(register.mock.calls).toEqual([[expect.objectContaining({ name: 'Broken' }), file]]);
-    });
+            expect(unregistered()).toEqual(['Broken']);
+            expect(register.mock.calls).toEqual([[expect.objectContaining({ name: 'Broken' }), file]]);
+        });
 
-    it('does not log a rollback for a file that had no working version', async () => {
-        const file = write('Fresh.mjs', "throw new Error('boom');\n");
+        it('does not log a rollback for a file that had no working version', async () => {
+            const file = write('Fresh.mjs', "throw new Error('boom');\n");
 
-        await folder.handle({ file, type: 'create' });
+            await folder.handle({ file, type: 'create' });
 
-        expect(spies.warn).not.toHaveBeenCalled();
-        expect(register).not.toHaveBeenCalled();
-    });
+            expect(spies.warn).not.toHaveBeenCalled();
+            expect(register).not.toHaveBeenCalled();
+        });
 
-    it('skips the restore when rollback is disabled', async () => {
-        const { 'Broken.mjs': file = '' } = await loaded({ 'Broken.mjs': 'export class Broken {}\n' });
-        write('Broken.mjs', "throw new Error('boom');\n");
+        it('skips the restore when rollback is disabled', async () => {
+            const { 'Broken.mjs': file = '' } = await loaded({ 'Broken.mjs': 'export class Broken {}\n' });
+            write('Broken.mjs', "throw new Error('boom');\n");
 
-        await folder.handle({ file, type: 'update', rollback: false });
+            await folder.handle({ file, type: 'update', rollback: false });
 
-        expect(unregistered()).toEqual(['Broken']);
-        expect(register).not.toHaveBeenCalled();
-    });
+            expect(unregistered()).toEqual(['Broken']);
+            expect(register).not.toHaveBeenCalled();
+        });
 
-    it('logs CoreVitePluginThrew when a plugin from vitePlugins throws during a reload', async () => {
-        const utils = import.meta.resolve('@seedcord/utils/internal');
-        const thrownBy = { plugin: 'shop-loader', hook: 'load', configFile: join(dir, 'seedcord.config.ts') };
-        const file = write(
-            'Shop.mjs',
-            `import { recordThrownBy } from ${JSON.stringify(utils)};\nthrow recordThrownBy(new Error('bad yaml'), ${JSON.stringify(thrownBy)});\n`
-        );
+        it('logs CoreVitePluginThrew when a plugin from vitePlugins throws', async () => {
+            const utils = import.meta.resolve('@seedcord/utils/internal');
+            const thrownBy = { plugin: 'shop-loader', hook: 'load', configFile: join(dir, 'seedcord.config.ts') };
+            const file = write(
+                'Shop.mjs',
+                `import { recordThrownBy } from ${JSON.stringify(utils)};\nthrow recordThrownBy(new Error('bad yaml'), ${JSON.stringify(thrownBy)});\n`
+            );
 
-        await folder.handle({ file, type: 'update' });
+            await folder.handle({ file, type: 'update' });
 
-        expect(spies.error.mock.calls[0]?.[1]).toMatchObject({
-            code: SeedcordErrorCode.CoreVitePluginThrew,
-            message: expect.stringContaining('shop-loader') as string
+            expect(spies.error.mock.calls[0]?.[1]).toMatchObject({
+                code: SeedcordErrorCode.CoreVitePluginThrew,
+                message: expect.stringContaining('shop-loader') as string
+            });
         });
     });
 });

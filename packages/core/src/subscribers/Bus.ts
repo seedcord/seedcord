@@ -271,7 +271,7 @@ export class Bus extends TypedEventEmitter<SubscriptionTuples> {
 }
 
 // every caller already checked that the Subscribe metadata is there
-export function registrationsFor(ctor: StoredSubscriberCtor): SubscriberRegistration[] {
+function registrationsFor(ctor: StoredSubscriberCtor): SubscriberRegistration[] {
     const entries = Reflect.getMetadata(SubscribeMetadataKey, ctor) as SubscribeMetadataEntry[];
     return entries.map(({ key, frequency }) => ({ key, frequency, ctor }));
 }

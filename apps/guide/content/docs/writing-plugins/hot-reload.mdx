@@ -64,7 +64,7 @@ If `jobs/index.ts` re-exports a job, `load()` still registers it once. `handle()
 | type | what `handle()` does |
 | --- | --- |
 | `create`, `update` | re-imports the saved file and every file in `affectedModules` that sits under `dir`, unregisters what each one exported before, and registers what it exports now |
-| `delete`, `deleteDir` | unregisters what that path exported, apart from a value that another file still exports |
+| `delete`, `deleteDir` | unregisters what that path exported, apart from a value that another file still exports, then re-imports the files in `affectedModules` that import it |
 | `createDir` | nothing. Each file in the new folder arrives as its own `create` event |
 
 {/* prettier-ignore-end */}
@@ -124,6 +124,8 @@ A save to a job file clears the old class's timer before the new class starts it
 ### More than one folder
 
 A `FolderExports` covers one folder and one kind of value. For a second kind, like hooks that run around each job, make a second `FolderExports` with its own `is`, `register`, and `unregister`. Call `load()` on both in `init()` and `handle()` on both in `onHmr()`, since each one ignores saves outside its own folder.
+
+If the hooks folder is a subfolder of the jobs folder, pass it to the jobs instance as `exclude: [hooksDir]`. Without it, a hook file that throws on import logs its error once from each instance. The dir should be relative to the `root` of your project, or an absolute path.
 
 ## Files read once
 

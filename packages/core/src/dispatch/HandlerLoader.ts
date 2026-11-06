@@ -1,4 +1,4 @@
-import { formatFilePath } from '@seedcord/utils';
+import { displayPath } from '@seedcord/errors/internal';
 
 import { FolderExports } from '#hmr/FolderExports';
 
@@ -36,6 +36,7 @@ export class HandlerLoader<Handler extends { name: string }, Middleware extends 
         const { handlersDir, middlewaresDir, middlewares, logger } = options;
         this.handlerFiles = new FolderExports({
             dir: handlersDir,
+            exclude: middlewaresDir ? [middlewaresDir] : [],
             is: (value): value is Handler => options.isHandler(value),
             register: (handler, file) => this.registerHandler(handler, file),
             unregister: (handler) => options.removeHandler(handler),
@@ -69,7 +70,7 @@ export class HandlerLoader<Handler extends { name: string }, Middleware extends 
     }
 
     private registerHandler(handler: Handler, file: string): void {
-        const from = formatFilePath(file);
+        const from = displayPath(file);
         if (!this.options.storeHandler(handler, from)) return;
         if (this.initialLoad) this.loadedHandlers.push({ name: handler.name, from });
     }
@@ -84,7 +85,7 @@ export class HandlerLoader<Handler extends { name: string }, Middleware extends 
             : registration.priority;
         this.loadedMiddlewares.push({
             name: `${middleware.name} (${String(scope)})`,
-            from: formatFilePath(file)
+            from: displayPath(file)
         });
     }
 }

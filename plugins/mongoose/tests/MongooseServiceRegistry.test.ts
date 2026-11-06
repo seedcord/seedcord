@@ -60,14 +60,19 @@ describe('MongooseServiceRegistry model ownership', () => {
         expect(vi.mocked(mongoose.deleteModel)).not.toHaveBeenCalledWith('adopted');
     });
 
-    it('deletes its own model on clearModels and when a save deletes the service file', async () => {
+    it('deletes its own model on clearModels', async () => {
         await registry.load();
-        registry.clearModels();
-        expect(vi.mocked(mongoose.deleteModel)).toHaveBeenCalledWith('adopted');
 
-        vi.clearAllMocks();
+        registry.clearModels();
+
+        expect(vi.mocked(mongoose.deleteModel)).toHaveBeenCalledWith('adopted');
+    });
+
+    it('deletes its own model when a save deletes the service file', async () => {
         await registry.load();
+
         await registry.onHmr({ file, type: 'delete' });
+
         expect(vi.mocked(mongoose.deleteModel)).toHaveBeenCalledWith('adopted');
     });
 });
