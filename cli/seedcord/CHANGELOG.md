@@ -1,5 +1,21 @@
 # seedcord
 
+## 0.23.2
+
+### 🩹 Patch
+
+- Fixed `seedcord build` throwing `dispatcher.getOwner is not a function` when a file that `bot.ts` imports renders React while it loads. ([#441](https://github.com/seedcord/seedcord/pull/441))
+- Fixed `seedcord build` failing at the boot step on a busy machine, with a message saying the worker closed the connection. The boot check now retries a connection that times out, for up to its full 60s. ([#442](https://github.com/seedcord/seedcord/pull/442))
+
+#### 📦 Seedcord packages
+
+- `@seedcord/core` 0.12.1 → 0.13.0
+- `@seedcord/types` 0.16.1 → 0.16.2
+- `@seedcord/logger` 0.6.0 → 0.6.1
+- `@seedcord/event-emitter` 0.2.0 → 0.2.1
+- `@seedcord/errors` 0.15.0 → 0.15.1
+- `@seedcord/utils` 0.9.1 → 0.9.2
+
 ## 0.23.1
 
 ### 🩹 Patch

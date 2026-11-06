@@ -1,5 +1,18 @@
 # @seedcord/logger
 
+## 0.6.1
+
+### 🩹 Patch
+
+- Fixed an async log sink on an edge bot getting cut off when the request ended, which lost the lines that it was sending to a log service. ([#442](https://github.com/seedcord/seedcord/pull/442))
+- Removed the `node` field from `ILogSink` and the winston sinks, since nothing ever read it. ([#442](https://github.com/seedcord/seedcord/pull/442))
+
+#### 📦 Seedcord packages
+
+- `@seedcord/types` 0.16.1 → 0.16.2
+- `@seedcord/errors` 0.15.0 → 0.15.1
+- `@seedcord/utils` 0.9.1 → 0.9.2
+
 ## 0.6.0
 
 ### 💥 Breaking

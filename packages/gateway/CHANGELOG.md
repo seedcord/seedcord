@@ -1,5 +1,22 @@
 # @seedcord/gateway
 
+## 0.10.0
+
+### 💥 Breaking
+
+- `HmrModuleHandler` is now `FolderExports`, exported from `@seedcord/core` and both transport packages, and `@seedcord/core/hmr` has been removed. Its `load()` replaces the startup loop you wrote with `importFiles` and `trackHandler()`, so your plugin's `init()` becomes one call. Each instance covers one folder, and `unregister` receives only the class since `getArtifacts` no longer exists. ([#444](https://github.com/seedcord/seedcord/pull/444))
+
+### 🩹 Patch
+
+#### 📦 Seedcord packages
+
+- `@seedcord/core` 0.12.1 → 0.13.0
+- `@seedcord/types` 0.16.1 → 0.16.2
+- `@seedcord/logger` 0.6.0 → 0.6.1
+- `@seedcord/event-emitter` 0.2.0 → 0.2.1
+- `@seedcord/errors` 0.15.0 → 0.15.1
+- `@seedcord/utils` 0.9.1 → 0.9.2
+
 ## 0.9.0
 
 ### 💥 Breaking

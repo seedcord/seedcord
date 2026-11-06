@@ -1,5 +1,16 @@
 # @seedcord/utils
 
+## 0.9.2
+
+### 🩹 Patch
+
+- `@seedcord/core` now reads `fileUrl` from here. ([#444](https://github.com/seedcord/seedcord/pull/444))
+
+#### 📦 Seedcord packages
+
+- `@seedcord/types` 0.16.1 → 0.16.2
+- `@seedcord/errors` 0.15.0 → 0.15.1
+
 ## 0.9.1
 
 ### 🩹 Patch
