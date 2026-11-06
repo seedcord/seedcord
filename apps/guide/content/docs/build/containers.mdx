@@ -19,7 +19,9 @@ To write a Dockerfile, first pull the image(s) you want, then perform copying an
 ```gitignore
 node_modules
 dist
-**/.* # almost literally every dotfolder is not needed and can be excluded for maximum layer caching
+# almost literally every dotfolder is not needed and can be excluded for maximum layer caching
+**/.*
+.env*
 # add other files that you don't want to include in your image if you want to optimize caching
 ```
 
