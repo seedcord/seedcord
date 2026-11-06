@@ -15,12 +15,18 @@ This page assumes Node.js 26+ for its simplicity. You'll need to follow differen
 
 You can compile your bot to a single binary using Node.js SEA.
 
-To properly compile your bot using SEA, you'll need to first create a SEA configuration file:
+Due to current limitations at the time of writing, to properly compile your bot using SEA, you'll need to re-bundle your bot to be a singular file. Use a bundler like `esbuild`:
+
+```sh
+npx esbuild --bundle dist/index.mjs --outfile bin/index.js
+```
+
+Create a SEA configuration file:
 
 ```jsonc
 // Node.js does not accept JSONC; remove comments before usage.
 {
-    "main": "dist/index.mjs",
+    "main": "bin/index.js",
     "mainFormat": "module",
     "output": "bot" // On Windows, set this to bot.exe
 }
@@ -39,7 +45,7 @@ You can also bundle assets in and use them via the `node:sea` built-in module. R
 
 ### Other tools that build executables on Node
 
-- tsdown has built-in support to compile Node apps via SEA [(docs)](https://tsdown.dev/options/exe).
+- tsdown has built-in support to compile Node apps via SEA [(docs)](https://tsdown.dev/options/exe). This is the recommended option if you are already using Vite+ as, with the right configuration, you can run `seedcord build` and then `vp pack` to generate binaries for all platforms.
 - `pkg` is a (now-deprecated) CLI for compiling Node apps via its own mechanism.
 
 ## Bun single-file executable
