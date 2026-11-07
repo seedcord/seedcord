@@ -8,7 +8,7 @@ type ConfiguredDriver = NonNullable<Config['kv']>;
 
 /**
  * What `JSON.stringify` keeps of `TValue`, with `never` in place of anything JSON has no form for: a
- * function, `Map`, `Set`, or `bigint`. `[T] extends [JsonSafe<T>]` holds when `T` survives the trip.
+ * function, `Map`, `Set`, or `bigint`. `[T] extends [JsonSafe<T>]` holds when JSON keeps every value in `T`.
  * A `Date` counts, since it passes through its `toJSON`.
  */
 export type JsonSafe<TValue> = TValue extends string | number | boolean | null | undefined

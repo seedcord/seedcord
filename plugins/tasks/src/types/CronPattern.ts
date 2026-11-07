@@ -264,7 +264,7 @@ export type CronPattern<TPattern extends string> = string extends TPattern
     : Lowercase<TPattern> extends CronNickname
       ? TPattern
       : Lowercase<TPattern> extends `@${string}`
-        ? `'${TPattern}' is not a nickname croner knows. Use @yearly, @annually, @monthly, @weekly, @daily, @midnight or @hourly`
+        ? `'${TPattern}' is not a croner nickname. Use @yearly, @annually, @monthly, @weekly, @daily, @midnight or @hourly`
         : CheckPattern<Fields<Lowercase<TPattern>>> extends infer Result
           ? Result extends string
               ? `Invalid cron pattern '${TPattern}': ${Result}`

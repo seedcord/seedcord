@@ -135,7 +135,7 @@ function checkDate(
     timezone: string | undefined
 ): void {
     try {
-        // eslint-disable-next-line no-new -- the constructor is the check, it throws for a date croner can't read
+        // eslint-disable-next-line no-new -- the constructor is the check, since it throws for a date croner can't read
         new CronDate(value, timezone);
     } catch (error) {
         throw new SeedcordTypeError(SeedcordErrorCode.PluginTasksInvalidDate, [key, option, String(value), file], {

@@ -2,4 +2,4 @@
 '@seedcord/errors': minor
 ---
 
-**BREAKING:** Renamed `GateInvalidCooldownDuration` to `InvalidDuration`, since `Cooldown` and `@seedcord/plugin-tasks` throw it for the same bad duration. The code stays 1701.
+**BREAKING:** Renamed `GateInvalidCooldownDuration` to `InvalidDuration`, since `Cooldown` and `@seedcord/plugin-tasks` throw it for the same bad duration. The code is still 1701.

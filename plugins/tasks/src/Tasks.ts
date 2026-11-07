@@ -111,7 +111,7 @@ export class Tasks extends Plugin<{ transport: 'any'; runtime: 'server' }> {
         return Promise.resolve();
     }
 
-    /** Stops every timer, aborts each run's `signal`, and waits for in-flight runs. Pending jobs stay stored. */
+    /** Stops every timer, aborts each run's `signal`, and waits for in-flight runs. The driver still holds pending jobs. */
     public override async dispose(): Promise<void> {
         this.cronTasks.stop();
         this.scheduled.stop();
@@ -217,7 +217,7 @@ export class Tasks extends Plugin<{ transport: 'any'; runtime: 'server' }> {
         await this.runner.run(this.requireLoaded(Task), { trigger: 'manual', jobId: null }, undefined);
     }
 
-    // the jobs are gone by the time the process ends, so this warns while there's still time to act
+    // a MemoryDriver holds the jobs only until the process ends, so this warns while there's still time to switch drivers
     private warnIfMemory(): void {
         if (this.warnedMemory || !(this.kv.driver instanceof MemoryDriver)) return;
 

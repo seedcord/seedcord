@@ -110,7 +110,7 @@ export class ScheduledJobs {
         );
     }
 
-    // the record stays until the run ends, so a crash mid-run leaves the job for the next start
+    // fire() deletes the record only after the run ends, so a crash mid-run leaves the job for the next start
     private async fire(job: Pending): Promise<void> {
         this.pending.delete(job.id);
         this.firing.add(job.id);
@@ -122,7 +122,9 @@ export class ScheduledJobs {
             const loaded = this.findTask(record.key);
 
             if (!loaded) {
-                this.logger.warn(`no task has the key ${paint.sky(record.key)}, job ${paint.sky(job.id)} stays stored`);
+                this.logger.warn(
+                    `no task has the key ${paint.sky(record.key)}, so job ${paint.sky(job.id)} is still in the store`
+                );
                 return;
             }
 

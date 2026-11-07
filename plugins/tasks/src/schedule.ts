@@ -9,7 +9,7 @@ const MIN_EPOCH_MS = 946_684_800_000;
 
 export function isTimezone(timezone: string): boolean {
     try {
-        // eslint-disable-next-line no-new -- the constructor is the check, it throws for a zone it doesn't know
+        // eslint-disable-next-line no-new -- the constructor is the check, since it throws for a zone that Intl doesn't support
         new Intl.DateTimeFormat(undefined, { timeZone: timezone });
         return true;
     } catch {

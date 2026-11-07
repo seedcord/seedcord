@@ -18,7 +18,7 @@ type IsDigits<TText extends string> = TText extends `${Digit}${infer Rest}`
 
 type IsZeros<TText extends string> = TText extends '' ? true : TText extends `0${infer Rest}` ? IsZeros<Rest> : false;
 
-// ms goes first, since '500ms' also ends in 's'
+// check ms before the other units, since '500ms' also ends in 's'
 type Amount<TText extends string> = TText extends `${infer Value}ms`
     ? Value
     : TText extends `${infer Value}${Exclude<DurationUnit, 'ms'>}`
@@ -33,7 +33,7 @@ type IsPositiveWhole<Value extends string> =
  * number above 0 followed by a unit (`ms`, `s`, `m`, `h`, `d`).
  *
  * Give it the literal through a `const` type parameter. A literal it rejects resolves to a message
- * that names the mistake, so the call fails to compile. A plain `string` passes, and
+ * that says what's wrong, so the call fails to compile. A plain `string` passes, and
  * `parseDuration` checks it at run time.
  *
  * @typeParam TText - The literal to check.

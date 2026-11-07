@@ -88,7 +88,7 @@ export class Heartbeat extends Task {
 }
 ```
 
-The minute field only goes up to 59, so `61` stops the build. A pattern typed as `string`, like one read from `.env`, skips this check. If it's invalid, `init()` throws `PluginTasksInvalidPattern` when the bot starts.
+The minute field takes 0 to 59, so `61` stops the build. A pattern typed as `string`, like one read from `.env`, skips this check. If it's invalid, `init()` throws `PluginTasksInvalidPattern` when the bot starts.
 
 Patterns follow the grammar of [croner](https://croner.56k.guru/usage/pattern/), the cron library the plugin uses. A pattern has five, six, or seven fields. With six or seven, seconds come first, and a seventh field sets the year.
 
@@ -162,9 +162,9 @@ The second argument to `@RegisterTask` takes these options, all optional:
 
 croner reads a date string without an offset in the task's timezone. If it can't read `startAt` or `stopAt` as a date, `init()` throws `PluginTasksInvalidDate` with the option's name.
 
-Daylight saving moves some runs. A fixed-time task has one value each for second, minute, and hour, like `30 2 * * *`. When clocks go back and 02:30 happens twice, it runs once. When clocks go forward and 02:30 doesn't exist, it runs at the first time that does.
+Daylight saving moves some runs. A fixed-time task has one value each for second, minute, and hour, like `30 2 * * *`. When daylight saving ends and 02:30 happens twice, it runs once. When daylight saving starts and 02:30 doesn't exist, it runs at the first time that does.
 
-Every other task, like `*/5 * * * *`, runs in both occurrences of the repeated hour. When clocks go forward, it skips the times that don't exist.
+Every other task, like `*/5 * * * *`, runs in both occurrences of the repeated hour. When daylight saving starts, it skips the times that don't exist.
 
 ## What a task can read
 
