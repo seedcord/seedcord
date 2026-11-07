@@ -244,6 +244,10 @@ export enum SeedcordErrorCode {
     PluginTasksAtTooEarly = 2307,
     /** `schedule` got an `in` that ends past the last date a `Date` can hold. */
     PluginTasksDurationTooLong = 2308,
+    /** A task's `maxRuns` is not a whole number of 1 or more. */
+    PluginTasksInvalidMaxRuns = 2309,
+    /** A task's `stopAt` is not after its `startAt`, so it never runs. */
+    PluginTasksStopBeforeStart = 2310,
 
     /** Someone pressed Ctrl-C at a prompt in `seedcord` or `create-seedcord`. */
     CliCancelled = 3001,

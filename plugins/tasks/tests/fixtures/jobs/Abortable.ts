@@ -13,4 +13,8 @@ export class Abortable extends Task<void, TestHost> {
         this.core.runs.push({ task: this.key, trigger: this.trigger, data: this.data });
         await sleep(LONGER_THAN_ANY_TEST_MS, undefined, { signal: this.signal });
     }
+
+    public override async onError(): Promise<void> {
+        await Promise.resolve();
+    }
 }

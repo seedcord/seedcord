@@ -1,6 +1,6 @@
 import type { Cron } from 'croner';
 
-// croner sets a timer once it holds a callback, even while paused, so the job gets its callback on its first start
+// croner sets a timer once it holds a callback, even while paused, so the job hands over its callback the first time it runs
 export class CronJob {
     private scheduled = false;
 
@@ -17,18 +17,17 @@ export class CronJob {
         return this.cron.isRunning();
     }
 
-    public start(): void {
-        if (this.scheduled) {
-            this.cron.resume();
+    public setRunning(running: boolean): void {
+        if (!running) {
+            this.cron.pause();
             return;
         }
 
-        this.scheduled = true;
-        this.cron.schedule(this.run);
-    }
-
-    public pause(): void {
-        this.cron.pause();
+        if (!this.scheduled) {
+            this.scheduled = true;
+            this.cron.schedule(this.run);
+        }
+        this.cron.resume();
     }
 
     public stop(): void {

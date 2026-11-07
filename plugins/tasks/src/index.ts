@@ -3,16 +3,7 @@ export { Tasks } from './Tasks';
 
 export { RegisterTask } from './decorators/RegisterTask';
 
-export type {
-    CronStatus,
-    ScheduledJob,
-    ScheduleOptions,
-    TaskContext,
-    TaskData,
-    TaskOptions,
-    TasksOptions,
-    TaskTrigger
-} from './types/Tasks';
+export type { CronStatus, ScheduledJob, TaskContext, TaskOptions, TasksOptions, TaskTrigger } from './types/Tasks';
 export type { CronPattern } from './types/CronPattern';
 export type { IanaTimezone } from './types/Timezone';
 

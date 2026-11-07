@@ -111,7 +111,7 @@ describe('Tasks scheduled jobs', () => {
         await vi.advanceTimersByTimeAsync(HOUR_MS);
         expect(second.host.runs).toEqual([]);
 
-        await second.tasks.ready();
+        second.tasks.ready();
         await vi.advanceTimersByTimeAsync(0);
         expect(second.host.runs).toHaveLength(1);
     });
@@ -123,7 +123,7 @@ describe('Tasks scheduled jobs', () => {
         await vi.advanceTimersByTimeAsync(HOUR_MS);
         expect(host.runs).toEqual([]);
 
-        await tasks.ready();
+        tasks.ready();
         await vi.advanceTimersByTimeAsync(0);
         expect(host.runs).toHaveLength(1);
     });
@@ -230,6 +230,20 @@ describe('Tasks scheduled jobs', () => {
         await second.tasks.dispose();
     });
 
+    it('reports a run that shutdown interrupts as interrupted, without calling onError', async () => {
+        const { host, tasks } = await start(jobs, driver);
+        const ran = vi.fn();
+        host.bus.on('taskRan', ran);
+        const onError = vi.spyOn(Abortable.prototype, 'onError');
+        await tasks.schedule(Abortable, { in: '1s' });
+        await vi.advanceTimersByTimeAsync(SECOND_MS);
+
+        await tasks.dispose();
+
+        expect(ran).toHaveBeenCalledWith(expect.objectContaining({ key: 'Abortable', outcome: 'interrupted' }));
+        expect(onError).not.toHaveBeenCalled();
+    });
+
     it('runs a job again when the process died during it', async () => {
         const first = await start(jobs, driver);
         first.host.hold();
@@ -276,7 +290,7 @@ describe('Tasks.cancel', () => {
         expect(driver.stored.size).toBe(0);
     });
 
-    it('cancels a stored job this process holds no timer for', async () => {
+    it('cancels a job that another process holds the timer for', async () => {
         const first = await start(jobs, driver);
         const job = await first.tasks.schedule(Reminder, { in: '1h' });
         const second = await start(jobs, driver);
@@ -286,6 +300,20 @@ describe('Tasks.cancel', () => {
 
         expect(first.host.runs).toEqual([]);
         expect(second.host.runs).toEqual([]);
+    });
+
+    it('cancels a stored job this process holds no timer for', async () => {
+        const first = await start(jobs, driver);
+        const job = await first.tasks.schedule(Reminder, { in: '1s' });
+        await first.tasks.dispose();
+        // partial doesn't load Reminder, so the due job stays in the store with no timer
+        const { tasks } = await start(partial, driver);
+        await vi.advanceTimersByTimeAsync(SECOND_MS);
+        expect(tasks.jobs()).toEqual([]);
+
+        await expect(tasks.cancel(job.id)).resolves.toBe(true);
+        expect(driver.stored.size).toBe(0);
+        await tasks.dispose();
     });
 
     it('reports an unknown id', async () => {
@@ -395,7 +423,7 @@ describe('Tasks job upkeep', () => {
         const { tasks } = await start(jobs, new MemoryDriver());
 
         await tasks.schedule(Reminder, { in: '1h' });
-        expect(logs.at('warn')).toEqual([expect.stringContaining('end with this process')]);
+        expect(logs.at('warn')).toEqual([expect.stringContaining('end when it exits')]);
 
         await tasks.schedule(Reminder, { in: '2h' });
         expect(logs.at('warn')).toHaveLength(1);

@@ -8,7 +8,7 @@ import type { CoreBase, Subscriptions } from '@seedcord/core';
 import type { Logger } from '@seedcord/logger';
 import type { DistributedPick } from 'type-fest';
 
-export type RunOutcome = 'finished' | 'failed' | 'interrupted' | 'skipped';
+export type RunOutcome = Subscriptions['taskRan']['outcome'] | 'skipped';
 
 // what started a run, with the job's id when a scheduled job did
 type RunSource = DistributedPick<Subscriptions['taskRan'], 'trigger' | 'jobId'>;
@@ -22,13 +22,11 @@ export class TaskRunner {
         private readonly logger: Logger
     ) {}
 
-    // while a protected task is busy, the runner skips a cron or manual run and calls onOverrun()
-    // instead, and a scheduled run waits for the busy one so its data still runs
     public async run(loaded: LoadedTask, source: RunSource, data: TaskData<unknown>): Promise<RunOutcome> {
         const { state, protect } = loaded;
 
         if (protect && state.busy && source.trigger !== 'scheduled') {
-            this.logger.warn(`skipped a run of ${paint.sky(loaded.key)}, the previous one is still running`);
+            this.logger.warn(`skipped a run of ${paint.sky(loaded.key)} because the previous one is still running`);
             await this.track(this.callOverrun(loaded, source.trigger));
 
             return 'skipped';
@@ -102,6 +100,14 @@ export class TaskRunner {
 
             return 'finished';
         } catch (thrown) {
+            if (this.shutdown.signal.aborted) {
+                const durationMs = elapsedMs(startedAt);
+                this.logger.info(`shutdown stopped ${paint.sky(key)} after ${durationMs}ms`);
+                this.core.bus.publish('taskRan', { key, ...source, durationMs, outcome: 'interrupted' });
+
+                return 'interrupted';
+            }
+
             const error = this.fail(key, source, startedAt, thrown);
 
             try {
@@ -110,7 +116,7 @@ export class TaskRunner {
                 this.logger.error(`${paint.sky(key)} threw from onError`, inner);
             }
 
-            return this.shutdown.signal.aborted ? 'interrupted' : 'failed';
+            return 'failed';
         }
     }
 

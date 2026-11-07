@@ -78,6 +78,7 @@ void probeDecorator;
 
 expectTypeOf<TaskData<{ at: Date; name: string }>>().toEqualTypeOf<{ at: string; name: string }>();
 expectTypeOf<TaskData<void>>().toBeVoid();
+expectTypeOf<TaskData<string | undefined>>().toEqualTypeOf<string | undefined>();
 
 class OnGateway extends GatewayTask {
     public async execute(): Promise<void> {

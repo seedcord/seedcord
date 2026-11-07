@@ -118,7 +118,7 @@ export class TestHost extends PluginHost<'gateway', 'server'> {
 
 type Driver = ConstructorParameters<typeof TestHost>[0];
 
-export interface Booted {
+export interface Booted extends AsyncDisposable {
     host: TestHost;
     tasks: Tasks;
 }
@@ -128,13 +128,13 @@ export async function boot(options: TasksOptions, driver: Driver = new FakeDrive
     const host = new TestHost(driver);
     const bot = host.attach('tasks', Tasks, options);
     await bot.tasks.init();
-    return { host, tasks: bot.tasks };
+    return { host, tasks: bot.tasks, [Symbol.asyncDispose]: () => bot.tasks.dispose() };
 }
 
 /** {@link boot}, then `ready()`, like a bot that has logged in. */
 export async function start(options: TasksOptions, driver?: Driver): Promise<Booted> {
     const booted = await boot(options, driver);
-    await booted.tasks.ready();
+    booted.tasks.ready();
     return booted;
 }
 

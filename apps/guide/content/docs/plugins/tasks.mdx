@@ -3,9 +3,9 @@ title: Tasks
 description: Run a function on a schedule, like a digest every morning or a cleanup every hour, from a folder of task classes in your bot.
 ---
 
-Some of your bot's work has no command behind it, like a digest every morning or a cleanup every hour. Written by hand, that work was a `setInterval` in `bot.ts`. You started it after login, stopped it before the process exited, logged its errors, and made sure a slow run didn't overlap the next one.
+Some of your bot's work has no command behind it, like a digest every morning or a cleanup every hour. Written by hand, each job was a `setInterval` in `bot.ts`. You started it after login, stopped it before the process exited, logged its errors, and made sure a slow run didn't overlap the next one.
 
-[`@seedcord/plugin-tasks`](ref:plugin-tasks) does that work for you. Each piece of that work is a class in a folder. The plugin loads the folder, starts the tasks once your bot has logged in, and gives running tasks time to finish during shutdown.
+[`@seedcord/plugin-tasks`](ref:plugin-tasks) handles all of that for you. Each job is a class in a folder. The plugin loads the folder, starts the tasks once your bot has logged in, and gives running tasks time to finish during shutdown.
 
 <Shell add="@seedcord/plugin-tasks" />
 
@@ -160,9 +160,9 @@ The second argument to `@RegisterTask` takes these options, all optional:
 
 {/* prettier-ignore-end */}
 
-croner reads a date string without an offset in the task's timezone. If it can't read `startAt` or `stopAt` as a date, `init()` throws `PluginTasksInvalidDate` with the option's name.
+croner reads a date string without an offset in the task's timezone. If it can't read `startAt` or `stopAt` as a date, `init()` throws `PluginTasksInvalidDate` with the option's name. A `stopAt` that isn't after `startAt` throws `PluginTasksStopBeforeStart`, and a `maxRuns` that isn't a whole number of 1 or more throws `PluginTasksInvalidMaxRuns`.
 
-Daylight saving moves some runs. A fixed-time task has one value each for second, minute, and hour, like `30 2 * * *`. When daylight saving ends and 02:30 happens twice, it runs once. When daylight saving starts and 02:30 doesn't exist, it runs at the first time that does.
+Daylight saving moves some runs. A fixed-time task has one value each for second, minute, and hour, like `30 2 * * *`. When daylight saving ends and its time happens twice, it runs once. When daylight saving starts and its time doesn't exist, it runs at the first time that does. In `America/New_York`, the repeated hour is 01:00 to 02:00 and the skipped one is 02:00 to 03:00.
 
 Every other task, like `*/5 * * * *`, runs in both occurrences of the repeated hour. When daylight saving starts, it skips the times that don't exist.
 
@@ -217,7 +217,7 @@ Pass `protect: false` only if two runs of the task can safely overlap, since the
 
 A throw in `execute()` doesn't stop the schedule. The task runs again at its next match. The plugin logs the error, then calls [`onError(error)`](ref:plugin-tasks/Task.onError) if the task defines it, passing the same `Error`. The plugin logs a throw from `onError()` too.
 
-After every run, the plugin publishes `taskRan` on the [bus](/events/bus) with an `outcome` of `'finished'` or `'failed'`. Use `onError()` to clean up after one task, since it runs on the instance that threw. Use `taskRan` for what every task shares, like a report to Sentry, because one subscriber covers them all.
+After every run, the plugin publishes `taskRan` on the [bus](/events/bus) with an `outcome` of `'finished'` or `'failed'`. A run that throws after shutdown aborts `this.signal` gets `'interrupted'`, and the plugin skips its `onError()`. Use `onError()` to clean up after one task, since it runs on the instance that threw. Use `taskRan` for what every task shares, like a report to Sentry, because one subscriber covers them all.
 
 ```ts twoslash title="src/subscribers/ReportTaskFailure.ts"
 import { Subscribe, Subscriber } from '@seedcord/gateway';
@@ -230,7 +230,7 @@ export class ReportTaskFailure extends Subscriber<'taskRan'> {
     public async execute(): Promise<void> {
         const run = this.data;
         //               ^?
-        if (run.outcome === 'finished') return;
+        if (run.outcome !== 'failed') return;
 
         this.logger.error(`${run.key} failed`, run.error);
     }

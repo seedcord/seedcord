@@ -31,7 +31,7 @@ export interface TaskOptions<TZone extends string = string> {
     timezone?: Timezone<TZone>;
     /**
      * Skips a cron or manual run while the last one is still running, and calls `onOverrun()` for it.
-     * A scheduled job waits for the last run to end instead, so its data still runs.
+     * A scheduled job waits for the last run to end instead, so the job still runs with its data.
      *
      * @defaultValue `true`
      */
@@ -51,12 +51,11 @@ export interface TaskOptions<TZone extends string = string> {
     stopAt?: Date | string;
 }
 
-// a scheduled run carries its job's id, and only a failed run carries an error
 type TaskRun = Simplify<
     { key: string; durationMs: number } & (
         { trigger: 'scheduled'; jobId: string } | { trigger: 'cron' | 'manual'; jobId: null }
     ) &
-        ({ outcome: 'finished' } | { outcome: 'failed'; error: Error })
+        ({ outcome: 'finished' | 'interrupted' } | { outcome: 'failed'; error: Error })
 >;
 
 /** What started a run. */
@@ -65,14 +64,18 @@ export type TaskTrigger = TaskRun['trigger'];
 // no-invalid-void-type rejects a bare void in a conditional type
 type NoData = ReturnType<() => void>;
 
-// one rule for both what a task reads and what schedule() takes, so the two always match
 type IsNoData<TData> = [TData] extends [NoData] ? true : false;
 
 /**
  * `TData` after its trip through the store. A `Date` in `TData` reads back as its ISO string, the
- * same as a record from a `KvCollection`.
+ * same as a record from a `KvCollection`. A job scheduled with `undefined` stores no data and reads
+ * back as `undefined`.
  */
-export type TaskData<TData> = unknown extends TData ? unknown : IsNoData<TData> extends true ? NoData : Stored<TData>;
+export type TaskData<TData> = unknown extends TData
+    ? unknown
+    : IsNoData<TData> extends true
+      ? NoData
+      : Stored<Exclude<TData, undefined>> | Extract<TData, undefined>;
 
 /** What the plugin passes to a task's constructor. */
 export interface TaskContext<TData = unknown> {
@@ -114,7 +117,7 @@ export interface ScheduledJob {
 
 declare module '@seedcord/core' {
     interface Subscriptions {
-        /** A task run ended. `outcome` says whether it returned or threw. */
+        /** A task run ended. `outcome` says whether it returned, threw, or threw after shutdown aborted it. */
         taskRan: TaskRun;
     }
 }

@@ -45,8 +45,6 @@ export class Tasks extends Plugin<{ transport: 'any'; runtime: 'server' }> {
     readonly #scheduled: ScheduledJobs;
     readonly #reloader: FolderExports<TaskClass>;
     readonly #path: string;
-    #warnedMemory = false;
-
     public constructor(host: CoreBase, options: TasksOptions) {
         // Drain, so in-flight runs finish before database plugins disconnect
         super(host, {
@@ -73,7 +71,8 @@ export class Tasks extends Plugin<{ transport: 'any'; runtime: 'server' }> {
             this.kv.collection<JobRecord>('job'),
             this.#runner,
             (key) => this.#registry.loaded(key),
-            this.logger
+            this.logger,
+            this.kv.driver instanceof MemoryDriver
         );
 
         this.#reloader = new FolderExports({
@@ -103,11 +102,9 @@ export class Tasks extends Plugin<{ transport: 'any'; runtime: 'server' }> {
     }
 
     /** Starts the cron tasks and the timers for pending jobs, so a due job runs on a logged-in bot. */
-    public override ready(): Promise<void> {
+    public override ready(): void {
         this.#cronTasks.start();
         this.#scheduled.start();
-
-        return Promise.resolve();
     }
 
     /** Stops every timer, aborts each run's `signal`, and waits for in-flight runs. The driver still holds pending jobs. */
@@ -154,14 +151,13 @@ export class Tasks extends Plugin<{ transport: 'any'; runtime: 'server' }> {
         // justified: ScheduleOptions rejects data that JSON can't keep, and the store throws on a cycle
         const data = ('data' in options ? options.data : undefined) as JsonValue | undefined;
 
-        this.#warnIfMemory();
         return this.#scheduled.add(key, at, data);
     }
 
     /**
      * Deletes a job so it never runs.
      *
-     * @returns `false` when no job has that id, or when the job's time has come.
+     * @returns `false` when no job has that id, or when its run has started.
      * @throws A **SeedcordError** with `CoreKvDriverFailed` when the driver can't delete the job.
      */
     public async cancel(id: string): Promise<boolean> {
@@ -217,16 +213,6 @@ export class Tasks extends Plugin<{ transport: 'any'; runtime: 'server' }> {
      */
     public async trigger(Task: NoDataTaskClass): Promise<void> {
         await this.#runner.run(this.#requireLoaded(Task), { trigger: 'manual', jobId: null }, undefined);
-    }
-
-    // a MemoryDriver holds the jobs only until the process ends, so this warns while there's still time to switch drivers
-    #warnIfMemory(): void {
-        if (this.#warnedMemory || !(this.kv.driver instanceof MemoryDriver)) return;
-
-        this.#warnedMemory = true;
-        this.logger.warn(
-            `scheduled jobs are kept in memory and end with this process. Pass a driver as ${paint.bold('kv')} in your config to keep them through a restart`
-        );
     }
 
     #requireLoaded(Task: { readonly name: string }): LoadedTask {

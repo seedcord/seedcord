@@ -1,4 +1,4 @@
-import { mkdir, rm, writeFile } from 'node:fs/promises';
+import { writeFile } from 'node:fs/promises';
 import path from 'node:path';
 
 import { SeedcordErrorCode } from '@seedcord/errors';
@@ -11,6 +11,7 @@ import { Slow } from '#tests/fixtures/tasks/Slow';
 import { Tick } from '#tests/fixtures/tasks/Tick';
 import { Loose } from '#tests/fixtures/unprotected/Loose';
 import { FakeDriver, TestHost, boot, captureLogs, start } from '#tests/utils/host';
+import { tempFolder } from '#tests/utils/tempFolder';
 
 import type { TasksOptions } from '#src/types/Tasks';
 import type { Run } from '#tests/utils/host';
@@ -40,7 +41,7 @@ describe('Tasks cron tasks', () => {
         await vi.advanceTimersByTimeAsync(SECOND_MS * 3);
         expect(host.runs).toEqual([]);
 
-        await tasks.ready();
+        tasks.ready();
         await vi.advanceTimersByTimeAsync(SECOND_MS);
         expect(runsOf(host, 'Tick')).toHaveLength(1);
 
@@ -93,52 +94,70 @@ describe('Tasks cron tasks', () => {
         await tasks.dispose();
     });
 
-    it('leaves a paused task until resume', async () => {
-        const { host, tasks } = await start(crons);
+    describe('pause and resume', () => {
+        it('leaves a paused task until resume', async () => {
+            const { host, tasks } = await start(crons);
 
-        await vi.advanceTimersByTimeAsync(SECOND_MS);
-        expect(runsOf(host, 'Idle')).toEqual([]);
+            await vi.advanceTimersByTimeAsync(SECOND_MS);
+            expect(runsOf(host, 'Idle')).toEqual([]);
 
-        tasks.resume(Idle);
-        await vi.advanceTimersByTimeAsync(SECOND_MS);
-        expect(runsOf(host, 'Idle')).toHaveLength(1);
+            tasks.resume(Idle);
+            await vi.advanceTimersByTimeAsync(SECOND_MS);
+            expect(runsOf(host, 'Idle')).toHaveLength(1);
 
-        await tasks.dispose();
-    });
+            await tasks.dispose();
+        });
 
-    it('keeps a task paused before ready paused through ready', async () => {
-        const { host, tasks } = await boot(crons);
+        it('keeps a task paused before ready paused through ready', async () => {
+            const { host, tasks } = await boot(crons);
 
-        tasks.pause(Tick);
-        await tasks.ready();
-        await vi.advanceTimersByTimeAsync(SECOND_MS);
+            tasks.pause(Tick);
+            tasks.ready();
+            await vi.advanceTimersByTimeAsync(SECOND_MS);
 
-        expect(runsOf(host, 'Tick')).toEqual([]);
-        await tasks.dispose();
-    });
+            expect(runsOf(host, 'Tick')).toEqual([]);
+            await tasks.dispose();
+        });
 
-    it('starts a task resumed before ready once ready runs', async () => {
-        const { host, tasks } = await boot(crons);
+        it.each([
+            ['before ready', true],
+            ['after ready', false]
+        ])('runs a task paused before ready and resumed %s', async (_when, resumeFirst) => {
+            const { host, tasks } = await boot(crons);
 
-        tasks.resume(Idle);
-        await vi.advanceTimersByTimeAsync(SECOND_MS);
-        expect(runsOf(host, 'Idle')).toEqual([]);
+            tasks.pause(Tick);
+            if (resumeFirst) tasks.resume(Tick);
+            tasks.ready();
+            if (!resumeFirst) tasks.resume(Tick);
+            await vi.advanceTimersByTimeAsync(SECOND_MS);
 
-        await tasks.ready();
-        await vi.advanceTimersByTimeAsync(SECOND_MS);
-        expect(runsOf(host, 'Idle')).toHaveLength(1);
+            expect(runsOf(host, 'Tick')).not.toEqual([]);
+            await tasks.dispose();
+        });
 
-        await tasks.dispose();
-    });
+        it('starts a task resumed before ready once ready runs', async () => {
+            const { host, tasks } = await boot(crons);
 
-    it('pauses a running task', async () => {
-        const { host, tasks } = await start(crons);
+            tasks.resume(Idle);
+            await vi.advanceTimersByTimeAsync(SECOND_MS);
+            expect(runsOf(host, 'Idle')).toEqual([]);
 
-        tasks.pause(Tick);
-        await vi.advanceTimersByTimeAsync(SECOND_MS * 2);
+            tasks.ready();
+            await vi.advanceTimersByTimeAsync(SECOND_MS);
+            expect(runsOf(host, 'Idle')).toHaveLength(1);
 
-        expect(runsOf(host, 'Tick')).toEqual([]);
-        await tasks.dispose();
+            await tasks.dispose();
+        });
+
+        it('pauses a running task', async () => {
+            const { host, tasks } = await start(crons);
+
+            tasks.pause(Tick);
+            await vi.advanceTimersByTimeAsync(SECOND_MS * 2);
+
+            expect(runsOf(host, 'Tick')).toEqual([]);
+            await tasks.dispose();
+        });
     });
 
     it('runs a task now through trigger', async () => {
@@ -313,8 +332,8 @@ describe('Tasks cron tasks', () => {
         });
 
         it('applies a paused option changed in a save', async () => {
-            const folder = path.join(import.meta.dirname, 'temp', 'paused-save');
-            const file = path.join(folder, 'Flip.ts');
+            await using folder = await tempFolder('paused-save');
+            const file = path.join(folder.path, 'Flip.ts');
             const source = (paused: boolean): string =>
                 [
                     "import { RegisterTask } from '#src/decorators/RegisterTask';",
@@ -325,19 +344,13 @@ describe('Tasks cron tasks', () => {
                     '}'
                 ].join('\n');
 
-            await mkdir(folder, { recursive: true });
             await writeFile(file, source(true));
+            await using booted = await start({ path: folder.path });
 
-            try {
-                const { tasks } = await start({ path: folder });
-                await writeFile(file, source(false));
-                await tasks.onHmr({ file, type: 'update' });
+            await writeFile(file, source(false));
+            await booted.tasks.onHmr({ file, type: 'update' });
 
-                expect(tasks.crons()[0]?.active).toBe(true);
-                await tasks.dispose();
-            } finally {
-                await rm(folder, { recursive: true, force: true });
-            }
+            expect(booted.tasks.crons()[0]?.active).toBe(true);
         });
 
         it('keeps what resume did across a save', async () => {
@@ -412,7 +425,11 @@ describe('Tasks cron tasks', () => {
         const keys = (): string[] => tasks.crons().map((status) => status.key);
 
         await tasks.onHmr({ file, type: 'update' });
-        expect(keys().filter((key) => key === 'Idle')).toHaveLength(1);
+        // the save loaded a fresh copy of the class, so the one this file imported no longer matches
+        expect(() => {
+            tasks.pause(Idle);
+        }).toThrow(expect.objectContaining({ code: SeedcordErrorCode.PluginTasksNotLoaded }));
+        expect(keys()).toContain('Idle');
 
         await tasks.onHmr({ file, type: 'delete' });
         expect(keys()).not.toContain('Idle');
@@ -424,6 +441,8 @@ describe('Tasks cron tasks', () => {
         it.each([
             ['duplicate-key', SeedcordErrorCode.CoreDuplicateName],
             ['bad-start', SeedcordErrorCode.PluginTasksInvalidDate],
+            ['stop-before-start', SeedcordErrorCode.PluginTasksStopBeforeStart],
+            ['bad-max-runs', SeedcordErrorCode.PluginTasksInvalidMaxRuns],
             ['date-pattern', SeedcordErrorCode.PluginTasksDateAsPattern],
             ['bad-timezone', SeedcordErrorCode.PluginTasksInvalidTimezone],
             ['bad-pattern', SeedcordErrorCode.PluginTasksInvalidPattern]

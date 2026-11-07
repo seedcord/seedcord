@@ -282,7 +282,12 @@ const messages = {
     [SeedcordErrorCode.PluginTasksAtTooEarly]: (key: string, at: number) =>
         `${paint.bold('schedule()')} got ${paint.iris(at)} as ${paint.bold('at')} for ${paint.sky(key)}, which is before the year 2000. A number that small is usually a timestamp in seconds, or a missing value read as ${paint.iris(0)}. Pass milliseconds, like ${paint.sky('Date.now() + 60_000')}.`,
     [SeedcordErrorCode.PluginTasksDurationTooLong]: (key: string, duration: string) =>
-        `${paint.bold('schedule()')} got ${paint.sky(duration)} for ${paint.sky(key)}, which ends after the last date a JavaScript ${paint.bold('Date')} can hold, in the year 275760. Pass a shorter duration as ${paint.bold('in')}.`,
+        `${paint.bold('schedule()')} got ${quoted(duration)} for ${paint.sky(key)}, which ends after the last date a JavaScript ${paint.bold('Date')} can hold, in the year 275760. Pass a shorter duration as ${paint.bold('in')}.`,
+
+    [SeedcordErrorCode.PluginTasksInvalidMaxRuns]: (key: string, file: string, maxRuns: number) =>
+        `The task ${paint.sky(key)} in ${paint.path(file)} has ${paint.bold('maxRuns')} set to ${paint.iris(maxRuns)}. Pass a whole number of ${paint.iris(1)} or more, or leave it out for no limit.`,
+    [SeedcordErrorCode.PluginTasksStopBeforeStart]: (key: string, file: string, startAt: string, stopAt: string) =>
+        `The task ${paint.sky(key)} in ${paint.path(file)} has a ${paint.bold('stopAt')} of ${quoted(stopAt)} that isn't after its ${paint.bold('startAt')} of ${quoted(startAt)}, so it never runs. Move ${paint.bold('stopAt')} later.`,
 
     [SeedcordErrorCode.CliCancelled]: () => 'Cancelled.',
 

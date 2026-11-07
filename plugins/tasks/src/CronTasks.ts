@@ -1,5 +1,5 @@
 import { SeedcordErrorCode, paint } from '@seedcord/errors';
-import { SeedcordTypeError } from '@seedcord/errors/internal';
+import { SeedcordRangeError, SeedcordTypeError } from '@seedcord/errors/internal';
 import { keepDefined } from '@seedcord/utils';
 import { asError } from '@seedcord/utils/internal';
 import { Cron, CronDate } from 'croner';
@@ -44,12 +44,13 @@ export class CronTasks {
             throw new SeedcordTypeError(SeedcordErrorCode.PluginTasksDateAsPattern, [key, file, pattern]);
         }
 
+        if (meta.maxRuns !== undefined && !(Number.isSafeInteger(meta.maxRuns) && meta.maxRuns >= 1)) {
+            throw new SeedcordRangeError(SeedcordErrorCode.PluginTasksInvalidMaxRuns, [key, file, meta.maxRuns]);
+        }
+
         const timezone = meta.timezone ?? this.defaultTimezone;
         const dates = keepDefined({ startAt: meta.startAt, stopAt: meta.stopAt });
-        for (const option of ['startAt', 'stopAt'] as const) {
-            const value = meta[option];
-            if (value !== undefined) checkDate(loaded, option, value, timezone);
-        }
+        checkDates(loaded, dates, timezone);
 
         let cron: Cron;
 
@@ -73,7 +74,7 @@ export class CronTasks {
         const job = new CronJob(cron, run, pattern, timezone, meta.paused ?? false);
 
         slot.cron = job;
-        if (this.started && !slot.paused) job.start();
+        this.sync(slot);
     }
 
     public remove(slot: TaskSlot): void {
@@ -84,9 +85,7 @@ export class CronTasks {
     public start(): void {
         this.started = true;
 
-        for (const slot of this.registry.cronSlots()) {
-            if (!slot.paused) slot.cron.start();
-        }
+        for (const slot of this.registry.cronSlots()) this.sync(slot);
     }
 
     public stop(): void {
@@ -97,16 +96,20 @@ export class CronTasks {
 
     public pause(slot: CronSlot): void {
         slot.pausedByCall = true;
-        slot.cron.pause();
+        this.sync(slot);
     }
 
     public resume(slot: CronSlot): void {
         slot.pausedByCall = false;
-        if (this.started) slot.cron.start();
+        this.sync(slot);
     }
 
     public nextRun(slot: CronSlot): Date | null {
         return slot.paused ? null : slot.cron.nextRun();
+    }
+
+    private sync(slot: TaskSlot): void {
+        slot.cron?.setRunning(this.started && !slot.paused);
     }
 
     public list(): CronStatus[] {
@@ -130,16 +133,33 @@ function cronerReason(error: unknown): string {
         .replace(/^(Invalid value for \w+): .*$/, '$1');
 }
 
+function checkDates(
+    loaded: LoadedTask,
+    { startAt, stopAt }: Pick<CronMetadata, 'startAt' | 'stopAt'>,
+    timezone: string | undefined
+): void {
+    const start = startAt === undefined ? undefined : readDate(loaded, 'startAt', startAt, timezone);
+    const stop = stopAt === undefined ? undefined : readDate(loaded, 'stopAt', stopAt, timezone);
+
+    if (start !== undefined && stop !== undefined && stop <= start) {
+        throw new SeedcordTypeError(SeedcordErrorCode.PluginTasksStopBeforeStart, [
+            loaded.key,
+            loaded.file,
+            String(startAt),
+            String(stopAt)
+        ]);
+    }
+}
+
 // croner reads a date string in the task's timezone, so a plain new Date() could read it as a different time
-function checkDate(
+function readDate(
     { key, file }: LoadedTask,
     option: string,
     value: Date | string,
     timezone: string | undefined
-): void {
+): number {
     try {
-        // eslint-disable-next-line no-new -- the constructor is the check, since it throws for a date croner can't read
-        new CronDate(value, timezone);
+        return new CronDate(value, timezone).getTime();
     } catch (error) {
         throw new SeedcordTypeError(SeedcordErrorCode.PluginTasksInvalidDate, [key, option, String(value), file], {
             cause: error

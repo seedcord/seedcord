@@ -28,12 +28,14 @@ export class ScheduledJobs {
     private readonly pending = new Map<string, Pending>();
     private readonly firing = new Set<string>();
     private started = false;
+    private warnedInMemory = false;
 
     constructor(
         private readonly records: KvCollection<JobRecord>,
         private readonly runner: TaskRunner,
         private readonly findTask: (key: string) => LoadedTask | undefined,
-        private readonly logger: Logger
+        private readonly logger: Logger,
+        private readonly inMemory: boolean
     ) {}
 
     public get size(): number {
@@ -61,6 +63,7 @@ export class ScheduledJobs {
     public async add(key: string, at: Date, data: JsonValue | undefined): Promise<ScheduledJob> {
         const id = randomUUID();
         await this.records.set(id, { key, at: at.getTime(), ...(data !== undefined && { data }) });
+        this.warnIfInMemory();
 
         const job: Pending = { id, key, at, timer: undefined };
         this.pending.set(id, job);
@@ -136,11 +139,23 @@ export class ScheduledJobs {
         }
     }
 
+    private warnIfInMemory(): void {
+        if (!this.inMemory || this.warnedInMemory) return;
+
+        this.warnedInMemory = true;
+        this.logger.warn(
+            `this process holds scheduled jobs in memory, so they end when it exits. Pass a driver as ${paint.bold('kv')} in your config to keep them through a restart`
+        );
+    }
+
     private async read(job: Pending): Promise<JobRecord | undefined> {
         try {
             return await this.records.get(job.id);
         } catch (error) {
-            this.logger.error(`could not read job ${paint.sky(job.id)}, trying again in ${STORE_RETRY_MS}ms`, error);
+            this.logger.error(
+                `could not read job ${paint.sky(job.id)}. The plugin tries again in ${STORE_RETRY_MS}ms`,
+                error
+            );
             this.pending.set(job.id, job);
             this.setTimer(job, STORE_RETRY_MS);
 
@@ -152,7 +167,7 @@ export class ScheduledJobs {
         try {
             await this.records.delete(id);
         } catch (error) {
-            this.logger.error(`could not delete job ${paint.sky(id)}, it runs again after a restart`, error);
+            this.logger.error(`could not delete job ${paint.sky(id)}, so it runs again after a restart`, error);
         }
     }
 }

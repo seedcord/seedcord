@@ -282,8 +282,6 @@ export class Unban extends Task<{ userId: string }> {
     }
 
     public override async onError(): Promise<void> {
-        if (this.signal.aborted) return;
-
         await this.core.tasks.schedule(Unban, {
             in: '1h',
             data: this.data
@@ -292,7 +290,7 @@ export class Unban extends Task<{ userId: string }> {
 }
 ```
 
-Check `this.signal.aborted` first. A run that shutdown interrupted keeps its job, so scheduling another one would leave you with two.
+A run that shutdown interrupts keeps its job and skips `onError()`, so the retry never schedules a second copy.
 
 ### Renaming a task
 

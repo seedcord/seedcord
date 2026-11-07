@@ -1,4 +1,4 @@
-// every zone Intl.supportedValuesOf('timeZone') lists, so a literal timezone can be checked at compile time
+// IANA zone names that Intl accepts, so a literal timezone can be checked at compile time
 export const IANA_TIMEZONES = [
     'Africa/Abidjan',
     'Africa/Accra',

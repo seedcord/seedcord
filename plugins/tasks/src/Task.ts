@@ -48,7 +48,7 @@ export abstract class Task<TData = void, TCore extends CoreBase = CoreBase> {
     /** The task's work. The plugin logs a throw, publishes it as a failed `taskRan`, and passes it to `onError()`. */
     public abstract execute(): Promise<void>;
 
-    /** Runs after `execute()` throws, once the plugin has logged the error. */
+    /** Runs after `execute()` throws, once the plugin has logged the error. A throw after shutdown aborts `signal` skips it. */
     public onError?(error: Error): Promise<void>;
 
     /** Runs in place of `execute()` when a `protect`ed task gets a cron or manual run during its last run. */
