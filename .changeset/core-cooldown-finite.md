@@ -2,4 +2,4 @@
 '@seedcord/core': minor
 ---
 
-**BREAKING:** Fixed `Cooldown(NaN)` and `Cooldown(Infinity)` building a gate whose window never freed. They now throw `InvalidDuration`, the same as `Cooldown(0)`.
+**BREAKING:** Fixed `Cooldown(NaN)` and `Cooldown(Infinity)` building a gate that never blocked. They now throw `InvalidDuration`, the same as `Cooldown(0)`.
