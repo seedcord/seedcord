@@ -33,7 +33,6 @@ function defaultFormat(): SinkFormat {
  */
 export class WinstonConsoleSink implements ILogSink {
     public readonly kind = 'console';
-    public readonly node = true;
 
     private readonly winston: Winston;
 

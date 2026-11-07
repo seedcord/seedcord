@@ -56,7 +56,6 @@ describe('Bus listener isolation', () => {
         const error = vi.spyOn(busLoggerOf(bus), 'error');
         const thrown = new Error('listener blew up');
 
-        // eslint-disable-next-line @typescript-eslint/no-misused-promises -- the void position is what this pins
         bus.on('unknownException', async () => {
             await Promise.resolve();
             throw thrown;

@@ -2,7 +2,6 @@ import 'reflect-metadata';
 
 import path from 'node:path';
 
-import { HmrModuleHandler } from '@seedcord/core/hmr';
 import { Plugin } from '@seedcord/core/plugin';
 import { SeedcordErrorCode, paint } from '@seedcord/errors';
 import { SeedcordError } from '@seedcord/errors/internal';
@@ -11,12 +10,10 @@ import { Envapter } from 'envapt';
 import { Kysely, PostgresDialect } from 'kysely';
 import { Pool, type PoolConfig, type PoolClient } from 'pg';
 
-import { KyselyServiceMetadataKey } from './decorators/RegisterKyselyService';
 import { KyselyMigrationManager } from './KyselyMigrationManager';
 import { KyselyServiceRegistry } from './KyselyServiceRegistry';
 import { PostgresDatabaseBootstrapper } from './PostgresDatabaseBootstrapper';
 
-import type { KyselyServiceConstructor } from './KyselyService';
 import type { KyselySchema } from './types/KyselyDatabase';
 import type { MigrationOptions, StepMigrationOptions } from './types/KyselyMigration';
 import type { KyselyOptions } from './types/KyselyOptions';
@@ -25,10 +22,6 @@ import type { CoreBase } from '@seedcord/core';
 import type { HmrUpdateEvent } from '@seedcord/types';
 import type { MigrationInfo } from 'kysely/migration';
 import type { Constructor } from 'type-fest';
-
-export interface KyselyArtifact {
-    key?: string;
-}
 
 /**
  * Postgres plugin using Kysely.
@@ -51,7 +44,6 @@ export class KyselyPostgres extends Plugin<{ transport: 'any'; runtime: 'server'
     private readonly serviceRegistry: KyselyServiceRegistry;
     private readonly databaseBootstrapper: PostgresDatabaseBootstrapper;
     private databaseName: string | null = null;
-    private readonly hmrHandler?: HmrModuleHandler<KyselyServiceConstructor, void, KyselyArtifact>;
 
     /**
      * Map of all services registered with the plugin, keyed by their decorator name.
@@ -70,33 +62,17 @@ export class KyselyPostgres extends Plugin<{ transport: 'any'; runtime: 'server'
         private readonly options: KyselyOptions
     ) {
         super(host, { runtime: 'server', dispose: keepDefined({ timeout: options.timeout }) });
-        this.serviceRegistry = new KyselyServiceRegistry(this, this.core, this.logger);
+        this.serviceRegistry = new KyselyServiceRegistry(this, this.core, this.logger, options.dir);
         this.databaseBootstrapper = new PostgresDatabaseBootstrapper(this.logger);
 
         if (!Envapter.isDevelopment) return;
 
         super.registerCriticalFiles([path.posix.join(this.options.migrations.dir, '**')]);
-
-        this.hmrHandler = new HmrModuleHandler({
-            handlers: {
-                dir: this.options.dir,
-                is: this.serviceRegistry.isServiceClass.bind(this.serviceRegistry),
-                register: this.serviceRegistry.initializeService.bind(this.serviceRegistry),
-                unregister: this.serviceRegistry.unregister.bind(this.serviceRegistry),
-                getArtifacts: this.getArtifacts.bind(this)
-            },
-            logger: this.logger
-        });
-    }
-
-    private getArtifacts(ctor: KyselyServiceConstructor): KyselyArtifact {
-        const key = Reflect.getMetadata(KyselyServiceMetadataKey, ctor) as string | undefined;
-        return key ? { key } : {};
     }
 
     /** @internal For use in dev mode */
     public override async onHmr(event: HmrUpdateEvent): Promise<void> {
-        await this.hmrHandler?.handle(event);
+        await this.serviceRegistry.onHmr(event);
     }
 
     /**
@@ -124,7 +100,7 @@ export class KyselyPostgres extends Plugin<{ transport: 'any'; runtime: 'server'
                     await this.migrate();
                 }
             }
-            await this.serviceRegistry.loadFromDirectory(this.options.dir);
+            await this.serviceRegistry.load();
         } catch (caught) {
             // the host skips dispose for a plugin whose init rejected so need to disconnect here
             await this.disconnect().catch((error: unknown) => this.logger.error('failed to close the pool', error));
@@ -253,15 +229,6 @@ export class KyselyPostgres extends Plugin<{ transport: 'any'; runtime: 'server'
     /** @internal */
     _register(key: string, instance: unknown): void {
         this.serviceRegistry.register(key, instance);
-    }
-
-    /**
-     * Tracks a service file with the HMR handler so dev reloads can swap it. No-op outside dev.
-     *
-     * @internal Exposes the dev-only HMR handler to {@link KyselyServiceRegistry}.
-     */
-    public trackServiceFile(filePath: string, ctor: KyselyServiceConstructor): void {
-        this.hmrHandler?.trackHandler(filePath, ctor);
     }
 
     private async resolvePool(): Promise<Pool> {

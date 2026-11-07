@@ -37,11 +37,16 @@ export interface LogRecord {
 
 type LogSinkKind = 'console' | 'file' | 'capture';
 
-/** A destination for log records. `kind` controls dispatch routing, `node: true` marks a node-only sink. */
+/** A destination for log records. */
 export interface ILogSink {
+    /**
+     * A `'console'` sink stops getting records while a capture sink that mutes the console is installed,
+     * like the dev terminal's. `'file'` and `'capture'` sinks keep getting them.
+     */
     readonly kind: LogSinkKind;
-    readonly node?: boolean;
-    onLog(record: LogRecord): void;
+    /** Can be async. seedcord doesn't await it, and an edge bot keeps the request open until it finishes. */
+    onLog(record: LogRecord): unknown;
+    /** Runs when a later logger config leaves this sink out. Close a file handle or a connection here. */
     dispose?(): void;
 }
 

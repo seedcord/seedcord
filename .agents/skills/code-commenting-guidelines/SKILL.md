@@ -5,7 +5,7 @@ description: Use this when writing, refactoring, or reviewing TypeScript code. D
 
 # Comments
 
-Most code needs none. Fix the code first. When the reason sits outside the file and no name can hold it, write one line the way you would say it out loud.
+Most code needs none. Fix the code first. When the reason sits outside the file and no name can hold it, write it the way you would say it out loud.
 
 For _how_ the line should read once you decide to write it, this skill and `writing-voice` both apply. That one covers word choice everywhere. This one covers whether the comment exists.
 
@@ -160,23 +160,26 @@ A reviewer asking "why is this comment here" is a different person asking a diff
 
 ---
 
-## 4. Write the fact, then stop
+## 4. Write for the next editor
 
-**One fact per comment. Write it, then stop.** That is the default and it covers most comments.
+**Say what the line does that the code can't show, or what breaks if they change it.** Your debugging, measurements, and investigation terms stay out. Whatever you just worked out only helps if the next editor needs it too.
 
-Add a consequence only when a reader would misread the code without it. Usually the consequence is the next line and they are about to read it anyway.
-
-**The test, run it before the comment ships.** Cut everything from the connective onward and read what is left. When the shorter line still does the job, that was the whole comment.
+**The test, run it on every draft and after every rewrite.** Read the comment as someone who never saw the debugging. Each `this`, `these`, and helper name has to point at something on the lines around it. Then read any second clause. It stays when it says what breaks or why. It goes when the reader loses nothing.
 
 ```ts
-// drafted
+// the second half adds nothing, so cut it
 // zero packs to one char, which means an empty block is a truncated body
-
-// cut at the connective, still works, ship this one
 // an empty block means the body was truncated
+
+// the second half is the reason, so it stays
+// a save after this imports a second copy of the framework and breaks the instanceof checks
+
+// the number came from a benchmark, and the editor needs what it showed
+// waiting on them took 100 reads on a 2ms backend from 3ms to 227ms
+// waiting on them slows down a busy key on a networked backend
 ```
 
-Keep both halves when the first carries something the reader has no other way to get. "cloudflare publishes the record 2.5s late" earns its place. "the loop collects failures" does not, because the loop is right there.
+Never cut or split a comment only to get past a rule. Two facts that each belong to a different line go on those lines, which section 5 covers.
 
 **When you catch yourself explaining why the comment is there, delete the comment.** The urge to justify is the tell that it never earned its place. Catch the urge and you catch every version of the shape, whichever connective you reached for.
 
@@ -239,4 +242,4 @@ Cover the comment and read the code. Would a careful reader get it wrong?
 
 - No, and a rename would fix it. Do the rename.
 - No, it is already clear. Delete the comment.
-- Yes, and the missing piece is one of the four in section 2. Keep it, one line, in your own voice.
+- Yes, and the missing piece is one of the four in section 2. Keep it, on the line it explains, in your own voice.

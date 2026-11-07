@@ -112,6 +112,8 @@ export enum SeedcordErrorCode {
     CoreBotMemberMissing = 1235,
     /** A module from a build read its path, but the build's `index.mjs` didn't run first. */
     CoreBuiltModuleRanDirectly = 1236,
+    /** `JSON.stringify` threw on a record passed to a kv collection's `set()` or `update()`, like one with a circular reference. */
+    CoreKvUnserializable = 1237,
 
     /** A command class carries `@RegisterCommand` twice. */
     DecoratorCommandAlreadyRegistered = 1301,

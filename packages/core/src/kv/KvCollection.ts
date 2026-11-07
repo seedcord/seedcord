@@ -1,3 +1,7 @@
+import { SeedcordErrorCode } from '@seedcord/errors';
+import { SeedcordTypeError } from '@seedcord/errors/internal';
+import { asError } from '@seedcord/utils/internal';
+
 import type { KeyedQueue } from './KeyedQueue';
 import type { KvDriver } from '@seedcord/types';
 import type { Jsonify, Simplify } from 'type-fest';
@@ -9,6 +13,17 @@ type Stored<TRecord> = Simplify<Jsonify<TRecord>>;
 interface Envelope<TValue> {
     value: TValue;
     expiresAt?: number;
+}
+
+// the record types reject a function or a bigint, but a recursive type like `{ self?: Loop }` still compiles
+function serialized(key: string, envelope: Envelope<unknown>): string {
+    try {
+        return JSON.stringify(envelope);
+    } catch (error) {
+        throw new SeedcordTypeError(SeedcordErrorCode.CoreKvUnserializable, [key, asError(error).message], {
+            cause: error
+        });
+    }
 }
 
 /**
@@ -42,7 +57,7 @@ export class KvCollection<TRecord> {
     /** Reads the record stored under `id`. Resolves to `undefined` when nothing is there or the record expired. */
     public async get(id: string): Promise<Stored<TRecord> | undefined> {
         const key = this.#prefix + id;
-        const raw = await this.#driver.get(key);
+        const raw = await this.#updates.read(key, async () => this.#driver.get(key));
         const value = this.#liveValue(raw);
         if (raw !== undefined && value === undefined) await this.#deleteExpired(key);
         return value;
@@ -106,13 +121,19 @@ export class KvCollection<TRecord> {
      */
     public async *entries(): AsyncIterable<[id: string, record: Stored<TRecord>]> {
         const expired: string[] = [];
+        const writes = this.#updates.watchWrites();
         try {
-            for await (const [key, raw] of this.#driver.entries(this.#prefix)) {
+            for await (const [key, listed] of this.#driver.entries(this.#prefix)) {
+                // a set that overlaps the driver's read can leave a half-written record in the listing
+                const raw = writes.overlaps(key)
+                    ? await this.#updates.read(key, async () => this.#driver.get(key))
+                    : listed;
                 const value = this.#liveValue(raw);
                 if (value === undefined) expired.push(key);
                 else yield [key.slice(this.#prefix.length), value];
             }
         } finally {
+            writes.stop();
             // deletes wait until the listing ends. a driver may be reading from an open cursor
             await Promise.all(expired.map(async (key) => this.#deleteExpired(key)));
         }
@@ -120,7 +141,7 @@ export class KvCollection<TRecord> {
 
     async #write(key: string, value: TRecord, ttlMs: number | undefined): Promise<void> {
         const envelope: Envelope<TRecord> = ttlMs === undefined ? { value } : { value, expiresAt: Date.now() + ttlMs };
-        await this.#driver.set(key, JSON.stringify(envelope), ttlMs);
+        await this.#driver.set(key, serialized(key, envelope), ttlMs);
     }
 
     // reads again in the queue. a set queued after the first read may have stored a live record

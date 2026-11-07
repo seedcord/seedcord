@@ -1,5 +1,29 @@
 # @seedcord/http
 
+## 0.13.0
+
+### 💥 Breaking
+
+- `HmrModuleHandler` is now `FolderExports`, exported from `@seedcord/core` and both transport packages, and `@seedcord/core/hmr` has been removed. Its `load()` replaces the startup loop you wrote with `importFiles` and `trackHandler()`, so your plugin's `init()` becomes one call. Each instance covers one folder, and `unregister` receives only the class since `getArtifacts` no longer exists. ([#444](https://github.com/seedcord/seedcord/pull/444))
+
+### 🩹 Patch
+
+- Fixed an async log sink on an edge bot getting cut off when the request ended, which lost the lines that it was sending to a log service. ([#442](https://github.com/seedcord/seedcord/pull/442))
+- Fixed an edge bot that stopped answering every request after Discord dropped the first one during a slow startup. ([#442](https://github.com/seedcord/seedcord/pull/442))
+- Fixed an edge bot failing every request after a plugin's `init()` timed out. The bot now starts again on the first request after that init finishes, or after 25 seconds if it never does. ([#442](https://github.com/seedcord/seedcord/pull/442))
+- Fixed an edge bot's sends to one channel or webhook hanging for good after two interactions sent to that channel or webhook at the same time. Each request now gets its own REST client behind `core.rest`. ([#442](https://github.com/seedcord/seedcord/pull/442))
+- A node http bot's shutdown now also waits for the async `bus.on()` listeners and log sinks that a request started, within the same drain window. ([#442](https://github.com/seedcord/seedcord/pull/442))
+- Fixed subscribers and async `bus.on()` listeners on an edge bot getting cut off when the request ended, which lost `WebhookLog` cards and error reports. The bot now keeps each request open until that work finishes, including work that a startup task publishes. ([#442](https://github.com/seedcord/seedcord/pull/442))
+
+#### 📦 Seedcord packages
+
+- `@seedcord/core` 0.12.1 → 0.13.0
+- `@seedcord/types` 0.16.1 → 0.16.2
+- `@seedcord/logger` 0.6.0 → 0.6.1
+- `@seedcord/event-emitter` 0.2.0 → 0.2.1
+- `@seedcord/errors` 0.15.0 → 0.15.1
+- `@seedcord/utils` 0.9.1 → 0.9.2
+
 ## 0.12.0
 
 ### 💥 Breaking

@@ -114,6 +114,7 @@ export { UnstorageDriver } from '#src/kv/UnstorageDriver';
 export { buildKey } from '#src/rateLimiter/buildKey';
 
 export type { Generated, PluginTypes } from '#src/plugin/Generated';
+export { FolderExports } from '#hmr/FolderExports';
 
 export { Bus, Subscribe, Subscriber, WebhookLog, WebhookUrl } from '#subscribers/index';
 export type {

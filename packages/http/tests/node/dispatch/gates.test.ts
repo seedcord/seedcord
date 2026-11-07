@@ -65,7 +65,6 @@ describe('handler gates', () => {
 
         expect(response.status).toBe(202);
         expect(executed()).toBe(false);
-        expect(ctx.waitUntil).not.toHaveBeenCalled();
         const first = restClients()[0];
         expect(first?.post).toHaveBeenCalledTimes(1);
         const [route, options] = first?.post.mock.calls[0] as [
@@ -88,7 +87,7 @@ describe('handler gates', () => {
         using engine = await readyEngine(classes);
         const { signer, handle } = engine;
 
-        const response = await handle(await signedRequest(signer, slashPayload('guarded')));
+        const response = await handle(await signedRequest(signer, slashPayload('guarded')), capturingCtx());
 
         expect(response.status).toBe(202);
         expect(executed()).toBe(false);

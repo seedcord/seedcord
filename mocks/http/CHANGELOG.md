@@ -1,5 +1,13 @@
 # @seedcord/mock-http
 
+## 0.0.17
+
+### 🩹 Patch
+
+#### 📦 Seedcord packages
+
+- `@seedcord/http` 0.12.0 → 0.13.0
+
 ## 0.0.16
 
 ### 🩹 Patch

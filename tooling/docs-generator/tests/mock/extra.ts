@@ -15,7 +15,7 @@ export type { PromotedShape } from './promoted.js';
 
 export { MockHostBase } from './hostBase.js';
 
-// never exported, the way @seedcord/core/hmr references HmrModuleHandlerOptions without exporting it.
+// never exported, the way @seedcord/core references FolderExportsOptions without exporting it.
 // includeForgottenExports still puts it in the model.
 interface ExtraOnly {
     tag: 'extra';

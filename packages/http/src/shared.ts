@@ -3,7 +3,7 @@ import './subscriptions';
 
 // both entries export this module, each with its own Seedcord beside it
 
-export type { EngineContext } from './engine';
+export type { EngineContext } from './requestScope';
 
 export { Plugin } from './Plugin';
 export type { HttpPluginOptions, PluginLifecycleSpec, PluginOptions } from './Plugin';
@@ -21,7 +21,6 @@ export type { InjectedEmojiMap } from '#src/emojis/EmojiInjector';
 
 export type { API } from '@discordjs/core/http-only';
 export * from '@seedcord/core';
-export { HmrModuleHandler } from '@seedcord/core/hmr';
 export * from '@seedcord/errors';
 export * from '@seedcord/event-emitter';
 export * from '@seedcord/logger';

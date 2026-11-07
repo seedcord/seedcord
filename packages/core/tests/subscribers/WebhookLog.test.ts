@@ -19,8 +19,7 @@ import type { APIMessageTopLevelComponent } from 'discord-api-types/v10';
 // envapt snapshots process.env on its first read, before any test runs
 const WEBHOOK_ENV = vi.hoisted(() => {
     const env = {
-        REPORTER_WEBHOOK_URL: 'https://discord.com/api/webhooks/77/tok-en',
-        REPORTER_REUSE_WEBHOOK_URL: 'https://discord.com/api/webhooks/88/reuse-tok'
+        REPORTER_WEBHOOK_URL: 'https://discord.com/api/webhooks/77/tok-en'
     };
     Object.assign(process.env, env);
     return env;
@@ -32,11 +31,11 @@ afterAll(() => {
 
 // justified: report() under test ignores the payload
 const data = {} as unknown as AllSubscriptions['unknownException'];
-// justified: the Subscriber base only stores core
-const core = {} as unknown as CoreBase;
+// justified: WebhookLog reads only rest off the core
+const core = { rest: new REST() } as unknown as CoreBase;
 
 // the throttle keys on the core
-const freshCore = (): CoreBase => ({}) as unknown as CoreBase;
+const freshCore = (): CoreBase => ({ rest: new REST() }) as unknown as CoreBase;
 
 interface SentBody {
     body: { username: string; avatar_url?: string };
@@ -109,22 +108,6 @@ describe('WebhookLog', () => {
         const bodies = post.mock.calls.map(([, options]) => (options as SentBody).body);
         expect(bodies[0]?.avatar_url).toBe('https://cdn.example/av.png');
         expect(bodies[1]).not.toHaveProperty('avatar_url');
-    });
-
-    it('reuses one sender per url across instances', async () => {
-        @Subscribe(['unknownException'])
-        @WebhookUrl('REPORTER_REUSE_WEBHOOK_URL')
-        class RepeatReporter extends WebhookLog<'unknownException', CoreBase> {
-            report(): WebhookReport {
-                return { components: [] };
-            }
-        }
-
-        await new RepeatReporter(data, core, 'unknownException').execute();
-        await new RepeatReporter(data, core, 'unknownException').execute();
-
-        expect(post).toHaveBeenCalledTimes(2);
-        expect(post.mock.contexts[1]).toBe(post.mock.contexts[0]);
     });
 
     it('logs a send failure and resolves', async () => {

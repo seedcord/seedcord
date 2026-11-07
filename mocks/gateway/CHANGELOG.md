@@ -1,5 +1,14 @@
 # @seedcord/mock-gateway
 
+## 0.2.37
+
+### 🩹 Patch
+
+#### 📦 Seedcord packages
+
+- `@seedcord/gateway` 0.9.0 → 0.10.0
+- `@seedcord/plugin-mongoose` 0.7.0 → 0.7.1
+
 ## 0.2.36
 
 ### 🩹 Patch

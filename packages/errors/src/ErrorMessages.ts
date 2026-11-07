@@ -89,6 +89,8 @@ const messages = {
         `${paint.bold('collection.entries()')} reads the key list of the Keyv store in ${paint.bold('config.kv')}, but that store can't list its keys. Cache adapters like ${paint.bold('@keyv/memcache')} never can. Pass an adapter that can, like ${paint.bold('@keyv/redis')} or ${paint.bold('@keyv/sqlite')}.`,
     [SeedcordErrorCode.CoreKvDriverFailed]: (operation: 'read' | 'write' | 'delete' | 'list', key: string) =>
         `The driver in ${paint.bold('config.kv')} failed to ${operation} ${paint.sky(key)}. Check that the storage it connects to is reachable.`,
+    [SeedcordErrorCode.CoreKvUnserializable]: (key: string, reason: string) =>
+        `The record for ${paint.sky(key)} can't be stored, because ${paint.bold('JSON.stringify')} threw: ${reason}. ${paint.bold('config.kv')} stores every record as JSON. Remove the circular reference, or convert the value to a type that JSON supports, like a ${paint.bold('bigint')} to a string.`,
     [SeedcordErrorCode.CoreBotMemberMissing]: (guildId: string) =>
         `The member cache of guild ${paint.sky(guildId)} doesn't hold the bot's member, so seedcord can't read the bot's permissions there. If ${paint.bold('clientOptions.makeCache')} limits ${paint.bold('GuildMemberManager')}, keep the bot's member with ${paint.sky('keepOverLimit: (member) => member.id === member.client.user.id')}.`,
     [SeedcordErrorCode.CoreBuiltModuleRanDirectly]: () =>

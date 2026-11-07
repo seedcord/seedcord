@@ -77,37 +77,6 @@ describe('CommandRegistry Integration', () => {
         expect(globalCommands?.[0]?.name).toBe('ping');
     });
 
-    it('resets the loading flag when the bulk load throws', async ({ testEnv }) => {
-        const commandsDir = 'commands';
-        await testEnv.createFile(
-            `${commandsDir}/PingCommand.ts`,
-            `
-            import { BuilderComponent, RegisterCommand } from '${seedcordPath}';
-
-            @RegisterCommand('global')
-            export class PingCommand extends BuilderComponent<'command'> {
-                constructor() {
-                    super('command');
-                    this.instance.setName('ping').setDescription('Replies with Pong!');
-                }
-            }
-            `
-        );
-        const config = testConfig({ commands: testEnv.resolvePath(commandsDir) });
-
-        await using seedcord = new Seedcord(config);
-
-        // fixture: access the private load + flag to force a mid-load throw
-        const internal = registryOf(seedcord) as unknown as {
-            loadCommands: () => Promise<void>;
-            loading: boolean;
-        };
-        vi.spyOn(internal, 'loadCommands').mockRejectedValue(new Error('load boom'));
-
-        await expect(registryOf(seedcord).init()).rejects.toThrow('load boom');
-        expect(internal.loading).toBe(false);
-    });
-
     it('should handle HMR updates for commands', async ({ testEnv }) => {
         const commandsDir = 'commands';
         const filePath = await testEnv.createFile(

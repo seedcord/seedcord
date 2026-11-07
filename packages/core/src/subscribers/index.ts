@@ -1,5 +1,5 @@
 export { Bus } from './Bus';
-export { registrationsFor, type StoredSubscriberCtor } from './Bus';
+export { type StoredSubscriberCtor } from './Bus';
 
 export { Subscriber } from './Subscriber';
 

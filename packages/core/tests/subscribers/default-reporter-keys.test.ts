@@ -33,8 +33,8 @@ const source: InteractionFaultSource = {
     raw: {}
 };
 
-// justified: the Subscriber base only stores core
-const core = {} as unknown as CoreBase;
+// justified: WebhookLog reads only rest off the core
+const core = { rest: new REST() } as unknown as CoreBase;
 
 afterEach(() => {
     vi.restoreAllMocks();

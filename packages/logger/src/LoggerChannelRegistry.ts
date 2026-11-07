@@ -35,6 +35,7 @@ export class LoggerChannelRegistry {
     private nextCaptureId = 1;
     private readonly captures = new Map<number, CaptureEntry>();
     private readonly broken = new WeakSet<ILogSink>();
+    private onSinkRun: (run: Promise<unknown>) => void = () => undefined;
 
     public static get instance(): LoggerChannelRegistry {
         return (this._instance ??= new LoggerChannelRegistry());
@@ -59,6 +60,11 @@ export class LoggerChannelRegistry {
         this.buildDefaultSinks = build;
     }
 
+    /** @internal the http host keeps the logging request open for each sink run */
+    public trackSinkRuns(track: (run: Promise<unknown>) => void): void {
+        this.onSinkRun = track;
+    }
+
     public dispatch(record: LogRecord): void {
         const override = this.channels[record.channel];
         if (!passesLevel(record.level, override?.level ?? this.level)) return;
@@ -78,9 +84,11 @@ export class LoggerChannelRegistry {
         if (this.broken.has(sink)) return;
 
         try {
-            void Promise.resolve(sink.onLog(record)).catch((error: unknown) => {
-                this.sinkFailed(sink, error);
-            });
+            this.onSinkRun(
+                Promise.resolve(sink.onLog(record)).catch((error: unknown) => {
+                    this.sinkFailed(sink, error);
+                })
+            );
         } catch (error: unknown) {
             this.sinkFailed(sink, error);
         }
@@ -115,6 +123,7 @@ export class LoggerChannelRegistry {
         this.buildDefaultSinks = objectConsoleSinks;
         this.sinks = this.buildDefaultSinks();
         this.channels = {};
+        this.onSinkRun = () => undefined;
         this.captures.clear();
         this.nextCaptureId = 1;
     }

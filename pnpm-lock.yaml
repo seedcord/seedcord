@@ -1865,6 +1865,9 @@ importers:
       envapt:
         specifier: catalog:peer
         version: 9.2.0
+      es-toolkit:
+        specifier: catalog:deps
+        version: 1.53.0
       yaml:
         specifier: catalog:deps
         version: 2.9.1
