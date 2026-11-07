@@ -26,9 +26,9 @@ type DataOf<TTask> = TTask extends abstract new (context: TaskContext<infer TDat
  * Runs the task classes in a folder. A task with a cron pattern runs on that schedule. Any task can
  * also run once at a later time through {@link Tasks.schedule}.
  *
- * The plugin stores scheduled jobs in the bot's `config.kv`, under its attach key. With a driver that
- * keeps its records, the driver still holds a pending job after a restart, and a job that came due
- * while the bot was down runs as soon as it starts. Renaming the attach key leaves the old key's
+ * The plugin stores scheduled jobs in the bot's `config.kv`, under its attach key. A driver that
+ * keeps its records still holds a pending job after a restart, and a job that came due while the
+ * bot was down runs as soon as it starts. Renaming the attach key leaves the old key's
  * jobs behind.
  *
  * @example
@@ -88,19 +88,14 @@ export class Tasks extends Plugin<{ transport: 'any'; runtime: 'server' }> {
     /**
      * Loads the task classes under `path`, then reads back the jobs earlier runs of the bot stored.
      *
+     * @throws A **SeedcordError** when a task file throws while it imports.
      * @throws A **SeedcordTypeError** with `CoreDuplicateName` when two tasks share a key.
-     * @throws A **SeedcordTypeError** when a task has an invalid cron pattern, timezone, `startAt`, or `stopAt`.
+     * @throws A **SeedcordTypeError** when a task has an invalid cron pattern, a date as its pattern, or an invalid timezone, `startAt`, or `stopAt`.
      * @throws A **SeedcordError** with `CoreKvKeysUnsupported` when the `config.kv` driver can't list its keys.
      */
     public async init(): Promise<void> {
-        try {
-            await this.#reloader.load();
-            await this.#scheduled.restore();
-        } catch (error) {
-            // the host skips dispose for a plugin whose init rejected
-            this.#cronTasks.stop();
-            throw error;
-        }
+        await this.#reloader.load();
+        await this.#scheduled.restore();
 
         this.logger.info(
             `loaded ${this.#registry.size} tasks, ${this.#cronTasks.size} on a cron pattern, ${this.#scheduled.size} scheduled jobs`

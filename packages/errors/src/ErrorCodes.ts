@@ -238,10 +238,10 @@ export enum SeedcordErrorCode {
     PluginTasksInvalidTimezone = 2304,
     /** `pause`, `resume`, or `nextRun` got a task without a cron pattern. */
     PluginTasksPatternMissing = 2305,
-    /** A task's `startAt` or `stopAt`, or the `at` passed to `schedule`, is not a valid date, or `at` is zero or negative. */
+    /** A task's `startAt` or `stopAt`, or the `at` passed to `schedule`, is not a valid date. */
     PluginTasksInvalidDate = 2306,
-    /** `schedule` got an `at` number too small to be milliseconds since the epoch. */
-    PluginTasksAtInSeconds = 2307,
+    /** `schedule` got an `at` number from before 2000, which is likely seconds or a missing value. */
+    PluginTasksAtTooEarly = 2307,
     /** `schedule` got an `in` that ends past the last date a `Date` can hold. */
     PluginTasksDurationTooLong = 2308,
 

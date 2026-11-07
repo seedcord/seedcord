@@ -3,7 +3,7 @@ import { PRODUCTION_SITES } from '@seedcord/brand';
 
 import { SeedcordErrorCode } from './ErrorCodes';
 import { deployFix, listedFolderProblems, placeText, token, vitePluginFix } from './messageParts';
-import { allOf, counted, isOne, oneOf, quoted, reasonThen, sentence } from './messageText';
+import { allOf, capitalized, counted, isOne, oneOf, quoted, reasonThen, sentence } from './messageText';
 import { paint } from './palette';
 
 import type { VitePluginPlace } from './messageParts';
@@ -233,7 +233,7 @@ const messages = {
         `${paint.bold('WinstonFileSink')} got ${paint.path(filename)} as its ${paint.bold('filename')}, which has a folder in it. File logs always go in ${paint.path(logsFolder)}. Pass only the file name, like ${paint.sky("'bot-{date}.log'")}.`,
 
     [SeedcordErrorCode.PluginOptionsRejected]: (pluginName: string, reason: string) =>
-        `${paint.sky(pluginName)} rejected its options. ${sentence(reason.charAt(0).toUpperCase() + reason.slice(1))}`,
+        `${paint.sky(pluginName)} rejected its options. ${sentence(capitalized(reason))}`,
     [SeedcordErrorCode.PluginDisposeFailures]: (count: number) =>
         `${paint.iris(count)} plugins failed to dispose. Each one is listed below.`,
     [SeedcordErrorCode.PluginServiceDecoratorMissing]: (decorator: string, className: string) =>
@@ -268,21 +268,19 @@ const messages = {
             ? `The class you passed has the task key ${paint.sky(key)}, but the task loaded under that key is a different class, from ${paint.path(loadedFrom)}. Pass the class that file exports, or give one of the two its own ${paint.bold('key')}.`
             : `${paint.sky(key)} is not a loaded task. Export it from a file under ${paint.path(path)} with ${paint.bold('@RegisterTask')}.`,
     [SeedcordErrorCode.PluginTasksInvalidPattern]: (key: string, file: string, pattern: string, reason: string) =>
-        `The task ${paint.sky(key)} in ${paint.path(file)} has the cron pattern ${paint.sky(pattern)}, which croner can't parse: ${reasonThen(reason, 'Fix that part of the pattern.')}`,
+        `The task ${paint.sky(key)} in ${paint.path(file)} has the cron pattern ${paint.sky(pattern)}, which croner can't parse. ${reasonThen(capitalized(reason), 'Fix that part of the pattern.')}`,
     [SeedcordErrorCode.PluginTasksDateAsPattern]: (key: string, file: string, pattern: string) =>
         `The task ${paint.sky(key)} in ${paint.path(file)} has ${paint.sky(pattern)} as its pattern, which is a date. For a task that runs once, call ${paint.bold('schedule()')}.`,
     [SeedcordErrorCode.PluginTasksInvalidTimezone]: (where: string, timezone: string) =>
         `${where} is ${quoted(timezone)}, which is not an IANA timezone. Write one like ${paint.sky("'America/New_York'")} or ${paint.sky("'UTC'")}.`,
     [SeedcordErrorCode.PluginTasksPatternMissing]: (key: string) =>
         `${paint.sky(key)} has no cron pattern. Pass one to ${paint.bold('@RegisterTask')} to pause, resume, or read its next run.`,
-    [SeedcordErrorCode.PluginTasksInvalidDate]: (key: string, option: string, value: string | number, file?: string) =>
+    [SeedcordErrorCode.PluginTasksInvalidDate]: (key: string, option: string, value: string, file?: string) =>
         file
-            ? `The task ${paint.sky(key)} in ${paint.path(file)} has ${paint.bold(option)} set to ${quoted(String(value))}, which croner can't read as a date. Pass a ${paint.bold('Date')}, or an ISO 8601 string like ${paint.sky("'2027-01-01T09:00:00'")}. A string without an offset reads in the task's timezone.`
-            : typeof value === 'number'
-              ? `${paint.bold('schedule()')} got ${paint.iris(value)} as ${paint.bold(option)} for ${paint.sky(key)}, which is at or before 1970 and usually means the value is missing. Pass the time in milliseconds, like ${paint.sky('Date.now() + 60_000')}.`
-              : `${paint.bold('schedule()')} got ${quoted(value)} as ${paint.bold(option)} for ${paint.sky(key)}, which is not a date. Pass a valid ${paint.bold('Date')}, or a number of milliseconds since the epoch.`,
-    [SeedcordErrorCode.PluginTasksAtInSeconds]: (key: string, at: number) =>
-        `${paint.bold('schedule()')} got ${paint.iris(at)} as ${paint.bold('at')} for ${paint.sky(key)}, which looks like seconds. Pass milliseconds, like ${paint.sky('Date.now() + 60_000')}.`,
+            ? `The task ${paint.sky(key)} in ${paint.path(file)} has ${paint.bold(option)} set to ${quoted(value)}, which croner can't read as a date. Pass a ${paint.bold('Date')}, or an ISO 8601 string like ${paint.sky("'2027-01-01T09:00:00'")}. A string without an offset reads in the task's timezone.`
+            : `${paint.bold('schedule()')} got ${quoted(value)} as ${paint.bold(option)} for ${paint.sky(key)}, which is not a date. Pass a valid ${paint.bold('Date')}, or a number of milliseconds since the epoch.`,
+    [SeedcordErrorCode.PluginTasksAtTooEarly]: (key: string, at: number) =>
+        `${paint.bold('schedule()')} got ${paint.iris(at)} as ${paint.bold('at')} for ${paint.sky(key)}, which is before the year 2000. A number that small is usually a timestamp in seconds, or a missing value read as ${paint.iris(0)}. Pass milliseconds, like ${paint.sky('Date.now() + 60_000')}.`,
     [SeedcordErrorCode.PluginTasksDurationTooLong]: (key: string, duration: string) =>
         `${paint.bold('schedule()')} got ${paint.sky(duration)} for ${paint.sky(key)}, which ends after the last date a JavaScript ${paint.bold('Date')} can hold, in the year 275760. Pass a shorter duration as ${paint.bold('in')}.`,
 

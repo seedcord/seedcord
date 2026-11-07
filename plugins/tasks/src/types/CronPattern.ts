@@ -247,7 +247,7 @@ type CheckFields<Texts extends string[], Fields extends Field[]> = Texts extends
 
 type CheckPattern<Texts extends string[]> = Texts['length'] extends keyof Layouts
     ? CheckFields<Texts, Layouts[Texts['length']]>
-    : `has ${Texts['length']} field${Texts['length'] extends 1 ? '' : 's'}. Write 5 (minute first), 6 (second first) or 7 (second first, year last)`;
+    : `it has ${Texts['length']} field${Texts['length'] extends 1 ? '' : 's'}. Write 5 (minute first), 6 (second first) or 7 (second first, year last)`;
 
 export type CronPattern<TPattern extends string> = string extends TPattern
     ? TPattern
@@ -257,6 +257,6 @@ export type CronPattern<TPattern extends string> = string extends TPattern
         ? `'${TPattern}' is not a croner nickname. Use @yearly, @annually, @monthly, @weekly, @daily, @midnight or @hourly`
         : CheckPattern<Fields<Lowercase<TPattern>>> extends infer Result
           ? Result extends string
-              ? `Invalid cron pattern '${TPattern}': ${Result}`
+              ? `'${TPattern}' isn't a valid cron pattern. ${Capitalize<Result>}`
               : TPattern
           : never;

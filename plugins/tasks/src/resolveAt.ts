@@ -20,10 +20,8 @@ function parseIn(key: string, duration: string): number {
 
 function parseAt(key: string, at: Date | number): Date {
     const date = new Date(at);
-    if (typeof at === 'number') {
-        // zero or below is a missing value more often than a date before 1970
-        if (at <= 0) throw new SeedcordRangeError(SeedcordErrorCode.PluginTasksInvalidDate, [key, 'at', at]);
-        if (at < MIN_EPOCH_MS) throw new SeedcordRangeError(SeedcordErrorCode.PluginTasksAtInSeconds, [key, at]);
+    if (typeof at === 'number' && at < MIN_EPOCH_MS) {
+        throw new SeedcordRangeError(SeedcordErrorCode.PluginTasksAtTooEarly, [key, at]);
     }
 
     if (Number.isNaN(date.getTime())) {

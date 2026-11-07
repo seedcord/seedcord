@@ -2,7 +2,7 @@ import path from 'node:path';
 
 import { MemoryDriver } from '@seedcord/core';
 import { SeedcordErrorCode } from '@seedcord/errors';
-import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
+import { afterAll, afterEach, beforeAll, beforeEach, describe, expect, it, vi } from 'vitest';
 
 import { Tasks } from '#src/Tasks';
 import { Abortable } from '#tests/fixtures/jobs/Abortable';
@@ -411,8 +411,19 @@ describe('Tasks job upkeep', () => {
     });
 
     describe('rejects', () => {
+        // every case here fails before it stores anything, so one plugin serves them all
+        const shared = new FakeDriver();
+        let tasks: Tasks;
+
+        beforeAll(async () => {
+            ({ tasks } = await start(jobs, shared));
+        });
+
+        afterAll(async () => {
+            await tasks.dispose();
+        });
+
         it('a duration parseDuration cannot read', async () => {
-            const { tasks } = await start(jobs, driver);
             const duration = String('soon');
 
             await expect(tasks.schedule(Reminder, { in: duration })).rejects.toMatchObject({
@@ -421,66 +432,63 @@ describe('Tasks job upkeep', () => {
         });
 
         it('a duration that ends past the last date a Date can hold, and stores nothing', async () => {
-            const { tasks } = await start(jobs, driver);
             const duration = String('100000001d');
 
             await expect(tasks.schedule(Reminder, { in: duration })).rejects.toMatchObject({
                 type: 'SeedcordRangeError',
                 code: SeedcordErrorCode.PluginTasksDurationTooLong
             });
-            expect(driver.stored.size).toBe(0);
+            expect(shared.stored.size).toBe(0);
         });
 
         it('an at in seconds', async () => {
-            const { tasks } = await start(jobs, driver);
             const seconds = Math.floor(Date.now() / SECOND_MS);
 
             await expect(tasks.schedule(Reminder, { at: seconds })).rejects.toMatchObject({
                 type: 'SeedcordRangeError',
-                code: SeedcordErrorCode.PluginTasksAtInSeconds
+                code: SeedcordErrorCode.PluginTasksAtTooEarly
             });
         });
 
-        it.each([
-            [new Date('nope'), 'SeedcordTypeError'],
-            [0, 'SeedcordRangeError'],
-            [-1, 'SeedcordRangeError']
-        ])('the invalid date %s', async (at, type) => {
-            const { tasks } = await start(jobs, driver);
-
+        it.each([new Date('nope'), Number.NaN])('the invalid date %s', async (at) => {
             await expect(tasks.schedule(Reminder, { at })).rejects.toMatchObject({
-                type,
+                type: 'SeedcordTypeError',
                 code: SeedcordErrorCode.PluginTasksInvalidDate
             });
         });
 
+        it.each([0, -1])('the at %s, as a likely missing value', async (at) => {
+            await expect(tasks.schedule(Reminder, { at })).rejects.toMatchObject({
+                type: 'SeedcordRangeError',
+                code: SeedcordErrorCode.PluginTasksAtTooEarly
+            });
+        });
+
         it('data with a cycle, and stores nothing', async () => {
-            const { tasks } = await start(jobs, driver);
             const data = { text: 'hi', sentAt: new Date() };
             Object.assign(data, { self: data });
 
             await expect(tasks.schedule(Note, { in: '1s', data })).rejects.toMatchObject({
                 code: SeedcordErrorCode.CoreKvUnserializable
             });
-            expect(driver.stored.size).toBe(0);
+            expect(shared.stored.size).toBe(0);
         });
 
         it('a class that shares its key with a loaded task, and stores nothing', async () => {
-            const { tasks } = await start(jobs, driver);
-
             const scheduling = tasks.schedule(TwinReminder, { in: '1s', data: { text: 'hi' } });
 
             await expect(scheduling).rejects.toMatchObject({ code: SeedcordErrorCode.PluginTasksNotLoaded });
             await expect(scheduling).rejects.toThrow('jobs/Reminder.ts');
-            expect(driver.stored.size).toBe(0);
+            expect(shared.stored.size).toBe(0);
         });
 
         it('a task the plugin did not load', async () => {
-            const { tasks } = await start(partial, driver);
+            const { tasks: partialTasks } = await start(partial, driver);
 
-            await expect(tasks.schedule(Reminder, { in: '1s' })).rejects.toMatchObject({
+            await expect(partialTasks.schedule(Reminder, { in: '1s' })).rejects.toMatchObject({
                 code: SeedcordErrorCode.PluginTasksNotLoaded
             });
+            await partialTasks.dispose();
         });
     });
 });

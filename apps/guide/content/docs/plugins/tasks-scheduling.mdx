@@ -107,7 +107,7 @@ export class TempBan extends SlashHandler<'tempban'> {
 }
 ```
 
-`job` is a [`ScheduledJob`](ref:plugin-tasks/ScheduledJob), and `TempBan` keeps its `id` to cancel it later. TypeScript checks `'1d'` against [`ValidDuration`](ref:utils/ValidDuration), which takes `ms`, `s`, `m`, `h`, or `d` after a whole number above 0. `data` follows the type on `Unban`, which means a missing `userId` fails to compile. `data` on a task that declares none fails too.
+`job` is a [`ScheduledJob`](ref:plugin-tasks/ScheduledJob), and `TempBan` keeps its `id` to cancel it later. TypeScript checks `'1d'` against [`ValidDuration`](ref:utils/ValidDuration), which takes `ms`, `s`, `m`, `h`, or `d` after a whole number above 0. `data` follows the type on `Unban`, so a missing `userId` fails to compile. `data` on a task that declares none fails too.
 
 Await `schedule()`, because it resolves once your driver holds the job. If the driver can't store it, the call throws `CoreKvDriverFailed`, and no job exists.
 
@@ -117,13 +117,13 @@ Await `schedule()`, because it resolves once your driver holds the job. If the d
 | --- | --- |
 | a `string` for `in` that isn't a duration | `InvalidDuration` |
 | an `in` so long it ends after the year 275760 | `PluginTasksDurationTooLong` |
-| an invalid `Date`, `NaN`, `0`, or a negative number for `at` | `PluginTasksInvalidDate` |
-| a number for `at` from before the year 2000 | `PluginTasksAtInSeconds` |
+| an invalid `Date` or `NaN` for `at` | `PluginTasksInvalidDate` |
+| a number for `at` from before the year 2000, `0` and negative numbers included | `PluginTasksAtTooEarly` |
 | a class the plugin didn't load from `path` | `PluginTasksNotLoaded` |
 
 {/* prettier-ignore-end */}
 
-`Date.now()` counts milliseconds, while a Unix timestamp from another API usually counts seconds. Read as milliseconds, that timestamp is a date in January 1970, which is why `schedule()` throws `PluginTasksAtInSeconds` for it. Any other time in the past runs the job right away.
+`Date.now()` counts milliseconds, while a Unix timestamp from another API usually counts seconds. Read as milliseconds, that timestamp is a date in January 1970, which is why `schedule()` throws `PluginTasksAtTooEarly` for it, and for a `0` that stands in for a missing value. Any other time in the past runs the job right away.
 
 `schedule()` also takes a cron task that declares no data. The job adds one extra run at that time. If `protect` is on and a run from the pattern is still running at that time, the job waits for it to end and then runs. A job of a paused task runs on time.
 

@@ -75,6 +75,22 @@ describe('Tasks cron tasks', () => {
         await tasks.onHmr({ file: path.join(taskFolder, 'Slow.ts'), type: 'update' });
 
         expect(tasks.crons().find((status) => status.key === 'slow')?.active).toBe(false);
+        expect(vi.getTimerCount()).toBe(0);
+    });
+
+    it('holds no timer before ready', async () => {
+        const { tasks } = await boot(crons);
+
+        expect(vi.getTimerCount()).toBe(0);
+        await tasks.dispose();
+    });
+
+    it('holds no timer for a task that starts paused', async () => {
+        const { tasks } = await start({ path: taskFolder, timezone: 'UTC' });
+        const unpaused = tasks.crons().filter((status) => status.key !== 'Idle').length;
+
+        expect(vi.getTimerCount()).toBe(unpaused);
+        await tasks.dispose();
     });
 
     it('leaves a paused task until resume', async () => {
@@ -415,13 +431,13 @@ describe('Tasks cron tasks', () => {
             await expect(boot({ path: path.join(fixtures, folder) })).rejects.toMatchObject({ code });
         });
 
-        it('stops the crons it built when init fails', async () => {
+        it('leaves no timer behind when init fails', async () => {
             const host = new TestHost(new FakeDriver());
             const { tasks } = host.attach('tasks', Tasks, { path: path.join(fixtures, 'bad-pattern') });
 
             await expect(tasks.init()).rejects.toThrow();
 
-            expect(tasks.crons()).toEqual([expect.objectContaining({ key: 'AGood', active: false, nextRun: null })]);
+            expect(vi.getTimerCount()).toBe(0);
         });
 
         it('rejects an empty path', () => {

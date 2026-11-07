@@ -4,6 +4,7 @@ import { keepDefined } from '@seedcord/utils';
 import { asError } from '@seedcord/utils/internal';
 import { Cron, CronDate } from 'croner';
 
+import { CronJob } from './CronJob';
 import { isTimezone } from './isTimezone';
 
 import type { TaskMetadata } from './decorators/RegisterTask';
@@ -45,23 +46,19 @@ export class CronTasks {
 
         const timezone = meta.timezone ?? this.defaultTimezone;
         const dates = keepDefined({ startAt: meta.startAt, stopAt: meta.stopAt });
-        for (const [option, value] of Object.entries(dates)) checkDate(loaded, option, value, timezone);
+        for (const option of ['startAt', 'stopAt'] as const) {
+            const value = meta[option];
+            if (value !== undefined) checkDate(loaded, option, value, timezone);
+        }
 
-        let job: Cron;
+        let cron: Cron;
 
         try {
-            job = new Cron(
-                pattern,
-                {
-                    paused: true,
-                    ...(timezone !== undefined && { timezone }),
-                    ...keepDefined({ maxRuns: meta.maxRuns }),
-                    ...dates
-                },
-                async () => {
-                    await this.runner.run(loaded, { trigger: 'cron', jobId: null }, undefined);
-                }
-            );
+            cron = new Cron(pattern, {
+                ...(timezone !== undefined && { timezone }),
+                ...keepDefined({ maxRuns: meta.maxRuns }),
+                ...dates
+            });
         } catch (error) {
             throw new SeedcordTypeError(
                 SeedcordErrorCode.PluginTasksInvalidPattern,
@@ -70,12 +67,17 @@ export class CronTasks {
             );
         }
 
-        slot.cron = { job, pattern, timezone, paused: meta.paused ?? false };
-        if (this.started && !slot.paused) job.resume();
+        const run = async (): Promise<void> => {
+            await this.runner.run(loaded, { trigger: 'cron', jobId: null }, undefined);
+        };
+        const job = new CronJob(cron, run, pattern, timezone, meta.paused ?? false);
+
+        slot.cron = job;
+        if (this.started && !slot.paused) job.start();
     }
 
     public remove(slot: TaskSlot): void {
-        slot.cron?.job.stop();
+        slot.cron?.stop();
         slot.cron = undefined;
     }
 
@@ -83,28 +85,28 @@ export class CronTasks {
         this.started = true;
 
         for (const slot of this.registry.cronSlots()) {
-            if (!slot.paused) slot.cron.job.resume();
+            if (!slot.paused) slot.cron.start();
         }
     }
 
     public stop(): void {
         this.started = false;
 
-        for (const slot of this.registry.cronSlots()) slot.cron.job.stop();
+        for (const slot of this.registry.cronSlots()) slot.cron.stop();
     }
 
     public pause(slot: CronSlot): void {
         slot.pausedByCall = true;
-        slot.cron.job.pause();
+        slot.cron.pause();
     }
 
     public resume(slot: CronSlot): void {
         slot.pausedByCall = false;
-        if (this.started) slot.cron.job.resume();
+        if (this.started) slot.cron.start();
     }
 
     public nextRun(slot: CronSlot): Date | null {
-        return slot.paused ? null : slot.cron.job.nextRun();
+        return slot.paused ? null : slot.cron.nextRun();
     }
 
     public list(): CronStatus[] {
@@ -112,10 +114,10 @@ export class CronTasks {
             key: slot.loaded.key,
             pattern: slot.cron.pattern,
             timezone: slot.cron.timezone,
-            active: slot.cron.job.isRunning(),
+            active: slot.cron.active,
             busy: slot.state.busy,
             nextRun: this.nextRun(slot),
-            previousRun: slot.cron.job.previousRun()
+            previousRun: slot.cron.previousRun()
         }));
     }
 }

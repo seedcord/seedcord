@@ -1,8 +1,8 @@
 import { TaskState } from './TaskState';
 
+import type { CronJob } from './CronJob';
 import type { TaskClass } from './decorators/RegisterTask';
 import type { Logger } from '@seedcord/logger';
-import type { Cron } from 'croner';
 
 export interface LoadedTask {
     readonly key: string;
@@ -13,28 +13,20 @@ export interface LoadedTask {
     readonly state: TaskState;
 }
 
-export interface CronEntry {
-    readonly job: Cron;
-    readonly pattern: string;
-    readonly timezone: string | undefined;
-    // the decorator's paused option, which applies until pause() or resume() runs
-    readonly paused: boolean;
-}
-
 // everything the plugin holds for one task key. A save unregisters the key and registers it again,
 // so the slot keeps a run in flight and what pause() or resume() did
 export class TaskSlot {
     public readonly state = new TaskState();
     public loaded: LoadedTask | undefined;
-    public cron: CronEntry | undefined;
+    public cron: CronJob | undefined;
     public pausedByCall: boolean | undefined;
 
     public get paused(): boolean {
-        return this.pausedByCall ?? this.cron?.paused ?? false;
+        return this.pausedByCall ?? this.cron?.pausedByDefault ?? false;
     }
 }
 
-export type CronSlot = TaskSlot & { readonly loaded: LoadedTask; readonly cron: CronEntry };
+export type CronSlot = TaskSlot & { readonly loaded: LoadedTask; readonly cron: CronJob };
 
 const isCronSlot = (slot: TaskSlot): slot is CronSlot => slot.loaded !== undefined && slot.cron !== undefined;
 
