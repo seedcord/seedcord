@@ -19,10 +19,11 @@ export class FakeDriver implements KvDriver, Disposable {
     public failReads = 0;
     public failDeletes = 0;
     private failHeldDeletes = false;
+    private failHeldReads = false;
+    private readGate: Promise<void> | undefined;
     private deleteGate: Promise<void> | undefined;
     private setGate: Promise<void> | undefined;
 
-    /** Holds every delete until the returned function runs, like a slow backend. */
     /** Holds every delete until the returned function runs. With `fail`, the held deletes then throw. */
     public holdDeletes({ fail = false } = {}): () => void {
         const { promise, resolve } = Promise.withResolvers<undefined>();
@@ -30,6 +31,17 @@ export class FakeDriver implements KvDriver, Disposable {
         this.failHeldDeletes = fail;
         return () => {
             this.deleteGate = undefined;
+            resolve(undefined);
+        };
+    }
+
+    /** Holds every read until the returned function runs. With `fail`, the held reads then throw. */
+    public holdReads({ fail = false } = {}): () => void {
+        const { promise, resolve } = Promise.withResolvers<undefined>();
+        this.readGate = promise;
+        this.failHeldReads = fail;
+        return () => {
+            this.readGate = undefined;
             resolve(undefined);
         };
     }
@@ -44,10 +56,17 @@ export class FakeDriver implements KvDriver, Disposable {
         };
     }
 
-    public get(key: string): string | undefined {
+    public get(key: string): Promise<string | undefined> | string | undefined {
         if (this.failReads > 0) {
             this.failReads -= 1;
             throw new Error('store is down');
+        }
+        if (this.readGate) {
+            const fail = this.failHeldReads;
+            return this.readGate.then(() => {
+                if (fail) throw new Error('store is down');
+                return this.stored.get(key);
+            });
         }
         return this.stored.get(key);
     }

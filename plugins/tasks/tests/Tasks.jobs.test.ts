@@ -363,6 +363,28 @@ describe('Tasks.cancel', () => {
         expect(host.runs).toHaveLength(1);
     });
 
+    it('runs a job once when its read and its cancel both fail', async () => {
+        await using booted = await start(jobs, driver);
+        const { host, tasks } = booted;
+        host.hold();
+        const job = await tasks.schedule(Note, { in: '1s', data: { text: 'hi', sentAt: new Date() } });
+
+        const releaseRead = driver.holdReads({ fail: true });
+        await vi.advanceTimersByTimeAsync(SECOND_MS);
+        const releaseDelete = driver.holdDeletes({ fail: true });
+        const cancelling = tasks.cancel(job.id);
+        releaseRead();
+        await vi.advanceTimersByTimeAsync(0);
+        releaseDelete();
+        await expect(cancelling).rejects.toMatchObject({ code: SeedcordErrorCode.CoreKvDriverFailed });
+
+        await vi.advanceTimersByTimeAsync(RETRY_MS * 2);
+        const runs = host.runs.length;
+        host.release();
+
+        expect(runs).toBe(1);
+    });
+
     it('refuses to cancel a job that has started', async () => {
         await using booted = await start(jobs, driver);
         const { host, tasks } = booted;

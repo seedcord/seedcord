@@ -111,6 +111,8 @@ export class ScheduledJobs {
     }
 
     private setTimer(job: Pending, delayMs = job.at.getTime() - Date.now()): void {
+        // a failed read and a failed cancel can both rearm one job
+        clearTimeout(job.timer);
         if (!this.started) return;
 
         job.timer = setTimeout(
