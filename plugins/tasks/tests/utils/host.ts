@@ -18,13 +18,16 @@ export class FakeDriver implements KvDriver, Disposable {
     public readonly stored = new Map<string, string>();
     public failReads = 0;
     public failDeletes = 0;
+    private failHeldDeletes = false;
     private deleteGate: Promise<void> | undefined;
     private setGate: Promise<void> | undefined;
 
     /** Holds every delete until the returned function runs, like a slow backend. */
-    public holdDeletes(): () => void {
+    /** Holds every delete until the returned function runs. With `fail`, the held deletes then throw. */
+    public holdDeletes({ fail = false } = {}): () => void {
         const { promise, resolve } = Promise.withResolvers<undefined>();
         this.deleteGate = promise;
+        this.failHeldDeletes = fail;
         return () => {
             this.deleteGate = undefined;
             resolve(undefined);
@@ -65,7 +68,9 @@ export class FakeDriver implements KvDriver, Disposable {
             throw new Error('store is down');
         }
         if (this.deleteGate) {
+            const fail = this.failHeldDeletes;
             return this.deleteGate.then(() => {
+                if (fail) throw new Error('store is down');
                 this.stored.delete(key);
             });
         }

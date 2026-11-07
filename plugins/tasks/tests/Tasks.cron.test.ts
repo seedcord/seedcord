@@ -323,6 +323,31 @@ describe('Tasks cron tasks', () => {
             expect(driver.stored.size).toBe(0);
         });
 
+        it('runs a waiting job whose cancel could not delete it', async () => {
+            using driver = new FakeDriver();
+            await using booted = await start(crons, driver);
+            const { host, tasks } = booted;
+            host.hold();
+
+            const first = tasks.trigger(Slow);
+            const job = await tasks.schedule(Slow, { in: '1s' });
+            await vi.advanceTimersByTimeAsync(SECOND_MS);
+
+            const release = driver.holdDeletes({ fail: true });
+            const cancelling = tasks.cancel(job.id);
+            host.release();
+            await first;
+            await vi.advanceTimersByTimeAsync(0);
+            release();
+
+            await expect(cancelling).rejects.toMatchObject({ code: SeedcordErrorCode.CoreKvDriverFailed });
+            await vi.advanceTimersByTimeAsync(0);
+            expect(runsOf(host, 'slow')).toEqual([
+                { task: 'slow', trigger: 'manual', data: undefined },
+                { task: 'slow', trigger: 'scheduled', data: undefined }
+            ]);
+        });
+
         it('runs a paused task through trigger and a scheduled job', async () => {
             await using booted = await start(crons);
             const { host, tasks } = booted;

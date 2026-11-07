@@ -19,6 +19,12 @@ interface Pending extends ScheduledJob {
     timer: NodeJS.Timeout | undefined;
 }
 
+// a job leaves 'waiting' once its run starts, so cancel() can stop it until then
+interface RunningJob {
+    readonly job: Pending;
+    state: 'waiting' | 'started' | 'cancelled';
+}
+
 // setTimeout overflows past this, so a longer wait sets a new timer in steps
 const MAX_TIMEOUT_MS = 2_147_483_647;
 // short enough that a job runs close to its time once the driver answers again
@@ -26,8 +32,7 @@ const STORE_RETRY_MS = 30_000;
 
 export class ScheduledJobs {
     private readonly pending = new Map<string, Pending>();
-    // a job leaves 'waiting' once its run starts, so cancel() can stop it until then
-    private readonly runningJobs = new Map<string, 'waiting' | 'started' | 'cancelled'>();
+    private readonly runningJobs = new Map<string, RunningJob>();
     private started = false;
     private warnedInMemory = false;
 
@@ -76,7 +81,7 @@ export class ScheduledJobs {
 
     public async cancel(id: string): Promise<boolean> {
         const running = this.runningJobs.get(id);
-        if (running === 'waiting') return this.cancelWaiting(id);
+        if (running?.state === 'waiting') return this.cancelWaiting(running);
         if (running) return false;
 
         const job = this.pending.get(id);
@@ -117,13 +122,20 @@ export class ScheduledJobs {
         );
     }
 
-    private async cancelWaiting(id: string): Promise<boolean> {
-        this.runningJobs.set(id, 'cancelled');
+    private async cancelWaiting(running: RunningJob): Promise<boolean> {
+        const { job } = running;
+        running.state = 'cancelled';
 
         try {
-            await this.records.delete(id);
+            await this.records.delete(job.id);
         } catch (error) {
-            if (this.runningJobs.has(id)) this.runningJobs.set(id, 'waiting');
+            // the wait can end while the delete is in flight, and runJob() lets go of the job once it does
+            if (this.runningJobs.get(job.id) === running) {
+                running.state = 'waiting';
+            } else {
+                this.pending.set(job.id, job);
+                this.setTimer(job);
+            }
             throw error;
         }
 
@@ -133,7 +145,8 @@ export class ScheduledJobs {
     // runJob() deletes the record only after the run ends, so a crash mid-run leaves the job for the next start
     private async runJob(job: Pending): Promise<void> {
         this.pending.delete(job.id);
-        this.runningJobs.set(job.id, 'waiting');
+        const running: RunningJob = { job, state: 'waiting' };
+        this.runningJobs.set(job.id, running);
 
         try {
             const record = await this.read(job);
@@ -149,7 +162,7 @@ export class ScheduledJobs {
             }
 
             const outcome = await this.runner.run(loaded, { trigger: 'scheduled', jobId: job.id }, record.data, () =>
-                this.startRun(job.id)
+                this.startRun(running)
             );
             if (outcome === 'finished' || outcome === 'failed') await this.forget(job.id);
         } finally {
@@ -157,10 +170,10 @@ export class ScheduledJobs {
         }
     }
 
-    private startRun(id: string): boolean {
-        if (this.runningJobs.get(id) !== 'waiting') return false;
+    private startRun(running: RunningJob): boolean {
+        if (running.state !== 'waiting') return false;
 
-        this.runningJobs.set(id, 'started');
+        running.state = 'started';
         return true;
     }
 
