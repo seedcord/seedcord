@@ -21,8 +21,8 @@ node_modules
 dist
 # almost literally every dotfolder is not needed and can be excluded for maximum layer caching
 **/.*
-# If you don't use build-time environment variables, uncomment the line below:
-# .env*
+# If you use build-time environment variables, uncomment the line below:
+# !.env
 
 # add other files that you don't need to include in your image if you want to optimize caching
 ```
@@ -160,7 +160,7 @@ COPY package.json ./
 COPY pnpm-lock.yaml ./
 COPY pnpm-workspace.yaml ./
 
-RUN npm install --production
+RUN pnpm install --production
 
 FROM node:24 AS runner
 # Here, you wouldn't use the container with your dev tools, just your production runner image
