@@ -297,6 +297,54 @@ export class PauseDigest extends SlashHandler<'pause-digest'> {
 
 `pause()`, `resume()`, and `nextRun()` throw `PluginTasksPatternMissing` for a task without a pattern. Each method that takes a class throws `PluginTasksNotLoaded` if the plugin didn't load it from `path`. These methods take tasks without data, so passing a task that declares data fails to compile.
 
+### Checking when a task runs next
+
+`nextRun()` returns a task's next run time as a `Date`. A handler can turn it into a Discord timestamp, and Discord shows it in each reader's own timezone.
+
+```ts twoslash title="src/handlers/DigestNext.ts"
+// ---cut-start---
+// @filename: tasks/Digest.ts
+import { RegisterTask, Task } from '@seedcord/plugin-tasks/gateway';
+
+@RegisterTask('0 9 * * MON')
+export class Digest extends Task {
+    public async execute(): Promise<void> {}
+}
+
+// @filename: handlers/DigestNext.ts
+import type { Tasks } from '@seedcord/plugin-tasks';
+
+declare module '@seedcord/gateway' {
+    interface Core {
+        tasks: Tasks;
+    }
+    interface SlashRegistry {
+        'digest-next': { options: {}; cache: 'cached' };
+    }
+}
+// ---cut-end---
+import { SlashHandler, SlashRoute } from '@seedcord/gateway';
+
+import { Digest } from '../tasks/Digest';
+
+@SlashRoute('digest-next')
+export class DigestNext extends SlashHandler<'digest-next'> {
+    public async execute(): Promise<void> {
+        const next = this.core.tasks.nextRun(Digest);
+
+        if (!next) {
+            await this.reply('The digest is paused.');
+            return;
+        }
+
+        const seconds = Math.floor(next.getTime() / 1000);
+        await this.reply(`The next digest posts <t:${seconds}:R>.`);
+    }
+}
+```
+
+`nextRun()` returns `null` while the task is paused or once it has no runs left, so check for it before you read the date. To get the next run of every cron task at once, call `crons()` and read each entry's `nextRun`.
+
 ## Shutting down
 
 A task that's writing to your database when the bot stops needs that database until it finishes. The plugin's [`dispose()`](ref:plugin-tasks/Tasks.dispose) runs in the `Drain` [shutdown phase](/plugins/lifecycle), before database plugins disconnect. It stops every timer, aborts `this.signal`, and waits for running tasks. If they take longer than `timeout`, seedcord stops waiting and reports [`LifecycleTaskTimeout`](/plugins/lifecycle#the-shutdown-deadline).
