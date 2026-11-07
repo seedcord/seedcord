@@ -10,6 +10,21 @@ permissions:
   contents: read
 
 jobs:
+  acknowledge:
+    if: github.event.issue.pull_request && github.event.comment.body == '/preview'
+    runs-on: ubuntu-latest
+    permissions:
+      pull-requests: write
+    outputs:
+      reaction: ${{ steps.react.outputs.id }}
+    steps:
+      - name: React to the comment
+        id: react
+        run: echo "id=$(gh api "repos/$GITHUB_REPOSITORY/issues/comments/$COMMENT/reactions" -f content=eyes --jq .id)" >> "$GITHUB_OUTPUT"
+        env:
+          GH_TOKEN: ${{ github.token }}
+          COMMENT: ${{ github.event.comment.id }}
+
   plan:
     if: >-
       (github.event_name == 'pull_request' && github.event.pull_request.user.type != 'Bot') || (github.event.issue.pull_request && github.event.comment.body == '/preview')
@@ -89,19 +104,26 @@ jobs:
       !cancelled() && needs.plan.result == 'success' && needs.plan.outputs.apps != '[]' && (needs.build.result == 'success' || needs.build.result == 'skipped') && (github.event_name == 'issue_comment' || github.event.pull_request.head.repo.full_name == github.repository)
     runs-on: ubuntu-latest
     timeout-minutes: 20
-    environment:
-      name: preview
-      url: https://pr${{ needs.plan.outputs.pr }}.seedcord.org${{ matrix.app == 'guide' && '/guide/' || '/' }}
+    # actionlint:ignore-next-line cache-write-untrusted -- an issue_comment run checks out next's code only
+    cache-mode: write # zizmor: ignore[cache-poisoning] same reason as the line above
     concurrency:
       group: site-preview-deploy-${{ needs.plan.outputs.pr }}-${{ matrix.app }}
       cancel-in-progress: true
     permissions:
       actions: read
       contents: read
+      deployments: write
     strategy:
       matrix:
         app: ${{ fromJSON(needs.plan.outputs.apps) }}
     steps:
+      - name: Start the deployment
+        id: deployment
+        run: echo "id=$(gh api "repos/$GITHUB_REPOSITORY/deployments" -f ref="$SHA" -f environment=preview -F auto_merge=false -f 'required_contexts[]' --jq .id)" >> "$GITHUB_OUTPUT"
+        env:
+          GH_TOKEN: ${{ github.token }}
+          SHA: ${{ needs.plan.outputs.sha }}
+
       - name: Check out the worker
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
@@ -146,18 +168,32 @@ jobs:
           packageManager: pnpm
           command: deploy --env next --name seedcord-${{ matrix.app }}-pr${{ needs.plan.outputs.pr }} --route pr${{ needs.plan.outputs.pr }}.seedcord.org/${{ matrix.app == 'guide' && 'guide*' || '*' }}
 
-  # a /preview deployment runs on the default branch, so github doesn't show its button on the pull request
-  comment:
-    needs: [plan, deploy]
-    if: ${{ !cancelled() && github.event_name == 'issue_comment' && needs.deploy.result == 'success' }}
+      - name: Finish the deployment
+        if: always() && steps.deployment.outputs.id
+        run: gh api "repos/$GITHUB_REPOSITORY/deployments/$ID/statuses" -f state="$STATE" -f environment_url="$URL"
+        env:
+          GH_TOKEN: ${{ github.token }}
+          ID: ${{ steps.deployment.outputs.id }}
+          STATE: ${{ job.status == 'success' && 'success' || 'failure' }}
+          URL: https://pr${{ needs.plan.outputs.pr }}.seedcord.org${{ matrix.app == 'guide' && '/guide/' || '/' }}
+
+  report:
+    needs: [acknowledge, plan, deploy]
+    if: always() && needs.acknowledge.result == 'success'
     runs-on: ubuntu-latest
     permissions:
       pull-requests: write
     steps:
-      - name: Post the preview link
-        run: gh pr comment "$PR" --repo "$GITHUB_REPOSITORY" --edit-last --create-if-none --body "Preview of $SHA at https://pr$PR.seedcord.org$PAGE"
+      - name: Remove the pickup reaction
+        run: gh api -X DELETE "repos/$GITHUB_REPOSITORY/issues/comments/$COMMENT/reactions/$REACTION"
         env:
           GH_TOKEN: ${{ github.token }}
-          PR: ${{ needs.plan.outputs.pr }}
-          SHA: ${{ needs.plan.outputs.sha }}
-          PAGE: ${{ contains(needs.plan.outputs.apps, 'home') && '/' || '/guide/' }}
+          COMMENT: ${{ github.event.comment.id }}
+          REACTION: ${{ needs.acknowledge.outputs.reaction }}
+
+      - name: React to the comment
+        run: gh api "repos/$GITHUB_REPOSITORY/issues/comments/$COMMENT/reactions" -f content="$CONTENT"
+        env:
+          GH_TOKEN: ${{ github.token }}
+          COMMENT: ${{ github.event.comment.id }}
+          CONTENT: ${{ needs.deploy.result == 'success' && 'rocket' || 'confused' }}
