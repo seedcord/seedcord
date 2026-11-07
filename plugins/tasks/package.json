@@ -65,7 +65,7 @@
         "coverage": "vitest run --coverage"
     },
     "peerDependencies": {
-        "@seedcord/core": "workspace:>=0.13.0-next.0",
+        "@seedcord/core": "workspace:>=0.14.0-next.0",
         "@seedcord/gateway": "workspace:>=0.9.0-next.0",
         "@seedcord/http": "workspace:>=0.12.0-next.0",
         "typescript": "catalog:consumerTypes"

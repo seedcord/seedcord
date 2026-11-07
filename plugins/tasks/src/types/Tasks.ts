@@ -21,7 +21,7 @@ export interface TasksOptions {
 /** The options `@RegisterTask` takes after a cron pattern. */
 export interface TaskOptions<TZone extends string = string> {
     /**
-     * Names the task in logs, bus events, and stored jobs. Set it on a scheduled task to keep its
+     * The task's identity in logs, bus events, and stored jobs. Set it on a scheduled task to keep its
      * pending jobs working through a class rename.
      *
      * @defaultValue The class name.

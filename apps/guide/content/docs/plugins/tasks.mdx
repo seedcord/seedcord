@@ -43,7 +43,7 @@ This sample builds a gateway bot. The same `attach` call works on an http `Seedc
 
 {/* prettier-ignore-end */}
 
-`timezone` only takes names from [`IanaTimezone`](ref:plugin-tasks/IanaTimezone), so a value you read from the environment needs a cast. If that value isn't a real timezone, `attach` throws `PluginTasksInvalidTimezone`.
+`timezone` only takes names from [`IanaTimezone`](ref:plugin-tasks/IanaTimezone), so a value that you read from the environment needs a cast. If that value isn't a real timezone, `attach` throws `PluginTasksInvalidTimezone`.
 
 The plugin reads your stored jobs while the bot starts, even if you only use cron tasks. If your [kv driver](/built-ins/drivers) [can't list its keys](/built-ins#reading-every-record), `init()` throws and the bot doesn't start. [Scheduling jobs](/plugins/tasks-scheduling#keeping-jobs-through-a-restart) covers which drivers work.
 
@@ -76,7 +76,7 @@ The `/gateway` import types `this.core` as the `Core` from `@seedcord/gateway`, 
 
 ### Writing a pattern
 
-With a plain cron library, a typo in a pattern only showed up when the bot started. `@RegisterTask` checks a literal pattern against [`CronPattern`](ref:plugin-tasks/CronPattern) at compile time and reports the field that's wrong.
+With a plain cron library, you only found a typo in a pattern when the bot started. `@RegisterTask` checks a literal pattern against [`CronPattern`](ref:plugin-tasks/CronPattern) at compile time and reports the field that's wrong.
 
 ```ts twoslash
 // @errors: 2345
@@ -168,7 +168,7 @@ Every other task, like `*/5 * * * *`, runs in both occurrences of the repeated h
 
 ## What a task can read
 
-`execute()` doesn't take arguments, since everything is on `this`. The plugin builds a new instance for each run, so a field you set doesn't keep its value for the next run. If a task needs a value between runs, keep it in [`core.kv`](/built-ins).
+`execute()` doesn't take arguments, since everything is on `this`. The plugin builds a new instance for each run, so a field that you set doesn't keep its value for the next run. If a task needs a value between runs, keep it in [`core.kv`](/built-ins).
 
 {/* prettier-ignore-start */}
 
@@ -215,7 +215,7 @@ Pass `protect: false` only if two runs of the task can safely overlap, since the
 
 ## When a task throws
 
-A throw in `execute()` doesn't stop the schedule. The task runs again at its next match. The plugin logs the error, then calls [`onError(error)`](ref:plugin-tasks/Task.onError) if the task defines it, passing the same `Error`. A throw from `onError()` gets logged too.
+A throw in `execute()` doesn't stop the schedule. The task runs again at its next match. The plugin logs the error, then calls [`onError(error)`](ref:plugin-tasks/Task.onError) if the task defines it, passing the same `Error`. The plugin logs a throw from `onError()` too.
 
 After every run, the plugin publishes `taskRan` on the [bus](/events/bus) with an `outcome` of `'finished'` or `'failed'`. Use `onError()` to clean up after one task, since it runs on the instance that threw. Use `taskRan` for what every task shares, like a report to Sentry, because one subscriber covers them all.
 

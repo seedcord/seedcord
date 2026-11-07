@@ -1,6 +1,7 @@
 import { SeedcordErrorCode, paint } from '@seedcord/errors';
 import { SeedcordTypeError } from '@seedcord/errors/internal';
 import { keepDefined } from '@seedcord/utils';
+import { asError } from '@seedcord/utils/internal';
 import { Cron, CronDate } from 'croner';
 
 import { isTimezone } from './schedule';
@@ -11,7 +12,7 @@ import type { CronStatus } from './types/Tasks';
 
 type CronMetadata = Extract<TaskMetadata, { kind: 'cron' }>;
 
-/** A cron task's croner job. A save rebuilds it, and the task's run state lives on `loaded.state`. */
+// a cron task's croner job, which a save rebuilds
 export interface CronEntry {
     readonly loaded: LoadedTask;
     readonly job: Cron;
@@ -21,6 +22,8 @@ export interface CronEntry {
 
 export class CronTasks {
     private readonly entries = new Map<string, CronEntry>();
+    // by task key, and outside the entry, so a save that rebuilds the job keeps what pause() and resume() did
+    private readonly paused = new Map<string, boolean>();
     private started = false;
 
     constructor(
@@ -73,14 +76,17 @@ export class CronTasks {
                 }
             );
         } catch (error) {
-            throw new SeedcordTypeError(SeedcordErrorCode.PluginTasksInvalidPattern, [key, file, pattern], {
+            // croner prefixes its messages with its class name, which says nothing to the reader
+            const reason = asError(error).message.replace(/^CronPattern: /, '');
+            throw new SeedcordTypeError(SeedcordErrorCode.PluginTasksInvalidPattern, [key, file, pattern, reason], {
                 cause: error
             });
         }
 
         this.entries.set(key, { loaded, job, pattern, timezone });
+        if (!this.paused.has(key)) this.paused.set(key, meta.paused ?? false);
 
-        if (this.started && !loaded.state.paused) job.resume();
+        if (this.started && !this.isPaused(key)) job.resume();
     }
 
     public remove(key: string): void {
@@ -92,7 +98,7 @@ export class CronTasks {
         this.started = true;
 
         for (const { job, loaded } of this.entries.values()) {
-            if (!loaded.state.paused) job.resume();
+            if (!this.isPaused(loaded.key)) job.resume();
         }
     }
 
@@ -103,17 +109,17 @@ export class CronTasks {
     }
 
     public pause({ job, loaded }: CronEntry): void {
-        loaded.state.paused = true;
+        this.paused.set(loaded.key, true);
         job.pause();
     }
 
     public resume({ job, loaded }: CronEntry): void {
-        loaded.state.paused = false;
+        this.paused.set(loaded.key, false);
         if (this.started) job.resume();
     }
 
     public nextRun({ job, loaded }: CronEntry): Date | null {
-        return loaded.state.paused ? null : job.nextRun();
+        return this.isPaused(loaded.key) ? null : job.nextRun();
     }
 
     public list(): CronStatus[] {
@@ -127,9 +133,13 @@ export class CronTasks {
             previousRun: entry.job.previousRun()
         }));
     }
+
+    private isPaused(key: string): boolean {
+        return this.paused.get(key) === true;
+    }
 }
 
-// croner reads a date string in the task's timezone, so a plain new Date() could disagree with it
+// croner reads a date string in the task's timezone, so a plain new Date() could read it as a different time
 function checkDate(
     { key, file }: LoadedTask,
     option: string,

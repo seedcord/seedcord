@@ -66,11 +66,14 @@ function probeDecorator(): void {
     // croner trims a pattern and splits it on runs of whitespace
     RegisterTask(' 0  9 *\t* * ')(NoData);
     RegisterTask()(Unban);
+    RegisterTask({ key: 'unban' })(Unban);
 
     // @ts-expect-error a week outside 1-5 or L
     RegisterTask('0 0 * * 5#6');
     // @ts-expect-error a backwards weekday range
     RegisterTask('0 0 * * 6-5#L');
+    // @ts-expect-error a scheduled task takes only a key, since the cron options do nothing there
+    RegisterTask({ key: 'unban', protect: false });
     // @ts-expect-error a cron task can't declare data
     RegisterTask('* * * * *')(Unban);
     // @ts-expect-error minute outside 0-59

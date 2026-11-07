@@ -185,7 +185,7 @@ describe('Tasks scheduled jobs', () => {
         expect(host.runs.map((run) => run.task)).toEqual(['Boom', 'onError', 'reminder']);
     });
 
-    it('publishes a failed run and drops the job when the constructor throws', async () => {
+    it('publishes a failed run and deletes the job when the constructor throws', async () => {
         using logs = captureLogs();
         const { host, tasks } = await start(jobs, driver);
         const ran = vi.fn();

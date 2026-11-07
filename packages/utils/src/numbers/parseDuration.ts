@@ -1,3 +1,5 @@
+import type { IsDigits, StripZeros } from './IsDigits';
+
 const UNIT_MS = {
     ms: 1,
     s: 1000,
@@ -8,16 +10,6 @@ const UNIT_MS = {
 
 type DurationUnit = keyof typeof UNIT_MS;
 
-type Digit = '0' | '1' | '2' | '3' | '4' | '5' | '6' | '7' | '8' | '9';
-
-type IsDigits<TText extends string> = TText extends `${Digit}${infer Rest}`
-    ? Rest extends ''
-        ? true
-        : IsDigits<Rest>
-    : false;
-
-type IsZeros<TText extends string> = TText extends '' ? true : TText extends `0${infer Rest}` ? IsZeros<Rest> : false;
-
 // check ms before the other units, since '500ms' also ends in 's'
 type Amount<TText extends string> = TText extends `${infer Value}ms`
     ? Value
@@ -26,7 +18,7 @@ type Amount<TText extends string> = TText extends `${infer Value}ms`
       : never;
 
 type IsPositiveWhole<Value extends string> =
-    IsDigits<Value> extends true ? (IsZeros<Value> extends true ? false : true) : false;
+    IsDigits<Value> extends true ? (StripZeros<Value> extends '0' ? false : true) : false;
 
 /**
  * A duration literal that {@link parseDuration} accepts, like `'30m'`, `'24h'`, or `'500ms'`: a whole

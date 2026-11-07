@@ -4,16 +4,20 @@ import type { CronPattern } from '#src/types/CronPattern';
 import type { TaskContext, TaskOptions } from '#src/types/Tasks';
 
 export type TaskClass = new (context: TaskContext) => Task<unknown>;
-export type CronTaskClass = abstract new (context: TaskContext<void>) => Task;
+export type NoDataTaskClass = abstract new (context: TaskContext<void>) => Task;
 export type ScheduledTaskClass = abstract new (context: never) => Task<unknown>;
 
+type ScheduledOptions = Pick<TaskOptions, 'key'>;
+
+// TArg is inferred as a literal, which skips the excess property check, so this rejects any other key
 type RegisterArgs<TArg, TZone extends string> = TArg extends string
     ? [pattern: CronPattern<TArg>, options?: TaskOptions<TZone>]
-    : [options?: TArg];
-type TaskTarget<TArg> = TArg extends string ? CronTaskClass : ScheduledTaskClass;
+    : [options?: TArg & Record<Exclude<keyof TArg, keyof ScheduledOptions>, never>];
+type TaskTarget<TArg> = TArg extends string ? NoDataTaskClass : ScheduledTaskClass;
 
 export type TaskMetadata =
-    (Omit<TaskOptions, 'key'> & { kind: 'cron'; key: string; pattern: string }) | { kind: 'scheduled'; key: string };
+    | (Omit<TaskOptions, 'key' | 'protect'> & { kind: 'cron'; key: string; pattern: string; protect: boolean })
+    | { kind: 'scheduled'; key: string; protect: false };
 
 const registry = new WeakMap<object, TaskMetadata>();
 
@@ -34,16 +38,22 @@ const registry = new WeakMap<object, TaskMetadata>();
  * ```
  */
 export function RegisterTask<
-    const TArg extends string | Pick<TaskOptions, 'key'> = Pick<TaskOptions, 'key'>,
+    const TArg extends string | ScheduledOptions = ScheduledOptions,
     const TZone extends string = string
 >(...args: RegisterArgs<TArg, TZone>): (target: TaskTarget<TArg>) => void;
 
-export function RegisterTask(patternOrOptions: string | Pick<TaskOptions, 'key'> = {}, options: TaskOptions = {}) {
+export function RegisterTask(patternOrOptions: string | ScheduledOptions = {}, options: TaskOptions = {}) {
     return (target: { readonly name: string }): void => {
         const metadata: TaskMetadata =
             typeof patternOrOptions === 'string'
-                ? { ...options, kind: 'cron', key: options.key ?? target.name, pattern: patternOrOptions }
-                : { kind: 'scheduled', key: patternOrOptions.key ?? target.name };
+                ? {
+                      ...options,
+                      kind: 'cron',
+                      key: options.key ?? target.name,
+                      pattern: patternOrOptions,
+                      protect: options.protect ?? true
+                  }
+                : { kind: 'scheduled', key: patternOrOptions.key ?? target.name, protect: false };
 
         registry.set(target, metadata);
     };

@@ -17,6 +17,7 @@ export {
 export { botFolder } from './files/sources';
 export { withoutQuery } from './files/withoutQuery';
 export * from './misc/asError';
+export type { IsDigits, StripZeros } from './numbers/IsDigits';
 export * from './misc/hasErrorCode';
 export * from './misc/isInteractive';
 export * from './misc/isPortInUse';

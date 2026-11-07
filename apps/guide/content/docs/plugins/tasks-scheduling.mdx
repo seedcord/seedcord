@@ -3,7 +3,7 @@ title: Scheduling jobs
 description: Run a function later, like an unban a day after a tempban, and keep the job in a kv driver so it still runs after a restart.
 ---
 
-Some work has to run later, like lifting a ban a day after `/tempban`. With `setTimeout`, that unban was a timer in your bot's memory, and any restart before it ran threw it away.
+Some work has to run later, like lifting a ban a day after `/tempban`. With `setTimeout`, that unban was a timer in your bot's memory, and any restart before it ran lost it.
 
 [`schedule()`](ref:plugin-tasks/Tasks.schedule) writes the job to your [kv store](/built-ins) before it sets a timer. With a [driver](/built-ins/drivers) that keeps its records, the job is still there after a restart. This page assumes the [tasks plugin](/plugins/tasks) is attached under the key `tasks`. A handler then reaches it as [`this.core.tasks`](/plugins#reading-it-from-a-handler) once you've run [`seedcord codegen`](/plugins/typing).
 
@@ -125,7 +125,7 @@ Await `schedule()`, because it resolves once your driver holds the job. If the d
 
 `Date.now()` counts milliseconds, while a Unix timestamp from another API usually counts seconds. Read as milliseconds, that timestamp is a date in January 1970, which is why `schedule()` throws `PluginTasksAtInSeconds` for it. Any other time in the past runs the job right away.
 
-`schedule()` also takes a cron task that declares no data, which adds one extra run at that time. If `protect` is on and a run from the pattern is still running at that time, the job waits for it to end and then runs. A job of a paused task runs on time.
+`schedule()` also takes a cron task that declares no data. The job adds one extra run at that time. If `protect` is on and a run from the pattern is still running at that time, the job waits for it to end and then runs. A job of a paused task runs on time.
 
 ## Cancelling a job
 

@@ -174,7 +174,7 @@ export enum SeedcordErrorCode {
     /** `dispatch.require()` was called for a key that nothing set on this dispatch. */
     DispatchStateMissing = 1617,
 
-    /** A duration string doesn't parse, or a duration is zero or less. */
+    /** A duration string doesn't parse, or a duration is zero, negative, or not finite. */
     InvalidDuration = 1701,
 
     /** A paginator got a `perPage` that is not a positive integer. */

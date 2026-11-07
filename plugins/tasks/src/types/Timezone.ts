@@ -471,4 +471,4 @@ export type Timezone<TZone extends string> = string extends TZone
     ? TZone
     : TZone extends IanaTimezone
       ? TZone
-      : `'${TZone}' is not an IANA timezone. Write one like 'America/New_York' or 'UTC'`;
+      : `'${TZone}' isn't in seedcord's timezone list. Write one like 'America/New_York' or 'UTC'`;

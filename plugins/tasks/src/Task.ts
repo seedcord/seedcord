@@ -45,7 +45,7 @@ export abstract class Task<TData = void, TCore extends CoreBase = CoreBase> {
         this.trigger = context.trigger;
     }
 
-    /** The task's work. A throw gets logged, published as a failed `taskRan`, and passed to `onError()`. */
+    /** The task's work. The plugin logs a throw, publishes it as a failed `taskRan`, and passes it to `onError()`. */
     public abstract execute(): Promise<void>;
 
     /** Runs after `execute()` throws, once the plugin has logged the error. */

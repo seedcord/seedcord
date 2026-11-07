@@ -15,13 +15,14 @@ export interface LoadedTask {
     readonly Task: TaskClass;
     readonly file: string;
     readonly logger: Logger;
+    readonly protect: boolean;
     readonly state: TaskState;
 }
 
 export type RunOutcome = 'finished' | 'failed' | 'interrupted' | 'skipped';
 
-/** What started a run, with the job's id when a scheduled job did. */
-export type RunSource = DistributedPick<Subscriptions['taskRan'], 'trigger' | 'jobId'>;
+// what started a run, with the job's id when a scheduled job did
+type RunSource = DistributedPick<Subscriptions['taskRan'], 'trigger' | 'jobId'>;
 
 export class TaskRunner {
     private readonly running = new Set<Promise<unknown>>();
@@ -33,31 +34,22 @@ export class TaskRunner {
         private readonly logger: Logger
     ) {}
 
-    /**
-     * The state for `key`. A key seen before keeps its state, `paused` included, and takes the new
-     * `protect`, so a save that reloads a task doesn't reset what `pause()` did.
-     */
-    public state(key: string, protect: boolean, paused: boolean): TaskState {
+    public state(key: string): TaskState {
         const existing = this.states.get(key);
-        if (!existing) {
-            const state = new TaskState(protect, paused);
-            this.states.set(key, state);
+        if (existing) return existing;
 
-            return state;
-        }
+        const state = new TaskState();
+        this.states.set(key, state);
 
-        existing.protect = protect;
-        return existing;
+        return state;
     }
 
-    /**
-     * Runs a task. While a `protect`ed task is busy, a cron or manual run is skipped and calls
-     * `onOverrun()`, and a scheduled run waits for the busy one to end so its data still runs.
-     */
+    // while a protected task is busy, a cron or manual run is skipped and calls onOverrun(),
+    // and a scheduled run waits for the busy one so its data still runs
     public async run(loaded: LoadedTask, source: RunSource, data: TaskData<unknown>): Promise<RunOutcome> {
-        const { state } = loaded;
+        const { state, protect } = loaded;
 
-        if (state.protect && state.busy && source.trigger !== 'scheduled') {
+        if (protect && state.busy && source.trigger !== 'scheduled') {
             this.logger.warn(`skipped a run of ${paint.sky(loaded.key)}, the previous one is still running`);
             await this.track(this.callOverrun(loaded, source.trigger));
 
@@ -65,7 +57,7 @@ export class TaskRunner {
         }
 
         // the check and the add below share a tick, so two waiting jobs can't both start
-        while (state.protect && state.busy) await state.settled();
+        if (protect) while (state.busy) await state.settled();
         if (this.shutdown.signal.aborted) return 'interrupted';
 
         // the run counts as busy before execute() starts, so a task that calls trigger() on itself is skipped

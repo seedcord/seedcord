@@ -33,7 +33,7 @@ describe('Tasks cron tasks', () => {
         vi.restoreAllMocks();
     });
 
-    it('does not fire before ready', async () => {
+    it('runs nothing before ready', async () => {
         const { host, tasks } = await boot(crons);
 
         await vi.advanceTimersByTimeAsync(SECOND_MS * 3);
@@ -58,7 +58,7 @@ describe('Tasks cron tasks', () => {
         await tasks.dispose();
     });
 
-    it('stops firing after dispose', async () => {
+    it('runs nothing after dispose', async () => {
         const { host, tasks } = await start(crons);
         await tasks.dispose();
 
@@ -196,7 +196,7 @@ describe('Tasks cron tasks', () => {
         expect(disposed).toBe(true);
     });
 
-    it('stays busy until every unprotected run finishes', async () => {
+    it('reports busy until every unprotected run finishes', async () => {
         const { host, tasks } = await start({ path: path.join(fixtures, 'unprotected') });
         const long = Promise.withResolvers<undefined>();
         const short = Promise.withResolvers<undefined>();
@@ -355,7 +355,9 @@ describe('Tasks cron tasks', () => {
 
         expect(() => {
             tasks.pause(Reminder);
-        }).toThrow(expect.objectContaining({ code: SeedcordErrorCode.PluginTasksPatternMissing }));
+        }).toThrow(
+            expect.objectContaining({ code: SeedcordErrorCode.PluginTasksPatternMissing, type: 'SeedcordTypeError' })
+        );
         await tasks.dispose();
     });
 

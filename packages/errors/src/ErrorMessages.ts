@@ -267,8 +267,8 @@ const messages = {
         loadedFrom
             ? `The class you passed has the task key ${paint.sky(key)}, but the task loaded under that key is a different class, from ${paint.path(loadedFrom)}. Pass the class that file exports, or give one of the two its own ${paint.bold('key')}.`
             : `${paint.sky(key)} is not a loaded task. Export it from a file under ${paint.path(path)} with ${paint.bold('@RegisterTask')}.`,
-    [SeedcordErrorCode.PluginTasksInvalidPattern]: (key: string, file: string, pattern: string) =>
-        `The task ${paint.sky(key)} in ${paint.path(file)} has the cron pattern ${paint.sky(pattern)}, which croner can't parse. Write five, six, or seven fields, like ${paint.sky("'0 * * * *'")}.`,
+    [SeedcordErrorCode.PluginTasksInvalidPattern]: (key: string, file: string, pattern: string, reason: string) =>
+        `The task ${paint.sky(key)} in ${paint.path(file)} has the cron pattern ${paint.sky(pattern)}, which croner can't parse: ${reasonThen(reason, 'Fix that part of the pattern.')}`,
     [SeedcordErrorCode.PluginTasksDateAsPattern]: (key: string, file: string, pattern: string) =>
         `The task ${paint.sky(key)} in ${paint.path(file)} has ${paint.sky(pattern)} as its pattern, which is a date. For a task that runs once, call ${paint.bold('schedule()')}.`,
     [SeedcordErrorCode.PluginTasksInvalidTimezone]: (where: string, timezone: string) =>
