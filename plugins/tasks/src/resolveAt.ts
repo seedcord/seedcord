@@ -25,7 +25,11 @@ function parseAt(key: string, at: Date | number): Date {
     }
 
     if (Number.isNaN(date.getTime())) {
-        throw new SeedcordTypeError(SeedcordErrorCode.PluginTasksInvalidAt, [key, String(at)]);
+        throw new SeedcordTypeError(SeedcordErrorCode.PluginTasksInvalidOption, [
+            `The ${paint.bold('at')} that ${paint.bold('schedule()')} got for ${paint.sky(key)}`,
+            String(at),
+            `That's not a date. Pass a valid ${paint.bold('Date')}, or a number of milliseconds since the epoch.`
+        ]);
     }
     return date;
 }

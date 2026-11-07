@@ -5,7 +5,7 @@ import { asError } from '@seedcord/utils/internal';
 import { Cron, CronDate } from 'croner';
 
 import { CronJob } from './CronJob';
-import { isTimezone } from './isTimezone';
+import { requireTimezone } from './requireTimezone';
 
 import type { TaskMetadata } from './decorators/RegisterTask';
 import type { CronSlot, LoadedTask, TaskRegistry, TaskSlot } from './TaskRegistry';
@@ -32,20 +32,23 @@ export class CronTasks {
         const { pattern } = meta;
 
         // the constructor already checked the plugin's timezone
-        if (meta.timezone !== undefined && !isTimezone(meta.timezone)) {
-            throw new SeedcordTypeError(SeedcordErrorCode.PluginTasksInvalidTimezone, [
-                `The ${paint.bold('timezone')} of the task ${paint.sky(key)} in ${paint.path(file)}`,
-                meta.timezone
-            ]);
-        }
+        requireTimezone(optionOf(loaded, 'timezone'), meta.timezone);
 
         // croner treats a string with a colon as a one-off date
         if (pattern.includes(':')) {
-            throw new SeedcordTypeError(SeedcordErrorCode.PluginTasksDateAsPattern, [key, file, pattern]);
+            throw new SeedcordTypeError(SeedcordErrorCode.PluginTasksInvalidOption, [
+                optionOf(loaded, 'pattern'),
+                pattern,
+                `That's a date, which croner would run once. For a task that runs once, call ${paint.bold('schedule()')}.`
+            ]);
         }
 
         if (meta.maxRuns !== undefined && !(Number.isSafeInteger(meta.maxRuns) && meta.maxRuns >= 1)) {
-            throw new SeedcordRangeError(SeedcordErrorCode.PluginTasksInvalidMaxRuns, [key, file, meta.maxRuns]);
+            throw new SeedcordRangeError(SeedcordErrorCode.PluginTasksInvalidOption, [
+                optionOf(loaded, 'maxRuns'),
+                String(meta.maxRuns),
+                'Pass a whole number of 1 or more, or leave it out for no limit.'
+            ]);
         }
 
         const timezone = meta.timezone ?? this.defaultTimezone;
@@ -109,7 +112,8 @@ export class CronTasks {
     }
 
     private sync(slot: TaskSlot): void {
-        slot.cron?.setRunning(this.started && !slot.paused);
+        if (this.started && !slot.paused) slot.cron?.start();
+        else slot.cron?.pause();
     }
 
     public list(): CronStatus[] {
@@ -142,27 +146,31 @@ function checkDates(
     const stop = stopAt === undefined ? undefined : readDate(loaded, 'stopAt', stopAt, timezone);
 
     if (start !== undefined && stop !== undefined && stop <= start) {
-        throw new SeedcordTypeError(SeedcordErrorCode.PluginTasksStopBeforeStart, [
-            loaded.key,
-            loaded.file,
-            String(startAt),
-            String(stopAt)
+        throw new SeedcordTypeError(SeedcordErrorCode.PluginTasksInvalidOption, [
+            optionOf(loaded, 'stopAt'),
+            String(stopAt),
+            `That isn't after its ${paint.bold('startAt')} of ${paint.sky(String(startAt))}, so the task never runs. Move ${paint.bold('stopAt')} later.`
         ]);
     }
 }
 
 // croner reads a date string in the task's timezone, so a plain new Date() could read it as a different time
-function readDate(
-    { key, file }: LoadedTask,
-    option: string,
-    value: Date | string,
-    timezone: string | undefined
-): number {
+function readDate(loaded: LoadedTask, option: string, value: Date | string, timezone: string | undefined): number {
     try {
         return new CronDate(value, timezone).getTime();
     } catch (error) {
-        throw new SeedcordTypeError(SeedcordErrorCode.PluginTasksInvalidDate, [key, file, option, String(value)], {
-            cause: error
-        });
+        throw new SeedcordTypeError(
+            SeedcordErrorCode.PluginTasksInvalidOption,
+            [
+                optionOf(loaded, option),
+                String(value),
+                `Croner can't read that as a date. Pass a ${paint.bold('Date')}, or an ISO 8601 string like ${paint.sky("'2027-01-01T09:00:00'")}. A string without an offset reads in the task's timezone.`
+            ],
+            { cause: error }
+        );
     }
+}
+
+function optionOf({ key, file }: LoadedTask, option: string): string {
+    return `The ${paint.bold(option)} of the task ${paint.sky(key)} in ${paint.path(file)}`;
 }

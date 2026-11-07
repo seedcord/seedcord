@@ -8,7 +8,7 @@ import type { CoreBase, Subscriptions } from '@seedcord/core';
 import type { Logger } from '@seedcord/logger';
 import type { DistributedPick } from 'type-fest';
 
-export type RunOutcome = Subscriptions['taskRan']['outcome'] | 'skipped';
+export type RunOutcome = Subscriptions['taskRan']['outcome'] | 'skipped' | 'cancelled';
 
 // what started a run, with the job's id when a scheduled job did
 type RunSource = DistributedPick<Subscriptions['taskRan'], 'trigger' | 'jobId'>;
@@ -22,7 +22,12 @@ export class TaskRunner {
         private readonly logger: Logger
     ) {}
 
-    public async run(loaded: LoadedTask, source: RunSource, data: TaskData<unknown>): Promise<RunOutcome> {
+    public async run(
+        loaded: LoadedTask,
+        source: RunSource,
+        data: TaskData<unknown>,
+        stillWanted: () => boolean = () => true
+    ): Promise<RunOutcome> {
         const { state, protect } = loaded;
 
         if (protect && state.busy && source.trigger !== 'scheduled') {
@@ -35,6 +40,7 @@ export class TaskRunner {
         // the check and the add below share a tick, so two waiting jobs can't both start
         if (protect) while (state.busy) await state.settled();
         if (this.shutdown.signal.aborted) return 'interrupted';
+        if (!stillWanted()) return 'cancelled';
 
         // the run counts as busy before execute() starts, so the runner skips a trigger() that a task calls on itself
         const { promise, resolve } = Promise.withResolvers<RunOutcome>();

@@ -16,17 +16,16 @@ export class CronJob {
         return this.cron.isRunning();
     }
 
-    public setRunning(running: boolean): void {
-        if (!running) {
-            this.cron.pause();
-            return;
-        }
-
+    public start(): void {
         if (!this.scheduled) {
             this.scheduled = true;
             this.cron.schedule(this.run);
         }
         this.cron.resume();
+    }
+
+    public pause(): void {
+        this.cron.pause();
     }
 
     public stop(): void {

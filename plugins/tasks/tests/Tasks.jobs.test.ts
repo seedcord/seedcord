@@ -2,7 +2,7 @@ import path from 'node:path';
 
 import { MemoryDriver } from '@seedcord/core';
 import { SeedcordErrorCode } from '@seedcord/errors';
-import { afterAll, afterEach, beforeAll, beforeEach, describe, expect, it, vi } from 'vitest';
+import { afterEach, beforeAll, beforeEach, describe, expect, it, vi } from 'vitest';
 
 import { Tasks } from '#src/Tasks';
 import { Abortable } from '#tests/fixtures/jobs/Abortable';
@@ -427,6 +427,9 @@ describe('Tasks job upkeep', () => {
     it('keeps two attachments in separate records', async () => {
         const host = new TestHost(driver);
         const bot = host.attach('one', Tasks, jobs).attach('two', Tasks, jobs);
+        await using plugins = new AsyncDisposableStack();
+        plugins.defer(() => bot.one.dispose());
+        plugins.defer(() => bot.two.dispose());
         await bot.one.init();
         await bot.two.init();
 
@@ -464,9 +467,8 @@ describe('Tasks job upkeep', () => {
 
         beforeAll(async () => {
             ({ tasks } = await start(jobs, shared));
+            return () => tasks.dispose();
         });
-
-        afterAll(async () => {});
 
         it('a duration parseDuration cannot read', async () => {
             const duration = String('soon');
@@ -498,7 +500,7 @@ describe('Tasks job upkeep', () => {
         it.each([new Date('nope'), Number.NaN])('the invalid date %s', async (at) => {
             await expect(tasks.schedule(Reminder, { at })).rejects.toMatchObject({
                 type: 'SeedcordTypeError',
-                code: SeedcordErrorCode.PluginTasksInvalidAt
+                code: SeedcordErrorCode.PluginTasksInvalidOption
             });
         });
 

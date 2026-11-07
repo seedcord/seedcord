@@ -26,7 +26,8 @@ const STORE_RETRY_MS = 30_000;
 
 export class ScheduledJobs {
     private readonly pending = new Map<string, Pending>();
-    private readonly firing = new Set<string>();
+    // a job leaves 'waiting' once its run starts, so cancel() can stop it until then
+    private readonly runningJobs = new Map<string, 'waiting' | 'started' | 'cancelled'>();
     private started = false;
     private warnedInMemory = false;
 
@@ -74,7 +75,9 @@ export class ScheduledJobs {
     }
 
     public async cancel(id: string): Promise<boolean> {
-        if (this.firing.has(id)) return false;
+        const running = this.runningJobs.get(id);
+        if (running === 'waiting') return this.cancelWaiting(id);
+        if (running) return false;
 
         const job = this.pending.get(id);
         if (!job && (await this.records.get(id)) === undefined) return false;
@@ -108,16 +111,29 @@ export class ScheduledJobs {
         job.timer = setTimeout(
             () => {
                 if (job.at.getTime() > Date.now()) this.setTimer(job);
-                else void this.runner.track(this.fire(job));
+                else void this.runner.track(this.runJob(job));
             },
             Math.min(Math.max(delayMs, 0), MAX_TIMEOUT_MS)
         );
     }
 
-    // fire() deletes the record only after the run ends, so a crash mid-run leaves the job for the next start
-    private async fire(job: Pending): Promise<void> {
+    private async cancelWaiting(id: string): Promise<boolean> {
+        this.runningJobs.set(id, 'cancelled');
+
+        try {
+            await this.records.delete(id);
+        } catch (error) {
+            if (this.runningJobs.has(id)) this.runningJobs.set(id, 'waiting');
+            throw error;
+        }
+
+        return true;
+    }
+
+    // runJob() deletes the record only after the run ends, so a crash mid-run leaves the job for the next start
+    private async runJob(job: Pending): Promise<void> {
         this.pending.delete(job.id);
-        this.firing.add(job.id);
+        this.runningJobs.set(job.id, 'waiting');
 
         try {
             const record = await this.read(job);
@@ -132,11 +148,20 @@ export class ScheduledJobs {
                 return;
             }
 
-            const outcome = await this.runner.run(loaded, { trigger: 'scheduled', jobId: job.id }, record.data);
-            if (outcome !== 'interrupted') await this.forget(job.id);
+            const outcome = await this.runner.run(loaded, { trigger: 'scheduled', jobId: job.id }, record.data, () =>
+                this.startRun(job.id)
+            );
+            if (outcome === 'finished' || outcome === 'failed') await this.forget(job.id);
         } finally {
-            this.firing.delete(job.id);
+            this.runningJobs.delete(job.id);
         }
+    }
+
+    private startRun(id: string): boolean {
+        if (this.runningJobs.get(id) !== 'waiting') return false;
+
+        this.runningJobs.set(id, 'started');
+        return true;
     }
 
     private warnIfInMemory(): void {

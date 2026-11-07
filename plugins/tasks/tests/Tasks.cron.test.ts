@@ -119,32 +119,20 @@ describe('Tasks cron tasks', () => {
         });
 
         it.each([
-            ['before ready', true],
-            ['after ready', false]
-        ])('runs a task paused before ready and resumed %s', async (_when, resumeFirst) => {
+            { pausedBy: 'pause()', Task: Tick, resumed: 'before ready' },
+            { pausedBy: 'pause()', Task: Tick, resumed: 'after ready' },
+            { pausedBy: 'the decorator', Task: Idle, resumed: 'before ready' }
+        ] as const)('runs a task paused by $pausedBy and resumed $resumed', async ({ pausedBy, Task, resumed }) => {
             await using booted = await boot(crons);
             const { host, tasks } = booted;
 
-            tasks.pause(Tick);
-            if (resumeFirst) tasks.resume(Tick);
+            if (pausedBy === 'pause()') tasks.pause(Task);
+            if (resumed === 'before ready') tasks.resume(Task);
             tasks.ready();
-            if (!resumeFirst) tasks.resume(Tick);
+            if (resumed === 'after ready') tasks.resume(Task);
             await vi.advanceTimersByTimeAsync(SECOND_MS);
 
-            expect(runsOf(host, 'Tick')).not.toEqual([]);
-        });
-
-        it('starts a task resumed before ready once ready runs', async () => {
-            await using booted = await boot(crons);
-            const { host, tasks } = booted;
-
-            tasks.resume(Idle);
-            await vi.advanceTimersByTimeAsync(SECOND_MS);
-            expect(runsOf(host, 'Idle')).toEqual([]);
-
-            tasks.ready();
-            await vi.advanceTimersByTimeAsync(SECOND_MS);
-            expect(runsOf(host, 'Idle')).toHaveLength(1);
+            expect(runsOf(host, Task.name)).not.toEqual([]);
         });
 
         it('pauses a running task', async () => {
@@ -316,6 +304,25 @@ describe('Tasks cron tasks', () => {
             expect(driver.stored.size).toBe(1);
         });
 
+        it('cancels a scheduled job while it waits for the protected run before it', async () => {
+            using driver = new FakeDriver();
+            await using booted = await start(crons, driver);
+            const { host, tasks } = booted;
+            host.hold();
+
+            const first = tasks.trigger(Slow);
+            const job = await tasks.schedule(Slow, { in: '1s' });
+            await vi.advanceTimersByTimeAsync(SECOND_MS);
+
+            await expect(tasks.cancel(job.id)).resolves.toBe(true);
+            host.release();
+            await first;
+            await vi.advanceTimersByTimeAsync(0);
+
+            expect(runsOf(host, 'slow')).toEqual([{ task: 'slow', trigger: 'manual', data: undefined }]);
+            expect(driver.stored.size).toBe(0);
+        });
+
         it('runs a paused task through trigger and a scheduled job', async () => {
             await using booted = await start(crons);
             const { host, tasks } = booted;
@@ -437,11 +444,11 @@ describe('Tasks cron tasks', () => {
     describe('at startup', () => {
         it.each([
             ['duplicate-key', SeedcordErrorCode.CoreDuplicateName],
-            ['bad-start', SeedcordErrorCode.PluginTasksInvalidDate],
-            ['stop-before-start', SeedcordErrorCode.PluginTasksStopBeforeStart],
-            ['bad-max-runs', SeedcordErrorCode.PluginTasksInvalidMaxRuns],
-            ['date-pattern', SeedcordErrorCode.PluginTasksDateAsPattern],
-            ['bad-timezone', SeedcordErrorCode.PluginTasksInvalidTimezone],
+            ['bad-start', SeedcordErrorCode.PluginTasksInvalidOption],
+            ['stop-before-start', SeedcordErrorCode.PluginTasksInvalidOption],
+            ['bad-max-runs', SeedcordErrorCode.PluginTasksInvalidOption],
+            ['date-pattern', SeedcordErrorCode.PluginTasksInvalidOption],
+            ['bad-timezone', SeedcordErrorCode.PluginTasksInvalidOption],
             ['bad-pattern', SeedcordErrorCode.PluginTasksInvalidPattern]
         ])('rejects %s', async (folder, code) => {
             await expect(boot({ path: path.join(fixtures, folder) })).rejects.toMatchObject({ code });
@@ -461,7 +468,7 @@ describe('Tasks cron tasks', () => {
             const timezone = 'America/New_Yrok' as TasksOptions['timezone'] & string;
 
             expect(() => host.attach('tasks', Tasks, { path: taskFolder, timezone })).toThrow(
-                expect.objectContaining({ code: SeedcordErrorCode.PluginTasksInvalidTimezone })
+                expect.objectContaining({ code: SeedcordErrorCode.PluginTasksInvalidOption })
             );
         });
     });

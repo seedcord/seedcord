@@ -117,7 +117,7 @@ Await `schedule()`, because it resolves once your driver holds the job. If the d
 | --- | --- |
 | a `string` for `in` that isn't a duration | `InvalidDuration` |
 | an `in` so long it ends after the year 275760 | `PluginTasksDurationTooLong` |
-| an invalid `Date` or `NaN` for `at` | `PluginTasksInvalidAt` |
+| an invalid `Date` or `NaN` for `at` | `PluginTasksInvalidOption` |
 | a number for `at` from before the year 2000, `0` and negative numbers included | `PluginTasksAtTooEarly` |
 | a class the plugin didn't load from `path` | `PluginTasksNotLoaded` |
 | a class whose key belongs to a different loaded class | `PluginTasksKeyTaken` |
@@ -170,7 +170,7 @@ export class LiftBan extends SlashHandler<'unban'> {
 }
 ```
 
-`LiftBan` reads the id from `unban-job` and passes it to [`cancel()`](ref:plugin-tasks/Tasks.cancel), which deletes the job from your driver and resolves to `true`. It resolves to `false` if no job has that id, or if the job's time has come, including a job that's waiting for an earlier run to end. A cancel that arrives after the run started doesn't stop that run.
+`LiftBan` reads the id from `unban-job` and passes it to [`cancel()`](ref:plugin-tasks/Tasks.cancel), which deletes the job from your driver and resolves to `true`. It resolves to `false` if no job has that id, or if the job's run has started. A job that's waiting for an earlier run of a `protect`ed task to end hasn't started, so `cancel()` still stops it. A cancel that arrives after the run started doesn't stop that run.
 
 [`jobs()`](ref:plugin-tasks/Tasks.jobs) returns a `ScheduledJob` for each job waiting to run in this process.
 

@@ -232,26 +232,16 @@ export enum SeedcordErrorCode {
     PluginTasksNotLoaded = 2301,
     /** croner rejected a task's cron pattern. */
     PluginTasksInvalidPattern = 2302,
-    /** A task's cron pattern is a date, which croner would run once. */
-    PluginTasksDateAsPattern = 2303,
-    /** A task's `timezone`, or the plugin's, is not a timezone `Intl` supports. */
-    PluginTasksInvalidTimezone = 2304,
+    /** A task option, the plugin's `timezone`, or the `at` passed to `schedule` has a value the plugin can't use. */
+    PluginTasksInvalidOption = 2303,
     /** `pause`, `resume`, or `nextRun` got a task without a cron pattern. */
-    PluginTasksPatternMissing = 2305,
-    /** A task's `startAt` or `stopAt` is not a date croner can read. */
-    PluginTasksInvalidDate = 2306,
+    PluginTasksPatternMissing = 2304,
     /** `schedule` got an `at` number from before 2000, which is likely seconds or a missing value. */
-    PluginTasksAtTooEarly = 2307,
+    PluginTasksAtTooEarly = 2305,
     /** `schedule` got an `in` that ends past the last date a `Date` can hold. */
-    PluginTasksDurationTooLong = 2308,
-    /** A task's `maxRuns` is not a whole number of 1 or more. */
-    PluginTasksInvalidMaxRuns = 2309,
-    /** A task's `stopAt` is not after its `startAt`, so it never runs. */
-    PluginTasksStopBeforeStart = 2310,
+    PluginTasksDurationTooLong = 2306,
     /** A `Tasks` method got a class whose task key belongs to a different loaded class. */
-    PluginTasksKeyTaken = 2311,
-    /** `schedule` got an `at` that is an invalid `Date` or `NaN`. */
-    PluginTasksInvalidAt = 2312,
+    PluginTasksKeyTaken = 2307,
 
     /** Someone pressed Ctrl-C at a prompt in `seedcord` or `create-seedcord`. */
     CliCancelled = 3001,

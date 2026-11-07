@@ -6,7 +6,7 @@ import { keepDefined } from '@seedcord/utils';
 
 import { CronTasks } from './CronTasks';
 import { isTaskClass, taskKey, taskMetadata } from './decorators/RegisterTask';
-import { isTimezone } from './isTimezone';
+import { requireTimezone } from './requireTimezone';
 import { resolveAt } from './resolveAt';
 import { ScheduledJobs } from './ScheduledJobs';
 import { TaskRegistry } from './TaskRegistry';
@@ -57,12 +57,7 @@ export class Tasks extends Plugin<{ transport: 'any'; runtime: 'server' }> {
                 `${paint.bold('path')} is empty. Pass the folder that holds your task classes, like ${paint.sky("'./tasks'")}`
             );
         }
-        if (options.timezone !== undefined && !isTimezone(options.timezone)) {
-            throw new SeedcordTypeError(SeedcordErrorCode.PluginTasksInvalidTimezone, [
-                `The ${paint.bold('timezone')} option of ${paint.bold(Tasks.id)}`,
-                options.timezone
-            ]);
-        }
+        requireTimezone(`The ${paint.bold('timezone')} option of ${paint.bold(Tasks.id)}`, options.timezone);
 
         this.#path = options.path;
         this.#runner = new TaskRunner(this.core, this.logger);
@@ -90,11 +85,8 @@ export class Tasks extends Plugin<{ transport: 'any'; runtime: 'server' }> {
      * @throws A **SeedcordError** when a task file throws while it imports.
      * @throws A **SeedcordTypeError** with `CoreDuplicateName` when two tasks share a key.
      * @throws A **SeedcordTypeError** with `PluginTasksInvalidPattern` when croner can't parse a task's cron pattern.
-     * @throws A **SeedcordTypeError** with `PluginTasksDateAsPattern` when a task's pattern is a date.
-     * @throws A **SeedcordTypeError** with `PluginTasksInvalidTimezone` when a task's `timezone` isn't one `Intl` supports.
-     * @throws A **SeedcordTypeError** with `PluginTasksInvalidDate` when croner can't read a task's `startAt` or `stopAt`.
-     * @throws A **SeedcordTypeError** with `PluginTasksStopBeforeStart` when a task's `stopAt` isn't after its `startAt`.
-     * @throws A **SeedcordRangeError** with `PluginTasksInvalidMaxRuns` when a task's `maxRuns` isn't a whole number of 1 or more.
+     * @throws A **SeedcordTypeError** with `PluginTasksInvalidOption` when a task's pattern is a date, its `timezone` isn't one `Intl` supports, croner can't read its `startAt` or `stopAt`, or its `stopAt` isn't after its `startAt`.
+     * @throws A **SeedcordRangeError** with `PluginTasksInvalidOption` when a task's `maxRuns` isn't a whole number of 1 or more.
      * @throws A **SeedcordError** with `CoreKvKeysUnsupported` when the `config.kv` driver can't list its keys.
      */
     public async init(): Promise<void> {

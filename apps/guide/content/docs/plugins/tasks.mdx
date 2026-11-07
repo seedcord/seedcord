@@ -43,7 +43,7 @@ This sample builds a gateway bot. The same `attach` call works on an http `Seedc
 
 {/* prettier-ignore-end */}
 
-`timezone` only takes names from [`IanaTimezone`](ref:plugin-tasks/IanaTimezone), so a value that you read from the environment needs a cast. If that value isn't a real timezone, `attach` throws `PluginTasksInvalidTimezone`.
+`timezone` only takes names from [`IanaTimezone`](ref:plugin-tasks/IanaTimezone), so a value that you read from the environment needs a cast. If that value isn't a real timezone, `attach` throws `PluginTasksInvalidOption`.
 
 The plugin reads your stored jobs while the bot starts, even if you only use cron tasks. If your [kv driver](/built-ins/drivers) [can't list its keys](/built-ins#reading-every-record), `init()` throws and the bot doesn't start. [Scheduling jobs](/plugins/tasks-scheduling#keeping-jobs-through-a-restart) covers which drivers work.
 
@@ -109,7 +109,7 @@ A pattern with both a day of the month and a day of the week matches either one.
 
 </Callout>
 
-If a `string` pattern holds a date, like `2030-01-01T09:00:00`, `init()` throws `PluginTasksDateAsPattern`, because croner reads that as a single date. To run something once, call [`schedule()`](ref:plugin-tasks/Tasks.schedule).
+If a `string` pattern holds a date, like `2030-01-01T09:00:00`, `init()` throws `PluginTasksInvalidOption`, because croner reads that as a single date. To run something once, call [`schedule()`](ref:plugin-tasks/Tasks.schedule).
 
 ### Setting a timezone
 
@@ -142,7 +142,7 @@ export class Digest extends Task {
 }
 ```
 
-A timezone typed as `string` skips that check. If it isn't a real timezone, `init()` throws `PluginTasksInvalidTimezone`.
+A timezone typed as `string` skips that check. If it isn't a real timezone, `init()` throws `PluginTasksInvalidOption`.
 
 The second argument to `@RegisterTask` takes these options, all optional:
 
@@ -160,7 +160,7 @@ The second argument to `@RegisterTask` takes these options, all optional:
 
 {/* prettier-ignore-end */}
 
-croner reads a date string without an offset in the task's timezone. If it can't read `startAt` or `stopAt` as a date, `init()` throws `PluginTasksInvalidDate` with the option's name. A `stopAt` that isn't after `startAt` throws `PluginTasksStopBeforeStart`, and a `maxRuns` that isn't a whole number of 1 or more throws `PluginTasksInvalidMaxRuns`.
+croner reads a date string without an offset in the task's timezone. If it can't read `startAt` or `stopAt` as a date, `init()` throws `PluginTasksInvalidOption` with the option's name. A `stopAt` that isn't after `startAt`, and a `maxRuns` that isn't a whole number of 1 or more, throw it too.
 
 Daylight saving moves some runs. A fixed-time task has one value each for second, minute, and hour, like `30 2 * * *`. When daylight saving ends and its time happens twice, it runs once. When daylight saving starts and its time doesn't exist, it runs at the first time that does. In `America/New_York`, the repeated hour is 01:00 to 02:00 and the skipped one is 02:00 to 03:00.
 

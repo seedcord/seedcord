@@ -267,28 +267,16 @@ const messages = {
         `${paint.sky(key)} is not a loaded task. Export it from a file under ${paint.path(path)} with ${paint.bold('@RegisterTask')}.`,
     [SeedcordErrorCode.PluginTasksInvalidPattern]: (key: string, file: string, pattern: string, reason: string) =>
         `The task ${paint.sky(key)} in ${paint.path(file)} has the cron pattern ${paint.sky(pattern)}, which croner can't parse. ${reasonThen(capitalized(reason), 'Fix that part of the pattern.')}`,
-    [SeedcordErrorCode.PluginTasksDateAsPattern]: (key: string, file: string, pattern: string) =>
-        `The task ${paint.sky(key)} in ${paint.path(file)} has ${paint.sky(pattern)} as its pattern, which is a date. For a task that runs once, call ${paint.bold('schedule()')}.`,
-    [SeedcordErrorCode.PluginTasksInvalidTimezone]: (where: string, timezone: string) =>
-        `${where} is ${quoted(timezone)}, which is not a timezone that ${paint.bold('Intl')} supports. Write an IANA name like ${paint.sky("'America/New_York'")} or ${paint.sky("'UTC'")}.`,
+    [SeedcordErrorCode.PluginTasksInvalidOption]: (option: string, value: string, fix: string) =>
+        `${option} is ${quoted(value)}. ${fix}`,
     [SeedcordErrorCode.PluginTasksPatternMissing]: (key: string) =>
         `${paint.sky(key)} has no cron pattern. Pass one to ${paint.bold('@RegisterTask')} to pause, resume, or read its next run.`,
-    [SeedcordErrorCode.PluginTasksInvalidDate]: (key: string, file: string, option: string, value: string) =>
-        `The task ${paint.sky(key)} in ${paint.path(file)} has ${paint.bold(option)} set to ${quoted(value)}, which croner can't read as a date. Pass a ${paint.bold('Date')}, or an ISO 8601 string like ${paint.sky("'2027-01-01T09:00:00'")}. A string without an offset reads in the task's timezone.`,
     [SeedcordErrorCode.PluginTasksAtTooEarly]: (key: string, at: number) =>
         `${paint.bold('schedule()')} got ${paint.iris(at)} as ${paint.bold('at')} for ${paint.sky(key)}, which is before the year 2000. A number that small is usually a timestamp in seconds, or a missing value read as ${paint.iris(0)}. Pass milliseconds, like ${paint.sky('Date.now() + 60_000')}.`,
     [SeedcordErrorCode.PluginTasksDurationTooLong]: (key: string, duration: string) =>
         `${paint.bold('schedule()')} got ${quoted(duration)} for ${paint.sky(key)}, which ends after the last date a JavaScript ${paint.bold('Date')} can hold, in the year 275760. Pass a shorter duration as ${paint.bold('in')}.`,
-
-    [SeedcordErrorCode.PluginTasksInvalidMaxRuns]: (key: string, file: string, maxRuns: number) =>
-        `The task ${paint.sky(key)} in ${paint.path(file)} has ${paint.bold('maxRuns')} set to ${paint.iris(maxRuns)}. Pass a whole number of ${paint.iris(1)} or more, or leave it out for no limit.`,
-    [SeedcordErrorCode.PluginTasksStopBeforeStart]: (key: string, file: string, startAt: string, stopAt: string) =>
-        `The task ${paint.sky(key)} in ${paint.path(file)} has a ${paint.bold('stopAt')} of ${quoted(stopAt)} that isn't after its ${paint.bold('startAt')} of ${quoted(startAt)}, so it never runs. Move ${paint.bold('stopAt')} later.`,
-
     [SeedcordErrorCode.PluginTasksKeyTaken]: (key: string, loadedFrom: string) =>
         `The class you passed has the task key ${paint.sky(key)}, but the task loaded under that key is a different class, from ${paint.path(loadedFrom)}. Pass the class that file exports, or give one of the two its own ${paint.bold('key')}.`,
-    [SeedcordErrorCode.PluginTasksInvalidAt]: (key: string, at: string) =>
-        `${paint.bold('schedule()')} got ${quoted(at)} as ${paint.bold('at')} for ${paint.sky(key)}, which is not a date. Pass a valid ${paint.bold('Date')}, or a number of milliseconds since the epoch.`,
 
     [SeedcordErrorCode.CliCancelled]: () => 'Cancelled.',
 
