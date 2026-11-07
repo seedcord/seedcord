@@ -6,12 +6,9 @@ import type { Config } from '@seedcord/types';
 
 type ConfiguredDriver = NonNullable<Config['kv']>;
 
-/**
- * What `JSON.stringify` keeps of `TValue`, with `never` in place of anything JSON has no form for: a
- * function, `Map`, `Set`, or `bigint`. `[T] extends [JsonSafe<T>]` holds when JSON keeps every value in `T`.
- * A `Date` counts, since it passes through its `toJSON`.
- */
-export type JsonSafe<TValue> = TValue extends string | number | boolean | null | undefined
+// what JSON.stringify keeps of TValue, with never in place of a function, Map, Set, or bigint.
+// A Date counts, since it passes through its toJSON
+type JsonSafe<TValue> = TValue extends string | number | boolean | null | undefined
     ? TValue
     : TValue extends { toJSON(): unknown }
       ? TValue
@@ -25,12 +22,34 @@ export type JsonSafe<TValue> = TValue extends string | number | boolean | null |
               ? { [K in keyof TValue]: JsonSafe<TValue[K]> }
               : never;
 
+type KeepsJson<TValue> = [TValue] extends [JsonSafe<TValue>] ? true : false;
+
+type NotKept<TWhat extends string> =
+    `This ${TWhat} holds a value that JSON cannot keep, like a function, Map, Set, or bigint.`;
+
+/**
+ * `TValue` when a `KvCollection` can store it as JSON. Otherwise it's a message saying JSON can't
+ * keep a value in it, so a parameter typed with it fails to compile. A `Date` counts, since it
+ * passes through its `toJSON`.
+ *
+ * @typeParam TValue - The value to check.
+ * @typeParam TWhat - What the message calls the value, like `'task data'`.
+ * @example
+ * ```ts
+ * declare function save<TData>(data: Storable<TData, 'data'>): void;
+ *
+ * save({ at: new Date() });
+ * save({ ids: new Set<string>() }); // fails to compile
+ * ```
+ */
+export type Storable<TValue, TWhat extends string> = KeepsJson<TValue> extends true ? TValue : NotKept<TWhat>;
+
 // tsc prints a failed string argument against an object type as only `string is not assignable`
 type CollectionName<TRecord> = unknown extends TRecord
     ? 'Pass the record type, like kv.collection<Profile>(name).'
-    : [TRecord] extends [JsonSafe<TRecord>]
+    : KeepsJson<TRecord> extends true
       ? string
-      : 'This record type holds a value that JSON cannot keep, like a function, Map, Set, or bigint.';
+      : NotKept<'record type'>;
 
 // unescaped, every key under `user:settings:` would also start with `user:`
 function keyPrefix(path: readonly string[]): string {

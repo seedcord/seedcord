@@ -6,14 +6,15 @@ import { keepDefined } from '@seedcord/utils';
 
 import { CronTasks } from './CronTasks';
 import { isTaskClass, taskKey, taskMetadata } from './decorators/RegisterTask';
-import { isTimezone, resolveAt } from './schedule';
+import { isTimezone } from './isTimezone';
+import { resolveAt } from './resolveAt';
 import { ScheduledJobs } from './ScheduledJobs';
+import { TaskRegistry } from './TaskRegistry';
 import { TaskRunner } from './TaskRunner';
 
-import type { CronEntry } from './CronTasks';
 import type { NoDataTaskClass, ScheduledTaskClass, TaskClass } from './decorators/RegisterTask';
 import type { JobRecord } from './ScheduledJobs';
-import type { LoadedTask } from './TaskRunner';
+import type { CronSlot, LoadedTask } from './TaskRegistry';
 import type { CronStatus, ScheduledJob, ScheduleOptions, TaskContext, TasksOptions, When } from './types/Tasks';
 import type { CoreBase } from '@seedcord/core';
 import type { HmrUpdateEvent } from '@seedcord/core/plugin';
@@ -38,7 +39,7 @@ type DataOf<TTask> = TTask extends abstract new (context: TaskContext<infer TDat
 export class Tasks extends Plugin<{ transport: 'any'; runtime: 'server' }> {
     public static readonly id = '@seedcord/plugin-tasks';
 
-    readonly #tasks = new Map<string, LoadedTask>();
+    readonly #registry = new TaskRegistry();
     readonly #runner: TaskRunner;
     readonly #cronTasks: CronTasks;
     readonly #scheduled: ScheduledJobs;
@@ -67,11 +68,11 @@ export class Tasks extends Plugin<{ transport: 'any'; runtime: 'server' }> {
 
         this.#path = options.path;
         this.#runner = new TaskRunner(this.core, this.logger);
-        this.#cronTasks = new CronTasks(this.#runner, options.timezone);
+        this.#cronTasks = new CronTasks(this.#registry, this.#runner, options.timezone);
         this.#scheduled = new ScheduledJobs(
             this.kv.collection<JobRecord>('job'),
             this.#runner,
-            (key) => this.#tasks.get(key),
+            (key) => this.#registry.loaded(key),
             this.logger
         );
 
@@ -102,7 +103,7 @@ export class Tasks extends Plugin<{ transport: 'any'; runtime: 'server' }> {
         }
 
         this.logger.info(
-            `loaded ${this.#tasks.size} tasks, ${this.#cronTasks.size} on a cron pattern, ${this.#scheduled.size} scheduled jobs`
+            `loaded ${this.#registry.size} tasks, ${this.#cronTasks.size} on a cron pattern, ${this.#scheduled.size} scheduled jobs`
         );
     }
 
@@ -183,13 +184,13 @@ export class Tasks extends Plugin<{ transport: 'any'; runtime: 'server' }> {
     }
 
     /**
-     * When a cron task runs next, or `null` when it won't.
+     * When a cron task runs next, or `null` while it's paused or once it has no runs left.
      *
      * @throws A **SeedcordError** when the plugin did not load `Task`.
      * @throws A **SeedcordTypeError** with `PluginTasksPatternMissing` when `Task` has no cron pattern.
      */
     public nextRun(Task: NoDataTaskClass): Date | null {
-        return this.#cronTasks.nextRun(this.#cronEntry(Task));
+        return this.#cronTasks.nextRun(this.#cronSlot(Task));
     }
 
     /**
@@ -200,7 +201,7 @@ export class Tasks extends Plugin<{ transport: 'any'; runtime: 'server' }> {
      * @throws A **SeedcordTypeError** with `PluginTasksPatternMissing` when `Task` has no cron pattern.
      */
     public pause(Task: NoDataTaskClass): void {
-        this.#cronTasks.pause(this.#cronEntry(Task));
+        this.#cronTasks.pause(this.#cronSlot(Task));
     }
 
     /**
@@ -210,7 +211,7 @@ export class Tasks extends Plugin<{ transport: 'any'; runtime: 'server' }> {
      * @throws A **SeedcordTypeError** with `PluginTasksPatternMissing` when `Task` has no cron pattern.
      */
     public resume(Task: NoDataTaskClass): void {
-        this.#cronTasks.resume(this.#cronEntry(Task));
+        this.#cronTasks.resume(this.#cronSlot(Task));
     }
 
     /**
@@ -235,7 +236,7 @@ export class Tasks extends Plugin<{ transport: 'any'; runtime: 'server' }> {
 
     #requireLoaded(Task: { readonly name: string }): LoadedTask {
         const key = taskKey(Task);
-        const loaded = this.#tasks.get(key);
+        const loaded = this.#registry.loaded(key);
 
         if (!loaded) throw new SeedcordError(SeedcordErrorCode.PluginTasksNotLoaded, [key, this.#path]);
         // a class from another folder can share the key, and its data would reach the loaded class
@@ -246,18 +247,19 @@ export class Tasks extends Plugin<{ transport: 'any'; runtime: 'server' }> {
         return loaded;
     }
 
-    #cronEntry(Task: NoDataTaskClass): CronEntry {
+    #cronSlot(Task: NoDataTaskClass): CronSlot {
         const { key } = this.#requireLoaded(Task);
-        const entry = this.#cronTasks.get(key);
+        const slot = this.#registry.cronSlot(key);
 
-        if (!entry) throw new SeedcordTypeError(SeedcordErrorCode.PluginTasksPatternMissing, [key]);
+        if (!slot) throw new SeedcordTypeError(SeedcordErrorCode.PluginTasksPatternMissing, [key]);
 
-        return entry;
+        return slot;
     }
 
     #register(Task: TaskClass, file: string): void {
         const meta = taskMetadata(Task);
-        const existing = this.#tasks.get(meta.key);
+        const slot = this.#registry.slot(meta.key);
+        const existing = slot.loaded;
 
         if (existing) {
             throw new SeedcordTypeError(SeedcordErrorCode.CoreDuplicateName, [
@@ -277,18 +279,18 @@ export class Tasks extends Plugin<{ transport: 'any'; runtime: 'server' }> {
             file,
             logger: this.logger.withLabel(meta.key),
             protect: meta.protect,
-            state: this.#runner.state(meta.key)
+            state: slot.state
         };
 
-        if (meta.kind === 'cron') this.#cronTasks.add(loaded, meta);
+        if (meta.kind === 'cron') this.#cronTasks.add(slot, loaded, meta);
 
-        this.#tasks.set(meta.key, loaded);
+        slot.loaded = loaded;
     }
 
     #unregister(Task: TaskClass): void {
-        const key = taskKey(Task);
+        const slot = this.#registry.slot(taskKey(Task));
 
-        this.#cronTasks.remove(key);
-        this.#tasks.delete(key);
+        this.#cronTasks.remove(slot);
+        slot.loaded = undefined;
     }
 }

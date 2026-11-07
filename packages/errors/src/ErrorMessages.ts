@@ -278,11 +278,13 @@ const messages = {
     [SeedcordErrorCode.PluginTasksInvalidDate]: (key: string, option: string, value: string | number, file?: string) =>
         file
             ? `The task ${paint.sky(key)} in ${paint.path(file)} has ${paint.bold(option)} set to ${quoted(String(value))}, which croner can't read as a date. Pass a ${paint.bold('Date')}, or an ISO 8601 string like ${paint.sky("'2027-01-01T09:00:00'")}. A string without an offset reads in the task's timezone.`
-            : `${paint.bold('schedule()')} got ${typeof value === 'number' ? paint.iris(value) : quoted(value)} as ${paint.bold(option)} for ${paint.sky(key)}, which is not a date. Pass a valid ${paint.bold('Date')}, or a number of milliseconds since the epoch.`,
+            : typeof value === 'number'
+              ? `${paint.bold('schedule()')} got ${paint.iris(value)} as ${paint.bold(option)} for ${paint.sky(key)}, which is at or before 1970 and usually means the value is missing. Pass the time in milliseconds, like ${paint.sky('Date.now() + 60_000')}.`
+              : `${paint.bold('schedule()')} got ${quoted(value)} as ${paint.bold(option)} for ${paint.sky(key)}, which is not a date. Pass a valid ${paint.bold('Date')}, or a number of milliseconds since the epoch.`,
     [SeedcordErrorCode.PluginTasksAtInSeconds]: (key: string, at: number) =>
         `${paint.bold('schedule()')} got ${paint.iris(at)} as ${paint.bold('at')} for ${paint.sky(key)}, which looks like seconds. Pass milliseconds, like ${paint.sky('Date.now() + 60_000')}.`,
     [SeedcordErrorCode.PluginTasksDurationTooLong]: (key: string, duration: string) =>
-        `${paint.bold('schedule()')} got ${paint.sky(duration)} for ${paint.sky(key)}, which ends after the last date a JavaScript ${paint.bold('Date')} can hold, in the year 275760. Pass ${paint.bold('in')} a shorter duration.`,
+        `${paint.bold('schedule()')} got ${paint.sky(duration)} for ${paint.sky(key)}, which ends after the last date a JavaScript ${paint.bold('Date')} can hold, in the year 275760. Pass a shorter duration as ${paint.bold('in')}.`,
 
     [SeedcordErrorCode.CliCancelled]: () => 'Cancelled.',
 

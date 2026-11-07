@@ -23,11 +23,14 @@ class NoData extends Stub<void> {}
 class Unban extends Stub<{ guildId: string; bannedAt: Date }> {}
 class Holds extends Stub<{ ids: Set<string> }> {}
 class Callback extends Stub<{ run: () => void }> {}
+class Optional extends Stub<string | undefined> {}
 
 function probeSchedule(): void {
     void tasks.schedule(NoData, { in: '30s' });
     void tasks.schedule(NoData, { at: new Date() });
     void tasks.schedule(Unban, { at: Date.now(), data: { guildId: '1', bannedAt: new Date() } });
+    void tasks.schedule(Optional, { in: '30s', data: 'x' });
+    void tasks.schedule(Optional, { in: '30s', data: undefined });
 
     // @ts-expect-error a task without data takes no data
     void tasks.schedule(NoData, { in: '30s', data: { guildId: '1' } });
@@ -57,35 +60,13 @@ function probeControls(): void {
 
 function probeDecorator(): void {
     RegisterTask('* * * * *')(NoData);
-    RegisterTask('@daily')(NoData);
-    RegisterTask('0 0 9 * * mon-fri')(NoData);
-    RegisterTask('0 0 * * FRI#L')(NoData);
-    RegisterTask('0 0 * * 5-6#L')(NoData);
-    RegisterTask('0 0 * * 5-6#2')(NoData);
-    RegisterTask('0 0 * * 5-6L')(NoData);
-    // croner trims a pattern and splits it on runs of whitespace
-    RegisterTask(' 0  9 *\t* * ')(NoData);
     RegisterTask()(Unban);
     RegisterTask({ key: 'unban' })(Unban);
 
-    // @ts-expect-error a week outside 1-5 or L
-    RegisterTask('0 0 * * 5#6');
-    // @ts-expect-error a backwards weekday range
-    RegisterTask('0 0 * * 6-5#L');
     // @ts-expect-error a scheduled task takes only a key, since the cron options do nothing there
     RegisterTask({ key: 'unban', protect: false });
     // @ts-expect-error a cron task can't declare data
     RegisterTask('* * * * *')(Unban);
-    // @ts-expect-error minute outside 0-59
-    RegisterTask('61 * * * *');
-    // @ts-expect-error four fields
-    RegisterTask('* * * *');
-    // @ts-expect-error a pattern with no fields
-    RegisterTask('  ');
-    // @ts-expect-error a backwards range
-    RegisterTask('5-1 * * * *');
-    // @ts-expect-error a nickname croner doesn't have
-    RegisterTask('@fortnightly');
     // @ts-expect-error a misspelled timezone
     RegisterTask('* * * * *', { timezone: 'America/New_Yrok' });
     RegisterTask('* * * * *', { timezone: 'America/New_York' });

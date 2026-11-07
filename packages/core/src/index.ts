@@ -107,7 +107,7 @@ export type { ControlCosmetics, ControlKey, PaginatorControls } from '#paginatio
 export type { ItemRender, PageRender } from '#pagination/render';
 
 export { KeyvDriver } from '#src/kv/KeyvDriver';
-export type { JsonSafe, Kv } from '#src/kv/Kv';
+export type { Kv, Storable } from '#src/kv/Kv';
 export type { KvCollection, Stored } from '#src/kv/KvCollection';
 export { MemoryDriver } from '#src/kv/MemoryDriver';
 export { UnstorageDriver } from '#src/kv/UnstorageDriver';

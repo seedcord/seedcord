@@ -2,7 +2,8 @@ import { randomUUID } from 'node:crypto';
 
 import { paint } from '@seedcord/errors';
 
-import type { LoadedTask, TaskRunner } from './TaskRunner';
+import type { LoadedTask } from './TaskRegistry';
+import type { TaskRunner } from './TaskRunner';
 import type { ScheduledJob } from './types/Tasks';
 import type { KvCollection } from '@seedcord/core';
 import type { Logger } from '@seedcord/logger';

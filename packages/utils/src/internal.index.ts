@@ -17,11 +17,11 @@ export {
 export { botFolder } from './files/sources';
 export { withoutQuery } from './files/withoutQuery';
 export * from './misc/asError';
-export type { IsDigits, StripZeros } from './numbers/IsDigits';
 export * from './misc/hasErrorCode';
 export * from './misc/isInteractive';
 export * from './misc/isPortInUse';
 export * from './misc/unlessAborted';
+export type { IsDigits, StripZeros } from './numbers/IsDigits';
 export * from './objects/isPlainObject';
 export * from './objects/isStringArray';
 export * from './strings/buildSlashRoute';

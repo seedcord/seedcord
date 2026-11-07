@@ -441,10 +441,15 @@ describe('Tasks job upkeep', () => {
             });
         });
 
-        it.each([new Date('nope'), 0, -1])('the invalid date %s', async (at) => {
+        it.each([
+            [new Date('nope'), 'SeedcordTypeError'],
+            [0, 'SeedcordRangeError'],
+            [-1, 'SeedcordRangeError']
+        ])('the invalid date %s', async (at, type) => {
             const { tasks } = await start(jobs, driver);
 
             await expect(tasks.schedule(Reminder, { at })).rejects.toMatchObject({
+                type,
                 code: SeedcordErrorCode.PluginTasksInvalidDate
             });
         });

@@ -1,23 +1,12 @@
 import { paint } from '@seedcord/errors';
 import { asError } from '@seedcord/utils/internal';
 
-import { TaskState } from './TaskState';
-
-import type { TaskClass } from './decorators/RegisterTask';
 import type { Task } from './Task';
+import type { LoadedTask } from './TaskRegistry';
 import type { TaskData, TaskTrigger } from './types/Tasks';
 import type { CoreBase, Subscriptions } from '@seedcord/core';
 import type { Logger } from '@seedcord/logger';
 import type { DistributedPick } from 'type-fest';
-
-export interface LoadedTask {
-    readonly key: string;
-    readonly Task: TaskClass;
-    readonly file: string;
-    readonly logger: Logger;
-    readonly protect: boolean;
-    readonly state: TaskState;
-}
 
 export type RunOutcome = 'finished' | 'failed' | 'interrupted' | 'skipped';
 
@@ -26,7 +15,6 @@ type RunSource = DistributedPick<Subscriptions['taskRan'], 'trigger' | 'jobId'>;
 
 export class TaskRunner {
     private readonly running = new Set<Promise<unknown>>();
-    private readonly states = new Map<string, TaskState>();
     private readonly shutdown = new AbortController();
 
     constructor(
@@ -34,18 +22,8 @@ export class TaskRunner {
         private readonly logger: Logger
     ) {}
 
-    public state(key: string): TaskState {
-        const existing = this.states.get(key);
-        if (existing) return existing;
-
-        const state = new TaskState();
-        this.states.set(key, state);
-
-        return state;
-    }
-
-    // while a protected task is busy, a cron or manual run is skipped and calls onOverrun(),
-    // and a scheduled run waits for the busy one so its data still runs
+    // while a protected task is busy, the runner skips a cron or manual run and calls onOverrun()
+    // instead, and a scheduled run waits for the busy one so its data still runs
     public async run(loaded: LoadedTask, source: RunSource, data: TaskData<unknown>): Promise<RunOutcome> {
         const { state, protect } = loaded;
 
@@ -60,7 +38,7 @@ export class TaskRunner {
         if (protect) while (state.busy) await state.settled();
         if (this.shutdown.signal.aborted) return 'interrupted';
 
-        // the run counts as busy before execute() starts, so a task that calls trigger() on itself is skipped
+        // the run counts as busy before execute() starts, so the runner skips a trigger() that a task calls on itself
         const { promise, resolve } = Promise.withResolvers<RunOutcome>();
         const run = this.track(promise);
         state.add(run);

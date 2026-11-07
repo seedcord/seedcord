@@ -1,9 +1,9 @@
 import { readFile } from 'node:fs/promises';
 import path from 'node:path';
 
-import { describe, expect, it } from 'vitest';
+import { beforeAll, describe, expect, it } from 'vitest';
 
-import { isTimezone } from '#src/schedule';
+import { isTimezone } from '#src/isTimezone';
 
 const source = path.resolve(import.meta.dirname, '../../src/types/Timezone.ts');
 
@@ -16,15 +16,19 @@ async function listedZones(): Promise<Set<string>> {
 }
 
 describe('IanaTimezone', () => {
-    it('lists every zone this Node supports', async () => {
-        const listed = await listedZones();
+    let listed: Set<string>;
+
+    beforeAll(async () => {
+        listed = await listedZones();
+    });
+
+    it('lists every zone this Node supports', () => {
         const missing = Intl.supportedValuesOf('timeZone').filter((zone) => !listed.has(zone));
 
         expect(missing).toEqual([]);
     });
 
-    it('lists only zones this Node supports', async () => {
-        const listed = await listedZones();
+    it('lists only zones this Node supports', () => {
         const unknown = [...listed].filter((zone) => !isTimezone(zone));
 
         expect(unknown).toEqual([]);

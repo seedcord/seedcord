@@ -1,5 +1,5 @@
 import type { IanaTimezone, Timezone } from './Timezone';
-import type { CoreBase, JsonSafe, Stored } from '@seedcord/core';
+import type { CoreBase, Storable, Stored } from '@seedcord/core';
 import type { Logger } from '@seedcord/logger';
 import type { ValidDuration } from '@seedcord/utils';
 import type { Simplify } from 'type-fest';
@@ -65,11 +65,14 @@ export type TaskTrigger = TaskRun['trigger'];
 // no-invalid-void-type rejects a bare void in a conditional type
 type NoData = ReturnType<() => void>;
 
+// one rule for both what a task reads and what schedule() takes, so the two always match
+type IsNoData<TData> = [TData] extends [NoData] ? true : false;
+
 /**
  * `TData` after its trip through the store. A `Date` in `TData` reads back as its ISO string, the
  * same as a record from a `KvCollection`.
  */
-export type TaskData<TData> = unknown extends TData ? unknown : [TData] extends [NoData] ? NoData : Stored<TData>;
+export type TaskData<TData> = unknown extends TData ? unknown : IsNoData<TData> extends true ? NoData : Stored<TData>;
 
 /** What the plugin passes to a task's constructor. */
 export interface TaskContext<TData = unknown> {
@@ -86,15 +89,9 @@ export interface TaskContext<TData = unknown> {
 export type When<TIn extends string = string> =
     { in: ValidDuration<TIn>; at?: never } | { at: Date | number; in?: never };
 
-type HasData<TData> = [TData] extends [Exclude<TData, void>] ? true : false;
-
-type StorableData<TData> = [TData] extends [JsonSafe<TData>]
-    ? TData
-    : 'This task data holds a value JSON cannot keep, like a function, Map, Set, or bigint.';
-
 /** The options `schedule()` takes. `data` follows the task's type argument. */
 export type ScheduleOptions<TData, TIn extends string = string> = When<TIn> &
-    (HasData<TData> extends true ? { data: StorableData<TData> } : { data?: never });
+    (IsNoData<TData> extends true ? { data?: never } : { data: Storable<TData, 'task data'> });
 
 /** One cron task, as `crons()` reports it. */
 export interface CronStatus {

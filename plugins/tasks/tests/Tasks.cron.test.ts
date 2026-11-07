@@ -1,3 +1,4 @@
+import { mkdir, rm, writeFile } from 'node:fs/promises';
 import path from 'node:path';
 
 import { SeedcordErrorCode } from '@seedcord/errors';
@@ -295,6 +296,34 @@ describe('Tasks cron tasks', () => {
             await tasks.dispose();
         });
 
+        it('applies a paused option changed in a save', async () => {
+            const folder = path.join(import.meta.dirname, 'temp', 'paused-save');
+            const file = path.join(folder, 'Flip.ts');
+            const source = (paused: boolean): string =>
+                [
+                    "import { RegisterTask } from '#src/decorators/RegisterTask';",
+                    "import { Task } from '#src/Task';",
+                    `@RegisterTask('* * * * * *', { paused: ${String(paused)} })`,
+                    'export class Flip extends Task {',
+                    '    public async execute(): Promise<void> {}',
+                    '}'
+                ].join('\n');
+
+            await mkdir(folder, { recursive: true });
+            await writeFile(file, source(true));
+
+            try {
+                const { tasks } = await start({ path: folder });
+                await writeFile(file, source(false));
+                await tasks.onHmr({ file, type: 'update' });
+
+                expect(tasks.crons()[0]?.active).toBe(true);
+                await tasks.dispose();
+            } finally {
+                await rm(folder, { recursive: true, force: true });
+            }
+        });
+
         it('keeps what resume did across a save', async () => {
             const { host, tasks } = await start(crons);
             tasks.resume(Idle);
@@ -318,7 +347,7 @@ describe('Tasks cron tasks', () => {
             timezone: 'America/New_York',
             active: true,
             busy: true,
-            nextRun: tasks.nextRun(Slow),
+            nextRun: new Date('2031-01-01T05:00:00.000Z'),
             previousRun: null
         });
         expect(tasks.nextRun(Slow)?.toISOString()).toBe('2031-01-01T05:00:00.000Z');

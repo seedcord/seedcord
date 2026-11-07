@@ -4,42 +4,29 @@ import { keepDefined } from '@seedcord/utils';
 import { asError } from '@seedcord/utils/internal';
 import { Cron, CronDate } from 'croner';
 
-import { isTimezone } from './schedule';
+import { isTimezone } from './isTimezone';
 
 import type { TaskMetadata } from './decorators/RegisterTask';
-import type { LoadedTask, TaskRunner } from './TaskRunner';
+import type { CronSlot, LoadedTask, TaskRegistry, TaskSlot } from './TaskRegistry';
+import type { TaskRunner } from './TaskRunner';
 import type { CronStatus } from './types/Tasks';
 
 type CronMetadata = Extract<TaskMetadata, { kind: 'cron' }>;
 
-// a cron task's croner job, which a save rebuilds
-export interface CronEntry {
-    readonly loaded: LoadedTask;
-    readonly job: Cron;
-    readonly pattern: string;
-    readonly timezone: string | undefined;
-}
-
 export class CronTasks {
-    private readonly entries = new Map<string, CronEntry>();
-    // by task key, and outside the entry, so a save that rebuilds the job keeps what pause() and resume() did
-    private readonly paused = new Map<string, boolean>();
     private started = false;
 
     constructor(
+        private readonly registry: TaskRegistry,
         private readonly runner: TaskRunner,
         private readonly defaultTimezone: string | undefined
     ) {}
 
     public get size(): number {
-        return this.entries.size;
+        return this.registry.cronSlots().length;
     }
 
-    public get(key: string): CronEntry | undefined {
-        return this.entries.get(key);
-    }
-
-    public add(loaded: LoadedTask, meta: CronMetadata): void {
+    public add(slot: TaskSlot, loaded: LoadedTask, meta: CronMetadata): void {
         const { key, file } = loaded;
         const { pattern } = meta;
 
@@ -76,67 +63,69 @@ export class CronTasks {
                 }
             );
         } catch (error) {
-            // croner prefixes its messages with its class name, which says nothing to the reader
-            const reason = asError(error).message.replace(/^CronPattern: /, '');
-            throw new SeedcordTypeError(SeedcordErrorCode.PluginTasksInvalidPattern, [key, file, pattern, reason], {
-                cause: error
-            });
+            throw new SeedcordTypeError(
+                SeedcordErrorCode.PluginTasksInvalidPattern,
+                [key, file, pattern, cronerReason(error)],
+                { cause: error }
+            );
         }
 
-        this.entries.set(key, { loaded, job, pattern, timezone });
-        if (!this.paused.has(key)) this.paused.set(key, meta.paused ?? false);
-
-        if (this.started && !this.isPaused(key)) job.resume();
+        slot.cron = { job, pattern, timezone, paused: meta.paused ?? false };
+        if (this.started && !slot.paused) job.resume();
     }
 
-    public remove(key: string): void {
-        this.entries.get(key)?.job.stop();
-        this.entries.delete(key);
+    public remove(slot: TaskSlot): void {
+        slot.cron?.job.stop();
+        slot.cron = undefined;
     }
 
     public start(): void {
         this.started = true;
 
-        for (const { job, loaded } of this.entries.values()) {
-            if (!this.isPaused(loaded.key)) job.resume();
+        for (const slot of this.registry.cronSlots()) {
+            if (!slot.paused) slot.cron.job.resume();
         }
     }
 
     public stop(): void {
         this.started = false;
 
-        for (const entry of this.entries.values()) entry.job.stop();
+        for (const slot of this.registry.cronSlots()) slot.cron.job.stop();
     }
 
-    public pause({ job, loaded }: CronEntry): void {
-        this.paused.set(loaded.key, true);
-        job.pause();
+    public pause(slot: CronSlot): void {
+        slot.pausedByCall = true;
+        slot.cron.job.pause();
     }
 
-    public resume({ job, loaded }: CronEntry): void {
-        this.paused.set(loaded.key, false);
-        if (this.started) job.resume();
+    public resume(slot: CronSlot): void {
+        slot.pausedByCall = false;
+        if (this.started) slot.cron.job.resume();
     }
 
-    public nextRun({ job, loaded }: CronEntry): Date | null {
-        return this.isPaused(loaded.key) ? null : job.nextRun();
+    public nextRun(slot: CronSlot): Date | null {
+        return slot.paused ? null : slot.cron.job.nextRun();
     }
 
     public list(): CronStatus[] {
-        return [...this.entries.values()].map((entry) => ({
-            key: entry.loaded.key,
-            pattern: entry.pattern,
-            timezone: entry.timezone,
-            active: entry.job.isRunning(),
-            busy: entry.loaded.state.busy,
-            nextRun: this.nextRun(entry),
-            previousRun: entry.job.previousRun()
+        return this.registry.cronSlots().map((slot) => ({
+            key: slot.loaded.key,
+            pattern: slot.cron.pattern,
+            timezone: slot.cron.timezone,
+            active: slot.cron.job.isRunning(),
+            busy: slot.state.busy,
+            nextRun: this.nextRun(slot),
+            previousRun: slot.cron.job.previousRun()
         }));
     }
+}
 
-    private isPaused(key: string): boolean {
-        return this.paused.get(key) === true;
-    }
+// croner prefixes its messages with its class name, and it shows the day and month it rejected
+// counted from 0, so 32 reads as 31. The field name alone points at the right part
+function cronerReason(error: unknown): string {
+    return asError(error)
+        .message.replace(/^CronPattern: /, '')
+        .replace(/^(Invalid value for \w+): .*$/, '$1');
 }
 
 // croner reads a date string in the task's timezone, so a plain new Date() could read it as a different time

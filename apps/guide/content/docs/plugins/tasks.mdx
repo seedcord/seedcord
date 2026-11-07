@@ -31,7 +31,7 @@ export const seedcord = new Seedcord({
 export default seedcord;
 ```
 
-This sample builds a gateway bot. The same `attach` call works on an http `Seedcord` from `@seedcord/http` that runs on a server. [`Tasks`](ref:plugin-tasks/Tasks) requires a long-running process to hold its timers, so on an http bot for [Cloudflare Workers](/build/workers) the same call is a compile error. A cast that bypasses the error throws `CorePluginScopeMismatch`, which [the plugins page](/plugins#a-plugin-declares-where-it-runs) covers.
+This sample builds a gateway bot. The same `attach` call works on an http `Seedcord` from `@seedcord/http` that runs on a server. [`Tasks`](ref:plugin-tasks/Tasks) requires a long-running process to hold its timers, so on an http bot for [Cloudflare Workers](/build/workers) the same call is a compile error. With a cast that bypasses the error, `attach` throws `CorePluginScopeMismatch`, which [the plugins page](/plugins#a-plugin-declares-where-it-runs) covers.
 
 {/* prettier-ignore-start */}
 
@@ -209,7 +209,7 @@ export class Prune extends Task {
 
 `Prune` counts its skipped runs in `onOverrun()`. `this.core` works there too, because the plugin builds that instance from the same context it passes a run. If `onOverrun()` throws, the plugin logs the error, and the task still runs at its next match.
 
-A [scheduled job](/plugins/tasks-scheduling) of the task isn't skipped. It waits for the run before it to end, then runs with its data.
+The plugin doesn't skip a [scheduled job](/plugins/tasks-scheduling) of the task. The job waits for the run before it to end, then runs with its data.
 
 Pass `protect: false` only if two runs of the task can safely overlap, since the plugin then starts a run at every match.
 
@@ -287,13 +287,13 @@ export class PauseDigest extends SlashHandler<'pause-digest'> {
 | --- | --- |
 | [`pause(Task)`](ref:plugin-tasks/Tasks.pause) | stops a cron task's pattern. Scheduled jobs and `trigger()` still run the task. After a restart, the pattern runs again |
 | [`resume(Task)`](ref:plugin-tasks/Tasks.resume) | starts a task that `pause()` or the `paused` option stopped |
-| [`nextRun(Task)`](ref:plugin-tasks/Tasks.nextRun) | returns the next run as a `Date`, or `null` when the task won't run again, like when it's paused or has no runs left |
+| [`nextRun(Task)`](ref:plugin-tasks/Tasks.nextRun) | returns the next run as a `Date`, or `null` while the task is paused or once it has no runs left |
 | [`trigger(Task)`](ref:plugin-tasks/Tasks.trigger) | runs a task now, even while it's paused. If `protect` is on and the task is running, the plugin skips this run and calls `onOverrun()` |
 | [`crons()`](ref:plugin-tasks/Tasks.crons) | returns a [`CronStatus`](ref:plugin-tasks/CronStatus) for each cron task, with its `key`, `pattern`, `timezone`, `active`, `busy`, `nextRun`, and `previousRun` |
 
 {/* prettier-ignore-end */}
 
-`pause()` lasts until the process stops, and a save during `seedcord dev` keeps it. To keep a task paused after a restart, store a flag in [`core.kv`](/built-ins) and check it at the top of `execute()`.
+`pause()` lasts until the process stops, and a save during `seedcord dev` keeps what `pause()` and `resume()` did. Until you call either one, a save applies the `paused` option in the task's file. To keep a task paused after a restart, store a flag in [`core.kv`](/built-ins) and check it at the top of `execute()`.
 
 `pause()`, `resume()`, and `nextRun()` throw `PluginTasksPatternMissing` for a task without a pattern. Each method that takes a class throws `PluginTasksNotLoaded` if the plugin didn't load it from `path`. These methods take tasks without data, so passing a task that declares data fails to compile.
 
