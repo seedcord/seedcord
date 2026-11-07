@@ -67,6 +67,15 @@ describe('Tasks cron tasks', () => {
         expect(host.runs).toEqual([]);
     });
 
+    it('leaves a task saved after dispose stopped', async () => {
+        const { tasks } = await start(crons);
+        await tasks.dispose();
+
+        await tasks.onHmr({ file: path.join(taskFolder, 'Slow.ts'), type: 'update' });
+
+        expect(tasks.crons().find((status) => status.key === 'slow')?.active).toBe(false);
+    });
+
     it('leaves a paused task until resume', async () => {
         const { host, tasks } = await start(crons);
 

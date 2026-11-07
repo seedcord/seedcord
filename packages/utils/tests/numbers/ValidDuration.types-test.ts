@@ -2,6 +2,7 @@ import type { ValidDuration } from '#src/numbers/parseDuration';
 
 declare function every<const TText extends string>(duration: ValidDuration<TText>): void;
 declare const typed: string;
+declare const mixed: '5s' | '2w';
 
 every('500ms');
 every('90s');
@@ -27,3 +28,5 @@ every('ms');
 every('30M');
 // @ts-expect-error weeks aren't a unit
 every('2w');
+// @ts-expect-error one member of the union has no unit
+every(mixed);

@@ -97,6 +97,8 @@ export class CronTasks {
     }
 
     public stop(): void {
+        this.started = false;
+
         for (const entry of this.entries.values()) entry.job.stop();
     }
 

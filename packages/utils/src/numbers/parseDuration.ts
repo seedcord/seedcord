@@ -45,11 +45,14 @@ type IsPositiveWhole<Value extends string> =
  * every('1.5h'); // fails to compile
  * ```
  */
-export type ValidDuration<TText extends string> = string extends TText
-    ? TText
-    : IsPositiveWhole<Amount<TText>> extends true
-      ? TText
-      : `'${TText}' isn't a duration. Write a whole number above 0 and a unit (ms, s, m, h or d), like '90s' or '2h'`;
+export type ValidDuration<TText extends string> = string extends TText ? TText : EachDuration<TText>;
+
+// checks each member of a union on its own, so one valid member can't let the rest through
+type EachDuration<TText extends string> = TText extends string
+    ? IsPositiveWhole<Amount<TText>> extends true
+        ? TText
+        : `'${TText}' isn't a duration. Write a whole number above 0 and a unit (ms, s, m, h or d), like '90s' or '2h'`
+    : never;
 
 const DURATION_PATTERN = new RegExp(String.raw`^(\d+)(${Object.keys(UNIT_MS).join('|')})$`);
 
