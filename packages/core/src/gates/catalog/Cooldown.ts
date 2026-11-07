@@ -70,7 +70,7 @@ function scopeValue(ctx: GateContextBase, per: 'user' | 'guild' | 'channel'): st
  * @param duration - A number is seconds, and a string is a duration like `30m` or `24h`.
  * @param options - Sets the scope with `per`, the uses per window with `limit`, and the refusal with `notice`.
  * @throws A **SeedcordTypeError** when `duration` is a string that doesn't parse.
- * @throws A **SeedcordRangeError** when `duration` is zero or negative.
+ * @throws A **SeedcordRangeError** when `duration` is zero, negative, `NaN`, or `Infinity`.
  *
  * @see the `@Gated` decorator from your transport package
  * @see {@link IRateLimiter}
@@ -117,8 +117,9 @@ export function Cooldown<const TDuration extends string>(
         if (parsed === null) throw new SeedcordTypeError(SeedcordErrorCode.InvalidDuration, [COOLDOWN, duration]);
         windowMs = parsed;
     }
-    // a zero or negative window would never limit
-    if (windowMs <= 0) throw new SeedcordRangeError(SeedcordErrorCode.InvalidDuration, [COOLDOWN, duration]);
+    // a zero or negative window would never limit, and NaN or Infinity would never free
+    if (!Number.isFinite(windowMs) || windowMs <= 0)
+        throw new SeedcordRangeError(SeedcordErrorCode.InvalidDuration, [COOLDOWN, duration]);
 
     const per = options?.per ?? 'user';
     // exactOptionalPropertyTypes rejects an explicit undefined key

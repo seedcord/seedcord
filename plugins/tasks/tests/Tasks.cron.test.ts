@@ -218,68 +218,84 @@ describe('Tasks cron tasks', () => {
         await tasks.dispose();
     });
 
-    it('runs a scheduled job of a protected task once the run before it ends', async () => {
-        const { host, tasks } = await start(crons);
-        host.hold();
+    describe('run state', () => {
+        it('skips a run the task starts on itself before its first await', async () => {
+            using _logs = captureLogs();
+            const { host, tasks } = await start(crons);
+            host.reenter = () => tasks.trigger(Slow);
 
-        const first = tasks.trigger(Slow);
-        await tasks.schedule(Slow, { in: '1s' });
-        await vi.advanceTimersByTimeAsync(SECOND_MS);
-        expect(runsOf(host, 'slow')).toEqual([{ task: 'slow', trigger: 'manual', data: undefined }]);
+            await tasks.trigger(Slow);
 
-        host.release();
-        await first;
-        await vi.advanceTimersByTimeAsync(0);
+            expect(host.runs).toEqual([
+                { task: 'slow', trigger: 'manual', data: undefined },
+                { task: 'overrun', trigger: 'manual', data: undefined }
+            ]);
+            await tasks.dispose();
+        });
 
-        expect(runsOf(host, 'slow')).toEqual([
-            { task: 'slow', trigger: 'manual', data: undefined },
-            { task: 'slow', trigger: 'scheduled', data: undefined }
-        ]);
-        expect(tasks.jobs()).toEqual([]);
-        await tasks.dispose();
-    });
+        it('runs a scheduled job of a protected task once the run before it ends', async () => {
+            const { host, tasks } = await start(crons);
+            host.hold();
 
-    it('keeps a job that waited on a protected run stored when dispose interrupts it', async () => {
-        using driver = new FakeDriver();
-        const { host, tasks } = await start(crons, driver);
-        host.hold();
+            const first = tasks.trigger(Slow);
+            await tasks.schedule(Slow, { in: '1s' });
+            await vi.advanceTimersByTimeAsync(SECOND_MS);
+            expect(runsOf(host, 'slow')).toEqual([{ task: 'slow', trigger: 'manual', data: undefined }]);
 
-        void tasks.trigger(Slow);
-        await tasks.schedule(Slow, { in: '1s' });
-        await vi.advanceTimersByTimeAsync(SECOND_MS);
+            host.release();
+            await first;
+            await vi.advanceTimersByTimeAsync(0);
 
-        const disposing = tasks.dispose();
-        host.release();
-        await disposing;
+            expect(runsOf(host, 'slow')).toEqual([
+                { task: 'slow', trigger: 'manual', data: undefined },
+                { task: 'slow', trigger: 'scheduled', data: undefined }
+            ]);
+            expect(tasks.jobs()).toEqual([]);
+            await tasks.dispose();
+        });
 
-        expect(runsOf(host, 'slow')).toEqual([{ task: 'slow', trigger: 'manual', data: undefined }]);
-        expect(driver.stored.size).toBe(1);
-    });
+        it('keeps a job that waited on a protected run stored when dispose interrupts it', async () => {
+            using driver = new FakeDriver();
+            const { host, tasks } = await start(crons, driver);
+            host.hold();
 
-    it('runs a paused task through trigger and a scheduled job', async () => {
-        const { host, tasks } = await start(crons);
-        tasks.pause(Tick);
+            void tasks.trigger(Slow);
+            await tasks.schedule(Slow, { in: '1s' });
+            await vi.advanceTimersByTimeAsync(SECOND_MS);
 
-        await tasks.trigger(Tick);
-        await tasks.schedule(Tick, { in: '1s' });
-        await vi.advanceTimersByTimeAsync(SECOND_MS * 2);
+            const disposing = tasks.dispose();
+            host.release();
+            await disposing;
 
-        expect(runsOf(host, 'Tick')).toEqual([
-            { task: 'Tick', trigger: 'manual', data: undefined },
-            { task: 'Tick', trigger: 'scheduled', data: undefined }
-        ]);
-        await tasks.dispose();
-    });
+            expect(runsOf(host, 'slow')).toEqual([{ task: 'slow', trigger: 'manual', data: undefined }]);
+            expect(driver.stored.size).toBe(1);
+        });
 
-    it('keeps what resume did across a save', async () => {
-        const { host, tasks } = await start(crons);
-        tasks.resume(Idle);
+        it('runs a paused task through trigger and a scheduled job', async () => {
+            const { host, tasks } = await start(crons);
+            tasks.pause(Tick);
 
-        await tasks.onHmr({ file: path.join(taskFolder, 'Idle.ts'), type: 'update' });
-        await vi.advanceTimersByTimeAsync(SECOND_MS);
+            await tasks.trigger(Tick);
+            await tasks.schedule(Tick, { in: '1s' });
+            await vi.advanceTimersByTimeAsync(SECOND_MS * 2);
 
-        expect(runsOf(host, 'Idle')).toHaveLength(1);
-        await tasks.dispose();
+            expect(runsOf(host, 'Tick')).toEqual([
+                { task: 'Tick', trigger: 'manual', data: undefined },
+                { task: 'Tick', trigger: 'scheduled', data: undefined }
+            ]);
+            await tasks.dispose();
+        });
+
+        it('keeps what resume did across a save', async () => {
+            const { host, tasks } = await start(crons);
+            tasks.resume(Idle);
+
+            await tasks.onHmr({ file: path.join(taskFolder, 'Idle.ts'), type: 'update' });
+            await vi.advanceTimersByTimeAsync(SECOND_MS);
+
+            expect(runsOf(host, 'Idle')).toHaveLength(1);
+            await tasks.dispose();
+        });
     });
 
     it('reports its state through list and nextRun', async () => {

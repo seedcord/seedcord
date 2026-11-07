@@ -7,7 +7,12 @@ import type { TestHost } from '#tests/utils/host';
 export class Slow extends Task<void, TestHost> {
     public async execute(): Promise<void> {
         this.core.runs.push({ task: this.key, trigger: this.trigger, data: this.data });
+        const { reenter } = this.core;
+        this.core.reenter = undefined;
+        const again = reenter?.();
+
         await this.core.gate;
+        await again;
     }
 
     public override async onOverrun(): Promise<void> {

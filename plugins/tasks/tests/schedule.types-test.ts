@@ -63,6 +63,8 @@ function probeDecorator(): void {
     RegisterTask('0 0 * * 5-6#L')(NoData);
     RegisterTask('0 0 * * 5-6#2')(NoData);
     RegisterTask('0 0 * * 5-6L')(NoData);
+    // croner trims a pattern and splits it on runs of whitespace
+    RegisterTask(' 0  9 *\t* * ')(NoData);
     RegisterTask()(Unban);
 
     // @ts-expect-error a week outside 1-5 or L
@@ -75,6 +77,8 @@ function probeDecorator(): void {
     RegisterTask('61 * * * *');
     // @ts-expect-error four fields
     RegisterTask('* * * *');
+    // @ts-expect-error a pattern with no fields
+    RegisterTask('  ');
     // @ts-expect-error a backwards range
     RegisterTask('5-1 * * * *');
     // @ts-expect-error a nickname croner doesn't have

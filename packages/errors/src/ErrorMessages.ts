@@ -211,7 +211,7 @@ const messages = {
 
     [SeedcordErrorCode.InvalidDuration]: (where: string, input: string | number) =>
         typeof input === 'number'
-            ? `${where} got ${paint.iris(input)} seconds. Pass a number above 0, or a duration string like ${paint.sky("'30m'")}.`
+            ? `${where} got ${paint.iris(input)} seconds. Pass a finite number above 0, or a duration string like ${paint.sky("'30m'")}.`
             : `${where} got ${quoted(input)}, which isn't a duration. Write a whole number above 0 and a unit (ms, s, m, h or d), like ${paint.sky("'90s'")} or ${paint.sky("'2h'")}.`,
     [SeedcordErrorCode.PaginationInvalidPerPage]: (perPage: number) =>
         `perPage is ${perPage}. Pass a positive integer.`,

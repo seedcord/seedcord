@@ -137,6 +137,21 @@ type Split<Text extends string, Separator extends string> = Text extends `${infe
     ? [Head, ...Split<Tail, Separator>]
     : [Text];
 
+type Whitespace = ' ' | '\t' | '\n' | '\r';
+
+// croner trims a pattern and splits it on runs of whitespace, so this does too
+type Fields<
+    Text extends string,
+    Current extends string = '',
+    Done extends string[] = []
+> = Text extends `${infer Char}${infer Rest}`
+    ? Char extends Whitespace
+        ? Fields<Rest, '', Current extends '' ? Done : [...Done, Current]>
+        : Fields<Rest, `${Current}${Char}`, Done>
+    : Current extends ''
+      ? Done
+      : [...Done, Current];
+
 type Fail<TField extends Field, Item extends string, Reason extends string> = `${TField['label']} '${Item}' ${Reason}`;
 
 type ValueOf<TField extends Field, Text extends string> = Text extends keyof TField['names']
@@ -197,7 +212,7 @@ type CheckWeekdays<
     : CheckValue<TField, Value, Item>;
 
 type CheckItem<TField extends Field, Item extends string> = Item extends ''
-    ? Fail<TField, Item, 'is empty. Separate fields with one space and list items with commas'>
+    ? Fail<TField, Item, 'is empty. Put a value on both sides of each comma'>
     : TField extends Day
       ? Item extends 'l'
           ? true
@@ -250,7 +265,7 @@ export type CronPattern<TPattern extends string> = string extends TPattern
       ? TPattern
       : Lowercase<TPattern> extends `@${string}`
         ? `'${TPattern}' is not a nickname croner knows. Use @yearly, @annually, @monthly, @weekly, @daily, @midnight or @hourly`
-        : CheckPattern<Split<Lowercase<TPattern>, ' '>> extends infer Result
+        : CheckPattern<Fields<Lowercase<TPattern>>> extends infer Result
           ? Result extends string
               ? `Invalid cron pattern '${TPattern}': ${Result}`
               : TPattern

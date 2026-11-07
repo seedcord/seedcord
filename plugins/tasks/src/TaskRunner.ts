@@ -68,8 +68,11 @@ export class TaskRunner {
         while (state.protect && state.busy) await state.settled();
         if (this.shutdown.signal.aborted) return 'interrupted';
 
-        const run = this.track(this.execute(loaded, source, data));
+        // the run counts as busy before execute() starts, so a task that calls trigger() on itself is skipped
+        const { promise, resolve } = Promise.withResolvers<RunOutcome>();
+        const run = this.track(promise);
         state.add(run);
+        resolve(this.execute(loaded, source, data));
 
         return run;
     }
