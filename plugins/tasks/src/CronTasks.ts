@@ -1,32 +1,30 @@
 import { SeedcordErrorCode, paint } from '@seedcord/errors';
 import { SeedcordTypeError } from '@seedcord/errors/internal';
 import { keepDefined } from '@seedcord/utils';
-import { Cron } from 'croner';
+import { Cron, CronDate } from 'croner';
 
 import { isTimezone } from './schedule';
 
 import type { TaskMetadata } from './decorators/RegisterTask';
-import type { Registered, RunOutcome, TaskRunner } from './TaskRunner';
-import type { CronStatus, TaskTrigger } from './types/Tasks';
-import type { Logger } from '@seedcord/logger';
+import type { LoadedTask, TaskRunner } from './TaskRunner';
+import type { CronStatus } from './types/Tasks';
 
-interface CronEntry {
-    readonly registered: Registered;
+type CronMetadata = Extract<TaskMetadata, { kind: 'cron' }>;
+
+/** A cron task's croner job. A save rebuilds it, and the task's run state lives on `loaded.state`. */
+export interface CronEntry {
+    readonly loaded: LoadedTask;
     readonly job: Cron;
+    readonly pattern: string;
     readonly timezone: string | undefined;
-    readonly protect: boolean;
-    paused: boolean;
 }
 
 export class CronTasks {
     private readonly entries = new Map<string, CronEntry>();
-    // keyed by task key, not entry, so a save that replaces the entry still sees the runs in progress
-    private readonly running = new Map<string, Set<Promise<RunOutcome>>>();
     private started = false;
 
     constructor(
         private readonly runner: TaskRunner,
-        private readonly logger: Logger,
         private readonly defaultTimezone: string | undefined
     ) {}
 
@@ -34,22 +32,30 @@ export class CronTasks {
         return this.entries.size;
     }
 
-    public has(key: string): boolean {
-        return this.entries.has(key);
+    public get(key: string): CronEntry | undefined {
+        return this.entries.get(key);
     }
 
-    public add(registered: Registered, meta: TaskMetadata, pattern: string, file: string): void {
-        const { key } = registered;
-        const timezone = meta.timezone ?? this.defaultTimezone;
+    public add(loaded: LoadedTask, meta: CronMetadata): void {
+        const { key, file } = loaded;
+        const { pattern } = meta;
 
-        if (timezone !== undefined && !isTimezone(timezone)) {
-            throw new SeedcordTypeError(SeedcordErrorCode.PluginTasksInvalidTimezone, [key, file, timezone]);
+        // the constructor already checked the plugin's timezone
+        if (meta.timezone !== undefined && !isTimezone(meta.timezone)) {
+            throw new SeedcordTypeError(SeedcordErrorCode.PluginTasksInvalidTimezone, [
+                `The ${paint.bold('timezone')} of the task ${paint.sky(key)} in ${paint.path(file)}`,
+                meta.timezone
+            ]);
         }
 
         // croner treats a string with a colon as a one-off date
         if (pattern.includes(':')) {
             throw new SeedcordTypeError(SeedcordErrorCode.PluginTasksDateAsPattern, [key, file, pattern]);
         }
+
+        const timezone = meta.timezone ?? this.defaultTimezone;
+        const dates = keepDefined({ startAt: meta.startAt, stopAt: meta.stopAt });
+        for (const [option, value] of Object.entries(dates)) checkDate(loaded, option, value, timezone);
 
         let job: Cron;
 
@@ -59,9 +65,12 @@ export class CronTasks {
                 {
                     paused: true,
                     ...(timezone !== undefined && { timezone }),
-                    ...keepDefined({ maxRuns: meta.maxRuns, startAt: meta.startAt, stopAt: meta.stopAt })
+                    ...keepDefined({ maxRuns: meta.maxRuns }),
+                    ...dates
                 },
-                () => this.run(key, 'cron')
+                async () => {
+                    await this.runner.run(loaded, { trigger: 'cron', jobId: null }, undefined);
+                }
             );
         } catch (error) {
             throw new SeedcordTypeError(SeedcordErrorCode.PluginTasksInvalidPattern, [key, file, pattern], {
@@ -69,10 +78,9 @@ export class CronTasks {
             });
         }
 
-        const { paused = false, protect = true } = meta;
-        this.entries.set(key, { registered, job, timezone, paused, protect });
+        this.entries.set(key, { loaded, job, pattern, timezone });
 
-        if (this.started && !paused) job.resume();
+        if (this.started && !loaded.state.paused) job.resume();
     }
 
     public remove(key: string): void {
@@ -83,8 +91,8 @@ export class CronTasks {
     public start(): void {
         this.started = true;
 
-        for (const entry of this.entries.values()) {
-            if (!entry.paused) entry.job.resume();
+        for (const { job, loaded } of this.entries.values()) {
+            if (!loaded.state.paused) job.resume();
         }
     }
 
@@ -92,61 +100,46 @@ export class CronTasks {
         for (const entry of this.entries.values()) entry.job.stop();
     }
 
-    public pause(key: string): void {
-        const entry = this.entries.get(key);
-        if (!entry) return;
-
-        entry.paused = true;
-        entry.job.pause();
+    public pause({ job, loaded }: CronEntry): void {
+        loaded.state.paused = true;
+        job.pause();
     }
 
-    public resume(key: string): void {
-        const entry = this.entries.get(key);
-        if (!entry) return;
-
-        entry.paused = false;
-        if (this.started) entry.job.resume();
+    public resume({ job, loaded }: CronEntry): void {
+        loaded.state.paused = false;
+        if (this.started) job.resume();
     }
 
-    public nextRun(key: string): Date | null {
-        const entry = this.entries.get(key);
-        if (!entry || entry.paused) return null;
-
-        return entry.job.nextRun();
+    public nextRun({ job, loaded }: CronEntry): Date | null {
+        return loaded.state.paused ? null : job.nextRun();
     }
 
     public list(): CronStatus[] {
-        return [...this.entries].map(([key, { job, timezone, paused }]) => ({
-            key,
-            pattern: job.getPattern() ?? '',
-            timezone,
-            scheduled: job.isRunning(),
-            busy: this.running.has(key),
-            nextRun: paused ? null : job.nextRun(),
-            previousRun: job.previousRun()
+        return [...this.entries.values()].map((entry) => ({
+            key: entry.loaded.key,
+            pattern: entry.pattern,
+            timezone: entry.timezone,
+            active: entry.job.isRunning(),
+            busy: entry.loaded.state.busy,
+            nextRun: this.nextRun(entry),
+            previousRun: entry.job.previousRun()
         }));
     }
+}
 
-    public async run(key: string, trigger: TaskTrigger): Promise<void> {
-        const entry = this.entries.get(key);
-        if (!entry) return;
-
-        if (entry.protect && this.running.has(key)) {
-            this.logger.warn(`skipped a run of ${paint.sky(key)}, the previous one is still going`);
-            await this.runner.overrun(entry.registered, trigger);
-
-            return;
-        }
-
-        const run = this.runner.run(entry.registered, trigger, undefined, null);
-        const runs = this.running.get(key) ?? new Set();
-        this.running.set(key, runs.add(run));
-
-        try {
-            await run;
-        } finally {
-            runs.delete(run);
-            if (runs.size === 0) this.running.delete(key);
-        }
+// croner reads a date string in the task's timezone, so a plain new Date() could disagree with it
+function checkDate(
+    { key, file }: LoadedTask,
+    option: string,
+    value: Date | string,
+    timezone: string | undefined
+): void {
+    try {
+        // eslint-disable-next-line no-new -- the constructor is the check, it throws for a date croner can't read
+        new CronDate(value, timezone);
+    } catch (error) {
+        throw new SeedcordTypeError(SeedcordErrorCode.PluginTasksInvalidDate, [key, option, String(value), file], {
+            cause: error
+        });
     }
 }

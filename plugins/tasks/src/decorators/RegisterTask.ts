@@ -1,13 +1,19 @@
-import type { Task } from '#src/Task';
+import { Task } from '#src/Task';
+
 import type { CronPattern } from '#src/types/CronPattern';
 import type { TaskContext, TaskOptions } from '#src/types/Tasks';
 
 export type TaskClass = new (context: TaskContext) => Task<unknown>;
+export type CronTaskClass = abstract new (context: TaskContext<void>) => Task;
+export type ScheduledTaskClass = abstract new (context: never) => Task<unknown>;
 
-export interface TaskMetadata extends Omit<TaskOptions, 'key'> {
-    key: string;
-    pattern: string | undefined;
-}
+type RegisterArgs<TArg, TZone extends string> = TArg extends string
+    ? [pattern: CronPattern<TArg>, options?: TaskOptions<TZone>]
+    : [options?: TArg];
+type TaskTarget<TArg> = TArg extends string ? CronTaskClass : ScheduledTaskClass;
+
+export type TaskMetadata =
+    (Omit<TaskOptions, 'key'> & { kind: 'cron'; key: string; pattern: string }) | { kind: 'scheduled'; key: string };
 
 const registry = new WeakMap<object, TaskMetadata>();
 
@@ -19,39 +25,36 @@ const registry = new WeakMap<object, TaskMetadata>();
  * data, since nothing passes it any.
  *
  * @param pattern - 5, 6, or 7 fields in croner's grammar, or a nickname like `@daily`.
- * @param options - See {@link TaskOptions}.
  * @example
  * ```ts
- * \@RegisterTask('0 9 * * *', { timezone: 'Europe/Sarajevo' })
+ * \@RegisterTask('0 9 * * *', { timezone: 'America/New_York' })
  * export class DailyDigest extends Task {
  *     public async execute(): Promise<void> {}
  * }
  * ```
  */
-export function RegisterTask<const TPattern extends string, const TZone extends string = string>(
-    pattern: CronPattern<TPattern>,
-    options?: TaskOptions<TZone>
-): (target: abstract new (context: TaskContext<void>) => Task) => void;
-
-export function RegisterTask(
-    options?: Pick<TaskOptions, 'key'>
-): (target: abstract new (context: never) => Task<unknown>) => void;
+export function RegisterTask<
+    const TArg extends string | Pick<TaskOptions, 'key'> = Pick<TaskOptions, 'key'>,
+    const TZone extends string = string
+>(...args: RegisterArgs<TArg, TZone>): (target: TaskTarget<TArg>) => void;
 
 export function RegisterTask(patternOrOptions: string | Pick<TaskOptions, 'key'> = {}, options: TaskOptions = {}) {
     return (target: { readonly name: string }): void => {
         const metadata: TaskMetadata =
             typeof patternOrOptions === 'string'
-                ? { ...options, key: options.key ?? target.name, pattern: patternOrOptions }
-                : { key: patternOrOptions.key ?? target.name, pattern: undefined };
+                ? { ...options, kind: 'cron', key: options.key ?? target.name, pattern: patternOrOptions }
+                : { kind: 'scheduled', key: patternOrOptions.key ?? target.name };
 
         registry.set(target, metadata);
     };
 }
 
-export function taskMetadata(target: object): TaskMetadata | undefined {
-    return registry.get(target);
-}
+export const isTaskClass = (value: unknown): value is TaskClass =>
+    typeof value === 'function' && value.prototype instanceof Task && registry.has(value);
+
+// justified: a TaskClass only comes out of isTaskClass, which checked the registry holds it
+export const taskMetadata = (Task: TaskClass): TaskMetadata => registry.get(Task) as TaskMetadata;
 
 export function taskKey(target: { readonly name: string }): string {
-    return taskMetadata(target)?.key ?? target.name;
+    return registry.get(target)?.key ?? target.name;
 }

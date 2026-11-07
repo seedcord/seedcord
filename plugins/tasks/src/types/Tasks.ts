@@ -1,8 +1,8 @@
-import type { Duration } from './Duration';
 import type { IanaTimezone, Timezone } from './Timezone';
-import type { CoreBase, JsonSafe } from '@seedcord/core';
+import type { CoreBase, JsonSafe, Stored } from '@seedcord/core';
 import type { Logger } from '@seedcord/logger';
-import type { Jsonify, Simplify } from 'type-fest';
+import type { ValidDuration } from '@seedcord/utils';
+import type { Simplify } from 'type-fest';
 
 /** Options for the {@link Tasks} plugin. */
 export interface TasksOptions {
@@ -30,13 +30,15 @@ export interface TaskOptions<TZone extends string = string> {
     /** Overrides the plugin's `timezone` for this task. */
     timezone?: Timezone<TZone>;
     /**
-     * Skips a run while the last one is still going, and calls `onOverrun()` for it.
+     * Skips a cron or manual run while the last one is still running, and calls `onOverrun()` for it.
+     * A scheduled job waits for the last run to end instead, so its data still runs.
      *
      * @defaultValue `true`
      */
     protect?: boolean;
     /**
-     * Starts the task paused. Call `resume()` to start it.
+     * Starts the task's pattern paused. Call `resume()` to start it. Scheduled jobs and `trigger()`
+     * still run the task.
      *
      * @defaultValue `false`
      */
@@ -49,8 +51,16 @@ export interface TaskOptions<TZone extends string = string> {
     stopAt?: Date | string;
 }
 
+// a scheduled run carries its job's id, and only a failed run carries an error
+type TaskRun = Simplify<
+    { key: string; durationMs: number } & (
+        { trigger: 'scheduled'; jobId: string } | { trigger: 'cron' | 'manual'; jobId: null }
+    ) &
+        ({ outcome: 'finished' } | { outcome: 'failed'; error: Error })
+>;
+
 /** What started a run. */
-export type TaskTrigger = 'cron' | 'scheduled' | 'manual';
+export type TaskTrigger = TaskRun['trigger'];
 
 // no-invalid-void-type rejects a bare void in a conditional type
 type NoData = ReturnType<() => void>;
@@ -59,11 +69,7 @@ type NoData = ReturnType<() => void>;
  * `TData` after its trip through the store. A `Date` in `TData` reads back as its ISO string, the
  * same as a record from a `KvCollection`.
  */
-export type TaskData<TData> = unknown extends TData
-    ? unknown
-    : [TData] extends [NoData]
-      ? NoData
-      : Simplify<Jsonify<TData>>;
+export type TaskData<TData> = unknown extends TData ? unknown : [TData] extends [NoData] ? NoData : Stored<TData>;
 
 /** What the plugin passes to a task's constructor. */
 export interface TaskContext<TData = unknown> {
@@ -77,7 +83,8 @@ export interface TaskContext<TData = unknown> {
 }
 
 /** When a scheduled job runs. Pass `in` or `at`. */
-export type When<TIn extends string = string> = { in: Duration<TIn>; at?: never } | { at: Date | number; in?: never };
+export type When<TIn extends string = string> =
+    { in: ValidDuration<TIn>; at?: never } | { at: Date | number; in?: never };
 
 type HasData<TData> = [TData] extends [Exclude<TData, void>] ? true : false;
 
@@ -89,12 +96,13 @@ type StorableData<TData> = [TData] extends [JsonSafe<TData>]
 export type ScheduleOptions<TData, TIn extends string = string> = When<TIn> &
     (HasData<TData> extends true ? { data: StorableData<TData> } : { data?: never });
 
-/** One cron task, as `list()` reports it. */
+/** One cron task, as `crons()` reports it. */
 export interface CronStatus {
     key: string;
     pattern: string;
     timezone: string | undefined;
-    scheduled: boolean;
+    /** Whether the pattern's timer is on. `false` before `ready()`, while the task is paused, and once it has no runs left. */
+    active: boolean;
     busy: boolean;
     nextRun: Date | null;
     previousRun: Date | null;
@@ -109,9 +117,7 @@ export interface ScheduledJob {
 
 declare module '@seedcord/core' {
     interface Subscriptions {
-        /** A task run returned. */
-        taskFinished: { key: string; trigger: TaskTrigger; jobId: string | null; durationMs: number };
-        /** A task run threw. */
-        taskFailed: { key: string; trigger: TaskTrigger; jobId: string | null; durationMs: number; error: Error };
+        /** A task run ended. `outcome` says whether it returned or threw. */
+        taskRan: TaskRun;
     }
 }

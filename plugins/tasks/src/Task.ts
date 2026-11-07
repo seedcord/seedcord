@@ -45,12 +45,12 @@ export abstract class Task<TData = void, TCore extends CoreBase = CoreBase> {
         this.trigger = context.trigger;
     }
 
-    /** The task's work. A throw gets logged, published as `taskFailed`, and passed to `onError()`. */
+    /** The task's work. A throw gets logged, published as a failed `taskRan`, and passed to `onError()`. */
     public abstract execute(): Promise<void>;
 
     /** Runs after `execute()` throws, once the plugin has logged the error. */
     public onError?(error: Error): Promise<void>;
 
-    /** Runs in place of `execute()` when a `protect`ed cron task fires during its last run. */
+    /** Runs in place of `execute()` when a `protect`ed task gets a cron or manual run during its last run. */
     public onOverrun?(): Promise<void>;
 }

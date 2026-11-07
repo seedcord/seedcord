@@ -174,8 +174,8 @@ export enum SeedcordErrorCode {
     /** `dispatch.require()` was called for a key that nothing set on this dispatch. */
     DispatchStateMissing = 1617,
 
-    /** A `Cooldown` gate got a duration that doesn't parse, or one of zero or less. */
-    GateInvalidCooldownDuration = 1701,
+    /** A duration string doesn't parse, or a duration is zero or less. */
+    InvalidDuration = 1701,
 
     /** A paginator got a `perPage` that is not a positive integer. */
     PaginationInvalidPerPage = 1801,
@@ -230,26 +230,20 @@ export enum SeedcordErrorCode {
 
     /** A `Tasks` method got a task class that its `path` did not load. */
     PluginTasksNotLoaded = 2301,
-    /** Two task classes use one key. */
-    PluginTasksDuplicateKey = 2302,
     /** croner rejected a task's cron pattern. */
-    PluginTasksInvalidPattern = 2303,
+    PluginTasksInvalidPattern = 2302,
     /** A task's cron pattern is a date, which croner would run once. */
-    PluginTasksDateAsPattern = 2304,
-    /** A task's `timezone` is not an IANA timezone. */
-    PluginTasksInvalidTimezone = 2305,
+    PluginTasksDateAsPattern = 2303,
+    /** A task's `timezone`, or the plugin's, is not an IANA timezone. */
+    PluginTasksInvalidTimezone = 2304,
     /** `pause`, `resume`, or `nextRun` got a task without a cron pattern. */
-    PluginTasksPatternMissing = 2306,
-    /** `schedule` got an `at` that is not a valid date. */
-    PluginTasksInvalidDate = 2307,
+    PluginTasksPatternMissing = 2305,
+    /** A task's `startAt` or `stopAt`, or the `at` passed to `schedule`, is not a valid date. */
+    PluginTasksInvalidDate = 2306,
     /** `schedule` got an `at` number too small to be milliseconds since the epoch. */
-    PluginTasksAtInSeconds = 2308,
-    /** `schedule` got an `in` that `parseDuration` can't read. */
-    PluginTasksInvalidDuration = 2309,
-    /** `schedule` got `data` that has no JSON form. */
-    PluginTasksDataNotJson = 2310,
+    PluginTasksAtInSeconds = 2307,
     /** `schedule` got an `in` that ends past the last date a `Date` can hold. */
-    PluginTasksDurationTooLong = 2311,
+    PluginTasksDurationTooLong = 2308,
 
     /** Someone pressed Ctrl-C at a prompt in `seedcord` or `create-seedcord`. */
     CliCancelled = 3001,

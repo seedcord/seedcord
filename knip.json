@@ -102,6 +102,7 @@
             "entry": ["**/*.types-test.ts"]
         },
         "packages/utils": {
+            "entry": ["**/*.types-test.ts"],
             "ignore": ["tests/files/fixtures/**"],
             "ignoreDependencies": ["tsx"]
         },

@@ -1,12 +1,12 @@
 type Digit = '0' | '1' | '2' | '3' | '4' | '5' | '6' | '7' | '8' | '9';
 
-export type IsDigits<Text extends string> = Text extends `${Digit}${infer Rest}`
+type IsDigits<Text extends string> = Text extends `${Digit}${infer Rest}`
     ? Rest extends ''
         ? true
         : IsDigits<Rest>
     : false;
 
-export type StripZeros<Text extends string> = Text extends `0${infer Rest extends `${Digit}${string}`}`
+type StripZeros<Text extends string> = Text extends `0${infer Rest extends `${Digit}${string}`}`
     ? StripZeros<Rest>
     : Text;
 
@@ -131,7 +131,7 @@ interface Layouts {
     7: [Second, Minute, Hour, Day, Month, Weekday, Year];
 }
 
-export type CronNickname = '@yearly' | '@annually' | '@monthly' | '@weekly' | '@daily' | '@midnight' | '@hourly';
+type CronNickname = '@yearly' | '@annually' | '@monthly' | '@weekly' | '@daily' | '@midnight' | '@hourly';
 
 type Split<Text extends string, Separator extends string> = Text extends `${infer Head}${Separator}${infer Tail}`
     ? [Head, ...Split<Tail, Separator>]

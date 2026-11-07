@@ -1,7 +1,6 @@
 import path from 'node:path';
 
 import { SeedcordErrorCode } from '@seedcord/errors';
-import { Logger } from '@seedcord/logger';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
 import { Tasks } from '#src/Tasks';
@@ -10,33 +9,16 @@ import { Idle } from '#tests/fixtures/tasks/Idle';
 import { Slow } from '#tests/fixtures/tasks/Slow';
 import { Tick } from '#tests/fixtures/tasks/Tick';
 import { Loose } from '#tests/fixtures/unprotected/Loose';
-import { FakeDriver, TestHost } from '#tests/utils/host';
+import { FakeDriver, TestHost, boot, captureLogs, start } from '#tests/utils/host';
 
 import type { TasksOptions } from '#src/types/Tasks';
 import type { Run } from '#tests/utils/host';
 
 const fixtures = path.resolve(import.meta.dirname, 'fixtures');
 const taskFolder = path.join(fixtures, 'tasks');
+const crons: TasksOptions = { path: taskFolder };
 
 const SECOND_MS = 1000;
-
-interface Booted {
-    host: TestHost;
-    tasks: Tasks;
-}
-
-async function boot(options: Partial<TasksOptions> = {}): Promise<Booted> {
-    const host = new TestHost(new FakeDriver());
-    const bot = host.attach('tasks', Tasks, { path: taskFolder, ...options });
-    await bot.tasks.init();
-    return { host, tasks: bot.tasks };
-}
-
-async function start(options: Partial<TasksOptions> = {}): Promise<Booted> {
-    const booted = await boot(options);
-    await booted.tasks.ready();
-    return booted;
-}
 
 const runsOf = (host: TestHost, task: string): Run[] => host.runs.filter((run) => run.task === task);
 
@@ -44,8 +26,6 @@ describe('Tasks cron tasks', () => {
     beforeEach(() => {
         vi.useFakeTimers();
         vi.setSystemTime(new Date('2030-01-15T12:00:00Z'));
-        vi.spyOn(Logger.prototype, 'error').mockImplementation(() => undefined);
-        vi.spyOn(Logger.prototype, 'warn').mockImplementation(() => undefined);
     });
 
     afterEach(() => {
@@ -54,7 +34,7 @@ describe('Tasks cron tasks', () => {
     });
 
     it('does not fire before ready', async () => {
-        const { host, tasks } = await boot();
+        const { host, tasks } = await boot(crons);
 
         await vi.advanceTimersByTimeAsync(SECOND_MS * 3);
         expect(host.runs).toEqual([]);
@@ -67,7 +47,7 @@ describe('Tasks cron tasks', () => {
     });
 
     it('runs a class exported twice once per tick', async () => {
-        const { host, tasks } = await start();
+        const { host, tasks } = await start(crons);
 
         await vi.advanceTimersByTimeAsync(SECOND_MS * 2);
 
@@ -79,7 +59,7 @@ describe('Tasks cron tasks', () => {
     });
 
     it('stops firing after dispose', async () => {
-        const { host, tasks } = await start();
+        const { host, tasks } = await start(crons);
         await tasks.dispose();
 
         await vi.advanceTimersByTimeAsync(SECOND_MS * 2);
@@ -88,7 +68,7 @@ describe('Tasks cron tasks', () => {
     });
 
     it('leaves a paused task until resume', async () => {
-        const { host, tasks } = await start();
+        const { host, tasks } = await start(crons);
 
         await vi.advanceTimersByTimeAsync(SECOND_MS);
         expect(runsOf(host, 'Idle')).toEqual([]);
@@ -101,7 +81,7 @@ describe('Tasks cron tasks', () => {
     });
 
     it('keeps a task paused before ready paused through ready', async () => {
-        const { host, tasks } = await boot();
+        const { host, tasks } = await boot(crons);
 
         tasks.pause(Tick);
         await tasks.ready();
@@ -112,7 +92,7 @@ describe('Tasks cron tasks', () => {
     });
 
     it('starts a task resumed before ready once ready runs', async () => {
-        const { host, tasks } = await boot();
+        const { host, tasks } = await boot(crons);
 
         tasks.resume(Idle);
         await vi.advanceTimersByTimeAsync(SECOND_MS);
@@ -126,7 +106,7 @@ describe('Tasks cron tasks', () => {
     });
 
     it('pauses a running task', async () => {
-        const { host, tasks } = await start();
+        const { host, tasks } = await start(crons);
 
         tasks.pause(Tick);
         await vi.advanceTimersByTimeAsync(SECOND_MS * 2);
@@ -136,7 +116,7 @@ describe('Tasks cron tasks', () => {
     });
 
     it('runs a task now through trigger', async () => {
-        const { host, tasks } = await start();
+        const { host, tasks } = await start(crons);
 
         await tasks.trigger(Reminder);
         await tasks.trigger(Slow);
@@ -148,8 +128,9 @@ describe('Tasks cron tasks', () => {
         await tasks.dispose();
     });
 
-    it('skips a protected run while the last one is going and calls onOverrun', async () => {
-        const { host, tasks } = await start();
+    it('skips a protected run while the last one is still running and calls onOverrun', async () => {
+        using logs = captureLogs();
+        const { host, tasks } = await start(crons);
         host.hold();
 
         const first = tasks.trigger(Slow);
@@ -159,14 +140,33 @@ describe('Tasks cron tasks', () => {
             { task: 'slow', trigger: 'manual', data: undefined },
             { task: 'overrun', trigger: 'manual', data: undefined }
         ]);
+        expect(logs.at('warn')).toEqual([expect.stringContaining('skipped a run of')]);
 
         host.release();
         await first;
         await tasks.dispose();
     });
 
+    it('logs an onOverrun that throws and carries on', async () => {
+        using logs = captureLogs();
+        const { host, tasks } = await start(crons);
+        host.hold();
+        host.failOverrun = true;
+
+        const first = tasks.trigger(Slow);
+        await tasks.trigger(Slow);
+        expect(logs.at('error')).toEqual([expect.stringContaining('threw during its overrun')]);
+
+        host.release();
+        await first;
+        await tasks.trigger(Slow);
+        expect(host.runs.filter((run) => run.task === 'slow')).toHaveLength(2);
+        await tasks.dispose();
+    });
+
     it('waits for onOverrun during dispose', async () => {
-        const { host, tasks } = await start();
+        using _logs = captureLogs();
+        const { host, tasks } = await start(crons);
         host.hold();
         host.holdOverrun();
 
@@ -197,42 +197,106 @@ describe('Tasks cron tasks', () => {
         const second = tasks.trigger(Loose);
         short.resolve(undefined);
         await second;
-        expect(tasks.list()[0]?.busy).toBe(true);
+        expect(tasks.crons()[0]?.busy).toBe(true);
 
         long.resolve(undefined);
         await first;
-        expect(tasks.list()[0]?.busy).toBe(false);
+        expect(tasks.crons()[0]?.busy).toBe(false);
         await tasks.dispose();
     });
 
     it('keeps a running task busy across a save', async () => {
-        const { host, tasks } = await start();
+        const { host, tasks } = await start(crons);
         host.hold();
         const run = tasks.trigger(Slow);
 
         await tasks.onHmr({ file: path.join(taskFolder, 'Slow.ts'), type: 'update' });
-        expect(tasks.list().find((status) => status.key === 'slow')?.busy).toBe(true);
+        expect(tasks.crons().find((status) => status.key === 'slow')?.busy).toBe(true);
 
         host.release();
         await run;
         await tasks.dispose();
     });
 
+    it('runs a scheduled job of a protected task once the run before it ends', async () => {
+        const { host, tasks } = await start(crons);
+        host.hold();
+
+        const first = tasks.trigger(Slow);
+        await tasks.schedule(Slow, { in: '1s' });
+        await vi.advanceTimersByTimeAsync(SECOND_MS);
+        expect(runsOf(host, 'slow')).toEqual([{ task: 'slow', trigger: 'manual', data: undefined }]);
+
+        host.release();
+        await first;
+        await vi.advanceTimersByTimeAsync(0);
+
+        expect(runsOf(host, 'slow')).toEqual([
+            { task: 'slow', trigger: 'manual', data: undefined },
+            { task: 'slow', trigger: 'scheduled', data: undefined }
+        ]);
+        expect(tasks.jobs()).toEqual([]);
+        await tasks.dispose();
+    });
+
+    it('keeps a job that waited on a protected run stored when dispose interrupts it', async () => {
+        using driver = new FakeDriver();
+        const { host, tasks } = await start(crons, driver);
+        host.hold();
+
+        void tasks.trigger(Slow);
+        await tasks.schedule(Slow, { in: '1s' });
+        await vi.advanceTimersByTimeAsync(SECOND_MS);
+
+        const disposing = tasks.dispose();
+        host.release();
+        await disposing;
+
+        expect(runsOf(host, 'slow')).toEqual([{ task: 'slow', trigger: 'manual', data: undefined }]);
+        expect(driver.stored.size).toBe(1);
+    });
+
+    it('runs a paused task through trigger and a scheduled job', async () => {
+        const { host, tasks } = await start(crons);
+        tasks.pause(Tick);
+
+        await tasks.trigger(Tick);
+        await tasks.schedule(Tick, { in: '1s' });
+        await vi.advanceTimersByTimeAsync(SECOND_MS * 2);
+
+        expect(runsOf(host, 'Tick')).toEqual([
+            { task: 'Tick', trigger: 'manual', data: undefined },
+            { task: 'Tick', trigger: 'scheduled', data: undefined }
+        ]);
+        await tasks.dispose();
+    });
+
+    it('keeps what resume did across a save', async () => {
+        const { host, tasks } = await start(crons);
+        tasks.resume(Idle);
+
+        await tasks.onHmr({ file: path.join(taskFolder, 'Idle.ts'), type: 'update' });
+        await vi.advanceTimersByTimeAsync(SECOND_MS);
+
+        expect(runsOf(host, 'Idle')).toHaveLength(1);
+        await tasks.dispose();
+    });
+
     it('reports its state through list and nextRun', async () => {
-        const { host, tasks } = await start();
+        const { host, tasks } = await start(crons);
         host.hold();
         const run = tasks.trigger(Slow);
 
-        expect(tasks.list().find((status) => status.key === 'slow')).toEqual({
+        expect(tasks.crons().find((status) => status.key === 'slow')).toEqual({
             key: 'slow',
             pattern: '0 0 1 1 *',
-            timezone: 'Europe/Sarajevo',
-            scheduled: true,
+            timezone: 'America/New_York',
+            active: true,
             busy: true,
             nextRun: tasks.nextRun(Slow),
             previousRun: null
         });
-        expect(tasks.nextRun(Slow)?.toISOString()).toBe('2030-12-31T23:00:00.000Z');
+        expect(tasks.nextRun(Slow)?.toISOString()).toBe('2031-01-01T05:00:00.000Z');
 
         host.release();
         await run;
@@ -240,29 +304,29 @@ describe('Tasks cron tasks', () => {
     });
 
     it('reports no next run while a task is paused', async () => {
-        const { tasks } = await start();
+        const { tasks } = await start(crons);
 
         tasks.pause(Slow);
         expect(tasks.nextRun(Slow)).toBeNull();
-        expect(tasks.list().find((status) => status.key === 'slow')?.nextRun).toBeNull();
+        expect(tasks.crons().find((status) => status.key === 'slow')?.nextRun).toBeNull();
 
         tasks.resume(Slow);
-        expect(tasks.nextRun(Slow)?.toISOString()).toBe('2030-12-31T23:00:00.000Z');
+        expect(tasks.nextRun(Slow)?.toISOString()).toBe('2031-01-01T05:00:00.000Z');
 
         await tasks.dispose();
     });
 
     it('applies the plugin timezone to a task without one', async () => {
-        const { tasks } = await start({ timezone: 'Asia/Tokyo' });
+        const { tasks } = await start({ ...crons, timezone: 'Asia/Tokyo' });
 
-        expect(tasks.list().find((status) => status.key === 'Tick')?.timezone).toBe('Asia/Tokyo');
-        expect(tasks.list().find((status) => status.key === 'slow')?.timezone).toBe('Europe/Sarajevo');
+        expect(tasks.crons().find((status) => status.key === 'Tick')?.timezone).toBe('Asia/Tokyo');
+        expect(tasks.crons().find((status) => status.key === 'slow')?.timezone).toBe('America/New_York');
 
         await tasks.dispose();
     });
 
     it('throws for pause on a task without a pattern', async () => {
-        const { tasks } = await boot();
+        const { tasks } = await boot(crons);
 
         expect(() => {
             tasks.pause(Reminder);
@@ -271,22 +335,23 @@ describe('Tasks cron tasks', () => {
     });
 
     it('swaps a class on a save and stops it on a delete', async () => {
-        const { tasks } = await start();
-        const file = path.join(taskFolder, 'Tick.ts');
-        const keys = (): string[] => tasks.list().map((status) => status.key);
+        const { tasks } = await start(crons);
+        const file = path.join(taskFolder, 'Idle.ts');
+        const keys = (): string[] => tasks.crons().map((status) => status.key);
 
         await tasks.onHmr({ file, type: 'update' });
-        expect(keys().filter((key) => key === 'Tick')).toHaveLength(1);
+        expect(keys().filter((key) => key === 'Idle')).toHaveLength(1);
 
         await tasks.onHmr({ file, type: 'delete' });
-        expect(keys()).not.toContain('Tick');
+        expect(keys()).not.toContain('Idle');
 
         await tasks.dispose();
     });
 
     describe('at startup', () => {
         it.each([
-            ['duplicate-key', SeedcordErrorCode.PluginTasksDuplicateKey],
+            ['duplicate-key', SeedcordErrorCode.CoreDuplicateName],
+            ['bad-start', SeedcordErrorCode.PluginTasksInvalidDate],
             ['date-pattern', SeedcordErrorCode.PluginTasksDateAsPattern],
             ['bad-timezone', SeedcordErrorCode.PluginTasksInvalidTimezone],
             ['bad-pattern', SeedcordErrorCode.PluginTasksInvalidPattern]
@@ -300,7 +365,7 @@ describe('Tasks cron tasks', () => {
 
             await expect(tasks.init()).rejects.toThrow();
 
-            expect(tasks.list()).toEqual([expect.objectContaining({ key: 'AGood', scheduled: false, nextRun: null })]);
+            expect(tasks.crons()).toEqual([expect.objectContaining({ key: 'AGood', active: false, nextRun: null })]);
         });
 
         it('rejects an empty path', () => {
@@ -314,10 +379,10 @@ describe('Tasks cron tasks', () => {
         it('rejects a plugin timezone that is not IANA', () => {
             const host = new TestHost(new FakeDriver());
             // justified: a value from .env reaches this check through a cast
-            const timezone = 'Europe/Sarajvo' as TasksOptions['timezone'] & string;
+            const timezone = 'America/New_Yrok' as TasksOptions['timezone'] & string;
 
             expect(() => host.attach('tasks', Tasks, { path: taskFolder, timezone })).toThrow(
-                expect.objectContaining({ code: SeedcordErrorCode.PluginOptionsRejected })
+                expect.objectContaining({ code: SeedcordErrorCode.PluginTasksInvalidTimezone })
             );
         });
     });

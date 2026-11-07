@@ -1,38 +1,34 @@
-import { MemoryDriver, ShutdownPhase } from '@seedcord/core';
-import { HmrModuleHandler } from '@seedcord/core/hmr';
+import { FolderExports, MemoryDriver, ShutdownPhase } from '@seedcord/core';
 import { Plugin } from '@seedcord/core/plugin';
 import { SeedcordErrorCode, paint } from '@seedcord/errors';
-import { SeedcordError } from '@seedcord/errors/internal';
-import { importFiles, keepDefined } from '@seedcord/utils';
+import { SeedcordError, SeedcordTypeError } from '@seedcord/errors/internal';
+import { keepDefined } from '@seedcord/utils';
 
 import { CronTasks } from './CronTasks';
-import { taskKey, taskMetadata } from './decorators/RegisterTask';
-import { isTimezone, resolveAt, toJson } from './schedule';
+import { isTaskClass, taskKey, taskMetadata } from './decorators/RegisterTask';
+import { isTimezone, resolveAt } from './schedule';
 import { ScheduledJobs } from './ScheduledJobs';
-import { Task } from './Task';
 import { TaskRunner } from './TaskRunner';
 
-import type { TaskClass } from './decorators/RegisterTask';
+import type { CronEntry } from './CronTasks';
+import type { CronTaskClass, ScheduledTaskClass, TaskClass } from './decorators/RegisterTask';
 import type { JobRecord } from './ScheduledJobs';
-import type { Registered } from './TaskRunner';
+import type { LoadedTask } from './TaskRunner';
 import type { CronStatus, ScheduledJob, ScheduleOptions, TaskContext, TasksOptions, When } from './types/Tasks';
 import type { CoreBase } from '@seedcord/core';
 import type { HmrUpdateEvent } from '@seedcord/core/plugin';
+import type { JsonValue } from 'type-fest';
 
-type AnyTaskClass = abstract new (context: never) => Task<unknown>;
-type VoidTaskClass = abstract new (context: TaskContext<void>) => Task;
 type DataOf<TTask> = TTask extends abstract new (context: TaskContext<infer TData>) => unknown ? TData : never;
-
-const isTaskClass = (value: unknown): value is TaskClass =>
-    typeof value === 'function' && value.prototype instanceof Task && taskMetadata(value) !== undefined;
 
 /**
  * Runs the task classes in a folder. A task with a cron pattern runs on that schedule. Any task can
  * also run once at a later time through {@link Tasks.schedule}.
  *
  * Scheduled jobs live in the bot's `config.kv`, under this plugin's attach key. With a driver that
- * keeps its records, a pending job survives a restart, and one that came due while the bot was down
- * runs as soon as it starts. Renaming the attach key leaves the old key's jobs behind.
+ * keeps its records, the driver still holds a pending job after a restart, and a job that came due
+ * while the bot was down runs as soon as it starts. Renaming the attach key leaves the old key's
+ * jobs behind.
  *
  * @example
  * ```ts
@@ -42,11 +38,12 @@ const isTaskClass = (value: unknown): value is TaskClass =>
 export class Tasks extends Plugin<{ transport: 'any'; runtime: 'server' }> {
     public static readonly id = '@seedcord/plugin-tasks';
 
-    private readonly tasks = new Map<string, Registered>();
+    private readonly tasks = new Map<string, LoadedTask>();
     private readonly runner: TaskRunner;
-    private readonly crons: CronTasks;
+    private readonly cronTasks: CronTasks;
     private readonly scheduled: ScheduledJobs;
-    private readonly reloader: HmrModuleHandler<TaskClass, void, string>;
+    private readonly reloader: FolderExports<TaskClass>;
+    private warnedMemory = false;
 
     public constructor(
         host: CoreBase,
@@ -60,11 +57,14 @@ export class Tasks extends Plugin<{ transport: 'any'; runtime: 'server' }> {
 
         if (options.path.length === 0) this.rejectOptions('path is empty');
         if (options.timezone !== undefined && !isTimezone(options.timezone)) {
-            this.rejectOptions(`timezone '${options.timezone}' is not an IANA timezone`);
+            throw new SeedcordTypeError(SeedcordErrorCode.PluginTasksInvalidTimezone, [
+                `The ${paint.bold('timezone')} option of ${paint.bold(Tasks.id)}`,
+                options.timezone
+            ]);
         }
 
         this.runner = new TaskRunner(this.core, this.logger);
-        this.crons = new CronTasks(this.runner, this.logger, options.timezone);
+        this.cronTasks = new CronTasks(this.runner, options.timezone);
         this.scheduled = new ScheduledJobs(
             this.kv.collection<JobRecord>('job'),
             this.runner,
@@ -72,14 +72,11 @@ export class Tasks extends Plugin<{ transport: 'any'; runtime: 'server' }> {
             this.logger
         );
 
-        this.reloader = new HmrModuleHandler<TaskClass, void, string>({
-            handlers: {
-                dir: options.path,
-                is: isTaskClass,
-                register: (Task, file) => this.register(Task, file),
-                getArtifacts: (Task) => taskKey(Task),
-                unregister: (_Task, key) => this.unregister(key)
-            },
+        this.reloader = new FolderExports({
+            dir: options.path,
+            is: isTaskClass,
+            register: (Task, file) => this.register(Task, file),
+            unregister: (Task) => this.unregister(Task),
             logger: this.logger
         });
     }
@@ -87,28 +84,28 @@ export class Tasks extends Plugin<{ transport: 'any'; runtime: 'server' }> {
     /**
      * Loads the task classes under `path`, then reads back the jobs earlier runs of the bot stored.
      *
-     * @throws A **SeedcordError** when two tasks share a key.
-     * @throws A **SeedcordTypeError** when a task has an invalid cron pattern or timezone.
+     * @throws A **SeedcordTypeError** with `CoreDuplicateName` when two tasks share a key.
+     * @throws A **SeedcordTypeError** when a task has an invalid cron pattern, timezone, `startAt`, or `stopAt`.
      * @throws A **SeedcordError** with `CoreKvKeysUnsupported` when the `config.kv` driver can't list its keys.
      */
     public async init(): Promise<void> {
         try {
-            await this.loadTasks();
+            await this.reloader.load();
             await this.scheduled.restore();
         } catch (error) {
             // the host skips dispose for a plugin whose init rejected
-            this.crons.stop();
+            this.cronTasks.stop();
             throw error;
         }
 
         this.logger.info(
-            `loaded ${this.tasks.size} tasks, ${this.crons.size} on a cron pattern, ${this.scheduled.size} scheduled jobs`
+            `loaded ${this.tasks.size} tasks, ${this.cronTasks.size} on a cron pattern, ${this.scheduled.size} scheduled jobs`
         );
     }
 
     /** Starts the cron tasks and the timers for pending jobs, so a due job runs on a logged-in bot. */
     public override ready(): Promise<void> {
-        this.crons.start();
+        this.cronTasks.start();
         this.scheduled.start();
 
         return Promise.resolve();
@@ -116,13 +113,7 @@ export class Tasks extends Plugin<{ transport: 'any'; runtime: 'server' }> {
 
     /** Stops every timer, aborts each run's `signal`, and waits for in-flight runs. Pending jobs stay stored. */
     public override async dispose(): Promise<void> {
-        if (this.scheduled.size > 0 && this.kv.driver instanceof MemoryDriver) {
-            this.logger.warn(
-                `${this.scheduled.size} scheduled jobs end with this process. Pass a driver as ${paint.bold('kv')} in your config to keep them through a restart`
-            );
-        }
-
-        this.crons.stop();
+        this.cronTasks.stop();
         this.scheduled.stop();
 
         await this.runner.stop();
@@ -136,7 +127,7 @@ export class Tasks extends Plugin<{ transport: 'any'; runtime: 'server' }> {
     /**
      * Stores a job that runs `Task` once, at the time `options` gives. A time in the past runs it
      * right away, or in `ready()` if the bot hasn't reached it. The promise resolves once the driver
-     * holds the job, so a job you got an id for survives a restart.
+     * holds the job, so after a restart the driver still holds any job you got an id for.
      *
      * If the process dies during a run, the job runs again after a restart. Write a task so a second
      * run of one job does no harm.
@@ -146,7 +137,7 @@ export class Tasks extends Plugin<{ transport: 'any'; runtime: 'server' }> {
      * @throws A **SeedcordError** when the plugin did not load `Task`.
      * @throws A **SeedcordTypeError** when `in` isn't a duration or `at` isn't a date.
      * @throws A **SeedcordRangeError** when `at` is a number too small to be milliseconds, or `in` ends past the last date a `Date` can hold.
-     * @throws A **SeedcordTypeError** when `data` has no JSON form.
+     * @throws A **SeedcordTypeError** with `CoreKvUnserializable` when `data` holds a circular reference.
      * @throws A **SeedcordError** with `CoreKvDriverFailed` when the driver can't store the job.
      * @example
      * ```ts
@@ -154,22 +145,24 @@ export class Tasks extends Plugin<{ transport: 'any'; runtime: 'server' }> {
      * await this.core.tasks.cancel(job.id);
      * ```
      */
-    public async schedule<TTask extends AnyTaskClass, const TIn extends string = string>(
+    public async schedule<TTask extends ScheduledTaskClass, const TIn extends string = string>(
         Task: TTask,
         options: ScheduleOptions<DataOf<TTask>, TIn>
     ): Promise<ScheduledJob> {
-        const { key } = this.registered(Task);
+        const { key } = this.requireLoaded(Task);
         const when: When = options;
         const at = resolveAt(key, when);
-        const data: unknown = 'data' in options ? options.data : undefined;
+        // justified: ScheduleOptions rejects data JSON can't keep, and the store throws on a cycle
+        const data = ('data' in options ? options.data : undefined) as JsonValue | undefined;
 
-        return this.scheduled.add(key, at, data === undefined ? undefined : toJson(key, data));
+        this.warnIfMemory();
+        return this.scheduled.add(key, at, data);
     }
 
     /**
      * Deletes a job so it never runs.
      *
-     * @returns `false` when no job has that id, or when the job has already started.
+     * @returns `false` when no job has that id, or when the job's time has come.
      * @throws A **SeedcordError** with `CoreKvDriverFailed` when the driver can't delete the job.
      */
     public async cancel(id: string): Promise<boolean> {
@@ -182,8 +175,8 @@ export class Tasks extends Plugin<{ transport: 'any'; runtime: 'server' }> {
     }
 
     /** Every cron task and its state. */
-    public list(): CronStatus[] {
-        return this.crons.list();
+    public crons(): CronStatus[] {
+        return this.cronTasks.list();
     }
 
     /**
@@ -191,17 +184,18 @@ export class Tasks extends Plugin<{ transport: 'any'; runtime: 'server' }> {
      *
      * @throws A **SeedcordError** when the plugin did not load `Task` or `Task` has no cron pattern.
      */
-    public nextRun(Task: VoidTaskClass): Date | null {
-        return this.crons.nextRun(this.cronKey(Task));
+    public nextRun(Task: CronTaskClass): Date | null {
+        return this.cronTasks.nextRun(this.cronEntry(Task));
     }
 
     /**
-     * Stops a cron task from firing until {@link Tasks.resume}. A restart forgets this.
+     * Stops a cron task's schedule until {@link Tasks.resume}. Scheduled jobs and `trigger()` still
+     * run the task. A save that reloads the task keeps it paused, and a restart forgets this.
      *
      * @throws A **SeedcordError** when the plugin did not load `Task` or `Task` has no cron pattern.
      */
-    public pause(Task: VoidTaskClass): void {
-        this.crons.pause(this.cronKey(Task));
+    public pause(Task: CronTaskClass): void {
+        this.cronTasks.pause(this.cronEntry(Task));
     }
 
     /**
@@ -209,74 +203,83 @@ export class Tasks extends Plugin<{ transport: 'any'; runtime: 'server' }> {
      *
      * @throws A **SeedcordError** when the plugin did not load `Task` or `Task` has no cron pattern.
      */
-    public resume(Task: VoidTaskClass): void {
-        this.crons.resume(this.cronKey(Task));
+    public resume(Task: CronTaskClass): void {
+        this.cronTasks.resume(this.cronEntry(Task));
     }
 
     /**
-     * Runs a task now, outside its schedule. A `protect`ed cron task that is mid-run skips this one.
+     * Runs a task now, outside its schedule, even while it's paused. A `protect`ed task that is
+     * mid-run skips this one and calls `onOverrun()`.
      *
      * @throws A **SeedcordError** when the plugin did not load `Task`.
      */
-    public async trigger(Task: VoidTaskClass): Promise<void> {
-        const registered = this.registered(Task);
-
-        if (this.crons.has(registered.key)) await this.crons.run(registered.key, 'manual');
-        else await this.runner.run(registered, 'manual', undefined, null);
+    public async trigger(Task: CronTaskClass): Promise<void> {
+        await this.runner.run(this.requireLoaded(Task), { trigger: 'manual', jobId: null }, undefined);
     }
 
-    private async loadTasks(): Promise<void> {
-        for await (const { fullPath, relativePath, imported } of importFiles(this.options.path)) {
-            for (const Task of Object.values(imported).filter(isTaskClass)) {
-                this.register(Task, relativePath);
-                this.reloader.trackHandler(fullPath, Task);
-            }
-        }
+    // the jobs are gone by the time the process ends, so this warns while there's still time to act
+    private warnIfMemory(): void {
+        if (this.warnedMemory || !(this.kv.driver instanceof MemoryDriver)) return;
+
+        this.warnedMemory = true;
+        this.logger.warn(
+            `scheduled jobs are kept in memory and end with this process. Pass a driver as ${paint.bold('kv')} in your config to keep them through a restart`
+        );
     }
 
-    private registered(Task: { readonly name: string }): Registered {
+    private requireLoaded(Task: { readonly name: string }): LoadedTask {
         const key = taskKey(Task);
-        const registered = this.tasks.get(key);
+        const loaded = this.tasks.get(key);
 
+        if (!loaded) throw new SeedcordError(SeedcordErrorCode.PluginTasksNotLoaded, [key, this.options.path]);
         // a class from another folder can share the key, and its data would reach the loaded class
-        if (registered?.Task !== Task) {
-            throw new SeedcordError(SeedcordErrorCode.PluginTasksNotLoaded, [key, this.options.path]);
+        if (loaded.Task !== Task) {
+            throw new SeedcordError(SeedcordErrorCode.PluginTasksNotLoaded, [key, this.options.path, loaded.file]);
         }
 
-        return registered;
+        return loaded;
     }
 
-    private cronKey(Task: VoidTaskClass): string {
-        const { key } = this.registered(Task);
+    private cronEntry(Task: CronTaskClass): CronEntry {
+        const { key } = this.requireLoaded(Task);
+        const entry = this.cronTasks.get(key);
 
-        if (!this.crons.has(key)) throw new SeedcordError(SeedcordErrorCode.PluginTasksPatternMissing, [key]);
+        if (!entry) throw new SeedcordError(SeedcordErrorCode.PluginTasksPatternMissing, [key]);
 
-        return key;
+        return entry;
     }
 
     private register(Task: TaskClass, file: string): void {
         const meta = taskMetadata(Task);
-        if (!meta) return;
+        const existing = this.tasks.get(meta.key);
 
-        const { key } = meta;
-        const existing = this.tasks.get(key);
+        if (existing) {
+            throw new SeedcordTypeError(SeedcordErrorCode.CoreDuplicateName, [
+                'task',
+                meta.key,
+                [
+                    `${paint.bold(existing.Task.name)} (${paint.path(existing.file)})`,
+                    `${paint.bold(Task.name)} (${paint.path(file)})`
+                ],
+                `A task's key is its class name unless it passes a ${paint.bold('key')}.`
+            ]);
+        }
 
-        // a file that exports one class twice reaches this loop twice
-        if (existing?.Task === Task) return;
-        if (existing) throw new SeedcordError(SeedcordErrorCode.PluginTasksDuplicateKey, [key, file]);
+        const state =
+            meta.kind === 'cron'
+                ? this.runner.state(meta.key, meta.protect ?? true, meta.paused ?? false)
+                : this.runner.state(meta.key, false, false);
+        const loaded: LoadedTask = { key: meta.key, Task, file, logger: this.logger.withLabel(meta.key), state };
 
-        const registered: Registered = { key, Task, logger: this.logger.withLabel(key) };
+        if (meta.kind === 'cron') this.cronTasks.add(loaded, meta);
 
-        if (meta.pattern !== undefined) this.crons.add(registered, meta, meta.pattern, file);
-
-        this.tasks.set(key, registered);
-        this.logger.debug(`registered ${paint.sky(key)} from ${paint.path(file)}`);
+        this.tasks.set(meta.key, loaded);
     }
 
-    private unregister(key: string | undefined): void {
-        if (key === undefined) return;
+    private unregister(Task: TaskClass): void {
+        const key = taskKey(Task);
 
-        this.crons.remove(key);
+        this.cronTasks.remove(key);
         this.tasks.delete(key);
     }
 }

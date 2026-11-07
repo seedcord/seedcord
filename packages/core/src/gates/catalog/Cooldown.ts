@@ -1,4 +1,4 @@
-import { SeedcordErrorCode } from '@seedcord/errors';
+import { SeedcordErrorCode, paint } from '@seedcord/errors';
 import { SeedcordRangeError, SeedcordTypeError } from '@seedcord/errors/internal';
 import { parseDuration, type ValidDuration } from '@seedcord/utils';
 
@@ -47,6 +47,8 @@ export interface CooldownOptions {
     /** Your Notice class, constructed with the epoch ms the key frees up and thrown in place of the default refusal. */
     notice?: NoticeConstructor<[resetAt: EpochMs]>;
 }
+
+const COOLDOWN = paint.bold('Cooldown()');
 
 // off-route ctxs have no route to key on. each Cooldown() call gets its own id to keep unrelated event handlers isolated
 let anonSeq = 0;
@@ -103,8 +105,8 @@ function scopeValue(ctx: GateContextBase, per: 'user' | 'guild' | 'channel'): st
  * }
  * ```
  */
-export function Cooldown(
-    duration: number | ValidDuration,
+export function Cooldown<const TDuration extends string>(
+    duration: number | ValidDuration<TDuration>,
     options?: CooldownOptions
 ): EffectGate<GateContextBase, 'Cooldown'> {
     let windowMs: number;
@@ -112,13 +114,11 @@ export function Cooldown(
         windowMs = duration * 1000;
     } else {
         const parsed = parseDuration(duration);
-        if (parsed === null) throw new SeedcordTypeError(SeedcordErrorCode.GateInvalidCooldownDuration, [duration]);
+        if (parsed === null) throw new SeedcordTypeError(SeedcordErrorCode.InvalidDuration, [COOLDOWN, duration]);
         windowMs = parsed;
     }
     // a zero or negative window would never limit
-    if (windowMs <= 0) {
-        throw new SeedcordRangeError(SeedcordErrorCode.GateInvalidCooldownDuration, [String(duration)]);
-    }
+    if (windowMs <= 0) throw new SeedcordRangeError(SeedcordErrorCode.InvalidDuration, [COOLDOWN, duration]);
 
     const per = options?.per ?? 'user';
     // exactOptionalPropertyTypes rejects an explicit undefined key

@@ -12,6 +12,6 @@ export class Boom extends Task<void, TestHost> {
 
     public override async onError(error: Error): Promise<void> {
         this.core.runs.push({ task: 'onError', trigger: this.trigger, data: error.message });
-        await Promise.resolve();
+        await Promise.reject(new Error('onError broke too'));
     }
 }

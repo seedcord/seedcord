@@ -1,11 +1,11 @@
 ---
 title: Tasks
-description: Run code on a cron schedule in a gateway or Node http bot, with literal patterns checked at compile time and running tasks given time to finish.
+description: Run a function on a schedule, like a digest every morning or a cleanup every hour, from a folder of task classes in your bot.
 ---
 
 Some of your bot's work has no command behind it, like a digest every morning or a cleanup every hour. Written by hand, that work was a `setInterval` in `bot.ts`. You started it after login, stopped it before the process exited, logged its errors, and made sure a slow run didn't overlap the next one.
 
-[`@seedcord/plugin-tasks`](ref:plugin-tasks) does that work for you. Each job is a class in a folder. The plugin loads the folder, starts the tasks once your bot has logged in, and gives running tasks time to finish during shutdown.
+[`@seedcord/plugin-tasks`](ref:plugin-tasks) does that work for you. Each piece of that work is a class in a folder. The plugin loads the folder, starts the tasks once your bot has logged in, and gives running tasks time to finish during shutdown.
 
 <Shell add="@seedcord/plugin-tasks" />
 
@@ -31,7 +31,7 @@ export const seedcord = new Seedcord({
 export default seedcord;
 ```
 
-This sample builds a gateway bot. The same `attach` call works on an http `Seedcord` from `@seedcord/http` that runs on a server. [`Tasks`](ref:plugin-tasks/Tasks) needs a process that stays alive to hold its timers, so on an http bot for [Cloudflare Workers](/build/workers) the same call is a compile error. A cast that bypasses the error throws `CorePluginScopeMismatch`.
+This sample builds a gateway bot. The same `attach` call works on an http `Seedcord` from `@seedcord/http` that runs on a server. [`Tasks`](ref:plugin-tasks/Tasks) requires a long-running process to hold its timers, so on an http bot for [Cloudflare Workers](/build/workers) the same call is a compile error. A cast that bypasses the error throws `CorePluginScopeMismatch`, which [the plugins page](/plugins#a-plugin-declares-where-it-runs) covers.
 
 {/* prettier-ignore-start */}
 
@@ -43,13 +43,9 @@ This sample builds a gateway bot. The same `attach` call works on an http `Seedc
 
 {/* prettier-ignore-end */}
 
-`timezone` only takes names from [`IanaTimezone`](ref:plugin-tasks/IanaTimezone), so a value you read from the environment needs a cast. If that value isn't a real timezone, `attach` throws.
+`timezone` only takes names from [`IanaTimezone`](ref:plugin-tasks/IanaTimezone), so a value you read from the environment needs a cast. If that value isn't a real timezone, `attach` throws `PluginTasksInvalidTimezone`.
 
-<Callout type="warning">
-
-The plugin reads your stored jobs during startup, even if you only use cron tasks. If your [kv driver](/built-ins/drivers) can't list its keys, [`init()`](ref:plugin-tasks/Tasks.init) throws `CoreKvKeysUnsupported` and the bot doesn't start.
-
-</Callout>
+The plugin reads your stored jobs while the bot starts, even if you only use cron tasks. If your [kv driver](/built-ins/drivers) [can't list its keys](/built-ins#reading-every-record), `init()` throws and the bot doesn't start. [Scheduling jobs](/plugins/tasks-scheduling#keeping-jobs-through-a-restart) covers which drivers work.
 
 ## Writing a cron task
 
@@ -70,7 +66,7 @@ export class Heartbeat extends Task {
 
 `'*/5 * * * *'` runs `Heartbeat` every five minutes. If a class in the folder doesn't have the decorator, the plugin skips it.
 
-The class name, `Heartbeat`, becomes the task's key, which appears in its logs and its events. If two tasks share a key, startup throws `PluginTasksDuplicateKey`, and the message includes the file of the second task.
+The class name, `Heartbeat`, becomes the task's key, which appears in its logs and its events. If two tasks share a key, startup throws `CoreDuplicateName` with both files.
 
 <Callout type="transport">
 
@@ -80,10 +76,10 @@ The `/gateway` import types `this.core` as the `Core` from `@seedcord/gateway`, 
 
 ### Writing a pattern
 
-With a plain cron library, a typo in a pattern only showed up when the bot started. `@RegisterTask` reads a literal pattern at compile time and reports the field that's wrong.
+With a plain cron library, a typo in a pattern only showed up when the bot started. `@RegisterTask` checks a literal pattern against [`CronPattern`](ref:plugin-tasks/CronPattern) at compile time and reports the field that's wrong.
 
 ```ts twoslash
-// @errors: 2769
+// @errors: 2345
 import { RegisterTask, Task } from '@seedcord/plugin-tasks/gateway';
 // ---cut---
 @RegisterTask('61 * * * *')
@@ -117,13 +113,13 @@ If a `string` pattern holds a date, like `2030-01-01T09:00:00`, `init()` throws 
 
 ### Setting a timezone
 
-A pattern runs in your server's timezone unless you say otherwise, so `0 9 * * *` on a server in UTC reaches your community in Sarajevo at 10:00 or 11:00. If most of your tasks serve one community, pass `timezone` to the plugin. Set it on a task when that task serves somewhere else.
+A pattern runs in the timezone of the machine your bot runs on. On a server set to UTC, `0 9 * * *` runs at 09:00 UTC, whatever the time is where your members live. Pass `timezone` to the plugin to set it for every task, and set it on a task that needs a different one.
 
 ```ts twoslash title="src/tasks/Digest.ts"
 import { RegisterTask, Task } from '@seedcord/plugin-tasks/gateway';
 // ---cut---
 @RegisterTask('0 9 * * MON', {
-    timezone: 'Europe/Sarajevo',
+    timezone: 'America/New_York',
     key: 'weekly-digest',
     maxRuns: 52
 })
@@ -134,7 +130,19 @@ export class Digest extends Task {
 }
 ```
 
-`Digest` runs at 09:00 Sarajevo time every Monday, and it stops after 52 runs. A misspelled literal like `'Europe/Sarajvo'` fails to compile. If a `string` value turns out invalid, `init()` throws `PluginTasksInvalidTimezone`.
+`Digest` runs at 09:00 New York time every Monday, and it stops after 52 runs. A misspelled zone fails to compile.
+
+```ts twoslash
+// @errors: 2322
+import { RegisterTask, Task } from '@seedcord/plugin-tasks/gateway';
+// ---cut---
+@RegisterTask('0 9 * * MON', { timezone: 'America/New_Yrok' })
+export class Digest extends Task {
+    public async execute(): Promise<void> {}
+}
+```
+
+A timezone typed as `string` skips that check. If it isn't a real timezone, `init()` throws `PluginTasksInvalidTimezone`.
 
 The second argument to `@RegisterTask` takes these options, all optional:
 
@@ -144,13 +152,15 @@ The second argument to `@RegisterTask` takes these options, all optional:
 | --- | --- |
 | [`key`](ref:plugin-tasks/TaskOptions.key) | the task's key. Defaults to the class name |
 | [`timezone`](ref:plugin-tasks/TaskOptions.timezone) | the timezone for this task. Defaults to the plugin's `timezone` |
-| [`protect`](ref:plugin-tasks/TaskOptions.protect) | skips a run while the previous one is going. Defaults to `true` |
+| [`protect`](ref:plugin-tasks/TaskOptions.protect) | skips a cron or manual run while the previous one is still running. A scheduled job waits for it instead. Defaults to `true` |
 | [`paused`](ref:plugin-tasks/TaskOptions.paused) | starts the task paused until you call `this.core.tasks.resume()`. Defaults to `false` |
 | [`maxRuns`](ref:plugin-tasks/TaskOptions.maxRuns) | stops the task after this many runs |
 | [`startAt`](ref:plugin-tasks/TaskOptions.startAt) | a `Date` or date string. The task doesn't run before it. If a match falls exactly on it, the task runs |
 | [`stopAt`](ref:plugin-tasks/TaskOptions.stopAt) | a `Date` or date string. The task doesn't run after it |
 
 {/* prettier-ignore-end */}
+
+croner reads a date string without an offset in the task's timezone. If it can't read `startAt` or `stopAt` as a date, `init()` throws `PluginTasksInvalidDate` with the option's name.
 
 Daylight saving moves some runs. A fixed-time task has one value each for second, minute, and hour, like `30 2 * * *`. When clocks go back and 02:30 happens twice, it runs once. When clocks go forward and 02:30 doesn't exist, it runs at the first time that does.
 
@@ -170,7 +180,7 @@ Every other task, like `*/5 * * * *`, runs in both occurrences of the repeated h
 | [`data`](ref:plugin-tasks/Task.data) | what `schedule()` passed. A cron task has none |
 | [`signal`](ref:plugin-tasks/Task.signal) | an `AbortSignal` that aborts when the bot shuts down |
 | [`startedAt`](ref:plugin-tasks/Task.startedAt) | when this run started |
-| [`trigger`](ref:plugin-tasks/Task.trigger) | what started this run, `'cron'`, `'scheduled'`, or `'manual'` |
+| [`trigger`](ref:plugin-tasks/Task.trigger) | a [`TaskTrigger`](ref:plugin-tasks/TaskTrigger) that says what started this run, `'cron'`, `'scheduled'`, or `'manual'` |
 
 {/* prettier-ignore-end */}
 
@@ -178,7 +188,7 @@ Every other task, like `*/5 * * * *`, runs in both occurrences of the repeated h
 
 Say a task prunes old records every minute, and one run takes 90 seconds. Without a guard, a second prune starts on the same records while the first is still deleting them.
 
-`protect` is on by default for that reason. If the pattern matches while the previous run is still going, the plugin skips the new run, logs a warning, and calls [`onOverrun()`](ref:plugin-tasks/Task.onOverrun) if the task defines it.
+`protect` is on by default for that reason. If the pattern matches, or a handler calls `trigger()`, while the previous run is still running, the plugin skips the new run, logs a warning, and calls [`onOverrun()`](ref:plugin-tasks/Task.onOverrun) if the task defines it.
 
 ```ts twoslash title="src/tasks/Prune.ts"
 import { RegisterTask, Task } from '@seedcord/plugin-tasks/gateway';
@@ -197,13 +207,17 @@ export class Prune extends Task {
 }
 ```
 
-`Prune` counts its skipped runs in `onOverrun()`. That method runs on a new instance, so `this.core` works there as it does in `execute()`. Pass `protect: false` only if two runs of the task can safely overlap, since the plugin then starts a run at every match.
+`Prune` counts its skipped runs in `onOverrun()`. `this.core` works there too, because the plugin builds that instance from the same context it passes a run. If `onOverrun()` throws, the plugin logs the error, and the task still runs at its next match.
+
+A [scheduled job](/plugins/tasks-scheduling) of the task isn't skipped. It waits for the run before it to end, then runs with its data.
+
+Pass `protect: false` only if two runs of the task can safely overlap, since the plugin then starts a run at every match.
 
 ## When a task throws
 
-A throw in `execute()` doesn't stop the schedule, so the task runs again at its next match. The plugin logs the error and publishes `taskFailed` on the [bus](/events/bus). Then it calls [`onError(error)`](ref:plugin-tasks/Task.onError) if the task defines it, passing the same `Error`. A run that returns publishes `taskFinished`.
+A throw in `execute()` doesn't stop the schedule. The task runs again at its next match. The plugin logs the error, then calls [`onError(error)`](ref:plugin-tasks/Task.onError) if the task defines it, passing the same `Error`. A throw from `onError()` gets logged too.
 
-Use `onError()` to clean up after one task, since it runs on the instance that threw. Use `taskFailed` for what every task shares, like a report to Sentry, because one subscriber then covers them all.
+After every run, the plugin publishes `taskRan` on the [bus](/events/bus) with an `outcome` of `'finished'` or `'failed'`. Use `onError()` to clean up after one task, since it runs on the instance that threw. Use `taskRan` for what every task shares, like a report to Sentry, because one subscriber covers them all.
 
 ```ts twoslash title="src/subscribers/ReportTaskFailure.ts"
 import { Subscribe, Subscriber } from '@seedcord/gateway';
@@ -211,26 +225,46 @@ import { Subscribe, Subscriber } from '@seedcord/gateway';
 import type {} from '@seedcord/plugin-tasks';
 // ---cut-end---
 
-@Subscribe(['taskFailed'])
-export class ReportTaskFailure extends Subscriber<'taskFailed'> {
+@Subscribe(['taskRan'])
+export class ReportTaskFailure extends Subscriber<'taskRan'> {
     public async execute(): Promise<void> {
-        const { key, trigger, durationMs, error } = this.data;
+        const run = this.data;
+        //               ^?
+        if (run.outcome === 'finished') return;
 
-        this.logger.error(
-            `${key} (${trigger}) failed after ${durationMs}ms`,
-            error
-        );
+        this.logger.error(`${run.key} failed`, run.error);
     }
 }
 ```
 
-The `taskFailed` payload also has `jobId`, which is `null` unless the run came from a scheduled job. `taskFinished` has the same fields, without `error`.
+`error` only exists once `outcome` is `'failed'`, which is why `ReportTaskFailure` checks `outcome` before it reads `run.error`. `jobId` works the same way. It is a string only when `trigger` is `'scheduled'`.
 
 ## Controlling a task from a handler
 
-A task that posts to a channel keeps posting while you fix that channel, unless a handler can pause it. Every attached plugin is on `this.core` under its key, so a handler reaches this one as `this.core.tasks`.
+A task that posts to a channel keeps posting while you fix that channel, unless a handler can pause it. A handler reaches the plugin as [`this.core.tasks`](/plugins#reading-it-from-a-handler), since every attached plugin is on `this.core` under its key. From there it can pause a task, run it now, or read its next run time.
 
-```ts title="src/handlers/PauseDigest.ts"
+```ts twoslash title="src/handlers/PauseDigest.ts"
+// ---cut-start---
+// @filename: tasks/Digest.ts
+import { RegisterTask, Task } from '@seedcord/plugin-tasks/gateway';
+
+@RegisterTask('0 9 * * MON')
+export class Digest extends Task {
+    public async execute(): Promise<void> {}
+}
+
+// @filename: handlers/PauseDigest.ts
+import type { Tasks } from '@seedcord/plugin-tasks';
+
+declare module '@seedcord/gateway' {
+    interface Core {
+        tasks: Tasks;
+    }
+    interface SlashRegistry {
+        'pause-digest': { options: {}; cache: 'cached' };
+    }
+}
+// ---cut-end---
 import { SlashHandler, SlashRoute } from '@seedcord/gateway';
 
 import { Digest } from '../tasks/Digest';
@@ -251,21 +285,21 @@ export class PauseDigest extends SlashHandler<'pause-digest'> {
 
 | method | what it does |
 | --- | --- |
-| [`pause(Task)`](ref:plugin-tasks/Tasks.pause) | stops a cron task from running. After a restart, the task runs again |
+| [`pause(Task)`](ref:plugin-tasks/Tasks.pause) | stops a cron task's pattern. Scheduled jobs and `trigger()` still run the task. After a restart, the pattern runs again |
 | [`resume(Task)`](ref:plugin-tasks/Tasks.resume) | starts a task that `pause()` or the `paused` option stopped |
 | [`nextRun(Task)`](ref:plugin-tasks/Tasks.nextRun) | returns the next run as a `Date`, or `null` when the task won't run again, like when it's paused or has no runs left |
-| [`trigger(Task)`](ref:plugin-tasks/Tasks.trigger) | runs a task now. If `protect` is on and the task is running, the plugin skips this run |
-| [`list()`](ref:plugin-tasks/Tasks.list) | returns a [`CronStatus`](ref:plugin-tasks/CronStatus) for each cron task, with its `key`, `pattern`, `timezone`, `scheduled`, `busy`, `nextRun`, and `previousRun` |
+| [`trigger(Task)`](ref:plugin-tasks/Tasks.trigger) | runs a task now, even while it's paused. If `protect` is on and the task is running, the plugin skips this run and calls `onOverrun()` |
+| [`crons()`](ref:plugin-tasks/Tasks.crons) | returns a [`CronStatus`](ref:plugin-tasks/CronStatus) for each cron task, with its `key`, `pattern`, `timezone`, `active`, `busy`, `nextRun`, and `previousRun` |
 
 {/* prettier-ignore-end */}
 
-`pause()` lasts until the process stops. If a task has to stay off through a restart, keep a flag in [`core.kv`](/built-ins) and check it at the top of `execute()`.
+`pause()` lasts until the process stops, and a save during `seedcord dev` keeps it. To keep a task paused after a restart, store a flag in [`core.kv`](/built-ins) and check it at the top of `execute()`.
 
 `pause()`, `resume()`, and `nextRun()` throw `PluginTasksPatternMissing` for a task without a pattern. Each method that takes a class throws `PluginTasksNotLoaded` if the plugin didn't load it from `path`. These methods take tasks without data, so passing a task that declares data fails to compile.
 
 ## Shutting down
 
-A task that's writing to your database when the bot stops needs that database until it finishes. The plugin's [`dispose()`](ref:plugin-tasks/Tasks.dispose) runs in the `Drain` [shutdown phase](/plugins/lifecycle), before database plugins disconnect. It stops every timer, aborts `this.signal`, and waits for running tasks. If they take longer than `timeout`, seedcord stops waiting and reports `LifecycleTaskTimeout`.
+A task that's writing to your database when the bot stops needs that database until it finishes. The plugin's [`dispose()`](ref:plugin-tasks/Tasks.dispose) runs in the `Drain` [shutdown phase](/plugins/lifecycle), before database plugins disconnect. It stops every timer, aborts `this.signal`, and waits for running tasks. If they take longer than `timeout`, seedcord stops waiting and reports [`LifecycleTaskTimeout`](/plugins/lifecycle#the-shutdown-deadline).
 
 Pass `this.signal` to anything slow to end a long request when the bot stops.
 
@@ -284,7 +318,7 @@ export class SyncStatus extends Task {
 }
 ```
 
-When the signal aborts, `fetch` rejects, so `SyncStatus` throws and that run publishes `taskFailed` like any other throw.
+When the signal aborts, `fetch` rejects. `SyncStatus` then throws, and the plugin publishes that run as a failed `taskRan` like any other throw.
 
 ## Running more than one copy
 

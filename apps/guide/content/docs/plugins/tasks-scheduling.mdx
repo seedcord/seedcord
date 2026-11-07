@@ -1,11 +1,11 @@
 ---
 title: Scheduling jobs
-description: Run a task once at a later time, like an unban a day from now, with jobs stored through a kv driver that keeps them across a restart.
+description: Run a function later, like an unban a day after a tempban, and keep the job in a kv driver so it still runs after a restart.
 ---
 
-A `/tempban` command bans someone for a day, so something has to unban them tomorrow. With `setTimeout`, that unban was a timer in your bot's memory. A deploy that evening restarted the process and threw the timer away, so the ban stayed until a moderator noticed.
+Some work has to run later, like lifting a ban a day after `/tempban`. With `setTimeout`, that unban was a timer in your bot's memory, and any restart before it ran threw it away.
 
-[`schedule()`](ref:plugin-tasks/Tasks.schedule) writes the job to your [kv store](/built-ins) before it sets a timer. With a [driver](/built-ins/drivers) that keeps its records, the job survives that deploy. This page assumes the [tasks plugin](/plugins/tasks) is attached under the key `tasks`, so a handler reaches it as `this.core.tasks` once you've run [`seedcord codegen`](/plugins/typing).
+[`schedule()`](ref:plugin-tasks/Tasks.schedule) writes the job to your [kv store](/built-ins) before it sets a timer. With a [driver](/built-ins/drivers) that keeps its records, the job is still there after a restart. This page assumes the [tasks plugin](/plugins/tasks) is attached under the key `tasks`. A handler then reaches it as [`this.core.tasks`](/plugins#reading-it-from-a-handler) once you've run [`seedcord codegen`](/plugins/typing).
 
 ## Writing a scheduled task
 
@@ -31,7 +31,20 @@ export class Unban extends Task<UnbanData> {
 }
 ```
 
-`this.data` has the type `UnbanData`. A task with a pattern can't declare data, because nothing passes data to a cron run. `@RegisterTask('* * * * *')` on `Unban` fails to compile.
+`this.data` has the type `UnbanData`. A task with a pattern can't declare data, because nothing passes data to a cron run.
+
+```ts twoslash
+// @errors: 1238
+import { RegisterTask, Task } from '@seedcord/plugin-tasks/gateway';
+// ---cut---
+@RegisterTask('* * * * *')
+export class Unban extends Task<{
+    guildId: string;
+    userId: string;
+}> {
+    public async execute(): Promise<void> {}
+}
+```
 
 Pass ids in `data`, like `guildId` and `userId`, and fetch what you need when the task runs. The job may run days later, so a copy of a member or a guild taken today is out of date by then.
 
@@ -40,10 +53,19 @@ Pass ids in `data`, like `guildId` and `userId`, and fetch what you need when th
 `schedule()` takes the class and exactly one of two times. `in` takes a duration, and `at` takes a `Date` or a timestamp in milliseconds.
 
 ```ts twoslash title="src/handlers/TempBan.ts"
-import { SlashHandler, SlashRoute } from '@seedcord/gateway';
 // ---cut-start---
+// @filename: tasks/Unban.ts
 import { RegisterTask, Task } from '@seedcord/plugin-tasks/gateway';
 
+@RegisterTask()
+export class Unban extends Task<{
+    guildId: string;
+    userId: string;
+}> {
+    public async execute(): Promise<void> {}
+}
+
+// @filename: handlers/TempBan.ts
 import type { Tasks } from '@seedcord/plugin-tasks';
 
 declare module '@seedcord/gateway' {
@@ -57,12 +79,10 @@ declare module '@seedcord/gateway' {
         };
     }
 }
-
-@RegisterTask()
-class Unban extends Task<{ guildId: string; userId: string }> {
-    public async execute(): Promise<void> {}
-}
 // ---cut-end---
+import { SlashHandler, SlashRoute } from '@seedcord/gateway';
+
+import { Unban } from '../tasks/Unban';
 
 @SlashRoute('tempban')
 export class TempBan extends SlashHandler<'tempban'> {
@@ -73,6 +93,7 @@ export class TempBan extends SlashHandler<'tempban'> {
         await guild.bans.create(userId);
 
         const job = await this.core.tasks.schedule(Unban, {
+            //  ^?
             in: '1d',
             data: { guildId, userId }
         });
@@ -86,7 +107,7 @@ export class TempBan extends SlashHandler<'tempban'> {
 }
 ```
 
-`'1d'` is a literal, so TypeScript checks it. Durations use `ms`, `s`, `m`, `h`, or `d` after a whole number above 0. `data` follows the type on `Unban`, which means a missing `userId` fails to compile. `data` on a task that declares none fails too.
+`job` is a [`ScheduledJob`](ref:plugin-tasks/ScheduledJob), and `TempBan` keeps its `id` to cancel it later. TypeScript checks `'1d'` against [`ValidDuration`](ref:utils/ValidDuration), which takes `ms`, `s`, `m`, `h`, or `d` after a whole number above 0. `data` follows the type on `Unban`, which means a missing `userId` fails to compile. `data` on a task that declares none fails too.
 
 Await `schedule()`, because it resolves once your driver holds the job. If the driver can't store it, the call throws `CoreKvDriverFailed`, and no job exists.
 
@@ -94,21 +115,21 @@ Await `schedule()`, because it resolves once your driver holds the job. If the d
 
 | if you pass | it throws |
 | --- | --- |
-| a `string` for `in` that isn't a duration | `PluginTasksInvalidDuration` |
+| a `string` for `in` that isn't a duration | `InvalidDuration` |
 | an `in` so long it ends after the year 275760 | `PluginTasksDurationTooLong` |
-| an invalid `Date` or `NaN` for `at` | `PluginTasksInvalidDate` |
+| an invalid `Date`, `NaN`, `0`, or a negative number for `at` | `PluginTasksInvalidDate` |
 | a number for `at` from before the year 2000 | `PluginTasksAtInSeconds` |
 | a class the plugin didn't load from `path` | `PluginTasksNotLoaded` |
 
 {/* prettier-ignore-end */}
 
-`Date.now()` counts milliseconds, while a Unix timestamp from another API usually counts seconds. Read as milliseconds, that timestamp is a date in January 1970, so `schedule()` throws `PluginTasksAtInSeconds` for it. Any other time in the past runs the job right away.
+`Date.now()` counts milliseconds, while a Unix timestamp from another API usually counts seconds. Read as milliseconds, that timestamp is a date in January 1970, which is why `schedule()` throws `PluginTasksAtInSeconds` for it. Any other time in the past runs the job right away.
 
-`schedule()` also takes a cron task that declares no data, which adds one extra run at that time. That run ignores `protect`, so it can overlap a run from the pattern.
+`schedule()` also takes a cron task that declares no data, which adds one extra run at that time. If `protect` is on and a run from the pattern is still running at that time, the job waits for it to end and then runs. A job of a paused task runs on time.
 
 ## Cancelling a job
 
-A moderator lifts the ban today, and tomorrow's job is still stored. If nothing cancels it, it runs anyway. `schedule()` returns a [`ScheduledJob`](ref:plugin-tasks/ScheduledJob) with a generated `id`, which `TempBan` stored in the `unban-job` collection under the user's id.
+A moderator lifts the ban today, and tomorrow's job is still stored. If nothing cancels it, it runs anyway. `TempBan` stored the job's `id` in the `unban-job` collection under the user's id.
 
 ```ts twoslash title="src/handlers/LiftBan.ts"
 import { SlashHandler, SlashRoute } from '@seedcord/gateway';
@@ -148,13 +169,13 @@ export class LiftBan extends SlashHandler<'unban'> {
 }
 ```
 
-`LiftBan` reads the id from `unban-job` and passes it to [`cancel()`](ref:plugin-tasks/Tasks.cancel), which deletes the job from your driver and resolves to `true`. It resolves to `false` if no job has that id, or if the job has already started, so a late cancel doesn't stop a run in progress.
+`LiftBan` reads the id from `unban-job` and passes it to [`cancel()`](ref:plugin-tasks/Tasks.cancel), which deletes the job from your driver and resolves to `true`. It resolves to `false` if no job has that id, or if the job's time has come, including a job that's waiting for an earlier run to end. A cancel that arrives after the run started doesn't stop that run.
 
-[`jobs()`](ref:plugin-tasks/Tasks.jobs) returns each job still pending in this process, with its `id`, `key`, and `at`.
+[`jobs()`](ref:plugin-tasks/Tasks.jobs) returns a `ScheduledJob` for each job waiting to run in this process.
 
 ## What JSON can store
 
-A job is stored in your driver as JSON, so a restart gives `execute()` only what JSON can hold. `data` has to fit, and [`this.data`](ref:plugin-tasks/Task.data) has the type of what comes back.
+The plugin stores a job in your driver as JSON, and after a restart `execute()` gets back only what JSON can hold. `data` has to fit, and [`this.data`](ref:plugin-tasks/Task.data) has the type of what comes back.
 
 ```ts twoslash title="src/tasks/Remind.ts"
 import { RegisterTask, Task } from '@seedcord/plugin-tasks/gateway';
@@ -169,11 +190,33 @@ export class Remind extends Task<{ text: string; sentAt: Date }> {
 }
 ```
 
-`sentAt` goes in as a `Date` and reads back as a `string`, so `Remind` builds a `Date` again before using it. Values with no JSON form, like a `Map`, a `Set`, a function, or a `bigint`, fail to compile. A circular reference still compiles, but `schedule()` throws `PluginTasksDataNotJson` for it.
+You pass `sentAt` as a `Date`, and it reads back as a `string`, so `Remind` builds a `Date` again before using it. A value with no JSON form, like a `Map`, a `Set`, a function, or a `bigint`, fails to compile.
 
-## Surviving a restart
+```ts twoslash
+// @errors: 2322
+// ---cut-start---
+import { RegisterTask, Task } from '@seedcord/plugin-tasks/gateway';
 
-The kv store keeps its records in memory until you give it a [driver](/built-ins/drivers), so without one a restart deletes your jobs. The plugin logs a warning at shutdown if jobs are still in that memory store. To keep them, set `kv` on your `Seedcord` config.
+import type { Tasks } from '@seedcord/plugin-tasks';
+
+declare const tasks: Tasks;
+// ---cut-end---
+@RegisterTask()
+export class Tally extends Task<{ counts: Map<string, number> }> {
+    public async execute(): Promise<void> {}
+}
+
+await tasks.schedule(Tally, {
+    in: '1h',
+    data: { counts: new Map() }
+});
+```
+
+A circular reference still compiles. Your kv store throws `CoreKvUnserializable` for it, and `schedule()` doesn't store the job.
+
+## Keeping jobs through a restart
+
+The kv store keeps its records in memory until you give it a [driver](/built-ins/drivers), and a restart clears that memory along with your jobs. The first time you schedule a job into it, the plugin logs a warning. To keep your jobs, set `kv` on your `Seedcord` config.
 
 ```ts twoslash title="src/bot.ts"
 import KeyvSqlite from '@keyv/sqlite';
@@ -198,25 +241,25 @@ export const seedcord = new Seedcord({
 export default seedcord;
 ```
 
-With `kv` set, the plugin reads every job back from `kv.sqlite` during startup. It sets their timers once the bot has logged in, so a job that came due during the restart runs as soon as the bot is ready.
+With `kv` set, the plugin reads every job back from `kv.sqlite` during startup. It sets their timers once the bot has logged in, and a job that came due during the restart runs as soon as the bot is ready.
 
 <Callout type="warning">
 
-The driver has to list its keys, because that's how the plugin finds your jobs at startup. A cache adapter like `@keyv/memcache` can't, so `init()` throws `CoreKvKeysUnsupported` and the bot doesn't start.
+The driver has to [list its keys](/built-ins#reading-every-record), because that's how the plugin finds your jobs at startup. A cache adapter like `@keyv/memcache` can't, so `init()` throws `CoreKvKeysUnsupported` and the bot doesn't start.
 
 </Callout>
 
 <Callout type="warning">
 
-The plugin stores jobs under the key you pass to `attach`, here `'tasks'`. If you change that key, the jobs stored under `tasks` stay in your driver and never run.
+The plugin stores jobs under the key you pass to `attach`, here `'tasks'`. If you change that key, the plugin can't find the jobs stored under `tasks`, and they never run.
 
 </Callout>
 
 ### A job can run twice
 
-The plugin deletes a job after its run ends. If the process dies during a run, the job is still stored, so it runs again after the restart. The same happens if shutdown aborts `this.signal` and the task then throws. Deleting the job before the run would lose it in a crash.
+The plugin deletes a job after its run ends. If the process dies during a run, the job is still in your driver and runs again after the restart. The same happens if shutdown aborts `this.signal` and the task then throws. Deleting the job before the run would lose it in a crash.
 
-So write a scheduled task to make a second run harmless, because the plugin doesn't remove duplicates for you. `Unban` is close to safe. A second run gets Discord's [`Unknown Ban` error](https://discord.com/developers/docs/topics/opcodes-and-status-codes#json) and changes nothing, though the throw still publishes `taskFailed`. A task that sends a DM isn't safe to run twice, so record each DM in [`core.kv`](/built-ins) and check that record first.
+Write a scheduled task to make a second run harmless, because the plugin doesn't remove duplicates for you. `Unban` is close to safe. A second run gets Discord's [`Unknown Ban` error](https://discord.com/developers/docs/topics/opcodes-and-status-codes#json) and changes nothing, though the plugin still publishes the throw as a failed `taskRan`. A task that sends a DM isn't safe to run twice. Record each DM in [`core.kv`](/built-ins) and check that record first.
 
 If a task throws for any other reason, the plugin deletes the job without running it again, since a task that fails on its data would otherwise fail forever. To retry, call `schedule()` from [`onError()`](ref:plugin-tasks/Task.onError).
 
@@ -249,11 +292,11 @@ export class Unban extends Task<{ userId: string }> {
 }
 ```
 
-The `this.signal.aborted` check matters. A run that shutdown interrupted keeps its job, so scheduling another one would leave you with two.
+Check `this.signal.aborted` first. A run that shutdown interrupted keeps its job, so scheduling another one would leave you with two.
 
 ### Renaming a task
 
-The plugin looks up a stored job's task by key, and the key defaults to the class name. If you rename `Unban` with jobs waiting, those jobs have no task to run, so the plugin leaves them stored and logs a warning. Pass `key` to `@RegisterTask` to keep them working through the rename.
+The plugin looks up a stored job's task by key, and the key defaults to the class name. If you rename `Unban` with jobs waiting, no task has their key anymore. The plugin logs a warning and leaves those jobs in your driver. Pass `key` to `@RegisterTask` to keep them working through the rename.
 
 ```ts twoslash
 import { RegisterTask, Task } from '@seedcord/plugin-tasks/gateway';
@@ -276,5 +319,3 @@ export class ReleaseBan extends Task<{
 ### Running more than one copy
 
 The plugin doesn't lock a job, so two copies of your bot that share one store each read it and each run it. Run one copy per store. Separate shard processes break this rule. A rolling deploy does too, when a stored job comes due while both copies are up.
-
-That covers what the plugin does with your jobs. [The kv store](/built-ins) has more on what else a driver holds, and [Writing plugins](/writing-plugins) shows how to build a plugin like this one.

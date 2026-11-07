@@ -7,6 +7,7 @@ import { Task } from '#src/Task';
 
 import type { Tasks } from '#src/Tasks';
 import type { TaskData } from '#src/types/Tasks';
+import type { Subscriptions } from '@seedcord/core';
 import type { Core as GatewayCore } from '@seedcord/gateway';
 import type { Core as HttpCore } from '@seedcord/http';
 
@@ -79,8 +80,8 @@ function probeDecorator(): void {
     // @ts-expect-error a nickname croner doesn't have
     RegisterTask('@fortnightly');
     // @ts-expect-error a misspelled timezone
-    RegisterTask('* * * * *', { timezone: 'Europe/Sarajvo' });
-    RegisterTask('* * * * *', { timezone: 'Europe/Sarajevo' });
+    RegisterTask('* * * * *', { timezone: 'America/New_Yrok' });
+    RegisterTask('* * * * *', { timezone: 'America/New_York' });
 }
 
 void probeSchedule;
@@ -106,3 +107,14 @@ class OnHttp extends HttpTask {
 
 void OnGateway;
 void OnHttp;
+
+declare const host: { bus: { on: (event: 'taskRan', listener: (run: Subscriptions['taskRan']) => void) => void } };
+
+host.bus.on('taskRan', (run) => {
+    if (run.trigger === 'scheduled') expectTypeOf(run.jobId).toEqualTypeOf<string>();
+    else expectTypeOf(run.jobId).toEqualTypeOf<null>();
+
+    if (run.outcome === 'failed') expectTypeOf(run.error).toEqualTypeOf<Error>();
+    // @ts-expect-error only a failed run has an error
+    else void run.error;
+});

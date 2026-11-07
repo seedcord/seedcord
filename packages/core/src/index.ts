@@ -108,7 +108,7 @@ export type { ItemRender, PageRender } from '#pagination/render';
 
 export { KeyvDriver } from '#src/kv/KeyvDriver';
 export type { JsonSafe, Kv } from '#src/kv/Kv';
-export type { KvCollection } from '#src/kv/KvCollection';
+export type { KvCollection, Stored } from '#src/kv/KvCollection';
 export { MemoryDriver } from '#src/kv/MemoryDriver';
 export { UnstorageDriver } from '#src/kv/UnstorageDriver';
 export { buildKey } from '#src/rateLimiter/buildKey';
