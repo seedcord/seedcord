@@ -155,26 +155,30 @@ describe('Cooldown', () => {
         expect(() => Cooldown('soon')).toThrow();
     });
 
-    it('throws a SeedcordError for a duration that types but parses to nothing', () => {
+    it('throws a SeedcordError for a duration string that parses to nothing', () => {
+        // a plain string skips the compile-time check
+        const zero = String('0s');
         let caught: unknown;
         try {
-            // '0s' types as a ValidDuration but parseDuration returns null for it
-            Cooldown('0s');
+            Cooldown(zero);
         } catch (error) {
             caught = error;
         }
-        expect(isSeedcordError(caught, undefined, SeedcordErrorCode.GateInvalidCooldownDuration)).toBe(true);
+        expect(isSeedcordError(caught, undefined, SeedcordErrorCode.InvalidDuration)).toBe(true);
     });
 
-    it.each([0, -1])('throws a SeedcordError for the non-positive numeric duration %d', (duration) => {
-        let caught: unknown;
-        try {
-            Cooldown(duration);
-        } catch (error) {
-            caught = error;
+    it.each([0, -1, Number.NaN, Number.POSITIVE_INFINITY])(
+        'throws a SeedcordError for the numeric duration %d',
+        (duration) => {
+            let caught: unknown;
+            try {
+                Cooldown(duration);
+            } catch (error) {
+                caught = error;
+            }
+            expect(isSeedcordError(caught, undefined, SeedcordErrorCode.InvalidDuration)).toBe(true);
         }
-        expect(isSeedcordError(caught, undefined, SeedcordErrorCode.GateInvalidCooldownDuration)).toBe(true);
-    });
+    );
 
     it('converts a numeric duration from seconds to the window length', async () => {
         const peek = vi.fn().mockReturnValue({ limited: false });

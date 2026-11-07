@@ -39,6 +39,7 @@
                 "@keyv/sqlite",
                 "@seedcord/plugin-kysely-postgres",
                 "@seedcord/plugin-mongoose",
+                "@seedcord/plugin-tasks",
                 "@types/pg",
                 "db0",
                 "discord-api-types",
@@ -101,6 +102,7 @@
             "entry": ["**/*.types-test.ts"]
         },
         "packages/utils": {
+            "entry": ["**/*.types-test.ts"],
             "ignore": ["tests/files/fixtures/**"],
             "ignoreDependencies": ["tsx"]
         },
@@ -109,6 +111,9 @@
         },
         "plugins/mongoose": {
             "entry": ["**/*.types-test.ts"]
+        },
+        "plugins/tasks": {
+            "entry": ["**/*.types-test.ts", "tests/fixtures/**/*.ts"]
         },
         "cli/seedcord": {
             "entry": ["**/*.types-test.ts", "tests/fixtures/*/**/*.{ts,tsx,mts,js,jsx,mjs}"],

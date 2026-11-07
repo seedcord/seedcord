@@ -6,8 +6,12 @@ import type { Config } from '@seedcord/types';
 
 type ConfiguredDriver = NonNullable<Config['kv']>;
 
-// what JSON.stringify keeps as written. a Date passes through its toJSON
-type JsonSafe<TValue> = TValue extends string | number | boolean | null | undefined
+/**
+ * What `JSON.stringify` keeps of `TValue`, with `never` in place of anything JSON has no form for: a
+ * function, `Map`, `Set`, or `bigint`. `[T] extends [JsonSafe<T>]` holds when JSON keeps every value in `T`.
+ * A `Date` counts, since it passes through its `toJSON`.
+ */
+export type JsonSafe<TValue> = TValue extends string | number | boolean | null | undefined
     ? TValue
     : TValue extends { toJSON(): unknown }
       ? TValue

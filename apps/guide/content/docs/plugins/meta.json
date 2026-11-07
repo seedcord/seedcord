@@ -12,6 +12,9 @@
         "kysely",
         "kysely-schema",
         "kysely-services",
-        "kysely-migrations"
+        "kysely-migrations",
+        "---Tasks---",
+        "tasks",
+        "tasks-scheduling"
     ]
 }
