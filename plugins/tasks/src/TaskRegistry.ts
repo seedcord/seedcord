@@ -19,10 +19,18 @@ export class TaskSlot {
     public readonly state = new TaskState();
     public loaded: LoadedTask | undefined;
     public cron: CronJob | undefined;
-    public pausedByCall: boolean | undefined;
+    private pausedByCall: boolean | undefined;
 
     public get paused(): boolean {
-        return this.pausedByCall ?? this.cron?.pausedByDefault ?? false;
+        return this.pausedByCall ?? this.cron?.pausedByDecorator ?? false;
+    }
+
+    public pause(): void {
+        this.pausedByCall = true;
+    }
+
+    public resume(): void {
+        this.pausedByCall = false;
     }
 }
 

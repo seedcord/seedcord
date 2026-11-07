@@ -251,12 +251,14 @@ type CheckPattern<Texts extends string[]> = Texts['length'] extends keyof Layout
 
 export type CronPattern<TPattern extends string> = string extends TPattern
     ? TPattern
-    : Lowercase<TPattern> extends CronNickname
-      ? TPattern
-      : Lowercase<TPattern> extends `@${string}`
-        ? `'${TPattern}' is not a croner nickname. Use @yearly, @annually, @monthly, @weekly, @daily, @midnight or @hourly`
-        : CheckPattern<Fields<Lowercase<TPattern>>> extends infer Result
-          ? Result extends string
-              ? `'${TPattern}' isn't a valid cron pattern. ${Capitalize<Result>}`
-              : TPattern
-          : never;
+    : Fields<Lowercase<TPattern>> extends infer Texts extends string[]
+      ? Texts extends [CronNickname]
+          ? TPattern
+          : Texts extends [`@${string}`]
+            ? `'${TPattern}' is not a croner nickname. Use @yearly, @annually, @monthly, @weekly, @daily, @midnight or @hourly`
+            : CheckPattern<Texts> extends infer Result
+              ? Result extends string
+                  ? `'${TPattern}' isn't a valid cron pattern. ${Capitalize<Result>}`
+                  : TPattern
+              : never
+      : never;

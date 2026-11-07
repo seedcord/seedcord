@@ -9,8 +9,7 @@ export class CronJob {
         private readonly run: () => Promise<void>,
         public readonly pattern: string,
         public readonly timezone: string | undefined,
-        // the decorator's paused option, which applies until pause() or resume() runs
-        public readonly pausedByDefault: boolean
+        public readonly pausedByDecorator: boolean
     ) {}
 
     public get active(): boolean {

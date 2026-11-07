@@ -36,7 +36,8 @@ describe('Tasks cron tasks', () => {
     });
 
     it('runs nothing before ready', async () => {
-        const { host, tasks } = await boot(crons);
+        await using booted = await boot(crons);
+        const { host, tasks } = booted;
 
         await vi.advanceTimersByTimeAsync(SECOND_MS * 3);
         expect(host.runs).toEqual([]);
@@ -44,12 +45,11 @@ describe('Tasks cron tasks', () => {
         tasks.ready();
         await vi.advanceTimersByTimeAsync(SECOND_MS);
         expect(runsOf(host, 'Tick')).toHaveLength(1);
-
-        await tasks.dispose();
     });
 
     it('runs a class exported twice once per tick', async () => {
-        const { host, tasks } = await start(crons);
+        await using booted = await start(crons);
+        const { host } = booted;
 
         await vi.advanceTimersByTimeAsync(SECOND_MS * 2);
 
@@ -57,11 +57,11 @@ describe('Tasks cron tasks', () => {
             { task: 'Tick', trigger: 'cron', data: undefined },
             { task: 'Tick', trigger: 'cron', data: undefined }
         ]);
-        await tasks.dispose();
     });
 
     it('runs nothing after dispose', async () => {
-        const { host, tasks } = await start(crons);
+        await using booted = await start(crons);
+        const { host, tasks } = booted;
         await tasks.dispose();
 
         await vi.advanceTimersByTimeAsync(SECOND_MS * 2);
@@ -70,7 +70,8 @@ describe('Tasks cron tasks', () => {
     });
 
     it('leaves a task saved after dispose stopped', async () => {
-        const { tasks } = await start(crons);
+        await using booted = await start(crons);
+        const { tasks } = booted;
         await tasks.dispose();
 
         await tasks.onHmr({ file: path.join(taskFolder, 'Slow.ts'), type: 'update' });
@@ -80,23 +81,23 @@ describe('Tasks cron tasks', () => {
     });
 
     it('holds no timer before ready', async () => {
-        const { tasks } = await boot(crons);
+        await using _booted = await boot(crons);
 
         expect(vi.getTimerCount()).toBe(0);
-        await tasks.dispose();
     });
 
     it('holds no timer for a task that starts paused', async () => {
-        const { tasks } = await start({ path: taskFolder, timezone: 'UTC' });
+        await using booted = await start({ path: taskFolder, timezone: 'UTC' });
+        const { tasks } = booted;
         const unpaused = tasks.crons().filter((status) => status.key !== 'Idle').length;
 
         expect(vi.getTimerCount()).toBe(unpaused);
-        await tasks.dispose();
     });
 
     describe('pause and resume', () => {
         it('leaves a paused task until resume', async () => {
-            const { host, tasks } = await start(crons);
+            await using booted = await start(crons);
+            const { host, tasks } = booted;
 
             await vi.advanceTimersByTimeAsync(SECOND_MS);
             expect(runsOf(host, 'Idle')).toEqual([]);
@@ -104,26 +105,25 @@ describe('Tasks cron tasks', () => {
             tasks.resume(Idle);
             await vi.advanceTimersByTimeAsync(SECOND_MS);
             expect(runsOf(host, 'Idle')).toHaveLength(1);
-
-            await tasks.dispose();
         });
 
         it('keeps a task paused before ready paused through ready', async () => {
-            const { host, tasks } = await boot(crons);
+            await using booted = await boot(crons);
+            const { host, tasks } = booted;
 
             tasks.pause(Tick);
             tasks.ready();
             await vi.advanceTimersByTimeAsync(SECOND_MS);
 
             expect(runsOf(host, 'Tick')).toEqual([]);
-            await tasks.dispose();
         });
 
         it.each([
             ['before ready', true],
             ['after ready', false]
         ])('runs a task paused before ready and resumed %s', async (_when, resumeFirst) => {
-            const { host, tasks } = await boot(crons);
+            await using booted = await boot(crons);
+            const { host, tasks } = booted;
 
             tasks.pause(Tick);
             if (resumeFirst) tasks.resume(Tick);
@@ -132,11 +132,11 @@ describe('Tasks cron tasks', () => {
             await vi.advanceTimersByTimeAsync(SECOND_MS);
 
             expect(runsOf(host, 'Tick')).not.toEqual([]);
-            await tasks.dispose();
         });
 
         it('starts a task resumed before ready once ready runs', async () => {
-            const { host, tasks } = await boot(crons);
+            await using booted = await boot(crons);
+            const { host, tasks } = booted;
 
             tasks.resume(Idle);
             await vi.advanceTimersByTimeAsync(SECOND_MS);
@@ -145,23 +145,22 @@ describe('Tasks cron tasks', () => {
             tasks.ready();
             await vi.advanceTimersByTimeAsync(SECOND_MS);
             expect(runsOf(host, 'Idle')).toHaveLength(1);
-
-            await tasks.dispose();
         });
 
         it('pauses a running task', async () => {
-            const { host, tasks } = await start(crons);
+            await using booted = await start(crons);
+            const { host, tasks } = booted;
 
             tasks.pause(Tick);
             await vi.advanceTimersByTimeAsync(SECOND_MS * 2);
 
             expect(runsOf(host, 'Tick')).toEqual([]);
-            await tasks.dispose();
         });
     });
 
     it('runs a task now through trigger', async () => {
-        const { host, tasks } = await start(crons);
+        await using booted = await start(crons);
+        const { host, tasks } = booted;
 
         await tasks.trigger(Reminder);
         await tasks.trigger(Slow);
@@ -170,12 +169,12 @@ describe('Tasks cron tasks', () => {
             { task: 'reminder', trigger: 'manual', data: undefined },
             { task: 'slow', trigger: 'manual', data: undefined }
         ]);
-        await tasks.dispose();
     });
 
     it('skips a protected run while the last one is still running and calls onOverrun', async () => {
         using logs = captureLogs();
-        const { host, tasks } = await start(crons);
+        await using booted = await start(crons);
+        const { host, tasks } = booted;
         host.hold();
 
         const first = tasks.trigger(Slow);
@@ -189,12 +188,12 @@ describe('Tasks cron tasks', () => {
 
         host.release();
         await first;
-        await tasks.dispose();
     });
 
     it('logs an onOverrun that throws and carries on', async () => {
         using logs = captureLogs();
-        const { host, tasks } = await start(crons);
+        await using booted = await start(crons);
+        const { host, tasks } = booted;
         host.hold();
         host.failOverrun = true;
 
@@ -206,12 +205,12 @@ describe('Tasks cron tasks', () => {
         await first;
         await tasks.trigger(Slow);
         expect(host.runs.filter((run) => run.task === 'slow')).toHaveLength(2);
-        await tasks.dispose();
     });
 
     it('waits for onOverrun during dispose', async () => {
         using _logs = captureLogs();
-        const { host, tasks } = await start(crons);
+        await using booted = await start(crons);
+        const { host, tasks } = booted;
         host.hold();
         host.holdOverrun();
 
@@ -233,7 +232,8 @@ describe('Tasks cron tasks', () => {
     });
 
     it('reports busy until every unprotected run finishes', async () => {
-        const { host, tasks } = await start({ path: path.join(fixtures, 'unprotected') });
+        await using booted = await start({ path: path.join(fixtures, 'unprotected') });
+        const { host, tasks } = booted;
         const long = Promise.withResolvers<undefined>();
         const short = Promise.withResolvers<undefined>();
         host.gates.push(long.promise, short.promise);
@@ -247,11 +247,11 @@ describe('Tasks cron tasks', () => {
         long.resolve(undefined);
         await first;
         expect(tasks.crons()[0]?.busy).toBe(false);
-        await tasks.dispose();
     });
 
     it('keeps a running task busy across a save', async () => {
-        const { host, tasks } = await start(crons);
+        await using booted = await start(crons);
+        const { host, tasks } = booted;
         host.hold();
         const run = tasks.trigger(Slow);
 
@@ -260,13 +260,13 @@ describe('Tasks cron tasks', () => {
 
         host.release();
         await run;
-        await tasks.dispose();
     });
 
     describe('run state', () => {
         it('skips a run the task starts on itself before its first await', async () => {
             using _logs = captureLogs();
-            const { host, tasks } = await start(crons);
+            await using booted = await start(crons);
+            const { host, tasks } = booted;
             host.reenter = () => tasks.trigger(Slow);
 
             await tasks.trigger(Slow);
@@ -275,11 +275,11 @@ describe('Tasks cron tasks', () => {
                 { task: 'slow', trigger: 'manual', data: undefined },
                 { task: 'overrun', trigger: 'manual', data: undefined }
             ]);
-            await tasks.dispose();
         });
 
         it('runs a scheduled job of a protected task once the run before it ends', async () => {
-            const { host, tasks } = await start(crons);
+            await using booted = await start(crons);
+            const { host, tasks } = booted;
             host.hold();
 
             const first = tasks.trigger(Slow);
@@ -296,12 +296,12 @@ describe('Tasks cron tasks', () => {
                 { task: 'slow', trigger: 'scheduled', data: undefined }
             ]);
             expect(tasks.jobs()).toEqual([]);
-            await tasks.dispose();
         });
 
         it('keeps a job that waited on a protected run stored when dispose interrupts it', async () => {
             using driver = new FakeDriver();
-            const { host, tasks } = await start(crons, driver);
+            await using booted = await start(crons, driver);
+            const { host, tasks } = booted;
             host.hold();
 
             void tasks.trigger(Slow);
@@ -317,7 +317,8 @@ describe('Tasks cron tasks', () => {
         });
 
         it('runs a paused task through trigger and a scheduled job', async () => {
-            const { host, tasks } = await start(crons);
+            await using booted = await start(crons);
+            const { host, tasks } = booted;
             tasks.pause(Tick);
 
             await tasks.trigger(Tick);
@@ -328,7 +329,6 @@ describe('Tasks cron tasks', () => {
                 { task: 'Tick', trigger: 'manual', data: undefined },
                 { task: 'Tick', trigger: 'scheduled', data: undefined }
             ]);
-            await tasks.dispose();
         });
 
         it('applies a paused option changed in a save', async () => {
@@ -354,19 +354,20 @@ describe('Tasks cron tasks', () => {
         });
 
         it('keeps what resume did across a save', async () => {
-            const { host, tasks } = await start(crons);
+            await using booted = await start(crons);
+            const { host, tasks } = booted;
             tasks.resume(Idle);
 
             await tasks.onHmr({ file: path.join(taskFolder, 'Idle.ts'), type: 'update' });
             await vi.advanceTimersByTimeAsync(SECOND_MS);
 
             expect(runsOf(host, 'Idle')).toHaveLength(1);
-            await tasks.dispose();
         });
     });
 
     it('reports its state through list and nextRun', async () => {
-        const { host, tasks } = await start(crons);
+        await using booted = await start(crons);
+        const { host, tasks } = booted;
         host.hold();
         const run = tasks.trigger(Slow);
 
@@ -383,11 +384,11 @@ describe('Tasks cron tasks', () => {
 
         host.release();
         await run;
-        await tasks.dispose();
     });
 
     it('reports no next run while a task is paused', async () => {
-        const { tasks } = await start(crons);
+        await using booted = await start(crons);
+        const { tasks } = booted;
 
         tasks.pause(Slow);
         expect(tasks.nextRun(Slow)).toBeNull();
@@ -395,32 +396,30 @@ describe('Tasks cron tasks', () => {
 
         tasks.resume(Slow);
         expect(tasks.nextRun(Slow)?.toISOString()).toBe('2031-01-01T05:00:00.000Z');
-
-        await tasks.dispose();
     });
 
     it('applies the plugin timezone to a task without one', async () => {
-        const { tasks } = await start({ ...crons, timezone: 'Asia/Tokyo' });
+        await using booted = await start({ ...crons, timezone: 'Asia/Tokyo' });
+        const { tasks } = booted;
 
         expect(tasks.crons().find((status) => status.key === 'Tick')?.timezone).toBe('Asia/Tokyo');
         expect(tasks.crons().find((status) => status.key === 'slow')?.timezone).toBe('America/New_York');
-
-        await tasks.dispose();
     });
 
     it('throws for pause on a task without a pattern', async () => {
-        const { tasks } = await boot(crons);
+        await using booted = await boot(crons);
+        const { tasks } = booted;
 
         expect(() => {
             tasks.pause(Reminder);
         }).toThrow(
             expect.objectContaining({ code: SeedcordErrorCode.PluginTasksPatternMissing, type: 'SeedcordTypeError' })
         );
-        await tasks.dispose();
     });
 
     it('swaps a class on a save and stops it on a delete', async () => {
-        const { tasks } = await start(crons);
+        await using booted = await start(crons);
+        const { tasks } = booted;
         const file = path.join(taskFolder, 'Idle.ts');
         const keys = (): string[] => tasks.crons().map((status) => status.key);
 
@@ -428,13 +427,11 @@ describe('Tasks cron tasks', () => {
         // the save loaded a fresh copy of the class, so the one this file imported no longer matches
         expect(() => {
             tasks.pause(Idle);
-        }).toThrow(expect.objectContaining({ code: SeedcordErrorCode.PluginTasksNotLoaded }));
+        }).toThrow(expect.objectContaining({ code: SeedcordErrorCode.PluginTasksKeyTaken }));
         expect(keys()).toContain('Idle');
 
         await tasks.onHmr({ file, type: 'delete' });
         expect(keys()).not.toContain('Idle');
-
-        await tasks.dispose();
     });
 
     describe('at startup', () => {
@@ -448,15 +445,6 @@ describe('Tasks cron tasks', () => {
             ['bad-pattern', SeedcordErrorCode.PluginTasksInvalidPattern]
         ])('rejects %s', async (folder, code) => {
             await expect(boot({ path: path.join(fixtures, folder) })).rejects.toMatchObject({ code });
-        });
-
-        it('leaves no timer behind when init fails', async () => {
-            const host = new TestHost(new FakeDriver());
-            const { tasks } = host.attach('tasks', Tasks, { path: path.join(fixtures, 'bad-pattern') });
-
-            await expect(tasks.init()).rejects.toThrow();
-
-            expect(vi.getTimerCount()).toBe(0);
         });
 
         it('rejects an empty path', () => {

@@ -16,7 +16,9 @@ export const acceptedPatterns = [
     '0 0 * * 5-6#2',
     '0 0 * * 5-6L',
     // croner trims a pattern and splits it on runs of whitespace
-    ' 0  9 *\t* * '
+    ' 0  9 *\t* * ',
+    ' @weekly ',
+    '@WEEKLY'
 ] as const;
 
 export const rejectedPatterns = [
@@ -32,5 +34,6 @@ export const rejectedPatterns = [
     '0 0 * * 5#6',
     '0 0 * * MON#0',
     '0 0 * * 6-5#L',
-    '@fortnightly'
+    '@fortnightly',
+    '@ weekly'
 ] as const;

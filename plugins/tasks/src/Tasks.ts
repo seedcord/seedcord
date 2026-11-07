@@ -89,7 +89,12 @@ export class Tasks extends Plugin<{ transport: 'any'; runtime: 'server' }> {
      *
      * @throws A **SeedcordError** when a task file throws while it imports.
      * @throws A **SeedcordTypeError** with `CoreDuplicateName` when two tasks share a key.
-     * @throws A **SeedcordTypeError** when a task has an invalid cron pattern, a date as its pattern, or an invalid timezone, `startAt`, or `stopAt`.
+     * @throws A **SeedcordTypeError** with `PluginTasksInvalidPattern` when croner can't parse a task's cron pattern.
+     * @throws A **SeedcordTypeError** with `PluginTasksDateAsPattern` when a task's pattern is a date.
+     * @throws A **SeedcordTypeError** with `PluginTasksInvalidTimezone` when a task's `timezone` isn't one `Intl` supports.
+     * @throws A **SeedcordTypeError** with `PluginTasksInvalidDate` when croner can't read a task's `startAt` or `stopAt`.
+     * @throws A **SeedcordTypeError** with `PluginTasksStopBeforeStart` when a task's `stopAt` isn't after its `startAt`.
+     * @throws A **SeedcordRangeError** with `PluginTasksInvalidMaxRuns` when a task's `maxRuns` isn't a whole number of 1 or more.
      * @throws A **SeedcordError** with `CoreKvKeysUnsupported` when the `config.kv` driver can't list its keys.
      */
     public async init(): Promise<void> {
@@ -130,7 +135,8 @@ export class Tasks extends Plugin<{ transport: 'any'; runtime: 'server' }> {
      *
      * @param Task - A class the plugin loaded from `path`.
      * @param options - `in` or `at`, plus `data` when the task declares it.
-     * @throws A **SeedcordError** when the plugin did not load `Task`.
+     * @throws A **SeedcordError** with `PluginTasksNotLoaded` when the plugin did not load `Task`.
+     * @throws A **SeedcordTypeError** with `PluginTasksKeyTaken` when a different class loaded under `Task`'s key.
      * @throws A **SeedcordTypeError** when `in` isn't a duration or `at` isn't a date.
      * @throws A **SeedcordRangeError** when `at` is a number too small to be milliseconds, or `in` ends past the last date a `Date` can hold.
      * @throws A **SeedcordTypeError** with `CoreKvUnserializable` when `data` holds a circular reference.
@@ -158,7 +164,7 @@ export class Tasks extends Plugin<{ transport: 'any'; runtime: 'server' }> {
      * Deletes a job so it never runs.
      *
      * @returns `false` when no job has that id, or when its run has started.
-     * @throws A **SeedcordError** with `CoreKvDriverFailed` when the driver can't delete the job.
+     * @throws A **SeedcordError** with `CoreKvDriverFailed` when the driver can't read or delete the job.
      */
     public async cancel(id: string): Promise<boolean> {
         return this.#scheduled.cancel(id);
@@ -177,7 +183,8 @@ export class Tasks extends Plugin<{ transport: 'any'; runtime: 'server' }> {
     /**
      * When a cron task runs next, or `null` while it's paused or once it has no runs left.
      *
-     * @throws A **SeedcordError** when the plugin did not load `Task`.
+     * @throws A **SeedcordError** with `PluginTasksNotLoaded` when the plugin did not load `Task`.
+     * @throws A **SeedcordTypeError** with `PluginTasksKeyTaken` when a different class loaded under `Task`'s key.
      * @throws A **SeedcordTypeError** with `PluginTasksPatternMissing` when `Task` has no cron pattern.
      */
     public nextRun(Task: NoDataTaskClass): Date | null {
@@ -188,7 +195,8 @@ export class Tasks extends Plugin<{ transport: 'any'; runtime: 'server' }> {
      * Stops a cron task's schedule until {@link Tasks.resume}. Scheduled jobs and `trigger()` still
      * run the task. A save that reloads the task keeps it paused, and a restart forgets this.
      *
-     * @throws A **SeedcordError** when the plugin did not load `Task`.
+     * @throws A **SeedcordError** with `PluginTasksNotLoaded` when the plugin did not load `Task`.
+     * @throws A **SeedcordTypeError** with `PluginTasksKeyTaken` when a different class loaded under `Task`'s key.
      * @throws A **SeedcordTypeError** with `PluginTasksPatternMissing` when `Task` has no cron pattern.
      */
     public pause(Task: NoDataTaskClass): void {
@@ -198,7 +206,8 @@ export class Tasks extends Plugin<{ transport: 'any'; runtime: 'server' }> {
     /**
      * Starts a cron task that `pause()` or the `paused` option stopped.
      *
-     * @throws A **SeedcordError** when the plugin did not load `Task`.
+     * @throws A **SeedcordError** with `PluginTasksNotLoaded` when the plugin did not load `Task`.
+     * @throws A **SeedcordTypeError** with `PluginTasksKeyTaken` when a different class loaded under `Task`'s key.
      * @throws A **SeedcordTypeError** with `PluginTasksPatternMissing` when `Task` has no cron pattern.
      */
     public resume(Task: NoDataTaskClass): void {
@@ -209,7 +218,8 @@ export class Tasks extends Plugin<{ transport: 'any'; runtime: 'server' }> {
      * Runs a task now, outside its schedule, even while it's paused. A `protect`ed task that is
      * mid-run skips this one and calls `onOverrun()`.
      *
-     * @throws A **SeedcordError** when the plugin did not load `Task`.
+     * @throws A **SeedcordError** with `PluginTasksNotLoaded` when the plugin did not load `Task`.
+     * @throws A **SeedcordTypeError** with `PluginTasksKeyTaken` when a different class loaded under `Task`'s key.
      */
     public async trigger(Task: NoDataTaskClass): Promise<void> {
         await this.#runner.run(this.#requireLoaded(Task), { trigger: 'manual', jobId: null }, undefined);
@@ -222,7 +232,7 @@ export class Tasks extends Plugin<{ transport: 'any'; runtime: 'server' }> {
         if (!loaded) throw new SeedcordError(SeedcordErrorCode.PluginTasksNotLoaded, [key, this.#path]);
         // a class from another folder can share the key, and its data would reach the loaded class
         if (loaded.Task !== Task) {
-            throw new SeedcordError(SeedcordErrorCode.PluginTasksNotLoaded, [key, this.#path, loaded.file]);
+            throw new SeedcordTypeError(SeedcordErrorCode.PluginTasksKeyTaken, [key, loaded.file]);
         }
 
         return loaded;

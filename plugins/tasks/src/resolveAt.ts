@@ -25,7 +25,7 @@ function parseAt(key: string, at: Date | number): Date {
     }
 
     if (Number.isNaN(date.getTime())) {
-        throw new SeedcordTypeError(SeedcordErrorCode.PluginTasksInvalidDate, [key, 'at', String(at)]);
+        throw new SeedcordTypeError(SeedcordErrorCode.PluginTasksInvalidAt, [key, String(at)]);
     }
     return date;
 }

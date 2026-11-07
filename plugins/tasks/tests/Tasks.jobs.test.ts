@@ -38,7 +38,8 @@ afterEach(() => {
 
 describe('Tasks scheduled jobs', () => {
     it('runs a job at its time and deletes the record', async () => {
-        const { host, tasks } = await start(jobs, driver);
+        await using booted = await start(jobs, driver);
+        const { host, tasks } = booted;
 
         const job = await tasks.schedule(Reminder, { in: '1h' });
 
@@ -55,7 +56,8 @@ describe('Tasks scheduled jobs', () => {
     });
 
     it('keeps its time when a caller changes a returned date', async () => {
-        const { host, tasks } = await start(jobs, driver);
+        await using booted = await start(jobs, driver);
+        const { host, tasks } = booted;
 
         const job = await tasks.schedule(Reminder, { in: '1h' });
         job.at.setTime(job.at.getTime() + DAY_MS);
@@ -66,7 +68,8 @@ describe('Tasks scheduled jobs', () => {
     });
 
     it('resolves schedule only once the driver holds the job', async () => {
-        const { tasks } = await start(jobs, driver);
+        await using booted = await start(jobs, driver);
+        const { tasks } = booted;
         const release = driver.holdSets();
 
         let resolved = false;
@@ -86,13 +89,13 @@ describe('Tasks scheduled jobs', () => {
         const data = { text: 'hi', sentAt: new Date('2030-01-01T00:00:00Z') };
         const stored = { text: 'hi', sentAt: '2030-01-01T00:00:00.000Z' };
 
-        const first = await start(jobs, driver);
+        await using first = await start(jobs, driver);
         const job = await first.tasks.schedule(Note, { in: '1h', data });
         await first.tasks.schedule(Note, { in: '1s', data });
         await vi.advanceTimersByTimeAsync(SECOND_MS);
         await first.tasks.dispose();
 
-        const second = await start(jobs, driver);
+        await using second = await start(jobs, driver);
         expect(second.tasks.jobs()).toEqual([job]);
         await vi.advanceTimersByTimeAsync(HOUR_MS);
 
@@ -101,13 +104,13 @@ describe('Tasks scheduled jobs', () => {
     });
 
     it('holds a job that came due during downtime until ready', async () => {
-        const first = await start(jobs, driver);
+        await using first = await start(jobs, driver);
         await first.tasks.schedule(Reminder, { in: '1h' });
         await first.tasks.dispose();
 
         vi.setSystemTime(Date.now() + DAY_MS);
 
-        const second = await boot(jobs, driver);
+        await using second = await boot(jobs, driver);
         await vi.advanceTimersByTimeAsync(HOUR_MS);
         expect(second.host.runs).toEqual([]);
 
@@ -117,7 +120,8 @@ describe('Tasks scheduled jobs', () => {
     });
 
     it('holds a job scheduled before ready until ready', async () => {
-        const { host, tasks } = await boot(jobs, driver);
+        await using booted = await boot(jobs, driver);
+        const { host, tasks } = booted;
 
         await tasks.schedule(Reminder, { at: new Date('2029-01-01T00:00:00Z') });
         await vi.advanceTimersByTimeAsync(HOUR_MS);
@@ -129,20 +133,21 @@ describe('Tasks scheduled jobs', () => {
     });
 
     it('keeps a job scheduled during shutdown for the next start', async () => {
-        const first = await start(jobs, driver);
+        await using first = await start(jobs, driver);
         await first.tasks.dispose();
 
         await first.tasks.schedule(Reminder, { in: '1s' });
         await vi.advanceTimersByTimeAsync(HOUR_MS);
         expect(first.host.runs).toEqual([]);
 
-        const second = await start(jobs, driver);
+        await using second = await start(jobs, driver);
         await vi.advanceTimersByTimeAsync(0);
         expect(second.host.runs).toHaveLength(1);
     });
 
     it('waits past the setTimeout limit', async () => {
-        const { host, tasks } = await start(jobs, driver);
+        await using booted = await start(jobs, driver);
+        const { host, tasks } = booted;
         const days = 40;
 
         await tasks.schedule(Reminder, { in: `${days}d` });
@@ -155,7 +160,8 @@ describe('Tasks scheduled jobs', () => {
     });
 
     it('takes at as a date or as epoch milliseconds', async () => {
-        const { host, tasks } = await start(jobs, driver);
+        await using booted = await start(jobs, driver);
+        const { host, tasks } = booted;
 
         await tasks.schedule(Reminder, { at: new Date(Date.now() + SECOND_MS) });
         await tasks.schedule(Reminder, { at: Date.now() + SECOND_MS });
@@ -166,7 +172,8 @@ describe('Tasks scheduled jobs', () => {
 
     it('does not run a job again after it throws, and carries on when onError throws too', async () => {
         using logs = captureLogs();
-        const { host, tasks } = await start(jobs, driver);
+        await using booted = await start(jobs, driver);
+        const { host, tasks } = booted;
         const ran = vi.fn();
         host.bus.on('taskRan', ran);
 
@@ -187,7 +194,8 @@ describe('Tasks scheduled jobs', () => {
 
     it('publishes a failed run and deletes the job when the constructor throws', async () => {
         using logs = captureLogs();
-        const { host, tasks } = await start(jobs, driver);
+        await using booted = await start(jobs, driver);
+        const { host, tasks } = booted;
         const ran = vi.fn();
         host.bus.on('taskRan', ran);
 
@@ -202,7 +210,8 @@ describe('Tasks scheduled jobs', () => {
     });
 
     it('publishes a finished run with the job id', async () => {
-        const { host, tasks } = await start(jobs, driver);
+        await using booted = await start(jobs, driver);
+        const { host, tasks } = booted;
         const ran = vi.fn();
         host.bus.on('taskRan', ran);
 
@@ -215,23 +224,23 @@ describe('Tasks scheduled jobs', () => {
     });
 
     it('runs a job again when shutdown interrupts it', async () => {
-        const first = await start(jobs, driver);
+        await using first = await start(jobs, driver);
         await first.tasks.schedule(Abortable, { in: '1s' });
         await vi.advanceTimersByTimeAsync(SECOND_MS);
 
         await first.tasks.dispose();
         expect(driver.stored.size).toBe(1);
 
-        const second = await start(jobs, driver);
+        await using second = await start(jobs, driver);
         await vi.advanceTimersByTimeAsync(0);
 
         expect(first.host.runs).toHaveLength(1);
         expect(second.host.runs).toHaveLength(1);
-        await second.tasks.dispose();
     });
 
     it('reports a run that shutdown interrupts as interrupted, without calling onError', async () => {
-        const { host, tasks } = await start(jobs, driver);
+        await using booted = await start(jobs, driver);
+        const { host, tasks } = booted;
         const ran = vi.fn();
         host.bus.on('taskRan', ran);
         const onError = vi.spyOn(Abortable.prototype, 'onError');
@@ -245,21 +254,22 @@ describe('Tasks scheduled jobs', () => {
     });
 
     it('runs a job again when the process died during it', async () => {
+        // no using. a killed process never disposes, and its held run would keep dispose waiting
         const first = await start(jobs, driver);
         first.host.hold();
         await first.tasks.schedule(Note, { in: '1s', data: { text: 'hi', sentAt: new Date() } });
         await vi.advanceTimersByTimeAsync(SECOND_MS);
         expect(first.host.runs).toHaveLength(1);
 
-        // no dispose. a killed process never reaches it
-        const second = await start(jobs, driver);
+        await using second = await start(jobs, driver);
         await vi.advanceTimersByTimeAsync(0);
 
         expect(second.host.runs).toHaveLength(1);
     });
 
     it('waits for a run that dispose interrupted before it resolves', async () => {
-        const { host, tasks } = await start(jobs, driver);
+        await using booted = await start(jobs, driver);
+        const { host, tasks } = booted;
         host.hold();
         await tasks.schedule(Note, { in: '1s', data: { text: 'hi', sentAt: new Date() } });
         await vi.advanceTimersByTimeAsync(SECOND_MS);
@@ -279,7 +289,8 @@ describe('Tasks scheduled jobs', () => {
 
 describe('Tasks.cancel', () => {
     it('cancels a pending job', async () => {
-        const { host, tasks } = await start(jobs, driver);
+        await using booted = await start(jobs, driver);
+        const { host, tasks } = booted;
         const job = await tasks.schedule(Reminder, { in: '1s' });
 
         await expect(tasks.cancel(job.id)).resolves.toBe(true);
@@ -291,9 +302,9 @@ describe('Tasks.cancel', () => {
     });
 
     it('cancels a job that another process holds the timer for', async () => {
-        const first = await start(jobs, driver);
+        await using first = await start(jobs, driver);
         const job = await first.tasks.schedule(Reminder, { in: '1h' });
-        const second = await start(jobs, driver);
+        await using second = await start(jobs, driver);
 
         await expect(second.tasks.cancel(job.id)).resolves.toBe(true);
         await vi.advanceTimersByTimeAsync(HOUR_MS);
@@ -303,27 +314,29 @@ describe('Tasks.cancel', () => {
     });
 
     it('cancels a stored job this process holds no timer for', async () => {
-        const first = await start(jobs, driver);
+        await using first = await start(jobs, driver);
         const job = await first.tasks.schedule(Reminder, { in: '1s' });
         await first.tasks.dispose();
         // partial doesn't load Reminder, so the due job stays in the store with no timer
-        const { tasks } = await start(partial, driver);
+        await using booted = await start(partial, driver);
+        const { tasks } = booted;
         await vi.advanceTimersByTimeAsync(SECOND_MS);
         expect(tasks.jobs()).toEqual([]);
 
         await expect(tasks.cancel(job.id)).resolves.toBe(true);
         expect(driver.stored.size).toBe(0);
-        await tasks.dispose();
     });
 
     it('reports an unknown id', async () => {
-        const { tasks } = await start(jobs, driver);
+        await using booted = await start(jobs, driver);
+        const { tasks } = booted;
 
         await expect(tasks.cancel('missing')).resolves.toBe(false);
     });
 
     it('does not run a job that comes due while its cancel is deleting it', async () => {
-        const { host, tasks } = await start(jobs, driver);
+        await using booted = await start(jobs, driver);
+        const { host, tasks } = booted;
         const job = await tasks.schedule(Reminder, { in: '1s' });
         await vi.advanceTimersByTimeAsync(SECOND_MS - 1);
 
@@ -338,7 +351,8 @@ describe('Tasks.cancel', () => {
     });
 
     it('keeps a job whose cancel could not delete it', async () => {
-        const { host, tasks } = await start(jobs, driver);
+        await using booted = await start(jobs, driver);
+        const { host, tasks } = booted;
         const job = await tasks.schedule(Reminder, { in: '1s' });
 
         driver.failDeletes = 1;
@@ -350,7 +364,8 @@ describe('Tasks.cancel', () => {
     });
 
     it('refuses to cancel a job that has started', async () => {
-        const { host, tasks } = await start(jobs, driver);
+        await using booted = await start(jobs, driver);
+        const { host, tasks } = booted;
         host.hold();
         const job = await tasks.schedule(Note, { in: '1s', data: { text: 'hi', sentAt: new Date() } });
         await vi.advanceTimersByTimeAsync(SECOND_MS);
@@ -362,18 +377,18 @@ describe('Tasks.cancel', () => {
 
 describe('Tasks job upkeep', () => {
     it('keeps a job whose task is missing until a start that has the task', async () => {
-        const first = await start(jobs, driver);
+        await using first = await start(jobs, driver);
         await first.tasks.schedule(Reminder, { in: '1s' });
         await first.tasks.dispose();
 
-        const without = await start(partial, driver);
+        await using without = await start(partial, driver);
         await vi.advanceTimersByTimeAsync(SECOND_MS);
 
         expect(without.host.runs).toEqual([]);
         expect(driver.stored.size).toBe(1);
         await without.tasks.dispose();
 
-        const withTask = await start(jobs, driver);
+        await using withTask = await start(jobs, driver);
         await vi.advanceTimersByTimeAsync(SECOND_MS);
 
         expect(withTask.host.runs).toHaveLength(1);
@@ -381,7 +396,8 @@ describe('Tasks job upkeep', () => {
     });
 
     it('tries a job again when the store fails its read', async () => {
-        const { host, tasks } = await start(jobs, driver);
+        await using booted = await start(jobs, driver);
+        const { host, tasks } = booted;
         const job = await tasks.schedule(Reminder, { in: '1s' });
 
         driver.failReads = 1;
@@ -396,7 +412,8 @@ describe('Tasks job upkeep', () => {
 
     it('logs a failed delete and keeps the job for the next start', async () => {
         using logs = captureLogs();
-        const { host, tasks } = await start(jobs, driver);
+        await using booted = await start(jobs, driver);
+        const { host, tasks } = booted;
         const job = await tasks.schedule(Reminder, { in: '1s' });
 
         driver.failDeletes = 1;
@@ -420,7 +437,8 @@ describe('Tasks job upkeep', () => {
 
     it('warns once, on the first job scheduled into a MemoryDriver', async () => {
         using logs = captureLogs();
-        const { tasks } = await start(jobs, new MemoryDriver());
+        await using booted = await start(jobs, new MemoryDriver());
+        const { tasks } = booted;
 
         await tasks.schedule(Reminder, { in: '1h' });
         expect(logs.at('warn')).toEqual([expect.stringContaining('end when it exits')]);
@@ -431,7 +449,8 @@ describe('Tasks job upkeep', () => {
 
     it('does not warn on a driver that keeps its records', async () => {
         using logs = captureLogs();
-        const { tasks } = await start(jobs, driver);
+        await using booted = await start(jobs, driver);
+        const { tasks } = booted;
 
         await tasks.schedule(Reminder, { in: '1h' });
 
@@ -447,9 +466,7 @@ describe('Tasks job upkeep', () => {
             ({ tasks } = await start(jobs, shared));
         });
 
-        afterAll(async () => {
-            await tasks.dispose();
-        });
+        afterAll(async () => {});
 
         it('a duration parseDuration cannot read', async () => {
             const duration = String('soon');
@@ -481,7 +498,7 @@ describe('Tasks job upkeep', () => {
         it.each([new Date('nope'), Number.NaN])('the invalid date %s', async (at) => {
             await expect(tasks.schedule(Reminder, { at })).rejects.toMatchObject({
                 type: 'SeedcordTypeError',
-                code: SeedcordErrorCode.PluginTasksInvalidDate
+                code: SeedcordErrorCode.PluginTasksInvalidAt
             });
         });
 
@@ -505,18 +522,18 @@ describe('Tasks job upkeep', () => {
         it('a class that shares its key with a loaded task, and stores nothing', async () => {
             const scheduling = tasks.schedule(TwinReminder, { in: '1s', data: { text: 'hi' } });
 
-            await expect(scheduling).rejects.toMatchObject({ code: SeedcordErrorCode.PluginTasksNotLoaded });
+            await expect(scheduling).rejects.toMatchObject({ code: SeedcordErrorCode.PluginTasksKeyTaken });
             await expect(scheduling).rejects.toThrow('jobs/Reminder.ts');
             expect(shared.stored.size).toBe(0);
         });
 
         it('a task the plugin did not load', async () => {
-            const { tasks: partialTasks } = await start(partial, driver);
+            await using booted = await start(partial, driver);
+            const { tasks: partialTasks } = booted;
 
             await expect(partialTasks.schedule(Reminder, { in: '1s' })).rejects.toMatchObject({
                 code: SeedcordErrorCode.PluginTasksNotLoaded
             });
-            await partialTasks.dispose();
         });
     });
 });

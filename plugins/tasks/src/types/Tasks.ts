@@ -47,7 +47,7 @@ export interface TaskOptions<TZone extends string = string> {
     maxRuns?: number;
     /** The task doesn't run before this date. A pattern match exactly at this date runs. */
     startAt?: Date | string;
-    /** The task doesn't run after this date. */
+    /** The task doesn't run after this date. A pattern match exactly at this date doesn't run either. */
     stopAt?: Date | string;
 }
 

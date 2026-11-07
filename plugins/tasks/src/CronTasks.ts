@@ -95,12 +95,12 @@ export class CronTasks {
     }
 
     public pause(slot: CronSlot): void {
-        slot.pausedByCall = true;
+        slot.pause();
         this.sync(slot);
     }
 
     public resume(slot: CronSlot): void {
-        slot.pausedByCall = false;
+        slot.resume();
         this.sync(slot);
     }
 
@@ -125,12 +125,12 @@ export class CronTasks {
     }
 }
 
-// croner prefixes its messages with its class name, and it shows the day and month it rejected
-// counted from 0, so 32 reads as 31. The field name alone points at the right part
+// croner prefixes its messages with its class name, and it shows a rejected day or month counted
+// from 0, so 32 reads as 31. For those two the field name alone points at the right part
 function cronerReason(error: unknown): string {
     return asError(error)
         .message.replace(/^CronPattern: /, '')
-        .replace(/^(Invalid value for \w+): .*$/, '$1');
+        .replace(/^(Invalid value for (?:day|month)): .*$/, '$1');
 }
 
 function checkDates(
@@ -161,7 +161,7 @@ function readDate(
     try {
         return new CronDate(value, timezone).getTime();
     } catch (error) {
-        throw new SeedcordTypeError(SeedcordErrorCode.PluginTasksInvalidDate, [key, option, String(value), file], {
+        throw new SeedcordTypeError(SeedcordErrorCode.PluginTasksInvalidDate, [key, file, option, String(value)], {
             cause: error
         });
     }

@@ -16,7 +16,7 @@ import type { Logger } from '@seedcord/logger';
  * export class Unban extends Task<{ guildId: string; userId: string }> {
  *     public async execute(): Promise<void> {
  *         const { guildId, userId } = this.data;
- *         await this.core.bot.client.guilds.cache.get(guildId)?.bans.remove(userId);
+ *         await this.core.rest.delete(Routes.guildBan(guildId, userId));
  *     }
  * }
  * ```
@@ -48,7 +48,7 @@ export abstract class Task<TData = void, TCore extends CoreBase = CoreBase> {
     /** The task's work. The plugin logs a throw, publishes it as a failed `taskRan`, and passes it to `onError()`. */
     public abstract execute(): Promise<void>;
 
-    /** Runs after `execute()` throws, once the plugin has logged the error. A throw after shutdown aborts `signal` skips it. */
+    /** Runs after `execute()` throws, once the plugin has logged the error. If `execute()` throws after shutdown aborted `signal`, the plugin skips this. */
     public onError?(error: Error): Promise<void>;
 
     /** Runs in place of `execute()` when a `protect`ed task gets a cron or manual run during its last run. */

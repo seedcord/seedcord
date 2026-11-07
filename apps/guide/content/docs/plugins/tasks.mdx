@@ -5,7 +5,7 @@ description: Run a function on a schedule, like a digest every morning or a clea
 
 Some of your bot's work has no command behind it, like a digest every morning or a cleanup every hour. Written by hand, each job was a `setInterval` in `bot.ts`. You started it after login, stopped it before the process exited, logged its errors, and made sure a slow run didn't overlap the next one.
 
-[`@seedcord/plugin-tasks`](ref:plugin-tasks) handles all of that for you. Each job is a class in a folder. The plugin loads the folder, starts the tasks once your bot has logged in, and gives running tasks time to finish during shutdown.
+[`@seedcord/plugin-tasks`](ref:plugin-tasks) does all of that for you. Each job is a class in a folder. The plugin loads the folder, starts the tasks once your bot has logged in, and gives running tasks time to finish during shutdown.
 
 <Shell add="@seedcord/plugin-tasks" />
 
@@ -156,7 +156,7 @@ The second argument to `@RegisterTask` takes these options, all optional:
 | [`paused`](ref:plugin-tasks/TaskOptions.paused) | starts the task paused until you call `this.core.tasks.resume()`. Defaults to `false` |
 | [`maxRuns`](ref:plugin-tasks/TaskOptions.maxRuns) | stops the task after this many runs |
 | [`startAt`](ref:plugin-tasks/TaskOptions.startAt) | a `Date` or date string. The task doesn't run before it. If a match falls exactly on it, the task runs |
-| [`stopAt`](ref:plugin-tasks/TaskOptions.stopAt) | a `Date` or date string. The task doesn't run after it |
+| [`stopAt`](ref:plugin-tasks/TaskOptions.stopAt) | a `Date` or date string. The task doesn't run after it, and a match exactly at it doesn't run either |
 
 {/* prettier-ignore-end */}
 
@@ -285,7 +285,7 @@ export class PauseDigest extends SlashHandler<'pause-digest'> {
 
 | method | what it does |
 | --- | --- |
-| [`pause(Task)`](ref:plugin-tasks/Tasks.pause) | stops a cron task's pattern. Scheduled jobs and `trigger()` still run the task. After a restart, the pattern runs again |
+| [`pause(Task)`](ref:plugin-tasks/Tasks.pause) | stops a cron task's pattern. Scheduled jobs and `trigger()` still run the task. After a restart, the task goes back to its `paused` option |
 | [`resume(Task)`](ref:plugin-tasks/Tasks.resume) | starts a task that `pause()` or the `paused` option stopped |
 | [`nextRun(Task)`](ref:plugin-tasks/Tasks.nextRun) | returns the next run as a `Date`, or `null` while the task is paused or once it has no runs left |
 | [`trigger(Task)`](ref:plugin-tasks/Tasks.trigger) | runs a task now, even while it's paused. If `protect` is on and the task is running, the plugin skips this run and calls `onOverrun()` |
@@ -295,7 +295,7 @@ export class PauseDigest extends SlashHandler<'pause-digest'> {
 
 `pause()` lasts until the process stops, and a save during `seedcord dev` keeps what `pause()` and `resume()` did. Until you call either one, a save applies the `paused` option in the task's file. To keep a task paused after a restart, store a flag in [`core.kv`](/built-ins) and check it at the top of `execute()`.
 
-`pause()`, `resume()`, and `nextRun()` throw `PluginTasksPatternMissing` for a task without a pattern. Each method that takes a class throws `PluginTasksNotLoaded` if the plugin didn't load it from `path`. These methods take tasks without data, so passing a task that declares data fails to compile.
+`pause()`, `resume()`, and `nextRun()` throw `PluginTasksPatternMissing` for a task without a pattern. Each method that takes a class throws `PluginTasksNotLoaded` if the plugin didn't load it from `path`, and `PluginTasksKeyTaken` if a different class loaded under its key. These methods take tasks without data, so passing a task that declares data fails to compile.
 
 ### Checking when a task runs next
 
@@ -366,10 +366,10 @@ export class SyncStatus extends Task {
 }
 ```
 
-When the signal aborts, `fetch` rejects. `SyncStatus` then throws, and the plugin publishes that run as a failed `taskRan` like any other throw.
+When the signal aborts, `fetch` rejects and `SyncStatus` throws. The plugin publishes that run as an `'interrupted'` `taskRan` and skips `onError()`.
 
 ## Running more than one copy
 
 Each copy of your bot sets its own timers, so `Heartbeat` runs once per copy. If you run separate shard processes, attach this plugin in one copy only. Otherwise every cron task runs once for each process.
 
-[Scheduling jobs](/plugins/tasks-scheduling) picks up from here, with a task that runs once at a later time.
+[Scheduling jobs](/plugins/tasks-scheduling) covers a task that runs once at a later time.
