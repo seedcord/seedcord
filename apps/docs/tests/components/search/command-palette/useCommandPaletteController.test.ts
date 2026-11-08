@@ -15,8 +15,8 @@ const PACKAGES: SearchPackage[] = [
 async function freshController(): Promise<() => RenderHookResult<CommandPaletteController, unknown>> {
     vi.resetModules();
     const [{ useCommandPaletteController }, { CommandPaletteProvider }] = await Promise.all([
-        import('#components/search/command-palette/useCommandPaletteController.ts'),
-        import('#components/providers/CommandPaletteProvider.tsx')
+        import('#components/search/command-palette/useCommandPaletteController'),
+        import('#components/providers/CommandPaletteProvider')
     ]);
     return () => renderHook(() => useCommandPaletteController(), { wrapper: CommandPaletteProvider });
 }

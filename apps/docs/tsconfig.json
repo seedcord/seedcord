@@ -11,7 +11,15 @@
                 "name": "next"
             }
         ],
-        "allowImportingTsExtensions": true,
+        "paths": {
+            "#tests/*": ["./tests/*"],
+            "#src/*": ["./src/*"],
+            "#components/*": ["./src/components/*"],
+            "#ui/*": ["./src/components/ui/*"],
+            "#lib/*": ["./src/lib/*"],
+            "#store/*": ["./src/store/*"],
+            "#styles/*": ["./src/app/*"]
+        },
         "incremental": true,
         "esModuleInterop": true
     },

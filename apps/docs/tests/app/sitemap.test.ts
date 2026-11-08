@@ -38,7 +38,7 @@ vi.mock('#lib/docs/ActiveVersion', () => ({
     ActiveVersion: { open: () => Promise.resolve({ pages: PAGES }) }
 }));
 
-const { default: sitemap } = await import('#src/app/sitemap.ts');
+const { default: sitemap } = await import('#src/app/sitemap');
 
 describe('sitemap', () => {
     it('lists each package page at its latest url and leaves re-exports to their own package', async () => {

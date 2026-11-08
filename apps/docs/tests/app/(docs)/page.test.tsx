@@ -29,7 +29,7 @@ vi.mock('#lib/docs/catalog', async (importOriginal) => ({
     loadDocsCatalog: () => Promise.resolve([GATEWAY])
 }));
 
-const { default: DocsIndexPage } = await import('#src/app/(docs)/page.tsx');
+const { default: DocsIndexPage } = await import('#src/app/(docs)/page');
 
 describe('docs index page', () => {
     it('links each package at its latest url', async () => {

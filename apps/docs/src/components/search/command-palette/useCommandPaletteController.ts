@@ -5,7 +5,7 @@ import { useNavigateAndClose } from '@seedcord/ui';
 import { usePathname, useRouter } from 'next/navigation';
 import { useCallback, useEffect, useRef, useState, type RefObject } from 'react';
 
-import { useCommandPaletteOpen } from '#components/providers/CommandPaletteProvider.tsx';
+import { useCommandPaletteOpen } from '#components/providers/CommandPaletteProvider';
 import { log } from '#lib/logger';
 import { referenceSearch } from '#lib/search/referenceSearch';
 

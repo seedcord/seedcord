@@ -6,7 +6,7 @@ vi.mock('#lib/site', () => ({ canonicalUrl: (path: string) => `https://seedcord.
 vi.mock('#lib/docs/catalog', () => ({ findPackageVersion: vi.fn() }));
 vi.mock('#lib/docs/resolveEntity', () => ({ resolveEntity: resolveEntityMock }));
 
-const { GET } = await import('#src/app/llms/[[...path]]/route.ts');
+const { GET } = await import('#src/app/llms/[[...path]]/route');
 
 function call(path: string[]): Promise<Response> {
     return GET(new Request('https://seedcord.org/docs/llms'), { params: Promise.resolve({ path }) });

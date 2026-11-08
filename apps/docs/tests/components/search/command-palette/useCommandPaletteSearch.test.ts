@@ -52,7 +52,7 @@ beforeEach(async () => {
 
     // referenceSearch keeps its downloads for the life of the module
     vi.resetModules();
-    ({ useCommandPaletteSearch } = await import('#components/search/command-palette/useCommandPaletteSearch.ts'));
+    ({ useCommandPaletteSearch } = await import('#components/search/command-palette/useCommandPaletteSearch'));
 });
 
 afterEach(() => {

@@ -2,8 +2,8 @@ import { TooltipProvider } from '@seedcord/ui';
 import { fireEvent, render, screen, within } from '@testing-library/react';
 import { describe, expect, it, vi } from 'vite-plus/test';
 
-import { Navbar } from '#components/header/Navbar.tsx';
-import { CommandPaletteProvider, useCommandPaletteOpen } from '#components/providers/CommandPaletteProvider.tsx';
+import { Navbar } from '#components/header/Navbar';
+import { CommandPaletteProvider, useCommandPaletteOpen } from '#components/providers/CommandPaletteProvider';
 
 import type { ReactElement } from 'react';
 

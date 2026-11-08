@@ -14,7 +14,7 @@ vi.mock('#lib/docs/engine', () => ({
         )
 }));
 
-const { GET } = await import('#src/app/api/search/[packageId]/[file]/route.ts');
+const { GET } = await import('#src/app/api/search/[packageId]/[file]/route');
 
 function search(packageId: string, file: string): Promise<Response> {
     return GET(new Request('https://seedcord.org/docs/api/search'), { params: Promise.resolve({ packageId, file }) });

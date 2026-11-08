@@ -1,13 +1,11 @@
-import { defineConfig } from 'vite-plus';
-import { createTestConfig, OXC_OPTIONS } from '@seedcord/vitest-config';
+import { createViteConfig } from '@seedcord/vitest-config';
 
-export default defineConfig({
-    oxc: OXC_OPTIONS,
-    test: createTestConfig({
+export default createViteConfig(import.meta.url, {
+    test: {
         // these tests vi.mock docs' own modules, and a mock carries into the next file in a shared worker
         isolate: true,
         globals: true,
         environment: 'jsdom',
         setupFiles: ['./tests/test-setup.ts']
-    })
+    }
 });

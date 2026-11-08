@@ -1,7 +1,7 @@
 import { render, screen } from '@testing-library/react';
 import { describe, expect, it } from 'vite-plus/test';
 
-import { MemberRow } from '#components/docs/entity/member/MemberRow.tsx';
+import { MemberRow } from '#components/docs/entity/member/MemberRow';
 
 import type { EntityMemberSummary } from '#lib/docs/types';
 

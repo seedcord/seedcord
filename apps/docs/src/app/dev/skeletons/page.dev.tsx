@@ -1,6 +1,6 @@
 import { cn } from '@seedcord/ui';
 
-import { SidebarCategoryListSkeleton } from '#components/layout/sidebar/SidebarCategoryListSkeleton.tsx';
+import { SidebarCategoryListSkeleton } from '#components/layout/sidebar/SidebarCategoryListSkeleton';
 
 import type { ReactElement, ReactNode } from 'react';
 

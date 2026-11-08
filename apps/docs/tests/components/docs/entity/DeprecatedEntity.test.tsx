@@ -1,7 +1,7 @@
 import { render, screen } from '@testing-library/react';
 import { describe, expect, it } from 'vite-plus/test';
 
-import { DeprecatedEntity } from '#components/docs/entity/DeprecatedEntity.tsx';
+import { DeprecatedEntity } from '#components/docs/entity/DeprecatedEntity';
 
 describe('DeprecatedEntity', () => {
     it('renders the children untouched when nothing is deprecated', () => {

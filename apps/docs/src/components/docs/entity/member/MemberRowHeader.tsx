@@ -1,7 +1,7 @@
 import { cn, Icon, CopyAnchorButton } from '@seedcord/ui';
 import { Code } from 'lucide-react';
 
-import { CommentParagraphs } from '#components/docs/entity/comments/CommentParagraphs.tsx';
+import { CommentParagraphs } from '#components/docs/entity/comments/CommentParagraphs';
 
 import type { EntityMemberSummary } from '#lib/docs/types';
 import type { ReactElement } from 'react';
