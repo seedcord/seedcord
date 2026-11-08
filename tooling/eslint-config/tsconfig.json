@@ -5,7 +5,10 @@
         "outDir": "./dist",
         "rootDir": ".",
         "allowJs": true,
-        "checkJs": false
+        "checkJs": false,
+        "paths": {
+            "#src/*": ["./src/*"]
+        }
     },
     "include": ["./src", "eslint.config.ts", "./tests/**/*.ts", "vite.config.ts"],
     "exclude": ["node_modules", "dist"]
