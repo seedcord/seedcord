@@ -4,7 +4,7 @@ import { fileURLToPath } from 'node:url';
 import { parseTsconfig } from 'get-tsconfig';
 import { configDefaults, mergeConfig } from 'vite-plus';
 
-import type { AliasOptions } from 'vite-plus';
+import type { AliasOptions, OxcOptions } from 'vite-plus';
 import type { InlineConfig } from 'vite-plus/test/node';
 
 // configUrl is expected to be the caller's import.meta.url
@@ -49,6 +49,11 @@ const VITEST_CONFIG: InlineConfig = {
         include: ['src'],
         exclude: ['**/node_modules/**', '**/dist/**', '**/*.test.ts', '**/*.spec.ts', '**/logs/**', '**/*.log']
     }
+};
+
+// oxc reads the Next apps' jsx: preserve as the classic runtime
+export const OXC_OPTIONS: OxcOptions = {
+    jsx: { runtime: 'automatic' }
 };
 
 export function createTestConfig(overrides: InlineConfig = {}): InlineConfig {

@@ -1,9 +1,8 @@
 import { defineConfig } from 'vite-plus';
-import { createTestConfig } from '@seedcord/vitest-config';
+import { createTestConfig, OXC_OPTIONS } from '@seedcord/vitest-config';
 
 export default defineConfig({
-    // oxc reads the Next apps' jsx: preserve as the classic runtime
-    oxc: { jsx: { runtime: 'automatic' } },
+    oxc: OXC_OPTIONS,
     test: createTestConfig({
         // these tests vi.mock docs' own modules, and a mock carries into the next file in a shared worker
         isolate: true,
