@@ -10,7 +10,6 @@
     },
     "type": "module",
     "imports": {
-        "#tests/*": "./tests/*.ts",
         "#src/*": "./src/*.ts"
     },
     "scripts": {
