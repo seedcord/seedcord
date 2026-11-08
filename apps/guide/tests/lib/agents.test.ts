@@ -1,7 +1,7 @@
 import { loader } from 'fumadocs-core/source';
 import { describe, expect, it } from 'vite-plus/test';
 
-import { llmsIndex, pageLinks, twinLinks } from '#lib/agents.ts';
+import { llmsIndex, pageLinks, twinLinks } from '#lib/agents';
 
 describe('the page list in llms.txt', () => {
     it('lists every page as a link', async () => {

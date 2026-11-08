@@ -11,9 +11,15 @@
                 "name": "next"
             }
         ],
+        "paths": {
+            "#tests/*": ["./tests/*"],
+            "#src/*": ["./src/*"],
+            "#components/*": ["./src/components/*"],
+            "#lib/*": ["./src/lib/*"],
+            "#styles/*": ["./src/app/*"]
+        },
         "incremental": true,
-        "esModuleInterop": true,
-        "allowImportingTsExtensions": true
+        "esModuleInterop": true
     },
     "include": [
         "next-env.d.ts",

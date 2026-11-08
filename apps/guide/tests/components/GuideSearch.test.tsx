@@ -2,7 +2,7 @@ import { fireEvent, render, screen, waitFor } from '@testing-library/react';
 import { AppRouterContext } from 'next/dist/shared/lib/app-router-context.shared-runtime';
 import { afterEach, describe, expect, it, vi } from 'vite-plus/test';
 
-import { GuideSearch } from '#components/GuideSearch.tsx';
+import { GuideSearch } from '#components/GuideSearch';
 
 import type { AppRouterInstance } from 'next/dist/shared/lib/app-router-context.shared-runtime';
 

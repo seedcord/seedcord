@@ -4,7 +4,7 @@ import { resolve } from 'node:path';
 import { render, screen, type RenderResult } from '@testing-library/react';
 import { afterEach, describe, expect, it, vi } from 'vite-plus/test';
 
-import { SearchResultRow } from '#components/SearchResultRow.tsx';
+import { SearchResultRow } from '#components/SearchResultRow';
 
 import type { GuideResult } from '@seedcord/docs-search';
 import type { ReactElement } from 'react';

@@ -1,6 +1,6 @@
 import { afterEach, describe, expect, it, vi } from 'vite-plus/test';
 
-import { twoslashBlock } from '#lib/twoslash.ts';
+import { twoslashBlock } from '#lib/twoslash';
 
 function sample(...lines: string[]): string {
     return lines.join('\n');

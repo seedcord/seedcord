@@ -3,7 +3,7 @@ import { resolve } from 'node:path';
 
 import { describe, expect, it } from 'vite-plus/test';
 
-import { RENAMED_PAGES, redirectFor } from '#lib/redirects.ts';
+import { RENAMED_PAGES, redirectFor } from '#lib/redirects';
 
 const DOCS = resolve(import.meta.dirname, '../../content/docs');
 

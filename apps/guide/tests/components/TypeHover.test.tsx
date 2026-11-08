@@ -2,7 +2,7 @@ import { render, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { describe, expect, it } from 'vite-plus/test';
 
-import { TypeHover } from '#components/TypeHover.tsx';
+import { TypeHover } from '#components/TypeHover';
 
 const TOKEN_SELECTOR = '.twoslash-hover';
 

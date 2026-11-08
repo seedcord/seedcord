@@ -1,7 +1,7 @@
 import { fireEvent, renderHook } from '@testing-library/react';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vite-plus/test';
 
-import { useScrollMemory } from '#components/useScrollMemory.ts';
+import { useScrollMemory } from '#components/useScrollMemory';
 
 function scrollPageTo(top: number): void {
     vi.stubGlobal('scrollY', top);

@@ -7,7 +7,7 @@ import { GUIDE as guideSite } from '@seedcord/ui/sites';
 import { parse } from 'jsonc-parser';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vite-plus/test';
 
-import { GuideAnswers } from '#lib/GuideAnswers.ts';
+import { GuideAnswers } from '#lib/GuideAnswers';
 
 // eslint-disable-next-line no-restricted-imports -- the app root has no alias
 import handler from '../worker';

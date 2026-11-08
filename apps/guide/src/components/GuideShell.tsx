@@ -5,7 +5,7 @@ import { AnchorProvider, useActiveAnchor } from 'fumadocs-core/toc';
 import { usePathname } from 'next/navigation';
 import { useMemo, useState } from 'react';
 
-import { useVisibleHeadingIds } from '#lib/visibleHeadings.ts';
+import { useVisibleHeadingIds } from '#lib/visibleHeadings';
 
 import { DocsSidebar } from './DocsSidebar';
 import { GithubLink, GuideNavbar } from './GuideNavbar';
@@ -16,9 +16,9 @@ import { idOf, TableOfContents } from './TableOfContents';
 import { TocBar } from './TocBar';
 import { useScrollMemory } from './useScrollMemory';
 
-import type { GuideTab, SidebarsByTab } from '#lib/nav.ts';
-import type { PageNeighbours } from '#lib/neighbours.ts';
-import type { PageActionProps } from '#lib/pageActions.ts';
+import type { GuideTab, SidebarsByTab } from '#lib/nav';
+import type { PageNeighbours } from '#lib/neighbours';
+import type { PageActionProps } from '#lib/pageActions';
 import type { TocBarProps } from './TocBar';
 import type { TOCItemType } from 'fumadocs-core/toc';
 import type { ReactElement, ReactNode } from 'react';

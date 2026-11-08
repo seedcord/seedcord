@@ -1,6 +1,6 @@
 import { TWIN } from '@seedcord/ui/PageAsset';
 
-import { source } from '#lib/source.ts';
+import { source } from '#lib/source';
 import { twinDocument } from '@seedcord/ui/twin';
 
 export const dynamic = 'force-static';

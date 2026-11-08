@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vite-plus/test';
 
-import { SymbolRef } from '#lib/SymbolRef.ts';
+import { SymbolRef } from '#lib/SymbolRef';
 
 const parts = (ref: SymbolRef | string | null): object | string | null =>
     ref instanceof SymbolRef ? { pkg: ref.pkg, symbol: ref.symbol, owner: ref.owner, member: ref.member } : ref;

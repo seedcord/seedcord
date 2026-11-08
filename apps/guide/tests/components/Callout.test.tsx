@@ -1,9 +1,9 @@
 import { render, screen } from '@testing-library/react';
 import { describe, expect, it } from 'vite-plus/test';
 
-import { Callout } from '#components/Callout.tsx';
+import { Callout } from '#components/Callout';
 
-import type { CalloutProps } from '#components/Callout.tsx';
+import type { CalloutProps } from '#components/Callout';
 
 describe('Callout', () => {
     it('labels its kind above the body', () => {

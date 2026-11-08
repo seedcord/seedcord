@@ -1,5 +1,5 @@
-import { llmsFull } from '#lib/agents.ts';
-import { source } from '#lib/source.ts';
+import { llmsFull } from '#lib/agents';
+import { source } from '#lib/source';
 import { twinDocument } from '@seedcord/ui/twin';
 
 export const dynamic = 'force-static';

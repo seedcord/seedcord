@@ -19,7 +19,7 @@ import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { useState } from 'react';
 
-import { DOCS_URL, HOME_URL, REPO_URL, SITE_URL } from '#lib/site.ts';
+import { DOCS_URL, HOME_URL, REPO_URL, SITE_URL } from '#lib/site';
 
 import { GuideSearch, SEARCH_LABEL } from './GuideSearch';
 import { useGuidePageKeys } from './useGuidePageKeys';

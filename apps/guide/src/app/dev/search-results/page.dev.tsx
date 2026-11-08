@@ -2,8 +2,8 @@
 
 import { cn } from '@seedcord/ui';
 
-import { SearchResultRow } from '#components/SearchResultRow.tsx';
-import { SearchResultsSkeleton } from '#components/SearchResultsSkeleton.tsx';
+import { SearchResultRow } from '#components/SearchResultRow';
+import { SearchResultsSkeleton } from '#components/SearchResultsSkeleton';
 
 import type { GuideResult } from '@seedcord/docs-search';
 import type { ReactElement } from 'react';

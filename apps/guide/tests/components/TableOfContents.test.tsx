@@ -2,7 +2,7 @@ import { MotionProvider } from '@seedcord/ui';
 import { render, screen } from '@testing-library/react';
 import { describe, expect, it } from 'vite-plus/test';
 
-import { TableOfContents } from '#components/TableOfContents.tsx';
+import { TableOfContents } from '#components/TableOfContents';
 
 import type { TOCItemType } from 'fumadocs-core/toc';
 

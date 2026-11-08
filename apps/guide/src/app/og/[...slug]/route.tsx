@@ -6,9 +6,9 @@ import { CARD } from '@seedcord/ui/PageAsset';
 import { notFound } from 'next/navigation';
 import { ImageResponse } from 'takumi-js/response';
 
-import { pillFor } from '#lib/og/card.ts';
-import { SITE_DESCRIPTION } from '#lib/site.ts';
-import { source } from '#lib/source.ts';
+import { pillFor } from '#lib/og/card';
+import { SITE_DESCRIPTION } from '#lib/site';
+import { source } from '#lib/source';
 
 export const dynamic = 'force-static';
 

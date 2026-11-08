@@ -2,9 +2,9 @@ import { Button, HotkeyHint, Icon, cn, tw } from '@seedcord/ui';
 import { ChevronLeft, ChevronRight } from 'lucide-react';
 import Link from 'next/link';
 
-import { GUIDE_KEYS } from '#lib/guideKeys.ts';
+import { GUIDE_KEYS } from '#lib/guideKeys';
 
-import type { OrderedPage, PageNeighbours } from '#lib/neighbours.ts';
+import type { OrderedPage, PageNeighbours } from '#lib/neighbours';
 import type { ReactElement } from 'react';
 
 const DIRECTIONS = {

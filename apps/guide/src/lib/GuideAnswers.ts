@@ -2,7 +2,7 @@ import { PRODUCTION_ORIGIN } from '@seedcord/brand';
 import { embedding, guideResult, loadOnce, parseQuestion, QUESTION_RULE, SectionIndex } from '@seedcord/docs-search';
 import { GUIDE } from '@seedcord/ui/sites';
 
-import { ERROR_CODES } from '#lib/errorCodes.ts';
+import { ERROR_CODES } from '#lib/errorCodes';
 
 import type { GuideAnswer, GuideService, Question } from '@seedcord/docs-search';
 import type { Assets } from '@seedcord/ui/fetchAsset';

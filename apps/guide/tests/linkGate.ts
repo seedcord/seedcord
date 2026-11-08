@@ -10,8 +10,8 @@ import remarkMdx from 'remark-mdx';
 import remarkParse from 'remark-parse';
 import { unified } from 'unified';
 
-import { redirectFor } from '#lib/redirects.ts';
-import { SymbolRef } from '#lib/SymbolRef.ts';
+import { redirectFor } from '#lib/redirects';
+import { SymbolRef } from '#lib/SymbolRef';
 
 import type { Nodes, Root } from 'mdast';
 

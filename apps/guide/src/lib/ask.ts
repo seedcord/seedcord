@@ -1,8 +1,8 @@
 import { ASK_WAIT_STATUS, parseQuestion, QUESTION_RULE, waitMessage } from '@seedcord/docs-search';
 
-import { GuideAnswers } from '#lib/GuideAnswers.ts';
+import { GuideAnswers } from '#lib/GuideAnswers';
 
-import type { AnswerEnv } from '#lib/GuideAnswers.ts';
+import type { AnswerEnv } from '#lib/GuideAnswers';
 import type { AskWaitStatus } from '@seedcord/docs-search';
 
 export interface GuideEnv extends AnswerEnv {

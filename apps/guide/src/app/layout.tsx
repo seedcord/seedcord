@@ -14,7 +14,7 @@ import { Space_Grotesk } from 'next/font/google';
 
 import './globals.css';
 
-import { SITE_DESCRIPTION, SITE_NAME, SITE_URL } from '#lib/site.ts';
+import { SITE_DESCRIPTION, SITE_NAME, SITE_URL } from '#lib/site';
 
 import type { Metadata, Viewport } from 'next';
 import type { ReactNode } from 'react';

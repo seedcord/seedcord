@@ -1,6 +1,6 @@
 import { removeTwoslashNotations } from 'twoslash/fallback';
 
-import { dedent } from '#lib/dedent.ts';
+import { dedent } from '#lib/dedent';
 
 // a trailing marker leaves the newline above it behind
 export function cleanFence(code: string): string {

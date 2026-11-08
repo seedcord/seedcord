@@ -1,6 +1,6 @@
 import { WorkerEntrypoint } from 'cloudflare:workers';
 
-import { GuideAnswers } from '#lib/GuideAnswers.ts';
+import { GuideAnswers } from '#lib/GuideAnswers';
 
 // eslint-disable-next-line no-restricted-imports -- the app root doesn't have an alias
 import handler from '../worker';

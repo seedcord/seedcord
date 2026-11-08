@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vite-plus/test';
 
-import { formatHoverType } from '#lib/formatHoverType.ts';
+import { formatHoverType } from '#lib/formatHoverType';
 
 describe('formatting a hover type', () => {
     it('breaks a property whose type holds a namespaced generic', async () => {

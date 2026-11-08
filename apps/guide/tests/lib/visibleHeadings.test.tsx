@@ -1,7 +1,7 @@
 import { act, renderHook } from '@testing-library/react';
 import { afterEach, beforeEach, describe, expect, it } from 'vite-plus/test';
 
-import { useVisibleHeadingIds } from '#lib/visibleHeadings.ts';
+import { useVisibleHeadingIds } from '#lib/visibleHeadings';
 
 import type { TOCItemType } from 'fumadocs-core/toc';
 

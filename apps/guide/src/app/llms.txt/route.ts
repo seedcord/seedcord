@@ -1,5 +1,5 @@
-import { llmsIndex, pageLinks } from '#lib/agents.ts';
-import { source } from '#lib/source.ts';
+import { llmsIndex, pageLinks } from '#lib/agents';
+import { source } from '#lib/source';
 
 export const dynamic = 'force-static';
 

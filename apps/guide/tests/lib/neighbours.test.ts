@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vite-plus/test';
 
-import { neighboursOf } from '#lib/neighbours.ts';
+import { neighboursOf } from '#lib/neighbours';
 
 const ORDER = [
     { tab: 'Start', label: 'Introduction', href: '/' },
