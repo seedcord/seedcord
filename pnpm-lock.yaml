@@ -1050,6 +1050,9 @@ importers:
       reflect-metadata:
         specifier: catalog:deps
         version: 0.2.2
+      rolldown:
+        specifier: ~1.2.12
+        version: 1.2.15
       rolldown-plugin-dts:
         specifier: 0.28.8
         version: 0.28.8(@typescript/native-preview@7.0.0-dev.20260630.1)(oxc-resolver@11.24.2)(rolldown@1.2.15)(typescript@6.0.3)
