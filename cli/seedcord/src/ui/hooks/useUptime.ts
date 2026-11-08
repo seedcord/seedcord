@@ -1,6 +1,6 @@
 import { useState, useSyncExternalStore } from 'react';
 
-import type { DevState } from '#ui/stores/DevStore.ts';
+import type { DevState } from '#ui/stores/DevStore';
 
 const TICK_MS = 1000;
 

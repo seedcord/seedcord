@@ -1,4 +1,4 @@
-import type { LogEntry } from '#ui/stores/LogStore.ts';
+import type { LogEntry } from '#ui/stores/LogStore';
 
 export function logEntry(over: Partial<LogEntry>): LogEntry {
     return {

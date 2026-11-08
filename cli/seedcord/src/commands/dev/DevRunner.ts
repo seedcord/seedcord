@@ -18,7 +18,7 @@ import { TunnelRouter } from './tunnel/TunnelRouter';
 
 import type { ResolvedTarget, ResolvedTunnel } from '#core/config/schema';
 import type { StateFolder } from '#core/state/StateFolder';
-import type { DevStore } from '#ui/stores/DevStore.ts';
+import type { DevStore } from '#ui/stores/DevStore';
 import type { DevSessionDeps } from './DevSession';
 import type { DevRuntime } from './runtime/DevRuntime';
 import type { TunnelCoordinator } from './tunnel/TunnelCoordinator';

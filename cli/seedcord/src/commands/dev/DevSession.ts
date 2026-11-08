@@ -17,7 +17,7 @@ import type { ResolvedSeedcordConfig } from '#core/config/schema';
 import type { ProjectFiles } from '#core/project/ProjectFiles';
 import type { DevLock } from '#core/state/DevLock';
 import type { StateFolder } from '#core/state/StateFolder';
-import type { DevStore } from '#ui/stores/DevStore.ts';
+import type { DevStore } from '#ui/stores/DevStore';
 import type { DevRuntime } from './runtime/DevRuntime';
 import type { ILogger } from '@seedcord/types';
 

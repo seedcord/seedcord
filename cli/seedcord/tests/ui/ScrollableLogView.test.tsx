@@ -12,7 +12,7 @@ import { expandRows, wrapRows } from '#ui/logRows';
 
 import { logEntry as entry } from './logEntry';
 
-import type { LogEntry } from '#ui/stores/LogStore.ts';
+import type { LogEntry } from '#ui/stores/LogStore';
 import type { LogLevel } from '@seedcord/types';
 
 const WIDE = LogLayout.fit(120, 12, 'auto');

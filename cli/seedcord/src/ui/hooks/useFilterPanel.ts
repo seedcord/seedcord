@@ -1,6 +1,6 @@
 import { useState } from 'react';
 
-import type { FilterPlace } from '#ui/Screen.ts';
+import type { FilterPlace } from '#ui/Screen';
 
 interface FilterPanel {
     readonly open: boolean;

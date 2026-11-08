@@ -4,7 +4,7 @@ import { debounce } from 'es-toolkit';
 
 import { cliLogger } from '#core/cliLogger';
 
-import type { DevStore } from '#ui/stores/DevStore.ts';
+import type { DevStore } from '#ui/stores/DevStore';
 import type { DevRunner } from './DevRunner';
 import type { Readable } from 'node:stream';
 import type { Promisable } from 'type-fest';

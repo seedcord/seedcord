@@ -5,7 +5,7 @@ import { devPrefsFile } from '#ui/devPrefs';
 
 import { createPreviewContext } from './PreviewContext';
 
-import type { DevStore } from '#ui/stores/DevStore.ts';
+import type { DevStore } from '#ui/stores/DevStore';
 import type { Scenario } from './scenarios/types';
 import type { ReactElement } from 'react';
 

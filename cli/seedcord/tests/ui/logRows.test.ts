@@ -6,8 +6,8 @@ import { expandRows, rowKey, wrapRows } from '#ui/logRows';
 
 import { logEntry as entry } from './logEntry';
 
-import type { LogRow } from '#ui/logRows.ts';
-import type { LogEntry } from '#ui/stores/LogStore.ts';
+import type { LogRow } from '#ui/logRows';
+import type { LogEntry } from '#ui/stores/LogStore';
 
 const LABEL_WIDTH = 3;
 // every width below stays under the step that shows the clock

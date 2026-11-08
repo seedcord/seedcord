@@ -2,7 +2,7 @@ import { describe, expect, it } from 'vite-plus/test';
 
 import { Post } from '#lib/blog/Post';
 
-import type { BlogPost } from '#lib/blog/source.ts';
+import type { BlogPost } from '#lib/blog/source';
 
 const COVER = { src: '/blog/a-post/cover.webp', width: 2048, height: 608, alt: 'the cover' };
 const THUMBNAIL = { src: '/blog/a-post/thumbnail.webp', width: 1600, height: 900 };
