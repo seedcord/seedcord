@@ -7,6 +7,8 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { Tasks } from '#src/Tasks';
 import { Spaced } from '#tests/fixtures/every/Spaced';
 import { Reminder } from '#tests/fixtures/jobs/Reminder';
+import { Noon } from '#tests/fixtures/resume/Noon';
+import { Twice } from '#tests/fixtures/resume/Twice';
 import { Idle } from '#tests/fixtures/tasks/Idle';
 import { Slow } from '#tests/fixtures/tasks/Slow';
 import { Tick } from '#tests/fixtures/tasks/Tick';
@@ -22,6 +24,7 @@ const taskFolder = path.join(fixtures, 'tasks');
 const crons: TasksOptions = { path: taskFolder };
 
 const SECOND_MS = 1000;
+const DAY_MS = 86_400_000;
 
 const runsOf = (host: TestHost, task: string): Run[] => host.runs.filter((run) => run.task === task);
 
@@ -144,6 +147,42 @@ describe('Tasks cron tasks', () => {
             await vi.advanceTimersByTimeAsync(SECOND_MS * 2);
 
             expect(runsOf(host, 'Tick')).toEqual([]);
+        });
+
+        describe('after a pause that skipped a run', () => {
+            // Noon runs at 12:00:00 each day, and Twice every second until it has run twice
+            const startResume = (): ReturnType<typeof start> =>
+                start({ path: path.join(fixtures, 'resume'), timezone: 'UTC' });
+
+            it('waits for the next match instead of running the skipped one', async () => {
+                vi.setSystemTime(new Date('2030-01-15T11:59:59Z'));
+                await using booted = await startResume();
+                const { host, tasks } = booted;
+                await vi.advanceTimersByTimeAsync(SECOND_MS);
+
+                tasks.pause(Noon);
+                await vi.advanceTimersByTimeAsync(DAY_MS + SECOND_MS * 3600);
+                tasks.resume(Noon);
+                await vi.advanceTimersByTimeAsync(SECOND_MS * 60);
+
+                expect(runsOf(host, 'Noon')).toHaveLength(1);
+                expect(tasks.nextRun(Noon)).toEqual(new Date('2030-01-17T12:00:00Z'));
+                expect(tasks.crons().find((status) => status.key === 'Noon')?.previousRun).toEqual(
+                    new Date('2030-01-15T12:00:00Z')
+                );
+            });
+
+            it('keeps the runs a task has left', async () => {
+                await using booted = await startResume();
+                const { host, tasks } = booted;
+                await vi.advanceTimersByTimeAsync(SECOND_MS);
+
+                tasks.pause(Twice);
+                tasks.resume(Twice);
+                await vi.advanceTimersByTimeAsync(SECOND_MS * 3);
+
+                expect(runsOf(host, 'Twice')).toHaveLength(2);
+            });
         });
     });
 
@@ -497,7 +536,7 @@ describe('Tasks cron tasks', () => {
             expect(status?.nextRun?.getTime()).toBe((status?.previousRun?.getTime() ?? 0) + SECOND_MS * 90);
         });
 
-        it('reports no next run after resume until croner runs the task again', async () => {
+        it('runs at the first match after resume', async () => {
             vi.setSystemTime(new Date('2030-01-15T12:00:00Z'));
             await using booted = await startEvery();
             const { host, tasks } = booted;
@@ -506,11 +545,10 @@ describe('Tasks cron tasks', () => {
             tasks.pause(Spaced);
             await vi.advanceTimersByTimeAsync(SECOND_MS * 600);
             tasks.resume(Spaced);
-            expect(tasks.nextRun(Spaced)).toBeNull();
+            expect(tasks.nextRun(Spaced)).toEqual(new Date(Date.now() + SECOND_MS));
 
-            await vi.advanceTimersByTimeAsync(SECOND_MS * 90);
+            await vi.advanceTimersByTimeAsync(SECOND_MS);
             expect(runsOf(host, 'Spaced')).toHaveLength(2);
-            expect(tasks.nextRun(Spaced)?.getTime()).toBeGreaterThan(Date.now());
         });
     });
 

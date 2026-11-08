@@ -174,8 +174,7 @@ export class Tasks extends Plugin<{ transport: 'any'; runtime: 'server' }> {
     }
 
     /**
-     * When a cron task runs next, or `null` while it's paused, once it has no runs left, or between `resume()` and
-     * the next run of a task that sets `every`.
+     * When a cron task runs next, or `null` while it's paused or once it has no runs left.
      *
      * @throws A **SeedcordError** with `PluginTasksNotLoaded` when the plugin did not load `Task`.
      * @throws A **SeedcordTypeError** with `PluginTasksKeyTaken` when a different class loaded under `Task`'s key.
@@ -198,7 +197,8 @@ export class Tasks extends Plugin<{ transport: 'any'; runtime: 'server' }> {
     }
 
     /**
-     * Starts a cron task that `pause()` or the `paused` option stopped.
+     * Starts a cron task that `pause()` or the `paused` option stopped. It runs at its next match and skips the
+     * ones it missed.
      *
      * @throws A **SeedcordError** with `PluginTasksNotLoaded` when the plugin did not load `Task`.
      * @throws A **SeedcordTypeError** with `PluginTasksKeyTaken` when a different class loaded under `Task`'s key.

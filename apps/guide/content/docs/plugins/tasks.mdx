@@ -186,7 +186,7 @@ export class Poll extends Task {
 
 `every` sets the shortest gap, and the pattern still has to match. `* * * * *` has 5 fields and matches only second 0 of each minute, so with `every: '90s'` it runs every 2 minutes. Use 6 fields, like `* * * * * *`, to run exactly 90 seconds apart.
 
-After `resume()`, the first run comes within one gap. croner keeps counting gaps while the task is paused, so the run lands on the next one, not right away. `nextRun()` returns `null` until that run.
+After `resume()`, the task runs at its next match, and the gap counts from there.
 
 `every` takes whole seconds or more, since croner spaces runs in seconds. A literal like `'0s'` or `'1.5h'` fails to compile. A value typed as `string` skips that check, so `init()` throws `InvalidDuration` when it isn't a duration and `PluginTasksInvalidOption` when it isn't whole seconds, like `'1500ms'`.
 
@@ -310,8 +310,8 @@ export class PauseDigest extends SlashHandler<'pause-digest'> {
 | method | what it does |
 | --- | --- |
 | [`pause(Task)`](ref:plugin-tasks/Tasks.pause) | stops a cron task's pattern. Scheduled jobs and `trigger()` still run the task. After a restart, the task goes back to its `paused` option |
-| [`resume(Task)`](ref:plugin-tasks/Tasks.resume) | starts a task that `pause()` or the `paused` option stopped |
-| [`nextRun(Task)`](ref:plugin-tasks/Tasks.nextRun) | returns the next run as a `Date`, or `null` while the task is paused, once it has no runs left, or between `resume()` and the next run of a task that sets `every` |
+| [`resume(Task)`](ref:plugin-tasks/Tasks.resume) | starts a task that `pause()` or the `paused` option stopped. It runs at its next match and skips the ones it missed |
+| [`nextRun(Task)`](ref:plugin-tasks/Tasks.nextRun) | returns the next run as a `Date`, or `null` while the task is paused or once it has no runs left |
 | [`trigger(Task)`](ref:plugin-tasks/Tasks.trigger) | runs a task now, even while it's paused. If `protect` is on and the task is running, the plugin skips this run and calls `onOverrun()` |
 | [`crons()`](ref:plugin-tasks/Tasks.crons) | returns a [`CronStatus`](ref:plugin-tasks/CronStatus) for each cron task, with its `key`, `pattern`, `timezone`, `active`, `busy`, `nextRun`, and `previousRun` |
 
@@ -367,7 +367,7 @@ export class DigestNext extends SlashHandler<'digest-next'> {
 }
 ```
 
-`nextRun()` returns `null` while the task is paused, once it has no runs left, or between `resume()` and the next run of a task that sets `every`, so check for it before you read the date. To get the next run of every cron task at once, call `crons()` and read each entry's `nextRun`.
+`nextRun()` returns `null` while the task is paused or once it has no runs left, so check for it before you read the date. To get the next run of every cron task at once, call `crons()` and read each entry's `nextRun`.
 
 ## Shutting down
 

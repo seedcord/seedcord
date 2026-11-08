@@ -48,7 +48,7 @@ export interface TaskOptions<TZone extends string = string, TEvery extends strin
     /**
      * The shortest gap between two runs, in whole seconds or more. The pattern still decides when the
      * task may run, so `'* * 9-17 * * 1-5'` with `every: '90s'` runs every 90 seconds during those hours.
-     * After `resume()`, the first run comes within one gap.
+     * After `resume()`, the task runs at its next match, and the gap counts from there.
      */
     every?: ValidDuration<TEvery>;
     /**

@@ -7,6 +7,7 @@ import { Cron, CronDate } from 'croner';
 import { CronJob } from './CronJob';
 import { requireTimezone } from './requireTimezone';
 
+import type { BuildCron } from './CronJob';
 import type { TaskMetadata } from './decorators/RegisterTask';
 import type { CronSlot, LoadedTask, TaskRegistry, TaskSlot } from './TaskRegistry';
 import type { TaskRunner } from './TaskRunner';
@@ -58,15 +59,21 @@ export class CronTasks {
         const dates = keepDefined({ startAt: meta.startAt, stopAt: meta.stopAt });
         checkDates(loaded, dates, timezone);
 
-        let cron: Cron;
-
-        try {
-            cron = new Cron(pattern, {
+        const run = async (): Promise<void> => {
+            await this.runner.run(loaded, { trigger: 'cron', jobId: null }, undefined);
+        };
+        const build: BuildCron = (maxRuns = meta.maxRuns) =>
+            new Cron(pattern, {
                 ...(timezone !== undefined && { timezone }),
-                ...keepDefined({ maxRuns: meta.maxRuns }),
+                ...(maxRuns !== undefined && { maxRuns }),
                 ...gap,
                 ...dates
             });
+
+        let job: CronJob;
+
+        try {
+            job = new CronJob(build, run, pattern, timezone, meta.paused ?? false);
         } catch (error) {
             throw new SeedcordTypeError(
                 SeedcordErrorCode.PluginTasksInvalidPattern,
@@ -74,11 +81,6 @@ export class CronTasks {
                 { cause: error }
             );
         }
-
-        const run = async (): Promise<void> => {
-            await this.runner.run(loaded, { trigger: 'cron', jobId: null }, undefined);
-        };
-        const job = new CronJob(cron, run, pattern, timezone, meta.paused ?? false);
 
         slot.cron = job;
         this.sync(slot);
@@ -117,7 +119,7 @@ export class CronTasks {
 
     private sync(slot: TaskSlot): void {
         if (this.started && !slot.paused) slot.cron?.start();
-        else slot.cron?.pause();
+        else slot.cron?.stop();
     }
 
     public list(): CronStatus[] {
