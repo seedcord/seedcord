@@ -8,7 +8,7 @@ import process from 'node:process';
 import { CliFlags } from '#src/lib/CliFlags';
 import { Workspace } from '#src/lib/Workspace';
 
-const flags = new CliFlags('pnpm release:preview [options]', {
+const flags = new CliFlags('vp run release:preview [options]', {
     pre: { type: 'boolean', describe: 'Preview the post for the next prerelease' }
 });
 
