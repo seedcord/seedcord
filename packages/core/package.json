@@ -27,24 +27,6 @@
     ],
     "type": "module",
     "types": "./dist/index.d.mts",
-    "imports": {
-        "#tests/*": "./tests/*.ts",
-        "#src/*": "./src/*.ts",
-        "#components/*": "./src/components/*.ts",
-        "#customId/*": "./src/customId/*.ts",
-        "#decorators/*": "./src/decorators/*.ts",
-        "#gates/*": "./src/gates/*.ts",
-        "#hmr/*": "./src/hmr/*.ts",
-        "#inputs/*": "./src/inputs/*.ts",
-        "#interfaces/*": "./src/interfaces/*.ts",
-        "#node/*": "./src/node/*.ts",
-        "#notices/*": "./src/notices/*.ts",
-        "#pagination/*": "./src/pagination/*.ts",
-        "#registries/*": "./src/registries/*.ts",
-        "#reply/*": "./src/reply/*.ts",
-        "#stops/*": "./src/stops/*.ts",
-        "#subscribers/*": "./src/subscribers/*.ts"
-    },
     "exports": {
         ".": {
             "import": {
