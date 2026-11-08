@@ -48,9 +48,9 @@ export default createRule({
             minOverMax:
                 'A minimum of {{min}} selections exceeds the maximum of {{max}}. Discord rejects the select menu.'
         },
-        schema: []
+        schema: [],
+        defaultOptions: []
     },
-    defaultOptions: [],
     create(context) {
         const services = ESLintUtils.getParserServices(context);
         const checker = services.program.getTypeChecker();

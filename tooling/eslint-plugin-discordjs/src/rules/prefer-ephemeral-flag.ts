@@ -71,9 +71,9 @@ export default createRule({
         messages: {
             deprecated: 'The ephemeral reply option is deprecated. Use flags: MessageFlags.Ephemeral.'
         },
-        schema: []
+        schema: [],
+        defaultOptions: []
     },
-    defaultOptions: [],
     create(context) {
         const services = ESLintUtils.getParserServices(context);
         const checker = services.program.getTypeChecker();

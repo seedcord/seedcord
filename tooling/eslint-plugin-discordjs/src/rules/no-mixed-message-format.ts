@@ -26,9 +26,9 @@ export default createRule({
             mixedFormat:
                 'A message cannot mix builder components with content, embeds, poll, or stickers. Discord rejects the payload.'
         },
-        schema: []
+        schema: [],
+        defaultOptions: []
     },
-    defaultOptions: [],
     create(context) {
         const services = ESLintUtils.getParserServices(context);
         const checker = services.program.getTypeChecker();

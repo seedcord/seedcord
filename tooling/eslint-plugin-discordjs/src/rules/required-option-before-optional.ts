@@ -76,9 +76,9 @@ export default createRule({
         messages: {
             outOfOrder: 'A required slash option cannot come after an optional one.'
         },
-        schema: []
+        schema: [],
+        defaultOptions: []
     },
-    defaultOptions: [],
     create(context) {
         const services = ESLintUtils.getParserServices(context);
         const checker = services.program.getTypeChecker();

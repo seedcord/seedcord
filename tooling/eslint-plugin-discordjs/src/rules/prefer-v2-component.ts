@@ -13,9 +13,9 @@ export default createRule({
         messages: {
             preferV2: 'Prefer a components v2 layout (ContainerBuilder, TextDisplayBuilder) over an embed.'
         },
-        schema: []
+        schema: [],
+        defaultOptions: []
     },
-    defaultOptions: [],
     create(context) {
         const services = ESLintUtils.getParserServices(context);
         const checker = services.program.getTypeChecker();

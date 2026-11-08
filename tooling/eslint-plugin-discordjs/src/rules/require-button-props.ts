@@ -105,9 +105,9 @@ export default createRule({
             missingCustomId: 'A {{style}} button requires a customId.',
             missingLabel: 'A {{style}} button requires a label or an emoji.'
         },
-        schema: []
+        schema: [],
+        defaultOptions: []
     },
-    defaultOptions: [],
     create(context) {
         const services = ESLintUtils.getParserServices(context);
         const info: TypeInfo = { services, checker: services.program.getTypeChecker(), sourceCode: context.sourceCode };

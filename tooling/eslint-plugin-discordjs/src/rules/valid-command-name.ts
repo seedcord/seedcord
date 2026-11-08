@@ -45,9 +45,9 @@ export default createRule({
             invalidName:
                 'This name is not a valid chat-input name. Use lowercase letters, digits, hyphens, or underscores, 1 to 32 characters.'
         },
-        schema: []
+        schema: [],
+        defaultOptions: []
     },
-    defaultOptions: [],
     create(context) {
         const services = ESLintUtils.getParserServices(context);
 
