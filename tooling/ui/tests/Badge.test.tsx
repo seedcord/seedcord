@@ -1,7 +1,7 @@
 import { render } from '@testing-library/react';
 import { describe, expect, it } from 'vite-plus/test';
 
-import { Badge } from '#src/Badge.tsx';
+import { Badge } from '#src/Badge';
 
 function getBadge(container: HTMLElement): HTMLSpanElement {
     const el = container.querySelector('span');

@@ -3,9 +3,9 @@ import userEvent from '@testing-library/user-event';
 import { useState } from 'react';
 import { describe, expect, it, vi } from 'vite-plus/test';
 
-import { SegmentedControl } from '#src/SegmentedControl.tsx';
+import { SegmentedControl } from '#src/SegmentedControl';
 
-import type { SegmentedControlOption } from '#src/SegmentedControl.tsx';
+import type { SegmentedControlOption } from '#src/SegmentedControl';
 import type { ReactElement } from 'react';
 
 type View = 'list' | 'grid' | 'table';

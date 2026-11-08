@@ -3,7 +3,7 @@ import userEvent from '@testing-library/user-event';
 import { useState } from 'react';
 import { beforeAll, describe, expect, it } from 'vite-plus/test';
 
-import { Popover, PopoverArrow, PopoverContent, PopoverTrigger } from '#src/Popover.tsx';
+import { Popover, PopoverArrow, PopoverContent, PopoverTrigger } from '#src/Popover';
 
 import type { ReactElement } from 'react';
 

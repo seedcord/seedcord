@@ -1,9 +1,9 @@
 import { render, screen, within } from '@testing-library/react';
 import { describe, expect, it, vi } from 'vite-plus/test';
 
-import { HotkeysDialog } from '#src/HotkeysDialog.tsx';
+import { HotkeysDialog } from '#src/HotkeysDialog';
 
-import type { Hotkey } from '#src/lib/useHotkeys.ts';
+import type { Hotkey } from '#src/lib/useHotkeys';
 
 const HOTKEYS: readonly Hotkey[] = [
     { key: 'k', mod: true, description: 'Search the guide', run: vi.fn() },

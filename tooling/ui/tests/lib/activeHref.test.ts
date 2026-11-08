@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vite-plus/test';
 
-import { isActiveHref, matchActiveHref } from '#src/lib/activeHref.ts';
+import { isActiveHref, matchActiveHref } from '#src/lib/activeHref';
 
 const TABS = ['/', '/commands', '/gates', '/tooling'];
 

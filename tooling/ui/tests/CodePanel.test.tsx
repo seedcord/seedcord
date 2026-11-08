@@ -1,9 +1,9 @@
 import { render, screen } from '@testing-library/react';
 import { describe, expect, it } from 'vite-plus/test';
 
-import { CodePanel } from '#src/CodePanel.tsx';
+import { CodePanel } from '#src/CodePanel';
 
-import type { CodeRepresentation } from '#src/types/CodeRepresentation.ts';
+import type { CodeRepresentation } from '#src/types/CodeRepresentation';
 
 function rep(overrides: Partial<CodeRepresentation> = {}): CodeRepresentation {
     return { text: 'const x = 1;', html: null, ...overrides };

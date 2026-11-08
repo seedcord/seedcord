@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vite-plus/test';
 
-import { twinDocument } from '#src/twin.ts';
+import { twinDocument } from '#src/twin';
 
 describe('twinDocument', () => {
     it('puts the title, description and byline above the body', () => {

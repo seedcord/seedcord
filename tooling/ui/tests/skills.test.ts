@@ -1,9 +1,9 @@
 import { describe, expect, it } from 'vite-plus/test';
 
-import { SEEDCORD_SKILL } from '#src/skills/seedcord.ts';
-import { agentSkillsIndex, skillDigest, skillResponse, skillsIndex, skillUrl } from '#src/skills.ts';
+import { agentSkillsIndex, skillDigest, skillResponse, skillsIndex, skillUrl } from '#src/skills';
+import { SEEDCORD_SKILL } from '#src/skills/seedcord';
 
-import type { Skill } from '#src/skills.ts';
+import type { Skill } from '#src/skills';
 
 const SHA256_HEX = /^sha256:[0-9a-f]{64}$/;
 

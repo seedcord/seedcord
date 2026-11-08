@@ -1,8 +1,8 @@
 import { render } from '@testing-library/react';
 import { describe, expect, it } from 'vite-plus/test';
 
-import { AgentLinks } from '#src/AgentLinks.tsx';
-import { siteLinks } from '#src/agents.ts';
+import { AgentLinks } from '#src/AgentLinks';
+import { siteLinks } from '#src/agents';
 
 function headHrefs(): Map<string, string> {
     const found = new Map<string, string>();

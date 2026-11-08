@@ -1,7 +1,7 @@
 import { toComponentEmbedJson } from 'discord-component-embed';
 import { describe, expect, it } from 'vite-plus/test';
 
-import { PREVIEW_EMOJI, PreviewCard } from '#src/LinkPreview.tsx';
+import { PREVIEW_EMOJI, PreviewCard } from '#src/LinkPreview';
 
 import type { ReactElement } from 'react';
 

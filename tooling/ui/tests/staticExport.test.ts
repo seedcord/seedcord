@@ -1,8 +1,8 @@
 import { PHASE_DEVELOPMENT_SERVER, PHASE_PRODUCTION_BUILD } from 'next/constants';
 import { describe, expect, it } from 'vite-plus/test';
 
-import { GUIDE } from '#src/sites.ts';
-import { staticExport } from '#src/staticExport.ts';
+import { GUIDE } from '#src/sites';
+import { staticExport } from '#src/staticExport';
 
 describe('staticExport', () => {
     it('writes a production build into dist under the site path', () => {

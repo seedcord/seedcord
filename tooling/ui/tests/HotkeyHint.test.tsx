@@ -1,10 +1,10 @@
 import { act, fireEvent, render, screen } from '@testing-library/react';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vite-plus/test';
 
-import { HotkeyHint } from '#src/HotkeyHint.tsx';
-import { SearchTrigger } from '#src/SearchTrigger.tsx';
-import { SiteSwitcher } from '#src/SiteSwitcher.tsx';
-import { TooltipProvider } from '#src/Tooltip.tsx';
+import { HotkeyHint } from '#src/HotkeyHint';
+import { SearchTrigger } from '#src/SearchTrigger';
+import { SiteSwitcher } from '#src/SiteSwitcher';
+import { TooltipProvider } from '#src/Tooltip';
 
 import type { ReactElement } from 'react';
 

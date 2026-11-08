@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vite-plus/test';
 
-import { ogPageCardAlt } from '#src/OgCard.tsx';
+import { ogPageCardAlt } from '#src/OgCard';
 
 describe('ogPageCardAlt', () => {
     it('reads the name and the pill the card draws', () => {
