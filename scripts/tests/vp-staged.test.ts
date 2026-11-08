@@ -43,4 +43,10 @@ describe('vp staged commands', () => {
 
         expect(argvOf(runEslint([quoted]))[0]?.at(-1)).toBe("src/don't.ts");
     });
+
+    it('throws for a file name holding both kinds of quote, which string-argv cannot carry', () => {
+        const quoted = path.join(PACKAGE, `src/don't "say".ts`);
+
+        expect(() => runEslint([quoted])).toThrow(`vp staged can't pass a path holding both ' and ", got ${quoted}`);
+    });
 });
