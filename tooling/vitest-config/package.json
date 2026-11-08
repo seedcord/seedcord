@@ -44,7 +44,8 @@
         "@seedcord/tsconfig": "workspace:^",
         "@seedcord/tsdown-config": "workspace:^",
         "@types/node": "catalog:deps",
-        "typescript": "catalog:peer"
+        "typescript": "catalog:peer",
+        "vite-plus": "catalog:deps"
     },
     "engines": {
         "bun": ">=1.4.2",
