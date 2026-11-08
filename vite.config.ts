@@ -1,6 +1,6 @@
 import { defineConfig } from 'vite-plus';
 
-import { runEslint } from './scripts/src/lint-staged.ts';
+import { runEslint } from './scripts/src/vp-staged.ts';
 
 export default defineConfig({
     staged: {

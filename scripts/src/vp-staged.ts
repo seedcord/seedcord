@@ -22,12 +22,12 @@ function findNearestConfig(filePath: string, name: string): ConfigHit | null {
     return null;
 }
 
-// lint-staged splits commands with string-argv
+// vp staged splits commands with string-argv
 // it never unescapes \" or \\
 function quote(arg: string): string {
     if (!arg.includes('"')) return `"${arg}"`;
     if (!arg.includes("'")) return `'${arg}'`;
-    throw new Error(`lint-staged can't pass a path holding both ' and ", got ${arg}. Rename the file.`);
+    throw new Error(`vp staged can't pass a path holding both ' and ", got ${arg}. Rename the file.`);
 }
 
 const quoteFiles = (files: readonly string[]): string => files.map(quote).join(' ');
@@ -36,11 +36,11 @@ interface Group extends Partial<ConfigHit> {
     files: string[];
 }
 
-function groupByConfig(files: readonly string[], name: string): Map<string, Group> {
+function groupByConfig(files: readonly string[]): Map<string, Group> {
     const groups = new Map<string, Group>();
 
     for (const file of files) {
-        const hit = findNearestConfig(file, name);
+        const hit = findNearestConfig(file, 'eslint.config.ts');
         const key = hit?.configPath ?? 'DEFAULT';
         if (!groups.has(key)) groups.set(key, { files: [], ...hit });
         groups.get(key)?.files.push(file);
@@ -58,7 +58,7 @@ export function runEslint(files: readonly string[]): string[] {
     const linted = files.filter((file) => !file.endsWith('.d.ts'));
     const commands: string[] = [];
 
-    for (const [configPath, info] of groupByConfig(linted, 'eslint.config.ts')) {
+    for (const [configPath, info] of groupByConfig(linted)) {
         const { rootDir } = info;
         const scopedFiles = rootDir === undefined ? info.files : info.files.map((file) => posixRelative(rootDir, file));
         const fileList = quoteFiles(scopedFiles);
