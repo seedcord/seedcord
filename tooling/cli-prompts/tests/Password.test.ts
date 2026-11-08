@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vite-plus/test';
 
-import { KEY, PromptTerminal } from '#src/PromptTerminal.ts';
-import { settled } from '#src/settled.ts';
+import { KEY, PromptTerminal } from '#src/PromptTerminal';
+import { settled } from '#src/settled';
 
 const FAKE_TOKEN = `${'a'.repeat(26)}.${'b'.repeat(6)}.${'c'.repeat(38)}`;
 

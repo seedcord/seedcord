@@ -1,6 +1,6 @@
 import { isSeedcordError, paint, SeedcordErrorCode } from '@seedcord/errors';
 
-import { Prompter } from '#src/Prompter.ts';
+import { Prompter } from '#src/Prompter';
 
 type Scenario = (prompter: Prompter) => Promise<unknown>;
 

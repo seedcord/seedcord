@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vite-plus/test';
 
-import { KEY, PromptTerminal } from '#src/PromptTerminal.ts';
+import { KEY, PromptTerminal } from '#src/PromptTerminal';
 
 const SPACE = ' ';
 

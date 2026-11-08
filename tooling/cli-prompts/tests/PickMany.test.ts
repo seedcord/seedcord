@@ -1,8 +1,8 @@
 import { describe, expect, it } from 'vite-plus/test';
 
-import { KEY, PromptTerminal } from '#src/PromptTerminal.ts';
-import { PROMPT_MARKS } from '#src/rows.ts';
-import { settled } from '#src/settled.ts';
+import { KEY, PromptTerminal } from '#src/PromptTerminal';
+import { PROMPT_MARKS } from '#src/rows';
+import { settled } from '#src/settled';
 
 const GUILDS = {
     message: 'Guilds to clean',

@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vite-plus/test';
 
-import { KEY, PromptTerminal } from '#src/PromptTerminal.ts';
-import { settled } from '#src/settled.ts';
+import { KEY, PromptTerminal } from '#src/PromptTerminal';
+import { settled } from '#src/settled';
 
 const LOWERCASE = 'Use lowercase letters only.';
 
