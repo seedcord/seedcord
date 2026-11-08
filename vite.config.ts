@@ -15,7 +15,7 @@ export default defineConfig({
             '.eslintcache',
             '.eslintrc.js',
             '.env',
-            // prettier reads .hbs as an html template, and these hold typescript and markdown
+            // oxfmt reads .hbs as an html template, and these hold typescript and markdown
             '*.hbs',
             '**/.next/**',
             '**/dist/**',
