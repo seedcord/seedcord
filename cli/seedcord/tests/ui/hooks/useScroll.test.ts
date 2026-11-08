@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vite-plus/test';
 
-import { computeScrollView } from '#ui/hooks/useScroll.ts';
+import { computeScrollView } from '#ui/hooks/useScroll';
 
 interface Row {
     id: number;

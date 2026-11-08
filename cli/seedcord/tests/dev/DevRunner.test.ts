@@ -21,7 +21,7 @@ import { linkPackages } from '#tests/edgeFolder';
 import { loadedConfig } from '#tests/loadedConfig';
 import { lockDir, type LockDir } from '#tests/lockDir';
 import { silentLogger } from '#tests/silentLogger';
-import { DevStore } from '#ui/stores/DevStore.ts';
+import { DevStore } from '#ui/stores/DevStore';
 
 import { devConfigFor } from './devConfigFor';
 import { fakeBot, fakeRuntime } from './fakes';

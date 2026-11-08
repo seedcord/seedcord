@@ -3,10 +3,10 @@ import { render } from 'ink-testing-library';
 import React, { createRef } from 'react';
 import { describe, expect, it } from 'vite-plus/test';
 
-import { FilterPanel } from '#ui/components/primitives/FilterPanel.tsx';
-import { INITIAL_CURSOR } from '#ui/filterCursor.ts';
+import { FilterPanel } from '#ui/components/primitives/FilterPanel';
+import { INITIAL_CURSOR } from '#ui/filterCursor';
 
-import type { PanelFit } from '#ui/hooks/usePanelFit.ts';
+import type { PanelFit } from '#ui/hooks/usePanelFit';
 
 const FITS: PanelFit = { panelRef: createRef(), contentRef: createRef(), fits: true };
 

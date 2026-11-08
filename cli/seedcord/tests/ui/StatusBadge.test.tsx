@@ -2,11 +2,11 @@ import { settled } from '@seedcord/cli-prompts/testing';
 import React, { useEffect, useState } from 'react';
 import { describe, expect, it } from 'vite-plus/test';
 
-import { StatusBadge } from '#ui/components/StatusBadge.tsx';
+import { StatusBadge } from '#ui/components/StatusBadge';
 
 import { renderAt } from './renderAt';
 
-import type { DevPhase } from '#ui/stores/devPhase.ts';
+import type { DevPhase } from '#ui/stores/devPhase';
 import type { ReactElement } from 'react';
 
 const SIZE = { rows: 24, columns: 80 };

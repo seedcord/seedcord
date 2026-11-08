@@ -4,10 +4,10 @@ import { render } from 'ink-testing-library';
 import React from 'react';
 import { afterEach, describe, expect, it, onTestFinished, vi } from 'vite-plus/test';
 
-import { useUptime } from '#ui/hooks/useUptime.ts';
-import { DevStore } from '#ui/stores/DevStore.ts';
+import { useUptime } from '#ui/hooks/useUptime';
+import { DevStore } from '#ui/stores/DevStore';
 
-import type { DevState } from '#ui/stores/DevStore.ts';
+import type { DevState } from '#ui/stores/DevStore';
 import type { ReactElement } from 'react';
 
 const SECOND_MS = 1000;

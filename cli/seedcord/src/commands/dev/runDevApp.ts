@@ -1,13 +1,13 @@
 import { render } from 'ink';
 import React from 'react';
 
-import { DevApp } from '#ui/DevApp.tsx';
-import { devPrefsFile } from '#ui/devPrefs.ts';
-import { profileFrame } from '#ui/profile.ts';
-import { LogStore } from '#ui/stores/LogStore.ts';
+import { DevApp } from '#ui/DevApp';
+import { devPrefsFile } from '#ui/devPrefs';
+import { profileFrame } from '#ui/profile';
+import { LogStore } from '#ui/stores/LogStore';
 
 import type { StateFolder } from '#core/state/StateFolder';
-import type { DevStore } from '#ui/stores/DevStore.ts';
+import type { DevStore } from '#ui/stores/DevStore';
 import type { DevRunner } from './DevRunner';
 
 export async function runDevApp(store: DevStore, runner: DevRunner, stateFolder: StateFolder): Promise<void> {

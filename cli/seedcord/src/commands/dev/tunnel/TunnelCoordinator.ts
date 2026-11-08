@@ -1,6 +1,6 @@
 import { paint } from '@seedcord/errors';
 
-import { formatUptime } from '#ui/format.ts';
+import { formatUptime } from '#ui/format';
 
 import type { InteractionsEndpoint } from './InteractionsEndpoint';
 import type { ILogger } from '@seedcord/types';

@@ -24,7 +24,7 @@ import { loadedConfig } from '#tests/loadedConfig';
 import { lockDir } from '#tests/lockDir';
 import { silentLogger } from '#tests/silentLogger';
 import { vitePluginsOf } from '#tests/vitePluginsOf';
-import { DevStore } from '#ui/stores/DevStore.ts';
+import { DevStore } from '#ui/stores/DevStore';
 
 import {
     captureLogs,

@@ -4,8 +4,8 @@ import React from 'react';
 import { afterEach, describe, expect, it, vi } from 'vite-plus/test';
 
 import { cliLogger } from '#core/cliLogger';
-import { useLogCapture } from '#ui/hooks/useLogCapture.ts';
-import { LogStore } from '#ui/stores/LogStore.ts';
+import { useLogCapture } from '#ui/hooks/useLogCapture';
+import { LogStore } from '#ui/stores/LogStore';
 
 import type { ReactElement } from 'react';
 

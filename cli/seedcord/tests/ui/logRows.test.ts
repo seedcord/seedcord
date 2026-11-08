@@ -1,8 +1,8 @@
 import { describe, expect, it } from 'vite-plus/test';
 
-import { computeScrollView } from '#ui/hooks/useScroll.ts';
-import { LogLayout } from '#ui/LogLayout.ts';
-import { expandRows, rowKey, wrapRows } from '#ui/logRows.ts';
+import { computeScrollView } from '#ui/hooks/useScroll';
+import { LogLayout } from '#ui/LogLayout';
+import { expandRows, rowKey, wrapRows } from '#ui/logRows';
 
 import { logEntry as entry } from './logEntry';
 

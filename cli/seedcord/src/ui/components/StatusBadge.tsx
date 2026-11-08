@@ -1,12 +1,12 @@
 import { Text } from 'ink';
 import React from 'react';
 
-import { isStreaming, PHASE_META } from '#ui/stores/devPhase.ts';
+import { isStreaming, PHASE_META } from '#ui/stores/devPhase';
 
 import { BlinkDot } from './primitives/BlinkDot';
 import { Spinner } from './primitives/Spinner';
 
-import type { DevPhase } from '#ui/stores/devPhase.ts';
+import type { DevPhase } from '#ui/stores/devPhase';
 import type { ReactElement } from 'react';
 
 interface StatusBadgeProps {

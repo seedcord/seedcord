@@ -2,7 +2,10 @@
     "$schema": "https://json.schemastore.org/tsconfig",
     "extends": "@seedcord/tsconfig/node",
     "compilerOptions": {
-        "rootDir": "./"
+        "rootDir": "./",
+        "paths": {
+            "#lib/*": ["./src/lib/*"]
+        }
     },
     "include": ["src/**/*.ts", "src/**/*.tsx", "src/**/*.mts"]
 }

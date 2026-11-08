@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vite-plus/test';
 
-import { focusedIn, INITIAL_CURSOR, moveCursor } from '#ui/filterCursor.ts';
+import { focusedIn, INITIAL_CURSOR, moveCursor } from '#ui/filterCursor';
 
 describe('moveCursor', () => {
     it('moves right within channels and wraps', () => {

@@ -4,9 +4,17 @@
     "compilerOptions": {
         "rootDir": "./",
         "outDir": "./dist",
+        "paths": {
+            "#src/*": ["./src/*"],
+            "#tests/*": ["./tests/*"],
+            "#ui/*": ["./src/ui/*"],
+            "#core/*": ["./src/core/*"],
+            "#commands/*": ["./src/commands/*"],
+            "#utils/*": ["./src/utils/*"],
+            "#api/*": ["./src/api/*"]
+        },
         "types": ["react"],
-        "jsx": "react",
-        "allowImportingTsExtensions": true
+        "jsx": "react"
     },
     "include": [
         "src/**/*.ts",

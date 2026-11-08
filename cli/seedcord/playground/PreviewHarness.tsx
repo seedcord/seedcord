@@ -1,7 +1,7 @@
 import React, { useCallback, useEffect, useRef } from 'react';
 
-import { DevApp } from '#ui/DevApp.tsx';
-import { devPrefsFile } from '#ui/devPrefs.ts';
+import { DevApp } from '#ui/DevApp';
+import { devPrefsFile } from '#ui/devPrefs';
 
 import { createPreviewContext } from './PreviewContext';
 

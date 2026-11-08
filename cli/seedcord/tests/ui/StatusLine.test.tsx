@@ -2,9 +2,9 @@ import { render } from 'ink-testing-library';
 import React from 'react';
 import { describe, expect, it } from 'vite-plus/test';
 
-import { StatusLine } from '#ui/components/primitives/StatusLine.tsx';
-import { noticesOf } from '#ui/notices.tsx';
-import { DevStore } from '#ui/stores/DevStore.ts';
+import { StatusLine } from '#ui/components/primitives/StatusLine';
+import { noticesOf } from '#ui/notices';
+import { DevStore } from '#ui/stores/DevStore';
 
 function running(): DevStore {
     const store = new DevStore();

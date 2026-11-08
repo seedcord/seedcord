@@ -6,9 +6,9 @@ import { describe, expect, it, onTestFinished } from 'vite-plus/test';
 
 import { StateFolder } from '#core/state/StateFolder';
 import { silentLogger } from '#tests/silentLogger';
-import { devPrefsFile } from '#ui/devPrefs.ts';
+import { devPrefsFile } from '#ui/devPrefs';
 
-import type { DevPrefs } from '#ui/devPrefs.ts';
+import type { DevPrefs } from '#ui/devPrefs';
 import type { LogLevel } from '@seedcord/types';
 
 async function projectDir(): Promise<string> {

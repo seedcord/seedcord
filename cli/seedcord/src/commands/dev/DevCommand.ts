@@ -4,8 +4,8 @@ import { isInteractive } from '@seedcord/utils/internal';
 import { BaseCommand } from '#core/BaseCommand';
 import { cliLogger } from '#core/cliLogger';
 import { StateFolder } from '#core/state/StateFolder';
-import { profileReport, profileStdout } from '#ui/profile.ts';
-import { DevStore } from '#ui/stores/DevStore.ts';
+import { profileReport, profileStdout } from '#ui/profile';
+import { DevStore } from '#ui/stores/DevStore';
 
 import { DevRunner } from './DevRunner';
 import { DevSignals } from './DevSignals';

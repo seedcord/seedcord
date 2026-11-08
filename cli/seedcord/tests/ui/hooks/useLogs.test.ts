@@ -1,8 +1,8 @@
 import { describe, expect, it } from 'vite-plus/test';
 
-import { filterLogs } from '#ui/hooks/useLogs.ts';
+import { filterLogs } from '#ui/hooks/useLogs';
 
-import type { LogEntry } from '#ui/stores/LogStore.ts';
+import type { LogEntry } from '#ui/stores/LogStore';
 
 function entry(over: Partial<LogEntry>): LogEntry {
     return {

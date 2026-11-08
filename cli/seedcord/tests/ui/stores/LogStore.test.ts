@@ -1,7 +1,7 @@
 import { afterEach, describe, expect, it } from 'vite-plus/test';
 
 import { routeConsoleToLogs } from '#commands/dev/routeConsoleToLogs';
-import { LogStore } from '#ui/stores/LogStore.ts';
+import { LogStore } from '#ui/stores/LogStore';
 
 import type { LogRecord } from '@seedcord/types';
 

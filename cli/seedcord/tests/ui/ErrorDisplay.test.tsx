@@ -5,7 +5,7 @@ import { render } from 'ink-testing-library';
 import React from 'react';
 import { describe, expect, it, vi } from 'vite-plus/test';
 
-import { ErrorDisplay } from '#ui/components/ErrorDisplay.tsx';
+import { ErrorDisplay } from '#ui/components/ErrorDisplay';
 
 const BOTTOM = '╰';
 

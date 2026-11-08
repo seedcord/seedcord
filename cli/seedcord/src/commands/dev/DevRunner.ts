@@ -7,8 +7,8 @@ import { openModuleLoader } from '#core/modules/openModuleLoader';
 import { quietSteps } from '#core/output/quietSteps';
 import { DevLock } from '#core/state/DevLock';
 import { startupShell } from '#src/core/ShellMode';
-import { resetChannelColors } from '#ui/channelColor.ts';
-import { profileMark } from '#ui/profile.ts';
+import { resetChannelColors } from '#ui/channelColor';
+import { profileMark } from '#ui/profile';
 
 import { DevSession } from './DevSession';
 import { EdgeDevRuntime } from './runtime/EdgeDevRuntime';

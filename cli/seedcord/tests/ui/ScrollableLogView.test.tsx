@@ -5,10 +5,10 @@ import { render } from 'ink-testing-library';
 import React from 'react';
 import { describe, expect, it } from 'vite-plus/test';
 
-import { NO_ROOM, ScrollableLogView } from '#ui/components/primitives/ScrollableLogView.tsx';
-import { formatClock } from '#ui/format.ts';
-import { LogLayout } from '#ui/LogLayout.ts';
-import { expandRows, wrapRows } from '#ui/logRows.ts';
+import { NO_ROOM, ScrollableLogView } from '#ui/components/primitives/ScrollableLogView';
+import { formatClock } from '#ui/format';
+import { LogLayout } from '#ui/LogLayout';
+import { expandRows, wrapRows } from '#ui/logRows';
 
 import { logEntry as entry } from './logEntry';
 

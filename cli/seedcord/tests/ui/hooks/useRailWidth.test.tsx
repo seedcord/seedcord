@@ -4,9 +4,9 @@ import { render } from 'ink-testing-library';
 import React, { useRef } from 'react';
 import { describe, expect, it } from 'vite-plus/test';
 
-import { useRailWidth } from '#ui/hooks/useRailWidth.ts';
+import { useRailWidth } from '#ui/hooks/useRailWidth';
 
-import type { DevPhase } from '#ui/stores/devPhase.ts';
+import type { DevPhase } from '#ui/stores/devPhase';
 import type { DOMElement } from 'ink';
 import type { ReactElement } from 'react';
 

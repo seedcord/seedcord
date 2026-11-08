@@ -7,7 +7,7 @@ import { HostAugmentTarget, HostVersion, type SeedcordInstance } from '@seedcord
 import { asError, unlessAborted } from '@seedcord/utils/internal';
 
 import { toSeedcordInstance } from '#core/modules/importInstance';
-import { profileMark } from '#ui/profile.ts';
+import { profileMark } from '#ui/profile';
 import { resolveDefaultExport } from '#utils/resolveDefaultExport';
 
 import { TscRunner } from './TscRunner';
