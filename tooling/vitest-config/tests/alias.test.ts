@@ -3,9 +3,12 @@ import { fileURLToPath } from 'node:url';
 import { afterAll, beforeAll, describe, expect, it } from 'vite-plus/test';
 import { createViteServer } from 'vite-plus/test/node';
 
+import { aliasFromTsconfig } from '#src/index';
+
+const fixtureConfigUrl = new URL('./fixtures/vite.config.ts', import.meta.url).toString();
 const fixture = (path: string): string => fileURLToPath(new URL(`./fixtures/${path}`, import.meta.url));
 
-describe('createVitestConfig aliases', () => {
+describe('aliasFromTsconfig aliases', () => {
     let server: Awaited<ReturnType<typeof createViteServer>>;
 
     beforeAll(async () => {
@@ -13,7 +16,8 @@ describe('createVitestConfig aliases', () => {
             configFile: false,
             root: fixture(''),
             logLevel: 'silent',
-            server: { middlewareMode: true }
+            server: { middlewareMode: true },
+            resolve: { alias: aliasFromTsconfig(fixtureConfigUrl) }
         });
     });
 

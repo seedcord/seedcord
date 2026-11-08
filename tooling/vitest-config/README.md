@@ -7,4 +7,4 @@
 
 # @seedcord/vitest-config
 
-A private vitest preset that every seedcord package with tests uses, through `createTestConfig` in its `vite.config.ts`.
+A private vitest preset that every seedcord package with tests uses, through `createViteConfig` in its `vite.config.ts`.

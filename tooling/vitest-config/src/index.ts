@@ -2,10 +2,34 @@ import { extname } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
 import { parseTsconfig } from 'get-tsconfig';
-import { configDefaults, mergeConfig } from 'vite-plus';
+import { configDefaults, mergeConfig, defineConfig } from 'vite-plus';
 
-import type { AliasOptions, OxcOptions } from 'vite-plus';
-import type { InlineConfig } from 'vite-plus/test/node';
+import type { AliasOptions, UserConfig } from 'vite-plus';
+
+const base = defineConfig({
+    // oxc reads the Next apps' jsx: preserve as the classic runtime
+    oxc: { jsx: { runtime: 'automatic' } },
+    test: {
+        // isolating every file cost about 40% of the suite's CPU
+        isolate: false,
+        // on a dev machine with turbo.json's 2 tasks at once, 25% each leaves about half the cores free
+        ...(!process.env.CI && { maxWorkers: '25%' }),
+        // mergeConfig puts these before a package's own setupFiles
+        setupFiles: [fileURLToPath(new URL(`freshModules${extname(import.meta.url)}`, import.meta.url))],
+        // node_modules packages that keep state between test files
+        server: { deps: { inline: ['envapt', '@testing-library/react', '@cloudflare/vite-plugin'] } },
+        testTimeout: 10_000,
+        passWithNoTests: true,
+        exclude: [...configDefaults.exclude, '**/.claude/**'],
+        coverage: {
+            enabled: false,
+            provider: 'v8',
+            reporter: [['lcovonly', { file: 'lcov.info' }], ['html']],
+            include: ['src'],
+            exclude: ['**/node_modules/**', '**/dist/**', '**/*.test.ts', '**/*.spec.ts', '**/logs/**', '**/*.log']
+        }
+    }
+});
 
 // configUrl is expected to be the caller's import.meta.url
 export function aliasFromTsconfig(configUrl: string): AliasOptions {
@@ -30,32 +54,9 @@ function wildcardPrefixLength(key: string): number {
     return key.includes('*') ? key.indexOf('*') : Number.MAX_SAFE_INTEGER;
 }
 
-const VITEST_CONFIG: InlineConfig = {
-    // isolating every file cost about 40% of the suite's CPU
-    isolate: false,
-    // on a dev machine with turbo.json's 2 tasks at once, 25% each leaves about half the cores free
-    ...(!process.env.CI && { maxWorkers: '25%' }),
-    // mergeConfig puts these before a package's own setupFiles
-    setupFiles: [fileURLToPath(new URL(`freshModules${extname(import.meta.url)}`, import.meta.url))],
-    // node_modules packages that keep state between test files
-    server: { deps: { inline: ['envapt', '@testing-library/react', '@cloudflare/vite-plugin'] } },
-    testTimeout: 10_000,
-    passWithNoTests: true,
-    exclude: [...configDefaults.exclude, '**/.claude/**'],
-    coverage: {
-        enabled: false,
-        provider: 'v8',
-        reporter: [['lcovonly', { file: 'lcov.info' }], ['html']],
-        include: ['src'],
-        exclude: ['**/node_modules/**', '**/dist/**', '**/*.test.ts', '**/*.spec.ts', '**/logs/**', '**/*.log']
-    }
-};
-
-// oxc reads the Next apps' jsx: preserve as the classic runtime
-export const OXC_OPTIONS: OxcOptions = {
-    jsx: { runtime: 'automatic' }
-};
-
-export function createTestConfig(overrides: InlineConfig = {}): InlineConfig {
-    return mergeConfig(VITEST_CONFIG, overrides);
+export function createViteConfig(configUrl: string, overrides: UserConfig = {}): UserConfig {
+    return mergeConfig(
+        mergeConfig(base, defineConfig({ resolve: { alias: aliasFromTsconfig(configUrl) } })),
+        overrides
+    );
 }
