@@ -1,7 +1,6 @@
 import { mkdir, mkdtempDisposable, symlink, writeFile } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
-import process from 'node:process';
 
 import { onTestFinished } from 'vite-plus/test';
 
@@ -24,12 +23,7 @@ interface EdgeFolder {
 
 export async function linkPackages(dir: string, names: readonly string[]): Promise<void> {
     await mkdir(join(dir, 'node_modules'), { recursive: true });
-    for (const name of names)
-        await symlink(
-            join(CLI_NODE_MODULES, name),
-            join(dir, 'node_modules', name),
-            process.platform === 'win32' ? 'junction' : 'dir'
-        );
+    for (const name of names) await symlink(join(CLI_NODE_MODULES, name), join(dir, 'node_modules', name), 'junction');
 }
 
 // the folder is in the os temp dir, where node finds a package only through the links linkPackages writes

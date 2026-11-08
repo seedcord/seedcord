@@ -37,11 +37,7 @@ describe('seedcord build mode on a node bot', () => {
     it('loads the React that a bot shares with the CLI after it sets NODE_ENV', async () => {
         await using copy = await fixtureCopy(HTTP_BOT);
         await mkdir(join(copy.path, 'node_modules'));
-        await symlink(
-            join(BIN, '../..'),
-            join(copy.path, 'node_modules/seedcord'),
-            process.platform === 'win32' ? 'junction' : 'dir'
-        );
+        await symlink(join(BIN, '../..'), join(copy.path, 'node_modules/seedcord'), 'junction');
         const bot = join(copy.path, 'src/bot.ts');
         await writeFile(bot, `import './react-probe';\n${await readFile(bot, 'utf8')}`);
         await writeFile(

@@ -1,7 +1,6 @@
 import { mkdir, mkdtempDisposable, symlink, writeFile } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
-import process from 'node:process';
 
 import { describe, expect, it, onTestFinished } from 'vite-plus/test';
 
@@ -74,11 +73,7 @@ describe('seedcordDependents', () => {
         await writeManifest(root, { dependencies: { linked: '1.0.0' } });
         await writeManifest(join(store, 'linked'), { dependencies: { 'store-plugin': '1.0.0' } });
         await writeManifest(join(store, 'store-plugin'), { peerDependencies: { '@seedcord/core': '*' } });
-        await symlink(
-            join(store, 'linked'),
-            join(root, 'node_modules', 'linked'),
-            process.platform === 'win32' ? 'junction' : 'dir'
-        );
+        await symlink(join(store, 'linked'), join(root, 'node_modules', 'linked'), 'junction');
 
         expect(seedcordDependents(root).toSorted()).toEqual(['linked', 'store-plugin']);
     });
