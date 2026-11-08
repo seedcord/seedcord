@@ -4,6 +4,7 @@
     "compilerOptions": {
         "rootDir": ".",
         "paths": {
+            "#src/*": ["./src/*"],
             "@seedcord/fixture-base": ["./tests/mock-base/index.ts"]
         }
     },

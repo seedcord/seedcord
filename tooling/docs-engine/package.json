@@ -17,16 +17,6 @@
     ],
     "type": "module",
     "types": "./dist/index.d.mts",
-    "imports": {
-        "#tests/*": "./tests/*.ts",
-        "#src/*": "./src/*.ts",
-        "#model/*": "./src/model/*.ts",
-        "#builders/*": "./src/builders/*.ts",
-        "#routing/*": "./src/routing/*.ts",
-        "#transformers/*": "./src/transformers/*.ts",
-        "#packages/*": "./src/packages/*.ts",
-        "#remote/*": "./src/remote/*.ts"
-    },
     "exports": {
         ".": {
             "import": {

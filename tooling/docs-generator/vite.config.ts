@@ -1,19 +1,14 @@
 import { createTsdownConfig } from '@seedcord/tsdown-config';
-import { aliasFromTsconfig, createTestConfig } from '@seedcord/vitest-config';
-import { defineConfig } from 'vite-plus';
+import { createViteConfig } from '@seedcord/vitest-config';
 
-// required to resolve @seedcord/fixture-base
-const alias = aliasFromTsconfig(import.meta.url);
-
-export default defineConfig({
-    resolve: { alias },
-    test: createTestConfig({
+export default createViteConfig(import.meta.url, {
+    test: {
         globals: true,
         environment: 'node',
         testTimeout: 10_000,
         globalSetup: './tests/utils/globalSetup.ts',
         fileParallelism: false
-    }),
+    },
     pack: createTsdownConfig({
         entry: ['src/index.ts', 'src/manifest-fields.ts', 'src/RuntimeBuild.ts']
     })
