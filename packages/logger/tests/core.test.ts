@@ -294,7 +294,7 @@ class ThrowingSink implements ILogSink {
 
 class RejectingSink implements ILogSink {
     public readonly kind: ILogSink['kind'] = 'console';
-    // eslint-disable-next-line @typescript-eslint/no-misused-promises, @typescript-eslint/require-await -- a void-returning interface taking an async method is the bug under test
+    // eslint-disable-next-line @typescript-eslint/require-await -- an async method that rejects is the case under test
     public async onLog(): Promise<void> {
         throw new Error('sink exploded later');
     }

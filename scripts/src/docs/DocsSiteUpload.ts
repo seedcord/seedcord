@@ -1,4 +1,5 @@
 import { SiteBuild } from '@seedcord/docs-engine';
+import { limitAsync } from 'es-toolkit';
 
 import type { DocsSiteFile } from '#src/docs/DocsSiteFiles';
 
@@ -19,13 +20,11 @@ export class DocsSiteUpload {
             throw new Error(`the docs export has no ${INDEX}. run \`vp -C apps/docs run build\` first`);
         }
 
-        for (let start = 0; start < files.length; start += WRITES_AT_ONCE) {
-            await Promise.all(
-                files
-                    .slice(start, start + WRITES_AT_ONCE)
-                    .map(({ key, path }) => this.bucket.putFile(build.key(key), path))
-            );
-        }
+        const write = limitAsync(
+            (key: string, path: string) => this.bucket.putFile(build.key(key), path),
+            WRITES_AT_ONCE
+        );
+        await Promise.all(files.map(({ key, path }) => write(key, path)));
         return files.length;
     }
 

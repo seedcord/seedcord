@@ -63,7 +63,7 @@ Everything ships against one of two transports.
 
 Both transports re-export all of `@seedcord/core`. A bot installs one seedcord package. Code they share belongs in `core`. A plugin for one transport extends that transport's `Plugin`. A plugin for both extends the base from `@seedcord/core/plugin`, which neither transport re-exports, so its author installs `@seedcord/core`.
 
-The edge build runs with Cloudflare's Node compat on. It may import `node:buffer`, `node:fs`, `node:path`, `node:url` and `node:util`. Keep node server code, like `node:http` and the process signal handlers, out of anything it reaches.
+The edge build runs with Cloudflare's Node compat on. A module is fine if [Cloudflare's list](https://developers.cloudflare.com/workers/runtime-apis/nodejs/) marks it supported. Check a partly supported one before you use it. Keep node server code, like `node:http` and the process signal handlers, out of anything it reaches.
 
 When someone asks how seedcord does something, answer for gateway and for http. Answer for one only when they ask about that one.
 

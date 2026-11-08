@@ -1,6 +1,6 @@
 {
     "name": "@seedcord/core",
-    "version": "0.12.1",
+    "version": "0.13.0",
     "description": "Foundational code shared by both transports",
     "keywords": [
         "discord",
@@ -76,12 +76,6 @@
                 "default": "./dist/node.index.mjs"
             }
         },
-        "./hmr": {
-            "import": {
-                "types": "./dist/hmr.index.d.mts",
-                "default": "./dist/hmr.index.mjs"
-            }
-        },
         "./node/internal": {
             "import": {
                 "types": "./dist/node-internal.index.d.mts",
@@ -96,8 +90,8 @@
     "scripts": {
         "build": "vp pack",
         "clean": "rm -rf dist",
-        "lint": "eslint '**/*.{ts,tsx}' --cache --no-error-on-unmatched-pattern",
-        "lint:fix": "eslint '**/*.{ts,tsx}' --fix --cache --no-error-on-unmatched-pattern",
+        "lint": "eslint '**/*.{ts,tsx}' --max-warnings=0 --cache --no-error-on-unmatched-pattern",
+        "lint:fix": "eslint '**/*.{ts,tsx}' --fix --max-warnings=0 --cache --no-error-on-unmatched-pattern",
         "tc": "tsgo --noEmit",
         "test": "vp test run",
         "test:watch": "vp test dev",

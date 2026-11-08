@@ -19,12 +19,14 @@ function buildMockClient(): unknown {
             id: 'mock-bot-id',
             tag: 'MockBot#1234'
         },
-        // the command deploy reads application.id and PUTs through rest
+        // the command deploy reads application.id and PUTs through rest. webhook reporters GET and POST through it
         application: {
             id: 'mock-app-id'
         },
         rest: {
             put: vi.fn().mockResolvedValue([]),
+            get: vi.fn().mockResolvedValue({}),
+            post: vi.fn().mockResolvedValue({}),
             on: vi.fn(),
             off: vi.fn()
         }

@@ -5,7 +5,7 @@ import { emptyRouteMaps, interactionMiddleware, MiddlewareRegistry } from '@seed
 import { Envapter, PortableSource } from 'envapt';
 import { afterEach, describe, expect, it, vi } from 'vite-plus/test';
 
-import { buildEngine } from '#src/engine';
+import { InteractionEngine } from '#src/InteractionEngine';
 import { testCore } from '#tests/helpers/core';
 import { createSigner } from '#tests/helpers/ed25519';
 import { nullPathConfig, VALID_TOKEN } from '#tests/helpers/fixtures';
@@ -36,14 +36,14 @@ async function routerThrows(thrown: unknown): Promise<{
     vi.spyOn(maps[InteractionKind.Slash], 'get').mockImplementation(() => {
         throw thrown;
     });
-    const handle = buildEngine(
+    const engine = new InteractionEngine(
         core,
         maps,
         new MiddlewareRegistry<InteractionMiddlewareConstructor>(interactionMiddleware),
         signer.publicKeyHex
     );
 
-    return { response: await handle(await signedRequest(signer, slashPayload('anything'))), seen };
+    return { response: await engine.handle(await signedRequest(signer, slashPayload('anything'))), seen };
 }
 
 describe('the http root catch', () => {

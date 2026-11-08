@@ -1,6 +1,10 @@
 import { SeedcordErrorCode } from '@seedcord/errors';
 import { expect, vi } from 'vite-plus/test';
 
+// Prompter imports these on the first prompt. importing them here stops a test's first press from timing out
+import 'ink';
+import './promptViews';
+
 import { Prompter } from './Prompter';
 import { KeyboardStdin, ScreenStdout } from './terminalStubs';
 

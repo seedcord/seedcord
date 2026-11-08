@@ -7,6 +7,7 @@ import { Seedcord } from '#src/edge/Seedcord';
 import { clearBakedIds, registerBakedIds } from '#tests/helpers/bakedIds';
 import { createSigner, nowSeconds, signedRequest, type Signer } from '#tests/helpers/ed25519';
 import { VALID_TOKEN } from '#tests/helpers/fixtures';
+import { capturingCtx } from '#tests/helpers/interactions';
 
 function bindEnv(vars: Record<string, string>): void {
     Envapter.useSource(new PortableSource(vars));
@@ -26,13 +27,13 @@ async function readySeedcord(): Promise<{ signer: Signer; handle: (request: Requ
     bindEnv({ DISCORD_BOT_TOKEN: VALID_TOKEN });
     registerBakedIds({ publicKey: signer.publicKeyHex });
     const seedcord = edgeSeedcord();
-    return { signer, handle: (request) => seedcord.fetch(request) };
+    return { signer, handle: (request) => seedcord.fetch(request, undefined, capturingCtx()) };
 }
 
 // the edge Seedcord reads the env and the baked ids on its first POST
 function firstRequestError(): Promise<unknown> {
     return edgeSeedcord()
-        .fetch(new Request('https://bot.example/interactions', { method: 'POST' }))
+        .fetch(new Request('https://bot.example/interactions', { method: 'POST' }), undefined, capturingCtx())
         .then(
             () => expect.unreachable('the first request should throw'),
             (caught: unknown) => caught

@@ -1,5 +1,6 @@
-import { CustomId, InteractionKind } from '@seedcord/core';
-import { beforeEach, describe, expect, it, vi } from 'vite-plus/test';
+import { CustomId, InteractionKind, Subscribe, Subscriber } from '@seedcord/core';
+import { PublishDefault } from '@seedcord/core/internal';
+import { beforeEach, describe, expect, it } from 'vite-plus/test';
 
 import { ButtonHandler } from '#handlers/interaction/components/ButtonHandler';
 import { SlashHandler } from '#handlers/interaction/SlashHandler';
@@ -7,8 +8,47 @@ import { restClients } from '#tests/helpers/restClients';
 
 import { capturingCtx, noClasses, readyEngine, routedHandler, signedRequest, slashPayload } from './harness';
 
+import type { Core } from '#interfaces/Core';
+
 beforeEach(() => {
     restClients().length = 0;
+});
+
+describe('waitUntil and subscribers', () => {
+    const tick = (): Promise<void> => new Promise((resolve) => setImmediate(resolve));
+
+    it('stays open for a subscriber that a handler published to', async () => {
+        const release = Promise.withResolvers<undefined>();
+        let finished = false;
+        @Subscribe(['unhandledInteractionError'])
+        class Slow extends Subscriber<'unhandledInteractionError', Core> {
+            public async execute(): Promise<void> {
+                await release.promise;
+                finished = true;
+            }
+        }
+        class Ban extends SlashHandler<never> {
+            public async execute(): Promise<void> {
+                this.core.bus[PublishDefault]('unhandledInteractionError', { error: new Error('boom') });
+                await this.reply('done');
+            }
+        }
+        const classes = routedHandler(InteractionKind.Slash, 'ban', Ban);
+        using engine = await readyEngine({ ...classes, subscribers: [Slow] });
+        const ctx = capturingCtx();
+        let settled = false;
+
+        await engine.handle(await signedRequest(engine.signer, slashPayload('ban')), ctx);
+        const work = ctx.settled().then(() => {
+            settled = true;
+        });
+        await tick();
+        expect(settled).toBe(false);
+
+        release.resolve(undefined);
+        await work;
+        expect(finished).toBe(true);
+    });
 });
 
 describe('engine dispatch', () => {
@@ -51,30 +91,13 @@ describe('engine dispatch', () => {
         const response = await handle(await signedRequest(signer, slashPayload('slow')), ctx);
 
         expect(response.status).toBe(202);
-        expect(ctx.waitUntil).toHaveBeenCalledTimes(1);
+        expect(ctx.waitUntil).toHaveBeenCalled();
         expect(executeFinished).toBe(false);
 
         releaseExecute(null);
         await ctx.settled();
         expect(executeFinished).toBe(true);
         expect(restClients()[0]?.post).toHaveBeenCalledTimes(1);
-    });
-
-    it('completes the handler without a ctx, tracking the work in flight', async () => {
-        class Ping extends SlashHandler<never> {
-            async execute(): Promise<void> {
-                await this.reply('pong');
-            }
-        }
-        using engine = await readyEngine(routedHandler(InteractionKind.Slash, 'ping', Ping));
-        const { signer, handle } = engine;
-
-        const response = await handle(await signedRequest(signer, slashPayload('ping')));
-
-        expect(response.status).toBe(202);
-        await vi.waitFor(() => {
-            expect(restClients()[0]?.post).toHaveBeenCalledTimes(1);
-        });
     });
 
     it('threads the resolved route id into the handler dispatch context', async () => {

@@ -1,5 +1,18 @@
 # @seedcord/plugin-mongoose
 
+## 0.7.1
+
+### 🩹 Patch
+
+- Fixed a service that a barrel file re-exports being built twice at startup. Both plugins now need `@seedcord/core` 0.13 or later. ([#444](https://github.com/seedcord/seedcord/pull/444))
+
+#### 📦 Seedcord packages
+
+- `@seedcord/types` 0.16.1 → 0.16.2
+- `@seedcord/logger` 0.6.0 → 0.6.1
+- `@seedcord/errors` 0.15.0 → 0.15.1
+- `@seedcord/utils` 0.9.1 → 0.9.2
+
 ## 0.7.0
 
 ### ✨ Minor

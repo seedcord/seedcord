@@ -1,6 +1,6 @@
 {
     "name": "@seedcord/plugin-mongoose",
-    "version": "0.7.0",
+    "version": "0.7.1",
     "description": "Connect a seedcord bot to MongoDB with Mongoose",
     "keywords": [
         "database",
@@ -46,8 +46,8 @@
     "scripts": {
         "build": "vp pack",
         "clean": "rm -rf dist",
-        "lint": "eslint '**/*.{ts,tsx}' --cache --no-error-on-unmatched-pattern",
-        "lint:fix": "eslint '**/*.{ts,tsx}' --fix --cache --no-error-on-unmatched-pattern",
+        "lint": "eslint '**/*.{ts,tsx}' --max-warnings=0 --cache --no-error-on-unmatched-pattern",
+        "lint:fix": "eslint '**/*.{ts,tsx}' --fix --max-warnings=0 --cache --no-error-on-unmatched-pattern",
         "tc": "tsgo --noEmit",
         "test": "vp test run",
         "test:watch": "vp test dev",
@@ -74,7 +74,7 @@
         "vitest": "catalog:test"
     },
     "peerDependencies": {
-        "@seedcord/core": "workspace:>=0.12.0-next.0",
+        "@seedcord/core": "workspace:>=0.13.0-next.0",
         "envapt": "catalog:peer",
         "mongoose": "catalog:peer",
         "typescript": "catalog:consumerTypes"

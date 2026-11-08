@@ -1,7 +1,8 @@
 import { spawnSync } from 'node:child_process';
-import { appendFile, cp, mkdir, mkdtempDisposable, readFile, rename, writeFile } from 'node:fs/promises';
+import { appendFile, cp, mkdir, mkdtempDisposable, readFile, rename, symlink, writeFile } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
+import process from 'node:process';
 import { stripVTControlCharacters } from 'node:util';
 
 import { describe, expect, it, onTestFinished, vi } from 'vite-plus/test';
@@ -9,9 +10,11 @@ import { describe, expect, it, onTestFinished, vi } from 'vite-plus/test';
 import { ShellMode } from '#src/core/ShellMode';
 import { linkPackages } from '#tests/edgeFolder';
 
-import { builtSource, copyFixture, FLAT_BOT, GATEWAY_BOT, HTTP_BOT } from './fixtureCopy';
+import { builtSource, copyFixture, fixtureCopy, FLAT_BOT, GATEWAY_BOT, HTTP_BOT } from './fixtureCopy';
 import { quickBuildRunner } from './quickBuildRunner';
 import { smoke } from './smoke';
+
+const BIN = join(import.meta.dirname, '../../../bin/seedcord.mjs');
 
 describe('a built module that runs without the entry', () => {
     it('says to run index.mjs when the module reads import.meta.dirname', async () => {
@@ -31,6 +34,37 @@ describe('a built module that runs without the entry', () => {
 });
 
 describe('seedcord build mode on a node bot', () => {
+    it('loads the React that a bot shares with the CLI after it sets NODE_ENV', async () => {
+        await using copy = await fixtureCopy(HTTP_BOT);
+        await mkdir(join(copy.path, 'node_modules'));
+        await symlink(
+            join(BIN, '../..'),
+            join(copy.path, 'node_modules/seedcord'),
+            process.platform === 'win32' ? 'junction' : 'dir'
+        );
+        const bot = join(copy.path, 'src/bot.ts');
+        await writeFile(bot, `import './react-probe';\n${await readFile(bot, 'utf8')}`);
+        await writeFile(
+            join(copy.path, 'src/react-probe.ts'),
+            `import React from 'react';
+// only react's dev build has captureOwnerStack
+if (process.env.NODE_ENV === 'production' && 'captureOwnerStack' in React) throw new Error('react loaded in development mode');
+// exiting here skips the build's type check and bundle
+process.exit(0);
+`
+        );
+        const { NODE_ENV: _shellMode, ...env } = process.env;
+
+        const { status, stdout, stderr } = spawnSync(process.execPath, [BIN, 'build'], {
+            cwd: copy.path,
+            encoding: 'utf8',
+            env: { ...env, CI: '1' },
+            timeout: 90_000
+        });
+
+        expect(status, stripVTControlCharacters(stdout + stderr)).toBe(0);
+    }, 120_000);
+
     it.each([
         ['gateway', GATEWAY_BOT],
         ['http', HTTP_BOT]

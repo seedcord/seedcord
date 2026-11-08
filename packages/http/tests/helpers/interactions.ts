@@ -23,10 +23,11 @@ export function capturingCtx(): CapturedCtx {
     const waitUntil = vi.fn<(promise: Promise<unknown>) => void>();
     return {
         waitUntil,
+        // the loop also reaches calls that a running promise adds while it waits
         settled: async () => {
-            const call = waitUntil.mock.calls[0];
-            if (!call) throw new Error('waitUntil was never called');
-            return call[0];
+            if (waitUntil.mock.calls.length === 0) throw new Error('waitUntil was never called');
+            for (const [work] of waitUntil.mock.calls) await work;
+            return undefined;
         }
     };
 }

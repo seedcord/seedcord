@@ -117,7 +117,7 @@ export class HmrPlugin extends TypedEventEmitter<{ event: [DevEvent] }> {
             this.logger.debug(`Registered ${String(data.patterns.length)} critical file patterns`);
         });
 
-        // the next save imports a second copy of the framework
+        // a save after this imports a second copy of the framework and breaks the instanceof checks
         this.dev?.on('seedcord:full-reload', () => {
             this.requireRestart(paint.coral('Vite reloaded every module.'));
         });

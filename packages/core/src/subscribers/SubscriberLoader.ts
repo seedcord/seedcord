@@ -1,11 +1,10 @@
 import { paint } from '@seedcord/errors';
-import { importFiles } from '@seedcord/utils';
 import { Envapter } from 'envapt';
 
-import { HmrModuleHandler } from '#hmr/HmrModuleHandler';
+import { FolderExports } from '#hmr/FolderExports';
 import { SubscribeMetadataKey } from '#src/metadataKeys';
 import { busLoggerOf } from '#subscribers/Bus';
-import { registrationsFor, Subscriber } from '#subscribers/index';
+import { Subscriber } from '#subscribers/index';
 import {
     RegisterDefaults,
     RegisteredCount,
@@ -16,30 +15,23 @@ import {
 
 import type { Initializeable } from '#src/plugin/Plugin';
 import type { StoredSubscriberCtor, Bus } from '#subscribers/index';
-import type { SubscriptionKey } from '#subscribers/types/Subscriptions';
 import type { HmrAware, HmrUpdateEvent } from '@seedcord/types';
-
-type SubscriberArtifact = SubscriptionKey[];
 
 export class SubscriberLoader implements Initializeable, HmrAware {
     private isInitialized = false;
-    private readonly hmrHandler?: HmrModuleHandler<StoredSubscriberCtor, void, SubscriberArtifact>;
+    private readonly subscriberFiles?: FolderExports<StoredSubscriberCtor>;
 
     constructor(
         private readonly bus: Bus,
-        private readonly directory: string | null
+        directory: string | null
     ) {
-        if (!this.directory) return;
-        if (!Envapter.isDevelopment && !Envapter.isTest) return;
+        if (!directory) return;
 
-        this.hmrHandler = new HmrModuleHandler({
-            handlers: {
-                dir: this.directory,
-                is: this.isSubscriber.bind(this),
-                register: this.registerSubscriber.bind(this),
-                unregister: this.unregisterSubscriber.bind(this),
-                getArtifacts: this.getArtifacts.bind(this)
-            },
+        this.subscriberFiles = new FolderExports({
+            dir: directory,
+            is: this.isSubscriber.bind(this),
+            register: (ctor) => this.bus[RegisterSubscriber](ctor),
+            unregister: (ctor) => this.bus[UnregisterSubscriber](ctor),
             logger: busLoggerOf(this.bus)
         });
     }
@@ -51,10 +43,8 @@ export class SubscriberLoader implements Initializeable, HmrAware {
 
         this.bus[RegisterDefaults]();
 
-        const { directory } = this;
-        if (directory) {
-            busLoggerOf(this.bus).debug(paint.mute(directory));
-            await this.load(directory);
+        if (this.subscriberFiles) {
+            await this.subscriberFiles.load();
             busLoggerOf(this.bus).utils.list(
                 [`${paint.iris.bold(this.bus[RegisteredCount])} subscribers`],
                 paint.mint.bold('Loaded'),
@@ -67,31 +57,7 @@ export class SubscriberLoader implements Initializeable, HmrAware {
 
     /** @internal */
     public async onHmr(event: HmrUpdateEvent): Promise<void> {
-        if (this.hmrHandler) await this.hmrHandler.handle(event);
-    }
-
-    private async load(dir: string): Promise<void> {
-        for await (const { fullPath, relativePath, imported } of importFiles(dir)) {
-            for (const value of Object.values(imported)) {
-                if (!this.isSubscriber(value)) continue;
-
-                this.registerSubscriber(value);
-                this.hmrHandler?.trackHandler(fullPath, value);
-                busLoggerOf(this.bus).utils.registration(value.name, relativePath, undefined, 'trace');
-            }
-        }
-    }
-
-    private registerSubscriber(ctor: StoredSubscriberCtor): void {
-        this.bus[RegisterSubscriber](ctor);
-    }
-
-    private unregisterSubscriber(ctor: StoredSubscriberCtor, artifacts?: SubscriberArtifact): void {
-        this.bus[UnregisterSubscriber](ctor, artifacts);
-    }
-
-    private getArtifacts(ctor: StoredSubscriberCtor): SubscriberArtifact {
-        return registrationsFor(ctor).map((registration) => registration.key);
+        await this.subscriberFiles?.handle(event);
     }
 
     private isSubscriber(value: unknown): value is StoredSubscriberCtor {

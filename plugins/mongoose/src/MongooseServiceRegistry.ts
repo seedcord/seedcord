@@ -1,3 +1,4 @@
+import { FolderExports } from '@seedcord/core';
 import { SeedcordErrorCode, paint } from '@seedcord/errors';
 import { SeedcordError } from '@seedcord/errors/internal';
 import { importFiles } from '@seedcord/utils';
@@ -6,17 +7,16 @@ import mongoose from 'mongoose';
 import { ModelNameMetadataKey, ServiceMetadataKey } from './decorators/RegisterMongooseService';
 import { MongooseService } from './MongooseService';
 
-import type { Mongoose, MongooseArtifact } from './Mongoose';
+import type { Mongoose } from './Mongoose';
 import type { MongooseServiceConstructor } from './MongooseService';
 import type { MongooseDocument } from './types/MongooseDocument';
 import type { MongooseServices } from './types/MongooseServices';
 import type { CoreBase } from '@seedcord/core';
 import type { Logger } from '@seedcord/logger';
+import type { HmrUpdateEvent } from '@seedcord/types';
 
 interface FoundService {
     readonly key: string;
-    readonly fullPath: string;
-    readonly relativePath: string;
     readonly Service: MongooseServiceConstructor;
 }
 
@@ -28,12 +28,22 @@ function metadataString(metadataKey: string | symbol, Service: MongooseServiceCo
 export class MongooseServiceRegistry {
     private readonly services = Object.create(null) as MongooseServices;
     private readonly ownModels = new Set<string>();
+    private readonly serviceFiles: FolderExports<MongooseServiceConstructor>;
 
     constructor(
         private readonly plugin: Mongoose,
         private readonly core: CoreBase,
-        private readonly logger: Logger
-    ) {}
+        private readonly logger: Logger,
+        dir: string
+    ) {
+        this.serviceFiles = new FolderExports({
+            dir,
+            is: (value): value is MongooseServiceConstructor => this.isServiceClass(value),
+            register: (Service) => this.initializeService(Service),
+            unregister: (Service) => this.unregister(Service),
+            logger
+        });
+    }
 
     public get map(): MongooseServices {
         return this.services;
@@ -57,27 +67,17 @@ export class MongooseServiceRegistry {
     }
 
     public async *serviceClassesIn(dir: string): AsyncGenerator<FoundService> {
-        for await (const { fullPath, relativePath, imported } of importFiles(dir)) {
+        for await (const { imported } of importFiles(dir)) {
             for (const Service of Object.values(imported)) {
                 if (!this.isServiceClass(Service)) continue;
                 const key = metadataString(ServiceMetadataKey, Service);
-                if (key !== undefined) yield { key, fullPath, relativePath, Service };
+                if (key !== undefined) yield { key, Service };
             }
         }
     }
 
-    public async loadFromDirectory(
-        dir: string,
-        track: (file: string, ctor: MongooseServiceConstructor) => void
-    ): Promise<void> {
-        this.logger.debug(paint.mute(dir));
-
-        for await (const { fullPath, relativePath, Service } of this.serviceClassesIn(dir)) {
-            this.initializeService(Service);
-            this.logger.utils.registration(Service.name, relativePath, undefined, 'trace');
-            track(fullPath, Service);
-        }
-
+    public async load(): Promise<void> {
+        await this.serviceFiles.load();
         this.logger.utils.list(
             [`${paint.iris.bold(Object.keys(this.services).length)} services`],
             paint.mint.bold('Loaded'),
@@ -85,7 +85,11 @@ export class MongooseServiceRegistry {
         );
     }
 
-    public initializeService(Service: MongooseServiceConstructor): void {
+    public async onHmr(event: HmrUpdateEvent): Promise<void> {
+        await this.serviceFiles.handle(event);
+    }
+
+    private initializeService(Service: MongooseServiceConstructor): void {
         // isServiceClass already checked ServiceMetadataKey exists, since the decorator writes both keys together
         const modelName = Reflect.getMetadata(ModelNameMetadataKey, Service) as string;
 
@@ -108,9 +112,9 @@ export class MongooseServiceRegistry {
         new Service(this.plugin, this.core, model);
     }
 
-    public unregister(Service: MongooseServiceConstructor, artifacts?: MongooseArtifact): void {
-        const key = artifacts?.key ?? metadataString(ServiceMetadataKey, Service);
-        const modelName = artifacts?.modelName ?? metadataString(ModelNameMetadataKey, Service);
+    private unregister(Service: MongooseServiceConstructor): void {
+        const key = metadataString(ServiceMetadataKey, Service);
+        const modelName = metadataString(ModelNameMetadataKey, Service);
 
         if (key) Reflect.deleteProperty(this.services, key);
 
@@ -123,16 +127,7 @@ export class MongooseServiceRegistry {
         this.ownModels.delete(modelName);
     }
 
-    public getArtifacts(ctor: MongooseServiceConstructor): MongooseArtifact {
-        const key = metadataString(ServiceMetadataKey, ctor);
-        const modelName = metadataString(ModelNameMetadataKey, ctor);
-        return {
-            ...(key && { key }),
-            ...(modelName && { modelName })
-        };
-    }
-
-    public isServiceClass(obj: unknown): obj is MongooseServiceConstructor {
+    private isServiceClass(obj: unknown): obj is MongooseServiceConstructor {
         return (
             typeof obj === 'function' &&
             obj.prototype instanceof MongooseService &&

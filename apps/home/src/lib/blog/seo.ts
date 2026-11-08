@@ -1,12 +1,9 @@
 import { ORG_ID, SOFTWARE_ID } from '@seedcord/ui';
-import { OG_SIZE } from '@seedcord/ui/og';
-import { ogPageCardAlt } from '@seedcord/ui/OgCard';
 
 import { canonicalUrl, DEFAULT_OG_IMAGE, SITE_NAME } from '#lib/site.ts';
 
 import { BLOG_DESCRIPTION, BLOG_NAME, BLOG_TITLE } from './about';
-import { OG_PILL, ogMeta } from './ogCard';
-import { BLOG_PATH, FEED_PATH, ogImagePath, twinPath } from './paths';
+import { BLOG_PATH, FEED_PATH, twinPath } from './paths';
 import { lastChanged } from './summary';
 
 import type { PostAuthor, PostSummary } from './summary';
@@ -14,6 +11,13 @@ import type { Metadata } from 'next';
 import type { Blog, Graph, Person, WithContext } from 'schema-dts';
 
 const postId = (post: Pick<PostSummary, 'url'>): string => `${canonicalUrl(post.url)}#post`;
+
+type ShareImage = Pick<typeof DEFAULT_OG_IMAGE, 'url' | 'width' | 'height'>;
+
+function shareImage({ thumbnail }: PostSummary): ShareImage {
+    if (thumbnail === undefined) return DEFAULT_OG_IMAGE;
+    return { url: thumbnail.src, width: thumbnail.width, height: thumbnail.height };
+}
 
 const FEED = { 'application/rss+xml': [{ url: canonicalUrl(FEED_PATH), title: BLOG_NAME }] };
 
@@ -42,8 +46,7 @@ export const BLOG_METADATA: Metadata = {
 
 export function postMetadata(post: PostSummary): Metadata {
     const url = canonicalUrl(post.url);
-    const alt = ogPageCardAlt({ pill: OG_PILL, name: post.title, meta: ogMeta(post) });
-    const images = [{ url: ogImagePath(post.slug), ...OG_SIZE, alt }];
+    const images = [shareImage(post)];
     const visibility = post.unlisted
         ? { robots: { index: false, follow: false }, types: FEED }
         : { robots: null, types: { ...FEED, 'text/markdown': canonicalUrl(twinPath(post.slug)) } };
@@ -86,7 +89,7 @@ export function postJsonLd(post: PostSummary): Graph {
                 description: post.description,
                 url,
                 mainEntityOfPage: url,
-                image: canonicalUrl(ogImagePath(post.slug)),
+                image: canonicalUrl(shareImage(post).url),
                 datePublished: post.created,
                 dateModified: lastChanged(post),
                 timeRequired: `PT${post.minutes}M`,

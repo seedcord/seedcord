@@ -1,6 +1,6 @@
 {
     "name": "@seedcord/gateway",
-    "version": "0.9.0",
+    "version": "0.10.0",
     "description": "Gateway transport for seedcord bots, using the discord.js client",
     "keywords": [
         "discord",
@@ -57,8 +57,8 @@
     "scripts": {
         "build": "vp pack",
         "clean": "rm -rf dist",
-        "lint": "eslint '**/*.{ts,tsx}' --cache --no-error-on-unmatched-pattern",
-        "lint:fix": "eslint '**/*.{ts,tsx}' --fix --cache --no-error-on-unmatched-pattern",
+        "lint": "eslint '**/*.{ts,tsx}' --max-warnings=0 --cache --no-error-on-unmatched-pattern",
+        "lint:fix": "eslint '**/*.{ts,tsx}' --fix --max-warnings=0 --cache --no-error-on-unmatched-pattern",
         "tc": "tsgo --noEmit",
         "test": "vp test run",
         "test:watch": "vp test dev",

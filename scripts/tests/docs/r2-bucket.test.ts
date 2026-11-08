@@ -1,6 +1,6 @@
 import path from 'node:path';
 
-import { describe, expect, it } from 'vite-plus/test';
+import { describe, expect, it, vi } from 'vite-plus/test';
 
 import { R2Bucket } from '#src/docs/R2Bucket';
 
@@ -148,6 +148,27 @@ describe('R2Bucket site files', () => {
         const deletes = sent.slice(1).map((command) => command.input.Delete as { Objects: { Key: string }[] });
         expect(deletes.map(({ Objects }) => Objects.length)).toEqual([1000, 500]);
         expect(deletes[0]?.Objects[0]?.Key).toBe('builds/a/page-0.html');
+    });
+
+    it('sends the delete requests for a folder at the same time', async () => {
+        const keys = Array.from({ length: 3000 }, (_, index) => ({ Key: `builds/a/page-${index}.html` }));
+        const { promise: r2Answers, resolve: answerDeletes } = Promise.withResolvers<object>();
+        const deletes: unknown[] = [];
+        const send = (command: { constructor: { name: string }; input: { Delete?: unknown } }): Promise<object> => {
+            if (command.constructor.name !== 'DeleteObjectsCommand') {
+                return Promise.resolve({ Contents: keys, IsTruncated: false });
+            }
+            deletes.push(command.input.Delete);
+            return r2Answers;
+        };
+        // fixture cast: R2Bucket only ever calls send()
+        const bucket = new R2Bucket({ send } as unknown as S3Client, 'site');
+
+        const deleting = bucket.deleteFolder('builds/a/');
+        await vi.waitFor(() => expect(deletes).toHaveLength(3));
+        answerDeletes({});
+
+        await deleting;
     });
 
     it('throws when the bucket refuses to delete some of the keys', async () => {

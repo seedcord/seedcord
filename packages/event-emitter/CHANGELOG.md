@@ -1,5 +1,11 @@
 # @seedcord/event-emitter
 
+## 0.2.1
+
+### 🩹 Patch
+
+- `@seedcord/core` now reads `onListenerRun` from here. ([#442](https://github.com/seedcord/seedcord/pull/442))
+
 ## 0.2.0
 
 ### 💥 Breaking

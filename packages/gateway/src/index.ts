@@ -38,7 +38,6 @@ export type { GatewayPluginOptions, PluginLifecycleSpec, PluginOptions } from '.
 export * from './Seedcord';
 
 export * from '@seedcord/core';
-export { HmrModuleHandler } from '@seedcord/core/hmr';
 export * from '@seedcord/errors';
 export * from '@seedcord/event-emitter';
 export * from '@seedcord/logger';

@@ -56,12 +56,8 @@ export class PluginLifecycle {
         this.completedInits.clear();
     }
 
-    public afterTimedOutInits(run: () => void): void {
-        if (this.timedOutInits.size === 0) {
-            run();
-            return;
-        }
-        void Promise.allSettled(this.timedOutInits).then(run);
+    public async timedOutInitsSettled(): Promise<void> {
+        await Promise.allSettled(this.timedOutInits);
     }
 
     private async runInits(group: readonly Attachment[]): Promise<void> {
@@ -86,7 +82,8 @@ export class PluginLifecycle {
     }
 
     // disposeCompleted skips a plugin missing from completedInits
-    private disposeWhenInitResolves({ key, instance, spec }: Attachment, running: Promise<void>): void {
+    private disposeWhenInitResolves(attachment: Attachment, running: Promise<void>): void {
+        const { key, instance, spec } = attachment;
         const dispose = instance.dispose?.bind(instance);
 
         const settled = running.then(

@@ -9,6 +9,7 @@ import { toWebRequest, writeWebResponse } from '#src/node/webBridge';
 import { registerBakedIds } from '#tests/helpers/bakedIds';
 import { createSigner, type Signer } from '#tests/helpers/ed25519';
 import { VALID_TOKEN } from '#tests/helpers/fixtures';
+import { capturingCtx } from '#tests/helpers/interactions';
 
 import type { AddressInfo } from 'node:net';
 
@@ -52,7 +53,7 @@ async function readySeedcord(): Promise<ReadySeedcord> {
         bot: { interactions: { path: null }, commands: { path: null } },
         subscribers: { path: null }
     });
-    const server = await startServer((request) => seedcord.fetch(request));
+    const server = await startServer((request) => seedcord.fetch(request, undefined, capturingCtx()));
     return {
         signer,
         url: urlOf(server),

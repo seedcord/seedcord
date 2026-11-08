@@ -87,6 +87,11 @@ export class TypedEventEmitter<TEvents extends EventMap<TEvents>> {
         });
     }
 
+    /** @internal */
+    protected onListenerRun(_run: Promise<void>): void {
+        // a subclass overrides this to wait for async listeners
+    }
+
     private dispatch(event: EventKey<TEvents>, args: readonly unknown[]): boolean {
         const slot = this.registrations.get(event);
         if (!slot || slot.size === 0) return false;
@@ -104,9 +109,11 @@ export class TypedEventEmitter<TEvents extends EventMap<TEvents>> {
         const current = [...slot];
         for (const registration of current) {
             try {
-                void Promise.resolve(registration.call(...args)).catch((error: unknown) => {
-                    this.onListenerError(error, event);
-                });
+                this.onListenerRun(
+                    Promise.resolve(registration.call(...args)).catch((error: unknown) => {
+                        this.onListenerError(error, event);
+                    })
+                );
             } catch (error) {
                 this.onListenerError(error, event);
             }

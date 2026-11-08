@@ -1,19 +1,19 @@
+import { FolderExports } from '@seedcord/core';
 import { paint } from '@seedcord/errors';
 import { importFiles } from '@seedcord/utils';
 
 import { KyselyServiceMetadataKey } from './decorators/RegisterKyselyService';
 import { KyselyService } from './KyselyService';
 
-import type { KyselyArtifact, KyselyPostgres } from './KyselyPostgres';
+import type { KyselyPostgres } from './KyselyPostgres';
 import type { KyselyServiceConstructor } from './KyselyService';
 import type { KyselyServices } from './types/KyselyServices';
 import type { CoreBase } from '@seedcord/core';
 import type { Logger } from '@seedcord/logger';
+import type { HmrUpdateEvent } from '@seedcord/types';
 
 interface FoundService {
     readonly key: string;
-    readonly fullPath: string;
-    readonly relativePath: string;
     readonly Service: KyselyServiceConstructor;
 }
 
@@ -24,12 +24,22 @@ function serviceKeyOf(Service: KyselyServiceConstructor): string | undefined {
 
 export class KyselyServiceRegistry {
     private readonly services = Object.create(null) as KyselyServices;
+    private readonly serviceFiles: FolderExports<KyselyServiceConstructor>;
 
     constructor(
         private readonly plugin: KyselyPostgres,
         private readonly core: CoreBase,
-        private readonly logger: Logger
-    ) {}
+        private readonly logger: Logger,
+        dir: string
+    ) {
+        this.serviceFiles = new FolderExports({
+            dir,
+            is: (value): value is KyselyServiceConstructor => this.isServiceClass(value),
+            register: (Service) => this.initializeService(Service),
+            unregister: (Service) => this.unregister(Service),
+            logger
+        });
+    }
 
     public get map(): KyselyServices {
         return this.services;
@@ -44,24 +54,17 @@ export class KyselyServiceRegistry {
     }
 
     public async *serviceClassesIn(dir: string): AsyncGenerator<FoundService> {
-        for await (const { fullPath, relativePath, imported } of importFiles(dir)) {
+        for await (const { imported } of importFiles(dir)) {
             for (const Service of Object.values(imported)) {
                 if (!this.isServiceClass(Service)) continue;
                 const key = serviceKeyOf(Service);
-                if (key !== undefined) yield { key, fullPath, relativePath, Service };
+                if (key !== undefined) yield { key, Service };
             }
         }
     }
 
-    public async loadFromDirectory(dir: string): Promise<void> {
-        this.logger.debug(paint.mute(dir));
-
-        for await (const { fullPath, relativePath, Service } of this.serviceClassesIn(dir)) {
-            this.initializeService(Service);
-            this.logger.utils.registration(Service.name, relativePath, undefined, 'trace');
-            this.plugin.trackServiceFile(fullPath, Service);
-        }
-
+    public async load(): Promise<void> {
+        await this.serviceFiles.load();
         this.logger.utils.list(
             [`${paint.iris.bold(Object.keys(this.services).length)} services`],
             paint.mint.bold('Loaded'),
@@ -69,17 +72,21 @@ export class KyselyServiceRegistry {
         );
     }
 
-    public unregister(Service: KyselyServiceConstructor, artifacts?: KyselyArtifact): void {
-        const key = artifacts?.key ?? serviceKeyOf(Service);
+    public async onHmr(event: HmrUpdateEvent): Promise<void> {
+        await this.serviceFiles.handle(event);
+    }
+
+    private unregister(Service: KyselyServiceConstructor): void {
+        const key = serviceKeyOf(Service);
         if (key) Reflect.deleteProperty(this.services, key);
     }
 
-    public initializeService(Service: KyselyServiceConstructor): void {
+    private initializeService(Service: KyselyServiceConstructor): void {
         // eslint-disable-next-line no-new -- the base ctor calls _register, so constructing is the registration
         new Service(this.plugin, this.core);
     }
 
-    public isServiceClass(obj: unknown): obj is KyselyServiceConstructor {
+    private isServiceClass(obj: unknown): obj is KyselyServiceConstructor {
         return (
             typeof obj === 'function' &&
             obj.prototype instanceof KyselyService &&

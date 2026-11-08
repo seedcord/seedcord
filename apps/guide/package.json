@@ -19,8 +19,8 @@
         "deploy": "wrangler deploy",
         "types": "wrangler types workerd/worker-configuration.d.ts",
         "postinstall": "wrangler types workerd/worker-configuration.d.ts",
-        "lint": "eslint '**/*.{ts,tsx}' --cache --no-error-on-unmatched-pattern",
-        "lint:fix": "eslint '**/*.{ts,tsx}' --fix --cache --no-error-on-unmatched-pattern",
+        "lint": "eslint '**/*.{ts,tsx}' --max-warnings=0 --cache --no-error-on-unmatched-pattern",
+        "lint:fix": "eslint '**/*.{ts,tsx}' --fix --max-warnings=0 --cache --no-error-on-unmatched-pattern",
         "tc": "fumadocs-mdx && tsgo --noEmit && tsgo -p workerd --noEmit",
         "test": "vp test run",
         "test:watch": "vp test dev"

@@ -8,6 +8,7 @@ import { dispatchInteraction } from './dispatch/dispatchInteraction';
 import { resolve } from './dispatch/resolve';
 import { Ed25519Verifier } from './receiver/Ed25519Verifier';
 import { ReplayGuard } from './receiver/ReplayGuard';
+import { keepRequestOpenFor } from './requestScope';
 
 import type { InteractionMiddlewareConstructor } from '#handlers/constructors';
 import type { ValidInteractionTypes } from '#handlers/interactionTypes';
@@ -29,7 +30,7 @@ const PING: number = InteractionType.Ping;
 
 const decoder = new TextDecoder();
 
-type Outcome = 'not-post' | 'unsigned' | 'stale' | 'bad-signature' | 'bad-body' | 'ping' | 'replay' | 'dispatched';
+type Outcome = 'unsigned' | 'stale' | 'bad-signature' | 'bad-body' | 'ping' | 'replay' | 'dispatched';
 type Answer = readonly [Response, Outcome];
 
 // discord only POSTs to the interactions endpoint
@@ -42,62 +43,37 @@ function hasInteractionType(payload: unknown): payload is { type: number } {
     return typeof payload === 'object' && payload !== null && 'type' in payload && typeof payload.type === 'number';
 }
 
-/** Matches the shape of the Workers `ExecutionContext`. Work that continues after the 202 response runs under its `waitUntil`. */
-export interface EngineContext {
-    waitUntil(promise: Promise<unknown>): void;
-}
+export class InteractionEngine {
+    private readonly verifier: Ed25519Verifier;
+    private readonly replays = new ReplayGuard();
+    private readonly logger = new Logger('Engine', { channel: 'bot' });
 
-export type Engine = (request: Request, ctx?: EngineContext) => Promise<Response>;
-
-export function buildEngine(
-    core: Core,
-    maps: RouteMaps,
-    middlewares: MiddlewareRegistry<InteractionMiddlewareConstructor>,
-    publicKey: string
-): Engine {
-    const verifier = new Ed25519Verifier(publicKey);
-    const replays = new ReplayGuard();
-    // eager because env binds before this factory runs
-    const logger = new Logger('Engine', { channel: 'bot' });
-
-    async function dispatchMatched(
-        match: NonNullable<ReturnType<typeof resolve>>,
-        payload: ValidInteractionTypes,
-        ctx: EngineContext | undefined
-    ): Promise<void> {
-        const start = await dispatchInteraction({ match, payload, core, middlewares });
-        if (!start) return;
-
-        // without this catch the rejection reaches the process unhandled
-        const work = start().catch(rootFault);
-        ctx?.waitUntil(work);
+    constructor(
+        private readonly core: Core,
+        private readonly maps: RouteMaps,
+        private readonly middlewares: MiddlewareRegistry<InteractionMiddlewareConstructor>,
+        publicKey: string
+    ) {
+        this.verifier = new Ed25519Verifier(publicKey);
     }
 
-    function rootFault(caught: unknown): void {
-        const error = asError(caught);
-        logger.error('dispatch failed past the boundary', error);
-        core.bus[PublishDefault]('unhandledInteractionError', { error });
-    }
-
-    const handle = async (request: Request, ctx?: EngineContext): Promise<Response> => {
-        const [response, outcome] = await respond(request, ctx);
-        logger.trace(`${paint.sky.bold(request.method)} ${outcome} ${paint.amber(String(response.status))}`);
+    public async handle(request: Request): Promise<Response> {
+        const [response, outcome] = await this.respond(request);
+        this.logger.trace(`${paint.sky.bold(request.method)} ${outcome} ${paint.amber(String(response.status))}`);
         return response;
-    };
+    }
 
-    const respond = async (request: Request, ctx?: EngineContext): Promise<Answer> => {
-        const notPost = rejectNonPost(request);
-        if (notPost) return [notPost, 'not-post'];
-
+    // only POSTs get here. edge Seedcord.fetch and NodeEndpoint reject every other method first
+    private async respond(request: Request): Promise<Answer> {
         const signature = request.headers.get(SIGNATURE_HEADER);
         const timestamp = request.headers.get(TIMESTAMP_HEADER);
         if (signature === null || timestamp === null) return [new Response(null, { status: UNAUTHORIZED }), 'unsigned'];
 
-        const timestampMs = replays.fresh(timestamp);
+        const timestampMs = this.replays.fresh(timestamp);
         if (timestampMs === null) return [new Response(null, { status: UNAUTHORIZED }), 'stale'];
 
         const body = new Uint8Array(await request.arrayBuffer());
-        if (!(await verifier.verify(signature, timestamp, body))) {
+        if (!(await this.verifier.verify(signature, timestamp, body))) {
             return [new Response(null, { status: UNAUTHORIZED }), 'bad-signature'];
         }
 
@@ -114,20 +90,40 @@ export function buildEngine(
             return [Response.json({ type: InteractionResponseType.Pong }), 'ping'];
         }
 
-        if (!replays.unseen(signature, timestampMs)) return [new Response(null, { status: UNAUTHORIZED }), 'replay'];
-
-        try {
-            // justified: the payload is signed by Discord, and the type field anchors the discriminated union
-            core.bus[PublishDefault]('anyInteraction', { interaction: payload as APIInteraction });
-            const match = resolve(maps, payload as APIInteraction);
-            if (match) await dispatchMatched(match, payload as ValidInteractionTypes, ctx);
-        } catch (caught) {
-            // the 202 has to go out either way or discord drops the interaction
-            rootFault(caught);
+        if (!this.replays.unseen(signature, timestampMs)) {
+            return [new Response(null, { status: UNAUTHORIZED }), 'replay'];
         }
 
-        return [new Response(null, { status: ACCEPTED }), 'dispatched'];
-    };
+        // justified: the payload is signed by Discord, and the type field anchors the discriminated union
+        await this.dispatch(payload as APIInteraction);
 
-    return handle;
+        return [new Response(null, { status: ACCEPTED }), 'dispatched'];
+    }
+
+    private async dispatch(interaction: APIInteraction): Promise<void> {
+        try {
+            this.core.bus[PublishDefault]('anyInteraction', { interaction });
+            const match = resolve(this.maps, interaction);
+            if (match) {
+                const payload = interaction as ValidInteractionTypes;
+                const start = await dispatchInteraction({
+                    match,
+                    payload,
+                    core: this.core,
+                    middlewares: this.middlewares
+                });
+                // without this catch the rejection reaches the process unhandled
+                if (start) keepRequestOpenFor(start().catch((caught: unknown) => this.rootFault(caught)));
+            }
+        } catch (caught) {
+            // the 202 has to go out either way or discord drops the interaction
+            this.rootFault(caught);
+        }
+    }
+
+    private rootFault(caught: unknown): void {
+        const error = asError(caught);
+        this.logger.error('dispatch failed past the boundary', error);
+        this.core.bus[PublishDefault]('unhandledInteractionError', { error });
+    }
 }

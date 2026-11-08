@@ -135,7 +135,6 @@ describe('fault boundary', () => {
         const response = await handle(await signedRequest(signer, slashPayload('unstable')), ctx);
 
         expect(response.status).toBe(202);
-        expect(ctx.waitUntil).not.toHaveBeenCalled();
         const posts = postedBodies();
         expect(posts).toHaveLength(1);
         expect(posts[0]?.body.type).toBe(4);

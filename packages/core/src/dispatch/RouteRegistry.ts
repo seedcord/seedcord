@@ -94,14 +94,10 @@ export class RouteRegistry<Ctor extends RoutableConstructor> {
         return writes.length > 0;
     }
 
-    public unregister(ctor: Ctor, routes: readonly RegisteredRoute<Ctor>[] = this.routesOf(ctor)): void {
-        for (const { kind, route } of routes) {
+    public unregister(ctor: Ctor): void {
+        for (const { kind, route } of this.allRoutes) {
             if (this.maps[kind].get(route)?.ctor === ctor) this.maps[kind].delete(route);
         }
-    }
-
-    public routesOf(ctor: Ctor): RegisteredRoute<Ctor>[] {
-        return this.allRoutes.filter((route) => route.ctor === ctor);
     }
 
     public warnUnhandledRoutes(logger: Logger, leaves: Iterable<string>): void {

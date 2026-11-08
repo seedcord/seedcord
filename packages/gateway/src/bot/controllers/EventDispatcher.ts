@@ -47,8 +47,6 @@ interface RegisteredEventHandlerEntry {
     readonly frequency: EventFrequency;
 }
 
-type EventArtifact = keyof ClientEvents;
-
 /**
  * Interactions route through InteractionDispatcher.
  *
@@ -65,12 +63,7 @@ export class EventDispatcher implements Initializeable, HmrAware {
     private readonly onceRuns = new OnceTracker();
     private readonly attachedEvents = new Set<keyof ClientEvents>();
 
-    private readonly loader: HandlerLoader<
-        EventHandlerConstructor,
-        EventMiddlewareConstructor,
-        keyof ClientEvents,
-        EventArtifact[]
-    >;
+    private readonly loader: HandlerLoader<EventHandlerConstructor, EventMiddlewareConstructor, keyof ClientEvents>;
 
     public constructor(
         protected core: Core,
@@ -92,17 +85,8 @@ export class EventDispatcher implements Initializeable, HmrAware {
             isHandler: (value): value is EventHandlerConstructor => this.isEventHandlerClass(value),
             isMiddleware: (value): value is EventMiddlewareConstructor => this.isMiddlewareClass(value),
             storeHandler: (ctor) => this.storeHandler(ctor),
-            removeHandler: (ctor, events) => this.unregisterHandler(ctor, events),
-            artifactsOf: (ctor) => this.getArtifacts(ctor)
+            removeHandler: (ctor) => this.unregisterHandler(ctor)
         });
-    }
-
-    private getArtifacts(ctor: EventHandlerConstructor): EventArtifact[] {
-        const events: EventArtifact[] = [];
-        for (const [event, handlers] of this.eventMap.entries()) {
-            if (handlers.some((h) => h.ctor === ctor)) events.push(event);
-        }
-        return events;
     }
 
     public async init(): Promise<void> {
@@ -141,15 +125,10 @@ export class EventDispatcher implements Initializeable, HmrAware {
         await this.loader.onHmr(event);
     }
 
-    private unregisterHandler(handlerClass: EventHandlerConstructor, artifacts?: EventArtifact[]): void {
-        const events = artifacts ?? [...this.eventMap.keys()];
-        for (const event of events) {
-            const handlers = this.eventMap.get(event);
-            if (!handlers) continue;
+    private unregisterHandler(handlerClass: EventHandlerConstructor): void {
+        for (const [event, handlers] of this.eventMap) {
             const index = handlers.findIndex((h) => h.ctor === handlerClass);
-            if (!(index !== -1)) {
-                continue;
-            }
+            if (index === -1) continue;
 
             handlers.splice(index, 1);
             if (handlers.length === 0) {

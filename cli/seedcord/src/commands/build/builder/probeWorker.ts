@@ -25,11 +25,26 @@ function notLoaded(response: Response): string {
     return `${answered} Check that ${paint.bold('instance')} default-exports a ${paint.bold('new Seedcord(...)')} from ${paint.bold('@seedcord/http')}.`;
 }
 
+function connectTimedOut(error: unknown): boolean {
+    if (!Error.isError(error) || !Error.isError(error.cause)) return false;
+    return 'code' in error.cause && error.cause.code === 'UND_ERR_CONNECT_TIMEOUT';
+}
+
+// node's fetch gives up connecting after 10s, even with time left on the signal
+async function fetchUntilConnected(url: string, signal: AbortSignal): Promise<Response> {
+    try {
+        return await fetch(url, { signal });
+    } catch (error: unknown) {
+        if (!connectTimedOut(error)) throw error;
+        return fetchUntilConnected(url, signal);
+    }
+}
+
 // workerd loads the worker on its first request
 export async function probeWorker(url: string, timeoutMs = PROBE_TIMEOUT_MS): Promise<ProbeFailure | undefined> {
     let response: Response;
     try {
-        response = await fetch(url, { signal: AbortSignal.timeout(timeoutMs) });
+        response = await fetchUntilConnected(url, AbortSignal.timeout(timeoutMs));
     } catch (error: unknown) {
         return { reason: unanswered(error, timeoutMs), cause: error };
     }

@@ -1,6 +1,6 @@
 {
     "name": "@seedcord/mock-gateway",
-    "version": "0.2.36",
+    "version": "0.2.37",
     "private": true,
     "description": "Gateway-transport mock bot for demonstration and testing",
     "repository": {
@@ -15,8 +15,8 @@
         "start": "vp run build && node --enable-source-maps dist/index.mjs",
         "codegen": "seedcord codegen",
         "clean": "rm -rf dist",
-        "lint": "eslint '**/*.{ts,tsx}' --cache --no-error-on-unmatched-pattern",
-        "lint:fix": "eslint '**/*.{ts,tsx}' --fix --cache --no-error-on-unmatched-pattern",
+        "lint": "eslint '**/*.{ts,tsx}' --max-warnings=0 --cache --no-error-on-unmatched-pattern",
+        "lint:fix": "eslint '**/*.{ts,tsx}' --fix --max-warnings=0 --cache --no-error-on-unmatched-pattern",
         "tc": "tsgo --noEmit",
         "tc:watch": "tsc --noEmit --watch"
     },

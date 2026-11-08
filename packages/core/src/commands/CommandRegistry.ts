@@ -1,13 +1,12 @@
 import { SlashCommandBuilder } from '@discordjs/builders';
 import { SeedcordErrorCode, paint } from '@seedcord/errors';
-import { SeedcordError } from '@seedcord/errors/internal';
+import { displayPath, SeedcordError } from '@seedcord/errors/internal';
 import { Logger } from '@seedcord/logger';
-import { formatFilePath, importFiles } from '@seedcord/utils';
+import { formatFilePath } from '@seedcord/utils';
 import { botFolder } from '@seedcord/utils/internal';
-import { Envapter } from 'envapt';
 
 import { getDevChannel } from '#hmr/devChannel';
-import { HmrModuleHandler } from '#hmr/HmrModuleHandler';
+import { FolderExports } from '#hmr/FolderExports';
 import { CommandInjector } from '#src/commands/CommandInjector';
 import { contextMenuLeaves } from '#src/commands/contextMenuLeaves';
 import { DeployReporter } from '#src/commands/DeployReporter';
@@ -36,7 +35,7 @@ import type { AllSubscriptions } from '#subscribers/types/Subscriptions';
 import type { HmrAware, HmrUpdateEvent } from '@seedcord/types';
 import type { APIApplicationCommand } from 'discord-api-types/v10';
 
-type CommandArtifact = DeployTarget & { name: string };
+type RegisteredCommand = DeployTarget & { name: string };
 
 // gateway's and http's InteractionDispatcher both fit this
 interface RouteWarnings {
@@ -64,13 +63,13 @@ export class CommandRegistry implements Initializeable, HmrAware {
 
     public readonly scopedCommands = new Map<ScopeId, CommandBuilder[]>();
 
-    private readonly ctorToCommand = new Map<CommandCtor, CommandArtifact>();
+    private readonly ctorToCommand = new Map<CommandCtor, RegisteredCommand>();
 
     // batched during bulk load. A reload reports on the hmr channel instead
     private loading = false;
     private readonly loadedCommands: { name: string; from: string; kind: 'slash command' | 'context menu' }[] = [];
 
-    private readonly hmrHandler?: HmrModuleHandler<CommandCtor, void, CommandArtifact | undefined>;
+    private readonly commandFiles: FolderExports<CommandCtor>;
     private readonly pendingEvents = new Map<string, HmrUpdateEvent>();
     private readonly deploys = new KeyedQueue();
     private readonly injector = new CommandInjector();
@@ -87,22 +86,13 @@ export class CommandRegistry implements Initializeable, HmrAware {
         }
         this.dir = commands.path;
         this.configuredGuilds = commands.guilds ?? [];
-
-        if (!Envapter.isDevelopment && !Envapter.isTest) return;
-        this.hmrHandler = new HmrModuleHandler<CommandCtor, void, CommandArtifact | undefined>({
-            handlers: {
-                dir: this.dir,
-                is: isCommandClass,
-                register: this.registerCommand.bind(this),
-                unregister: this.unregisterCommand.bind(this),
-                getArtifacts: this.getArtifacts.bind(this)
-            },
+        this.commandFiles = new FolderExports({
+            dir: this.dir,
+            is: isCommandClass,
+            register: this.registerCommand.bind(this),
+            unregister: this.unregisterCommand.bind(this),
             logger: this.logger
         });
-    }
-
-    private getArtifacts(ctor: CommandCtor): CommandArtifact | undefined {
-        return this.ctorToCommand.get(ctor);
     }
 
     /** @internal */
@@ -113,7 +103,7 @@ export class CommandRegistry implements Initializeable, HmrAware {
         this.loading = true;
         this.loadedCommands.length = 0;
         try {
-            await this.loadCommands(this.dir);
+            await this.commandFiles.load();
         } finally {
             this.loading = false;
         }
@@ -176,7 +166,7 @@ export class CommandRegistry implements Initializeable, HmrAware {
 
         this.logger.debug(paint.italic('Refreshing commands...'));
         for (const event of events) {
-            await this.hmrHandler?.handle(event);
+            await this.commandFiles.handle(event);
         }
         await this.setCommands();
     }
@@ -190,21 +180,11 @@ export class CommandRegistry implements Initializeable, HmrAware {
                 files: [...this.pendingEvents.keys()].map((f) => formatFilePath(f))
             });
         } else {
-            await this.hmrHandler?.handle(event);
+            await this.commandFiles.handle(event);
         }
     }
 
-    private async loadCommands(dir: string): Promise<void> {
-        for await (const { fullPath, relativePath, imported } of importFiles(dir)) {
-            for (const exported of Object.values(imported)) {
-                if (!isCommandClass(exported)) continue;
-                this.registerCommand(exported, relativePath);
-                this.hmrHandler?.trackHandler(fullPath, exported);
-            }
-        }
-    }
-
-    private registerCommand(Ctor: CommandCtor, rel: string): void {
+    private registerCommand(Ctor: CommandCtor, file: string): void {
         const meta = Reflect.getMetadata(CommandMetadataKey, Ctor) as CommandMeta | undefined;
 
         if (!meta) return;
@@ -224,12 +204,12 @@ export class CommandRegistry implements Initializeable, HmrAware {
         this.ctorToCommand.set(Ctor, { name: comp.name, ...target });
 
         if (this.loading) {
-            this.loadedCommands.push({ name: comp.name, from: formatFilePath(rel), kind });
+            this.loadedCommands.push({ name: comp.name, from: displayPath(file), kind });
         }
     }
 
-    private unregisterCommand(ctor: CommandCtor, artifacts?: CommandArtifact): void {
-        const info = artifacts ?? this.ctorToCommand.get(ctor);
+    private unregisterCommand(ctor: CommandCtor): void {
+        const info = this.ctorToCommand.get(ctor);
         if (!info) return;
 
         for (const scope of scopeIdsOf(info)) {

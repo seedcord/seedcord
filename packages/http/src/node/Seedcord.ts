@@ -1,6 +1,7 @@
 import { once } from 'node:events';
 import { createServer } from 'node:http';
 
+import { REST } from '@discordjs/rest';
 import { bindBotColor, busLoggerOf, connectDevChannel, getDevChannel, HmrManager } from '@seedcord/core/internal';
 import { CoordinatedShutdown, CoordinatedStartup, ServerHost } from '@seedcord/core/node';
 import { DRAIN_TASK_TIMEOUT_MS, HealthResponder, ShutdownPhase, StartupPhase } from '@seedcord/core/node/internal';
@@ -20,7 +21,6 @@ import { NodeEndpoint } from './NodeEndpoint';
 import { toWebRequest, writeWebResponse } from './webBridge';
 
 import type { HttpServerConfig } from '#interfaces/Config';
-import type { REST } from '@discordjs/rest';
 import type { SeedcordInstance } from '@seedcord/types/internal';
 import type { Server } from 'node:http';
 import type { AddressInfo } from 'node:net';
@@ -70,7 +70,7 @@ export class Seedcord extends ServerHost<'http'> implements SeedcordInstance {
 
         bindBotColor(() => this.config.botColor);
 
-        this.#service = new InteractionsService(this, config, config.bot.restOptions);
+        this.#service = new InteractionsService(this, config, new REST(config.bot.restOptions));
         this.rest = this.#service.rest;
         this.#endpoint = new NodeEndpoint(
             this.#service,

@@ -1,5 +1,12 @@
 # @seedcord/types
 
+## 0.16.2
+
+### 🩹 Patch
+
+- `bus.on()`, `bus.once()` and `ILogSink.onLog` now take a callback that can return anything, so an async one no longer trips `no-misused-promises` and a one-liner like `(data) => seen.push(data)` still compiles. ([#442](https://github.com/seedcord/seedcord/pull/442))
+- Removed the `node` field from `ILogSink` and the winston sinks, since nothing ever read it. ([#442](https://github.com/seedcord/seedcord/pull/442))
+
 ## 0.16.1
 
 ### 🩹 Patch
