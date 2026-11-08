@@ -2,9 +2,9 @@ import { PRODUCTION_SITES } from '@seedcord/brand';
 import { cn } from '@seedcord/ui';
 import { Materwelon } from '@seedcord/ui/Materwelon';
 
-import { HeroStart } from '#components/home/HeroStart.tsx';
-import { PosterButton } from '#components/ui/PosterButton.tsx';
-import { GUIDE_URL } from '#lib/site.ts';
+import { HeroStart } from '#components/home/HeroStart';
+import { PosterButton } from '#components/ui/PosterButton';
+import { GUIDE_URL } from '#lib/site';
 
 import type { ReactNode } from 'react';
 

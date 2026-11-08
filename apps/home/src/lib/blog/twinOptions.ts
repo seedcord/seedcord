@@ -1,7 +1,7 @@
 import { absoluteUrl } from '@seedcord/ui/sites';
 import { defaultHandlers } from 'mdast-util-to-markdown';
 
-import { canonicalUrl } from '#lib/site.ts';
+import { canonicalUrl } from '#lib/site';
 
 import type { LLMsOptions } from 'fumadocs-core/mdx-plugins/remark-llms';
 

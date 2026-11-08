@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vite-plus/test';
 
-import { linkKind } from '#lib/links.ts';
+import { linkKind } from '#lib/links';
 
 describe('linkKind', () => {
     it.each(['/blog/', '/blog/sample/#a-heading'])('treats %s as a home page', (href) => {

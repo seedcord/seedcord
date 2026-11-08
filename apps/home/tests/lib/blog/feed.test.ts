@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vite-plus/test';
 
-import { rssFeed } from '#lib/blog/feed.ts';
+import { rssFeed } from '#lib/blog/feed';
 import { POST } from '#tests/fixtures/post';
 
 describe('rssFeed', () => {

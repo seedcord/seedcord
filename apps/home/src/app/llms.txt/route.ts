@@ -1,5 +1,5 @@
-import { listedPosts } from '#lib/blog/posts.ts';
-import { llmsText } from '#lib/llms.ts';
+import { listedPosts } from '#lib/blog/posts';
+import { llmsText } from '#lib/llms';
 
 export const dynamic = 'force-static';
 export const revalidate = false;

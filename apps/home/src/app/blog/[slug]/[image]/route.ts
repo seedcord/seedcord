@@ -1,7 +1,7 @@
 import { readFileSync } from 'node:fs';
 import path from 'node:path';
 
-import { allPosts, postFromParams } from '#lib/blog/posts.ts';
+import { allPosts, postFromParams } from '#lib/blog/posts';
 
 export const dynamic = 'force-static';
 export const dynamicParams = false;

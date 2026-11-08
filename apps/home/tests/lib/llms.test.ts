@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vite-plus/test';
 
-import { llmsText } from '#lib/llms.ts';
+import { llmsText } from '#lib/llms';
 import { POST } from '#tests/fixtures/post';
 
 describe('llmsText', () => {

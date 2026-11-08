@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vite-plus/test';
 
-import { postMetadata } from '#lib/blog/seo.ts';
-import { DEFAULT_OG_IMAGE } from '#lib/site.ts';
+import { postMetadata } from '#lib/blog/seo';
+import { DEFAULT_OG_IMAGE } from '#lib/site';
 import { POST } from '#tests/fixtures/post';
 
 describe('postMetadata', () => {

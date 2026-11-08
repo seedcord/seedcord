@@ -1,6 +1,6 @@
 import { ORG_ID, SOFTWARE_ID } from '@seedcord/ui';
 
-import { canonicalUrl, DEFAULT_OG_IMAGE, SITE_NAME } from '#lib/site.ts';
+import { canonicalUrl, DEFAULT_OG_IMAGE, SITE_NAME } from '#lib/site';
 
 import { BLOG_DESCRIPTION, BLOG_NAME, BLOG_TITLE } from './about';
 import { BLOG_PATH, FEED_PATH, twinPath } from './paths';

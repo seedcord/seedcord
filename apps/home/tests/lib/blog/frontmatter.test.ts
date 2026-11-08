@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vite-plus/test';
 
-import { postSchema } from '#lib/blog/frontmatter.ts';
+import { postSchema } from '#lib/blog/frontmatter';
 import { POST_SLUG, PostFolder } from '#tests/mdxPipeline';
 
 const VALID = {

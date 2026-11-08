@@ -1,6 +1,6 @@
 import Link from 'next/link';
 
-import { linkKind } from '#lib/links.ts';
+import { linkKind } from '#lib/links';
 
 import type { ComponentProps, ReactNode } from 'react';
 

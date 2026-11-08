@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vite-plus/test';
 
-import { Post } from '#lib/blog/Post.ts';
+import { Post } from '#lib/blog/Post';
 
 import type { BlogPost } from '#lib/blog/source.ts';
 
