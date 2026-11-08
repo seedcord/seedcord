@@ -26,10 +26,6 @@
     ],
     "type": "module",
     "types": "./dist/index.d.mts",
-    "imports": {
-        "#src/*": "./src/*.ts",
-        "#tests/*": "./tests/*.ts"
-    },
     "exports": {
         ".": {
             "import": {
