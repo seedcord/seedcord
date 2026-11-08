@@ -34,8 +34,7 @@ export default createRule({
             rawEvent:
                 'Handle this gateway event with a @RegisterEvent handler. A raw client.on bypasses the event dispatcher and its middleware.'
         },
-        schema: [],
-        defaultOptions: []
+        schema: []
     },
     create(context) {
         const services = ESLintUtils.getParserServices(context);

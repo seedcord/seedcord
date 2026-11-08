@@ -157,8 +157,7 @@ export default createRule({
             missingFlag:
                 'A message using v2 builder components must set flags: MessageFlags.IsComponentsV2. Discord rejects the payload otherwise.'
         },
-        schema: [],
-        defaultOptions: []
+        schema: []
     },
     create(context) {
         const services = ESLintUtils.getParserServices(context);

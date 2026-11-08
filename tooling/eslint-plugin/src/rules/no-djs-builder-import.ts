@@ -121,8 +121,7 @@ export default createRule({
             useBuildersPkg:
                 "Import component builders from '@discordjs/builders'. The discord.js re-export is a separate CJS copy that breaks instanceof and toJSON when nested in a seedcord component."
         },
-        schema: [],
-        defaultOptions: []
+        schema: []
     },
     create(context) {
         const bindings = new Set<TSESTree.Node>();

@@ -80,8 +80,7 @@ export default createRule({
             deleteReply: 'Delete through this.delete().',
             respondMember: 'Respond through this.respond().'
         },
-        schema: [],
-        defaultOptions: []
+        schema: []
     },
     create(context) {
         const services = ESLintUtils.getParserServices(context);

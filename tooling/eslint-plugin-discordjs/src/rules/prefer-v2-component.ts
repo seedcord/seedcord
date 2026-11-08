@@ -13,8 +13,7 @@ export default createRule({
         messages: {
             preferV2: 'Prefer a components v2 layout (ContainerBuilder, TextDisplayBuilder) over an embed.'
         },
-        schema: [],
-        defaultOptions: []
+        schema: []
     },
     create(context) {
         const services = ESLintUtils.getParserServices(context);

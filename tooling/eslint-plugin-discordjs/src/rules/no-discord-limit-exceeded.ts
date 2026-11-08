@@ -167,8 +167,7 @@ export default createRule({
         messages: {
             tooMany: '{{detail}}. This builder declares {{count}}.'
         },
-        schema: [],
-        defaultOptions: []
+        schema: []
     },
     create(context) {
         const services = ESLintUtils.getParserServices(context);

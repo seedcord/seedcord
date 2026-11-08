@@ -37,8 +37,7 @@ export default createRule({
             usePaint:
                 'Style this with a paint tone from @seedcord/errors. A terminal theme remaps chalk color names, so the log line reads differently for every user.'
         },
-        schema: [],
-        defaultOptions: []
+        schema: []
     },
     create(context) {
         const services = ESLintUtils.getParserServices(context);

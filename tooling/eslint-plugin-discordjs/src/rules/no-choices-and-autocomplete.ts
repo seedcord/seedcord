@@ -61,8 +61,7 @@ export default createRule({
             bothSet:
                 'A slash option cannot enable autocomplete and declare choices at once. Building that throws a RangeError.'
         },
-        schema: [],
-        defaultOptions: []
+        schema: []
     },
     create(context) {
         const services = ESLintUtils.getParserServices(context);

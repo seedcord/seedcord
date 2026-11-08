@@ -32,8 +32,7 @@ export default createRule({
             missingWebhookUrl:
                 'This WebhookLog has no @WebhookUrl decorator naming its url env var, so registration throws at boot.'
         },
-        schema: [],
-        defaultOptions: []
+        schema: []
     },
     create(context) {
         const services = ESLintUtils.getParserServices(context);

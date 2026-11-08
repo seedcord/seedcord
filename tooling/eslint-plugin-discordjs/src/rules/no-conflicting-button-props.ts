@@ -33,8 +33,7 @@ export default createRule({
             skuIdWithProp: 'A button cannot set both a skuId and a {{prop}}.',
             premiumProp: 'A Premium button cannot have a {{prop}}, only a skuId.'
         },
-        schema: [],
-        defaultOptions: []
+        schema: []
     },
     create(context) {
         const services = ESLintUtils.getParserServices(context);
