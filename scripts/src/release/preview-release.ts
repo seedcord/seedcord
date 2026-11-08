@@ -37,10 +37,8 @@ async function main(): Promise<void> {
     });
 
     pnpm(tree, 'install');
-    // every prettier config imports this package's dist
-    pnpm(tree, 'turbo', 'build', '--filter=@seedcord/eslint-config');
     // changeset pre exit fails outside pre mode
-    if (pre !== true && existsSync(path.join(tree, '.changeset', 'pre.json'))) pnpm(tree, 'changeset', 'pre', 'exit');
+    if (pre !== true && existsSync(path.join(tree, '.changeset', 'pre.json'))) pnpm(tree, 'cs:exit');
     pnpm(tree, 'cs:status');
     pnpm(tree, 'cs:version');
     pnpm(tree, 'release:notes', '--out', path.join(rootDir, 'release.md'));
