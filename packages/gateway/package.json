@@ -28,20 +28,6 @@
     ],
     "type": "module",
     "types": "./dist/index.d.mts",
-    "imports": {
-        "#tests/*": "./tests/*.ts",
-        "#src/*": "./src/*.ts",
-        "#bot/*": "./src/bot/*.ts",
-        "#subscribers/*": "./src/subscribers/*.ts",
-        "#interfaces/*": "./src/interfaces/*.ts",
-        "#handlers/*": "./src/handlers/*.ts",
-        "#inputs/*": "./src/inputs/*.ts",
-        "#pagination/*": "./src/pagination/*.ts",
-        "#miscellaneous/*": "./src/miscellaneous/*.ts",
-        "#bUtilities/*": "./src/bot/utilities/*.ts",
-        "#bControllers/*": "./src/bot/controllers/*.ts",
-        "#bDecorators/*": "./src/bot/decorators/*.ts"
-    },
     "exports": {
         ".": {
             "import": {

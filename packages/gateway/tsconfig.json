@@ -3,7 +3,23 @@
     "extends": "@seedcord/tsconfig/node",
     "compilerOptions": {
         "rootDir": "./",
-        "outDir": "./dist"
+        "outDir": "./dist",
+        "paths": {
+            "#tests/*": ["./tests/*"],
+            "#src/*": ["./src/*"],
+            "#bot/*": ["./src/bot/*"],
+            "#subscribers/*": ["./src/subscribers/*"],
+            "#interfaces/*": ["./src/interfaces/*"],
+            "#handlers/*": ["./src/handlers/*"],
+            "#inputs/*": ["./src/inputs/*"],
+            "#pagination/*": ["./src/pagination/*"],
+            "#miscellaneous/*": ["./src/miscellaneous/*"],
+
+            // Paths inside src/bot
+            "#bUtilities/*": ["./src/bot/utilities/*"],
+            "#bControllers/*": ["./src/bot/controllers/*"],
+            "#bDecorators/*": ["./src/bot/decorators/*"]
+        }
     },
     "include": ["src/**/*.ts", "tests/**/*.ts", "eslint.config.ts", "vite.config.ts"],
     "exclude": ["node_modules", "dist"]
