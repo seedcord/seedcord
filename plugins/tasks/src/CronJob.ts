@@ -33,7 +33,12 @@ export class CronJob {
     }
 
     public nextRun(): Date | null {
-        return this.cron.nextRun();
+        if (!this.cron.options.interval) return this.cron.nextRun();
+
+        // croner's nextRun() counts an interval from now, but croner times the run from the last one, as nextRuns() does.
+        // After resume() croner still holds the run it skipped while paused, which is past, until it runs the task again
+        const next = this.cron.nextRuns(1)[0];
+        return next !== undefined && next.getTime() >= Date.now() ? next : null;
     }
 
     public previousRun(): Date | null {

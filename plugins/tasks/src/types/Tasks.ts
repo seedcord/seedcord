@@ -19,7 +19,7 @@ export interface TasksOptions {
 }
 
 /** The options `@RegisterTask` takes after a cron pattern. */
-export interface TaskOptions<TZone extends string = string> {
+export interface TaskOptions<TZone extends string = string, TEvery extends string = string> {
     /**
      * The task's identity in logs, bus events, and stored jobs. Set it on a scheduled task to keep its
      * pending jobs working through a class rename.
@@ -45,7 +45,16 @@ export interface TaskOptions<TZone extends string = string> {
     paused?: boolean;
     /** Stops the task after this many runs. */
     maxRuns?: number;
-    /** The task doesn't run before this date. A pattern match exactly at this date runs. */
+    /**
+     * The shortest gap between two runs, in whole seconds or more. The pattern still decides when the
+     * task may run, so `'* * 9-17 * * 1-5'` with `every: '90s'` runs every 90 seconds during those hours.
+     * After `resume()`, the first run comes within one gap.
+     */
+    every?: ValidDuration<TEvery>;
+    /**
+     * The task doesn't run before this date. A pattern match exactly at this date runs, unless the
+     * task sets `every`.
+     */
     startAt?: Date | string;
     /** The task doesn't run after this date. A pattern match exactly at this date doesn't run either. */
     stopAt?: Date | string;

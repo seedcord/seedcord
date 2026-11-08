@@ -70,6 +70,11 @@ function probeDecorator(): void {
     // @ts-expect-error a misspelled timezone
     RegisterTask('* * * * *', { timezone: 'America/New_Yrok' });
     RegisterTask('* * * * *', { timezone: 'America/New_York' });
+    RegisterTask('* * * * * *', { every: '90s' });
+    // @ts-expect-error a zero gap
+    RegisterTask('* * * * * *', { every: '0s' });
+    // @ts-expect-error not a whole number
+    RegisterTask('* * * * * *', { every: '1.5h' });
 }
 
 void probeSchedule;

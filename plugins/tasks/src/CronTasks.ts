@@ -1,6 +1,6 @@
 import { SeedcordErrorCode, paint } from '@seedcord/errors';
 import { SeedcordRangeError, SeedcordTypeError } from '@seedcord/errors/internal';
-import { keepDefined } from '@seedcord/utils';
+import { keepDefined, parseDuration } from '@seedcord/utils';
 import { asError } from '@seedcord/utils/internal';
 import { Cron, CronDate } from 'croner';
 
@@ -13,6 +13,8 @@ import type { TaskRunner } from './TaskRunner';
 import type { CronStatus } from './types/Tasks';
 
 type CronMetadata = Extract<TaskMetadata, { kind: 'cron' }>;
+
+const SECOND_MS = 1000;
 
 export class CronTasks {
     private started = false;
@@ -51,6 +53,7 @@ export class CronTasks {
             ]);
         }
 
+        const gap = meta.every === undefined ? {} : { interval: readEvery(loaded, meta.every) };
         const timezone = meta.timezone ?? this.defaultTimezone;
         const dates = keepDefined({ startAt: meta.startAt, stopAt: meta.stopAt });
         checkDates(loaded, dates, timezone);
@@ -61,6 +64,7 @@ export class CronTasks {
             cron = new Cron(pattern, {
                 ...(timezone !== undefined && { timezone }),
                 ...keepDefined({ maxRuns: meta.maxRuns }),
+                ...gap,
                 ...dates
             });
         } catch (error) {
@@ -169,6 +173,24 @@ function readDate(loaded: LoadedTask, option: string, value: Date | string, time
             { cause: error }
         );
     }
+}
+
+// croner's interval counts whole seconds
+function readEvery(loaded: LoadedTask, every: string): number {
+    const ms = parseDuration(every);
+    if (ms === null) {
+        throw new SeedcordTypeError(SeedcordErrorCode.InvalidDuration, [optionOf(loaded, 'every'), every]);
+    }
+
+    if (ms % SECOND_MS !== 0) {
+        throw new SeedcordRangeError(SeedcordErrorCode.PluginTasksInvalidOption, [
+            optionOf(loaded, 'every'),
+            every,
+            `croner spaces runs in whole seconds. Write a whole number of seconds or more, like ${paint.sky("'90s'")} or ${paint.sky("'2m'")}.`
+        ]);
+    }
+
+    return ms / SECOND_MS;
 }
 
 function optionOf({ key, file }: LoadedTask, option: string): string {

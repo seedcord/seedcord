@@ -10,8 +10,8 @@ export type ScheduledTaskClass = abstract new (context: never) => Task<unknown>;
 type ScheduledOptions = Pick<TaskOptions, 'key'>;
 
 // TArg is inferred as a literal, which skips the excess property check, so this rejects any other key
-type RegisterArgs<TArg, TZone extends string> = TArg extends string
-    ? [pattern: CronPattern<TArg>, options?: TaskOptions<TZone>]
+type RegisterArgs<TArg, TZone extends string, TEvery extends string> = TArg extends string
+    ? [pattern: CronPattern<TArg>, options?: TaskOptions<TZone, TEvery>]
     : [options?: TArg & Record<Exclude<keyof TArg, keyof ScheduledOptions>, never>];
 type TaskTarget<TArg> = TArg extends string ? NoDataTaskClass : ScheduledTaskClass;
 
@@ -25,7 +25,7 @@ const registry = new WeakMap<object, TaskMetadata>();
  * Marks a class as a task. With a cron pattern it runs on that schedule. Without one it runs when
  * code calls `schedule()`.
  *
- * A literal pattern or timezone with a mistake in it fails to compile. A cron task can't declare
+ * A literal pattern, timezone, or `every` with a mistake in it fails to compile. A cron task can't declare
  * data, since nothing passes it any.
  *
  * @param pattern - 5, 6, or 7 fields in croner's grammar, or a nickname like `@daily`.
@@ -39,8 +39,9 @@ const registry = new WeakMap<object, TaskMetadata>();
  */
 export function RegisterTask<
     const TArg extends string | ScheduledOptions = ScheduledOptions,
-    const TZone extends string = string
->(...args: RegisterArgs<TArg, TZone>): (target: TaskTarget<TArg>) => void;
+    const TZone extends string = string,
+    const TEvery extends string = string
+>(...args: RegisterArgs<TArg, TZone, TEvery>): (target: TaskTarget<TArg>) => void;
 
 export function RegisterTask(patternOrOptions: string | ScheduledOptions = {}, options: TaskOptions = {}) {
     return (target: { readonly name: string }): void => {

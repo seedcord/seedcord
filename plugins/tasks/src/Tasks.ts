@@ -86,7 +86,8 @@ export class Tasks extends Plugin<{ transport: 'any'; runtime: 'server' }> {
      * @throws A **SeedcordTypeError** with `CoreDuplicateName` when two tasks share a key.
      * @throws A **SeedcordTypeError** with `PluginTasksInvalidPattern` when croner can't parse a task's cron pattern.
      * @throws A **SeedcordTypeError** with `PluginTasksInvalidOption` when a task's pattern is a date, its `timezone` isn't one `Intl` supports, croner can't read its `startAt` or `stopAt`, or its `stopAt` isn't after its `startAt`.
-     * @throws A **SeedcordRangeError** with `PluginTasksInvalidOption` when a task's `maxRuns` isn't a whole number of 1 or more.
+     * @throws A **SeedcordRangeError** with `PluginTasksInvalidOption` when a task's `maxRuns` isn't a whole number of 1 or more, or its `every` isn't whole seconds.
+     * @throws A **SeedcordTypeError** with `InvalidDuration` when a task's `every` isn't a duration.
      * @throws A **SeedcordError** with `CoreKvKeysUnsupported` when the `config.kv` driver can't list its keys.
      */
     public async init(): Promise<void> {
@@ -173,7 +174,8 @@ export class Tasks extends Plugin<{ transport: 'any'; runtime: 'server' }> {
     }
 
     /**
-     * When a cron task runs next, or `null` while it's paused or once it has no runs left.
+     * When a cron task runs next, or `null` while it's paused, once it has no runs left, or between `resume()` and
+     * the next run of a task that sets `every`.
      *
      * @throws A **SeedcordError** with `PluginTasksNotLoaded` when the plugin did not load `Task`.
      * @throws A **SeedcordTypeError** with `PluginTasksKeyTaken` when a different class loaded under `Task`'s key.

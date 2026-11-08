@@ -5,6 +5,7 @@ import { SeedcordErrorCode } from '@seedcord/errors';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
 import { Tasks } from '#src/Tasks';
+import { Spaced } from '#tests/fixtures/every/Spaced';
 import { Reminder } from '#tests/fixtures/jobs/Reminder';
 import { Idle } from '#tests/fixtures/tasks/Idle';
 import { Slow } from '#tests/fixtures/tasks/Slow';
@@ -466,12 +467,61 @@ describe('Tasks cron tasks', () => {
         expect(keys()).not.toContain('Idle');
     });
 
+    describe('every', () => {
+        // Spaced matches every second of 12:00 to 12:59 UTC, with every: '90s'
+        const startEvery = (): ReturnType<typeof start> =>
+            start({ path: path.join(fixtures, 'every'), timezone: 'UTC' });
+
+        it('runs at the first match, then spaces runs by every', async () => {
+            vi.setSystemTime(new Date('2030-01-15T11:59:59Z'));
+            await using booted = await startEvery();
+            const { host } = booted;
+            const runsAfter = async (seconds: number): Promise<number> => {
+                await vi.advanceTimersByTimeAsync(SECOND_MS * seconds);
+                return runsOf(host, 'Spaced').length;
+            };
+
+            expect(await runsAfter(1)).toBe(1);
+            expect(await runsAfter(89)).toBe(1);
+            expect(await runsAfter(1)).toBe(2);
+        });
+
+        it('reports the next run every after the last one', async () => {
+            vi.setSystemTime(new Date('2030-01-15T12:00:00Z'));
+            await using booted = await startEvery();
+            const { tasks } = booted;
+
+            await vi.advanceTimersByTimeAsync(SECOND_MS * 45);
+            const [status] = tasks.crons();
+
+            expect(status?.nextRun?.getTime()).toBe((status?.previousRun?.getTime() ?? 0) + SECOND_MS * 90);
+        });
+
+        it('reports no next run after resume until croner runs the task again', async () => {
+            vi.setSystemTime(new Date('2030-01-15T12:00:00Z'));
+            await using booted = await startEvery();
+            const { host, tasks } = booted;
+            await vi.advanceTimersByTimeAsync(SECOND_MS);
+
+            tasks.pause(Spaced);
+            await vi.advanceTimersByTimeAsync(SECOND_MS * 600);
+            tasks.resume(Spaced);
+            expect(tasks.nextRun(Spaced)).toBeNull();
+
+            await vi.advanceTimersByTimeAsync(SECOND_MS * 90);
+            expect(runsOf(host, 'Spaced')).toHaveLength(2);
+            expect(tasks.nextRun(Spaced)?.getTime()).toBeGreaterThan(Date.now());
+        });
+    });
+
     describe('at startup', () => {
         it.each([
             ['duplicate-key', SeedcordErrorCode.CoreDuplicateName],
             ['bad-start', SeedcordErrorCode.PluginTasksInvalidOption],
             ['stop-before-start', SeedcordErrorCode.PluginTasksInvalidOption],
             ['bad-max-runs', SeedcordErrorCode.PluginTasksInvalidOption],
+            ['bad-every', SeedcordErrorCode.PluginTasksInvalidOption],
+            ['every-not-duration', SeedcordErrorCode.InvalidDuration],
             ['date-pattern', SeedcordErrorCode.PluginTasksInvalidOption],
             ['bad-timezone', SeedcordErrorCode.PluginTasksInvalidOption],
             ['bad-pattern', SeedcordErrorCode.PluginTasksInvalidPattern]
