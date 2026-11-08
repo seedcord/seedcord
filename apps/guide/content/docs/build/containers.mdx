@@ -14,9 +14,11 @@ In order to containerize your application, you'll need the following prerequisit
 
 To containerize your application, you'll need to write a Dockerfile and, optionally, a Docker Compose file.
 
-To write a Dockerfile, first pull the image(s) you want, then perform copying and building steps within that image. Here's an example Dockerfile (and .dockerignore) to get you started:
+To write a Dockerfile, first pull the image(s) you want, then perform copying and building steps within that image. We recommend using slim images for faster pull times, smaller output, and reduced attack surfaces.
 
-```gitignore
+Here's an example Dockerfile (and .dockerignore) to get you started:
+
+```gitignore title=.dockerignore
 node_modules
 dist
 # almost literally every dotfolder is not needed and can be excluded for maximum layer caching
@@ -29,14 +31,18 @@ dist
 
 ```Dockerfile title=Dockerfile
 # Use the official Node.js image from Docker Hub
-# Replace :latest with the version you want to use, example: ":24"
-FROM node:latest
+# Replace :lts-slim with the slimmed version you want to use, example: ":24-slim"
+FROM node:lts-slim
 # Or use something that can manage your Node runtime, like:
 # Vite+: FROM ghcr.io/voidzero-dev/vite-plus:latest
 # pnpm: FROM ghcr.io/pnpm/pnpm:latest
 
 # For the sake of organization, we'll use a workdir.
 WORKDIR /app
+
+# For a repo using pnpm, nstall pnpm in some way here (same idea for yarn)
+# Some images may already have pnpm or automatically download it
+RUN npm install -g pnpm
 
 # Repeat this for as many package.jsons as you need to build your bot
 COPY ./package.json ./
@@ -52,10 +58,16 @@ COPY . .
 # Run the build script
 RUN pnpm run build
 
+# Docker runs this command in the specified intervals to check the health of your bot
+HEALTHCHECK --interval=30s --timeout=3s --start-period=5s --retries=3 \
+  CMD curl -f http://localhost:6967/health || exit 1
+
 # When this container is executed directly, it will run this command.
 # Replace with the appropriate run command (shown to you after building)
-CMD ["node", "dist/index.mjs"]
+CMD ["node", "--enable-source-maps", "dist/index.mjs"]
 ```
+
+In your bot instance, make sure you set `lifecycle.shutdownDeadline` to ~5000, since Docker by default grants a container 10s to shutdown, which means that setting it to half leaves room for extra cleanup such as log flushing.
 
 ### Using a Docker Compose
 
@@ -69,8 +81,9 @@ services:
             context: .
             dockerfile: ./Dockerfile
         container_name: discord-bot
-        env_file:
-            - ./.env
+        env_file: ./.env
+        volumes:
+            - ./logs:/app/logs
 ```
 
 ```yml title=docker-compose.yml
@@ -84,6 +97,8 @@ services:
         network_mode: 'host' # If using Docker Desktop, this requires host networking to be enabled
         # you can also explicitly map ports via the ports: object
         env_file: ./.env
+        volumes:
+            - ./logs:/app/logs
 ```
 
 This can be helpful for any non-trivial bot, such as for:
@@ -99,8 +114,9 @@ services:
         container_name: discord-bot
         env_file: ./.env
         volumes:
-            - ./assets:/assets
-            - bot-data:/data
+            - ./assets:/app/assets
+            - ./logs:/app/logs
+            - bot-data:/app/data
 volumes:
     bot-data:
 ```
@@ -115,6 +131,8 @@ services:
             dockerfile: ./Dockerfile
         container_name: discord-bot
         env_file: ./.env
+        volumes:
+            - ./logs:/app/logs
     postgres:
         image: postgres:latest
         container_name: discord-bot-db
@@ -133,28 +151,31 @@ services:
         container_name: discord-bot
         environment:
             DISCORD_BOT_TOKEN: ${DISCORD_BOT_TOKEN}
-            DISCORD_CLIENT_ID: ${DISCORD_CLIENT_ID}
-            DISCORD_CLIENT_SECRET: ${DISCORD_CLIENT_SECRET}
         # or, if you're brave, mount the `.env` file into the container
-        mounts:
+        volumes:
             - ./.env:/app/.env
+            - ./logs:/app/logs
 ```
 
 ### Multi-stage container builds
 
-You may want to use multi-stage container builds to reduce the amount of dependencies that is output in your image.
+When you want to reduce your overall iamge size, you may want to use multi-stage container builds to separate each stage.
 
 When you want to do this, you'll need to define multiple stages:
 
 ```Dockerfile title=Dockerfile
-FROM node:24 AS build
+FROM node:lts-slim AS build
 # Or any other container with your dev tool
 
 # build steps go here
 
-FROM node:24 AS dependencies
+FROM node:lts-slim AS dependencies
 # Or any other container with your dev tool
 # This step is only needed if you externalise dependencies
+
+# Install pnpm in some way here
+# Some images may already have pnpm or automatically download it
+RUN npm install -g pnpm
 
 COPY package.json ./
 COPY pnpm-lock.yaml ./
@@ -162,19 +183,19 @@ COPY pnpm-workspace.yaml ./
 
 RUN pnpm install --production
 
-FROM node:24 AS runner
+FROM node:lts-slim AS runner
 # Here, you wouldn't use the container with your dev tools, just your production runner image
-# (i.e. use the Node.js image instead of e.x. Vite+ or pnpm images)
+# (i.e. use a slim Node.js image instead of e.x. Vite+ or pnpm images)
 
-COPY --from=build dist ./dist/
 # Replace dist/ with the folder containing your bot
-COPY --from=dependencies node_modules ./node_modules/
+COPY --from=build dist ./dist/
 # Only needed if you included the dependencies stage
+COPY --from=dependencies node_modules ./node_modules/
 
-CMD ["node", "dist/index.mjs"]
+CMD ["node", "--enable-source-maps", "dist/index.mjs"]
 ```
 
-### Build image in CI
+By default, seedcord requires your `dist` output, `package.json` and `node_modules`
 
 ## Configuring a dev container
 
@@ -201,7 +222,7 @@ To set up a dev container environment for a seedcord project, you'll need to def
 # Only needed if dockerComposeFile specified in devcontainer.json
 services:
     bot:
-        image: node:24 # or any dev image like pnpm or Vite+
+        image: node:lts # or any dev image like pnpm or Vite+
         container_name: discord-bot-dev
         # Keep the container running so your editor can attach
         command: sleep infinity
