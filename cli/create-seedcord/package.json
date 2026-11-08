@@ -33,14 +33,6 @@
         "LICENSE"
     ],
     "type": "module",
-    "imports": {
-        "#package": "./package.json",
-        "#cli/*": "./src/cli/*.ts",
-        "#interview/*": "./src/interview/*.ts",
-        "#scaffold/*": "./src/scaffold/*.ts",
-        "#template/*": "./src/template/*.ts",
-        "#tests/*": "./tests/*.ts"
-    },
     "publishConfig": {
         "access": "public",
         "provenance": true

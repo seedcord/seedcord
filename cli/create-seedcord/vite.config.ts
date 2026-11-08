@@ -1,12 +1,11 @@
 import { createTsdownConfig } from '@seedcord/tsdown-config';
-import { createTestConfig } from '@seedcord/vitest-config';
-import { defineConfig } from 'vite-plus';
+import { createViteConfig } from '@seedcord/vitest-config';
 
-export default defineConfig({
-    test: createTestConfig({
+export default createViteConfig(import.meta.url, {
+    test: {
         environment: 'node',
         testTimeout: 20_000
-    }),
+    },
     // every create call is a cold download
     pack: createTsdownConfig({
         entry: ['src/index.ts'],

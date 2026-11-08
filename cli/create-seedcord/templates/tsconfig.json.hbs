@@ -8,7 +8,11 @@
 {{#if isEdge}}
         "customConditions": ["workerd"],
 {{/if}}
-        "allowImportingTsExtensions": true
+        "paths": {
+            "#src/*": ["./src/*"],
+            "#components/*": ["./src/components/*"],
+            "#plugins/*": ["./src/plugins/*"]
+        }
     },
     "include": [
         "src/**/*.ts",
