@@ -1,13 +1,7 @@
 import { createTsdownConfig } from '@seedcord/tsdown-config';
-import { aliasFromTsconfig, createTestConfig } from '@seedcord/vitest-config';
-import { defineConfig } from 'vite-plus';
+import { createViteConfig } from '@seedcord/vitest-config';
 
-// required to resolve jsxImportSource to discord-component-embed/* (eg. discord-component-embed/jsx-dev-runtime)
-const alias = aliasFromTsconfig(import.meta.url);
-
-export default defineConfig({
-    resolve: { alias },
-    test: createTestConfig(),
+export default createViteConfig(import.meta.url, {
     pack: [
         createTsdownConfig({
             entry: ['src/index.ts', 'src/react.index.ts', 'src/jsx-runtime.ts', 'src/jsx-dev-runtime.ts'],
