@@ -56,9 +56,9 @@ export default createRule({
         messages: {
             missingRegister: 'This {{label}} has no @RegisterCommand decorator, so it never deploys to Discord.'
         },
-        schema: []
+        schema: [],
+        defaultOptions: []
     },
-    defaultOptions: [],
     create(context) {
         const services = ESLintUtils.getParserServices(context);
         const checker = services.program.getTypeChecker();

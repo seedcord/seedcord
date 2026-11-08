@@ -33,9 +33,9 @@ export default createRule({
             rawCustomId:
                 'Hand-written customId. Build it through the typed CustomId codec (CustomId.encode()) so its route and params stay in sync.'
         },
-        schema: []
+        schema: [],
+        defaultOptions: []
     },
-    defaultOptions: [],
     create(context) {
         const services = ESLintUtils.getParserServices(context);
         const checker = services.program.getTypeChecker();

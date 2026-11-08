@@ -80,9 +80,9 @@ export default createRule({
             deleteReply: 'Delete through this.delete().',
             respondMember: 'Respond through this.respond().'
         },
-        schema: []
+        schema: [],
+        defaultOptions: []
     },
-    defaultOptions: [],
     create(context) {
         const services = ESLintUtils.getParserServices(context);
         const checker = services.program.getTypeChecker();

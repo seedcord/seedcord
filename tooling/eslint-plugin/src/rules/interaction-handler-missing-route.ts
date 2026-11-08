@@ -45,9 +45,9 @@ export default createRule({
             sharedSelectBase:
                 'SelectMenuHandler is the shared base and takes no route decorator. Extend the base for the kind you need, such as StringMenuHandler or UserMenuHandler.'
         },
-        schema: []
+        schema: [],
+        defaultOptions: []
     },
-    defaultOptions: [],
     create(context) {
         const services = ESLintUtils.getParserServices(context);
         const checker = services.program.getTypeChecker();

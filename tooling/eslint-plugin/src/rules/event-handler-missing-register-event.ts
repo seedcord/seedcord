@@ -22,9 +22,9 @@ export default createRule({
             missingRegister:
                 'This EventHandler has no @RegisterEvent decorator, so it never registers and never runs when the event is emitted.'
         },
-        schema: []
+        schema: [],
+        defaultOptions: []
     },
-    defaultOptions: [],
     create(context) {
         const services = ESLintUtils.getParserServices(context);
         const checker = services.program.getTypeChecker();

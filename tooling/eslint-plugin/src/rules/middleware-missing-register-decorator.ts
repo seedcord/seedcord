@@ -31,9 +31,9 @@ export default createRule({
         messages: {
             missingMiddleware: 'This {{base}} has no @{{decorator}} decorator, so it never runs.'
         },
-        schema: []
+        schema: [],
+        defaultOptions: []
     },
-    defaultOptions: [],
     create(context) {
         const services = ESLintUtils.getParserServices(context);
         const checker = services.program.getTypeChecker();
