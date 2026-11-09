@@ -37,7 +37,7 @@ Finish these after generating, none of them are automated.
     vp -C <dir>/<folder> run build
     cd <dir>/<folder>
     # latest first, a bare publish defaults to the latest tag, no provenance locally
-    vp pm publish --access public
+    pnpm publish --no-provenance
     # then point next at the same version
     vp pm dist-tag add <name>@0.0.1 next
     # deprecate both tags in one go (since both are the same version)
