@@ -6,6 +6,7 @@ import { Gated } from '#bDecorators/Gated';
 import { eventGateContext, interactionGateContext } from '#bot/gates/context';
 import { EventHandler } from '#handlers/event';
 import { SlashHandler } from '#handlers/interaction/SlashHandler';
+import { deriveEventActor } from '#miscellaneous/deriveEventActor';
 import { TestNotice } from '#tests/utils/TestNotice';
 
 import type { Core } from '#interfaces/Core';
@@ -77,7 +78,10 @@ describe('runHandlerGates', () => {
         // empty payload, the gate refuses regardless of the derived actor
         const payload = [] as unknown as Parameters<typeof eventGateContext>[1];
         await expect(
-            runHandlerGates(Handler, eventGateContext('messageCreate', payload, core, dispatch))
+            runHandlerGates(
+                Handler,
+                eventGateContext('messageCreate', payload, core, dispatch, deriveEventActor(payload))
+            )
         ).rejects.toBeInstanceOf(Notice);
     });
 });

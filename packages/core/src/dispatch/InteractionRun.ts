@@ -3,8 +3,7 @@ import { paint } from '@seedcord/errors';
 import { runInteractionGates } from '#gates/runGates';
 import { FaultBoundary } from '#src/notices/FaultBoundary';
 
-import { MemberValues } from './DispatchContext';
-import { DispatchMembersSlot } from './DispatchMembers';
+import { buildDispatchMembers } from './DispatchMembers';
 import { outcomeFor, queuedMsFor, reportDispatch } from './dispatchReport';
 import { resultFor, runAfter } from './runAfter';
 
@@ -112,7 +111,7 @@ export class InteractionRun {
         const { HandlerCtor, event, core, dispatch, logger, origin } = this.config;
         logger.trace(`Processing ${paint.sky.bold(dispatch.routeId)} with ${paint.mute(HandlerCtor.name)}`);
         try {
-            dispatch[MemberValues] = await core[DispatchMembersSlot].build(origin);
+            await buildDispatchMembers(core, dispatch, origin);
             // justified: each transport's route maps pair a kind with the class that takes its event
             return new HandlerCtor(event as never, core as never, dispatch as never, replyWith as never);
         } catch (caught) {

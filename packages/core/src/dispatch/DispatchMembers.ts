@@ -2,6 +2,10 @@ import { SeedcordErrorCode } from '@seedcord/errors';
 import { SeedcordError, SeedcordTypeError } from '@seedcord/errors/internal';
 import { asError } from '@seedcord/utils/internal';
 
+import { MemberValues } from './DispatchContext';
+
+import type { CoreBase } from '#interfaces/CoreBase';
+import type { DispatchContext } from './DispatchContext';
 import type { DispatchOrigin } from './DispatchOrigin';
 
 export type DispatchMemberFunctions = Readonly<Record<string, (origin: DispatchOrigin) => unknown>>;
@@ -77,6 +81,14 @@ interface ClaimedMember {
 }
 
 export const DispatchMembersSlot = Symbol('seedcord:host:dispatch-members');
+
+export async function buildDispatchMembers(
+    core: CoreBase,
+    dispatch: DispatchContext,
+    origin: DispatchOrigin
+): Promise<void> {
+    dispatch[MemberValues] = await core[DispatchMembersSlot].build(origin);
+}
 
 export class DispatchMembers {
     // attach order, which is the order build() runs them in

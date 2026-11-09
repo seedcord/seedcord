@@ -1,20 +1,49 @@
+import { GuildMember } from 'discord.js';
 import { afterEach, beforeEach, describe, expect, vi } from 'vite-plus/test';
 
+import { Plugin } from '#src/Plugin';
 import { dispatcherOf } from '#tests/utils/dispatcherOf';
 import { seedcordPath } from '#tests/utils/source-path';
 import { testConfig } from '#tests/utils/test-config';
 import { it } from '#tests/utils/test-env';
+
+import type { Seedcord } from '#src/Seedcord';
+import type { CoreBase, DispatchOrigin } from '@seedcord/core';
 
 // a global is the only channel back to the test, since the fixture compiles into a temp dir
 function fireCalls(): string[] {
     return (globalThis as { fireCalls?: string[] }).fireCalls ?? [];
 }
 
-type Boot = (handlers: string, middlewares?: string) => Promise<ReturnType<typeof dispatcherOf>>;
+type Boot = (
+    handlers: string,
+    middlewares?: string,
+    attach?: (bot: Seedcord) => void
+) => Promise<ReturnType<typeof dispatcherOf>>;
+
+function pluginBuilding(tag: (origin: DispatchOrigin) => unknown): new (host: CoreBase) => Plugin {
+    return class extends Plugin {
+        public override readonly dispatchMembers = { tag };
+
+        public init(): Promise<void> {
+            return Promise.resolve();
+        }
+    };
+}
+
+// a real GuildMember instance for deriveEventActor's instanceof check, carrying only what the gate context reads
+function guildMemberPayload(): GuildMember {
+    return Object.defineProperties(Object.create(GuildMember.prototype) as GuildMember, {
+        guild: { value: { id: 'g1', preferredLocale: 'fr', members: { me: null } } },
+        user: { value: { id: 'u1' } },
+        roles: { value: { cache: new Map() } },
+        permissions: { value: { bitfield: 0n } }
+    });
+}
 
 const withBoot = it.extend<{ boot: Boot }>({
     boot: async ({ testEnv, seedcordWith }, use) => {
-        await use(async (handlers, middlewares) => {
+        await use(async (handlers, middlewares, attach) => {
             await testEnv.createFile('events/Handler.ts', handlers);
             if (middlewares) await testEnv.createFile('event-mw/Mw.ts', middlewares);
 
@@ -23,7 +52,9 @@ const withBoot = it.extend<{ boot: Boot }>({
                 ...(middlewares && { eventMiddlewares: testEnv.resolvePath('event-mw') })
             });
 
-            const events = dispatcherOf(seedcordWith(config));
+            const bot = seedcordWith(config);
+            attach?.(bot);
+            const events = dispatcherOf(bot);
             await events.init();
             return events;
         });
@@ -68,6 +99,84 @@ describe('the per-dispatch event context', () => {
         await events.processEvent('messageCreate', [{ reply: vi.fn() }]);
 
         expect(fireCalls()).toEqual(['handler:from-middleware', 'routeId:event:messageCreate']);
+    });
+
+    withBoot('gives plugin members to the middleware, the gate, and the handler of an event', async ({ boot }) => {
+        const tag = vi.fn(
+            (origin: DispatchOrigin) =>
+                `${String(origin.userId)}:${String(origin.userLocale)}:${String(origin.guildLocale)}`
+        );
+        const events = await boot(
+            `
+            import { defineGate, Gated, EventHandler, RegisterEvent } from '${seedcordPath}';
+            import { Events } from 'discord.js';
+
+            const ReadsTag = defineGate('ReadsTag', (ctx) => {
+                globalThis.fireCalls.push('gate:' + ctx.tag);
+            });
+
+            @Gated(ReadsTag)
+            @RegisterEvent(['guildMemberAdd'])
+            export class Greets extends EventHandler<Events.GuildMemberAdd> {
+                public async execute() {
+                    globalThis.fireCalls.push('handler:' + this.tag);
+                }
+            }
+            `,
+            `
+            import { EventMiddleware, RegisterEventMiddleware } from '${seedcordPath}';
+
+            @RegisterEventMiddleware()
+            export class Reads extends EventMiddleware {
+                public async execute() {
+                    globalThis.fireCalls.push('middleware:' + this.tag);
+                }
+            }
+            `,
+            (bot) => bot.attach('tagging', pluginBuilding(tag))
+        );
+
+        await events.processEvent('guildMemberAdd', [guildMemberPayload()]);
+
+        expect(fireCalls()).toEqual(['middleware:u1:null:fr', 'gate:u1:null:fr', 'handler:u1:null:fr']);
+        expect(tag).toHaveBeenCalledOnce();
+    });
+
+    withBoot('skips the middleware and handlers when a member throws', async ({ boot }) => {
+        const events = await boot(
+            `
+            import { EventHandler, RegisterEvent } from '${seedcordPath}';
+            import { Events } from 'discord.js';
+
+            @RegisterEvent(['guildMemberAdd'])
+            export class NeverRuns extends EventHandler<Events.GuildMemberAdd> {
+                public async execute() {
+                    globalThis.fireCalls.push('handler');
+                }
+            }
+            `,
+            `
+            import { EventMiddleware, RegisterEventMiddleware } from '${seedcordPath}';
+
+            @RegisterEventMiddleware()
+            export class NeverRuns extends EventMiddleware {
+                public async execute() {
+                    globalThis.fireCalls.push('middleware');
+                }
+            }
+            `,
+            (bot) =>
+                bot.attach(
+                    'tagging',
+                    pluginBuilding(() => {
+                        throw new Error('boom');
+                    })
+                )
+        );
+
+        await expect(events.processEvent('guildMemberAdd', [guildMemberPayload()])).resolves.toBeUndefined();
+
+        expect(fireCalls()).toEqual([]);
     });
 
     withBoot('hands a gate the same context the chain wrote to', async ({ boot }) => {

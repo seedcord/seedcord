@@ -4,6 +4,7 @@ import { GuildMember, Message, PermissionFlagsBits } from 'discord.js';
 import { describe, it, expect } from 'vite-plus/test';
 
 import { eventGateContext, interactionGateContext } from '#bot/gates/context';
+import { deriveEventActor } from '#miscellaneous/deriveEventActor';
 
 import type { Core } from '#interfaces/Core';
 import type { ButtonInteraction, User } from 'discord.js';
@@ -124,7 +125,7 @@ describe('eventGateContext', () => {
         // the builder never reads core
         const core = {} as unknown as Core;
 
-        const built = eventGateContext('messageCreate', payload, core, dispatch);
+        const built = eventGateContext('messageCreate', payload, core, dispatch, deriveEventActor(payload));
 
         expect(built.kind).toBe('event');
         expect(built.eventName).toBe('messageCreate');
@@ -154,7 +155,7 @@ describe('eventGateContext', () => {
         const payload = [member] as unknown as Parameters<typeof eventGateContext>[1];
         const core = {} as unknown as Core;
 
-        const built = eventGateContext('guildMemberAdd', payload, core, dispatch);
+        const built = eventGateContext('guildMemberAdd', payload, core, dispatch, deriveEventActor(payload));
 
         expect(built.userId).toBe('u1');
         expect(built.guildId).toBe('g1');
@@ -181,12 +182,21 @@ describe('eventGateContext', () => {
         const author = { id: 'b1', bot: true } as User;
         const payload = [message(null), message(author)] as unknown as Parameters<typeof eventGateContext>[1];
 
-        const built = eventGateContext('messageUpdate', payload, {} as unknown as Core, dispatch);
+        const built = eventGateContext(
+            'messageUpdate',
+            payload,
+            {} as unknown as Core,
+            dispatch,
+            deriveEventActor(payload)
+        );
 
         expect(built.user).toBe(author);
 
         const deleted = [message(null)] as unknown as Parameters<typeof eventGateContext>[1];
-        expect(eventGateContext('messageDelete', deleted, {} as unknown as Core, dispatch).channelId).toBe('c1');
+        expect(
+            eventGateContext('messageDelete', deleted, {} as unknown as Core, dispatch, deriveEventActor(deleted))
+                .channelId
+        ).toBe('c1');
     });
 });
 

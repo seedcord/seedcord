@@ -1,11 +1,10 @@
 import { GuildMember } from 'discord.js';
 
-import { deriveEventActor } from '#miscellaneous/deriveEventActor';
-
 import type { Core } from '#interfaces/Core';
+import type { EventActor } from '#miscellaneous/deriveEventActor';
 import type { Repliables, ValidInteractionTypes, ValidNonInteractionKeys } from '#src/handlers/interactionTypes';
 import type { EventGateContext, InteractionGateContext } from './Gate';
-import type { DispatchContext } from '@seedcord/core';
+import type { DispatchContext, DispatchOrigin } from '@seedcord/core';
 import type { InteractionRunConfig } from '@seedcord/core/internal';
 import type { ClientEvents } from 'discord.js';
 
@@ -54,13 +53,23 @@ export function interactionGateContext(
     };
 }
 
+export function eventOrigin(actor: EventActor): DispatchOrigin {
+    return {
+        userId: actor.user?.id ?? null,
+        guildId: actor.guild?.id ?? null,
+        channelId: actor.channelId,
+        userLocale: null,
+        guildLocale: actor.guild?.preferredLocale ?? null
+    };
+}
+
 export function eventGateContext(
     eventName: ValidNonInteractionKeys,
     args: ClientEvents[ValidNonInteractionKeys],
     core: Core,
-    dispatch: DispatchContext
+    dispatch: DispatchContext,
+    actor: EventActor
 ): EventGateContext {
-    const actor = deriveEventActor(args);
     return {
         kind: 'event',
         core,
@@ -70,11 +79,7 @@ export function eventGateContext(
         user: actor.user,
         guild: actor.guild,
         member: actor.member,
-        userId: actor.user?.id ?? null,
-        guildId: actor.guild?.id ?? null,
-        channelId: actor.channelId,
-        userLocale: null,
-        guildLocale: actor.guild?.preferredLocale ?? null,
+        ...eventOrigin(actor),
         // the cache has the everyone role (id equals the guild id), filtered out to match the interaction shape
         memberRoleIds: actor.member ? [...actor.member.roles.cache.keys()].filter((id) => id !== actor.guild?.id) : [],
         memberPermissions: actor.member?.permissions.bitfield ?? null,
