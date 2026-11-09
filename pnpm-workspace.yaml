@@ -144,3 +144,8 @@ peerDependencyRules:
   allowAny:
     - vite
     - vitest
+
+patchedDependencies:
+  # implements https://github.com/cloudflare/workers-sdk/pull/16699
+  # to fix "Error: asyncLocalStorage.disable() is not implemented"
+  '@cloudflare/vitest-plugin': patches/@cloudflare__vitest-plugin.patch

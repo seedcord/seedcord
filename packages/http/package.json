@@ -70,7 +70,7 @@
         "type-fest": "catalog:deps"
     },
     "devDependencies": {
-        "@cloudflare/vitest-plugin": "^1.4.0",
+        "@cloudflare/vitest-plugin": "^1.6.0",
         "@discordjs/builders": "catalog:peer",
         "@seedcord/eslint-config": "workspace:^",
         "@seedcord/tsconfig": "workspace:^",
