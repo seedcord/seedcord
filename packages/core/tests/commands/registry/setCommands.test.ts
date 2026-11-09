@@ -1,7 +1,7 @@
 import { EventEmitter } from 'node:events';
 
 import { SlashCommandBuilder } from '@discordjs/builders';
-import { HostPrepareCommands } from '@seedcord/types/internal';
+import { HostPluginHooks } from '@seedcord/types/internal';
 import { ApplicationCommandType, Routes } from 'discord-api-types/v10';
 import { describe, it, expect, vi } from 'vite-plus/test';
 
@@ -27,14 +27,14 @@ function deployedAs(id: string, name: string): APIApplicationCommand[] {
 
 function coreWith(
     put: ReturnType<typeof vi.fn>,
-    prepare = (commands: readonly CommandBody[]): readonly CommandBody[] => commands
+    prepareCommands: (commands: readonly CommandBody[]) => void = () => undefined
 ): CoreBase {
     // justified: the registry reads only these members off core
     const core = {
         config: { bot: { commands: { path: 'commands' } } },
         rest: Object.assign(new EventEmitter(), { put }),
         applicationId: APP,
-        [HostPrepareCommands]: (commands: readonly CommandBody[]) => Promise.resolve(prepare(commands))
+        [HostPluginHooks]: { prepareCommands }
     } as unknown as { bus: Bus };
     core.bus = new Bus(core as unknown as CoreBase);
     return core as unknown as CoreBase;
@@ -45,11 +45,11 @@ function registryWith(put: ReturnType<typeof vi.fn>): CommandRegistry {
 }
 
 describe('CommandRegistry.setCommands', () => {
-    it('sends what prepareCommands returned, once per command across every scope', async () => {
+    it('sends what prepareCommands wrote to every scope', async () => {
         const put = vi.fn().mockResolvedValue(deployedAs('123', 'ping'));
-        const prepare = vi.fn((commands: readonly CommandBody[]) =>
-            commands.map((command) => ({ ...command, name_localizations: { pl: 'pong' } }))
-        );
+        const prepare = vi.fn((commands: readonly CommandBody[]) => {
+            for (const command of commands) command.name_localizations = { pl: 'pong' };
+        });
         const registry = new CommandRegistry(coreWith(put, prepare));
         const ping = new SlashCommandBuilder().setName('ping').setDescription('Replies with Pong!');
         registry.scopedCommands.set(GLOBAL_ID, [ping]);

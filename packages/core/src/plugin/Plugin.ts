@@ -8,7 +8,6 @@ import { RuntimeBrand, TransportBrand } from './brands';
 import { resolveLifecycleSpec } from './lifecycle';
 
 import type { CoreBase } from '#interfaces/CoreBase';
-import type { DispatchMemberFunctions } from '#src/dispatch/DispatchMembers';
 import type { Kv } from '#src/kv/Kv';
 import type { ScopedSpec } from './brands';
 import type { ResolvedPluginLifecycleSpec, PluginLifecycleSpec } from './lifecycle';
@@ -24,6 +23,7 @@ import type {
     Transport,
     TransportAssert
 } from './options';
+import type { DispatchMemberFunctions } from './PluginHooks';
 import type { FrameworkChannel, HmrAware, HmrUpdateEvent } from '@seedcord/types';
 import type { RESTPostAPIApplicationCommandsJSONBody } from 'discord-api-types/v10';
 import type { Constructor, Promisable } from 'type-fest';
@@ -205,15 +205,12 @@ export abstract class Plugin<
     declare public readonly dispatchMembers?: DispatchMemberFunctions;
 
     /**
-     * Changes commands before seedcord sends them to Discord. It gets every command once, across every
-     * guild and global scope. Return one command for each command it got, in the same order. A throw
-     * stops the deploy, `seedcord codegen` and `seedcord build`.
+     * Changes commands before seedcord sends them to Discord. Write your changes onto these objects,
+     * like setting `name_localizations`. A command deployed to two guilds comes through twice. A throw stops the deploy, `seedcord codegen` and `seedcord build`.
      *
      * The CLI calls this without running `init()`. Read only what the constructor stored and the bot's files.
      */
-    prepareCommands?(
-        commands: RESTPostAPIApplicationCommandsJSONBody[]
-    ): Promisable<RESTPostAPIApplicationCommandsJSONBody[]>;
+    prepareCommands?(commands: readonly RESTPostAPIApplicationCommandsJSONBody[]): Promisable<void>;
 
     /**
      * Rejects the options this plugin got.

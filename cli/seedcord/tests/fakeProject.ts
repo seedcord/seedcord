@@ -1,4 +1,4 @@
-import { HostAugmentTarget, HostPluginKeys, HostPrepareCommands, SeedcordBrand } from '@seedcord/types/internal';
+import { HostAugmentTarget, HostPluginHooks, HostPluginKeys, SeedcordBrand } from '@seedcord/types/internal';
 
 import { Project } from '#core/project/Project';
 import { emptyModuleGraph } from '#tests/emptyModuleGraph';
@@ -36,7 +36,7 @@ export function brandedInstance(commandsPath: string | null = null, plugins: Rec
         [SeedcordBrand]: true,
         [HostAugmentTarget]: '@seedcord/gateway',
         [HostPluginKeys]: Object.keys(plugins),
-        [HostPrepareCommands]: (commands: unknown[]) => Promise.resolve(commands),
+        [HostPluginHooks]: { prepareCommands: () => Promise.resolve() },
         config: { bot: { commands: { path: commandsPath } } },
         ...plugins
     };

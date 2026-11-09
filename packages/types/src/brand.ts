@@ -12,4 +12,4 @@ export const HostVersion = Symbol.for('seedcord:host:version');
 export const HostAugmentTarget = Symbol.for('seedcord:host:augment-target');
 export const HostPluginKeys = Symbol.for('seedcord:host:plugin-keys');
 export const HostListenHost = Symbol.for('seedcord:host:listen-host');
-export const HostPrepareCommands = Symbol.for('seedcord:host:prepare-commands');
+export const HostPluginHooks = Symbol.for('seedcord:host:plugin-hooks');

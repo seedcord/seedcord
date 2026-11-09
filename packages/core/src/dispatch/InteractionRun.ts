@@ -1,9 +1,9 @@
 import { paint } from '@seedcord/errors';
+import { HostPluginHooks } from '@seedcord/types/internal';
 
 import { runInteractionGates } from '#gates/runGates';
 import { FaultBoundary } from '#src/notices/FaultBoundary';
 
-import { buildDispatchMembers } from './DispatchMembers';
 import { outcomeFor, queuedMsFor, reportDispatch } from './dispatchReport';
 import { resultFor, runAfter } from './runAfter';
 
@@ -111,7 +111,7 @@ export class InteractionRun {
         const { HandlerCtor, event, core, dispatch, logger, origin } = this.config;
         logger.trace(`Processing ${paint.sky.bold(dispatch.routeId)} with ${paint.mute(HandlerCtor.name)}`);
         try {
-            await buildDispatchMembers(core, dispatch, origin);
+            await core[HostPluginHooks].buildMembers(dispatch, origin);
             // justified: each transport's route maps pair a kind with the class that takes its event
             return new HandlerCtor(event as never, core as never, dispatch as never, replyWith as never);
         } catch (caught) {

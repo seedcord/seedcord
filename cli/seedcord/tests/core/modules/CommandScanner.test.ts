@@ -4,7 +4,7 @@ import { join } from 'node:path';
 
 import { BuilderComponent, RegisterCommand } from '@seedcord/core';
 import { SeedcordErrorCode } from '@seedcord/errors';
-import { HostPrepareCommands } from '@seedcord/types/internal';
+import { HostPluginHooks, type SeedcordInstance } from '@seedcord/types/internal';
 import { describe, expect, it } from 'vite-plus/test';
 
 import { CommandScanner } from '#core/modules/CommandScanner';
@@ -24,9 +24,8 @@ function filesAt(root: RealPath): ProjectFiles {
     });
 }
 
-type Preparer = ConstructorParameters<typeof CommandScanner>[2];
-
-const UNCHANGED: Preparer = { [HostPrepareCommands]: (commands) => Promise.resolve([...commands]) };
+// justified: the scanner reads only the hooks off the instance
+const UNCHANGED = { [HostPluginHooks]: { prepareCommands: (_bodies) => Promise.resolve() } } as SeedcordInstance;
 
 function recordingLoader(imported: string[]): ModuleLoader {
     return {
@@ -118,10 +117,15 @@ describe('CommandScanner', () => {
             importModule: <TModule>() => Promise.resolve({ Ban } as TModule),
             evaluated: () => [{ id: file, file, exports: { Ban }, imports: new Set() }]
         };
-        const localizing: Preparer = {
-            [HostPrepareCommands]: (bodies) =>
-                Promise.resolve(bodies.map((body) => ({ ...body, name_localizations: { pl: 'zbanuj' } })))
-        };
+        // justified: the scanner reads only the hooks off the instance
+        const localizing = {
+            [HostPluginHooks]: {
+                prepareCommands: (bodies) => {
+                    for (const body of bodies) body.name_localizations = { pl: 'zbanuj' };
+                    return Promise.resolve();
+                }
+            }
+        } as SeedcordInstance;
 
         const [found] = await new CommandScanner(modules, filesAt(root), localizing).scan('.');
 

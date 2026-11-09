@@ -1,5 +1,4 @@
 import {
-    buildDispatchMembers,
     DispatchContext,
     EventMetadataKey,
     EventMiddlewareMetadataKey,
@@ -15,6 +14,7 @@ import {
 import { SeedcordErrorCode, paint } from '@seedcord/errors';
 import { SeedcordError } from '@seedcord/errors/internal';
 import { Logger } from '@seedcord/logger';
+import { HostPluginHooks } from '@seedcord/types/internal';
 import { hasKeys } from '@seedcord/utils';
 import { asError } from '@seedcord/utils/internal';
 
@@ -151,7 +151,7 @@ export class EventDispatcher implements Initializeable, HmrAware {
         dispatch: DispatchContext
     ): Promise<{ caught: unknown } | null> {
         try {
-            await buildDispatchMembers(this.core, dispatch, eventOrigin(actor));
+            await this.core[HostPluginHooks].buildMembers(dispatch, eventOrigin(actor));
             return null;
         } catch (caught) {
             handleEventFault(caught, { handlerName: 'dispatchMembers', args, dispatch }, this.core);

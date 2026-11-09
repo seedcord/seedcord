@@ -131,7 +131,6 @@ export {
     VerifyWebhooks
 } from '#subscribers/slots';
 export { DispatchContext, type InteractionDispatch } from '#src/dispatch/DispatchContext';
-export { buildDispatchMembers } from '#src/dispatch/DispatchMembers';
 export { InteractionRun, type InteractionRunConfig } from '#src/dispatch/InteractionRun';
 export { componentKindOf } from '#src/dispatch/componentKindOf';
 export { HandlerLoader } from '#src/dispatch/HandlerLoader';

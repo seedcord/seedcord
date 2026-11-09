@@ -101,8 +101,6 @@ const messages = {
         `${plugin} uses ${paint.sky(member)} in ${paint.bold('dispatchMembers')}, but seedcord's handlers already have ${paint.bold(`this.${member}`)}. The plugin's value would overwrite it. Rename the key in the plugin.`,
     [SeedcordErrorCode.CorePluginMemberThrew]: (member: string, plugin: string, reason: string) =>
         `The ${paint.sky(member)} function in the ${paint.bold('dispatchMembers')} of ${plugin} threw, so the handler didn't run. ${sentence(reason)} Fix the error in the plugin.`,
-    [SeedcordErrorCode.CorePluginCommandCountChanged]: (key: string, received: number, returned: number) =>
-        `The plugin at ${paint.sky(key)} got ${paint.iris(received)} commands in ${paint.bold('prepareCommands')} and returned ${paint.iris(returned)}. Return one command for each command it got, in the same order.`,
     [SeedcordErrorCode.CorePluginGroupTaken]: (head: string, key: string) =>
         `${paint.bold(head)} is already taken on this bot, so ${paint.sky(key)} cannot nest under it. Pick another group name.`,
     [SeedcordErrorCode.CorePluginKeyMalformed]: (key: string, reason: string) =>

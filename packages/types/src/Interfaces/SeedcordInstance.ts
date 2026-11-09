@@ -1,8 +1,8 @@
 import type {
     HostAugmentTarget,
     HostListenHost,
+    HostPluginHooks,
     HostPluginKeys,
-    HostPrepareCommands,
     HostShutdown,
     HostStartup,
     HostVersion
@@ -23,9 +23,9 @@ export interface SeedcordInstance {
     readonly [HostVersion]: string;
     readonly [HostAugmentTarget]: TransportPackage;
     readonly [HostPluginKeys]: readonly string[];
-    [HostPrepareCommands](
-        commands: readonly RESTPostAPIApplicationCommandsJSONBody[]
-    ): Promise<RESTPostAPIApplicationCommandsJSONBody[]>;
+    readonly [HostPluginHooks]: {
+        prepareCommands(commands: readonly RESTPostAPIApplicationCommandsJSONBody[]): Promise<void>;
+    };
     readonly [HostShutdown]: { run(exitCode?: number, exitProcess?: boolean): Promise<void> };
     readonly [HostStartup]: { abort(): void };
     // seedcord dev sets this before start() for a quick tunnel

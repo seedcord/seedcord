@@ -2,11 +2,12 @@ import { SeedcordErrorCode } from '@seedcord/errors';
 import { SeedcordError, SeedcordTypeError } from '@seedcord/errors/internal';
 import { asError } from '@seedcord/utils/internal';
 
-import { MemberValues } from './DispatchContext';
+import { MemberValues } from '#src/dispatch/DispatchContext';
 
-import type { CoreBase } from '#interfaces/CoreBase';
-import type { DispatchContext } from './DispatchContext';
-import type { DispatchOrigin } from './DispatchOrigin';
+import type { DispatchContext } from '#src/dispatch/DispatchContext';
+import type { DispatchOrigin } from '#src/dispatch/DispatchOrigin';
+import type { PluginLike } from './Plugin';
+import type { RESTPostAPIApplicationCommandsJSONBody } from 'discord-api-types/v10';
 
 export type DispatchMemberFunctions = Readonly<Record<string, (origin: DispatchOrigin) => unknown>>;
 
@@ -80,41 +81,32 @@ interface ClaimedMember {
     readonly build: (origin: DispatchOrigin) => unknown;
 }
 
-export const DispatchMembersSlot = Symbol('seedcord:host:dispatch-members');
+export class PluginHooks {
+    private readonly members = new Map<string, ClaimedMember>();
+    private readonly plugins: PluginLike[] = [];
 
-export async function buildDispatchMembers(
-    core: CoreBase,
-    dispatch: DispatchContext,
-    origin: DispatchOrigin
-): Promise<void> {
-    dispatch[MemberValues] = await core[DispatchMembersSlot].build(origin);
-}
-
-export class DispatchMembers {
-    // attach order, which is the order build() runs them in
-    private readonly claimed = new Map<string, ClaimedMember>();
-
-    public claim(plugin: string, functions: DispatchMemberFunctions = {}): void {
-        for (const [member, build] of Object.entries(functions)) {
+    public add(name: string, plugin: PluginLike): void {
+        for (const [member, build] of Object.entries(plugin.dispatchMembers ?? {})) {
             if (isReservedMember(member)) {
-                throw new SeedcordTypeError(SeedcordErrorCode.CorePluginMemberReserved, [member, plugin]);
+                throw new SeedcordTypeError(SeedcordErrorCode.CorePluginMemberReserved, [member, name]);
             }
-            const owner = this.claimed.get(member);
+            const owner = this.members.get(member);
             if (owner) {
                 throw new SeedcordTypeError(SeedcordErrorCode.CoreDuplicateName, [
                     'dispatch member',
                     member,
-                    [owner.plugin, plugin],
+                    [owner.plugin, name],
                     'If both are the same plugin, attach it once.'
                 ]);
             }
-            this.claimed.set(member, { plugin, build });
+            this.members.set(member, { plugin: name, build });
         }
+        this.plugins.push(plugin);
     }
 
-    public async build(origin: DispatchOrigin): Promise<Record<string, unknown>> {
+    public async buildMembers(dispatch: DispatchContext, origin: DispatchOrigin): Promise<void> {
         const values: Record<string, unknown> = {};
-        for (const [member, { plugin, build }] of this.claimed) {
+        for (const [member, { plugin, build }] of this.members) {
             try {
                 values[member] = await build(origin);
             } catch (caught) {
@@ -125,6 +117,10 @@ export class DispatchMembers {
                 );
             }
         }
-        return values;
+        dispatch[MemberValues] = values;
+    }
+
+    public async prepareCommands(commands: readonly RESTPostAPIApplicationCommandsJSONBody[]): Promise<void> {
+        for (const plugin of this.plugins) await plugin.prepareCommands?.(commands);
     }
 }
