@@ -8,6 +8,7 @@ import { RuntimeBrand, TransportBrand } from './brands';
 import { resolveLifecycleSpec } from './lifecycle';
 
 import type { CoreBase } from '#interfaces/CoreBase';
+import type { DispatchView } from '#src/dispatch/DispatchView';
 import type { Kv } from '#src/kv/Kv';
 import type { ScopedSpec } from './brands';
 import type { ResolvedPluginLifecycleSpec, PluginLifecycleSpec } from './lifecycle';
@@ -37,6 +38,8 @@ let attaching: Attaching | undefined;
 export interface Initializeable {
     init(): Promisable<void>;
 }
+
+type DispatchMemberFunctions = Readonly<Record<string, (view: DispatchView) => unknown>>;
 
 /** @internal */
 const resolvedSpecSlot = Symbol('seedcord:plugin:spec');
@@ -187,6 +190,22 @@ export abstract class Plugin<
     codegen?(): Promise<unknown>;
 
     /**
+     * Adds values that your handlers can read. Each function runs once for every interaction or event,
+     * and a handler reads what it returned under the same key, like `this.tag`.
+     *
+     * `attach()` throws if another plugin on the bot already uses one of these keys, or if the bot
+     * attaches this plugin twice.
+     *
+     * @example
+     * ```ts
+     * public override readonly dispatchMembers = {
+     *     tag: (view: DispatchView) => `${view.guildId}:${view.userId}`
+     * };
+     * ```
+     */
+    declare public readonly dispatchMembers?: DispatchMemberFunctions;
+
+    /**
      * Rejects the options this plugin got.
      *
      * @param reason - Why the options are invalid.
@@ -248,7 +267,14 @@ export type { PluginOptions } from './options';
 /** @internal */
 export type PluginLike = Pick<
     Plugin,
-    'init' | 'ready' | 'dispose' | 'onHmr' | typeof resolvedSpecSlot | typeof loggerSlot | typeof scopeSlot
+    | 'init'
+    | 'ready'
+    | 'dispose'
+    | 'onHmr'
+    | 'dispatchMembers'
+    | typeof resolvedSpecSlot
+    | typeof loggerSlot
+    | typeof scopeSlot
 >;
 
 // a `CoreBase` first parameter rejects a narrowing ctor on its own, and it also collapses

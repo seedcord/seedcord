@@ -22,6 +22,8 @@ export function interactionGateContext(
         userId: user.id,
         guildId: payload.guild_id ?? null,
         channelId: payload.channel?.id ?? null,
+        userLocale: payload.locale,
+        guildLocale: payload.guild_locale ?? null,
         memberRoleIds: member?.roles ?? [],
         memberPermissions: member ? BigInt(member.permissions) : null,
         // app_permissions is present on every interaction Discord delivers, including DMs

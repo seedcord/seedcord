@@ -97,6 +97,8 @@ const messages = {
         `A module from your build read its path from ${paint.bold('import.meta')}, but nothing set that path because ${paint.path('index.mjs')} didn't run first. Run ${paint.path('index.mjs')} instead of the module, like ${paint.bold('node dist/index.mjs')}.`,
     [SeedcordErrorCode.CorePluginKvOutsideAttach]: (plugin: string) =>
         `${paint.bold(plugin)} read ${paint.bold('this.kv')} on an instance that ${paint.bold('attach()')} didn't build. ${paint.bold('this.kv')} stores a plugin's records under its attach key, which only ${paint.bold('attach()')} gives it. Attach the class with ${paint.bold(`seedcord.attach('key', ${plugin})`)}.`,
+    [SeedcordErrorCode.CorePluginMemberReserved]: (member: string, plugin: string) =>
+        `${plugin} uses ${paint.sky(member)} in ${paint.bold('dispatchMembers')}, but seedcord's handlers already have ${paint.bold(`this.${member}`)}. The plugin's value would overwrite it. Rename the key in the plugin.`,
     [SeedcordErrorCode.CorePluginGroupTaken]: (head: string, key: string) =>
         `${paint.bold(head)} is already taken on this bot, so ${paint.sky(key)} cannot nest under it. Pick another group name.`,
     [SeedcordErrorCode.CorePluginKeyMalformed]: (key: string, reason: string) =>

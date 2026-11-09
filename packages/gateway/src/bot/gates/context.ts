@@ -33,6 +33,8 @@ export function interactionGateContext(
         userId: interaction.user.id,
         guildId: interaction.guildId,
         channelId: interaction.channelId,
+        userLocale: interaction.locale,
+        guildLocale: interaction.guildLocale,
         memberRoleIds,
         memberPermissions: interaction.memberPermissions?.bitfield ?? null,
         // djs types appPermissions as non-null on interactions
@@ -64,6 +66,8 @@ export function eventGateContext(
         userId: actor.user?.id ?? null,
         guildId: actor.guild?.id ?? null,
         channelId: actor.channelId,
+        userLocale: null,
+        guildLocale: actor.guild?.preferredLocale ?? null,
         // the cache has the everyone role (id equals the guild id), filtered out to match the interaction shape
         memberRoleIds: actor.member ? [...actor.member.roles.cache.keys()].filter((id) => id !== actor.guild?.id) : [],
         memberPermissions: actor.member?.permissions.bitfield ?? null,

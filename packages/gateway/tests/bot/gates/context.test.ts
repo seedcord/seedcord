@@ -28,6 +28,8 @@ describe('interactionGateContext', () => {
             guild: null,
             guildId: 'g1',
             channelId: 'c1',
+            locale: 'en-GB',
+            guildLocale: 'de',
             memberPermissions: null,
             appPermissions: { bitfield: 64n }
         } as unknown as ButtonInteraction<'cached'>;
@@ -42,6 +44,8 @@ describe('interactionGateContext', () => {
         expect(built.userId).toBe('u1');
         expect(built.guildId).toBe('g1');
         expect(built.channelId).toBe('c1');
+        expect(built.userLocale).toBe('en-GB');
+        expect(built.guildLocale).toBe('de');
         expect(built.memberRoleIds).toEqual([]);
         expect(built.memberPermissions).toBeNull();
         expect(built.appPermissions).toBe(64n);
@@ -132,6 +136,8 @@ describe('eventGateContext', () => {
         expect(built.userId).toBeNull();
         expect(built.guildId).toBeNull();
         expect(built.channelId).toBeNull();
+        expect(built.userLocale).toBeNull();
+        expect(built.guildLocale).toBeNull();
         expect(built.memberRoleIds).toEqual([]);
         expect(built.memberPermissions).toBeNull();
         expect(built.memberGuildPermissions).toBeNull();
@@ -142,7 +148,7 @@ describe('eventGateContext', () => {
         // the cache has the everyone role (id equals the guild id), the scalar set excludes it
         const member = fakeMember(['g1', 'r1'], 4n);
         Object.defineProperties(member, {
-            guild: { value: { id: 'g1', members: { me: fakeMember([], 2n) } } },
+            guild: { value: { id: 'g1', preferredLocale: 'fr', members: { me: fakeMember([], 2n) } } },
             user: { value: { id: 'u1' } }
         });
         const payload = [member] as unknown as Parameters<typeof eventGateContext>[1];
@@ -152,6 +158,8 @@ describe('eventGateContext', () => {
 
         expect(built.userId).toBe('u1');
         expect(built.guildId).toBe('g1');
+        expect(built.userLocale).toBeNull();
+        expect(built.guildLocale).toBe('fr');
         expect(built.memberRoleIds).toEqual(['r1']);
         // these are the member's guild-level bits because events don't have a channel scope
         expect(built.memberPermissions).toBe(4n);
