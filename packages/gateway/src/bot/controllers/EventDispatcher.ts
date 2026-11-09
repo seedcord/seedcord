@@ -33,7 +33,6 @@ import type {
 } from '#handlers/constructors';
 import type { ValidNonInteractionKeys } from '#handlers/interactionTypes';
 import type { Core } from '#interfaces/Core';
-import type { EventActor } from '#miscellaneous/deriveEventActor';
 import type { HandlerResult } from '@seedcord/core';
 import type { Initializeable, MiddlewareRegistrationOf } from '@seedcord/core/internal';
 import type { InFlight } from '@seedcord/core/node/internal';
@@ -145,13 +144,9 @@ export class EventDispatcher implements Initializeable, HmrAware {
         }
     }
 
-    private async buildMembers(
-        actor: EventActor,
-        args: unknown,
-        dispatch: DispatchContext
-    ): Promise<{ caught: unknown } | null> {
+    private async buildMembers(args: unknown, dispatch: DispatchContext): Promise<{ caught: unknown } | null> {
         try {
-            await this.core[HostPluginHooks].buildMembers(dispatch, eventOrigin(actor));
+            await this.core[HostPluginHooks].buildMembers(dispatch, eventOrigin(deriveEventActor(args)));
             return null;
         } catch (caught) {
             handleEventFault(caught, { handlerName: 'dispatchMembers', args, dispatch }, this.core);
@@ -261,7 +256,6 @@ export class EventDispatcher implements Initializeable, HmrAware {
         if (handlersToExecute.length === 0) return;
 
         const dispatch = new DispatchContext('event', eventName);
-        const actor = deriveEventActor(args);
         reportEventDispatching(this.core, dispatch.id, eventName, args);
 
         const ran: EventMiddleware[] = [];
@@ -270,13 +264,13 @@ export class EventDispatcher implements Initializeable, HmrAware {
 
         try {
             stopped =
-                (await this.buildMembers(actor, args, dispatch)) ??
+                (await this.buildMembers(args, dispatch)) ??
                 (await this.runMiddlewares(eventName, args, dispatch, ran));
             if (stopped) return;
 
             // another dispatch may have claimed a once handler during the runMiddlewares await
             const claimed = handlersToExecute.filter((entry) => this.onceRuns.claim(entry, eventName));
-            const results = claimed.map((entry) => this.processHandler(eventName, entry.ctor, args, dispatch, actor));
+            const results = claimed.map((entry) => this.processHandler(eventName, entry.ctor, args, dispatch));
             handlers.push(...(await Promise.all(results)));
         } finally {
             const result = eventResultFor(stopped, handlers);
@@ -289,14 +283,13 @@ export class EventDispatcher implements Initializeable, HmrAware {
         eventName: KeyOfEvents,
         Ctor: EventHandlerConstructor,
         args: ClientEvents[KeyOfEvents],
-        dispatch: DispatchContext,
-        actor: EventActor
+        dispatch: DispatchContext
     ): Promise<HandlerResult> {
         try {
             this.logger.trace(`Processing ${paint.sky.bold(eventName)} with ${paint.mute(Ctor.name)}`);
             // the event map paired this name with this class
             const handler = new (Ctor as ConstructableEventHandler)(args, this.core, dispatch);
-            const eventCtx = eventGateContext(eventName, args, this.core, dispatch, actor);
+            const eventCtx = eventGateContext(eventName, args, this.core, dispatch);
             await runHandlerGates(Ctor, eventCtx);
             await handler.execute();
             return { handler: Ctor.name, outcome: 'handled' };

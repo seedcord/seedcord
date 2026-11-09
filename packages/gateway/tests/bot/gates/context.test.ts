@@ -1,13 +1,12 @@
 import { RequirePermissions } from '@seedcord/core';
 import { DispatchContext } from '@seedcord/core/internal';
-import { GuildMember, Message, PermissionFlagsBits } from 'discord.js';
+import { GuildMember, Message, MessageReaction, PermissionFlagsBits, User, VoiceState } from 'discord.js';
 import { describe, it, expect } from 'vite-plus/test';
 
 import { eventGateContext, interactionGateContext } from '#bot/gates/context';
-import { deriveEventActor } from '#miscellaneous/deriveEventActor';
 
 import type { Core } from '#interfaces/Core';
-import type { ButtonInteraction, User } from 'discord.js';
+import type { ButtonInteraction } from 'discord.js';
 
 const dispatch = new DispatchContext('button', 'probe');
 
@@ -125,7 +124,7 @@ describe('eventGateContext', () => {
         // the builder never reads core
         const core = {} as unknown as Core;
 
-        const built = eventGateContext('messageCreate', payload, core, dispatch, deriveEventActor(payload));
+        const built = eventGateContext('messageCreate', payload, core, dispatch);
 
         expect(built.kind).toBe('event');
         expect(built.eventName).toBe('messageCreate');
@@ -155,7 +154,7 @@ describe('eventGateContext', () => {
         const payload = [member] as unknown as Parameters<typeof eventGateContext>[1];
         const core = {} as unknown as Core;
 
-        const built = eventGateContext('guildMemberAdd', payload, core, dispatch, deriveEventActor(payload));
+        const built = eventGateContext('guildMemberAdd', payload, core, dispatch);
 
         expect(built.userId).toBe('u1');
         expect(built.guildId).toBe('g1');
@@ -182,21 +181,53 @@ describe('eventGateContext', () => {
         const author = { id: 'b1', bot: true } as User;
         const payload = [message(null), message(author)] as unknown as Parameters<typeof eventGateContext>[1];
 
-        const built = eventGateContext(
-            'messageUpdate',
-            payload,
-            {} as unknown as Core,
-            dispatch,
-            deriveEventActor(payload)
-        );
+        const built = eventGateContext('messageUpdate', payload, {} as unknown as Core, dispatch);
 
         expect(built.user).toBe(author);
 
         const deleted = [message(null)] as unknown as Parameters<typeof eventGateContext>[1];
-        expect(
-            eventGateContext('messageDelete', deleted, {} as unknown as Core, dispatch, deriveEventActor(deleted))
-                .channelId
-        ).toBe('c1');
+        expect(eventGateContext('messageDelete', deleted, {} as unknown as Core, dispatch).channelId).toBe('c1');
+    });
+
+    const guild = { id: 'g1', preferredLocale: 'fr', members: { me: null } };
+
+    function reaction(): MessageReaction {
+        return Object.defineProperties(Object.create(MessageReaction.prototype) as MessageReaction, {
+            message: { value: { guild, channelId: 'c1' } }
+        });
+    }
+
+    it('reads the guild and channel off a reaction and the user off the next argument', () => {
+        const user = Object.defineProperties(Object.create(User.prototype) as User, { id: { value: 'u1' } });
+        const payload = [reaction(), user, {}] as unknown as Parameters<typeof eventGateContext>[1];
+
+        const built = eventGateContext('messageReactionAdd', payload, {} as unknown as Core, dispatch);
+
+        expect(built).toMatchObject({ userId: 'u1', guildId: 'g1', channelId: 'c1', guildLocale: 'fr' });
+    });
+
+    it('reads the guild and channel off a reaction event without a user', () => {
+        const payload = [reaction()] as unknown as Parameters<typeof eventGateContext>[1];
+
+        const built = eventGateContext('messageReactionRemoveEmoji', payload, {} as unknown as Core, dispatch);
+
+        expect(built).toMatchObject({ userId: null, guildId: 'g1', channelId: 'c1' });
+    });
+
+    it('reads a voice update off the new state', () => {
+        const member = fakeMember([], 0n);
+        Object.defineProperties(member, { user: { value: { id: 'u1' } } });
+        const state = (channelId: string | null): VoiceState =>
+            Object.defineProperties(Object.create(VoiceState.prototype) as VoiceState, {
+                guild: { value: guild },
+                channelId: { value: channelId },
+                member: { value: member }
+            });
+        const payload = [state(null), state('c2')] as unknown as Parameters<typeof eventGateContext>[1];
+
+        const built = eventGateContext('voiceStateUpdate', payload, {} as unknown as Core, dispatch);
+
+        expect(built).toMatchObject({ userId: 'u1', guildId: 'g1', channelId: 'c2', member });
     });
 });
 

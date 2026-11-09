@@ -46,10 +46,9 @@ function gateContextNames(): string[] {
     const interaction = { user: { id: 'u1' }, appPermissions: { bitfield: 0n } } as unknown as Repliables;
     const core = {} as Core;
     const args = [] as unknown as ClientEvents['messageCreate'];
-    const actor = { guild: null, member: null, user: null, channelId: null };
     return [
         ...Object.keys(interactionGateContext(interaction, core, dispatch)),
-        ...Object.keys(eventGateContext('messageCreate', args, core, dispatch, actor))
+        ...Object.keys(eventGateContext('messageCreate', args, core, dispatch))
     ];
 }
 

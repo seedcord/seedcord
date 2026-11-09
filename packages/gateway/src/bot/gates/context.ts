@@ -1,5 +1,7 @@
 import { GuildMember } from 'discord.js';
 
+import { deriveEventActor } from '#miscellaneous/deriveEventActor';
+
 import type { Core } from '#interfaces/Core';
 import type { EventActor } from '#miscellaneous/deriveEventActor';
 import type { Repliables, ValidInteractionTypes, ValidNonInteractionKeys } from '#src/handlers/interactionTypes';
@@ -67,9 +69,9 @@ export function eventGateContext(
     eventName: ValidNonInteractionKeys,
     args: ClientEvents[ValidNonInteractionKeys],
     core: Core,
-    dispatch: DispatchContext,
-    actor: EventActor
+    dispatch: DispatchContext
 ): EventGateContext {
+    const actor = deriveEventActor(args);
     return {
         kind: 'event',
         core,

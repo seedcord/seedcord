@@ -1,3 +1,5 @@
+import { PublishDefault } from '@seedcord/core/internal';
+import { SeedcordErrorCode } from '@seedcord/errors';
 import { GuildMember } from 'discord.js';
 import { afterEach, beforeEach, describe, expect, vi } from 'vite-plus/test';
 
@@ -9,6 +11,7 @@ import { it } from '#tests/utils/test-env';
 
 import type { Seedcord } from '#src/Seedcord';
 import type { CoreBase, DispatchOrigin } from '@seedcord/core';
+import type { MockInstance } from 'vitest';
 
 // a global is the only channel back to the test, since the fixture compiles into a temp dir
 function fireCalls(): string[] {
@@ -142,7 +145,8 @@ describe('the per-dispatch event context', () => {
         expect(tag).toHaveBeenCalledOnce();
     });
 
-    withBoot('skips the middleware and handlers when a member throws', async ({ boot }) => {
+    withBoot('reports a member that throws and skips the middleware and handlers', async ({ boot }) => {
+        let publish: MockInstance | undefined;
         const events = await boot(
             `
             import { EventHandler, RegisterEvent } from '${seedcordPath}';
@@ -165,18 +169,22 @@ describe('the per-dispatch event context', () => {
                 }
             }
             `,
-            (bot) =>
+            (bot) => {
+                publish = vi.spyOn(bot.bus, PublishDefault);
                 bot.attach(
                     'tagging',
                     pluginBuilding(() => {
                         throw new Error('boom');
                     })
-                )
+                );
+            }
         );
 
         await expect(events.processEvent('guildMemberAdd', [guildMemberPayload()])).resolves.toBeUndefined();
 
         expect(fireCalls()).toEqual([]);
+        const reported = publish?.mock.calls.find(([event]) => event === 'unknownException');
+        expect(reported?.[1]).toMatchObject({ error: { code: SeedcordErrorCode.CorePluginMemberThrew } });
     });
 
     withBoot('hands a gate the same context the chain wrote to', async ({ boot }) => {
