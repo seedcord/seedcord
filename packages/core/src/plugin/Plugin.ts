@@ -8,7 +8,7 @@ import { RuntimeBrand, TransportBrand } from './brands';
 import { resolveLifecycleSpec } from './lifecycle';
 
 import type { CoreBase } from '#interfaces/CoreBase';
-import type { DispatchView } from '#src/dispatch/DispatchView';
+import type { DispatchMemberFunctions } from '#src/dispatch/DispatchMembers';
 import type { Kv } from '#src/kv/Kv';
 import type { ScopedSpec } from './brands';
 import type { ResolvedPluginLifecycleSpec, PluginLifecycleSpec } from './lifecycle';
@@ -38,8 +38,6 @@ let attaching: Attaching | undefined;
 export interface Initializeable {
     init(): Promisable<void>;
 }
-
-type DispatchMemberFunctions = Readonly<Record<string, (view: DispatchView) => unknown>>;
 
 /** @internal */
 const resolvedSpecSlot = Symbol('seedcord:plugin:spec');
@@ -199,7 +197,7 @@ export abstract class Plugin<
      * @example
      * ```ts
      * public override readonly dispatchMembers = {
-     *     tag: (view: DispatchView) => `${view.guildId}:${view.userId}`
+     *     tag: (origin: DispatchOrigin) => `${origin.guildId}:${origin.userId}`
      * };
      * ```
      */

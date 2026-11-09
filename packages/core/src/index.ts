@@ -39,7 +39,7 @@ export { RegisterInteractionMiddleware } from '#decorators/middleware';
 export type { InteractionMiddlewareOptions } from '#decorators/middleware';
 
 export type { DispatchContext } from '#src/dispatch/DispatchContext';
-export type { DispatchView } from '#src/dispatch/DispatchView';
+export type { DispatchOrigin } from '#src/dispatch/DispatchOrigin';
 export type { DispatchResult, EventDispatchResult, HandlerOutcome, HandlerResult } from '#src/dispatch/dispatchResult';
 
 export { BaseHandler } from '#src/handlers/BaseHandler';

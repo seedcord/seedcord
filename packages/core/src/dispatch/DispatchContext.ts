@@ -8,6 +8,8 @@ import type { DispatchBag, DispatchState } from '@seedcord/types';
 
 type DispatchKind = `${InteractionKind}` | 'event';
 
+export const MemberValues = Symbol('seedcord:dispatch:member-values');
+
 export type InteractionDispatch = DispatchContext<InteractionKind>;
 
 /**
@@ -20,6 +22,9 @@ export class DispatchContext<Kind extends DispatchKind = DispatchKind> implement
     private readonly state = Object.create(null) as Partial<DispatchState>;
 
     public readonly id = crypto.randomUUID();
+
+    /** @internal */
+    public [MemberValues]: Readonly<Record<string, unknown>> = {};
 
     constructor(
         /** What started this dispatch, an interaction kind or `event`. */

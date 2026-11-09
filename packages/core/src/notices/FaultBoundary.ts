@@ -1,4 +1,4 @@
-import { paint } from '@seedcord/errors';
+import { SeedcordErrorCode, isSeedcordError, paint } from '@seedcord/errors';
 import { asError } from '@seedcord/utils/internal';
 import { RESTJSONErrorCodes } from 'discord-api-types/v10';
 
@@ -129,7 +129,10 @@ export class FaultBoundary {
     private render({ error, uuid }: ReportedFault): FaultReply {
         const ctx = this.renderContext(uuid);
         if (error instanceof Notice) return { response: error.render(ctx), ephemeral: error.ephemeral };
-        const Override = this.core.config.errors?.defaultError;
+        // a bot's own card might read the member that just failed
+        const Override = isSeedcordError(error, undefined, SeedcordErrorCode.CorePluginMemberThrew)
+            ? undefined
+            : this.core.config.errors?.defaultError;
         return { response: (Override ? new Override(uuid) : new Fault()).render(ctx), ephemeral: true };
     }
 

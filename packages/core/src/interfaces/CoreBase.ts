@@ -1,3 +1,4 @@
+import type { DispatchMembers, DispatchMembersSlot } from '#src/dispatch/DispatchMembers';
 import type { Kv } from '#src/kv/Kv';
 import type { Bus } from '#subscribers/Bus';
 import type { REST } from '@discordjs/rest';
@@ -9,6 +10,8 @@ import type { Config, IRateLimiter } from '@seedcord/types';
  * members.
  */
 export interface CoreBase {
+    /** @internal */
+    readonly [DispatchMembersSlot]: DispatchMembers;
     /** Transports narrow this to their own config type. */
     readonly config: Config;
     /**

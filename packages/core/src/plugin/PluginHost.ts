@@ -3,6 +3,7 @@ import { SeedcordError, SeedcordTypeError } from '@seedcord/errors/internal';
 import { FRAMEWORK_CHANNELS } from '@seedcord/logger';
 import { HostPluginKeys } from '@seedcord/types/internal';
 
+import { DispatchMembers, DispatchMembersSlot } from '#src/dispatch/DispatchMembers';
 import { Kv } from '#src/kv/Kv';
 import { MemoryDriver } from '#src/kv/MemoryDriver';
 import { KvRateLimiter } from '#src/rateLimiter/KvRateLimiter';
@@ -26,53 +27,6 @@ export interface Attachment {
 
 const RESERVED_KEYS: ReadonlySet<string> = new Set(FRAMEWORK_CHANNELS);
 
-// a test on each transport fails if a handler gets a new method that isn't in this list
-const RESERVED_MEMBERS: ReadonlySet<string> = new Set([
-    'after',
-    'api',
-    'channels',
-    'core',
-    'decodedFocused',
-    'decodedRoute',
-    'defer',
-    'deferUpdate',
-    'delete',
-    'dispatch',
-    'edit',
-    'ensureSourceMessage',
-    'event',
-    'execute',
-    'fields',
-    'focused',
-    'followUp',
-    'getEvent',
-    'logger',
-    'match',
-    'members',
-    'options',
-    'params',
-    'reader',
-    'reply',
-    'resolver',
-    'respond',
-    'roles',
-    'route',
-    'send',
-    'sender',
-    'showModal',
-    'target',
-    'targetMember',
-    'update',
-    'user',
-    'users',
-    'values'
-]);
-
-// a member called constructor would replace this.constructor on every handler
-function isReservedMember(name: string): boolean {
-    return RESERVED_MEMBERS.has(name) || name in Object.prototype;
-}
-
 const attachmentsSlot = Symbol('seedcord:host:attachments');
 const sealSlot = Symbol('seedcord:host:seal');
 
@@ -93,7 +47,9 @@ export abstract class PluginHost<BotT extends Transport, BotRt extends Runtime> 
     readonly #attachments: Attachment[] = [];
     readonly #groups = new Map<string, Record<string, PluginLike>>();
     readonly #scope: { readonly transport: BotT; readonly runtime: BotRt };
-    readonly #memberOwners = new Map<string, string>();
+
+    /** @internal */
+    public readonly [DispatchMembersSlot] = new DispatchMembers();
 
     constructor(transport: BotT, runtime: BotRt, driver: Config['kv']) {
         this.#scope = { transport, runtime };
@@ -182,7 +138,7 @@ export abstract class PluginHost<BotT extends Transport, BotRt extends Runtime> 
         const kv = new Kv(this.kv.driver, 'plugins', key);
         const instance = constructAttached(key, kv, () => new Plugin(this, ...args));
         this.#assertScope(Plugin.name, declaredScopeOf(instance));
-        this.#claimMembers(`${paint.sky(Plugin.name)} at ${paint.sky(key)}`, instance);
+        this[DispatchMembersSlot].claim(`${paint.sky(Plugin.name)} at ${paint.sky(key)}`, instance.dispatchMembers);
         this.#attachments.push({ key, instance, spec: resolvedLifecycleSpecOf(instance) });
 
         if (leaf === undefined) {
@@ -219,24 +175,6 @@ export abstract class PluginHost<BotT extends Transport, BotRt extends Runtime> 
                 declared[axis],
                 host
             ]);
-        }
-    }
-
-    #claimMembers(plugin: string, { dispatchMembers = {} }: PluginLike): void {
-        for (const member of Object.keys(dispatchMembers)) {
-            if (isReservedMember(member)) {
-                throw new SeedcordTypeError(SeedcordErrorCode.CorePluginMemberReserved, [member, plugin]);
-            }
-            const owner = this.#memberOwners.get(member);
-            if (owner !== undefined) {
-                throw new SeedcordTypeError(SeedcordErrorCode.CoreDuplicateName, [
-                    'dispatch member',
-                    member,
-                    [owner, plugin],
-                    'If both are the same plugin, attach it once.'
-                ]);
-            }
-            this.#memberOwners.set(member, plugin);
         }
     }
 

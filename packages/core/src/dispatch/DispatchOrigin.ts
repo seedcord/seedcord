@@ -1,7 +1,7 @@
 import type { Locale } from 'discord-api-types/v10';
 
 /** The user, guild, and channel that one interaction or event came from. */
-export interface DispatchView {
+export interface DispatchOrigin {
     /** The id of the user who triggered it, or null on an event without a user. */
     readonly userId: string | null;
     /** The guild id, or null outside a guild. */

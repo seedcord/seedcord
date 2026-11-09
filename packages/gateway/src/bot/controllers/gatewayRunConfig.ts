@@ -31,8 +31,13 @@ export function gatewayRunConfig(run: GatewayRun): InteractionRunConfig {
         apiError: DiscordAPIError,
         logger,
         interactionId: interaction.id,
-        userId: interaction.user.id,
-        guildId: interaction.guildId,
+        origin: {
+            userId: interaction.user.id,
+            guildId: interaction.guildId,
+            channelId: interaction.channelId,
+            userLocale: interaction.locale,
+            guildLocale: interaction.guildLocale
+        },
         customId: 'customId' in interaction ? interaction.customId : null,
         faultDetails: () => interactionFaultReport(interaction, dispatch),
         target: interaction.isAutocomplete()

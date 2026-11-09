@@ -52,6 +52,7 @@ function filesOf(classes: BotClasses): Record<string, Record<string, unknown>> {
 interface EngineOptions {
     readonly settings?: Except<HttpEdgeConfig, 'bot' | 'subscribers'>;
     readonly env?: Readonly<Record<string, string>>;
+    readonly attach?: (bot: Seedcord) => void;
 }
 
 interface ReadyEngine extends Disposable {
@@ -79,6 +80,7 @@ export async function readyEngine(classes: BotClasses, options: EngineOptions = 
         },
         subscribers: { path: `${BUILT_ROOT}/${FOLDERS.subscribers}` }
     });
+    options.attach?.(seedcord);
     return {
         signer,
         handle: (request, ctx) => seedcord.fetch(request, undefined, ctx),

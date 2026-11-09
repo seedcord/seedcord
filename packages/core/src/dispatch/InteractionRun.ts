@@ -3,6 +3,8 @@ import { paint } from '@seedcord/errors';
 import { runInteractionGates } from '#gates/runGates';
 import { FaultBoundary } from '#src/notices/FaultBoundary';
 
+import { MemberValues } from './DispatchContext';
+import { DispatchMembersSlot } from './DispatchMembers';
 import { outcomeFor, queuedMsFor, reportDispatch } from './dispatchReport';
 import { resultFor, runAfter } from './runAfter';
 
@@ -12,9 +14,10 @@ import type { MiddlewareKind } from '#src/metadataKeys';
 import type { ApiErrorClass, FaultDetails, FaultSender } from '#src/notices/FaultBoundary';
 import type { DispatchOutcome } from '#subscribers/types/Subscriptions';
 import type { InteractionDispatch } from './DispatchContext';
+import type { DispatchOrigin } from './DispatchOrigin';
 import type { DispatchResult } from './dispatchResult';
 import type { Logger } from '@seedcord/logger';
-import type { Constructor, Promisable } from 'type-fest';
+import type { Constructor, Promisable, SetNonNullable } from 'type-fest';
 
 interface RunnableHandler {
     execute(): Promisable<void>;
@@ -49,8 +52,7 @@ export interface InteractionRunConfig {
     readonly apiError: ApiErrorClass;
     readonly logger: Logger;
     readonly interactionId: string;
-    readonly userId: string;
-    readonly guildId: string | null;
+    readonly origin: SetNonNullable<DispatchOrigin, 'userId'>;
     readonly target: RepliableTarget | AutocompleteTarget;
     faultDetails(): FaultDetails;
 }
@@ -107,9 +109,10 @@ export class InteractionRun {
     }
 
     private async builtHandler(replyWith: unknown, answer: Answer): Promise<RunnableHandler | null> {
-        const { HandlerCtor, event, core, dispatch, logger } = this.config;
+        const { HandlerCtor, event, core, dispatch, logger, origin } = this.config;
         logger.trace(`Processing ${paint.sky.bold(dispatch.routeId)} with ${paint.mute(HandlerCtor.name)}`);
         try {
+            dispatch[MemberValues] = await core[DispatchMembersSlot].build(origin);
             // justified: each transport's route maps pair a kind with the class that takes its event
             return new HandlerCtor(event as never, core as never, dispatch as never, replyWith as never);
         } catch (caught) {
@@ -161,13 +164,13 @@ export class InteractionRun {
     }
 
     private report(outcome: DispatchOutcome): void {
-        const { core, dispatch, interactionId, userId, guildId } = this.config;
+        const { core, dispatch, interactionId, origin } = this.config;
         reportDispatch(core.bus, {
             dispatch,
             interactionId,
             outcome,
-            userId,
-            guildId,
+            userId: origin.userId,
+            guildId: origin.guildId,
             startedAt: this.startedAt,
             queuedMs: this.queuedMs
         });

@@ -1,5 +1,7 @@
 import { Logger } from '@seedcord/logger';
 
+import { MemberValues } from '#src/dispatch/DispatchContext';
+
 import type { CoreBase } from '#interfaces/CoreBase';
 import type { DispatchContext } from '#src/dispatch/DispatchContext';
 import type { LoggerChannelId } from '@seedcord/types';
@@ -30,6 +32,8 @@ export abstract class BaseHandler<Event, TCore extends CoreBase> {
         this.logger = new Logger(this.constructor.name, { channel });
         this.dispatch = dispatch;
         this.route = dispatch.route;
+        // runs before subclass fields so that a field initializer can read a member
+        Object.assign(this, dispatch[MemberValues]);
     }
 
     /**

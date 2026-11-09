@@ -6,19 +6,22 @@ import {
     MiddlewareRegistry,
     PublishDefault
 } from '@seedcord/core/internal';
+import { PluginHost } from '@seedcord/core/plugin';
 import { Logger } from '@seedcord/logger';
 import { MessageFlags, RESTJSONErrorCodes } from 'discord.js';
 import { beforeEach, describe, expect, it, vi } from 'vite-plus/test';
 
 import { gatewayRunConfig } from '#bot/controllers/gatewayRunConfig';
 import { UnhandledAutocomplete, UnhandledRepliable } from '#bot/defaults';
+import { Plugin } from '#src/Plugin';
 import { harmlessError } from '#tests/utils/harmlessError';
 import { TestNotice } from '#tests/utils/TestNotice';
 
 import type { HandlerConstructor, InteractionMiddlewareConstructor } from '#handlers/constructors';
 import type { Core } from '#interfaces/Core';
 import type { ValidInteractionTypes } from '#src/handlers/interactionTypes';
-import type { SubscriptionData } from '@seedcord/core';
+import type { DispatchOrigin, SubscriptionData } from '@seedcord/core';
+import type { Config } from '@seedcord/types';
 
 const withResponse = { resource: { message: { id: 'sent' } } };
 
@@ -51,9 +54,23 @@ function mockInteraction() {
     };
 }
 
-function mockCore(publish: ReturnType<typeof vi.fn>): Core {
+class BoundaryHost extends PluginHost<'gateway', 'server'> {
+    public readonly config: Config;
+    // justified: the boundary never reads rest
+    public readonly rest = {} as PluginHost<'gateway', 'server'>['rest'];
+    public readonly applicationId = 'app-1';
+
+    constructor(publish: ReturnType<typeof vi.fn>, errors: Config['errors']) {
+        super('gateway', 'server', undefined);
+        // justified: the boundary reads only these two config sections
+        this.config = { errors, notifications: {} } as unknown as Config;
+        Object.assign(this, { bus: { [PublishDefault]: publish } });
+    }
+}
+
+function mockCore(publish: ReturnType<typeof vi.fn>, errors: Config['errors'] = {}): BoundaryHost & Core {
     // justified: the fixture implements only the Core surface the boundary reads.
-    return { bus: { [PublishDefault]: publish }, config: { errors: {}, notifications: {} } } as unknown as Core;
+    return new BoundaryHost(publish, errors) as unknown as BoundaryHost & Core;
 }
 
 // justified: the fixture implements only the interaction surface the boundary reads.
@@ -113,6 +130,32 @@ describe('gateway fault answers', () => {
         publish = vi.fn();
     });
 
+    it('builds a plugin member from the interaction and sets it on the handler', async () => {
+        class Tagging extends Plugin {
+            public override readonly dispatchMembers = {
+                tag: (origin: DispatchOrigin): string => `${String(origin.guildId)}:${String(origin.userLocale)}`
+            };
+
+            public init(): Promise<void> {
+                return Promise.resolve();
+            }
+        }
+        let seen: unknown;
+        class Reads extends UnhandledRepliable {
+            override execute(): Promise<void> {
+                // generated types add members in a later step
+                seen = (this as unknown as { tag: string }).tag;
+                return Promise.resolve();
+            }
+        }
+        const core = mockCore(publish);
+        core.attach('tagging', Tagging);
+
+        await runHandler(Reads, asInteraction(Object.assign(mock, { locale: 'pl' })), core);
+
+        expect(seen).toBe('g1:pl');
+    });
+
     it('replies the generic and publishes unknownException for a raw error on an unacked interaction', async () => {
         await answerFault(new Error('boom'), asInteraction(mock), mockCore(publish));
 
@@ -132,11 +175,7 @@ describe('gateway fault answers', () => {
     });
 
     it('swallows an api code listed in ignoreApiCodes, with no reply or report', async () => {
-        // justified: the fixture implements only the Core surface the boundary reads.
-        const core = {
-            bus: { [PublishDefault]: publish },
-            config: { errors: { ignoreApiCodes: [RESTJSONErrorCodes.UnknownInteraction] }, notifications: {} }
-        } as unknown as Core;
+        const core = mockCore(publish, { ignoreApiCodes: [RESTJSONErrorCodes.UnknownInteraction] });
 
         await answerFault(harmlessError(), asInteraction(mock), core);
 

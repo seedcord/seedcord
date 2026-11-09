@@ -36,8 +36,13 @@ function httpRunConfig(args: DispatchArgs): InteractionRunConfig {
         apiError: DiscordAPIError,
         logger: logger(),
         interactionId: payload.id,
-        userId: interactionUser(payload).id,
-        guildId: payload.guild_id ?? null,
+        origin: {
+            userId: interactionUser(payload).id,
+            guildId: payload.guild_id ?? null,
+            channelId: payload.channel?.id ?? null,
+            userLocale: payload.locale,
+            guildLocale: payload.guild_locale ?? null
+        },
         customId: 'custom_id' in payload.data ? payload.data.custom_id : null,
         faultDetails: () => interactionFaultReport(payload, dispatch),
         target:

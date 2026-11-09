@@ -3,6 +3,7 @@ import { describe, expect, it, vi } from 'vite-plus/test';
 
 import { defineGate } from '#gates/Gate';
 import { DispatchContext } from '#src/dispatch/DispatchContext';
+import { DispatchMembers, DispatchMembersSlot } from '#src/dispatch/DispatchMembers';
 import { InteractionRun } from '#src/dispatch/InteractionRun';
 import { GatedMetadataKey, InteractionKind } from '#src/metadataKeys';
 import { Silence } from '#stops/Silence';
@@ -19,8 +20,8 @@ function configFor(
 ): InteractionRunConfig {
     return {
         dispatch: new DispatchContext(kind, 'probe'),
-        // justified: the run reads only core.config.errors and core.bus
-        core: { bus: busWith(), config: {} } as unknown as CoreBase,
+        // justified: the run reads only core.config.errors, core.bus, and the members
+        core: { bus: busWith(), config: {}, [DispatchMembersSlot]: new DispatchMembers() } as unknown as CoreBase,
         event: {},
         HandlerCtor,
         middlewares: { chainFor: () => [] },
@@ -29,8 +30,7 @@ function configFor(
         },
         logger: new Logger('Test'),
         interactionId: 'i1',
-        userId: 'u1',
-        guildId: null,
+        origin: { userId: 'u1', guildId: null, channelId: null, userLocale: null, guildLocale: null },
         customId: null,
         target,
         faultDetails: () => ({
