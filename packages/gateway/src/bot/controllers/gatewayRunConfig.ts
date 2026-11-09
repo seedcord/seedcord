@@ -1,7 +1,7 @@
 import { DiscordAPIError } from 'discord.js';
 
 import { autocompleteResponder } from '#bot/autocompleteResponder';
-import { interactionGateContext } from '#bot/gates/context';
+import { interactionGateContext, interactionOrigin } from '#bot/gates/context';
 import { ReplySender } from '#bot/ReplySender';
 import { interactionFaultReport } from '#miscellaneous/faultReports';
 
@@ -31,13 +31,7 @@ export function gatewayRunConfig(run: GatewayRun): InteractionRunConfig {
         apiError: DiscordAPIError,
         logger,
         interactionId: interaction.id,
-        origin: {
-            userId: interaction.user.id,
-            guildId: interaction.guildId,
-            channelId: interaction.channelId,
-            userLocale: interaction.locale,
-            guildLocale: interaction.guildLocale
-        },
+        origin: interactionOrigin(interaction),
         customId: 'customId' in interaction ? interaction.customId : null,
         faultDetails: () => interactionFaultReport(interaction, dispatch),
         target: interaction.isAutocomplete()

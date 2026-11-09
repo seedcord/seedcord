@@ -2,10 +2,9 @@ import { DiscordAPIError } from '@discordjs/rest';
 import { DispatchContext, InteractionRun, lazyLogger } from '@seedcord/core/internal';
 import { InteractionType } from 'discord-api-types/v10';
 
-import { interactionUser } from '#handlers/interactionUser';
 import { autocompleteResponder } from '#reply/autocompleteResponder';
 import { ReplySender } from '#reply/ReplySender';
-import { interactionGateContext } from '#src/gates/context';
+import { interactionGateContext, interactionOrigin } from '#src/gates/context';
 
 import { interactionFaultReport } from './interactionFaultReport';
 
@@ -36,13 +35,7 @@ function httpRunConfig(args: DispatchArgs): InteractionRunConfig {
         apiError: DiscordAPIError,
         logger: logger(),
         interactionId: payload.id,
-        origin: {
-            userId: interactionUser(payload).id,
-            guildId: payload.guild_id ?? null,
-            channelId: payload.channel?.id ?? null,
-            userLocale: payload.locale,
-            guildLocale: payload.guild_locale ?? null
-        },
+        origin: interactionOrigin(payload),
         customId: 'custom_id' in payload.data ? payload.data.custom_id : null,
         faultDetails: () => interactionFaultReport(payload, dispatch),
         target:

@@ -1,7 +1,8 @@
 import 'reflect-metadata';
 
 import { TextDisplayBuilder } from '@discordjs/builders';
-import { Fault, InteractionKind, Notice, RegisterInteractionMiddleware } from '@seedcord/core';
+import { defineGate, Fault, InteractionKind, Notice, RegisterInteractionMiddleware } from '@seedcord/core';
+import { GatedMetadataKey } from '@seedcord/core/internal';
 import { InteractionType } from 'discord-api-types/v10';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
@@ -136,6 +137,32 @@ describe('dispatch members on http', () => {
         await dispatched(routedHandler(InteractionKind.Autocomplete, 'probe', Suggests), fromOrigin, payload);
 
         expect(seen).toBe('g-1:pl');
+    });
+
+    it('gives a member to a gate and to the Notice that the gate throws', async () => {
+        let seen: string | undefined;
+        class Echo extends Notice {
+            public constructor() {
+                super('echo');
+            }
+
+            public override render(ctx: RenderContext): ReplyResponse {
+                return { components: [new TextDisplayBuilder().setContent((ctx as unknown as Tagged).tag)] };
+            }
+        }
+        const capture = defineGate('capture', (ctx) => {
+            seen = (ctx as unknown as Tagged).tag;
+            throw new Echo();
+        });
+        class Guarded extends SlashHandler<never> {
+            execute = vi.fn();
+        }
+        Reflect.defineMetadata(GatedMetadataKey, [capture], Guarded);
+
+        await dispatched(routedHandler(InteractionKind.Slash, 'probe', Guarded), fromOrigin);
+
+        expect(seen).toBe('g-1:pl');
+        expect(repliedText()).toContain('g-1:pl');
     });
 
     it('builds members for an interaction with no handler', async () => {

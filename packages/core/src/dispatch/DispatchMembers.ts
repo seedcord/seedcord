@@ -6,10 +6,13 @@ import type { DispatchOrigin } from './DispatchOrigin';
 
 export type DispatchMemberFunctions = Readonly<Record<string, (origin: DispatchOrigin) => unknown>>;
 
-// a test on each transport fails if a handler gets a new method that isn't in this list
+// a test on each transport fails if a handler method or gate context field isn't in this list
 const RESERVED_MEMBERS: ReadonlySet<string> = new Set([
     'after',
     'api',
+    'appGuildPermissions',
+    'appPermissions',
+    'channelId',
     'channels',
     'core',
     'decodedFocused',
@@ -17,20 +20,32 @@ const RESERVED_MEMBERS: ReadonlySet<string> = new Set([
     'defer',
     'deferUpdate',
     'delete',
+    'developerUsername',
     'dispatch',
     'edit',
     'ensureSourceMessage',
     'event',
+    'eventName',
     'execute',
     'fields',
     'focused',
     'followUp',
     'getEvent',
+    'guild',
+    'guildId',
+    'guildLocale',
+    'interaction',
+    'kind',
     'logger',
     'match',
+    'member',
+    'memberGuildPermissions',
+    'memberPermissions',
+    'memberRoleIds',
     'members',
     'options',
     'params',
+    'payload',
     'reader',
     'reply',
     'resolver',
@@ -44,7 +59,10 @@ const RESERVED_MEMBERS: ReadonlySet<string> = new Set([
     'targetMember',
     'update',
     'user',
+    'userId',
+    'userLocale',
     'users',
+    'uuid',
     'values'
 ]);
 

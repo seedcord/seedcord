@@ -1,10 +1,15 @@
+import { DispatchContext } from '@seedcord/core/internal';
 import { Plugin, PluginHost } from '@seedcord/core/plugin';
 import { SeedcordErrorCode } from '@seedcord/errors';
 import { describe, expect, it } from 'vitest';
 
+import { eventGateContext, interactionGateContext } from '#bot/gates/context';
 import * as handlers from '#src/handlers/index';
 
+import type { Core } from '#interfaces/Core';
+import type { Repliables } from '#src/handlers/interactionTypes';
 import type { Config } from '@seedcord/types';
+import type { ClientEvents } from 'discord.js';
 
 class Host extends PluginHost<'gateway', 'server'> {
     // justified: attach reads nothing off these
@@ -35,8 +40,23 @@ function prototypeMemberNames({ prototype }: { prototype: object }): string[] {
     return names;
 }
 
+function gateContextNames(): string[] {
+    const dispatch = new DispatchContext('event', 'ready');
+    // justified: the builders read only these interaction fields
+    const interaction = { user: { id: 'u1' }, appPermissions: { bitfield: 0n } } as unknown as Repliables;
+    const core = {} as Core;
+    return [
+        ...Object.keys(interactionGateContext(interaction, core, dispatch)),
+        ...Object.keys(
+            eventGateContext('messageCreate', [] as unknown as ClientEvents['messageCreate'], core, dispatch)
+        )
+    ];
+}
+
+const memberNames = new Set([...Object.values(handlers).flatMap(prototypeMemberNames), ...gateContextNames()]);
+
 describe('reserved dispatch member names on gateway', () => {
-    it.each([...new Set(Object.values(handlers).flatMap(prototypeMemberNames))])('reserves %s', (name) => {
+    it.each([...memberNames])('reserves %s', (name) => {
         const attachRaw = Host.prototype.attach.bind(new Host()) as (key: string, plugin: unknown) => unknown;
 
         expect(() => attachRaw('first', pluginAdding(name))).toThrow(

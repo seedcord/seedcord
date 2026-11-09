@@ -2,6 +2,7 @@ import { SeedcordErrorCode, isSeedcordError, paint } from '@seedcord/errors';
 import { asError } from '@seedcord/utils/internal';
 import { RESTJSONErrorCodes } from 'discord-api-types/v10';
 
+import { MemberValues } from '#src/dispatch/DispatchContext';
 import { lazyLogger } from '#src/miscellaneous/lazyLogger';
 import { Fault } from '#stops/Fault';
 import { Notice } from '#stops/Notice';
@@ -138,8 +139,9 @@ export class FaultBoundary {
 
     private renderContext(uuid: RenderContext['uuid']): RenderContext {
         const { dispatch } = this;
+        const context = { ...dispatch[MemberValues], uuid, dispatch };
         const developerUsername = this.core.config.notifications?.developerUsername;
-        return developerUsername === undefined ? { uuid, dispatch } : { uuid, developerUsername, dispatch };
+        return developerUsername === undefined ? context : { ...context, developerUsername };
     }
 
     // only this send swallows the harmless codes. a handler's own write still reports them

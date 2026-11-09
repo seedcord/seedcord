@@ -79,11 +79,14 @@ describe('dispatch members at attach', () => {
         expect(host.plainTwo).toBeInstanceOf(Bare);
     });
 
-    it.each([...handlerMemberNames(), 'toString', '__proto__'])('rejects the reserved name %s', (name) => {
-        const host = new TestPluginHost();
+    it.each([...handlerMemberNames(), 'toString', '__proto__', 'uuid', 'developerUsername'])(
+        'rejects the reserved name %s',
+        (name) => {
+            const host = new TestPluginHost();
 
-        expect(() => host.attach('first', pluginAdding(name))).toThrow(
-            expect.objectContaining({ code: SeedcordErrorCode.CorePluginMemberReserved })
-        );
-    });
+            expect(() => host.attach('first', pluginAdding(name))).toThrow(
+                expect.objectContaining({ code: SeedcordErrorCode.CorePluginMemberReserved })
+            );
+        }
+    );
 });
