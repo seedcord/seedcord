@@ -3,13 +3,14 @@ import type { Kv } from '#src/kv/Kv';
 import type { Bus } from '#subscribers/Bus';
 import type { REST } from '@discordjs/rest';
 import type { Config, IRateLimiter } from '@seedcord/types';
+import type { HostPrepareCommands, SeedcordInstance } from '@seedcord/types/internal';
 
 /**
  * The transport-agnostic slice of the running framework, what core code (gates, notices, plugins'
  * agnostic surface) accesses through `ctx.core`. Each transport's `Core` extends it with its own
  * members.
  */
-export interface CoreBase {
+export interface CoreBase extends Pick<SeedcordInstance, typeof HostPrepareCommands> {
     /** @internal */
     readonly [DispatchMembersSlot]: DispatchMembers;
     /** Transports narrow this to their own config type. */

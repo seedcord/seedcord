@@ -25,6 +25,7 @@ import type {
     TransportAssert
 } from './options';
 import type { FrameworkChannel, HmrAware, HmrUpdateEvent } from '@seedcord/types';
+import type { RESTPostAPIApplicationCommandsJSONBody } from 'discord-api-types/v10';
 import type { Constructor, Promisable } from 'type-fest';
 
 interface Attaching {
@@ -204,6 +205,17 @@ export abstract class Plugin<
     declare public readonly dispatchMembers?: DispatchMemberFunctions;
 
     /**
+     * Changes commands before seedcord sends them to Discord. It gets every command once, across every
+     * guild and global scope. Return one command for each command it got, in the same order. A throw
+     * stops the deploy, `seedcord codegen` and `seedcord build`.
+     *
+     * The CLI calls this without running `init()`. Read only what the constructor stored and the bot's files.
+     */
+    prepareCommands?(
+        commands: RESTPostAPIApplicationCommandsJSONBody[]
+    ): Promisable<RESTPostAPIApplicationCommandsJSONBody[]>;
+
+    /**
      * Rejects the options this plugin got.
      *
      * @param reason - Why the options are invalid.
@@ -270,6 +282,7 @@ export type PluginLike = Pick<
     | 'dispose'
     | 'onHmr'
     | 'dispatchMembers'
+    | 'prepareCommands'
     | typeof resolvedSpecSlot
     | typeof loggerSlot
     | typeof scopeSlot

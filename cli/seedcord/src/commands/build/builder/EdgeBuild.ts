@@ -97,7 +97,7 @@ export class EdgeBuild extends TargetBuild {
         const { commands, emojis } = instance.config.bot;
         const read = await readDiscord({
             rest: this.deps.openDiscord(instance),
-            commands: await this.commandsInCode(commands),
+            commands: await this.commandsInCode(commands, instance),
             emojis
         });
 
@@ -175,9 +175,12 @@ export class EdgeBuild extends TargetBuild {
         return [['deploy', 'cf deploy --prebuilt']];
     }
 
-    private async commandsInCode(commands: CommandsConfig): Promise<CommandsInCode | undefined> {
+    private async commandsInCode(
+        commands: CommandsConfig,
+        instance: SeedcordInstance
+    ): Promise<CommandsInCode | undefined> {
         if (commands.path === null) return undefined;
-        const scanner = new CommandScanner(this.project.modules, this.project.files);
+        const scanner = new CommandScanner(this.project.modules, this.project.files, instance);
         const found = await scanner.scan(commands.path);
         return { found, configuredGuilds: commands.guilds ?? [] };
     }

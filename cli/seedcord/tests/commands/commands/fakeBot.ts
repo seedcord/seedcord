@@ -6,7 +6,7 @@ import { stripVTControlCharacters } from 'node:util';
 
 import { REST } from '@discordjs/rest';
 import { BuilderComponent, RegisterCommand } from '@seedcord/core';
-import { SeedcordBrand } from '@seedcord/types/internal';
+import { HostPrepareCommands, SeedcordBrand } from '@seedcord/types/internal';
 import { ApplicationCommandType, Routes } from 'discord-api-types/v10';
 import { onTestFinished, vi } from 'vite-plus/test';
 
@@ -102,7 +102,12 @@ export async function fakeProject({
     const instance = resolve(root, 'bot.ts');
     await writeFile(instance, '');
     byPath.set(instance, {
-        default: { [SeedcordBrand]: true, rest, config: { bot: { commands: { path: commandsPath, guilds } } } }
+        default: {
+            [SeedcordBrand]: true,
+            [HostPrepareCommands]: (commands: unknown[]) => Promise.resolve(commands),
+            rest,
+            config: { bot: { commands: { path: commandsPath, guilds } } }
+        }
     });
 
     const config = resolvedConfigOf(root, {

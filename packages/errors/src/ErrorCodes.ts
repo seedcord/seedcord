@@ -118,6 +118,8 @@ export enum SeedcordErrorCode {
     CorePluginMemberReserved = 1238,
     /** A function in a plugin's `dispatchMembers` threw, so the handler didn't run. */
     CorePluginMemberThrew = 1239,
+    /** A plugin's `prepareCommands` returned a different number of commands than it got. */
+    CorePluginCommandCountChanged = 1240,
 
     /** A command class has `@RegisterCommand` twice. */
     DecoratorCommandAlreadyRegistered = 1301,

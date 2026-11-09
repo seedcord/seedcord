@@ -2,6 +2,7 @@ import { SlashCommandBuilder } from '@discordjs/builders';
 import { SeedcordErrorCode, paint } from '@seedcord/errors';
 import { displayPath, SeedcordError } from '@seedcord/errors/internal';
 import { Logger } from '@seedcord/logger';
+import { HostPrepareCommands } from '@seedcord/types/internal';
 import { formatFilePath } from '@seedcord/utils';
 import { botFolder } from '@seedcord/utils/internal';
 
@@ -234,7 +235,7 @@ export class CommandRegistry implements Initializeable, HmrAware {
         // read here because gateway assigns core.rest after this registry is constructed
         const { rest, applicationId } = this.core;
         const last = await this.lastDeploy.read(applicationId, signal);
-        const plan = await planDeploy(this.commandBodies(), last?.scopes, (unchanged) =>
+        const plan = await planDeploy(await this.commandBodies(), last?.scopes, (unchanged) =>
             readCommands(unchanged, { rest, applicationId, signal })
         );
         await this.reporter.readGuildNames(rest, [...plan.toPut.keys(), ...plan.skipped], signal);
@@ -256,12 +257,22 @@ export class CommandRegistry implements Initializeable, HmrAware {
         return result;
     }
 
-    private commandBodies(): CommandScopes {
+    private async commandBodies(): Promise<CommandScopes> {
+        const builders = [...new Set(this.allCommands())];
+        const prepared = await this.core[HostPrepareCommands](builders.map((builder) => builder.toJSON()));
+        // justified: HostPrepareCommands throws unless it returns one body per builder
+        const bodyOf = new Map(builders.map((builder, index) => [builder, prepared[index] as CommandBody]));
+
         // a guild-only start keeps the global commands another deploy put there
         const deployable = this.scopedCommands
             .entries()
             .filter(([scope, commands]) => scope !== GLOBAL_ID || commands.length > 0);
-        return new Map(deployable.map(([scope, commands]) => [scope, commands.map((c) => c.toJSON())]));
+        return new Map(
+            deployable.map(([scope, commands]) => [
+                scope,
+                commands.map((command) => bodyOf.get(command) as CommandBody)
+            ])
+        );
     }
 
     private allCommands(): CommandBuilder[] {

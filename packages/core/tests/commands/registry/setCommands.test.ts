@@ -1,6 +1,7 @@
 import { EventEmitter } from 'node:events';
 
 import { SlashCommandBuilder } from '@discordjs/builders';
+import { HostPrepareCommands } from '@seedcord/types/internal';
 import { ApplicationCommandType, Routes } from 'discord-api-types/v10';
 import { describe, it, expect, vi } from 'vite-plus/test';
 
@@ -11,6 +12,7 @@ import { Bus } from '#subscribers/Bus';
 
 import type { CoreBase } from '#interfaces/CoreBase';
 import type { CommandInfo } from '#src/commands/CommandInjector';
+import type { CommandBody } from '#src/commands/putCommands';
 import type { APIApplicationCommand } from 'discord-api-types/v10';
 
 const APP = 'app-1';
@@ -23,12 +25,16 @@ function deployedAs(id: string, name: string): APIApplicationCommand[] {
     return [{ id, name, type: ApplicationCommandType.ChatInput } as APIApplicationCommand];
 }
 
-function coreWith(put: ReturnType<typeof vi.fn>): CoreBase {
-    // justified: the registry reads only these four members off core
+function coreWith(
+    put: ReturnType<typeof vi.fn>,
+    prepare = (commands: readonly CommandBody[]): readonly CommandBody[] => commands
+): CoreBase {
+    // justified: the registry reads only these members off core
     const core = {
         config: { bot: { commands: { path: 'commands' } } },
         rest: Object.assign(new EventEmitter(), { put }),
-        applicationId: APP
+        applicationId: APP,
+        [HostPrepareCommands]: (commands: readonly CommandBody[]) => Promise.resolve(prepare(commands))
     } as unknown as { bus: Bus };
     core.bus = new Bus(core as unknown as CoreBase);
     return core as unknown as CoreBase;
@@ -39,6 +45,25 @@ function registryWith(put: ReturnType<typeof vi.fn>): CommandRegistry {
 }
 
 describe('CommandRegistry.setCommands', () => {
+    it('sends what prepareCommands returned, once per command across every scope', async () => {
+        const put = vi.fn().mockResolvedValue(deployedAs('123', 'ping'));
+        const prepare = vi.fn((commands: readonly CommandBody[]) =>
+            commands.map((command) => ({ ...command, name_localizations: { pl: 'pong' } }))
+        );
+        const registry = new CommandRegistry(coreWith(put, prepare));
+        const ping = new SlashCommandBuilder().setName('ping').setDescription('Replies with Pong!');
+        registry.scopedCommands.set(GLOBAL_ID, [ping]);
+        registry.scopedCommands.set('111', [ping]);
+
+        await registry.setCommands();
+
+        expect(prepare).toHaveBeenCalledOnce();
+        expect(put.mock.calls.map(([, options]) => (options as { body: CommandBody[] }).body[0])).toEqual([
+            expect.objectContaining({ name_localizations: { pl: 'pong' } }),
+            expect.objectContaining({ name_localizations: { pl: 'pong' } })
+        ]);
+    });
+
     it('hands the abort signal to every put', async () => {
         const put = vi.fn().mockResolvedValue(deployedAs('123', 'ping'));
         const registry = registryWith(put);

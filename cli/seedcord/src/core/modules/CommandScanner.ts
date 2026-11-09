@@ -3,6 +3,7 @@ import 'reflect-metadata';
 import { CommandMetadataKey, isCommandClass } from '@seedcord/core/internal';
 import { SeedcordErrorCode, isSeedcordError } from '@seedcord/errors';
 import { SeedcordError, SeedcordTypeError, throwSingleOrAggregate } from '@seedcord/errors/internal';
+import { HostPrepareCommands, type SeedcordInstance } from '@seedcord/types/internal';
 import { asError } from '@seedcord/utils/internal';
 import { ApplicationCommandType } from 'discord-api-types/v10';
 
@@ -60,7 +61,8 @@ function construct({ sourceFile, Command }: CommandClassFile): FoundCommand | Se
 export class CommandScanner {
     constructor(
         private readonly modules: ModuleLoader,
-        private readonly files: ProjectFiles
+        private readonly files: ProjectFiles,
+        private readonly instance: Pick<SeedcordInstance, typeof HostPrepareCommands>
     ) {}
 
     public async scan(commandsPath: string): Promise<FoundCommand[]> {
@@ -86,7 +88,12 @@ export class CommandScanner {
         }
 
         throwSingleOrAggregate([...problems, ...importFailures], SeedcordErrorCode.CliProblems);
-        return commands;
+        const prepared = await this.instance[HostPrepareCommands](commands.map(({ json }) => json));
+        // justified: HostPrepareCommands throws unless it returns one body per command
+        return commands.map((command, index) => ({
+            ...command,
+            json: prepared[index] as RESTPostAPIApplicationCommandsJSONBody
+        }));
     }
 
     private async *commandClasses(folder: string): AsyncGenerator<CommandClassFile> {

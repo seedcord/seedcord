@@ -64,7 +64,7 @@ export async function loadCodeScopes(
 
     const found = await steps.step(
         'scan',
-        () => new CommandScanner(modules, project.files).scan(path),
+        () => new CommandScanner(modules, project.files, instance).scan(path),
         (commands) => plural(commands.length, 'command')
     );
     return { ...loaded, scopes: scopesInCode(found, guilds) };

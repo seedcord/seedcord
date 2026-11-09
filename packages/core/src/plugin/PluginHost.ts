@@ -1,7 +1,7 @@
 import { SeedcordErrorCode, paint } from '@seedcord/errors';
 import { SeedcordError, SeedcordTypeError } from '@seedcord/errors/internal';
 import { FRAMEWORK_CHANNELS } from '@seedcord/logger';
-import { HostPluginKeys } from '@seedcord/types/internal';
+import { HostPluginKeys, HostPrepareCommands } from '@seedcord/types/internal';
 
 import { DispatchMembers, DispatchMembersSlot } from '#src/dispatch/DispatchMembers';
 import { Kv } from '#src/kv/Kv';
@@ -18,6 +18,7 @@ import type { DeclaredScope, Runtime, Transport } from './options';
 import type { AttachableCtor, Attached, AttachKeyAssert, PluginArgs, PluginCtor, PluginLike } from './Plugin';
 import type { REST } from '@discordjs/rest';
 import type { Config, IRateLimiter } from '@seedcord/types';
+import type { RESTPostAPIApplicationCommandsJSONBody } from 'discord-api-types/v10';
 
 export interface Attachment {
     readonly key: string;
@@ -62,6 +63,25 @@ export abstract class PluginHost<BotT extends Transport, BotRt extends Runtime> 
     /** @internal */
     public get [attachmentsSlot](): readonly Attachment[] {
         return this.#attachments;
+    }
+
+    /** @internal */
+    public async [HostPrepareCommands](
+        commands: readonly RESTPostAPIApplicationCommandsJSONBody[]
+    ): Promise<RESTPostAPIApplicationCommandsJSONBody[]> {
+        let prepared = [...commands];
+        for (const { key, instance } of this.#attachments) {
+            if (!instance.prepareCommands) continue;
+            prepared = await instance.prepareCommands(prepared);
+            if (prepared.length !== commands.length) {
+                throw new SeedcordError(SeedcordErrorCode.CorePluginCommandCountChanged, [
+                    key,
+                    commands.length,
+                    prepared.length
+                ]);
+            }
+        }
+        return prepared;
     }
 
     /** @internal */

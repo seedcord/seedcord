@@ -2,12 +2,14 @@ import type {
     HostAugmentTarget,
     HostListenHost,
     HostPluginKeys,
+    HostPrepareCommands,
     HostShutdown,
     HostStartup,
     HostVersion
 } from '#src/brand';
 import type { Config } from './Config';
 import type { REST } from '@discordjs/rest';
+import type { RESTPostAPIApplicationCommandsJSONBody } from 'discord-api-types/v10';
 
 export type TransportPackage = '@seedcord/gateway' | '@seedcord/http';
 
@@ -21,6 +23,9 @@ export interface SeedcordInstance {
     readonly [HostVersion]: string;
     readonly [HostAugmentTarget]: TransportPackage;
     readonly [HostPluginKeys]: readonly string[];
+    [HostPrepareCommands](
+        commands: readonly RESTPostAPIApplicationCommandsJSONBody[]
+    ): Promise<RESTPostAPIApplicationCommandsJSONBody[]>;
     readonly [HostShutdown]: { run(exitCode?: number, exitProcess?: boolean): Promise<void> };
     readonly [HostStartup]: { abort(): void };
     // seedcord dev sets this before start() for a quick tunnel
