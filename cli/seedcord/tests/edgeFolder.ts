@@ -4,6 +4,8 @@ import { join } from 'node:path';
 
 import { onTestFinished } from 'vite-plus/test';
 
+import { realPath } from '#src/core/project/realPath';
+
 const CLI_NODE_MODULES = join(import.meta.dirname, '../node_modules');
 
 // env is the source of the worker's env object, like "TOKEN: bindings.secret()"
@@ -33,7 +35,7 @@ export async function edgeFolder(
 ): Promise<EdgeFolder> {
     const tmp = await mkdtempDisposable(join(tmpdir(), 'seedcord-edge-'));
     onTestFinished(() => tmp.remove());
-    const dir = tmp.path;
+    const dir = realPath(tmp.path);
     await linkPackages(dir, links);
     const cloudflareConfig = join(dir, 'cloudflare.config.ts');
     await writeFile(cloudflareConfig, config);
