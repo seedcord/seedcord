@@ -4,8 +4,6 @@ import { runEslint } from './scripts/src/vp-staged.ts';
 
 export default defineConfig({
     staged: {
-        // this will become 'vp check --fix --no-error-on-unmatched-pattern'
-        // once eslint has been replaced with oxlint
         '*': 'vp fmt --no-error-on-unmatched-pattern',
         '*.{ts,tsx,js,jsx,cjs,mjs}': runEslint
     },
