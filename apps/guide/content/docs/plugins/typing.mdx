@@ -30,6 +30,7 @@ Every key you attached becomes one row on `Core`, sorted by key. A group takes o
 // Run `seedcord codegen` after changing your commands, plugins, or emoji config.
 
 import type Bot from './bot';
+import type { AttachedPlugin } from '@seedcord/gateway';
 
 type Fits<
     Plugin extends { codegen(): Promise<unknown> },
@@ -39,8 +40,8 @@ type Fits<
 // prettier-ignore
 declare module '@seedcord/gateway' {
     interface Core {
-        db: (typeof Bot)['db'];
-        i18n: (typeof Bot)['i18n'];
+        db: AttachedPlugin<(typeof Bot)['db']>;
+        i18n: AttachedPlugin<(typeof Bot)['i18n']>;
     }
     // SlashRegistry, the context menu registries, and EmojiMap follow
     interface PluginTypes {
@@ -51,7 +52,7 @@ declare module '@seedcord/gateway' {
 export {};
 ```
 
-`Bot` is the default export of the file your `instance` config key points at. Each row reads its type straight from that bot, so `db` gets exactly the type `attach` produced, `Mongoose` here. That only works when the default export is the value `attach` returns. If you [export the bot without it](/plugins#no-plugin-types-in-your-handler), `this.core.db` compiles as `any`. If you export the bot only as a named const, codegen stops with the code `CliInstanceInvalid` before it writes anything.
+`Bot` is the default export of the file your `instance` config key points at. Each row reads its type straight from that bot, so `db` has the methods of the type `attach` produced without the methods that only seedcord calls, like `init()`. That only works when the default export is the value `attach` returns. If you [export the bot without it](/plugins#no-plugin-types-in-your-handler), `this.core.db` compiles as `any`. If you export the bot only as a named const, codegen stops with the code `CliInstanceInvalid` before it writes anything.
 
 [`PluginTypes`](ref:core/PluginTypes) holds types that a plugin built from your project's files while codegen ran. The row above comes from a translations plugin attached as `i18n`, and it lists the message keys in your `locales` folder, so `this.core.i18n.t()` accepts `'bye'` or `'greet'` and rejects a typo. `Fits` checks each row against the plugin attached at that key. [Writing types from codegen](/writing-plugins/codegen) shows how a plugin adds a row.
 

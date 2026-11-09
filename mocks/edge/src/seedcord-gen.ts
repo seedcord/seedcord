@@ -2,11 +2,12 @@
 // Run `seedcord codegen` after changing your commands, plugins, or emoji config.
 
 import type Bot from './bot';
+import type { AttachedPlugin } from '@seedcord/http';
 
 // prettier-ignore
 declare module '@seedcord/http' {
     interface Core {
-        pings: (typeof Bot)['pings'];
+        pings: AttachedPlugin<(typeof Bot)['pings']>;
     }
     interface SlashRegistry {
         ping: { options: { detailed: { kind: 'boolean'; required: false } }; cache: 'cached' };

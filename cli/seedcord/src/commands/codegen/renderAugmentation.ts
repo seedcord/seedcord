@@ -39,7 +39,7 @@ export function renderAugmentation(registry: Augmentation, target: string, bot: 
     const [botImport, coreBlock] =
         groups.length > 0
             ? [
-                  `import type ${BOT_BINDING} from '${escapeLiteral(bot.specifier)}';\n\n`,
+                  `import type ${BOT_BINDING} from '${escapeLiteral(bot.specifier)}';\nimport type { AttachedPlugin } from '${target}';\n\n`,
                   renderInterface('Core', coreRows(groups))
               ]
             : ['', ''];
@@ -82,7 +82,7 @@ function groupNames(keys: readonly string[]): string[] {
 // the indexed access defers resolution. an `extends Pick<typeof Bot, ...>` clause resolves while the bot
 // constant is still being inferred, and a plugin ctor that references Core closes that loop (TS7022).
 function coreRows(groups: readonly string[]): Row[] {
-    return groups.map((key) => [key, `(typeof ${BOT_BINDING})['${escapeLiteral(key)}']`]);
+    return groups.map((key) => [key, `AttachedPlugin<(typeof ${BOT_BINDING})['${escapeLiteral(key)}']>`]);
 }
 
 function pluginTypeRows(types: PluginTypeTable): Row[] {

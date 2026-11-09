@@ -12,6 +12,7 @@ export interface UserContextMenuRegistry {}
 export interface MessageContextMenuRegistry {}
 export interface EmojiMap {}
 export interface PluginTypes {}
+export type AttachedPlugin<T> = T;
 `;
 
 const BOT = `

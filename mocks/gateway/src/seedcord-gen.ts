@@ -2,14 +2,15 @@
 // Run `seedcord codegen` after changing your commands, plugins, or emoji config.
 
 import type Bot from './bot';
+import type { AttachedPlugin } from '@seedcord/gateway';
 
 type Fits<Plugin extends { codegen(): Promise<unknown> }, Row extends Awaited<ReturnType<Plugin['codegen']>>> = Row;
 
 // prettier-ignore
 declare module '@seedcord/gateway' {
     interface Core {
-        db: (typeof Bot)['db'];
-        i18n: (typeof Bot)['i18n'];
+        db: AttachedPlugin<(typeof Bot)['db']>;
+        i18n: AttachedPlugin<(typeof Bot)['i18n']>;
     }
     interface SlashRegistry {
         defernotice: { options: {}; cache: 'cached' };

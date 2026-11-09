@@ -309,6 +309,16 @@ export type Attached<Key extends string, Instance> = Key extends `${infer Group}
     ? Record<Group, Record<Leaf, Instance>>
     : Record<Key, Instance>;
 
+type LifecycleMember = 'init' | 'ready' | 'dispose' | 'codegen' | 'onHmr' | 'dispatchMembers' | 'prepareCommands';
+
+/**
+ * A plugin as `this.core.<key>` types it, without the members that only seedcord calls.
+ * `seedcord codegen` writes this type into `Core`. For a group, it applies to each plugin in the group.
+ */
+export type AttachedPlugin<Value> = Value extends PluginLike
+    ? Omit<Value, LifecycleMember>
+    : { [Key in keyof Value]: AttachedPlugin<Value[Key]> };
+
 // Object's keys are here because attach writes the key onto the host, where toString would shadow Object.prototype's
 // eslint-disable-next-line @typescript-eslint/no-wrapper-object-types -- lint:fix swaps this for `keyof object`, which is never
 type HostMember<Host> = keyof Host | keyof Object;
