@@ -18,7 +18,7 @@ export type ValidInteractionTypes =
     | AnySelectMenuInteraction
     | ContextMenuCommandInteraction;
 
-export type ValidNonInteractionKeys = Exclude<keyof ClientEvents, Events.InteractionCreate>;
+export type ValidNonInteractionKeys = ExcludeStrict<keyof ClientEvents, `${Events.InteractionCreate}`>;
 
 export type ValidEventTypes = ValidInteractionTypes | ClientEvents[ValidNonInteractionKeys];
 

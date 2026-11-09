@@ -29,6 +29,7 @@ import type {
     EventHandlerConstructor,
     EventMiddlewareConstructor
 } from '#handlers/constructors';
+import type { ValidNonInteractionKeys } from '#handlers/interactionTypes';
 import type { Core } from '#interfaces/Core';
 import type { HandlerResult } from '@seedcord/core';
 import type { Initializeable, MiddlewareRegistrationOf } from '@seedcord/core/internal';
@@ -36,7 +37,7 @@ import type { InFlight } from '@seedcord/core/node/internal';
 import type { EventFrequency, HmrAware, HmrUpdateEvent } from '@seedcord/types';
 import type { ClientEvents } from 'discord.js';
 
-const eventMiddleware: MiddlewareRegistrationOf<EventMiddlewareConstructor, keyof ClientEvents> = (ctor) => {
+const eventMiddleware: MiddlewareRegistrationOf<EventMiddlewareConstructor, ValidNonInteractionKeys> = (ctor) => {
     const metadata = eventMiddlewareMetaOf(ctor);
     if (!metadata) return undefined;
     return { priority: metadata.priority, ...(metadata.events && { keys: metadata.events }) };
@@ -56,14 +57,18 @@ export class EventDispatcher implements Initializeable, HmrAware {
     private readonly logger = new Logger('Events', { channel: 'events' });
     private isInitialized = false;
 
-    private readonly eventMap = new Map<keyof ClientEvents, RegisteredEventHandlerEntry[]>();
-    private readonly middlewares = new MiddlewareRegistry<EventMiddlewareConstructor, keyof ClientEvents>(
+    private readonly eventMap = new Map<ValidNonInteractionKeys, RegisteredEventHandlerEntry[]>();
+    private readonly middlewares = new MiddlewareRegistry<EventMiddlewareConstructor, ValidNonInteractionKeys>(
         eventMiddleware
     );
     private readonly onceRuns = new OnceTracker();
-    private readonly attachedEvents = new Set<keyof ClientEvents>();
+    private readonly attachedEvents = new Set<ValidNonInteractionKeys>();
 
-    private readonly loader: HandlerLoader<EventHandlerConstructor, EventMiddlewareConstructor, keyof ClientEvents>;
+    private readonly loader: HandlerLoader<
+        EventHandlerConstructor,
+        EventMiddlewareConstructor,
+        ValidNonInteractionKeys
+    >;
 
     public constructor(
         protected core: Core,
@@ -138,7 +143,7 @@ export class EventDispatcher implements Initializeable, HmrAware {
     }
 
     // a returned value is the throw that stopped the event before any handler ran
-    private async runMiddlewares<KeyOfEvents extends keyof ClientEvents>(
+    private async runMiddlewares<KeyOfEvents extends ValidNonInteractionKeys>(
         eventName: KeyOfEvents,
         args: ClientEvents[KeyOfEvents],
         dispatch: DispatchContext,
@@ -171,11 +176,12 @@ export class EventDispatcher implements Initializeable, HmrAware {
 
     private storeHandler(handlerClass: EventHandlerConstructor): true {
         // justified: @RegisterEvent is the only writer of this key
-        const entries = Reflect.getMetadata(EventMetadataKey, handlerClass) as RegisterEventMetadataEntry<
-            keyof ClientEvents
-        >[];
+        const entries = Reflect.getMetadata(
+            EventMetadataKey,
+            handlerClass
+        ) as RegisterEventMetadataEntry<ValidNonInteractionKeys>[];
 
-        const register = (key: keyof ClientEvents, frequency: EventFrequency): void => {
+        const register = (key: ValidNonInteractionKeys, frequency: EventFrequency): void => {
             let handlers = this.eventMap.get(key);
             if (!handlers) {
                 handlers = [];
@@ -203,7 +209,7 @@ export class EventDispatcher implements Initializeable, HmrAware {
         }
     }
 
-    private attachListener(eventName: keyof ClientEvents): void {
+    private attachListener(eventName: ValidNonInteractionKeys): void {
         if (this.attachedEvents.has(eventName)) return;
         this.attachedEvents.add(eventName);
 
@@ -225,7 +231,7 @@ export class EventDispatcher implements Initializeable, HmrAware {
         this.core.bus[PublishDefault]('unhandledEventError', { error });
     }
 
-    private async processEvent<KeyOfEvents extends keyof ClientEvents>(
+    private async processEvent<KeyOfEvents extends ValidNonInteractionKeys>(
         eventName: KeyOfEvents,
         args: ClientEvents[KeyOfEvents]
     ): Promise<void> {
@@ -259,7 +265,7 @@ export class EventDispatcher implements Initializeable, HmrAware {
         }
     }
 
-    private async processHandler<KeyOfEvents extends keyof ClientEvents>(
+    private async processHandler<KeyOfEvents extends ValidNonInteractionKeys>(
         eventName: KeyOfEvents,
         Ctor: EventHandlerConstructor,
         args: ClientEvents[KeyOfEvents],

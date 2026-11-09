@@ -137,10 +137,6 @@ catalogs:
     react: ^19.3.1
     react-dom: ^19.3.1
 
-minimumReleaseAgeExclude:
-  - es-toolkit@1.53.0
-  - envapt@9.2.0
-
 peerDependencyRules:
   allowAny:
     - vite
