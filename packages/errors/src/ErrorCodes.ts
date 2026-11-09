@@ -114,7 +114,7 @@ export enum SeedcordErrorCode {
     CoreBuiltModuleRanDirectly = 1236,
     /** `JSON.stringify` threw on a record passed to a kv collection's `set()` or `update()`, like one with a circular reference. */
     CoreKvUnserializable = 1237,
-    /** A key in a plugin's `dispatchMembers` matches something seedcord's handlers already have, like `reply`. */
+    /** A plugin's `dispatchMembers` has a key that seedcord uses too, like `reply`. */
     CorePluginMemberReserved = 1238,
     /** A function in a plugin's `dispatchMembers` threw, so the handler didn't run. */
     CorePluginMemberThrew = 1239,

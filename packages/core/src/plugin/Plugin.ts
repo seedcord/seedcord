@@ -189,8 +189,10 @@ export abstract class Plugin<
     codegen?(): Promise<unknown>;
 
     /**
-     * Adds values that your handlers can read. Each function runs once for every interaction or event,
-     * and a handler reads what it returned under the same key, like `this.tag`.
+     * Adds values that every handler can read. Each key becomes a member, like `this.tag`, and its
+     * function returns the value. Gates and `Notice.render` read the same values on `ctx`.
+     *
+     * Seedcord calls each function once per interaction, and once per event that has a handler.
      *
      * `attach()` throws if another plugin on the bot already uses one of these keys, or if the bot
      * attaches this plugin twice.
@@ -206,7 +208,9 @@ export abstract class Plugin<
 
     /**
      * Changes commands before seedcord sends them to Discord. Write your changes onto these objects,
-     * like setting `name_localizations`. A command deployed to two guilds comes through twice. A throw stops the deploy, `seedcord codegen` and `seedcord build`.
+     * like setting `name_localizations`. On a started bot, a command in two guilds appears twice in `commands`.
+     *
+     * If it throws, the deploy, `seedcord codegen`, `seedcord commands`, and `seedcord build` stop.
      *
      * The CLI calls this without running `init()`. Read only what the constructor stored and the bot's files.
      */
@@ -269,21 +273,12 @@ export function constructAttached<TPlugin>(key: string, kv: Kv, construct: () =>
 export type { PluginLifecycleSpec } from './lifecycle';
 export type { PluginOptions } from './options';
 
+type LifecycleMember = 'init' | 'ready' | 'dispose' | 'codegen' | 'onHmr' | 'dispatchMembers' | 'prepareCommands';
+
 // a bound of Plugin<{}> rejects every plugin that declares an option, since Plugin<A> and Plugin<B>
 // are mutually unassignable. no member here may depend on Opts.
 /** @internal */
-export type PluginLike = Pick<
-    Plugin,
-    | 'init'
-    | 'ready'
-    | 'dispose'
-    | 'onHmr'
-    | 'dispatchMembers'
-    | 'prepareCommands'
-    | typeof resolvedSpecSlot
-    | typeof loggerSlot
-    | typeof scopeSlot
->;
+export type PluginLike = Pick<Plugin, LifecycleMember | typeof resolvedSpecSlot | typeof loggerSlot | typeof scopeSlot>;
 
 // a `CoreBase` first parameter rejects a narrowing ctor on its own, and it also collapses
 // `InstanceType<Ctor>` to `PluginLike` at every attach call. CoreParamAssert checks it instead.
@@ -308,8 +303,6 @@ type InheritsScopedConstructor<Ctor extends PluginCtor> =
 export type Attached<Key extends string, Instance> = Key extends `${infer Group}.${infer Leaf}`
     ? Record<Group, Record<Leaf, Instance>>
     : Record<Key, Instance>;
-
-type LifecycleMember = 'init' | 'ready' | 'dispose' | 'codegen' | 'onHmr' | 'dispatchMembers' | 'prepareCommands';
 
 /**
  * A plugin as `this.core.<key>` types it, without the members that only seedcord calls.

@@ -93,7 +93,8 @@ export abstract class PluginHost<BotT extends Transport, BotRt extends Runtime> 
      * @throws A **SeedcordError** when you attach after the bot has started.
      * @throws A **SeedcordTypeError** when `key` is taken, reserved, or malformed.
      * @throws A **SeedcordTypeError** when the plugin extends `Plugin` from another copy of `@seedcord/core`.
-     * @throws A **SeedcordTypeError** when another plugin uses a key from this plugin's `dispatchMembers`, or when seedcord's handlers already have a member with that name.
+     * @throws A **SeedcordTypeError** when another plugin uses a key from this plugin's `dispatchMembers`.
+     * @throws A **SeedcordTypeError** when seedcord already uses a key from this plugin's `dispatchMembers`.
      * @throws A **SeedcordTypeError** when the plugin's `transport` or `runtime` differs from this host and the types were bypassed.
      * @example
      * ```ts

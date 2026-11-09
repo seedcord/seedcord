@@ -1,12 +1,13 @@
 import 'reflect-metadata';
 
 import { TextDisplayBuilder } from '@discordjs/builders';
-import { defineGate, Fault, InteractionKind, Notice, RegisterInteractionMiddleware } from '@seedcord/core';
+import { CustomId, defineGate, Fault, InteractionKind, Notice, RegisterInteractionMiddleware } from '@seedcord/core';
 import { GatedMetadataKey } from '@seedcord/core/internal';
 import { InteractionType } from 'discord-api-types/v10';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
 import { AutocompleteHandler } from '#handlers/interaction/AutocompleteHandler';
+import { ButtonHandler } from '#handlers/interaction/components/ButtonHandler';
 import { InteractionMiddleware } from '#handlers/interaction/InteractionMiddleware';
 import { SlashHandler } from '#handlers/interaction/SlashHandler';
 import { Plugin } from '#src/Plugin';
@@ -23,9 +24,9 @@ interface Tagged {
     readonly tag: string;
 }
 
-function pluginBuilding(tag: (origin: DispatchOrigin) => unknown): new (host: CoreBase) => Plugin {
+function pluginBuilding(tag: (origin: DispatchOrigin) => unknown, member = 'tag'): new (host: CoreBase) => Plugin {
     return class extends Plugin {
-        public override readonly dispatchMembers = { tag };
+        public override readonly dispatchMembers = { [member]: tag };
 
         public init(): Promise<void> {
             return Promise.resolve();
@@ -117,6 +118,36 @@ describe('dispatch members on http', () => {
 
         expect(seen).toEqual(['g-1:pl', 'g-1:pl']);
         expect(tag).toHaveBeenCalledOnce();
+    });
+
+    it('keeps a member that shares its name with a private field of the handler', async () => {
+        let seen: unknown;
+        class Clicks extends ButtonHandler<never> {
+            async execute(): Promise<void> {
+                seen = (this as unknown as { decoded: string }).decoded;
+                await this.update('ok');
+            }
+        }
+        using engine = await readyEngine(routedHandler(InteractionKind.Button, 'approve', Clicks), {
+            attach: (bot) => bot.attach('tagging', pluginBuilding(fromOrigin, 'decoded'))
+        });
+        const ctx = capturingCtx();
+        const payload = {
+            type: 3,
+            id: 'int-1',
+            application_id: 'app-1',
+            token: 'tok',
+            app_permissions: '0',
+            user: { id: 'u1', username: 'tester' },
+            guild_id: 'g-1',
+            locale: 'pl',
+            data: { component_type: 2, custom_id: new CustomId('approve').encode({}) }
+        };
+
+        await engine.handle(await signedRequest(engine.signer, payload), ctx);
+        await ctx.settled();
+
+        expect(seen).toBe('g-1:pl');
     });
 
     it('sets a member on an autocomplete handler', async () => {

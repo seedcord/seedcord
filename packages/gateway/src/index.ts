@@ -38,6 +38,7 @@ export type { GatewayPluginOptions, PluginLifecycleSpec, PluginOptions } from '.
 export * from './Seedcord';
 
 export * from '@seedcord/core';
+export { FolderExports, type AttachedPlugin, type Generated, type PluginTypes } from '@seedcord/core/plugin';
 export * from '@seedcord/errors';
 export * from '@seedcord/event-emitter';
 export * from '@seedcord/logger';

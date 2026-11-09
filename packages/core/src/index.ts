@@ -114,10 +114,6 @@ export { MemoryDriver } from '#src/kv/MemoryDriver';
 export { UnstorageDriver } from '#src/kv/UnstorageDriver';
 export { buildKey } from '#src/rateLimiter/buildKey';
 
-export type { Generated, PluginTypes } from '#src/plugin/Generated';
-export type { AttachedPlugin } from '#src/plugin/Plugin';
-export { FolderExports } from '#hmr/FolderExports';
-
 export { Bus, Subscribe, Subscriber, WebhookLog, WebhookUrl } from '#subscribers/index';
 export type {
     AttemptedWrite,

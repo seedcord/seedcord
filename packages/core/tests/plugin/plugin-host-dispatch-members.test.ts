@@ -1,7 +1,8 @@
 import { SeedcordErrorCode } from '@seedcord/errors';
+import { HostPluginHooks } from '@seedcord/types/internal';
 import { describe, expect, it } from 'vitest';
 
-import { DispatchContext } from '#src/dispatch/DispatchContext';
+import { DispatchContext, MemberValues } from '#src/dispatch/DispatchContext';
 import { RepliableHandler } from '#src/handlers/RepliableHandler';
 import { Plugin } from '#src/plugin/Plugin';
 import { TestPluginHost } from '#tests/utils/TestPluginHost';
@@ -89,4 +90,33 @@ describe('dispatch members at attach', () => {
             );
         }
     );
+});
+
+describe('building dispatch members', () => {
+    it('runs the functions at the same time', async () => {
+        const released = Promise.withResolvers<string>();
+        class Waits extends Bare {
+            public override readonly dispatchMembers = { first: (): Promise<string> => released.promise };
+        }
+        class Releases extends Bare {
+            public override readonly dispatchMembers = {
+                second: (): string => {
+                    released.resolve('released');
+                    return 'done';
+                }
+            };
+        }
+        const host = new TestPluginHost().attach('waits', Waits).attach('releases', Releases);
+        const dispatch = new DispatchContext('event', 'ready');
+
+        await host[HostPluginHooks].buildMembers(dispatch, {
+            userId: null,
+            guildId: null,
+            channelId: null,
+            userLocale: null,
+            guildLocale: null
+        });
+
+        expect(dispatch[MemberValues]).toEqual({ first: 'released', second: 'done' });
+    });
 });

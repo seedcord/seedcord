@@ -98,9 +98,9 @@ const messages = {
     [SeedcordErrorCode.CorePluginKvOutsideAttach]: (plugin: string) =>
         `${paint.bold(plugin)} read ${paint.bold('this.kv')} on an instance that ${paint.bold('attach()')} didn't build. ${paint.bold('this.kv')} stores a plugin's records under its attach key, which only ${paint.bold('attach()')} gives it. Attach the class with ${paint.bold(`seedcord.attach('key', ${plugin})`)}.`,
     [SeedcordErrorCode.CorePluginMemberReserved]: (member: string, plugin: string) =>
-        `${plugin} uses ${paint.sky(member)} in ${paint.bold('dispatchMembers')}, but seedcord's handlers already have ${paint.bold(`this.${member}`)}. The plugin's value would overwrite it. Rename the key in the plugin.`,
+        `${plugin} uses ${paint.sky(member)} in ${paint.bold('dispatchMembers')}, but seedcord already uses that name on handlers, gates, or error cards. Rename the key in the plugin.`,
     [SeedcordErrorCode.CorePluginMemberThrew]: (member: string, plugin: string, reason: string) =>
-        `The ${paint.sky(member)} function in the ${paint.bold('dispatchMembers')} of ${plugin} threw, so the handler didn't run. ${sentence(reason)} Fix the error in the plugin.`,
+        `The ${paint.sky(member)} function in the ${paint.bold('dispatchMembers')} of ${plugin} threw, so the handler didn't run. ${sentence(reason)} Fix that function in the plugin.`,
     [SeedcordErrorCode.CorePluginGroupTaken]: (head: string, key: string) =>
         `${paint.bold(head)} is already taken on this bot, so ${paint.sky(key)} cannot nest under it. Pick another group name.`,
     [SeedcordErrorCode.CorePluginKeyMalformed]: (key: string, reason: string) =>

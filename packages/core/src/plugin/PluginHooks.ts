@@ -11,7 +11,7 @@ import type { RESTPostAPIApplicationCommandsJSONBody } from 'discord-api-types/v
 
 export type DispatchMemberFunctions = Readonly<Record<string, (origin: DispatchOrigin) => unknown>>;
 
-// a test on each transport fails if a handler method or gate context field isn't in this list
+// a test on each transport fails if a handler method or gate field is missing here. instance fields aren't checked
 const RESERVED_MEMBERS: ReadonlySet<string> = new Set([
     'after',
     'api',
@@ -71,7 +71,7 @@ const RESERVED_MEMBERS: ReadonlySet<string> = new Set([
     'values'
 ]);
 
-// a member called constructor would replace this.constructor on every handler
+// a key like constructor would replace this.constructor on every handler
 function isReservedMember(name: string): boolean {
     return RESERVED_MEMBERS.has(name) || name in Object.prototype;
 }
@@ -105,19 +105,20 @@ export class PluginHooks {
     }
 
     public async buildMembers(dispatch: DispatchContext, origin: DispatchOrigin): Promise<void> {
-        const values: Record<string, unknown> = {};
-        for (const [member, { plugin, build }] of this.members) {
-            try {
-                values[member] = await build(origin);
-            } catch (caught) {
-                throw new SeedcordError(
-                    SeedcordErrorCode.CorePluginMemberThrew,
-                    [member, plugin, asError(caught).message],
-                    { cause: caught }
-                );
-            }
-        }
-        dispatch[MemberValues] = values;
+        const built = await Promise.all(
+            [...this.members].map(async ([member, { plugin, build }]) => {
+                try {
+                    return [member, await build(origin)] as const;
+                } catch (caught) {
+                    throw new SeedcordError(
+                        SeedcordErrorCode.CorePluginMemberThrew,
+                        [member, plugin, asError(caught).message],
+                        { cause: caught }
+                    );
+                }
+            })
+        );
+        dispatch[MemberValues] = Object.fromEntries(built);
     }
 
     public async prepareCommands(commands: readonly RESTPostAPIApplicationCommandsJSONBody[]): Promise<void> {
