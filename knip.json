@@ -1,10 +1,12 @@
 {
     "$schema": "https://unpkg.com/knip@latest/schema.json",
-    "ignoreBinaries": ["seedcord"],
-    "ignoreDependencies": ["ink"],
+    "ignoreDependencies": ["@commitlint/cli", "ink"],
     "ignoreWorkspaces": ["mocks/*"],
     "rules": {
         "optionalPeerDependencies": "off"
+    },
+    "tsdown": {
+        "config": ["vite.config.ts"]
     },
     "workspaces": {
         ".": {
@@ -17,10 +19,10 @@
                 "src/docs/{build-docs-artifacts,extract-docs,published-payload,preview-docs,prune-docs-site,purge-cdn-cache,sync-docs-to-artifacts,upload-docs-site}.ts",
                 "src/release/{changelog,lint-changesets,release-notes,tidy-changelogs}.ts",
                 "src/guide/embed-guide-sections.ts",
+                "src/release/preview-release.ts",
                 "tests/**/*.test.ts"
             ],
-            "project": ["**/*.ts"],
-            "ignoreBinaries": ["wrangler"]
+            "project": ["**/*.ts"]
         },
         "apps/docs": {
             "entry": ["src/app/**/{page,layout,route,not-found,sitemap}{,.dev}.{ts,tsx}"],
@@ -29,7 +31,7 @@
         },
         "apps/guide": {
             "entry": ["src/app/**/{page,layout,route,not-found,sitemap}{,.dev}.{ts,tsx}", "tests/**/*.test.{ts,tsx}"],
-            "project": ["worker.ts", "src/**/*.{ts,tsx,css}", "tests/**/*.{ts,tsx}"],
+            "project": ["worker.ts", "src/**/*.{ts,tsx,css,mdx}", "tests/**/*.{ts,tsx}"],
             "ignoreDependencies": [
                 "cloudflare",
                 "@seedcord/gateway",
@@ -54,7 +56,7 @@
         },
         "apps/home": {
             "entry": ["src/app/**/{page,layout,route,not-found,sitemap}.{ts,tsx}", "tests/**/*.test.{ts,tsx}"],
-            "project": ["src/**/*.{ts,tsx,css}", "tests/**/*.{ts,tsx}"]
+            "project": ["src/**/*.{ts,tsx,css,mdx}", "tests/**/*.{ts,tsx}"]
         },
         "packages/core": {
             "entry": ["**/*.types-test.ts", "tests/**/fixtures/**"]
@@ -76,7 +78,9 @@
         },
         "tooling/eslint-utils": {},
         "tooling/brand": {},
-        "tooling/cli-prompts": {},
+        "tooling/cli-prompts": {
+            "entry": ["playground/preview.ts"]
+        },
         "tooling/cli-templates": {},
         "packages/event-emitter": {
             "entry": ["**/*.types-test.ts"]
@@ -109,8 +113,12 @@
             "entry": ["**/*.types-test.ts"]
         },
         "cli/seedcord": {
-            "entry": ["**/*.types-test.ts", "tests/fixtures/*/**/*.{ts,tsx,mts,js,jsx,mjs}"],
-            "ignoreDependencies": ["cloudflare", "@leeoniya/ufuzzy", "es-toolkit", "handlebars"]
+            "entry": [
+                "**/*.types-test.ts",
+                "playground/**/*.{ts,tsx}",
+                "tests/fixtures/*/**/*.{ts,tsx,mts,js,jsx,mjs}"
+            ],
+            "ignoreDependencies": ["cloudflare", "@leeoniya/ufuzzy", "handlebars"]
         },
         "cli/create-seedcord": {
             "entry": ["**/*.types-test.ts"]
@@ -132,7 +140,7 @@
             ]
         },
         "tooling/eslint-config-base": {
-            "ignoreDependencies": ["@typescript-eslint/parser"]
+            "ignoreDependencies": ["@types/eslint-plugin-security", "@typescript-eslint/parser"]
         },
         "tooling/tsconfig": {},
         "tooling/tsdown-config": {},
