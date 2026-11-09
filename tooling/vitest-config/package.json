@@ -13,19 +13,11 @@
         "src"
     ],
     "type": "module",
-    "main": "./dist/index.mjs",
-    "types": "./dist/index.d.mts",
+    "main": "./src/index.ts",
     "exports": {
-        ".": {
-            "import": {
-                "types": "./dist/index.d.mts",
-                "default": "./dist/index.mjs"
-            }
-        }
+        ".": "./src/index.ts"
     },
     "scripts": {
-        "build": "vp pack",
-        "clean": "rm -rf dist",
         "lint": "eslint '**/*.{ts,tsx}' --max-warnings=0 --cache --no-error-on-unmatched-pattern",
         "lint:fix": "eslint '**/*.{ts,tsx}' --fix --max-warnings=0 --cache --no-error-on-unmatched-pattern",
         "tc": "tsgo --noEmit",
@@ -39,7 +31,6 @@
     "devDependencies": {
         "@seedcord/eslint-config-base": "workspace:^",
         "@seedcord/tsconfig": "workspace:^",
-        "@seedcord/tsdown-config": "workspace:^",
         "@types/node": "catalog:deps",
         "typescript": "catalog:peer",
         "vite-plus": "catalog:deps"
