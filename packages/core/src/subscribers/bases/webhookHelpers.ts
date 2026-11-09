@@ -27,6 +27,8 @@ export function breakBackticks(text: string): string {
 // discord caps a message at 2000 characters. the backticks and heading take the rest.
 const REPORT_BUDGET = 1800;
 
+const CAUSE_LABEL = '\n\nCaused by:\n';
+
 // breakBackticks grows the text by 2 chars per run
 function body(value: unknown): string {
     const raw = Error.isError(value) ? (value.stack ?? `${value.name}: ${value.message}`) : String(value);
@@ -40,6 +42,12 @@ function clamp(text: string, budget: number): string {
 
 function omittedLine(count: number): string {
     return `\n\nand ${count} more ${pluralize(count, 'failure')}`;
+}
+
+function headReport(error: Error, budget: number): string {
+    if (!Error.isError(error.cause)) return clamp(body(error), budget);
+    const cause = CAUSE_LABEL + clamp(body(error.cause), Math.floor(budget / 2) - CAUSE_LABEL.length);
+    return clamp(body(error), budget - cause.length) + cause;
 }
 
 function memberReport(members: readonly unknown[], budget: number): string {
@@ -63,11 +71,11 @@ function memberReport(members: readonly unknown[], budget: number): string {
 
 // ansi codes are stripped because discord won't render them
 export function errorReport(error: Error): string {
-    let head = body(error);
-    if (Error.isError(error.cause)) head += `\n\nCaused by:\n${body(error.cause)}`;
-
     const members: unknown[] = error instanceof AggregateError ? error.errors : [];
-    if (members.length === 0) return clamp(head, REPORT_BUDGET);
+    if (members.length === 0) return headReport(error, REPORT_BUDGET);
+
+    let head = body(error);
+    if (Error.isError(error.cause)) head += `${CAUSE_LABEL}${body(error.cause)}`;
 
     // a long parent stack would otherwise push the dropped-count line off the end
     const report = clamp(head, REPORT_BUDGET - omittedLine(members.length).length);
