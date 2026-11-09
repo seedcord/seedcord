@@ -110,8 +110,7 @@
         "ink-testing-library": "^4.0.0",
         "type-fest": "catalog:deps",
         "typescript": "catalog:peer",
-        "vite": "catalog:deps",
-        "vitest": "catalog:test"
+        "vite": "catalog:deps"
     },
     "peerDependencies": {
         "@cloudflare/vite-plugin": "catalog:peer",

@@ -59,8 +59,7 @@
         "@typescript-eslint/rule-tester": "catalog:eslint",
         "dedent": "catalog:test",
         "discord.js": "catalog:peer",
-        "eslint": "catalog:eslint",
-        "vitest": "catalog:test"
+        "eslint": "catalog:eslint"
     },
     "peerDependencies": {
         "eslint": "^9.0.0 || ^10.0.0",

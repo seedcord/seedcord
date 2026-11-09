@@ -67,8 +67,7 @@
         "@seedcord/tsdown-config": "workspace:^",
         "@seedcord/vitest-config": "workspace:^",
         "envapt": "catalog:peer",
-        "mongoose": "catalog:peer",
-        "vitest": "catalog:test"
+        "mongoose": "catalog:peer"
     },
     "peerDependencies": {
         "@seedcord/core": "workspace:>=0.13.0-next.0",

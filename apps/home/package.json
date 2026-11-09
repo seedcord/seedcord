@@ -54,7 +54,6 @@
         "tailwindcss": "catalog:deps",
         "typescript": "catalog:peer",
         "vfile": "catalog:deps",
-        "vitest": "catalog:test",
         "wrangler": "catalog:peer"
     },
     "engines": {

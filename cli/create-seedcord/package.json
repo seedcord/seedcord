@@ -62,8 +62,7 @@
         "discord.js": "catalog:peer",
         "handlebars": "catalog:deps",
         "package-manager-detector": "^1.8.0",
-        "typescript": "catalog:peer",
-        "vitest": "catalog:test"
+        "typescript": "catalog:peer"
     },
     "engines": {
         "bun": ">=1.4.2",

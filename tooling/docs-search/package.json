@@ -45,8 +45,7 @@
         "@seedcord/tsconfig": "workspace:^",
         "@seedcord/tsdown-config": "workspace:^",
         "@seedcord/vitest-config": "workspace:^",
-        "type-fest": "catalog:deps",
-        "vitest": "catalog:test"
+        "type-fest": "catalog:deps"
     },
     "engines": {
         "bun": ">=1.4.2",

@@ -74,8 +74,7 @@
         "@seedcord/eslint-config-base": "workspace:^",
         "@seedcord/vitest-config": "workspace:^",
         "@typescript-eslint/utils": "catalog:eslint",
-        "eslint": "catalog:eslint",
-        "vitest": "catalog:test"
+        "eslint": "catalog:eslint"
     },
     "peerDependencies": {
         "eslint": "^9.22.0 || ^10.4.0",

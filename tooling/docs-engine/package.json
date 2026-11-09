@@ -59,8 +59,7 @@
         "@seedcord/eslint-config": "workspace:^",
         "@seedcord/tsconfig": "workspace:^",
         "@seedcord/tsdown-config": "workspace:^",
-        "@seedcord/vitest-config": "workspace:^",
-        "vitest": "catalog:test"
+        "@seedcord/vitest-config": "workspace:^"
     },
     "engines": {
         "bun": ">=1.4.2",

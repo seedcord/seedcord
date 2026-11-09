@@ -49,8 +49,7 @@
         "@seedcord/vitest-config": "workspace:^",
         "@types/react": "catalog:react",
         "@xterm/headless": "^6.0.0",
-        "eslint-plugin-react-hooks": "catalog:eslint",
-        "vitest": "catalog:test"
+        "eslint-plugin-react-hooks": "catalog:eslint"
     },
     "peerDependencies": {
         "typescript": "catalog:peer"

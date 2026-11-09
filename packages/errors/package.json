@@ -68,8 +68,7 @@
         "@seedcord/eslint-config": "workspace:^",
         "@seedcord/tsconfig": "workspace:^",
         "@seedcord/tsdown-config": "workspace:^",
-        "@seedcord/vitest-config": "workspace:^",
-        "vitest": "catalog:test"
+        "@seedcord/vitest-config": "workspace:^"
     },
     "peerDependencies": {
         "typescript": "catalog:consumerTypes"

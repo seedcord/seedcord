@@ -66,8 +66,7 @@
         "@seedcord/tsconfig": "workspace:^",
         "@seedcord/tsdown-config": "workspace:^",
         "@seedcord/vitest-config": "workspace:^",
-        "discord.js": "catalog:peer",
-        "vitest": "catalog:test"
+        "discord.js": "catalog:peer"
     },
     "peerDependencies": {
         "typescript": "catalog:consumerTypes"

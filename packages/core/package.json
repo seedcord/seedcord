@@ -102,8 +102,7 @@
         "keyv": "catalog:deps",
         "unstorage": "catalog:deps",
         "unstorage-v1": "npm:unstorage@1.17.6",
-        "vite": "catalog:deps",
-        "vitest": "catalog:test"
+        "vite": "catalog:deps"
     },
     "peerDependencies": {
         "@discordjs/builders": "catalog:peer",

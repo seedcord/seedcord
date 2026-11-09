@@ -69,8 +69,7 @@
         "@types/pg": "catalog:deps",
         "envapt": "catalog:peer",
         "kysely": "catalog:peer",
-        "pg": "catalog:peer",
-        "vitest": "catalog:test"
+        "pg": "catalog:peer"
     },
     "peerDependencies": {
         "@seedcord/core": "workspace:>=0.13.0-next.0",
