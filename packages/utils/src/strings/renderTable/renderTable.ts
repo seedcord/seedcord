@@ -5,6 +5,7 @@ import { paginate } from './pagination';
 import { renderSingle } from './renderSingle';
 
 import type { PagedTableOptions, TableOptions } from './options';
+import type { Arrayable } from 'type-fest';
 
 /**
  * Renders a grid of strings as a framed monospace table for Discord output.
@@ -57,7 +58,7 @@ export function renderTable(data: readonly (readonly string[])[], options?: Tabl
 export function renderTable(
     data: readonly (readonly string[])[],
     options?: TableOptions | PagedTableOptions
-): string | string[] {
+): Arrayable<string> {
     if (options) validateOptions(options);
     if (options && 'budget' in options) return paginate(data, options);
     return renderSingle(data, options);

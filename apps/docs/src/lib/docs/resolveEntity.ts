@@ -6,6 +6,7 @@ import { getCatalogContext } from './pageContext';
 
 import type { PageParams } from './pageContext';
 import type { EntityModel, PackageCatalogEntry, PackageVersionCatalog } from './types';
+import type { Arrayable } from 'type-fest';
 
 export interface ResolvedEntity {
     entry: PackageCatalogEntry;
@@ -14,7 +15,7 @@ export interface ResolvedEntity {
     segments: string[];
 }
 
-function normalizeSegments(raw: string | string[] | undefined): string[] {
+function normalizeSegments(raw: Arrayable<string> | undefined): string[] {
     if (Array.isArray(raw)) return raw;
     if (typeof raw === 'string') return [raw];
     return [];

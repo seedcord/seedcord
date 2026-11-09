@@ -51,6 +51,7 @@
         "@types/react": "catalog:react",
         "@xterm/headless": "^6.0.0",
         "eslint-plugin-react-hooks": "catalog:eslint",
+        "type-fest": "catalog:deps",
         "vite-plus": "catalog:deps"
     },
     "peerDependencies": {

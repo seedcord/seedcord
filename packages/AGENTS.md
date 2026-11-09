@@ -28,7 +28,7 @@ Scaffold with `turbo gen package`. Then follow the wiring checklist in `turbo/ge
 
 - **No `any` in _any_ code.** Narrow through a type guard, or use `unknown` and a guard. A cast is rarely the answer.
 - **No `as unknown as T`.** Fix the declaration, write a guard, or change the API.
-- **Derive, never restate.** A constructor shape is `TypedConstructor<typeof X>` (see `packages/gateway/src/handlers/constructors.ts`). A member union comes from `keyof`, `TypedExtract`, an indexed access, or a template-literal map over the owning enum. A narrowed copy uses `Pick` or `TypedOmit`.
+- **Derive, never restate.** A constructor shape is `TypedConstructor<typeof X>` (see `packages/gateway/src/handlers/constructors.ts`). A member union comes from `keyof`, `ExtractStrict`, an indexed access, or a template-literal map over the owning enum. A narrowed copy uses `Pick` or `Except`.
 - **Check `@seedcord/types` first** for a project alias. Then `type-fest` for a structural transform. A cast is rarely the answer.
 - `?.` and `??` belong on genuinely optional branches. Using them to quiet an error hides a broken assumption.
 - **`#` hides plumbing and state inside a class users can reach.** They reach it through the `exports` map, or through a public field typed as it. Every other class uses `private`, even when its file exports it.

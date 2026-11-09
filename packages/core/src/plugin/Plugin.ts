@@ -23,8 +23,8 @@ import type {
     Transport,
     TransportAssert
 } from './options';
-import type { Tail, FrameworkChannel, HmrAware, HmrUpdateEvent } from '@seedcord/types';
-import type { Promisable } from 'type-fest';
+import type { FrameworkChannel, HmrAware, HmrUpdateEvent } from '@seedcord/types';
+import type { Constructor, Promisable } from 'type-fest';
 
 interface Attaching {
     readonly key: string;
@@ -254,7 +254,9 @@ export type PluginLike = Pick<
 // a `CoreBase` first parameter rejects a narrowing ctor on its own, and it also collapses
 // `InstanceType<Ctor>` to `PluginLike` at every attach call. CoreParamAssert checks it instead.
 /** @internal */
-export type PluginCtor<TPlugin extends PluginLike = PluginLike> = new (...args: any[]) => TPlugin;
+export type PluginCtor<TPlugin extends PluginLike = PluginLike> = Constructor<TPlugin>;
+
+type Tail<TArgs extends unknown[]> = TArgs extends [unknown, ...infer R] ? R : never;
 
 /** @internal */
 export type PluginArgs<Ctor extends PluginCtor> =

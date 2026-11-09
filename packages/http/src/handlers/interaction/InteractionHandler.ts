@@ -5,6 +5,7 @@ import type { Core } from '#interfaces/Core';
 import type { ReplySender } from '#reply/ReplySender';
 import type { DispatchContext, ModalLike } from '@seedcord/core';
 import type { APIModalSubmitInteraction } from 'discord-api-types/v10';
+import type { ExcludeStrict } from 'type-fest';
 
 /**
  * Shared base the repliable interaction handlers extend.
@@ -26,7 +27,7 @@ export abstract class InteractionHandler<Event extends Repliables> extends Repli
      * compile time (Discord forbids a modal in response to a modal).
      */
     protected showModal(
-        this: InteractionHandler<Exclude<Repliables, APIModalSubmitInteraction>>,
+        this: InteractionHandler<ExcludeStrict<Repliables, APIModalSubmitInteraction>>,
         modal: ModalLike
     ): Promise<void> {
         return this.sender.showModal(modal);

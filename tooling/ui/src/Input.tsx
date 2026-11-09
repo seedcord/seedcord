@@ -5,6 +5,7 @@ import { cn } from 'cn';
 import { tw } from './lib/tw';
 
 import type { InputHTMLAttributes, ReactElement, ReactNode, Ref } from 'react';
+import type { Except } from 'type-fest';
 
 const inputWrapperBaseClassName = cn(
     tw`flex items-center gap-2 rounded-md`,
@@ -28,7 +29,7 @@ const inputSizeClasses = {
 export type InputSize = keyof typeof inputSizeClasses;
 
 // `size` is omitted from the native attrs (a numeric character-width) and reused for the design scale.
-export interface InputProps extends Omit<InputHTMLAttributes<HTMLInputElement>, 'size'> {
+export interface InputProps extends Except<InputHTMLAttributes<HTMLInputElement>, 'size'> {
     variant?: InputVariant;
     size?: InputSize;
     leading?: ReactNode;

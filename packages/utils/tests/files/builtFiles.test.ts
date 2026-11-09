@@ -13,7 +13,7 @@ import { clearBuiltFiles } from '#tests/builtFilesSlot';
 
 import type { EncodedFile } from '#src/files/encodedFile';
 import type { BuiltSlot } from '#src/files/slots';
-import type { TypedOmit } from '@seedcord/types';
+import type { Except } from 'type-fest';
 
 // not on disk. path.resolve adds the drive letter on windows
 const ROOT = path.resolve('/bot');
@@ -31,7 +31,7 @@ function register({
     modules = {},
     listedFiles = {},
     ...rest
-}: Partial<TypedOmit<BuiltSlot, 'kind'>>): Disposable {
+}: Partial<Except<BuiltSlot, 'kind'>>): Disposable {
     return setBuiltFiles({ root, folders, listed, skippedFolders, modules, listedFiles, ...rest });
 }
 

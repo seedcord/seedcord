@@ -11,8 +11,9 @@ import type { CommandAction } from './types';
 import type { SearchResultKind } from '@seedcord/docs-search';
 import type { EntityTone } from '@seedcord/docs-engine/client';
 import type { ReactElement } from 'react';
+import type { ExtractStrict } from 'type-fest';
 
-type NonEntityResultKind = Extract<SearchResultKind, 'package' | 'page' | 'resource'>;
+type NonEntityResultKind = ExtractStrict<SearchResultKind, 'package' | 'page' | 'resource'>;
 
 // members inherit their owner's tone family (a method maps to function, a property to variable, an
 // enum member to enum) so their icon and highlight match. adding a new SearchResultKind here means

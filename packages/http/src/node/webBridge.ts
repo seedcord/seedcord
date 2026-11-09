@@ -1,4 +1,5 @@
 import type { IncomingHttpHeaders, IncomingMessage, ServerResponse } from 'node:http';
+import type { Arrayable } from 'type-fest';
 
 function toHeaders(raw: IncomingHttpHeaders): Headers {
     const headers = new Headers();
@@ -30,7 +31,7 @@ export async function toWebRequest(request: IncomingMessage): Promise<Request> {
 }
 
 export async function writeWebResponse(response: Response, out: ServerResponse): Promise<void> {
-    const headers: Record<string, string | string[]> = Object.fromEntries(response.headers);
+    const headers: Record<string, Arrayable<string>> = Object.fromEntries(response.headers);
     // iterating Headers comma-joins same-name values, which corrupts Set-Cookie (a per-cookie header)
     const cookies = response.headers.getSetCookie();
     if (cookies.length > 0) headers['set-cookie'] = cookies;

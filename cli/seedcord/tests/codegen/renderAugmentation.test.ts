@@ -4,7 +4,7 @@ import { describe, it, expect } from 'vite-plus/test';
 import { renderAugmentation } from '#commands/codegen/renderAugmentation';
 
 import type { RouteOptions, SlashTables } from '#commands/codegen/AugmentationBuilder';
-import type { TypedOmit } from '@seedcord/types';
+import type { Except } from 'type-fest';
 
 const AUGMENT_TARGET = '@seedcord/gateway';
 
@@ -25,7 +25,7 @@ function renderSlash(tables: Record<string, RouteOptions>): string {
     return renderWithTarget({ slash: guildRows(tables), userContextMenus: {}, messageContextMenus: {}, emojis: {} });
 }
 
-type FlatRegistry = TypedOmit<Parameters<typeof renderAugmentation>[0], 'slash'> & {
+type FlatRegistry = Except<Parameters<typeof renderAugmentation>[0], 'slash'> & {
     slash: Record<string, RouteOptions>;
 };
 

@@ -30,12 +30,13 @@ import type {
     SeedcordBuildConfig,
     SeedcordHmrConfig
 } from './schema';
+import type { Promisable } from 'type-fest';
 
 // the node http Seedcord's default port
 const EDGE_DEV_PORT = 3000;
 
 // runs before any plugin in vitePlugins starts
-export type ProjectCheck = (project: Project) => void | Promise<void>;
+export type ProjectCheck = (project: Project) => Promisable<void>;
 
 function resolveTunnel(value: boolean | string | undefined): ResolvedTunnel {
     if (value === false) return { mode: 'off' };

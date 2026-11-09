@@ -3,13 +3,14 @@ import { cn, Icon, tw } from '@seedcord/ui';
 import type { Ground } from '#components/home/Section';
 import type { LucideIcon } from 'lucide-react';
 import type { ReactNode } from 'react';
+import type { ExtractStrict } from 'type-fest';
 
 interface Chip {
     icon: LucideIcon;
     label: string;
 }
 
-type ChipGround = Extract<Ground, 'flesh' | 'ink'>;
+type ChipGround = ExtractStrict<Ground, 'flesh' | 'ink'>;
 
 const FILL: Record<ChipGround, string> = {
     flesh: tw`bg-(--seed-dark)/30`,

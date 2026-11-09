@@ -3,8 +3,9 @@ import uFuzzy from '@leeoniya/ufuzzy';
 import { DocKind } from '#src/DocKind';
 
 import type { DocSearchEntry } from '#src/DocSearchEntry';
+import type { Except } from 'type-fest';
 
-export type ScoredEntry = Omit<DocSearchEntry, 'summary' | 'value'>;
+export type ScoredEntry = Except<DocSearchEntry, 'summary' | 'value'>;
 
 const SCORE_FUZZY_MATCH = 5;
 const SCORE_NAME_EXACT = 8;
