@@ -36,7 +36,8 @@ function errorCodes(types: PluginTypeTable): number[] {
                 .values()
                 .flatMap((parts) => parts.map(({ key }) => key))
                 .toArray(),
-            types
+            types,
+            members: []
         }
     );
     const files = new Map([

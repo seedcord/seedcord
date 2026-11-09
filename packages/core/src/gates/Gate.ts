@@ -1,6 +1,7 @@
 import type { CoreBase } from '#interfaces/CoreBase';
 import type { DispatchContext } from '#src/dispatch/DispatchContext';
 import type { DispatchOrigin } from '#src/dispatch/DispatchOrigin';
+import type { DispatchMemberValues } from '@seedcord/types';
 import type { Promisable } from 'type-fest';
 
 /**
@@ -17,7 +18,7 @@ import type { Promisable } from 'type-fest';
  * });
  * ```
  */
-export interface GateContextBase extends DispatchOrigin {
+export interface GateContextBase extends DispatchOrigin, DispatchMemberValues {
     /** Gates read the config and the rate limiter through it. */
     readonly core: CoreBase;
     /**

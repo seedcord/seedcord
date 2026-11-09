@@ -1,6 +1,6 @@
 import { Plugin, readFiles } from '@seedcord/gateway';
 
-import type { CoreBase, Generated } from '@seedcord/gateway';
+import type { CoreBase, DispatchOrigin, Generated } from '@seedcord/gateway';
 
 type Messages = Generated<typeof I18n>['messages'];
 
@@ -10,6 +10,10 @@ const ARGUMENT = /\{\s*\$(\w+)\s*\}/g;
 // one-line Fluent messages, like `greet = Hello { $name }!`
 export class I18n extends Plugin {
     public static readonly id = 'mock-i18n';
+
+    public override readonly dispatchMembers = {
+        askedIn: (origin: DispatchOrigin): string => origin.userLocale ?? origin.guildLocale ?? 'unknown'
+    };
 
     private templates = new Map<string, string>();
 

@@ -5,6 +5,12 @@
 export interface DispatchState {}
 
 /**
+ * What each plugin's `dispatchMembers` adds to handlers, gates, and error cards. `seedcord codegen`
+ * writes one row per member into `seedcord-gen.ts`.
+ */
+export interface DispatchMemberValues {}
+
+/**
  * The read and write surface of the per-dispatch bag. `DispatchContext` in `@seedcord/core` implements
  * it. Declared here so {@link RenderContext} can carry one without importing the concrete class.
  */

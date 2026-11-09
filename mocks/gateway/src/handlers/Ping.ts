@@ -11,6 +11,7 @@ export class Ping extends SlashHandler<'ping'> {
 
         if (this.options.getBoolean('detailed')) {
             lines.push(`Uptime **${Math.round(process.uptime())}s**`);
+            lines.push(`Asked in **${this.askedIn}**`);
         }
 
         await this.reply(lines.join('\n'));

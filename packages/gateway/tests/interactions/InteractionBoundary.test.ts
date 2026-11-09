@@ -143,7 +143,7 @@ describe('gateway fault answers', () => {
         let seen: unknown;
         class Reads extends UnhandledRepliable {
             override execute(): Promise<void> {
-                // generated types add members in a later step
+                // a bot's seedcord-gen.ts types the members
                 seen = (this as unknown as { tag: string }).tag;
                 return Promise.resolve();
             }

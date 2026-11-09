@@ -19,7 +19,6 @@ import type { CoreBase, DispatchOrigin } from '@seedcord/core';
 import type { RenderContext, ReplyResponse } from '@seedcord/types';
 import type { UUID } from 'node:crypto';
 
-// generated types add members in a later step, so fixtures read them through this shape
 interface Tagged {
     readonly tag: string;
 }

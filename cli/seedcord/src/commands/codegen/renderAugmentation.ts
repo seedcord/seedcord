@@ -20,13 +20,18 @@ interface AttachmentType {
 // a plugin id's row holds one entry per key the bot attached that plugin at
 export type PluginTypeTable = ReadonlyMap<string, readonly AttachmentType[]>;
 
-const FITS = `// a row has to fit what its plugin's codegen() declares
-type Fits<Plugin extends { codegen(): Promise<unknown> }, Row extends Awaited<ReturnType<Plugin['codegen']>>> = Row;`;
+const FITS = `type Fits<Plugin extends { codegen(): Promise<unknown> }, Row extends Awaited<ReturnType<Plugin['codegen']>>> = Row;`;
 
 interface AugmentedBot {
     readonly specifier: string; // relative to the generated file at config.root
     readonly keys: readonly string[];
     readonly types: PluginTypeTable;
+    readonly members: readonly DispatchMemberAt[];
+}
+
+export interface DispatchMemberAt {
+    readonly key: string;
+    readonly member: string;
 }
 
 export function renderAugmentation(registry: Augmentation, target: string, bot: AugmentedBot): string {
@@ -41,6 +46,7 @@ export function renderAugmentation(registry: Augmentation, target: string, bot: 
     const hasTypes = bot.types.size > 0;
     const fits = hasTypes ? `${FITS}\n\n` : '';
     const typesBlock = hasTypes ? renderInterface('PluginTypes', pluginTypeRows(bot.types)) : '';
+    const membersBlock = bot.members.length > 0 ? renderInterface('DispatchMemberValues', memberRows(bot.members)) : '';
 
     // prettier-ignore binds to the next statement, and the declare module is the whole file
     const header = `${BANNER}\n\n${botImport}${fits}// prettier-ignore\ndeclare module '${target}' {\n`;
@@ -53,6 +59,7 @@ export function renderAugmentation(registry: Augmentation, target: string, bot: 
         renderInterface('MessageContextMenuRegistry', contextMenuRows(registry.messageContextMenus)),
         renderInterface('EmojiMap', emojiRows(registry.emojis)),
         typesBlock,
+        membersBlock,
         '}\n\nexport {};\n'
     ].join('');
 }
@@ -80,6 +87,13 @@ function coreRows(groups: readonly string[]): Row[] {
 
 function pluginTypeRows(types: PluginTypeTable): Row[] {
     return [...types].map(([id, attachments]) => [id, attachments.map(renderFits).join(' & ')]);
+}
+
+function memberRows(members: readonly DispatchMemberAt[]): Row[] {
+    return members.map(({ key, member }) => [
+        member,
+        `Awaited<ReturnType<${pluginAt(key)}['dispatchMembers']['${escapeLiteral(member)}']>>`
+    ]);
 }
 
 // a generic plugin types each attachment by its own type argument

@@ -9,7 +9,7 @@ import type { Except } from 'type-fest';
 const AUGMENT_TARGET = '@seedcord/gateway';
 
 type Bot = Parameters<typeof renderAugmentation>[2];
-const NO_PLUGINS: Bot = { specifier: './bot', keys: [], types: new Map() };
+const NO_PLUGINS: Bot = { specifier: './bot', keys: [], types: new Map(), members: [] };
 
 function renderWithTarget(registry: Parameters<typeof renderAugmentation>[0]): string {
     return renderAugmentation(registry, AUGMENT_TARGET, NO_PLUGINS);
@@ -463,7 +463,7 @@ export {};
 describe('renderAugmentation plugin capabilities', () => {
     const empty = { slash: {}, userContextMenus: {}, messageContextMenus: {}, emojis: {} };
     const withPlugins = (plugins: { specifier: string; keys: readonly string[] }): string =>
-        renderAugmentation(empty, AUGMENT_TARGET, { ...plugins, types: new Map() });
+        renderAugmentation(empty, AUGMENT_TARGET, { ...plugins, types: new Map(), members: [] });
 
     it('imports the bot and augments Core with one member per attach key', () => {
         const output = withPlugins({ specifier: './bot', keys: ['db', 'cache'] });
@@ -556,7 +556,7 @@ export {};
 
     it('checks a plugin attached inside a group against the plugin at that path', () => {
         const output = renderAugmentation(empty, AUGMENT_TARGET, {
-            specifier: './bot',
+            ...NO_PLUGINS,
             keys: ['services.users'],
             types: new Map([['users-plugin', [{ key: 'services.users', type: '{ ready: true }' }]]])
         });

@@ -3,7 +3,6 @@
 
 import type Bot from './bot';
 
-// a row has to fit what its plugin's codegen() declares
 type Fits<Plugin extends { codegen(): Promise<unknown> }, Row extends Awaited<ReturnType<Plugin['codegen']>>> = Row;
 
 // prettier-ignore
@@ -27,6 +26,9 @@ declare module '@seedcord/http' {
     }
     interface PluginTypes {
         'mock-i18n': Fits<(typeof Bot)['i18n'], { messages: { goodbye: []; greet: ['name']; transfer: ['from', 'amount', 'to'] } }>;
+    }
+    interface DispatchMemberValues {
+        askedIn: Awaited<ReturnType<(typeof Bot)['stats']['pings']['dispatchMembers']['askedIn']>>;
     }
 }
 

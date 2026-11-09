@@ -17,7 +17,7 @@ import { printResolvedConfig } from '#core/output/printResolvedConfig';
 import { startupShell } from '#src/core/ShellMode';
 
 import { AugmentationBuilder } from './AugmentationBuilder';
-import { PluginTypesCollector } from './PluginTypesCollector';
+import { dispatchMembersOf, PluginTypesCollector } from './PluginTypesCollector';
 import { renderAugmentation } from './renderAugmentation';
 
 import type { ProjectOpener } from '#core/config/openProjectWithSteps';
@@ -123,7 +123,8 @@ export class CodegenRunner {
         return renderAugmentation(this.deps.generator.generate(commands, emojis), instance[HostAugmentTarget], {
             specifier: importSpecifier(config.root, config.instance),
             keys: instance[HostPluginKeys],
-            types
+            types,
+            members: dispatchMembersOf(instance)
         });
     }
 
