@@ -2,7 +2,7 @@ import { writeFile } from 'node:fs/promises';
 import { join } from 'node:path';
 
 import { Envapter, PortableSource } from 'envapt';
-import { describe, expect, it, onTestFinished, vi } from 'vitest';
+import { describe, expect, it, onTestFinished, vi } from 'vite-plus/test';
 
 import { openModuleLoader } from '#core/modules/openModuleLoader';
 import { realPath } from '#core/project/realPath';
@@ -44,7 +44,7 @@ export const base = Envapter.get('BASE_URL');
         });
     });
 
-    it('drops removed Vite keys when the loader restarts', async () => {
+    it('clears removed Vite keys when the loader restarts', async () => {
         const { dir } = await edgeFolder('', ['envapt']);
         const entry = join(dir, 'probe.ts');
         await writeFile(

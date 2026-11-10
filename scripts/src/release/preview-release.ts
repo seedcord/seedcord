@@ -8,15 +8,12 @@ import process from 'node:process';
 import { CliFlags } from '#src/lib/CliFlags';
 import { Workspace } from '#src/lib/Workspace';
 
-const flags = new CliFlags('pnpm release:preview [options]', {
+const flags = new CliFlags('vp run release:preview [options]', {
     pre: { type: 'boolean', describe: 'Preview the post for the next prerelease' }
 });
 
-// node refuses to run pnpm's .cmd shim on windows without a shell
-function pnpm(cwd: string, ...args: string[]): void {
-    const bin = process.env.npm_execpath ?? 'pnpm';
-    const [file, prefix] = /\.[cm]?js$/.test(bin) ? [process.execPath, [bin]] : [bin, []];
-    execFileSync(file, [...prefix, ...args], { cwd, stdio: 'inherit' });
+function vp(cwd: string, ...args: string[]): void {
+    execFileSync('vp', args, { cwd, stdio: 'inherit' });
 }
 
 async function main(): Promise<void> {
@@ -36,14 +33,12 @@ async function main(): Promise<void> {
         execFileSync('git', ['worktree', 'remove', '--force', tree], { cwd: rootDir, stdio: 'inherit' });
     });
 
-    pnpm(tree, 'install');
-    // every prettier config imports this package's dist
-    pnpm(tree, 'turbo', 'build', '--filter=@seedcord/eslint-config');
+    vp(tree, 'install');
     // changeset pre exit fails outside pre mode
-    if (pre !== true && existsSync(path.join(tree, '.changeset', 'pre.json'))) pnpm(tree, 'changeset', 'pre', 'exit');
-    pnpm(tree, 'cs:status');
-    pnpm(tree, 'cs:version');
-    pnpm(tree, 'release:notes', '--out', path.join(rootDir, 'release.md'));
+    if (pre !== true && existsSync(path.join(tree, '.changeset', 'pre.json'))) vp(tree, 'run', 'cs:exit');
+    vp(tree, 'run', 'cs:status');
+    vp(tree, 'run', 'cs:version');
+    vp(tree, 'run', 'release:notes', '--out', path.join(rootDir, 'release.md'));
 }
 
 await main();

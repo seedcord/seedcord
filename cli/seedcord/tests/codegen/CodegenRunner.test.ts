@@ -8,7 +8,7 @@ import { CommandMetadataKey } from '@seedcord/core/internal';
 import { SeedcordErrorCode, isSeedcordError } from '@seedcord/errors';
 import { runsUnderSeedcordDev, setDevFiles } from '@seedcord/utils/internal';
 import { ApplicationCommandType, ButtonStyle } from 'discord.js';
-import { assert, describe, expect, it, onTestFinished } from 'vitest';
+import { assert, describe, expect, it, onTestFinished } from 'vite-plus/test';
 
 import { AugmentationBuilder } from '#commands/codegen/AugmentationBuilder';
 import { CodegenRunner } from '#commands/codegen/CodegenRunner';
@@ -69,7 +69,7 @@ function runnerWith(
     return new CodegenRunner({ steps: quietSteps, projectLoader, generator: new AugmentationBuilder(logger), logger });
 }
 
-// no commands path, so the scan is empty and the rendered registry is deterministic.
+// the scan is empty and the rendered registry is deterministic because the runner doesn't have a commands path.
 function makeRunner(root: string, logger: ILogger): CodegenRunner {
     const importModule = (): Promise<unknown> => Promise.resolve({ default: brandedInstance() });
 
@@ -92,7 +92,7 @@ function scanRunner(
     return runnerWith(configAt(root, instancePath), importModule, logger);
 }
 
-// instance double whose default export carries no SeedcordBrand, to exercise the isSeedcordInstance guard.
+// instance double whose default export doesn't have SeedcordBrand, to test the isSeedcordInstance guard.
 function invalidRunner(root: string, logger: ILogger): CodegenRunner {
     const importModule = (): Promise<unknown> => Promise.resolve({ default: { not: 'branded' } });
 
@@ -154,7 +154,7 @@ describe('CodegenRunner plugin capabilities', () => {
         expect(output).toContain("import type Bot from '../");
     });
 
-    it('emits no import, no Core block, and no PluginTypes block when nothing is attached', async () => {
+    it('omits the import, the Core block, and the PluginTypes block when nothing is attached', async () => {
         const root = await tempDir('codegen-');
         await pluginRunner(root, resolve(root, 'bot.ts'), {}, silentLogger).run(false);
 
@@ -257,7 +257,7 @@ describe('CodegenRunner', () => {
         });
     });
 
-    it('renders an empty registry when the instance declares no commands path', async () => {
+    it("renders an empty registry when the instance doesn't declare a commands path", async () => {
         const root = await tempDir('codegen-');
         await makeRunner(root, silentLogger).run(false);
 
@@ -586,7 +586,7 @@ describe('CodegenRunner', () => {
         const cmdDir = await commandsUnder(root);
         await writeFile(join(cmdDir, 'helpers.ts'), 'export {};', 'utf8');
 
-        // the scan constructs with no arguments
+        // the scan constructs without arguments
         class Formatter {
             public readonly prefix: string;
 

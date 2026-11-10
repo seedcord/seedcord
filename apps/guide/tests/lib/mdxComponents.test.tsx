@@ -1,5 +1,5 @@
 import { render, screen } from '@testing-library/react';
-import { describe, expect, it } from 'vitest';
+import { describe, expect, it } from 'vite-plus/test';
 
 import { mdxComponents } from '#lib/mdxComponents';
 import { MAPPED_TAGS } from '#lib/remarkNoMappedJsx';
@@ -38,13 +38,13 @@ describe('a fence', () => {
         expect(screen.getByText('src/commands/Ping.ts')).toBeInTheDocument();
     });
 
-    it('draws no caption when the fence gives no title', async () => {
+    it('omits the caption when the fence is untitled', async () => {
         await renderFence({ className: 'language-ts' });
 
         expect(screen.queryByText('src/commands/Ping.ts')).toBeNull();
     });
 
-    it('drops the copy button on a fence tagged as output', async () => {
+    it('removes the copy button from a fence tagged as output', async () => {
         await renderFence({ className: 'language-bash', 'data-output': '' });
 
         expect(screen.queryByRole('button', { name: /Copy/ })).toBeNull();
@@ -116,7 +116,7 @@ describe('a link', () => {
 });
 
 describe('the image component', () => {
-    // a plain <img> gets no basePath from next
+    // next doesn't add the basePath to a plain <img>
     it('loads a file from public/ under the guide path', () => {
         render(<Image src="/portal-token.webp" alt="token" />);
 
@@ -132,7 +132,7 @@ describe('the image component', () => {
         );
     });
 
-    it('draws no border by default', () => {
+    it('leaves the border off by default', () => {
         render(<Image src="/logo.svg" alt="bare" />);
 
         expect(borderWidthOf('bare')).toBeUndefined();

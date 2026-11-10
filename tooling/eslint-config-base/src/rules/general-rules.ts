@@ -69,7 +69,7 @@ export const GENERAL_RULES: Linter.RulesRecord = {
 
     'arrow-body-style': ['error', 'as-needed', { requireReturnForObjectLiteral: false }],
 
-    // flat config replaces this rule wholesale when another block also sets no-restricted-syntax, so keep every selector in this one array
+    // keep every selector in this one array because flat config replaces this rule wholesale when another block also sets no-restricted-syntax
     'no-restricted-syntax': [
         'error',
         {

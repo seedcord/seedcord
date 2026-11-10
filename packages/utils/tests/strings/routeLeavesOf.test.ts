@@ -1,5 +1,5 @@
 import { SlashCommandBuilder } from 'discord.js';
-import { describe, expect, it } from 'vitest';
+import { describe, expect, it } from 'vite-plus/test';
 
 import { routeLeavesOf } from '#src/strings/routeLeavesOf';
 
@@ -80,7 +80,7 @@ describe('routeLeavesOf', () => {
         expect(leaves[0]?.options.map((option) => option.name)).toEqual(['key']);
     });
 
-    it('yields no leaf for a subcommand group with no subcommands', () => {
+    it('yields zero leaves for a subcommand group without subcommands', () => {
         const json = new SlashCommandBuilder()
             .setName('admin')
             .setDescription('d')

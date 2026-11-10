@@ -3,23 +3,23 @@ title: Cloudflare Workers
 description: Run an http bot on Cloudflare Workers, test it locally in workerd with seedcord dev, and deploy the worker that seedcord build writes with cf.
 ---
 
-An http bot only does work when Discord posts an interaction to it. On a server it still holds a process open between those posts, and you keep that machine patched and running. A Cloudflare Worker starts when the request arrives, so there's no process for you to keep alive.
+An http bot only does work when Discord posts an interaction to it. On a server it still holds a process open between those posts, and you keep that machine patched and running. A Cloudflare Worker starts when the request arrives, so you don't keep a process alive.
 
 <Callout type="transport" only="http">
 
-Only an http bot runs on Workers. `@seedcord/gateway` holds a websocket to Discord open for as long as the bot runs, so it ships no build for Workers.
+Only an http bot runs on Workers. `@seedcord/gateway` holds a websocket to Discord open for as long as the bot runs, so it doesn't ship a build for Workers.
 
 </Callout>
 
 ## Limits on Workers
 
-A Worker has no process that starts once. The bot starts on the first POST that reaches each isolate. That request loads your handlers, runs the startup tasks, and runs every plugin's [`init()`](/plugins/lifecycle#on-cloudflare-workers), and any request that arrives meanwhile waits for it. Cloudflare can start a new isolate whenever it likes, and each new one pays that cost again.
+A Worker never starts as one process. The bot starts on the first POST that reaches each isolate. That request loads your handlers, runs the startup tasks, and runs every plugin's [`init()`](/plugins/lifecycle#on-cloudflare-workers), and any request that arrives meanwhile waits for it. Cloudflare can start a new isolate whenever it likes, and each new one pays that cost again.
 
 Each isolate has its own memory. By default, [`core.kv`](/built-ins/) and [cooldowns](/checks/rate-limiter) keep their records there, so a new isolate starts with none and two isolates can't see each other's. To share them, store them in D1, as [Drivers](/built-ins/drivers#on-cloudflare-workers) shows.
 
 An isolate also stops without warning, since Cloudflare doesn't give a worker a shutdown hook. `shutdown.addTask` throws there, and the config doesn't take `lifecycle` or `port`. Some plugins need a server too. [Mongoose](/plugins/mongoose) and [Kysely](/plugins/kysely) declare themselves server-only, so attaching either one to an edge bot fails.
 
-Stay on a server if your bot needs one of those plugins, or needs state in memory to outlive a request.
+Run on a server if your bot needs one of those plugins, or needs state in memory to outlive a request.
 
 ## Setting it up
 
@@ -37,7 +37,7 @@ seedcord's CLI runs your bot through the Vite plugin, and `cloudflare.config.ts`
 
 This file declares the worker:
 
-```ts title="cloudflare.config.ts"
+```ts plain title="cloudflare.config.ts"
 import { bindings, defineConfig } from 'cf/config';
 
 export default defineConfig(({ mode = 'production' }) => ({
@@ -74,7 +74,7 @@ Set the `workerd` condition in your tsconfig, which picks the edge build of seed
 }
 ```
 
-With `"workerd"` there, `@seedcord/http` resolves to the [`Seedcord`](ref:http/Seedcord) that runs in a Worker, and `defineConfig` from `seedcord` takes the edge config. The CLI checks the two files agree. A `cloudflare.config.ts` without the condition throws `CliEdgeWithoutWorkerdCondition`, and the condition without a `cloudflare.config.ts` throws `CliWorkerdConditionWithoutCloudflareConfig`.
+With `"workerd"` there, `@seedcord/http` resolves to the [`Seedcord`](ref:http/Seedcord) that runs in a Worker, and `defineConfig` from `seedcord` takes the edge config. The CLI checks that you have both the condition and a `cloudflare.config.ts`, or neither. A `cloudflare.config.ts` without the condition throws `CliEdgeWithoutWorkerdCondition`, and the condition without a `cloudflare.config.ts` throws `CliWorkerdConditionWithoutCloudflareConfig`.
 
 The last `include` line holds the types for your bindings, which `cf workers types` writes. The scaffold runs it as a `postinstall` script, and you run it again after you change `env`:
 
@@ -84,11 +84,11 @@ Before that file exists, an import from `cloudflare:workers` fails the type chec
 
 ### The seedcord config and bot.ts
 
-In your `seedcord.config.ts`, point `root` at your bot's code, like `'./src'`, and leave out `build.start`, since a worker has no file that starts it. [An edge bot's config](/build/config#an-edge-bots-config) has the rest of that shape.
+In your `seedcord.config.ts`, point `root` at your bot's code, like `'./src'`, and leave out `build.start`, since Cloudflare starts a worker without a file. [An edge bot's config](/build/config#an-edge-bots-config) has the rest of that shape.
 
 Make the bot the default export of `bot.ts`, because Cloudflare calls its `fetch` for every request.
 
-```ts title="src/bot.ts"
+```ts plain title="src/bot.ts"
 import { Seedcord } from '@seedcord/http';
 
 export default new Seedcord({
@@ -102,17 +102,17 @@ export default new Seedcord({
 
 ## Bindings and secrets
 
-Your worker's `env` holds only the bindings `cloudflare.config.ts` declares, so declare every secret the bot reads, starting with `DISCORD_BOT_TOKEN`.
+Your worker's `env` holds only the bindings `cloudflare.config.ts` declares, so declare every secret that the bot reads, starting with `DISCORD_BOT_TOKEN`.
 
 <Callout type="warning">
 
-A secret set in your `.env` and never declared in `cloudflare.config.ts` stays undefined in the worker.
+The worker reads `undefined` for a secret you set in your `.env` but never declared in `cloudflare.config.ts`.
 
 </Callout>
 
-`bindings.secret()` declares a name without a value, so the token never sits in a file you commit. Your bot reads every binding as `env` from `cloudflare:workers`:
+`bindings.secret()` declares a name without a value, so you never commit the token in a file. Your bot reads every binding as `env` from `cloudflare:workers`:
 
-```ts
+```ts plain
 import { env } from 'cloudflare:workers';
 
 const environment = env.ENV;
@@ -160,7 +160,7 @@ The build then writes the worker to `.cloudflare/output` and starts it once in w
 
 A worker that `seedcord build` didn't write has none of those ids, so its first request throws `CoreEdgeUnbuilt`.
 
-Besides those ids, the build leaves the worker unminified, with a source map beside it in `.cloudflare/output`. Cloudflare [maps the stack trace of an uncaught exception](https://developers.cloudflare.com/workers/observability/source-maps/) back to your source with that map. An error your bot catches and logs itself doesn't go through the map, though it stays readable since the bundle keeps your own names.
+Besides those ids, the build leaves the worker unminified, with a source map beside it in `.cloudflare/output`. Cloudflare [maps the stack trace of an uncaught exception](https://developers.cloudflare.com/workers/observability/source-maps/) back to your source with that map. Cloudflare doesn't apply the map to an error that your bot catches and logs itself, though that trace is still readable since the bundle keeps your own names.
 
 ## Deploying
 
@@ -172,7 +172,7 @@ That runs `seedcord build && cf deploy --prebuilt`. `--prebuilt` tells `cf` to d
 
 ### The first deploy
 
-Cloudflare [fails a deploy](https://developers.cloudflare.com/workers/configuration/secrets/#validate-secrets-before-deploy) while a secret the worker declares isn't configured on it. A new worker has none configured, so its first deploy passes every secret's value with `--secrets-file`, which takes a JSON or a `.env` file. Keep that file out of git.
+Cloudflare [fails a deploy](https://developers.cloudflare.com/workers/configuration/secrets/#validate-secrets-before-deploy) while a secret that the worker declares isn't configured on it. A new worker has none configured, so its first deploy passes every secret's value with `--secrets-file`, which takes a JSON or a `.env` file. Keep that file out of git.
 
 The whole first deploy, in order:
 
@@ -188,7 +188,7 @@ After that the secrets are configured on the worker, so `pnpm run deploy` works 
 
 `cf auth login` needs a browser. In CI, `cf` reads `CLOUDFLARE_API_TOKEN` and `CLOUDFLARE_ACCOUNT_ID` from the environment instead, which [Cloudflare's CI guide](https://developers.cloudflare.com/cf/ci/) covers. Store both as secrets in your CI, next to `DISCORD_BOT_TOKEN`. The bot never reads the two Cloudflare ones, so they don't belong in its `.env` or in `cloudflare.config.ts`.
 
-This GitHub Actions workflow deploys on every push to `main`. It runs the same steps as the list above, and it passes the token with `--secrets-file` on every deploy. That covers the first deploy, and it puts a new token on the worker after you rotate it. Cloudflare [keeps every secret the file leaves out](https://developers.cloudflare.com/workers/configuration/secrets/) from the previous version.
+This GitHub Actions workflow deploys on every push to `main`. It runs the same steps as the list above, and it passes the token with `--secrets-file` on every deploy. That covers the first deploy, and it puts a new token on the worker after you rotate it. Cloudflare [keeps every secret that the file leaves out](https://developers.cloudflare.com/workers/configuration/secrets/) from the previous version.
 
 ```yaml title=".github/workflows/deploy.yml"
 name: Deploy
@@ -237,7 +237,7 @@ The commands step deploys with `--yes`, which skips the preview, and Discord rep
 | what happened | the error |
 | --- | --- |
 | the tsconfig leaves out `"customConditions": ["workerd"]` | `CliEdgeWithoutWorkerdCondition` |
-| the tsconfig sets `workerd` but there's no `cloudflare.config.ts` | `CliWorkerdConditionWithoutCloudflareConfig` |
+| the tsconfig sets `workerd` but `cloudflare.config.ts` doesn't exist | `CliWorkerdConditionWithoutCloudflareConfig` |
 | `root` holds `seedcord.config.ts` | `CliEdgeRootHoldsConfig` |
 | `@cloudflare/vite-plugin` or `cf` isn't installed | `CliDependencyMissing` |
 | the CLI ran on Bun | `CliEdgeOnBun` |

@@ -4,7 +4,7 @@ import { CustomId, InteractionKind } from '@seedcord/core';
 import { shutdownOf } from '@seedcord/core/node/internal';
 import { SeedcordErrorCode } from '@seedcord/errors';
 import { Logger } from '@seedcord/logger';
-import { describe, expect, beforeEach, afterEach, vi } from 'vitest';
+import { describe, expect, beforeEach, afterEach, vi } from 'vite-plus/test';
 
 import { botLoggerOf, interactionsOf } from '#bot/Bot';
 import { CONFIRM_DEF } from '#bot/confirm/reserved';
@@ -20,7 +20,7 @@ interface PrivateInteractionDispatcher {
     maps: Record<InteractionKind, Map<string, { ctor: unknown }>>;
     init(): Promise<void>;
     onHmr(event: unknown): Promise<void>;
-    // only ever spied on, so the parameters stay loose
+    // unknown[] is enough since this is only ever spied on
     processInteraction(...args: unknown[]): Promise<void>;
     inFlight: InFlight;
     handleInteraction(interaction: unknown): Promise<void>;
@@ -118,7 +118,8 @@ const it = base.extend<{ client: ClientHarness; bootWith: BootWith; dispatchedFo
         controller.inFlight.open();
 
         const fire = onSpy.mock.calls.find(([event]) => event === 'interactionCreate')?.[1] as
-            ((i: unknown) => void) | undefined;
+            | ((i: unknown) => void)
+            | undefined;
         expect(fire).toBeDefined();
         await use({ seedcord, controller, fire });
     },
@@ -211,7 +212,8 @@ describe('InteractionDispatcher Integration', () => {
         });
 
         const fire = onSpy.mock.calls.find(([event]) => event === 'interactionCreate')?.[1] as
-            ((i: unknown) => void) | undefined;
+            | ((i: unknown) => void)
+            | undefined;
 
         expect(fire).toBeDefined();
         expect(() => fire?.(fakeSlash('ping'))).not.toThrow();
@@ -327,7 +329,7 @@ describe('InteractionDispatcher Integration', () => {
         const boundaryError = vi.spyOn(Logger.prototype, 'error');
         await controller.handleInteraction(interaction);
 
-        // the handler acked with a deferReply, so the boundary's live sender is deferred-reply and edits @original
+        // the boundary's live sender is deferred-reply and edits @original because the handler acked with a deferReply
         expect(interaction.deferReply).toHaveBeenCalledTimes(1);
         expect(interaction.editReply).toHaveBeenCalledTimes(1);
         expect(interaction.reply).not.toHaveBeenCalled();
@@ -381,7 +383,7 @@ describe('InteractionDispatcher Integration', () => {
         expect(interaction.respond).toHaveBeenCalledWith([{ name: 'apple', value: 'apple' }]);
     });
 
-    // the choices callback bypasses the reply surface, so it reports through its own path
+    // the choices callback reports through its own path. it bypasses the reply surface
     it('publishes responseAttempted for an autocomplete choices response', async ({ testEnv }) => {
         await testEnv.createFile(
             'interactions/SearchAutocomplete.ts',
@@ -479,7 +481,7 @@ describe('InteractionDispatcher Integration', () => {
         expect(controller.maps[InteractionKind.Slash].has('ping')).toBe(true);
     });
 
-    it('ignores a middleware saved beside the handlers when the config has no middlewares folder', async ({
+    it("ignores a middleware saved beside the handlers when the config doesn't have a middlewares folder", async ({
         testEnv
     }) => {
         await testEnv.createFile(
@@ -536,7 +538,7 @@ describe('InteractionDispatcher Integration', () => {
             `
         );
 
-        // the first version skips slash, so the chain leaves the dispatch alone
+        // the chain leaves the dispatch alone because the first version skips slash
         const mwPath = await testEnv.createFile(
             `${middlewaresDir}/Audit.ts`,
             `
@@ -564,7 +566,7 @@ describe('InteractionDispatcher Integration', () => {
         await controller.handleInteraction(before);
         expect(before.deferReply).not.toHaveBeenCalled();
 
-        // the same class widens to a catchall, so the reload has to reach the slash chain
+        // the reload has to reach the slash chain since the same class widens to a catchall
         await testEnv.createFile(
             `${middlewaresDir}/Audit.ts`,
             `
@@ -616,7 +618,7 @@ describe('InteractionDispatcher Integration', () => {
         expect(controller.maps[InteractionKind.Slash].has('alpha')).toBe(true);
         expect(controller.maps[InteractionKind.Slash].has('beta')).toBe(true);
 
-        // a broken edit, both handlers now claim 'alpha', so the reload throws a duplicate-route mid-registration
+        // the reload throws a duplicate-route mid-registration because a broken edit makes both handlers claim 'alpha'
         await testEnv.createFile(
             `${interactionsDir}/Pair.ts`,
             `
@@ -638,7 +640,7 @@ describe('InteractionDispatcher Integration', () => {
             `
         );
 
-        // rollback must clear the partial registration first, so restoring both old routes does not re-collide
+        // rollback has to clear the partial registration first, or restoring both old routes re-collides
         await expect(controller.onHmr({ file: filePath, type: 'update' })).resolves.toBeUndefined();
         expect(controller.maps[InteractionKind.Slash].has('alpha')).toBe(true);
         expect(controller.maps[InteractionKind.Slash].has('beta')).toBe(true);
@@ -690,7 +692,7 @@ describe('InteractionDispatcher Integration', () => {
         expect(controller.maps[InteractionKind.Button].has('shared')).toBe(true);
         const lastGood = controller.maps[InteractionKind.Button].get('own')?.ctor;
 
-        // the edit claims a route Keeper owns, so registration throws after setting 'own', orphaning it
+        // registration throws after setting 'own', orphaning it, because the edit claims a route Keeper registered
         await testEnv.createFile(
             `${interactionsDir}/Multi.ts`,
             `
@@ -852,7 +854,7 @@ describe('InteractionDispatcher Integration', () => {
             await controller.init();
 
             const warn = vi.spyOn(Logger.prototype, 'warn').mockImplementation(() => undefined);
-            // monotonic +800ms per reading, so any check's start-to-end pair crosses the 750ms threshold
+            // any check's start-to-end pair crosses the 750ms threshold because each reading is monotonic +800ms
             let reading = 0;
             vi.spyOn(performance, 'now').mockImplementation(() => (reading += 800));
 
@@ -891,7 +893,7 @@ describe('InteractionDispatcher Integration', () => {
             const interaction = fakeSlash('refused');
             await controller.handleInteraction(interaction);
 
-            // the gate threw a Silence, so execute never ran
+            // execute never ran. the gate threw a Silence
             expect(interaction.reply).not.toHaveBeenCalled();
         });
 
@@ -923,7 +925,7 @@ describe('InteractionDispatcher Integration', () => {
             const interaction = fakeSlash('owner');
             await controller.handleInteraction(interaction);
 
-            // the non-owner is refused, so execute never replied 'executed', the boundary rendered NotOwner
+            // execute never replied 'executed' because the non-owner is refused, and the boundary rendered NotOwner
             expect(interaction.reply).not.toHaveBeenCalledWith('executed');
             expect(interaction.reply).toHaveBeenCalledTimes(1);
         });
@@ -1052,7 +1054,7 @@ describe('InteractionDispatcher Integration', () => {
 
             controller.inFlight.close();
             fire?.(fakeSlash('ping'));
-            // draining, so no new dispatch started
+            // no new dispatch started while it is draining
             expect(handleSpy).toHaveBeenCalledTimes(1);
 
             await expect(controller.inFlight.drain(50)).resolves.toBeUndefined();
@@ -1562,7 +1564,7 @@ describe('InteractionDispatcher Integration', () => {
             expect(interaction.deferReply).not.toHaveBeenCalled();
         });
 
-        // the unhandled default carries no route decorator, so its own sender has no dispatch route id
+        // its own sender doesn't have a dispatch route id since the unhandled default doesn't have a route decorator
         it('publishes one route id across both keys for the unhandled default', async ({ bootWith }) => {
             const { seedcord, controller } = await bootWith(`
                 import { SlashHandler, SlashRoute } from '${seedcordPath}';
@@ -1585,7 +1587,7 @@ describe('InteractionDispatcher Integration', () => {
             expect(written[0]?.routeId).toBe('slash:unregistered');
         });
 
-        // a consumer groups the two keys by route, so they have to agree
+        // both payloads must hold the same route id because a consumer groups the two keys by route
         it('publishes one route id across both keys when a middleware throws', async ({ bootWith }) => {
             const { seedcord, controller } = await bootWith(MW_BOOM_ROUTE, MW_BOOM_MIDDLEWARE);
             const dispatched: SubscriptionData<'interactionDispatched'>[] = [];
@@ -1599,8 +1601,8 @@ describe('InteractionDispatcher Integration', () => {
             expect(written[0]?.routeId).toBe('slash:mwboom');
         });
 
-        // a hand-built customId carries no colon, so prefixOf returns '' and no route can match
-        it('replies to a customId that carries no route prefix through the unhandled default', async ({ testEnv }) => {
+        // prefixOf returns '' and routes can't match. a hand-built customId doesn't have a colon
+        it('replies to a customId without a route prefix through the unhandled default', async ({ testEnv }) => {
             await testEnv.createDir('interactions');
             const config = testConfig({ interactions: testEnv.resolvePath('interactions') });
 
@@ -1715,7 +1717,7 @@ describe('InteractionDispatcher Integration', () => {
             expect(dispatched[0]?.dispatchId).not.toBe(dispatched[1]?.dispatchId);
         });
 
-        // the type-based rule is the same on both transports, so a constructor Silence matches http
+        // a constructor Silence matches http since the type-based rule is the same on both transports
         it('reports refused when the handler constructor throws a Silence', async ({ dispatchedFor }) => {
             const published = await dispatchedFor(
                 `

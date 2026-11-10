@@ -1,7 +1,7 @@
 import { CustomId, Notice } from '@seedcord/core';
 import { DispatchContext } from '@seedcord/core/internal';
 import { isSeedcordError, SeedcordErrorCode } from '@seedcord/errors';
-import { describe, expect, expectTypeOf, it } from 'vitest';
+import { describe, expect, expectTypeOf, it } from 'vite-plus/test';
 
 import { ButtonHandler } from '#handlers/interaction/components/ButtonHandler';
 import { ModalHandler } from '#handlers/interaction/components/ModalHandler';
@@ -201,7 +201,7 @@ describe('button decode', () => {
         );
     });
 
-    it('throws CustomIdHandlerRouteMissing when the handler has no route decorator', () => {
+    it('throws CustomIdHandlerRouteMissing when the handler is missing its route decorator', () => {
         class Bare extends ButtonHandler<[typeof ApproveId]> {
             execute(): Promise<void> {
                 void this.params;

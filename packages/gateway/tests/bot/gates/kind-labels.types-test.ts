@@ -1,6 +1,6 @@
 import { CustomId, defineGate, RequireBotPermissions, RequirePermissions } from '@seedcord/core';
 import { PermissionFlagsBits } from 'discord.js';
-import { expectTypeOf } from 'vitest';
+import { expectTypeOf } from 'vite-plus/test';
 
 import { EventHandler } from '#handlers/event/EventHandler';
 import { AutocompleteHandler } from '#handlers/interaction/AutocompleteHandler';

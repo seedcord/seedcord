@@ -1,0 +1,21 @@
+extends: existence
+link: https://github.com/seedcord/seedcord/blob/next/.agents/skills/writing-voice/SKILL.md
+message: "'%s' is a human verb. If its subject is a file, a value, or a function, write what the code does, like 'contains', 'reads', or 'returns'."
+level: suggestion
+ignorecase: true
+# third person only. "you want" and "its own" are fine
+tokens:
+  # a message, a prompt, or a page really does say or ask something
+  - '(?<!\b(?:message|messages|error|errors|prompt|terminal|page|pages|changelog|section|guide|docs?|readme|comment|heading|line|note|callout|output|hint|warning|label|title|question|text)(?: that| which)? )(?:says|asks)'
+  - 'knows'
+  - 'wants'
+  - 'sees'
+  - 'owns'
+  - 'cares'
+  - 'thinks'
+  - 'likes'
+  - 'believes'
+  - 'understands'
+  - 'decides'
+  - 'remembers'
+  - 'forgets'

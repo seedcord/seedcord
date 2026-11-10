@@ -1,6 +1,6 @@
 import { CustomId, InteractionKind, Subscribe, Subscriber } from '@seedcord/core';
 import { PublishDefault } from '@seedcord/core/internal';
-import { beforeEach, describe, expect, it } from 'vitest';
+import { beforeEach, describe, expect, it } from 'vite-plus/test';
 
 import { ButtonHandler } from '#handlers/interaction/components/ButtonHandler';
 import { SlashHandler } from '#handlers/interaction/SlashHandler';
@@ -17,7 +17,7 @@ beforeEach(() => {
 describe('waitUntil and subscribers', () => {
     const tick = (): Promise<void> => new Promise((resolve) => setImmediate(resolve));
 
-    it('stays open for a subscriber that a handler published to', async () => {
+    it('keeps the context pending until a subscriber that a handler published to finishes', async () => {
         const release = Promise.withResolvers<undefined>();
         let finished = false;
         @Subscribe(['unhandledInteractionError'])

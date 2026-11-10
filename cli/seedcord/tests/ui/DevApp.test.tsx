@@ -1,6 +1,6 @@
 import { settled, stableFrame } from '@seedcord/cli-prompts/testing';
 import React from 'react';
-import { describe, expect, it, vi } from 'vitest';
+import { describe, expect, it, vi } from 'vite-plus/test';
 
 import { NO_FILTER_ROOM } from '#ui/components/primitives/FilterPanel';
 import { NO_ROOM } from '#ui/components/primitives/ScrollableLogView';
@@ -218,7 +218,7 @@ describe('DevApp tiers', () => {
         app.unmount();
     });
 
-    it('opens with a rule across the whole terminal, so nothing sits on the top edge', async () => {
+    it('opens with a rule across the whole terminal, so the top row is only the rule', async () => {
         const app = view(FULL);
         const frame = await stableFrame(app.lastFrame);
 
@@ -227,7 +227,7 @@ describe('DevApp tiers', () => {
         app.unmount();
     });
 
-    // the stack can take every row the log column has, so the pane keeps one back for its own message
+    // the pane keeps one row back for its own message because the stack can take every row the log column has
     it('always says something in the log pane', async () => {
         const store = squeezedStore();
 

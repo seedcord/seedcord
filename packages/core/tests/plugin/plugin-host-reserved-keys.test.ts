@@ -1,5 +1,5 @@
 import { SeedcordErrorCode } from '@seedcord/errors';
-import { describe, it, expect } from 'vitest';
+import { describe, it, expect } from 'vite-plus/test';
 
 import { Plugin } from '#src/plugin/Plugin';
 import { TestPluginHost } from '#tests/utils/TestPluginHost';
@@ -42,7 +42,7 @@ describe('a reserved framework channel as an attach key', () => {
     });
 
     it('reports the reserved code for a channel that is also a host member', () => {
-        // gateway's Seedcord carries a `bot` member
+        // gateway's Seedcord has a `bot` member
         class BotHost extends TestPluginHost {
             public readonly bot = {};
         }

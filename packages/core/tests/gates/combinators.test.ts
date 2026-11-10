@@ -1,4 +1,4 @@
-import { describe, it, expect, expectTypeOf } from 'vitest';
+import { describe, it, expect, expectTypeOf } from 'vite-plus/test';
 
 import { and, or } from '#gates/combinators';
 import { defineGate } from '#gates/Gate';
@@ -11,7 +11,7 @@ import { TestNotice } from '#tests/utils/TestNotice';
 import type { Gate, GateContextBase, RequiredOf } from '#gates/Gate';
 import type { RenderContext } from '@seedcord/types';
 
-// gates ignore ctx here, so a minimal cast stands in
+// a minimal cast stands in because gates ignore ctx here
 const ctx = {} as unknown as GateContextBase;
 
 const AgnosticGate = defineGate('any', () => {});
@@ -65,7 +65,7 @@ describe('and', () => {
         expect(or(A, B).name).toBe('a | b');
     });
 
-    it('wraps a nested combinator so the grouping survives the join', () => {
+    it('wraps a nested combinator so the joined name keeps the grouping', () => {
         const A = defineGate('a', () => {});
         const B = defineGate('b', () => {});
         const C = defineGate('c', () => {});
@@ -190,7 +190,7 @@ describe('or', () => {
             );
 
         expect(thrown).toBeInstanceOf(Notice);
-        // the list render ignores ctx, so a minimal cast stands in
+        // a minimal cast is enough since the list render ignores ctx
         const reply = (thrown as Notice).render({} as unknown as RenderContext);
         const description = cardJson(reply);
         expect(description).toContain('Manage Server');
@@ -213,7 +213,7 @@ describe('or', () => {
                 () => {
                     throw new Error('expected a refusal');
                 },
-                // the render ignores ctx, so a minimal cast stands in
+                // ctx is a minimal cast. the render ignores it
                 (error: Notice) => error.render({} as unknown as RenderContext)
             );
 

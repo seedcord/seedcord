@@ -1,4 +1,4 @@
-import { describe, it, expect } from 'vitest';
+import { describe, it, expect } from 'vite-plus/test';
 
 import { and, or } from '#gates/combinators';
 import { defineEffectGate, defineGate } from '#gates/Gate';
@@ -9,7 +9,7 @@ import { TestNotice } from '#tests/utils/TestNotice';
 
 import type { GateContextBase } from '#gates/Gate';
 
-// gates ignore ctx here, so a minimal cast stands in
+// a minimal cast stands in because gates ignore ctx here
 const ctx = {} as unknown as GateContextBase;
 
 describe('runGates', () => {
@@ -158,7 +158,7 @@ describe('effect gates', () => {
 
         await runGates([or(and(charge, refuse), pass)], ctx);
 
-        // the first gate queued charge then refused, the or moved to pass, so charge must not commit
+        // charge must not commit because the first gate queued it then refused, and the or moved to pass
         expect(committed).toEqual([]);
     });
 });

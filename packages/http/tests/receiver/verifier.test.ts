@@ -1,5 +1,5 @@
 import { isSeedcordError, SeedcordErrorCode } from '@seedcord/errors';
-import { describe, expect, it } from 'vitest';
+import { describe, expect, it } from 'vite-plus/test';
 
 import { Ed25519Verifier } from '#src/receiver/Ed25519Verifier';
 import { createSigner } from '#tests/helpers/ed25519';

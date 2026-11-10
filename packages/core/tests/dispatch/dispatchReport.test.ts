@@ -1,6 +1,6 @@
 import { Logger, LoggerChannelRegistry } from '@seedcord/logger';
 import { timestampFromSnowflake } from '@seedcord/utils';
-import { afterEach, describe, expect, it, vi, type MockInstance } from 'vitest';
+import { afterEach, describe, expect, it, vi, type MockInstance } from 'vite-plus/test';
 
 import { DispatchContext } from '#src/dispatch/DispatchContext';
 import { outcomeFor, queuedMsFor, reportDispatch } from '#src/dispatch/dispatchReport';
@@ -14,7 +14,7 @@ import type { CoreBase } from '#interfaces/CoreBase';
 import type { SubscriptionData } from '#subscribers/types/Subscriptions';
 import type { LogRecord, ReplyResponse } from '@seedcord/types';
 
-// 2022-01-01, so the gap to now is always positive
+// minted 2022-01-01, always in the past
 const SNOWFLAKE = '926845371392000000';
 
 class Refusal extends Notice {

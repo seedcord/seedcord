@@ -1,5 +1,5 @@
 import { PermissionFlagsBits } from 'discord-api-types/v10';
-import { describe, it, expect, vi } from 'vitest';
+import { describe, it, expect, vi } from 'vite-plus/test';
 
 import { GuildOnly, OwnerOnly } from '#gates/catalog/access';
 import { Cooldown } from '#gates/catalog/Cooldown';

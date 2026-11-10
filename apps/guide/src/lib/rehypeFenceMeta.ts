@@ -11,7 +11,7 @@ export const FENCE_ATTR = {
 } as const;
 
 // the markdown twin strips these back out
-export const FENCE_MODES = ['twoslash', 'hovers'];
+export const FENCE_MODES = ['twoslash', 'hovers', 'plain'];
 
 const FENCE_NAMES = ['output', ...FENCE_MODES];
 
@@ -34,6 +34,11 @@ export function rehypeFenceMeta() {
                 if ('hovers' in attributes) added[FENCE_ATTR.hovers] = '';
             } else if ('hovers' in attributes) {
                 file.fail('hovers needs twoslash on the same fence.', code);
+            } else if (TWOSLASH_LANGS.has(languageOf(code)) && !('output' in attributes) && !('plain' in attributes)) {
+                file.fail(
+                    `Nothing checks that this ${languageOf(code)} fence compiles. Add twoslash, or add plain if the sample can't compile by itself.`,
+                    code
+                );
             }
 
             code.properties = { ...code.properties, ...added };

@@ -1,4 +1,4 @@
-import { expectTypeOf } from 'vitest';
+import { expectTypeOf } from 'vite-plus/test';
 
 import { RegisterKyselyService } from '#src/decorators/RegisterKyselyService';
 import { KyselyService } from '#src/KyselyService';
@@ -7,7 +7,7 @@ import type { KyselyServices } from '#src/types/KyselyServices';
 
 class Orders extends KyselyService<'products'> {}
 
-// the row seedcord codegen writes for this plugin
+// the row that seedcord codegen writes for this plugin
 declare module '@seedcord/core/plugin' {
     interface PluginTypes {
         '@seedcord/plugin-kysely-postgres': { services: { orders: typeof Orders } };

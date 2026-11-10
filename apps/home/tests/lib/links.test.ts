@@ -1,4 +1,4 @@
-import { describe, expect, it } from 'vitest';
+import { describe, expect, it } from 'vite-plus/test';
 
 import { linkKind } from '#lib/links';
 
@@ -7,7 +7,7 @@ describe('linkKind', () => {
         expect(linkKind(href)).toBe('home-page');
     });
 
-    // home has no basePath, so next/link would route these as pages of this app
+    // next/link would route these as pages of this app because home doesn't set a basePath
     it.each(['/guide/start', '/docs', '/blog/rss.xml', '/blog/rss.xml?v=2', 'https://seedcord.org/guide'])(
         'treats %s as another part of the site',
         (href) => {

@@ -1,4 +1,4 @@
-import { expectTypeOf } from 'vitest';
+import { expectTypeOf } from 'vite-plus/test';
 
 import { RegisterTask } from '#src/decorators/RegisterTask';
 import { Task as GatewayTask } from '#src/gateway.index';

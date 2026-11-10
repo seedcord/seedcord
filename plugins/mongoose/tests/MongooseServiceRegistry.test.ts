@@ -2,7 +2,7 @@ import { pathToFileURL } from 'node:url';
 
 import { Logger } from '@seedcord/logger';
 import mongoose from 'mongoose';
-import { describe, it, expect, afterEach, beforeEach, vi } from 'vitest';
+import { describe, it, expect, afterEach, beforeEach, vi } from 'vite-plus/test';
 
 import { MongooseServiceRegistry } from '#src/MongooseServiceRegistry';
 
@@ -48,7 +48,7 @@ describe('MongooseServiceRegistry model ownership', () => {
         await testEnv.teardown();
     });
 
-    // the same schema instance, so mongoose returns the existing model and never throws
+    // mongoose returns the existing model and never throws because it's the same schema instance
     async function registerAdoptedElsewhere(): Promise<void> {
         const { Adopted } = (await import(pathToFileURL(file).href)) as { Adopted: { schema: mongoose.Schema } };
         mongoose.model('adopted', Adopted.schema);

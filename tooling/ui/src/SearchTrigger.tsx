@@ -1,12 +1,12 @@
 'use client';
 
+import { cn } from 'cn';
 import { Search } from 'lucide-react';
 
 import { Button } from './Button';
 import { ariaKeyshortcuts } from './HotkeyKeys';
 import { Icon } from './Icon';
 import { Kbd } from './Kbd';
-import { cn } from './lib/cn';
 import { useIsMac } from './lib/useIsMac';
 import { searchKeys } from './lib/useSiteHotkeys';
 

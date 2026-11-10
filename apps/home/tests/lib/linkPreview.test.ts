@@ -1,4 +1,4 @@
-import { describe, expect, it } from 'vitest';
+import { describe, expect, it } from 'vite-plus/test';
 
 import { postPreview } from '#lib/linkPreview';
 import { POST } from '#tests/fixtures/post';
@@ -27,7 +27,7 @@ describe('postPreview', () => {
         expect(labels(true)).not.toContain('Markdown');
     });
 
-    it('leaves the banner out when the post has no cover', () => {
+    it("leaves the banner out when the post doesn't have a cover", () => {
         expect(postPreview(POST).bannerUrl).toBeUndefined();
     });
 });

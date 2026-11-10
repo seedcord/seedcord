@@ -48,7 +48,7 @@ class Ban extends SlashHandler<'ban'> {
 }
 ```
 
-`edit()` doesn't take options, so whatever you pass `defer()` is what the reply carries.
+`edit()` doesn't take options, so whatever you pass `defer()` is what the reply has.
 
 ## reply() after a deferral throws
 
@@ -64,13 +64,13 @@ message. (route slash:ban)
 
 ## Defer before anything slow
 
-[`reply()`](ref:gateway/RepliableHandler.reply) after the three seconds throws Discord's own error, `DiscordAPIError[10062]`, since the interaction is gone by then. seedcord rethrows it untouched, then sends its [error card](/replying/faults) to that same interaction. Discord rejects the card too, and seedcord drops that rejection with a debug line. The person who ran the command sees the interaction fail.
+[`reply()`](ref:gateway/RepliableHandler.reply) after the three seconds throws Discord's own error, `DiscordAPIError[10062]`, since the interaction has expired by then. seedcord rethrows it untouched, then sends its [error card](/replying/faults) to that same interaction. Discord rejects the card too, and seedcord catches that rejection and logs a debug line. The person who ran the command sees the interaction fail.
 
 Defer first whenever you can't predict how long the handler takes.
 
 ## Sending more messages
 
-Suppose your ban handler revokes the target's sessions after it has already replied "Banned." Telling the caller how that went takes a different call from the first one, and rewriting the message you already sent takes a reference to it.
+Suppose your ban handler revokes the target's sessions after it has already replied "Banned." Telling the caller how that went takes a different call from the first one, and rewriting the message you have already sent takes a reference to it.
 
 Once you've replied or deferred, `this.followUp()` sends another message. Every one of `reply()`, `followUp()`, and `edit()` resolves to the message it wrote. Pass one back to `edit()` to rewrite it.
 
@@ -143,11 +143,11 @@ class Ban extends SlashHandler<'ban'> {
 | nothing sent yet | `reply()` |
 | deferred a reply | `edit()`, filling the placeholder |
 | deferred an update | `followUp()` |
-| already replied | `followUp()` |
+| replied | `followUp()` |
 
 {/* prettier-ignore-end */}
 
-`ephemeral` and `silent` apply only when `send()` creates a message. On the `edit()` row it drops them, since `edit()` doesn't take options.
+`ephemeral` and `silent` apply only when `send()` creates a message. On the `edit()` row it ignores them, since `edit()` doesn't take options.
 
 Use `send()` in code that runs from more than one state, like a helper that a deferring handler and a replying handler both call.
 

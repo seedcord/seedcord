@@ -2,7 +2,7 @@ import { mkdirSync, writeFileSync } from 'node:fs';
 import { join } from 'node:path';
 
 import { isSeedcordError, SeedcordErrorCode } from '@seedcord/errors';
-import { assert, describe, expect, it, onTestFinished } from 'vitest';
+import { assert, describe, expect, it, onTestFinished } from 'vite-plus/test';
 
 import { openProjectWithSteps } from '#core/config/openProjectWithSteps';
 import { ProjectLoader } from '#core/config/ProjectLoader';
@@ -45,7 +45,7 @@ function projectWithConfig(source: string): string {
 const loader = new ProjectLoader(openModuleLoader, new ShellMode());
 
 describe('openProjectWithSteps', () => {
-    it('opens the project inside read config when the config has no vitePlugins', async () => {
+    it("opens the project inside read config when the config doesn't have vitePlugins", async () => {
         const projectDir = projectWithConfig(`export default { ${SERVER_FIELDS} };\n`);
         const steps = recordingSteps();
 

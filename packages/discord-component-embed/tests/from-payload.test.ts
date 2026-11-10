@@ -1,4 +1,4 @@
-import { describe, expect, it } from 'vitest';
+import { describe, expect, it } from 'vite-plus/test';
 
 import { fromPayload, toComponentEmbed } from '#src/index';
 
@@ -86,7 +86,7 @@ const text = { type: 10, content: 'hi' };
 const inPayload = (...components: unknown[]): unknown => ({ component: { type: 17, components } });
 
 describe('fromPayload keys', () => {
-    // discord renders a component with an unknown key and drops the key
+    // discord renders a component with an unknown key and ignores the key
     it.each([
         [
             'a mistyped key on a component',
@@ -107,7 +107,7 @@ describe('fromPayload keys', () => {
             'A text display doesn\'t take "x". It takes type, id, and content.'
         ],
         [
-            // discord's crawler rendered the button and dropped the unknown key
+            // discord's crawler rendered the button and ignored the unknown key
             'a mistyped key on a button emoji',
             inPayload({
                 type: 1,
@@ -157,7 +157,7 @@ describe('fromPayload ids', () => {
         });
     });
 
-    // discord's crawler showed no preview at all for each of these
+    // discord's crawler didn't show a preview at all for each of these
     it.each([
         [-1, '-1'],
         [2_147_483_648, '2147483648'],

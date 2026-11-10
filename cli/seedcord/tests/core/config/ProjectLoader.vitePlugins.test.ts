@@ -3,7 +3,7 @@ import { join } from 'node:path';
 import { stripVTControlCharacters } from 'node:util';
 
 import { SeedcordErrorCode, isSeedcordError } from '@seedcord/errors';
-import { assert, describe, it, expect, onTestFinished } from 'vitest';
+import { assert, describe, it, expect, onTestFinished } from 'vite-plus/test';
 
 import { ProjectLoader } from '#core/config/ProjectLoader';
 import { openModuleLoader } from '#core/modules/openModuleLoader';
@@ -220,7 +220,7 @@ describe('the loader that ran seedcord.config.ts', () => {
         expect(loaders).toEqual([{ loads: 'config', closed: true }]);
     });
 
-    it('stays open until the project closes for a config with vitePlugins', async () => {
+    it('keeps the loaders open until the project closes for a config with vitePlugins', async () => {
         const { loader, dir, loaders } = stubProject(WITH_PLUGIN);
 
         const project = await loader.openProject(await loader.readConfig(dir));

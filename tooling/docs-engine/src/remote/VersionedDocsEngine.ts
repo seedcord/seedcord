@@ -175,7 +175,7 @@ function entityFromEntry(entry: PackageIndexEntry, slug: string, activeVersion?:
     const tone = entry.entities?.[entitySlug];
     if (!tone) return null;
 
-    // stay on the version the reader is viewing
+    // link to the version the reader is viewing
     const version = activeVersion ?? entry.stable?.latest ?? entry.prerelease?.latest;
     if (!version) return null;
 

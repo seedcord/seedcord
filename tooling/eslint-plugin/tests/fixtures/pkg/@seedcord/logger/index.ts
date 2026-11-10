@@ -1,4 +1,4 @@
-// stubbed at an installed package's path so the rule's origin check sees a real @seedcord/logger layout.
+// stubbed at an installed package's path so the rule's origin check reads a real @seedcord/logger layout.
 // depending on the real package would cycle, since every package's eslint-config pulls this plugin.
 export declare class Logger {
     constructor(label: string);

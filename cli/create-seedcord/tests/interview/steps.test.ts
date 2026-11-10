@@ -1,4 +1,4 @@
-import { describe, expect, it } from 'vitest';
+import { describe, expect, it } from 'vite-plus/test';
 
 import { directoryStep } from '#interview/steps/directory';
 import { transportStep } from '#interview/steps/transport';
@@ -16,7 +16,7 @@ describe('directoryStep', () => {
         expect(() => directoryStep.flag.parse('   ')).toThrow();
     });
 
-    it('keeps a nested path, checking only the folder the project goes in', () => {
+    it('keeps a nested path, checking only the folder that holds the project', () => {
         expect(directoryStep.flag.parse('bots/my-bot')).toBe('bots/my-bot');
     });
 

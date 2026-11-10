@@ -41,7 +41,7 @@ export abstract class ServerHost<BotT extends Transport> extends PluginHost<BotT
     static #liveProcessErrors?: (() => void) | undefined;
 
     constructor(transport: BotT, shutdown: CoordinatedShutdown, startup: CoordinatedStartup, driver: Config['kv']) {
-        // a `sideEffects: false` build would drop the same call in the node entry
+        // a `sideEffects: false` build would remove the same call from the node entry
         assertDeclaredRuntime();
         super(transport, 'server', driver);
 
@@ -149,7 +149,7 @@ export abstract class ServerHost<BotT extends Transport> extends PluginHost<BotT
     }
 }
 
-// the public `shutdown` field carries addTask alone
+// the public `shutdown` field has only addTask
 export function shutdownOf(host: Pick<ServerHost<Transport>, typeof HostShutdown>): CoordinatedShutdown {
     return host[HostShutdown];
 }

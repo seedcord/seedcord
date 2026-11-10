@@ -16,7 +16,7 @@ export default defineConfig({
     mdxOptions: {
         // mdxComponents.tsx highlights every fence through CodeBlock
         rehypeCodeOptions: false,
-        // the img in mdxComponents.tsx requires src to stay a string
+        // the img in mdxComponents.tsx requires src to be a string
         remarkImageOptions: { useImport: false },
         // fumadocs leaves `code` out of its default types
         remarkStructureOptions: {

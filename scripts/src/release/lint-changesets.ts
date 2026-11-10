@@ -10,16 +10,15 @@ import type { Violation } from '#src/release/ChangesetRule';
 
 const MESSAGES: Record<Violation['reason'], string> = {
     'unknown-package': 'lists a package outside the workspace',
-    'pre-1.0-major': 'asks for a major bump on a 0.x package without saying it goes to 1.0.0',
+    'pre-1.0-major': 'asks for a major bump on a 0.x package without saying the new version is 1.0.0',
     'unmarked-major': 'asks for a major bump past 1.0 without **BREAKING:** opening the summary',
-    'empty-summary': 'has no summary',
+    'empty-summary': 'has an empty summary',
     'multi-line': 'runs past one paragraph on one line',
     'block-start': 'opens as a list, a heading or a quote',
     'breaking-marker': 'spells the breaking marker as something other than **BREAKING:** opening the summary',
     'breaking-patch': 'marks a patch as breaking, which needs a minor bump pre-1.0',
     'too-long': 'runs past the sentence cap, two when every bump is a patch and three otherwise',
-    'banned-punctuation': 'carries punctuation the writing rules ban',
-    'banned-word': 'carries a banned word',
+    semicolon: 'has a semicolon, which writing-voice bans in markdown',
     'fix-opener': 'opens a fix with something other than Fixed'
 };
 

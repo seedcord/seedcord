@@ -65,7 +65,7 @@ If the notified member can't see the channel, the default refusal card starts wi
 • View Channel
 ```
 
-`subject` goes into the card exactly as you pass it. To show a mention there, pass `<@id>` for a member or `<@&id>` for a role.
+The card shows `subject` exactly as you pass it. To show a mention there, pass `<@id>` for a member or `<@&id>` for a role.
 
 `getMember` can return `null` even for a required user option. It reads the member from the interaction Discord sends. Discord leaves the member out in two cases.
 
@@ -124,7 +124,7 @@ The Administrator rule from [permissions](/checks/permissions) applies here too.
 
 ## Replacing the refusal card
 
-The default card says which permissions are missing. When your command needs its own wording, like "You can't ban a moderator", pass a `Notice` class you wrote as `notice`. It replaces the refusal with or without `inverse: true`. seedcord constructs it with `subject` and the permission names: the missing ones, or the held ones under `inverse: true`.
+The default card lists which permissions are missing. When your command needs its own wording, like "You can't ban a moderator", pass a `Notice` class you wrote as `notice`. It replaces the refusal with or without `inverse: true`. seedcord constructs it with `subject` and the permission names: the missing ones, or the held ones under `inverse: true`.
 
 [Refusing a request](/replying/throwing) shows how to write one.
 
@@ -205,4 +205,4 @@ checkBotPermissions({
 
 If your bot's own member isn't in the member cache, `checkBotPermissions` throws `CoreBotMemberMissing`. The error says how to keep it there.
 
-A passing check for Manage Roles still leaves role position to check. Discord rejects a role your bot assigns if that role is at or above the bot's highest role. [Changing roles](/checks/changing-roles) covers that check.
+A passing check for Manage Roles still leaves role position to check. Discord rejects a role that your bot assigns if that role is at or above the bot's highest role. [Changing roles](/checks/changing-roles) covers that check.

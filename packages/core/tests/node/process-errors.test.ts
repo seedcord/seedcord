@@ -1,5 +1,5 @@
 import { LoggerChannelRegistry } from '@seedcord/logger';
-import { describe, it, expect, afterEach, vi } from 'vitest';
+import { describe, it, expect, afterEach, vi } from 'vite-plus/test';
 
 import { CoordinatedShutdown } from '#node/Lifecycle/CoordinatedShutdown';
 import { CoordinatedStartup } from '#src/lifecycle/CoordinatedStartup';
@@ -9,7 +9,7 @@ import { TestServerHost } from '#tests/utils/TestServerHost';
 import type { SubscriptionData } from '#subscribers/types/Subscriptions';
 import type { Config, LogRecord } from '@seedcord/types';
 
-// justified: this startup path reads config.errors and nothing else on Config
+// justified: this startup path reads only config.errors on Config
 async function startHost(config: Config = {} as Config): Promise<{
     host: TestServerHost;
     shutdown: CoordinatedShutdown;

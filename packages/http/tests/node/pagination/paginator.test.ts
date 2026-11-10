@@ -1,6 +1,6 @@
 import { DispatchContext, serializeReply } from '@seedcord/core/internal';
 import { ComponentType, InteractionResponseType, MessageFlags } from 'discord-api-types/v10';
-import { describe, expect, expectTypeOf, it, vi } from 'vitest';
+import { describe, expect, expectTypeOf, it, vi } from 'vite-plus/test';
 
 import { ReplySender } from '#reply/ReplySender';
 import { ButtonRoute } from '#src/index';
@@ -42,13 +42,12 @@ function pagerFor(ephemeral?: boolean): Paginator<string, 'letters'> {
     });
 }
 
-// the guild payload, the DM branch of contextOf drops member and guild_id for a top-level user
 function guildPayload(): Repliables {
     // justified: the paginator reads only the guild id and the acting user off the payload
     return { guild_id: 'g1', member: { user: { id: 'u1' } } } as unknown as Repliables;
 }
 function dmPayload(): Repliables {
-    // justified: same, a DM payload carries neither member nor guild_id
+    // justified: same, a DM payload has neither member nor guild_id
     return { user: { id: 'u2' } } as unknown as Repliables;
 }
 

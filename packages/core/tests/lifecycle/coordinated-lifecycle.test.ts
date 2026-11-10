@@ -1,6 +1,6 @@
 import { SeedcordErrorCode, isSeedcordError } from '@seedcord/errors';
 import { LoggerChannelRegistry } from '@seedcord/logger';
-import { describe, it, expect } from 'vitest';
+import { describe, it, expect } from 'vite-plus/test';
 
 import { CoordinatedStartup } from '#src/lifecycle/CoordinatedStartup';
 import { StartupPhase } from '#src/lifecycle/phases';
@@ -27,7 +27,7 @@ describe('CoordinatedStartup run', () => {
 });
 
 describe('CoordinatedStartup failure and guards', () => {
-    it('rethrows and stays unready when a task rejects', async () => {
+    it('rethrows and leaves isReady false when a task rejects', async () => {
         const startup = new CoordinatedStartup();
 
         startup.addTask(StartupPhase.Configuration, 'reject', () => Promise.reject(new Error('boom')));

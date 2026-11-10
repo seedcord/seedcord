@@ -1,10 +1,10 @@
 'use client';
 
+import { cn } from 'cn';
 import { Fragment } from 'react';
 
 import { Dialog } from './Dialog';
 import { HotkeyKeys, keyCaps } from './HotkeyKeys';
-import { cn } from './lib/cn';
 import { useIsMac } from './lib/useIsMac';
 
 import type { HotkeySpec } from './lib/useHotkeys';

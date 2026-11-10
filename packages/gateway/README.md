@@ -23,9 +23,9 @@
 
 ## About
 
-`@seedcord/gateway` is the transport for a gateway bot. It holds a websocket connection to Discord through the discord.js client, which also keeps the cache. That connection carries message, member, voice, and reaction events, and Discord only sends those over a websocket. Pick this transport when your bot reacts to any of them.
+`@seedcord/gateway` is the transport for a gateway bot. It holds a websocket connection to Discord through the discord.js client, which also keeps the cache. That connection delivers message, member, voice, and reaction events, and Discord only sends those over a websocket. Pick this transport when your bot reacts to any of them.
 
-A bot that only answers commands and components can use [`@seedcord/http`](https://www.npmjs.com/package/@seedcord/http) instead, which keeps no connection open and also runs on Cloudflare Workers.
+A bot that only answers commands and components can use [`@seedcord/http`](https://www.npmjs.com/package/@seedcord/http) instead, which doesn't keep a connection open and also runs on Cloudflare Workers.
 
 seedcord is pre-1.0, so a minor version can break your bot. Each release's changelog says what changed and how to update.
 

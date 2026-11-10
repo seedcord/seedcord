@@ -9,7 +9,7 @@ List them under `vitePlugins` in `seedcord.config.ts`. This one uses [`@rollup/p
 
 <Shell add="-D @rollup/plugin-yaml" />
 
-```ts title="seedcord.config.ts"
+```ts plain title="seedcord.config.ts"
 import yaml from '@rollup/plugin-yaml';
 import { defineConfig } from 'seedcord';
 
@@ -23,20 +23,20 @@ export default defineConfig({
 
 A handler then imports the file like any module:
 
-```ts title="src/handlers/Greet.ts"
+```ts plain title="src/handlers/Greet.ts"
 import messages from '../messages.yaml';
 ```
 
 TypeScript doesn't know what a `.yaml` import holds, so it reports the import above until you declare the module. Put the declaration in any `.d.ts` file under `root`:
 
-```ts title="src/yaml.d.ts"
+```ts plain title="src/yaml.d.ts"
 declare module '*.yaml' {
     const value: Record<string, unknown>;
     export default value;
 }
 ```
 
-The same goes for any other kind of file a plugin loads. Write a `declare module` for each extension.
+The same applies to any other kind of file a plugin loads. Write a `declare module` for each extension.
 
 ## Why vitePlugins is a function
 
@@ -70,11 +70,11 @@ Leave `apply` off a plugin your bot's imports depend on. Keep `apply: 'build'` f
 
 ## The seedcord environment
 
-seedcord loads your bot in a Vite environment named `seedcord`, in every command that loads it, on Node and on Cloudflare Workers. Vite also creates its usual `client` and `ssr` environments, which stay empty. A plugin without a scope runs its per-environment hooks in all three.
+seedcord loads your bot in a Vite environment named `seedcord`, in every command that loads it, on Node and on Cloudflare Workers. Vite also creates its usual `client` and `ssr` environments, which are empty. A plugin without a scope runs its per-environment hooks in all three.
 
 To run a plugin on your bot alone, check that name in `applyToEnvironment`:
 
-```ts title="seedcord.config.ts"
+```ts plain title="seedcord.config.ts"
 import type { Plugin } from 'vite';
 
 function banner(): Plugin {
@@ -102,7 +102,7 @@ seedcord doesn't re-export any Vite type, so import `Plugin` from `vite` yoursel
 
 Then pick each hook in that plugin by how often its work should happen. `load` and `transform` run on every import, and again on each import a hot reload repeats, so do only the work that one file needs in them. Open anything shared, like a database connection or a cache, in `buildStart` and close it in `closeBundle`.
 
-```ts title="seedcord.config.ts"
+```ts plain title="seedcord.config.ts"
 import type { Plugin } from 'vite';
 
 function queries(): Plugin {

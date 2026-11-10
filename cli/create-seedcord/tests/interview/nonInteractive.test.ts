@@ -1,5 +1,5 @@
 import { SeedcordErrorCode, isSeedcordError } from '@seedcord/errors';
-import { describe, expect, it } from 'vitest';
+import { describe, expect, it } from 'vite-plus/test';
 
 import { runFlow } from '#interview/runFlow';
 import { BOT_TOKEN } from '#tests/token';
@@ -41,7 +41,7 @@ describe('runFlow with no terminal', () => {
         expect(answers.token).toBeNull();
     });
 
-    it('offers the --no- flag, with what it does, when a step that can wait has no answer', async () => {
+    it('offers the --no- flag, with what it does, when a step that can wait is unanswered', async () => {
         const token: Step<'token'> = {
             ...neverAsks('token', 'token'),
             flag: { name: 'token', description: 'a stub', parse: () => BOT_TOKEN, noFlag: 'leave it for later' }

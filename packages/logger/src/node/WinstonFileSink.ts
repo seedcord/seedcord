@@ -21,7 +21,7 @@ export class WinstonFileSink implements ILogSink {
     private readonly format: FileSinkFormat;
     private readonly maxSize: number | undefined;
     private readonly maxFiles: number | undefined;
-    // winston's File transport creates the file at construction, so a sink disposed before any log (repeated installNodeDefaults churns these) would leave an empty file
+    // winston is created lazily because its File transport creates the file at construction, and a sink disposed before any log (repeated installNodeDefaults churns these) would leave an empty file
     private winston?: Winston;
 
     constructor(options?: { filename?: string; format?: FileSinkFormat; maxSize?: number; maxFiles?: number }) {

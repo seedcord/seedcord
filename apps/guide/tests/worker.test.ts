@@ -5,7 +5,7 @@ import { NEXT_GUIDE } from '@seedcord/brand';
 import { embedding, GUIDE_SECTIONS_PATH, GUIDE_VECTORS_PATH, QUESTION_RULE } from '@seedcord/docs-search';
 import { GUIDE as guideSite } from '@seedcord/ui/sites';
 import { parse } from 'jsonc-parser';
-import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vite-plus/test';
 
 import { GuideAnswers } from '#lib/GuideAnswers';
 
@@ -147,7 +147,7 @@ describe('the guide worker', () => {
         expect(card.asked.at(-1)).toBe('/guide/og/index.png');
     });
 
-    // a screenshot dropped in public/ keeps its own url
+    // a screenshot added to public/ keeps its own url
     it('leaves a real file alone', async () => {
         const assets = recording('/guide/portal-token.png');
 

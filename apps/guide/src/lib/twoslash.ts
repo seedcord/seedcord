@@ -91,7 +91,7 @@ const renderer: TwoslashRenderer = {
         const partial = rich.nodeCompletion?.call(this, completion, node) ?? {};
         if (partial.type !== 'element') return partial;
 
-        // the list drops to the line's left edge once it becomes a block
+        // the list moves to the line's left edge once it becomes a block
         const style = `--ts-col:${String(completion.character)}`;
 
         return { ...partial, properties: { ...partial.properties, style } };
@@ -214,7 +214,7 @@ const SHARED = {
     twoslasher: dedenting
 };
 
-// a hovered token carries its whole printed type into the markup
+// a hovered token puts its whole printed type into the markup
 const withoutHovers: TwoslashRenderer = { ...renderer, nodeStaticInfo: (_info, node) => node };
 
 const TRANSFORMER = {
@@ -258,7 +258,7 @@ export async function twoslashBlock(
 
         return { text, html: await highlightToHtml(code, lang, options) };
     } catch (error) {
-        // a bad marker reaches typescript as a bare "Debug Failure" with no file and no line
+        // a bad marker reaches typescript as a bare "Debug Failure" without a file or line
         throw new Error(`twoslash failed on this sample:\n\n${code}\n\n${String(error)}`, { cause: error });
     }
 }

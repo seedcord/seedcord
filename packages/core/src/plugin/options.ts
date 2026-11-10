@@ -3,8 +3,8 @@ import type { PluginLifecycleSpec } from './lifecycle';
 import type { TypedExclude } from '@seedcord/types';
 
 /**
- * Declares where a plugin may attach. Pass it as the `Plugin<Opts>` type argument. Every field you
- * narrow goes to `super()` as well. `attach()` fails to compile when the host does not match.
+ * Declares where a plugin may attach. Pass it as the `Plugin<Opts>` type argument. Pass every field you
+ * narrow to `super()` as well. `attach()` fails to compile when the host does not match.
  *
  * @example
  * ```ts

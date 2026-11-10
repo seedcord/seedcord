@@ -13,9 +13,9 @@ The maintainer judges everything a user reads. You do the legwork, ground every 
 ## Setup
 
 1. Make a sibling worktree off local `next`, like `git worktree add -b docs-refresh ../docs-refresh next`, with the sandbox off. Open it with `code ../docs-refresh`, also outside the sandbox.
-2. `pnpm install`, then build what each phase needs. The home site needs `pnpm turbo run build --filter='./apps/home^...'` before `next dev` starts.
+2. `vp install`, then build what each phase needs. The home site needs `vp exec turbo run build --filter='./apps/home^...'` before `next dev` starts.
 3. Load the four skills `AGENTS.md` lists, plus `guide-voice` and `changeset-guidelines`.
-4. Start a guide notes file in the session scratchpad. Every fact cut from a README or the home page goes in it, with the guide page it belongs on. The guide phase reads it.
+4. Start a guide notes file in the session scratchpad. Write every fact cut from a README or the home page in it, with the guide page it belongs on. The guide phase reads it.
 
 Done when the worktree builds and the notes file exists.
 

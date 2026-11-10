@@ -1,13 +1,13 @@
 ---
 title: Custom IDs
-description: Declare what a component's custom id carries with CustomId, so a click arrives with typed values and you skip parsing strings.
+description: Declare what a component's custom id holds with CustomId, so a click arrives with typed values and you skip parsing strings.
 ---
 
 Discord hands a component's `custom_id` back when someone clicks a button, picks from a select menu, or submits a modal. It's always a plain string, so whatever your handler reads later has to be inside it.
 
-Written by hand, that's a string like `ticket:184580573574955008:close:true` that you build in one file and split apart in another. Every value comes back as text, so turning `'true'` back into a boolean is your job too. The two sides agree on the order only because you kept them matching by hand. Add a field to one side and the other reads the wrong piece, with no error until someone clicks.
+Written by hand, that's a string like `ticket:184580573574955008:close:true` that you build in one file and split apart in another. Every value comes back as text, so turning `'true'` back into a boolean is your job too. The two sides use the same order only because you kept them matching by hand. Add a field to one side and the other reads the wrong piece, without an error until someone clicks.
 
-[`CustomId`](ref:custom-id/CustomId) declares what the string carries, once. The component that encodes it and the handler that decodes it both read that one declaration, so a field you add reaches both sides. The `AppealId` on the button from [building components](/components) is one of these.
+[`CustomId`](ref:custom-id/CustomId) declares what the string holds, once. The component that encodes it and the handler that decodes it both read that one declaration, so a field you add reaches both sides. The `AppealId` on the button from [building components](/components) is one of these.
 
 ```ts twoslash hovers title="src/components/TicketActions.ts"
 import { CustomId } from '@seedcord/gateway';
@@ -40,7 +40,7 @@ export const TicketAction = new CustomId('ticket')
 
 Each method returns a new `CustomId` and leaves the original untouched. A call whose result you don't keep adds nothing, which is why every declaration on this page is one chain.
 
-```ts
+```ts plain
 const Broken = new CustomId('ticket');
 // the result goes nowhere and Broken keeps zero fields
 Broken.snowflake('ownerId');
@@ -115,7 +115,7 @@ The type can't check a value's range or format. `900` compiles against `int('pag
 
 ## The field kinds
 
-The kind you pick sets the type your handler gets back and how many characters the value takes. Pick the narrowest kind that fits.
+The kind you pick sets the type that your handler gets back and how many characters the value takes. Pick the narrowest kind that fits.
 
 {/* prettier-ignore-start */}
 
@@ -146,7 +146,7 @@ const { choice } = Vote.decode('...');
 //      ^?
 ```
 
-`someOf` carries any subset of its list, which suits a select menu that allows several picks.
+`someOf` holds any subset of its list, which suits a select menu that allows several picks.
 
 ```ts twoslash
 import { CustomId } from '@seedcord/gateway';
@@ -257,7 +257,7 @@ A custom id you write by hand compiles. `setCustomId('ticket:123')` skips the sh
 
 ## Clicks the router should skip
 
-A discord.js collector you opened yourself answers the clicks it waits for. seedcord's router gets those same clicks too. With no handler registered for them, it answers with its unhandled reply. Discord then rejects whichever answer comes second. List the id under `ignoreCustomIds` to make the router return before it answers.
+A discord.js collector you opened yourself answers the clicks it waits for. seedcord's router gets those same clicks too. Without a handler registered for them, it answers with its unhandled reply. Discord then rejects whichever answer comes second. List the id under `ignoreCustomIds` to make the router return before it answers.
 
 ```ts twoslash title="src/bot.ts"
 import { resolve } from 'node:path';

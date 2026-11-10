@@ -18,7 +18,7 @@ const OUTSIDE_ROOT_IGNORES = ['node_modules', 'dist', '.git', STATE_FOLDER].map(
 
 export function devWatchOptions(layout: BotLayout): NonNullable<ServerOptions['watch']> {
     const ignored = (file: string): boolean => {
-        // HmrPlugin asks for a restart when one changes
+        // HmrPlugin triggers a restart when one changes
         if (layout.isProjectFile(file)) return false;
         if (layout.isSkipped(file)) return true;
         const posix = toPosixPath(file);
@@ -59,7 +59,7 @@ export function edgeViteConfig(layout: BotLayout, viteRoot: string): InlineConfi
         customLogger: workerLogger(),
         // discord's POST arrives under the tunnel's hostname. the endpoint blocks every other request
         server: { allowedHosts: true },
-        // the plugin's dep scan finds nothing in a virtual main. vite then reloads mid-start and leaves a second envapt with no source bound
+        // the plugin's dep scan finds nothing in a virtual main. vite then reloads mid-start and leaves a second envapt without a source bound
         environments: {
             [BOT_ENVIRONMENT]: {
                 // a glob reads a windows separator as an escape

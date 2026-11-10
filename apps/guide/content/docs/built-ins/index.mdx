@@ -57,7 +57,7 @@ const updatedAt = saved?.updatedAt;
 
 `updatedAt` reads back as a `string`, because JSON keeps a `Date` as its ISO text. Pass it to `new Date()` to get the date again. `get` resolves to `undefined` when nothing is stored under the id.
 
-A `Set`, a `Map`, a function, and a `bigint` have no JSON form at all. If the record type holds one, the `collection()` call fails to compile:
+A `Set`, a `Map`, a function, and a `bigint` can't be written as JSON at all. If the record type holds one, the `collection()` call fails to compile:
 
 ```ts twoslash
 // @errors: 2345
@@ -86,13 +86,13 @@ const codes = core.kv.collection<string>('confirm-code');
 await codes.set(userId, '4821', TEN_MINUTES_MS);
 ```
 
-Once `TEN_MINUTES_MS` has passed, `codes.get(userId)` resolves to `undefined` and deletes the record. Without a third argument, the record stays until you call `delete`.
+Once `TEN_MINUTES_MS` has passed, `codes.get(userId)` resolves to `undefined` and deletes the record. Without a third argument, the driver keeps the record until you call `delete`.
 
-seedcord also hands the ttl to the driver. If the storage behind it can't expire keys itself, like unstorage's filesystem driver, an expired record your code never reads again stays in storage.
+seedcord also hands the ttl to the driver. If the storage behind it can't expire keys itself, like unstorage's filesystem driver, nothing deletes an expired record that your code never reads again.
 
 ## Changing a record two interactions share
 
-A `get` followed by a `set` can overwrite a change. If two people claim `/daily` at the same moment, both handlers read `4` and both write `5`, so one claim goes uncounted. `update` runs your function on the current record and stores the result before the next call on that id starts:
+A `get` followed by a `set` can overwrite a change. If two people claim `/daily` at the same moment, both handlers read `4` and both write `5`, so the count misses one claim. `update` runs your function on the current record and stores the result before the next call on that id starts:
 
 ```ts twoslash title="src/handlers/Daily.ts"
 import { SlashHandler, SlashRoute } from '@seedcord/gateway';
@@ -125,7 +125,7 @@ That order holds inside one process. Two processes that share one driver's stora
 
 ## Reading every record
 
-`get` needs an id, and after a restart nothing in memory holds the ids your bot saved. `entries()` yields an `[id, record]` pair for every record in the collection that hasn't expired:
+`get` needs an id, and after a restart nothing in memory holds the ids that your bot saved. `entries()` yields an `[id, record]` pair for every record in the collection that hasn't expired:
 
 ```ts twoslash
 import type { CoreBase } from '@seedcord/gateway';

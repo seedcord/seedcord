@@ -62,7 +62,8 @@ export interface TaskOptions<TZone extends string = string, TEvery extends strin
 
 type TaskRun = Simplify<
     { key: string; durationMs: number } & (
-        { trigger: 'scheduled'; jobId: string } | { trigger: 'cron' | 'manual'; jobId: null }
+        | { trigger: 'scheduled'; jobId: string }
+        | { trigger: 'cron' | 'manual'; jobId: null }
     ) &
         ({ outcome: 'finished' | 'interrupted' } | { outcome: 'failed'; error: Error })
 >;
@@ -99,7 +100,8 @@ export interface TaskContext<TData = unknown> {
 
 /** When a scheduled job runs. Pass `in` or `at`. */
 export type When<TIn extends string = string> =
-    { in: ValidDuration<TIn>; at?: never } | { at: Date | number; in?: never };
+    | { in: ValidDuration<TIn>; at?: never }
+    | { at: Date | number; in?: never };
 
 /** The options `schedule()` takes. `data` follows the task's type argument. */
 export type ScheduleOptions<TData, TIn extends string = string> = When<TIn> &

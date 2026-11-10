@@ -1,6 +1,6 @@
 import path from 'node:path';
 
-import { describe, expect, it } from 'vitest';
+import { describe, expect, it } from 'vite-plus/test';
 
 import { InteractionDispatcher } from '#src/dispatch/InteractionDispatcher';
 import { resolve } from '#src/dispatch/resolve';
@@ -83,7 +83,7 @@ describe('http InteractionDispatcher discovery', () => {
         expect(match?.fallback).toBe(true);
     });
 
-    it('drops every route a handler owned when its file goes away', async () => {
+    it('removes every route a handler owned when its file is deleted', async () => {
         const dispatcher = await readyDispatcher();
 
         await dispatcher.onHmr({ type: 'delete', file: path.join(HANDLERS_DIR, 'PingCommand.ts') });

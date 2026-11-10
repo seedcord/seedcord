@@ -3,7 +3,7 @@ import { readdirSync, symlinkSync, writeFileSync } from 'node:fs';
 import { join } from 'node:path';
 
 import { SeedcordErrorCode } from '@seedcord/errors';
-import { describe, expect, it, vi } from 'vitest';
+import { describe, expect, it, vi } from 'vite-plus/test';
 
 import { DevLock } from '#core/state/DevLock';
 import { lockDir } from '#tests/lockDir';
@@ -92,7 +92,7 @@ describe('DevLock', () => {
     });
 
     // a dangling link throws ENOENT like a lock released after the folder was listed
-    it.skipIf(process.platform === 'win32')('skips a lock that is gone by the time it is read', () => {
+    it.skipIf(process.platform === 'win32')('skips a lock that was deleted before it is read', () => {
         using dir = lockDir();
         symlinkSync(join(dir.path, 'released'), join(dir.path, `${APP}.released.lock`));
         const info = vi.fn();
@@ -102,7 +102,7 @@ describe('DevLock', () => {
         expect(info).not.toHaveBeenCalled();
     });
 
-    // root owns /, and windows has no uid
+    // root owns /, and windows doesn't have uids
     it.skipIf(process.getuid === undefined || process.getuid() === 0)('refuses a lock folder another user owns', () => {
         expect(() => new DevLock('/', silentLogger).hold(APP, BOT_DIR)).toThrow(
             errorWith({ code: SeedcordErrorCode.CliDevLockFolderNotOwned })

@@ -86,7 +86,7 @@ export function PostCard({ post }: { post: Post }) {
 
 `0x45a44f` colors the bar down the card's left edge. Discord shows the `<Thumbnail>` to the right of the two blocks of text. JSX turns a line break in your source into a space. The `{'\n'}` after the title puts `post.summary` on its own line.
 
-This file compiles with React's JSX, Preact's, or the package's own. If your project has no JSX yet, [JSX setup](#jsx-setup) shows the two lines to add.
+This file compiles with React's JSX, Preact's, or the package's own. If your project doesn't use JSX yet, [JSX setup](#jsx-setup) shows the two lines to add.
 
 Without JSX, build the same card with `h()`. It takes a component, its props, then its children.
 
@@ -390,11 +390,11 @@ const script = toComponentEmbedScript(fromPayload(card));
 
 Every error for a tree from `fromPayload` has JSON keys in its `path`, like `['component', 'components', '1']`, and its message prints them as `component > components > 1`. That holds for the errors `toComponentEmbed` throws for the tree later too. The numbers are array indexes, counted from 0.
 
-Discord shows no preview at all for a bad `id`, so `fromPayload` checks those too. Each `id` has to be a whole number from 0 to 2147483647, and no two components can share one. `fromPayload` then leaves them out of the tree, because nothing in a link preview reads them.
+Discord doesn't show a preview at all for a bad `id`, so `fromPayload` checks those too. Each `id` has to be a whole number from 0 to 2147483647, and no two components can share one. `fromPayload` then leaves them out of the tree, because nothing in a link preview reads them.
 
-If a component has a key it doesn't take, like a mistyped `descripton`, `fromPayload` throws with the keys it does take and suggests the closest one. Discord drops such a key and shows the card without that field. On a button, Discord shows the Open Graph card instead. It does the same for any key in `media` other than `url`, including the `proxy_url` and `width` that Discord's API adds.
+If a component has a key it doesn't take, like a mistyped `descripton`, `fromPayload` throws with the keys it does take and suggests the closest one. Discord ignores such a key and shows the card without that field. On a button, Discord shows the Open Graph card instead. It does the same for any key in `media` other than `url`, including the `proxy_url` and `width` that Discord's API adds.
 
-The 3000-byte check measures the JSON the package writes from the tree. If you serve a hand-written file as it is, run it through the [`check` command](#check-from-the-command-line), which measures the file as written.
+The 3000-byte check measures the JSON that the package writes from the tree. If you serve a hand-written file as it is, run it through the [`check` command](#check-from-the-command-line), which measures the file as written.
 
 <div align="right"><a href="#contents">back to top</a></div>
 
@@ -421,7 +421,7 @@ For a URL, the command fetches the page with Discord's crawler user agent. It ch
 
 Discord shows a preview only for a page served as `text/html` or `application/xhtml+xml`.
 
-Discord waits about 10 seconds in total for the page and its linked JSON, then shows no preview. The command stops at the same 10 seconds. A page that runs out of time counts as unreadable, and a linked JSON that runs out fails the check. If the page and its JSON take over 9 seconds together, the target passes with a warning.
+Discord waits about 10 seconds in total for the page and its linked JSON, then doesn't show a preview. The command stops at the same 10 seconds. A page that runs out of time counts as unreadable, and a linked JSON that runs out fails the check. If the page and its JSON take over 9 seconds together, the target passes with a warning.
 
 Pass a `.html` file to check a static build before you deploy it. For a `<link>`, the command still fetches its URL, and it can't check the host because a file has none.
 
@@ -489,7 +489,7 @@ Discord also has to fetch every image within about 10 seconds, without a login o
 
 <!-- prettier-ignore-start -->
 
-| Component | Goes in | Takes |
+| Component | Used in | Takes |
 | --- | --- | --- |
 | [`Container`](https://seedcord.org/docs/packages/discord-component-embed/latest/functions/container) | the root | `accentColor`, `spoiler`, and the components below |
 | [`TextDisplay`](https://seedcord.org/docs/packages/discord-component-embed/latest/functions/text-display) | `Container`, `Section` | Discord markdown as text children |
@@ -528,15 +528,15 @@ Discord doesn't report an invalid payload anywhere. It shows the Open Graph card
 
 `fromPayload` throws a `ComponentEmbedError` too, for JSON that can't become a tree:
 
-- a component, a list, or `media` isn't the shape Discord's JSON uses, like a string where a list goes
-- a component has a type a component embed doesn't take, or a button isn't a link button
+- a component, a list, or `media` isn't the shape Discord's JSON uses, like a string in place of a list
+- a component has a type that a component embed doesn't take, or a button isn't a link button
 - a component has a key it doesn't take
 - an `id` is outside `0` to `2147483647`, or two components share one
 - a separator `spacing` is anything but `1` or `2`
 
 When one component breaks a rule, the error's `path` lists the steps from the root to it, like `['Container', 'PostCard', 'Section 2']`. The message ends with the same steps after `Found at`, and your own components appear by name.
 
-Every `ComponentEmbedError` carries a `code`: `InvalidStructure`, `InvalidProp`, `OverLimit`, `UnsupportedComponent`, or `ReadFailed`. Branch on the code, since the message wording can change in any release. If a component or an iterator of yours throws while the tree is read, you get a `ReadFailed` with the original error on `cause`.
+Every `ComponentEmbedError` has a `code`: `InvalidStructure`, `InvalidProp`, `OverLimit`, `UnsupportedComponent`, or `ReadFailed`. Branch on the code, since the message wording can change in any release. If a component or an iterator of yours throws while the tree is read, you get a `ReadFailed` with the original error on `cause`.
 
 <div align="right"><a href="#contents">back to top</a></div>
 

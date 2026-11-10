@@ -1,6 +1,6 @@
 ---
 title: A Node or Bun server
-description: Deploy your bot to a VPS or a container by building one folder you copy over and start with node, or a single Bun binary with no node_modules.
+description: Deploy your bot to a VPS or a container by building one folder you copy over and start with node, or a single Bun binary without node_modules.
 ---
 
 A host like a VPS, a container, or Railway runs one process for you. You give it a folder and one command that starts it, and that folder shouldn't carry your `src`, your dev dependencies, or the seedcord CLI.
@@ -17,7 +17,7 @@ export default defineConfig({
 });
 ```
 
-```ts title="src/index.ts"
+```ts plain title="src/index.ts"
 import seedcord from './bot';
 
 await seedcord.start();
@@ -47,13 +47,13 @@ Each `✔︎` line of the build output is one step. The three that do the work:
 
 - **load bot** imports your `instance` file and constructs the bot, the same way `seedcord dev` does. An env value your config reads at construction has to exist in CI too, or the build stops here.
 - **type check** runs `tsc --noEmit` against the `tsconfig.json` beside `seedcord.config.ts`, from your project's own `typescript`. [`build.tsconfig`](/build/config) points it at another file.
-- **bundle** runs Vite and writes `dist`, with `index.mjs` as the entry, one `.js` file for each of your modules, and a source map beside each. The code stays unminified. [Every code file under `root`](/build/config#keep-tool-files-outside-root) builds, whether or not your bot imports it. Always run `index.mjs`, because it sets the paths that the `.js` files read.
+- **bundle** runs Vite and writes `dist`, with `index.mjs` as the entry, one `.js` file for each of your modules, and a source map beside each. The build doesn't minify the code. [Every code file under `root`](/build/config#keep-tool-files-outside-root) builds, whether or not your bot imports it. Always run `index.mjs`, because it sets the paths that the `.js` files read.
 
 The last two lines print the commands that start what it built. The `run` line uses the runtime the CLI ran on, so `bun --bun run build` prints `bun dist/index.mjs`. The `compile` line takes the binary's name from your `package.json`, without the scope, so `@acme/my-bot` builds to `my-bot`.
 
 ### outDir gets emptied
 
-Vite deletes everything in `outDir` before it writes, so a file from a source you deleted can't linger in `dist`. Before that happens, the build checks the folder. It goes ahead if `outDir` doesn't exist, is empty, or holds an `index.mjs` that an earlier `seedcord build` wrote. Anything else stops it:
+Vite deletes everything in `outDir` before it writes, so a file from a source you deleted can't linger in `dist`. Before that happens, the build checks the folder. It continues if `outDir` doesn't exist, is empty, or holds an `index.mjs` that an earlier `seedcord build` wrote. Anything else stops it:
 
 ```txt output
 [3117] build.outDir is dist, which already contains other files. seedcord build empties outDir before it writes. Point it at an empty folder, or delete what is in it.
@@ -63,7 +63,7 @@ That's `CliBuildOutDirNotEmpty`.
 
 <Callout type="warning">
 
-The check only reads `index.mjs`. Once the folder holds a seedcord build, everything else in it goes too, like a `Dockerfile` or a `.env` you put beside the build. Keep those outside `outDir`.
+The check only reads `index.mjs`. Once the folder holds a seedcord build, Vite deletes everything else in it too, like a `Dockerfile` or a `.env` you put beside the build. Keep those outside `outDir`.
 
 </Callout>
 
@@ -83,7 +83,7 @@ A host that only got `dist` and `package.json` has no `seedcord.config.ts`, whic
 
 ## One file with Bun
 
-`bun build --compile` turns the build into a single executable that carries the Bun runtime and every dependency inside it. The host then needs no node, no Bun, and no `node_modules`:
+`bun build --compile` turns the build into a single executable that includes the Bun runtime and every dependency inside it. The host then doesn't need node, Bun, or `node_modules`:
 
 ```sh
 bun build --compile dist/index.mjs --outfile my-bot

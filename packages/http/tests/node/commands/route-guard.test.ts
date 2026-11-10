@@ -2,7 +2,7 @@ import path from 'node:path';
 
 import { InteractionKind } from '@seedcord/core';
 import { Logger } from '@seedcord/logger';
-import { afterEach, describe, expect, it, vi, type MockInstance } from 'vitest';
+import { afterEach, describe, expect, it, vi, type MockInstance } from 'vite-plus/test';
 
 import { UnhandledRepliable } from '#handlers/defaults/UnhandledRepliable';
 import { InteractionDispatcher } from '#src/dispatch/InteractionDispatcher';
@@ -44,7 +44,7 @@ describe('warnUnhandledRoutes', () => {
         expect(message).toContain('@SlashRoute');
     });
 
-    it('stays quiet when every route is registered', () => {
+    it('is silent when every route is registered', () => {
         const { dispatcher, warn } = dispatcherWith((d) =>
             d.maps[InteractionKind.Slash].set('ping', route(InteractionKind.Slash, 'ping'))
         );

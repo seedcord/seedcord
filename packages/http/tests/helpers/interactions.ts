@@ -1,4 +1,4 @@
-import { vi } from 'vitest';
+import { vi } from 'vite-plus/test';
 
 export function slashPayload(name: string): object {
     // the builder reads app_permissions unconditionally, like the gateway does

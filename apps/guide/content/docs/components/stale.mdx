@@ -1,11 +1,11 @@
 ---
-title: When a custom id goes stale
+title: When a custom id is stale
 description: Learn why old buttons and select menus show an Outdated card after a deploy, and choose what your user sees when one does.
 ---
 
 A deploy can leave the buttons and select menus on your bot's older messages broken. Clicking one shows an **Outdated** card.
 
-A message with a button or a select menu on it stays in the channel until someone deletes it. Your shape changes on the next deploy. Decoded against the new shape, an old button's values would fill the wrong fields, and your handler would use them.
+Discord keeps a message with a button or a select menu on it until someone deletes it. Your shape changes on the next deploy. Decoded against the new shape, an old button's values would fill the wrong fields, and your handler would use them.
 
 seedcord stops that with a three-character shape hash in every id it mints. An old button's hash doesn't match the new shape, so seedcord refuses its values before your handler reads them.
 
@@ -35,9 +35,9 @@ The hash covers each field's name, its position in the chain, its kind, whether 
 
 {/* prettier-ignore-end */}
 
-Bounds count the same way. `int('n', 0, 100)` and `int('n', 0, 200)` produce different hashes, so widening a page range invalidates the buttons you already sent.
+Bounds count the same way. `int('n', 0, 100)` and `int('n', 0, 200)` produce different hashes, so widening a page range invalidates the buttons you have already sent.
 
-Weigh an edit against how long its messages stay in use. A reply someone clicks once and scrolls past can change shape on any deploy. A role menu pinned in a rules channel stops working after the same edit, so plan to send that message again when you ship it.
+Weigh an edit against how long people keep using its messages. A reply someone clicks once and scrolls past can change shape on any deploy. A role menu pinned in a rules channel stops working after the same edit, so plan to send that message again when you ship it.
 
 ## What your user sees
 
@@ -56,13 +56,13 @@ A modal and a select menu route by prefix the same way, so both go stale on the 
 
 ## A wire from a different id
 
-[`decode`](ref:custom-id/CustomId.decode) separates two failures. A matching prefix with a different hash is the stale case above. A wire minted by some other `CustomId` refuses with a message naming both route keys.
+[`decode`](ref:custom-id/CustomId.decode) separates two failures. A matching prefix with a different hash is the stale case above. A wire minted by some other `CustomId` refuses with a message that lists both route keys.
 
 ```txt output
 Invalid customId. routeKey "pollM4x" is not "ticketVrl"
 ```
 
-That one does report, since a working bot never produces it. seedcord logs it and publishes it to the `handledException` bus, where the report carries the name `InvalidCustomId`. The user sees the generic card.
+That one does report, since a working bot never produces it. seedcord logs it and publishes it to the `handledException` bus, where the report has the name `InvalidCustomId`. The user sees the generic card.
 
 ```txt output
 ### Cannot Proceed

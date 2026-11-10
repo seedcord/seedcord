@@ -2,7 +2,7 @@ import { mkdtempDisposable, mkdir, writeFile } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 
-import { beforeEach, describe, expect, it } from 'vitest';
+import { beforeEach, describe, expect, it } from 'vite-plus/test';
 
 import { resolveDocEntryPoints } from '#src/workspace';
 
@@ -37,8 +37,8 @@ describe('resolveDocEntryPoints', () => {
         );
     });
 
-    // @seedcord/tsconfig ships json presets. resolving nothing has to stay a skip, never a throw.
-    it('resolves nothing for a package whose every export declares no types', async () => {
+    // @seedcord/tsconfig ships json presets. resolving nothing must not throw.
+    it("resolves nothing for a package whose every export doesn't declare types", async () => {
         const manifest = manifestWith({
             '.': { default: './base.json' },
             './node': { default: './node.json' }
@@ -47,7 +47,7 @@ describe('resolveDocEntryPoints', () => {
         await expect(resolveDocEntryPoints(packageDir, manifest)).resolves.toEqual([]);
     });
 
-    it('skips a subpath that declares no types', async () => {
+    it("skips a subpath that doesn't declare types", async () => {
         await writeDeclaration('dist/index.d.mts');
         const manifest = manifestWith({
             '.': { import: { types: './dist/index.d.mts' } },
@@ -88,8 +88,8 @@ describe('resolveDocEntryPoints', () => {
         ]);
     });
 
-    // the build's own classes would get no source links
-    it('throws when a runtime build has no source file to scan', async () => {
+    // the build's own classes wouldn't get source links
+    it('throws when a runtime build is missing a source file to scan', async () => {
         await writeDeclaration('dist/index.d.mts');
         await writeDeclaration('dist/workerd.index.d.mts');
         const manifest = manifestWith({
@@ -112,7 +112,7 @@ describe('resolveDocEntryPoints', () => {
         expect(entries.map(({ condition }) => condition)).toEqual([undefined]);
     });
 
-    it('sorts the root entry ahead of every subpath', async () => {
+    it('sorts the root entry before every subpath', async () => {
         await writeDeclaration('dist/index.d.mts');
         await writeDeclaration('dist/edge.d.mts');
         const manifest = manifestWith({

@@ -1,33 +1,28 @@
 {
     "name": "seedcord",
-    "type": "module",
     "version": "0.23.2",
-    "engines": {
-        "node": "^24.22.1 || >=26.12.1",
-        "bun": ">=1.4.2"
-    },
     "description": "The seedcord CLI. Dev server, build, and codegen for a typed Discord bot.",
     "keywords": [
+        "cli",
+        "codegen",
         "discord",
         "discord-bot",
-        "seedcord",
-        "cli",
         "hmr",
-        "codegen"
+        "seedcord"
     ],
-    "bin": {
-        "seedcord": "./bin/seedcord.mjs"
-    },
+    "homepage": "https://seedcord.org",
+    "bugs": "https://github.com/seedcord/seedcord/issues",
+    "license": "Apache-2.0",
+    "author": "Dhruv <materwelondhruv@gmail.com> (https://materwelon.dev)",
     "repository": {
         "type": "git",
         "url": "https://github.com/seedcord/seedcord.git",
         "directory": "cli/seedcord"
     },
-    "homepage": "https://seedcord.org",
-    "bugs": "https://github.com/seedcord/seedcord/issues",
-    "license": "Apache-2.0",
-    "author": "Dhruv <materwelondhruv@gmail.com> (https://materwelon.dev)",
     "funding": "https://github.com/sponsors/materwelonDhruv",
+    "bin": {
+        "seedcord": "./bin/seedcord.mjs"
+    },
     "files": [
         "bin",
         "dist",
@@ -35,6 +30,7 @@
         "README.md",
         "LICENSE"
     ],
+    "type": "module",
     "types": "./dist/index.d.mts",
     "exports": {
         ".": {
@@ -48,31 +44,22 @@
             }
         }
     },
+    "publishConfig": {
+        "access": "public",
+        "provenance": true
+    },
     "scripts": {
-        "dev": "tsx src/cli.ts",
-        "preview": "tsx playground/preview.tsx",
-        "preview:prompts": "tsx playground/prompts.ts",
-        "build": "tsdown",
+        "dev": "vpx src/cli.ts",
+        "preview": "vpx playground/preview.tsx",
+        "preview:prompts": "vpx playground/prompts.ts",
+        "build": "vp pack",
         "clean": "rm -rf dist",
         "lint": "eslint '**/*.{ts,tsx}' 'bin/**/*.mjs' --max-warnings=0 --cache --no-error-on-unmatched-pattern",
         "lint:fix": "eslint '**/*.{ts,tsx}' 'bin/**/*.mjs' --fix --max-warnings=0 --cache --no-error-on-unmatched-pattern",
-        "fmt": "prettier --write '**/*.{ts,tsx,json,md}' 'bin/**/*.mjs' --cache --no-error-on-unmatched-pattern",
-        "fmt:check": "prettier --check '**/*.{ts,tsx,json,md}' 'bin/**/*.mjs' --cache --no-error-on-unmatched-pattern",
         "tc": "tsgo --noEmit",
-        "test": "vitest run",
-        "test:watch": "vitest dev",
-        "coverage": "vitest run --coverage"
-    },
-    "peerDependencies": {
-        "@cloudflare/vite-plugin": "catalog:peer",
-        "envapt": "catalog:peer",
-        "typescript": "catalog:consumerTypes",
-        "vite": "catalog:peer"
-    },
-    "peerDependenciesMeta": {
-        "@cloudflare/vite-plugin": {
-            "optional": true
-        }
+        "test": "vp test run",
+        "test:watch": "vp test dev",
+        "coverage": "vp test run --coverage"
     },
     "dependencies": {
         "@cloudflare/build-output-utils": "0.9.6",
@@ -111,23 +98,34 @@
         "@seedcord/eslint-config": "workspace:^",
         "@seedcord/gateway": "workspace:^",
         "@seedcord/http": "workspace:^",
+        "@seedcord/prose": "workspace:^",
         "@seedcord/tsconfig": "workspace:^",
         "@seedcord/tsdown-config": "workspace:^",
         "@seedcord/ui": "workspace:^",
-        "@seedcord/vitest-config": "workspace:^",
+        "@seedcord/vite-config": "workspace:^",
         "@types/react": "catalog:react",
         "cf": "catalog:deps",
         "discord.js": "catalog:peer",
         "envapt": "catalog:peer",
         "eslint-plugin-react-hooks": "catalog:eslint",
         "ink-testing-library": "^4.0.0",
-        "tsx": "catalog:deps",
         "type-fest": "catalog:deps",
         "typescript": "catalog:peer",
+        "vite": "catalog:deps"
+    },
+    "peerDependencies": {
+        "@cloudflare/vite-plugin": "catalog:peer",
+        "envapt": "catalog:peer",
+        "typescript": "catalog:consumerTypes",
         "vite": "catalog:peer"
     },
-    "publishConfig": {
-        "access": "public",
-        "provenance": true
+    "peerDependenciesMeta": {
+        "@cloudflare/vite-plugin": {
+            "optional": true
+        }
+    },
+    "engines": {
+        "bun": ">=1.4.2",
+        "node": "^24.22.1 || >=26.12.1"
     }
 }

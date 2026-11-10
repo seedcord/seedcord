@@ -42,9 +42,9 @@ async function run() {
         return;
     }
 
-    const srcEntry = resolve(here, '../src/cli.ts');
-    await import('tsx/esm/api');
-    await import(pathToFileURL(srcEntry).href);
+    // eslint-disable-next-line no-console -- the bin has no logger
+    console.error("seedcord isn't built. Run `vp run build` from the repo root.");
+    process.exit(1);
 }
 
 const unsupported = unsupportedRuntime();

@@ -3,7 +3,7 @@ title: Writing types from codegen
 description: Give your plugin's methods autocomplete and exact types for what it reads from the bot's project, like locale file keys, using codegen().
 ---
 
-Say your plugin translates messages. A bot calls `t('greet')`, and your plugin looks up `greet` in the bot's `locales/en.json`. You write the plugin before any bot exists, so its types can't list which keys a bot's locale files will hold. Without codegen, `t()` takes any `string`. The bot's author gets no suggestions, and a typo like `t('gret')` only shows up when a user sees the wrong message.
+Say your plugin translates messages. A bot calls `t('greet')`, and your plugin looks up `greet` in the bot's `locales/en.json`. You write the plugin before any bot exists, so its types can't list which keys a bot's locale files will hold. Without codegen, `t()` takes any `string`. The bot's author doesn't get suggestions, and a typo like `t('gret')` only shows up when a user sees the wrong message.
 
 ## How it works
 
@@ -261,7 +261,7 @@ locales.t('greet', {});
 
 A few rules decide what you can return:
 
-- **A class or object needs a file that exports it.** Codegen writes it as an import of that file, so the bot or your `codegen()` has to have imported the file. If your own package exports it, codegen imports it by package name. Any value a file exports goes through that import, so declare exported data `as const` to keep its literal types.
+- **A class or object needs a file that exports it.** Codegen writes it as an import of that file, so the bot or your `codegen()` has to have imported the file. If your own package exports it, codegen imports it by package name. The generated file reads any exported value through that import, so declare exported data `as const` to keep its literal types.
 - **Anything else has to be plain data.** A `Date`, a class instance, or a function that no file exports stops codegen with `CliPluginCodegenValue`.
 - **Prefer an object over an array if a bot can attach your plugin twice.** Codegen merges two objects key by key. Two arrays have to match as a whole, or codegen stops with `CliPluginCodegenConflict`.
 - **Return only what your types need.** Codegen writes every value into the bot's committed file. If you returned the message text, `seedcord codegen --check` would fail each time someone rewords a message.
@@ -374,7 +374,7 @@ For a server bot, `seedcord dev` writes the file after the bot has started, when
 | --- | --- |
 | `CliPluginCodegenNoId` | the class has a `codegen()` and no `id` |
 | `CoreDuplicateName` | two different classes use one id |
-| `CliPluginCodegenThrew` | your `codegen()` threw. It carries the plugin's key and your error's message |
+| `CliPluginCodegenThrew` | your `codegen()` threw. It includes the plugin's key and your error's message |
 | `CliPluginCodegenValue` | your `codegen()` returned a value codegen can't write, at the path it gives |
 | `CliPluginCodegenConflict` | two attachments of your plugin returned different values for one field. It gives both keys and the field |
 

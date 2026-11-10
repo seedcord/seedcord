@@ -7,11 +7,11 @@ Your bot started, and either the logs list a command or they say the deploy was 
 
 ## The logs don't list it
 
-A command deploys only if its class extends [`BuilderComponent`](ref:core/BuilderComponent), carries a `@RegisterCommand` decorator, and is exported from a file under your `commands` path. seedcord skips any other export without an error.
+A command deploys only if its class extends [`BuilderComponent`](ref:core/BuilderComponent), has a `@RegisterCommand` decorator, and is exported from a file under your `commands` path. seedcord skips any other export without an error.
 
 ## Check whether it's global or per-server first
 
-A guild command appears the moment your bot deploys it. A global command takes longer. Discord doesn't say how long.
+A guild command appears the moment that your bot deploys it. A global command takes longer. Discord doesn't say how long.
 
 To skip the wait while you develop, deploy your test application's commands to your test servers through `TESTING_GUILD_IDS`. [Test servers](/commands/deployed#test-servers) shows the setup.
 
@@ -21,22 +21,22 @@ Once an update shows up, a client can still hold the old copy of the command. Di
 
 If `commands.guilds` lists any servers, every command with a bare `@RegisterCommand()` deploys to those servers only. A bot from `create-seedcord` fills the list from `TESTING_GUILD_IDS` in `.env`. If this is your production bot, unset `TESTING_GUILD_IDS` where it runs, as [In production](/commands/deployed#in-production) shows.
 
-A command registered with its own ids, like `@RegisterCommand('guild', ['613425648685547541'])`, deploys to those servers whatever `commands.guilds` says. It is missing everywhere else.
+A command registered with its own ids, like `@RegisterCommand('guild', ['613425648685547541'])`, deploys to those servers whatever `commands.guilds` contains. It is missing everywhere else.
 
 ## Dev skipped the deploy
 
 These make `seedcord dev` leave a command out of Discord:
 
 - You answered `n` to the refresh prompt after saving the file. Restart the bot to load the change.
-- The log says "Skipped the global commands". Dev skips a scope when its hash matches the saved one and the command names on Discord match yours. It compares names only, so versions that another checkout deployed under the same names get skipped too. Run `seedcord commands deploy --force` to deploy anyway. [Deployed commands](/commands/deployed#seedcord-dev-skips-a-deploy-that-changes-nothing) explains the check.
+- The log reads "Skipped the global commands". Dev skips a scope when its hash matches the saved one and the command names on Discord match yours. It compares names only, so versions that another checkout deployed under the same names get skipped too. Run `seedcord commands deploy --force` to deploy anyway. [Deployed commands](/commands/deployed#seedcord-dev-skips-a-deploy-that-changes-nothing) explains the check.
 
 ## A Worker never sends its commands
 
-A deployed Cloudflare Worker sends no commands to Discord. Run [`seedcord commands deploy`](/tooling/commands). Discord gives a new command an id, and the Worker only has the ids `seedcord build` wrote into it, so build and publish the Worker again after the deploy.
+A deployed Cloudflare Worker doesn't send commands to Discord. Run [`seedcord commands deploy`](/tooling/commands). Discord gives a new command an id, and the Worker only has the ids `seedcord build` wrote into it, so build and publish the Worker again after the deploy.
 
 ## Nobody can see it
 
-Discord hides a command from the picker when the person lacks permission to use it. A command you can't run looks exactly like a command nobody deployed.
+Discord hides a command from the picker when the person doesn't have permission to use it. A command you can't run looks exactly like a command nobody deployed.
 
 The permission comes from two places. `setDefaultMemberPermissions` in your command file sets who can use it by default. A server's admins can change it for their server. In **Server Settings**, then **Integrations**, they can limit your command to some roles or channels, or turn it off for everyone.
 
@@ -44,7 +44,7 @@ If a command shows in one server and not another, check **Integrations** in the 
 
 ## It's missing in direct messages
 
-A command stays out of DMs by default, since [`BuilderComponent`](ref:core/BuilderComponent) sets `InteractionContextType.Guild`. To show it in a DM, call `setContexts` with `InteractionContextType.Guild` and `InteractionContextType.BotDM`. The call replaces the whole list, so `Guild` goes in again.
+A command doesn't show in DMs by default, since [`BuilderComponent`](ref:core/BuilderComponent) sets `InteractionContextType.Guild`. To show it in a DM, call `setContexts` with `InteractionContextType.Guild` and `InteractionContextType.BotDM`. The call replaces the whole list, so include `Guild` again.
 
 ## You are near a limit
 
@@ -60,4 +60,4 @@ Discord caps how many slash commands your bot can have, and every server gets it
 
 {/* prettier-ignore-end */}
 
-Creating a command counts against a second cap, 200 per day per guild. If you send a name Discord already has, Discord updates that command, so restarting your bot all day doesn't count against the cap. Reaching the cap takes 200 names Discord has never seen in one day.
+Creating a command counts against a second cap, 200 per day per guild. If you send a name that Discord already has, Discord updates that command, so restarting your bot all day doesn't count against the cap. Reaching the cap takes 200 names Discord has never seen in one day.

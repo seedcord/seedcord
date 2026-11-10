@@ -1,5 +1,5 @@
 import { SeedcordErrorCode } from '@seedcord/errors';
-import { describe, it, expect } from 'vitest';
+import { describe, it, expect } from 'vite-plus/test';
 
 import { KyselyServiceMetadataKey } from '#src/decorators/RegisterKyselyService';
 import { KyselyService } from '#src/KyselyService';
@@ -14,11 +14,11 @@ const core = {} as unknown as CoreBase;
 class Undecorated extends KyselyService {}
 
 class MissingTable extends KyselyService {}
-// the decorator always writes a table with the key, so set the key directly to leave one out
+// set the key directly to leave the table out because the decorator always writes a table with the key
 Reflect.defineMetadata(KyselyServiceMetadataKey, 'users', MissingTable);
 
 describe('KyselyService constructor guards', () => {
-    it('throws when the class has no decorator', () => {
+    it('throws when the class is missing its decorator', () => {
         expect(() => new Undecorated(kysely, core)).toThrow(
             expect.objectContaining({ code: SeedcordErrorCode.PluginServiceDecoratorMissing })
         );

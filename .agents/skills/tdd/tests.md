@@ -2,49 +2,53 @@
 
 ## Good tests
 
-Integration-style. Test through the real interface, not mocks of internal parts.
+Integration-style. Test through the real interface, with real collaborators.
 
 ```typescript
-import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
+import { describe, expect, it } from 'vite-plus/test';
 
-import { CooldownManager } from '../src/CooldownManager';
+import { Kv } from '#src/kv/Kv';
+import { MemoryDriver } from '#src/kv/MemoryDriver';
 
-describe('CooldownManager', () => {
-    beforeEach(() => vi.useFakeTimers());
-    afterEach(() => vi.useRealTimers());
+interface Profile {
+    bio: string;
+    joinedAt: Date;
+}
 
-    // GOOD: checks observable behavior through the public methods
-    it('throws while a key is cooling down and recovers after the window', () => {
-        const cooldown = new CooldownManager({ cooldown: 1000 });
+describe('KvCollection', () => {
+    // GOOD: checks what a caller gets back through the public methods
+    it('reads back a stored record with its Date as an ISO string', async () => {
+        const profiles = new Kv(new MemoryDriver()).collection<Profile>('profile');
+        const joinedAt = new Date('2026-01-01T00:00:00Z');
 
-        cooldown.check('user');
-        expect(() => cooldown.check('user')).toThrow();
+        await profiles.set('1', { bio: 'hi', joinedAt });
 
-        vi.advanceTimersByTime(1000);
-        expect(() => cooldown.check('user')).not.toThrow();
+        expect(await profiles.get('1')).toEqual({ bio: 'hi', joinedAt: joinedAt.toISOString() });
     });
 });
 ```
 
 Characteristics:
 
-- Checks behavior the caller cares about.
+- Checks the behavior that a caller depends on.
 - Uses the public API only.
-- Survives internal refactors.
-- Names what it does, not how.
+- Still passes after internal refactors.
+- Its name describes what the code does, and leaves out how.
 - One logical assertion per test.
 
 ## Bad tests
 
-Implementation-detail tests. Coupled to internal structure.
+Implementation-detail tests, coupled to internal structure.
 
 ```typescript
-// BAD: asserts on an internal call instead of the result
-it('check writes to the internal timestamp map', () => {
-    const cooldown = new CooldownManager({ cooldown: 1000 });
-    const spy = vi.spyOn(cooldown as unknown as { record: () => void }, 'record');
-    cooldown.check('user');
-    expect(spy).toHaveBeenCalled();
+// BAD: asserts on a call to a collaborator instead of the result
+it('set calls the driver', async () => {
+    const driver = new MemoryDriver();
+    const spy = vi.spyOn(driver, 'set');
+
+    await new Kv(driver).collection<Profile>('profile').set('1', profile);
+
+    expect(spy).toHaveBeenCalledOnce();
 });
 ```
 
@@ -53,27 +57,29 @@ Red flags:
 - Mocking or spying on collaborators you own.
 - Reaching into private methods.
 - Asserting on call counts or order.
-- Test breaks when you refactor with no behavior change.
-- Test name describes how, not what.
-- Verifying through a side channel instead of the interface.
+- The test breaks when you refactor without changing behavior.
+- The test name describes how it works.
+- Checking through a side channel when the interface can show the result.
 
 ```typescript
-// BAD: reaches past the interface to verify
-it('set marks a key active in the internal map', () => {
-    const cooldown = new CooldownManager({ cooldown: 1000 });
-    cooldown.set('a');
-    const internal = cooldown as unknown as { store: Map<string, number> };
-    expect(internal.store.has('a')).toBe(true);
+// BAD: reads the driver's raw storage to check the record
+it('delete removes the key from the driver', async () => {
+    const driver = new MemoryDriver();
+    const profiles = new Kv(driver).collection<Profile>('profile');
+
+    await profiles.set('1', profile);
+    await profiles.delete('1');
+
+    expect(await driver.get('profile:1')).toBeUndefined(); // ties the test to the key format
 });
 
-// GOOD: verifies through the public method
-it('reports a key as active after set and inactive after clear', () => {
-    const cooldown = new CooldownManager({ cooldown: 1000 });
+// GOOD: checks through the public method
+it('reads nothing back after delete', async () => {
+    const profiles = new Kv(new MemoryDriver()).collection<Profile>('profile');
 
-    cooldown.set('a');
-    expect(cooldown.isActive('a')).toBe(true);
+    await profiles.set('1', profile);
+    await profiles.delete('1');
 
-    cooldown.clear('a');
-    expect(cooldown.isActive('a')).toBe(false);
+    expect(await profiles.get('1')).toBeUndefined();
 });
 ```

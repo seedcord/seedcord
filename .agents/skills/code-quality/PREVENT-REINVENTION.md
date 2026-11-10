@@ -10,7 +10,7 @@ The root `AGENTS.md` has the repo map. Every new piece of code is one of two thi
 1. **Reuse** of an existing primitive, helper, type, convention, or pattern.
 2. **A justified, named extension** to that existing surface, added in the right package, exported through the right boundary, then reused.
 
-There is **no third option.** If neither reuse nor a clean shared extension fits, stop and ask the user. Do not invent a local workaround. Inline duplication is not a "small thing." Reinventing a Logger, a CooldownManager, a string utility, or a bus subscriber helper is not a "quick win." Each duplicate creates tech debt that compounds across packages and across PRs until the conventions stop mattering and someone has to do a multi-package cleanup. The same logic applies to types, error classes, validation, and code structure: a small antipattern shipped today becomes a multi-file migration in three months.
+If neither one fits, stop and ask the user. A local workaround copies what already exists. A second logger, rate limiter, string helper, or bus subscriber helper splits one behavior across two places. The copies drift apart, and someone later has to clean up several packages at once. Types, error classes, and validation follow the same rule.
 
 Before writing any new code, run the checks below. If the answer to any is "I haven't checked," go check. Only depart from these checks when the user explicitly asks for a different approach or a repo-level instruction overrides them.
 
@@ -30,29 +30,22 @@ If you're about to write a string utility, number helper, object helper, type-fe
 - `plugins/*` holds the first-party plugin packages. If your "feature" is really a plugin, it becomes a package there. The contract itself is `@seedcord/core/plugin`.
 - `cli/seedcord/src` is the seedcord CLI built on Commander + Ink. CLI-shaped features extend this. Do not build a new ad-hoc CLI.
 
-If your helper is "almost" one that already exists but has one different behavior, that is a missing **option / overload / variant**. It is not a new helper. Extend the existing one and use it. Inline duplication of "just one slightly different formatter" is how packages drift.
+When your helper is almost one that exists, with one different behavior, the existing one is missing an **option, overload, or variant**. Extend it and use it. A second formatter that differs in one detail is how packages drift apart.
 
 ### 2. Is the literal value a typed constant?
 
-Any magic number, error message format, ANSI color string, log prefix, env var name, or repeated literal you're about to scatter across files:
+Any unnamed number, error message format, ANSI color string, log prefix, env var name, or other literal that you're about to repeat across files:
 
 - Check whether `@seedcord/types` already defines the union or enum.
 - Check whether `@seedcord/utils` already exposes the constant or formatter.
 
-If the value isn't there but you're about to use it more than once, **add a named constant first, then use it.** The threshold for "this needs a name" is three uses. The cost of naming a literal is one export. The cost of not naming it is grepping across the monorepo later.
+If the value isn't there but you're about to use it more than once, **add a named constant first, then use it.** Three uses means it needs a name. Naming it costs one export. Leaving it unnamed costs a grep across the monorepo later.
 
 For app code, the same rule applies inside that app: look at `tooling/ui/src` and the app's `src/lib` before writing a new helper or primitive. A Tailwind class fragment used three times belongs in a shared constant.
 
-### 3. Use the project's `cn` for classNames (never `[...].join(' ')`)
+### 3. Use the project's `cn` for classNames
 
-`cn` comes from `@seedcord/ui`. It wraps `clsx` + `tailwind-merge`, which:
-
-- Dedupes conflicting Tailwind utilities (`cn('px-2', 'px-4')` → `'px-4'`). Arrays joined by space carry dead conflicting classes.
-- Filters falsy values, so `cn('a', isActive && 'b')` works directly, with no ternary returning empty string and no `.filter(Boolean)` boilerplate.
-
-The companion `tw` template tag in the same file lets you author multi-line class strings without losing formatter support. Match what the existing primitives (e.g. `Button.tsx`) do. Use `cn` + `tw`, never `Array.join`.
-
-The only legitimate use of `.join(' ')` in this repo is joining non-className strings (CLI args, log fragments).
+Build classNames with `cn` and `tw` from `@seedcord/ui`. [TAILWIND.md](./TAILWIND.md#rule-1-use-cn-for-dynamic-classnames) covers both.
 
 ### 4. Does a shared hook / store / type already exist?
 
@@ -69,7 +62,7 @@ If the helper would be reused across apps (`docs` + `guide` + `home`), it belong
 Before creating any file, look at sibling packages. The conventions are consistent across `packages/*` and `tooling/*`:
 
 - Tests live in `<package>/tests/` mirroring `src/`. Do not put tests in `src/**/*.test.ts`.
-- Vitest is the runner (`vitest run` / `vitest dev`). Coverage runs via `vitest run --coverage`.
+- Vitest is the runner (`vp test run` / `vp test dev`). Coverage runs via `vp test run --coverage`.
 - Lint and tc scripts cover both `src/**` and `tests/**`.
 - ESLint configs at the package root as `eslint.config.ts` (flat config), composed from `@seedcord/eslint-config`.
 - TypeScript configs extend `@seedcord/tsconfig` and never cross package source-path boundaries (no `paths` or `include` reaching into another package's `src`).
@@ -80,20 +73,20 @@ If you find yourself adding a test in `src/`, putting setup in a non-conventiona
 
 ### 6. Was this asked for?
 
-If you're tempted to add a bundler `external` block, a custom prettier plugin, a "performance" optimization, a config tweak, a feature flag, a backward-compat shim, an abstraction, or anything else that wasn't in the task description: **don't.** Scope discipline is non-negotiable.
+Leave out anything that the task didn't ask for. Common cases are a bundler `external` block, a custom prettier plugin, a speed optimization, a config tweak, a feature flag, a backward-compat shim, and an abstraction. [DESIGN.md](./DESIGN.md#7-smallest-version-first) covers how small the change should be.
 
-If you genuinely think the addition is needed, surface it as a question to the user _before_ implementing. "I'm about to add X to tsdown.config because Y. Does that match what you want?" is cheap. Adding it silently and getting reviewed at PR time is expensive, because the diff buries the question in 200 lines of legitimate changes and the user can't tell what's their requirement and what's your improvisation.
+If you think the addition is needed, ask the user _before_ writing it. "I'm about to add X to the `pack` block in vite.config.ts because Y. Does that match what you want?" costs one message. Adding it without asking hides the question in 200 lines of real changes, and the user can't tell which parts they asked for.
 
 ### 7. Are you using a new npm package?
 
-Before writing any code that uses a package not already in the workspace, fetch and read its README. Use `WebFetch` on the GitHub README or npmjs.com page for the exact version pinned in `pnpm-workspace.yaml`'s catalogs or in the consuming `package.json`. Never rely on training knowledge. Major version bumps routinely move, rename, or deprecate APIs. Seedcord deliberately tracks recent majors, so stale knowledge is especially likely to bite.
+Before writing any code that uses a package that the workspace doesn't have yet, fetch and read its README. Read the GitHub README or the npmjs.com page for the exact version pinned in `pnpm-workspace.yaml`'s catalogs or in the consuming `package.json`. Never rely on training knowledge. Major version bumps routinely move, rename, or deprecate APIs. Seedcord deliberately tracks recent majors, so stale knowledge is especially likely to bite.
 
 **Why:** Using stale knowledge about modern packages produces code built on deprecated subpaths and silently broken imports that the user has to fix mid-PR.
 
 **How:**
 
 1. Check the pinned version: `grep -E '<pkg>|catalog' pnpm-workspace.yaml package.json`
-2. `WebFetch` the README for that version
+2. Fetch the README for that version
 3. Only then write code based on what the README actually documents
 
 ---
@@ -111,13 +104,13 @@ Saying "compatibility issue" without checking the upstream version range is a li
 
 ### 9. Does a dependency already in the tree export it?
 
-Before you write a type, a helper, a constant, or a parser for something a dependency deals with, check whether that dependency exports one. Check 7 covers a package you are adding. This check covers every package already installed.
+Before you write a type, a helper, a constant, or a parser for something a dependency deals with, check whether that dependency exports one. Check 7 covers a package you are adding. This check covers every package that the workspace has installed.
 
 1. Read the `exports` map in the dependency's `package.json`. A subpath like `cf/config` or `@seedcord/errors/internal` is a separate surface.
 2. Open the `.d.ts` behind each entry and read its export list. A bundled `.d.ts` re-exports from a chunk file, so follow the import to find the declarations.
-3. Use the exported type with `Parameters`, `ReturnType`, `Partial`, or an indexed access. Call the exported helper. Only write your own when the dependency has nothing that fits, and say so in the PR.
+3. Use the exported type with `Parameters`, `ReturnType`, `Partial`, or an indexed access. Call the exported helper. Only write your own when nothing in the dependency fits, and say so in the PR.
 
-A real miss: a test helper took `{ env?: Record<string, unknown>; [field: string]: unknown }` for a `cloudflare.config.ts` worker, where `cf/config` already exported `WorkerConfig` and the `bindings` and `exports` helpers. A Durable Object binding missing its `worker` field then failed at build time. With `Partial<WorkerConfig>`, `tc` would have reported it.
+A real miss: a test helper took `{ env?: Record<string, unknown>; [field: string]: unknown }` for a `cloudflare.config.ts` worker, where `cf/config` exports `WorkerConfig` and the `bindings` and `exports` helpers. A Durable Object binding missing its `worker` field then failed at build time. With `Partial<WorkerConfig>`, `tc` would have reported it.
 
 This applies to tests as much as to source. A test helper typed loosely accepts a config the real tool rejects.
 
@@ -125,10 +118,9 @@ This applies to tests as much as to source. A test helper typed loosely accepts 
 
 ## Code-Quality Rules (Part 2)
 
-Type standards, error handling, structure, commenting, and validation discipline are defined as global always-on rules in `AGENTS.md`. Follow those while writing. They apply to every PR, whether or not you are running a reinvention audit.
+`AGENTS.md` sets the rules for errors, derived types, and dead code on every PR. For the rest, see:
 
-For targeted guidance on specific topics, see:
-
+- **[`DESIGN.md`](./DESIGN.md)** covers root causes, one source of truth, and the smallest version first
 - **[`FAIL-FAST-RULES.md`](./FAIL-FAST-RULES.md)** covers null/undefined handling, invariant checks, and when NOT to use `?.` / `??`
 - **[Code-Commenting Guidelines](../code-commenting-guidelines/SKILL.md)** covers when comments help vs. when they're noise
 
@@ -177,7 +169,7 @@ When you catch yourself doing one of these, **stop and back up.** Either reuse w
 
 If you genuinely need a new helper, type, error class, service, or framework primitive:
 
-If no existing surface fits and there is no clean shared extension path, stop and ask the user. Do not add an app-local exception.
+When nothing that exists fits and you can't extend a shared package cleanly, stop and ask the user. Don't add an app-local exception.
 
 1. **Add it in the shared package.** Do not add it in the consuming app or downstream package.
     - Pure type / interface: `@seedcord/types`
@@ -188,12 +180,12 @@ If no existing surface fits and there is no clean shared extension path, stop an
     - Plugin-shaped behavior: a package under `plugins/`
     - CLI command / Ink component for the CLI: `cli/seedcord`
     - Doc-extraction or doc-rendering logic: `@seedcord/docs-generator` / `@seedcord/docs-engine`
-2. **Add the export** to the relevant `src/index.ts` (and `internal.index.ts` if it's an internal-only surface). Update the package.json `exports` field and the `tsdown.config.ts` entry for a new entry point.
-3. **Rebuild the package** (`pnpm -C packages/<name> build`) so consumers see the new export.
+2. **Add the export** to the relevant `src/index.ts` (and `internal.index.ts` if it's an internal-only surface). Update the package.json `exports` field and the `pack` entry in `vite.config.ts` for a new entry point.
+3. **Rebuild the package** (`vp -C packages/<name> run build`) so consumers see the new export.
 4. **Use it from the call site.** Inline duplication of the new helper defeats the point.
 5. **Document the rationale inline** only if the addition exists for a non-obvious reason (a specific Discord.js quirk, a runtime constraint, a license requirement). Otherwise the name is the documentation.
 
-If the change is published-package-affecting, also add a `changeset` (`pnpm cs`) so the version bump and changelog land with the code.
+If the change is published-package-affecting, also add a `changeset` (`vp run cs`) so the version bump and changelog ship with the code.
 
 ---
 
@@ -205,11 +197,11 @@ Before opening a PR, ask:
 2. Is every repeated literal either a named constant in a shared package or a typed alias in `@seedcord/types`?
 3. Am I using `cn()` for classNames in app code, and avoiding array `.join`?
 4. Are my tests in `tests/` mirroring `src/` like every other package?
-5. Does my code have zero `any`, zero `as unknown as T` doubles, zero silent fallbacks?
+5. Is my code free of `any`, `as unknown as T` double casts, and silent fallbacks?
 6. Did the task ask for every config change in my diff, or did I add improvements?
 7. For every version pin I left untouched citing "compatibility," did I cite the upstream peer-dep range?
-8. Did I delete the comments that just restate the code below them?
+8. Did I delete the comments that only restate the code below them?
 9. If the change is public-API-affecting, did I add a `changeset`?
-10. Does `pnpm check --filter=<pkg>` exit cleanly?
+10. Does `vp run check --filter=<pkg>` exit cleanly?
 
 If any answer is "no" or "I didn't check," the PR is not ready.

@@ -2,7 +2,7 @@ import { writeFile } from 'node:fs/promises';
 import path from 'node:path';
 
 import { SeedcordErrorCode } from '@seedcord/errors';
-import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vite-plus/test';
 
 import { Tasks } from '#src/Tasks';
 import { Spaced } from '#tests/fixtures/every/Spaced';

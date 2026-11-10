@@ -29,7 +29,7 @@ export class WorkersAi {
                 text: batch
             });
             if (!isEmbeddings(result)) {
-                throw new Error(`${embedding.model} returned no embeddings: ${JSON.stringify(result)}`);
+                throw new Error(`${embedding.model} didn't return embeddings: ${JSON.stringify(result)}`);
             }
             const { data } = result;
             if (data.length !== batch.length) {

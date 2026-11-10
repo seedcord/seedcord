@@ -1,4 +1,4 @@
-import { describe, expect, it } from 'vitest';
+import { describe, expect, it } from 'vite-plus/test';
 
 import { botColorStep, COLOR_NAMES } from '#interview/steps/botColor';
 import { capabilitiesStep } from '#interview/steps/capabilities';
@@ -16,11 +16,11 @@ describe('capabilitiesStep', () => {
         expect(capabilitiesStep.flag.parse('')).toEqual([]);
     });
 
-    it('quotes the offender when an id matches no capability', () => {
+    it("quotes the offender when an id isn't a capability", () => {
         expect(() => capabilitiesStep.flag.parse('reactions,telepathy')).toThrow(/telepathy/);
     });
 
-    it('skips itself on http, which has no intents', () => {
+    it("skips itself on http, which doesn't have intents", () => {
         expect(capabilitiesStep.skip?.({ transport: 'http' })).toBe(true);
         expect(capabilitiesStep.skip?.({ transport: 'gateway' })).toBe(false);
     });
@@ -50,7 +50,7 @@ describe('botColorStep', () => {
         expect(botColorStep.flag.parse('fe565a')).toBe('#fe565a');
     });
 
-    it('lowercases a hex so two spellings of one color agree', () => {
+    it('lowercases a hex so two spellings of one color match', () => {
         expect(botColorStep.flag.parse('#FE565A')).toBe('#fe565a');
     });
 

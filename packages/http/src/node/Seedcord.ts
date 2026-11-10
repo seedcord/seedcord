@@ -91,7 +91,7 @@ export class Seedcord extends ServerHost<'http'> implements SeedcordInstance {
         return this.#fetchedUsername;
     }
 
-    /** The bound server port, set once `start()` is listening. Stays `undefined` with `port: false`. */
+    /** The bound server port, set once `start()` is listening. Always `undefined` with `port: false`. */
     public get port(): number | undefined {
         return this.#boundPort;
     }
@@ -190,11 +190,11 @@ export class Seedcord extends ServerHost<'http'> implements SeedcordInstance {
         const server = createServer((incoming, outgoing) => {
             void (async () => {
                 const response = await this.#endpoint.fetch(await toWebRequest(incoming));
-                // node's close() leaves a busy connection open once it goes idle
+                // node's close() leaves a busy connection open once it becomes idle
                 if (!server.listening) outgoing.setHeader('connection', 'close');
                 await writeWebResponse(response, outgoing);
             })().catch((error: unknown) => {
-                // a swallowed throw would hang the client with no cause
+                // a swallowed throw would hang the client without a cause
                 outgoing.destroy(Error.isError(error) ? error : new Error(String(error)));
             });
         });

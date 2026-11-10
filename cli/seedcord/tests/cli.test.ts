@@ -4,7 +4,7 @@ import { join } from 'node:path';
 import { promisify } from 'node:util';
 
 import { SeedcordErrorCode } from '@seedcord/errors';
-import { describe, expect, it } from 'vitest';
+import { describe, expect, it } from 'vite-plus/test';
 
 import { copyEdgeBotForTest } from './commands/build/edgeBot';
 import { tempProject } from './core/config/projectLoaderFixtures';
@@ -60,7 +60,7 @@ describe('the seedcord CLI', () => {
         expect(stderr).toContain(`[${SeedcordErrorCode.CliNotProjectInstall}]`);
     });
 
-    it('runs from a symlinked project install and goes on to look for the config', async () => {
+    it('runs from a symlinked project install and continues to look for the config', async () => {
         const project = tempProject();
         await symlink(PACKAGE_DIR, join(project, 'node_modules', 'seedcord'), 'dir');
 

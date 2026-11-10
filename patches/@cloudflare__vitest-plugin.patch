@@ -1,0 +1,23 @@
+diff --git a/dist/worker/index.mjs b/dist/worker/index.mjs
+index 02997e38282f71b9cbf809348895cd8aa1dc569c..dc9a5bf74b1ea6a51ba2a95a3cf2c12ef11ccbb8 100644
+--- a/dist/worker/index.mjs
++++ b/dist/worker/index.mjs
+@@ -1,4 +1,5 @@
+ import assert from "node:assert";
++import { AsyncLocalStorage } from "node:async_hooks";
+ import { fileURLToPath, pathToFileURL } from "node:url";
+ import * as vm from "node:vm";
+ import defines from "__VITEST_POOL_WORKERS_DEFINES";
+@@ -896,6 +897,12 @@ globalThis.BroadcastChannel = class {
+ 	onmessage = null;
+ 	onmessageerror = null;
+ };
++const originalDisable = AsyncLocalStorage.prototype.disable;
++AsyncLocalStorage.prototype.disable = function disable() {
++	if (this.getStore() !== undefined) {
++		originalDisable.call(this);
++	}
++};
+ let cwd;
+ process.cwd = () => {
+ 	assert(cwd !== void 0, "Expected cwd to be set");

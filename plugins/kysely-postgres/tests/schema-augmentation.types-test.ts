@@ -1,4 +1,4 @@
-import { expectTypeOf } from 'vitest';
+import { expectTypeOf } from 'vite-plus/test';
 
 import { RegisterKyselyService } from '#src/decorators/RegisterKyselyService';
 import { KyselyService } from '#src/KyselyService';
@@ -29,7 +29,7 @@ declare module '#src/types/KyselyServices' {
     interface KyselyServices {
         users: Users;
         people: Users;
-        // typed to the base, so the services-map constraint accepts any table and only a table check errors
+        // typed to the base to make the services-map constraint accept any table, leaving only the table check to error
         loose: KyselyService;
     }
 }

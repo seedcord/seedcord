@@ -2,7 +2,7 @@ import path from 'node:path';
 
 import { MemoryDriver } from '@seedcord/core';
 import { SeedcordErrorCode } from '@seedcord/errors';
-import { afterEach, beforeAll, beforeEach, describe, expect, it, vi } from 'vitest';
+import { afterEach, beforeAll, beforeEach, describe, expect, it, vi } from 'vite-plus/test';
 
 import { Tasks } from '#src/Tasks';
 import { Abortable } from '#tests/fixtures/jobs/Abortable';

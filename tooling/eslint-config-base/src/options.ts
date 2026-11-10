@@ -23,7 +23,7 @@ export interface CreateConfigOptions {
     userConfigs?: FlatConfigItem[];
 
     /**
-     * How much of the `eslint-plugin-import-x` rule set to run. Drop to `'fast'` when lint time
+     * How much of the `eslint-plugin-import-x` rule set to run. Switch to `'fast'` when lint time
      * matters more than catching import cycles and deprecated imports.
      *
      * @defaultValue `'all'`
@@ -66,8 +66,8 @@ export interface CreateConfigOptions {
     registerTypescriptConfigs?: TypescriptConfigsLevel;
 
     /**
-     * Toggle registration of the `eslint-plugin-unicorn` plugin. unicorn requires eslint >=10.4, so
-     * consumers still on eslint 9 must set this to `false`.
+     * Toggle registration of the `eslint-plugin-unicorn` plugin. Consumers still on eslint 9 must set
+     * this to `false` because unicorn requires eslint >=10.4.
      *
      * @defaultValue `true`
      */

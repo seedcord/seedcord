@@ -2,7 +2,7 @@ import { createHash } from 'node:crypto';
 import { readdirSync, readFileSync, statSync } from 'node:fs';
 import { join } from 'node:path';
 
-import { beforeAll, describe, expect, it } from 'vitest';
+import { beforeAll, describe, expect, it } from 'vite-plus/test';
 
 import { BuildRunner } from '#commands/build/BuildRunner';
 import { quietSteps } from '#core/output/quietSteps';
@@ -107,7 +107,7 @@ describe('seedcord build on an http bot', () => {
     it.each([
         ['a folder outside files', 'fixture:unlisted'],
         ['a dot-folder inside a listed folder', 'fixture:skipped']
-    ])('bundles no text from %s', (_, marker) => {
+    ])("doesn't bundle text from %s", (_, marker) => {
         expect(builtFilesContaining(marker)).toEqual([]);
     });
 

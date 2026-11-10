@@ -1,4 +1,4 @@
-import { afterEach, describe, expect, it } from 'vitest';
+import { afterEach, describe, expect, it } from 'vite-plus/test';
 
 import { DocsLinks } from '#lib/DocsLinks';
 import { SymbolRef } from '#lib/SymbolRef';
@@ -25,7 +25,7 @@ describe('DocsLinks', () => {
         expect(links.hasPackage('constructor')).toBe(false);
     });
 
-    it('links no page for a package name every object inherits', async () => {
+    it('returns a null href for a package name that every object inherits', async () => {
         const links = await DocsLinks.load();
         const ref = SymbolRef.fromUrl('ref:constructor');
         if (!(ref instanceof SymbolRef)) throw new Error(`ref:constructor ${ref}`);

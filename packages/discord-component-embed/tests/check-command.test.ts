@@ -1,4 +1,4 @@
-import { describe, expect, it } from 'vitest';
+import { describe, expect, it } from 'vite-plus/test';
 
 import { runCheckCommand } from '#src/checkCommand';
 
@@ -96,7 +96,7 @@ describe('discord-component-embed check', () => {
         expect(output).toMatch(mark);
     });
 
-    it('prints no color codes without a color terminal', async () => {
+    it("doesn't print color codes without a color terminal", async () => {
         const { output } = await runCheckCommand(
             ['check', 'good.json'],
             withFiles({ 'good.json': card({ type: 10, content: 'hi' }) })
@@ -121,7 +121,7 @@ describe('discord-component-embed check', () => {
         const { output, exitCode } = await runCheckCommand(['check', url], input);
 
         expect(output.split('\n').at(-2)).toBe(
-            '  ! Fetching this embed took 9.4 seconds. Discord waits about 10 seconds in total for the page and its linked JSON, then shows no preview.'
+            "  ! Fetching this embed took 9.4 seconds. Discord waits about 10 seconds in total for the page and its linked JSON, then doesn't show a preview."
         );
         expect(exitCode).toBe(0);
     });

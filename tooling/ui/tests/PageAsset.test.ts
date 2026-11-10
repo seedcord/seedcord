@@ -1,4 +1,4 @@
-import { describe, expect, it } from 'vitest';
+import { describe, expect, it } from 'vite-plus/test';
 
 import { CARD, PageAsset, TWIN } from '#src/PageAsset';
 
@@ -21,15 +21,15 @@ describe('the page an asset file points back at', () => {
         expect(CARD.pageSegments(CARD.fileSegments(segments))).toEqual(segments);
     });
 
-    it('reaches no page when the extension is missing', () => {
+    it("doesn't reach a page when the extension is missing", () => {
         expect(TWIN.pageSegments(['commands', 'options'])).toBeUndefined();
     });
 
-    it('reaches no page for an empty path', () => {
+    it("doesn't reach a page for an empty path", () => {
         expect(TWIN.pageSegments([])).toBeUndefined();
     });
 
-    it('reaches no page when the extension belongs to the other asset', () => {
+    it("doesn't reach a page when the extension belongs to the other asset", () => {
         expect(TWIN.pageSegments(['commands', 'options.png'])).toBeUndefined();
     });
 });

@@ -92,7 +92,7 @@ interface PaletteProps {
     onRun: (command: SlashCommandDef) => void;
 }
 
-// the input stays mounted while closed. removing a focused input mid-keystroke makes chrome
+// the palette keeps the input mounted while closed because removing a focused input mid-keystroke makes chrome
 // collapse the selection to the removal point (the end of body here) and scroll it into view.
 function Palette({ query, selected, onSelect, onChange, onRun }: PaletteProps): ReactNode {
     const inputRef = useRef<HTMLInputElement>(null);
@@ -103,7 +103,7 @@ function Palette({ query, selected, onSelect, onChange, onRun }: PaletteProps): 
         const input = inputRef.current;
         if (!input) return;
         input.focus();
-        // the input persists across opens, so the caret sits wherever the last session left it
+        // the caret would sit wherever the last session left it because the input persists across opens
         input.setSelectionRange(input.value.length, input.value.length);
     }, [open]);
 

@@ -33,7 +33,7 @@ export type CommandMeta = GlobalMeta | GuildMeta | ConfigMeta;
 type CommandScope = CommandMeta['scope'];
 
 /**
- * Registers a command in the guilds listed under `commands.guilds`. With no ids listed there, the
+ * Registers a command in the guilds listed under `commands.guilds`. Without ids listed there, the
  * command deploys globally.
  *
  * @decorator

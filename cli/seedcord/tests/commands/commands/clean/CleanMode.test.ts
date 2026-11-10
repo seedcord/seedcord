@@ -1,6 +1,6 @@
 import { SeedcordErrorCode } from '@seedcord/errors';
 import { ApplicationCommandType } from 'discord-api-types/v10';
-import { describe, expect, it } from 'vitest';
+import { describe, expect, it } from 'vite-plus/test';
 
 import { CleanMode } from '#commands/commands/clean/CleanMode';
 import { slash } from '#tests/commands/commands/fakeBot';
@@ -45,18 +45,18 @@ describe('CleanMode', () => {
         expect(selected).toEqual([]);
     });
 
-    it('says the scanned guilds hold no commands', () => {
+    it('says the scanned guilds hold zero commands', () => {
         const message = clean.nothingToRemove(scan({ guilds: [{ scope: alpha, commands: [] }] }));
 
         expect(message.outro).toBe('Scanned 1 guild with no guild commands deployed. Nothing to clean.');
     });
 
-    it('says the app has no global commands when it has none', () => {
+    it("says the app's global command list is empty", () => {
         const message = clean.nothingToRemove(
             scan({ global: [], guilds: [{ scope: alpha, commands: [slash('setup')] }] })
         );
 
-        expect(message.info[0]).toBe('This app has no global commands, so nothing can duplicate one.');
+        expect(message.info[0]).toBe("This app doesn't have global commands, so nothing can duplicate one.");
     });
 
     it('counts what it scanned when nothing duplicates a global command', () => {

@@ -73,8 +73,8 @@ export function isFromDiscordJs(symbol: ts.Symbol | undefined): boolean {
     return file !== undefined && (file.includes('/discord.js/') || file.includes('/@discordjs/'));
 }
 
-// discord.js interactions are generic (ChatInputCommandInteraction<Cached>), so the base chain is only
-// reachable through the target
+// the base chain is only reachable through the target because discord.js interactions are generic
+// (ChatInputCommandInteraction<Cached>)
 function asClassOrInterface(type: ts.Type): ts.InterfaceType | undefined {
     if (type.isClassOrInterface()) return type;
     // justified: the checker types .target as an always-present GenericType, but it is undefined on a
@@ -143,7 +143,7 @@ export function booleanLiteralValue(checker: ts.TypeChecker, type: ts.Type): boo
     return checker.typeToString(type) === 'true';
 }
 
-// an anonymous default export has no id, so its instance type comes off the construct signature
+// an anonymous default export's instance type comes off the construct signature because it doesn't have an id
 export function classInstanceType(
     node: TSESTree.ClassDeclaration | TSESTree.ClassExpression,
     services: ParserServicesWithTypeInformation,

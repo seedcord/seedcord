@@ -2,7 +2,7 @@ import { Readable } from 'node:stream';
 
 import { TextDisplayBuilder } from '@discordjs/builders';
 import { DispatchContext } from '@seedcord/core/internal';
-import { describe, expect, it, vi } from 'vitest';
+import { describe, expect, it, vi } from 'vite-plus/test';
 
 import { ReplySender } from '#reply/ReplySender';
 import { stubBus } from '#tests/helpers/fixtures';
@@ -53,13 +53,13 @@ describe('the portable file', () => {
         ]);
     });
 
-    it('sends alt text on the attachments entry, which RawFile has no field for', async () => {
+    it("sends alt text on the attachments entry, which RawFile doesn't have a field for", async () => {
         const rest = await replyWith([{ data: BYTES, name: 'seed.txt', description: 'four bytes' }]);
 
         expect(sentAttachments(rest)).toEqual([{ id: 0, filename: 'seed.txt', description: 'four bytes' }]);
     });
 
-    it('sends no attachments entry when no file carries alt text', async () => {
+    it("doesn't send an attachments entry when no file has alt text", async () => {
         expect(sentAttachments(await replyWith([{ data: BYTES, name: 'seed.txt' }]))).toBeUndefined();
     });
 

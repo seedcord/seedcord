@@ -1,7 +1,7 @@
 import { TextDisplayBuilder } from '@discordjs/builders';
 import { DispatchContext, PublishDefault } from '@seedcord/core/internal';
 import { MessageFlags } from 'discord.js';
-import { describe, expect, it, vi } from 'vitest';
+import { describe, expect, it, vi } from 'vite-plus/test';
 
 import { UnhandledAutocomplete } from '#bot/defaults/UnhandledAutocomplete';
 import { UnhandledRepliable } from '#bot/defaults/UnhandledRepliable';
@@ -14,7 +14,7 @@ import type { AutocompleteInteraction, ChatInputCommandInteraction } from 'disco
 const dispatch = new DispatchContext('slash', 'probe');
 
 // justified: the defaults read only the interaction, the rest of Core is unused here.
-// justified: a real Core always carries a bus, the handlers publish through it
+// justified: a real Core always has a bus, the handlers publish through it
 const core = { bus: { [PublishDefault]: () => undefined } } as unknown as Core;
 
 type Slash = ChatInputCommandInteraction<'cached'>;

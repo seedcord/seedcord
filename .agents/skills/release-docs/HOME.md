@@ -10,7 +10,7 @@
 4. Build the new sections first. Load the `frontend-iteration` skill. The page itself is the preview, so check each section in Chrome through chrome-devtools-mcp at 1440px and at 390px, and confirm nothing scrolls sideways.
 5. Show the maintainer, fix what they flag, then do the smaller edits: the hero line, the marquee, the feature grid, the section cards, and the meta description.
 6. Test the link preview card in Discord. See below.
-7. Review your own diff twice, then run `tc`, `eslint --max-warnings=0`, and `pnpm react-doctor --verbose`.
+7. Review your own diff twice, then run `tc`, `eslint --max-warnings=0`, and `vp run react-doctor`.
 
 Done when the maintainer has seen every section at both widths, the card renders in Discord, and the gates are clean.
 
@@ -20,7 +20,7 @@ Done when the maintainer has seen every section at both widths, the card renders
 - When the same markup shows up a second time, lift it into a home component in the same change. Chips were the case on the Vite release, copied between two sections.
 - A list of cards is data plus one component. A card that differs takes an extra field, like a `sample`, and needs no second copy of the card.
 - A section alternates its background with its neighbours. Read the grounds of the sections around it.
-- Links go through `SiteLink`, and URLs live in `lib/site.ts`.
+- Write links with `SiteLink`, and URLs live in `lib/site.ts`.
 - A bare `'` in JSX text fails lint, and nothing on the site escapes one. Reword the sentence.
 
 ## The Discord card

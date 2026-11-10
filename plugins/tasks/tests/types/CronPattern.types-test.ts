@@ -1,4 +1,4 @@
-import { expectTypeOf } from 'vitest';
+import { expectTypeOf } from 'vite-plus/test';
 
 import type { CronPattern } from '#src/types/CronPattern';
 import type { acceptedPatterns, rejectedPatterns } from '#tests/fixtures/cronPatterns';

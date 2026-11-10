@@ -1,4 +1,4 @@
-import { describe, expect, it } from 'vitest';
+import { describe, expect, it } from 'vite-plus/test';
 
 import { errorReport, jsonAttachment } from '#subscribers/bases/webhookHelpers';
 
@@ -10,7 +10,7 @@ describe('jsonAttachment', () => {
         expect(new TextDecoder().decode(file.data)).toBe(JSON.stringify({ userId: '1' }, undefined, 2));
     });
 
-    it('drops circular references so the encode cannot throw', () => {
+    it('breaks circular references so the encode cannot throw', () => {
         const circular: Record<string, unknown> = { name: 'a' };
         circular.self = circular;
 
@@ -35,6 +35,28 @@ describe('errorReport', () => {
         expect(errorReport(error)).not.toContain('```');
     });
 
+    it.each([
+        ['an error', (cause: Error): Error => new Error('outer', { cause })],
+        ['an aggregate', (cause: Error): Error => new AggregateError([new Error('member')], 'outer', { cause })]
+    ])('keeps the cause of %s when the parent stack fills the budget', (_label, wrap) => {
+        const error = wrap(new Error('the cause'));
+        error.stack = 'x'.repeat(2000);
+
+        const report = errorReport(error);
+
+        expect(report.length).toBeLessThanOrEqual(1800);
+        expect(report).toContain('Error: the cause');
+    });
+
+    it('shows the whole cause when the parent leaves room for it', () => {
+        const cause = new Error('db down');
+        cause.stack = `${'y'.repeat(1200)}END`;
+        const error = new Error('wrapper', { cause });
+        error.stack = 'Error: wrapper';
+
+        expect(errorReport(error)).toContain('END');
+    });
+
     it('reports every aggregate member under a numbered heading', () => {
         const first = new Error('mongo closed');
         first.stack = 'Error: mongo closed\n    at Mongoose.dispose';
@@ -51,7 +73,7 @@ describe('errorReport', () => {
         expect(report).toContain('at Kysely.dispose');
     });
 
-    it('keeps the dropped count when the parent stack fills the budget', () => {
+    it('keeps the count of omitted members when the parent stack fills the budget', () => {
         const members = Array.from({ length: 40 }, (_, i) => new Error(`member-${i}`));
         const error = new AggregateError(members, 'forty failed');
         error.stack = `AggregateError: forty failed\n${'    at frame\n'.repeat(200)}`;
@@ -62,7 +84,7 @@ describe('errorReport', () => {
         expect(report).toContain('and 40 more failures');
     });
 
-    it('never drops a member without counting it when a stack carries backticks', () => {
+    it('counts every member it leaves out when a stack carries backticks', () => {
         const members = Array.from({ length: 40 }, (_, i) => {
             const member = new Error(`member-${i}`);
             member.stack = `Error: \`\`\`member-${i}\`\`\`\n${'    at frame\n'.repeat(60)}`;
@@ -79,7 +101,7 @@ describe('errorReport', () => {
         expect(shown + counted).toBe(40);
     });
 
-    it('never drops a member without counting it', () => {
+    it('counts every member it leaves out', () => {
         const members = Array.from({ length: 40 }, (_, i) => {
             const member = new Error(`member-${i}`);
             member.stack = `Error: member-${i}\n${'    at frame\n'.repeat(60)}`;
@@ -96,7 +118,7 @@ describe('errorReport', () => {
         expect(shown + counted).toBe(40);
     });
 
-    it('gives each member an equal share so a late member survives the cap', () => {
+    it('gives each member an equal share so a late member still appears under the cap', () => {
         const members = Array.from({ length: 6 }, (_, i) => {
             const member = new Error(`member-${i}`);
             member.stack = `Error: member-${i}\n${'    at frame\n'.repeat(80)}`;

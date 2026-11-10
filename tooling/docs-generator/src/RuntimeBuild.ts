@@ -17,7 +17,7 @@ export class RuntimeBuild {
         return path.map((segment, index) => (index === 0 ? this.owner(segment) : segment));
     }
 
-    // the condition goes last. a canonical reference already uses `!`, `.` and `:`
+    // the condition comes last. a canonical reference already uses `!`, `.` and `:`
     key(canonicalKey: string): string {
         return this.condition ? `${canonicalKey}@${this.condition}` : canonicalKey;
     }

@@ -1,7 +1,7 @@
 import path from 'node:path';
 
 import { Routes } from 'discord-api-types/v10';
-import { beforeEach, describe, expect, it, vi } from 'vitest';
+import { beforeEach, describe, expect, it, vi } from 'vite-plus/test';
 
 import { Emojis } from '#src/emojis/EmojiInjector';
 import { Seedcord } from '#src/node/Seedcord';
@@ -13,7 +13,7 @@ import type { ResolvedEmoji } from '@seedcord/core';
 
 const HANDLERS_DIR = path.resolve(__dirname, '../discovery/fixtures/handlers');
 
-// justified: EmojiMap is empty in tests, so runtime values read through a plain record
+// justified: runtime values read through a plain record because EmojiMap is empty in tests
 const emojis = Emojis as Record<string, ResolvedEmoji>;
 
 function config(): HttpServerConfig {

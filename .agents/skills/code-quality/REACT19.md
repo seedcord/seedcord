@@ -11,10 +11,10 @@ The three sites in `apps/` run **Next.js 16 and React 19**. A component is a ser
 
 ## Rule 1: `use()` over `useContext()`
 
-`use()` is React 19's unified primitive for reading context and promises. Unlike hooks, it can appear after early returns and inside conditionals.
+`use()` reads context and promises. It can run after an early return and inside a condition, which no hook can do. `useContext` still works in React 19, but new code uses `use()`.
 
 ```tsx
-// Bad: useContext (deprecated pattern)
+// Avoid in new code
 import { useContext } from 'react';
 const theme = useContext(ThemeContext);
 
@@ -33,7 +33,7 @@ function Heading({ children }: { children?: React.ReactNode }) {
 }
 ```
 
-**Null-guard pattern** (used in Drawer and Modal):
+**Null-guard pattern** for a context that only exists inside its provider:
 
 ```tsx
 const DrawerContext = createContext<DrawerContextValue | null>(null);
@@ -51,10 +51,10 @@ function useDrawerContext(): DrawerContextValue {
 
 ## Rule 2: `ref` as a plain prop, no `forwardRef`
 
-`forwardRef` is deprecated in React 19. Components accept `ref` directly as a prop.
+React 19 passes `ref` to a function component as a normal prop, so `forwardRef` isn't needed. React plans to deprecate it in a later version.
 
 ```tsx
-// Bad: forwardRef (deprecated)
+// Bad: forwardRef
 const Input = React.forwardRef<HTMLInputElement, InputProps>(({ placeholder }, ref) => (
     <input ref={ref} placeholder={placeholder} />
 ));
@@ -112,7 +112,7 @@ React 19 ref callbacks can return a cleanup function, removing the need for a se
 
 ## Rule 4: `useTransition` with async functions
 
-`useTransition` now accepts async functions. `isPending` stays `true` for the full async duration, making it the standard way to track in-flight mutations without `useState(false)` + manual flag management.
+`useTransition` now accepts async functions. `isPending` is `true` for the full async duration, making it the standard way to track in-flight mutations without `useState(false)` + manual flag management.
 
 ```tsx
 // Bad: manual pending state
@@ -190,17 +190,17 @@ function handleLike() {
 
 ---
 
-## Rule 7: `<Context>` as provider (`<Context.Provider>` deprecated)
+## Rule 7: `<Context>` as provider
 
 ```tsx
-// Old pattern: still works but deprecated
+// Old form, still supported. React plans to deprecate it
 <ThemeContext.Provider value="dark">{children}</ThemeContext.Provider>
 
-// React 19 pattern: prefer for new code
+// React 19 form, for new code
 <ThemeContext value="dark">{children}</ThemeContext>
 ```
 
-Existing `<Context.Provider>` usages in the codebase don't need immediate migration, but use the new pattern when adding new context providers.
+A new provider uses `<Context>`. The existing `<Context.Provider>` in `tooling/ui/src/SearchDialog.tsx` can move over the next time someone edits that file.
 
 ---
 
@@ -251,23 +251,68 @@ function ProductPage({ product }: { product: Product }) {
 
 ---
 
-## What's removed: don't use these
+## Removed in React 19
 
-| Removed                               | Use instead                   |
-| ------------------------------------- | ----------------------------- |
-| `React.forwardRef()`                  | ref as plain prop             |
-| `useContext()`                        | `use()`                       |
-| `<Context.Provider>`                  | `<Context>`                   |
-| `ReactDOM.render()`                   | `createRoot().render()`       |
-| `ReactDOM.hydrate()`                  | `hydrateRoot()`               |
-| `ReactDOM.findDOMNode()`              | `useRef`                      |
-| `react-dom/test-utils` (`act`)        | `import { act } from 'react'` |
-| `propTypes` on function components    | TypeScript                    |
-| `defaultProps` on function components | ES6 default parameters        |
-| String refs (`ref="input"`)           | `useRef` or callback ref      |
+<!--prettier-ignore-start-->
+
+| Removed | Use instead |
+| --- | --- |
+| `ReactDOM.render()` | `createRoot().render()` |
+| `ReactDOM.hydrate()` | `hydrateRoot()` |
+| `ReactDOM.findDOMNode()` | `useRef` |
+| `react-dom/test-utils` (`act`) | `import { act } from 'react'` |
+| `propTypes` on function components | TypeScript |
+| `defaultProps` on function components | default parameters |
+| String refs (`ref="input"`) | `useRef` or a callback ref |
+
+<!--prettier-ignore-end-->
+
+`forwardRef`, `useContext`, and `<Context.Provider>` still work. Rules 1, 2, and 7 cover what new code uses in their place.
+
+---
+
+## Catch these in review
+
+`vp run react-doctor` reports index keys, `.filter().map()` chains, `includes()` inside a loop, independent awaits in sequence, and related `useState` calls that belong in a `useReducer`. Fix what it reports. Read for the ones below yourself.
+
+**Mutable values in effect deps.** `location.pathname`, `ref.current`, and other mutable globals in a `useEffect` deps array don't trigger a render when they change, so the effect doesn't re-run. Depend on the stable object and read the field inside, or read it inside the effect without listing it as a dep.
+
+```tsx
+// Bad
+useEffect(() => {
+    doSomething();
+}, [location.pathname]);
+
+// Good
+useEffect(() => {
+    doSomething(location.pathname);
+}, [location]);
+```
+
+**Hydration mismatches.** `new Date()`, `Math.random()`, `window.*`, or any other client-only value in JSX renders one value on the server and another on the client, and hydration throws. Set it in an effect.
+
+```tsx
+// Bad
+<p>{new Date().toLocaleDateString()}</p>;
+
+// Good
+const [now, setNow] = useState<Date | null>(null);
+useEffect(() => {
+    setNow(new Date());
+}, []);
+<p>{now?.toLocaleDateString() ?? ''}</p>;
+```
+
+**`useState(prop)` that must follow the prop.** The state keeps the first value it got. Remount with a `key` derived from the prop, or read the prop directly.
+
+**An `await` before a synchronous guard.** When the guard doesn't use the awaited value, return first and await after.
+
+**Barrel imports inside one app.** Import from the module file, like `'../store/useAuthStore'`. A barrel one folder away makes the bundler and HMR load every file it re-exports.
+
+**Components past about 200 lines.** Split out focused children. The parent holds the state, effects, and layout, and each child renders one part.
 
 ---
 
 ## React Compiler
 
-The React Compiler is **not installed** in the seedcord apps. Prefer simple, correctly-shaped components over scattering manual memo hooks "just in case."
+The apps don't run the React Compiler, so nothing memoizes for you. Add a `useMemo` or `useCallback` when a render is measurably slow or a dependency needs a stable identity.

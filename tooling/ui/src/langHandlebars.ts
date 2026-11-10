@@ -2,7 +2,7 @@ import type { LanguageRegistration } from 'shiki';
 
 const PATH = String.raw`[A-Za-z_@.][\w./@-]*`;
 
-// the text between mustaches can be any language, so this colors only the mustaches
+// this colors only the mustaches because the text between them can be any language
 export const langHandlebars: LanguageRegistration = {
     name: 'hbs',
     scopeName: 'text.hbs',

@@ -1,4 +1,4 @@
-import { describe, expect, it } from 'vitest';
+import { describe, expect, it } from 'vite-plus/test';
 
 import { compileGuideMdx } from './mdxPipeline';
 
@@ -18,7 +18,7 @@ describe('a markdown image', () => {
 });
 
 describe('the text search reads', () => {
-    it('drops markdown syntax and keeps each table row together', async () => {
+    it('removes markdown syntax and keeps each table row together', async () => {
         const code = await compileGuideMdx(
             'Use `per` with *a sliding window*.\n\n| key | means |\n| --- | --- |\n| per | who shares |\n'
         );
@@ -27,7 +27,7 @@ describe('the text search reads', () => {
         expect(code).toContain('"content": "key · means; per · who shares"');
     });
 
-    it('drops quote markers, reference links, and strikethrough', async () => {
+    it('removes quote markers, reference links, and strikethrough', async () => {
         const code = await compileGuideMdx('> See the [store][s] and ~~old~~ text.\n\n[s]: /checks/rate-limiter');
 
         expect(code).toContain('"content": "See the store and old text."');
@@ -74,7 +74,7 @@ describe('a fence caption', () => {
     }
 
     it('carries the title through to the code element', async () => {
-        const code = await compileGuideMdx(fence('title="src/commands/Ping.ts"'));
+        const code = await compileGuideMdx(fence('plain title="src/commands/Ping.ts"'));
 
         expect(code).toContain('src/commands/Ping.ts');
     });
@@ -85,14 +85,14 @@ describe('a fence caption', () => {
         expect(code).toContain('data-output');
     });
 
-    it('leaves an untagged fence unmarked', async () => {
-        const code = await compileGuideMdx(fence('title="a.ts"'));
+    it('leaves a plain fence unmarked', async () => {
+        const code = await compileGuideMdx(fence('plain title="a.ts"'));
 
         expect(code).not.toContain('data-output');
     });
 
     it('reads the word output outside the title only', async () => {
-        const code = await compileGuideMdx(fence('title="build output log.ts"'));
+        const code = await compileGuideMdx(fence('plain title="build output log.ts"'));
 
         expect(code).toContain('build output log.ts');
         expect(code).not.toContain('data-output');
@@ -123,8 +123,18 @@ describe('a fence caption', () => {
         }
     );
 
-    it('leaves an untagged fence unchecked', async () => {
-        await expect(compileGuideMdx(fence('title="a.ts"'))).resolves.not.toContain('data-twoslash');
+    it('leaves a plain fence unchecked', async () => {
+        await expect(compileGuideMdx(fence('plain title="a.ts"'))).resolves.not.toContain('data-twoslash');
+    });
+
+    it('refuses a ts fence that is neither twoslash, plain, nor output', async () => {
+        await expect(compileGuideMdx(fence('title="a.ts"'))).rejects.toThrow('add plain');
+    });
+
+    it('leaves an untagged fence in another language alone', async () => {
+        const source = ['```js title="a.js"', 'const a = 1;', '```'].join('\n');
+
+        await expect(compileGuideMdx(source)).resolves.toContain('a.js');
     });
 
     it.each(['tsx', 'typescript'])('takes the flag on a %s fence', async (lang) => {
@@ -134,7 +144,7 @@ describe('a fence caption', () => {
     });
 
     it('reads the word twoslash outside the title only', async () => {
-        const code = await compileGuideMdx(fence('title="twoslash notes.ts"'));
+        const code = await compileGuideMdx(fence('plain title="twoslash notes.ts"'));
 
         expect(code).toContain('twoslash notes.ts');
         expect(code).not.toContain('data-twoslash');

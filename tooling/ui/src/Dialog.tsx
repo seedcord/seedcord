@@ -1,9 +1,9 @@
 'use client';
 
 import * as RadixDialog from '@radix-ui/react-dialog';
+import { cn } from 'cn';
 
 import { CloseControls } from './CloseControls';
-import { cn } from './lib/cn';
 import { tw } from './lib/tw';
 import { useFocusReturn } from './lib/useFocusReturn';
 

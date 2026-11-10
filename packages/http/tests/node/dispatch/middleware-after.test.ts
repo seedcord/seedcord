@@ -3,7 +3,7 @@ import 'reflect-metadata';
 import { defineGate, InteractionKind, Notice, RegisterInteractionMiddleware, Silence } from '@seedcord/core';
 import { GatedMetadataKey, interactionMiddleware, MiddlewareRegistry } from '@seedcord/core/internal';
 import { Envapter, PortableSource } from 'envapt';
-import { afterEach, beforeEach, describe, expect, it } from 'vitest';
+import { afterEach, beforeEach, describe, expect, it } from 'vite-plus/test';
 
 import { InteractionMiddleware } from '#handlers/interaction/InteractionMiddleware';
 import { SlashHandler } from '#handlers/interaction/SlashHandler';
@@ -169,7 +169,7 @@ describe('after() on the http interaction chain', () => {
         expect(calls).toContain('First.after');
     });
 
-    it('keeps going when one after() throws', async () => {
+    it('continues when one after() throws', async () => {
         @RegisterInteractionMiddleware({ priority: 3 })
         class Angry extends InteractionMiddleware {
             public execute(): Promise<void> {

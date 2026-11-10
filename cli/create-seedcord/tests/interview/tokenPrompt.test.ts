@@ -1,5 +1,5 @@
 import { KEY, PromptTerminal, settled } from '@seedcord/cli-prompts/testing';
-import { describe, expect, it } from 'vitest';
+import { describe, expect, it } from 'vite-plus/test';
 
 import { tokenStep } from '#interview/steps/token';
 import { BOT_TOKEN, TOKEN } from '#tests/token';
@@ -16,7 +16,7 @@ describe('the token question', () => {
         await expect(answer).resolves.toBeNull();
     });
 
-    it('stays open on a paste that is not the right shape', async () => {
+    it('keeps asking after a paste that is not the right shape', async () => {
         using terminal = new PromptTerminal();
         const answer = tokenStep.ask({}, terminal.prompter);
 

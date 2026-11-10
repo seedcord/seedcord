@@ -1,6 +1,6 @@
 import { Notice, defineGate } from '@seedcord/core';
 import { DispatchContext, runHandlerGates } from '@seedcord/core/internal';
-import { describe, expect, it } from 'vitest';
+import { describe, expect, it } from 'vite-plus/test';
 
 import { Gated } from '#bDecorators/Gated';
 import { eventGateContext, interactionGateContext } from '#bot/gates/context';
@@ -50,7 +50,7 @@ describe('runHandlerGates', () => {
         ).rejects.toBeInstanceOf(Notice);
     });
 
-    it('resolves when the handler has no gates', async () => {
+    it("resolves when the handler's gate list is empty", async () => {
         class Handler extends SlashHandler<'runprobe'> {
             async execute(): Promise<void> {
                 await Promise.resolve();

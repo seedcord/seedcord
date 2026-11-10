@@ -5,7 +5,7 @@ export type Overflow = 'wrap' | 'truncate';
 export interface TableOptions {
     /**
      * Treats the first row as a header and draws a separator beneath it. The double frame draws that separator heavier.
-     * The markdown border always carries its delimiter row. Turning this off puts a blank row above it.
+     * The markdown border always has its delimiter row. Turning this off puts a blank row above it.
      * @defaultValue true
      */
     header?: boolean;
@@ -15,7 +15,7 @@ export interface TableOptions {
      */
     align?: Alignment | readonly Alignment[];
     /**
-     * Frame glyph set. `markdown` emits GFM with no outer frame.
+     * Frame glyph set. `markdown` emits GFM without an outer frame.
      * @defaultValue 'rounded'
      */
     border?: BorderStyle;
@@ -25,7 +25,7 @@ export interface TableOptions {
      */
     padding?: number;
     /**
-     * Fills a missing or empty cell so ragged rows stay aligned.
+     * Fills a missing or empty cell so ragged rows line up.
      * @defaultValue ''
      */
     emptyCell?: string;
@@ -39,7 +39,7 @@ export interface TableOptions {
     maxWidth?: number;
     /**
      * How an over-wide cell is handled once maxWidth is set. `wrap` word-wraps onto multiple lines, `truncate` cuts with a trailing ellipsis.
-     * A GFM cell holds one line. The markdown border truncates whatever this says.
+     * A GFM cell holds one line. The markdown border truncates whatever this specifies.
      * @defaultValue 'wrap'
      */
     overflow?: Overflow;

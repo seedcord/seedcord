@@ -28,7 +28,7 @@ type TypeContainer = ts.ClassDeclaration | ts.InterfaceDeclaration | ts.EnumDecl
 
 const joinName = (prefix: string, name: string): string => (prefix ? `${prefix}.${name}` : name);
 
-// api extractor records a declaration's source as a path into the dist rollup and drops the line.
+// api extractor records a declaration's source as a path into the dist rollup and omits the line.
 // this walks the package's `src` with the compiler API and keys each position the way the adapter
 // keys a node, `Class.member`.
 export class SourceIndexer {
@@ -110,9 +110,9 @@ export class SourceIndexer {
         }
     }
 
-    // A top-level export with no declaration under this `src` came from another `packages/<x>/`.
-    // API Extractor omits those without bundling, so record the declaring package and let the
-    // umbrella overview list them.
+    // A top-level export without a declaration under this `src` came from another `packages/<x>/`.
+    // Record the declaring package and let the umbrella overview list them because API Extractor
+    // omits those without bundling.
     private recordReexport(name: string, decls: readonly ts.Declaration[]): void {
         const owner = this.foreignOwner(decls);
         if (!owner || this.seenReexport.has(name)) return;
@@ -184,7 +184,7 @@ export class SourceIndexer {
     private recordContainer(node: TypeContainer, prefix: string, exportedKeys: ReadonlySet<string>): void {
         if (!node.name) return;
         const qualifiedName = joinName(prefix, node.name.text);
-        // the symbol walk already recorded the exported class. a second one under that name is another build's.
+        // the symbol walk has already recorded the exported class. a second one under that name is another build's.
         if (exportedKeys.has(qualifiedName)) return;
         this.record(qualifiedName, node);
         for (const member of node.members) {

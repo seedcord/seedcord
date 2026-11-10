@@ -1,7 +1,7 @@
 import { execFileSync } from 'node:child_process';
 import { stripVTControlCharacters } from 'node:util';
 
-import { describe, expect, it } from 'vitest';
+import { describe, expect, it } from 'vite-plus/test';
 
 import { PackageManager } from '#cli/PackageManager';
 import { parseInput } from '#cli/parseInput';
@@ -125,15 +125,15 @@ describe('dashboardToggles', () => {
         expect(dashboardToggles(['members']).join('\n')).toContain('https://discord.com/developers/applications');
     });
 
-    it('says nothing on http, which has no intents', () => {
+    it("says nothing on http, which doesn't have intents", () => {
         expect(dashboardToggles([])).toEqual([]);
     });
 });
 
 describe('reproducingCommand', () => {
-    it('reads back with no test servers through a shell that drops empty arguments', () => {
+    it('reads back without test servers through a shell that removes empty arguments', () => {
         const command = reproducingCommand({ ...HTTP, token: null }, 'pnpm');
-        // windows powershell 5.1 passes no empty argument to a native program
+        // windows powershell 5.1 doesn't pass an empty argument to a native program
         const [, ...args] = shellWordsAfter('pnpm create', command).filter((word) => word !== '');
 
         expect(parseInput(args)).toMatchObject({ testingGuilds: [], runtime: 'server', token: null });
@@ -168,7 +168,7 @@ describe('reproducingCommand', () => {
 
     it('answers every step a re-run would ask', () => {
         const command = reproducingCommand(HTTP, 'pnpm');
-        // the directory goes in as the positional argument
+        // the directory is the positional argument
         const flagged = STEPS.filter((step) => step.flag.name !== 'dir' && step.skip?.(HTTP) !== true);
 
         for (const step of flagged) {

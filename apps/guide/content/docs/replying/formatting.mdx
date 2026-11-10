@@ -7,7 +7,7 @@ Your handler works in ids, milliseconds, and raw numbers. The person reading the
 
 Those conversions are in `@seedcord/utils`, which your transport package re-exports. Everything here imports from `@seedcord/gateway` or `@seedcord/http` alongside the rest.
 
-## A snowflake carries its own timestamp
+## A snowflake has its own timestamp
 
 Every Discord id encodes the moment it was created, in the top 42 bits. [`timestampFromSnowflake`](ref:utils/timestampFromSnowflake) reads it back off any id, a user's, a guild's, a message's, or an interaction's.
 
@@ -88,7 +88,7 @@ roundToDenomination(12_345_678, { suffixes: ['k'] }); // '12345.7k'
 
 Anything below 1000 comes back unchanged. `precision` defaults to `1`. `suffixes` replaces the default `['K', 'M', 'B', 'T', 'Q']` with a list of any length. Shortening stops at the last suffix you give it, which leaves five digits in front of the `k` above.
 
-999,999 rounds to 1000K. A label reading `1000K` looks wrong, so it carries to `1M`.
+999,999 rounds to 1000K. A label reading `1000K` looks wrong, so it rolls over to `1M`.
 
 Shortening costs you precision, since 1234 and 1240 both read as `1.2K`. Keep the digits where the exact number is the point, as in a currency balance.
 

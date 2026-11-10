@@ -2,7 +2,7 @@ import { randomUUID } from 'node:crypto';
 import { cp, readdir, readFile, rm } from 'node:fs/promises';
 import { basename, join } from 'node:path';
 
-import { onTestFinished } from 'vitest';
+import { onTestFinished } from 'vite-plus/test';
 
 export const FLAT_BOT = join(import.meta.dirname, '../../fixtures/flat-bot');
 export const GATEWAY_BOT = join(import.meta.dirname, '../../fixtures/gateway-bot');

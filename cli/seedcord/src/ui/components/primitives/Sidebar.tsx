@@ -149,7 +149,7 @@ export function Sidebar({
             <Box flexShrink={0}>
                 <Banner version={version} />
             </Box>
-            {/* compact has no room for the status beside the open chips */}
+            {/* compact doesn't have room for the status beside the open chips */}
             {view === 'shown' ? null : (
                 <Box flexShrink={0} marginTop={1}>
                     <StatusBlock state={state} uptimeMs={uptimeMs} withTarget />

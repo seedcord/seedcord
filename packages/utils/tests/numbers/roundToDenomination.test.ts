@@ -1,4 +1,4 @@
-import { describe, it, expect } from 'vitest';
+import { describe, it, expect } from 'vite-plus/test';
 
 import { roundToDenomination } from '#src/numbers/roundToDenomination';
 
@@ -16,7 +16,7 @@ describe('roundToDenomination', () => {
         expect(roundToDenomination(12_345)).toBe('12.3K');
     });
 
-    it('drops the digits two values share at the given precision', () => {
+    it('removes the digits two values share at the given precision', () => {
         expect(roundToDenomination(1234)).toBe(roundToDenomination(1240));
     });
 

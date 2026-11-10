@@ -2,7 +2,7 @@ import { EventEmitter } from 'node:events';
 
 import { SlashCommandBuilder } from '@discordjs/builders';
 import { ApplicationCommandType, Routes } from 'discord-api-types/v10';
-import { describe, it, expect, vi } from 'vitest';
+import { describe, it, expect, vi } from 'vite-plus/test';
 
 import { Commands } from '#src/commands/CommandInjector';
 import { CommandRegistry } from '#src/commands/CommandRegistry';
@@ -99,7 +99,7 @@ describe('CommandRegistry.setCommands', () => {
         expect(mentions.ping?.mention).toBe('</ping:123>');
     });
 
-    it('puts only the guild route when the bot has no global commands', async () => {
+    it("puts only the guild route when the bot doesn't have global commands", async () => {
         const put = vi.fn().mockResolvedValue(deployedAs('g-1', 'config'));
         const registry = registryWith(put);
         registry.scopedCommands.set('111', [new SlashCommandBuilder().setName('config').setDescription('Config')]);

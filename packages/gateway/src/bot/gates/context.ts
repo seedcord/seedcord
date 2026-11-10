@@ -64,7 +64,7 @@ export function eventGateContext(
         userId: actor.user?.id ?? null,
         guildId: actor.guild?.id ?? null,
         channelId: actor.channelId,
-        // the cache carries the everyone role (id equals the guild id), filtered out to match the interaction shape
+        // the cache has the everyone role (id equals the guild id), filtered out to match the interaction shape
         memberRoleIds: actor.member ? [...actor.member.roles.cache.keys()].filter((id) => id !== actor.guild?.id) : [],
         memberPermissions: actor.member?.permissions.bitfield ?? null,
         memberGuildPermissions: actor.member?.permissions.bitfield ?? null,

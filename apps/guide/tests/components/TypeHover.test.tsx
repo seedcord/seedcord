@@ -1,6 +1,6 @@
 import { render, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
-import { describe, expect, it } from 'vitest';
+import { describe, expect, it } from 'vite-plus/test';
 
 import { TypeHover } from '#components/TypeHover';
 
@@ -102,7 +102,7 @@ describe('the type hover', () => {
             expect(block.querySelectorAll(`${TOKEN_SELECTOR}[tabindex]`)).toHaveLength(0);
         });
 
-        it('drops the tab stop shiki puts inside the type', async () => {
+        it('removes the tab stop shiki puts inside the type', async () => {
             const block = renderBlock();
             block.focus();
 

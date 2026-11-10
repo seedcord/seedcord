@@ -1,4 +1,4 @@
-import { beforeAll, describe, expect, it } from 'vitest';
+import { beforeAll, describe, expect, it } from 'vite-plus/test';
 
 import { MOCK_PACKAGE_FULL_NAME } from './utils/constants';
 import { getEngine, getNodeBySlug } from './utils/test-helpers';
@@ -22,7 +22,7 @@ const HASH_GARBAGE = /-[a-z0-9]{6,}$/;
 
 const TOP_LEVEL = ['mock-class', 'mock-interface', 'mock-enum', 'mock-function', 'mock-function-with-rest'];
 
-describe('URL spec — engine signature fragments', () => {
+describe('URL spec for engine signature fragments', () => {
     beforeAll(async () => {
         engine = await getEngine();
     });

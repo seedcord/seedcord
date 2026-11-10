@@ -100,7 +100,7 @@ export class Bus extends TypedEventEmitter<SubscriptionTuples> {
         return new Set([...this.#subscribersMap.values()].flat().map((entry) => entry.ctor)).size;
     }
 
-    /** @internal registration already skipped every reporter with no url set */
+    /** @internal registration has already skipped every reporter without a url set */
     public async [VerifyWebhooks](): Promise<void> {
         const missing: string[] = [];
         await Promise.all(
@@ -136,10 +136,10 @@ export class Bus extends TypedEventEmitter<SubscriptionTuples> {
     /**
      * Publishes an event to its subscribers and native listeners.
      *
-     * Fire-and-forget. Subscriber handlers run asynchronously and this returns before they finish.
+     * Subscriber handlers run asynchronously and this returns before they finish.
      * Errors thrown by a subscriber or by an `on()` listener are caught and logged, never surfaced
      * here. One throwing listener does not stop the others. Subscribers on one key run concurrently
-     * and carry no ordering guarantee. A `'once'` subscriber is marked as executed when it starts,
+     * and don't carry an ordering guarantee. A `'once'` subscriber is marked as executed when it starts,
      * even if it throws. It never runs twice.
      *
      * The framework's own keys are excluded. Subscribe to those and listen with `on`. The framework
@@ -270,7 +270,7 @@ export class Bus extends TypedEventEmitter<SubscriptionTuples> {
     }
 }
 
-// every caller already checked that the Subscribe metadata is there
+// every caller has already checked that the Subscribe metadata is there
 function registrationsFor(ctor: StoredSubscriberCtor): SubscriberRegistration[] {
     const entries = Reflect.getMetadata(SubscribeMetadataKey, ctor) as SubscribeMetadataEntry[];
     return entries.map(({ key, frequency }) => ({ key, frequency, ctor }));

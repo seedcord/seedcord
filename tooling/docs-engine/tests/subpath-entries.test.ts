@@ -1,7 +1,7 @@
 import { readFileSync } from 'node:fs';
 import { resolve } from 'node:path';
 
-import { beforeAll, describe, expect, it } from 'vitest';
+import { beforeAll, describe, expect, it } from 'vite-plus/test';
 
 import { MOCK_DIR, MOCK_PACKAGE_FULL_NAME } from './utils/constants';
 import { getEngine, getMockPackage } from './utils/test-helpers';
@@ -25,13 +25,13 @@ describe('subpath entry points', () => {
     });
 
     // the page badge renders `entries` as the import path a reader types
-    it('claims no entry for a symbol the subpath references without exporting', () => {
+    it("doesn't claim an entry for a symbol the subpath references without exporting", () => {
         const node = engine.getNodeBySlug(MOCK_PACKAGE_FULL_NAME, 'extra-only');
         expect(node?.isExported).toBe(false);
         expect(node?.entries).toBeUndefined();
     });
 
-    // the root model carries PromotedShape as a forgotten declaration, and `./extra` exports it
+    // the root model has PromotedShape as a forgotten declaration, and `./extra` exports it
     it('promotes a forgotten root node when a subpath exports the same symbol', () => {
         const node = engine.getNodeBySlug(MOCK_PACKAGE_FULL_NAME, 'promoted-shape');
         expect(node?.isExported).toBe(true);
@@ -47,7 +47,7 @@ describe('subpath entry points', () => {
         expect(node?.entries).toEqual(['.', './deep-entry', './deep/entry', './extra']);
     });
 
-    it('records an overloaded symbol once per entry, not once per overload', () => {
+    it('records an overloaded symbol once per entry', () => {
         const node = engine.getNodeBySlug(MOCK_PACKAGE_FULL_NAME, 'mock-function');
         expect(node?.signatures.length).toBeGreaterThan(1);
         expect(node?.entries).toEqual(['.', './extra']);

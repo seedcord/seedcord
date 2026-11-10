@@ -31,11 +31,10 @@ export default createRule({
         },
         messages: {
             rawCustomId:
-                'Hand-written customId. Build it through the typed CustomId codec (CustomId.encode()) so its route and params stay in sync.'
+                'Hand-written customId. Build it through the typed CustomId codec (CustomId.encode()) so the handler can decode its route and params.'
         },
         schema: []
     },
-    defaultOptions: [],
     create(context) {
         const services = ESLintUtils.getParserServices(context);
         const checker = services.program.getTypeChecker();

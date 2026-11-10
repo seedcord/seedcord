@@ -3,7 +3,7 @@ import 'reflect-metadata';
 import { InteractionKind } from '@seedcord/core';
 import { emptyRouteMaps, interactionMiddleware, MiddlewareRegistry } from '@seedcord/core/internal';
 import { Envapter, PortableSource } from 'envapt';
-import { afterEach, describe, expect, it, vi } from 'vitest';
+import { afterEach, describe, expect, it, vi } from 'vite-plus/test';
 
 import { InteractionEngine } from '#src/InteractionEngine';
 import { testCore } from '#tests/helpers/core';
@@ -20,7 +20,7 @@ afterEach(() => {
     Envapter.useSource(new PortableSource({}));
 });
 
-// the router is the first thing past the ack guard, so a throw there reaches the root catch
+// a throw in the router reaches the root catch because the router is the first thing past the ack guard
 async function routerThrows(thrown: unknown): Promise<{
     response: Response;
     seen: SubscriptionData<'unhandledInteractionError'>[];
@@ -50,7 +50,7 @@ describe('the http root catch', () => {
     it('publishes unhandledInteractionError when routing throws past the boundary', async () => {
         const { response, seen } = await routerThrows(new Error('router exploded'));
 
-        // the ack still goes out because a dispatch throw never stops it
+        // handle() still returns the ack because a dispatch throw never stops it
         expect(response.status).toBe(202);
         expect(seen).toHaveLength(1);
         expect(seen[0]?.error.message).toBe('router exploded');

@@ -1,6 +1,6 @@
 import { TooltipProvider } from '@seedcord/ui';
 import { render, screen } from '@testing-library/react';
-import { describe, expect, it } from 'vitest';
+import { describe, expect, it } from 'vite-plus/test';
 
 import { PageNav } from '#components/PageNav';
 
@@ -32,13 +32,13 @@ describe('PageNav', () => {
         expect(screen.getByText('Previous · Gates')).toBeInTheDocument();
     });
 
-    it('drops the tab from a page named after it', () => {
+    it('omits the tab from a page named after it', () => {
         renderNav({ next: NEXT });
 
         expect(screen.getByText('Next')).toBeInTheDocument();
     });
 
-    it('leaves out the direction a page has no neighbour in', () => {
+    it('leaves out the direction where a page lacks a neighbour', () => {
         renderNav({ next: NEXT });
 
         expect(screen.queryByText(/Previous/)).not.toBeInTheDocument();

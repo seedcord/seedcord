@@ -1,6 +1,6 @@
 import { ContextMenuCommandBuilder, SlashCommandBuilder } from '@discordjs/builders';
 import { ApplicationCommandType } from 'discord-api-types/v10';
-import { describe, expect, it } from 'vitest';
+import { describe, expect, it } from 'vite-plus/test';
 
 import { slashRouteLeaves } from '#src/commands/slashRouteLeaves';
 
@@ -46,7 +46,7 @@ describe('slashRouteLeaves', () => {
         expect(slashRouteLeaves([ban, ban, ban])).toEqual(new Set(['ban']));
     });
 
-    it('skips a context-menu command, which has no slash route', () => {
+    it("skips a context-menu command, which doesn't have a slash route", () => {
         const report = new ContextMenuCommandBuilder().setName('Report').setType(ApplicationCommandType.Message);
         expect(slashRouteLeaves([report])).toEqual(new Set());
     });

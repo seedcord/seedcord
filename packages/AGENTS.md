@@ -8,11 +8,11 @@ Most of these publish.
 
 ## The exports map is the surface
 
-A package's `exports` block in its `package.json` decides what consumers can import. Adding a file to `src/` publishes nothing until the map lists it.
+A package's `exports` block in its `package.json` sets what consumers can import. Adding a file to `src/` publishes nothing until the map lists it.
 
-`./internal` entries carry framework wiring between packages. A symbol reachable only through one has no outside consumer. It gets no TSDoc block. [Changesets](#changesets) says when a change to one still needs a changeset.
+`./internal` entries carry framework wiring between packages. Nothing outside the package consumes a symbol reachable only through one, so it skips the TSDoc block. [Changesets](#changesets) covers when a change to one still needs a changeset.
 
-Export a symbol when a caller has to write its name: in a variable annotation, a parameter or return type, or an `extends` clause. A helper type that only appears as the shape of another exported type's field stays internal. The parent's declaration still resolves it in the emitted `.d.ts`.
+Export a symbol when a caller has to write its name: in a variable annotation, a parameter or return type, or an `extends` clause. A helper type that only appears as the shape of another exported type's field doesn't need an export. The parent's declaration still resolves it in the emitted `.d.ts`.
 
 Before adding `export`, confirm code outside the file uses the symbol. Before removing one, grep every consuming surface including markdown and generated output.
 
@@ -30,7 +30,7 @@ Scaffold with `turbo gen package`. Then follow the wiring checklist in `turbo/ge
 - **No `as unknown as T`.** Fix the declaration, write a guard, or change the API.
 - **Derive, never restate.** A constructor shape is `TypedConstructor<typeof X>` (see `packages/gateway/src/handlers/constructors.ts`). A member union comes from `keyof`, `TypedExtract`, an indexed access, or a template-literal map over the owning enum. A narrowed copy uses `Pick` or `TypedOmit`.
 - **Check `@seedcord/types` first** for a project alias. Then `type-fest` for a structural transform. A cast is rarely the answer.
-- `?.` and `??` belong on genuinely optional branches. Reaching for them to quiet an error hides a broken assumption.
+- `?.` and `??` belong on genuinely optional branches. Using them to quiet an error hides a broken assumption.
 - **`#` hides plumbing and state inside a class users can reach.** They reach it through the `exports` map, or through a public field typed as it. Every other class uses `private`, even when its file exports it.
 
 The shared `tsconfig` turns on `exactOptionalPropertyTypes`. An optional property declared `foo?: string` rejects an explicit `undefined`. Write `foo?: string | undefined` when a caller passes one through.
@@ -39,7 +39,7 @@ The shared `tsconfig` turns on `exactOptionalPropertyTypes`. An optional propert
 
 ## Errors
 
-In a package that depends on `@seedcord/errors`, every throw carries a registered code from `SeedcordErrorCode`. Message strings get reworded between releases. The codes stay, so branch on the code. A small library that does not depend on seedcord throws its own `Error` subclass, like `ComponentEmbedError` in `discord-component-embed`.
+In a package that depends on `@seedcord/errors`, every throw has a registered code from `SeedcordErrorCode`. Message strings get reworded between releases. The codes don't change, so branch on the code. A small library that does not depend on seedcord throws its own `Error` subclass, like `ComponentEmbedError` in `discord-component-embed`.
 
 `isSeedcordError(error)` narrows to any seedcord error. Passing the class name and a code narrows to one specific failure.
 
@@ -49,16 +49,16 @@ Translate a third-party throw into a seedcord error before it reaches a consumer
 
 ## Changesets
 
-Write one with `pnpm cs` when you change a published package in a way that someone on the latest release will notice. Skip it when you fix code that isn't on `main` yet. That bug never shipped. `git log origin/main -- <path>` shows whether `main` has the file.
+Write one with `vp run cs` when you change a published package in a way that someone on the latest release will notice. Skip it when you fix code that isn't on `main` yet. That bug never shipped. `git log origin/main -- <path>` shows whether `main` has the file.
 
 A changeset is one or two plain sentences saying what changed for the user. Skip the sub-changes that rode along, since the changelog reader has the diff. Mark a breaking change with a bold `**BREAKING:**` prefix line.
 
-A change to an `./internal` entry gets a patch changeset once another package imports from it. Without one the package doesn't publish, and the importing package ships asking for an export the registry doesn't have. Write one line saying which package reads it now, like "`@seedcord/logger` and `seedcord` now read `isPlainObject` from here."
+A change to an `./internal` entry gets a patch changeset once another package imports from it. Without one the package doesn't publish, and the importing package ships asking for an export the registry doesn't have. Write one line saying which package reads it now, like "`@seedcord/logger` and `seedcord` now read `isPlainObject` from here." Skip it when the package already has a pending changeset, because that one publishes the package anyway.
 
 ---
 
 ## Tests
 
-Tests live in `<package>/tests/` mirroring `src/`. Run `pnpm check --filter=<package>`.
+Tests live in `<package>/tests/` mirroring `src/`. Run `vp run check --filter=<package>`.
 
 `id` on a discord.js structure is a prototype getter, so build a stub with `Object.create(proto)`. A plain object literal leaves `id` undefined.

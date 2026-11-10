@@ -4,7 +4,7 @@ import { Command } from '@commander-js/extra-typings';
 import { KEY, PromptTerminal } from '@seedcord/cli-prompts/testing';
 import { paint, SeedcordErrorCode } from '@seedcord/errors';
 import { Routes } from 'discord-api-types/v10';
-import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vite-plus/test';
 
 import { CommandsCommand } from '#commands/commands/CommandsCommand';
 import { DeployRunner } from '#commands/commands/deploy/DeployRunner';
@@ -17,7 +17,7 @@ import { silentLogger } from '#tests/silentLogger';
 
 import type { FakeProject } from '#tests/commands/commands/fakeBot';
 import type { Prompter } from '@seedcord/cli-prompts';
-import type { Mock } from 'vitest';
+import type { Mock } from 'vite-plus/test';
 
 const GUILD_PAGE = 200;
 
@@ -235,7 +235,7 @@ describe('seedcord commands clean and purge, off a terminal', () => {
         expect(gets).toContain(Routes.applicationGuildCommands(APP_ID, `g${GUILD_PAGE}`));
     });
 
-    it('prints CliNoScopeGiven with no stack when clean gets no guilds', async () => {
+    it('prints CliNoScopeGiven without a stack when clean gets zero guilds', async () => {
         using output = captureOutput();
 
         await run(['clean', '--yes']);

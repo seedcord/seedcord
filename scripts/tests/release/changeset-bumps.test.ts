@@ -1,11 +1,11 @@
-import { describe, expect, it } from 'vitest';
+import { describe, expect, it } from 'vite-plus/test';
 
 import { changesetPathsFromFiles, maxBump } from '#src/release/changeset-bumps';
 
 const changeset = (frontmatter: string): string => `---\n${frontmatter}\n---\n\nSome description.`;
 
 describe('maxBump', () => {
-    it('returns null when there are no changesets', () => {
+    it('returns null when the changeset list is empty', () => {
         expect(maxBump([])).toBeNull();
     });
 
@@ -45,7 +45,7 @@ describe('maxBump', () => {
 });
 
 describe('changesetPathsFromFiles', () => {
-    it('yields nothing for a PR that adds no changeset (a CI-only PR)', () => {
+    it('yields nothing for a PR that adds zero changesets (a CI-only PR)', () => {
         const files = [
             { filename: '.github/workflows/checks.yml', status: 'modified' },
             { filename: '.github/workflows/coverage.yml', status: 'modified' }

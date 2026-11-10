@@ -21,7 +21,7 @@ Your bot sends one request per scope. A scope is the list of global commands, or
 
 {/* prettier-ignore-end */}
 
-A started bot deploys on every start, and Discord [rate-limits](https://docs.discord.com/developers/topics/rate-limits) replacing its global commands. In practice that's twice a minute, so a third restart inside that minute has to wait. The log says how many seconds Discord makes it wait. After 75 seconds startup stops waiting and fails.
+A started bot deploys on every start, and Discord [rate-limits](https://docs.discord.com/developers/topics/rate-limits) replacing its global commands. In practice that's twice a minute, so a third restart inside that minute has to wait. The log shows how many seconds Discord makes it wait. After 75 seconds startup stops waiting and fails.
 
 The [`seedcord dev`](/tooling/dev) row depends on its refresh prompt, **Refresh commands? (y/n)**, which shows when you save a command file. If you answer `n`, neither Discord nor the running bot receives the change, so restart the bot to load it.
 
@@ -29,7 +29,7 @@ The Worker row reads never because a Worker sends nothing to Discord. It reads t
 
 ## Test servers
 
-A global command takes a while to appear, and a half-built command shouldn't reach every server your bot is in. To deploy every bare [`@RegisterCommand()`](ref:core/RegisterCommand) command to your test servers only, list them under `commands.guilds`. The command appears there right away. [Commands](/commands#one-list-of-servers-for-every-command) shows the config and the other decorator forms.
+A global command takes a while to appear, and a half-built command shouldn't reach every server that your bot is in. To deploy every bare [`@RegisterCommand()`](ref:core/RegisterCommand) command to your test servers only, list them under `commands.guilds`. The command appears there right away. [Commands](/commands#one-list-of-servers-for-every-command) shows the config and the other decorator forms.
 
 An empty list, or no `guilds` key, deploys those commands globally. A bot from `create-seedcord` reads the list from `TESTING_GUILD_IDS` in `.env`, a comma-separated list of ids.
 
@@ -43,7 +43,7 @@ Run your production bot as [its own application](/discord-application#make-a-sec
 
 A bot with only guild commands has an empty global list. Sending it would wipe the global commands that another deploy put there, so a bot never sends an empty global scope.
 
-That means a deploy can't remove your _last_ global command. Your bot sends nothing, so Discord keeps the copy it has. A guild scope with no commands isn't sent at start either.
+That means a deploy can't remove your _last_ global command. Your bot sends nothing, so Discord keeps the copy it has. A guild scope without commands isn't sent at start either.
 
 `seedcord dev` treats a guild differently. If you delete the last command file for a server and answer `y` to the refresh prompt, dev sends that server an empty list, which clears it. The global scope is the only one dev never clears.
 
@@ -66,11 +66,11 @@ Skipped the global commands because they match the last deploy.
 
 When the log shows that line, dev compared only names. Say you deployed other versions of the same commands from another checkout. The names match, so your dev run skips them and Discord keeps the other versions. Run `seedcord commands deploy --force` to deploy anyway, or delete `.seedcord/deployed-commands.json`.
 
-`seedcord commands deploy` writes the same file. If you deploy from the CLI, the next `seedcord dev` run skips whatever you just sent. A started bot reads no file and deploys every scope that has commands.
+`seedcord commands deploy` writes the same file. If you deploy from the CLI, the next `seedcord dev` run skips whatever you just sent. A started bot doesn't read the file and deploys every scope that has commands.
 
 ## When Discord refuses a deploy
 
-The bot fails to start, and the error shows Discord's reply. A 401 means `DISCORD_BOT_TOKEN` is wrong or was reset. A 400 means a command broke one of Discord's rules for names, descriptions or options, and Discord's reply says which field.
+The bot fails to start, and the error shows Discord's reply. A 401 means `DISCORD_BOT_TOKEN` is wrong or was reset. A 400 means a command broke one of Discord's rules for names, descriptions or options, and Discord's reply shows which field.
 
 ### Discord refused the global command deploy
 

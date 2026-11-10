@@ -1,5 +1,5 @@
 import { setDevFiles } from '@seedcord/utils/internal';
-import { describe, it, expect, afterEach } from 'vitest';
+import { describe, it, expect, afterEach } from 'vite-plus/test';
 
 import { CoordinatedShutdown } from '#node/Lifecycle/CoordinatedShutdown';
 import { CoordinatedStartup } from '#src/lifecycle/CoordinatedStartup';
@@ -7,7 +7,7 @@ import { TestServerHost } from '#tests/utils/TestServerHost';
 
 import type { Config } from '@seedcord/types';
 
-// justified: startup reads config.errors and nothing else on Config
+// justified: startup reads only config.errors on Config
 const config = { errors: { catchProcessErrors: false } } as Config;
 
 function signalHost(): TestServerHost {

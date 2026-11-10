@@ -1,4 +1,4 @@
-import { expectTypeOf } from 'vitest';
+import { expectTypeOf } from 'vite-plus/test';
 
 import type { IntentName, PartialName } from '#interview/capabilities';
 import type { GatewayIntentBits, Partials } from 'discord.js';

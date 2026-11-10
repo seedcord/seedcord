@@ -4,7 +4,7 @@ import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 
 import { SeedcordErrorCode, isSeedcordError } from '@seedcord/errors';
-import { afterEach, assert, describe, expect, it, onTestFinished, vi } from 'vitest';
+import { afterEach, assert, describe, expect, it, onTestFinished, vi } from 'vite-plus/test';
 
 import { importInstance } from '#core/modules/importInstance';
 import { openModuleLoader } from '#core/modules/openModuleLoader';
@@ -73,7 +73,7 @@ async function writeEntry(root: string, specifier: string): Promise<string> {
 }
 
 describe('openModuleLoader', () => {
-    it('opens no hmr websocket while another process holds its port', async () => {
+    it("doesn't open an hmr websocket while another process holds its port", async () => {
         await holdViteHmrPort();
         const logged = vi.spyOn(console, 'error').mockImplementation(() => undefined);
         const root = await project();

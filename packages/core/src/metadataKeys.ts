@@ -18,7 +18,7 @@ export enum InteractionKind {
 }
 
 /**
- * The interaction kinds a middleware can filter on. Autocomplete carries no reply target.
+ * The interaction kinds a middleware can filter on. Autocomplete doesn't carry a reply target.
  */
 export type MiddlewareKind = TypedExclude<InteractionKind, InteractionKind.Autocomplete>;
 

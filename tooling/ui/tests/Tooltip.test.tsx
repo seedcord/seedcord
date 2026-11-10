@@ -1,5 +1,5 @@
 import { act, fireEvent, render, screen } from '@testing-library/react';
-import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vite-plus/test';
 
 import { Tooltip, TooltipProvider } from '#src/Tooltip';
 
@@ -37,7 +37,7 @@ function renderTooltip({
 }
 
 function hoverTrigger(trigger: HTMLElement): void {
-    // justified: Radix opens on pointerMove (pointerType !== 'touch'); user-event's hover schedules through its own delay queue and races Radix's timer logic under fake timers, so drive pointer events directly via fireEvent.
+    // justified: Radix opens on pointerMove (pointerType !== 'touch'); call fireEvent for the pointer events directly because user-event's hover schedules through its own delay queue and races Radix's timer logic under fake timers.
     fireEvent.pointerMove(trigger, { pointerType: 'mouse' });
 }
 
@@ -175,7 +175,7 @@ describe('Tooltip aria-describedby linkage', () => {
         expect(tooltip.id).toBe(describedBy);
     });
 
-    it('drops aria-describedby again once the trigger is unhovered', () => {
+    it('removes aria-describedby again once the trigger is unhovered', () => {
         renderTooltip({ providerProps: { delayDuration: 0 } });
         const trigger = screen.getByRole('button', { name: 'Trigger' });
         hoverTrigger(trigger);

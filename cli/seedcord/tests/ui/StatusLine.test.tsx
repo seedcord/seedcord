@@ -1,6 +1,6 @@
 import { render } from 'ink-testing-library';
 import React from 'react';
-import { describe, expect, it } from 'vitest';
+import { describe, expect, it } from 'vite-plus/test';
 
 import { StatusLine } from '#ui/components/primitives/StatusLine';
 import { noticesOf } from '#ui/notices';
@@ -56,7 +56,7 @@ describe('StatusLine', () => {
         expect(frameOf(store)).toContain('2 commands updated');
     });
 
-    it('counts the notices it has no room to name', () => {
+    it("counts the notices that don't fit on the line", () => {
         const store = running();
         store.setError(new Error('boom'));
         store.apply({ type: 'command-update-prompt', files: ['a.ts'] });

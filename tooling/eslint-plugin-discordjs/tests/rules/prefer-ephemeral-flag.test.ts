@@ -41,7 +41,7 @@ ruleTester.run('prefer-ephemeral-flag', rule, {
     ],
     invalid: [
         {
-            // autofixed because MessageFlags is imported and there is no existing flags key
+            // autofixed because MessageFlags is imported and the object doesn't have a flags key yet
             code: dedent`
                 import { ChatInputCommandInteraction, MessageFlags } from 'discord.js';
                 declare const interaction: ChatInputCommandInteraction;
@@ -108,7 +108,7 @@ ruleTester.run('prefer-ephemeral-flag', rule, {
             errors: [{ messageId: 'deprecated' }]
         },
         {
-            // MessageFlags is not imported, so the flag stays but no fix is applied
+            // the rule reports without a fix because MessageFlags isn't imported
             code: dedent`
                 import { ChatInputCommandInteraction } from 'discord.js';
                 declare const interaction: ChatInputCommandInteraction;

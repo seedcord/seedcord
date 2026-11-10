@@ -1,5 +1,5 @@
 import { SeedcordErrorCode } from '@seedcord/errors';
-import { beforeEach, describe, expect, it } from 'vitest';
+import { beforeEach, describe, expect, it } from 'vite-plus/test';
 
 import { RegisterInteractionMiddleware } from '#decorators/middleware';
 import { interactionMiddleware, MiddlewareRegistry } from '#src/dispatch/MiddlewareRegistry';
@@ -94,7 +94,7 @@ describe('MiddlewareRegistry', () => {
         for (const kind of kinds) expect(names(registry.chainFor(kind))).toEqual(['Everywhere']);
     });
 
-    it('drops a class from every chain on unregister', () => {
+    it('removes a class from every chain on unregister', () => {
         const audit = middleware('Audit');
         registry.register(audit);
         registry.unregister(audit);

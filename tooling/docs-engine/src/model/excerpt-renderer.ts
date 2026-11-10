@@ -5,8 +5,8 @@ import { referenceFromCanonical } from '#model/canonical-ref';
 import type { InlineType, SigPart } from '#src/types';
 import type { Excerpt, ExcerptToken } from '@microsoft/api-extractor-model';
 
-// api extractor flattens these into plain Content text, so re-wrap them as `ref` parts to keep the
-// consumer's resolveHref linking them to MDN and the TS handbook
+// re-wrap these as `ref` parts because api extractor flattens them into plain Content text, and the
+// consumer's resolveHref needs the parts to link them to MDN and the TS handbook
 const INTRINSICS = new Set([
     'string',
     'number',
@@ -85,8 +85,8 @@ export function tokensToSigParts(tokens: readonly ExcerptToken[]): SigPart[] {
     for (const token of tokens) {
         if (token.kind === ExcerptTokenKind.Reference && token.canonicalReference) {
             // AE appends `$N` when two same-named symbols are in scope (winston `Logger` alongside a
-            // package `Logger` becomes `Logger$1`). strip it from the display text only. `ref.name` stays
-            // byte-exact so the resolver's name fallback never collides with a documented same-named node.
+            // package `Logger` becomes `Logger$1`). strip it from the display text only. `ref.name` keeps
+            // the `$N` so the resolver's name fallback never collides with a documented same-named node.
             parts.push({
                 kind: 'ref',
                 text: token.text.replace(/\$\d+$/, ''),

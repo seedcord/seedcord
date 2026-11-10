@@ -1,18 +1,20 @@
 {
     "name": "@seedcord/ui",
     "version": "0.2.2",
-    "engines": {
-        "node": "^24.22.1 || >=26.12.1",
-        "bun": ">=1.4.2"
-    },
     "private": true,
-    "type": "module",
     "description": "Internal UI primitives for seedcord apps (docs, guide, home)",
     "repository": {
         "type": "git",
         "url": "https://github.com/seedcord/seedcord.git",
         "directory": "tooling/ui"
     },
+    "files": [
+        "dist",
+        "src/styles",
+        "package.json",
+        "LICENSE"
+    ],
+    "type": "module",
     "types": "./dist/index.d.mts",
     "exports": {
         ".": {
@@ -28,34 +30,16 @@
         "./styles/globals.css": "./src/styles/globals.css",
         "./styles/tokens.css": "./src/styles/tokens.css"
     },
-    "files": [
-        "dist",
-        "src/styles",
-        "package.json",
-        "LICENSE"
-    ],
     "scripts": {
-        "build": "tsdown",
-        "dev": "tsdown --watch",
+        "build": "vp pack",
+        "dev": "vp pack --watch",
         "clean": "rm -rf dist",
         "lint": "eslint '**/*.{ts,tsx}' --max-warnings=0 --cache --no-error-on-unmatched-pattern",
         "lint:fix": "eslint '**/*.{ts,tsx}' --fix --max-warnings=0 --cache --no-error-on-unmatched-pattern",
-        "fmt": "prettier --write '**/*.{ts,tsx,json,md,css}' --cache --no-error-on-unmatched-pattern",
-        "fmt:check": "prettier --check '**/*.{ts,tsx,json,md,css}' --cache --no-error-on-unmatched-pattern",
         "tc": "tsgo --noEmit",
-        "test": "vitest run",
-        "test:watch": "vitest dev",
-        "coverage": "vitest run --coverage"
-    },
-    "peerDependencies": {
-        "next": "catalog:deps",
-        "react": "catalog:react",
-        "react-dom": "catalog:react"
-    },
-    "peerDependenciesMeta": {
-        "next": {
-            "optional": true
-        }
+        "test": "vp test run",
+        "test:watch": "vp test dev",
+        "coverage": "vp test run --coverage"
     },
     "dependencies": {
         "@radix-ui/react-dialog": "^1.1.23",
@@ -65,23 +49,23 @@
         "@radix-ui/react-tooltip": "^1.2.16",
         "@seedcord/brand": "workspace:^",
         "@shikijs/langs": "^4.5.0",
-        "clsx": "^2.1.1",
+        "cn": "^0.5.2",
         "discord-component-embed": "workspace:^",
         "fumadocs-core": "catalog:deps",
         "lucide-react": "catalog:deps",
         "motion": "catalog:deps",
         "next-themes": "^0.4.6",
         "shiki": "^4.5.0",
-        "tailwind-merge": "^3.7.0",
         "tw-animate-css": "^1.4.0",
         "type-fest": "catalog:deps",
         "unist-util-visit": "catalog:deps"
     },
     "devDependencies": {
         "@seedcord/eslint-config": "workspace:^",
+        "@seedcord/prose": "workspace:^",
         "@seedcord/tsconfig": "workspace:^",
         "@seedcord/tsdown-config": "workspace:^",
-        "@seedcord/vitest-config": "workspace:^",
+        "@seedcord/vite-config": "workspace:^",
         "@testing-library/dom": "catalog:test",
         "@testing-library/jest-dom": "catalog:test",
         "@testing-library/react": "catalog:test",
@@ -97,6 +81,21 @@
         "next": "catalog:deps",
         "prettier-plugin-tailwindcss": "catalog:deps",
         "tailwindcss": "catalog:deps",
-        "vfile": "catalog:deps"
+        "vfile": "catalog:deps",
+        "vitest": "catalog:test"
+    },
+    "peerDependencies": {
+        "next": "catalog:deps",
+        "react": "catalog:react",
+        "react-dom": "catalog:react"
+    },
+    "peerDependenciesMeta": {
+        "next": {
+            "optional": true
+        }
+    },
+    "engines": {
+        "bun": ">=1.4.2",
+        "node": "^24.22.1 || >=26.12.1"
     }
 }

@@ -35,7 +35,6 @@ export default createRule({
         },
         schema: []
     },
-    defaultOptions: [],
     create(context) {
         const services = ESLintUtils.getParserServices(context);
         const checker = services.program.getTypeChecker();
@@ -66,8 +65,8 @@ export default createRule({
                 context.report({ node: skuId, messageId: 'skuIdOnNonPremium', data: { style: STYLE_NAMES[style] } });
                 return;
             }
-            // premium forbids these props and every other style forbids the skuId, so the pair
-            // throws no matter what the style turns out to be
+            // the pair throws no matter what the style turns out to be because premium forbids these
+            // props and every other style forbids the skuId
             for (const prop of PREMIUM_FORBIDDEN) {
                 if (props.has(prop)) {
                     context.report({ node: skuId, messageId: 'skuIdWithProp', data: { prop } });

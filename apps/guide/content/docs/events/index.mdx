@@ -58,7 +58,7 @@ If the content didn't change, `EditLog` returns early. discord.js also emits `me
 
 `EditLog` only writes a log line. To respond in Discord, you use the objects in `this.event`, like `after.reply(...)` on a message. An event handler doesn't have `this.reply`, because Discord isn't waiting for a reply to an event.
 
-The log line goes through [`this.logger`](ref:core/BaseHandler.logger), which writes to the `events` log channel. [Tooling](/tooling) lists the channels and the levels.
+`EditLog` logs through [`this.logger`](ref:core/BaseHandler.logger), which writes to the `events` log channel. [Tooling](/tooling) lists the channels and the levels.
 
 ## Where to put handlers
 
@@ -90,7 +90,7 @@ export const seedcord = new Seedcord({
 });
 ```
 
-If your bot has no event handlers, set `events: { path: null }`. seedcord then skips the scan.
+If your bot doesn't have event handlers, set `events: { path: null }`. seedcord then skips the scan.
 
 ## Intents, and a handler that never runs
 
@@ -128,9 +128,9 @@ If you forget `@RegisterEvent` on a handler class, that handler never runs. seed
 
 ## Several handlers for one event
 
-Several handlers can register the same event, so a welcome message and a join log, for example, can stay in separate files. They run at the same time, and if one of them throws, the rest still run. Don't make one handler depend on another's result, since nothing guarantees the order. [Refusing a request](/replying/throwing) covers what seedcord does with the error.
+Several handlers can register the same event, so you can keep a welcome message and a join log, for example, in separate files. They run at the same time, and if one of them throws, the rest still run. Don't make one handler depend on another's result, since nothing guarantees the order. [Refusing a request](/replying/throwing) covers what seedcord does with the error.
 
-Processing one event with every handler registered for it is an _event dispatch_. The [event middleware](/events/middleware) for that event runs once per event dispatch, ahead of all of those handlers. Each event dispatch runs in this order.
+Processing one event with every handler registered for it is an _event dispatch_. The [event middleware](/events/middleware) for that event runs once per event dispatch, before all of those handlers. Each event dispatch runs in this order.
 
 ```txt output
 discord.js emits an event

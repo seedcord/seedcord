@@ -1,6 +1,6 @@
 import { SeedcordRangeError, SeedcordTypeError } from '@seedcord/errors/internal';
 import { ButtonStyle, ComponentType } from 'discord-api-types/v10';
-import { describe, expect, it } from 'vitest';
+import { describe, expect, it } from 'vite-plus/test';
 
 import { Controls } from '#pagination/Controls';
 import { PAGE_MAX, pageCursor } from '#pagination/cursor';
@@ -15,7 +15,7 @@ function arrayView(page: number, totalPages: number): PageView<number> {
     return { items: [], page, perPage: 10, totalPages, hasPrev: page > 0, hasNext: page < totalPages - 1 };
 }
 
-// toJSON() is a union and the link variant has no custom_id.
+// toJSON() is a union and the link variant doesn't have a custom_id.
 function jsonOf(button: ButtonBuilder): APIButtonComponentWithCustomId {
     const json = button.toJSON();
     if (!('custom_id' in json)) throw new Error('control button has no custom_id');
@@ -79,7 +79,7 @@ describe('controls.button', () => {
         expect(controls.button('last').data.disabled).toBe(true);
     });
 
-    it('drops the default label for an icon-only button (emoji, no label)', () => {
+    it('removes the default label for an icon-only button (emoji, without a label)', () => {
         const button = new Controls(cursor, arrayView(1, 3)).button('prev', { emoji: { name: '⬅️' } });
         expect(labelOf(button)).toBeUndefined();
         expect(jsonOf(button).emoji).toBeDefined();

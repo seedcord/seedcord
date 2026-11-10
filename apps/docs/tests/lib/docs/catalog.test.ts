@@ -1,4 +1,4 @@
-import { afterEach, describe, expect, it, vi } from 'vitest';
+import { afterEach, describe, expect, it, vi } from 'vite-plus/test';
 
 import type { NavigationCategory, PackageCatalogEntry, PackageVersionCatalog } from '#lib/docs/types';
 import type { PackageIndexEntry } from '@seedcord/docs-engine';
@@ -49,7 +49,7 @@ function makeEntry(versions: PackageVersionCatalog[]): PackageCatalogEntry {
 }
 
 describe('findCatalogVersion', () => {
-    it('returns undefined when the entry has no versions', () => {
+    it('returns undefined for an entry without versions', () => {
         const entry = makeEntry([]);
         expect(findCatalogVersion(entry, 'latest')).toBeUndefined();
         expect(findCatalogVersion(entry, '1.0.0')).toBeUndefined();

@@ -1,9 +1,11 @@
 import createConfig from '@seedcord/eslint-config';
+import { proseConfig } from '@seedcord/prose';
 
 export default createConfig({
     tsconfigRootDir: import.meta.dirname,
     relativeImports: 'parent',
     userConfigs: [
+        ...proseConfig,
         {
             // these numbers are cron's own field bounds
             files: ['src/types/CronPattern.ts'],

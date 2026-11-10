@@ -25,7 +25,7 @@ const DEFAULT_PATH_TEMPLATES = {
 /**
  * Assemble an {@link IndexJson} from each package's full version list. Stable versions set `latest`
  * and the per-minor and per-major line-head maps. The newest prerelease becomes `prerelease.latest`.
- * Invalid version strings are dropped.
+ * It skips invalid version strings.
  */
 export function buildIndex(packages: readonly PackageVersionsInput[], options: BuildIndexOptions): IndexJson {
     const entries: Record<string, PackageIndexEntry> = {};
@@ -92,7 +92,7 @@ function buildPrerelease(versions: readonly string[]): { latest: string } | null
     return latest ? { latest } : null;
 }
 
-// `sorted` is descending, so the first version seen for a key is its line head.
+// the first version seen for a key is its line head because `sorted` is descending.
 function headsBy(sorted: readonly string[], keyOf: (version: string) => string): Record<string, string> {
     const heads: Record<string, string> = {};
     for (const version of sorted) {

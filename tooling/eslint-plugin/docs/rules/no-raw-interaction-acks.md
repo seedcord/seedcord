@@ -6,7 +6,7 @@ Inside a seedcord handler, calling `this.event.reply(...)` and the other djs ack
 
 The rule reports on a class whose instance type extends `InteractionHandler` (the slash, context-menu, button, select, and modal handler bases) or `AutocompleteHandler`. It resolves the receiver's type and reports only when it is a discord.js repliable interaction, or an `AutocompleteInteraction` for `respond`. The direct `this.event.reply(...)` and the alias `const e = this.event; e.reply(...)` share that receiver type, so both forms are reported. Middleware is out of scope, and the destructured form `const { reply } = this.event` is a known gap.
 
-The flagged methods are `reply`, `deferReply`, `editReply`, `followUp`, `deferUpdate`, `update`, `showModal`, `fetchReply`, `deleteReply`, and `respond`. Replace `deleteReply` with `this.delete()`, `respond` with `this.respond()`, and read the sent message from the return value of a reply member in place of `fetchReply`. The rule has no autofix. The argument shapes do not map across mechanically.
+The flagged methods are `reply`, `deferReply`, `editReply`, `followUp`, `deferUpdate`, `update`, `showModal`, `fetchReply`, `deleteReply`, and `respond`. Replace `deleteReply` with `this.delete()`, `respond` with `this.respond()`, and read the sent message from the return value of a reply member in place of `fetchReply`. The rule can't autofix. The argument shapes do not map across mechanically.
 
 To acknowledge an interaction you collected yourself inside a handler, extract a standalone helper that takes the interaction. The rule reports on any repliable receiver in a handler body, so the raw ack must be outside the class.
 

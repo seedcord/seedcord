@@ -1,4 +1,4 @@
-import { describe, expect, it } from 'vitest';
+import { describe, expect, it } from 'vite-plus/test';
 
 import { twinDocument } from '#src/twin';
 
@@ -14,7 +14,7 @@ describe('twinDocument', () => {
         expect(doc).toBe('# Options\n\nReading input.\n\nBy Dhruv.\n\nProse.\n');
     });
 
-    it('goes straight to the body when a page carries no description', () => {
+    it('starts with the body when a page has an undefined description', () => {
         expect(twinDocument({ title: 'Options', body: 'Prose.\n' })).toBe('# Options\n\nProse.\n');
     });
 

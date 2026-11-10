@@ -1,5 +1,5 @@
 import mongoose from 'mongoose';
-import { expectTypeOf } from 'vitest';
+import { expectTypeOf } from 'vite-plus/test';
 
 import { RegisterMongooseService } from '#src/decorators/RegisterMongooseService';
 import { MongooseService } from '#src/MongooseService';
@@ -15,7 +15,7 @@ class Orders extends MongooseService<IOrder> {
     public static schema = new mongoose.Schema<IOrder>({ total: Number });
 }
 
-// the row seedcord codegen writes for this plugin
+// the row that seedcord codegen writes for this plugin
 declare module '@seedcord/core/plugin' {
     interface PluginTypes {
         '@seedcord/plugin-mongoose': { services: { orders: typeof Orders } };

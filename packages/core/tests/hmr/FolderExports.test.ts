@@ -4,7 +4,7 @@ import { join } from 'node:path';
 
 import { SeedcordErrorCode } from '@seedcord/errors';
 import { setDevFiles } from '@seedcord/utils/internal';
-import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
+import { describe, it, expect, beforeEach, afterEach, vi } from 'vite-plus/test';
 
 import { FolderExports } from '#hmr/FolderExports';
 
@@ -130,7 +130,7 @@ describe('FolderExports', () => {
         });
     });
 
-    it('warns when a saved file loses its last export, and stays quiet for a file that never had one', async () => {
+    it("warns when a saved file loses its last export, and doesn't warn for a file that never had one", async () => {
         const { 'Ping.mjs': file = '' } = await loaded({ 'Ping.mjs': 'export class Ping {}\n' });
         write('Ping.mjs', 'export const notAUnit = 1;\n');
 
@@ -163,7 +163,7 @@ describe('FolderExports', () => {
         expect(register.mock.calls).toEqual([[expect.objectContaining({ name: 'Ping' }), file]]);
     });
 
-    it('imports the new contents when two saves of one file land in the same millisecond', async () => {
+    it('imports the new contents when two saves of one file happen in the same millisecond', async () => {
         vi.spyOn(Date, 'now').mockReturnValue(1);
         const file = write('Ping.mjs', 'export class First {}\n');
         await folder.handle({ file, type: 'update' });
@@ -235,7 +235,7 @@ describe('FolderExports', () => {
             expect(debugLines(spies).find((line) => line.includes('Reloaded'))).toMatch(/Reloaded \S*Ping\S* from/);
         });
 
-        it('stays quiet when a new barrel re-exports a class that is already registered', async () => {
+        it("doesn't log when a new barrel re-exports a class that is already registered", async () => {
             await loaded({ 'Ping.mjs': 'export class Ping {}\n' });
             const barrel = write('index.mjs', "export { Ping } from './Ping.mjs';\n");
 
@@ -244,7 +244,7 @@ describe('FolderExports', () => {
             expect(debugLines(spies).some((line) => line.includes('Registered'))).toBe(false);
         });
 
-        it('stays quiet when the file registers nothing', async () => {
+        it("doesn't log when the file registers nothing", async () => {
             const file = write('Empty.mjs', 'export const value = 1;\n');
 
             await folder.handle({ file, type: 'update' });
@@ -461,7 +461,7 @@ describe('FolderExports', () => {
             expect(register.mock.calls).toEqual([[expect.objectContaining({ name: 'Broken' }), file]]);
         });
 
-        it('does not log a rollback for a file that had no working version', async () => {
+        it('does not log a rollback for a file without a working version', async () => {
             const file = write('Fresh.mjs', "throw new Error('boom');\n");
 
             await folder.handle({ file, type: 'create' });

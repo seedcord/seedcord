@@ -1,11 +1,11 @@
 'use client';
 
+import { cn } from 'cn';
 import { Check, Hash } from 'lucide-react';
 import { type ReactElement, useCallback } from 'react';
 
 import { Button } from './Button';
 import { IconSwap } from './IconSwap';
-import { cn } from './lib/cn';
 import { useTimedToggle } from './lib/useTimedToggle';
 
 const ICON_FLIP_DURATION_MS = 1400;

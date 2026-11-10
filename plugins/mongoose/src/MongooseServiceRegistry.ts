@@ -9,6 +9,7 @@ import { MongooseService } from './MongooseService';
 
 import type { Mongoose } from './Mongoose';
 import type { MongooseServiceConstructor } from './MongooseService';
+import type { MongooseDocument } from './types/MongooseDocument';
 import type { MongooseServices } from './types/MongooseServices';
 import type { CoreBase } from '@seedcord/core';
 import type { Logger } from '@seedcord/logger';
@@ -89,7 +90,7 @@ export class MongooseServiceRegistry {
     }
 
     private initializeService(Service: MongooseServiceConstructor): void {
-        // isServiceClass already checked ServiceMetadataKey exists, since the decorator writes both keys together
+        // isServiceClass has already checked ServiceMetadataKey exists, since the decorator writes both keys together
         const modelName = Reflect.getMetadata(ModelNameMetadataKey, Service) as string;
 
         // mongoose returns an existing model when the schema matches. That one is not this plugin's to delete
@@ -97,7 +98,7 @@ export class MongooseServiceRegistry {
 
         let model;
         try {
-            model = mongoose.model(modelName, Service.schema);
+            model = mongoose.model<MongooseDocument>(modelName, Service.schema);
         } catch (caught) {
             throw new SeedcordError(SeedcordErrorCode.PluginMongooseModelCreationFailed, [modelName, Service.name], {
                 cause: caught

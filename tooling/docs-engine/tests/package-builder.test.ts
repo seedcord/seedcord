@@ -1,5 +1,5 @@
 import { DocKind } from '@seedcord/docs-search';
-import { describe, expect, it } from 'vitest';
+import { describe, expect, it } from 'vite-plus/test';
 
 import { buildPackageFromModel } from '#builders/package-builder';
 
@@ -103,7 +103,7 @@ describe('buildPackageFromModel search gate', () => {
         expect(names).toContain('shown');
     });
 
-    it('drops a forgotten interface and its properties from search and the sidebar', () => {
+    it('removes a forgotten interface and its properties from search and the sidebar', () => {
         const { indexes } = buildPackageFromModel(manifest, buildTree());
         const searchNames = indexes.search.map((entry) => entry.name);
         expect(searchNames).not.toContain('HiddenIds');
@@ -122,7 +122,7 @@ describe('buildPackageFromModel search gate', () => {
         expect(indexes.byQName.has('HiddenIds')).toBe(true);
     });
 
-    it('drops an @internal node and its children from search and the sidebar but keeps them resolvable', () => {
+    it('removes an @internal node and its children from search and the sidebar but keeps them resolvable', () => {
         const { indexes } = buildPackageFromModel(manifest, buildTree());
         const searchNames = indexes.search.map((entry) => entry.name);
         expect(searchNames).not.toContain('InternalInterface');

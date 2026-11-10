@@ -1,7 +1,7 @@
 import { isSeedcordError, SeedcordErrorCode } from '@seedcord/errors';
 import { SeedcordError } from '@seedcord/errors/internal';
 import { Logger } from '@seedcord/logger';
-import { describe, it, expect, expectTypeOf, afterEach, vi } from 'vitest';
+import { describe, it, expect, expectTypeOf, afterEach, vi } from 'vite-plus/test';
 
 import { CoordinatedShutdown } from '#node/Lifecycle/CoordinatedShutdown';
 import { MemoryDriver } from '#src/kv/MemoryDriver';
@@ -389,7 +389,7 @@ describe('ServerHost', () => {
         expect(order).toEqual(['init-a', 'init-b', 'ready-a', 'ready-b']);
     });
 
-    it('registers no Ready task when no plugin declares ready or a Ready-phase init', async () => {
+    it("doesn't register a Ready task when no plugin declares ready or a Ready-phase init", async () => {
         const { host, startup } = makeHost();
         const addTask = vi.spyOn(startup, 'addTask');
         host.attach('db', TestPlugin, 'x');

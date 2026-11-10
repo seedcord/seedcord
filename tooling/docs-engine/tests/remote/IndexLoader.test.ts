@@ -1,4 +1,4 @@
-import { describe, expect, it, vi } from 'vitest';
+import { describe, expect, it, vi } from 'vite-plus/test';
 
 import { IndexFetchError } from '#remote/errors';
 import { validateIndex } from '#remote/index-json';
@@ -60,8 +60,8 @@ describe('IndexLoader', () => {
         await expect(loader.load()).rejects.toBeInstanceOf(IndexFetchError);
     });
 
-    it('drops folders the docs no longer document from the loaded index', async () => {
-        // kit is published in R2 but absent from PACKAGE_OVERRIDES, so the engine never sees it
+    it('removes folders the docs no longer document from the loaded index', async () => {
+        // the engine never reads kit because it is published in R2 but absent from PACKAGE_OVERRIDES
         const withRemoved: IndexJson = {
             ...fixture,
             packages: {
@@ -119,7 +119,7 @@ describe('IndexLoader', () => {
             };
             const empty: PackageIndexEntry = { fullName: '@seedcord/empty', stable: null, prerelease: null };
 
-            it("resolves 'latest' to the prerelease head when there is no stable channel", () => {
+            it("resolves 'latest' to the prerelease head when the stable channel is missing", () => {
                 expect(loader.resolveVersion(prereleaseOnly, 'latest')).toEqual({
                     version: '0.11.0-next.0',
                     channel: 'prerelease'
@@ -155,7 +155,7 @@ describe('IndexLoader', () => {
     });
 
     it('validateIndex round-trips a known-good index', () => {
-        // eslint-disable-next-line unicorn/prefer-structured-clone -- exercises the JSON wire round-trip the remote docs format uses
+        // eslint-disable-next-line unicorn/prefer-structured-clone -- tests the JSON wire round-trip the remote docs format uses
         expect(validateIndex(JSON.parse(JSON.stringify(fixture)))).toEqual(fixture);
     });
 });

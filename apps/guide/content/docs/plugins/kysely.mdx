@@ -3,7 +3,7 @@ title: Kysely and Postgres
 description: Connect a gateway or http bot to Postgres through Kysely with the kysely plugin, which starts and stops with your bot.
 ---
 
-A bot on Postgres usually creates a `pg` pool in `bot.ts`, runs a migration script before it starts, and calls `pool.end()` on shutdown. A handler can import that pool before the tables exist. If you forget `pool.end()`, the connections stay open after the bot stops. [`@seedcord/plugin-kysely-postgres`](ref:plugin-kysely-postgres) opens the pool, runs your migrations, and loads your service classes from a directory while the bot starts, then closes the pool when it stops. Your queries are ordinary [Kysely](https://kysely.dev/docs/intro) queries, so anything in Kysely's own docs applies as written.
+A bot on Postgres usually creates a `pg` pool in `bot.ts`, runs a migration script before it starts, and calls `pool.end()` on shutdown. A handler can import that pool before the tables exist. If you forget `pool.end()`, the connections are still open after the bot stops. [`@seedcord/plugin-kysely-postgres`](ref:plugin-kysely-postgres) opens the pool, runs your migrations, and loads your service classes from a directory while the bot starts, then closes the pool when it stops. Your queries are ordinary [Kysely](https://kysely.dev/docs/intro) queries, so anything in Kysely's own docs applies as written.
 
 <Shell add="@seedcord/plugin-kysely-postgres kysely pg" />
 
@@ -31,7 +31,7 @@ export default seedcord;
 
 This sample builds a gateway bot. The same `attach` call works on an http `Seedcord` from `@seedcord/http` that runs on a server. Kysely is a server-only plugin, so on an http bot for Cloudflare Workers the same call is a compile error, and a cast that gets past it throws `CorePluginScopeMismatch`. A Workers bot [attaches other plugins](/plugins#a-plugin-declares-where-it-runs) as usual.
 
-`dir` and `migrations` are the two required options. `dir` and `migrations.dir` are folders of your bot, so a relative one is relative to `root`. Both have to sit inside it, as [the folder rules](/plugins) describe. The sample also passes `connectionString`. Without one, `pg` reads `PGHOST`, `PGPORT`, `PGUSER`, `PGPASSWORD`, and `PGDATABASE` from the environment.
+`dir` and `migrations` are the two required options. `dir` and `migrations.dir` are folders of your bot, so a relative one is relative to `root`. Both have to be inside it, as [the folder rules](/plugins) describe. The sample also passes `connectionString`. Without one, `pg` reads `PGHOST`, `PGPORT`, `PGUSER`, `PGPASSWORD`, and `PGDATABASE` from the environment.
 
 A real bot reads the connection string from its environment. With `exactOptionalPropertyTypes`, which the scaffold's `@seedcord/tsconfig` turns on, `connectionString: process.env.DATABASE_URL` is a compile error, because its type is `string | undefined`. `Envapter.getRequired('DATABASE_URL', Converters.String)` from envapt returns a `string`, and it throws when the variable is unset. [Env files and modes](/build/env) covers reading config that way.
 
@@ -41,7 +41,7 @@ A real bot reads the connection string from its environment. With `exactOptional
 
 | option | required | what it sets |
 | --- | --- | --- |
-| `dir` | yes | the folder the plugin scans for service classes |
+| `dir` | yes | the folder that the plugin scans for service classes |
 | `migrations` | yes | the folder of your migration files and when they run |
 | `pool` | no | a `pg` pool to reuse, or the config to build one from |
 | `connectionString` | no | the Postgres URL |
@@ -154,7 +154,7 @@ If that first connect fails, `init()` throws `PluginConnectionFailed`. Its messa
 
 <Callout type="warning">
 
-Unless you set `onStartup` to `false`, the migrations folder has to exist before the first start. If it's missing, `init()` throws `CorePathUnreadable` with the path. A built bot throws `CoreDirectoryNotBuilt` instead, since `seedcord build` found no folder to bundle. An empty folder works in both. With `onStartup: false`, `init()` never reads the folder, so the error waits for your first call to a migration method.
+Unless you set `onStartup` to `false`, the migrations folder has to exist before the first start. If it's missing, `init()` throws `CorePathUnreadable` with the path. A built bot throws `CoreDirectoryNotBuilt` instead, since `seedcord build` didn't find a folder to bundle. An empty folder works in both. With `onStartup: false`, `init()` never reads the folder, so the error waits for your first call to a migration method.
 
 </Callout>
 
@@ -166,7 +166,7 @@ Shutdown runs fewer steps. `dispose()` clears the service registry, then closes 
 
 <Callout type="warning">
 
-`connection` is only set after the pool connects. If you read it before then, you get `undefined`, even though its type says it's always set.
+`connection` is only set after the pool connects. If you read it before then, you get `undefined`, even though its type marks it as always set.
 
 </Callout>
 

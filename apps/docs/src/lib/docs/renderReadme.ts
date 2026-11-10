@@ -74,7 +74,7 @@ function themeWordmarkPictures(html: string): string {
 export async function renderReadme(markdown: string, folderUrl?: string): Promise<string> {
     const html = await readmeMarked(folderUrl).parse(markdown);
     const themed = themeWordmarkPictures(html);
-    // the first README image is the hero banner and the page's LCP element, so fetch it at high priority.
+    // fetch the first README image at high priority because it's the hero banner and the page's LCP element.
     const prioritized = themed.replace(/<img\b/, '<img fetchpriority="high"');
     return sanitizeHtml(prioritized);
 }

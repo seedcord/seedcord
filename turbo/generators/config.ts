@@ -4,7 +4,7 @@ import type { PlopTypes } from '@turbo/gen';
 export default function generator(plop: PlopTypes.NodePlopAPI): void {
     plop.setHelper('folder', (dir: string, name: string) => {
         const unscoped = name.replace(/^@seedcord\//, '');
-        // every directory under plugins/ is a plugin, so the folder omits the prefix the package name keeps for npm
+        // the folder omits the prefix the package name keeps for npm because every directory under plugins/ is a plugin
         return dir === 'plugins' ? unscoped.replace(/^plugin-/, '') : unscoped;
     });
 
@@ -48,8 +48,8 @@ export default function generator(plop: PlopTypes.NodePlopAPI): void {
             },
             {
                 type: 'add',
-                path: '{{ dir }}/{{ folder dir name }}/tsdown.config.ts',
-                templateFile: 'templates/tsdown.config.ts.hbs'
+                path: '{{ dir }}/{{ folder dir name }}/vite.config.ts',
+                templateFile: 'templates/vite.config.ts.hbs'
             },
             {
                 type: 'add',
@@ -80,11 +80,6 @@ export default function generator(plop: PlopTypes.NodePlopAPI): void {
                 type: 'add',
                 path: '{{ dir }}/{{ folder dir name }}/tests/.gitkeep',
                 templateFile: 'templates/tests/.gitkeep.hbs'
-            },
-            {
-                type: 'add',
-                path: '{{ dir }}/{{ folder dir name }}/vitest.config.ts',
-                templateFile: 'templates/vitest.config.ts.hbs'
             }
         ]
     });

@@ -1,4 +1,4 @@
-import { describe, expect, it } from 'vitest';
+import { describe, expect, it } from 'vite-plus/test';
 
 import { LoggerUtilities } from '#src/LoggerUtilities';
 
@@ -113,7 +113,7 @@ describe('LoggerUtilities', () => {
         expect(plain(short ?? '').indexOf('./src/')).toBe(plain(long ?? '').indexOf('./src/'));
     });
 
-    it('drops zero counts', () => {
+    it('omits zero counts', () => {
         const lines = new LoggerUtilities(new FakeLogger()).counts({ slash: 7, modals: 0, buttons: 3 });
         const joined = lines.join(' ');
         expect(joined).toContain('7 slash');

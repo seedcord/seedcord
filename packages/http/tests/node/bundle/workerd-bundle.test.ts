@@ -3,7 +3,7 @@ import { tmpdir } from 'node:os';
 import path from 'node:path';
 
 import { build } from 'esbuild';
-import { afterAll, describe, expect, it } from 'vitest';
+import { afterAll, describe, expect, it } from 'vite-plus/test';
 
 const packageRoot = path.resolve(import.meta.dirname, '../../..');
 
@@ -14,8 +14,8 @@ afterAll(async () => {
 });
 
 describe('workerd bundle', () => {
-    // the vitest workerd pool cannot transform @discordjs/builders, so edge viability is proven by
-    // bundling the real entry the way a worker build would
+    // edge viability is proven by bundling the real entry the way a worker build would, because the
+    // vitest workerd pool cannot transform @discordjs/builders
     it('bundles the workerd entry with the dispatch path reachable and no node server code', async () => {
         outDir = await mkdtemp(path.join(tmpdir(), 'seedcord-http-bundle-'));
 

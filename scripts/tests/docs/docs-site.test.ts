@@ -1,4 +1,4 @@
-import { describe, expect, it } from 'vitest';
+import { describe, expect, it } from 'vite-plus/test';
 
 import { rollbackBuildId } from '#src/docs/docsSite';
 
@@ -37,11 +37,11 @@ describe('rollbackBuildId', () => {
         expect(rollbackBuildId(run)).toBe('20261001T000000Z-abc1234');
     });
 
-    it('finds no rollback build on the first deploy', () => {
+    it('returns null on the first deploy', () => {
         expect(rollbackBuildId(wrangler([deployment('v1')], {}))).toBeNull();
     });
 
-    it('finds no rollback build when the previous version set no BUILD_ID', () => {
+    it("returns null when the previous version didn't set a BUILD_ID", () => {
         expect(rollbackBuildId(wrangler([deployment('v1'), deployment('v2')], { v1: version() }))).toBeNull();
     });
 });

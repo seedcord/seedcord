@@ -1,0 +1,7 @@
+extends: existence
+link: https://github.com/seedcord/seedcord/blob/next/.agents/skills/writing-voice/SKILL.md
+message: "'%s' leaves out the 'that' before who does it. Put 'that' back, or lead with the actor."
+level: suggestion
+ignorecase: true
+tokens:
+  - '(?<!\b(?:after|before|during|until|since|on|in|at|with|without|from|for|by|of|to) )(?:any|every|each|the|a|an) (?!(?:time|way)\b)[a-z]+ (?:their|its|your|our|his|her|the|a|this|discord|seedcord) [a-z]+ (?:don''t|doesn''t|didn''t|can''t|won''t|[a-z]+s|[a-z]+ed)'

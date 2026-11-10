@@ -3,7 +3,7 @@ import { join } from 'node:path';
 import { stripVTControlCharacters } from 'node:util';
 
 import { isSeedcordError, SeedcordErrorCode } from '@seedcord/errors';
-import { assert, describe, expect, it, onTestFinished, vi } from 'vitest';
+import { assert, describe, expect, it, onTestFinished, vi } from 'vite-plus/test';
 
 import { WorkerEnv } from '#core/modules/workerEnv';
 import { cloudflareConfigSource, edgeFolder } from '#tests/edgeFolder';
@@ -28,7 +28,7 @@ describe('WorkerEnv', () => {
         expect(workerEnv.values()).toEqual({ LIMITS: { max: 3 } });
     });
 
-    it('throws CliEdgeNoWorker for a cloudflare.config.ts that sets no worker', async () => {
+    it("throws CliEdgeNoWorker for a cloudflare.config.ts that doesn't set a worker", async () => {
         const { cloudflareConfig } = await edgeFolder('export default {};\n');
 
         await expect(WorkerEnv.load(cloudflareConfig, 'development')).rejects.toMatchObject({

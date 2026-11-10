@@ -1,7 +1,14 @@
 import type { ButtonStyle, ComponentType, SeparatorSpacingSize } from 'discord-api-types/v10';
 
 type UsedComponentType =
-    'ActionRow' | 'Button' | 'Container' | 'MediaGallery' | 'Section' | 'Separator' | 'TextDisplay' | 'Thumbnail';
+    | 'ActionRow'
+    | 'Button'
+    | 'Container'
+    | 'MediaGallery'
+    | 'Section'
+    | 'Separator'
+    | 'TextDisplay'
+    | 'Thumbnail';
 
 export const TYPE: { readonly [Name in UsedComponentType]: (typeof ComponentType)[Name] } = {
     ActionRow: 1,

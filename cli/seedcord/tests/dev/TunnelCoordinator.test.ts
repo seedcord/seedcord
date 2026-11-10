@@ -1,6 +1,6 @@
 import { SeedcordErrorCode } from '@seedcord/errors';
 import { SeedcordError } from '@seedcord/errors/internal';
-import { describe, expect, it, vi } from 'vitest';
+import { describe, expect, it, vi } from 'vite-plus/test';
 
 import { TunnelCoordinator } from '#commands/dev/tunnel/TunnelCoordinator';
 import { silentLogger } from '#tests/silentLogger';
@@ -164,7 +164,7 @@ describe('TunnelCoordinator', () => {
         expect(info.mock.calls.at(-1)?.[0]).toBe('paste');
     });
 
-    it('stops a tunnel that survived a failed attempt', async () => {
+    it('stops a tunnel left over from a failed attempt', async () => {
         const stop = vi.fn();
         const coordinator = new TunnelCoordinator(
             deps({
@@ -310,7 +310,7 @@ describe('TunnelCoordinator', () => {
         expect(open).toHaveBeenCalledTimes(2);
     });
 
-    describe('when the kind has nothing to tunnel to', () => {
+    describe("when the kind doesn't have a tunnel target", () => {
         it('stops the live tunnel and warns', async () => {
             const stop = vi.fn();
             const clear = vi.fn<CoordinatorDeps['endpoint']['clear']>().mockResolvedValue();
@@ -415,7 +415,7 @@ describe('TunnelCoordinator', () => {
         expect(open).toHaveBeenCalledTimes(2);
     });
 
-    it('walks the steps to live, and drops the status on stop', async () => {
+    it('reports each step up to live, and clears the status on stop', async () => {
         const onStatus = vi.fn();
         const coordinator = new TunnelCoordinator(deps({ onStatus }));
 
@@ -446,7 +446,7 @@ describe('TunnelCoordinator', () => {
         expect(onStatus.mock.calls.flat()).toEqual(['opening', 'resolving', 'registering', 'live']);
     });
 
-    it('drops the status when the setup fails', async () => {
+    it('clears the status when the setup fails', async () => {
         const onStatus = vi.fn();
         const coordinator = new TunnelCoordinator(
             deps({

@@ -1,7 +1,7 @@
 import { readFileSync } from 'node:fs';
 import { resolve } from 'node:path';
 
-import { beforeAll, describe, expect, it } from 'vitest';
+import { beforeAll, describe, expect, it } from 'vite-plus/test';
 
 import { MOCK_PACKAGE_NAME, TEMP_DIR } from './utils';
 import { entryPointMembers, findMember, readApiPackage, readApiPackageRaw } from './utils/test-helpers';
@@ -89,7 +89,7 @@ describe('ApiDocsGenerator', () => {
             expect(raw).not.toContain('privateMethod');
         });
 
-        it('keeps @internal exports (rendered as a badge, not gated out of the surface)', () => {
+        it('keeps @internal exports (rendered as a badge)', () => {
             const asyncMockFunction = findMember(pkg.members[0]!, 'asyncMockFunction');
             expect(asyncMockFunction).toBeDefined();
             expect(asyncMockFunction?.releaseTag).toBe('Internal');

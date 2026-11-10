@@ -15,7 +15,7 @@ import {
     it,
     onTestFinished,
     vi
-} from 'vitest';
+} from 'vite-plus/test';
 
 import { HmrPlugin } from '#commands/dev/runtime/HmrPlugin';
 import { RestartFiles } from '#commands/dev/runtime/RestartFiles';
@@ -335,7 +335,7 @@ describe('HmrPlugin', () => {
             ]);
         });
 
-        it('sends a delete for an update to a file that is gone', () => {
+        it('sends a delete for an update to a file that was deleted', () => {
             const gone = join(projectRoot, 'src/components/Gone.ts');
 
             viteHotUpdate(hmrPlugin, 'update', gone, [moduleNode(gone, [moduleNode(importerFile)])]);
@@ -345,7 +345,7 @@ describe('HmrPlugin', () => {
             ]);
         });
 
-        it('lists the file itself when the graph has no module for it yet', () => {
+        it("lists the file itself when the graph doesn't have a module for it yet", () => {
             viteHotUpdate(hmrPlugin, 'create', file);
 
             expect(hotSendMock.mock.calls).toEqual([
@@ -378,7 +378,7 @@ describe('HmrPlugin', () => {
             expect(bot.moduleGraph.invalidateModule.mock.calls).toEqual([[fileNode], [importerNode]]);
         });
 
-        it('sends a save that lands right after a create', () => {
+        it('sends a save that comes right after a create', () => {
             viteHotUpdate(hmrPlugin, 'create', file);
             viteHotUpdate(hmrPlugin, 'update', file);
 

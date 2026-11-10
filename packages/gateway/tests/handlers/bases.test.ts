@@ -2,7 +2,7 @@ import { TextDisplayBuilder } from '@discordjs/builders';
 import { DispatchContext } from '@seedcord/core/internal';
 import { isSeedcordError, SeedcordErrorCode } from '@seedcord/errors';
 import { MessageFlags } from 'discord.js';
-import { describe, expect, it } from 'vitest';
+import { describe, expect, it } from 'vite-plus/test';
 
 import { ButtonHandler } from '#handlers/interaction/components/ButtonHandler';
 import { ModalHandler } from '#handlers/interaction/components/ModalHandler';
@@ -41,7 +41,7 @@ const reply = { components: [new TextDisplayBuilder().setContent('hi')] };
 const serialized = reply.components.map((c) => c.toJSON());
 const modal: ModalLike = { toJSON: () => ({ title: 'x', custom_id: 'y', components: [] }) };
 
-// a command interaction carries no source message, so it seeds unacked and rejects update
+// a command interaction seeds unacked and rejects update because it doesn't carry a source message
 const commandFlags = { isMessageComponent: false, isModalSubmit: false } as const;
 
 class RejectsShowModalModalKindAt extends ModalHandler<never> {

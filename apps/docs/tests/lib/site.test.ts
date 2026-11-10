@@ -1,10 +1,10 @@
-import { describe, expect, it } from 'vitest';
+import { describe, expect, it } from 'vite-plus/test';
 
 import { DocsPage, entityCard, packageCard } from '#lib/docs/DocsPage';
 
 import type { EntityModel, PackageCatalogEntry, PackageVersionCatalog } from '#lib/docs/types';
 
-// each fixture carries only the fields DocsPage reads
+// each fixture has only the fields DocsPage reads
 const VERSION = { id: '0.13.0', label: '0.13.0' } as unknown as PackageVersionCatalog;
 const ENTRY = {
     id: 'types',
@@ -93,12 +93,12 @@ describe('DocsPage.metadata', () => {
         expect(images[0]?.alt).toBe('A seedcord card reading @seedcord/types, labelled package, 0.13.0');
     });
 
-    it('drops a page from the index once the latest version has no canonical for it', () => {
+    it("removes a page from the index once the latest version doesn't have a canonical for it", () => {
         const meta = DocsPage.forEntity(ENTITY_PATH, entity('Gone', 'x'), VERSION, undefined).metadata();
         expect(meta.robots).toEqual({ index: false, follow: true });
     });
 
-    it('sets no robots rule on a page that still has a canonical', () => {
+    it('leaves robots undefined on a page that has a canonical', () => {
         const meta = DocsPage.forEntity(ENTITY_PATH, entity('Here', 'x'), VERSION, ENTITY_PATH).metadata();
         expect(meta.robots).toBeUndefined();
     });

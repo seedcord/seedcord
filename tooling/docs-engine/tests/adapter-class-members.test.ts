@@ -1,4 +1,4 @@
-import { describe, expect, it } from 'vitest';
+import { describe, expect, it } from 'vite-plus/test';
 
 import { getMockPackage } from './utils/test-helpers';
 
@@ -18,7 +18,7 @@ describe('class members', () => {
         expect(memberNames(await topLevel('InlineConstraintBase'))).toEqual(['stored']);
     });
 
-    it('keeps a real inherited member and drops the keys of an inline type argument', async () => {
+    it('keeps a real inherited member and leaves out the keys of an inline type argument', async () => {
         expect(memberNames(await topLevel('InlineConstraintChild'))).toEqual(['ownProp', 'stored']);
     });
 
@@ -28,7 +28,7 @@ describe('class members', () => {
         expect(node.children[0]?.headerText).toContain('TypeM');
     });
 
-    it('drops the call, method, and construct signatures a constraint carries', async () => {
+    it('leaves out the call, method, and construct signatures a constraint carries', async () => {
         expect(memberNames(await topLevel('InlineConstraintCallable'))).toEqual(['held']);
     });
 

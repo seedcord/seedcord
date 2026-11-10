@@ -4,7 +4,7 @@ import { join } from 'node:path';
 
 import { BuilderComponent, RegisterCommand } from '@seedcord/core';
 import { SeedcordErrorCode } from '@seedcord/errors';
-import { describe, expect, it } from 'vitest';
+import { describe, expect, it } from 'vite-plus/test';
 
 import { CommandScanner } from '#core/modules/CommandScanner';
 import { ProjectFiles } from '#core/project/ProjectFiles';
@@ -27,7 +27,7 @@ function recordingLoader(imported: string[]): ModuleLoader {
     return {
         importModule: <TModule>(entryPath: string) => {
             imported.push(entryPath);
-            // justified: an empty module has no values for the scanner to read
+            // justified: an empty module exports nothing for the scanner to read
             return Promise.resolve({} as TModule);
         },
         ...emptyModuleGraph

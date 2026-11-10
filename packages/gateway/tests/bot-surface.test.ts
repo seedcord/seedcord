@@ -1,11 +1,11 @@
-import { describe, it, expect } from 'vitest';
+import { describe, it, expect } from 'vite-plus/test';
 
 import { Seedcord } from '#src/Seedcord';
 
 import { testConfig } from './utils/test-config';
 
 describe('the Bot surface a bot author reaches', () => {
-    it('drops the calls the host drives', async () => {
+    it('hides the methods only the host calls', async () => {
         await using seedcord = new Seedcord(testConfig());
         const { bot } = seedcord;
 

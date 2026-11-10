@@ -10,7 +10,7 @@ The `guide-voice` skill and its two review prompts decide what a page says. This
 2. List the pages the release makes stale, the facts that have no page yet, and the gaps users reported. A gap the maintainer brings up counts too, like "writing a plugin needs its own pages".
 3. Propose the structure: the pages to rewrite, add, merge or delete, and any new tab. Present it as a table, then ask the open decisions through `AskUserQuestion`.
 
-Done when the maintainer signs off on the page list. Settle where shared facts live too. On the Vite release, envapt got a short mention where a first bot reads config and a full page in Build & deploy, and `seedcord commands` got a CLI page in Tooling plus a "how commands reach Discord" page in Commands. From here the run can go unattended, so it can't wait on an approval prompt. Run every command the hooks pass ([SESSIONS.md](SESSIONS.md#hook-safe-commands)), and give every agent the same rule.
+Done when the maintainer signs off on the page list. Settle where shared facts live too. On the Vite release, envapt got a short mention where a first bot reads config and a full page in Build & deploy, and `seedcord commands` got a CLI page in Tooling plus a "how commands reach Discord" page in Commands. From here the run is unattended, so it can't wait on an approval prompt. Run every command the hooks pass ([SESSIONS.md](SESSIONS.md#hook-safe-commands)), and give every agent the same rule.
 
 ## 2. Set up the run
 
@@ -18,7 +18,7 @@ Done when the maintainer signs off on the page list. Settle where shared facts l
 2. Start the guide dev server with twoslash in the background, sandbox off, on a free port, and leave it running. Pages live under `/guide/`. Stop any other dev server first, since twoslash needs the memory. Restart it when `curl` fails.
 3. Write one shared writer brief to the scratchpad. [PROMPTS.md](PROMPTS.md#guide-writer-brief) has the template. Each writer's prompt then adds only its own tab, its files, and what the release changed there.
 4. Start a run log beside it: what the maintainer settled, the tab order with a status for each, and what to re-read after a compaction.
-5. Pick a backup folder that survives a reboot, outside `/tmp`. Copy the run log, the brief, the notes file and the research reports there now, and again at every snapshot.
+5. Pick a backup folder that a reboot doesn't clear, outside `/tmp`. Copy the run log, the brief, the notes file and the research reports there now, and again at every snapshot.
 
 ## 3. Write and review
 
@@ -39,7 +39,7 @@ Done when the maintainer signs off on the page list. Settle where shared facts l
     - release history written into a page
     - advice that breaks in production (`CONTENT-REVIEW.md` check 9)
 
-    Give each audit to one helper. It reads the skill sections behind its pattern, reports only, and gives each finding's line, the full sentence, and what's really going on, without a replacement sentence. Write each fix for its own sentence, even when the maintainer showed the rule with one example, then reread every changed line in its paragraph for flow. Splitting every sentence in two reads worse than the original.
+    Give each audit to one helper. It reads the skill sections behind its pattern, reports only, and gives each finding's line, the full sentence, and what the real problem is, without a replacement sentence. Write each fix for its own sentence, even when the maintainer showed the rule with one example, then reread every changed line in its paragraph for flow. Splitting every sentence in two reads worse than the original.
 
 Done when the last review round brings back only wishlist items, the cold readers can finish their tasks, and the audits come back clean.
 
@@ -49,7 +49,7 @@ Done when the last review round brings back only wishlist items, the cold reader
 - Link between pages, but keep each fact on one page.
 - Every sample uses the most specific API there is, from real exports.
 - A sentence about the page itself ("Come here for an exact signature...") answers a question in the wrong place. Find the question and answer it with a fact, or move it into the link text. Fix the pattern at its root in the `guide-voice` skill too.
-- When a page moves, update the links in the READMEs. The guide notes file lists them. TSDoc and error messages carry no guide links, because a link in a published package goes dead when a page moves.
+- When a page moves, update the links in the READMEs. The guide notes file lists them. TSDoc and error messages carry no guide links, because a link in a published package breaks when a page moves.
 - Run `guide-voice` over all public TSDoc the release touched.
 - Hold every file the branch touches to `code-commenting-guidelines`, `writing-voice` and `code-quality`, strictly.
 - Update the guide's dependencies.

@@ -7,8 +7,7 @@ export interface PrettifyOptions {
     capitalize?: boolean;
 }
 /**
- * Converts a string from any common naming convention to human-readable format.
- * Accepts camelCase, PascalCase, snake_case, and kebab-case input.
+ * Converts a camelCase, PascalCase, snake_case, or kebab-case string to human-readable format.
  *
  * @returns A space-separated, human-readable string
  *

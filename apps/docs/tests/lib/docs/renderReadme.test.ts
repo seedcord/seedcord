@@ -1,4 +1,4 @@
-import { describe, expect, it } from 'vitest';
+import { describe, expect, it } from 'vite-plus/test';
 
 import { renderReadme } from '#lib/docs/renderReadme';
 
@@ -49,7 +49,7 @@ describe('renderReadme', () => {
     it('rewrites a prefers-color-scheme wordmark <picture> into data-theme-gated <img>s', async () => {
         const html = await renderReadme(WORDMARK_PICTURE);
 
-        // the <source> media query keys off the OS setting, which the site's data-theme toggle can't drive
+        // the <source> media query keys off the OS setting, which the site's data-theme toggle can't change
         expect(html).not.toContain('prefers-color-scheme');
         expect(html).not.toContain('<source');
 
@@ -110,7 +110,7 @@ describe('renderReadme', () => {
         expect(html).toContain('id="tocomponentembed"');
     });
 
-    it('suffixes a repeated heading so both ids stay reachable', async () => {
+    it('suffixes a repeated heading so both ids are reachable', async () => {
         const html = await renderReadme('## Usage\n\n## Usage\n');
 
         expect(html).toContain('id="usage"');

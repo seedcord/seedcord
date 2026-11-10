@@ -1,6 +1,6 @@
 import remarkParse from 'remark-parse';
 import { unified } from 'unified';
-import { describe, expect, it } from 'vitest';
+import { describe, expect, it } from 'vite-plus/test';
 
 import { twinOf } from './twinPipeline';
 
@@ -17,7 +17,7 @@ function linksIn(markdown: string): Link[] {
 }
 
 describe('what an agent reads instead of the page', () => {
-    it('drops the heading anchor a reader never sees', async () => {
+    it('removes the heading anchor a reader never sees', async () => {
         expect(await twinOf('## Reading options\n')).toBe('## Reading options\n');
     });
 
@@ -33,7 +33,7 @@ describe('what an agent reads instead of the page', () => {
         expect(twin).toContain('/packages/core/latest/classes/paginator-base#start)');
     });
 
-    it('links the package overview when a ref carries no symbol', async () => {
+    it('links the package overview when the ref is only a package', async () => {
         const twin = await twinOf('install [core](ref:core) first\n');
 
         expect(twin).toContain('[core](https://seedcord.org/docs/packages/core/latest)');

@@ -1,4 +1,4 @@
-import { afterEach, describe, expect, it, vi } from 'vitest';
+import { afterEach, describe, expect, it, vi } from 'vite-plus/test';
 
 import { twoslashBlock } from '#lib/twoslash';
 
@@ -35,7 +35,7 @@ describe('the twoslash transformer', () => {
             )
         );
 
-        // shiki owns the theme classes between these two
+        // only shiki writes the theme classes between these two
         expect(html).toMatch(/<pre class="[^"]*\bshiki\b[^"]*\btwoslash\b/);
         expect(html).not.toContain('twoslash-error-line');
     });
@@ -126,7 +126,7 @@ describe('the twoslash transformer', () => {
         expect(second).not.toContain("Type 'string' is not assignable to type 'number'.");
     });
 
-    it('stays out of the way when the fence carries no flag', async () => {
+    it('adds nothing when the fence is unflagged', async () => {
         const { html } = await twoslashBlock('const count = 12;', 'ts', 'off');
 
         expect(html).not.toContain('twoslash');
@@ -253,7 +253,7 @@ describe('the twoslash transformer', () => {
                 )
             );
 
-            // once the 8 spaces are gone the 9-wide argument starts at 24
+            // with the 8 spaces removed, the 9-wide argument starts at 24
             expect(html).toContain('--ts-col:28.5');
         });
     });

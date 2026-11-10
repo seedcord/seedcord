@@ -26,7 +26,7 @@ interface RunnableMiddleware extends RunnableHandler {
 
 type Answer = (caught: unknown) => Promise<void>;
 
-// null when the run already answered a throw or a refusal
+// null when the run has already answered a throw or a refusal
 type PreparedRun = (() => Promise<void>) | null;
 
 interface RepliableTarget {

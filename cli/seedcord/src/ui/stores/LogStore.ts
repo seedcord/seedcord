@@ -61,7 +61,8 @@ export class LogStore extends ChangeStore implements ILogSink {
 
     public onLog(record: LogRecord): void {
         // a lone \r left in a row sends the terminal cursor to column 0 and overwrites what it printed, and
-        // every other control char corrupts the row the same way. ESC survives because SGR colors need it.
+        // every other control char corrupts the row the same way. the replace below keeps ESC because SGR
+        // colors start with it.
         const lines = formatBody(record).split(/\r\n|\r|\n/);
 
         for (const [index, line] of lines.entries()) {
@@ -81,12 +82,12 @@ export class LogStore extends ChangeStore implements ILogSink {
         this.scheduleUpdate();
     }
 
-    // useSyncExternalStore needs a stable reference, so channel filtering stays in useLogs
+    // useLogs does the channel filtering because useSyncExternalStore needs a stable reference
     public getLogs(): readonly LogEntry[] {
         return this.entries;
     }
 
-    // read off live entries, else the toggle list carries an empty "default" row
+    // read off live entries, else the toggle list gets an empty "default" row
     public getChannels(): readonly string[] {
         const seen = new Set<string>();
         for (const entry of this.entries) seen.add(entry.channel);

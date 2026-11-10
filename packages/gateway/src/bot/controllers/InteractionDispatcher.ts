@@ -67,7 +67,7 @@ export class InteractionDispatcher implements Initializeable, HmrAware {
             for (const ignoredKey of ignoredKeysFromConfig) this.keysToIgnore.add(ignoredKey);
         }
 
-        // the in-process getConfirmation() collector consumes these clicks, so the global router would double-ack them
+        // the global router would double-ack these clicks because the in-process getConfirmation() collector consumes them
         this.keysToIgnore.add(CONFIRM_DEF);
 
         const interactionsDir = this.core.config.bot.interactions.path;

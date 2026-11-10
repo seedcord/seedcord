@@ -1,0 +1,8 @@
+extends: existence
+link: https://github.com/seedcord/seedcord/blob/next/.agents/skills/writing-voice/SKILL.md
+message: 'Semicolon in prose. Rewrite the sentence, or split it in two.'
+level: suggestion
+nonword: true
+tokens:
+  # the `;` closing an html entity is part of the character
+  - '(?<!&(?:[a-zA-Z][a-zA-Z0-9]{0,30}|#\d{1,7}|#[xX][\da-fA-F]{1,6}));'

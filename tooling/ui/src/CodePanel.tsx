@@ -1,5 +1,6 @@
+import { cn } from 'cn';
+
 import { Card, CardBody, CardDescription, CardHeader, CardTitle } from './Card';
-import { cn } from './lib/cn';
 import { tw } from './lib/tw';
 
 import type { CodeRepresentation } from './types/CodeRepresentation';

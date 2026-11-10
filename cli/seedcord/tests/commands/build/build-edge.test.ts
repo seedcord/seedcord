@@ -7,7 +7,7 @@ import { cloudflare } from '@cloudflare/vite-plugin';
 import { SeedcordErrorCode } from '@seedcord/errors';
 import { bindings, exports } from 'cf/config';
 import { preview } from 'vite';
-import { afterAll, beforeAll, describe, expect, it, onTestFinished, vi } from 'vitest';
+import { afterAll, beforeAll, describe, expect, it, onTestFinished, vi } from 'vite-plus/test';
 
 import { BOT_ENVIRONMENT } from '#core/modules/botEnvironment';
 
@@ -244,7 +244,7 @@ describe('seedcord build on an edge bot with files it never loads', () => {
         await expect(edgeBuildRunner().run(projectDir)).resolves.toBeDefined();
     }, 120_000);
 
-    it('throws CliEdgeCommandsNotDeployed with the file of a command discord has no id for', async () => {
+    it('throws CliEdgeCommandsNotDeployed with the file of a command without a discord id', async () => {
         const projectDir = await copyEdgeBotForTest();
         await mkdir(join(projectDir, 'src/commands'));
         await writeFile(join(projectDir, 'src/commands/Hello.ts'), HELLO_COMMAND);

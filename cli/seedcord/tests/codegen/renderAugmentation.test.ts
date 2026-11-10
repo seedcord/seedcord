@@ -1,5 +1,5 @@
 import { ChannelType } from 'discord-api-types/v10';
-import { describe, it, expect } from 'vitest';
+import { describe, it, expect } from 'vite-plus/test';
 
 import { renderAugmentation } from '#commands/codegen/renderAugmentation';
 
@@ -119,7 +119,7 @@ export {};
         expect(first).toBe(second);
     });
 
-    it('escapes an apostrophe in a string choice value and stays valid TS', () => {
+    it('escapes an apostrophe in a string choice value and produces valid TS', () => {
         const output = renderSlash({
             survey: { answer: { kind: 'string', required: true, choices: ["don't", 'yes'] } }
         });
@@ -499,7 +499,7 @@ export {};
         );
     });
 
-    it('emits no import and no Core block for a bot with no plugins', () => {
+    it('omits the import and the Core block for a bot without plugins', () => {
         const output = withPlugins({ specifier: './bot', keys: [] });
 
         expect(output).not.toContain('import type');

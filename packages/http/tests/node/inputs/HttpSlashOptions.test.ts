@@ -1,5 +1,5 @@
 import { ApplicationCommandOptionType } from 'discord-api-types/v10';
-import { describe, expect, it } from 'vitest';
+import { describe, expect, it } from 'vite-plus/test';
 
 import { HttpSlashOptions } from '#inputs/HttpSlashOptions';
 
@@ -21,7 +21,7 @@ const user: APIUser = {
     avatar: null
 };
 
-// justified: the fixture carries only the fields the tests read
+// justified: the fixture has only the fields the tests read
 function member(nick: string): APIInteractionDataResolvedGuildMember {
     return { nick, roles: [], permissions: '0' } as unknown as APIInteractionDataResolvedGuildMember;
 }

@@ -1,7 +1,7 @@
 import { SeedcordErrorCode } from '@seedcord/errors';
 import { Routes } from 'discord-api-types/v10';
 import { Envapter, PortableSource } from 'envapt';
-import { describe, expect, it, vi } from 'vitest';
+import { describe, expect, it, vi } from 'vite-plus/test';
 
 import { Seedcord } from '#src/node/Seedcord';
 import { createSigner } from '#tests/helpers/ed25519';

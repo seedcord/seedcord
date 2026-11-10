@@ -5,11 +5,11 @@ description: Refuse a request by throwing a Notice from any handler or helper, s
 
 Sometimes you need to stop a command and tell the user why, like when they don't have a profile, aren't allowed to do something, or can't afford it, etc. You do that by throwing a [`Notice`](ref:core/Notice).
 
-seedcord catches that throw at one boundary and sends the reply through the handler, so the class you throw sets what the reply says. A gate throws into the same boundary, and its refusal reaches the user the same way.
+seedcord catches that throw at one boundary and sends the reply through the handler, so the class you throw sets the reply's text. A gate throws into the same boundary, and its refusal reaches the user the same way.
 
 ## Why not reply and return?
 
-An early return works while the check sits in `execute()`.
+An early return works while the check is in `execute()`.
 
 ```ts twoslash
 import { SlashHandler, SlashRoute } from '@seedcord/gateway';
@@ -105,7 +105,7 @@ export class Ban extends SlashHandler<'ban'> {
 }
 ```
 
-Your logs and your fault reports read the string you pass to `super()`. Since `OpenCaseExists` overrides `render()`, the user never sees that string, so the id can go there. `render()` builds the reply and returns a [`ReplyResponse`](ref:types/ReplyResponse), the same `{ components }` shape that [`this.reply()`](ref:gateway/RepliableHandler.reply) takes. If you leave `render()` out, seedcord replies with its own refusal card and your `super()` string as the text.
+Your logs and your fault reports read the string you pass to `super()`. Since `OpenCaseExists` overrides `render()`, the user never sees that string, so you can put the id there. `render()` builds the reply and returns a [`ReplyResponse`](ref:types/ReplyResponse), the same `{ components }` shape that [`this.reply()`](ref:gateway/RepliableHandler.reply) takes. If you leave `render()` out, seedcord replies with its own refusal card and your `super()` string as the text.
 
 `assertNoOpenCase` refuses on its own. `execute()` calls it and continues, since a refusal never comes back as a return value.
 

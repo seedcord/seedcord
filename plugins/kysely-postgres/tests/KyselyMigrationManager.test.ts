@@ -1,7 +1,7 @@
 import { SeedcordErrorCode } from '@seedcord/errors';
 import { Logger } from '@seedcord/logger';
 import { setDevFiles } from '@seedcord/utils/internal';
-import { afterEach, beforeEach, describe, expect, it, vi, type Mock } from 'vitest';
+import { afterEach, beforeEach, describe, expect, it, vi, type Mock } from 'vite-plus/test';
 
 import { KyselyPostgres } from '#src/KyselyPostgres';
 
@@ -64,7 +64,7 @@ describe('KyselyMigrationManager', () => {
 
     // a dev bot loads the .ts file and a built bot the .js one
     it.each(['ts', 'js'])(
-        'reads a relative dir from root and names a .%s migration without the extension',
+        'reads a relative dir from root and returns the name of a .%s migration without the extension',
         async (extension) => {
             await testEnv.createFile(`migrations/001-create-users.${extension}`, NAMED_EXPORTS);
 
@@ -122,7 +122,7 @@ describe('KyselyMigrationManager', () => {
         await expect(plugin.migrate()).resolves.toBeUndefined();
     });
 
-    it('stops migrateDown at the newest migration when it has no down', async () => {
+    it('stops migrateDown at the newest migration when it is missing a down', async () => {
         await testEnv.createFile('migrations/001-users.ts', NAMED_EXPORTS);
         await testEnv.createFile('migrations/002-guilds.ts', 'export async function up() {}\n');
         seedRanMigrations(['001-users', '002-guilds']);

@@ -43,7 +43,7 @@ function refHref(link: Node, links: DocsLinks, file: Reporter): string {
 
 function refElement(link: Node, links: DocsLinks, file: Reporter): Node {
     const href = refHref(link, links, file);
-    if ((link.children ?? []).length === 0) file.fail(`${link.url ?? ''} has no link text. ${FORM}`, link);
+    if ((link.children ?? []).length === 0) file.fail(`${link.url ?? ''} doesn't have link text. ${FORM}`, link);
 
     return {
         type: 'mdxJsxTextElement',
@@ -65,14 +65,14 @@ function walk(tree: Node, links: DocsLinks, file: Reporter, inHeading: boolean):
         }
         // mdast resolves a definition against its linkReference after every remark plugin has run
         if (child.type === 'definition' && hasRefTarget(child)) {
-            file.fail(`a link definition stays a plain url. ${FORM}`, child);
+            file.fail(`a link definition is still a plain url. ${FORM}`, child);
         }
 
         walk(child, links, file, heading);
 
         if (child.type !== 'link' || !hasRefTarget(child)) return child;
         if (heading) {
-            file.fail('a heading takes no symbol link. Its text also renders in the table of contents.', child);
+            file.fail("a heading can't take a symbol link. Its text also renders in the table of contents.", child);
         }
 
         return refElement(child, links, file);

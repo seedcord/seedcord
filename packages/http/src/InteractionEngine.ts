@@ -116,7 +116,7 @@ export class InteractionEngine {
                 if (start) keepRequestOpenFor(start().catch((caught: unknown) => this.rootFault(caught)));
             }
         } catch (caught) {
-            // the 202 has to go out either way or discord drops the interaction
+            // handle() has to return the 202 either way or discord fails the interaction
             this.rootFault(caught);
         }
     }

@@ -5,7 +5,7 @@ description: Run and build your bot through Vite, so the same Vite plugins, .env
 
 Your bot's source can't run as it is. Your handlers use decorators, which node's own TypeScript support stops on with a parser error. Compiling with `tsc` gets past the decorators. It still leaves a handler unable to import a `.yaml` file, and your translation files never reach `dist` unless you copy them there yourself.
 
-seedcord solves all three by loading your bot through [Vite](https://vite.dev). Vite compiles the decorators, and a Vite plugin can turn the `.yaml` file into code. The translation folder goes into `dist` once you list it under `files`.
+seedcord solves all three by loading your bot through [Vite](https://vite.dev). Vite compiles the decorators, and a Vite plugin can turn the `.yaml` file into code. The build puts the translation folder in `dist` once you list it under `files`.
 
 Every `seedcord` command loads your bot this way. [`seedcord dev`](/tooling/dev) runs it. [`seedcord codegen`](/tooling/codegen) and [`seedcord commands`](/tooling/commands) import it. `seedcord build` builds it. All of them use the same Vite plugins. A plugin you add for dev also runs in the build unless its `apply` option limits it, so an import that works while you edit works in production too.
 

@@ -16,7 +16,7 @@ import type { LiteralUnion } from 'type-fest';
  * Provides a small, typed shim around the shared Kysely instance and ensures
  * that subclasses have been decorated with `@RegisterKyselyService`.
  *
- * @typeParam TTable - The table this service works with. Defaults to every table in the schema.
+ * @typeParam TTable - The table that this service works with. Defaults to every table in the schema.
  *
  * @example
  * ```typescript
@@ -53,7 +53,7 @@ export abstract class KyselyService<TTable extends LiteralUnion<KyselyTable, str
 
         const table = Reflect.getMetadata(KyselyTableMetadataKey, ctor) as TTable | undefined;
 
-        // the decorator always writes a table with the key, so this only throws if it was bypassed
+        // the decorator always writes a table with the key. this only throws if something bypassed it
         if (!table) {
             throw new SeedcordTypeError(SeedcordErrorCode.PluginKyselyServiceTableMissing, [ctor.name]);
         }

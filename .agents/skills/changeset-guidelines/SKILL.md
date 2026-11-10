@@ -9,11 +9,11 @@ A changeset becomes a changelog entry, which someone scans while deciding whethe
 
 This skill decides what a changeset says. `writing-voice` covers how any sentence in this repo sounds. `release-version` covers cutting the release itself.
 
-The shape is fixed, and `pnpm lint:changesets` rejects anything else:
+The shape is fixed, and `vp run lint:changesets` rejects anything else:
 
 - One paragraph on one line. No second paragraph, list, heading, quote, or code block.
 - At most two sentences for a patch and three otherwise. One sentence is fine when it already carries the reader's own case. A second sentence carries that case when the first one cannot.
-- `**BREAKING:**` plus a space opens the summary when the change breaks. The changeset bumps no package as a patch, and a `major` bump is only for a package already past 1.0. A `0.x` package goes to `1.0.0` with a `major` bump whose summary says `1.0.0`.
+- `**BREAKING:**` plus a space opens the summary when the change breaks. The changeset bumps no package as a patch, and a `major` bump is only for a package already past 1.0. A `0.x` package reaches `1.0.0` with a `major` bump whose summary says `1.0.0`.
 
 ---
 
@@ -168,9 +168,9 @@ Accepted:
 The changelog credits each changeset to the PR whose commit added its file. `@changesets/git` finds that commit with `git log --diff-filter=AC --follow`, and `scripts/src/release/ChangelogRenderer.ts:20` reads the `(#N)` at the end of its subject.
 
 - Rewrite the text in place, in the file from the PR you want credited, then delete the duplicates.
-- A renamed file keeps its credit while its text stays close to the original. `--follow` matches a rename by content, so rename and rewrite in separate commits.
+- A renamed file keeps its credit while its text is still close to the original. `--follow` matches a rename by content, so rename and rewrite in separate commits.
 - Never write a new file to hold merged text. It would credit the dedupe PR.
-- When one line covers two PRs, only the surviving file's PR gets linked. Write the other one into the text as a bare `#N`.
+- When one line covers two PRs, only the PR of the file you keep gets linked. Write the other one into the text as a bare `#N`.
 
 ---
 

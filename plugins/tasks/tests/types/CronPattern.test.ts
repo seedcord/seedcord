@@ -1,5 +1,5 @@
 import { Cron } from 'croner';
-import { describe, expect, it } from 'vitest';
+import { describe, expect, it } from 'vite-plus/test';
 
 import { acceptedPatterns, rejectedPatterns } from '#tests/fixtures/cronPatterns';
 

@@ -1,7 +1,7 @@
 import { DiscordAPIError, RateLimitError, REST } from '@discordjs/rest';
 import { isSeedcordError, SeedcordErrorCode } from '@seedcord/errors';
 import { RESTJSONErrorCodes, Routes } from 'discord-api-types/v10';
-import { describe, expect, it, vi } from 'vitest';
+import { describe, expect, it, vi } from 'vite-plus/test';
 
 import { InteractionsEndpoint } from '#commands/dev/tunnel/InteractionsEndpoint';
 import { bindEnv } from '#tests/bindEnv';
@@ -120,7 +120,7 @@ describe('InteractionsEndpoint', () => {
         await expect(endpointFor(client).set(TUNNEL, RUNNING, INSTANCE)).rejects.toBe(refusal);
     });
 
-    it('surfaces a rate limit rather than reading it as a refusal', async () => {
+    it('rejects with the rate limit error itself', async () => {
         const { rest: client } = rest();
         const limited = new RateLimitError({
             timeToReset: 60_000,

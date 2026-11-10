@@ -1,5 +1,5 @@
 import { DocKind } from '@seedcord/docs-search';
-import { describe, expect, it, vi } from 'vitest';
+import { describe, expect, it, vi } from 'vite-plus/test';
 
 import { AnchorStrategy } from '#routing/AnchorStrategy';
 import { ReferenceResolver } from '#routing/ReferenceResolver';
@@ -270,7 +270,7 @@ describe('ReferenceResolver.href', () => {
         expect(resolver.href('seedcord', ref)).toBe('/packages/seedcord/3.1.4/classes/MockClass');
     });
 
-    it('returns /404 when the resolved member has no entity ancestor and no qualifiedName owner', () => {
+    it('returns /404 when the resolved member has neither an entity ancestor nor a qualifiedName owner', () => {
         const member = makeNode({
             slug: 'a/b/c',
             qualifiedName: 'unrelated',
@@ -345,7 +345,7 @@ describe('ReferenceResolver.resolve', () => {
             known: ['seedcord', '@seedcord/logger'],
             cross: LOGGER_CROSS
         });
-        // `Ghost` is not an entity in the logger index, so it does not resolve.
+        // `Ghost` doesn't resolve because it isn't an entity in the logger index.
         const ref: DocReference = { name: 'Ghost', packageName: '@seedcord/logger', qualifiedName: 'Ghost' };
         expect(resolver.resolve('seedcord', ref)).toEqual({ kind: 'unresolved' });
     });
@@ -378,14 +378,14 @@ describe('ReferenceResolver.href cross-package', () => {
         expect(resolver.href('seedcord', ref)).toBe('/packages/logger/0.5.0/classes/logger#debug');
     });
 
-    it('routes a known-package non-entity (EventEmitter) to its node.js docs, not a 404 link', () => {
+    it('routes a known-package non-entity (EventEmitter) to its node.js docs', () => {
         const { resolver } = makeResolver({
             loaded: ['seedcord'],
             known: ['seedcord', '@seedcord/logger'],
             cross: LOGGER_CROSS
         });
-        // EventEmitter is not an entity in the logger index, so href falls through to the
-        // external-link table instead of building a 404 internal link.
+        // href falls through to the external-link table instead of building a 404 internal link because
+        // EventEmitter isn't an entity in the logger index.
         const ref: DocReference = {
             name: 'EventEmitter',
             packageName: '@seedcord/logger',

@@ -186,7 +186,7 @@ export class HmrPlugin extends TypedEventEmitter<{ event: [DevEvent] }> {
     }
 }
 
-// workerd has no access to the project's files
+// workerd can't read the project's files
 function deleteIfGone(type: HotUpdateOptions['type'], file: string): HotUpdateOptions['type'] {
     return type === 'update' && !existsSync(file) ? 'delete' : type;
 }

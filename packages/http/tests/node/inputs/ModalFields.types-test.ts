@@ -1,5 +1,5 @@
 import { ComponentType } from 'discord-api-types/v10';
-import { expectTypeOf } from 'vitest';
+import { expectTypeOf } from 'vite-plus/test';
 
 import { ModalFields } from '#inputs/ModalFields';
 

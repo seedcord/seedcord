@@ -1,7 +1,7 @@
 import { SlashCommandBuilder } from '@discordjs/builders';
 import { SeedcordErrorCode } from '@seedcord/errors';
 import { GatewayIntentBits, InteractionContextType } from 'discord.js';
-import { describe, expect, it } from 'vitest';
+import { describe, expect, it } from 'vite-plus/test';
 
 import { assertGuildsIntent } from '#miscellaneous/assertGuildsIntent';
 

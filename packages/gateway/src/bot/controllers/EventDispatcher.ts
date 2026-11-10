@@ -187,7 +187,7 @@ export class EventDispatcher implements Initializeable, HmrAware {
                 frequency
             });
 
-            // a post-init (hmr) registration can add an event with no client listener yet
+            // a post-init (hmr) registration can add an event without a client listener yet
             if (this.isInitialized && !this.attachedEvents.has(key)) {
                 this.attachListener(key);
             }

@@ -2,7 +2,15 @@ import type { ChannelType } from 'discord-api-types/v10';
 
 /** A slash option kind as a plain string union (`string`, `channel`, ...), keyed to the registry. */
 export type OptionKind =
-    'string' | 'integer' | 'number' | 'boolean' | 'user' | 'channel' | 'role' | 'mentionable' | 'attachment';
+    | 'string'
+    | 'integer'
+    | 'number'
+    | 'boolean'
+    | 'user'
+    | 'channel'
+    | 'role'
+    | 'mentionable'
+    | 'attachment';
 
 /**
  * The cache state a command's interaction arrives in, read from the `contexts` it declares. A guild-only
@@ -54,7 +62,7 @@ export interface SlashRegistry {}
  */
 export type CacheFor<Route extends keyof SlashRegistry> = undefined extends CacheOf<Route> ? undefined : 'cached';
 
-// a route the registry cannot answer for carries no guild guarantee
+// a route the registry cannot answer for doesn't carry a guild guarantee
 type CacheOf<Route extends keyof SlashRegistry> = [Route] extends [never]
     ? undefined
     : SlashRegistry[Route] extends { cache: infer Cache }

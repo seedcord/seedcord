@@ -1,5 +1,5 @@
 import { LoggerChannelRegistry } from '@seedcord/logger';
-import { beforeEach, describe, expect, it, vi } from 'vitest';
+import { beforeEach, describe, expect, it, vi } from 'vite-plus/test';
 
 import { HealthCheck } from '#node/HealthCheck';
 import { Bus, busLoggerOf } from '#subscribers/Bus';
@@ -25,7 +25,7 @@ beforeEach(() => {
     registry.configure({ level: 'trace', sinks: [sink] });
 });
 
-// `LoggerChannelId` is a LiteralUnion, so a typo in a channel literal is still fine.
+// a typo in a channel literal is still fine because `LoggerChannelId` is a LiteralUnion.
 // only the sites that construct without a host or a Discord client are pinned here.
 describe('flat-site log channels', () => {
     it('puts the bus on the subscribers channel', () => {

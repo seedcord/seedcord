@@ -1,12 +1,12 @@
 'use client';
 
 import * as Dialog from '@radix-ui/react-dialog';
+import { cn } from 'cn';
 import { AnimatePresence, m } from 'motion/react';
 import { createContext, use, useCallback, useLayoutEffect, useMemo, useRef, useState } from 'react';
 
 import { Card } from './Card';
 import { DIALOG_OVERLAY } from './Dialog';
-import { cn } from './lib/cn';
 import { easeOutStrong } from './lib/motion';
 import { tw } from './lib/tw';
 import { useFocusReturn } from './lib/useFocusReturn';
@@ -102,7 +102,7 @@ function useMeasuredHeight(): [number, (el: HTMLDivElement | null) => void] {
     const observerRef = useRef<ResizeObserver | null>(null);
     const [height, setHeight] = useState(0);
 
-    // the radix portal drops this node on close. a callback ref re-attaches the observer on the next open
+    // the radix portal unmounts this node on close. a callback ref re-attaches the observer on the next open
     const measureRef = useCallback((el: HTMLDivElement | null) => {
         observerRef.current?.disconnect();
         if (!el) {

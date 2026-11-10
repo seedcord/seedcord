@@ -2,7 +2,7 @@ import { writeFile } from 'node:fs/promises';
 import { join } from 'node:path';
 
 import { readBuildOutput } from '@cloudflare/build-output-utils';
-import { describe, expect, it } from 'vitest';
+import { describe, expect, it } from 'vite-plus/test';
 
 import { ShellMode } from '#src/core/ShellMode';
 
@@ -29,7 +29,7 @@ async function builtWorkerName(shell: ShellMode): Promise<string> {
 }
 
 describe('seedcord build mode on an edge bot', () => {
-    it('builds in production when the shell sets no mode', async () => {
+    it("builds in production when the shell doesn't set a mode", async () => {
         await expect(builtWorkerName(new ShellMode())).resolves.toBe('edge-bot-production');
     }, 120_000);
 

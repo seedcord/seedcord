@@ -1,7 +1,7 @@
 import { RegisterInteractionMiddleware } from '@seedcord/core';
 import { DispatchContext } from '@seedcord/core/internal';
 import { Events } from 'discord.js';
-import { describe, expect, expectTypeOf, it, vi } from 'vitest';
+import { describe, expect, expectTypeOf, it, vi } from 'vite-plus/test';
 
 import { RegisterEventMiddleware } from '#bDecorators/Middlewares';
 import { EventMiddleware } from '#handlers/event';
@@ -79,7 +79,7 @@ describe('EventMiddleware', () => {
     });
 });
 
-// @RegisterEventMiddleware and the EventMiddleware generic must agree, in both directions
+// @RegisterEventMiddleware and the EventMiddleware generic must list the same events, checked in both directions
 
 @RegisterEventMiddleware()
 class GoodCatchall extends EventMiddleware {

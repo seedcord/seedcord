@@ -11,16 +11,16 @@ type CommandOption = NonNullable<RESTPostAPIChatInputApplicationCommandsJSONBody
 /** One executable slash route and the basic options at that leaf. */
 export interface SlashRouteLeaf {
     route: string;
-    /** The subcommand's description. For a command with no subcommands, the command's own description. */
+    /** The subcommand's description. For a command without subcommands, the command's own description. */
     description: string;
     options: readonly CommandOption[];
 }
 
 /**
- * Enumerates the executable route leaves of a chat-input command's JSON. A command with no subcommands is a
+ * Enumerates the executable route leaves of a chat-input command's JSON. A command without subcommands is a
  * single leaf at its name. Each subcommand and grouped subcommand is its own leaf, keyed through
  * {@link buildSlashRoute} so a generated registry and a dispatched interaction resolve to the same string. A
- * subcommand group with no subcommands deploys nothing on Discord, so it yields no leaf.
+ * subcommand group without subcommands doesn't yield a leaf because it deploys nothing on Discord.
  */
 export function routeLeavesOf(json: RESTPostAPIChatInputApplicationCommandsJSONBody): SlashRouteLeaf[] {
     const options = json.options ?? [];

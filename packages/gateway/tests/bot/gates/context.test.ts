@@ -1,7 +1,7 @@
 import { RequirePermissions } from '@seedcord/core';
 import { DispatchContext } from '@seedcord/core/internal';
 import { GuildMember, Message, PermissionFlagsBits } from 'discord.js';
-import { describe, it, expect } from 'vitest';
+import { describe, it, expect } from 'vite-plus/test';
 
 import { eventGateContext, interactionGateContext } from '#bot/gates/context';
 
@@ -66,7 +66,7 @@ describe('interactionGateContext', () => {
 
         expect(built.member).toBe(member);
         expect(built.memberRoleIds).toEqual(['r1', 'r2']);
-        // the payload's channel-scoped permissions, so gates read the same bits on every transport
+        // gates read the same bits on every transport because these are the payload's channel-scoped permissions
         expect(built.memberPermissions).toBe(16n);
         expect(built.appPermissions).toBe(64n);
         expect(built.memberGuildPermissions).toBe(8n);
@@ -74,7 +74,7 @@ describe('interactionGateContext', () => {
     });
 
     it('excludes the everyone role from a cached member, matching the raw payload shape', () => {
-        // the everyone role's id equals the guild id, and the raw payload's roles array never carries it
+        // the everyone role's id equals the guild id, and the raw payload's roles array never has it
         const member = fakeMember(['g1', 'r1'], 8n);
         const interaction = {
             user: { id: 'u1' },
@@ -108,14 +108,14 @@ describe('interactionGateContext', () => {
 
         expect(built.member).toBeNull();
         expect(built.memberRoleIds).toEqual(['r3']);
-        // an uncached raw member carries no djs permissions, so the base set is null
+        // the base set is null since an uncached raw member doesn't carry djs permissions
         expect(built.memberGuildPermissions).toBeNull();
     });
 });
 
 describe('eventGateContext', () => {
-    it('builds the event context and yields a null actor when the args carry no carrier', () => {
-        // empty payload, so deriveEventActor finds no Message, GuildMember, or User to read
+    it('builds the event context and yields a null actor when the args are missing a carrier', () => {
+        // deriveEventActor doesn't find a Message, GuildMember, or User to read. the payload is empty
         const payload = [] as unknown as Parameters<typeof eventGateContext>[1];
         // the builder never reads core
         const core = {} as unknown as Core;
@@ -139,7 +139,7 @@ describe('eventGateContext', () => {
     });
 
     it('derives the scalars from a member-carrying payload', () => {
-        // the cache carries the everyone role (id equals the guild id), the scalar set excludes it
+        // the cache has the everyone role (id equals the guild id), the scalar set excludes it
         const member = fakeMember(['g1', 'r1'], 4n);
         Object.defineProperties(member, {
             guild: { value: { id: 'g1', members: { me: fakeMember([], 2n) } } },
@@ -153,7 +153,7 @@ describe('eventGateContext', () => {
         expect(built.userId).toBe('u1');
         expect(built.guildId).toBe('g1');
         expect(built.memberRoleIds).toEqual(['r1']);
-        // events have no channel scope, so these are the member's guild-level bits
+        // these are the member's guild-level bits because events don't have a channel scope
         expect(built.memberPermissions).toBe(4n);
         expect(built.memberGuildPermissions).toBe(4n);
         expect(built.appGuildPermissions).toBe(2n);
@@ -203,7 +203,7 @@ describe('core permission gate over a djs-built context', () => {
         ).resolves.toBeUndefined();
     });
 
-    it('refuses when the member lacks it', async () => {
+    it("refuses when the member doesn't have it", async () => {
         await expect(
             RequirePermissions([PermissionFlagsBits.BanMembers]).check(contextFor(PermissionFlagsBits.SendMessages))
         ).rejects.toThrow('A required permission is missing.');

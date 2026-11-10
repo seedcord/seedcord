@@ -3,7 +3,7 @@ title: Context menu commands
 description: Add a right-click command to a user or a message in Discord, and read the user or message someone ran it on.
 ---
 
-Reporting a message through a slash command means getting its id in front of the caller somehow, then having them paste it into an option. A context menu command puts the action on the message itself, so the right-click carries the target.
+Reporting a message through a slash command means getting its id in front of the caller somehow, then having them paste it into an option. A context menu command puts the action on the message itself, so the right-click includes the target.
 
 Discord shows one of these when someone right-clicks. It takes a name and a kind, and that click is its only input.
 
@@ -71,7 +71,7 @@ The clicked thing arrives as a discord.js object on gateway and as a `discord-ap
 
 {/* prettier-ignore-end */}
 
-Both transports give `this.target` an `id`. A user target carries `username` too, and a message target reaches its author through `author`.
+Both transports give `this.target` an `id`. A user target has `username` too, and a message target reaches its author through `author`.
 
 `this.targetMember` differs further. Gateway gives it `id` and `displayName`. Http holds the guild fields alone there, since Discord sends that person's user object once under `resolved.users`.
 
@@ -99,7 +99,7 @@ export class ReportMessage extends MessageContextMenuHandler<'Report Message'> {
 
 ## Reaching the member
 
-A user command also carries the clicked person's server member, which is `null` when the command runs outside a server.
+A user command also has the clicked person's server member, which is `null` when the command runs outside a server.
 
 ```ts twoslash
 import {
@@ -153,7 +153,7 @@ Message commands work the same way, and each of your cases receives the clicked 
 
 ## Each kind keeps its own names
 
-Discord lets a user command and a message command share a name, so the two registries stay separate. A name in one is invisible to the other.
+Discord lets a user command and a message command share a name, so seedcord keeps the two registries separate. A name in one is invisible to the other.
 
 ```ts twoslash
 // @errors: 2344

@@ -1,4 +1,4 @@
-import { describe, expect, it } from 'vitest';
+import { describe, expect, it } from 'vite-plus/test';
 
 import { noticesOf } from '#ui/notices';
 import { DevStore } from '#ui/stores/DevStore';
@@ -66,7 +66,7 @@ describe('noticesOf', () => {
         expect(keysOf(store.getState())).toStrictEqual(['commands', 'error']);
     });
 
-    // the runner sets the phase and the notice together, so filtering on the phase drops the card entirely
+    // filtering on the phase removes the card entirely because the runner sets the phase and the notice together
     it('keeps the error notice while the phase reads error', () => {
         const store = running();
         store.setPhase('error');

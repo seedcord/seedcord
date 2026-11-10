@@ -1,9 +1,9 @@
 'use client';
 
+import { cn } from 'cn';
 import { LayoutGroup, m, useReducedMotion } from 'motion/react';
 import { useId } from 'react';
 
-import { cn } from './lib/cn';
 import { layoutSpring } from './lib/motion';
 import { PlainLink } from './lib/navLink';
 

@@ -1,6 +1,6 @@
 import { useHotkeys } from '@seedcord/ui';
 import { fireEvent, renderHook } from '@testing-library/react';
-import { afterEach, describe, expect, it, vi } from 'vitest';
+import { afterEach, describe, expect, it, vi } from 'vite-plus/test';
 
 import { useGuidePageKeys } from '#components/useGuidePageKeys';
 
@@ -46,7 +46,7 @@ describe('useGuidePageKeys', () => {
         expect(hrefs).toEqual(['/core', '/commands/options', '/', '/tooling/cli']);
     });
 
-    it('stays put past the last page and tab, and on a page outside every tab', () => {
+    it('does nothing past the last page and tab, and on a page outside every tab', () => {
         const atEnd = pressed({ ...TARGETS, activeHref: '/tooling/cli', neighbours: {} }, [
             { key: 'ArrowRight' },
             { key: 'ArrowRight', shiftKey: true }

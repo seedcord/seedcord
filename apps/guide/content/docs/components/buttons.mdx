@@ -34,13 +34,13 @@ A click is an interaction like any other, so every [reply method](/replying) wor
 
 <Callout type="transport" only="gateway">
 
-A gateway `ButtonHandler` takes a second type argument, discord.js's `CacheType`, which defaults to `'cached'`. That default types `this.event.member` as a `GuildMember`, but seedcord doesn't check it at runtime. A button in a DM has no member, so pass `CacheType` for a handler that can get one. An http `ButtonHandler` takes only the route tuple.
+A gateway `ButtonHandler` takes a second type argument, discord.js's `CacheType`, which defaults to `'cached'`. That default types `this.event.member` as a `GuildMember`, but seedcord doesn't check it at runtime. A button in a DM doesn't have a member, so pass `CacheType` for a handler that can get one. An http `ButtonHandler` takes only the route tuple.
 
 </Callout>
 
 ## Rewriting the source message
 
-A `reply` to a click posts a new message under the old one. The old buttons stay there, so someone can click them again.
+A `reply` to a click posts a new message under the old one. The old buttons are still there, so someone can click them again.
 
 [`this.update()`](ref:gateway/ComponentHandler.update) rewrites the message the button came from. It takes the same response shape every reply method takes, so a new `components` list replaces the old buttons.
 
@@ -127,7 +127,7 @@ Decoding runs once, before any case, so a wire from an [older shape](/components
 
 ## Who can click a button
 
-You posted a ticket with a **Close** button, and someone else in the channel closed it. seedcord runs your handler for every click, whoever clicked.
+seedcord runs your handler for every click, whoever clicked. On a ticket with a **Close** button, anyone in the channel can close it.
 
 If only one person needs the buttons, send them in [an ephemeral reply](/replying#only-the-person-who-ran-the-command-sees-it), which nobody else can see. To keep the message public, put that person's id in the custom id and compare it to the clicker.
 

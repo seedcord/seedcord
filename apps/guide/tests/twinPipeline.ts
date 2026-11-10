@@ -8,7 +8,7 @@ import { remarkRefLinks } from '#lib/remarkRefLinks';
 import { TWIN_OPTIONS } from '#lib/twin';
 
 // _data is the plugin's own hook for reading the markdown without compiling a module.
-// source.config.ts runs remarkRefLinks ahead of the twin
+// source.config.ts runs remarkRefLinks before the twin
 export async function twinOf(source: string): Promise<string> {
     const processor = unified()
         .use(remarkParse)

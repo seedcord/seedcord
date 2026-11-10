@@ -1,4 +1,4 @@
-import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
+import { describe, it, expect, beforeEach, afterEach, vi } from 'vite-plus/test';
 
 import { Kv } from '#src/kv/Kv';
 import { MemoryDriver } from '#src/kv/MemoryDriver';
@@ -21,9 +21,9 @@ describe('KvRateLimiter remaining semantics', () => {
         const limiter = memoryRateLimiter();
         const window = { windowMs: 1000, limit: 1 };
 
-        // peek is advisory, so a fresh key shows the slot as still available
+        // a fresh key shows the slot as still available because peek is advisory
         expect(await limiter.peek('user', window)).toMatchObject({ remaining: 1 });
-        // charge is exact, so consuming the slot leaves none
+        // consuming the slot leaves none because charge is exact
         expect(await limiter.charge('user', window)).toMatchObject({ remaining: 0 });
     });
 

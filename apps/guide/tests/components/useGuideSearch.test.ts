@@ -1,5 +1,5 @@
 import { act, renderHook } from '@testing-library/react';
-import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vite-plus/test';
 
 import { emptyMessage, useGuideSearch } from '#components/useGuideSearch';
 
@@ -13,7 +13,7 @@ const ANSWERS: Record<string, { path: string; page: string }[]> = {
     kysely: [{ path: '/plugins/kysely', page: 'Kysely' }]
 };
 
-// an Error rejects the fetch the way a dropped connection does
+// an Error rejects the fetch the way a lost connection does
 type Reply = Response | Error;
 
 interface Server {
@@ -244,7 +244,7 @@ describe('useGuideSearch', () => {
         expect(signals.get('kysely')).toBe(answered);
     });
 
-    it('says there is no connection only when the request never reached the server', async () => {
+    it('reports a lost connection only when the request never reached the server', async () => {
         const { answer } = serving();
         const { result } = renderHook(() => useGuideSearch('cooldown', true).groups);
         await pauseTyping();

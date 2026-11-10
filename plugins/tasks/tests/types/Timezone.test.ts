@@ -1,4 +1,4 @@
-import { describe, expect, it } from 'vitest';
+import { describe, expect, it } from 'vite-plus/test';
 
 import { isTimezone } from '#src/isTimezone';
 import { IANA_TIMEZONES } from '#src/types/Timezone';

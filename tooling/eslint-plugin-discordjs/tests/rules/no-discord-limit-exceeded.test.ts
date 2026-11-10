@@ -26,7 +26,7 @@ ruleTester.run('no-discord-limit-exceeded', rule, {
             declare const btn: ButtonBuilder;
             new ActionRowBuilder().addComponents(btn, btn, btn, btn, btn);
         `,
-        // setComponents replaces the prior addComponents, so the real count is 2
+        // the real count is 2 because setComponents replaces the prior addComponents
         dedent`
             import { ActionRowBuilder } from 'discord.js';
             new ActionRowBuilder().addComponents({}, {}, {}, {}).setComponents([{}, {}]);
@@ -61,7 +61,7 @@ ruleTester.run('no-discord-limit-exceeded', rule, {
                 }
             }
         `,
-        // local class named ActionRowBuilder is not from discord.js, so it stays unflagged
+        // a local class named ActionRowBuilder isn't flagged because it isn't from discord.js
         dedent`
             class ActionRowBuilder {
                 addComponents(...items: unknown[]): this { return this; }

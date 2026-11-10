@@ -1,9 +1,9 @@
 'use client';
 
+import { cn } from 'cn';
 import { ArrowBigUp, Command } from 'lucide-react';
 
 import { Cap, keyCap } from './KeyCap';
-import { cn } from './lib/cn';
 
 import type { KbdSize } from './Kbd';
 import type { KeyCap } from './KeyCap';

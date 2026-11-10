@@ -139,13 +139,13 @@ class Leaderboard extends SlashHandler<'leaderboard'> {
 }
 ```
 
-`row` has the shape of a `users` row, with `id` typed as `number` since the select unwraps its `Generated`. `executeTakeFirst()` returns `undefined` when no row matches, so the reply checks `row` before it reads `username`.
+`row` has the shape of a `users` row, with `id` typed as `number` since the select unwraps its `Generated`. `executeTakeFirst()` returns `undefined` when nothing matches, so the reply checks `row` before it reads `username`.
 
 ## Nothing checks this against your database
 
 You write this interface by hand, separately from the migrations that create the tables. When a migration adds a column, your queries can't select it until you add it to this interface too. Every schema change is an edit in two places. If you misspell a column here, the query still compiles, though it fails when it runs.
 
-[`kysely-codegen`](https://github.com/RobinBlomberg/kysely-codegen) saves you the second edit. It connects to your database, reads the tables your migrations created, and writes a file that exports an interface named `DB`.
+[`kysely-codegen`](https://github.com/RobinBlomberg/kysely-codegen) saves you the second edit. It connects to your database, reads the tables that your migrations created, and writes a file that exports an interface named `DB`.
 
 <Shell add="-D kysely-codegen" />
 
@@ -153,7 +153,7 @@ You write this interface by hand, separately from the migrations that create the
 
 The command reads the connection string from `DATABASE_URL`, either in your environment or in a `.env` file. Point `schema` at the generated type, and delete the interfaces you wrote by hand.
 
-```ts title="src/database.ts"
+```ts plain title="src/database.ts"
 import type { DB } from './db';
 
 declare module '@seedcord/plugin-kysely-postgres' {
@@ -165,4 +165,4 @@ declare module '@seedcord/plugin-kysely-postgres' {
 
 The generated file only changes when you run the command again, so run it after every migration.
 
-To keep each table's queries in one class, write [services](/plugins/kysely-services). [Migrations](/plugins/kysely-migrations) create the tables this interface describes.
+To keep each table's queries in one class, write [services](/plugins/kysely-services). [Migrations](/plugins/kysely-migrations) create the tables that this interface describes.

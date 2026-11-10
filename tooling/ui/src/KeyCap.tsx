@@ -1,8 +1,8 @@
+import { cn } from 'cn';
 import { ArrowDown, ArrowLeft, ArrowRight, ArrowUp, CornerDownLeft } from 'lucide-react';
 
 import { Icon } from './Icon';
 import { Kbd } from './Kbd';
-import { cn } from './lib/cn';
 
 import type { IconComponent } from './Icon';
 import type { KbdSize } from './Kbd';

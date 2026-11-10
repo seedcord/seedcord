@@ -1,0 +1,13 @@
+extends: substitution
+link: https://github.com/seedcord/seedcord/blob/next/.agents/skills/writing-voice/SKILL.md
+message: "Write '%s' in place of '%s'."
+level: error
+ignorecase: true
+swap:
+  'leverag(?:e|es|ed|ing)': use
+  'utili[sz](?:e|es|ed|ing)': use
+  'in order to': to
+  'out of the box': by default
+  'under the hood': internally
+  'reach(?:es|ed|ing)? for': use
+  'empower(?:s|ed|ing)?': lets you

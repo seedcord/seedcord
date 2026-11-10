@@ -14,8 +14,7 @@ export interface Violation {
         | 'breaking-marker'
         | 'breaking-patch'
         | 'too-long'
-        | 'banned-punctuation'
-        | 'banned-word'
+        | 'semicolon'
         | 'fix-opener';
     detail: string;
 }
@@ -33,21 +32,6 @@ const NOT_A_SENTENCE_END = /\b(?:e\.g|i\.e)\.|\bvs\.|\betc\.(?=\s+[a-z])/g;
 const PATCH_SENTENCES = 2;
 const SENTENCES = 3;
 
-const EM_DASH = '—';
-const EN_DASH = '–';
-const MARKS = [EM_DASH, EN_DASH, ';'];
-const WORDS = [
-    'robust',
-    'seamless',
-    'blazing',
-    'effortless',
-    'leverage',
-    'performant',
-    'worth noting',
-    'surprisingly',
-    'fail-loud'
-];
-
 export class ChangesetRule {
     // package name to its current version
     constructor(private readonly packages: ReadonlyMap<string, string>) {}
@@ -63,8 +47,7 @@ export class ChangesetRule {
             ...markerViolations(file, summary),
             ...breakingPatchViolations(file, summary, patches),
             ...lengthViolations(file, summary, patches.length === releases.length),
-            ...punctuationViolations(file, summary),
-            ...wordViolations(file, summary),
+            ...(prose(summary).includes(';') ? [{ file, reason: 'semicolon' as const, detail: ';' }] : []),
             ...openerViolations(file, summary)
         ];
     }
@@ -125,26 +108,6 @@ function lengthViolations(file: string, summary: string, patchOnly: boolean): Vi
     if (counted <= cap) return [];
 
     return [{ file, reason: 'too-long', detail: `${String(counted)} sentences` }];
-}
-
-function punctuationViolations(file: string, summary: string): Violation[] {
-    const text = prose(summary);
-
-    return MARKS.filter((mark) => text.includes(mark)).map((mark) => ({
-        file,
-        reason: 'banned-punctuation' as const,
-        detail: mark
-    }));
-}
-
-function wordViolations(file: string, summary: string): Violation[] {
-    const text = prose(summary);
-
-    return WORDS.filter((word) => new RegExp(String.raw`\b${word}\b`, 'i').test(text)).map((word) => ({
-        file,
-        reason: 'banned-word' as const,
-        detail: word
-    }));
 }
 
 function openerViolations(file: string, summary: string): Violation[] {

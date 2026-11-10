@@ -1,4 +1,4 @@
-import { describe, expect, it } from 'vitest';
+import { describe, expect, it } from 'vite-plus/test';
 
 import { postMetadata } from '#lib/blog/seo';
 import { DEFAULT_OG_IMAGE } from '#lib/site';
@@ -12,7 +12,7 @@ describe('postMetadata', () => {
         expect(metadata.alternates?.types).not.toHaveProperty('text/markdown');
     });
 
-    it('sets no robots rule on a listed post', () => {
+    it('leaves robots null on a listed post', () => {
         expect(postMetadata(POST).robots).toBeNull();
     });
 

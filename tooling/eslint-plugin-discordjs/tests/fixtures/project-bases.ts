@@ -1,7 +1,7 @@
 import { BuilderComponent } from './seedcord';
 
-// Local stand-ins for seedcord's base classes. extendsSeedcordType matches by class name only, so a
-// project abstract base extending one of these reproduces the cross-file case the decorator rules flag.
+// Local stand-ins for seedcord's base classes. A project abstract base extending one of these
+// reproduces the cross-file case the decorator rules flag because extendsSeedcordType matches by class name only.
 
 export abstract class EventHandler<EventName> {
     declare public readonly event: EventName;

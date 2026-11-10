@@ -49,7 +49,7 @@ export interface InteractionMiddlewareMetadata {
  * Registers an interaction middleware. It runs after the dispatcher builds the handler and before its
  * gates, over that handler's reply surface.
  *
- * @param options - The kinds this middleware runs on and its ordering.
+ * @param options - The kinds that this middleware runs on and its ordering.
  * @decorator
  *
  * @example

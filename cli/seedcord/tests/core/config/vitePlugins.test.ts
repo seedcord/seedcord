@@ -1,7 +1,7 @@
 import { stripVTControlCharacters } from 'node:util';
 
 import { isSeedcordError, SeedcordErrorCode } from '@seedcord/errors';
-import { assert, describe, expect, it } from 'vitest';
+import { assert, describe, expect, it } from 'vite-plus/test';
 
 import { rethrowVitePluginError } from '#core/config/vitePlugins';
 import { vitePluginsOf } from '#tests/vitePluginsOf';
@@ -188,7 +188,7 @@ describe('VitePlugins.create', () => {
     });
 
     it.each([['yaml'], [{ transform: () => undefined }]])(
-        'throws CliConfigInvalidField for the entry %o that has no plugin name',
+        "throws CliConfigInvalidField for the entry %o that doesn't have a plugin name",
         async (entry) => {
             const vitePlugins = vitePluginsOf(() => [entry], CONFIG_FILE);
 

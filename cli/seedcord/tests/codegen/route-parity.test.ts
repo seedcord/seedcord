@@ -1,6 +1,6 @@
 import { buildSlashRoute } from '@seedcord/utils/internal';
 import { SlashCommandBuilder, ApplicationCommandOptionType } from 'discord.js';
-import { describe, it, expect } from 'vitest';
+import { describe, it, expect } from 'vite-plus/test';
 
 import { AugmentationBuilder } from '#commands/codegen/AugmentationBuilder';
 import { silentLogger } from '#tests/silentLogger';
@@ -80,7 +80,7 @@ describe('route-key parity between AugmentationBuilder and buildSlashRoute', () 
         expect(new Set(Object.keys(tables))).toEqual(new Set(expectedRoutesFromJson(json)));
     });
 
-    it('empty subcommand group yields no route on either side', () => {
+    it('empty subcommand group yields zero routes on either side', () => {
         const builder = new SlashCommandBuilder()
             .setName('admin')
             .setDescription('d')

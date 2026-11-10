@@ -1,4 +1,4 @@
-import { describe, expect, it } from 'vitest';
+import { describe, expect, it } from 'vite-plus/test';
 
 import { Notice } from '#stops/Notice';
 import { Silence } from '#stops/Silence';
@@ -24,7 +24,7 @@ describe('Silence', () => {
         expect(new NoopDenial()).toBeInstanceOf(Notice);
     });
 
-    it('carries no reason by default', () => {
+    it('has an undefined reason by default', () => {
         expect(new Silence().reason).toBeUndefined();
     });
 

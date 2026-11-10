@@ -43,11 +43,10 @@ export default createRule({
             missingRoute:
                 'This {{base}} has no @{{decorator}} decorator, so it never registers and its interactions fall through to the unhandled default.',
             sharedSelectBase:
-                'SelectMenuHandler is the shared base and takes no route decorator. Extend the base for the kind you need, such as StringMenuHandler or UserMenuHandler.'
+                "SelectMenuHandler is the shared base and doesn't take a route decorator. Extend the base for the kind you need, such as StringMenuHandler or UserMenuHandler."
         },
         schema: []
     },
-    defaultOptions: [],
     create(context) {
         const services = ESLintUtils.getParserServices(context);
         const checker = services.program.getTypeChecker();

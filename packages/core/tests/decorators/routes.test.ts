@@ -1,5 +1,5 @@
 import { CustomId } from '@seedcord/custom-id';
-import { describe, expect, expectTypeOf, it } from 'vitest';
+import { describe, expect, expectTypeOf, it } from 'vite-plus/test';
 
 import { ComponentDefsKey } from '#customId/routing';
 import {
@@ -109,7 +109,7 @@ const profileTypo = UserContextMenuRoute('View Profil');
 const approveRejectButton = ButtonRoute(ApproveId, RejectId);
 const approveButton = ButtonRoute(ApproveId);
 
-// compile-only. each decorator's parameter type is the error the author reads.
+// compile-only. each decorator's parameter type is the error that the author reads.
 function rejectionMessages(): void {
     expectTypeOf<Parameters<typeof slashKick<typeof Ban>>[0]>().toEqualTypeOf<
         Constructor<['SlashRoute does not match the SlashHandler generic', { decorator: 'rtKick'; generic: 'rtBan' }]>

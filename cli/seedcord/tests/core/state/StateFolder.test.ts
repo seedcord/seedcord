@@ -2,7 +2,7 @@ import { mkdir, mkdtempDisposable, writeFile } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 
-import { describe, expect, it, onTestFinished, vi } from 'vitest';
+import { describe, expect, it, onTestFinished, vi } from 'vite-plus/test';
 
 import { StateFolder } from '#core/state/StateFolder';
 import { silentLogger } from '#tests/silentLogger';
@@ -72,7 +72,7 @@ describe('StateFolder', () => {
         expect(state.read(counter)).toEqual({ count: 0 });
     });
 
-    it('warns on a write it could not save and keeps going', async () => {
+    it('warns on a write it could not save and continues', async () => {
         const warn = vi.fn();
         const state = new StateFolder(await projectWithFolderAtFile(), { ...silentLogger, warn });
 

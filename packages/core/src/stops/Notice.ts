@@ -67,7 +67,7 @@ export abstract class Notice extends Error {
     protected constructor(message: string, options?: ErrorOptions) {
         super(message, options);
 
-        // Error sets name to 'Error', so stamp the concrete subclass name for logs and the fault report
+        // stamp the concrete subclass name for logs and the fault report because Error sets name to 'Error'
         this.name = new.target.name;
         Error.captureStackTrace(this, this.constructor);
     }
@@ -84,7 +84,7 @@ export abstract class Notice extends Error {
 
 /**
  * A Notice class that seedcord constructs and throws in place of a default refusal. It passes the data that
- * refusal carries, like the retry time for `Cooldown` or the subject and permission names for a permission check.
+ * refusal has, like the retry time for `Cooldown` or the subject and permission names for a permission check.
  *
  * @example
  * ```ts

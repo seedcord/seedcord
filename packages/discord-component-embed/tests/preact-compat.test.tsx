@@ -1,6 +1,6 @@
 /** @jsxImportSource preact */
 import { Component, forwardRef, lazy, memo } from 'preact/compat';
-import { describe, expect, it } from 'vitest';
+import { describe, expect, it } from 'vite-plus/test';
 
 import { Container, TextDisplay, toComponentEmbed } from '#src/index';
 

@@ -3,7 +3,7 @@ import { stripVTControlCharacters } from 'node:util';
 import { paint, SeedcordErrorCode } from '@seedcord/errors';
 import { SeedcordError } from '@seedcord/errors/internal';
 import { Routes } from 'discord-api-types/v10';
-import { describe, expect, it, vi } from 'vitest';
+import { describe, expect, it, vi } from 'vite-plus/test';
 
 import { PROCEED } from '#commands/commands/confirm';
 import { DeployPresenter } from '#commands/commands/deploy/DeployPresenter';
@@ -54,7 +54,7 @@ describe('DeployRunner', () => {
         ]);
     });
 
-    it('counts only global commands when the code targets no guild', async () => {
+    it('counts only global commands when the code targets zero guilds', async () => {
         const { rest } = fakeDiscord();
 
         const output = await deploy(await fakeProject({ commands: [Ping] }), rest);
@@ -62,7 +62,7 @@ describe('DeployRunner', () => {
         expect(output).toMatch(/deploy +\S+ +1 global\n/u);
     });
 
-    it('prints what each scope gains and loses, and counts the commands that stay', async () => {
+    it('prints what each scope gains and loses, and counts the commands it keeps', async () => {
         const { rest } = fakeDiscord({ [Routes.applicationCommands(APP_ID)]: [slash('ping'), slash('legacy')] });
 
         const output = await deploy(await fakeProject(), rest);
@@ -190,7 +190,7 @@ describe('DeployRunner', () => {
         expect(confirm).toHaveBeenCalledWith(expect.stringContaining('Deploy to 2 scopes?'));
     });
 
-    it('says there is nothing to deploy and asks nothing when the code has no commands', async () => {
+    it('says there is nothing to deploy and asks nothing when the code defines zero commands', async () => {
         const { rest, puts } = fakeDiscord();
         const confirm = vi.fn((_message: string) => Promise.resolve(true));
 
@@ -230,7 +230,7 @@ describe('DeployRunner', () => {
         expect(output.trimEnd().split('\n').at(-1)).toBe('  cancelled');
     });
 
-    it('throws CliDeployNoCommandsFolder and sends nothing when the bot has no commands folder', async () => {
+    it("throws CliDeployNoCommandsFolder and sends nothing when the bot doesn't have a commands folder", async () => {
         const { rest, puts } = fakeDiscord();
 
         const deploying = deploy(await fakeProject({ commandsPath: null }), rest);
@@ -271,7 +271,7 @@ describe('DeployRunner', () => {
         expect(output).toContain('Run seedcord build and deploy the worker again');
     });
 
-    it('skips the rebuild hint when the deploy adds no command', async () => {
+    it('skips the rebuild hint when the deploy adds zero commands', async () => {
         const { rest } = fakeDiscord({
             [Routes.applicationCommands(APP_ID)]: [slash('ping')],
             [Routes.applicationGuildCommands(APP_ID, '111')]: [slash('config')]

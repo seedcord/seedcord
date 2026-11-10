@@ -23,7 +23,7 @@
 
 ## About
 
-`@seedcord/eslint-plugin` has the ESLint rules for seedcord bots. Each one catches a seedcord mistake that still compiles, like a handler with no route decorator, which never registers. Its `seedcord` preset also turns on [`eslint-plugin-discordjs`](https://www.npmjs.com/package/eslint-plugin-discordjs)'s `recommended` rules.
+`@seedcord/eslint-plugin` has the ESLint rules for seedcord bots. Each one catches a seedcord mistake that still compiles, like a handler without a route decorator, which never registers. Its `seedcord` preset also turns on [`eslint-plugin-discordjs`](https://www.npmjs.com/package/eslint-plugin-discordjs)'s `recommended` rules.
 
 Install it in a seedcord bot that has its own ESLint config. A bot on [`@seedcord/eslint-config`](https://www.npmjs.com/package/@seedcord/eslint-config) already has it, through `registerSeedcordPlugin`.
 

@@ -1,4 +1,4 @@
-import { afterEach, describe, expect, it } from 'vitest';
+import { afterEach, describe, expect, it } from 'vite-plus/test';
 
 import { routeConsoleToLogs } from '#commands/dev/routeConsoleToLogs';
 import { LogStore } from '#ui/stores/LogStore';

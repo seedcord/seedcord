@@ -1,4 +1,4 @@
-import { describe, expect, it } from 'vitest';
+import { describe, expect, it } from 'vite-plus/test';
 
 import { embedding } from '#src/embedding';
 import { GUIDE_SECTIONS_PATH, GUIDE_VECTORS_PATH } from '#src/files';

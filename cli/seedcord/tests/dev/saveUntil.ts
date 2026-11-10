@@ -1,6 +1,6 @@
 import { writeFile } from 'node:fs/promises';
 
-import { vi } from 'vitest';
+import { vi } from 'vite-plus/test';
 
 // chokidar 3 to 5 emit ready before they watch nested folders when one of their paths is missing.
 // vite passes it every env file for the mode, existing or not

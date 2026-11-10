@@ -1,4 +1,4 @@
-import { describe, expect, it } from 'vitest';
+import { describe, expect, it } from 'vite-plus/test';
 
 import { agentLinkHeader, agentRules, readmeFeatures, siteLinks } from '#src/agents';
 
@@ -55,7 +55,7 @@ describe('agentLinkHeader', () => {
         expect(agentLinkHeader('guide', '/commands/options.md')).toContain('type="text/markdown"');
     });
 
-    it('offers no alternate on a page with no twin', () => {
+    it("doesn't offer an alternate on a page without a twin", () => {
         expect(relationsOf(agentLinkHeader('guide')).has('alternate')).toBe(false);
     });
 });
@@ -78,7 +78,7 @@ describe('siteLinks', () => {
 describe('agentRules', () => {
     it('warns every site that seedcord is absent from training data', () => {
         for (const site of SITES) {
-            expect(agentRules(site)[0]).toContain('no presence in training data');
+            expect(agentRules(site)[0]).toContain("isn't in training data");
         }
     });
 
@@ -135,7 +135,7 @@ describe('readmeFeatures', () => {
         expect(readmeFeatures(README)).not.toContain('this bullet belongs to another section');
     });
 
-    it('comes back empty when the heading is gone', () => {
+    it('is empty when the heading was removed', () => {
         expect(readmeFeatures('# seedcord\n\n- a loose bullet\n')).toEqual([]);
     });
 });

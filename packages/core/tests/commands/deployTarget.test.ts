@@ -1,5 +1,5 @@
 import { isSeedcordError, SeedcordErrorCode } from '@seedcord/errors';
-import { describe, expect, it } from 'vitest';
+import { describe, expect, it } from 'vite-plus/test';
 
 import { resolveDeployTarget } from '#src/commands/deployTarget';
 
@@ -33,7 +33,7 @@ describe('resolveDeployTarget', () => {
         });
     });
 
-    it('expands the config token where it sits in the list', () => {
+    it('expands the config token in its position in the list', () => {
         expect(targetFor({ scope: 'guild', guilds: ['222', 'config'] }, ['111'])).toEqual({
             scope: 'guild',
             guilds: ['222', '111']
@@ -47,7 +47,7 @@ describe('resolveDeployTarget', () => {
         });
     });
 
-    it('throws when the config token has no ids behind it', () => {
+    it('throws when the config token resolves to zero ids', () => {
         let caught: unknown;
         try {
             targetFor({ scope: 'guild', guilds: ['config'] }, []);

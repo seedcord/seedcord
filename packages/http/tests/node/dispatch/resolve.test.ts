@@ -1,6 +1,6 @@
 import { CustomId, InteractionKind } from '@seedcord/core';
 import { RouteRegistry, storeInteractionRoute } from '@seedcord/core/internal';
-import { describe, expect, it } from 'vitest';
+import { describe, expect, it } from 'vite-plus/test';
 
 import { UnhandledRepliable } from '#handlers/defaults/UnhandledRepliable';
 import { resolve } from '#src/dispatch/resolve';
@@ -165,7 +165,7 @@ describe('resolve', () => {
     it('resolves the unhandled default for a wire no prefix owns', () => {
         const maps = mapsWith([InteractionKind.Button, 'approve']);
 
-        // prefixOf reads an empty key out of a wire with no colon
+        // prefixOf reads an empty key out of a wire without a colon
         expect(resolve(maps, component(2, 'other-app-id'))).toMatchObject({
             kind: 'button',
             route: '',

@@ -1,12 +1,12 @@
 import { isSeedcordError, SeedcordErrorCode } from '@seedcord/errors';
 import { Routes } from 'discord-api-types/v10';
-import { assert, describe, expect, it, vi } from 'vitest';
+import { assert, describe, expect, it, vi } from 'vite-plus/test';
 
 import { resolveEmojis } from '#src/miscellaneous/resolveEmojis';
 
 import type { REST } from '@discordjs/rest';
 import type { APIEmoji } from 'discord-api-types/v10';
-import type { Mock } from 'vitest';
+import type { Mock } from 'vite-plus/test';
 
 const APP = 'app-1';
 
@@ -117,7 +117,7 @@ describe('resolveEmojis', () => {
         expect(isSeedcordError(caught, 'SeedcordTypeError', SeedcordErrorCode.ConfigEmojiInvalid)).toBe(true);
     });
 
-    it('reports an emoji whose payload carries no id as not found', async () => {
+    it('reports an emoji whose payload has an empty id as not found', async () => {
         const caught = await failureOf({ Wave: ['wave', 'g1'] }, restWith({ g1: [apiEmoji('wave', '')] }));
 
         expect(caught).toMatchObject({

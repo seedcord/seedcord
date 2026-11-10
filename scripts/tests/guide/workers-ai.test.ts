@@ -1,5 +1,5 @@
 import { embedding } from '@seedcord/docs-search';
-import { expect, it } from 'vitest';
+import { expect, it } from 'vite-plus/test';
 
 import { WorkersAi } from '#src/guide/WorkersAi';
 import { CloudflareApi, type HttpFetch } from '#src/lib/CloudflareApi';
@@ -36,8 +36,8 @@ it('throws when a batch comes back with fewer vectors than texts', async () => {
     await expect(ai.embed(['a', 'b'])).rejects.toThrow(/1 vectors for 2 texts/);
 });
 
-it('throws when the result carries no vectors', async () => {
+it('throws when the result is missing vectors', async () => {
     const { ai } = fakeWorkersAi(() => ({ shape: [] }));
 
-    await expect(ai.embed(['a'])).rejects.toThrow(/returned no embeddings/);
+    await expect(ai.embed(['a'])).rejects.toThrow(/didn't return embeddings/);
 });

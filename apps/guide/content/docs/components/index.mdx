@@ -1,9 +1,9 @@
 ---
 title: Components
-description: Build the components your bot sends, like buttons, rows, and containers, as classes over the discord.js builders, with your bot color and emojis by name.
+description: Build the components that your bot sends, like buttons, rows, and containers, as classes over the discord.js builders, with your bot color and emojis by name.
 ---
 
-A line of text needs nothing more than `this.reply('Banned.')`. A container with a heading, a body, and a row of buttons under it needs a discord.js builder. You put that builder in a class.
+A line of text needs only `this.reply('Banned.')`. A container with a heading, a body, and a row of buttons under it needs a discord.js builder. You put that builder in a class.
 
 Subclass [`BuilderComponent`](ref:core/BuilderComponent), name the builder you want in the generic and in the `super()` call, and build the thing in the constructor.
 
@@ -30,7 +30,7 @@ Write the two the same. The compiler rejects a mismatch.
 
 To reword the card, you change one line in `BanCard.ts`. Every handler that sends one gets the new wording.
 
-`this.instance` stays protected, so your handler reads `.component` to get the builder out.
+`this.instance` is protected, so your handler reads `.component` to get the builder out.
 
 ```ts twoslash title="src/handlers/Ban.ts"
 import { SlashHandler, SlashRoute } from '@seedcord/gateway';
@@ -81,7 +81,7 @@ src/
 
 ## A row of buttons
 
-`ActionRowBuilder` is generic over what goes inside it, so a row you build by hand writes the child builder into the type every time. [`RowComponent`](ref:core/RowComponent) takes a key and does that for you, typing `this.instance` to whatever the row holds. A row holds buttons or one select menu.
+`ActionRowBuilder` is generic over the components inside it, so a row you build by hand writes the child builder into the type every time. [`RowComponent`](ref:core/RowComponent) takes a key and does that for you, typing `this.instance` to whatever the row holds. A row holds buttons or one select menu.
 
 ```ts twoslash title="src/components/BanActions.ts"
 import { ButtonBuilder } from '@discordjs/builders';
@@ -167,9 +167,9 @@ export const seedcord = new Seedcord({
 });
 ```
 
-Reading `.component` applies it. An embed takes it as its color, and a container takes it as its accent. Every other builder gets nothing, since nothing else carries one.
+Reading `.component` applies it. An embed takes it as its color, and a container takes it as its accent. Every other builder gets nothing, since nothing else has one.
 
-Set your own in the constructor, with `setColor` on an embed or `setAccentColor` on a container. The check only fills an empty color, so yours survives.
+Set your own in the constructor, with `setColor` on an embed or `setAccentColor` on a container. The check only fills an empty color, so it leaves yours alone.
 
 ```ts twoslash title="src/components/MaintenanceEmbed.ts"
 import { BuilderComponent } from '@seedcord/gateway';
@@ -193,7 +193,7 @@ Your color might only be known after the bot exists, because it comes from a set
 
 ## Emojis by name
 
-You've gone hunting for an emoji id before. Copy `<:streak_flame:1872389747982323426>` out of the client, paste it into a constants file, then do the next one. From then on you keep that file in sync by hand.
+Discord takes a custom emoji in a message as `<:streak_flame:1872389747982323426>`. By hand, you'd copy each of those out of the client into a constants file and keep that file in sync yourself.
 
 A re-upload gives the emoji a new id, so every copy of the old one points at nothing. A rename leaves the name in your code out of step with the one in Discord. Some emojis come from your app and some from one guild, so each of those is its own lookup.
 
@@ -277,7 +277,7 @@ class ConfirmRow extends RowComponent<'button'> {
 }
 ```
 
-seedcord stops startup when a name won't resolve, and the error carries every failure at once. `Emojis` throws when you read a key before startup fills it.
+seedcord stops startup when a name won't resolve, and the error lists every failure at once. `Emojis` throws when you read a key before startup fills it.
 
 <Callout type="transport" only="gateway">
 
@@ -287,7 +287,7 @@ A `[name, guildId]` emoji needs the `Guilds` intent, since seedcord reads that g
 
 <Callout type="transport">
 
-On gateway, each one is a [`GatewayEmoji`](ref:gateway/GatewayEmoji). In the example above, `Emojis.Streak` carries a `.source` holding the live discord.js `GuildEmoji` or `ApplicationEmoji`, typed per key from the tag codegen wrote. On http it is a plain [`ResolvedEmoji`](ref:core/ResolvedEmoji) with the name, the id, and the animated flag. Both stringify and both pass to `setEmoji`.
+On gateway, each one is a [`GatewayEmoji`](ref:gateway/GatewayEmoji). In the example above, `Emojis.Streak` has a `.source` holding the live discord.js `GuildEmoji` or `ApplicationEmoji`, typed per key from the tag codegen wrote. On http it is a plain [`ResolvedEmoji`](ref:core/ResolvedEmoji) with the name, the id, and the animated flag. Both stringify and both pass to `setEmoji`.
 
 </Callout>
 

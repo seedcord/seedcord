@@ -1,6 +1,6 @@
 import { CustomId } from '@seedcord/custom-id';
 import { isSeedcordError, SeedcordErrorCode } from '@seedcord/errors';
-import { describe, expect, it } from 'vitest';
+import { describe, expect, it } from 'vite-plus/test';
 
 import { decodeComponentRoute } from '#customId/routing';
 // the barrel registers the notices. a bot always loads it
