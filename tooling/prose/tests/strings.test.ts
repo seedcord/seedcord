@@ -22,12 +22,23 @@ new RuleTester().run('strings', strings, {
         dedent`
             // prose-ignore-next-line -- Discord's own wording, quoted
             const quoted = 'Interaction has already been acknowledged, rather than replied.';
-        `
+        `,
+        // the marker covers a template's later lines too
+        [
+            '// prose-ignore-next-line -- quoted across lines',
+            'const spread = `Interaction has already',
+            'been acknowledged ${state}, rather than replied.`;'
+        ].join('\n')
     ],
     invalid: [
         {
             code: "throw new Error('The job stays untouched after a restart.');",
             errors: [{ messageId: 'prose', column: 26, endColumn: 31 }]
+        },
+        {
+            // the escape takes two source characters and decodes to one
+            code: String.raw`const note = 'Don\'t panic, the job stays untouched.';`,
+            errors: [{ messageId: 'prose', column: 37, endColumn: 42 }]
         },
         {
             code: 'const message = `Pass ${name} rather than a string, since the codec reads it`;',

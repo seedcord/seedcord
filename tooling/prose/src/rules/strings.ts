@@ -69,13 +69,14 @@ export const strings = ESLintUtils.RuleCreator.withoutDocs<[Options], 'prose'>({
             return previous !== undefined && IGNORE_NEXT_LINE.test(previous);
         }
 
-        function check(node: TSESTree.Node, text: string): void {
-            if (!isProse(text) || ignored(node)) return;
+        // text is the raw source between the delimiters, so a match index is also a source offset
+        function check(chunk: TSESTree.Node, text: string, whole: TSESTree.Node): void {
+            if (!wanted(whole) || !isProse(text) || ignored(whole)) return;
             for (const { rule, message, index, length } of style.matches(blankCode(text))) {
                 // + 1 skips the opening quote, or the backtick or } in front of a template chunk
-                const start = node.range[0] + 1 + index;
+                const start = chunk.range[0] + 1 + index;
                 context.report({
-                    node,
+                    node: chunk,
                     loc: {
                         start: context.sourceCode.getLocFromIndex(start),
                         end: context.sourceCode.getLocFromIndex(start + length)
@@ -88,12 +89,10 @@ export const strings = ESLintUtils.RuleCreator.withoutDocs<[Options], 'prose'>({
 
         return {
             Literal(node) {
-                if (typeof node.value === 'string' && wanted(node)) check(node, node.value);
+                if (typeof node.value === 'string') check(node, node.raw.slice(1, -1), node);
             },
             TemplateElement(node) {
-                if (node.parent.type === AST_NODE_TYPES.TemplateLiteral && wanted(node.parent)) {
-                    check(node, node.value.raw);
-                }
+                if (node.parent.type === AST_NODE_TYPES.TemplateLiteral) check(node, node.value.raw, node.parent);
             }
         };
     }

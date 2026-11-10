@@ -13,7 +13,7 @@ const EDITED = fileURLToPath(new URL('edited.md', TEMP));
 const OTHER = new URL('other/', TEMP);
 const OTHER_PAGE = fileURLToPath(new URL('page.md', OTHER));
 
-// a committed file with these phrases would fail lint-staged
+// a committed file with these phrases would fail the pre-commit hook
 const PAGE = `# Edited
 
 Before the edit the job stays untouched.
@@ -21,13 +21,21 @@ Before the edit the job stays untouched.
 After a restart the job fails loudly.
 
 The handler carries the route id.
+
+After a restart the job fails loudly.
 `;
 
-const runHook = (file: string, written: string): string =>
-    execFileSync('node', [HOOK], {
-        input: JSON.stringify({ tool_name: 'Edit', tool_input: { file_path: file, new_string: written } }),
-        encoding: 'utf8'
+// the patch shape Claude Code reports for an Edit
+const editAt = (file: string, line: number, text: string): string =>
+    runHook({
+        tool_name: 'Edit',
+        tool_input: { file_path: file, new_string: text },
+        tool_response: { structuredPatch: [{ newStart: line, lines: [`+${text}`] }] }
     });
+
+function runHook(payload: object): string {
+    return execFileSync('node', [HOOK], { input: JSON.stringify(payload), encoding: 'utf8' });
+}
 
 beforeAll(() => {
     mkdirSync(OTHER, { recursive: true });
@@ -47,18 +55,18 @@ afterAll(() => {
 });
 
 describe('prose hook', () => {
-    it('blocks on an error in the lines the edit wrote and ignores older lines', () => {
-        const { decision, reason } = JSON.parse(runHook(EDITED, 'After a restart the job fails loudly.')) as {
+    it('blocks on an error in the lines the edit wrote, even when the same text sits earlier', () => {
+        const { decision, reason } = JSON.parse(editAt(EDITED, 9, 'After a restart the job fails loudly.')) as {
             decision: string;
             reason: string;
         };
 
         expect(decision).toBe('block');
-        expect(reason.match(/^- \d+ .*$/gm)).toEqual([expect.stringMatching(/^- 5 error Seedcord\.Banned:/)]);
+        expect(reason.match(/^- \d+ .*$/gm)).toEqual([expect.stringMatching(/^- 9 error Seedcord\.Banned:/)]);
     });
 
     it('passes a suggestion back as context without blocking', () => {
-        const output = JSON.parse(runHook(EDITED, 'The handler carries the route id.')) as {
+        const output = JSON.parse(editAt(EDITED, 7, 'The handler carries the route id.')) as {
             decision?: string;
             hookSpecificOutput: { additionalContext: string };
         };
@@ -67,7 +75,13 @@ describe('prose hook', () => {
         expect(output.hookSpecificOutput.additionalContext).toMatch(/^- 7 suggestion Seedcord\.\w+:/m);
     });
 
-    it("lints a file in another checkout with that checkout's own config", () => {
-        expect(runHook(OTHER_PAGE, 'The job stays untouched.')).toBe('');
+    it("lints a new file in another checkout with that checkout's own config", () => {
+        const created = runHook({
+            tool_name: 'Write',
+            tool_input: { file_path: OTHER_PAGE, content: 'The job stays untouched.\n' },
+            tool_response: { type: 'create', structuredPatch: [] }
+        });
+
+        expect(created).toBe('');
     });
 });
