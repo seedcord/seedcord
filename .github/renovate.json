@@ -7,14 +7,22 @@
     "prConcurrentLimit": 2,
     "prHourlyLimit": 2,
     "rangeStrategy": "bump",
-    "commitMessage": "chore(deps): bump deps",
+    "commitMessagePrefix": "chore(deps):",
+    "commitMessageAction": "bump",
+    "commitMessageTopic": "deps",
+    "commitMessageExtra": "",
+    "commitMessageSuffix": "",
     "commitBody": "",
     "packageRules": [
         {
             "matchManagers": ["npm"],
             "matchUpdateTypes": ["minor", "patch"],
             "groupName": "all non major npm updates",
-            "commitMessage": "chore(deps): bump deps",
+            "commitMessagePrefix": "chore(deps):",
+            "commitMessageAction": "bump",
+            "commitMessageTopic": "deps",
+            "commitMessageExtra": "",
+            "commitMessageSuffix": "",
             "commitBody": ""
         },
         {
