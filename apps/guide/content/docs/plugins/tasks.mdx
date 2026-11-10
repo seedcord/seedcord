@@ -256,7 +256,7 @@ When daylight saving changes the clock, some times happen twice or don't happen 
 - A task with one fixed time runs once. `30 1 * * *` runs once on the day when 01:30 happens twice. `30 2 * * *` runs right after the gap on the day when 02:30 doesn't exist.
 - Every other task, like `*/5 * * * *`, runs at each match in both of the repeated hours. It skips the times that don't exist.
 
-croner reads a `startAt` or `stopAt` string in the task's timezone, unless the string has its own offset, like `Z` or `+02:00`. A match at exactly `startAt` runs, unless the task sets `every`. A match at exactly `stopAt` doesn't run.
+croner reads a `startAt` or `stopAt` string in the task's timezone, unless the string has its own offset, like `Z` or `+02:00`. A match at exactly `startAt` runs, and a match at exactly `stopAt` doesn't.
 
 ## Errors while the bot starts
 

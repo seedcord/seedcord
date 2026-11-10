@@ -53,8 +53,7 @@ export interface TaskOptions<TZone extends string = string, TEvery extends strin
      */
     every?: ValidDuration<TEvery>;
     /**
-     * The task doesn't run before this date. A pattern match exactly at this date runs, unless the
-     * task sets `every`.
+     * The task doesn't run before this date. A pattern match exactly at this date runs.
      */
     startAt?: Date | string;
     /** The task doesn't run after this date. A pattern match exactly at this date doesn't run either. */

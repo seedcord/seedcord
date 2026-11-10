@@ -85,21 +85,14 @@ describe('Tasks cron tasks', () => {
         expect(vi.getTimerCount()).toBe(0);
     });
 
-    it("doesn't set a timer for a task that starts paused", async () => {
-        await using booted = await start({ path: taskFolder, timezone: 'UTC' });
-        const { tasks } = booted;
-        const unpaused = tasks.crons().filter((status) => status.key !== 'Idle').length;
-
-        expect(vi.getTimerCount()).toBe(unpaused);
-    });
-
     describe('pause and resume', () => {
-        it('leaves a paused task until resume', async () => {
+        it('leaves a task that starts paused until resume', async () => {
             await using booted = await start(crons);
             const { host, tasks } = booted;
 
             await vi.advanceTimersByTimeAsync(SECOND_MS);
             expect(runsOf(host, 'Idle')).toEqual([]);
+            expect(tasks.crons().find((status) => status.key === 'Idle')?.active).toBe(false);
 
             tasks.resume(Idle);
             await vi.advanceTimersByTimeAsync(SECOND_MS);
@@ -552,13 +545,17 @@ describe('Tasks cron tasks', () => {
         const startEvery = (): ReturnType<typeof start> =>
             start({ path: path.join(fixtures, 'every'), timezone: 'UTC' });
 
-        it('runs at the first match, then spaces runs by every', async () => {
-            vi.setSystemTime(new Date('2030-01-15T11:59:59Z'));
-            await using booted = await startEvery();
+        it.each([
+            { folder: 'every', task: 'Spaced', now: '2030-01-15T11:59:59Z' },
+            // Late's startAt passed 100 seconds before ready
+            { folder: 'every-started', task: 'Late', now: '2030-01-15T12:00:00Z' }
+        ])('runs $task at its first match, then spaces runs by every', async ({ folder, task, now }) => {
+            vi.setSystemTime(new Date(now));
+            await using booted = await start({ path: path.join(fixtures, folder), timezone: 'UTC' });
             const { host } = booted;
             const runsAfter = async (seconds: number): Promise<number> => {
                 await vi.advanceTimersByTimeAsync(SECOND_MS * seconds);
-                return runsOf(host, 'Spaced').length;
+                return runsOf(host, task).length;
             };
 
             expect(await runsAfter(1)).toBe(1);

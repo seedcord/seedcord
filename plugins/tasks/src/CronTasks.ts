@@ -55,13 +55,20 @@ export class CronTasks {
 
         const gap = meta.every === undefined ? {} : { interval: readEvery(loaded, meta.every) };
         const timezone = meta.timezone ?? this.defaultTimezone;
-        const dates = keepDefined({ startAt: meta.startAt, stopAt: meta.stopAt });
-        checkDates(loaded, dates, timezone);
+        const startMs = checkDates(loaded, meta, timezone);
 
         const run = async (claim: () => boolean): Promise<void> => {
             await this.runner.run(loaded, { trigger: 'cron', jobId: null }, undefined, claim);
         };
-        const build = (): Cron => new Cron(pattern, { ...(timezone !== undefined && { timezone }), ...gap, ...dates });
+        const build = (): Cron =>
+            new Cron(pattern, {
+                ...(timezone !== undefined && { timezone }),
+                ...gap,
+                ...keepDefined({ stopAt: meta.stopAt }),
+                // croner waits up to one interval before the first run if startAt has passed
+                // leaving it out lets a boot or resume() run at the next match
+                ...(startMs !== undefined && startMs > Date.now() && { startAt: meta.startAt })
+            });
 
         let job: CronJob;
 
@@ -141,11 +148,12 @@ function cronerReason(error: unknown): string {
         .replace(/^(Invalid value for (?:day|month)): .*$/, '$1');
 }
 
+// returns startAt in epoch ms
 function checkDates(
     loaded: LoadedTask,
     { startAt, stopAt }: Pick<CronMetadata, 'startAt' | 'stopAt'>,
     timezone: string | undefined
-): void {
+): number | undefined {
     const start = startAt === undefined ? undefined : readDate(loaded, 'startAt', startAt, timezone);
     const stop = stopAt === undefined ? undefined : readDate(loaded, 'stopAt', stopAt, timezone);
 
@@ -156,6 +164,8 @@ function checkDates(
             `That isn't after its ${paint.bold('startAt')} of ${paint.sky(String(startAt))}, so the task never runs. Move ${paint.bold('stopAt')} later.`
         ]);
     }
+
+    return start;
 }
 
 // CronDate reads a date string in the task's timezone. new Date() would read it in the machine's
