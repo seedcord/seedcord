@@ -6,7 +6,7 @@ import { stripVTControlCharacters } from 'node:util';
 
 import { REST } from '@discordjs/rest';
 import { BuilderComponent, RegisterCommand } from '@seedcord/core';
-import { HostPlugins, SeedcordBrand } from '@seedcord/types/internal';
+import { HOST_CONTRACT, HostContract, HostPlugins, SeedcordBrand } from '@seedcord/types/internal';
 import { ApplicationCommandType, Routes } from 'discord-api-types/v10';
 import { onTestFinished, vi } from 'vite-plus/test';
 
@@ -104,6 +104,7 @@ export async function fakeProject({
     byPath.set(instance, {
         default: {
             [SeedcordBrand]: true,
+            [HostContract]: HOST_CONTRACT,
             [HostPlugins]: { prepareCommands: () => Promise.resolve() },
             rest,
             config: { bot: { commands: { path: commandsPath, guilds } } }

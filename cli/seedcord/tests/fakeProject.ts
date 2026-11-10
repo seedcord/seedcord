@@ -1,4 +1,4 @@
-import { HostAugmentTarget, HostPlugins, SeedcordBrand } from '@seedcord/types/internal';
+import { HOST_CONTRACT, HostAugmentTarget, HostContract, HostPlugins, SeedcordBrand } from '@seedcord/types/internal';
 
 import { Project } from '#core/project/Project';
 import { emptyModuleGraph } from '#tests/emptyModuleGraph';
@@ -44,6 +44,7 @@ function claimedMembers(plugins: Record<string, object>): { key: string; member:
 export function brandedInstance(commandsPath: string | null = null, plugins: Record<string, object> = {}): object {
     return {
         [SeedcordBrand]: true,
+        [HostContract]: HOST_CONTRACT,
         [HostAugmentTarget]: '@seedcord/gateway',
         [HostPlugins]: {
             keys: Object.keys(plugins),

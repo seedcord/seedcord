@@ -1,5 +1,6 @@
 import type {
     HostAugmentTarget,
+    HostContract,
     HostListenHost,
     HostPlugins,
     HostShutdown,
@@ -20,6 +21,7 @@ export interface SeedcordInstance {
 
     // symbol keys keep these out of autocomplete on a host
     readonly [HostVersion]: string;
+    readonly [HostContract]: number;
     readonly [HostAugmentTarget]: TransportPackage;
     readonly [HostPlugins]: {
         // the attach keys in attach order. codegen writes one Core row for each

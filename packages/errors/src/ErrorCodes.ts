@@ -350,6 +350,8 @@ export enum SeedcordErrorCode {
     CliAskHasToWait = 3148,
     /** The guide search failed for a reason other than a search limit. */
     CliAskFailed = 3149,
+    /** The bot comes from a version of `@seedcord/gateway` or `@seedcord/http` that this CLI can't load. */
+    CliHostContractMismatch = 3150,
 
     /** A flag answers a question that the earlier answers skip. */
     CreateFlagNotApplicable = 3201,

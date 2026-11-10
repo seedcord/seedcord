@@ -1,7 +1,7 @@
 import { SeedcordErrorCode } from '@seedcord/errors';
 import { SeedcordError, SeedcordTypeError } from '@seedcord/errors/internal';
 import { FRAMEWORK_CHANNELS } from '@seedcord/logger';
-import { HostPlugins } from '@seedcord/types/internal';
+import { HOST_CONTRACT, HostContract, HostPlugins } from '@seedcord/types/internal';
 
 import { Kv } from '#src/kv/Kv';
 import { MemoryDriver } from '#src/kv/MemoryDriver';
@@ -41,6 +41,9 @@ export abstract class PluginHost<BotT extends Transport, BotRt extends Runtime> 
 
     /** @internal */
     public readonly [HostPlugins] = new PluginRegistry();
+
+    /** @internal */
+    public readonly [HostContract] = HOST_CONTRACT;
 
     constructor(transport: BotT, runtime: BotRt, driver: Config['kv']) {
         this.#scope = { transport, runtime };

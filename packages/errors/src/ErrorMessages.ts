@@ -356,6 +356,8 @@ const messages = {
         `${wait} You can read the guide at ${paint.sky(guide)} in the meantime.`,
     [SeedcordErrorCode.CliAskFailed]: (reason: string, guide: string) =>
         `The guide search failed. ${reason}. Try again, or read the guide at ${paint.sky(guide)}.`,
+    [SeedcordErrorCode.CliHostContractMismatch]: (transport: string) =>
+        `This version of ${paint.bold('seedcord')} can't load a bot built with your version of ${paint.bold(transport)}. Update ${paint.bold('seedcord')} and ${paint.bold(transport)} together to their latest versions.`,
     [SeedcordErrorCode.CliCodegenOutOfDate]: (outputPath: string) =>
         `${paint.path(outputPath)} is out of date. Run ${paint.bold('seedcord codegen')} and commit it.`,
     [SeedcordErrorCode.CliEdgeWithoutWorkerdCondition]: (cloudflareConfig: string, tsconfig: string) =>
