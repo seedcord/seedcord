@@ -118,7 +118,7 @@ export class Translations extends Plugin {
 }
 ```
 
-`dispatchMembers` is a plain object of functions. Seedcord calls each function once per interaction, and once per event if the event has a handler. At run time, `t` becomes `this.t`. A function can also be async, so handlers get the value it resolves to.
+`dispatchMembers` is a plain object of functions. Seedcord calls each function once per interaction, and once per event if the event has a handler. At run time, `t` becomes `this.t`. A function can be async, and handlers then get the value it resolves to.
 
 Each function gets a [`DispatchOrigin`](ref:core/DispatchOrigin), with these fields:
 
@@ -166,15 +166,15 @@ export class GreetCommand extends SlashHandler<'greet'> {
 
 `this.t` has the type that the `t` function returns. [Middleware](/checks/middleware) reads `this.t` too. [Gates](/checks/gates) and a [`Notice`](ref:core/Notice)'s `render` read it as `ctx.t`.
 
-Seedcord calls a bot's `dispatchMembers` functions at the same time, and the handler waits until they've all returned or one has thrown. They run before middleware and gates, even for an interaction that a gate then refuses. So a slow function spends part of the [three seconds](/replying) that Discord gives a bot to answer an interaction. They also run for [autocomplete](/commands/autocomplete), which Discord sends as the user types. If only a few handlers need a value, give your plugin a method and call it through `this.core` in those handlers.
+Seedcord runs every plugin's `dispatchMembers` functions at the same time, and the handler waits until they've all returned or one has thrown. They run before middleware and gates, even for an interaction that a gate then refuses. So a slow function spends part of the [three seconds](/replying) that Discord gives a bot to answer an interaction. They also run for [autocomplete](/commands/autocomplete), which Discord sends as the user types. If only a few handlers need a value, give your plugin a method and call it through `this.core` in those handlers.
 
 If a function throws, seedcord skips the middleware and handlers for that interaction or event, and logs and publishes the error with the code `CorePluginMemberThrew`. Seedcord answers a command, a component, a context menu or a modal with the built-in [`Fault`](ref:core/Fault) card. It skips your bot's `defaultError` here, because a card of your own might read the value that just failed. An autocomplete gets an empty list of choices. An event isn't answered at all.
 
-`attach()` throws `CorePluginMemberReserved` if one of your `dispatchMembers` keys is a name that seedcord uses, like `reply`, `user` or `logger`. It throws `CoreDuplicateName` if another plugin already uses the key. If you attach a plugin that has `dispatchMembers` twice, `attach()` throws `CoreDuplicateName`, because both copies add the same keys.
+`attach()` throws `CorePluginMemberReserved` if one of your `dispatchMembers` keys is a name that seedcord uses, like `reply`, `user` or `logger`. It throws `CoreDuplicateName` if another plugin already uses the key. If you attach a plugin that has `dispatchMembers` twice, `attach()` throws `CorePluginAttachedTwice`, because both copies add the same keys. A handler or middleware can't use your keys either. If one defines a method or getter with one of them, startup stops with `CoreDuplicateName`. If it sets a field with one, every dispatch to it fails with that code, since the field would replace your value.
 
 <Callout type="transport">
 
-Only a gateway bot receives events, so on an http bot the functions run once per interaction. `userLocale` comes from the interaction on both transports, so it's only null on a gateway event.
+Only a gateway bot receives events, so on an http bot the functions run once per interaction.
 
 </Callout>
 
@@ -206,7 +206,7 @@ If `init()` throws, seedcord skips `dispose()`. If a plugin opens two things in 
 
 </Callout>
 
-The cleanup seedcord does on its own is under [When init fails](/plugins/lifecycle#when-init-fails). On Cloudflare Workers, `dispose()` runs only when startup fails, so a plugin there writes state as soon as it changes. Otherwise the state is lost, because the shutdown phases never run there. [On Cloudflare Workers](/plugins/lifecycle#on-cloudflare-workers) lists the other differences.
+The cleanup seedcord does on its own is under [When init fails](/plugins/lifecycle#when-init-fails). On Cloudflare Workers, `dispose()` runs only when startup fails, so write state as soon as it changes, since the shutdown phases never run there. [On Cloudflare Workers](/plugins/lifecycle#on-cloudflare-workers) lists the other differences.
 
 ## Which base to import
 
@@ -297,7 +297,7 @@ Uptime rejected its options. Label is empty.
 
 ## Logging
 
-Log through [`this.logger`](ref:core/Plugin.logger), so a bot can tell your plugin's lines apart and silence them on their own. It exists from the constructor onward and labels each line with your class name. The logger writes each line to a channel, a named stream that a bot can filter or silence. `attach` sets the channel to the key before your constructor runs. For example, if someone attaches your plugin as `metrics`, the logger writes every line to the `metrics` channel, and [the log channel section](/plugins#the-key-is-also-a-log-channel) shows how a bot filters it. To label one job's lines, call [`this.logger.withLabel('sync')`](ref:logger/Logger.withLabel), which returns a logger with that label on the same channel. [`withChannel()`](ref:logger/Logger.withChannel) returns one that writes to another channel.
+Log through [`this.logger`](ref:core/Plugin.logger), so a bot can filter or silence your plugin's lines by themselves. It exists from the constructor onward and labels each line with your class name. The logger writes each line to a channel, a named stream that a bot can filter or silence. `attach` sets the channel to the key before your constructor runs. For example, if someone attaches your plugin as `metrics`, the logger writes every line to the `metrics` channel, and [the log channel section](/plugins#the-key-is-also-a-log-channel) shows how a bot filters it. To label one job's lines, call [`this.logger.withLabel('sync')`](ref:logger/Logger.withLabel), which returns a logger with that label on the same channel. [`withChannel()`](ref:logger/Logger.withChannel) returns one that writes to another channel.
 
 ## Keeping records
 

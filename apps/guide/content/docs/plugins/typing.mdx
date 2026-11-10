@@ -55,7 +55,7 @@ declare module '@seedcord/gateway' {
 export {};
 ```
 
-`Bot` is the default export of the file that your `instance` config key points to. Each row reads its type directly from that bot, so `db` has every member of the type that `attach` returns, except the ones that only seedcord uses, like [`init()`](ref:core/Plugin.init). [Calling it from a handler](/writing-plugins#calling-it-from-a-handler) lists all of them. For that, the default export has to be the value `attach` returns. If you [export the bot without it](/plugins#no-plugin-types-in-your-handler), `this.core.db` has the type `any`. If you export the bot only as a named const, codegen stops with the code `CliInstanceInvalid` before it writes anything.
+`Bot` is the default export of the file that your `instance` config key points to. Each row reads its type directly from that bot, so `db` has every member of the type that `attach` returns, except the ones that only seedcord uses, like [`init()`](ref:core/Plugin.init). [Calling it from a handler](/writing-plugins#calling-it-from-a-handler) lists all of them. This only works when the default export is the value `attach` returns. If you [export the bot without it](/plugins#no-plugin-types-in-your-handler), `this.core.db` has the type `any`. If you export the bot only as a named const, codegen stops with the code `CliInstanceInvalid` before it writes anything.
 
 [`AttachedPlugin`](ref:core/AttachedPlugin) is the type that omits those members. It also omits the class's private members, so `this.core.db` isn't assignable to a parameter typed as the [`Mongoose`](ref:plugin-mongoose/Mongoose) class. To pass it to a function of your own, type that parameter as `AttachedPlugin<Mongoose>`.
 
@@ -104,4 +104,4 @@ export class History extends SlashHandler<'history'> {
 }
 ```
 
-Codegen doesn't tell you whether the plugin has started when your handler runs. That's on [the lifecycle page](/plugins/lifecycle).
+Whether the plugin has started by the time your handler runs is on [the lifecycle page](/plugins/lifecycle).

@@ -100,7 +100,7 @@ const messages = {
     [SeedcordErrorCode.CorePluginMemberReserved]: (member: string, plugin: string) =>
         `${plugin} uses ${paint.sky(member)} in ${paint.bold('dispatchMembers')}, but seedcord already uses that name on handlers, gates, or error cards. Rename the key in the plugin.`,
     [SeedcordErrorCode.CorePluginMemberThrew]: (member: string, plugin: string, reason: string) =>
-        `The ${paint.sky(member)} function in the ${paint.bold('dispatchMembers')} of ${plugin} threw, so the handler didn't run. ${sentence(reason)} Fix that function in the plugin.`,
+        `${plugin} threw from its ${paint.bold('dispatchMembers')} function ${paint.sky(member)}, so the handler didn't run. ${sentence(reason)} Fix that function in the plugin.`,
     [SeedcordErrorCode.CorePluginAttachedTwice]: (plugin: string, firstKey: string, secondKey: string) =>
         `${paint.bold(plugin)} is attached at both ${paint.sky(firstKey)} and ${paint.sky(secondKey)}, and each copy adds the same ${paint.bold('dispatchMembers')}. Attach it once.`,
     [SeedcordErrorCode.CorePluginGroupTaken]: (head: string, key: string) =>

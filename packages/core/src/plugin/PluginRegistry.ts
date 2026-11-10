@@ -23,7 +23,7 @@ interface HandlerClass {
     readonly prototype: object;
 }
 
-// a test on each transport fails if a handler method or gate field is missing here
+// each transport's test fails if a handler method or gate field is missing here
 const RESERVED_MEMBERS: ReadonlySet<string> = new Set([
     'after',
     'api',

@@ -29,7 +29,7 @@ export function deriveEventActor(args: unknown): EventActor {
     let voice: VoiceState | undefined;
     for (const arg of tuple) {
         if (arg instanceof MessageReaction) reaction = arg;
-        // voiceStateUpdate passes the old state first
+        // the new state wins because voiceStateUpdate passes the old one first
         if (arg instanceof VoiceState) voice = arg;
         if (arg instanceof Message) {
             // instanceof also matches a partial, the old copy discord.js passes for an uncached message

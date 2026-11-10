@@ -210,7 +210,8 @@ export abstract class Plugin<
      * Changes commands before seedcord sends them to Discord. Write your changes onto these objects,
      * like setting `name_localizations`. On a started bot, a command in two guilds appears twice in `commands`.
      *
-     * If it throws, the deploy, `seedcord codegen`, `seedcord commands`, and `seedcord build` stop.
+     * If it throws, the deploy stops, and so do `seedcord codegen`, a Workers build, and `seedcord commands deploy`,
+     * `list` and `remove`.
      *
      * The CLI calls this without running `init()`. Read only what the constructor stored and the bot's files.
      */
