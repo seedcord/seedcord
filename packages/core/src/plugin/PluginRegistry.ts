@@ -18,7 +18,12 @@ export interface Attachment {
 
 export type DispatchMemberFunctions = Readonly<Record<string, (origin: DispatchOrigin) => unknown>>;
 
-// a test on each transport fails if a handler method or gate field is missing here. instance fields aren't checked
+interface HandlerClass {
+    readonly name: string;
+    readonly prototype: object;
+}
+
+// a test on each transport fails if a handler method or gate field is missing here
 const RESERVED_MEMBERS: ReadonlySet<string> = new Set([
     'after',
     'api',
@@ -81,6 +86,10 @@ function isReservedMember(name: string): boolean {
     return RESERVED_MEMBERS.has(name) || name in Object.prototype;
 }
 
+function throwTaken(member: string, first: string, second: string): never {
+    throw new SeedcordTypeError(SeedcordErrorCode.CoreDuplicateName, ['dispatch member', member, [first, second]]);
+}
+
 interface ClaimedMember {
     readonly key: string;
     readonly plugin: string;
@@ -127,11 +136,24 @@ export class PluginRegistry {
                 key
             ]);
         }
-        throw new SeedcordTypeError(SeedcordErrorCode.CoreDuplicateName, [
-            'dispatch member',
-            member,
-            [owner.plugin, plugin]
-        ]);
+        throwTaken(member, owner.plugin, plugin);
+    }
+
+    // a method or getter with a member's name breaks the assign in BaseHandler
+    public assertFreeOn(handler: HandlerClass): void {
+        for (const [member, { plugin }] of this.claimed) {
+            if (member in handler.prototype) throwTaken(member, paint.sky(handler.name), plugin);
+        }
+    }
+
+    // a subclass field replaces a member because it runs after BaseHandler assigns them
+    public assertMembersKept<Handler extends object>(handler: Handler, dispatch: DispatchContext): Handler {
+        for (const [member, { plugin }] of this.claimed) {
+            if (!Object.is(Reflect.get(handler, member), dispatch[MemberValues][member])) {
+                throwTaken(member, paint.sky(handler.constructor.name), plugin);
+            }
+        }
+        return handler;
     }
 
     public async buildMembers(dispatch: DispatchContext, origin: DispatchOrigin): Promise<void> {

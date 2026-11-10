@@ -113,7 +113,8 @@ export class InteractionRun {
         try {
             await core[HostPlugins].buildMembers(dispatch, origin);
             // justified: each transport's route maps pair a kind with the class that takes its event
-            return new HandlerCtor(event as never, core as never, dispatch as never, replyWith as never);
+            const handler = new HandlerCtor(event as never, core as never, dispatch as never, replyWith as never);
+            return core[HostPlugins].assertMembersKept(handler, dispatch);
         } catch (caught) {
             await this.finish(answer, caught);
             return null;
@@ -134,8 +135,11 @@ export class InteractionRun {
         const { middlewares, event, core, dispatch } = this.config;
         // justified: a repliable target means a MiddlewareKind
         for (const Middleware of middlewares.chainFor(dispatch.kind as MiddlewareKind)) {
-            // justified: chainFor picked this kind. the class declares this event type.
-            const middleware = new Middleware(event as never, core as never, dispatch as never, sender as never);
+            const middleware = core[HostPlugins].assertMembersKept(
+                // justified: chainFor picked this kind. the class declares this event type.
+                new Middleware(event as never, core as never, dispatch as never, sender as never),
+                dispatch
+            );
             // pushed before the await because a middleware that throws still gets its after()
             this.ran.push(middleware);
             await middleware.execute();

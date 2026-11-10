@@ -1,6 +1,7 @@
 import path from 'node:path';
 
 import { InteractionKind } from '@seedcord/core';
+import { PluginRegistry } from '@seedcord/core/internal';
 import { Logger } from '@seedcord/logger';
 import { afterEach, describe, expect, it, vi, type MockInstance } from 'vite-plus/test';
 
@@ -20,7 +21,7 @@ function dispatcherWith(seed: (d: InteractionDispatcher) => void): {
     dispatcher: InteractionDispatcher;
     warn: MockInstance<Logger['warn']>;
 } {
-    const dispatcher = new InteractionDispatcher(HANDLERS_DIR);
+    const dispatcher = new InteractionDispatcher(new PluginRegistry(), HANDLERS_DIR);
     seed(dispatcher);
     return { dispatcher, warn: vi.spyOn(Logger.prototype, 'warn').mockImplementation(() => undefined) };
 }

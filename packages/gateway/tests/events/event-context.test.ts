@@ -187,6 +187,61 @@ describe('the per-dispatch event context', () => {
         expect(reported?.[1]).toMatchObject({ error: { code: SeedcordErrorCode.CorePluginMemberThrew } });
     });
 
+    withBoot('fails to load an event handler that has a method with a member name', async ({ boot }) => {
+        const loading = boot(
+            `
+            import { EventHandler, RegisterEvent } from '${seedcordPath}';
+            import { Events } from 'discord.js';
+
+            @RegisterEvent(['guildMemberAdd'])
+            export class Clashes extends EventHandler<Events.GuildMemberAdd> {
+                public tag() {}
+                public async execute() {}
+            }
+            `,
+            undefined,
+            (bot) =>
+                bot.attach(
+                    'tagging',
+                    pluginBuilding(() => 'tag')
+                )
+        );
+
+        await expect(loading).rejects.toMatchObject({ code: SeedcordErrorCode.CoreDuplicateName });
+    });
+
+    withBoot('skips an event handler whose field replaces a member', async ({ boot }) => {
+        let publish: MockInstance | undefined;
+        const events = await boot(
+            `
+            import { EventHandler, RegisterEvent } from '${seedcordPath}';
+            import { Events } from 'discord.js';
+
+            @RegisterEvent(['guildMemberAdd'])
+            export class Shadows extends EventHandler<Events.GuildMemberAdd> {
+                public readonly tag = 'own';
+                public async execute() {
+                    globalThis.fireCalls.push('handler');
+                }
+            }
+            `,
+            undefined,
+            (bot) => {
+                publish = vi.spyOn(bot.bus, PublishDefault);
+                bot.attach(
+                    'tagging',
+                    pluginBuilding(() => 'tag')
+                );
+            }
+        );
+
+        await events.processEvent('guildMemberAdd', [guildMemberPayload()]);
+
+        expect(fireCalls()).toEqual([]);
+        const reported = publish?.mock.calls.find(([event]) => event === 'unknownException');
+        expect(reported?.[1]).toMatchObject({ error: { code: SeedcordErrorCode.CoreDuplicateName } });
+    });
+
     withBoot('hands a gate the same context the chain wrote to', async ({ boot }) => {
         const events = await boot(
             `

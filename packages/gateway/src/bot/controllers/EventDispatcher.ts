@@ -88,6 +88,7 @@ export class EventDispatcher implements Initializeable, HmrAware {
                 ? this.core.config.bot.events.middlewares
                 : undefined,
             middlewares: this.middlewares,
+            plugins: this.core[HostPlugins],
             logger: this.logger,
             isHandler: (value): value is EventHandlerConstructor => this.isEventHandlerClass(value),
             isMiddleware: (value): value is EventMiddlewareConstructor => this.isMiddlewareClass(value),
@@ -163,7 +164,10 @@ export class EventDispatcher implements Initializeable, HmrAware {
     ): Promise<{ caught: unknown } | null> {
         for (const Middleware of this.middlewares.chainFor(eventName)) {
             try {
-                const middleware = new Middleware(args, this.core, dispatch);
+                const middleware = this.core[HostPlugins].assertMembersKept(
+                    new Middleware(args, this.core, dispatch),
+                    dispatch
+                );
                 // pushed before the await because a middleware that throws still gets its after()
                 ran.push(middleware);
                 await middleware.execute();
@@ -287,8 +291,11 @@ export class EventDispatcher implements Initializeable, HmrAware {
     ): Promise<HandlerResult> {
         try {
             this.logger.trace(`Processing ${paint.sky.bold(eventName)} with ${paint.mute(Ctor.name)}`);
-            // the event map paired this name with this class
-            const handler = new (Ctor as ConstructableEventHandler)(args, this.core, dispatch);
+            const handler = this.core[HostPlugins].assertMembersKept(
+                // the event map paired this name with this class
+                new (Ctor as ConstructableEventHandler)(args, this.core, dispatch),
+                dispatch
+            );
             const eventCtx = eventGateContext(eventName, args, this.core, dispatch);
             await runHandlerGates(Ctor, eventCtx);
             await handler.execute();

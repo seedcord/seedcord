@@ -16,6 +16,7 @@ import { prefixOf } from '@seedcord/custom-id';
 import { SeedcordErrorCode, paint } from '@seedcord/errors';
 import { SeedcordError } from '@seedcord/errors/internal';
 import { Logger } from '@seedcord/logger';
+import { HostPlugins } from '@seedcord/types/internal';
 import { hasKeys } from '@seedcord/utils';
 import { asError } from '@seedcord/utils/internal';
 import { Events } from 'discord.js';
@@ -85,6 +86,7 @@ export class InteractionDispatcher implements Initializeable, HmrAware {
                 ? this.core.config.bot.interactions.middlewares
                 : undefined,
             middlewares: this.middlewares,
+            plugins: this.core[HostPlugins],
             logger: this.logger,
             isHandler: (value): value is HandlerConstructor => this.isHandlerClass(value),
             isMiddleware: (value): value is InteractionMiddlewareConstructor => this.isMiddlewareClass(value),

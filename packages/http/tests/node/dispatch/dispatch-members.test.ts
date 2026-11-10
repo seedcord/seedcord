@@ -3,6 +3,7 @@ import 'reflect-metadata';
 import { TextDisplayBuilder } from '@discordjs/builders';
 import { CustomId, defineGate, Fault, InteractionKind, Notice, RegisterInteractionMiddleware } from '@seedcord/core';
 import { GatedMetadataKey } from '@seedcord/core/internal';
+import { SeedcordErrorCode } from '@seedcord/errors';
 import { InteractionType } from 'discord-api-types/v10';
 import { beforeEach, describe, expect, it, vi } from 'vite-plus/test';
 
@@ -168,6 +169,60 @@ describe('dispatch members on http', () => {
         await ctx.settled();
 
         expect(seen).toBe('g-1:pl');
+    });
+
+    it.each([
+        {
+            kind: 'a method',
+            Handler: class extends SlashHandler<never> {
+                tag(): string {
+                    return 'own';
+                }
+                execute = vi.fn();
+            }
+        },
+        {
+            kind: 'a getter',
+            Handler: class extends SlashHandler<never> {
+                // eslint-disable-next-line @typescript-eslint/class-literal-property-style -- the getter is the clash this case covers
+                get tag(): string {
+                    return 'own';
+                }
+                execute = vi.fn();
+            }
+        }
+    ])('fails startup when a handler has $kind with a member name', async ({ Handler }) => {
+        using engine = await readyEngine(routedHandler(InteractionKind.Slash, 'probe', Handler), {
+            attach: (bot) => bot.attach('tagging', pluginBuilding(fromOrigin))
+        });
+
+        await expect(
+            engine.handle(await signedRequest(engine.signer, guildPayload), capturingCtx())
+        ).rejects.toMatchObject({
+            code: SeedcordErrorCode.CoreDuplicateName
+        });
+    });
+
+    it('stops the dispatch when a handler field replaces a member', async () => {
+        const caught: unknown[] = [];
+        const execute = vi.fn();
+        class Shadows extends SlashHandler<never> {
+            readonly tag = 'own';
+            execute = execute;
+        }
+        using engine = await readyEngine(routedHandler(InteractionKind.Slash, 'probe', Shadows), {
+            attach: (bot) => {
+                bot.attach('tagging', pluginBuilding(fromOrigin));
+                bot.bus.on('unknownException', ({ error }) => caught.push(error));
+            }
+        });
+        const ctx = capturingCtx();
+
+        await engine.handle(await signedRequest(engine.signer, guildPayload), ctx);
+        await ctx.settled();
+
+        expect(execute).not.toHaveBeenCalled();
+        expect(caught).toEqual([expect.objectContaining({ code: SeedcordErrorCode.CoreDuplicateName })]);
     });
 
     it('sets a member on an autocomplete handler', async () => {

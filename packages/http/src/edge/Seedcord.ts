@@ -176,6 +176,8 @@ export class Seedcord extends PluginHost<'http', 'edge'> {
     async #prepare(): Promise<void> {
         // seedcord dev's codegen copy constructs this bot inside the CLI and never starts it
         Logger.configure(this.config.logger ?? {});
+        // the handler loader checks each class against the members of every attached plugin
+        sealAttachments(this);
         const ids = this.#readsBakedIds ? bakedIds() : undefined;
         this.#service.authenticate();
         await this.#service.subscribers.init();
@@ -187,7 +189,6 @@ export class Seedcord extends PluginHost<'http', 'edge'> {
     }
 
     async #runStartup(): Promise<void> {
-        sealAttachments(this);
         this.#plugins.register(this[HostPlugins].attachments);
         try {
             await this.#startup.run();
