@@ -1,4 +1,4 @@
-import { expectTypeOf } from 'vitest';
+import { expectTypeOf } from 'vite-plus/test';
 
 import type { Config } from '#src/Interfaces/Config';
 import type { KvDriver } from '#src/Interfaces/Kv';

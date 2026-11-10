@@ -1,7 +1,7 @@
 import { AutocompleteRoute } from '@seedcord/core';
 import { DispatchContext, PublishDefault } from '@seedcord/core/internal';
 import { SeedcordErrorCode } from '@seedcord/errors';
-import { describe, expect, expectTypeOf, it } from 'vitest';
+import { describe, expect, expectTypeOf, it } from 'vite-plus/test';
 
 import { AutocompleteHandler } from '#handlers/interaction/AutocompleteHandler';
 import { built } from '#tests/utils/built';

@@ -2,7 +2,7 @@ import { settled } from '@seedcord/cli-prompts/testing';
 import { Box, Text, useBoxMetrics } from 'ink';
 import { render } from 'ink-testing-library';
 import React, { useRef } from 'react';
-import { afterEach, describe, expect, it } from 'vitest';
+import { afterEach, describe, expect, it } from 'vite-plus/test';
 
 import { version } from '#core/version';
 import { Sidebar } from '#ui/components/primitives/Sidebar';

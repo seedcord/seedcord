@@ -1,5 +1,5 @@
 import { DocKind } from '@seedcord/docs-search';
-import { describe, expect, it } from 'vitest';
+import { describe, expect, it } from 'vite-plus/test';
 
 import { ActiveVersion } from '#lib/docs/ActiveVersion';
 

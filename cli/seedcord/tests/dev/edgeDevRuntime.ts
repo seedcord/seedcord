@@ -5,7 +5,7 @@ import { LoggerChannelRegistry } from '@seedcord/logger';
 import { logsFolderIn } from '@seedcord/logger/internal';
 import { installNodeDefaults } from '@seedcord/logger/node';
 import { Envapter, Environment } from 'envapt';
-import { onTestFinished } from 'vitest';
+import { onTestFinished } from 'vite-plus/test';
 
 import { EdgeDevRuntime } from '#commands/dev/runtime/EdgeDevRuntime';
 import { toSeedcordInstance } from '#core/modules/importInstance';

@@ -1,4 +1,4 @@
-import { describe, expect, it } from 'vitest';
+import { describe, expect, it } from 'vite-plus/test';
 
 import { noticesOf } from '#ui/notices';
 import { DevStore } from '#ui/stores/DevStore';

@@ -3,7 +3,7 @@ import { createServer as createNetServer } from 'node:net';
 
 import { SeedcordErrorCode } from '@seedcord/errors';
 import { LoggerChannelRegistry } from '@seedcord/logger';
-import { describe, expect, it, onTestFinished } from 'vitest';
+import { describe, expect, it, onTestFinished } from 'vite-plus/test';
 
 import { listenForInteractions } from '#commands/dev/runtime/listenForInteractions';
 

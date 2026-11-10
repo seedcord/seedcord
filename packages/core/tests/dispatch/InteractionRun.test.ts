@@ -1,5 +1,5 @@
 import { Logger } from '@seedcord/logger';
-import { describe, expect, it, vi } from 'vitest';
+import { describe, expect, it, vi } from 'vite-plus/test';
 
 import { defineGate } from '#gates/Gate';
 import { DispatchContext } from '#src/dispatch/DispatchContext';

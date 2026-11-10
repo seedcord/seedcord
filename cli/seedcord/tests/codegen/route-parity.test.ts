@@ -1,6 +1,6 @@
 import { buildSlashRoute } from '@seedcord/utils/internal';
 import { SlashCommandBuilder, ApplicationCommandOptionType } from 'discord.js';
-import { describe, it, expect } from 'vitest';
+import { describe, it, expect } from 'vite-plus/test';
 
 import { AugmentationBuilder } from '#commands/codegen/AugmentationBuilder';
 import { silentLogger } from '#tests/silentLogger';

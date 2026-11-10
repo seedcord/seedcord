@@ -1,7 +1,7 @@
 import { ButtonBuilder } from '@discordjs/builders';
 import { SeedcordErrorCode } from '@seedcord/errors';
 import { Collection } from 'discord.js';
-import { afterEach, describe, expect, it, vi } from 'vitest';
+import { afterEach, describe, expect, it, vi } from 'vite-plus/test';
 
 import { EmojiInjector, Emojis } from '#bot/injectors/EmojiInjector';
 

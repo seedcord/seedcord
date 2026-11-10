@@ -1,6 +1,6 @@
 import { settled } from '@seedcord/cli-prompts/testing';
 import React, { useEffect, useState } from 'react';
-import { describe, expect, it } from 'vitest';
+import { describe, expect, it } from 'vite-plus/test';
 
 import { StatusBadge } from '#ui/components/StatusBadge';
 

@@ -1,19 +1,15 @@
 {
     "name": "@seedcord/brand",
-    "type": "module",
     "version": "0.0.0",
-    "engines": {
-        "node": "^24.22.1 || >=26.12.1",
-        "bun": ">=1.4.2"
-    },
     "private": true,
     "description": "The brand colors and site addresses seedcord's packages and sites share",
-    "types": "./dist/index.d.mts",
     "repository": {
         "type": "git",
         "url": "https://github.com/seedcord/seedcord.git",
         "directory": "tooling/brand"
     },
+    "type": "module",
+    "types": "./dist/index.d.mts",
     "exports": {
         ".": {
             "types": "./dist/index.d.mts",
@@ -21,23 +17,25 @@
         }
     },
     "scripts": {
-        "build": "tsdown",
+        "build": "vp pack",
         "clean": "rm -rf dist",
         "lint": "eslint '**/*.{ts,tsx}' --max-warnings=0 --cache --no-error-on-unmatched-pattern",
         "lint:fix": "eslint '**/*.{ts,tsx}' --fix --max-warnings=0 --cache --no-error-on-unmatched-pattern",
-        "fmt": "prettier --write '**/*.{ts,tsx,json,md}' --cache --no-error-on-unmatched-pattern",
-        "fmt:check": "prettier --check '**/*.{ts,tsx,json,md}' --cache --no-error-on-unmatched-pattern",
         "tc": "tsgo --noEmit",
-        "test": "vitest run",
-        "test:watch": "vitest dev"
-    },
-    "peerDependencies": {
-        "typescript": "catalog:peer"
+        "test": "vp test run",
+        "test:watch": "vp test dev"
     },
     "devDependencies": {
         "@seedcord/eslint-config": "workspace:^",
         "@seedcord/tsconfig": "workspace:^",
         "@seedcord/tsdown-config": "workspace:^",
-        "@seedcord/vitest-config": "workspace:^"
+        "@seedcord/vite-config": "workspace:^"
+    },
+    "peerDependencies": {
+        "typescript": "catalog:peer"
+    },
+    "engines": {
+        "bun": ">=1.4.2",
+        "node": "^24.22.1 || >=26.12.1"
     }
 }

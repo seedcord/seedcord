@@ -1,7 +1,7 @@
 import { REST } from '@discordjs/rest';
 import { SeedcordErrorCode } from '@seedcord/errors';
 import { ApplicationCommandOptionType, Routes } from 'discord-api-types/v10';
-import { describe, expect, it } from 'vitest';
+import { describe, expect, it } from 'vite-plus/test';
 
 import { listingJson } from '#commands/commands/list/listingJson';
 import { ListPresenter } from '#commands/commands/list/ListPresenter';

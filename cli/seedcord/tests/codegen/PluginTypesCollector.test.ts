@@ -7,7 +7,7 @@ import { stripVTControlCharacters } from 'node:util';
 import { isSeedcordError, SeedcordErrorCode } from '@seedcord/errors';
 import { HostPluginKeys } from '@seedcord/types/internal';
 import { toPosixPath } from '@seedcord/utils/internal';
-import { assert, describe, expect, it } from 'vitest';
+import { assert, describe, expect, it } from 'vite-plus/test';
 
 import { PluginTypesCollector } from '#commands/codegen/PluginTypesCollector';
 

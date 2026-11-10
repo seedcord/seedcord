@@ -1,6 +1,6 @@
 import { createServer } from 'node:net';
 
-import { onTestFinished } from 'vitest';
+import { onTestFinished } from 'vite-plus/test';
 
 // vite's default hmr websocket port
 const VITE_HMR_PORT = 24_678;

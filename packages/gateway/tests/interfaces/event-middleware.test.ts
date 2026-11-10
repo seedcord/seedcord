@@ -1,7 +1,7 @@
 import { RegisterInteractionMiddleware } from '@seedcord/core';
 import { DispatchContext } from '@seedcord/core/internal';
 import { Events } from 'discord.js';
-import { describe, expect, expectTypeOf, it, vi } from 'vitest';
+import { describe, expect, expectTypeOf, it, vi } from 'vite-plus/test';
 
 import { RegisterEventMiddleware } from '#bDecorators/Middlewares';
 import { EventMiddleware } from '#handlers/event';

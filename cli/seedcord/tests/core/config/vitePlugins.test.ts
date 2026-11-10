@@ -1,7 +1,7 @@
 import { stripVTControlCharacters } from 'node:util';
 
 import { isSeedcordError, SeedcordErrorCode } from '@seedcord/errors';
-import { assert, describe, expect, it } from 'vitest';
+import { assert, describe, expect, it } from 'vite-plus/test';
 
 import { rethrowVitePluginError } from '#core/config/vitePlugins';
 import { vitePluginsOf } from '#tests/vitePluginsOf';

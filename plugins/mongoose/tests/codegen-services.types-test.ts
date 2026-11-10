@@ -1,5 +1,5 @@
 import mongoose from 'mongoose';
-import { expectTypeOf } from 'vitest';
+import { expectTypeOf } from 'vite-plus/test';
 
 import { RegisterMongooseService } from '#src/decorators/RegisterMongooseService';
 import { MongooseService } from '#src/MongooseService';

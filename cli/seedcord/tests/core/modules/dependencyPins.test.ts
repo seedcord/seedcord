@@ -1,13 +1,23 @@
 import { readFileSync } from 'node:fs';
 import { join } from 'node:path';
 
-import { describe, expect, it } from 'vitest';
+import { satisfies } from 'verkit';
+import { describe, expect, it } from 'vite-plus/test';
 
 const CLI_ROOT = join(import.meta.dirname, '../../..');
 
+interface Manifest {
+    dependencies?: Record<string, string>;
+    bundledVersions?: Record<string, string>;
+}
+
+function manifest(packageJson: string): Manifest {
+    // justified: every field is optional, so this fits any package.json
+    return JSON.parse(readFileSync(packageJson, 'utf8')) as Manifest;
+}
+
 function dependencies(packageJson: string): Record<string, string> {
-    // justified: both files are package manifests with a dependencies map
-    return (JSON.parse(readFileSync(packageJson, 'utf8')) as { dependencies: Record<string, string> }).dependencies;
+    return manifest(packageJson).dependencies ?? {};
 }
 
 describe('cloudflare pins', () => {
@@ -23,10 +33,12 @@ describe('cloudflare pins', () => {
 });
 
 describe('rolldown pin', () => {
-    // rolldown-plugin-dts imports rolldown itself. the same range resolves it to vite's copy
-    it('matches the rolldown range vite depends on', () => {
-        const vite = dependencies(join(CLI_ROOT, 'node_modules/vite/package.json'));
+    // the dts plugin imports rolldown on its own, so our range has to include the version vite runs.
+    // vite in this repo is vite-plus-core, which ships rolldown inside and lists its version in bundledVersions
+    it('accepts the rolldown version vite bundles', () => {
+        const bundled = manifest(join(CLI_ROOT, 'node_modules/vite/package.json')).bundledVersions?.rolldown;
+        const range = dependencies(join(CLI_ROOT, 'package.json')).rolldown;
 
-        expect(dependencies(join(CLI_ROOT, 'package.json')).rolldown).toBe(vite.rolldown);
+        expect(range && bundled && satisfies(bundled, range), `rolldown ${bundled} against ${range}`).toBe(true);
     });
 });

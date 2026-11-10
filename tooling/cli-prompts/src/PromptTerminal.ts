@@ -1,5 +1,5 @@
 import { SeedcordErrorCode } from '@seedcord/errors';
-import { expect, vi } from 'vitest';
+import { expect, vi } from 'vite-plus/test';
 
 // Prompter imports these on the first prompt. importing them here stops a test's first press from timing out
 import 'ink';

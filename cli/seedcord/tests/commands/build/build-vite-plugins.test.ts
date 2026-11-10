@@ -2,7 +2,7 @@ import { writeFile } from 'node:fs/promises';
 import { dirname, join } from 'node:path';
 
 import { isSeedcordError, SeedcordErrorCode } from '@seedcord/errors';
-import { assert, describe, expect, it } from 'vitest';
+import { assert, describe, expect, it } from 'vite-plus/test';
 
 import { configWithGreetingPlugin, GREETING, GREETING_PROBE } from '#tests/greetingPlugin';
 

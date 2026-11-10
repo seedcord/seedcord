@@ -1,5 +1,5 @@
 import { Silence } from '@seedcord/core';
-import { describe, it, expect } from 'vitest';
+import { describe, it, expect } from 'vite-plus/test';
 
 import { IgnoreBots } from '#bot/gates/catalog';
 

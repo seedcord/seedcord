@@ -1,7 +1,7 @@
 import fs from 'node:fs/promises';
 import path from 'node:path';
 
-import { it as base } from 'vitest';
+import { it as base } from 'vite-plus/test';
 
 import { Seedcord } from '#src/Seedcord';
 

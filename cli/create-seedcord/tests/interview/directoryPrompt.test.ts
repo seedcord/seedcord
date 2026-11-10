@@ -3,7 +3,7 @@ import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 
 import { KEY, PromptTerminal, settled } from '@seedcord/cli-prompts/testing';
-import { describe, expect, it } from 'vitest';
+import { describe, expect, it } from 'vite-plus/test';
 
 import { directoryStep } from '#interview/steps/directory';
 

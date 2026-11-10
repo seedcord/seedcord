@@ -1,7 +1,7 @@
 import path from 'node:path';
 
 import { setDevChannel } from '@seedcord/core/internal';
-import { afterEach, describe, expect, it } from 'vitest';
+import { afterEach, describe, expect, it } from 'vite-plus/test';
 
 import { Seedcord } from '#src/node/Seedcord';
 import { bindSignedEnv, serverConfig } from '#tests/helpers/nodeHost';

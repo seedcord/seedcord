@@ -1,5 +1,5 @@
 import { CustomId, ModalRoute } from '@seedcord/core';
-import { expectTypeOf } from 'vitest';
+import { expectTypeOf } from 'vite-plus/test';
 
 import { ModalHandler } from '#handlers/interaction/components';
 

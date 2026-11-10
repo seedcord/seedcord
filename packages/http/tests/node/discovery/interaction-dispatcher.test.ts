@@ -1,6 +1,6 @@
 import path from 'node:path';
 
-import { describe, expect, it } from 'vitest';
+import { describe, expect, it } from 'vite-plus/test';
 
 import { InteractionDispatcher } from '#src/dispatch/InteractionDispatcher';
 import { resolve } from '#src/dispatch/resolve';

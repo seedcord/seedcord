@@ -1,4 +1,4 @@
-import { expectTypeOf } from 'vitest';
+import { expectTypeOf } from 'vite-plus/test';
 
 import type { SubscriptionData } from '#subscribers/types/Subscriptions';
 

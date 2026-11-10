@@ -112,9 +112,8 @@
           - 'turbo.json'
           - 'turbo.jsonc'
           - '**/tsconfig*.json'
-          - '**/tsdown.config.*'
+          - '**/vite.config.*'
           - '**/eslint.config.*'
-          - '**/vitest*.config.*'
           - 'pnpm-workspace.yaml'
 '🔗 deps':
   - changed-files:

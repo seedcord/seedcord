@@ -5,7 +5,7 @@ import { join } from 'node:path';
 
 import { SeedcordErrorCode } from '@seedcord/errors';
 import { BOT_FILES_KEY } from '@seedcord/utils/internal';
-import { beforeEach, describe, expect, it, onTestFinished } from 'vitest';
+import { beforeEach, describe, expect, it, onTestFinished } from 'vite-plus/test';
 
 import { linkPackages } from '#tests/edgeFolder';
 

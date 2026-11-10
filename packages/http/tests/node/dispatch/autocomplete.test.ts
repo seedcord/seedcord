@@ -2,7 +2,7 @@ import 'reflect-metadata';
 
 import { defineGate, InteractionKind, Notice } from '@seedcord/core';
 import { GatedMetadataKey } from '@seedcord/core/internal';
-import { beforeEach, describe, expect, it } from 'vitest';
+import { beforeEach, describe, expect, it } from 'vite-plus/test';
 
 import { AutocompleteHandler } from '#handlers/interaction/AutocompleteHandler';
 import { restClients } from '#tests/helpers/restClients';

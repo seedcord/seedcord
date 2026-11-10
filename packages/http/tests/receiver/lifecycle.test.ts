@@ -1,7 +1,7 @@
 import { ShutdownPhase } from '@seedcord/core';
 import { SeedcordErrorCode } from '@seedcord/errors';
 import { Envapter, PortableSource } from 'envapt';
-import { afterEach, describe, expect, it } from 'vitest';
+import { afterEach, describe, expect, it } from 'vite-plus/test';
 
 import { Seedcord } from '#src/edge/Seedcord';
 

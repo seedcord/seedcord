@@ -1,4 +1,4 @@
-import { describe, expect, it, vi } from 'vitest';
+import { describe, expect, it, vi } from 'vite-plus/test';
 
 import type { BaseEntityModel, FormatContext } from '#lib/docs/types';
 import type { DocNode } from '@seedcord/docs-engine';

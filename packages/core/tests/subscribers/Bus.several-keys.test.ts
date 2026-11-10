@@ -1,5 +1,5 @@
 import { SeedcordErrorCode } from '@seedcord/errors';
-import { describe, expect, expectTypeOf, it, vi } from 'vitest';
+import { describe, expect, expectTypeOf, it, vi } from 'vite-plus/test';
 
 import { Subscribe } from '#subscribers/decorators/Subscribe';
 import { PublishDefault } from '#subscribers/publishDefault';

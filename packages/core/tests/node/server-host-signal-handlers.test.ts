@@ -1,5 +1,5 @@
 import { setDevFiles } from '@seedcord/utils/internal';
-import { describe, it, expect, afterEach } from 'vitest';
+import { describe, it, expect, afterEach } from 'vite-plus/test';
 
 import { CoordinatedShutdown } from '#node/Lifecycle/CoordinatedShutdown';
 import { CoordinatedStartup } from '#src/lifecycle/CoordinatedStartup';

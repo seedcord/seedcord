@@ -1,5 +1,5 @@
 import { embedding } from '@seedcord/docs-search';
-import { expect, it } from 'vitest';
+import { expect, it } from 'vite-plus/test';
 
 import { WorkersAi } from '#src/guide/WorkersAi';
 import { CloudflareApi, type HttpFetch } from '#src/lib/CloudflareApi';

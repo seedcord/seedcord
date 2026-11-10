@@ -1,4 +1,4 @@
-import { describe, expect, it } from 'vitest';
+import { describe, expect, it } from 'vite-plus/test';
 
 import { postMetadata } from '#lib/blog/seo';
 import { DEFAULT_OG_IMAGE } from '#lib/site';

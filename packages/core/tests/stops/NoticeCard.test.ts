@@ -1,6 +1,6 @@
 import { ContainerBuilder } from '@discordjs/builders';
 import { ComponentType } from 'discord-api-types/v10';
-import { afterEach, describe, expect, it } from 'vitest';
+import { afterEach, describe, expect, it } from 'vite-plus/test';
 
 import { bindBotColor } from '#components/botColorHolder';
 import { NoticeCard } from '#stops/NoticeCard';

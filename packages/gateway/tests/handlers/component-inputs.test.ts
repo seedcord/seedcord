@@ -8,7 +8,7 @@ import {
     UserMenuRoute
 } from '@seedcord/core';
 import { DispatchContext } from '@seedcord/core/internal';
-import { describe, expect, it } from 'vitest';
+import { describe, expect, it } from 'vite-plus/test';
 
 import {
     ChannelMenuHandler,

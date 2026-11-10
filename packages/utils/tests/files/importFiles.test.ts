@@ -5,7 +5,7 @@ import { pathToFileURL } from 'node:url';
 import { stripVTControlCharacters } from 'node:util';
 
 import { SeedcordErrorCode } from '@seedcord/errors';
-import { afterAll, beforeAll, beforeEach, describe, expect, it } from 'vitest';
+import { afterAll, beforeAll, beforeEach, describe, expect, it } from 'vite-plus/test';
 
 import { readFiles, importFiles } from '#src/files/readers';
 import { setDevFiles } from '#src/files/slots';

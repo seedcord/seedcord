@@ -11,13 +11,13 @@ The seedcord monorepo enforces quality through layered checks. Most are tool-enf
 
 | Layer | What it catches | How to run today |
 | --- | --- | --- |
-| **ESLint + TypeScript** (tool) | Type errors, lint violations, import order, formatting, rule violations | `pnpm check --filter=<pkg>` |
-| **Vitest** (tool) | Behavior regressions | `pnpm check --filter=<pkg>` |
-| **Prettier** (tool) | Formatting | `pnpm -C <pkg> fmt` / `fmt:check` |
-| **changesets** (tool) | Missing version bump on published packages | `pnpm cs` when touching a published package. `pnpm cs:status` to check |
-| **React 19 antipatterns** (tool) | Mutable deps, index keys, deprecated APIs, hydration mismatches, hand-rolled `useContext`, giant components | `pnpm react-doctor --verbose` from repo root. Configured via `doctor.config.ts`. Run deliberately, NOT on every `prePush` (it's slow + interactive). Use the verbose flag for per-file diagnostics. |
-| **Dead code / unused deps** (tool) | Unused files, exports, types, deps, devDeps, binaries | `pnpm knip` from repo root. Configured via `knip.json`. Run deliberately, NOT on every `prePush`. Triage false positives into `knip.json` `ignoreDependencies` / `ignoreBinaries` / extra `entry` patterns with a comment explaining why. |
-| **Cross-package source paths** (review) | `paths` or `include` reaching into another package's `src` | Manual review of every new/changed `tsconfig.json` and `vitest.config.ts`. |
+| **ESLint + TypeScript** (tool) | Type errors, lint violations, import order, formatting, rule violations | `vp run check --filter=<pkg>` |
+| **Vitest** (tool) | Behavior regressions | `vp run check --filter=<pkg>` |
+| **Oxfmt** (tool) | Formatting | `vp fmt` / `vp fmt --check` |
+| **changesets** (tool) | Missing version bump on published packages | `vp run cs` when touching a published package. `vp run cs:status` to check |
+| **React 19 antipatterns** (tool) | Mutable deps, index keys, deprecated APIs, hydration mismatches, hand-rolled `useContext`, giant components | `vp run react-doctor --verbose` from repo root. Configured via `doctor.config.ts`. Run deliberately, NOT on every `prePush` (it's slow + interactive). Use the verbose flag for per-file diagnostics. |
+| **Dead code / unused deps** (tool) | Unused files, exports, types, deps, devDeps, binaries | `vp run knip` from repo root. Configured via `knip.json`. Run deliberately, NOT on every `prePush`. Triage false positives into `knip.json` `ignoreDependencies` / `ignoreBinaries` / extra `entry` patterns with a comment explaining why. |
+| **Cross-package source paths** (review) | `paths` or `include` reaching into another package's `src` | Manual review of every new/changed `tsconfig.json` and `vite.config.ts`. |
 
 <!--prettier-ignore-end-->
 
@@ -28,14 +28,14 @@ The only acceptable end state for a PR is: **lint:fix and tc exit clean for ever
 ## Running the Per-Package Gates
 
 ```sh
-pnpm check --filter=<pkg>      # lint:fix, tc and test, after building what <pkg> depends on
-pnpm check --filter=...<pkg>   # the same, plus everything that depends on <pkg>
-pnpm check --affected          # the same, for everything changed since next
-pnpm prePush                   # every check, on the packages changed since next
-pnpm prePush:all               # every check, on every package
+vp run check --filter=<pkg>      # lint:fix, tc and test, after building what <pkg> depends on
+vp run check --filter=...<pkg>   # the same, plus everything that depends on <pkg>
+vp run check --affected          # the same, for everything changed since next
+vp run prePush                   # every check, on the packages changed since next
+vp run prePush:all               # every check, on every package
 ```
 
-Husky runs `lint-staged` (configured in `lint-staged.config.ts`) on commit, and commitlint on the message. No hook runs on push, so run `pnpm prePush` yourself. Don't bypass the hooks.
+Vite+ runs `vp staged` (configured in `vite.config.ts`) on commit, and commitlint on the message. No hook runs on push, so run `vp run prePush` yourself. Don't bypass the hooks.
 
 ---
 
@@ -224,7 +224,7 @@ import { useAuthStore } from '../store/useAuthStore';
 
 ## Dead code
 
-`pnpm knip` covers unused files, exports, types and dependencies. If a dependency appears in two or more packages, lift it to `pnpm-workspace.yaml`'s `catalogs:` and reference it as `catalog:<name>` everywhere.
+`vp run knip` covers unused files, exports, types and dependencies. If a dependency appears in two or more packages, lift it to `pnpm-workspace.yaml`'s `catalogs:` and reference it as `catalog:<name>` everywhere.
 
 ---
 

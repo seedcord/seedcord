@@ -1,5 +1,5 @@
 import { HostShutdown, HostStartup } from '@seedcord/types/internal';
-import { describe, it, expect, afterEach } from 'vitest';
+import { describe, it, expect, afterEach } from 'vite-plus/test';
 
 import { ShutdownPhase, StartupPhase } from '#src/lifecycle/phases';
 import { TestServerHost } from '#tests/utils/TestServerHost';

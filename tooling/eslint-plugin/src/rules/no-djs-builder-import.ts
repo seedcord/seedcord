@@ -123,7 +123,6 @@ export default createRule({
         },
         schema: []
     },
-    defaultOptions: [],
     create(context) {
         const bindings = new Set<TSESTree.Node>();
         const report: Report = (node) => context.report({ node, messageId: 'useBuildersPkg' });

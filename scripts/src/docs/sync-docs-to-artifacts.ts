@@ -34,7 +34,7 @@ const DEFAULT_PROJECT_FOLDER_URL = 'https://github.com/seedcord/seedcord';
 // a union-reconstruction bug could otherwise let --prune wipe the whole catalog
 const PRUNE_DELETE_CAP = 0.5;
 
-const flags = new CliFlags('pnpm docs:sync [options]', {
+const flags = new CliFlags('vp run docs:sync [options]', {
     ...PUBLISHED_FLAGS,
     extract: { type: 'boolean', describe: 'Run the API extractor before emitting version dirs' },
     'project-folder-url': { type: 'string', describe: 'GitHub repo base for source links' },

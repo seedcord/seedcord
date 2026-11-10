@@ -2,7 +2,7 @@ import { pathToFileURL } from 'node:url';
 
 import { Logger } from '@seedcord/logger';
 import mongoose from 'mongoose';
-import { describe, it, expect, afterEach, beforeEach, vi } from 'vitest';
+import { describe, it, expect, afterEach, beforeEach, vi } from 'vite-plus/test';
 
 import { MongooseServiceRegistry } from '#src/MongooseServiceRegistry';
 

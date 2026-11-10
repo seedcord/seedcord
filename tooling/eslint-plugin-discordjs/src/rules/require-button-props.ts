@@ -107,7 +107,6 @@ export default createRule({
         },
         schema: []
     },
-    defaultOptions: [],
     create(context) {
         const services = ESLintUtils.getParserServices(context);
         const info: TypeInfo = { services, checker: services.program.getTypeChecker(), sourceCode: context.sourceCode };

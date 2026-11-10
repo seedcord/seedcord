@@ -1,4 +1,4 @@
-import { describe, it, expect, expectTypeOf } from 'vitest';
+import { describe, it, expect, expectTypeOf } from 'vite-plus/test';
 
 import { and, or } from '#gates/combinators';
 import { defineGate } from '#gates/Gate';

@@ -1,4 +1,4 @@
-import { describe, expect, it } from 'vitest';
+import { describe, expect, it } from 'vite-plus/test';
 
 import { agentSkillsIndex, skillDigest, skillResponse, skillsIndex, skillUrl } from '#src/skills';
 import { SEEDCORD_SKILL } from '#src/skills/seedcord';

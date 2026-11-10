@@ -1,4 +1,4 @@
-import { afterEach, describe, expect, it, vi } from 'vitest';
+import { afterEach, describe, expect, it, vi } from 'vite-plus/test';
 
 import { currentTime } from '#src/numbers/currentTime';
 import { toEpochSeconds } from '#src/numbers/toEpochSeconds';

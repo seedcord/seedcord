@@ -4,7 +4,7 @@ import { defineGate, InteractionKind } from '@seedcord/core';
 import { GatedMetadataKey } from '@seedcord/core/internal';
 import { Logger } from '@seedcord/logger';
 import { Envapter, PortableSource } from 'envapt';
-import { afterEach, beforeEach, describe, expect, it, vi, type MockInstance } from 'vitest';
+import { afterEach, beforeEach, describe, expect, it, vi, type MockInstance } from 'vite-plus/test';
 
 import { SlashHandler } from '#handlers/interaction/SlashHandler';
 import { restClients } from '#tests/helpers/restClients';

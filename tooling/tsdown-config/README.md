@@ -7,4 +7,4 @@
 
 # @seedcord/tsdown-config
 
-A private tsdown preset that most seedcord packages build with, through `createTsdownConfig` in their `tsdown.config.ts`.
+A private tsdown preset that most seedcord packages build with, through `createTsdownConfig` in their `vite.config.ts`.

@@ -1,5 +1,5 @@
 import { DocKind as Kind } from '@seedcord/docs-search';
-import { beforeEach, describe, expect, it, vi } from 'vitest';
+import { beforeEach, describe, expect, it, vi } from 'vite-plus/test';
 
 import { searchIndexFor, searchPackages } from '#lib/search/buildIndex';
 
