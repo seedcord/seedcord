@@ -49,7 +49,7 @@ describe('ProjectLoader', () => {
         writeFileSync(join(projectDir, 'seedcord.config.ts'), '');
         const source = join(projectDir, 'source');
         mkdirSync(source);
-        symlinkSync(source, join(projectDir, 'src'), 'junction');
+        symlinkSync(source, join(projectDir, 'src'), 'dir');
         const { open } = stubModulesExporting({ ...MINIMAL, root: './src', files: ['./locales'] });
 
         await using loaded = await new ProjectLoader(open, new ShellMode()).readConfig(projectDir);

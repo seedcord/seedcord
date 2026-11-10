@@ -29,7 +29,7 @@ const REPORT_BUDGET = 1800;
 
 const CAUSE_LABEL = '\n\nCaused by:\n';
 
-// breakBackticks grows the text by 2 chars per run
+// breakBackticks increases the text by 2 chars per run
 function body(value: unknown): string {
     const raw = Error.isError(value) ? (value.stack ?? `${value.name}: ${value.message}`) : String(value);
     return breakBackticks(stripAnsi(raw));
@@ -45,13 +45,14 @@ function omittedLine(count: number): string {
 }
 
 function headReport(error: Error, budget: number): string {
-    if (!Error.isError(error.cause)) return clamp(body(error), budget);
-    const cause = CAUSE_LABEL + clamp(body(error.cause), Math.floor(budget / 2) - CAUSE_LABEL.length);
-    return clamp(body(error), budget - cause.length) + cause;
+    const parent = body(error);
+    if (!Error.isError(error.cause)) return clamp(parent, budget);
+    const causeRoom = Math.max(budget - parent.length, Math.floor(budget / 2)) - CAUSE_LABEL.length;
+    const cause = CAUSE_LABEL + clamp(body(error.cause), causeRoom);
+    return clamp(parent, budget - cause.length) + cause;
 }
 
 function memberReport(members: readonly unknown[], budget: number): string {
-    // the dropped-count line has to fit even when every member is dropped
     const room = Math.max(budget - omittedLine(members.length).length, 0);
     const share = Math.floor(room / members.length);
 

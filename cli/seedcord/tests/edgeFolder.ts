@@ -4,8 +4,6 @@ import { join } from 'node:path';
 
 import { onTestFinished } from 'vite-plus/test';
 
-import { realPath } from '#src/core/project/realPath';
-
 const CLI_NODE_MODULES = join(import.meta.dirname, '../node_modules');
 
 // env is the source of the worker's env object, like "TOKEN: bindings.secret()"
@@ -25,7 +23,7 @@ interface EdgeFolder {
 
 export async function linkPackages(dir: string, names: readonly string[]): Promise<void> {
     await mkdir(join(dir, 'node_modules'), { recursive: true });
-    for (const name of names) await symlink(join(CLI_NODE_MODULES, name), join(dir, 'node_modules', name), 'junction');
+    for (const name of names) await symlink(join(CLI_NODE_MODULES, name), join(dir, 'node_modules', name));
 }
 
 // the folder is in the os temp dir, where node finds a package only through the links linkPackages writes
@@ -35,7 +33,7 @@ export async function edgeFolder(
 ): Promise<EdgeFolder> {
     const tmp = await mkdtempDisposable(join(tmpdir(), 'seedcord-edge-'));
     onTestFinished(() => tmp.remove());
-    const dir = realPath(tmp.path);
+    const dir = tmp.path;
     await linkPackages(dir, links);
     const cloudflareConfig = join(dir, 'cloudflare.config.ts');
     await writeFile(cloudflareConfig, config);

@@ -73,7 +73,7 @@ describe('seedcordDependents', () => {
         await writeManifest(root, { dependencies: { linked: '1.0.0' } });
         await writeManifest(join(store, 'linked'), { dependencies: { 'store-plugin': '1.0.0' } });
         await writeManifest(join(store, 'store-plugin'), { peerDependencies: { '@seedcord/core': '*' } });
-        await symlink(join(store, 'linked'), join(root, 'node_modules', 'linked'), 'junction');
+        await symlink(join(store, 'linked'), join(root, 'node_modules', 'linked'), 'dir');
 
         expect(seedcordDependents(root).toSorted()).toEqual(['linked', 'store-plugin']);
     });

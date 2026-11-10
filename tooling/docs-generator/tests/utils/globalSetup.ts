@@ -24,7 +24,7 @@ function buildDeclarations(packageDir: string): void {
 async function linkMockBase(): Promise<void> {
     await rm(MOCK_BASE_LINK, { force: true });
     await mkdir(resolve(MOCK_BASE_LINK, '..'), { recursive: true });
-    await symlink(MOCK_BASE_DIR, MOCK_BASE_LINK, 'junction');
+    await symlink(MOCK_BASE_DIR, MOCK_BASE_LINK, 'dir');
 }
 
 export async function setup(): Promise<void> {
