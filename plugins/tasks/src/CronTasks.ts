@@ -8,7 +8,7 @@ import { CronJob } from './CronJob';
 import { requireTimezone } from './requireTimezone';
 
 import type { TaskMetadata } from './decorators/RegisterTask';
-import type { CronSlot, LoadedTask, TaskRegistry, TaskSlot } from './TaskRegistry';
+import type { CronEntry, CronSlot, LoadedTask, TaskRegistry, TaskSlot } from './TaskRegistry';
 import type { TaskRunner } from './TaskRunner';
 import type { CronStatus } from './types/Tasks';
 
@@ -29,7 +29,7 @@ export class CronTasks {
         return this.registry.cronSlots().length;
     }
 
-    public add(slot: TaskSlot, loaded: LoadedTask, meta: CronMetadata): void {
+    public build(loaded: LoadedTask, meta: CronMetadata): CronEntry {
         const { key, file } = loaded;
         const { pattern } = meta;
 
@@ -73,12 +73,7 @@ export class CronTasks {
         let job: CronJob;
 
         try {
-            job = new CronJob(build, run, {
-                pattern,
-                timezone,
-                maxRuns: meta.maxRuns,
-                pausedByDecorator: meta.paused ?? false
-            });
+            job = new CronJob(build, run, meta.maxRuns);
         } catch (error) {
             throw new SeedcordTypeError(
                 SeedcordErrorCode.PluginTasksInvalidPattern,
@@ -87,25 +82,21 @@ export class CronTasks {
             );
         }
 
-        slot.cron = job;
-        this.sync(slot);
-    }
-
-    public remove(slot: TaskSlot): void {
-        slot.cron?.stop();
-        slot.cron = undefined;
+        return { job, pattern, timezone, pausedByDecorator: meta.paused ?? false };
     }
 
     public start(): void {
         this.started = true;
-
-        for (const slot of this.registry.cronSlots()) this.sync(slot);
+        this.syncAll();
     }
 
     public stop(): void {
         this.started = false;
+        this.syncAll();
+    }
 
-        for (const slot of this.registry.cronSlots()) slot.cron.stop();
+    public sync(slot: TaskSlot): void {
+        slot.sync(this.started);
     }
 
     public pause(slot: CronSlot): void {
@@ -119,24 +110,23 @@ export class CronTasks {
     }
 
     public nextRun(slot: CronSlot): Date | null {
-        return slot.paused ? null : slot.cron.nextRun();
-    }
-
-    private sync(slot: TaskSlot): void {
-        if (this.started && !slot.paused) slot.cron?.start();
-        else slot.cron?.stop();
+        return slot.paused ? null : slot.cron.job.nextRun();
     }
 
     public list(): CronStatus[] {
         return this.registry.cronSlots().map((slot) => ({
             key: slot.loaded.key,
-            pattern: slot.cron.settings.pattern,
-            timezone: slot.cron.settings.timezone,
-            active: slot.cron.active,
+            pattern: slot.cron.pattern,
+            timezone: slot.cron.timezone,
+            active: slot.cron.job.active,
             busy: slot.state.busy,
             nextRun: this.nextRun(slot),
-            previousRun: slot.cron.previousRun()
+            previousRun: slot.cron.job.previousRun()
         }));
+    }
+
+    private syncAll(): void {
+        for (const slot of this.registry.cronSlots()) this.sync(slot);
     }
 }
 

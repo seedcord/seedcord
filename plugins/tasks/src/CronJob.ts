@@ -1,12 +1,5 @@
 import type { Cron } from 'croner';
 
-interface CronSettings {
-    readonly pattern: string;
-    readonly timezone: string | undefined;
-    readonly maxRuns: number | undefined;
-    readonly pausedByDecorator: boolean;
-}
-
 // croner's resume() runs a match that it missed while paused. Pausing calls stop() instead, and resuming builds a new croner job
 export class CronJob {
     private cron: Cron;
@@ -17,10 +10,10 @@ export class CronJob {
     constructor(
         private readonly build: () => Cron,
         private readonly run: (claim: () => boolean) => Promise<void>,
-        public readonly settings: CronSettings
+        maxRuns: number | undefined
     ) {
         this.cron = build();
-        this.runsLeft = settings.maxRuns ?? Number.POSITIVE_INFINITY;
+        this.runsLeft = maxRuns ?? Number.POSITIVE_INFINITY;
     }
 
     public get active(): boolean {

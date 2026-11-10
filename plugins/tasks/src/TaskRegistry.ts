@@ -13,15 +13,41 @@ export interface LoadedTask {
     readonly state: TaskState;
 }
 
+export interface CronEntry {
+    readonly job: CronJob;
+    readonly pattern: string;
+    readonly timezone: string | undefined;
+    readonly pausedByDecorator: boolean;
+}
+
 // holds the run in flight and the pause state for one key. A save registers the key again and reuses this slot
 export class TaskSlot {
     public readonly state = new TaskState();
-    public loaded: LoadedTask | undefined;
-    public cron: CronJob | undefined;
+    private current: LoadedTask | undefined;
+    private entry: CronEntry | undefined;
     private pausedByCall: boolean | undefined;
 
+    public get loaded(): LoadedTask | undefined {
+        return this.current;
+    }
+
+    public get cron(): CronEntry | undefined {
+        return this.entry;
+    }
+
     public get paused(): boolean {
-        return this.pausedByCall ?? this.cron?.settings.pausedByDecorator ?? false;
+        return this.pausedByCall ?? this.entry?.pausedByDecorator ?? false;
+    }
+
+    public load(loaded: LoadedTask, cron: CronEntry | undefined): void {
+        this.current = loaded;
+        this.entry = cron;
+    }
+
+    public unload(): void {
+        this.entry?.job.stop();
+        this.entry = undefined;
+        this.current = undefined;
     }
 
     public pause(): void {
@@ -31,9 +57,14 @@ export class TaskSlot {
     public resume(): void {
         this.pausedByCall = false;
     }
+
+    public sync(started: boolean): void {
+        if (started && !this.paused) this.entry?.job.start();
+        else this.entry?.job.stop();
+    }
 }
 
-export type CronSlot = TaskSlot & { readonly loaded: LoadedTask; readonly cron: CronJob };
+export type CronSlot = TaskSlot & { readonly loaded: LoadedTask; readonly cron: CronEntry };
 
 const isCronSlot = (slot: TaskSlot): slot is CronSlot => slot.loaded !== undefined && slot.cron !== undefined;
 

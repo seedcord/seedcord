@@ -280,15 +280,11 @@ export class Tasks extends Plugin<{ transport: 'any'; runtime: 'server' }> {
             state: slot.state
         };
 
-        if (meta.kind === 'cron') this.#cronTasks.add(slot, loaded, meta);
-
-        slot.loaded = loaded;
+        slot.load(loaded, meta.kind === 'cron' ? this.#cronTasks.build(loaded, meta) : undefined);
+        this.#cronTasks.sync(slot);
     }
 
     #unregister(Task: TaskClass): void {
-        const slot = this.#registry.slot(taskKey(Task));
-
-        this.#cronTasks.remove(slot);
-        slot.loaded = undefined;
+        this.#registry.slot(taskKey(Task)).unload();
     }
 }
