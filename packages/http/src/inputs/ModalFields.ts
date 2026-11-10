@@ -15,9 +15,10 @@ import type {
     APIUser,
     ModalSubmitComponent
 } from 'discord-api-types/v10';
+import type { ExtractStrict } from 'type-fest';
 
 type FieldKind = ModalSubmitComponent['type'];
-type KindWithValues = Extract<ModalSubmitComponent, { values: string[] }>['type'];
+type KindWithValues = ExtractStrict<ModalSubmitComponent, { values: string[] }>['type'];
 
 interface KindLabel {
     label: string;

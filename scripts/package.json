@@ -41,6 +41,7 @@
         "@vitest/coverage-v8": "catalog:test",
         "jsonc-parser": "catalog:deps",
         "string-argv": "^0.3.2",
+        "type-fest": "catalog:deps",
         "typescript": "catalog:peer",
         "vite": "catalog:deps",
         "vitest": "catalog:test"

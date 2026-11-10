@@ -20,6 +20,7 @@
         "@seedcord/brand": "workspace:^",
         "@seedcord/ui": "workspace:^",
         "discord-component-embed": "workspace:^",
+        "es-toolkit": "catalog:deps",
         "fumadocs-core": "catalog:deps",
         "fumadocs-mdx": "catalog:deps",
         "lucide-react": "catalog:deps",
@@ -53,6 +54,7 @@
         "prettier-plugin-tailwindcss": "catalog:deps",
         "schema-dts": "^2.1.0",
         "tailwindcss": "catalog:deps",
+        "type-fest": "catalog:deps",
         "typescript": "catalog:peer",
         "vfile": "catalog:deps",
         "wrangler": "catalog:peer"

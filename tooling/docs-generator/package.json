@@ -65,7 +65,8 @@
         "@seedcord/prose": "workspace:^",
         "@seedcord/tsconfig": "workspace:^",
         "@seedcord/tsdown-config": "workspace:^",
-        "@seedcord/vite-config": "workspace:^"
+        "@seedcord/vite-config": "workspace:^",
+        "type-fest": "catalog:deps"
     },
     "engines": {
         "bun": ">=1.4.2",

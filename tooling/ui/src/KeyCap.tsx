@@ -7,7 +7,7 @@ import { Kbd } from './Kbd';
 import type { IconComponent } from './Icon';
 import type { KbdSize } from './Kbd';
 import type { ReactElement } from 'react';
-import type { LiteralUnion } from 'type-fest';
+import type { Except, LiteralUnion } from 'type-fest';
 
 export interface KeyCap {
     label: string;
@@ -23,7 +23,7 @@ const NAMED_KEYS = {
     ArrowRight: { label: 'Right', face: ArrowRight },
     Enter: { label: 'Enter', face: CornerDownLeft },
     Tab: { label: 'Tab', face: 'Tab' }
-} satisfies Record<string, Omit<KeyCap, 'aria'>>;
+} satisfies Record<string, Except<KeyCap, 'aria'>>;
 
 type NamedKey = keyof typeof NAMED_KEYS;
 

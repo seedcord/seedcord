@@ -1,4 +1,4 @@
-import { escapeHtml } from '@seedcord/ui/escapeHtml';
+import { escape as escapeHtml } from 'es-toolkit';
 
 import { canonicalUrl } from '#lib/site';
 

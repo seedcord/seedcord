@@ -6,6 +6,7 @@ import { cn } from 'cn';
 import { tw } from './lib/tw';
 
 import type { ComponentPropsWithoutRef, ReactElement, ReactNode, Ref } from 'react';
+import type { Except } from 'type-fest';
 
 const tooltipContentBaseClassName = cn(
     tw`z-50 max-w-xs`,
@@ -62,7 +63,7 @@ export function TooltipContent({ className, sideOffset = 6, ...props }: TooltipC
 type TooltipRootProps = ComponentPropsWithoutRef<typeof TooltipPrimitive.Root>;
 type TooltipContentOnlyProps = Pick<TooltipContentProps, 'side' | 'align' | 'sideOffset'>;
 
-export interface TooltipProps extends Omit<TooltipRootProps, 'children'>, TooltipContentOnlyProps {
+export interface TooltipProps extends Except<TooltipRootProps, 'children'>, TooltipContentOnlyProps {
     children: ReactNode;
     content: ReactNode;
     contentClassName?: string;

@@ -16,11 +16,10 @@ import type {
     SlashRouteBrand
 } from './brands';
 import type { AnyCustomId } from '@seedcord/custom-id';
-import type { TypedExtract } from '@seedcord/types';
-import type { Constructor, LiteralUnion } from 'type-fest';
+import type { ExtractStrict, Constructor, LiteralUnion } from 'type-fest';
 
 // Extract over Exclude so the union leaves out a kind added to the enum until someone gives it a decorator
-type ComponentBrand = TypedExtract<
+type ComponentBrand = ExtractStrict<
     InteractionKind,
     | InteractionKind.Button
     | InteractionKind.Modal

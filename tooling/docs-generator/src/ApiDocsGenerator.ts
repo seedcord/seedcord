@@ -10,8 +10,9 @@ import { discoverWorkspacePackages, readPackageManifest, readReadme, unscopedNam
 
 import type { ApiDocsPathConfig } from './ApiDocsPaths';
 import type { PackageDocResult } from './types';
+import type { SetOptional } from 'type-fest';
 
-type ConsoleLike = Pick<Console, 'log'> & Partial<Pick<Console, 'error'>>;
+type ConsoleLike = SetOptional<Pick<Console, 'log' | 'error'>, 'error'>;
 
 export interface ApiDocsGeneratorOptions extends ApiDocsPathConfig {
     logger?: ConsoleLike;

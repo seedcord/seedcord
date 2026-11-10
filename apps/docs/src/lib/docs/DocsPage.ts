@@ -10,8 +10,9 @@ import { canonicalUrl, OG_IMAGE_H, OG_IMAGE_W, OG_SITE_NAME, SITE_DESCRIPTION, S
 import type { EntityModel, PackageCatalogEntry, PackageVersionCatalog } from '#lib/docs/types';
 import type { OgPageCardProps } from '@seedcord/ui/OgCard';
 import type { Metadata } from 'next';
+import type { Except } from 'type-fest';
 
-export type DocsCard = Omit<OgPageCardProps, 'domain'>;
+export type DocsCard = Except<OgPageCardProps, 'domain'>;
 
 export function rootCard(): DocsCard {
     return { pill: 'docs', accent: BRAND_COLORS.seedDark, meta: [], name: 'Reference', description: SITE_DESCRIPTION };

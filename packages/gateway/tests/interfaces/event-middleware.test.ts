@@ -67,6 +67,14 @@ class CatchallType extends EventMiddleware {
 }
 void CatchallType;
 
+// @ts-expect-error use InteractionMiddleware
+class InteractionEvent extends EventMiddleware<Events.InteractionCreate> {
+    async execute(): Promise<void> {
+        await Promise.resolve();
+    }
+}
+void InteractionEvent;
+
 describe('EventMiddleware', () => {
     it('reads the current event name from the dispatch', () => {
         const mw = new SingleMw(createPayload(fakeMessage()), core, dispatch);

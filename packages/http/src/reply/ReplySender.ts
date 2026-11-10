@@ -5,8 +5,9 @@ import { InteractionResponseType, MessageFlags, Routes } from 'discord-api-types
 import type { REST, RawFile } from '@discordjs/rest';
 import type { Bus, DispatchContext } from '@seedcord/core';
 import type { SerializedReply } from '@seedcord/core/internal';
-import type { DeferOpts, ReplyResponse, SendOpts, TypedOmit } from '@seedcord/types';
+import type { DeferOpts, ReplyResponse, SendOpts } from '@seedcord/types';
 import type { APIMessage, APIModalInteractionResponseCallbackData } from 'discord-api-types/v10';
+import type { Except } from 'type-fest';
 
 /** The interaction payload fields the sender writes its wire from. */
 export interface InteractionRef {
@@ -19,7 +20,7 @@ export interface InteractionRef {
 export type SentMessage = APIMessage;
 
 // the framework's allowedMentions keys are camelCase, and the wire reads replied_user
-type WireAllowedMentions = TypedOmit<NonNullable<ReplyResponse['allowedMentions']>, 'repliedUser'> & {
+type WireAllowedMentions = Except<NonNullable<ReplyResponse['allowedMentions']>, 'repliedUser'> & {
     replied_user?: boolean;
 };
 

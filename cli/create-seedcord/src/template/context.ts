@@ -12,8 +12,9 @@ import { STEPS } from '#interview/steps';
 import type { PackageManager } from '#cli/PackageManager';
 import type { Answers } from '#interview/types';
 import type { TransportVariables } from '@seedcord/cli-templates';
+import type { Except } from 'type-fest';
 
-type SharedAnswers = Omit<Answers, 'transport' | 'runtime' | 'capabilities'>;
+type SharedAnswers = Except<Answers, 'transport' | 'runtime' | 'capabilities'>;
 
 export type ScaffoldAnswers =
     | (SharedAnswers & Pick<Answers, 'capabilities'> & { transport: 'gateway' })

@@ -1,4 +1,4 @@
-import type { TypedExclude } from '@seedcord/types';
+import type { ExcludeStrict } from 'type-fest';
 
 /**
  * Every interaction kind seedcord routes.
@@ -20,7 +20,7 @@ export enum InteractionKind {
 /**
  * The interaction kinds a middleware can filter on. Autocomplete doesn't carry a reply target.
  */
-export type MiddlewareKind = TypedExclude<InteractionKind, InteractionKind.Autocomplete>;
+export type MiddlewareKind = ExcludeStrict<InteractionKind, InteractionKind.Autocomplete>;
 
 // Symbol.for so a second copy of this module reads the same slots
 export const CommandMetadataKey = Symbol.for('seedcord:command:metadata');

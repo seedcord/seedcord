@@ -1,4 +1,5 @@
 import { assertNever } from '@seedcord/utils';
+import { sumBy } from 'es-toolkit';
 
 import { formatClock } from '#ui/format';
 
@@ -105,7 +106,7 @@ export class LogLayout {
     private constructor(width: number, step: Step, longestLabel: number) {
         this.width = width;
         this.cells = cellsFor(step, longestLabel);
-        this.messageColumn = this.cells.reduce((sum, cell) => sum + cellText(cell, PROBE).length + 1, 0);
+        this.messageColumn = sumBy(this.cells, (cell) => cellText(cell, PROBE).length + 1);
     }
 
     public static fit(width: number, longestLabel: number, details: DetailMode): LogLayout {

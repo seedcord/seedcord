@@ -1,9 +1,9 @@
 import type { WriteMethod } from '#reply/responseReport';
 import type { InteractionKind } from '#src/metadataKeys';
 import type { Notice } from '#stops/Notice';
-import type { TypedExclude } from '@seedcord/types';
 import type { UUID } from '@seedcord/types/internal';
 import type { APIApplicationCommand } from 'discord-api-types/v10';
+import type { ExcludeStrict } from 'type-fest';
 
 /**
  * How a dispatch finished. The thrown value's type sets this, wherever it was thrown. A `Silence` and a
@@ -192,7 +192,7 @@ export type SubscriptionKey = keyof AllSubscriptions;
  * The keys `publish` accepts. The framework's own keys are excluded, since only the framework
  * produces them.
  */
-export type PublishableKey = TypedExclude<SubscriptionKey, keyof DefaultSubscriptions>;
+export type PublishableKey = ExcludeStrict<SubscriptionKey, keyof DefaultSubscriptions>;
 
 /**
  * The payload type for a subscriber event.

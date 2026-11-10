@@ -1,8 +1,9 @@
 import { cn } from 'cn';
 
 import type { ReactElement, SVGAttributes } from 'react';
+import type { Except } from 'type-fest';
 
-export interface NpmIconProps extends Omit<SVGAttributes<SVGSVGElement>, 'children'> {
+export interface NpmIconProps extends Except<SVGAttributes<SVGSVGElement>, 'children'> {
     size?: number;
     title?: string;
 }

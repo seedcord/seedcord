@@ -14,9 +14,10 @@ import type { ResolvedSeedcordConfig } from '#core/config/schema';
 import type { StateFolder } from '#core/state/StateFolder';
 import type { DevEvent } from './events';
 import type { RestartFiles } from './RestartFiles';
-import type { HmrEventType, HmrUpdateEvent, TypedOmit } from '@seedcord/types';
+import type { HmrEventType, HmrUpdateEvent } from '@seedcord/types';
 import type { DevChannel, SeedcordCliEvents, SeedcordFrameworkEvents } from '@seedcord/types/internal';
 import type { FSWatcher } from 'node:fs';
+import type { Except } from 'type-fest';
 import type {
     DevEnvironment,
     EnvironmentModuleNode,
@@ -147,7 +148,7 @@ export class HmrPlugin extends TypedEventEmitter<{ event: [DevEvent] }> {
         this.send({ file: dir, type });
     }
 
-    private send(event: TypedOmit<HmrUpdateEvent, 'rollback'>): void {
+    private send(event: Except<HmrUpdateEvent, 'rollback'>): void {
         this.logger.trace(`${TYPE_COLOR[event.type](event.type.toUpperCase())} ${paint.mute(displayPath(event.file))}`);
         this.dev?.send('seedcord:hmr', {
             ...event,

@@ -1,4 +1,5 @@
 import type { BorderStyle } from './options';
+import type { ExcludeStrict } from 'type-fest';
 
 export interface LinePart {
     left: string;
@@ -39,7 +40,7 @@ const ASCII: BorderChars = {
     vertical: '|'
 };
 
-export const BORDERS: Record<Exclude<BorderStyle, 'markdown'>, BorderChars> = {
+export const BORDERS: Record<ExcludeStrict<BorderStyle, 'markdown'>, BorderChars> = {
     double: DOUBLE,
     rounded: ROUNDED,
     ascii: ASCII
