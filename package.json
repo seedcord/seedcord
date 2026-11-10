@@ -40,7 +40,7 @@
         "prepare": "vp config",
         "knip": "knip",
         "react-doctor": "react-doctor --verbose",
-        "cs": "changeset",
+        "cs": "changeset --since next",
         "cs:enter": "changeset pre enter next",
         "cs:exit": "changeset pre exit",
         "cs:publish": "changeset publish",
