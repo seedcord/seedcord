@@ -79,7 +79,7 @@ describe('ReleaseName', () => {
         );
     });
 
-    it('finds no previous release when none came before', () => {
+    it("doesn't find a previous release when none came before", () => {
         const name = ReleaseName.fromTag('release-2026.09.11');
 
         expect(name.previousIn(['release-2026.09.11', 'release-2026.09.12', '@seedcord/core@0.7.0'])).toBeUndefined();

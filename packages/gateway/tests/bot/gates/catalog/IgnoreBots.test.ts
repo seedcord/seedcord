@@ -15,7 +15,7 @@ describe('IgnoreBots', () => {
         await expect(IgnoreBots.check(actorCtx(false))).resolves.toBeUndefined();
     });
 
-    it('drops a bot actor with a Silence', async () => {
+    it('stops a bot actor with a Silence', async () => {
         await expect(IgnoreBots.check(actorCtx(true))).rejects.toBeInstanceOf(Silence);
     });
 });

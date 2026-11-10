@@ -71,7 +71,7 @@ describe('ReplySender.reply', () => {
         await expect(senderFor(mock).reply(reply)).resolves.toBe(message);
     });
 
-    it('drops the ephemeral flag when ephemeral is false, keeping v2', async () => {
+    it('clears the ephemeral flag when ephemeral is false, keeping v2', async () => {
         const mock = mockInteraction();
         await senderFor(mock).reply(reply, { ephemeral: false });
         expect(replyOptions(mock).flags).toBe(V2);
@@ -90,7 +90,7 @@ describe('ReplySender.reply', () => {
         expect(replyOptions(mock).components).toEqual([new TextDisplayBuilder().setContent('done').toJSON()]);
     });
 
-    it('throws ReplyCallbackMissingMessage when the callback carries no message', async () => {
+    it('throws ReplyCallbackMissingMessage when the callback is missing its message', async () => {
         const mock = mockInteraction();
         mock.reply.mockResolvedValueOnce({ resource: { message: null } });
         await expect(senderFor(mock).reply(reply)).rejects.toSatisfy((e: unknown) =>
@@ -98,7 +98,7 @@ describe('ReplySender.reply', () => {
         );
     });
 
-    it('advances to replied when the callback acked but carried no message, so a followUp works', async () => {
+    it('advances to replied when the callback acked without a message, so a followUp works', async () => {
         const mock = mockInteraction();
         mock.reply.mockResolvedValueOnce({ resource: { message: null } });
         const sender = senderFor(mock);
@@ -142,7 +142,7 @@ describe('ReplySender.defer', () => {
         expect(mock.deferReply).toHaveBeenCalledWith({ flags: MessageFlags.Ephemeral });
     });
 
-    it('drops the ephemeral flag on defer({ ephemeral: false })', async () => {
+    it('clears the ephemeral flag on defer({ ephemeral: false })', async () => {
         const mock = mockInteraction();
         await senderFor(mock).defer({ ephemeral: false });
         expect(mock.deferReply).toHaveBeenCalledWith({ flags: 0 });
@@ -525,7 +525,7 @@ describe('ReplySender.send', () => {
         expect(replyOptions(mock).flags).toBe(V2);
     });
 
-    it('drops send opts when the deferred-reply path edits @original', async () => {
+    it('leaves send opts out when the deferred-reply path edits @original', async () => {
         const mock = mockInteraction();
         const sender = senderFor(mock);
         await sender.defer();

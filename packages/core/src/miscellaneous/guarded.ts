@@ -1,7 +1,7 @@
 import { SeedcordErrorCode } from '@seedcord/errors';
 import { SeedcordError } from '@seedcord/errors/internal';
 
-// null-prototype, on a plain object a key named __proto__ sets the store's prototype and adds no entry
+// null-prototype, on a plain object a key named __proto__ sets the store's prototype and doesn't add an entry
 export function accessorStore<Value>(): Record<string, Value> {
     return Object.create(null) as Record<string, Value>;
 }

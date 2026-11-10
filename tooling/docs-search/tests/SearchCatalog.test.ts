@@ -22,7 +22,7 @@ const logger: SearchPackage = {
 const onSeedcord = { pkg: 'seedcord', version: '1.0.0' };
 
 describe('SearchCatalog.targets', () => {
-    it('searches the viewed package at its url version so older versions stay searchable', () => {
+    it('searches the viewed package at its url version so older versions are searchable', () => {
         const catalog = new SearchCatalog([seedcord, logger]);
         expect(catalog.targets({ pkg: 'seedcord', version: '0.5.0' }, 'all', false)).toContainEqual({
             id: 'seedcord',

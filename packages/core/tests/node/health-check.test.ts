@@ -71,7 +71,7 @@ describe('HealthCheck', () => {
         expect(missing.status).toBe(404);
 
         await expect(hc.stop()).resolves.toBeUndefined();
-        // second stop hits the !listening guard and must resolve rather than hang the shutdown phase
+        // second stop hits the !listening guard and must resolve, so the shutdown phase doesn't hang
         await expect(hc.stop()).resolves.toBeUndefined();
     });
 });

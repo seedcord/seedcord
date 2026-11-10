@@ -78,7 +78,7 @@ describe('seedcordDependents', () => {
         expect(seedcordDependents(root).toSorted()).toEqual(['linked', 'store-plugin']);
     });
 
-    it('finds a package whose exports map has no root entry', async () => {
+    it("finds a package whose exports map doesn't have a root entry", async () => {
         const root = await projectRoot();
         await writeManifest(root, { dependencies: { 'subpaths-only': '1.0.0' } });
         await writeManifest(join(root, 'node_modules', 'subpaths-only'), {

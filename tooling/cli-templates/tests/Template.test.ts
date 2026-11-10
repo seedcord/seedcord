@@ -37,7 +37,7 @@ describe('Template.readAll', () => {
 const ROOT = '/bot/src';
 const GATEWAY: RenderProject = { root: ROOT, transport: '@seedcord/gateway', runtime: 'server', helpers: {} };
 
-// a path starting with _ stays beside the template, like _partials/header.hbs
+// this writes a path starting with _ beside the template folder, like _partials/header.hbs
 async function onlyTemplate(files: Record<string, string>): Promise<AsyncDisposable & { template: Template }> {
     const folder = await templateFolder(
         Object.fromEntries(
@@ -159,7 +159,7 @@ describe('TemplateOutput.render', () => {
     });
 
     it.each(['Appeal', 'appeal'])(
-        'throws MakePathTaken for %j when two files of the template land on one path in any casing',
+        'throws MakePathTaken for %j when two files of the template resolve to one path in any casing',
         async (name) => {
             await using made = await onlyTemplate({ '{{name}}.ts.hbs': '', '{{pascal name}}.ts.hbs': '' });
 

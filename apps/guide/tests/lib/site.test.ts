@@ -111,7 +111,7 @@ describe('the sitemap', () => {
         expect(sitemapEntries([undated])[0]).not.toHaveProperty('lastModified');
     });
 
-    it('ranks the page a reader lands on above every other', () => {
+    it('ranks the page a reader opens first above every other', () => {
         expect(sitemapEntries([page('/', 'index.mdx')])[0]?.priority).toBe(1);
     });
 

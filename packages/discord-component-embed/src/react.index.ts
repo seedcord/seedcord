@@ -33,7 +33,7 @@ export interface ComponentEmbedProps {
  * ```
  */
 export function ComponentEmbed({ children }: ComponentEmbedProps): ReactElement {
-    // no JSX in this file. react 17 has no exports map for react/jsx-runtime
+    // no JSX in this file. react 17 ships without an exports map for react/jsx-runtime
     return createElement('script', {
         id: SCRIPT_ID,
         type: EMBED_TYPE,

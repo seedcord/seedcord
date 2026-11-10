@@ -11,7 +11,7 @@ describe('sendFlags', () => {
         expect(flags & MessageFlags.SuppressNotifications).toBe(0);
     });
 
-    it('drops Ephemeral when ephemeral is false', () => {
+    it('clears Ephemeral when ephemeral is false', () => {
         const flags = sendFlags({ ephemeral: false });
         expect(flags & MessageFlags.IsComponentsV2).toBe(MessageFlags.IsComponentsV2);
         expect(flags & MessageFlags.Ephemeral).toBe(0);
@@ -29,7 +29,7 @@ describe('sendFlags', () => {
 });
 
 describe('deferFlags', () => {
-    it('defaults to ephemeral and carries no content flag', () => {
+    it('defaults to ephemeral with the content flag unset', () => {
         expect(deferFlags()).toBe(MessageFlags.Ephemeral);
     });
 

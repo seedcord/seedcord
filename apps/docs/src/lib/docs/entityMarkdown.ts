@@ -11,7 +11,7 @@ import type {
 import type { CodeRepresentation } from '@seedcord/ui';
 
 // function renders its own declaration per signature, and type renders its expanded declaration, so
-// the base signature here would just duplicate it.
+// the base signature here would duplicate it.
 const SKIP_BASE_SIGNATURE = new Set<EntityModel['kind']>(['function', 'type']);
 
 function paragraphs(parts: readonly CommentParagraph[] | undefined): string {

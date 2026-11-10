@@ -270,7 +270,7 @@ describe('ReferenceResolver.href', () => {
         expect(resolver.href('seedcord', ref)).toBe('/packages/seedcord/3.1.4/classes/MockClass');
     });
 
-    it('returns /404 when the resolved member has no entity ancestor and no qualifiedName owner', () => {
+    it('returns /404 when the resolved member has neither an entity ancestor nor a qualifiedName owner', () => {
         const member = makeNode({
             slug: 'a/b/c',
             qualifiedName: 'unrelated',
@@ -378,7 +378,7 @@ describe('ReferenceResolver.href cross-package', () => {
         expect(resolver.href('seedcord', ref)).toBe('/packages/logger/0.5.0/classes/logger#debug');
     });
 
-    it('routes a known-package non-entity (EventEmitter) to its node.js docs, not a 404 link', () => {
+    it('routes a known-package non-entity (EventEmitter) to its node.js docs', () => {
         const { resolver } = makeResolver({
             loaded: ['seedcord'],
             known: ['seedcord', '@seedcord/logger'],

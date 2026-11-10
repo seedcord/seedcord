@@ -99,7 +99,7 @@ describe('CommandRegistry.setCommands', () => {
         expect(mentions.ping?.mention).toBe('</ping:123>');
     });
 
-    it('puts only the guild route when the bot has no global commands', async () => {
+    it("puts only the guild route when the bot doesn't have global commands", async () => {
         const put = vi.fn().mockResolvedValue(deployedAs('g-1', 'config'));
         const registry = registryWith(put);
         registry.scopedCommands.set('111', [new SlashCommandBuilder().setName('config').setDescription('Config')]);

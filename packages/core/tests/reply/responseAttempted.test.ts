@@ -129,7 +129,7 @@ describe('responseAttempted', () => {
             'discord said no'
         );
 
-        // the caller still sees the value that was thrown
+        // the caller still receives the value that was thrown
         await expect(sender.reply(response)).rejects.toBe('discord said no');
 
         expect(sent).toHaveLength(1);

@@ -34,7 +34,7 @@ export class Users extends MongooseService<IUser> {
 }
 ```
 
-`Users.ts` does several things at once, so let's go through it one part at a time.
+`Users.ts` does several things at once, so let's read it one part at a time.
 
 - **`IUser`** lists the fields a user document has. It extends [`MongooseDocument`](ref:plugin-mongoose/MongooseDocument), which declares `_id: string`, the one field every document has.
 - **[`@RegisterMongooseService('users')`](ref:plugin-mongoose/RegisterMongooseService)** gives the class its key. Your handlers read the service from `services` under that key, typed as `Users` once [codegen has run](#typing-the-registry).
@@ -44,7 +44,7 @@ export class Users extends MongooseService<IUser> {
 
 ## You never construct a service
 
-The constructor takes the plugin, the core, and a model, so the plugin builds your services itself, right after it connects. It imports every code file under the `dir` you gave the [mongoose plugin](/plugins/mongoose), including subfolders, in order of path. That covers `.ts`, `.tsx`, `.mts`, `.js`, `.jsx`, and `.mjs`, and skips type declarations, dotfiles, dot-folders, and `node_modules`. For each exported class that extends `MongooseService` and carries the decorator, it builds the model from `schema` and constructs the class. That constructor call adds the instance to the plugin's [`services`](ref:plugin-mongoose/Mongoose.services) map under its key.
+The constructor takes the plugin, the core, and a model, so the plugin builds your services itself, right after it connects. It imports every code file under the `dir` you gave the [mongoose plugin](/plugins/mongoose), including subfolders, in order of path. That covers `.ts`, `.tsx`, `.mts`, `.js`, `.jsx`, and `.mjs`, and skips type declarations, dotfiles, dot-folders, and `node_modules`. For each exported class that extends `MongooseService` and has the decorator, it builds the model from `schema` and constructs the class. That constructor call adds the instance to the plugin's [`services`](ref:plugin-mongoose/Mongoose.services) map under its key.
 
 <Callout type="warning">
 

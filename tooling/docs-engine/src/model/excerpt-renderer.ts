@@ -85,8 +85,8 @@ export function tokensToSigParts(tokens: readonly ExcerptToken[]): SigPart[] {
     for (const token of tokens) {
         if (token.kind === ExcerptTokenKind.Reference && token.canonicalReference) {
             // AE appends `$N` when two same-named symbols are in scope (winston `Logger` alongside a
-            // package `Logger` becomes `Logger$1`). strip it from the display text only. `ref.name` stays
-            // byte-exact so the resolver's name fallback never collides with a documented same-named node.
+            // package `Logger` becomes `Logger$1`). strip it from the display text only. `ref.name` keeps
+            // the `$N` so the resolver's name fallback never collides with a documented same-named node.
             parts.push({
                 kind: 'ref',
                 text: token.text.replace(/\$\d+$/, ''),

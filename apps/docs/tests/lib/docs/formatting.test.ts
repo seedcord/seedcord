@@ -7,7 +7,7 @@ import type { FormatContext } from '#lib/docs/types';
 import type { NodeLookup, PackageRegistry, RenderedSignature } from '@seedcord/docs-engine';
 
 // An empty lookup makes resolve() fall through to the external-URL table, so name-only refs
-// (string, Promise) link to MDN, matching the engine's behavior with no loaded package.
+// (string, Promise) link to MDN, matching the engine's behavior without a loaded package.
 const emptyLookup: NodeLookup = {
     getNodeByKey: () => null,
     getNodeBySlug: () => null,
@@ -35,7 +35,7 @@ const ref = (text: string): { kind: 'ref'; text: string; ref: { name: string } }
 });
 
 describe('formatSignature link weaving', () => {
-    it('keeps type links when a modifier prefix is applied (regression: prefix dropped links)', async () => {
+    it('keeps type links when a modifier prefix is applied (regression: the prefix removed links)', async () => {
         const render: RenderedSignature = {
             name: [{ kind: 'text', text: 'fetchThing' }],
             parameters: [{ name: 'id', optional: false, type: { parts: [ref('string')] } }],
@@ -76,7 +76,7 @@ describe('formatSignature link weaving', () => {
         expect(out.html).toContain('target="_blank"');
     });
 
-    it('drops the empty seam anchors DOMPurify leaves on a span-crossing link', async () => {
+    it('removes the empty seam anchors DOMPurify leaves on a span-crossing link', async () => {
         // `id: string` places the link right after `: `, which shiki tokenizes across a span seam;
         // before the fix DOMPurify split that into an empty <a></a> plus the real anchor.
         const render: RenderedSignature = {

@@ -3,7 +3,7 @@ title: Options
 description: Declare options on a slash command and read them back through getters typed from what you declared, with required ones never null.
 ---
 
-You marked the option required when you registered it, but `getString('query')` still handed back `string | null`. Every read opened with a check whose answer you already knew, or a `!` you hoped was right. A misspelled name compiled fine, then handed null to whoever ran the command.
+With plain discord.js, `getString('query')` returns `string | null` even when you registered the option as required, unless you pass `true` again at every read. A misspelled name compiles fine, then returns null for whoever runs the command.
 
 Both of those come from the same gap, where nothing connects your declaration to the getter that reads it. Every option you declare becomes a getter on [`this.options`](ref:gateway/SlashHandler.options), typed from what you declared.
 
@@ -103,11 +103,11 @@ class Maintenance extends SlashHandler<'maintenance'> {
 }
 ```
 
-## Required options drop the null
+## Required options are never null
 
 `notify` and `target` were declared with `setRequired(true)`, so they arrive as values. `reason` was left optional, so it arrives as `string | null`. Discord rejects the command before your handler runs when a required option is missing.
 
-Mark an option required when your handler has nothing sensible to do without it. Discord then turns the caller away at the picker, where they can still fix it, so your handler reads the value with no guard. The table below pairs each `add...Option` method with the getter that reads it.
+Mark an option required when your handler can't do anything sensible without it. Discord then turns the caller away at the picker, where they can still fix it, so your handler reads the value without a guard. The table below pairs each `add...Option` method with the getter that reads it.
 
 ```ts twoslash
 import { SlashHandler, SlashRoute } from '@seedcord/gateway';
@@ -145,9 +145,9 @@ class Maintenance extends SlashHandler<'maintenance'> {
 
 <Callout type="transport">
 
-The last six return live discord.js objects on gateway and raw `discord-api-types` payloads on http. Every one of them carries `id` on both transports. The exception is an http `getMember` payload, which holds the guild fields alone, since Discord sends that person's user object once under `resolved.users`.
+The last six return live discord.js objects on gateway and raw `discord-api-types` payloads on http. Every one of them has `id` on both transports. The exception is an http `getMember` payload, which holds the guild fields alone, since Discord sends that person's user object once under `resolved.users`.
 
-`getUser` carries `username`, and `getMentionable` carries it when someone picked a user. A role has `name`, a channel has `name`, and an attachment has `filename`.
+`getUser` has `username`, and `getMentionable` has it when someone picked a user. A role has `name`, a channel has `name`, and an attachment has `filename`.
 
 </Callout>
 
@@ -226,7 +226,7 @@ Threads are the one pair you cannot split. Asking for `PublicThread` alone gives
 
 ## When a getter is missing
 
-A getter only exists when the command declares an option of that kind. `maintenance` declares no integer option, so `this.options.getInteger` does not exist there.
+A getter only exists when the command declares an option of that kind. `maintenance` doesn't declare an integer option, so `this.options.getInteger` does not exist there.
 
 ```ts twoslash
 // @errors: 2339

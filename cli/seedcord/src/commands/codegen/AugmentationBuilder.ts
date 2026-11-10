@@ -51,7 +51,7 @@ const KIND_BY_TYPE = {
     [ApplicationCommandOptionType.Attachment]: 'attachment'
 } as const satisfies Record<APIApplicationCommandBasicOption['type'], OptionKind>;
 
-// discord reads a command with no contexts as reachable from all three
+// discord reads a command without contexts as reachable from all three
 function cacheStateOf(contexts: RESTPostAPIApplicationCommandsJSONBody['contexts']): 'cached' | undefined {
     if (!contexts || contexts.length === 0) return undefined;
     return contexts.every((context) => context === InteractionContextType.Guild) ? 'cached' : undefined;

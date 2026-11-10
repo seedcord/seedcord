@@ -62,7 +62,7 @@ export function renderSeeAlso(comment: DocComment, context: FormatContext): SeeA
                 );
                 if (resolved) href = resolved;
             } catch {
-                // an unresolved target just stays a plain-text entry
+                // an unresolved target renders as a plain-text entry
             }
         }
 

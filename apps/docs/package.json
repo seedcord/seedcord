@@ -40,6 +40,7 @@
         "zustand": "^5.0.15"
     },
     "devDependencies": {
+        "@seedcord/prose": "workspace:^",
         "@seedcord/tsconfig": "workspace:^",
         "@seedcord/vite-config": "workspace:^",
         "@testing-library/dom": "catalog:test",

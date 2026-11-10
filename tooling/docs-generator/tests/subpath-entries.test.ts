@@ -79,7 +79,7 @@ describe('a package with more than one public entry point', () => {
         expect(memberNamesOf(root.output, 'MockRuntimeHost')).not.toContain('fetch');
     });
 
-    it('lists the names the workerd build declares itself', () => {
+    it('lists the symbols the workerd build declares itself', () => {
         const workerd = mock.entries.find((entry) => entry.condition === 'workerd')!;
 
         expect(workerd.ownVersions).toEqual(['MockRuntimeHost']);
@@ -153,7 +153,7 @@ describe('a package with more than one public entry point', () => {
         const extra = mock.entries.find((entry) => entry.subpath === './extra')!;
         const model = readFileSync(resolve(TEMP_DIR, basename(extra.output)), 'utf8');
         expect(model).toContain('extraFunction');
-        // extra.ts re-exports mockFunction. mockFunctionWithRest stays behind on the root entry.
+        // extra.ts re-exports mockFunction. mockFunctionWithRest is only on the root entry.
         expect(model).toContain('mockFunction');
         expect(model).not.toContain('mockFunctionWithRest');
     });

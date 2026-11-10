@@ -5,7 +5,7 @@ description: Split a long list into pages with Paginator, and let users move bet
 
 A list longer than one message needs a Next button, and that button has to know which page comes next. If you keep the page number in memory, every button stops working the next time your bot restarts. If you write it into the id by hand, the bounds checks and disabled buttons are yours to write too.
 
-A [`Paginator`](ref:gateway/Paginator) sends one page of a list and routes the clicks on its nav buttons. Every button carries its target page inside the custom id, so a click still works after your bot restarts. It disables **Prev** on page one and **Next** on the last page.
+A [`Paginator`](ref:gateway/Paginator) sends one page of a list and routes the clicks on its nav buttons. Every button holds its target page inside the custom id, so a click still works after your bot restarts. It disables **Prev** on page one and **Next** on the last page.
 
 ```ts twoslash hovers title="src/handlers/Roles.ts"
 import {
@@ -36,7 +36,7 @@ export class RolesList extends SlashHandler<'roles'> {
 }
 ```
 
-`prefix` sets the route every nav button carries, the same way a [`CustomId`](ref:custom-id/CustomId) prefix sets one. A click routes by its prefix alone, so pick a name nothing else in your bot uses.
+`prefix` sets the route that every nav button has, the same way a [`CustomId`](ref:custom-id/CustomId) prefix sets one. A click routes by its prefix alone, so pick a name nothing else in your bot uses.
 
 The paginator builds its own nav handler and puts it on [`Roles.Handler`](ref:gateway/Paginator.Handler). Extend that with an empty body, hand `Roles.cursor` to [`@ButtonRoute`](ref:core/ButtonRoute), and export it from wherever seedcord scans your handlers. Clicks don't route until that class exists.
 
@@ -54,7 +54,7 @@ The first page is page 0, so `Roles.start(this, 3)` opens the fourth page. If th
 
 ## Where the items come from
 
-[`ArraySource`](ref:gateway/ArraySource) takes a loader and a page size. Every click runs the loader again, then slices out the page its button targets. It loads everything, so the page count is exact. That gives the nav row a working **Last** button, and the indicator reads `Page 2 of 4`. The cost is a full read of the list on every click, which [Sources](/components/pagination-sources) avoids by fetching one page at a time.
+[`ArraySource`](ref:gateway/ArraySource) takes a loader and a page size. Every click runs the loader again, then slices out the page that its button targets. It loads everything, so the page count is exact. That gives the nav row a working **Last** button, and the indicator reads `Page 2 of 4`. The cost is a full read of the list on every click, which [Sources](/components/pagination-sources) avoids by fetching one page at a time.
 
 Your loader can return a promise. If it calls a database or an API, cache the result inside it.
 
@@ -62,7 +62,7 @@ Your loader can return a promise. If it calls a database or an API, cache the re
 
 <Callout type="transport">
 
-The loader receives a [`PageContext`](ref:gateway/PageContext), which carries `guild: Guild | null` on gateway and `guildId: string | null` on http. Reading `ctx.guild` fails to compile there. Fetch the guild through `ctx.core.rest` where your loader reads guild data.
+The loader receives a [`PageContext`](ref:gateway/PageContext), which has `guild: Guild | null` on gateway and `guildId: string | null` on http. Reading `ctx.guild` fails to compile there. Fetch the guild through `ctx.core.rest` where your loader reads guild data.
 
 </Callout>
 
@@ -88,7 +88,7 @@ Without `render`, seedcord puts the items and a row of nav buttons in one contai
 
 `renderItem` receives an item and its position, counted from the start of the list. The index counts from zero, so at a `perPage` of 15 the first item on page two gets `15`. The `Roles` sample adds one to print it as `16`.
 
-Return a string from `renderItem` for a plain line. For an item that carries a thumbnail or a button of its own, return a [`BuilderComponent<'section'>`](ref:core/BuilderComponent).
+Return a string from `renderItem` for a plain line. For an item that has a thumbnail or a button of its own, return a [`BuilderComponent<'section'>`](ref:core/BuilderComponent).
 
 ```ts twoslash
 import {
@@ -125,4 +125,4 @@ Three more pages continue from here. Each one hands you a job seedcord was doing
 
 - [Sources](/components/pagination-sources) pages a list too large to load whole, and writes a source of its own.
 - [Custom rendering](/components/pagination-render) replaces the message, nav buttons included.
-- [Paging it yourself](/components/pagination-headless) drops the paginator and keeps the page math.
+- [Paging it yourself](/components/pagination-headless) uses the page math without the paginator.

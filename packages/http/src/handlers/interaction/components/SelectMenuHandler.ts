@@ -43,7 +43,7 @@ export abstract class SelectMenuHandler<
     Event extends APIMessageComponentSelectMenuInteraction,
     Defs extends readonly AnyCustomId[]
 > extends ComponentHandler<Event, Defs> {
-    /** The values this select picked. On every kind but the string menu they are snowflake ids. */
+    /** The values that this select picked. On every kind but the string menu they are snowflake ids. */
     protected get values(): string[] {
         // eslint-disable-next-line @typescript-eslint/no-unnecessary-condition -- a payload can arrive with no values key
         return this.event.data.values ?? [];
@@ -106,7 +106,7 @@ export abstract class UserMenuHandler<Defs extends readonly AnyCustomId[]> exten
     /** @internal */
     declare readonly [ComponentKindBrand]?: InteractionKind.UserMenu;
 
-    /** The users this select picked. */
+    /** The users that this select picked. */
     protected get users(): Collection<string, APIUser> {
         return pick(this.values, resolvedOf(this.event.data).users);
     }
@@ -143,7 +143,7 @@ export abstract class RoleMenuHandler<Defs extends readonly AnyCustomId[]> exten
     /** @internal */
     declare readonly [ComponentKindBrand]?: InteractionKind.RoleMenu;
 
-    /** The roles this select picked. */
+    /** The roles that this select picked. */
     protected get roles(): Collection<string, APIRole> {
         return pick(this.values, resolvedOf(this.event.data).roles);
     }
@@ -175,7 +175,7 @@ export abstract class ChannelMenuHandler<Defs extends readonly AnyCustomId[]> ex
     /** @internal */
     declare readonly [ComponentKindBrand]?: InteractionKind.ChannelMenu;
 
-    /** The channels this select picked. */
+    /** The channels that this select picked. */
     protected get channels(): Collection<string, APIInteractionDataResolvedChannel> {
         return pick(this.values, resolvedOf(this.event.data).channels);
     }
@@ -207,7 +207,7 @@ export abstract class MentionableMenuHandler<Defs extends readonly AnyCustomId[]
     /** @internal */
     declare readonly [ComponentKindBrand]?: InteractionKind.MentionableMenu;
 
-    /** The users this select picked. */
+    /** The users that this select picked. */
     protected get users(): Collection<string, APIUser> {
         return pick(this.values, resolvedOf(this.event.data).users);
     }
@@ -217,7 +217,7 @@ export abstract class MentionableMenuHandler<Defs extends readonly AnyCustomId[]
         return pick(this.values, resolvedOf(this.event.data).members);
     }
 
-    /** The roles this select picked. */
+    /** The roles that this select picked. */
     protected get roles(): Collection<string, APIRole> {
         return pick(this.values, resolvedOf(this.event.data).roles);
     }

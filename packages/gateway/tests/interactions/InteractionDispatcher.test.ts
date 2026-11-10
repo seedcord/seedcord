@@ -20,7 +20,7 @@ interface PrivateInteractionDispatcher {
     maps: Record<InteractionKind, Map<string, { ctor: unknown }>>;
     init(): Promise<void>;
     onHmr(event: unknown): Promise<void>;
-    // only ever spied on, so the parameters stay loose
+    // only ever spied on, so unknown[] is enough
     processInteraction(...args: unknown[]): Promise<void>;
     inFlight: InFlight;
     handleInteraction(interaction: unknown): Promise<void>;
@@ -481,7 +481,7 @@ describe('InteractionDispatcher Integration', () => {
         expect(controller.maps[InteractionKind.Slash].has('ping')).toBe(true);
     });
 
-    it('ignores a middleware saved beside the handlers when the config has no middlewares folder', async ({
+    it("ignores a middleware saved beside the handlers when the config doesn't have a middlewares folder", async ({
         testEnv
     }) => {
         await testEnv.createFile(
@@ -1564,7 +1564,7 @@ describe('InteractionDispatcher Integration', () => {
             expect(interaction.deferReply).not.toHaveBeenCalled();
         });
 
-        // the unhandled default carries no route decorator, so its own sender has no dispatch route id
+        // the unhandled default doesn't have a route decorator, so its own sender doesn't have a dispatch route id
         it('publishes one route id across both keys for the unhandled default', async ({ bootWith }) => {
             const { seedcord, controller } = await bootWith(`
                 import { SlashHandler, SlashRoute } from '${seedcordPath}';
@@ -1587,7 +1587,7 @@ describe('InteractionDispatcher Integration', () => {
             expect(written[0]?.routeId).toBe('slash:unregistered');
         });
 
-        // a consumer groups the two keys by route, so they have to agree
+        // a consumer groups the two keys by route, so both payloads must hold the same route id
         it('publishes one route id across both keys when a middleware throws', async ({ bootWith }) => {
             const { seedcord, controller } = await bootWith(MW_BOOM_ROUTE, MW_BOOM_MIDDLEWARE);
             const dispatched: SubscriptionData<'interactionDispatched'>[] = [];
@@ -1601,8 +1601,8 @@ describe('InteractionDispatcher Integration', () => {
             expect(written[0]?.routeId).toBe('slash:mwboom');
         });
 
-        // a hand-built customId carries no colon, so prefixOf returns '' and no route can match
-        it('replies to a customId that carries no route prefix through the unhandled default', async ({ testEnv }) => {
+        // a hand-built customId doesn't have a colon, so prefixOf returns '' and no route can match
+        it('replies to a customId without a route prefix through the unhandled default', async ({ testEnv }) => {
             await testEnv.createDir('interactions');
             const config = testConfig({ interactions: testEnv.resolvePath('interactions') });
 

@@ -220,7 +220,7 @@ describe('the loader that ran seedcord.config.ts', () => {
         expect(loaders).toEqual([{ loads: 'config', closed: true }]);
     });
 
-    it('stays open until the project closes for a config with vitePlugins', async () => {
+    it('keeps the loaders open until the project closes for a config with vitePlugins', async () => {
         const { loader, dir, loaders } = stubProject(WITH_PLUGIN);
 
         const project = await loader.openProject(await loader.readConfig(dir));

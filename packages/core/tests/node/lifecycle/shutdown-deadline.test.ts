@@ -179,7 +179,7 @@ describe('CoordinatedShutdown deadline', () => {
         expect(claimedSuccess).toBe(false);
     });
 
-    it('reports the phases a slow startup left no time for', async () => {
+    it('reports the phases a slow startup left zero time for', async () => {
         const errors = vi.spyOn(Logger.prototype, 'error').mockImplementation(() => undefined);
         const info = vi.spyOn(Logger.prototype, 'info').mockImplementation(() => undefined);
         const shutdown = new CoordinatedShutdown(DEADLINE_MS);

@@ -159,7 +159,7 @@ describe('gateway fault answers', () => {
         expect(payload.denial).toBeInstanceOf(Fault);
     });
 
-    it('follows up and reports no fault for a non-reporting denial on a replied interaction', async () => {
+    it("follows up and doesn't report a fault for a non-reporting denial on a replied interaction", async () => {
         mock.replied = true;
 
         await answerFault(new TestNotice(), asInteraction(mock), mockCore(publish));

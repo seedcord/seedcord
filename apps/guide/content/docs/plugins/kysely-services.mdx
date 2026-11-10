@@ -51,7 +51,7 @@ Here's what each part of `Users.ts` does.
 
 ## You never construct a service
 
-The plugin builds your services itself, after it has connected and run your startup migrations, so `this.db` has a working connection by the time any method runs. It imports every code file under the `dir` you gave the [kysely plugin](/plugins/kysely), including subfolders, in order of path. That covers `.ts`, `.tsx`, `.mts`, `.js`, `.jsx`, and `.mjs`, and skips type declarations, dotfiles, dot-folders, and `node_modules`. For each exported class that extends `KyselyService` and carries the decorator, it constructs the class. That constructor call adds the instance to the plugin's `services` map under its key.
+The plugin builds your services itself, after it has connected and run your startup migrations, so `this.db` has a working connection by the time any method runs. It imports every code file under the `dir` you gave the [kysely plugin](/plugins/kysely), including subfolders, in order of path. That covers `.ts`, `.tsx`, `.mts`, `.js`, `.jsx`, and `.mjs`, and skips type declarations, dotfiles, dot-folders, and `node_modules`. For each exported class that extends `KyselyService` and has the decorator, it constructs the class. That constructor call adds the instance to the plugin's `services` map under its key.
 
 ### When a service reads undefined
 
@@ -225,6 +225,6 @@ class Leaderboard extends SlashHandler<'leaderboard'> {
 }
 ```
 
-`findByDiscordId` resolves to `undefined` when no row matches, so the handler checks `found` before it reads `streak`.
+`findByDiscordId` resolves to `undefined` when nothing matches, so the handler checks `found` before it reads `streak`.
 
 If you read `services` before the plugin's `init()` has connected and loaded every class, it throws `PluginServicesNotReady`. Your handlers never read it that early, though, because they only start receiving interactions once `init()` has finished.

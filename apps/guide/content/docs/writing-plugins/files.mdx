@@ -43,7 +43,7 @@ export class Tasks extends Plugin {
 }
 ```
 
-Each yield also carries `fullPath`. A `break` stops the loop before the next import. [Reloading in dev](/writing-plugins/hot-reload) shows how a plugin picks up edits under `seedcord dev`.
+Each yield also has `fullPath`. A `break` stops the loop before the next import. [Reloading in dev](/writing-plugins/hot-reload) shows how a plugin picks up edits under `seedcord dev`.
 
 ## Reading data with readFiles
 
@@ -102,4 +102,4 @@ A relative `dir` is relative to `root`, whichever file calls `importFiles` or `r
 - A folder inside a dot-folder or `node_modules` throws `CoreDirectorySkipped`.
 - In a built bot, a folder that was missing at build time throws `CoreDirectoryNotBuilt`.
 
-A folder inside your plugin's own package can't go through `readFiles`, because a listed folder has to sit inside the bot's project and `node_modules` is skipped. Import that data from your plugin's code, so your plugin's build carries it.
+`readFiles` can't read a folder inside your plugin's own package, because a listed folder has to be inside the bot's project and `node_modules` is skipped. Import that data from your plugin's code, so your plugin's build includes it.

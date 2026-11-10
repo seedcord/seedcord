@@ -41,12 +41,12 @@ export abstract class ModalHandler<
     /** @internal */
     declare readonly [ComponentKindBrand]?: InteractionKind.Modal;
 
-    /** The fields this modal submitted, read by custom id. */
+    /** The fields that this modal submitted, read by custom id. */
     protected get fields(): ModalSubmitFields<Cache> {
         return this.event.fields;
     }
 
-    /** Rewrite the message this modal was opened from. Throws when a command opened the modal. */
+    /** Rewrite the message that this modal was opened from. Throws when a command opened the modal. */
     protected override update(response: GatewayReplyResponse | string): Promise<SentMessage> {
         this.ensureSourceMessage('update');
         return super.update(response);

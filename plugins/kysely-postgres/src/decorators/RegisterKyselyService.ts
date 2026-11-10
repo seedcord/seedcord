@@ -15,7 +15,7 @@ export const KyselyTableMetadataKey = Symbol.for('seedcord:kysely-postgres:table
  * Associates a service class with a key for dependency injection.
  * The service becomes available via `core.db.services[key]`.
  *
- * @typeParam TTable - The table the service reads, defaulting to the key
+ * @typeParam TTable - The table that the service reads, defaulting to the key
  * @param key - Service key for registration and type-safe access
  * @decorator
  * @example

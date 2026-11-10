@@ -61,7 +61,7 @@ describe('questionFromText', () => {
         expect(question).toHaveLength(QUESTION_LENGTH.max);
     });
 
-    it('has no question when only punctuation is left', () => {
+    it('returns an undefined question when only punctuation is left', () => {
         expect(questionFromText('    at file:///bot/src/bot.ts:3:1\n!!!')).toEqual({
             question: undefined,
             shortened: false

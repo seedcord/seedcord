@@ -125,7 +125,7 @@ export class Presence extends Plugin {
 
 An `init()` waiting on a service that never answers would hang your bot's startup forever, so each method gets its own timeout. `init()` and `ready()` default to 15000ms, and `dispose()` defaults to 10000ms.
 
-If a method runs past its timeout, seedcord throws `LifecycleTaskTimeout`. The task name in the message carries the attach key and which method ran.
+If a method runs past its timeout, seedcord throws `LifecycleTaskTimeout`. The task name in the message includes the attach key and which method ran.
 
 ```txt output
 Task "Plugin (db)" timed out after 15000ms. Check what it waits on, or give it a longer timeout.
@@ -137,7 +137,7 @@ A timeout of zero, a negative number, or `Infinity` throws `LifecycleInvalidTime
 
 ### The shutdown deadline
 
-Those timeouts limit one method each. Your hosting platform kills the process if shutdown as a whole takes too long, so seedcord also bounds the whole shutdown with a single deadline, 25000ms by default. Once it elapses seedcord skips the phases it never reached and exits. A task already running keeps going until the process exits three seconds later. A deadline of zero, a negative number, or `Infinity` throws `LifecycleInvalidTimeout`.
+Those timeouts limit one method each. Your hosting platform kills the process if shutdown as a whole takes too long, so seedcord also bounds the whole shutdown with a single deadline, 25000ms by default. Once it elapses seedcord skips the phases it never reached and exits. A task already running keeps running until the process exits three seconds later. A deadline of zero, a negative number, or `Infinity` throws `LifecycleInvalidTimeout`.
 
 If shutdown starts while the bot is still starting, it waits for startup to finish, and that wait counts against the same deadline. If the deadline passes first, seedcord doesn't dispose the plugins that finish starting after that.
 
@@ -166,7 +166,7 @@ An `init()` usually fails because a service it connects to is down or can't be r
 
 ### When it throws
 
-seedcord calls `dispose()` on every plugin whose `init()` had already finished, in reverse attach order. The plugin that threw doesn't get a `dispose()` call. Anything its `init()` opened before the error stays open unless `init()` closes it.
+seedcord calls `dispose()` on every plugin whose `init()` had already finished, in reverse attach order. The plugin that threw doesn't get a `dispose()` call. Anything its `init()` opened before the error is still open unless `init()` closes it.
 
 ```ts twoslash title="src/plugins/Feeds.ts"
 import { Plugin } from '@seedcord/gateway';
@@ -210,7 +210,7 @@ Once startup has failed, the same `Seedcord` can't start again. Calling `start()
 
 ## When dispose fails
 
-If one `dispose()` fails, the others still run. With `db` and `settings` from earlier, a throw from `settings.dispose()` still lets `db.dispose()` close the connection. Once they've all run, seedcord logs the failures under "Coordinated shutdown failed" and carries on with the next phase. Your code can't catch them. If several `dispose()` calls in one phase failed, the log shows one error carrying `PluginDisposeFailures`, with each error in its `errors` array. A `dispose()` that fails during a startup rollback is logged as a warning, and `start()` still rejects with the startup error.
+If one `dispose()` fails, the others still run. With `db` and `settings` from earlier, a throw from `settings.dispose()` still lets `db.dispose()` close the connection. Once they've all run, seedcord logs the failures under "Coordinated shutdown failed" and continues with the next phase. Your code can't catch them. If several `dispose()` calls in one phase failed, the log shows one error carrying `PluginDisposeFailures`, with each error in its `errors` array. A `dispose()` that fails during a startup rollback is logged as a warning, and `start()` still rejects with the startup error.
 
 ## On Cloudflare Workers
 

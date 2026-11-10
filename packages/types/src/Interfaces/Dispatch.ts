@@ -1,6 +1,6 @@
 /**
  * The per-dispatch bag's keys. Any code can merge fields into it by declaration merging, the same
- * pattern as {@link SlashRegistry}. The bag stays inert until one does.
+ * pattern as {@link SlashRegistry}. The bag is empty until one does.
  */
 export interface DispatchState {}
 
@@ -11,7 +11,7 @@ export interface DispatchState {}
 export interface DispatchBag {
     /**
      * Unique to this one dispatch, and unique again the next time the same route runs. Every bus key
-     * this dispatch publishes carries it as `dispatchId`, so a store keyed on it lines up the dispatch,
+     * this dispatch publishes has it as `dispatchId`, so a store keyed on it lines up the dispatch,
      * its writes, and any fault it raised.
      */
     readonly id: string;

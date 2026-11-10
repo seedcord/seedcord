@@ -77,6 +77,15 @@
         "//#lint:md": {
             "inputs": ["**/*.md", ".markdownlint-cli2.jsonc", ".markdownlint.json"]
         },
+        "//#lint:prose": {
+            "inputs": ["**/*.{md,mdx,ts,tsx,yml,yaml}", ".vale.ini", "tooling/prose/**"]
+        },
+        "//#knip": {
+            "inputs": ["**/*.{ts,tsx,mts,cts,js,mjs,json}", "knip.json"]
+        },
+        "//#react-doctor": {
+            "inputs": ["apps/**/*.{ts,tsx}", "tooling/ui/**/*.{ts,tsx}", "cli/**/*.tsx", "doctor.config.ts"]
+        },
         "lint": {
             "dependsOn": ["^build", "@seedcord/eslint-config#build"]
         },

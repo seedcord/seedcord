@@ -79,7 +79,7 @@ describe('handler gates', () => {
         ]);
     });
 
-    it('drops the interaction with no reply on a gate Silence', async () => {
+    it('ends the interaction without a reply on a gate Silence', async () => {
         const drop = defineGate('drop', () => {
             throw new Silence('blacklisted');
         });
@@ -142,7 +142,7 @@ describe('handler gates', () => {
         expect(seen?.dispatch.declaredRoute).toBe('slash:guarded');
     });
 
-    it('reads the invoking user for a DM payload that carries no member', async () => {
+    it('reads the invoking user for a DM payload without a member', async () => {
         let seen: GateContextBase | undefined;
         const capture = defineGate('capture', (gateCtx) => {
             seen = gateCtx;

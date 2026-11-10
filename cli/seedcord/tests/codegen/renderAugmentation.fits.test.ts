@@ -61,7 +61,7 @@ function errorCodes(types: PluginTypeTable): number[] {
     const libExists = host.fileExists.bind(host);
     host.fileExists = (name): boolean => files.has(name) || libExists(name);
 
-    // a module that only an augmentation reaches stays out of the program unless it's a root
+    // createProgram skips a module that only an augmentation reaches unless it's a root
     const program = ts.createProgram([...files.keys()], options, host);
     return ts.getPreEmitDiagnostics(program).map(({ code }) => code);
 }

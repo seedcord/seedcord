@@ -48,7 +48,7 @@ describe('registerTypescriptConfigs', () => {
         expect(config.rules?.['@seedcord/no-djs-builder-import']).toBeDefined();
     });
 
-    it('leaves no typescript-eslint rule switched on for false', async () => {
+    it('leaves zero typescript-eslint rules switched on for false', async () => {
         const { rules = {} } = await resolveConfig({ registerTypescriptConfigs: false }, 'src/example.ts');
         // eslint-config-prettier still sets a few of them to off
         const enabled = Object.keys(rules).filter(

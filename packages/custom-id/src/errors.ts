@@ -3,9 +3,9 @@ import { SeedcordError } from '@seedcord/errors/internal';
 
 /** Supply one constructor per failure. {@link CustomId.decode} throws whatever the matching one returns. */
 export interface CustomIdErrors {
-    /** Built when the wire's prefix matches and its layout hash differs. */
+    /** Called when the wire's prefix matches but its layout hash differs. */
     stale(prefix: string): Error;
-    /** Built when the wire is corrupt, truncated, or minted by a different definition. */
+    /** Called when the wire is corrupt, truncated, or came from a different definition. */
     invalid(detail: string): Error;
 }
 
@@ -17,17 +17,15 @@ const defaults: CustomIdErrors = {
 let active: CustomIdErrors = defaults;
 
 /**
- * Replace what {@link CustomId.decode} throws. One registration covers the whole process. The last
- * call wins. Call this before any interaction is received.
+ * Replace the errors that {@link CustomId.decode} throws. The setting is process-wide and the last
+ * call wins, so call it before your bot receives any interaction.
  *
- * The stale constructor receives the route prefix. The invalid one receives a detail string. Neither
- * carries the interaction. A per-user locale cannot reach either one.
+ * `stale` gets the route prefix and `invalid` gets a detail string. Neither one gets the interaction,
+ * so you can't localize the message per user.
  *
- * A [seedcord](https://seedcord.org) bot already calls this at import, swapping both defaults for `Notice`
- * subclasses that render a card. Call it again with your own to change what the user reads. Return a
- * `Notice` subclass from each callback. A plain `Error` would otherwise reach the user as the generic fault card.
- *
- * @param errors - Constructors for the two failure cases.
+ * A [seedcord](https://seedcord.org) bot already calls this at import and replaces both defaults with
+ * `Notice` subclasses that render a card. To change what the user reads, call it again with your own and
+ * return a `Notice` subclass from each callback. A plain `Error` reaches the user as the generic fault card.
  *
  * @example
  * ```ts

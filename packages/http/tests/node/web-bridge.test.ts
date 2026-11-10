@@ -26,7 +26,7 @@ async function startServer(handle: Handle): Promise<Server> {
             const response = await handle(await toWebRequest(incoming));
             await writeWebResponse(response, outgoing);
         })().catch((error: unknown) => {
-            // a swallowed throw would hang the client fetch to the test timeout with no cause
+            // a swallowed throw would hang the client fetch to the test timeout without a cause
             outgoing.destroy(Error.isError(error) ? error : new Error(String(error)));
         });
     });
@@ -48,7 +48,7 @@ async function readySeedcord(): Promise<ReadySeedcord> {
     const bakedIds = registerBakedIds({ publicKey: signer.publicKeyHex });
     // @ts-expect-error singleton reset between bots
     Seedcord.reset();
-    // any engine works behind the bridge. the edge one needs no server of its own
+    // any engine works behind the bridge. the edge one doesn't need a server of its own
     const seedcord = new Seedcord({
         bot: { interactions: { path: null }, commands: { path: null } },
         subscribers: { path: null }

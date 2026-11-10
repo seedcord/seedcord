@@ -1,4 +1,4 @@
-// api-extractor drops the methods of a base that no entry point exports
+// api-extractor leaves out the methods of a base that no entry point exports
 export { InteractionHandler } from './InteractionHandler';
 export { InteractionMiddleware } from './InteractionMiddleware';
 export { SlashHandler } from './SlashHandler';

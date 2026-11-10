@@ -24,7 +24,7 @@ describe('Silence', () => {
         expect(new NoopDenial()).toBeInstanceOf(Notice);
     });
 
-    it('carries no reason by default', () => {
+    it('has an undefined reason by default', () => {
         expect(new Silence().reason).toBeUndefined();
     });
 

@@ -15,7 +15,7 @@ function takesSingleHandler(_h: EventHandler<Events.MessageCreate>): void {}
 
 // both bases read their event-name parameter only in output positions, so the measured variance is
 // covariant and the fast path accepts a widening. the `in out` annotation forces the structural check,
-// which catches SingleEventPayload collapsing to never. dropping it makes these widenings compile
+// which catches SingleEventPayload collapsing to never. removing it makes these widenings compile
 
 // @ts-expect-error a single-event middleware reads this.event as a concrete tuple, never as a union
 takesMultiMw(singleMw);

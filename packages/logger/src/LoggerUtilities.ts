@@ -6,7 +6,7 @@ import type { LogLevel, ILogger } from '@seedcord/types';
 const COUNT_WRAP_WIDTH = 64;
 const CHIP_SEPARATOR = ' · ';
 
-// pack styled count chips onto lines whose visible width stays under maxWidth
+// pack styled count chips onto lines whose visible width fits in maxWidth
 function wrapChips(chips: readonly { plain: string; styled: string }[], maxWidth: number): string[] {
     const lines: string[] = [];
     let current: string[] = [];

@@ -84,7 +84,7 @@ export abstract class Notice extends Error {
 
 /**
  * A Notice class that seedcord constructs and throws in place of a default refusal. It passes the data that
- * refusal carries, like the retry time for `Cooldown` or the subject and permission names for a permission check.
+ * refusal has, like the retry time for `Cooldown` or the subject and permission names for a permission check.
  *
  * @example
  * ```ts

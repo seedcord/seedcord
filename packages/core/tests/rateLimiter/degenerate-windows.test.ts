@@ -35,7 +35,7 @@ describe('KvRateLimiter degenerate windows', () => {
         expect(limited.retryAfterMs).toBe(1000.5);
     });
 
-    it('never limits while charges stay below a very large limit', async () => {
+    it('never limits while charges are below a very large limit', async () => {
         const limiter = memoryRateLimiter();
         const window = { windowMs: 1000, limit: 1_000_000 };
 

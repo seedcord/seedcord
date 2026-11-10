@@ -51,7 +51,7 @@ function baseEvent(): { application_id: string; id: string; token: string; type:
     return { application_id: 'app-1', id: 'int-1', token: 'tok', type: 2 };
 }
 
-// justified: each fixture carries only the app-id, id, and token the sender ref reads
+// justified: each fixture has only the app-id, id, and token the sender ref reads
 function slashEvent(): APIChatInputApplicationCommandInteraction {
     return baseEvent() as unknown as APIChatInputApplicationCommandInteraction;
 }

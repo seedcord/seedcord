@@ -175,7 +175,7 @@ describe('Tooltip aria-describedby linkage', () => {
         expect(tooltip.id).toBe(describedBy);
     });
 
-    it('drops aria-describedby again once the trigger is unhovered', () => {
+    it('removes aria-describedby again once the trigger is unhovered', () => {
         renderTooltip({ providerProps: { delayDuration: 0 } });
         const trigger = screen.getByRole('button', { name: 'Trigger' });
         hoverTrigger(trigger);

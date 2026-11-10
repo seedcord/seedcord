@@ -29,7 +29,7 @@ export abstract class BaseReplySender<TMessage extends { id: string }, TNative =
     private state: AckState;
     // the only ids a targeted edit accepts
     private readonly sent = new Set<string>();
-    // the cause carries the first ack's stack so a double-ack reports both lines
+    // the cause holds the first ack's stack so a double-ack reports both lines
     private ackedBy?: AckTrace;
 
     protected constructor(
@@ -43,7 +43,7 @@ export abstract class BaseReplySender<TMessage extends { id: string }, TNative =
         return this.telemetry.dispatch.routeId;
     }
 
-    // anything that threw already reported through attemptWrite
+    // anything that threw has already reported through attemptWrite
     private report(method: ReplyMethod, startedAt: number, messageId: string | null): void {
         publishResponse(this.telemetry, { method, startedAt, outcome: 'sent', messageId });
     }
@@ -60,7 +60,7 @@ export abstract class BaseReplySender<TMessage extends { id: string }, TNative =
         this.checkLegality('reply');
         const startedAt = performance.now();
         const created = await this.attempt('reply', startedAt, () => this.writeReply(response, opts));
-        // the callback already acked discord, so record replied before the message guard can throw
+        // the callback has already acked discord, so record replied before the message guard can throw
         this.transition('reply', 'replied');
         const message = this.remember(this.requireMessage(created, 'reply'));
         this.report('reply', startedAt, message.id);
@@ -84,14 +84,14 @@ export abstract class BaseReplySender<TMessage extends { id: string }, TNative =
     }
 
     /**
-     * After a deferUpdate the state stays deferred-update. Calling this again rewrites. The returned message
+     * After a deferUpdate the state is still deferred-update. Calling this again rewrites. The returned message
      * is the source message, editable only through a bare `update` or `edit`. A targeted `edit` or `delete`
      * of it throws the foreign-target error.
      */
     public async update(response: ReplyResponse<TNative> | string): Promise<TMessage> {
         this.checkLegality('update');
         const startedAt = performance.now();
-        // in deferred-update the source message is @original and the ack-legality check above already passed
+        // in deferred-update the source message is @original and the ack-legality check above has already passed
         if (this.state === 'deferred-update') {
             const edited = await this.attempt('update', startedAt, () => this.editOriginal(response));
             this.report('update', startedAt, edited.id);
@@ -194,7 +194,7 @@ export abstract class BaseReplySender<TMessage extends { id: string }, TNative =
         return created;
     }
 
-    // a with_response callback always returns the created message. this only trips if the wire says otherwise
+    // a with_response callback always returns the created message. this only trips if the wire response differs
     private requireMessage(created: TMessage | undefined, method: 'reply' | 'update'): TMessage {
         if (!created) throw new SeedcordError(SeedcordErrorCode.ReplyCallbackMissingMessage, [method, this.routeId]);
         return created;

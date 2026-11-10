@@ -12,7 +12,7 @@ interface FakeTerminal extends Terminal {
     readonly lines: () => string[];
 }
 
-// a piped terminal reports no width
+// a piped terminal doesn't report a width
 function terminal(columns?: number): FakeTerminal {
     let written = '';
     return {
@@ -72,7 +72,7 @@ describe('printSections', () => {
         ]);
     });
 
-    it('prints a row marker ahead of the commands and wraps the row under them', () => {
+    it('prints a row marker before the commands and wraps the row under them', () => {
         const stdout = terminal(28);
 
         printSections(printerOn(stdout), [

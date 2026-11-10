@@ -162,16 +162,16 @@ A reviewer asking "why is this comment here" is a different person asking a diff
 
 ## 4. Write for the next editor
 
-**Say what the line does that the code can't show, or what breaks if they change it.** Your debugging, measurements, and investigation terms stay out. Whatever you just worked out only helps if the next editor needs it too.
+**Say what the line does that the code can't show, or what breaks if they change it.** Leave your debugging, measurements, and investigation terms out. Whatever you just worked out only helps if the next editor needs it too.
 
-**The test, run it on every draft and after every rewrite.** Read the comment as someone who never saw the debugging. Each `this`, `these`, and helper name has to point at something on the lines around it. Then read any second clause. It stays when it says what breaks or why. It goes when the reader loses nothing.
+**The test, run it on every draft and after every rewrite.** Read the comment as someone who never saw the debugging. Each `this`, `these`, and helper name has to point at something on the lines around it. Then read any second clause. Keep it when it says what breaks or why. Cut it when the reader loses nothing.
 
 ```ts
 // the second half adds nothing, so cut it
 // zero packs to one char, which means an empty block is a truncated body
 // an empty block means the body was truncated
 
-// the second half is the reason, so it stays
+// the second half is the reason, so keep it
 // a save after this imports a second copy of the framework and breaks the instanceof checks
 
 // the number came from a benchmark, and the editor needs what it showed
@@ -203,7 +203,7 @@ Attach the comment to the one line whose reason is unclear, on that line or dire
 const BUTTON_STYLE_LINK = 5; // discord's wire value, stable since v8
 ```
 
-A comment inline gets deleted with its line. A block at the top of a function goes stale as the body changes underneath it, because no sentence in it belongs to any one line.
+A comment inline gets deleted with its line. A block at the top of a function gets out of date as the body changes underneath it, because no sentence in it belongs to any one line.
 
 Keep a block comment only for something the whole function rests on, an invariant every line depends on or a wire format the whole body implements. `packages/custom-id/src/codec.ts:8` is a fair example, because the format description belongs to the module.
 
@@ -219,7 +219,7 @@ A TSDoc block needs a caller who would read the signature and still guess wrong.
 - Anything reachable only through a package's `./internal` entry gets a `//` line or nothing. Read the `exports` map in `package.json` to tell.
 - `@returns Whether the check passed` next to a declared `boolean` repeats the signature. Delete the tag. When every tag on a block does this, delete the block.
 - A tag earns its place by mapping inputs to outcomes the types cannot express, for example which of `undefined`, `true`, and an object produces which result.
-- Every error a public symbol documents goes in its own `@throws` tag: the error class, then the condition. Two classes or two unrelated conditions get two tags. A throw mentioned in the description or in a `@param` is easy to miss, so move it into a tag.
+- Put every error a public symbol documents in its own `@throws` tag: the error class, then the condition. Two classes or two unrelated conditions get two tags. A throw mentioned in the description or in a `@param` is easy to miss, so move it into a tag.
 - Skip `@internal` on a member when the whole class is already internal. The entry map states it and no consumer reads the tag.
 
 ---

@@ -376,7 +376,7 @@ describe('renderTable pagination', () => {
         expect(pages[0]).toBe(renderTable(data));
     });
 
-    it('splits into multiple pages that each stay within the budget', () => {
+    it('splits into multiple pages that each fit within the budget', () => {
         const data = [['ID', 'Value'], ...Array.from({ length: 12 }, (_, i) => [String(i), 'xxxxx'])];
         const pages = renderTable(data, { budget: 120 });
         expect(pages.length).toBeGreaterThan(1);
@@ -392,14 +392,14 @@ describe('renderTable pagination', () => {
         }
     });
 
-    it('keeps every body row across the pages, none dropped', () => {
+    it('keeps every body row across the pages', () => {
         const data = [['ID', 'Value'], ...Array.from({ length: 12 }, (_, i) => [`row${i}`, 'v'])];
         const pages = renderTable(data, { budget: 120 });
         const joined = pages.join('');
         for (let i = 0; i < 12; i++) expect(joined).toContain(`row${i}`);
     });
 
-    it('gives a single over-budget row its own page rather than dropping it', () => {
+    it('gives a single over-budget row its own page', () => {
         const data = [['H'], ['x'.repeat(50)]];
         const pages = renderTable(data, { budget: 10 });
         expect(pages).toHaveLength(1);

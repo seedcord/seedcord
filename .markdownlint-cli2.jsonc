@@ -10,7 +10,6 @@
         "**/coverage/**",
         "**/CHANGELOG.md",
         "debugging/**",
-        "generated/**",
-        ".vscode/**"
+        "generated/**"
     ]
 }

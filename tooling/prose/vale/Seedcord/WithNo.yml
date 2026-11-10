@@ -1,0 +1,7 @@
+extends: existence
+link: https://github.com/seedcord/seedcord/blob/next/.agents/skills/writing-voice/SKILL.md
+message: "'%s' negates the noun. 'without' usually reads plainer, like 'is silent without readings'."
+level: suggestion
+ignorecase: true
+tokens:
+  - 'with no (?!longer|more|matter)\w+'

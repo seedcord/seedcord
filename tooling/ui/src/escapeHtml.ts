@@ -1,4 +1,4 @@
-// works in html text, html attributes and xml. & goes first, or the other entities get escaped twice
+// works in html text, html attributes and xml. replace & first, or the other entities get escaped twice
 export const escapeHtml = (value: string): string =>
     value
         .replaceAll('&', '&amp;')

@@ -88,7 +88,7 @@ describe('useVisibleHeadingIds', () => {
         expect(new Set(result.current)).toEqual(new Set(['the-options', 'replacing-the-prompt']));
     });
 
-    it('drops a heading once its own entry reports it left the viewport', () => {
+    it('removes a heading once its own entry reports it left the viewport', () => {
         const { result } = renderHook(() => useVisibleHeadingIds(ITEMS));
         const [observer] = FakeIntersectionObserver.instances;
         if (!observer) throw new Error('no observer created');
@@ -128,7 +128,7 @@ describe('useVisibleHeadingIds', () => {
         expect(result.current.has('the-options')).toBe(false);
     });
 
-    it('drops a heading that falls below the threshold while still on screen', () => {
+    it('removes a heading that falls below the threshold while still on screen', () => {
         const { result } = renderHook(() => useVisibleHeadingIds(ITEMS));
         const [observer] = FakeIntersectionObserver.instances;
         if (!observer) throw new Error('no observer created');

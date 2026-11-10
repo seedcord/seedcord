@@ -24,7 +24,7 @@ describe('opensInNewTab', () => {
         expect(opensInNewTab('/docs/packages/utils/latest/functions/clamp', 'seedcord')).toBe(true);
     });
 
-    it('compares against the display segment, not the manifest name', () => {
+    it('compares the URL against the display segment of the package name', () => {
         expect(opensInNewTab('/docs/packages/utils/latest/functions/clamp', '@seedcord/utils')).toBe(false);
         expect(opensInNewTab('/docs/packages/seedcord/latest/classes/Seedcord', '@seedcord/utils')).toBe(true);
     });

@@ -4,7 +4,7 @@ export interface EmbedElement {
     props: unknown;
 }
 
-/** Anything you can pass as children. The package drops a boolean, `null`, and `undefined`. */
+/** Anything you can pass as children. The package ignores a boolean, `null`, and `undefined`. */
 export type EmbedNode = EmbedElement | string | number | boolean | null | undefined | Iterable<EmbedNode>;
 
 type OwnProps<Props> = Props extends unknown ? Omit<Props, 'children'> : never;

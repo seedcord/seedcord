@@ -22,7 +22,7 @@ describe('Mongoose Plugin Integration', () => {
 
     afterEach(async () => {
         await testEnv.teardown();
-        // the mongoose mock is module-level, so a leaked model goes into the next test
+        // the mongoose mock is module-level, so a leaked model is still registered in the next test
         for (const name of Object.keys(mongoose.models)) Reflect.deleteProperty(mongoose.models, name);
         vi.clearAllMocks();
     });
@@ -116,7 +116,7 @@ describe('Mongoose Plugin Integration', () => {
         expect(plugin.services).toHaveProperty('admins');
     });
 
-    it('drops a model it unregistered during HMR from its later cleanup', async () => {
+    it('leaves a model it unregistered during HMR out of its later cleanup', async () => {
         const servicesDir = 'services';
         const filePath = await testEnv.createFile(
             `${servicesDir}/UserService.ts`,

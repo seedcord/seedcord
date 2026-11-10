@@ -46,7 +46,7 @@ export class GuideAnswers implements GuideService {
             return { retryAfterSeconds: secondsUntilReset(Date.now()) };
         }
         const [vector] = data;
-        if (!vector) throw new Error(`${embedding.model} returned no embedding`);
+        if (!vector) throw new Error(`${embedding.model} didn't return an embedding.`);
         return { hits: index.rank(vector, RESULTS) };
     }
 

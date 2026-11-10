@@ -1,0 +1,7 @@
+extends: existence
+link: https://github.com/seedcord/seedcord/blob/next/.agents/skills/writing-voice/SKILL.md
+message: "'%s' can mean several things. Write the one you mean."
+level: suggestion
+ignorecase: true
+tokens:
+  - 'ahead of(?! time\b)'

@@ -49,7 +49,7 @@ ruleTester.run('no-choices-and-autocomplete', rule, {
                 .setAutocomplete(OFF)
                 .addChoices({ name: 'A', value: 'a' });
         `,
-        // a later setAutocomplete(false) overrides the earlier true, so there is no conflict
+        // a later setAutocomplete(false) overrides the earlier true, so the two don't conflict
         dedent`
             import { SlashCommandStringOption } from 'discord.js';
             new SlashCommandStringOption()

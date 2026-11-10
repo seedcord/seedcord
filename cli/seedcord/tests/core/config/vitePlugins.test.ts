@@ -188,7 +188,7 @@ describe('VitePlugins.create', () => {
     });
 
     it.each([['yaml'], [{ transform: () => undefined }]])(
-        'throws CliConfigInvalidField for the entry %o that has no plugin name',
+        "throws CliConfigInvalidField for the entry %o that doesn't have a plugin name",
         async (entry) => {
             const vitePlugins = vitePluginsOf(() => [entry], CONFIG_FILE);
 

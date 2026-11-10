@@ -147,7 +147,7 @@ describe('the guide worker', () => {
         expect(card.asked.at(-1)).toBe('/guide/og/index.png');
     });
 
-    // a screenshot dropped in public/ keeps its own url
+    // a screenshot added to public/ keeps its own url
     it('leaves a real file alone', async () => {
         const assets = recording('/guide/portal-token.png');
 

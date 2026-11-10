@@ -76,7 +76,7 @@ export class ObjectConsoleSink implements ILogSink {
         const fields: Record<string, unknown> = {};
         const extras: unknown[] = [];
         for (const value of rest) {
-            // a second Error goes to args so neither is lost
+            // a second Error moves to args so neither is lost
             if (Error.isError(value)) {
                 if (fields.error === undefined) fields.error = errorShape(value);
                 else extras.push(errorShape(value));
@@ -102,7 +102,7 @@ export class ObjectConsoleSink implements ILogSink {
 }
 
 function emit(level: LogLevel, payload: unknown): void {
-    // debug carries trace too, because workerd has no console.trace
+    // debug also takes trace records, because workerd doesn't have console.trace
     const method = level === 'error' ? 'error' : level === 'warn' ? 'warn' : level === 'info' ? 'info' : 'debug';
     // eslint-disable-next-line no-console -- this sink emits to the console by design
     console[method](payload);

@@ -1,0 +1,18 @@
+extends: existence
+link: https://github.com/seedcord/seedcord/blob/next/.agents/skills/writing-voice/SKILL.md
+message: "'%s' is banned in most senses. Check the sense, then write what actually happens or delete it."
+level: suggestion
+ignorecase: true
+tokens:
+  - 'powers?'
+  - 'powering'
+  - 'drives?(?! letter)'
+  - 'easy'
+  - 'easily'
+  - 'simple'
+  # the temporal sense ("a member who just left") passes
+  - 'just(?! (?:\w+ed|sent|hit|left|joined|made|got|ran|wrote|built|did|saw|came|went|took)\b)'
+  - 'please'
+  - 'unlock(?:s|ed)?'
+  - 'clearly'
+  - 'magic(?:al|ally)?'

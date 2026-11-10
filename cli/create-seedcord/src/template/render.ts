@@ -6,7 +6,7 @@ import Handlebars from 'handlebars';
 import type { TemplateContext } from './context';
 import type { RenderedFile } from '@seedcord/cli-templates';
 
-// npm drops a literal .gitignore from a tarball, whatever the files list says
+// npm strips a literal .gitignore from a tarball, whatever the files list specifies
 const DOTTED = new Set(['env', 'gitattributes', 'gitignore', 'prettierignore']);
 
 function targetPath(templateRelative: string): string {
@@ -35,7 +35,7 @@ export async function renderTemplates(templatesRoot: string, context: TemplateCo
         })
     );
 
-    // a template that wraps its whole body in a conditional writes no file when that is false
+    // a template that wraps its whole body in a conditional doesn't write a file when that is false
     return rendered.filter((file) => file.contents.trim() !== '');
 }
 

@@ -16,7 +16,7 @@ import type { LiteralUnion } from 'type-fest';
  * Provides a small, typed shim around the shared Kysely instance and ensures
  * that subclasses have been decorated with `@RegisterKyselyService`.
  *
- * @typeParam TTable - The table this service works with. Defaults to every table in the schema.
+ * @typeParam TTable - The table that this service works with. Defaults to every table in the schema.
  *
  * @example
  * ```typescript

@@ -28,7 +28,7 @@ function contextOf(interaction: Repliables, core: Core): PageContext {
 
 /**
  * A restart-proof paginator. Each nav button's customId encodes its full target page, so clicks are
- * idempotent and survive a restart. A persistent `@ButtonRoute` on `Handler` dispatches the clicks.
+ * idempotent and still work after a restart. A persistent `@ButtonRoute` on `Handler` dispatches the clicks.
  *
  * @typeParam Item - The item type, inferred from the source.
  * @typeParam Prefix - The route prefix, inferred from `config.prefix`.

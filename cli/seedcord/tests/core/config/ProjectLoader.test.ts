@@ -92,7 +92,7 @@ describe('ProjectLoader', () => {
 });
 
 describe('ProjectLoader target', () => {
-    it('targets a server when the config folder has no cloudflare.config.ts', async () => {
+    it("targets a server when the config folder doesn't have a cloudflare.config.ts", async () => {
         const { projectDir, load } = projectWith(MINIMAL);
 
         const { target } = await load();
@@ -483,7 +483,7 @@ describe('ProjectLoader validation', () => {
 });
 
 describe('ProjectLoader files', () => {
-    it('lists no folders when the config leaves files out', async () => {
+    it('lists zero folders when the config leaves files out', async () => {
         const { files } = await projectWith(MINIMAL).load();
 
         expect(files).toEqual([]);

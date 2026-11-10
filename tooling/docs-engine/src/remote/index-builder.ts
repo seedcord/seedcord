@@ -25,7 +25,7 @@ const DEFAULT_PATH_TEMPLATES = {
 /**
  * Assemble an {@link IndexJson} from each package's full version list. Stable versions set `latest`
  * and the per-minor and per-major line-head maps. The newest prerelease becomes `prerelease.latest`.
- * Invalid version strings are dropped.
+ * It skips invalid version strings.
  */
 export function buildIndex(packages: readonly PackageVersionsInput[], options: BuildIndexOptions): IndexJson {
     const entries: Record<string, PackageIndexEntry> = {};

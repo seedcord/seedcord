@@ -1,0 +1,7 @@
+extends: substitution
+link: https://github.com/seedcord/seedcord/blob/next/.agents/skills/writing-voice/SKILL.md
+message: "Write '%s' in place of '%s' when it means the value holds something."
+level: suggestion
+ignorecase: true
+swap:
+  'carries': has

@@ -16,7 +16,7 @@ type SlashMatchCases<Route extends keyof SlashRegistry, Ret> = {
  * Base class for a chat-input (slash) command handler on the HTTP transport.
  *
  * Pass the route from the generated registry as the generic, then read `this.options` for a single
- * command or `this.match` for several. Command authoring stays plain discord.js. `seedcord codegen`
+ * command or `this.match` for several. You build the command with plain discord.js. `seedcord codegen`
  * reads its `toJSON()` to type these options.
  *
  * @typeParam Route - One or more route keys from {@link SlashRegistry}, e.g. `'ban'` or `'ban' | 'kick'`.
@@ -47,7 +47,7 @@ export abstract class SlashHandler<
      */
     protected get options(): SlashOptions<Route> {
         this.resolver ??= new HttpSlashOptions(this.event.data);
-        // SlashOptions is just the registry-typed view over the getters the reader already exposes
+        // SlashOptions is only the registry-typed view over the getters the reader already exposes
         return this.resolver as SlashOptions<Route>;
     }
 

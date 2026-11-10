@@ -196,7 +196,7 @@ describe('command deploy during http startup', () => {
         await expect(host.start()).resolves.toBe(host);
     });
 
-    it('touches no command route when no commands path is configured', async () => {
+    it("doesn't touch a command route when no commands path is configured", async () => {
         await using host = new Seedcord(config(null));
         const { get, put } = stubRest(host);
 

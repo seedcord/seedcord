@@ -14,7 +14,7 @@ const MAX_WIRE_LENGTH = 100;
 /** Per-field options every {@link CustomId} chain method takes. */
 export interface FieldOptions<Nullable extends boolean = boolean> {
     /**
-     * Whether the field also carries null. A nullable field costs one extra slot on the wire.
+     * Set to `true` to let the field hold null. It costs one extra slot on the wire.
      *
      * @defaultValue `false`
      */
@@ -29,14 +29,13 @@ function routeKeyOf(wire: string): string {
 }
 
 /**
- * Recover the stable prefix from a wire by stripping its layout hash.
+ * Strip the layout hash off a wire and return the prefix that the customId was declared with.
  *
- * Route on this. The prefix survives a shape change. A click on a component built before the change
- * still reaches the same place, where {@link CustomId.decode} refuses it. Returns an empty string for a
- * wire too short to carry a hash.
+ * Route on this. Changing a shape doesn't change its prefix, so a click on a component built before the
+ * change still reaches the same handler. {@link CustomId.decode} then throws the stale error there.
+ * Returns an empty string when the wire is missing its colon or its routeKey is too short to carry a hash.
  *
  * @param wire - The customId string from the interaction.
- * @returns The prefix the customId was declared with.
  *
  * @example
  * ```ts
@@ -55,18 +54,18 @@ export function prefixOf(wire: string): string {
 }
 
 /**
- * A typed customId. The single source of truth shared by the component that mints it and the handler
- * that reads it. This gives you typed reads on the `.customId` field in components. Values are packed
- * into a compact wire string, which fits more of them inside Discord's 100-char limit.
+ * A typed customId. Declare it once and import it in both the component that encodes it and the
+ * handler that decodes it, so both sides read the same typed fields. It packs the values into a compact
+ * wire string, which fits more of them in Discord's 100-char limit.
  *
  * @typeParam Prefix - The stable route prefix, e.g. 'approve'.
- * @typeParam Shape - The accumulated fields, filled in by the chain.
+ * @typeParam Shape - The fields that the chain methods add.
  *
  * @example
  * ```ts
  * import { ButtonHandler, ButtonRoute, CustomId } from '@seedcord/gateway';
  *
- * // declare this in the component file that mints the button
+ * // declare this in the component file that builds the button
  * export const Approve = new CustomId('approve').snowflake('userId').oneOf('action', ['approve', 'deny']);
  *
  * \@ButtonRoute(Approve)
@@ -89,7 +88,7 @@ export function prefixOf(wire: string): string {
  * // one declaration, imported by both sides
  * const Approve = new CustomId('approve').snowflake('userId').oneOf('action', ['approve', 'deny']);
  *
- * // minting, on the button you send
+ * // encoding, on the button you send
  * new ButtonBuilder().setCustomId(Approve.encode({ userId: '123', action: 'deny' })).setLabel('Deny');
  *
  * // reading, wherever your bot receives the click
@@ -105,14 +104,14 @@ export function prefixOf(wire: string): string {
 export class CustomId<Prefix extends string, Shape extends CustomIdShape = {}> {
     /** The stable route prefix, e.g. 'approve'. */
     readonly prefix: Prefix;
-    /** The field definitions accumulated by the chain, keyed by name. */
+    /** The field definitions, keyed by name. */
     readonly shape: Shape;
     /** The prefix plus a short hash of the shape, the part of the wire before the colon. */
     readonly routeKey: string;
 
     constructor(prefix: Prefix, shape: Shape = {} as Shape) {
-        // an empty prefix leaves the routeKey all-hash, which prefixOf then strips to nothing. a colon
-        // or a control char breaks the wire framing.
+        // prefixOf strips an all-hash routeKey down to '', so an empty prefix could never route. a colon
+        // or one of the codec's control chars would break the wire framing.
         if (!prefix || /[:\x1B\x1F]/.test(prefix)) {
             throw new SeedcordTypeError(SeedcordErrorCode.CustomIdInvalidPrefix, [prefix]);
         }
@@ -121,7 +120,7 @@ export class CustomId<Prefix extends string, Shape extends CustomIdShape = {}> {
         this.routeKey = prefix + computeLayoutHash(shape);
     }
 
-    // returning a fresh instance is what avoids an `as unknown as this` cast here.
+    // a fresh instance avoids an `as unknown as this` cast
     private add<Name extends string, Decoded>(
         name: Name,
         field: CustomIdField<Decoded>
@@ -166,7 +165,7 @@ export class CustomId<Prefix extends string, Shape extends CustomIdShape = {}> {
     }
 
     /**
-     * Add an integer field with no bounds, for a value up to 2^53.
+     * Add an integer field without bounds, for a value up to 2^53.
      *
      * @example
      * ```ts
@@ -241,8 +240,8 @@ export class CustomId<Prefix extends string, Shape extends CustomIdShape = {}> {
     /**
      * Add a field that holds any subset of a fixed list, decoded as an array of the literal union.
      *
-     * A duplicate collapses into one entry. Decode returns the picks in the order the CustomId declares
-     * them. One choice costs one bit on the wire.
+     * Encode collapses a repeated pick into one. Decode returns the picks in declaration order. Each
+     * choice costs one bit on the wire.
      *
      * @example
      * ```ts
@@ -262,8 +261,8 @@ export class CustomId<Prefix extends string, Shape extends CustomIdShape = {}> {
     }
 
     /**
-     * Add a free short text field. Avoid it where possible. It cannot be packed, which makes it the most
-     * expensive field on the wire.
+     * Add a free text field. It's the most expensive field on the wire because it can't be packed, so
+     * use another kind where one fits.
      *
      * @example
      * ```ts
@@ -278,7 +277,7 @@ export class CustomId<Prefix extends string, Shape extends CustomIdShape = {}> {
     }
 
     /**
-     * Encodes the values into a wire string.
+     * Encode the values into a wire string.
      *
      * @param values - One value per field, typed by the chain.
      * @returns The wire string to put on the component's customId.
@@ -308,7 +307,6 @@ export class CustomId<Prefix extends string, Shape extends CustomIdShape = {}> {
      * Read a wire string back into values. Use {@link setCustomIdErrors} to change the two errors it throws.
      *
      * @param wire - The customId string from the interaction.
-     * @returns The decoded values, typed by the chain.
      * @throws The stale error when the wire was encoded before the shape changed. The default is a **SeedcordError**.
      * @throws The invalid error when the wire is corrupt or was encoded by a different definition. The default is a **SeedcordError**.
      *
@@ -330,19 +328,19 @@ export class CustomId<Prefix extends string, Shape extends CustomIdShape = {}> {
     decode(wire: string): DecodedParams<Shape> {
         const key = routeKeyOf(wire);
         if (key !== this.routeKey) {
-            // same prefix but a different hash means the shape changed since this wire was minted.
+            // same prefix with a different hash means the shape changed after this wire was encoded
             if (prefixOf(wire) === this.prefix) throw staleError(this.prefix);
             throw invalidError(`routeKey ${JSON.stringify(key)} is not ${JSON.stringify(this.routeKey)}`);
         }
-        // justified: the codec returns runtime values and the shape guarantees their decoded types.
+        // justified: decodeBody builds each value from its field in this.shape
         return decodeBody(this.shape, wire.slice(key.length + 1)) as DecodedParams<Shape>;
     }
 
     /**
-     * True if this wire was minted from this customId's prefix, ignoring the shape hash.
+     * Returns `true` when the wire's prefix matches this customId's, whatever its shape hash.
      *
-     * Use it to pick which definition a click belongs to before decoding. {@link decodeFor} runs this
-     * loop for you across several definitions.
+     * Use it to pick which definition a click belongs to before decoding. {@link decodeFor} does this
+     * check across several definitions for you.
      *
      * @param wire - The customId string from the interaction.
      *
@@ -357,10 +355,10 @@ export class CustomId<Prefix extends string, Shape extends CustomIdShape = {}> {
     }
 }
 
-/** Any customId, whatever its prefix and fields. Write this to take one as a parameter. */
+/** Any customId, whatever its prefix and fields. Use it to type a parameter that takes one. */
 export type AnyCustomId = CustomId<string, CustomIdShape>;
 
-/** The outcome of decoding a wire against several customIds, the matched prefix paired with its values. */
+/** What {@link decodeFor} returns, the matched prefix with its params. */
 export type DecodedRoute<Defs extends readonly AnyCustomId[]> = {
     [Index in keyof Defs]: Defs[Index] extends AnyCustomId
         ? { readonly prefix: Defs[Index]['prefix']; readonly params: DecodedParams<Defs[Index]['shape']> }
@@ -368,15 +366,14 @@ export type DecodedRoute<Defs extends readonly AnyCustomId[]> = {
 }[number];
 
 /**
- * Decode a wire against several customIds at once, for a handler serving more than one.
+ * Decode a wire against several customIds at once, for a handler that takes more than one.
  *
- * Matching runs on the prefix. The result pairs the matched prefix with that definition's own params.
- * Switching on `prefix` narrows both together.
+ * It decodes with the first definition whose prefix matches the wire. Switching on `prefix` narrows
+ * `params` to that definition's fields.
  *
  * @param defs - The customId definitions to try, in order.
  * @param wire - The customId string from the interaction.
- * @returns The matched prefix and its decoded params.
- * @throws The invalid error from {@link setCustomIdErrors} when no definition owns the wire.
+ * @throws The invalid error from {@link setCustomIdErrors} when the wire's prefix doesn't match any definition.
  * @throws What {@link CustomId.decode} throws when the matched definition rejects the wire.
  *
  * @example
@@ -385,13 +382,13 @@ export type DecodedRoute<Defs extends readonly AnyCustomId[]> = {
  * const Reject = new CustomId('reject').snowflake('userId').str('reason');
  *
  * const { prefix, params } = decodeFor([Approve, Reject], wire);
- * // params.reason exists on this branch alone
+ * // params.reason only exists on this branch
  * if (prefix === 'reject') await deny(params.userId, params.reason);
  * ```
  */
 export function decodeFor<Defs extends readonly AnyCustomId[]>(defs: Defs, wire: string): DecodedRoute<Defs> {
     const match = defs.find((def) => def.owns(wire));
     if (!match) throw invalidError(`no customId owns ${JSON.stringify(routeKeyOf(wire))}`);
-    // justified: the matched customId fixes both prefix and params together but find() loses that link.
+    // justified: find() returns AnyCustomId, so the compiler can't tie prefix to params here
     return { prefix: match.prefix, params: match.decode(wire) } as DecodedRoute<Defs>;
 }

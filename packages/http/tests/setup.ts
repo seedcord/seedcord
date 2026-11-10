@@ -7,7 +7,7 @@ import { clearBuiltFiles } from '#tests/helpers/builtFiles';
 
 import type * as DiscordRest from '@discordjs/rest';
 
-// globalThis survives vi.resetModules
+// vi.resetModules doesn't reset globalThis
 clearBuiltFiles();
 clearBakedIds();
 

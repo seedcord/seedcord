@@ -64,7 +64,7 @@ ruleTester.run('no-raw-client-events', rule, {
             declare const evt: Events.MessageCreate | string;
             client.on(evt, () => {});
         `,
-        // ready is a lifecycle event, not a gateway dispatch
+        // ready is a lifecycle event, so the rule skips it
         dedent`
             import { Client } from 'discord.js';
             declare const client: Client;

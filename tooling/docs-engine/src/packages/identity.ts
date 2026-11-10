@@ -122,7 +122,7 @@ export function formatDisplayPackageName(manifestName: string): string {
     return override ?? manifestName;
 }
 
-// the R2 index.json is additive. A folder published once stays, so removed and mis-keyed folders linger.
+// the R2 index.json is additive. Publishing never deletes a folder, so removed and mis-keyed folders linger.
 // a scoped key here needs a displayName matching its folder.
 const DOCUMENTED_PACKAGE_FOLDERS: ReadonlySet<string> = new Set(
     Object.keys(PACKAGE_OVERRIDES).map((name) => formatDisplayPackageName(name))

@@ -19,7 +19,7 @@ const BOT_SUBJECT = 'The bot';
  */
 export interface RequireBotPermissionsOptions {
     /**
-     * The set the check reads. `'channel'` reads the effective channel set the payload carries, what
+     * The set the check reads. `'channel'` reads the effective channel set in the payload, what
      * Discord enforces in the invoked channel. `'guild'` reads the base set from roles, available on the
      * gateway transport only.
      *
@@ -46,7 +46,7 @@ export interface RequirePermissionsOptions extends RequireBotPermissionsOptions 
 export interface RequireRoleOptions {
     /** Your Notice class, constructed and thrown in place of the refusal outside a guild. */
     notInGuild?: NoticeConstructor;
-    /** Your Notice class, constructed with the role id and thrown in place of the refusal when the caller lacks the role. */
+    /** Your Notice class, constructed with the role id and thrown in place of the refusal when the caller doesn't have the role. */
     missingRole?: NoticeConstructor<[roleId: string]>;
 }
 
@@ -75,7 +75,7 @@ function botMemberMissing(guildId: string): never {
  * member's permissions are unavailable, then when a permission is missing. The Administrator bit passes any
  * scope.
  *
- * The default `'channel'` scope reads the effective channel set the payload carries, what Discord enforces
+ * The default `'channel'` scope reads the effective channel set in the payload, what Discord enforces
  * in the invoked channel. The `'guild'` scope reads the base set from roles and requires a
  * {@link GuildPermissionsContext}, so it fits a gateway handler only.
  *
@@ -188,7 +188,7 @@ export function RequireBotPermissions(
 
 /**
  * Requires the caller to hold `roleId`, read from the member's role ids. Refuses outside a guild first,
- * then when the role is missing. Roles are guild-global, so there is no scope dimension.
+ * then when the role is missing. Roles are guild-global, so they don't vary by scope.
  *
  * @param roleId - The role snowflake the caller must hold.
  * @param options - Replace a refusal with a Notice class as `notInGuild` or `missingRole`.

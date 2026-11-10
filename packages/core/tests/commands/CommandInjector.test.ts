@@ -115,7 +115,7 @@ describe('CommandInjector', () => {
         expect(mentionOf('report')).toBe('</report:1>');
     });
 
-    it('drops stale keys when re-injected after a rename', () => {
+    it('removes stale keys when re-injected after a rename', () => {
         const builders = [ping()];
         const injector = new CommandInjector();
         injector.inject(deploy(deployed([['1', 'ping']])), builders);
@@ -257,7 +257,7 @@ describe('CommandInjector', () => {
             expect(isSeedcordError(caught, 'SeedcordError', SeedcordErrorCode.CoreAccessorUnresolved)).toBe(true);
         });
 
-        it('drops stale menu names when re-injected after a rename', () => {
+        it('removes stale menu names when re-injected after a rename', () => {
             const injector = new CommandInjector();
             injector.inject(deploy(deployed([['1', 'View Profile', ApplicationCommandType.User]])), [userMenu()]);
 
@@ -270,7 +270,7 @@ describe('CommandInjector', () => {
         });
     });
 
-    it('warns "user menu" for a deployed user menu that has no command in code', () => {
+    it('warns "user menu" for a deployed user menu that doesn\'t have a command in code', () => {
         const warn = vi.fn();
         // justified: warnLinks only calls warn
         const logger = { warn } as unknown as ILogger;

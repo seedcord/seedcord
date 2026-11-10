@@ -148,7 +148,7 @@ describe('DevSession', () => {
         await running;
     });
 
-    it('rejects a default export that carries no seedcord brand', async () => {
+    it('rejects a default export without a seedcord brand', async () => {
         const session = new DevSession(
             ...withFiles(config()),
             fakeRuntime({ default: { start: vi.fn() } }),

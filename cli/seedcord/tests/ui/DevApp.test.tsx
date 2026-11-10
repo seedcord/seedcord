@@ -218,7 +218,7 @@ describe('DevApp tiers', () => {
         app.unmount();
     });
 
-    it('opens with a rule across the whole terminal, so nothing sits on the top edge', async () => {
+    it('opens with a rule across the whole terminal, so the top row is only the rule', async () => {
         const app = view(FULL);
         const frame = await stableFrame(app.lastFrame);
 

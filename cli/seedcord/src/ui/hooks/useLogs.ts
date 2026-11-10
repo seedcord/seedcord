@@ -8,7 +8,7 @@ import type { LogLevel } from '@seedcord/types';
 const EMPTY_CHANNELS: ReadonlySet<string> = new Set();
 const EMPTY_LEVELS: ReadonlySet<LogLevel> = new Set();
 
-// empty set means all, so a channel or level that appears later stays visible by default
+// empty set means all, so a channel or level that appears later is visible by default
 export function filterLogs(
     logs: readonly LogEntry[],
     channels: ReadonlySet<string>,

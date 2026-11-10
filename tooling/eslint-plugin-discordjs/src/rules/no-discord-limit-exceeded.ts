@@ -50,7 +50,7 @@ const LIMITS: readonly Limit[] = [
         cap: 25,
         detail: 'An embed holds at most 25 fields'
     },
-    // the slash option builders take no constructor data
+    // the slash option builders don't take constructor data
     {
         builders: new Set(['SlashCommandStringOption', 'SlashCommandIntegerOption', 'SlashCommandNumberOption']),
         addMethod: 'addChoices',
@@ -97,7 +97,7 @@ function arrayLength(
 }
 
 // discord.js normalizeArray reads a sole leading array argument (or array-typed variable) as the
-// whole list and drops the remaining arguments
+// whole list and ignores the remaining arguments
 function callItems(
     call: TSESTree.CallExpression,
     services: ParserServicesWithTypeInformation,

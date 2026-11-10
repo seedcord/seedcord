@@ -1,9 +1,9 @@
 ---
 title: Tuning error behavior
-description: Set what your bot does with an error through the errors block on your config, like the card a fault shows and what it ignores.
+description: Set what your bot does with an error through the errors block on your config, like the card that a fault shows and what it ignores.
 ---
 
-Something threw inside a handler, and whoever ran the command got seedcord's generic card. The wording on that card is yours to replace. So is the decision about which errors reach a user at all, since a message someone already deleted is nothing they can act on.
+Something threw inside a handler, and whoever ran the command got seedcord's generic card. The wording on that card is yours to replace. So is the decision about which errors reach a user at all, since a message someone has already deleted is nothing they can act on.
 
 You set both on the `errors` block [`Seedcord`](ref:gateway/Seedcord) takes on its config. Every key in it is optional.
 
@@ -51,7 +51,7 @@ export const seedcord = new Seedcord({
 | key | default | what it changes |
 | --- | --- | --- |
 | `errorStack` | `true` | `false` prints one line for an unknown fault, with its uuid, message, and the first line of its `cause` |
-| `logSilences` | `true` | `false` drops the debug line written for a [`Silence`](ref:core/Silence) reason |
+| `logSilences` | `true` | `false` turns off the debug line written for a [`Silence`](ref:core/Silence) reason |
 | `defaultError` | the built-in card | the class seedcord renders for an unknown fault |
 | `catchProcessErrors` | `true` | `false` leaves the `unhandledRejection` and `uncaughtException` listeners to you |
 | `ignoreApiCodes` | `[]` | Discord api codes the interaction path swallows |
@@ -97,7 +97,7 @@ export class BrandedFault extends Notice {
 
 <Callout type="tip">
 
-Put a button on that card. The user can then file the fault themselves. The customId carries the uuid, so the click arrives with the code on it.
+Put a button on that card. The user can then file the fault themselves. The customId holds the uuid, so the click arrives with the code on it.
 
 ```ts twoslash title="src/handlers/ReportFault.ts"
 import { ButtonBuilder } from '@discordjs/builders';
@@ -140,7 +140,7 @@ export class OpenTicket extends ButtonHandler<
 }
 ```
 
-Add the row to `BrandedCard` through `addActionRowComponents`, passing it `new ReportRow(uuid).component`. [Custom ids](/components/custom-ids) explains how a customId carries a value like that uuid.
+Add the row to `BrandedCard` through `addActionRowComponents`, passing it `new ReportRow(uuid).component`. [Custom ids](/components/custom-ids) explains how a customId holds a value like that uuid.
 
 </Callout>
 
@@ -148,7 +148,7 @@ Add the row to `BrandedCard` through `addActionRowComponents`, passing it `new R
 
 Both ignore lists start empty, so every api code your own work throws reports as a fault. A real bug surfaces that way, like a double ack from a misplaced `defer()`. Add a code once you've confirmed it's an expected dead end for your bot. A swallowed code still writes a debug line.
 
-Sending the fault card itself is a separate case. seedcord always drops a 10062, 40060, or 10008 that comes back from that send, whatever these lists hold. `UnknownInteraction` (10062) means the interaction expired. `InteractionHasAlreadyBeenAcknowledged` (40060) means something already answered it. `UnknownMessage` (10008) means the message the card would edit is gone.
+Sending the fault card itself is a separate case. seedcord always ignores a 10062, 40060, or 10008 that comes back from that send, whatever these lists hold. `UnknownInteraction` (10062) means the interaction expired. `InteractionHasAlreadyBeenAcknowledged` (40060) means something has already answered it. `UnknownMessage` (10008) means the message the card would edit was deleted.
 
 <Callout type="transport" only="gateway">
 
@@ -160,11 +160,11 @@ Sending the fault card itself is a separate case. seedcord always drops a 10062,
 
 When you wrap a seedcord call in `try`, branch on the error's code. The message wording can change in any release. A change to a code is always marked as breaking, so the changelog tells you when to update your check. Your transport package re-exports what you need from `@seedcord/errors`.
 
-- [`SeedcordErrorCode`](ref:errors/SeedcordErrorCode), every code the framework throws
+- [`SeedcordErrorCode`](ref:errors/SeedcordErrorCode), every code that the framework throws
 - [`isSeedcordError`](ref:errors/isSeedcordError), the guard below
 - [`paint`](ref:errors/paint), the terminal colors seedcord logs with
 
-Every error the framework throws carries one of those codes. `isSeedcordError` narrows a caught value to a seedcord error.
+Every error that the framework throws has one of those codes. `isSeedcordError` narrows a caught value to a seedcord error.
 
 ```ts twoslash
 import {

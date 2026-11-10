@@ -39,7 +39,7 @@ describe('dev vite config', () => {
     it.each([
         ['a server', (root: string): InlineConfig => serverViteConfig(configAt(root), layoutAt(root))],
         ['an edge', (root: string): InlineConfig => edgeViteConfig(layoutAt(root), root)]
-    ])('opens no hmr websocket for %s bot while another process holds its port', async (_kind, config) => {
+    ])("doesn't open an hmr websocket for %s bot while another process holds its port", async (_kind, config) => {
         await holdViteHmrPort();
         const root = project();
         const errors: string[] = [];

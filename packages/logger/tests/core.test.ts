@@ -63,7 +63,7 @@ describe('Logger dispatch', () => {
 });
 
 describe('level gate', () => {
-    it('drops records below the global level', () => {
+    it('filters out records below the global level', () => {
         const sink = new FakeSink();
         registry.configure({ level: 'warn', sinks: [sink] });
 
@@ -213,7 +213,7 @@ describe('configure and reset', () => {
         expect(dispose).toHaveBeenCalledOnce();
     });
 
-    it('disposes a channel-override sink dropped on reconfigure', () => {
+    it('disposes a channel-override sink removed on reconfigure', () => {
         const dispose = vi.fn();
         const channelSink: ILogSink = { kind: 'file', onLog: () => undefined, dispose };
         registry.configure({ level: 'trace', sinks: [], channels: { errors: { sinks: [channelSink] } } });
@@ -339,7 +339,7 @@ describe('a sink that throws', () => {
         consoleError.mockRestore();
     });
 
-    it('keeps the healthy sinks running after a neighbour is dropped', () => {
+    it('keeps the healthy sinks running after a neighbour is removed', () => {
         const consoleError = vi.spyOn(console, 'error').mockImplementation(() => undefined);
         const healthy = new FakeSink();
         registry.configure({ level: 'trace', sinks: [new ThrowingSink(), healthy] });

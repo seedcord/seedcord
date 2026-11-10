@@ -1,9 +1,9 @@
 /**
- * Throw to stop a handler with no reply and no report.
+ * Throw to stop a handler without a reply or a report.
  *
  * The framework boundary catches `Silence` before {@link Notice}, makes zero Discord calls, and stops.
  * Ideally you'd only throw this in `EventHandlers` (or `Gates` for those), because it doesn't make sense to
- * leave the user with no reply for an interaction.
+ * leave the user without a reply for an interaction.
  *
  * @example
  * ```ts

@@ -1,4 +1,5 @@
 import createConfig from '@seedcord/eslint-config';
+import { proseConfig } from '@seedcord/prose';
 
 const typesOnlyApi = {
     name: 'discord-api-types/v10',
@@ -11,6 +12,7 @@ export default createConfig({
     tsconfigRootDir: import.meta.dirname,
     relativeImports: 'parent',
     userConfigs: [
+        ...proseConfig,
         {
             files: ['src/**/*.{ts,tsx}'],
             rules: {

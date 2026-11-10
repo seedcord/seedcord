@@ -89,7 +89,7 @@ describe('ApiDocsGenerator', () => {
             expect(raw).not.toContain('privateMethod');
         });
 
-        it('keeps @internal exports (rendered as a badge, not gated out of the surface)', () => {
+        it('keeps @internal exports (rendered as a badge)', () => {
             const asyncMockFunction = findMember(pkg.members[0]!, 'asyncMockFunction');
             expect(asyncMockFunction).toBeDefined();
             expect(asyncMockFunction?.releaseTag).toBe('Internal');

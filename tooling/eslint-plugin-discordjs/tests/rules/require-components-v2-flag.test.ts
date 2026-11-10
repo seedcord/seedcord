@@ -213,7 +213,7 @@ ruleTester.run('require-components-v2-flag', rule, {
     ],
     invalid: [
         {
-            // v2 components with no IsComponentsV2 flag
+            // v2 components without an IsComponentsV2 flag
             code: dedent`
                 import { TextChannel, ContainerBuilder } from 'discord.js';
                 declare const channel: TextChannel;
@@ -222,7 +222,7 @@ ruleTester.run('require-components-v2-flag', rule, {
             errors: [{ messageId: 'missingFlag' }]
         },
         {
-            // a zero literal sets no bit
+            // a zero literal doesn't set a bit
             code: dedent`
                 import { TextChannel, ContainerBuilder } from 'discord.js';
                 declare const channel: TextChannel;
@@ -400,7 +400,7 @@ ruleTester.run('require-components-v2-flag', rule, {
             errors: [{ messageId: 'missingFlag' }]
         },
         {
-            // a spread carries a non-v2 flag read from its as-const type
+            // a spread has a non-v2 flag read from its as-const type
             code: dedent`
                 import { TextChannel, ContainerBuilder, MessageFlags } from 'discord.js';
                 declare const channel: TextChannel;

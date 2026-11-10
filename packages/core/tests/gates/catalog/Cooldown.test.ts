@@ -48,7 +48,7 @@ describe('Cooldown', () => {
         await expect(Cooldown(5).check(cdCtx(rl))).resolves.toBeUndefined();
     });
 
-    it('charges the key on commit, not on check', async () => {
+    it('charges the key only on commit', async () => {
         const charge = vi.fn().mockReturnValue({ limited: false });
         await Cooldown(5).commit(cdCtx({ peek: () => ({ limited: false }), charge }));
         expect(charge).toHaveBeenCalledTimes(1);

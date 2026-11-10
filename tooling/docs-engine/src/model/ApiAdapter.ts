@@ -161,7 +161,7 @@ export class ApiAdapter {
         return node;
     }
 
-    // only the top-level node gets the page badge and the sidebar label. its members stay plain.
+    // only the top-level node gets the page badge and the sidebar label
     private markCondition(node: DocNode): void {
         const { condition } = this.build;
         if (condition && node.path.length === 1) node.condition = condition;
@@ -209,7 +209,7 @@ export class ApiAdapter {
         });
     }
 
-    // api extractor's fileUrlPath points at the dist rollup with no line. the generator's compiler pass has them.
+    // api extractor's fileUrlPath points at the dist rollup without a line. the generator's compiler pass has them.
     private sourcesFor(qualifiedName: string, name: string, inheritedFrom: DocReference | null): DocSource[] {
         const baseRow = baseRowName(name, inheritedFrom, this.manifest.name);
         return sourcesIn(this.manifest.sources ?? {}, this.build.withCondition(qualifiedName), baseRow);

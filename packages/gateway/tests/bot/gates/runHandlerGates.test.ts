@@ -50,7 +50,7 @@ describe('runHandlerGates', () => {
         ).rejects.toBeInstanceOf(Notice);
     });
 
-    it('resolves when the handler has no gates', async () => {
+    it("resolves when the handler's gate list is empty", async () => {
         class Handler extends SlashHandler<'runprobe'> {
             async execute(): Promise<void> {
                 await Promise.resolve();

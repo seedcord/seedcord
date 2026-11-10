@@ -33,7 +33,7 @@ declare module '@seedcord/core' {
     }
 }
 
-// justified: a real Core always carries a bus, respond publishes through it
+// justified: a real Core always has a bus, respond publishes through it
 const core = { bus: { [PublishDefault]: () => undefined } } as unknown as Core;
 
 // the focused getter reads only options.getFocused(true), so a minimal fake is enough.
@@ -135,7 +135,7 @@ class Siblings extends AutocompleteHandler<'search'> {
         expectTypeOf(this.options.getString('query')).toEqualTypeOf<string | null>();
         expectTypeOf(this.options.getString('category')).toEqualTypeOf<'books' | 'films' | null>();
         expectTypeOf(this.options.getInteger('limit')).toEqualTypeOf<number | null>();
-        // search has no boolean option, so getBoolean is absent
+        // search doesn't declare a boolean option, so getBoolean is absent
         // @ts-expect-error getBoolean does not exist when no boolean option is present.
         void this.options.getBoolean;
         // autocomplete never resolves a user, so a rich getter is never on the view
@@ -208,7 +208,7 @@ class DecoratedMulti extends AutocompleteHandler<'search' | 'find'> {
 }
 void DecoratedMulti;
 
-// the handler declares a command the decorator omits
+// the handler declares a command that the decorator omits
 // @ts-expect-error 'find' is in the generic but not listed on the decorator.
 @AutocompleteRoute('search')
 class OmitsCommand extends AutocompleteHandler<'search' | 'find'> {
@@ -218,7 +218,7 @@ class OmitsCommand extends AutocompleteHandler<'search' | 'find'> {
 }
 void OmitsCommand;
 
-// the decorator lists a command the handler does not declare
+// the decorator lists a command that the handler does not declare
 // @ts-expect-error 'find' is listed on the decorator but not in the generic.
 @AutocompleteRoute('search', 'find')
 class ExtraCommand extends AutocompleteHandler<'search'> {
@@ -255,7 +255,7 @@ describe('AutocompleteHandler', () => {
         expect(captured).toEqual([{ name: 'sp', value: 'sp' }]);
     });
 
-    it('throws MatchCaseMissing when the focused field lacks a case', async () => {
+    it("throws MatchCaseMissing when the focused field doesn't have a case", async () => {
         // a stale-deployed field arrives that the handler does not branch on
         const handler = built(SearchMatch, autocompleteRespond('ghost', 'x', []), core, dispatch);
         await expect(handler.execute()).rejects.toMatchObject({

@@ -15,7 +15,7 @@ vi.mock('next/link', () => ({
 }));
 
 describe('HoverPrefetchLink', () => {
-    it('skips prefetch while the link only sits in view', () => {
+    it('skips prefetch while the link is only in view', () => {
         render(<HoverPrefetchLink href="/packages/core/latest">core</HoverPrefetchLink>);
         expect(screen.getByRole('link')).toHaveAttribute('data-prefetch', 'false');
     });

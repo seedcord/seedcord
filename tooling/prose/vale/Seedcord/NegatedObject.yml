@@ -1,0 +1,10 @@
+extends: existence
+link: https://github.com/seedcord/seedcord/blob/next/.agents/skills/writing-voice/SKILL.md
+message: "Negated object '%s'. Negate the verb ('doesn't have X'), or say what is there."
+level: error
+ignorecase: true
+tokens:
+  # any -s or -ed word before "no" is almost always a verb. the lookahead skips the common words that aren't
+  - '(?:have|had|take|took|need|get|got|give|gave|make|made|keep|kept|hold|held|carry|leave|left|set|run|ran|find|found|see|saw|show|write|wrote|read|send|sent|add|use|do|did|return|throw|threw|pass|want|bring|brought|draw|drew|pay|paid|put|(?!(?:as|is|was|this|thus|yes|unless|plus|its|his|us|always|perhaps|across|besides|less|towards|whereas|sometimes)\b)[a-z]{2,}(?:s|ed)) +(?-i:no)(?= +(?!(?:longer|more|matter|later|less|sooner|further)\b)[\w`''"(])'
+  - "there(?:'s| is| are| was| were) no"
+  - '(?:has|have|had)\s+(?:nothing|zero)'

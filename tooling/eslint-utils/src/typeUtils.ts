@@ -143,7 +143,7 @@ export function booleanLiteralValue(checker: ts.TypeChecker, type: ts.Type): boo
     return checker.typeToString(type) === 'true';
 }
 
-// an anonymous default export has no id, so its instance type comes off the construct signature
+// an anonymous default export doesn't have an id, so its instance type comes off the construct signature
 export function classInstanceType(
     node: TSESTree.ClassDeclaration | TSESTree.ClassExpression,
     services: ParserServicesWithTypeInformation,

@@ -23,7 +23,7 @@ export interface CreateConfigOptions {
     userConfigs?: FlatConfigItem[];
 
     /**
-     * How much of the `eslint-plugin-import-x` rule set to run. Drop to `'fast'` when lint time
+     * How much of the `eslint-plugin-import-x` rule set to run. Switch to `'fast'` when lint time
      * matters more than catching import cycles and deprecated imports.
      *
      * @defaultValue `'all'`

@@ -1,4 +1,5 @@
 import createConfig from '@seedcord/eslint-config';
+import { proseConfig } from '@seedcord/prose';
 
 export default createConfig({
     tsconfigRootDir: import.meta.dirname,
@@ -6,6 +7,7 @@ export default createConfig({
     registerDiscordjsPlugin: true,
     registerSeedcordPlugin: true,
     userConfigs: [
+        ...proseConfig,
         {
             // framework tests build unwired fixture classes on purpose
             files: ['tests/**/*.ts'],

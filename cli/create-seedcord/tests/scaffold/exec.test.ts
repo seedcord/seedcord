@@ -74,7 +74,7 @@ describe('spawnSpec', () => {
         await expect(execRunner('pnpm', ['exec', 'node', '-e', script, 'a^b'], process.cwd())).resolves.toBeNull();
     });
 
-    it('uses no shell anywhere else', () => {
+    it("doesn't use a shell anywhere else", () => {
         expect(spawnSpec('npm', ['i'], 'darwin').shell).toBe(false);
     });
 

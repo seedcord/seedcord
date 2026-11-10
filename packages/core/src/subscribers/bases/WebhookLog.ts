@@ -16,7 +16,7 @@ import type { WebhookFile } from './WebhookSender';
 import type { APIMessageTopLevelComponent } from 'discord-api-types/v10';
 
 /**
- * The content a reporter returns from {@link WebhookLog.report}.
+ * The content that a reporter returns from {@link WebhookLog.report}.
  */
 export interface WebhookReport {
     /** Shown as the webhook message author. Defaults to the reporter's class name. */
@@ -44,7 +44,7 @@ export abstract class WebhookLog<KeyOfSubscribers extends SubscriptionKey, TCore
     /**
      * Builds the message for one published event.
      *
-     * @param suppressed - How many events were dropped since the last card
+     * @param suppressed - How many events the throttle suppressed since the last card
      */
     abstract report(suppressed: number): WebhookReport | Promise<WebhookReport>;
 

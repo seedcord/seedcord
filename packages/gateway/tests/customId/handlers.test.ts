@@ -162,7 +162,7 @@ describe('this.params on a single-route handler', () => {
         });
     });
 
-    it('throws when the handler has no route decorator', () => {
+    it('throws when the handler is missing its route decorator', () => {
         const handler = built(Undecorated, button('approveXyz:'), core, dispatch);
         expect(() => handler.read()).toThrow(/route decorator/);
     });

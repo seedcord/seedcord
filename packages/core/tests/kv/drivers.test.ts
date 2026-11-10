@@ -128,7 +128,7 @@ describe.each(cases)('$name', ({ open, persists }) => {
         expect(await counts.get('runs')).toBe(5);
     });
 
-    it('keeps a delete that lands while an update runs', async () => {
+    it('keeps a delete that arrives while an update runs', async () => {
         const counts = new Kv(open()).collection<number>('race');
         await counts.set('k', 5);
 
@@ -158,7 +158,7 @@ describe.each(cases)('$name', ({ open, persists }) => {
             expect(await Array.fromAsync(driver.entries('ttl:'))).toEqual([]);
         });
 
-        it('keeps a set that lands while a read deletes the expired record', async () => {
+        it('keeps a set that arrives while a read deletes the expired record', async () => {
             const kv = new Kv(open()).collection<string>('ttl-race');
             await kv.set('k', 'old', 1000);
             vi.setSystemTime(Date.now() + 1000);
@@ -268,7 +268,7 @@ describe('a record that JSON cannot hold', () => {
 });
 
 describe('a driver that writes in two steps', () => {
-    it('reads the finished record when a get or an entries call lands during a set', async () => {
+    it('reads the finished record when a get or an entries call arrives during a set', async () => {
         const records = new Map<string, string>();
         const writeStarted = Promise.withResolvers<undefined>();
         const finishWrite = Promise.withResolvers<undefined>();

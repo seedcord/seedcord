@@ -3,7 +3,7 @@ title: Files and attachments
 description: Upload files with a reply and show them in the message through a file, thumbnail, or media gallery component.
 ---
 
-Discord renders an attachment where a component references it. If you send the bytes with nothing pointing at them, the upload reaches Discord and stays invisible.
+Discord renders an attachment where a component references it. If you send the bytes with nothing pointing at them, Discord stores the upload and doesn't show it.
 
 That component is the second half of every upload. A seedcord reply is made of components, so a file you upload needs two things: the bytes in `files`, and a component that points at them. Both transports take a [`ReplyFile`](ref:types/ReplyFile), the bytes plus the name Discord shows.
 
@@ -51,7 +51,7 @@ Under ComponentsV2, Discord renders an attachment where a component references i
 
 Use a media gallery for images and video you want shown inline, a thumbnail for one small image beside a section's text, and a file component for a download row like `report.pdf` above.
 
-An upload with no component pointing at it still reaches Discord. Nobody reading the message sees it.
+An upload without a component pointing at it still reaches Discord. Nobody reading the message sees it.
 
 ## The fields
 
@@ -72,7 +72,7 @@ To attach a file that ships with your bot, like a template PDF, read its bytes w
 
 Prefix the name with `SPOILER_` to blur the attachment until the viewer clicks it.
 
-```ts
+```ts plain
 files: [
     {
         data: bytes,
@@ -89,7 +89,7 @@ Http takes `ReplyFile` alone, so a discord.js file form is a compile error there
 
 Gateway takes every form that discord.js takes, since it passes `files` straight to the library.
 
-```ts
+```ts plain
 files: [
     new AttachmentBuilder(createReadStream('./report.pdf'), {
         name: 'report.pdf'

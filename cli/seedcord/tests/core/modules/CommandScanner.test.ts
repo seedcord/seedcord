@@ -27,7 +27,7 @@ function recordingLoader(imported: string[]): ModuleLoader {
     return {
         importModule: <TModule>(entryPath: string) => {
             imported.push(entryPath);
-            // justified: an empty module has no values for the scanner to read
+            // justified: an empty module exports nothing for the scanner to read
             return Promise.resolve({} as TModule);
         },
         ...emptyModuleGraph

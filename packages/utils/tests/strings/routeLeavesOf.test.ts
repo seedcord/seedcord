@@ -80,7 +80,7 @@ describe('routeLeavesOf', () => {
         expect(leaves[0]?.options.map((option) => option.name)).toEqual(['key']);
     });
 
-    it('yields no leaf for a subcommand group with no subcommands', () => {
+    it('yields zero leaves for a subcommand group without subcommands', () => {
         const json = new SlashCommandBuilder()
             .setName('admin')
             .setDescription('d')

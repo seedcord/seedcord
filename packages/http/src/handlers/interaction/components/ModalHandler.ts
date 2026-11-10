@@ -43,13 +43,13 @@ export abstract class ModalHandler<Defs extends readonly AnyCustomId[]> extends 
 
     private reader?: ModalFields;
 
-    /** The fields this modal submitted, read by custom id. */
+    /** The fields that this modal submitted, read by custom id. */
     protected get fields(): ModalFields {
         this.reader ??= new ModalFields(this.event.data);
         return this.reader;
     }
 
-    /** Rewrite the message this modal was opened from. Throws when a command opened the modal. */
+    /** Rewrite the message that this modal was opened from. Throws when a command opened the modal. */
     protected override update(response: ReplyResponse | string): Promise<SentMessage> {
         this.ensureSourceMessage('update');
         return super.update(response);

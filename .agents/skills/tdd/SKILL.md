@@ -7,9 +7,9 @@ description: Test-driven development with red-green-refactor loop. Use when user
 
 ## Philosophy
 
-Tests verify behavior through public interfaces, not implementation details. The code underneath can change completely and the test stays green.
+Tests check behavior through public interfaces. The code underneath can change completely and the test still passes.
 
-**Good tests** exercise real code paths through public APIs. They describe what the system does, not how. A name like `'throws while a key is cooling down and recovers after the window'` states a capability. Such tests survive refactors because they read no internal structure.
+**Good tests** run real code paths through public APIs. They describe what the system does. A name like `'reads nothing back after delete'` states a behavior. Such tests still pass after a refactor because they don't read internal structure.
 
 **Bad tests** couple to internal structure. They mock collaborators you own, reach into private methods, or verify through a side channel instead of the interface. The tell is a test that breaks when you rename an internal function while behavior is unchanged. That test was checking implementation.
 
@@ -21,7 +21,7 @@ Do not write all the tests first and then all the implementation. That treats RE
 
 This produces weak tests:
 
-- Tests written in bulk check imagined behavior, not real behavior.
+- Tests written in bulk check behavior that you imagined.
 - You assert on the shape of things (data structures, signatures) instead of observable behavior.
 - The tests pass when behavior breaks and fail when behavior is fine.
 - You commit to a test structure before the implementation teaches you what matters.
@@ -41,7 +41,7 @@ RIGHT (vertical):
 
 ## Where tests live in this repo
 
-Tests sit in `<package>/tests/`, mirroring `src/`. Never `src/**/*.test.ts`. A test for `packages/core/src/rateLimiter/KvRateLimiter.ts` is `packages/core/tests/rateLimiter/kv-rate-limiter.test.ts`.
+Tests go in `<package>/tests/`, mirroring `src/`. Never `src/**/*.test.ts`. A test for `packages/core/src/rateLimiter/KvRateLimiter.ts` is `packages/core/tests/rateLimiter/kv-rate-limiter.test.ts`.
 
 Vitest is the runner. `vp -C <pkg> run test:watch` watches and reruns on change, which is the loop you want during a TDD cycle.
 
@@ -54,6 +54,16 @@ Tests import through the package's `#src/*` alias and may use a pragmatic fixtur
 
 `mocks/` holds one runnable bot per transport. [Trying a feature on a mock](../../../AGENTS.md#trying-a-feature-on-a-mock) covers behavior that needs a real Discord connection.
 
+## Prove a claim before acting on it
+
+When a review, a search, or your own reading points to a bug, a race, or a timing problem, write the test that shows it first. Run it and watch it fail. Then decide what to do: fix it, keep it, or accept the trade-off. A decision made from a claim that nobody ran is a guess.
+
+A refactor works the same way. Pin the current behavior with passing tests, then refactor and rerun them after each step.
+
+## Fold new tests into the ones that exist
+
+Read the tests in the file before adding yours. When an existing test sets up the same scenario, add your assertions to it. When two of your tests check the same shared code, keep one, plus only what it takes to show that each caller passes its data through. When several tests repeat the same setup, move it into one helper that they all call.
+
 ## Workflow
 
 ### 1. Plan
@@ -64,12 +74,12 @@ Before any code:
 - [ ] Confirm which behaviors to test, in priority order.
 - [ ] Look for [deep modules](deep-modules.md), a small interface over a deep implementation.
 - [ ] Design interfaces for [testability](interface-design.md).
-- [ ] List behaviors to test, not implementation steps.
+- [ ] List the behaviors to test.
 - [ ] Get user approval on the plan.
 
 Ask: "What should the public interface look like? Which behaviors matter most to test?"
 
-You cannot test everything. Confirm which behaviors matter and put the effort on the critical paths and the complex logic, not every edge case.
+You cannot test everything. Confirm which behaviors matter and put the effort on the critical paths and the complex logic.
 
 ### 2. Tracer bullet
 

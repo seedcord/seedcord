@@ -1,0 +1,35 @@
+extends: existence
+link: https://github.com/seedcord/seedcord/blob/next/.agents/skills/writing-voice/SKILL.md
+message: "'%s' stands in for what actually happens. Write who does what, like 'the build writes it' or 'load() registers it once'."
+level: error
+ignorecase: true
+tokens:
+  - 'lives (?:in|on|inside)'
+  - 'sits? (?:on|in|inside)'
+  - 'lands?'
+  - 'landed'
+  - 'landing'
+  - 'surviv(?:e|es|ed|ing)'
+  - 'stays'
+  - 'stayed'
+  # instruction to the reader
+  - '(?<=\w )stay'
+  - 'remains?'
+  - 'remained'
+  - 'fires?'
+  - 'fired'
+  - 'firing'
+  - 'goes'
+  - 'gone'
+  # "going" before a quote is someone speaking, as in going "huh"
+  - 'going(?!\s+["“])'
+  - 'go (?:through|away)'
+  - 'can go'
+  - '(?:dis)?agrees?'
+  - 'drops?'
+  - 'dropped'
+  - 'dropping'
+  # the plural noun is legal, and a determiner after it marks the verb
+  - 'names\s+(?:the|a|an|that|this|these|those|your|its|their|our|every|each|both|it|them|which|what)'
+  # left out on purpose: "only names" and "names you" are usually the noun
+  - '(?:it|this|also|still|never|then) names'

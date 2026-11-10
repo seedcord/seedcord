@@ -77,7 +77,7 @@ export async function formatDeclarationHeader(
 ): Promise<CodeRepresentation> {
     const { text, refs } = await formatRenderedDeclarationHeaderPretty(header, buildResolveHref(context), optional);
     const links = refsToLinks(refs, context.manifestPackage);
-    // with no leading keyword the text isn't top-level TS, and shiki only reads `protected`, `readonly`
+    // without a leading keyword the text isn't top-level TS, and shiki only reads `protected`, `readonly`
     // and type-param `extends` as keywords inside the class-body wrap
     const highlighter = header.keyword
         ? (c: string): Promise<string | null> => highlightToHtml(c, 'ts', { links })

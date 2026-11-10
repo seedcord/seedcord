@@ -174,7 +174,7 @@ describe('toComponentEmbed', () => {
             'Put it in an <ActionRow> or use it as a <Section> accessory'
         ],
         ['<MediaGalleryItem>', <MediaGalleryItem key="m" url={IMAGE} />, 'Put it in a <MediaGallery>']
-    ])('tells you where %s goes when it sits straight in a container', (name, element, hint) => {
+    ])('reports where %s belongs when it is directly in a container', (name, element, hint) => {
         expectEmbedError(
             () => toComponentEmbed(<Container>{element}</Container>),
             `${name} can't go straight inside a <Container>. ${hint}.`
@@ -453,7 +453,7 @@ describe('toComponentEmbed with text', () => {
     it('rejects text outside a text display', () => {
         expectEmbedError(
             () => toComponentEmbed(<Container>hello</Container>),
-            'Got "hello" where only components can go. Wrap text in a <TextDisplay> and put that in a <Container> or a <Section>.'
+            'Got "hello" where only components are allowed. Wrap text in a <TextDisplay> and put that in a <Container> or a <Section>.'
         );
     });
 

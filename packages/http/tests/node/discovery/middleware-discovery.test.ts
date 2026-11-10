@@ -32,7 +32,7 @@ describe('http middleware discovery', () => {
         expect(names(dispatcher.middlewares.chainFor(InteractionKind.Modal))).toEqual(['Audit']);
     });
 
-    it('drops a middleware from every chain when its file goes away', async () => {
+    it('removes a middleware from every chain when its file is deleted', async () => {
         const dispatcher = await readyDispatcher(MIDDLEWARES_DIR);
 
         await dispatcher.onHmr({ type: 'delete', file: path.join(MIDDLEWARES_DIR, 'Audit.ts') });

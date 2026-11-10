@@ -50,7 +50,7 @@ const user: APIUser = { id: 'u1', username: 'dhruv', discriminator: '0', global_
 function coreMock(): { core: Core; post: ReturnType<typeof vi.fn> } {
     const post = vi.fn().mockResolvedValue(undefined);
     // justified: these tests reach only core.rest.post
-    // justified: a real Core always carries a bus, respond publishes through it
+    // justified: a real Core always has a bus, respond publishes through it
     const bus = { [PublishDefault]: () => undefined };
     return { core: { rest: { post } as unknown as REST, bus } as unknown as Core, post };
 }

@@ -6,8 +6,7 @@ export async function settled(assertion: () => void | Promise<void>): Promise<vo
     await vi.waitFor(assertion, { timeout: 5000, interval: 10 });
 }
 
-// three identical polls mean the effect passes ran out, two would also match the reads that land before the
-// first commit
+// three identical polls mean the effect passes ran out. two would also match the reads before the first commit
 const STABLE_READS = 3;
 
 export async function stableFrame(read: () => string | Promise<string>): Promise<string> {

@@ -13,7 +13,8 @@ export type TwoOrMore<Item> = readonly [Item, Item, ...Item[]];
 
 type GateName<TGate> = TGate extends Gate<GateContextBase, infer Name> ? Name : string;
 
-// brackets keep `&` and `|` from reading as equal precedence
+// we need to make sure that `&` and `|` are grouped correctly when
+// joining gate names so they don't look like they have the same precedence
 type Grouped<Name extends string> = Name extends `${string} & ${string}` | `${string} | ${string}` ? `(${Name})` : Name;
 
 export type JoinNames<Gates extends readonly Gate<GateContextBase>[], Sep extends string> = Gates extends readonly [

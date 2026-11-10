@@ -9,7 +9,7 @@ import type { PagedTableOptions, TableOptions } from './options';
 /**
  * Renders a grid of strings as a framed monospace table for Discord output.
  *
- * Column widths use display width, so emoji, astral, and CJK cells stay aligned. The first row is a
+ * Column widths use display width, so emoji, astral, and CJK cells line up. The first row is a
  * header by default with a separator beneath it. Ragged rows are padded to the widest row.
  *
  * Pass `budget` to get one string per page instead of a single string, splitting the body across a

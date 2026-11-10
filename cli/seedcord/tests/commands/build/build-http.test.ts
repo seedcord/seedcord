@@ -107,7 +107,7 @@ describe('seedcord build on an http bot', () => {
     it.each([
         ['a folder outside files', 'fixture:unlisted'],
         ['a dot-folder inside a listed folder', 'fixture:skipped']
-    ])('bundles no text from %s', (_, marker) => {
+    ])("doesn't bundle text from %s", (_, marker) => {
         expect(builtFilesContaining(marker)).toEqual([]);
     });
 

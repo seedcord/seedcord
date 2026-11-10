@@ -241,7 +241,7 @@ export interface DocNode {
     kind: number;
     kindLabel: string;
     // Reachable from the package entry point. Forgotten/referenced-only declarations are `false`.
-    // They still get a page and resolve as link targets, but stay hidden from the sidebar and search (two-tier).
+    // They still get a page and resolve as link targets, but don't show in the sidebar or search (two-tier).
     isExported: boolean;
     flags: DocFlags;
     comment?: DocComment | null;

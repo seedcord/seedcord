@@ -174,7 +174,7 @@ function mentionableIncludesGuildMember(options: SlashOptions<'purge'>): void {
 
 function onlyPresentKindGetters(options: SlashOptions<'flag'>): void {
     expectTypeOf(options.getString('reason')).toEqualTypeOf<string>();
-    // route has no user option, so getMember and getUser do not exist
+    // route doesn't declare a user option, so getMember and getUser do not exist
     // @ts-expect-error getMember is absent without a user option
     void options.getMember;
     // @ts-expect-error getUser is absent without a user option

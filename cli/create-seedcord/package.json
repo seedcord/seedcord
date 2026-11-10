@@ -55,6 +55,7 @@
         "@seedcord/core": "workspace:^",
         "@seedcord/errors": "workspace:^",
         "@seedcord/eslint-config": "workspace:^",
+        "@seedcord/prose": "workspace:^",
         "@seedcord/tsconfig": "workspace:^",
         "@seedcord/tsdown-config": "workspace:^",
         "@seedcord/types": "workspace:^",

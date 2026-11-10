@@ -1,0 +1,8 @@
+extends: existence
+link: https://github.com/seedcord/seedcord/blob/next/.agents/skills/writing-voice/SKILL.md
+message: 'Em-dash or en-dash. Use a comma, parentheses, a hyphen, or two sentences.'
+level: error
+nonword: true
+tokens:
+  - '—'
+  - '–'

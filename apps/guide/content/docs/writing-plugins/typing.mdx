@@ -71,7 +71,7 @@ If you pass `KeyValue` alone, `TValue` becomes `unknown`, the fallback for a typ
 
 ## Reading another plugin
 
-A plugin on the base from `@seedcord/core/plugin` has a `this.core` typed as `CoreBase`, which has no members for attached plugins. Reading another plugin by key fails to compile.
+A plugin on the base from `@seedcord/core/plugin` has a `this.core` typed as `CoreBase`, which doesn't list attached plugins. Reading another plugin by key fails to compile.
 
 ```ts twoslash
 // @errors: 2339

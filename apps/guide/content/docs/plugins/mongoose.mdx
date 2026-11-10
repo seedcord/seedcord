@@ -41,7 +41,7 @@ A real bot reads the connection string from its environment. `process.env.MONGO_
 
 | option | required | what it sets |
 | --- | --- | --- |
-| `dir` | yes | the folder the plugin scans for service classes. A relative path is relative to `root`, and the folder has to sit inside it, as [the folder rules](/plugins) describe |
+| `dir` | yes | the folder that the plugin scans for service classes. A relative path is relative to `root`, and the folder has to be inside it, as [the folder rules](/plugins) describe |
 | `uri` | yes | the MongoDB connection string |
 | `name` | yes | the database, passed to mongoose as `dbName` |
 | `connectionOptions` | no | any `mongoose.ConnectOptions`, merged over what the plugin sets |
@@ -67,7 +67,7 @@ Shutdown runs the same steps backwards. `dispose()` clears the service registry 
 
 ## The mongoose instance
 
-Most of your queries go through [service classes](/plugins/mongoose-services). Some work doesn't belong in a service, like checking whether the bot is still connected to MongoDB. For that, use `this.core.db.connection`, the Mongoose instance that `mongoose.connect()` returned. Its `connection` property is Mongoose's `Connection` object, and its `model()` method builds a model.
+You write most of your queries in [service classes](/plugins/mongoose-services). Some work doesn't belong in a service, like checking whether the bot is still connected to MongoDB. For that, use `this.core.db.connection`, the Mongoose instance that `mongoose.connect()` returned. Its `connection` property is Mongoose's `Connection` object, and its `model()` method builds a model.
 
 ```ts twoslash
 import { SlashHandler, SlashRoute } from '@seedcord/gateway';
@@ -97,7 +97,7 @@ The handler reads `readyState` from Mongoose's `Connection`, which is `1` while 
 
 <Callout type="warning">
 
-`connection` and `services` are only ready after `init()` resolves. If you read `connection` before then, you get `undefined`, even though its type says it's always set. Reading `services` before then throws `PluginServicesNotReady`.
+`connection` and `services` are only ready after `init()` resolves. If you read `connection` before then, you get `undefined`, even though its type marks it as always set. Reading `services` before then throws `PluginServicesNotReady`.
 
 </Callout>
 

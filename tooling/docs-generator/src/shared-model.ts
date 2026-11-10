@@ -48,7 +48,7 @@ function retarget(node: unknown, promotions: ExportedByLocal): void {
 }
 
 /**
- * Write a copy of the package's root model that also carries every subpath symbol, for sibling packages
+ * Write a copy of the package's root model that also has every subpath symbol, for sibling packages
  * to resolve against.
  *
  * @remarks

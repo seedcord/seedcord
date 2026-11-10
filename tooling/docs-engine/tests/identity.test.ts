@@ -117,7 +117,7 @@ describe('resolveExternalPackageUrl', () => {
         expect(resolveExternalPackageUrl('discord-api-types')).toBe('https://discord.js.org/docs');
     });
 
-    it('maps the @discordjs scoped helper packages to the discord.js docs (JSONEncodable lives in util)', () => {
+    it('maps the @discordjs scoped helper packages to the discord.js docs (JSONEncodable is defined in util)', () => {
         expect(resolveExternalPackageUrl('@discordjs/util')).toBe('https://discord.js.org/docs');
     });
 

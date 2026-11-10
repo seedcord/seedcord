@@ -39,7 +39,7 @@ describe('OwnerOnly', () => {
         await expect(OwnerOnly().check(ownerCtx('u2', []))).rejects.toBeInstanceOf(NotOwner);
     });
 
-    it('refuses with NotOwner when the context carries no user id', async () => {
+    it('refuses with NotOwner when the context has a null user id', async () => {
         await expect(OwnerOnly().check(ownerCtx(null, ['o1']))).rejects.toBeInstanceOf(NotOwner);
     });
 

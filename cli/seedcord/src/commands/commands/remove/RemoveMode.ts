@@ -7,7 +7,7 @@ export interface EmptyMessage {
 }
 
 export abstract class RemoveMode {
-    // the word the output uses for one selected command
+    // the word that the output uses for one selected command
     public abstract readonly itemName: string;
     public abstract readonly includesGlobal: boolean;
 

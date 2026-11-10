@@ -84,7 +84,7 @@ describe('symbolPreview', () => {
         expect(card.breadcrumb).toEqual(['docs', '@seedcord/core', 'v0.8.0']);
     });
 
-    it('links an old version to the latest package page when the latest version has no such symbol', () => {
+    it("links an old version to the latest package page when the latest version doesn't have that symbol", () => {
         const card = symbolPreview(resolved({ kind: 'type' }, OLD), undefined);
 
         expect(card.latestVersion?.url).toBe('https://seedcord.org/docs/packages/core/latest');

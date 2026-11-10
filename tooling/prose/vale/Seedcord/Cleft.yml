@@ -1,0 +1,10 @@
+extends: existence
+link: https://github.com/seedcord/seedcord/blob/next/.agents/skills/writing-voice/SKILL.md
+message: "'%s' puts 'is' where the real verb belongs. Lead with who does what."
+level: suggestion
+ignorecase: true
+tokens:
+  - 'what (?:this|it|that|\w+) (?:does|is|means) is'
+  - 'is what (?:lets|makes|keeps|stops|gives)'
+  # capital T keeps it to sentence openers. "up there is the path" is fine
+  - '(?-i:There) (?:is|are|was|were) (?!no\b)'

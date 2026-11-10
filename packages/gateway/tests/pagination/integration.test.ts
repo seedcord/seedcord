@@ -53,7 +53,7 @@ function fakeButton(customId: string) {
     };
 }
 
-// the sender serializes each component before the wire call, so the sent body carries raw API data
+// the sender serializes each component before the wire call, so the sent body has raw API data
 function pageText(body: { components: unknown[] }): string {
     const json = body.components[0] as APIContainerComponent;
     return json.components.reduce<string>(

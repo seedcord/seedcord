@@ -49,6 +49,7 @@
         "@seedcord/http": "workspace:^",
         "@seedcord/plugin-kysely-postgres": "workspace:^",
         "@seedcord/plugin-mongoose": "workspace:^",
+        "@seedcord/prose": "workspace:^",
         "@seedcord/tsconfig": "workspace:^",
         "@seedcord/vite-config": "workspace:^",
         "@tailwindcss/postcss": "catalog:deps",

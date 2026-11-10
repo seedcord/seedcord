@@ -64,7 +64,7 @@ export abstract class RowComponent<Key extends RowType> {
     }
 }
 
-// the rule reads this.event's djs type, so event carries the matching interaction
+// the rule reads this.event's djs type, so event has the matching interaction
 
 type Repliable =
     | ChatInputCommandInteraction

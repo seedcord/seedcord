@@ -65,7 +65,7 @@ describe('and', () => {
         expect(or(A, B).name).toBe('a | b');
     });
 
-    it('wraps a nested combinator so the grouping survives the join', () => {
+    it('wraps a nested combinator so the joined name keeps the grouping', () => {
         const A = defineGate('a', () => {});
         const B = defineGate('b', () => {});
         const C = defineGate('c', () => {});

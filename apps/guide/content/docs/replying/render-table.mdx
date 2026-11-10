@@ -38,7 +38,7 @@ Discord shows a message in a proportional font, so the columns don't line up. Pa
 
 ## Picking a frame
 
-The frame decides where the table can go. A box frame reads well in a Discord code block, and `markdown` suits a file or a gist. Every table so far used the default frame. `border` picks another one.
+The frame determines where you can use the table. A box frame reads well in a Discord code block, and `markdown` suits a file or a gist. Every table so far used the default frame. `border` picks another one.
 
 ```ts twoslash
 import { renderTable } from '@seedcord/gateway';
@@ -64,7 +64,7 @@ double            ascii
 ╚═══════╩═════╝   +-------+-----+
 ```
 
-`markdown` drops the outer frame and emits a GitHub-flavored table, the kind with a `| --- |` delimiter row.
+`markdown` leaves out the outer frame and emits a GitHub-flavored table, the kind with a `| --- |` delimiter row.
 
 ```txt output
 | Name  | Age |
@@ -80,7 +80,7 @@ Discord doesn't render GitHub-flavored tables in a message. Use `markdown` for o
 
 ## Aligning columns
 
-Pass `align` one value to set every column, or an array to set them one at a time. Any column the array doesn't cover falls back to left.
+Pass `align` one value to set every column, or an array to set them one at a time. Any column that the array doesn't cover falls back to left.
 
 ```ts twoslash
 import { renderTable } from '@seedcord/gateway';
@@ -148,7 +148,7 @@ wrap             truncate
 ╰────────────╯
 ```
 
-A markdown row holds one line, so that border truncates whatever `overflow` says.
+A markdown row holds one line, so that border truncates whatever `overflow` is set to.
 
 <Callout type="warning">
 

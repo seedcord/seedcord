@@ -164,7 +164,7 @@ describe('eventDispatched', () => {
         expect(ends[0]?.dispatchId).toBe(starts[0]?.dispatchId);
     });
 
-    it('stays quiet for an event no handler registered', async ({ testEnv }) => {
+    it('reports nothing for an event that no handler registered', async ({ testEnv }) => {
         await testEnv.createFile(`${EVENTS_DIR}/Ok.ts`, OK);
 
         await using seedcord = new Seedcord(testConfig({ events: testEnv.resolvePath(EVENTS_DIR) }));

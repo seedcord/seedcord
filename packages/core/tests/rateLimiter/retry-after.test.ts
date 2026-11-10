@@ -6,7 +6,7 @@ describe('KvRateLimiter retryAfterMs and resetAt math', () => {
     beforeEach(() => vi.useFakeTimers());
     afterEach(() => vi.useRealTimers());
 
-    it('shrinks retryAfterMs as time passes while resetAt stays fixed', async () => {
+    it('shrinks retryAfterMs as time passes while resetAt is fixed', async () => {
         const limiter = memoryRateLimiter();
         const window = { windowMs: 1000 };
         const start = Date.now();

@@ -61,7 +61,7 @@ ruleTester.run('no-discord-limit-exceeded', rule, {
                 }
             }
         `,
-        // local class named ActionRowBuilder is not from discord.js, so it stays unflagged
+        // local class named ActionRowBuilder is not from discord.js, so it isn't flagged
         dedent`
             class ActionRowBuilder {
                 addComponents(...items: unknown[]): this { return this; }

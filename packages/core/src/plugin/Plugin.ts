@@ -112,7 +112,7 @@ export abstract class Plugin<
         private readonly host: CoreBase,
         ...[spec]: PluginSpecArgs<Opts, Fixed>
     ) {
-        // cleared here. a plugin this constructor builds by hand doesn't get the outer key
+        // cleared here. a plugin that this constructor builds by hand doesn't get the outer key
         const attachment = attaching;
         attaching = undefined;
         this.#kv = attachment?.kv;
@@ -244,7 +244,7 @@ export type { PluginLifecycleSpec } from './lifecycle';
 export type { PluginOptions } from './options';
 
 // a bound of Plugin<{}> rejects every plugin that declares an option, since Plugin<A> and Plugin<B>
-// are mutually unassignable. every member here must stay Opts-independent.
+// are mutually unassignable. no member here may depend on Opts.
 /** @internal */
 export type PluginLike = Pick<
     Plugin,
@@ -260,7 +260,7 @@ export type PluginCtor<TPlugin extends PluginLike = PluginLike> = new (...args: 
 export type PluginArgs<Ctor extends PluginCtor> =
     InheritsScopedConstructor<Ctor> extends true ? [] : Tail<ConstructorParameters<Ctor>>;
 
-// a narrowed plugin with no constructor of its own inherits the base one, whose spec carries ScopedSpec
+// a narrowed plugin without a constructor of its own inherits the base one, whose spec has ScopedSpec
 type InheritsScopedConstructor<Ctor extends PluginCtor> =
     Tail<ConstructorParameters<Ctor>> extends [infer Spec, ...unknown[]]
         ? typeof ScopedSpec extends keyof Spec

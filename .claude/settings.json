@@ -1,0 +1,17 @@
+{
+    "$schema": "https://json.schemastore.org/claude-code-settings.json",
+    "hooks": {
+        "PostToolUse": [
+            {
+                "matcher": "Write|Edit",
+                "hooks": [
+                    {
+                        "type": "command",
+                        "command": "node \"$(git -C \"$CLAUDE_PROJECT_DIR\" rev-parse --show-toplevel)/tooling/prose/src/hook.ts\"",
+                        "timeout": 15
+                    }
+                ]
+            }
+        ]
+    }
+}

@@ -84,7 +84,7 @@ export abstract class PluginHost<BotT extends Transport, BotRt extends Runtime> 
      * Take `CoreBase` as your constructor's first parameter. `attach()` passes it, so you don't.
      * A narrower one fails to compile here.
      *
-     * @param key - Also the channel the plugin logs on, dots included.
+     * @param key - Also the channel that the plugin logs on, dots included.
      * @param args - Whatever your constructor takes after the host.
      * @throws A **SeedcordError** when you attach after the bot has started.
      * @throws A **SeedcordTypeError** when `key` is taken, reserved, or malformed.

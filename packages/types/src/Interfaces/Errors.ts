@@ -64,7 +64,7 @@ export interface ErrorsConfig {
     /**
      * discord.js API error codes the event error path swallows quietly, reporting no fault.
      * Discord delivers dead resources on events (a reaction on a deleted message, a member that just
-     * left), so a handler's own fetch can throw a gone-resource error.
+     * left), so a handler's own fetch can throw a dead-resource error.
      *
      * When empty, a dead resource reports (throttled to one per minute per handler) until you confirm it
      * is an expected dead end and add the code here, for example Unknown Message (10008), Unknown Member

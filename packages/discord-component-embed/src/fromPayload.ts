@@ -224,7 +224,7 @@ function toLinkButton(node: JsonObject, path: Path): EmbedElement {
     return createElement(LinkButton, { url: node.url, label: node.label, emoji: node.emoji, disabled: node.disabled });
 }
 
-// discord silently drops most unknown keys
+// discord silently ignores most unknown keys
 function checkKeys(node: JsonObject, what: string, allowed: readonly string[], path: Path): void {
     const unknown = Object.keys(node).find((key) => !allowed.includes(key));
     if (unknown === undefined) return;
@@ -237,7 +237,7 @@ function checkKeys(node: JsonObject, what: string, allowed: readonly string[], p
     );
 }
 
-// one edit per 3 letters covers "descripton" (1 edit) and "spolier" (2). at one per 4, "spolier" gets no guess
+// one edit per 3 letters covers "descripton" (1 edit) and "spolier" (2). at one per 4, "spolier" doesn't get a guess
 const LETTERS_PER_EDIT = 3;
 
 function closestKey(key: string, allowed: readonly string[]): string | undefined {
@@ -342,7 +342,7 @@ function toMediaProps(node: JsonObject, what: string, path: Path): Record<string
             { path }
         );
     }
-    // discord shows the Open Graph card for any other media key, the ones its API adds included
+    // discord shows the Open Graph card for any other media key, including the ones that its API adds
     checkKeys(node.media, `${what}'s media`, ['url'], path);
     return { url: node.media.url, description: node.description, spoiler: node.spoiler };
 }

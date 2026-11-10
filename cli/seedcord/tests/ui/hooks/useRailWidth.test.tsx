@@ -25,7 +25,7 @@ function Harness({ phase, label }: { readonly phase: DevPhase; readonly label: s
 }
 
 describe('useRailWidth', () => {
-    it('holds no width before the session runs', async () => {
+    it('reports a null width before the session runs', async () => {
         const { lastFrame, unmount } = render(<Harness phase="starting" label="abcde" />);
         await settled(() => expect(lastFrame()).toContain('w:null'));
         unmount();
@@ -40,7 +40,7 @@ describe('useRailWidth', () => {
         unmount();
     });
 
-    it('holds the lock while the session stays running', async () => {
+    it('keeps the lock while the session is running', async () => {
         const { lastFrame, rerender, unmount } = render(<Harness phase="running" label="abcde" />);
         await settled(() => expect(lastFrame()).toContain('w:5'));
 

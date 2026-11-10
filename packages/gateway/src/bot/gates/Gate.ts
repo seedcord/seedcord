@@ -4,7 +4,7 @@ import type { AppPermissionsContext, GuildPermissionsContext } from '@seedcord/c
 import type { ClientEvents, Guild, GuildMember, User } from 'discord.js';
 
 /**
- * The context a gate gets on an interaction. It extends {@link GuildPermissionsContext} with the live interaction and
+ * The context that a gate gets on an interaction. It extends {@link GuildPermissionsContext} with the live interaction and
  * the djs objects resolved from the gateway cache. `Repliable` is the interaction type the gate
  * supports, inferred from the `ctx` annotation, so a gate reading button-specific fields is rejected
  * on a slash handler. `interaction` is the reply target, so `user` is always present. Use
@@ -33,14 +33,14 @@ export interface InteractionGateContext<Repliable extends Repliables = Repliable
     readonly interaction: Repliable;
     /** The invoking user, always present on an interaction. */
     readonly user: User;
-    /** The guild the interaction happened in, or null in a DM. */
+    /** The guild that the interaction happened in, or null in a DM. */
     readonly guild: Guild | null;
     /** The invoking member from the cache, or null outside a guild or when uncached. */
     readonly member: GuildMember | null;
 }
 
 /**
- * The context a gate gets on an event. It extends {@link GuildPermissionsContext} with the event payload and the djs
+ * The context that a gate gets on an event. It extends {@link GuildPermissionsContext} with the event payload and the djs
  * objects derived from it. `Names` is the event(s) the gate supports, inferred from the `ctx`
  * annotation, so a gate that reads one event's `payload` is rejected on a handler for a different
  * event. The default supports every event.
@@ -68,7 +68,7 @@ export interface EventGateContext<
     readonly eventName: Names;
     /** The event's arguments, typed to that event's args tuple. */
     readonly payload: ClientEvents[Names];
-    /** The acting user derived from the payload, or null when the event carries none. */
+    /** The acting user derived from the payload, or null when the event has none. */
     readonly user: User | null;
     /** The guild derived from the payload, or null. */
     readonly guild: Guild | null;

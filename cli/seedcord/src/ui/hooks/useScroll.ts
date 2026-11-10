@@ -27,7 +27,7 @@ interface ScrollView<Item> {
 }
 
 // a null anchor follows the newest line. a key anchor pins the top row to that entry's current index, so
-// the visible lines stay put while LogStore trims its head or appends. a trimmed-away anchor falls back to
+// the visible lines don't move while LogStore trims its head or appends. a trimmed-away anchor falls back to
 // the oldest line.
 export function computeScrollView<Item>(
     items: readonly Item[],

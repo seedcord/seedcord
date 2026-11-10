@@ -48,7 +48,7 @@ function pluginBlock(params: {
     settings?: Linter.Config['settings'];
 }): FlatConfigItem {
     const item: FlatConfigItem = { files: [...params.files] };
-    // when disabled, drop the rules and settings as well. eslint throws "rule not found" if a
+    // when disabled, leave out the rules and settings as well. eslint throws "rule not found" if a
     // <plugin>/* rule is set while its plugin is unregistered.
     if (!params.enabled) return item;
     if (params.settings) item.settings = params.settings;
@@ -178,7 +178,6 @@ function createConfig(options: CreateConfigOptions = {}): FlatConfig {
             taggedTemplates: tailwindTaggedTemplates
         }),
 
-        // Opt-in via mdxFiles, the spread drops the block entirely when omitted.
         ...(mdxFiles ? [mdxBlock(mdxFiles)] : []),
 
         {
@@ -199,7 +198,7 @@ function createConfig(options: CreateConfigOptions = {}): FlatConfig {
             }
         },
 
-        // Must stay after the rule blocks above so it can disable any formatting rules they enable.
+        // Must come after the rule blocks above so it can disable any formatting rules they enable.
         prettierConfig,
 
         // Last so consumer overrides win over everything above.

@@ -7,10 +7,10 @@ import { createRule } from '#src/createRule';
 import type { TSESTree } from '@typescript-eslint/utils';
 import type * as ts from 'typescript';
 
-// a message carries content through these fields or through builder components, never both
+// a message has content in these fields or in builder components, never both
 const CONTENT_FIELDS = ['content', 'embeds', 'poll', 'stickers', 'sticker_ids'];
 
-// JSON serialization drops an undefined property, so the wire payload carries no such field
+// JSON serialization omits an undefined property, so the wire payload doesn't include that field
 function isDefinitelyUndefined(type: ts.Type): boolean {
     return (type.flags & TypeFlags.Undefined) !== 0;
 }

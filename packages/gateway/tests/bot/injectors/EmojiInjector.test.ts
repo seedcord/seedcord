@@ -10,7 +10,7 @@ import type { Core } from '#interfaces/Core';
 
 type EmojiArgument = Parameters<ButtonBuilder['setEmoji']>[0];
 
-// a real GuildEmoji carries client, guild, roles, and more. setEmoji rejects every one of them.
+// a real GuildEmoji has client, guild, roles, and more. setEmoji rejects every one of them.
 interface EmojiStub {
     id: string;
     name: string;
@@ -92,7 +92,7 @@ describe('EmojiInjector', () => {
         expect((stored.Wave as GatewayEmoji).source).toBe(wave);
     });
 
-    it('collects every unresolvable emoji into one error rather than throwing on the first', async () => {
+    it('collects every unresolvable emoji into one error', async () => {
         const error = await initError(stubCore({ emojis: { Confirm: 'check', Cancel: 'cross' }, appEmojis: [] }));
 
         expect(error).toMatchObject({
@@ -123,7 +123,7 @@ describe('EmojiInjector', () => {
     });
 
     it('reports a config value that is neither a name nor a tuple', async () => {
-        // fixture: a non-string, non-tuple value to exercise the invalid-value branch
+        // fixture: a non-string, non-tuple value to hit the invalid-value branch
         const error = await initError(stubCore({ emojis: { Bad: 42 as unknown as string } }));
 
         expect(error).toMatchObject({ code: SeedcordErrorCode.ConfigEmojiInvalid });
@@ -132,7 +132,7 @@ describe('EmojiInjector', () => {
     it('fetches a guild before reading its emoji cache', async () => {
         const wave: EmojiStub = { id: '9', name: 'wave' };
         const cache = new Collection<string, EmojiStub>();
-        // the emoji only appears after fetch, so dropping the fetch leaves the cache empty and resolution fails
+        // the emoji only appears after fetch, so removing the fetch leaves the cache empty and resolution fails
         const guild = {
             emojis: {
                 fetch: vi.fn(() => {

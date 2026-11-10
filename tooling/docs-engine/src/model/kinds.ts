@@ -33,7 +33,7 @@ export function frozenKindLabel(kind: number): string {
 }
 
 /**
- * API Extractor's `ApiItemKind` → the frozen numeric kind. AE has no distinct getter/setter/accessor
+ * API Extractor's `ApiItemKind` → the frozen numeric kind. AE doesn't have a distinct getter/setter/accessor
  * kind. They arrive as `Property`. The adapter detects `get `/`set ` excerpt prefixes and overrides
  * to Accessor where needed, so this base map keeps Property for the plain case.
  */

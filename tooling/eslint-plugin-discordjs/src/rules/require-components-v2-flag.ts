@@ -181,7 +181,7 @@ export default createRule({
 
                 context.report({ node, messageId: 'missingFlag' });
             },
-            // an unannotated payload has no contextual type until the call site
+            // an unannotated payload gets a contextual type only at the call site
             CallExpression(node) {
                 for (const arg of node.arguments) {
                     if (arg.type !== AST_NODE_TYPES.Identifier) continue;

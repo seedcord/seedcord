@@ -40,7 +40,7 @@ const REPLIABLE_INTERACTIONS = new Set([
     'ChannelSelectMenuInteraction'
 ]);
 
-// autocomplete has no reply/defer, so respond gates on it alone
+// autocomplete doesn't have reply/defer, so respond gates on it alone
 const AUTOCOMPLETE_INTERACTIONS = new Set(['AutocompleteInteraction']);
 
 const ACK_MESSAGES = {

@@ -29,7 +29,7 @@ function buildConfigObject(options: {
         projectFolder: options.packageDir,
         mainEntryPointFilePath: options.entryPoint,
         // Folding a re-exported workspace dep's symbols inline made API Extractor mis-stamp their
-        // owning package (rushstack #3521/#3593). With no bundledPackages, re-exports resolve
+        // owning package (rushstack #3521/#3593). Without bundledPackages, re-exports resolve
         // cross-package and the umbrella package lists them.
         compiler: { tsconfigFilePath: options.tsconfigPath },
         apiReport: { enabled: false },
@@ -40,7 +40,7 @@ function buildConfigObject(options: {
             compilerMessageReporting: { default: { logLevel: ExtractorLogLevel.Warning } },
             extractorMessageReporting: {
                 default: { logLevel: ExtractorLogLevel.Warning },
-                // forgotten exports are expected here. this project sets no release tags
+                // forgotten exports are expected here. this project doesn't set release tags
                 // (@public/@beta/...), which leaves AE's coherence checks and its underscore-prefix
                 // convention for `@internal` with nothing to report.
                 'ae-forgotten-export': { logLevel: ExtractorLogLevel.None },
@@ -104,7 +104,7 @@ export async function extractPackageApiModel(
     const manifest = await readPackageManifest(packageDir);
     if (manifest.private) return null;
 
-    // @seedcord/tsconfig publishes json presets and declares no types
+    // @seedcord/tsconfig publishes json presets and doesn't declare types
     const entryPoints = await resolveDocEntryPoints(packageDir, manifest);
     if (entryPoints.length === 0) return null;
 

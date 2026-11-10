@@ -107,7 +107,7 @@ describe('ObjectConsoleSink', () => {
         expect(error.omittedErrors).toBe(4);
     });
 
-    it('survives an aggregate whose members reach itself', () => {
+    it('renders an aggregate whose members reach itself without throwing', () => {
         const cap = capture('error');
         const cyclic = new AggregateError([], 'loops');
         cyclic.errors.push(cyclic);
@@ -158,13 +158,13 @@ describe('ObjectConsoleSink', () => {
         expect(cap.payload().timestamp).toBe(new Date(ts).toISOString());
     });
 
-    it('survives a BigInt without throwing', () => {
+    it('renders a BigInt without throwing', () => {
         const cap = capture();
         expect(() => new ObjectConsoleSink().onLog(record({ message: 'big', args: [{ id: 10n }] }))).not.toThrow();
         expect(cap.payload().id).toBe('10');
     });
 
-    it('survives a circular reference without throwing', () => {
+    it('renders a circular reference without throwing', () => {
         const cap = capture();
         const circular: Record<string, unknown> = { name: 'loop' };
         circular.self = circular;

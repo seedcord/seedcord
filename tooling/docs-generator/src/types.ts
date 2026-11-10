@@ -55,7 +55,7 @@ export interface ReexportEntry {
 export interface SourceScan {
     sources: PackageSourceIndex;
     reexports: ReexportEntry[];
-    // per runtime condition, the exports its build declares in place of the default build's
+    // per runtime condition, the exports that its build declares in place of the default build's
     ownVersions: Record<string, string[]>;
 }
 

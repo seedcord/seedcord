@@ -79,7 +79,7 @@ describe('EventMiddleware', () => {
     });
 });
 
-// @RegisterEventMiddleware and the EventMiddleware generic must agree, in both directions
+// @RegisterEventMiddleware and the EventMiddleware generic must list the same events, checked in both directions
 
 @RegisterEventMiddleware()
 class GoodCatchall extends EventMiddleware {

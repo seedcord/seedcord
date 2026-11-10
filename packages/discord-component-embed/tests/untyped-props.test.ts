@@ -136,7 +136,7 @@ describe('toComponentEmbed with untyped props', () => {
     it('rejects an object whose Symbol.iterator is not a function', () => {
         expectEmbedError(
             () => toComponentEmbed(loose(Container, null, { [Symbol.iterator]: 1 })),
-            'Got {} where only components can go.'
+            'Got {} where only components are allowed.'
         );
     });
 

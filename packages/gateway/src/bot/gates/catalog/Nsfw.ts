@@ -6,7 +6,7 @@ import type { InteractionGateContext } from '#bot/gates/Gate';
 import type { NonModalInteraction } from '#src/handlers/interactionTypes';
 import type { Gate, GateNoticeOptions } from '@seedcord/core';
 
-// a thread carries no nsfw flag of its own
+// a thread doesn't carry an nsfw flag of its own
 function channelIsNsfw(channel: InteractionGateContext['interaction']['channel']): boolean {
     if (!channel) return false;
     if (channel.isThread()) return channel.parent?.nsfw ?? false;
@@ -16,7 +16,7 @@ function channelIsNsfw(channel: InteractionGateContext['interaction']['channel']
 /**
  * Requires an age-restricted channel, else refuses. Pass a Notice class as `notice` to replace the refusal.
  *
- * A thread inherits its parent channel's nsfw flag. ModalSubmit has no reliable channel, so it is excluded.
+ * A thread inherits its parent channel's nsfw flag. ModalSubmit doesn't have a reliable channel, so it is excluded.
  *
  * @param options - Replace the refusal with a Notice class as `notice`.
  *

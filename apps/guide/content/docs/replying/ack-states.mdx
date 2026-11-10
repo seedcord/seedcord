@@ -108,18 +108,18 @@ The `got` half describes the value you passed.
 
 A discord.js throw that never reaches its validator keeps its own message, like "Non-premium buttons must have a label and/or an emoji."
 
-The original throw stays on the error as its `cause`, so you can still read the nested shapeshift error underneath.
+The original throw is the error's `cause`, so you can still read the nested shapeshift error underneath.
 
-## The interaction callback returned no message
+## The interaction callback didn't return a message
 
 `reply()` and `update()` read the created message out of Discord's callback response.
 
 ```txt output
-The interaction callback for reply() returned no message.
+The interaction callback for reply() didn't return a message.
 (route slash:ban)
 ```
 
-Your handler can't cause this throw. The callback carries that message on every documented path, so seedcord throws this error when Discord's response doesn't include it.
+Your handler can't cause this throw. The callback has that message on every documented path, so seedcord throws this error when Discord's response doesn't include it.
 
 ## update() on a modal a command opened
 

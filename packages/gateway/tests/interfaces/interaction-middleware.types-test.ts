@@ -44,7 +44,7 @@ class Catchall extends InteractionMiddleware {
 }
 void Catchall;
 
-// autocomplete carries no reply target
+// autocomplete doesn't carry a reply target
 // @ts-expect-error Autocomplete is not a middleware kind
 class NotAutocomplete extends InteractionMiddleware<InteractionKind.Autocomplete> {
     public execute(): Promise<void> {

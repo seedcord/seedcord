@@ -71,7 +71,7 @@ export default createRule({
             const maxValue = staticNumber(max.source, services);
             if (minValue === undefined || maxValue === undefined || minValue <= maxValue) return;
 
-            // so the squiggle lands on the offending bound
+            // so the squiggle underlines the offending bound
             context.report({ node: min.site, messageId: 'minOverMax', data: { min: minValue, max: maxValue } });
         }
 

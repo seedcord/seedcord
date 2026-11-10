@@ -36,8 +36,8 @@ it('throws when a batch comes back with fewer vectors than texts', async () => {
     await expect(ai.embed(['a', 'b'])).rejects.toThrow(/1 vectors for 2 texts/);
 });
 
-it('throws when the result carries no vectors', async () => {
+it('throws when the result is missing vectors', async () => {
     const { ai } = fakeWorkersAi(() => ({ shape: [] }));
 
-    await expect(ai.embed(['a'])).rejects.toThrow(/returned no embeddings/);
+    await expect(ai.embed(['a'])).rejects.toThrow(/didn't return embeddings/);
 });

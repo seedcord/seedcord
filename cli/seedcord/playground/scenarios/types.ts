@@ -5,7 +5,7 @@ import type { LogLevel } from '@seedcord/types';
 export type PreviewLogLevel = LogLevel;
 
 /**
- * The surface a scenario uses to drive the real stores. `log` goes through the real Logger so channels
+ * The calls that a scenario makes to update the real stores. `log` calls the real Logger so channels
  * register and the production sink pipeline runs. `emit` reduces a runtime event through DevStore. Scenarios
  * never touch React, Ink, or the variant switcher. Data and layout are independent axes.
  */

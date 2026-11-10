@@ -27,7 +27,7 @@ function deadResourceError(): DiscordAPIError {
 }
 
 function stringCodedError(): DiscordAPIError {
-    // djs puts the code the boundary reads in the second constructor argument. some of them are strings.
+    // djs puts the code that the boundary reads in the second constructor argument. some of them are strings.
     return new DiscordAPIError(
         { code: 0, message: 'Unknown command' },
         'SLASH_COMMAND_UNKNOWN',
@@ -75,7 +75,7 @@ describe('handleEventFault', () => {
         expect(payload.metadata).toMatchObject({ eventName: 'guildMemberRemove', handler: 'Farewell' });
     });
 
-    it('stays quiet for a Silence', () => {
+    it('publishes nothing for a Silence', () => {
         handleEventFault(new Silence('filtered'), 'guildMemberAdd', 'Welcome', [{}], mockCore(publish));
 
         expect(publish).not.toHaveBeenCalled();
@@ -104,7 +104,7 @@ describe('handleEventFault', () => {
         debug.mockRestore();
     });
 
-    it('leaves the compact fault log without a cause line when the error has no Error cause', () => {
+    it('leaves the compact fault log without a cause line when the error is missing an Error cause', () => {
         const errorLog = vi.spyOn(Logger.prototype, 'error').mockImplementation(() => undefined);
 
         handleEventFault(new Error('plain boom'), 'messageCreate', 'PingPong', [{}], mockCore(publish));
@@ -113,7 +113,7 @@ describe('handleEventFault', () => {
         errorLog.mockRestore();
     });
 
-    it('stays quiet for a non-reporting denial', () => {
+    it('publishes nothing for a non-reporting denial', () => {
         handleEventFault(new TestNotice(), 'voiceStateUpdate', 'Tracker', [{}], mockCore(publish));
 
         expect(publish).not.toHaveBeenCalled();

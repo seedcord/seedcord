@@ -117,7 +117,7 @@ describe('resolveEmojis', () => {
         expect(isSeedcordError(caught, 'SeedcordTypeError', SeedcordErrorCode.ConfigEmojiInvalid)).toBe(true);
     });
 
-    it('reports an emoji whose payload carries no id as not found', async () => {
+    it('reports an emoji whose payload has an empty id as not found', async () => {
         const caught = await failureOf({ Wave: ['wave', 'g1'] }, restWith({ g1: [apiEmoji('wave', '')] }));
 
         expect(caught).toMatchObject({

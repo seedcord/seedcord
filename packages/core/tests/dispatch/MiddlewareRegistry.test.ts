@@ -94,7 +94,7 @@ describe('MiddlewareRegistry', () => {
         for (const kind of kinds) expect(names(registry.chainFor(kind))).toEqual(['Everywhere']);
     });
 
-    it('drops a class from every chain on unregister', () => {
+    it('removes a class from every chain on unregister', () => {
         const audit = middleware('Audit');
         registry.register(audit);
         registry.unregister(audit);

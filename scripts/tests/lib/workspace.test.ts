@@ -41,7 +41,7 @@ describe('Workspace', () => {
         ]);
     });
 
-    it('omits the root path when the workspace has no root package', () => {
+    it('omits the root path when the workspace is missing a root package', () => {
         const rootless = { rootDir: '/repo', packages: snapshot.packages };
 
         expect(new Workspace(rootless).packageJsonPaths()).toEqual([

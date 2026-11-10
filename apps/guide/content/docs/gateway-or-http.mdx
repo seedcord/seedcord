@@ -11,25 +11,25 @@ Your bot opens a websocket to Discord and holds it open. Discord sends the event
 
 discord.js caches guilds, channels, roles, and members from the events on that connection, and its helpers read from that cache. With the Guilds intent on, `interaction.guild` returns the cached guild.
 
-The connection has to stay open, so a gateway bot runs as a long-lived process on a [server](/build/server), under Node or Bun or as one Bun binary.
+The bot has to keep the connection open, so a gateway bot runs as a long-lived process on a [server](/build/server), under Node or Bun or as one Bun binary.
 
 ## Http
 
-An http bot receives each interaction as a request that Discord posts to a URL you own. It has no discord.js dependency.
+An http bot receives each interaction as a request that Discord posts to a URL you own. It doesn't depend on discord.js.
 
-An http bot holds no connection to Discord, so it has no cache. To get anything the interaction doesn't carry about a guild or a member, fetch it from Discord's REST API. Each fetch counts against Discord's rate limit.
+An http bot never holds a connection to Discord, so it can't cache anything. To get anything the interaction doesn't carry about a guild or a member, fetch it from Discord's REST API. Each fetch counts against Discord's rate limit.
 
 The URL can point at any of these:
 
 - Your bot's own [server](/build/server), a Node or Bun process that listens on a port.
 - An HTTP route in an app you already run, like a Hono or Next.js app. With `port: false`, you pass each request from that route to `bot.fetch()`. [Inside your own server](/build/embed) has the setup.
-- [Cloudflare Workers](/build/workers), where nothing runs between requests. A Workers bot runs its startup tasks on the first request it receives and has no shutdown hook.
+- [Cloudflare Workers](/build/workers), where nothing runs between requests. A Workers bot runs its startup tasks on the first request it receives and never runs a shutdown hook.
 
 ## How to pick
 
 Some bots act without anyone running a command. Welcoming a member who joins needs an event that arrives over the websocket, and so does logging a deleted message. A bot that needs events like these is a gateway bot.
 
-A bot that only answers commands, buttons, and modals runs on either one. For those bots, the deciding question is where the bot runs. Gateway needs a process that is up all the time. Http needs a URL Discord can reach. It also fits a serverless host that starts your code for each request, because a websocket can't stay open there.
+A bot that only answers commands, buttons, and modals runs on either one. For those bots, the deciding question is where the bot runs. Gateway needs a process that is up all the time. Http needs a URL Discord can reach. It also fits a serverless host that starts your code for each request, because that host can't keep a websocket open.
 
 Gateway also fits a bot that reads server state often, because discord.js serves those reads from its cache. On http, each read is a REST call.
 

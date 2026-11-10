@@ -36,7 +36,7 @@ function makeContext(): FormatContext {
 }
 
 describe('renderSeeAlso', () => {
-    it('returns undefined when the comment has no block tags', () => {
+    it('returns undefined for a comment without block tags', () => {
         expect(renderSeeAlso(makeComment([]), makeContext())).toBeUndefined();
     });
 

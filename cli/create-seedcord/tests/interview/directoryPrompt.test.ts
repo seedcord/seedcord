@@ -8,7 +8,7 @@ import { describe, expect, it } from 'vite-plus/test';
 import { directoryStep } from '#interview/steps/directory';
 
 describe('the folder question', () => {
-    it('stays open on a folder that already has files', async () => {
+    it('keeps asking on a folder that already has files', async () => {
         await using scratch = await mkdtempDisposable(join(tmpdir(), 'create-seedcord-folder-'));
         const taken = join(scratch.path, 'taken');
         await mkdir(taken);

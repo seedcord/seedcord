@@ -127,7 +127,7 @@ class ButtonOnly extends InteractionMiddleware<InteractionKind.Button> {
     }
 }
 
-// type 4 is an autocomplete, and resolve keys it off the same command data a slash carries
+// type 4 is an autocomplete, and resolve keys it off the same command data a slash has
 const autocompletePayload = (): object => ({ ...slashPayload('search'), type: 4 });
 
 function routeFor(route: string, ctor: HandlerConstructor): ResolvedRoute {
@@ -318,7 +318,7 @@ describe('interactionDispatched from the http dispatcher', () => {
         expect(published[0]).toMatchObject({ routeId: 'slash:ctorboom', outcome: 'failed' });
     });
 
-    // a customId seedcord never minted reads an empty key, which both transports render as unrouted
+    // a customId that seedcord never minted reads an empty key, which both transports render as unrouted
     it('labels an unmintable customId unrouted', async () => {
         const match: ResolvedRoute = {
             kind: InteractionKind.Button,

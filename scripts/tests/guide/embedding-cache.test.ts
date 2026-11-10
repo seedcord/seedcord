@@ -15,14 +15,14 @@ async function tempFolder(): Promise<AsyncDisposable & { url: URL }> {
     };
 }
 
-// each document's vector carries its first character code
+// each document's vector has its first character code
 const vectorsFor = (documents: readonly string[]): Promise<number[][]> =>
     Promise.resolve(documents.map((document) => [document.charCodeAt(0), 1]));
 
 const decoded = (bytes: Uint8Array): number[] => [...new Float32Array(new Uint8Array(bytes).buffer)];
 
 describe('EmbeddingCache', () => {
-    it('embeds only the documents it has no vectors for, and deletes the ones that are gone', async () => {
+    it('embeds only the documents without vectors, and deletes the ones that were removed', async () => {
         await using folder = await tempFolder();
         const embed = vi.fn(vectorsFor);
         const cache = new EmbeddingCache(folder.url);

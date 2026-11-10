@@ -10,7 +10,7 @@ export function sendFlags(opts?: SendOpts): number {
     return flags;
 }
 
-// a deferral carries no content
+// a deferral doesn't carry content
 export function deferFlags(opts?: DeferOpts): number {
     return (opts?.ephemeral ?? true) ? MessageFlags.Ephemeral : 0;
 }

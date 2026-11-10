@@ -90,7 +90,7 @@ ruleTester.run('no-raw-interaction-acks', rule, {
             `,
             errors: [{ messageId: 'replyMember' }]
         },
-        // the sender reads its ack state once, when the dispatcher builds the handler ahead of the chain
+        // the sender reads its ack state once, when the dispatcher builds the handler before the chain
         {
             code: dedent`
                 import { InteractionMiddleware } from 'seedcord';

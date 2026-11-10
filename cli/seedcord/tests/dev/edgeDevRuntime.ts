@@ -24,7 +24,7 @@ import type { ResolvedEdgeTarget, ResolvedSeedcordConfig } from '#core/config/sc
 import type { LogRecord } from '@seedcord/types';
 import type { SeedcordInstance } from '@seedcord/types/internal';
 
-// a port probed up front can go to another worker before the runtime binds it
+// another worker can take a port probed up front before the runtime binds it
 const ANY_PORT = 0;
 
 function edgeTarget(projectDir: string, port: number): ResolvedEdgeTarget {

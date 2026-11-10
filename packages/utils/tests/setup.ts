@@ -1,4 +1,4 @@
 import { clearBuiltFiles } from './builtFilesSlot';
 
-// globalThis survives vi.resetModules
+// vi.resetModules doesn't reset globalThis
 clearBuiltFiles();

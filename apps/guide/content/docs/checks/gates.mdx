@@ -37,7 +37,7 @@ export class Ban extends SlashHandler<'ban'> {
 
 seedcord catches a gate's throw at the same boundary it catches your handler's. The user sees the same card either way. [Refusing a request](/replying/throwing) covers what each class produces.
 
-Every gate in the table below throws a [`Notice`](ref:core/Notice) except [`IgnoreBots`](ref:gateway/IgnoreBots), which throws a [`Silence`](ref:core/Silence). The message gets dropped and your bot doesn't reply.
+Every gate in the table below throws a [`Notice`](ref:core/Notice) except [`IgnoreBots`](ref:gateway/IgnoreBots), which throws a [`Silence`](ref:core/Silence). seedcord stops handling the message, so your bot doesn't reply.
 
 ## Several gates on one handler
 
@@ -57,9 +57,9 @@ A second `@Gated` on the same class adds its gates to the list. TypeScript appli
 | [`GuildOnly()`](ref:core/GuildOnly) | the call came from a server |
 | [`DmOnly()`](ref:core/DmOnly) | the call came from a direct message |
 | [`RequireRole(id)`](ref:core/RequireRole) | the caller holds that role |
-| [`RequirePermissions(bits)`](ref:core/RequirePermissions) | the caller holds every bit you name |
-| [`RequireBotPermissions(bits)`](ref:core/RequireBotPermissions) | your bot holds every bit you name |
-| [`Cooldown(duration)`](ref:core/Cooldown) | uses remain in the current window |
+| [`RequirePermissions(bits)`](ref:core/RequirePermissions) | the caller holds every bit you pass |
+| [`RequireBotPermissions(bits)`](ref:core/RequireBotPermissions) | your bot holds every bit you pass |
+| [`Cooldown(duration)`](ref:core/Cooldown) | the current window still has uses left |
 | [`Nsfw()`](ref:gateway/Nsfw) | the channel is age-restricted. Gateway interaction handlers only, modals excluded |
 | [`IgnoreBots`](ref:gateway/IgnoreBots) | the actor is a person. Gateway only, and event handlers only |
 | [`MentionPrefix`](ref:gateway/MentionPrefix) | the message starts with a mention of your bot, like `@bot ping`. `messageCreate` and `messageUpdate` handlers only |
@@ -94,7 +94,7 @@ export class Mentioned extends EventHandler<Events.MessageCreate> {
 }
 ```
 
-Every gate carries the context it reads, and `@Gated` checks that against the handler you put it on. `Nsfw()` reads an interaction's channel, so attaching it to the event handler below fails to compile. The error shows the gate and the handler kind.
+Every gate has the context it reads, and `@Gated` checks that against the handler you put it on. `Nsfw()` reads an interaction's channel, so attaching it to the event handler below fails to compile. The error shows the gate and the handler kind.
 
 ```ts twoslash
 // @errors: 1238
@@ -148,7 +148,7 @@ export const seedcord = new Seedcord({
 
 Each refusal card uses seedcord's default wording. Replace it when your command has a next step to offer, like pointing someone at the server where it works.
 
-`OwnerOnly`, `GuildOnly`, `DmOnly`, and `Nsfw` take the same [`GateNoticeOptions`](ref:core/GateNoticeOptions). Pass a [`Notice`](ref:core/Notice) class you wrote as `notice`, and the gate throws it in place of its own.
+`OwnerOnly`, `GuildOnly`, `DmOnly`, and `Nsfw` take the same [`GateNoticeOptions`](ref:core/GateNoticeOptions). Pass a [`Notice`](ref:core/Notice) class you wrote as `notice` to make the gate throw it in place of its own.
 
 ```ts twoslash
 import {

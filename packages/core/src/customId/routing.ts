@@ -18,7 +18,7 @@ import type { AnyCustomId, DecodedParams } from '@seedcord/custom-id';
 export const ComponentDefsKey = Symbol.for('seedcord:custom-id:component-defs');
 
 /**
- * the phantom a component handler base carries. a route decorator constrains its argument to this, so
+ * the phantom a component handler base has. a route decorator constrains its argument to this, so
  * passing different defs to the decorator and the handler's generic is a compile error. never set at runtime.
  *
  * @internal
@@ -35,7 +35,7 @@ export interface DecodedComponentRoute {
 }
 
 /**
- * throws `CustomIdHandlerRouteMissing` when the class has no stored defs. a drifted or corrupt wire
+ * throws `CustomIdHandlerRouteMissing` when the class doesn't have stored defs. a drifted or corrupt wire
  * throws `StaleCustomId` or `InvalidCustomId`.
  *
  * @internal

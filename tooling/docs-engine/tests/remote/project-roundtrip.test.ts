@@ -21,7 +21,7 @@ describe('project-file serialize/deserialize roundtrip', () => {
     });
 
     it('rebuilds the same indexes, search, and directory after a JSON roundtrip', () => {
-        // eslint-disable-next-line unicorn/prefer-structured-clone -- exercises the JSON wire round-trip the remote docs format uses
+        // eslint-disable-next-line unicorn/prefer-structured-clone -- tests the JSON wire round-trip the remote docs format uses
         const wire = JSON.parse(JSON.stringify(serializeProject(original))) as DocProjectFile;
         const restored = deserializeProject(wire);
 

@@ -129,7 +129,7 @@ async function awardsLeft(memberId: string): Promise<number> {
 
 ## Clearing a key
 
-A window sometimes counts a use that shouldn't have counted, like an award a moderator revoked. `reset` drops every use recorded against a key, so the next `charge` starts a fresh window.
+A window sometimes counts a use that shouldn't have counted, like an award that a moderator revoked. `reset` deletes every use recorded against a key, so the next `charge` starts a fresh window.
 
 ```ts twoslash
 import { buildKey } from '@seedcord/gateway';

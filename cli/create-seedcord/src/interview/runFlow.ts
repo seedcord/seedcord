@@ -7,7 +7,7 @@ import type { AnyStep, Answers, Step } from './types';
 import type { Prompter } from '@seedcord/cli-prompts';
 
 function unansweredReason<Key extends keyof Answers>({ flag }: Step<Key>): string {
-    const reason = 'Required when there is no terminal to ask on.';
+    const reason = "Required when the CLI can't ask in a terminal.";
     if (flag.noFlag === undefined) return reason;
 
     return `${reason} Pass --${noFlagName(flag.name)} to ${flag.noFlag}.`;

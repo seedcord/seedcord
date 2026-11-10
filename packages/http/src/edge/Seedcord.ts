@@ -159,7 +159,7 @@ export class Seedcord extends PluginHost<'http', 'edge'> {
 
     async #start(): Promise<void> {
         const starting = this.#startOnce();
-        // if discord drops the first request, workers cancels startup and every later request waits on it forever.
+        // if discord disconnects during the first request, workers cancels startup and every later request waits on it forever.
         // the await below already throws a failed startup, so waitUntil gets one that never rejects
         keepRequestOpenFor(starting.catch(() => undefined));
         await starting;
@@ -196,7 +196,7 @@ export class Seedcord extends PluginHost<'http', 'edge'> {
             await this.#plugins.rollback();
             const oldInits = this.#plugins.timedOutInitsSettled();
             // cloudflare cancels a timed-out init once its request ends, so a retry can't overlap it there.
-            // seedcord dev starts outside a request and nothing cancels it, so dev just waits it out.
+            // seedcord dev starts outside a request and nothing cancels it, so dev waits it out.
             // we tried guarding overlapping inits on one plugin instead and every guard opened a new race. not worth it
             const waited = requestScope.getStore() ? settleWithin(oldInits, TIMED_OUT_INIT_WAIT_MS) : oldInits;
             keepRequestOpenFor(

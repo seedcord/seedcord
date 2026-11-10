@@ -40,7 +40,7 @@ const pager = new Paginator({
 @ButtonRoute(pager.cursor)
 class BansNav extends pager.Handler {}
 
-// a paginator whose loader records the context the Paginator builds, to pin the DM guild-null threading.
+// a paginator whose loader records the context that the Paginator builds, to pin the DM guild-null threading.
 const seenContexts: PageContext[] = [];
 const Reminders = new Paginator({
     prefix: 'reminders',

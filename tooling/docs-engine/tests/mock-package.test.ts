@@ -306,7 +306,7 @@ describe('DocsEngine mock package integration', () => {
         const concrete = fn.signatures.find((sig) => sig.typeParameters.length === 0);
         expect(generic?.typeParameters.map((tp) => tp.name)).toEqual(['TypeT']);
         expect(concrete).toBeDefined();
-        // render.typeParams mirrors the per-signature list, so a concrete overload renders no `<…>`.
+        // render.typeParams mirrors the per-signature list, so a concrete overload doesn't render `<…>`.
         expect(concrete?.render?.typeParams ?? []).toEqual([]);
     });
 
@@ -325,7 +325,7 @@ describe('DocsEngine mock package integration', () => {
 
     it('resolves a bare same-package {@link} in @see to a target reference at extraction time', async () => {
         // a bare {@link MockEnum} only resolves when the adapter passes the owning ApiItem as context;
-        // without it the link carries no target and the see-also renderer falls back to plain text
+        // without it the link doesn't have a target and the see-also renderer falls back to plain text
         const mockClass = await getNodeBySlug('mock-class');
         const enumLink = (mockClass.comment?.blockTags ?? [])
             .filter((tag) => tag.tag === '@see')

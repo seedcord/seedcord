@@ -27,7 +27,7 @@ describe('CoordinatedStartup run', () => {
 });
 
 describe('CoordinatedStartup failure and guards', () => {
-    it('rethrows and stays unready when a task rejects', async () => {
+    it('rethrows and leaves isReady false when a task rejects', async () => {
         const startup = new CoordinatedStartup();
 
         startup.addTask(StartupPhase.Configuration, 'reject', () => Promise.reject(new Error('boom')));

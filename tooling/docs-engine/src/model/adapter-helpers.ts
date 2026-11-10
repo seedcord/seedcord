@@ -201,7 +201,7 @@ export function sourcesIn(table: PackageSourceIndex, ownRow: string, baseRow: st
     }));
 }
 
-// a base class from another package has no row in this package's source table
+// a base class from another package doesn't have a row in this package's source table
 export function baseRowName(
     memberName: string,
     inheritedFrom: DocReference | null,

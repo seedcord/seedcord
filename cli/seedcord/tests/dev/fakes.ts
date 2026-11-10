@@ -19,7 +19,7 @@ export function fakeBot(overrides: Record<PropertyKey, unknown> = {}): Record<Pr
     };
 }
 
-// runs `module` as the bot in this process. `emit` goes out from startBot, where a real runtime reports the port
+// runs `module` as the bot in this process. startBot sends `emit` at the point where a real runtime reports the port
 export function fakeRuntime(module: unknown, emit?: DevEvent): DevRuntime {
     const lifecycle = new InstanceLifecycle();
     let onEvent: DevEventHandler | undefined;

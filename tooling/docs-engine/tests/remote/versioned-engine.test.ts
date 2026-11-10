@@ -22,7 +22,7 @@ function jsonResponse(body: unknown, status = 200): Response {
     return new Response(JSON.stringify(body), { status });
 }
 
-// default to a fresh per-engine cache so tests stay isolated while the model-cache test shares one.
+// default to a fresh per-engine cache so each test gets its own cache, while the model-cache test shares one.
 function makeEngine(fetcher: Fetcher, modelCache = new Map<string, DocPackageModel>()): VersionedDocsEngine {
     return new VersionedDocsEngine(new IndexLoader(INDEX_URL, fetcher, () => true), fetcher, modelCache);
 }
@@ -59,7 +59,7 @@ describe('VersionedDocsEngine', () => {
                     prerelease: null,
                     entities: { logger: 'class' }
                 },
-                // Known but declares no entities here: a ref mis-attributed to it re-homes elsewhere.
+                // Known but doesn't declare entities here: a ref mis-attributed to it re-homes elsewhere.
                 types: {
                     fullName: '@seedcord/types',
                     stable: { latest: '0.0.0', latestByMinor: { '0.0': '0.0.0' }, latestByMajor: {} },
@@ -153,7 +153,7 @@ describe('VersionedDocsEngine', () => {
         expect(engine.resolver().href(MOCK_PACKAGE_FULL_NAME, ref)).toBe('/packages/logger/0.0.0/classes/logger#debug');
     });
 
-    it('points a cross-package parameter ref at its owning member anchor, not the parameter', async () => {
+    it('points a cross-package parameter ref at its owning member anchor', async () => {
         const engine = makeEngine(fixtureFetcher());
         await engine.setVersion(MOCK_FOLDER, 'latest');
 
@@ -183,7 +183,7 @@ describe('VersionedDocsEngine', () => {
     });
 
     it('returns an unresolved target for an external package absent from the index', async () => {
-        // discord.js has no page on the reference site. href() reads the external-url table for it
+        // discord.js doesn't have a page on the reference site. href() reads the external-url table for it
         const engine = makeEngine(fixtureFetcher());
         await engine.setVersion(MOCK_FOLDER, 'latest');
 

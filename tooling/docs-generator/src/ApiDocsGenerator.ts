@@ -107,7 +107,7 @@ export class ApiDocsGenerator {
             .filter(({ name }) => name === target || unscopedName(name) === target)
             .map(({ dir }) => dir);
         if (matches.length === 0) {
-            throw new Error(`--package "${target}" matched no package in the workspace`);
+            throw new Error(`--package "${target}" didn't match any package in the workspace`);
         }
         return matches;
     }

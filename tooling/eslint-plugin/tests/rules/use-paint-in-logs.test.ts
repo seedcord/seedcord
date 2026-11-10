@@ -25,7 +25,7 @@ ruleTester.run('use-paint-in-logs', rule, {
             import chalk from 'chalk';
             const banner = chalk.red('seedcord');
         `,
-        // the same goes for a tagged template outside a log call
+        // a tagged chalk template outside a log call too
         dedent`
             import chalk from 'chalk';
             const banner = chalk.red\`seedcord\`;
@@ -99,7 +99,7 @@ ruleTester.run('use-paint-in-logs', rule, {
             `,
             errors: [{ messageId: 'usePaint' }]
         },
-        // a later argument carries the styling
+        // a later argument has the styling
         {
             code: dedent`
                 import { Logger } from '@seedcord/logger';
@@ -149,7 +149,7 @@ ruleTester.run('use-paint-in-logs', rule, {
             `,
             errors: [{ messageId: 'usePaint' }]
         },
-        // a plugin logs through the logger it inherits, with no Logger import in the file
+        // a plugin logs through the logger it inherits, without a Logger import in the file
         {
             code: dedent`
                 import { PluginBase } from '@seedcord/core';

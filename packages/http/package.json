@@ -73,6 +73,7 @@
         "@cloudflare/vitest-plugin": "^1.6.0",
         "@discordjs/builders": "catalog:peer",
         "@seedcord/eslint-config": "workspace:^",
+        "@seedcord/prose": "workspace:^",
         "@seedcord/tsconfig": "workspace:^",
         "@seedcord/tsdown-config": "workspace:^",
         "@seedcord/vite-config": "workspace:^",

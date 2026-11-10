@@ -1,0 +1,11 @@
+extends: existence
+link: https://github.com/seedcord/seedcord/blob/next/.agents/skills/writing-voice/SKILL.md
+message: "'%s' makes the reader picture what the sentence left out. Cut it, or put 'only' before the thing you mean to limit."
+level: suggestion
+ignorecase: true
+tokens:
+  - 'instead of'
+  - 'and nothing else'
+  - "and that's it"
+  - 'nothing more'
+  - 'and no other'
