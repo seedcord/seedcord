@@ -15,6 +15,7 @@ export const acceptedPatterns = [
     '0 0 * * 5-6#L',
     '0 0 * * 5-6#2',
     '0 0 * * 5-6L',
+    '0 12 1 * +MON',
     // croner trims a pattern and splits it on runs of whitespace
     ' 0  9 *\t* * ',
     ' @weekly ',

@@ -37,9 +37,11 @@ afterEach(() => {
 });
 
 describe('Tasks scheduled jobs', () => {
-    it('runs a job at its time and deletes the record', async () => {
+    it('runs a job at its time, publishes it with the job id, and deletes the record', async () => {
         await using booted = await start(jobs, driver);
         const { host, tasks } = booted;
+        const ran = vi.fn();
+        host.bus.on('taskRan', ran);
 
         const job = await tasks.schedule(Reminder, { in: '1h' });
 
@@ -51,6 +53,9 @@ describe('Tasks scheduled jobs', () => {
 
         await vi.advanceTimersByTimeAsync(1);
         expect(host.runs).toEqual([{ task: 'reminder', trigger: 'scheduled', data: undefined }]);
+        expect(ran).toHaveBeenCalledWith(
+            expect.objectContaining({ key: 'reminder', trigger: 'scheduled', jobId: job.id, outcome: 'finished' })
+        );
         expect(tasks.jobs()).toEqual([]);
         expect(driver.stored.size).toBe(0);
     });
@@ -209,26 +214,17 @@ describe('Tasks scheduled jobs', () => {
         expect(driver.stored.size).toBe(0);
     });
 
-    it('publishes a finished run with the job id', async () => {
-        await using booted = await start(jobs, driver);
-        const { host, tasks } = booted;
-        const ran = vi.fn();
-        host.bus.on('taskRan', ran);
-
-        const job = await tasks.schedule(Reminder, { in: '1s' });
-        await vi.advanceTimersByTimeAsync(SECOND_MS);
-
-        expect(ran).toHaveBeenCalledWith(
-            expect.objectContaining({ key: 'reminder', trigger: 'scheduled', jobId: job.id, outcome: 'finished' })
-        );
-    });
-
-    it('runs a job again when shutdown interrupts it', async () => {
+    it('reports a run that shutdown interrupts, skips onError, and runs the job again', async () => {
         await using first = await start(jobs, driver);
+        const ran = vi.fn();
+        first.host.bus.on('taskRan', ran);
+        const onError = vi.spyOn(Abortable.prototype, 'onError');
         await first.tasks.schedule(Abortable, { in: '1s' });
         await vi.advanceTimersByTimeAsync(SECOND_MS);
 
         await first.tasks.dispose();
+        expect(ran).toHaveBeenCalledWith(expect.objectContaining({ key: 'Abortable', outcome: 'interrupted' }));
+        expect(onError).not.toHaveBeenCalled();
         expect(driver.stored.size).toBe(1);
 
         await using second = await start(jobs, driver);
@@ -236,21 +232,6 @@ describe('Tasks scheduled jobs', () => {
 
         expect(first.host.runs).toHaveLength(1);
         expect(second.host.runs).toHaveLength(1);
-    });
-
-    it('reports a run that shutdown interrupts as interrupted, without calling onError', async () => {
-        await using booted = await start(jobs, driver);
-        const { host, tasks } = booted;
-        const ran = vi.fn();
-        host.bus.on('taskRan', ran);
-        const onError = vi.spyOn(Abortable.prototype, 'onError');
-        await tasks.schedule(Abortable, { in: '1s' });
-        await vi.advanceTimersByTimeAsync(SECOND_MS);
-
-        await tasks.dispose();
-
-        expect(ran).toHaveBeenCalledWith(expect.objectContaining({ key: 'Abortable', outcome: 'interrupted' }));
-        expect(onError).not.toHaveBeenCalled();
     });
 
     it('runs a job again when the process died during it', async () => {

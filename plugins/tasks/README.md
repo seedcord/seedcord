@@ -23,7 +23,7 @@
 
 ## About
 
-`@seedcord/plugin-tasks` runs code without a command to start it. A task with a cron pattern runs on that schedule, and any task can run once at a later time, like an unban a day from now.
+`@seedcord/plugin-tasks` runs your bot's code on a schedule. A task with a cron pattern runs on that schedule, and any task can run once at a later time, like an unban a day from now.
 
 Install it when your bot needs recurring work or a job that runs later. It works with a gateway bot and with an http bot on your own server. On a Cloudflare Workers bot, attaching it is a compile error.
 

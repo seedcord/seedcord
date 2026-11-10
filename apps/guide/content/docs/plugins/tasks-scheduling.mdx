@@ -86,8 +86,9 @@ export class TempBan extends SlashHandler<'tempban'> {
         const userId = this.options.getUser('target').id;
         const unbanJobs =
             this.core.kv.collection<string>('unban-job');
+        const key = `${guildId}:${userId}`;
 
-        const earlier = await unbanJobs.get(userId);
+        const earlier = await unbanJobs.get(key);
         if (earlier !== undefined) {
             await this.core.tasks.cancel(earlier);
         }
@@ -97,7 +98,7 @@ export class TempBan extends SlashHandler<'tempban'> {
             in: '1d',
             data: { guildId, userId }
         });
-        await unbanJobs.set(userId, job.id);
+        await unbanJobs.set(key, job.id);
 
         await guild.bans.create(userId);
         await this.reply('Banned for a day.');
@@ -108,10 +109,10 @@ export class TempBan extends SlashHandler<'tempban'> {
 `TempBan` does three things, in this order:
 
 1. If the member already has an unban waiting from an earlier `/tempban`, it cancels that job. Otherwise the old job would unban them early.
-2. It schedules the new unban and stores the job's `id` in the `unban-job` collection, so that `/unban` can cancel it later.
+2. It schedules the new unban and stores the job's `id` in the `unban-job` collection, so that `/unban` can cancel it later. The key holds the server's id and the member's id, because one member can be banned in two servers that use your bot.
 3. It bans the member.
 
-Since the ban comes last, nobody gets banned if `schedule()` throws. If the ban fails instead, the unban still runs a day later. Discord answers it with the `Unknown Ban` error (10026), so that run fails and nobody gets unbanned twice.
+Since the ban comes last, nobody gets banned if `schedule()` throws. If the ban fails instead, the unban still runs a day later. Discord rejects that unban with [`Unknown Ban`](https://discord.com/developers/docs/topics/opcodes-and-status-codes#json-json-error-codes) (10026), so the run fails and changes nothing.
 
 `job` is a [`ScheduledJob`](ref:plugin-tasks/ScheduledJob) with the job's `id`, its task's `key`, and its `at` time as a `Date`. It doesn't hold the job's data, so you can't look up a member's job from [`jobs()`](ref:plugin-tasks/Tasks.jobs). That's why `TempBan` stores the id itself.
 
@@ -146,23 +147,25 @@ declare module '@seedcord/gateway' {
 @SlashRoute('unban')
 export class LiftBan extends SlashHandler<'unban'> {
     public async execute(): Promise<void> {
+        const { guild, guildId } = this.event;
         const userId = this.options.getUser('target').id;
         const unbanJobs =
             this.core.kv.collection<string>('unban-job');
-        const jobId = await unbanJobs.get(userId);
+        const key = `${guildId}:${userId}`;
+        const jobId = await unbanJobs.get(key);
 
         if (jobId !== undefined) {
             await this.core.tasks.cancel(jobId);
-            await unbanJobs.delete(userId);
+            await unbanJobs.delete(key);
         }
 
-        await this.event.guild.bans.remove(userId);
+        await guild.bans.remove(userId);
         await this.reply('Unbanned.');
     }
 }
 ```
 
-`LiftBan` reads the id that `TempBan` stored and passes it to [`cancel()`](ref:plugin-tasks/Tasks.cancel). `cancel()` deletes the job and resolves to `true`. It resolves to `false` if no job has that id, or if the job's run has already started.
+`LiftBan` reads the id that `TempBan` stored and passes it to [`cancel()`](ref:plugin-tasks/Tasks.cancel). `cancel()` deletes the job and resolves to `true`. It resolves to `false` if the id doesn't match a job, or if the job's run has already started.
 
 `jobs()` returns an array with a `ScheduledJob` for each job that's waiting in this process.
 
@@ -252,7 +255,7 @@ The plugin stores jobs under the key that you pass to `attach`, here `'tasks'`. 
 
 The plugin deletes a job once its run ends. If the process dies during the run, your kv store still holds the job, and it runs again after the restart. The same happens if the bot shuts down during the run and the task throws, and if the plugin can't delete the job after the run.
 
-The plugin doesn't stop that second run, so write each task for jobs to be safe to run twice. A second run of `Unban` gets the `Unknown Ban` error from Discord. That run fails, but nobody gets unbanned twice. A task that sends a DM isn't safe. Record each DM in [`core.kv`](/built-ins) and check for it before you send.
+The plugin doesn't stop that second run, so write each task for jobs to be safe to run twice. A second run of `Unban` gets the `Unknown Ban` error from Discord. It fails and changes nothing. A task that sends a DM isn't safe. Record each DM in [`core.kv`](/built-ins) and check for it before you send.
 
 ### Trying again after a failure
 
@@ -288,6 +291,7 @@ export class Unban extends Task<{
     }
 
     public override async onError(error: Error): Promise<void> {
+        const { guildId, userId } = this.data;
         const attempt = this.data.attempt + 1;
         if (attempt > MAX_ATTEMPTS || isUnknownBan(error)) return;
 
@@ -297,7 +301,7 @@ export class Unban extends Task<{
         });
         await this.core.kv
             .collection<string>('unban-job')
-            .set(this.data.userId, job.id);
+            .set(`${guildId}:${userId}`, job.id);
     }
 }
 

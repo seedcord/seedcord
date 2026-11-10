@@ -474,11 +474,10 @@ describe('Tasks cron tasks', () => {
     });
 
     it('applies the plugin timezone to a task without one', async () => {
-        await using booted = await start({ ...crons, timezone: 'Asia/Tokyo' });
-        const { tasks } = booted;
+        await using booted = await start({ path: path.join(fixtures, 'resume'), timezone: 'Asia/Tokyo' });
 
-        expect(tasks.crons().find((status) => status.key === 'Tick')?.timezone).toBe('Asia/Tokyo');
-        expect(tasks.crons().find((status) => status.key === 'slow')?.timezone).toBe('America/New_York');
+        // Noon runs at 12:00 Tokyo time, which is 03:00 UTC
+        expect(booted.tasks.nextRun(Noon)).toEqual(new Date('2030-01-16T03:00:00Z'));
     });
 
     it('throws for pause on a task without a pattern', async () => {

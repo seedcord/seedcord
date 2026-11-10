@@ -112,7 +112,7 @@ TypeScript can't check a pattern typed as `string`, like one read from `.env`. T
 
 ## Setting a timezone
 
-A pattern runs in the timezone of the machine that runs your bot. On a server set to UTC, `0 9 * * *` runs at 09:00 UTC, even if your members are in New York. Set `timezone` on the plugin for every task, or on one task.
+Without a `timezone`, a pattern uses the clock of the machine your bot runs on. On a server set to UTC, `0 9 * * *` runs at 09:00 UTC, even if your members are in New York. Set `timezone` on the plugin for every task, or on one task.
 
 ```ts twoslash title="src/tasks/Digest.ts"
 import { RegisterTask, Task } from '@seedcord/plugin-tasks/gateway';
