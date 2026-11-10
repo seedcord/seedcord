@@ -174,8 +174,8 @@ export enum SeedcordErrorCode {
     /** `dispatch.require()` was called for a key that nothing set on this dispatch. */
     DispatchStateMissing = 1617,
 
-    /** A `Cooldown` gate got a duration that doesn't parse, or one of zero or less. */
-    GateInvalidCooldownDuration = 1701,
+    /** A duration string doesn't parse, or a duration is zero, negative, or not finite. */
+    InvalidDuration = 1701,
 
     /** A paginator got a `perPage` that is not a positive integer. */
     PaginationInvalidPerPage = 1801,
@@ -227,6 +227,21 @@ export enum SeedcordErrorCode {
     PluginKyselyNonErrorFailure = 2205,
     /** Creating the target Postgres database failed. */
     PluginKyselyBootstrapFailed = 2206,
+
+    /** A `Tasks` method got a task class that its `path` did not load. */
+    PluginTasksNotLoaded = 2301,
+    /** croner rejected a task's cron pattern. */
+    PluginTasksInvalidPattern = 2302,
+    /** A task option, the plugin's `timezone`, or the `at` passed to `schedule` has a value that the plugin can't use. */
+    PluginTasksInvalidOption = 2303,
+    /** `pause`, `resume`, or `nextRun` got a task without a cron pattern. */
+    PluginTasksPatternMissing = 2304,
+    /** `schedule` got an `at` number from before 2000, which is likely seconds or a missing value. */
+    PluginTasksAtTooEarly = 2305,
+    /** `schedule` got an `in` that ends past the last date a `Date` can hold. */
+    PluginTasksDurationTooLong = 2306,
+    /** A `Tasks` method got a class whose task key belongs to a different loaded class. */
+    PluginTasksKeyTaken = 2307,
 
     /** Someone pressed Ctrl-C at a prompt in `seedcord` or `create-seedcord`. */
     CliCancelled = 3001,

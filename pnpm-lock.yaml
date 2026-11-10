@@ -713,6 +713,9 @@ importers:
       '@seedcord/plugin-mongoose':
         specifier: workspace:^
         version: link:../../plugins/mongoose
+      '@seedcord/plugin-tasks':
+        specifier: workspace:^
+        version: link:../../plugins/tasks
       '@seedcord/prose':
         specifier: workspace:^
         version: link:../../tooling/prose
@@ -1824,6 +1827,61 @@ importers:
       mongoose:
         specifier: catalog:peer
         version: 9.11.4
+
+  plugins/tasks:
+    dependencies:
+      '@seedcord/errors':
+        specifier: workspace:^
+        version: link:../../packages/errors
+      '@seedcord/logger':
+        specifier: workspace:^
+        version: link:../../packages/logger
+      '@seedcord/utils':
+        specifier: workspace:^
+        version: link:../../packages/utils
+      croner:
+        specifier: ^11.0.0
+        version: 11.0.0
+      es-toolkit:
+        specifier: catalog:deps
+        version: 1.53.2
+      type-fest:
+        specifier: catalog:deps
+        version: 5.10.0
+      typescript:
+        specifier: catalog:consumerTypes
+        version: 6.0.3
+    devDependencies:
+      '@seedcord/core':
+        specifier: workspace:^
+        version: link:../../packages/core
+      '@seedcord/eslint-config':
+        specifier: workspace:^
+        version: link:../../tooling/eslint-config
+      '@seedcord/gateway':
+        specifier: workspace:^
+        version: link:../../packages/gateway
+      '@seedcord/http':
+        specifier: workspace:^
+        version: link:../../packages/http
+      '@seedcord/prose':
+        specifier: workspace:^
+        version: link:../../tooling/prose
+      '@seedcord/tsconfig':
+        specifier: workspace:^
+        version: link:../../tooling/tsconfig
+      '@seedcord/tsdown-config':
+        specifier: workspace:^
+        version: link:../../tooling/tsdown-config
+      '@seedcord/types':
+        specifier: workspace:^
+        version: link:../../packages/types
+      '@seedcord/vite-config':
+        specifier: workspace:^
+        version: link:../../tooling/vite-config
+      envapt:
+        specifier: catalog:peer
+        version: 9.2.0
 
   scripts:
     dependencies:
@@ -6770,6 +6828,10 @@ packages:
     peerDependenciesMeta:
       typescript:
         optional: true
+
+  croner@11.0.0:
+    resolution: {integrity: sha512-T17ADjdttrVToyzLpLq9Xb9xzcMwpQ/M3Qs9szhh0MVNTbv6NWQ9OFYa2qlzPYXFMn+uoDlnW1IpIv6cAvFtyA==}
+    engines: {node: '>=18.0'}
 
   cross-env@10.1.0:
     resolution: {integrity: sha512-GsYosgnACZTADcmEyJctkJIoqAhHjttw7RsFrVoJNXbsWWqaq6Ym+7kZjq6mS45O0jij6vtiReppKQEtqWy6Dw==}
@@ -14389,6 +14451,8 @@ snapshots:
       parse-json: 5.2.0
     optionalDependencies:
       typescript: 6.0.3
+
+  croner@11.0.0: {}
 
   cross-env@10.1.0:
     dependencies:
