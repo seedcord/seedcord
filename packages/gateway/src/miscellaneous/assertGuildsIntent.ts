@@ -6,12 +6,11 @@ import type { BitFieldResolvable, GatewayIntentsString } from 'discord.js';
 
 interface DeployableCommand {
     readonly name: string;
-    toJSON(): { contexts?: InteractionContextType[] | undefined };
+    readonly contexts?: readonly InteractionContextType[] | undefined;
 }
 
 // discord reads a command without contexts as reachable from all three
-function reachesGuilds(command: DeployableCommand): boolean {
-    const contexts = command.toJSON().contexts;
+function reachesGuilds({ contexts }: DeployableCommand): boolean {
     if (!contexts || contexts.length === 0) return true;
     return contexts.includes(InteractionContextType.Guild);
 }

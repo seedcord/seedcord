@@ -12,7 +12,8 @@ import type {
 } from '#registries/ContextMenuRegistry';
 import type { SlashRegistry } from '#registries/SlashRegistry';
 import type { CommandRef, LinkedCommands } from '#src/commands/linkCommands';
-import type { CommandBuilder, DeployResult } from '#src/commands/types';
+import type { CommandBody } from '#src/commands/putCommands';
+import type { DeployResult } from '#src/commands/types';
 import type { ILogger } from '@seedcord/types';
 
 const commandStorage = accessorStore<CommandInfo>();
@@ -131,11 +132,8 @@ export function warnLinks(
 export class CommandInjector {
     private readonly logger = new Logger('Commands', { channel: 'bot' });
 
-    public inject(deploy: DeployResult, all: readonly CommandBuilder[]): void {
-        const linked = linkCommands(
-            deploy,
-            all.map((command) => command.toJSON())
-        );
+    public inject(deploy: DeployResult, all: readonly CommandBody[]): LinkedCommands {
+        const linked = linkCommands(deploy, all);
         installLinks(linked);
 
         warnLinks(this.logger, linked);
@@ -148,5 +146,6 @@ export class CommandInjector {
             'context menus':
                 Object.keys(linked.contextMenus.user).length + Object.keys(linked.contextMenus.message).length
         });
+        return linked;
     }
 }

@@ -65,6 +65,21 @@ describe('CommandRegistry.setCommands', () => {
         ]);
     });
 
+    it('links the command under the name prepareCommands gave it', async () => {
+        const put = vi.fn().mockResolvedValue(deployedAs('123', 'pong'));
+        const rename = (commands: readonly CommandBody[]): void => {
+            for (const command of commands) command.name = 'pong';
+        };
+        const registry = new CommandRegistry(coreWith(put, rename));
+        registry.scopedCommands.set(GLOBAL_ID, [
+            new SlashCommandBuilder().setName('ping').setDescription('Replies with Pong!')
+        ]);
+
+        await registry.setCommands();
+
+        expect(mentions.pong?.mention).toBe('</pong:123>');
+    });
+
     it('hands the abort signal to every put', async () => {
         const put = vi.fn().mockResolvedValue(deployedAs('123', 'ping'));
         const registry = registryWith(put);
@@ -130,12 +145,12 @@ describe('CommandRegistry.setCommands', () => {
         const registry = registryWith(put);
         registry.scopedCommands.set('111', [new SlashCommandBuilder().setName('config').setDescription('Config')]);
 
-        const result = await registry.setCommands();
+        await registry.setCommands();
 
         expect(put.mock.calls.map(([route]: unknown[]) => route)).toEqual([
             Routes.applicationGuildCommands(APP, '111')
         ]);
-        expect(result.get('111')?.get('g-1')?.name).toBe('config');
+        expect(mentions.config?.mention).toBe('</config:g-1>');
     });
 
     it('sends the built command json as the put body', async () => {

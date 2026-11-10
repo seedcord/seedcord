@@ -85,7 +85,7 @@ describe('CommandInjector', () => {
     });
 
     it('ignores a context menu deployed under the same name as a slash command', () => {
-        const slash = new SlashCommandBuilder().setName('report').setDescription('file a report');
+        const slash = new SlashCommandBuilder().setName('report').setDescription('file a report').toJSON();
 
         new CommandInjector().inject(
             deploy(
@@ -101,7 +101,7 @@ describe('CommandInjector', () => {
     });
 
     it('ignores a same-named guild context menu when resolving a guild slash command', () => {
-        const slash = new SlashCommandBuilder().setName('report').setDescription('file a report');
+        const slash = new SlashCommandBuilder().setName('report').setDescription('file a report').toJSON();
         const registry = [slash];
 
         new CommandInjector().inject(
@@ -116,14 +116,13 @@ describe('CommandInjector', () => {
     });
 
     it('removes stale keys when re-injected after a rename', () => {
-        const builders = [ping()];
         const injector = new CommandInjector();
-        injector.inject(deploy(deployed([['1', 'ping']])), builders);
+        injector.inject(deploy(deployed([['1', 'ping']])), [ping()]);
         expect(mentionOf('ping')).toBe('</ping:1>');
 
-        builders.length = 0;
-        builders.push(new SlashCommandBuilder().setName('pong').setDescription('Replies with Ping!'));
-        injector.inject(deploy(deployed([['2', 'pong']])), builders);
+        injector.inject(deploy(deployed([['2', 'pong']])), [
+            new SlashCommandBuilder().setName('pong').setDescription('Replies with Ping!').toJSON()
+        ]);
 
         expect(mentionOf('pong')).toBe('</pong:2>');
         expect(() => mentionOf('ping')).toThrow();
@@ -141,7 +140,7 @@ describe('CommandInjector', () => {
     });
 
     it('keeps a route named __proto__ as an ordinary entry', () => {
-        const odd = new SlashCommandBuilder().setName('__proto__').setDescription('edge');
+        const odd = new SlashCommandBuilder().setName('__proto__').setDescription('edge').toJSON();
 
         new CommandInjector().inject(deploy(deployed([['7', '__proto__']])), [odd]);
 

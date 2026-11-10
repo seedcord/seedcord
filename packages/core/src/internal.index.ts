@@ -64,7 +64,6 @@ export {
 export { contextMenuLeaves } from '#src/commands/contextMenuLeaves';
 export type { ContextMenuLeaves } from '#src/commands/contextMenuLeaves';
 export { isCommandClass, type CommandCtor } from '#src/commands/isCommandClass';
-export { slashRouteLeaves } from '#src/commands/slashRouteLeaves';
 export type { CommandBuilder, DeployResult } from '#src/commands/types';
 
 export type { GateFitsWith } from '#gates/matching';
