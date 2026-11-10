@@ -29,7 +29,7 @@ const REPORT_BUDGET = 1800;
 
 const CAUSE_LABEL = '\n\nCaused by:\n';
 
-// breakBackticks increases the text by 2 chars per run
+// breakBackticks grows the text by 2 chars per run
 function body(value: unknown): string {
     const raw = Error.isError(value) ? (value.stack ?? `${value.name}: ${value.message}`) : String(value);
     return breakBackticks(stripAnsi(raw));
@@ -75,11 +75,8 @@ export function errorReport(error: Error): string {
     const members: unknown[] = error instanceof AggregateError ? error.errors : [];
     if (members.length === 0) return headReport(error, REPORT_BUDGET);
 
-    let head = body(error);
-    if (Error.isError(error.cause)) head += `${CAUSE_LABEL}${body(error.cause)}`;
-
     // a long parent stack would otherwise push the dropped-count line off the end
-    const report = clamp(head, REPORT_BUDGET - omittedLine(members.length).length);
+    const report = headReport(error, REPORT_BUDGET - omittedLine(members.length).length);
     return report + memberReport(members, REPORT_BUDGET - report.length);
 }
 

@@ -1,6 +1,6 @@
 import { ContainerBuilder } from '@discordjs/builders';
 
-import { getConfirmation } from '#bot/confirm/index';
+import { getConfirmation } from '#bot/confirm';
 
 import type { ButtonHandler } from '#handlers/interaction/components/ButtonHandler';
 import type { ModalHandler } from '#handlers/interaction/components/ModalHandler';

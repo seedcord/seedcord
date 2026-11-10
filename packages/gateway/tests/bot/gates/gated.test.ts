@@ -14,18 +14,13 @@ import { GatedMetadataKey } from '@seedcord/core/internal';
 import { describe, expect, it } from 'vite-plus/test';
 
 import { Gated } from '#bDecorators/Gated';
-import { EventHandler } from '#handlers/event/index';
+import { EventHandler } from '#handlers/event';
 import { AutocompleteHandler } from '#handlers/interaction/AutocompleteHandler';
-import {
-    ButtonHandler,
-    ModalHandler,
-    StringMenuHandler,
-    UserMenuHandler
-} from '#handlers/interaction/components/index';
+import { ButtonHandler, ModalHandler, StringMenuHandler, UserMenuHandler } from '#handlers/interaction/components';
 import { UserContextMenuHandler, MessageContextMenuHandler } from '#handlers/interaction/ContextMenuHandler';
 import { SlashHandler } from '#handlers/interaction/SlashHandler';
 
-import type { EventGateContext, InteractionGateContext } from '#bot/gates/index';
+import type { EventGateContext, InteractionGateContext } from '#bot/gates';
 import type {
     ButtonInteraction,
     ChatInputCommandInteraction,

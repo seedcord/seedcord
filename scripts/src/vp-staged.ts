@@ -3,23 +3,18 @@ import path from 'node:path';
 
 import { posixRelative } from '#src/lib/paths';
 
-interface ConfigHit {
-    configPath: string;
-    rootDir: string;
+const ESLINT_CONFIG = 'eslint.config.ts';
+const ESLINT = 'eslint --no-warn-ignored --max-warnings=0 --fix --cache';
+
+function* folderAndParents(dir: string): Generator<string> {
+    for (let current = dir; ; current = path.dirname(current)) {
+        yield current;
+        if (path.dirname(current) === current) return;
+    }
 }
 
-function findNearestConfig(filePath: string, name: string): ConfigHit | null {
-    let dir = path.dirname(filePath);
-    let checked: string;
-    do {
-        const candidate = path.join(dir, name);
-        if (existsSync(candidate)) return { configPath: candidate, rootDir: dir };
-
-        checked = dir;
-        dir = path.dirname(dir);
-    } while (dir !== checked);
-
-    return null;
+function eslintRoot(file: string): string | undefined {
+    return folderAndParents(path.dirname(file)).find((dir) => existsSync(path.join(dir, ESLINT_CONFIG)));
 }
 
 // vp staged splits commands with string-argv
@@ -30,49 +25,14 @@ function quote(arg: string): string {
     throw new Error(`vp staged can't pass a path holding both ' and ", got ${arg}. Rename the file.`);
 }
 
-const quoteFiles = (files: readonly string[]): string => files.map(quote).join(' ');
-
-interface Group extends Partial<ConfigHit> {
-    files: string[];
-}
-
-function groupByConfig(files: readonly string[]): Map<string, Group> {
-    const groups = new Map<string, Group>();
-
-    for (const file of files) {
-        const hit = findNearestConfig(file, 'eslint.config.ts');
-        const key = hit?.configPath ?? 'DEFAULT';
-        if (!groups.has(key)) groups.set(key, { files: [], ...hit });
-        groups.get(key)?.files.push(file);
-    }
-
-    return groups;
-}
-
 // every command starts in the repo root, with no shell to run a cd
-function scoped(rootDir: string | undefined, command: string): string {
-    return rootDir === undefined ? `vp exec ${command}` : `vp -C ${quote(rootDir)} exec ${command}`;
+function eslintCommand(root: string | undefined, files: readonly string[]): string {
+    if (root === undefined) return `vp exec ${ESLINT} ${files.map(quote).join(' ')}`;
+    const relative = files.map((file) => quote(posixRelative(root, file)));
+    return `vp -C ${quote(root)} exec ${ESLINT} --config ${quote(ESLINT_CONFIG)} ${relative.join(' ')}`;
 }
 
 export function runEslint(files: readonly string[]): string[] {
     const linted = files.filter((file) => !file.endsWith('.d.ts'));
-    const commands: string[] = [];
-
-    for (const [configPath, info] of groupByConfig(linted)) {
-        const { rootDir } = info;
-        const scopedFiles = rootDir === undefined ? info.files : info.files.map((file) => posixRelative(rootDir, file));
-        const fileList = quoteFiles(scopedFiles);
-        if (!fileList) continue;
-
-        const scopedConfigPath =
-            rootDir !== undefined && configPath !== 'DEFAULT' ? posixRelative(rootDir, configPath) : configPath;
-        const configFlag = scopedConfigPath === 'DEFAULT' ? '' : `--config ${quote(scopedConfigPath)}`;
-        const command = ['eslint --no-warn-ignored --max-warnings=0 --fix --cache', configFlag, fileList]
-            .filter(Boolean)
-            .join(' ');
-
-        commands.push(scoped(rootDir, command));
-    }
-
-    return commands;
+    return [...Map.groupBy(linted, eslintRoot)].map(([root, grouped]) => eslintCommand(root, grouped));
 }

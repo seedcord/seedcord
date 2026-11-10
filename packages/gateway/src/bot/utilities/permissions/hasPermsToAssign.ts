@@ -2,7 +2,7 @@ import { SeedcordErrorCode } from '@seedcord/errors';
 import { SeedcordError } from '@seedcord/errors/internal';
 import { PermissionFlagsBits } from 'discord.js';
 
-import { CannotAssignBotRole, RoleHigherThanMe } from '#bot/notices/index';
+import { CannotAssignBotRole, RoleHigherThanMe } from '#bot/notices';
 
 import { checkBotPermissions } from './checkBotPermissions';
 

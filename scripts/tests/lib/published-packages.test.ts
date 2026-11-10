@@ -72,6 +72,6 @@ describe('readStatusReleases', () => {
     it('tells you to run cs:status when the status file is missing', async () => {
         await using dir = await mkdtempDisposable(path.join(tmpdir(), 'status-'));
 
-        await expect(readStatusReleases(workspaceAt(dir.path))).rejects.toThrow(/pnpm cs:status/);
+        await expect(readStatusReleases(workspaceAt(dir.path))).rejects.toThrow(/vp run cs:status/);
     });
 });

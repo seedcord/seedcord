@@ -72,7 +72,7 @@
     },
     "devDependencies": {
         "@seedcord/eslint-config-base": "workspace:^",
-        "@seedcord/vitest-config": "workspace:^",
+        "@seedcord/vite-config": "workspace:^",
         "@typescript-eslint/utils": "catalog:eslint",
         "eslint": "catalog:eslint"
     },

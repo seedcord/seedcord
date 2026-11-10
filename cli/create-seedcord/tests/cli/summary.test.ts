@@ -7,7 +7,7 @@ import { PackageManager } from '#cli/PackageManager';
 import { parseInput } from '#cli/parseInput';
 import { dashboardToggles, nextSteps as paintedSteps, pendingNotice, reproducingCommand } from '#cli/summary';
 import { version } from '#cli/version';
-import { STEPS } from '#interview/steps/index';
+import { STEPS } from '#interview/steps';
 import { BOT_TOKEN } from '#tests/token';
 
 import type { ScaffoldAnswers } from '#template/context';

@@ -114,7 +114,7 @@ Two whole-workspace gates exist and they differ:
 - `vp run prePush` runs the checks through `turbo --affected`, against `next`.
 - `vp run prePush:all` runs every check across every package. A green `prePush` covers less than a green `prePush:all`, so run `prePush:all` before a release and at the end of a long branch.
 
-Both start with `build`, which builds everything except the three sites in `apps/`, and `codegen:check`, then `check:catalog`, the script and markdown lint, `tc`, `lint`, `fmt:check`, and `test`. The root `package.json` has the exact chain.
+Both start with `build`, which builds everything except the three sites in `apps/`, and `codegen:check`, then `check:catalog`, the script and markdown lint, `tc`, `lint`, `vp fmt --check`, and `test`. The root `package.json` has the exact chain.
 
 `vp run knip` (dead code) and `vp run react-doctor` (React patterns) are real gates. **No hook and no CI job runs them.** Run them by hand when the change warrants it.
 
@@ -162,6 +162,6 @@ Anything that leaves this machine needs an explicit request first: opening a PR,
 
 ---
 
-## Using Vite+, the Unified Toolchain for the Web
+## Vite+
 
 `vp <name>` runs a built-in command and `vp run <name>` runs a package.json script. The Vite+ docs are in `node_modules/vite-plus/docs`.

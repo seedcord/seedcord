@@ -6,7 +6,7 @@ AI is fine here. I use it a lot myself. Just that there are a few rules if you'r
 
 - **Know your code.** You should be able to explain what your change does, and how it fits into the rest of seedcord, without asking an AI. If I ask why something is the way it is, "the AI wrote it" isn't an answer.
 
-- **Test it properly.** AI code looks right a lot of the time and still misses edge cases. Run `pnpm prePush`, but don't stop at the unit tests. Run your change in one of the mock bots and use it the way someone building a bot would. Click the buttons, send the weird input, restart it halfway, read the error you get when you mess up the config. Some of this only gets caught by a human poking at it and going "huh, that's weird". "The agent said the tests pass" doesn't count.
+- **Test it properly.** AI code looks right a lot of the time and still misses edge cases. Run `vp run prePush`, but don't stop at the unit tests. Run your change in one of the mock bots and use it the way someone building a bot would. Click the buttons, send the weird input, restart it halfway, read the error you get when you mess up the config. Some of this only gets caught by a human poking at it and going "huh, that's weird". "The agent said the tests pass" doesn't count.
 
 - **Fix things you actually ran into.** Pointing an agent at the repo and asking it to find bugs gets you a pile of edge cases nobody hits, like a `NaN` rate limit or a timeout longer than 24 days. Fix the thing that broke your bot, one fix per PR.
 

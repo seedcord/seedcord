@@ -43,7 +43,7 @@ async function run() {
     }
 
     // eslint-disable-next-line no-console -- the bin has no logger
-    console.error('seedcord must be built before running this command. Run `vp run build` from the repo root.');
+    console.error("seedcord isn't built. Run `vp run build` from the repo root.");
     process.exit(1);
 }
 

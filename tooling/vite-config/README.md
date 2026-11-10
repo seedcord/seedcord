@@ -5,6 +5,6 @@
   </picture>
 </div>
 
-# @seedcord/vitest-config
+# @seedcord/vite-config
 
-A private vitest preset that every seedcord package with tests uses, through `createViteConfig` in its `vite.config.ts`.
+The shared vite and vitest config that every package's `vite.config.ts` builds on with `createViteConfig`.

@@ -17,7 +17,7 @@ import {
     RoleMenuHandler,
     StringMenuHandler,
     UserMenuHandler
-} from '#handlers/interaction/components/index';
+} from '#handlers/interaction/components';
 import { built } from '#tests/utils/built';
 
 import type { Core } from '#interfaces/Core';

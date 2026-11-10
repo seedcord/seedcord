@@ -1,10 +1,9 @@
-import { extname } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
 import { parseTsconfig } from 'get-tsconfig';
 import { configDefaults, mergeConfig, defineConfig } from 'vite-plus';
 
-import type { AliasOptions, UserConfig } from 'vite-plus';
+import type { Alias, UserConfig } from 'vite-plus';
 
 const base = defineConfig({
     // oxc reads the Next apps' jsx: preserve as the classic runtime
@@ -15,7 +14,7 @@ const base = defineConfig({
         // on a dev machine with turbo.json's 2 tasks at once, 25% each leaves about half the cores free
         ...(!process.env.CI && { maxWorkers: '25%' }),
         // mergeConfig puts these before a package's own setupFiles
-        setupFiles: [fileURLToPath(new URL(`freshModules${extname(import.meta.url)}`, import.meta.url))],
+        setupFiles: [fileURLToPath(new URL('freshModules.ts', import.meta.url))],
         // node_modules packages that keep state between test files
         server: { deps: { inline: ['envapt', '@testing-library/react', '@cloudflare/vite-plugin'] } },
         testTimeout: 10_000,
@@ -32,7 +31,7 @@ const base = defineConfig({
 });
 
 // configUrl is expected to be the caller's import.meta.url
-export function aliasFromTsconfig(configUrl: string): AliasOptions {
+export function aliasFromTsconfig(configUrl: string): Alias[] {
     // parseTsconfig because tsconfig can be jsonc
     const paths = parseTsconfig(fileURLToPath(new URL('tsconfig.json', configUrl))).compilerOptions?.paths ?? {};
     // vite takes the first alias that matches. tsc takes an exact key first, then the longest wildcard prefix

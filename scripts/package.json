@@ -35,7 +35,7 @@
     "devDependencies": {
         "@seedcord/eslint-config": "workspace:^",
         "@seedcord/tsconfig": "workspace:^",
-        "@seedcord/vitest-config": "workspace:^",
+        "@seedcord/vite-config": "workspace:^",
         "@types/node": "catalog:deps",
         "@vitest/coverage-v8": "catalog:test",
         "jsonc-parser": "catalog:deps",

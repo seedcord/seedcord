@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vite-plus/test';
 
 import { helpText } from '#cli/help';
-import { STEPS } from '#interview/steps/index';
+import { STEPS } from '#interview/steps';
 
 describe('helpText', () => {
     it('lists every flag the interview reads, each beside what it does', () => {

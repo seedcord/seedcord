@@ -46,10 +46,11 @@
         "@seedcord/eslint-config": "workspace:^",
         "@seedcord/tsconfig": "workspace:^",
         "@seedcord/tsdown-config": "workspace:^",
-        "@seedcord/vitest-config": "workspace:^",
+        "@seedcord/vite-config": "workspace:^",
         "@types/react": "catalog:react",
         "@xterm/headless": "^6.0.0",
-        "eslint-plugin-react-hooks": "catalog:eslint"
+        "eslint-plugin-react-hooks": "catalog:eslint",
+        "vite-plus": "catalog:deps"
     },
     "peerDependencies": {
         "typescript": "catalog:peer"

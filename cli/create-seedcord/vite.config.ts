@@ -1,9 +1,8 @@
 import { createTsdownConfig } from '@seedcord/tsdown-config';
-import { createViteConfig } from '@seedcord/vitest-config';
+import { createViteConfig } from '@seedcord/vite-config';
 
 export default createViteConfig(import.meta.url, {
     test: {
-        environment: 'node',
         testTimeout: 20_000
     },
     // every create call is a cold download
@@ -18,7 +17,6 @@ export default createViteConfig(import.meta.url, {
         env: { NODE_ENV: 'production' }, // react's dev build becomes dead code
         minify: true,
         sourcemap: false,
-        format: ['esm'],
         dts: false
     })
 });

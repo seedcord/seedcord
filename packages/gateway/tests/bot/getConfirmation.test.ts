@@ -2,12 +2,12 @@ import { ContainerBuilder } from '@discordjs/builders';
 import { DispatchContext, PublishDefault, serializeReply } from '@seedcord/core/internal';
 import { beforeEach, describe, expect, it, vi } from 'vite-plus/test';
 
-import { getConfirmation } from '#bot/confirm/index';
+import { getConfirmation } from '#bot/confirm';
 import { CONFIRM_DEF } from '#bot/confirm/reserved';
 import { ReplySender } from '#bot/ReplySender';
 import { stubBus } from '#tests/utils/stubBus';
 
-import type { DefaultConfirmOptions } from '#bot/confirm/index';
+import type { DefaultConfirmOptions } from '#bot/confirm';
 import type { NonModalInteraction } from '#src/handlers/interactionTypes';
 import type { RepliableHandler } from '#src/handlers/RepliableHandler';
 import type { Bus } from '@seedcord/core';

@@ -3,7 +3,6 @@ import { existsSync } from 'node:fs';
 import { cp, mkdir, rm, symlink } from 'node:fs/promises';
 import { createRequire } from 'node:module';
 import { resolve, sep } from 'node:path';
-import process from 'node:process';
 
 import { ApiDocsGenerator } from '@seedcord/docs-generator';
 

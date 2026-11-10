@@ -60,7 +60,7 @@ const cls = cn('base', isActive && 'bg-(--flesh)');
 
 ## Rule 2: Use the `tw` template tag for multi-line class strings
 
-`@seedcord/ui` also exports `tw`, a template tag that normalizes whitespace and lets you keep `prettier-plugin-tailwindcss` formatting on long class strings:
+`@seedcord/ui` also exports `tw`, a template tag that normalizes whitespace so oxfmt still sorts the classes in long class strings:
 
 ```tsx
 import { cn, tw } from '@seedcord/ui';

@@ -326,10 +326,10 @@ describe('ReleaseNotes', () => {
 
     it('throws on a package in a folder with no section heading', () => {
         const unknown = {
-            name: '@seedcord/vitest-config',
+            name: '@seedcord/vite-config',
             version: '0.2.1',
             directory: 'configs/vitest-config',
-            changelog: '# @seedcord/vitest-config\n'
+            changelog: '# @seedcord/vite-config\n'
         };
 
         expect(

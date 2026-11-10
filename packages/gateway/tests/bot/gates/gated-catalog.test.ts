@@ -15,10 +15,10 @@ import { PermissionFlagsBits } from 'discord.js';
 import { describe, expect, it } from 'vite-plus/test';
 
 import { Gated } from '#bDecorators/Gated';
-import { IgnoreBots, MentionPrefix, Nsfw } from '#bot/gates/index';
-import { EventHandler } from '#handlers/event/index';
+import { IgnoreBots, MentionPrefix, Nsfw } from '#bot/gates';
+import { EventHandler } from '#handlers/event';
 import { AutocompleteHandler } from '#handlers/interaction/AutocompleteHandler';
-import { ModalHandler } from '#handlers/interaction/components/index';
+import { ModalHandler } from '#handlers/interaction/components';
 import { SlashHandler } from '#handlers/interaction/SlashHandler';
 
 import type { Events } from 'discord.js';

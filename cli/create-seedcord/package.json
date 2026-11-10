@@ -58,7 +58,7 @@
         "@seedcord/tsconfig": "workspace:^",
         "@seedcord/tsdown-config": "workspace:^",
         "@seedcord/types": "workspace:^",
-        "@seedcord/vitest-config": "workspace:^",
+        "@seedcord/vite-config": "workspace:^",
         "discord.js": "catalog:peer",
         "handlebars": "catalog:deps",
         "package-manager-detector": "^1.8.0",

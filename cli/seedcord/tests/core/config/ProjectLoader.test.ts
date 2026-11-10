@@ -1,6 +1,5 @@
 import { mkdirSync, symlinkSync, writeFileSync } from 'node:fs';
 import { dirname, join, resolve } from 'node:path';
-import process from 'node:process';
 
 import { SeedcordErrorCode, isSeedcordError } from '@seedcord/errors';
 import { botFolder, toPosixPath } from '@seedcord/utils/internal';

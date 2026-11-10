@@ -145,7 +145,7 @@
         "tooling/tsconfig": {},
         "tooling/tsdown-config": {},
         "tooling/ui": {},
-        "tooling/vitest-config": {
+        "tooling/vite-config": {
             "ignore": ["tests/fixtures/**"]
         }
     }

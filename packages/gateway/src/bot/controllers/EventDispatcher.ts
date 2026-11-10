@@ -21,7 +21,7 @@ import { eventMiddlewareMetaOf } from '#bDecorators/Middlewares';
 import { eventGateContext } from '#bot/gates/context';
 import { handleEventFault } from '#bot/handleEventFault';
 import { reportEventDispatched, reportEventDispatching } from '#bot/reportEventDispatch';
-import { EventHandler, EventMiddleware } from '#handlers/event/index';
+import { EventHandler, EventMiddleware } from '#handlers/event';
 
 import type { RegisterEventMetadataEntry } from '#bDecorators/Events';
 import type {

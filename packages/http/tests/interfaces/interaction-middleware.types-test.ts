@@ -1,7 +1,7 @@
 import { InteractionType } from 'discord-api-types/v10';
 import { expectTypeOf } from 'vite-plus/test';
 
-import { InteractionMiddleware } from '#handlers/interaction/index';
+import { InteractionMiddleware } from '#handlers/interaction';
 
 import type { InteractionKind, SlashRegistry } from '@seedcord/core';
 import type {

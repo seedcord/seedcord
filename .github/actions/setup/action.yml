@@ -1,12 +1,11 @@
 name: 'Setup workspace'
-description: 'Install pnpm, set up Node, optionally restore deps via vp install --frozen-lockfile.'
+description: 'Install Vite+ and Node, then optionally run vp install --frozen-lockfile.'
 
 inputs:
   node-version:
     description: 'Node.js version'
     required: false
-  # we want to allow disabling cache for pnpm/npm publish
-  # to prevent cache poisoning
+  # publish switches this off so nothing from a poisoned cache ends up on npm
   cache:
     description: 'Enable caching of project dependencies'
     required: false

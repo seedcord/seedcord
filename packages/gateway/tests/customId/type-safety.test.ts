@@ -1,7 +1,7 @@
 import { CustomId, ButtonRoute, RoleMenuRoute, UserMenuRoute } from '@seedcord/core';
 import { describe, expectTypeOf, it } from 'vite-plus/test';
 
-import { ButtonHandler, UserMenuHandler } from '#handlers/interaction/components/index';
+import { ButtonHandler, UserMenuHandler } from '#handlers/interaction/components';
 
 // each @ts-expect-error fails the typecheck if the mistake it guards stops being a compile error.
 

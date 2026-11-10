@@ -98,7 +98,7 @@
     "vitest.disableWorkspaceWarning": true,
 
     "chat.tools.terminal.autoApprove": {
-        "pnpm": true
+        "vp": true
     },
     "js/ts.tsdk.path": "node_modules/@typescript/native-preview",
     "npm.scriptRunner": "vp"

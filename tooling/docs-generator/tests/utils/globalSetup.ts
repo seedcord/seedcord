@@ -3,7 +3,6 @@ import { existsSync } from 'node:fs';
 import { mkdir, rm, symlink } from 'node:fs/promises';
 import { createRequire } from 'node:module';
 import { resolve } from 'node:path';
-import process from 'node:process';
 
 import { ApiDocsGenerator } from '#src/ApiDocsGenerator';
 

@@ -75,7 +75,7 @@
         "@seedcord/eslint-config": "workspace:^",
         "@seedcord/tsconfig": "workspace:^",
         "@seedcord/tsdown-config": "workspace:^",
-        "@seedcord/vitest-config": "workspace:^",
+        "@seedcord/vite-config": "workspace:^",
         "@vitest/coverage-istanbul": "5.1.0",
         "envapt": "catalog:peer",
         "esbuild": "^0.28.1",

@@ -9,7 +9,7 @@ Every package's tests run in shared workers, inside a workspace run that already
 
 ## How the workers run
 
-`@seedcord/vitest-config` sets these for every package. Leave them alone in a package's own config. apps/docs is the one exception, with `isolate: true` until its tests stop mocking its own modules.
+`@seedcord/vite-config` sets these for every package. Leave them alone in a package's own config. apps/docs is the one exception, with `isolate: true` until its tests stop mocking its own modules.
 
 - `isolate: false`. A worker process runs many test files in turn.
 - A setup file calls `vi.resetModules()` before each file. Each file gets fresh instances of the modules vitest runs, so a static cache or a module-level singleton stays inside its file.

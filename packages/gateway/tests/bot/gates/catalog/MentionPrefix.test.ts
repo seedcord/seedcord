@@ -1,9 +1,9 @@
 import { Silence } from '@seedcord/core';
 import { describe, it, expect } from 'vite-plus/test';
 
-import { MentionPrefix } from '#bot/gates/catalog/index';
+import { MentionPrefix } from '#bot/gates/catalog';
 
-import type { EventGateContext } from '#bot/gates/index';
+import type { EventGateContext } from '#bot/gates';
 
 const BOT_ID = '123456789012345678';
 const OTHER_ID = '876543210987654321';

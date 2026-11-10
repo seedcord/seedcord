@@ -1,6 +1,6 @@
 import { RegisterInteractionMiddleware } from '@seedcord/core';
 
-import { InteractionMiddleware } from '#handlers/interaction/index';
+import { InteractionMiddleware } from '#handlers/interaction';
 
 import { ran } from './recorder';
 

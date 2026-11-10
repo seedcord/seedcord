@@ -11,7 +11,7 @@ import { MessageFlags, RESTJSONErrorCodes } from 'discord.js';
 import { beforeEach, describe, expect, it, vi } from 'vite-plus/test';
 
 import { gatewayRunConfig } from '#bot/controllers/gatewayRunConfig';
-import { UnhandledAutocomplete, UnhandledRepliable } from '#bot/defaults/index';
+import { UnhandledAutocomplete, UnhandledRepliable } from '#bot/defaults';
 import { harmlessError } from '#tests/utils/harmlessError';
 import { TestNotice } from '#tests/utils/TestNotice';
 

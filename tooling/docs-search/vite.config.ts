@@ -1,13 +1,9 @@
 import { createTsdownConfig } from '@seedcord/tsdown-config';
-import { createViteConfig } from '@seedcord/vitest-config';
+import { createViteConfig } from '@seedcord/vite-config';
 
 export default createViteConfig(import.meta.url, {
-    test: {
-        environment: 'node',
-        testTimeout: 10_000
-    },
     pack: createTsdownConfig({
         entry: ['src/index.ts'],
-        deps: { neverBundle: true, alwaysBundle: ['@seedcord/brand'] }
+        deps: { alwaysBundle: ['@seedcord/brand'] }
     })
 });

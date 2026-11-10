@@ -1,10 +1,9 @@
 import { createTsdownConfig } from '@seedcord/tsdown-config';
-import { createViteConfig } from '@seedcord/vitest-config';
+import { createViteConfig } from '@seedcord/vite-config';
 
 export default createViteConfig(import.meta.url, {
     test: {
         globals: true,
-        environment: 'node',
         testTimeout: 15_000,
         globalSetup: './tests/utils/globalSetup.ts'
     },

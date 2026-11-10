@@ -3,7 +3,7 @@ import { DispatchContext } from '@seedcord/core/internal';
 import { SeedcordErrorCode } from '@seedcord/errors';
 import { describe, expect, it } from 'vite-plus/test';
 
-import { ButtonHandler, ModalHandler, UserMenuHandler } from '#handlers/interaction/components/index';
+import { ButtonHandler, ModalHandler, UserMenuHandler } from '#handlers/interaction/components';
 import { built } from '#tests/utils/built';
 
 import type { Core } from '#interfaces/Core';

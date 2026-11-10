@@ -65,7 +65,7 @@
         "@seedcord/http": "workspace:^",
         "@seedcord/tsconfig": "workspace:^",
         "@seedcord/tsdown-config": "workspace:^",
-        "@seedcord/vitest-config": "workspace:^",
+        "@seedcord/vite-config": "workspace:^",
         "@types/pg": "catalog:deps",
         "envapt": "catalog:peer",
         "kysely": "catalog:peer",

@@ -8,9 +8,9 @@ Everyone here follows the [code of conduct](CODE_OF_CONDUCT.md). Report a securi
 
 ## Setup
 
-You need Vite+, the Node version in `engines.node` and the pnpm version in `packageManager`, both in the root `package.json`.
+You need Vite+, plus the Node and pnpm versions set in the root `package.json` (`engines.node` and `packageManager`).
 
-If you configured your global Vite+ install to manage Node versions, Vite+ will automatically install the correct version.
+When Vite+ manages your Node versions, it installs the right one for you.
 
 Bun is optional. With it installed, the `seedcord build` tests also compile the built http and gateway fixture bots into bun binaries and run them. Without it they skip those tests. CI's Bun job runs them on every push and on pull requests that are ready for review.
 
@@ -126,6 +126,8 @@ When you add or change a handler in a mock, run `vp -C mocks/<name> run codegen`
 
 - **pre-commit** runs `vp staged`, which formats the files you staged and lints them with zero warnings allowed. One lint warning blocks the commit, even though plain `vp run lint` lets it through.
 - **commit-msg** runs commitlint on your message.
+
+If you cloned before the switch to Vite+, git still points at the old husky hooks folder and your hooks don't run. Run `vp hooks enable` once to fix that.
 
 Run `vp run prePush` before you open the PR. It checks the packages your branch changed since `next` and the ones that depend on them. `vp run prePush:all` checks every package. The root `package.json` has both chains.
 

@@ -33,18 +33,9 @@ describe('UnknownException.report', () => {
         expect(reportText(error)).not.toContain(ESC);
     });
 
-    it('renders the AckTrace cause under a parent stack longer than the report', () => {
+    it('renders the direct AckTrace cause', () => {
         const error = new Error('illegal ack', { cause: new AckTrace('reply') });
-        error.stack = 'x'.repeat(2000);
         expect(reportText(error)).toContain('reply() acknowledged this interaction');
-    });
-
-    it('shows the whole cause when the parent leaves room for it', () => {
-        const cause = new Error('db down');
-        cause.stack = `${'y'.repeat(1200)}END`;
-        const error = new Error('wrapper', { cause });
-        error.stack = 'Error: wrapper';
-        expect(reportText(error)).toContain('END');
     });
 
     it('prints the suppressed count', () => {

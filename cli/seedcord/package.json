@@ -101,7 +101,7 @@
         "@seedcord/tsconfig": "workspace:^",
         "@seedcord/tsdown-config": "workspace:^",
         "@seedcord/ui": "workspace:^",
-        "@seedcord/vitest-config": "workspace:^",
+        "@seedcord/vite-config": "workspace:^",
         "@types/react": "catalog:react",
         "cf": "catalog:deps",
         "discord.js": "catalog:peer",

@@ -50,7 +50,7 @@
         "@seedcord/plugin-kysely-postgres": "workspace:^",
         "@seedcord/plugin-mongoose": "workspace:^",
         "@seedcord/tsconfig": "workspace:^",
-        "@seedcord/vitest-config": "workspace:^",
+        "@seedcord/vite-config": "workspace:^",
         "@tailwindcss/postcss": "catalog:deps",
         "@testing-library/dom": "catalog:test",
         "@testing-library/jest-dom": "catalog:test",

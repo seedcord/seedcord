@@ -1,6 +1,6 @@
 import { cloudflareTest } from '@cloudflare/vitest-plugin';
 import { createTsdownConfig } from '@seedcord/tsdown-config';
-import { createViteConfig, aliasFromTsconfig } from '@seedcord/vitest-config';
+import { createViteConfig, aliasFromTsconfig } from '@seedcord/vite-config';
 
 // the workerd project keeps its own config. extending the shared one breaks @discordjs/builders in the node project
 const alias = aliasFromTsconfig(import.meta.url);

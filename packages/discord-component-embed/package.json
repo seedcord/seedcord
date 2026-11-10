@@ -90,7 +90,7 @@
         "@seedcord/eslint-config": "workspace:^",
         "@seedcord/tsconfig": "workspace:^",
         "@seedcord/tsdown-config": "workspace:^",
-        "@seedcord/vitest-config": "workspace:^",
+        "@seedcord/vite-config": "workspace:^",
         "@types/react": "catalog:react",
         "@types/react-dom": "catalog:react",
         "discord-api-types": "catalog:deps",

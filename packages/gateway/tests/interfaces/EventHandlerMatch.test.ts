@@ -5,7 +5,7 @@ import { Events } from 'discord.js';
 import { describe, expect, expectTypeOf, it, vi } from 'vite-plus/test';
 
 import { RegisterEvent } from '#bDecorators/Events';
-import { EventHandler } from '#handlers/event/index';
+import { EventHandler } from '#handlers/event';
 
 import type { Core } from '#interfaces/Core';
 import type { ReplyResponse } from '@seedcord/types';

@@ -2,7 +2,6 @@ import { spawnSync } from 'node:child_process';
 import { appendFile, cp, mkdir, mkdtempDisposable, readFile, rename, symlink, writeFile } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
-import process from 'node:process';
 import { stripVTControlCharacters } from 'node:util';
 
 import { describe, expect, it, onTestFinished, vi } from 'vite-plus/test';

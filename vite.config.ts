@@ -1,6 +1,7 @@
 import { defineConfig } from 'vite-plus';
 
 import { runEslint } from './scripts/src/vp-staged.ts';
+import { PRETTIER_CONFIG } from './tooling/eslint-config-base/src/rules/prettier-config.ts';
 
 export default defineConfig({
     staged: {
@@ -26,18 +27,7 @@ export default defineConfig({
             '**/.wrangler/**',
             '**/worker-configuration.d.ts'
         ],
-        tabWidth: 4,
-        semi: true,
-        singleQuote: true,
-        trailingComma: 'none',
-        printWidth: 120,
-        bracketSpacing: true,
-        arrowParens: 'always',
-        endOfLine: 'lf',
-        useTabs: false,
-        quoteProps: 'as-needed',
-        bracketSameLine: false,
-        proseWrap: 'never',
+        ...PRETTIER_CONFIG,
         overrides: [
             {
                 files: ['*.{yml,yaml}'],

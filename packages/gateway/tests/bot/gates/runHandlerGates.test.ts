@@ -4,7 +4,7 @@ import { describe, expect, it } from 'vite-plus/test';
 
 import { Gated } from '#bDecorators/Gated';
 import { eventGateContext, interactionGateContext } from '#bot/gates/context';
-import { EventHandler } from '#handlers/event/index';
+import { EventHandler } from '#handlers/event';
 import { SlashHandler } from '#handlers/interaction/SlashHandler';
 import { TestNotice } from '#tests/utils/TestNotice';
 

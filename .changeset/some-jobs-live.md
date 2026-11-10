@@ -2,4 +2,4 @@
 '@seedcord/core': patch
 ---
 
-Fixed a bug where the error webhooks could cut off the error cause.
+Fixed the error webhook cutting off the cause when the error's stack trace was long.

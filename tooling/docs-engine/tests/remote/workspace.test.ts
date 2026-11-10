@@ -48,7 +48,7 @@ describe('the workspace index', () => {
         await rm(repo, { recursive: true, force: true });
     });
 
-    it('reads the index pnpm docs:local wrote', async () => {
+    it('reads the index vp run docs:local wrote', async () => {
         await writeLocalIndex();
 
         const index = await workspaceIndexLoader().load();

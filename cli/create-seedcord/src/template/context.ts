@@ -7,7 +7,7 @@ import { SeedcordTypeError } from '@seedcord/errors/internal';
 import ownPackage from '#package' with { type: 'json' };
 
 import { intentsFor, partialsFor } from '#interview/capabilities';
-import { STEPS } from '#interview/steps/index';
+import { STEPS } from '#interview/steps';
 
 import type { PackageManager } from '#cli/PackageManager';
 import type { Answers } from '#interview/types';

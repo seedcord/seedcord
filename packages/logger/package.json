@@ -72,8 +72,9 @@
         "@seedcord/eslint-config": "workspace:^",
         "@seedcord/tsconfig": "workspace:^",
         "@seedcord/tsdown-config": "workspace:^",
-        "@seedcord/vitest-config": "workspace:^",
-        "envapt": "catalog:peer"
+        "@seedcord/vite-config": "workspace:^",
+        "envapt": "catalog:peer",
+        "vite-plus": "catalog:deps"
     },
     "peerDependencies": {
         "envapt": "catalog:peer",

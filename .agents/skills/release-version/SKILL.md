@@ -38,8 +38,8 @@ The publish ends on the `next` dist-tag as `X.Y.Z-next.N`. The changesets must a
 
 ```sh
 git switch next && git pull
-vp run cs:version                 # bump every pending package to X.Y.Z-next.N and tidy the changelogs
-vp install                         # rewrite internal ranges into the lockfile
+vp run cs:version                    # bump every pending package to X.Y.Z-next.N and tidy the changelogs
+vp install                           # rewrite internal ranges into the lockfile
 git add .changeset                   # pre mode moves each used changeset into .changeset/pre/, which -a would skip
 git commit -am "chore(release): version packages"
 git push origin next                 # no changesets pending, so publish.yml publishes directly
@@ -57,10 +57,10 @@ Run on `main` so the clean version reaches `latest`. Exiting pre mode and versio
 
 ```sh
 git switch main && git pull
-git merge next                    # resolve any changelog or pre.json conflicts
-vp run cs:exit                    # set pre.json to exit mode, then review the changesets in .changeset/pre/
-vp run cs:version                 # write the clean X.Y.Z and delete the superseded prerelease sections
-vp install                        # update the lockfile
+git merge next                       # resolve any changelog or pre.json conflicts
+vp run cs:exit                       # set pre.json to exit mode, then review the changesets in .changeset/pre/
+vp run cs:version                    # write the clean X.Y.Z and delete the superseded prerelease sections
+vp install                           # update the lockfile
 git add .changeset
 git commit -am "chore(release): version packages"
 git push origin main
