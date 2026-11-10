@@ -1,6 +1,7 @@
+import { cn } from 'cn';
+
 import { Card } from './Card';
 import { CopyButton } from './CopyButton';
-import { cn } from './lib/cn';
 import { tw } from './lib/tw';
 
 import type { CodeRepresentation } from './types/CodeRepresentation';

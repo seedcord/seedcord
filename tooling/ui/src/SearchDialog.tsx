@@ -1,12 +1,12 @@
 'use client';
 
 import * as Dialog from '@radix-ui/react-dialog';
+import { cn } from 'cn';
 import { AnimatePresence, m } from 'motion/react';
 import { createContext, use, useCallback, useLayoutEffect, useMemo, useRef, useState } from 'react';
 
 import { Card } from './Card';
 import { DIALOG_OVERLAY } from './Dialog';
-import { cn } from './lib/cn';
 import { easeOutStrong } from './lib/motion';
 import { tw } from './lib/tw';
 import { useFocusReturn } from './lib/useFocusReturn';

@@ -1,9 +1,9 @@
 'use client';
 
 import * as SwitchPrimitive from '@radix-ui/react-switch';
+import { cn } from 'cn';
 import { useId } from 'react';
 
-import { cn } from './lib/cn';
 import { tw } from './lib/tw';
 
 import type { ReactElement, ReactNode } from 'react';

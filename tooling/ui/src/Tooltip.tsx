@@ -1,8 +1,8 @@
 'use client';
 
 import * as TooltipPrimitive from '@radix-ui/react-tooltip';
+import { cn } from 'cn';
 
-import { cn } from './lib/cn';
 import { tw } from './lib/tw';
 
 import type { ComponentPropsWithoutRef, ReactElement, ReactNode, Ref } from 'react';

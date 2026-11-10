@@ -1,11 +1,11 @@
 'use client';
 
+import { cn } from 'cn';
 import { ArrowUpRight, Check } from 'lucide-react';
 import { useId } from 'react';
 
 import { CaretTrigger } from './CaretTrigger';
 import { HotkeyHint } from './HotkeyHint';
-import { cn } from './lib/cn';
 import { PlainLink } from './lib/navLink';
 import { useRovingList } from './lib/useRovingList';
 import { SWITCH_SITE } from './lib/useSiteHotkeys';

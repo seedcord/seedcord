@@ -1,9 +1,9 @@
+import { cn } from 'cn';
 import { X } from 'lucide-react';
 
 import { Button } from './Button';
 import { Icon } from './Icon';
 import { Kbd } from './Kbd';
-import { cn } from './lib/cn';
 
 import type { ReactElement } from 'react';
 
