@@ -19,7 +19,7 @@ export interface RegisteredRoute<Ctor, Kind extends InteractionKind = Interactio
 }
 
 // the handler class each kind takes. a transport types every slot with that kind's event
-export type HandlerSlots = Readonly<Record<InteractionKind, RoutableConstructor>>;
+type HandlerSlots = Readonly<Record<InteractionKind, RoutableConstructor>>;
 
 type KindMaps<Slots extends HandlerSlots, Extra extends object = object> = {
     readonly [Kind in InteractionKind]: Map<string, RegisteredRoute<Slots[Kind], Kind> & Extra>;
@@ -69,14 +69,13 @@ export function unhandledSlots<Repliable, Autocomplete>(
     };
 }
 
-// unhandled holds the class that answers a route without a handler, one per kind
 export function matchRoute<Slots extends HandlerSlots, Kind extends InteractionKind>(
     maps: RouteMaps<Slots>,
     kind: Kind,
     route: string,
-    unhandled: Slots
+    unhandledByKind: Slots
 ): RegisteredRoute<Slots[Kind], Kind> {
-    return maps[kind].get(route) ?? { kind, route, fallback: true, ctor: unhandled[kind] };
+    return maps[kind].get(route) ?? { kind, route, fallback: true, ctor: unhandledByKind[kind] };
 }
 
 interface Loaded {
@@ -90,7 +89,7 @@ export class RouteRegistry<Slots extends HandlerSlots> {
         return Object.values(this.maps).flatMap((routes) => [...routes.values()]);
     }
 
-    // a class only reaches a kind's map through that kind's route decorator, which type-checked it for the slot
+    // justified: a class only reaches a kind's map through that kind's route decorator, which type-checked it for the slot
     private routesOf<Kind extends InteractionKind>(kind: Kind): Map<string, RegisteredRoute<Slots[Kind]> & Loaded> {
         return this.maps[kind];
     }

@@ -1,10 +1,8 @@
 import { Plugin } from '#src/Plugin';
 
-import type { CoreBase, DispatchOrigin } from '@seedcord/core';
+import type { CoreBase } from '@seedcord/core';
 
-export function pluginWithMembers(
-    members: Readonly<Record<string, (origin: DispatchOrigin) => unknown>>
-): new (host: CoreBase) => Plugin {
+export function pluginWithMembers(members: NonNullable<Plugin['dispatchMembers']>): new (host: CoreBase) => Plugin {
     return class extends Plugin {
         public override readonly dispatchMembers = members;
 

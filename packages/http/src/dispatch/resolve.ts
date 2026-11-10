@@ -95,10 +95,12 @@ function resolveComponent(maps: RouteMaps, interaction: APIMessageComponentInter
     if (isSelect(interaction, ComponentType.StringSelect)) {
         return resolved(maps, InteractionKind.StringMenu, key, interaction);
     }
-    if (isSelect(interaction, ComponentType.UserSelect))
+    if (isSelect(interaction, ComponentType.UserSelect)) {
         return resolved(maps, InteractionKind.UserMenu, key, interaction);
-    if (isSelect(interaction, ComponentType.RoleSelect))
+    }
+    if (isSelect(interaction, ComponentType.RoleSelect)) {
         return resolved(maps, InteractionKind.RoleMenu, key, interaction);
+    }
     if (isSelect(interaction, ComponentType.ChannelSelect)) {
         return resolved(maps, InteractionKind.ChannelMenu, key, interaction);
     }

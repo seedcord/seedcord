@@ -7,4 +7,4 @@
 'seedcord': minor
 ---
 
-A plugin can now set `dispatchMembers`, an object of functions that seedcord runs once for each interaction or event. Each result shows up as `this.<name>` on handlers and middleware, and as `ctx.<name>` in gates and `Notice.render`.
+A plugin can now set `dispatchMembers`, an object of functions that seedcord runs once for each interaction or event. Each result becomes `this.<name>` on handlers and middleware, and as `ctx.<name>` in gates and `Notice.render`.

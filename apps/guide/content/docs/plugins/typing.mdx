@@ -5,7 +5,7 @@ description: Run seedcord codegen to type the plugins you attached on this.core,
 
 You've attached the plugin, but `this.core.db` still fails to compile. The property is there when the bot runs, so only the types are missing. `attach` returns a bot typed with `db`, but a handler reads `this.core`. seedcord declares the type of `this.core` in its own package, which never imports your bot file.
 
-In other frameworks, you would have to declare those types by hand in a `declare module` block, and then remember to update it each time you rename a key. `seedcord codegen` writes that block for you into `src/seedcord-gen.ts`.
+Without codegen, you'd declare those types by hand in a `declare module` block and update it each time you rename a key. `seedcord codegen` writes that block for you into `src/seedcord-gen.ts`.
 
 ```ts twoslash title="src/handlers/History.ts"
 // @errors: 2339
@@ -55,7 +55,7 @@ declare module '@seedcord/gateway' {
 export {};
 ```
 
-`Bot` is the default export of the file that your `instance` config key points to. Each row reads its type directly from that bot, so `db` has every member of the type that `attach` returns, except the ones that only seedcord uses, like [`init()`](ref:core/Plugin.init). [Calling it from a handler](/writing-plugins#calling-it-from-a-handler) lists all of them. This only works when the default export is the value `attach` returns. If you [export the bot without it](/plugins#no-plugin-types-in-your-handler), `this.core.db` has the type `any`. If you export the bot only as a named const, codegen stops with the code `CliInstanceInvalid` before it writes anything.
+`Bot` is the default export of the file that your `instance` config key points to. Each row reads its type from that bot, so `db` has the type `attach` returns, minus the members only seedcord calls, like [`init()`](ref:core/Plugin.init). [Calling it from a handler](/writing-plugins#calling-it-from-a-handler) lists all of them. This only works when the default export is the value `attach` returns. If you [export the bot without it](/plugins#no-plugin-types-in-your-handler), `this.core.db` has the type `any`. If you export the bot only as a named const, codegen stops with the code `CliInstanceInvalid` before it writes anything.
 
 [`AttachedPlugin`](ref:core/AttachedPlugin) is the type that omits those members. It also omits the class's private members, so `this.core.db` isn't assignable to a parameter typed as the [`Mongoose`](ref:plugin-mongoose/Mongoose) class. To pass it to a function of your own, type that parameter as `AttachedPlugin<Mongoose>`.
 
@@ -104,4 +104,4 @@ export class History extends SlashHandler<'history'> {
 }
 ```
 
-Whether the plugin has started by the time your handler runs is on [the lifecycle page](/plugins/lifecycle).
+[The lifecycle page](/plugins/lifecycle) covers whether the plugin has started by the time your handler runs.

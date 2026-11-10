@@ -86,8 +86,13 @@ function isReservedMember(name: string): boolean {
     return RESERVED_MEMBERS.has(name) || name in Object.prototype;
 }
 
-function throwTaken(member: string, first: string, second: string): never {
-    throw new SeedcordTypeError(SeedcordErrorCode.CoreDuplicateName, ['dispatch member', member, [first, second]]);
+function throwTaken(member: string, first: string, second: string, note?: string): never {
+    throw new SeedcordTypeError(SeedcordErrorCode.CoreDuplicateName, [
+        'dispatch member',
+        member,
+        [first, second],
+        note
+    ]);
 }
 
 interface ClaimedMember {
@@ -97,7 +102,7 @@ interface ClaimedMember {
     readonly build: (origin: DispatchOrigin) => unknown;
 }
 
-// every attached plugin, in attach order
+// the attached plugins in attach order, and the dispatch members they add
 export class PluginRegistry {
     private readonly claimed = new Map<string, ClaimedMember>();
     private readonly list: Attachment[] = [];
@@ -142,16 +147,21 @@ export class PluginRegistry {
     // a method or getter with a member's name breaks the assign in BaseHandler
     public assertFreeOn(handler: HandlerClass): void {
         for (const [member, { plugin }] of this.claimed) {
-            if (member in handler.prototype) throwTaken(member, paint.sky(handler.name), plugin);
+            if (member in handler.prototype) {
+                throwTaken(member, paint.sky(handler.name), plugin, 'A handler method or getter would hide the value.');
+            }
         }
     }
 
     // a subclass field replaces a member because it runs after BaseHandler assigns them
     public assertMembersKept<Handler extends object>(handler: Handler, dispatch: DispatchContext): Handler {
         for (const [member, { plugin }] of this.claimed) {
-            if (!Object.is(Reflect.get(handler, member), dispatch[MemberValues][member])) {
-                throwTaken(member, paint.sky(handler.constructor.name), plugin);
+            if (Object.is(Reflect.get(handler, member), dispatch[MemberValues][member])) {
+                continue;
             }
+
+            const handlerName = paint.sky(handler.constructor.name);
+            throwTaken(member, handlerName, plugin, 'The handler field replaces the value the plugin built.');
         }
         return handler;
     }

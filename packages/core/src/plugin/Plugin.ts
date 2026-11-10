@@ -194,8 +194,8 @@ export abstract class Plugin<
      *
      * Seedcord calls each function once per interaction, and once per event that has a handler.
      *
-     * `attach()` throws if another plugin on the bot already uses one of these keys, or if the bot
-     * attaches this plugin twice.
+     * `attach()` throws if seedcord already uses one of these keys, like `reply`, if another plugin on the
+     * bot uses it, or if the bot attaches this plugin twice.
      *
      * @example
      * ```ts
