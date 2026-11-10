@@ -51,7 +51,7 @@ function stubCore(opts: StubOptions): Core {
     } as unknown as Core;
 }
 
-// the global is typed by the (empty in tests) EmojiMap, so read runtime values through a plain record
+// read runtime values through a plain record because the global is typed by the (empty in tests) EmojiMap
 const stored = Emojis as Record<string, unknown>;
 
 async function initError(core: Core): Promise<Error | null> {
@@ -132,7 +132,7 @@ describe('EmojiInjector', () => {
     it('fetches a guild before reading its emoji cache', async () => {
         const wave: EmojiStub = { id: '9', name: 'wave' };
         const cache = new Collection<string, EmojiStub>();
-        // the emoji only appears after fetch, so removing the fetch leaves the cache empty and resolution fails
+        // removing the fetch leaves the cache empty and resolution fails because the emoji only appears after fetch
         const guild = {
             emojis: {
                 fetch: vi.fn(() => {

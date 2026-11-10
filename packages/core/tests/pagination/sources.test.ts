@@ -3,7 +3,7 @@ import { describe, expect, expectTypeOf, it } from 'vite-plus/test';
 
 import { ArraySourceBase, CursorSourceBase } from '#pagination/sources';
 
-// the sources only forward ctx to the loader, so a fake shape is enough
+// a fake shape is enough because the sources only forward ctx to the loader
 interface TestCtx {
     readonly tag: string;
 }

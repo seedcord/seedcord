@@ -17,8 +17,8 @@ async function resolveRules(options: SeedcordConfigOptions, file: string): Promi
 
 describe('createConfig plugin toggles', () => {
     it('removes plugin rules when the plugin is disabled', async () => {
-        // regression: a disabled plugin left its import-x/* rules in the config, so eslint threw
-        // "rule not found" for the eslint-9 apps that register no import-x plugin.
+        // regression: a disabled plugin left its import-x/* rules in the config. eslint then threw
+        // "rule not found" for the eslint-9 apps that don't register an import-x plugin.
         const rules = await resolveRules({ registerImportPlugin: 'off' }, 'src/example.ts');
         expect(Object.keys(rules).filter((name) => name.startsWith('import-x/'))).toEqual([]);
     });

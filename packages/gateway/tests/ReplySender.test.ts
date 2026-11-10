@@ -232,7 +232,7 @@ describe('ReplySender.update', () => {
 
         expect(mock.editReply).toHaveBeenCalledOnce();
         expect(mock.update).not.toHaveBeenCalled();
-        // the source message is not minted, so a later targeted edit of it throws foreign
+        // a later targeted edit of the source message throws foreign because it is not minted
         await expect(sender.edit(source, reply)).rejects.toSatisfy((e: unknown) =>
             isSeedcordError(e, 'SeedcordError', SeedcordErrorCode.ReplyForeignEditTarget)
         );

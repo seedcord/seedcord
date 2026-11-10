@@ -7,7 +7,7 @@ import type { ClientEvents, Guild, GuildMember, User } from 'discord.js';
  * The context that a gate gets on an interaction. It extends {@link GuildPermissionsContext} with the live interaction and
  * the djs objects resolved from the gateway cache. `Repliable` is the interaction type the gate
  * supports, inferred from the `ctx` annotation, so a gate reading button-specific fields is rejected
- * on a slash handler. `interaction` is the reply target, so `user` is always present. Use
+ * on a slash handler. `user` is always present because `interaction` is the reply target. Use
  * {@link NonModalInteraction} to exclude ModalSubmit when the gate needs a reliable caller member or
  * channel.
  *

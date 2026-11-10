@@ -82,7 +82,7 @@ export class LogStore extends ChangeStore implements ILogSink {
         this.scheduleUpdate();
     }
 
-    // useSyncExternalStore needs a stable reference, so useLogs does the channel filtering
+    // useLogs does the channel filtering because useSyncExternalStore needs a stable reference
     public getLogs(): readonly LogEntry[] {
         return this.entries;
     }

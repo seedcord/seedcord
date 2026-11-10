@@ -16,9 +16,9 @@ function joinNames(gates: readonly Gate<GateContextBase>[], separator: string): 
 }
 
 /**
- * Runs each gate in order and refuses on the first refusal. Takes two or more gates. The required
- * context is the intersection of their contexts, so an event-only and an interaction-only gate cannot be
- * combined.
+ * Runs each gate in order and refuses on the first refusal. Takes two or more gates. An event-only and an
+ * interaction-only gate cannot be combined because the required context is the intersection of their
+ * contexts.
  *
  * @typeParam Gates - The tuple of two or more gates, run left to right.
  * @param gates - The gates to run in order, all refused on the first refusal.

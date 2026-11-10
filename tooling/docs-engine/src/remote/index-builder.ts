@@ -92,7 +92,7 @@ function buildPrerelease(versions: readonly string[]): { latest: string } | null
     return latest ? { latest } : null;
 }
 
-// `sorted` is descending, so the first version seen for a key is its line head.
+// the first version seen for a key is its line head because `sorted` is descending.
 function headsBy(sorted: readonly string[], keyOf: (version: string) => string): Record<string, string> {
     const heads: Record<string, string> = {};
     for (const version of sorted) {

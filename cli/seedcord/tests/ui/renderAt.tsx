@@ -11,8 +11,8 @@ export interface RenderAtResult {
     readonly unmount: () => void;
 }
 
-// ink-testing-library hardcodes 100 columns and reads real rows from terminal-size, so size assertions render
-// through here
+// size assertions render through here because ink-testing-library hardcodes 100 columns and reads real rows
+// from terminal-size
 export function renderAt(tree: ReactElement, size: Size): RenderAtResult {
     const stdout = new SizedStdout(size.columns, size.rows);
     const stdin = new KeyboardStdin();

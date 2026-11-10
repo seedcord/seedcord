@@ -2,8 +2,8 @@
 // barrel, only the node-free `./Slugger` module, or `next build` breaks on a `node:module` import.
 import { slugifySegment } from '#src/Slugger';
 
-// Constructors already end in `/constructor`, so the trailing slug segment is the fragment without
-// a kind check.
+// the trailing slug segment is the fragment without a kind check because constructors already end in
+// `/constructor`.
 export function memberFragment(node: { slug: string }): string {
     const index = node.slug.lastIndexOf('/');
     return index === -1 ? node.slug : node.slug.slice(index + 1);

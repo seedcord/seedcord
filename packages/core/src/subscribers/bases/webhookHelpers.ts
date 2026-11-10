@@ -19,7 +19,7 @@ export function jsonAttachment(name: string, description: string, data: unknown)
     return { name, description, data: new TextEncoder().encode(JSON.stringify(content, undefined, 2)) };
 }
 
-// callers wrap the report in a ``` code block, so a stray ``` in the text would close it early
+// a stray ``` in the text would close the code block that callers wrap the report in
 export function breakBackticks(text: string): string {
     return text.replaceAll('```', '`​`​`');
 }

@@ -16,7 +16,7 @@ function channelIsNsfw(channel: InteractionGateContext['interaction']['channel']
 /**
  * Requires an age-restricted channel, else refuses. Pass a Notice class as `notice` to replace the refusal.
  *
- * A thread inherits its parent channel's nsfw flag. ModalSubmit doesn't have a reliable channel, so it is excluded.
+ * A thread inherits its parent channel's nsfw flag. ModalSubmit is excluded because it doesn't have a reliable channel.
  *
  * @param options - Replace the refusal with a Notice class as `notice`.
  *

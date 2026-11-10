@@ -61,7 +61,7 @@ describe('IndexLoader', () => {
     });
 
     it('removes folders the docs no longer document from the loaded index', async () => {
-        // kit is published in R2 but absent from PACKAGE_OVERRIDES, so the engine never reads it
+        // the engine never reads kit because it is published in R2 but absent from PACKAGE_OVERRIDES
         const withRemoved: IndexJson = {
             ...fixture,
             packages: {

@@ -30,7 +30,7 @@ function denialNameFrom(fn: () => unknown): string {
     throw new Error('expected a Notice to be thrown');
 }
 
-// the bases read only a couple fields off the event, so a minimal fake per kind is enough.
+// a minimal fake per kind is enough because the bases read only a couple fields off the event.
 function button(customId: string): ButtonInteraction<'cached'> {
     return { customId } as unknown as ButtonInteraction<'cached'>;
 }

@@ -182,7 +182,7 @@ describe('DocsEngine mock package integration', () => {
             const label = mockClass.children.find((child) => child.name === 'label');
             expect(label?.kind).toBe(DocKind.Accessor);
             expect(label?.flags.accessor).toBe('getter-setter');
-            // The comment moves onto the signatures, so the member summary won't render it twice.
+            // The comment moves onto the signatures to keep the member summary from rendering it twice.
             expect(label?.comment).toBeNull();
             expect(label?.signatures.map((sig) => sig.kind)).toEqual([DocKind.GetSignature, DocKind.SetSignature]);
             const [getter, setter] = label?.signatures ?? [];
@@ -306,7 +306,7 @@ describe('DocsEngine mock package integration', () => {
         const concrete = fn.signatures.find((sig) => sig.typeParameters.length === 0);
         expect(generic?.typeParameters.map((tp) => tp.name)).toEqual(['TypeT']);
         expect(concrete).toBeDefined();
-        // render.typeParams mirrors the per-signature list, so a concrete overload doesn't render `<…>`.
+        // a concrete overload doesn't render `<…>` because render.typeParams mirrors the per-signature list.
         expect(concrete?.render?.typeParams ?? []).toEqual([]);
     });
 
@@ -352,9 +352,9 @@ describe('DocsEngine mock package integration', () => {
     });
 
     it('resolves references using keys, package hints, and external URLs', async () => {
-        // DocsEngine is the eager NodeLookup; pair it with a registry over its loaded packages. The
-        // eager engine resolves every ref through loaded nodes, so the index-driven cross-package gate
-        // is never reached here.
+        // DocsEngine is the eager NodeLookup. Pair it with a registry over its loaded packages. The
+        // index-driven cross-package gate is never reached here because the eager engine resolves every
+        // ref through loaded nodes.
         const registry: PackageRegistry = {
             isKnownPackage: (name) => engine.getPackage(name) !== null,
             candidatePackages: (current, hinted) => orderedPackageCandidates(current, hinted, engine.listPackages()),

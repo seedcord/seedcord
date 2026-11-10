@@ -20,7 +20,7 @@ afterEach(() => {
     Envapter.useSource(new PortableSource({}));
 });
 
-// the router is the first thing past the ack guard, so a throw there reaches the root catch
+// a throw in the router reaches the root catch because the router is the first thing past the ack guard
 async function routerThrows(thrown: unknown): Promise<{
     response: Response;
     seen: SubscriptionData<'unhandledInteractionError'>[];

@@ -31,8 +31,8 @@ function routeKeyOf(wire: string): string {
 /**
  * Strip the layout hash off a wire and return the prefix that the customId was declared with.
  *
- * Route on this. Changing a shape doesn't change its prefix, so a click on a component built before the
- * change still reaches the same handler. {@link CustomId.decode} then throws the stale error there.
+ * Route on this. A click on a component built before a shape change still reaches the same handler
+ * because changing a shape doesn't change its prefix. {@link CustomId.decode} then throws the stale error there.
  * Returns an empty string when the wire is missing its colon or its routeKey is too short to carry a hash.
  *
  * @param wire - The customId string from the interaction.
@@ -110,7 +110,7 @@ export class CustomId<Prefix extends string, Shape extends CustomIdShape = {}> {
     readonly routeKey: string;
 
     constructor(prefix: Prefix, shape: Shape = {} as Shape) {
-        // prefixOf strips an all-hash routeKey down to '', so an empty prefix could never route. a colon
+        // an empty prefix could never route since prefixOf strips an all-hash routeKey down to ''. a colon
         // or one of the codec's control chars would break the wire framing.
         if (!prefix || /[:\x1B\x1F]/.test(prefix)) {
             throw new SeedcordTypeError(SeedcordErrorCode.CustomIdInvalidPrefix, [prefix]);
@@ -261,8 +261,8 @@ export class CustomId<Prefix extends string, Shape extends CustomIdShape = {}> {
     }
 
     /**
-     * Add a free text field. It's the most expensive field on the wire because it can't be packed, so
-     * use another kind where one fits.
+     * Add a free text field. It's the most expensive field on the wire since it can't be packed.
+     * Use another kind where one fits.
      *
      * @example
      * ```ts
@@ -389,6 +389,6 @@ export type DecodedRoute<Defs extends readonly AnyCustomId[]> = {
 export function decodeFor<Defs extends readonly AnyCustomId[]>(defs: Defs, wire: string): DecodedRoute<Defs> {
     const match = defs.find((def) => def.owns(wire));
     if (!match) throw invalidError(`no customId owns ${JSON.stringify(routeKeyOf(wire))}`);
-    // justified: find() returns AnyCustomId, so the compiler can't tie prefix to params here
+    // justified: the compiler can't tie prefix to params here. find() returns AnyCustomId
     return { prefix: match.prefix, params: match.decode(wire) } as DecodedRoute<Defs>;
 }

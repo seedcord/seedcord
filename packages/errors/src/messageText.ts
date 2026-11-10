@@ -11,7 +11,7 @@ export function reasonThen(reason: string, next: string): string {
     return `${sentence(reason)}${reason.includes('\n') ? '\n' : ' '}${next}`;
 }
 
-// @seedcord/utils depends on this package, so its pluralize is out of reach here
+// pluralize from @seedcord/utils isn't importable here because that package depends on this one
 const plurals = new Intl.PluralRules('en');
 export const allOf = new Intl.ListFormat('en', { type: 'conjunction' });
 export const oneOf = new Intl.ListFormat('en', { type: 'disjunction' });

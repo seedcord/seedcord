@@ -41,7 +41,7 @@ const reply = { components: [new TextDisplayBuilder().setContent('hi')] };
 const serialized = reply.components.map((c) => c.toJSON());
 const modal: ModalLike = { toJSON: () => ({ title: 'x', custom_id: 'y', components: [] }) };
 
-// a command interaction doesn't carry a source message, so it seeds unacked and rejects update
+// a command interaction seeds unacked and rejects update because it doesn't carry a source message
 const commandFlags = { isMessageComponent: false, isModalSubmit: false } as const;
 
 class RejectsShowModalModalKindAt extends ModalHandler<never> {

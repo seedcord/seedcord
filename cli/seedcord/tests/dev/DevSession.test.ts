@@ -57,7 +57,7 @@ function sessionDeps(
     };
 }
 
-// start() spawns tsc --watch before it reaches the throw, so every case has to stop the session
+// every case has to stop the session because start() spawns tsc --watch before it reaches the throw
 async function settle(session: DevSession, run: Promise<unknown>): Promise<unknown> {
     const outcome = await run.then(
         () => null,

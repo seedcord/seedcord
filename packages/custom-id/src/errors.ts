@@ -20,8 +20,8 @@ let active: CustomIdErrors = defaults;
  * Replace the errors that {@link CustomId.decode} throws. The setting is process-wide and the last
  * call wins, so call it before your bot receives any interaction.
  *
- * `stale` gets the route prefix and `invalid` gets a detail string. Neither one gets the interaction,
- * so you can't localize the message per user.
+ * `stale` gets the route prefix and `invalid` gets a detail string. You can't localize the message per user
+ * because neither one gets the interaction.
  *
  * A [seedcord](https://seedcord.org) bot already calls this at import and replaces both defaults with
  * `Notice` subclasses that render a card. To change what the user reads, call it again with your own and

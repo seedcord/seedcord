@@ -16,7 +16,7 @@ interface FakeEntryInput {
     intersectionRatio?: number;
 }
 
-// jsdom ships no IntersectionObserver
+// jsdom doesn't ship an IntersectionObserver
 class FakeIntersectionObserver {
     public static instances: FakeIntersectionObserver[] = [];
     private readonly targets = new Set<Element>();
@@ -81,7 +81,7 @@ describe('useVisibleHeadingIds', () => {
         });
         expect(new Set(result.current)).toEqual(new Set(['the-options']));
 
-        // a second, unrelated heading crossing the threshold must not drop the first
+        // a second, unrelated heading crossing the threshold must keep the first
         act(() => {
             observer.emit([{ target: replacing, isIntersecting: true }]);
         });

@@ -18,7 +18,7 @@ import {
 import type { CommandInfo, ContextMenuInfo } from '#src/commands/CommandInjector';
 import type { ILogger } from '@seedcord/types';
 
-// justified: SlashRegistry is empty in tests, so runtime values read through a plain record
+// justified: runtime values read through a plain record because SlashRegistry is empty in tests
 const commands = Commands as Record<string, CommandInfo>;
 const mentionOf = (route: string): string => commands[route]!.mention;
 

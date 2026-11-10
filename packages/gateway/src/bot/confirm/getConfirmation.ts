@@ -164,8 +164,8 @@ export function getConfirmation(
  * @throws The send error when the prompt fails to send. The handler's fault boundary catches it.
  *
  * @remarks
- * The prompt is collected in-process, so a bot restart ends it. Without an outcome hook seedcord deletes
- * the prompt once the user confirms, so deliver the result with a fresh `this.followUp(...)`.
+ * A bot restart ends the prompt because it is collected in-process. Without an outcome hook seedcord deletes
+ * the prompt once the user confirms. Deliver the result with a fresh `this.followUp(...)` in that case.
  *
  * @example
  * ```ts

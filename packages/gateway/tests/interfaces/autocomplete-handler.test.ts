@@ -36,7 +36,7 @@ declare module '@seedcord/core' {
 // justified: a real Core always has a bus, respond publishes through it
 const core = { bus: { [PublishDefault]: () => undefined } } as unknown as Core;
 
-// the focused getter reads only options.getFocused(true), so a minimal fake is enough.
+// a minimal fake is enough because the focused getter reads only options.getFocused(true).
 function autocomplete(name: string, value: string): AutocompleteInteraction<'cached'> {
     return {
         options: { getFocused: () => ({ name, value, focused: true, type: 3 }) }
@@ -53,7 +53,7 @@ function autocompleteSiblings(focusedName: string, siblings: { limit?: number })
     } as unknown as AutocompleteInteraction<'cached'>;
 }
 
-// match also calls this.event.respond, so capture its choices into a shared array.
+// capture match's choices into a shared array since it also calls this.event.respond.
 function autocompleteRespond(
     name: string,
     value: string,
@@ -135,10 +135,10 @@ class Siblings extends AutocompleteHandler<'search'> {
         expectTypeOf(this.options.getString('query')).toEqualTypeOf<string | null>();
         expectTypeOf(this.options.getString('category')).toEqualTypeOf<'books' | 'films' | null>();
         expectTypeOf(this.options.getInteger('limit')).toEqualTypeOf<number | null>();
-        // search doesn't declare a boolean option, so getBoolean is absent
+        // getBoolean is absent because search doesn't declare a boolean option
         // @ts-expect-error getBoolean does not exist when no boolean option is present.
         void this.options.getBoolean;
-        // autocomplete never resolves a user, so a rich getter is never on the view
+        // a rich getter is never on the view. autocomplete never resolves a user
         // @ts-expect-error getUser is not part of the autocomplete options view.
         void this.options.getUser;
         // @ts-expect-error 'ghost' is not a string option on search.

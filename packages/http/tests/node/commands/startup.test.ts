@@ -18,7 +18,7 @@ const COMMANDS_DIR = path.resolve(__dirname, './fixtures');
 const EMOJI_COMMANDS_DIR = path.resolve(__dirname, './emoji-fixtures');
 const HANDLERS_DIR = path.resolve(__dirname, '../discovery/fixtures/handlers');
 
-// justified: the generated Commands map is empty in tests, so entries read through a plain record
+// justified: entries read through a plain record because the generated Commands map is empty in tests
 const commands = Commands as Record<string, { id: string; mention: string } | undefined>;
 
 function config(commandsPath: string | null, interactionsPath: string | null = null): HttpServerConfig {

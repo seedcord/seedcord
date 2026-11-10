@@ -127,7 +127,7 @@ export class ApiDocsGenerator {
         await this.ensureOutputDirectory();
         const packageDirs = await this.discoverPackages();
         // Built from every workspace package, including ones outside the current `--package` scope,
-        // so a re-export's declaring package always resolves to its real npm name.
+        // because a re-export's declaring package must always resolve to its real npm name.
         const packageNames = await this.buildPackageNames();
         const results: PackageDocResult[] = [];
 

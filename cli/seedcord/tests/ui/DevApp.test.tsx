@@ -227,7 +227,7 @@ describe('DevApp tiers', () => {
         app.unmount();
     });
 
-    // the stack can take every row the log column has, so the pane keeps one back for its own message
+    // the pane keeps one row back for its own message because the stack can take every row the log column has
     it('always says something in the log pane', async () => {
         const store = squeezedStore();
 

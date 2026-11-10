@@ -242,9 +242,9 @@ export function MessageContextMenuRoute<
  * Routes button interactions to handler classes.
  *
  * Pass the {@link CustomId} definition(s) this handler decodes and list the same ones in the handler's
- * generic. Passing different definitions to the decorator and the generic is a compile error. Routing
- * matches the stable prefix, so a wire minted from an older shape still reaches the handler, where
- * reading this.params throws StaleCustomId and the controller boundary turns it into a reply.
+ * generic. Passing different definitions to the decorator and the generic is a compile error. A wire
+ * minted from an older shape still reaches the handler because routing matches the stable prefix.
+ * Reading this.params there throws StaleCustomId, and the controller boundary turns it into a reply.
  *
  * @param defs - The customId definition(s) this handler decodes, one per route.
  * @decorator

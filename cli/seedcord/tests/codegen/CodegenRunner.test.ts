@@ -69,7 +69,7 @@ function runnerWith(
     return new CodegenRunner({ steps: quietSteps, projectLoader, generator: new AugmentationBuilder(logger), logger });
 }
 
-// no commands path, so the scan is empty and the rendered registry is deterministic.
+// the scan is empty and the rendered registry is deterministic because the runner doesn't have a commands path.
 function makeRunner(root: string, logger: ILogger): CodegenRunner {
     const importModule = (): Promise<unknown> => Promise.resolve({ default: brandedInstance() });
 

@@ -20,7 +20,7 @@ export interface SlashRouteLeaf {
  * Enumerates the executable route leaves of a chat-input command's JSON. A command without subcommands is a
  * single leaf at its name. Each subcommand and grouped subcommand is its own leaf, keyed through
  * {@link buildSlashRoute} so a generated registry and a dispatched interaction resolve to the same string. A
- * subcommand group without subcommands deploys nothing on Discord, so it doesn't yield a leaf.
+ * subcommand group without subcommands doesn't yield a leaf because it deploys nothing on Discord.
  */
 export function routeLeavesOf(json: RESTPostAPIChatInputApplicationCommandsJSONBody): SlashRouteLeaf[] {
     const options = json.options ?? [];

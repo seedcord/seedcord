@@ -103,7 +103,7 @@ describe('responseAttempted', () => {
         expect(sent.map((payload) => payload.method)).toEqual(['reply']);
     });
 
-    // the write advances the clock, so no other performance.now() reader shifts the measurement
+    // no other performance.now() reader shifts the measurement because the write advances the clock
     it('measures the write, from before it starts until it settles', async () => {
         const { bus, sent } = busWithSpy();
         const sender = new TestSender(bus);

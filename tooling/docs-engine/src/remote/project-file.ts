@@ -48,7 +48,7 @@ export function validateProjectFile(value: unknown): DocProjectFile {
         throw new ProjectFetchError(null, 'project.json.root must be an object');
     }
 
-    // serializeProject has already produced this tree at publish time, so deep validation here would be redundant cost on every fetch.
+    // deep validation here would add redundant cost on every fetch because serializeProject has already produced this tree at publish time.
     return {
         schemaVersion: 1,
         package: { name: pkg.name, version: pkg.version },

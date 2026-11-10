@@ -9,7 +9,7 @@ import type { CustomIdField } from './Field';
 
 // converts one field's value to a bigint and back. codec.ts packs those bigints into the wire.
 
-// a bounded field has a known range, so codec.ts packs it into the shared integer
+// codec.ts packs a bounded field into the shared integer since it has a known range
 export function isBounded(field: CustomIdField<unknown>): boolean {
     if (field.kind === 'int') return field.min !== undefined && field.max !== undefined;
     return (
@@ -38,7 +38,7 @@ function kindRadix(field: CustomIdField<unknown>): bigint {
             return 2n;
         }
         case 'oneOf': {
-            // oneOf() already rejects an empty list, so this only throws for a hand-built shape
+            // this only throws for a hand-built shape because oneOf() already rejects an empty list
             if (!field.choices?.length) throw invalidError("oneOf field doesn't have choices");
             return BigInt(field.choices.length);
         }
@@ -47,7 +47,7 @@ function kindRadix(field: CustomIdField<unknown>): bigint {
             return 1n << BigInt(field.choices.length);
         }
         case 'int': {
-            // isBounded only passes an int with both bounds, so a missing one means a corrupt shape
+            // a missing bound means a corrupt shape. isBounded only passes an int with both bounds
             if (field.min === undefined || field.max === undefined)
                 throw invalidError('bounded int field is missing a bound');
             // convert first. in float64, max - min + 1 loses the +1 once it reaches 2^53.
@@ -70,7 +70,7 @@ export function boundedToBigint(field: CustomIdField<unknown>, name: string, val
     return slot;
 }
 
-// BigInt() throws a bare TypeError or SyntaxError on bad input, so check first and throw ours
+// check first and throw our own error because BigInt() throws a bare TypeError or SyntaxError on bad input
 function snowflakeSlot(field: CustomIdField<unknown>, name: string, value: unknown): bigint {
     if (typeof value !== 'string' || !/^\d+$/.test(value)) return reject(field, name, value);
     return BigInt(value);

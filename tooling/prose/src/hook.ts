@@ -3,8 +3,8 @@ import { existsSync, readFileSync } from 'node:fs';
 import { createRequire } from 'node:module';
 import { dirname, join, relative } from 'node:path';
 
-// Claude Code PostToolUse hook for Write and Edit. A session started in one checkout can edit another, like a
-// worktree it created, so the edited file's own checkout supplies the linters and the rules.
+// Claude Code PostToolUse hook for Write and Edit. The edited file's own checkout supplies the linters
+// and the rules because a session started in one checkout can edit another, like a worktree it created.
 
 interface ToolInput {
     file_path: string;
@@ -55,7 +55,7 @@ class Checkout {
         return [...this.valeAlerts(file), ...this.stringAlerts(file)];
     }
 
-    // a node_modules/.bin shim is a shell script on unix and a .cmd file on windows, so node runs the package's own bin
+    // node runs the package's own bin because a node_modules/.bin shim is a shell script on unix and a .cmd file on windows
     private run(pkg: string, bin: string, args: string[]): string {
         let manifest: string;
         try {

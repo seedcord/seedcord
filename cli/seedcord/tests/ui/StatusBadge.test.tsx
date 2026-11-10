@@ -11,7 +11,7 @@ import type { ReactElement } from 'react';
 
 const SIZE = { rows: 24, columns: 80 };
 
-// balloon2 ticks every 120ms, so this lands on frame 4, past toggle4's four frames
+// this reaches frame 4, past toggle4's four frames, because balloon2 ticks every 120ms
 const PAST_TOGGLE4 = 520;
 
 const TOGGLE4_FRAMES = ['■', '□', '▪', '▫'];

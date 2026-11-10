@@ -31,7 +31,7 @@ function canReplaceEphemeral(
     messageFlagsAlias: string | undefined
 ): boolean {
     const hasFlags = options.properties.some((property) => propertyName(property) === 'flags');
-    // a spread could already carry a flags key, so the autofix is skipped to avoid duplicating it
+    // the autofix is skipped because a spread could already carry a flags key and the fix would duplicate it
     const hasSpread = options.properties.some((property) => property.type === AST_NODE_TYPES.SpreadElement);
     const isTrue = ephemeral.value.type === AST_NODE_TYPES.Literal && ephemeral.value.value === true;
     return messageFlagsAlias !== undefined && !hasFlags && !hasSpread && isTrue;

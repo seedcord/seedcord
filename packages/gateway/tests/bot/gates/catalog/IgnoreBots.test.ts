@@ -6,7 +6,7 @@ import { IgnoreBots } from '#bot/gates/catalog';
 import type { EventGateContext } from '#bot/gates';
 
 function actorCtx(isBot: boolean): EventGateContext {
-    // the gate reads only the event actor's bot flag, so a minimal cast stands in
+    // a minimal cast stands in because the gate reads only the event actor's bot flag
     return { user: { bot: isBot } } as unknown as EventGateContext;
 }
 

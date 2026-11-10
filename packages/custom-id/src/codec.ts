@@ -5,14 +5,14 @@ import { bigintToBoundedValue, boundedToBigint, isBounded, radixOf, reject, reje
 
 import type { CustomIdField, CustomIdShape } from './Field';
 
-// a wire is `routeKey:body`. the routeKey is the prefix plus a short hash of the shape, so decode can tell
-// when a button was encoded under an older shape.
+// a wire is `routeKey:body`. the routeKey is the prefix plus a short hash of the shape.
+// decode compares the hash to tell when a button was encoded under an older shape.
 // every field with a known range gets packed into one big base64 number. free strings and unbounded ints
 // come after it, each one split off by a delimiter.
 //
 // only runtime values in here. CustomId.ts adds the types.
 
-// url-safe base64. every char is one utf-16 unit, so the 100-char check on wire.length is exact
+// url-safe base64. the 100-char check on wire.length is exact because every char is one utf-16 unit
 const ALPHABET = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789-_';
 const BASE = 64n;
 const CHAR_TO_VALUE = new Map([...ALPHABET].map((char, index) => [char, index] as const));
@@ -128,7 +128,7 @@ function decodeUnboundedToken(field: CustomIdField<unknown>, piece: string): unk
 
 /** @internal */
 export function computeLayoutHash(shape: CustomIdShape): string {
-    // JSON.stringify escapes the choice strings, so two different shapes never give the same signature
+    // two different shapes never give the same signature because JSON.stringify escapes the choice strings
     const signature = JSON.stringify(
         Object.entries(shape).map(([name, field]) => [
             name,

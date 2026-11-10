@@ -3,8 +3,8 @@ import type { Repliables } from '#src/handlers/interactionTypes';
 import type { APIUser } from 'discord-api-types/v10';
 
 /**
- * The context passed to a source loader. The raw payload has a guild id but no guild object, so a
- * loader that requires guild data fetches it through `core.rest`.
+ * The context passed to a source loader. A loader that requires guild data fetches it through
+ * `core.rest` because the raw payload has a guild id but doesn't have a guild object.
  */
 export interface PageContext {
     /** The interaction that triggered this load (a command or a nav click). */

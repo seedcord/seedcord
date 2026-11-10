@@ -76,8 +76,8 @@ function botMemberMissing(guildId: string): never {
  * scope.
  *
  * The default `'channel'` scope reads the effective channel set in the payload, what Discord enforces
- * in the invoked channel. The `'guild'` scope reads the base set from roles and requires a
- * {@link GuildPermissionsContext}, so it fits a gateway handler only.
+ * in the invoked channel. The `'guild'` scope reads the base set from roles and fits a gateway handler only,
+ * because it requires a {@link GuildPermissionsContext}.
  *
  * @param scope - The permission flag bits the caller must all hold.
  * @param options - Pick the scope with `in`. Replace a refusal with a Notice class as `notInGuild`, `unresolved`, or `missing`.

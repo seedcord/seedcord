@@ -10,8 +10,6 @@ tokens:
   - 'easy'
   - 'easily'
   - 'simple'
-  # the temporal sense ("a member who just left") passes
-  - 'just(?! (?:\w+ed|sent|hit|left|joined|made|got|ran|wrote|built|did|saw|came|went|took)\b)'
   - 'please'
   - 'unlock(?:s|ed)?'
   - 'clearly'

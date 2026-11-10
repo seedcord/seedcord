@@ -1,4 +1,4 @@
-// stable first-seen assignment keeps a channel's tag matched to its filter chip. red is reserved for errors and the live dot, so the palette leaves it out.
+// stable first-seen assignment keeps a channel's tag matched to its filter chip. the palette leaves red out because it's reserved for errors and the live dot.
 const PALETTE = [
     '#ff8a3d',
     '#ff6a4d',

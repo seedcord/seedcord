@@ -127,7 +127,7 @@ export class DevRunner {
         }
     }
 
-    // no caller awaits this promise, so run() does
+    // run() awaits this promise because callers don't
     public async quit(): Promise<void> {
         this.quitting ??= this.runQuit();
         return this.quitting;

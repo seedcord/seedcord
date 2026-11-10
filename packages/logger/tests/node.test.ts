@@ -411,7 +411,7 @@ describe('installNodeDefaults', () => {
 
         installNodeDefaults();
         installNodeDefaults();
-        // the eager File transport opens its stream on the next tick, so wait past it before asserting
+        // wait past the next tick before asserting because the eager File transport opens its stream then
         await new Promise((resolve) => setTimeout(resolve, 100));
 
         expect(existsSync(folder.logs) ? readdirSync(folder.logs) : []).toEqual([]);

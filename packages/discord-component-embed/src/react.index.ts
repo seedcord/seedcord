@@ -11,8 +11,8 @@ export interface ComponentEmbedProps {
 }
 
 /**
- * Renders the `<script>` tag Discord reads for a component embed. Discord does not run JavaScript, so render this on
- * the server or at build time. It works in the `<head>` or the `<body>`.
+ * Renders the `<script>` tag Discord reads for a component embed. Render this on the server or at build time because
+ * Discord does not run JavaScript. It works in the `<head>` or the `<body>`.
  *
  * @example
  * ```tsx

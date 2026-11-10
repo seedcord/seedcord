@@ -26,7 +26,7 @@ ruleTester.run('select-menu-min-exceeds-max', rule, {
             import { StringSelectMenuBuilder } from 'discord.js';
             new StringSelectMenuBuilder().setCustomId('c').setMaxValues(2);
         `,
-        // a dynamic bound is not statically provable, so it is skipped
+        // it is skipped because a dynamic bound isn't statically provable
         dedent`
             import { StringSelectMenuBuilder } from 'discord.js';
             declare const n: number;
@@ -42,7 +42,7 @@ ruleTester.run('select-menu-min-exceeds-max', rule, {
             import { StringSelectMenuBuilder } from 'discord.js';
             new StringSelectMenuBuilder().setCustomId('c').setMaxValues(2).setMinValues(5).setMinValues(1);
         `,
-        // a literal number in a variable is still a literal type, so it is checked, and this pair is fine
+        // it is checked because a literal number in a variable is still a literal type, and this pair is fine
         dedent`
             import { StringSelectMenuBuilder } from 'discord.js';
             const MIN = 2;

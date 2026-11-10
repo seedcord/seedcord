@@ -35,7 +35,8 @@ Don't write a scene. An invented person, a made-up afternoon, "you've hunted for
 
 Rules for the problem sentence:
 
-- **Ground it** in the guide or the code, never in what you remember about another library. An opener once claimed plain discord.js splits a command across two files, and discord.js's own guide puts both in one.
+- **Ground it** in the guide or the code. The problem has to be one this feature solves, sourced from its declarations. A problem remembered from another library or made up to fit the feature is wrong, even when it sounds plausible. An opener once claimed plain discord.js splits a command across two files, and discord.js's own guide puts both in one.
+- **Write the problem as what it costs.** "You can declare those types by hand, though you'd update them on every rename" offers the reader a choice and tucks the cost behind `though`. "Without codegen, you'd declare those types by hand and update them each time you rename a key" states the cost.
 - **Give the verb to whoever acts.** "A second reply comes back rejected" reads as seedcord rejecting it. Discord rejects it, so write that.
 - **Use `would` only after a frame.** Without one, "You'd write your own wording onto that card" reads as advice. "The wording on that card is yours to replace" states what's true.
 - **Leave a limit unframed when the reader still lives with it.** Discord still allows three seconds and still sends a click back as one string. A frame there promises a fix that nobody ships.

@@ -27,13 +27,13 @@ ruleTester.run('valid-command-name', rule, {
             const NAME = 'ban-user';
             new SlashCommandBuilder().setName(NAME);
         `,
-        // a plain string variable doesn't have a literal type, so it is skipped
+        // it is skipped because a plain string variable doesn't have a literal type
         dedent`
             import { SlashCommandBuilder } from 'discord.js';
             declare const name: string;
             new SlashCommandBuilder().setName(name);
         `,
-        // a context menu command name may use spaces and uppercase, so it is left alone
+        // it is left alone. a context menu command name may use spaces and uppercase
         dedent`
             import { ContextMenuCommandBuilder } from 'discord.js';
             new ContextMenuCommandBuilder().setName('View Profile');
@@ -163,7 +163,7 @@ new SlashCommandBuilder().setName(\`Ban\`);`,
             errors: [{ messageId: 'invalidName' }]
         },
         {
-            // a union-typed receiver doesn't have a single symbol, so extendsDjsType walks its members
+            // extendsDjsType walks the members since a union-typed receiver doesn't have a single symbol
             code: dedent`
                 import { SlashCommandBuilder, SlashCommandSubcommandBuilder } from 'discord.js';
                 declare const b: SlashCommandBuilder | SlashCommandSubcommandBuilder;
@@ -172,7 +172,7 @@ new SlashCommandBuilder().setName(\`Ban\`);`,
             errors: [{ messageId: 'invalidName' }]
         },
         {
-            // a subclass reports its own symbol name, so extendsDjsType walks the base chain
+            // extendsDjsType walks the base chain because a subclass reports its own symbol name
             code: dedent`
                 import { SlashCommandBuilder } from 'discord.js';
                 class MyBuilder extends SlashCommandBuilder {}

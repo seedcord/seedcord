@@ -2,8 +2,8 @@ import type { EffectGate, Gate, GateContextBase } from './Gate';
 
 type CommitFn = () => Promise<void>;
 
-// commits wait here until the whole gate set passes, one queue per request. the key is the context
-// itself and the map is weak, so gc frees an entry along with its request
+// commits wait here until the whole gate set passes, one queue per request. gc frees an entry along
+// with its request because the key is the context itself and the map is weak
 const commitQueues = new WeakMap<GateContextBase, CommitFn[]>();
 
 function isEffectGate(gate: Gate<GateContextBase>): gate is EffectGate<GateContextBase> {

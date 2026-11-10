@@ -102,7 +102,7 @@ function useMeasuredHeight(): [number, (el: HTMLDivElement | null) => void] {
     const observerRef = useRef<ResizeObserver | null>(null);
     const [height, setHeight] = useState(0);
 
-    // the radix portal drops this node on close. a callback ref re-attaches the observer on the next open
+    // the radix portal unmounts this node on close. a callback ref re-attaches the observer on the next open
     const measureRef = useCallback((el: HTMLDivElement | null) => {
         observerRef.current?.disconnect();
         if (!el) {

@@ -67,7 +67,7 @@ export abstract class Notice extends Error {
     protected constructor(message: string, options?: ErrorOptions) {
         super(message, options);
 
-        // Error sets name to 'Error', so stamp the concrete subclass name for logs and the fault report
+        // stamp the concrete subclass name for logs and the fault report because Error sets name to 'Error'
         this.name = new.target.name;
         Error.captureStackTrace(this, this.constructor);
     }

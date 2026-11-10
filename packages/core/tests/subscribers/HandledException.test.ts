@@ -56,7 +56,7 @@ function reportText(denial: Notice, source: FaultSource): string {
     return JSON.stringify(report.components.map((component) => component.toJSON()));
 }
 
-// the raw text-display strings, so an assertion reads the real webhook content before JSON escaping
+// the raw text-display strings, to let an assertion read the real webhook content before JSON escaping
 function rawText(denial: Notice, source: FaultSource, suppressed = 0): string {
     const report = handledReport(denial, source, suppressed);
     // justified: report() emits a single container component, its json shape is APIContainerComponent

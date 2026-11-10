@@ -105,7 +105,7 @@ export class Controls implements PaginatorControls {
         if (keys.length === 0 || keys.length > MAX_BUTTONS_PER_ROW) {
             throw new SeedcordRangeError(SeedcordErrorCode.PaginationControlCount, [keys.length, MAX_BUTTONS_PER_ROW]);
         }
-        // repeating a control reuses its slot and page, so the custom_ids collide and Discord rejects the message.
+        // a repeated control reuses its slot and page, and Discord rejects a message with colliding custom_ids
         const seen = new Set<ControlKey>();
         for (const key of keys) {
             if (seen.has(key)) throw new SeedcordTypeError(SeedcordErrorCode.PaginationDuplicateControls, [key]);

@@ -16,8 +16,8 @@ export function useSidebarPersistence(
     const collapsedStorageKey = `docs.sidebar.collapsed:${localPackageId}:${localVersionId}`;
     const scrollStorageKey = `docs.sidebar.scroll:${localPackageId}:${localVersionId}`;
 
-    // the ref callback's identity changes with scrollStorageKey, so react detaches the old listener,
-    // reattaches to the same node, and restores that key's saved scrollTop.
+    // react detaches the old listener, reattaches to the same node, and restores that key's saved
+    // scrollTop because the ref callback's identity changes with scrollStorageKey.
     const scrollRef = useCallback(
         (el: HTMLDivElement | null): (() => void) => {
             if (!el) return () => undefined;

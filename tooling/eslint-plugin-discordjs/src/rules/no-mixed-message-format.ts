@@ -10,7 +10,7 @@ import type * as ts from 'typescript';
 // a message has content in these fields or in builder components, never both
 const CONTENT_FIELDS = ['content', 'embeds', 'poll', 'stickers', 'sticker_ids'];
 
-// JSON serialization omits an undefined property, so the wire payload doesn't include that field
+// the wire payload doesn't include that field because JSON serialization omits an undefined property
 function isDefinitelyUndefined(type: ts.Type): boolean {
     return (type.flags & TypeFlags.Undefined) !== 0;
 }

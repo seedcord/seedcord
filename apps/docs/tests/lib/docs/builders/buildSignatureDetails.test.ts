@@ -17,7 +17,7 @@ vi.mock('#lib/docs/formatting', () => {
         highlightCode: vi.fn((text: string) => Promise.resolve(code(text)))
     };
 });
-// param/throws-free signatures never call formatCommentRich, so stub the module to keep its shiki imports out.
+// stub the module to keep its shiki imports out because param/throws-free signatures never call formatCommentRich.
 vi.mock('#lib/docs/comments/formatter', () => ({
     formatCommentRich: vi.fn(() => Promise.resolve({ paragraphs: [], examples: [] }))
 }));

@@ -172,7 +172,7 @@ describe('VersionedDocsEngine', () => {
         const engine = makeEngine(fixtureFetcher());
         await engine.setVersion(MOCK_FOLDER, 'latest');
 
-        // `Ghost` is attributed to logger but absent from its entity map, so it does not resolve.
+        // `Ghost` doesn't resolve because it is attributed to logger but absent from its entity map.
         expect(
             engine.resolver().resolve(MOCK_PACKAGE_FULL_NAME, {
                 name: 'Ghost',

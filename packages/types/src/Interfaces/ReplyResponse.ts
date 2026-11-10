@@ -41,8 +41,8 @@ export interface ReplyFile {
 }
 
 /**
- * A ComponentsV2 reply. Discord's components-v2 flag forbids `content`, `embeds`, `stickers`, and `poll`,
- * so a reply has only `components` plus the v2-compatible `allowedMentions` and `files`.
+ * A ComponentsV2 reply. A reply has only `components` plus the v2-compatible `allowedMentions` and
+ * `files` because Discord's components-v2 flag forbids `content`, `embeds`, `stickers`, and `poll`.
  *
  * @typeParam TNative - Extra file forms one transport accepts beyond {@link ReplyFile}. `@seedcord/gateway`
  * binds the discord.js file forms and exports that as `GatewayReplyResponse`. A reply built from

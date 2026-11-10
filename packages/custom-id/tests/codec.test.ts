@@ -125,7 +125,7 @@ describe('CustomId round-trips', () => {
     });
 
     it('round-trips a negative unbounded int', () => {
-        // encode zigzags an unbounded int, so this checks the sign comes back
+        // this checks the sign comes back because encode zigzags an unbounded int
         const Reputation = new CustomId('rep').int('delta');
         expect(Reputation.decode(Reputation.encode({ delta: -424_242 })).delta).toBe(-424_242);
     });
@@ -353,7 +353,7 @@ describe('CustomId corruption is rejected', () => {
     });
 
     it('rejects an unbounded int that decodes past the safe range', () => {
-        // borrow the body of a 2^60 snowflake. as a js number it would lose precision, so decode has to reject it.
+        // borrow the body of a 2^60 snowflake. decode has to reject it since a js number would lose precision.
         const Ban = new CustomId('ban').snowflake('userId');
         const oversized = Ban.encode({ userId: (1n << 60n).toString() }).split(':')[1] ?? '';
         const Counter = new CustomId('counter').int('total');
@@ -371,7 +371,7 @@ describe('CustomId corruption is rejected', () => {
     });
 
     it('rejects a packed block with leftover bits after unpacking', () => {
-        // 'C' decodes to 2. a lone bool packs to 0 or 1, so one bit is left over.
+        // 'C' decodes to 2. a lone bool packs to 0 or 1, leaving one bit over.
         const Flag = new CustomId('flag').bool('on');
         expect(thrownCode(() => Flag.decode(`${Flag.routeKey}:C`))).toBe(SeedcordErrorCode.CustomIdWireInvalid);
     });

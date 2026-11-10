@@ -282,7 +282,7 @@ describe('a driver that writes in two steps', () => {
                 records.set(key, value);
             },
             delete: (key) => void records.delete(key),
-            // holds each value it read until the test lets it go, so a write can finish in between
+            // holds each value it read until the test lets it go, to let a write finish in between
             entries: async function* () {
                 for (const [key, value] of records) {
                     await yieldListed.promise;

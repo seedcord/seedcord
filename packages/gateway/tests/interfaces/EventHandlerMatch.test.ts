@@ -79,7 +79,7 @@ class MissingCase extends EventHandler<Events.MessageCreate | Events.MessageUpda
     }
 }
 
-// each case receives the event's payload as named params, so a param past the tuple's arity is a compile error
+// a param past the tuple's arity is a compile error because each case receives the event's payload as named params
 class CaseArity extends EventHandler<Events.MessageCreate | Events.MessageUpdate> {
     async execute(): Promise<void> {
         await this.match({

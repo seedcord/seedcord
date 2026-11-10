@@ -58,7 +58,7 @@ class Slot {
         return { kind: this.kind ?? 'text' };
     }
 
-    // {{#if x}} only checks that x has an answer, so a tested value can still take any shape
+    // a tested value can still take any shape because {{#if x}} only checks that x has an answer
     private become(kind: Exclude<InputShape['kind'], 'bool'>): void {
         if (this.kind !== undefined && this.kind !== 'bool' && this.kind !== kind) {
             throw new SeedcordTypeError(SeedcordErrorCode.MakeValueUsedTwoWays, [

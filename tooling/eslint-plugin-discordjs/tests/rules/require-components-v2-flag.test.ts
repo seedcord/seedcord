@@ -51,7 +51,7 @@ ruleTester.run('require-components-v2-flag', rule, {
             const F = 32768;
             channel.send({ components: [new ContainerBuilder()], flags: F });
         `,
-        // a let flag widens to number, so it is skipped even though the value would be present
+        // it is skipped even though the value would be present because a let flag widens to number
         dedent`
             import { TextChannel, ContainerBuilder } from 'discord.js';
             declare const channel: TextChannel;
@@ -82,7 +82,7 @@ ruleTester.run('require-components-v2-flag', rule, {
             declare const channel: TextChannel;
             channel.send({ components: [new ContainerBuilder()], flags: 1 << 15 });
         `,
-        // one unresolvable operand makes the whole combination unreadable, so it is left alone
+        // it is left alone. one unresolvable operand makes the whole combination unreadable
         dedent`
             import { TextChannel, ContainerBuilder, MessageFlags } from 'discord.js';
             declare const channel: TextChannel;
@@ -96,7 +96,7 @@ ruleTester.run('require-components-v2-flag', rule, {
             declare const bits: number;
             channel.send({ components: [new ContainerBuilder()], flags: bits });
         `,
-        // an action row is not a v2 builder, so no flag is required
+        // no flag is required since an action row isn't a v2 builder
         dedent`
             import { TextChannel, ActionRowBuilder } from 'discord.js';
             declare const channel: TextChannel;
@@ -128,7 +128,7 @@ ruleTester.run('require-components-v2-flag', rule, {
             const payload = { components: [new ContainerBuilder()] };
             render(payload);
         `,
-        // a reassigned payload variable, its initializer is dead, so it is skipped
+        // a reassigned payload variable is skipped because its initializer is dead
         dedent`
             import { TextChannel, ContainerBuilder } from 'discord.js';
             declare const channel: TextChannel;
@@ -136,7 +136,7 @@ ruleTester.run('require-components-v2-flag', rule, {
             payload = { components: [] };
             channel.send(payload);
         `,
-        // the flag is added at the spread site, so the inline payload is valid
+        // the inline payload is valid. the flag is added at the spread site
         dedent`
             import { TextChannel, ContainerBuilder, MessageFlags } from 'discord.js';
             declare const channel: TextChannel;
@@ -150,14 +150,14 @@ ruleTester.run('require-components-v2-flag', rule, {
             const base = { flags: MessageFlags.IsComponentsV2 } as const;
             channel.send({ ...base, components: [new ContainerBuilder()] });
         `,
-        // a spread whose flag type is a plain number is unreadable, so it is left alone
+        // a spread whose flag type is a plain number is left alone since it is unreadable
         dedent`
             import { TextChannel, ContainerBuilder } from 'discord.js';
             declare const channel: TextChannel;
             declare const base: { flags: number };
             channel.send({ ...base, components: [new ContainerBuilder()] });
         `,
-        // an inferred object literal widens its flag to the enum, so a non-v2 spread is left alone (a known miss)
+        // a non-v2 spread is left alone (a known miss) because an inferred object literal widens its flag to the enum
         dedent`
             import { TextChannel, ContainerBuilder, MessageFlags } from 'discord.js';
             declare const channel: TextChannel;
@@ -171,7 +171,7 @@ ruleTester.run('require-components-v2-flag', rule, {
             const base = { flags: MessageFlags.IsComponentsV2 } as const;
             channel.send({ flags: MessageFlags.SuppressNotifications, ...base, components: [new ContainerBuilder()] });
         `,
-        // a later components key overrides the v2 spread, so no flag is required
+        // no flag is required. a later components key overrides the v2 spread
         dedent`
             import { TextChannel, ContainerBuilder, ActionRowBuilder } from 'discord.js';
             declare const channel: TextChannel;
@@ -197,7 +197,7 @@ ruleTester.run('require-components-v2-flag', rule, {
             const extra = [MessageFlags.IsComponentsV2] as const;
             channel.send({ components: [new ContainerBuilder()], flags: [...extra] });
         `,
-        // a spread of a plain number array is unreadable, so the array is left alone
+        // the array is left alone since a spread of a plain number array is unreadable
         dedent`
             import { TextChannel, ContainerBuilder, MessageFlags } from 'discord.js';
             declare const channel: TextChannel;

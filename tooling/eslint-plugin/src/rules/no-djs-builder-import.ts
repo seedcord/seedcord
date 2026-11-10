@@ -4,7 +4,7 @@ import { createRule } from '#src/createRule';
 
 import type { TSESLint, TSESTree } from '@typescript-eslint/utils';
 
-// discord.js re-exports a separate CJS copy of these builders, so instanceof and toJSON break when one nests in an ESM seedcord component
+// instanceof and toJSON break when one of these nests in an ESM seedcord component because discord.js re-exports a separate CJS copy of the builders
 const BUILDERS = new Set([
     'ActionRowBuilder',
     'ButtonBuilder',
@@ -129,7 +129,7 @@ export default createRule({
 
         return {
             ImportDeclaration(node) {
-                // a type-only import is erased, so no CJS copy reaches runtime
+                // no CJS copy reaches runtime from a type-only import because the compiler erases it
                 if (node.importKind === 'type' || !isDiscordJs(node.source)) return;
                 for (const spec of node.specifiers) {
                     if (spec.type === AST_NODE_TYPES.ImportNamespaceSpecifier) {

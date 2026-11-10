@@ -6,9 +6,9 @@ export interface PackageReexports {
 }
 
 /**
- * Find every symbol a package re-exports that its declaring package never exports. No package gives
- * those a page, so the docs omit them. A symbol that the owner exports and tags `@internal` is allowed,
- * since the owner made that call. Returns one message per offender.
+ * Find every symbol a package re-exports that its declaring package never exports. The docs omit them
+ * because the declaring package doesn't give them a page. A symbol that the owner exports and tags `@internal` is
+ * allowed since the owner made that call. Returns one message per offender.
  */
 export function findReexportsMissingFromOwner(packages: readonly PackageReexports[]): string[] {
     const exportedByPackage = new Map(packages.map((pkg) => [pkg.name, new Set(pkg.exportedNames)]));

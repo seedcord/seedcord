@@ -347,8 +347,8 @@ export class ApiAdapter {
         const signatureName =
             apiKindToDocKind(item) === DocKind.Constructor ? (item.parent?.displayName ?? owner.name) : owner.name;
 
-        // owner.typeParameters holds the first overload's list, so every other overload would be
-        // mislabelled by it (buildSlashRoute's overloads differ).
+        // every other overload would be mislabelled by owner.typeParameters because it holds the first
+        // overload's list (buildSlashRoute's overloads differ).
         const typeParameters = this.typeParamsFor(item);
         const render = this.buildSignatureRender(item, signatureName, renderParameters, typeParameters);
 

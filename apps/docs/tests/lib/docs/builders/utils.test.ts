@@ -121,7 +121,7 @@ describe('selectDescription', () => {
 
         const result = selectDescription(signatureComments, makeFormattedComment([]));
 
-        // each overload keeps its own description in its panel, so neither is pinned to the static header
+        // neither is pinned to the static header because each overload keeps its own description in its panel
         expect(result).toEqual({ description: null, signatureIndex: null });
     });
 

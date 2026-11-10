@@ -20,8 +20,8 @@ function buildConfigObject(options: {
         enabled: true,
         apiJsonFilePath: options.apiJsonPath,
         includeForgottenExports: true,
-        // AE trims `@internal` out of the doc model by default. Here it is only a render-time
-        // badge, so internal symbols still get pages.
+        // internal symbols still get pages because `@internal` is only a render-time badge here. AE
+        // trims it out of the doc model by default.
         releaseTagsToTrim: []
     };
 

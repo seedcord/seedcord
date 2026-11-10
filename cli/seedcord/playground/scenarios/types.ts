@@ -15,7 +15,7 @@ export interface PreviewContext {
     emit(event: DevEvent): void;
     wait(ms: number): Promise<void>;
     // isAborted is a method because scenarios poll it in loops. a readonly property would narrow to
-    // its initial value, so it never reflects the flip on unmount
+    // its initial value and never reflect the flip on unmount
     isAborted(): boolean;
 }
 

@@ -7,13 +7,13 @@ import type { GateContextBase } from '#gates/Gate';
 import type { CoreBase } from '#interfaces/CoreBase';
 
 function ownerCtx(userId: string | null, ownerIds: string[]): GateContextBase {
-    // the gate reads only core.config.ownerIds and userId, so a minimal cast stands in
+    // a minimal cast stands in because the gate reads only core.config.ownerIds and userId
     const core = { config: { ownerIds } } as unknown as CoreBase;
     return { core, userId } as unknown as GateContextBase;
 }
 
 function guildCtx(inGuild: boolean): GateContextBase {
-    // the gate reads only guildId, so a minimal cast stands in
+    // a minimal cast stands in because the gate reads only guildId
     return { guildId: inGuild ? 'g1' : null } as unknown as GateContextBase;
 }
 

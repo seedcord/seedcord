@@ -16,7 +16,7 @@ function jsonish(value: unknown): string {
     }
 }
 
-// util.format is node-only, so this reimplements the specifiers for edge runtimes
+// this reimplements the specifiers for edge runtimes because util.format is node-only
 function interpolate(message: string, args: readonly unknown[]): { text: string; rest: unknown[] } {
     let consumed = 0;
     const text = message.replaceAll(SPECIFIER, (spec) => {

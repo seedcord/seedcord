@@ -165,7 +165,7 @@ describe('KyselyPostgres Plugin Integration', () => {
 
         await plugin.onHmr({ file: userFile, type: 'update' });
 
-        // the unchanged product leaf is still tracked, so the single-leaf reload kept the store
+        // the single-leaf reload kept the store because the unchanged product leaf is still tracked
         expect(plugin.services).toHaveProperty('products');
         expect(plugin.services).toHaveProperty('admins');
         expect(plugin.services).not.toHaveProperty('users');
@@ -173,7 +173,7 @@ describe('KyselyPostgres Plugin Integration', () => {
 
     it('removes services registered by a failed init when the retry no longer finds them', async () => {
         const servicesDir = 'services';
-        // A sorts before Z, so this one registers before the broken file aborts the scan
+        // this one registers before the broken file aborts the scan. A sorts before Z
         await testEnv.createFile(
             `${servicesDir}/AUserService.ts`,
             `
@@ -239,7 +239,7 @@ describe('KyselyPostgres Plugin Integration', () => {
         await testEnv.createFile(`${servicesDir}/UserService.ts`, 'export const broken = {{{ not valid');
         await plugin.onHmr({ file: userFile, type: 'update' });
 
-        // the failed reload rolled back, so the last-good service round-trips and is still registered
+        // the last-good service round-trips and is still registered since the failed reload rolled back
         expect(plugin.services).toHaveProperty('users');
     });
 

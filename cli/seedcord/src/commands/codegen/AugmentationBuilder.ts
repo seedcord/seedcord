@@ -148,8 +148,8 @@ export class AugmentationBuilder {
         menus.set(json.name, { cache: cacheStateOf(json.contexts) });
     }
 
-    // toJSON() allows an empty subcommand group though discord rejects it at deploy. routeLeavesOf gives it
-    // no route, so it never reaches the tables
+    // toJSON() allows an empty subcommand group though discord rejects it at deploy. the group never
+    // reaches the tables because routeLeavesOf doesn't give it a route
     private warnEmptyGroups(json: RESTPostAPIChatInputApplicationCommandsJSONBody): void {
         for (const option of json.options ?? []) {
             if (option.type === ApplicationCommandOptionType.SubcommandGroup && (option.options ?? []).length === 0) {

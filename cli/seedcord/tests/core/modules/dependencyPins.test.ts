@@ -12,7 +12,7 @@ interface Manifest {
 }
 
 function manifest(packageJson: string): Manifest {
-    // justified: every field is optional, so this fits any package.json
+    // justified: this fits any package.json because every field is optional
     return JSON.parse(readFileSync(packageJson, 'utf8')) as Manifest;
 }
 
@@ -33,7 +33,7 @@ describe('cloudflare pins', () => {
 });
 
 describe('rolldown pin', () => {
-    // the dts plugin imports rolldown on its own, so our range has to include the version vite runs.
+    // our range has to include the version vite runs because the dts plugin imports rolldown on its own.
     // vite in this repo is vite-plus-core, which ships rolldown inside and lists its version in bundledVersions
     it('accepts the rolldown version vite bundles', () => {
         const bundled = manifest(join(CLI_ROOT, 'node_modules/vite/package.json')).bundledVersions?.rolldown;

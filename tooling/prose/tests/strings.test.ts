@@ -41,6 +41,11 @@ new RuleTester().run('strings', strings, {
             errors: [{ messageId: 'prose', column: 37, endColumn: 42 }]
         },
         {
+            // the word after an escaped newline is a word of its own
+            code: String.raw`const note = 'The job\nstays untouched.';`,
+            errors: [{ messageId: 'prose', column: 24, endColumn: 29 }]
+        },
+        {
             code: 'const message = `Pass ${name} rather than a string, since the codec reads it`;',
             errors: [{ messageId: 'prose', column: 31, endColumn: 42 }]
         },

@@ -31,7 +31,7 @@ describe('guardedAccessor', () => {
 
     // a command or emoji can legitimately be named `constructor`
     it('throws for a key inherited from Object.prototype', () => {
-        // a plain store, so Object.prototype is actually in the chain
+        // a plain store puts Object.prototype in the chain
         const accessor = guardedAccessor('Commands', {});
 
         for (const inherited of ['constructor', 'toString', 'valueOf', 'hasOwnProperty']) {

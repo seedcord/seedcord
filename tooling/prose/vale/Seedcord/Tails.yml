@@ -4,7 +4,6 @@ message: "'%s' makes the reader picture what the sentence left out. Cut it, or p
 level: suggestion
 ignorecase: true
 tokens:
-  - 'instead of'
   - 'and nothing else'
   - "and that's it"
   - 'nothing more'

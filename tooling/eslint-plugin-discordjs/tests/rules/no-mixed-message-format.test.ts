@@ -12,7 +12,7 @@ ruleTester.run('no-mixed-message-format', rule, {
             import { ContainerBuilder } from 'discord.js';
             const payload = { components: [new ContainerBuilder()] };
         `,
-        // an action row is not a v2 builder, so it can sit alongside content
+        // an action row can sit alongside content because it isn't a v2 builder
         dedent`
             import { ActionRowBuilder } from 'discord.js';
             const payload = { content: 'hi', components: [new ActionRowBuilder()] };
@@ -37,7 +37,7 @@ ruleTester.run('no-mixed-message-format', rule, {
             declare const base: MessageCreateOptions;
             const payload = { ...base, components: [new ContainerBuilder()] };
         `,
-        // a later components key overrides the v2 spread, so the final payload is not v2
+        // the final payload isn't v2 since a later components key overrides the v2 spread
         dedent`
             import { ContainerBuilder, ActionRowBuilder } from 'discord.js';
             const base = { components: [new ContainerBuilder()] };
@@ -55,13 +55,13 @@ ruleTester.run('no-mixed-message-format', rule, {
             declare const file: unknown;
             const payload = { files: [file], components: [new ContainerBuilder()] };
         `,
-        // a seedcord row accessory is an action row, so content next to it is fine
+        // content next to a seedcord row accessory is fine. the accessory is an action row
         dedent`
             import { RowComponent } from './seedcord';
             declare const row: RowComponent<'button'>;
             const payload = { content: 'hi', components: [row.component] };
         `,
-        // an undefined value serializes to nothing, so the payload is not mixed
+        // the payload isn't mixed because an undefined value serializes to nothing
         dedent`
             import { ContainerBuilder } from 'discord.js';
             const payload = { content: undefined, components: [new ContainerBuilder()] };

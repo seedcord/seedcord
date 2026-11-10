@@ -37,7 +37,7 @@ function renderTooltip({
 }
 
 function hoverTrigger(trigger: HTMLElement): void {
-    // justified: Radix opens on pointerMove (pointerType !== 'touch'); user-event's hover schedules through its own delay queue and races Radix's timer logic under fake timers, so drive pointer events directly via fireEvent.
+    // justified: Radix opens on pointerMove (pointerType !== 'touch'); call fireEvent for the pointer events directly because user-event's hover schedules through its own delay queue and races Radix's timer logic under fake timers.
     fireEvent.pointerMove(trigger, { pointerType: 'mouse' });
 }
 

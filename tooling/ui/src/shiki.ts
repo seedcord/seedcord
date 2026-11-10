@@ -75,7 +75,7 @@ const EXTERNAL_URL_RE = /^https?:\/\//i;
 
 const NEW_TAB = { target: '_blank', rel: ['noreferrer', 'noopener'] };
 
-// transformerDecorations splits a token at any offset, so a link inside `: Foo` gets its own anchor
+// a link inside `: Foo` gets its own anchor because transformerDecorations splits a token at any offset
 function toDecorations(links: readonly CodeLink[]): DecorationItem[] {
     return links.map((link) => ({
         start: link.start,

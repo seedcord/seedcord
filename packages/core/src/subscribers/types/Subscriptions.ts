@@ -62,7 +62,7 @@ export interface AttemptedWrite {
     readonly routeId: string;
     /** The interaction that this write belongs to, for joining against `interactionDispatched`. */
     readonly interactionId: string;
-    /** `send` routes to another verb, so it reports the verb that ran. */
+    /** The verb that ran. A `send` reports the verb it routed to. */
     readonly method: WriteMethod;
     readonly durationMs: number;
 }
@@ -147,8 +147,8 @@ export interface DefaultSubscriptions {
         /**
          * Discord's interaction creation until dispatch entry, read from the snowflake. This covers
          * network transit plus any time your bot was busy before starting. A rise points at either
-         * Discord or your own backlog. It subtracts a Discord timestamp from the host clock, so a host
-         * running behind Discord reports a negative value.
+         * Discord or your own backlog. A host running behind Discord reports a negative value
+         * because this subtracts a Discord timestamp from the host clock.
          */
         readonly queuedMs: number;
     };

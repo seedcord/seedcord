@@ -345,7 +345,7 @@ describe('ReferenceResolver.resolve', () => {
             known: ['seedcord', '@seedcord/logger'],
             cross: LOGGER_CROSS
         });
-        // `Ghost` is not an entity in the logger index, so it does not resolve.
+        // `Ghost` doesn't resolve because it isn't an entity in the logger index.
         const ref: DocReference = { name: 'Ghost', packageName: '@seedcord/logger', qualifiedName: 'Ghost' };
         expect(resolver.resolve('seedcord', ref)).toEqual({ kind: 'unresolved' });
     });
@@ -384,8 +384,8 @@ describe('ReferenceResolver.href cross-package', () => {
             known: ['seedcord', '@seedcord/logger'],
             cross: LOGGER_CROSS
         });
-        // EventEmitter is not an entity in the logger index, so href falls through to the
-        // external-link table instead of building a 404 internal link.
+        // href falls through to the external-link table instead of building a 404 internal link because
+        // EventEmitter isn't an entity in the logger index.
         const ref: DocReference = {
             name: 'EventEmitter',
             packageName: '@seedcord/logger',

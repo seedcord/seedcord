@@ -3,7 +3,7 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 
 // Returns `[active, trigger]`. Calling `trigger()` flips `active` to true and schedules a
-// revert to false after `durationMs`. Re-triggering resets the timer, so `active` turns
+// revert to false after `durationMs`. Re-triggering resets the timer. `active` then turns
 // false exactly `durationMs` after the most recent trigger. Cleans the timer on unmount.
 export function useTimedToggle(durationMs: number): [boolean, () => void] {
     const [active, setActive] = useState(false);

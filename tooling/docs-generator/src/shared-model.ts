@@ -55,7 +55,7 @@ function retarget(node: unknown, promotions: ExportedByLocal): void {
  * API Extractor matches an inherited base class by exact canonical reference, and it rebuilds that
  * string from the entry point that declares the symbol. The root entry point yields
  * `@seedcord/core!Plugin:class`, and the `@seedcord/core/plugin` entry point yields a different string,
- * so a class extending `Plugin` from another package loses every member it inherits.
+ * so a class extending `Plugin` from another package then loses every member it inherits.
  */
 export async function writeSharedModel(
     root: EntryDocResult,

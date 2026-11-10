@@ -60,7 +60,7 @@ export abstract class BaseReplySender<TMessage extends { id: string }, TNative =
         this.checkLegality('reply');
         const startedAt = performance.now();
         const created = await this.attempt('reply', startedAt, () => this.writeReply(response, opts));
-        // the callback has already acked discord, so record replied before the message guard can throw
+        // record replied before the message guard can throw because the callback has already acked discord
         this.transition('reply', 'replied');
         const message = this.remember(this.requireMessage(created, 'reply'));
         this.report('reply', startedAt, message.id);
@@ -159,7 +159,7 @@ export abstract class BaseReplySender<TMessage extends { id: string }, TNative =
         this.report('delete', startedAt, null);
     }
 
-    /** Routes to the verb the current ack state permits. Every state has a route, so the illegal-ack throw is unreachable. */
+    /** Routes to the verb the current ack state permits. The illegal-ack throw is unreachable because every state has a route. */
     public async send(response: ReplyResponse<TNative> | string, opts?: SendOpts): Promise<TMessage> {
         const target = sendTarget(this.state);
         if (target === 'reply') return await this.reply(response, opts);

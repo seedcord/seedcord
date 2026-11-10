@@ -116,7 +116,7 @@ describe('a link', () => {
 });
 
 describe('the image component', () => {
-    // a plain <img> gets no basePath from next
+    // next doesn't add the basePath to a plain <img>
     it('loads a file from public/ under the guide path', () => {
         render(<Image src="/portal-token.webp" alt="token" />);
 

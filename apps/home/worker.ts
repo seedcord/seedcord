@@ -5,7 +5,7 @@ interface Env {
     ASSETS: Assets;
 }
 
-// every other host serves the same content, so it gets an X-Robots-Tag noindex to keep duplicates out of Google
+// every other host gets an X-Robots-Tag noindex to keep duplicates out of Google because it serves the same content
 const PRODUCTION_HOST = 'seedcord.org';
 const WWW_HOST = `www.${PRODUCTION_HOST}`;
 

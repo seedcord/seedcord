@@ -59,8 +59,8 @@ function scopeValue(ctx: GateContextBase, per: 'user' | 'guild' | 'channel'): st
 
 /**
  * Allows `limit` uses per window, scoped by `per`. A number `duration` is **seconds**, and a string is
- * a duration like `30m` or `24h`. The slot is charged in commit, only after the whole gate set passes,
- * so a later refusal never burns the cooldown.
+ * a duration like `30m` or `24h`. A later refusal never burns the cooldown
+ * because the slot is charged in commit, only after the whole gate set passes.
  * If two requests in one process pass the check together, the commit refuses the one that exceeds `limit`.
  * The key combines the handler's route with the window settings, keeping two different handlers on separate
  * windows. Replace the refusal with {@link CooldownOptions.notice}.
@@ -124,7 +124,7 @@ export function Cooldown(
     // exactOptionalPropertyTypes rejects an explicit undefined key
     const window = options?.limit === undefined ? { windowMs } : { windowMs, limit: options.limit };
     const anonId = anonSeq++;
-    // a routed key is the same after a restart, so a durable store rebuilds the same window
+    // a durable store rebuilds the same window because a routed key is the same after a restart
     const keyOf = (ctx: GateContextBase): string =>
         `cooldown:${ctx.dispatch.declaredRoute ?? `anon${anonId}`}:${per}:w${windowMs}:l${options?.limit ?? 1}:${scopeValue(ctx, per)}`;
 

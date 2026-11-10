@@ -151,9 +151,9 @@ export interface EffectGate<Ctx extends GateContextBase = GateContextBase, Name 
 
 /**
  * Builds a {@link Gate} from a check. The check refuses by throwing a Notice or a Silence and passes
- * by returning. The required context is inferred from `ctx`, so annotate it as narrowly as the fields
- * the check reads. No annotation defaults to {@link GateContextBase}, an agnostic gate that fits every
- * handler.
+ * by returning. Annotate `ctx` as narrowly as the fields the check reads, because the required context
+ * is inferred from it. No annotation defaults to {@link GateContextBase}, an agnostic gate that fits
+ * every handler.
  *
  * @typeParam Name - The gate's name, captured as a literal for mismatch errors.
  * @typeParam Ctx - The context that the check reads, inferred from the `ctx` annotation.

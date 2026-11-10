@@ -181,6 +181,20 @@ A reviewer asking "why is this comment here" is a different person asking a diff
 
 Never cut or split a comment only to get past a rule. Two facts that each belong to a different line go on those lines, which section 5 covers.
 
+**Open with the thing on the line, then give the reason.** The editor is already reading that line. The reason can follow `because` or `since`, sit in a second sentence, or go when the next line already shows it. Mix them across a file. Skip `as`, which can also mean "while" or "like".
+
+```ts
+// bad. the reader gets the background before the point
+// codegen never runs for these test bots, so nothing types the members
+
+// good
+// these members aren't typed because codegen doesn't run for these test bots
+```
+
+Writing the cause first follows the order you worked it out in, and it's what produces `, so` in a comment. Vale treats `, so` in a `//` comment as an error. Fix the order. Swapping it for `, which` or `, and` keeps the cause first and only gets past Vale.
+
+TSDoc reads like the docs it becomes, and there a consequence that follows a setup takes `, so`: "On a multi-route handler `this.params` is `never`, so match is the only way to read the decoded params." Vale only suggests a rewrite there. Rewrite when the `so` clause is what the reader came for, as in "Discord delivers dead resources on events, so a handler's own fetch can throw", where the reader wants to know their fetch can throw.
+
 **When you catch yourself explaining why the comment is there, delete the comment.** The urge to justify is the tell that it never earned its place. Catch the urge and you catch every version of the shape, whichever connective you reached for.
 
 ```ts

@@ -130,7 +130,7 @@ void ExtraRoute;
 // this.options on a union route keeps only the options common to every member route
 class UnionOptionsHandler extends SlashHandler<'mute' | 'note'> {
     async execute(): Promise<void> {
-        // 'target' is a user option on both mute and note, so it's still in the union, with its type
+        // 'target' is still in the union, with its type, because it's a user option on both mute and note
         expectTypeOf(this.options.getUser('target')).toEqualTypeOf<User>();
         // @ts-expect-error mute has an integer option but note does not, so getInteger is absent on the union.
         void this.options.getInteger;

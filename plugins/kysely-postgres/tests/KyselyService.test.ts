@@ -14,7 +14,7 @@ const core = {} as unknown as CoreBase;
 class Undecorated extends KyselyService {}
 
 class MissingTable extends KyselyService {}
-// the decorator always writes a table with the key, so set the key directly to leave one out
+// set the key directly to leave the table out because the decorator always writes a table with the key
 Reflect.defineMetadata(KyselyServiceMetadataKey, 'users', MissingTable);
 
 describe('KyselyService constructor guards', () => {

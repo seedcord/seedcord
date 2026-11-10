@@ -22,7 +22,7 @@ describe('Mongoose Plugin Integration', () => {
 
     afterEach(async () => {
         await testEnv.teardown();
-        // the mongoose mock is module-level, so a leaked model is still registered in the next test
+        // clear the models because the mongoose mock is module-level and the next test would still have a leaked model registered
         for (const name of Object.keys(mongoose.models)) Reflect.deleteProperty(mongoose.models, name);
         vi.clearAllMocks();
     });

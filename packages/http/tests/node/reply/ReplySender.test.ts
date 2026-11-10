@@ -72,7 +72,7 @@ interface WebhookOptions {
     files?: { name: string; data: Buffer }[];
 }
 
-// justified: vitest types mock.calls as unknown[], so the tuple cast reads the wire route and body the sender passed
+// justified: the tuple cast reads the wire route and body the sender passed because vitest types mock.calls as unknown[]
 function postCall(rest: RestMock, index = 0): { route: string; options: PostOptions } {
     const [route, options] = rest.post.mock.calls[index] as [string, PostOptions];
     return { route, options };

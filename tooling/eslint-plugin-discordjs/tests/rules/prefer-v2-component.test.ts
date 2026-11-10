@@ -17,7 +17,7 @@ ruleTester.run('prefer-v2-component', rule, {
             import { ActionRowBuilder } from 'discord.js';
             new ActionRowBuilder();
         `,
-        // a seedcord container component exposes a ContainerBuilder, so it passes
+        // a seedcord container component passes because it exposes a ContainerBuilder
         dedent`
             import { BuilderComponent } from './seedcord';
             class MyCard extends BuilderComponent<'container'> {

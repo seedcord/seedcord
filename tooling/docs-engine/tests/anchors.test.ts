@@ -20,7 +20,7 @@ describe('docs anchors', () => {
 
     it('prefixes type params and params, kebab-casing the name', () => {
         expect(typeParamFragment('T')).toBe('type-param-t');
-        // slugify splits lower-to-upper only, so leading caps aren't split (matches the engine Slugger).
+        // leading caps aren't split because slugify splits lower-to-upper only (matches the engine Slugger).
         expect(typeParamFragment('TKey')).toBe('type-param-tkey');
         expect(paramFragment('options')).toBe('param-options');
         expect(paramFragment('myOption')).toBe('param-my-option');

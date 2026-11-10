@@ -29,7 +29,7 @@ export const PopoverAnchor = PopoverPrimitive.Anchor;
 export const PopoverClose = PopoverPrimitive.Close;
 
 interface PopoverContentProps extends ComponentPropsWithoutRef<typeof PopoverPrimitive.Content> {
-    // portal target. pass a modal Dialog's content node so the popover lands inside its
+    // portal target. pass a modal Dialog's content node so the popover renders inside its
     // react-remove-scroll region. otherwise the body portal can't scroll inside the dialog
     container?: HTMLElement | null;
 }

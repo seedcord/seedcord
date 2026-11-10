@@ -4,8 +4,8 @@ import { ValeStyle } from '#src/ValeStyle';
 
 import type { TSESTree } from '@typescript-eslint/utils';
 
-// the same exception .vale.ini makes for code comments
-const style = ValeStyle.load().without('Semicolon');
+// strings get the Semicolon exception that comments have. CauseFirst only covers comments
+const style = ValeStyle.load().without('Semicolon', 'CauseFirst');
 
 const PLAIN_WORD = /^[A-Za-z][A-Za-z']*[.,!?:]?$/;
 // under three words is an identifier, a path, or a key
@@ -22,6 +22,37 @@ function isProse(text: string): boolean {
 }
 
 const blankCode = (text: string): string => text.replaceAll(CODE_SPAN, (span) => ' '.repeat(span.length));
+
+const ESCAPE = /\\(?:u\{[\da-fA-F]+\}|u[\da-fA-F]{4}|x[\da-fA-F]{2}|\r\n|[\s\S])/g;
+const LINE_CONTINUATION = /^(?:\r\n|[\n\r\p{Zl}\p{Zp}])$/u;
+const CONTROL_ESCAPES: Record<string, string> = { b: '\b', f: '\f', n: '\n', r: '\r', t: '\t', v: '\v', 0: '\0' };
+
+function unescape(body: string): string {
+    if (LINE_CONTINUATION.test(body)) return '';
+    if (body.length > 1) return String.fromCodePoint(Number.parseInt(body.replaceAll(/[ux{}]/g, ''), 16));
+    return CONTROL_ESCAPES[body] ?? body;
+}
+
+// what the string holds at runtime, and the source offset of each character
+function decode(raw: string): { text: string; sourceOffset: (index: number) => number } {
+    let text = '';
+    const offsets: number[] = [];
+    let at = 0;
+    const copyUpTo = (end: number): void => {
+        text += raw.slice(at, end);
+        for (; at < end; at++) offsets.push(at);
+    };
+    for (const match of raw.matchAll(ESCAPE)) {
+        copyUpTo(match.index);
+        const value = unescape(match[0].slice(1));
+        text += value;
+        offsets.push(...new Array<number>(value.length).fill(at));
+        at += match[0].length;
+    }
+    copyUpTo(raw.length);
+    // the index just past the last character maps to the end of the source
+    return { text, sourceOffset: (index) => offsets[index] ?? raw.length };
+}
 
 // `it.each(rows)('name')` and `describe.skip('name')` both root at the test call's identifier
 function calleeRoot(callee: TSESTree.Node): string | undefined {
@@ -69,17 +100,17 @@ export const strings = ESLintUtils.RuleCreator.withoutDocs<[Options], 'prose'>({
             return previous !== undefined && IGNORE_NEXT_LINE.test(previous);
         }
 
-        // text is the raw source between the delimiters, so a match index is also a source offset
-        function check(chunk: TSESTree.Node, text: string, whole: TSESTree.Node): void {
+        function check(chunk: TSESTree.Node, raw: string, whole: TSESTree.Node): void {
+            const { text, sourceOffset } = decode(raw);
             if (!wanted(whole) || !isProse(text) || ignored(whole)) return;
+            // + 1 skips the opening quote, or the backtick or } in front of a template chunk
+            const contentStart = chunk.range[0] + 1;
             for (const { rule, message, index, length } of style.matches(blankCode(text))) {
-                // + 1 skips the opening quote, or the backtick or } in front of a template chunk
-                const start = chunk.range[0] + 1 + index;
                 context.report({
                     node: chunk,
                     loc: {
-                        start: context.sourceCode.getLocFromIndex(start),
-                        end: context.sourceCode.getLocFromIndex(start + length)
+                        start: context.sourceCode.getLocFromIndex(contentStart + sourceOffset(index)),
+                        end: context.sourceCode.getLocFromIndex(contentStart + sourceOffset(index + length))
                     },
                     messageId: 'prose',
                     data: { rule, message }

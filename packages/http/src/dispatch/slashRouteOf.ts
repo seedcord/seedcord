@@ -12,7 +12,7 @@ export type SlashLikeData = (
 )['data'];
 
 // the raw-payload port of the gateway's slashRouteOf
-// both assemble the key through buildSlashRoute, so a dispatched interaction always matches its generated registry key
+// a dispatched interaction always matches its generated registry key because both assemble the key through buildSlashRoute
 export function slashRouteOf(data: SlashLikeData): string {
     const first = data.options?.[0];
     if (first?.type === ApplicationCommandOptionType.SubcommandGroup) {

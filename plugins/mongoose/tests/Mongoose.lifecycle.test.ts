@@ -26,7 +26,7 @@ describe('Mongoose lifecycle', () => {
 
     afterEach(async () => {
         await testEnv.teardown();
-        // the mongoose mock is module-level, so a leaked model is still registered in the next test
+        // clear the models because the mongoose mock is module-level and the next test would still have a leaked model registered
         for (const name of Object.keys(mongoose.models)) Reflect.deleteProperty(mongoose.models, name);
         vi.clearAllMocks();
     });
@@ -220,7 +220,7 @@ describe('Mongoose lifecycle', () => {
     });
 
     it('removes services registered by a failed init when the retry no longer finds them', async () => {
-        // A sorts before Z, so this one registers before the broken file aborts the scan
+        // this one registers before the broken file aborts the scan because A sorts before Z
         await testEnv.createFile(
             'services/AUserService.ts',
             `

@@ -26,7 +26,8 @@ tokens:
   - 'go (?:through|away)'
   - 'can go'
   - '(?:dis)?agrees?'
-  - 'drops?'
+  # a hyphenated term like drop-shadow is a noun
+  - 'drops?(?!-)'
   - 'dropped'
   - 'dropping'
   # the plural noun is legal, and a determiner after it marks the verb

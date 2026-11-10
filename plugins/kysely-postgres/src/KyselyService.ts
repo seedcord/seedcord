@@ -53,7 +53,7 @@ export abstract class KyselyService<TTable extends LiteralUnion<KyselyTable, str
 
         const table = Reflect.getMetadata(KyselyTableMetadataKey, ctor) as TTable | undefined;
 
-        // the decorator always writes a table with the key, so this only throws if it was bypassed
+        // the decorator always writes a table with the key. this only throws if something bypassed it
         if (!table) {
             throw new SeedcordTypeError(SeedcordErrorCode.PluginKyselyServiceTableMissing, [ctor.name]);
         }

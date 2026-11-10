@@ -7,7 +7,7 @@ import type { IndexJson, PackageVersionsInput } from '@seedcord/docs-engine';
 
 const UPDATED_AT = '2026-06-06T00:00:00.000Z';
 
-// buildIndex produces a real remote index, so building the fixtures the same way tests the round-trip
+// building the fixtures through buildIndex, which produces a real remote index, tests the round-trip
 // the additive merge relies on: heads -> versions -> heads.
 function remoteWith(...packages: PackageVersionsInput[]): IndexJson {
     return buildIndex(packages, { updatedAt: UPDATED_AT });

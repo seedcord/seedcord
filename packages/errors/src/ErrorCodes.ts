@@ -18,7 +18,7 @@ export enum SeedcordErrorCode {
     ConfigMissingEnv = 1006,
     /** An environment variable is set to a value seedcord cannot use. */
     ConfigInvalidEnv = 1007,
-    /** A command that runs in guilds is registered without the `Guilds` intent, so discord.js doesn't cache guilds. */
+    /** A command that runs in guilds is registered without the `Guilds` intent, which discord.js needs to cache guilds. */
     MissingGuildsIntent = 1008,
     /** The running Node or Bun is older than the range seedcord declares in `engines`. */
     UnsupportedRuntimeVersion = 1009,
@@ -357,6 +357,6 @@ export enum SeedcordErrorCode {
     MakeNoTemplates = 3307,
     /** A path `seedcord make` would write to is taken, by a file on disk or by another file of the same template. */
     MakePathTaken = 3308,
-    /** A template's partial calls itself, so `seedcord make` can't tell how many levels to ask for. */
+    /** A template's partial calls itself. `seedcord make` can't tell how many levels to ask for. */
     MakePartialCallsItself = 3309
 }

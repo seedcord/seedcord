@@ -6,8 +6,8 @@ import { formatSignature } from '#lib/docs/formatting';
 import type { FormatContext } from '#lib/docs/types';
 import type { NodeLookup, PackageRegistry, RenderedSignature } from '@seedcord/docs-engine';
 
-// An empty lookup makes resolve() fall through to the external-URL table, so name-only refs
-// (string, Promise) link to MDN, matching the engine's behavior without a loaded package.
+// An empty lookup makes resolve() fall through to the external-URL table. Name-only refs
+// (string, Promise) then link to MDN, matching the engine's behavior without a loaded package.
 const emptyLookup: NodeLookup = {
     getNodeByKey: () => null,
     getNodeBySlug: () => null,
@@ -64,8 +64,8 @@ describe('formatSignature link weaving', () => {
     });
 
     it('opens external type links in a new tab via the CodeLink.external flag', async () => {
-        // `string` resolves to an MDN URL (external https), so refsToLinks marks it external and
-        // applyLinkMarkers adds target="_blank".
+        // refsToLinks marks `string` external and applyLinkMarkers adds target="_blank" because it
+        // resolves to an MDN URL (external https).
         const render: RenderedSignature = {
             name: [{ kind: 'text', text: 'f' }],
             parameters: [{ name: 'id', optional: false, type: { parts: [ref('string')] } }]

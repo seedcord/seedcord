@@ -66,8 +66,8 @@ export interface CreateConfigOptions {
     registerTypescriptConfigs?: TypescriptConfigsLevel;
 
     /**
-     * Toggle registration of the `eslint-plugin-unicorn` plugin. unicorn requires eslint >=10.4, so
-     * consumers still on eslint 9 must set this to `false`.
+     * Toggle registration of the `eslint-plugin-unicorn` plugin. Consumers still on eslint 9 must set
+     * this to `false` because unicorn requires eslint >=10.4.
      *
      * @defaultValue `true`
      */

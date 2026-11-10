@@ -127,7 +127,8 @@ finding, and a tic is a habit rather than a single sentence.
    true. After a frame, the conditional is right: "By hand, you'd copy each
    emoji id into a constants file" keeps the sentence in the world without
    seedcord. Report a framed complaint in flat present, like "By hand, you copy
-   each id", since it reads as an instruction.
+   each id", since it reads as an instruction. A complaint worded as an option
+   the reader may take, as in "You can X, though Y", is the same finding.
 
    Report a complaint the page takes away that is written in flat present with
    no frame word. The reader reaches the end of it without knowing whether this

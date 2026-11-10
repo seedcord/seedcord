@@ -24,8 +24,8 @@ export interface ErrorsConfig {
      */
     errorStack?: boolean;
     /**
-     * Whether a `Silence` debug-logs its reason. A per-event silence (a message from a bot) emits this
-     * line once per event, so turn it off to quiet a busy stream.
+     * Whether a `Silence` debug-logs its reason. Turn it off to quiet a busy stream, because a
+     * per-event silence (a message from a bot) emits this line once per event.
      *
      * @defaultValue `true`
      */
@@ -63,8 +63,8 @@ export interface ErrorsConfig {
     ignoreApiCodes?: readonly (number | string)[];
     /**
      * discord.js API error codes the event error path swallows quietly, reporting no fault.
-     * Discord delivers dead resources on events (a reaction on a deleted message, a member that just
-     * left), so a handler's own fetch can throw a dead-resource error.
+     * A handler's own fetch can throw a dead-resource error because Discord delivers dead resources on
+     * events (a reaction on a deleted message, a member that just left).
      *
      * When empty, a dead resource reports (throttled to one per minute per handler) until you confirm it
      * is an expected dead end and add the code here, for example Unknown Message (10008), Unknown Member

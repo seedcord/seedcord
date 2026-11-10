@@ -21,7 +21,7 @@ export class IndexLoader {
     constructor(
         private readonly indexUrl: string = resolveIndexUrl(),
         private readonly fetcher: Fetcher = defaultFetcher,
-        // the R2 index is additive, so a folder published once is listed forever
+        // a folder published once is listed forever because the R2 index is additive
         private readonly isDocumented: (folder: string) => boolean = isDocumentedPackage
     ) {}
 

@@ -123,7 +123,7 @@ describe('CloudflaredTunnel', () => {
         expect(isSeedcordError(error, undefined, SeedcordErrorCode.CliTunnelUrlUnavailable)).toBe(true);
     });
 
-    // our resolver is not the one discord uses, so a silent probe still gets the url written
+    // a silent probe still gets the url written because our resolver is not the one discord uses
     it('reports the url when the hostname never answers as this bot', async () => {
         const fetch = vi.fn<TunnelDeps['fetch']>((url) =>
             url.startsWith('https://')

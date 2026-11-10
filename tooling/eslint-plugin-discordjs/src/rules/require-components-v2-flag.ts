@@ -63,8 +63,8 @@ function applyBitwise(operator: string, left: number, right: number): number | u
     }
 }
 
-// the checker widens a bitwise expression to `number`, so fold it from the operands it still
-// resolves as literals (a numeric literal or an enum member)
+// fold a bitwise expression from the operands the checker still resolves as literals (a numeric
+// literal or an enum member) because the checker widens the expression itself to `number`
 function foldToNumber(node: TSESTree.Node, services: ParserServicesWithTypeInformation): number | undefined {
     switch (node.type) {
         case AST_NODE_TYPES.Literal: {

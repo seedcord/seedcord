@@ -5,8 +5,8 @@ import { referenceFromCanonical } from '#model/canonical-ref';
 import type { InlineType, SigPart } from '#src/types';
 import type { Excerpt, ExcerptToken } from '@microsoft/api-extractor-model';
 
-// api extractor flattens these into plain Content text, so re-wrap them as `ref` parts to keep the
-// consumer's resolveHref linking them to MDN and the TS handbook
+// re-wrap these as `ref` parts because api extractor flattens them into plain Content text, and the
+// consumer's resolveHref needs the parts to link them to MDN and the TS handbook
 const INTRINSICS = new Set([
     'string',
     'number',

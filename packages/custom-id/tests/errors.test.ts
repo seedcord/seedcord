@@ -3,7 +3,7 @@ import { describe, expect, it } from 'vite-plus/test';
 import { CustomId } from '#src/CustomId';
 import { setCustomIdErrors } from '#src/errors';
 
-// the shared vitest setup resets modules before each file, so a swap here doesn't reach codec.test.ts
+// a swap here doesn't reach codec.test.ts because the shared vitest setup resets modules before each file
 
 class OwnStale extends Error {}
 class OwnInvalid extends Error {}

@@ -212,8 +212,8 @@ export class FolderExports<TUnit> {
         }
     }
 
-    // a typo shouldn't knock a handler out until the next good save, so we put the old classes back.
-    // same objects too, so a db connection that a plugin opened for one is still open
+    // the old classes go back because a typo shouldn't knock a handler out until the next good save
+    // a db connection that a plugin opened for one is still open because they're the same objects
     #rollBack(file: string, lastGood: TUnit[]): void {
         const path = paint.mute(formatFilePath(file));
 

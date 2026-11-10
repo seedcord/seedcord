@@ -18,7 +18,7 @@ import {
 
 const MOCK_BASE_LINK = resolve(MOCK_DIR, 'node_modules/@seedcord/fixture-base');
 
-// API Extractor consumes built `.d.ts`, so emit the mock's declarations before extracting.
+// emit the mock's declarations before extracting because API Extractor consumes built `.d.ts`.
 function buildDeclarations(packageDir: string): void {
     const tsc = createRequire(import.meta.url).resolve('typescript/bin/tsc');
     execFileSync(process.execPath, [tsc, '-p', resolve(packageDir, 'tsconfig.build.json')], { stdio: 'inherit' });

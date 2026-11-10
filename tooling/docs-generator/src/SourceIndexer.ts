@@ -111,8 +111,8 @@ export class SourceIndexer {
     }
 
     // A top-level export without a declaration under this `src` came from another `packages/<x>/`.
-    // API Extractor omits those without bundling, so record the declaring package and let the
-    // umbrella overview list them.
+    // Record the declaring package and let the umbrella overview list them because API Extractor
+    // omits those without bundling.
     private recordReexport(name: string, decls: readonly ts.Declaration[]): void {
         const owner = this.foreignOwner(decls);
         if (!owner || this.seenReexport.has(name)) return;

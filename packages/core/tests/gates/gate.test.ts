@@ -6,7 +6,7 @@ import { TestNotice } from '#tests/utils/TestNotice';
 
 import type { Gate, GateContextBase } from '#gates/Gate';
 
-// gates ignore ctx here, so a minimal cast stands in
+// a minimal cast stands in because gates ignore ctx here
 const ctx = {} as unknown as GateContextBase;
 
 function RequiresOnlyScalarBaseWhen(): void {

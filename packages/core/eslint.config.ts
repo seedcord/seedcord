@@ -9,7 +9,7 @@ export default createConfig({
     userConfigs: [
         ...proseConfig,
         {
-            // fixtures build the old embed style on purpose, so the rule would flag them
+            // the rule is off here because fixtures build the old embed style on purpose
             files: ['tests/**/*.ts'],
             rules: {
                 'discordjs/prefer-v2-component': 'off'

@@ -273,7 +273,7 @@ export type Attached<Key extends string, Instance> = Key extends `${infer Group}
     ? Record<Group, Record<Leaf, Instance>>
     : Record<Key, Instance>;
 
-// attach writes the key onto the host, so a key like toString would shadow the one on Object.prototype
+// Object's keys are here because attach writes the key onto the host, where toString would shadow Object.prototype's
 // eslint-disable-next-line @typescript-eslint/no-wrapper-object-types -- lint:fix swaps this for `keyof object`, which is never
 type HostMember<Host> = keyof Host | keyof Object;
 

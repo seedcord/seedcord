@@ -18,7 +18,7 @@ const MessageGate = defineGate('msg', (c: EventGateContext<Events.MessageCreate>
 const MemberGate = defineGate('mem', (c: EventGateContext<Events.GuildMemberAdd>) => {
     void c.payload;
 });
-// fixture: defineGate makes a plain Gate, so cast to add the EffectGate shape (only the type is read here)
+// fixture: cast to add the EffectGate shape because defineGate makes a plain Gate (only the type is read here)
 const EffectButtonGate = defineGate('eff', (c: InteractionGateContext<ButtonInteraction>) => {
     void c.interaction;
 }) as unknown as EffectGate<InteractionGateContext<ButtonInteraction>, 'eff'>;

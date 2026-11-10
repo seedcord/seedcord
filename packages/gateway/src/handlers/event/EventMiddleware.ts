@@ -11,7 +11,7 @@ import type { Promisable } from 'type-fest';
  * Base class for Discord event middleware.
  *
  * Middleware runs before event handlers and can stop the event by throwing a `Silence`. Unlike `EventHandler`, it
- * runs the SAME for every event it is registered for, so it doesn't take a `match`. Specify a single event in the
+ * doesn't take a `match` because it runs the SAME for every event it is registered for. Specify a single event in the
  * generic and `{ events }` to read `this.event` fully typed. If you span several events (or omit `{ events }` for
  * a catchall), `this.event` narrows to `never`. Read `this.route` there, for work that doesn't depend on the
  * payload shape. Write one class per event for a middleware that needs each event's payload.
@@ -25,7 +25,7 @@ export abstract class EventMiddleware<
         super(event, core, dispatch, 'events');
     }
 
-    // a concrete tuple for one event only, so reading it on a multi-event middleware is a compile error
+    // reading this on a multi-event middleware is a compile error because it's a concrete tuple for one event only
     declare protected readonly event: SingleEventPayload<EventName>;
 
     /**
