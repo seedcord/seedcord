@@ -37,7 +37,6 @@ export const FEATURES = [
     'Node, Bun & single binary builds',
     'Cloudflare Workers',
     'your bot as an npm package',
-    'typed plugins',
-    'Postgres & Mongo plugins',
+    'plugin ecosystem',
     'eslint rules for discord.js'
 ] as const;

@@ -3,7 +3,7 @@ import { PRODUCTION_SITES } from '@seedcord/brand';
 
 import { SeedcordErrorCode } from './ErrorCodes';
 import { deployFix, listedFolderProblems, placeText, token, vitePluginFix } from './messageParts';
-import { allOf, counted, isOne, oneOf, quoted, reasonThen, sentence } from './messageText';
+import { allOf, capitalized, counted, isOne, oneOf, quoted, reasonThen, sentence } from './messageText';
 import { paint } from './palette';
 
 import type { VitePluginPlace } from './messageParts';
@@ -209,8 +209,10 @@ const messages = {
     [SeedcordErrorCode.DispatchStateMissing]: (key: string) =>
         `Nothing set ${paint.sky(key)} on this dispatch. Check that the middleware writing it is registered and that its filter covers this dispatch.`,
 
-    [SeedcordErrorCode.GateInvalidCooldownDuration]: (input: string) =>
-        `The cooldown duration ${quoted(input)} is not valid. Pass a positive number of seconds, or a duration string like '30m', '24h', or '500ms'.`,
+    [SeedcordErrorCode.InvalidDuration]: (where: string, input: string | number) =>
+        typeof input === 'number'
+            ? `${where} got ${paint.iris(input)} seconds. Pass a finite number above 0, or a duration string like ${paint.sky("'30m'")}.`
+            : `${where} got ${quoted(input)}, which isn't a duration. Write a whole number above 0 and a unit (ms, s, m, h or d), like ${paint.sky("'90s'")} or ${paint.sky("'2h'")}.`,
     [SeedcordErrorCode.PaginationInvalidPerPage]: (perPage: number) =>
         `perPage is ${perPage}. Pass a positive integer.`,
     [SeedcordErrorCode.PaginationControlCount]: (count: number, max: number) =>
@@ -231,7 +233,7 @@ const messages = {
         `${paint.bold('WinstonFileSink')} got ${paint.path(filename)} as its ${paint.bold('filename')}, which has a folder in it. File logs always go in ${paint.path(logsFolder)}. Pass only the file name, like ${paint.sky("'bot-{date}.log'")}.`,
 
     [SeedcordErrorCode.PluginOptionsRejected]: (pluginName: string, reason: string) =>
-        `${paint.sky(pluginName)} rejected its options. ${sentence(reason.charAt(0).toUpperCase() + reason.slice(1))}`,
+        `${paint.sky(pluginName)} rejected its options. ${sentence(capitalized(reason))}`,
     [SeedcordErrorCode.PluginDisposeFailures]: (count: number) =>
         `${paint.iris(count)} plugins failed to dispose. Each one is listed below.`,
     [SeedcordErrorCode.PluginServiceDecoratorMissing]: (decorator: string, className: string) =>
@@ -260,6 +262,21 @@ const messages = {
         `A migration failed with a value that is not an Error: ${message}.`,
     [SeedcordErrorCode.PluginKyselyBootstrapFailed]: (databaseName: string) =>
         `Could not create the database ${paint.sky(databaseName)}. Check that the database user may create databases, or create it yourself.`,
+
+    [SeedcordErrorCode.PluginTasksNotLoaded]: (key: string, path: string) =>
+        `${paint.sky(key)} is not a loaded task. Export it from a file under ${paint.path(path)} with ${paint.bold('@RegisterTask')}.`,
+    [SeedcordErrorCode.PluginTasksInvalidPattern]: (key: string, file: string, pattern: string, reason: string) =>
+        `The task ${paint.sky(key)} in ${paint.path(file)} has the cron pattern ${paint.sky(pattern)}, which croner can't parse. ${reasonThen(capitalized(reason), 'Fix that part of the pattern.')}`,
+    [SeedcordErrorCode.PluginTasksInvalidOption]: (option: string, value: string, fix: string) =>
+        `${option} is ${quoted(value)}. ${fix}`,
+    [SeedcordErrorCode.PluginTasksPatternMissing]: (key: string) =>
+        `${paint.sky(key)} doesn't have a cron pattern. Pass one to ${paint.bold('@RegisterTask')} to pause, resume, or read its next run.`,
+    [SeedcordErrorCode.PluginTasksAtTooEarly]: (key: string, at: number) =>
+        `${paint.bold('schedule()')} got ${paint.iris(at)} as ${paint.bold('at')} for ${paint.sky(key)}, which is before the year 2000. A number that small is usually a timestamp in seconds, or a missing value read as ${paint.iris(0)}. Pass milliseconds, like ${paint.sky('Date.now() + 60_000')}.`,
+    [SeedcordErrorCode.PluginTasksDurationTooLong]: (key: string, duration: string) =>
+        `${paint.bold('schedule()')} got ${quoted(duration)} for ${paint.sky(key)}, which ends after the last date a JavaScript ${paint.bold('Date')} can hold, in the year 275760. Pass a shorter duration as ${paint.bold('in')}.`,
+    [SeedcordErrorCode.PluginTasksKeyTaken]: (key: string, loadedFrom: string) =>
+        `${paint.sky(key)} is the key of a different class, loaded from ${paint.path(loadedFrom)}. Pass that class, or give one of them its own ${paint.bold('key')}.`,
 
     [SeedcordErrorCode.CliCancelled]: () => 'Cancelled.',
 

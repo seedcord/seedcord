@@ -1,0 +1,373 @@
+---
+title: Scheduling jobs
+description: Run a task once at a later time with its own data, like an unban a day after a tempban, and keep it waiting through a restart.
+---
+
+Some work has to happen later, like lifting a ban a day after `/tempban`. With `setTimeout`, that unban would be a timer in your bot's memory, and a restart before it ran would lose it.
+
+The [tasks plugin](/plugins/tasks) keeps that work as a _job_: one run of a task at a later time, with some data. [`schedule()`](ref:plugin-tasks/Tasks.schedule) writes the job to your [kv store](/built-ins) first, and then sets a timer. If your kv store keeps its records on disk or in a database, the job is still there after a restart.
+
+This page assumes the plugin is attached under the key `tasks`. Handlers reach it as [`this.core.tasks`](/plugins#reading-it-from-a-handler) after you run [`seedcord codegen`](/plugins/typing).
+
+## Writing a task for jobs
+
+A task for jobs is a [`Task`](ref:plugin-tasks/Task) in your tasks folder, with [`@RegisterTask()`](ref:plugin-tasks/RegisterTask) and without a pattern. Its type argument declares the data that each job passes to it.
+
+```ts twoslash title="src/tasks/Unban.ts"
+import { RegisterTask, Task } from '@seedcord/plugin-tasks/gateway';
+
+interface UnbanData {
+    guildId: string;
+    userId: string;
+}
+
+@RegisterTask()
+export class Unban extends Task<UnbanData> {
+    public async execute(): Promise<void> {
+        const { guildId, userId } = this.data;
+        const guild =
+            await this.core.bot.client.guilds.fetch(guildId);
+
+        await guild.bans.remove(userId);
+    }
+}
+```
+
+`this.data` has the type `UnbanData`. Put ids in the data, like `guildId` and `userId`, and fetch what you need when the task runs. A job can run days later, so a member or a guild that you copied today could be out of date by then.
+
+A task for jobs doesn't use `protect`. If two jobs of `Unban` are set for the same time, both run at once.
+
+<Callout type="transport">
+
+The samples on this page are for a gateway bot, where `this.core` is the `Core` from `@seedcord/gateway`. On an http bot, import `Task` from `@seedcord/plugin-tasks/http`, and `this.core` is the `Core` from `@seedcord/http`. That one doesn't have `bot.client`, so call Discord's REST API through `this.core.rest`, which both have.
+
+</Callout>
+
+## Scheduling a job
+
+`schedule()` takes the task's class and a time. Pass `in` with a duration like `'1d'`, or `at` with a `Date` or a timestamp in milliseconds. If the time has already passed, the job runs right away.
+
+```ts twoslash title="src/handlers/TempBan.ts"
+// ---cut-start---
+// @filename: tasks/Unban.ts
+import { RegisterTask, Task } from '@seedcord/plugin-tasks/gateway';
+
+@RegisterTask()
+export class Unban extends Task<{
+    guildId: string;
+    userId: string;
+}> {
+    public async execute(): Promise<void> {}
+}
+
+// @filename: handlers/TempBan.ts
+import type { Tasks } from '@seedcord/plugin-tasks';
+
+declare module '@seedcord/gateway' {
+    interface Core {
+        tasks: Tasks;
+    }
+    interface SlashRegistry {
+        tempban: {
+            options: { target: { kind: 'user'; required: true } };
+            cache: 'cached';
+        };
+    }
+}
+// ---cut-end---
+import { SlashHandler, SlashRoute } from '@seedcord/gateway';
+
+import { Unban } from '../tasks/Unban';
+
+@SlashRoute('tempban')
+export class TempBan extends SlashHandler<'tempban'> {
+    public async execute(): Promise<void> {
+        const { guild, guildId } = this.event;
+        const userId = this.options.getUser('target').id;
+        const unbanJobs =
+            this.core.kv.collection<string>('unban-job');
+        const key = `${guildId}:${userId}`;
+
+        const earlier = await unbanJobs.get(key);
+        if (earlier !== undefined) {
+            await this.core.tasks.cancel(earlier);
+        }
+
+        const job = await this.core.tasks.schedule(Unban, {
+            //  ^?
+            in: '1d',
+            data: { guildId, userId }
+        });
+        await unbanJobs.set(key, job.id);
+
+        await guild.bans.create(userId);
+        await this.reply('Banned for a day.');
+    }
+}
+```
+
+`TempBan` does three things, in this order:
+
+1. If the member already has an unban waiting from an earlier `/tempban`, it cancels that job. Otherwise the old job would unban them early.
+2. It schedules the new unban and stores the job's `id` in the `unban-job` collection, so that `/unban` can cancel it later. The key holds the server's id and the member's id, because one member can be banned in two servers that use your bot.
+3. It bans the member.
+
+Since the ban comes last, nobody gets banned if `schedule()` throws. If the ban fails instead, the unban still runs a day later. Discord rejects that unban with [`Unknown Ban`](https://discord.com/developers/docs/topics/opcodes-and-status-codes#json-json-error-codes) (10026), so the run fails and changes nothing.
+
+`job` is a [`ScheduledJob`](ref:plugin-tasks/ScheduledJob) with the job's `id`, its task's `key`, and its `at` time as a `Date`. It doesn't hold the job's data, so you can't look up a member's job from [`jobs()`](ref:plugin-tasks/Tasks.jobs). That's why `TempBan` stores the id itself.
+
+`schedule()` resolves once your kv store holds the job, so always await it. TypeScript checks the call for you:
+
+- `in` has to be a whole number above 0 followed by `ms`, `s`, `m`, `h`, or `d`, as [`ValidDuration`](ref:utils/ValidDuration) describes. `'1.5h'` fails to compile.
+- `data` has to match the type on `Unban`. If you leave out `userId`, it fails to compile.
+- If the task doesn't declare data, passing `data` fails to compile.
+
+## Cancelling a job
+
+A job waits in your kv store until it runs or you cancel it. When a moderator lifts a ban early, cancel the unban job too.
+
+```ts twoslash title="src/handlers/LiftBan.ts"
+// ---cut-start---
+import { SlashHandler, SlashRoute } from '@seedcord/gateway';
+
+import type { Tasks } from '@seedcord/plugin-tasks';
+
+declare module '@seedcord/gateway' {
+    interface Core {
+        tasks: Tasks;
+    }
+    interface SlashRegistry {
+        unban: {
+            options: { target: { kind: 'user'; required: true } };
+            cache: 'cached';
+        };
+    }
+}
+// ---cut-end---
+@SlashRoute('unban')
+export class LiftBan extends SlashHandler<'unban'> {
+    public async execute(): Promise<void> {
+        const { guild, guildId } = this.event;
+        const userId = this.options.getUser('target').id;
+        const unbanJobs =
+            this.core.kv.collection<string>('unban-job');
+        const key = `${guildId}:${userId}`;
+        const jobId = await unbanJobs.get(key);
+
+        if (jobId !== undefined) {
+            await this.core.tasks.cancel(jobId);
+            await unbanJobs.delete(key);
+        }
+
+        await guild.bans.remove(userId);
+        await this.reply('Unbanned.');
+    }
+}
+```
+
+`LiftBan` reads the id that `TempBan` stored and passes it to [`cancel()`](ref:plugin-tasks/Tasks.cancel). `cancel()` deletes the job and resolves to `true`. It resolves to `false` if the id doesn't match a job, or if the job's run has already started.
+
+`jobs()` returns an array with a `ScheduledJob` for each job that's waiting in this process.
+
+## What job data can hold
+
+The plugin stores a job as JSON, and each run reads `data` back from your kv store. So `data` can only hold what JSON can store, and [`this.data`](ref:plugin-tasks/Task.data) has the type that the data has after it's read back.
+
+```ts twoslash title="src/tasks/Remind.ts"
+import { RegisterTask, Task } from '@seedcord/plugin-tasks/gateway';
+// ---cut---
+@RegisterTask()
+export class Remind extends Task<{ text: string; sentAt: Date }> {
+    public async execute(): Promise<void> {
+        const { sentAt } = this.data;
+        //      ^?
+        this.logger.info(new Date(sentAt).toISOString());
+    }
+}
+```
+
+You pass `sentAt` as a `Date`, but the plugin stores it as an ISO string. `Remind` builds a `Date` from that string again before using it.
+
+JSON can't store a `Map`, a `Set`, a function, or a `bigint`. If `data` holds one, the `schedule()` call fails to compile.
+
+```ts twoslash
+// @errors: 2322
+// ---cut-start---
+import { RegisterTask, Task } from '@seedcord/plugin-tasks/gateway';
+
+import type { Tasks } from '@seedcord/plugin-tasks';
+
+declare const tasks: Tasks;
+// ---cut-end---
+@RegisterTask()
+export class Tally extends Task<{ counts: Map<string, number> }> {
+    public async execute(): Promise<void> {}
+}
+
+await tasks.schedule(Tally, {
+    in: '1h',
+    data: { counts: new Map() }
+});
+```
+
+## Keeping jobs through a restart
+
+Without a driver, your kv store keeps its records in memory, so your jobs are lost when the bot restarts. The plugin logs a warning the first time you schedule a job that way. To keep jobs, set `kv` on your `Seedcord` config.
+
+```ts twoslash title="src/bot.ts"
+import KeyvSqlite from '@keyv/sqlite';
+import { KeyvDriver, Seedcord } from '@seedcord/gateway';
+import { Tasks } from '@seedcord/plugin-tasks';
+import { GatewayIntentBits } from 'discord.js';
+import Keyv from 'keyv';
+
+export const seedcord = new Seedcord({
+    kv: new KeyvDriver(
+        new Keyv(new KeyvSqlite('sqlite://./kv.sqlite'))
+    ),
+    bot: {
+        clientOptions: { intents: [GatewayIntentBits.Guilds] },
+        interactions: { path: './handlers' },
+        commands: { path: './commands' },
+        events: { path: null }
+    },
+    subscribers: { path: null }
+}).attach('tasks', Tasks, { path: './tasks' });
+
+export default seedcord;
+```
+
+When the bot starts, the plugin reads every job from `kv.sqlite` and sets its timer. If a job's time passed while the bot was down, the job runs as soon as the bot is ready.
+
+<Callout type="warning">
+
+The plugin finds your jobs by listing the keys in your kv store, so your [driver](/built-ins/drivers) has to [list its keys](/built-ins#reading-every-record). With a cache driver like `@keyv/memcache`, which can't list its keys, the bot doesn't start.
+
+</Callout>
+
+<Callout type="warning">
+
+The plugin stores jobs under the key that you pass to `attach`, here `'tasks'`. If you change that key, the plugin doesn't find the jobs stored under `tasks`. They don't run until you change the key back.
+
+</Callout>
+
+## When a job runs twice
+
+The plugin deletes a job once its run ends. If the process dies during the run, your kv store still holds the job, and it runs again after the restart. The same happens if the bot shuts down during the run and the task throws, and if the plugin can't delete the job after the run.
+
+The plugin doesn't stop that second run, so write each task for jobs to be safe to run twice. A second run of `Unban` gets the `Unknown Ban` error from Discord. It fails and changes nothing. A task that sends a DM isn't safe. Record each DM in [`core.kv`](/built-ins) and check for it before you send.
+
+### Trying again after a failure
+
+If `execute()` throws, the plugin logs the error and doesn't run that job again. To try again, schedule a new job from [`onError()`](ref:plugin-tasks/Task.onError). Count the attempts in `data`, so that the retries stop after a few.
+
+```ts twoslash title="src/tasks/Unban.ts"
+import { RegisterTask, Task } from '@seedcord/plugin-tasks/gateway';
+import { DiscordAPIError, RESTJSONErrorCodes } from 'discord.js';
+// ---cut-start---
+import type { Tasks } from '@seedcord/plugin-tasks';
+
+declare module '@seedcord/gateway' {
+    interface Core {
+        tasks: Tasks;
+    }
+}
+// ---cut-end---
+
+const MAX_ATTEMPTS = 3;
+
+@RegisterTask()
+export class Unban extends Task<{
+    guildId: string;
+    userId: string;
+    attempt: number;
+}> {
+    public async execute(): Promise<void> {
+        const { guildId, userId } = this.data;
+        const guild =
+            await this.core.bot.client.guilds.fetch(guildId);
+
+        await guild.bans.remove(userId);
+    }
+
+    public override async onError(error: Error): Promise<void> {
+        const { guildId, userId } = this.data;
+        const attempt = this.data.attempt + 1;
+        if (attempt > MAX_ATTEMPTS || isUnknownBan(error)) return;
+
+        const job = await this.core.tasks.schedule(Unban, {
+            in: '1h',
+            data: { ...this.data, attempt }
+        });
+        await this.core.kv
+            .collection<string>('unban-job')
+            .set(`${guildId}:${userId}`, job.id);
+    }
+}
+
+function isUnknownBan(error: Error): boolean {
+    return (
+        error instanceof DiscordAPIError &&
+        error.code === RESTJSONErrorCodes.UnknownBan
+    );
+}
+```
+
+With `attempt` in the data, `TempBan` has to pass `attempt: 1` too. The job runs at most three times, and `onError()` stops early on `Unknown Ban`, since that error means the member isn't banned anymore. `onError()` also stores the new job's `id` in `unban-job`, so `/unban` can cancel the retry.
+
+If the bot shuts down during a run, the plugin skips `onError()`. The job is still in your kv store and runs after the restart, so you don't need a retry for it.
+
+## Renaming a task
+
+The plugin finds the task for a stored job by its key, and the key is the class name unless you set one.
+
+<Callout type="warning">
+
+If you rename `Unban` while jobs are waiting, no task has their key anymore. The plugin logs a warning and leaves those jobs in your kv store, and they don't run. Pass the old name as `key` to keep them working.
+
+</Callout>
+
+```ts twoslash
+import { RegisterTask, Task } from '@seedcord/plugin-tasks/gateway';
+// ---cut---
+@RegisterTask({ key: 'Unban' })
+export class ReleaseBan extends Task<{
+    guildId: string;
+    userId: string;
+}> {
+    public async execute(): Promise<void> {
+        const { guildId, userId } = this.data;
+
+        this.logger.info(`Releasing ${userId} in ${guildId}`);
+    }
+}
+```
+
+`ReleaseBan` runs the jobs that `Unban` left. The plugin doesn't check the stored data against your new type, so keep `data` the same shape.
+
+## Sharing one kv store between processes
+
+A process reads the stored jobs when it starts, and the plugin doesn't lock a job. So if two processes of your bot use the same kv store, both run every job that was stored when they started. Give each process its own store, or attach the plugin in one process only.
+
+A rolling deploy starts the new process while the old one still has its timers. A job whose time arrives during that overlap runs in both. That's one more reason to make each task [safe to run twice](#when-a-job-runs-twice).
+
+## Errors from schedule()
+
+{/* prettier-ignore-start */}
+
+| error | when |
+| --- | --- |
+| `InvalidDuration` | `in` is a `string` that isn't a duration |
+| `PluginTasksDurationTooLong` | the time that `in` gives falls after the year 275760, the last date a `Date` can hold |
+| `PluginTasksInvalidOption` | `at` is an invalid `Date` or `NaN` |
+| `PluginTasksAtTooEarly` | `at` is a number before the year 2000, including `0` and negative numbers |
+| `PluginTasksNotLoaded` | the plugin didn't load the class from its `path` |
+| `PluginTasksKeyTaken` | the class's key belongs to a different task that the plugin loaded |
+| `CoreKvUnserializable` | `data` holds a circular reference, which TypeScript can't catch |
+| `CoreKvDriverFailed` | your kv store couldn't save the job. No job exists then |
+
+{/* prettier-ignore-end */}
+
+`PluginTasksAtTooEarly` usually means that you passed seconds. `Date.now()` counts milliseconds, but many APIs give a Unix timestamp in seconds, which JavaScript reads as a date in January 1970. Multiply it by 1000 first.
+
+To pause a task, run it right away, or report its failed runs, read [Controlling tasks](/plugins/tasks-control) next.
