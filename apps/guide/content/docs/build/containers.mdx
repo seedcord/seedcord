@@ -242,12 +242,15 @@ services:
         # Keep the container running so your editor can attach
         command: sleep infinity
         volumes:
-            - .:/app:cached
+            - .:/app
+            - bot_node_modules:/app/node_modules # Use a separate volue to avoid cross-OS issues.
     postgres: # Start a development PostgreSQL DB alongside your bot
         image: postgres:latest
         container_name: discord-bot-dev-postgres
         environment:
             - POSTGRES_PASSWORD=some-password-here
+volumes:
+    bot_node_modules:
 ```
 
 `node:24` exits as soon as it starts, and your editor attaches to a running container, so `sleep infinity` holds the `bot` service open. The `volumes` entry mounts your project at `/app`, which is the `workspaceFolder` your editor opens.
