@@ -1,5 +1,6 @@
 import path from 'node:path';
 
+import { PluginRegistry } from '@seedcord/core/internal';
 import { describe, expect, it } from 'vite-plus/test';
 
 import { InteractionDispatcher } from '#src/dispatch/InteractionDispatcher';
@@ -12,7 +13,7 @@ import type { APIInteraction } from 'discord-api-types/v10';
 const HANDLERS_DIR = path.resolve(__dirname, './fixtures/handlers');
 
 async function readyDispatcher(): Promise<InteractionDispatcher> {
-    const dispatcher = new InteractionDispatcher(HANDLERS_DIR);
+    const dispatcher = new InteractionDispatcher(new PluginRegistry(), HANDLERS_DIR);
     await dispatcher.init();
     return dispatcher;
 }

@@ -122,6 +122,8 @@ describe('handler gates', () => {
         const payload = {
             ...slashPayload('guarded'),
             guild_id: 'g-1',
+            locale: 'pl',
+            guild_locale: 'de',
             channel: { id: 'c-1', type: 0 },
             member: {
                 user: { id: 'u-1', username: 'tester' },
@@ -136,6 +138,8 @@ describe('handler gates', () => {
             userId: 'u-1',
             guildId: 'g-1',
             channelId: 'c-1',
+            userLocale: 'pl',
+            guildLocale: 'de',
             memberRoleIds: ['r-1', 'r-2'],
             memberPermissions: 2048n
         });
@@ -159,6 +163,7 @@ describe('handler gates', () => {
         expect(seen).toMatchObject({
             userId: 'u-dm',
             guildId: null,
+            guildLocale: null,
             memberRoleIds: [],
             memberPermissions: null
         });

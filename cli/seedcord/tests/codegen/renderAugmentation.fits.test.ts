@@ -12,6 +12,7 @@ export interface UserContextMenuRegistry {}
 export interface MessageContextMenuRegistry {}
 export interface EmojiMap {}
 export interface PluginTypes {}
+export type AttachedPlugin<T> = T;
 `;
 
 const BOT = `
@@ -36,7 +37,8 @@ function errorCodes(types: PluginTypeTable): number[] {
                 .values()
                 .flatMap((parts) => parts.map(({ key }) => key))
                 .toArray(),
-            types
+            types,
+            members: []
         }
     );
     const files = new Map([

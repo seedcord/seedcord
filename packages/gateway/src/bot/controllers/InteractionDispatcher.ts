@@ -1,7 +1,5 @@
 import { InteractionKind } from '@seedcord/core';
 import {
-    componentKindOf,
-    DispatchContext,
     HandlerLoader,
     InteractionRun,
     InteractionMetadataKey,
@@ -10,45 +8,48 @@ import {
     matchRoute,
     MiddlewareRegistry,
     PublishDefault,
-    RouteRegistry
+    RouteRegistry,
+    unhandledSlots
 } from '@seedcord/core/internal';
 import { prefixOf } from '@seedcord/custom-id';
 import { SeedcordErrorCode, paint } from '@seedcord/errors';
 import { SeedcordError } from '@seedcord/errors/internal';
 import { Logger } from '@seedcord/logger';
+import { HostPlugins } from '@seedcord/types/internal';
 import { hasKeys } from '@seedcord/utils';
 import { asError } from '@seedcord/utils/internal';
 import { Events } from 'discord.js';
 
 import { CONFIRM_DEF } from '#bot/confirm/reserved';
-import { gatewayRunConfig } from '#bot/controllers/gatewayRunConfig';
+import { autocompleteRunConfig, repliableRunConfig } from '#bot/controllers/gatewayRunConfig';
 import { UnhandledAutocomplete, UnhandledRepliable } from '#bot/defaults';
 import { slashRouteOf } from '#bUtilities/miscellaneous/slashRouteOf';
 import { AutocompleteHandler, InteractionMiddleware } from '#handlers/interaction';
 import { InteractionHandler } from '#handlers/interaction/InteractionHandler';
 
-import type { HandlerConstructor, InteractionMiddlewareConstructor } from '#handlers/constructors';
+import type {
+    HandlerConstructor,
+    HandlerSlots,
+    InteractionMiddlewareConstructor,
+    ResolvedInteraction
+} from '#handlers/constructors';
+import type { Payloads } from '#handlers/interaction/middlewareKinds';
 import type { Core } from '#interfaces/Core';
-import type { ValidInteractionTypes } from '#src/handlers/interactionTypes';
 import type { MiddlewareKind } from '@seedcord/core';
 import type { ContextMenuLeaves, Initializeable, RouteMaps } from '@seedcord/core/internal';
 import type { InFlight } from '@seedcord/core/node/internal';
 import type { CustomIdMatcher, HmrAware, HmrUpdateEvent } from '@seedcord/types';
 import type { Interaction } from 'discord.js';
-import type { ExtractStrict } from 'type-fest';
 
-const UNHANDLED: { repliable: HandlerConstructor; autocomplete: HandlerConstructor } = {
-    repliable: UnhandledRepliable,
-    autocomplete: UnhandledAutocomplete
-};
+const UNHANDLED: HandlerSlots = unhandledSlots(UnhandledRepliable, UnhandledAutocomplete);
 
 export class InteractionDispatcher implements Initializeable, HmrAware {
     private readonly logger = new Logger('Interactions', { channel: 'interactions' });
     private isInitialized = false;
 
-    private readonly routes = new RouteRegistry<HandlerConstructor>();
+    private readonly routes = new RouteRegistry<HandlerSlots>();
 
-    private get maps(): RouteMaps<HandlerConstructor> {
+    private get maps(): RouteMaps<HandlerSlots> {
         return this.routes.maps;
     }
 
@@ -85,6 +86,7 @@ export class InteractionDispatcher implements Initializeable, HmrAware {
                 ? this.core.config.bot.interactions.middlewares
                 : undefined,
             middlewares: this.middlewares,
+            plugins: this.core[HostPlugins],
             logger: this.logger,
             isHandler: (value): value is HandlerConstructor => this.isHandlerClass(value),
             isMiddleware: (value): value is InteractionMiddlewareConstructor => this.isMiddlewareClass(value),
@@ -179,50 +181,71 @@ export class InteractionDispatcher implements Initializeable, HmrAware {
         });
     }
 
-    private async handleCustomIdInteraction(
-        interaction: ExtractStrict<ValidInteractionTypes, { customId: string }>,
-        kind: InteractionKind
-    ): Promise<void> {
-        if ([...this.keysToIgnore].some((matcher) => matcher.owns(interaction.customId))) return;
-
-        // the stable prefix (the routeKey minus its shape hash) routes an older-shape wire to its handler
-        await this.processInteraction(interaction, kind, prefixOf(interaction.customId));
+    private async handleInteraction(interaction: Interaction): Promise<void> {
+        const resolved = this.resolvedOf(interaction);
+        if (!resolved) {
+            this.logger.warn(`Unhandled interaction type: ${interaction.type}`);
+            return;
+        }
+        const { event } = resolved;
+        if ('customId' in event && [...this.keysToIgnore].some((matcher) => matcher.owns(event.customId))) return;
+        await this.run(resolved);
     }
 
-    private async processInteraction(
-        interaction: ValidInteractionTypes,
-        kind: InteractionKind,
-        key: string
-    ): Promise<void> {
-        const { fallback, ctor: HandlerCtor } = matchRoute(this.maps, kind, key, UNHANDLED);
-        const config = gatewayRunConfig({
-            interaction,
-            core: this.core,
-            dispatch: new DispatchContext(kind, key, fallback),
-            HandlerCtor,
-            middlewares: this.middlewares,
-            logger: this.logger
-        });
+    // each branch narrows the interaction to the type its kind's handlers take
+    private resolvedOf(interaction: Interaction): ResolvedInteraction | null {
+        if (interaction.isChatInputCommand()) {
+            return this.resolve(InteractionKind.Slash, slashRouteOf(interaction), interaction);
+        }
+        if (interaction.isAutocomplete()) {
+            return this.resolve(InteractionKind.Autocomplete, slashRouteOf(interaction), interaction);
+        }
+        // the stable prefix (the routeKey minus its shape hash) routes an older-shape wire to its handler
+        if (interaction.isModalSubmit()) {
+            return this.resolve(InteractionKind.Modal, prefixOf(interaction.customId), interaction);
+        }
+        if (interaction.isButton()) {
+            return this.resolve(InteractionKind.Button, prefixOf(interaction.customId), interaction);
+        }
+        if (interaction.isStringSelectMenu()) {
+            return this.resolve(InteractionKind.StringMenu, prefixOf(interaction.customId), interaction);
+        }
+        if (interaction.isUserSelectMenu()) {
+            return this.resolve(InteractionKind.UserMenu, prefixOf(interaction.customId), interaction);
+        }
+        if (interaction.isRoleSelectMenu()) {
+            return this.resolve(InteractionKind.RoleMenu, prefixOf(interaction.customId), interaction);
+        }
+        if (interaction.isChannelSelectMenu()) {
+            return this.resolve(InteractionKind.ChannelMenu, prefixOf(interaction.customId), interaction);
+        }
+        if (interaction.isMentionableSelectMenu()) {
+            return this.resolve(InteractionKind.MentionableMenu, prefixOf(interaction.customId), interaction);
+        }
+        if (interaction.isMessageContextMenuCommand()) {
+            return this.resolve(InteractionKind.MessageContextMenu, interaction.commandName, interaction);
+        }
+        if (interaction.isUserContextMenuCommand()) {
+            return this.resolve(InteractionKind.UserContextMenu, interaction.commandName, interaction);
+        }
+        return null;
+    }
+
+    private resolve<Kind extends InteractionKind>(
+        kind: Kind,
+        key: string,
+        event: Payloads[Kind]
+    ): ResolvedInteraction<Kind> {
+        return { ...matchRoute(this.maps, kind, key, UNHANDLED), event };
+    }
+
+    private async run(resolved: ResolvedInteraction): Promise<void> {
+        const { core, logger } = this;
+        const config =
+            resolved.kind === InteractionKind.Autocomplete
+                ? autocompleteRunConfig({ resolved, core, logger })
+                : repliableRunConfig({ resolved, core, logger, middlewares: this.middlewares.chainFor(resolved.kind) });
         const start = await new InteractionRun(config).prepare();
         await start?.();
-    }
-
-    private async handleInteraction(interaction: Interaction): Promise<void> {
-        if (interaction.isChatInputCommand()) {
-            await this.processInteraction(interaction, InteractionKind.Slash, slashRouteOf(interaction));
-        } else if (interaction.isAutocomplete()) {
-            await this.processInteraction(interaction, InteractionKind.Autocomplete, slashRouteOf(interaction));
-        } else if (interaction.isModalSubmit()) {
-            await this.handleCustomIdInteraction(interaction, InteractionKind.Modal);
-        } else if (interaction.isButton() || interaction.isAnySelectMenu()) {
-            const kind = componentKindOf(interaction.componentType);
-            if (kind) await this.handleCustomIdInteraction(interaction, kind);
-        } else if (interaction.isMessageContextMenuCommand()) {
-            await this.processInteraction(interaction, InteractionKind.MessageContextMenu, interaction.commandName);
-        } else if (interaction.isUserContextMenuCommand()) {
-            await this.processInteraction(interaction, InteractionKind.UserContextMenu, interaction.commandName);
-        } else {
-            this.logger.warn(`Unhandled interaction type: ${interaction.type}`);
-        }
     }
 }

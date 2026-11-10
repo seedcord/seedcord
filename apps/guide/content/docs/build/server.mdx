@@ -79,6 +79,8 @@ The printed `run` line leaves the flag out, so add it yourself. Without it, a st
 
 To run it on a host, copy the whole `dist` folder there, along with `package.json` and your production dependencies, since `dist` imports packages like `@seedcord/gateway` from `node_modules`.
 
+An http bot's interactions server listens on port 3000. To use another port, pass `port` to `new Seedcord({ ... })`. [Reading a value](/build/env#reading-a-value) has a sample that takes it from a `PORT` variable.
+
 A host that only got `dist` and `package.json` has no `seedcord.config.ts`, which changes where the bot looks for `.env`. [A built bot's .env files](/build/env#in-a-built-bot) has both cases.
 
 ## One file with Bun

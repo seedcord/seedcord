@@ -13,6 +13,7 @@ import { emptyModuleGraph } from '#tests/emptyModuleGraph';
 
 import type { ModuleLoader } from '#core/modules/ModuleLoader';
 import type { RealPath } from '#core/project/realPath';
+import type { RESTPostAPIApplicationCommandsJSONBody } from 'discord-api-types/v10';
 
 function filesAt(root: RealPath): ProjectFiles {
     return new ProjectFiles({
@@ -22,6 +23,8 @@ function filesAt(root: RealPath): ProjectFiles {
         target: { kind: 'server', start: undefined, outDir: realPath(join(root, 'dist')) }
     });
 }
+
+const UNCHANGED = { prepareCommands: () => Promise.resolve() };
 
 function recordingLoader(imported: string[]): ModuleLoader {
     return {
@@ -45,7 +48,7 @@ describe('CommandScanner', () => {
         }
         const imported: string[] = [];
 
-        await new CommandScanner(recordingLoader(imported), filesAt(root)).scan('.');
+        await new CommandScanner(recordingLoader(imported), filesAt(root), UNCHANGED).scan('.');
 
         expect(imported).toEqual([join(root, 'ban.ts')]);
     });
@@ -75,7 +78,7 @@ describe('CommandScanner', () => {
             ]
         };
 
-        const caught: unknown = await new CommandScanner(modules, filesAt(root))
+        const caught: unknown = await new CommandScanner(modules, filesAt(root), UNCHANGED)
             .scan('.')
             .catch((error: unknown) => error);
 
@@ -88,8 +91,40 @@ describe('CommandScanner', () => {
         await using root = await mkdtempDisposable(join(tmpdir(), 'scan-root-'));
         await using elsewhere = await mkdtempDisposable(join(tmpdir(), 'scan-elsewhere-'));
 
-        const scan = new CommandScanner(recordingLoader([]), filesAt(realPath(root.path))).scan(elsewhere.path);
+        const scan = new CommandScanner(recordingLoader([]), filesAt(realPath(root.path)), UNCHANGED).scan(
+            elsewhere.path
+        );
 
         await expect(scan).rejects.toMatchObject({ code: SeedcordErrorCode.CorePathOutsideRoot });
+    });
+
+    it('returns the commands that the plugins prepared', async () => {
+        await using commands = await mkdtempDisposable(join(tmpdir(), 'scan-prepared-'));
+        const root = realPath(commands.path);
+        const file = join(root, 'ban.ts');
+        await writeFile(file, 'export {};\n');
+        class Ban extends BuilderComponent<'command'> {
+            public constructor() {
+                super('command');
+                this.instance.setName('ban').setDescription('Bans someone');
+            }
+        }
+        RegisterCommand('global')(Ban);
+        const modules: ModuleLoader = {
+            ...emptyModuleGraph,
+            // justified: the file exports only the class
+            importModule: <TModule>() => Promise.resolve({ Ban } as TModule),
+            evaluated: () => [{ id: file, file, exports: { Ban }, imports: new Set() }]
+        };
+        const localizing = {
+            prepareCommands: (bodies: readonly RESTPostAPIApplicationCommandsJSONBody[]) => {
+                for (const body of bodies) body.name_localizations = { pl: 'zbanuj' };
+                return Promise.resolve();
+            }
+        };
+
+        const [found] = await new CommandScanner(modules, filesAt(root), localizing).scan('.');
+
+        expect(found?.json.name_localizations).toEqual({ pl: 'zbanuj' });
     });
 });

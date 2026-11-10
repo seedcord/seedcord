@@ -1,12 +1,12 @@
 import { RequirePermissions } from '@seedcord/core';
 import { DispatchContext } from '@seedcord/core/internal';
-import { GuildMember, Message, PermissionFlagsBits } from 'discord.js';
+import { GuildMember, Message, MessageReaction, PermissionFlagsBits, User, VoiceState } from 'discord.js';
 import { describe, it, expect } from 'vite-plus/test';
 
 import { eventGateContext, interactionGateContext } from '#bot/gates/context';
 
 import type { Core } from '#interfaces/Core';
-import type { ButtonInteraction, User } from 'discord.js';
+import type { ButtonInteraction } from 'discord.js';
 
 const dispatch = new DispatchContext('button', 'probe');
 
@@ -28,6 +28,8 @@ describe('interactionGateContext', () => {
             guild: null,
             guildId: 'g1',
             channelId: 'c1',
+            locale: 'en-GB',
+            guildLocale: 'de',
             memberPermissions: null,
             appPermissions: { bitfield: 64n }
         } as unknown as ButtonInteraction<'cached'>;
@@ -42,6 +44,8 @@ describe('interactionGateContext', () => {
         expect(built.userId).toBe('u1');
         expect(built.guildId).toBe('g1');
         expect(built.channelId).toBe('c1');
+        expect(built.userLocale).toBe('en-GB');
+        expect(built.guildLocale).toBe('de');
         expect(built.memberRoleIds).toEqual([]);
         expect(built.memberPermissions).toBeNull();
         expect(built.appPermissions).toBe(64n);
@@ -132,6 +136,8 @@ describe('eventGateContext', () => {
         expect(built.userId).toBeNull();
         expect(built.guildId).toBeNull();
         expect(built.channelId).toBeNull();
+        expect(built.userLocale).toBeNull();
+        expect(built.guildLocale).toBeNull();
         expect(built.memberRoleIds).toEqual([]);
         expect(built.memberPermissions).toBeNull();
         expect(built.memberGuildPermissions).toBeNull();
@@ -142,7 +148,7 @@ describe('eventGateContext', () => {
         // the cache has the everyone role (id equals the guild id), the scalar set excludes it
         const member = fakeMember(['g1', 'r1'], 4n);
         Object.defineProperties(member, {
-            guild: { value: { id: 'g1', members: { me: fakeMember([], 2n) } } },
+            guild: { value: { id: 'g1', preferredLocale: 'fr', members: { me: fakeMember([], 2n) } } },
             user: { value: { id: 'u1' } }
         });
         const payload = [member] as unknown as Parameters<typeof eventGateContext>[1];
@@ -152,6 +158,8 @@ describe('eventGateContext', () => {
 
         expect(built.userId).toBe('u1');
         expect(built.guildId).toBe('g1');
+        expect(built.userLocale).toBeNull();
+        expect(built.guildLocale).toBe('fr');
         expect(built.memberRoleIds).toEqual(['r1']);
         // these are the member's guild-level bits because events don't have a channel scope
         expect(built.memberPermissions).toBe(4n);
@@ -179,6 +187,47 @@ describe('eventGateContext', () => {
 
         const deleted = [message(null)] as unknown as Parameters<typeof eventGateContext>[1];
         expect(eventGateContext('messageDelete', deleted, {} as unknown as Core, dispatch).channelId).toBe('c1');
+    });
+
+    const guild = { id: 'g1', preferredLocale: 'fr', members: { me: null } };
+
+    function reaction(): MessageReaction {
+        return Object.defineProperties(Object.create(MessageReaction.prototype) as MessageReaction, {
+            message: { value: { guild, channelId: 'c1' } }
+        });
+    }
+
+    it('reads the guild and channel off a reaction and the user off the next argument', () => {
+        const user = Object.defineProperties(Object.create(User.prototype) as User, { id: { value: 'u1' } });
+        const payload = [reaction(), user, {}] as unknown as Parameters<typeof eventGateContext>[1];
+
+        const built = eventGateContext('messageReactionAdd', payload, {} as unknown as Core, dispatch);
+
+        expect(built).toMatchObject({ userId: 'u1', guildId: 'g1', channelId: 'c1', guildLocale: 'fr' });
+    });
+
+    it('reads the guild and channel off a reaction event without a user', () => {
+        const payload = [reaction()] as unknown as Parameters<typeof eventGateContext>[1];
+
+        const built = eventGateContext('messageReactionRemoveEmoji', payload, {} as unknown as Core, dispatch);
+
+        expect(built).toMatchObject({ userId: null, guildId: 'g1', channelId: 'c1' });
+    });
+
+    it('reads a voice update off the new state', () => {
+        const member = fakeMember([], 0n);
+        Object.defineProperties(member, { user: { value: { id: 'u1' } } });
+        const state = (channelId: string | null): VoiceState =>
+            Object.defineProperties(Object.create(VoiceState.prototype) as VoiceState, {
+                guild: { value: guild },
+                channelId: { value: channelId },
+                member: { value: member }
+            });
+        const payload = [state(null), state('c2')] as unknown as Parameters<typeof eventGateContext>[1];
+
+        const built = eventGateContext('voiceStateUpdate', payload, {} as unknown as Core, dispatch);
+
+        expect(built).toMatchObject({ userId: 'u1', guildId: 'g1', channelId: 'c2', member });
     });
 });
 

@@ -1,24 +1,23 @@
 import { InteractionKind, Fault, Silence } from '@seedcord/core';
-import {
-    DispatchContext,
-    InteractionRun,
-    interactionMiddleware,
-    MiddlewareRegistry,
-    PublishDefault
-} from '@seedcord/core/internal';
+import { InteractionRun, PublishDefault } from '@seedcord/core/internal';
+import { PluginHost } from '@seedcord/core/plugin';
 import { Logger } from '@seedcord/logger';
 import { MessageFlags, RESTJSONErrorCodes } from 'discord.js';
 import { beforeEach, describe, expect, it, vi } from 'vite-plus/test';
 
-import { gatewayRunConfig } from '#bot/controllers/gatewayRunConfig';
+import { autocompleteRunConfig, repliableRunConfig } from '#bot/controllers/gatewayRunConfig';
 import { UnhandledAutocomplete, UnhandledRepliable } from '#bot/defaults';
 import { harmlessError } from '#tests/utils/harmlessError';
+import { pluginWithMembers } from '#tests/utils/pluginWithMembers';
 import { TestNotice } from '#tests/utils/TestNotice';
 
-import type { HandlerConstructor, InteractionMiddlewareConstructor } from '#handlers/constructors';
+import type { HandlerSlots } from '#handlers/constructors';
 import type { Core } from '#interfaces/Core';
 import type { ValidInteractionTypes } from '#src/handlers/interactionTypes';
 import type { SubscriptionData } from '@seedcord/core';
+import type { InteractionRunConfig } from '@seedcord/core/internal';
+import type { Config } from '@seedcord/types';
+import type { AutocompleteInteraction, ChatInputCommandInteraction } from 'discord.js';
 
 const withResponse = { resource: { message: { id: 'sent' } } };
 
@@ -51,37 +50,63 @@ function mockInteraction() {
     };
 }
 
-function mockCore(publish: ReturnType<typeof vi.fn>): Core {
-    // justified: the fixture implements only the Core surface the boundary reads.
-    return { bus: { [PublishDefault]: publish }, config: { errors: {}, notifications: {} } } as unknown as Core;
+class BoundaryHost extends PluginHost<'gateway', 'server'> {
+    public readonly config: Config;
+    // justified: the boundary never reads rest
+    public readonly rest = {} as PluginHost<'gateway', 'server'>['rest'];
+    public readonly applicationId = 'app-1';
+
+    constructor(publish: ReturnType<typeof vi.fn>, errors: Config['errors']) {
+        super('gateway', 'server', undefined);
+        // justified: the boundary reads only these two config sections
+        this.config = { errors, notifications: {} } as unknown as Config;
+        Object.assign(this, { bus: { [PublishDefault]: publish } });
+    }
 }
 
+function mockCore(publish: ReturnType<typeof vi.fn>, errors: Config['errors'] = {}): BoundaryHost & Core {
+    // justified: the fixture implements only the Core surface the boundary reads.
+    return new BoundaryHost(publish, errors) as unknown as BoundaryHost & Core;
+}
+
+type Mock = ReturnType<typeof mockInteraction>;
+
 // justified: the fixture implements only the interaction surface the boundary reads.
-function asInteraction(mock: ReturnType<typeof mockInteraction>): ValidInteractionTypes {
+function asInteraction(mock: Mock): ValidInteractionTypes {
     return mock as unknown as ValidInteractionTypes;
 }
 
-async function runHandler(
-    HandlerCtor: HandlerConstructor,
-    interaction: ValidInteractionTypes,
+// justified: the same fixture, read as the slash command it mocks by default
+function asSlash(mock: Mock): ChatInputCommandInteraction {
+    return mock as unknown as ChatInputCommandInteraction;
+}
+
+// justified: the same fixture, read as an autocomplete once isAutocomplete returns true
+function asAutocomplete(mock: Mock): AutocompleteInteraction {
+    return mock as unknown as AutocompleteInteraction;
+}
+
+async function start(config: InteractionRunConfig): Promise<void> {
+    const started = await new InteractionRun(config).prepare();
+    await started?.();
+}
+
+function runSlash(
+    ctor: HandlerSlots[InteractionKind.Slash],
+    event: ChatInputCommandInteraction,
     core: Core
 ): Promise<void> {
-    const dispatch = new DispatchContext(
-        interaction.isAutocomplete() ? InteractionKind.Autocomplete : InteractionKind.Slash,
-        'test'
-    );
-    const run = new InteractionRun(
-        gatewayRunConfig({
-            interaction,
-            core,
-            dispatch,
-            HandlerCtor,
-            middlewares: new MiddlewareRegistry<InteractionMiddlewareConstructor>(interactionMiddleware),
-            logger: new Logger('Test')
-        })
-    );
-    const start = await run.prepare();
-    await start?.();
+    const resolved = { kind: InteractionKind.Slash, route: 'test', fallback: false, ctor, event } as const;
+    return start(repliableRunConfig({ resolved, core, middlewares: [], logger: new Logger('Test') }));
+}
+
+function runAutocomplete(
+    ctor: HandlerSlots[InteractionKind.Autocomplete],
+    event: AutocompleteInteraction,
+    core: Core
+): Promise<void> {
+    const resolved = { kind: InteractionKind.Autocomplete, route: 'test', fallback: false, ctor, event } as const;
+    return start(autocompleteRunConfig({ resolved, core, logger: new Logger('Test') }));
 }
 
 function answerFault(caught: Error, interaction: ValidInteractionTypes, core: Core): Promise<void> {
@@ -95,7 +120,9 @@ function answerFault(caught: Error, interaction: ValidInteractionTypes, core: Co
             throw caught;
         }
     }
-    return runHandler(interaction.isAutocomplete() ? ThrowsAutocomplete : ThrowsRepliable, interaction, core);
+    if (interaction.isAutocomplete()) return runAutocomplete(ThrowsAutocomplete, interaction, core);
+    if (interaction.isChatInputCommand()) return runSlash(ThrowsRepliable, interaction, core);
+    throw new Error('the mock is a slash command or an autocomplete');
 }
 
 function faultEvents(publish: ReturnType<typeof vi.fn>): unknown[] {
@@ -132,11 +159,7 @@ describe('gateway fault answers', () => {
     });
 
     it('swallows an api code listed in ignoreApiCodes, with no reply or report', async () => {
-        // justified: the fixture implements only the Core surface the boundary reads.
-        const core = {
-            bus: { [PublishDefault]: publish },
-            config: { errors: { ignoreApiCodes: [RESTJSONErrorCodes.UnknownInteraction] }, notifications: {} }
-        } as unknown as Core;
+        const core = mockCore(publish, { ignoreApiCodes: [RESTJSONErrorCodes.UnknownInteraction] });
 
         await answerFault(harmlessError(), asInteraction(mock), core);
 
@@ -200,7 +223,7 @@ describe('gateway fault answers', () => {
                 }
             }
 
-            await runHandler(RespondsThenStops, asInteraction(mock), mockCore(publish));
+            await runAutocomplete(RespondsThenStops, asAutocomplete(mock), mockCore(publish));
 
             expect(mock.respond).toHaveBeenCalledTimes(1);
         });
@@ -227,7 +250,7 @@ describe('gateway fault answers', () => {
                 }
             }
 
-            await runHandler(RepliesThenThrows, asInteraction(mock), mockCore(publish));
+            await runSlash(RepliesThenThrows, asSlash(mock), mockCore(publish));
 
             expect(mock.reply).toHaveBeenCalledTimes(1);
             expect(mock.followUp).toHaveBeenCalledTimes(1);
@@ -241,10 +264,32 @@ describe('gateway fault answers', () => {
                 }
             }
 
-            await runHandler(ThrowsOnBuild, asInteraction(mock), mockCore(publish));
+            await runSlash(ThrowsOnBuild, asSlash(mock), mockCore(publish));
 
             expect(mock.reply).toHaveBeenCalledTimes(1);
             expect(mock.followUp).not.toHaveBeenCalled();
         });
+    });
+});
+
+describe('plugin members on a gateway interaction', () => {
+    it('builds a member from the interaction and sets it on the handler', async () => {
+        let seen: unknown;
+        class Reads extends UnhandledRepliable {
+            override execute(): Promise<void> {
+                // codegen types the members in a bot, and it doesn't run for this test bot
+                seen = Reflect.get(this, 'tag');
+                return Promise.resolve();
+            }
+        }
+        const core = mockCore(vi.fn());
+        core.attach(
+            'tagging',
+            pluginWithMembers({ tag: (origin) => `${String(origin.guildId)}:${String(origin.userLocale)}` })
+        );
+
+        await runSlash(Reads, asSlash(Object.assign(mockInteraction(), { locale: 'pl' })), core);
+
+        expect(seen).toBe('g1:pl');
     });
 });

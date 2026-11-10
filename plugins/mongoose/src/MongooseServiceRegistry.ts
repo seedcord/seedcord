@@ -1,4 +1,4 @@
-import { FolderExports } from '@seedcord/core';
+import { FolderExports } from '@seedcord/core/plugin';
 import { SeedcordErrorCode, paint } from '@seedcord/errors';
 import { SeedcordError } from '@seedcord/errors/internal';
 import { importFiles } from '@seedcord/utils';

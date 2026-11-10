@@ -1,5 +1,7 @@
 import type { CoreBase } from '#interfaces/CoreBase';
 import type { DispatchContext } from '#src/dispatch/DispatchContext';
+import type { DispatchOrigin } from '#src/dispatch/DispatchOrigin';
+import type { DispatchMemberValues } from '@seedcord/types';
 import type { Promisable } from 'type-fest';
 
 /**
@@ -16,15 +18,9 @@ import type { Promisable } from 'type-fest';
  * });
  * ```
  */
-export interface GateContextBase {
+export interface GateContextBase extends DispatchOrigin, DispatchMemberValues {
     /** Gates read the config and the rate limiter through it. */
     readonly core: CoreBase;
-    /** The acting user's id, or null on an event that has none. */
-    readonly userId: string | null;
-    /** The guild id, or null outside a guild. */
-    readonly guildId: string | null;
-    /** The channel id, or null when the source has none. */
-    readonly channelId: string | null;
     /**
      * The member's role ids without the everyone role, the shape a raw interaction payload
      * contains. Empty outside a guild or when the source contains none.

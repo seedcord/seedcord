@@ -127,7 +127,13 @@ When you add or change a handler in a mock, run `vp -C mocks/<name> run codegen`
 - **pre-commit** runs `vp staged`, which formats the files you staged and lints them with zero warnings allowed. One lint warning blocks the commit, even though plain `vp run lint` lets it through. It also checks the prose in your staged docs, comments, and error messages against the writing rules, and an error there blocks the commit too.
 - **commit-msg** runs commitlint on your message.
 
-If you cloned before the switch to Vite+, git still points at the old husky hooks folder and your hooks don't run. Run `vp hooks enable` once to fix that.
+If you cloned before the switch to Vite+, git still points at the old husky hooks folder, so your hooks don't run. `vp hooks enable` skips while that setting is there. Clear it first:
+
+```sh
+git config --unset core.hooksPath && vp hooks enable
+```
+
+You can delete the leftover `.husky` folder after that.
 
 When a prose error is wrong for one spot, turn that rule off around it, with the reason next to the switch:
 

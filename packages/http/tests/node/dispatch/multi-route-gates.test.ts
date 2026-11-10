@@ -1,6 +1,6 @@
 import 'reflect-metadata';
 
-import { Cooldown, InteractionKind } from '@seedcord/core';
+import { Cooldown } from '@seedcord/core';
 import { GatedMetadataKey, interactionMiddleware, MiddlewareRegistry } from '@seedcord/core/internal';
 import { Envapter, PortableSource } from 'envapt';
 import { describe, expect, it } from 'vite-plus/test';
@@ -9,11 +9,11 @@ import { SlashHandler } from '#handlers/interaction/SlashHandler';
 import { dispatchInteraction } from '#src/dispatch/dispatchInteraction';
 import { testCore } from '#tests/helpers/core';
 import { nullPathConfig, VALID_TOKEN } from '#tests/helpers/fixtures';
+import { resolvedSlash } from '#tests/helpers/interactions';
 
 import { slashPayload } from './harness';
 
 import type { InteractionMiddlewareConstructor } from '#handlers/constructors';
-import type { ValidInteractionTypes } from '#handlers/interactionTypes';
 import type { Core } from '#interfaces/Core';
 import type { SubscriptionData } from '@seedcord/core';
 
@@ -34,8 +34,7 @@ function freshCore(): { core: Core; published: SubscriptionData<'interactionDisp
 
 async function dispatchRoute(core: Core, route: string): Promise<void> {
     const execute = await dispatchInteraction({
-        match: { kind: InteractionKind.Slash, route, fallback: false, ctor: Vote },
-        payload: slashPayload('vote') as ValidInteractionTypes,
+        resolved: resolvedSlash(route, Vote, slashPayload('vote')),
         core,
         middlewares: new MiddlewareRegistry<InteractionMiddlewareConstructor>(interactionMiddleware)
     });

@@ -21,6 +21,7 @@ export type { InjectedEmojiMap } from '#src/emojis/EmojiInjector';
 
 export type { API } from '@discordjs/core/http-only';
 export * from '@seedcord/core';
+export { FolderExports, type AttachedPlugin, type Generated, type PluginTypes } from '@seedcord/core/plugin';
 export * from '@seedcord/errors';
 export * from '@seedcord/event-emitter';
 export * from '@seedcord/logger';

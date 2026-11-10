@@ -9,6 +9,7 @@ import {
 import { SeedcordErrorCode } from '@seedcord/errors';
 import { SeedcordError } from '@seedcord/errors/internal';
 import { LoggerChannelRegistry } from '@seedcord/logger';
+import { HostPlugins } from '@seedcord/types/internal';
 
 import { InteractionDispatcher } from '#src/dispatch/InteractionDispatcher';
 import { InteractionEngine } from '#src/InteractionEngine';
@@ -40,7 +41,7 @@ export class InteractionsService {
 
         const interactions = config.bot.interactions;
         this.interactions = interactions.path
-            ? new InteractionDispatcher(interactions.path, interactions.middlewares)
+            ? new InteractionDispatcher(host[HostPlugins], interactions.path, interactions.middlewares)
             : undefined;
     }
 

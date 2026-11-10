@@ -1,4 +1,4 @@
-import { HostPluginKeys } from '@seedcord/types/internal';
+import { HostPlugins } from '@seedcord/types/internal';
 import { describe, it, expect } from 'vite-plus/test';
 
 import { Plugin } from '#src/plugin/Plugin';
@@ -12,7 +12,7 @@ class TestPlugin extends Plugin {
 
 describe('pluginKeys', () => {
     it('is empty before anything attaches', () => {
-        expect(new TestPluginHost()[HostPluginKeys]).toEqual([]);
+        expect(new TestPluginHost()[HostPlugins].keys).toEqual([]);
     });
 
     it('reports the keys in attach order', () => {
@@ -20,7 +20,7 @@ describe('pluginKeys', () => {
 
         const attached = host.attach('db', TestPlugin).attach('cache', TestPlugin);
 
-        expect(attached[HostPluginKeys]).toEqual(['db', 'cache']);
+        expect(attached[HostPlugins].keys).toEqual(['db', 'cache']);
     });
 
     it('reports a grouped key whole', () => {
@@ -28,6 +28,6 @@ describe('pluginKeys', () => {
 
         const attached = host.attach('services.users', TestPlugin);
 
-        expect(attached[HostPluginKeys]).toEqual(['services.users']);
+        expect(attached[HostPlugins].keys).toEqual(['services.users']);
     });
 });

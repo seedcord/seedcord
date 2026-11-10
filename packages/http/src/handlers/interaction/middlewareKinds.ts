@@ -1,6 +1,7 @@
 import type { SelectInteraction } from './components/SelectMenuHandler';
 import type { InteractionKind, MiddlewareKind } from '@seedcord/core';
 import type {
+    APIApplicationCommandAutocompleteInteraction,
     APIChatInputApplicationCommandInteraction,
     APIMessageApplicationCommandInteraction,
     APIMessageChannelSelectInteractionData,
@@ -13,7 +14,9 @@ import type {
     APIUserApplicationCommandInteraction
 } from 'discord-api-types/v10';
 
-interface Payloads {
+/** @internal */
+export interface Payloads {
+    [InteractionKind.Autocomplete]: APIApplicationCommandAutocompleteInteraction;
     [InteractionKind.Slash]: APIChatInputApplicationCommandInteraction;
     [InteractionKind.Button]: APIMessageComponentButtonInteraction;
     [InteractionKind.Modal]: APIModalSubmitInteraction;

@@ -1,5 +1,5 @@
-import { FolderExports, MemoryDriver, ShutdownPhase } from '@seedcord/core';
-import { Plugin } from '@seedcord/core/plugin';
+import { MemoryDriver, ShutdownPhase } from '@seedcord/core';
+import { FolderExports, Plugin } from '@seedcord/core/plugin';
 import { SeedcordErrorCode, paint } from '@seedcord/errors';
 import { SeedcordError, SeedcordTypeError } from '@seedcord/errors/internal';
 import { keepDefined } from '@seedcord/utils';

@@ -19,7 +19,8 @@ export { FaultBoundary, type FaultDetails } from '#src/notices/FaultBoundary';
 export { FixedScope } from '#src/plugin/Plugin';
 export type { PluginArgs, PluginCtor } from '#src/plugin/Plugin';
 export type { Runtime, Transport } from '#src/plugin/options';
-export { attachmentsOf, sealAttachments } from '#src/plugin/PluginHost';
+export { sealAttachments } from '#src/plugin/PluginHost';
+export { PluginRegistry } from '#src/plugin/PluginRegistry';
 export { splitPluginKey } from '#src/plugin/splitPluginKey';
 export { CoordinatedStartup, type StartupTasks } from '#src/lifecycle/CoordinatedStartup';
 export { PluginLifecycle } from '#src/lifecycle/PluginLifecycle';
@@ -63,7 +64,6 @@ export {
 export { contextMenuLeaves } from '#src/commands/contextMenuLeaves';
 export type { ContextMenuLeaves } from '#src/commands/contextMenuLeaves';
 export { isCommandClass, type CommandCtor } from '#src/commands/isCommandClass';
-export { slashRouteLeaves } from '#src/commands/slashRouteLeaves';
 export type { CommandBuilder, DeployResult } from '#src/commands/types';
 
 export type { GateFitsWith } from '#gates/matching';
@@ -132,13 +132,14 @@ export {
 } from '#subscribers/slots';
 export { DispatchContext, type InteractionDispatch } from '#src/dispatch/DispatchContext';
 export { InteractionRun, type InteractionRunConfig } from '#src/dispatch/InteractionRun';
-export { componentKindOf } from '#src/dispatch/componentKindOf';
 export { HandlerLoader } from '#src/dispatch/HandlerLoader';
 export {
     emptyRouteMaps,
     matchRoute,
     RouteRegistry,
+    unhandledSlots,
     type RegisteredRoute,
+    type ResolvedRoute,
     type RouteMaps
 } from '#src/dispatch/RouteRegistry';
 export { eventResultFor, resultFor, runAfter } from '#src/dispatch/runAfter';

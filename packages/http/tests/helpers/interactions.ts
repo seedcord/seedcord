@@ -1,4 +1,19 @@
+import { InteractionKind } from '@seedcord/core';
 import { vi } from 'vite-plus/test';
+
+import type { HandlerSlots, ResolvedInteraction } from '#handlers/constructors';
+import type { APIChatInputApplicationCommandInteraction } from 'discord-api-types/v10';
+
+// what resolve() returns for a slash command, for a test that calls dispatchInteraction directly
+export function resolvedSlash(
+    route: string,
+    ctor: HandlerSlots[InteractionKind.Slash],
+    payload: object = slashPayload(route)
+): ResolvedInteraction<InteractionKind.Slash> {
+    // justified: the payload has every field that the dispatch reads off a chat input command
+    const event = payload as APIChatInputApplicationCommandInteraction;
+    return { kind: InteractionKind.Slash, route, fallback: false, ctor, event };
+}
 
 export function slashPayload(name: string): object {
     // the builder reads app_permissions unconditionally, like the gateway does

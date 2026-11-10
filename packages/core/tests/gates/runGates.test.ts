@@ -3,14 +3,15 @@ import { describe, it, expect } from 'vite-plus/test';
 import { and, or } from '#gates/combinators';
 import { defineEffectGate, defineGate } from '#gates/Gate';
 import { runGates, runHandlerGates } from '#gates/runGates';
+import { DispatchContext } from '#src/dispatch/DispatchContext';
 import { GatedMetadataKey } from '#src/metadataKeys';
 import { Notice } from '#stops/Notice';
 import { TestNotice } from '#tests/utils/TestNotice';
 
 import type { GateContextBase } from '#gates/Gate';
 
-// a minimal cast stands in because gates ignore ctx here
-const ctx = {} as unknown as GateContextBase;
+// gates ignore ctx here, and runHandlerGates reads only dispatch off it
+const ctx = { dispatch: new DispatchContext('event', 'probe') } as unknown as GateContextBase;
 
 describe('runGates', () => {
     it('runs each gate in order and resolves when all pass', async () => {

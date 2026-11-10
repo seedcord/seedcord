@@ -1,17 +1,20 @@
 import path from 'node:path';
 
 import { InteractionKind } from '@seedcord/core';
+import { PluginRegistry } from '@seedcord/core/internal';
 import { Logger } from '@seedcord/logger';
 import { afterEach, describe, expect, it, vi, type MockInstance } from 'vite-plus/test';
 
 import { UnhandledRepliable } from '#handlers/defaults/UnhandledRepliable';
 import { InteractionDispatcher } from '#src/dispatch/InteractionDispatcher';
 
-import type { ResolvedRoute } from '#src/dispatch/resolve';
+import type { HandlerSlots } from '#handlers/constructors';
+import type { MiddlewareKind } from '@seedcord/core';
+import type { RegisteredRoute } from '@seedcord/core/internal';
 
 const HANDLERS_DIR = path.resolve(__dirname, '../discovery/fixtures/handlers');
 
-function route(kind: ResolvedRoute['kind'], key: string): ResolvedRoute {
+function route<Kind extends MiddlewareKind>(kind: Kind, key: string): RegisteredRoute<HandlerSlots[Kind], Kind> {
     // the guard reads map membership only
     return { kind, route: key, fallback: false, ctor: UnhandledRepliable };
 }
@@ -20,7 +23,7 @@ function dispatcherWith(seed: (d: InteractionDispatcher) => void): {
     dispatcher: InteractionDispatcher;
     warn: MockInstance<Logger['warn']>;
 } {
-    const dispatcher = new InteractionDispatcher(HANDLERS_DIR);
+    const dispatcher = new InteractionDispatcher(new PluginRegistry(), HANDLERS_DIR);
     seed(dispatcher);
     return { dispatcher, warn: vi.spyOn(Logger.prototype, 'warn').mockImplementation(() => undefined) };
 }

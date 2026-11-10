@@ -12,10 +12,10 @@ import { AutocompleteHandler } from '#handlers/interaction/AutocompleteHandler';
 import { InteractionHandler } from '#handlers/interaction/InteractionHandler';
 import { InteractionMiddleware } from '#handlers/interaction/InteractionMiddleware';
 
-import type { HandlerConstructor, InteractionMiddlewareConstructor } from '#handlers/constructors';
+import type { HandlerConstructor, HandlerSlots, InteractionMiddlewareConstructor } from '#handlers/constructors';
 import type { RouteMaps } from '#src/dispatch/resolve';
 import type { MiddlewareKind } from '@seedcord/core';
-import type { Initializeable, ContextMenuLeaves } from '@seedcord/core/internal';
+import type { Initializeable, ContextMenuLeaves, PluginRegistry } from '@seedcord/core/internal';
 import type { HmrAware, HmrUpdateEvent } from '@seedcord/types';
 
 // hmr swaps entries in these maps while resolve() reads them per request
@@ -26,7 +26,7 @@ export class InteractionDispatcher implements Initializeable, HmrAware {
     /** @internal */
     public readonly logger = new Logger('Interactions', { channel: 'interactions' });
 
-    private readonly routes = new RouteRegistry<HandlerConstructor>();
+    private readonly routes = new RouteRegistry<HandlerSlots>();
 
     public get maps(): RouteMaps {
         return this.routes.maps;
@@ -35,11 +35,12 @@ export class InteractionDispatcher implements Initializeable, HmrAware {
     private isInitialized = false;
     private readonly loader: HandlerLoader<HandlerConstructor, InteractionMiddlewareConstructor, MiddlewareKind>;
 
-    constructor(handlersDir: string, middlewaresDir?: string) {
+    constructor(plugins: PluginRegistry, handlersDir: string, middlewaresDir?: string) {
         this.loader = new HandlerLoader({
             handlersDir,
             middlewaresDir,
             middlewares: this.middlewares,
+            plugins,
             logger: this.logger,
             isHandler: (value): value is HandlerConstructor => this.isHandler(value),
             isMiddleware: (value): value is InteractionMiddlewareConstructor => this.isMiddleware(value),

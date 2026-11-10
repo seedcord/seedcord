@@ -31,7 +31,7 @@ export abstract class SlashHandler<
     /** The selected command's path, such as `search/docs`. */
     declare protected readonly route: Route;
 
-    private resolver?: HttpSlashOptions;
+    #resolver?: HttpSlashOptions;
 
     /**
      * The typed options for this command's route. Only the getters for kinds this command declares appear.
@@ -46,9 +46,9 @@ export abstract class SlashHandler<
      * Rich kinds resolve from the interaction's `resolved` data.
      */
     protected get options(): SlashOptions<Route> {
-        this.resolver ??= new HttpSlashOptions(this.event.data);
+        this.#resolver ??= new HttpSlashOptions(this.event.data);
         // SlashOptions is only the registry-typed view over the getters the reader already exposes
-        return this.resolver as SlashOptions<Route>;
+        return this.#resolver as SlashOptions<Route>;
     }
 
     /**

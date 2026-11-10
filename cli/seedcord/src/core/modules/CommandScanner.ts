@@ -11,6 +11,7 @@ import { ModuleExports } from './ModuleExports';
 import type { ModuleLoader } from '#core/modules/ModuleLoader';
 import type { ProjectFiles } from '#core/project/ProjectFiles';
 import type { CommandCtor, CommandMeta } from '@seedcord/core/internal';
+import type { HostPlugins, SeedcordInstance } from '@seedcord/types/internal';
 import type { RESTPostAPIApplicationCommandsJSONBody } from 'discord-api-types/v10';
 
 interface CommandClassFile {
@@ -60,7 +61,8 @@ function construct({ sourceFile, Command }: CommandClassFile): FoundCommand | Se
 export class CommandScanner {
     constructor(
         private readonly modules: ModuleLoader,
-        private readonly files: ProjectFiles
+        private readonly files: ProjectFiles,
+        private readonly plugins: Pick<SeedcordInstance[typeof HostPlugins], 'prepareCommands'>
     ) {}
 
     public async scan(commandsPath: string): Promise<FoundCommand[]> {
@@ -86,6 +88,7 @@ export class CommandScanner {
         }
 
         throwSingleOrAggregate([...problems, ...importFailures], SeedcordErrorCode.CliProblems);
+        await this.plugins.prepareCommands(commands.map(({ json }) => json));
         return commands;
     }
 

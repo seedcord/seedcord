@@ -11,7 +11,7 @@ Every save sends your plugin an [`HmrUpdateEvent`](ref:types/HmrUpdateEvent) thr
 
 ## Reloading files the plugin loaded
 
-[`FolderExports`](ref:core/FolderExports) registers what a folder's files export at startup, then reloads a file's exports each time you save it. Import it from your transport package, or from `@seedcord/core` on the `@seedcord/core/plugin` base. You give it the folder, a check for which exports count, and how to register and unregister one.
+[`FolderExports`](ref:core/FolderExports) registers what a folder's files export at startup, then reloads a file's exports each time you save it. Import it from your transport package, or from `@seedcord/core/plugin` if your plugin works on both transports. You give it the folder, a check for which exports count, and how to register and unregister one.
 
 ```ts twoslash title="src/plugins/Jobs.ts"
 import { FolderExports, Plugin } from '@seedcord/gateway';

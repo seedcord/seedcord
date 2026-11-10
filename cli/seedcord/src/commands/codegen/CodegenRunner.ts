@@ -4,7 +4,7 @@ import { dirname, resolve } from 'node:path';
 
 import { SeedcordErrorCode, paint } from '@seedcord/errors';
 import { SeedcordError } from '@seedcord/errors/internal';
-import { HostAugmentTarget, HostPluginKeys, type SeedcordInstance } from '@seedcord/types/internal';
+import { HostAugmentTarget, HostPlugins, type SeedcordInstance } from '@seedcord/types/internal';
 import { importSpecifier } from '@seedcord/utils/internal';
 
 import { openProjectWithSteps } from '#core/config/openProjectWithSteps';
@@ -94,7 +94,10 @@ export class CodegenRunner {
         const commandsPath = instance.config.bot.commands.path;
         const commands = await steps.step(
             'scan commands',
-            () => (commandsPath ? new CommandScanner(modules, files).scan(commandsPath) : Promise.resolve([])),
+            () =>
+                commandsPath
+                    ? new CommandScanner(modules, files, instance[HostPlugins]).scan(commandsPath)
+                    : Promise.resolve([]),
             (found) => paint.mute(plural(found.length, 'command'))
         );
 
@@ -122,8 +125,9 @@ export class CodegenRunner {
         const emojis = instance.config.bot.emojis ?? {};
         return renderAugmentation(this.deps.generator.generate(commands, emojis), instance[HostAugmentTarget], {
             specifier: importSpecifier(config.root, config.instance),
-            keys: instance[HostPluginKeys],
-            types
+            keys: instance[HostPlugins].keys,
+            types,
+            members: instance[HostPlugins].members
         });
     }
 

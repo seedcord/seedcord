@@ -1,11 +1,11 @@
 ---
 title: Writing a plugin
-description: Write a plugin that your bot starts and stops, give it typed options, and call it from your handlers through this.core.
+description: Add your own functionality to seedcord with a plugin, a class that starts and stops with your bot and that every handler reads from this.core.
 ---
 
-Say your bot talks to an outside service, like a metrics API or a cache, and exports its client from `bot.ts`. Nothing closes that client when the bot shuts down. A handler can also import it before it has connected. As a plugin, the client starts and stops with your bot, and handlers read it from `this.core` under the key you attach it with. [Using a plugin](/plugins) shows how a bot attaches one.
+Say your bot talks to an outside service, like a metrics API or a cache, and exports its client from `bot.ts`. Without a plugin, nothing closes that client when the bot shuts down, and a handler can import it before it has connected. As a plugin, the client starts and stops with your bot, and handlers read it from [`this.core`](ref:core/CoreBase) under the key you attach it with. A plugin can also give every handler a value built from the interaction, and keep records across restarts. If nothing needs to start or stop with the bot, a plain module works too. [Using a plugin](/plugins) covers attaching one to a bot.
 
-To write a plugin, extend [`Plugin`](ref:core/Plugin) and write `init()`. Everything else on the base is optional.
+To write a plugin, extend [`Plugin`](ref:core/Plugin) and write [`init()`](ref:core/Plugin.init). Everything else on `Plugin` is optional. The samples on this page import from `@seedcord/gateway`, and an http bot imports the same names from `@seedcord/http`.
 
 ```ts twoslash title="src/plugins/Uptime.ts"
 import { Plugin } from '@seedcord/gateway';
@@ -23,7 +23,7 @@ export class Uptime extends Plugin {
 }
 ```
 
-A new project has a plugin like this in `src/plugins/Uptime.ts`. Its constructor takes only the bot, so you attach it with a key and the class.
+A new project has a plugin like this in `src/plugins/Uptime.ts`. `Uptime` doesn't declare a constructor, so you [`attach`](ref:gateway/Seedcord.attach) it with a key and the class.
 
 ```ts twoslash
 import { Plugin, Seedcord } from '@seedcord/gateway';
@@ -40,7 +40,7 @@ export default seedcord.attach('uptime', Uptime);
 
 ## Calling it from a handler
 
-A handler calls your plugin's methods on `this.core.uptime`, the key you attached it under. It doesn't need an import from `bot.ts`.
+A handler doesn't import the plugin from `bot.ts`. It reads `this.core.uptime`, where `uptime` is the key from the `attach` call.
 
 ```ts twoslash title="src/handlers/UptimeCommand.ts"
 import { SlashHandler, SlashRoute } from '@seedcord/gateway';
@@ -78,15 +78,109 @@ export class UptimeCommand extends SlashHandler<'uptime'> {
 }
 ```
 
-`ms` is a `number` because `elapsed()` returns a `number`. [Typing what you ship](/writing-plugins/typing) shows how the type gets from your class to `this.core`.
+[Typing what you ship](/writing-plugins/typing) explains how the return type of `elapsed()` reaches `this.core`.
 
-A handler can call every public member of your class. `startedAt` is private, so a handler reads the time through `elapsed()` and can't overwrite it. Keep connections and state private, and make public only the methods you want handlers to call.
+A handler can use every public member of your class except the ones that only seedcord uses: `init()`, [`ready()`](ref:core/Plugin.ready), [`dispose()`](ref:core/Plugin.dispose), [`codegen()`](ref:core/Plugin.codegen), [`onHmr()`](ref:core/Plugin.onHmr), [`dispatchMembers`](ref:core/Plugin.dispatchMembers) and [`prepareCommands()`](ref:core/Plugin.prepareCommands). `startedAt` in the first sample is private, so a handler reads the time through `elapsed()`, and TypeScript rejects a handler that writes to it. Keep connections and state private, and make public only the methods you want handlers to call.
 
-Handlers can call those methods only after startup. Startup runs in three phases: Configuration, Login and Ready. `init()` runs in Configuration by default, and a plugin can also define `ready()` for the Ready phase. Handlers start receiving interactions once every `init()` has finished, so a handler can call your method while `ready()` is still running. If a method reads something `ready()` sets, return early or throw while it's unset. [The lifecycle](/plugins/lifecycle) has the full order.
+Put work in `ready()` when it needs the logged-in client or the bot's application id, which `init()` can't read yet. Handlers start receiving interactions when the last startup phase, Ready, begins. `ready()` runs in that phase too, so a handler can call your method before `ready()` finishes. If a method reads something that `ready()` sets, check for it first. Throw if the handler can't do its job without it, and return early if it can skip the work. The full startup order is on [the lifecycle page](/plugins/lifecycle).
+
+<Callout type="transport">
+
+On Cloudflare Workers, the first request waits for the whole startup, `ready()` included, so a handler there never runs before `ready()` finishes.
+
+</Callout>
+
+## Adding a value to every handler
+
+Suppose your plugin translates messages, and each translation depends on the language of the user who ran the command. Without `dispatchMembers`, every handler would read that language from its interaction and pass it into every call. A function in your plugin's [`dispatchMembers`](ref:core/Plugin.dispatchMembers) reads the language once per interaction, so a handler calls `this.t('greet')` without passing it.
+
+```ts twoslash title="src/plugins/Translations.ts"
+import { Plugin } from '@seedcord/gateway';
+
+import type { DispatchOrigin } from '@seedcord/gateway';
+
+const MESSAGES: Record<string, Record<string, string>> = {
+    'en-US': { greet: 'Hello' },
+    fr: { greet: 'Bonjour' }
+};
+
+export class Translations extends Plugin {
+    public override readonly dispatchMembers = {
+        t: (origin: DispatchOrigin) => {
+            const locale = origin.userLocale ?? origin.guildLocale;
+            const messages =
+                MESSAGES[locale ?? 'en-US'] ?? MESSAGES['en-US'];
+            return (key: string): string => messages?.[key] ?? key;
+        }
+    };
+
+    public async init(): Promise<void> {}
+}
+```
+
+`dispatchMembers` is a plain object of functions. seedcord calls each function once per interaction, and once per event if the event has a handler. Each handler gets what `t` returns as `this.t`. A function can be async, and handlers then get the value it resolves to.
+
+Each function gets a [`DispatchOrigin`](ref:core/DispatchOrigin), with these fields:
+
+```ts twoslash
+// @noErrors
+import type { DispatchOrigin } from '@seedcord/gateway';
+
+declare const origin: DispatchOrigin;
+// ---cut---
+origin.
+//     ^|
+```
+
+An interaction always has `userId` and `userLocale`. The other fields can be null:
+
+- `guildId` and `guildLocale` are null outside a guild.
+- `channelId` is null when the interaction or event doesn't happen in a channel.
+- `userId` is null on an event without a user, and `userLocale` is null on every gateway event.
+
+That's why `t` falls back to `guildLocale` and then to the `'en-US'` messages.
+
+To type `this.t` on every handler, attach the plugin and run [`seedcord codegen`](/plugins/typing). Codegen writes one row for each key, and TypeScript reads the row's type from the function's return type. Leave the `dispatchMembers` object without a type annotation. With one, like `Record<string, (origin: DispatchOrigin) => unknown>`, `this.t` becomes `unknown`.
+
+```ts twoslash title="src/handlers/GreetCommand.ts"
+// ---cut-start---
+import { SlashHandler, SlashRoute } from '@seedcord/gateway';
+
+declare module '@seedcord/gateway' {
+    interface DispatchMemberValues {
+        t: (key: string) => string;
+    }
+    interface SlashRegistry {
+        greet: { options: {}; cache: 'cached' };
+    }
+}
+// ---cut-end---
+@SlashRoute('greet')
+export class GreetCommand extends SlashHandler<'greet'> {
+    public async execute(): Promise<void> {
+        await this.reply(this.t('greet'));
+        //                    ^?
+    }
+}
+```
+
+`this.t` has the type that the `t` function returns. [Middleware](/checks/middleware) reads `this.t` too. [Gates](/checks/gates) and a [`Notice`](ref:core/Notice)'s `render` read it as `ctx.t`.
+
+seedcord runs every plugin's `dispatchMembers` functions at the same time, and the handler waits until they've all returned or one has thrown. They run before middleware and gates, even for an interaction that a gate then refuses. So a slow function spends part of the [three seconds](/replying) that Discord gives a bot to answer an interaction. They also run for [autocomplete](/commands/autocomplete), which Discord sends as the user types. If only a few handlers need a value, give your plugin a method and call it through `this.core` in those handlers.
+
+If a function throws, seedcord skips the middleware and handlers for that interaction or event, and logs and publishes the error with the code `CorePluginMemberThrew`. seedcord answers a command, a component, a context menu or a modal with the built-in [`Fault`](ref:core/Fault) card. It skips your bot's `defaultError` here, because a card of your own might read the value that just failed. An autocomplete gets an empty list of choices. An event isn't answered at all.
+
+`attach()` throws `CorePluginMemberReserved` if one of your `dispatchMembers` keys is a name that seedcord uses, like `reply`, `user` or `logger`. It throws `CoreDuplicateName` if another plugin already uses the key. If you attach a plugin that has `dispatchMembers` twice, `attach()` throws `CorePluginAttachedTwice`, because both copies add the same keys. A handler or middleware can't use your keys either. If one defines a method or getter with one of them, startup stops with `CoreDuplicateName`. If it sets a field with one, every dispatch to it fails with that code, since the field would replace your value.
+
+<Callout type="transport">
+
+Only a gateway bot receives events, so on an http bot the functions run once per interaction.
+
+</Callout>
 
 ## Closing what init() opened
 
-A timer that `init()` starts keeps running its callback after the bot begins shutting down, and an open connection keeps the process from exiting. `dispose()` runs at shutdown. Close in it whatever `init()` started.
+Without `dispose()`, a timer that `init()` starts keeps calling its callback after the bot begins shutting down. `seedcord dev` restarts your bot in the same process, so the timer from the last run still calls its callback, and any connection `init()` opened is still open. [`dispose()`](ref:core/Plugin.dispose) runs at shutdown, and it's where you close whatever `init()` started.
 
 ```ts twoslash title="src/plugins/Heartbeat.ts"
 import { Plugin } from '@seedcord/gateway';
@@ -106,9 +200,13 @@ export class Heartbeat extends Plugin {
 }
 ```
 
-If `init()` throws, seedcord skips `dispose()`. A plugin that opens two things in `init()` has to close the first itself when the second fails. [When init fails](/plugins/lifecycle#when-init-fails) shows what seedcord cleans up.
+<Callout type="warning">
 
-On a bot running on Cloudflare Workers, `dispose()` runs only when startup fails, and then only for plugins whose `init()` had finished. So write state as soon as it changes. [On Cloudflare Workers](/plugins/lifecycle#on-cloudflare-workers) has the rest of the differences.
+If `init()` throws, seedcord skips `dispose()`. If a plugin opens two things in `init()` and the second one fails, `init()` has to close the first itself.
+
+</Callout>
+
+[When init fails](/plugins/lifecycle#when-init-fails) covers what seedcord cleans up for you. On Cloudflare Workers the shutdown phases never run, so `dispose()` runs only when startup fails. Write state as soon as it changes. [On Cloudflare Workers](/plugins/lifecycle#on-cloudflare-workers) lists the other differences.
 
 ## Which base to import
 
@@ -118,13 +216,11 @@ Each transport exports its own `Plugin` class. A transport is how the bot talks 
 
 | import from | `this.core` has | extend it when your plugin |
 | --- | --- | --- |
-| `@seedcord/gateway` | the gateway [`Core`](ref:gateway/Core), which adds `bot`, `startup` and `shutdown` | reads `bot`, `startup` or `shutdown` |
-| `@seedcord/http` | the http [`Core`](ref:http/Core), which adds `startup` and `shutdown` | reads `startup` or `shutdown` on an http bot (on Workers, [`shutdown`](/plugins/lifecycle#on-cloudflare-workers) throws) |
-| `@seedcord/core/plugin` | [`CoreBase`](ref:core/CoreBase), the members both transports share | only uses what both transports share |
+| `@seedcord/gateway` | the gateway [`Core`](ref:gateway/Core), which adds [`bot`](ref:gateway/Core.bot), [`startup`](ref:gateway/Core.startup) and [`shutdown`](ref:gateway/Core.shutdown) | reads [`bot`](ref:gateway/Core.bot), [`startup`](ref:gateway/Core.startup) or [`shutdown`](ref:gateway/Core.shutdown) |
+| `@seedcord/http` | the http [`Core`](ref:http/Core), which adds [`startup`](ref:http/Core.startup) and [`shutdown`](ref:http/Core.shutdown) | reads [`startup`](ref:http/Core.startup) or [`shutdown`](ref:http/Core.shutdown) on an http bot (on Workers, [`shutdown`](/plugins/lifecycle#on-cloudflare-workers) throws) |
+| `@seedcord/core/plugin` | [`CoreBase`](ref:core/CoreBase), the members both transports share, like [`config`](ref:core/CoreBase.config), [`rest`](ref:core/CoreBase.rest) and [`bus`](ref:core/CoreBase.bus) | only uses what both transports share |
 
 {/* prettier-ignore-end */}
-
-`CoreBase` has members both transports share, such as `config`, `rest`, and `bus`. A plugin on the `@seedcord/core/plugin` base attaches to a bot on either transport. Each base also sets where a bot may attach the plugin. [Where it runs](/writing-plugins/runtimes) has that.
 
 <Callout type="transport">
 
@@ -132,11 +228,13 @@ Each transport exports its own `Plugin` class. A transport is how the bot talks 
 
 </Callout>
 
-When you publish a plugin, its base sets which bots can attach it. One on the gateway base attaches only to gateway bots, and one on the http base only to http bots. Extend `@seedcord/core/plugin` unless your plugin needs `bot`, `startup`, or `shutdown`. The Mongoose and Kysely plugins both extend it, so a bot on either transport can attach them. A plugin inside your own bot only ever runs on that bot's transport, so extend that transport's base.
+The base also sets which bots can attach the plugin. One on the gateway base attaches only to gateway bots, one on the http base only to http bots, and one on `@seedcord/core/plugin` to bots on either transport. The gateway base also runs only on a server, while the http base and `@seedcord/core/plugin` run on Workers too. [Where it runs](/writing-plugins/runtimes) covers how a plugin narrows that.
+
+When you publish a plugin, extend `@seedcord/core/plugin` unless your plugin needs `bot`, `startup`, or `shutdown`, so that bots on both transports can attach it. If you write a plugin only for your own bot, extend your bot's transport base or `@seedcord/core/plugin`.
 
 ## What the constructor takes
 
-Most plugins need options, like a connection string or a label. The constructor's first parameter is the bot, which seedcord passes in when you call `attach`. The samples call it `host`. Type it as `CoreBase` and pass it to `super`. Every parameter after it is yours, and you pass their values to `attach` after the plugin class, where TypeScript checks their types. If you type the first parameter as a transport's `Core`, the `attach` call fails to compile. [Typing what you ship](/writing-plugins/typing#why-the-first-parameter-is-corebase) explains why.
+A plugin often needs options, like a connection string or a label. The constructor's first parameter is the host, the bot that seedcord passes in when you call `attach`. Type it as `CoreBase` and pass it to `super`. You define every parameter after it. You pass their values to `attach` after the plugin class, and TypeScript checks their types. If you type the first parameter as a transport's `Core`, the `attach` call fails to compile, and [Typing what you ship](/writing-plugins/typing#why-the-first-parameter-is-corebase) gives the reason.
 
 ```ts twoslash
 import { Plugin } from '@seedcord/gateway';
@@ -157,15 +255,19 @@ export class Uptime extends Plugin {
 }
 ```
 
-`Uptime` takes a `label` after the bot, so you write [`seedcord.attach('uptime', Uptime, label)`](ref:gateway/Seedcord.attach).
+`Uptime` takes `label` as its second parameter, so you write [`attach('uptime', Uptime, label)`](ref:gateway/Seedcord.attach).
 
-Import `CoreBase` from the package you took `Plugin` from. On the `@seedcord/core/plugin` base, that's `@seedcord/core`, which a new bot doesn't install. Add it to your bot, and list it as a peer dependency when you publish the plugin. [Publishing](/writing-plugins/publishing#the-peer-entry) shows the entry.
+Import `CoreBase` from the package you import `Plugin` from. On the `@seedcord/core/plugin` base, that's `@seedcord/core`, which a new bot doesn't install. Add it to your bot, and list it as a peer dependency when you publish the plugin, so the bot and the plugin share one copy. With two copies, `attach` rejects the plugin with the code `CorePluginFromOtherCore`. The `peerDependencies` entry is in [Publishing](/writing-plugins/publishing#the-peer-entry).
 
-After the host, `super()` takes an optional [`PluginLifecycleSpec`](ref:core/PluginLifecycleSpec) to move `init()` to another phase or set a timeout in milliseconds, as in `super(host, { init: { timeout: 30_000 } })`. [The lifecycle page](/plugins/lifecycle#moving-a-method-to-another-phase) shows the phases.
+The second argument to `super()` is an optional [`PluginLifecycleSpec`](ref:core/PluginLifecycleSpec), and every field in it is optional too. `init` and `dispose` can each take a `phase`, like [`StartupPhase.Login`](ref:core/StartupPhase), and a `timeout` in milliseconds. `ready` can take a `timeout`. Without them, `init()` runs in Configuration, `dispose()` runs in Disconnect, and the timeouts are 15000ms for `init()` and `ready()` and 10000ms for `dispose()`. A plugin that declares a `transport` or a `runtime` has to pass the spec, as [Where it runs](/writing-plugins/runtimes) shows. [The lifecycle page](/plugins/lifecycle#moving-a-method-to-another-phase) has a sample.
 
-Keep the rest of the constructor to storing its arguments, because it runs whenever something loads `bot.ts`. [`seedcord codegen`](/tooling/codegen#codegen-constructs-your-bot) and `seedcord build` both load it. A connection opened there opens on every codegen run and every build, even though no bot is running. Open connections and read files in `init()`.
+<Callout type="warning">
 
-## Rejecting bad options
+The constructor runs whenever something loads `bot.ts`. [`seedcord codegen`](/tooling/codegen#codegen-constructs-your-bot) and `seedcord build` both load it, so a connection opened there opens on every codegen run and every build, even though no bot is running. In the constructor, only store the arguments. Open connections and read files in `init()`.
+
+</Callout>
+
+### Rejecting bad options
 
 Catch a bad option, like an empty label, while the bot starts, before anything connects. Call [`rejectOptions`](ref:core/Plugin.rejectOptions) from the constructor to stop the bot at the `attach` call.
 
@@ -187,7 +289,7 @@ export class Uptime extends Plugin {
 }
 ```
 
-Calling `rejectOptions` throws an error with the code `PluginOptionsRejected`, which stops the bot with this message.
+`rejectOptions` throws an error with the code `PluginOptionsRejected`, and its message starts with your plugin's class name, which a plain `throw` would leave out. The bot stops with this message.
 
 ```txt output
 Uptime rejected its options. Label is empty.
@@ -195,13 +297,11 @@ Uptime rejected its options. Label is empty.
 
 ## Logging
 
-`this.logger` exists from the constructor onward and prints under your class name. The logger writes each line to a channel, a named stream that a bot can filter or silence. `attach` sets the channel to the key before your constructor runs, so if someone attaches your plugin as `metrics`, it logs every line to the `metrics` channel. [The log channel section](/plugins#the-key-is-also-a-log-channel) shows how a bot filters them.
-
-A plugin that runs jobs can give each one its own label. `this.logger.withLabel('nightly-sync')` returns a logger that prints under `nightly-sync` on the same channel.
+Log through [`this.logger`](ref:core/Plugin.logger). It exists from the constructor onward and labels each line with your class name. The logger writes each line to a channel, a named stream that a bot can filter or silence. `attach` sets the channel to the key before your constructor runs. For example, if someone attaches your plugin as `metrics`, the logger writes every line to the `metrics` channel, and [the log channel section](/plugins#the-key-is-also-a-log-channel) shows how a bot filters it. To label one job's lines, call [`this.logger.withLabel('sync')`](ref:logger/Logger.withLabel), which returns a logger with that label on the same channel. [`withChannel()`](ref:logger/Logger.withChannel) returns one that writes to another channel.
 
 ## Keeping records
 
-A plugin that schedules jobs or tracks where a sync left off needs that state back after a restart. `this.kv` is a [kv store](/built-ins/) of your plugin's own. It writes through the driver that the bot passes as `kv`, under your plugin's attach key, so its records are separate from `core.kv` and from every other plugin's.
+A plugin that schedules jobs or tracks how far a sync got needs to read those records again after a restart. [`this.kv`](ref:core/Plugin.kv) is a key-value store for your plugin. It stores records in the bot's [kv driver](/built-ins/drivers), under your plugin's key. The bot's own [`core.kv`](ref:core/CoreBase.kv) and every other plugin write under their own prefixes, so the records don't mix. Records are stored as JSON, which is why the sample below types `runAt` as a string. [Built-ins](/built-ins/) has the other collection methods and what JSON keeps.
 
 ```ts twoslash
 import { Plugin } from '@seedcord/gateway';
@@ -233,8 +333,15 @@ export class Reminders extends Plugin {
 }
 ```
 
-`add` saves a job before it schedules it, so `ready()` finds the job again after a restart. The restore runs in `ready()`, after the bot has logged in, because a job that is already due sends its message right away.
+`add` saves a job before it schedules it, so a crash between the two still leaves the job for `ready()` to find after a restart. The restore runs in `ready()`, after the bot has started. If a job is already due by then, a real `schedule()` sends its message right away.
 
-`jobs` reads `this.kv` in a field initializer, which works because `attach` sets it before your constructor runs. The constructor and every method can read it too. If a bot attaches `Reminders` twice under two keys, each one keeps its own jobs. If the bot renames the key, the records under the old key are still in the driver and the plugin starts empty.
+Handlers can call `add()` while `ready()` is still restoring, so the same id can reach `schedule()` twice. Make `schedule()` replace any timer it already holds for that id. A large collection can also take longer to restore than the 15 seconds `ready()` gets by default, and some drivers can't list their records at all. [Drivers](/built-ins/drivers) lists which ones.
 
-A plugin you build with `new` yourself, as in a test, never gets an attach key. Reading `this.kv` on it throws `CorePluginKvOutsideAttach`.
+`jobs` reads `this.kv` in a field initializer. That works because `attach` sets it before your constructor runs, so the constructor and every method can read it too. Each key keeps its own records:
+
+- If a bot attaches `Reminders` twice under two keys, each one keeps its own jobs.
+- If the bot renames the key, the plugin starts empty. The driver still holds the records under the old key.
+
+The default driver keeps records in memory, so a restart loses them. To keep them, set `kv` in your bot's config to a driver that writes somewhere else. [Drivers](/built-ins/drivers) has a sample for each backend.
+
+If you build a plugin with `new`, as in a test, it never gets a key, and `this.kv` throws `CorePluginKvOutsideAttach` if you read it.

@@ -1,6 +1,7 @@
 import { EventEmitter } from 'node:events';
 
 import { SlashCommandBuilder } from '@discordjs/builders';
+import { HostPlugins } from '@seedcord/types/internal';
 import { ApplicationCommandType, Routes } from 'discord-api-types/v10';
 import { describe, it, expect, vi } from 'vite-plus/test';
 
@@ -11,6 +12,7 @@ import { Bus } from '#subscribers/Bus';
 
 import type { CoreBase } from '#interfaces/CoreBase';
 import type { CommandInfo } from '#src/commands/CommandInjector';
+import type { CommandBody } from '#src/commands/putCommands';
 import type { APIApplicationCommand } from 'discord-api-types/v10';
 
 const APP = 'app-1';
@@ -23,12 +25,16 @@ function deployedAs(id: string, name: string): APIApplicationCommand[] {
     return [{ id, name, type: ApplicationCommandType.ChatInput } as APIApplicationCommand];
 }
 
-function coreWith(put: ReturnType<typeof vi.fn>): CoreBase {
-    // justified: the registry reads only these four members off core
+function coreWith(
+    put: ReturnType<typeof vi.fn>,
+    prepareCommands: (commands: readonly CommandBody[]) => void = () => undefined
+): CoreBase {
+    // justified: the registry reads only these members off core
     const core = {
         config: { bot: { commands: { path: 'commands' } } },
         rest: Object.assign(new EventEmitter(), { put }),
-        applicationId: APP
+        applicationId: APP,
+        [HostPlugins]: { prepareCommands }
     } as unknown as { bus: Bus };
     core.bus = new Bus(core as unknown as CoreBase);
     return core as unknown as CoreBase;
@@ -39,6 +45,41 @@ function registryWith(put: ReturnType<typeof vi.fn>): CommandRegistry {
 }
 
 describe('CommandRegistry.setCommands', () => {
+    it('hands prepareCommands each command once and sends what it wrote to every scope', async () => {
+        const put = vi.fn().mockResolvedValue(deployedAs('123', 'ping'));
+        const prepare = vi.fn((commands: readonly CommandBody[]) => {
+            for (const command of commands) command.name_localizations = { pl: 'pong' };
+        });
+        const registry = new CommandRegistry(coreWith(put, prepare));
+        const ping = new SlashCommandBuilder().setName('ping').setDescription('Replies with Pong!');
+        registry.scopedCommands.set(GLOBAL_ID, [ping]);
+        registry.scopedCommands.set('111', [ping]);
+
+        await registry.setCommands();
+
+        expect(prepare).toHaveBeenCalledOnce();
+        expect(prepare.mock.calls[0]?.[0]).toHaveLength(1);
+        expect(put.mock.calls.map(([, options]) => (options as { body: CommandBody[] }).body[0])).toEqual([
+            expect.objectContaining({ name_localizations: { pl: 'pong' } }),
+            expect.objectContaining({ name_localizations: { pl: 'pong' } })
+        ]);
+    });
+
+    it('links the command under the name prepareCommands gave it', async () => {
+        const put = vi.fn().mockResolvedValue(deployedAs('123', 'pong'));
+        const rename = (commands: readonly CommandBody[]): void => {
+            for (const command of commands) command.name = 'pong';
+        };
+        const registry = new CommandRegistry(coreWith(put, rename));
+        registry.scopedCommands.set(GLOBAL_ID, [
+            new SlashCommandBuilder().setName('ping').setDescription('Replies with Pong!')
+        ]);
+
+        await registry.setCommands();
+
+        expect(mentions.pong?.mention).toBe('</pong:123>');
+    });
+
     it('hands the abort signal to every put', async () => {
         const put = vi.fn().mockResolvedValue(deployedAs('123', 'ping'));
         const registry = registryWith(put);
@@ -104,12 +145,12 @@ describe('CommandRegistry.setCommands', () => {
         const registry = registryWith(put);
         registry.scopedCommands.set('111', [new SlashCommandBuilder().setName('config').setDescription('Config')]);
 
-        const result = await registry.setCommands();
+        await registry.setCommands();
 
         expect(put.mock.calls.map(([route]: unknown[]) => route)).toEqual([
             Routes.applicationGuildCommands(APP, '111')
         ]);
-        expect(result.get('111')?.get('g-1')?.name).toBe('config');
+        expect(mentions.config?.mention).toBe('</config:g-1>');
     });
 
     it('sends the built command json as the put body', async () => {
