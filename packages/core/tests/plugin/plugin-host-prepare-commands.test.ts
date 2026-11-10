@@ -1,4 +1,4 @@
-import { HostPluginHooks } from '@seedcord/types/internal';
+import { HostPlugins } from '@seedcord/types/internal';
 import { describe, expect, it } from 'vite-plus/test';
 
 import { Plugin } from '#src/plugin/Plugin';
@@ -27,7 +27,7 @@ describe('prepareCommands', () => {
         const host = new TestPluginHost().attach('first', pluginAdding('one')).attach('second', pluginAdding('two'));
         const ping: RESTPostAPIApplicationCommandsJSONBody = { name: 'ping', description: 'Pong' };
 
-        await host[HostPluginHooks].prepareCommands([ping]);
+        await host[HostPlugins].prepareCommands([ping]);
 
         expect(ping.name).toBe('ping-one-two');
     });

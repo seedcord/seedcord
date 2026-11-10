@@ -1,7 +1,7 @@
-import { SeedcordErrorCode, paint } from '@seedcord/errors';
+import { SeedcordErrorCode } from '@seedcord/errors';
 import { SeedcordError, SeedcordTypeError } from '@seedcord/errors/internal';
 import { FRAMEWORK_CHANNELS } from '@seedcord/logger';
-import { HostPluginHooks, HostPluginKeys } from '@seedcord/types/internal';
+import { HostPlugins } from '@seedcord/types/internal';
 
 import { Kv } from '#src/kv/Kv';
 import { MemoryDriver } from '#src/kv/MemoryDriver';
@@ -9,25 +9,17 @@ import { KvRateLimiter } from '#src/rateLimiter/KvRateLimiter';
 import { Bus } from '#subscribers/Bus';
 
 import { constructAttached, declaredScopeOf, extendsThisCorePlugin, resolvedLifecycleSpecOf } from './Plugin';
-import { PluginHooks } from './PluginHooks';
+import { PluginRegistry } from './PluginRegistry';
 import { splitPluginKey } from './splitPluginKey';
 
 import type { CoreBase } from '#interfaces/CoreBase';
-import type { ResolvedPluginLifecycleSpec } from './lifecycle';
 import type { DeclaredScope, Runtime, Transport } from './options';
 import type { AttachableCtor, Attached, AttachKeyAssert, PluginArgs, PluginCtor, PluginLike } from './Plugin';
 import type { REST } from '@discordjs/rest';
 import type { Config, IRateLimiter } from '@seedcord/types';
 
-export interface Attachment {
-    readonly key: string;
-    readonly instance: PluginLike;
-    readonly spec: ResolvedPluginLifecycleSpec;
-}
-
 const RESERVED_KEYS: ReadonlySet<string> = new Set(FRAMEWORK_CHANNELS);
 
-const attachmentsSlot = Symbol('seedcord:host:attachments');
 const sealSlot = Symbol('seedcord:host:seal');
 
 /** Base class for a plugin host. */
@@ -44,12 +36,11 @@ export abstract class PluginHost<BotT extends Transport, BotRt extends Runtime> 
     public readonly rateLimiter: IRateLimiter;
 
     #sealed = false;
-    readonly #attachments: Attachment[] = [];
     readonly #groups = new Map<string, Record<string, PluginLike>>();
     readonly #scope: { readonly transport: BotT; readonly runtime: BotRt };
 
     /** @internal */
-    public readonly [HostPluginHooks] = new PluginHooks();
+    public readonly [HostPlugins] = new PluginRegistry();
 
     constructor(transport: BotT, runtime: BotRt, driver: Config['kv']) {
         this.#scope = { transport, runtime };
@@ -60,18 +51,8 @@ export abstract class PluginHost<BotT extends Transport, BotRt extends Runtime> 
     }
 
     /** @internal */
-    public get [attachmentsSlot](): readonly Attachment[] {
-        return this.#attachments;
-    }
-
-    /** @internal */
     public [sealSlot](): void {
         this.#sealed = true;
-    }
-
-    /** @internal codegen reads this to emit the `Core` augmentation */
-    public get [HostPluginKeys](): readonly string[] {
-        return this.#attachments.map((attachment) => attachment.key);
     }
 
     /**
@@ -139,8 +120,7 @@ export abstract class PluginHost<BotT extends Transport, BotRt extends Runtime> 
         const kv = new Kv(this.kv.driver, 'plugins', key);
         const instance = constructAttached(key, kv, () => new Plugin(this, ...args));
         this.#assertScope(Plugin.name, declaredScopeOf(instance));
-        this[HostPluginHooks].add(`${paint.sky(Plugin.name)} at ${paint.sky(key)}`, instance);
-        this.#attachments.push({ key, instance, spec: resolvedLifecycleSpecOf(instance) });
+        this[HostPlugins].add({ key, instance, spec: resolvedLifecycleSpecOf(instance) });
 
         if (leaf === undefined) {
             return Object.assign(this, { [key]: instance }) as this & Attached<Key, InstanceType<Ctor>>;
@@ -189,12 +169,6 @@ export abstract class PluginHost<BotT extends Transport, BotRt extends Runtime> 
         Object.assign(this, { [head]: group });
         return group;
     }
-}
-
-export function attachmentsOf(
-    host: Pick<PluginHost<Transport, Runtime>, typeof attachmentsSlot>
-): readonly Attachment[] {
-    return host[attachmentsSlot];
 }
 
 export function sealAttachments(host: Pick<PluginHost<Transport, Runtime>, typeof sealSlot>): void {

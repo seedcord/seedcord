@@ -3,7 +3,7 @@ import { stripVTControlCharacters } from 'node:util';
 
 import { SeedcordErrorCode } from '@seedcord/errors';
 import { LoggerChannelRegistry } from '@seedcord/logger';
-import { HostPluginHooks } from '@seedcord/types/internal';
+import { HostPlugins } from '@seedcord/types/internal';
 import { ApplicationCommandType, Routes } from 'discord-api-types/v10';
 import { describe, expect, it, onTestFinished, vi } from 'vite-plus/test';
 
@@ -41,7 +41,7 @@ function coreWith(put: Mock, get: Mock = vi.fn().mockResolvedValue(BARE), guilds
         config: { bot: { commands: { path: FIXTURE, guilds } } },
         rest: { put, get, on: vi.fn(), off: vi.fn() },
         applicationId: APP,
-        [HostPluginHooks]: { prepareCommands: () => Promise.resolve() }
+        [HostPlugins]: { prepareCommands: () => Promise.resolve() }
     } as unknown as { bus: Bus };
     core.bus = new Bus(core as unknown as CoreBase);
     return core as unknown as CoreBase;

@@ -1,4 +1,4 @@
-import { SeedcordErrorCode } from '@seedcord/errors';
+import { SeedcordErrorCode, paint } from '@seedcord/errors';
 import { SeedcordError, SeedcordTypeError } from '@seedcord/errors/internal';
 import { asError } from '@seedcord/utils/internal';
 
@@ -6,8 +6,15 @@ import { MemberValues } from '#src/dispatch/DispatchContext';
 
 import type { DispatchContext } from '#src/dispatch/DispatchContext';
 import type { DispatchOrigin } from '#src/dispatch/DispatchOrigin';
+import type { ResolvedPluginLifecycleSpec } from './lifecycle';
 import type { PluginLike } from './Plugin';
 import type { RESTPostAPIApplicationCommandsJSONBody } from 'discord-api-types/v10';
+
+export interface Attachment {
+    readonly key: string;
+    readonly instance: PluginLike;
+    readonly spec: ResolvedPluginLifecycleSpec;
+}
 
 export type DispatchMemberFunctions = Readonly<Record<string, (origin: DispatchOrigin) => unknown>>;
 
@@ -81,12 +88,23 @@ interface ClaimedMember {
     readonly build: (origin: DispatchOrigin) => unknown;
 }
 
-export class PluginHooks {
+// every attached plugin, in attach order
+export class PluginRegistry {
     private readonly members = new Map<string, ClaimedMember>();
-    private readonly plugins: PluginLike[] = [];
+    private readonly list: Attachment[] = [];
 
-    public add(name: string, plugin: PluginLike): void {
-        for (const [member, build] of Object.entries(plugin.dispatchMembers ?? {})) {
+    public get attachments(): readonly Attachment[] {
+        return this.list;
+    }
+
+    public get keys(): readonly string[] {
+        return this.list.map((attachment) => attachment.key);
+    }
+
+    public add(attachment: Attachment): void {
+        const { key, instance } = attachment;
+        const name = `${paint.sky(instance.constructor.name)} at ${paint.sky(key)}`;
+        for (const [member, build] of Object.entries(instance.dispatchMembers ?? {})) {
             if (isReservedMember(member)) {
                 throw new SeedcordTypeError(SeedcordErrorCode.CorePluginMemberReserved, [member, name]);
             }
@@ -101,7 +119,7 @@ export class PluginHooks {
             }
             this.members.set(member, { plugin: name, build });
         }
-        this.plugins.push(plugin);
+        this.list.push(attachment);
     }
 
     public async buildMembers(dispatch: DispatchContext, origin: DispatchOrigin): Promise<void> {
@@ -122,6 +140,6 @@ export class PluginHooks {
     }
 
     public async prepareCommands(commands: readonly RESTPostAPIApplicationCommandsJSONBody[]): Promise<void> {
-        for (const plugin of this.plugins) await plugin.prepareCommands?.(commands);
+        for (const { instance } of this.list) await instance.prepareCommands?.(commands);
     }
 }

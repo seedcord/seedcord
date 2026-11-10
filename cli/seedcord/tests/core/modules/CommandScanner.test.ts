@@ -4,7 +4,7 @@ import { join } from 'node:path';
 
 import { BuilderComponent, RegisterCommand } from '@seedcord/core';
 import { SeedcordErrorCode } from '@seedcord/errors';
-import { HostPluginHooks, type SeedcordInstance } from '@seedcord/types/internal';
+import { HostPlugins, type SeedcordInstance } from '@seedcord/types/internal';
 import { describe, expect, it } from 'vite-plus/test';
 
 import { CommandScanner } from '#core/modules/CommandScanner';
@@ -25,7 +25,7 @@ function filesAt(root: RealPath): ProjectFiles {
 }
 
 // justified: the scanner reads only the hooks off the instance
-const UNCHANGED = { [HostPluginHooks]: { prepareCommands: (_bodies) => Promise.resolve() } } as SeedcordInstance;
+const UNCHANGED = { [HostPlugins]: { prepareCommands: (_bodies) => Promise.resolve() } } as SeedcordInstance;
 
 function recordingLoader(imported: string[]): ModuleLoader {
     return {
@@ -119,7 +119,7 @@ describe('CommandScanner', () => {
         };
         // justified: the scanner reads only the hooks off the instance
         const localizing = {
-            [HostPluginHooks]: {
+            [HostPlugins]: {
                 prepareCommands: (bodies) => {
                     for (const body of bodies) body.name_localizations = { pl: 'zbanuj' };
                     return Promise.resolve();

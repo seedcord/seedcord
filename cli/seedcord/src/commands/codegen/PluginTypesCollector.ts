@@ -4,7 +4,7 @@ import { isDeepStrictEqual } from 'node:util';
 import { splitPluginKey } from '@seedcord/core/internal';
 import { paint, SeedcordErrorCode } from '@seedcord/errors';
 import { SeedcordError, SeedcordTypeError, throwSingleOrAggregate } from '@seedcord/errors/internal';
-import { HostPluginKeys, type SeedcordInstance } from '@seedcord/types/internal';
+import { HostPlugins, type SeedcordInstance } from '@seedcord/types/internal';
 import { asError, importSpecifier, isInside, isPlainObject } from '@seedcord/utils/internal';
 
 import { isReferable, ModuleExports } from '#core/modules/ModuleExports';
@@ -64,7 +64,7 @@ export class PluginTypesCollector {
         root: string
     ): Promise<PluginTypeTable> {
         const collector = new PluginTypesCollector();
-        for (const key of instance[HostPluginKeys]) await collector.add(key, codegenPluginAt(instance, key));
+        for (const key of instance[HostPlugins].keys) await collector.add(key, codegenPluginAt(instance, key));
 
         // built after every codegen(), since codegen() imports the files it reads
         const index = await ExportIndex.create(modules, root, collector.classes(), collector.problems);
@@ -240,7 +240,7 @@ function codegenPluginAt(instance: SeedcordInstance, key: string): CodegenPlugin
 }
 
 export function dispatchMembersOf(instance: SeedcordInstance): DispatchMemberAt[] {
-    return instance[HostPluginKeys].flatMap((key) => {
+    return instance[HostPlugins].keys.flatMap((key) => {
         const plugin = attachedAt(instance, key);
         const members: unknown = isReferable(plugin) ? Reflect.get(plugin, 'dispatchMembers') : undefined;
         return isPlainObject(members) ? Object.keys(members).map((member) => ({ key, member })) : [];

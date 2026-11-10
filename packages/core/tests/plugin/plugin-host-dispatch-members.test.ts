@@ -1,5 +1,5 @@
 import { isSeedcordError, SeedcordErrorCode } from '@seedcord/errors';
-import { HostPluginHooks } from '@seedcord/types/internal';
+import { HostPlugins } from '@seedcord/types/internal';
 import { describe, expect, it } from 'vite-plus/test';
 
 import { DispatchContext, MemberValues } from '#src/dispatch/DispatchContext';
@@ -104,7 +104,7 @@ describe('building dispatch members', () => {
         const host = new TestPluginHost().attach('waits', Waits).attach('releases', Releases);
         const dispatch = new DispatchContext('event', 'ready');
 
-        await host[HostPluginHooks].buildMembers(dispatch, {
+        await host[HostPlugins].buildMembers(dispatch, {
             userId: null,
             guildId: null,
             channelId: null,

@@ -3,7 +3,7 @@ import 'reflect-metadata';
 import { CommandMetadataKey, isCommandClass } from '@seedcord/core/internal';
 import { SeedcordErrorCode, isSeedcordError } from '@seedcord/errors';
 import { SeedcordError, SeedcordTypeError, throwSingleOrAggregate } from '@seedcord/errors/internal';
-import { HostPluginHooks, type SeedcordInstance } from '@seedcord/types/internal';
+import { HostPlugins, type SeedcordInstance } from '@seedcord/types/internal';
 import { asError } from '@seedcord/utils/internal';
 import { ApplicationCommandType } from 'discord-api-types/v10';
 
@@ -88,7 +88,7 @@ export class CommandScanner {
         }
 
         throwSingleOrAggregate([...problems, ...importFailures], SeedcordErrorCode.CliProblems);
-        await this.instance[HostPluginHooks].prepareCommands(commands.map(({ json }) => json));
+        await this.instance[HostPlugins].prepareCommands(commands.map(({ json }) => json));
         return commands;
     }
 

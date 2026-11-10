@@ -23,7 +23,7 @@ import type {
     Transport,
     TransportAssert
 } from './options';
-import type { DispatchMemberFunctions } from './PluginHooks';
+import type { DispatchMemberFunctions } from './PluginRegistry';
 import type { FrameworkChannel, HmrAware, HmrUpdateEvent } from '@seedcord/types';
 import type { RESTPostAPIApplicationCommandsJSONBody } from 'discord-api-types/v10';
 import type { Constructor, Promisable } from 'type-fest';

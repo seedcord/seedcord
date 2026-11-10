@@ -1,9 +1,9 @@
 import type { Kv } from '#src/kv/Kv';
-import type { PluginHooks } from '#src/plugin/PluginHooks';
+import type { PluginRegistry } from '#src/plugin/PluginRegistry';
 import type { Bus } from '#subscribers/Bus';
 import type { REST } from '@discordjs/rest';
 import type { Config, IRateLimiter } from '@seedcord/types';
-import type { HostPluginHooks } from '@seedcord/types/internal';
+import type { HostPlugins } from '@seedcord/types/internal';
 
 /**
  * The transport-agnostic slice of the running framework, what core code (gates, notices, plugins'
@@ -12,7 +12,7 @@ import type { HostPluginHooks } from '@seedcord/types/internal';
  */
 export interface CoreBase {
     /** @internal */
-    readonly [HostPluginHooks]: PluginHooks;
+    readonly [HostPlugins]: PluginRegistry;
     /** Transports narrow this to their own config type. */
     readonly config: Config;
     /**

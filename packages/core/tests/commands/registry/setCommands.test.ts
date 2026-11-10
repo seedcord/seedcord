@@ -1,7 +1,7 @@
 import { EventEmitter } from 'node:events';
 
 import { SlashCommandBuilder } from '@discordjs/builders';
-import { HostPluginHooks } from '@seedcord/types/internal';
+import { HostPlugins } from '@seedcord/types/internal';
 import { ApplicationCommandType, Routes } from 'discord-api-types/v10';
 import { describe, it, expect, vi } from 'vite-plus/test';
 
@@ -34,7 +34,7 @@ function coreWith(
         config: { bot: { commands: { path: 'commands' } } },
         rest: Object.assign(new EventEmitter(), { put }),
         applicationId: APP,
-        [HostPluginHooks]: { prepareCommands }
+        [HostPlugins]: { prepareCommands }
     } as unknown as { bus: Bus };
     core.bus = new Bus(core as unknown as CoreBase);
     return core as unknown as CoreBase;

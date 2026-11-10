@@ -2,7 +2,7 @@ import { SlashCommandBuilder } from '@discordjs/builders';
 import { SeedcordErrorCode, paint } from '@seedcord/errors';
 import { displayPath, SeedcordError } from '@seedcord/errors/internal';
 import { Logger } from '@seedcord/logger';
-import { HostPluginHooks } from '@seedcord/types/internal';
+import { HostPlugins } from '@seedcord/types/internal';
 import { formatFilePath } from '@seedcord/utils';
 import { botFolder } from '@seedcord/utils/internal';
 
@@ -265,7 +265,7 @@ export class CommandRegistry implements Initializeable, HmrAware {
         const scopes = new Map(
             deployable.map(([scope, commands]) => [scope, commands.map((command) => command.toJSON())])
         );
-        await this.core[HostPluginHooks].prepareCommands([...scopes.values()].flat());
+        await this.core[HostPlugins].prepareCommands([...scopes.values()].flat());
         return scopes;
     }
 

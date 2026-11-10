@@ -1,5 +1,4 @@
 import {
-    attachmentsOf,
     BAKED_IDS_KEY,
     bindBotColor,
     connectDevChannel,
@@ -16,7 +15,7 @@ import { PluginHost } from '@seedcord/core/plugin';
 import { SeedcordErrorCode } from '@seedcord/errors';
 import { SeedcordError, setColorLevel } from '@seedcord/errors/internal';
 import { Logger } from '@seedcord/logger';
-import { HostAugmentTarget, HostVersion, SeedcordBrand } from '@seedcord/types/internal';
+import { HostAugmentTarget, HostPlugins, HostVersion, SeedcordBrand } from '@seedcord/types/internal';
 
 import { installEmojis } from '#src/emojis/EmojiInjector';
 import { HttpStartupTasks } from '#src/HttpStartupTasks';
@@ -189,7 +188,7 @@ export class Seedcord extends PluginHost<'http', 'edge'> {
 
     async #runStartup(): Promise<void> {
         sealAttachments(this);
-        this.#plugins.register(attachmentsOf(this));
+        this.#plugins.register(this[HostPlugins].attachments);
         try {
             await this.#startup.run();
         } catch (caught) {

@@ -1,8 +1,7 @@
 import type {
     HostAugmentTarget,
     HostListenHost,
-    HostPluginHooks,
-    HostPluginKeys,
+    HostPlugins,
     HostShutdown,
     HostStartup,
     HostVersion
@@ -22,8 +21,9 @@ export interface SeedcordInstance {
     // symbol keys keep these out of autocomplete on a host
     readonly [HostVersion]: string;
     readonly [HostAugmentTarget]: TransportPackage;
-    readonly [HostPluginKeys]: readonly string[];
-    readonly [HostPluginHooks]: {
+    readonly [HostPlugins]: {
+        // the attach keys in attach order. codegen writes one Core row for each
+        readonly keys: readonly string[];
         prepareCommands(commands: readonly RESTPostAPIApplicationCommandsJSONBody[]): Promise<void>;
     };
     readonly [HostShutdown]: { run(exitCode?: number, exitProcess?: boolean): Promise<void> };

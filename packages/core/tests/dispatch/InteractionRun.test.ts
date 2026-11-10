@@ -1,12 +1,12 @@
 import { Logger } from '@seedcord/logger';
-import { HostPluginHooks } from '@seedcord/types/internal';
+import { HostPlugins } from '@seedcord/types/internal';
 import { describe, expect, it, vi } from 'vite-plus/test';
 
 import { defineGate } from '#gates/Gate';
 import { DispatchContext } from '#src/dispatch/DispatchContext';
 import { InteractionRun } from '#src/dispatch/InteractionRun';
 import { GatedMetadataKey, InteractionKind } from '#src/metadataKeys';
-import { PluginHooks } from '#src/plugin/PluginHooks';
+import { PluginRegistry } from '#src/plugin/PluginRegistry';
 import { Silence } from '#stops/Silence';
 import { busWith } from '#tests/utils/busWith';
 
@@ -22,7 +22,7 @@ function configFor(
     return {
         dispatch: new DispatchContext(kind, 'probe'),
         // justified: the run reads only core.config.errors, core.bus, and the members
-        core: { bus: busWith(), config: {}, [HostPluginHooks]: new PluginHooks() } as unknown as CoreBase,
+        core: { bus: busWith(), config: {}, [HostPlugins]: new PluginRegistry() } as unknown as CoreBase,
         event: {},
         HandlerCtor,
         middlewares: { chainFor: () => [] },

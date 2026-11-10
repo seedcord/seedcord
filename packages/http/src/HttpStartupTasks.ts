@@ -1,5 +1,6 @@
 import { StartupPhase } from '@seedcord/core';
-import { attachmentsOf, COMMAND_DEPLOY_TIMEOUT_MS, CommandRegistry } from '@seedcord/core/internal';
+import { COMMAND_DEPLOY_TIMEOUT_MS, CommandRegistry } from '@seedcord/core/internal';
+import { HostPlugins } from '@seedcord/types/internal';
 
 import { EmojiInjector } from '#src/emojis/EmojiInjector';
 import { publicKeyOf } from '#src/publicKey';
@@ -8,15 +9,13 @@ import type { Core } from '#interfaces/Core';
 import type { InteractionsService } from '#src/InteractionsService';
 import type { HmrManager } from '@seedcord/core/internal';
 
-type Host = Core & Parameters<typeof attachmentsOf>[0];
-
 // the startup tasks the node bot and the edge bot under seedcord dev share
 export class HttpStartupTasks {
     private readonly commands: CommandRegistry | undefined;
     private readonly emojis: EmojiInjector;
 
     public constructor(
-        private readonly host: Host,
+        private readonly host: Core,
         private readonly service: InteractionsService
     ) {
         this.commands = host.config.bot.commands.path ? new CommandRegistry(host) : undefined;
@@ -29,7 +28,7 @@ export class HttpStartupTasks {
             if (this.service.interactions) hmr.register(this.service.interactions);
             if (this.commands) hmr.register(this.commands);
             hmr.register(this.service.subscribers);
-            for (const { instance } of attachmentsOf(this.host)) hmr.register(instance);
+            for (const { instance } of this.host[HostPlugins].attachments) hmr.register(instance);
             return Promise.resolve();
         });
     }
