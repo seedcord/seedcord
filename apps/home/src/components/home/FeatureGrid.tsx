@@ -6,6 +6,7 @@ import {
     Binary,
     Bot,
     Cable,
+    CalendarClock,
     Cloud,
     Component,
     Database,
@@ -203,7 +204,8 @@ const GROUPS: Group[] = [
         rows: [
             { icon: Plug, label: 'typed plugins', gloss: 'attach once, codegen types it on core' },
             { icon: Leaf, label: 'Mongoose', gloss: 'MongoDB, services typed by key' },
-            { icon: Database, label: 'Kysely', gloss: 'Postgres, queries typed off your schema' }
+            { icon: Database, label: 'Kysely', gloss: 'Postgres, queries typed off your schema' },
+            { icon: CalendarClock, label: 'Tasks', gloss: 'cron jobs and scheduled tasks' }
         ]
     }
 ];

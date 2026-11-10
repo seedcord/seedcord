@@ -7,6 +7,11 @@ export function sentence(text: string): string {
     return /[.!?]$/.test(text) ? text : `${text}.`;
 }
 
+// a reason from a third-party error may start lowercase
+export function capitalized(text: string): string {
+    return text.charAt(0).toUpperCase() + text.slice(1);
+}
+
 export function reasonThen(reason: string, next: string): string {
     return `${sentence(reason)}${reason.includes('\n') ? '\n' : ' '}${next}`;
 }
