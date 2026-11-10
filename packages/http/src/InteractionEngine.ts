@@ -11,7 +11,6 @@ import { ReplayGuard } from './receiver/ReplayGuard';
 import { keepRequestOpenFor } from './requestScope';
 
 import type { InteractionMiddlewareConstructor } from '#handlers/constructors';
-import type { ValidInteractionTypes } from '#handlers/interactionTypes';
 import type { Core } from '#interfaces/Core';
 import type { RouteMaps } from './dispatch/resolve';
 import type { MiddlewareRegistry } from '@seedcord/core/internal';
@@ -103,15 +102,9 @@ export class InteractionEngine {
     private async dispatch(interaction: APIInteraction): Promise<void> {
         try {
             this.core.bus[PublishDefault]('anyInteraction', { interaction });
-            const match = resolve(this.maps, interaction);
-            if (match) {
-                const payload = interaction as ValidInteractionTypes;
-                const start = await dispatchInteraction({
-                    match,
-                    payload,
-                    core: this.core,
-                    middlewares: this.middlewares
-                });
+            const resolved = resolve(this.maps, interaction);
+            if (resolved) {
+                const start = await dispatchInteraction({ resolved, core: this.core, middlewares: this.middlewares });
                 // without this catch the rejection reaches the process unhandled
                 if (start) keepRequestOpenFor(start().catch((caught: unknown) => this.rootFault(caught)));
             }

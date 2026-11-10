@@ -12,7 +12,7 @@ import { AutocompleteHandler } from '#handlers/interaction/AutocompleteHandler';
 import { InteractionHandler } from '#handlers/interaction/InteractionHandler';
 import { InteractionMiddleware } from '#handlers/interaction/InteractionMiddleware';
 
-import type { HandlerConstructor, InteractionMiddlewareConstructor } from '#handlers/constructors';
+import type { HandlerConstructor, HandlerSlots, InteractionMiddlewareConstructor } from '#handlers/constructors';
 import type { RouteMaps } from '#src/dispatch/resolve';
 import type { MiddlewareKind } from '@seedcord/core';
 import type { Initializeable, ContextMenuLeaves, PluginRegistry } from '@seedcord/core/internal';
@@ -26,7 +26,7 @@ export class InteractionDispatcher implements Initializeable, HmrAware {
     /** @internal */
     public readonly logger = new Logger('Interactions', { channel: 'interactions' });
 
-    private readonly routes = new RouteRegistry<HandlerConstructor>();
+    private readonly routes = new RouteRegistry<HandlerSlots>();
 
     public get maps(): RouteMaps {
         return this.routes.maps;

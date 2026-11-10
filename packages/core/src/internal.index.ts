@@ -133,13 +133,14 @@ export {
 } from '#subscribers/slots';
 export { DispatchContext, type InteractionDispatch } from '#src/dispatch/DispatchContext';
 export { InteractionRun, type InteractionRunConfig } from '#src/dispatch/InteractionRun';
-export { componentKindOf } from '#src/dispatch/componentKindOf';
 export { HandlerLoader } from '#src/dispatch/HandlerLoader';
 export {
     emptyRouteMaps,
     matchRoute,
     RouteRegistry,
+    unhandledSlots,
     type RegisteredRoute,
+    type ResolvedRoute,
     type RouteMaps
 } from '#src/dispatch/RouteRegistry';
 export { eventResultFor, resultFor, runAfter } from '#src/dispatch/runAfter';

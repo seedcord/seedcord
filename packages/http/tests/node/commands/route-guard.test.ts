@@ -8,11 +8,13 @@ import { afterEach, describe, expect, it, vi, type MockInstance } from 'vite-plu
 import { UnhandledRepliable } from '#handlers/defaults/UnhandledRepliable';
 import { InteractionDispatcher } from '#src/dispatch/InteractionDispatcher';
 
-import type { ResolvedRoute } from '#src/dispatch/resolve';
+import type { HandlerSlots } from '#handlers/constructors';
+import type { MiddlewareKind } from '@seedcord/core';
+import type { RegisteredRoute } from '@seedcord/core/internal';
 
 const HANDLERS_DIR = path.resolve(__dirname, '../discovery/fixtures/handlers');
 
-function route(kind: ResolvedRoute['kind'], key: string): ResolvedRoute {
+function route<Kind extends MiddlewareKind>(kind: Kind, key: string): RegisteredRoute<HandlerSlots[Kind], Kind> {
     // the guard reads map membership only
     return { kind, route: key, fallback: false, ctor: UnhandledRepliable };
 }

@@ -21,7 +21,7 @@ interface PrivateInteractionDispatcher {
     init(): Promise<void>;
     onHmr(event: unknown): Promise<void>;
     // unknown[] is enough since this is only ever spied on
-    processInteraction(...args: unknown[]): Promise<void>;
+    run(...args: unknown[]): Promise<void>;
     inFlight: InFlight;
     handleInteraction(interaction: unknown): Promise<void>;
 }
@@ -426,7 +426,7 @@ describe('InteractionDispatcher Integration', () => {
         await using seedcord = new Seedcord(config);
         const controller = controllerOf(seedcord);
         // justified: spy on the private routing entry to assert the ignore gate runs before it
-        const processSpy = vi.spyOn(controller, 'processInteraction').mockResolvedValue(undefined);
+        const processSpy = vi.spyOn(controller, 'run').mockResolvedValue(undefined);
 
         await controller.handleInteraction(fakeButton(ClickId.encode({})));
         expect(processSpy).not.toHaveBeenCalled();
@@ -442,7 +442,7 @@ describe('InteractionDispatcher Integration', () => {
 
         await using seedcord = new Seedcord(config);
         const controller = controllerOf(seedcord);
-        const processSpy = vi.spyOn(controller, 'processInteraction').mockResolvedValue(undefined);
+        const processSpy = vi.spyOn(controller, 'run').mockResolvedValue(undefined);
 
         await controller.handleInteraction(fakeButton(CONFIRM_DEF.encode({ choice: 'confirm' })));
         expect(processSpy).not.toHaveBeenCalled();

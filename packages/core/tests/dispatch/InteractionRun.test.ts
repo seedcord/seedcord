@@ -23,9 +23,7 @@ function configFor(
         dispatch: new DispatchContext(kind, 'probe'),
         // justified: the run reads only core.config.errors, core.bus, and the members
         core: { bus: busWith(), config: {}, [HostPlugins]: new PluginRegistry() } as unknown as CoreBase,
-        event: {},
         HandlerCtor,
-        middlewares: { chainFor: () => [] },
         apiError: class extends Error {
             readonly code = 0;
         },
@@ -65,9 +63,10 @@ describe('InteractionRun', () => {
                 // justified: runInteractionGates reads only dispatch from this context
                 gateContext: () =>
                     ({ dispatch: new DispatchContext(InteractionKind.Slash, 'probe') }) as GateContextBase,
-                sender: { send: vi.fn().mockResolvedValue(undefined) }
+                sender: { send: vi.fn().mockResolvedValue(undefined) },
+                handler: () => new Refused(),
+                middlewares: [() => new Audit()]
             }),
-            middlewares: { chainFor: () => [Audit] },
             faultDetails: () => {
                 throw new Error('details failed');
             }
@@ -86,7 +85,10 @@ describe('InteractionRun', () => {
         }
         const warn = vi.spyOn(Logger.prototype, 'warn').mockImplementation(() => undefined);
         const config = {
-            ...configFor(InteractionKind.Button, Unhandled, { responder: { clear: vi.fn() } }),
+            ...configFor(InteractionKind.Button, Unhandled, {
+                responder: { clear: vi.fn() },
+                handler: () => new Unhandled()
+            }),
             dispatch: new DispatchContext(InteractionKind.Button, route, true),
             customId
         };
@@ -106,7 +108,7 @@ describe('InteractionRun', () => {
         const clear = vi.fn().mockResolvedValue(undefined);
 
         const start = await new InteractionRun(
-            configFor(InteractionKind.Autocomplete, Quiet, { responder: { clear } })
+            configFor(InteractionKind.Autocomplete, Quiet, { responder: { clear }, handler: () => new Quiet() })
         ).prepare();
         await start?.();
 

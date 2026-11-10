@@ -1,5 +1,6 @@
 import type { InteractionKind, MiddlewareKind } from '@seedcord/core';
 import type {
+    AutocompleteInteraction,
     ButtonInteraction,
     ChannelSelectMenuInteraction,
     ChatInputCommandInteraction,
@@ -12,7 +13,9 @@ import type {
     UserSelectMenuInteraction
 } from 'discord.js';
 
-interface Payloads {
+/** @internal */
+export interface Payloads {
+    [InteractionKind.Autocomplete]: AutocompleteInteraction;
     [InteractionKind.Slash]: ChatInputCommandInteraction;
     [InteractionKind.Button]: ButtonInteraction;
     [InteractionKind.Modal]: ModalSubmitInteraction;

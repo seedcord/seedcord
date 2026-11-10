@@ -1,6 +1,6 @@
 import 'reflect-metadata';
 
-import { defineGate, InteractionKind, Notice, RegisterInteractionMiddleware, Silence } from '@seedcord/core';
+import { defineGate, Notice, RegisterInteractionMiddleware, Silence } from '@seedcord/core';
 import { GatedMetadataKey, interactionMiddleware, MiddlewareRegistry } from '@seedcord/core/internal';
 import { Envapter, PortableSource } from 'envapt';
 import { afterEach, beforeEach, describe, expect, it } from 'vite-plus/test';
@@ -10,12 +10,10 @@ import { SlashHandler } from '#handlers/interaction/SlashHandler';
 import { dispatchInteraction } from '#src/dispatch/dispatchInteraction';
 import { testCore } from '#tests/helpers/core';
 import { nullPathConfig, VALID_TOKEN } from '#tests/helpers/fixtures';
+import { resolvedSlash } from '#tests/helpers/interactions';
 
-import { slashPayload } from './harness';
-
-import type { HandlerConstructor, InteractionMiddlewareConstructor } from '#handlers/constructors';
-import type { ValidInteractionTypes } from '#handlers/interactionTypes';
-import type { DispatchResult } from '@seedcord/core';
+import type { HandlerSlots, InteractionMiddlewareConstructor } from '#handlers/constructors';
+import type { DispatchResult, InteractionKind } from '@seedcord/core';
 import type { ReplyResponse } from '@seedcord/types';
 
 const calls: string[] = [];
@@ -60,13 +58,15 @@ function registry(...ctors: InteractionMiddlewareConstructor[]): MiddlewareRegis
     return middlewares;
 }
 
-async function dispatchThrough(ctor: HandlerConstructor, ...ctors: InteractionMiddlewareConstructor[]): Promise<void> {
+async function dispatchThrough(
+    ctor: HandlerSlots[InteractionKind.Slash],
+    ...ctors: InteractionMiddlewareConstructor[]
+): Promise<void> {
     Envapter.useSource(new PortableSource({}));
     const core = testCore(nullPathConfig, VALID_TOKEN);
 
     const execute = await dispatchInteraction({
-        match: { kind: InteractionKind.Slash, route: 'ok', fallback: false, ctor },
-        payload: slashPayload('ok') as ValidInteractionTypes,
+        resolved: resolvedSlash('ok', ctor),
         core,
         middlewares: registry(...ctors)
     });
