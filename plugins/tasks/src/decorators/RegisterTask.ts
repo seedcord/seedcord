@@ -10,7 +10,7 @@ export type ScheduledTaskClass = abstract new (context: never) => Task<unknown>;
 
 type ScheduledOptions = Pick<TaskOptions, 'key'>;
 
-// a literal TArg skips the excess property check, which Exact puts back
+// makes @RegisterTask({ key, protect }) an error. TypeScript doesn't check for extra keys on a generic argument
 type RegisterArgs<TArg, TZone extends string, TEvery extends string> = TArg extends string
     ? [pattern: CronPattern<TArg>, options?: TaskOptions<TZone, TEvery>]
     : [options?: Exact<ScheduledOptions, TArg>];

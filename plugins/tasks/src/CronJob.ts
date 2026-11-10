@@ -7,8 +7,7 @@ interface CronSettings {
     readonly pausedByDecorator: boolean;
 }
 
-// croner times a run from the last one. A croner job paused through a match would run it the moment it resumes.
-// stop() ends the croner job instead, and start() builds a fresh one
+// croner's resume() runs a match that it missed while paused. Pausing calls stop() instead, and resuming builds a new croner job
 export class CronJob {
     private cron: Cron;
     private scheduled = false;
@@ -45,7 +44,7 @@ export class CronJob {
     public nextRun(): Date | null {
         if (!this.cron.options.interval) return this.cron.nextRun();
 
-        // croner runs an interval job from its last run. nextRuns() matches that and nextRun() counts from now
+        // with an interval, croner's nextRun() counts from now. nextRuns() counts from the last run, like croner's timer
         return this.cron.nextRuns(1)[0] ?? null;
     }
 
@@ -53,7 +52,6 @@ export class CronJob {
         return this.lastRun;
     }
 
-    // TaskRunner.run() calls this as stillWanted, after its protect and shutdown checks pass
     private claim(): boolean {
         if (this.runsLeft === 0) return false;
 

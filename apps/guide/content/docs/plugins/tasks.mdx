@@ -266,9 +266,9 @@ These errors come at run time, from values that TypeScript can't check. Most com
 
 | error | when |
 | --- | --- |
-| `PluginOptionsRejected` | the plugin's `path` is empty |
+| `PluginOptionsRejected` | the plugin's `path` is empty, or `Intl` doesn't support the plugin's `timezone` |
 | `PluginTasksInvalidPattern` | croner can't read a pattern |
-| `PluginTasksInvalidOption` | a timezone isn't in the IANA list |
+| `PluginTasksInvalidOption` | `Intl` doesn't support a task's `timezone` |
 | `PluginTasksInvalidOption` | a pattern holds a date, like `2030-01-01T09:00:00`. To run something once at a date, [schedule a job](/plugins/tasks-scheduling) |
 | `PluginTasksInvalidOption` | croner can't read `startAt` or `stopAt` as a date, or `stopAt` isn't after `startAt` |
 | `PluginTasksInvalidOption` | `maxRuns` isn't a whole number of 1 or more |
@@ -280,6 +280,6 @@ These errors come at run time, from values that TypeScript can't check. Most com
 
 {/* prettier-ignore-end */}
 
-An empty `path`, a wrong plugin `timezone`, and `CorePluginScopeMismatch` throw when you call `attach`. The rest throw while the bot starts, and the bot doesn't start.
+`PluginOptionsRejected` and `CorePluginScopeMismatch` throw when you call `attach`. The rest throw while the bot starts, and the bot doesn't start.
 
 To run a task once at a later time, read [Scheduling jobs](/plugins/tasks-scheduling) next.

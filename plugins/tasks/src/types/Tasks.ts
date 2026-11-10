@@ -72,8 +72,8 @@ type TaskRun = Simplify<
 /** What started a run. */
 export type TaskTrigger = TaskRun['trigger'];
 
-// no-invalid-void-type rejects a bare void in a conditional type
-type NoData = ReturnType<() => void>;
+// eslint-disable-next-line @typescript-eslint/no-invalid-void-type -- a task without data declares Task<void>
+type NoData = void;
 
 type IsNoData<TData> = [TData] extends [NoData] ? true : false;
 

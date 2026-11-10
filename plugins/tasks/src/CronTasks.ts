@@ -133,8 +133,8 @@ export class CronTasks {
     }
 }
 
-// croner prefixes its messages with its class name. It also counts a rejected day or month from 0
-// and reports 32 as 31. For those two the field name alone points at the right part
+// strips croner's 'CronPattern: ' prefix. croner shows a bad day or month off by one, like 32 as 31,
+// and this keeps only the field name for those two
 function cronerReason(error: unknown): string {
     return asError(error)
         .message.replace(/^CronPattern: /, '')
@@ -158,7 +158,7 @@ function checkDates(
     }
 }
 
-// CronDate reads a date string in the task's timezone. A plain new Date() could read it as a different time
+// CronDate reads a date string in the task's timezone. new Date() would read it in the machine's
 function readDate(loaded: LoadedTask, option: string, value: Date | string, timezone: string | undefined): number {
     try {
         return new CronDate(value, timezone).getTime();

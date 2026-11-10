@@ -25,23 +25,30 @@ export class TaskRunner {
         loaded: LoadedTask,
         source: RunSource,
         data: TaskData<unknown>,
-        stillWanted: () => boolean = () => true
+        claim: () => boolean = () => true
     ): Promise<RunOutcome> {
         const { state, protect } = loaded;
+        if (this.stopping()) return 'interrupted';
 
-        if (protect && state.busy && source.trigger !== 'scheduled') {
-            this.logger.warn(`skipped a run of ${paint.sky(loaded.key)} because the previous one is still running`);
-            await this.track(this.callOverrun(loaded, source.trigger));
+        if (protect && state.busy) {
+            if (source.trigger !== 'scheduled') {
+                this.logger.warn(`skipped a run of ${paint.sky(loaded.key)} because the previous one is still running`);
+                await this.track(this.callOverrun(loaded, source.trigger));
 
-            return 'skipped';
+                return 'skipped';
+            }
+
+            // keep state.add() in the same tick as this busy check. An await between them lets two waiting jobs start
+            do {
+                await state.settled();
+                // eslint-disable-next-line @typescript-eslint/no-unnecessary-condition -- TS keeps state.busy narrowed to true across the await
+            } while (state.busy);
+            if (this.stopping()) return 'interrupted';
         }
 
-        // nothing awaits between this check and state.add(). Two waiting jobs can't both start
-        if (protect) while (state.busy) await state.settled();
-        if (this.shutdown.signal.aborted) return 'interrupted';
-        if (!stillWanted()) return 'cancelled';
+        if (!claim()) return 'cancelled';
 
-        // busy before execute() starts, which makes a trigger() that a task calls on itself skip
+        // state.add() comes before execute(). Otherwise a task that calls trigger() on itself runs twice at once
         const { promise, resolve } = Promise.withResolvers<RunOutcome>();
         const run = this.track(promise);
         state.add(run);
@@ -62,11 +69,15 @@ export class TaskRunner {
         await Promise.allSettled(this.running);
     }
 
+    private stopping(): boolean {
+        return this.shutdown.signal.aborted;
+    }
+
     private async callOverrun(loaded: LoadedTask, trigger: TaskTrigger): Promise<void> {
         try {
             await this.instantiate(loaded, trigger, undefined, new Date()).onOverrun?.();
         } catch (error) {
-            this.logger.error(`${paint.sky(loaded.key)} threw during its overrun`, error);
+            this.logger.error(`${paint.sky(loaded.key)} threw from onOverrun`, error);
         }
     }
 
@@ -105,7 +116,7 @@ export class TaskRunner {
 
             return 'finished';
         } catch (thrown) {
-            if (this.shutdown.signal.aborted) {
+            if (this.stopping()) {
                 const durationMs = elapsedMs(startedAt);
                 this.logger.info(`shutdown stopped ${paint.sky(key)} after ${durationMs}ms`);
                 this.core.bus.publish('taskRan', { key, ...source, durationMs, outcome: 'interrupted' });

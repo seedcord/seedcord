@@ -254,7 +254,7 @@ describe('Tasks scheduled jobs', () => {
     });
 
     it('runs a job again when the process died during it', async () => {
-        // no using. a killed process never disposes, and its held run would keep dispose waiting
+        // skips using: a killed process never disposes, and dispose would wait forever on the held run
         const first = await start(jobs, driver);
         first.host.hold();
         await first.tasks.schedule(Note, { in: '1s', data: { text: 'hi', sentAt: new Date() } });
@@ -385,6 +385,20 @@ describe('Tasks.cancel', () => {
         expect(runs).toBe(1);
     });
 
+    it("doesn't list a job that a cancel deleted while its read was failing", async () => {
+        await using booted = await start(jobs, driver);
+        const { tasks } = booted;
+        const job = await tasks.schedule(Note, { in: '1s', data: { text: 'hi', sentAt: new Date() } });
+
+        const releaseRead = driver.holdReads({ fail: true });
+        await vi.advanceTimersByTimeAsync(SECOND_MS);
+        const cancelling = tasks.cancel(job.id);
+        releaseRead();
+
+        await expect(cancelling).resolves.toBe(true);
+        expect(tasks.jobs()).toEqual([]);
+    });
+
     it('refuses to cancel a job that has started', async () => {
         await using booted = await start(jobs, driver);
         const { host, tasks } = booted;
@@ -466,7 +480,7 @@ describe('Tasks job upkeep', () => {
         const { tasks } = booted;
 
         await tasks.schedule(Reminder, { in: '1h' });
-        expect(logs.at('warn')).toEqual([expect.stringContaining('end when it exits')]);
+        expect(logs.at('warn')).toEqual([expect.stringContaining('lost when it exits')]);
 
         await tasks.schedule(Reminder, { in: '2h' });
         expect(logs.at('warn')).toHaveLength(1);

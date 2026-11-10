@@ -67,6 +67,7 @@
         "@seedcord/logger": "workspace:^",
         "@seedcord/utils": "workspace:^",
         "croner": "^11.0.0",
+        "es-toolkit": "catalog:deps",
         "type-fest": "catalog:deps"
     },
     "devDependencies": {

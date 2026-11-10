@@ -39,9 +39,10 @@ describe('Tasks cron tasks', () => {
         vi.restoreAllMocks();
     });
 
-    it('runs nothing before ready', async () => {
+    it("doesn't set a timer or run anything before ready", async () => {
         await using booted = await boot(crons);
         const { host, tasks } = booted;
+        expect(vi.getTimerCount()).toBe(0);
 
         await vi.advanceTimersByTimeAsync(SECOND_MS * 3);
         expect(host.runs).toEqual([]);
@@ -81,12 +82,6 @@ describe('Tasks cron tasks', () => {
         await tasks.onHmr({ file: path.join(taskFolder, 'Slow.ts'), type: 'update' });
 
         expect(tasks.crons().find((status) => status.key === 'slow')?.active).toBe(false);
-        expect(vi.getTimerCount()).toBe(0);
-    });
-
-    it("doesn't set a timer before ready", async () => {
-        await using _booted = await boot(crons);
-
         expect(vi.getTimerCount()).toBe(0);
     });
 
@@ -227,7 +222,7 @@ describe('Tasks cron tasks', () => {
 
         const first = tasks.trigger(Slow);
         await tasks.trigger(Slow);
-        expect(logs.at('error')).toEqual([expect.stringContaining('threw during its overrun')]);
+        expect(logs.at('error')).toEqual([expect.stringContaining('threw from onOverrun')]);
 
         host.release();
         await first;
@@ -257,6 +252,21 @@ describe('Tasks cron tasks', () => {
         host.releaseOverrun();
         await Promise.all([second, disposing]);
         expect(disposed).toBe(true);
+    });
+
+    it("doesn't call onOverrun once dispose has started", async () => {
+        using _logs = captureLogs();
+        await using booted = await start(crons);
+        const { host, tasks } = booted;
+        host.hold();
+
+        const first = tasks.trigger(Slow);
+        const disposing = tasks.dispose();
+        await tasks.trigger(Slow);
+        host.release();
+        await Promise.all([first, disposing]);
+
+        expect(runsOf(host, 'overrun')).toEqual([]);
     });
 
     it('reports busy until every unprotected run finishes', async () => {
@@ -612,7 +622,7 @@ describe('Tasks cron tasks', () => {
             const timezone = 'America/New_Yrok' as TasksOptions['timezone'] & string;
 
             expect(() => host.attach('tasks', Tasks, { path: taskFolder, timezone })).toThrow(
-                expect.objectContaining({ code: SeedcordErrorCode.PluginTasksInvalidOption })
+                expect.objectContaining({ code: SeedcordErrorCode.PluginOptionsRejected })
             );
         });
     });

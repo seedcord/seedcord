@@ -3,10 +3,12 @@ import { Plugin } from '@seedcord/core/plugin';
 import { SeedcordErrorCode, paint } from '@seedcord/errors';
 import { SeedcordError, SeedcordTypeError } from '@seedcord/errors/internal';
 import { keepDefined } from '@seedcord/utils';
+import { pluralize } from '@seedcord/utils/internal';
 
 import { CronTasks } from './CronTasks';
 import { isTaskClass, taskKey, taskMetadata } from './decorators/RegisterTask';
-import { requireTimezone } from './requireTimezone';
+import { isTimezone } from './isTimezone';
+import { NOT_A_TIMEZONE } from './requireTimezone';
 import { resolveAt } from './resolveAt';
 import { ScheduledJobs } from './ScheduledJobs';
 import { TaskRegistry } from './TaskRegistry';
@@ -26,9 +28,9 @@ type DataOf<TTask> = TTask extends abstract new (context: TaskContext<infer TDat
  * Runs the task classes in a folder. A task with a cron pattern runs on that schedule. Any task can
  * also run once at a later time through {@link Tasks.schedule}.
  *
- * The plugin stores scheduled jobs in the bot's `config.kv`, under its attach key. A driver that
- * keeps its records still holds a pending job after a restart, and a job that came due while the
- * bot was down runs as soon as it starts. Renaming the attach key leaves the old key's
+ * The plugin stores scheduled jobs in the bot's `config.kv`, under its attach key. With a driver that
+ * keeps its records, a pending job is still there after a restart. A job whose time passed while the
+ * bot was down runs as soon as the bot starts. Renaming the attach key leaves the old key's
  * jobs behind.
  *
  * @example
@@ -57,7 +59,9 @@ export class Tasks extends Plugin<{ transport: 'any'; runtime: 'server' }> {
                 `${paint.bold('path')} is empty. Pass the folder that holds your task classes, like ${paint.sky("'./tasks'")}`
             );
         }
-        requireTimezone(`The ${paint.bold('timezone')} option of ${paint.bold(Tasks.id)}`, options.timezone);
+        if (options.timezone !== undefined && !isTimezone(options.timezone)) {
+            this.rejectOptions(`${paint.bold('timezone')} is ${paint.sky(`'${options.timezone}'`)}. ${NOT_A_TIMEZONE}`);
+        }
 
         this.#path = options.path;
         this.#runner = new TaskRunner(this.core, this.logger);
@@ -85,8 +89,12 @@ export class Tasks extends Plugin<{ transport: 'any'; runtime: 'server' }> {
      * @throws A **SeedcordError** when a task file throws while it imports.
      * @throws A **SeedcordTypeError** with `CoreDuplicateName` when two tasks share a key.
      * @throws A **SeedcordTypeError** with `PluginTasksInvalidPattern` when croner can't parse a task's cron pattern.
-     * @throws A **SeedcordTypeError** with `PluginTasksInvalidOption` when a task's pattern is a date, its `timezone` isn't one `Intl` supports, croner can't read its `startAt` or `stopAt`, or its `stopAt` isn't after its `startAt`.
-     * @throws A **SeedcordRangeError** with `PluginTasksInvalidOption` when a task's `maxRuns` isn't a whole number of 1 or more, or its `every` isn't whole seconds.
+     * @throws A **SeedcordTypeError** with `PluginTasksInvalidOption` when a task's pattern is a date.
+     * @throws A **SeedcordTypeError** with `PluginTasksInvalidOption` when a task's `timezone` isn't one `Intl` supports.
+     * @throws A **SeedcordTypeError** with `PluginTasksInvalidOption` when croner can't read a task's `startAt` or `stopAt`.
+     * @throws A **SeedcordTypeError** with `PluginTasksInvalidOption` when a task's `stopAt` isn't after its `startAt`.
+     * @throws A **SeedcordRangeError** with `PluginTasksInvalidOption` when a task's `maxRuns` isn't a whole number of 1 or more.
+     * @throws A **SeedcordRangeError** with `PluginTasksInvalidOption` when a task's `every` isn't whole seconds.
      * @throws A **SeedcordTypeError** with `InvalidDuration` when a task's `every` isn't a duration.
      * @throws A **SeedcordError** with `CoreKvKeysUnsupported` when the `config.kv` driver can't list its keys.
      */
@@ -94,8 +102,10 @@ export class Tasks extends Plugin<{ transport: 'any'; runtime: 'server' }> {
         await this.#reloader.load();
         await this.#scheduled.restore();
 
+        const tasks = this.#registry.size;
+        const jobs = this.#scheduled.size;
         this.logger.info(
-            `loaded ${this.#registry.size} tasks, ${this.#cronTasks.size} on a cron pattern, ${this.#scheduled.size} scheduled jobs`
+            `loaded ${tasks} ${pluralize(tasks, 'task')}, ${this.#cronTasks.size} on a cron pattern, ${jobs} scheduled ${pluralize(jobs, 'job')}`
         );
     }
 
@@ -120,8 +130,8 @@ export class Tasks extends Plugin<{ transport: 'any'; runtime: 'server' }> {
 
     /**
      * Stores a job that runs `Task` once, at the time `options` gives. If that time has passed, the job
-     * runs right away, or in `ready()` if the bot hasn't logged in yet. Any job that you got an id for
-     * is still in the driver after a restart, since the promise resolves only once the driver holds it.
+     * runs right away, or in `ready()` if the bot hasn't logged in yet. Once the promise resolves, the
+     * driver holds the job, and it's still there after a restart.
      *
      * If the process dies during a run, the job runs again after a restart. Write a task so a second
      * run of one job is safe.
@@ -130,8 +140,10 @@ export class Tasks extends Plugin<{ transport: 'any'; runtime: 'server' }> {
      * @param options - `in` or `at`, plus `data` when the task declares it.
      * @throws A **SeedcordError** with `PluginTasksNotLoaded` when the plugin did not load `Task`.
      * @throws A **SeedcordTypeError** with `PluginTasksKeyTaken` when a different class loaded under `Task`'s key.
-     * @throws A **SeedcordTypeError** when `in` isn't a duration or `at` isn't a date.
-     * @throws A **SeedcordRangeError** when `at` is a number too small to be milliseconds, or `in` ends past the last date a `Date` can hold.
+     * @throws A **SeedcordTypeError** with `InvalidDuration` when `in` isn't a duration.
+     * @throws A **SeedcordTypeError** with `PluginTasksInvalidOption` when `at` isn't a date.
+     * @throws A **SeedcordRangeError** with `PluginTasksAtTooEarly` when `at` is a number too small to be milliseconds.
+     * @throws A **SeedcordRangeError** with `PluginTasksDurationTooLong` when `in` ends past the last date a `Date` can hold.
      * @throws A **SeedcordTypeError** with `CoreKvUnserializable` when `data` holds a circular reference.
      * @throws A **SeedcordError** with `CoreKvDriverFailed` when the driver can't store the job.
      * @example
@@ -156,7 +168,7 @@ export class Tasks extends Plugin<{ transport: 'any'; runtime: 'server' }> {
     /**
      * Deletes a job so it never runs.
      *
-     * @returns `false` when no job has that id, or when its run has started.
+     * @returns `false` if the id doesn't match a job, or if the job's run has started.
      * @throws A **SeedcordError** with `CoreKvDriverFailed` when the driver can't read or delete the job.
      */
     public async cancel(id: string): Promise<boolean> {

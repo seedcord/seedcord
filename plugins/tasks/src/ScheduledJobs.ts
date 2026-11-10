@@ -1,6 +1,7 @@
 import { randomUUID } from 'node:crypto';
 
 import { paint } from '@seedcord/errors';
+import { clamp, once } from 'es-toolkit';
 
 import type { LoadedTask } from './TaskRegistry';
 import type { TaskRunner } from './TaskRunner';
@@ -19,7 +20,6 @@ interface Pending extends ScheduledJob {
     timer: NodeJS.Timeout | undefined;
 }
 
-// cancel() can only stop a 'waiting' job. startRun() moves it to 'started' when the run begins
 interface RunningJob {
     readonly job: Pending;
     state: 'waiting' | 'started' | 'cancelled';
@@ -34,7 +34,11 @@ export class ScheduledJobs {
     private readonly pending = new Map<string, Pending>();
     private readonly runningJobs = new Map<string, RunningJob>();
     private started = false;
-    private warnedInMemory = false;
+    private readonly warnInMemory = once(() => {
+        this.logger.warn(
+            `this process holds scheduled jobs in memory, so they're lost when it exits. Pass a driver as ${paint.bold('kv')} in your config to keep them through a restart`
+        );
+    });
 
     constructor(
         private readonly records: KvCollection<JobRecord>,
@@ -69,13 +73,13 @@ export class ScheduledJobs {
     public async add(key: string, at: Date, data: JsonValue | undefined): Promise<ScheduledJob> {
         const id = randomUUID();
         await this.records.set(id, { key, at: at.getTime(), ...(data !== undefined && { data }) });
-        this.warnIfInMemory();
+        if (this.inMemory) this.warnInMemory();
 
         const job: Pending = { id, key, at, timer: undefined };
         this.pending.set(id, job);
         this.setTimer(job);
 
-        // a copy, since the timer reads job.at and a caller may change what it gets back
+        // returns a copy of at. The timer reads job.at, and the caller could change the date it gets
         return { id, key, at: new Date(at) };
     }
 
@@ -87,7 +91,7 @@ export class ScheduledJobs {
         const job = this.pending.get(id);
         if (!job && (await this.records.get(id)) === undefined) return false;
 
-        // stops the timer first to keep the job from coming due while the delete is in flight
+        // clear the timer before the delete. Otherwise the job can start while the delete runs
         if (job) {
             clearTimeout(job.timer);
             this.pending.delete(id);
@@ -107,11 +111,14 @@ export class ScheduledJobs {
     }
 
     public list(): ScheduledJob[] {
-        return [...this.pending.values()].map(({ id, key, at }) => ({ id, key, at: new Date(at) }));
+        return this.pending
+            .values()
+            .map(({ id, key, at }) => ({ id, key, at: new Date(at) }))
+            .toArray();
     }
 
     private setTimer(job: Pending, delayMs = job.at.getTime() - Date.now()): void {
-        // a failed read and a failed cancel can both rearm one job
+        // a failed read and a failed cancel can both call this for one job
         clearTimeout(job.timer);
         if (!this.started) return;
 
@@ -120,7 +127,7 @@ export class ScheduledJobs {
                 if (job.at.getTime() > Date.now()) this.setTimer(job);
                 else void this.runner.track(this.runJob(job));
             },
-            Math.min(Math.max(delayMs, 0), MAX_TIMEOUT_MS)
+            clamp(delayMs, 0, MAX_TIMEOUT_MS)
         );
     }
 
@@ -131,7 +138,7 @@ export class ScheduledJobs {
         try {
             await this.records.delete(job.id);
         } catch (error) {
-            // if the wait ended while the delete was in flight, runJob() has already removed the job from runningJobs
+            // if runJob() still holds the job, it waits again. If its wait ended during the delete, it needs a new timer
             if (this.runningJobs.get(job.id) === running) {
                 running.state = 'waiting';
             } else {
@@ -151,7 +158,7 @@ export class ScheduledJobs {
         this.runningJobs.set(job.id, running);
 
         try {
-            const record = await this.read(job);
+            const record = await this.read(running);
             if (!record) return;
 
             const loaded = this.findTask(record.key);
@@ -179,16 +186,9 @@ export class ScheduledJobs {
         return true;
     }
 
-    private warnIfInMemory(): void {
-        if (!this.inMemory || this.warnedInMemory) return;
+    private async read(running: RunningJob): Promise<JobRecord | undefined> {
+        const { job } = running;
 
-        this.warnedInMemory = true;
-        this.logger.warn(
-            `this process holds scheduled jobs in memory, so they end when it exits. Pass a driver as ${paint.bold('kv')} in your config to keep them through a restart`
-        );
-    }
-
-    private async read(job: Pending): Promise<JobRecord | undefined> {
         try {
             return await this.records.get(job.id);
         } catch (error) {
@@ -196,8 +196,11 @@ export class ScheduledJobs {
                 `could not read job ${paint.sky(job.id)}. The plugin tries again in ${STORE_RETRY_MS}ms`,
                 error
             );
-            this.pending.set(job.id, job);
-            this.setTimer(job, STORE_RETRY_MS);
+            // cancelWaiting() puts a cancelled job back itself if its delete fails
+            if (running.state === 'waiting') {
+                this.pending.set(job.id, job);
+                this.setTimer(job, STORE_RETRY_MS);
+            }
 
             return undefined;
         }

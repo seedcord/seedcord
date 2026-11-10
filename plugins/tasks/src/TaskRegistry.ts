@@ -13,8 +13,7 @@ export interface LoadedTask {
     readonly state: TaskState;
 }
 
-// everything the plugin holds for one task key. A save unregisters the key and registers it again,
-// and the slot keeps the run in flight and the pause() state through that
+// holds the run in flight and the pause state for one key. A save registers the key again and reuses this slot
 export class TaskSlot {
     public readonly state = new TaskState();
     public loaded: LoadedTask | undefined;
@@ -60,10 +59,13 @@ export class TaskRegistry {
     }
 
     public cronSlots(): CronSlot[] {
-        return [...this.slots.values()].filter(isCronSlot);
+        return this.slots.values().filter(isCronSlot).toArray();
     }
 
     public get size(): number {
-        return [...this.slots.values()].filter((slot) => slot.loaded !== undefined).length;
+        return this.slots
+            .values()
+            .filter((slot) => slot.loaded !== undefined)
+            .toArray().length;
     }
 }

@@ -1842,6 +1842,9 @@ importers:
       croner:
         specifier: ^11.0.0
         version: 11.0.0
+      es-toolkit:
+        specifier: catalog:deps
+        version: 1.53.2
       type-fest:
         specifier: catalog:deps
         version: 5.10.0
