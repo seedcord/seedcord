@@ -144,7 +144,7 @@ for await (const [userId, saved] of preferences.entries()) {
 }
 ```
 
-To restore scheduled jobs after a restart, put them in a plugin, as [Keeping records](/writing-plugins/#keeping-records) shows.
+To restore scheduled tasks after a restart, put them in a plugin, as [Keeping records](/writing-plugins/#keeping-records) shows.
 
 The Keyv and unstorage drivers read every key in the storage to find one collection's records, so a large store makes `entries()` slow. Call it at startup or from a timer. It throws on a [driver that can't list its keys](/built-ins/drivers#keyv).
 

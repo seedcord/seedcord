@@ -8,7 +8,7 @@ import type { Logger } from '@seedcord/logger';
  *
  * Import it from `@seedcord/plugin-tasks/gateway` or `/http` to type `this.core` as your bot's `Core`.
  *
- * @typeParam TData - The payload `schedule()` passes. A cron task takes none.
+ * @typeParam TData - The payload `schedule()` passes. A cron job takes none.
  * @typeParam TCore - The `Core` that `this.core` has. The transport subpaths set it.
  * @example
  * ```ts

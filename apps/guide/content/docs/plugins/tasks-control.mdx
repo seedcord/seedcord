@@ -3,7 +3,7 @@ title: Controlling tasks
 description: Pause a task, run it right away, or read when it runs next from any handler, and report failed task runs from a subscriber.
 ---
 
-Without a way to pause it, a cron task keeps running on its pattern until the bot stops. The [tasks plugin](/plugins/tasks) gives your handlers [`pause()`](ref:plugin-tasks/Tasks.pause), [`resume()`](ref:plugin-tasks/Tasks.resume), [`trigger()`](ref:plugin-tasks/Tasks.trigger), and [`nextRun()`](ref:plugin-tasks/Tasks.nextRun) for that.
+Without a way to pause it, a cron job keeps running on its pattern until the bot stops. The [tasks plugin](/plugins/tasks) gives your handlers [`pause()`](ref:plugin-tasks/Tasks.pause), [`resume()`](ref:plugin-tasks/Tasks.resume), [`trigger()`](ref:plugin-tasks/Tasks.trigger), and [`nextRun()`](ref:plugin-tasks/Tasks.nextRun) for that.
 
 With the plugin attached under the key `tasks`, a handler or a subscriber reaches it as [`this.core.tasks`](/plugins#reading-it-from-a-handler). It gets its type after you run [`seedcord codegen`](/plugins/typing).
 
@@ -110,9 +110,9 @@ export class DigestNext extends SlashHandler<'digest-next'> {
 
 If the task has [`protect`](/plugins/tasks#when-a-run-takes-too-long) on and it's already running, the plugin skips this run. It calls the task's [`onOverrun()`](ref:plugin-tasks/Task.onOverrun) instead.
 
-## Listing every cron task
+## Listing every cron job
 
-[`crons()`](ref:plugin-tasks/Tasks.crons) returns an array with a [`CronStatus`](ref:plugin-tasks/CronStatus) for each cron task, for example to list them in a `/tasks` command.
+[`crons()`](ref:plugin-tasks/Tasks.crons) returns an array with a [`CronStatus`](ref:plugin-tasks/CronStatus) for each cron job, for example to list them in a `/tasks` command.
 
 {/* prettier-ignore-start */}
 

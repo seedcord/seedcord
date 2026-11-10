@@ -28,7 +28,7 @@ type DataOf<TTask> = TTask extends abstract new (context: TaskContext<infer TDat
  * Runs the task classes in a folder. A task with a cron pattern runs on that schedule. Any task can
  * also run once at a later time through {@link Tasks.schedule}.
  *
- * The plugin stores scheduled jobs in the bot's `config.kv`, under its attach key. With a driver that
+ * The plugin stores scheduled tasks in the bot's `config.kv`, under its attach key. With a driver that
  * keeps its records, a pending job is still there after a restart. A job whose time passed while the
  * bot was down runs as soon as the bot starts. Renaming the attach key leaves the old key's
  * jobs behind.
@@ -109,7 +109,7 @@ export class Tasks extends Plugin<{ transport: 'any'; runtime: 'server' }> {
         );
     }
 
-    /** Starts the cron tasks and the timers for pending jobs once the bot has logged in. */
+    /** Starts the cron jobs and the timers for pending jobs once the bot has logged in. */
     public override ready(): void {
         this.#cronTasks.start();
         this.#scheduled.start();
@@ -180,13 +180,13 @@ export class Tasks extends Plugin<{ transport: 'any'; runtime: 'server' }> {
         return this.#scheduled.list();
     }
 
-    /** Every cron task and its state. */
+    /** Every cron job and its state. */
     public crons(): CronStatus[] {
         return this.#cronTasks.list();
     }
 
     /**
-     * When a cron task runs next, or `null` while it's paused or once it doesn't have any runs left.
+     * When a cron job runs next, or `null` while it's paused or once it doesn't have any runs left.
      *
      * @throws A **SeedcordError** with `PluginTasksNotLoaded` when the plugin did not load `Task`.
      * @throws A **SeedcordTypeError** with `PluginTasksKeyTaken` when a different class loaded under `Task`'s key.
@@ -197,7 +197,7 @@ export class Tasks extends Plugin<{ transport: 'any'; runtime: 'server' }> {
     }
 
     /**
-     * Stops a cron task's schedule until {@link Tasks.resume}. Scheduled jobs and `trigger()` still
+     * Stops a cron job's schedule until {@link Tasks.resume}. Scheduled tasks and `trigger()` still
      * run the task. The task is still paused after a save reloads it. After a restart, it
      * follows its `paused` option again.
      *
@@ -210,7 +210,7 @@ export class Tasks extends Plugin<{ transport: 'any'; runtime: 'server' }> {
     }
 
     /**
-     * Starts a cron task that `pause()` or the `paused` option stopped. It runs at its next match and skips the
+     * Starts a cron job that `pause()` or the `paused` option stopped. It runs at its next match and skips the
      * ones it missed.
      *
      * @throws A **SeedcordError** with `PluginTasksNotLoaded` when the plugin did not load `Task`.

@@ -26,7 +26,7 @@ const registry = new WeakMap<object, TaskMetadata>();
  * Marks a class as a task. With a cron pattern it runs on that schedule. Without one it runs when
  * code calls `schedule()`.
  *
- * A literal pattern, timezone, or `every` with a mistake in it fails to compile. A cron task can't declare
+ * A literal pattern, timezone, or `every` with a mistake in it fails to compile. A cron job can't declare
  * data, since nothing passes it any.
  *
  * @param pattern - 5, 6, or 7 fields in croner's grammar, or a nickname like `@daily`.

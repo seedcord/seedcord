@@ -36,7 +36,7 @@ afterEach(() => {
     vi.restoreAllMocks();
 });
 
-describe('Tasks scheduled jobs', () => {
+describe('Tasks scheduled tasks', () => {
     it('runs a job at its time, publishes it with the job id, and deletes the record', async () => {
         await using booted = await start(jobs, driver);
         const { host, tasks } = booted;

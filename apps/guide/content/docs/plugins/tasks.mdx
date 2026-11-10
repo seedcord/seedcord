@@ -7,8 +7,8 @@ Some of your bot's work doesn't start from a command, like a digest every mornin
 
 [`@seedcord/plugin-tasks`](ref:plugin-tasks) does that work for you. You write each piece of work as a class in a folder, and the plugin runs it. A class like that is a _task_, and it can run in two ways:
 
-- A **cron task** runs again and again on a pattern, like every five minutes. This page is about cron tasks.
-- A **scheduled job** runs a task once at a later time, like an unban a day after a tempban. [Scheduling jobs](/plugins/tasks-scheduling) shows how.
+- A **cron job** runs again and again on a pattern, like every five minutes. This page is about cron jobs.
+- A **scheduled task** runs a task once at a later time, like an unban a day after a tempban. [Scheduling jobs](/plugins/tasks-scheduling) shows how.
 
 <Shell add="@seedcord/plugin-tasks" />
 
@@ -41,14 +41,14 @@ The plugin loads every task in `./tasks`. It starts them once the bot is ready, 
 | option | required | what it sets |
 | --- | --- | --- |
 | [`path`](ref:plugin-tasks/TasksOptions.path) | yes | the folder of tasks. A relative path starts at `root` from your `seedcord.config.ts`, and the folder has to be inside `root` |
-| [`timezone`](ref:plugin-tasks/TasksOptions.timezone) | no | the timezone for every cron task that doesn't set its own. Defaults to the system's timezone |
+| [`timezone`](ref:plugin-tasks/TasksOptions.timezone) | no | the timezone for every cron job that doesn't set its own. Defaults to the system's timezone |
 | [`timeout`](ref:plugin-tasks/TasksOptions.timeout) | no | how long running tasks get to finish during shutdown, in milliseconds. Defaults to 10000 |
 
 {/* prettier-ignore-end */}
 
-The plugin reads your stored jobs while the bot starts, even if you only write cron tasks. To read them, your [kv driver](/built-ins/drivers) has to [list its keys](/built-ins#reading-every-record). If it can't, the bot doesn't start.
+The plugin reads your stored jobs while the bot starts, even if you only write cron jobs. To read them, your [kv driver](/built-ins/drivers) has to [list its keys](/built-ins#reading-every-record). If it can't, the bot doesn't start.
 
-## Writing a cron task
+## Writing a cron job
 
 Export a class from a file in your tasks folder, extend [`Task`](ref:plugin-tasks/Task), and pass a pattern to [`@RegisterTask`](ref:plugin-tasks/RegisterTask). Put the work in [`execute()`](ref:plugin-tasks/Task.execute).
 
@@ -176,7 +176,7 @@ export class Poll extends Task {
 | [`core`](ref:plugin-tasks/Task.core) | your bot's `Core`, with your plugins. On a gateway bot it has the client too |
 | [`logger`](ref:plugin-tasks/Task.logger) | a logger that puts the task's key on each line |
 | [`key`](ref:plugin-tasks/Task.key) | the task's key |
-| [`data`](ref:plugin-tasks/Task.data) | the data of a [job](/plugins/tasks-scheduling). A cron task doesn't get any |
+| [`data`](ref:plugin-tasks/Task.data) | the data of a [job](/plugins/tasks-scheduling). A cron job doesn't get any |
 | [`signal`](ref:plugin-tasks/Task.signal) | an `AbortSignal` that aborts when the bot shuts down |
 | [`startedAt`](ref:plugin-tasks/Task.startedAt) | when this run started |
 | [`trigger`](ref:plugin-tasks/Task.trigger) | what started this run, as a [`TaskTrigger`](ref:plugin-tasks/TaskTrigger): `'cron'`, `'scheduled'` for a job, or `'manual'` |
@@ -243,7 +243,7 @@ If a task can run longer than 10 seconds, raise `timeout` so shutdown waits for 
 
 ## Running more than one process
 
-Each process of your bot sets its own timers, and the plugin doesn't share tasks between processes. If two processes attach the plugin, every cron task runs twice.
+Each process of your bot sets its own timers, and the plugin doesn't share tasks between processes. If two processes attach the plugin, every cron job runs twice.
 
 So if you run shards in separate processes, attach the plugin in one of them only. Handlers in the other processes can't use `this.core.tasks`, so a command that pauses a task only works in the process that attached the plugin.
 

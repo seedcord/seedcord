@@ -28,7 +28,7 @@ const DAY_MS = 86_400_000;
 
 const runsOf = (host: TestHost, task: string): Run[] => host.runs.filter((run) => run.task === task);
 
-describe('Tasks cron tasks', () => {
+describe('Tasks cron jobs', () => {
     beforeEach(() => {
         vi.useFakeTimers();
         vi.setSystemTime(new Date('2030-01-15T12:00:00Z'));
@@ -308,7 +308,7 @@ describe('Tasks cron tasks', () => {
             ]);
         });
 
-        it('runs a scheduled job of a protected task once the run before it ends', async () => {
+        it('runs a scheduled task of a protected task once the run before it ends', async () => {
             await using booted = await start(crons);
             const { host, tasks } = booted;
             host.hold();
@@ -347,7 +347,7 @@ describe('Tasks cron tasks', () => {
             expect(driver.stored.size).toBe(1);
         });
 
-        it('cancels a scheduled job while it waits for the protected run before it', async () => {
+        it('cancels a scheduled task while it waits for the protected run before it', async () => {
             using driver = new FakeDriver();
             await using booted = await start(crons, driver);
             const { host, tasks } = booted;
@@ -391,7 +391,7 @@ describe('Tasks cron tasks', () => {
             ]);
         });
 
-        it('runs a paused task through trigger and a scheduled job', async () => {
+        it('runs a paused task through trigger and a scheduled task', async () => {
             await using booted = await start(crons);
             const { host, tasks } = booted;
             tasks.pause(Tick);

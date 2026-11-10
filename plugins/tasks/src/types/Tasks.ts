@@ -8,7 +8,7 @@ import type { IsUnknown, RequireExactlyOne, Simplify } from 'type-fest';
 export interface TasksOptions {
     /** The folder that holds your task classes, relative to `root` from `seedcord.config.ts`. */
     path: string;
-    /** The timezone for every cron task that doesn't set its own. Defaults to the system's. */
+    /** The timezone for every cron job that doesn't set its own. Defaults to the system's. */
     timezone?: IanaTimezone;
     /**
      * How long in-flight runs get to finish during shutdown, in milliseconds.
@@ -31,13 +31,13 @@ export interface TaskOptions<TZone extends string = string, TEvery extends strin
     timezone?: Timezone<TZone>;
     /**
      * Skips a cron or manual run before the previous run has finished, and calls `onOverrun()` for it.
-     * A scheduled job waits for the previous run to end. Skipping it would lose the job's data.
+     * A scheduled task waits for the previous run to end. Skipping it would lose the job's data.
      *
      * @defaultValue `true`
      */
     protect?: boolean;
     /**
-     * Starts the task's pattern paused. Call `resume()` to start it. Scheduled jobs and `trigger()`
+     * Starts the task's pattern paused. Call `resume()` to start it. Scheduled tasks and `trigger()`
      * still run the task.
      *
      * @defaultValue `false`
@@ -99,14 +99,14 @@ export interface TaskContext<TData = unknown> {
     trigger: TaskTrigger;
 }
 
-/** When a scheduled job runs. Pass `in` or `at`. */
+/** When a scheduled task runs. Pass `in` or `at`. */
 export type When<TIn extends string = string> = RequireExactlyOne<{ in: ValidDuration<TIn>; at: Date | number }>;
 
 /** The options `schedule()` takes. `data` follows the task's type argument. */
 export type ScheduleOptions<TData, TIn extends string = string> = When<TIn> &
     (IsNoData<TData> extends true ? { data?: never } : { data: Storable<TData, 'task data'> });
 
-/** One cron task, as `crons()` reports it. */
+/** One cron job, as `crons()` reports it. */
 export interface CronStatus {
     key: string;
     pattern: string;
@@ -118,7 +118,7 @@ export interface CronStatus {
     previousRun: Date | null;
 }
 
-/** One scheduled job waiting to run. */
+/** One scheduled task waiting to run. */
 export interface ScheduledJob {
     id: string;
     key: string;

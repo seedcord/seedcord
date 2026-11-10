@@ -36,7 +36,7 @@ export class ScheduledJobs {
     private started = false;
     private readonly warnInMemory = once(() => {
         this.logger.warn(
-            `this process holds scheduled jobs in memory, so they're lost when it exits. Pass a driver as ${paint.bold('kv')} in your config to keep them through a restart`
+            `this process holds scheduled tasks in memory, so they're lost when it exits. Pass a driver as ${paint.bold('kv')} in your config to keep them through a restart`
         );
     });
 

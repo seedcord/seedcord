@@ -65,7 +65,7 @@ function probeDecorator(): void {
 
     // @ts-expect-error a scheduled task takes only a key, since the cron options do nothing there
     RegisterTask({ key: 'unban', protect: false });
-    // @ts-expect-error a cron task can't declare data
+    // @ts-expect-error a cron job can't declare data
     RegisterTask('* * * * *')(Unban);
     // @ts-expect-error a misspelled timezone
     RegisterTask('* * * * *', { timezone: 'America/New_Yrok' });
