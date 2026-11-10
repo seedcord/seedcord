@@ -1,14 +1,14 @@
 import { DispatchContext } from '@seedcord/core/internal';
-import { Plugin, PluginHost } from '@seedcord/core/plugin';
+import { PluginHost } from '@seedcord/core/plugin';
 import { isSeedcordError, SeedcordErrorCode } from '@seedcord/errors';
 import { describe, expect, it } from 'vite-plus/test';
 
 import { interactionGateContext } from '#src/gates/context';
 import * as handlers from '#src/handlers/index';
+import { pluginWithMembers } from '#tests/helpers/pluginWithMembers';
 
 import type { Core } from '#interfaces/Core';
 import type { Repliables } from '#src/handlers/interactionTypes';
-import type { CoreBase } from '@seedcord/core';
 import type { Config } from '@seedcord/types';
 
 class Host extends PluginHost<'http', 'server'> {
@@ -20,16 +20,6 @@ class Host extends PluginHost<'http', 'server'> {
     constructor() {
         super('http', 'server', undefined);
     }
-}
-
-function pluginAdding(name: string): new (host: CoreBase) => Plugin {
-    return class extends Plugin {
-        public override readonly dispatchMembers = { [name]: (): string => name };
-
-        public init(): Promise<void> {
-            return Promise.resolve();
-        }
-    };
 }
 
 function prototypeMemberNames({ prototype }: { prototype: object }): string[] {
@@ -50,7 +40,7 @@ const memberNames = new Set([...Object.values(handlers).flatMap(prototypeMemberN
 
 function attachRejects(name: string): boolean {
     try {
-        new Host().attach('first', pluginAdding(name));
+        new Host().attach('first', pluginWithMembers({ [name]: () => name }));
         return false;
     } catch (error) {
         return isSeedcordError(error, undefined, SeedcordErrorCode.CorePluginMemberReserved);

@@ -7,14 +7,14 @@ import { beforeEach, describe, expect, it, vi } from 'vite-plus/test';
 
 import { autocompleteRunConfig, repliableRunConfig } from '#bot/controllers/gatewayRunConfig';
 import { UnhandledAutocomplete, UnhandledRepliable } from '#bot/defaults';
-import { Plugin } from '#src/Plugin';
 import { harmlessError } from '#tests/utils/harmlessError';
+import { pluginWithMembers } from '#tests/utils/pluginWithMembers';
 import { TestNotice } from '#tests/utils/TestNotice';
 
 import type { HandlerSlots } from '#handlers/constructors';
 import type { Core } from '#interfaces/Core';
 import type { ValidInteractionTypes } from '#src/handlers/interactionTypes';
-import type { DispatchOrigin, SubscriptionData } from '@seedcord/core';
+import type { SubscriptionData } from '@seedcord/core';
 import type { InteractionRunConfig } from '@seedcord/core/internal';
 import type { Config } from '@seedcord/types';
 import type { AutocompleteInteraction, ChatInputCommandInteraction } from 'discord.js';
@@ -138,32 +138,6 @@ describe('gateway fault answers', () => {
     beforeEach(() => {
         mock = mockInteraction();
         publish = vi.fn();
-    });
-
-    it('builds a plugin member from the interaction and sets it on the handler', async () => {
-        class Tagging extends Plugin {
-            public override readonly dispatchMembers = {
-                tag: (origin: DispatchOrigin): string => `${String(origin.guildId)}:${String(origin.userLocale)}`
-            };
-
-            public init(): Promise<void> {
-                return Promise.resolve();
-            }
-        }
-        let seen: unknown;
-        class Reads extends UnhandledRepliable {
-            override execute(): Promise<void> {
-                // a bot's seedcord-gen.ts types the members
-                seen = (this as unknown as { tag: string }).tag;
-                return Promise.resolve();
-            }
-        }
-        const core = mockCore(publish);
-        core.attach('tagging', Tagging);
-
-        await runSlash(Reads, asSlash(Object.assign(mock, { locale: 'pl' })), core);
-
-        expect(seen).toBe('g1:pl');
     });
 
     it('replies the generic and publishes unknownException for a raw error on an unacked interaction', async () => {
@@ -295,5 +269,27 @@ describe('gateway fault answers', () => {
             expect(mock.reply).toHaveBeenCalledTimes(1);
             expect(mock.followUp).not.toHaveBeenCalled();
         });
+    });
+});
+
+describe('plugin members on a gateway interaction', () => {
+    it('builds a member from the interaction and sets it on the handler', async () => {
+        let seen: unknown;
+        class Reads extends UnhandledRepliable {
+            override execute(): Promise<void> {
+                // codegen types the members in a bot, and it doesn't run for this test bot
+                seen = Reflect.get(this, 'tag');
+                return Promise.resolve();
+            }
+        }
+        const core = mockCore(vi.fn());
+        core.attach(
+            'tagging',
+            pluginWithMembers({ tag: (origin) => `${String(origin.guildId)}:${String(origin.userLocale)}` })
+        );
+
+        await runSlash(Reads, asSlash(Object.assign(mockInteraction(), { locale: 'pl' })), core);
+
+        expect(seen).toBe('g1:pl');
     });
 });

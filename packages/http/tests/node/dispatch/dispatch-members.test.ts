@@ -11,29 +11,19 @@ import { AutocompleteHandler } from '#handlers/interaction/AutocompleteHandler';
 import { ButtonHandler } from '#handlers/interaction/components/ButtonHandler';
 import { InteractionMiddleware } from '#handlers/interaction/InteractionMiddleware';
 import { SlashHandler } from '#handlers/interaction/SlashHandler';
-import { Plugin } from '#src/Plugin';
+import { pluginWithMembers } from '#tests/helpers/pluginWithMembers';
 import { restClients } from '#tests/helpers/restClients';
 
 import { capturingCtx, noClasses, readyEngine, routedHandler, signedRequest, slashPayload } from './harness';
 
 import type { BotClasses } from './harness';
-import type { CoreBase, DispatchOrigin } from '@seedcord/core';
+import type { DispatchOrigin } from '@seedcord/core';
 import type { RenderContext, ReplyResponse } from '@seedcord/types';
 import type { UUID } from 'node:crypto';
 
 // these members aren't typed because codegen doesn't run for these test bots
 function memberOf(target: object, member = 'tag'): string {
     return String(Reflect.get(target, member));
-}
-
-function pluginBuilding(tag: (origin: DispatchOrigin) => unknown, member = 'tag'): new (host: CoreBase) => Plugin {
-    return class extends Plugin {
-        public override readonly dispatchMembers = { [member]: tag };
-
-        public init(): Promise<void> {
-            return Promise.resolve();
-        }
-    };
 }
 
 const fromOrigin = (origin: DispatchOrigin): string => `${String(origin.guildId)}:${String(origin.userLocale)}`;
@@ -48,7 +38,7 @@ async function dispatched(
 ): Promise<void> {
     using engine = await readyEngine(classes, {
         ...settings,
-        attach: (bot) => bot.attach('tagging', pluginBuilding(tag))
+        attach: (bot) => bot.attach('tagging', pluginWithMembers({ tag }))
     });
     const ctx = capturingCtx();
     await engine.handle(await signedRequest(engine.signer, payload), ctx);
@@ -131,7 +121,7 @@ describe('dispatch members on http', () => {
             }
         }
         using engine = await readyEngine(routedHandler(InteractionKind.Button, 'approve', Clicks), {
-            attach: (bot) => bot.attach('tagging', pluginBuilding(fromOrigin, 'decoded'))
+            attach: (bot) => bot.attach('tagging', pluginWithMembers({ decoded: fromOrigin }))
         });
         const ctx = capturingCtx();
         const payload = {
@@ -161,7 +151,7 @@ describe('dispatch members on http', () => {
             }
         }
         using engine = await readyEngine(routedHandler(InteractionKind.Slash, 'probe', Reads), {
-            attach: (bot) => bot.attach('tagging', pluginBuilding(fromOrigin, 'resolver'))
+            attach: (bot) => bot.attach('tagging', pluginWithMembers({ resolver: fromOrigin }))
         });
         const ctx = capturingCtx();
 
@@ -193,7 +183,7 @@ describe('dispatch members on http', () => {
         }
     ])('fails startup when a handler has $kind with a member name', async ({ Handler }) => {
         using engine = await readyEngine(routedHandler(InteractionKind.Slash, 'probe', Handler), {
-            attach: (bot) => bot.attach('tagging', pluginBuilding(fromOrigin))
+            attach: (bot) => bot.attach('tagging', pluginWithMembers({ tag: fromOrigin }))
         });
 
         await expect(
@@ -212,7 +202,7 @@ describe('dispatch members on http', () => {
         }
         using engine = await readyEngine(routedHandler(InteractionKind.Slash, 'probe', Shadows), {
             attach: (bot) => {
-                bot.attach('tagging', pluginBuilding(fromOrigin));
+                bot.attach('tagging', pluginWithMembers({ tag: fromOrigin }));
                 bot.bus.on('unknownException', ({ error }) => caught.push(error));
             }
         });

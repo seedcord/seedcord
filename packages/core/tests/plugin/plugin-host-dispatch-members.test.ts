@@ -39,19 +39,6 @@ class Replying extends RepliableHandler<
     public execute(): void {}
 }
 
-function handlerMemberNames(): string[] {
-    const handler = new Replying();
-    const names = Object.keys(handler);
-    for (
-        let proto: unknown = Object.getPrototypeOf(handler);
-        proto !== Object.prototype;
-        proto = Object.getPrototypeOf(proto)
-    ) {
-        names.push(...Object.getOwnPropertyNames(proto));
-    }
-    return names;
-}
-
 describe('dispatch members at attach', () => {
     it('rejects a member name that another plugin added', () => {
         const host = new TestPluginHost().attach('first', pluginAdding('tag'));
@@ -101,8 +88,9 @@ describe('dispatch members at attach', () => {
         expect(host.plainTwo).toBeInstanceOf(Bare);
     });
 
-    it('rejects a member called like a handler member, a card field, or an Object.prototype key', () => {
-        const names = [...handlerMemberNames(), 'toString', '__proto__', 'uuid', 'developerUsername'];
+    // each transport's test covers the methods and gate fields. these are what only core sets
+    it('rejects a member called like a handler instance field, a card field, or an Object.prototype key', () => {
+        const names = [...Object.keys(new Replying()), 'toString', '__proto__', 'uuid', 'developerUsername'];
 
         const accepted = names.filter((name) => {
             try {

@@ -3,14 +3,14 @@ import { SeedcordErrorCode } from '@seedcord/errors';
 import { GuildMember } from 'discord.js';
 import { afterEach, beforeEach, describe, expect, vi } from 'vite-plus/test';
 
-import { Plugin } from '#src/Plugin';
 import { dispatcherOf } from '#tests/utils/dispatcherOf';
+import { pluginWithMembers } from '#tests/utils/pluginWithMembers';
 import { seedcordPath } from '#tests/utils/source-path';
 import { testConfig } from '#tests/utils/test-config';
 import { it } from '#tests/utils/test-env';
 
 import type { Seedcord } from '#src/Seedcord';
-import type { CoreBase, DispatchOrigin } from '@seedcord/core';
+import type { DispatchOrigin } from '@seedcord/core';
 import type { MockInstance } from 'vite-plus/test';
 
 // a global is the only channel back to the test, since the fixture compiles into a temp dir
@@ -23,16 +23,6 @@ type Boot = (
     middlewares?: string,
     attach?: (bot: Seedcord) => void
 ) => Promise<ReturnType<typeof dispatcherOf>>;
-
-function pluginBuilding(tag: (origin: DispatchOrigin) => unknown): new (host: CoreBase) => Plugin {
-    return class extends Plugin {
-        public override readonly dispatchMembers = { tag };
-
-        public init(): Promise<void> {
-            return Promise.resolve();
-        }
-    };
-}
 
 // a real GuildMember instance for deriveEventActor's instanceof check, carrying only what the gate context reads
 function guildMemberPayload(): GuildMember {
@@ -136,7 +126,7 @@ describe('the per-dispatch event context', () => {
                 }
             }
             `,
-            (bot) => bot.attach('tagging', pluginBuilding(tag))
+            (bot) => bot.attach('tagging', pluginWithMembers({ tag }))
         );
 
         await events.processEvent('guildMemberAdd', [guildMemberPayload()]);
@@ -173,8 +163,10 @@ describe('the per-dispatch event context', () => {
                 publish = vi.spyOn(bot.bus, PublishDefault);
                 bot.attach(
                     'tagging',
-                    pluginBuilding(() => {
-                        throw new Error('boom');
+                    pluginWithMembers({
+                        tag: () => {
+                            throw new Error('boom');
+                        }
                     })
                 );
             }
@@ -200,11 +192,7 @@ describe('the per-dispatch event context', () => {
             }
             `,
             undefined,
-            (bot) =>
-                bot.attach(
-                    'tagging',
-                    pluginBuilding(() => 'tag')
-                )
+            (bot) => bot.attach('tagging', pluginWithMembers({ tag: () => 'tag' }))
         );
 
         await expect(loading).rejects.toMatchObject({ code: SeedcordErrorCode.CoreDuplicateName });
@@ -228,10 +216,7 @@ describe('the per-dispatch event context', () => {
             undefined,
             (bot) => {
                 publish = vi.spyOn(bot.bus, PublishDefault);
-                bot.attach(
-                    'tagging',
-                    pluginBuilding(() => 'tag')
-                );
+                bot.attach('tagging', pluginWithMembers({ tag: () => 'tag' }));
             }
         );
 
