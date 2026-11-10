@@ -1623,9 +1623,6 @@ importers:
       discord-api-types:
         specifier: ^0.38.52
         version: 0.38.57
-      strip-ansi:
-        specifier: ^7.2.0
-        version: 7.2.0
       type-fest:
         specifier: catalog:deps
         version: 5.10.0
