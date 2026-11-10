@@ -276,7 +276,7 @@ const messages = {
     [SeedcordErrorCode.PluginTasksDurationTooLong]: (key: string, duration: string) =>
         `${paint.bold('schedule()')} got ${quoted(duration)} for ${paint.sky(key)}, which ends after the last date a JavaScript ${paint.bold('Date')} can hold, in the year 275760. Pass a shorter duration as ${paint.bold('in')}.`,
     [SeedcordErrorCode.PluginTasksKeyTaken]: (key: string, loadedFrom: string) =>
-        `The class you passed has the task key ${paint.sky(key)}, but the task loaded under that key is a different class, from ${paint.path(loadedFrom)}. Pass the class that file exports, or give one of the two its own ${paint.bold('key')}.`,
+        `${paint.sky(key)} is the key of a different class, loaded from ${paint.path(loadedFrom)}. Pass that class, or give one of them its own ${paint.bold('key')}.`,
 
     [SeedcordErrorCode.CliCancelled]: () => 'Cancelled.',
 

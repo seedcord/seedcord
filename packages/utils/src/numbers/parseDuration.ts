@@ -24,8 +24,7 @@ type IsPositiveWhole<Value extends string> =
  * A duration string that {@link parseDuration} accepts, like `'30m'`, `'24h'`, or `'500ms'`. It's a
  * whole number above 0, followed by one of the units `ms`, `s`, `m`, `h`, or `d`.
  *
- * Use it to make your own function reject a bad duration at compile time. The example below shows
- * how. A call like `every('1.5h')` then fails to compile, and the error explains what a duration
+ * Use it to make your own function reject a bad duration at compile time. A call like `every('1.5h')` then fails to compile, and the error explains what a duration
  * looks like. A value typed as `string`, like one from `.env`, still compiles, so check it with
  * `parseDuration` at run time.
  *
@@ -72,5 +71,5 @@ export function parseDuration(input: string): number | null {
     if (!match) return null;
 
     const ms = Number(match[1]) * UNIT_MS[match[2] as DurationUnit];
-    return ms > 0 ? ms : null;
+    return Number.isSafeInteger(ms) && ms > 0 ? ms : null;
 }

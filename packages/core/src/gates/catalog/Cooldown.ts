@@ -4,10 +4,15 @@ import { parseDuration, type ValidDuration } from '@seedcord/utils';
 
 import { defineEffectGate } from '#gates/Gate';
 import { OnCooldown } from '#notices/index';
+import { buildKey } from '#src/rateLimiter/buildKey';
 
 import type { EffectGate, GateContextBase } from '#gates/Gate';
 import type { NoticeConstructor } from '#stops/Notice';
 import type { EpochMs } from '@seedcord/types';
+
+const SCOPE_ID_FIELD = { user: 'userId', guild: 'guildId', channel: 'channelId' } as const;
+
+type CooldownScope = keyof typeof SCOPE_ID_FIELD;
 
 /**
  * Options for {@link Cooldown}. `per` sets the bucket that the window applies to and `limit` the uses allowed per
@@ -33,11 +38,11 @@ import type { EpochMs } from '@seedcord/types';
  */
 export interface CooldownOptions {
     /**
-     * The bucket the cooldown window applies to. 'user' scopes by user ID (falls back to global when the source doesn't carry a user id). 'guild' scopes by guild ID (falls back to global if no guild), and 'channel' scopes by channel ID (falls back to global if no channel).
+     * The bucket the cooldown window applies to. 'user' scopes by user ID (falls back to global when the source doesn't have a user id). 'guild' scopes by guild ID (falls back to global if no guild), and 'channel' scopes by channel ID (falls back to global if no channel).
      *
      * @defaultValue `'user'`
      */
-    per?: 'user' | 'guild' | 'channel';
+    per?: CooldownScope;
     /**
      * Uses allowed inside one window before the gate refuses.
      *
@@ -52,12 +57,6 @@ const COOLDOWN = paint.bold('Cooldown()');
 
 // off-route ctxs don't have a route to key on. each Cooldown() call gets its own id to keep unrelated event handlers isolated
 let anonSeq = 0;
-
-function scopeValue(ctx: GateContextBase, per: 'user' | 'guild' | 'channel'): string {
-    if (per === 'guild') return ctx.guildId ?? 'global';
-    if (per === 'channel') return ctx.channelId ?? 'global';
-    return ctx.userId ?? 'global';
-}
 
 /**
  * Allows `limit` uses per window, scoped by `per`. A number `duration` is **seconds**, and a string is
@@ -109,15 +108,9 @@ export function Cooldown<const TDuration extends string>(
     duration: number | ValidDuration<TDuration>,
     options?: CooldownOptions
 ): EffectGate<GateContextBase, 'Cooldown'> {
-    let windowMs: number;
-    if (typeof duration === 'number') {
-        windowMs = duration * 1000;
-    } else {
-        const parsed = parseDuration(duration);
-        if (parsed === null) throw new SeedcordTypeError(SeedcordErrorCode.InvalidDuration, [COOLDOWN, duration]);
-        windowMs = parsed;
-    }
-    // a window of 0 or less never limits anything. NaN or Infinity never resets
+    const windowMs = typeof duration === 'number' ? duration * 1000 : parseDuration(duration);
+    if (windowMs === null) throw new SeedcordTypeError(SeedcordErrorCode.InvalidDuration, [COOLDOWN, duration]);
+    // a window of 0 or less never limits anything. NaN or Infinity never blocks
     if (!Number.isFinite(windowMs) || windowMs <= 0)
         throw new SeedcordRangeError(SeedcordErrorCode.InvalidDuration, [COOLDOWN, duration]);
 
@@ -125,9 +118,10 @@ export function Cooldown<const TDuration extends string>(
     // exactOptionalPropertyTypes rejects an explicit undefined key
     const window = options?.limit === undefined ? { windowMs } : { windowMs, limit: options.limit };
     const anonId = anonSeq++;
+    const settings = [per, `w${windowMs}`, `l${options?.limit ?? 1}`];
     // a durable store rebuilds the same window because a routed key is the same after a restart
     const keyOf = (ctx: GateContextBase): string =>
-        `cooldown:${ctx.dispatch.declaredRoute ?? `anon${anonId}`}:${per}:w${windowMs}:l${options?.limit ?? 1}:${scopeValue(ctx, per)}`;
+        buildKey('cooldown', ctx.dispatch.declaredRoute ?? `anon${anonId}`, ...settings, ctx[SCOPE_ID_FIELD[per]]);
 
     const Refusal = options?.notice ?? OnCooldown;
 
