@@ -45,7 +45,7 @@ For app code, the same rule applies inside that app: look at `tooling/ui/src` an
 
 ### 3. Use the project's `cn` for classNames (never `[...].join(' ')`)
 
-`cn` comes from `@seedcord/ui`. It wraps `clsx` + `tailwind-merge`, which:
+`cn` comes from `@seedcord/ui`. It re-exports the function from the `cn` NPM package, which:
 
 - Dedupes conflicting Tailwind utilities (`cn('px-2', 'px-4')` → `'px-4'`). Arrays joined by space carry dead conflicting classes.
 - Filters falsy values, so `cn('a', isActive && 'b')` works directly, with no ternary returning empty string and no `.filter(Boolean)` boilerplate.

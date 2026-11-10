@@ -1,4 +1,4 @@
-import { twMerge } from 'tailwind-merge';
+import { twMerge } from 'cn';
 
 type TwValue = string | false | null | undefined | TwValue[];
 
