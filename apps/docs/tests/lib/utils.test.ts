@@ -24,7 +24,7 @@ describe('tw', () => {
         expect(result).toBe('btn is-active rounded shadow');
     });
 
-    it('runs the result through tailwind-merge to dedupe conflicts', () => {
+    it('runs the result through cn to dedupe conflicts', () => {
         const result = tw`px-2 ${'px-4'}`;
         expect(result).toBe('px-4');
     });
@@ -36,7 +36,7 @@ describe('cn', () => {
         expect(result).toBe('px-2 py-1');
     });
 
-    it('dedupes conflicting tailwind utilities via tailwind-merge', () => {
+    it('dedupes conflicting tailwind utilities via cn', () => {
         expect(cn('px-2', 'px-4')).toBe('px-4');
     });
 

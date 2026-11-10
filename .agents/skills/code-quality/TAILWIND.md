@@ -40,7 +40,7 @@ export default config;
 
 ## Rule 1: Use `cn()` for dynamic classNames
 
-`cn` comes from `@seedcord/ui`. It wraps `clsx` + `tailwind-merge`:
+`cn` comes from `@seedcord/ui`. It re-exports the function from the `cn` NPM package:
 
 - Deduplicates conflicting Tailwind utilities: `cn('px-2', 'px-4')` → `'px-4'`.
 - Filters falsy values, so you don't need `.filter(Boolean)` or empty-string ternaries.

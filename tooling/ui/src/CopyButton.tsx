@@ -1,11 +1,11 @@
 'use client';
 
+import { cn } from 'cn';
 import { Check, Copy } from 'lucide-react';
 import { useCallback } from 'react';
 
 import { Button } from './Button';
 import { IconSwap } from './IconSwap';
-import { cn } from './lib/cn';
 import { useTimedToggle } from './lib/useTimedToggle';
 
 import type { ReactElement } from 'react';

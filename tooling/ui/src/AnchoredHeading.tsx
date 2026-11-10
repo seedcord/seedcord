@@ -1,5 +1,6 @@
+import { cn } from 'cn';
+
 import { CopyAnchorButton } from './CopyAnchorButton';
-import { cn } from './lib/cn';
 import { tw } from './lib/tw';
 
 import type { ComponentProps, ReactElement } from 'react';
