@@ -1,4 +1,4 @@
-import { describe, expect, it } from 'vitest';
+import { describe, expect, it } from 'vite-plus/test';
 
 import { DocKind } from '#src/DocKind';
 import { DocSearch } from '#src/DocSearch';

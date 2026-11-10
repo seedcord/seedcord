@@ -2,7 +2,7 @@ import { EventEmitter } from 'node:events';
 
 import { SlashCommandBuilder } from '@discordjs/builders';
 import { ApplicationCommandType, Routes } from 'discord-api-types/v10';
-import { describe, it, expect, vi } from 'vitest';
+import { describe, it, expect, vi } from 'vite-plus/test';
 
 import { Commands } from '#src/commands/CommandInjector';
 import { CommandRegistry } from '#src/commands/CommandRegistry';

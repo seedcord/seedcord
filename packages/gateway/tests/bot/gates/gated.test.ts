@@ -11,7 +11,7 @@ import {
     UserMenuRoute
 } from '@seedcord/core';
 import { GatedMetadataKey } from '@seedcord/core/internal';
-import { describe, expect, it } from 'vitest';
+import { describe, expect, it } from 'vite-plus/test';
 
 import { Gated } from '#bDecorators/Gated';
 import { EventHandler } from '#handlers/event';

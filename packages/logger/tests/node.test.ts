@@ -8,7 +8,7 @@ import { SeedcordErrorCode } from '@seedcord/errors';
 import { stripAnsi } from '@seedcord/utils';
 import { setBuiltFiles, setDevFiles } from '@seedcord/utils/internal';
 import { Envapter } from 'envapt';
-import { afterEach, describe, expect, it, vi } from 'vitest';
+import { afterEach, describe, expect, it, vi } from 'vite-plus/test';
 
 import { LoggerChannelRegistry } from '#src/LoggerChannelRegistry';
 import {
@@ -219,7 +219,7 @@ describe('winston sinks', () => {
     });
 
     it('the console sink stops writing once its stdout closes', async () => {
-        const child = spawn(process.execPath, ['--import', 'tsx', LOGS_TO_STDOUT], {
+        const child = spawn(process.execPath, ['--import', 'vite-plus/register', LOGS_TO_STDOUT], {
             stdio: ['ignore', 'pipe', 'pipe']
         });
         await once(child.stdout, 'data');

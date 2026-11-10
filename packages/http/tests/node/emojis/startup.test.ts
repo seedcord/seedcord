@@ -1,7 +1,7 @@
 import path from 'node:path';
 
 import { Routes } from 'discord-api-types/v10';
-import { beforeEach, describe, expect, it, vi } from 'vitest';
+import { beforeEach, describe, expect, it, vi } from 'vite-plus/test';
 
 import { Emojis } from '#src/emojis/EmojiInjector';
 import { Seedcord } from '#src/node/Seedcord';

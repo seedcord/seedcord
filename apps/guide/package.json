@@ -1,27 +1,22 @@
 {
     "name": "@seedcord/guide",
     "version": "0.0.3",
-    "type": "module",
-    "engines": {
-        "node": "^24.22.1 || >=26.12.1"
-    },
     "private": true,
+    "type": "module",
     "scripts": {
         "dev": "cross-env TWOSLASH=0 next dev",
         "dev:twoslash": "cross-env NODE_OPTIONS=--max-old-space-size=8192 next dev",
         "build": "cross-env NODE_OPTIONS=--max-old-space-size=8192 next build && node -e \"require('node:fs').copyFileSync('_headers', 'dist/_headers')\"",
-        "start": "pnpm dlx serve dist",
+        "start": "vp dlx serve dist",
         "preview": "wrangler dev",
         "deploy": "wrangler deploy",
         "types": "wrangler types workerd/worker-configuration.d.ts",
         "postinstall": "wrangler types workerd/worker-configuration.d.ts",
         "lint": "eslint '**/*.{ts,tsx}' --max-warnings=0 --cache --no-error-on-unmatched-pattern",
         "lint:fix": "eslint '**/*.{ts,tsx}' --fix --max-warnings=0 --cache --no-error-on-unmatched-pattern",
-        "fmt": "prettier --write '**/*.{ts,tsx,json,md,css}' 'content/**/*.mdx' --cache --no-error-on-unmatched-pattern",
-        "fmt:check": "prettier --check '**/*.{ts,tsx,json,md,css}' 'content/**/*.mdx' --cache --no-error-on-unmatched-pattern",
         "tc": "fumadocs-mdx && tsgo --noEmit && tsgo -p workerd --noEmit",
-        "test": "vitest run",
-        "test:watch": "vitest dev"
+        "test": "vp test run",
+        "test:watch": "vp test dev"
     },
     "dependencies": {
         "@seedcord/brand": "workspace:^",
@@ -55,7 +50,7 @@
         "@seedcord/plugin-kysely-postgres": "workspace:^",
         "@seedcord/plugin-mongoose": "workspace:^",
         "@seedcord/tsconfig": "workspace:^",
-        "@seedcord/vitest-config": "workspace:^",
+        "@seedcord/vite-config": "workspace:^",
         "@tailwindcss/postcss": "catalog:deps",
         "@testing-library/dom": "catalog:test",
         "@testing-library/jest-dom": "catalog:test",
@@ -95,5 +90,8 @@
         "vfile": "catalog:deps",
         "vitest": "catalog:test",
         "wrangler": "catalog:peer"
+    },
+    "engines": {
+        "node": "^24.22.1 || >=26.12.1"
     }
 }

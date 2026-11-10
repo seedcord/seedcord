@@ -1,6 +1,6 @@
 import { CustomId, InteractionKind, Subscribe, Subscriber } from '@seedcord/core';
 import { PublishDefault } from '@seedcord/core/internal';
-import { beforeEach, describe, expect, it } from 'vitest';
+import { beforeEach, describe, expect, it } from 'vite-plus/test';
 
 import { ButtonHandler } from '#handlers/interaction/components/ButtonHandler';
 import { SlashHandler } from '#handlers/interaction/SlashHandler';

@@ -1,7 +1,6 @@
-import { formatFilePath, importFiles } from '@seedcord/utils';
-import { Envapter } from 'envapt';
+import { displayPath } from '@seedcord/errors/internal';
 
-import { HmrModuleHandler } from '#hmr/HmrModuleHandler';
+import { FolderExports } from '#hmr/FolderExports';
 
 import type { AnyMiddlewareCtor } from '#decorators/middleware';
 import type { MiddlewareRegistry } from './MiddlewareRegistry';
@@ -13,7 +12,7 @@ interface LoadedUnit {
     readonly from: string;
 }
 
-interface HandlerLoaderOptions<Handler, Middleware extends AnyMiddlewareCtor, Key extends string, Artifacts> {
+interface HandlerLoaderOptions<Handler, Middleware extends AnyMiddlewareCtor, Key extends string> {
     readonly handlersDir: string;
     readonly middlewaresDir: string | undefined;
     readonly middlewares: MiddlewareRegistry<Middleware, Key>;
@@ -22,90 +21,61 @@ interface HandlerLoaderOptions<Handler, Middleware extends AnyMiddlewareCtor, Ke
     isMiddleware(value: unknown): value is Middleware;
     // returns whether the class declared anything to store
     storeHandler(handler: Handler, from: string): boolean;
-    removeHandler(handler: Handler, artifacts?: Artifacts): void;
-    artifactsOf(handler: Handler): Artifacts;
+    removeHandler(handler: Handler): void;
 }
 
-export class HandlerLoader<
-    Handler extends { name: string },
-    Middleware extends AnyMiddlewareCtor,
-    Key extends string,
-    Artifacts
-> {
+export class HandlerLoader<Handler extends { name: string }, Middleware extends AnyMiddlewareCtor, Key extends string> {
     public readonly loadedHandlers: LoadedUnit[] = [];
     public readonly loadedMiddlewares: LoadedUnit[] = [];
 
     private initialLoad = false;
-    private readonly hmr?: HmrModuleHandler<Handler, Middleware, Artifacts>;
+    private readonly handlerFiles: FolderExports<Handler>;
+    private readonly middlewareFiles?: FolderExports<Middleware>;
 
-    constructor(private readonly options: HandlerLoaderOptions<Handler, Middleware, Key, Artifacts>) {
-        if (!Envapter.isDevelopment && !Envapter.isTest) return;
-
+    constructor(private readonly options: HandlerLoaderOptions<Handler, Middleware, Key>) {
         const { handlersDir, middlewaresDir, middlewares, logger } = options;
-        this.hmr = new HmrModuleHandler({
-            handlers: {
-                dir: handlersDir,
-                is: (value): value is Handler => options.isHandler(value),
-                register: (handler, file) => this.registerHandler(handler, file),
-                unregister: (handler, artifacts) => options.removeHandler(handler, artifacts),
-                getArtifacts: (handler) => options.artifactsOf(handler)
-            },
-            ...(middlewaresDir && {
-                middlewares: {
-                    dir: middlewaresDir,
-                    is: (value): value is Middleware => options.isMiddleware(value),
-                    register: (middleware, file) => this.registerMiddleware(middleware, file),
-                    unregister: (middleware) => middlewares.unregister(middleware)
-                }
-            }),
+        this.handlerFiles = new FolderExports({
+            dir: handlersDir,
+            exclude: middlewaresDir ? [middlewaresDir] : [],
+            is: (value): value is Handler => options.isHandler(value),
+            register: (handler, file) => this.registerHandler(handler, file),
+            unregister: (handler) => options.removeHandler(handler),
+            logger
+        });
+        if (!middlewaresDir) return;
+        this.middlewareFiles = new FolderExports({
+            dir: middlewaresDir,
+            is: (value): value is Middleware => options.isMiddleware(value),
+            register: (middleware, file) => this.registerMiddleware(middleware, file),
+            unregister: (middleware) => middlewares.unregister(middleware),
             logger
         });
     }
 
     public async load(): Promise<void> {
-        const { handlersDir, middlewaresDir } = this.options;
         this.initialLoad = true;
         this.loadedHandlers.length = 0;
         this.loadedMiddlewares.length = 0;
         try {
-            if (middlewaresDir) await this.loadMiddlewares(middlewaresDir);
-            await this.loadHandlers(handlersDir);
+            await this.middlewareFiles?.load();
+            await this.handlerFiles.load();
         } finally {
             this.initialLoad = false;
         }
     }
 
     public async onHmr(event: HmrUpdateEvent): Promise<void> {
-        await this.hmr?.handle(event);
+        await this.middlewareFiles?.handle(event);
+        await this.handlerFiles.handle(event);
     }
 
-    private async loadHandlers(dir: string): Promise<void> {
-        for await (const { fullPath, relativePath, imported } of importFiles(dir)) {
-            for (const value of Object.values(imported)) {
-                if (!this.options.isHandler(value)) continue;
-                this.registerHandler(value, relativePath);
-                this.hmr?.trackHandler(fullPath, value);
-            }
-        }
-    }
-
-    private async loadMiddlewares(dir: string): Promise<void> {
-        for await (const { fullPath, relativePath, imported } of importFiles(dir)) {
-            for (const value of Object.values(imported)) {
-                if (!this.options.isMiddleware(value)) continue;
-                this.registerMiddleware(value, relativePath);
-                this.hmr?.trackMiddleware(fullPath, value);
-            }
-        }
-    }
-
-    private registerHandler(handler: Handler, relativePath: string): void {
-        const from = formatFilePath(relativePath);
+    private registerHandler(handler: Handler, file: string): void {
+        const from = displayPath(file);
         if (!this.options.storeHandler(handler, from)) return;
         if (this.initialLoad) this.loadedHandlers.push({ name: handler.name, from });
     }
 
-    private registerMiddleware(middleware: Middleware, relativePath: string): void {
+    private registerMiddleware(middleware: Middleware, file: string): void {
         const registration = this.options.middlewares.register(middleware);
         if (!registration || !this.initialLoad) return;
 
@@ -115,7 +85,7 @@ export class HandlerLoader<
             : registration.priority;
         this.loadedMiddlewares.push({
             name: `${middleware.name} (${String(scope)})`,
-            from: formatFilePath(relativePath)
+            from: displayPath(file)
         });
     }
 }

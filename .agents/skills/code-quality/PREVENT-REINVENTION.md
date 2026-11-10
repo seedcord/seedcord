@@ -45,7 +45,7 @@ For app code, the same rule applies inside that app: look at `tooling/ui/src` an
 
 ### 3. Use the project's `cn` for classNames (never `[...].join(' ')`)
 
-`cn` comes from `@seedcord/ui`. It wraps `clsx` + `tailwind-merge`, which:
+`cn` comes from `@seedcord/ui`. It re-exports the function from the `cn` NPM package, which:
 
 - Dedupes conflicting Tailwind utilities (`cn('px-2', 'px-4')` → `'px-4'`). Arrays joined by space carry dead conflicting classes.
 - Filters falsy values, so `cn('a', isActive && 'b')` works directly, with no ternary returning empty string and no `.filter(Boolean)` boilerplate.
@@ -69,7 +69,7 @@ If the helper would be reused across apps (`docs` + `guide` + `home`), it belong
 Before creating any file, look at sibling packages. The conventions are consistent across `packages/*` and `tooling/*`:
 
 - Tests live in `<package>/tests/` mirroring `src/`. Do not put tests in `src/**/*.test.ts`.
-- Vitest is the runner (`vitest run` / `vitest dev`). Coverage runs via `vitest run --coverage`.
+- Vitest is the runner (`vp test run` / `vp test dev`). Coverage runs via `vp test run --coverage`.
 - Lint and tc scripts cover both `src/**` and `tests/**`.
 - ESLint configs at the package root as `eslint.config.ts` (flat config), composed from `@seedcord/eslint-config`.
 - TypeScript configs extend `@seedcord/tsconfig` and never cross package source-path boundaries (no `paths` or `include` reaching into another package's `src`).
@@ -82,7 +82,7 @@ If you find yourself adding a test in `src/`, putting setup in a non-conventiona
 
 If you're tempted to add a bundler `external` block, a custom prettier plugin, a "performance" optimization, a config tweak, a feature flag, a backward-compat shim, an abstraction, or anything else that wasn't in the task description: **don't.** Scope discipline is non-negotiable.
 
-If you genuinely think the addition is needed, surface it as a question to the user _before_ implementing. "I'm about to add X to tsdown.config because Y. Does that match what you want?" is cheap. Adding it silently and getting reviewed at PR time is expensive, because the diff buries the question in 200 lines of legitimate changes and the user can't tell what's their requirement and what's your improvisation.
+If you genuinely think the addition is needed, surface it as a question to the user _before_ implementing. "I'm about to add X to the `pack` block in vite.config.ts because Y. Does that match what you want?" is cheap. Adding it silently and getting reviewed at PR time is expensive, because the diff buries the question in 200 lines of legitimate changes and the user can't tell what's their requirement and what's your improvisation.
 
 ### 7. Are you using a new npm package?
 
@@ -188,12 +188,12 @@ If no existing surface fits and there is no clean shared extension path, stop an
     - Plugin-shaped behavior: a package under `plugins/`
     - CLI command / Ink component for the CLI: `cli/seedcord`
     - Doc-extraction or doc-rendering logic: `@seedcord/docs-generator` / `@seedcord/docs-engine`
-2. **Add the export** to the relevant `src/index.ts` (and `internal.index.ts` if it's an internal-only surface). Update the package.json `exports` field and the `tsdown.config.ts` entry for a new entry point.
-3. **Rebuild the package** (`pnpm -C packages/<name> build`) so consumers see the new export.
+2. **Add the export** to the relevant `src/index.ts` (and `internal.index.ts` if it's an internal-only surface). Update the package.json `exports` field and the `pack` entry in `vite.config.ts` for a new entry point.
+3. **Rebuild the package** (`vp -C packages/<name> run build`) so consumers see the new export.
 4. **Use it from the call site.** Inline duplication of the new helper defeats the point.
 5. **Document the rationale inline** only if the addition exists for a non-obvious reason (a specific Discord.js quirk, a runtime constraint, a license requirement). Otherwise the name is the documentation.
 
-If the change is published-package-affecting, also add a `changeset` (`pnpm cs`) so the version bump and changelog land with the code.
+If the change is published-package-affecting, also add a `changeset` (`vp run cs`) so the version bump and changelog land with the code.
 
 ---
 
@@ -210,6 +210,6 @@ Before opening a PR, ask:
 7. For every version pin I left untouched citing "compatibility," did I cite the upstream peer-dep range?
 8. Did I delete the comments that just restate the code below them?
 9. If the change is public-API-affecting, did I add a `changeset`?
-10. Does `pnpm check --filter=<pkg>` exit cleanly?
+10. Does `vp run check --filter=<pkg>` exit cleanly?
 
 If any answer is "no" or "I didn't check," the PR is not ready.

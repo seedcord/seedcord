@@ -1,5 +1,5 @@
 import { SeedcordErrorCode } from '@seedcord/errors';
-import { describe, expect, it } from 'vitest';
+import { describe, expect, it } from 'vite-plus/test';
 
 import { PurgeMode } from '#commands/commands/purge/PurgeMode';
 import { GLOBAL_SCOPE } from '#commands/commands/scope';

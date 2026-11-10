@@ -3,7 +3,7 @@ import { join } from 'node:path';
 
 import { HostPluginKeys } from '@seedcord/types/internal';
 import { bindings } from 'cf/config';
-import { describe, expect, it } from 'vitest';
+import { describe, expect, it } from 'vite-plus/test';
 
 import { openProjectWithSteps } from '#core/config/openProjectWithSteps';
 import { ProjectLoader } from '#core/config/ProjectLoader';

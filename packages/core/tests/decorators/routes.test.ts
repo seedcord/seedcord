@@ -1,5 +1,5 @@
 import { CustomId } from '@seedcord/custom-id';
-import { describe, expect, expectTypeOf, it } from 'vitest';
+import { describe, expect, expectTypeOf, it } from 'vite-plus/test';
 
 import { ComponentDefsKey } from '#customId/routing';
 import {

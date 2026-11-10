@@ -8,7 +8,7 @@ import { REST } from '@discordjs/rest';
 import { BuilderComponent, RegisterCommand } from '@seedcord/core';
 import { SeedcordBrand } from '@seedcord/types/internal';
 import { ApplicationCommandType, Routes } from 'discord-api-types/v10';
-import { onTestFinished, vi } from 'vitest';
+import { onTestFinished, vi } from 'vite-plus/test';
 
 import { Project } from '#core/project/Project';
 import { realPath } from '#core/project/realPath';

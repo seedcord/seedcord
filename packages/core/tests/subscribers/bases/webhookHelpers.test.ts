@@ -1,4 +1,4 @@
-import { describe, expect, it } from 'vitest';
+import { describe, expect, it } from 'vite-plus/test';
 
 import { errorReport, jsonAttachment } from '#subscribers/bases/webhookHelpers';
 
@@ -33,6 +33,28 @@ describe('errorReport', () => {
         error.stack = 'Error: outer';
 
         expect(errorReport(error)).not.toContain('```');
+    });
+
+    it.each([
+        ['an error', (cause: Error): Error => new Error('outer', { cause })],
+        ['an aggregate', (cause: Error): Error => new AggregateError([new Error('member')], 'outer', { cause })]
+    ])('keeps the cause of %s when the parent stack fills the budget', (_label, wrap) => {
+        const error = wrap(new Error('the cause'));
+        error.stack = 'x'.repeat(2000);
+
+        const report = errorReport(error);
+
+        expect(report.length).toBeLessThanOrEqual(1800);
+        expect(report).toContain('Error: the cause');
+    });
+
+    it('shows the whole cause when the parent leaves room for it', () => {
+        const cause = new Error('db down');
+        cause.stack = `${'y'.repeat(1200)}END`;
+        const error = new Error('wrapper', { cause });
+        error.stack = 'Error: wrapper';
+
+        expect(errorReport(error)).toContain('END');
     });
 
     it('reports every aggregate member under a numbered heading', () => {

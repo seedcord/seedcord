@@ -1,7 +1,7 @@
 import path from 'node:path';
 
 import { Logger, LoggerChannelRegistry } from '@seedcord/logger';
-import { describe, expect, it } from 'vitest';
+import { describe, expect, it } from 'vite-plus/test';
 
 import { Seedcord } from '#src/node/Seedcord';
 import { Plugin } from '#src/Plugin';

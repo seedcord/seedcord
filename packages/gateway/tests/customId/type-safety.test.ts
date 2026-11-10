@@ -1,5 +1,5 @@
 import { CustomId, ButtonRoute, RoleMenuRoute, UserMenuRoute } from '@seedcord/core';
-import { describe, expectTypeOf, it } from 'vitest';
+import { describe, expectTypeOf, it } from 'vite-plus/test';
 
 import { ButtonHandler, UserMenuHandler } from '#handlers/interaction/components';
 

@@ -5,7 +5,7 @@ import { PassThrough } from 'node:stream';
 
 import { SeedcordErrorCode } from '@seedcord/errors';
 import { HostShutdown, HostStartup } from '@seedcord/types/internal';
-import { afterEach, beforeEach, describe, expect, it, onTestFinished, vi, type Mock } from 'vitest';
+import { afterEach, beforeEach, describe, expect, it, onTestFinished, vi, type Mock } from 'vite-plus/test';
 
 import { DevRunner } from '#commands/dev/DevRunner';
 import { runPlain } from '#commands/dev/runPlain';

@@ -2,7 +2,7 @@ import { mkdir, mkdtemp, rm, writeFile } from 'node:fs/promises';
 import { dirname, join } from 'node:path';
 import { pathToFileURL } from 'node:url';
 
-import { afterAll, describe, expect, it, vi } from 'vitest';
+import { afterAll, describe, expect, it, vi } from 'vite-plus/test';
 
 import { ServerDevRuntime } from '#commands/dev/runtime/ServerDevRuntime';
 
@@ -13,7 +13,7 @@ import type { DevEvent } from '#commands/dev/runtime/events';
 
 const SCRATCH_ROOT = join(import.meta.dirname, '.hmr-fixture');
 
-// imports by file url, the same way HmrModuleHandler loads a changed handler
+// imports by file url, the same way FolderExports loads a changed file
 const ENTRY = 'export async function read(url: string): Promise<string> { return (await import(url)).value; }\n';
 
 describe('dev runtime hot reload', () => {

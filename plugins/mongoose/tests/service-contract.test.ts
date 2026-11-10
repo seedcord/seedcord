@@ -1,6 +1,6 @@
 import { SeedcordErrorCode } from '@seedcord/errors';
 import mongoose from 'mongoose';
-import { describe, it, expect, expectTypeOf } from 'vitest';
+import { describe, it, expect, expectTypeOf } from 'vite-plus/test';
 
 import { RegisterMongooseService } from '#src/decorators/RegisterMongooseService';
 import { MongooseService } from '#src/MongooseService';

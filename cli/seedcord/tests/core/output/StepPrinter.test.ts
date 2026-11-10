@@ -2,7 +2,7 @@ import { stripVTControlCharacters } from 'node:util';
 
 import { paint } from '@seedcord/errors';
 import { Logger, LoggerChannelRegistry } from '@seedcord/logger';
-import { afterEach, beforeEach, describe, expect, it } from 'vitest';
+import { afterEach, beforeEach, describe, expect, it } from 'vite-plus/test';
 
 import { levelMark } from '#core/output/levelMark';
 import { StepPrinter } from '#core/output/StepPrinter';

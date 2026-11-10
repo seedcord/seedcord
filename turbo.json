@@ -114,13 +114,6 @@
         "seedcord#test": {
             "dependsOn": ["^build", "seedcord#build"]
         },
-        "fmt": {
-            "dependsOn": ["@seedcord/eslint-config#build"],
-            "cache": false
-        },
-        "fmt:check": {
-            "dependsOn": ["@seedcord/eslint-config#build"]
-        },
         "clean": {
             "cache": false
         }

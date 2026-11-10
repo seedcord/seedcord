@@ -4,7 +4,7 @@ node_modules/
 # debug
 npm-debug.*
 
-# pnpm release:preview
+# vp run release:preview
 /release.md
 
 # local env files
@@ -104,3 +104,4 @@ Thumbs.db
 
 # Turborepo
 .turbo
+.vitest/

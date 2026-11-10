@@ -3,7 +3,7 @@ import { setTimeout } from 'node:timers/promises';
 
 import { shutdownOf, StartupPhase } from '@seedcord/core/node/internal';
 import { SeedcordErrorCode } from '@seedcord/errors';
-import { describe, expect, it } from 'vitest';
+import { describe, expect, it } from 'vite-plus/test';
 
 import { Seedcord } from '#src/node/Seedcord';
 import { signedRequest } from '#tests/helpers/ed25519';

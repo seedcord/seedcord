@@ -1,5 +1,5 @@
 import { MemoryDriver } from '@seedcord/core';
-import { describe, it, expect } from 'vitest';
+import { describe, it, expect } from 'vite-plus/test';
 
 import { Seedcord } from '#src/Seedcord';
 

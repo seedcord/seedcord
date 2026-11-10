@@ -1,6 +1,6 @@
 import { Logger, LoggerChannelRegistry } from '@seedcord/logger';
 import { Envapter, PortableSource } from 'envapt';
-import { beforeEach, describe, expect, it } from 'vitest';
+import { beforeEach, describe, expect, it } from 'vite-plus/test';
 
 import { Seedcord } from '#src/edge/Seedcord';
 import { registerBakedIds } from '#tests/helpers/bakedIds';

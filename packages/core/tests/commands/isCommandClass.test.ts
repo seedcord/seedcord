@@ -1,4 +1,4 @@
-import { describe, expect, it } from 'vitest';
+import { describe, expect, it } from 'vite-plus/test';
 
 import { BuilderComponent } from '#components/Component';
 import { RegisterCommand } from '#decorators/Command';

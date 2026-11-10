@@ -1,9 +1,9 @@
 'use client';
 
+import { cn } from 'cn';
 import { AnimatePresence, m } from 'motion/react';
 
 import { Icon } from './Icon';
-import { cn } from './lib/cn';
 import { easeOutStrong } from './lib/motion';
 
 import type { LucideIcon } from 'lucide-react';

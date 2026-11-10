@@ -2,7 +2,7 @@ import { mkdir, mkdtemp, rm, writeFile } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import path from 'node:path';
 
-import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vite-plus/test';
 
 import { workspaceIndexLoader } from '#remote/workspace';
 
@@ -48,7 +48,7 @@ describe('the workspace index', () => {
         await rm(repo, { recursive: true, force: true });
     });
 
-    it('reads the index pnpm docs:local wrote', async () => {
+    it('reads the index vp run docs:local wrote', async () => {
         await writeLocalIndex();
 
         const index = await workspaceIndexLoader().load();

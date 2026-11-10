@@ -1,7 +1,7 @@
 import { Box } from 'ink';
 import { render } from 'ink-testing-library';
 import React, { createRef } from 'react';
-import { describe, expect, it } from 'vitest';
+import { describe, expect, it } from 'vite-plus/test';
 
 import { FilterPanel } from '#ui/components/primitives/FilterPanel';
 import { INITIAL_CURSOR } from '#ui/filterCursor';

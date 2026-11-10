@@ -2,7 +2,7 @@ import { mkdirSync, mkdtempDisposableSync, symlinkSync, writeFileSync } from 'no
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 
-import { onTestFinished } from 'vitest';
+import { onTestFinished } from 'vite-plus/test';
 
 import { ProjectLoader } from '#core/config/ProjectLoader';
 import { realPath } from '#core/project/realPath';

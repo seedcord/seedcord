@@ -31,7 +31,7 @@ import type { HandlerConstructor, InteractionMiddlewareConstructor } from '#hand
 import type { Core } from '#interfaces/Core';
 import type { ValidInteractionTypes } from '#src/handlers/interactionTypes';
 import type { MiddlewareKind } from '@seedcord/core';
-import type { ContextMenuLeaves, Initializeable, RegisteredRoute, RouteMaps } from '@seedcord/core/internal';
+import type { ContextMenuLeaves, Initializeable, RouteMaps } from '@seedcord/core/internal';
 import type { InFlight } from '@seedcord/core/node/internal';
 import type { CustomIdMatcher, HmrAware, HmrUpdateEvent } from '@seedcord/types';
 import type { Interaction } from 'discord.js';
@@ -54,12 +54,7 @@ export class InteractionDispatcher implements Initializeable, HmrAware {
     private readonly keysToIgnore = new Set<CustomIdMatcher>();
     private readonly middlewares = new MiddlewareRegistry<InteractionMiddlewareConstructor>(interactionMiddleware);
 
-    private readonly loader: HandlerLoader<
-        HandlerConstructor,
-        InteractionMiddlewareConstructor,
-        MiddlewareKind,
-        RegisteredRoute<HandlerConstructor>[]
-    >;
+    private readonly loader: HandlerLoader<HandlerConstructor, InteractionMiddlewareConstructor, MiddlewareKind>;
 
     constructor(
         protected core: Core,
@@ -93,8 +88,7 @@ export class InteractionDispatcher implements Initializeable, HmrAware {
             isHandler: (value): value is HandlerConstructor => this.isHandlerClass(value),
             isMiddleware: (value): value is InteractionMiddlewareConstructor => this.isMiddlewareClass(value),
             storeHandler: (ctor, from) => this.routes.register(ctor, from),
-            removeHandler: (ctor, routes) => this.routes.unregister(ctor, routes),
-            artifactsOf: (ctor) => this.routes.routesOf(ctor)
+            removeHandler: (ctor) => this.routes.unregister(ctor)
         });
     }
 

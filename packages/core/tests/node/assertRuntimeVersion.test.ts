@@ -1,7 +1,7 @@
 import { createRequire } from 'node:module';
 
 import { SeedcordErrorCode } from '@seedcord/errors';
-import { afterEach, describe, expect, it, vi } from 'vitest';
+import { afterEach, describe, expect, it, vi } from 'vite-plus/test';
 
 import { assertDeclaredRuntime } from '#node/assertRuntimeVersion';
 import { TestServerHost } from '#tests/utils/TestServerHost';

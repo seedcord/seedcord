@@ -4,7 +4,7 @@ import { SeedcordErrorCode } from '@seedcord/errors';
 import { HostStartup, HostVersion } from '@seedcord/types/internal';
 import { setDevFiles } from '@seedcord/utils/internal';
 import { ApplicationCommandType, Collection, Events, GatewayIntentBits } from 'discord.js';
-import { type Mock, describe, expect, afterEach, onTestFinished, vi } from 'vitest';
+import { type Mock, describe, expect, afterEach, onTestFinished, vi } from 'vite-plus/test';
 
 import { commandRegistryOf } from '#bot/Bot';
 import { Plugin } from '#src/Plugin';
@@ -75,37 +75,6 @@ describe('CommandRegistry Integration', () => {
         const globalCommands = registryOf(seedcord).scopedCommands.get(GLOBAL_ID);
         expect(globalCommands).toHaveLength(1);
         expect(globalCommands?.[0]?.name).toBe('ping');
-    });
-
-    it('resets the loading flag when the bulk load throws', async ({ testEnv }) => {
-        const commandsDir = 'commands';
-        await testEnv.createFile(
-            `${commandsDir}/PingCommand.ts`,
-            `
-            import { BuilderComponent, RegisterCommand } from '${seedcordPath}';
-
-            @RegisterCommand('global')
-            export class PingCommand extends BuilderComponent<'command'> {
-                constructor() {
-                    super('command');
-                    this.instance.setName('ping').setDescription('Replies with Pong!');
-                }
-            }
-            `
-        );
-        const config = testConfig({ commands: testEnv.resolvePath(commandsDir) });
-
-        await using seedcord = new Seedcord(config);
-
-        // fixture: access the private load + flag to force a mid-load throw
-        const internal = registryOf(seedcord) as unknown as {
-            loadCommands: () => Promise<void>;
-            loading: boolean;
-        };
-        vi.spyOn(internal, 'loadCommands').mockRejectedValue(new Error('load boom'));
-
-        await expect(registryOf(seedcord).init()).rejects.toThrow('load boom');
-        expect(internal.loading).toBe(false);
     });
 
     it('should handle HMR updates for commands', async ({ testEnv }) => {

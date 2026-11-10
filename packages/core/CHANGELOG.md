@@ -1,5 +1,30 @@
 # @seedcord/core
 
+## 0.13.0
+
+### 💥 Breaking
+
+- `HmrModuleHandler` is now `FolderExports`, exported from `@seedcord/core` and both transport packages, and `@seedcord/core/hmr` has been removed. Its `load()` replaces the startup loop you wrote with `importFiles` and `trackHandler()`, so your plugin's `init()` becomes one call. Each instance covers one folder, and `unregister` receives only the class since `getArtifacts` no longer exists. ([#444](https://github.com/seedcord/seedcord/pull/444))
+
+### 🩹 Patch
+
+- `bus.on()`, `bus.once()` and `ILogSink.onLog` now take a callback that can return anything, so an async one no longer trips `no-misused-promises` and a one-liner like `(data) => seen.push(data)` still compiles. ([#442](https://github.com/seedcord/seedcord/pull/442))
+- Fixed an edge bot failing every request after a plugin's `init()` timed out. The bot now starts again on the first request after that init finishes, or after 25 seconds if it never does. ([#442](https://github.com/seedcord/seedcord/pull/442))
+- Fixed a subscriber, handler, or command that a barrel file re-exports registering once per file. A subscriber ran twice per event, and deleting the barrel under `seedcord dev` unregistered it while its own file still exported it. ([#444](https://github.com/seedcord/seedcord/pull/444))
+- Fixed two quick saves under `seedcord dev` leaving an old copy of a handler or middleware registered next to the new one, so both ran. ([#444](https://github.com/seedcord/seedcord/pull/444))
+- Fixed `set()` and `update()` on a kv collection throwing a raw `TypeError` for a record with a circular reference. They now throw a **SeedcordTypeError** with `CoreKvUnserializable` that says which key it was. ([`1a2fb98`](https://github.com/seedcord/seedcord/commit/1a2fb984ea72f5f10c9b255eec503c3cd763be5c))
+- Fixed `kv.get()` and `entries()` throwing `Unexpected end of JSON input` when they read a key while the same process was writing it through unstorage's fs driver. ([#442](https://github.com/seedcord/seedcord/pull/442))
+- Fixed subscribers and async `bus.on()` listeners on an edge bot getting cut off when the request ended, which lost `WebhookLog` cards and error reports. The bot now keeps each request open until that work finishes, including work that a startup task publishes. ([#442](https://github.com/seedcord/seedcord/pull/442))
+- `WebhookLog` cards now go through the bot's own REST client, so the REST options you set for the bot apply to them too. ([#442](https://github.com/seedcord/seedcord/pull/442))
+
+#### 📦 Seedcord packages
+
+- `@seedcord/types` 0.16.1 → 0.16.2
+- `@seedcord/logger` 0.6.0 → 0.6.1
+- `@seedcord/event-emitter` 0.2.0 → 0.2.1
+- `@seedcord/errors` 0.15.0 → 0.15.1
+- `@seedcord/utils` 0.9.1 → 0.9.2
+
 ## 0.12.1
 
 ### 🩹 Patch

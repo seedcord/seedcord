@@ -1,5 +1,5 @@
 import { ChannelType } from 'discord-api-types/v10';
-import { describe, it, expect } from 'vitest';
+import { describe, it, expect } from 'vite-plus/test';
 
 import { renderAugmentation } from '#commands/codegen/renderAugmentation';
 

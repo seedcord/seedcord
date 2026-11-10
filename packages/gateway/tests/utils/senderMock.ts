@@ -1,5 +1,5 @@
 import { DispatchContext } from '@seedcord/core/internal';
-import { vi } from 'vitest';
+import { vi } from 'vite-plus/test';
 
 import { ReplySender } from '#bot/ReplySender';
 

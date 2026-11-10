@@ -10,7 +10,7 @@
 4. Build the new sections first. Load the `frontend-iteration` skill. The page itself is the preview, so check each section in Chrome through chrome-devtools-mcp at 1440px and at 390px, and confirm nothing scrolls sideways.
 5. Show the maintainer, fix what they flag, then do the smaller edits: the hero line, the marquee, the feature grid, the section cards, and the meta description.
 6. Test the link preview card in Discord. See below.
-7. Review your own diff twice, then run `tc`, `eslint --max-warnings=0`, and `pnpm react-doctor --verbose`.
+7. Review your own diff twice, then run `tc`, `eslint --max-warnings=0`, and `vp run react-doctor`.
 
 Done when the maintainer has seen every section at both widths, the card renders in Discord, and the gates are clean.
 

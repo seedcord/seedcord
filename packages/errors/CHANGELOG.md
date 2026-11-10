@@ -1,5 +1,11 @@
 # @seedcord/errors
 
+## 0.15.1
+
+### 🩹 Patch
+
+- Fixed `set()` and `update()` on a kv collection throwing a raw `TypeError` for a record with a circular reference. They now throw a **SeedcordTypeError** with `CoreKvUnserializable` that says which key it was. ([`1a2fb98`](https://github.com/seedcord/seedcord/commit/1a2fb984ea72f5f10c9b255eec503c3cd763be5c))
+
 ## 0.15.0
 
 ### 💥 Breaking

@@ -15,7 +15,7 @@ import {
     it,
     onTestFinished,
     vi
-} from 'vitest';
+} from 'vite-plus/test';
 
 import { HmrPlugin } from '#commands/dev/runtime/HmrPlugin';
 import { RestartFiles } from '#commands/dev/runtime/RestartFiles';

@@ -3,7 +3,7 @@ import { tmpdir } from 'node:os';
 import path from 'node:path';
 
 import { ESLint } from 'eslint';
-import { expect, it } from 'vitest';
+import { expect, it } from 'vite-plus/test';
 
 import createConfig from '#src/index';
 

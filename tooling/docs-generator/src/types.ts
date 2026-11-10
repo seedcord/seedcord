@@ -20,7 +20,7 @@ export interface PackageManifest {
     exports?: Record<string, ExportCondition>;
 }
 
-/** One documented import path, `.` for the package root and `./hmr` for a subpath. */
+/** One documented import path, `.` for the package root and `./plugin` for a subpath. */
 export interface DocEntryPoint {
     subpath: string;
     /** The `exports` key that selects this build, like `workerd`. Absent for the default build. */

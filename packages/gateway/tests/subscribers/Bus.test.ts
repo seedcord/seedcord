@@ -1,5 +1,5 @@
 import { HmrManager, PublishDefault, RegisteredCount, SubscriberLoader } from '@seedcord/core/internal';
-import { describe, expect, afterEach, vi } from 'vitest';
+import { describe, expect, afterEach, vi } from 'vite-plus/test';
 
 import { Seedcord } from '#src/Seedcord';
 import { seedcordPath } from '#tests/utils/source-path';
@@ -91,6 +91,21 @@ describe('Bus Integration', () => {
         expect(seedcord.bus[RegisteredCount]).toBe(DEFAULT_SUBSCRIBERS + 1);
         publish();
         await vi.waitFor(() => expect(runs).toEqual(['after']));
+    });
+
+    it('runs a subscriber once per event when a barrel re-exports it', async ({ testEnv }) => {
+        const runs: string[] = [];
+        Reflect.set(globalThis, RUNS_SLOT, runs);
+        using _runsSlot = { [Symbol.dispose]: () => Reflect.deleteProperty(globalThis, RUNS_SLOT) };
+        await testEnv.createFile('subscribers/LogSubscriber.ts', fixtureRecording('run'));
+        await testEnv.createFile('subscribers/index.ts', `export { LogSubscriber } from './LogSubscriber';\n`);
+
+        await using seedcord = new Seedcord(testConfig({ subscribers: testEnv.resolvePath('subscribers') }));
+        await loaderOf(seedcord).init();
+        // justified: the fixture subscriber ignores the payload
+        seedcord.bus[PublishDefault]('anyInteraction', { interaction: {} as Interaction });
+
+        await vi.waitFor(() => expect(runs).toEqual(['run']));
     });
 
     it('registers the Bus with the HMR manager, so an update dispatch reaches it', async ({ testEnv }) => {

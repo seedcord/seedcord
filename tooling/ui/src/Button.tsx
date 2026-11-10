@@ -1,8 +1,8 @@
 'use client';
 
 import { Slot } from '@radix-ui/react-slot';
+import { cn } from 'cn';
 
-import { cn } from './lib/cn';
 import { tw } from './lib/tw';
 
 import type { ButtonHTMLAttributes, ReactElement, Ref } from 'react';

@@ -1,8 +1,7 @@
 'use client';
 
+import { cn } from 'cn';
 import { useLayoutEffect, useRef } from 'react';
-
-import { cn } from './lib/cn';
 
 import type { ReactElement, ReactNode } from 'react';
 

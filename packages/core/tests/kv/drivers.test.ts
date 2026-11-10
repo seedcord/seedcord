@@ -8,7 +8,7 @@ import { createStorage } from 'unstorage';
 import fsDriver from 'unstorage/drivers/fs';
 import { createStorage as createStorageV1 } from 'unstorage-v1';
 import fsDriverV1 from 'unstorage-v1/drivers/fs';
-import { afterAll, afterEach, beforeEach, describe, expect, expectTypeOf, it, vi } from 'vitest';
+import { afterAll, afterEach, beforeEach, describe, expect, expectTypeOf, it, vi } from 'vite-plus/test';
 
 import { KeyvDriver } from '#src/kv/KeyvDriver';
 import { Kv } from '#src/kv/Kv';

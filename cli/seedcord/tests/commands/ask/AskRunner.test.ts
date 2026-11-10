@@ -3,7 +3,7 @@ import { stripVTControlCharacters } from 'node:util';
 import { NEXT_GUIDE } from '@seedcord/brand';
 import { ASK_WAIT_STATUS, QUESTION_LENGTH, SearchUnavailable, SiteUnreachable } from '@seedcord/docs-search';
 import { SeedcordErrorCode } from '@seedcord/errors';
-import { describe, expect, it } from 'vitest';
+import { describe, expect, it } from 'vite-plus/test';
 
 import { ASK_STEPS, FOR_AGENT, FOR_PERSON } from '#commands/ask/AskPresenter';
 import { AskRunner } from '#commands/ask/AskRunner';

@@ -1,4 +1,4 @@
-import { describe, expect, it } from 'vitest';
+import { describe, expect, it } from 'vite-plus/test';
 
 import { postImageNames } from '#lib/blog/postFiles';
 import { POST_SLUG, PostFolder } from '#tests/mdxPipeline';

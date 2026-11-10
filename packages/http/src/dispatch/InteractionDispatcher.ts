@@ -13,7 +13,7 @@ import { InteractionHandler } from '#handlers/interaction/InteractionHandler';
 import { InteractionMiddleware } from '#handlers/interaction/InteractionMiddleware';
 
 import type { HandlerConstructor, InteractionMiddlewareConstructor } from '#handlers/constructors';
-import type { ResolvedRoute, RouteMaps } from '#src/dispatch/resolve';
+import type { RouteMaps } from '#src/dispatch/resolve';
 import type { MiddlewareKind } from '@seedcord/core';
 import type { Initializeable, ContextMenuLeaves } from '@seedcord/core/internal';
 import type { HmrAware, HmrUpdateEvent } from '@seedcord/types';
@@ -33,12 +33,7 @@ export class InteractionDispatcher implements Initializeable, HmrAware {
     }
 
     private isInitialized = false;
-    private readonly loader: HandlerLoader<
-        HandlerConstructor,
-        InteractionMiddlewareConstructor,
-        MiddlewareKind,
-        ResolvedRoute[]
-    >;
+    private readonly loader: HandlerLoader<HandlerConstructor, InteractionMiddlewareConstructor, MiddlewareKind>;
 
     constructor(handlersDir: string, middlewaresDir?: string) {
         this.loader = new HandlerLoader({
@@ -49,8 +44,7 @@ export class InteractionDispatcher implements Initializeable, HmrAware {
             isHandler: (value): value is HandlerConstructor => this.isHandler(value),
             isMiddleware: (value): value is InteractionMiddlewareConstructor => this.isMiddleware(value),
             storeHandler: (ctor, from) => this.routes.register(ctor, from),
-            removeHandler: (ctor, routes) => this.routes.unregister(ctor, routes),
-            artifactsOf: (ctor) => this.routes.routesOf(ctor)
+            removeHandler: (ctor) => this.routes.unregister(ctor)
         });
     }
 

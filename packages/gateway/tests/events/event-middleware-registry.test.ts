@@ -1,4 +1,4 @@
-import { afterEach, describe, expect, vi } from 'vitest';
+import { afterEach, describe, expect, vi } from 'vite-plus/test';
 
 import { Seedcord } from '#src/Seedcord';
 import { dispatcherOf } from '#tests/utils/dispatcherOf';

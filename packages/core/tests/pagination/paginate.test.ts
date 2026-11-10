@@ -1,5 +1,5 @@
 import { SeedcordRangeError } from '@seedcord/errors/internal';
-import { describe, expect, expectTypeOf, it } from 'vitest';
+import { describe, expect, expectTypeOf, it } from 'vite-plus/test';
 
 import { paginate } from '#pagination/paginate';
 

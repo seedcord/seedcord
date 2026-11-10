@@ -1,4 +1,4 @@
-import { expectTypeOf } from 'vitest';
+import { expectTypeOf } from 'vite-plus/test';
 
 import type { FrameworkChannel, LoggerChannelId, LoggerConfig } from '#src/Interfaces/LogSink';
 

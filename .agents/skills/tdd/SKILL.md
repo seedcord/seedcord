@@ -43,11 +43,11 @@ RIGHT (vertical):
 
 Tests sit in `<package>/tests/`, mirroring `src/`. Never `src/**/*.test.ts`. A test for `packages/core/src/rateLimiter/KvRateLimiter.ts` is `packages/core/tests/rateLimiter/kv-rate-limiter.test.ts`.
 
-Vitest is the runner. `pnpm -C <pkg> test:watch` watches and reruns on change, which is the loop you want during a TDD cycle.
+Vitest is the runner. `vp -C <pkg> run test:watch` watches and reruns on change, which is the loop you want during a TDD cycle.
 
 ```sh
-pnpm -C <pkg> test:watch       # during the loop
-pnpm check --filter=<pkg>      # lint:fix, tc and test, once the slice is done
+vp -C <pkg> run test:watch       # during the loop
+vp run check --filter=<pkg>      # lint:fix, tc and test, once the slice is done
 ```
 
 Tests import through the package's `#src/*` alias and may use a pragmatic fixture cast (`as unknown as T`) with a one-line justification comment. No `as any` in tests. The ESLint rule rewrites `any` to `unknown`, which surfaces a real type error if the cast was wrong.
@@ -110,7 +110,7 @@ Once the tests pass, look for [refactor candidates](refactoring.md):
 
 Do not refactor while RED. Get to GREEN first.
 
-For a published package, add a changeset (`pnpm cs`) once the slice is done.
+For a published package, add a changeset (`vp run cs`) once the slice is done.
 
 ## Checklist per cycle
 

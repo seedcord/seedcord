@@ -1,4 +1,4 @@
-import { describe, expect, it } from 'vitest';
+import { describe, expect, it } from 'vite-plus/test';
 
 import { COMPACT_ROWS, FULL_ROWS, Screen } from '#ui/Screen';
 

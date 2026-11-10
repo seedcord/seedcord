@@ -3,7 +3,7 @@ import { stripVTControlCharacters } from 'node:util';
 import { LEVEL_COLOR } from '@seedcord/logger';
 import { render } from 'ink-testing-library';
 import React from 'react';
-import { describe, expect, it } from 'vitest';
+import { describe, expect, it } from 'vite-plus/test';
 
 import { NO_ROOM, ScrollableLogView } from '#ui/components/primitives/ScrollableLogView';
 import { formatClock } from '#ui/format';

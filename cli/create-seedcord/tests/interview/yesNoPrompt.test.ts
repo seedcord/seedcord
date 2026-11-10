@@ -1,5 +1,5 @@
 import { KEY, PromptTerminal } from '@seedcord/cli-prompts/testing';
-import { describe, expect, it } from 'vitest';
+import { describe, expect, it } from 'vite-plus/test';
 
 import { gitStep, installStep } from '#interview/steps/yesNo';
 

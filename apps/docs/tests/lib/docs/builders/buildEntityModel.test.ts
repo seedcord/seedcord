@@ -1,4 +1,4 @@
-import { describe, expect, it, vi } from 'vitest';
+import { describe, expect, it, vi } from 'vite-plus/test';
 
 import type { CodeRepresentation } from '@seedcord/ui';
 import type { DocNode, VersionedDocsEngine } from '@seedcord/docs-engine';
@@ -37,8 +37,8 @@ function makeNode(entries: string[] | undefined): DocNode {
 
 describe('buildEntityModel package badge', () => {
     it('shows the subpath when only a subpath exports the symbol', async () => {
-        const model = await buildEntityModel(engine, makeNode(['./hmr']));
-        expect(model.displayPackage).toBe('core/hmr');
+        const model = await buildEntityModel(engine, makeNode(['./plugin']));
+        expect(model.displayPackage).toBe('core/plugin');
     });
 
     it('shows the package alone when the root entry exports it too', async () => {

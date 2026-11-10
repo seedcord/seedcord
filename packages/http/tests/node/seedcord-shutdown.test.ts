@@ -3,7 +3,7 @@ import path from 'node:path';
 
 import { DRAIN_WINDOW_MS, shutdownOf } from '@seedcord/core/node/internal';
 import { Logger } from '@seedcord/logger';
-import { afterEach, describe, expect, it, vi } from 'vitest';
+import { afterEach, describe, expect, it, vi } from 'vite-plus/test';
 
 import { Seedcord } from '#src/node/Seedcord';
 import { signedHeaders, type Signer } from '#tests/helpers/ed25519';

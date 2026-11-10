@@ -1,5 +1,5 @@
 import { SeedcordErrorCode } from '@seedcord/errors';
-import { describe, expect, expectTypeOf, it, vi } from 'vitest';
+import { describe, expect, expectTypeOf, it, vi } from 'vite-plus/test';
 
 import { Subscribe } from '#subscribers/decorators/Subscribe';
 import { PublishDefault } from '#subscribers/publishDefault';
@@ -91,7 +91,7 @@ describe('a subscriber on several keys', () => {
         const bus = busWith(Both, Witness);
         expect(bus[RegisteredCount]).toBe(2);
 
-        bus[UnregisterSubscriber](Both, ['unknownException', 'unhandledInteractionError']);
+        bus[UnregisterSubscriber](Both);
         bus[PublishDefault]('unhandledInteractionError', unhandled);
         bus[PublishDefault]('unknownException', unknown);
 

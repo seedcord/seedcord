@@ -9,7 +9,7 @@ A changeset becomes a changelog entry, which someone scans while deciding whethe
 
 This skill decides what a changeset says. `writing-voice` covers how any sentence in this repo sounds. `release-version` covers cutting the release itself.
 
-The shape is fixed, and `pnpm lint:changesets` rejects anything else:
+The shape is fixed, and `vp run lint:changesets` rejects anything else:
 
 - One paragraph on one line. No second paragraph, list, heading, quote, or code block.
 - At most two sentences for a patch and three otherwise. One sentence is fine when it already carries the reader's own case. A second sentence carries that case when the first one cannot.
