@@ -11,7 +11,7 @@ import { it } from '#tests/utils/test-env';
 
 import type { Seedcord } from '#src/Seedcord';
 import type { CoreBase, DispatchOrigin } from '@seedcord/core';
-import type { MockInstance } from 'vitest';
+import type { MockInstance } from 'vite-plus/test';
 
 // a global is the only channel back to the test, since the fixture compiles into a temp dir
 function fireCalls(): string[] {

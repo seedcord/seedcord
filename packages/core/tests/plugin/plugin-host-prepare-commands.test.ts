@@ -1,5 +1,5 @@
 import { HostPluginHooks } from '@seedcord/types/internal';
-import { describe, expect, it } from 'vitest';
+import { describe, expect, it } from 'vite-plus/test';
 
 import { Plugin } from '#src/plugin/Plugin';
 import { TestPluginHost } from '#tests/utils/TestPluginHost';

@@ -4,7 +4,7 @@ import { TextDisplayBuilder } from '@discordjs/builders';
 import { CustomId, defineGate, Fault, InteractionKind, Notice, RegisterInteractionMiddleware } from '@seedcord/core';
 import { GatedMetadataKey } from '@seedcord/core/internal';
 import { InteractionType } from 'discord-api-types/v10';
-import { beforeEach, describe, expect, it, vi } from 'vitest';
+import { beforeEach, describe, expect, it, vi } from 'vite-plus/test';
 
 import { AutocompleteHandler } from '#handlers/interaction/AutocompleteHandler';
 import { ButtonHandler } from '#handlers/interaction/components/ButtonHandler';

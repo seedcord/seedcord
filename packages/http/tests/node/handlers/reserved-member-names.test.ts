@@ -1,7 +1,7 @@
 import { DispatchContext } from '@seedcord/core/internal';
 import { Plugin, PluginHost } from '@seedcord/core/plugin';
 import { SeedcordErrorCode } from '@seedcord/errors';
-import { describe, expect, it } from 'vitest';
+import { describe, expect, it } from 'vite-plus/test';
 
 import { interactionGateContext } from '#src/gates/context';
 import * as handlers from '#src/handlers/index';

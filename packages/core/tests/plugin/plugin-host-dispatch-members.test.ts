@@ -1,6 +1,6 @@
 import { SeedcordErrorCode } from '@seedcord/errors';
 import { HostPluginHooks } from '@seedcord/types/internal';
-import { describe, expect, it } from 'vitest';
+import { describe, expect, it } from 'vite-plus/test';
 
 import { DispatchContext, MemberValues } from '#src/dispatch/DispatchContext';
 import { RepliableHandler } from '#src/handlers/RepliableHandler';
