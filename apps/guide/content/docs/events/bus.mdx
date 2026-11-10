@@ -9,7 +9,7 @@ The bus separates the two sides. `/award` publishes one named event, so its file
 
 Event handlers, middleware, subscribers, and plugin services get `core` too, so any of them can publish. If members also level up by chatting, a `messageCreate` handler publishes the same `levelUp`. The same three follow-ups run with none of their code copied.
 
-Everything on the bus stays inside your bot. To show members something, like the announcement, a subscriber sends that message to Discord itself.
+Publishing an event doesn't send anything outside your bot. To show members something, like the announcement, a subscriber sends that message to Discord itself.
 
 Start by declaring the key and its payload. Declaration merging puts them on the [`Subscriptions`](ref:core/Subscriptions) interface that your transport package exports.
 
@@ -101,7 +101,7 @@ export class Award extends SlashHandler<'award'> {
 
 </Callout>
 
-`publish` returns `true` if the key had at least one `on` listener. It counts those listeners only, so a key with three subscribers and no listeners returns `false`.
+`publish` returns `true` if the key had at least one `on` listener. It counts those listeners only, so a key with three subscribers and zero listeners returns `false`.
 
 Subscribers on the same key start at the same time, so any of them can finish first. Don't make one subscriber depend on another's result, since nothing guarantees the order.
 

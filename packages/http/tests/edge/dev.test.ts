@@ -32,7 +32,7 @@ interface FakeCli {
     save(event: HmrUpdateEvent): void;
 }
 
-// the channel seedcord dev opens to the worker. it answers a read with `deployed`
+// the channel that seedcord dev opens to the worker. it answers a read with `deployed`
 function connectCli(deployed?: DeployedHashes): FakeCli {
     const sent: [string, unknown][] = [];
     const handlers = new Map<string, (data: unknown) => void>();

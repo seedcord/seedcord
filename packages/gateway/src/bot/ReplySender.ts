@@ -40,8 +40,8 @@ function toDjsFile(file: ReplyFile | GatewayFile): GatewayFile {
     };
 }
 
-// djs flips `replied` on editReply, so per-call derivation would break repeated update() and post-edit
-// send() parity
+// seed the state once because djs flips `replied` on editReply, and deriving it per call would break repeated
+// update() and post-edit send() parity
 function seedState(interaction: Repliables): AckState {
     if (interaction.deferred && interaction.ephemeral === null) return 'deferred-update';
     if (interaction.replied) return 'replied';

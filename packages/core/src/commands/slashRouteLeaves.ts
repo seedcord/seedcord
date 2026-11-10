@@ -5,8 +5,8 @@ import type { ContextMenuCommandBuilder } from '@discordjs/builders';
 
 /**
  * dedupes route keys since the same builder appears once per guild.
- * these come from the same {@link routeLeavesOf} that `seedcord codegen` reads, so the boot-time
- * check compares against the generated registry's keys.
+ * the boot-time check compares against the generated registry's keys because these come from the
+ * same {@link routeLeavesOf} that `seedcord codegen` reads.
  *
  * @internal
  */

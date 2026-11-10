@@ -11,7 +11,7 @@ import type { Mock } from 'vite-plus/test';
 
 const APP = 'app-1';
 
-// justified: EmojiMap is empty in tests, so runtime values read through a plain record
+// justified: runtime values read through a plain record because EmojiMap is empty in tests
 const emojis = Emojis as Record<string, ResolvedEmoji>;
 
 function apiEmoji(name: string, id: string): APIEmoji {

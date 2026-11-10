@@ -20,7 +20,7 @@ describe('docs anchors', () => {
 
     it('prefixes type params and params, kebab-casing the name', () => {
         expect(typeParamFragment('T')).toBe('type-param-t');
-        // slugify splits lower-to-upper only, so leading caps stay joined (matches the engine Slugger).
+        // leading caps aren't split because slugify splits lower-to-upper only (matches the engine Slugger).
         expect(typeParamFragment('TKey')).toBe('type-param-tkey');
         expect(paramFragment('options')).toBe('param-options');
         expect(paramFragment('myOption')).toBe('param-my-option');
@@ -33,7 +33,7 @@ describe('docs anchors', () => {
         expect(withOverload('param-options', 0, 2)).toBe('param-options-overload-1');
     });
 
-    it('handles an overloaded constructor: row stays #constructor, panels get -overload-N', () => {
+    it('handles an overloaded constructor: row is #constructor, panels get -overload-N', () => {
         const base = memberFragment({ slug: 'autocomplete-handler/constructor' });
         expect(base).toBe('constructor');
         // buildSignatureDetails composes the panel anchors this way.

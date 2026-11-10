@@ -28,7 +28,7 @@ interface HttpLens {
 
 /**
  * The typed view over a chat-input command's options for one route on the HTTP transport. Each getter
- * restricts its `name` to that route's options of the matching kind, drops the null on required options,
+ * restricts its `name` to that route's options of the matching kind, removes the null on required options,
  * narrows `choices` to their literal union, and only appears when the route has an option of that kind.
  * The rich kinds return `discord-api-types` payloads resolved from the interaction's `resolved` data.
  *

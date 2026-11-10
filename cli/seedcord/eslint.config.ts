@@ -1,6 +1,7 @@
 // eslint-disable-next-line import-x/no-rename-default -- the plugin exports its default as finalPlugin
 import eslintReact from '@eslint-react/eslint-plugin';
 import createConfig from '@seedcord/eslint-config';
+import { proseConfig } from '@seedcord/prose';
 import reactHooks from 'eslint-plugin-react-hooks';
 
 import type { ESLint } from 'eslint';
@@ -13,6 +14,7 @@ export default createConfig({
     relativeImports: 'parent',
     generalIgnores: ['template/**/*.ts', 'tests/fixtures/**'],
     userConfigs: [
+        ...proseConfig,
         { ...eslintReact.configs['recommended-typescript'], files: ['**/*.{ts,tsx}'] },
         {
             files: ['**/*.{ts,tsx}'],

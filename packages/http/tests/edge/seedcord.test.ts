@@ -491,7 +491,7 @@ describe('the edge Seedcord', () => {
         expect(caught).toMatchObject({ code: SeedcordErrorCode.CorePluginAfterInit });
     });
 
-    it('reads no env until the first request', async () => {
+    it("doesn't read env until the first request", async () => {
         Envapter.useSource(new PortableSource({}));
         registerBakedIds({ publicKey: 'ab'.repeat(32) });
 

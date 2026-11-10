@@ -1,6 +1,6 @@
 ---
 title: Autocomplete
-description: Suggest option values from your own data while someone types a slash command, and read the options they already filled in.
+description: Suggest option values from your own data while someone types a slash command, and read the options they have already filled in.
 ---
 
 `addChoices` covers a list you know when you deploy, up to Discord's limit of 25. A catalogue you query, or anything that changes while the bot runs, needs the suggestions built per keystroke.
@@ -90,7 +90,7 @@ Discord sends one of these every time the person edits the field, so `value` is 
 
 ## One case per field
 
-An autocomplete interaction says which field is focused, so your handler has to branch on it. `this.match` takes one case per autocompletable field, and a case you leave out fails to compile.
+An autocomplete interaction reports which field is focused, so your handler has to branch on it. `this.match` takes one case per autocompletable field, and a case you leave out fails to compile.
 
 Each case receives the partial value and a `respond` typed to that field's choice values.
 
@@ -188,7 +188,7 @@ class SearchAutocomplete extends AutocompleteHandler<'search'> {
 
 Discord sends the raw text, so someone typing `120` sends `'1'`, then `'12'`, then `'120'`. Parse it yourself and guard the result, since an empty field sends an empty string.
 
-What you send back carries the real type. `limit` takes `{ value: number }`.
+What you send back has the real type. `limit` takes `{ value: number }`.
 
 ## Reading the other options
 

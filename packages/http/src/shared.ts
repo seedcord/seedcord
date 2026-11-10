@@ -28,7 +28,7 @@ export type * from '@seedcord/types';
 export * from '@seedcord/utils';
 
 export * from './handlers';
-// two `export *` both re-export RepliableHandler, so export it explicitly to resolve to the http subclass
+// export RepliableHandler explicitly to resolve to the http subclass because two `export *` both re-export it
 export { RepliableHandler } from '#handlers/RepliableHandler';
 
 export { ReplySender } from '#reply/ReplySender';

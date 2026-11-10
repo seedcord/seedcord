@@ -29,7 +29,7 @@ describe('RouteRegistry', () => {
         expect(registry.maps[InteractionKind.Button].has('free')).toBe(false);
     });
 
-    it('returns false for a class that declares no routes', () => {
+    it("returns false for a class that doesn't declare routes", () => {
         const registry = new RouteRegistry<Ctor>();
 
         expect(registry.register(Handler, 'Empty.ts')).toBe(false);

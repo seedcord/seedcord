@@ -201,7 +201,7 @@ export function sourcesIn(table: PackageSourceIndex, ownRow: string, baseRow: st
     }));
 }
 
-// a base class from another package has no row in this package's source table
+// a base class from another package doesn't have a row in this package's source table
 export function baseRowName(
     memberName: string,
     inheritedFrom: DocReference | null,
@@ -269,8 +269,8 @@ export function accessorRole(item: ApiItem): 'getter' | 'setter' | null {
     return null;
 }
 
-// AE folds a get+set pair into one `get` property and never emits the setter, so a non-readonly
-// accessor is the only sign a setter exists (a get-only accessor reports isReadonly=true).
+// a non-readonly accessor is the only sign a setter exists because AE folds a get+set pair into one
+// `get` property and never emits the setter (a get-only accessor reports isReadonly=true).
 export function accessorHasSetter(item: ApiItem): boolean {
     return accessorRole(item) === 'getter' && (item as AeShapes).isReadonly === false;
 }
@@ -320,7 +320,7 @@ export function buildAccessorSignature(
         implementationOf: null
     };
     if (owner.sourceUrl) signature.sourceUrl = owner.sourceUrl;
-    // applyAccessor nulls node.comment, so @throws only reaches the page on the signature
+    // @throws only reaches the page on the signature because applyAccessor nulls node.comment
     const throwsTags = comment?.blockTags.filter((tag) => tag.tag === '@throws');
     if (throwsTags && throwsTags.length > 0) signature.throws = throwsTags;
     return signature;

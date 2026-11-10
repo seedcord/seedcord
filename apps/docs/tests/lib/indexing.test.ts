@@ -35,11 +35,11 @@ describe('latestEntitySegments', () => {
         expect(latestEntitySegments(nested, path)).toEqual(['types', 'nested', 'thing']);
     });
 
-    it('drops a symbol the latest version stopped documenting', () => {
+    it('returns undefined for a symbol the latest version stopped documenting', () => {
         expect(latestEntitySegments(entities, parsed('class', 'old-thing', ['classes', 'old-thing']))).toBeUndefined();
     });
 
-    it('drops a path that parsed to no slug', () => {
+    it('returns undefined for a path that parsed to a null slug', () => {
         expect(latestEntitySegments(entities, parsed('class', null, ['classes']))).toBeUndefined();
     });
 
@@ -49,7 +49,7 @@ describe('latestEntitySegments', () => {
         expect(latestEntitySegments({ constructor: 'function' } as const, path)).toEqual(['functions', 'constructor']);
     });
 
-    it('keeps the original path when the index carries no entity map', () => {
+    it('keeps the original path when the index is missing its entity map', () => {
         expect(latestEntitySegments(undefined, parsed('class', 'logger', ['classes', 'logger']))).toEqual([
             'classes',
             'logger'

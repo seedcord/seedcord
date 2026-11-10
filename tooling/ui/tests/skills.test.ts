@@ -48,7 +48,7 @@ describe('the v0.1.0 index', () => {
         expect(index.skills[0]?.files).toEqual(['SKILL.md']);
     });
 
-    it('carries no schema, which is what marks it v0.1.0', () => {
+    it('omits $schema, which marks it v0.1.0', () => {
         expect(skillsIndex([SEEDCORD_SKILL])).not.toHaveProperty('$schema');
     });
 });

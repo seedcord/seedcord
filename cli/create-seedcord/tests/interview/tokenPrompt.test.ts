@@ -16,7 +16,7 @@ describe('the token question', () => {
         await expect(answer).resolves.toBeNull();
     });
 
-    it('stays open on a paste that is not the right shape', async () => {
+    it('keeps asking after a paste that is not the right shape', async () => {
         using terminal = new PromptTerminal();
         const answer = tokenStep.ask({}, terminal.prompter);
 

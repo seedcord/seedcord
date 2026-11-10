@@ -13,7 +13,7 @@ interface GatewayLens<Cache extends CacheType> {
 
 /**
  * The typed view over a chat-input command's options for one route. Each getter mirrors the discord.js
- * resolver method but restricts its `name` to that route's options of the matching kind, drops the null
+ * resolver method but restricts its `name` to that route's options of the matching kind, removes the null
  * on required options, narrows `choices` to their literal union, and only appears when the route has an
  * option of that kind. The rich kinds return exactly what the djs resolver returns.
  *

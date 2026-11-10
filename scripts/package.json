@@ -34,6 +34,7 @@
     },
     "devDependencies": {
         "@seedcord/eslint-config": "workspace:^",
+        "@seedcord/prose": "workspace:^",
         "@seedcord/tsconfig": "workspace:^",
         "@seedcord/vite-config": "workspace:^",
         "@types/node": "catalog:deps",

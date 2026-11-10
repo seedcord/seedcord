@@ -107,7 +107,7 @@ class DecoratedMulti extends SlashHandler<'kick' | 'warn'> {
 }
 void DecoratedMulti;
 
-// the handler declares a route the decorator omits
+// the handler declares a route that the decorator omits
 // @ts-expect-error 'warn' is in the generic but not listed on the decorator.
 @SlashRoute('kick')
 class OmitsRoute extends SlashHandler<'kick' | 'warn'> {
@@ -117,7 +117,7 @@ class OmitsRoute extends SlashHandler<'kick' | 'warn'> {
 }
 void OmitsRoute;
 
-// the decorator lists a route the handler does not declare
+// the decorator lists a route that the handler does not declare
 // @ts-expect-error 'warn' is listed on the decorator but not in the generic.
 @SlashRoute('kick', 'warn')
 class ExtraRoute extends SlashHandler<'kick'> {
@@ -130,7 +130,7 @@ void ExtraRoute;
 // this.options on a union route keeps only the options common to every member route
 class UnionOptionsHandler extends SlashHandler<'mute' | 'note'> {
     async execute(): Promise<void> {
-        // 'target' is a user option on both mute and note, so it survives the union and stays typed
+        // 'target' is still in the union, with its type, because it's a user option on both mute and note
         expectTypeOf(this.options.getUser('target')).toEqualTypeOf<User>();
         // @ts-expect-error mute has an integer option but note does not, so getInteger is absent on the union.
         void this.options.getInteger;
@@ -140,7 +140,7 @@ class UnionOptionsHandler extends SlashHandler<'mute' | 'note'> {
     }
 }
 
-// each match case is typed for its own route, recovering getters the union view drops
+// each match case is typed for its own route, recovering getters that the union view leaves out
 class PerCaseNarrowing extends SlashHandler<'mute' | 'note'> {
     async execute(): Promise<void> {
         await this.match({
@@ -245,7 +245,7 @@ class SubcommandHandler extends SlashHandler<'demo/setup'> {
     }
 }
 
-// the decorator only accepts registered routes, the keyof constraint that also drives route autocomplete
+// the decorator only accepts registered routes, the same keyof constraint that gives route autocomplete its keys
 // @ts-expect-error 'ghost' is not a key of SlashRegistry.
 @SlashRoute('ghost')
 class UnknownDecoratorRoute extends SlashHandler<'kick'> {

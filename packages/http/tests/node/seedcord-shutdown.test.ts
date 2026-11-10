@@ -58,7 +58,7 @@ describe('http Seedcord shutdown', () => {
         vi.restoreAllMocks();
     });
 
-    it('installs no signal handlers until start', async () => {
+    it("doesn't install signal handlers until start", async () => {
         const base = signalListeners();
         await bindSignedEnv();
         await using host = new Seedcord(config());
@@ -110,7 +110,7 @@ describe('http Seedcord shutdown', () => {
         expect(errors).not.toHaveBeenCalled();
     });
 
-    it('a request awaiting its ack survives a shutdown started mid-flight', async () => {
+    it('a request awaiting its ack completes when a shutdown starts mid-flight', async () => {
         const signer = await bindSignedEnv();
         await using host = new Seedcord(config());
         await host.start();

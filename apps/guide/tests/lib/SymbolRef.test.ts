@@ -15,7 +15,7 @@ describe('a ref: link', () => {
         expect(parts(SymbolRef.fromUrl(url))).toEqual(expected);
     });
 
-    it('points at the package overview when it carries no symbol', () => {
+    it('points at the package overview when the ref is only a package', () => {
         const ref = SymbolRef.fromUrl('ref:core');
 
         expect(ref instanceof SymbolRef && ref.isPackage).toBe(true);
@@ -26,8 +26,8 @@ describe('a ref: link', () => {
         ['ref:/Notice', 'is missing the package'],
         ['ref:core/', 'has a slash with no symbol after it'],
         ['ref:core/Notice/x', 'has a path after the symbol'],
-        ['ref:core/.Notice', 'has nothing before the member'],
-        ['ref:core/Notice.', 'has nothing after the member separator'],
+        ['ref:core/.Notice', 'is missing the part before the member'],
+        ['ref:core/Notice.', 'is missing the part after the member separator'],
         ['https://seedcord.org', 'is not a ref: link']
     ])('reports what is wrong with %s', (url, problem) => {
         expect(SymbolRef.fromUrl(url)).toBe(problem);
@@ -83,7 +83,7 @@ describe('the symbol a hover points at', () => {
         expect(SymbolRef.fromDeclaration(file, name)).toBeNull();
     });
 
-    // the checker calls an inline object type __type. the reference site has no page for one
+    // the checker calls an inline object type __type. the reference site doesn't have a page for one
     it.each([
         ['__type.durationMs', 'a field on an inline payload type'],
         ['__type', 'the inline type itself'],

@@ -30,7 +30,7 @@ describe('Prompter.text', () => {
         await expect(answer).resolves.toBe('my-bot');
     });
 
-    it('stays open and shows the message validate returns', async () => {
+    it('keeps asking and shows the message validate returns', async () => {
         using terminal = new PromptTerminal();
         const answer = terminal.prompter.text(FOLDER);
 

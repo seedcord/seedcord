@@ -40,7 +40,7 @@ describe('ReplySender.showModal', () => {
 
     it('labels a null-prototype modal as modal in the translated error', async () => {
         const mock = mockInteraction();
-        // justified: a null-prototype object has no constructor, the label fallback path under test
+        // justified: a null-prototype object doesn't have a constructor, the label fallback path under test
         const modal = Object.create(null) as { toJSON(): never };
         modal.toJSON = () => {
             throw new RangeError('Modal title must be 1-45 characters.');

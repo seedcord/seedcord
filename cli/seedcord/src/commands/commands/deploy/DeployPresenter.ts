@@ -72,7 +72,7 @@ export class DeployPresenter extends StepsPresenter<DeployStep> {
 
     public edgeHint(): void {
         this.output.line();
-        this.output.line(paint.mute('Your edge worker has no ids for the commands this deploy added.'));
+        this.output.line(paint.mute("Your edge worker doesn't have ids for the commands this deploy added."));
         this.output.line(
             paint.mute(`Run ${paint.bold('seedcord build')} and deploy the worker again to pick them up.`)
         );

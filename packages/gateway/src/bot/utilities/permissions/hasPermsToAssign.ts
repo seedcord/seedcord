@@ -21,7 +21,7 @@ export interface HasPermsToAssignOptions {
     missing?: PermissionNoticeConstructor;
 }
 
-// botRoleFor searches the guild's role cache, so a cold cache returns null
+// a cold cache returns null because botRoleFor searches the guild's role cache
 function botRoleOf(guild: Guild): Role {
     const botRole = guild.roles.botRoleFor(guild.client.user);
     if (!botRole) throw new SeedcordError(SeedcordErrorCode.CoreBotRoleMissing, [guild.id]);

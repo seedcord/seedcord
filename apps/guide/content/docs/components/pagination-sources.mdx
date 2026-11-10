@@ -5,7 +5,7 @@ description: Decide where a paginator's items come from, whether that's an array
 
 A fifty-thousand-row mod log costs fifty thousand reads per click, to show ten rows.
 
-What you pay per click comes down to the source. A source decides which items belong on page N. [Pagination](/components/pagination) used [`ArraySource`](ref:gateway/ArraySource), which loads the whole list on every click and slices it.
+What you pay per click comes down to the source. A source picks which items belong on page N. [Pagination](/components/pagination) used [`ArraySource`](ref:gateway/ArraySource), which loads the whole list on every click and slices it.
 
 [`CursorSource`](ref:gateway/CursorSource) fetches one page at a time and reports whether another follows, which is what a SQL `LIMIT`/`OFFSET` query or a paged HTTP API gives you.
 
@@ -58,21 +58,21 @@ A cursor source can't see where the list ends, so it passes a page past the last
 
 <Callout type="transport">
 
-The fetcher's first argument is a [`PageContext`](ref:gateway/PageContext). Gateway's carries `guild: Guild | null` while http's carries `guildId: string | null`, so `ctx.guild` fails to compile there.
+The fetcher's first argument is a [`PageContext`](ref:gateway/PageContext). Gateway's has `guild: Guild | null` while http's has `guildId: string | null`, so `ctx.guild` fails to compile there.
 
 </Callout>
 
 ## Without a total, no First and Last buttons
 
-`CursorSource` never asks for a total, because counting every row costs a second query. Three things follow.
+`CursorSource` never requests a total, because counting every row costs a second query. Three things follow.
 
 - `totalPages` comes back `undefined`.
-- The nav row drops **First** and **Last**, leaving **Prev**, the indicator, and **Next**.
-- The indicator reads `Page 3` with no total after it.
+- The nav row leaves out **First** and **Last**, leaving **Prev**, the indicator, and **Next**.
+- The indicator reads `Page 3` without a total after it.
 
 Use [`ArraySource`](ref:gateway/ArraySource) when the list is small enough to load whole and you want the count.
 
-## The page a source returns
+## The page that a source returns
 
 Every source returns a [`PageView`](ref:core/PageView), the two shipped ones and yours alike.
 
@@ -152,6 +152,6 @@ export class AuditSource implements PageSource<Entry> {
 
 One `COUNT` beside the page query fills in `totalPages`, which puts **First** and **Last** back without loading the table.
 
-Clamp `n` yourself, as the sample does. Say the table had eight pages when a button was minted. After someone deletes half the rows, that button still carries page 7. `start()` also passes any number you give it.
+Clamp `n` yourself, as the sample does. Say the table had eight pages when a button was minted. After someone deletes half the rows, that button still holds page 7. `start()` also passes any number you give it.
 
 seedcord has rendered every page so far. [Custom rendering](/components/pagination-render) hands you the whole message.

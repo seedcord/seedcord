@@ -57,7 +57,7 @@ jobs:
           PR_NUMBER: ${{ github.event.pull_request.number || github.event.issue.number }}
           COMMENTER: ${{ github.event.comment.user.login }}
 
-  # plan and build run a fork's code, and github gives a fork's run no secrets
+  # plan and build run a fork's code, and github withholds secrets from a fork's run
   build:
     needs: plan
     if: github.event_name == 'pull_request' && needs.plan.outputs.apps != '[]'

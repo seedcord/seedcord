@@ -65,7 +65,7 @@ export interface LoggerConfig {
     channels?: Partial<Record<LoggerChannelId, ChannelOverride>>;
 }
 
-/** Handle returned by `installSink`. Disposable, so it works with `using`. */
+/** Handle returned by `installSink`. It works with `using` since it's Disposable. */
 export interface LogSinkHandle {
     dispose(): void;
     [Symbol.dispose](): void;

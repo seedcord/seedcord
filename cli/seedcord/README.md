@@ -56,7 +56,7 @@ Run it through your project's scripts, like `pnpm dev`. A global `seedcord` thro
 
 `codegen --check` verifies the committed augmentations match your source. Run it in CI.
 
-`make` asks for a name and each value the template reads. The [make guide](https://seedcord.org/guide/tooling/make) shows how to write a template.
+`make` asks for a name and each value that the template reads. The [make guide](https://seedcord.org/guide/tooling/make) shows how to write a template.
 
 `commands` reads `DISCORD_BOT_TOKEN` from your environment or `.env`:
 

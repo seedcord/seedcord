@@ -2,7 +2,7 @@ import { createViteConfig } from '@seedcord/vite-config';
 
 export default createViteConfig(import.meta.url, {
     test: {
-        // these tests vi.mock docs' own modules, and a mock carries into the next file in a shared worker
+        // these tests vi.mock docs' own modules, and a mock leaks into the next file in a shared worker
         isolate: true,
         globals: true,
         environment: 'jsdom',

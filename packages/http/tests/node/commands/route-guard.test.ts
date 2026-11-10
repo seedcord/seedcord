@@ -44,7 +44,7 @@ describe('warnUnhandledRoutes', () => {
         expect(message).toContain('@SlashRoute');
     });
 
-    it('stays quiet when every route is registered', () => {
+    it('is silent when every route is registered', () => {
         const { dispatcher, warn } = dispatcherWith((d) =>
             d.maps[InteractionKind.Slash].set('ping', route(InteractionKind.Slash, 'ping'))
         );

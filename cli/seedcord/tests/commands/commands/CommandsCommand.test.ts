@@ -235,7 +235,7 @@ describe('seedcord commands clean and purge, off a terminal', () => {
         expect(gets).toContain(Routes.applicationGuildCommands(APP_ID, `g${GUILD_PAGE}`));
     });
 
-    it('prints CliNoScopeGiven with no stack when clean gets no guilds', async () => {
+    it('prints CliNoScopeGiven without a stack when clean gets zero guilds', async () => {
         using output = captureOutput();
 
         await run(['clean', '--yes']);

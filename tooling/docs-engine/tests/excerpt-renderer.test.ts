@@ -22,7 +22,7 @@ describe('tokensToSigParts', () => {
         const [part] = tokensToSigParts([refToken('Logger$1', 'winston!winston.Logger:class')]);
         expect(part?.kind).toBe('ref');
         if (part?.kind !== 'ref') throw new Error('expected a ref part');
-        // Display drops `$1`; ref.name stays `Logger$1` so it can't collide with a documented
+        // Display strips `$1`. ref.name keeps `Logger$1` so it can't collide with a documented
         // internal `Logger` during the resolver's name fallback.
         expect(part.text).toBe('Logger');
         expect(part.ref.name).toBe('Logger$1');

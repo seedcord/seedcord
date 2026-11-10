@@ -37,7 +37,7 @@ export async function runGates(
     }
 }
 
-// dispatchers call this before execute, inside the boundary, so a refusal renders or drops
+// dispatchers call this before execute, inside the boundary, to let the boundary render a refusal
 export async function runHandlerGates(
     handlerCtor: object,
     ctx: GateContextBase,

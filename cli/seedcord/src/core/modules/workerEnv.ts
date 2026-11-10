@@ -83,7 +83,7 @@ export class WorkerEnv {
         stack.use(bindEnv(Envapter, merge(Envapter.source, new PortableSource(this.values())), this.envDir));
     }
 
-    // the plugin's resolveLocalBindings uses the same rules. kv, d1 and the other resources have no node stand-in
+    // the plugin's resolveLocalBindings uses the same rules. kv, d1 and the other resources don't have a node stand-in
     public values(): Record<string, unknown> {
         const local = this.localVars();
         const values: Record<string, unknown> = {};

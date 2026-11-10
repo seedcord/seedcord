@@ -13,7 +13,7 @@ function actorOf(message: Message | PartialMessage): EventActor {
     return { guild: message.guild, member: message.member, user: message.author, channelId: message.channelId };
 }
 
-// each event carries the actor in a different argument
+// each event passes the actor in a different argument
 export function deriveEventActor(args: unknown): EventActor {
     const tuple = Array.isArray(args) ? (args as unknown[]) : [args];
     let partial: PartialMessage | undefined;

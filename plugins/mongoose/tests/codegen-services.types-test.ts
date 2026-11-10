@@ -15,7 +15,7 @@ class Orders extends MongooseService<IOrder> {
     public static schema = new mongoose.Schema<IOrder>({ total: Number });
 }
 
-// the row seedcord codegen writes for this plugin
+// the row that seedcord codegen writes for this plugin
 declare module '@seedcord/core/plugin' {
     interface PluginTypes {
         '@seedcord/plugin-mongoose': { services: { orders: typeof Orders } };

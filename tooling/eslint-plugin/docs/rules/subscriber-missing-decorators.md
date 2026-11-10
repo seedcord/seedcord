@@ -2,7 +2,7 @@
 
 Require `@Subscribe` on every concrete subscriber and `@WebhookUrl` on every webhook reporter.
 
-A class that extends `Subscriber` registers only when it carries `@Subscribe`, and the bus never runs an undecorated one. A class that extends `WebhookLog` additionally needs `@WebhookUrl` with its url env var, and registration throws at boot without it.
+A class that extends `Subscriber` registers only when it has `@Subscribe`, and the bus never runs an undecorated one. A class that extends `WebhookLog` additionally needs `@WebhookUrl` with its url env var, and registration throws at boot without it.
 
 The base class must be imported from `seedcord` or a `@seedcord/*` package, and an `abstract` intermediate base is skipped.
 

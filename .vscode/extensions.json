@@ -5,6 +5,7 @@
         "dbaeumer.vscode-eslint",
         "EditorConfig.EditorConfig",
         "DavidAnson.vscode-markdownlint",
+        "ChrisChinchilla.vale-vscode",
 
         // Lang Tooling
         "christian-kohler.path-intellisense",

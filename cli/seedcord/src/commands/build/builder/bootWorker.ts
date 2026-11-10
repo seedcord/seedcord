@@ -49,7 +49,10 @@ function bootFailed(errors: string[], fallback: string, cause?: unknown): Seedco
 function localUrl(server: PreviewServer): string {
     const url = server.resolvedUrls?.local[0];
     if (url === undefined) {
-        throw bootFailed([], 'vite preview listed no local URL, so the build had nowhere to send its test request.');
+        throw bootFailed(
+            [],
+            "vite preview didn't list a local URL, so the build had nowhere to send its test request."
+        );
     }
     return url;
 }

@@ -19,7 +19,7 @@ const GATEWAY_SCOPE = { transport: 'gateway', runtime: 'server' } as const;
 /**
  * Base class for a gateway plugin, binding `this.core` to the gateway {@link Core}.
  *
- * To run on either transport, extend the base from `@seedcord/core/plugin`. Its `this.core` carries
+ * To run on either transport, extend the base from `@seedcord/core/plugin`. Its `this.core` has
  * only the shared members.
  *
  * @typeParam Opts - The transport and runtime the plugin declares.

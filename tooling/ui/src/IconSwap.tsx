@@ -37,7 +37,7 @@ export function IconSwap({
                     animate={{ opacity: 1, scale: 1 }}
                     exit={{ opacity: 0, scale: 0.85 }}
                     transition={{ duration: ICON_SWAP_DURATION_S, ease: [...easeOutStrong] }}
-                    // Color goes on the motion wrapper so the Icon inherits via text-current and
+                    // Set the color on the motion wrapper so the Icon inherits via text-current and
                     // the inner element's prop shape doesn't change between idle and active.
                     className={cn('absolute inset-0 inline-flex', active && activeClassName)}
                 >

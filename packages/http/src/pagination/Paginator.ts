@@ -27,8 +27,8 @@ function contextOf(interaction: Repliables, core: Core): PageContext {
 }
 
 /**
- * A restart-proof paginator. Each nav button's customId encodes its full target page, so clicks are
- * idempotent and survive a restart. A persistent `@ButtonRoute` on `Handler` dispatches the clicks.
+ * A restart-proof paginator. Clicks are idempotent and still work after a restart because each nav
+ * button's customId encodes its full target page. A persistent `@ButtonRoute` on `Handler` dispatches the clicks.
  *
  * @typeParam Item - The item type, inferred from the source.
  * @typeParam Prefix - The route prefix, inferred from `config.prefix`.
@@ -59,7 +59,7 @@ export class Paginator<Item, const Prefix extends string> extends PaginatorBase<
             async execute(): Promise<void> {
                 await this.deferUpdate();
                 const response = await pageFor(this, this.params.page);
-                // deferUpdate seeds the sender deferred-update, so update PATCHes @original
+                // update PATCHes @original because deferUpdate seeds the sender deferred-update
                 await this.update(response);
             }
         };

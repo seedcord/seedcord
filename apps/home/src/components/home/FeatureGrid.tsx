@@ -136,7 +136,7 @@ const GROUPS: Group[] = [
             { icon: Blocks, label: 'composable gates', gloss: 'stack them with and, or' },
             { icon: TimerReset, label: 'cooldowns', gloss: 'scoped per user, guild or channel' },
             { icon: Gauge, label: 'rate limiter', gloss: 'a sliding window per key' },
-            { icon: ShieldAlert, label: 'errors', gloss: 'Notice refuses, Fault reports, Silence stays quiet' }
+            { icon: ShieldAlert, label: 'errors', gloss: 'Notice refuses, Fault reports, Silence sends nothing' }
         ]
     },
     {
@@ -170,7 +170,7 @@ const GROUPS: Group[] = [
             {
                 icon: RefreshCw,
                 label: 'hot reload',
-                gloss: 'Vite HMR swaps changed modules, the gateway stays connected'
+                gloss: 'Vite HMR swaps changed modules, the gateway keeps its connection'
             },
             { icon: Cable, label: 'dev tunnel', gloss: 'opens cloudflared and points Discord at it' },
             { icon: FileCode2, label: 'codegen', gloss: 'writes the types for your commands and config' },

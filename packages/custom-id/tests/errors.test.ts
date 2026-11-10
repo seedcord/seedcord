@@ -3,7 +3,7 @@ import { describe, expect, it } from 'vite-plus/test';
 import { CustomId } from '#src/CustomId';
 import { setCustomIdErrors } from '#src/errors';
 
-// vitest gives each test file its own module registry. a swap here never reaches codec.test.ts.
+// a swap here doesn't reach codec.test.ts because the shared vitest setup resets modules before each file
 
 class OwnStale extends Error {}
 class OwnInvalid extends Error {}
@@ -24,7 +24,7 @@ describe('setCustomIdErrors', () => {
     });
 
     it('hands the prefix to stale and a detail to invalid', () => {
-        // the default messages carry the prefix and the detail too. the tags tell the two apart.
+        // the default messages contain the prefix and detail too. the stale: and invalid: tags prove ours ran.
         setCustomIdErrors({
             stale: (prefix) => new OwnStale(`stale:${prefix}`),
             invalid: (detail) => new OwnInvalid(`invalid:${detail}`)

@@ -71,7 +71,7 @@ export class TunnelCoordinator {
         const attempt = this.begin();
         const since = elapsedSince(Date.now());
         const tunnel = setup.makeTunnel(() => this.reportLost(attempt));
-        // a later onPort has no handle on this tunnel. the abort is the only way back to stop it.
+        // a later onPort cannot reach this tunnel. the abort is the only way back to stop it.
         attempt.signal.addEventListener('abort', () => tunnel.stop(), { once: true });
         let patched = false;
 
@@ -118,7 +118,7 @@ export class TunnelCoordinator {
 
         this.live = undefined;
         this.deps.onStatus('lost');
-        this.deps.logger.error('cloudflared exited, so the bot has no public endpoint');
+        this.deps.logger.error('cloudflared exited, so the bot lost its public endpoint');
     }
 
     private reportFailure(error: unknown, patched: boolean): void {

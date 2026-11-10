@@ -65,7 +65,7 @@ export class CloudflaredTunnel {
         child.on('error', (error) => {
             this.failure = error;
         });
-        // stop() clears this.child first, so a deliberate kill skips this
+        // a deliberate kill skips this because stop() clears this.child first
         child.on('exit', (code) => {
             if (this.child !== child) return;
             this.failure = new Error(`cloudflared exited early with code ${String(code)}`);
@@ -74,9 +74,9 @@ export class CloudflaredTunnel {
 
         const url = `https://${await this.readHostname(metricsPort, signal)}`;
         onResolving?.();
-        // the record lands ~2.5s later and an early lookup caches NXDOMAIN for a 30 minute negative TTL
+        // cloudflare publishes the record ~2.5s later and an early lookup caches NXDOMAIN for a 30 minute negative TTL
         await this.deps.wait(SETTLE_MS);
-        // local dns resolving doesn't mean discord's resolver has too, so this only shortens the wait
+        // this only shortens the wait because local dns resolving doesn't mean discord's resolver has too
         await awaitReachable(url, this.deps, signal);
         child.once('exit', () => {
             if (this.child === child) this.onLost();

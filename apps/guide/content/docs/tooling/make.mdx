@@ -3,13 +3,13 @@ title: Templates
 description: Generate new handlers, components, and commands from Handlebars templates you keep in your bot, with seedcord make prompting for each value.
 ---
 
-You've started a new button by copying the last one. You renamed the class and the custom id, retyped the label, and fixed the import path when the copy was one folder deeper. Then you did the same again for the handler that answers it.
+By hand, a new button would start as a copy of the last one. You'd rename the class and the custom id, retype the label, fix the import path when the copy sits one folder deeper, and then repeat it all for the handler that answers it.
 
 `seedcord make` generates those files from a template you keep in your project. You pick a template and type a name. It asks for each value the template reads, then writes every file in the template under your [`root`](/build/config) folder.
 
 <Shell exec="seedcord make" />
 
-It only runs in a terminal, since every answer comes from a prompt. It doesn't take the answers as flags. With no terminal, or with `CI` set, it throws `MakeNeedsTerminal`.
+It only runs in a terminal, since every answer comes from a prompt. It doesn't take the answers as flags. Without a terminal, or with `CI` set, it throws `MakeNeedsTerminal`.
 
 ## Writing a template
 
@@ -26,7 +26,7 @@ templates/
       └─ {{pascal name}}.ts.hbs
 ```
 
-The folders inside a template become folders under `root`, which is `./src` in a scaffolded project. `components/{{pascal name}}.ts.hbs` goes to `components/` with the `.hbs` taken off, and the handler goes to `handlers/`. Any extension works in front of `.hbs`, like `.json.hbs`. seedcord ignores a file that doesn't end in `.hbs`.
+The folders inside a template become folders under `root`, which is `./src` in a scaffolded project. seedcord writes `components/{{pascal name}}.ts.hbs` to `components/` with the `.hbs` taken off, and the handler to `handlers/`. Any extension works in front of `.hbs`, like `.json.hbs`. seedcord ignores a file that doesn't end in `.hbs`.
 
 Each file is a [Handlebars](https://handlebarsjs.com/guide/) template. The sample builds a [custom id](/components/custom-ids) and a [button row](/components/buttons). Here's the component:
 
@@ -185,11 +185,11 @@ export default defineConfig({
 
 A template calls `upper` like a built-in helper. `{{ upper (snake name) }}` turns `roll dice` into `ROLL_DICE`, a name for a constant. Handlebars writes what a helper returns into the file as text, so the type of `make.helpers` rejects a helper that doesn't return a string. Handlebars passes your arguments first, then an options object you can ignore. If you keep your helpers in their own file, type them as `SeedcordMakeHelpers` from `seedcord`.
 
-If you give a helper a name templates already use, like `pascal`, Handlebars' `each`, or a value seedcord fills in like `name`, TypeScript reports an error in your config, and `make` throws `CliConfigInvalidField`. `make` never asks for a value with a helper's name, even when a template calls the helper with no arguments, as in `{{ upper }}`.
+If you give a helper a name that templates already use, like `pascal`, Handlebars' `each`, or a value seedcord fills in like `name`, TypeScript reports an error in your config, and `make` throws `CliConfigInvalidField`. `make` never asks for a value with a helper's name, even when a template calls the helper without arguments, as in `{{ upper }}`.
 
 ## Partials
 
-Every handler template starts with the same import line. If it lives in each template, a change to it means editing every copy. A partial holds that shared piece once. Put it in `templates/_partials/` and call it by its file name without `.hbs`:
+Every handler template starts with the same import line. If each template has its own copy, a change to it means editing every copy. A partial holds that shared piece once. Put it in `templates/_partials/` and call it by its file name without `.hbs`:
 
 {/* prettier-ignore */}
 ```hbs title="templates/_partials/imports.hbs"
@@ -224,7 +224,7 @@ The path resolves against the plugin's own folder. List the folder in `files` to
 
 A plugin's templates work like yours. One template can serve gateway and http bots alike, since `{{ transport }}` and `{{#if isGateway}}` read the bot `make` runs in.
 
-## Starting with no templates
+## Starting without templates
 
 A project from `create-seedcord` starts with templates in `templates/` for a slash command, a button, a select menu, a modal, and on gateway an event. They come from the [starters](https://github.com/seedcord/seedcord/tree/next/cli/create-seedcord/starters) in the seedcord repo, so you can copy them into a project that doesn't have them.
 

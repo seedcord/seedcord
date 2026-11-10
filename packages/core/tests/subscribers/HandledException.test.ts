@@ -56,7 +56,7 @@ function reportText(denial: Notice, source: FaultSource): string {
     return JSON.stringify(report.components.map((component) => component.toJSON()));
 }
 
-// the raw text-display strings, so an assertion sees the real webhook content before JSON escaping
+// the raw text-display strings, to let an assertion read the real webhook content before JSON escaping
 function rawText(denial: Notice, source: FaultSource, suppressed = 0): string {
     const report = handledReport(denial, source, suppressed);
     // justified: report() emits a single container component, its json shape is APIContainerComponent
@@ -120,7 +120,7 @@ describe('HandledException.report', () => {
         expect(rawText(new TestFault(), interactionSource, 7)).toContain('7 more');
     });
 
-    it('prints no count when nothing was suppressed', () => {
+    it("doesn't print a count when nothing was suppressed", () => {
         expect(rawText(new TestFault(), interactionSource)).not.toContain('more');
     });
 });

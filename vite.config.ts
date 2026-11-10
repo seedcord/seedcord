@@ -1,12 +1,13 @@
 import { defineConfig } from 'vite-plus';
 
-import { runEslint } from './scripts/src/vp-staged.ts';
+import { runEslint, runProse } from './scripts/src/vp-staged.ts';
 import { PRETTIER_CONFIG } from './tooling/eslint-config-base/src/rules/prettier-config.ts';
 
 export default defineConfig({
     staged: {
         '*': 'vp fmt --no-error-on-unmatched-pattern',
-        '*.{ts,tsx,js,jsx,cjs,mjs}': runEslint
+        '*.{ts,tsx,js,jsx,cjs,mjs}': runEslint,
+        '*.{md,mdx,ts,tsx,mts,cts,yml,yaml}': runProse
     },
     fmt: {
         ignorePatterns: [

@@ -36,7 +36,7 @@ const UNHANDLED: { repliable: HandlerConstructor; autocomplete: HandlerConstruct
 };
 
 /**
- * Matches a verified non-PING interaction to a registered handler. A known kind with no handler resolves
+ * Matches a verified non-PING interaction to a registered handler. A known kind without a handler resolves
  * to the unhandled default. Null is an unrecognized payload shape, which the engine acks with a 202
  * without dispatching. Components and modals route by the stable customId prefix. A wire whose layout
  * hash drifted still reaches its handler, where decode refuses with `StaleCustomId`.

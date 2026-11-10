@@ -44,7 +44,7 @@ export const base = Envapter.get('BASE_URL');
         });
     });
 
-    it('drops removed Vite keys when the loader restarts', async () => {
+    it('clears removed Vite keys when the loader restarts', async () => {
         const { dir } = await edgeFolder('', ['envapt']);
         const entry = join(dir, 'probe.ts');
         await writeFile(

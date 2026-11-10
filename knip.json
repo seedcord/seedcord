@@ -77,6 +77,9 @@
             "ignoreDependencies": ["discord.js"]
         },
         "tooling/eslint-utils": {},
+        "tooling/prose": {
+            "entry": ["src/hook.ts", "tests/**/*.test.ts"]
+        },
         "tooling/brand": {},
         "tooling/cli-prompts": {
             "entry": ["playground/preview.ts"]

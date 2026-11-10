@@ -41,7 +41,7 @@ describe('SourceIndexer', () => {
         });
     });
 
-    it('records a position per member, not the parent location', () => {
+    it('records a position per member', () => {
         const [computed] = withBase.sources['MockClass.computedProp'] ?? [];
         expect(computed?.file).toBe(MOCK_CLASS);
         expect(computed?.line).toBe(117);
@@ -64,7 +64,7 @@ describe('SourceIndexer', () => {
         expect(source?.line).toBe(31);
     });
 
-    it('reports no re-exports for a standalone package', () => {
+    it('reports zero re-exports for a standalone package', () => {
         expect(withBase.reexports).toEqual([]);
     });
 });

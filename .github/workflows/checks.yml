@@ -45,6 +45,9 @@ jobs:
       - uses: $/.github/actions/setup
       - run: vp run check:catalog
       - run: vp run lint:changesets
+      - run: vp run lint:prose
+      - run: vp run knip
+      - run: vp run react-doctor
       - run: vp run lint
 
   format:

@@ -159,7 +159,7 @@ describe('ComponentEmbedError path', () => {
         expect(thrownBy(() => toComponentEmbed(<Container>{child}</Container>)).path).toEqual(path);
     });
 
-    it('stays empty for a limit on the whole embed', () => {
+    it('is empty for a limit on the whole embed', () => {
         const error = thrownBy(() =>
             toComponentEmbed(
                 <Container>

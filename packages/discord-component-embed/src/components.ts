@@ -85,7 +85,7 @@ export function Container(_props: ContainerProps): null {
 }
 
 /**
- * A block of Discord markdown. Every piece of text in a component embed goes inside one.
+ * A block of Discord markdown. Every piece of text in a component embed must be inside one.
  *
  * @example
  * ```tsx
@@ -123,7 +123,7 @@ export function Section(_props: SectionProps): null {
 }
 
 /**
- * A small image. It goes in a {@link Section}'s `accessory`.
+ * A small image for a {@link Section}'s `accessory`.
  *
  * @example
  * ```tsx

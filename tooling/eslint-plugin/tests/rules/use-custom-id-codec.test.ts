@@ -63,7 +63,7 @@ ruleTester.run('use-custom-id-codec', rule, {
             const id = ApproveId.encode({ action: 'approve' });
             new ButtonBuilder().setCustomId(id);
         `,
-        // a reassigned variable, its initializer is dead, so it is skipped
+        // a reassigned variable is skipped because its initializer is dead
         dedent`
             import { ButtonBuilder } from 'discord.js';
             declare const encoded: string;

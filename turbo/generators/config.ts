@@ -4,7 +4,7 @@ import type { PlopTypes } from '@turbo/gen';
 export default function generator(plop: PlopTypes.NodePlopAPI): void {
     plop.setHelper('folder', (dir: string, name: string) => {
         const unscoped = name.replace(/^@seedcord\//, '');
-        // every directory under plugins/ is a plugin, so the folder omits the prefix the package name keeps for npm
+        // the folder omits the prefix the package name keeps for npm because every directory under plugins/ is a plugin
         return dir === 'plugins' ? unscoped.replace(/^plugin-/, '') : unscoped;
     });
 

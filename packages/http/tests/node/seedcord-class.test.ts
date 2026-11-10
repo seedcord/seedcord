@@ -64,7 +64,7 @@ describe('http Seedcord class', () => {
         expect(shutdownOf(host).removeTask(ShutdownPhase.Drain, 'stop-healthcheck-server')).toBe(false);
     });
 
-    it('username stays undefined before the ready fetch', async () => {
+    it('username is undefined before the ready fetch', async () => {
         await bindSignedEnv();
         await using host = new Seedcord(config());
         await host.start();

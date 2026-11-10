@@ -265,7 +265,7 @@ describe('CommandRegistry.deploy', () => {
         );
     });
 
-    it('logs a guild by its id outside seedcord dev, and reads no guild', async () => {
+    it("logs a guild by its id outside seedcord dev, and doesn't read the guild", async () => {
         const get = guildNamed('Alpha');
         const registry = new CommandRegistry(coreWith(vi.fn().mockResolvedValue(BARE), get, ['111']));
         const messages: string[] = [];
@@ -277,7 +277,7 @@ describe('CommandRegistry.deploy', () => {
         expect(get).not.toHaveBeenCalledWith(Routes.guild('111'));
     });
 
-    it('skips the put on a refresh that changed no command', async () => {
+    it('skips the put on a refresh that changed zero commands', async () => {
         const put = vi.fn().mockResolvedValue(BARE);
         const registry = registryWith(put);
         await registry.deploy(new AbortController().signal, {});

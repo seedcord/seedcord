@@ -9,7 +9,7 @@ import type { DispatchContext } from '@seedcord/core';
 import type { CaseReturn, MatchResult, OnlyCases } from '@seedcord/core/internal';
 import type { ClientEvents } from 'discord.js';
 
-// a single tuple param would drop the discord.js labels from editor signature help
+// a single tuple param would hide the discord.js labels from editor signature help
 type EventMatchCases<Names extends ValidNonInteractionKeys, Ret> = {
     [Name in Names]: (...args: ClientEvents[Name]) => CaseReturn<Ret>;
 };

@@ -88,7 +88,7 @@ describe('GuideMatches', () => {
         expect(paths(matches, 'event cooldown')).toEqual([]);
     });
 
-    it('puts a page ahead of a heading, then a whole word ahead of a word it only starts', () => {
+    it('ranks a page higher than a heading, then a whole word higher than a word it only starts', () => {
         const matches = matchesIn([
             heading('/checks/effect-gates/#cooldown', 'Effect gates', 'Cooldown'),
             heading('/checks/rate-limiter/#cooldowns-by-hand', 'Rate limiter', 'Cooldowns by hand'),

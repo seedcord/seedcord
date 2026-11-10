@@ -59,7 +59,7 @@ export class FaultBoundary {
         this.ignoredCodes = new Set(ignoredCodes);
     }
 
-    // null when the fault is a Silence or carries an ignored api code
+    // null when the fault is a Silence or has an ignored api code
     public report(caught: unknown): ReportedFault | null {
         const { config } = this.core;
         if (caught instanceof Silence) {

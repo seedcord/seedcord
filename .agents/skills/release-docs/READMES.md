@@ -18,7 +18,7 @@ Done when every published package's README and every private stub is committed.
 - One short sample built from real exports, with nothing from an `./internal` entry.
 - Links to the guide for the rules.
 
-Leave the rules, edge cases and option lists to the guide. A dense paragraph of config detail becomes one line and a link. Each cut fact goes into the guide notes file with the page it belongs on.
+Leave the rules, edge cases and option lists to the guide. A dense paragraph of config detail becomes one line and a link. Write each cut fact into the guide notes file with the page it belongs on.
 
 A library with no guide of its own, like `discord-component-embed`, keeps its long README. That README is its documentation.
 

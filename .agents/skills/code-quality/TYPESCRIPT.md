@@ -5,46 +5,44 @@ description: Use this when writing TypeScript in seedcord. Covers type narrowing
 
 # TypeScript Quality: Seedcord Conventions
 
-This repo runs strict TypeScript. `any` is banned in production code. The goal is types that accurately describe the domain. A type that only silences the compiler misses the point.
+This repo runs strict TypeScript. `any` is banned in production code. The goal is types that describe the domain accurately. A type that only quiets the compiler misses the point.
 
 ---
 
 ## Rule 1: Narrow, don't cast
 
-The first instinct when TypeScript complains should be narrowing. Casting is a last resort.
+When TypeScript complains, narrow first. A cast is the last option.
 
 ```ts
-// Bad: casting silences the error but loses safety
+// Bad: the cast quiets the error and loses the check
 const name = (response as any).user.name;
 
 // Good: narrow with a type guard
 function hasName(v: unknown): v is { name: string } {
-    return (
-        typeof v === 'object' && v !== null && 'name' in v && typeof (v as Record<string, unknown>).name === 'string'
-    );
+    return typeof v === 'object' && v !== null && 'name' in v && typeof v.name === 'string';
 }
 if (hasName(response)) {
     const name = response.name;
 }
 ```
 
-Use `typeof`, `instanceof`, `in`, and discriminated union checks before reaching for a cast. When a third-party library forces a cast, use a single `as Expected` with `// justified: <reason>`.
+Try `typeof`, `instanceof`, `in`, and discriminated union checks before a cast. When a third-party library forces a cast, write a single `as Expected` with `// justified: <reason>` above it.
 
 ---
 
 ## Rule 2: Discriminated unions over optional fields
 
-Model state as a discriminated union. The compiler then enforces exhaustive matching, and every impossible combination stops being representable.
+Model state as a discriminated union. The compiler then checks every case, and the impossible combinations can't be written. [DESIGN.md](./DESIGN.md#5-pick-a-shape-that-cant-hold-the-wrong-state) covers why optional fields pile up.
 
 ```ts
-// Bad: impossible states are representable
+// Bad: the type allows impossible states
 type RequestState = {
     isLoading: boolean;
     data?: User;
     error?: string;
 };
 
-// Good: mutually exclusive states
+// Good: the states can't overlap
 type RequestState =
     | { status: 'idle' }
     | { status: 'loading' }
@@ -64,54 +62,51 @@ switch (state.status) {
 
 ## Rule 3: Type guards and assertion functions
 
-Write typed predicates for reusable narrowing:
+Write typed predicates for narrowing that you reuse:
 
 ```ts
-// Type predicate: returns boolean, narrows in if-block
+// Type predicate: returns a boolean and narrows inside the if
 function isString(v: unknown): v is string {
     return typeof v === 'string';
 }
 
-// Assertion function: throws on failure, narrows after call
-function assertDefined<T>(v: T | null | undefined, msg: string): asserts v is T {
-    if (v == null) throw new Error(msg);
+// Assertion function: throws on failure and narrows after the call
+function assertDefined<T>(v: T | null | undefined, code: SeedcordErrorCode, args: string[]): asserts v is T {
+    if (v == null) throw new SeedcordError(code, args);
 }
 
-// Usage
-assertDefined(user, 'user must be loaded before calling this');
-// TypeScript now knows user is T (not null/undefined)
-console.log(user.name);
+assertDefined(user, SeedcordErrorCode.SomeCode, ['user']);
+console.log(user.name); // user is T here
 ```
+
+Framework code throws a `SeedcordError` subclass with a registered code. [AGENTS.md](../../../AGENTS.md#other-important-rules) lists which class fits which failure.
 
 ---
 
 ## Rule 4: Generics, constrain early and infer where possible
 
-Don't write `T extends any`. Constrain generics meaningfully instead. Let TypeScript infer the type argument when the call site makes it unambiguous.
+Constrain a generic when the shape matters, and let TypeScript infer the type argument when the call site makes it clear.
 
 ```ts
-// Bad: unconstrained, no information at call site
-function first<T>(arr: T[]): T | undefined {
-    return arr[0];
+// Bad: the caller loses the value's type
+function getKey(obj: Record<string, unknown>, key: string): unknown {
+    return obj[key];
 }
 
-// Good: same, but let inference do the work
-const first = <T>(arr: T[]): T | undefined => arr[0];
-const item = first([1, 2, 3]); // inferred: number | undefined
-
-// Constrain when the shape matters
+// Good: the key must exist, and the return type follows it
 function getKey<T, K extends keyof T>(obj: T, key: K): T[K] {
     return obj[key];
 }
+const port = getKey(config, 'port'); // number
 ```
 
-Avoid generic parameter lists longer than 3. If you need more, your abstraction is probably wrong.
+A generic list longer than three parameters usually means the abstraction is wrong.
 
 ---
 
 ## Rule 5: Prefer built-in utility types over manual mappings
 
-TypeScript ships `Partial`, `Required`, `Readonly`, `Pick`, `Omit`, `ReturnType`, `Parameters`, `Awaited`, `NonNullable`, `Extract`, `Exclude`. Prefer them over manual mapped types.
+TypeScript ships `Partial`, `Required`, `Readonly`, `Pick`, `Omit`, `ReturnType`, `Parameters`, `Awaited`, `NonNullable`, `Extract`, and `Exclude`. Use them over hand-written mapped types.
 
 ```ts
 // Bad: manual mapped type
@@ -120,66 +115,87 @@ type PartialUser = { [K in keyof User]?: User[K] };
 // Good
 type PartialUser = Partial<User>;
 
-// Extracting function return type
+// A function's return type
 type ApiResult = Awaited<ReturnType<typeof fetchUser>>;
 
-// Making specific keys optional
+// Specific keys made optional
 type UserDraft = Omit<User, 'id'> & Partial<Pick<User, 'id'>>;
 ```
 
-**`type-fest`** is available for transforms that built-in utilities don't cover: `ReadonlyDeep`, `PartialDeep`, `Merge`, `SetRequired`, `SetOptional`, `ConditionalKeys`, `ValueOf`, etc. Prefer it over writing complex mapped types from scratch.
+### type-fest
+
+`type-fest` is in the workspace catalog, and it covers most of what the built-ins don't. A package that doesn't list it yet adds it with `vp add type-fest@catalog:deps`. Before writing a conditional type, a mapped type, or a union by hand, search its README or its `index.d.ts` in `node_modules` for one that does the job. It ships a version for most shapes that people write by hand, and the shipped version handles the edge cases.
+
+```ts
+// Bad: hand-written
+type Hook = () => void | Promise<void>;
+type Values = (typeof Colors)[keyof typeof Colors];
+type Locale = 'en' | 'fr' | (string & {});
+
+// Good
+type Hook = () => Promisable<void>;
+type Values = ValueOf<typeof Colors>;
+type Locale = LiteralUnion<'en' | 'fr', string>;
+```
+
+**Wrap a type that someone reads in a hover in `Simplify`.** An intersection or a mapped type shows up in the editor as `A & B & Omit<C, 'x'>`, or as the name of a helper type. `Simplify` makes the hover list the fields.
+
+```ts
+// packages/custom-id/src/Field.ts. the hover lists each decoded field
+export type DecodedParams<Shape extends CustomIdShape> = Simplify<{ ... }>;
+```
+
+Use it on a type that a user or a caller reads: a public option type, a return type, or a decoded value. A type used only inside one file doesn't need it. `SimplifyDeep` on a deep or recursive type can hit TS2589 ("type instantiation is excessively deep"). `KvCollection` falls back to `Simplify` for that reason.
 
 ---
 
 ## Rule 6: `satisfies` for type-checked literals
 
-`satisfies` validates a value against a type without widening it. Use it to catch mistakes in constant maps while keeping the literal types.
+`satisfies` checks a value against a type without widening it. Use it on constant maps to catch mistakes and keep the literal types.
 
 ```ts
-// Bad: type annotation widens to string, losing literal inference
+// Bad: the annotation widens every value to string
 const routes: Record<string, string> = {
     home: '/',
     about: '/about'
-    // typo in key: 'abut' would not be caught until runtime
 };
 
-// Good: satisfies validates without widening
+// Good: checked, and still literal
 const routes = {
     home: '/',
     about: '/about'
 } satisfies Record<string, string>;
 
-routes.home; // type: '/' (literal), not string
+routes.home; // type: '/'
 ```
 
 ```ts
-// Enforce exhaustive config objects
+// Every Status needs a label
 type Status = 'pending' | 'fulfilled' | 'cancelled';
 const statusLabels = {
     pending: 'Pending',
     fulfilled: 'Fulfilled',
     cancelled: 'Cancelled'
 } satisfies Record<Status, string>;
-// Adding a new Status without updating statusLabels is a compile error
+// a new Status without a label is a compile error
 ```
 
 ---
 
 ## Rule 7: `const` assertions for literal inference
 
-Use `as const` to narrow a value to its literal type and make arrays/objects `readonly`.
+`as const` narrows a value to its literal type and makes arrays and objects `readonly`.
 
 ```ts
-// Without as const: types are widened
-const directions = ['north', 'south', 'east', 'west']; // string[]
+// Without as const: string[]
+const directions = ['north', 'south', 'east', 'west'];
 
-// With as const: literal tuple
+// With as const: a readonly literal tuple
 const directions = ['north', 'south', 'east', 'west'] as const;
-// readonly ['north', 'south', 'east', 'west']
 type Direction = (typeof directions)[number]; // 'north' | 'south' | 'east' | 'west'
 ```
 
-Combine with `satisfies` for validated, literal-preserving config:
+Combine it with `satisfies` for config that is both checked and literal:
 
 ```ts
 const buttonSizes = {
@@ -192,46 +208,44 @@ const buttonSizes = {
 
 ## Rule 8: Branded types for domain primitives
 
-Prevent passing the wrong `string` (e.g., a user ID where an order ID is expected) by branding primitive types.
+Brand a primitive when two values of the same primitive type get mixed up and cause real bugs. Use `Tagged` from `type-fest`. `@seedcord/types` brands epoch milliseconds apart from epoch seconds, because Discord's `<t:...>` markup reads seconds.
 
 ```ts
-type OrderId = string & { readonly __brand: 'OrderId' };
-type UserId = string & { readonly __brand: 'UserId' };
+import type { Tagged } from 'type-fest';
 
-function createOrderId(raw: string): OrderId {
-    return raw as OrderId; // single justified cast at the boundary
+export type EpochMs = Tagged<number, 'EpochMs'>;
+export type EpochSec = Tagged<number, 'EpochSec'>;
+
+function timestamp(at: EpochSec): string {
+    return `<t:${String(at)}:R>`;
 }
 
-function getOrder(id: OrderId): Promise<Order> { ... }
-
-const userId = createUserId('abc');
-getOrder(userId); // TypeScript error — UserId is not OrderId
+timestamp(Date.now() as EpochMs); // compile error: EpochMs isn't EpochSec
 ```
 
-Use branded types at domain boundaries: API response IDs, route params, currency amounts. Don't brand everything. Only brand where confusion between same-primitive types causes real bugs.
+Make the brand at the boundary that creates the value, with one cast there. Don't brand every primitive.
 
 ---
 
 ## Rule 9: `unknown` at external boundaries, narrow before use
 
-At system boundaries (API responses, `JSON.parse`, user input, `localStorage`), the incoming value is `unknown`. Validate it with a type guard or Zod schema before using.
+At a boundary, like an API response, `JSON.parse`, user input, or `localStorage`, the incoming value is `unknown`. Check it with a type guard or a schema before using it.
 
 ```ts
-// Bad: trusting unvalidated external data
+// Bad: trusts data that nothing checked
 const user = JSON.parse(raw) as User;
 
-// Good: validate at the boundary with a runtime type guard
-//   (or a Zod schema, if Zod is in use in the consuming package)
+// Good: check at the boundary
 function isUser(v: unknown): v is User {
-    return typeof v === 'object' && v !== null && typeof (v as Record<string, unknown>).id === 'string';
+    return typeof v === 'object' && v !== null && 'id' in v && typeof v.id === 'string';
 }
 
 const parsed: unknown = JSON.parse(raw);
-if (!isUser(parsed)) throw new Error('Invalid user data');
+if (!isUser(parsed)) throw new SeedcordTypeError(SeedcordErrorCode.SomeCode, [source]);
 const user = parsed; // User
 ```
 
-Inside the validated boundary, trust the types. Don't add defensive `?.` chains on values you know are non-null. That hides bugs.
+Past the boundary, trust the types. A `?.` on a value that can't be null hides bugs.
 
 ---
 
@@ -244,7 +258,7 @@ type EventName = `on${Capitalize<string>}`;
 type CSSVar = `--${string}`;
 type RoutePath = `/${string}`;
 
-// Enforce naming conventions at the type level
+// the type checks the naming convention
 function registerHandler(name: EventName, fn: () => void): void { ... }
 registerHandler('onClick', fn);   // ok
 registerHandler('click', fn);     // TypeScript error
@@ -261,15 +275,15 @@ let value: any;
 // ❌ Double casts
 const v = x as unknown as T; // fix the declaration instead
 
-// ❌ Silently widening with as
-const id = rawId as string; // use a type guard or validated cast at boundary
+// ❌ Widening with as
+const id = rawId as string; // use a type guard, or one cast at the boundary
 
-// ❌ Redundant non-null assertions when the type is already correct
-const el = ref.current!; // if ref.current is HTMLDivElement | null, use assertDefined() or check first
+// ❌ Non-null assertions to quiet a nullable type
+const el = ref.current!; // if ref.current is HTMLDivElement | null, check it first
 
 // ❌ import('pkg').Type inline
 type X = import('pkg').SomeType; // use: import type { SomeType } from 'pkg';
 
-// ❌ Generic typed useReducer (deprecated form)
-useReducer<React.Reducer<State, Action>>(reducer); // use: useReducer(reducer) with inferred types
+// ❌ The old generic form of useReducer
+useReducer<React.Reducer<State, Action>>(reducer); // use: useReducer(reducer) and let it infer
 ```

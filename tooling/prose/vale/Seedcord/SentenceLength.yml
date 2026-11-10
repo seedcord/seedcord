@@ -1,0 +1,7 @@
+extends: occurrence
+link: https://github.com/seedcord/seedcord/blob/next/.agents/skills/writing-voice/SKILL.md
+message: 'This sentence has more than 30 words. Split it into one fact per sentence.'
+level: suggestion
+scope: sentence
+max: 30
+token: '\b(\w+)\b'

@@ -121,7 +121,7 @@ describe('selectDescription', () => {
 
         const result = selectDescription(signatureComments, makeFormattedComment([]));
 
-        // each overload keeps its own description in its panel, so neither is pinned to the static header
+        // neither is pinned to the static header because each overload keeps its own description in its panel
         expect(result).toEqual({ description: null, signatureIndex: null });
     });
 
@@ -139,7 +139,7 @@ describe('selectDescription', () => {
 });
 
 describe('stripDuplicateDescription', () => {
-    it('drops the first paragraph when it is reference-equal to the description', () => {
+    it('removes the first paragraph when it is reference-equal to the description', () => {
         const head = makeParagraph('intro');
         const tail = makeParagraph('details');
 
@@ -166,7 +166,7 @@ describe('stripDuplicateDescription', () => {
         expect(result).toEqual(paragraphs);
     });
 
-    it('clones rather than returning the input reference', () => {
+    it('returns a clone of the input', () => {
         const paragraphs: readonly CommentParagraph[] = [makeParagraph('a')];
 
         const result = stripDuplicateDescription(paragraphs, null);
@@ -185,7 +185,7 @@ describe('buildDeprecationStatusFromNodeLike', () => {
         expect(status).toEqual({ isDeprecated: false });
     });
 
-    it('returns isDeprecated true with no message when there is no @deprecated block', () => {
+    it('returns isDeprecated true without a message when the @deprecated block is missing', () => {
         const status = buildDeprecationStatusFromNodeLike({
             flags: makeFlags({ isDeprecated: true }),
             comment: null

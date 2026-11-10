@@ -1,0 +1,8 @@
+extends: existence
+link: https://github.com/seedcord/seedcord/blob/next/.agents/skills/writing-voice/SKILL.md
+message: "Negated noun '%s'. If negating the verb keeps the meaning, write that, like 'so a committed file doesn't contain them'."
+# a suggestion only. "when no row matches" and "when a row doesn't match" mean different things
+level: suggestion
+ignorecase: true
+tokens:
+  - '(?:so|and|but|because|since|if|when|while|where|that) no (?!longer|more|matter|later|sooner|further|one\b)\w+'

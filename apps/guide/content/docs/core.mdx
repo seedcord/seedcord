@@ -25,7 +25,7 @@ export class Ping extends SlashHandler<'ping'> {
 
 Other code reaches the same object. A gate, which is a check that runs before a handler, reads it as `ctx.core`. A subscriber, which listens for your own events, and a plugin read `this.core` like a handler does.
 
-## What it carries
+## What it holds
 
 {/* prettier-ignore-start */}
 
@@ -105,7 +105,7 @@ All the shutdown phases share one deadline of 25000 milliseconds, and after them
 
 <Callout type="transport" only="gateway">
 
-`core.applicationId` comes from the discord.js client, so it resolves during the Login phase. If you read it in a `Configuration` task, it throws. Read it in a handler or in a `Ready` task. `core.rest` has no token before Login either.
+`core.applicationId` comes from the discord.js client, so it resolves during the Login phase. If you read it in a `Configuration` task, it throws. Read it in a handler or in a `Ready` task. `core.rest` also gets its token only at Login.
 
 </Callout>
 
@@ -123,7 +123,7 @@ A process runs one `Seedcord`. If you construct a second before the first has sh
 
 A script that starts a bot for one job can shut it down with `await using`, which runs the shutdown when the block ends. You can construct a new `Seedcord` after that. This only works on a server, since an edge bot doesn't have a shutdown.
 
-```ts
+```ts plain
 await using bot = await new Seedcord(config).start();
 ```
 

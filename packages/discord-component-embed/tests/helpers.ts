@@ -40,7 +40,7 @@ export function withPages(pages: Record<string, string>, userAgents: string[] = 
     };
 }
 
-// Response adds text/plain to a string body; bytes get no content type
+// Response adds text/plain to a string body; bytes don't get a content type
 export function serving(html: string, headers: Record<string, string>): CheckInput {
     return {
         ...withPages({}),

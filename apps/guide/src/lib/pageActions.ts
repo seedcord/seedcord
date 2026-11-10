@@ -38,7 +38,7 @@ export interface PageActionProps {
     links: PageActionLinks;
 }
 
-// the fetch goes straight at the file. the menu link goes through worker.ts
+// the fetch reads the file directly. worker.ts serves the menu link
 export function pageActionsFor(page: GuidePage): PageActionProps {
     return {
         copySource: GUIDE.path + TWIN.exportPath(page.url),

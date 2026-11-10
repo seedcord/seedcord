@@ -10,7 +10,7 @@ turbo gen package --args <name> "<one-line description>" <dir>
 
 It prompts for the npm name, a description, and the workspace folder, then writes `package.json`, `tsconfig.json`, `vite.config.ts`, `eslint.config.ts`, `tsdoc.json`, `README.md`, `LICENSE`, `src/index.ts`, and `tests/.gitkeep` from the templates in `templates/`.
 
-`<folder>` is the npm name without `@seedcord/`, so `@seedcord/core` scaffolds into `packages/core/`. Under `plugins/` the folder also omits the `plugin-` prefix, so `@seedcord/plugin-mongoose` scaffolds into `plugins/mongoose/`. The prefix earns its place on npm, where a package name carries no parent folder.
+`<folder>` is the npm name without `@seedcord/`, so `@seedcord/core` scaffolds into `packages/core/`. Under `plugins/` the folder also omits the `plugin-` prefix: `@seedcord/plugin-mongoose` scaffolds into `plugins/mongoose/`. The prefix earns its place on npm, where a package name doesn't have a parent folder.
 
 Every tool that walks the workspace reads each package's name from its `package.json`, so the folder name stays a human-facing label. The globs below are the exception and name the folder directly.
 

@@ -39,6 +39,7 @@ supportedArchitectures:
 
 allowBuilds:
   '@tailwindcss/oxide': true
+  '@vvago/vale': true
   esbuild: true
   sharp: true
   unrs-resolver: true

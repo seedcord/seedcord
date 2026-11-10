@@ -37,7 +37,7 @@ export class SkipMuted extends EventMiddleware<Events.MessageCreate> {
 
 ## Stopping the event
 
-Any throw stops the event. What happens next depends on the class you throw. `SkipMuted` throws a [`Silence`](ref:core/Silence), which ends the event without reporting anything. seedcord logs its reason, `'author is muted'`, as a debug line on the `errors` log channel. To turn that line off, set `errors.logSilences` to `false`. If a `Silence` has no reason, seedcord doesn't log anything. Anything else is reported the same way as a handler's [throw](/replying/throwing).
+Any throw stops the event. What happens next depends on the class you throw. `SkipMuted` throws a [`Silence`](ref:core/Silence), which ends the event without reporting anything. seedcord logs its reason, `'author is muted'`, as a debug line on the `errors` log channel. To turn that line off, set `errors.logSilences` to `false`. If you throw a `Silence` without a reason, seedcord doesn't log anything. Anything else is reported the same way as a handler's [throw](/replying/throwing).
 
 That stops one [event dispatch](/events#several-handlers-for-one-event). The next message runs every middleware again from the start.
 
@@ -171,7 +171,7 @@ export class Timing extends EventMiddleware {
 
 The base class declares `after()`, so `Timing` marks its version `override`. Leaving that off is a compile error under TypeScript's `noImplicitOverride`.
 
-`after()` receives an [`EventDispatchResult`](ref:core/EventDispatchResult) that says how the event ended. The `Timing` sample logs how many handlers ran, from `result.handlers`.
+`after()` receives an [`EventDispatchResult`](ref:core/EventDispatchResult) that reports how the event ended. The `Timing` sample logs how many handlers ran, from `result.handlers`.
 
 {/* prettier-ignore-start */}
 
@@ -183,7 +183,7 @@ The base class declares `after()`, so `Timing` marks its version `override`. Lea
 
 {/* prettier-ignore-end */}
 
-`outcome` only covers the middleware. If a handler throws, `outcome` still reads `'handled'`. That handler's own result is in its `handlers` entry, which carries the handler's class name as `handler`, plus its own `outcome` and `caught` with the same three values.
+`outcome` only covers the middleware. If a handler throws, `outcome` still reads `'handled'`. That handler's own result is in its `handlers` entry, which has the handler's class name as `handler`, plus its own `outcome` and `caught` with the same three values.
 
 An `after()` that throws doesn't stop the other `after()` calls. If `B.after()` throws, seedcord logs the error and still calls `A.after()`.
 
@@ -224,7 +224,7 @@ seedcord imports every file in that `./events/middlewares` folder. If a class th
 
 Middleware runs only when a handler is about to run. seedcord checks for a handler left to run before it starts any middleware. A catchall middleware therefore skips two kinds of events:
 
-- an event that no handler registered
+- an event with zero registered handlers
 - an event whose handlers were all registered `once` and have already run
 
 </Callout>

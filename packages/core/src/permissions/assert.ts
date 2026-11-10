@@ -7,7 +7,7 @@ import type { PermissionScope } from './bits';
 
 /**
  * A Notice class for a permission refusal. seedcord constructs it with the subject and the permission names
- * the refusal lists. A null subject is the caller.
+ * listed in the refusal. A null subject is the caller.
  */
 export type PermissionNoticeConstructor = NoticeConstructor<[subject: string | null, permissions: readonly string[]]>;
 
@@ -30,7 +30,7 @@ export interface PermissionAssertion {
  * The Administrator bit passes any scope, and with `inverse` it reports every bit in `scope`.
  *
  * The caller computes `permissions`, gateway off a discord.js role, member, or channel, and HTTP off the
- * bitfield the interaction payload carries.
+ * bitfield in the interaction payload.
  *
  * @throws A {@link Notice} when the check refuses. It lists the missing or present permissions.
  *

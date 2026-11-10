@@ -12,7 +12,7 @@ export type DispatchResult =
 export type HandlerResult = { readonly handler: string } & DispatchResult;
 
 /**
- * What `eventDispatched` publishes for each handler that ran. `unknownException` carries the thrown
+ * What `eventDispatched` publishes for each handler that ran. `unknownException` has the thrown
  * value under the same `event:name:handler` origin.
  */
 export type HandlerOutcome = Pick<HandlerResult, 'handler' | 'outcome'>;

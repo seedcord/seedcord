@@ -91,7 +91,7 @@ describe('a plugin whose init outlasts its timeout', () => {
         expect(warn).not.toHaveBeenCalled();
     });
 
-    it('logs a late rejection from a plugin that declares no dispose', async () => {
+    it("logs a late rejection from a plugin that doesn't declare dispose", async () => {
         class NoDispose extends Plugin {
             constructor(core: CoreBase) {
                 super(core, { init: { timeout: INIT_TIMEOUT_MS } });
@@ -114,7 +114,7 @@ describe('a plugin whose init outlasts its timeout', () => {
         expect(logged).toBe(true);
     });
 
-    it('stays quiet when a late init fulfils on a plugin that declares no dispose', async () => {
+    it("doesn't log when a late init fulfils on a plugin that doesn't declare dispose", async () => {
         class NoDisposeSlow extends Plugin {
             constructor(core: CoreBase) {
                 super(core, { init: { timeout: INIT_TIMEOUT_MS } });

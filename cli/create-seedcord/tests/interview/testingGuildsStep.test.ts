@@ -33,7 +33,7 @@ describe('the testing guilds step', () => {
         expect(parseInput(['my-bot', '--testing-guilds', '']).testingGuilds).toEqual([]);
     });
 
-    it('deploys globally when there is no terminal to ask on', async () => {
+    it('deploys globally when it cannot ask on a terminal', async () => {
         const answers = await runFlow([testingGuildsStep], {}, { interactive: false });
 
         expect(answers.testingGuilds).toEqual([]);

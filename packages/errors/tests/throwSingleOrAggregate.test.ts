@@ -7,7 +7,7 @@ const problem = (folder: string): SeedcordError =>
     new SeedcordError(SeedcordErrorCode.CorePathOutsideRoot, [folder, '/bot/src']);
 
 describe('throwSingleOrAggregate', () => {
-    it('returns when there are no problems', () => {
+    it('returns when the problem list is empty', () => {
         expect(() => throwSingleOrAggregate([], SeedcordErrorCode.CliProblems)).not.toThrow();
     });
 

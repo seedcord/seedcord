@@ -1,6 +1,6 @@
 ---
 title: Reporting faults
-description: Send the errors your bot reports to a Discord channel through a webhook, or write a reporter of your own.
+description: Send the errors that your bot reports to a Discord channel through a webhook, or write a reporter of your own.
 ---
 
 seedcord logs every reported throw, but nobody watches a production bot's terminal. A reporter posts each one to a Discord channel instead. seedcord ships two and registers both while your bot starts. Each one reads a webhook url from an environment variable. Set both, so a throw you didn't expect reaches a channel you read.
@@ -28,7 +28,7 @@ The `handledException` card shows, from the top:
 - the user, guild, channel, and interaction ids
 - the uuid and a stack, taken from the cause when the throw has one and from the throw itself otherwise
 
-seedcord attaches the raw interaction as `source.json`. A fault raised in an event handler shows the event and the handler in place of the kind, and it drops the command, customId, and interaction id.
+seedcord attaches the raw interaction as `source.json`. A fault raised in an event handler shows the event and the handler in place of the kind, and it leaves out the command, customId, and interaction id.
 
 <Image
     src="/handled-exception-card.webp"
@@ -113,7 +113,7 @@ export class FaultMirror extends WebhookLog<'handledException'> {
 
 {/* prettier-ignore-end */}
 
-The shipped `handledException` reporter uses `files` to attach `source.json` every time. The `unknownException` one attaches `metadata.json` only when the throw carries metadata, so a process listener's card arrives without a file.
+The shipped `handledException` reporter uses `files` to attach `source.json` every time. The `unknownException` one attaches `metadata.json` only when the throw has metadata, so a process listener's card arrives without a file.
 
 seedcord scans the folder set in `subscribers.path` for your reporters. The scaffold ships `null` there, so point it at your folder.
 
@@ -148,7 +148,7 @@ One bug in a busy command can throw on every interaction. Unthrottled, that's a 
 
 seedcord calls `throttleKey()` before it sends each card. The base returns `null`, so each publish sends its own card. Return a string from your override. Events sharing that string then collapse into one card a minute.
 
-seedcord then calls `report()` with the number it dropped while the minute was running. Here is `FaultMirror` again with both methods.
+seedcord then calls `report()` with the number of cards it skipped while the minute was running. Here is `FaultMirror` again with both methods.
 
 ```ts twoslash title="src/subscribers/FaultMirror.ts"
 import {
@@ -199,4 +199,4 @@ export class FaultMirror extends WebhookLog<'handledException'> {
 -# 12 more of these since the last report
 ```
 
-seedcord keeps the count when a send fails, so the next card still carries those events.
+seedcord keeps the count when a send fails, so the next card still includes those events.

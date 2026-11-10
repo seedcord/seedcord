@@ -50,7 +50,7 @@ export class Role extends BuilderComponent<'command'> {
 }
 ```
 
-You put [`@RegisterCommand`](ref:core/RegisterCommand) on the parent alone, since the parent is what you send to Discord. Your subcommand classes stay plain builders, and you can keep them in the same file.
+You put [`@RegisterCommand`](ref:core/RegisterCommand) on the parent alone, since the parent is what you send to Discord. Your subcommand classes are plain builders, and you can keep them in the same file.
 
 ## The route
 
@@ -134,4 +134,4 @@ export class Settings extends BuilderComponent<'command'> {
 
 Discord shows that as `/settings notifications enable`, and the route is `settings/notifications/enable`.
 
-A path goes three segments deep at most, because Discord only accepts a group inside a command or subcommands inside a group.
+A path is three segments deep at most, because Discord only accepts a group inside a command or subcommands inside a group.

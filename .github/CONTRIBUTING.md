@@ -2,7 +2,7 @@
 
 Thanks for wanting to help! Bug fixes, features and better docs are all welcome.
 
-seedcord is pre-1.0 and I break things between minors. Open an issue before starting anything large and wait for my reply. I can't keep up with large PRs nobody asked for, so those may get closed without a detailed review. Check whether an issue or PR already covers your idea first.
+seedcord is pre-1.0 and breaks things between minors. Open an issue before starting anything large and wait for my reply. I can't keep up with large PRs nobody asked for, so those may get closed without a detailed review. Check whether an issue or PR already covers your idea first.
 
 Everyone here follows the [code of conduct](CODE_OF_CONDUCT.md). Report a security problem the way [SECURITY.md](SECURITY.md) describes. If you're using AI, read the [AI policy](../AI_POLICY.md) too.
 
@@ -124,16 +124,24 @@ When you add or change a handler in a mock, run `vp -C mocks/<name> run codegen`
 
 `vp install` sets up two git hooks:
 
-- **pre-commit** runs `vp staged`, which formats the files you staged and lints them with zero warnings allowed. One lint warning blocks the commit, even though plain `vp run lint` lets it through.
+- **pre-commit** runs `vp staged`, which formats the files you staged and lints them with zero warnings allowed. One lint warning blocks the commit, even though plain `vp run lint` lets it through. It also checks the prose in your staged docs, comments, and error messages against the writing rules, and an error there blocks the commit too.
 - **commit-msg** runs commitlint on your message.
 
 If you cloned before the switch to Vite+, git still points at the old husky hooks folder and your hooks don't run. Run `vp hooks enable` once to fix that.
 
-Run `vp run prePush` before you open the PR. It checks the packages your branch changed since `next` and the ones that depend on them. `vp run prePush:all` checks every package. The root `package.json` has both chains.
+When a prose error is wrong for one spot, turn that rule off around it, with the reason next to the switch:
+
+- In markdown, wrap the text in `<!-- vale Seedcord.StandIn = NO -->` and `<!-- vale Seedcord.StandIn = YES -->`, using the rule name from the error.
+- In MDX, use `{/* vale Seedcord.StandIn = NO */}` and `{/* vale Seedcord.StandIn = YES */}`.
+- Above a string, like one that quotes Discord's own wording, add `// prose-ignore-next-line -- <why>`.
+
+A code comment doesn't have a switch, since its wording is always yours. Reword it instead.
+
+Run `vp run prePush` before you open the PR. It checks the packages that your branch changed since `next` and the ones that depend on them. `vp run prePush:all` checks every package. The root `package.json` has both chains.
 
 ## Pull request guidelines
 
-1. **One change per PR.** Changes in the same scope can go together.
+1. **One change per PR.** Changes in the same scope can share one PR.
 
 2. **Commits and PR titles are one lowercase line, conventional commits, no scope.** A breaking change marks the bare type with `!`. `commitlint.config.ts` lists the accepted types. A squash merge turns the PR title into the commit on `next`, so the title follows the same rule.
 
@@ -181,7 +189,9 @@ Have it load the others only for these tasks:
 - [`release-docs`](../.agents/skills/release-docs/SKILL.md) for bringing the changesets, READMEs, home page and guide up to date before a release, a maintainer-only job
 - [`test-performance`](../.agents/skills/test-performance/SKILL.md) when writing a test, a test helper, or a vitest config, or when a test is slow or fails only in the full suite
 
-Before you open a PR, run [`/branch-audit`](../.claude/commands/branch-audit.md) or have your agent run it. It reviews everything your branch changes against `next`. Fix what it finds before you push.
+Before every push, type [`/branch-audit`](../.agents/skills/branch-audit/SKILL.md) yourself (`$branch-audit` in Codex), since agents can't start it on their own. It audits everything your branch changes against `next`, and then it works through the findings with you, one decision at a time. Run it again after the fixes, until a round finds only nits. The skill has the full loop.
+
+The audit reads callers and imports to check its claims. [codebase-memory](https://github.com/DeusData/codebase-memory-mcp) makes that faster and cheaper, but it's optional. Install it with `--skip-config` and add it to your agent's MCP config yourself, so the installer doesn't change your other agent setups.
 
 ## CI
 

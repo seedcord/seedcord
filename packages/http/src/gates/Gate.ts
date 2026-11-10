@@ -5,11 +5,11 @@ import type { APIInteractionGuildMember, APIUser } from 'discord-api-types/v10';
 
 /**
  * The interaction gate context on the HTTP transport. It extends the scalar {@link AppPermissionsContext} with the
- * raw interaction payload and the user and member the payload carries. A gate reading button fields, inferred
+ * raw interaction payload and the user and member in the payload. A gate reading button fields, inferred
  * from its `ctx` annotation, is rejected on a slash handler.
  *
- * The http transport delivers no role-derived permission sets, so `memberGuildPermissions` and
- * `appGuildPermissions` are absent. A gate requiring `GuildPermissionsContext` (a permission gate with
+ * `memberGuildPermissions` and `appGuildPermissions` are absent because the http transport doesn't
+ * deliver role-derived permission sets. A gate requiring `GuildPermissionsContext` (a permission gate with
  * `in: 'guild'`) is a compile error on an http handler.
  *
  * @typeParam Repliable - The interaction type the gate reads, narrowing which handlers accept it.

@@ -28,7 +28,7 @@ export interface AgentLink {
     type?: string;
 }
 
-/** The relations a site repeats on every page, for the html head and the `Link` header alike. */
+/** The relations that a site repeats on every page, for the html head and the `Link` header alike. */
 export function siteLinks(site: SeedcordSite): AgentLink[] {
     const links: AgentLink[] = [
         { rel: 'describedby', href: `${SITES[site].path}/${LLMS_TXT}` },
@@ -62,7 +62,7 @@ export function agentLinkHeader(site: SeedcordSite, twin?: string): string {
 const SKILL_URL = HOME.at(skillUrl(SEEDCORD_SKILL));
 
 const FRAMEWORK_RULES = [
-    'seedcord has no presence in training data. Read a page before you write code against it.',
+    "seedcord isn't in training data. Read a page before you write code against it.",
     SEARCH_RULE,
     "`seedcord` on npm is the command line tool. A bot installs `@seedcord/gateway` for a websocket connection, or `@seedcord/http` to answer Discord's interactions endpoint. It installs one of the two. Before you install another seedcord package, check whether that one already exports what you need since the transports re-export most packages.",
     'Read the current version of every package from the npm registry. Each one has its own version number.',
@@ -77,7 +77,7 @@ const REFERENCE_RULE = `The API reference is at ${PRODUCTION_SITES.docs.url}, on
 const GUIDE_RULE = `The guide is at ${GUIDE.url}, one page per feature.`;
 const HOME_RULE = `The project site is at ${HOME.url}.`;
 
-// a reader already on the site gets no line pointing back at it
+// a reader already on the site doesn't get a line pointing back at it
 const SITE_RULES: Record<SeedcordSite, string[]> = {
     home: [REFERENCE_RULE, GUIDE_RULE],
     guide: [REFERENCE_RULE, HOME_RULE],

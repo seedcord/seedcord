@@ -26,7 +26,7 @@ ruleTester.run('require-button-props', rule, {
             import { ButtonBuilder } from 'discord.js';
             new ButtonBuilder().setStyle(7);
         `,
-        // constructor data carries the customId
+        // constructor data has the customId
         dedent`
             import { ButtonBuilder, ButtonStyle } from 'discord.js';
             new ButtonBuilder({ custom_id: 'x' })

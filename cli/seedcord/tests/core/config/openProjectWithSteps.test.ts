@@ -45,7 +45,7 @@ function projectWithConfig(source: string): string {
 const loader = new ProjectLoader(openModuleLoader, new ShellMode());
 
 describe('openProjectWithSteps', () => {
-    it('opens the project inside read config when the config has no vitePlugins', async () => {
+    it("opens the project inside read config when the config doesn't have vitePlugins", async () => {
         const projectDir = projectWithConfig(`export default { ${SERVER_FIELDS} };\n`);
         const steps = recordingSteps();
 

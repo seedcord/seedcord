@@ -47,8 +47,8 @@ export class ReferenceResolver {
         return this.resolveCrossPackage(reference) ?? { kind: 'unresolved' };
     }
 
-    // the lazy engine never loads the package to check, so without this gate a param or predicate ref
-    // builds a 404 link
+    // this gate is needed because the lazy engine never loads the package to check, and without it a
+    // param or predicate ref builds a 404 link
     private resolveCrossPackage(reference: DocReference): RefTarget | null {
         if (!reference.packageName || !this.registry.isKnownPackage(reference.packageName)) return null;
 
@@ -74,8 +74,8 @@ export class ReferenceResolver {
 
         if (!reference) return null;
 
-        // the table keys a package (`mongoose` for `mongoose.Schema`) and a bare symbol (`Writable`), so
-        // try both
+        // try both lookups because the table keys a package (`mongoose` for `mongoose.Schema`) and a bare
+        // symbol (`Writable`)
         const fallbackUrl =
             resolveExternalPackageUrl(reference.packageName) ?? resolveExternalPackageUrl(reference.name);
         if (fallbackUrl) return fallbackUrl;

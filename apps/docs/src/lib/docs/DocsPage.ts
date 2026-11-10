@@ -70,7 +70,7 @@ interface PageFacts {
     image: string;
     markdownPath?: string;
     isArticle?: boolean;
-    // `undefined` drops the page from the index
+    // `undefined` marks the page noindex
     canonicalPath?: string | undefined;
 }
 
@@ -143,7 +143,7 @@ export class DocsPage {
                 canonical: url,
                 ...(markdownPath ? { types: { 'text/markdown': canonicalUrl(markdownPath) } } : {})
             },
-            // google merges a canonical between near-duplicates. a dropped symbol has no page to merge into
+            // google merges a canonical between near-duplicates. a symbol missing from latest doesn't have a page to merge into
             ...(canonicalPath === undefined ? { robots: { index: false, follow: true } } : {}),
             openGraph: {
                 type: isArticle ? 'article' : 'website',

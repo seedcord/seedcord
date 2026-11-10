@@ -22,7 +22,7 @@ describe('CopyAnchorButton', () => {
         });
     });
 
-    it('copies the page url when it has no anchor', async () => {
+    it('copies the page url when no anchor is given', async () => {
         const writeText = stubClipboard();
         render(<CopyAnchorButton label="Commands" />);
 

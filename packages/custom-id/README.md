@@ -25,7 +25,7 @@
 
 Discord gives a component one string to carry its state, capped at 100 characters. `@seedcord/custom-id` declares what that string holds, packs values into it, and reads them back with the types you declared. The component that mints the id and the code that reads a click share one declaration.
 
-Each id also carries a short hash of its fields. A click on a component built before you changed them throws on decode, so values in the old layout never reach your code.
+Each id also has a short hash of its fields. A click on a component built before you changed them throws on decode, so values in the old layout never reach your code.
 
 Both seedcord transports depend on it, and a seedcord bot imports `CustomId` from its transport. Install it directly to use it with discord.js or any other Discord library, without seedcord. You then match each click to its definition yourself.
 

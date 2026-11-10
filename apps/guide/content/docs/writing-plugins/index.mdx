@@ -3,7 +3,7 @@ title: Writing a plugin
 description: Write a plugin that your bot starts and stops, give it typed options, and call it from your handlers through this.core.
 ---
 
-Your bot talks to an outside service, like a metrics API or a cache. You created its client in `bot.ts` and exported it. Nothing closes that client when the bot shuts down, and a handler can import it before it has connected. As a plugin, the client starts and stops with your bot, and handlers read it from `this.core` under the key you attach it with. [Using a plugin](/plugins) shows how a bot attaches one.
+Say your bot talks to an outside service, like a metrics API or a cache, and exports its client from `bot.ts`. Nothing closes that client when the bot shuts down. A handler can also import it before it has connected. As a plugin, the client starts and stops with your bot, and handlers read it from `this.core` under the key you attach it with. [Using a plugin](/plugins) shows how a bot attaches one.
 
 To write a plugin, extend [`Plugin`](ref:core/Plugin) and write `init()`. Everything else on the base is optional.
 
@@ -40,7 +40,7 @@ export default seedcord.attach('uptime', Uptime);
 
 ## Calling it from a handler
 
-A handler calls your plugin's methods on `this.core.uptime`, the key you attached it under. It needs no import from `bot.ts`.
+A handler calls your plugin's methods on `this.core.uptime`, the key you attached it under. It doesn't need an import from `bot.ts`.
 
 ```ts twoslash title="src/handlers/UptimeCommand.ts"
 import { SlashHandler, SlashRoute } from '@seedcord/gateway';
@@ -132,7 +132,7 @@ Each transport exports its own `Plugin` class. A transport is how the bot talks 
 
 </Callout>
 
-When you publish a plugin, its base decides which bots can attach it. One on the gateway base attaches only to gateway bots, and one on the http base only to http bots. Extend `@seedcord/core/plugin` unless your plugin needs `bot`, `startup`, or `shutdown`. The Mongoose and Kysely plugins both extend it, so a bot on either transport can attach them. A plugin inside your own bot only ever runs on that bot's transport, so extend that transport's base.
+When you publish a plugin, its base sets which bots can attach it. One on the gateway base attaches only to gateway bots, and one on the http base only to http bots. Extend `@seedcord/core/plugin` unless your plugin needs `bot`, `startup`, or `shutdown`. The Mongoose and Kysely plugins both extend it, so a bot on either transport can attach them. A plugin inside your own bot only ever runs on that bot's transport, so extend that transport's base.
 
 ## What the constructor takes
 
@@ -195,13 +195,13 @@ Uptime rejected its options. Label is empty.
 
 ## Logging
 
-`this.logger` exists from the constructor onward and prints under your class name. Each log line goes to a channel, a named stream that a bot can filter or silence. `attach` sets the channel to the key before your constructor runs, so if someone attaches your plugin as `metrics`, every line it logs goes to the `metrics` channel. [The log channel section](/plugins#the-key-is-also-a-log-channel) shows how a bot filters them.
+`this.logger` exists from the constructor onward and prints under your class name. The logger writes each line to a channel, a named stream that a bot can filter or silence. `attach` sets the channel to the key before your constructor runs, so if someone attaches your plugin as `metrics`, it logs every line to the `metrics` channel. [The log channel section](/plugins#the-key-is-also-a-log-channel) shows how a bot filters them.
 
 A plugin that runs jobs can give each one its own label. `this.logger.withLabel('nightly-sync')` returns a logger that prints under `nightly-sync` on the same channel.
 
 ## Keeping records
 
-A plugin that schedules jobs or remembers where a sync left off needs that state back after a restart. `this.kv` is a [kv store](/built-ins/) of your plugin's own. It writes through the driver the bot passes as `kv`, under your plugin's attach key, so its records stay apart from `core.kv` and from every other plugin's.
+A plugin that schedules jobs or tracks where a sync left off needs that state back after a restart. `this.kv` is a [kv store](/built-ins/) of your plugin's own. It writes through the driver that the bot passes as `kv`, under your plugin's attach key, so its records are separate from `core.kv` and from every other plugin's.
 
 ```ts twoslash
 import { Plugin } from '@seedcord/gateway';
@@ -235,6 +235,6 @@ export class Reminders extends Plugin {
 
 `add` saves a job before it schedules it, so `ready()` finds the job again after a restart. The restore runs in `ready()`, after the bot has logged in, because a job that is already due sends its message right away.
 
-`jobs` reads `this.kv` in a field initializer, which works because `attach` sets it before your constructor runs. The constructor and every method can read it too. If a bot attaches `Reminders` twice under two keys, each one keeps its own jobs. If the bot renames the key, the records under the old key stay in the driver and the plugin starts empty.
+`jobs` reads `this.kv` in a field initializer, which works because `attach` sets it before your constructor runs. The constructor and every method can read it too. If a bot attaches `Reminders` twice under two keys, each one keeps its own jobs. If the bot renames the key, the records under the old key are still in the driver and the plugin starts empty.
 
-A plugin you build with `new` yourself, as in a test, has no attach key. Reading `this.kv` on it throws `CorePluginKvOutsideAttach`.
+A plugin you build with `new` yourself, as in a test, never gets an attach key. Reading `this.kv` on it throws `CorePluginKvOutsideAttach`.

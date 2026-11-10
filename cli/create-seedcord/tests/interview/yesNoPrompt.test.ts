@@ -13,7 +13,7 @@ describe.each([installStep, gitStep])('the $key question', (step) => {
         await expect(answer).resolves.toBe(true);
     });
 
-    it('answers no once you move down to it', async () => {
+    it('answers false once you move down to it', async () => {
         using terminal = new PromptTerminal();
         const answer = step.ask({}, terminal.prompter);
 

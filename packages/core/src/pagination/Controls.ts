@@ -12,7 +12,7 @@ import type { APIMessageComponentEmoji } from 'discord-api-types/v10';
 /** The five built-in nav controls. */
 export type ControlKey = 'first' | 'prev' | 'indicator' | 'next' | 'last';
 
-// Link and Premium have no custom_id, which un-routes a control.
+// Link and Premium don't have a custom_id, which un-routes a control.
 type CustomIdStyle = ButtonStyle.Primary | ButtonStyle.Secondary | ButtonStyle.Success | ButtonStyle.Danger;
 
 /** Cosmetic overrides for a control button. `style` excludes Link and Premium, which would un-route it. */
@@ -66,7 +66,7 @@ export class Controls implements PaginatorControls {
     button(key: ControlKey, cosmetics?: ControlCosmetics): ButtonBuilder {
         const { target, disabled } = this.navState(key);
 
-        // an emoji with no explicit label makes an icon-only button. the indicator always shows its page text.
+        // an emoji without an explicit label makes an icon-only button. the indicator always shows its page text.
         const defaultLabel = key === 'indicator' ? this.indicatorText() : DEFAULT_LABEL[key];
         const label = cosmetics?.label ?? (key === 'indicator' || !cosmetics?.emoji ? defaultLabel : undefined);
 
@@ -105,7 +105,7 @@ export class Controls implements PaginatorControls {
         if (keys.length === 0 || keys.length > MAX_BUTTONS_PER_ROW) {
             throw new SeedcordRangeError(SeedcordErrorCode.PaginationControlCount, [keys.length, MAX_BUTTONS_PER_ROW]);
         }
-        // repeating a control reuses its slot and page, so the custom_ids collide and Discord rejects the message.
+        // a repeated control reuses its slot and page, and Discord rejects a message with colliding custom_ids
         const seen = new Set<ControlKey>();
         for (const key of keys) {
             if (seen.has(key)) throw new SeedcordTypeError(SeedcordErrorCode.PaginationDuplicateControls, [key]);

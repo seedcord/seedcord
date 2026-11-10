@@ -25,11 +25,22 @@ function quote(arg: string): string {
     throw new Error(`vp staged can't pass a path holding both ' and ", got ${arg}. Rename the file.`);
 }
 
-// every command starts in the repo root, with no shell to run a cd
+// every command starts in the repo root, without a shell to run a cd
 function eslintCommand(root: string | undefined, files: readonly string[]): string {
     if (root === undefined) return `vp exec ${ESLINT} ${files.map(quote).join(' ')}`;
     const relative = files.map((file) => quote(posixRelative(root, file)));
     return `vp -C ${quote(root)} exec ${ESLINT} --config ${quote(ESLINT_CONFIG)} ${relative.join(' ')}`;
+}
+
+const PROSE = [
+    'vale --minAlertLevel=error',
+    'eslint --no-config-lookup -c tooling/prose/prose.config.ts --quiet --no-warn-ignored'
+];
+
+// vale and the eslint pass skip any files that aren't covered by their configs
+export function runProse(files: readonly string[]): string[] {
+    const list = files.map(quote).join(' ');
+    return PROSE.map((command) => `vp exec ${command} ${list}`);
 }
 
 export function runEslint(files: readonly string[]): string[] {

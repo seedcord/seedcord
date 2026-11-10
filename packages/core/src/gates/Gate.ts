@@ -19,11 +19,11 @@ import type { Promisable } from 'type-fest';
 export interface GateContextBase {
     /** Gates read the config and the rate limiter through it. */
     readonly core: CoreBase;
-    /** The acting user's id, or null on an event that carries none. */
+    /** The acting user's id, or null on an event that has none. */
     readonly userId: string | null;
     /** The guild id, or null outside a guild. */
     readonly guildId: string | null;
-    /** The channel id, or null when the source carries none. */
+    /** The channel id, or null when the source has none. */
     readonly channelId: string | null;
     /**
      * The member's role ids without the everyone role, the shape a raw interaction payload
@@ -68,7 +68,7 @@ export interface GuildPermissionsContext extends GateContextBase {
 
 /**
  * The context an interaction provides on both transports, where Discord always sends the bot's channel
- * permissions. A gate that requires it fits no event handler.
+ * permissions. A gate that requires it doesn't fit any event handler.
  *
  * @example
  * ```ts
@@ -86,11 +86,11 @@ declare const GateBrand: unique symbol;
 
 /**
  * A precondition attached to a handler. It refuses by throwing a `Notice` (a reply) or a `Silence`
- * (a drop with no reply), and passes by returning. `Ctx` is the context it requires, so a gate that reads
+ * (no reply), and passes by returning. `Ctx` is the context it requires, so a gate that reads
  * a field absent on a handler's context is rejected at compile time. `Name` is captured as a literal so
  * a mismatch error can name the gate. Build one with {@link defineGate} or {@link defineEffectGate}.
  *
- * @typeParam Ctx - The context the gate requires. A field missing from it is a compile error.
+ * @typeParam Ctx - The context that the gate requires. A field missing from it is a compile error.
  * @typeParam Name - The gate's literal name, named in a mismatch error.
  *
  * @example
@@ -151,12 +151,12 @@ export interface EffectGate<Ctx extends GateContextBase = GateContextBase, Name 
 
 /**
  * Builds a {@link Gate} from a check. The check refuses by throwing a Notice or a Silence and passes
- * by returning. The required context is inferred from `ctx`, so annotate it as narrowly as the fields
- * the check reads. No annotation defaults to {@link GateContextBase}, an agnostic gate that fits every
- * handler.
+ * by returning. Annotate `ctx` as narrowly as the fields the check reads, because the required context
+ * is inferred from it. No annotation defaults to {@link GateContextBase}, an agnostic gate that fits
+ * every handler.
  *
  * @typeParam Name - The gate's name, captured as a literal for mismatch errors.
- * @typeParam Ctx - The context the check reads, inferred from the `ctx` annotation.
+ * @typeParam Ctx - The context that the check reads, inferred from the `ctx` annotation.
  *
  * @param name - The gate's name, used in mismatch errors.
  * @param fn - The check, which refuses by throwing a Notice or a Silence and passes by returning.

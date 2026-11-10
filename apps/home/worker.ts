@@ -5,7 +5,7 @@ interface Env {
     ASSETS: Assets;
 }
 
-// every other host serves the same content, so it gets an X-Robots-Tag noindex to keep duplicates out of Google
+// every other host gets an X-Robots-Tag noindex to keep duplicates out of Google because it serves the same content
 const PRODUCTION_HOST = 'seedcord.org';
 const WWW_HOST = `www.${PRODUCTION_HOST}`;
 
@@ -13,7 +13,7 @@ const MOVED_PERMANENTLY = 301;
 
 const LINK_HEADER = agentLinkHeader('home');
 
-// cloudflare serves the extension-less file next writes here with no content-type at all
+// cloudflare serves the extension-less file next writes here without a content-type
 const ICON_PATH = '/icon';
 
 const handler = {

@@ -27,7 +27,7 @@ function makeContext(searchResults: SearchHit[], resolved = 'https://example.com
 }
 
 function linkPart(text: string): InlineTagPart {
-    // justified: a bare @link display part carries only kind/tag/text here.
+    // justified: a bare @link display part has only kind/tag/text here.
     return { kind: 'inline-tag', tag: '@link', text } as unknown as InlineTagPart;
 }
 

@@ -8,7 +8,7 @@ All three run Next.js with React 19 and Tailwind v4. None of them publish.
 
 ## Shared UI comes from `@seedcord/ui`
 
-Every primitive lives in `tooling/ui/src/`. Read that folder before you build anything.
+Every primitive is in `tooling/ui/src/`. Read that folder before you build anything.
 
 `react/forbid-elements` catches raw `<button>`, `<input>` and `<select>`. A one-off style means the primitive is missing a variant. Add it there and inline nothing. An element that fills a different job, a listbox option or a mock of another product's interface, takes an inline disable that gives the reason.
 
@@ -22,7 +22,7 @@ An app-local `src/components/` folder holds pieces specific to that app. A patte
 
 ## React 19
 
-- `use(Context)` replaces `useContext(Context)`. `ref` is a normal prop, so `forwardRef` is gone.
+- `use(Context)` replaces `useContext(Context)`. `ref` is a normal prop, so you don't need `forwardRef`.
 - **No array index as a React key.** Use a stable identity: an id, a slug, or the content string for a static list.
 - **No mutable values in dependency arrays.** `location.pathname` and `ref.current` trigger no re-render.
 - **Nothing that differs between server and client may be reachable from JSX during SSR.** `new Date()`, `Math.random()`, and `window.*` belong in `useEffect`, backed by state.

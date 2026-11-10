@@ -5,7 +5,7 @@ description: Answer a pick from a select menu, including the user, role, and cha
 
 A row holds five buttons. Once a choice needs more than five, or someone should pick several things at once, a select menu fits better. It's a dropdown of up to 25 options.
 
-One kind carries options you write yourself. For the rest, Discord resolves the picks into users, roles, channels, or a mix of users and roles, and sends the objects behind those ids. You skip asking for an id as text and fetching it yourself. Every kind gets its own handler base, and each one routes the way a button does.
+One kind has options you write yourself. For the rest, Discord resolves the picks into users, roles, channels, or a mix of users and roles, and sends the objects behind those ids. You skip asking for an id as text and fetching it yourself. Every kind gets its own handler base, and each one routes the way a button does.
 
 ```ts twoslash title="src/components/TopicPicker.ts"
 import { StringSelectMenuBuilder } from '@discordjs/builders';
@@ -37,7 +37,7 @@ export class TopicPicker extends RowComponent<'menu_string'> {
 
 ## Routing the pick
 
-The menu above carries options you wrote, so it routes through [`@StringMenuRoute`](ref:core/StringMenuRoute) to a [`StringMenuHandler`](ref:gateway/StringMenuHandler). Pass the same [`CustomId`](ref:custom-id/CustomId) definitions to the decorator and the generic. Passing different ones is a compile error.
+The menu above has options you wrote, so it routes through [`@StringMenuRoute`](ref:core/StringMenuRoute) to a [`StringMenuHandler`](ref:gateway/StringMenuHandler). Pass the same [`CustomId`](ref:custom-id/CustomId) definitions to the decorator and the generic. Passing different ones is a compile error.
 
 ```ts twoslash title="src/handlers/Topics.ts"
 import {
@@ -98,11 +98,11 @@ export class Assign extends UserMenuHandler<[typeof AssignId]> {
 }
 ```
 
-Each base declares _only_ the members its menu resolves.
+Each base declares _only_ the members that its menu resolves.
 
 {/* prettier-ignore-start */}
 
-| base | decorator | what the handler carries |
+| base | decorator | what the handler has |
 | --- | --- | --- |
 | [`StringMenuHandler`](ref:gateway/StringMenuHandler) | [`@StringMenuRoute`](ref:core/StringMenuRoute) | `this.values` |
 | [`UserMenuHandler`](ref:gateway/UserMenuHandler) | [`@UserMenuRoute`](ref:core/UserMenuRoute) | `this.values`, `this.users`, `this.members` |
@@ -112,7 +112,7 @@ Each base declares _only_ the members its menu resolves.
 
 {/* prettier-ignore-end */}
 
-If you read a member the base leaves out, like `this.channels` on a `UserMenuHandler`, TypeScript reports an error on that property.
+If you read a member that the base leaves out, like `this.channels` on a `UserMenuHandler`, TypeScript reports an error on that property.
 
 Discord resolves `this.members` only inside a guild, so it comes back empty in a DM. A mentionable menu accepts users and roles together. `this.users` and `this.roles` each hold whatever matched, so either one can be empty.
 

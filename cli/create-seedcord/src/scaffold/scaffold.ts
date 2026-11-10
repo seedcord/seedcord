@@ -69,7 +69,7 @@ function withReleaseTag(name: string): string {
     return isPrerelease && NEXT_TAGGED_PACKAGES.has(name) ? `${name}@next` : name;
 }
 
-// cf goes in the first add, since bun runs the project's postinstall after every one
+// cf is in the first add, since bun runs the project's postinstall after every one
 function addCommands(manager: PackageManager, context: TemplateContext): ResolvedCommand[] {
     return [
         manager.add(devPackages(context).map(withReleaseTag), true),
@@ -91,7 +91,7 @@ async function succeeded(steps: StepUi, label: StepLabel, work: () => Promise<un
         await steps.run(label, work);
         return true;
     } catch {
-        // StepUi already printed the failure
+        // StepUi has already printed the failure
         return false;
     }
 }

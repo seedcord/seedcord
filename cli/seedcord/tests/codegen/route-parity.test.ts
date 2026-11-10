@@ -80,7 +80,7 @@ describe('route-key parity between AugmentationBuilder and buildSlashRoute', () 
         expect(new Set(Object.keys(tables))).toEqual(new Set(expectedRoutesFromJson(json)));
     });
 
-    it('empty subcommand group yields no route on either side', () => {
+    it('empty subcommand group yields zero routes on either side', () => {
         const builder = new SlashCommandBuilder()
             .setName('admin')
             .setDescription('d')

@@ -120,7 +120,7 @@ export interface SeedcordConfig {
      */
     files?: string[];
     /**
-     * How `seedcord dev` exposes an http bot's interactions server. This has no effect on a gateway bot.
+     * How `seedcord dev` exposes an http bot's interactions server. This does nothing on a gateway bot.
      *
      * `true` opens a cloudflared quick tunnel and writes the interactions endpoint on every run,
      * since the hostname changes each time. An https URL is one you already serve, through a named

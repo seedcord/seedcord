@@ -30,7 +30,7 @@ export async function runDevApp(store: DevStore, runner: DevRunner, stateFolder:
                 runResult = runner
                     .run()
                     .finally(async () => {
-                        // unmounting first drops the buffered lines
+                        // unmounting first loses the buffered lines
                         await LogStore.instance.flush();
                         unmount();
                     })

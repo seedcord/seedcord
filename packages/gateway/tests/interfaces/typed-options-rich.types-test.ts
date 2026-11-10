@@ -64,7 +64,7 @@ declare module '@seedcord/core' {
             };
             cache: 'cached';
         };
-        // a DM can reach this one, so every resolved getter widens to include the raw payload
+        // every resolved getter widens to include the raw payload because a DM can reach this one
         askDm: {
             options: {
                 who: { kind: 'user'; required: true };
@@ -174,7 +174,7 @@ function mentionableIncludesGuildMember(options: SlashOptions<'purge'>): void {
 
 function onlyPresentKindGetters(options: SlashOptions<'flag'>): void {
     expectTypeOf(options.getString('reason')).toEqualTypeOf<string>();
-    // route has no user option, so getMember and getUser do not exist
+    // getMember and getUser do not exist because route doesn't declare a user option
     // @ts-expect-error getMember is absent without a user option
     void options.getMember;
     // @ts-expect-error getUser is absent without a user option

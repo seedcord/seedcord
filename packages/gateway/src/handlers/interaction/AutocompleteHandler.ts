@@ -91,7 +91,7 @@ export abstract class AutocompleteHandler<
 
     /**
      * Run the case for the focused field. Because an autocomplete always dispatches by which field is
-     * focused, match is how you read it. There is no single-field shortcut the way slash/component handlers have one.
+     * focused, match is how you read it. Autocomplete handlers don't get the single-field shortcut that slash and component handlers have.
      *
      * Provide one case per autocompletable field across the registered commands, keyed by field name. Each
      * case receives the focused partial value and a `respond` typed to that field's choice value. The

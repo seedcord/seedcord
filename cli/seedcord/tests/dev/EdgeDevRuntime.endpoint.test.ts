@@ -276,7 +276,7 @@ describe('EdgeDevRuntime endpoint', () => {
         const events: DevEvent[] = [];
         await using started = await startedRuntime(projectDir, (event) => events.push(event));
         await started.runtime.startBot(started.instance);
-        // the replay guard rejects a body it already saw with the same timestamp
+        // the replay guard rejects a body it has already seen with the same timestamp
         const wave = async (id: string): Promise<void> => {
             const body = JSON.stringify({ ...JSON.parse(WAVE_INTERACTION), id });
             await fetch(`http://localhost:${started.port()}/`, { method: 'POST', body, headers: await sign(body) });

@@ -23,7 +23,7 @@ export class ArraySource<Item> extends ArraySourceBase<Item, PageContext> {}
 /**
  * A source for a large or unknown-length set you fetch one page at a time (SQL LIMIT/OFFSET, a paged API).
  * The fetcher receives the page index and the page size and reports whether a next page exists. A cursor
- * source has no cheap total, so `totalPages` is undefined, the last button is omitted, and the indicator
+ * source doesn't have a cheap total, so `totalPages` is undefined, the last button is omitted, and the indicator
  * reads "Page X".
  *
  * @typeParam Item - The item type, inferred from the fetcher's slice.

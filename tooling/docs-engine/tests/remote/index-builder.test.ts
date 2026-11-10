@@ -43,7 +43,7 @@ describe('buildIndex', () => {
         expect(index.packages.x?.prerelease).toEqual({ latest: '1.0.0-next.1' });
     });
 
-    it('drops invalid version strings', () => {
+    it('skips invalid version strings', () => {
         const index = buildIndex([{ folder: 'x', fullName: '@s/x', versions: ['1.0.0', 'not-a-version', ''] }], {
             updatedAt: UPDATED_AT
         });
@@ -90,7 +90,7 @@ describe('buildIndex', () => {
             { updatedAt: UPDATED_AT }
         );
 
-        // eslint-disable-next-line unicorn/prefer-structured-clone -- exercises the JSON wire round-trip the remote docs format uses
+        // eslint-disable-next-line unicorn/prefer-structured-clone -- tests the JSON wire round-trip the remote docs format uses
         const reparsed = validateIndex(JSON.parse(JSON.stringify(built)));
         expect(reparsed.packages.x?.description).toBe('Survives serialize + re-read.');
     });

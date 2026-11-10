@@ -10,7 +10,7 @@ import type { NoticeConstructor } from '#stops/Notice';
 import type { EpochMs } from '@seedcord/types';
 
 /**
- * Options for {@link Cooldown}. `per` sets the bucket the window applies to and `limit` the uses allowed per
+ * Options for {@link Cooldown}. `per` sets the bucket that the window applies to and `limit` the uses allowed per
  * window. `notice` replaces the refusal.
  *
  * @example
@@ -33,7 +33,7 @@ import type { EpochMs } from '@seedcord/types';
  */
 export interface CooldownOptions {
     /**
-     * The bucket the cooldown window applies to. 'user' scopes by user ID (falls back to global when the source carries no user id). 'guild' scopes by guild ID (falls back to global if no guild), and 'channel' scopes by channel ID (falls back to global if no channel).
+     * The bucket the cooldown window applies to. 'user' scopes by user ID (falls back to global when the source doesn't carry a user id). 'guild' scopes by guild ID (falls back to global if no guild), and 'channel' scopes by channel ID (falls back to global if no channel).
      *
      * @defaultValue `'user'`
      */
@@ -48,7 +48,7 @@ export interface CooldownOptions {
     notice?: NoticeConstructor<[resetAt: EpochMs]>;
 }
 
-// off-route ctxs have no route to key on. each Cooldown() call gets its own id to keep unrelated event handlers isolated
+// off-route ctxs don't have a route to key on. each Cooldown() call gets its own id to keep unrelated event handlers isolated
 let anonSeq = 0;
 
 function scopeValue(ctx: GateContextBase, per: 'user' | 'guild' | 'channel'): string {
@@ -59,9 +59,9 @@ function scopeValue(ctx: GateContextBase, per: 'user' | 'guild' | 'channel'): st
 
 /**
  * Allows `limit` uses per window, scoped by `per`. A number `duration` is **seconds**, and a string is
- * a duration like `30m` or `24h`. The slot is charged in commit, only after the whole gate set passes,
- * so a later refusal never burns the cooldown.
- * If two requests in one process pass the check together, the commit refuses the one that goes over `limit`.
+ * a duration like `30m` or `24h`. A later refusal never burns the cooldown
+ * because the slot is charged in commit, only after the whole gate set passes.
+ * If two requests in one process pass the check together, the commit refuses the one that exceeds `limit`.
  * The key combines the handler's route with the window settings, keeping two different handlers on separate
  * windows. Replace the refusal with {@link CooldownOptions.notice}.
  *
@@ -124,7 +124,7 @@ export function Cooldown(
     // exactOptionalPropertyTypes rejects an explicit undefined key
     const window = options?.limit === undefined ? { windowMs } : { windowMs, limit: options.limit };
     const anonId = anonSeq++;
-    // routed keys stay stable across restarts, letting a durable store rebuild the same window
+    // a durable store rebuilds the same window because a routed key is the same after a restart
     const keyOf = (ctx: GateContextBase): string =>
         `cooldown:${ctx.dispatch.declaredRoute ?? `anon${anonId}`}:${per}:w${windowMs}:l${options?.limit ?? 1}:${scopeValue(ctx, per)}`;
 

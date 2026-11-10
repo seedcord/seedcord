@@ -79,7 +79,7 @@ export class HealthCheck {
                 server.removeListener('error', onListenError);
                 server.on('error', (err) => this.logger.error('Health check server error', err));
 
-                // binds all interfaces, so log an address a browser can open
+                // log an address a browser can open because the server binds all interfaces
                 const address = this._host ?? 'localhost';
                 this.logger.info(
                     `${paint.mint.bold(paint.check)} Health check server listening on ${paint.sky.bold(`http://${address}:${this._port}${this.path}`)}`
@@ -99,8 +99,8 @@ export class HealthCheck {
 
     public stop(): Promise<void> {
         const server = this.server;
-        // close() on a non-listening server invokes its callback with ERR_SERVER_NOT_RUNNING and
-        // never emits 'close', so without this guard the promise would hang the shutdown phase.
+        // this guard keeps the promise from hanging the shutdown phase because close() on a non-listening
+        // server invokes its callback with ERR_SERVER_NOT_RUNNING and never emits 'close'.
         if (!server?.listening) return Promise.resolve();
 
         return new Promise((resolve, reject) => {

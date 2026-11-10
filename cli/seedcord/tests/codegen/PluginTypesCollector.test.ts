@@ -150,7 +150,7 @@ describe('PluginTypesCollector', () => {
         expect(messages).toContainEqual(expect.stringContaining('returned a Date at when.'));
     });
 
-    it('keeps each attachment of one class and reports a key where they disagree', async () => {
+    it('keeps each attachment of one class and reports a key where they differ', async () => {
         const { modules } = growingLoader();
         class Cron {
             public static readonly id = 'cron';

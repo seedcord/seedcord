@@ -45,7 +45,7 @@ These read your handlers, commands, events, and subscribers. Some catch a class 
 | `subscriber-missing-decorators` | a subscriber missing `@Subscribe`, or a `WebhookLog` missing `@WebhookUrl` |
 | `no-raw-client-events` | a `client.on` listener, which skips the dispatcher and every middleware on it. Gateway only |
 | `no-raw-interaction-acks` | a raw discord.js `reply`, `defer`, `update`, or `showModal` on a handler's interaction |
-| `no-djs-builder-import` | a component builder imported from `discord.js`. Only the `@discordjs/builders` copy survives nesting |
+| `no-djs-builder-import` | a component builder imported from `discord.js`. Only the `@discordjs/builders` copy works when nested |
 | `use-custom-id-codec` | a hand-written `setCustomId` string, which drifts from the route that reads it |
 | `use-paint-in-logs` | chalk inside a logger call. A terminal theme remaps chalk's color names |
 
@@ -79,7 +79,7 @@ Builders get their own set. Most of these rules stop a payload Discord would rej
 
 Sometimes a rule fits most of your bot and not one folder, like old code you haven't moved to v2 components yet. The seedcord rules carry a `@seedcord/` prefix, and the discord.js rules carry `discordjs/`. The rule tables leave those prefixes out, so write the full name when you change a rule.
 
-`userConfigs` goes in last, so anything you put there overrides the blocks above it. This one turns `prefer-v2-component` off for `src/legacy` only.
+`userConfigs` is the last block, so anything you put there overrides the blocks above it. This one turns `prefer-v2-component` off for `src/legacy` only.
 
 ```ts twoslash title="eslint.config.ts"
 // ---cut-start---
@@ -109,7 +109,7 @@ Every one of these is optional. The defaults suit a normal bot. For the full set
 | `tsconfigRootDir` | the working directory | where the type-aware rules look for `tsconfig.json` |
 | `generalIgnores` | `[]` | globs to skip, added to `dist`, `node_modules`, `logs`, and `tests/temp` |
 | `userConfigs` | `[]` | your own config blocks, applied last |
-| `registerImportPlugin` | `'all'` | `'fast'` skips the cycle and deprecation checks. `'off'` drops the plugin |
+| `registerImportPlugin` | `'all'` | `'fast'` skips the cycle and deprecation checks. `'off'` doesn't register the plugin |
 | `registerUnicornPlugin` | `true` | unicorn requires ESLint 10.4, so set `false` on ESLint 9 |
 | `registerSecurityPlugin` | `true` | the `eslint-plugin-security` recommended set |
 | `registerTsdocPlugin` | `true` | TSDoc syntax checking in your comments |
@@ -119,7 +119,7 @@ Every one of these is optional. The defaults suit a normal bot. For the full set
 
 <Callout type="tip">
 
-When your lint run gets slow, setting `registerTypescriptConfigs` to `'no-type-checked'` saves the most. Dropping the rules that read the type checker cuts about a fifth of the run time on the seedcord packages. `registerImportPlugin: 'fast'` removes the two rules that parse every file an import resolves to. That one saves closer to a tenth.
+When your lint run gets slow, setting `registerTypescriptConfigs` to `'no-type-checked'` saves the most. Turning off the rules that read the type checker cuts about a fifth of the run time on the seedcord packages. `registerImportPlugin: 'fast'` removes the two rules that parse every file an import resolves to. That one saves closer to a tenth.
 
 </Callout>
 

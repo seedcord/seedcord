@@ -104,6 +104,13 @@ finding, and a tic is a habit rather than a single sentence.
    enthusiasm. Flag a warm line that takes three sentences to arrive, since the
    move is to flag a coming failure in a few words and hand the reader forward.
 
+   Flag every invented scene: a made-up person, an imagined afternoon, "you've
+   hunted for X before", or a story about what goes wrong months later. The
+   reader has to work through the picture to reach the fact. Quote it and give
+   the fact in one or two plain sentences. A setup built from real names, like
+   "Suppose three handlers respond to messageCreate" or "Say a command costs
+   one credit", is a worked case that the section then solves. Leave it.
+
 5. Written from the framework's side instead of the reader's. Naming a framework
    feature the reader has not met yet as though it means something to them.
    Answering what the framework does when the reader asked what they should do.
@@ -114,23 +121,29 @@ finding, and a tic is a habit rather than a single sentence.
    paragraph that opens on a fresh subject and leaves the reader to make the
    join. Four of fourteen new openers did this in one sweep.
 
-   A complaint stated in the conditional is the same finding. "You'd write your
-   own wording onto that card" hands the reader a suggestion. "The wording on
-   that card is yours to replace" states what is true.
+   A complaint in the conditional with no frame in front of it is the same
+   finding. "You'd write your own wording onto that card" hands the reader a
+   suggestion. "The wording on that card is yours to replace" states what is
+   true. After a frame, the conditional is right: "By hand, you'd copy each
+   emoji id into a constants file" keeps the sentence in the world without
+   seedcord. Report a framed complaint in flat present, like "By hand, you copy
+   each id", since it reads as an instruction. A complaint worded as an option
+   the reader may take, as in "You can X, though Y", is the same finding.
 
    Report a complaint the page takes away that is written in flat present with
    no frame word. The reader reaches the end of it without knowing whether this
-   page fixes the thing or teaches them to live with it. Past tense says it is
-   over, and so does `by hand`, `yourself`, `Without`, or an `if`. Leave a
-   complaint the reader still lives with after this page in present, since
-   Discord's three seconds and its one string per click outlive the page.
+   page fixes the thing or teaches them to live with it. The fix is a frame
+   word, `by hand`, `yourself`, `Without`, or an `if`, with the verb still in
+   present. Leave a complaint that the reader still lives with after this page
+   unframed, since Discord's three seconds and its one string per click
+   outlive the page.
 
-   Report release history written into a page. "The old build only compiled
-   TypeScript", "running dev in both used to break both", and "now every
-   command loads your bot through Vite" describe how seedcord changed, and a
-   reader who starts today never had the old behavior. That belongs in a
-   changeset. The past tense above is for the reader's own work without the
-   feature.
+   Report any complaint or behavior written in past tense. "Finding the answer
+   meant opening the guide" reads as seedcord's history. Report release history
+   too. "The old build only compiled TypeScript", "running dev in both used to
+   break both", and "now every command loads your bot through Vite" describe
+   how seedcord changed, and a reader who starts today never had the old
+   behavior. That belongs in a changeset.
 
    Report a complaint with nobody in front of the verb. seedcord is the only
    name on the page, so "a second reply comes back rejected" reads as seedcord
@@ -281,18 +294,8 @@ Then six counted passes, numbered 15 through 20.
     sentences where one would read better. Where a page has no natural site,
     say that instead of forcing one.
 
-18. `names`, the verb. Banned outright, so report every one on the page. The
-    noun stays legal, since a command has a name and a field has a name.
-
-    Quote each sentence and leave the repair to the writer, who writes the verb
-    for what actually happens and rephrases the sentence in simple words if it
-    needs it. A suggested word here would land on every page this review
-    touches, and one verb standing in for three unrelated jobs is what got the
-    old one banned.
-
-    Then the same question about any other word this page leans on. Report a
-    word the page uses as a term of art and never defines, and say where the
-    definition belongs. `verb` for the reply methods is the case that got
+18. Undefined terms. Report a word the page uses as a term of art and never
+    defines, and say where the definition belongs. `verb` for the reply methods is the case that got
     through: it arrived in a heading, recurred five times, and no sentence ever
     said it meant `reply()`, `edit()`, and `followUp()`. A term the reader has
     to learn either gets a definition on its first appearance or gets replaced
@@ -374,8 +377,7 @@ the rest and the handler". The repair pulls it out and puts it first: "If a
 commit throws, the commits after it don't run." Report a position word standing
 in for a relation, as in "repeats them above its real work" or "an effect gate
 nested two levels inside an or", and give the repair in terms of what the code
-does, using the names the sample shows. The skill's "Unpack what you packed"
-section has the table.
+does, using the names the sample shows. Section 3 of the skill covers both.
 
 Report `where` standing in for `when` or `if`. "Where a handler only ever
 reaches that line in one state" and "even where you meant it as a new message"

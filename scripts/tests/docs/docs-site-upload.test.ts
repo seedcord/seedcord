@@ -81,7 +81,7 @@ describe('DocsSiteUpload.upload', () => {
 });
 
 describe('DocsSiteUpload.prune', () => {
-    it('keeps the build a rollback goes to and deletes the older ones', async () => {
+    it('keeps the build that a rollback targets and deletes the older ones', async () => {
         const bucket = new FakeBucket([build(1), build(2), build(3), build(4)]);
 
         const deleted = await new DocsSiteUpload(bucket).prune(build(4), build(2).id);

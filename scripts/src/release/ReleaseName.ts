@@ -35,7 +35,7 @@ export class ReleaseName {
         return `${baseTag(this.day)}${this.letter}`;
     }
 
-    // plain string order matches release order while the day's suffix stays a single letter
+    // plain string order matches release order while the day's suffix is a single letter
     previousIn(tags: readonly string[]): string | undefined {
         return tags
             .filter((one) => TAG.test(one) && one < this.tag)

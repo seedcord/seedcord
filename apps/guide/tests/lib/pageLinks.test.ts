@@ -21,7 +21,7 @@ describe('a link to another guide page', () => {
         expect(code).toContain('href="/checks/cooldown/"');
     });
 
-    it('stays as written when it already ends in a slash', async () => {
+    it('keeps the written link when it already ends in a slash', async () => {
         const code = await compileGuideMdx('Back to [the start](/).');
 
         expect(code).toContain('href="/"');

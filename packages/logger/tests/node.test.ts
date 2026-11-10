@@ -241,7 +241,7 @@ describe('winston sinks', () => {
         expect(content).toContain('events');
     });
 
-    it('the json sink stamps the record timestamp as ISO, not the format-time now', async () => {
+    it('the json sink stamps the record timestamp as ISO', async () => {
         using folder = workingFolder();
         using sink = new WinstonFileSink({ filename: 'ts.log', format: 'json' });
 
@@ -405,13 +405,13 @@ describe('installNodeDefaults', () => {
         expect(plain(consoleOutputOf({ message: 'task' }))).toContain('[info');
     });
 
-    it('creates no log file until a record is logged, so repeated bootstraps leave no orphans', async () => {
+    it("doesn't create a log file until a record is logged, so repeated bootstraps leave zero orphans", async () => {
         using _dev = inDevelopment();
         using folder = workingFolder();
 
         installNodeDefaults();
         installNodeDefaults();
-        // the eager File transport opens its stream on the next tick, so wait past it before asserting
+        // wait past the next tick before asserting because the eager File transport opens its stream then
         await new Promise((resolve) => setTimeout(resolve, 100));
 
         expect(existsSync(folder.logs) ? readdirSync(folder.logs) : []).toEqual([]);

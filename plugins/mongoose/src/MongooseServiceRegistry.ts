@@ -90,7 +90,7 @@ export class MongooseServiceRegistry {
     }
 
     private initializeService(Service: MongooseServiceConstructor): void {
-        // isServiceClass already checked ServiceMetadataKey exists, since the decorator writes both keys together
+        // isServiceClass has already checked ServiceMetadataKey exists, since the decorator writes both keys together
         const modelName = Reflect.getMetadata(ModelNameMetadataKey, Service) as string;
 
         // mongoose returns an existing model when the schema matches. That one is not this plugin's to delete

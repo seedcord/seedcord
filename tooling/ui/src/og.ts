@@ -1,5 +1,5 @@
 /* eslint-disable max-lines, no-magic-numbers -- generated module, the base64 font payloads cannot be shortened and the 400/600 font weights are inherent */
-// base64 so the fonts load with no fs read or bundler path
+// base64 so the fonts load without an fs read or bundler path
 // OFL 1.1 (https://openfontlicense.org), (c) Florian Karsten (Space Grotesk) and the Hanken Grotesk
 // and JetBrains Mono project authors
 

@@ -29,7 +29,7 @@ async function builtWorkerName(shell: ShellMode): Promise<string> {
 }
 
 describe('seedcord build mode on an edge bot', () => {
-    it('builds in production when the shell sets no mode', async () => {
+    it("builds in production when the shell doesn't set a mode", async () => {
         await expect(builtWorkerName(new ShellMode())).resolves.toBe('edge-bot-production');
     }, 120_000);
 

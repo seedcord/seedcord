@@ -42,7 +42,7 @@ describe('a reserved framework channel as an attach key', () => {
     });
 
     it('reports the reserved code for a channel that is also a host member', () => {
-        // gateway's Seedcord carries a `bot` member
+        // gateway's Seedcord has a `bot` member
         class BotHost extends TestPluginHost {
             public readonly bot = {};
         }

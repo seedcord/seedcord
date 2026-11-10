@@ -66,7 +66,7 @@ Codegen records only the keys you attached. TypeScript resolves each plugin's ty
 
 <Callout type="transport">
 
-The rows codegen adds are the same either way. The interface it adds them to differs, since gateway's [`Core`](ref:gateway/Core) carries a `bot` member holding the discord.js client and its token. http's [`Core`](ref:http/Core) does not hold a connection.
+The rows codegen adds are the same either way. The interface it adds them to differs, since gateway's [`Core`](ref:gateway/Core) has a `bot` member holding the discord.js client and its token. http's [`Core`](ref:http/Core) does not hold a connection.
 
 </Callout>
 
@@ -74,7 +74,7 @@ The rows codegen adds are the same either way. The interface it adds them to dif
 
 To read your commands folder and your emoji block, codegen imports the module your `instance` setting points at. Constructing your bot runs every `attach()` call and every plugin constructor.
 
-Even so, your bot never starts. Nothing calls `start()`, so no plugin connects, no task runs, and nothing you've written reaches Discord.
+Even so, your bot never starts. Nothing calls `start()`, so plugins don't connect, tasks don't run, and nothing you've written reaches Discord.
 
 Codegen does call `codegen()` on each attached plugin that has one. That method can read your project's files, like a translations plugin reading its `locales` folder, and it returns what the plugin types for you. If one throws, the run stops with `CliPluginCodegenThrew`, which gives the plugin's key and what it threw.
 
@@ -84,7 +84,7 @@ A command constructor that throws fails the whole run, since codegen has to cons
 
 Some drift breaks the build for you. If you add a command without rerunning codegen, the handler with that route fails to compile. Your editor flags it immediately.
 
-Other drift compiles perfectly. If you delete a command, its entry stays in `SlashRegistry`, still typing a route your bot stopped answering. Passing `--check` renders the file in memory and compares it to the copy on disk, which catches the kind that still compiles.
+Other drift compiles perfectly. If you delete a command, its entry is still in `SlashRegistry`, still typing a route that your bot stopped answering. Passing `--check` renders the file in memory and compares it to the copy on disk, which catches the kind that still compiles.
 
 <Shell exec="seedcord codegen --check" />
 
@@ -102,11 +102,11 @@ It prints a line per step, like plain codegen. If the file matches, the last lin
 
 `--check` only reports, so you fix the drift by running plain `seedcord codegen`. The scaffold doesn't wire a script for it, so put it wherever your pipeline runs its checks.
 
-If codegen can't read your commands folder, it throws `CorePathUnreadable`, because a run that found no commands would pass `--check` against a file that's already stale.
+If codegen can't read your commands folder, it throws `CorePathUnreadable`, because a run that didn't find any commands would pass `--check` against a file that's already stale.
 
 ## Commands codegen passes over
 
-Codegen records a command class once it carries [`@RegisterCommand`](ref:core/RegisterCommand). If a class has no decorator, codegen skips that export entirely, so your route never appears in `SlashRegistry`. You get the same compile failure as a missed codegen run.
+Codegen records a command class once it has [`@RegisterCommand`](ref:core/RegisterCommand). If a class doesn't have the decorator, codegen skips that export entirely, so your route never appears in `SlashRegistry`. You get the same compile failure as a missed codegen run.
 
 Your commands folder can hold helpers and constants too. Codegen imports each of those files as well, keeps the exports that are decorated command classes, and ignores everything else.
 

@@ -85,7 +85,7 @@ export class InteractionDispatcher implements Initializeable, HmrAware {
         this.routes.warnUnhandledContextMenuRoutes(this.logger, leaves);
     }
 
-    // a gateway class carries the same core metadata on a different base class
+    // a gateway class has the same core metadata on a different base class
     private isHandler(value: unknown): value is HandlerConstructor {
         if (typeof value !== 'function' || !Reflect.hasMetadata(InteractionMetadataKey, value)) return false;
         return value.prototype instanceof InteractionHandler || value.prototype instanceof AutocompleteHandler;

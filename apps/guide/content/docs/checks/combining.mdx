@@ -5,7 +5,7 @@ description: Combine gates with or() and and() to let a command run when any one
 
 [`@Gated`](ref:gateway/Gated) requires every gate you list. A command that a bot owner or a moderator can run needs only one of those two checks to pass.
 
-[`or`](ref:core/or) combines gates into one that passes when any gate passes. [`and`](ref:core/and) combines them into one that needs every gate. The result goes on a handler like any other gate, or inside another combinator. Both take two gates or more.
+[`or`](ref:core/or) combines gates into one that passes when any gate passes. [`and`](ref:core/and) combines them into one that needs every gate. You put the result on a handler like any other gate, or inside another combinator. Both take two gates or more.
 
 ## or, when any one of them is enough
 
@@ -55,7 +55,7 @@ const staffOrOwner = or(staff, OwnerOnly());
 
 `staff` runs `GuildOnly` before `RequireRole`, since gates run left to right. The first refusal stops the rest.
 
-The combined gate carries the names of its gates, joined with `&` for an `and` and `|` for an `or`. A combinator nested inside another gets parentheses around its name, which is why `staffOrOwner` above reads `(GuildOnly & RequireRole) | OwnerOnly`.
+The combined gate has the names of its gates, joined with `&` for an `and` and `|` for an `or`. A combinator nested inside another gets parentheses around its name, which is why `staffOrOwner` above reads `(GuildOnly & RequireRole) | OwnerOnly`.
 
 ```ts twoslash
 import { GuildOnly, OwnerOnly, and } from '@seedcord/gateway';
@@ -64,7 +64,7 @@ const guildOwner = and(GuildOnly(), OwnerOnly());
 //    ^?
 ```
 
-A compile error prints that name when the gate goes on a handler it doesn't fit.
+A compile error prints that name when you put the gate on a handler it doesn't fit.
 
 ## What each one accepts
 
@@ -115,7 +115,7 @@ You need to meet at least one of these:
 • hold the <@&221439658686939136> role
 ```
 
-A [gate of your own](/checks/your-own) joins that list once its `Notice` sets `summary`. A single gate without a summary drops the whole list to the generic refusal, since a partial list would mislead by leaving an option out.
+A [gate of your own](/checks/your-own) joins that list once its `Notice` sets `summary`. If a single gate doesn't set a summary, the `or` replaces the whole list with the generic refusal, since a partial list would mislead by leaving an option out.
 
 ## Wording it yourself
 

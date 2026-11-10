@@ -61,7 +61,7 @@ describe('parseInput', () => {
         const thrown = thrownBy(() => parseInput(['--token', TOKEN, '--no-token']));
 
         expect(isSeedcordError(thrown, undefined, SeedcordErrorCode.CreateBadUsage)).toBe(true);
-        expect((thrown as Error).message).toContain('--token or --no-token');
+        expect((thrown as Error).message).toContain('--token and --no-token');
     });
 
     it('quotes an unknown flag and points at the help', () => {

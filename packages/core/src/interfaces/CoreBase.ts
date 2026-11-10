@@ -12,7 +12,7 @@ export interface CoreBase {
     /** Transports narrow this to their own config type. */
     readonly config: Config;
     /**
-     * Discord REST client. On gateway this is the discord.js client's own, and it carries no token
+     * Discord REST client. On gateway this is the discord.js client's own, and it doesn't carry a token
      * until the Login phase. On http the token is set by `start()`.
      */
     readonly rest: REST;

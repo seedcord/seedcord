@@ -27,7 +27,7 @@ export async function skillDigest(body: string): Promise<string> {
     return `sha256:${hex}`;
 }
 
-/** The v0.2.0 index. Every entry carries a type and a digest. */
+/** The v0.2.0 index. Every entry has a type and a digest. */
 export async function agentSkillsIndex(skills: readonly Skill[]): Promise<unknown> {
     const entries = await Promise.all(
         skills.map(async (skill) => ({

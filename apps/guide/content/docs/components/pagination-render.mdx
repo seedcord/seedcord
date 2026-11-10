@@ -7,9 +7,9 @@ By default a paginator sends one container with your items as lines and a row of
 
 `render` takes that job. It replaces the page seedcord would have built, nav row included. seedcord adds nothing around what you return.
 
-The function receives two arguments. `view` is the [`PageView`](ref:core/PageView) the source returned, holding this page's items. `controls` is a [`PaginatorControls`](ref:core/PaginatorControls), which builds nav buttons already pointed at the right page.
+The function receives two arguments. `view` is the [`PageView`](ref:core/PageView) the source returned, holding this page's items. `controls` is a [`PaginatorControls`](ref:core/PaginatorControls), which builds nav buttons that point at the right page.
 
-## A page with no buttons on it
+## A page without buttons on it
 
 Start with a `render` that ignores `controls` and returns a string.
 
@@ -54,7 +54,7 @@ export class FeedList extends SlashHandler<'feed'> {
 }
 ```
 
-If you run that, you get one line of text with no way to reach page two. `FeedNav` is wired correctly. It never runs, since no button on the message carries its route. Everything below puts the buttons back.
+If you run that, you get one line of text and no button to reach page two. `FeedNav` is wired correctly. It never runs, because the message doesn't have a button with its route. Everything below puts the buttons back.
 
 A string is one of three shapes `render` can return.
 
@@ -157,9 +157,9 @@ controls.row('
 //            ^|
 ```
 
-The indicator is a disabled button showing the page text, `Page 2 of 4` when the source counted and `Page 2` when it couldn't. A cursor source never counts, so `last` has no page to point at and `controls` always disables it there. `first` still works, since page zero needs no total. The fence above skips both and keeps three keys, the same row seedcord's default draws for a cursor source.
+The indicator is a disabled button showing the page text, `Page 2 of 4` when the source counted and `Page 2` when it couldn't. A cursor source never counts, so `last` can't point at a page and `controls` always disables it there. `first` still works, since page zero doesn't need a total. The fence above skips both and keeps three keys, the same row seedcord's default draws for a cursor source.
 
-An [`ArraySource`](ref:gateway/ArraySource) knows its total, so a row there can take every key.
+An [`ArraySource`](ref:gateway/ArraySource) has its total, so a row there can take every key.
 
 `row()` throws on an empty list, on more than five keys, and on the same key twice. Two copies of one control get the same custom id, which Discord rejects.
 
@@ -209,10 +209,10 @@ An emoji with no `label` gives an icon-only button, which is what `prev` and `ne
 
 <Callout type="warning">
 
-Call cosmetic setters only. `setCustomId` overwrites the page the button targets. `setStyle` with `ButtonStyle.Link` or `ButtonStyle.Premium` strips the custom id entirely, since Discord allows no custom id on either style. Any of the three leaves a button that reaches no handler.
+Call cosmetic setters only. `setCustomId` overwrites the page that the button targets. `setStyle` with `ButtonStyle.Link` or `ButtonStyle.Premium` strips the custom id entirely, since Discord doesn't allow a custom id on either style. Any of the three leaves a button that doesn't reach a handler.
 
 </Callout>
 
 If your own header prints the total, check `view.totalPages` first, since a cursor source leaves it `undefined`. [Sources](/components/pagination-sources) lists every field on a `PageView`.
 
-[Paging it yourself](/components/pagination-headless) is the last step, dropping the paginator and keeping the page math.
+[Paging it yourself](/components/pagination-headless) is the last step. It uses the page math without the paginator.

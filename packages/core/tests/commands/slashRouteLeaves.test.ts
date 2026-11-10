@@ -46,7 +46,7 @@ describe('slashRouteLeaves', () => {
         expect(slashRouteLeaves([ban, ban, ban])).toEqual(new Set(['ban']));
     });
 
-    it('skips a context-menu command, which has no slash route', () => {
+    it("skips a context-menu command, which doesn't have a slash route", () => {
         const report = new ContextMenuCommandBuilder().setName('Report').setType(ApplicationCommandType.Message);
         expect(slashRouteLeaves([report])).toEqual(new Set());
     });

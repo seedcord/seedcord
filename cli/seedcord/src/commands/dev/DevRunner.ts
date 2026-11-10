@@ -108,7 +108,7 @@ export class DevRunner {
         const restarts = this.restarts;
         await using loaded = await this.deps.projectLoader.readConfig();
         const { config, files } = loaded;
-        // a key pressed during the config load had no session to stop
+        // a key pressed during the config load didn't have a session to stop
         if (this.next !== 'session' || this.restarts !== restarts) return;
         profileMark('config');
         store.setIdleAnimation(config.idleAnimation);
@@ -127,7 +127,7 @@ export class DevRunner {
         }
     }
 
-    // every caller drops this promise, so run() awaits it
+    // run() awaits this promise because callers don't
     public async quit(): Promise<void> {
         this.quitting ??= this.runQuit();
         return this.quitting;
@@ -153,9 +153,9 @@ export class DevRunner {
         this.signalResolve?.();
     }
 
-    // the tunnel stays up because a disconnect is a short parked state the user leaves by pressing r
+    // this keeps the tunnel up because a disconnect is a short parked state the user leaves by pressing r
     public async disconnect(): Promise<void> {
-        // waking the signal while already parked would fall through and start a fresh session
+        // waking the signal while it is already parked would fall through and start a fresh session
         if (this.next !== 'session') return;
         this.next = 'disconnected';
         await this.currentSession?.stop();

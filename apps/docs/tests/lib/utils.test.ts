@@ -2,7 +2,7 @@ import { cn, tw } from '@seedcord/ui';
 import { describe, expect, it } from 'vite-plus/test';
 
 describe('tw', () => {
-    it('drops null, undefined, false, and empty-string interpolations', () => {
+    it('removes null, undefined, false, and empty-string interpolations', () => {
         const result = tw`px-2 ${null} ${undefined} ${false} ${''} py-1`;
         expect(result).toBe('px-2 py-1');
     });

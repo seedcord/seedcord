@@ -51,9 +51,9 @@ export function parseEntityPathSegments(segments?: string[] | null): ParsedEntit
 
     const [first, ...rest] = segments;
     // The leading segment becomes the tone only when it is an entity tone (the plural directory
-    // buildEntityHref emits, or a singular/synonym form). A non-tone, non-empty leading segment stays
-    // in the slug. Unlike resolveEntityTone, resolveEntityToneStrict returns null for it. An empty
-    // leading segment is dropped.
+    // buildEntityHref emits, or a singular/synonym form). A non-tone, non-empty leading segment is
+    // part of the slug. Unlike resolveEntityTone, resolveEntityToneStrict returns null for it. The slug
+    // skips an empty leading segment.
     const tone = first ? resolveEntityToneStrict(first) : null;
     const slugSegments = tone || !first ? rest : segments;
 

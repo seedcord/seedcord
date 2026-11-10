@@ -13,7 +13,7 @@ describe('lowestTypescript', () => {
 
     it('throws for a catalog with no typescript range', () => {
         expect(() => lowestTypescript(WORKSPACE, 'consumerTypes')).toThrow(
-            "pnpm-workspace.yaml's consumerTypes catalog has no typescript range"
+            "pnpm-workspace.yaml's consumerTypes catalog doesn't have a typescript range"
         );
     });
 });

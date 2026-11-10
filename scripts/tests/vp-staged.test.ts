@@ -3,7 +3,7 @@ import path from 'node:path';
 import { parseArgsStringToArgv } from 'string-argv';
 import { describe, expect, it } from 'vite-plus/test';
 
-import { runEslint } from '#src/vp-staged';
+import { runEslint, runProse } from '#src/vp-staged';
 
 const REPO = path.resolve(import.meta.dirname, '../..');
 const PACKAGE = path.join(REPO, 'packages/discord-component-embed');
@@ -28,6 +28,26 @@ describe('vp staged commands', () => {
                 '--config',
                 'eslint.config.ts',
                 'src/check.ts'
+            ]
+        ]);
+    });
+
+    it('runs vale and the string-literal pass on every staged prose file', () => {
+        const page = path.join(REPO, 'apps/guide/content/docs/index.mdx');
+
+        expect(argvOf(runProse([page, FILE]))).toEqual([
+            ['vp', 'exec', 'vale', '--minAlertLevel=error', page, FILE],
+            [
+                'vp',
+                'exec',
+                'eslint',
+                '--no-config-lookup',
+                '-c',
+                'tooling/prose/prose.config.ts',
+                '--quiet',
+                '--no-warn-ignored',
+                page,
+                FILE
             ]
         ]);
     });

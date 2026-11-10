@@ -12,7 +12,7 @@ const SAMPLE_README = `<p align="center"><img src="https://raw.githubusercontent
 
 _This repository is a work in progress._
 
-- There are no stable releases yet but changes are being made actively.
+- Every release so far is a prerelease, and the API still changes often.
 - Until a major v1.0.0 release for seedcord, expect breaking changes in minor versions.
 - Documentation will come soon as well!
 

@@ -26,7 +26,7 @@ function cdCtx(
     rateLimiter: object,
     ids: { userId?: string; guildId?: string; channelId?: string; declaredRoute?: string | null } = {}
 ): GateContextBase {
-    // the gate reads core.rateLimiter and the id scalars, so a minimal cast stands in
+    // a minimal cast stands in because the gate reads core.rateLimiter and the id scalars
     const core = { rateLimiter } as unknown as CoreBase;
     return {
         core,
@@ -48,7 +48,7 @@ describe('Cooldown', () => {
         await expect(Cooldown(5).check(cdCtx(rl))).resolves.toBeUndefined();
     });
 
-    it('charges the key on commit, not on check', async () => {
+    it('charges the key only on commit', async () => {
         const charge = vi.fn().mockReturnValue({ limited: false });
         await Cooldown(5).commit(cdCtx({ peek: () => ({ limited: false }), charge }));
         expect(charge).toHaveBeenCalledTimes(1);
@@ -65,7 +65,7 @@ describe('Cooldown', () => {
         const ctx = cdCtx({ peek, charge: vi.fn() }, { declaredRoute: 'slash:daily' });
         await Cooldown(5).check(ctx);
         await Cooldown(5).check(ctx);
-        // the key derives from the route and config, so two loads of the same handler match
+        // two loads of the same handler match since the key derives from the route and config
         expect(peek.mock.calls[0]?.[0]).toBe(peek.mock.calls[1]?.[0]);
     });
 
@@ -92,7 +92,7 @@ describe('Cooldown', () => {
 
     it('keys two off-route Cooldown instances to different keys', async () => {
         const peek = vi.fn().mockReturnValue({ limited: false });
-        // no route to key on, so unrelated event handlers must not collide on one bucket
+        // unrelated event handlers must not collide on one bucket. they don't have a route to key on
         await Cooldown(5).check(cdCtx({ peek, charge: vi.fn() }, { declaredRoute: null }));
         await Cooldown(5).check(cdCtx({ peek, charge: vi.fn() }, { declaredRoute: null }));
         expect(peek.mock.calls[0]?.[0]).not.toBe(peek.mock.calls[1]?.[0]);
@@ -103,7 +103,7 @@ describe('Cooldown', () => {
         const gate = Cooldown(5);
         await gate.check(cdCtx({ peek, charge: vi.fn() }, { declaredRoute: null }));
         await gate.check(cdCtx({ peek, charge: vi.fn() }, { declaredRoute: null }));
-        // one declaration site keys one bucket, so the same off-route gate limits its scope consistently
+        // the same off-route gate limits its scope consistently because one declaration site keys one bucket
         expect(peek.mock.calls[0]?.[0]).toBe(peek.mock.calls[1]?.[0]);
     });
 

@@ -10,7 +10,7 @@ describe('KvRateLimiter degenerate windows', () => {
         const limiter = memoryRateLimiter();
         const window = { windowMs: 0 };
 
-        // a zero-length use expires the instant it records, so it is never live
+        // a zero-length use is never live because it expires the instant it records
         expect(await limiter.charge('user', window)).toMatchObject({ limited: false });
         expect(await limiter.charge('user', window)).toMatchObject({ limited: false });
     });
@@ -35,7 +35,7 @@ describe('KvRateLimiter degenerate windows', () => {
         expect(limited.retryAfterMs).toBe(1000.5);
     });
 
-    it('never limits while charges stay below a very large limit', async () => {
+    it('never limits while charges are below a very large limit', async () => {
         const limiter = memoryRateLimiter();
         const window = { windowMs: 1000, limit: 1_000_000 };
 

@@ -6,7 +6,7 @@ export interface PageView<Item> {
     /** Zero-based, already clamped into range. */
     page: number;
     perPage: number;
-    /** The total page count, or `undefined` for a cursor source that has no cheap total. */
+    /** The total page count, or `undefined` for a cursor source that doesn't have a cheap total. */
     totalPages?: number;
     hasPrev: boolean;
     hasNext: boolean;

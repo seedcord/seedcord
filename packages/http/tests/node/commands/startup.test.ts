@@ -18,7 +18,7 @@ const COMMANDS_DIR = path.resolve(__dirname, './fixtures');
 const EMOJI_COMMANDS_DIR = path.resolve(__dirname, './emoji-fixtures');
 const HANDLERS_DIR = path.resolve(__dirname, '../discovery/fixtures/handlers');
 
-// justified: the generated Commands map is empty in tests, so entries read through a plain record
+// justified: entries read through a plain record because the generated Commands map is empty in tests
 const commands = Commands as Record<string, { id: string; mention: string } | undefined>;
 
 function config(commandsPath: string | null, interactionsPath: string | null = null): HttpServerConfig {
@@ -196,7 +196,7 @@ describe('command deploy during http startup', () => {
         await expect(host.start()).resolves.toBe(host);
     });
 
-    it('touches no command route when no commands path is configured', async () => {
+    it("doesn't touch a command route when no commands path is configured", async () => {
         await using host = new Seedcord(config(null));
         const { get, put } = stubRest(host);
 

@@ -79,7 +79,7 @@ class MissingCase extends EventHandler<Events.MessageCreate | Events.MessageUpda
     }
 }
 
-// each case receives the event's payload as named params, so a param past the tuple's arity is a compile error
+// a param past the tuple's arity is a compile error because each case receives the event's payload as named params
 class CaseArity extends EventHandler<Events.MessageCreate | Events.MessageUpdate> {
     async execute(): Promise<void> {
         await this.match({
@@ -109,7 +109,7 @@ class CaseParamTypes extends EventHandler<Events.MessageCreate | Events.MessageU
     }
 }
 
-// @RegisterEvent and the EventHandler generic must agree, in both directions
+// @RegisterEvent and the EventHandler generic must list the same events, checked in both directions
 @RegisterEvent([Events.MessageCreate])
 class GoodSingle extends EventHandler<Events.MessageCreate> {
     async execute(): Promise<void> {
@@ -124,7 +124,7 @@ class GoodMulti extends EventHandler<Events.MessageCreate | Events.MessageUpdate
     }
 }
 
-// the decorator registers an event the generic does not cover, the invariant generic catches this direction
+// the decorator registers an event that the generic does not cover, the invariant generic catches this direction
 // @ts-expect-error messageUpdate is listed on the decorator but not in the generic.
 @RegisterEvent([Events.MessageCreate], [Events.MessageUpdate])
 class DecoratorSuperset extends EventHandler<Events.MessageCreate> {
@@ -133,7 +133,7 @@ class DecoratorSuperset extends EventHandler<Events.MessageCreate> {
     }
 }
 
-// the generic declares an event the decorator omits
+// the generic declares an event that the decorator omits
 // @ts-expect-error messageUpdate is in the generic but not listed on the decorator.
 @RegisterEvent([Events.MessageCreate])
 class GenericSuperset extends EventHandler<Events.MessageCreate | Events.MessageUpdate> {
@@ -185,13 +185,13 @@ describe('EventHandler.match', () => {
         await expect(handler.execute()).rejects.toBeInstanceOf(BoomError);
     });
 
-    it('routes by the current event name, not the payload shape', async () => {
+    it('routes by the current event name', async () => {
         const created = fakeMessage();
         await new PingMulti(createPayload(created), core, eventDispatch(Events.MessageCreate)).execute();
         expect(created.reply).toHaveBeenCalledWith('created');
         expect(created.reply).not.toHaveBeenCalledWith('updated');
 
-        // messageUpdate carries [old, new], the same Message shape, proving the name is the discriminant
+        // messageUpdate has [old, new], the same Message shape, proving the name is the discriminant
         const oldMsg = fakeMessage();
         const newMsg = fakeMessage();
         const updatePayload = [oldMsg, newMsg] as unknown as ClientEvents[Events.MessageCreate];
@@ -206,7 +206,7 @@ describe('EventHandler.match', () => {
         expect(handler.read()).toHaveLength(1);
     });
 
-    it('throws MatchCaseMissing when the current event lacks a case', async () => {
+    it("throws MatchCaseMissing when the current event doesn't have a case", async () => {
         // a stale-deployed event arrives that the handler does not branch on
         const handler = new PingMulti(createPayload(fakeMessage()), core, eventDispatch('ghost'));
         await expect(handler.execute()).rejects.toMatchObject({ code: SeedcordErrorCode.MatchCaseMissing });

@@ -9,8 +9,8 @@ import type { CaseReturn } from '#src/handlers/runCase';
 import type { AnyCustomId, DecodedParams } from '@seedcord/custom-id';
 
 /**
- * route decorators store a handler's customId defs here, so the component base can decode
- * against them at runtime.
+ * route decorators store a handler's customId defs here for the component base to decode
+ * against at runtime.
  *
  * @internal
  */
@@ -18,8 +18,8 @@ import type { AnyCustomId, DecodedParams } from '@seedcord/custom-id';
 export const ComponentDefsKey = Symbol.for('seedcord:custom-id:component-defs');
 
 /**
- * the phantom a component handler base carries. a route decorator constrains its argument to this, so
- * passing different defs to the decorator and the handler's generic is a compile error. never set at runtime.
+ * the phantom a component handler base has. passing different defs to the route decorator and the
+ * handler's generic is a compile error because the decorator constrains its argument to this. never set at runtime.
  *
  * @internal
  */
@@ -35,7 +35,7 @@ export interface DecodedComponentRoute {
 }
 
 /**
- * throws `CustomIdHandlerRouteMissing` when the class has no stored defs. a drifted or corrupt wire
+ * throws `CustomIdHandlerRouteMissing` when the class doesn't have stored defs. a drifted or corrupt wire
  * throws `StaleCustomId` or `InvalidCustomId`.
  *
  * @internal

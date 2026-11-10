@@ -48,7 +48,7 @@ class BotFolderAccess implements FolderAccess {
     }
 }
 
-// a plain script or test has no config
+// a plain script or test doesn't have a config
 class OpenFolderAccess implements FolderAccess {
     public resolve(dir: string): string {
         if (!path.isAbsolute(dir)) throw new SeedcordError(SeedcordErrorCode.CoreDirectoryRootUnknown, [dir]);

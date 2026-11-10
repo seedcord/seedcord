@@ -14,7 +14,7 @@ async function raceTimer(
         await Promise.race([
             start(),
             new Promise<void>((resolve, reject) => {
-                // node's timer can go off before performance.now() reaches timeoutMs
+                // node can run a timer callback before performance.now() reaches timeoutMs
                 const expiresAt = performance.now() + timeoutMs;
                 const tick = (): void => {
                     const remaining = expiresAt - performance.now();
@@ -32,7 +32,7 @@ async function raceTimer(
     }
 }
 
-// rejects with a LifecycleTaskTimeout when run outlasts the bound
+// rejects with a timeout error if the run takes too long
 export function withTimeout(name: string, run: () => Promisable<void>, timeoutMs: number): Promise<void> {
     return raceTimer(run, timeoutMs, (_, reject) => {
         reject(new SeedcordError(SeedcordErrorCode.LifecycleTaskTimeout, [name, timeoutMs]));

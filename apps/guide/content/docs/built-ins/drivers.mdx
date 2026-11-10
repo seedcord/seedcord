@@ -7,7 +7,7 @@ The [kv store](/built-ins/) keeps its records in memory until you give it a driv
 
 A driver connects the store to storage that keeps the records after the process stops. You pass one as `kv` in your bot's config. Every collection, a plugin's `this.kv`, and the [rate limiter](/checks/rate-limiter) all store their records with it.
 
-[`KeyvDriver`](ref:core/KeyvDriver) and [`UnstorageDriver`](ref:core/UnstorageDriver) each wrap a library you install. [Keyv](https://keyv.org) connects to SQLite, Redis, Postgres, MongoDB, and others through one adapter package per database. [unstorage](https://unstorage.unjs.io) has its own drivers for the filesystem, Redis, and other hosted stores, plus D1 through db0. Pick the one with an adapter for the storage you already run. On a server with no storage yet, Keyv over SQLite keeps everything in one file.
+[`KeyvDriver`](ref:core/KeyvDriver) and [`UnstorageDriver`](ref:core/UnstorageDriver) each wrap a library you install. [Keyv](https://keyv.org) connects to SQLite, Redis, Postgres, MongoDB, and others through one adapter package per database. [unstorage](https://unstorage.unjs.io) has its own drivers for the filesystem, Redis, and other hosted stores, plus D1 through db0. Pick the one with an adapter for the storage you already run. On a server without storage yet, Keyv over SQLite keeps everything in one file.
 
 ## Keyv
 
@@ -35,7 +35,7 @@ export const seedcord = new Seedcord({
 export default seedcord;
 ```
 
-The records go into `kv.sqlite`, in the folder you start the bot from. If you swap `KeyvSqlite` for another adapter, like `@keyv/redis` or `@keyv/postgres`, the rest of your bot stays the same.
+The records go into `kv.sqlite`, in the folder you start the bot from. If you swap `KeyvSqlite` for another adapter, like `@keyv/redis` or `@keyv/postgres`, you don't change the rest of your bot.
 
 [`entries()`](/built-ins/#reading-every-record) needs an adapter that can list its keys. A cache adapter like `@keyv/memcache` can't, so `entries()` throws a `SeedcordError` with the code `CoreKvKeysUnsupported`. `get`, `set`, `update`, and `delete` still work on it.
 
@@ -75,13 +75,13 @@ Each record becomes a file under `.kv`. `UnstorageDriver` takes a storage from u
 
 ## On Cloudflare Workers
 
-A worker has no disk that keeps files between requests, and each isolate (one running copy of your worker) has its own memory. [D1](https://developers.cloudflare.com/d1/) is Cloudflare's SQL database. Every isolate uses the same one, so a record one isolate saves is there for the next. Connect to it through unstorage's db0 driver:
+A worker can't keep files on disk between requests, and each isolate (one running copy of your worker) has its own memory. [D1](https://developers.cloudflare.com/d1/) is Cloudflare's SQL database. Every isolate uses the same one, so a record one isolate saves is there for the next. Connect to it through unstorage's db0 driver:
 
 <Shell add="unstorage db0" />
 
-Declare the database as a binding in `cloudflare.config.ts`, the same way the [Workers page](/build/workers) declares `DISCORD_BOT_TOKEN`. A binding is the name your worker reads a Cloudflare resource under:
+Declare the database as a binding in `cloudflare.config.ts`, the same way the [Workers page](/build/workers) declares `DISCORD_BOT_TOKEN`. A binding is the name that your worker reads a Cloudflare resource under:
 
-```ts title="cloudflare.config.ts"
+```ts plain title="cloudflare.config.ts"
 env: {
     DB: bindings.d1(),
     DISCORD_BOT_TOKEN: bindings.secret()
@@ -115,7 +115,7 @@ export default new Seedcord({
 
 `bindingName` has to match the key under `env`, here `DB`. The db0 driver creates its table on the first query, so you don't write a migration.
 
-`createDatabase` doesn't touch D1 yet. db0 looks for the binding when it runs its first query, and queries only run inside the Workers runtime. That matters because [`seedcord codegen`](/tooling/codegen) and the build load `bot.ts` in node, where `DB` doesn't exist. A query at the top level of `bot.ts` would run there too and find no binding, so keep queries inside handlers and tasks.
+`createDatabase` doesn't touch D1 yet. db0 looks for the binding when it runs its first query, and queries only run inside the Workers runtime. That matters because [`seedcord codegen`](/tooling/codegen) and the build load `bot.ts` in node, where `DB` doesn't exist. A query at the top level of `bot.ts` would run there too and fail to find the binding, so keep queries inside handlers and tasks.
 
 D1 gives every isolate the same records. Two isolates can still update one record at the same moment, and then one change is lost, as [the kv store](/built-ins/#changing-a-record-two-interactions-share) explains.
 
@@ -204,6 +204,6 @@ const storage = prefixStorage(
 
 ## Closing the connection
 
-seedcord closes your driver in the `Release` [shutdown phase](/plugins/lifecycle) of a node bot, after every plugin has stopped. `KeyvDriver` calls Keyv's `disconnect()`, and `UnstorageDriver` calls the storage's `dispose()`. A Workers bot has no shutdown phase, so its driver stays open until Cloudflare stops the isolate.
+seedcord closes your driver in the `Release` [shutdown phase](/plugins/lifecycle) of a node bot, after every plugin has stopped. `KeyvDriver` calls Keyv's `disconnect()`, and `UnstorageDriver` calls the storage's `dispose()`. A Workers bot never runs a shutdown phase, so its driver is still open when Cloudflare stops the isolate.
 
 For storage neither library supports, [write your own driver](/built-ins/your-driver).

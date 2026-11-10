@@ -1,0 +1,8 @@
+extends: existence
+link: https://github.com/seedcord/seedcord/blob/next/.agents/skills/writing-voice/SKILL.md
+message: "'%s' puts a finished action in the past tense. If its result still holds now, write 'has already' or 'have already', like 'the commits before it have already run'."
+level: suggestion
+ignorecase: true
+tokens:
+  # a helper verb in front ("was already replied") is already correct
+  - '(?<!\b(?:was|were|is|are|be|been|being|has|have|had|ve|s)\s)already (?:ran|wrote|sent|went|did|made|took|gave|saw|got|knew|began|came|held|kept|left|set|put|read|found|built|caught|threw|told|\w+ed)'

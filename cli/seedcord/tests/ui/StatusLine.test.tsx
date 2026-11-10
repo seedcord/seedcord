@@ -56,7 +56,7 @@ describe('StatusLine', () => {
         expect(frameOf(store)).toContain('2 commands updated');
     });
 
-    it('counts the notices it has no room to name', () => {
+    it("counts the notices that don't fit on the line", () => {
         const store = running();
         store.setError(new Error('boom'));
         store.apply({ type: 'command-update-prompt', files: ['a.ts'] });

@@ -30,7 +30,7 @@ function serialized(key: string, envelope: Envelope<unknown>): string {
  * The records of one type, stored under one name in `config.kv`. Get one from
  * `kv.collection<T>('name')`.
  *
- * Every record goes through JSON on its way in and out. A `Date` you store reads back from `get()`
+ * The collection stores every record as JSON. A `Date` you store reads back from `get()`
  * as an ISO string.
  *
  * @example

@@ -37,7 +37,7 @@ function report(violations: readonly Violation[], repoRoot: string): void {
 
     console.error(
         `Workspace catalog check failed. ${String(violations.length)} dep(s) violate the catalog rule.\n` +
-            `A dep two or more packages use goes in the pnpm-workspace.yaml catalog, and one only a single package uses stays inline.\n`
+            `A dep that two or more packages use belongs in the pnpm-workspace.yaml catalog. A dep that only one package uses is declared inline in that package.\n`
     );
 
     for (const violation of violations) {

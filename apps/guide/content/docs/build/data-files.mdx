@@ -3,7 +3,7 @@ title: Data files
 description: Ship JSON, images, and other non-code files with your bot by listing their folders in files, then read them with readFiles in dev and in production.
 ---
 
-You keep translations in `src/locales/en.json` and `src/locales/de.json`, plus a card background in `assets/card.png` beside `src`. You read them with `fs.readFile`. That worked under `seedcord dev` and broke after `seedcord build`. The build only keeps files something imports, so it left out the JSON and the PNG. A path built from `import.meta.dirname` also pointed into `dist`, where those files never were.
+Say your bot keeps translations in `src/locales/en.json` and `src/locales/de.json`, plus a card background in `assets/card.png` beside `src`. If you read them with `fs.readFile`, they load under `seedcord dev` and fail after `seedcord build`. The build only keeps files that something imports, so it leaves out the JSON and the PNG. A path built from `import.meta.dirname` also points into `dist`, where those files never are.
 
 To ship the JSON and the PNG, list their folders under `files` in `seedcord.config.ts`. Those folders go into the build with your code:
 
@@ -79,7 +79,7 @@ Keep the loop in code that runs after the bot starts, like a startup task, a plu
 | you pass | it throws | the fix |
 | --- | --- | --- |
 | a folder `files` doesn't list, like `'./other'` | `CoreDirectoryNotListed` | add it to `files` |
-| a folder the build skips, like `'./locales/.cache'` | `CoreDirectorySkipped` | move the files out of the dot-folder |
+| a folder that the build skips, like `'./locales/.cache'` | `CoreDirectorySkipped` | move the files out of the dot-folder |
 | a relative path in a test or `tsx` run | `CoreDirectoryRootUnknown` | pass an absolute path, or run the bot through `seedcord dev` or the build |
 
 {/* prettier-ignore-end */}

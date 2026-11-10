@@ -3,7 +3,7 @@ title: The dev loop
 description: Run your bot locally with seedcord dev, which reloads a changed handler without restarting the process.
 ---
 
-If you run your bot under a plain file watcher, every save restarts the whole process. A gateway bot then logs in to Discord again, which takes a few seconds, and Discord caps how many new [gateway sessions](https://discord.com/developers/docs/events/gateway#session-start-limit-object) a bot can start in a day. The logs from before that restart are gone from your terminal too. Your bot prints every line to one stream, so reading your handler's output means scrolling past the framework's, or piping the whole thing through `grep` and losing the colors.
+Under a plain file watcher, every save restarts the whole process. A gateway bot then logs in to Discord again, which takes a few seconds and counts toward Discord's daily limit on new [gateway sessions](https://discord.com/developers/docs/events/gateway#session-start-limit-object). You also lose the logs from before the restart, and your handler's output shares one stream with the framework's.
 
 `seedcord dev` keeps your bot connected to Discord while you edit. When you save a handler, seedcord swaps the new version into the running bot without restarting the process. [Hot reload](/tooling/hot-reload) lists the saves that still need a restart. Its log pane [filters by channel and level](#filtering-the-log), so you can read one part of your bot while the rest keeps running.
 
@@ -11,7 +11,7 @@ If you run your bot under a plain file watcher, every save restarts the whole pr
 
 Its settings come from [`seedcord.config.ts`](/build/config), or `seedcord.config.mts`. The shell picks the mode, so `ENV=staging seedcord dev` loads your `.env.staging` file. [Env files and modes](/build/env) covers which variables count.
 
-A gateway bot or a node http bot hot reloads only in the `development` and `test` modes, and the `logs/` file below exists only in `development`. Under `ENV=staging`, a save changes nothing until you press `r`, and no log file is written.
+A gateway bot or a node http bot hot reloads only in the `development` and `test` modes, and the `logs/` file below exists only in `development`. Under `ENV=staging`, a save changes nothing until you press `r`, and seedcord doesn't write a log file.
 
 ## Running it on Bun
 
@@ -28,7 +28,7 @@ With that file, `bun run dev` runs the CLI on Bun, along with the bot it loads. 
 
 A `cloudflare.config.ts` beside `seedcord.config.ts` makes the bot an edge bot, which [Workers](/build/workers) sets up. `seedcord dev` runs it in workerd, the runtime Cloudflare runs a Worker on, through Cloudflare's Vite plugin. The Worker listens on the `port` in `seedcord.config.ts`, 3000 by default, and [the dev tunnel](/tooling/tunnel) points Discord at it. A saved handler reloads in place, as it does for a server bot.
 
-Saving `cloudflare.config.ts`, `.dev.vars`, `.dev.vars.<mode>`, or an `.env` file asks for a restart with `r`. [Hot reload](/tooling/hot-reload#saves-that-need-a-restart) lists every save that does.
+Saving `cloudflare.config.ts`, `.dev.vars`, `.dev.vars.<mode>`, or an `.env` file needs a restart with `r`. [Hot reload](/tooling/hot-reload#saves-that-need-a-restart) lists every save that does.
 
 Edge dev can't run on Bun. If the CLI runs on Bun, `seedcord dev` throws `CliEdgeOnBun`. An edge bot made with `bun create seedcord` gets no `bunfig.toml`, so `bun run dev` already starts on Node.
 
@@ -42,7 +42,7 @@ A bot with its own application and token can run `seedcord dev` at the same time
 
 ## When your bot fails to start
 
-If your bot throws while it starts, `seedcord dev` stops with `CliStartFailed`. The text after the colon says what went wrong. These are some common ones:
+If your bot throws while it starts, `seedcord dev` stops with `CliStartFailed`. The text after the colon explains what went wrong. These are some common ones:
 
 - **On gateway, "An invalid token was provided."** discord.js rejected `DISCORD_BOT_TOKEN`. Copy a new one from [Get the token](/discord-application#get-the-token).
 - **On gateway, "Used disallowed intents".** `clientOptions` lists an intent whose switch is off. Turn it on in [the portal](/discord-application#turn-on-the-intents-you-need).
@@ -80,7 +80,7 @@ The scroll keys work at any time, even while the bot is starting or shutting dow
 
 ## Filtering the log
 
-A busy bot prints more lines than you can read, though usually you only care about one part of it. Every log line carries a channel and a level, which [Logging](/built-ins/logging) explains. The five levels are `error`, `warn`, `info`, `debug`, and `trace`, while your channels depend on what your bot and its plugins log to. The sidebar draws both sets as two rows of small chips, and four keys move the cursor across those chips.
+A busy bot prints more lines than you can read, though usually you only care about one part of it. Every log line has a channel and a level, which [Logging](/built-ins/logging) explains. The five levels are `error`, `warn`, `info`, `debug`, and `trace`, while your channels depend on what your bot and its plugins log to. The sidebar draws both sets as two rows of small chips, and four keys move the cursor across those chips.
 
 {/* prettier-ignore-start */}
 
@@ -119,7 +119,7 @@ From 80 columns up, `s` hides the sidebar or the slim rail and shows the two sta
 
 Each log line starts with a clock and a label. While `p` is on fitting the width, seedcord removes the clock's seconds first as the log pane narrows, then the label, then the clock, to leave room for the message. Press `p` to always show all of it, or to hide it.
 
-![The dev terminal at a narrow width, with the chips gone and a status line above the logs](/dev-narrow-layout.webp)
+![The dev terminal at a narrow width, without the chips and with a status line above the logs](/dev-narrow-layout.webp)
 
 ## Without a terminal
 

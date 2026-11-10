@@ -52,7 +52,7 @@ class Suggest extends AutocompleteHandler<never> {
 
 describe('http handler log channels', () => {
     it('puts both interaction bases on the interactions channel', async () => {
-        // justified: the fixture carries only the fields these bases read
+        // justified: the fixture has only the fields these bases read
         await built(Ban, payload as unknown as APIChatInputApplicationCommandInteraction, core, dispatch).execute();
         await built(
             Suggest,
