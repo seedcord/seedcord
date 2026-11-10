@@ -1,6 +1,6 @@
 import { DispatchContext } from '@seedcord/core/internal';
 import { Plugin, PluginHost } from '@seedcord/core/plugin';
-import { SeedcordErrorCode } from '@seedcord/errors';
+import { isSeedcordError, SeedcordErrorCode } from '@seedcord/errors';
 import { describe, expect, it } from 'vite-plus/test';
 
 import { interactionGateContext } from '#src/gates/context';
@@ -8,6 +8,7 @@ import * as handlers from '#src/handlers/index';
 
 import type { Core } from '#interfaces/Core';
 import type { Repliables } from '#src/handlers/interactionTypes';
+import type { CoreBase } from '@seedcord/core';
 import type { Config } from '@seedcord/types';
 
 class Host extends PluginHost<'http', 'server'> {
@@ -21,7 +22,7 @@ class Host extends PluginHost<'http', 'server'> {
     }
 }
 
-function pluginAdding(name: string): new (host: Host) => Plugin {
+function pluginAdding(name: string): new (host: CoreBase) => Plugin {
     return class extends Plugin {
         public override readonly dispatchMembers = { [name]: (): string => name };
 
@@ -47,12 +48,17 @@ function gateContextNames(): string[] {
 
 const memberNames = new Set([...Object.values(handlers).flatMap(prototypeMemberNames), ...gateContextNames()]);
 
-describe('reserved dispatch member names on http', () => {
-    it.each([...memberNames])('reserves %s', (name) => {
-        const attachRaw = Host.prototype.attach.bind(new Host()) as (key: string, plugin: unknown) => unknown;
+function attachRejects(name: string): boolean {
+    try {
+        new Host().attach('first', pluginAdding(name));
+        return false;
+    } catch (error) {
+        return isSeedcordError(error, undefined, SeedcordErrorCode.CorePluginMemberReserved);
+    }
+}
 
-        expect(() => attachRaw('first', pluginAdding(name))).toThrow(
-            expect.objectContaining({ code: SeedcordErrorCode.CorePluginMemberReserved })
-        );
+describe('reserved dispatch member names on http', () => {
+    it('reserves every handler member and gate context field', () => {
+        expect([...memberNames].filter((name) => !attachRejects(name))).toEqual([]);
     });
 });

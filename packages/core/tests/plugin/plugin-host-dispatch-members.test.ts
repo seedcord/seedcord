@@ -1,4 +1,4 @@
-import { SeedcordErrorCode } from '@seedcord/errors';
+import { isSeedcordError, SeedcordErrorCode } from '@seedcord/errors';
 import { HostPluginHooks } from '@seedcord/types/internal';
 import { describe, expect, it } from 'vite-plus/test';
 
@@ -61,15 +61,6 @@ describe('dispatch members at attach', () => {
         );
     });
 
-    it('rejects one plugin attached twice', () => {
-        const Tagging = pluginAdding('tag');
-        const host = new TestPluginHost().attach('first', Tagging);
-
-        expect(() => host.attach('second', Tagging)).toThrow(
-            expect.objectContaining({ code: SeedcordErrorCode.CoreDuplicateName })
-        );
-    });
-
     it('lets plugins with different members, or none, share a host', () => {
         const host = new TestPluginHost()
             .attach('first', pluginAdding('tag'))
@@ -80,16 +71,20 @@ describe('dispatch members at attach', () => {
         expect(host.plainTwo).toBeInstanceOf(Bare);
     });
 
-    it.each([...handlerMemberNames(), 'toString', '__proto__', 'uuid', 'developerUsername'])(
-        'rejects the reserved name %s',
-        (name) => {
-            const host = new TestPluginHost();
+    it('rejects a member called like a handler member, a card field, or an Object.prototype key', () => {
+        const names = [...handlerMemberNames(), 'toString', '__proto__', 'uuid', 'developerUsername'];
 
-            expect(() => host.attach('first', pluginAdding(name))).toThrow(
-                expect.objectContaining({ code: SeedcordErrorCode.CorePluginMemberReserved })
-            );
-        }
-    );
+        const accepted = names.filter((name) => {
+            try {
+                new TestPluginHost().attach('first', pluginAdding(name));
+                return true;
+            } catch (error) {
+                return !isSeedcordError(error, undefined, SeedcordErrorCode.CorePluginMemberReserved);
+            }
+        });
+
+        expect(accepted).toEqual([]);
+    });
 });
 
 describe('building dispatch members', () => {

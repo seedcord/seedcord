@@ -20,8 +20,9 @@ import type { CoreBase, DispatchOrigin } from '@seedcord/core';
 import type { RenderContext, ReplyResponse } from '@seedcord/types';
 import type { UUID } from 'node:crypto';
 
-interface Tagged {
-    readonly tag: string;
+// these members aren't typed because codegen doesn't run for these test bots
+function memberOf(target: object, member = 'tag'): string {
+    return String(Reflect.get(target, member));
 }
 
 function pluginBuilding(tag: (origin: DispatchOrigin) => unknown, member = 'tag'): new (host: CoreBase) => Plugin {
@@ -85,7 +86,7 @@ describe('dispatch members on http', () => {
     it('sets a member before a handler field initializer runs', async () => {
         let seen: string | undefined;
         class Reads extends SlashHandler<never> {
-            private readonly tagAtBuild = (this as unknown as Tagged).tag;
+            private readonly tagAtBuild = memberOf(this);
 
             async execute(): Promise<void> {
                 seen = this.tagAtBuild;
@@ -104,12 +105,12 @@ describe('dispatch members on http', () => {
         @RegisterInteractionMiddleware()
         class Audit extends InteractionMiddleware {
             public execute(): void {
-                seen.push((this as unknown as Tagged).tag);
+                seen.push(memberOf(this));
             }
         }
         class Reads extends SlashHandler<never> {
             async execute(): Promise<void> {
-                seen.push((this as unknown as Tagged).tag);
+                seen.push(memberOf(this));
                 await this.reply('ok');
             }
         }
@@ -124,7 +125,7 @@ describe('dispatch members on http', () => {
         let seen: unknown;
         class Clicks extends ButtonHandler<never> {
             async execute(): Promise<void> {
-                seen = (this as unknown as { decoded: string }).decoded;
+                seen = memberOf(this, 'decoded');
                 await this.update('ok');
             }
         }
@@ -154,7 +155,7 @@ describe('dispatch members on http', () => {
         let seen: string | undefined;
         class Suggests extends AutocompleteHandler<never> {
             async execute(): Promise<void> {
-                seen = (this as unknown as Tagged).tag;
+                seen = memberOf(this);
                 await this.respond([]);
             }
         }
@@ -177,11 +178,11 @@ describe('dispatch members on http', () => {
             }
 
             public override render(ctx: RenderContext): ReplyResponse {
-                return { components: [new TextDisplayBuilder().setContent((ctx as unknown as Tagged).tag)] };
+                return { components: [new TextDisplayBuilder().setContent(memberOf(ctx))] };
             }
         }
         const capture = defineGate('capture', (ctx) => {
-            seen = (ctx as unknown as Tagged).tag;
+            seen = memberOf(ctx);
             throw new Echo();
         });
         class Guarded extends SlashHandler<never> {
