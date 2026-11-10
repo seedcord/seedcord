@@ -1,10 +1,4 @@
-import {
-    bindBotColor,
-    busLoggerOf,
-    connectDevChannel,
-    HmrManager,
-    SubscriberLoader
-} from '@seedcord/core/internal';
+import { bindBotColor, busLoggerOf, connectDevChannel, HmrManager, SubscriberLoader } from '@seedcord/core/internal';
 import { CoordinatedShutdown, CoordinatedStartup, ServerHost } from '@seedcord/core/node';
 import { HealthCheck, shutdownOf, StartupPhase } from '@seedcord/core/node/internal';
 import { HostAugmentTarget, HostPlugins, HostVersion, SeedcordBrand } from '@seedcord/types/internal';
