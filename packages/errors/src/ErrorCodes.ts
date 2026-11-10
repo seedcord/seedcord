@@ -232,7 +232,7 @@ export enum SeedcordErrorCode {
     PluginTasksNotLoaded = 2301,
     /** croner rejected a task's cron pattern. */
     PluginTasksInvalidPattern = 2302,
-    /** A task option, the plugin's `timezone`, or the `at` passed to `schedule` has a value the plugin can't use. */
+    /** A task option, the plugin's `timezone`, or the `at` passed to `schedule` has a value that the plugin can't use. */
     PluginTasksInvalidOption = 2303,
     /** `pause`, `resume`, or `nextRun` got a task without a cron pattern. */
     PluginTasksPatternMissing = 2304,

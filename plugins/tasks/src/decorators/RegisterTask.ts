@@ -2,6 +2,7 @@ import { Task } from '#src/Task';
 
 import type { CronPattern } from '#src/types/CronPattern';
 import type { TaskContext, TaskOptions } from '#src/types/Tasks';
+import type { Exact } from 'type-fest';
 
 export type TaskClass = new (context: TaskContext) => Task<unknown>;
 export type NoDataTaskClass = abstract new (context: TaskContext<void>) => Task;
@@ -9,10 +10,10 @@ export type ScheduledTaskClass = abstract new (context: never) => Task<unknown>;
 
 type ScheduledOptions = Pick<TaskOptions, 'key'>;
 
-// TArg is inferred as a literal, which skips the excess property check, so this rejects any other key
+// a literal TArg skips the excess property check, which Exact puts back
 type RegisterArgs<TArg, TZone extends string, TEvery extends string> = TArg extends string
     ? [pattern: CronPattern<TArg>, options?: TaskOptions<TZone, TEvery>]
-    : [options?: TArg & Record<Exclude<keyof TArg, keyof ScheduledOptions>, never>];
+    : [options?: Exact<ScheduledOptions, TArg>];
 type TaskTarget<TArg> = TArg extends string ? NoDataTaskClass : ScheduledTaskClass;
 
 export type TaskMetadata =

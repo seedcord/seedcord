@@ -5,7 +5,6 @@ export interface TempFolder extends AsyncDisposable {
     path: string;
 }
 
-/** A folder under `tests/temp` that is removed when the handle is disposed. */
 export async function tempFolder(name: string): Promise<TempFolder> {
     const folder = path.join(import.meta.dirname, '..', 'temp', name);
     await mkdir(folder, { recursive: true });

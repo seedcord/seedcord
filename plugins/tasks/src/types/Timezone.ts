@@ -1,4 +1,4 @@
-// IANA zone names that Intl accepts, so a literal timezone can be checked at compile time
+// the IANA zones that Intl accepts. TypeScript checks a literal timezone against this list
 export const IANA_TIMEZONES = [
     'Africa/Abidjan',
     'Africa/Accra',

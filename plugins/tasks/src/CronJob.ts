@@ -1,23 +1,27 @@
 import type { Cron } from 'croner';
 
-/** Builds the croner job for a task, with `maxRuns` in place of the task's own. */
-export type BuildCron = (maxRuns?: number) => Cron;
+interface CronSettings {
+    readonly pattern: string;
+    readonly timezone: string | undefined;
+    readonly maxRuns: number | undefined;
+    readonly pausedByDecorator: boolean;
+}
 
-// croner times a run from the last one, so a croner job paused through a match runs it at once on resume.
-// stop() ends the croner job instead, and start() builds a fresh one with the runs it had left
+// croner times a run from the last one. A croner job paused through a match would run it the moment it resumes.
+// stop() ends the croner job instead, and start() builds a fresh one
 export class CronJob {
     private cron: Cron;
     private scheduled = false;
-    private earlierRun: Date | null = null;
+    private runsLeft: number;
+    private lastRun: Date | null = null;
 
     constructor(
-        private readonly build: BuildCron,
-        private readonly run: () => Promise<void>,
-        public readonly pattern: string,
-        public readonly timezone: string | undefined,
-        public readonly pausedByDecorator: boolean
+        private readonly build: () => Cron,
+        private readonly run: (claim: () => boolean) => Promise<void>,
+        public readonly settings: CronSettings
     ) {
         this.cron = build();
+        this.runsLeft = settings.maxRuns ?? Number.POSITIVE_INFINITY;
     }
 
     public get active(): boolean {
@@ -25,17 +29,11 @@ export class CronJob {
     }
 
     public start(): void {
-        if (this.scheduled) return;
+        if (this.scheduled || this.runsLeft === 0) return;
 
-        if (this.cron.isStopped()) {
-            const runsLeft = this.cron.runsLeft();
-            if (runsLeft === 0) return;
+        if (this.cron.isStopped()) this.cron = this.build();
 
-            this.earlierRun = this.previousRun();
-            this.cron = this.build(runsLeft);
-        }
-
-        this.cron.schedule(this.run);
+        this.cron.schedule(() => this.run(() => this.claim()));
         this.scheduled = true;
     }
 
@@ -47,11 +45,22 @@ export class CronJob {
     public nextRun(): Date | null {
         if (!this.cron.options.interval) return this.cron.nextRun();
 
-        // croner's nextRun() counts an interval from now, but croner times the run from the last one, as nextRuns() does
+        // croner runs an interval job from its last run. nextRuns() matches that and nextRun() counts from now
         return this.cron.nextRuns(1)[0] ?? null;
     }
 
     public previousRun(): Date | null {
-        return this.cron.previousRun() ?? this.earlierRun;
+        return this.lastRun;
+    }
+
+    // TaskRunner.run() calls this as stillWanted, after its protect and shutdown checks pass
+    private claim(): boolean {
+        if (this.runsLeft === 0) return false;
+
+        this.runsLeft -= 1;
+        this.lastRun = new Date();
+        if (this.runsLeft === 0) this.stop();
+
+        return true;
     }
 }

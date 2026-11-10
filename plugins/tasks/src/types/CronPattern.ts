@@ -1,34 +1,8 @@
 import type { IsDigits, StripZeros } from '@seedcord/utils/internal';
+import type { IsNever, LessThanOrEqual, Split } from 'type-fest';
 
 type ToNumber<Text extends string> =
     IsDigits<Text> extends true ? (StripZeros<Text> extends `${infer Value extends number}` ? Value : never) : never;
-
-type CompareLength<Left extends string, Right extends string> = Left extends `${string}${infer LeftRest}`
-    ? Right extends `${string}${infer RightRest}`
-        ? CompareLength<LeftRest, RightRest>
-        : 'gt'
-    : Right extends ''
-      ? 'eq'
-      : 'lt';
-
-type CompareDigits<Left extends string, Right extends string> = Left extends `${infer LeftHead}${infer LeftRest}`
-    ? Right extends `${infer RightHead}${infer RightRest}`
-        ? LeftHead extends RightHead
-            ? CompareDigits<LeftRest, RightRest>
-            : '0123456789' extends `${string}${LeftHead}${string}${RightHead}${string}`
-              ? 'lt'
-              : 'gt'
-        : 'eq'
-    : 'eq';
-
-type LessOrEqual<Left extends number, Right extends number> =
-    CompareLength<`${Left}`, `${Right}`> extends 'eq'
-        ? CompareDigits<`${Left}`, `${Right}`> extends 'gt'
-            ? false
-            : true
-        : CompareLength<`${Left}`, `${Right}`> extends 'lt'
-          ? true
-          : false;
 
 interface Field {
     label: string;
@@ -123,13 +97,9 @@ interface Layouts {
 
 type CronNickname = '@yearly' | '@annually' | '@monthly' | '@weekly' | '@daily' | '@midnight' | '@hourly';
 
-type Split<Text extends string, Separator extends string> = Text extends `${infer Head}${Separator}${infer Tail}`
-    ? [Head, ...Split<Tail, Separator>]
-    : [Text];
-
 type Whitespace = ' ' | '\t' | '\n' | '\r';
 
-// croner trims a pattern and splits it on runs of whitespace, so this does too
+// trims and splits on runs of whitespace, the same way croner reads a pattern
 type Fields<
     Text extends string,
     Current extends string = '',
@@ -148,11 +118,12 @@ type ValueOf<TField extends Field, Text extends string> = Text extends keyof TFi
     ? TField['names'][Text]
     : ToNumber<Text>;
 
-type InRange<Value extends number, Min extends number, Max extends number> = [Value] extends [never]
-    ? false
-    : LessOrEqual<Min, Value> extends true
-      ? LessOrEqual<Value, Max>
-      : false;
+type InRange<Value extends number, Min extends number, Max extends number> =
+    IsNever<Value> extends true
+        ? false
+        : LessThanOrEqual<Min, Value> extends true
+          ? LessThanOrEqual<Value, Max>
+          : false;
 
 type CheckValue<TField extends Field, Text extends string, Item extends string> =
     InRange<ValueOf<TField, Text>, TField['min'], TField['max']> extends true
@@ -175,7 +146,7 @@ type CheckRange<TField extends Field, Start extends string, End extends string, 
         ? CheckValue<TField, Start, Item>
         : CheckValue<TField, RangeEnd<TField, End>, Item> extends string
           ? CheckValue<TField, RangeEnd<TField, End>, Item>
-          : LessOrEqual<ValueOf<TField, Start>, ValueOf<TField, RangeEnd<TField, End>>> extends true
+          : LessThanOrEqual<ValueOf<TField, Start>, ValueOf<TField, RangeEnd<TField, End>>> extends true
             ? true
             : Fail<TField, Item, 'runs backwards'>;
 

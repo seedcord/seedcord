@@ -10,7 +10,6 @@ import type { DistributedPick } from 'type-fest';
 
 export type RunOutcome = Subscriptions['taskRan']['outcome'] | 'skipped' | 'cancelled';
 
-// what started a run, with the job's id when a scheduled job did
 type RunSource = DistributedPick<Subscriptions['taskRan'], 'trigger' | 'jobId'>;
 
 export class TaskRunner {
@@ -37,12 +36,12 @@ export class TaskRunner {
             return 'skipped';
         }
 
-        // the check and the add below share a tick, so two waiting jobs can't both start
+        // nothing awaits between this check and state.add(). Two waiting jobs can't both start
         if (protect) while (state.busy) await state.settled();
         if (this.shutdown.signal.aborted) return 'interrupted';
         if (!stillWanted()) return 'cancelled';
 
-        // the run counts as busy before execute() starts, so the runner skips a trigger() that a task calls on itself
+        // busy before execute() starts, which makes a trigger() that a task calls on itself skip
         const { promise, resolve } = Promise.withResolvers<RunOutcome>();
         const run = this.track(promise);
         state.add(run);

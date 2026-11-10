@@ -21,12 +21,13 @@ type IsPositiveWhole<Value extends string> =
     IsDigits<Value> extends true ? (StripZeros<Value> extends '0' ? false : true) : false;
 
 /**
- * A duration literal that {@link parseDuration} accepts, like `'30m'`, `'24h'`, or `'500ms'`: a whole
- * number above 0 followed by a unit (`ms`, `s`, `m`, `h`, `d`).
+ * A duration string that {@link parseDuration} accepts, like `'30m'`, `'24h'`, or `'500ms'`. It's a
+ * whole number above 0, followed by one of the units `ms`, `s`, `m`, `h`, or `d`.
  *
- * Give it the literal through a `const` type parameter. A literal it rejects resolves to a message
- * that says what's wrong, so the call fails to compile. A plain `string` passes, and
- * `parseDuration` checks it at run time.
+ * Use it to make your own function reject a bad duration at compile time. The example below shows
+ * how. A call like `every('1.5h')` then fails to compile, and the error explains what a duration
+ * looks like. A value typed as `string`, like one from `.env`, still compiles, so check it with
+ * `parseDuration` at run time.
  *
  * @typeParam TText - The literal to check.
  * @example
@@ -39,7 +40,7 @@ type IsPositiveWhole<Value extends string> =
  */
 export type ValidDuration<TText extends string> = string extends TText ? TText : EachDuration<TText>;
 
-// checks each member of a union on its own, so one valid member can't let the rest through
+// distributes over a union. One valid member can't let an invalid one through
 type EachDuration<TText extends string> = TText extends string
     ? IsPositiveWhole<Amount<TText>> extends true
         ? TText
@@ -53,8 +54,7 @@ const DURATION_PATTERN = new RegExp(String.raw`^(\d+)(${Object.keys(UNIT_MS).joi
  *
  * The grammar is one or more digits followed by one lowercase unit (`ms`, `s`, `m`, `h`, `d`).
  * Anything else returns `null`, including a bare number, an unknown unit, an uppercase unit,
- * surrounding whitespace, a fractional value, and a result of zero. A malformed input can never
- * read as a valid duration.
+ * surrounding whitespace, a fractional value, and a result of zero.
  *
  * @param input - The duration string to parse.
  * @returns The duration in milliseconds, or `null` if `input` is not a well-formed positive duration.

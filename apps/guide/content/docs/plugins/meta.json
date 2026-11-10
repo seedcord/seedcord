@@ -15,6 +15,7 @@
         "kysely-migrations",
         "---Tasks---",
         "tasks",
-        "tasks-scheduling"
+        "tasks-scheduling",
+        "tasks-control"
     ]
 }

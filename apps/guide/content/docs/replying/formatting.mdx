@@ -70,7 +70,7 @@ parseDuration('30M'); // null
 
 The grammar is one or more digits followed by one lowercase unit, `ms`, `s`, `m`, `h`, or `d`. Everything else returns null, including a fraction, an uppercase unit, a bare number, and a duration of zero.
 
-[`ValidDuration`](ref:utils/ValidDuration) checks a literal against the same grammar, so `'1.5h'` fails to compile. A plain `string` passes the type, so check the return for one of those.
+[`ValidDuration`](ref:utils/ValidDuration) checks a literal against the same grammar, so `'1.5h'` fails to compile. A plain `string` passes the type, and `parseDuration` can still return `null` for it at run time.
 
 ## Shortening a big number
 

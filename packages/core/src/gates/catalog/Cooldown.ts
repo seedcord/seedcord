@@ -117,7 +117,7 @@ export function Cooldown<const TDuration extends string>(
         if (parsed === null) throw new SeedcordTypeError(SeedcordErrorCode.InvalidDuration, [COOLDOWN, duration]);
         windowMs = parsed;
     }
-    // a zero or negative window would never limit, and NaN or Infinity would never free
+    // a window of 0 or less never limits anything. NaN or Infinity never resets
     if (!Number.isFinite(windowMs) || windowMs <= 0)
         throw new SeedcordRangeError(SeedcordErrorCode.InvalidDuration, [COOLDOWN, duration]);
 

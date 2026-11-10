@@ -1,0 +1,183 @@
+---
+title: Controlling tasks
+description: Pause a task, run it right away, or read when it runs next from any handler, and report failed task runs from a subscriber.
+---
+
+Without a way to pause it, a cron task keeps running on its pattern until the bot stops. The [tasks plugin](/plugins/tasks) gives your handlers [`pause()`](ref:plugin-tasks/Tasks.pause), [`resume()`](ref:plugin-tasks/Tasks.resume), [`trigger()`](ref:plugin-tasks/Tasks.trigger), and [`nextRun()`](ref:plugin-tasks/Tasks.nextRun) for that.
+
+With the plugin attached under the key `tasks`, a handler or a subscriber reaches it as [`this.core.tasks`](/plugins#reading-it-from-a-handler). It gets its type after you run [`seedcord codegen`](/plugins/typing).
+
+## Pausing a task
+
+`PauseDigest` pauses the `Digest` task when someone runs `/pause-digest`.
+
+```ts twoslash title="src/handlers/PauseDigest.ts"
+// ---cut-start---
+// @filename: tasks/Digest.ts
+import { RegisterTask, Task } from '@seedcord/plugin-tasks/gateway';
+
+@RegisterTask('0 9 * * MON')
+export class Digest extends Task {
+    public async execute(): Promise<void> {}
+}
+
+// @filename: handlers/PauseDigest.ts
+import type { Tasks } from '@seedcord/plugin-tasks';
+
+declare module '@seedcord/gateway' {
+    interface Core {
+        tasks: Tasks;
+    }
+    interface SlashRegistry {
+        'pause-digest': { options: {}; cache: 'cached' };
+    }
+}
+// ---cut-end---
+import { SlashHandler, SlashRoute } from '@seedcord/gateway';
+
+import { Digest } from '../tasks/Digest';
+
+@SlashRoute('pause-digest')
+export class PauseDigest extends SlashHandler<'pause-digest'> {
+    public async execute(): Promise<void> {
+        this.core.tasks.pause(Digest);
+
+        await this.reply('The digest is paused.');
+    }
+}
+```
+
+`pause()` takes the `Digest` class, which `PauseDigest` imports from the task's file. `resume()`, `trigger()`, and `nextRun()` take the class the same way.
+
+A paused task doesn't run at its [matches](/plugins/tasks#writing-a-pattern), the times that its pattern picks. Call `resume()` to start it again. It runs at its next match and skips the ones that it missed.
+
+A pause lasts until the process stops. After a restart, the task follows the [`paused` option](/plugins/tasks#task-options) on its `@RegisterTask`. To keep a task paused through a restart, store a flag in [`core.kv`](/built-ins), and return early from `execute()` while it's set.
+
+If you save the task's file during `seedcord dev`, the plugin keeps the task paused or resumed, the way you left it.
+
+## Showing when a task runs next
+
+`nextRun()` returns the time of the next run as a `Date`. It returns `null` while the task is paused, and after its last run.
+
+```ts twoslash title="src/handlers/DigestNext.ts"
+// ---cut-start---
+// @filename: tasks/Digest.ts
+import { RegisterTask, Task } from '@seedcord/plugin-tasks/gateway';
+
+@RegisterTask('0 9 * * MON')
+export class Digest extends Task {
+    public async execute(): Promise<void> {}
+}
+
+// @filename: handlers/DigestNext.ts
+import type { Tasks } from '@seedcord/plugin-tasks';
+
+declare module '@seedcord/gateway' {
+    interface Core {
+        tasks: Tasks;
+    }
+    interface SlashRegistry {
+        'digest-next': { options: {}; cache: 'cached' };
+    }
+}
+import { SlashHandler, SlashRoute } from '@seedcord/gateway';
+
+import { Digest } from '../tasks/Digest';
+// ---cut-end---
+@SlashRoute('digest-next')
+export class DigestNext extends SlashHandler<'digest-next'> {
+    public async execute(): Promise<void> {
+        const next = this.core.tasks.nextRun(Digest);
+
+        if (!next) {
+            await this.reply('The digest is paused.');
+            return;
+        }
+
+        const seconds = Math.floor(next.getTime() / 1000);
+        await this.reply(`The next digest posts <t:${seconds}:R>.`);
+    }
+}
+```
+
+`DigestNext` puts the time in a [Discord timestamp](https://discord.com/developers/docs/reference#message-formatting-timestamp-styles), so Discord shows it to each member in their own timezone. It divides by 1000 because [Discord reads timestamps in seconds](/replying/formatting#discord-timestamps-take-seconds).
+
+## Running a task now
+
+`trigger()` runs a task right away, even while it's paused. It works on any task that doesn't declare data, with or without a pattern.
+
+`trigger()` returns a promise that resolves once the run ends. If `execute()` throws, the plugin logs the error the same way it does for any run, but the promise still resolves.
+
+If the task has [`protect`](/plugins/tasks#when-a-run-takes-too-long) on and it's already running, the plugin skips this run. It calls the task's [`onOverrun()`](ref:plugin-tasks/Task.onOverrun) instead.
+
+## Listing every cron task
+
+[`crons()`](ref:plugin-tasks/Tasks.crons) returns an array with a [`CronStatus`](ref:plugin-tasks/CronStatus) for each cron task, for example to list them in a `/tasks` command.
+
+{/* prettier-ignore-start */}
+
+| field | holds |
+| --- | --- |
+| [`key`](ref:plugin-tasks/CronStatus.key) | the task's key |
+| [`pattern`](ref:plugin-tasks/CronStatus.pattern) | the task's pattern |
+| [`timezone`](ref:plugin-tasks/CronStatus.timezone) | the task's timezone, or the plugin's. `undefined` if neither sets one, which means the system's timezone |
+| [`active`](ref:plugin-tasks/CronStatus.active) | `true` while the task waits for its next match. `false` before the bot is ready, while the task is paused, and after its last run |
+| [`busy`](ref:plugin-tasks/CronStatus.busy) | `true` while a run of the task hasn't finished |
+| [`nextRun`](ref:plugin-tasks/CronStatus.nextRun) | the same `Date` or `null` that `nextRun()` returns |
+| [`previousRun`](ref:plugin-tasks/CronStatus.previousRun) | when the pattern last started a run of the task, or `null` before its first run |
+
+{/* prettier-ignore-end */}
+
+## Reporting failed runs
+
+After each run that starts, the plugin publishes the `taskRan` event on the [bus](/events/bus). One subscriber can report the failed runs of every task, for example to Sentry. Use [`onError()`](ref:plugin-tasks/Task.onError) for cleanup that belongs to one task, since it runs on that task and can read `this.data`.
+
+```ts twoslash title="src/subscribers/ReportTaskFailure.ts"
+import { Subscribe, Subscriber } from '@seedcord/gateway';
+// ---cut-start---
+import type {} from '@seedcord/plugin-tasks';
+// ---cut-end---
+
+@Subscribe(['taskRan'])
+export class ReportTaskFailure extends Subscriber<'taskRan'> {
+    public async execute(): Promise<void> {
+        const run = this.data;
+        //               ^?
+        if (run.outcome !== 'failed') return;
+
+        this.logger.error(`${run.key} failed`, run.error);
+    }
+}
+```
+
+`run.outcome` is one of three values:
+
+- `'finished'` if `execute()` returned.
+- `'failed'` if it threw. Only then does `run` have `error`, which is why `ReportTaskFailure` checks `outcome` first.
+- `'interrupted'` if it threw after shutdown aborted `this.signal`.
+
+`run` also has the task's `key`, the run's `trigger`, and `durationMs`. `jobId` is the job's id when a [job](/plugins/tasks-scheduling) started the run, and `null` otherwise.
+
+The plugin doesn't publish `taskRan` for a run that `protect` skipped, since that run never started.
+
+<Callout type="transport">
+
+The samples on this page are for a gateway bot. On an http bot, import `SlashHandler`, `SlashRoute`, `Subscribe`, and `Subscriber` from `@seedcord/http`, and import `Task` from `@seedcord/plugin-tasks/http`.
+
+</Callout>
+
+## Errors from these methods
+
+{/* prettier-ignore-start */}
+
+| error | when |
+| --- | --- |
+| `PluginTasksPatternMissing` | you pass a task without a pattern to `pause()`, `resume()`, or `nextRun()` |
+| `PluginTasksNotLoaded` | you pass a class that the plugin didn't load from its `path` |
+| `PluginTasksKeyTaken` | you pass a class whose key belongs to a different task that the plugin loaded, like a class with the same name in another folder |
+
+{/* prettier-ignore-end */}
+
+`pause()`, `resume()`, `nextRun()`, and `trigger()` don't pass data to the task. So they only take a task that doesn't declare data, and passing one that does fails to compile.
+
+To run a task once at a later time instead, read [Scheduling jobs](/plugins/tasks-scheduling).

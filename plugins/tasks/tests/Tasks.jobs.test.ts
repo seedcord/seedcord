@@ -313,11 +313,11 @@ describe('Tasks.cancel', () => {
         expect(second.host.runs).toEqual([]);
     });
 
-    it('cancels a stored job this process holds no timer for', async () => {
+    it("cancels a stored job that this process hasn't set a timer for", async () => {
         await using first = await start(jobs, driver);
         const job = await first.tasks.schedule(Reminder, { in: '1s' });
         await first.tasks.dispose();
-        // partial doesn't load Reminder, so the due job stays in the store with no timer
+        // partial doesn't load Reminder. The store keeps the due job and nothing sets a timer for it
         await using booted = await start(partial, driver);
         const { tasks } = booted;
         await vi.advanceTimersByTimeAsync(SECOND_MS);
@@ -483,7 +483,7 @@ describe('Tasks job upkeep', () => {
     });
 
     describe('rejects', () => {
-        // every case here fails before it stores anything, so one plugin serves them all
+        // each case fails before it stores anything. One plugin is enough for all of them
         const shared = new FakeDriver();
         let tasks: Tasks;
 

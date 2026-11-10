@@ -6,7 +6,7 @@ export type IsDigits<TText extends string> = TText extends `${Digit}${infer Rest
         : IsDigits<Rest>
     : false;
 
-// keeps the last digit, so '000' becomes '0'
+// '000' strips down to '0'
 export type StripZeros<TText extends string> = TText extends `0${infer Rest extends `${Digit}${string}`}`
     ? StripZeros<Rest>
     : TText;

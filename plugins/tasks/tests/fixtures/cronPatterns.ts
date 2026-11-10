@@ -1,4 +1,4 @@
-// one table for the CronPattern type and for croner, so a test fails once the two give different answers
+// the CronPattern type tests and the croner tests both read this table. A test fails once the two give different answers
 export const acceptedPatterns = [
     '* * * * *',
     '*/15 * * * *',

@@ -7,7 +7,6 @@ import { Cron, CronDate } from 'croner';
 import { CronJob } from './CronJob';
 import { requireTimezone } from './requireTimezone';
 
-import type { BuildCron } from './CronJob';
 import type { TaskMetadata } from './decorators/RegisterTask';
 import type { CronSlot, LoadedTask, TaskRegistry, TaskSlot } from './TaskRegistry';
 import type { TaskRunner } from './TaskRunner';
@@ -34,7 +33,7 @@ export class CronTasks {
         const { key, file } = loaded;
         const { pattern } = meta;
 
-        // the constructor already checked the plugin's timezone
+        // the constructor has already checked the plugin's timezone
         requireTimezone(optionOf(loaded, 'timezone'), meta.timezone);
 
         // croner treats a string with a colon as a one-off date
@@ -59,21 +58,20 @@ export class CronTasks {
         const dates = keepDefined({ startAt: meta.startAt, stopAt: meta.stopAt });
         checkDates(loaded, dates, timezone);
 
-        const run = async (): Promise<void> => {
-            await this.runner.run(loaded, { trigger: 'cron', jobId: null }, undefined);
+        const run = async (claim: () => boolean): Promise<void> => {
+            await this.runner.run(loaded, { trigger: 'cron', jobId: null }, undefined, claim);
         };
-        const build: BuildCron = (maxRuns = meta.maxRuns) =>
-            new Cron(pattern, {
-                ...(timezone !== undefined && { timezone }),
-                ...(maxRuns !== undefined && { maxRuns }),
-                ...gap,
-                ...dates
-            });
+        const build = (): Cron => new Cron(pattern, { ...(timezone !== undefined && { timezone }), ...gap, ...dates });
 
         let job: CronJob;
 
         try {
-            job = new CronJob(build, run, pattern, timezone, meta.paused ?? false);
+            job = new CronJob(build, run, {
+                pattern,
+                timezone,
+                maxRuns: meta.maxRuns,
+                pausedByDecorator: meta.paused ?? false
+            });
         } catch (error) {
             throw new SeedcordTypeError(
                 SeedcordErrorCode.PluginTasksInvalidPattern,
@@ -125,8 +123,8 @@ export class CronTasks {
     public list(): CronStatus[] {
         return this.registry.cronSlots().map((slot) => ({
             key: slot.loaded.key,
-            pattern: slot.cron.pattern,
-            timezone: slot.cron.timezone,
+            pattern: slot.cron.settings.pattern,
+            timezone: slot.cron.settings.timezone,
             active: slot.cron.active,
             busy: slot.state.busy,
             nextRun: this.nextRun(slot),
@@ -135,8 +133,8 @@ export class CronTasks {
     }
 }
 
-// croner prefixes its messages with its class name, and it shows a rejected day or month counted
-// from 0, so 32 reads as 31. For those two the field name alone points at the right part
+// croner prefixes its messages with its class name. It also counts a rejected day or month from 0
+// and reports 32 as 31. For those two the field name alone points at the right part
 function cronerReason(error: unknown): string {
     return asError(error)
         .message.replace(/^CronPattern: /, '')
@@ -160,7 +158,7 @@ function checkDates(
     }
 }
 
-// croner reads a date string in the task's timezone, so a plain new Date() could read it as a different time
+// CronDate reads a date string in the task's timezone. A plain new Date() could read it as a different time
 function readDate(loaded: LoadedTask, option: string, value: Date | string, timezone: string | undefined): number {
     try {
         return new CronDate(value, timezone).getTime();

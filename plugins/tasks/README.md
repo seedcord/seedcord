@@ -23,7 +23,7 @@
 
 ## About
 
-`@seedcord/plugin-tasks` runs code that no command starts. A task with a cron pattern runs on that schedule, and any task can run once at a later time, like an unban a day from now.
+`@seedcord/plugin-tasks` runs code without a command to start it. A task with a cron pattern runs on that schedule, and any task can run once at a later time, like an unban a day from now.
 
 Install it when your bot needs recurring work or a job that runs later. It works with a gateway bot and with an http bot on your own server. On a Cloudflare Workers bot, attaching it is a compile error.
 
@@ -70,4 +70,4 @@ export class Heartbeat extends Task {
 }
 ```
 
-A typo in a literal pattern fails to compile. The [Tasks guide](https://seedcord.org/guide/plugins/tasks) covers patterns, timezones, and controlling a task from a handler. [Scheduling jobs](https://seedcord.org/guide/plugins/tasks-scheduling) covers running a task once later, and what a kv driver has to do to keep those jobs through a restart.
+A typo in a literal pattern fails to compile. The [Tasks guide](https://seedcord.org/guide/plugins/tasks) teaches patterns and timezones. [Scheduling jobs](https://seedcord.org/guide/plugins/tasks-scheduling) shows how to run a task once later and keep the job through a restart. [Controlling tasks](https://seedcord.org/guide/plugins/tasks-control) shows how to pause, run, and report tasks from a handler.

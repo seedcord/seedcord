@@ -84,13 +84,13 @@ describe('Tasks cron tasks', () => {
         expect(vi.getTimerCount()).toBe(0);
     });
 
-    it('holds no timer before ready', async () => {
+    it("doesn't set a timer before ready", async () => {
         await using _booted = await boot(crons);
 
         expect(vi.getTimerCount()).toBe(0);
     });
 
-    it('holds no timer for a task that starts paused', async () => {
+    it("doesn't set a timer for a task that starts paused", async () => {
         await using booted = await start({ path: taskFolder, timezone: 'UTC' });
         const { tasks } = booted;
         const unpaused = tasks.crons().filter((status) => status.key !== 'Idle').length;
@@ -458,7 +458,7 @@ describe('Tasks cron tasks', () => {
         await run;
     });
 
-    it('reports no next run while a task is paused', async () => {
+    it('returns null for the next run while a task is paused', async () => {
         await using booted = await start(crons);
         const { tasks } = booted;
 
@@ -496,7 +496,7 @@ describe('Tasks cron tasks', () => {
         const keys = (): string[] => tasks.crons().map((status) => status.key);
 
         await tasks.onHmr({ file, type: 'update' });
-        // the save loaded a fresh copy of the class, so the one this file imported no longer matches
+        // the save loaded a fresh copy. The class that this file imported is a different one now
         expect(() => {
             tasks.pause(Idle);
         }).toThrow(expect.objectContaining({ code: SeedcordErrorCode.PluginTasksKeyTaken }));
@@ -504,6 +504,37 @@ describe('Tasks cron tasks', () => {
 
         await tasks.onHmr({ file, type: 'delete' });
         expect(keys()).not.toContain('Idle');
+    });
+
+    describe('maxRuns', () => {
+        // Capped matches every second and holds each run until host.release()
+        const startCapped = async (): ReturnType<typeof start> => {
+            const booted = await boot({ path: path.join(fixtures, 'limited'), timezone: 'UTC' });
+            booted.host.hold();
+            booted.tasks.ready();
+            await vi.advanceTimersByTimeAsync(SECOND_MS * 3);
+            return booted;
+        };
+
+        it('counts only the runs that start toward maxRuns', async () => {
+            await using booted = await startCapped();
+            const { host, tasks } = booted;
+
+            host.release();
+            await vi.advanceTimersByTimeAsync(SECOND_MS * 3);
+
+            expect(runsOf(host, 'Capped')).toHaveLength(2);
+            expect(tasks.crons().find((status) => status.key === 'Capped')?.active).toBe(false);
+        });
+
+        it('reports the last run that started as the previous run', async () => {
+            await using booted = await startCapped();
+            const { host, tasks } = booted;
+            const { previousRun } = tasks.crons().find((status) => status.key === 'Capped') ?? {};
+            host.release();
+
+            expect(previousRun).toEqual(new Date('2030-01-15T12:00:01Z'));
+        });
     });
 
     describe('every', () => {

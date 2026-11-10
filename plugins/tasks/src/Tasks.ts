@@ -46,7 +46,7 @@ export class Tasks extends Plugin<{ transport: 'any'; runtime: 'server' }> {
     readonly #reloader: FolderExports<TaskClass>;
     readonly #path: string;
     public constructor(host: CoreBase, options: TasksOptions) {
-        // Drain, so in-flight runs finish before database plugins disconnect
+        // Drain lets in-flight runs finish before database plugins disconnect
         super(host, {
             runtime: 'server',
             dispose: { phase: ShutdownPhase.Drain, ...keepDefined({ timeout: options.timeout }) }
@@ -80,7 +80,7 @@ export class Tasks extends Plugin<{ transport: 'any'; runtime: 'server' }> {
     }
 
     /**
-     * Loads the task classes under `path`, then reads back the jobs earlier runs of the bot stored.
+     * Loads the task classes under `path`, then reads back the jobs that earlier runs of the bot stored.
      *
      * @throws A **SeedcordError** when a task file throws while it imports.
      * @throws A **SeedcordTypeError** with `CoreDuplicateName` when two tasks share a key.
@@ -99,7 +99,7 @@ export class Tasks extends Plugin<{ transport: 'any'; runtime: 'server' }> {
         );
     }
 
-    /** Starts the cron tasks and the timers for pending jobs, so a due job runs on a logged-in bot. */
+    /** Starts the cron tasks and the timers for pending jobs once the bot has logged in. */
     public override ready(): void {
         this.#cronTasks.start();
         this.#scheduled.start();
@@ -119,14 +119,14 @@ export class Tasks extends Plugin<{ transport: 'any'; runtime: 'server' }> {
     }
 
     /**
-     * Stores a job that runs `Task` once, at the time `options` gives. A time in the past runs it
-     * right away, or in `ready()` if the bot hasn't reached it. The promise resolves once the driver
-     * holds the job, so after a restart the driver still holds any job that you got an id for.
+     * Stores a job that runs `Task` once, at the time `options` gives. If that time has passed, the job
+     * runs right away, or in `ready()` if the bot hasn't logged in yet. Any job that you got an id for
+     * is still in the driver after a restart, since the promise resolves only once the driver holds it.
      *
      * If the process dies during a run, the job runs again after a restart. Write a task so a second
-     * run of one job does no harm.
+     * run of one job is safe.
      *
-     * @param Task - A class the plugin loaded from `path`.
+     * @param Task - A class that the plugin loaded from `path`.
      * @param options - `in` or `at`, plus `data` when the task declares it.
      * @throws A **SeedcordError** with `PluginTasksNotLoaded` when the plugin did not load `Task`.
      * @throws A **SeedcordTypeError** with `PluginTasksKeyTaken` when a different class loaded under `Task`'s key.
@@ -174,11 +174,11 @@ export class Tasks extends Plugin<{ transport: 'any'; runtime: 'server' }> {
     }
 
     /**
-     * When a cron task runs next, or `null` while it's paused or once it has no runs left.
+     * When a cron task runs next, or `null` while it's paused or once it doesn't have any runs left.
      *
      * @throws A **SeedcordError** with `PluginTasksNotLoaded` when the plugin did not load `Task`.
      * @throws A **SeedcordTypeError** with `PluginTasksKeyTaken` when a different class loaded under `Task`'s key.
-     * @throws A **SeedcordTypeError** with `PluginTasksPatternMissing` when `Task` has no cron pattern.
+     * @throws A **SeedcordTypeError** with `PluginTasksPatternMissing` when `Task` doesn't have a cron pattern.
      */
     public nextRun(Task: NoDataTaskClass): Date | null {
         return this.#cronTasks.nextRun(this.#cronSlot(Task));
@@ -186,11 +186,12 @@ export class Tasks extends Plugin<{ transport: 'any'; runtime: 'server' }> {
 
     /**
      * Stops a cron task's schedule until {@link Tasks.resume}. Scheduled jobs and `trigger()` still
-     * run the task. A save that reloads the task keeps it paused, and a restart forgets this.
+     * run the task. The task is still paused after a save reloads it. After a restart, it
+     * follows its `paused` option again.
      *
      * @throws A **SeedcordError** with `PluginTasksNotLoaded` when the plugin did not load `Task`.
      * @throws A **SeedcordTypeError** with `PluginTasksKeyTaken` when a different class loaded under `Task`'s key.
-     * @throws A **SeedcordTypeError** with `PluginTasksPatternMissing` when `Task` has no cron pattern.
+     * @throws A **SeedcordTypeError** with `PluginTasksPatternMissing` when `Task` doesn't have a cron pattern.
      */
     public pause(Task: NoDataTaskClass): void {
         this.#cronTasks.pause(this.#cronSlot(Task));
@@ -202,15 +203,15 @@ export class Tasks extends Plugin<{ transport: 'any'; runtime: 'server' }> {
      *
      * @throws A **SeedcordError** with `PluginTasksNotLoaded` when the plugin did not load `Task`.
      * @throws A **SeedcordTypeError** with `PluginTasksKeyTaken` when a different class loaded under `Task`'s key.
-     * @throws A **SeedcordTypeError** with `PluginTasksPatternMissing` when `Task` has no cron pattern.
+     * @throws A **SeedcordTypeError** with `PluginTasksPatternMissing` when `Task` doesn't have a cron pattern.
      */
     public resume(Task: NoDataTaskClass): void {
         this.#cronTasks.resume(this.#cronSlot(Task));
     }
 
     /**
-     * Runs a task now, outside its schedule, even while it's paused. A `protect`ed task that is
-     * mid-run skips this one and calls `onOverrun()`.
+     * Runs a task now, outside its schedule, even while it's paused. If a `protect`ed task is
+     * mid-run, it skips this run and calls `onOverrun()`.
      *
      * @throws A **SeedcordError** with `PluginTasksNotLoaded` when the plugin did not load `Task`.
      * @throws A **SeedcordTypeError** with `PluginTasksKeyTaken` when a different class loaded under `Task`'s key.
@@ -224,7 +225,7 @@ export class Tasks extends Plugin<{ transport: 'any'; runtime: 'server' }> {
         const loaded = this.#registry.loaded(key);
 
         if (!loaded) throw new SeedcordError(SeedcordErrorCode.PluginTasksNotLoaded, [key, this.#path]);
-        // a class from another folder can share the key, and its data would reach the loaded class
+        // a class from another folder can share the key. Its data would then reach the loaded class
         if (loaded.Task !== Task) {
             throw new SeedcordTypeError(SeedcordErrorCode.PluginTasksKeyTaken, [key, loaded.file]);
         }

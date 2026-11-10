@@ -2,7 +2,7 @@ import type { IanaTimezone, Timezone } from './Timezone';
 import type { CoreBase, Storable, Stored } from '@seedcord/core';
 import type { Logger } from '@seedcord/logger';
 import type { ValidDuration } from '@seedcord/utils';
-import type { Simplify } from 'type-fest';
+import type { IsUnknown, RequireExactlyOne, Simplify } from 'type-fest';
 
 /** Options for the {@link Tasks} plugin. */
 export interface TasksOptions {
@@ -30,8 +30,8 @@ export interface TaskOptions<TZone extends string = string, TEvery extends strin
     /** Overrides the plugin's `timezone` for this task. */
     timezone?: Timezone<TZone>;
     /**
-     * Skips a cron or manual run while the last one is still running, and calls `onOverrun()` for it.
-     * A scheduled job waits for the last run to end instead, so the job still runs with its data.
+     * Skips a cron or manual run before the previous run has finished, and calls `onOverrun()` for it.
+     * A scheduled job waits for the previous run to end. Skipping it would lose the job's data.
      *
      * @defaultValue `true`
      */
@@ -46,9 +46,10 @@ export interface TaskOptions<TZone extends string = string, TEvery extends strin
     /** Stops the task after this many runs. */
     maxRuns?: number;
     /**
-     * The shortest gap between two runs, in whole seconds or more. The pattern still decides when the
-     * task may run, so `'* * 9-17 * * 1-5'` with `every: '90s'` runs every 90 seconds during those hours.
-     * After `resume()`, the task runs at its next match, and the gap counts from there.
+     * The shortest gap between two runs, as a duration in whole seconds like `'90s'` or `'5m'`. The task
+     * still only runs at times that the pattern matches. For example, `'* * 9-17 * * 1-5'` with
+     * `every: '90s'` runs every 90 seconds during those hours. After `resume()`, the task runs at its
+     * next match, and the gap counts from there.
      */
     every?: ValidDuration<TEvery>;
     /**
@@ -78,14 +79,15 @@ type IsNoData<TData> = [TData] extends [NoData] ? true : false;
 
 /**
  * `TData` after its trip through the store. A `Date` in `TData` reads back as its ISO string, the
- * same as a record from a `KvCollection`. A job scheduled with `undefined` stores no data and reads
- * back as `undefined`.
+ * same as a record from a `KvCollection`. A job scheduled with `undefined` doesn't store any data and
+ * reads back as `undefined`.
  */
-export type TaskData<TData> = unknown extends TData
-    ? unknown
-    : IsNoData<TData> extends true
-      ? NoData
-      : Stored<Exclude<TData, undefined>> | Extract<TData, undefined>;
+export type TaskData<TData> =
+    IsUnknown<TData> extends true
+        ? unknown
+        : IsNoData<TData> extends true
+          ? NoData
+          : Stored<Exclude<TData, undefined>> | Extract<TData, undefined>;
 
 /** What the plugin passes to a task's constructor. */
 export interface TaskContext<TData = unknown> {
@@ -99,9 +101,7 @@ export interface TaskContext<TData = unknown> {
 }
 
 /** When a scheduled job runs. Pass `in` or `at`. */
-export type When<TIn extends string = string> =
-    | { in: ValidDuration<TIn>; at?: never }
-    | { at: Date | number; in?: never };
+export type When<TIn extends string = string> = RequireExactlyOne<{ in: ValidDuration<TIn>; at: Date | number }>;
 
 /** The options `schedule()` takes. `data` follows the task's type argument. */
 export type ScheduleOptions<TData, TIn extends string = string> = When<TIn> &
@@ -112,7 +112,7 @@ export interface CronStatus {
     key: string;
     pattern: string;
     timezone: string | undefined;
-    /** Whether the pattern's timer is on. `false` before `ready()`, while the task is paused, and once it has no runs left. */
+    /** Whether the pattern's timer is on. `false` before `ready()`, while the task is paused, and once it doesn't have any runs left. */
     active: boolean;
     busy: boolean;
     nextRun: Date | null;
@@ -128,7 +128,7 @@ export interface ScheduledJob {
 
 declare module '@seedcord/core' {
     interface Subscriptions {
-        /** A task run ended. `outcome` says whether it returned, threw, or threw after shutdown aborted it. */
+        /** A task run ended. `outcome` is `'finished'` if it returned, `'failed'` if it threw, and `'interrupted'` if it threw after shutdown aborted it. */
         taskRan: TaskRun;
     }
 }

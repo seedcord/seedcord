@@ -19,13 +19,13 @@ interface Pending extends ScheduledJob {
     timer: NodeJS.Timeout | undefined;
 }
 
-// a job leaves 'waiting' once its run starts, so cancel() can stop it until then
+// cancel() can only stop a 'waiting' job. startRun() moves it to 'started' when the run begins
 interface RunningJob {
     readonly job: Pending;
     state: 'waiting' | 'started' | 'cancelled';
 }
 
-// setTimeout overflows past this, so a longer wait sets a new timer in steps
+// setTimeout's largest delay. A longer wait sets the timer again in steps
 const MAX_TIMEOUT_MS = 2_147_483_647;
 // short enough that a job runs close to its time once the driver answers again
 const STORE_RETRY_MS = 30_000;
@@ -87,7 +87,7 @@ export class ScheduledJobs {
         const job = this.pending.get(id);
         if (!job && (await this.records.get(id)) === undefined) return false;
 
-        // the timer stops first, so the job can't come due while the delete is in flight
+        // stops the timer first to keep the job from coming due while the delete is in flight
         if (job) {
             clearTimeout(job.timer);
             this.pending.delete(id);
@@ -131,7 +131,7 @@ export class ScheduledJobs {
         try {
             await this.records.delete(job.id);
         } catch (error) {
-            // the wait can end while the delete is in flight, and runJob() lets go of the job once it does
+            // if the wait ended while the delete was in flight, runJob() has already removed the job from runningJobs
             if (this.runningJobs.get(job.id) === running) {
                 running.state = 'waiting';
             } else {
@@ -144,7 +144,7 @@ export class ScheduledJobs {
         return true;
     }
 
-    // runJob() deletes the record only after the run ends, so a crash mid-run leaves the job for the next start
+    // deletes the record only after the run ends. A crash mid-run leaves the job for the next start
     private async runJob(job: Pending): Promise<void> {
         this.pending.delete(job.id);
         const running: RunningJob = { job, state: 'waiting' };

@@ -270,7 +270,7 @@ const messages = {
     [SeedcordErrorCode.PluginTasksInvalidOption]: (option: string, value: string, fix: string) =>
         `${option} is ${quoted(value)}. ${fix}`,
     [SeedcordErrorCode.PluginTasksPatternMissing]: (key: string) =>
-        `${paint.sky(key)} has no cron pattern. Pass one to ${paint.bold('@RegisterTask')} to pause, resume, or read its next run.`,
+        `${paint.sky(key)} doesn't have a cron pattern. Pass one to ${paint.bold('@RegisterTask')} to pause, resume, or read its next run.`,
     [SeedcordErrorCode.PluginTasksAtTooEarly]: (key: string, at: number) =>
         `${paint.bold('schedule()')} got ${paint.iris(at)} as ${paint.bold('at')} for ${paint.sky(key)}, which is before the year 2000. A number that small is usually a timestamp in seconds, or a missing value read as ${paint.iris(0)}. Pass milliseconds, like ${paint.sky('Date.now() + 60_000')}.`,
     [SeedcordErrorCode.PluginTasksDurationTooLong]: (key: string, duration: string) =>

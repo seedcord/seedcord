@@ -68,7 +68,7 @@ A duration literal is digits followed by one lowercase unit.
 
 {/* prettier-ignore-end */}
 
-A literal the parser would reject fails to compile, and the compiler error shows the form a duration takes.
+A literal the parser would reject fails to compile, and the compiler error shows what a duration looks like.
 
 ```ts twoslash
 // @errors: 2345
@@ -77,7 +77,7 @@ import { Cooldown } from '@seedcord/gateway';
 Cooldown('1.5h');
 ```
 
-An uppercase unit like `'30M'`, a string with no unit like `'30'`, and a zero like `'0s'` fail to compile too. Write `Cooldown('90m')` instead.
+An uppercase unit like `'30M'`, a string without a unit like `'30'`, and a zero like `'0s'` fail to compile too. Write `Cooldown('90m')` instead.
 
 A duration typed as a plain `string`, like one read from an environment variable, skips that check. If it doesn't parse, `Cooldown` throws `InvalidDuration` when it's called. Inside `@Gated`, that happens as the module loads, so your bot fails to start.
 

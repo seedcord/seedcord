@@ -13,7 +13,7 @@ export interface Run {
     data: unknown;
 }
 
-/** Keeps its keys when a "restart" builds a new host, the way a real driver would. */
+// keeps its keys across a "restart", like a real store
 export class FakeDriver implements KvDriver, Disposable {
     public readonly stored = new Map<string, string>();
     public failReads = 0;
@@ -24,7 +24,7 @@ export class FakeDriver implements KvDriver, Disposable {
     private deleteGate: Promise<void> | undefined;
     private setGate: Promise<void> | undefined;
 
-    /** Holds every delete until the returned function runs. With `fail`, the held deletes then throw. */
+    // with fail, the held deletes throw once released
     public holdDeletes({ fail = false } = {}): () => void {
         const { promise, resolve } = Promise.withResolvers<undefined>();
         this.deleteGate = promise;
@@ -35,7 +35,6 @@ export class FakeDriver implements KvDriver, Disposable {
         };
     }
 
-    /** Holds every read until the returned function runs. With `fail`, the held reads then throw. */
     public holdReads({ fail = false } = {}): () => void {
         const { promise, resolve } = Promise.withResolvers<undefined>();
         this.readGate = promise;
@@ -46,7 +45,6 @@ export class FakeDriver implements KvDriver, Disposable {
         };
     }
 
-    /** Holds every write until the returned function runs, like a slow backend. */
     public holdSets(): () => void {
         const { promise, resolve } = Promise.withResolvers<undefined>();
         this.setGate = promise;
@@ -115,11 +113,11 @@ export class TestHost extends PluginHost<'gateway', 'server'> {
     public readonly runs: Run[] = [];
     public release: () => void = () => undefined;
     public gate: Promise<void> = Promise.resolve();
-    /** Each run of a task that reads it takes the next gate, so runs can finish out of order. */
+    // each run takes the next gate. A test releases them in any order
     public readonly gates: Promise<void>[] = [];
     public releaseOverrun: () => void = () => undefined;
     public failOverrun = false;
-    /** Called once from inside the next `Slow` run, before its first await. */
+    // Slow calls this once, before its first await
     public reenter: (() => Promise<void>) | undefined;
     public overrunGate: Promise<void> = Promise.resolve();
 
@@ -147,7 +145,7 @@ export interface Booted extends AsyncDisposable {
     tasks: Tasks;
 }
 
-/** Attaches the plugin and runs its `init()`, like a bot that hasn't logged in yet. */
+// a bot that hasn't logged in yet
 export async function boot(options: TasksOptions, driver: Driver = new FakeDriver()): Promise<Booted> {
     const host = new TestHost(driver);
     const bot = host.attach('tasks', Tasks, options);
@@ -155,7 +153,6 @@ export async function boot(options: TasksOptions, driver: Driver = new FakeDrive
     return { host, tasks: bot.tasks, [Symbol.asyncDispose]: () => bot.tasks.dispose() };
 }
 
-/** {@link boot}, then `ready()`, like a bot that has logged in. */
 export async function start(options: TasksOptions, driver?: Driver): Promise<Booted> {
     const booted = await boot(options, driver);
     booted.tasks.ready();
@@ -163,11 +160,10 @@ export async function start(options: TasksOptions, driver?: Driver): Promise<Boo
 }
 
 export interface CapturedLogs extends Disposable {
-    /** The messages logged at `level` so far. */
     at(level: LogLevel): string[];
 }
 
-/** Collects the log records and keeps them off the console. Hold it with `using`. */
+// mutes the console until disposed
 export function captureLogs(): CapturedLogs {
     const records: { level: LogLevel; message: string }[] = [];
     const sink = LoggerChannelRegistry.instance.installSink(

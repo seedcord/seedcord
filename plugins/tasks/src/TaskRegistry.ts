@@ -14,7 +14,7 @@ export interface LoadedTask {
 }
 
 // everything the plugin holds for one task key. A save unregisters the key and registers it again,
-// so the slot keeps a run in flight and what pause() or resume() did
+// and the slot keeps the run in flight and the pause() state through that
 export class TaskSlot {
     public readonly state = new TaskState();
     public loaded: LoadedTask | undefined;
@@ -22,7 +22,7 @@ export class TaskSlot {
     private pausedByCall: boolean | undefined;
 
     public get paused(): boolean {
-        return this.pausedByCall ?? this.cron?.pausedByDecorator ?? false;
+        return this.pausedByCall ?? this.cron?.settings.pausedByDecorator ?? false;
     }
 
     public pause(): void {
