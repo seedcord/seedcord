@@ -41,12 +41,12 @@ export abstract class ModalHandler<Defs extends readonly AnyCustomId[]> extends 
     /** @internal */
     declare readonly [ComponentKindBrand]?: InteractionKind.Modal;
 
-    private reader?: ModalFields;
+    #reader?: ModalFields;
 
     /** The fields that this modal submitted, read by custom id. */
     protected get fields(): ModalFields {
-        this.reader ??= new ModalFields(this.event.data);
-        return this.reader;
+        this.#reader ??= new ModalFields(this.event.data);
+        return this.#reader;
     }
 
     /** Rewrite the message that this modal was opened from. Throws when a command opened the modal. */

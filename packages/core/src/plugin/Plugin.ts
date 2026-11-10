@@ -273,12 +273,15 @@ export function constructAttached<TPlugin>(key: string, kv: Kv, construct: () =>
 export type { PluginLifecycleSpec } from './lifecycle';
 export type { PluginOptions } from './options';
 
-type LifecycleMember = 'init' | 'ready' | 'dispose' | 'codegen' | 'onHmr' | 'dispatchMembers' | 'prepareCommands';
+type SeedcordOnlyMember = 'init' | 'ready' | 'dispose' | 'codegen' | 'onHmr' | 'dispatchMembers' | 'prepareCommands';
 
 // a bound of Plugin<{}> rejects every plugin that declares an option, since Plugin<A> and Plugin<B>
 // are mutually unassignable. no member here may depend on Opts.
 /** @internal */
-export type PluginLike = Pick<Plugin, LifecycleMember | typeof resolvedSpecSlot | typeof loggerSlot | typeof scopeSlot>;
+export type PluginLike = Pick<
+    Plugin,
+    SeedcordOnlyMember | typeof resolvedSpecSlot | typeof loggerSlot | typeof scopeSlot
+>;
 
 // a `CoreBase` first parameter rejects a narrowing ctor on its own, and it also collapses
 // `InstanceType<Ctor>` to `PluginLike` at every attach call. CoreParamAssert checks it instead.
@@ -309,7 +312,7 @@ export type Attached<Key extends string, Instance> = Key extends `${infer Group}
  * `seedcord codegen` writes this type into `Core`. For a group, it applies to each plugin in the group.
  */
 export type AttachedPlugin<Value> = Value extends PluginLike
-    ? Omit<Value, LifecycleMember>
+    ? Omit<Value, SeedcordOnlyMember>
     : { [Key in keyof Value]: AttachedPlugin<Value[Key]> };
 
 // Object's keys are here because attach writes the key onto the host, where toString would shadow Object.prototype's

@@ -151,6 +151,25 @@ describe('dispatch members on http', () => {
         expect(seen).toBe('g-1:pl');
     });
 
+    it('keeps a member that shares its name with the slash handler option cache', async () => {
+        let seen: unknown;
+        class Reads extends SlashHandler<never> {
+            async execute(): Promise<void> {
+                seen = memberOf(this, 'resolver');
+                await this.reply('ok');
+            }
+        }
+        using engine = await readyEngine(routedHandler(InteractionKind.Slash, 'probe', Reads), {
+            attach: (bot) => bot.attach('tagging', pluginBuilding(fromOrigin, 'resolver'))
+        });
+        const ctx = capturingCtx();
+
+        await engine.handle(await signedRequest(engine.signer, guildPayload), ctx);
+        await ctx.settled();
+
+        expect(seen).toBe('g-1:pl');
+    });
+
     it('sets a member on an autocomplete handler', async () => {
         let seen: string | undefined;
         class Suggests extends AutocompleteHandler<never> {

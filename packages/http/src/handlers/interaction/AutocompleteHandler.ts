@@ -77,11 +77,11 @@ export abstract class AutocompleteHandler<Route extends keyof SlashRegistry> ext
         return interactionUser(this.event);
     }
 
-    private resolver?: HttpSlashOptions;
+    #resolver?: HttpSlashOptions;
 
     private get reader(): HttpSlashOptions {
-        this.resolver ??= new HttpSlashOptions(this.event.data);
-        return this.resolver;
+        this.#resolver ??= new HttpSlashOptions(this.event.data);
+        return this.#resolver;
     }
 
     /**

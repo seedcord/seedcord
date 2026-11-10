@@ -13,7 +13,7 @@ import { PackageManifest } from '#core/modules/PackageManifest';
 import { compare, escapeLiteral, renderKey } from './renderAugmentation';
 
 import type { ModuleLoader } from '#core/modules/ModuleLoader';
-import type { DispatchMemberAt, PluginTypeTable } from './renderAugmentation';
+import type { PluginTypeTable } from './renderAugmentation';
 import type { AbstractConstructor } from 'type-fest';
 
 type CodegenModules = Pick<ModuleLoader, 'evaluated' | 'importPackage'>;
@@ -237,14 +237,6 @@ function attachedAt(instance: SeedcordInstance, key: string): unknown {
 function codegenPluginAt(instance: SeedcordInstance, key: string): CodegenPlugin | undefined {
     const value = attachedAt(instance, key);
     return hasCodegen(value) ? value : undefined;
-}
-
-export function dispatchMembersOf(instance: SeedcordInstance): DispatchMemberAt[] {
-    return instance[HostPlugins].keys.flatMap((key) => {
-        const plugin = attachedAt(instance, key);
-        const members: unknown = isReferable(plugin) ? Reflect.get(plugin, 'dispatchMembers') : undefined;
-        return isPlainObject(members) ? Object.keys(members).map((member) => ({ key, member })) : [];
-    });
 }
 
 function hasCodegen(value: unknown): value is CodegenPlugin {

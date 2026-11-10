@@ -24,6 +24,8 @@ export interface SeedcordInstance {
     readonly [HostPlugins]: {
         // the attach keys in attach order. codegen writes one Core row for each
         readonly keys: readonly string[];
+        // every dispatch member, with the key of the plugin that adds it
+        readonly members: readonly { readonly key: string; readonly member: string }[];
         prepareCommands(commands: readonly RESTPostAPIApplicationCommandsJSONBody[]): Promise<void>;
     };
     readonly [HostShutdown]: { run(exitCode?: number, exitProcess?: boolean): Promise<void> };

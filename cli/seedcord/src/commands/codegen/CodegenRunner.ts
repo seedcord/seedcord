@@ -17,7 +17,7 @@ import { printResolvedConfig } from '#core/output/printResolvedConfig';
 import { startupShell } from '#src/core/ShellMode';
 
 import { AugmentationBuilder } from './AugmentationBuilder';
-import { dispatchMembersOf, PluginTypesCollector } from './PluginTypesCollector';
+import { PluginTypesCollector } from './PluginTypesCollector';
 import { renderAugmentation } from './renderAugmentation';
 
 import type { ProjectOpener } from '#core/config/openProjectWithSteps';
@@ -125,7 +125,7 @@ export class CodegenRunner {
             specifier: importSpecifier(config.root, config.instance),
             keys: instance[HostPlugins].keys,
             types,
-            members: dispatchMembersOf(instance)
+            members: instance[HostPlugins].members
         });
     }
 

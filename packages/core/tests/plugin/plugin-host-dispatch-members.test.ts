@@ -61,6 +61,36 @@ describe('dispatch members at attach', () => {
         );
     });
 
+    it('rejects one plugin attached twice with its own code', () => {
+        const Tagging = pluginAdding('tag');
+        const host = new TestPluginHost().attach('first', Tagging);
+
+        expect(() => host.attach('second', Tagging)).toThrow(
+            expect.objectContaining({ code: SeedcordErrorCode.CorePluginAttachedTwice })
+        );
+    });
+
+    it('claims none of a plugin members when one of them is rejected', () => {
+        class Mixed extends Bare {
+            public override readonly dispatchMembers = { tag: (): string => 'a', reply: (): string => 'b' };
+        }
+        const host = new TestPluginHost();
+
+        expect(() => host.attach('mixed', Mixed)).toThrow(
+            expect.objectContaining({ code: SeedcordErrorCode.CorePluginMemberReserved })
+        );
+        expect(() => host.attach('tagging', pluginAdding('tag'))).not.toThrow();
+    });
+
+    it('lists each claimed member with the key its plugin is attached at', () => {
+        const host = new TestPluginHost().attach('first', pluginAdding('tag')).attach('second', pluginAdding('label'));
+
+        expect(host[HostPlugins].members).toEqual([
+            { key: 'first', member: 'tag' },
+            { key: 'second', member: 'label' }
+        ]);
+    });
+
     it('lets plugins with different members, or none, share a host', () => {
         const host = new TestPluginHost()
             .attach('first', pluginAdding('tag'))

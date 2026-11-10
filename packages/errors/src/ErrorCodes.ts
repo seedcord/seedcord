@@ -116,8 +116,10 @@ export enum SeedcordErrorCode {
     CoreKvUnserializable = 1237,
     /** A plugin's `dispatchMembers` has a key that seedcord uses too, like `reply`. */
     CorePluginMemberReserved = 1238,
-    /** A function in a plugin's `dispatchMembers` threw, so the handler didn't run. */
+    /** The handler didn't run because a function in a plugin's `dispatchMembers` threw. */
     CorePluginMemberThrew = 1239,
+    /** A plugin that has `dispatchMembers` is attached twice, and both copies add the same members. */
+    CorePluginAttachedTwice = 1240,
 
     /** A command class has `@RegisterCommand` twice. */
     DecoratorCommandAlreadyRegistered = 1301,

@@ -27,7 +27,6 @@ const RESERVED_MEMBERS: ReadonlySet<string> = new Set([
     'channelId',
     'channels',
     'core',
-    'decodedFocused',
     'decodedRoute',
     'defer',
     'deferUpdate',
@@ -60,7 +59,6 @@ const RESERVED_MEMBERS: ReadonlySet<string> = new Set([
     'payload',
     'reader',
     'reply',
-    'resolver',
     'respond',
     'roles',
     'route',
@@ -84,13 +82,15 @@ function isReservedMember(name: string): boolean {
 }
 
 interface ClaimedMember {
+    readonly key: string;
     readonly plugin: string;
+    readonly instance: PluginLike;
     readonly build: (origin: DispatchOrigin) => unknown;
 }
 
 // every attached plugin, in attach order
 export class PluginRegistry {
-    private readonly members = new Map<string, ClaimedMember>();
+    private readonly claimed = new Map<string, ClaimedMember>();
     private readonly list: Attachment[] = [];
 
     public get attachments(): readonly Attachment[] {
@@ -101,30 +101,42 @@ export class PluginRegistry {
         return this.list.map((attachment) => attachment.key);
     }
 
+    public get members(): readonly { readonly key: string; readonly member: string }[] {
+        return [...this.claimed].map(([member, { key }]) => ({ key, member }));
+    }
+
     public add(attachment: Attachment): void {
         const { key, instance } = attachment;
-        const name = `${paint.sky(instance.constructor.name)} at ${paint.sky(key)}`;
-        for (const [member, build] of Object.entries(instance.dispatchMembers ?? {})) {
-            if (isReservedMember(member)) {
-                throw new SeedcordTypeError(SeedcordErrorCode.CorePluginMemberReserved, [member, name]);
-            }
-            const owner = this.members.get(member);
-            if (owner) {
-                throw new SeedcordTypeError(SeedcordErrorCode.CoreDuplicateName, [
-                    'dispatch member',
-                    member,
-                    [owner.plugin, name],
-                    'If both are the same plugin, attach it once.'
-                ]);
-            }
-            this.members.set(member, { plugin: name, build });
-        }
+        const plugin = `${paint.sky(instance.constructor.name)} at ${paint.sky(key)}`;
+        const functions = Object.entries(instance.dispatchMembers ?? {});
+        for (const [member] of functions) this.assertFree(member, key, plugin, instance);
+        for (const [member, build] of functions) this.claimed.set(member, { key, plugin, instance, build });
         this.list.push(attachment);
+    }
+
+    private assertFree(member: string, key: string, plugin: string, instance: PluginLike): void {
+        if (isReservedMember(member)) {
+            throw new SeedcordTypeError(SeedcordErrorCode.CorePluginMemberReserved, [member, plugin]);
+        }
+        const owner = this.claimed.get(member);
+        if (!owner) return;
+        if (owner.instance.constructor === instance.constructor) {
+            throw new SeedcordTypeError(SeedcordErrorCode.CorePluginAttachedTwice, [
+                instance.constructor.name,
+                owner.key,
+                key
+            ]);
+        }
+        throw new SeedcordTypeError(SeedcordErrorCode.CoreDuplicateName, [
+            'dispatch member',
+            member,
+            [owner.plugin, plugin]
+        ]);
     }
 
     public async buildMembers(dispatch: DispatchContext, origin: DispatchOrigin): Promise<void> {
         const built = await Promise.all(
-            [...this.members].map(async ([member, { plugin, build }]) => {
+            [...this.claimed].map(async ([member, { plugin, build }]) => {
                 try {
                     return [member, await build(origin)] as const;
                 } catch (caught) {
