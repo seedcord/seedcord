@@ -95,7 +95,9 @@ export class CodegenRunner {
         const commands = await steps.step(
             'scan commands',
             () =>
-                commandsPath ? new CommandScanner(modules, files, instance).scan(commandsPath) : Promise.resolve([]),
+                commandsPath
+                    ? new CommandScanner(modules, files, instance[HostPlugins]).scan(commandsPath)
+                    : Promise.resolve([]),
             (found) => paint.mute(plural(found.length, 'command'))
         );
 

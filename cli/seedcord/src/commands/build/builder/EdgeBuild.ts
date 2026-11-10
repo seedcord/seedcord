@@ -3,6 +3,7 @@ import { dirname, join } from 'node:path';
 import { warnLinks } from '@seedcord/core/internal';
 import { paint, SeedcordErrorCode } from '@seedcord/errors';
 import { SeedcordError } from '@seedcord/errors/internal';
+import { HostPlugins } from '@seedcord/types/internal';
 import { BotLayout, isInside } from '@seedcord/utils/internal';
 import { createBuilder } from 'vite';
 
@@ -180,7 +181,7 @@ export class EdgeBuild extends TargetBuild {
         instance: SeedcordInstance
     ): Promise<CommandsInCode | undefined> {
         if (commands.path === null) return undefined;
-        const scanner = new CommandScanner(this.project.modules, this.project.files, instance);
+        const scanner = new CommandScanner(this.project.modules, this.project.files, instance[HostPlugins]);
         const found = await scanner.scan(commands.path);
         return { found, configuredGuilds: commands.guilds ?? [] };
     }

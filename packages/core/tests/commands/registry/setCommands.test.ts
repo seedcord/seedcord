@@ -45,7 +45,7 @@ function registryWith(put: ReturnType<typeof vi.fn>): CommandRegistry {
 }
 
 describe('CommandRegistry.setCommands', () => {
-    it('sends what prepareCommands wrote to every scope', async () => {
+    it('hands prepareCommands each command once and sends what it wrote to every scope', async () => {
         const put = vi.fn().mockResolvedValue(deployedAs('123', 'ping'));
         const prepare = vi.fn((commands: readonly CommandBody[]) => {
             for (const command of commands) command.name_localizations = { pl: 'pong' };
@@ -58,6 +58,7 @@ describe('CommandRegistry.setCommands', () => {
         await registry.setCommands();
 
         expect(prepare).toHaveBeenCalledOnce();
+        expect(prepare.mock.calls[0]?.[0]).toHaveLength(1);
         expect(put.mock.calls.map(([, options]) => (options as { body: CommandBody[] }).body[0])).toEqual([
             expect.objectContaining({ name_localizations: { pl: 'pong' } }),
             expect.objectContaining({ name_localizations: { pl: 'pong' } })

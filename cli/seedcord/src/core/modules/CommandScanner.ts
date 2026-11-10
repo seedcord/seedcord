@@ -3,7 +3,6 @@ import 'reflect-metadata';
 import { CommandMetadataKey, isCommandClass } from '@seedcord/core/internal';
 import { SeedcordErrorCode, isSeedcordError } from '@seedcord/errors';
 import { SeedcordError, SeedcordTypeError, throwSingleOrAggregate } from '@seedcord/errors/internal';
-import { HostPlugins, type SeedcordInstance } from '@seedcord/types/internal';
 import { asError } from '@seedcord/utils/internal';
 import { ApplicationCommandType } from 'discord-api-types/v10';
 
@@ -12,6 +11,7 @@ import { ModuleExports } from './ModuleExports';
 import type { ModuleLoader } from '#core/modules/ModuleLoader';
 import type { ProjectFiles } from '#core/project/ProjectFiles';
 import type { CommandCtor, CommandMeta } from '@seedcord/core/internal';
+import type { HostPlugins, SeedcordInstance } from '@seedcord/types/internal';
 import type { RESTPostAPIApplicationCommandsJSONBody } from 'discord-api-types/v10';
 
 interface CommandClassFile {
@@ -62,7 +62,7 @@ export class CommandScanner {
     constructor(
         private readonly modules: ModuleLoader,
         private readonly files: ProjectFiles,
-        private readonly instance: SeedcordInstance
+        private readonly plugins: Pick<SeedcordInstance[typeof HostPlugins], 'prepareCommands'>
     ) {}
 
     public async scan(commandsPath: string): Promise<FoundCommand[]> {
@@ -88,7 +88,7 @@ export class CommandScanner {
         }
 
         throwSingleOrAggregate([...problems, ...importFailures], SeedcordErrorCode.CliProblems);
-        await this.instance[HostPlugins].prepareCommands(commands.map(({ json }) => json));
+        await this.plugins.prepareCommands(commands.map(({ json }) => json));
         return commands;
     }
 

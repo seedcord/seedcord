@@ -235,7 +235,7 @@ export class CommandRegistry implements Initializeable, HmrAware {
         // read here because gateway assigns core.rest after this registry is constructed
         const { rest, applicationId } = this.core;
         const last = await this.lastDeploy.read(applicationId, signal);
-        const plan = await planDeploy(await this.commandBodies(), last?.scopes, (unchanged) =>
+        const plan = await planDeploy(await this.preparedBodies(), last?.scopes, (unchanged) =>
             readCommands(unchanged, { rest, applicationId, signal })
         );
         await this.reporter.readGuildNames(rest, [...plan.toPut.keys(), ...plan.skipped], signal);
@@ -257,15 +257,20 @@ export class CommandRegistry implements Initializeable, HmrAware {
         return result;
     }
 
-    private async commandBodies(): Promise<CommandScopes> {
+    // prepareCommands gets each command once because every scope shares one body per builder
+    private async preparedBodies(): Promise<CommandScopes> {
+        const bodies = new Map<CommandBuilder, CommandBody>();
+        const bodyOf = (command: CommandBuilder): CommandBody => {
+            const body = bodies.get(command) ?? command.toJSON();
+            bodies.set(command, body);
+            return body;
+        };
         // a guild-only start keeps the global commands another deploy put there
         const deployable = this.scopedCommands
             .entries()
             .filter(([scope, commands]) => scope !== GLOBAL_ID || commands.length > 0);
-        const scopes = new Map(
-            deployable.map(([scope, commands]) => [scope, commands.map((command) => command.toJSON())])
-        );
-        await this.core[HostPlugins].prepareCommands([...scopes.values()].flat());
+        const scopes = new Map(deployable.map(([scope, commands]) => [scope, commands.map(bodyOf)]));
+        await this.core[HostPlugins].prepareCommands([...bodies.values()]);
         return scopes;
     }
 
