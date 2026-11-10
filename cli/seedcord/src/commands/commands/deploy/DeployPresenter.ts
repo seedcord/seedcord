@@ -1,6 +1,7 @@
 import { unlessCancelled } from '@seedcord/cli-prompts';
 import { GLOBAL_ID, skippedNote } from '@seedcord/core/internal';
 import { paint } from '@seedcord/errors';
+import { sumBy } from 'es-toolkit';
 
 import { commandLabel, printSections } from '#commands/commands/commandRows';
 import { StepsPresenter } from '#commands/commands/StepsPresenter';
@@ -25,7 +26,7 @@ function deployedNote(scopes: CommandScopes): string {
     if (global) parts.push(`${paint.iris(String(global.length))} global`);
     const guilds = [...scopes].filter(([scope]) => scope !== GLOBAL_ID);
     if (guilds.length > 0) {
-        const inGuilds = guilds.reduce((sum, [, commands]) => sum + commands.length, 0);
+        const inGuilds = sumBy(guilds, ([, commands]) => commands.length);
         parts.push(`${paint.iris(String(inGuilds))} in ${plural(guilds.length, 'guild')}`);
     }
     return parts.join(', ');

@@ -5,6 +5,7 @@ import { isPlainObject, isStringArray } from '@seedcord/utils/internal';
 
 import type { BuildTarget, EdgeTarget, ServerTarget } from './detectTarget';
 import type { SeedcordConfig, SeedcordServerConfig } from './schema';
+import type { ExtractStrict } from 'type-fest';
 
 type ConfigProblem = SeedcordTypeError | SeedcordRangeError;
 
@@ -81,7 +82,7 @@ export type CheckedConfig =
     | { readonly target: ServerTarget; readonly config: SeedcordServerConfig }
     | { readonly target: EdgeTarget; readonly config: SeedcordConfig };
 
-type CheckedEdgeConfig = Extract<CheckedConfig, { target: EdgeTarget }>;
+type CheckedEdgeConfig = ExtractStrict<CheckedConfig, { target: EdgeTarget }>;
 
 export function isEdgeConfig(checked: CheckedConfig): checked is CheckedEdgeConfig {
     return checked.target.kind === 'edge';

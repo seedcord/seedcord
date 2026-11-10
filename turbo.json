@@ -106,6 +106,10 @@
         "@seedcord/core#lint": {
             "dependsOn": ["^build", "@seedcord/core#build"]
         },
+        "@seedcord/core#lint:fix": {
+            "dependsOn": ["^build", "@seedcord/core#build"],
+            "cache": false
+        },
         "@seedcord/core#tc": {
             "dependsOn": ["^build", "@seedcord/core#build"]
         },

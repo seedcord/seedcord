@@ -2,7 +2,7 @@ import type { RealPath } from '#core/project/realPath';
 import type { EdgeTarget, ServerTarget } from './detectTarget';
 import type { VitePlugins } from './vitePlugins';
 import type { TakenName, TemplateHelper } from '@seedcord/cli-templates/helper-names';
-import type { TypedOmit } from '@seedcord/types';
+import type { Except } from 'type-fest';
 import type { PluginOption } from 'vite';
 
 /**
@@ -197,10 +197,7 @@ interface ResolvedSeedcordMakeConfig {
 }
 
 export interface ResolvedSeedcordConfig extends Required<
-    TypedOmit<
-        SeedcordConfig,
-        'build' | 'hmr' | 'tunnel' | 'port' | 'vitePlugins' | 'root' | 'instance' | 'files' | 'make'
-    >
+    Except<SeedcordConfig, 'build' | 'hmr' | 'tunnel' | 'port' | 'vitePlugins' | 'root' | 'instance' | 'files' | 'make'>
 > {
     make: ResolvedSeedcordMakeConfig;
     root: RealPath;

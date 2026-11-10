@@ -2,6 +2,7 @@ import { SeedcordErrorCode } from '@seedcord/errors';
 import { SeedcordError } from '@seedcord/errors/internal';
 
 import type { AckTrace } from './AckTrace';
+import type { ExcludeStrict } from 'type-fest';
 
 export type AckState = 'unacked' | 'deferred-reply' | 'deferred-update' | 'replied';
 
@@ -35,7 +36,7 @@ function deferReason(what: string): Illegal {
 }
 
 // a missing entry means legal in that state
-const ILLEGAL: Record<Exclude<ReplyMethod, 'send'>, Partial<Record<AckState, Illegal>>> = {
+const ILLEGAL: Record<ExcludeStrict<ReplyMethod, 'send'>, Partial<Record<AckState, Illegal>>> = {
     reply: {
         'deferred-reply': {
             reason: 'this interaction was already deferred',

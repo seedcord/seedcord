@@ -35,6 +35,7 @@ import type { ContextMenuLeaves, Initializeable, RouteMaps } from '@seedcord/cor
 import type { InFlight } from '@seedcord/core/node/internal';
 import type { CustomIdMatcher, HmrAware, HmrUpdateEvent } from '@seedcord/types';
 import type { Interaction } from 'discord.js';
+import type { ExtractStrict } from 'type-fest';
 
 const UNHANDLED: { repliable: HandlerConstructor; autocomplete: HandlerConstructor } = {
     repliable: UnhandledRepliable,
@@ -179,7 +180,7 @@ export class InteractionDispatcher implements Initializeable, HmrAware {
     }
 
     private async handleCustomIdInteraction(
-        interaction: Extract<ValidInteractionTypes, { customId: string }>,
+        interaction: ExtractStrict<ValidInteractionTypes, { customId: string }>,
         kind: InteractionKind
     ): Promise<void> {
         if ([...this.keysToIgnore].some((matcher) => matcher.owns(interaction.customId))) return;

@@ -12,6 +12,7 @@ import type {
     RESTPostAPIChatInputApplicationCommandsJSONBody,
     RESTPostAPIContextMenuApplicationCommandsJSONBody
 } from 'discord-api-types/v10';
+import type { ExcludeStrict } from 'type-fest';
 
 export type RouteOptions = Record<string, SlashOption>;
 
@@ -33,7 +34,7 @@ export interface Augmentation {
 export type ScannedCommand = Pick<FoundCommand, 'sourceFile' | 'json'>;
 
 type CommandOption = SlashRouteLeaf['options'][number];
-type BasicOption = Exclude<
+type BasicOption = ExcludeStrict<
     CommandOption,
     { type: ApplicationCommandOptionType.Subcommand | ApplicationCommandOptionType.SubcommandGroup }
 >;

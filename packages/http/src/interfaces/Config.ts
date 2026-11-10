@@ -1,5 +1,6 @@
 import type { RESTOptions } from '@discordjs/rest';
-import type { BotConfig, Config, HealthCheckConfig, TypedOmit } from '@seedcord/types';
+import type { BotConfig, Config, HealthCheckConfig } from '@seedcord/types';
+import type { Except } from 'type-fest';
 
 // workerd throws when a timer starts at a worker's global scope
 export type EdgeSweeperKey = 'hashSweepInterval' | 'handlerSweepInterval';
@@ -36,7 +37,7 @@ export interface HttpServerConfig extends Config {
  * Config for a bot on Cloudflare Workers. Pass to `new Seedcord(config)`.
  */
 export interface HttpEdgeConfig extends Config {
-    bot: HttpBotConfig<Partial<TypedOmit<RESTOptions, EdgeSweeperKey>>>;
+    bot: HttpBotConfig<Partial<Except<RESTOptions, EdgeSweeperKey>>>;
     port?: never;
     // an isolate does not run a coordinated shutdown
     lifecycle?: never;

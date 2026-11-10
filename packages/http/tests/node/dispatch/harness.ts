@@ -12,7 +12,7 @@ import type { HttpEdgeConfig } from '#interfaces/Config';
 import type { EngineContext } from '#src/requestScope';
 import type { InteractionKind } from '@seedcord/core';
 import type { StoredSubscriberCtor } from '@seedcord/core/internal';
-import type { TypedOmit } from '@seedcord/types';
+import type { Except } from 'type-fest';
 
 export const FROM = 'handlers/Test.ts';
 
@@ -50,7 +50,7 @@ function filesOf(classes: BotClasses): Record<string, Record<string, unknown>> {
 }
 
 interface EngineOptions {
-    readonly settings?: TypedOmit<HttpEdgeConfig, 'bot' | 'subscribers'>;
+    readonly settings?: Except<HttpEdgeConfig, 'bot' | 'subscribers'>;
     readonly env?: Readonly<Record<string, string>>;
 }
 

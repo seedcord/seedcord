@@ -9,6 +9,7 @@ import { usePrompt } from './usePrompt';
 
 import type { Outcome, PromptMachine } from './usePrompt';
 import type { ReactElement } from 'react';
+import type { Except } from 'type-fest';
 
 export interface TextPrompt {
     readonly message: string;
@@ -19,7 +20,7 @@ export interface TextPrompt {
     readonly emptyWarning?: string;
 }
 
-export type PasswordPrompt = Omit<TextPrompt, 'placeholder'>;
+export type PasswordPrompt = Except<TextPrompt, 'placeholder'>;
 
 interface TextProps extends TextPrompt {
     readonly masked?: boolean;

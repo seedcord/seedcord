@@ -1,3 +1,4 @@
+import { clamp } from 'es-toolkit';
 import { useState } from 'react';
 
 export interface ScrollApi<Item> {
@@ -46,7 +47,7 @@ export function computeScrollView<Item>(
         const found = items.findIndex((item) => getKey(item) === anchor);
         topIndex = found === -1 ? 0 : found;
     }
-    topIndex = Math.min(Math.max(0, topIndex), maxTop);
+    topIndex = clamp(topIndex, 0, maxTop);
 
     const visible = items.slice(topIndex, topIndex + height);
     return {
@@ -71,7 +72,7 @@ export function useScroll<Item>(
     const view = computeScrollView(items, viewportHeight, anchor, getKey);
 
     const anchorAt = (nextTop: number): void => {
-        const clamped = Math.min(Math.max(0, nextTop), maxTop);
+        const clamped = clamp(nextTop, 0, maxTop);
         if (clamped >= maxTop) {
             setAnchor(null);
             return;

@@ -3,6 +3,7 @@ import process from 'node:process';
 
 import { WORDMARK } from '@seedcord/errors/internal';
 import { Converters, Envapter } from 'envapt';
+import { sum } from 'es-toolkit';
 
 const enabled = Envapter.getAs('SEEDCORD_DEV_PROFILE', Converters.Boolean, false);
 
@@ -112,7 +113,7 @@ export function profileReport(): string | null {
 
     const session = performance.now();
     const sorted = renderTimes.toSorted((a, b) => a - b);
-    const layoutTotal = renderTimes.reduce((sum, time) => sum + time, 0);
+    const layoutTotal = sum(renderTimes);
     const mb = (written / BYTES_PER_MB).toFixed(2);
     const share = (part: number): string => `${((part / session) * PERCENT).toFixed(1)}% of session`;
 

@@ -10,7 +10,7 @@ import type {
 } from '@seedcord/docs-engine';
 import type { EntityTone } from '@seedcord/docs-engine/client';
 import type { CodeRepresentation } from '@seedcord/ui';
-import type { Except, RenameKeys } from 'type-fest';
+import type { Except, ExtractStrict, RenameKeys } from 'type-fest';
 
 export interface FormatContext {
     engine: VersionedDocsEngine;
@@ -239,10 +239,10 @@ export interface EntityMemberSummary
 }
 
 export type MemberPrefix = 'property' | 'method' | 'constructor' | 'typeParameter';
-export type ClassLikeModel = Extract<EntityModel, { kind: 'class' | 'interface' }>;
-export type EnumModel = Extract<EntityModel, { kind: 'enum' }>;
-export type TypeModel = Extract<EntityModel, { kind: 'type' }>;
-export type FunctionModel = Extract<EntityModel, { kind: 'function' }>;
+export type ClassLikeModel = ExtractStrict<EntityModel, { kind: 'class' | 'interface' }>;
+export type EnumModel = ExtractStrict<EntityModel, { kind: 'enum' }>;
+export type TypeModel = ExtractStrict<EntityModel, { kind: 'type' }>;
+export type FunctionModel = ExtractStrict<EntityModel, { kind: 'function' }>;
 
 export type WithParentDeprecationStatus = RenameKeys<
     WithDeprecationStatus,
