@@ -9,7 +9,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vite-plus/test'
 import { Later } from '#tests/fixtures/dev/Later';
 import { LaterLoud } from '#tests/fixtures/dev/LaterLoud';
 import { Quiet } from '#tests/fixtures/dev/Quiet';
-import { captureLogs, start } from '#tests/utils/host';
+import { FakeDriver, captureLogs, start } from '#tests/utils/host';
 import { tempFolder } from '#tests/utils/tempFolder';
 
 import type { TasksOptions } from '#src/types/Tasks';
@@ -140,6 +140,28 @@ describe('Tasks under seedcord dev', () => {
             await vi.advanceTimersByTimeAsync(SECOND_MS * 3);
 
             expect(host.runs).toHaveLength(runs);
+        });
+
+        it('keeps a due job waiting when a save turns runInDev off during its store read', async () => {
+            await using folder = await tempFolder('run-in-dev-mid-read');
+            const file = path.join(folder.path, 'Flip.ts');
+            await writeFile(file, source(true));
+            using driver = new FakeDriver();
+            await using booted = await start({ path: folder.path }, driver);
+            const { host, tasks } = booted;
+            // justified: the file above exports Flip, a task without a pattern or data like Later
+            const { Flip } = (await import(file)) as { Flip: typeof Later };
+
+            const job = await tasks.schedule(Flip, { in: '1s' });
+            const releaseRead = driver.holdReads();
+            await vi.advanceTimersByTimeAsync(SECOND_MS);
+            await writeFile(file, source(false));
+            await tasks.onHmr({ file, type: 'update' });
+            releaseRead();
+            await vi.advanceTimersByTimeAsync(SECOND_MS);
+
+            expect(host.runs).toHaveLength(0);
+            expect(tasks.jobs()).toEqual([job]);
         });
     });
 });

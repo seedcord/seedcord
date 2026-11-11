@@ -176,6 +176,12 @@ export class ScheduledJobs {
                 return;
             }
 
+            // a save can hold the task during the read. sync() sets its timer once a save lets it run
+            if (loaded.heldInDev) {
+                if (running.state === 'waiting') this.pending.set(job.id, job);
+                return;
+            }
+
             const outcome = await this.runner.run(loaded, { trigger: 'scheduled', jobId: job.id }, record.data, () =>
                 this.startRun(running)
             );
