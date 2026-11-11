@@ -49,7 +49,6 @@ interface PostedBody {
     data?: { flags?: number };
 }
 
-// the Ephemeral bit of every body that the run posted, in order
 async function ephemeralBits(config: HttpConfig, ctor: HandlerSlots[InteractionKind.Slash]): Promise<number[]> {
     const core = testCore(config, VALID_TOKEN);
     const execute = await dispatchInteraction({

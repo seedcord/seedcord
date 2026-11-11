@@ -26,8 +26,9 @@ export type InteractionsConfig =
            */
           middlewares?: string;
           /**
-           * The `ephemeral` value a reply uses when the call leaves it out. Set `false` to make replies
-           * public, and pass `{ ephemeral: true }` on a reply only the invoking user should see.
+           * The `ephemeral` value a reply uses when the call leaves it out. Set it to `false` to make replies
+           * public. Pass `{ ephemeral: true }` on a reply that only the invoking user should see. Error cards
+           * and notices ignore this value, though one that fills a public `defer()` placeholder is public.
            *
            * @defaultValue `true`
            */

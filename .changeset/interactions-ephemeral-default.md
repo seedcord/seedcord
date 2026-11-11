@@ -5,4 +5,4 @@
 '@seedcord/http': minor
 ---
 
-Added `bot.interactions.ephemeral`, which sets `ephemeral` on every reply that leaves it out, so `false` makes your bot's replies public by default.
+Added `bot.interactions.ephemeral`, the `ephemeral` value a reply uses when the call leaves it out. Set it to `false` to make your bot's replies public by default. `ReplySender` now takes that default as its last constructor argument.

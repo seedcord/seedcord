@@ -132,7 +132,7 @@ export class Ban extends SlashHandler<'ban'> {
 
 ## Only the person who ran the command sees it
 
-Ephemeral is on by default. Pass `ephemeral: false` to show the reply to the whole channel. `silent: true` skips push and desktop notifications.
+Ephemeral is on unless [your config turns it off](#make-replies-public-by-default). Pass `ephemeral: false` to show the reply to the whole channel. `silent: true` skips push and desktop notifications.
 
 ```ts twoslash
 import { SlashHandler, SlashRoute } from '@seedcord/gateway';
@@ -154,7 +154,7 @@ class Ban extends SlashHandler<'ban'> {
 
 ### Make replies public by default
 
-If most of your replies should go to the whole channel, set `ephemeral: false` under `bot.interactions` in your config. Then you can leave `ephemeral` off your replies.
+If most of your replies should go to the whole channel, set `ephemeral: false` under `bot.interactions` in your config. Then you can leave `ephemeral` off your replies. An http bot sets the same key in its `Seedcord` config.
 
 ```ts twoslash title="src/bot.ts"
 import { resolve } from 'node:path';
@@ -176,9 +176,9 @@ export const seedcord = new Seedcord({
 });
 ```
 
-Every reply that leaves `ephemeral` out uses that default, including `defer()` and a paginator. Pass `ephemeral: true` when only the person who ran the command should see a reply.
+Every reply that leaves `ephemeral` out uses that default, including `defer()`, a paginator, and a confirm prompt. Pass `ephemeral: true` when only the person who ran the command should see a reply.
 
-Error cards and [notices](/replying/throwing) ignore this default. seedcord sends them as ephemeral, unless a notice sets `ephemeral` to `false`. After a public `defer()`, though, the card fills the public placeholder, so the whole channel sees it. To keep a handler's errors private, defer it with `{ ephemeral: true }`.
+Error cards and [notices](/replying/throwing) ignore this default. seedcord sends them as ephemeral, unless a notice sets `ephemeral` to `false`. After a public `defer()`, though, the card fills the public placeholder, so the whole channel sees it. To keep a handler's errors private, call `defer({ ephemeral: true })`.
 
 ## The message you get back
 
