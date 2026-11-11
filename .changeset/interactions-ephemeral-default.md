@@ -5,4 +5,4 @@
 '@seedcord/http': minor
 ---
 
-Added `bot.interactions.ephemeral` to set whether replies are ephemeral when a call leaves `ephemeral` out, so `ephemeral: false` makes `reply()`, `followUp()`, `defer()`, paginators, and confirm prompts public by default. Fault replies and notices still default to ephemeral.
+Added `bot.interactions.ephemeral`, which sets `ephemeral` on every reply that leaves it out, so `false` makes your bot's replies public by default.

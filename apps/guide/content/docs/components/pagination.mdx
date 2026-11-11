@@ -80,7 +80,7 @@ The loader receives a [`PageContext`](ref:gateway/PageContext), which has `guild
 
 {/* prettier-ignore-end */}
 
-Every nav click edits the message `start()` sent. One `ephemeral` covers the whole run. Only the person who ran the command sees an ephemeral list, so each person browses their own copy. If you set `ephemeral: false` to post the list publicly, anyone who can see the message can click a nav button, and the click changes the page for everyone. To keep the list public and let only one person click, [page it yourself](/components/pagination-headless) with their id in the custom id, then compare it to `this.user.id` as [Who can click a button](/components/buttons#who-can-click-a-button) shows.
+Every nav click edits the message `start()` sent. One `ephemeral` covers the whole run. Only the person who ran the command sees an ephemeral list, so each person browses their own copy. If you set `ephemeral: false`, or leave it out on a bot whose [default is public](/replying#make-replies-public-by-default), the list is public. Anyone who can see the message can click a nav button, and the click changes the page for everyone. To keep the list public and let only one person click, [page it yourself](/components/pagination-headless) with their id in the custom id, then compare it to `this.user.id` as [Who can click a button](/components/buttons#who-can-click-a-button) shows.
 
 ## Rendering each item
 

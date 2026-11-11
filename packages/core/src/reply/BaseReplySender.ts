@@ -8,7 +8,7 @@ import { serializeReply } from './serializeReply';
 import { translateSerializationError } from './translateSerialization';
 
 import type { AckState, ReplyMethod } from './ackLegality';
-import type { ResolvedDeferOpts, ResolvedSendOpts } from './flags';
+import type { ResolvedSendOpts } from './flags';
 import type { ReplyTelemetry } from './responseReport';
 import type { SerializedReply } from './serializeReply';
 import type { DeferOpts, ReplyResponse, SendOpts } from '@seedcord/types';
@@ -35,7 +35,7 @@ export abstract class BaseReplySender<TMessage extends { id: string }, TNative =
 
     protected constructor(
         private readonly telemetry: ReplyTelemetry,
-        private readonly ephemeralByDefault: boolean,
+        private readonly ephemeralDefault: boolean,
         initialState: AckState = 'unacked'
     ) {
         this.state = initialState;
@@ -72,7 +72,7 @@ export abstract class BaseReplySender<TMessage extends { id: string }, TNative =
     public async defer(opts?: DeferOpts): Promise<void> {
         this.checkLegality('defer');
         const startedAt = performance.now();
-        await this.attempt('defer', startedAt, () => this.writeDefer({ ephemeral: this.ephemeral(opts) }));
+        await this.attempt('defer', startedAt, () => this.writeDefer(this.ephemeral(opts)));
         this.transition('defer', 'deferred-reply');
         this.report('defer', startedAt, null);
     }
@@ -212,7 +212,7 @@ export abstract class BaseReplySender<TMessage extends { id: string }, TNative =
     }
 
     private ephemeral(opts: SendOpts | DeferOpts | undefined): boolean {
-        return opts?.ephemeral ?? this.ephemeralByDefault;
+        return opts?.ephemeral ?? this.ephemeralDefault;
     }
 
     private resolve(opts: SendOpts | undefined): ResolvedSendOpts {
@@ -235,7 +235,7 @@ export abstract class BaseReplySender<TMessage extends { id: string }, TNative =
         response: ReplyResponse<TNative> | string,
         opts: ResolvedSendOpts
     ): Promise<TMessage | undefined>;
-    protected abstract writeDefer(opts: ResolvedDeferOpts): Promise<void>;
+    protected abstract writeDefer(ephemeral: boolean): Promise<void>;
     protected abstract writeDeferUpdate(): Promise<void>;
     protected abstract writeUpdate(response: ReplyResponse<TNative> | string): Promise<TMessage | undefined>;
     protected abstract writeFollowUp(

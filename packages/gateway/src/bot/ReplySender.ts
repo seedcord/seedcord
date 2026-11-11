@@ -7,7 +7,7 @@ import { MessageFlags } from 'discord.js';
 import type { GatewayFile, GatewayReplyResponse } from '#interfaces/ReplyResponse';
 import type { Repliables } from '#src/handlers/interactionTypes';
 import type { Bus, DispatchContext } from '@seedcord/core';
-import type { AckState, ResolvedDeferOpts, ResolvedSendOpts } from '@seedcord/core/internal';
+import type { AckState, ResolvedSendOpts } from '@seedcord/core/internal';
 import type { ReplyFile } from '@seedcord/types';
 import type {
     APIModalInteractionResponseCallbackData,
@@ -55,9 +55,9 @@ export class ReplySender extends BaseReplySender<SentMessage, GatewayFile> {
         private readonly interaction: Repliables,
         dispatch: DispatchContext,
         bus: Bus,
-        ephemeralByDefault: boolean
+        ephemeralDefault: boolean
     ) {
-        super({ bus, dispatch, interactionId: interaction.id }, ephemeralByDefault, seedState(interaction));
+        super({ bus, dispatch, interactionId: interaction.id }, ephemeralDefault, seedState(interaction));
     }
 
     protected async writeReply(
@@ -71,8 +71,8 @@ export class ReplySender extends BaseReplySender<SentMessage, GatewayFile> {
         return this.createdMessage(result);
     }
 
-    protected async writeDefer(opts: ResolvedDeferOpts): Promise<void> {
-        await this.interaction.deferReply({ flags: deferFlags(opts) });
+    protected async writeDefer(ephemeral: boolean): Promise<void> {
+        await this.interaction.deferReply({ flags: deferFlags(ephemeral) });
     }
 
     protected async writeDeferUpdate(): Promise<void> {

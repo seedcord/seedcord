@@ -154,7 +154,7 @@ class Ban extends SlashHandler<'ban'> {
 
 ### Make replies public by default
 
-If most of your replies should go to the whole channel, set `ephemeral: false` under `bot.interactions` in your config. You then skip the option on every reply.
+If most of your replies should go to the whole channel, set `ephemeral: false` under `bot.interactions` in your config. Then you can leave `ephemeral` off your replies.
 
 ```ts twoslash title="src/bot.ts"
 import { resolve } from 'node:path';
@@ -176,9 +176,9 @@ export const seedcord = new Seedcord({
 });
 ```
 
-`reply()`, `followUp()`, `send()`, `defer()`, a paginator, and a confirm prompt all use that default when you leave `ephemeral` out. Pass `ephemeral: true` on a reply that only its user should see.
+Every reply that leaves `ephemeral` out uses that default, including `defer()` and a paginator. Pass `ephemeral: true` when only the person who ran the command should see a reply.
 
-Fault replies and [notices](/replying/throwing) don't read this default. seedcord sends them ephemeral unless a notice sets its own `ephemeral` to `false`, so an error or a refusal only shows to the person who hit it.
+Error cards and [notices](/replying/throwing) ignore this default. seedcord sends them as ephemeral, unless a notice sets `ephemeral` to `false`. After a public `defer()`, though, the card fills the public placeholder, so the whole channel sees it. To keep a handler's errors private, defer it with `{ ephemeral: true }`.
 
 ## The message you get back
 

@@ -23,8 +23,7 @@ export interface PaginatorConfig<Item, Prefix extends string, Ctx> {
     render?: PageRender<Item>;
     /**
      * Whether the first page is ephemeral. Set `false` to post a public message, where anyone who can see it can
-     * click the nav buttons and change the page for everyone. Leave it out to use the bot's
-     * `bot.interactions.ephemeral`, which is `true` unless the config sets it.
+     * click the nav buttons and change the page for everyone. Leave it out to use `bot.interactions.ephemeral`.
      */
     ephemeral?: boolean;
 }
@@ -46,10 +45,6 @@ export abstract class PaginatorBase<Item, Prefix extends string, Ctx> {
     protected constructor(config: PaginatorConfig<Item, Prefix, Ctx>) {
         this.cursor = pageCursor(config.prefix);
         this.config = config;
-    }
-
-    protected get ephemeral(): boolean | undefined {
-        return this.config.ephemeral;
     }
 
     /** Build one page as a {@link ReplyResponse}. Each transport wraps this in a `page()` taking its handler. */

@@ -76,10 +76,10 @@ describe('getConfirmation', () => {
         source: object,
         route = 'confirm-test',
         bus: Bus = stubBus(),
-        ephemeralByDefault = true
+        ephemeralDefault = true
     ): RepliableHandler<NonModalInteraction> {
         const interaction = source as NonModalInteraction;
-        const sender = new ReplySender(interaction, new DispatchContext('slash', route), bus, ephemeralByDefault);
+        const sender = new ReplySender(interaction, new DispatchContext('slash', route), bus, ephemeralDefault);
         return {
             getEvent: () => interaction,
             sender

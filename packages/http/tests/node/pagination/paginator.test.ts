@@ -54,12 +54,12 @@ function dmPayload(): Repliables {
 function stubHandler(
     post: ReturnType<typeof vi.fn>,
     interaction = guildPayload(),
-    ephemeralByDefault = true
+    ephemeralDefault = true
 ): RepliableHandler<Repliables> {
     const core = { bus: stubBus() } as Core;
     const dispatch = new DispatchContext('slash', 'page');
     // justified: the fixture implements only the REST surface ReplySender reads
-    const sender = new ReplySender(ref, { post } as unknown as REST, dispatch, core.bus, ephemeralByDefault);
+    const sender = new ReplySender(ref, { post } as unknown as REST, dispatch, core.bus, ephemeralDefault);
     // justified: start reads only these three members off the handler
     return {
         core,

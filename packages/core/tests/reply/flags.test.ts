@@ -30,10 +30,10 @@ describe('sendFlags', () => {
 
 describe('deferFlags', () => {
     it('maps ephemeral to Ephemeral with the content flag unset', () => {
-        expect(deferFlags({ ephemeral: true })).toBe(MessageFlags.Ephemeral);
+        expect(deferFlags(true)).toBe(MessageFlags.Ephemeral);
     });
 
     it('is zero when ephemeral is false', () => {
-        expect(deferFlags({ ephemeral: false })).toBe(0);
+        expect(deferFlags(false)).toBe(0);
     });
 });

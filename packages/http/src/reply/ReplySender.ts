@@ -4,7 +4,7 @@ import { InteractionResponseType, MessageFlags, Routes } from 'discord-api-types
 
 import type { REST, RawFile } from '@discordjs/rest';
 import type { Bus, DispatchContext } from '@seedcord/core';
-import type { ResolvedDeferOpts, ResolvedSendOpts, SerializedReply } from '@seedcord/core/internal';
+import type { ResolvedSendOpts, SerializedReply } from '@seedcord/core/internal';
 import type { ReplyResponse } from '@seedcord/types';
 import type { APIMessage, APIModalInteractionResponseCallbackData } from 'discord-api-types/v10';
 import type { Except } from 'type-fest';
@@ -74,9 +74,9 @@ export class ReplySender extends BaseReplySender<SentMessage> {
         private readonly rest: REST,
         dispatch: DispatchContext,
         bus: Bus,
-        ephemeralByDefault: boolean
+        ephemeralDefault: boolean
     ) {
-        super({ bus, dispatch, interactionId: ref.id }, ephemeralByDefault);
+        super({ bus, dispatch, interactionId: ref.id }, ephemeralDefault);
     }
 
     protected async writeReply(
@@ -92,8 +92,8 @@ export class ReplySender extends BaseReplySender<SentMessage> {
         return this.createdMessage(result);
     }
 
-    protected async writeDefer(opts: ResolvedDeferOpts): Promise<void> {
-        await this.callback(InteractionResponseType.DeferredChannelMessageWithSource, { flags: deferFlags(opts) });
+    protected async writeDefer(ephemeral: boolean): Promise<void> {
+        await this.callback(InteractionResponseType.DeferredChannelMessageWithSource, { flags: deferFlags(ephemeral) });
     }
 
     protected async writeDeferUpdate(): Promise<void> {

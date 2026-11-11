@@ -26,10 +26,8 @@ export type InteractionsConfig =
            */
           middlewares?: string;
           /**
-           * Whether a reply, a defer, a followUp, a paginator, or a confirm prompt is ephemeral when the
-           * call leaves `ephemeral` out. Set `false` to make replies public by default, then pass
-           * `{ ephemeral: true }` on each reply that only its user should see. seedcord sends fault replies
-           * and denials as ephemeral either way.
+           * The `ephemeral` value a reply uses when the call leaves it out. Set `false` to make replies
+           * public, and pass `{ ephemeral: true }` on a reply only the invoking user should see.
            *
            * @defaultValue `true`
            */

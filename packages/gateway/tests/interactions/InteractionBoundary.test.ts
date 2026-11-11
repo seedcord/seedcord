@@ -305,6 +305,23 @@ describe('the interactions ephemeral default on gateway', () => {
         expect(replyFlags(mock)).toBe(MessageFlags.Ephemeral);
     });
 
+    it('fills a public placeholder with the fault card after a defer', async () => {
+        class DefersThenThrows extends UnhandledRepliable {
+            override async execute(): Promise<void> {
+                await this.defer();
+                throw new Error('boom');
+            }
+        }
+        const mock = mockInteraction();
+
+        await runSlash(DefersThenThrows, asSlash(mock), mockCore(vi.fn(), {}, publicByDefault));
+
+        const [options] = mock.deferReply.mock.calls[0] as [{ flags: number }];
+        expect(options.flags & MessageFlags.Ephemeral).toBe(0);
+        expect(mock.editReply).toHaveBeenCalledTimes(1);
+        expect(mock.followUp).not.toHaveBeenCalled();
+    });
+
     it('keeps a fault reply ephemeral when the config sets it false', async () => {
         const mock = mockInteraction();
 

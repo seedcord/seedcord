@@ -43,7 +43,7 @@ function deferring(): HandlerSlots[InteractionKind.Slash] {
     };
 }
 
-// a callback puts flags under data, and a followUp's webhook body has them at the top
+// a callback nests flags under data, and a followUp's body has them at the top
 interface PostedBody {
     flags?: number;
     data?: { flags?: number };
@@ -87,6 +87,18 @@ describe('the interactions ephemeral default', () => {
 
     it('keeps the unhandled fallback reply ephemeral when the config sets it false', async () => {
         expect(await ephemeralBits(configWith(false), UnhandledRepliable)).toEqual([MessageFlags.Ephemeral]);
+    });
+
+    it('fills a public placeholder with the fault card after a defer', async () => {
+        class DefersThenThrows extends SlashHandler<never> {
+            async execute(): Promise<void> {
+                await this.defer();
+                throw new Error('boom');
+            }
+        }
+
+        expect(await ephemeralBits(configWith(false), DefersThenThrows)).toEqual([0]);
+        expect(restClients().at(-1)?.patch.mock.calls[0]?.[0]).toMatch(/\/messages\/@original$/);
     });
 
     it('applies to a defer and the followUp after it', async () => {
