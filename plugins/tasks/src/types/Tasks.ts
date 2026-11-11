@@ -16,6 +16,13 @@ export interface TasksOptions {
      * @defaultValue `10_000`
      */
     timeout?: number;
+    /**
+     * Lets cron jobs and scheduled tasks run on their own in development. Without it they wait, and
+     * `trigger()` runs a task by hand. A task's own `runInDev` overrides this.
+     *
+     * @defaultValue `false`
+     */
+    runInDev?: boolean;
 }
 
 /** The options `@RegisterTask` takes after a cron pattern. */
@@ -43,6 +50,11 @@ export interface TaskOptions<TZone extends string = string, TEvery extends strin
      * @defaultValue `false`
      */
     paused?: boolean;
+    /**
+     * Lets this task's cron job and scheduled tasks run on their own in development. Overrides the
+     * plugin's `runInDev`.
+     */
+    runInDev?: boolean;
     /** Stops the task after this many runs. */
     maxRuns?: number;
     /**

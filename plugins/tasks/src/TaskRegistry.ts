@@ -10,6 +10,8 @@ export interface LoadedTask {
     readonly file: string;
     readonly logger: Logger;
     readonly protect: boolean;
+    // set in development for a task that doesn't opt in through runInDev
+    readonly heldInDev: boolean;
     readonly state: TaskState;
 }
 
@@ -17,7 +19,7 @@ export interface CronEntry {
     readonly job: CronJob;
     readonly pattern: string;
     readonly timezone: string | undefined;
-    readonly pausedByDecorator: boolean;
+    readonly startsPaused: boolean;
 }
 
 // holds the run in flight and the pause state for one key. A save registers the key again and reuses this slot
@@ -36,7 +38,7 @@ export class TaskSlot {
     }
 
     public get paused(): boolean {
-        return this.pausedByCall ?? this.entry?.pausedByDecorator ?? false;
+        return this.pausedByCall ?? this.entry?.startsPaused ?? false;
     }
 
     public load(loaded: LoadedTask, cron: CronEntry | undefined): void {
@@ -93,10 +95,10 @@ export class TaskRegistry {
         return this.slots.values().filter(isCronSlot).toArray();
     }
 
-    public get size(): number {
+    public tasks(): LoadedTask[] {
         return this.slots
             .values()
-            .filter((slot) => slot.loaded !== undefined)
-            .toArray().length;
+            .flatMap((slot) => (slot.loaded ? [slot.loaded] : []))
+            .toArray();
     }
 }

@@ -4,6 +4,7 @@ import { SeedcordErrorCode, paint } from '@seedcord/errors';
 import { SeedcordError, SeedcordTypeError } from '@seedcord/errors/internal';
 import { keepDefined } from '@seedcord/utils';
 import { pluralize } from '@seedcord/utils/internal';
+import { Envapter } from 'envapt';
 
 import { CronTasks } from './CronTasks';
 import { isTaskClass, taskKey, taskMetadata } from './decorators/RegisterTask';
@@ -21,6 +22,8 @@ import type { CronStatus, ScheduledJob, ScheduleOptions, TaskContext, TasksOptio
 import type { CoreBase } from '@seedcord/core';
 import type { HmrUpdateEvent } from '@seedcord/core/plugin';
 import type { JsonValue } from 'type-fest';
+
+const allOf = new Intl.ListFormat('en', { type: 'conjunction' });
 
 type DataOf<TTask> = TTask extends abstract new (context: TaskContext<infer TData>) => unknown ? TData : never;
 
@@ -47,6 +50,7 @@ export class Tasks extends Plugin<{ transport: 'any'; runtime: 'server' }> {
     readonly #scheduled: ScheduledJobs;
     readonly #reloader: FolderExports<TaskClass>;
     readonly #path: string;
+    readonly #runInDev: boolean;
     public constructor(host: CoreBase, options: TasksOptions) {
         // Drain lets in-flight runs finish before database plugins disconnect
         super(host, {
@@ -64,6 +68,7 @@ export class Tasks extends Plugin<{ transport: 'any'; runtime: 'server' }> {
         }
 
         this.#path = options.path;
+        this.#runInDev = options.runInDev ?? false;
         this.#runner = new TaskRunner(this.core, this.logger);
         this.#cronTasks = new CronTasks(this.#registry, this.#runner, options.timezone);
         this.#scheduled = new ScheduledJobs(
@@ -102,17 +107,28 @@ export class Tasks extends Plugin<{ transport: 'any'; runtime: 'server' }> {
         await this.#reloader.load();
         await this.#scheduled.restore();
 
-        const tasks = this.#registry.size;
+        const tasks = this.#registry.tasks().length;
         const jobs = this.#scheduled.size;
         this.logger.info(
             `loaded ${tasks} ${pluralize(tasks, 'task')}, ${this.#cronTasks.size} on a cron pattern, ${jobs} scheduled ${pluralize(jobs, 'job')}`
         );
     }
 
-    /** Starts the cron jobs and the timers for pending jobs once the bot has logged in. */
+    /**
+     * Starts the cron jobs and the timers for pending jobs once the bot has logged in. In development, a
+     * task without `runInDev` waits.
+     */
     public override ready(): void {
         this.#cronTasks.start();
         this.#scheduled.start();
+
+        const held = this.#registry.tasks().filter((loaded) => loaded.heldInDev);
+        if (held.length === 0) return;
+
+        const keys = allOf.format(held.map((loaded) => paint.sky(loaded.key)));
+        this.logger.info(
+            `${keys} won't run on their own in development. Call ${paint.bold('trigger()')} to run one, or pass ${paint.bold('runInDev: true')} to the plugin or the task`
+        );
     }
 
     /** Stops every timer, aborts each run's `signal`, and waits for in-flight runs. The driver still holds pending jobs. */
@@ -277,6 +293,7 @@ export class Tasks extends Plugin<{ transport: 'any'; runtime: 'server' }> {
             file,
             logger: this.logger.withLabel(meta.key),
             protect: meta.protect,
+            heldInDev: Envapter.isDevelopment && !(meta.runInDev ?? this.#runInDev),
             state: slot.state
         };
 

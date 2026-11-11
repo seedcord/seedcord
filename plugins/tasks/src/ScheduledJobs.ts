@@ -120,7 +120,7 @@ export class ScheduledJobs {
     private setTimer(job: Pending, delayMs = job.at.getTime() - Date.now()): void {
         // a failed read and a failed cancel can both call this for one job
         clearTimeout(job.timer);
-        if (!this.started) return;
+        if (!this.started || this.findTask(job.key)?.heldInDev) return;
 
         job.timer = setTimeout(
             () => {

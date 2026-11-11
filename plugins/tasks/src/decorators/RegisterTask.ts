@@ -1,3 +1,5 @@
+import { keepDefined } from '@seedcord/utils';
+
 import { Task } from '#src/Task';
 
 import type { CronPattern } from '#src/types/CronPattern';
@@ -8,7 +10,7 @@ export type TaskClass = new (context: TaskContext) => Task<unknown>;
 export type NoDataTaskClass = abstract new (context: TaskContext<void>) => Task;
 export type ScheduledTaskClass = abstract new (context: never) => Task<unknown>;
 
-type ScheduledOptions = Pick<TaskOptions, 'key'>;
+type ScheduledOptions = Pick<TaskOptions, 'key' | 'runInDev'>;
 
 // makes @RegisterTask({ key, protect }) an error. TypeScript doesn't check for extra keys on a generic argument
 type RegisterArgs<TArg, TZone extends string, TEvery extends string> = TArg extends string
@@ -18,7 +20,7 @@ type TaskTarget<TArg> = TArg extends string ? NoDataTaskClass : ScheduledTaskCla
 
 export type TaskMetadata =
     | (Omit<TaskOptions, 'key' | 'protect'> & { kind: 'cron'; key: string; pattern: string; protect: boolean })
-    | { kind: 'scheduled'; key: string; protect: false };
+    | (Pick<TaskOptions, 'runInDev'> & { kind: 'scheduled'; key: string; protect: false });
 
 const registry = new WeakMap<object, TaskMetadata>();
 
@@ -55,7 +57,12 @@ export function RegisterTask(patternOrOptions: string | ScheduledOptions = {}, o
                       pattern: patternOrOptions,
                       protect: options.protect ?? true
                   }
-                : { kind: 'scheduled', key: patternOrOptions.key ?? target.name, protect: false };
+                : {
+                      ...keepDefined({ runInDev: patternOrOptions.runInDev }),
+                      kind: 'scheduled',
+                      key: patternOrOptions.key ?? target.name,
+                      protect: false
+                  };
 
         registry.set(target, metadata);
     };

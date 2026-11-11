@@ -82,7 +82,7 @@ export class CronTasks {
             );
         }
 
-        return { job, pattern, timezone, pausedByDecorator: meta.paused ?? false };
+        return { job, pattern, timezone, startsPaused: (meta.paused ?? false) || loaded.heldInDev };
     }
 
     public start(): void {
