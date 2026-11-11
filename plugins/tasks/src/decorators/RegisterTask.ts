@@ -8,7 +8,7 @@ export type TaskClass = new (context: TaskContext) => Task<unknown>;
 export type NoDataTaskClass = abstract new (context: TaskContext<void>) => Task;
 export type ScheduledTaskClass = abstract new (context: never) => Task<unknown>;
 
-type ScheduledOptions = Pick<TaskOptions, 'key' | 'runInDev'>;
+type ScheduledOptions = Pick<TaskOptions, 'key'>;
 
 // makes @RegisterTask({ key, protect }) an error. TypeScript doesn't check for extra keys on a generic argument
 type RegisterArgs<TArg, TZone extends string, TEvery extends string> = TArg extends string
@@ -18,7 +18,7 @@ type TaskTarget<TArg> = TArg extends string ? NoDataTaskClass : ScheduledTaskCla
 
 export type TaskMetadata =
     | (Omit<TaskOptions, 'key' | 'protect'> & { kind: 'cron'; key: string; pattern: string; protect: boolean })
-    | (Omit<ScheduledOptions, 'key'> & { kind: 'scheduled'; key: string; protect: false });
+    | { kind: 'scheduled'; key: string; protect: false };
 
 const registry = new WeakMap<object, TaskMetadata>();
 
@@ -55,12 +55,7 @@ export function RegisterTask(patternOrOptions: string | ScheduledOptions = {}, o
                       pattern: patternOrOptions,
                       protect: options.protect ?? true
                   }
-                : {
-                      ...patternOrOptions,
-                      kind: 'scheduled',
-                      key: patternOrOptions.key ?? target.name,
-                      protect: false
-                  };
+                : { kind: 'scheduled', key: patternOrOptions.key ?? target.name, protect: false };
 
         registry.set(target, metadata);
     };

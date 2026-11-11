@@ -50,7 +50,7 @@ export class Tasks extends Plugin<{ transport: 'any'; runtime: 'server' }> {
     readonly #scheduled: ScheduledJobs;
     readonly #reloader: FolderExports<TaskClass>;
     readonly #path: string;
-    readonly #runInDev: boolean;
+    readonly #heldInDev: boolean;
     public constructor(host: CoreBase, options: TasksOptions) {
         // Drain lets in-flight runs finish before database plugins disconnect
         super(host, {
@@ -68,9 +68,9 @@ export class Tasks extends Plugin<{ transport: 'any'; runtime: 'server' }> {
         }
 
         this.#path = options.path;
-        this.#runInDev = options.runInDev ?? false;
+        this.#heldInDev = getDevChannel() !== undefined && !(options.runInDev ?? false);
         this.#runner = new TaskRunner(this.core, this.logger);
-        this.#cronTasks = new CronTasks(this.#registry, this.#runner, options.timezone);
+        this.#cronTasks = new CronTasks(this.#registry, this.#runner, options.timezone, this.#heldInDev);
         this.#scheduled = new ScheduledJobs(
             this.kv.collection<JobRecord>('job'),
             this.#runner,
@@ -107,7 +107,7 @@ export class Tasks extends Plugin<{ transport: 'any'; runtime: 'server' }> {
         await this.#reloader.load();
         await this.#scheduled.restore();
 
-        const tasks = this.#registry.tasks().length;
+        const tasks = this.#registry.size;
         const jobs = this.#scheduled.size;
         this.logger.info(
             `loaded ${tasks} ${pluralize(tasks, 'task')}, ${this.#cronTasks.size} on a cron pattern, ${jobs} scheduled ${pluralize(jobs, 'job')}`
@@ -115,19 +115,25 @@ export class Tasks extends Plugin<{ transport: 'any'; runtime: 'server' }> {
     }
 
     /**
-     * Starts the cron jobs and the timers for pending jobs once the bot has logged in. Under `seedcord dev`,
-     * only tasks with `runInDev` start.
+     * Starts the cron jobs and the timers for pending jobs once the bot has logged in. Under `seedcord dev`
+     * without `runInDev`, cron jobs start paused and pending jobs wait.
      */
     public override ready(): void {
         this.#cronTasks.start();
-        this.#scheduled.start();
+        if (!this.#heldInDev) {
+            this.#scheduled.start();
+            return;
+        }
 
-        const held = this.#registry.tasks().filter((loaded) => loaded.heldInDev);
-        if (held.length === 0) return;
+        const held = [
+            [this.#cronTasks.size, 'cron job'],
+            [this.#scheduled.size, 'scheduled job']
+        ] as const;
+        const counts = held.filter(([count]) => count > 0).map(([count, noun]) => `${count} ${pluralize(count, noun)}`);
+        if (counts.length === 0) return;
 
-        const keys = allOf.format(held.map((loaded) => paint.sky(loaded.key)));
         this.logger.info(
-            `${keys} wait under seedcord dev. Pass ${paint.bold('runInDev: true')} to the plugin or the task to run them on their own`
+            `seedcord dev holds ${allOf.format(counts)}. Pass ${paint.bold('runInDev: true')} to the plugin to run them on their own`
         );
     }
 
@@ -294,13 +300,11 @@ export class Tasks extends Plugin<{ transport: 'any'; runtime: 'server' }> {
             file,
             logger: this.logger.withLabel(meta.key),
             protect: meta.protect,
-            heldInDev: getDevChannel() !== undefined && !(meta.runInDev ?? this.#runInDev),
             state: slot.state
         };
 
         slot.load(loaded, meta.kind === 'cron' ? this.#cronTasks.build(loaded, meta) : undefined);
         this.#cronTasks.sync(slot);
-        this.#scheduled.sync(meta.key);
     }
 
     #unregister(Task: TaskClass): void {

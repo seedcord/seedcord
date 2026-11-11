@@ -10,7 +10,6 @@ export interface LoadedTask {
     readonly file: string;
     readonly logger: Logger;
     readonly protect: boolean;
-    readonly heldInDev: boolean;
     readonly state: TaskState;
 }
 
@@ -94,10 +93,10 @@ export class TaskRegistry {
         return this.slots.values().filter(isCronSlot).toArray();
     }
 
-    public tasks(): LoadedTask[] {
+    public get size(): number {
         return this.slots
             .values()
-            .flatMap((slot) => (slot.loaded ? [slot.loaded] : []))
-            .toArray();
+            .filter((slot) => slot.loaded !== undefined)
+            .toArray().length;
     }
 }

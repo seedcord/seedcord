@@ -5,7 +5,7 @@ description: Run a task once at a later time with its own data, like an unban a 
 
 Some work has to happen later, like lifting a ban a day after `/tempban`. With `setTimeout`, that unban would be a timer in your bot's memory, and a restart before it ran would lose it.
 
-The [tasks plugin](/plugins/tasks) keeps that work as a _job_: one run of a task at a later time, with some data. [`schedule()`](ref:plugin-tasks/Tasks.schedule) writes the job to your [kv store](/built-ins) first, and then sets a timer. If your kv store keeps its records on disk or in a database, the job is still there after a restart. Under `seedcord dev` a job waits instead of running, as [Tasks in development](/plugins/tasks#tasks-in-development) explains.
+The [tasks plugin](/plugins/tasks) keeps that work as a _job_: one run of a task at a later time, with some data. [`schedule()`](ref:plugin-tasks/Tasks.schedule) writes the job to your [kv store](/built-ins) first, and then sets a timer. If your kv store keeps its records on disk or in a database, the job is still there after a restart. Under `seedcord dev`, the plugin doesn't set the timer, so the job doesn't run. [Tasks in development](/plugins/tasks#tasks-in-development) shows how to run it.
 
 This page assumes the plugin is attached under the key `tasks`. Handlers reach it as [`this.core.tasks`](/plugins#reading-it-from-a-handler) after you run [`seedcord codegen`](/plugins/typing).
 

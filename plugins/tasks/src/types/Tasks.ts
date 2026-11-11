@@ -17,8 +17,9 @@ export interface TasksOptions {
      */
     timeout?: number;
     /**
-     * Lets every task run on its own under `seedcord dev`. Without it, tasks wait, and `trigger()` runs one by
-     * hand. A task's own `runInDev` overrides this.
+     * Lets cron jobs and scheduled jobs run on their own under `seedcord dev`. Without it, cron jobs start
+     * paused and scheduled jobs wait for a restart outside `seedcord dev`. `trigger()` still runs a task
+     * without data by hand.
      *
      * @defaultValue `false`
      */
@@ -50,12 +51,6 @@ export interface TaskOptions<TZone extends string = string, TEvery extends strin
      * @defaultValue `false`
      */
     paused?: boolean;
-    /**
-     * Lets this task run on its own under `seedcord dev`, on its pattern and for its scheduled jobs.
-     *
-     * @defaultValue The plugin's `runInDev`.
-     */
-    runInDev?: boolean;
     /** Stops the task after this many runs. */
     maxRuns?: number;
     /**

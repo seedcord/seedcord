@@ -32,7 +32,7 @@ export const seedcord = new Seedcord({
 export default seedcord;
 ```
 
-The plugin loads every task in `./tasks`. It starts them once the bot is ready, and stops them when the bot shuts down. Under `seedcord dev` they wait instead. [Tasks in development](#tasks-in-development) explains why.
+The plugin loads every task in `./tasks`. It starts them once the bot is ready, and stops them when the bot shuts down. Under `seedcord dev`, they don't start on their own. [Tasks in development](#tasks-in-development) shows how to run them.
 
 [`Tasks`](ref:plugin-tasks/Tasks) works on a gateway bot and on an http bot that runs on a server. It needs a process that keeps running, so on an http bot for [Cloudflare Workers](/build/workers) the same `attach` call fails to compile.
 
@@ -43,7 +43,7 @@ The plugin loads every task in `./tasks`. It starts them once the bot is ready, 
 | [`path`](ref:plugin-tasks/TasksOptions.path) | yes | the folder of tasks. A relative path starts at `root` from your `seedcord.config.ts`, and the folder has to be inside `root` |
 | [`timezone`](ref:plugin-tasks/TasksOptions.timezone) | no | the timezone for every cron job that doesn't set its own. Defaults to the system's timezone |
 | [`timeout`](ref:plugin-tasks/TasksOptions.timeout) | no | how long running tasks get to finish during shutdown, in milliseconds. Defaults to 10000 |
-| [`runInDev`](ref:plugin-tasks/TasksOptions.runInDev) | no | lets every task run on its own under `seedcord dev`. Defaults to `false` |
+| [`runInDev`](ref:plugin-tasks/TasksOptions.runInDev) | no | lets cron jobs and scheduled jobs run on their own under `seedcord dev`. Defaults to `false` |
 
 {/* prettier-ignore-end */}
 
@@ -67,6 +67,8 @@ export class Heartbeat extends Task {
 ```
 
 The pattern `'*/5 * * * *'` runs `Heartbeat` every five minutes. The class name becomes the task's _key_, which appears in its logs. A class without `@RegisterTask` isn't a task, and the plugin skips it.
+
+Under `seedcord dev`, `Heartbeat` doesn't run every five minutes. [Tasks in development](#tasks-in-development) explains why, and how to run it.
 
 <Callout type="transport">
 
@@ -140,7 +142,6 @@ The second argument to `@RegisterTask` takes these options. Each one is optional
 | [`timezone`](ref:plugin-tasks/TaskOptions.timezone) | sets the timezone for this task. Defaults to the plugin's `timezone` |
 | [`protect`](ref:plugin-tasks/TaskOptions.protect) | skips a run if the last one hasn't finished. Defaults to `true`. See [When a run takes too long](#when-a-run-takes-too-long) |
 | [`paused`](ref:plugin-tasks/TaskOptions.paused) | starts the task paused. Defaults to `false`. To start it, call `resume()` from [Controlling tasks](/plugins/tasks-control#pausing-a-task) |
-| [`runInDev`](ref:plugin-tasks/TaskOptions.runInDev) | lets this task run on its own under `seedcord dev`. Overrides the plugin's `runInDev` |
 | [`maxRuns`](ref:plugin-tasks/TaskOptions.maxRuns) | stops the task after this many runs. A match that `protect` skipped doesn't count |
 | [`every`](ref:plugin-tasks/TaskOptions.every) | sets the shortest gap between two runs, in whole seconds, like `'90s'` or `'5m'`. [Spacing runs](#spacing-runs) has a sample |
 | [`startAt`](ref:plugin-tasks/TaskOptions.startAt) | a `Date` or date string. The task doesn't run before it |
@@ -169,11 +170,11 @@ export class Poll extends Task {
 
 ## Tasks in development
 
-Under `seedcord dev`, cron jobs and scheduled tasks don't run on their own, so a task can't change the data you're debugging. [`schedule()`](ref:plugin-tasks/Tasks.schedule) still stores a job, and [`jobs()`](ref:plugin-tasks/Tasks.jobs) still lists it. Once the bot is ready, the plugin logs which tasks are waiting.
+Under `seedcord dev`, cron jobs start paused and scheduled jobs don't run, so a task can't change the data you're debugging. [`schedule()`](ref:plugin-tasks/Tasks.schedule) still stores a job, and [`jobs()`](ref:plugin-tasks/Tasks.jobs) still lists it. Once the bot is ready, the plugin logs how many cron jobs and scheduled jobs it holds.
 
-To run a task without data while you test it, call [`trigger()`](ref:plugin-tasks/Tasks.trigger). [`resume()`](ref:plugin-tasks/Tasks.resume) lets a waiting cron job run on its pattern until the bot restarts.
+To run a task without data while you test it, call [`trigger()`](ref:plugin-tasks/Tasks.trigger). [`resume()`](ref:plugin-tasks/Tasks.resume) lets a paused cron job run on its pattern until the bot restarts.
 
-To let tasks run on their own, pass `runInDev: true`. On the plugin, it covers every task:
+`trigger()` doesn't take a task with data. To run those, pass `runInDev: true` to the plugin, and every task runs on its own:
 
 ```ts twoslash
 import { Seedcord } from '@seedcord/gateway';
@@ -185,8 +186,6 @@ seedcord.attach('tasks', Tasks, {
     runInDev: true
 });
 ```
-
-On `@RegisterTask`, it covers that one task and overrides the plugin's setting. A task with `runInDev: false` keeps waiting even when the plugin passes `true`. A task without a pattern takes it too, as in `@RegisterTask({ runInDev: true })`.
 
 A bot you start some other way, like a built bot run with `node`, runs every task.
 
