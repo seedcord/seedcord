@@ -3,13 +3,41 @@ title: Single-binary compilation
 description: Compile your seedcord bot into one binary to run it on a server without a JavaScript runtime.
 ---
 
+<Callout type="note">
+
+This section is not applicable to edge builds.
+
+</Callout>
+
 Depending on what runtime you're using, you have two options:
+
+## Bun single-file executable
+
+Bun comes built-in with its own compiler to generate a standalone binary.
+
+In order to compile with Bun, use the following command:
+
+```sh
+bun run build # Builds your bot first
+bun build ./dist/index.mjs --compile --outfile bot # bot.exe on Windows
+```
+
+Cross-compiling should use the `--target` flag. Read the [Bun documentation](https://bun.sh/docs/compiler/executables) to learn more about single-file executable compilation.
 
 ## Node.js SEA (Single-Executable Application)
 
 <Callout type="note">
 
-This page assumes Node.js 26+ for its simplicity. You'll need to follow different instructions for Node.js [22](https://nodejs.org/docs/latest-v22.x/api/single-executable-applications.html) and [24](https://nodejs.org/docs/latest-v24.x/api/single-executable-applications.html).
+This section assumes Node.js 26+ for its simplicity. You'll need to follow different instructions for Node.js [24](https://nodejs.org/docs/latest-v24.x/api/single-executable-applications.html).
+
+</Callout>
+
+<Callout type="warn">
+
+We recommend not configuring compiling with Node.js SEA directly, due to certain limitations. We hope these limitations get resolved in the future.
+
+Instead, read the ["Other tools that build executables on Node"](#other-tools-that-build-executable-on-node) section for tools that manage this instead.
+These all require Node 26+.
 
 </Callout>
 
@@ -46,17 +74,4 @@ You can also bundle assets in and use them via the `node:sea` built-in module. R
 ### Other tools that build executables on Node
 
 - tsdown has built-in support to compile Node apps via SEA [(docs)](https://tsdown.dev/options/exe). This is the recommended option if you are already using Vite+ as, with the right configuration, you can run `seedcord build` and then `vp pack` to generate binaries for all platforms.
-- `pkg` is a (now-deprecated) CLI for compiling Node apps via its own mechanism.
-
-## Bun single-file executable
-
-Bun comes built-in with its own compiler to generate a standalone binary.
-
-In order to compile with Bun, use the following command:
-
-```sh
-bun run build # Builds your bot first
-bun build ./dist/index.mjs --compile --outfile bot # bot.exe on Windows
-```
-
-Cross-compiling should use the `--target` flag. Read the [Bun documentation](https://bun.sh/docs/compiler/executables) to learn more about single-file executable compilation.
+- `pkg` is a (now-deprecated, but has active forks) CLI for compiling Node apps via its own mechanism (independent of SEA).
