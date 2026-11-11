@@ -52,7 +52,8 @@ export interface TaskOptions<TZone extends string = string, TEvery extends strin
     paused?: boolean;
     /**
      * Lets this task run on its own under `seedcord dev`, on its pattern and for its scheduled jobs.
-     * Overrides the plugin's `runInDev`.
+     *
+     * @defaultValue The plugin's `runInDev`.
      */
     runInDev?: boolean;
     /** Stops the task after this many runs. */
