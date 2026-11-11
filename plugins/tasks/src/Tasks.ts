@@ -153,7 +153,8 @@ export class Tasks extends Plugin<{ transport: 'any'; runtime: 'server' }> {
     /**
      * Stores a job that runs `Task` once, at the time `options` gives. If that time has passed, the job
      * runs right away, or in `ready()` if the bot hasn't logged in yet. Once the promise resolves, the
-     * driver holds the job, and it's still there after a restart.
+     * driver holds the job, and it's still there after a restart. Under `seedcord dev` without `runInDev`,
+     * the job waits for a restart outside `seedcord dev`.
      *
      * If the process dies during a run, the job runs again after a restart. Write a task so a second
      * run of one job is safe.
