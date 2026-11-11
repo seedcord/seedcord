@@ -111,7 +111,7 @@ export type { AutocompletableNames, ChoiceValueOf, EntryFor, FocusedField } from
 
 export { PAGE_MAX, pageCursor, type PageCursor } from '#pagination/cursor';
 
-export { deferFlags, sendFlags } from '#reply/flags';
+export { deferFlags, ephemeralDefault, sendFlags, type ResolvedSendOpts } from '#reply/flags';
 export { checkAckLegality, sendTarget, type AckState, type ReplyMethod } from '#reply/ackLegality';
 export { AckTrace } from '#reply/AckTrace';
 export { AutocompleteResponder } from '#reply/AutocompleteResponder';

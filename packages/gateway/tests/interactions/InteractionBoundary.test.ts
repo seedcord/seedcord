@@ -16,7 +16,7 @@ import type { Core } from '#interfaces/Core';
 import type { ValidInteractionTypes } from '#src/handlers/interactionTypes';
 import type { SubscriptionData } from '@seedcord/core';
 import type { InteractionRunConfig } from '@seedcord/core/internal';
-import type { Config } from '@seedcord/types';
+import type { Config, InteractionsConfig } from '@seedcord/types';
 import type { AutocompleteInteraction, ChatInputCommandInteraction } from 'discord.js';
 
 const withResponse = { resource: { message: { id: 'sent' } } };
@@ -56,17 +56,21 @@ class BoundaryHost extends PluginHost<'gateway', 'server'> {
     public readonly rest = {} as PluginHost<'gateway', 'server'>['rest'];
     public readonly applicationId = 'app-1';
 
-    constructor(publish: ReturnType<typeof vi.fn>, errors: Config['errors']) {
+    constructor(publish: ReturnType<typeof vi.fn>, errors: Config['errors'], interactions: InteractionsConfig) {
         super('gateway', 'server', undefined);
-        // justified: the boundary reads only these two config sections
-        this.config = { errors, notifications: {} } as unknown as Config;
+        // justified: the boundary reads only these config sections
+        this.config = { bot: { interactions }, errors, notifications: {} } as unknown as Config;
         Object.assign(this, { bus: { [PublishDefault]: publish } });
     }
 }
 
-function mockCore(publish: ReturnType<typeof vi.fn>, errors: Config['errors'] = {}): BoundaryHost & Core {
+function mockCore(
+    publish: ReturnType<typeof vi.fn>,
+    errors: Config['errors'] = {},
+    interactions: InteractionsConfig = { path: null }
+): BoundaryHost & Core {
     // justified: the fixture implements only the Core surface the boundary reads.
-    return new BoundaryHost(publish, errors) as unknown as BoundaryHost & Core;
+    return new BoundaryHost(publish, errors, interactions) as unknown as BoundaryHost & Core;
 }
 
 type Mock = ReturnType<typeof mockInteraction>;
@@ -269,6 +273,61 @@ describe('gateway fault answers', () => {
             expect(mock.reply).toHaveBeenCalledTimes(1);
             expect(mock.followUp).not.toHaveBeenCalled();
         });
+    });
+});
+
+describe('the interactions ephemeral default on gateway', () => {
+    const publicByDefault: InteractionsConfig = { path: 'handlers', ephemeral: false };
+
+    function replyFlags(mock: Mock): number {
+        const [options] = mock.reply.mock.calls[0] as [{ flags: number }];
+        return options.flags & MessageFlags.Ephemeral;
+    }
+
+    it('sends a public reply when the config sets it false', async () => {
+        class Replies extends UnhandledRepliable {
+            override async execute(): Promise<void> {
+                await this.reply('hi');
+            }
+        }
+        const mock = mockInteraction();
+
+        await runSlash(Replies, asSlash(mock), mockCore(vi.fn(), {}, publicByDefault));
+
+        expect(replyFlags(mock)).toBe(0);
+    });
+
+    it('keeps the unhandled fallback reply ephemeral when the config sets it false', async () => {
+        const mock = mockInteraction();
+
+        await runSlash(UnhandledRepliable, asSlash(mock), mockCore(vi.fn(), {}, publicByDefault));
+
+        expect(replyFlags(mock)).toBe(MessageFlags.Ephemeral);
+    });
+
+    it('fills a public placeholder with the fault card after a defer', async () => {
+        class DefersThenThrows extends UnhandledRepliable {
+            override async execute(): Promise<void> {
+                await this.defer();
+                throw new Error('boom');
+            }
+        }
+        const mock = mockInteraction();
+
+        await runSlash(DefersThenThrows, asSlash(mock), mockCore(vi.fn(), {}, publicByDefault));
+
+        const [options] = mock.deferReply.mock.calls[0] as [{ flags: number }];
+        expect(options.flags & MessageFlags.Ephemeral).toBe(0);
+        expect(mock.editReply).toHaveBeenCalledTimes(1);
+        expect(mock.followUp).not.toHaveBeenCalled();
+    });
+
+    it('keeps a fault reply ephemeral when the config sets it false', async () => {
+        const mock = mockInteraction();
+
+        await answerFault(new Error('boom'), asInteraction(mock), mockCore(vi.fn(), {}, publicByDefault));
+
+        expect(replyFlags(mock)).toBe(MessageFlags.Ephemeral);
     });
 });
 

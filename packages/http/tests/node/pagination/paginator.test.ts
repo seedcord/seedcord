@@ -51,10 +51,15 @@ function dmPayload(): Repliables {
     return { user: { id: 'u2' } } as unknown as Repliables;
 }
 
-function stubHandler(post: ReturnType<typeof vi.fn>, interaction = guildPayload()): RepliableHandler<Repliables> {
+function stubHandler(
+    post: ReturnType<typeof vi.fn>,
+    interaction = guildPayload(),
+    ephemeralDefault = true
+): RepliableHandler<Repliables> {
     const core = { bus: stubBus() } as Core;
+    const dispatch = new DispatchContext('slash', 'page');
     // justified: the fixture implements only the REST surface ReplySender reads
-    const sender = new ReplySender(ref, { post } as unknown as REST, new DispatchContext('slash', 'page'), core.bus);
+    const sender = new ReplySender(ref, { post } as unknown as REST, dispatch, core.bus, ephemeralDefault);
     // justified: start reads only these three members off the handler
     return {
         core,
@@ -99,10 +104,18 @@ describe('http Paginator.start', () => {
         expect(textLines(callbackBody(post).data?.components?.[0])).toEqual(['e']);
     });
 
-    it('honors an ephemeral paginator', async () => {
+    it('follows the bot default when the paginator leaves ephemeral out', async () => {
         const post = vi.fn().mockResolvedValue({ resource: { message: { id: 'm-1' } } });
 
-        await pagerFor(true).start(stubHandler(post));
+        await pagerFor().start(stubHandler(post, guildPayload(), false));
+
+        expect((callbackBody(post).data?.flags ?? 0) & MessageFlags.Ephemeral).toBe(0);
+    });
+
+    it('keeps an ephemeral paginator private on a bot that defaults to public', async () => {
+        const post = vi.fn().mockResolvedValue({ resource: { message: { id: 'm-1' } } });
+
+        await pagerFor(true).start(stubHandler(post, guildPayload(), false));
 
         expect((callbackBody(post).data?.flags ?? 0) & MessageFlags.Ephemeral).toBeTruthy();
     });

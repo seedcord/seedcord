@@ -1,5 +1,6 @@
 import { ContainerBuilder } from '@discordjs/builders';
 import { DispatchContext, PublishDefault, serializeReply } from '@seedcord/core/internal';
+import { MessageFlags } from 'discord.js';
 import { beforeEach, describe, expect, it, vi } from 'vite-plus/test';
 
 import { getConfirmation } from '#bot/confirm';
@@ -74,10 +75,11 @@ describe('getConfirmation', () => {
     function handlerFor(
         source: object,
         route = 'confirm-test',
-        bus: Bus = stubBus()
+        bus: Bus = stubBus(),
+        ephemeralDefault = true
     ): RepliableHandler<NonModalInteraction> {
         const interaction = source as NonModalInteraction;
-        const sender = new ReplySender(interaction, new DispatchContext('slash', route), bus);
+        const sender = new ReplySender(interaction, new DispatchContext('slash', route), bus, ephemeralDefault);
         return {
             getEvent: () => interaction,
             sender
@@ -96,6 +98,13 @@ describe('getConfirmation', () => {
 
         const sent = publish.mock.calls.find(([key]) => key === 'responseAttempted');
         expect(sent?.[1]).toMatchObject({ routeId: 'slash:ban' });
+    });
+
+    it('sends a public prompt on a bot that defaults to public', async () => {
+        await (getConfirmation as ConfirmCall)(handlerFor(event, 'confirm-test', stubBus(), false), v2Prompt);
+
+        const [options] = event.reply.mock.calls[0] as [{ flags: number }];
+        expect(options.flags & MessageFlags.Ephemeral).toBe(0);
     });
 
     it('resolves true when the user confirms', async () => {

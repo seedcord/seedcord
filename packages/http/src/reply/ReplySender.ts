@@ -4,8 +4,8 @@ import { InteractionResponseType, MessageFlags, Routes } from 'discord-api-types
 
 import type { REST, RawFile } from '@discordjs/rest';
 import type { Bus, DispatchContext } from '@seedcord/core';
-import type { SerializedReply } from '@seedcord/core/internal';
-import type { DeferOpts, ReplyResponse, SendOpts } from '@seedcord/types';
+import type { ResolvedSendOpts, SerializedReply } from '@seedcord/core/internal';
+import type { ReplyResponse } from '@seedcord/types';
 import type { APIMessage, APIModalInteractionResponseCallbackData } from 'discord-api-types/v10';
 import type { Except } from 'type-fest';
 
@@ -73,12 +73,16 @@ export class ReplySender extends BaseReplySender<SentMessage> {
         private readonly ref: InteractionRef,
         private readonly rest: REST,
         dispatch: DispatchContext,
-        bus: Bus
+        bus: Bus,
+        ephemeralDefault: boolean
     ) {
-        super({ bus, dispatch, interactionId: ref.id });
+        super({ bus, dispatch, interactionId: ref.id }, ephemeralDefault);
     }
 
-    protected async writeReply(response: ReplyResponse | string, opts?: SendOpts): Promise<SentMessage | undefined> {
+    protected async writeReply(
+        response: ReplyResponse | string,
+        opts: ResolvedSendOpts
+    ): Promise<SentMessage | undefined> {
         const reply = this.serialize(response);
         const result = await this.callback(
             InteractionResponseType.ChannelMessageWithSource,
@@ -88,8 +92,8 @@ export class ReplySender extends BaseReplySender<SentMessage> {
         return this.createdMessage(result);
     }
 
-    protected async writeDefer(opts?: DeferOpts): Promise<void> {
-        await this.callback(InteractionResponseType.DeferredChannelMessageWithSource, { flags: deferFlags(opts) });
+    protected async writeDefer(ephemeral: boolean): Promise<void> {
+        await this.callback(InteractionResponseType.DeferredChannelMessageWithSource, { flags: deferFlags(ephemeral) });
     }
 
     protected async writeDeferUpdate(): Promise<void> {
@@ -106,7 +110,7 @@ export class ReplySender extends BaseReplySender<SentMessage> {
         return this.createdMessage(result);
     }
 
-    protected async writeFollowUp(response: ReplyResponse | string, opts?: SendOpts): Promise<SentMessage> {
+    protected async writeFollowUp(response: ReplyResponse | string, opts: ResolvedSendOpts): Promise<SentMessage> {
         const reply = this.serialize(response);
         // discord returns the created message for interaction-token followups either way. wait=true pins
         // that contract and matches the djs webhook client

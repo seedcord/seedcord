@@ -1,4 +1,4 @@
-import { DispatchContext } from '@seedcord/core/internal';
+import { DispatchContext, ephemeralDefault } from '@seedcord/core/internal';
 import { DiscordAPIError } from 'discord.js';
 
 import { autocompleteResponder } from '#bot/autocompleteResponder';
@@ -34,7 +34,7 @@ export function repliableRunConfig<Kind extends MiddlewareKind>(run: RepliableRu
     const { resolved, core, middlewares } = run;
     const { event, ctor: Ctor } = resolved;
     const dispatch = dispatchOf(resolved);
-    const sender = new ReplySender(event, dispatch, core.bus);
+    const sender = new ReplySender(event, dispatch, core.bus, ephemeralDefault(core.config.bot.interactions));
     return runConfig(run, dispatch, {
         sender,
         gateContext: () => interactionGateContext(event, core, dispatch),

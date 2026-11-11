@@ -17,7 +17,7 @@ const created: TestMessage = { id: 'm1' };
 
 class TestSender extends BaseReplySender<TestMessage> {
     public constructor(bus: Bus) {
-        super({ bus, dispatch: new DispatchContext('slash', 'ping'), interactionId: 'i1' });
+        super({ bus, dispatch: new DispatchContext('slash', 'ping'), interactionId: 'i1' }, true);
     }
 
     protected writeReply(): Promise<TestMessage> {

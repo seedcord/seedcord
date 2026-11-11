@@ -48,7 +48,7 @@ A project from `create-seedcord` wraps these as scripts, along with `check`, `co
 
 | key | what it sets | where it's taught |
 | --- | --- | --- |
-| `bot.interactions` | the folder seedcord scans for handlers, plus middleware and ignored ids | [Components](/components) |
+| `bot.interactions` | the folder seedcord scans for handlers, plus middleware, ignored ids, and whether replies are ephemeral by default | [Components](/components), [Replying](/replying#make-replies-public-by-default) |
 | `bot.commands` | the folder seedcord scans for commands, and `guilds`, the test servers that bare `@RegisterCommand()` commands deploy to | [Commands](/commands), [Test servers](/commands/deployed#test-servers) |
 | `bot.emojis` | the emoji names [`Emojis`](ref:gateway/Emojis) resolves at startup | [Components](/components) |
 | `bot.events` | the folder seedcord scans for event handlers. Gateway only | [Events](/events) |

@@ -25,6 +25,14 @@ export type InteractionsConfig =
            * Optional path to interaction middleware directory
            */
           middlewares?: string;
+          /**
+           * The `ephemeral` value a reply uses when the call leaves it out. Set it to `false` to make replies
+           * public. Pass `{ ephemeral: true }` on a reply that only the invoking user should see. Error cards
+           * and notices ignore this value, though one that fills a public `defer()` placeholder is public.
+           *
+           * @defaultValue `true`
+           */
+          ephemeral?: boolean;
       }
     | {
           /** No interactions configured */
