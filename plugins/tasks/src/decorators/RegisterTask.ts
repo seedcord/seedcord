@@ -1,5 +1,3 @@
-import { keepDefined } from '@seedcord/utils';
-
 import { Task } from '#src/Task';
 
 import type { CronPattern } from '#src/types/CronPattern';
@@ -20,7 +18,7 @@ type TaskTarget<TArg> = TArg extends string ? NoDataTaskClass : ScheduledTaskCla
 
 export type TaskMetadata =
     | (Omit<TaskOptions, 'key' | 'protect'> & { kind: 'cron'; key: string; pattern: string; protect: boolean })
-    | (Pick<TaskOptions, 'runInDev'> & { kind: 'scheduled'; key: string; protect: false });
+    | (Omit<ScheduledOptions, 'key'> & { kind: 'scheduled'; key: string; protect: false });
 
 const registry = new WeakMap<object, TaskMetadata>();
 
@@ -58,7 +56,7 @@ export function RegisterTask(patternOrOptions: string | ScheduledOptions = {}, o
                       protect: options.protect ?? true
                   }
                 : {
-                      ...keepDefined({ runInDev: patternOrOptions.runInDev }),
+                      ...patternOrOptions,
                       kind: 'scheduled',
                       key: patternOrOptions.key ?? target.name,
                       protect: false

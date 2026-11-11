@@ -86,7 +86,6 @@
         "@seedcord/core": "workspace:>=0.14.0-next.0",
         "@seedcord/gateway": "workspace:>=0.10.1-next.0",
         "@seedcord/http": "workspace:>=0.13.1-next.0",
-        "envapt": "catalog:peer",
         "typescript": "catalog:consumerTypes"
     },
     "peerDependenciesMeta": {

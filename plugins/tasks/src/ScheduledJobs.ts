@@ -70,6 +70,10 @@ export class ScheduledJobs {
         this.pending.clear();
     }
 
+    public sync(key: string): void {
+        for (const job of this.pending.values()) if (job.key === key) this.setTimer(job);
+    }
+
     public async add(key: string, at: Date, data: JsonValue | undefined): Promise<ScheduledJob> {
         const id = randomUUID();
         await this.records.set(id, { key, at: at.getTime(), ...(data !== undefined && { data }) });

@@ -1,10 +1,10 @@
 import { MemoryDriver, ShutdownPhase } from '@seedcord/core';
+import { getDevChannel } from '@seedcord/core/internal';
 import { FolderExports, Plugin } from '@seedcord/core/plugin';
 import { SeedcordErrorCode, paint } from '@seedcord/errors';
 import { SeedcordError, SeedcordTypeError } from '@seedcord/errors/internal';
 import { keepDefined } from '@seedcord/utils';
 import { pluralize } from '@seedcord/utils/internal';
-import { Envapter } from 'envapt';
 
 import { CronTasks } from './CronTasks';
 import { isTaskClass, taskKey, taskMetadata } from './decorators/RegisterTask';
@@ -115,8 +115,8 @@ export class Tasks extends Plugin<{ transport: 'any'; runtime: 'server' }> {
     }
 
     /**
-     * Starts the cron jobs and the timers for pending jobs once the bot has logged in. In development, a
-     * task without `runInDev` waits.
+     * Starts the cron jobs and the timers for pending jobs once the bot has logged in. Under `seedcord dev`,
+     * only tasks with `runInDev` start.
      */
     public override ready(): void {
         this.#cronTasks.start();
@@ -127,7 +127,7 @@ export class Tasks extends Plugin<{ transport: 'any'; runtime: 'server' }> {
 
         const keys = allOf.format(held.map((loaded) => paint.sky(loaded.key)));
         this.logger.info(
-            `${keys} won't run on their own in development. Call ${paint.bold('trigger()')} to run one, or pass ${paint.bold('runInDev: true')} to the plugin or the task`
+            `${keys} wait under seedcord dev. Pass ${paint.bold('runInDev: true')} to the plugin or the task to run them on their own`
         );
     }
 
@@ -202,7 +202,8 @@ export class Tasks extends Plugin<{ transport: 'any'; runtime: 'server' }> {
     }
 
     /**
-     * When a cron job runs next, or `null` while it's paused or once it doesn't have any runs left.
+     * When a cron job runs next, or `null` while it's paused or waiting under `seedcord dev`, or once it doesn't
+     * have any runs left.
      *
      * @throws A **SeedcordError** with `PluginTasksNotLoaded` when the plugin did not load `Task`.
      * @throws A **SeedcordTypeError** with `PluginTasksKeyTaken` when a different class loaded under `Task`'s key.
@@ -226,8 +227,8 @@ export class Tasks extends Plugin<{ transport: 'any'; runtime: 'server' }> {
     }
 
     /**
-     * Starts a cron job that `pause()` or the `paused` option stopped. It runs at its next match and skips the
-     * ones it missed.
+     * Starts a cron job that `pause()`, the `paused` option, or `seedcord dev` stopped. It runs at its next match
+     * and skips the ones it missed.
      *
      * @throws A **SeedcordError** with `PluginTasksNotLoaded` when the plugin did not load `Task`.
      * @throws A **SeedcordTypeError** with `PluginTasksKeyTaken` when a different class loaded under `Task`'s key.
@@ -293,12 +294,13 @@ export class Tasks extends Plugin<{ transport: 'any'; runtime: 'server' }> {
             file,
             logger: this.logger.withLabel(meta.key),
             protect: meta.protect,
-            heldInDev: Envapter.isDevelopment && !(meta.runInDev ?? this.#runInDev),
+            heldInDev: getDevChannel() !== undefined && !(meta.runInDev ?? this.#runInDev),
             state: slot.state
         };
 
         slot.load(loaded, meta.kind === 'cron' ? this.#cronTasks.build(loaded, meta) : undefined);
         this.#cronTasks.sync(slot);
+        this.#scheduled.sync(meta.key);
     }
 
     #unregister(Task: TaskClass): void {

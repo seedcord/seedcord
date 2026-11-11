@@ -10,7 +10,6 @@ export interface LoadedTask {
     readonly file: string;
     readonly logger: Logger;
     readonly protect: boolean;
-    // set in development for a task that doesn't opt in through runInDev
     readonly heldInDev: boolean;
     readonly state: TaskState;
 }
