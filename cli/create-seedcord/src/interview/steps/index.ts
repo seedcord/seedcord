@@ -4,6 +4,7 @@ import { directoryStep } from './directory';
 import { runtimeStep } from './runtime';
 import { testingGuildsStep } from './testingGuilds';
 import { tokenStep } from './token';
+import { toolsStep } from './tools';
 import { transportStep } from './transport';
 import { gitStep, installStep } from './yesNo';
 
@@ -17,6 +18,7 @@ export const STEPS: AnyStep[] = [
     tokenStep,
     testingGuildsStep,
     botColorStep,
+    toolsStep,
     installStep,
     gitStep
 ];
