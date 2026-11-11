@@ -4,8 +4,8 @@ import { describe, expect, it } from 'vite-plus/test';
 import { deferFlags, sendFlags } from '#reply/flags';
 
 describe('sendFlags', () => {
-    it('always sets IsComponentsV2 and defaults to ephemeral', () => {
-        const flags = sendFlags();
+    it('always sets IsComponentsV2 and maps ephemeral to Ephemeral', () => {
+        const flags = sendFlags({ ephemeral: true });
         expect(flags & MessageFlags.IsComponentsV2).toBe(MessageFlags.IsComponentsV2);
         expect(flags & MessageFlags.Ephemeral).toBe(MessageFlags.Ephemeral);
         expect(flags & MessageFlags.SuppressNotifications).toBe(0);
@@ -18,7 +18,7 @@ describe('sendFlags', () => {
     });
 
     it('maps silent to SuppressNotifications', () => {
-        const flags = sendFlags({ silent: true });
+        const flags = sendFlags({ ephemeral: true, silent: true });
         expect(flags & MessageFlags.SuppressNotifications).toBe(MessageFlags.SuppressNotifications);
     });
 
@@ -29,8 +29,8 @@ describe('sendFlags', () => {
 });
 
 describe('deferFlags', () => {
-    it('defaults to ephemeral with the content flag unset', () => {
-        expect(deferFlags()).toBe(MessageFlags.Ephemeral);
+    it('maps ephemeral to Ephemeral with the content flag unset', () => {
+        expect(deferFlags({ ephemeral: true })).toBe(MessageFlags.Ephemeral);
     });
 
     it('is zero when ephemeral is false', () => {

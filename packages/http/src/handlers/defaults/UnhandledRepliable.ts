@@ -6,6 +6,6 @@ import type { Repliables } from '#handlers/interactionTypes';
 // a reply failure here reaches the dispatch fault boundary directly
 export class UnhandledRepliable extends InteractionHandler<Repliables> {
     async execute(): Promise<void> {
-        await this.reply('Feature not implemented yet.');
+        await this.reply('Feature not implemented yet.', { ephemeral: true });
     }
 }

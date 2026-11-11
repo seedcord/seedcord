@@ -33,7 +33,7 @@ The person who ran the command sees your bot thinking until [`edit()`](ref:gatew
 
 ## Set ephemeral when you defer
 
-`defer()` takes an `ephemeral` option, and it's on by default. Only the person who ran the command sees the placeholder and the reply that fills it.
+`defer()` takes an `ephemeral` option, and it's on unless [your config changes the default](/replying#make-replies-public-by-default). Only the person who ran the command sees the placeholder and the reply that fills it.
 
 ```ts twoslash
 import { SlashHandler, SlashRoute } from '@seedcord/gateway';

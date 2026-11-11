@@ -1,11 +1,10 @@
 /** Options for reply / followUp / send. send() applies them only when it creates a new message. */
 export interface SendOpts {
     /**
-     * Whether only the invoking user sees the reply.
-     *
-     * @defaultValue `true`
+     * Whether only the invoking user sees the reply. Leave it out to use the bot's
+     * `bot.interactions.ephemeral`, which is `true` unless the config sets it.
      */
-    readonly ephemeral?: boolean;
+    readonly ephemeral?: boolean | undefined;
     /**
      * Whether the message skips push and desktop notifications.
      *
@@ -17,9 +16,8 @@ export interface SendOpts {
 /** Options for defer. */
 export interface DeferOpts {
     /**
-     * Whether the eventual reply is ephemeral.
-     *
-     * @defaultValue `true`
+     * Whether the eventual reply is ephemeral. Leave it out to use the bot's `bot.interactions.ephemeral`,
+     * which is `true` unless the config sets it.
      */
-    readonly ephemeral?: boolean;
+    readonly ephemeral?: boolean | undefined;
 }

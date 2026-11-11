@@ -152,6 +152,34 @@ class Ban extends SlashHandler<'ban'> {
 
 `followUp()` takes `ephemeral` and `silent` the same way. `edit()` doesn't take options, since it rewrites a message that already has its flags.
 
+### Make replies public by default
+
+If most of your replies should go to the whole channel, set `ephemeral: false` under `bot.interactions` in your config. You then skip the option on every reply.
+
+```ts twoslash title="src/bot.ts"
+import { resolve } from 'node:path';
+
+import { Seedcord } from '@seedcord/gateway';
+import { GatewayIntentBits } from 'discord.js';
+
+export const seedcord = new Seedcord({
+    bot: {
+        clientOptions: { intents: [GatewayIntentBits.Guilds] },
+        interactions: {
+            path: resolve(import.meta.dirname, './handlers'),
+            ephemeral: false
+        },
+        commands: { path: null },
+        events: { path: null }
+    },
+    subscribers: { path: null }
+});
+```
+
+`reply()`, `followUp()`, `send()`, `defer()`, a paginator, and a confirm prompt all use that default when you leave `ephemeral` out. Pass `ephemeral: true` on a reply that only its user should see.
+
+Fault replies and [notices](/replying/throwing) don't read this default. seedcord sends them ephemeral unless a notice sets its own `ephemeral` to `false`, so an error or a refusal only shows to the person who hit it.
+
 ## The message you get back
 
 `reply()` resolves to the message it created. Keep that message and you can rewrite or delete it later, which [Follow-ups and edits](/replying/more-messages) shows.
