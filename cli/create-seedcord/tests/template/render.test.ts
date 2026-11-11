@@ -63,6 +63,49 @@ async function scriptsOf(answers: ScaffoldAnswers): Promise<Record<string, strin
 }
 
 describe('renderTemplates', () => {
+    it.each([
+        [
+            'eslint',
+            'eslint.config.ts',
+            'eslint "src/**/*.ts" --cache',
+            'prettier --check "src/**/*.{ts,json,md}" --cache'
+        ],
+        ['biome', 'biome.json', 'biome lint src', 'biome format src'],
+        ['oxlint', 'oxlint.config.ts', 'oxlint src', 'oxfmt --check']
+    ] as const)('renders the %s tooling and its scripts', async (tools, config, expectedLint, expectedFormat) => {
+        const files = await render({ ...GATEWAY, tools });
+        const scripts = await scriptsOf({ ...GATEWAY, tools });
+
+        expect(files.has(config)).toBe(true);
+        expect(scripts.lint).toBe(expectedLint);
+        expect(scripts['fmt:check']).toBe(expectedFormat);
+    });
+
+    it('renders Oxfmt config with Oxlint and not with the other tools', async () => {
+        const oxlint = await render({ ...GATEWAY, tools: 'oxlint' });
+        const biome = await render({ ...GATEWAY, tools: 'biome' });
+        const eslint = await render(GATEWAY);
+
+        expect(oxlint.has('oxfmt.config.ts')).toBe(true);
+        expect(biome.has('oxfmt.config.ts')).toBe(false);
+        expect(eslint.has('oxfmt.config.ts')).toBe(false);
+    });
+
+    it('renders only the selected linting configuration', async () => {
+        const [eslint, biome, oxlint] = await Promise.all([
+            render({ ...GATEWAY, tools: 'eslint' }),
+            render({ ...GATEWAY, tools: 'biome' }),
+            render({ ...GATEWAY, tools: 'oxlint' })
+        ]);
+
+        expect(eslint.has('biome.json')).toBe(false);
+        expect(eslint.has('oxlint.config.ts')).toBe(false);
+        expect(biome.has('eslint.config.ts')).toBe(false);
+        expect(biome.has('oxlint.config.ts')).toBe(false);
+        expect(oxlint.has('eslint.config.ts')).toBe(false);
+        expect(oxlint.has('biome.json')).toBe(false);
+    });
+
     it('writes a bunfig.toml that runs the cli on Bun for a Bun project', async () => {
         const files = await renderTemplates(
             TEMPLATES,
