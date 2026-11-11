@@ -7,7 +7,7 @@
         "useIgnoreFile": true
     },
     "files": {
-        "includes": ["!!**/seedcord-gen.ts", "!!templates/**"]
+        "includes": ["**", "!**/seedcord-gen.ts", "!**/templates/**"]
     },
     "formatter": {
         "enabled": true,
@@ -31,7 +31,21 @@
     "linter": {
         "enabled": true,
         "rules": {
-            "recommended": true
+            "recommended": true,
+            "correctness": {
+                "noUnusedImports": "error",
+                "noUnusedVariables": "error"
+            },
+            "style": {
+                "noNonNullAssertion": "error",
+                "useConst": "error",
+                "useImportType": "error"
+            },
+            "suspicious": {
+                "noDebugger": "error",
+                "noDoubleEquals": "error",
+                "noExplicitAny": "error"
+            }
         }
     }
 }
