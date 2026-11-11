@@ -3,6 +3,7 @@ import path from 'node:path';
 
 import { setDevChannel } from '@seedcord/core/internal';
 import { Envapter, Environment } from 'envapt';
+import { dedent } from 'es-toolkit';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vite-plus/test';
 
 import { Later } from '#tests/fixtures/dev/Later';
@@ -108,25 +109,24 @@ describe('Tasks under seedcord dev', () => {
     });
 
     describe('a save that changes runInDev on a scheduled task', () => {
-        const source = (runInDev: boolean): string =>
-            [
-                "import { RegisterTask } from '#src/decorators/RegisterTask';",
-                "import { Task } from '#src/Task';",
-                "import type { TestHost } from '#tests/utils/host';",
-                `@RegisterTask({ runInDev: ${String(runInDev)} })`,
-                'export class Flip extends Task<void, TestHost> {',
-                '    public async execute(): Promise<void> {',
-                '        this.core.runs.push({ task: this.key, trigger: this.trigger, data: this.data });',
-                '        await Promise.resolve();',
-                '    }',
-                '}'
-            ].join('\n');
+        const source = (runInDev: boolean): string => dedent`
+            import { RegisterTask } from '#src/decorators/RegisterTask';
+            import { Task } from '#src/Task';
+            import type { TestHost } from '#tests/utils/host';
+            @RegisterTask({ runInDev: ${runInDev} })
+            export class Flip extends Task<void, TestHost> {
+                public async execute(): Promise<void> {
+                    this.core.runs.push({ task: this.key, trigger: this.trigger, data: this.data });
+                    await Promise.resolve();
+                }
+            }
+        `;
 
         it.each([
             { from: false, to: true, runs: 1 },
             { from: true, to: false, runs: 0 }
         ])('from $from to $to leaves $runs runs of a stored job', async ({ from, to, runs }) => {
-            await using folder = await tempFolder(`run-in-dev-${String(from)}`);
+            await using folder = await tempFolder(`run-in-dev-${from}`);
             const file = path.join(folder.path, 'Flip.ts');
             await writeFile(file, source(from));
             await using booted = await start({ path: folder.path });
