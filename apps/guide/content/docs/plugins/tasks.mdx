@@ -171,7 +171,7 @@ export class Poll extends Task {
 
 Under `seedcord dev`, cron jobs and scheduled tasks don't run on their own, so a task can't change the data you're debugging. [`schedule()`](ref:plugin-tasks/Tasks.schedule) still stores a job, and [`jobs()`](ref:plugin-tasks/Tasks.jobs) still lists it. Once the bot is ready, the plugin logs which tasks are waiting.
 
-To run a task that takes no data while you test it, call [`trigger()`](ref:plugin-tasks/Tasks.trigger). [`resume()`](ref:plugin-tasks/Tasks.resume) lets a waiting cron job run on its pattern until the bot restarts.
+To run a task without data while you test it, call [`trigger()`](ref:plugin-tasks/Tasks.trigger). [`resume()`](ref:plugin-tasks/Tasks.resume) lets a waiting cron job run on its pattern until the bot restarts.
 
 To let tasks run on their own, pass `runInDev: true`. On the plugin, it covers every task:
 
