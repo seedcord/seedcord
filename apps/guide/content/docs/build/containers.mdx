@@ -155,13 +155,29 @@ services:
             dockerfile: ./Dockerfile
         container_name: discord-bot
         env_file: ./.env
+        # Make sure DATABASE_URL (or the env name you choose to contain your connection string) is set:
+        # DATABASE_URL: postgres://${POSTGRES_USER}:${POSTGRES_PASSWORD}@postgres:5432/${POSTGRES_DB}
+        # (Docker can expand environment variables inside .env as well)
         volumes:
             - ./logs:/app/logs
+        depends_on:
+            db:
+                condition: service_healthy
     db: # Database service, you simply pull the image and run
         image: postgres:latest
         container_name: discord-bot-db
+        restart: unless-stopped
         environment:
-            - POSTGRES_PASSWORD=some-password-here
+            POSTGRES_USER: ${POSTGRES_USER:-postgres}
+            POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?set POSTGRES_PASSWORD in .env}
+            POSTGRES_DB: ${POSTGRES_DB:-postgres}
+        volumes:
+            - db-data:/var/lib/postgresql
+        ports:
+            - '127.0.0.1:5432:5432'
+
+volumes:
+    db-data:
 ```
 
 - Passing in runtime secrets or variables (with or without the use of `.env`)
