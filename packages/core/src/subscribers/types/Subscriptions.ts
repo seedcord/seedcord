@@ -1,9 +1,9 @@
 import type { WriteMethod } from '#reply/responseReport';
 import type { InteractionKind } from '#src/metadataKeys';
 import type { Notice } from '#stops/Notice';
-import type { TypedExclude } from '@seedcord/types';
 import type { UUID } from '@seedcord/types/internal';
 import type { APIApplicationCommand } from 'discord-api-types/v10';
+import type { ExcludeStrict } from 'type-fest';
 
 /**
  * How a dispatch finished. The thrown value's type sets this, wherever it was thrown. A `Silence` and a
@@ -57,12 +57,12 @@ export interface EventFaultSource {
  * The fields both `responseAttempted` shapes carry.
  */
 export interface AttemptedWrite {
-    /** The dispatch this write belongs to, for joining against every other key it published. */
+    /** The dispatch that this write belongs to, for joining against every other key it published. */
     readonly dispatchId: string;
     readonly routeId: string;
-    /** The interaction this write belongs to, for joining against `interactionDispatched`. */
+    /** The interaction that this write belongs to, for joining against `interactionDispatched`. */
     readonly interactionId: string;
-    /** `send` routes to another verb, so it reports the verb that ran. */
+    /** The verb that ran. A `send` reports the verb it routed to. */
     readonly method: WriteMethod;
     readonly durationMs: number;
 }
@@ -104,7 +104,7 @@ export interface DefaultSubscriptions {
     /** Triggered when an unhandled exception (a raw non-Notice throw) occurs. */
     readonly unknownException: {
         readonly uuid: UUID;
-        /** The dispatch that raised it. Null on a process-level throw, which has no dispatch behind it. */
+        /** The dispatch that raised it. Null on a process-level throw, which runs outside any dispatch. */
         readonly dispatchId: string | null;
         readonly error: Error;
         /** Where the throw came from, `slash:ban` for an interaction and `event:name:handler` for an event. */
@@ -119,7 +119,7 @@ export interface DefaultSubscriptions {
         readonly uuid: UUID;
         /** The dispatch that reported it. */
         readonly dispatchId: string;
-        /** Where the reported Notice came from, the same shape `unknownException.origin` carries. */
+        /** Where the reported Notice came from, the same shape `unknownException.origin` has. */
         readonly origin: string;
         readonly source: FaultSource;
     };
@@ -138,7 +138,7 @@ export interface DefaultSubscriptions {
         readonly outcome: DispatchOutcome;
         /** True when no route matched and the unhandled default ran. */
         readonly fallback: boolean;
-        /** Who ran the route. Null when the payload carried no user. */
+        /** Who ran the route. Null when the payload didn't carry a user. */
         readonly userId: string | null;
         /** Guild the interaction came from, null in DMs. */
         readonly guildId: string | null;
@@ -147,15 +147,15 @@ export interface DefaultSubscriptions {
         /**
          * Discord's interaction creation until dispatch entry, read from the snowflake. This covers
          * network transit plus any time your bot was busy before starting. A rise points at either
-         * Discord or your own backlog. It subtracts a Discord timestamp from the host clock, so a host
-         * running behind Discord reports a negative value.
+         * Discord or your own backlog. A host running behind Discord reports a negative value
+         * because this subtracts a Discord timestamp from the host clock.
          */
         readonly queuedMs: number;
     };
     /**
      * Triggered on every write through the reply surface, several times per interaction. A write that
      * throws reports here too, with `outcome` `failed`. A write that reaches Discord and then returns an
-     * unexpected shape publishes nothing, since the callback succeeded and carries no message to name.
+     * unexpected shape publishes nothing, since the callback succeeded and doesn't carry a message to name.
      */
     readonly responseAttempted: ResponseAttempt;
     /** Triggered after each command deploy, including the redeploy after a hot reload. */
@@ -192,7 +192,7 @@ export type SubscriptionKey = keyof AllSubscriptions;
  * The keys `publish` accepts. The framework's own keys are excluded, since only the framework
  * produces them.
  */
-export type PublishableKey = TypedExclude<SubscriptionKey, keyof DefaultSubscriptions>;
+export type PublishableKey = ExcludeStrict<SubscriptionKey, keyof DefaultSubscriptions>;
 
 /**
  * The payload type for a subscriber event.

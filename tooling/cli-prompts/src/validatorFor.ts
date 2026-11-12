@@ -1,9 +1,10 @@
 import { isSeedcordError } from '@seedcord/errors';
 
 import type { SeedcordErrorCode } from '@seedcord/errors';
+import type { NonEmptyTuple } from 'type-fest';
 
 export function validatorFor(
-    retypeCodes: readonly [SeedcordErrorCode, ...SeedcordErrorCode[]],
+    retypeCodes: NonEmptyTuple<SeedcordErrorCode>,
     check: (value: string) => void
 ): (value: string) => string | undefined {
     return (value) => {

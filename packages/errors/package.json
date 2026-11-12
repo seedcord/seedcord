@@ -66,6 +66,7 @@
     "devDependencies": {
         "@seedcord/brand": "workspace:^",
         "@seedcord/eslint-config": "workspace:^",
+        "@seedcord/prose": "workspace:^",
         "@seedcord/tsconfig": "workspace:^",
         "@seedcord/tsdown-config": "workspace:^",
         "@seedcord/vite-config": "workspace:^"

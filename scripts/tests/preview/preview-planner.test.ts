@@ -87,7 +87,7 @@ describe('PreviewPlanner', () => {
         );
     });
 
-    it('refuses a comment when that commit has no build', async () => {
+    it('refuses a comment when that commit is missing a build', async () => {
         await expect(commentBy('admin', []).forComment('someone')).rejects.toThrow(
             `${SHA} doesn't have a site-preview.yml run`
         );

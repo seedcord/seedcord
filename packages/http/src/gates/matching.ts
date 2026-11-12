@@ -47,7 +47,7 @@ type SelectKindName<Data> = Data extends APIMessageStringSelectInteractionData
 // TS truncates the raw API type in a mismatch error
 type KindName<Ctx> = Ctx extends Ungateable
     ? 'autocomplete'
-    : // the http context defines no guild permission fields
+    : // the http context doesn't define guild permission fields
       Ctx extends GuildPermissionsContext
       ? 'gateway (guild permissions)'
       : Ctx extends InteractionGateContext<infer Repliable>

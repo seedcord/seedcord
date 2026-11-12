@@ -55,7 +55,7 @@ const PING_COMMAND = `
 
 describe('dev channel routing', () => {
     afterEach(() => {
-        // drop the fake channel so a later test never inherits it
+        // clear the fake channel so a later test never inherits it
         setDevChannel(undefined);
         vi.clearAllMocks();
     });

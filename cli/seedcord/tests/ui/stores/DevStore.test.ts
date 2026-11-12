@@ -16,7 +16,7 @@ describe('DevStore', () => {
         });
     });
 
-    it('drops a pending confirm once the phase changes under it', () => {
+    it('clears a pending confirm once the phase changes under it', () => {
         const store = new DevStore();
         store.setPhase('running');
         store.setPendingConfirm('disconnect');
@@ -118,7 +118,7 @@ describe('DevStore', () => {
         expect(store.getState().commandUpdatePrompt).toEqual(files);
     });
 
-    it.each(['beginRestart', 'beginDisconnect'] as const)('%s drops the port of the run that ended', (method) => {
+    it.each(['beginRestart', 'beginDisconnect'] as const)('%s clears the port of the run that ended', (method) => {
         const store = new DevStore();
         store.apply({ type: 'server-port', port: 4321 });
 
@@ -141,7 +141,7 @@ describe('DevStore', () => {
         expect(store.getState().status).toBe('Starting workerd…');
     });
 
-    it('clearPrompt drops the pending prompt with one change', () => {
+    it('clearPrompt removes the pending prompt with one change', () => {
         const store = new DevStore();
         store.apply({ type: 'command-update-prompt', files: ['a.ts'] });
         const onChange = vi.fn();

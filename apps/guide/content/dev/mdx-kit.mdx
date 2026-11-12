@@ -9,7 +9,7 @@ This page is the catalog. Each section covers one thing the pipeline supports an
 
 The header on a plain fence holds the copy button.
 
-```ts title="src/commands/Ping.ts"
+```ts plain title="src/commands/Ping.ts"
 import { SlashHandler, SlashRoute } from '@seedcord/gateway';
 
 @SlashRoute('ping')
@@ -26,7 +26,7 @@ A fence with no `title` still gets the header.
 pnpm add @seedcord/gateway
 ```
 
-Tagging a fence `output` drops the copy button, for lines a terminal printed back.
+Tagging a fence `output` hides the copy button, for lines a terminal printed back.
 
 ```sh output
 ✓ 12 routes written to .seedcord/manifest.ts
@@ -39,7 +39,7 @@ Tagging a fence `output` drops the copy button, for lines a terminal printed bac
 
 <Shell add="@seedcord/gateway discord.js" />
 
-It takes exactly one verb, and the verb decides which command each manager gets. Passing two or none throws while the page builds.
+It takes exactly one verb, and the verb sets which command each manager gets. Passing two or none throws while the page builds.
 
 <Shell create="seedcord" />
 
@@ -112,7 +112,7 @@ routes.p;
 
 ## Hovers
 
-On a `twoslash hovers` fence every token carries the type the compiler gave it. Hover one, or tab into the block and walk it with the arrow keys.
+On a `twoslash hovers` fence every token has the type the compiler gave it. Hover one, or tab into the block and walk it with the arrow keys.
 
 ```ts twoslash hovers
 import { SlashHandler, SlashRoute } from '@seedcord/gateway';
@@ -132,7 +132,7 @@ export class Ping extends SlashHandler<'ping'> {
 
 The compiler reads the whole fence. Cut markers set the first and last line that renders. A sample can carry the imports and the class it needs to compile without showing either.
 
-`// ---cut---` drops everything above it.
+`// ---cut---` hides everything above it.
 
 ```ts twoslash
 import { SlashHandler, SlashRoute } from '@seedcord/gateway';
@@ -163,7 +163,7 @@ class Ping extends SlashHandler<'ping'> {
 }
 ```
 
-`// ---cut-start---` and `// ---cut-end---` drop a range out of the middle and keep both ends.
+`// ---cut-start---` and `// ---cut-end---` hide a range in the middle and keep both ends.
 
 ```ts twoslash
 const routes = ['ping', 'ban'] as const;
@@ -176,7 +176,7 @@ const first = routes[0];
 
 ## Headings
 
-The section headings on this page are h2. h3 and h4 nest below them, and h4 is the deepest the pipeline accepts.
+The section headings on this page are h2. h3 and h4 nest below them, and h4 is the deepest that the pipeline accepts.
 
 ### An h3 under a section
 
@@ -189,7 +189,7 @@ An h1, h5, or h6 fails the build.
 ## Callouts
 
 <Callout type="note">
-    A note carries something the reader can act on later.
+    A note holds something the reader can act on later.
 </Callout>
 
 <Callout type="tip">
@@ -197,7 +197,7 @@ An h1, h5, or h6 fails the build.
 </Callout>
 
 <Callout type="warning">
-    A warning marks what commonly goes wrong.
+    A warning marks what commonly breaks.
 </Callout>
 
 <Callout type="danger">
@@ -226,7 +226,7 @@ A callout takes whole blocks. A fence renders inside one.
 <Callout type="tip">
     Both mocks ship this command already.
 
-    ```ts title="src/commands/Ping.ts"
+    ```ts plain title="src/commands/Ping.ts"
     await this.reply('Pong');
     ```
 
@@ -236,13 +236,13 @@ A callout takes whole blocks. A fence renders inside one.
 
 A symbol link is a markdown link with a `ref:` target, and the slug comes off the symbol. [Notice](ref:core/Notice), [Silence](ref:core/Silence), and [Fault](ref:core/Fault).
 
-A multi-word name kebab-cases itself: [SlashHandler](ref:gateway/SlashHandler) reaches `slash-handler`. A dotted member anchors on its owner's page: [Paginator.start](ref:gateway/Paginator.start) reaches `paginator#start`. A generic drops off the end, which puts [`Plugin<Options>`](ref:core/Plugin<Options>) and [Plugin](ref:core/Plugin) on one page.
+A multi-word name kebab-cases itself: [SlashHandler](ref:gateway/SlashHandler) reaches `slash-handler`. A dotted member anchors on its owner's page: [Paginator.start](ref:gateway/Paginator.start) reaches `paginator#start`. The link ignores a generic at the end, which puts [`Plugin<Options>`](ref:core/Plugin<Options>) and [Plugin](ref:core/Plugin) on one page.
 
-Dropping the symbol reaches the package itself, so [`@seedcord/utils`](ref:utils) opens its landing page.
+Leaving out the symbol reaches the package itself, so [`@seedcord/utils`](ref:utils) opens the package's own page.
 
-The link text is free. [The card a refusal renders](ref:core/Notice) points at the same page as its own name. Each package is its own segment, so [http's Seedcord](ref:http/Seedcord) and [gateway's Seedcord](ref:gateway/Seedcord) each reach their own. Every one of these opens in a new tab.
+The link text is free. [The card that a refusal renders](ref:core/Notice) points at the same page as its own name. Each package is its own segment, so [http's Seedcord](ref:http/Seedcord) and [gateway's Seedcord](ref:gateway/Seedcord) each reach their own. Every one of these opens in a new tab.
 
-A heading takes no symbol link, since its text also renders in the table of contents. The build says so by name.
+You can't put a symbol link in a heading, since its text also renders in the table of contents. The build reports it by name.
 
 ## Inline marks
 
@@ -273,7 +273,7 @@ Prose between them.
 
 > A quote can run to two paragraphs.
 >
-> The second one carries its own marker.
+> The second one has its own marker.
 
 ## A rule
 
@@ -289,7 +289,7 @@ Markdown image syntax gets the border by default.
 
 ![The seedcord materwelon mark, framed](/logo.svg)
 
-`<Image frame={false} />` turns the border off, for a mark or a diagram on a transparent ground. Markdown has no slot for that, so the capitalized name is the way to reach it.
+`<Image frame={false} />` turns the border off, for a mark or a diagram on a transparent ground. Markdown can't express that, so the capitalized name is the way to reach it.
 
 <Image
     src="/logo.svg"
@@ -362,7 +362,7 @@ A table wider than the column scrolls on its own. The page never scrolls sideway
 | Text input | 1 to 100 |  | 100 |  | 4000 | `max_length` 1 to 4000 |
 | ~~Modal~~ | 1 to 100 |  |  |  |  | `title` 45, 1 to 5 components |
 
-Wrapping a table in prettier-ignore keeps the source compact. A one-row edit then stays a one-line diff.
+Wrapping a table in prettier-ignore keeps the source compact. A one-row edit then makes a one-line diff.
 
 {/* prettier-ignore-start */}
 

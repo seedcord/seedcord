@@ -72,7 +72,7 @@ describe('reply surface error codes', () => {
 
         const message = stripAnsi(error.message);
         expect(message).toContain('reply()');
-        expect(message).toContain('no message');
+        expect(message).toContain("didn't return a message");
         expect(message).toContain('route slash:ban');
     });
 });

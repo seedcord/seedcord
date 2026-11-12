@@ -182,7 +182,7 @@ export class InlineConstraintBase<TypeM extends { token: string }> {
  */
 export class InlineConstraintChild extends InlineConstraintBase<{ token: string; revision: number }> {
     /**
-     * A property the subclass declares itself.
+     * A property that the subclass declares itself.
      */
     public ownProp = 'child';
 }
@@ -192,17 +192,17 @@ export class InlineConstraintChild extends InlineConstraintBase<{ token: string;
  */
 export class InlineConstraintShadow<TypeM extends { token: string }> {
     /**
-     * The token this instance stores.
+     * The token that this instance stores.
      */
     public token: TypeM | null = null;
 }
 
 /**
- * A class whose constraint carries a call, a method, and a construct signature.
+ * A class whose constraint has a call, a method, and a construct signature.
  */
 export class InlineConstraintCallable<TypeM extends { (): void; run(): void; new (): object }> {
     /**
-     * The value this instance holds.
+     * The value that this instance holds.
      */
     public held: TypeM | null = null;
 }
@@ -212,7 +212,7 @@ export class InlineConstraintCallable<TypeM extends { (): void; run(): void; new
  */
 export abstract class OverrideBase {
     /**
-     * A tag the subclass narrows.
+     * A tag that the subclass narrows.
      */
     public tag = 'base';
 
@@ -231,7 +231,7 @@ export abstract class OverrideBase {
     public abstract load(): Promise<void>;
 
     /**
-     * A label the subclass replaces.
+     * A label that the subclass replaces.
      */
     public label = 'base';
 

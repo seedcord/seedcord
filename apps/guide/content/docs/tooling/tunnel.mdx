@@ -17,7 +17,7 @@ An [edge bot](/tooling/dev#running-an-edge-bot) uses the same tunnel. `seedcord 
 
 `cloudflared` is a small program from Cloudflare. You run it on your machine. It opens a connection to Cloudflare, and Cloudflare gives you a public https address. Anything posted to that address comes back through the same connection to your local port.
 
-Your router and firewall stay as they are, since your machine only makes outgoing connections.
+You don't change your router or firewall, since your machine only makes outgoing connections.
 
 You install `cloudflared` once. After that, `seedcord dev` starts it, reads the address, and stops it again when you quit.
 
@@ -60,7 +60,7 @@ Cloudflare assigns a fresh hostname every run, so the last step writes a new end
 
 ## When you already have a URL
 
-A quick tunnel changes your endpoint on every run, and each run takes a few seconds to set up. When you want an address that stays the same, give `tunnel` an https URL you already serve. A named cloudflared tunnel, a tailscale funnel, a reverse proxy, or a staging server all work.
+A quick tunnel changes your endpoint on every run, and each run takes a few seconds to set up. When you want an address that doesn't change, give `tunnel` an https URL you already serve. A named cloudflared tunnel, a tailscale funnel, a reverse proxy, or a staging server all work.
 
 ```ts twoslash title="seedcord.config.ts"
 import { defineConfig } from 'seedcord';
@@ -83,7 +83,7 @@ Set `tunnel` to `false` to skip all of it. Use this when you set the endpoint yo
 
 ## When it fails
 
-Your bot keeps running through each of these, and the error goes to the [`cli` channel](/built-ins/logging).
+Your bot keeps running through each of these, and seedcord logs the error to the [`cli` channel](/built-ins/logging).
 
 {/* prettier-ignore-start */}
 
@@ -92,7 +92,7 @@ Your bot keeps running through each of these, and the error goes to the [`cli` c
 | cloudflared didn't report a hostname within 60 seconds | `CliTunnelUrlUnavailable` |
 | your own URL didn't answer the `401` check within 60 seconds | `CliTunnelUnreachable` |
 | Discord refused the address | `CliTunnelNotVerified` |
-| cloudflared exited after going live | cloudflared exited, so the bot has no public endpoint |
+| cloudflared exited after the tunnel opened | cloudflared exited, so the bot lost its public endpoint |
 
 {/* prettier-ignore-end */}
 

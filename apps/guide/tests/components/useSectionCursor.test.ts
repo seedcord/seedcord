@@ -7,7 +7,7 @@ const HEADINGS = ['setup', 'options', 'replies'] as const;
 
 const scrolled: string[] = [];
 
-// jsdom lays nothing out, so each heading reports the top the test gives it
+// each heading reports the top that the test gives it because jsdom doesn't lay anything out
 function placeHeading(id: string, top: number): void {
     const heading = document.getElementById(id);
     if (heading === null) throw new Error(`no heading ${id}`);
@@ -51,7 +51,7 @@ describe('useSectionCursor', () => {
         expect(result.current.section()).toBe('options');
     });
 
-    it('goes from the first section to the top of the page and back', () => {
+    it('steps from the first section to the top of the page and back', () => {
         const { result } = renderHook(() => useSectionCursor(HEADINGS, 'setup'));
 
         act(() => result.current.step(-1));
@@ -78,7 +78,7 @@ describe('useSectionCursor', () => {
         expect(result.current.section()).toBe('');
     });
 
-    it('reads a page opened at the top as the page title, ahead of the heading in view', () => {
+    it('reads a page opened at the top as the page title, over the heading in view', () => {
         vi.stubGlobal('scrollY', 0);
         const { result } = renderHook(() => useSectionCursor(HEADINGS, 'setup'));
 

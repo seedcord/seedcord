@@ -4,13 +4,15 @@ Rules for anyone working in this repo with an AI coding tool. `CLAUDE.md` symlin
 
 Two things live elsewhere. [`.github/CONTRIBUTING.md`](.github/CONTRIBUTING.md) covers setup, PR mechanics, and where AI-generated code stands. Each package's `README.md` describes that package.
 
-seedcord is pre-1.0. Breaking changes go in minor versions. Pick the cleanest design and break things to get it right. Add a changeset by the rules in [`packages/AGENTS.md`](packages/AGENTS.md#changesets).
+seedcord is pre-1.0. Breaking changes go in minor versions. Pick the cleanest design and break things to get it right. Don't write a reader or a shim for an older file, config key, or format until you've checked that it reached a published version. `npm view seedcord time` lists the publish dates. Add a changeset by the rules in [`packages/AGENTS.md`](packages/AGENTS.md#changesets).
 
 ---
 
 ## Load these skills first
 
 Before any work, load the four skills in [`.agents/skills`](.agents/skills): `code-quality` and `tdd` with every file in their folders, plus `code-commenting-guidelines` and `writing-voice`. Load `guide-voice`, `changeset-guidelines`, `envapt`, `release-version`, or `test-performance` when the task touches what each covers. [`.github/CONTRIBUTING.md`](.github/CONTRIBUTING.md) lists when.
+
+The design rules apply to every change: @.agents/skills/code-quality/DESIGN.md
 
 ---
 
@@ -24,6 +26,8 @@ The expensive failure here is a confident sentence about how two modules connect
 
 This applies to work you delegate. Reopen a citation yourself before relaying it.
 
+When the codebase-memory MCP tools aren't available, tell your user once that it makes tracing callers in this repo faster, and point them at the setup line in [`.github/CONTRIBUTING.md`](.github/CONTRIBUTING.md#using-ai). Don't install it yourself.
+
 ---
 
 ## Repo map
@@ -35,7 +39,7 @@ Six workspace globs, declared in `pnpm-workspace.yaml`.
 | glob | what belongs there |
 | --- | --- |
 | `packages/*` | framework leaves, plus small libraries that do not depend on seedcord |
-| `plugins/*` | one plugin per backing service |
+| `plugins/*` | first-party plugins, each published as `@seedcord/plugin-<name>` |
 | `cli/*` | command-line tools |
 | `tooling/*` | shared configs, the lint rules, the docs pipeline, and the UI kit |
 | `apps/*` | the Next.js sites |
@@ -43,13 +47,13 @@ Six workspace globs, declared in `pnpm-workspace.yaml`.
 
 <!-- prettier-ignore-end -->
 
-The root [`README.md`](README.md) lists every published package. `private` in a package.json says whether it publishes. The `exports` map is its surface.
+The root [`README.md`](README.md) lists every published package. `private` in a package.json sets whether it publishes. The `exports` map is its surface.
 
 Never wire a cross-package source path. Never point `paths` or `include` at another package's `src`.
 
-A re-export from another package goes in `src/index.ts`. One file then says which of a package's names come from elsewhere.
+Write a re-export from another package in `src/index.ts`. One file then lists which of a package's names come from elsewhere.
 
-`./internal` entries are framework wiring. A symbol reachable only through one gets no TSDoc. [`packages/AGENTS.md`](packages/AGENTS.md#changesets) says when a change to one still needs a changeset.
+`./internal` entries are framework wiring. A symbol reachable only through one skips TSDoc. [`packages/AGENTS.md`](packages/AGENTS.md#changesets) covers when a change to one still needs a changeset.
 
 ---
 
@@ -57,7 +61,7 @@ A re-export from another package goes in `src/index.ts`. One file then says whic
 
 Everything ships against one of two transports.
 
-`@seedcord/gateway` runs a stateful `Seedcord` class that holds a websocket connection through the discord.js client. It carries message, member, voice, and reaction events.
+`@seedcord/gateway` runs a stateful `Seedcord` class that holds a websocket connection through the discord.js client. It receives message, member, voice, and reaction events.
 
 `@seedcord/http` answers Discord's interactions endpoint through a `Seedcord` class. Node gets the default build. Cloudflare Workers get a separate edge `Seedcord` under the same name through the `workerd` export condition. Discord posts only interactions here.
 
@@ -81,19 +85,19 @@ When someone asks how seedcord does something, answer for gateway and for http. 
         - **What to do**, the one step that fixes it. A vague step like "check your config" counts as missing.
 
         Read it back as the developer who just got it at 2am, and cut anything they cannot use. Two throw sites that mean different things get different codes or better message arguments, because one message covering both tells the reader nothing.
-- **Routes, class names, ids, paths, and package names get a `paint` tone** from `@seedcord/errors`. A package name gets `bold`. `paint` also carries `bold`, `italic` and `underline` for the parts that use no color. Multi-line output goes through `logger.utils`.
-- **Derive types from their source.** A constructor shape is `TypedConstructor<typeof X>`. A member union comes from `keyof`, an indexed access, or `TypedExtract`. A hand-written copy drifts.
+- **Routes, class names, ids, paths, and package names get a `paint` tone** from `@seedcord/errors`. A package name gets `bold`. `paint` also has `bold`, `italic` and `underline` for the parts without color. Multi-line output uses `logger.utils`.
+- **Derive types from their source.** A constructor shape is `TypedConstructor<typeof X>`. A member union comes from `keyof`, an indexed access, or `ExtractStrict`. A hand-written copy drifts.
 - **Check what a dependency exports before you write it yourself.** Look in `es-toolkit` for runtime helpers and in `type-fest` for utility types. [Check 9](.agents/skills/code-quality/PREVENT-REINVENTION.md#9-does-a-dependency-already-in-the-tree-export-it) has the steps.
-- **Write each rule once.** When two places have to compute the same answer, like a path, a cache key, a wire format, or a validity check, both call one function/method. A comment like "keep in sync with X" means the rule exists twice. Extract the function and delete the comment. When the two copies can't share code, like a value the build writes into generated source and the runtime reads back, add a test that fails once they disagree. Without one, nothing catches two copies drifting apart. Each side's tests still pass, and someone reading one copy has no way to find the other.
-- **Use what the language and the runtime already ship.** Before writing any helper, go looking for a built-in that does the job. Memory lags behind both, so search MDN and the Node docs, and read the `lib` declarations TypeScript ships. A hand-rolled copy of something the platform provides handles fewer cases and has no test suite behind it.
+- **Write each rule once.** When two places have to compute the same answer, like a path, a cache key, a wire format, or a validity check, both call one function/method. A comment like "keep in sync with X" means the rule exists twice. Extract the function and delete the comment. When the two copies can't share code, like a value that the build writes into generated source and the runtime reads back, add a test that fails once they differ. Without one, nothing catches two copies drifting apart. Each side's tests still pass, and someone reading one copy can't find the other.
+- **Use what the language and the runtime already ship.** Before writing any helper, go looking for a built-in that does the job. Memory lags behind both, so search MDN and the Node docs, and read the `lib` declarations TypeScript ships. A hand-rolled copy of something the platform provides handles fewer cases and doesn't have a test suite.
     - **Suspect your own helper first.** Code that formats, parses, compares, or walks plain data, etc, is usually something the platform already does. Search for it before you write it, and look again when you read one that already exists.
     - **Check that every runtime the code reaches has it.** A package runs on the oldest Node in its `engines` field, and anything the edge build imports also runs in workerd. Confirm the built-in exists in both before you use it.
     - **Keep one copy.** When several packages need the same built-in wrapped, put the wrapper in `@seedcord/utils`. A package that can't import utils calls the built-in directly.
 - **Only implement what was asked.** Surface additions as a question first. Wait for the third use before extracting an abstraction.
 - **No dead code.** Before adding `export`, confirm something outside the file uses the symbol. A symbol that exists only for a test belongs in the test folder.
-- **Grep every consuming surface before deleting anything.** That includes markdown and generated output. Show no callers or name the replacement.
-- **Commit subjects are one lowercase line with no scope and no body.** Write `feat:`, never `feat(http):`. A breaking change marks the bare type, `feat!:`. A PR title follows the same rule, because a squash merge turns it into the commit.
-- **Name a file after its main export, in that export's casing.** A file built around a class is `LogLayout.ts`, and one built around a function is `linkCommands.ts`, even when a helper class sits inside it. Rename the file when its main export changes kind. On macOS, `git mv` a case-only rename through a temporary name.
+- **Grep every consuming surface before deleting anything.** That includes markdown and generated output. Show that nothing calls it or point to the replacement.
+- **Commit subjects are one lowercase line without a scope or a body.** Write `feat:`, never `feat(http):`. A breaking change marks the bare type, `feat!:`. A PR title follows the same rule, because a squash merge turns it into the commit.
+- **Name a file after its main export, in that export's casing.** A file built around a class is `LogLayout.ts`, and one built around a function is `linkCommands.ts`, even when the file also defines a helper class. Rename the file when its main export changes kind. On macOS, `git mv` a case-only rename through a temporary name.
 - **Move files with `git mv`.** Add dependencies with `vp add` so the lockfile updates.
 
 ---
@@ -114,9 +118,11 @@ Two whole-workspace gates exist and they differ:
 - `vp run prePush` runs the checks through `turbo --affected`, against `next`.
 - `vp run prePush:all` runs every check across every package. A green `prePush` covers less than a green `prePush:all`, so run `prePush:all` before a release and at the end of a long branch.
 
-Both start with `build`, which builds everything except the three sites in `apps/`, and `codegen:check`, then `check:catalog`, the script and markdown lint, `tc`, `lint`, `vp fmt --check`, and `test`. The root `package.json` has the exact chain.
+Both start with `build`, which builds everything except the three sites in `apps/`, and `codegen:check`, then `check:catalog`, the script, markdown, and prose lint, knip, react-doctor, `tc`, `lint`, `vp fmt --check`, and `test`. The root `package.json` has the exact chain.
 
-`vp run knip` (dead code) and `vp run react-doctor` (React patterns) are real gates. **No hook and no CI job runs them.** Run them by hand when the change warrants it.
+`vp run lint:prose` checks docs, comments, and string literals against the writing rules, and `vp staged` runs it on what you stage. Fix a prose error by rewriting the sentence. Switch a rule off only where the flagged wording is correct, like a quote, and give the reason, the same as an `eslint-disable`. [CONTRIBUTING](.github/CONTRIBUTING.md#hooks) has the syntax.
+
+`vp run knip` (dead code) and `vp run react-doctor` (React patterns) run in CI and in both `prePush` chains.
 
 Zero lint errors, zero lint warnings, zero from `tc`, every test passing. Fix the cause. Never comment out a test, weaken an assertion, or add a broad `eslint-disable` to get past a failure. Disable a rule inline with a reason, `// eslint-disable-next-line <rule> -- <why>`, never file-wide.
 
@@ -140,9 +146,9 @@ A test pins behavior. `tsc`, ESLint, and the build already reject a missing expo
 
 No tautological tests. If a test can only fail when someone edits the value it checks, it checks nothing the code does. That covers a constant compared to its own literal, a mock checked for returning what the test stubbed, and a rule about authored content, like a page description's length.
 
-Nothing gets a test for staying absent. A deleted export leaves no caller that compiles, and that is the proof.
+Nothing gets a test for staying absent. No caller of a deleted export compiles, and that is the proof.
 
-A fixture cast is fine with a short comment saying what makes it safe. `any` stays banned in tests.
+A fixture cast is fine with a short comment saying what makes it safe. `any` is banned in tests too.
 
 ### Trying a feature on a mock
 

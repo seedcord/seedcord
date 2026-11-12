@@ -1,476 +1,77 @@
 ---
 name: writing-voice
-description: Use this when writing or reviewing any prose - docs, READMEs, code comments, commit messages, PR descriptions, changesets, and chat replies. Defines plain words over compressed abstractions, verbs over invented nouns, a test for anthropomorphism you can apply to any verb, the punctuation bans, and a hype ban-list.
+description: Use this when writing or reviewing any prose - docs, READMEs, code comments, commit messages, PR descriptions, changesets, and chat replies. Covers who does what in a sentence, plain words, one claim per sentence, negation, and the test that tells a good rewrite from a worse one.
 ---
 
 # Writing Voice
 
-Write the sentence you would say out loud to another developer. Then check it against the rules below.
+Write the sentence you would say out loud to another developer at the keyboard. This covers everything a person reads: a comment, TSDoc, an error message, a changeset, a PR, a guide page, and a chat reply.
 
-This covers everything a human reads. A field description, a `//` comment, a commit body, a changeset, a PR, and a reply in chat all get the same voice.
+**Write the simplest sentence that says the fact.** Say it out loud the way you'd tell someone next to you, and write that version. Following the rules below cannot make a bad sentence good.
 
----
+Vale checks the word bans, the punctuation, and every shape that a pattern can match. Its rules are in [`tooling/prose/vale/Seedcord/`](../../../tooling/prose/vale/Seedcord/), and each one gives a fix with the hit. The Claude Code hook shows the hits after each edit, and the pre-commit hook blocks the errors. This file covers what a pattern can't judge.
 
-## 1. Plain words beat short words
+## 1. Who does what
 
-This is the rule that matters most and the one that gets broken most.
+Run these on each sentence, in order.
 
-An abstract phrase is shorter than the plain sentence it replaces. Any rule that rewards brevity will pull you toward abstraction. Resist it. **Cut whole ideas. Keep common words.**
+1. **Find who does the verb, and put them first with an active verb.** "The client refreshes the token when it expires." A sentence that hides the actor, like "the token is refreshed", leaves the reader to work out what acted and whether they have to do anything.
+2. **Check that the actor can really do it.** Could you write that function? `throws()`, `reads()`, and `stores()` yes. `wants()`, `knows()`, and `lives()` no. Write the mechanism in place of the picture. A company like Discord or Cloudflare is people and servers, so it can act.
+3. **Don't write a garden path sentence.** If the reader has to go back and read a sentence again, rewrite it. This usually happens when a clause splits two words that belong together. "A read before the host resolves it throws" splits a subject from its verb. "It throws if you read before the host resolves it" reads once.
+4. **Ask who the instruction is for.** When the reader has to do the thing, write it to them: "To read them, annotate `ctx`". A generic subject with a present verb reads as something the code does on its own.
+5. **Point every `it`, `this`, and `which` at the right noun.** The reader attaches it to the closest noun that fits. When that's the wrong one, repeat the right noun.
 
-A sentence improves when you cut a point the reader did not need. A sentence gets worse when you compress a point into a technical-sounding noun phrase. The second one looks like editing and is the opposite of it.
+The passive is fine when the actor is obvious or doesn't matter, and the active version reads worse. "This page is generated from the TSDoc" beats "The docs build generates this page from the TSDoc".
 
-Real failures, all written by an assistant explaining its own behavior:
+## 2. Plain words
 
-<!--prettier-ignore-start-->
+A compressed noun phrase is shorter than the plain sentence it replaces and costs the reader more. Cut whole ideas. Keep common words. Three tests for every phrase:
 
-| Compressed | Plain |
-|---|---|
-| local optimum, global monotony | every comment passes on its own. the file reads like one sentence repeated. |
-| per-comment conformance | every comment matching the rules |
-| the gradient toward variety is zero | nothing pushes toward variety |
-| the tails of the distribution | the unusual ones |
-| the variance carriers | the things that make writing sound different |
-| epistemic posture | how sure the writer sounds |
-| uniquely determined by the constraints | the only shape the rules leave |
-| rejection criteria | rules about what to cut |
-| uniform density | the same number of comments everywhere |
-| optimizing against an auditor | writing to pass the check |
+- **Would you say it out loud?** "The gradient toward variety is zero" fails. "Nothing pushes toward variety" passes.
+- **Did you invent the noun?** Two abstract nouns that name an idea you had a minute ago are jargon. Say what happens, with a verb. "Performs a validation of the payload" is "validates the payload".
+- **Did you borrow it as a picture?** A word from another field that stands for what you mean makes the reader unpack it. Write the thing itself. A real term of the domain, like debounce, shard, or snowflake, passes.
 
-<!--prettier-ignore-end-->
+## 3. One claim per sentence
 
-Every phrase on the left is shorter. Every phrase on the left costs the reader more.
+Write the claim and end the sentence. Add a second clause only when the reader would get the first one wrong without it. Then pick the connector for how the halves relate: `but` contrasts, `so` gives a result, `because` gives a reason, `if` sets a condition, `and` adds more of the same. When none of them fits, write two sentences. An instruction joined to its result by `and` reads as two facts: "Pass `true` and the getter throws". A result the reader wants takes `to`, as in "Pass `true` to make the getter throw". A mistake takes `if`.
 
-Those ten are examples of one move, and checking against them catches nothing. Apply the tests below to every phrase you write.
+Read the block as a whole. A person writes unevenly: some sentences end in four words, and one runs long because the thing was hard. Two sentences in a row with the same length and the same turn mean rewrite one.
 
-### Three tests
+## 4. Say what is
 
-**Say it out loud.** Would you use this phrase talking to someone at a keyboard? "The gradient toward variety is zero" fails. "Nothing pushes toward variety" passes.
+Write what the thing does or what's true, and give the condition in place of a selling point. "On a 429 the client waits `Retry-After` seconds" beats "retries without any manual wiring". Negation is normal English, so negate the verb: "doesn't write a log file". A sentence that repeats the one before it in reverse gets deleted.
 
-**Did you invent the noun?** Two abstract nouns stuck together to name an idea you had thirty seconds ago is jargon, whatever it means. "comment density", "variance carrier", "conformance pressure". Say what happens with a verb.
+## 5. The rewrite test
 
-**Did you borrow it as a picture?** A word carried in from maths, physics, war, or biology to stand for what you mean is a picture, and the reader has to unpack it to get back to the thing. Name the thing.
+Compare every sentence to the simplest way to say the fact. Beating the old sentence isn't enough. A rewrite that's harder to read is wrong, even when it's shorter. A longer sentence that reads easier is better. Don't squeeze a sentence into a noun phrase to pass a rule, and don't stretch one into three clauses to get around a rule either.
 
-No list will cover this. Apply the test to every phrase. The question is whether the word already meant this here before you wrote the sentence. Debounce, backoff, snowflake, gateway, and shard pass, because they are the real names of real things in this codebase. A word you reached past the domain for does not.
+Real rewrites from this repo:
 
----
-
-## 2. Say it with a verb
-
-A verb turned into a noun makes the sentence longer and vaguer at once, and it usually drags in a weak `is` or `are` to hold it up.
+<!-- vale off -->
 
 <!--prettier-ignore-start-->
 
-| Noun form | Verb form |
-|---|---|
-| performs a validation of the payload | validates the payload |
-| the deletion of stale rows happens on startup | startup deletes stale rows |
-| provides an improvement in readability | is easier to read |
-| there is a requirement that callers await this | callers must await this |
-| the implementation of retry logic | retries |
-
-<!--prettier-ignore-end-->
-
-Scan a draft for words ending in `-tion`, `-ment`, `-ance`, and `-ility`. Most of them are a verb in hiding. This is Helen Sword's "zombie nouns", and the fix is always to find the verb underneath and use it.
-
-Cut "there is" and "there are" openers. Start with the subject or the verb.
-
-### Lead with who does what
-
-The other way a verb goes missing is a split sentence, where one clause becomes two and the real verb sits behind an `is`. It feels like emphasis while you write it. It costs the reader a whole clause to unpack. Don't write cleft sentences, basically.
-
-<!--prettier-ignore-start-->
-
-| Split | Direct |
-|---|---|
-| an empty target is what lets the cleanup work | scaffold deletes the directory when a step fails |
-| what this does is reset the cache | this resets the cache |
-| it is the config that sets the port | the config sets the port |
-| the reason it fails is the missing shebang | it fails because the shebang is missing |
-
-<!--prettier-ignore-end-->
-
-### Every verb gets its actor
-
-Passive voice is banned, and so is a sentence that reports a state with nobody causing it. Both hide who does the thing, so the reader has to work out what acted and whether they need to do anything. Find the actor, make it the subject, and hand it an active verb.
-
-<!--prettier-ignore-start-->
-
-| Actor-less | Actor and verb |
-|---|---|
-| the checkout you run it from stays untouched | it doesn't mess with your checkout |
-| uncommitted changesets are left out | it skips uncommitted changesets |
-| your checkout stays as it was, because the versioning runs in a temporary copy | it versions a temporary copy of `HEAD`, so it doesn't mess with your checkout |
-| the token is refreshed on expiry | the client refreshes the token when it expires |
-
-<!--prettier-ignore-end-->
-
-The tell is a form of `be`, `stay`, `get`, or `remain` followed by a past participle, as in `is sent`, `stays untouched`, `gets skipped`, or `remains unchanged`. A participle working as a plain adjective with the actor already in the sentence is fine, as in "the bot reads the cached value".
-
-### Keep the subject next to its verb
-
-A noun made from a verb can take the subject slot, and then a clause slips in between that subject and its own verb. The reader reaches the end, finds they attached the object to the wrong verb, and has to go back and parse the sentence a second time. This is a garden path sentence. Put the action back in a verb and the sentence reads in one pass.
-
-<!--prettier-ignore-start-->
-
-| Reparsed | Direct |
-|---|---|
-| a read before the host resolves it throws | throws if you read before the host resolves it |
-| a write after the buffer flushes it fails | the write fails once the buffer has flushed it |
-| a lookup while the cache evicts it misses | the lookup misses if the cache evicted the key first |
-| a connect before the server binds it hangs | connecting before the server binds hangs |
-
-<!--prettier-ignore-end-->
-
-The tell is a subject that is an action, a noun made from a verb, like "a scan of the root throws" or "a save that early never reaches vite". Find who does the action and make that the subject. In a code comment that is usually a function, so name it: "assertNoHashPaths throws on this folder". Then read the draft once at speed. If you stop and start over, rewrite the sentence.
-
-### Keep the `that` in a relative clause
-
-Banned outright. A clause that describes a noun opens with `that`, `which`, or `who`. English lets you leave the `that` out, as in "a helper they share". The reader then meets a noun followed straight away by another subject and its verb, and has to work out that a clause started. A reader who learned English second often reads the two nouns as a list.
-
-<!--prettier-ignore-start-->
-
-| Dropped `that` | Fixed |
-|---|---|
+| Written | Rewritten |
+| --- | --- |
+| Tag a fragment that can't compile alone `plain`. | Tag a fragment with `plain` if it can't compile by itself. |
+| Your checkout stays as it was, because the versioning runs in a temporary copy of `HEAD`. | It versions a temporary copy of `HEAD`, so it doesn't mess with your checkout. |
+| An unlisted post builds at its url but stays out of the blog list. | An unlisted post gets a page at its url, but the blog list doesn't show it. |
+| Anything the bot keeps in memory lives in one isolate, and two isolates keep separate records. | Each isolate has its own memory, so two isolates don't share records. |
+| the config type of a bot with no wrangler config beside it | the config type for a bot without a wrangler config |
+| Going global meant clearing `TESTING_GUILD_IDS`. | In production, leave out the guild IDs. |
 | two classes and a helper they share | two classes and a shared helper |
-| run the case for the key the bus published | run the case for the published key |
-| a reply the whole channel sees | a reply that everyone in the channel can see |
-| the raw payload discord sent back | the raw payload that discord sent back |
+| where the counts live | where the counts are stored |
 
 <!--prettier-ignore-end-->
 
-The tell is a noun followed directly by a second noun or a pronoun and then its verb, with no `that`, `which`, or `who` between them. Fix it in this order:
+<!-- vale on -->
 
-1. Fold it into one word. A participle or an adjective in front of the noun does the job, like "a shared helper" or "the published key".
-2. Put the `that` back.
-3. Give the clause its own sentence, with its actor as the subject.
+## 6. Chat
 
-An indirect question keeps its shape, because a question word already opens it, as in "depends on which key the bus published".
-
-### Write an instruction as an instruction
-
-A generic subject with a present-tense verb reads as a fact about how the code behaves. When the reader is the one who has to do the thing, they wait for something that never happens. The sentence usually turns into a garden path too, because the clause that picks the subject sits between it and its verb.
-
-<!--prettier-ignore-start-->
-
-| Reads as a fact | Says who does it |
-|---|---|
-| A gate that reads them annotates `ctx` with `AppPermissionsContext` and reads `ctx.appPermissions`. | To read them, annotate `ctx` with `AppPermissionsContext` and read `ctx.appPermissions`. |
-
-<!--prettier-ignore-end-->
-
-Ask who does the verb. If it's the reader, write the imperative or `you`. If it's advice, write `should`. Keep the generic subject only when the code does the thing.
-
-### Point every `which`, `it`, and `that` at the right noun
-
-A reader attaches `which` to the noun right before it, and `it` to the last noun that fits. When that noun is the wrong one, the sentence says something false. The reader only finds out after misreading it.
-
-<!--prettier-ignore-start-->
-
-| Points at the wrong noun | Fixed |
-|---|---|
-| Pass the URL from the channel's Integrations settings, which looks like https://… | Pass the webhook URL from the channel's Integrations settings. It looks like https://… |
-| update() was called on a modal opened from a command, which has no source message. | update() was called on a modal that a command opened. That modal doesn't have a source message. |
-| Press q in that session, or delete dev.lock if it is no longer running. | …or delete dev.lock if that session is no longer running. |
-
-<!--prettier-ignore-end-->
-
-For every `which`, `it`, `this`, and `that`, find the noun it points at by that rule. If it's the wrong one, repeat the right noun or split the sentence.
-
-### Give a trailing participle its subject
-
-An `-ing` phrase after a comma borrows the sentence's subject. When the subject doesn't do that action, the reader has to guess who does. "ban is deployed to multiple guilds, falling back to plain text" leaves them asking what falls back. Write the result as a clause with its own subject: "ban is deployed to multiple guilds, so its mention stays plain text."
-
----
-
-## 3. Anthropomorphism, with a test you can apply
-
-Code performs no human act. The ban is strict and it keeps leaking, because a word list only catches the words on it.
-
-**The test: could you write that function?** `stop()`, `throws()`, `reads()`, `stores()`, `returns()`. Yes. `land()`, `want()`, `know()`, `see()`, `care()`. No. A verb with no possible implementation is a metaphor, and the metaphor is standing where the mechanism should be.
-
-Real leaks from this repo, all of which passed a word-list check:
-
-<!--prettier-ignore-start-->
-
-| Written | Fixed |
-|---|---|
-| the record lands ~2.5s later | cloudflare publishes the record ~2.5s later |
-| the client waits out an exhausted bucket | the client blocks until the rate limit resets |
-| abort contains the stop | abort also stops the tunnel |
-| a later onPort holds no handle on this tunnel | a later onPort cannot reach this tunnel |
-| zigzag keeps a small negative number short | zigzag encodes a small negative number in fewer chars |
-
-<!--prettier-ignore-end-->
-
-The standing swaps:
-
-<!--prettier-ignore-start-->
-
-| Human verb | Mechanical replacement |
-|---|---|
-| tells / lets | specifies |
-| sees / watches | detects |
-| knows / remembers | stores, reads, uses |
-| wants / needs | requires |
-| thinks / assumes / believes | uses, treats as |
-| owns | defines, sets, is the only writer of |
-| lives in / lands in / sits on | is defined in, is set on |
-| handles | parses, coerces, rejects, retries |
-| powers / drives / fuels | sets, determines, controls |
-
-<!--prettier-ignore-end-->
-
-### A company is an actor
-
-Discord, Cloudflare, and a browser vendor are people and servers. They do act. "Discord rejects a hostname it already rejected" is correct and precise. "The parser wants a trailing newline" is the banned thing. The line falls between an organization that made a choice and a function that executes one.
-
-> "I have now seen programs 'trying to do things', 'wanting to do things', 'believing things to be true', 'knowing things' etc. Don't be so naive as to believe that this use of language is harmless." Dijkstra, EWD854.
-
----
-
-## 4. One claim per sentence, then stop
-
-Write the claim and end the sentence. Reach for a second clause only when the reader would get the first one wrong without it.
-
-Before a sentence ships, cut it at the connective and read what is left. When the shorter version still carries the point, that was the sentence. A code comment follows section 4 of `code-commenting-guidelines` here, since its second clause is often the reason it exists.
-
-Prose written to a rule set collapses toward whichever single form satisfies every rule, and the collapse is invisible from inside one sentence. So judge it as a block, a paragraph or a changeset or a file's comments read end to end.
-
-A person writes unevenly. Some sentences end in four words. One runs long because the thing was genuinely hard. One admits uncertainty. That unevenness gives it a natural feel.
-
-Aim for a spread in length, in how sentences open, and in what each one is doing. When two sentences in a row run the same length and turn at the same joint, rewrite one.
-
----
-
-## 5. State behavior, never sell it
-
-1. Address the reader as "you". Name the thing, and give it no intent.
-2. Lead with the action or the plain fact, then the reason.
-3. Active voice, present tense. Plain verbs: loads, reads, returns, fails, throws, matches.
-4. Say what breaks, flatly. Prisma does this well: "Be aware that this query will fail if the user has any related records."
-5. One claim per sentence. Cut the intensifier.
-6. Give the condition, never the smoothness. Replace "no manual wiring" with "on a 429 the client waits `Retry-After` seconds before the next attempt".
-7. Prefer the concrete noun over the promised benefit. "Throws `TimeoutError` when no response arrives within `timeout` ms" beats any adjective.
-8. Count a list only when the set is closed. "The four lifecycle phases" is right when there are four. A sample of three out of thirty reads as all thirty unless the sentence says otherwise.
-9. Say what is. Write what the thing does or what is true.
-
-Negation is normal English. "The CLI doesn't write a log file" is a fine sentence. Three shapes make a negation read badly.
-
-**It describes a thing by what it lacks, when a positive fact says more.** The reader pictures the opposite first and then flips it. Write the positive fact.
-
-<!--prettier-ignore-start-->
-
-| Negative | Says what is |
-|---|---|
-| redirects a patch the index no longer lists | sends an old patch to the head of its line |
-| an interface would not fit the index signature | only a type alias fits the index signature |
-| the loader does not keep a load that failed | a failed load leaves the loader empty for the next call |
-
-<!--prettier-ignore-end-->
-
-**It puts the "no" on the object of an action verb.** The verb reads like something happens, then the "no" takes it back. Negate the verb with "not" or "doesn't".
-
-<!--prettier-ignore-start-->
-
-| Negated object | Negated verb |
-|---|---|
-| writes no log file | doesn't write a log file |
-| throws no error | doesn't throw |
-| makes no request until you call `start()` | doesn't make a request until you call `start()` |
-
-<!--prettier-ignore-end-->
-
-**It repeats the sentence before it in reverse.** "Installs only the console sink. It never writes a log file." The first sentence already said it, so delete the second.
-
-Swapping "not" for "no", "never", or "alone" to get past this rule hides the negation without fixing the sentence.
-
-Rule of thumb: if an adjective cannot be replaced by a measurable fact or a code reference, delete it.
-
----
-
-## 6. Punctuation
-
-Em-dash `—` and en-dash `–` are banned in prose. Use a comma, parentheses, a hyphen, or two sentences.
-
-Colon `:` and semicolon `;` are banned as a clause splice, where the mark joins two complete clauses into one sentence. A colon introducing a list, a code block, or a short label is standard. Keep it.
-
-Markdown prose gets no semicolon at all. Rephrasing the sentence into a simpler structure is a better approach.
-
-A code comment _may_ use one, if appropriate, under one shape: two short clauses that give the two cases of one rule, in matching grammar.
-
-```ts
-// scaffold deletes this directory when writing fails; later failures keep it
-```
-
-Cut the comment at the semicolon and read the right half. Where it opens with `so`, `therefore`, `thus`, `hence`, `meaning`, `this means`, `and`, etc., the second half is explaining the first. Rewrite those without the semicolon, and keep the explanation if it says what breaks or why.
-
-Comma splices are banned. A comma cannot join two complete clauses. Every comma carries a connector after it, separates list items, or becomes a period.
-
-**The comma gets no carve-out.** The colon exemption above covers the colon and nothing else. A comma joining two clauses in parallel shape (`A is X, B is Y`), a two-item enumeration, a pair of contrasting cases, or a before-and-after is still a splice. Matching structure only makes the error easier to miss. If you catch yourself arguing that a particular splice reads fine, that argument is the tell. Rewrite it.
-
-**Fix a splice by rewriting it shorter, in this order.**
-
-1. **Collapse to one clause.** Most splices are one fact stretched over two. This is almost always the best result and the one to try first.
-2. **Add the connector for the real relation** (`because`, `since`, `so`, `but`, `if`, `then`, or `and` when the second half adds more of the same). Keeps one sentence when both halves genuinely earn their place. The next section has the test.
-3. **Two sentences.** The fallback when the halves are independent facts that both matter.
-
-Going to a period first produces two stubby sentences carrying what one short line said better.
-
-```ts
-// Bad: parallel shape, still a splice
-// null is a failed reload, [] is a file that registered nothing
-// Good (1): one clause carries it, the empty array needs no gloss
-// only a failed reload returns null
-```
-
-```ts
-// Bad: two facts jammed with a comma
-// the cache is keyed by file, a rename adds a fresh entry
-// Good (2): the connector says how the halves relate
-// a rename adds a fresh entry because the cache is keyed by file
-```
-
-**Replace a banned mark with punctuation that does the same job.** A `;` or `—` between two complete clauses is holding two thoughts apart, and a bare comma cannot do that. Use a period.
-
-**A connector that claims a cause has to earn it.** Reaching for one to hold a second clause on is how a sentence grows a consequence the reader was about to read anyway. Name the reason for the first clause with `because` or `since`, join two facts with `and`, or end the sentence.
-
-- BAD, invented cause: "it is meaningless without a filesystem and it throws".
-- GOOD: "it throws because it is meaningless without a filesystem".
-- BAD, stacked: "binds a source per file and restore it after any swap and later tests see a clean default".
-- GOOD: "binds a source per file. Tests here swap it, then restore it for a clean default."
-
-### Pick the connector for the relation that's there
-
-A connector tells the reader where the sentence goes before they read it. `and` promises more of the same, `but` a contrast, `so` a result, `because` or `since` a reason, `if` a condition, `then` a step after a step, `while` two things at once. A wrong one sends the reader the wrong way. `and` goes wrong most often, since it fits anywhere.
-
-<!--prettier-ignore-start-->
-
-| Written | What the halves really are | Fixed |
-|---|---|---|
-| The plugins are both Mongoose, and their codegen() results differ. | a contrast | …both Mongoose, but their codegen() results differ. |
-| make asks for every value first, and it can't tell how deep the partial goes. | a result | …asks for every value first, so it can't tell… |
-| Try again, and check discordstatus.com if it keeps failing. | a condition, then a step | Try again. If it keeps failing, check discordstatus.com. |
-| The command registers to the config guilds while commands.guilds is empty. | a contrast | …registers to the config guilds, but commands.guilds is empty. |
-| Send with reply() first, then edit() rewrites it. | a fact about edit(), with no step after the step | Send with reply() first. After that, edit() rewrites it. |
-
-<!--prettier-ignore-end-->
-
-The test: read what follows the connector on its own, say out loud how it relates to the first half, then check that the word you wrote means that. When no word fits, write two sentences.
-
-### Contrast
-
-State the positive claim on its own. Defining a thing by first saying what it is not costs the reader a rejected idea they then have to discard. This covers "not X, but Y", "X, not Y", "rather than X", "instead of X", and every variant.
-
-- BAD: "the slot is load-bearing, not decoration".
-- GOOD: "the slot keeps the ids unique".
-
-When a contrast genuinely carries weight, write two plain sentences.
-
-**One test separates the tic from a real substitution. Was the reader already holding the alternative?**
-
-An `instead of` that points at a swap the reader is actually making stays, since saying what they replace is the instruction. "Pass a `CustomId` instead of a string" is written for someone passing a string right now. The ban covers an alternative nobody raised, as in "the codec is a real format instead of string concatenation", where the reader loads concatenation and then throws it away.
-
-### Exclusivity tails
-
-The same move hides at the end of a sentence. A claim gets a tail that rules out everything it didn't mention: "and nothing else", "and that's it", "nothing more", "on its own", "and no other". The reader pictures the excluded set and then throws it away. That costs the same as a contrast.
-
-- BAD: "markdown gives a link these attributes and nothing else".
-- GOOD: "markdown puts `href`, `title`, and `id` on a link".
-- GOOD, when the reader needs the limit: "markdown puts only `href`, `title`, and `id` on a link".
-
-The test: cut the tail and read the sentence again. A named list already says what is in it. When the limit is the fact the reader needs, put `only` in front of the thing it limits.
-
----
-
-## 7. Ban-list
-
-Illustrative. When a word is missing from the table, apply section 1 and the test at the bottom.
-
-<!--prettier-ignore-start-->
-
-| Banned | Replacement |
-|---|---|
-| powers / drives / fuels / underpins | determines, controls, sets |
-| leverage / utilize | use |
-| seamless / effortless / frictionless | delete, or name the condition |
-| loud / loudly / fails loudly | name the mechanism: throws `X`, logs a warning, exits non-zero |
-| easy / simple / intuitive / fun | delete, or state the steps |
-| robust | name the guarantee: validates X, throws on Y |
-| performant | give a figure: p99 under 5 ms, O(1) lookup |
-| harden / hardening | name the change: make private, remove the export |
-| under the hood | internally, or delete |
-| out of the box | by default |
-| first-class | name the support |
-| simply / just, minimizing the work | delete |
-| just, meaning only | only |
-| in order to | to |
-| please / please note | delete |
-| enable / unlock / empower | turn on, lets you, you can |
-| powerful / flexible / elegant | show the capability |
-| notably / clearly / of course / actually / essentially | delete |
-| magic / magical | explain the rule |
-| reach for X | use X |
-| blast radius | name what is affected: every caller of `parse()` |
-| rich set of / suite of | list them |
-| exercises (a test exercises X) | calls X, runs X, tests X |
-| does more than X | state what it does |
-| names / naming, as a verb | banned. write the verb for what actually happens and rephrase the sentence in simple words if needed |
-| drop / dropped / dropping, standing in for a more exact verb | work out what happens to the thing in that sentence, then write the verb for it |
-| arm / arms / armed, standing in for a more exact thing | write the thing itself: a `match` case, a gate in an `or`, a union member, a callback, a pending confirm |
-| go / goes / gone / going, standing in for what happens to a thing (`can go`, `goes away`, `is gone`, `go through it`) | banned. write who does what to it: delete it, `stop()` closes the server, the build deletes the file, every caller uses it |
-| land / lands / landed / landing, in any form (`landed on next`, `lands in`, `the fix lands`) | banned. write what happened: merged into `next`, is defined in, the build writes it, the PR adds it |
-| fire / fires / fired / firing, standing in for what code does (`the event fires`, `the timer fires`, `one fire of the event`) | write the call: the client emits `ready`, the timer calls `run()`, the router dispatches the event. a variable or member called `firing` keeps its name |
-| agree / agrees / disagree, said of code or values (`the two agree`, `so the timestamps agree`) | say how they match: come from the same read, hold the same value, `durationMs` starts at `startedAt` |
-| survive / survives / survived / surviving, in any form (`survives a restart`, `survives a save`) | banned. say what keeps the thing: the driver stores the job, a save doesn't clear the map, the record is still there after a restart |
-| stays / stay / stayed / remains, in any form | banned. say what keeps the thing that way, or state the fact plainly: `load()` registers it once, the connection is still open, the file still exports it |
-| worth noting / surprisingly / you may notice | delete, state the fact |
-| good catch / fair point / great question | delete |
-| to be honest / frankly | delete |
-
-<!--prettier-ignore-end-->
-
-A word can carry more than one sense, and the ban follows the sense. `just` minimizing the work is the defect, since "just add the decorator" rates how hard the step is for someone whose keyboard you are not at. `just` meaning only carries a real restriction, so write `only`, which nobody can misread. The temporal `just` is a third word again, as in "the member just joined".
-
----
-
-## 8. Rewrites
-
-1. BEFORE: "The same base URL powers every request." AFTER: "The client reads `baseURL` once at construction. Every request method prepends it."
-2. BEFORE: "retries failed requests without any manual wiring." AFTER: "The client retries on 429 and 503 up to `retries` times with exponential backoff. Other status codes are returned as-is."
-3. BEFORE: "the client seamlessly handles JSON out of the box." AFTER: "If the response `Content-Type` is `application/json`, the client parses the body. Otherwise it returns the raw text."
-4. BEFORE: "Our powerful interceptor layer ensures your requests are always robust." AFTER: "If a request interceptor throws, the request is never sent and the error propagates to the caller."
-5. BEFORE: "The `@retry` decorator empowers you to effortlessly add resilience." AFTER: "Annotate a method with `@retry(3)` to re-invoke it up to three times on a thrown error. It re-throws the last error if every attempt fails."
-6. BEFORE: "Under the hood, the client leverages a smart pool to unlock connection reuse." AFTER: "The client keeps up to `maxSockets` open connections per host and reuses them across requests."
-
----
-
-## 9. Chat counts
-
-A reply in chat follows every rule above. Section 1 applies hardest here, because explaining something you just worked out is exactly when a compressed abstraction feels earned.
-
-Two or more named things go in a list, never in a prose sentence. Counted things ("all four", "the three internal ones") force the reader to rebuild the set.
-
-Acknowledge in as few words as possible, then go to the content. No opener rating the question, no flag about being honest, no repeating the correction back.
-
----
-
-## Before it ships
-
-Run these on every piece of prose before it's written to disk, whatever the surface: a comment, TSDoc, an error message, a log line, a CLI string, a changeset, a README, a guide page, or a commit. Each one catches a mistake the others miss. Reading for meaning alone misses all of them.
-
-1. **Negation.** Find every verb followed by `no`, as in "has no", "takes no", "sets no". Negate the verb or state the positive fact (section 5).
-2. **Connectors.** Read each `and`, `but`, `so`, `because`, `since`, `while`, `then`, and `which` against the relation its two halves really have (section 6).
-3. **Pointers.** For each `which`, `it`, `this`, and `that`, find the noun it points at (section 2). Then find every noun followed directly by another subject and its verb, and put the dropped `that` back or fold the clause into one word (section 2).
-4. **Who does it.** For each sentence with a generic subject, ask who performs the verb (section 2).
-5. **One read at speed.** Read the text once as someone who has never seen it. Rewrite every sentence where you stopped and started over.
-6. **The bans.** Section 6 punctuation, anthropomorphism, contrast-negation, and every section 7 word, starting with `names` as a verb.
-
-A quoted message, such as an error in a doc's output block, matches the source string exactly, line breaks included.
+A reply in chat follows every rule above. Two or more named things go in a list. Acknowledge in as few words as you can, then give the content.
 
 ## The test
 
-Can a reader predict the exact behavior from this sentence, or do they only get an impression that something was said?
+Read what you wrote once at speed. Rewrite every sentence where you stopped and started over.
 
-If the sentence only creates an impression, rewrite it as a fact, a step, or a failure mode. If a word in it would make a reader stop and work out what it means, replace it with the plain thing.
-
-Sources: Stripe, Prisma, esbuild, Vue, and Tailwind for reference voice. Google, GitLab, and Microsoft developer style guides plus Wikipedia "Words to watch" for the word bans. Google's anthropomorphism guidance and Dijkstra EWD854. Helen Sword on nominalizations. Clean Code and the Google Python style guide on comments.
+Can a reader predict the exact behavior from the sentence, or do they only get an impression that something was said? If it's an impression, rewrite it as a fact, a step, or a failure. If a word makes the reader stop and work out what it means, replace it with the plain thing.

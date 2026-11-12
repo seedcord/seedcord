@@ -1,13 +1,15 @@
 import type {
     HostAugmentTarget,
+    HostContract,
     HostListenHost,
-    HostPluginKeys,
+    HostPlugins,
     HostShutdown,
     HostStartup,
     HostVersion
 } from '#src/brand';
 import type { Config } from './Config';
 import type { REST } from '@discordjs/rest';
+import type { RESTPostAPIApplicationCommandsJSONBody } from 'discord-api-types/v10';
 
 export type TransportPackage = '@seedcord/gateway' | '@seedcord/http';
 
@@ -19,8 +21,15 @@ export interface SeedcordInstance {
 
     // symbol keys keep these out of autocomplete on a host
     readonly [HostVersion]: string;
+    readonly [HostContract]: number;
     readonly [HostAugmentTarget]: TransportPackage;
-    readonly [HostPluginKeys]: readonly string[];
+    readonly [HostPlugins]: {
+        // the attach keys in attach order. codegen writes one Core row for each
+        readonly keys: readonly string[];
+        // every dispatch member, with the key of the plugin that adds it
+        readonly members: readonly { readonly key: string; readonly member: string }[];
+        prepareCommands(commands: readonly RESTPostAPIApplicationCommandsJSONBody[]): Promise<void>;
+    };
     readonly [HostShutdown]: { run(exitCode?: number, exitProcess?: boolean): Promise<void> };
     readonly [HostStartup]: { abort(): void };
     // seedcord dev sets this before start() for a quick tunnel

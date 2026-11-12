@@ -6,13 +6,14 @@ import { ERROR_CODES } from '#lib/errorCodes';
 
 import type { GuideAnswer, GuideService, Question } from '@seedcord/docs-search';
 import type { Assets } from '@seedcord/ui/fetchAsset';
+import type { ExtractStrict } from 'type-fest';
 
 export interface AnswerEnv {
     ASSETS: Assets;
     AI: { run(model: typeof embedding.model, input: { text: string[] }): Promise<{ data: number[][] }> };
 }
 
-type Ranked = { hits: ReturnType<SectionIndex['rank']> } | Extract<GuideAnswer, { retryAfterSeconds: number }>;
+type Ranked = { hits: ReturnType<SectionIndex['rank']> } | ExtractStrict<GuideAnswer, { retryAfterSeconds: number }>;
 
 const RESULTS = 8;
 const SECOND_MS = 1000;
@@ -46,7 +47,7 @@ export class GuideAnswers implements GuideService {
             return { retryAfterSeconds: secondsUntilReset(Date.now()) };
         }
         const [vector] = data;
-        if (!vector) throw new Error(`${embedding.model} returned no embedding`);
+        if (!vector) throw new Error(`${embedding.model} didn't return an embedding.`);
         return { hits: index.rank(vector, RESULTS) };
     }
 

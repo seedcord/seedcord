@@ -95,7 +95,7 @@ A new published package needs one thing before its first release:
 
 Confirm the package is public (the changesets config sets `access: "public"`) before the first publish.
 
-## If a publish lands on the wrong tag
+## If a publish gets the wrong tag
 
 Move the tag. You cannot delete or replace the version itself.
 
@@ -110,7 +110,7 @@ vp pm dist-tag ls seedcord
 - Don't run `changeset version` directly. Node cannot load the TypeScript changelog module without `--import vite-plus/register`, and the changelogs skip the tidy pass.
 - Don't run `npm publish`, `pnpm publish` or `vp pm publish` by hand, except for a new package's first release. CI publishes through changesets.
 - Don't push `main` while it is in pre mode. Exit pre mode first.
-- Don't let a new changeset land between versioning and the publish. The gate skips the publish while one is pending, and the next versioning run bumps past the skipped version.
+- Don't add a new changeset between versioning and the publish. The gate skips the publish while one is pending, and the next versioning run bumps past the skipped version.
 - Don't rename `.github/workflows/publish.yml`. Its filename is bound to the npm OIDC trust.
 
 ## Related

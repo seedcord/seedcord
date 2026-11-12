@@ -14,9 +14,10 @@ import type { CoreBase } from '#interfaces/CoreBase';
 import type { SubscriptionKey } from '#subscribers/types/Subscriptions';
 import type { WebhookFile } from './WebhookSender';
 import type { APIMessageTopLevelComponent } from 'discord-api-types/v10';
+import type { Promisable } from 'type-fest';
 
 /**
- * The content a reporter returns from {@link WebhookLog.report}.
+ * The content that a reporter returns from {@link WebhookLog.report}.
  */
 export interface WebhookReport {
     /** Shown as the webhook message author. Defaults to the reporter's class name. */
@@ -44,9 +45,9 @@ export abstract class WebhookLog<KeyOfSubscribers extends SubscriptionKey, TCore
     /**
      * Builds the message for one published event.
      *
-     * @param suppressed - How many events were dropped since the last card
+     * @param suppressed - How many events the throttle suppressed since the last card
      */
-    abstract report(suppressed: number): WebhookReport | Promise<WebhookReport>;
+    abstract report(suppressed: number): Promisable<WebhookReport>;
 
     /**
      * Events sharing this key collapse into one card per minute. Return `null` to send every event.

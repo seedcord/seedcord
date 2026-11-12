@@ -37,7 +37,7 @@ interface Entry<Ctor, Key extends string> {
 }
 
 /**
- * Holds the middleware a transport loaded and keeps one chain per key. An interaction keys on its kind
+ * Holds the middleware that a transport loaded and keeps one chain per key. An interaction keys on its kind
  * and an event on its name. Priority and the key filter behave the same on each.
  *
  * @typeParam Ctor - The transport's middleware constructor type.
@@ -54,7 +54,7 @@ export class MiddlewareRegistry<Ctor extends AnyMiddlewareCtor, Key extends stri
 
     /**
      * Adds a decorated middleware class and returns what it registered with. Returns `undefined` for an
-     * undecorated class or one already registered.
+     * undecorated class or one that is already registered.
      */
     public register(ctor: Ctor): MiddlewareRegistration<Key> | undefined {
         const registration = this.registrationOf(ctor);

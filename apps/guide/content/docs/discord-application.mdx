@@ -1,6 +1,6 @@
 ---
 title: Create your Discord application
-description: Create the application your bot runs as in Discord's developer portal, then get its token and add it to a server.
+description: Create the application that your bot runs as in Discord's developer portal, then get its token and add it to a server.
 ---
 
 Your bot needs an application on Discord's side before any code runs. Every step but the last happens in the [Discord Developer Portal](https://discord.com/developers/applications). Start with **New Application** in the top right.
@@ -15,7 +15,7 @@ Keep the token private, because anyone who holds it controls your bot. You paste
 
 <Callout type="warning">
     The **Client Secret** on the **OAuth2** page is a different
-    credential. Don't paste it where the token goes.
+    credential. Don't paste it in place of the token.
 </Callout>
 
 ## Make a second application for production
@@ -27,11 +27,11 @@ If both use one application, your laptop and your users' bot are the same bot. O
 ## Turn on the intents you need
 
 <Callout type="transport" only="http">
-    An http bot has no gateway connection, so it declares no
+    An http bot never connects to the gateway, so it doesn't declare
     intents.
 </Callout>
 
-The **Bot** page also has **Privileged Gateway Intents** below the token. The table says what each switch covers, and you turn on the ones your bot needs. Once your app reaches 10,000 users, Discord requires you to apply for them ([Discord's gateway docs](https://docs.discord.com/developers/events/gateway) have the details).
+The **Bot** page also has **Privileged Gateway Intents** below the token. The table lists what each switch covers, and you turn on the ones your bot needs. Once your app reaches 10,000 users, Discord requires you to apply for them ([Discord's gateway docs](https://docs.discord.com/developers/events/gateway) have the details).
 
 {/* prettier-ignore-start */}
 
@@ -45,15 +45,15 @@ The **Bot** page also has **Privileged Gateway Intents** below the token. The ta
 
 ![The privileged gateway intent switches on the Bot page](/portal-intents.webp)
 
-A switch here only allows an intent. Your bot also has to list the intents it uses in the `intents` option of `clientOptions` in `bot.ts`. The setup command on [the first bot page](/first-bot) fills that list in from your answers. If your code asks for an intent whose switch is off in the portal, Discord closes the connection and discord.js reports `Used disallowed intents`.
+A switch here only allows an intent. Your bot also has to list the intents it uses in the `intents` option of `clientOptions` in `bot.ts`. The setup command on [the first bot page](/first-bot) fills that list in from your answers. If your code requests an intent whose switch is off in the portal, Discord closes the connection and discord.js reports `Used disallowed intents`.
 
 ## Leave the endpoint URL empty
 
 <Callout type="transport" only="gateway">
-    A gateway bot has no endpoint URL to set.
+    A gateway bot doesn't use an endpoint URL.
 </Callout>
 
-**General Information** has an **Interactions Endpoint URL** field. Discord sends a signed request to a URL before it saves it ([Discord's interactions docs](https://docs.discord.com/developers/interactions/overview#configuring-an-interactions-endpoint-url) describe the check), so the field stays empty until a bot is answering. `seedcord dev` waits for your bot to answer, then writes the URL for you. Once you deploy, you enter your bot's public URL here yourself.
+**General Information** has an **Interactions Endpoint URL** field. Discord sends a signed request to a URL before it saves it ([Discord's interactions docs](https://docs.discord.com/developers/interactions/overview#configuring-an-interactions-endpoint-url) describe the check), so you can't fill the field until a bot is answering. `seedcord dev` waits for your bot to answer, then writes the URL for you. Once you deploy, you enter your bot's public URL here yourself.
 
 The same page shows your **Public Key**. An http bot uses it to verify Discord's signature on every request, but you don't copy it anywhere. A bot reads the key from Discord with your token when it starts, and `seedcord build` writes it into a [Cloudflare Worker](/build/workers#building).
 
@@ -67,7 +67,7 @@ Under **Installation Contexts**, turn on **Guild Install**. Guild Install puts y
 
 ![Installation Contexts with Guild Install ticked](/portal-install-contexts.webp)
 
-Under **Default Install Settings**, pick the permissions your bot needs, like Ban Members for a `ban` command. The scopes already include `bot` and `applications.commands`. You can't remove `applications.commands`.
+Under **Default Install Settings**, pick the permissions that your bot needs, like Ban Members for a `ban` command. The scopes already include `bot` and `applications.commands`. You can't remove `applications.commands`.
 
 <Callout type="warning">
     To add a bot to a server, you need the **Manage Server**

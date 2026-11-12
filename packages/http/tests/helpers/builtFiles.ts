@@ -1,6 +1,6 @@
 import { BOT_FILES_KEY, setBuiltFiles } from '@seedcord/utils/internal';
 
-// the root seedcord build gives every edge worker
+// every edge worker gets this root from the seedcord build
 export const BUILT_ROOT = '/bot';
 
 function foldersOf(keys: readonly string[]): string[] {
@@ -12,7 +12,7 @@ function foldersOf(keys: readonly string[]): string[] {
     return [...folders];
 }
 
-// writes the object seedcord build writes onto the slot. keys look like '/handlers/Ping.ts'
+// writes the object that seedcord build writes onto the slot. keys look like '/handlers/Ping.ts'
 export function registerBuiltFiles(
     modules: Record<string, Record<string, unknown>>,
     emptyFolders: readonly string[] = []

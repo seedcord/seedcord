@@ -5,18 +5,27 @@ import { describe, expect, it } from 'vite-plus/test';
 
 import { assertGuildsIntent } from '#miscellaneous/assertGuildsIntent';
 
-import type { BitFieldResolvable, GatewayIntentsString } from 'discord.js';
+import type {
+    BitFieldResolvable,
+    GatewayIntentsString,
+    RESTPostAPIChatInputApplicationCommandsJSONBody
+} from 'discord.js';
 
 const guildOnly = new SlashCommandBuilder()
     .setName('ban')
     .setDescription('d')
-    .setContexts(InteractionContextType.Guild);
+    .setContexts(InteractionContextType.Guild)
+    .toJSON();
 
-const dmOnly = new SlashCommandBuilder().setName('help').setDescription('d').setContexts(InteractionContextType.BotDM);
+const dmOnly = new SlashCommandBuilder()
+    .setName('help')
+    .setDescription('d')
+    .setContexts(InteractionContextType.BotDM)
+    .toJSON();
 
 function check(
     intents: BitFieldResolvable<GatewayIntentsString, number>,
-    ...commands: SlashCommandBuilder[]
+    ...commands: RESTPostAPIChatInputApplicationCommandsJSONBody[]
 ): () => void {
     return () => {
         assertGuildsIntent(intents, commands);

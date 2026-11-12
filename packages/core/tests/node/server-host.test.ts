@@ -389,7 +389,7 @@ describe('ServerHost', () => {
         expect(order).toEqual(['init-a', 'init-b', 'ready-a', 'ready-b']);
     });
 
-    it('registers no Ready task when no plugin declares ready or a Ready-phase init', async () => {
+    it("doesn't register a Ready task when no plugin declares ready or a Ready-phase init", async () => {
         const { host, startup } = makeHost();
         const addTask = vi.spyOn(startup, 'addTask');
         host.attach('db', TestPlugin, 'x');

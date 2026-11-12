@@ -16,9 +16,9 @@ async function resolveRules(options: SeedcordConfigOptions, file: string): Promi
 }
 
 describe('createConfig plugin toggles', () => {
-    it('drops plugin rules when the plugin is disabled', async () => {
-        // regression: a disabled plugin left its import-x/* rules in the config, so eslint threw
-        // "rule not found" for the eslint-9 apps that register no import-x plugin.
+    it('removes plugin rules when the plugin is disabled', async () => {
+        // regression: a disabled plugin left its import-x/* rules in the config. eslint then threw
+        // "rule not found" for the eslint-9 apps that don't register an import-x plugin.
         const rules = await resolveRules({ registerImportPlugin: 'off' }, 'src/example.ts');
         expect(Object.keys(rules).filter((name) => name.startsWith('import-x/'))).toEqual([]);
     });
@@ -28,7 +28,7 @@ describe('createConfig plugin toggles', () => {
         expect(rules['import-x/order']).toBeDefined();
     });
 
-    it('drops the cross-file import rules on fast, keeping the rest', async () => {
+    it('removes the cross-file import rules on fast, keeping the rest', async () => {
         const rules = await resolveRules({ registerImportPlugin: 'fast' }, 'src/example.ts');
 
         expect(rules['import-x/no-cycle']).toBeUndefined();
@@ -59,7 +59,7 @@ describe('createConfig plugin toggles', () => {
     it('registers the seedcord rules when enabled', async () => {
         const rules = await resolveRules({ registerSeedcordPlugin: true }, 'src/example.ts');
         expect(rules['@seedcord/no-djs-builder-import']).toBeDefined();
-        // the seedcord toggle registers only its own plugin, the discordjs one stays separate
+        // the seedcord toggle registers only its own plugin
         expect(Object.keys(rules).filter((name) => name.startsWith('discordjs/'))).toEqual([]);
     });
 

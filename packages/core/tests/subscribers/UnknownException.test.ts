@@ -14,7 +14,7 @@ const ESC = String.fromCharCode(27);
 // justified: the Subscriber base only stores core
 const core = {} as unknown as CoreBase;
 
-// the text a text-display carries in the container, so an assertion sees the real webhook string
+// the text of a text-display in the container, to let an assertion read the real webhook string
 function reportText(error: Error, suppressed = 0): string {
     const data = { uuid: randomUUID(), dispatchId: 'd-1', error, origin: 'slash:probe' };
     const report = new UnknownException(data, core, 'unknownException').report(suppressed);
@@ -42,7 +42,7 @@ describe('UnknownException.report', () => {
         expect(reportText(new Error('db down'), 412)).toContain('412 more');
     });
 
-    it('prints no count when nothing was suppressed', () => {
+    it("doesn't print a count when nothing was suppressed", () => {
         expect(reportText(new Error('db down'))).not.toContain('more');
     });
 });

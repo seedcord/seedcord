@@ -5,7 +5,7 @@ description: Use this when writing Tailwind CSS in any seedcord app or in @seedc
 
 # Tailwind CSS v4 (Seedcord Conventions)
 
-The Next.js 16 + React 19 apps under `apps/{docs,guide,home}` use **Tailwind v4** via the `@tailwindcss/postcss` plugin. There is no `tailwind.config.js` and no v3 directives. `tooling/ui` (`@seedcord/ui`) holds the shared primitives, the `cn` and `tw` helpers, `styles/tokens.css` and `styles/globals.css`. An app adds only what's specific to it, like the docs app's entity colors in `apps/docs/src/styles/tokens.css`.
+The Next.js 16 + React 19 apps under `apps/{docs,guide,home}` use **Tailwind v4** via the `@tailwindcss/postcss` plugin. The apps don't have a `tailwind.config.js` or any v3 directives. `tooling/ui` (`@seedcord/ui`) holds the shared primitives, the `cn` and `tw` helpers, `styles/tokens.css` and `styles/globals.css`. An app adds only what's specific to it, like the docs app's entity colors in `apps/docs/src/styles/tokens.css`.
 
 If the same pattern shows up in two apps, move it to `@seedcord/ui`.
 
@@ -27,10 +27,7 @@ const config = { plugins: { '@tailwindcss/postcss': {} } };
 export default config;
 ```
 
-```ts
-/* tailwind class scanning is automatic in Next.js 16; no @source needed unless you author
-   class strings in a file outside the app's tree (e.g. shared package). */
-```
+Next.js 16 scans the app's own files for classes. A `@source` line is only needed for class strings in a file outside the app's tree, like a shared package.
 
 **Never use the old v3 directives** (`@tailwind base`, `@tailwind components`, `@tailwind utilities`). They don't exist in v4.
 
@@ -171,7 +168,7 @@ Tailwind breakpoints: `sm` (640px) `md` (768px) `lg` (1024px) `xl` (1280px).
 
 For JS-driven breakpoint checks, prefer matchMedia in a `useEffect` over reading `window.innerWidth` on render (which crashes during SSR).
 
-**v4 behavior change:** `hover:` only fires on devices that support hover (pointer: fine). It no longer triggers on mobile tap. This is correct and intentional. Don't try to work around it.
+**v4 behavior change:** `hover:` only applies on devices that support hover (pointer: fine). It no longer triggers on mobile tap. This is correct and intentional. Don't try to work around it.
 
 ---
 
@@ -215,7 +212,7 @@ For a primitive in `tooling/ui/src`, put the base classes and the variant classe
 | `outline-none` | hides outline | sets `outline: none` literally (use `outline-hidden` to visually hide) |
 | Shadow scale | `shadow-sm` is small | `shadow-sm` in v4 = v3's bare `shadow` (scale shifted down) |
 | Container queries | requires plugin | built-in (use `@container` + `@sm:` directly) |
-| `hover:` on mobile | fires on tap | only on hover-capable devices |
+| `hover:` on mobile | applies on tap | only on hover-capable devices |
 | Config | `tailwind.config.js` | `@theme {}` in CSS or `:root` custom properties |
 | Content scanning | `content: []` in config | automatic in Next.js (`@source` for files outside the tree) |
 
@@ -228,14 +225,15 @@ No plugin needed. Use `@container` on the parent and `@sm:` etc. on children:
 ```tsx
 <div className="@container">
     <div className="grid grid-cols-1 @sm:grid-cols-2 @lg:grid-cols-3" />
-</div>;
+</div>
+```
 
-{
-    /* Named container */
-}
+A named container:
+
+```tsx
 <div className="@container/card">
     <p className="text-sm @md/card:text-base" />
-</div>;
+</div>
 ```
 
 ---

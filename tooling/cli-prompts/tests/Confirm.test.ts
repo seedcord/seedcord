@@ -5,7 +5,7 @@ import { KEY, PromptTerminal } from '#src/PromptTerminal';
 const DELETE = { message: 'Delete 3 guild commands? This cannot be undone.' };
 
 describe('Prompter.confirm', () => {
-    it('answers no when enter comes first', async () => {
+    it('answers false when enter comes first', async () => {
         using terminal = new PromptTerminal();
         const answer = terminal.prompter.confirm(DELETE);
 

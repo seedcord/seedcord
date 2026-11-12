@@ -12,12 +12,12 @@ ruleTester.run('prefer-v2-component', rule, {
             import { ContainerBuilder } from 'discord.js';
             new ContainerBuilder();
         `,
-        // an action row is used inside a v2 layout, not a legacy embed
+        // an action row inside a v2 layout passes
         dedent`
             import { ActionRowBuilder } from 'discord.js';
             new ActionRowBuilder();
         `,
-        // a seedcord container component exposes a ContainerBuilder, not an embed
+        // a seedcord container component passes because it exposes a ContainerBuilder
         dedent`
             import { BuilderComponent } from './seedcord';
             class MyCard extends BuilderComponent<'container'> {

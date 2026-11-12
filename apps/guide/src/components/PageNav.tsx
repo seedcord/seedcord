@@ -23,7 +23,7 @@ const DIRECTIONS = {
         hotkey: GUIDE_KEYS.nextPage,
         stackClassName: tw`items-end`,
         iconClassName: tw`-me-1.5`,
-        // the first page of the guide has no previous card to push this one across
+        // the first page of the guide doesn't have a previous card to push this one across
         cardClassName: tw`sm:col-start-2`
     }
 } as const;

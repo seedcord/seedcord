@@ -67,7 +67,7 @@ describe('http Seedcord startup failure', () => {
         host.attach('failing', FailsReadyOnce);
         await expect(host.start()).rejects.toThrow();
 
-        // ready resolves from here on, so only the restart guard can reject this
+        // only the restart guard can reject this because ready resolves from here on
         await expect(host.start()).rejects.toThrow(/new instance/);
 
         await using fresh = new Seedcord(config());

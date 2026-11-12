@@ -1,0 +1,45 @@
+{
+    "name": "@seedcord/prose",
+    "version": "0.0.1",
+    "private": true,
+    "description": "The repo's prose rules: Vale styles, an ESLint rule for string literals, and the write-time hook",
+    "repository": {
+        "type": "git",
+        "url": "https://github.com/seedcord/seedcord.git",
+        "directory": "tooling/prose"
+    },
+    "type": "module",
+    "imports": {
+        "#src/*": "./src/*.ts"
+    },
+    "exports": {
+        ".": "./src/index.ts"
+    },
+    "scripts": {
+        "lint": "eslint '**/*.ts' --max-warnings=0 --cache --no-error-on-unmatched-pattern",
+        "lint:fix": "eslint '**/*.ts' --fix --max-warnings=0 --cache --no-error-on-unmatched-pattern",
+        "tc": "tsgo --noEmit",
+        "test": "vp test run",
+        "test:watch": "vp test dev"
+    },
+    "dependencies": {
+        "@typescript-eslint/utils": "catalog:eslint",
+        "typescript-eslint": "catalog:eslint",
+        "yaml": "catalog:deps"
+    },
+    "devDependencies": {
+        "@seedcord/eslint-config": "workspace:^",
+        "@seedcord/tsconfig": "workspace:^",
+        "@seedcord/vite-config": "workspace:^",
+        "@typescript-eslint/rule-tester": "catalog:eslint",
+        "dedent": "catalog:test",
+        "eslint": "catalog:eslint",
+        "vite-plus": "catalog:deps"
+    },
+    "peerDependencies": {
+        "typescript": "catalog:peer"
+    },
+    "engines": {
+        "node": "^24.22.1 || >=26.12.1"
+    }
+}

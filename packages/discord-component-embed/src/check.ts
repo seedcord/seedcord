@@ -28,7 +28,7 @@ const JSON_USER_AGENT = 'Discordbot/2.0';
 const DISCORD_TIMEOUT_MS = 10_000;
 const SLOW_WARNING_MS = DISCORD_TIMEOUT_MS - 1000;
 const DISCORD_WAITS =
-    'Discord waits about 10 seconds in total for the page and its linked JSON, then shows no preview.';
+    "Discord waits about 10 seconds in total for the page and its linked JSON, then doesn't show a preview.";
 
 type Loaded = { text: string; inScript: boolean } | CheckResult;
 type Unreadable = Extract<CheckResult, { status: 'unreadable' }>;
@@ -39,7 +39,7 @@ interface Page {
 }
 type Fetched = Page | Unreadable;
 
-// a local html file has no host to hold a <link> to
+// a local html file doesn't have a host to hold a <link> to
 type LinkRule = { pageHost: string } | 'file';
 
 export async function checkTarget(target: string, input: CheckInput): Promise<CheckResult> {
@@ -89,7 +89,7 @@ async function embedIn(html: string, rule: LinkRule, deadline: number, input: Ch
         return {
             status: 'fail',
             problems: [
-                `The page has no component embed. Discord reads a <script id="${SCRIPT_ID}"> or a <link rel="${SCRIPT_ID}">.`
+                `The page doesn't have a component embed. Discord reads a <script id="${SCRIPT_ID}"> or a <link rel="${SCRIPT_ID}">.`
             ]
         };
     }
@@ -149,7 +149,7 @@ function servingProblem({ contentType, disposition }: Page): string | undefined 
 }
 
 function noPreview(how: string, fix: string): string {
-    return `The page is ${how}. Discord shows no preview for it, not even the Open Graph card. ${fix}`;
+    return `The page is ${how}. Discord doesn't show any preview for it, including the Open Graph card. ${fix}`;
 }
 
 async function fetchText(url: URL, userAgent: string, deadline: number, input: CheckInput): Promise<Fetched> {

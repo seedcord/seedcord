@@ -55,7 +55,7 @@ describe('buildVersionGroups', () => {
         expect(placeholder?.label).toMatch(/no stable/i);
     });
 
-    it('shows only the stable group when there are no prereleases', () => {
+    it('shows only the stable group when every version is stable', () => {
         const groups = buildVersionGroups([makeVersion('0.10.6', { isLatest: true, badge: 'latest' })]);
 
         expect(groups).toHaveLength(1);

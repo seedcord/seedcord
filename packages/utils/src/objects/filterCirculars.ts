@@ -3,7 +3,7 @@ import type { JsonPrimitive } from 'type-fest';
 
 /**
  * JSONify an arbitrary type while allowing any object position to be replaced
- * by a circular marker. Optional keys stay optional.
+ * by a circular marker. Keeps optional keys optional.
  */
 export type JsonifyWithCirculars<BaseType, Marker extends string = '[Circular]'> = BaseType extends JsonPrimitive
     ? BaseType

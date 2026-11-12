@@ -35,7 +35,7 @@ class MalformedReporter extends WebhookLog<'unknownException', CoreBase> {
     }
 }
 
-// justified: the Bus only stores core and reads no member during publish
+// justified: the Bus only stores core and doesn't read a member during publish
 function stubBus(): Bus {
     return new Bus({} as unknown as CoreBase);
 }
@@ -55,7 +55,7 @@ const payload = (): SubscriptionData<'unknownException'> => ({
 });
 
 describe('subscribers loaded from the built files on workerd', () => {
-    // workerd binds no source by default
+    // workerd doesn't bind a source by default
     beforeEach(() => {
         Envapter.useSource(new PortableSource({}));
     });

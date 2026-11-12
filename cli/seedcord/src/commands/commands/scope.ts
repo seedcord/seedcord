@@ -1,13 +1,15 @@
 import { GLOBAL_ID } from '@seedcord/core/internal';
+import { sumBy } from 'es-toolkit';
 
 import type { GuildSummary } from '@seedcord/core/internal';
 import type { APIApplicationCommand } from 'discord-api-types/v10';
+import type { ExtractStrict } from 'type-fest';
 
 export type Scope =
     | { readonly kind: 'global'; readonly id: typeof GLOBAL_ID }
     | ({ readonly kind: 'guild' } & GuildSummary);
 
-export type GuildScope = Extract<Scope, { kind: 'guild' }>;
+export type GuildScope = ExtractStrict<Scope, { kind: 'guild' }>;
 
 export const GLOBAL_SCOPE: Scope = { kind: 'global', id: GLOBAL_ID };
 
@@ -36,5 +38,5 @@ export function scopeTitle(scope: Scope): string {
 }
 
 export function commandCount(scopes: readonly ScopedCommands[]): number {
-    return scopes.reduce((sum, { commands }) => sum + commands.length, 0);
+    return sumBy(scopes, ({ commands }) => commands.length);
 }

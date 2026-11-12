@@ -31,11 +31,11 @@ reply() was called when this interaction was already replied to.
 Use followUp() for a new message or edit() to rewrite the reply. (route slash:ban)
 ```
 
-discord.js checks too, and its error reads "The reply to this interaction has already been sent or deferred." seedcord's says which method works from there and which route threw. Its `cause` carries a stack pointing at the line that answered first. On http, `this.api` doesn't check at all, so a second callback comes back from Discord as an API error. [When a reply throws](/replying/ack-states) covers every case.
+discord.js checks too, and its error reads "The reply to this interaction has already been sent or deferred." seedcord's reports which method works from there and which route threw. Its `cause` has a stack pointing at the line that answered first. On http, `this.api` doesn't check at all, so a second callback comes back from Discord as an API error. [When a reply throws](/replying/ack-states) covers every case.
 
 The state matters most when your handler refuses. You refuse by throwing a [`Notice`](ref:core/Notice). seedcord then sends its card through the same handler with [`send()`](ref:gateway/RepliableHandler.send), which reads the state to pick a method. If nothing went out yet, the card is the reply. After `defer()` it fills the thinking placeholder, and after a reply it arrives as a follow-up. You write the same `throw` from any of those points.
 
-That holds while every answer goes through the handler. `this.event.reply()` reaches Discord and leaves the state at `unacked`. A callback on `this.api.interactions` does the same on http. seedcord then sends a `Notice` thrown after it as a first reply, which Discord rejects because the interaction was already acknowledged. seedcord drops that rejection with a debug line. The person who ran the command sees your message and never sees the refusal.
+That holds while you send every answer through the handler. `this.event.reply()` reaches Discord and leaves the state at `unacked`. A callback on `this.api.interactions` does the same on http. seedcord then sends a `Notice` thrown after it as a first reply, which Discord rejects because the interaction was already acknowledged. seedcord catches that rejection and logs a debug line. The person who ran the command sees your message and never sees the refusal.
 
 ## Replying with an error
 
@@ -43,7 +43,7 @@ To tell the user they can't do something, like when they don't have a profile or
 
 ## A reply is a list of components
 
-seedcord sends every reply with Discord's [Components V2](https://docs.discord.com/developers/components/overview) flag, which rules out `content` and `embeds`. A string gives you one block of text. Anything more, like a container or a row of buttons, goes in `components`, one entry per top-level component.
+seedcord sends every reply with Discord's [Components V2](https://docs.discord.com/developers/components/overview) flag, which rules out `content` and `embeds`. A string gives you one block of text. For anything more, like a container or a row of buttons, use `components`, one entry per top-level component.
 
 ```ts twoslash hovers title="src/handlers/Ban.ts"
 import {
@@ -74,7 +74,7 @@ export class Ban extends SlashHandler<'ban'> {
 }
 ```
 
-[`BuilderComponent`](ref:core/BuilderComponent) wraps a discord.js builder, and `.component` gives you the builder to put in `components`. A component that only `Ban` sends can stay in its file. Move `BanCard` to a file of its own once a second handler sends one, so rewording it takes one edit.
+[`BuilderComponent`](ref:core/BuilderComponent) wraps a discord.js builder, and `.component` gives you the builder to put in `components`. A component that only `Ban` sends can share its file. Move `BanCard` to a file of its own once a second handler sends one, so rewording it takes one edit.
 
 `files` uploads bytes alongside the components, covered in [Files and attachments](/replying/files). The whole shape is [`ReplyResponse`](ref:types/ReplyResponse). Put it on a helper's return type when the helper builds a reply, so a wrong field fails inside the helper.
 
@@ -88,7 +88,7 @@ To send an embed or a poll, use discord.js's own methods on `this.event`. That s
 
 ### Mentions inside your components
 
-seedcord sends `allowedMentions` only when you set one. Discord's default for an interaction reply is `{ parse: ['users'] }`, so a `<@id>` in your text pings that person. A role or `@everyone` mention stays plain text.
+seedcord sends `allowedMentions` only when you set one. Discord's default for an interaction reply is `{ parse: ['users'] }`, so a `<@id>` in your text pings that person. A role or `@everyone` mention is plain text.
 
 ```ts twoslash
 import {

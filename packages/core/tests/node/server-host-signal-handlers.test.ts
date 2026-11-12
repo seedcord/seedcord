@@ -7,7 +7,7 @@ import { TestServerHost } from '#tests/utils/TestServerHost';
 
 import type { Config } from '@seedcord/types';
 
-// justified: startup reads config.errors and nothing else on Config
+// justified: startup reads only config.errors on Config
 const config = { errors: { catchProcessErrors: false } } as Config;
 
 function signalHost(): TestServerHost {

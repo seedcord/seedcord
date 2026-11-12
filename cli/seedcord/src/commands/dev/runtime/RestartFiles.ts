@@ -16,7 +16,7 @@ const logger = new Logger('HMR', { channel: 'hmr' });
 
 type RestartConfig = Pick<ResolvedSeedcordConfig, 'root' | 'configFile' | 'instance' | 'viteMode' | 'hmr'>;
 
-// every file whose save asks for a dev restart
+// every file whose save triggers a dev restart
 export class RestartFiles {
     private readonly configDir: string;
     private readonly hiddenNames: Set<string>;

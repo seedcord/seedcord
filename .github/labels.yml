@@ -13,6 +13,8 @@
   color: 7fbc62
 - name: '📦 plugin-kysely-postgres'
   color: 6fbc62
+- name: '📦 plugin-tasks'
+  color: 5fbc62
 - name: '📦 custom-id'
   color: 8a62bc
   description: typed customId codec
@@ -47,6 +49,9 @@
 - name: '📦 eslint-utils'
   color: 6278bc
   description: Internal shared utilities for the eslint plugins
+- name: '📦 prose'
+  color: 6278bc
+  description: The repo's prose rules, Vale styles and the write-time hook
 - name: '📦 brand'
   color: 6278bc
   description: Internal brand colors and site addresses

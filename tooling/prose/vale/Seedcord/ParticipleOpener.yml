@@ -1,0 +1,10 @@
+extends: existence
+link: https://github.com/seedcord/seedcord/blob/next/.agents/skills/writing-voice/SKILL.md
+message: "The sentence starts with '%s' and doesn't tell the reader who does it. Start with the actor, like 'If you check it by hand'."
+level: suggestion
+scope: sentence
+# vale's added word boundary can't match after the closing comma
+nonword: true
+tokens:
+  # table cells and comments like "keyed by file" end without a comma
+  - '^(?:[A-Za-z]+ed|written|built|kept|made|done|given|held|known|left|shown|taken|thrown|hidden|found|sent|run) (?:at|in|on|by|from|during|after|before|once|for|to)\b[^,.]{0,50},'

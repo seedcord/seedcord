@@ -1,6 +1,6 @@
 import { Buffer, isUtf8 } from 'node:buffer';
 
-// how a built bot carries one listed file inside its JS
+// how a built bot stores one listed file inside its JS
 export interface EncodedFile {
     readonly encoding: 'utf8' | 'base64';
     readonly data: string;

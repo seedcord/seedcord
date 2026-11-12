@@ -18,7 +18,7 @@
 
 `eslint-plugin-discordjs` has type-aware ESLint rules for discord.js. Apart from the two `prefer-*` style rules, each rule catches a payload or command definition that discord.js or the Discord API rejects at run time. The rules check values known at lint time.
 
-Install it in any discord.js project. It needs no seedcord package.
+Install it in any discord.js project. It works without a seedcord package.
 
 seedcord is pre-1.0, so a minor version can break your lint setup. Each release's changelog says what changed and how to update.
 
@@ -67,7 +67,7 @@ If your config already sets up typed linting, leave out the `languageOptions` bl
 | [select-menu-min-exceeds-max](docs/rules/select-menu-min-exceeds-max.md) | a select menu whose minimum is above its maximum |
 | [no-discord-limit-exceeded](docs/rules/no-discord-limit-exceeded.md) | more items than Discord allows on a builder, like a sixth component in a row or a 26th choice |
 | [no-conflicting-button-props](docs/rules/no-conflicting-button-props.md) | button props that don't go together, like a `customId` with a `url` |
-| [require-button-props](docs/rules/require-button-props.md) | a button missing its style or a prop its style needs |
+| [require-button-props](docs/rules/require-button-props.md) | a button missing its style or a prop that its style needs |
 | [no-choices-and-autocomplete](docs/rules/no-choices-and-autocomplete.md) | autocomplete and static choices on one slash option |
 | [required-option-before-optional](docs/rules/required-option-before-optional.md) | a required slash option after an optional one |
 | [valid-command-name](docs/rules/valid-command-name.md) | slash command and option names Discord rejects |

@@ -6,9 +6,9 @@ export interface PackageReexports {
 }
 
 /**
- * Find every symbol a package re-exports that its declaring package never exports. No package gives
- * those a page, so the docs drop them. A symbol the owner exports and tags `@internal` is allowed,
- * since the owner made that call. Returns one message per offender.
+ * Find every symbol a package re-exports that its declaring package never exports. The docs omit them
+ * because the declaring package doesn't give them a page. A symbol that the owner exports and tags `@internal` is
+ * allowed since the owner made that call. Returns one message per offender.
  */
 export function findReexportsMissingFromOwner(packages: readonly PackageReexports[]): string[] {
     const exportedByPackage = new Map(packages.map((pkg) => [pkg.name, new Set(pkg.exportedNames)]));
@@ -16,7 +16,7 @@ export function findReexportsMissingFromOwner(packages: readonly PackageReexport
     return packages.flatMap((pkg) =>
         pkg.reexports.reduce<string[]>((missing, reference) => {
             const owner = reference.packageName;
-            // an owner outside this map is an external package, which carries its own docs
+            // an owner outside this map is an external package, which has its own docs
             const ownerExports = owner === undefined ? undefined : exportedByPackage.get(owner);
             if (ownerExports && !ownerExports.has(reference.name)) {
                 missing.push(`${pkg.name} re-exports ${reference.name}, which ${owner} never exports`);

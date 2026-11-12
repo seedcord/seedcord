@@ -90,7 +90,7 @@ describe('DiscordSession.readScopes', () => {
 });
 
 describe('DiscordSession.deleteCommands', () => {
-    it('deletes each command through its own scope route, and keeps going past a failure', async () => {
+    it('deletes each command through its own scope route, and continues past a failure', async () => {
         const failing = Routes.applicationGuildCommand(APP_ID, '111', 'ban-id');
         const { session, deletes } = await sessionOn({ [failing]: new Error('Unknown Command') });
 
@@ -126,7 +126,7 @@ describe('DiscordSession.clearScopes', () => {
         expect(result).toEqual({ deleted: 3, failed: [] });
     });
 
-    it('records a scope it could not clear and keeps going', async () => {
+    it('records a scope it could not clear and continues', async () => {
         const { session, puts } = await sessionOn({ [Routes.applicationCommands(APP_ID)]: new Error('500') });
 
         const result = await session.clearScopes([

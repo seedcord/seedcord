@@ -45,7 +45,7 @@ describe('DocsPage card urls', () => {
         expect(imageOf(page.metadata())).toMatch(/\/packages\/core\/latest\/classes\/base-handler\.png$/);
     });
 
-    it('falls back to the package card when latest dropped the symbol', () => {
+    it('falls back to the package card when latest removed the symbol', () => {
         const page = DocsPage.forEntity('/packages/core/0.9.2/classes/base-handler', ENTITY, VERSION, undefined);
         expect(imageOf(page.metadata())).toMatch(/\/packages\/core\/latest\.png$/);
     });

@@ -21,7 +21,7 @@ export interface FormatFileOptions {
 /**
  * Formats a file path relative to the current working directory, with forward slashes on every OS.
  *
- * It returns the full path when the path is outside the working directory or the runtime has no `process`.
+ * It returns the full path when the path is outside the working directory or the runtime doesn't have `process`.
  *
  * @example
  * ```ts

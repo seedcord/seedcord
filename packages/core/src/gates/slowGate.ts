@@ -19,7 +19,7 @@ interface SlowGateMonitor {
     report(declaredRoute: string | null): void;
 }
 
-// undefined in production, so timedCheck skips the clock there. read per call, the environment binds late
+// undefined in production, where timedCheck skips the clock. read per call because the environment binds late
 export function slowGateMonitor(): SlowGateMonitor | undefined {
     if (Envapter.isProduction) return undefined;
     const readings: { name: string; ms: number }[] = [];

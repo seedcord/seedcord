@@ -3,6 +3,7 @@ import { displayPath } from '@seedcord/errors/internal';
 import { FolderExports } from '#hmr/FolderExports';
 
 import type { AnyMiddlewareCtor } from '#decorators/middleware';
+import type { PluginRegistry } from '#src/plugin/PluginRegistry';
 import type { MiddlewareRegistry } from './MiddlewareRegistry';
 import type { Logger } from '@seedcord/logger';
 import type { HmrUpdateEvent } from '@seedcord/types';
@@ -16,6 +17,7 @@ interface HandlerLoaderOptions<Handler, Middleware extends AnyMiddlewareCtor, Ke
     readonly handlersDir: string;
     readonly middlewaresDir: string | undefined;
     readonly middlewares: MiddlewareRegistry<Middleware, Key>;
+    readonly plugins: PluginRegistry;
     readonly logger: Logger;
     isHandler(value: unknown): value is Handler;
     isMiddleware(value: unknown): value is Middleware;
@@ -24,7 +26,11 @@ interface HandlerLoaderOptions<Handler, Middleware extends AnyMiddlewareCtor, Ke
     removeHandler(handler: Handler): void;
 }
 
-export class HandlerLoader<Handler extends { name: string }, Middleware extends AnyMiddlewareCtor, Key extends string> {
+export class HandlerLoader<
+    Handler extends Parameters<PluginRegistry['assertFreeOn']>[0],
+    Middleware extends AnyMiddlewareCtor,
+    Key extends string
+> {
     public readonly loadedHandlers: LoadedUnit[] = [];
     public readonly loadedMiddlewares: LoadedUnit[] = [];
 
@@ -70,12 +76,14 @@ export class HandlerLoader<Handler extends { name: string }, Middleware extends 
     }
 
     private registerHandler(handler: Handler, file: string): void {
+        this.options.plugins.assertFreeOn(handler);
         const from = displayPath(file);
         if (!this.options.storeHandler(handler, from)) return;
         if (this.initialLoad) this.loadedHandlers.push({ name: handler.name, from });
     }
 
     private registerMiddleware(middleware: Middleware, file: string): void {
+        this.options.plugins.assertFreeOn(middleware);
         const registration = this.options.middlewares.register(middleware);
         if (!registration || !this.initialLoad) return;
 

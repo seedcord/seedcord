@@ -16,11 +16,12 @@ import { TargetBuild } from './TargetBuild';
 import type { ResolvedSeedcordConfig, ResolvedServerTarget } from '#core/config/schema';
 import type { Project } from '#core/project/Project';
 import type { BundleStats } from './output';
+import type { AsyncReturnType } from 'type-fest';
 import type { BuildEnvironmentOptions, PluginOption, Rolldown, ViteBuilder } from 'vite';
 
 const NODE_TARGET = 'node24';
 
-function outputChunks(result: Awaited<ReturnType<ViteBuilder['build']>>): Rolldown.OutputChunk[] {
+function outputChunks(result: AsyncReturnType<ViteBuilder['build']>): Rolldown.OutputChunk[] {
     // vite returns a watcher only under build.watch
     const outputs = [result].flat().filter((output) => 'output' in output);
     return outputs.flatMap(({ output }) => output.filter((file) => file.type === 'chunk'));
@@ -87,7 +88,7 @@ export abstract class ServerBuild<Target extends ResolvedServerTarget = Resolved
     protected async buildBot(
         plugins: PluginOption[],
         build: BuildEnvironmentOptions
-    ): Promise<Awaited<ReturnType<ViteBuilder['build']>>> {
+    ): Promise<AsyncReturnType<ViteBuilder['build']>> {
         const { config, configDir } = this.project;
         const builder = await createBuilder({
             root: configDir,

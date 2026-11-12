@@ -13,6 +13,7 @@ export class Ping extends SlashHandler<'ping'> {
         if (this.options.getBoolean('detailed')) {
             lines.push(`Uptime **${this.core.stats.uptime.sinceStart()}s**`);
             lines.push(`Pings **${runs}**`);
+            lines.push(`Asked in **${this.askedIn}**`);
         }
 
         await this.reply(lines.join('\n'));

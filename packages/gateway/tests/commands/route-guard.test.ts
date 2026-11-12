@@ -8,7 +8,7 @@ import { it } from '#tests/utils/test-env';
 
 type Interactions = NonNullable<ReturnType<typeof interactionsOf>>;
 
-// justified: the warnings go through the dispatcher's private logger
+// justified: the dispatcher writes the warnings to its private logger
 function loggerOf(interactions: Interactions): { warn: (message: string) => void } {
     return (interactions as unknown as { logger: { warn: (message: string) => void } }).logger;
 }
@@ -28,7 +28,7 @@ describe('Boot-time slash route exhaustiveness guard', () => {
         vi.clearAllMocks();
     });
 
-    it('warns for a command route leaf with no handler and stays silent for the handled leaf', async ({ testEnv }) => {
+    it('warns for a command route leaf with no handler and is silent for the handled leaf', async ({ testEnv }) => {
         await testEnv.createFile(
             'commands/Config.ts',
             `
@@ -75,7 +75,7 @@ describe('Boot-time slash route exhaustiveness guard', () => {
         expect(warnSpy.mock.calls.every((call) => !String(call[0]).includes('config/set'))).toBe(true);
     });
 
-    it('stays silent when every command route leaf has a handler', async ({ testEnv }) => {
+    it('is silent when every command route leaf has a handler', async ({ testEnv }) => {
         await testEnv.createFile(
             'commands/Ping.ts',
             `

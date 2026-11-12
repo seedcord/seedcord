@@ -26,7 +26,7 @@ function cdCtx(
     rateLimiter: object,
     ids: { userId?: string; guildId?: string; channelId?: string; declaredRoute?: string | null } = {}
 ): GateContextBase {
-    // the gate reads core.rateLimiter and the id scalars, so a minimal cast stands in
+    // a minimal cast stands in because the gate reads core.rateLimiter and the id scalars
     const core = { rateLimiter } as unknown as CoreBase;
     return {
         core,
@@ -48,7 +48,7 @@ describe('Cooldown', () => {
         await expect(Cooldown(5).check(cdCtx(rl))).resolves.toBeUndefined();
     });
 
-    it('charges the key on commit, not on check', async () => {
+    it('charges the key only on commit', async () => {
         const charge = vi.fn().mockReturnValue({ limited: false });
         await Cooldown(5).commit(cdCtx({ peek: () => ({ limited: false }), charge }));
         expect(charge).toHaveBeenCalledTimes(1);
@@ -65,14 +65,15 @@ describe('Cooldown', () => {
         const ctx = cdCtx({ peek, charge: vi.fn() }, { declaredRoute: 'slash:daily' });
         await Cooldown(5).check(ctx);
         await Cooldown(5).check(ctx);
-        // the key derives from the route and config, so two loads of the same handler match
+        // two loads of the same handler match since the key derives from the route and config
         expect(peek.mock.calls[0]?.[0]).toBe(peek.mock.calls[1]?.[0]);
     });
 
-    it('includes the route id in the key', async () => {
+    it('keys by the route, the window settings, and the scope id, the same across releases', async () => {
         const peek = vi.fn().mockReturnValue({ limited: false });
-        await Cooldown(5).check(cdCtx({ peek, charge: vi.fn() }, { declaredRoute: 'slash:daily' }));
-        expect(String(peek.mock.calls[0]?.[0])).toContain('slash:daily');
+        await Cooldown(5, { limit: 3 }).check(cdCtx({ peek, charge: vi.fn() }, { declaredRoute: 'slash:daily' }));
+        // changing this format resets every window that a durable store kept under the old key
+        expect(peek.mock.calls[0]?.[0]).toBe('cooldown:slash:daily:user:w5000:l3:u1');
     });
 
     it('keys two different routes to different keys', async () => {
@@ -92,7 +93,7 @@ describe('Cooldown', () => {
 
     it('keys two off-route Cooldown instances to different keys', async () => {
         const peek = vi.fn().mockReturnValue({ limited: false });
-        // no route to key on, so unrelated event handlers must not collide on one bucket
+        // unrelated event handlers must not collide on one bucket. they don't have a route to key on
         await Cooldown(5).check(cdCtx({ peek, charge: vi.fn() }, { declaredRoute: null }));
         await Cooldown(5).check(cdCtx({ peek, charge: vi.fn() }, { declaredRoute: null }));
         expect(peek.mock.calls[0]?.[0]).not.toBe(peek.mock.calls[1]?.[0]);
@@ -103,7 +104,7 @@ describe('Cooldown', () => {
         const gate = Cooldown(5);
         await gate.check(cdCtx({ peek, charge: vi.fn() }, { declaredRoute: null }));
         await gate.check(cdCtx({ peek, charge: vi.fn() }, { declaredRoute: null }));
-        // one declaration site keys one bucket, so the same off-route gate limits its scope consistently
+        // the same off-route gate limits its scope consistently because one declaration site keys one bucket
         expect(peek.mock.calls[0]?.[0]).toBe(peek.mock.calls[1]?.[0]);
     });
 
@@ -155,26 +156,30 @@ describe('Cooldown', () => {
         expect(() => Cooldown('soon')).toThrow();
     });
 
-    it('throws a SeedcordError for a duration that types but parses to nothing', () => {
+    it('throws a SeedcordError for a duration string that parses to nothing', () => {
+        // a plain string skips the compile-time check
+        const zero = String('0s');
         let caught: unknown;
         try {
-            // '0s' types as a ValidDuration but parseDuration returns null for it
-            Cooldown('0s');
+            Cooldown(zero);
         } catch (error) {
             caught = error;
         }
-        expect(isSeedcordError(caught, undefined, SeedcordErrorCode.GateInvalidCooldownDuration)).toBe(true);
+        expect(isSeedcordError(caught, undefined, SeedcordErrorCode.InvalidDuration)).toBe(true);
     });
 
-    it.each([0, -1])('throws a SeedcordError for the non-positive numeric duration %d', (duration) => {
-        let caught: unknown;
-        try {
-            Cooldown(duration);
-        } catch (error) {
-            caught = error;
+    it.each([0, -1, Number.NaN, Number.POSITIVE_INFINITY])(
+        'throws a SeedcordError for the numeric duration %d',
+        (duration) => {
+            let caught: unknown;
+            try {
+                Cooldown(duration);
+            } catch (error) {
+                caught = error;
+            }
+            expect(isSeedcordError(caught, undefined, SeedcordErrorCode.InvalidDuration)).toBe(true);
         }
-        expect(isSeedcordError(caught, undefined, SeedcordErrorCode.GateInvalidCooldownDuration)).toBe(true);
-    });
+    );
 
     it('converts a numeric duration from seconds to the window length', async () => {
         const peek = vi.fn().mockReturnValue({ limited: false });
@@ -204,18 +209,28 @@ describe('Cooldown', () => {
         expect(laterCommit).toHaveBeenCalledTimes(1);
     });
 
-    it('falls back to the global bucket when the scope value is missing', async () => {
+    it.each([
+        { per: 'user', missing: 'userId' },
+        { per: 'guild', missing: 'guildId' },
+        { per: 'channel', missing: 'channelId' }
+    ] as const)('puts every context without a $missing in one global $per bucket', async ({ per, missing }) => {
         const peek = vi.fn().mockReturnValue({ limited: false });
-        const ctx = {
-            core: { rateLimiter: { peek, charge: vi.fn() } },
-            userId: null,
-            guildId: 'g1',
-            channelId: 'c1',
-            dispatch: { declaredRoute: null }
-        } as unknown as GateContextBase;
+        const gate = Cooldown(5, { per });
+        const without = (other: string): GateContextBase =>
+            // justified: the gate reads core.rateLimiter, the id scalars, and the dispatch route
+            ({
+                core: { rateLimiter: { peek, charge: vi.fn() } },
+                userId: other,
+                guildId: other,
+                channelId: other,
+                dispatch: { declaredRoute: null },
+                [missing]: null
+            }) as unknown as GateContextBase;
 
-        await Cooldown(5).check(ctx);
+        await gate.check(without('a'));
+        await gate.check(without('b'));
 
+        expect(peek.mock.calls[0]?.[0]).toBe(peek.mock.calls[1]?.[0]);
         expect(String(peek.mock.calls[0]?.[0])).toContain('global');
     });
 });

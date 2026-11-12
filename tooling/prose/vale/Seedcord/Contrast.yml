@@ -1,0 +1,8 @@
+extends: existence
+link: https://github.com/seedcord/seedcord/blob/next/.agents/skills/writing-voice/SKILL.md
+message: "Contrast '%s'. State the positive claim alone, or write two plain sentences."
+level: error
+ignorecase: true
+tokens:
+  - 'rather than'
+  - 'not\b[^.\n]{0,40}?, but'

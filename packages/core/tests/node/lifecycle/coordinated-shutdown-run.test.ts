@@ -8,8 +8,8 @@ import { ShutdownPhase } from '#src/lifecycle/phases';
 
 const SLOW_TASK_MS = 30;
 
-// a second spyOn on an already-spied method returns the existing mock, so an unrestored spy
-// carries the previous test's calls into this one
+// restore spies here because a second spyOn on an already-spied method returns the existing mock,
+// with the previous test's calls still on it
 afterEach(() => {
     vi.restoreAllMocks();
 });
@@ -25,7 +25,7 @@ describe('CoordinatedShutdown.run re-entrancy', () => {
         const shutdown = new CoordinatedShutdown();
         shutdown.removeSignalHandlers();
 
-        // same phase as the rejector, so allSettled still runs survivor before the phase throws
+        // allSettled still runs survivor before the phase throws because it's in the same phase as the rejector
         const survivor = vi.fn(() => Promise.resolve());
         shutdown.addTask(ShutdownPhase.Unbind, 'reject', () => Promise.reject(new Error('boom')), 1000);
         shutdown.addTask(ShutdownPhase.Unbind, 'survivor', survivor, 1000);

@@ -1,5 +1,4 @@
 import {
-    attachmentsOf,
     BAKED_IDS_KEY,
     bindBotColor,
     connectDevChannel,
@@ -16,7 +15,7 @@ import { PluginHost } from '@seedcord/core/plugin';
 import { SeedcordErrorCode } from '@seedcord/errors';
 import { SeedcordError, setColorLevel } from '@seedcord/errors/internal';
 import { Logger } from '@seedcord/logger';
-import { HostAugmentTarget, HostVersion, SeedcordBrand } from '@seedcord/types/internal';
+import { HostAugmentTarget, HostPlugins, HostVersion, SeedcordBrand } from '@seedcord/types/internal';
 
 import { installEmojis } from '#src/emojis/EmojiInjector';
 import { HttpStartupTasks } from '#src/HttpStartupTasks';
@@ -35,7 +34,7 @@ import type { REST } from '@discordjs/rest';
 import type { StartupTasks, BakedIds } from '@seedcord/core/internal';
 import type { DevChannel, SeedcordCliEvents, SeedcordFrameworkEvents } from '@seedcord/types/internal';
 
-// cloudflare cancels waitUntil work 30s after the response, this timer included, so the wait has to end before then
+// the wait has to end within 30s because cloudflare cancels waitUntil work 30s after the response, this timer included
 const TIMED_OUT_INIT_WAIT_MS = 25_000;
 
 // seedcord build's worker entry writes these before bot.ts loads
@@ -159,8 +158,8 @@ export class Seedcord extends PluginHost<'http', 'edge'> {
 
     async #start(): Promise<void> {
         const starting = this.#startOnce();
-        // if discord drops the first request, workers cancels startup and every later request waits on it forever.
-        // the await below already throws a failed startup, so waitUntil gets one that never rejects
+        // if discord disconnects during the first request, workers cancels startup and every later request waits on it forever.
+        // waitUntil gets a promise that never rejects. the await below already throws a failed startup
         keepRequestOpenFor(starting.catch(() => undefined));
         await starting;
     }
@@ -177,6 +176,8 @@ export class Seedcord extends PluginHost<'http', 'edge'> {
     async #prepare(): Promise<void> {
         // seedcord dev's codegen copy constructs this bot inside the CLI and never starts it
         Logger.configure(this.config.logger ?? {});
+        // seal before interactions.init(), which checks handlers against plugin members
+        sealAttachments(this);
         const ids = this.#readsBakedIds ? bakedIds() : undefined;
         this.#service.authenticate();
         await this.#service.subscribers.init();
@@ -188,15 +189,14 @@ export class Seedcord extends PluginHost<'http', 'edge'> {
     }
 
     async #runStartup(): Promise<void> {
-        sealAttachments(this);
-        this.#plugins.register(attachmentsOf(this));
+        this.#plugins.register(this[HostPlugins].attachments);
         try {
             await this.#startup.run();
         } catch (caught) {
             await this.#plugins.rollback();
             const oldInits = this.#plugins.timedOutInitsSettled();
-            // cloudflare cancels a timed-out init once its request ends, so a retry can't overlap it there.
-            // seedcord dev starts outside a request and nothing cancels it, so dev just waits it out.
+            // a retry can't overlap a timed-out init on cloudflare since cloudflare cancels it once its request ends.
+            // dev waits it out because seedcord dev starts outside a request and the init never gets cancelled.
             // we tried guarding overlapping inits on one plugin instead and every guard opened a new race. not worth it
             const waited = requestScope.getStore() ? settleWithin(oldInits, TIMED_OUT_INIT_WAIT_MS) : oldInits;
             keepRequestOpenFor(

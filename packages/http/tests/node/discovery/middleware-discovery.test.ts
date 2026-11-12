@@ -1,6 +1,7 @@
 import path from 'node:path';
 
 import { InteractionKind } from '@seedcord/core';
+import { PluginRegistry } from '@seedcord/core/internal';
 import { describe, expect, it } from 'vite-plus/test';
 
 import { InteractionDispatcher } from '#src/dispatch/InteractionDispatcher';
@@ -9,7 +10,7 @@ const HANDLERS_DIR = path.resolve(__dirname, './fixtures/handlers');
 const MIDDLEWARES_DIR = path.resolve(__dirname, './fixtures/middlewares');
 
 async function readyDispatcher(middlewaresDir?: string): Promise<InteractionDispatcher> {
-    const dispatcher = new InteractionDispatcher(HANDLERS_DIR, middlewaresDir);
+    const dispatcher = new InteractionDispatcher(new PluginRegistry(), HANDLERS_DIR, middlewaresDir);
     await dispatcher.init();
     return dispatcher;
 }
@@ -32,7 +33,7 @@ describe('http middleware discovery', () => {
         expect(names(dispatcher.middlewares.chainFor(InteractionKind.Modal))).toEqual(['Audit']);
     });
 
-    it('drops a middleware from every chain when its file goes away', async () => {
+    it('removes a middleware from every chain when its file is deleted', async () => {
         const dispatcher = await readyDispatcher(MIDDLEWARES_DIR);
 
         await dispatcher.onHmr({ type: 'delete', file: path.join(MIDDLEWARES_DIR, 'Audit.ts') });

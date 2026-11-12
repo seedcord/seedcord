@@ -15,7 +15,7 @@ export interface Violation {
 // the Next apps pin eslint 9 until eslint-config-next supports eslint 10
 const IGNORED: ReadonlySet<string> = new Set(['eslint']);
 
-// peer ranges a package publishes wider than the version the workspace installs
+// peer ranges that a package publishes wider than the version the workspace installs
 const WIDENED_PEERS: ReadonlyMap<string, ReadonlySet<string>> = new Map([
     ['discord-component-embed', new Set(['react'])]
 ]);

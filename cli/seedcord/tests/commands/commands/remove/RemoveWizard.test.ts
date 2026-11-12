@@ -64,7 +64,7 @@ function wizard(
 }
 
 describe('RemoveWizard with the clean questions', () => {
-    it('leaves only the steps, the preview and the outcome once the picked duplicates are gone', async () => {
+    it('leaves only the steps, the preview and the outcome once the picked duplicates are deleted', async () => {
         using terminal = new PromptTerminal();
         const { deleted, done } = wizard(terminal);
 

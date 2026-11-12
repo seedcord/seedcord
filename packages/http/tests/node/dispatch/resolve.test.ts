@@ -7,7 +7,7 @@ import { resolve } from '#src/dispatch/resolve';
 
 import { FROM } from './harness';
 
-import type { HandlerConstructor } from '#handlers/constructors';
+import type { HandlerConstructor, HandlerSlots } from '#handlers/constructors';
 import type { RouteMaps } from '#src/dispatch/resolve';
 import type { APIInteraction } from 'discord-api-types/v10';
 
@@ -20,7 +20,7 @@ function handlerNamed(name: string): HandlerConstructor {
 }
 
 function mapsWith(...registrations: Registration[]): RouteMaps {
-    const registry = new RouteRegistry<HandlerConstructor>();
+    const registry = new RouteRegistry<HandlerSlots>();
     for (const [kind, key, className] of registrations) {
         const ctor = handlerNamed(className ?? `${key}:${kind}`);
         storeInteractionRoute(kind, key, ctor);
@@ -165,7 +165,7 @@ describe('resolve', () => {
     it('resolves the unhandled default for a wire no prefix owns', () => {
         const maps = mapsWith([InteractionKind.Button, 'approve']);
 
-        // prefixOf reads an empty key out of a wire with no colon
+        // prefixOf reads an empty key out of a wire without a colon
         expect(resolve(maps, component(2, 'other-app-id'))).toMatchObject({
             kind: 'button',
             route: '',

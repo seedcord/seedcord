@@ -63,6 +63,7 @@
         "@seedcord/eslint-config": "workspace:^",
         "@seedcord/gateway": "workspace:^",
         "@seedcord/http": "workspace:^",
+        "@seedcord/prose": "workspace:^",
         "@seedcord/tsconfig": "workspace:^",
         "@seedcord/tsdown-config": "workspace:^",
         "@seedcord/vite-config": "workspace:^",
@@ -72,7 +73,7 @@
         "pg": "catalog:peer"
     },
     "peerDependencies": {
-        "@seedcord/core": "workspace:>=0.13.0-next.0",
+        "@seedcord/core": "workspace:>=0.14.0-next.0",
         "envapt": "catalog:peer",
         "kysely": "catalog:peer",
         "pg": "catalog:peer",

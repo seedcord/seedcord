@@ -23,7 +23,7 @@ import type { EmittedEntry } from '#src/docs/union-inputs';
 import type { PublishedPackage } from '#src/lib/published-packages';
 import type { PackageVersionsInput } from '@seedcord/docs-engine';
 
-// Additive publish. Merges freshly-published versions into the remote R2 index without dropping a
+// Additive publish. Merges freshly-published versions into the remote R2 index without removing a
 // prior version. build-docs-artifacts.ts is the whole-tree local builder.
 
 const INIT_CWD = process.env.INIT_CWD ? path.resolve(process.env.INIT_CWD) : process.cwd();
@@ -42,7 +42,7 @@ const flags = new CliFlags('vp run docs:sync [options]', {
     prefix: { type: 'string', describe: 'Key prefix inside the bucket' },
     bucket: { type: 'string', describe: 'Bucket name, overriding R2_BUCKET' },
     prune: { type: 'boolean', describe: 'Delete objects the rebuilt index no longer lists' },
-    'prune-force': { type: 'boolean', describe: 'Allow a prune that drops more than half the keys' },
+    'prune-force': { type: 'boolean', describe: 'Allow a prune that removes more than half the keys' },
     overwrite: { type: 'boolean', describe: 'Re-upload version dirs R2 already holds' },
     'dry-run': { type: 'boolean', describe: 'Print what would be written and send nothing' }
 });
@@ -81,7 +81,7 @@ async function readOptions(argv: readonly string[]): Promise<Options> {
 async function emitVersionDir(engine: DocsEngine, pkg: PublishedPackage): Promise<EmittedEntry | null> {
     const found = engine.getPackage(pkg.name);
     if (!found) {
-        console.log(`⏭️  ${pkg.name}@${pkg.version} has no documentable API; skipping`);
+        console.log(`⏭️  ${pkg.name}@${pkg.version} doesn't have a documentable API; skipping`);
         return null;
     }
     const folder = formatDisplayPackageName(pkg.name);
@@ -106,7 +106,7 @@ async function collectEmitted(opts: Options): Promise<EmittedEntry[]> {
     const published = opts.published.filter((pkg) => documented.has(pkg.name));
 
     if (opts.extract) {
-        // api-extractor drops an inherited member when its base class's package is absent from the model
+        // api-extractor omits an inherited member when its base class's package is absent from the model
         await new ApiDocsGenerator({
             outputDir: GENERATED_ROOT,
             githubBase: opts.projectFolderUrl,

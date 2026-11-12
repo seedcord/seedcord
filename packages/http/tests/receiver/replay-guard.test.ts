@@ -83,7 +83,7 @@ describe('ReplayGuard dedup', () => {
 
     it('sweeps expired entries on access and re-accepts a swept signature', () => {
         const guard = new ReplayGuard();
-        // justified: the sweep is unobservable through unseen(), so the test reads the private map
+        // justified: the test reads the private map because the sweep is unobservable through unseen()
         const seen = Reflect.get(guard, 'seen') as Map<string, number>;
 
         expect(guard.unseen('sig-a', BASE)).toBe(true);

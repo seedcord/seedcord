@@ -48,7 +48,10 @@ describe("checkTarget reading a page's HTML", () => {
 
         expect(
             await checkTarget(PAGE, withPages({ [PAGE]: html, 'https://example.com/post.json': good }))
-        ).toMatchObject({ status: 'fail', problems: [expect.stringMatching(/^The page has no component embed\./)] });
+        ).toMatchObject({
+            status: 'fail',
+            problems: [expect.stringMatching(/^The page doesn't have a component embed\./)]
+        });
     });
 
     it('measures a script body that holds <!-- and --> as sent', async () => {
@@ -61,7 +64,7 @@ describe("checkTarget reading a page's HTML", () => {
         });
     });
 
-    // on discord's crawler a <link> with no type never had its JSON fetched
+    // on discord's crawler a <link> without a type never had its JSON fetched
     it('fails a <link> with no type', async () => {
         const html = page(`<link rel="discord:component-embed" href="https://embeds.example.com/post.json">`);
 
@@ -137,7 +140,7 @@ describe("checkTarget reading a page's HTML", () => {
         });
     });
 
-    it('says a <link> has no href', async () => {
+    it('says a <link> is missing its href', async () => {
         const html = page(`<link rel="discord:component-embed" type="application/json">`);
 
         expect(await checkTarget(PAGE, withPages({ [PAGE]: html }))).toEqual({
@@ -156,7 +159,7 @@ describe("checkTarget reading a page's HTML", () => {
 
         expect(await checkTarget(PAGE, input)).toEqual({
             status: 'unreadable',
-            reason: `Couldn't fetch ${PAGE}: no answer before the 10 seconds ran out. Discord waits about 10 seconds in total for the page and its linked JSON, then shows no preview.`
+            reason: `Couldn't fetch ${PAGE}: no answer before the 10 seconds ran out. Discord waits about 10 seconds in total for the page and its linked JSON, then doesn't show a preview.`
         });
     });
 
@@ -175,12 +178,12 @@ describe("checkTarget reading a page's HTML", () => {
         expect(await checkTarget(PAGE, withSlowPages({ [PAGE]: html }, { [PAGE]: 9400 }))).toMatchObject({
             status: 'pass',
             warnings: [
-                'Fetching this embed took 9.4 seconds. Discord waits about 10 seconds in total for the page and its linked JSON, then shows no preview.'
+                "Fetching this embed took 9.4 seconds. Discord waits about 10 seconds in total for the page and its linked JSON, then doesn't show a preview."
             ]
         });
     });
 
-    it('stays quiet about a page that took under 9 seconds', async () => {
+    it('warns about nothing on a page that took under 9 seconds', async () => {
         const html = page(`<script id="discord:component-embed" type="application/json">${good}</script>`);
 
         const result = await checkTarget(PAGE, withSlowPages({ [PAGE]: html }, { [PAGE]: 8900 }));
@@ -211,7 +214,7 @@ describe("checkTarget reading a page's HTML", () => {
             expect(result).toEqual({
                 status: 'fail',
                 problems: [
-                    `Couldn't fetch ${JSON_URL}: no answer before the 10 seconds ran out. Discord waits about 10 seconds in total for the page and its linked JSON, then shows no preview.`
+                    `Couldn't fetch ${JSON_URL}: no answer before the 10 seconds ran out. Discord waits about 10 seconds in total for the page and its linked JSON, then doesn't show a preview.`
                 ]
             });
             expect(fetched).toEqual([PAGE]);

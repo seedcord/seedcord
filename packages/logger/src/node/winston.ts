@@ -14,7 +14,7 @@ type WinstonInfo = LogEntry & Logform.TransformableInfo;
 const SPLAT = Symbol.for('splat');
 const LEVEL = Symbol.for('level');
 
-// winston's default npm levels have no `trace`
+// winston's default npm levels don't include `trace`
 export const NODE_LEVELS: Record<LogLevel, number> = { error: 0, warn: 1, info: 2, debug: 3, trace: 4 };
 
 export type SinkFormat = 'pretty' | 'json' | 'json-ansi';

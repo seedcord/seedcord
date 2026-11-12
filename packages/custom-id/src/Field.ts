@@ -1,11 +1,9 @@
-// the field types a customId carries. the chain methods on CustomId build these at runtime.
-
 import type { Simplify } from 'type-fest';
 
 /**
  * One field in a customId shape, its wire kind plus the type it decodes to.
  *
- * The chain methods build these for you. Write one by hand to name a shape in a type position, as
+ * The chain methods build these for you. Write one by hand when you need a shape in a type, like
  * `CustomId<'page', { index: CustomIdField<number> }>`.
  */
 export interface CustomIdField<Decoded> {
@@ -15,19 +13,19 @@ export interface CustomIdField<Decoded> {
     readonly min?: number;
     /** Upper bound, for a bounded int field. */
     readonly max?: number;
-    /** The allowed values, for a oneOf field. */
+    /** The allowed values, for a oneOf or someOf field. */
     readonly choices?: readonly string[];
-    /** Whether this field also carries null. */
+    /** Whether this field also accepts null. */
     readonly nullable?: boolean;
-    /** Phantom only, carries the decoded type and is never set at runtime. */
+    /** Only there to carry the decoded type for the compiler. Nothing sets it at runtime. */
     readonly decoded?: Decoded;
 }
 
 /**
- * The set of fields a customId carries, keyed by name.
+ * The fields of a customId, keyed by name.
  *
- * Write it as a constraint when a helper of your own takes a definition and its params together.
- * {@link AnyCustomId} covers the looser case where the fields do not matter.
+ * Use it as a constraint when your own helper takes a definition and its params together. When the
+ * fields don't matter, use {@link AnyCustomId}.
  *
  * @example
  * ```ts
@@ -38,13 +36,13 @@ export interface CustomIdField<Decoded> {
  */
 export type CustomIdShape = Record<string, CustomIdField<unknown>>;
 
-// Simplify flattens the chain of Record intersections the builders make, for a readable hover
+// Simplify flattens the stacked Record intersections into one object so the hover is readable
 export type WithField<Shape extends CustomIdShape, Name extends string, Decoded> = Simplify<
     Shape & Record<Name, CustomIdField<Decoded>>
 >;
 
 /**
- * The decoded result, each field name mapped to its decoded type.
+ * The values that a shape decodes to, keyed by field name.
  *
  * @example
  * ```ts

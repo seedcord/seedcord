@@ -5,11 +5,12 @@ import { paginate } from './pagination';
 import { renderSingle } from './renderSingle';
 
 import type { PagedTableOptions, TableOptions } from './options';
+import type { Arrayable } from 'type-fest';
 
 /**
  * Renders a grid of strings as a framed monospace table for Discord output.
  *
- * Column widths use display width, so emoji, astral, and CJK cells stay aligned. The first row is a
+ * Column widths use display width, so emoji, astral, and CJK cells line up. The first row is a
  * header by default with a separator beneath it. Ragged rows are padded to the widest row.
  *
  * Pass `budget` to get one string per page instead of a single string, splitting the body across a
@@ -57,7 +58,7 @@ export function renderTable(data: readonly (readonly string[])[], options?: Tabl
 export function renderTable(
     data: readonly (readonly string[])[],
     options?: TableOptions | PagedTableOptions
-): string | string[] {
+): Arrayable<string> {
     if (options) validateOptions(options);
     if (options && 'budget' in options) return paginate(data, options);
     return renderSingle(data, options);

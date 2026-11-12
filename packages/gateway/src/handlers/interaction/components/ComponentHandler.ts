@@ -44,11 +44,11 @@ export abstract class ComponentHandler<Event extends ComponentInteraction, Defs 
         return this.sender.deferUpdate();
     }
 
-    private decoded?: DecodedComponentRoute;
+    #decoded?: DecodedComponentRoute;
 
     private get decodedRoute(): DecodedComponentRoute {
-        this.decoded ??= decodeComponentRoute(this.constructor, this.event.customId);
-        return this.decoded;
+        this.#decoded ??= decodeComponentRoute(this.constructor, this.event.customId);
+        return this.#decoded;
     }
 
     /** The matched custom-ID prefix, such as `approve`, without encoded params. */

@@ -28,7 +28,7 @@ function user(id: string, username: string): APIUser {
     return { id, username, discriminator: '0', global_name: username, avatar: null };
 }
 
-// justified: each fixture carries only the fields the assertions read
+// justified: each fixture has only the fields the assertions read
 function member(nick: string): APIInteractionDataResolvedGuildMember {
     return { nick, roles: [], permissions: '0' } as unknown as APIInteractionDataResolvedGuildMember;
 }
@@ -79,7 +79,7 @@ describe('text inputs', () => {
         expect(fields.getTextInputValue('bio')).toBe('writes bots');
     });
 
-    it('throws when the modal carries no field with that custom id', () => {
+    it("throws when the modal doesn't have a field with that custom id", () => {
         expect(codeFrom(() => fields.getTextInputValue('nope'))).toBe(SeedcordErrorCode.ModalFieldNotFound);
     });
 });
@@ -319,7 +319,7 @@ describe('file upload', () => {
         expect(fields.getUploadedFiles('proof')).toEqual(new Collection([['a1', shot]]));
     });
 
-    it('throws when a required read finds no upload', () => {
+    it('throws when a required read finds zero uploads', () => {
         const empty = new ModalFields({
             custom_id: 'form',
             components: [labelled(1, { type: ComponentType.FileUpload, id: 2, custom_id: 'proof', values: [] })]
@@ -403,15 +403,15 @@ describe('payloads the pinned types forbid', () => {
         expect(message).toContain('999');
     });
 
-    it('reads an empty modal when the payload carries no components', () => {
-        // justified: the test omits a key the typing marks required
+    it('reads an empty modal when the payload components list is empty', () => {
+        // justified: the test omits a key that the typing marks required
         const bare = { custom_id: 'form' } as unknown as APIModalSubmission;
         const fields = new ModalFields(bare);
 
         expect(codeFrom(() => fields.getTextInputValue('name'))).toBe(SeedcordErrorCode.ModalFieldNotFound);
     });
 
-    it('reads a select field that carries no values key', () => {
+    it('reads a select field without a values key', () => {
         // justified: discord.js guards this key on every select kind
         const bare = { type: ComponentType.UserSelect, id: 2, custom_id: 'owners' } as unknown as ModalSubmitComponent;
         const fields = new ModalFields({
@@ -424,7 +424,7 @@ describe('payloads the pinned types forbid', () => {
         expect(codeFrom(() => fields.getSelectedUsers('owners', true))).toBe(SeedcordErrorCode.ModalFieldEmpty);
     });
 
-    it('reads a mentionable field that carries no values key', () => {
+    it('reads a mentionable field without a values key', () => {
         const bare = {
             type: ComponentType.MentionableSelect,
             id: 2,
@@ -491,7 +491,7 @@ describe('getField', () => {
         });
     });
 
-    it('throws when the modal carries no field with that custom id', () => {
+    it("throws when the modal doesn't have a field with that custom id", () => {
         expect(codeFrom(() => fields.getField('nope'))).toBe(SeedcordErrorCode.ModalFieldNotFound);
     });
 

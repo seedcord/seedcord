@@ -133,7 +133,7 @@ export function DevLayout(props: DevLayoutProps): ReactElement {
                 ) : (
                     <>
                         <LogHeader following={scroll.following} below={scroll.below} />
-                        {/* the notification stack is unbounded, so the pane keeps a row back for its own message */}
+                        {/* the pane keeps a row back for its own message because the notification stack is unbounded */}
                         <Box ref={logBoxRef} flexGrow={1} minHeight={1} overflow="hidden">
                             <ScrollableLogView
                                 visible={scroll.visible}

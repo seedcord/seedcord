@@ -201,7 +201,7 @@ describe('button decode', () => {
         );
     });
 
-    it('throws CustomIdHandlerRouteMissing when the handler has no route decorator', () => {
+    it('throws CustomIdHandlerRouteMissing when the handler is missing its route decorator', () => {
         class Bare extends ButtonHandler<[typeof ApproveId]> {
             execute(): Promise<void> {
                 void this.params;

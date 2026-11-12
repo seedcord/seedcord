@@ -6,8 +6,12 @@ import type { KeyedQueue } from './KeyedQueue';
 import type { KvDriver } from '@seedcord/types';
 import type { Jsonify, Simplify } from 'type-fest';
 
+/**
+ * `TRecord` as a {@link KvCollection} reads it back, after `JSON.stringify` and `JSON.parse`. A `Date`
+ * reads back as its ISO string.
+ */
 // a hover shows the record's fields in place of JsonifyObject<...>. SimplifyDeep hits TS2589 in get()
-type Stored<TRecord> = Simplify<Jsonify<TRecord>>;
+export type Stored<TRecord> = Simplify<Jsonify<TRecord>>;
 
 // expiresAt covers backends that ignore a ttl, like unstorage's fs driver
 interface Envelope<TValue> {
@@ -30,7 +34,7 @@ function serialized(key: string, envelope: Envelope<unknown>): string {
  * The records of one type, stored under one name in `config.kv`. Get one from
  * `kv.collection<T>('name')`.
  *
- * Every record goes through JSON on its way in and out. A `Date` you store reads back from `get()`
+ * The collection stores every record as JSON. A `Date` you store reads back from `get()`
  * as an ISO string.
  *
  * @example

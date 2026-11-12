@@ -76,7 +76,7 @@ discord.js has `member.roles.add()` and `member.roles.remove()`. Each call sends
 
 To make every change in one request, set the member's whole role list at once. That list holds every role they keep, since Discord removes any role you leave out. Building it by hand means copying the held ids, pushing one, filtering one out, and removing duplicates.
 
-`mergeRoles` does that in one call. You pass it the ids a member holds, the ids to add, and the ids to remove. It returns the merged list without duplicates. If an id is in both the add list and the remove list, `mergeRoles` leaves it out.
+`mergeRoles` does that in one call. You pass it the ids that a member holds, the ids to add, and the ids to remove. It returns the merged list without duplicates. If an id is in both the add list and the remove list, `mergeRoles` leaves it out.
 
 ```ts twoslash title="src/handlers/AddRole.ts"
 import {
@@ -109,7 +109,7 @@ export class AddRole extends SlashHandler<'role/add'> {
 
 `AddRole` passes one id to add and an empty removal list. To swap a trial role for a staff role, fill both lists in the same call.
 
-```ts
+```ts plain
 member.roles.set(mergeRoles(ids, [staff], [trial]));
 ```
 
@@ -121,7 +121,7 @@ member.roles.set(mergeRoles(ids, [staff], [trial]));
 
 On gateway, pass the list to `member.roles.set()`. On http, send it through `this.api`, the typed REST client on every repliable http handler.
 
-```ts
+```ts plain
 await this.api.guilds.editMember(guildId, userId, { roles: ids });
 ```
 

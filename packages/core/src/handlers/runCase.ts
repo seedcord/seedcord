@@ -1,14 +1,14 @@
 import { SeedcordErrorCode } from '@seedcord/errors';
 import { SeedcordTypeError } from '@seedcord/errors/internal';
 
-import type { Promisable } from 'type-fest';
+import type { ValueOf, Promisable } from 'type-fest';
 
 type ResolvedReturn<Case> = Case extends (...args: never[]) => infer Result ? Awaited<Result> : never;
 
 // Ret is never when the caller doesn't write one
 export type CaseReturn<Ret> = [Ret] extends [never] ? unknown : Promisable<Ret>;
 
-export type MatchResult<Ret, Cases> = [Ret] extends [never] ? ResolvedReturn<Cases[keyof Cases]> : Ret;
+export type MatchResult<Ret, Cases> = [Ret] extends [never] ? ResolvedReturn<ValueOf<Cases>> : Ret;
 
 // keyof reads discord.js's Events.MessageCreate key and the 'messageCreate' that an author writes as different types
 type ShapeKey<Shape> = keyof Shape | `${Extract<keyof Shape, string>}`;

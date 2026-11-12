@@ -1,5 +1,7 @@
 import { parseArgs } from 'node:util';
 
+import type { Arrayable } from 'type-fest';
+
 interface FlagDefinition {
     type: 'string' | 'boolean';
     short?: string;
@@ -67,7 +69,7 @@ export class CliFlags<Spec extends FlagSpec> {
         return Object.fromEntries(entries) as Record<string, ParseArgsOption>;
     }
 
-    private valueOf(definition: FlagDefinition, value: unknown): boolean | string | string[] | undefined {
+    private valueOf(definition: FlagDefinition, value: unknown): boolean | Arrayable<string> | undefined {
         if (definition.type === 'boolean') return value === true;
         if (definition.multiple) return Array.isArray(value) ? value.filter((one) => typeof one === 'string') : [];
         return typeof value === 'string' ? value : undefined;

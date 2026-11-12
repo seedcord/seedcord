@@ -1,5 +1,6 @@
 import 'reflect-metadata';
 
+import { MemberValues } from '#src/dispatch/DispatchContext';
 import { GatedMetadataKey } from '#src/metadataKeys';
 
 import { discardCommits, runCheck, runCommits } from './effects';
@@ -37,7 +38,7 @@ export async function runGates(
     }
 }
 
-// dispatchers call this before execute, inside the boundary, so a refusal renders or drops
+// dispatchers call this before execute, inside the boundary, to let the boundary render a refusal
 export async function runHandlerGates(
     handlerCtor: object,
     ctx: GateContextBase,
@@ -46,7 +47,7 @@ export async function runHandlerGates(
     // justified: getMetadata returns any, and this key only ever stores the @Gated gate array
     const gates = Reflect.getMetadata(GatedMetadataKey, handlerCtor) as readonly Gate<GateContextBase>[] | undefined;
     if (!gates) return;
-    await runGates(gates, ctx, observe);
+    await runGates(gates, { ...ctx, ...ctx.dispatch[MemberValues] }, observe);
 }
 
 // discord rejects a response to an interaction that isn't acked within 3s

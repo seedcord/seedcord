@@ -145,7 +145,7 @@ describe('AugmentationBuilder', () => {
         expect(message).toContain('commands/mod/ban.ts');
     });
 
-    it('warns and emits no leaf for an undeployable empty subcommand group', () => {
+    it('warns and emits zero leaves for an undeployable empty subcommand group', () => {
         const warnings: string[] = [];
         const logger: ILogger = { ...silentLogger, warn: (message) => warnings.push(String(message)) };
         const json = new SlashCommandBuilder()
@@ -195,7 +195,7 @@ describe('AugmentationBuilder', () => {
             }
         });
 
-        // builder order, not alphabetized
+        // in builder order
         expect(Object.keys(tables.kinds ?? {})).toEqual(['s', 'i', 'n', 'b', 'u', 'c', 'r', 'm', 'a']);
     });
 

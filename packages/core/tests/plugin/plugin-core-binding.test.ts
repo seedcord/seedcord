@@ -15,7 +15,7 @@ class Bound extends Plugin<{}, TransportCore> {
     public init(): Promise<void> {
         return Promise.resolve();
     }
-    // annotated to the bound type, which fails to compile when `core` stays CoreBase
+    // annotated to the bound type, which fails to compile when `core` is still CoreBase
     public peek(): TransportCore {
         return this.core;
     }

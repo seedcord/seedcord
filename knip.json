@@ -41,6 +41,7 @@
                 "@keyv/sqlite",
                 "@seedcord/plugin-kysely-postgres",
                 "@seedcord/plugin-mongoose",
+                "@seedcord/plugin-tasks",
                 "@types/pg",
                 "db0",
                 "discord-api-types",
@@ -77,6 +78,9 @@
             "ignoreDependencies": ["discord.js"]
         },
         "tooling/eslint-utils": {},
+        "tooling/prose": {
+            "entry": ["src/hook.ts", "tests/**/*.test.ts"]
+        },
         "tooling/brand": {},
         "tooling/cli-prompts": {
             "entry": ["playground/preview.ts"]
@@ -104,6 +108,7 @@
             "entry": ["**/*.types-test.ts"]
         },
         "packages/utils": {
+            "entry": ["**/*.types-test.ts"],
             "ignore": ["tests/files/fixtures/**"]
         },
         "plugins/kysely-postgres": {
@@ -111,6 +116,9 @@
         },
         "plugins/mongoose": {
             "entry": ["**/*.types-test.ts"]
+        },
+        "plugins/tasks": {
+            "entry": ["**/*.types-test.ts", "tests/fixtures/**/*.ts"]
         },
         "cli/seedcord": {
             "entry": [

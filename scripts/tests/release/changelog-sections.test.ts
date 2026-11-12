@@ -62,7 +62,7 @@ describe('ChangelogSections headings', () => {
 });
 
 describe('ChangelogSections breaking split', () => {
-    it('moves a breaking entry above the minor one and drops the marker', () => {
+    it('moves a breaking entry above the minor one and removes the marker', () => {
         const out = regrouped(
             lines(
                 '## 0.8.0',
@@ -91,7 +91,7 @@ describe('ChangelogSections breaking split', () => {
         );
     });
 
-    it('drops a bump section that had only breaking entries', () => {
+    it('removes a bump section that had only breaking entries', () => {
         const out = regrouped(
             lines('## 0.8.0', '', '### Minor Changes', '', '- **BREAKING:** Everything moved. ([#311](url))', '')
         );

@@ -20,7 +20,7 @@ interface CtxFields {
 }
 
 function permCtx(fields: CtxFields = {}): GuildPermissionsContext & AppPermissionsContext {
-    // the permission gates read only the permission scalars and guild fields, so a minimal cast stands in
+    // a minimal cast stands in because the permission gates read only the permission scalars and guild fields
     return {
         memberPermissions: fields.memberPermissions ?? null,
         memberGuildPermissions: fields.memberGuildPermissions ?? null,

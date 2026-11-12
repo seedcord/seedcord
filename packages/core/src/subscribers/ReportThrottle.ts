@@ -22,7 +22,7 @@ export class ReportThrottle {
         private readonly now: () => number = () => Date.now()
     ) {}
 
-    // null while the window is open, otherwise how many were dropped since the last send
+    // null while the window is open, otherwise how many it suppressed since the last send
     public take(key: string): number | null {
         const window = this.windows.get(key);
         if (window && this.now() - window.lastSentAt < this.windowMs) {

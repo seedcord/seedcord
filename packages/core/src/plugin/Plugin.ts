@@ -23,8 +23,10 @@ import type {
     Transport,
     TransportAssert
 } from './options';
-import type { Tail, FrameworkChannel, HmrAware, HmrUpdateEvent } from '@seedcord/types';
-import type { Promisable } from 'type-fest';
+import type { DispatchMemberFunctions } from './PluginRegistry';
+import type { FrameworkChannel, HmrAware, HmrUpdateEvent } from '@seedcord/types';
+import type { RESTPostAPIApplicationCommandsJSONBody } from 'discord-api-types/v10';
+import type { Constructor, Promisable } from 'type-fest';
 
 interface Attaching {
     readonly key: string;
@@ -112,7 +114,7 @@ export abstract class Plugin<
         private readonly host: CoreBase,
         ...[spec]: PluginSpecArgs<Opts, Fixed>
     ) {
-        // cleared here. a plugin this constructor builds by hand doesn't get the outer key
+        // cleared here. a plugin that this constructor builds by hand doesn't get the outer key
         const attachment = attaching;
         attaching = undefined;
         this.#kv = attachment?.kv;
@@ -187,6 +189,35 @@ export abstract class Plugin<
     codegen?(): Promise<unknown>;
 
     /**
+     * Adds values that every handler can read. Each key becomes a member, like `this.tag`, and its
+     * function returns the value. Gates and `Notice.render` read the same values on `ctx`.
+     *
+     * Seedcord calls each function once per interaction, and once per event that has a handler.
+     *
+     * `attach()` throws if seedcord already uses one of these keys, like `reply`, if another plugin on the
+     * bot uses it, or if the bot attaches this plugin twice.
+     *
+     * @example
+     * ```ts
+     * public override readonly dispatchMembers = {
+     *     tag: (origin: DispatchOrigin) => `${origin.guildId}:${origin.userId}`
+     * };
+     * ```
+     */
+    declare public readonly dispatchMembers?: DispatchMemberFunctions;
+
+    /**
+     * Changes commands before seedcord sends them to Discord. Write your changes onto these objects,
+     * like setting `name_localizations`. Each command appears once, even when it deploys to several guilds.
+     *
+     * If it throws, the deploy stops, and so do `seedcord codegen`, a Workers build, and `seedcord commands deploy`,
+     * `list` and `remove`.
+     *
+     * The CLI calls this without running `init()`. Read only what the constructor stored and the bot's files.
+     */
+    prepareCommands?(commands: readonly RESTPostAPIApplicationCommandsJSONBody[]): Promisable<void>;
+
+    /**
      * Rejects the options this plugin got.
      *
      * @param reason - Why the options are invalid.
@@ -243,24 +274,28 @@ export function constructAttached<TPlugin>(key: string, kv: Kv, construct: () =>
 export type { PluginLifecycleSpec } from './lifecycle';
 export type { PluginOptions } from './options';
 
+type SeedcordOnlyMember = 'init' | 'ready' | 'dispose' | 'codegen' | 'onHmr' | 'dispatchMembers' | 'prepareCommands';
+
 // a bound of Plugin<{}> rejects every plugin that declares an option, since Plugin<A> and Plugin<B>
-// are mutually unassignable. every member here must stay Opts-independent.
+// are mutually unassignable. no member here may depend on Opts.
 /** @internal */
 export type PluginLike = Pick<
     Plugin,
-    'init' | 'ready' | 'dispose' | 'onHmr' | typeof resolvedSpecSlot | typeof loggerSlot | typeof scopeSlot
+    SeedcordOnlyMember | typeof resolvedSpecSlot | typeof loggerSlot | typeof scopeSlot
 >;
 
 // a `CoreBase` first parameter rejects a narrowing ctor on its own, and it also collapses
 // `InstanceType<Ctor>` to `PluginLike` at every attach call. CoreParamAssert checks it instead.
 /** @internal */
-export type PluginCtor<TPlugin extends PluginLike = PluginLike> = new (...args: any[]) => TPlugin;
+export type PluginCtor<TPlugin extends PluginLike = PluginLike> = Constructor<TPlugin>;
+
+type Tail<TArgs extends unknown[]> = TArgs extends [unknown, ...infer R] ? R : never;
 
 /** @internal */
 export type PluginArgs<Ctor extends PluginCtor> =
     InheritsScopedConstructor<Ctor> extends true ? [] : Tail<ConstructorParameters<Ctor>>;
 
-// a narrowed plugin with no constructor of its own inherits the base one, whose spec carries ScopedSpec
+// a narrowed plugin without a constructor of its own inherits the base one, whose spec has ScopedSpec
 type InheritsScopedConstructor<Ctor extends PluginCtor> =
     Tail<ConstructorParameters<Ctor>> extends [infer Spec, ...unknown[]]
         ? typeof ScopedSpec extends keyof Spec
@@ -273,7 +308,15 @@ export type Attached<Key extends string, Instance> = Key extends `${infer Group}
     ? Record<Group, Record<Leaf, Instance>>
     : Record<Key, Instance>;
 
-// attach writes the key onto the host, so a key like toString would shadow the one on Object.prototype
+/**
+ * A plugin as `this.core.<key>` types it, without the members that only seedcord calls.
+ * `seedcord codegen` writes this type into `Core`. For a group, it applies to each plugin in the group.
+ */
+export type AttachedPlugin<Value> = Value extends PluginLike
+    ? Omit<Value, SeedcordOnlyMember>
+    : { [Key in keyof Value]: AttachedPlugin<Value[Key]> };
+
+// Object's keys are here because attach writes the key onto the host, where toString would shadow Object.prototype's
 // eslint-disable-next-line @typescript-eslint/no-wrapper-object-types -- lint:fix swaps this for `keyof object`, which is never
 type HostMember<Host> = keyof Host | keyof Object;
 

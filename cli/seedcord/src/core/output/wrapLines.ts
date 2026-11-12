@@ -5,7 +5,7 @@ export interface LinePrefix {
     rest: string;
 }
 
-// piped output has no width
+// piped output doesn't have a width
 export function wrapLines(text: string, width: number | undefined, prefix: LinePrefix): string {
     const lines = text.split('\n').flatMap((line) => {
         if (width === undefined) return [line];

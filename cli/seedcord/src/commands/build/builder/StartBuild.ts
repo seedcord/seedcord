@@ -11,8 +11,9 @@ import { runStartFile } from './serverEntry';
 import type { ResolvedSeedcordConfig, ResolvedServerTarget } from '#core/config/schema';
 import type { BundleStats } from './output';
 import type { NextCommand } from './TargetBuild';
+import type { SetNonNullable } from 'type-fest';
 
-type StartTarget = ResolvedServerTarget & { start: string };
+type StartTarget = SetNonNullable<ResolvedServerTarget, 'start'>;
 
 export function startsItself(target: ResolvedServerTarget): target is StartTarget {
     return target.start !== undefined;

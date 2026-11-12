@@ -55,7 +55,7 @@ export function dashboardToggles(capabilities: string[]): string[] {
     return [paint.amber(toggles), paint.mute(`turn on under Bot in ${PORTAL}`)];
 }
 
-// the token stays out because this line reaches scroll-back and screenshots
+// this leaves out the token because the line reaches scroll-back and screenshots
 export function reproducingCommand(answers: ScaffoldAnswers, agent: AgentName): string {
     const flags = [
         `--transport ${answers.transport}`,

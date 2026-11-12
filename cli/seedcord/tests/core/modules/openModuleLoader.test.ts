@@ -73,7 +73,7 @@ async function writeEntry(root: string, specifier: string): Promise<string> {
 }
 
 describe('openModuleLoader', () => {
-    it('opens no hmr websocket while another process holds its port', async () => {
+    it("doesn't open an hmr websocket while another process holds its port", async () => {
         await holdViteHmrPort();
         const logged = vi.spyOn(console, 'error').mockImplementation(() => undefined);
         const root = await project();

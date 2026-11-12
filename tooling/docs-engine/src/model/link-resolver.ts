@@ -8,11 +8,11 @@ import type { ApiItem, ApiModel } from '@microsoft/api-extractor-model';
 /**
  * Builds the `{@link}` resolver for one package, bound to its API model and re-export table.
  *
- * A bare `{@link Name}` resolves against `fromItem`'s declaring package, so without that context AE
- * resolves only globally-unique absolute references. A re-exported symbol has no ApiItem in this
- * package's model (no bundledPackages), so resolveDeclarationReference can't reach it. The name is then
- * mapped through the re-export table to its declaring package, the same owner the type-excerpt path
- * cross-package links through.
+ * A bare `{@link Name}` resolves against `fromItem`'s declaring package. Without that context AE
+ * resolves only globally-unique absolute references. resolveDeclarationReference can't reach a
+ * re-exported symbol because it doesn't have an ApiItem in this package's model (no bundledPackages).
+ * The name is then mapped through the re-export table to its declaring package, the same owner the
+ * type-excerpt path cross-package links through.
  */
 export function createLinkResolver(
     model: ApiModel,

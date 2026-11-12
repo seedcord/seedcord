@@ -99,7 +99,7 @@ describe('ListRunner', () => {
         expect(discord.routes).toContain(Routes.applicationCommands(APP_ID));
     });
 
-    it('lists every guild the bot is in with --all-guilds and reads no guild names one by one', async () => {
+    it("lists every guild the bot is in with --all-guilds and doesn't read guild names one by one", async () => {
         const { rest, gets } = fakeDiscord({
             ...ON_DISCORD,
             [Routes.userGuilds()]: [

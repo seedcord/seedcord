@@ -45,7 +45,7 @@ describe('RegisterCommand', () => {
         });
     });
 
-    it('stores config scope metadata when it takes no scope', () => {
+    it('stores config scope metadata when called without a scope', () => {
         const Cmd = freshCommand();
         RegisterCommand()(Cmd);
         expect(Reflect.getOwnMetadata(CommandMetadataKey, Cmd) as CommandMeta).toEqual({ scope: 'config' });
@@ -88,7 +88,7 @@ describe('RegisterCommand', () => {
         expect(isSeedcordError(caught, undefined, SeedcordErrorCode.DecoratorCommandGlobalWithGuilds)).toBe(true);
     });
 
-    it('throws when guild scope carries no guild ids', () => {
+    it('throws when guild scope is registered without guild ids', () => {
         let caught: unknown;
         try {
             registerRaw('guild')(freshCommand());

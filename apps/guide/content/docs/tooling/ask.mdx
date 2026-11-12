@@ -11,13 +11,13 @@ It runs the search behind the **Related** results in the guide's search dialog. 
 
 The answer lists each matching page with its matching sections, and a link to each section. You can run it outside a project too, before your bot exists.
 
-Quote the question if it contains `--verbose` or `--help`, which the CLI reads as flags, or a character that your shell treats as special, like `?` or `[` in zsh. Other words that look like flags stay in the question.
+Quote the question if it contains `--verbose` or `--help`, which the CLI reads as flags, or a character that your shell treats as special, like `?` or `[` in zsh. The CLI treats other words that look like flags as part of the question.
 
 A stable release of the CLI searches `seedcord.org/guide`. A prerelease searches `next.seedcord.org/guide`, because that site has the pages for code that isn't in a stable release yet.
 
 ## Pasting an error
 
-Paste the whole error as the question. `seedcord ask` removes the stack frames, then searches the first 500 characters of what remains. If the command shortens your text, the answer says so.
+Paste the whole error as the question. `seedcord ask` removes the stack frames, then searches the first 500 characters of what's left. If the command shortens your text, the answer says so.
 
 A seedcord error starts with its code in brackets, like `[3116]`. The guide's pages use the error's name, so the command looks up the name for you:
 
@@ -33,11 +33,11 @@ A seedcord error starts with its code in brackets, like `[3116]`. The guide's pa
 
 {/* prettier-ignore-end */}
 
-The answer starts with `3116 is CliDependencyMissing`. Inside a longer question, a four-digit number stays as you wrote it, since it could be a port, year, or something else entirely. If that number is also an error code, the answer adds the command that looks up the code.
+The answer starts with `3116 is CliDependencyMissing`. Inside a longer question, the command doesn't change a four-digit number, since it could be a port, year, or something else entirely. If that number is also an error code, the answer adds the command that looks up the code.
 
 ## Running it from a script or an agent
 
-With no terminal attached, or with `CI` set, `seedcord ask` prints only the answer. Each page in it links to its Markdown copy and lists the matching headings, so that a coding agent can read the page without its HTML. If nothing matches, the answer links `llms.txt`, the list of every page in the guide. If the search fails, the command exits with code 1.
+Without a terminal attached, or with `CI` set, `seedcord ask` prints only the answer. Each page in it links to its Markdown copy and lists the matching headings, so that a coding agent can read the page without its HTML. If nothing matches, the answer links `llms.txt`, the list of every page in the guide. If the search fails, the command exits with code 1.
 
 A project from `create-seedcord` tells coding agents to use this command in its `AGENTS.md`.
 

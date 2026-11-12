@@ -30,7 +30,7 @@ function denialNameFrom(fn: () => unknown): string {
     throw new Error('expected a Notice to be thrown');
 }
 
-// the bases read only a couple fields off the event, so a minimal fake per kind is enough.
+// a minimal fake per kind is enough because the bases read only a couple fields off the event.
 function button(customId: string): ButtonInteraction<'cached'> {
     return { customId } as unknown as ButtonInteraction<'cached'>;
 }
@@ -162,7 +162,7 @@ describe('this.params on a single-route handler', () => {
         });
     });
 
-    it('throws when the handler has no route decorator', () => {
+    it('throws when the handler is missing its route decorator', () => {
         const handler = built(Undecorated, button('approveXyz:'), core, dispatch);
         expect(() => handler.read()).toThrow(/route decorator/);
     });

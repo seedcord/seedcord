@@ -39,7 +39,7 @@ export class AppealModal extends BuilderComponent<'modal'> {
 }
 ```
 
-A modal carries two kinds of custom id. You mint the modal's own id with [`CustomId`](ref:custom-id/CustomId), since seedcord routes the submit by it. Each input takes a plain string id you pick, like `'reason'` above, and you read that field back by the same string.
+A modal has two kinds of custom id. You mint the modal's own id with [`CustomId`](ref:custom-id/CustomId), since seedcord routes the submit by it. Each input takes a plain string id you pick, like `'reason'` above, and you read that field back by the same string.
 
 A modal holds up to five top-level components, and each label wraps one input. `addTextDisplayComponents` adds a line of plain text, which counts toward the same five as a label.
 
@@ -70,7 +70,7 @@ export class Appeal extends SlashHandler<'ban'> {
 
 <Callout type="danger">
 
-`showModal()` has to be the _initial_ response. Calling it after `reply()`, `defer()`, or `deferUpdate()` throws `ReplyIllegalAckState`, covered in [When a reply throws](/replying/ack-states). You can't defer first, so any lookup the form needs has to finish inside Discord's three seconds. Discord also forbids a modal opening another modal, so the call fails to compile inside a [`ModalHandler`](ref:gateway/ModalHandler).
+`showModal()` has to be the _initial_ response. Calling it after `reply()`, `defer()`, or `deferUpdate()` throws `ReplyIllegalAckState`, covered in [When a reply throws](/replying/ack-states). You can't defer first, so any lookup that the form needs has to finish inside Discord's three seconds. Discord also forbids a modal opening another modal, so the call fails to compile inside a [`ModalHandler`](ref:gateway/ModalHandler).
 
 </Callout>
 
@@ -143,7 +143,7 @@ A label wraps a text input or one of the other input kinds, and each kind has it
 
 `getCheckbox` returns a boolean. `getCheckboxGroup` returns the checked values. `getSelectedChannels` takes an optional list of allowed channel types and throws when someone picks outside it. Leave it out to accept any channel type.
 
-Most getters that can return `null` take a `required` flag. Pass `true` to make the getter throw on an empty field. Its return type then drops the `null`. `getSelectedMembers` takes the custom id alone, so its result stays nullable.
+Most getters that can return `null` take a `required` flag. Pass `true` to make the getter throw on an empty field. Its return type then doesn't include `null`. `getSelectedMembers` takes the custom id alone, so it can still return `null`.
 
 ## Rewriting the message it came from
 

@@ -29,7 +29,7 @@ function offenders(): string[] {
 }
 
 describe('terminal glyphs', () => {
-    it('uses no codepoint a terminal draws from its emoji font', () => {
+    it('uses zero codepoints that a terminal draws from its emoji font', () => {
         expect(offenders()).toEqual([]);
     });
 });

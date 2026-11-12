@@ -3,7 +3,7 @@ title: Faults
 description: See how a user still gets an answer when your handler throws an error it doesn't catch, and change the card seedcord shows.
 ---
 
-Some calls fail in ways the user can't fix, like a database write. Catch the error and throw a [`Fault`](ref:core/Fault). The user gets a generic card with a tracking id, and the error you caught goes to your fault report along with the command and the user who ran it. If the user can fix the problem, like by creating a profile, [throw](/replying/throwing) a [`Notice`](ref:core/Notice) that tells them how.
+Some calls fail in ways the user can't fix, like a database write. Catch the error and throw a [`Fault`](ref:core/Fault). The user gets a generic card with a tracking id, and seedcord sends the error you caught to your fault report along with the command and the user who ran it. If the user can fix the problem, like by creating a profile, [throw](/replying/throwing) a [`Notice`](ref:core/Notice) that tells them how.
 
 ```ts twoslash title="src/handlers/Ban.ts"
 import { Fault, SlashHandler, SlashRoute } from '@seedcord/gateway';
@@ -41,7 +41,7 @@ export class Ban extends SlashHandler<'ban'> {
 
 All three render the same card.
 
-Letting the error escape shows that card too. The difference is which report it reaches. A `Fault` goes to `handledException`, beside the refusals you chose to report. An error nobody caught goes to `unknownException`. Catch and wrap the calls you expect to fail, so `unknownException` only shows you the bugs you haven't found yet.
+Letting the error escape shows that card too. The difference is which report it reaches. seedcord sends a `Fault` to `handledException`, beside the refusals you chose to report. It sends an error nobody caught to `unknownException`. Catch and wrap the calls you expect to fail, so `unknownException` only shows you the bugs you haven't found yet.
 
 ## The card every fault renders
 
@@ -136,7 +136,7 @@ The reason string reaches a debug log and stops there. `new Silence()` without o
 
 <Callout type="danger">
 
-Throwing a `Silence` from an interaction handler leaves the user with Discord's own failure message. Before any ack Discord says the application did not respond, and after a `defer()` the thinking placeholder stays. Throw a `Notice` there.
+Throwing a `Silence` from an interaction handler leaves the user with Discord's own failure message. Before any ack Discord says the application did not respond, and after a `defer()` it keeps showing the thinking placeholder. Throw a `Notice` there.
 
 </Callout>
 

@@ -120,7 +120,7 @@ describe('InteractionsEndpoint', () => {
         await expect(endpointFor(client).set(TUNNEL, RUNNING, INSTANCE)).rejects.toBe(refusal);
     });
 
-    it('surfaces a rate limit rather than reading it as a refusal', async () => {
+    it('rejects with the rate limit error itself', async () => {
         const { rest: client } = rest();
         const limited = new RateLimitError({
             timeToReset: 60_000,

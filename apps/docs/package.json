@@ -24,6 +24,7 @@
         "@tailwindcss/postcss": "catalog:deps",
         "discord-component-embed": "workspace:^",
         "envapt": "catalog:peer",
+        "es-toolkit": "catalog:deps",
         "github-slugger": "^2.0.0",
         "isomorphic-dompurify": "^4.4.0",
         "lucide-react": "catalog:deps",
@@ -40,6 +41,7 @@
         "zustand": "^5.0.15"
     },
     "devDependencies": {
+        "@seedcord/prose": "workspace:^",
         "@seedcord/tsconfig": "workspace:^",
         "@seedcord/vite-config": "workspace:^",
         "@testing-library/dom": "catalog:test",

@@ -61,7 +61,7 @@ export abstract class BaseCommand {
         }
     }
 
-    // stdout carries only the json
+    // stdout holds only the json
     protected async runJson(command: CommandUnknownOpts, run: () => Promise<unknown>): Promise<void> {
         try {
             process.stdout.write(`${JSON.stringify(await run(), null, 2)}\n`);

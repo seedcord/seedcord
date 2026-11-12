@@ -3,7 +3,7 @@ title: Commands
 description: Create your first slash command from two files, one that declares it to Discord and one that answers it when someone runs it.
 ---
 
-Slash commands are the way Discord gives people to reach your bot, and they run without a privileged intent. Discord needs your command's shape before anyone can run one, and when someone does, the interaction it sends back carries that command's name. Uploading a shape and routing a name are different jobs.
+Slash commands are the way Discord gives people to reach your bot, and they run without a privileged intent. Discord needs your command's shape before anyone can run one, and when someone does, the interaction it sends back includes that command's name. Uploading a shape and routing a name are different jobs.
 
 Each of those gets a file. A command file declares what Discord shows people. A handler file runs when someone uses it.
 
@@ -46,14 +46,14 @@ export class Ban extends BuilderComponent<'command'> {
 
 `setContexts` replaces the whole list every time it runs, so pass `Guild` again alongside whatever you are adding. `BotDM` covers DMs with your bot and `PrivateChannel` covers group DMs.
 
-```ts
+```ts plain
 this.instance.setContexts(
     InteractionContextType.Guild,
     InteractionContextType.BotDM
 );
 ```
 
-The file goes under the `commands` path your `bot.ts` declares. seedcord imports every file under that path at startup and sends the commands to Discord.
+Put the file under the `commands` path that your `bot.ts` declares. seedcord imports every file under that path at startup and sends the commands to Discord.
 
 ## Global or one server
 
@@ -67,11 +67,11 @@ That speed is why you point your test application at test servers. With the deco
 
 If you change a command's decorator from `'guild'` to `'global'`, Discord keeps the guild copy, so those servers show it twice in the picker. [`seedcord commands clean`](/tooling/commands#delete-what-your-code-no-longer-sends) deletes the guild copy.
 
-```ts
+```ts plain
 @RegisterCommand('guild', ['613425648685547541'])
 ```
 
-`'guild'` needs its ids. [`@RegisterCommand('guild')`](ref:core/RegisterCommand) on its own matches no overload, so TypeScript rejects it before you run anything. A JavaScript caller reaching the same line throws `DecoratorCommandGuildWithoutGuilds` at startup.
+`'guild'` needs its ids. [`@RegisterCommand('guild')`](ref:core/RegisterCommand) on its own doesn't match any overload, so TypeScript rejects it before you run anything. A JavaScript caller reaching the same line throws `DecoratorCommandGuildWithoutGuilds` at startup.
 
 ### One list of servers for every command
 
@@ -101,19 +101,19 @@ export const seedcord = new Seedcord({
 
 A command decorated with [`@RegisterCommand()`](ref:core/RegisterCommand) deploys to every server in that list.
 
-```ts
+```ts plain
 @RegisterCommand()
 ```
 
-With `guilds` left out, or with no ids in it, those same commands deploy globally. Your command files don't change. Leave `TESTING_GUILD_IDS` unset where your production bot runs, as [In production](/commands/deployed#in-production) shows.
+With `guilds` left out, or without any ids in it, those same commands deploy globally. Your command files don't change. Leave `TESTING_GUILD_IDS` unset where your production bot runs, as [In production](/commands/deployed#in-production) shows.
 
 When you pass a scope yourself, seedcord skips the list. `'global'` keeps the command global. `'guild'` with ids sends it to those servers. Add `'config'` to that array to send the command to the configured servers as well.
 
-```ts
+```ts plain
 @RegisterCommand('guild', ['config', '613425648685547541'])
 ```
 
-`'config'` there stands for every id under `commands.guilds`, so this command goes to those servers and to `613425648685547541`. If `commands.guilds` is empty, the same line throws `CoreCommandGuildsEmpty` at startup, and the message points to your command class.
+`'config'` there stands for every id under `commands.guilds`, so seedcord registers this command in those servers and in `613425648685547541`. If `commands.guilds` is empty, the same line throws `CoreCommandGuildsEmpty` at startup, and the message points to your command class.
 
 ## Codegen
 
@@ -184,13 +184,13 @@ export class Ban extends SlashHandler<'ban'> {
 
 `'ban'` appears twice, on the decorator and on the generic. You write the command's own name in both. A mismatch is a compile error.
 
-The two do different jobs. The decorator registers the route at startup, and the generic types `this.options` from what the command declared. Writing the name in both keeps `extends` a plain class name, so go-to-definition lands on `SlashHandler` itself.
+The two do different jobs. The decorator registers the route at startup, and the generic types `this.options` from what the command declared. Writing the name in both keeps `extends` a plain class name, so go-to-definition opens `SlashHandler` itself.
 
 `target` was required on the command, so it arrives without a null check. `reason` was optional, so it can be null.
 
 Put this handler's file under the `interactions` path, the folder seedcord scans for handlers.
 
-## A command with no handler
+## A command without a handler
 
 seedcord warns at startup about any route with nothing to answer it. The error says which route.
 

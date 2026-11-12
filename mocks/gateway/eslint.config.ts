@@ -7,7 +7,7 @@ export default createConfig({
     generalIgnores: ['**/seedcord-gen.ts'],
     userConfigs: [
         {
-            // the mock exercises embed components on purpose
+            // the mock uses embed components on purpose
             files: ['src/components/**/*.ts'],
             rules: {
                 'discordjs/prefer-v2-component': 'off'

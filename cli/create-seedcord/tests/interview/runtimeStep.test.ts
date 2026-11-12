@@ -7,7 +7,7 @@ import { runtimeStep } from '#interview/steps/runtime';
 const NO_TERMINAL = { interactive: false } as const;
 
 describe('the runtime step', () => {
-    it('makes a server bot when nothing picks the runtime and there is no terminal', async () => {
+    it('makes a server bot when nothing picks the runtime and no terminal is attached', async () => {
         const answers = await runFlow([runtimeStep], { transport: 'http' }, NO_TERMINAL);
 
         expect(answers.runtime).toBe('server');

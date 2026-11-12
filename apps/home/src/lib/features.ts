@@ -26,7 +26,7 @@ export const FEATURES = [
     'typed kv store',
     'interaction & event middleware',
     'typed event handlers & waitFor',
-    'Vite HMR hot reload, gateway stays alive',
+    'Vite HMR hot reload, gateway keeps its connection',
     'any Vite plugin',
     '.env modes',
     'full-screen dev terminal',
@@ -37,7 +37,6 @@ export const FEATURES = [
     'Node, Bun & single binary builds',
     'Cloudflare Workers',
     'your bot as an npm package',
-    'typed plugins',
-    'Postgres & Mongo plugins',
+    'plugin ecosystem',
     'eslint rules for discord.js'
 ] as const;

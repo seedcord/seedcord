@@ -103,7 +103,7 @@ describe('responseAttempted', () => {
         expect(sent.map((payload) => payload.method)).toEqual(['reply']);
     });
 
-    // the write advances the clock, so no other performance.now() reader shifts the measurement
+    // no other performance.now() reader shifts the measurement because the write advances the clock
     it('measures the write, from before it starts until it settles', async () => {
         const { bus, sent } = busWithSpy();
         const sender = new TestSender(bus);
@@ -129,7 +129,7 @@ describe('responseAttempted', () => {
             'discord said no'
         );
 
-        // the caller still sees the value that was thrown
+        // the caller still receives the value that was thrown
         await expect(sender.reply(response)).rejects.toBe('discord said no');
 
         expect(sent).toHaveLength(1);

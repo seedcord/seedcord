@@ -55,7 +55,7 @@ describe('assertPermissions', () => {
         ).not.toThrow();
     });
 
-    // an administrator effectively holds every permission, so the inverse check reports them all
+    // the inverse check reports every permission because an administrator effectively holds them all
     it('reports every scope bit on the inverse check for an administrator', () => {
         expect(() =>
             assertPermissions({

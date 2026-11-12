@@ -9,7 +9,7 @@ import type { SeedcordError } from '@seedcord/errors/internal';
 
 const DEADLINE_MS = 60;
 const TASK_TIMEOUT_MS = 10_000;
-// longer than the deadline, so the loop reaches the next phase only after run() has returned
+// longer than the deadline, to make the loop reach the next phase only after run() has returned
 const HUNG_TASK_TIMEOUT_MS = 150;
 
 const never = (): Promise<void> => new Promise<void>(() => undefined);
@@ -179,7 +179,7 @@ describe('CoordinatedShutdown deadline', () => {
         expect(claimedSuccess).toBe(false);
     });
 
-    it('reports the phases a slow startup left no time for', async () => {
+    it('reports the phases a slow startup left zero time for', async () => {
         const errors = vi.spyOn(Logger.prototype, 'error').mockImplementation(() => undefined);
         const info = vi.spyOn(Logger.prototype, 'info').mockImplementation(() => undefined);
         const shutdown = new CoordinatedShutdown(DEADLINE_MS);

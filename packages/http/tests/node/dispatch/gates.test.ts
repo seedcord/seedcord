@@ -79,7 +79,7 @@ describe('handler gates', () => {
         ]);
     });
 
-    it('drops the interaction with no reply on a gate Silence', async () => {
+    it('ends the interaction without a reply on a gate Silence', async () => {
         const drop = defineGate('drop', () => {
             throw new Silence('blacklisted');
         });
@@ -122,6 +122,8 @@ describe('handler gates', () => {
         const payload = {
             ...slashPayload('guarded'),
             guild_id: 'g-1',
+            locale: 'pl',
+            guild_locale: 'de',
             channel: { id: 'c-1', type: 0 },
             member: {
                 user: { id: 'u-1', username: 'tester' },
@@ -136,13 +138,15 @@ describe('handler gates', () => {
             userId: 'u-1',
             guildId: 'g-1',
             channelId: 'c-1',
+            userLocale: 'pl',
+            guildLocale: 'de',
             memberRoleIds: ['r-1', 'r-2'],
             memberPermissions: 2048n
         });
         expect(seen?.dispatch.declaredRoute).toBe('slash:guarded');
     });
 
-    it('reads the invoking user for a DM payload that carries no member', async () => {
+    it('reads the invoking user for a DM payload without a member', async () => {
         let seen: GateContextBase | undefined;
         const capture = defineGate('capture', (gateCtx) => {
             seen = gateCtx;
@@ -159,6 +163,7 @@ describe('handler gates', () => {
         expect(seen).toMatchObject({
             userId: 'u-dm',
             guildId: null,
+            guildLocale: null,
             memberRoleIds: [],
             memberPermissions: null
         });

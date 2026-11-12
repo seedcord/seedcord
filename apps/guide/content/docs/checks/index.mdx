@@ -27,12 +27,12 @@ A gate can read what a middleware wrote, since every middleware runs first.
 ## In this tab
 
 - [Gates](/checks/gates) put a check on a handler with `@Gated`. The pages after it cover the [permission gates](/checks/permissions), [writing your own](/checks/your-own), [combining several](/checks/combining), and [gates that change state](/checks/effect-gates).
-- [Middleware](/checks/middleware) runs for every handler of the kinds it lists. The [dispatch context](/checks/dispatch-context) carries what it computes to the handler and its gates.
+- [Middleware](/checks/middleware) runs for every handler of the kinds it lists. The [dispatch context](/checks/dispatch-context) passes what it computes to the handler and its gates.
 - [Cooldowns](/checks/cooldown) limit how often a command runs. [The rate limiter](/checks/rate-limiter) counts uses against any key you build.
-- [Permissions in a handler](/checks/in-handler-permissions) and [changing roles](/checks/changing-roles) cover checks that need a value your handler reads first, like the member a command targets.
+- [Permissions in a handler](/checks/in-handler-permissions) and [changing roles](/checks/changing-roles) cover checks that need a value that your handler reads first, like the member that a command targets.
 
 <Callout type="transport" only="gateway">
 
-A gateway event runs its own order, with event middleware ahead of every handler registered for it. [The event dispatch order](/events#several-handlers-for-one-event) lists every step.
+A gateway event runs its own order, with event middleware before every handler registered for it. [The event dispatch order](/events#several-handlers-for-one-event) lists every step.
 
 </Callout>

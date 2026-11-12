@@ -86,21 +86,21 @@ seedcord runs every check _before_ it runs any commit.
 
 If someone runs that command in a DM, `SpendCredit` checks their balance first and queues its commit. [`GuildOnly`](ref:core/GuildOnly) then refuses. Step two never runs, so the caller keeps the credit.
 
-A refusal anywhere in step one drops every queued commit. The same holds when a check throws a [`Fault`](ref:core/Fault), a [`Silence`](ref:core/Silence), or a plain error.
+A refusal anywhere in step one cancels every queued commit. The same holds when a check throws a [`Fault`](ref:core/Fault), a [`Silence`](ref:core/Silence), or a plain error.
 
 <Callout type="warning">
 
 Step two finishes before step three starts. Your handler runs after every commit, so a throw inside it leaves the credit spent. If your users paid for that credit or can see their balance, catch the throw in your handler and refund the credit there.
 
-Commits run one at a time. If a commit throws, the commits after it don't run, and neither does your handler. The commits before it already ran, so their changes stay.
+Commits run one at a time. If a commit throws, the commits after it don't run, and neither does your handler. The commits before it have already run, and seedcord doesn't undo them.
 
-The same happens inside a single commit. If it writes twice and throws between the two writes, the first write stays. Give each commit one write.
+The same happens inside a single commit. If it writes twice and throws between the two writes, the first write has already happened. Give each commit one write.
 
 </Callout>
 
 ### Inside an or
 
-Each gate you pass to an [`or`](ref:core/or) can be a group of gates, like an `and`. If that group refuses, seedcord throws away the commits its gates queued, so they never run. The handler below passes `SpendCredit` to an `and`, and passes that `and` to an `or`.
+Each gate you pass to an [`or`](ref:core/or) can be a group of gates, like an `and`. If that group refuses, seedcord throws away the commits that its gates queued, so they never run. The handler below passes `SpendCredit` to an `and`, and passes that `and` to an `or`.
 
 ```ts twoslash hovers
 import {
@@ -142,7 +142,7 @@ export class History extends SlashHandler<'history'> {
 }
 ```
 
-A bot owner who lacks that role runs it. Read the checks down, then the commits.
+A bot owner who doesn't have that role runs it. Read the checks down, then the commits.
 
 ```txt output
 1. every check, left to right
@@ -199,4 +199,4 @@ export const CountUse = defineEffectGate(
 
 [`Cooldown`](ref:core/Cooldown) is an effect gate. It reads the window in `check` and charges the slot in `commit`, which is why a later refusal never records a use.
 
-If two requests arrive at the same moment, both can pass a `check`. [When a use is charged](/checks/cooldown#when-a-use-is-charged) shows how `Cooldown` refuses the one that goes over `limit` in its `commit`.
+If two requests arrive at the same moment, both can pass a `check`. [When a use is charged](/checks/cooldown#when-a-use-is-charged) shows how `Cooldown` refuses the one that exceeds `limit` in its `commit`.

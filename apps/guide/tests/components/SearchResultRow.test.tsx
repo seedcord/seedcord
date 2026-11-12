@@ -30,7 +30,7 @@ function renderRow(result: GuideResult = RESULT): RenderResult {
     return render(row(result));
 }
 
-// jsdom has no CSS Custom Highlight API
+// jsdom doesn't implement the CSS Custom Highlight API
 function stubHighlights(): Map<string, Set<Range>> {
     const highlights = new Map<string, Set<Range>>();
     vi.stubGlobal('CSS', { highlights });

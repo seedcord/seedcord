@@ -31,7 +31,7 @@ function codeText(html: string): string {
     return textOf(/<pre[\s\S]*?<\/pre>/.exec(html)?.[0] ?? '');
 }
 
-// hast decides the attribute order
+// hast sets the attribute order
 const ANCHOR_RE = /<a\s([^>]*)>/g;
 
 function attrsFor(html: string, href: string): string[] {
@@ -147,19 +147,19 @@ function anchorTextFor(html: string, href: string): string | null {
 }
 
 describe('the wrapped fragment helpers', () => {
-    it('drops the function wrap a signature needed to tokenize', async () => {
+    it('removes the function wrap a signature needed to tokenize', async () => {
         const html = await highlightSignatureToHtml('doThing(count: number): void');
 
         expect(codeText(html ?? '')).toBe('doThing(count: number): void');
     });
 
-    it('drops the class wrap a member needed to tokenize', async () => {
+    it('removes the class wrap a member needed to tokenize', async () => {
         const html = await highlightMemberToHtml('protected readonly name: string');
 
         expect(codeText(html ?? '')).toBe('protected readonly name: string');
     });
 
-    it('drops the type alias wrap a type parameter needed to tokenize', async () => {
+    it('removes the type alias wrap a type parameter needed to tokenize', async () => {
         const html = await highlightTypeParamToHtml('T extends string = never');
 
         expect(codeText(html ?? '')).toBe('T extends string = never');

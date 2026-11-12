@@ -52,8 +52,8 @@ export class SymbolRef {
 
         const ref = new SymbolRef(pkg, symbol ?? '');
         if (ref.isPackage) return ref;
-        if (ref.owner === '') return 'has nothing before the member';
-        if (ref.member === '') return 'has nothing after the member separator';
+        if (ref.owner === '') return 'is missing the part before the member';
+        if (ref.member === '') return 'is missing the part after the member separator';
         return ref;
     }
 

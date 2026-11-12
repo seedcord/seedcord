@@ -2,7 +2,7 @@ export const MANAGERS = ['pnpm', 'bun', 'npm', 'yarn'] as const;
 
 export type Manager = (typeof MANAGERS)[number];
 
-// yarn runs a script with no verb in front of it
+// yarn runs a script without a verb in front of it
 export const VERBS = {
     create: { npm: 'npm create', pnpm: 'pnpm create', yarn: 'yarn create', bun: 'bun create' },
     add: { npm: 'npm install', pnpm: 'pnpm add', yarn: 'yarn add', bun: 'bun add' },

@@ -126,13 +126,13 @@ describe('renderTemplates', () => {
         expect(files.find((file) => file.path === 'pnpm-workspace.yaml')).toBeUndefined();
     });
 
-    it('drops the .hbs extension', async () => {
+    it('removes the .hbs extension', async () => {
         const files = await render(GATEWAY);
 
         expect([...files.keys()].filter((path) => path.endsWith('.hbs'))).toEqual([]);
     });
 
-    it('restores the leading dot on the three files npm would drop', async () => {
+    it('restores the leading dot on the files npm would remove', async () => {
         const files = await render(GATEWAY);
 
         expect(files.has('.env')).toBe(true);
@@ -284,7 +284,7 @@ describe('the rendered gateway config', () => {
 });
 
 describe('the rendered http config', () => {
-    it('imports the http package and declares no intents', async () => {
+    it('imports the http package and omits intents', async () => {
         const bot = await renderOne(HTTP, 'src/bot.ts');
 
         expect(bot).toContain("from '@seedcord/http'");
@@ -313,7 +313,7 @@ describe('the rendered edge project', () => {
         expect(files.has('src/index.ts')).toBe(false);
     });
 
-    it('writes no cloudflare.config.ts for a server bot', async () => {
+    it("doesn't write cloudflare.config.ts for a server bot", async () => {
         const files = await render(HTTP);
 
         expect(files.has('cloudflare.config.ts')).toBe(false);

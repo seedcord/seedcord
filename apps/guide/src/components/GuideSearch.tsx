@@ -24,6 +24,7 @@ import type { ResultGroup } from './useGuideSearch';
 import type { CodeMention, GuideResult } from '@seedcord/docs-search';
 import type { RovingGroup, RovingList } from '@seedcord/ui';
 import type { ReactElement } from 'react';
+import type { Arrayable, Except } from 'type-fest';
 
 const LISTBOX_ID = 'guide-search-results';
 
@@ -48,7 +49,7 @@ interface GroupProps {
     onSelect: (result: GuideResult) => void;
 }
 
-function GroupBody({ group, roving, onSelect }: GroupProps): ReactElement | ReactElement[] {
+function GroupBody({ group, roving, onSelect }: GroupProps): Arrayable<ReactElement> {
     if (group.status === 'pending' && group.results.length === 0) return <SearchResultsSkeleton />;
     if (group.status === 'failed') {
         return (
@@ -80,7 +81,7 @@ function Group(props: GroupProps): ReactElement {
     );
 }
 
-interface ResultsProps extends Omit<GroupProps, 'group'> {
+interface ResultsProps extends Except<GroupProps, 'group'> {
     groups: readonly ResultGroup[];
     message: string | undefined;
 }

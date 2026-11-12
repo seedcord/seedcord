@@ -31,7 +31,7 @@ ruleTester.run('no-choices-and-autocomplete', rule, {
                 .setAutocomplete(false)
                 .addChoices({ name: 'A', value: 'a' });
         `,
-        // a plain boolean variable is not statically provable, so it is skipped
+        // it is skipped because a plain boolean variable isn't statically provable
         dedent`
             import { SlashCommandStringOption } from 'discord.js';
             declare const flag: boolean;
@@ -49,7 +49,7 @@ ruleTester.run('no-choices-and-autocomplete', rule, {
                 .setAutocomplete(OFF)
                 .addChoices({ name: 'A', value: 'a' });
         `,
-        // a later setAutocomplete(false) overrides the earlier true, so there is no conflict
+        // the two don't conflict. a later setAutocomplete(false) overrides the earlier true
         dedent`
             import { SlashCommandStringOption } from 'discord.js';
             new SlashCommandStringOption()
@@ -83,7 +83,7 @@ ruleTester.run('no-choices-and-autocomplete', rule, {
                 .setAutocomplete(true)
                 .setChoices(...dynamicChoices);
         `,
-        // setChoices([]) clears all choices at runtime, so a following setAutocomplete(true) is safe
+        // a following setAutocomplete(true) is safe since setChoices([]) clears all choices at runtime
         dedent`
             import { SlashCommandStringOption } from 'discord.js';
             new SlashCommandStringOption()

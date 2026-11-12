@@ -12,6 +12,7 @@ export interface UserContextMenuRegistry {}
 export interface MessageContextMenuRegistry {}
 export interface EmojiMap {}
 export interface PluginTypes {}
+export type AttachedPlugin<T> = T;
 `;
 
 const BOT = `
@@ -36,7 +37,8 @@ function errorCodes(types: PluginTypeTable): number[] {
                 .values()
                 .flatMap((parts) => parts.map(({ key }) => key))
                 .toArray(),
-            types
+            types,
+            members: []
         }
     );
     const files = new Map([
@@ -61,7 +63,7 @@ function errorCodes(types: PluginTypeTable): number[] {
     const libExists = host.fileExists.bind(host);
     host.fileExists = (name): boolean => files.has(name) || libExists(name);
 
-    // a module that only an augmentation reaches stays out of the program unless it's a root
+    // createProgram skips a module that only an augmentation reaches unless it's a root
     const program = ts.createProgram([...files.keys()], options, host);
     return ts.getPreEmitDiagnostics(program).map(({ code }) => code);
 }

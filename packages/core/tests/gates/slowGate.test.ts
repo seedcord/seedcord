@@ -34,7 +34,7 @@ describe('slowGateMonitor', () => {
         expect(message).toContain('slash:daily');
     });
 
-    it('stays silent when the checks sum under the threshold', () => {
+    it('is silent when the checks sum under the threshold', () => {
         const warn = warnSpy();
         const monitor = slowGateMonitor();
         monitor?.observe('first', 300);
@@ -44,7 +44,7 @@ describe('slowGateMonitor', () => {
         expect(warn).not.toHaveBeenCalled();
     });
 
-    it('stays silent with no readings', () => {
+    it('is silent with no readings', () => {
         const warn = warnSpy();
         slowGateMonitor()?.report(null);
 

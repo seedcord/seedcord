@@ -3,6 +3,7 @@ import { stripVTControlCharacters } from 'node:util';
 
 import { SeedcordErrorCode } from '@seedcord/errors';
 import { LoggerChannelRegistry } from '@seedcord/logger';
+import { HostPlugins } from '@seedcord/types/internal';
 import { ApplicationCommandType, Routes } from 'discord-api-types/v10';
 import { describe, expect, it, onTestFinished, vi } from 'vite-plus/test';
 
@@ -13,7 +14,7 @@ import { Bus } from '#subscribers/Bus';
 
 import type { CoreBase } from '#interfaces/CoreBase';
 import type { CommandInfo } from '#src/commands/CommandInjector';
-import type { CommandBuilder } from '#src/commands/types';
+import type { CommandBody } from '#src/commands/putCommands';
 import type { DeployedHashes } from '@seedcord/types/internal';
 import type { APIApplicationCommand } from 'discord-api-types/v10';
 import type { Mock } from 'vite-plus/test';
@@ -34,12 +35,18 @@ const BARE_AGAIN: APIApplicationCommand[] = [
     { id: '2', name: 'bare', type: ApplicationCommandType.ChatInput } as APIApplicationCommand
 ];
 
-function coreWith(put: Mock, get: Mock = vi.fn().mockResolvedValue(BARE), guilds?: string[]): CoreBase {
+function coreWith(
+    put: Mock,
+    get: Mock = vi.fn().mockResolvedValue(BARE),
+    guilds?: string[],
+    prepareCommands: (commands: readonly CommandBody[]) => void = () => undefined
+): CoreBase {
     // justified: deploy reads only these members off core
     const core = {
         config: { bot: { commands: { path: FIXTURE, guilds } } },
         rest: { put, get, on: vi.fn(), off: vi.fn() },
-        applicationId: APP
+        applicationId: APP,
+        [HostPlugins]: { prepareCommands }
     } as unknown as { bus: Bus };
     core.bus = new Bus(core as unknown as CoreBase);
     return core as unknown as CoreBase;
@@ -117,9 +124,26 @@ describe('CommandRegistry.deploy', () => {
         expect(routes.warnUnhandledContextMenuRoutes).toHaveBeenCalledWith({ user: new Set(), message: new Set() });
     });
 
+    it('checks and warns on the commands after prepareCommands renamed them', async () => {
+        const put = vi.fn().mockResolvedValue([{ id: '1', name: 'renamed', type: ApplicationCommandType.ChatInput }]);
+        const rename = (commands: readonly CommandBody[]): void => {
+            for (const command of commands) command.name = 'renamed';
+        };
+        const routes = { warnUnhandledRoutes: vi.fn(), warnUnhandledContextMenuRoutes: vi.fn() };
+        const check = vi.fn((_commands: readonly CommandBody[]) => undefined);
+
+        await new CommandRegistry(coreWith(put, undefined, undefined, rename)).deploy(new AbortController().signal, {
+            routes,
+            check
+        });
+
+        expect(check.mock.calls[0]?.[0].map((command) => command.name)).toEqual(['renamed']);
+        expect([...(routes.warnUnhandledRoutes.mock.calls[0]?.[0] as Iterable<string>)]).toEqual(['renamed']);
+    });
+
     it('sends nothing to discord when the check throws', async () => {
         const put = vi.fn().mockResolvedValue([]);
-        const check = vi.fn((_commands: CommandBuilder[]) => {
+        const check = vi.fn((_commands: readonly CommandBody[]) => {
             throw new Error('needs the Guilds intent');
         });
 
@@ -265,7 +289,7 @@ describe('CommandRegistry.deploy', () => {
         );
     });
 
-    it('logs a guild by its id outside seedcord dev, and reads no guild', async () => {
+    it("logs a guild by its id outside seedcord dev, and doesn't read the guild", async () => {
         const get = guildNamed('Alpha');
         const registry = new CommandRegistry(coreWith(vi.fn().mockResolvedValue(BARE), get, ['111']));
         const messages: string[] = [];
@@ -277,7 +301,7 @@ describe('CommandRegistry.deploy', () => {
         expect(get).not.toHaveBeenCalledWith(Routes.guild('111'));
     });
 
-    it('skips the put on a refresh that changed no command', async () => {
+    it('skips the put on a refresh that changed zero commands', async () => {
         const put = vi.fn().mockResolvedValue(BARE);
         const registry = registryWith(put);
         await registry.deploy(new AbortController().signal, {});

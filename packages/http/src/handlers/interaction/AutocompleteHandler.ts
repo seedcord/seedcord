@@ -77,11 +77,11 @@ export abstract class AutocompleteHandler<Route extends keyof SlashRegistry> ext
         return interactionUser(this.event);
     }
 
-    private resolver?: HttpSlashOptions;
+    #resolver?: HttpSlashOptions;
 
     private get reader(): HttpSlashOptions {
-        this.resolver ??= new HttpSlashOptions(this.event.data);
-        return this.resolver;
+        this.#resolver ??= new HttpSlashOptions(this.event.data);
+        return this.#resolver;
     }
 
     /**
@@ -130,7 +130,7 @@ export abstract class AutocompleteHandler<Route extends keyof SlashRegistry> ext
      * types the focused field. The focused field is on `this.focused`.
      */
     protected get options(): AutocompleteOptions<Route> {
-        // AutocompleteOptions is the registry-typed view over the getters the reader exposes
+        // AutocompleteOptions is the registry-typed view over the getters that the reader exposes
         return this.reader as AutocompleteOptions<Route>;
     }
 }

@@ -28,7 +28,7 @@ describe('Screen.fit', () => {
         expect(Screen.fit(40, 79, false)).toMatchObject(BAND);
     });
 
-    it('drops to the one-line status on a short terminal at any width', () => {
+    it('switches to the one-line status on a short terminal at any width', () => {
         expect(Screen.fit(19, 120, false)).toMatchObject(LINE);
     });
 

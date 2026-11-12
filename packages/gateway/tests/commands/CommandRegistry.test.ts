@@ -389,7 +389,7 @@ describe('CommandRegistry Integration', () => {
         expect(names?.toSorted()).toEqual(['kick', 'mute', 'ping']);
     });
 
-    it('sends no refresh prompt for a file saved in a dot-folder, which startup skips', async ({ testEnv }) => {
+    it("doesn't send a refresh prompt for a file saved in a dot-folder, which startup skips", async ({ testEnv }) => {
         using _dev = setDevFiles({
             root: testEnv.rootDir,
             listed: [],

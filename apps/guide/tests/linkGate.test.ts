@@ -55,7 +55,7 @@ describe('the link gate', () => {
         expect(problemsIn(link)).toHaveLength(1);
     });
 
-    it('reports the line the broken link sits on', () => {
+    it('reports the line of the broken link', () => {
         expect(problemsIn('fine\n\n[gone](/nowhere)')).toEqual([expect.stringContaining('/:9 /nowhere')]);
     });
 });

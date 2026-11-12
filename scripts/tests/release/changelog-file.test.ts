@@ -48,7 +48,7 @@ describe('ChangelogFile sections', () => {
 describe('ChangelogFile prerelease pruning', () => {
     const pruned = (text: string): string => new ChangelogFile(text).withoutSupersededPrereleases().contents;
 
-    it('drops a prerelease section once its stable version is present', () => {
+    it('removes a prerelease section once its stable version is present', () => {
         const out = pruned(
             lines('# @seedcord/core', '', '## 0.2.0', '', '- a thing', '', '## 0.2.0-next.0', '', '- a thing', '')
         );
@@ -57,7 +57,7 @@ describe('ChangelogFile prerelease pruning', () => {
         expect(out).toContain('## 0.2.0\n');
     });
 
-    it('drops prerelease sections written in the emoji shape', () => {
+    it('removes prerelease sections written in the emoji shape', () => {
         const out = pruned(
             lines(
                 '# @seedcord/core',
@@ -100,7 +100,7 @@ describe('ChangelogFile prerelease pruning', () => {
         expect(out.endsWith('- Older. ([#311](url))\n')).toBe(true);
     });
 
-    it('drops a prerelease of a lower version that a later bump folded into the stable above', () => {
+    it('removes a prerelease of a lower version that a later bump folded into the stable above', () => {
         const out = pruned(
             lines(
                 '# @seedcord/core',
@@ -166,7 +166,7 @@ describe('ChangelogFile prerelease pruning', () => {
         expect(out).toContain('- Fixed a duplicate route.');
     });
 
-    it('keeps a lower dependency-only prerelease that bumps a package the stable above never names', () => {
+    it("keeps a lower dependency-only prerelease that bumps a package the stable above doesn't mention", () => {
         const nested = (...deps: string[]): string[] => [
             '### 🩹 Patch',
             '',
@@ -195,7 +195,7 @@ describe('ChangelogFile prerelease pruning', () => {
         expect(out).toContain('## 0.4.0-next.3');
     });
 
-    it('drops a lower dependency-only prerelease once the stable above bumps the same packages', () => {
+    it('removes a lower dependency-only prerelease once the stable above bumps the same packages', () => {
         const nested = (...deps: string[]): string[] => [
             '### 🩹 Patch',
             '',
@@ -224,7 +224,7 @@ describe('ChangelogFile prerelease pruning', () => {
         expect(out).not.toContain('-next.');
     });
 
-    it('keeps a prerelease that has no stable counterpart yet', () => {
+    it("keeps a prerelease that doesn't have a stable counterpart yet", () => {
         expect(pruned(lines('# @seedcord/core', '', '## 0.3.0-next.0', '', '- pending', ''))).toContain('0.3.0-next.0');
     });
 
@@ -304,7 +304,7 @@ describe('ChangelogFile prerelease pruning', () => {
         expect(out.endsWith('\n\n')).toBe(false);
     });
 
-    it('drops every prerelease of a released version and repeats clean', () => {
+    it('removes every prerelease of a released version and repeats clean', () => {
         const once = pruned(
             lines(
                 '# @seedcord/core',

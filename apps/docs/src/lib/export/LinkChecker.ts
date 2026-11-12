@@ -61,7 +61,7 @@ export class LinkChecker {
         return broken;
     }
 
-    // each distinct link, with the first page that carries it
+    // each distinct link, with the first page that has it
     private async links(): Promise<FoundLink[]> {
         const pages = (await readdir(this.root, { recursive: true })).filter((file) => file.endsWith('.html'));
         const links = new Map<string, FoundLink>();

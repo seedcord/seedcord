@@ -15,9 +15,10 @@ import type {
     APIUser,
     ModalSubmitComponent
 } from 'discord-api-types/v10';
+import type { ExtractStrict } from 'type-fest';
 
 type FieldKind = ModalSubmitComponent['type'];
-type KindWithValues = Extract<ModalSubmitComponent, { values: string[] }>['type'];
+type KindWithValues = ExtractStrict<ModalSubmitComponent, { values: string[] }>['type'];
 
 interface KindLabel {
     label: string;
@@ -62,9 +63,9 @@ export interface SelectedMentionables {
 }
 
 /**
- * The fields a modal carries, read by custom id.
+ * The fields in a modal, read by custom id.
  *
- * A select getter resolves the ids its field picked against the interaction's `resolved` data and returns a
+ * A select getter resolves the ids that its field picked against the interaction's `resolved` data and returns a
  * `Collection` keyed by id. A field that picked nothing returns null.
  *
  * @throws A **SeedcordTypeError** from every getter when no field in the modal has that custom id.

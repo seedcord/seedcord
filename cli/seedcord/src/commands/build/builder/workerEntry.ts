@@ -74,7 +74,7 @@ function modeSetup(mode: EntryMode): ModeSetup {
     }
 }
 
-// the entry imports these in order, ahead of the instance file
+// the entry imports these in order, before the instance file
 function setupSources({ layout, folders, rootKey, mode }: WorkerEntryOptions): Map<string, string> {
     const { root, cwd, sourcePaths, modules } = modeSetup(mode);
     const rootExpression = JSON.stringify(root);

@@ -7,11 +7,16 @@ export function sentence(text: string): string {
     return /[.!?]$/.test(text) ? text : `${text}.`;
 }
 
+// a reason from a third-party error may start lowercase
+export function capitalized(text: string): string {
+    return text.charAt(0).toUpperCase() + text.slice(1);
+}
+
 export function reasonThen(reason: string, next: string): string {
     return `${sentence(reason)}${reason.includes('\n') ? '\n' : ' '}${next}`;
 }
 
-// @seedcord/utils depends on this package, so its pluralize is out of reach here
+// pluralize from @seedcord/utils isn't importable here because that package depends on this one
 const plurals = new Intl.PluralRules('en');
 export const allOf = new Intl.ListFormat('en', { type: 'conjunction' });
 export const oneOf = new Intl.ListFormat('en', { type: 'disjunction' });

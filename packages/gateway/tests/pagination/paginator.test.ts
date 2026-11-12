@@ -40,7 +40,7 @@ const pager = new Paginator({
 @ButtonRoute(pager.cursor)
 class BansNav extends pager.Handler {}
 
-// a paginator whose loader records the context the Paginator builds, to pin the DM guild-null threading.
+// a paginator whose loader records the context that the Paginator builds, to pin the DM guild-null threading.
 const seenContexts: PageContext[] = [];
 const Reminders = new Paginator({
     prefix: 'reminders',
@@ -78,7 +78,7 @@ function startEvent() {
     };
 }
 
-// the sender reads the interaction's unacked flags, so this.deferUpdate() sets deferred-update
+// this.deferUpdate() sets deferred-update because the sender reads the interaction's unacked flags
 // eslint-disable-next-line @typescript-eslint/explicit-function-return-type -- inference is fine for the mock
 function navEvent(customId: string) {
     return {
@@ -110,7 +110,7 @@ function asButton(event: ReturnType<typeof navEvent>): ButtonInteraction<'cached
     return event as unknown as ButtonInteraction<'cached'>;
 }
 
-// the sender serializes each component before the wire call, so sent components arrive as raw API data
+// sent components arrive as raw API data. the sender serializes each component before the wire call
 function containerText(components: unknown[]): string {
     const json = components[0] as APIContainerComponent;
     return json.components.reduce<string>(
@@ -124,7 +124,7 @@ function stubCore(): Core {
     return { bus: { [PublishDefault]: () => true } } as unknown as Core;
 }
 
-// start reads the route id off the handler's sender, so the fixture builds a real one
+// the fixture builds a real sender since start reads the route id off the handler's sender
 function stubHandler(event: ReturnType<typeof startEvent>): RepliableHandler<Repliables> {
     const interaction = asRepliable(event);
     const core = stubCore();

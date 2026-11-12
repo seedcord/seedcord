@@ -8,6 +8,7 @@ import { BotLayout } from './BotLayout';
 
 import type { BotLayoutData } from './BotLayout';
 import type { EncodedFile } from './encodedFile';
+import type { Except } from 'type-fest';
 
 export type ModuleLoader = () => Promise<Record<string, unknown>>;
 type EncodedFileLoader = () => Promise<EncodedFile>;
@@ -81,6 +82,6 @@ export function setCliFiles(source: BotLayoutData): Disposable {
 }
 
 // the generated entry writes the same object without importing seedcord
-export function setBuiltFiles(built: Omit<BuiltSlot, 'kind'>): Disposable {
+export function setBuiltFiles(built: Except<BuiltSlot, 'kind'>): Disposable {
     return writeSlot({ kind: 'built', ...built });
 }

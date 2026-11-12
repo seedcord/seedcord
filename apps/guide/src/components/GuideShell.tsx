@@ -21,11 +21,12 @@ import type { PageNeighbours } from '#lib/neighbours';
 import type { PageActionProps } from '#lib/pageActions';
 import type { TocBarProps } from './TocBar';
 import type { TOCItemType } from 'fumadocs-core/toc';
+import type { Except } from 'type-fest';
 import type { ReactElement, ReactNode } from 'react';
 
 const NO_TOC: readonly TOCItemType[] = [];
 
-function ContentsBar({ items, pageTitle }: Omit<TocBarProps, 'activeIds' | 'currentId' | 'className'>): ReactElement {
+function ContentsBar({ items, pageTitle }: Except<TocBarProps, 'activeIds' | 'currentId' | 'className'>): ReactElement {
     const activeIds = useVisibleHeadingIds(items);
     const currentId = useActiveAnchor();
 

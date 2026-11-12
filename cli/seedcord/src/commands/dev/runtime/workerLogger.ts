@@ -18,7 +18,7 @@ export function workerLogger(): Logger {
     const forward =
         (level: LogLevel) =>
         (message: string, options?: LogErrorOptions): void => {
-            // forwardLogsToCli marks every line the bot writes, already filtered by the worker's level
+            // forwardLogsToCli marks every line that the bot writes, already filtered by the worker's level
             LoggerChannelRegistry.instance.dispatch(fromDevLogLine(message) ?? viteRecord(level, message, options));
         };
     logger.info = forward('info');

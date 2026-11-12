@@ -1,6 +1,7 @@
 import { describe, it, expect } from 'vite-plus/test';
 
 import { parseDuration } from '#src/numbers/parseDuration';
+import { acceptedDurations, rejectedDurations } from '#tests/numbers/durations';
 
 describe('parseDuration', () => {
     it('parses each supported unit into milliseconds', () => {
@@ -9,44 +10,19 @@ describe('parseDuration', () => {
         expect(parseDuration('30m')).toBe(1_800_000);
         expect(parseDuration('24h')).toBe(86_400_000);
         expect(parseDuration('7d')).toBe(604_800_000);
-    });
-
-    it('parses a multi-digit value', () => {
         expect(parseDuration('120s')).toBe(120_000);
     });
 
-    it('returns null for a bare number with no unit', () => {
-        expect(parseDuration('24')).toBeNull();
+    it.each(acceptedDurations)('accepts %j, the same as ValidDuration', (duration) => {
+        expect(parseDuration(duration)).toBeGreaterThan(0);
     });
 
-    it('returns null for an unknown unit', () => {
-        expect(parseDuration('5y')).toBeNull();
-        expect(parseDuration('10w')).toBeNull();
+    it.each(rejectedDurations)('returns null for %j, the same as ValidDuration', (duration) => {
+        expect(parseDuration(duration)).toBeNull();
     });
 
-    it('returns null for a malformed or empty string', () => {
-        expect(parseDuration('')).toBeNull();
-        expect(parseDuration('h')).toBeNull();
-        expect(parseDuration('abc')).toBeNull();
-        expect(parseDuration('24hh')).toBeNull();
-    });
-
-    it('returns null for an uppercase unit', () => {
-        expect(parseDuration('24H')).toBeNull();
-    });
-
-    it('returns null when the input has surrounding whitespace', () => {
-        expect(parseDuration('24 h')).toBeNull();
-        expect(parseDuration(' 24h')).toBeNull();
-        expect(parseDuration('24h ')).toBeNull();
-    });
-
-    it('returns null for a fractional value', () => {
-        expect(parseDuration('1.5h')).toBeNull();
-    });
-
-    it('returns null for a zero duration so a result is never 0', () => {
-        expect(parseDuration('0h')).toBeNull();
-        expect(parseDuration('0s')).toBeNull();
+    it('returns null for a number too big to count in milliseconds', () => {
+        expect(parseDuration(`${'9'.repeat(400)}ms`)).toBeNull();
+        expect(parseDuration('9007199254740992ms')).toBeNull();
     });
 });

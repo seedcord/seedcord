@@ -12,15 +12,14 @@ import { nullPathConfig, VALID_TOKEN } from '#tests/helpers/fixtures';
 
 import { signedRequest, slashPayload } from './harness';
 
-import type { InteractionMiddlewareConstructor } from '#handlers/constructors';
-import type { ResolvedRoute } from '#src/dispatch/resolve';
+import type { HandlerSlots, InteractionMiddlewareConstructor } from '#handlers/constructors';
 import type { SubscriptionData } from '@seedcord/core';
 
 afterEach(() => {
     Envapter.useSource(new PortableSource({}));
 });
 
-// the router is the first thing past the ack guard, so a throw there reaches the root catch
+// a throw in the router reaches the root catch because the router is the first thing past the ack guard
 async function routerThrows(thrown: unknown): Promise<{
     response: Response;
     seen: SubscriptionData<'unhandledInteractionError'>[];
@@ -32,7 +31,7 @@ async function routerThrows(thrown: unknown): Promise<{
     const seen: SubscriptionData<'unhandledInteractionError'>[] = [];
     core.bus.on('unhandledInteractionError', (payload) => seen.push(payload));
 
-    const maps = emptyRouteMaps<ResolvedRoute>();
+    const maps = emptyRouteMaps<HandlerSlots>();
     vi.spyOn(maps[InteractionKind.Slash], 'get').mockImplementation(() => {
         throw thrown;
     });
@@ -50,7 +49,7 @@ describe('the http root catch', () => {
     it('publishes unhandledInteractionError when routing throws past the boundary', async () => {
         const { response, seen } = await routerThrows(new Error('router exploded'));
 
-        // the ack still goes out because a dispatch throw never stops it
+        // handle() still returns the ack because a dispatch throw never stops it
         expect(response.status).toBe(202);
         expect(seen).toHaveLength(1);
         expect(seen[0]?.error.message).toBe('router exploded');

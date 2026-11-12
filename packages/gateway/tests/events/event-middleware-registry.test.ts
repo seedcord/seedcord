@@ -57,7 +57,7 @@ describe('the event middleware registry', () => {
         vi.clearAllMocks();
     });
 
-    it('runs the rest of the chain when a reload drops a middleware mid-dispatch', async ({ testEnv }) => {
+    it('runs the rest of the chain when a reload removes a middleware mid-dispatch', async ({ testEnv }) => {
         const ran: string[] = [];
         const parked = deferred();
         const started = deferred();
@@ -81,7 +81,7 @@ describe('the event middleware registry', () => {
         const dispatching = events.processEvent('messageCreate', [{ reply: vi.fn() }]);
         await started.promise;
 
-        // the reload drops Parks while its execute() is still awaiting
+        // the reload removes Parks while its execute() is still awaiting
         await testEnv.createFile(`${MIDDLEWARES_DIR}/Parks.ts`, 'export const gone = true;');
         await events.onHmr({ file: parksPath, type: 'update' });
 

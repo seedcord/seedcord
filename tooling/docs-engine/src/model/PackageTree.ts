@@ -63,7 +63,7 @@ export class PackageTree {
         this.root = adapter.transform(root.apiPackage);
         for (const child of this.root.children) {
             const key = nodeKey(child.kind, child.name);
-            // includeForgottenExports pulls in declarations no entry point exports
+            // includeForgottenExports pulls in declarations missing from every entry point
             if (child.isExported && (!root.rootExports || root.rootExports.has(key))) child.entries = [root.subpath];
             this.byKey.set(key, child);
         }

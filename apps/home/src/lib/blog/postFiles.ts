@@ -105,7 +105,7 @@ export function remarkPostFiles() {
 
         visit(tree, 'image', (image) => {
             if (!image.alt?.trim())
-                file.fail(`${image.url} has no alt text. Write it as ![what it shows](${image.url}).`, image);
+                file.fail(`${image.url} doesn't have alt text. Write it as ![what it shows](${image.url}).`, image);
 
             const read = readPostImage(image.url, file.path);
             if (!read.ok) file.fail(read.reason, image);

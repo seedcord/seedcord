@@ -44,12 +44,14 @@
     "devDependencies": {
         "@eslint-react/eslint-plugin": "catalog:eslint",
         "@seedcord/eslint-config": "workspace:^",
+        "@seedcord/prose": "workspace:^",
         "@seedcord/tsconfig": "workspace:^",
         "@seedcord/tsdown-config": "workspace:^",
         "@seedcord/vite-config": "workspace:^",
         "@types/react": "catalog:react",
         "@xterm/headless": "^6.0.0",
         "eslint-plugin-react-hooks": "catalog:eslint",
+        "type-fest": "catalog:deps",
         "vite-plus": "catalog:deps"
     },
     "peerDependencies": {

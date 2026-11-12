@@ -31,6 +31,9 @@
         }
     ],
 
+    // Vale Settings
+    "vale.valeCLI.path": "${workspaceFolder}/node_modules/.bin/vale",
+
     // EditorConfig Support
     "editorconfig.generateAuto": false,
 

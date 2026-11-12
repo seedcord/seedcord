@@ -88,9 +88,9 @@ Leaving the `ctx` parameter unannotated makes it a [`GateContextBase`](ref:core/
 | field | type | holds |
 | --- | --- | --- |
 | `core` | `CoreBase` | the running framework, for `core.config` and `core.rateLimiter` |
-| `userId` | `string \| null` | the acting user's id, null on an event that carries none |
+| `userId` | `string \| null` | the acting user's id, null on an event without one |
 | `guildId` | `string \| null` | the server id, null in a direct message |
-| `channelId` | `string \| null` | the channel id, null when the source carries none |
+| `channelId` | `string \| null` | the channel id, null when the source has none |
 | `memberRoleIds` | `readonly string[]` | the caller's role ids without the everyone role, empty outside a server |
 | `memberPermissions` | `bigint \| null` | the caller's permission bits, channel-scoped on an interaction and role-derived on a gateway event, null outside a server |
 | `dispatch` | `DispatchContext` | the [dispatch context](/checks/dispatch-context), holding what a middleware wrote before the first gate ran |
@@ -103,7 +103,7 @@ Discord sends your bot's permissions in the invoked channel only with an interac
 
 ## Narrowing what the gate accepts
 
-Annotating `ctx` with a narrower context changes two things. The check reads the extra fields, and [`@Gated`](ref:gateway/Gated) rejects the gate on any handler that lacks them.
+Annotating `ctx` with a narrower context changes two things. The check reads the extra fields, and [`@Gated`](ref:gateway/Gated) rejects the gate on any handler that doesn't have them.
 
 ```ts twoslash hovers title="src/gates/NoAttachments.ts"
 import { defineGate, Silence } from '@seedcord/gateway';
@@ -128,7 +128,7 @@ export const NoAttachments = defineGate(
 
 <Callout type="tip">
 
-`NoAttachments` doesn't take an argument. Export the gate itself and attach it without calling, the way [`IgnoreBots`](ref:gateway/IgnoreBots) does. `InChannel` above stays a function because it closes over a channel id.
+`NoAttachments` doesn't take an argument. Export the gate itself and attach it without calling, the way [`IgnoreBots`](ref:gateway/IgnoreBots) does. `InChannel` above is a function because it closes over a channel id.
 
 </Callout>
 
@@ -149,7 +149,7 @@ The two gateway contexts carry different fields. Narrow on `ctx.kind` before rea
 
 <Callout type="transport">
 
-Both transports export a type called `InteractionGateContext`. Each transport's version has its own fields. Gateway's holds live discord.js objects: a `User` that's always present, plus a `Guild` and a `GuildMember` that can each be `null`, outside a server or when the cache lacks them. Http's holds an `APIUser` and an `APIInteractionGuildMember`, and it doesn't carry `guild` at all. A gate reading `ctx.guild` compiles on gateway. The same gate fails to compile on http.
+Both transports export a type called `InteractionGateContext`. Each transport's version has its own fields. Gateway's holds live discord.js objects: a `User` that's always present, plus a `Guild` and a `GuildMember` that can each be `null`, outside a server or when the cache doesn't have them. Http's holds an `APIUser` and an `APIInteractionGuildMember`, and it doesn't carry `guild` at all. A gate reading `ctx.guild` compiles on gateway. The same gate fails to compile on http.
 
 The gateway cache builds that discord.js `Guild`. An http bot doesn't run one. Discord sends it a partial guild carrying `id`, `features`, and `locale`, which `ctx.interaction.guild` reaches.
 
@@ -161,7 +161,7 @@ On an interaction, `memberPermissions` and `appPermissions` hold the set for the
 
 <Callout type="transport" only="gateway">
 
-Only the gateway cache carries role-derived permissions. Annotating `ctx` with `GuildPermissionsContext` gives you a gate that the http transport rejects at the decorator line. [`RequirePermissions`](ref:core/RequirePermissions) applies the same rule under `in: 'guild'`.
+Only the gateway cache has role-derived permissions. Annotating `ctx` with `GuildPermissionsContext` gives you a gate that the http transport rejects at the decorator line. [`RequirePermissions`](ref:core/RequirePermissions) applies the same rule under `in: 'guild'`.
 
 </Callout>
 
@@ -198,6 +198,6 @@ Gates run one after another, so the `await bans.has` above delays every gate beh
 
 ## What to throw
 
-If you throw a [`Notice`](ref:core/Notice), seedcord replies with what its `render()` builds. If you throw a [`Silence`](ref:core/Silence), seedcord drops the request without replying, which suits an event handler. [Refusing a request](/replying/throwing) has both in full, plus what a check throwing anything else produces.
+If you throw a [`Notice`](ref:core/Notice), seedcord replies with what its `render()` builds. If you throw a [`Silence`](ref:core/Silence), seedcord doesn't reply, which suits an event handler. [Refusing a request](/replying/throwing) has both in full, plus what a check throwing anything else produces.
 
 If you plan to pass a gate to an [`or`](ref:core/or), set `summary` in your `Notice`'s constructor, as in `this.summary = 'run it in #bots'`. When every gate refuses, the `or` [lists each gate's summary](/checks/combining#the-refusal-when-every-gate-refuses). If one gate doesn't set a summary, the `or` shows a generic refusal.

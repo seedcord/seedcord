@@ -65,7 +65,7 @@ describe('useCommandPaletteSearch', () => {
         expect(fetchMock).not.toHaveBeenCalled();
     });
 
-    it('stays idle while the query is shorter than the minimum', async () => {
+    it('is idle while the query is shorter than the minimum', async () => {
         const { result } = render('s');
         await waitFor(() => expect(fetchMock).toHaveBeenCalled());
         expect(result.current).toEqual({ results: [], status: 'idle' });

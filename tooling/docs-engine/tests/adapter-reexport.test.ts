@@ -11,8 +11,8 @@ import type { DocManifestPackage, DocNode, InlineTagTarget } from '#src/types';
 
 type LinkTarget = number | string | InlineTagTarget | undefined;
 
-// A re-exported foreign symbol has no ApiItem in this package's model (no bundledPackages), so
-// resolveDeclarationReference can't resolve a {@link} to it. The adapter must fall back to the
+// resolveDeclarationReference can't resolve a {@link} to a re-exported foreign symbol because it
+// doesn't have an ApiItem in this package's model (no bundledPackages). The adapter must fall back to the
 // package's re-export table, the same owner data the type-excerpt path uses to cross-package link.
 function transformMock(reexports: DocManifestPackage['reexports']): DocNode {
     const model = createApiModel();

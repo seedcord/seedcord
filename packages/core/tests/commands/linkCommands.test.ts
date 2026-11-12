@@ -16,7 +16,7 @@ describe('linkCommands', () => {
                     ['2', 'View Profile', ApplicationCommandType.User]
                 ])
             ),
-            [withSubcommand().toJSON(), userMenu().toJSON()]
+            [withSubcommand(), userMenu()]
         );
 
         expect(linked.commands['ban/list']?.mention).toBe('</ban list:1>');
@@ -27,7 +27,7 @@ describe('linkCommands', () => {
         const buckets = guildBucket('g1', [['1', 'ping']]);
         buckets.set('g2', deployed([['2', 'ping']]));
 
-        const linked = linkCommands(buckets, [ping().toJSON(), ping().toJSON()]);
+        const linked = linkCommands(buckets, [ping(), ping()]);
 
         expect(linked.multiGuild).toEqual([{ name: 'ping', type: ApplicationCommandType.ChatInput }]);
     });
@@ -56,7 +56,7 @@ describe('linkCommands', () => {
                 ]),
                 guildBucket('g1', [['3', 'probe']])
             ),
-            [ping().toJSON()]
+            [ping()]
         );
 
         expect(linked.notInCode).toEqual([{ name: 'probe', type: ApplicationCommandType.ChatInput }]);

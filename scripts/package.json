@@ -34,12 +34,14 @@
     },
     "devDependencies": {
         "@seedcord/eslint-config": "workspace:^",
+        "@seedcord/prose": "workspace:^",
         "@seedcord/tsconfig": "workspace:^",
         "@seedcord/vite-config": "workspace:^",
         "@types/node": "catalog:deps",
         "@vitest/coverage-v8": "catalog:test",
         "jsonc-parser": "catalog:deps",
         "string-argv": "^0.3.2",
+        "type-fest": "catalog:deps",
         "typescript": "catalog:peer",
         "vite": "catalog:deps",
         "vitest": "catalog:test"

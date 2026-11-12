@@ -26,7 +26,7 @@ const TEMPLATES = resolve(import.meta.dirname, '../../templates');
 const STARTERS = resolve(import.meta.dirname, '../../starters');
 
 const BUILT_IN = new Set(['node']);
-// the binary a script calls, against the package that ships it
+// the binary that a script calls, against the package that ships it
 const PACKAGE_OF: Record<string, string> = {
     eslint: 'eslint',
     prettier: 'prettier',
@@ -63,7 +63,7 @@ const SEEDCORD_CLI = resolve(import.meta.dirname, '../../../seedcord');
 
 async function seedcordTestedVersion(name: string): Promise<string> {
     const manifest = await readFile(join(SEEDCORD_CLI, 'node_modules', name, 'package.json'), 'utf8');
-    // justified: a package manifest carries its version
+    // justified: a package manifest has its version
     return (JSON.parse(manifest) as { version: string }).version;
 }
 
@@ -366,7 +366,7 @@ describe('scaffold', () => {
         await expect(readdir(target)).resolves.toContain('package.json');
     });
 
-    it('skips format and codegen, then keeps going to git and the summary, when the install fails', async () => {
+    it('skips format and codegen, then continues to git and the summary, when the install fails', async () => {
         const target = await scratchTarget();
         const { runner, calls } = recorder('-D');
         const { steps, seen } = stepRecorder();
@@ -399,7 +399,7 @@ describe('scaffold', () => {
         expect(spoken.some((args) => args.includes('codegen'))).toBe(true);
     });
 
-    it('keeps going past a failed format', async () => {
+    it('continues past a failed format', async () => {
         const target = await scratchTarget();
         // the dev install lists prettier too
         const { runner, calls } = recorder('prettier --write');

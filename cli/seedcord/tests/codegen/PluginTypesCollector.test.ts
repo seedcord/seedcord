@@ -5,7 +5,7 @@ import { join, resolve } from 'node:path';
 import { stripVTControlCharacters } from 'node:util';
 
 import { isSeedcordError, SeedcordErrorCode } from '@seedcord/errors';
-import { HostPluginKeys } from '@seedcord/types/internal';
+import { HostPlugins } from '@seedcord/types/internal';
 import { toPosixPath } from '@seedcord/utils/internal';
 import { assert, describe, expect, it } from 'vite-plus/test';
 
@@ -49,7 +49,7 @@ function growingLoader(): GrowingLoader {
 
 function botWith(plugins: Record<string, object>): SeedcordInstance {
     // justified: the collector reads only the plugin keys and the plugins they point at
-    return { [HostPluginKeys]: Object.keys(plugins), ...plugins } as unknown as SeedcordInstance;
+    return { [HostPlugins]: { keys: Object.keys(plugins) }, ...plugins } as unknown as SeedcordInstance;
 }
 
 describe('PluginTypesCollector', () => {
@@ -150,7 +150,7 @@ describe('PluginTypesCollector', () => {
         expect(messages).toContainEqual(expect.stringContaining('returned a Date at when.'));
     });
 
-    it('keeps each attachment of one class and reports a key where they disagree', async () => {
+    it('keeps each attachment of one class and reports a key where they differ', async () => {
         const { modules } = growingLoader();
         class Cron {
             public static readonly id = 'cron';
@@ -209,7 +209,7 @@ describe('PluginTypesCollector', () => {
         }
         // justified: the collector reads only the plugin keys and the plugins they point at
         const bot = {
-            [HostPluginKeys]: ['services.users'],
+            [HostPlugins]: { keys: ['services.users'] },
             services: { users: new Grouped() }
         } as unknown as SeedcordInstance;
 

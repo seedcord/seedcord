@@ -52,7 +52,7 @@ export class ArraySourceBase<Item, Ctx> implements PageSourceBase<Item, Ctx> {
 /**
  * A source for a large or unknown-length set you fetch one page at a time (SQL LIMIT/OFFSET, a paged API).
  * The fetcher receives the page index and the page size and reports whether a next page exists. A cursor
- * source has no cheap total, so `totalPages` is undefined, the last button is omitted, and the indicator
+ * source doesn't have a cheap total, so `totalPages` is undefined, the last button is omitted, and the indicator
  * reads "Page X".
  *
  * @typeParam Item - The item type, inferred from the fetcher's slice.
@@ -73,7 +73,7 @@ export class CursorSourceBase<Item, Ctx> implements PageSourceBase<Item, Ctx> {
     }
 
     async page(ctx: Ctx, n: number): Promise<PageView<Item>> {
-        // a cursor source has no total to clamp against. Infinity and NaN both fall back to 0.
+        // a cursor source doesn't have a total to clamp against. Infinity and NaN both fall back to 0.
         const page = Number.isFinite(n) ? Math.max(0, Math.trunc(n)) : 0;
         const { items, hasNext } = await this.fetch(ctx, page, this.perPage);
         return { items: [...items], page, perPage: this.perPage, hasPrev: page > 0, hasNext };

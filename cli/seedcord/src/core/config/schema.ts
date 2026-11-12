@@ -2,7 +2,7 @@ import type { RealPath } from '#core/project/realPath';
 import type { EdgeTarget, ServerTarget } from './detectTarget';
 import type { VitePlugins } from './vitePlugins';
 import type { TakenName, TemplateHelper } from '@seedcord/cli-templates/helper-names';
-import type { TypedOmit } from '@seedcord/types';
+import type { Except } from 'type-fest';
 import type { PluginOption } from 'vite';
 
 /**
@@ -120,7 +120,7 @@ export interface SeedcordConfig {
      */
     files?: string[];
     /**
-     * How `seedcord dev` exposes an http bot's interactions server. This has no effect on a gateway bot.
+     * How `seedcord dev` exposes an http bot's interactions server. This does nothing on a gateway bot.
      *
      * `true` opens a cloudflared quick tunnel and writes the interactions endpoint on every run,
      * since the hostname changes each time. An https URL is one you already serve, through a named
@@ -197,10 +197,7 @@ interface ResolvedSeedcordMakeConfig {
 }
 
 export interface ResolvedSeedcordConfig extends Required<
-    TypedOmit<
-        SeedcordConfig,
-        'build' | 'hmr' | 'tunnel' | 'port' | 'vitePlugins' | 'root' | 'instance' | 'files' | 'make'
-    >
+    Except<SeedcordConfig, 'build' | 'hmr' | 'tunnel' | 'port' | 'vitePlugins' | 'root' | 'instance' | 'files' | 'make'>
 > {
     make: ResolvedSeedcordMakeConfig;
     root: RealPath;

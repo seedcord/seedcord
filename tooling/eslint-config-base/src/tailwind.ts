@@ -25,7 +25,7 @@ export function resolveSharedTailwindEntry(packageRoot: string, candidates: stri
 
 interface TailwindBlockParams {
     files: string[];
-    // undefined makes the block a no-op for packages with no Tailwind surface
+    // undefined makes the block a no-op for packages without a Tailwind surface
     entryPoint: string | undefined;
     calleeFunctions: string[];
     taggedTemplates: string[];

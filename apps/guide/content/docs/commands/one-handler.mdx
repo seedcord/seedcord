@@ -3,7 +3,7 @@ title: One handler, several commands
 description: Answer several slash commands or subcommands from one handler class, and branch on the route that ran.
 ---
 
-Two commands that share most of their work become two handler classes, plus a helper you import into both. Instead, just handle both in a single handler class. You write the list in the decorator and again in the generic.
+Two commands that share most of their work become two handler classes, plus a helper you import into both. Instead, handle both in a single handler class. You write the list in the decorator and again in the generic.
 
 ```ts twoslash title="src/handlers/Moderation.ts"
 import { SlashHandler, SlashRoute } from '@seedcord/gateway';
@@ -64,7 +64,7 @@ class Moderation extends SlashHandler<'ban' | 'kick'> {
 }
 ```
 
-An option only one route declares stays out.
+The type leaves out an option that only one route declares.
 
 ```ts twoslash
 // @errors: 2339

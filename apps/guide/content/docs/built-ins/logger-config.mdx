@@ -3,7 +3,7 @@ title: Configuring the logger
 description: Set where your bot's logs go and how much of them prints, through the logger block on your bot config.
 ---
 
-By default a node bot prints every level in development, drops `trace` in staging, and prints `info` and above everywhere else. It writes a log file in development, and the console prints readable columns or JSON lines depending on how the bot runs. Your bot config takes a `logger` block for when that doesn't fit, like a noisy channel you want quieter or logs you need sent to a service. Its three keys are `level`, `channels`, and `sinks`, all optional.
+By default a node bot prints every level in development, skips `trace` in staging, and prints `info` and above everywhere else. It writes a log file in development, and the console prints readable columns or JSON lines depending on how the bot runs. Your bot config takes a `logger` block for when that doesn't fit, like a noisy channel you want quieter or logs you need sent to a service. Its three keys are `level`, `channels`, and `sinks`, all optional.
 
 ## The level floor
 
@@ -41,7 +41,7 @@ export const seedcord = new Seedcord({
 
 ### One channel at a time
 
-Setting the whole bot to `debug` to chase one bug in your handlers also prints every other channel's `debug` lines. `channels` sets a separate floor for a single channel, so `interactions` can print at `trace` while the rest of your bot stays at `info`.
+Setting the whole bot to `debug` to chase one bug in your handlers also prints every other channel's `debug` lines. `channels` sets a separate floor for a single channel, so `interactions` can print at `trace` while the rest of your bot prints at `info`.
 
 ```ts twoslash title="src/bot.ts"
 // @noErrors
@@ -71,9 +71,9 @@ export const seedcord = new Seedcord({
 
 Your editor lists every framework channel as you type the next key. The key takes your own names too, so a plugin you attached as `db` gets a `db` entry here for the channel it logs on.
 
-## Where a record goes
+## Where seedcord sends a record
 
-One logger call builds one _record_. A sink is where that record goes after it passes the floor, and every sink you name receives all of them.
+One logger call builds one _record_. A sink receives that record after it passes the floor, and every sink you list receives all of them.
 
 These sinks ship with seedcord.
 
@@ -182,18 +182,18 @@ export class HttpSink implements ILogSink {
 }
 ```
 
-A [`LogRecord`](ref:types/LogRecord) carries the `level`, the `message`, the `label`, the `channel`, and a `timestamp` in milliseconds. It also carries `args`, the values you passed after the message. A message on its own leaves `args` absent.
+A [`LogRecord`](ref:types/LogRecord) has the `level`, the `message`, the `label`, the `channel`, and a `timestamp` in milliseconds. It also has `args`, the values you passed after the message. A message on its own leaves `args` absent.
 
 Four things shape how seedcord treats your sink.
 
 - **`onLog` can return a promise.** seedcord calls it and continues, so a slow sink does not delay the handler that logged. An edge bot keeps the request open until that promise finishes.
 - **A throw turns the sink off.** seedcord catches it, prints one console line with the error, and stops sending that sink records for the rest of the process. A rejected promise counts the same way. Catching inside `onLog` keeps that from happening, so write your retry or backoff there when a failed request shouldn't cost you every later line.
-- **`kind` decides which sinks the dev terminal silences.** The dev terminal silences every `'console'` sink from `config.logger` while it draws its own lines. `'file'` and `'capture'` keep writing.
-- **`dispose` is optional.** seedcord calls it when a later `logger` config drops the sink. The winston file handle closes this way.
+- **`kind` selects which sinks the dev terminal silences.** The dev terminal silences every `'console'` sink from `config.logger` while it draws its own lines. `'file'` and `'capture'` keep writing.
+- **`dispose` is optional.** seedcord calls it when a later `logger` config removes the sink. The winston file handle closes this way.
 
 ### Adding a sink alongside the others
 
-A sink in `sinks` replaces the defaults. A plugin or tool that only reads your logs shouldn't change which sinks your bot runs. [`installSink`](ref:logger/LoggerChannelRegistry.installSink) puts a sink alongside whatever `config.logger` already set, and setting `config.logger` again leaves it in place.
+A sink in `sinks` replaces the defaults. A plugin or tool that only reads your logs shouldn't change which sinks your bot runs. [`installSink`](ref:logger/LoggerChannelRegistry.installSink) puts a sink alongside whatever `config.logger` has already set, and setting `config.logger` again leaves it in place.
 
 ```ts twoslash title="src/bot.ts"
 import { LoggerChannelRegistry } from '@seedcord/gateway';

@@ -14,6 +14,7 @@ import type {
     ReactNode,
     Ref
 } from 'react';
+import type { Except } from 'type-fest';
 
 const disclosureTriggerBaseClassName = cn(
     tw`flex w-full cursor-pointer items-center gap-2 text-left`,
@@ -111,7 +112,7 @@ export function Disclosure({
     );
 }
 
-export interface DisclosureTriggerProps extends Omit<
+export interface DisclosureTriggerProps extends Except<
     ButtonHTMLAttributes<HTMLButtonElement>,
     'type' | 'aria-expanded' | 'aria-controls'
 > {
@@ -145,7 +146,7 @@ export function DisclosureTrigger({
     );
 }
 
-export interface DisclosureChevronProps extends Omit<ComponentPropsWithoutRef<typeof ChevronDown>, 'aria-hidden'> {}
+export interface DisclosureChevronProps extends Except<ComponentPropsWithoutRef<typeof ChevronDown>, 'aria-hidden'> {}
 
 export function DisclosureChevron({ className, size = 16, ...props }: DisclosureChevronProps): ReactElement {
     const { open } = useDisclosureContext('DisclosureChevron');

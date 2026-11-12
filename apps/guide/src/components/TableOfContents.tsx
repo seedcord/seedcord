@@ -82,7 +82,7 @@ function useRail(items: readonly TOCItemType[]): [RefObject<HTMLDivElement | nul
         const list = listRef.current;
         if (!list) return;
 
-        // fires once on observe, then whenever a title wraps
+        // the observer calls this once on observe, then whenever a title wraps
         const observer = new ResizeObserver(() => {
             setRail({
                 rows: Array.from(list.querySelectorAll('a'), (row) => ({

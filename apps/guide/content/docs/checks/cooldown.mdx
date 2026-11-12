@@ -68,25 +68,18 @@ A duration literal is digits followed by one lowercase unit.
 
 {/* prettier-ignore-end */}
 
-<Callout type="warning">
-
-The type accepts any number in front of the unit. The parser accepts whole digits alone. So this compiles, then throws as the module loads.
+A literal the parser would reject fails to compile, and the compiler error shows what a duration looks like.
 
 ```ts twoslash
+// @errors: 2345
 import { Cooldown } from '@seedcord/gateway';
 // ---cut---
 Cooldown('1.5h');
 ```
 
-That throw stops your bot from starting. The error's code is `GateInvalidCooldownDuration`. Write `Cooldown('90m')` instead.
+An uppercase unit like `'30M'`, a string without a unit like `'30'`, and a zero like `'0s'` fail to compile too. Write `Cooldown('90m')` instead.
 
-</Callout>
-
-Everything else the parser rejects throws the same way.
-
-- an uppercase unit, as in `30M`
-- a bare number in a string, as in `'30'`
-- a zero duration, as in `0s`
+A duration typed as a plain `string`, like one read from an environment variable, skips that check. If it doesn't parse, `Cooldown` throws `InvalidDuration` when it's called. Inside `@Gated`, that happens as the module loads, so your bot fails to start.
 
 ### Several uses per window
 
@@ -130,7 +123,7 @@ Cooldown('1h', { per: 'guild' });
 
 With `per: 'guild'`, every caller outside a server shares one global window. If one person uses the command in a DM, they can use up the window for every other DM caller. Pair it with [`GuildOnly`](ref:core/GuildOnly) when your command should only run in a server anyway.
 
-If two handlers use the same settings, they still get separate windows, since the key includes the route. If one handler has two `Cooldown` calls with different settings, their windows stay separate too.
+If two handlers use the same settings, they still get separate windows, since the key includes the route. If one handler has two `Cooldown` calls with different settings, their windows are separate too.
 
 ### Replacing the refusal
 
@@ -166,7 +159,7 @@ Discord's [`<t:...:R>` markup](https://discord.com/developers/docs/reference#mes
 
 ## Putting it together
 
-This handler sets `limit` and `per` together. Each server gets three feeds every ten minutes. When a server has used all three, the refusal says when the caller can try again.
+This handler sets `limit` and `per` together. Each server gets three feeds every ten minutes. When a server has used all three, the refusal shows when the caller can try again.
 
 ```ts twoslash title="src/handlers/Feed.ts"
 import {
@@ -191,9 +184,9 @@ export class Feed extends SlashHandler<'feed'> {
 
 <Callout type="note">
 
-If two requests for the same key arrive at the same moment, both can find room in the window before either records its use. `Cooldown` then refuses the one that goes over `limit` in its commit, through [`ctx.core.rateLimiter.charge`](ref:types/IRateLimiter.charge), which records a use only when the window still has room. Put `Cooldown` before your other [effect gates](/checks/effect-gates), because seedcord doesn't undo a commit that already ran.
+If two requests for the same key arrive at the same moment, both can find room in the window before either records its use. `Cooldown` then refuses the one that exceeds `limit` in its commit, through [`ctx.core.rateLimiter.charge`](ref:types/IRateLimiter.charge), which records a use only when the window still has room. Put `Cooldown` before your other [effect gates](/checks/effect-gates), because seedcord doesn't undo a commit that has already run.
 
-If several copies of your bot run at once, each copy records its own uses one at a time, so a tight burst across copies can go over `limit`.
+If several copies of your bot run at once, each copy records its own uses one at a time, so a tight burst across copies can exceed `limit`.
 
 </Callout>
 

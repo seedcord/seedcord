@@ -1,17 +1,17 @@
 ---
 title: Reloading in dev
-description: Reload the files your plugin loads when you save them under seedcord dev, and ask for a restart for the ones it reads once.
+description: Reload the files that your plugin loads when you save them under seedcord dev, and ask for a restart for the ones it reads once.
 ---
 
-Under [`seedcord dev`](/tooling/dev), a save swaps the file into the running bot. A plugin that loaded the file itself, like a service class from its folder, keeps the old copy, because seedcord has no record that the plugin read that file. Restarting for every edit costs the connection you were trying to keep.
+Under [`seedcord dev`](/tooling/dev), a save swaps the file into the running bot. A plugin that loaded the file itself, like a service class from its folder, keeps the old copy, because seedcord can't tell that the plugin read that file. Restarting for every edit costs the connection you were trying to keep.
 
 ## What reaches onHmr when a file is saved
 
-Every save sends your plugin an [`HmrUpdateEvent`](ref:types/HmrUpdateEvent) through [`onHmr`](ref:core/Plugin.onHmr). `file` is the saved path, and `type` is `create`, `createDir`, `update`, `delete`, or `deleteDir`. `affectedModules` lists the file and every file that imports it, and `rollback` says whether a failed reload keeps the last working version. The default `onHmr` does nothing, and it never runs outside `seedcord dev`. If your `onHmr` throws, seedcord logs the error and the bot's other reloaders still run.
+Every save sends your plugin an [`HmrUpdateEvent`](ref:types/HmrUpdateEvent) through [`onHmr`](ref:core/Plugin.onHmr). `file` is the saved path, and `type` is `create`, `createDir`, `update`, `delete`, or `deleteDir`. `affectedModules` lists the file and every file that imports it, and `rollback` tells you whether a failed reload keeps the last working version. The default `onHmr` does nothing, and it never runs outside `seedcord dev`. If your `onHmr` throws, seedcord logs the error and the bot's other reloaders still run.
 
 ## Reloading files the plugin loaded
 
-[`FolderExports`](ref:core/FolderExports) registers what a folder's files export at startup, then reloads a file's exports each time you save it. Import it from your transport package, or from `@seedcord/core` on the `@seedcord/core/plugin` base. You give it the folder, a check for which exports count, and how to register and unregister one.
+[`FolderExports`](ref:core/FolderExports) registers what a folder's files export at startup, then reloads a file's exports each time you save it. Import it from your transport package, or from `@seedcord/core/plugin` if your plugin works on both transports. You give it the folder, a check for which exports count, and how to register and unregister one.
 
 ```ts twoslash title="src/plugins/Jobs.ts"
 import { FolderExports, Plugin } from '@seedcord/gateway';
@@ -51,7 +51,7 @@ export class Jobs extends Plugin {
 }
 ```
 
-`init()` calls `load()`, which imports every file under `dir` and passes each export that `isJob` accepts to `register`. It runs the same way in production, so the bot registers its jobs through one path whether dev is running or not. `isJob` receives every value a file exports, helpers and constants included, so it has to pick out your classes.
+`init()` calls `load()`, which imports every file under `dir` and passes each export that `isJob` accepts to `register`. It runs the same way in production, so the bot registers its jobs through one path whether dev is running or not. `isJob` receives every value that a file exports, helpers and constants included, so it has to pick out your classes.
 
 If `jobs/index.ts` re-exports a job, `load()` still only registers it once. `handle()` unregisters it only after neither file exports it, so deleting the barrel leaves the job running.
 
@@ -77,7 +77,7 @@ Each reload logs one line at debug level on your plugin's logger, in the `hmr` c
 
 ### Undoing what a registration made
 
-`unregister` gets the old value and nothing else. That's enough for `Jobs`, since registering only stored the class in a map. If registering creates something you have to undo later, keep it in a map keyed by the class and look it up in `unregister`. Here `schedule()` starts a timer for each job:
+`unregister` gets only the old value. That's enough for `Jobs`, since registering only stored the class in a map. If registering creates something you have to undo later, keep it in a map keyed by the class and look it up in `unregister`. Here `schedule()` starts a timer for each job:
 
 ```ts twoslash title="src/plugins/Jobs.ts"
 import { FolderExports, Plugin } from '@seedcord/gateway';
@@ -129,7 +129,7 @@ If the hooks folder is a subfolder of the jobs folder, pass it to the jobs insta
 
 ## Files read once
 
-A reload only helps with files your plugin reads again. A locale folder that `init()` read at startup stays as it was, because swapping the file doesn't repeat the read. Pass glob patterns for files like that to [`registerCriticalFiles`](ref:core/Plugin.registerCriticalFiles). When one of them changes, the dev terminal shows a **Restart required** card telling you to press `r`, which [the Tooling tab](/tooling/hot-reload#saves-that-need-a-restart) describes.
+A reload only helps with files your plugin reads again. If `init()` read a locale folder at startup, your plugin still has the old copy, because swapping the file doesn't repeat the read. Pass glob patterns for files like that to [`registerCriticalFiles`](ref:core/Plugin.registerCriticalFiles). When one of them changes, the dev terminal shows a **Restart required** card telling you to press `r`, which [the Tooling tab](/tooling/hot-reload#saves-that-need-a-restart) describes.
 
 ```ts twoslash title="src/plugins/Locales.ts"
 import { Plugin, readFiles } from '@seedcord/gateway';
@@ -153,8 +153,8 @@ export class Locales extends Plugin {
 }
 ```
 
-Saving anything under `dir` now asks for a restart. A relative pattern resolves against `root`, and the call does nothing outside `seedcord dev`. Register only the files your plugin reads, because seedcord already asks for a restart on its own startup files.
+Saving anything under `dir` now needs a restart. A relative pattern resolves against `root`, and the call does nothing outside `seedcord dev`. Register only the files that your plugin reads, because seedcord already asks for a restart on its own startup files.
 
 ## Saving the plugin's own source
 
-A plugin you keep in `src/plugins` asks for a restart when you save it, and no hook changes that. Your bot file imports the plugin and attaches it once at startup, and `seedcord dev` asks for a restart on a save to any file the bot file imports. A hot reload would leave the attached instance running the old code. [Testing it in a bot](/writing-plugins/publishing#test-it-in-a-bot-first) covers a plugin that lives in another package.
+A plugin you keep in `src/plugins` needs a restart when you save it, and a hook can't change that. Your bot file imports the plugin and attaches it once at startup, and `seedcord dev` asks for a restart on a save to any file the bot file imports. A hot reload would leave the attached instance running the old code. [Testing it in a bot](/writing-plugins/publishing#test-it-in-a-bot-first) covers a plugin from another package.

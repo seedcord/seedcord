@@ -6,7 +6,7 @@ description: Page a message without a Paginator by calling paginate() with a cur
 You page by hand when a [`Paginator`](ref:gateway/Paginator) can't carry what your message needs, as in these two cases.
 
 - **An embed.** Discord forbids an embed on a ComponentsV2 message, which is what seedcord's reply methods send.
-- **Extra values on the button.** A paginator's cursor carries a page and a slot. A filter, a sort key, or a target user id has to survive the page turn, so the nav button carries it. Shaping that id means writing your own [`CustomId`](ref:custom-id/CustomId).
+- **Extra values on the button.** A paginator's cursor has a page and a slot. The next page needs a filter, a sort key, or a target user id too, so the nav button holds it. Shaping that id means writing your own [`CustomId`](ref:custom-id/CustomId).
 
 [`paginate()`](ref:core/paginate) is the slicing math on its own. It takes a list, a page number, and a page size, then returns a [`PageView`](ref:core/PageView) with `totalPages` filled in. The cursor, the buttons, and the routing are all yours to write.
 
@@ -87,7 +87,7 @@ Both handlers call `renderBoard`, so the first reply and every click build the s
 
 <Callout type="transport">
 
-`this.event` is the discord.js interaction on gateway, which declares `reply` and `update` itself. Http delivers `this.event` as a raw payload that doesn't have ack methods, so the same job goes through [`this.api`](ref:http/RepliableHandler.api), whose `api.interactions` callbacks answer Discord themselves.
+`this.event` is the discord.js interaction on gateway, which declares `reply` and `update` itself. Http delivers `this.event` as a raw payload that doesn't have ack methods, so you do the same job through [`this.api`](ref:http/RepliableHandler.api), whose `api.interactions` callbacks answer Discord themselves.
 
 [Raw acks](/replying/raw-acks) covers both routes and the lint rule the two handlers above disable.
 
@@ -95,13 +95,13 @@ Both handlers call `renderBoard`, so the first reply and every click build the s
 
 ## The cursor you declare
 
-`Board` here carries a page and nothing else. **Prev** targets `page - 1` while **Next** targets `page + 1`, two numbers that never collide.
+`Board` here holds only a page. **Prev** targets `page - 1` while **Next** targets `page + 1`, two numbers that never collide.
 
 A third button breaks that. From page 1, **First** and **Prev** both target page 0. Discord rejects a message carrying two identical custom ids, so you give the cursor a second field, `.int('slot', 0, 4)`, and pass each button its own slot.
 
 <Callout type="warning">
 
-`encode` throws `CustomIdValueRejected` once a value passes the bound its field declared. Clamp the target page on both ends before you encode it, the way `Math.min` and `Math.max` do in the fence above.
+`encode` throws `CustomIdValueRejected` once a value passes the bound that its field declared. Clamp the target page on both ends before you encode it, the way `Math.min` and `Math.max` do in the fence above.
 
 </Callout>
 
@@ -126,4 +126,4 @@ A `perPage` of zero, a fraction, or a negative throws `PaginationInvalidPerPage`
 
 `renderBoard` builds a plain object, so any call taking Discord's message shape accepts it. Both handlers above pass it straight to an ack.
 
-The **Prev** and **Next** buttons route from any message, since the custom id carries everything the handler reads. [`@ButtonRoute`](ref:core/ButtonRoute) matches on its prefix alone. On gateway, a weekly job that posts `renderBoard(0)` with `channel.send` gets working buttons too.
+The **Prev** and **Next** buttons route from any message, since the custom id holds everything the handler reads. [`@ButtonRoute`](ref:core/ButtonRoute) matches on its prefix alone. On gateway, a weekly job that posts `renderBoard(0)` with `channel.send` gets working buttons too.

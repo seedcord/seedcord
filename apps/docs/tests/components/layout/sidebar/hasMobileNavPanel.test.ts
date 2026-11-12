@@ -11,7 +11,7 @@ describe('hasMobileNavPanel', () => {
         expect(hasMobileNavPanel('/packages/seedcord/0.12.0/classes/Seedcord')).toBe(true);
     });
 
-    it('is false on the landing page', () => {
+    it('is false on the home page', () => {
         expect(hasMobileNavPanel('/')).toBe(false);
     });
 

@@ -10,8 +10,9 @@ import { discoverWorkspacePackages, readPackageManifest, readReadme, unscopedNam
 
 import type { ApiDocsPathConfig } from './ApiDocsPaths';
 import type { PackageDocResult } from './types';
+import type { SetOptional } from 'type-fest';
 
-type ConsoleLike = Pick<Console, 'log'> & Partial<Pick<Console, 'error'>>;
+type ConsoleLike = SetOptional<Pick<Console, 'log' | 'error'>, 'error'>;
 
 export interface ApiDocsGeneratorOptions extends ApiDocsPathConfig {
     logger?: ConsoleLike;
@@ -107,7 +108,7 @@ export class ApiDocsGenerator {
             .filter(({ name }) => name === target || unscopedName(name) === target)
             .map(({ dir }) => dir);
         if (matches.length === 0) {
-            throw new Error(`--package "${target}" matched no package in the workspace`);
+            throw new Error(`--package "${target}" didn't match any package in the workspace`);
         }
         return matches;
     }
@@ -127,7 +128,7 @@ export class ApiDocsGenerator {
         await this.ensureOutputDirectory();
         const packageDirs = await this.discoverPackages();
         // Built from every workspace package, including ones outside the current `--package` scope,
-        // so a re-export's declaring package always resolves to its real npm name.
+        // because a re-export's declaring package must always resolve to its real npm name.
         const packageNames = await this.buildPackageNames();
         const results: PackageDocResult[] = [];
 

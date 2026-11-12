@@ -13,7 +13,7 @@ import type { ResolvedEmoji } from '@seedcord/core';
 
 const HANDLERS_DIR = path.resolve(__dirname, '../discovery/fixtures/handlers');
 
-// justified: EmojiMap is empty in tests, so runtime values read through a plain record
+// justified: runtime values read through a plain record because EmojiMap is empty in tests
 const emojis = Emojis as Record<string, ResolvedEmoji>;
 
 function config(): HttpServerConfig {

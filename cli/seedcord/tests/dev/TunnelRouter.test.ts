@@ -47,7 +47,7 @@ describe('TunnelRouter', () => {
         expect(onPort).toHaveBeenCalledExactlyOnceWith(4321, INSTANCE);
     });
 
-    it('stays out of the way when the config turns the tunnel off', async () => {
+    it('does nothing when the config turns the tunnel off', async () => {
         const onPort = vi.fn().mockResolvedValue(undefined);
         const warn = vi.fn();
 
@@ -109,7 +109,7 @@ describe('TunnelRouter', () => {
         expect(onFreshPort).toHaveBeenCalledExactlyOnceWith(2, INSTANCE);
     });
 
-    it('drops the running tunnel when a restart turns it off', async () => {
+    it('stops the running tunnel when a restart turns it off', async () => {
         const stop = vi.fn().mockResolvedValue(undefined);
         const routing = new TunnelRouter(() => fakeCoordinator({ stop }), silentLogger);
 

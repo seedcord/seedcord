@@ -173,7 +173,7 @@ describe('the interactions engine', () => {
         expect(response.headers.get('allow')).toBe('POST');
     });
 
-    it('throws CoreEdgeUnbuilt when the worker carries no ids from seedcord build', async () => {
+    it('throws CoreEdgeUnbuilt when the worker is missing ids from seedcord build', async () => {
         bindEnv({ DISCORD_BOT_TOKEN: VALID_TOKEN });
         clearBakedIds();
 

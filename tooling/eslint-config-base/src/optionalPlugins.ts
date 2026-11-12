@@ -23,7 +23,7 @@ export function requirePlugin<Plugin>(name: string, option: string): Plugin {
     } catch (error: unknown) {
         if (!isAbsent(error, name)) throw error;
 
-        throw new Error(`${option} needs ${name}. Install it as a dev dependency, or drop the option.`, {
+        throw new Error(`${option} needs ${name}. Install it as a dev dependency, or remove the option.`, {
             cause: error
         });
     }
@@ -31,6 +31,6 @@ export function requirePlugin<Plugin>(name: string, option: string): Plugin {
     // a plugin transpiled from esm puts itself on default, and eslint-plugin-tailwind-canonical-classes does
     const transpiled = plugin as Transpiled | null;
 
-    // justified: a plugin package has no shared type, and each caller knows the shape it needs
+    // justified: a plugin package doesn't share a type, and each caller types the shape it needs
     return (transpiled?.__esModule === true ? transpiled.default : plugin) as Plugin;
 }

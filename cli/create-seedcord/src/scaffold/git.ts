@@ -20,7 +20,7 @@ const PLACEHOLDER = 'the developer';
 
 const FALLBACK_TAIL = `Error cards will say "${PLACEHOLDER}" until you set notifications.developerUsername in src/bot.ts.`;
 const GIT_ABSENT = `git is not installed. ${FALLBACK_TAIL}`;
-const NAME_MISSING = `git reported no user.name. ${FALLBACK_TAIL}`;
+const NAME_MISSING = `git didn't report a user.name. ${FALLBACK_TAIL}`;
 const ALREADY_REPO = 'this directory is already inside a git repo. Nothing was initialized.';
 
 function noticeFor(probe: GitProbe, wanted: boolean): string | null {

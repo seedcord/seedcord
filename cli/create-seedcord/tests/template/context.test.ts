@@ -47,7 +47,7 @@ describe('buildContext on gateway', () => {
         expect(context.partials).toEqual(['Message', 'Channel', 'Reaction']);
     });
 
-    it('sees no message capability behind reactions alone', () => {
+    it('reports hasMessages as false for reactions alone', () => {
         expect(context.hasMessages).toBe(false);
     });
 });
@@ -64,7 +64,7 @@ describe('buildContext on http', () => {
         expect(context.transport).toBe('@seedcord/http');
     });
 
-    it('carries no intents or partials', () => {
+    it('has empty intents and partials', () => {
         expect(context.intents).toEqual([]);
         expect(context.partials).toEqual([]);
         expect(context.hasMessages).toBe(false);
@@ -78,7 +78,7 @@ describe('buildContext on a gateway bot that picked nothing', () => {
         expect(context.intents).toEqual(['Guilds']);
     });
 
-    it('sees no message capability', () => {
+    it('reports hasMessages as false', () => {
         expect(context.hasMessages).toBe(false);
     });
 });

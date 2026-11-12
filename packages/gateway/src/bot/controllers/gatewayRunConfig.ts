@@ -1,45 +1,72 @@
+import { DispatchContext } from '@seedcord/core/internal';
 import { DiscordAPIError } from 'discord.js';
 
 import { autocompleteResponder } from '#bot/autocompleteResponder';
-import { interactionGateContext } from '#bot/gates/context';
+import { interactionGateContext, interactionOrigin } from '#bot/gates/context';
 import { ReplySender } from '#bot/ReplySender';
 import { interactionFaultReport } from '#miscellaneous/faultReports';
 
-import type { HandlerConstructor, InteractionMiddlewareConstructor } from '#handlers/constructors';
+import type { InteractionMiddlewareConstructor, ResolvedInteraction } from '#handlers/constructors';
 import type { Core } from '#interfaces/Core';
-import type { ValidInteractionTypes } from '#src/handlers/interactionTypes';
-import type { InteractionDispatch, InteractionRunConfig, MiddlewareRegistry } from '@seedcord/core/internal';
+import type { InteractionKind, MiddlewareKind } from '@seedcord/core';
+import type { InteractionDispatch, InteractionRunConfig } from '@seedcord/core/internal';
 import type { Logger } from '@seedcord/logger';
 
-interface GatewayRun {
-    readonly interaction: ValidInteractionTypes;
+interface GatewayRun<Kind extends InteractionKind> {
+    readonly resolved: ResolvedInteraction<Kind>;
     readonly core: Core;
-    readonly dispatch: InteractionDispatch;
-    readonly HandlerCtor: HandlerConstructor;
-    readonly middlewares: MiddlewareRegistry<InteractionMiddlewareConstructor>;
     readonly logger: Logger;
 }
 
-export function gatewayRunConfig(run: GatewayRun): InteractionRunConfig {
-    const { interaction, core, dispatch, HandlerCtor, middlewares, logger } = run;
+interface RepliableRun<Kind extends MiddlewareKind> extends GatewayRun<Kind> {
+    readonly middlewares: readonly InteractionMiddlewareConstructor[];
+}
+
+export function autocompleteRunConfig(run: GatewayRun<InteractionKind.Autocomplete>): InteractionRunConfig {
+    const { resolved, core } = run;
+    const { event, ctor: Ctor } = resolved;
+    const dispatch = dispatchOf(resolved);
+    const responder = autocompleteResponder(event, core, dispatch);
+    return runConfig(run, dispatch, { responder, handler: () => new Ctor(event, core, dispatch, responder) });
+}
+
+export function repliableRunConfig<Kind extends MiddlewareKind>(run: RepliableRun<Kind>): InteractionRunConfig {
+    const { resolved, core, middlewares } = run;
+    const { event, ctor: Ctor } = resolved;
+    const dispatch = dispatchOf(resolved);
+    const sender = new ReplySender(event, dispatch, core.bus);
+    return runConfig(run, dispatch, {
+        sender,
+        gateContext: () => interactionGateContext(event, core, dispatch),
+        handler: () => new Ctor(event, core, dispatch, sender),
+        middlewares: middlewares.map((Middleware) => () => new Middleware(event, core, dispatch, sender))
+    });
+}
+
+function dispatchOf<Kind extends InteractionKind>({
+    kind,
+    route,
+    fallback
+}: ResolvedInteraction<Kind>): InteractionDispatch {
+    return new DispatchContext(kind, route, fallback);
+}
+
+function runConfig<Kind extends InteractionKind>(
+    { resolved, core, logger }: GatewayRun<Kind>,
+    dispatch: InteractionDispatch,
+    target: InteractionRunConfig['target']
+): InteractionRunConfig {
+    const { event, ctor } = resolved;
     return {
         dispatch,
         core,
-        event: interaction,
-        HandlerCtor,
-        middlewares,
+        HandlerCtor: ctor,
         apiError: DiscordAPIError,
         logger,
-        interactionId: interaction.id,
-        userId: interaction.user.id,
-        guildId: interaction.guildId,
-        customId: 'customId' in interaction ? interaction.customId : null,
-        faultDetails: () => interactionFaultReport(interaction, dispatch),
-        target: interaction.isAutocomplete()
-            ? { responder: autocompleteResponder(interaction, core, dispatch) }
-            : {
-                  gateContext: () => interactionGateContext(interaction, core, dispatch),
-                  sender: new ReplySender(interaction, dispatch, core.bus)
-              }
+        interactionId: event.id,
+        origin: interactionOrigin(event),
+        customId: 'customId' in event ? event.customId : null,
+        faultDetails: () => interactionFaultReport(event, dispatch),
+        target
     };
 }

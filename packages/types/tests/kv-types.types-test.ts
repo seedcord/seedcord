@@ -7,7 +7,7 @@ interface SqlDriver extends KvDriver, Disposable {
     query(sql: string): unknown[];
 }
 
-// every Config in this package's program sees this registration
+// this registration applies to every Config in this package's program
 declare module '#src/Interfaces/Kv' {
     interface KvTypes {
         driver: SqlDriver;

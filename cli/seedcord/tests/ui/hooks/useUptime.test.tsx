@@ -49,7 +49,7 @@ describe('useUptime', () => {
         unmount();
     });
 
-    it('stays off when no sidebar renders it', async () => {
+    it('is off when no sidebar renders it', async () => {
         const { lastFrame, unmount } = render(<Harness state={liveState()} shown={false} />);
         await settled(() => expect(lastFrame()).toContain('up:null'));
         unmount();

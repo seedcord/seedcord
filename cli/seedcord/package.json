@@ -98,6 +98,7 @@
         "@seedcord/eslint-config": "workspace:^",
         "@seedcord/gateway": "workspace:^",
         "@seedcord/http": "workspace:^",
+        "@seedcord/prose": "workspace:^",
         "@seedcord/tsconfig": "workspace:^",
         "@seedcord/tsdown-config": "workspace:^",
         "@seedcord/ui": "workspace:^",

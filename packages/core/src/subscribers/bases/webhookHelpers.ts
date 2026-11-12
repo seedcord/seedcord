@@ -19,7 +19,7 @@ export function jsonAttachment(name: string, description: string, data: unknown)
     return { name, description, data: new TextEncoder().encode(JSON.stringify(content, undefined, 2)) };
 }
 
-// the report goes inside a ``` code block, so a stray ``` in the text would close it early
+// a stray ``` in the text would close the code block that callers wrap the report in
 export function breakBackticks(text: string): string {
     return text.replaceAll('```', '`​`​`');
 }
@@ -75,7 +75,7 @@ export function errorReport(error: Error): string {
     const members: unknown[] = error instanceof AggregateError ? error.errors : [];
     if (members.length === 0) return headReport(error, REPORT_BUDGET);
 
-    // a long parent stack would otherwise push the dropped-count line off the end
+    // a long parent stack would otherwise push the omitted-count line off the end
     const report = headReport(error, REPORT_BUDGET - omittedLine(members.length).length);
     return report + memberReport(members, REPORT_BUDGET - report.length);
 }

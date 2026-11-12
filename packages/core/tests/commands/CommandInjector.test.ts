@@ -18,7 +18,7 @@ import {
 import type { CommandInfo, ContextMenuInfo } from '#src/commands/CommandInjector';
 import type { ILogger } from '@seedcord/types';
 
-// justified: SlashRegistry is empty in tests, so runtime values read through a plain record
+// justified: runtime values read through a plain record because SlashRegistry is empty in tests
 const commands = Commands as Record<string, CommandInfo>;
 const mentionOf = (route: string): string => commands[route]!.mention;
 
@@ -85,7 +85,7 @@ describe('CommandInjector', () => {
     });
 
     it('ignores a context menu deployed under the same name as a slash command', () => {
-        const slash = new SlashCommandBuilder().setName('report').setDescription('file a report');
+        const slash = new SlashCommandBuilder().setName('report').setDescription('file a report').toJSON();
 
         new CommandInjector().inject(
             deploy(
@@ -101,7 +101,7 @@ describe('CommandInjector', () => {
     });
 
     it('ignores a same-named guild context menu when resolving a guild slash command', () => {
-        const slash = new SlashCommandBuilder().setName('report').setDescription('file a report');
+        const slash = new SlashCommandBuilder().setName('report').setDescription('file a report').toJSON();
         const registry = [slash];
 
         new CommandInjector().inject(
@@ -115,15 +115,14 @@ describe('CommandInjector', () => {
         expect(mentionOf('report')).toBe('</report:1>');
     });
 
-    it('drops stale keys when re-injected after a rename', () => {
-        const builders = [ping()];
+    it('removes stale keys when re-injected after a rename', () => {
         const injector = new CommandInjector();
-        injector.inject(deploy(deployed([['1', 'ping']])), builders);
+        injector.inject(deploy(deployed([['1', 'ping']])), [ping()]);
         expect(mentionOf('ping')).toBe('</ping:1>');
 
-        builders.length = 0;
-        builders.push(new SlashCommandBuilder().setName('pong').setDescription('Replies with Ping!'));
-        injector.inject(deploy(deployed([['2', 'pong']])), builders);
+        injector.inject(deploy(deployed([['2', 'pong']])), [
+            new SlashCommandBuilder().setName('pong').setDescription('Replies with Ping!').toJSON()
+        ]);
 
         expect(mentionOf('pong')).toBe('</pong:2>');
         expect(() => mentionOf('ping')).toThrow();
@@ -141,7 +140,7 @@ describe('CommandInjector', () => {
     });
 
     it('keeps a route named __proto__ as an ordinary entry', () => {
-        const odd = new SlashCommandBuilder().setName('__proto__').setDescription('edge');
+        const odd = new SlashCommandBuilder().setName('__proto__').setDescription('edge').toJSON();
 
         new CommandInjector().inject(deploy(deployed([['7', '__proto__']])), [odd]);
 
@@ -257,7 +256,7 @@ describe('CommandInjector', () => {
             expect(isSeedcordError(caught, 'SeedcordError', SeedcordErrorCode.CoreAccessorUnresolved)).toBe(true);
         });
 
-        it('drops stale menu names when re-injected after a rename', () => {
+        it('removes stale menu names when re-injected after a rename', () => {
             const injector = new CommandInjector();
             injector.inject(deploy(deployed([['1', 'View Profile', ApplicationCommandType.User]])), [userMenu()]);
 
@@ -270,7 +269,7 @@ describe('CommandInjector', () => {
         });
     });
 
-    it('warns "user menu" for a deployed user menu that has no command in code', () => {
+    it('warns "user menu" for a deployed user menu that doesn\'t have a command in code', () => {
         const warn = vi.fn();
         // justified: warnLinks only calls warn
         const logger = { warn } as unknown as ILogger;

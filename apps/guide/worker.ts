@@ -14,7 +14,7 @@ const NOT_FOUND = 404;
 
 const PRODUCTION_HOST = new URL(PRODUCTION_ORIGIN).hostname;
 
-// cloudflare serves the extension-less files next writes here with no content-type at all
+// cloudflare serves the extension-less files next writes here without a content-type
 const TYPED_PATHS: Record<string, string> = {
     '/icon': 'image/png',
     '/apple-icon': 'image/png'

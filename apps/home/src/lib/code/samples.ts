@@ -88,7 +88,7 @@ export class SearchHandler extends
 }
 
 // the route, registration and guards are done.
-// edit, save, hot reload, the connection stays up.`;
+// edit, save, hot reload, the connection is still up.`;
 
 export const codecComponent = `import {
     BuilderComponent, CustomId
@@ -150,7 +150,7 @@ export const startTerminal = `# scaffold a typed bot
 $ pnpm create seedcord my-bot
 $ cd my-bot
 
-# tui with hot reload, the gateway stays up
+# tui with hot reload, the gateway is still up
 $ seedcord dev
 
 # bot online, every slash option fully typed`;

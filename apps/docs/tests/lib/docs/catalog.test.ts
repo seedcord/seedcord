@@ -49,7 +49,7 @@ function makeEntry(versions: PackageVersionCatalog[]): PackageCatalogEntry {
 }
 
 describe('findCatalogVersion', () => {
-    it('returns undefined when the entry has no versions', () => {
+    it('returns undefined for an entry without versions', () => {
         const entry = makeEntry([]);
         expect(findCatalogVersion(entry, 'latest')).toBeUndefined();
         expect(findCatalogVersion(entry, '1.0.0')).toBeUndefined();

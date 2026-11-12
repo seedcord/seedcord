@@ -107,7 +107,7 @@ export function guideOrder(): readonly OrderedPage[] {
 
 export type SidebarsByTab = Readonly<Record<string, readonly SidebarSection[]>>;
 
-// a next layout gets no pathname
+// next doesn't pass a layout the pathname
 export function sidebarsByTab(): SidebarsByTab {
     return TAB_ROOTS.reduce<Record<string, readonly SidebarSection[]>>((byTab, node) => {
         const href = firstUrl(node);

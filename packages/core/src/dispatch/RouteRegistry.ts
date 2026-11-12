@@ -8,20 +8,33 @@ import { routeIdOf } from './routeIdOf';
 
 import type { RoutableConstructor } from '#decorators/interactionRoutes';
 import type { ContextMenuLeaves } from '#src/commands/contextMenuLeaves';
+import type { MiddlewareKind } from '#src/metadataKeys';
 import type { Logger } from '@seedcord/logger';
 
-export interface RegisteredRoute<Ctor> {
-    readonly kind: InteractionKind;
+export interface RegisteredRoute<Ctor, Kind extends InteractionKind = InteractionKind> {
+    readonly kind: Kind;
     readonly route: string;
     readonly fallback: boolean;
     readonly ctor: Ctor;
 }
 
-type KindMaps<Entry> = Readonly<Record<InteractionKind, Map<string, Entry>>>;
+// the handler class each kind takes. a transport types every slot with that kind's event
+type HandlerSlots = Readonly<Record<InteractionKind, RoutableConstructor>>;
 
-export type RouteMaps<Ctor> = KindMaps<RegisteredRoute<Ctor>>;
+type KindMaps<Slots extends HandlerSlots, Extra extends object = object> = {
+    readonly [Kind in InteractionKind]: Map<string, RegisteredRoute<Slots[Kind], Kind> & Extra>;
+};
 
-export function emptyRouteMaps<Entry>(): KindMaps<Entry> {
+export type RouteMaps<Slots extends HandlerSlots> = KindMaps<Slots>;
+
+// a matched route with the event that reached it. indexing by Kind keeps each class with its own kind's event
+export type ResolvedRoute<
+    Slots extends HandlerSlots,
+    Events extends Record<InteractionKind, unknown>,
+    Kind extends InteractionKind = InteractionKind
+> = { [Each in Kind]: RegisteredRoute<Slots[Each], Each> & { readonly event: Events[Each] } }[Kind];
+
+export function emptyRouteMaps<Slots extends HandlerSlots, Extra extends object = object>(): KindMaps<Slots, Extra> {
     return {
         [InteractionKind.Slash]: new Map(),
         [InteractionKind.UserContextMenu]: new Map(),
@@ -37,31 +50,48 @@ export function emptyRouteMaps<Entry>(): KindMaps<Entry> {
     };
 }
 
-export function matchRoute<Ctor>(
-    maps: RouteMaps<Ctor>,
-    kind: InteractionKind,
-    route: string,
-    unhandled: { readonly repliable: Ctor; readonly autocomplete: Ctor }
-): RegisteredRoute<Ctor> {
-    return (
-        maps[kind].get(route) ?? {
-            kind,
-            route,
-            fallback: true,
-            ctor: kind === InteractionKind.Autocomplete ? unhandled.autocomplete : unhandled.repliable
-        }
-    );
+export function unhandledSlots<Repliable, Autocomplete>(
+    repliable: Repliable,
+    autocomplete: Autocomplete
+): Record<MiddlewareKind, Repliable> & Record<InteractionKind.Autocomplete, Autocomplete> {
+    return {
+        [InteractionKind.Slash]: repliable,
+        [InteractionKind.UserContextMenu]: repliable,
+        [InteractionKind.MessageContextMenu]: repliable,
+        [InteractionKind.Button]: repliable,
+        [InteractionKind.StringMenu]: repliable,
+        [InteractionKind.UserMenu]: repliable,
+        [InteractionKind.RoleMenu]: repliable,
+        [InteractionKind.ChannelMenu]: repliable,
+        [InteractionKind.MentionableMenu]: repliable,
+        [InteractionKind.Modal]: repliable,
+        [InteractionKind.Autocomplete]: autocomplete
+    };
 }
 
-interface LoadedRoute<Ctor> extends RegisteredRoute<Ctor> {
+export function matchRoute<Slots extends HandlerSlots, Kind extends InteractionKind>(
+    maps: RouteMaps<Slots>,
+    kind: Kind,
+    route: string,
+    unhandledByKind: Slots
+): RegisteredRoute<Slots[Kind], Kind> {
+    return maps[kind].get(route) ?? { kind, route, fallback: true, ctor: unhandledByKind[kind] };
+}
+
+interface Loaded {
     readonly from: string;
 }
 
-export class RouteRegistry<Ctor extends RoutableConstructor> {
-    public readonly maps: KindMaps<LoadedRoute<Ctor>> = emptyRouteMaps();
+export class RouteRegistry<Slots extends HandlerSlots> {
+    public readonly maps: KindMaps<Slots, Loaded> = emptyRouteMaps();
 
-    private get allRoutes(): LoadedRoute<Ctor>[] {
+    private get allRoutes(): (RegisteredRoute<Slots[InteractionKind]> & Loaded)[] {
         return Object.values(this.maps).flatMap((routes) => [...routes.values()]);
+    }
+
+    // justified: a class only reaches a kind's map through that kind's route decorator, which type-checked it for the slot
+    private routesOf<Kind extends InteractionKind>(kind: Kind): Map<string, RegisteredRoute<Slots[Kind]> & Loaded> {
+        return this.maps[kind];
     }
 
     public get size(): number {
@@ -69,9 +99,9 @@ export class RouteRegistry<Ctor extends RoutableConstructor> {
     }
 
     // returns whether the class declared any route
-    public register(ctor: Ctor, from: string): boolean {
+    public register(ctor: Slots[InteractionKind], from: string): boolean {
         // a partial registration would orphan routes and break hmr rollback
-        const writes: LoadedRoute<Ctor>[] = [];
+        const writes: (RegisteredRoute<Slots[InteractionKind]> & Loaded)[] = [];
 
         for (const [kind, routes] of interactionRoutesOf(ctor)) {
             for (const route of routes) {
@@ -90,11 +120,11 @@ export class RouteRegistry<Ctor extends RoutableConstructor> {
             }
         }
 
-        for (const write of writes) this.maps[write.kind].set(write.route, write);
+        for (const write of writes) this.routesOf(write.kind).set(write.route, write);
         return writes.length > 0;
     }
 
-    public unregister(ctor: Ctor): void {
+    public unregister(ctor: Slots[InteractionKind]): void {
         for (const { kind, route } of this.allRoutes) {
             if (this.maps[kind].get(route)?.ctor === ctor) this.maps[kind].delete(route);
         }

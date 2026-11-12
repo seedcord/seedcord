@@ -53,7 +53,7 @@ export class ScreenStdout extends Writable {
             cols: size.columns,
             rows: size.rows,
             allowProposedApi: true,
-            // a tty driver turns \n into \r\n before the terminal sees it
+            // a tty driver turns \n into \r\n before it reaches the terminal
             convertEol: true
         });
     }

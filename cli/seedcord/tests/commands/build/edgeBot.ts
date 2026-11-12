@@ -60,7 +60,7 @@ if (navigator.userAgent === 'Cloudflare-Workers') {
 
 const ANY_PUBLIC_KEY = 'ab'.repeat(ED25519_KEY_BYTES);
 
-// what discord returns to an edge build, with no command or emoji deployed
+// what discord returns to an edge build, without a command or emoji deployed
 export function fakeDiscord(publicKey = ANY_PUBLIC_KEY): Pick<REST, 'get'> {
     const answers: Record<string, unknown> = {
         [Routes.currentApplication()]: { id: APP_ID, verify_key: publicKey },
@@ -107,7 +107,7 @@ interface SigningEnv {
 
 // the plugin reads .dev.vars beside cloudflare.config.ts into the worker's env
 export async function writeSigningEnv(projectDir: string): Promise<SigningEnv> {
-    // justified: @types/node has no CryptoKeyPair global for what generateKey('Ed25519') returns
+    // justified: @types/node doesn't declare a CryptoKeyPair global for what generateKey('Ed25519') returns
     const pair = (await crypto.subtle.generateKey('Ed25519', true, ['sign', 'verify'])) as {
         publicKey: CryptoKey;
         privateKey: CryptoKey;

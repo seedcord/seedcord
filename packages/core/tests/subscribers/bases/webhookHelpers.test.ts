@@ -10,7 +10,7 @@ describe('jsonAttachment', () => {
         expect(new TextDecoder().decode(file.data)).toBe(JSON.stringify({ userId: '1' }, undefined, 2));
     });
 
-    it('drops circular references so the encode cannot throw', () => {
+    it('breaks circular references so the encode cannot throw', () => {
         const circular: Record<string, unknown> = { name: 'a' };
         circular.self = circular;
 
@@ -73,7 +73,7 @@ describe('errorReport', () => {
         expect(report).toContain('at Kysely.dispose');
     });
 
-    it('keeps the dropped count when the parent stack fills the budget', () => {
+    it('keeps the count of omitted members when the parent stack fills the budget', () => {
         const members = Array.from({ length: 40 }, (_, i) => new Error(`member-${i}`));
         const error = new AggregateError(members, 'forty failed');
         error.stack = `AggregateError: forty failed\n${'    at frame\n'.repeat(200)}`;
@@ -84,7 +84,7 @@ describe('errorReport', () => {
         expect(report).toContain('and 40 more failures');
     });
 
-    it('never drops a member without counting it when a stack carries backticks', () => {
+    it('counts every member it leaves out when a stack carries backticks', () => {
         const members = Array.from({ length: 40 }, (_, i) => {
             const member = new Error(`member-${i}`);
             member.stack = `Error: \`\`\`member-${i}\`\`\`\n${'    at frame\n'.repeat(60)}`;
@@ -101,7 +101,7 @@ describe('errorReport', () => {
         expect(shown + counted).toBe(40);
     });
 
-    it('never drops a member without counting it', () => {
+    it('counts every member it leaves out', () => {
         const members = Array.from({ length: 40 }, (_, i) => {
             const member = new Error(`member-${i}`);
             member.stack = `Error: member-${i}\n${'    at frame\n'.repeat(60)}`;
@@ -118,7 +118,7 @@ describe('errorReport', () => {
         expect(shown + counted).toBe(40);
     });
 
-    it('gives each member an equal share so a late member survives the cap', () => {
+    it('gives each member an equal share so a late member still appears under the cap', () => {
         const members = Array.from({ length: 6 }, (_, i) => {
             const member = new Error(`member-${i}`);
             member.stack = `Error: member-${i}\n${'    at frame\n'.repeat(80)}`;

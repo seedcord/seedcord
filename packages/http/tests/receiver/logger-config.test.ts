@@ -68,7 +68,7 @@ describe('config.logger on an edge bot', () => {
         expect(messages).not.toContain('quiet');
     });
 
-    it('goes back to the default sink when a later bot omits logger', async () => {
+    it('returns to the default sink when a later bot omits logger', async () => {
         await startBot(edgeConfig({ level: 'trace', sinks: [sink] }));
         await startBot(edgeConfig());
 

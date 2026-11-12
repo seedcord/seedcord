@@ -10,7 +10,7 @@ interface FolderExportsOptions<TUnit> {
     dir: string;
     /** Folders inside `dir` to skip, like a middlewares folder that a second `FolderExports` loads. */
     exclude?: readonly string[];
-    /** Receives every value a file exports. The ones it accepts are the folder's "units". */
+    /** Receives every value that a file exports. The ones that it accepts are the folder's "units". */
     is: (value: unknown) => value is TUnit;
     register: (unit: TUnit, file: string) => void;
     unregister: (unit: TUnit) => void;
@@ -183,7 +183,7 @@ export class FolderExports<TUnit> {
 
     async #import(file: string): Promise<Record<string, unknown>> {
         let url = fileUrl(file);
-        // vitest has no real vite server managing the module graph
+        // vitest runs without a real vite server managing the module graph
         if (process.env.VITEST === 'true') url += `?update=${String(++testImports)}`;
 
         // justified: a dynamic import resolves to an untyped export map
@@ -212,8 +212,8 @@ export class FolderExports<TUnit> {
         }
     }
 
-    // a typo shouldn't knock a handler out until the next good save, so we put the old classes back.
-    // same objects too, so a db connection that a plugin opened for one just stays open
+    // the old classes go back because a typo shouldn't knock a handler out until the next good save
+    // a db connection that a plugin opened for one is still open because they're the same objects
     #rollBack(file: string, lastGood: TUnit[]): void {
         const path = paint.mute(formatFilePath(file));
 

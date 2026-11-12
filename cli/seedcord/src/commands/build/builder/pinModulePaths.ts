@@ -36,7 +36,7 @@ const FILE_URL_IMPORT = `import { pathToFileURL as ${FILE_URL} } from 'node:url'
 const BUILT_ROOT = '__seedcordBuiltRoot';
 
 // bun --compile gives every module the entry's import.meta
-// an edge bot's files have no path on disk
+// an edge bot's files don't have a path on disk
 export function pinModulePaths(layout: BotLayout): Plugin {
     const utilsPath = fileURLToPath(import.meta.resolve('@seedcord/utils/internal'));
     const builtRootImport = `import { builtRoot as ${BUILT_ROOT} } from ${JSON.stringify(utilsPath)};`;

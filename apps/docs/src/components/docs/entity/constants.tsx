@@ -11,11 +11,11 @@ export const COMMENT_PROSE = cn(
     tw`[&_p+p]:mt-2`,
     tw`[&_ul]:my-2 [&_ul]:list-disc [&_ul]:space-y-1 [&_ul]:pl-5`,
     tw`[&_ol]:my-2 [&_ol]:list-decimal [&_ol]:space-y-1 [&_ol]:pl-5`,
-    // a loose list wraps each item in a <p>. its margin would drop the text below the bullet
+    // a loose list wraps each item in a <p>. its margin would push the text below the bullet
     tw`[&_li>p]:m-0`,
     PROSE_CODE_BLOCK,
     tw`[&_pre]:my-2 [&_pre]:px-3 [&_pre]:py-2`,
-    // a link around a shiki chip reads as plain inline code until the underline goes on
+    // the underline marks a link around a shiki chip, which otherwise reads as plain inline code
     tw`[&_a]:text-(--link) [&_a]:underline [&_a]:underline-offset-4 [&_a]:transition-opacity [&_a]:duration-150 [&_a:hover]:opacity-80`
 );
 

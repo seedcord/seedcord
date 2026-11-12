@@ -38,7 +38,7 @@ function buildIndexes(root: DocNode, manifest: DocManifestPackage): DocIndexes {
             byQName.set(new RuntimeBuild(condition).withCondition(node.qualifiedName), node);
         }
 
-        // Forgotten (referenced-only) declarations and @internal-tagged nodes stay resolvable as link
+        // Forgotten (referenced-only) declarations and @internal-tagged nodes are still resolvable as link
         // targets via the maps above, but are kept out of the sidebar (byKind) and search so both show
         // only the package's real public exports (the two-tier model). A non-searchable parent's
         // children inherit the exclusion even though the adapter marks each child isExported.
@@ -284,7 +284,7 @@ export function buildPackageFromApi(
     return buildPackageFromModel(pkg, PackageTree.build(new ApiAdapter(pkg, model), entries));
 }
 
-// buildPackageFromApi runs this after adapting, and the remote project.json loader reuses it directly with no AE adapter.
+// buildPackageFromApi runs this after adapting, and the remote project.json loader reuses it directly without an AE adapter.
 export function buildPackageFromModel(pkg: DocManifestPackage, root: DocNode): DocPackageModel {
     const indexes = buildIndexes(root, pkg);
     const listed = [...indexes.byKind.values()].flat();

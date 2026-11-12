@@ -12,6 +12,7 @@ import type {
     RESTPostAPIChatInputApplicationCommandsJSONBody,
     RESTPostAPIContextMenuApplicationCommandsJSONBody
 } from 'discord-api-types/v10';
+import type { ExcludeStrict } from 'type-fest';
 
 export type RouteOptions = Record<string, SlashOption>;
 
@@ -33,7 +34,7 @@ export interface Augmentation {
 export type ScannedCommand = Pick<FoundCommand, 'sourceFile' | 'json'>;
 
 type CommandOption = SlashRouteLeaf['options'][number];
-type BasicOption = Exclude<
+type BasicOption = ExcludeStrict<
     CommandOption,
     { type: ApplicationCommandOptionType.Subcommand | ApplicationCommandOptionType.SubcommandGroup }
 >;
@@ -51,7 +52,7 @@ const KIND_BY_TYPE = {
     [ApplicationCommandOptionType.Attachment]: 'attachment'
 } as const satisfies Record<APIApplicationCommandBasicOption['type'], OptionKind>;
 
-// discord reads a command with no contexts as reachable from all three
+// discord reads a command without contexts as reachable from all three
 function cacheStateOf(contexts: RESTPostAPIApplicationCommandsJSONBody['contexts']): 'cached' | undefined {
     if (!contexts || contexts.length === 0) return undefined;
     return contexts.every((context) => context === InteractionContextType.Guild) ? 'cached' : undefined;
@@ -148,8 +149,8 @@ export class AugmentationBuilder {
         menus.set(json.name, { cache: cacheStateOf(json.contexts) });
     }
 
-    // toJSON() allows an empty subcommand group though discord rejects it at deploy. routeLeavesOf gives it
-    // no route, so it never reaches the tables
+    // toJSON() allows an empty subcommand group though discord rejects it at deploy. the group never
+    // reaches the tables because routeLeavesOf doesn't give it a route
     private warnEmptyGroups(json: RESTPostAPIChatInputApplicationCommandsJSONBody): void {
         for (const option of json.options ?? []) {
             if (option.type === ApplicationCommandOptionType.SubcommandGroup && (option.options ?? []).length === 0) {

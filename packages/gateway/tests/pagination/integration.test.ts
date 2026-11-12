@@ -22,7 +22,7 @@ function dispatcherOf(instance: Seedcord): PrivateDispatcher {
     return interactionsOf(instance.bot) as unknown as PrivateDispatcher;
 }
 
-// the sender reads the interaction's unacked flags, so this.deferUpdate() sets deferred-update
+// this.deferUpdate() sets deferred-update because the sender reads the interaction's unacked flags
 // eslint-disable-next-line @typescript-eslint/explicit-function-return-type -- inference is fine for the mock
 function fakeButton(customId: string) {
     return {
@@ -53,7 +53,7 @@ function fakeButton(customId: string) {
     };
 }
 
-// the sender serializes each component before the wire call, so the sent body carries raw API data
+// the sent body has raw API data because the sender serializes each component before the wire call
 function pageText(body: { components: unknown[] }): string {
     const json = body.components[0] as APIContainerComponent;
     return json.components.reduce<string>(

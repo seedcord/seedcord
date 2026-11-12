@@ -36,7 +36,7 @@ const core = {} as unknown as Core;
 
 const ada: APIUser = { id: 'u1', username: 'ada', discriminator: '0', global_name: 'ada', avatar: null };
 
-// justified: each fixture carries only the fields the assertions read
+// justified: each fixture has only the fields the assertions read
 const boss = { nick: 'boss', roles: [], permissions: '0' } as unknown as APIInteractionDataResolvedGuildMember;
 const mods = { id: 'r1', name: 'mods' } as unknown as APIRole;
 const general = { id: 'c1', name: 'general', type: 0, permissions: '0' } as APIInteractionDataResolvedChannel;
@@ -217,7 +217,7 @@ describe('user select', () => {
         expect(members).toEqual(new Collection([['u1', boss]]));
     });
 
-    it('returns an empty collection when the guild resolved no member', async () => {
+    it('returns an empty collection when the guild resolved zero members', async () => {
         let members: unknown;
 
         @UserMenuRoute(AssignId)

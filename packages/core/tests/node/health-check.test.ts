@@ -10,8 +10,8 @@ import { HealthCheck } from '#node/HealthCheck';
 import type { CoordinatedShutdown } from '#node/Lifecycle/CoordinatedShutdown';
 import type { AddressInfo } from 'node:net';
 
-// fixture: HealthCheck only calls shutdown.addTask, so a stub avoids constructing a real
-// CoordinatedShutdown (which registers process signal handlers).
+// fixture: a stub avoids constructing a real CoordinatedShutdown (which registers process
+// signal handlers) because HealthCheck only calls shutdown.addTask.
 const shutdownStub = { addTask: () => undefined } as unknown as CoordinatedShutdown;
 
 function freePort(): Promise<number> {
@@ -71,7 +71,7 @@ describe('HealthCheck', () => {
         expect(missing.status).toBe(404);
 
         await expect(hc.stop()).resolves.toBeUndefined();
-        // second stop hits the !listening guard and must resolve rather than hang the shutdown phase
+        // second stop hits the !listening guard and must resolve to keep the shutdown phase from hanging
         await expect(hc.stop()).resolves.toBeUndefined();
     });
 });

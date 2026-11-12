@@ -10,7 +10,7 @@ import type { LogRow } from '#ui/logRows';
 import type { LogEntry } from '#ui/stores/LogStore';
 
 const LABEL_WIDTH = 3;
-// every width below stays under the step that shows the clock
+// every width below is under the step that shows the clock
 const COLUMN = LogLayout.fit(0, LABEL_WIDTH, 'auto').messageColumn;
 
 function wrap(logs: readonly LogEntry[], width: number): LogRow[] {
@@ -133,7 +133,7 @@ describe('wrapRows', () => {
         expect(rows.at(-1)?.kind).toBe('rule');
     });
 
-    it('keeps one row when the width leaves no room for text', () => {
+    it('keeps one row when the width leaves zero room for text', () => {
         const rows = wrap([entry({ id: 1, text: 'aaaa bbbb' })], 2);
 
         expect(texts(rows)).toEqual(['aaaa bbbb']);

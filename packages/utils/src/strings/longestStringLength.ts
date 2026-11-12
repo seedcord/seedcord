@@ -9,6 +9,6 @@
  * ```
  */
 export function longestStringLength(arr: (string | number)[]): number {
-    // Math.max() with no arguments is -Infinity
+    // Math.max() without arguments is -Infinity
     return arr.reduce<number>((longest, el) => Math.max(longest, el.toString().length), 0);
 }

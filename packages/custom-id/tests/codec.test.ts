@@ -5,12 +5,12 @@ import { decodeFor, prefixOf, CustomId } from '#src/CustomId';
 
 import type { SeedcordError } from '@seedcord/errors/internal';
 
-// the SeedcordError code a thrown error carries, or undefined when it threw something else.
+// undefined when run() doesn't throw or throws something without a code
 function thrownCode(run: () => unknown): SeedcordErrorCode | undefined {
     try {
         run();
     } catch (error) {
-        return (error as SeedcordError).code; // fixture cast, read the code off whatever was thrown
+        return (error as SeedcordError).code; // fixture cast, a plain Error reads back undefined
     }
     return undefined;
 }
@@ -19,7 +19,7 @@ function thrownMessage(run: () => unknown): string {
     try {
         run();
     } catch (error) {
-        return (error as Error).message; // fixture cast, read the message off whatever was thrown
+        return (error as Error).message; // fixture cast, everything these tests throw is an Error
     }
     return '';
 }
@@ -98,7 +98,6 @@ describe('nullable fields', () => {
 
 describe('CustomId round-trips', () => {
     it('round-trips every field kind in one customId', () => {
-        // a support-ticket action button that carries one field of every kind at once.
         const TicketAction = new CustomId('ticket')
             .snowflake('userId')
             .uuid('ticketId')
@@ -126,7 +125,7 @@ describe('CustomId round-trips', () => {
     });
 
     it('round-trips a negative unbounded int', () => {
-        // an unbounded int packs through zigzag, so a negative reputation delta must survive.
+        // this checks the sign comes back because encode zigzags an unbounded int
         const Reputation = new CustomId('rep').int('delta');
         expect(Reputation.decode(Reputation.encode({ delta: -424_242 })).delta).toBe(-424_242);
     });
@@ -141,8 +140,8 @@ describe('CustomId round-trips', () => {
         expect(Big.decode(Big.encode({ n: 2 ** 53 })).n).toBe(2 ** 53);
     });
 
-    it('round-trips a bounded int whose slot lands past 2^53', () => {
-        // a negative min pushes the stored number past 2^53, where js numbers start skipping.
+    it('round-trips a bounded int whose slot is past 2^53', () => {
+        // with min -2 the slot is the value + 2, and past 2^53 a js number skips integers
         const Big = new CustomId('big').int('n', -2, Number.MAX_SAFE_INTEGER);
         expect(Big.decode(Big.encode({ n: Number.MAX_SAFE_INTEGER })).n).toBe(Number.MAX_SAFE_INTEGER);
     });
@@ -158,7 +157,7 @@ describe('CustomId round-trips', () => {
     });
 
     it('escapes a string field that contains the wire control characters', () => {
-        // a free-text note can hold the bytes the codec uses to split and escape tokens.
+        // \x1F and \x1B are the codec's delimiter and escape chars
         const Note = new CustomId('note').str('body');
         const body = 'a-b\u{1F}c\u{1B}d';
         expect(Note.decode(Note.encode({ body })).body).toBe(body);
@@ -172,7 +171,6 @@ describe('CustomId round-trips', () => {
 });
 
 describe('someOf fields', () => {
-    // a self-assign role menu, where the confirm button carries what the member picked.
     const ROLES = ['reader', 'artist', 'streamer', 'events', 'vip'] as const;
     const Assign = new CustomId('assign').someOf('roles', ROLES);
 
@@ -203,12 +201,12 @@ describe('someOf fields', () => {
         ]);
     });
 
-    it('mints one wire for the same set in either order', () => {
+    it('encodes the same set to one wire in either order', () => {
         expect(Assign.encode({ roles: ['streamer', 'reader'] })).toBe(Assign.encode({ roles: ['reader', 'streamer'] }));
     });
 
     it('spends one bit per choice', () => {
-        // five choices pack into a radix-32 slot, which is one base64 character.
+        // five choices make a radix-32 slot, which fits in one base64 char
         const body = Assign.encode({ roles: [...ROLES] }).split(':')[1];
         expect(body).toHaveLength(1);
     });
@@ -219,7 +217,7 @@ describe('someOf fields', () => {
         expect(Optional.decode(Optional.encode({ roles: null })).roles).toBeNull();
     });
 
-    it('mints one wire whether a choice repeats or not', () => {
+    it('encodes to one wire whether a choice repeats or not', () => {
         expect(Assign.encode({ roles: ['vip', 'vip'] })).toBe(Assign.encode({ roles: ['vip'] }));
     });
 
@@ -246,7 +244,7 @@ describe('someOf fields', () => {
     });
 
     it('rejects an array that holds itself', () => {
-        // formatting the value for the message must not follow the cycle.
+        // building the error message must not loop forever on this
         const cyclic: unknown[] = [];
         cyclic.push(cyclic);
         expect(
@@ -313,7 +311,7 @@ describe('CustomId stale detection', () => {
 });
 
 describe('routeKey stability', () => {
-    // the guide prints these in components/custom-ids.mdx and components/stale.mdx. changing the hash edits both.
+    // the guide prints these in components/custom-ids.mdx and components/stale.mdx. if the hash changes, update both.
     const Ticket = new CustomId('ticket').snowflake('ownerId').oneOf('action', ['close', 'reopen']);
 
     it('pins the routeKeys the guide documents', () => {
@@ -355,7 +353,7 @@ describe('CustomId corruption is rejected', () => {
     });
 
     it('rejects an unbounded int that decodes past the safe range', () => {
-        // a body crafted to unpack above MAX_SAFE_INTEGER would silently truncate, so decode must reject it.
+        // borrow the body of a 2^60 snowflake. decode has to reject it since a js number would lose precision.
         const Ban = new CustomId('ban').snowflake('userId');
         const oversized = Ban.encode({ userId: (1n << 60n).toString() }).split(':')[1] ?? '';
         const Counter = new CustomId('counter').int('total');
@@ -365,7 +363,7 @@ describe('CustomId corruption is rejected', () => {
     });
 
     it('rejects a bounded int wire past what a js number holds', () => {
-        // 2^53 + 1 sits inside the declared range, and no js number holds it exactly.
+        // 2^53 + 1 is inside the declared range, and a js number can't hold it exactly.
         const Ban = new CustomId('ban').snowflake('userId');
         const body = Ban.encode({ userId: (2n ** 53n + 1n).toString() }).split(':')[1] ?? '';
         const Big = new CustomId('big').int('v', 0, 2 ** 60);
@@ -373,7 +371,7 @@ describe('CustomId corruption is rejected', () => {
     });
 
     it('rejects a packed block with leftover bits after unpacking', () => {
-        // a single bool packs to 0 or 1, so a block that base64-decodes to 2 leaves a bit unconsumed.
+        // 'C' decodes to 2. a lone bool packs to 0 or 1, leaving one bit over.
         const Flag = new CustomId('flag').bool('on');
         expect(thrownCode(() => Flag.decode(`${Flag.routeKey}:C`))).toBe(SeedcordErrorCode.CustomIdWireInvalid);
     });
@@ -510,6 +508,8 @@ describe('CustomId rejection messages', () => {
 });
 
 describe('CustomId definition guards', () => {
+    const empty = [] as unknown as [string]; // fixture cast, gets past NonEmptyTuple so the runtime guard runs
+
     it('rejects a prefix that contains a colon', () => {
         expect(thrownCode(() => new CustomId('a:b'))).toBe(SeedcordErrorCode.CustomIdInvalidPrefix);
     });
@@ -529,22 +529,18 @@ describe('CustomId definition guards', () => {
     });
 
     it('rejects a oneOf with no choices', () => {
-        // the type rejects an empty list, so cast past it to prove the runtime guard still throws.
-        const empty = [] as unknown as [string]; // fixture cast, bypass NonEmptyTuple to reach the runtime guard
         expect(thrownCode(() => new CustomId('poll').oneOf('choice', empty))).toBe(
             SeedcordErrorCode.CustomIdEmptyChoices
         );
     });
 
     it('rejects a someOf with no choices', () => {
-        const empty = [] as unknown as [string]; // fixture cast, bypass NonEmptyTuple to reach the runtime guard
         expect(thrownCode(() => new CustomId('assign').someOf('roles', empty))).toBe(
             SeedcordErrorCode.CustomIdEmptyChoices
         );
     });
 
     it('reports the method that was called without choices', () => {
-        const empty = [] as unknown as [string]; // fixture cast, bypass NonEmptyTuple to reach the runtime guard
         expect(thrownMessage(() => new CustomId('assign').someOf('roles', empty))).toContain('someOf()');
         expect(thrownMessage(() => new CustomId('poll').oneOf('choice', empty))).toContain('oneOf()');
     });
@@ -555,7 +551,6 @@ describe('CustomId definition guards', () => {
 });
 
 describe('decodeFor', () => {
-    // an approve/deny button pair on one message, each carrying the user it acts on.
     const Approve = new CustomId('approve').snowflake('userId');
     const Deny = new CustomId('deny').snowflake('userId').str('reason');
     const routes = [Approve, Deny] as const;

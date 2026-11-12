@@ -49,7 +49,7 @@ async function caught(promise: Promise<unknown>): Promise<unknown> {
 }
 
 describe('CloudflaredTunnel', () => {
-    it('survives a spawn failure', async () => {
+    it('rejects with CliTunnelUrlUnavailable on a spawn failure', async () => {
         const child = fakeChild();
         const tunnel = new CloudflaredTunnel(
             deps({
@@ -123,7 +123,7 @@ describe('CloudflaredTunnel', () => {
         expect(isSeedcordError(error, undefined, SeedcordErrorCode.CliTunnelUrlUnavailable)).toBe(true);
     });
 
-    // our resolver is not the one discord uses, so a silent probe still gets the url written
+    // a silent probe still gets the url written because our resolver is not the one discord uses
     it('reports the url when the hostname never answers as this bot', async () => {
         const fetch = vi.fn<TunnelDeps['fetch']>((url) =>
             url.startsWith('https://')
@@ -182,7 +182,7 @@ describe('CloudflaredTunnel', () => {
         expect(lost).toHaveBeenCalledOnce();
     });
 
-    it('stays quiet when stop kills the child', async () => {
+    it("doesn't report a loss when stop kills the child", async () => {
         const child = fakeChild();
         const lost = vi.fn();
         const tunnel = new CloudflaredTunnel(deps({ spawn: () => child }), BINARY, lost);

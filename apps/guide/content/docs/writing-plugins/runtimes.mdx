@@ -5,11 +5,11 @@ description: Limit a plugin to one transport or runtime so a wrong attach fails 
 
 A plugin that reads `this.core.bot` needs a gateway bot. One that talks to a database through a Node driver can't run on Workers. If you attach either to the wrong bot, you find out when the plugin first reads something that isn't there.
 
-You can catch the wrong bot at compile time. If you declare the transport or the runtime your plugin needs, an [`attach`](ref:gateway/Seedcord.attach) call on a bot that doesn't match fails to compile. A transport is how the bot talks to Discord, `'gateway'` or `'http'`. A runtime is where the bot's code runs, `'server'` for Node or Bun and `'edge'` for Cloudflare Workers. A type cast or plain JavaScript gets past the compiler, and then `attach` throws when it runs.
+You can catch the wrong bot at compile time. If you declare the transport or the runtime that your plugin needs, an [`attach`](ref:gateway/Seedcord.attach) call on a bot that doesn't match fails to compile. A transport is how the bot talks to Discord, `'gateway'` or `'http'`. A runtime is where the bot's code runs, `'server'` for Node or Bun and `'edge'` for Cloudflare Workers. A type cast or plain JavaScript gets past the compiler, and then `attach` throws when it runs.
 
 ## Limiting where a plugin runs
 
-The package you import `Plugin` from sets the transport. To target one transport, extend that transport's base. It also types `this.core` with that transport's members. The runtime stays open on the http and `@seedcord/core/plugin` bases, and you limit it with the [`PluginOptions`](ref:core/PluginOptions) generic. The compile errors below call this narrowing.
+The package you import `Plugin` from sets the transport. To target one transport, extend that transport's base. It also types `this.core` with that transport's members. The http and `@seedcord/core/plugin` bases accept any runtime, and you limit it with the [`PluginOptions`](ref:core/PluginOptions) generic. The compile errors below call this narrowing.
 
 {/* prettier-ignore-start */}
 
@@ -42,9 +42,9 @@ export class DriverCache extends Plugin<{ runtime: 'server' }> {
 }
 ```
 
-`DriverCache` repeats `server` in `super()` because TypeScript erases the type argument when it compiles. At run time, `attach` can only read what the constructor passes. The second argument of `super()` is typed from the type argument, so the two can't disagree. It also takes the [`PluginLifecycleSpec`](ref:core/PluginLifecycleSpec) fields, like an `init` timeout in milliseconds.
+`DriverCache` repeats `server` in `super()` because TypeScript erases the type argument when it compiles. At run time, `attach` can only read what the constructor passes. The second argument of `super()` is typed from the type argument, so the two always match. It also takes the [`PluginLifecycleSpec`](ref:core/PluginLifecycleSpec) fields, like an `init` timeout in milliseconds.
 
-```ts
+```ts plain
 super(host, { runtime: 'server', init: { timeout: 30_000 } });
 ```
 
@@ -78,7 +78,7 @@ declare const workersBot: PluginHost<'http', 'edge'>;
 workersBot.attach('cache', DriverCache);
 ```
 
-The error prints the runtime `DriverCache` declares beside the one the bot runs. A cast or plain JavaScript skips that check, and then `attach` throws `CorePluginScopeMismatch` with the plugin, the runtime it declares, and the runtime the bot uses.
+The error prints the runtime `DriverCache` declares beside the one that the bot runs. A cast or plain JavaScript skips that check, and then `attach` throws `CorePluginScopeMismatch` with the plugin, the runtime it declares, and the runtime that the bot uses.
 
 ```txt output
 DriverCache only runs on the server runtime, but this bot uses the edge runtime. Remove the attach call, or move the bot to the server runtime.

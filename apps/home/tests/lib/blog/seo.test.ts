@@ -12,7 +12,7 @@ describe('postMetadata', () => {
         expect(metadata.alternates?.types).not.toHaveProperty('text/markdown');
     });
 
-    it('sets no robots rule on a listed post', () => {
+    it('leaves robots null on a listed post', () => {
         expect(postMetadata(POST).robots).toBeNull();
     });
 

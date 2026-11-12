@@ -94,7 +94,7 @@ describe('useRovingList', () => {
         expect(result.current.active).toBe('x');
     });
 
-    it('goes back to the first row for a new query, even when the old row is still listed', () => {
+    it('returns to the first row for a new query, even when the old row is still listed', () => {
         const groups = one(ITEMS);
         const { result, rerender } = renderHook(({ query }) => useRovingList({ query, groups, onSelect: vi.fn() }), {
             initialProps: { query: 'co' }

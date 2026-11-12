@@ -8,7 +8,7 @@ AI is fine here. I use it a lot myself. Just that there are a few rules if you'r
 
 - **Test it properly.** AI code looks right a lot of the time and still misses edge cases. Run `vp run prePush`, but don't stop at the unit tests. Run your change in one of the mock bots and use it the way someone building a bot would. Click the buttons, send the weird input, restart it halfway, read the error you get when you mess up the config. Some of this only gets caught by a human poking at it and going "huh, that's weird". "The agent said the tests pass" doesn't count.
 
-- **Fix things you actually ran into.** Pointing an agent at the repo and asking it to find bugs gets you a pile of edge cases nobody hits, like a `NaN` rate limit or a timeout longer than 24 days. Fix the thing that broke your bot, one fix per PR.
+- **Fix things you actually ran into.** Pointing an agent at the repo and asking it to find bugs gets you a pile of edge cases that are so unlikely to happen that it's a waste of time to solve. Fix the thing that broke your bot, one fix per PR.
 
 - **Edit what the AI writes for you.** Issues, discussions, PR descriptions and replies can be AI-assisted, but read them and cut them down before you post. AI loves writing three paragraphs where one line would do. I'd rather read your one line, typos and all.
 
@@ -16,9 +16,9 @@ AI is fine here. I use it a lot myself. Just that there are a few rules if you'r
 
 - **I'll close obvious slop.** If a PR or issue is clearly AI output you didn't read, I'll close it without a review. **Keep sending them and you'll get blocked from the repo.** If you're still learning, that's totally fine! Skip the AI, ask me stuff, and I'll help you out 😄
 
-> Please don't open a PR just to become a contributor, either. Use seedcord, build a bot with it, and contribute when something gets in your way. That's the kind of contributor I'm after 😅
+> Please don't open a PR just to become a contributor either. Use seedcord, build a bot with it, and contribute when something gets in your way. That's the kind of contributor I'm after 🙏🏻
 
-These rules are for outside contributions. Maintainers may use AI however they see fit, and everything still gets a human review before it goes in.
+These rules are for outside contributions. Maintainers may use AI however they see fit, and everything still gets a human review before it's merged.
 
 ## There are humans here
 
@@ -34,9 +34,11 @@ Seriously. seedcord is built with a ton of AI help, and the repo is set up so yo
 
 For anything big, open an issue first and wait for me to reply. An agent can write a 2,000 line PR in an afternoon. I can't review one in an afternoon.
 
-When you start on the code, point your agent at [`AGENTS.md`](AGENTS.md). It lists the skills from `.agents/skills` your agent should load, and those hold how this repo writes code, comments, tests and docs. With those loaded, your agent writes code that looks like the rest of seedcord, and my review goes a lot quicker. Even then, don't take its first try (or the next couple either tbh). Read it like you'd read someone else's PR, point at what's off, like "this is nested way too deep, use an `AsyncDisposableStack`", and have it redo it till you actually like what it wrote.
+When you start on the code, point your agent at [`AGENTS.md`](AGENTS.md). It lists the skills from `.agents/skills` your agent should load, and those hold how this repo writes code, comments, tests and docs. With those loaded, your agent writes code that looks like the rest of seedcord, and my review is a lot quicker. Even then, don't take its first try (or the next couple either tbh). Read it like you'd read someone else's PR, point at what's off, like "this is nested way too deep, use an `AsyncDisposableStack`", and have it redo it till you actually like what it wrote.
 
-Before you push, run [`/branch-audit`](.claude/commands/branch-audit.md), or have your agent run it. It reviews your whole branch against `next` and catches a lot. Go through what it found yourself though, since _you're_ still the one deciding what's right.
+Before you push, type [`/branch-audit`](.agents/skills/branch-audit/SKILL.md) yourself. Your agent can't start it on its own. It sends a separate agent through your whole branch, then puts everything it found in a table. Read that table yourself, since _you're_ still the one deciding what's right. Some findings are just wrong, so push back on those. Then your agent asks you about the ones that need a call, and fixes what you approve.
+
+Once the fixes are in, run it again. Keep rerunning it till a round only finds nits that aren't worth fixing. On a big branch that can take a few rounds, and that's normal. Then push. Fixing review bot comments one at a time after you push takes way longer, because every fix gets you a fresh batch of findings.
 
 Then read your whole diff once, top to bottom. Agents love leaving stray debug code, test scaffolding and random config changes behind. Clean those out before you open the PR.
 

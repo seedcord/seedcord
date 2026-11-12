@@ -21,6 +21,7 @@ export type { InjectedEmojiMap } from '#src/emojis/EmojiInjector';
 
 export type { API } from '@discordjs/core/http-only';
 export * from '@seedcord/core';
+export { FolderExports, type AttachedPlugin, type Generated, type PluginTypes } from '@seedcord/core/plugin';
 export * from '@seedcord/errors';
 export * from '@seedcord/event-emitter';
 export * from '@seedcord/logger';
@@ -28,7 +29,7 @@ export type * from '@seedcord/types';
 export * from '@seedcord/utils';
 
 export * from './handlers';
-// two `export *` both re-export RepliableHandler, so export it explicitly to resolve to the http subclass
+// export RepliableHandler explicitly to resolve to the http subclass because two `export *` both re-export it
 export { RepliableHandler } from '#handlers/RepliableHandler';
 
 export { ReplySender } from '#reply/ReplySender';

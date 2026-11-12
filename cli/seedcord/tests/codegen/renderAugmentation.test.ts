@@ -4,12 +4,12 @@ import { describe, it, expect } from 'vite-plus/test';
 import { renderAugmentation } from '#commands/codegen/renderAugmentation';
 
 import type { RouteOptions, SlashTables } from '#commands/codegen/AugmentationBuilder';
-import type { TypedOmit } from '@seedcord/types';
+import type { Except } from 'type-fest';
 
 const AUGMENT_TARGET = '@seedcord/gateway';
 
 type Bot = Parameters<typeof renderAugmentation>[2];
-const NO_PLUGINS: Bot = { specifier: './bot', keys: [], types: new Map() };
+const NO_PLUGINS: Bot = { specifier: './bot', keys: [], types: new Map(), members: [] };
 
 function renderWithTarget(registry: Parameters<typeof renderAugmentation>[0]): string {
     return renderAugmentation(registry, AUGMENT_TARGET, NO_PLUGINS);
@@ -25,7 +25,7 @@ function renderSlash(tables: Record<string, RouteOptions>): string {
     return renderWithTarget({ slash: guildRows(tables), userContextMenus: {}, messageContextMenus: {}, emojis: {} });
 }
 
-type FlatRegistry = TypedOmit<Parameters<typeof renderAugmentation>[0], 'slash'> & {
+type FlatRegistry = Except<Parameters<typeof renderAugmentation>[0], 'slash'> & {
     slash: Record<string, RouteOptions>;
 };
 
@@ -119,7 +119,7 @@ export {};
         expect(first).toBe(second);
     });
 
-    it('escapes an apostrophe in a string choice value and stays valid TS', () => {
+    it('escapes an apostrophe in a string choice value and produces valid TS', () => {
         const output = renderSlash({
             survey: { answer: { kind: 'string', required: true, choices: ["don't", 'yes'] } }
         });
@@ -463,7 +463,7 @@ export {};
 describe('renderAugmentation plugin capabilities', () => {
     const empty = { slash: {}, userContextMenus: {}, messageContextMenus: {}, emojis: {} };
     const withPlugins = (plugins: { specifier: string; keys: readonly string[] }): string =>
-        renderAugmentation(empty, AUGMENT_TARGET, { ...plugins, types: new Map() });
+        renderAugmentation(empty, AUGMENT_TARGET, { ...plugins, types: new Map(), members: [] });
 
     it('imports the bot and augments Core with one member per attach key', () => {
         const output = withPlugins({ specifier: './bot', keys: ['db', 'cache'] });
@@ -473,12 +473,13 @@ describe('renderAugmentation plugin capabilities', () => {
 // Run \`seedcord codegen\` after changing your commands, plugins, or emoji config.
 
 import type Bot from './bot';
+import type { AttachedPlugin } from '@seedcord/gateway';
 
 // prettier-ignore
 declare module '@seedcord/gateway' {
     interface Core {
-        cache: (typeof Bot)['cache'];
-        db: (typeof Bot)['db'];
+        cache: AttachedPlugin<(typeof Bot)['cache']>;
+        db: AttachedPlugin<(typeof Bot)['db']>;
     }
     interface SlashRegistry {
 
@@ -499,7 +500,7 @@ export {};
         );
     });
 
-    it('emits no import and no Core block for a bot with no plugins', () => {
+    it('omits the import and the Core block for a bot without plugins', () => {
         const output = withPlugins({ specifier: './bot', keys: [] });
 
         expect(output).not.toContain('import type');
@@ -512,8 +513,8 @@ export {};
             keys: ['db', 'services.users', 'services.tickets']
         });
 
-        expect(output).toContain("        db: (typeof Bot)['db'];");
-        expect(output).toContain("        services: (typeof Bot)['services'];");
+        expect(output).toContain("        db: AttachedPlugin<(typeof Bot)['db']>;");
+        expect(output).toContain("        services: AttachedPlugin<(typeof Bot)['services']>;");
         expect(output).not.toContain('services.users');
     });
 
@@ -527,13 +528,13 @@ export {};
     it('quotes an attach key that is not a valid identifier', () => {
         const output = withPlugins({ specifier: './bot', keys: ['my-db'] });
 
-        expect(output).toContain("        'my-db': (typeof Bot)['my-db'];");
+        expect(output).toContain("        'my-db': AttachedPlugin<(typeof Bot)['my-db']>;");
     });
 
     it('escapes an apostrophe in an attach key', () => {
         const output = withPlugins({ specifier: './bot', keys: ["tony's"] });
 
-        expect(output).toContain(String.raw`        'tony\'s': (typeof Bot)['tony\'s'];`);
+        expect(output).toContain(String.raw`        'tony\'s': AttachedPlugin<(typeof Bot)['tony\'s']>;`);
     });
 
     it('carries the specifier through unchanged', () => {
@@ -556,7 +557,7 @@ export {};
 
     it('checks a plugin attached inside a group against the plugin at that path', () => {
         const output = renderAugmentation(empty, AUGMENT_TARGET, {
-            specifier: './bot',
+            ...NO_PLUGINS,
             keys: ['services.users'],
             types: new Map([['users-plugin', [{ key: 'services.users', type: '{ ready: true }' }]]])
         });

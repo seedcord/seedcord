@@ -1,4 +1,5 @@
 import type { HmrUpdateEvent } from './Types/Hmr';
+import type { EmptyObject } from 'type-fest';
 
 // how a bot in workerd sends a thrown error to the CLI
 export interface WireError {
@@ -24,7 +25,7 @@ export interface SeedcordFrameworkEvents {
     'seedcord:start-failed': { error: WireError };
     'seedcord:read-deployed': { applicationId: string };
     'seedcord:commands-deployed': DeployedHashes;
-    'seedcord:full-reload': Record<string, never>;
+    'seedcord:full-reload': EmptyObject;
 }
 
 // the CLI sends these back

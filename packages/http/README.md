@@ -23,7 +23,7 @@
 
 ## About
 
-`@seedcord/http` is the transport for an http bot. Discord posts each interaction to your bot's URL, and the bot checks the request's Ed25519 signature before it runs your handler. It has no discord.js dependency and keeps no connection open, so it runs on your own server or on Cloudflare Workers.
+`@seedcord/http` is the transport for an http bot. Discord posts each interaction to your bot's URL, and the bot checks the request's Ed25519 signature before it runs your handler. It doesn't depend on discord.js or keep a connection open, so it runs on your own server or on Cloudflare Workers.
 
 Discord posts only interactions to that URL. Use [`@seedcord/gateway`](https://www.npmjs.com/package/@seedcord/gateway) when your bot reacts to messages, members, voice, or reactions.
 

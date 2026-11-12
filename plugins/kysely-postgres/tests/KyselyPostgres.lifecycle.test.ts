@@ -66,7 +66,7 @@ describe('KyselyPostgres lifecycle', () => {
     });
 
     it('closes the pool when the connection test fails', async () => {
-        // targeting the admin db returns ensure() early, so the only connect is the plugin's
+        // the only connect is the plugin's because targeting the admin db returns ensure() early
         const plugin = new KyselyPostgres(mockCore, {
             connectionString: 'postgres://localhost:5432/postgres',
             migrations: { dir: testEnv.resolvePath('migrations') },
@@ -101,7 +101,7 @@ describe('KyselyPostgres lifecycle', () => {
     });
 
     it('builds one pool when two callers race init', async () => {
-        // targeting the admin db returns ensure() early, so the plugin's own pool is the only one built
+        // the plugin's own pool is the only one built because targeting the admin db returns ensure() early
         const plugin = new KyselyPostgres(mockCore, {
             connectionString: 'postgres://localhost:5432/postgres',
             migrations: { dir: testEnv.resolvePath('migrations') },

@@ -1,11 +1,11 @@
 ---
 name: oop
-description: Use this when deciding between classes and functions, designing service layers, or applying OOP principles in seedcord. Covers the class-vs-function rule, SOLID in TypeScript, access modifiers, composition over inheritance, service pattern, and common OOP antipatterns to avoid.
+description: Use this when deciding between classes and functions or designing a class in seedcord. Covers the class-vs-function rule, SOLID in TypeScript, access modifiers, composition over inheritance, interfaces vs abstract classes, and common OOP antipatterns to avoid.
 ---
 
 # OOP in TypeScript: Seedcord Conventions
 
-The repo's rule (from AGENTS.md): **OOP for complex domain logic** (inheritance + composition). **Plain functions for small, stateless utilities.** The line is complexity and statefulness. Style preference decides nothing here.
+Seedcord uses classes for stateful framework pieces and plain functions for small, stateless helpers. Pick by complexity and state, never by style.
 
 ---
 
@@ -15,57 +15,48 @@ The repo's rule (from AGENTS.md): **OOP for complex domain logic** (inheritance 
 
 | Situation | Use |
 |---|---|
-| Stateful domain logic (lifecycle, encapsulated state, polymorphism) | Class |
-| Multiple related methods that share private state | Class |
-| Implementing an interface that multiple consumers depend on | Class |
-| Simple transform, formatter, predicate, or one-off utility | Function |
-| React hook | Function |
+| State with a lifecycle, like a connection, a cache, or a queue | Class |
+| Several methods that share private state | Class |
+| An implementation of an interface that other code depends on | Class |
+| A transform, formatter, predicate, or one-off helper | Function |
+| A React hook | Function |
 | Module-level configuration or constants | Named exports |
 
 <!--prettier-ignore-end-->
 
 ```ts
-// Bad: class wrapping a single stateless transform
-export class PriceFormatter {
-    static format(cents: number): string {
-        return `$${(cents / 100).toFixed(2)}`;
-    }
+// a function: stateless, one job (packages/utils/src/strings/capitalize.ts)
+export function capitalize(word: string): string {
+    return word.charAt(0).toUpperCase() + word.slice(1).toLowerCase();
 }
 
-// Good: plain function
-export function formatCentsToCad(cents: number): string {
-    return `$${(cents / 100).toFixed(2)}`;
-}
-```
+// a class: holds a driver, a key prefix, and a write queue across calls (packages/core/src/kv/KvCollection.ts)
+export class KvCollection<TRecord> {
+    readonly #driver: KvDriver;
+    readonly #prefix: string;
+    readonly #updates: KeyedQueue;
 
-```ts
-// Good: class for stateful service with lifecycle
-export class CartSyncService {
-    private readonly queue: SyncOperation[] = [];
-    private isFlushing = false;
-
-    enqueue(op: SyncOperation): void { ... }
-    async flush(): Promise<void> { ... }
-    reset(): void { ... }
+    public async get(id: string): Promise<Stored<TRecord> | undefined> { ... }
+    public async set(id: string, value: TRecord, ttlMs?: number): Promise<void> { ... }
 }
 ```
 
 ---
 
-## Rule 2: No static-only classes (namespace antipattern)
+## Rule 2: No static-only classes
 
-A class where every member is `static` behaves like a plain module wrapped in class syntax. Use named exports instead.
+A class where every member is `static` is a module wrapped in class syntax. Use named exports instead.
 
 ```ts
-// Bad: static namespace class
-export class Utils {
-    static parseDate(s: string): Date { ... }
-    static formatCurrency(n: number): string { ... }
+// Bad
+export class Strings {
+    static capitalize(word: string): string { ... }
+    static pluralize(word: string, count: number): string { ... }
 }
 
-// Good: named exports from a module
-export function parseDate(s: string): Date { ... }
-export function formatCurrency(n: number): string { ... }
+// Good: one file per helper, re-exported from the folder's index
+export function capitalize(word: string): string { ... }
+export function pluralize(word: string, count: number): string { ... }
 ```
 
 ---
@@ -74,67 +65,38 @@ export function formatCurrency(n: number): string { ... }
 
 ### Single Responsibility
 
-Each class has one reason to change. If a class fetches data, formats it, AND validates it, split it.
+Each class has one reason to change. When a class fetches data, formats it, and validates it, split it.
 
-```ts
-// Bad
-export class OrderService {
-    async fetch(id: string): Promise<Order> { ... }
-    formatForDisplay(order: Order): DisplayOrder { ... }
-    validate(order: Order): boolean { ... }
-}
+### Open/Closed
 
-// Good: each responsibility in its own unit
-export class OrderService { async fetch(id: string): Promise<Order> { ... } }
-export class OrderPresenter { format(order: Order): DisplayOrder { ... } }
-export function validateOrder(order: Order): boolean { ... }
-```
-
-### Open/Closed: extend via composition
-
-Add behavior by composing, and leave the class itself unmodified. New use cases add new code, and existing classes stay untouched.
+Add behavior by composing a new piece, and leave the existing class unchanged. A new kv backend is a new `KvDriver` class. `KvCollection` doesn't change.
 
 ### Liskov Substitution
 
-Subclasses must be usable wherever the base class is expected, without callers knowing which subclass they have. If a subclass throws on a method the base class exposes, that's a violation.
+A subclass works anywhere its base class works, and callers don't need to know which subclass they have. A subclass breaks this when it throws on a method that the base class exposes.
 
 ### Interface Segregation
 
-Prefer narrow interfaces over one fat interface.
-
-```ts
-// Bad: fat interface; every consumer gets methods they don't need
-interface Repository<T> {
-    findById(id: string): Promise<T>;
-    findAll(): Promise<T[]>;
-    save(entity: T): Promise<void>;
-    delete(id: string): Promise<void>;
-    count(): Promise<number>;
-    search(query: string): Promise<T[]>;
-}
-
-// Good: segregated interfaces
-interface Readable<T> {
-    findById(id: string): Promise<T>;
-}
-interface Writable<T> {
-    save(entity: T): Promise<void>;
-}
-```
+Keep interfaces narrow. `KvDriver` in `@seedcord/types` has four methods, `get`, `set`, `delete`, and `entries`, and a backend implements only those.
 
 ### Dependency Inversion
 
-Depend on interfaces and abstractions. Pass dependencies in through the constructor (constructor injection).
+Depend on an interface and take the implementation through the constructor.
 
 ```ts
-// Bad: hard-wired dependency
-export class OrderService {
-    private readonly db = new PostgresDatabase(); // can't be mocked, can't be swapped
+// Bad: the class builds its own backend, so a test or a bot can't swap it
+export class KvCollection<TRecord> {
+    readonly #driver = new MemoryDriver();
 }
 
-// Good: injected dependency
-export class OrderService {
-    constructor(private readonly db: Database) {}
+// Good: any KvDriver works
+export class KvCollection<TRecord> {
+    readonly #driver: KvDriver;
+
+    constructor(driver: KvDriver, prefix: string, updates: KeyedQueue) {
+        this.#driver = driver;
+        ...
+    }
 }
 ```
 
@@ -142,55 +104,38 @@ export class OrderService {
 
 ## Rule 4: Composition over inheritance
 
-Inheritance is appropriate for genuine "is-a" relationships (a `PulsesProduct` is a `Product`). Use composition for "has-a" or "does-a" (a service that has a logger, does retries).
+Inherit for a real "is-a" relationship. Compose for "has-a" or "does-a", like a class that has a logger or retries a request.
 
 ```ts
-// Fragile inheritance: adding behavior by subclassing
-class BaseService {
-    protected log(msg: string): void {
-        console.log(msg);
-    }
+// Fragile: a base class only to share a helper
+class LoggingBase {
+    protected log(message: string): void { ... }
 }
-class OrderService extends BaseService {
-    fetch() {
-        this.log('fetching');
-    }
-}
+class Scanner extends LoggingBase { ... }
 
-// Better: compose the logger in
-class OrderService {
+// Better: pass the logger in
+class Scanner {
     constructor(private readonly logger: Logger) {}
-    fetch() {
-        this.logger.info('fetching');
-    }
 }
 ```
 
-Max inheritance depth: 2 (base + one subclass). If you're 3 levels deep, refactor to composition.
+Keep chains short, and make each level add one job. Gateway's `Seedcord` extends `ServerHost`, which extends `PluginHost`. `PluginHost` holds the bus, kv, and rate limiter and attaches plugins. `ServerHost` adds startup and shutdown for a long-lived process. `Seedcord` opens the gateway session. When a level only adds a helper, composition fits better.
 
 ---
 
 ## Rule 5: Access modifiers
 
-Use the narrowest access modifier that satisfies the requirement:
+Use the narrowest modifier that works.
 
-```ts
-export class ProductService {
-    // Public: part of the API contract
-    async findById(id: string): Promise<Product> { ... }
-
-    // Private: implementation detail, not part of the contract
-    private buildQuery(id: string): string { ... }
-
-    // Readonly: set once in the constructor, never reassigned
-    constructor(private readonly client: ApiClient) {}
-}
-```
+- `public` for the API that callers use.
+- `protected` for what subclasses need, like `Plugin`'s `logger`.
+- `private` for everything else.
+- `readonly` on any field that the constructor sets once.
 
 **`#name` (ECMAScript private)** vs **`private` (TypeScript keyword):**
 
-- `#name` hides plumbing and state inside a class users can reach. They reach it by importing it through a package's `exports` map, or through a public field typed as it, like gateway's `core.bot: Bot`. A user's editor never shows a `#` member, and their code cannot read it at runtime.
-- Every other class uses `private`. That covers internal services, helpers, and classes only an `./internal` entry exports. An `export` keyword on the file does not make a class public.
+- `#name` hides plumbing and state inside a class that users can reach. They reach it by importing it through a package's `exports` map, or through a public field typed as it, like gateway's `core.bot: Bot`. A user's editor never shows a `#` member, and their code cannot read it at runtime.
+- Every other class uses `private`. That covers internal services, helpers, and classes that only an `./internal` entry exports. An `export` keyword on the file does not make a class public.
 
 ```ts
 // public: @seedcord/core/node exports ServerHost, and the gateway and node http Seedcord classes extend it
@@ -211,69 +156,34 @@ export class InteractionsService {
 
 ## Rule 6: Interface vs abstract class
 
-**Use an interface** when you want to define a contract that multiple unrelated classes can implement, and you don't need any shared implementation:
+**Use an interface** for a contract that unrelated classes implement without sharing any code. `KvDriver` is one, and `MemoryDriver`, `KeyvDriver`, and `UnstorageDriver` each implement it.
 
 ```ts
-interface Logger {
-    info(msg: string): void;
-    error(msg: string, err?: unknown): void;
+export interface KvDriver {
+    get(key: string): Promisable<string | undefined>;
+    set(key: string, value: string, ttlMs?: number): Promisable<void>;
+    delete(key: string): Promisable<void>;
+    entries(prefix: string): AsyncIterable<KvEntry> | Iterable<KvEntry>;
 }
 
-class ConsoleLogger implements Logger { ... }
-class PinoLogger implements Logger { ... }
+export class MemoryDriver implements KvDriver, Disposable { ... }
 ```
 
-**Use an abstract class** when you have shared implementation alongside the contract:
+**Use an abstract class** when subclasses share code alongside the contract. `Plugin` in `@seedcord/core/plugin` gives every plugin its `logger`, `core`, and `kv`, and leaves `init()` abstract.
 
 ```ts
-abstract class BaseRepository<T> {
-    constructor(protected readonly db: Database) {}
+export abstract class Plugin<...> {
+    // shared code that every plugin gets
+    protected readonly logger: Logger;
+    protected get core(): TCore { ... }
+    protected get kv(): Kv { ... }
 
-    // Shared implementation
-    protected async query(sql: string): Promise<unknown[]> {
-        return this.db.execute(sql);
-    }
-
-    // Contract: subclasses must implement
-    abstract findById(id: string): Promise<T>;
-}
-
-class OrderRepository extends BaseRepository<Order> {
-    findById(id: string): Promise<Order> {
-        return this.query(`SELECT * FROM orders WHERE id = '${id}'`).then(parseOrder);
-    }
+    // the contract that every plugin implements
+    abstract init(): Promisable<void>;
 }
 ```
 
-Do not use abstract classes just to share a logger or config. Constructor injection exists for that.
-
----
-
-## Rule 7: Service pattern (how this repo uses it)
-
-Services encapsulate business logic around an entity or domain concept. They are injected where needed. They don't create their own dependencies.
-
-```ts
-export class AddressService {
-    constructor(private readonly api: ApiClient) {}
-
-    async list(userId: string): Promise<Address[]> {
-        const response = await this.api.get(`/users/${userId}/addresses`);
-        return response.data;
-    }
-
-    async setDefault(addressId: string): Promise<void> {
-        await this.api.patch(`/addresses/${addressId}`, { is_default: true });
-    }
-}
-```
-
-Conventions:
-
-- One service per domain entity or bounded context
-- Services are instantiated once (singletons in DI or module-level instances)
-- No presentation logic inside services. They return domain types, and formatting into display strings happens elsewhere
-- No state that leaks between requests/users
+Don't write an abstract class only to share a logger or config. Pass those through the constructor.
 
 ---
 
@@ -281,22 +191,22 @@ Conventions:
 
 ```ts
 // ❌ Static namespace class
-export class MathUtils { static add(a, b) { return a + b; } }
+export class MathUtils { static add(a: number, b: number) { return a + b; } }
 
 // ❌ God class: one class doing everything
-export class AppService { /* auth, products, cart, checkout, analytics */ }
+export class BotService { /* commands, kv, logging, http, scheduling */ }
 
 // ❌ Constructor doing async work
-constructor() { this.data = await fetchData(); } // use an init() method or factory
+constructor() { this.data = await fetchData(); } // use an init() method or a static factory
 
-// ❌ Mutating props or injected references
-class Service {
-    update(config: Config) { config.timeout = 5000; } // mutate the caller's object
+// ❌ Mutating an injected object
+class Scanner {
+    configure(config: Config) { config.timeout = 5000; } // changes the caller's object
 }
 
-// ❌ Inheritance for code reuse only (no is-a relationship)
-class CoffeeProduct extends DatabaseRecord { } // just inject the DB client
+// ❌ Inheritance only to reuse code, with no is-a relationship
+class Scanner extends FileReader { } // pass the reader in
 
-// ❌ Abstract class with no shared implementation
-abstract class Animal { abstract speak(): void; } // use an interface instead
+// ❌ Abstract class with no shared code
+abstract class Driver { abstract get(key: string): string; } // use an interface
 ```

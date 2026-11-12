@@ -2,6 +2,7 @@ import { SlashCommandBuilder } from '@discordjs/builders';
 import { SeedcordErrorCode, paint } from '@seedcord/errors';
 import { displayPath, SeedcordError } from '@seedcord/errors/internal';
 import { Logger } from '@seedcord/logger';
+import { HostPlugins } from '@seedcord/types/internal';
 import { formatFilePath } from '@seedcord/utils';
 import { botFolder } from '@seedcord/utils/internal';
 
@@ -17,7 +18,6 @@ import { planDeploy } from '#src/commands/planDeploy';
 import { putCommands } from '#src/commands/putCommands';
 import { readCommands } from '#src/commands/readCommands';
 import { GLOBAL_ID, scopeIdsOf } from '#src/commands/scopes';
-import { slashRouteLeaves } from '#src/commands/slashRouteLeaves';
 import { KeyedQueue } from '#src/kv/KeyedQueue';
 import { CommandMetadataKey } from '#src/metadataKeys';
 import { PublishDefault } from '#subscribers/publishDefault';
@@ -27,6 +27,7 @@ import type { CoreBase } from '#interfaces/CoreBase';
 import type { ContextMenuLeaves } from '#src/commands/contextMenuLeaves';
 import type { DeployTarget } from '#src/commands/deployTarget';
 import type { CommandCtor } from '#src/commands/isCommandClass';
+import type { LinkedCommands } from '#src/commands/linkCommands';
 import type { CommandBody, CommandScopes } from '#src/commands/putCommands';
 import type { ScopeId } from '#src/commands/scopes';
 import type { CommandBuilder, DeployResult } from '#src/commands/types';
@@ -45,7 +46,12 @@ interface RouteWarnings {
 
 interface DeployHooks {
     routes?: RouteWarnings | undefined;
-    check?: (commands: CommandBuilder[]) => void;
+    check?: (commands: readonly CommandBody[]) => void;
+}
+
+interface PreparedCommands {
+    readonly scopes: CommandScopes;
+    readonly commands: readonly CommandBody[];
 }
 
 // discord's global command bucket allows 2 PUTs a minute
@@ -223,18 +229,28 @@ export class CommandRegistry implements Initializeable, HmrAware {
     /** @internal */
     public async deploy(signal: AbortSignal, { routes, check }: DeployHooks): Promise<void> {
         await this.init();
-        check?.(this.allCommands());
-        await this.afterRunningDeploy(() => this.setCommands(signal));
-        routes?.warnUnhandledRoutes(this.routeLeaves());
-        routes?.warnUnhandledContextMenuRoutes(this.contextMenuLeaves());
+        const { linked, commands } = await this.afterRunningDeploy(async () => {
+            const prepared = await this.prepare();
+            check?.(prepared.commands);
+            return { linked: await this.deployPrepared(prepared, signal), commands: prepared.commands };
+        });
+        routes?.warnUnhandledRoutes(Object.keys(linked.commands));
+        routes?.warnUnhandledContextMenuRoutes(contextMenuLeaves(commands));
     }
 
     /** @internal */
-    public async setCommands(signal?: AbortSignal): Promise<DeployResult> {
+    public async setCommands(signal?: AbortSignal): Promise<void> {
+        await this.deployPrepared(await this.prepare(), signal);
+    }
+
+    private async deployPrepared(
+        { scopes, commands }: PreparedCommands,
+        signal?: AbortSignal
+    ): Promise<LinkedCommands> {
         // read here because gateway assigns core.rest after this registry is constructed
         const { rest, applicationId } = this.core;
         const last = await this.lastDeploy.read(applicationId, signal);
-        const plan = await planDeploy(this.commandBodies(), last?.scopes, (unchanged) =>
+        const plan = await planDeploy(scopes, last?.scopes, (unchanged) =>
             readCommands(unchanged, { rest, applicationId, signal })
         );
         await this.reporter.readGuildNames(rest, [...plan.toPut.keys(), ...plan.skipped], signal);
@@ -251,29 +267,27 @@ export class CommandRegistry implements Initializeable, HmrAware {
         const result: DeployResult = new Map([...plan.onDiscord, ...put]);
         this.lastDeploy.save({ applicationId, scopes: plan.hashes });
 
-        this.injector.inject(result, this.allCommands());
+        const linked = this.injector.inject(result, commands);
         this.core.bus[PublishDefault]('commandsDeployed', deployedPayload(result));
-        return result;
+        return linked;
     }
 
-    private commandBodies(): CommandScopes {
+    // prepareCommands gets each command once because every scope shares one body per builder
+    private async prepare(): Promise<PreparedCommands> {
+        const bodies = new Map<CommandBuilder, CommandBody>();
+        const bodyOf = (command: CommandBuilder): CommandBody => {
+            const body = bodies.get(command) ?? command.toJSON();
+            bodies.set(command, body);
+            return body;
+        };
         // a guild-only start keeps the global commands another deploy put there
         const deployable = this.scopedCommands
             .entries()
             .filter(([scope, commands]) => scope !== GLOBAL_ID || commands.length > 0);
-        return new Map(deployable.map(([scope, commands]) => [scope, commands.map((c) => c.toJSON())]));
-    }
-
-    private allCommands(): CommandBuilder[] {
-        return [...this.scopedCommands.values()].flat();
-    }
-
-    private routeLeaves(): Set<string> {
-        return slashRouteLeaves(this.allCommands());
-    }
-
-    private contextMenuLeaves(): ContextMenuLeaves {
-        return contextMenuLeaves(this.allCommands().map((command) => command.toJSON()));
+        const scopes = new Map(deployable.map(([scope, commands]) => [scope, commands.map(bodyOf)]));
+        const commands = [...bodies.values()];
+        await this.core[HostPlugins].prepareCommands(commands);
+        return { scopes, commands };
     }
 }
 

@@ -1,4 +1,4 @@
-// these are all the types the registry uses to type its examples. expand as needed
+// these are all the types that the registry uses to type its examples. expand as needed
 const REGISTRIES = `
     interface SlashRegistry {
         ping: { options: { detailed: { kind: 'boolean'; required: false } }; cache: 'cached' };

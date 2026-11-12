@@ -102,7 +102,7 @@ describe('the type hover', () => {
             expect(block.querySelectorAll(`${TOKEN_SELECTOR}[tabindex]`)).toHaveLength(0);
         });
 
-        it('drops the tab stop shiki puts inside the type', async () => {
+        it('removes the tab stop shiki puts inside the type', async () => {
             const block = renderBlock();
             block.focus();
 

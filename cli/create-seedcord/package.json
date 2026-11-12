@@ -55,6 +55,7 @@
         "@seedcord/core": "workspace:^",
         "@seedcord/errors": "workspace:^",
         "@seedcord/eslint-config": "workspace:^",
+        "@seedcord/prose": "workspace:^",
         "@seedcord/tsconfig": "workspace:^",
         "@seedcord/tsdown-config": "workspace:^",
         "@seedcord/types": "workspace:^",
@@ -62,6 +63,7 @@
         "discord.js": "catalog:peer",
         "handlebars": "catalog:deps",
         "package-manager-detector": "^1.8.0",
+        "type-fest": "catalog:deps",
         "typescript": "catalog:peer"
     },
     "engines": {

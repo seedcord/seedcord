@@ -20,7 +20,7 @@ const STACK_FRAME = /^\s+at /;
 const SPLAT = Symbol.for('splat'); // winston keeps the extra log args under this key
 // Symbol() keeps this key out of the global Symbol.for registry
 const SPECIFIER_COUNT_KEY = Symbol('seedcord:logger:specifier-count');
-// %% takes no arg. ObjectConsoleSink's pattern has %% because it prints it as %.
+// %% doesn't take an arg. ObjectConsoleSink's pattern has %% because it prints it as %.
 const FORMAT_SPECIFIERS = /%[sdifjoO]/gu;
 
 interface PrettyFormatOptions {
@@ -188,7 +188,7 @@ export class LogFormatter {
         if (strip) return padded;
         const palette: Partial<Record<string, string>> = LEVEL_COLOR;
         const hex = palette[level];
-        // winston's colorize only knows the 16 basic color names
+        // winston's colorize only supports the 16 basic color names
         return hex ? chalk.hex(hex)(padded) : padded;
     }
 
@@ -229,7 +229,7 @@ export class LogFormatter {
                 if (typeof info.stack === 'string') {
                     let stack = this.safeString(info.stack);
                     if (options.stripExtras) stack = stripAnsi(stack);
-                    // info.stack is plain text with no cause in it
+                    // info.stack is plain text without a cause in it
                     const firstError = extras.find((entry): entry is Error => Error.isError(entry));
                     append(
                         '\n',
@@ -261,7 +261,7 @@ export class LogFormatter {
         const filtered = cleaned.filter((x, index) => {
             if (x === null || x === undefined || x === '') return false;
             if (Error.isError(x)) {
-                // the first Error already printed above as info.stack
+                // the first Error was already printed above as info.stack
                 if (hasStack && !firstErrorDropped) {
                     firstErrorDropped = true;
                     return false;
@@ -307,7 +307,7 @@ export class LogFormatter {
                 const args = this.getExtras(info);
                 let stackError: Error | undefined;
                 if (typeof info.stack === 'string') {
-                    // info.stack is plain text with no cause in it
+                    // info.stack is plain text without a cause in it
                     stackError = args.find((entry): entry is Error => Error.isError(entry));
                     const stack = strip ? stripAnsi(info.stack) : info.stack;
                     info.stack = stack + (stackError ? this.detailBlock(stackError, strip) : '');

@@ -1,0 +1,42 @@
+extends: existence
+link: https://github.com/seedcord/seedcord/blob/next/.agents/skills/writing-voice/SKILL.md
+message: "'%s' is banned. State the fact, the mechanism, or the steps."
+level: error
+ignorecase: true
+tokens:
+  - '(?<!out )loud(?:ly)?'
+  - 'worth noting'
+  - 'surprisingly'
+  - 'interestingly'
+  - 'you may notice'
+  - 'good catch'
+  - 'fair (?:question|point)'
+  - 'great (?:point|question)'
+  - 'to be honest'
+  - 'honestly'
+  - 'frankly'
+  - 'seamless(?:ly)?'
+  - 'effortless(?:ly)?'
+  - 'frictionless(?:ly)?'
+  - 'blazing'
+  - 'supercharge[sd]?'
+  - 'performant'
+  - 'robust(?:ly|ness)?'
+  - 'first-class'
+  - 'please note'
+  - 'blast radius'
+  - 'rich set of'
+  - 'suite of'
+  - 'does more than'
+  - 'fuels?'
+  - 'underpins?'
+  - 'intuitive(?:ly)?'
+  - 'harden(?:s|ed|ing)?'
+  # the hype sense only. "enable autocomplete" and "leaves Next enabled" are exact
+  - 'enables? (?:you|users)'
+  - 'powerful'
+  - 'elegant(?:ly)?'
+  - 'notably'
+  - 'of course'
+  - 'exercises?'
+  - 'graduation'

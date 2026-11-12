@@ -67,6 +67,14 @@ class CatchallType extends EventMiddleware {
 }
 void CatchallType;
 
+// @ts-expect-error use InteractionMiddleware
+class InteractionEvent extends EventMiddleware<Events.InteractionCreate> {
+    async execute(): Promise<void> {
+        await Promise.resolve();
+    }
+}
+void InteractionEvent;
+
 describe('EventMiddleware', () => {
     it('reads the current event name from the dispatch', () => {
         const mw = new SingleMw(createPayload(fakeMessage()), core, dispatch);
@@ -79,7 +87,7 @@ describe('EventMiddleware', () => {
     });
 });
 
-// @RegisterEventMiddleware and the EventMiddleware generic must agree, in both directions
+// @RegisterEventMiddleware and the EventMiddleware generic must list the same events, checked in both directions
 
 @RegisterEventMiddleware()
 class GoodCatchall extends EventMiddleware {

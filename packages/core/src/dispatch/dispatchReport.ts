@@ -9,10 +9,11 @@ import { PublishDefault } from '#subscribers/publishDefault';
 import type { InteractionDispatch } from '#src/dispatch/DispatchContext';
 import type { Bus } from '#subscribers/Bus';
 import type { DispatchOutcome } from '#subscribers/types/Subscriptions';
+import type { ExcludeStrict } from 'type-fest';
 
 const logger = lazyLogger('Dispatch', { channel: 'interactions' });
 
-export function outcomeFor(caught: unknown): Exclude<DispatchOutcome, 'handled'> {
+export function outcomeFor(caught: unknown): ExcludeStrict<DispatchOutcome, 'handled'> {
     if (caught instanceof Silence) return 'refused';
     if (caught instanceof Notice) return caught.report ? 'failed' : 'refused';
     return 'failed';

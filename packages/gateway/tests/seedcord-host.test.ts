@@ -50,7 +50,7 @@ describe('Seedcord host', () => {
     beforeEach(reset);
     afterEach(reset);
 
-    it('installs no signal handlers while only constructed', () => {
+    it("doesn't install signal handlers while only constructed", () => {
         const base = [process.listenerCount('SIGTERM'), process.listenerCount('SIGINT')];
 
         // eslint-disable-next-line no-new -- construction is the behavior under test

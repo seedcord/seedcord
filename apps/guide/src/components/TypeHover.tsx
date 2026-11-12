@@ -82,7 +82,7 @@ function TypePopup({ shown, keyboard, hold, release }: TypePopupProps): ReactEle
             onOpenAutoFocus={(event) => {
                 if (!keyboard.current) event.preventDefault();
             }}
-            // only escape restores focus. tab keeps going where it was heading
+            // only escape restores focus. tab moves on to wherever it was heading
             onCloseAutoFocus={(event) => event.preventDefault()}
             onPointerOver={hold}
             onPointerOut={release}
@@ -176,7 +176,7 @@ function useTokenWalk(
 }
 
 export function TypeHover({ children }: { children: ReactNode }): ReactElement {
-    // the last token stays rendered while radix plays its close animation
+    // this holds the last token so it renders while radix plays its close animation
     const [shown, setShown] = useState<Shown | null>(null);
     const [open, setOpen] = useState(false);
     const closing = useRef<ReturnType<typeof setTimeout> | null>(null);

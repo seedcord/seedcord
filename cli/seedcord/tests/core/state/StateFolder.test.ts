@@ -72,7 +72,7 @@ describe('StateFolder', () => {
         expect(state.read(counter)).toEqual({ count: 0 });
     });
 
-    it('warns on a write it could not save and keeps going', async () => {
+    it('warns on a write it could not save and continues', async () => {
         const warn = vi.fn();
         const state = new StateFolder(await projectWithFolderAtFile(), { ...silentLogger, warn });
 

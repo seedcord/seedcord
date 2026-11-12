@@ -1,10 +1,10 @@
 import type { RuntimeBrand, ScopedSpec, TransportBrand } from './brands';
 import type { PluginLifecycleSpec } from './lifecycle';
-import type { TypedExclude } from '@seedcord/types';
+import type { ExcludeStrict } from 'type-fest';
 
 /**
- * Declares where a plugin may attach. Pass it as the `Plugin<Opts>` type argument. Every field you
- * narrow goes to `super()` as well. `attach()` fails to compile when the host does not match.
+ * Declares where a plugin may attach. Pass it as the `Plugin<Opts>` type argument. Pass every field you
+ * narrow to `super()` as well. `attach()` fails to compile when the host does not match.
  *
  * @example
  * ```ts
@@ -42,10 +42,10 @@ export type RuntimeOf<Opts extends PluginOptions> = undefined extends Opts['runt
     : NonNullable<Opts['runtime']>;
 
 /** @internal */
-export type Transport = TypedExclude<NonNullable<PluginOptions['transport']>, 'any'>;
+export type Transport = ExcludeStrict<NonNullable<PluginOptions['transport']>, 'any'>;
 
 /** @internal */
-export type Runtime = TypedExclude<NonNullable<PluginOptions['runtime']>, 'any'>;
+export type Runtime = ExcludeStrict<NonNullable<PluginOptions['runtime']>, 'any'>;
 
 /** @internal */
 export interface DeclaredScope {
