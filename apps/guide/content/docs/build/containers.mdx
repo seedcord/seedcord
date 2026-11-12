@@ -18,8 +18,7 @@ To containerize your application, you'll need the following prerequisites:
 
 To containerize your application, you'll need to write a Dockerfile and, optionally, a Docker Compose file.
 
-To write a Dockerfile, first pull the image(s) you want, then perform copying and building steps within that image.
-We recommend using slim images for faster pull times, smaller output, and reduced attack surfaces.
+To write a Dockerfile, first pull the image(s) you want, then perform copying and building steps within that image. We recommend using slim images for faster pull times, smaller output, and reduced attack surfaces.
 
 Here's an example Dockerfile (and .dockerignore) to get you started:
 
@@ -82,9 +81,7 @@ In your bot instance, make sure you set `lifecycle.shutdownDeadline` to ~5000, s
 
 ### Using a Docker Compose
 
-Docker Compose definitions are YAML files that describe the entire container stack that your application requires.
-This allows you orchestrate your entire container stack at once, using a definition file.
-It also allows you to configure some options not found in Dockerfiles, or more easily configure options.
+Docker Compose definitions are YAML files that describe the entire container stack that your application requires. This allows you orchestrate your entire container stack at once, using a definition file. It also allows you to configure some options not found in Dockerfiles, or more easily configure options.
 
 If you want to use a Docker Compose file, create a file named `docker-compose.yml` with the contents of either of these:
 
@@ -122,8 +119,7 @@ services:
             - ./logs:/app/logs
 ```
 
-Once your Docker Compose definition has been written, run `docker compose build` to pull or build each service.
-Then, run `docker compose up` to start the compose stack. If you want to check logs, you can run `docker compose logs`.
+Once your Docker Compose definition has been written, run `docker compose build` to pull or build each service. Then, run `docker compose up` to start the compose stack. If you want to check logs, you can run `docker compose logs`.
 
 Docker Compose definitions can be helpful for any non-trivial bot, such as for:
 
