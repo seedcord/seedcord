@@ -85,8 +85,8 @@ catalogs:
     yaml: ^2.9.1
     verkit: ^0.5.0
     es-toolkit: ^1.53.2
-    vite: npm:@voidzero-dev/vite-plus-core@1.5.1
-    vite-plus: 1.5.1
+    vite: npm:@voidzero-dev/vite-plus-core@1.6.0
+    vite-plus: 1.6.0
   eslint:
     '@eslint-react/eslint-plugin': ^5.18.1
     '@typescript-eslint/rule-tester': ^8.65.0
