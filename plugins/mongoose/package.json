@@ -71,7 +71,7 @@
         "mongoose": "catalog:peer"
     },
     "peerDependencies": {
-        "@seedcord/core": "workspace:>=0.13.0-next.0",
+        "@seedcord/core": "workspace:>=0.14.0-next.0",
         "envapt": "catalog:peer",
         "mongoose": "catalog:peer",
         "typescript": "catalog:consumerTypes"

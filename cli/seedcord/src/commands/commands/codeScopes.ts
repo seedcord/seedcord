@@ -1,5 +1,6 @@
 import { resolveDeployTarget, scopeIdsOf } from '@seedcord/core/internal';
 import { paint } from '@seedcord/errors';
+import { HostPlugins } from '@seedcord/types/internal';
 
 import { openProjectWithSteps } from '#core/config/openProjectWithSteps';
 import { plural } from '#core/format';
@@ -64,7 +65,7 @@ export async function loadCodeScopes(
 
     const found = await steps.step(
         'scan',
-        () => new CommandScanner(modules, project.files).scan(path),
+        () => new CommandScanner(modules, project.files, instance[HostPlugins]).scan(path),
         (commands) => plural(commands.length, 'command')
     );
     return { ...loaded, scopes: scopesInCode(found, guilds) };

@@ -1,14 +1,7 @@
-import {
-    attachmentsOf,
-    bindBotColor,
-    busLoggerOf,
-    connectDevChannel,
-    HmrManager,
-    SubscriberLoader
-} from '@seedcord/core/internal';
+import { bindBotColor, busLoggerOf, connectDevChannel, HmrManager, SubscriberLoader } from '@seedcord/core/internal';
 import { CoordinatedShutdown, CoordinatedStartup, ServerHost } from '@seedcord/core/node';
 import { HealthCheck, shutdownOf, StartupPhase } from '@seedcord/core/node/internal';
-import { HostAugmentTarget, HostVersion, SeedcordBrand } from '@seedcord/types/internal';
+import { HostAugmentTarget, HostPlugins, HostVersion, SeedcordBrand } from '@seedcord/types/internal';
 import { Envapter } from 'envapt';
 
 import { Bot } from './bot/Bot';
@@ -110,7 +103,7 @@ export class Seedcord extends ServerHost<'gateway'> implements SeedcordInstance 
         this.startup.addTask(StartupPhase.Configuration, 'hmr-registration', async () => {
             this.#hmrManager.register(this.bot);
             this.#hmrManager.register(this.#subscribers);
-            for (const { instance } of attachmentsOf(this)) {
+            for (const { instance } of this[HostPlugins].attachments) {
                 this.#hmrManager.register(instance);
             }
             await Promise.resolve();

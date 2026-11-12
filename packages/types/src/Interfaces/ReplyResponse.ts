@@ -1,5 +1,5 @@
 import type { UUID } from '#src/uuid';
-import type { DispatchBag } from './Dispatch';
+import type { DispatchBag, DispatchMemberValues } from './Dispatch';
 import type { APIMessageTopLevelComponent } from 'discord-api-types/v10';
 
 /** A ComponentsV2 top-level component, as discord.js accepts it in a message's `components` field. */
@@ -61,7 +61,7 @@ export interface ReplyResponse<TNative = never> {
  * Context passed into a denial's render. Built fresh per render so a reported fault's reply shows the same
  * uuid the framework logs and puts on the bus.
  */
-export interface RenderContext {
+export interface RenderContext extends DispatchMemberValues {
     readonly uuid: UUID;
     /** Contact name a generic fault reply points the user to, from `notifications.developerUsername`. */
     readonly developerUsername?: string;

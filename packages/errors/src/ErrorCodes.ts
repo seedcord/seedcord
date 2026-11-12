@@ -94,7 +94,7 @@ export enum SeedcordErrorCode {
     CoreWebhookUrlInvalid = 1226,
     /** Reading from Discord with `DISCORD_BOT_TOKEN` failed, like the application, its public key, or its commands. */
     CoreDiscordReadFailed = 1227,
-    /** Two routes, commands, migrations, or customId fields have the same name, or two code files build to the same file. */
+    /** Two routes, commands, migrations, customId fields, or dispatch members have the same name, or two code files build to the same file. */
     CoreDuplicateName = 1228,
     /** A Vite plugin from `vitePlugins` threw while Vite started or loaded a file, or failed when seedcord called `vitePlugins`. */
     CoreVitePluginThrew = 1229,
@@ -114,6 +114,12 @@ export enum SeedcordErrorCode {
     CoreBuiltModuleRanDirectly = 1236,
     /** `JSON.stringify` threw on a record passed to a kv collection's `set()` or `update()`, like one with a circular reference. */
     CoreKvUnserializable = 1237,
+    /** A plugin's `dispatchMembers` has a key that seedcord uses too, like `reply`. */
+    CorePluginMemberReserved = 1238,
+    /** The handler didn't run because a function in a plugin's `dispatchMembers` threw. */
+    CorePluginMemberThrew = 1239,
+    /** A plugin that has `dispatchMembers` is attached twice, and both copies add the same members. */
+    CorePluginAttachedTwice = 1240,
 
     /** A command class has `@RegisterCommand` twice. */
     DecoratorCommandAlreadyRegistered = 1301,
@@ -344,6 +350,8 @@ export enum SeedcordErrorCode {
     CliAskHasToWait = 3148,
     /** The guide search failed for a reason other than a search limit. */
     CliAskFailed = 3149,
+    /** The bot comes from a version of `@seedcord/gateway` or `@seedcord/http` that this CLI can't load. */
+    CliHostContractMismatch = 3150,
 
     /** A flag answers a question that the earlier answers skip. */
     CreateFlagNotApplicable = 3201,

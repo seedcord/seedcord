@@ -97,6 +97,12 @@ const messages = {
         `A module from your build read its path from ${paint.bold('import.meta')}, but nothing set that path because ${paint.path('index.mjs')} didn't run first. Run ${paint.path('index.mjs')} instead of the module, like ${paint.bold('node dist/index.mjs')}.`,
     [SeedcordErrorCode.CorePluginKvOutsideAttach]: (plugin: string) =>
         `${paint.bold(plugin)} read ${paint.bold('this.kv')} on an instance that ${paint.bold('attach()')} didn't build. ${paint.bold('this.kv')} stores a plugin's records under its attach key, which only ${paint.bold('attach()')} gives it. Attach the class with ${paint.bold(`seedcord.attach('key', ${plugin})`)}.`,
+    [SeedcordErrorCode.CorePluginMemberReserved]: (member: string, plugin: string) =>
+        `${plugin} uses ${paint.sky(member)} in ${paint.bold('dispatchMembers')}, but seedcord already uses that name on handlers, gates, or error cards. Rename the key in the plugin.`,
+    [SeedcordErrorCode.CorePluginMemberThrew]: (member: string, plugin: string, reason: string) =>
+        `${plugin} threw from its ${paint.bold('dispatchMembers')} function ${paint.sky(member)}, so the handler didn't run. ${sentence(reason)} Fix ${paint.sky(member)} in the plugin, or catch the error inside it.`,
+    [SeedcordErrorCode.CorePluginAttachedTwice]: (plugin: string, firstKey: string, secondKey: string) =>
+        `${paint.bold(plugin)} is attached at both ${paint.sky(firstKey)} and ${paint.sky(secondKey)}, and each copy adds the same ${paint.bold('dispatchMembers')}. Attach it once.`,
     [SeedcordErrorCode.CorePluginGroupTaken]: (head: string, key: string) =>
         `${paint.bold(head)} is already taken on this bot, so ${paint.sky(key)} cannot nest under it. Pick another group name.`,
     [SeedcordErrorCode.CorePluginKeyMalformed]: (key: string, reason: string) =>
@@ -350,6 +356,8 @@ const messages = {
         `${wait} You can read the guide at ${paint.sky(guide)} in the meantime.`,
     [SeedcordErrorCode.CliAskFailed]: (reason: string, guide: string) =>
         `The guide search failed. ${reason}. Try again, or read the guide at ${paint.sky(guide)}.`,
+    [SeedcordErrorCode.CliHostContractMismatch]: (transport: string) =>
+        `This version of ${paint.bold('seedcord')} can't load a bot built with your version of ${paint.bold(transport)}. Update ${paint.bold('seedcord')} and ${paint.bold(transport)} together to their latest versions.`,
     [SeedcordErrorCode.CliCodegenOutOfDate]: (outputPath: string) =>
         `${paint.path(outputPath)} is out of date. Run ${paint.bold('seedcord codegen')} and commit it.`,
     [SeedcordErrorCode.CliEdgeWithoutWorkerdCondition]: (cloudflareConfig: string, tsconfig: string) =>

@@ -9,7 +9,7 @@ import { withTimeout } from './withTimeout';
 
 import type { ShutdownTasks } from '#node/Lifecycle/CoordinatedShutdown';
 import type { TaskShutdownPhase } from '#src/lifecycle/phases';
-import type { Attachment } from '#src/plugin/PluginHost';
+import type { Attachment } from '#src/plugin/PluginRegistry';
 import type { StartupTasks } from './CoordinatedStartup';
 import type { Promisable } from 'type-fest';
 

@@ -2,15 +2,15 @@
 // Run `seedcord codegen` after changing your commands, plugins, or emoji config.
 
 import type Bot from './bot';
+import type { AttachedPlugin } from '@seedcord/gateway';
 
-// a row has to fit what its plugin's codegen() declares
 type Fits<Plugin extends { codegen(): Promise<unknown> }, Row extends Awaited<ReturnType<Plugin['codegen']>>> = Row;
 
 // prettier-ignore
 declare module '@seedcord/gateway' {
     interface Core {
-        db: (typeof Bot)['db'];
-        i18n: (typeof Bot)['i18n'];
+        db: AttachedPlugin<(typeof Bot)['db']>;
+        i18n: AttachedPlugin<(typeof Bot)['i18n']>;
     }
     interface SlashRegistry {
         defernotice: { options: {}; cache: 'cached' };
@@ -36,6 +36,9 @@ declare module '@seedcord/gateway' {
     interface PluginTypes {
         '@seedcord/plugin-mongoose': Fits<(typeof Bot)['db'], { services: { users: (typeof import('./services/Users'))['Users'] } }>;
         'mock-i18n': Fits<(typeof Bot)['i18n'], { messages: { goodbye: []; greet: ['name']; transfer: ['from', 'amount', 'to'] } }>;
+    }
+    interface DispatchMemberValues {
+        askedIn: Awaited<ReturnType<(typeof Bot)['i18n']['dispatchMembers']['askedIn']>>;
     }
 }
 

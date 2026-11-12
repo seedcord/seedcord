@@ -74,17 +74,17 @@ export abstract class AutocompleteHandler<
         return this.event.user;
     }
 
-    private decodedFocused?: { name: string; value: string };
+    #decodedFocused?: { name: string; value: string };
 
     /**
      * The focused option for this interaction. `value` is always the raw partial string the user is typing,
      * even for an integer or number option, so coerce it yourself when you need a number.
      */
     protected get focused(): FocusedField<Route> {
-        if (this.decodedFocused) return this.decodedFocused as FocusedField<Route>;
+        if (this.#decodedFocused) return this.#decodedFocused as FocusedField<Route>;
         const raw = this.event.options.getFocused(true);
         const focused = { name: raw.name, value: raw.value };
-        this.decodedFocused = focused;
+        this.#decodedFocused = focused;
         // the registry constrains the names
         return focused as FocusedField<Route>;
     }

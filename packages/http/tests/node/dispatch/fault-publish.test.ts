@@ -1,6 +1,6 @@
 import 'reflect-metadata';
 
-import { InteractionKind, Notice } from '@seedcord/core';
+import { Notice } from '@seedcord/core';
 import { interactionMiddleware, MiddlewareRegistry } from '@seedcord/core/internal';
 import { LoggerChannelRegistry } from '@seedcord/logger';
 import { Envapter, PortableSource } from 'envapt';
@@ -10,14 +10,11 @@ import { SlashHandler } from '#handlers/interaction/SlashHandler';
 import { dispatchInteraction } from '#src/dispatch/dispatchInteraction';
 import { testCore } from '#tests/helpers/core';
 import { nullPathConfig, VALID_TOKEN } from '#tests/helpers/fixtures';
+import { resolvedSlash } from '#tests/helpers/interactions';
 
-import { slashPayload } from './harness';
-
-import type { HandlerConstructor, InteractionMiddlewareConstructor } from '#handlers/constructors';
-import type { ValidInteractionTypes } from '#handlers/interactionTypes';
+import type { HandlerSlots, InteractionMiddlewareConstructor } from '#handlers/constructors';
 import type { Core } from '#interfaces/Core';
-import type { ResolvedRoute } from '#src/dispatch/resolve';
-import type { SubscriptionData } from '@seedcord/core';
+import type { InteractionKind, SubscriptionData } from '@seedcord/core';
 import type { LogRecord, ReplyResponse } from '@seedcord/types';
 
 class Reported extends Notice {
@@ -57,6 +54,8 @@ class OtherBoomHandler extends SlashHandler<never> {
     }
 }
 
+type SlashSlot = HandlerSlots[InteractionKind.Slash];
+
 interface Published {
     handled: SubscriptionData<'handledException'>[];
     unknown: SubscriptionData<'unknownException'>[];
@@ -70,18 +69,16 @@ function watched(): { core: Core; published: Published } {
     return { core, published };
 }
 
-async function dispatchThrough(core: Core, handler: HandlerConstructor): Promise<void> {
-    const match: ResolvedRoute = { kind: InteractionKind.Slash, route: 'ok', fallback: false, ctor: handler };
+async function dispatchThrough(core: Core, handler: SlashSlot): Promise<void> {
     const execute = await dispatchInteraction({
-        match,
-        payload: slashPayload('ok') as ValidInteractionTypes,
+        resolved: resolvedSlash('ok', handler),
         core,
         middlewares: new MiddlewareRegistry<InteractionMiddlewareConstructor>(interactionMiddleware)
     });
     await execute?.();
 }
 
-async function faultsFor(handler: HandlerConstructor): Promise<Published> {
+async function faultsFor(handler: SlashSlot): Promise<Published> {
     const { core, published } = watched();
     await dispatchThrough(core, handler);
     return published;

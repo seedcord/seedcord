@@ -1,10 +1,12 @@
 import { Logger } from '@seedcord/logger';
+import { HostPlugins } from '@seedcord/types/internal';
 import { describe, expect, it, vi } from 'vite-plus/test';
 
 import { defineGate } from '#gates/Gate';
 import { DispatchContext } from '#src/dispatch/DispatchContext';
 import { InteractionRun } from '#src/dispatch/InteractionRun';
 import { GatedMetadataKey, InteractionKind } from '#src/metadataKeys';
+import { PluginRegistry } from '#src/plugin/PluginRegistry';
 import { Silence } from '#stops/Silence';
 import { busWith } from '#tests/utils/busWith';
 
@@ -19,18 +21,15 @@ function configFor(
 ): InteractionRunConfig {
     return {
         dispatch: new DispatchContext(kind, 'probe'),
-        // justified: the run reads only core.config.errors and core.bus
-        core: { bus: busWith(), config: {} } as unknown as CoreBase,
-        event: {},
+        // justified: the run reads only core.config.errors, core.bus, and the members
+        core: { bus: busWith(), config: {}, [HostPlugins]: new PluginRegistry() } as unknown as CoreBase,
         HandlerCtor,
-        middlewares: { chainFor: () => [] },
         apiError: class extends Error {
             readonly code = 0;
         },
         logger: new Logger('Test'),
         interactionId: 'i1',
-        userId: 'u1',
-        guildId: null,
+        origin: { userId: 'u1', guildId: null, channelId: null, userLocale: null, guildLocale: null },
         customId: null,
         target,
         faultDetails: () => ({
@@ -64,9 +63,10 @@ describe('InteractionRun', () => {
                 // justified: runInteractionGates reads only dispatch from this context
                 gateContext: () =>
                     ({ dispatch: new DispatchContext(InteractionKind.Slash, 'probe') }) as GateContextBase,
-                sender: { send: vi.fn().mockResolvedValue(undefined) }
+                sender: { send: vi.fn().mockResolvedValue(undefined) },
+                handler: () => new Refused(),
+                middlewares: [() => new Audit()]
             }),
-            middlewares: { chainFor: () => [Audit] },
             faultDetails: () => {
                 throw new Error('details failed');
             }
@@ -85,7 +85,10 @@ describe('InteractionRun', () => {
         }
         const warn = vi.spyOn(Logger.prototype, 'warn').mockImplementation(() => undefined);
         const config = {
-            ...configFor(InteractionKind.Button, Unhandled, { responder: { clear: vi.fn() } }),
+            ...configFor(InteractionKind.Button, Unhandled, {
+                responder: { clear: vi.fn() },
+                handler: () => new Unhandled()
+            }),
             dispatch: new DispatchContext(InteractionKind.Button, route, true),
             customId
         };
@@ -105,7 +108,7 @@ describe('InteractionRun', () => {
         const clear = vi.fn().mockResolvedValue(undefined);
 
         const start = await new InteractionRun(
-            configFor(InteractionKind.Autocomplete, Quiet, { responder: { clear } })
+            configFor(InteractionKind.Autocomplete, Quiet, { responder: { clear }, handler: () => new Quiet() })
         ).prepare();
         await start?.();
 
