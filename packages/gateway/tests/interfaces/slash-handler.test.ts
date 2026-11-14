@@ -140,7 +140,7 @@ class UnionOptionsHandler extends SlashHandler<'mute' | 'note'> {
     }
 }
 
-// each match case is typed for its own route, recovering getters that the union view leaves out
+// each match case is typed for its own route, recovering getters that the union view doesn't include
 class PerCaseNarrowing extends SlashHandler<'mute' | 'note'> {
     async execute(): Promise<void> {
         await this.match({

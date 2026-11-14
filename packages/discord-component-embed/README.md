@@ -390,7 +390,7 @@ const script = toComponentEmbedScript(fromPayload(card));
 
 Every error for a tree from `fromPayload` has JSON keys in its `path`, like `['component', 'components', '1']`, and its message prints them as `component > components > 1`. That holds for the errors `toComponentEmbed` throws for the tree later too. The numbers are array indexes, counted from 0.
 
-Discord doesn't show a preview at all for a bad `id`, so `fromPayload` checks those too. Each `id` has to be a whole number from 0 to 2147483647, and no two components can share one. `fromPayload` then leaves them out of the tree, because nothing in a link preview reads them.
+Discord doesn't show a preview at all for a bad `id`, so `fromPayload` checks those too. Each `id` has to be a whole number from 0 to 2147483647, and no two components can share one. `fromPayload` then doesn't copy them into the tree, because nothing in a link preview reads them.
 
 If a component has a key it doesn't take, like a mistyped `descripton`, `fromPayload` throws with the keys it does take and suggests the closest one. Discord ignores such a key and shows the card without that field. On a button, Discord shows the Open Graph card instead. It does the same for any key in `media` other than `url`, including the `proxy_url` and `width` that Discord's API adds.
 
@@ -477,7 +477,7 @@ cloudflared tunnel --url http://localhost:4321
 
 It prints a `trycloudflare.com` URL to paste into Discord. A Vite dev server rejects a host it doesn't recognize, so either serve a build or add the tunnel's host to `server.allowedHosts`.
 
-Discord caches a preview for about 30 minutes, so an edit won't show on a link you've already shared. Add a new query string, like `?v=2`, to see it right away. Changing only the `#fragment` doesn't help, since Discord leaves the fragment out of its cache key. Discord's [Embed Debugger](https://discord.com/developers/embeds) shows which tags it read from any URL.
+Discord caches a preview for about 30 minutes, so an edit won't show on a link you've already shared. Add a new query string, like `?v=2`, to see it right away. Changing only the `#fragment` doesn't help, since Discord doesn't include the fragment in its cache key. Discord's [Embed Debugger](https://discord.com/developers/embeds) shows which tags it read from any URL.
 
 To check a card without Discord, [`toComponentEmbed`](https://seedcord.org/docs/packages/discord-component-embed/latest/functions/to-component-embed) returns the payload as an object. A test can build every page's card with it before you deploy.
 

@@ -21,7 +21,7 @@ describe('matchChoices', () => {
         expect(matchChoices(choices, 'SERVER').map(({ label }) => label)).toContain('Test Server');
     });
 
-    it('leaves out a choice whose label and id both lack the filter', () => {
+    it("doesn't include a choice whose label and id both lack the filter", () => {
         expect(matchChoices(choices, 'zzz')).toEqual([]);
     });
 });

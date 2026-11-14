@@ -182,7 +182,7 @@ export class Span extends InteractionMiddleware {
 }
 ```
 
-The base class declares `after()`, so your version overrides it. Mark it `override`, since leaving that off is a compile error under TypeScript's `noImplicitOverride`.
+The base class declares `after()`, so your version overrides it. Mark it `override`, since a version without it is a compile error under TypeScript's `noImplicitOverride`.
 
 `after()` receives a [`DispatchResult`](ref:core/DispatchResult) that reports how the dispatch ended. The `Span` sample ends its tracing span with `result.outcome`.
 

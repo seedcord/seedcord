@@ -336,7 +336,7 @@ describe('readFiles in a built bot', () => {
         expect(error).toMatchObject({ code: SeedcordErrorCode.CoreDirectorySkipped });
     });
 
-    it('throws CoreDirectoryNotListed with the folder for a folder files leaves out', async () => {
+    it("throws CoreDirectoryNotListed with the folder for a folder files doesn't list", async () => {
         using _built = register({ folders: ['/locales', '/tags'], listed: ['/locales'] });
 
         const error = await rejection(readFiles(at('tags')));

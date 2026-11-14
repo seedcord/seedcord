@@ -118,7 +118,7 @@ import { env } from 'cloudflare:workers';
 const environment = env.ENV;
 ```
 
-On your machine, a declared secret takes its value from a `.dev.vars` file, or from your `.env` files when there isn't one. [On Cloudflare Workers](/build/env#on-cloudflare-workers) has that order. The scaffold's `.gitignore` already leaves out `.env*` and `.dev.vars*`.
+On your machine, a declared secret takes its value from a `.dev.vars` file, or from your `.env` files when there isn't one. [On Cloudflare Workers](/build/env#on-cloudflare-workers) has that order. The scaffold's `.gitignore` already ignores `.env*` and `.dev.vars*`.
 
 ### A KV or D1 binding is undefined in codegen
 
@@ -188,7 +188,7 @@ After that the secrets are configured on the worker, so `pnpm run deploy` works 
 
 `cf auth login` needs a browser. In CI, `cf` reads `CLOUDFLARE_API_TOKEN` and `CLOUDFLARE_ACCOUNT_ID` from the environment instead, which [Cloudflare's CI guide](https://developers.cloudflare.com/cf/ci/) covers. Store both as secrets in your CI, next to `DISCORD_BOT_TOKEN`. The bot never reads the two Cloudflare ones, so they don't belong in its `.env` or in `cloudflare.config.ts`.
 
-This GitHub Actions workflow deploys on every push to `main`. It runs the same steps as the list above, and it passes the token with `--secrets-file` on every deploy. That covers the first deploy, and it puts a new token on the worker after you rotate it. Cloudflare [keeps every secret that the file leaves out](https://developers.cloudflare.com/workers/configuration/secrets/) from the previous version.
+This GitHub Actions workflow deploys on every push to `main`. It runs the same steps as the list above, and it passes the token with `--secrets-file` on every deploy. That covers the first deploy, and it puts a new token on the worker after you rotate it. Cloudflare [reuses every secret from the previous version](https://developers.cloudflare.com/workers/configuration/secrets/) that the file doesn't include.
 
 ```yaml title=".github/workflows/deploy.yml"
 name: Deploy
@@ -236,7 +236,7 @@ The commands step deploys with `--yes`, which skips the preview, and Discord rep
 
 | what happened | the error |
 | --- | --- |
-| the tsconfig leaves out `"customConditions": ["workerd"]` | `CliEdgeWithoutWorkerdCondition` |
+| the tsconfig doesn't set `"customConditions": ["workerd"]` | `CliEdgeWithoutWorkerdCondition` |
 | the tsconfig sets `workerd` but `cloudflare.config.ts` doesn't exist | `CliWorkerdConditionWithoutCloudflareConfig` |
 | `root` holds `seedcord.config.ts` | `CliEdgeRootHoldsConfig` |
 | `@cloudflare/vite-plugin` or `cf` isn't installed | `CliDependencyMissing` |

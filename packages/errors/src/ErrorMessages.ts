@@ -329,7 +329,7 @@ const messages = {
     [SeedcordErrorCode.CliCommandsNotDeleted]: () =>
         'Some commands could not be deleted. The warnings above give the reason for each one.',
     [SeedcordErrorCode.CliEdgeOnBun]: () =>
-        `seedcord loads ${paint.path('cloudflare.config.ts')} through Cloudflare's config loader, which throws on Bun. Run the CLI on Node by leaving out ${paint.bold('--bun')}, as in ${paint.bold('bun run dev')}.`,
+        `seedcord loads ${paint.path('cloudflare.config.ts')} through Cloudflare's config loader, which throws on Bun. Run the CLI on Node without ${paint.bold('--bun')}, as in ${paint.bold('bun run dev')}.`,
     [SeedcordErrorCode.CliEdgeNoWorker]: (cloudflareConfig: string) =>
         `${paint.path(cloudflareConfig)} doesn't set ${paint.bold('worker')}. Set ${paint.bold('worker')} to your worker's ${paint.bold('name')} and ${paint.bold('compatibilityDate')}.`,
     [SeedcordErrorCode.CliNotProjectInstall]: (cliDir: string, projectInstall: string) =>

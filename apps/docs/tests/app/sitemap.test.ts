@@ -22,7 +22,7 @@ const GATEWAY: PackageCatalogEntry = {
     ]
 };
 
-// AnyHandlerCtor is a forgotten type. the sidebar leaves it out and signatures link to it
+// AnyHandlerCtor is a forgotten type. the sidebar doesn't list it and signatures link to it
 const PAGES: NavigationEntityItem[] = [
     { id: 'gated', label: 'Gated', href: '/packages/gateway/0.7.1/functions/gated' },
     { id: 'any-handler-ctor', label: 'AnyHandlerCtor', href: '/packages/gateway/0.7.1/types/any-handler-ctor' },

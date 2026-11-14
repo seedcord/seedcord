@@ -38,7 +38,7 @@ describe('PageNav', () => {
         expect(screen.getByText('Next')).toBeInTheDocument();
     });
 
-    it('leaves out the direction where a page lacks a neighbour', () => {
+    it("doesn't show the direction where a page lacks a neighbour", () => {
         renderNav({ next: NEXT });
 
         expect(screen.queryByText(/Previous/)).not.toBeInTheDocument();

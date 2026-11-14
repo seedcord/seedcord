@@ -14,7 +14,7 @@ import type { APIApplicationCommand, RESTPostAPIApplicationCommandsJSONBody } fr
 
 export type CommandBody = RESTPostAPIApplicationCommandsJSONBody;
 
-// a scope left out keeps what discord has. an empty list clears it
+// a scope that isn't in the map keeps what discord has. an empty list clears it
 export type CommandScopes = ReadonlyMap<ScopeId, readonly CommandBody[]>;
 
 interface PutCommandsOptions {

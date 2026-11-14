@@ -78,7 +78,7 @@ interface Scope {
     // block params from `as |item index|`
     readonly params: ReadonlyMap<string, Slot>;
     // a partial's hash values. handlebars sets them on the
-    // partial's context and leaves out the caller's block params
+    // partial's context, which doesn't include the caller's block params
     readonly fields?: ReadonlyMap<string, Slot>;
 }
 

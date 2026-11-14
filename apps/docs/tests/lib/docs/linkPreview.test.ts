@@ -39,7 +39,7 @@ const categories = (counts: [EntityTone, number][]): NavigationCategory[] =>
     counts.map(([tone, count]) => ({ tone, items: list(count) })) as unknown as NavigationCategory[];
 
 describe('symbolPreview', () => {
-    it('counts the members of a class and leaves out the empty groups', () => {
+    it("counts the members of a class and doesn't list the empty groups", () => {
         const card = symbolPreview(
             resolved({ kind: 'class', constructors: list(1), properties: list(3), methods: list(0) }),
             undefined
@@ -90,7 +90,7 @@ describe('symbolPreview', () => {
         expect(card.latestVersion?.url).toBe('https://seedcord.org/docs/packages/core/latest');
     });
 
-    it('leaves the latest link off the latest version', () => {
+    it("doesn't add the latest link to the latest version", () => {
         expect(symbolPreview(resolved({ kind: 'type' }), undefined).latestVersion).toBeUndefined();
     });
 
@@ -145,7 +145,7 @@ describe('symbolPreview', () => {
         );
     });
 
-    it('leaves out the source link for a symbol with no source', () => {
+    it("doesn't add a source link for a symbol with no source", () => {
         const labels = symbolPreview(resolved({ kind: 'type' }), undefined).links.map(({ label }) => label);
 
         expect(labels).toEqual(['Markdown']);

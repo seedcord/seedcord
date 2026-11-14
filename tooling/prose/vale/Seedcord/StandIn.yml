@@ -30,6 +30,9 @@ tokens:
   - 'drops?(?!-)'
   - 'dropped'
   - 'dropping'
+  # an imperative "leave it out" is the reader acting, and "work out" is a different verb
+  - '(?:leaves|leaving)\s+(?:(?!(?:work|figure)\b)\S+\s+){0,3}?(?:out|off)'
+  - 'left\s+out'
   # the plural noun is legal, and a determiner after it marks the verb
   - 'names\s+(?:the|a|an|that|this|these|those|your|its|their|our|every|each|both|it|them|which|what)'
   # left out on purpose: "only names" and "names you" are usually the noun

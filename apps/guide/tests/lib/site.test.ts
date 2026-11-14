@@ -105,7 +105,7 @@ describe('the sitemap', () => {
         expect(sitemapEntries([page('/tooling', 'tooling/index.mdx')])[0]?.lastModified).toBe(edited);
     });
 
-    it('leaves the date off a page git knows nothing about', () => {
+    it("doesn't set the date for a page git knows nothing about", () => {
         const undated = { url: '/tooling', path: 'tooling/index.mdx', data: {} };
 
         expect(sitemapEntries([undated])[0]).not.toHaveProperty('lastModified');

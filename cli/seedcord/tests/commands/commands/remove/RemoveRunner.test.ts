@@ -137,7 +137,7 @@ describe('RemoveRunner.run', () => {
         expect(lines.at(-1)).toBe('Nothing deleted.');
     });
 
-    it('clears global and each guild with purge, and leaves out the untouched line', async () => {
+    it("clears global and each guild with purge, and doesn't print the untouched line", async () => {
         const { puts, lines, confirm } = await run({ mode: new PurgeMode(true) });
 
         expect(confirm).toHaveBeenCalledWith(expect.stringContaining('Delete 3 commands?'));

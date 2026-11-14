@@ -190,7 +190,7 @@ export function inheritedFromRef(item: ApiItem, owningContainer: ApiItem | undef
     return referenceFromCanonical(parent.canonicalReference, parent.displayName);
 }
 
-// own row first. api extractor leaves an `@internal` override out and reports the member as inherited.
+// own row first. api extractor doesn't list an `@internal` override and reports the member as inherited.
 export function sourcesIn(table: PackageSourceIndex, ownRow: string, baseRow: string | undefined): DocSource[] {
     const entries = table[ownRow] ?? (baseRow === undefined ? undefined : table[baseRow]);
     return (entries ?? []).map((entry) => ({

@@ -32,7 +32,7 @@ describe('loadCodeScopes', () => {
         expect(names(scopes?.get('111'))).toEqual(['config']);
     });
 
-    it('sends a command with no scope to the configured guilds and leaves global out', async () => {
+    it("sends a command with no scope to the configured guilds and doesn't send it to global", async () => {
         const { scopes } = await scopesOf(await fakeProject({ commands: [Help], guilds: ['111', '222'] }));
 
         expect([...(scopes?.keys() ?? [])]).toEqual(['111', '222']);

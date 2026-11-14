@@ -5,7 +5,7 @@ import { DEFAULT_OG_IMAGE } from '#lib/site';
 import { POST } from '#tests/fixtures/post';
 
 describe('postMetadata', () => {
-    it('sets noindex and leaves out the markdown copy link on an unlisted post', () => {
+    it("sets noindex and doesn't include the markdown copy link on an unlisted post", () => {
         const metadata = postMetadata({ ...POST, unlisted: true });
 
         expect(metadata.robots).toEqual({ index: false, follow: false });

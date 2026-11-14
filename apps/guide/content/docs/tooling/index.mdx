@@ -17,7 +17,7 @@ export default defineConfig({
 });
 ```
 
-Only `instance` is required. `build.start` is optional. Without it, the build's `index.mjs` default-exports the bot for your own node server to start. An edge bot, which [runs on Cloudflare Workers](/build/workers), leaves it out too. [Your first bot](/first-bot#where-your-folders-resolve) explains how `root`, `instance`, and `build.start` fit together.
+Only `instance` is required. `build.start` is optional. Without it, the build's `index.mjs` default-exports the bot for your own node server to start. An edge bot, which [runs on Cloudflare Workers](/build/workers), doesn't set it either. [Your first bot](/first-bot#where-your-folders-resolve) explains how `root`, `instance`, and `build.start` fit together.
 
 Every other key is optional: `root`, `files`, `vitePlugins`, `tunnel`, `hmr`, `idleAnimation`, `make`, the rest of `build`, and `port` on an edge bot. [The config reference](/build/config) lists each one with its default. `vitePlugins` takes a function that returns [Vite plugins](/build/vite-plugins), like `() => [yaml()]`.
 

@@ -224,7 +224,7 @@ describe('mentionable select', () => {
         });
     });
 
-    it('returns null for a bucket the payload left out', () => {
+    it("returns null for a bucket the payload doesn't include", () => {
         const rolesOnly = new ModalFields({
             custom_id: 'form',
             resolved: { roles: { r1: mods } },

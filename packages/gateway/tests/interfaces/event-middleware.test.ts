@@ -113,7 +113,7 @@ class GoodMulti extends EventMiddleware<Events.MessageCreate | Events.MessageUpd
 }
 void GoodMulti;
 
-// the generic lists an event that { events } leaves out
+// the generic lists an event that { events } doesn't include
 // @ts-expect-error events lists messageCreate, the generic is guildMemberAdd
 @RegisterEventMiddleware({ events: [Events.MessageCreate] })
 class BadMismatch extends EventMiddleware<Events.GuildMemberAdd> {

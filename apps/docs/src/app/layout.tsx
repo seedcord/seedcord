@@ -25,7 +25,7 @@ const display = Space_Grotesk({ variable: '--font-display', subsets: ['latin'], 
 const ROOT_CARD = CARD.publicPath('/');
 const ROOT_CARD_ALT = ogPageCardAlt({ pill: 'docs', name: 'Reference', meta: [] });
 
-// next 16.3.8 leaves basePath off icon urls in metadata and off a file-based icon under turbopack
+// next 16.3.8 doesn't add basePath to icon urls in metadata or to a file-based icon under turbopack
 const ICON = {
     url: `${PRODUCTION_SITES.docs.path}/icon`,
     type: 'image/png',

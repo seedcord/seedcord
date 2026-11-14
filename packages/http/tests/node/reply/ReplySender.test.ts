@@ -621,7 +621,7 @@ describe('ReplySender.send', () => {
         expect(patchCall(rest, 1).route).toBe(ORIGINAL_ROUTE);
     });
 
-    it('leaves send opts out when the deferred-reply path edits', async () => {
+    it("doesn't pass send opts when the deferred-reply path edits", async () => {
         const rest = restMock();
         const sender = senderFor(rest);
         await sender.defer();

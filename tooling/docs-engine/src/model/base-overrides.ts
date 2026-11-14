@@ -12,7 +12,7 @@ function memberKey(member: ApiItem): string {
 
 const isAbstract = (member: ApiItem): boolean => ApiAbstractMixin.isBaseClassOf(member) && member.isAbstract;
 
-// tsc strips `override` from the .d.ts. seedcord leaves it off members that implement an abstract one
+// tsc strips `override` from the .d.ts. seedcord doesn't write it on members that implement an abstract one
 export function overridableBaseKeys(container: ApiItem | undefined): ReadonlySet<string> {
     if (!(container instanceof ApiClass) || !container.extendsType) return new Set();
     const baseRef = container.extendsType.excerpt.spannedTokens.find(

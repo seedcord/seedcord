@@ -96,7 +96,7 @@ describe('EdgeDevRuntime hot reload', () => {
         ['dist', 'dist', 'written.js'],
         ['.seedcord', '.seedcord', 'written.js'],
         ['.cloudflare', '.cloudflare', 'written.js']
-    ])('leaves %s out of hot reload', async (_shown, folder, file) => {
+    ])("doesn't hot reload %s", async (_shown, folder, file) => {
         const handler = `src/handlers/Touched${folder.replaceAll(/\W/g, '')}.ts`;
 
         await mkdir(join(projectDir, folder), { recursive: true });

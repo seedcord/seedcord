@@ -103,15 +103,15 @@ describe('DocsEngine mock package integration', () => {
             expect(child('create')?.flags.isOverwriting).toBe(false);
         });
 
-        it('leaves override off a method that implements an abstract one', () => {
+        it("doesn't write override on a method that implements an abstract one", () => {
             expect(child('hook')?.flags.isOverwriting).toBe(false);
         });
 
-        it('leaves override off an overriding field', () => {
+        it("doesn't write override on an overriding field", () => {
             expect(child('label')?.headerText).not.toMatch(/\boverride\b/);
         });
 
-        it('leaves override off a declare field', () => {
+        it("doesn't write override on a declare field", () => {
             expect(child('tag')?.headerText).not.toMatch(/\boverride\b/);
         });
 
@@ -132,7 +132,7 @@ describe('DocsEngine mock package integration', () => {
             expect(member('LIMIT')?.headerText).toMatch(/^public static readonly LIMIT\b/);
         });
 
-        it('leaves async off an abstract method', () => {
+        it("doesn't write async on an abstract method", () => {
             expect(member('load')?.flags.isAsync).toBe(false);
         });
 

@@ -75,7 +75,7 @@ The scaffold's start script runs the build with node's `--enable-source-maps` fl
 node --enable-source-maps dist/index.mjs
 ```
 
-The printed `run` line leaves the flag out, so add it yourself. Without it, a stack trace points at lines in `dist`. With it, node reads the source maps the build wrote and points at your `.ts` lines.
+The printed `run` line doesn't include the flag, so add it yourself. Without it, a stack trace points at lines in `dist`. With it, node reads the source maps the build wrote and points at your `.ts` lines.
 
 To run it on a host, copy the whole `dist` folder there, along with `package.json` and your production dependencies, since `dist` imports packages like `@seedcord/gateway` from `node_modules`.
 
@@ -131,7 +131,7 @@ export default new Seedcord({
 });
 ```
 
-This bot answers `/healthz` on port 8080. All three keys are optional. `port` defaults to 6967, `path` to `/health`, and `host` to every network interface. `healthCheck: true` and leaving the key out both give you those defaults. `healthCheck: false` turns the server off.
+This bot answers `/healthz` on port 8080. All three keys are optional. `port` defaults to 6967, `path` to `/health`, and `host` to every network interface. `healthCheck: true` and a missing `healthCheck` key both give you those defaults. `healthCheck: false` turns the server off.
 
 Change `port` or `path` if your host expects its health check somewhere else. Set `host` if the server should only listen inside a container network. Turn it off if nothing calls it or port 6967 is already taken on the machine.
 

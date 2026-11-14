@@ -157,7 +157,7 @@ describe('CommandPaletteDialog', () => {
         expect(screen.queryByRole('listbox')).toBeNull();
     });
 
-    it('leaves out the pre-release toggle while no package has a pre-release', () => {
+    it("doesn't show the pre-release toggle while no package has a pre-release", () => {
         renderDialog(makeController());
         expect(screen.queryByRole('switch', { name: 'Pre-release' })).toBeNull();
     });

@@ -72,7 +72,7 @@ describe('resolveHeaderSignature', () => {
         expect((await resolveHeaderSignature(node, context)).text).toBe('tag?');
     });
 
-    it('leaves ? off a required property', async () => {
+    it("doesn't add ? to a required property", async () => {
         const node = makeNode({ header: header('tag', []), flags: makeFlags() });
         expect((await resolveHeaderSignature(node, context)).text).toBe('tag');
     });

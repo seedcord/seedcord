@@ -42,7 +42,7 @@ function readmeMarked(folderUrl: string | undefined): Marked {
             await highlightCodeToken(token);
         },
         renderer: {
-            // marked leaves the id off a heading
+            // marked doesn't put an id on a heading
             heading({ tokens, depth }: Tokens.Heading): string {
                 const text = this.parser.parseInline(tokens);
                 const id = slugger.slug(this.parser.parseInline(tokens, visibleText));

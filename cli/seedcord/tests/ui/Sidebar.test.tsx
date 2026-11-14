@@ -202,7 +202,7 @@ describe('Sidebar', () => {
         slim.unmount();
     });
 
-    it('leaves both rows out on a gateway run', () => {
+    it("doesn't show both rows on a gateway run", () => {
         const frame = frameFor(RUNNING);
 
         expect(frame).not.toContain('port');

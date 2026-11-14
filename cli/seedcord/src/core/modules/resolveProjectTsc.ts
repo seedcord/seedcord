@@ -7,7 +7,7 @@ export function resolveProjectTsc(projectDir: string): string | null {
     const manifest = resolve(projectDir, 'package.json');
     const projectRequire = createRequire(existsSync(manifest) ? manifest : import.meta.url);
 
-    // typescript 7's exports map leaves out bin/tsc
+    // typescript 7's exports map doesn't export bin/tsc
     let packageJson: string;
     try {
         packageJson = projectRequire.resolve('typescript/package.json');

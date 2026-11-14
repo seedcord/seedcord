@@ -32,7 +32,7 @@ describe('agentLinkHeader', () => {
         }
     });
 
-    it('leaves out the relation a site would point at itself', () => {
+    it("doesn't include the relation a site would point at itself", () => {
         expect(relationsOf(agentLinkHeader('home')).has('index')).toBe(false);
         expect(relationsOf(agentLinkHeader('docs')).has('service-doc')).toBe(false);
     });
@@ -70,7 +70,7 @@ describe('siteLinks', () => {
     });
 
     // pageMetadata already renders the twin
-    it('leaves the page twin out', () => {
+    it("doesn't include the page twin", () => {
         expect(siteLinks('guide').some((entry) => entry.rel === 'alternate')).toBe(false);
     });
 });
@@ -90,7 +90,7 @@ describe('agentRules', () => {
         }
     });
 
-    it('leaves out the site a reader is already on', () => {
+    it("doesn't include the site a reader is already on", () => {
         expect(agentRules('docs').join('\n')).not.toContain('The API reference is at');
         expect(agentRules('guide').join('\n')).not.toContain('The guide is at');
         expect(agentRules('home').join('\n')).not.toContain('The project site is at');

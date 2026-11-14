@@ -164,7 +164,7 @@ describe('execRunner', () => {
         expect(await failureOf('')).toContain('exited with 1');
     });
 
-    it('leaves stack frames out of the failure', async () => {
+    it("doesn't include stack frames in the failure", async () => {
         const captured = await capturedBy(...STACK);
 
         expect(captured).toContain('could not load a command');

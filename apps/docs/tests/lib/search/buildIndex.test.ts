@@ -147,13 +147,13 @@ describe('searchIndexFor', () => {
         expect(member?.action).toMatchObject({ label: 'attach', path: 'seedcord@1.0.0 · Seedcord (workerd).attach' });
     });
 
-    it('leaves out entries with an empty slug', async () => {
+    it('skips entries with an empty slug', async () => {
         indexes(makeEntry({ slug: '' }), makeEntry({ slug: 'keeper' }));
         const results = (await searchIndexFor('seedcord', '1.0.0')) ?? [];
         expect(results.map((result) => result.action.id)).toEqual(['seedcord:keeper:128']);
     });
 
-    it('keeps the fields the scorer reads and leaves out the summary', async () => {
+    it("keeps the fields the scorer reads and doesn't keep the summary", async () => {
         indexes(makeEntry({ tokens: ['thing'], aliases: ['Thing()'], summary: 'Text.' }));
         const [result] = (await searchIndexFor('seedcord', '1.0.0')) ?? [];
         expect(result).toMatchObject({ slug: 'thing', tokens: ['thing'], aliases: ['Thing()'], kind: Kind.Class });

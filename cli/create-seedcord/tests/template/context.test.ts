@@ -88,7 +88,7 @@ describe('the message capabilities', () => {
         expect(buildContext({ ...GATEWAY, capabilities: [id] }, EXTRAS).hasMessages).toBe(true);
     });
 
-    it.each(['reactions', 'voice', 'polls', 'automod'])('leaves %s out', (id) => {
+    it.each(['reactions', 'voice', 'polls', 'automod'])("doesn't set hasMessages for %s", (id) => {
         expect(buildContext({ ...GATEWAY, capabilities: [id] }, EXTRAS).hasMessages).toBe(false);
     });
 });

@@ -67,7 +67,7 @@ If the notified member can't see the channel, the default refusal card starts wi
 
 The card shows `subject` exactly as you pass it. To show a mention there, pass `<@id>` for a member or `<@&id>` for a role.
 
-`getMember` can return `null` even for a required user option. It reads the member from the interaction Discord sends. Discord leaves the member out in two cases.
+`getMember` can return `null` even for a required user option. It reads the member from the interaction Discord sends. Discord doesn't send the member in two cases.
 
 - The command ran in a direct message.
 - The chosen user isn't a member of the server.

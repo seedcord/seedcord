@@ -199,7 +199,7 @@ describe('reproducingCommand', () => {
         expect(words.at(-1)).toBe('--git');
     });
 
-    it('leaves capabilities out on http', () => {
+    it("doesn't include capabilities on http", () => {
         expect(reproducingCommand(HTTP, 'pnpm')).not.toContain('--capabilities');
     });
 
@@ -207,7 +207,7 @@ describe('reproducingCommand', () => {
         expect(reproducingCommand(GATEWAY, 'npm')).toContain(`npm create seedcord@${version} my-bot --`);
     });
 
-    it('leaves the double dash out for every other manager', () => {
+    it("doesn't add the double dash for every other manager", () => {
         expect(reproducingCommand(GATEWAY, 'pnpm')).not.toContain(' -- ');
     });
 });

@@ -104,7 +104,7 @@ describe('the guide worker', () => {
         expect(response.headers.get('Link')).toContain('</guide/llms.txt>; rel="describedby"');
     });
 
-    it('leaves the Link header off an asset that is not a page', async () => {
+    it("doesn't set the Link header on an asset that is not a page", async () => {
         const png = new Response('', { headers: { 'content-type': 'image/png' } });
 
         const response = await get('/some.png', serving(png));
@@ -222,7 +222,7 @@ describe('the guide worker', () => {
     });
 
     // Vary splits a cache entry per accept header
-    it('leaves Vary off an asset that never negotiates', async () => {
+    it("doesn't set Vary on an asset that never negotiates", async () => {
         const script = new Response('', { headers: { 'content-type': 'application/javascript' } });
 
         const response = await get('/_next/static/chunk.js', serving(script));

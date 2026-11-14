@@ -190,7 +190,7 @@ export class FolderExports<TUnit> {
         return (await import(/* @vite-ignore */ url)) as Record<string, unknown>;
     }
 
-    // returns what it called register for, leaving out units another file already holds
+    // returns what it called register for, which excludes units another file already holds
     #register(file: string, units: TUnit[]): TUnit[] {
         const registered: TUnit[] = [];
         try {

@@ -5,7 +5,7 @@ type PageField = (typeof PAGE_FIELDS)[number];
 
 export type PageFields = Partial<Record<PageField, string>>;
 
-// a manifest or project file from before a field existed leaves it out
+// a manifest or project file from before a field existed doesn't have it
 export function pageFields(source: Partial<Record<PageField, unknown>>): PageFields {
     const fields: PageFields = {};
     for (const field of PAGE_FIELDS) {

@@ -39,7 +39,7 @@ describe('ScrollableLogView', () => {
         expect(frame).toContain('connected');
     });
 
-    it('leaves the clock off a narrow pane', () => {
+    it("doesn't show the clock on a narrow pane", () => {
         const frame = frameOf([entry({ text: 'connected' })], LogLayout.fit(50, 12, 'auto'));
 
         expect(frame).not.toContain(formatClock(0, 'minutes'));

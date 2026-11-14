@@ -41,7 +41,7 @@ describe('resolvePackages', () => {
         });
     });
 
-    it('leaves the old version off a first publish', async () => {
+    it("doesn't set the old version on a first publish", async () => {
         const workspace = await workspaceWith({ '@seedcord/kit': '# @seedcord/kit\n\n## 0.1.0\n' });
 
         const [kit] = await resolvePackages(workspace, [{ name: '@seedcord/kit', version: '0.1.0' }]);

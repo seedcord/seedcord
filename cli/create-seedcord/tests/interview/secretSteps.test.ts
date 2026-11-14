@@ -33,7 +33,7 @@ describe('tokenStep', () => {
         expect(() => tokenStep.flag.parse('   ')).toThrow();
     });
 
-    it('points to the flag and the Bot page, which the framework error leaves out', () => {
+    it("points to the flag and the Bot page, which the framework error doesn't mention", () => {
         expect(() => tokenStep.flag.parse('aaa.bbb.ccc')).toThrow(/--token: .*Bot page/);
     });
 });

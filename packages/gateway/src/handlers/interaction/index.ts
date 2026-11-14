@@ -1,5 +1,5 @@
 export { InteractionMiddleware } from './InteractionMiddleware';
-// api-extractor leaves out the methods of a base that no entry point exports
+// api-extractor doesn't include the methods of a base that no entry point exports
 export { InteractionHandler } from './InteractionHandler';
 export { SlashHandler } from './SlashHandler';
 export { UserContextMenuHandler, MessageContextMenuHandler } from './ContextMenuHandler';

@@ -24,7 +24,7 @@ describe('CleanMode', () => {
         );
     });
 
-    it('picks the guild commands that share a global command name, and leaves out guilds with none', () => {
+    it("picks the guild commands that share a global command name, and doesn't pick guilds with none", () => {
         const selected = clean.select(
             scan({
                 guilds: [

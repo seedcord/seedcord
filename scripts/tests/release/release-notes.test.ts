@@ -70,7 +70,7 @@ describe('ReleaseNotes', () => {
         ).toBe(true);
     });
 
-    it('leaves the links off when no release came before', () => {
+    it("doesn't add the links when no release came before", () => {
         expect(notes()).not.toContain('See what changed');
     });
 

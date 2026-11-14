@@ -33,7 +33,7 @@ describe('routeConsole', () => {
         ]);
     });
 
-    it('leaves a method off the list alone', () => {
+    it("doesn't route a method that isn't on the list", () => {
         const route = vi.fn();
         const info = vi.spyOn(terminal, 'info').mockImplementation(() => undefined);
         using _route = routeConsole(['log'], route);

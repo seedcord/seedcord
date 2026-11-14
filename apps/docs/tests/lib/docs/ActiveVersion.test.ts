@@ -44,7 +44,7 @@ describe('ActiveVersion', () => {
         expect(newest?.readme).toBe('# core');
     });
 
-    it('gives a page to a symbol the sidebar leaves out', async () => {
+    it("gives a page to a symbol the sidebar doesn't list", async () => {
         const active = await ActiveVersion.open(fixtureEngine('core', '@seedcord/core', CORE), 'core', '0.9.2');
 
         expect(active?.pages.map(({ label }) => label)).toEqual(['Bus', 'Hidden']);
