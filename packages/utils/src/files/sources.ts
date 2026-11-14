@@ -80,9 +80,9 @@ abstract class FileSource {
         return this.modulesIn(folder, this.access.layoutAt(folder));
     }
 
-    public files(dir: string): Promise<Loaders<BytesLoader>> {
+    public async files(dir: string): Promise<{ folder: string; files: Loaders<BytesLoader> }> {
         const folder = this.access.resolveListed(dir);
-        return this.filesIn(folder, this.access.layoutAt(folder));
+        return { folder, files: await this.filesIn(folder, this.access.layoutAt(folder)) };
     }
 
     protected abstract modulesIn(folder: string, layout: BotLayout): Promise<Loaders<ModuleLoader>>;

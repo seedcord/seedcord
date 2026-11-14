@@ -151,6 +151,14 @@ describe('a folder on disk under seedcord dev', () => {
         expect(seen).toEqual([path.join(FIXTURES, 'text', 'nested', 'faq.md')]);
     });
 
+    it('gives each file its path inside the folder it read, with forward slashes', async () => {
+        const seen: string[] = [];
+
+        for await (const { pathInDir } of readFiles('./text')) seen.push(pathInDir);
+
+        expect(seen).toEqual(['en.json', 'nested/faq.md']);
+    });
+
     it("throws CoreDirectoryNotListed for a folder files doesn't list", async () => {
         const error = await rejection(readFiles('./walk'));
 

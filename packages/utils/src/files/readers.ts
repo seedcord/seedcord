@@ -4,6 +4,7 @@ import { displayPath, SeedcordError } from '@seedcord/errors/internal';
 import { importFailed } from '#src/files/importFailed';
 import { asError } from '#src/misc/asError';
 
+import { posixRelative } from './paths';
 import { fileSource } from './sources';
 
 import type { Buffer } from 'node:buffer';
@@ -21,6 +22,8 @@ interface ImportedFile extends FoundFile {
 }
 
 interface ReadFile extends FoundFile {
+    /** The file's path inside the folder `readFiles` read, with forward slashes, like `commands/de.ftl`. */
+    pathInDir: string;
     bytes: Buffer;
 }
 
@@ -74,7 +77,8 @@ export async function* importFiles(dir: string): AsyncGenerator<ImportedFile> {
  * ```
  */
 export async function* readFiles(dir: string): AsyncGenerator<ReadFile> {
-    for (const [fullPath, load] of await fileSource().files(dir)) {
+    const { folder, files } = await fileSource().files(dir);
+    for (const [fullPath, load] of files) {
         const relativePath = displayPath(fullPath);
         let bytes: Buffer;
         try {
@@ -84,6 +88,6 @@ export async function* readFiles(dir: string): AsyncGenerator<ReadFile> {
                 cause: err
             });
         }
-        yield { fullPath, relativePath, bytes };
+        yield { fullPath, relativePath, pathInDir: posixRelative(folder, fullPath), bytes };
     }
 }
