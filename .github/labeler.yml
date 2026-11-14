@@ -19,6 +19,9 @@
 '📦 plugin-tasks':
   - changed-files:
       - any-glob-to-any-file: 'plugins/tasks/**'
+'📦 plugin-i18n':
+  - changed-files:
+      - any-glob-to-any-file: 'plugins/i18n/**'
 '📦 custom-id':
   - changed-files:
       - any-glob-to-any-file: 'packages/custom-id/**'

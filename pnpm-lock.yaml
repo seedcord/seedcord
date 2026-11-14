@@ -1715,6 +1715,34 @@ importers:
         specifier: catalog:peer
         version: 14.27.0
 
+  plugins/i18n:
+    dependencies:
+      '@seedcord/errors':
+        specifier: workspace:^
+        version: link:../../packages/errors
+      typescript:
+        specifier: catalog:consumerTypes
+        version: 6.0.3
+    devDependencies:
+      '@seedcord/core':
+        specifier: workspace:^
+        version: link:../../packages/core
+      '@seedcord/eslint-config':
+        specifier: workspace:^
+        version: link:../../tooling/eslint-config
+      '@seedcord/prose':
+        specifier: workspace:^
+        version: link:../../tooling/prose
+      '@seedcord/tsconfig':
+        specifier: workspace:^
+        version: link:../../tooling/tsconfig
+      '@seedcord/tsdown-config':
+        specifier: workspace:^
+        version: link:../../tooling/tsdown-config
+      '@seedcord/vite-config':
+        specifier: workspace:^
+        version: link:../../tooling/vite-config
+
   plugins/kysely-postgres:
     dependencies:
       '@seedcord/errors':

@@ -43,11 +43,19 @@ Finish these after generating. None of them are automated.
     vp -C <dir>/<folder> run build
     cd <dir>/<folder>
     # latest first, a bare publish defaults to the latest tag, no provenance locally
-    pnpm publish --no-provenance
+    # --no-git-checks because the package isn't committed or on main yet
+    pnpm publish --no-provenance --no-git-checks
     # then point next at the same version
     npm dist-tag add <name>@0.0.1 next
-    # deprecate both tags in one go (since both are the same version)
-    npm deprecate <name>@0.0.1 "This is a bootstrap version, please use the next tag for development."
     ```
 
-10. Update OIDC trust for the `publish.yml` workflow for the new packages on the npm page. Only `@materwelonDhruv` can do this as well.
+    npm stages the first publish of a new package. It puts up a `0.0.0-stage` placeholder to hold the name, and `0.0.1` waits in Validating until npm's checks finish. Approve `0.0.1` with 2FA on the package page, then deprecate both versions. `npm deprecate` returns a 404 until you approve.
+
+    ```sh
+    npm deprecate <name>@0.0.1 "This is a bootstrap version, please use the next tag for development."
+    npm deprecate <name>@0.0.0-stage "Placeholder from npm's staged publishing. Use the next tag."
+    # latest and next should both show 0.0.1
+    npm view <name> dist-tags
+    ```
+
+10. Add `publish.yml` as the package's trusted publisher on npm. Only `@materwelonDhruv` can do this as well. Tick **Allow npm publish**, because `changeset publish` runs a plain `npm publish` and npm rejects it without that box. Leave **Allow npm dist-tag** off, since the workflow sets tags while it publishes.

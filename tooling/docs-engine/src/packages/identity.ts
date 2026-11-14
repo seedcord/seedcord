@@ -34,6 +34,10 @@ const PACKAGE_OVERRIDES: Record<string, PackageOverride> = {
         displayName: 'plugin-tasks',
         aliases: ['plugin-tasks', 'tasks', 'cron', 'scheduler']
     },
+    '@seedcord/plugin-i18n': {
+        displayName: 'plugin-i18n',
+        aliases: ['plugin-i18n', 'i18n', 'translations', 'fluent', 'localization']
+    },
     '@seedcord/types': {
         displayName: 'types',
         aliases: ['types']

@@ -22,6 +22,7 @@
                 "@seedcord/gateway#build",
                 "@seedcord/http#build",
                 "@seedcord/logger#build",
+                "@seedcord/plugin-i18n#build",
                 "@seedcord/plugin-kysely-postgres#build",
                 "@seedcord/plugin-mongoose#build",
                 "@seedcord/plugin-tasks#build",
