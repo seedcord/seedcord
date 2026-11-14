@@ -141,3 +141,6 @@ peerDependencyRules:
   allowAny:
     - vite
     - vitest
+
+patchedDependencies:
+  '@vvago/vale@3.25.1': patches/@vvago__vale@3.25.1.patch

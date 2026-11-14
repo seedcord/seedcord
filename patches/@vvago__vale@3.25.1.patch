@@ -1,0 +1,17 @@
+diff --git a/dist/index.cjs b/dist/index.cjs
+index da256acfcb094a72935013581b2c8592de68ff1b..c1a4db471ebf5a52273799c7c3ff8bceffc9707c 100644
+--- a/dist/index.cjs
++++ b/dist/index.cjs
+@@ -194,7 +194,11 @@ function downloadAndExtract() {
+ function _downloadAndExtract() {
+ 	_downloadAndExtract = _asyncToGenerator(function* () {
+ 		const bin = getRelease();
+-		const res = yield fetch(bin.url, {
++		// github's api answers 403 after 60 unauthenticated calls an hour from one ip, and CI runners share ips.
++		// the release download url is on github.com, outside the rest api, and serves the same archive as bin.url
++		const release = version.split("-").at(0);
++		const archive = `vale_${release}_${getPlatform()}.${isWindows ? "zip" : "tar.gz"}`;
++		const res = yield fetch(`https://github.com/vale-cli/vale/releases/download/v${release}/${archive}`, {
+ 			headers: { Accept: "application/octet-stream" },
+ 			signal: AbortSignal.timeout(6e4)
+ 		});
