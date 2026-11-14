@@ -1,3 +1,4 @@
+{{#if tools.isEslint}}
 import createConfig from '@seedcord/eslint-config';
 
 export default createConfig({
@@ -6,3 +7,4 @@ export default createConfig({
     registerSeedcordPlugin: true,
     generalIgnores: ['**/seedcord-gen.ts']
 });
+{{/if}}

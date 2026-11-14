@@ -65,6 +65,7 @@ export function reproducingCommand(answers: ScaffoldAnswers, agent: AgentName): 
         secretFlag(answers.token, 'token', 'YOUR_TOKEN'),
         `--testing-guilds=${answers.testingGuilds.join(',')}`,
         `--color ${shellWord(answers.botColor)}`,
+        `--tools ${answers.tools}`,
         switchFlag(answers.install, 'install'),
         switchFlag(answers.git, 'git')
     ];

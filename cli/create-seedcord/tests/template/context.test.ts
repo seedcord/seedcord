@@ -13,6 +13,7 @@ const GATEWAY: ScaffoldAnswers = {
     token: BOT_TOKEN,
     testingGuilds: [],
     botColor: 'Blurple',
+    tools: 'eslint',
     install: true,
     git: true
 };
@@ -24,6 +25,7 @@ const HTTP: ScaffoldAnswers = {
     token: BOT_TOKEN,
     testingGuilds: [],
     botColor: '#ff8800',
+    tools: 'eslint',
     install: true,
     git: true
 };
