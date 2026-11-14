@@ -1,11 +1,10 @@
 import { BaseReplySender } from '@seedcord/core';
-import { deferFlags, sendFlags } from '@seedcord/core/internal';
 import { InteractionResponseType, MessageFlags, Routes } from 'discord-api-types/v10';
 
 import type { REST, RawFile } from '@discordjs/rest';
 import type { Bus, DispatchContext } from '@seedcord/core';
 import type { SerializedReply } from '@seedcord/core/internal';
-import type { DeferOpts, ReplyResponse, SendOpts } from '@seedcord/types';
+import type { ReplyResponse } from '@seedcord/types';
 import type { APIMessage, APIModalInteractionResponseCallbackData } from 'discord-api-types/v10';
 import type { Except } from 'type-fest';
 
@@ -78,18 +77,18 @@ export class ReplySender extends BaseReplySender<SentMessage> {
         super({ bus, dispatch, interactionId: ref.id });
     }
 
-    protected async writeReply(response: ReplyResponse | string, opts?: SendOpts): Promise<SentMessage | undefined> {
+    protected async writeReply(response: ReplyResponse | string, flags: number): Promise<SentMessage | undefined> {
         const reply = this.serialize(response);
         const result = await this.callback(
             InteractionResponseType.ChannelMessageWithSource,
-            callbackData(reply, sendFlags(opts)),
+            callbackData(reply, flags),
             reply.files
         );
         return this.createdMessage(result);
     }
 
-    protected async writeDefer(opts?: DeferOpts): Promise<void> {
-        await this.callback(InteractionResponseType.DeferredChannelMessageWithSource, { flags: deferFlags(opts) });
+    protected async writeDefer(flags: number): Promise<void> {
+        await this.callback(InteractionResponseType.DeferredChannelMessageWithSource, { flags });
     }
 
     protected async writeDeferUpdate(): Promise<void> {
@@ -106,12 +105,12 @@ export class ReplySender extends BaseReplySender<SentMessage> {
         return this.createdMessage(result);
     }
 
-    protected async writeFollowUp(response: ReplyResponse | string, opts?: SendOpts): Promise<SentMessage> {
+    protected async writeFollowUp(response: ReplyResponse | string, flags: number): Promise<SentMessage> {
         const reply = this.serialize(response);
         // discord returns the created message for interaction-token followups either way. wait=true pins
         // that contract and matches the djs webhook client
         const result = await this.rest.post(Routes.webhook(this.ref.application_id, this.ref.token), {
-            body: callbackData(reply, sendFlags(opts)),
+            body: callbackData(reply, flags),
             query: new URLSearchParams({ wait: 'true' }),
             ...(reply.files && { files: this.rawFiles(reply.files) })
         });

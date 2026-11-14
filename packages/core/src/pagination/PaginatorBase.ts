@@ -49,10 +49,6 @@ export abstract class PaginatorBase<Item, Prefix extends string, Ctx> {
         this.config = config;
     }
 
-    protected get ephemeral(): boolean {
-        return this.config.ephemeral ?? true;
-    }
-
     /** Build one page as a {@link ReplyResponse}. Each transport wraps this in a `page()` taking its handler. */
     protected async buildPage(ctx: Ctx, n: number): Promise<ReplyResponse> {
         const view = await this.config.source.page(ctx, n);

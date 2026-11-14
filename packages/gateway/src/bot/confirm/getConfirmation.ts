@@ -212,7 +212,7 @@ export async function getConfirmation(
     prompt: ConfirmPrompt,
     options?: DefaultConfirmOptions
 ): Promise<boolean> {
-    const { ephemeral = true, timeoutMs = DEFAULT_TIMEOUT_MS } = options ?? {};
+    const { ephemeral, timeoutMs = DEFAULT_TIMEOUT_MS } = options ?? {};
 
     const response = typeof prompt === 'string' ? defaultPrompt(prompt, options) : await prompt(CONFIRM_IDS);
     const interaction = handler.getEvent();
