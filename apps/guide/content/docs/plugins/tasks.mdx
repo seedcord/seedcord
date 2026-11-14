@@ -32,7 +32,7 @@ export const seedcord = new Seedcord({
 export default seedcord;
 ```
 
-The plugin loads every task in `./tasks`. It starts them once the bot is ready, and stops them when the bot shuts down.
+The plugin loads every task in `./tasks`. It starts them once the bot is ready, and stops them when the bot shuts down. Under `seedcord dev`, they don't start on their own. [Tasks in development](#tasks-in-development) shows how to run them.
 
 [`Tasks`](ref:plugin-tasks/Tasks) works on a gateway bot and on an http bot that runs on a server. It needs a process that keeps running, so on an http bot for [Cloudflare Workers](/build/workers) the same `attach` call fails to compile.
 
@@ -43,6 +43,7 @@ The plugin loads every task in `./tasks`. It starts them once the bot is ready, 
 | [`path`](ref:plugin-tasks/TasksOptions.path) | yes | the folder of tasks. A relative path starts at `root` from your `seedcord.config.ts`, and the folder has to be inside `root` |
 | [`timezone`](ref:plugin-tasks/TasksOptions.timezone) | no | the timezone for every cron job that doesn't set its own. Defaults to the system's timezone |
 | [`timeout`](ref:plugin-tasks/TasksOptions.timeout) | no | how long running tasks get to finish during shutdown, in milliseconds. Defaults to 10000 |
+| [`runInDev`](ref:plugin-tasks/TasksOptions.runInDev) | no | lets cron jobs and scheduled jobs run on their own under `seedcord dev`. Defaults to `false` |
 
 {/* prettier-ignore-end */}
 
@@ -66,6 +67,8 @@ export class Heartbeat extends Task {
 ```
 
 The pattern `'*/5 * * * *'` runs `Heartbeat` every five minutes. The class name becomes the task's _key_, which appears in its logs. A class without `@RegisterTask` isn't a task, and the plugin skips it.
+
+Under `seedcord dev`, `Heartbeat` doesn't run every five minutes. [Tasks in development](#tasks-in-development) explains why, and how to run it.
 
 <Callout type="transport">
 
@@ -164,6 +167,27 @@ export class Poll extends Task {
 `Poll` runs every 90 seconds from 09:00 to 16:59 on Mondays and Thursdays. Outside those days and hours, it doesn't run at all.
 
 `every` sets the shortest gap, but the task still waits for a match. That's why the pattern has six fields. With five, it only matches second 0 of each minute. 90 seconds after a run is halfway through a minute, so the next match would come 2 minutes after the run.
+
+## Tasks in development
+
+Under `seedcord dev`, cron jobs start paused and scheduled jobs don't run, so a task only changes the data you're debugging when you run it. [`schedule()`](ref:plugin-tasks/Tasks.schedule) still stores a job, and [`jobs()`](ref:plugin-tasks/Tasks.jobs) still lists it. Once the bot is ready, the plugin logs how many cron jobs and scheduled jobs it holds.
+
+To run a task without data while you test it, call [`trigger()`](ref:plugin-tasks/Tasks.trigger). [`resume()`](ref:plugin-tasks/Tasks.resume) lets a paused cron job run on its pattern until the bot restarts.
+
+`trigger()` doesn't take a task with data. To run those, pass `runInDev: true` to the plugin, and every task runs on its own:
+
+```ts twoslash
+import { Seedcord } from '@seedcord/gateway';
+import { Tasks } from '@seedcord/plugin-tasks';
+declare const seedcord: Seedcord;
+// ---cut---
+seedcord.attach('tasks', Tasks, {
+    path: './tasks',
+    runInDev: true
+});
+```
+
+A bot you start some other way, like a built bot run with `node`, runs every task.
 
 ## What a task can read
 
