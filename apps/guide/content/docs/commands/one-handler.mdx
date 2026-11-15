@@ -64,7 +64,7 @@ class Moderation extends SlashHandler<'ban' | 'kick'> {
 }
 ```
 
-The type leaves out an option that only one route declares.
+The type doesn't include an option that only one route declares.
 
 ```ts twoslash
 // @errors: 2339
@@ -120,7 +120,7 @@ class Moderation extends SlashHandler<'ban' | 'kick'> {
 }
 ```
 
-Leaving one out is a compile error.
+A `match` that's missing one of them is a compile error.
 
 ```ts twoslash
 // @errors: 2345

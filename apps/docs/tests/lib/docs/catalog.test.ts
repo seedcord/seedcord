@@ -121,7 +121,7 @@ describe('loadDocsCatalog version badges', () => {
         expect(preHead).toMatchObject({ channel: 'prerelease', isLatest: false, badge: 'next' });
     });
 
-    it('leaves out a prerelease that a newer stable release passed', async () => {
+    it("doesn't list a prerelease that a newer stable release passed", async () => {
         const passed: PackageIndexEntry = {
             fullName: '@seedcord/core',
             stable: { latest: '0.9.2', latestByMinor: { '0.9': '0.9.2' }, latestByMajor: { '0': '0.9.2' } },

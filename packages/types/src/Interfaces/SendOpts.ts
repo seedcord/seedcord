@@ -5,7 +5,7 @@ export interface SendOpts {
      *
      * @defaultValue `true`
      */
-    readonly ephemeral?: boolean;
+    readonly ephemeral?: boolean | undefined;
     /**
      * Whether the message skips push and desktop notifications.
      *

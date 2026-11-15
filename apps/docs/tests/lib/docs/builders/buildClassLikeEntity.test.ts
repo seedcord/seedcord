@@ -44,7 +44,7 @@ describe('buildClassLikeEntity', () => {
         expect(labelsOf(model.methods)).toEqual(['method']);
     });
 
-    it('leaves an @internal child out of every bucket', async () => {
+    it("doesn't put an @internal child in any bucket", async () => {
         const model = await buildClassLikeEntity(
             base,
             nodeWith([

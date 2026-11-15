@@ -54,7 +54,7 @@ export class Award extends SlashHandler<'award'> {
 
 `THREE_A_DAY` is a sliding window, so each award counts for one day after it happens. Once the oldest of the three awards is a day old, a fourth award passes.
 
-The second argument is a [`RateLimitWindow`](ref:types/RateLimitWindow). `windowMs` is the window's length in milliseconds. `limit` is how many uses fit in one window. If you leave `limit` out, the window allows one use. This window leaves it out, so it allows one use per minute.
+The second argument is a [`RateLimitWindow`](ref:types/RateLimitWindow). `windowMs` is the window's length in milliseconds. `limit` is how many uses fit in one window. If you don't pass `limit`, the window allows one use. This window doesn't set it, so it allows one use per minute.
 
 ```ts twoslash
 import type { RateLimitWindow } from '@seedcord/gateway';

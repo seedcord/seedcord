@@ -21,7 +21,7 @@ describe('plainSummary', () => {
         expect(plainSummary('first line.\n\nsecond   line.')).toBe('first line. second line.');
     });
 
-    it('leaves a fenced block out of the prose', () => {
+    it("doesn't include a fenced block in the prose", () => {
         expect(plainSummary('Reads a wire.\n\n```ts\nconst a = 1;\n```\nThen throws.')).toBe(
             'Reads a wire. Then throws.'
         );

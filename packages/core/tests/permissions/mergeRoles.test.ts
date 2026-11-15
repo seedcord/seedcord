@@ -7,7 +7,7 @@ describe('mergeRoles', () => {
         expect(mergeRoles(['a'], ['b'], [])).toEqual(['a', 'b']);
     });
 
-    it('leaves out the removed ids', () => {
+    it("doesn't return the removed ids", () => {
         expect(mergeRoles(['a', 'b'], [], ['b'])).toEqual(['a']);
     });
 

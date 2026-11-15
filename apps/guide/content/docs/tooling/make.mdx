@@ -162,7 +162,7 @@ With the name typed as `roll dice`:
 
 {/* prettier-ignore-end */}
 
-`importOf` takes the path of a folder inside the template, like `"components"`. It returns the import path from the file being written to the file in that folder. The path leaves off a `.ts` or `.js` extension. If that folder contains no `.hbs` file or more than one, `make` throws `MakeImportOfUnmatched`.
+`importOf` takes the path of a folder inside the template, like `"components"`. It returns the import path from the file being written to the file in that folder. The path doesn't end in `.ts` or `.js`. If that folder contains no `.hbs` file or more than one, `make` throws `MakeImportOfUnmatched`.
 
 ## Your own helpers
 
@@ -220,7 +220,7 @@ A plugin's users write the same files around it in every bot, like a handler tha
 }
 ```
 
-The path resolves against the plugin's own folder. List the folder in `files` too, or npm leaves it out of [the published package](/writing-plugins/publishing). The first prompt shows where each template came from beside its name. Your own templates show your templates folder, like `templates/`. A plugin's templates show its package name.
+The path resolves against the plugin's own folder. List the folder in `files` too, or npm doesn't include it in [the published package](/writing-plugins/publishing). The first prompt shows where each template came from beside its name. Your own templates show your templates folder, like `templates/`. A plugin's templates show its package name.
 
 A plugin's templates work like yours. One template can serve gateway and http bots alike, since `{{ transport }}` and `{{#if isGateway}}` read the bot `make` runs in.
 

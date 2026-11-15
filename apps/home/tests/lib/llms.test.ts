@@ -10,7 +10,7 @@ describe('llmsText', () => {
         );
     });
 
-    it('leaves out the Blog heading while no post is listed', () => {
+    it("doesn't show the Blog heading while no post is listed", () => {
         expect(llmsText([])).not.toContain('## Blog');
     });
 });

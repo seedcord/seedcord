@@ -1,5 +1,4 @@
 import { BaseReplySender } from '@seedcord/core';
-import { deferFlags, sendFlags } from '@seedcord/core/internal';
 import { SeedcordErrorCode } from '@seedcord/errors';
 import { SeedcordError } from '@seedcord/errors/internal';
 import { MessageFlags } from 'discord.js';
@@ -8,7 +7,7 @@ import type { GatewayFile, GatewayReplyResponse } from '#interfaces/ReplyRespons
 import type { Repliables } from '#src/handlers/interactionTypes';
 import type { Bus, DispatchContext } from '@seedcord/core';
 import type { AckState } from '@seedcord/core/internal';
-import type { DeferOpts, ReplyFile, SendOpts } from '@seedcord/types';
+import type { ReplyFile } from '@seedcord/types';
 import type {
     APIModalInteractionResponseCallbackData,
     InteractionCallbackResponse,
@@ -61,17 +60,14 @@ export class ReplySender extends BaseReplySender<SentMessage, GatewayFile> {
 
     protected async writeReply(
         response: GatewayReplyResponse | string,
-        opts?: SendOpts
+        flags: number
     ): Promise<SentMessage | undefined> {
-        const result = await this.interaction.reply({
-            ...this.replyOptions(response, sendFlags(opts)),
-            withResponse: true
-        });
+        const result = await this.interaction.reply({ ...this.replyOptions(response, flags), withResponse: true });
         return this.createdMessage(result);
     }
 
-    protected async writeDefer(opts?: DeferOpts): Promise<void> {
-        await this.interaction.deferReply({ flags: deferFlags(opts) });
+    protected async writeDefer(flags: number): Promise<void> {
+        await this.interaction.deferReply({ flags });
     }
 
     protected async writeDeferUpdate(): Promise<void> {
@@ -84,8 +80,8 @@ export class ReplySender extends BaseReplySender<SentMessage, GatewayFile> {
         return this.createdMessage(result);
     }
 
-    protected async writeFollowUp(response: GatewayReplyResponse | string, opts?: SendOpts): Promise<SentMessage> {
-        return await this.interaction.followUp(this.replyOptions(response, sendFlags(opts)));
+    protected async writeFollowUp(response: GatewayReplyResponse | string, flags: number): Promise<SentMessage> {
+        return await this.interaction.followUp(this.replyOptions(response, flags));
     }
 
     protected async writeEditOriginal(response: GatewayReplyResponse | string): Promise<SentMessage> {

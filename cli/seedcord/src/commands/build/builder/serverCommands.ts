@@ -28,7 +28,7 @@ function runtimeName(): string {
 // characters every shell reads as part of a plain word
 const SHELL_SAFE = /^[\w./@+=:,-]+$/;
 
-// single quotes keep $ literal in POSIX shells and in PowerShell, the windows default. cmd.exe is left out
+// single quotes keep $ literal in POSIX shells and in PowerShell, the windows default. cmd.exe isn't covered
 function shellArg(arg: string): string {
     if (SHELL_SAFE.test(arg)) return arg;
     const escapedQuote = process.platform === 'win32' ? "''" : String.raw`'\''`;

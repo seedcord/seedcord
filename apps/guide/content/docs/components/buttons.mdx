@@ -217,7 +217,7 @@ export class ClaimReward extends ButtonHandler<
 }
 ```
 
-`charge` counts one click at a time, and `ONE_CLAIM` leaves out `limit`, which defaults to one use. The second click gets `limited` as `true`, and [`deferUpdate()`](ref:gateway/ComponentHandler.deferUpdate) answers it without changing the message. That click still shows a result, because `update()` on the first click replaces the button with `Claimed.` for everyone. [`buildKey`](ref:core/buildKey) includes `rewardId`, so claiming one reward doesn't block the next one. If `rewards.give` throws, `reset` clears the charge so that the next click can try again.
+`charge` counts one click at a time, and `ONE_CLAIM` doesn't set `limit`, which defaults to one use. The second click gets `limited` as `true`, and [`deferUpdate()`](ref:gateway/ComponentHandler.deferUpdate) answers it without changing the message. That click still shows a result, because `update()` on the first click replaces the button with `Claimed.` for everyone. [`buildKey`](ref:core/buildKey) includes `rewardId`, so claiming one reward doesn't block the next one. If `rewards.give` throws, `reset` clears the charge so that the next click can try again.
 
 `ONE_CLAIM` expires after a minute, so it only stops a double click. To stop a second claim for later, keep a record of who claimed in your database, or in [the kv store](/built-ins/) with a driver.
 

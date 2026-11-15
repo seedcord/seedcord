@@ -112,7 +112,7 @@ Each base declares _only_ the members that its menu resolves.
 
 {/* prettier-ignore-end */}
 
-If you read a member that the base leaves out, like `this.channels` on a `UserMenuHandler`, TypeScript reports an error on that property.
+If you read a member that the base doesn't have, like `this.channels` on a `UserMenuHandler`, TypeScript reports an error on that property.
 
 Discord resolves `this.members` only inside a guild, so it comes back empty in a DM. A mentionable menu accepts users and roles together. `this.users` and `this.roles` each hold whatever matched, so either one can be empty.
 

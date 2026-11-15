@@ -89,7 +89,7 @@ By default the plugin runs every pending migration while the bot starts. If a mi
 
 | `onStartup` | what happens while the bot starts |
 | --- | --- |
-| left out, or `true` | runs every pending migration |
+| not set, or `true` | runs every pending migration |
 | `false` | runs nothing |
 | a [`MigrationOptions`](ref:plugin-kysely-postgres/MigrationOptions) object | runs to the `target`, or in the `direction` and `steps` you pass |
 

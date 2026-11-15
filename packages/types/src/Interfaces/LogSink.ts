@@ -46,7 +46,7 @@ export interface ILogSink {
     readonly kind: LogSinkKind;
     /** Can be async. seedcord doesn't await it, and an edge bot keeps the request open until it finishes. */
     onLog(record: LogRecord): unknown;
-    /** Runs when a later logger config leaves this sink out. Close a file handle or a connection here. */
+    /** Runs when a later logger config doesn't include this sink. Close a file handle or a connection here. */
     dispose?(): void;
 }
 

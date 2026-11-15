@@ -18,7 +18,7 @@ import type {
 import type { AnyCustomId } from '@seedcord/custom-id';
 import type { ExtractStrict, Constructor, LiteralUnion } from 'type-fest';
 
-// Extract over Exclude so the union leaves out a kind added to the enum until someone gives it a decorator
+// Extract over Exclude so the union doesn't include a kind added to the enum until someone gives it a decorator
 type ComponentBrand = ExtractStrict<
     InteractionKind,
     | InteractionKind.Button

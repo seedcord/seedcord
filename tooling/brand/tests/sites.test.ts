@@ -32,7 +32,7 @@ describe('SiteAddress', () => {
         expect(slashed.at('/packages')).toBe('https://preview.example.dev/docs/packages');
     });
 
-    it('leaves the protocol off its label', () => {
+    it("doesn't include the protocol in its label", () => {
         expect(guide.label).toBe('seedcord.org/guide');
         expect(new SiteAddress('http://localhost:3001/docs').label).toBe('localhost:3001/docs');
     });

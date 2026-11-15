@@ -74,7 +74,7 @@ describe('dev runtime with root set to src', () => {
         expect(module).toMatchObject({ texts: ['hello'] });
     }, 60_000);
 
-    it('throws CoreDirectoryNotListed for a text folder that files leaves out', async () => {
+    it("throws CoreDirectoryNotListed for a text folder that files doesn't list", async () => {
         await mkdir(SCRATCH_ROOT, { recursive: true });
         const dir = await mkdtemp(join(SCRATCH_ROOT, 'dev-'));
         await writeProject(dir);

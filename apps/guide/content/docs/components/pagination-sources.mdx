@@ -67,7 +67,7 @@ The fetcher's first argument is a [`PageContext`](ref:gateway/PageContext). Gate
 `CursorSource` never requests a total, because counting every row costs a second query. Three things follow.
 
 - `totalPages` comes back `undefined`.
-- The nav row leaves out **First** and **Last**, leaving **Prev**, the indicator, and **Next**.
+- The nav row doesn't show **First** and **Last**, and shows **Prev**, the indicator, and **Next**.
 - The indicator reads `Page 3` without a total after it.
 
 Use [`ArraySource`](ref:gateway/ArraySource) when the list is small enough to load whole and you want the count.

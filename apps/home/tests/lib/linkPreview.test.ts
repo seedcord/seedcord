@@ -27,7 +27,7 @@ describe('postPreview', () => {
         expect(labels(true)).not.toContain('Markdown');
     });
 
-    it("leaves the banner out when the post doesn't have a cover", () => {
+    it("doesn't show the banner when the post doesn't have a cover", () => {
         expect(postPreview(POST).bannerUrl).toBeUndefined();
     });
 });

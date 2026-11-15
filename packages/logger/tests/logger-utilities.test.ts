@@ -50,7 +50,7 @@ describe('LoggerUtilities', () => {
         expect(text).toContain('./src/Ping.ts');
     });
 
-    it('leaves an out-of-cwd path unchanged', () => {
+    it("doesn't change an out-of-cwd path", () => {
         const logger = new FakeLogger();
         new LoggerUtilities(logger).registration('Ping', '/elsewhere/Ping.ts');
         expect(logger.calls[0]?.text).toContain('/elsewhere/Ping.ts');

@@ -71,7 +71,7 @@ export type LinkButtonProps = LinkButtonBase &
 
 /**
  * The root of every component embed. Wrap everything else in one, then pass it to {@link toComponentEmbed}. React
- * leaves it out of your page.
+ * renders nothing in your page.
  *
  * @example
  * ```tsx

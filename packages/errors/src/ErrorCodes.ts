@@ -98,7 +98,7 @@ export enum SeedcordErrorCode {
     CoreDuplicateName = 1228,
     /** A Vite plugin from `vitePlugins` threw while Vite started or loaded a file, or failed when seedcord called `vitePlugins`. */
     CoreVitePluginThrew = 1229,
-    /** `readFiles` read a folder that `files` in `seedcord.config.ts` leaves out. */
+    /** `readFiles` read a folder that `files` in `seedcord.config.ts` doesn't list. */
     CoreDirectoryNotListed = 1230,
     /** A folder is inside one that `seedcord build` skips, like a dot-folder, `node_modules`, `outDir` or the logs folder. */
     CoreDirectorySkipped = 1231,

@@ -66,7 +66,7 @@ export class CronTasks {
                 ...gap,
                 ...keepDefined({ stopAt: meta.stopAt }),
                 // croner waits up to one interval before the first run if startAt has passed
-                // leaving it out lets a boot or resume() run at the next match
+                // without it, a boot or resume() runs at the next match
                 ...(startMs !== undefined && startMs > Date.now() && { startAt: meta.startAt })
             });
 

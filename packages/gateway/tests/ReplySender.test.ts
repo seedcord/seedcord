@@ -525,7 +525,7 @@ describe('ReplySender.send', () => {
         expect(replyOptions(mock).flags).toBe(V2);
     });
 
-    it('leaves send opts out when the deferred-reply path edits @original', async () => {
+    it("doesn't pass send opts when the deferred-reply path edits @original", async () => {
         const mock = mockInteraction();
         const sender = senderFor(mock);
         await sender.defer();

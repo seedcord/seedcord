@@ -151,7 +151,7 @@ describe('a folder on disk under seedcord dev', () => {
         expect(seen).toEqual([path.join(FIXTURES, 'text', 'nested', 'faq.md')]);
     });
 
-    it('throws CoreDirectoryNotListed for a folder files leaves out', async () => {
+    it("throws CoreDirectoryNotListed for a folder files doesn't list", async () => {
         const error = await rejection(readFiles('./walk'));
 
         expect(error).toMatchObject({ code: SeedcordErrorCode.CoreDirectoryNotListed });
@@ -185,7 +185,7 @@ describe('a listed folder beside root, under seedcord dev', () => {
     });
 });
 
-describe('the folders and files the build leaves out, under seedcord dev', () => {
+describe("the folders and files the build doesn't include, under seedcord dev", () => {
     const root = path.join(scratch, 'project');
 
     beforeAll(async () => {

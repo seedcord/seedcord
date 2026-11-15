@@ -169,7 +169,7 @@ export class Timing extends EventMiddleware {
 }
 ```
 
-The base class declares `after()`, so `Timing` marks its version `override`. Leaving that off is a compile error under TypeScript's `noImplicitOverride`.
+The base class declares `after()`, so `Timing` marks its version `override`. Without `override`, it's a compile error under TypeScript's `noImplicitOverride`.
 
 `after()` receives an [`EventDispatchResult`](ref:core/EventDispatchResult) that reports how the event ended. The `Timing` sample logs how many handlers ran, from `result.handlers`.
 

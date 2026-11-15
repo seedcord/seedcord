@@ -57,7 +57,7 @@ describe('checkTarget on a file', () => {
         });
     });
 
-    it("leaves out the minified size when minifying wouldn't get the file under the limit", async () => {
+    it("doesn't report the minified size when minifying wouldn't get the file under the limit", async () => {
         const payload = { component: { type: 17, components: [{ type: 10, content: 'x'.repeat(3500) }] } };
 
         const result = await checkTarget('embed.json', withFiles({ 'embed.json': JSON.stringify(payload, null, 1) }));
