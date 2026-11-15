@@ -1,16 +1,20 @@
 import { Plugin } from '@seedcord/core/plugin';
 import { paint, SeedcordErrorCode } from '@seedcord/errors';
-import { throwSingleOrAggregate } from '@seedcord/errors/internal';
-import { readFiles } from '@seedcord/utils';
+import { SeedcordError, throwSingleOrAggregate } from '@seedcord/errors/internal';
+import { importFiles, readFiles } from '@seedcord/utils';
 import { once } from 'es-toolkit';
 
 import { Catalogs } from './Catalogs';
+import { CommandLocalizer } from './CommandLocalizer';
+import { translationsIn } from './commandTranslations';
+import { isDiscordLocale, localesLike } from './locales';
 
 import type { LocaleFile, MessageTable } from './catalog/checkCatalog';
 import type { Translate } from './Catalogs';
 import type { LocaleCode } from './locales';
 import type { CoreBase, DispatchOrigin } from '@seedcord/core';
 import type { Generated } from '@seedcord/core/plugin';
+import type { RESTPostAPIApplicationCommandsJSONBody } from 'discord-api-types/v10';
 import type { Promisable } from 'type-fest';
 
 const FTL = '.ftl';
@@ -153,6 +157,27 @@ export class I18n extends Plugin {
 
     public async init(): Promise<void> {
         await this.catalogs();
+    }
+
+    public override async prepareCommands(commands: readonly RESTPostAPIApplicationCommandsJSONBody[]): Promise<void> {
+        const problems: SeedcordError[] = [];
+        for await (const { pathInDir, relativePath, imported } of importFiles(this.dir)) {
+            if (pathInDir.includes('/')) continue;
+            const locale = pathInDir.slice(0, pathInDir.lastIndexOf('.'));
+            const translations = translationsIn(imported.default);
+            if (!isDiscordLocale(locale)) {
+                problems.push(
+                    new SeedcordError(SeedcordErrorCode.PluginI18nNotALocale, [relativePath, localesLike(locale)])
+                );
+            } else if (!translations) {
+                problems.push(new SeedcordError(SeedcordErrorCode.PluginI18nNotTranslations, [relativePath]));
+            } else {
+                const localizer = new CommandLocalizer(locale, relativePath);
+                localizer.apply(commands, translations);
+                problems.push(...localizer.problems);
+            }
+        }
+        throwSingleOrAggregate(problems, SeedcordErrorCode.CliProblems);
     }
 
     public override async codegen(): Promise<{ messages: MessageTable }> {

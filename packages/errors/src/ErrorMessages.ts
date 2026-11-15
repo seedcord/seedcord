@@ -291,6 +291,12 @@ const messages = {
         `${paint.path(place)} has ${what}, but ${paint.path(baseFile)} doesn't. ${paint.bold('t()')} only reads what the base file has. Add it to ${paint.path(baseFile)} first, or remove it here.`,
     [SeedcordErrorCode.PluginI18nOutOfDate]: (key: string, problem: string) =>
         `${paint.bold(`t('${key}')`)} ${problem}. The .ftl files changed after ${paint.bold('seedcord codegen')} last ran. Run it to update what ${paint.bold('t()')} accepts, then fix this call.`,
+    [SeedcordErrorCode.PluginI18nUnknownCommand]: (file: string, path: string) =>
+        `${paint.path(file)} translates ${paint.sky(path)}, but none of your commands has it. Fix the name, or run ${paint.bold('seedcord codegen')} and type-check to find these before a deploy.`,
+    [SeedcordErrorCode.PluginI18nNotTranslations]: (file: string) =>
+        `${paint.path(file)} doesn't export command translations. Make its default export ${paint.bold('commandTranslations({ ... })')}.`,
+    [SeedcordErrorCode.PluginI18nDiscordRejects]: (file: string, path: string, value: string, rule: string) =>
+        `${paint.path(file)} sets ${paint.sky(path)} to ${quoted(value)}. Discord rejects it: ${rule}. Change the translation to fit.`,
     [SeedcordErrorCode.PluginI18nBaseMissing]: (dir: string, baseFile: string) =>
         `${paint.path(dir)} doesn't have ${paint.path(baseFile)}, the file that lists every message. Add it, or set ${paint.bold('base')} to a locale that has a file.`,
 

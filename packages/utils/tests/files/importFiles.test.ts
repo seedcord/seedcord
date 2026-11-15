@@ -27,18 +27,12 @@ afterAll(async () => {
 });
 
 describe('importFiles', () => {
-    it('visits every ts file under the directory, sorted by path', async () => {
+    it('visits every ts file under the directory, sorted by path, with its path inside the directory', async () => {
         const seen: string[] = [];
 
-        for await (const { fullPath } of importFiles(path.join(FIXTURES, 'walk'))) {
-            seen.push(path.relative(FIXTURES, fullPath));
-        }
+        for await (const { pathInDir } of importFiles(path.join(FIXTURES, 'walk'))) seen.push(pathInDir);
 
-        expect(seen).toEqual([
-            path.join('walk', 'aGood.ts'),
-            path.join('walk', 'b', 'bGood.ts'),
-            path.join('walk', 'cGood.ts')
-        ]);
+        expect(seen).toEqual(['aGood.ts', 'b/bGood.ts', 'cGood.ts']);
     });
 
     it('skips hidden files and folders, the same as a built bot', async () => {

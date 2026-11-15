@@ -91,6 +91,7 @@ export default {
         'packages/logger': { entry: [TYPE_TESTS, 'tests/fixtures/*.ts'] },
         'packages/types': typeTestsOnly,
         'packages/utils': { entry: [TYPE_TESTS], ignore: ['tests/files/fixtures/**'] },
+        'plugins/i18n': { entry: [TYPE_TESTS, 'tests/fixtures/**/*.ts'] },
         'plugins/kysely-postgres': typeTestsOnly,
         'plugins/mongoose': typeTestsOnly,
         'plugins/tasks': { entry: [TYPE_TESTS, 'tests/fixtures/**/*.ts'] },

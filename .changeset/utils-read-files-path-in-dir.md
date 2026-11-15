@@ -2,4 +2,4 @@
 '@seedcord/utils': minor
 ---
 
-`readFiles` now gives each file a `pathInDir`, its path inside the folder you passed, like `commands/de.ftl`.
+`readFiles` and `importFiles` now give each file a `pathInDir`. It's the file's path inside the folder you passed, like `nested/faq.md`.

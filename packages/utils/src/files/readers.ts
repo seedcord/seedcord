@@ -15,6 +15,8 @@ interface FoundFile {
      * The path to show in logs. A file under the working directory gets a relative path. Any other file gets its absolute path.
      */
     relativePath: string;
+    /** The file's path inside the folder you passed, with forward slashes, like `nested/faq.md`. */
+    pathInDir: string;
 }
 
 interface ImportedFile extends FoundFile {
@@ -22,8 +24,6 @@ interface ImportedFile extends FoundFile {
 }
 
 interface ReadFile extends FoundFile {
-    /** The file's path inside the folder `readFiles` read, with forward slashes, like `commands/de.ftl`. */
-    pathInDir: string;
     bytes: Buffer;
 }
 
@@ -46,7 +46,8 @@ interface ReadFile extends FoundFile {
  * ```
  */
 export async function* importFiles(dir: string): AsyncGenerator<ImportedFile> {
-    for (const [fullPath, load] of await fileSource().modules(dir)) {
+    const { folder, files } = await fileSource().modules(dir);
+    for (const [fullPath, load] of files) {
         const relativePath = displayPath(fullPath);
         let imported: Record<string, unknown>;
         try {
@@ -54,7 +55,7 @@ export async function* importFiles(dir: string): AsyncGenerator<ImportedFile> {
         } catch (err) {
             throw importFailed(relativePath, err);
         }
-        yield { fullPath, relativePath, imported };
+        yield { fullPath, relativePath, pathInDir: posixRelative(folder, fullPath), imported };
     }
 }
 

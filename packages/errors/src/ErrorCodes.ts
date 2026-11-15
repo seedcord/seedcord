@@ -1,3 +1,4 @@
+/* eslint-disable max-lines -- one enum holds every code, the same way ErrorMessages holds every message */
 /* eslint-disable no-magic-numbers */
 
 /**
@@ -258,6 +259,12 @@ export enum SeedcordErrorCode {
     PluginI18nBaseMissing = 2404,
     /** A `t()` call doesn't match the `.ftl` files. They changed after `seedcord codegen` last ran. */
     PluginI18nOutOfDate = 2405,
+    /** A locale's command translations have a name that isn't on any command, option, choice, or menu. */
+    PluginI18nUnknownCommand = 2406,
+    /** A `.ts` file under the i18n plugin's `dir` doesn't export `commandTranslations(...)` as its default. */
+    PluginI18nNotTranslations = 2407,
+    /** A translated command name, description, or choice name breaks one of Discord's rules for it. */
+    PluginI18nDiscordRejects = 2408,
 
     /** Someone pressed Ctrl-C at a prompt in `seedcord` or `create-seedcord`. */
     CliCancelled = 3001,

@@ -8,6 +8,7 @@ import { describe, expect, it } from 'vite-plus/test';
 
 import { I18n } from '#src/I18n';
 
+import { commandBodies } from './commands';
 import { TestHost } from './host';
 
 import type { I18nOptions } from '#src/I18n';
@@ -94,6 +95,87 @@ describe('I18n', () => {
             expect(() => t('removed', {})).toThrow(
                 expect.objectContaining({ code: SeedcordErrorCode.PluginI18nOutOfDate })
             );
+        });
+    });
+
+    describe('prepareCommands', () => {
+        async function prepared(fixture: string): Promise<ReturnType<typeof commandBodies>> {
+            const bodies = commandBodies();
+            await i18nAt(`commands/${fixture}`).prepareCommands(bodies);
+            return bodies;
+        }
+
+        async function problemsIn(fixture: string): Promise<unknown[][]> {
+            const failure: unknown = await prepared(fixture).catch((error: unknown) => error);
+            const errors = isSeedcordError(failure, 'SeedcordAggregateError') ? failure.errors : [failure];
+            return errors.map((error) =>
+                isSeedcordError(error) ? [error.code, stripVTControlCharacters(error.message)] : []
+            );
+        }
+
+        it("adds each locale's names and descriptions to every command, option, choice, and menu", async () => {
+            const [ball, config, probe, viewProfile, reportMessage] = await prepared('good');
+
+            expect(ball).toMatchObject({
+                name_localizations: { pl: 'kula', de: 'kugel' },
+                description_localizations: { pl: 'Zapytaj kulę' }
+            });
+            expect(config).toMatchObject({
+                name_localizations: { pl: 'konfiguracja' },
+                options: [
+                    {
+                        name_localizations: { pl: 'logi' },
+                        options: [
+                            {
+                                name_localizations: { pl: 'ustaw' },
+                                options: [
+                                    {
+                                        name_localizations: { pl: 'kanał' },
+                                        description_localizations: { pl: 'Gdzie trafiają logi' }
+                                    }
+                                ]
+                            }
+                        ]
+                    },
+                    { name: 'show' }
+                ]
+            });
+            expect(probe).not.toHaveProperty('name_localizations');
+            expect(probe).toMatchObject({
+                options: [{ choices: [{ value: 'books', name_localizations: { pl: 'Książki' } }, { value: 'films' }] }]
+            });
+            expect(viewProfile?.name_localizations).toEqual({ pl: 'Pokaż profil' });
+            expect(reportMessage?.name_localizations).toEqual({ pl: 'Zgłoś wiadomość' });
+        });
+
+        it("throws for a name that's on none of the commands", async () => {
+            expect(await problemsIn('unknown')).toEqual([
+                [SeedcordErrorCode.PluginI18nUnknownCommand, expect.stringMatching(/slash\.config\.subcommands\.sett/)]
+            ]);
+        });
+
+        it("throws for a file whose default export commandTranslations didn't make", async () => {
+            expect(await problemsIn('plain')).toEqual([
+                [SeedcordErrorCode.PluginI18nNotTranslations, expect.stringMatching(/pl\.ts/)]
+            ]);
+        });
+
+        it('reports every translation that Discord would reject, and a file named after no locale', async () => {
+            const problems = await problemsIn('rejected');
+
+            expect(problems).toEqual(
+                expect.arrayContaining([
+                    [SeedcordErrorCode.PluginI18nNotALocale, expect.stringMatching(/en\.ts/)],
+                    [SeedcordErrorCode.PluginI18nDiscordRejects, expect.stringMatching(/slash\.8ball\.name/)],
+                    [SeedcordErrorCode.PluginI18nDiscordRejects, expect.stringMatching(/slash\.8ball\.description/)],
+                    [
+                        SeedcordErrorCode.PluginI18nDiscordRejects,
+                        expect.stringMatching(/slash\.probe\.options\.category\.choices\.books/)
+                    ],
+                    [SeedcordErrorCode.PluginI18nDiscordRejects, expect.stringMatching(/userMenus\.View Profile/)]
+                ])
+            );
+            expect(problems).toHaveLength(5);
         });
     });
 

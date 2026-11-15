@@ -75,9 +75,9 @@ abstract class FileSource {
         return this.access.layoutAt(this.access.resolve(dir));
     }
 
-    public modules(dir: string): Promise<Loaders<ModuleLoader>> {
+    public async modules(dir: string): Promise<{ folder: string; files: Loaders<ModuleLoader> }> {
         const folder = this.access.resolveBundled(dir);
-        return this.modulesIn(folder, this.access.layoutAt(folder));
+        return { folder, files: await this.modulesIn(folder, this.access.layoutAt(folder)) };
     }
 
     public async files(dir: string): Promise<{ folder: string; files: Loaders<BytesLoader> }> {
