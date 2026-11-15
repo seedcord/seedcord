@@ -1,7 +1,7 @@
 extends: existence
 link: https://github.com/seedcord/seedcord/blob/next/.agents/skills/writing-voice/SKILL.md
 message: "'%s' is banned in most senses. Check the sense, then write what actually happens or delete it."
-level: suggestion
+level: error
 ignorecase: true
 tokens:
   - 'powers?'

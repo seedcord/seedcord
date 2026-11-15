@@ -109,7 +109,7 @@ describe('pendingNotice', () => {
 });
 
 describe('dashboardToggles', () => {
-    it('says nothing for a bot that asked for no privileged intent', () => {
+    it('returns an empty list for a bot that asked for no privileged intent', () => {
         expect(dashboardToggles(['guild-messages', 'reactions'])).toEqual([]);
     });
 
@@ -125,7 +125,7 @@ describe('dashboardToggles', () => {
         expect(dashboardToggles(['members']).join('\n')).toContain('https://discord.com/developers/applications');
     });
 
-    it("says nothing on http, which doesn't have intents", () => {
+    it("returns an empty list on http, which doesn't have intents", () => {
         expect(dashboardToggles([])).toEqual([]);
     });
 });
@@ -157,7 +157,7 @@ describe('reproducingCommand', () => {
         expect(reproducingCommand(GATEWAY, 'pnpm')).toMatch(/create seedcord@\d+\.\d+\.\d+ /);
     });
 
-    it('carries every answer the run used', () => {
+    it('lists every answer that the run used', () => {
         const command = reproducingCommand(GATEWAY, 'pnpm');
 
         expect(command).toContain('my-bot');
@@ -176,7 +176,7 @@ describe('reproducingCommand', () => {
         }
     });
 
-    it('carries a no to install or git as its --no- switch', () => {
+    it('writes a no to install or git as its --no- switch', () => {
         const command = reproducingCommand({ ...HTTP, install: false, git: false }, 'pnpm');
 
         expect(command).toContain('--no-install');

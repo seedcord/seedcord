@@ -192,7 +192,7 @@ export const seedcord = new Seedcord({
 export default seedcord;
 ```
 
-Each `path` key is a folder that seedcord imports files from at startup, and a `null` path scans nothing. `'./handlers'` is relative to `root`, so with `root: './src'` it means `src/handlers`. The seedcord CLI and a built bot set `root`. If a test or a `tsx` script runs the bot, a relative path throws `CoreDirectoryRootUnknown`. In those runs, use an absolute path built from `import.meta.dirname`.
+Each `path` key is a folder that seedcord imports files from at startup, and a `null` path turns that folder off. `'./handlers'` is relative to `root`, so with `root: './src'` it means `src/handlers`. The seedcord CLI and a built bot set `root`. If a test or a `tsx` script runs the bot, a relative path throws `CoreDirectoryRootUnknown`. In those runs, use an absolute path built from `import.meta.dirname`.
 
 The optional `guilds` key lists the servers where every command registered with [`RegisterCommand()`](ref:core/RegisterCommand) deploys. It reads `TESTING_GUILD_IDS` from `.env` through envapt, which splits the comma-separated ids into an array. An empty list sends those commands to every server your bot is in, so don't set `TESTING_GUILD_IDS` where you deploy. A command that passes `'global'` to the decorator ignores the list, and one that passes its own ids replaces it. [Commands](/commands) explains both. [Environment files](/build/env) explains how envapt picks `.env` files and reads your own keys.
 
@@ -272,7 +272,7 @@ export class Ping extends SlashHandler<'ping'> {
 
 `execute()` runs when someone uses `/ping`. `'ping'` appears twice, on the decorator and on the generic, and both have to match the name that the command sets. The compiler catches a mismatch. [`this.options`](ref:gateway/SlashHandler.options) has `detailed` because `seedcord codegen` recorded it off the command file.
 
-`roundtrip` measures one way, from Discord creating the interaction to `execute()` running, so it is closer to a latency than a round trip. It comes from the interaction's id, so it includes any gap between your clock and Discord's. With `detailed` set, the reply adds a line like "Up since 3 minutes ago". Discord turns the `<t:...:R>` markup into a relative time.
+`roundtrip` measures one way, from Discord creating the interaction to `execute()` running, so it is closer to a latency than a round trip. It comes from the interaction's id and includes any gap between your clock and Discord's. With `detailed` set, the reply adds a line like "Up since 3 minutes ago". Discord turns the `<t:...:R>` markup into a relative time.
 
 <Callout type="transport" only="http">
 

@@ -91,7 +91,7 @@ import { Cooldown } from '@seedcord/gateway';
 Cooldown('10m', { limit: 3 });
 ```
 
-The window is a _sliding window_, so each use counts for ten minutes after it happens. If someone runs the command at 12:00, 12:02, and 12:05, all three pass. A fourth run at 12:06 is refused. At 12:10 the 12:00 use expires, so the next run after that passes.
+The window is a _sliding window_, so each use counts for ten minutes after it happens. If someone runs the command at 12:00, 12:02, and 12:05, all three pass. A fourth run at 12:06 is refused. At 12:10 the 12:00 use expires, and the next run after that passes.
 
 ### Who shares a window
 

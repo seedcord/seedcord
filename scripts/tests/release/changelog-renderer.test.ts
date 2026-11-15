@@ -137,7 +137,7 @@ describe('ChangelogRenderer dependency block', () => {
         expect(block).toBe('- `@seedcord/types` 0.12.0 → 0.13.0\n- `@seedcord/errors` 0.7.0 → 0.8.0');
     });
 
-    it('writes nothing when no dependency moved', () => {
+    it('skips the dependency line when the dependencies are unchanged', () => {
         expect(renderer.dependencyLine([])).toBe('');
     });
 });

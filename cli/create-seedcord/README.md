@@ -35,7 +35,7 @@ pnpm create seedcord my-bot
 
 `npm create seedcord`, `yarn create seedcord`, and `bun create seedcord` work too, and the project uses that package manager.
 
-It asks whether your bot is a gateway or an http bot, where an http bot runs, what a gateway bot reacts to, your bot token, and the servers to test your commands in. The [first bot guide](https://seedcord.org/guide/first-bot) walks through each question.
+It asks whether your bot is a gateway or an http bot, where an http bot runs, and what a gateway bot reacts to. It also asks for your bot token and the servers to test your commands in. The [first bot guide](https://seedcord.org/guide/first-bot) walks through each question.
 
 Every question has a flag, and `--help` prints them all. npm passes flags on only after a `--`:
 

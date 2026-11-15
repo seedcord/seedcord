@@ -33,7 +33,7 @@ describe('AugmentationBuilder contexts', () => {
         expect(cache).toStrictEqual({ help: undefined });
     });
 
-    it('reads a command with no guild context as uncached', () => {
+    it('reads a command without a guild context as uncached', () => {
         const cache = cacheFor(command('dmonly').setContexts(InteractionContextType.BotDM));
 
         expect(cache).toStrictEqual({ dmonly: undefined });

@@ -16,7 +16,7 @@ describe('interactionRoutesOf', () => {
         ]);
     });
 
-    it('returns nothing for an undecorated constructor', () => {
+    it('returns an empty list for an undecorated constructor', () => {
         // eslint-disable-next-line @typescript-eslint/no-extraneous-class -- a bare metadata carrier
         class Bare {}
 

@@ -96,7 +96,7 @@ describe('RemoveWizard with the clean questions', () => {
         );
     });
 
-    it('prints cancelled and deletes nothing when a prompt is cancelled', async () => {
+    it('prints cancelled and keeps every command when a prompt is cancelled', async () => {
         using terminal = new PromptTerminal();
         const { deleted, done } = wizard(terminal);
 
@@ -107,7 +107,7 @@ describe('RemoveWizard with the clean questions', () => {
         expect(await terminal.screen()).toBe('  cancelled');
     });
 
-    it('deletes nothing and says so when the delete is declined', async () => {
+    it('keeps every command and says so when the delete is declined', async () => {
         using terminal = new PromptTerminal();
         const { deleted, done } = wizard(terminal);
 

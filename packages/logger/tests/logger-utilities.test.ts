@@ -132,7 +132,7 @@ describe('LoggerUtilities', () => {
         for (const line of lines) expect(plain(line).length).toBeLessThanOrEqual(14);
     });
 
-    it('logs nothing for an empty list and only the heading when one is given', () => {
+    it('logs only the heading for an empty list, if one is given', () => {
         const empty = new FakeLogger();
         new LoggerUtilities(empty).list([]);
         expect(empty.calls).toHaveLength(0);

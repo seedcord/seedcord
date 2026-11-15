@@ -102,7 +102,7 @@ describe('checkAckLegality', () => {
         expect(message).toContain('A deferral can only be the initial response.');
     });
 
-    it('says nothing was sent when edit is called before any ack', () => {
+    it('says that nothing was sent when edit is called before any ack', () => {
         const message = captureMessage('edit', 'unacked');
         expect(message.toLowerCase()).toContain('nothing');
     });

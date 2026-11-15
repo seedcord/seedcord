@@ -38,7 +38,7 @@ describe('resolveDocEntryPoints', () => {
     });
 
     // @seedcord/tsconfig ships json presets. resolving nothing must not throw.
-    it("resolves nothing for a package whose every export doesn't declare types", async () => {
+    it("returns an empty list for a package whose every export doesn't declare types", async () => {
         const manifest = manifestWith({
             '.': { default: './base.json' },
             './node': { default: './node.json' }

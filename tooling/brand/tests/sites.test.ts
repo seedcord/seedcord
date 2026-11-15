@@ -21,7 +21,7 @@ describe('SiteAddress', () => {
         expect(guide.at('sitemap.xml')).toBe('https://seedcord.org/guide/sitemap.xml');
     });
 
-    it('joins onto a site with no base path', () => {
+    it('joins onto a site without a base path', () => {
         expect(new SiteAddress('https://seedcord.org').at('/sitemap.xml')).toBe('https://seedcord.org/sitemap.xml');
     });
 

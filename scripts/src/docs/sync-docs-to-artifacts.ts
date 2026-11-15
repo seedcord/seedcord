@@ -44,7 +44,7 @@ const flags = new CliFlags('vp run docs:sync [options]', {
     prune: { type: 'boolean', describe: 'Delete objects the rebuilt index no longer lists' },
     'prune-force': { type: 'boolean', describe: 'Allow a prune that removes more than half the keys' },
     overwrite: { type: 'boolean', describe: 'Re-upload version dirs R2 already holds' },
-    'dry-run': { type: 'boolean', describe: 'Print what would be written and send nothing' }
+    'dry-run': { type: 'boolean', describe: 'Print what would be written, then stop' }
 });
 
 interface Options {

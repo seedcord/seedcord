@@ -95,7 +95,7 @@ class Ban extends SlashHandler<'ban'> {
 
 Each one takes a reply or a function returning one. The fence above passes both shapes, a function to `onConfirm` and a plain reply to `onTimeout`. seedcord calls the function after the click, so it reads whatever is true by then.
 
-Without an outcome option, send the result with a fresh [`this.followUp()`](ref:gateway/RepliableHandler.followUp), since a deleted prompt leaves nothing to edit.
+Without an outcome option, send the result with a fresh [`this.followUp()`](ref:gateway/RepliableHandler.followUp), since a deleted prompt can't be edited.
 
 ## Building the prompt yourself
 

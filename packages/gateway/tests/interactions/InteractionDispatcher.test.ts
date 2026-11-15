@@ -339,7 +339,7 @@ describe('InteractionDispatcher Integration', () => {
         );
     });
 
-    it('dispatches UnhandledAutocomplete for an autocomplete with no registered handler, responding empty', async ({
+    it('dispatches UnhandledAutocomplete for an autocomplete without a registered handler, responding empty', async ({
         testEnv
     }) => {
         await testEnv.createDir('interactions');
@@ -1029,7 +1029,7 @@ describe('InteractionDispatcher Integration', () => {
             });
         });
 
-        it('wraps a non-Error rejection at the root, so the payload still carries an Error', async ({ client }) => {
+        it('wraps a non-Error rejection at the root, so the payload still has an Error', async ({ client }) => {
             const { seedcord, controller, fire } = client;
             vi.spyOn(controller, 'handleInteraction').mockRejectedValue('a bare string');
             vi.spyOn(botLoggerOf(seedcord.bot), 'error').mockImplementation(() => undefined);

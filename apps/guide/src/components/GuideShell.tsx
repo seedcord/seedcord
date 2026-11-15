@@ -137,7 +137,7 @@ export function GuideShell({
                     {hasContents ? <ContentsColumn items={toc} actions={actions} /> : null}
                 </div>
             </div>
-            {/* the contents column carries its own from lg up */}
+            {/* from lg up, the contents column renders its own button */}
             <ScrollToTopButton className={cn('right-(--page-gutter) lg:hidden')} />
 
             <MobilePanel

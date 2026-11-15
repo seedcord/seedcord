@@ -15,13 +15,13 @@ A saved file reloads when it holds one of these.
 - a bus subscriber
 - files a plugin loads itself, if the plugin implements `onHmr`. Saving the plugin's own file needs a restart. [Plugins and hot reload](/writing-plugins/hot-reload) has both
 
-Any other file, like a component or a helper, reloads through the files that import it. Editing a file that none of those groups imports doesn't reload anything. Reloading works only in the `development` and `test` modes, so `ENV=staging seedcord dev` reloads nothing.
+Any other file, like a component or a helper, reloads through the files that import it. Editing a file that none of those groups imports doesn't trigger a reload. Reloading works only in the `development` and `test` modes, so `ENV=staging seedcord dev` never reloads.
 
 ## How it works
 
-Node can't unload a module once it has imported it. A plain watcher like `node --watch`, `nodemon`, or `tsx watch` works around that by restarting the process, which for a gateway bot means logging in to Discord again, and Discord limits how many [sessions](https://discord.com/developers/docs/events/gateway#session-start-limit-object) a bot may start per day. `seedcord dev` runs your bot inside Vite's module runner instead, which keeps its own graph of the modules it evaluated. seedcord removes the saved file from that graph and imports it again, inside the process that's already running.
+Node can't unload a module once it has imported it. A plain watcher like `node --watch`, `nodemon`, or `tsx watch` works around that by restarting the process. For a gateway bot that means logging in to Discord again, and Discord limits how many [sessions](https://discord.com/developers/docs/events/gateway#session-start-limit-object) a bot may start per day. `seedcord dev` runs your bot inside Vite's module runner instead, which keeps its own graph of the modules it evaluated. seedcord removes the saved file from that graph and imports it again, inside the process that's already running.
 
-The graph also records which modules imported which, so seedcord reloads the modules that imported your saved file, and the ones that imported those. Saving a component every handler builds therefore updates all of them. Vite's watcher reports each save, its transform step reads your TypeScript and your tsconfig paths, and its message channel passes what the CLI and your bot say to each other, like the restart prompt below.
+The graph also records which modules imported which, so seedcord reloads the modules that imported your saved file, and the ones that imported those. Saving a component every handler builds therefore updates all of them. Vite's watcher reports each save, and its transform step reads your TypeScript and your tsconfig paths. Its message channel passes what the CLI and your bot say to each other, like the restart prompt below.
 
 A few files can't be swapped this way, because something read them once when the bot started.
 
@@ -70,7 +70,7 @@ Typos happen. If a file throws while seedcord imports it, its handlers would dis
 Rolled back ./src/handlers/Ping.ts to the last-good version
 ```
 
-`Ping` keeps answering with its old code until your next working save replaces it, so a quick test in Discord can pass against the version you meant to replace. A new file that has never loaded doesn't have a last working version, so it registers nothing until it imports cleanly.
+`Ping` keeps answering with its old code until your next working save replaces it, so a quick test in Discord can pass against the version you meant to replace. A new file that has never loaded doesn't have a last working version and doesn't register anything until it imports cleanly.
 
 Setting `hmr.rollback` to `false` turns rollback off. seedcord then removes a broken file's handlers, so the route stops answering until you fix it.
 

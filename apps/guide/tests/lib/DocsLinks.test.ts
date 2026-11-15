@@ -18,7 +18,7 @@ describe('DocsLinks', () => {
         await expect(DocsLinks.load()).resolves.toBeInstanceOf(DocsLinks);
     });
 
-    it('lists only the packages the index carries', async () => {
+    it('lists only the packages in the index', async () => {
         const links = await DocsLinks.load();
 
         expect(links.hasPackage('core')).toBe(true);

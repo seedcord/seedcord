@@ -7,7 +7,7 @@ describe('changelog module', () => {
         expect(() => changelog.getReleaseLine({ summary: 'A thing changed.' }, 'patch', null)).toThrow(/repo/);
     });
 
-    it('renders a changeset with no commit without asking git or github', async () => {
+    it('renders an uncommitted changeset without asking git or github', async () => {
         const line = await changelog.getReleaseLine({ summary: 'A thing changed.' }, 'patch', {
             repo: 'seedcord/seedcord'
         });

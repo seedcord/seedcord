@@ -97,7 +97,7 @@ export class Award extends SlashHandler<'award'> {
 
 <Callout type="warning">
 
-`publish` returns before your subscribers finish, so code after the call can't read anything a subscriber wrote. If a subscriber or listener throws, seedcord catches the error and logs it on the `subscribers` log channel. The call to `publish` never sees it.
+`publish` returns before your subscribers finish, so code after the call can't read anything a subscriber wrote. If a subscriber or listener throws, seedcord catches the error and logs it on the `subscribers` log channel. The call to `publish` never receives it.
 
 </Callout>
 
@@ -221,7 +221,7 @@ const [data] = await core.bus.waitFor('levelUp', {
 
 If the timeout passes or the signal aborts, `waitFor` rejects with a `WaitForError`. Its `reason` is `'timeout'` or `'aborted'`.
 
-Write a subscriber by default. It gets `this.core` and `this.logger` without any setup. seedcord loads its file at startup, so nothing in your code has to register it. Each publish runs a new instance, so a field on the class doesn't keep its value between publishes. A callback registered with `on` suits code that already holds `core`, like a plugin. `waitFor` suits code that has to pause until the next publish.
+Write a subscriber by default. It gets `this.core` and `this.logger` without any setup. seedcord loads its file at startup. Nothing in your code has to register it. Each publish runs a new instance, so a field on the class doesn't keep its value between publishes. A callback registered with `on` suits code that already holds `core`, like a plugin. `waitFor` suits code that has to pause until the next publish.
 
 <Callout type="warning">
 

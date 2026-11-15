@@ -144,7 +144,7 @@ function countStaticItems(
         matched = true;
     }
 
-    // a later setMethod wins over earlier adds
+    // a later setMethod replaces earlier adds
     for (const call of [...calls].reverse()) {
         const name = methodName(call);
         if (name !== limit.addMethod && name !== limit.setMethod) continue;

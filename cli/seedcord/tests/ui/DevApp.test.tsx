@@ -51,7 +51,7 @@ function view(
     );
 }
 
-// every channel the framework logs on
+// every channel that the framework logs on
 const MANY_CHANNELS = [
     'default',
     'bot',

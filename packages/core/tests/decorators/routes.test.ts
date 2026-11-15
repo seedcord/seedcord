@@ -120,7 +120,7 @@ function rejectionMessages(): void {
         >
     >();
     expectTypeOf<Parameters<typeof slashTypo<typeof Ban>>[0]>().toEqualTypeOf<
-        Constructor<['SlashRoute lists a command that is not registered', '/rtBan']>
+        Constructor<['SlashRoute lists an unregistered command', '/rtBan']>
     >();
     expectTypeOf<Parameters<typeof autocompleteKick<typeof Find>>[0]>().toEqualTypeOf<
         Constructor<
@@ -139,7 +139,7 @@ function rejectionMessages(): void {
         >
     >();
     expectTypeOf<Parameters<typeof profileTypo<typeof Profile>>[0]>().toEqualTypeOf<
-        Constructor<['ContextMenuRoute lists a command that is not registered', 'View Profil']>
+        Constructor<['ContextMenuRoute lists an unregistered command', 'View Profil']>
     >();
     expectTypeOf<Parameters<typeof approveRejectButton<typeof Approve>>[0]>().toEqualTypeOf<
         Constructor<

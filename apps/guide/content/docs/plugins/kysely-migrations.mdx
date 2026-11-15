@@ -90,7 +90,7 @@ By default the plugin runs every pending migration while the bot starts. If a mi
 | `onStartup` | what happens while the bot starts |
 | --- | --- |
 | not set, or `true` | runs every pending migration |
-| `false` | runs nothing |
+| `false` | skips the migrations |
 | a [`MigrationOptions`](ref:plugin-kysely-postgres/MigrationOptions) object | runs to the `target`, or in the `direction` and `steps` you pass |
 
 {/* prettier-ignore-end */}
@@ -167,7 +167,7 @@ If a migration in that range has no `down`, Kysely skips it and keeps its row in
 
 </Callout>
 
-`steps` has to be a whole number of zero or more. A fraction, a negative number, `NaN`, or `Infinity` throws `PluginKyselyInvalidStepCount`. Zero runs nothing. If you pass any other `direction`, `migrate` throws `PluginKyselyUnknownDirection`.
+`steps` has to be a whole number of zero or more. A fraction, a negative number, `NaN`, or `Infinity` throws `PluginKyselyInvalidStepCount`. Zero leaves the database as it is. If you pass any other `direction`, `migrate` throws `PluginKyselyUnknownDirection`.
 
 ## When a migration fails
 
@@ -180,7 +180,7 @@ If a migration throws an `Error`, you get that error unchanged, so a failing `CR
 | a file in the folder that doesn't export `up` | `PluginKyselyInvalidMigrationModule`, with the file path |
 | two files with the same name without the folder and extension | `CoreDuplicateName`, with both file paths |
 | a migration that throws something other than an `Error` | `PluginKyselyNonErrorFailure` |
-| a `dir` that doesn't exist | `CorePathUnreadable` under `seedcord dev`, `CoreDirectoryNotBuilt` in a built bot |
+| a missing `dir` | `CorePathUnreadable` under `seedcord dev`, `CoreDirectoryNotBuilt` in a built bot |
 
 {/* prettier-ignore-end */}
 

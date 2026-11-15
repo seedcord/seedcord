@@ -47,7 +47,7 @@ That refusal is a [`Notice`](ref:core/Notice), so the boundary catches it and re
 
 ```txt output
 ### Outdated
-This button or menu is from an older version. Please run the command again.
+This button or menu is from an older version. Run the command again.
 ```
 
 The card is ephemeral, and nothing reaches your logs or the `handledException` bus. seedcord doesn't report a stale click, because it's the normal result of editing a shape.
@@ -66,7 +66,7 @@ That one does report, since a working bot never produces it. seedcord logs it an
 
 ```txt output
 ### Cannot Proceed
-Something went wrong. Please try again.
+Something went wrong. Try again.
 ```
 
 `decode` also throws on a corrupt string, or on one you wrote by hand.

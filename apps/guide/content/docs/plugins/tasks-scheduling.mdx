@@ -112,7 +112,7 @@ export class TempBan extends SlashHandler<'tempban'> {
 2. It schedules the new unban and stores the job's `id` in the `unban-job` collection, so that `/unban` can cancel it later. The key holds the server's id and the member's id, because one member can be banned in two servers that use your bot.
 3. It bans the member.
 
-Since the ban comes last, nobody gets banned if `schedule()` throws. If the ban fails instead, the unban still runs a day later. Discord rejects that unban with [`Unknown Ban`](https://discord.com/developers/docs/topics/opcodes-and-status-codes#json-json-error-codes) (10026), so the run fails and changes nothing.
+Since the ban comes last, nobody gets banned if `schedule()` throws. If the ban fails instead, the unban still runs a day later. Discord rejects that unban with [`Unknown Ban`](https://discord.com/developers/docs/topics/opcodes-and-status-codes#json-json-error-codes) (10026), so the run fails and doesn't change anything.
 
 `job` is a [`ScheduledJob`](ref:plugin-tasks/ScheduledJob) with the job's `id`, its task's `key`, and its `at` time as a `Date`. It doesn't hold the job's data, so you can't look up a member's job from [`jobs()`](ref:plugin-tasks/Tasks.jobs). That's why `TempBan` stores the id itself.
 
@@ -255,7 +255,7 @@ The plugin stores jobs under the key that you pass to `attach`, here `'tasks'`. 
 
 The plugin deletes a job once its run ends. If the process dies during the run, your kv store still holds the job, and it runs again after the restart. The same happens if the bot shuts down during the run and the task throws, and if the plugin can't delete the job after the run.
 
-The plugin doesn't stop that second run, so write each task for jobs to be safe to run twice. A second run of `Unban` gets the `Unknown Ban` error from Discord. It fails and changes nothing. A task that sends a DM isn't safe. Record each DM in [`core.kv`](/built-ins) and check for it before you send.
+The plugin doesn't stop that second run, so write each task for jobs to be safe to run twice. A second run of `Unban` gets the `Unknown Ban` error from Discord, which is harmless. A task that sends a DM isn't safe. Record each DM in [`core.kv`](/built-ins) and check for it before you send.
 
 ### Trying again after a failure
 

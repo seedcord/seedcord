@@ -234,7 +234,7 @@ describe('CommandInjector', () => {
             expect(userMenus['View Profile']?.id).toBe('77');
         });
 
-        it('records a menu deployed to two or more guilds with no id', () => {
+        it('records a menu deployed to two or more guilds without an id', () => {
             const registry = [userMenu()];
             const buckets = guildBucket('g1', [['1', 'View Profile', ApplicationCommandType.User]]);
             buckets.set('g2', deployed([['2', 'View Profile', ApplicationCommandType.User]]));

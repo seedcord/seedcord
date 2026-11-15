@@ -135,7 +135,7 @@ const [winner] = fyShuffle(entrants);
 
 <Callout type="tip">
 
-`items.sort(() => Math.random() - 0.5)` is the common way to write this by hand. It's measurably biased. A comparator has to give the same answer every time it sees a pair. That one answers at random on each call, which leaves some orderings far more likely than others.
+`items.sort(() => Math.random() - 0.5)` is the common way to write this by hand. It's measurably biased. A comparator has to give the same answer every time it gets a pair. That one answers at random on each call, which leaves some orderings far more likely than others.
 
 </Callout>
 

@@ -60,7 +60,7 @@ afterEach(() => {
 });
 
 describe('useCommandPaletteSearch', () => {
-    it('downloads nothing while the palette is closed', () => {
+    it('waits for the palette to open before downloading', () => {
         render('seedcord', false);
         expect(fetchMock).not.toHaveBeenCalled();
     });

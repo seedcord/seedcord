@@ -294,7 +294,7 @@ ruleTester.run('require-components-v2-flag', rule, {
             errors: [{ messageId: 'missingFlag' }]
         },
         {
-            // an empty flags array sets nothing
+            // an empty flags array sets zero flags
             code: dedent`
                 import { TextChannel, ContainerBuilder } from 'discord.js';
                 declare const channel: TextChannel;

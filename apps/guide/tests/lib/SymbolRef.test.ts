@@ -24,7 +24,7 @@ describe('a ref: link', () => {
     it.each([
         ['ref:', 'is missing the package'],
         ['ref:/Notice', 'is missing the package'],
-        ['ref:core/', 'has a slash with no symbol after it'],
+        ['ref:core/', 'has a slash without a symbol after it'],
         ['ref:core/Notice/x', 'has a path after the symbol'],
         ['ref:core/.Notice', 'is missing the part before the member'],
         ['ref:core/Notice.', 'is missing the part after the member separator'],

@@ -93,7 +93,7 @@ type AssertNames<
     ? SameSet<Names, Declared> extends true
         ? TCtor
         : Mismatch<`${Decorator} does not match the ${Handler} generic`, Names, Declared>
-    : Constructor<[`${Decorator} lists a command that is not registered`, Exclude<Names, Registered>]>;
+    : Constructor<[`${Decorator} lists an unregistered command`, Exclude<Names, Registered>]>;
 
 type AssertSlashRoute<Route extends string, TCtor extends AnyHandlerCtor> = AssertNames<
     Route,

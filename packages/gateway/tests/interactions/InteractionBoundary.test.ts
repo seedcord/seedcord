@@ -158,7 +158,7 @@ describe('gateway fault answers', () => {
         expect(payload.metadata).toBe(interaction);
     });
 
-    it('swallows an api code listed in ignoreApiCodes, with no reply or report', async () => {
+    it('swallows an api code listed in ignoreApiCodes, without a reply or report', async () => {
         const core = mockCore(publish, { ignoreApiCodes: [RESTJSONErrorCodes.UnknownInteraction] });
 
         await answerFault(harmlessError(), asInteraction(mock), core);

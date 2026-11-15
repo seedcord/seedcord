@@ -77,7 +77,7 @@ describe('command deploy during http startup', () => {
         expect(commands.ping?.mention).toBe('</ping:cmd-1>');
     });
 
-    it('reads the ids and deploys nothing when seedcord dev holds the hashes of an unchanged deploy', async () => {
+    it('reads the ids and skips the deploy when seedcord dev holds the hashes of an unchanged deploy', async () => {
         let saved: DeployedHashes | undefined;
         const handlers = new Map<string, (data: unknown) => void>();
         setDevChannel({

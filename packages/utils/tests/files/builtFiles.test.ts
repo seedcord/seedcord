@@ -75,7 +75,7 @@ describe('botConfigDir', () => {
         expect(botConfigDir()).toBe(project.path);
     });
 
-    it('returns nothing for a build copied away from its project', () => {
+    it('returns undefined for a build copied away from its project', () => {
         using elsewhere = mkdtempDisposableSync(path.join(tmpdir(), 'seedcord-built-'));
         using _built = register({ root: path.join(elsewhere.path, 'app'), configFile: '/../seedcord.config.ts' });
 
@@ -181,7 +181,7 @@ describe('importFiles in a built bot', () => {
         await expect(walk(at('handlers'))).resolves.toEqual([[at('handlers/A.js'), 'A']]);
     });
 
-    it('loads nothing past the file the caller stopped at', async () => {
+    it('stops loading at the file where the caller stopped', async () => {
         const later = vi.fn(stub('Later'));
         using _built = register({
             folders: ['/handlers'],
@@ -226,7 +226,7 @@ describe('importFiles in a built bot', () => {
         await expect(walk(fsRoot)).resolves.toEqual([[path.join(fsRoot, 'handlers/Roll.js'), 'Roll']]);
     });
 
-    it('yields nothing for an empty folder the build registered', async () => {
+    it('yields an empty list for an empty folder the build registered', async () => {
         using _built = register({
             folders: ['/handlers', '/subscribers'],
             modules: { '/handlers/Roll.ts': stub('Roll') }

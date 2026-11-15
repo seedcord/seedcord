@@ -350,7 +350,7 @@ describe('ReferenceResolver.resolve', () => {
         expect(resolver.resolve('seedcord', ref)).toEqual({ kind: 'unresolved' });
     });
 
-    it('falls through to unresolved when crossPackageUrlRef yields nothing (no qualifiedName)', () => {
+    it('falls through to unresolved when crossPackageUrlRef comes back empty (no qualifiedName)', () => {
         const { resolver } = makeResolver({ loaded: ['seedcord'], known: ['seedcord', '@seedcord/logger'] });
         const ref: DocReference = { name: 'Logger', packageName: '@seedcord/logger' };
         expect(resolver.resolve('seedcord', ref)).toEqual({ kind: 'unresolved' });

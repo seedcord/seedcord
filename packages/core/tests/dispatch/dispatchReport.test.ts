@@ -92,7 +92,7 @@ describe('dispatch timing', () => {
         expect(message).toContain('142ms');
     });
 
-    it('traces the outcome a refused dispatch carries', () => {
+    it('traces the outcome of a refused dispatch', () => {
         const trace = traceSpy();
 
         publishedFor({ ...reportFor(), outcome: 'refused' });

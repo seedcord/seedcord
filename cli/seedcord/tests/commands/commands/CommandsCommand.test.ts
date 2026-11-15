@@ -219,7 +219,7 @@ describe('seedcord commands clean and purge, off a terminal', () => {
         expect(deletes).toEqual([]);
     });
 
-    it('deletes the duplicates with --yes and asks nothing', async () => {
+    it('deletes the duplicates with --yes and skips the prompt', async () => {
         using _output = captureOutput();
 
         const { deletes } = await run(['clean', '--guilds', '111', '--yes']);
@@ -245,7 +245,7 @@ describe('seedcord commands clean and purge, off a terminal', () => {
         expect(process.exitCode).toBe(1);
     });
 
-    it('lists every command in the guilds passed to purge and deletes nothing', async () => {
+    it('only lists the commands in the guilds passed to purge', async () => {
         using output = captureOutput();
 
         const { puts } = await run(['purge', '--guilds', '111']);
@@ -270,7 +270,7 @@ describe('seedcord commands clean and purge, off a terminal', () => {
         expect(puts).toEqual([{ route: Routes.applicationCommands(APP_ID), names: [] }]);
     });
 
-    it('throws CliNoScopeGiven when purge gets nothing to empty', async () => {
+    it('throws CliNoScopeGiven when purge gets zero scopes', async () => {
         using output = captureOutput();
 
         await run(['purge', '--yes']);

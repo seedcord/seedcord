@@ -23,7 +23,7 @@ describe('missingNotice', () => {
         expect(missingNotice('darwin')).toContain('seedcord dev');
     });
 
-    it('carries the platform install line', () => {
+    it('prints the install line for the platform', () => {
         expect(missingNotice('darwin')).toContain('brew install cloudflared');
         expect(missingNotice('linux')).toContain('https://');
     });

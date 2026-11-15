@@ -7,7 +7,7 @@ const HEADINGS = ['setup', 'options', 'replies'] as const;
 
 const scrolled: string[] = [];
 
-// each heading reports the top that the test gives it because jsdom doesn't lay anything out
+// each heading reports the top that the test gives it because jsdom skips layout
 function placeHeading(id: string, top: number): void {
     const heading = document.getElementById(id);
     if (heading === null) throw new Error(`no heading ${id}`);

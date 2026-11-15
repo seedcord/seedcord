@@ -254,7 +254,7 @@ A rolling deploy also runs two processes for a short time. A match during that t
 When daylight saving changes the clock, some times happen twice or don't happen at all. In `America/New_York`, 01:00 to 02:00 happens twice in autumn, and 02:00 to 03:00 doesn't happen in spring.
 
 - A task with one fixed time runs once. `30 1 * * *` runs once on the day when 01:30 happens twice. `30 2 * * *` runs right after the gap on the day when 02:30 doesn't exist.
-- Every other task, like `*/5 * * * *`, runs at each match in both of the repeated hours. It skips the times that don't exist.
+- Every other task, like `*/5 * * * *`, runs at each match in both of the repeated hours. It skips the times in the gap.
 
 croner reads a `startAt` or `stopAt` string in the task's timezone, unless the string has its own offset, like `Z` or `+02:00`. A match at exactly `startAt` runs, and a match at exactly `stopAt` doesn't.
 

@@ -190,7 +190,7 @@ export {};
         );
     });
 
-    it('renders declared channelTypes as wire numbers with no extra import', () => {
+    it('renders declared channelTypes as wire numbers without an extra import', () => {
         const output = renderSlash({
             move: {
                 dest: {
@@ -537,7 +537,7 @@ export {};
         expect(output).toContain(String.raw`        'tony\'s': AttachedPlugin<(typeof Bot)['tony\'s']>;`);
     });
 
-    it('carries the specifier through unchanged', () => {
+    it('passes the specifier through unchanged', () => {
         const output = withPlugins({ specifier: '../src/bot', keys: ['db'] });
 
         expect(output).toContain("import type Bot from '../src/bot';");

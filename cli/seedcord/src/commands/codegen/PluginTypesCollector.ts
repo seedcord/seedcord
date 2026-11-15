@@ -254,7 +254,7 @@ function describeValue(value: unknown): string {
     if (typeof value === 'function') return `the function ${value.name || '(anonymous)'}`;
     if (isReferable(value)) {
         const Class: unknown = Reflect.get(value, 'constructor');
-        return typeof Class === 'function' ? `a ${Class.name}` : 'an object with no class';
+        return typeof Class === 'function' ? `a ${Class.name}` : 'an object without a class';
     }
     if (typeof value === 'bigint' || typeof value === 'symbol') return `a ${typeof value}`;
     return String(value);

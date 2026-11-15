@@ -32,7 +32,7 @@ describe('Callout', () => {
         expect(screen.getByText('Gateway and http differ')).toBeInTheDocument();
     });
 
-    // mdx does not typecheck the props a page writes
+    // mdx doesn't typecheck the props that a page writes
     it('refuses an unknown type', () => {
         const wrong = { type: 'nonsense' } as unknown as CalloutProps;
 

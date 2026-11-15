@@ -212,7 +212,7 @@ describe('the loader that ran seedcord.config.ts', () => {
 
     const WITH_PLUGIN = { ...MINIMAL, vitePlugins: () => [{ name: 'lazy' }] };
 
-    it('closes before readConfig returns for a config with no vitePlugins', async () => {
+    it('closes before readConfig returns for a config without vitePlugins', async () => {
         const { loader, dir, loaders } = stubProject(MINIMAL);
 
         await using _loaded = await loader.readConfig(dir);

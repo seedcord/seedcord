@@ -13,7 +13,7 @@ import type { Config } from '@seedcord/types';
 import type { ClientEvents } from 'discord.js';
 
 class Host extends PluginHost<'gateway', 'server'> {
-    // justified: attach reads nothing off these
+    // justified: attach never reads these
     public readonly config = {} as Config;
     public readonly rest = {} as PluginHost<'gateway', 'server'>['rest'];
     public readonly applicationId = 'app-1';

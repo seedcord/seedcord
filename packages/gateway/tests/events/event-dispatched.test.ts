@@ -117,7 +117,7 @@ describe('eventDispatched', () => {
         expect(published[0]?.handlers).toEqual([]);
     });
 
-    it('pairs with eventDispatching once a spent once-handler leaves nothing to run', async ({ testEnv }) => {
+    it('pairs with eventDispatching after the only once-handler is spent', async ({ testEnv }) => {
         await testEnv.createFile(`${EVENTS_DIR}/Once.ts`, ONCE);
 
         await using seedcord = new Seedcord(testConfig({ events: testEnv.resolvePath(EVENTS_DIR) }));
@@ -164,7 +164,7 @@ describe('eventDispatched', () => {
         expect(ends[0]?.dispatchId).toBe(starts[0]?.dispatchId);
     });
 
-    it('reports nothing for an event that no handler registered', async ({ testEnv }) => {
+    it('skips the report for an event without a registered handler', async ({ testEnv }) => {
         await testEnv.createFile(`${EVENTS_DIR}/Ok.ts`, OK);
 
         await using seedcord = new Seedcord(testConfig({ events: testEnv.resolvePath(EVENTS_DIR) }));

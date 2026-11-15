@@ -9,10 +9,10 @@ const flags = new CliFlags('vp run docs:purge [options]', {
     prefixes: {
         type: 'string',
         multiple: true,
-        describe: 'URL prefix to purge as host plus path, repeat for several. Wins over --files'
+        describe: 'URL prefix to purge as host plus path, repeat for several. With this set, --files is ignored'
     },
     files: { type: 'string', multiple: true, describe: 'Full URL to purge, repeat for several' },
-    'dry-run': { type: 'boolean', describe: 'Print the request and send nothing' }
+    'dry-run': { type: 'boolean', describe: "Print the request and don't send it" }
 });
 
 async function main(): Promise<void> {

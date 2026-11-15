@@ -272,7 +272,7 @@ function slashInteraction(commandName: string): ChatInputCommandInteraction<'cac
 }
 
 describe('SlashHandler', () => {
-    it('throws MatchCaseMissing for a prototype-named route with no case', async () => {
+    it('throws MatchCaseMissing for a prototype-named route without a case', async () => {
         class Mod extends SlashHandler<'kick' | 'warn'> {
             async execute(): Promise<void> {
                 await this.match({

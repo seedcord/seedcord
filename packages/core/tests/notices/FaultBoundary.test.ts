@@ -147,7 +147,7 @@ describe('FaultBoundary', () => {
             expect(log.lines.at(-1)?.args).toEqual([thrown]);
         });
 
-        it('publishes nothing for a Notice that does not report', () => {
+        it("skips the publish for a Notice that doesn't report", () => {
             const { boundary, published } = harness();
 
             boundary.report(new TestNotice());
@@ -188,7 +188,7 @@ describe('FaultBoundary', () => {
     });
 
     describe('answerWithReply', () => {
-        it('sends nothing for a Silence', async () => {
+        it("doesn't send a reply for a Silence", async () => {
             const { boundary, send } = harness();
 
             await boundary.answerWithReply(new Silence(), { send });

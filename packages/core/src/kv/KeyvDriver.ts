@@ -59,7 +59,7 @@ export class KeyvDriver<TKeyv extends KeyvLike> implements KvDriver, AsyncDispos
         await this.keyv.disconnect();
     }
 
-    // Keyv iterates a Map-like store itself. any other store without an iterator() doesn't yield anything
+    // Keyv iterates a Map-like store itself. any other store needs an iterator() to yield its entries
     #canListKeys(): boolean {
         const capabilities = this.keyv.store.capabilities;
         return capabilities?.store === 'mapLike' || capabilities?.methods.iterator.exists === true;

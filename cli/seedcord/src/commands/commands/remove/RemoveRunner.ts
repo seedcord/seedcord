@@ -23,7 +23,7 @@ export interface RemoveDeps extends Pick<RunnerDeps, 'openDiscord'> {
 interface RemovePlan {
     mode: RemoveMode;
     guilds: GuildTargets;
-    // false prints what would go and deletes nothing
+    // false prints what it would delete without deleting anything
     apply: boolean;
 }
 

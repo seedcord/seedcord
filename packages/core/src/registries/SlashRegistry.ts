@@ -14,8 +14,8 @@ export type OptionKind =
 
 /**
  * The cache state a command's interaction arrives in, read from the `contexts` it declares. A guild-only
- * command is `'cached'`. A command a DM or a private channel can reach is `undefined`, since no guild
- * backs it.
+ * command is `'cached'`. A command that a DM or a private channel can reach is `undefined`, since it can
+ * arrive from outside a guild.
  */
 export type RouteCache = 'cached' | undefined;
 

@@ -12,7 +12,7 @@ describe('the pill on a guide card', () => {
     });
 
     // the Start tab's pages are directly under content/docs
-    it('names Start for a page with no folder above it', () => {
+    it('names Start for a page without a folder above it', () => {
         expect(pillFor({ slugs: ['first-bot'], path: 'first-bot.mdx' })).toBe('start');
     });
 

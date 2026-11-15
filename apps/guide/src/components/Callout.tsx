@@ -45,7 +45,7 @@ export function Callout({ type, only, children }: CalloutProps): ReactElement {
                 <Icon icon={icon} size={15} />
                 <span className={cn('text-[0.625rem] font-semibold tracking-widest uppercase')}>{label}</span>
             </p>
-            {/* a one-line callout arrives as bare text with no p around it */}
+            {/* a one-line callout arrives as bare text without a p around it */}
             <div
                 className={cn(
                     'mt-1.5 space-y-3 text-sm/relaxed text-(--text) [&>ol]:text-sm/relaxed [&>p]:text-sm/relaxed [&>ul]:text-sm/relaxed'

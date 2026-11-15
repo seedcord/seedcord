@@ -175,7 +175,7 @@ describe('Tasks scheduled tasks', () => {
         expect(host.runs).toHaveLength(2);
     });
 
-    it('does not run a job again after it throws, and carries on when onError throws too', async () => {
+    it('does not run a job again after it throws, and keeps running when onError throws too', async () => {
         using logs = captureLogs();
         await using booted = await start(jobs, driver);
         const { host, tasks } = booted;
@@ -495,7 +495,7 @@ describe('Tasks job upkeep', () => {
             });
         });
 
-        it('a duration that ends past the last date a Date can hold, and stores nothing', async () => {
+        it('a duration that ends past the last date a Date can hold, before storing it', async () => {
             const duration = String('100000001d');
 
             await expect(tasks.schedule(Reminder, { in: duration })).rejects.toMatchObject({
@@ -528,7 +528,7 @@ describe('Tasks job upkeep', () => {
             });
         });
 
-        it('data with a cycle, and stores nothing', async () => {
+        it('data with a cycle, before storing it', async () => {
             const data = { text: 'hi', sentAt: new Date() };
             Object.assign(data, { self: data });
 
@@ -538,7 +538,7 @@ describe('Tasks job upkeep', () => {
             expect(shared.stored.size).toBe(0);
         });
 
-        it('a class that shares its key with a loaded task, and stores nothing', async () => {
+        it('a class that shares its key with a loaded task, before storing it', async () => {
             const scheduling = tasks.schedule(TwinReminder, { in: '1s', data: { text: 'hi' } });
 
             await expect(scheduling).rejects.toMatchObject({ code: SeedcordErrorCode.PluginTasksKeyTaken });

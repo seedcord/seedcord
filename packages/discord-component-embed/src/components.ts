@@ -70,8 +70,8 @@ export type LinkButtonProps = LinkButtonBase &
     ({ label: string; emoji?: LinkButtonEmoji } | { label?: string; emoji: LinkButtonEmoji });
 
 /**
- * The root of every component embed. Wrap everything else in one, then pass it to {@link toComponentEmbed}. React
- * renders nothing in your page.
+ * The root of every component embed. Wrap everything else in one, then pass it to {@link toComponentEmbed}. It
+ * renders as `null` in your React page.
  *
  * @example
  * ```tsx

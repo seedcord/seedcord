@@ -11,7 +11,7 @@ Under a plain file watcher, every save restarts the whole process. A gateway bot
 
 Its settings come from [`seedcord.config.ts`](/build/config), or `seedcord.config.mts`. The shell picks the mode, so `ENV=staging seedcord dev` loads your `.env.staging` file. [Env files and modes](/build/env) covers which variables count.
 
-A gateway bot or a node http bot hot reloads only in the `development` and `test` modes, and the `logs/` file below exists only in `development`. Under `ENV=staging`, a save changes nothing until you press `r`, and seedcord doesn't write a log file.
+A gateway bot or a node http bot hot reloads only in the `development` and `test` modes, and the `logs/` file below exists only in `development`. Under `ENV=staging`, a save takes effect only when you press `r`, and seedcord doesn't write a log file.
 
 ## Running it on Bun
 
@@ -148,7 +148,7 @@ Any other line logs a warning and is ignored.
 
 ## Where the logs go
 
-The terminal fills your whole console while it runs, so the log pane is the only place those lines appear on screen. In `development` mode seedcord also writes every line to a file under `logs/`, so a restart or the 1,000-line limit doesn't lose them. A `logger.sinks` list in your bot config replaces that file sink. When you quit, the terminal prints the `logs/` folder either way.
+The terminal fills your whole console while it runs, and the log pane is the only place those lines appear on screen. In `development` mode seedcord also writes every line to a file under `logs/`, so a restart or the 1,000-line limit doesn't lose them. A `logger.sinks` list in your bot config replaces that file sink. When you quit, the terminal prints the `logs/` folder either way.
 
 ```txt output
 2 Nov, 03:35:09 am [info ]: Dev - seedcord dev stopped. logs: logs/

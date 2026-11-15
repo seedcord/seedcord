@@ -274,7 +274,7 @@ describe('DocsEngine mock package integration', () => {
         const decoratorTagPresent =
             decoratorSignature.comment?.blockTags.some((tag) => tag.tag === '@decorator') ?? false;
         expect(decoratorTagPresent).toBe(true);
-        expect(decoratorSignature.comment?.summary).toContain('A simple method decorator');
+        expect(decoratorSignature.comment?.summary).toContain('A method decorator');
 
         const asyncMockFunction = await getNodeBySlug('async-mock-function');
         expect(asyncMockFunction.flags.isAsync).toBe(true);

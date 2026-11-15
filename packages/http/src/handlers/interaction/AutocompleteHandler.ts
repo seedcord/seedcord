@@ -86,7 +86,7 @@ export abstract class AutocompleteHandler<Route extends keyof SlashRegistry> ext
 
     /**
      * The focused option for this interaction. `value` is always the raw partial string the user is typing,
-     * even for an integer or number option, so coerce it yourself when you need a number.
+     * even for an integer or number option. Coerce it yourself when you need a number.
      */
     protected get focused(): FocusedField<Route> {
         const focused = this.reader.getFocused();

@@ -120,7 +120,7 @@ describe('ReplySender.reply', () => {
         expect(mock.reply).toHaveBeenCalledOnce();
     });
 
-    it('carries the first ack as the cause on a double reply', async () => {
+    it('uses the first ack as the cause on a double reply', async () => {
         const mock = mockInteraction();
         const sender = senderFor(mock);
         await sender.reply(reply);
@@ -164,7 +164,7 @@ describe('ReplySender.defer', () => {
         expect(mock.deferReply).not.toHaveBeenCalled();
     });
 
-    it('carries the defer as the cause when a reply follows a defer', async () => {
+    it('uses the defer as the cause when a reply follows a defer', async () => {
         const mock = mockInteraction();
         const sender = senderFor(mock);
         await sender.defer();

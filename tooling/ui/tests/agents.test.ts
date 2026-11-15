@@ -61,7 +61,7 @@ describe('agentLinkHeader', () => {
 });
 
 describe('siteLinks', () => {
-    it('carries the same relations the header sends', () => {
+    it('has the same relations that the header sends', () => {
         for (const site of SITES) {
             const rels = siteLinks(site).map((entry) => entry.rel);
 

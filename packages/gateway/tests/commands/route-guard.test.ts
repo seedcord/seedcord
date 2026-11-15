@@ -28,7 +28,7 @@ describe('Boot-time slash route exhaustiveness guard', () => {
         vi.clearAllMocks();
     });
 
-    it('warns for a command route leaf with no handler and is silent for the handled leaf', async ({ testEnv }) => {
+    it('warns for a command route leaf without a handler and is silent for the handled leaf', async ({ testEnv }) => {
         await testEnv.createFile(
             'commands/Config.ts',
             `

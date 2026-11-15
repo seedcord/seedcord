@@ -26,10 +26,11 @@ tokens:
   - 'go (?:through|away)'
   - 'can go'
   - '(?:dis)?agrees?'
-  # a hyphenated term like drop-shadow is a noun
+  # a hyphenated term like drop-shadow or last-wins is a noun
   - 'drops?(?!-)'
   - 'dropped'
   - 'dropping'
+  - '(?<!-)(?<!(?:\ba|\ban|quick|big|easy|small) )wins?(?!-)'
   # an imperative "leave it out" is the reader acting, and "work out" is a different verb
   - '(?:leaves|leaving)\s+(?:(?!(?:work|figure)\b)\S+\s+){0,3}?(?:out|off)'
   - 'left\s+out'

@@ -13,7 +13,7 @@ In a terminal that opens a menu with one entry per subcommand. Without a termina
 
 A scaffolded project has the scripts `commands` and `commands:deploy`. [Your first bot](/first-bot#scripts) explains why the CLI runs through scripts.
 
-Every subcommand reads `DISCORD_BOT_TOKEN` from your environment or a [`.env` file](/build/env#the-env-files). `clean` and `purge` need nothing else. `deploy` and `list` compare Discord against the commands in your code, so they also read [`seedcord.config.ts`](/build/config), run its [Vite plugins](/build/vite-plugins), and import the module `instance` points at. That import [constructs your bot](/tooling/codegen#codegen-constructs-your-bot) and never starts it.
+Every subcommand reads `DISCORD_BOT_TOKEN` from your environment or a [`.env` file](/build/env#the-env-files). `clean` and `purge` need only the token. `deploy` and `list` compare Discord against the commands in your code, so they also read [`seedcord.config.ts`](/build/config), run its [Vite plugins](/build/vite-plugins), and import the module `instance` points at. That import [constructs your bot](/tooling/codegen#codegen-constructs-your-bot) and never starts it.
 
 {/* prettier-ignore-start */}
 
@@ -45,7 +45,7 @@ Test Server  1 command, none added or removed
 
 The `+` row holds commands Discord doesn't have yet. The `-` row holds commands your code no longer defines. Discord [overwrites the whole scope](https://discord.com/developers/docs/interactions/application-commands#bulk-overwrite-global-application-commands) on a deploy, so every `-` command disappears from the picker. `Test Server` shows "none added or removed" when one of its commands changed in place, like a new description or option. Its scope still gets sent again. The prompt that follows defaults to no.
 
-`deploy` skips a scope whose hash matches `.seedcord/deployed-commands.json` and whose command names match what Discord holds. [Deployed commands](/commands/deployed#seedcord-dev-skips-a-deploy-that-changes-nothing) explains the check. A confirmed `deploy` writes that file, so the next `seedcord dev` run skips what you just sent. Pass `--force` to send a skipped scope anyway.
+`deploy` skips a scope whose hash matches `.seedcord/deployed-commands.json` and whose command names match what Discord holds. [Deployed commands](/commands/deployed#seedcord-dev-skips-a-deploy-when-nothing-changed) explains the check. A confirmed `deploy` writes that file, so the next `seedcord dev` run skips what you just sent. Pass `--force` to send a skipped scope anyway.
 
 If everything was skipped, a terminal asks "Deploy them anyway?". With `--yes` and no `--force`, `deploy` prints "Nothing to deploy." and exits `0`.
 
@@ -74,7 +74,7 @@ Pass flags to run either one from a script.
 
 <Shell exec="seedcord commands clean --all-guilds" />
 
-With flags, both subcommands list what they would delete and stop with "Dry run. Re-run with `--yes` to delete these." A script that omits the flag deletes nothing. `clean` needs `--guilds` or `--all-guilds`, and `purge` needs one of those or `--global`. Otherwise they throw `CliNoScopeGiven`.
+With flags, both subcommands list what they would delete and stop with "Dry run. Re-run with `--yes` to delete these." A script that omits the flag only gets the list. `clean` needs `--guilds` or `--all-guilds`, and `purge` needs one of those or `--global`. Otherwise they throw `CliNoScopeGiven`.
 
 <Shell exec="seedcord commands purge --global --yes" />
 

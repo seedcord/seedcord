@@ -66,7 +66,7 @@ describe('the runtime check on node', () => {
         expectUnsupported(onRuntime({ nodeRange: '>= 24.11', node: '22.18.0' }));
     });
 
-    it('checks nothing when the range is a form it cannot read', () => {
+    it("skips the check when it can't read the range", () => {
         expect(onRuntime({ nodeRange: '', node: '22.18.0' })).not.toThrow();
         expect(onRuntime({ nodeRange: 'not a range', node: '22.18.0' })).not.toThrow();
     });

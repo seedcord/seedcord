@@ -36,7 +36,7 @@ Commands, replies, components, checks, events, plugins, and the dev tooling all 
 - **Checks.** A gate runs before your handler and refuses by throwing. [`@Gated`](ref:gateway/Gated) puts one on a handler, [`defineGate`](ref:core/defineGate) writes your own, and [`and`](ref:core/and) or [`or`](ref:core/or) combines them. seedcord ships a catalog you can import directly, like cooldowns and permission checks. Middleware runs around every handler call. A rate limiter counts uses against any key you build.
 - **Events.** On gateway, a handler can listen to the events discord.js emits. You can also publish and subscribe to your own events, and that works on http too.
 - **Plugins.** A plugin adds a database, a cache, or a client for another API to your bot. seedcord starts and stops it with the bot, and every handler reads it from `this.core` with its type.
-- **Tooling.** Save a handler and the running bot loads it without a restart. `seedcord dev` offers to re-register a command you changed. On http it also opens a tunnel and sets it as your Discord application's endpoint. The same CLI runs codegen, deploys and cleans up your commands, and builds your bot for production. The new project's lint rules flag a handler with no route decorator, like `@SlashRoute`, in your editor.
+- **Tooling.** Save a handler and the running bot loads it without a restart. `seedcord dev` offers to re-register a command you changed. On http it also opens a tunnel and sets it as your Discord application's endpoint. The same CLI runs codegen, deploys and cleans up your commands, and builds your bot for production. The new project's lint rules flag a handler without a route decorator, like `@SlashRoute`, in your editor.
 
 ## Errors that tell you what to do
 
@@ -94,7 +94,7 @@ export class Ban extends SlashHandler<'ban'> {
 }
 ```
 
-The `ban` command, which isn't shown here, marks `target` as required, so it arrives as a plain `User`. If you leave `target` optional, the same call returns `User | null`. Every option you declare is typed, so a misspelled name stops the build, like `resaon` on the last line above.
+The `ban` command, which isn't shown here, marks `target` as required, so it arrives as a plain `User`. If you leave `target` optional, the same call returns `User | null`. Every option you declare is typed. A misspelled name stops the build, like `resaon` on the last line above.
 
 <Callout type="transport">
 

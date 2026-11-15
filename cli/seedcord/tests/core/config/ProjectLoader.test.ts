@@ -150,14 +150,14 @@ describe('ProjectLoader target', () => {
         });
     });
 
-    it('throws CliTsconfigNotFound for a cloudflare.config.ts with no tsconfig', async () => {
+    it('throws CliTsconfigNotFound for a cloudflare.config.ts without a tsconfig', async () => {
         const { projectDir, load } = projectWith(EDGE_MINIMAL);
         writeEdgeConfig(projectDir);
 
         await expect(load()).rejects.toMatchObject({ code: SeedcordErrorCode.CliTsconfigNotFound });
     });
 
-    it('throws CliWorkerdConditionWithoutCloudflareConfig for the workerd condition with no cloudflare.config.ts', async () => {
+    it('throws CliWorkerdConditionWithoutCloudflareConfig for the workerd condition without a cloudflare.config.ts', async () => {
         const { projectDir, load } = projectWith(MINIMAL);
         writeTsconfig(projectDir, { customConditions: ['workerd'] });
 
@@ -240,7 +240,7 @@ describe('ProjectLoader on an edge bot', () => {
 });
 
 describe('ProjectLoader make', () => {
-    it('reads templates from ./templates beside the config with no helpers by default', async () => {
+    it('reads templates from ./templates beside the config without helpers by default', async () => {
         const { projectDir, load } = projectWith(MINIMAL);
 
         const { make } = await load();
@@ -324,7 +324,7 @@ describe('ProjectLoader paths with a #', () => {
 });
 
 describe('ProjectLoader validation', () => {
-    it('throws CliConfigNotFound for a folder with no seedcord config', async () => {
+    it('throws CliConfigNotFound for a folder without a seedcord config', async () => {
         const open: OpenModules = () => Promise.reject(new Error('never opened'));
 
         await expect(new ProjectLoader(open, new ShellMode()).readConfig(tempProject())).rejects.toMatchObject({
@@ -430,7 +430,7 @@ describe('ProjectLoader validation', () => {
         ]);
     });
 
-    it('carries hmr config through and resolves the typecheck tsconfig', async () => {
+    it('passes hmr config through and resolves the typecheck tsconfig', async () => {
         const hmr = { restart: ['**/*.json'], typecheck: { tsconfig: './tsconfig.dev.json' } };
         const { projectDir, load } = projectWith({ ...MINIMAL, hmr });
 

@@ -465,7 +465,7 @@ describe('DevRunner run', () => {
     }, 60_000);
 });
 
-describe('runPlain, with no terminal to answer prompts', () => {
+describe('runPlain, without a terminal to answer prompts', () => {
     afterEach(() => {
         vi.useRealTimers();
     });

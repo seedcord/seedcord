@@ -64,7 +64,7 @@ double            ascii
 ╚═══════╩═════╝   +-------+-----+
 ```
 
-`markdown` doesn't draw the outer frame and emits a GitHub-flavored table, the kind with a `| --- |` delimiter row.
+`markdown` emits a GitHub-flavored table, the kind with a `| --- |` delimiter row, and skips the outer frame.
 
 ```txt output
 | Name  | Age |
@@ -92,7 +92,7 @@ renderTable(rows, { align: 'center' });
 renderTable(rows, { align: ['left', 'right', 'center'] });
 ```
 
-`numericAlign` right-aligns any column whose body cells all read as numbers, which lines the digits up on a scoreboard. An explicit `align` for that column wins.
+`numericAlign` right-aligns any column whose body cells all read as numbers, which lines the digits up on a scoreboard. An explicit `align` for that column overrides it.
 
 ```ts twoslash
 import { renderTable } from '@seedcord/gateway';

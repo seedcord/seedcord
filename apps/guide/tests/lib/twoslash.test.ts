@@ -109,7 +109,7 @@ describe('the twoslash transformer', () => {
         await expect(render(source, 'tsx')).rejects.toThrow('not marked as being expected');
     });
 
-    it('carries the type on a hovered token, without its tsdoc', async () => {
+    it('shows only the type on a hovered token, without its tsdoc', async () => {
         const html = await render("const routes = ['ping'] as const;");
 
         expect(html).toContain('twoslash-hover');
@@ -126,7 +126,7 @@ describe('the twoslash transformer', () => {
         expect(second).not.toContain("Type 'string' is not assignable to type 'number'.");
     });
 
-    it('adds nothing when the fence is unflagged', async () => {
+    it('leaves an unflagged fence as it is', async () => {
         const { html } = await twoslashBlock('const count = 12;', 'ts', 'off');
 
         expect(html).not.toContain('twoslash');
@@ -166,7 +166,7 @@ describe('the twoslash transformer', () => {
         });
     });
 
-    it('hands the copy button a sample with no twoslash notation', async () => {
+    it('hands the copy button a sample without twoslash notation', async () => {
         const { text } = await twoslashBlock(
             sample('// @errors: 2322', 'const count: number = "twelve";'),
             'ts',

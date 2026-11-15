@@ -51,7 +51,7 @@ describe('GuideSearch', () => {
         await expect(failure).rejects.toThrow(message);
     });
 
-    it('throws a plain status error for a 429 with no wait in seconds', async () => {
+    it('throws a plain status error for a 429 without a wait in seconds', async () => {
         for (const headers of [{}, { 'retry-after': 'Wed, 21 Oct 2026 07:28:00 GMT' }]) {
             answering(new Response(null, { status: ASK_WAIT_STATUS.tooManySearches, headers }));
 

@@ -44,7 +44,7 @@ describe('anyInteraction from the http engine', () => {
         expect(seen[0]?.interaction).toMatchObject({ id: 'int-1', type: 2 });
     });
 
-    it('publishes nothing for a ping', async () => {
+    it('skips the publish for a ping', async () => {
         expect(await published({ type: 1, id: 'ping-1', application_id: 'app-1', token: 'tok' })).toHaveLength(0);
     });
 });

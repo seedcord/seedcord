@@ -167,7 +167,7 @@ export const seedcord = new Seedcord({
 });
 ```
 
-Reading `.component` applies it. An embed takes it as its color, and a container takes it as its accent. Every other builder gets nothing, since nothing else has one.
+Reading `.component` applies it. An embed takes it as its color, and a container takes it as its accent. Every other builder is unaffected, since nothing else has one.
 
 Set your own in the constructor, with `setColor` on an embed or `setAccentColor` on a container. The check only fills an empty color, so it leaves yours alone.
 
@@ -195,7 +195,7 @@ Your color might only be known after the bot exists, because it comes from a set
 
 Discord takes a custom emoji in a message as `<:streak_flame:1872389747982323426>`. By hand, you'd copy each of those out of the client into a constants file and keep that file in sync yourself.
 
-A re-upload gives the emoji a new id, so every copy of the old one points at nothing. A rename leaves the name in your code out of step with the one in Discord. Some emojis come from your app and some from one guild, so each of those is its own lookup.
+A re-upload gives the emoji a new id, so every copy of the old one points at nothing. A rename leaves the name in your code out of step with the one in Discord. Some emojis come from your app and some from one guild, and each of those is its own lookup.
 
 seedcord does those lookups for you, once, while the bot starts. Name each custom emoji in your config, then read it back by that name.
 

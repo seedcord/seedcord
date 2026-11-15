@@ -119,7 +119,7 @@ Calls to `update`, `set`, and `delete` on one id run one after another, so the s
 
 <Callout type="warning">
 
-That order holds inside one process. Two processes that share one driver's storage, like two copies of your bot or two Workers isolates, can both read a record before either one writes, so one change is lost. Most bots run as one process, where `update` is exact.
+That order holds inside one process. Two processes that share one driver's storage, like two copies of your bot or two Workers isolates, can both read a record before either one writes. Then one change is lost. Most bots run as one process, where `update` is exact.
 
 </Callout>
 

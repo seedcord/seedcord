@@ -85,7 +85,7 @@ ruleTester.run('no-conflicting-button-props', rule, {
             }
             new NavButton({ url: 'https://example.com', custom_id: 'x' });
         `,
-        // the last setStyle wins, and it moves the button off the Link style
+        // the last setStyle moves the button off the Link style
         dedent`
             import { ButtonBuilder, ButtonStyle } from 'discord.js';
             new ButtonBuilder()
@@ -183,7 +183,7 @@ ruleTester.run('no-conflicting-button-props', rule, {
             errors: [{ messageId: 'skuIdWithProp', data: { prop: 'customId' } }]
         },
         {
-            // the chained setStyle runs after the constructor and wins
+            // the chained setStyle runs after the constructor and overrides its style
             code: dedent`
                 import { ButtonBuilder, ButtonStyle } from 'discord.js';
                 new ButtonBuilder({ style: ButtonStyle.Primary })

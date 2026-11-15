@@ -68,7 +68,7 @@ describe('ActiveVersion', () => {
         ]);
     });
 
-    it('opens nothing for a version the index does not list', async () => {
+    it("ignores a version that the index doesn't list", async () => {
         await expect(
             ActiveVersion.open(fixtureEngine('core', '@seedcord/core', CORE), 'core', '0.1.0')
         ).resolves.toBeNull();

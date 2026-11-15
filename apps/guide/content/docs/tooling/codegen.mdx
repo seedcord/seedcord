@@ -31,7 +31,7 @@ export class SearchCommand extends BuilderComponent<'command'> {
 
 An option's name and its required flag are arguments to method calls. Those calls run when something constructs the class. TypeScript reads the source of that chain without running it, so the name `query` only exists once the chain has run.
 
-`seedcord codegen` records those names for you. It imports every TypeScript and JavaScript file under your commands folder, constructs each decorated class it finds, reads the JSON that class's builder produced, and writes what it found to `seedcord-gen.ts`.
+`seedcord codegen` records those names for you. It imports every TypeScript and JavaScript file under your commands folder and constructs each decorated class it finds. Then it reads the JSON that class's builder produced and writes what it found to `seedcord-gen.ts`.
 
 <Shell run="codegen" />
 
@@ -100,7 +100,7 @@ It prints a line per step, like plain codegen. If the file matches, the last lin
   [3119] src/seedcord-gen.ts is out of date. Run seedcord codegen and commit it.
 ```
 
-`--check` only reports, so you fix the drift by running plain `seedcord codegen`. The scaffold doesn't wire a script for it, so put it wherever your pipeline runs its checks.
+`--check` only reports. To fix the drift, run plain `seedcord codegen`. The scaffold doesn't wire a script for it, so put it wherever your pipeline runs its checks.
 
 If codegen can't read your commands folder, it throws `CorePathUnreadable`, because a run that didn't find any commands would pass `--check` against a file that's already stale.
 
@@ -112,4 +112,4 @@ Your commands folder can hold helpers and constants too. Codegen imports each of
 
 ## Two commands, one name
 
-Discord scopes command names per kind. seedcord enforces the same rule. If two commands resolve to one slash route, or two context menus of one kind share a name, codegen throws `CoreDuplicateName` with both file paths, so you know which one to rename.
+Discord scopes command names per kind. seedcord enforces the same rule. If two commands resolve to one slash route, or two context menus of one kind share a name, codegen throws `CoreDuplicateName`. The error has both file paths, so you know which one to rename.

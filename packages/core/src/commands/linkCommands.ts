@@ -76,7 +76,7 @@ function deployedIds(deploy: DeployResult): Map<string, DeployedId> {
             else if (existing !== command.id) ids.set(key, MULTI_GUILD);
         }
     }
-    // a global command's one id wins over any guild copy
+    // a global command's one id overwrites the id of any guild copy
     for (const command of deploy.get(GLOBAL_ID)?.values() ?? []) ids.set(commandKey(command), command.id);
     return ids;
 }

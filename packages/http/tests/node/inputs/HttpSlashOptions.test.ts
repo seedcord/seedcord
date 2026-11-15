@@ -172,7 +172,7 @@ describe('subcommand hoisting', () => {
         expect(options.getInteger('count')).toBe(7);
     });
 
-    it('handles a subcommand with no options', () => {
+    it('handles a subcommand without options', () => {
         const options = new HttpSlashOptions(
             chatData([{ name: 'setup', type: ApplicationCommandOptionType.Subcommand }])
         );
@@ -224,7 +224,7 @@ describe('autocomplete payloads', () => {
         expect(options.getFocused()).toBeNull();
     });
 
-    it('coerces entered numeric siblings, the autocomplete wire carries them as strings', () => {
+    it('coerces entered numeric siblings, the autocomplete wire sends them as strings', () => {
         const options = new HttpSlashOptions(
             autocompleteData([
                 { name: 'query', type: ApplicationCommandOptionType.String, value: 'par', focused: true },

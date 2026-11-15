@@ -2,4 +2,4 @@
 '@seedcord/types': minor
 ---
 
-**BREAKING:** Removed `TypedOmit`, `TypedExclude`, and `TypedExtract`, so use `Except`, `ExcludeStrict`, and `ExtractStrict` from `type-fest`. Removed `Tail`, so use `ArrayTail` from `type-fest`. Removed `FilterUnionByProperty`, `StringStartsWith`, `StringEndsWith`, and `StringContains`, so use TypeScript's `Extract`.
+**BREAKING:** Removed `TypedOmit`, `TypedExclude`, and `TypedExtract` in favor of `Except`, `ExcludeStrict`, and `ExtractStrict` from `type-fest`. Removed `Tail` in favor of `ArrayTail` from `type-fest`. Removed `FilterUnionByProperty`, `StringStartsWith`, `StringEndsWith`, and `StringContains` in favor of TypeScript's `Extract`.

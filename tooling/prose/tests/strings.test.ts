@@ -2,7 +2,7 @@ import { RuleTester } from '@typescript-eslint/rule-tester';
 import dedent from 'dedent';
 import { afterAll, describe, it } from 'vite-plus/test';
 
-import { strings } from '#src/rules/strings';
+import { stringHints, strings } from '#src/rules/strings';
 
 RuleTester.afterAll = afterAll;
 RuleTester.describe = describe;
@@ -15,10 +15,14 @@ new RuleTester().run('strings', strings, {
         "const key = 'robust';",
         // code spans are skipped
         "const hint = 'Pass `leverage` as the second argument.';",
-        // lint runs only the error-level patterns
-        "const note = 'The handler carries the route id in its custom id.';",
+        // string-hints reports the suggestion-level patterns
+        "const note = 'The handler sees the route id in its custom id.';",
         'const line = `${name} was registered in ${file}`;',
         "const cls = cn('drop-shadow-mark size-8 shrink-0');",
+        // "does nothing" is allowed
+        "const note = 'The call does nothing outside seedcord dev.';",
+        // a compound and the noun are allowed
+        "const note = 'Precedence is last-wins, which is a quick win for readers.';",
         dedent`
             // prose-ignore-next-line -- Discord's own wording, quoted
             const quoted = 'Interaction has already been acknowledged, rather than replied.';
@@ -57,6 +61,14 @@ new RuleTester().run('strings', strings, {
             ]
         },
         {
+            code: "const note = 'A later file wins over an earlier one.';",
+            errors: [{ messageId: 'prose', column: 28, endColumn: 32 }]
+        },
+        {
+            code: "const hint = 'Return nothing to use the default.';",
+            errors: [{ messageId: 'prose', column: 15, endColumn: 29 }]
+        },
+        {
             code: "const hint = 'Restart the bot in order to reload the config.';",
             errors: [
                 {
@@ -92,6 +104,25 @@ new RuleTester().run('strings in test names', strings, {
             code: 'test.skip(`the cache goes away after ${n} reads`, () => {});',
             options: [{ only: 'test-names' }],
             errors: [{ messageId: 'prose', column: 22, endColumn: 26 }]
+        }
+    ]
+});
+
+new RuleTester().run('string-hints', stringHints, {
+    // an error-level match belongs to the strings rule
+    valid: ["throw new Error('The job stays untouched after a restart.');"],
+    invalid: [
+        {
+            code: "it('skips the put when no scope is given', () => {});",
+            options: [{ only: 'test-names' }],
+            // the span covers 'when no scope'
+            errors: [{ messageId: 'prose', column: 19, endColumn: 32 }]
+        },
+        {
+            code: String.raw`it('calls a helper that doesn\'t exist', () => {});`,
+            options: [{ only: 'test-names' }],
+            // the span covers "that doesn't exist"
+            errors: [{ messageId: 'prose', column: 20, endColumn: 39 }]
         }
     ]
 });

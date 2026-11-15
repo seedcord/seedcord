@@ -3,7 +3,7 @@ title: Logging
 description: Log from your handlers, subscribers, and plugins through the logger each one has, with five levels and named channels.
 ---
 
-A `console.log` in a handler prints a bare string. You can't tell which handler wrote it, you can't hide it in production without deleting it, and the [dev terminal](/tooling/dev) files it under the `default` channel with the label `Console`, next to every other line logged without a channel. Every handler, subscriber, and plugin has a `logger` that fixes all three, and you call it with one of five methods.
+A `console.log` in a handler prints a bare string. You can't tell which handler wrote it, and you can't hide it in production without deleting it. The [dev terminal](/tooling/dev) files it under the `default` channel with the label `Console`, next to every other line logged without a channel. Every handler, subscriber, and plugin has a `logger` that fixes all three, and you call it with one of five methods.
 
 ```ts twoslash title="src/handlers/Ping.ts"
 import { SlashHandler, SlashRoute } from '@seedcord/gateway';
@@ -177,4 +177,4 @@ export class Ping extends SlashHandler<'ping'> {
 }
 ```
 
-`block` takes a heading (`Cache warmed` here), its lines, and a level. The level defaults to `trace`, which only prints in development, so the sample passes `'info'`. The other helpers on `logger.utils` default to `info`, and `list` writes one record per line, so it gets the interleaving `block` avoids. [`LoggerUtilities`](ref:logger/LoggerUtilities) lists all of them.
+`block` takes a heading (`Cache warmed` here), its lines, and a level. The sample passes `'info'` because the level defaults to `trace`, which only prints in development. The other helpers on `logger.utils` default to `info`, and `list` writes one record per line, so it gets the interleaving `block` avoids. [`LoggerUtilities`](ref:logger/LoggerUtilities) lists all of them.

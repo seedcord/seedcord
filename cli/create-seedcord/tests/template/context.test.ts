@@ -71,7 +71,7 @@ describe('buildContext on http', () => {
     });
 });
 
-describe('buildContext on a gateway bot that picked nothing', () => {
+describe('buildContext on a bare gateway bot', () => {
     const context = buildContext({ ...GATEWAY, capabilities: [] }, EXTRAS);
 
     it('still writes Guilds', () => {
@@ -94,7 +94,7 @@ describe('the message capabilities', () => {
 });
 
 describe('buildContext extras', () => {
-    it('carries the developer name and the run command', () => {
+    it('fills in the developer name and the run command', () => {
         const context = buildContext(GATEWAY, EXTRAS);
 
         expect(context.developerUsername).toBe('dhruv');

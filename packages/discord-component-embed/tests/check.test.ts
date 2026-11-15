@@ -315,7 +315,7 @@ describe('checkTarget on a url', () => {
         });
     });
 
-    it('fails a page with no component embed', async () => {
+    it('fails a page without a component embed', async () => {
         expect(await checkTarget(PAGE, withPages({ [PAGE]: page('<title>hi</title>') }))).toEqual({
             status: 'fail',
             problems: [
@@ -392,7 +392,7 @@ describe('checkTarget on an html file', () => {
         });
     });
 
-    it('fails an .htm file with no component embed', async () => {
+    it('fails an .htm file without a component embed', async () => {
         expect(await checkTarget('post.htm', withFilesAndPages({ 'post.htm': page('<title>hi</title>') }))).toEqual({
             status: 'fail',
             problems: [

@@ -16,7 +16,7 @@ function resolveWithBases(input: string, bases: (string | undefined)[]): string 
         return path.normalize(input);
     }
 
-    // First defined base wins, since earlier-priority entries like INIT_CWD may be undefined. Later
+    // The first defined base is used, since earlier-priority entries like INIT_CWD may be undefined. Later
     // always-defined entries are unreachable fallbacks kept only to express the priority order.
     const base = bases.find((candidate): candidate is string => Boolean(candidate));
     return path.normalize(base ? path.resolve(base, input) : path.resolve(input));

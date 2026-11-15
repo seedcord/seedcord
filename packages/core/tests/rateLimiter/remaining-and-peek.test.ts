@@ -27,7 +27,7 @@ describe('KvRateLimiter remaining semantics', () => {
         expect(await limiter.charge('user', window)).toMatchObject({ remaining: 0 });
     });
 
-    it('keeps peek remaining constant across repeated peeks and records nothing', async () => {
+    it('keeps peek remaining constant across repeated peeks because peek only reads', async () => {
         const limiter = memoryRateLimiter();
         const window = { windowMs: 1000, limit: 3 };
 

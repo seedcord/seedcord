@@ -13,7 +13,7 @@ Only an http bot runs on Workers. `@seedcord/gateway` holds a websocket to Disco
 
 ## Limits on Workers
 
-A Worker never starts as one process. The bot starts on the first POST that reaches each isolate. That request loads your handlers, runs the startup tasks, and runs every plugin's [`init()`](/plugins/lifecycle#on-cloudflare-workers), and any request that arrives meanwhile waits for it. Cloudflare can start a new isolate whenever it likes, and each new one pays that cost again.
+A Worker never starts as one process. The bot starts on the first POST that reaches each isolate. That request loads your handlers, runs the startup tasks, and runs every plugin's [`init()`](/plugins/lifecycle#on-cloudflare-workers), and any request that arrives meanwhile waits for it. Cloudflare can start a new isolate at any time, and each new one pays that cost again.
 
 Each isolate has its own memory. By default, [`core.kv`](/built-ins/) and [cooldowns](/checks/rate-limiter) keep their records there, so a new isolate starts with none and two isolates can't see each other's. To share them, store them in D1, as [Drivers](/built-ins/drivers#on-cloudflare-workers) shows.
 

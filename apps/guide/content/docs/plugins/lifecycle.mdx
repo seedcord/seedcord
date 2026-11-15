@@ -89,7 +89,7 @@ shutdown
 └─ Release
 ```
 
-Your plugins start in the order you attach them and stop in the _reverse_ order. Attach a plugin before any plugin that reads from it. seedcord puts all of a phase's plugin calls in one task, so they run one after another while the phase's [other tasks](/core#running-work-while-your-bot-starts-and-stops) run in parallel with them. Your handlers start when Ready does, so they can already receive interactions and events while `ready()` is still running. Set up anything a handler needs in `init()`, and keep it in Configuration or Login.
+Your plugins start in the order you attach them and stop in the _reverse_ order. Attach a plugin before any plugin that reads from it. seedcord puts all of a phase's plugin calls in one task. They run one after another while the phase's [other tasks](/core#running-work-while-your-bot-starts-and-stops) run in parallel with them. Your handlers start when Ready does, so they can already receive interactions and events while `ready()` is still running. Set up anything a handler needs in `init()`, and keep it in Configuration or Login.
 
 A gateway bot gets events from Discord as soon as it logs in. Anything that arrives during Login waits until Ready starts, so its handler can read your emojis and command mentions.
 
@@ -214,8 +214,8 @@ If one `dispose()` fails, the others still run. With `db` and `settings` from ea
 
 ## On Cloudflare Workers
 
-A Workers bot has no `start()` call, so its plugins start when the first POST reaches an isolate. `init()` and `ready()` run in the same phases and order as above, and requests that arrive meanwhile wait for them. Cloudflare can run several isolates of your bot at once. Each one starts its own copy of every plugin, so a field like a counter holds one value per isolate.
+A Workers bot has no `start()` call, so its plugins start when the first POST reaches an isolate. `init()` and `ready()` run in the same phases and order as above, and requests that arrive meanwhile wait for them. Cloudflare can run several isolates of your bot at once. Each one starts its own copy of every plugin. A field like a counter holds one value per isolate.
 
-Cloudflare gives [a Worker's isolate](https://developers.cloudflare.com/workers/reference/how-workers-works/) no shutdown hook, so the shutdown phases never run. `dispose()` runs only when startup fails. Then seedcord disposes the plugins whose `init()` had finished, in reverse attach order, and the request that triggered startup gets the error. A plugin can't flush its state on the way out, so write it as you go. After a failed startup the next request starts up again, so a plugin's `init()` can run a second time on the same instance, after its `dispose()`. Write `init()` so it can run twice.
+Cloudflare gives [a Worker's isolate](https://developers.cloudflare.com/workers/reference/how-workers-works/) no shutdown hook, so the shutdown phases never run. `dispose()` runs only when startup fails. Then seedcord disposes the plugins whose `init()` had finished, in reverse attach order, and the request that triggered startup gets the error. A plugin can't flush its state on the way out. Write it as you go. After a failed startup the next request starts up again. A plugin's `init()` can then run a second time on the same instance, after its `dispose()`. Write `init()` so it can run twice.
 
 `shutdown.addTask` throws `CoreLifecycleUnavailable` on a Workers bot, and `lifecycle` isn't a config key there.

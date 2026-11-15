@@ -91,7 +91,7 @@ ruleTester.run('middleware-missing-register-decorator', rule, {
             errors: [{ messageId: 'missingMiddleware' }]
         },
         {
-            // a same-named decorator from another module satisfies nothing
+            // a same-named decorator from another module doesn't count
             code: dedent`
                 import { EventMiddleware } from 'seedcord';
                 import { RegisterEventMiddleware } from 'some-other-lib';

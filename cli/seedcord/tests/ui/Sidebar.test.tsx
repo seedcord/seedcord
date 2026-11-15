@@ -20,7 +20,7 @@ import type { LogRecord } from '@seedcord/types';
 import type { DOMElement } from 'ink';
 import type { ReactElement, Ref } from 'react';
 
-// every channel the framework logs on, which is the tallest the chip list gets without plugins
+// every channel that the framework logs on, which is the tallest the chip list gets without plugins
 const FRAMEWORK_CHANNELS = [
     'default',
     'bot',
@@ -154,7 +154,7 @@ describe('Sidebar', () => {
         return frame;
     }
 
-    // the tier thresholds are authored constants, and this is what keeps them honest as the rail changes
+    // this keeps the tier thresholds, which are authored constants, honest as the rail changes
     it('fits the open rail inside the full tier', async () => {
         const { rows } = await measure(sidebar('always'));
 

@@ -244,7 +244,7 @@ describe('FolderExports', () => {
             expect(debugLines(spies).some((line) => line.includes('Registered'))).toBe(false);
         });
 
-        it("doesn't log when the file registers nothing", async () => {
+        it('skips the log line for a file without registrations', async () => {
             const file = write('Empty.mjs', 'export const value = 1;\n');
 
             await folder.handle({ file, type: 'update' });

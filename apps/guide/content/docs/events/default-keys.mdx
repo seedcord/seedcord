@@ -90,7 +90,7 @@ seedcord publishes `eventDispatched` once the handlers finish. Its fields, inclu
 
 ## The two unhandled errors
 
-A throw from your handlers, gates, or middleware reaches the fault boundary, which catches and reports it. `unhandledInteractionError` and `unhandledEventError` cover a throw the boundary never sees, like one inside seedcord's own dispatch code ([report it](https://github.com/seedcord/seedcord/issues/new?template=bug_report.yml)). Both carry only `{ error: Error }`. Subscribe to them to hear about those failures in production, since your handlers' own reporting never sees them.
+A throw from your handlers, gates, or middleware reaches the fault boundary, which catches and reports it. `unhandledInteractionError` and `unhandledEventError` cover a throw the boundary never catches, like one inside seedcord's own dispatch code ([report it](https://github.com/seedcord/seedcord/issues/new?template=bug_report.yml)). Both carry only `{ error: Error }`. Subscribe to them to hear about those failures in production, since your handlers' own reporting never receives them.
 
 ## The fault keys
 

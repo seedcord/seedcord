@@ -350,7 +350,7 @@ interface PluginTypes {
 
 ## The id
 
-Rows in the bot's file share one list, keyed by your plugin's id. You declare the id on the class because your package reads its own row with `Generated<typeof Locales>` when it builds, before any bot has picked an attach key. Use your package's name, like `'seedcord-locales'` here, so no other plugin writes the same key.
+Rows in the bot's file share one list, keyed by your plugin's id. You declare the id on the class because your package reads its own row with `Generated<typeof Locales>` when it builds, before any bot has picked an attach key. Use your package's name, like `'seedcord-locales'` here, so another plugin doesn't write the same key.
 
 Write it `static readonly`. Without `readonly`, TypeScript types the id as `string`, and each field of `Generated` turns into a message saying to add it.
 

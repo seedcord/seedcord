@@ -18,7 +18,7 @@ describe('KyselyPostgres Plugin Integration', () => {
         testEnv = new TestEnvironment('kysely-postgres-test-');
         await testEnv.setup();
         await testEnv.createFile('migrations/.keep', '');
-        // the plugin reads nothing off core, this only satisfies the constructor
+        // the plugin never reads core. this only satisfies the constructor
         mockCore = { config: {} } as unknown as CoreBase;
     });
 

@@ -31,7 +31,7 @@ export interface TableOptions {
     emptyCell?: string;
     /**
      * Right-aligns a column whose non-empty body cells are all numeric. The header label is not judged, so
-     * a numeric column under a text header still aligns. An explicit align for that column wins.
+     * a numeric column under a text header still aligns. An explicit align for that column overrides it.
      * @defaultValue false
      */
     numericAlign?: boolean;

@@ -170,7 +170,7 @@ describe('ReplySender.reply', () => {
         expect(rest.post).toHaveBeenCalledTimes(1);
     });
 
-    it('carries the first ack as the cause on a double reply', async () => {
+    it('uses the first ack as the cause on a double reply', async () => {
         const rest = restMock();
         const sender = senderFor(rest);
         await sender.reply(reply);
@@ -229,7 +229,7 @@ describe('ReplySender.defer', () => {
 });
 
 describe('ReplySender.deferUpdate', () => {
-    it('POSTs a callback type 6 with no data and no with_response', async () => {
+    it('POSTs a callback type 6 without data or with_response', async () => {
         const rest = restMock();
 
         await senderFor(rest).deferUpdate();

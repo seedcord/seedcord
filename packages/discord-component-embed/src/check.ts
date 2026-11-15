@@ -278,7 +278,7 @@ function checkJsonText(sentJson: string, minify: (payload: unknown) => string): 
         };
     }
 
-    // collectPayloadErrors found nothing wrong with its shape
+    // its shape passed collectPayloadErrors
     const { component } = payload as ComponentEmbedPayload;
     return { status: 'pass', bytes, ...embedStats(component) };
 }

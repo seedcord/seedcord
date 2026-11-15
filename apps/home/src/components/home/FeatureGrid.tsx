@@ -114,7 +114,7 @@ const GROUPS: Group[] = [
             {
                 icon: GalleryHorizontalEnd,
                 label: 'pagination',
-                gloss: 'each nav button carries its page, so a restart keeps working'
+                gloss: 'each nav button encodes its page, so a restart keeps working'
             }
         ]
     },
@@ -137,7 +137,11 @@ const GROUPS: Group[] = [
             { icon: Blocks, label: 'composable gates', gloss: 'stack them with and, or' },
             { icon: TimerReset, label: 'cooldowns', gloss: 'scoped per user, guild or channel' },
             { icon: Gauge, label: 'rate limiter', gloss: 'a sliding window per key' },
-            { icon: ShieldAlert, label: 'errors', gloss: 'Notice refuses, Fault reports, Silence sends nothing' }
+            {
+                icon: ShieldAlert,
+                label: 'errors',
+                gloss: 'Notice refuses, Fault reports, Silence just stops'
+            }
         ]
     },
     {

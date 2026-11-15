@@ -168,7 +168,7 @@ describe('parseEntityPathSegments', () => {
         });
     });
 
-    it('parses a tone directory with no slug as a category-only path', () => {
+    it('parses a tone directory without a slug as a category-only path', () => {
         expect(parseEntityPathSegments(['classes'])).toStrictEqual({
             tone: 'class',
             slug: null,

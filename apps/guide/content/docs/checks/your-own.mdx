@@ -149,7 +149,7 @@ The two gateway contexts carry different fields. Narrow on `ctx.kind` before rea
 
 <Callout type="transport">
 
-Both transports export a type called `InteractionGateContext`. Each transport's version has its own fields. Gateway's holds live discord.js objects: a `User` that's always present, plus a `Guild` and a `GuildMember` that can each be `null`, outside a server or when the cache doesn't have them. Http's holds an `APIUser` and an `APIInteractionGuildMember`, and it doesn't carry `guild` at all. A gate reading `ctx.guild` compiles on gateway. The same gate fails to compile on http.
+Both transports export a type called `InteractionGateContext`. Each transport's version has its own fields. Gateway's holds live discord.js objects: a `User` that's always present, plus a `Guild` and a `GuildMember`. Each of those two can be `null`, outside a server or when the cache doesn't have it. Http's holds an `APIUser` and an `APIInteractionGuildMember`, and it doesn't carry `guild` at all. A gate reading `ctx.guild` compiles on gateway. The same gate fails to compile on http.
 
 The gateway cache builds that discord.js `Guild`. An http bot doesn't run one. Discord sends it a partial guild carrying `id`, `features`, and `locale`, which `ctx.interaction.guild` reaches.
 

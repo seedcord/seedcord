@@ -37,7 +37,7 @@ const PROSE = [
     'eslint --no-config-lookup -c tooling/prose/prose.config.ts --quiet --no-warn-ignored'
 ];
 
-// vale and the eslint pass skip any files that aren't covered by their configs
+// vale and the eslint pass skip any files outside their configs
 export function runProse(files: readonly string[]): string[] {
     const list = files.map(quote).join(' ');
     return PROSE.map((command) => `vp exec ${command} ${list}`);

@@ -8,7 +8,7 @@ Most of these publish.
 
 ## The exports map is the surface
 
-A package's `exports` block in its `package.json` sets what consumers can import. Adding a file to `src/` publishes nothing until the map lists it.
+A package's `exports` block in its `package.json` sets what consumers can import. A file that you add to `src/` publishes only once the map lists it.
 
 `./internal` entries carry framework wiring between packages. Nothing outside the package consumes a symbol reachable only through one, so it skips the TSDoc block. [Changesets](#changesets) covers when a change to one still needs a changeset.
 

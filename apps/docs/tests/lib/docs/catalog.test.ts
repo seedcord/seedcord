@@ -63,7 +63,7 @@ describe('findCatalogVersion', () => {
         expect(findCatalogVersion(entry, '2.0.0')).toBe(v2);
     });
 
-    it('returns undefined when the id matches nothing', () => {
+    it('returns undefined for an unknown id', () => {
         const entry = makeEntry([makeVersion('1.0.0'), makeVersion('2.0.0')]);
         expect(findCatalogVersion(entry, '9.9.9')).toBeUndefined();
     });

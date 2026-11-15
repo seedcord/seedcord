@@ -50,7 +50,7 @@ describe('the plugin base binds its core type', () => {
         expect(plugin.readExtra()).toBe('seed');
     });
 
-    it('falls back to CoreBase with no binding', () => {
+    it('falls back to CoreBase without a binding', () => {
         const plugin = new Unbound(host);
 
         expect(plugin.peek()).toBe(host);

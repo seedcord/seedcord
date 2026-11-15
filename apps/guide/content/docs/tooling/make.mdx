@@ -3,7 +3,7 @@ title: Templates
 description: Generate new handlers, components, and commands from Handlebars templates you keep in your bot, with seedcord make prompting for each value.
 ---
 
-By hand, a new button would start as a copy of the last one. You'd rename the class and the custom id, retype the label, fix the import path when the copy sits one folder deeper, and then repeat it all for the handler that answers it.
+By hand, a new button would start as a copy of the last one. You'd rename the class and the custom id, retype the label, and fix the import path when the copy sits one folder deeper. Then you'd repeat it all for the handler that answers it.
 
 `seedcord make` generates those files from a template you keep in your project. You pick a template and type a name. It asks for each value the template reads, then writes every file in the template under your [`root`](/build/config) folder.
 
@@ -123,7 +123,7 @@ seedcord disables Handlebars' HTML escaping, so `{{ label }}` writes your answer
 - If a partial calls itself, `make` throws `MakePartialCallsItself`, because it can't tell how many levels to ask for.
 - If Handlebars' `lookup` helper gets an unquoted key, `make` throws `MakeLookupDynamicKey`, because seedcord can't tell which field to ask for. Quote the key, as in `{{ lookup author "label" }}`.
 
-If a template file doesn't parse, calls a helper that doesn't exist, or has a file name that reads a value other than `name`, `make` throws `MakeTemplateFailed` with the file's path and the error Handlebars gave.
+If a template file doesn't parse, calls an unknown helper, or has a file name that reads a value other than `name`, `make` throws `MakeTemplateFailed`. It reports the file's path and the error Handlebars gave.
 
 ## The values seedcord fills in
 
@@ -220,7 +220,7 @@ A plugin's users write the same files around it in every bot, like a handler tha
 }
 ```
 
-The path resolves against the plugin's own folder. List the folder in `files` too, or npm doesn't include it in [the published package](/writing-plugins/publishing). The first prompt shows where each template came from beside its name. Your own templates show your templates folder, like `templates/`. A plugin's templates show its package name.
+The path resolves against the plugin's own folder. List the folder in `files` too, or [the published package](/writing-plugins/publishing) won't have it. The first prompt shows where each template came from beside its name. Your own templates show your templates folder, like `templates/`. A plugin's templates show its package name.
 
 A plugin's templates work like yours. One template can serve gateway and http bots alike, since `{{ transport }}` and `{{#if isGateway}}` read the bot `make` runs in.
 

@@ -54,7 +54,7 @@ describe('questionFromText', () => {
         expect(question?.endsWith('word')).toBe(true);
     });
 
-    it('cuts a long paste with no spaces at the limit', () => {
+    it('cuts a long paste without spaces at the limit', () => {
         const { question, shortened } = questionFromText('k'.repeat(QUESTION_LENGTH.max + 1));
 
         expect(shortened).toBe(true);

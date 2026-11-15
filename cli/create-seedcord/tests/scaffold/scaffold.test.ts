@@ -384,7 +384,7 @@ describe('scaffold', () => {
         expect(spoken.some((args) => args.includes('codegen'))).toBe(false);
     });
 
-    it('carries on through format and codegen when the install only reports a skipped build', async () => {
+    it('continues through format and codegen when the install only reports a skipped build', async () => {
         const target = await scratchTarget();
         const { runner, calls } = recorder(undefined, '-D');
 
@@ -467,7 +467,7 @@ describe('scaffold cleanup', () => {
         await expect(readdir(target)).resolves.toContain('package.json');
     });
 
-    it('removes the directory it created and reports nothing created when writing fails', async () => {
+    it('removes the directory it created and reports created false when writing fails', async () => {
         const target = await scratchTarget();
         const { runner } = recorder();
         const { steps, seen } = stepRecorder();

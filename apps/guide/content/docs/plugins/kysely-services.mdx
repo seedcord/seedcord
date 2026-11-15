@@ -121,7 +121,7 @@ RegisterKyselyService('users', { table: '
 //                                       ^|
 ```
 
-The decorator checks that `table` matches the class's type argument, so TypeScript reports an error if you pass `{ table: 'app_users' }` for a `KyselyService<'bans'>`. When you leave `table` out, the decorator uses the key as the table name. `users` isn't a table in that schema, so `Users` needs `table`, and TypeScript reports an error on the decorator without it.
+The decorator checks that `table` matches the class's type argument. TypeScript reports an error if you pass `{ table: 'app_users' }` for a `KyselyService<'bans'>`. When you leave `table` out, the decorator uses the key as the table name. `users` isn't a table in that schema, so `Users` needs `table`, and TypeScript reports an error on the decorator without it.
 
 ## Typing the registry
 

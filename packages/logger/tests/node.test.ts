@@ -114,7 +114,7 @@ const registry = LoggerChannelRegistry.instance;
 afterEach(() => registry.reset());
 
 describe('formatPretty', () => {
-    it('interpolates args and carries level, label, and message', () => {
+    it('interpolates args and sets level, label, and message', () => {
         const line = plain(formatPretty(record({ message: 'user %s scored %d', args: ['bob', 42] })));
         expect(line).toContain('info');
         expect(line).toContain('Bot');

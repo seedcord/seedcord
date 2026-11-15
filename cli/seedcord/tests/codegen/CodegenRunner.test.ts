@@ -141,7 +141,7 @@ describe('CodegenRunner plugin capabilities', () => {
         );
     });
 
-    it('writes a nested bot entry as a relative specifier with no extension', async () => {
+    it('writes a nested bot entry as a relative specifier without an extension', async () => {
         const root = await tempDir('codegen-');
         await pluginRunner(root, resolve(root, 'app/bot.ts'), { db: {} }, silentLogger).run(false);
 

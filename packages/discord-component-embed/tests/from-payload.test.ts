@@ -371,7 +371,7 @@ describe('fromPayload errors', () => {
         expect(error.message).toMatch(/^Type 3 can't go in a component embed\./);
     });
 
-    it('says a button with no url got nothing', () => {
+    it('words the error for a button without a url', () => {
         const button = { type: 2, style: 5, label: 'go' };
 
         const error = thrownBy(() => toComponentEmbed(fromJson(inPayload({ type: 1, components: [button] }))));
@@ -381,7 +381,7 @@ describe('fromPayload errors', () => {
         );
     });
 
-    it('lets the tree report a section with no accessory', () => {
+    it('lets the tree report a section without an accessory', () => {
         const error = thrownBy(() => toComponentEmbed(fromJson(inPayload({ type: 9, components: [text] }))));
 
         expect(error.path).toEqual(['component', 'components', '0']);

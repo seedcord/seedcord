@@ -19,7 +19,7 @@ const BOT_SUBJECT = 'The bot';
  */
 export interface RequireBotPermissionsOptions {
     /**
-     * The set the check reads. `'channel'` reads the effective channel set in the payload, what
+     * The set that the check reads. `'channel'` reads the effective channel set in the payload, what
      * Discord enforces in the invoked channel. `'guild'` reads the base set from roles, available on the
      * gateway transport only.
      *
