@@ -1,18 +1,24 @@
 import { TextDisplayBuilder } from '@discordjs/builders';
-import { UserContextMenuHandler, UserContextMenuRoute, Cooldown, Gated, Notice } from '@seedcord/gateway';
+import {
+    Cooldown,
+    Gated,
+    Notice,
+    toEpochSeconds,
+    UserContextMenuHandler,
+    UserContextMenuRoute
+} from '@seedcord/gateway';
+import { time } from 'discord.js';
 
-import type { ReplyResponse } from '@seedcord/gateway';
+import type { EpochMs, RenderContext, ReplyResponse } from '@seedcord/gateway';
 
 class ProfileCooldown extends Notice {
-    public constructor(private readonly resetAt: number) {
+    public constructor(private readonly resetAt: EpochMs) {
         super('profile lookups are rate limited');
     }
 
-    public override render(): ReplyResponse {
-        const text = new TextDisplayBuilder().setContent(
-            `Slow down. You can view another profile <t:${Math.round(this.resetAt / 1000)}:R>.`
-        );
-        return { components: [text] };
+    public override render(ctx: RenderContext): ReplyResponse {
+        const when = `<t:${toEpochSeconds(this.resetAt)}:R>`;
+        return { components: [new TextDisplayBuilder().setContent(ctx.t('profile-cooldown', { when }))] };
     }
 }
 
@@ -20,8 +26,8 @@ class ProfileCooldown extends Notice {
 @UserContextMenuRoute('View Profile')
 export class ViewProfile extends UserContextMenuHandler<'View Profile'> {
     public async execute(): Promise<void> {
-        const user = this.target;
+        const { tag, createdAt } = this.target;
 
-        await this.reply(`Profile for ${user.tag} (joined Discord <t:${Math.floor(user.createdTimestamp / 1000)}:R>).`);
+        await this.reply(this.t('profile', { tag, joined: time(createdAt, 'R') }));
     }
 }

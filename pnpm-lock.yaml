@@ -1174,6 +1174,9 @@ importers:
       '@seedcord/http':
         specifier: workspace:^
         version: link:../../packages/http
+      '@seedcord/plugin-i18n':
+        specifier: workspace:^
+        version: link:../../plugins/i18n
       db0:
         specifier: catalog:deps
         version: 0.4.2
@@ -1214,6 +1217,9 @@ importers:
       '@seedcord/gateway':
         specifier: workspace:^
         version: link:../../packages/gateway
+      '@seedcord/plugin-i18n':
+        specifier: workspace:^
+        version: link:../../plugins/i18n
       '@seedcord/plugin-mongoose':
         specifier: workspace:^
         version: link:../../plugins/mongoose
@@ -1248,6 +1254,9 @@ importers:
       '@seedcord/http':
         specifier: workspace:^
         version: link:../../packages/http
+      '@seedcord/plugin-i18n':
+        specifier: workspace:^
+        version: link:../../plugins/i18n
       discord-api-types:
         specifier: ^0.38.52
         version: 0.38.57

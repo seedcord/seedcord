@@ -3,15 +3,14 @@ import { SlashHandler, SlashRoute, timestampFromSnowflake } from '@seedcord/gate
 @SlashRoute('ping')
 export class Ping extends SlashHandler<'ping'> {
     public async execute(): Promise<void> {
-        const roundtrip = Date.now() - timestampFromSnowflake(this.event.id);
         const lines = [
-            `### ${this.core.i18n.t('greet', { name: this.user.username })}`,
-            `Roundtrip **${roundtrip}ms**`
+            `### ${this.t('greet', { name: this.user.username })}`,
+            this.t('roundtrip', { ms: Date.now() - timestampFromSnowflake(this.event.id) })
         ];
 
         if (this.options.getBoolean('detailed')) {
-            lines.push(`Uptime **${Math.round(process.uptime())}s**`);
-            lines.push(`Asked in **${this.askedIn}**`);
+            lines.push(this.t('uptime', { seconds: Math.round(process.uptime()) }));
+            lines.push(this.t('asked-in', { locale: this.t.locale }));
         }
 
         await this.reply(lines.join('\n'));

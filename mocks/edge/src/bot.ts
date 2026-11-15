@@ -1,4 +1,5 @@
 import { Seedcord, UnstorageDriver } from '@seedcord/http';
+import { I18n } from '@seedcord/plugin-i18n';
 import { createDatabase } from 'db0';
 import cloudflareD1 from 'db0/connectors/cloudflare-d1';
 import { createStorage } from 'unstorage';
@@ -26,4 +27,6 @@ export default new Seedcord({
             driver: db0Driver({ database })
         })
     )
-}).attach('pings', PingCounter);
+})
+    .attach('pings', PingCounter)
+    .attach('i18n', I18n, { dir: './locales' });

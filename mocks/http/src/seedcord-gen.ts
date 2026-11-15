@@ -26,10 +26,11 @@ declare module '@seedcord/http' {
 
     }
     interface PluginTypes {
-        'mock-i18n': Fits<(typeof Bot)['i18n'], { messages: { goodbye: []; greet: ['name']; transfer: ['from', 'amount', 'to'] } }>;
+        '@seedcord/plugin-i18n': Fits<(typeof Bot)['i18n'], { messages: { 'asked-in': { locale: 'text' }; greet: { name: 'text' }; pings: { count: 'number' }; roll: { actor: 'text'; sides: 'text'; value: 'text' }; 'roll-again': {}; roundtrip: { ms: 'number' }; uptime: { seconds: 'number' } } }>;
     }
     interface DispatchMemberValues {
         askedIn: Awaited<ReturnType<(typeof Bot)['stats']['pings']['dispatchMembers']['askedIn']>>;
+        t: Awaited<ReturnType<(typeof Bot)['i18n']['dispatchMembers']['t']>>;
     }
 }
 

@@ -4,9 +4,12 @@
 import type Bot from './bot';
 import type { AttachedPlugin } from '@seedcord/http';
 
+type Fits<Plugin extends { codegen(): Promise<unknown> }, Row extends Awaited<ReturnType<Plugin['codegen']>>> = Row;
+
 // prettier-ignore
 declare module '@seedcord/http' {
     interface Core {
+        i18n: AttachedPlugin<(typeof Bot)['i18n']>;
         pings: AttachedPlugin<(typeof Bot)['pings']>;
     }
     interface SlashRegistry {
@@ -20,6 +23,12 @@ declare module '@seedcord/http' {
     }
     interface EmojiMap {
 
+    }
+    interface PluginTypes {
+        '@seedcord/plugin-i18n': Fits<(typeof Bot)['i18n'], { messages: { 'isolate-pings': { count: 'text' }; pong: {}; roundtrip: { ms: 'number' }; 'total-pings': { count: 'text' } } }>;
+    }
+    interface DispatchMemberValues {
+        t: Awaited<ReturnType<(typeof Bot)['i18n']['dispatchMembers']['t']>>;
     }
 }
 
