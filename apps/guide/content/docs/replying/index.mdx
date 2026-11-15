@@ -173,7 +173,7 @@ export const seedcord = new Seedcord({
 
 Every reply without its own `ephemeral` uses that default, including `defer()`, a paginator, and a confirm prompt. Pass `ephemeral: true` when only the person who ran the command should see a reply.
 
-seedcord sends error cards and [notices](/replying/throwing) as ephemeral whatever you set here. After a public `defer()`, the card edits that placeholder, and Discord doesn't let an edit hide a message, so the whole channel sees it. Defer with `{ ephemeral: true }` in a handler whose errors should be private.
+seedcord sends error cards and [notices](/replying/throwing) as ephemeral whatever you set here. After a public `defer()`, the card edits that placeholder, and [Discord doesn't let an edit hide a message](https://docs.discord.com/developers/interactions/receiving-and-responding#create-followup-message), so the whole channel sees it. Defer with `{ ephemeral: true }` in a handler whose errors should be private.
 
 ## The message you get back
 
