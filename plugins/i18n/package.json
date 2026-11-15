@@ -51,11 +51,15 @@
         "coverage": "vp test run --coverage"
     },
     "dependencies": {
-        "@seedcord/errors": "workspace:^"
+        "@fluent/syntax": "^0.19.0",
+        "@seedcord/errors": "workspace:^",
+        "@seedcord/utils": "workspace:^",
+        "discord-api-types": "catalog:deps"
     },
     "devDependencies": {
         "@seedcord/core": "workspace:^",
         "@seedcord/eslint-config": "workspace:^",
+        "@seedcord/logger": "workspace:^",
         "@seedcord/prose": "workspace:^",
         "@seedcord/tsconfig": "workspace:^",
         "@seedcord/tsdown-config": "workspace:^",

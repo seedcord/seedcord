@@ -283,6 +283,14 @@ const messages = {
         `${paint.bold('schedule()')} got ${quoted(duration)} for ${paint.sky(key)}, which ends after the last date a JavaScript ${paint.bold('Date')} can hold, in the year 275760. Pass a shorter duration as ${paint.bold('in')}.`,
     [SeedcordErrorCode.PluginTasksKeyTaken]: (key: string, loadedFrom: string) =>
         `${paint.sky(key)} is the key of a different class, loaded from ${paint.path(loadedFrom)}. Pass that class, or give one of them its own ${paint.bold('key')}.`,
+    [SeedcordErrorCode.PluginI18nSyntax]: (place: string, detail: string) =>
+        `Fluent can't parse ${paint.path(place)}: ${detail}. Fix the syntax on that line.`,
+    [SeedcordErrorCode.PluginI18nNotALocale]: (file: string, like: readonly string[]) =>
+        `${paint.path(file)} isn't named after a Discord locale code. Rename it to ${like.length > 0 ? oneOf.format(like.map((locale) => paint.path(`${locale}.ftl`))) : `a code from Discord's locale list, like ${paint.path('en-US.ftl')}`}.`,
+    [SeedcordErrorCode.PluginI18nNotInBase]: (place: string, what: string, baseFile: string) =>
+        `${paint.path(place)} has ${what}, but ${paint.path(baseFile)} doesn't. ${paint.bold('t()')} only reads what the base file has. Add it to ${paint.path(baseFile)} first, or remove it here.`,
+    [SeedcordErrorCode.PluginI18nBaseMissing]: (dir: string, baseFile: string) =>
+        `${paint.path(dir)} doesn't have ${paint.path(baseFile)}, the file that lists every message. Add it, or set ${paint.bold('base')} to a locale that has a file.`,
 
     [SeedcordErrorCode.CliCancelled]: () => 'Cancelled.',
 

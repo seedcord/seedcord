@@ -1717,9 +1717,18 @@ importers:
 
   plugins/i18n:
     dependencies:
+      '@fluent/syntax':
+        specifier: ^0.19.0
+        version: 0.19.0
       '@seedcord/errors':
         specifier: workspace:^
         version: link:../../packages/errors
+      '@seedcord/utils':
+        specifier: workspace:^
+        version: link:../../packages/utils
+      discord-api-types:
+        specifier: ^0.38.52
+        version: 0.38.57
       typescript:
         specifier: catalog:consumerTypes
         version: 6.0.3
@@ -1730,6 +1739,9 @@ importers:
       '@seedcord/eslint-config':
         specifier: workspace:^
         version: link:../../tooling/eslint-config
+      '@seedcord/logger':
+        specifier: workspace:^
+        version: link:../../packages/logger
       '@seedcord/prose':
         specifier: workspace:^
         version: link:../../tooling/prose
@@ -3545,6 +3557,10 @@ packages:
 
   '@floating-ui/utils@0.2.12':
     resolution: {integrity: sha512-HpCo8tmWzLVad5s2d19EhAz5zqrrQ6s69qd6moPMQvkOuSwDT1YgRfWSVuc4ennqrgv3OHppiOGMQ7oC13yIww==}
+
+  '@fluent/syntax@0.19.0':
+    resolution: {integrity: sha512-5D2qVpZrgpjtqU4eNOcWGp1gnUCgjfM+vKGE2y03kKN6z5EBhtx0qdRFbg8QuNNj8wXNoX93KJoYb+NqoxswmQ==}
+    engines: {node: '>=14.0.0', npm: '>=7.0.0'}
 
   '@fumari/image-size@0.1.1':
     resolution: {integrity: sha512-iaiV2wyzJ4mW358NX4CX3yGit+WjKYzpaQ+rldK9BjL/5jFpeV6ruWnZVq7MEyMn3Gd0DLi8g/79NZAAQaGscw==}
@@ -11744,6 +11760,8 @@ snapshots:
       react-dom: 19.3.1(react@19.3.1)
 
   '@floating-ui/utils@0.2.12': {}
+
+  '@fluent/syntax@0.19.0': {}
 
   '@fumari/image-size@0.1.1': {}
 

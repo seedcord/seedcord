@@ -248,6 +248,14 @@ export enum SeedcordErrorCode {
     PluginTasksDurationTooLong = 2306,
     /** A `Tasks` method got a class whose task key belongs to a different loaded class. */
     PluginTasksKeyTaken = 2307,
+    /** A `.ftl` file under the i18n plugin's `dir` has a line Fluent can't parse. */
+    PluginI18nSyntax = 2401,
+    /** A `.ftl` file's name isn't one of Discord's locale codes. */
+    PluginI18nNotALocale = 2402,
+    /** A locale file has a message, variable, or attribute that the base locale's file doesn't have. */
+    PluginI18nNotInBase = 2403,
+    /** The i18n plugin's `dir` doesn't have a file for its base locale. */
+    PluginI18nBaseMissing = 2404,
 
     /** Someone pressed Ctrl-C at a prompt in `seedcord` or `create-seedcord`. */
     CliCancelled = 3001,
