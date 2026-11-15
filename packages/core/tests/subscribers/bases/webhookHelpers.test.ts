@@ -84,7 +84,7 @@ describe('errorReport', () => {
         expect(report).toContain('and 40 more failures');
     });
 
-    it('counts every member it leaves out when a stack carries backticks', () => {
+    it("counts every member it doesn't list when a stack contains backticks", () => {
         const members = Array.from({ length: 40 }, (_, i) => {
             const member = new Error(`member-${i}`);
             member.stack = `Error: \`\`\`member-${i}\`\`\`\n${'    at frame\n'.repeat(60)}`;
@@ -101,7 +101,7 @@ describe('errorReport', () => {
         expect(shown + counted).toBe(40);
     });
 
-    it('counts every member it leaves out', () => {
+    it("counts every member it doesn't list", () => {
         const members = Array.from({ length: 40 }, (_, i) => {
             const member = new Error(`member-${i}`);
             member.stack = `Error: member-${i}\n${'    at frame\n'.repeat(60)}`;

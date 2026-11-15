@@ -29,7 +29,7 @@ export const metadata: Metadata = {
     title: { default: SITE_NAME, template: '%s · seedcord guide' },
     description: SITE_DESCRIPTION,
     applicationName: SITE_NAME,
-    // next 16.3.8 leaves basePath off icon urls in metadata and off a file-based icon under turbopack
+    // next 16.3.8 doesn't add basePath to icon urls in metadata or to a file-based icon under turbopack
     icons: {
         icon: [{ url: `${GUIDE.path}/icon`, ...ICON }],
         apple: [{ url: `${GUIDE.path}/apple-icon`, ...APPLE_ICON }]

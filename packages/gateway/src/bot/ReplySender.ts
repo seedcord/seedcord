@@ -1,5 +1,4 @@
 import { BaseReplySender } from '@seedcord/core';
-import { deferFlags, sendFlags } from '@seedcord/core/internal';
 import { SeedcordErrorCode } from '@seedcord/errors';
 import { SeedcordError } from '@seedcord/errors/internal';
 import { MessageFlags } from 'discord.js';
@@ -7,7 +6,7 @@ import { MessageFlags } from 'discord.js';
 import type { GatewayFile, GatewayReplyResponse } from '#interfaces/ReplyResponse';
 import type { Repliables } from '#src/handlers/interactionTypes';
 import type { Bus, DispatchContext } from '@seedcord/core';
-import type { AckState, ResolvedSendOpts } from '@seedcord/core/internal';
+import type { AckState } from '@seedcord/core/internal';
 import type { ReplyFile } from '@seedcord/types';
 import type {
     APIModalInteractionResponseCallbackData,
@@ -55,24 +54,21 @@ export class ReplySender extends BaseReplySender<SentMessage, GatewayFile> {
         private readonly interaction: Repliables,
         dispatch: DispatchContext,
         bus: Bus,
-        ephemeralDefault: boolean
+        isEphemeralByDefault: boolean
     ) {
-        super({ bus, dispatch, interactionId: interaction.id }, ephemeralDefault, seedState(interaction));
+        super({ bus, dispatch, interactionId: interaction.id }, isEphemeralByDefault, seedState(interaction));
     }
 
     protected async writeReply(
         response: GatewayReplyResponse | string,
-        opts: ResolvedSendOpts
+        flags: number
     ): Promise<SentMessage | undefined> {
-        const result = await this.interaction.reply({
-            ...this.replyOptions(response, sendFlags(opts)),
-            withResponse: true
-        });
+        const result = await this.interaction.reply({ ...this.replyOptions(response, flags), withResponse: true });
         return this.createdMessage(result);
     }
 
-    protected async writeDefer(ephemeral: boolean): Promise<void> {
-        await this.interaction.deferReply({ flags: deferFlags(ephemeral) });
+    protected async writeDefer(flags: number): Promise<void> {
+        await this.interaction.deferReply({ flags });
     }
 
     protected async writeDeferUpdate(): Promise<void> {
@@ -85,11 +81,8 @@ export class ReplySender extends BaseReplySender<SentMessage, GatewayFile> {
         return this.createdMessage(result);
     }
 
-    protected async writeFollowUp(
-        response: GatewayReplyResponse | string,
-        opts: ResolvedSendOpts
-    ): Promise<SentMessage> {
-        return await this.interaction.followUp(this.replyOptions(response, sendFlags(opts)));
+    protected async writeFollowUp(response: GatewayReplyResponse | string, flags: number): Promise<SentMessage> {
+        return await this.interaction.followUp(this.replyOptions(response, flags));
     }
 
     protected async writeEditOriginal(response: GatewayReplyResponse | string): Promise<SentMessage> {

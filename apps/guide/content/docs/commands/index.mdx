@@ -105,7 +105,7 @@ A command decorated with [`@RegisterCommand()`](ref:core/RegisterCommand) deploy
 @RegisterCommand()
 ```
 
-With `guilds` left out, or without any ids in it, those same commands deploy globally. Your command files don't change. Leave `TESTING_GUILD_IDS` unset where your production bot runs, as [In production](/commands/deployed#in-production) shows.
+Without `guilds`, or without any ids in it, those same commands deploy globally. Your command files don't change. Leave `TESTING_GUILD_IDS` unset where your production bot runs, as [In production](/commands/deployed#in-production) shows.
 
 When you pass a scope yourself, seedcord skips the list. `'global'` keeps the command global. `'guild'` with ids sends it to those servers. Add `'config'` to that array to send the command to the configured servers as well.
 

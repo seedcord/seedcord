@@ -11,7 +11,7 @@ export type SeedcordSite = keyof typeof SITES;
 // all three are in the IANA link relation registry
 const RELATIONS = ['service-doc', 'index', 'related'] as const;
 
-// every relation a site would point at itself is left out
+// a site's list doesn't include a relation that points at itself
 const SITE_RELATIONS: Record<SeedcordSite, Partial<Record<(typeof RELATIONS)[number], SeedcordSite>>> = {
     home: { 'service-doc': 'docs', related: 'guide' },
     guide: { 'service-doc': 'docs', index: 'home' },

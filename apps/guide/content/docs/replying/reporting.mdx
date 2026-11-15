@@ -28,7 +28,7 @@ The `handledException` card shows, from the top:
 - the user, guild, channel, and interaction ids
 - the uuid and a stack, taken from the cause when the throw has one and from the throw itself otherwise
 
-seedcord attaches the raw interaction as `source.json`. A fault raised in an event handler shows the event and the handler in place of the kind, and it leaves out the command, customId, and interaction id.
+seedcord attaches the raw interaction as `source.json`. A fault raised in an event handler shows the event and the handler in place of the kind. It doesn't show the command, the customId, or the interaction id.
 
 <Image
     src="/handled-exception-card.webp"

@@ -76,7 +76,7 @@ describe('ErrorCodeReader', () => {
         expect(read('3102 or 3102').hints).toEqual([CONFIG]);
     });
 
-    it('leaves a swapped code out of the hints when it also appears bare', () => {
+    it("doesn't list a swapped code in the hints when it also appears bare", () => {
         expect(read('[3116] what is 3116')).toEqual({
             question: 'CliDependencyMissing what is 3116',
             swapped: [DEPENDENCY],

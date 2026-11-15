@@ -1,6 +1,6 @@
 import { DiscordAPIError } from '@discordjs/rest';
 import { InteractionKind } from '@seedcord/core';
-import { DispatchContext, ephemeralDefault, InteractionRun, lazyLogger } from '@seedcord/core/internal';
+import { DispatchContext, isEphemeralByDefault, InteractionRun, lazyLogger } from '@seedcord/core/internal';
 
 import { autocompleteResponder } from '#reply/autocompleteResponder';
 import { ReplySender } from '#reply/ReplySender';
@@ -42,7 +42,13 @@ function repliableRunConfig<Kind extends MiddlewareKind>(
     const { event, ctor: Ctor } = resolved;
     const dispatch = dispatchOf(resolved);
     const ref = { application_id: event.application_id, id: event.id, token: event.token };
-    const sender = new ReplySender(ref, core.rest, dispatch, core.bus, ephemeralDefault(core.config.bot.interactions));
+    const sender = new ReplySender(
+        ref,
+        core.rest,
+        dispatch,
+        core.bus,
+        isEphemeralByDefault(core.config.bot.interactions)
+    );
     return runConfig(resolved, core, dispatch, {
         sender,
         gateContext: () => interactionGateContext(event, core, dispatch),

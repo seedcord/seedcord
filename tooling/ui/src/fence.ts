@@ -31,7 +31,7 @@ export function languageOf(code: Element): string {
     return languageIn(Array.isArray(names) ? names : [names]) ?? '';
 }
 
-// mdx leaves the fence meta out of its output
+// mdx doesn't put the fence meta in its output
 export function rehypeFenceTitle() {
     return (tree: Root): void => {
         visitFences(tree, (code, meta) => {

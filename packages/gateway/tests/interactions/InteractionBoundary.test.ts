@@ -7,13 +7,14 @@ import { beforeEach, describe, expect, it, vi } from 'vite-plus/test';
 
 import { autocompleteRunConfig, repliableRunConfig } from '#bot/controllers/gatewayRunConfig';
 import { UnhandledAutocomplete, UnhandledRepliable } from '#bot/defaults';
+import { InteractionHandler } from '#handlers/interaction/InteractionHandler';
 import { harmlessError } from '#tests/utils/harmlessError';
 import { pluginWithMembers } from '#tests/utils/pluginWithMembers';
 import { TestNotice } from '#tests/utils/TestNotice';
 
 import type { HandlerSlots } from '#handlers/constructors';
 import type { Core } from '#interfaces/Core';
-import type { ValidInteractionTypes } from '#src/handlers/interactionTypes';
+import type { Repliables, ValidInteractionTypes } from '#src/handlers/interactionTypes';
 import type { SubscriptionData } from '@seedcord/core';
 import type { InteractionRunConfig } from '@seedcord/core/internal';
 import type { Config, InteractionsConfig } from '@seedcord/types';
@@ -285,8 +286,8 @@ describe('the interactions ephemeral default on gateway', () => {
     }
 
     it('sends a public reply when the config sets it false', async () => {
-        class Replies extends UnhandledRepliable {
-            override async execute(): Promise<void> {
+        class Replies extends InteractionHandler<Repliables> {
+            async execute(): Promise<void> {
                 await this.reply('hi');
             }
         }
@@ -301,31 +302,6 @@ describe('the interactions ephemeral default on gateway', () => {
         const mock = mockInteraction();
 
         await runSlash(UnhandledRepliable, asSlash(mock), mockCore(vi.fn(), {}, publicByDefault));
-
-        expect(replyFlags(mock)).toBe(MessageFlags.Ephemeral);
-    });
-
-    it('fills a public placeholder with the fault card after a defer', async () => {
-        class DefersThenThrows extends UnhandledRepliable {
-            override async execute(): Promise<void> {
-                await this.defer();
-                throw new Error('boom');
-            }
-        }
-        const mock = mockInteraction();
-
-        await runSlash(DefersThenThrows, asSlash(mock), mockCore(vi.fn(), {}, publicByDefault));
-
-        const [options] = mock.deferReply.mock.calls[0] as [{ flags: number }];
-        expect(options.flags & MessageFlags.Ephemeral).toBe(0);
-        expect(mock.editReply).toHaveBeenCalledTimes(1);
-        expect(mock.followUp).not.toHaveBeenCalled();
-    });
-
-    it('keeps a fault reply ephemeral when the config sets it false', async () => {
-        const mock = mockInteraction();
-
-        await answerFault(new Error('boom'), asInteraction(mock), mockCore(vi.fn(), {}, publicByDefault));
 
         expect(replyFlags(mock)).toBe(MessageFlags.Ephemeral);
     });

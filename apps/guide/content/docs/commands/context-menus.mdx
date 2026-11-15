@@ -145,7 +145,7 @@ export class Moderation extends UserContextMenuHandler<
 }
 ```
 
-Leaving `Warn` out of the cases is a compile error, the same as it is on a slash handler.
+Cases without a `Warn` entry are a compile error, the same as on a slash handler.
 
 `this.route` contains the name of the command the user selected.
 

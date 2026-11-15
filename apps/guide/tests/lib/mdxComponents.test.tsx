@@ -132,7 +132,7 @@ describe('the image component', () => {
         );
     });
 
-    it('leaves the border off by default', () => {
+    it("doesn't draw the border by default", () => {
         render(<Image src="/logo.svg" alt="bare" />);
 
         expect(borderWidthOf('bare')).toBeUndefined();

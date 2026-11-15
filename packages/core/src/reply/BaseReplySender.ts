@@ -3,12 +3,12 @@ import { SeedcordError } from '@seedcord/errors/internal';
 
 import { checkAckLegality, sendTarget } from './ackLegality';
 import { AckTrace } from './AckTrace';
+import { deferFlags, sendFlags } from './flags';
 import { attemptWrite, publishResponse } from './responseReport';
 import { serializeReply } from './serializeReply';
 import { translateSerializationError } from './translateSerialization';
 
 import type { AckState, ReplyMethod } from './ackLegality';
-import type { ResolvedSendOpts } from './flags';
 import type { ReplyTelemetry } from './responseReport';
 import type { SerializedReply } from './serializeReply';
 import type { DeferOpts, ReplyResponse, SendOpts } from '@seedcord/types';
@@ -35,7 +35,7 @@ export abstract class BaseReplySender<TMessage extends { id: string }, TNative =
 
     protected constructor(
         private readonly telemetry: ReplyTelemetry,
-        private readonly ephemeralDefault: boolean,
+        private readonly isEphemeralByDefault: boolean,
         initialState: AckState = 'unacked'
     ) {
         this.state = initialState;
@@ -61,7 +61,7 @@ export abstract class BaseReplySender<TMessage extends { id: string }, TNative =
     public async reply(response: ReplyResponse<TNative> | string, opts?: SendOpts): Promise<TMessage> {
         this.checkLegality('reply');
         const startedAt = performance.now();
-        const created = await this.attempt('reply', startedAt, () => this.writeReply(response, this.resolve(opts)));
+        const created = await this.attempt('reply', startedAt, () => this.writeReply(response, this.replyFlags(opts)));
         // record replied before the message guard can throw because the callback has already acked discord
         this.transition('reply', 'replied');
         const message = this.remember(this.requireMessage(created, 'reply'));
@@ -72,7 +72,7 @@ export abstract class BaseReplySender<TMessage extends { id: string }, TNative =
     public async defer(opts?: DeferOpts): Promise<void> {
         this.checkLegality('defer');
         const startedAt = performance.now();
-        await this.attempt('defer', startedAt, () => this.writeDefer(this.ephemeral(opts)));
+        await this.attempt('defer', startedAt, () => this.writeDefer(deferFlags(this.ephemeral(opts))));
         this.transition('defer', 'deferred-reply');
         this.report('defer', startedAt, null);
     }
@@ -110,7 +110,7 @@ export abstract class BaseReplySender<TMessage extends { id: string }, TNative =
         this.checkLegality('followUp');
         const startedAt = performance.now();
         const created = await this.attempt('followUp', startedAt, () =>
-            this.writeFollowUp(response, this.resolve(opts))
+            this.writeFollowUp(response, this.replyFlags(opts))
         );
         const message = this.remember(created);
         this.report('followUp', startedAt, message.id);
@@ -212,11 +212,11 @@ export abstract class BaseReplySender<TMessage extends { id: string }, TNative =
     }
 
     private ephemeral(opts: SendOpts | DeferOpts | undefined): boolean {
-        return opts?.ephemeral ?? this.ephemeralDefault;
+        return opts?.ephemeral ?? this.isEphemeralByDefault;
     }
 
-    private resolve(opts: SendOpts | undefined): ResolvedSendOpts {
-        return { ...opts, ephemeral: this.ephemeral(opts) };
+    private replyFlags(opts: SendOpts | undefined): number {
+        return sendFlags({ ...opts, ephemeral: this.ephemeral(opts) });
     }
 
     private checkLegality(method: ReplyMethod): void {
@@ -233,15 +233,12 @@ export abstract class BaseReplySender<TMessage extends { id: string }, TNative =
 
     protected abstract writeReply(
         response: ReplyResponse<TNative> | string,
-        opts: ResolvedSendOpts
+        flags: number
     ): Promise<TMessage | undefined>;
-    protected abstract writeDefer(ephemeral: boolean): Promise<void>;
+    protected abstract writeDefer(flags: number): Promise<void>;
     protected abstract writeDeferUpdate(): Promise<void>;
     protected abstract writeUpdate(response: ReplyResponse<TNative> | string): Promise<TMessage | undefined>;
-    protected abstract writeFollowUp(
-        response: ReplyResponse<TNative> | string,
-        opts: ResolvedSendOpts
-    ): Promise<TMessage>;
+    protected abstract writeFollowUp(response: ReplyResponse<TNative> | string, flags: number): Promise<TMessage>;
     protected abstract writeEditOriginal(response: ReplyResponse<TNative> | string): Promise<TMessage>;
     protected abstract writeEditTarget(targetId: string, response: ReplyResponse<TNative> | string): Promise<TMessage>;
     protected abstract writeDeleteOriginal(): Promise<void>;

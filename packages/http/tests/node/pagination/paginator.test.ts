@@ -54,12 +54,12 @@ function dmPayload(): Repliables {
 function stubHandler(
     post: ReturnType<typeof vi.fn>,
     interaction = guildPayload(),
-    ephemeralDefault = true
+    isEphemeralByDefault = true
 ): RepliableHandler<Repliables> {
     const core = { bus: stubBus() } as Core;
     const dispatch = new DispatchContext('slash', 'page');
     // justified: the fixture implements only the REST surface ReplySender reads
-    const sender = new ReplySender(ref, { post } as unknown as REST, dispatch, core.bus, ephemeralDefault);
+    const sender = new ReplySender(ref, { post } as unknown as REST, dispatch, core.bus, isEphemeralByDefault);
     // justified: start reads only these three members off the handler
     return {
         core,
@@ -104,7 +104,7 @@ describe('http Paginator.start', () => {
         expect(textLines(callbackBody(post).data?.components?.[0])).toEqual(['e']);
     });
 
-    it('follows the bot default when the paginator leaves ephemeral out', async () => {
+    it("follows the bot default when the paginator doesn't set ephemeral", async () => {
         const post = vi.fn().mockResolvedValue({ resource: { message: { id: 'm-1' } } });
 
         await pagerFor().start(stubHandler(post, guildPayload(), false));

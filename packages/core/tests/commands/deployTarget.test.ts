@@ -26,7 +26,7 @@ describe('resolveDeployTarget', () => {
         expect(targetFor({ scope: 'global' }, ['111'])).toEqual({ scope: 'global' });
     });
 
-    it('uses the ids the decorator passed, leaving the configured list out', () => {
+    it('uses the ids the decorator passed and ignores the configured list', () => {
         expect(targetFor({ scope: 'guild', guilds: ['222'] }, ['111'])).toEqual({
             scope: 'guild',
             guilds: ['222']

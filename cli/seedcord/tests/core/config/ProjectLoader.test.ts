@@ -297,7 +297,7 @@ describe('ProjectLoader paths with a #', () => {
         });
     });
 
-    it('lists each # name once, leaving out what sits under a # folder', async () => {
+    it('lists each # name once, without the entries inside a # folder', async () => {
         const { projectDir, load } = projectWith(MINIMAL);
         mkdirSync(join(projectDir, 'old#handlers', 'sub'), { recursive: true });
         writeFileSync(join(projectDir, 'old#handlers', 'a.ts'), '');
@@ -440,7 +440,7 @@ describe('ProjectLoader validation', () => {
         expect(resolved.typecheck).toEqual({ enabled: true, tsconfig: resolve(projectDir, 'tsconfig.dev.json') });
     });
 
-    it('leaves typecheck off when the config omits it', async () => {
+    it("doesn't enable typecheck when the config doesn't set it", async () => {
         const { typecheck } = await projectWith(MINIMAL).load();
 
         expect(typecheck).toEqual({ enabled: false });
@@ -483,7 +483,7 @@ describe('ProjectLoader validation', () => {
 });
 
 describe('ProjectLoader files', () => {
-    it('lists zero folders when the config leaves files out', async () => {
+    it("lists zero folders when the config doesn't list files", async () => {
         const { files } = await projectWith(MINIMAL).load();
 
         expect(files).toEqual([]);

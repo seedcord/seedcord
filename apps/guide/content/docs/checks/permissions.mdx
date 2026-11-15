@@ -207,6 +207,6 @@ RequirePermissions([PermissionFlagsBits.BanMembers], {
 RequireRole('221439658686939136', { missingRole: SubscribersOnly });
 ```
 
-Leaving an option out keeps the default card. The permission gates list every missing bit on it by name, and `RequireRole` mentions the role.
+Without the option, a gate uses the default card. The permission gates list every missing bit on it by name, and `RequireRole` mentions the role.
 
 A check these gates don't cover, like whether the caller linked an account, is [a gate you write yourself](/checks/your-own).

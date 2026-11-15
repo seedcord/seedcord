@@ -154,21 +154,16 @@ class Ban extends SlashHandler<'ban'> {
 
 ### Make replies public by default
 
-If most of your replies should go to the whole channel, set `ephemeral: false` under `bot.interactions` in your config. Then you can leave `ephemeral` off your replies. An http bot sets the same key in its `Seedcord` config.
+If most of your replies should go to the whole channel, set `ephemeral: false` under `bot.interactions` in your config. Then you don't need to pass `ephemeral` on each reply.
 
 ```ts twoslash title="src/bot.ts"
-import { resolve } from 'node:path';
-
 import { Seedcord } from '@seedcord/gateway';
 import { GatewayIntentBits } from 'discord.js';
 
 export const seedcord = new Seedcord({
     bot: {
         clientOptions: { intents: [GatewayIntentBits.Guilds] },
-        interactions: {
-            path: resolve(import.meta.dirname, './handlers'),
-            ephemeral: false
-        },
+        interactions: { path: './handlers', ephemeral: false },
         commands: { path: null },
         events: { path: null }
     },
@@ -176,9 +171,9 @@ export const seedcord = new Seedcord({
 });
 ```
 
-Every reply that leaves `ephemeral` out uses that default, including `defer()`, a paginator, and a confirm prompt. Pass `ephemeral: true` when only the person who ran the command should see a reply.
+Every reply without its own `ephemeral` uses that default, including `defer()`, a paginator, and a confirm prompt. Pass `ephemeral: true` when only the person who ran the command should see a reply.
 
-Error cards and [notices](/replying/throwing) ignore this default. seedcord sends them as ephemeral, unless a notice sets `ephemeral` to `false`. After a public `defer()`, though, the card fills the public placeholder, so the whole channel sees it. To keep a handler's errors private, call `defer({ ephemeral: true })`.
+seedcord sends error cards and [notices](/replying/throwing) as ephemeral whatever you set here. After a public `defer()`, the card edits that placeholder, and Discord doesn't let an edit hide a message, so the whole channel sees it. Defer with `{ ephemeral: true }` in a handler whose errors should be private.
 
 ## The message you get back
 
