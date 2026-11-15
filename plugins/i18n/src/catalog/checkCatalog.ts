@@ -6,8 +6,9 @@ import { isDiscordLocale, localesLike } from '#src/locales';
 
 import type { FunctionReference, Message, SelectExpression, VariableReference } from '@fluent/syntax';
 
-type VariableKind = 'number' | 'text' | readonly string[];
-export type MessageVariables = Record<string, VariableKind>;
+export type VariableKind = 'number' | 'text' | readonly string[];
+type MessageVariables = Record<string, VariableKind>;
+export type MessageTable = Record<string, MessageVariables>;
 
 export interface LocaleFile {
     readonly locale: string;
@@ -16,7 +17,7 @@ export interface LocaleFile {
 }
 
 export interface CheckedCatalog {
-    readonly messages: Record<string, MessageVariables>;
+    readonly messages: MessageTable;
     readonly problems: SeedcordError[];
     readonly untranslated: { readonly relativePath: string; readonly keys: string[] }[];
 }

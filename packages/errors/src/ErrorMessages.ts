@@ -289,6 +289,8 @@ const messages = {
         `${paint.path(file)} isn't named after a Discord locale code. Rename it to ${like.length > 0 ? oneOf.format(like.map((locale) => paint.path(`${locale}.ftl`))) : `a code from Discord's locale list, like ${paint.path('en-US.ftl')}`}.`,
     [SeedcordErrorCode.PluginI18nNotInBase]: (place: string, what: string, baseFile: string) =>
         `${paint.path(place)} has ${what}, but ${paint.path(baseFile)} doesn't. ${paint.bold('t()')} only reads what the base file has. Add it to ${paint.path(baseFile)} first, or remove it here.`,
+    [SeedcordErrorCode.PluginI18nOutOfDate]: (key: string, problem: string) =>
+        `${paint.bold(`t('${key}')`)} ${problem}. The .ftl files changed after ${paint.bold('seedcord codegen')} last ran. Run it to update what ${paint.bold('t()')} accepts, then fix this call.`,
     [SeedcordErrorCode.PluginI18nBaseMissing]: (dir: string, baseFile: string) =>
         `${paint.path(dir)} doesn't have ${paint.path(baseFile)}, the file that lists every message. Add it, or set ${paint.bold('base')} to a locale that has a file.`,
 

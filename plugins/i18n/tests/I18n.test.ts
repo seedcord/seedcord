@@ -11,6 +11,7 @@ import { I18n } from '#src/I18n';
 import { TestHost } from './host';
 
 import type { I18nOptions } from '#src/I18n';
+import type { DispatchOrigin } from '@seedcord/core';
 
 const FIXTURES = path.join(import.meta.dirname, 'fixtures');
 
@@ -18,11 +19,82 @@ function i18nAt(fixture: string, options: Omit<I18nOptions, 'dir'> = {}): I18n {
     return new TestHost().attach('i18n', I18n, { dir: path.join(FIXTURES, fixture), ...options }).i18n;
 }
 
+function from(locales: Partial<Pick<DispatchOrigin, 'userLocale' | 'guildLocale'>>): DispatchOrigin {
+    return { userId: '1', guildId: null, channelId: null, userLocale: null, guildLocale: null, ...locales };
+}
+
+async function tFor(
+    origin: DispatchOrigin,
+    options: Omit<I18nOptions, 'dir'> = {}
+): ReturnType<I18n['dispatchMembers']['t']> {
+    const i18n = i18nAt('good', options);
+    await i18n.init();
+    return i18n.dispatchMembers.t(origin);
+}
+
 describe('I18n', () => {
     it('rejects an empty dir', () => {
         expect(() => new TestHost().attach('i18n', I18n, { dir: '' })).toThrow(
             expect.objectContaining({ code: SeedcordErrorCode.PluginOptionsRejected })
         );
+    });
+
+    describe('t', () => {
+        it("translates into the user's locale", async () => {
+            const t = await tFor(from({ userLocale: Locale.Polish }));
+
+            expect(t('greeting', { user: 'Ana' })).toBe('Cześć Ana, witaj w seedcord');
+            expect(t.locale).toBe('pl');
+        });
+
+        it('picks the plural form each locale uses', async () => {
+            const pl = await tFor(from({ userLocale: Locale.Polish }));
+            const en = await tFor(from({ userLocale: Locale.EnglishUS }));
+
+            expect([1, 3, 5].map((count) => pl('items', { count }))).toEqual([
+                'Masz 1 przedmiot',
+                'Masz 3 przedmioty',
+                'Masz 5 przedmiotów'
+            ]);
+            expect([1, 2].map((count) => en('items', { count }))).toEqual(['You have 1 item', 'You have 2 items']);
+        });
+
+        it("reads the pair's file, then the base's, for a message that the locale's file doesn't have", async () => {
+            const t = await tFor(from({ userLocale: Locale.SpanishLATAM }));
+
+            expect(t('items', { count: 2 })).toBe('Tenés 2 objetos');
+            expect(t('greeting', { user: 'Ana' })).toBe('Hola Ana, bienvenido a seedcord');
+            expect(t('ping-reply', { ms: 42 })).toBe('Pong! 42ms');
+        });
+
+        it("uses the guild's locale, then the base, when the user's is missing", async () => {
+            const guild = await tFor(from({ guildLocale: Locale.Polish }));
+            const neither = await tFor(from({}));
+
+            expect(guild.locale).toBe('pl');
+            expect(neither.locale).toBe('en-US');
+        });
+
+        it("binds to the base for a locale that doesn't have a file", async () => {
+            const t = await tFor(from({ userLocale: Locale.Japanese }));
+
+            expect(t.locale).toBe('en-US');
+            expect(t('role', { user: 'Ana', role: 'admin' })).toBe('Ana is an admin');
+        });
+
+        it('takes the locale resolveLocale returns over the Discord ones', async () => {
+            const t = await tFor(from({ userLocale: Locale.EnglishUS }), { resolveLocale: () => 'pl' });
+
+            expect(t.locale).toBe('pl');
+        });
+
+        it('throws for a message that no locale file has, like one a stale seedcord-gen.ts still offers', async () => {
+            const t = await tFor(from({}));
+
+            expect(() => t('removed', {})).toThrow(
+                expect.objectContaining({ code: SeedcordErrorCode.PluginI18nOutOfDate })
+            );
+        });
     });
 
     describe('codegen', () => {

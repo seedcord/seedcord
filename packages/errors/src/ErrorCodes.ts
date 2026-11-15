@@ -256,6 +256,8 @@ export enum SeedcordErrorCode {
     PluginI18nNotInBase = 2403,
     /** The i18n plugin's `dir` doesn't have a file for its base locale. */
     PluginI18nBaseMissing = 2404,
+    /** A `t()` call doesn't match the `.ftl` files. They changed after `seedcord codegen` last ran. */
+    PluginI18nOutOfDate = 2405,
 
     /** Someone pressed Ctrl-C at a prompt in `seedcord` or `create-seedcord`. */
     CliCancelled = 3001,

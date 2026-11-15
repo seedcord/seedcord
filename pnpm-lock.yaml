@@ -1717,6 +1717,9 @@ importers:
 
   plugins/i18n:
     dependencies:
+      '@fluent/bundle':
+        specifier: ^0.19.1
+        version: 0.19.1
       '@fluent/syntax':
         specifier: ^0.19.0
         version: 0.19.0
@@ -1729,6 +1732,12 @@ importers:
       discord-api-types:
         specifier: ^0.38.52
         version: 0.38.57
+      es-toolkit:
+        specifier: catalog:deps
+        version: 1.53.2
+      type-fest:
+        specifier: catalog:deps
+        version: 5.10.0
       typescript:
         specifier: catalog:consumerTypes
         version: 6.0.3
@@ -3557,6 +3566,10 @@ packages:
 
   '@floating-ui/utils@0.2.12':
     resolution: {integrity: sha512-HpCo8tmWzLVad5s2d19EhAz5zqrrQ6s69qd6moPMQvkOuSwDT1YgRfWSVuc4ennqrgv3OHppiOGMQ7oC13yIww==}
+
+  '@fluent/bundle@0.19.1':
+    resolution: {integrity: sha512-SWJLZrPamDPsJlFFOW1nkgN0j0rbPbmSdmK0XAoXlyqKieLtMVl4vzng3aR5pwKoUx0scug8+YY2oct3fdfy9A==}
+    engines: {node: '>=18.0.0', npm: '>=7.0.0'}
 
   '@fluent/syntax@0.19.0':
     resolution: {integrity: sha512-5D2qVpZrgpjtqU4eNOcWGp1gnUCgjfM+vKGE2y03kKN6z5EBhtx0qdRFbg8QuNNj8wXNoX93KJoYb+NqoxswmQ==}
@@ -11760,6 +11773,8 @@ snapshots:
       react-dom: 19.3.1(react@19.3.1)
 
   '@floating-ui/utils@0.2.12': {}
+
+  '@fluent/bundle@0.19.1': {}
 
   '@fluent/syntax@0.19.0': {}
 

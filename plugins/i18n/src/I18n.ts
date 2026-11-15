@@ -2,10 +2,16 @@ import { Plugin } from '@seedcord/core/plugin';
 import { paint, SeedcordErrorCode } from '@seedcord/errors';
 import { throwSingleOrAggregate } from '@seedcord/errors/internal';
 import { readFiles } from '@seedcord/utils';
+import { once } from 'es-toolkit';
 
-import type { LocaleFile, MessageVariables } from './catalog/checkCatalog';
-import type { CoreBase } from '@seedcord/core';
-import type { Locale } from 'discord-api-types/v10';
+import { Catalogs } from './Catalogs';
+
+import type { LocaleFile, MessageTable } from './catalog/checkCatalog';
+import type { Translate } from './Catalogs';
+import type { LocaleCode } from './locales';
+import type { CoreBase, DispatchOrigin } from '@seedcord/core';
+import type { Generated } from '@seedcord/core/plugin';
+import type { Promisable } from 'type-fest';
 
 const FTL = '.ftl';
 
@@ -14,24 +20,124 @@ export interface I18nOptions {
     /** The folder that holds one `.ftl` file per locale, and the command translations in its `commands` folder. Defaults to `./locales`. */
     readonly dir?: string;
     /** The locale whose file lists every message and the variables each one takes. Defaults to `en-US`. */
-    readonly base?: `${Locale}`;
+    readonly base?: LocaleCode;
+    /**
+     * Picks the locale for an interaction or event, like a language that the user picked in your bot. When it
+     * returns `undefined` or `null`, the plugin uses the user's Discord language, then the guild's, then `base`.
+     */
+    readonly resolveLocale?: (origin: DispatchOrigin) => Promisable<LocaleCode | null | undefined>;
 }
 
 /**
- * Translates the bot's replies and commands from Fluent `.ftl` files, one per Discord locale.
+ * Gives every handler `this.t`, which formats your Fluent messages in the user's language.
+ *
+ * Put one `.ftl` file per Discord locale in `dir`, like `en-US.ftl` and `pl.ftl`. In gates and
+ * `Notice.render`, read the same function from `ctx.t`.
+ *
+ * @example
+ * ```ftl
+ * # locales/en-US.ftl
+ * # the base file. add a message or variable here before you translate it
+ *
+ * greeting = Hello { $user }!
+ *
+ * items = { $count ->
+ *     [one] You have { $count } item
+ *    *[other] You have { $count } items
+ * }
+ * ```
  *
  * @example
  * ```ts
- * seedcord.attach('i18n', I18n, { dir: './locales' });
+ * // seedcord.config.ts
+ * export default defineConfig({
+ *     files: ['./locales']
+ * });
+ *
+ * // bot.ts
+ * seedcord.attach('i18n', I18n, { dir: './locales', base: 'en-US' });
+ * ```
+ *
+ * @example
+ * ```ts
+ * // in a handler after you edit a .ftl file,
+ * // run seedcord codegen to update what t accepts
+ * await this.reply(this.t('greeting', { user: this.event.user.username }));
+ * await this.reply(this.t('items', { count: cart.length }));
+ * ```
+ *
+ * @example
+ * ```ts
+ * // pass this.t to a component's constructor to translate inside it
+ * import { BuilderComponent, type DispatchMemberValues } from '@seedcord/gateway';
+ * import { TextDisplayBuilder } from '@discordjs/builders';
+ *
+ * class CartSummary extends BuilderComponent<'container'> {
+ *     constructor(t: DispatchMemberValues['t'], count: number) {
+ *         super('container');
+ *
+ *         const text = new TextDisplayBuilder().setContent(t('items', { count }));
+ *         this.instance.addTextDisplayComponents(text);
+ *     }
+ * }
+ *
+ * // in the handler
+ * const summary = new CartSummary(this.t, cart.length);
+ * await this.reply({ components: [summary.component] });
+ * ```
+ *
+ * @example
+ * ```ts
+ * // in a Notice, read ctx.t. it formats in the same language as the handler's this.t
+ * class EmptyCart extends Notice {
+ *     constructor() {
+ *         super('cart is empty');
+ *     }
+ *
+ *     override render(ctx: RenderContext): ReplyResponse {
+ *         return { content: ctx.t('items', { count: 0 }) };
+ *     }
+ * }
+ * ```
+ *
+ * @example
+ * ```ts
+ * // return a language the user saved with your bot to use it over their Discord language
+ * seedcord.attach('i18n', I18n, {
+ *     resolveLocale: async ({ userId }) => {
+ *         if (!userId) return undefined;
+ *         return languages.get(userId);
+ *     }
+ * });
+ * ```
+ *
+ * @example
+ * ```ts
+ * // t.locale is the locale t formats in. use it for dates and numbers
+ * const joined = new Intl.DateTimeFormat(this.t.locale).format(member.joinedAt);
  * ```
  */
 export class I18n extends Plugin {
     public static readonly id = '@seedcord/plugin-i18n';
 
-    private readonly dir: string;
-    private readonly base: Required<I18nOptions>['base'];
+    public override readonly dispatchMembers = {
+        t: async (origin: DispatchOrigin): Promise<Translate<Generated<typeof I18n>['messages']>> => {
+            const chosen = await this.resolveLocale?.(origin);
+            const catalogs = await this.catalogs();
+            return catalogs.translator(chosen ?? origin.userLocale ?? origin.guildLocale ?? this.base);
+        }
+    };
 
-    public constructor(host: CoreBase, { dir = './locales', base = 'en-US' }: I18nOptions = {}) {
+    private readonly dir: string;
+    private readonly base: LocaleCode;
+    private readonly resolveLocale: I18nOptions['resolveLocale'];
+
+    private readonly catalogs = once(async () => {
+        const files = await this.localeFiles();
+        return new Catalogs(new Map(files.map(({ locale, source }) => [locale, source])), this.base);
+    });
+
+    public constructor(host: CoreBase, { dir = './locales', base = 'en-US', resolveLocale }: I18nOptions = {}) {
         super(host);
 
         if (dir.length === 0) {
@@ -42,11 +148,14 @@ export class I18n extends Plugin {
 
         this.dir = dir;
         this.base = base;
+        this.resolveLocale = resolveLocale;
     }
 
-    public init(): void {}
+    public async init(): Promise<void> {
+        await this.catalogs();
+    }
 
-    public override async codegen(): Promise<{ messages: Record<string, MessageVariables> }> {
+    public override async codegen(): Promise<{ messages: MessageTable }> {
         // a running bot doesn't need to load @fluent/syntax as only codegen needs it
         const { checkCatalog } = await import('./catalog/checkCatalog');
         const { messages, problems, untranslated } = checkCatalog(await this.localeFiles(), this.base, this.dir);
