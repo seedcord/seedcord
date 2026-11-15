@@ -2,7 +2,8 @@ import { SeedcordRangeError } from '@seedcord/errors/internal';
 import { describe, expect, it } from 'vite-plus/test';
 
 import { ShutdownPhase, StartupPhase } from '#src/lifecycle/phases';
-import { Plugin, resolvedLifecycleSpecOf } from '#src/plugin/Plugin';
+import { Plugin } from '#src/plugin/Plugin';
+import { resolvedLifecycleSpecOf } from '#src/plugin/pluginSlots';
 
 import type { CoreBase } from '#interfaces/CoreBase';
 import type { PluginLifecycleSpec } from '#src/plugin/Plugin';

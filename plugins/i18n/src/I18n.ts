@@ -1,8 +1,10 @@
+import path from 'node:path';
+
 import { Plugin } from '@seedcord/core/plugin';
 import { paint, SeedcordErrorCode } from '@seedcord/errors';
 import { SeedcordError, throwSingleOrAggregate } from '@seedcord/errors/internal';
-import { importFiles, readFiles } from '@seedcord/utils';
-import { once } from 'es-toolkit';
+import { formatFilePath, importFiles, readFiles } from '@seedcord/utils';
+import { botFolder } from '@seedcord/utils/internal';
 
 import { Catalogs } from './Catalogs';
 import { CommandLocalizer } from './CommandLocalizer';
@@ -13,7 +15,7 @@ import type { LocaleFile, MessageTable } from './catalog/checkCatalog';
 import type { Translate } from './Catalogs';
 import type { LocaleCode } from './locales';
 import type { CoreBase, DispatchOrigin } from '@seedcord/core';
-import type { Generated } from '@seedcord/core/plugin';
+import type { Generated, HmrUpdateEvent } from '@seedcord/core/plugin';
 import type { RESTPostAPIApplicationCommandsJSONBody } from 'discord-api-types/v10';
 import type { Promisable } from 'type-fest';
 
@@ -127,7 +129,7 @@ export class I18n extends Plugin {
     public override readonly dispatchMembers = {
         t: async (origin: DispatchOrigin): Promise<Translate<Generated<typeof I18n>['messages']>> => {
             const chosen = await this.resolveLocale?.(origin);
-            const catalogs = await this.catalogs();
+            const catalogs = await this.loadedCatalogs();
             return catalogs.translator(chosen ?? origin.userLocale ?? origin.guildLocale ?? this.base);
         }
     };
@@ -136,10 +138,7 @@ export class I18n extends Plugin {
     private readonly base: LocaleCode;
     private readonly resolveLocale: I18nOptions['resolveLocale'];
 
-    private readonly catalogs = once(async () => {
-        const files = await this.localeFiles();
-        return new Catalogs(new Map(files.map(({ locale, source }) => [locale, source])), this.base);
-    });
+    private catalogs: Promise<Catalogs> | undefined;
 
     public constructor(host: CoreBase, { dir = './locales', base = 'en-US', resolveLocale }: I18nOptions = {}) {
         super(host);
@@ -153,17 +152,30 @@ export class I18n extends Plugin {
         this.dir = dir;
         this.base = base;
         this.resolveLocale = resolveLocale;
+        this.registerCommandFiles((file) => this.isTranslationFile(file));
     }
 
     public async init(): Promise<void> {
-        await this.catalogs();
+        await this.loadedCatalogs();
+    }
+
+    public override async onHmr({ file }: HmrUpdateEvent): Promise<void> {
+        if (!this.isCatalogFile(file)) return;
+        const startedAt = Date.now();
+        this.catalogs = undefined;
+        await this.loadedCatalogs();
+        this.logger
+            .withChannel('hmr')
+            .debug(
+                `Reloaded ${paint.sky.bold(path.basename(file, FTL))} from ${paint.mute(formatFilePath(file))} ${paint.mute('in')} ${String(Date.now() - startedAt)}ms`
+            );
     }
 
     public override async prepareCommands(commands: readonly RESTPostAPIApplicationCommandsJSONBody[]): Promise<void> {
         const problems: SeedcordError[] = [];
-        for await (const { pathInDir, relativePath, imported } of importFiles(this.dir)) {
-            if (pathInDir.includes('/')) continue;
-            const locale = pathInDir.slice(0, pathInDir.lastIndexOf('.'));
+        for await (const { fullPath, relativePath, imported } of importFiles(this.dir)) {
+            if (!this.isTranslationFile(fullPath)) continue;
+            const locale = path.parse(fullPath).name;
             const translations = translationsIn(imported.default);
             if (!isDiscordLocale(locale)) {
                 problems.push(
@@ -193,12 +205,31 @@ export class I18n extends Plugin {
         return { messages };
     }
 
+    private loadedCatalogs(): Promise<Catalogs> {
+        this.catalogs ??= this.localeFiles().then(
+            (files) => new Catalogs(new Map(files.map(({ locale, source }) => [locale, source])), this.base)
+        );
+        return this.catalogs;
+    }
+
+    // a subfolder's files aren't catalogs or command translations
+    private isDirectlyInDir(file: string): boolean {
+        return path.dirname(file) === botFolder(this.dir).path;
+    }
+
+    private isCatalogFile(file: string): boolean {
+        return this.isDirectlyInDir(file) && file.endsWith(FTL);
+    }
+
+    private isTranslationFile(file: string): boolean {
+        return this.isDirectlyInDir(file) && botFolder(this.dir).holdsModule(file);
+    }
+
     private async localeFiles(): Promise<LocaleFile[]> {
         const files: LocaleFile[] = [];
-        for await (const { pathInDir, relativePath, bytes } of readFiles(this.dir)) {
-            // a subfolder like commands/ holds the command translations
-            if (pathInDir.includes('/') || !pathInDir.endsWith(FTL)) continue;
-            files.push({ locale: pathInDir.slice(0, -FTL.length), relativePath, source: bytes.toString() });
+        for await (const { fullPath, relativePath, bytes } of readFiles(this.dir)) {
+            if (!this.isCatalogFile(fullPath)) continue;
+            files.push({ locale: path.basename(fullPath, FTL), relativePath, source: bytes.toString() });
         }
         return files;
     }

@@ -56,7 +56,6 @@
         "@seedcord/errors": "workspace:^",
         "@seedcord/utils": "workspace:^",
         "discord-api-types": "catalog:deps",
-        "es-toolkit": "catalog:deps",
         "type-fest": "catalog:deps"
     },
     "devDependencies": {
@@ -66,6 +65,7 @@
         "@seedcord/prose": "workspace:^",
         "@seedcord/tsconfig": "workspace:^",
         "@seedcord/tsdown-config": "workspace:^",
+        "@seedcord/types": "workspace:^",
         "@seedcord/vite-config": "workspace:^"
     },
     "peerDependencies": {

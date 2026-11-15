@@ -3,7 +3,7 @@ import { throwSingleOrAggregate } from '@seedcord/errors/internal';
 import { Logger } from '@seedcord/logger';
 
 import { StartupPhase } from '#src/lifecycle/phases';
-import { pluginLoggerOf } from '#src/plugin/Plugin';
+import { pluginLoggerOf } from '#src/plugin/pluginSlots';
 
 import { withTimeout } from './withTimeout';
 

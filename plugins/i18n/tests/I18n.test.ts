@@ -1,8 +1,10 @@
+import { writeFile } from 'node:fs/promises';
 import path from 'node:path';
 import { stripVTControlCharacters } from 'node:util';
 
 import { isSeedcordError, SeedcordErrorCode } from '@seedcord/errors';
 import { LoggerChannelRegistry } from '@seedcord/logger';
+import { HostPlugins } from '@seedcord/types/internal';
 import { Locale } from 'discord-api-types/v10';
 import { describe, expect, it } from 'vite-plus/test';
 
@@ -10,6 +12,7 @@ import { I18n } from '#src/I18n';
 
 import { commandBodies } from './commands';
 import { TestHost } from './host';
+import { tempCatalog } from './tempCatalog';
 
 import type { I18nOptions } from '#src/I18n';
 import type { DispatchOrigin } from '@seedcord/core';
@@ -95,6 +98,30 @@ describe('I18n', () => {
             expect(() => t('removed', {})).toThrow(
                 expect.objectContaining({ code: SeedcordErrorCode.PluginI18nOutOfDate })
             );
+        });
+    });
+
+    describe('saves under seedcord dev', () => {
+        it('reads a saved .ftl file the next time t runs', async () => {
+            await using catalog = await tempCatalog('good', 'saved-ftl');
+            const host = new TestHost().attach('i18n', I18n, { dir: catalog.path });
+            await host.i18n.init();
+            const file = path.join(catalog.path, 'en-US.ftl');
+            await writeFile(file, 'greeting = Hey { $user }\n');
+
+            await host.i18n.onHmr({ file, type: 'update' });
+            const t = await host.i18n.dispatchMembers.t(from({}));
+
+            expect(t('greeting', { user: 'Ana' })).toBe('Hey Ana');
+        });
+
+        it('marks the .ts files right inside dir as the files that change commands', () => {
+            const dir = path.join(FIXTURES, 'commands', 'good');
+            const plugins = new TestHost().attach('i18n', I18n, { dir })[HostPlugins];
+
+            expect(plugins.readCommandFile(path.join(dir, 'pl.ts'))).toBe(true);
+            expect(plugins.readCommandFile(path.join(dir, 'pl.ftl'))).toBe(false);
+            expect(plugins.readCommandFile(path.join(dir, 'nested', 'pl.ts'))).toBe(false);
         });
     });
 

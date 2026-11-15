@@ -179,7 +179,7 @@ export class CommandRegistry implements Initializeable, HmrAware {
 
     /** @internal */
     public async onHmr(event: HmrUpdateEvent): Promise<void> {
-        if (botFolder(this.dir).holds(event.file)) {
+        if (botFolder(this.dir).holds(event.file) || this.core[HostPlugins].readCommandFile(event.file)) {
             this.pendingEvents.delete(event.file);
             this.pendingEvents.set(event.file, event);
             getDevChannel()?.send('seedcord:commands-update-prompt', {

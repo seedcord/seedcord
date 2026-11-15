@@ -6,6 +6,7 @@ import { getDevChannel } from '#hmr/devChannel';
 
 import { RuntimeBrand, TransportBrand } from './brands';
 import { resolveLifecycleSpec } from './lifecycle';
+import { commandFilesSlot, loggerSlot, resolvedSpecSlot, scopeSlot, takeAttaching } from './pluginSlots';
 
 import type { CoreBase } from '#interfaces/CoreBase';
 import type { Kv } from '#src/kv/Kv';
@@ -24,28 +25,15 @@ import type {
     TransportAssert
 } from './options';
 import type { DispatchMemberFunctions } from './PluginRegistry';
+import type { CommandFileCheck, PluginSlots } from './pluginSlots';
 import type { FrameworkChannel, HmrAware, HmrUpdateEvent } from '@seedcord/types';
 import type { RESTPostAPIApplicationCommandsJSONBody } from 'discord-api-types/v10';
 import type { Constructor, Promisable } from 'type-fest';
-
-interface Attaching {
-    readonly key: string;
-    readonly kv: Kv;
-}
-
-// set only while attach() runs `new Plugin()`
-let attaching: Attaching | undefined;
 
 export interface Initializeable {
     init(): Promisable<void>;
 }
 
-/** @internal */
-const resolvedSpecSlot = Symbol('seedcord:plugin:spec');
-/** @internal */
-const loggerSlot = Symbol('seedcord:plugin:logger');
-/** @internal */
-const scopeSlot = Symbol('seedcord:plugin:scope');
 /** @internal */
 export const FixedScope = Symbol('seedcord:plugin:fixed-scope');
 
@@ -86,7 +74,7 @@ export abstract class Plugin<
     TCore extends CoreBase = CoreBase,
     Fixed extends ScopeAxis = never
 >
-    implements Initializeable, HmrAware
+    implements Initializeable, HmrAware, PluginSlots
 {
     /** @internal */
     protected static readonly [FixedScope]: Partial<DeclaredScope> = {};
@@ -103,6 +91,8 @@ export abstract class Plugin<
     readonly [loggerSlot]: Logger;
     /** @internal */
     readonly [scopeSlot]: DeclaredScope;
+    /** @internal */
+    readonly [commandFilesSlot]: CommandFileCheck[] = [];
 
     /** Logs under the plugin's class name, on the channel its attach key sets. */
     protected readonly logger: Logger;
@@ -114,9 +104,7 @@ export abstract class Plugin<
         private readonly host: CoreBase,
         ...[spec]: PluginSpecArgs<Opts, Fixed>
     ) {
-        // cleared here. a plugin that this constructor builds by hand doesn't get the outer key
-        const attachment = attaching;
-        attaching = undefined;
+        const attachment = takeAttaching();
         this.#kv = attachment?.kv;
 
         this.logger = new Logger(this.constructor.name, attachment && { channel: attachment.key });
@@ -239,36 +227,21 @@ export abstract class Plugin<
     protected registerCriticalFiles(patterns: string[]): void {
         getDevChannel()?.send('seedcord:register-critical-files', { patterns });
     }
-}
 
-/** @internal */
-export function resolvedLifecycleSpecOf(plugin: PluginLike): ResolvedPluginLifecycleSpec {
-    return plugin[resolvedSpecSlot];
+    /**
+     * Tells `seedcord dev` which files your `prepareCommands` reads. This way you can trigger
+     * the command redeploy prompt when one of them changes.
+     *
+     * @param matches - Gets a saved file's full path. Return `true` if your `prepareCommands` reads it.
+     */
+    protected registerCommandFiles(matches: CommandFileCheck): void {
+        this[commandFilesSlot].push(matches);
+    }
 }
 
 /** @internal */
 export function extendsThisCorePlugin(ctor: PluginCtor): boolean {
     return ctor.prototype instanceof Plugin;
-}
-
-/** @internal */
-export function pluginLoggerOf(plugin: PluginLike): Logger {
-    return plugin[loggerSlot];
-}
-
-/** @internal */
-export function declaredScopeOf(plugin: PluginLike): DeclaredScope {
-    return plugin[scopeSlot];
-}
-
-/** @internal */
-export function constructAttached<TPlugin>(key: string, kv: Kv, construct: () => TPlugin): TPlugin {
-    attaching = { key, kv };
-    try {
-        return construct();
-    } finally {
-        attaching = undefined;
-    }
 }
 
 export type { PluginLifecycleSpec } from './lifecycle';
@@ -279,10 +252,7 @@ type SeedcordOnlyMember = 'init' | 'ready' | 'dispose' | 'codegen' | 'onHmr' | '
 // a bound of Plugin<{}> rejects every plugin that declares an option since Plugin<A> and Plugin<B>
 // are mutually unassignable. no member here may depend on Opts.
 /** @internal */
-export type PluginLike = Pick<
-    Plugin,
-    SeedcordOnlyMember | typeof resolvedSpecSlot | typeof loggerSlot | typeof scopeSlot
->;
+export type PluginLike = Pick<Plugin, SeedcordOnlyMember | keyof PluginSlots>;
 
 // a `CoreBase` first parameter rejects a narrowing ctor on its own, and it also collapses
 // `InstanceType<Ctor>` to `PluginLike` at every attach call. CoreParamAssert checks it instead.

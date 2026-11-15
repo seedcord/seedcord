@@ -8,8 +8,9 @@ import { MemoryDriver } from '#src/kv/MemoryDriver';
 import { KvRateLimiter } from '#src/rateLimiter/KvRateLimiter';
 import { Bus } from '#subscribers/Bus';
 
-import { constructAttached, declaredScopeOf, extendsThisCorePlugin, resolvedLifecycleSpecOf } from './Plugin';
+import { extendsThisCorePlugin } from './Plugin';
 import { PluginRegistry } from './PluginRegistry';
+import { constructAttached, declaredScopeOf, resolvedLifecycleSpecOf } from './pluginSlots';
 import { splitPluginKey } from './splitPluginKey';
 
 import type { CoreBase } from '#interfaces/CoreBase';
