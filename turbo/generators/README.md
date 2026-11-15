@@ -30,7 +30,7 @@ Finish these after generating. None of them are automated.
 
 1. `.github/labeler.yml`, add a `'📦 <name>'` glob block matching `<dir>/<folder>/**`. Label names leave out the `@seedcord/` scope.
 2. `.github/labels.yml`, add the `📦 <name>` label entry (name, a muted color).
-3. `knip.json`, add `"<dir>/<folder>": {}` to the `workspaces` map.
+3. `knip.ts`, add the package to the `workspaces` map only when it needs its own `entry`, `project`, or `ignore`. Knip gives every unlisted workspace its defaults.
 4. `turbo.json`, add `"<name>#build"` to the `dependsOn` list on `//#docs:extract` (skip for a private package). The extractor reads every published package's built declarations. To keep a published package off the docs site, set `"seedcordDocs": { "skip": true }` in its `package.json`, and skip this step and step 5.
 5. `tooling/docs-engine/src/packages/identity.ts`, add a `PACKAGE_OVERRIDES` entry for `<name>`, with any search `aliases`. The docs site only lists a package that has an entry here. For a scoped package, set `displayName` to the name without `@seedcord/`, like `core`, since it has to match the package's docs folder. Skip this for a package without a documented entry point.
 6. `pnpm-workspace.yaml` catalogs, move any dependency now used by two or more packages into the matching catalog bucket (`deps`, `peer`, `test`, `react`) and reference it as `catalog:<bucket>`. `check:catalog` gates prePush on this.
