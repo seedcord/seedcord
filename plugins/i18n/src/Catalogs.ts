@@ -61,7 +61,7 @@ export class Catalogs {
                 ]);
             }
         }
-        throw new SeedcordError(SeedcordErrorCode.PluginI18nOutOfDate, [key, `isn't in any locale file`]);
+        throw new SeedcordError(SeedcordErrorCode.PluginI18nOutOfDate, [key]);
     }
 
     // parses each locale the first time a t() reads it

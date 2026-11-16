@@ -7,6 +7,7 @@ import { messageKey, splitKey } from '#src/messageKey';
 
 import type { LocaleCode } from '#src/locales';
 import type {
+    SyntaxNode,
     FunctionReference,
     Message,
     MessageReference,
@@ -33,7 +34,7 @@ interface Untranslated {
     readonly fallback: LocaleCode;
 }
 
-export interface CheckedCatalog {
+interface CheckedCatalog {
     readonly messages: MessageTable;
     readonly problems: SeedcordError[];
     readonly untranslated: Untranslated[];
@@ -115,17 +116,17 @@ function scan(node: Message | Term | Pattern): EntryScan {
     return entryScan;
 }
 
-function keysOf(entry: Message, line: number): [key: string, parsed: ParsedKey][] {
+function keysOf(entry: Message, lines: SourceLines): [key: string, parsed: ParsedKey][] {
     const id = entry.id.name;
-    const parsedKey = (pattern: Pattern): ParsedKey => {
+    const parsedKey = (at: SyntaxNode, pattern: Pattern): ParsedKey => {
         const { variables, usedKeys } = scan(pattern);
-        return { line, variables, usedKeys };
+        return { line: lines.of(at), variables, usedKeys };
     };
-    const keys: [string, ParsedKey][] = entry.attributes.map(({ id: attribute, value }) => [
-        messageKey(id, attribute.name),
-        parsedKey(value)
+    const keys: [string, ParsedKey][] = entry.attributes.map((attribute) => [
+        messageKey(id, attribute.id.name),
+        parsedKey(attribute.id, attribute.value)
     ]);
-    if (entry.value) keys.unshift([messageKey(id), parsedKey(entry.value)]);
+    if (entry.value) keys.unshift([messageKey(id), parsedKey(entry.id, entry.value)]);
     return keys;
 }
 
@@ -153,8 +154,18 @@ function describe(key: string): string {
         : `${paint.sky(`.${attribute}`)} on ${paint.sky(id)}`;
 }
 
-function lineAt(source: string, offset: number): number {
-    return source.slice(0, offset).split('\n').length;
+class SourceLines {
+    private readonly starts = [0];
+
+    public constructor(source: string) {
+        for (let at = source.indexOf('\n'); at !== -1; at = source.indexOf('\n', at + 1)) this.starts.push(at + 1);
+    }
+
+    // error messages count lines from 1, like de.ftl:1 for the first line
+    public of(node: SyntaxNode): number {
+        const offset = node.span?.start ?? 0;
+        return this.starts.findLastIndex((start) => start <= offset) + 1;
+    }
 }
 
 class CatalogCheck {
@@ -213,22 +224,26 @@ class CatalogCheck {
         const messages = new Map<string, ParsedKey>();
         const defined = new Set<string>();
         const uses: EntryReferences[] = [];
+        const lines = new SourceLines(source);
         for (const entry of parse(source, { withSpans: true }).body) {
-            const line = lineAt(source, entry.span?.start ?? 0);
             if (entry.type === 'Junk') {
                 const detail = entry.annotations.map(({ message }) => message).join(', ');
                 this.problems.push(
-                    new SeedcordError(SeedcordErrorCode.PluginI18nSyntax, [`${relativePath}:${line}`, detail])
+                    new SeedcordError(SeedcordErrorCode.PluginI18nSyntax, [
+                        `${relativePath}:${lines.of(entry)}`,
+                        detail
+                    ])
                 );
             }
             if (entry.type !== 'Message' && entry.type !== 'Term') continue;
 
-            uses.push({ line, references: scan(entry).references });
+            // the entry's own span starts at the comment above it
+            uses.push({ line: lines.of(entry.id), references: scan(entry).references });
             if (entry.type === 'Term') {
                 defined.add(`-${entry.id.name}`);
             } else {
                 defined.add(entry.id.name);
-                for (const [key, parsedKey] of keysOf(entry, line)) messages.set(key, parsedKey);
+                for (const [key, parsedKey] of keysOf(entry, lines)) messages.set(key, parsedKey);
             }
         }
         this.checkReferences(relativePath, uses, defined);
@@ -263,7 +278,6 @@ class CatalogCheck {
             return;
         }
 
-        // each translation merges its variables into the base key's
         for (const [name, kind] of Object.entries(variables)) {
             if (Object.hasOwn(inBase.variables, name)) inBase.variables[name] = merge(inBase.variables[name], kind);
             else this.notInBase(at, `${paint.sky(`$${name}`)} in ${paint.sky(key)}`);

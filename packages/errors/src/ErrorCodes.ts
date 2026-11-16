@@ -271,6 +271,8 @@ export enum SeedcordErrorCode {
     PluginI18nMissingReference = 2409,
     /** Fluent threw while `t()` formatted a message, like for a variable that the call didn't pass. */
     PluginI18nFormatFailed = 2410,
+    /** Two or more command translation files have problems. Each one is in the error's `errors`. */
+    PluginI18nCommandProblems = 2411,
 
     /** Someone pressed Ctrl-C at a prompt in `seedcord` or `create-seedcord`. */
     CliCancelled = 3001,
@@ -309,7 +311,7 @@ export enum SeedcordErrorCode {
     CliDependencyMissing = 3116,
     /** `build.outDir` already has other files in it. */
     CliBuildOutDirNotEmpty = 3117,
-    /** One step found two or more problems, like codegen or a command deploy. Each one is in the error's `errors`. */
+    /** One CLI step found two or more problems. Each one is in the error's `errors`. */
     CliProblems = 3118,
     /** `seedcord codegen --check` found the committed augmentations out of date. */
     CliCodegenOutOfDate = 3119,

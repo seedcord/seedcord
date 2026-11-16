@@ -289,13 +289,15 @@ const messages = {
         return `${paint.path(file)} isn't named after a Discord locale code. Rename it to ${like.length > 0 ? oneOf.format(like.map((locale) => paint.path(`${locale}${extension}`))) : `a code from Discord's locale list, like ${paint.path(`en-US${extension}`)}`}.`;
     },
     [SeedcordErrorCode.PluginI18nNotInBase]: (place: string, what: string, baseFile: string) =>
-        `${paint.path(place)} has ${what}, but ${paint.path(baseFile)} doesn't. ${paint.bold('t()')} only reads what the base file has. Add it to ${paint.path(baseFile)} first, or remove it here.`,
-    [SeedcordErrorCode.PluginI18nOutOfDate]: (key: string, problem: string) =>
-        `${paint.bold(`t('${key}')`)} ${problem}. The .ftl files changed after ${paint.bold('seedcord codegen')} last ran. Run it to update what ${paint.bold('t()')} accepts, then fix this call.`,
+        `${paint.path(place)} has ${what}, but ${paint.path(baseFile)} doesn't. ${paint.bold('t()')} only accepts the keys and variables in the base file. Add it to ${paint.path(baseFile)} first, or remove it here.`,
+    [SeedcordErrorCode.PluginI18nOutOfDate]: (key: string) =>
+        `${paint.bold(`t('${key}')`)} isn't in any locale file. Run ${paint.bold('seedcord codegen')} to update what ${paint.bold('t()')} accepts, then fix the calls that TypeScript reports.`,
+    [SeedcordErrorCode.PluginI18nCommandProblems]: (count: number) =>
+        `${paint.iris(count)} problems in the command translation files need fixing. Each one is listed below.`,
     [SeedcordErrorCode.PluginI18nFormatFailed]: (key: string, file: string, reason: string) =>
         `${paint.bold(`t('${key}')`)} couldn't format the text in ${paint.path(file)}: ${reason}. Pass every variable that the message and the messages it uses need.`,
     [SeedcordErrorCode.PluginI18nUnknownCommand]: (file: string, path: string) =>
-        `${paint.path(file)} translates ${paint.sky(path)}, but none of your commands has it. Fix the name, or run ${paint.bold('seedcord codegen')} and type-check to find these before a deploy.`,
+        `${paint.path(file)} translates ${paint.sky(path)}, but none of your commands has it. Fix the name. Running ${paint.bold('seedcord codegen')} and a type-check finds these before a deploy.`,
     [SeedcordErrorCode.PluginI18nNotTranslations]: (file: string) =>
         `${paint.path(file)} doesn't export command translations. Make its default export ${paint.bold('commandTranslations({ ... })')}.`,
     [SeedcordErrorCode.PluginI18nDiscordRejects]: (file: string, path: string, value: string, accepts: string) =>

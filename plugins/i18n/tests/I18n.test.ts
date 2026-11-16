@@ -286,11 +286,11 @@ describe('I18n', () => {
                         SeedcordErrorCode.PluginI18nNotInBase,
                         expect.stringMatching(/de\.ftl:1 has \$username in greeting/)
                     ],
-                    [SeedcordErrorCode.PluginI18nNotInBase, expect.stringMatching(/de\.ftl:6 has the message greting/)],
-                    [SeedcordErrorCode.PluginI18nSyntax, expect.stringMatching(/de\.ftl:7/)],
-                    [SeedcordErrorCode.PluginI18nNotInBase, expect.stringMatching(/de\.ftl:11 has \.tooltip on ping/)],
-                    [SeedcordErrorCode.PluginI18nMissingReference, expect.stringMatching(/de\.ftl:14 uses -brand/)],
+                    [SeedcordErrorCode.PluginI18nNotInBase, expect.stringMatching(/de\.ftl:7 has the message greting/)],
+                    [SeedcordErrorCode.PluginI18nSyntax, expect.stringMatching(/de\.ftl:8/)],
+                    [SeedcordErrorCode.PluginI18nNotInBase, expect.stringMatching(/de\.ftl:14 has \.tooltip on ping/)],
                     [SeedcordErrorCode.PluginI18nMissingReference, expect.stringMatching(/de\.ftl:15 uses -brand/)],
+                    [SeedcordErrorCode.PluginI18nMissingReference, expect.stringMatching(/de\.ftl:16 uses -brand/)],
                     [SeedcordErrorCode.PluginI18nNotALocale, expect.stringMatching(/en-US\.ftl or .*en-GB\.ftl/)]
                 ])
             );

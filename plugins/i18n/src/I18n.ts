@@ -177,17 +177,21 @@ export class I18n extends Plugin {
         const problems: SeedcordError[] = [];
         const folder = botFolder(this.dir);
         const globs = this.translationFileGlobs;
+        // a misnamed file never runs because this checks the name before importing it
+        const namedForLocale = (fullPath: string, relativePath: string): boolean => {
+            const name = path.parse(fullPath).name;
+            if (isDiscordLocale(name)) return true;
+            problems.push(new SeedcordError(SeedcordErrorCode.PluginI18nNotALocale, [relativePath, localesLike(name)]));
+            return false;
+        };
         const translationFiles = importFiles(this.dir, {
-            filter: ({ fullPath }) => folder.matchesFiles(fullPath, globs)
+            filter: ({ fullPath, relativePath }) =>
+                folder.matchesFiles(fullPath, globs) && namedForLocale(fullPath, relativePath)
         });
         for await (const { fullPath, relativePath, imported } of translationFiles) {
             const locale = path.parse(fullPath).name;
-            if (!isDiscordLocale(locale)) {
-                problems.push(
-                    new SeedcordError(SeedcordErrorCode.PluginI18nNotALocale, [relativePath, localesLike(locale)])
-                );
-                continue;
-            }
+            // the filter only passes files named after a locale, and this narrows the type
+            if (!isDiscordLocale(locale)) continue;
             const translations = translationsIn(imported.default);
             if (!translations) {
                 problems.push(new SeedcordError(SeedcordErrorCode.PluginI18nNotTranslations, [relativePath]));
@@ -197,7 +201,7 @@ export class I18n extends Plugin {
             localizer.apply(commands, translations);
             problems.push(...localizer.problems);
         }
-        throwSingleOrAggregate(problems, SeedcordErrorCode.CliProblems);
+        throwSingleOrAggregate(problems, SeedcordErrorCode.PluginI18nCommandProblems);
     }
 
     public override async codegen(): Promise<{ messages: MessageTable }> {
@@ -214,9 +218,13 @@ export class I18n extends Plugin {
     }
 
     private loadedCatalogs(): Promise<Catalogs> {
-        this.catalogs ??= this.localeFiles().then(
-            (files) => new Catalogs(new Map(files.map(({ locale, source }) => [locale, source])), this.base)
-        );
+        this.catalogs ??= this.localeFiles()
+            .then((files) => new Catalogs(new Map(files.map(({ locale, source }) => [locale, source])), this.base))
+            .catch((error: unknown) => {
+                // the next t() reads the files again
+                this.catalogs = undefined;
+                throw error;
+            });
         return this.catalogs;
     }
 
