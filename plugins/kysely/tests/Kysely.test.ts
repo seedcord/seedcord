@@ -30,7 +30,7 @@ describe('Kysely Plugin Integration', () => {
         setDevChannel({ send, on: vi.fn(), off: vi.fn() });
         onTestFinished(() => setDevChannel(undefined));
 
-        kyselyWith({ migrations: { dir: './migrations' }, dir: './services' });
+        kyselyWith({ migrations: { path: './migrations' }, path: './services' });
 
         expect(send).toHaveBeenCalledWith('seedcord:register-critical-files', { patterns: ['migrations/**'] });
     });

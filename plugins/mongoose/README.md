@@ -55,7 +55,7 @@ export default new Seedcord({
     },
     subscribers: { path: null }
 }).attach('db', Mongoose, {
-    dir: './services',
+    path: './services',
     uri: Envapter.getRequired('MONGO_URI', Converters.String),
     name: 'my-bot'
 });

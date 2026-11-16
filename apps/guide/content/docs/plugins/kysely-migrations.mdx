@@ -32,7 +32,7 @@ export async function down(db: Kysely<any>): Promise<void> {
 
 ## Where to put the files and how to order them
 
-The plugin reads one folder, the `dir` under `migrations`, and its subfolders too. A relative `dir` is relative to `root` and has to point inside it, as [the folder rules](/plugins) describe. With `root: './src'`, `'./migrations'` means `src/migrations`.
+The plugin reads one folder, the `path` under `migrations`, and its subfolders too. A relative `path` is relative to `root` and has to point inside it, as [the folder rules](/plugins) describe. With `root: './src'`, `'./migrations'` means `src/migrations`.
 
 Every code file in that folder has to be a migration. If a file doesn't export `up`, the plugin throws `PluginKyselyInvalidMigrationModule` with the file's path, so keep helper files out of the folder. The plugin reads `.ts`, `.tsx`, `.mts`, `.js`, `.jsx`, and `.mjs` files. It skips type declarations, dotfiles, dot-folders, and `node_modules`.
 
@@ -108,10 +108,10 @@ import type { Seedcord } from '@seedcord/gateway';
 declare const seedcord: Seedcord;
 // ---cut-end---
 seedcord.attach('db', Kysely, {
-    dir: './services',
+    path: './services',
     dialect: () =>
         new SqliteDialect({ database: new Database('bot.db') }),
-    migrations: { dir: './migrations', onStartup: false }
+    migrations: { path: './migrations', onStartup: false }
 });
 ```
 
@@ -183,7 +183,7 @@ If a migration throws an `Error`, you get that error unchanged, so a failing `CR
 | a file in the folder that doesn't export `up` | `PluginKyselyInvalidMigrationModule`, with the file path |
 | two files with the same name without the folder and extension | `CoreDuplicateName`, with both file paths |
 | a migration that throws something other than an `Error` | `PluginKyselyNonErrorFailure` |
-| a missing `dir` | `CorePathUnreadable` under `seedcord dev`, `CoreDirectoryNotBuilt` in a built bot |
+| a missing `path` | `CorePathUnreadable` under `seedcord dev`, `CoreDirectoryNotBuilt` in a built bot |
 
 {/* prettier-ignore-end */}
 

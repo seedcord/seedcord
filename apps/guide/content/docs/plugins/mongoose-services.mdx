@@ -44,7 +44,7 @@ export class Users extends MongooseService<IUser> {
 
 ## You never construct a service
 
-The constructor takes the plugin, the core, and a model, so the plugin builds your services itself, right after it connects. It imports every code file under the `dir` you gave the [mongoose plugin](/plugins/mongoose), including subfolders, in order of path. That covers `.ts`, `.tsx`, `.mts`, `.js`, `.jsx`, and `.mjs`, and skips type declarations, dotfiles, dot-folders, and `node_modules`. For each exported class that extends `MongooseService` and has the decorator, it builds the model from `schema` and constructs the class. That constructor call adds the instance to the plugin's [`services`](ref:plugin-mongoose/Mongoose.services) map under its key.
+The constructor takes the plugin, the core, and a model, so the plugin builds your services itself, right after it connects. It imports every code file under the `path` you gave the [mongoose plugin](/plugins/mongoose), including subfolders, in order of path. That covers `.ts`, `.tsx`, `.mts`, `.js`, `.jsx`, and `.mjs`, and skips type declarations, dotfiles, dot-folders, and `node_modules`. For each exported class that extends `MongooseService` and has the decorator, it builds the model from `schema` and constructs the class. That constructor call adds the instance to the plugin's [`services`](ref:plugin-mongoose/Mongoose.services) map under its key.
 
 <Callout type="warning">
 
@@ -82,9 +82,9 @@ With `modelName: 'app_user'`, mongoose reads the `app_users` collection, while y
 
 ## Typing the registry
 
-The plugin finds your services by importing `dir` when the bot starts, but TypeScript only reads your source. Typing each key by hand means a `declare module` entry per service, which you keep in step with the decorator yourself.
+The plugin finds your services by importing `path` when the bot starts, but TypeScript only reads your source. Typing each key by hand means a `declare module` entry per service, which you keep in step with the decorator yourself.
 
-[`seedcord codegen`](/plugins/typing) imports `dir` the same way and writes each key it finds into `src/seedcord-gen.ts`. After that, `services.users` is typed as your `Users` service, and the decorator offers the keys codegen found. With a `users` and a `guilds` service, it offers both:
+[`seedcord codegen`](/plugins/typing) imports `path` the same way and writes each key it finds into `src/seedcord-gen.ts`. After that, `services.users` is typed as your `Users` service, and the decorator offers the keys codegen found. With a `users` and a `guilds` service, it offers both:
 
 ```ts twoslash
 // @noErrors
@@ -176,4 +176,4 @@ class History extends SlashHandler<'history'> {
 
 `findByName` resolves to an `IUser` or `null`, so the handler checks `found` before it reads `username`.
 
-If you read `services` before the plugin's `init()` has finished, it throws `PluginServicesNotReady`. Your handlers never read it that early, though, because they only start receiving interactions once `init()` has finished.
+If you read `services` before the plugin's `init()` has finished, it throws `PluginNotReady`. Your handlers never read it that early, though, because they only start receiving interactions once `init()` has finished.

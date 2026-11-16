@@ -8,7 +8,7 @@ import type { Except } from 'type-fest';
  */
 export interface KyselyMigrationsOptions {
     /** Folder holding your migration files, subfolders included. A relative path resolves against `root` from `seedcord.config.ts`. */
-    readonly dir: string;
+    readonly path: string;
     /** Allow running migrations even if new ones are inserted out of order */
     readonly allowUnorderedMigrations?: boolean;
     /** Custom table name used to track executed migrations */
@@ -27,8 +27,8 @@ export interface KyselyMigrationsOptions {
  * Options for the Kysely plugin's connection, migrations and services.
  */
 export interface KyselyOptions {
-    /** Directory containing service classes. Make sure file(s)/folder(s) are built to `.js` in dist and aren't merged into a single file. */
-    readonly dir: string;
+    /** Folder holding your service classes, subfolders included. A relative path resolves against `root` from `seedcord.config.ts`. */
+    readonly path: string;
     /** Migration settings */
     readonly migrations: KyselyMigrationsOptions;
     /**

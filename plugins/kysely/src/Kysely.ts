@@ -25,15 +25,17 @@ import type { HmrUpdateEvent } from '@seedcord/types';
 import type { Dialect } from 'kysely';
 import type { MigrationInfo } from 'kysely/migration';
 
-// the constructor name of an anonymous dialect subclass is an empty string
-const UNNAMED_DIALECT = 'database';
+const FALLBACK_LABEL = 'database';
 
 function labelOf(dialect: Dialect): string {
-    return dialect.constructor.name.replace(/Dialect$/, '') || UNNAMED_DIALECT;
+    // the constructor name of an anonymous dialect subclass is an empty string
+    return dialect.constructor.name.replace(/Dialect$/, '') || FALLBACK_LABEL;
 }
 
-function connectionFailed(label: string, reason: string, cause: unknown): SeedcordError {
-    return new SeedcordError(SeedcordErrorCode.PluginConnectionFailed, [label, reason, 'dialect'], { cause });
+function connectionFailed(label: string, reason: string, cause: unknown, fix?: string): SeedcordError {
+    return new SeedcordError(SeedcordErrorCode.PluginConnectionFailed, [label, reason, 'dialect', undefined, fix], {
+        cause
+    });
 }
 
 interface Session {
@@ -68,7 +70,7 @@ export class Kysely extends Plugin<{ transport: 'any'; runtime: 'server' }> {
      */
     public get connection(): KyselyClient<KyselySchema> {
         if (!this.session) {
-            throw new SeedcordError(SeedcordErrorCode.PluginServicesNotReady, [this.constructor.name, 'connection']);
+            throw new SeedcordError(SeedcordErrorCode.PluginNotReady, [this.constructor.name, 'connection']);
         }
         return this.session.client;
     }
@@ -80,7 +82,7 @@ export class Kysely extends Plugin<{ transport: 'any'; runtime: 'server' }> {
         super(host, { runtime: 'server', dispose: keepDefined({ timeout: options.timeout }) });
         this.serviceRegistry = new PluginServices({
             pluginName: this.constructor.name,
-            dir: options.dir,
+            path: options.path,
             logger: this.logger,
             base: KyselyService,
             metadataKey: KyselyServiceMetadataKey,
@@ -90,7 +92,7 @@ export class Kysely extends Plugin<{ transport: 'any'; runtime: 'server' }> {
 
         if (!Envapter.isDevelopment) return;
 
-        super.registerCriticalFiles([path.posix.join(this.options.migrations.dir, '**')]);
+        super.registerCriticalFiles([path.posix.join(this.options.migrations.path, '**')]);
     }
 
     /** @internal For use in dev mode */
@@ -144,7 +146,12 @@ export class Kysely extends Plugin<{ transport: 'any'; runtime: 'server' }> {
         try {
             return this.options.dialect();
         } catch (err) {
-            throw connectionFailed(UNNAMED_DIALECT, `dialect() threw: ${errorReason(err)}`, err);
+            throw connectionFailed(
+                FALLBACK_LABEL,
+                `dialect() threw: ${errorReason(err)}`,
+                err,
+                'Fix the code inside dialect().'
+            );
         }
     }
 

@@ -52,7 +52,7 @@ export class Mongoose extends Plugin<{ transport: 'any'; runtime: 'server' }> {
      */
     public get connection(): MongooseInstance {
         if (!this.client) {
-            throw new SeedcordError(SeedcordErrorCode.PluginServicesNotReady, [this.constructor.name, 'connection']);
+            throw new SeedcordError(SeedcordErrorCode.PluginNotReady, [this.constructor.name, 'connection']);
         }
         return this.client;
     }
@@ -66,7 +66,7 @@ export class Mongoose extends Plugin<{ transport: 'any'; runtime: 'server' }> {
         this.models = new MongooseModels(this.logger);
         this.serviceRegistry = new PluginServices({
             pluginName: this.constructor.name,
-            dir: options.dir,
+            path: options.path,
             logger: this.logger,
             base: MongooseService,
             metadataKey: ServiceMetadataKey,

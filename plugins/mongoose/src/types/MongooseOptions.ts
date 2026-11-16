@@ -4,8 +4,8 @@ import type mongoose from 'mongoose';
  * Configuration options for MongoDB connection and service loading.
  */
 export interface MongooseOptions {
-    /** Directory path containing database service classes */
-    dir: string;
+    /** Folder holding your service classes, subfolders included. A relative path resolves against `root` from `seedcord.config.ts`. */
+    path: string;
     /** MongoDB connection URI */
     uri: string;
     /** Database name to use */

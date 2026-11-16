@@ -153,11 +153,11 @@ const seedcord = new Seedcord({
 // ---cut-end---
 
 export default seedcord.attach('db', Kysely, {
-    dir: './services',
+    path: './services',
     dialect: () =>
         new SqliteDialect({ database: new Database('bot.db') }),
     migrations: {
-        dir: './migrations'
+        path: './migrations'
     }
 });
 ```

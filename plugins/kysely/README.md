@@ -58,9 +58,9 @@ export default new Seedcord({
     },
     subscribers: { path: null }
 }).attach('sql', Kysely, {
-    dir: './services',
+    path: './services',
     dialect: () => new SqliteDialect({ database: new Database('bot.db') }),
-    migrations: { dir: './migrations' }
+    migrations: { path: './migrations' }
 });
 ```
 

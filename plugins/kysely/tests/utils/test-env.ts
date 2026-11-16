@@ -16,8 +16,8 @@ export const it = base.extend<{ kyselyWith: KyselyWith }>({
         await use((options = {}) => {
             const plugin = new Kysely(core, {
                 dialect: memorySqlite,
-                migrations: { dir: testEnv.resolvePath('migrations') },
-                dir: testEnv.resolvePath('services'),
+                migrations: { path: testEnv.resolvePath('migrations') },
+                path: testEnv.resolvePath('services'),
                 ...options
             });
             plugins.defer(() => plugin.dispose());

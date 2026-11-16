@@ -209,8 +209,8 @@ export enum SeedcordErrorCode {
     PluginDisposeFailures = 2002,
     /** A plugin service class is missing the decorator that registers it. */
     PluginServiceDecoratorMissing = 2003,
-    /** A plugin member, like `services` or `connection`, was read before the plugin finished `init()`. */
-    PluginServicesNotReady = 2004,
+    /** A plugin member, like `services` or `connection`, was read before `init()` finished or after `dispose()`. */
+    PluginNotReady = 2004,
     /** A plugin could not connect to the service it wraps. */
     PluginConnectionFailed = 2005,
     /** A plugin could not close its connection cleanly during shutdown. */

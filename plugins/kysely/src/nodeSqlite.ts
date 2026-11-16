@@ -21,8 +21,8 @@ const NO_NAMED_PARAMETERS = {};
  *
  * seedcord.attach('db', Kysely, {
  *     dialect: () => new SqliteDialect({ database: nodeSqlite(new DatabaseSync('bot.db')) }),
- *     dir: './services',
- *     migrations: { dir: './migrations' }
+ *     path: './services',
+ *     migrations: { path: './migrations' }
  * });
  * ```
  */

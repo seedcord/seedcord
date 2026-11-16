@@ -10,7 +10,7 @@ import { it } from './utils/test-env';
 
 describe('Mongoose lifecycle', () => {
     it('closes the connection when service loading fails after connecting', async ({ mongooseWith, testEnv }) => {
-        const plugin = mongooseWith({ dir: testEnv.resolvePath('absent') });
+        const plugin = mongooseWith({ path: testEnv.resolvePath('absent') });
         const connection = await mongoose.connect('');
 
         await expect(plugin.init()).rejects.toThrow();
@@ -19,7 +19,7 @@ describe('Mongoose lifecycle', () => {
     });
 
     it('keeps the init failure when the cleanup disconnect also fails', async ({ mongooseWith, testEnv }) => {
-        const plugin = mongooseWith({ dir: testEnv.resolvePath('absent') });
+        const plugin = mongooseWith({ path: testEnv.resolvePath('absent') });
         const connection = await mongoose.connect('');
         vi.mocked(connection.disconnect).mockRejectedValueOnce(new Error('still busy'));
 
@@ -85,7 +85,7 @@ describe('Mongoose lifecycle', () => {
                 import { MongooseService, RegisterMongooseService } from '${pluginsPath}';
                 import mongoose from 'mongoose';
 
-                @RegisterMongooseService('users')
+                @RegisterMongooseService('${name.toLowerCase()}', { modelName: 'users' })
                 export class ${name} extends MongooseService {
                     public static schema = new mongoose.Schema({ name: String });
                 }
@@ -181,9 +181,7 @@ describe('Mongoose lifecycle', () => {
     it.for(['services', 'connection'] as const)('throws when %s is read before init', (member, { mongooseWith }) => {
         const plugin = mongooseWith();
 
-        expect(() => plugin[member]).toThrow(
-            expect.objectContaining({ code: SeedcordErrorCode.PluginServicesNotReady })
-        );
+        expect(() => plugin[member]).toThrow(expect.objectContaining({ code: SeedcordErrorCode.PluginNotReady }));
     });
 
     it('exposes the connection and the services map once init resolves', async ({ mongooseWith }) => {
@@ -246,9 +244,7 @@ describe('Mongoose lifecycle', () => {
 
             await plugin.dispose();
 
-            expect(() => plugin[member]).toThrow(
-                expect.objectContaining({ code: SeedcordErrorCode.PluginServicesNotReady })
-            );
+            expect(() => plugin[member]).toThrow(expect.objectContaining({ code: SeedcordErrorCode.PluginNotReady }));
         }
     );
 

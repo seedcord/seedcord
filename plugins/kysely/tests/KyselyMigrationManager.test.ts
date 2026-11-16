@@ -15,7 +15,7 @@ const it = base.extend<{ startedWith: (migrations: KyselyMigrationsOptions) => P
     startedWith: async ({ kyselyWith, testEnv }, use) => {
         using _dev = setDevFiles({ root: testEnv.rootDir, listed: [], skippedFolders: [] });
         await use(async (migrations) => {
-            const plugin = kyselyWith({ migrations, dir: './services' });
+            const plugin = kyselyWith({ migrations, path: './services' });
             await plugin.init();
             return plugin;
         });
@@ -38,7 +38,7 @@ describe('KyselyMigrationManager', () => {
         async (extension, { startedWith, testEnv }) => {
             await testEnv.createFile(`migrations/001-create-users.${extension}`, NAMED_EXPORTS);
 
-            await expect(listedNames(startedWith, { dir: './migrations' })).resolves.toEqual(['001-create-users']);
+            await expect(listedNames(startedWith, { path: './migrations' })).resolves.toEqual(['001-create-users']);
         }
     );
 
@@ -48,23 +48,23 @@ describe('KyselyMigrationManager', () => {
             'export default { async up() {}, async down() {} };\n'
         );
 
-        await expect(listedNames(startedWith, { dir: './migrations' })).resolves.toEqual(['001-create-users']);
+        await expect(listedNames(startedWith, { path: './migrations' })).resolves.toEqual(['001-create-users']);
     });
 
     it('reads a migration with only up', async ({ startedWith, testEnv }) => {
         await testEnv.createFile('migrations/001-create-users.ts', 'export async function up() {}\n');
 
-        await expect(listedNames(startedWith, { dir: './migrations' })).resolves.toEqual(['001-create-users']);
+        await expect(listedNames(startedWith, { path: './migrations' })).resolves.toEqual(['001-create-users']);
     });
 
     it('returns an empty list for an empty dir', async ({ startedWith }) => {
-        await expect(listedNames(startedWith, { dir: './migrations' })).resolves.toEqual([]);
+        await expect(listedNames(startedWith, { path: './migrations' })).resolves.toEqual([]);
     });
 
     it('throws on a helper file in the dir', async ({ startedWith, testEnv }) => {
         await testEnv.createFile('migrations/helpers.ts', 'export const tableName = "users";\n');
 
-        await expect(listedNames(startedWith, { dir: './migrations' })).rejects.toThrow(
+        await expect(listedNames(startedWith, { path: './migrations' })).rejects.toThrow(
             expect.objectContaining({ code: SeedcordErrorCode.PluginKyselyInvalidMigrationModule })
         );
     });
@@ -73,7 +73,7 @@ describe('KyselyMigrationManager', () => {
         await testEnv.createFile('migrations/users/001-init.ts', NAMED_EXPORTS);
         await testEnv.createFile('migrations/guilds/001-init.ts', NAMED_EXPORTS);
 
-        await expect(listedNames(startedWith, { dir: './migrations' })).rejects.toThrow(
+        await expect(listedNames(startedWith, { path: './migrations' })).rejects.toThrow(
             expect.objectContaining({ code: SeedcordErrorCode.CoreDuplicateName })
         );
     });
@@ -86,7 +86,7 @@ describe('KyselyMigrationManager', () => {
         await testEnv.createFile('migrations/B.ts', NAMED_EXPORTS);
         await testEnv.createFile('migrations/a.ts', NAMED_EXPORTS);
         const byCodeUnit = (nameA: string, nameB: string): number => (nameA < nameB ? -1 : Number(nameA > nameB));
-        const plugin = await startedWith({ dir: './migrations', nameComparator: byCodeUnit });
+        const plugin = await startedWith({ path: './migrations', nameComparator: byCodeUnit });
         await sql`update kysely_migration set timestamp = ${new Date('2026-01-01T00:00:00Z').toISOString()}`.execute(
             plugin.connection
         );
@@ -97,7 +97,7 @@ describe('KyselyMigrationManager', () => {
     it('stops migrateDown at the newest migration when it is missing a down', async ({ startedWith, testEnv }) => {
         await testEnv.createFile('migrations/001-users.ts', NAMED_EXPORTS);
         await testEnv.createFile('migrations/002-guilds.ts', 'export async function up() {}\n');
-        const plugin = await startedWith({ dir: './migrations' });
+        const plugin = await startedWith({ path: './migrations' });
 
         await plugin.migrateDown({ steps: 3 });
 

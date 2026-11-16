@@ -34,9 +34,9 @@ export const seedcord = new Seedcord({
     .attach('stats.uptime', Uptime)
     .attach('stats.pings', PingCounter)
     .attach('db', Kysely, {
-        dir: './services',
+        path: './services',
         dialect: () => new SqliteDialect({ database: new Database(':memory:') }),
-        migrations: { dir: './migrations' }
+        migrations: { path: './migrations' }
     })
     .attach('i18n', I18n, { path: './locales' });
 

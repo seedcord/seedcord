@@ -25,10 +25,10 @@ export const seedcord = new Seedcord({
     },
     subscribers: { path: null }
 }).attach('db', Kysely, {
-    dir: './services',
+    path: './services',
     dialect: () =>
         new SqliteDialect({ database: new Database('bot.db') }),
-    migrations: { dir: './migrations' }
+    migrations: { path: './migrations' }
 });
 
 export default seedcord;
@@ -36,7 +36,7 @@ export default seedcord;
 
 This sample builds a gateway bot. The same `attach` call works on an http `Seedcord` from `@seedcord/http` that runs on a server. On Cloudflare Workers it's a compile error because the plugin [needs a server](/plugins#a-plugin-declares-where-it-runs), and a cast that gets past it throws `CorePluginScopeMismatch`.
 
-You have to pass `dir`, `dialect`, and `migrations`. A relative `dir` or `migrations.dir` resolves against `root`, and both folders have to be inside it, as [the folder rules](/plugins) describe. The `'bot.db'` path is different, since `better-sqlite3` opens it relative to the folder you start the bot from.
+You have to pass `path`, `dialect`, and `migrations`. A relative `path` or `migrations.path` resolves against `root`, and both folders have to be inside it, as [the folder rules](/plugins) describe. The `'bot.db'` path is different, since `better-sqlite3` opens it relative to the folder you start the bot from.
 
 ## Why `dialect` is a function
 
@@ -50,7 +50,7 @@ The plugin calls `dialect()` in `init()` when the bot starts. Codegen and build 
 
 | option | required | what it sets |
 | --- | --- | --- |
-| `dir` | yes | the folder that the plugin scans for service classes |
+| `path` | yes | the folder that the plugin scans for service classes |
 | `dialect` | yes | a function returning the Kysely dialect for your database |
 | `migrations` | yes | the folder of your migration files and when they run |
 | `kysely` | no | any other Kysely config, like `log` or `plugins` |
@@ -78,7 +78,7 @@ import type { Seedcord } from '@seedcord/gateway';
 declare const seedcord: Seedcord;
 // ---cut-end---
 seedcord.attach('db', Kysely, {
-    dir: './services',
+    path: './services',
     dialect: () =>
         new PostgresDialect({
             pool: new Pool({
@@ -93,7 +93,7 @@ seedcord.attach('db', Kysely, {
                 );
             }
         }),
-    migrations: { dir: './migrations' }
+    migrations: { path: './migrations' }
 });
 ```
 
@@ -112,24 +112,24 @@ import type { Seedcord } from '@seedcord/gateway';
 declare const seedcord: Seedcord;
 // ---cut-end---
 seedcord.attach('db', Kysely, {
-    dir: './services',
+    path: './services',
     dialect: () =>
         new SqliteDialect({
             database: nodeSqlite(new DatabaseSync('bot.db'))
         }),
-    migrations: { dir: './migrations' }
+    migrations: { path: './migrations' }
 });
 ```
 
 ## Startup and shutdown
 
-`init()` calls `dialect()`, opens the first connection, runs your migrations unless you [set `onStartup` to `false`](/plugins/kysely-migrations#when-they-run), then loads every service class from `dir`. If any of those steps fails, `init()` closes the connection before it rethrows the error because seedcord doesn't call `dispose()` for a plugin whose `init()` failed. If a migration fails, the bot never reaches its handlers.
+`init()` calls `dialect()`, opens the first connection, runs your migrations unless you [set `onStartup` to `false`](/plugins/kysely-migrations#when-they-run), then loads every service class from `path`. If any of those steps fails, `init()` closes the connection before it rethrows the error because seedcord doesn't call `dispose()` for a plugin whose `init()` failed. If a migration fails, the bot never reaches its handlers.
 
 If `dialect()` throws or that first connection fails, `init()` throws `PluginConnectionFailed`. If `dialect()` threw, the message says so. Otherwise it includes the driver's own message, like `connect ECONNREFUSED 127.0.0.1:5432` from `pg` when the server isn't running. The full driver error is in its `cause`. `start()` reports it along with any other plugin's failure, as [the lifecycle page](/plugins/lifecycle#when-init-fails) explains.
 
 <Callout type="warning">
 
-The `dir` folder and, unless you set `onStartup` to `false`, the migrations folder have to exist before the first start. If one is missing, `init()` throws `CorePathUnreadable` with the path. A built bot throws `CoreDirectoryNotBuilt` instead because `seedcord build` doesn't find a folder to bundle. An empty folder works in both. Git doesn't track an empty folder, so put a `.gitkeep` in it, which the plugin skips like every dotfile. With `onStartup: false`, `init()` never reads the migrations folder and the error appears on your first call to a migration method.
+The `path` folder and, unless you set `onStartup` to `false`, the migrations folder have to exist before the first start. If one is missing, `init()` throws `CorePathUnreadable` with the path. A built bot throws `CoreDirectoryNotBuilt` instead because `seedcord build` doesn't find a folder to bundle. An empty folder works in both. Git doesn't track an empty folder, so put a `.gitkeep` in it, which the plugin skips like every dotfile. With `onStartup: false`, `init()` never reads the migrations folder and the error appears on your first call to a migration method.
 
 </Callout>
 
@@ -137,6 +137,6 @@ The `dir` folder and, unless you set `onStartup` to `false`, the migrations fold
 
 ## The Kysely instance
 
-You keep the queries for one table in a [service](/plugins/kysely-services). For a transaction that writes to two tables, use the Kysely instance directly. That instance is [`connection`](ref:plugin-kysely/Kysely.connection), and in a handler you read it as `this.core.db.connection` once [codegen](/plugins/typing) has typed `db`. If you read it before `init()` connects, the read throws `PluginServicesNotReady`.
+You keep the queries for one table in a [service](/plugins/kysely-services). For a transaction that writes to two tables, use the Kysely instance directly. That instance is [`connection`](ref:plugin-kysely/Kysely.connection), and in a handler you read it as `this.core.db.connection` once [codegen](/plugins/typing) has typed `db`. If you read it before `init()` connects, the read throws `PluginNotReady`.
 
 TypeScript checks the table and column names in those queries against a [schema](/plugins/kysely-schema) you declare yourself.

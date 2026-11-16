@@ -7,7 +7,7 @@ import { heldSqlite, memorySqlite } from './utils/dialects';
 import { it } from './utils/test-env';
 
 describe('Kysely lifecycle', () => {
-    it('translates a dialect() that throws into PluginConnectionFailed with its message', async ({ kyselyWith }) => {
+    it('tells you to fix dialect() when it throws', async ({ kyselyWith }) => {
         const plugin = kyselyWith({
             dialect: () => {
                 throw new Error('bad option');
@@ -17,23 +17,19 @@ describe('Kysely lifecycle', () => {
         await expect(plugin.init()).rejects.toThrow(
             expect.objectContaining({
                 code: SeedcordErrorCode.PluginConnectionFailed,
-                message: expect.stringContaining('bad option') as string
+                message: expect.stringMatching(/bad option.*Fix the code inside dialect\(\)/) as string
             })
         );
     });
 
-    it('includes the driver messages when the connection is refused on every address', async ({ kyselyWith }) => {
-        const refused = new AggregateError(
-            [new Error('connect ECONNREFUSED ::1:5432'), new Error('connect ECONNREFUSED 127.0.0.1:5432')],
-            // eslint-disable-next-line unicorn/error-message -- pg refuses a localhost connection with an empty message
-            ''
-        );
+    it('includes the driver message when the connection is refused', async ({ kyselyWith }) => {
+        const refused = new Error('connect ECONNREFUSED 127.0.0.1:5432');
         const plugin = kyselyWith({ dialect: () => new SqliteDialect({ database: () => Promise.reject(refused) }) });
 
         await expect(plugin.init()).rejects.toThrow(
             expect.objectContaining({
                 code: SeedcordErrorCode.PluginConnectionFailed,
-                message: expect.stringContaining('connect ECONNREFUSED 127.0.0.1:5432') as string
+                message: expect.stringMatching(/connect ECONNREFUSED 127\.0\.0\.1:5432.*database is running/) as string
             })
         );
     });
@@ -63,7 +59,7 @@ describe('Kysely lifecycle', () => {
 
     it('closes the connection when service loading fails after connecting', async ({ kyselyWith, testEnv }) => {
         const held = heldSqlite();
-        const plugin = kyselyWith({ dialect: held.dialect, dir: testEnv.resolvePath('absent') });
+        const plugin = kyselyWith({ dialect: held.dialect, path: testEnv.resolvePath('absent') });
 
         await expect(plugin.init()).rejects.toThrow(
             expect.objectContaining({ code: SeedcordErrorCode.CorePathUnreadable })
@@ -77,7 +73,7 @@ describe('Kysely lifecycle', () => {
         vi.spyOn(held.database, 'close').mockImplementation(() => {
             throw new Error('still busy');
         });
-        const plugin = kyselyWith({ dialect: held.dialect, dir: testEnv.resolvePath('absent') });
+        const plugin = kyselyWith({ dialect: held.dialect, path: testEnv.resolvePath('absent') });
 
         await expect(plugin.init()).rejects.toThrow(
             expect.objectContaining({ code: SeedcordErrorCode.CorePathUnreadable })
@@ -87,9 +83,7 @@ describe('Kysely lifecycle', () => {
     it.for(['services', 'connection'] as const)('throws when %s is read before init', (member, { kyselyWith }) => {
         const plugin = kyselyWith();
 
-        expect(() => plugin[member]).toThrow(
-            expect.objectContaining({ code: SeedcordErrorCode.PluginServicesNotReady })
-        );
+        expect(() => plugin[member]).toThrow(expect.objectContaining({ code: SeedcordErrorCode.PluginNotReady }));
     });
 
     it('exposes a working connection and the services map once init resolves', async ({ kyselyWith }) => {
@@ -132,9 +126,7 @@ describe('Kysely lifecycle', () => {
 
             await plugin.dispose();
 
-            expect(() => plugin[member]).toThrow(
-                expect.objectContaining({ code: SeedcordErrorCode.PluginServicesNotReady })
-            );
+            expect(() => plugin[member]).toThrow(expect.objectContaining({ code: SeedcordErrorCode.PluginNotReady }));
         }
     );
 

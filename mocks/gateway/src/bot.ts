@@ -52,7 +52,7 @@ export const seedcord = new Seedcord({
     botColor: '#fe565a'
 })
     .attach('db', Mongoose, {
-        dir: './services',
+        path: './services',
         uri: Vars.mongoUri,
         name: Vars.dbName
     })

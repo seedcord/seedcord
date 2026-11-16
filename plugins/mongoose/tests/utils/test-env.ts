@@ -15,7 +15,7 @@ export const it = base.extend<{ mongooseWith: MongooseWith }>({
                 new Mongoose(core, {
                     uri: 'mongodb://localhost:27017',
                     name: 'test',
-                    dir: testEnv.resolvePath('services'),
+                    path: testEnv.resolvePath('services'),
                     ...options
                 })
         );

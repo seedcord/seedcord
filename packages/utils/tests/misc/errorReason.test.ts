@@ -26,6 +26,8 @@ describe('errorReason', () => {
             Object.assign(new Error(''), { code: 'ETIMEDOUT' }),
             'ETIMEDOUT'
         ],
+        // eslint-disable-next-line unicorn/error-message -- the empty message is the case under test
+        ['the name of an error with no message or code', new TypeError(''), 'TypeError'],
         ['a thrown string', 'refused', 'refused']
     ] as const)('returns %s', ([, caught, reason]) => {
         expect(errorReason(caught)).toBe(reason);

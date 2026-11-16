@@ -176,11 +176,11 @@ export class KyselyMigrationManager {
     }
 
     private async getMigrationProvider(): Promise<MigrationProvider> {
-        const { dir } = this.ctx.config;
-        this.ctx.logger.debug(paint.mute(`Loading migrations from ${paint.path(dir)}`));
+        const { path } = this.ctx.config;
+        this.ctx.logger.debug(paint.mute(`Loading migrations from ${paint.path(path)}`));
 
         const files: MigrationFile[] = [];
-        for await (const { relativePath, imported } of importFiles(dir)) {
+        for await (const { relativePath, imported } of importFiles(path)) {
             const migration = migrationIn(imported);
             if (!migration) {
                 throw new SeedcordTypeError(SeedcordErrorCode.PluginKyselyInvalidMigrationModule, [relativePath]);

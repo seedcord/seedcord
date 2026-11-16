@@ -21,7 +21,7 @@ export const seedcord = new Seedcord({
     },
     subscribers: { path: null }
 }).attach('db', Mongoose, {
-    dir: './services',
+    path: './services',
     uri: 'mongodb://localhost:27017/',
     name: 'seedcord'
 });
@@ -31,7 +31,7 @@ export default seedcord;
 
 [`attach`](ref:gateway/Seedcord.attach) takes the key, the plugin class, and whatever that class's constructor takes after the host. If the constructor takes only the host, attach it with two arguments.
 
-Mongoose reads its `dir` relative to `root` in [`seedcord.config.ts`](/build/config), the same as the `path` keys. With `root: './src'`, the `'./services'` above means `src/services`. It reads the folder when the bot starts, and again during `seedcord codegen`. That read throws if the folder breaks one of these rules:
+Mongoose reads its `path` relative to `root` in [`seedcord.config.ts`](/build/config), the same as the `path` keys. With `root: './src'`, the `'./services'` above means `src/services`. It reads the folder when the bot starts, and again during `seedcord codegen`. That read throws if the folder breaks one of these rules:
 
 {/* prettier-ignore-start */}
 
@@ -128,15 +128,15 @@ export const seedcord = new Seedcord({
     subscribers: { path: null }
 })
     .attach('db', Mongoose, {
-        dir: './mongo',
+        path: './mongo',
         uri: 'mongodb://localhost:27017/',
         name: 'seedcord'
     })
     .attach('sql', Kysely, {
-        dir: './sql',
+        path: './sql',
         dialect: () =>
             new SqliteDialect({ database: new Database('bot.db') }),
-        migrations: { dir: './migrations' }
+        migrations: { path: './migrations' }
     });
 ```
 
@@ -231,7 +231,7 @@ const seedcord = new Seedcord({
 
 // ---cut---
 seedcord.attach('commands', Mongoose, {
-    dir: './services',
+    path: './services',
     uri: 'mongodb://localhost:27017/',
     name: 'seedcord'
 });

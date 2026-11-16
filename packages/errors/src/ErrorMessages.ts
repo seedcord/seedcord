@@ -243,10 +243,16 @@ const messages = {
         `${paint.iris(count)} plugins failed to dispose. Each one is listed below.`,
     [SeedcordErrorCode.PluginServiceDecoratorMissing]: (decorator: string, className: string) =>
         `${paint.sky(className)} is missing ${paint.bold(decorator)}. Add it to the class to register the service.`,
-    [SeedcordErrorCode.PluginServicesNotReady]: (pluginName: string, member: string) =>
-        `${paint.sky(`${pluginName}.${member}`)} was read before the plugin finished ${paint.bold('init()')}. Read it inside a handler, or after start() resolves.`,
-    [SeedcordErrorCode.PluginConnectionFailed]: (service: string, reason: string, option: string, target?: string) =>
-        `Could not connect to ${paint.bold(service)}${target ? ` (${paint.sky(target)})` : ''}: ${reason}. Check that the database is running and that ${paint.bold(option)} points at it.`,
+    [SeedcordErrorCode.PluginNotReady]: (pluginName: string, member: string) =>
+        `${paint.sky(`${pluginName}.${member}`)} was read before the plugin finished ${paint.bold('init()')} or after ${paint.bold('dispose()')}. Read it inside a handler, which runs after start() resolves and before the bot shuts down.`,
+    [SeedcordErrorCode.PluginConnectionFailed]: (
+        service: string,
+        reason: string,
+        option: string,
+        target?: string,
+        fix?: string
+    ) =>
+        `Could not connect to ${paint.bold(service)}${target ? ` (${paint.sky(target)})` : ''}: ${reason}. ${fix ?? `Check that the database is running and that ${paint.bold(option)} points at it.`}`,
     [SeedcordErrorCode.PluginDisconnectFailed]: (service: string) =>
         `Could not close the ${paint.bold(service)} connection cleanly during shutdown.`,
 

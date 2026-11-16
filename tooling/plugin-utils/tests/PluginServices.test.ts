@@ -19,10 +19,10 @@ import { RegisterService, Service } from '${fixturesPath}';
 export class ${className} extends Service {}
 `;
 
-function servicesIn(dir: string): PluginServices<new () => Service, Record<string, Service>> {
+function servicesIn(folder: string): PluginServices<new () => Service, Record<string, Service>> {
     return new PluginServices({
         pluginName: 'Test',
-        dir,
+        path: folder,
         logger: new Logger('PluginServices'),
         base: Service,
         metadataKey: ServiceKey,
@@ -40,10 +40,23 @@ describe('PluginServices', () => {
 
         const { services: found } = await services.codegen();
         expect(found.users?.name).toBe('Users');
-        expect(() => services.map).toThrow(expect.objectContaining({ code: SeedcordErrorCode.PluginServicesNotReady }));
+        expect(() => services.map).toThrow(expect.objectContaining({ code: SeedcordErrorCode.PluginNotReady }));
 
         await services.load();
         expect(services.map.users?.className).toBe('Users');
+    });
+
+    it.for(['load', 'codegen'] as const)('throws on two classes with one key in %s', async (method, { testEnv }) => {
+        await testEnv.createFile('services/Users.ts', serviceSource('users'));
+        await testEnv.createFile('services/Admins.ts', serviceSource('users', 'Admins'));
+        const services = servicesIn(testEnv.resolvePath('services'));
+
+        await expect(services[method]()).rejects.toThrow(
+            expect.objectContaining({
+                code: SeedcordErrorCode.CoreDuplicateName,
+                message: expect.stringMatching(/Admins.*Users|Users.*Admins/) as string
+            })
+        );
     });
 
     it('warns once about an exported class without the decorator and ignores the other exports', async ({
