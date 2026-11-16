@@ -1,6 +1,6 @@
 ---
 title: Kysely
-description: Connect a bot on your own server to SQLite, Postgres, MySQL, or another database Kysely supports, with a plugin that starts and stops with your bot.
+description: Connect a bot on your own server to SQLite, Postgres, MySQL, or another database Kysely supports, and open and close the connection with your bot.
 ---
 
 [`@seedcord/plugin-kysely`](ref:plugin-kysely) opens your database connection and runs your migrations when the bot starts, then closes the connection when it stops. Your queries are plain [Kysely](https://kysely.dev/docs/intro) queries.
@@ -34,7 +34,7 @@ export const seedcord = new Seedcord({
 export default seedcord;
 ```
 
-This sample builds a gateway bot. The same `attach` call works on an http `Seedcord` from `@seedcord/http` that runs on a server. On Cloudflare Workers it's a compile error because the plugin [needs a server](/plugins#a-plugin-declares-where-it-runs), and a cast that gets past it throws `CorePluginScopeMismatch`.
+This sample builds a gateway bot. The same `attach` call works on an http `Seedcord` from `@seedcord/http` that runs on a server. On Cloudflare Workers it's a compile error because the plugin [needs a server](/plugins#a-plugin-declares-where-it-runs). A cast that gets past it throws `CorePluginScopeMismatch`.
 
 You have to pass `path`, `dialect`, and `migrations`. A relative `path` or `migrations.path` resolves against `root`, and both folders have to be inside it, as [the folder rules](/plugins) describe. `'bot.db'` doesn't follow `root`. `better-sqlite3` opens it relative to the folder you start the bot from.
 
@@ -125,11 +125,11 @@ seedcord.attach('db', Kysely, {
 
 `init()` calls `dialect()`, opens the first connection, runs your migrations unless you [set `onStartup` to `false`](/plugins/kysely-migrations#when-they-run), then loads every service class from `path`. If any of those steps fails, `init()` closes the connection before it rethrows the error because seedcord doesn't call `dispose()` for a plugin whose `init()` failed. If a migration fails, the bot never reaches its handlers.
 
-If `dialect()` throws or that first connection fails, `init()` throws `PluginConnectionFailed`. If `dialect()` threw, the message says so. Otherwise it includes the driver's own message, like `connect ECONNREFUSED 127.0.0.1:5432` from `pg` when the server isn't running. The full driver error is in its `cause`. `start()` reports it along with any other plugin's failure, as [the lifecycle page](/plugins/lifecycle#when-init-fails) explains.
+If `dialect()` throws, `init()` rethrows that error unchanged, like envapt's error for a missing `DATABASE_URL`. If the first connection fails, `init()` throws `PluginConnectionFailed`. Its message includes the driver's error, like `connect ECONNREFUSED 127.0.0.1:5432` from `pg` when the server isn't running. The full driver error is in its `cause`. `start()` reports it along with any other plugin's failure, as [the lifecycle page](/plugins/lifecycle#when-init-fails) explains.
 
 <Callout type="warning">
 
-Both `path` and the migrations folder have to exist before the first start. With `onStartup: false`, only `path` does. If one is missing, `init()` throws `CorePathUnreadable` with the path. A built bot throws `CoreDirectoryNotBuilt` instead because `seedcord build` doesn't find a folder to bundle. An empty folder works in both. Git doesn't track an empty folder, so put a `.gitkeep` in it, which the plugin skips like every dotfile. With `onStartup: false`, `init()` never reads the migrations folder and the error appears on your first call to a migration method.
+Both `path` and the migrations folder have to exist before the first start. If one is missing, `init()` throws `CorePathUnreadable` with the path. A built bot throws `CoreDirectoryNotBuilt` instead because `seedcord build` doesn't find a folder to bundle. An empty folder works in both. Git doesn't track an empty folder, so put a `.gitkeep` in it, which the plugin skips like every dotfile. With `onStartup: false`, only `path` has to exist, and a missing migrations folder throws on your first call to a migration method.
 
 </Callout>
 

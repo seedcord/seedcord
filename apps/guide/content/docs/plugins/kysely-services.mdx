@@ -46,12 +46,14 @@ Here's what each part of `Users.ts` does.
 
 - **[`@RegisterKyselyService('users')`](ref:plugin-kysely/RegisterKyselyService)** gives the class its key. Your handlers read the service from `services` under that key, and the plugin also uses it as the table name unless you [pass another one](#the-key-is-also-the-table-name).
 - **`KyselyService<'users'>`** is the base class, and its type argument is a table from [your schema](/plugins/kysely-schema). `this.table` holds that name, so `selectFrom(this.table)` checks `discord_id` against the `users` columns.
-- **`this.db`** returns the plugin's [`connection`](ref:plugin-kysely/Kysely.connection), so every service queries through the same connection. It can query every table in your schema, so a method can join `users` with another table.
+- **`this.db`** returns the plugin's [`connection`](ref:plugin-kysely/Kysely.connection), so every service queries through the same Kysely instance. It can query every table in your schema, so a method can join `users` with another table.
 - **`findByDiscordId`** keeps the lookup inside the class. Your handlers call that method on `services.users`, so none of them writes the query. `services.users` gets its type once [codegen has run](#typing-the-registry).
 
 ## You never construct a service
 
-The plugin builds your services itself after it has connected and run your startup migrations, so `this.db` has a working connection by the time any method runs. It imports every code file under the `path` you gave the [kysely plugin](/plugins/kysely), including subfolders, in order of path. That covers `.ts`, `.tsx`, `.mts`, `.js`, `.jsx`, and `.mjs`, and skips type declarations, dotfiles, dot-folders, and `node_modules`. For each exported class that extends `KyselyService` and has the decorator, it constructs the class. That constructor call adds the instance to the plugin's `services` map under its key.
+The plugin builds your services itself after it has connected and run your startup migrations, so `this.db` has a working connection by the time any method runs. It imports every code file under the `path` you gave the [kysely plugin](/plugins/kysely), including subfolders, in order of path. That covers `.ts`, `.tsx`, `.mts`, `.js`, `.jsx`, and `.mjs`, and skips type declarations, dotfiles, dot-folders, and `node_modules`. For each exported class that extends `KyselyService` and has the decorator, it constructs the class, then adds the instance to the plugin's `services` map under its key.
+
+If two classes use the same key, `init()` and `seedcord codegen` both throw `CoreDuplicateName` with both class names, and `init()` adds each file.
 
 ### When a service reads undefined
 

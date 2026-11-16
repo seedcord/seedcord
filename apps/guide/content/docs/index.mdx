@@ -158,3 +158,7 @@ The same [`seedcord build`](/build) makes whatever your host needs:
 - **Node 24.22.1+ on the 24.x line, Node 26.12.1+, or Bun 1.4.2+.** Every seedcord package declares its requirements under `engines`.
 - **TypeScript.** seedcord uses it heavily. You read and write generics from the first handler onward.
 - **discord.js on gateway.** The gateway transport uses the discord.js client, so gateway handlers read discord.js objects. An http bot doesn't depend on discord.js. You write command definitions with `@discordjs/builders` on both transports.
+
+### Does seedcord work with JavaScript?
+
+Not officially. JavaScript works, since TypeScript is still JavaScript in the end, but you lose a lot of the developer experience that seedcord's types give you. In a `.js` file, call each decorator as a function.

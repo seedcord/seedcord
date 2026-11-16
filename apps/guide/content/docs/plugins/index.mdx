@@ -31,7 +31,7 @@ export default seedcord;
 
 [`attach`](ref:gateway/Seedcord.attach) takes the key, the plugin class, and whatever that class's constructor takes after the host. If the constructor takes only the host, attach it with two arguments.
 
-Mongoose reads its `path` relative to `root` in [`seedcord.config.ts`](/build/config), the same as the `path` keys. With `root: './src'`, the `'./services'` above means `src/services`. It reads the folder when the bot starts, and again during `seedcord codegen`. That read throws if the folder breaks one of these rules:
+Mongoose reads its `path` relative to `root` in [`seedcord.config.ts`](/build/config), like the bot's own `path` keys. With `root: './src'`, the `'./services'` above means `src/services`. It reads the folder when the bot starts, and again during `seedcord codegen`. That read throws if the folder breaks one of these rules:
 
 {/* prettier-ignore-start */}
 

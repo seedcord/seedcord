@@ -55,7 +55,7 @@ export default defineConfig({
 
 Every relative path is relative to one of two folders. `root`, `build.outDir`, and `build.tsconfig` are relative to the folder that holds `seedcord.config.ts`. Everything that points into your bot's code is relative to `root`, so with `root: './src'` you write `instance: './bot.ts'`. Writing `'./src/bot.ts'` there would look for `src/src/bot.ts`.
 
-The folder paths inside `new Seedcord({ ... })` follow the same rule, so `interactions: { path: './handlers' }` reaches `src/handlers`. seedcord loads the same code files from a handler folder that [`importFiles`](ref:utils/importFiles) does. A plugin that reads a folder, like Mongoose with its `dir`, [resolves it the same way](/writing-plugins/files#where-a-relative-path-starts).
+The folder paths inside `new Seedcord({ ... })` follow the same rule, so `interactions: { path: './handlers' }` reaches `src/handlers`. seedcord loads the same code files from a handler folder that [`importFiles`](ref:utils/importFiles) does. A plugin that reads a folder, like Mongoose with its `path`, [resolves it the same way](/writing-plugins/files#where-a-relative-path-starts).
 
 A test or a `tsx` script that imports `bot.ts` runs without `root`, so [Your first bot](/first-bot#your-bots-settings) shows the absolute paths those runs need.
 

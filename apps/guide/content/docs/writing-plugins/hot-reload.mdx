@@ -118,14 +118,14 @@ If the reactions folder is a subfolder of the responders folder, pass it to the 
 
 ## Files read once
 
-If `init()` reads a folder at startup, like a locale folder, your plugin keeps the old contents after you save a file in it because the reload doesn't repeat the read. Pass glob patterns for files like that to [`registerCriticalFiles`](ref:core/Plugin.registerCriticalFiles). When one of them changes, the dev terminal shows a [**Restart required** card](/tooling/hot-reload#saves-that-need-a-restart) telling you to press `r`.
+If `init()` reads a folder at startup, like a folder of tags, your plugin keeps the old contents after you save a file in it because the reload doesn't repeat the read. Pass glob patterns for files like that to [`registerCriticalFiles`](ref:core/Plugin.registerCriticalFiles). When one of them changes, the dev terminal shows a [**Restart required** card](/tooling/hot-reload#saves-that-need-a-restart) telling you to press `r`.
 
-```ts twoslash title="src/plugins/Locales.ts"
+```ts twoslash title="src/plugins/Tags.ts"
 import { Plugin, readFiles } from '@seedcord/gateway';
 
 import type { CoreBase } from '@seedcord/gateway';
 
-export class Locales extends Plugin {
+export class Tags extends Plugin {
     public constructor(
         host: CoreBase,
         private readonly dir: string
