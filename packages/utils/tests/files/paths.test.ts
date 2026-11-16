@@ -2,16 +2,7 @@ import { join } from 'node:path';
 
 import { describe, expect, it } from 'vite-plus/test';
 
-import { importSpecifier, matchesFileGlobs, workerdPath } from '#src/files/paths';
-
-describe('matchesFileGlobs', () => {
-    it('resolves each pattern, then skips a file that a `!` pattern matches', () => {
-        const resolve = (pattern: string): string => `/bot/src/${pattern}`;
-
-        expect(matchesFileGlobs('/bot/src/locales/pl.d.ts', ['locales/*.ts', '!locales/*.d.ts'], resolve)).toBe(false);
-        expect(matchesFileGlobs('/bot/src/locales/pl.ts', ['locales/*.ts', '!locales/*.d.ts'], resolve)).toBe(true);
-    });
-});
+import { importSpecifier, workerdPath } from '#src/files/paths';
 
 describe('workerdPath', () => {
     it('makes a Windows path absolute for POSIX path functions', () => {

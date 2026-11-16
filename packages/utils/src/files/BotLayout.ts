@@ -3,10 +3,13 @@ import * as path from 'node:path';
 
 import { SeedcordErrorCode } from '@seedcord/errors';
 import { SeedcordError } from '@seedcord/errors/internal';
+import { partition } from 'es-toolkit';
+// node's esm loader needs the .js because picomatch doesn't have an exports map
+import picomatch from 'picomatch/posix.js';
 
 import { asError } from '#src/misc/asError';
 
-import { escapeGlob, isInside, matchesFileGlobs, posixRelative, rootedGlob, toPosixPath } from './paths';
+import { isInside, posixRelative, toPosixPath } from './paths';
 
 // every path here is root-relative with a leading slash, like '/locales'. one beside a ./src root reads '/../logs'
 export interface BotLayoutData {
@@ -46,14 +49,14 @@ function isProjectFileName(name: string): boolean {
 // i would use the dependency directly, but the edge bundle can't resolve tinyglobby's fs import
 const GLOB_SYMBOLS = /[()[\]{}*?|]|[!+@](?=\()/g;
 
-type Escape = (text: string) => string;
-
-// vite's import.meta.glob reads a backslash as an escape
-const viteEscape: Escape = (text) => text.replaceAll(GLOB_SYMBOLS, String.raw`\$&`);
+// vite's import.meta.glob and picomatch both read a backslash as an escape
+function escapeGlob(text: string): string {
+    return text.replaceAll(GLOB_SYMBOLS, String.raw`\$&`);
+}
 
 // a key of '/' is base itself
-function globFolder(base: string, key: string, escape: Escape = viteEscape): string {
-    return escape(key === '/' ? base : `${base}${key}`);
+function globFolder(base: string, key: string): string {
+    return escapeGlob(key === '/' ? base : `${base}${key}`);
 }
 
 function moduleGlobsIn(folder: string): string[] {
@@ -223,17 +226,16 @@ export class BotLayout {
         return [...moduleGlobsIn(`${globFolder(base, '/')}/**`), ...this.globExcludes(base)];
     }
 
-    // for matchesFiles, which takes absolute globs as they are
     public moduleGlobsDirectlyIn(folder: string): string[] {
-        const root = toPosixPath(this.root);
-        return [
-            ...moduleGlobsIn(globFolder(root, this.keyOf(folder), escapeGlob)),
-            ...this.globExcludes(root, escapeGlob)
-        ];
+        return [...moduleGlobsIn(globFolder('.', this.keyOf(folder))), ...this.globExcludes('.')];
     }
 
+    // picomatch/posix runs on workerd, which throws on node's path.matchesGlob
     public matchesFiles(file: string, patterns: readonly string[]): boolean {
-        return matchesFileGlobs(file, patterns, (pattern) => rootedGlob(this.root, pattern));
+        const [excludes, includes] = partition(patterns, (pattern) => pattern.startsWith('!'));
+        const posixFile = toPosixPath(file);
+        const matches = (pattern: string): boolean => picomatch.isMatch(posixFile, this.rootedGlob(pattern));
+        return includes.some(matches) && !excludes.some((pattern) => matches(pattern.slice(1)));
     }
 
     public listedFileGlobs(base = '.'): string[] {
@@ -270,14 +272,22 @@ export class BotLayout {
     }
 
     // import.meta.glob already skips dotfiles, dot-folders and node_modules
-    private globExcludes(base: string, escape?: Escape): string[] {
-        const folders = this.data.skippedFolders.map((key) => `!${globFolder(base, key, escape)}/**`);
+    private globExcludes(base: string): string[] {
+        const folders = this.data.skippedFolders.map((key) => `!${globFolder(base, key)}/**`);
         const configDir = this.configDir();
         const projectFiles =
             configDir === undefined
                 ? []
-                : PROJECT_FILE_GLOBS.map((name) => `!${globFolder(base, this.keyOf(configDir), escape)}/${name}`);
+                : PROJECT_FILE_GLOBS.map((name) => `!${globFolder(base, this.keyOf(configDir))}/${name}`);
         return [...folders, ...projectFiles];
+    }
+
+    // the root's own [ or ( matches as plain text
+    private rootedGlob(pattern: string): string {
+        const root = escapeGlob(toPosixPath(this.root));
+        if (!path.isAbsolute(pattern)) return path.posix.join(root, toPosixPath(pattern));
+        if (!isInside(this.root, pattern)) return toPosixPath(pattern);
+        return path.posix.join(root, posixRelative(this.root, pattern));
     }
 
     private pathOf(key: string): string {
@@ -304,6 +314,11 @@ export class BotFolder {
 
     public moduleGlobsDirectlyIn(): string[] {
         return this.layout.moduleGlobsDirectlyIn(this.path);
+    }
+
+    // without a config, a relative glob resolves against this folder
+    public matchesFiles(file: string, patterns: readonly string[]): boolean {
+        return this.layout.matchesFiles(file, patterns);
     }
 
     public assertBundled(): void {
