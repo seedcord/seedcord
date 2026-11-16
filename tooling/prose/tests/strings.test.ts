@@ -19,8 +19,6 @@ new RuleTester().run('strings', strings, {
         "const note = 'The handler sees the route id in its custom id.';",
         'const line = `${name} was registered in ${file}`;',
         "const cls = cn('drop-shadow-mark size-8 shrink-0');",
-        // "does nothing" is allowed
-        "const note = 'The call does nothing outside seedcord dev.';",
         // a compound and the noun are allowed
         "const note = 'Precedence is last-wins, which is a quick win for readers.';",
         dedent`
@@ -35,6 +33,10 @@ new RuleTester().run('strings', strings, {
         ].join('\n')
     ],
     invalid: [
+        {
+            code: "const note = 'The call does nothing outside seedcord dev.';",
+            errors: [{ messageId: 'prose', column: 24, endColumn: 36 }]
+        },
         {
             code: "throw new Error('The job stays untouched after a restart.');",
             errors: [{ messageId: 'prose', column: 26, endColumn: 31 }]

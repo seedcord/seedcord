@@ -28,7 +28,7 @@ const FRAME_WEIGHTS = {
     thick: tw`border-4`
 } as const;
 
-// auto margins do nothing without the block class below
+// the block class below lets these auto margins move the image
 const ALIGNMENTS = {
     left: tw`me-auto`,
     center: tw`mx-auto`,

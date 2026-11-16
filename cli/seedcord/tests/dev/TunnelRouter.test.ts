@@ -47,7 +47,7 @@ describe('TunnelRouter', () => {
         expect(onPort).toHaveBeenCalledExactlyOnceWith(4321, INSTANCE);
     });
 
-    it('does nothing when the config turns the tunnel off', async () => {
+    it("doesn't open a tunnel or warn when the config turns the tunnel off", async () => {
         const onPort = vi.fn().mockResolvedValue(undefined);
         const warn = vi.fn();
 

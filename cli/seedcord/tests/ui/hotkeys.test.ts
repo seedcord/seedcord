@@ -195,7 +195,7 @@ describe('dispatchHotkey channel filters', () => {
         expect(setFilters).toHaveBeenCalledWith(filtersOf([], ['warn', 'info', 'debug', 'trace']));
     });
 
-    it('does nothing on space or o when no channels exist', () => {
+    it("doesn't change the filters on space or o when no channels exist", () => {
         const setFilters = vi.fn();
 
         dispatchHotkey(makeCtx({ input: ' ', cursor: INITIAL_CURSOR, setFilters }));

@@ -278,7 +278,7 @@ export class OverrideChild extends OverrideBase {
     }
 
     /**
-     * Does nothing.
+     * Resolves after one microtask.
      *
      * @returns When loading finishes.
      */

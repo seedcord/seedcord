@@ -116,7 +116,7 @@ vp -C mocks/gateway run dev
 
 Check a mock's `src/bot.ts` for what else it connects to. The gateway mock attaches a database plugin, so it needs that database running. The http mock needs a public URL for Discord to post to, and `seedcord dev` opens one through [cloudflared](https://seedcord.org/guide/tooling/tunnel).
 
-Try every change a bot author would notice in a mock, and use it like they would. Unit tests miss things you only catch by using the bot, like a confusing error message or a button that does nothing after a restart.
+Try every change a bot author would notice in a mock, and use it like they would. Unit tests miss things you only catch by using the bot, like a confusing error message or a button that stops responding after a restart.
 
 When you add or change a handler in a mock, run `vp -C mocks/<name> run codegen`. The gate fails on a stale generated file.
 

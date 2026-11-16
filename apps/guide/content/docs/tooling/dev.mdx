@@ -76,7 +76,7 @@ Once it starts, your terminal turns into a console for the bot. The wide pane on
 
 {/* prettier-ignore-end */}
 
-The scroll keys work at any time, even while the bot is starting or shutting down. `r`, `g`, `d`, and `c` also work while it starts, like during a command deploy that waits on Discord's rate limit. They do nothing while it stops or restarts, or while the refresh prompt waits for `y` or `n`. `d` needs a bot that's starting or running, so it does nothing after a disconnect or an error.
+The scroll keys work at any time, even while the bot is starting or shutting down. `r`, `g`, `d`, and `c` also work while it starts, like during a command deploy that waits on Discord's rate limit. The terminal ignores them while the bot stops or restarts, or while the refresh prompt waits for `y` or `n`. `d` needs a bot that's starting or running, so the terminal ignores it after a disconnect or an error.
 
 ## Filtering the log
 

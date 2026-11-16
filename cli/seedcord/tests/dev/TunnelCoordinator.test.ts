@@ -491,7 +491,7 @@ describe('TunnelCoordinator', () => {
         expect(warn).toHaveBeenCalledOnce();
     });
 
-    it('stop does nothing when no tunnel opened', async () => {
+    it("stop doesn't stop a tunnel or clear the endpoint before a tunnel opens", async () => {
         const stop = vi.fn();
         const clear = vi.fn<CoordinatorDeps['endpoint']['clear']>().mockResolvedValue();
         const coordinator = new TunnelCoordinator(
