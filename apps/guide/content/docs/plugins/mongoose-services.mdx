@@ -48,7 +48,7 @@ The constructor takes the plugin, the core, and a model, so the plugin builds yo
 
 <Callout type="warning">
 
-If a class isn't exported or has no `@RegisterMongooseService`, the plugin skips it without throwing or logging anything, and `services.users` reads `undefined`. Codegen skips the class too, so once it has run, `services.users` fails to compile.
+If an exported class isn't decorated with `@RegisterMongooseService`, the plugin logs a warning with the class name and skips it. The plugin skips an unexported class without a warning. Either way `services.users` reads `undefined`. Codegen skips the class too, so once it has run, `services.users` fails to compile.
 
 </Callout>
 

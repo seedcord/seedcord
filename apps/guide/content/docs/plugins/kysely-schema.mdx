@@ -1,9 +1,9 @@
 ---
 title: Your schema
-description: Type your Postgres tables for the kysely plugin by declaring a schema on KyselyDatabase, and keep it in step with your migrations.
+description: Type your database tables for the kysely plugin by declaring a schema on KyselyDatabase, and keep it in step with your migrations.
 ---
 
-TypeScript can't read your tables out of Postgres while it compiles, so Kysely types every query against an interface you write by hand. To give the plugin that interface, declare `schema` on [`KyselyDatabase`](ref:plugin-kysely/KyselyDatabase). The plugin's [`connection`](ref:plugin-kysely/Kysely.connection) and every service get their table and column types from it.
+TypeScript can't read your tables out of the database while it compiles, so Kysely types every query against an interface you write by hand. To give the plugin that interface, declare `schema` on [`KyselyDatabase`](ref:plugin-kysely/KyselyDatabase). The plugin's [`connection`](ref:plugin-kysely/Kysely.connection) and every service get their table and column types from it.
 
 ```ts twoslash title="src/database.ts"
 import type { KyselyDatabase } from '@seedcord/plugin-kysely';
@@ -15,7 +15,7 @@ export interface UsersTable {
     id: Generated<number>;
     discord_id: string;
     username: string;
-    joined_at: ColumnType<Date, string | undefined, never>;
+    joined_at: ColumnType<string, string | undefined, never>;
 }
 
 export interface AppDatabase {
@@ -31,9 +31,9 @@ declare module '@seedcord/plugin-kysely' {
 
 TypeScript applies that `declare module` block from any file your tsconfig includes, so nothing needs to import `src/database.ts`.
 
-`AppDatabase` takes one entry per table, keyed by the table's name in Postgres.
+`AppDatabase` takes one entry per table, keyed by the table's name in your database.
 
-Most columns have one type whether you select, insert, or update them, like `username`. For the ones that don't, Kysely has two helpers. `Generated` is for a column Postgres fills in itself, like a serial or identity `id`. `ColumnType` takes three types, one each for select, insert, and update. Here's what `UsersTable` ends up allowing:
+Most columns have one type whether you select, insert, or update them, like `username`. For the ones that don't, Kysely has two helpers. `Generated` is for a column that the database fills in itself, like an `integer primary key` in SQLite or a serial `id` in Postgres. `ColumnType` takes three types, one each for select, insert, and update. Here's what `UsersTable` ends up allowing:
 
 {/* prettier-ignore-start */}
 
@@ -41,7 +41,7 @@ Most columns have one type whether you select, insert, or update them, like `use
 | --- | --- | --- | --- |
 | `username` | `string` | `string` | `string` |
 | `id` | `number` | `number`, or leave it out | `number` |
-| `joined_at` | `Date` | `string`, or leave it out | `never`, so TypeScript rejects an update that sets it |
+| `joined_at` | `string` | `string`, or leave it out | `never`, so TypeScript rejects an update that sets it |
 
 {/* prettier-ignore-end */}
 
@@ -56,7 +56,7 @@ declare const table: KyselyTable;
 //            ^?
 ```
 
-A typo like `selectFrom('user')` then compiles. Postgres rejects the query because no `user` table exists. You only find the typo when someone runs that command and it fails for them. A misspelled column name compiles the same way. Every column you select is typed `never`. TypeScript accepts a `never` value anywhere, so it can't report a column used as the wrong type either.
+A typo like `selectFrom('user')` then compiles. The database rejects the query because no `user` table exists. You only find the typo when someone runs that command and it fails for them. A misspelled column name compiles the same way. Every column you select is typed `never`. TypeScript accepts a `never` value anywhere, so it can't report a column used as the wrong type either.
 
 ## What the declaration catches
 
@@ -99,7 +99,7 @@ class Leaderboard extends SlashHandler<'leaderboard'> {
 }
 ```
 
-`'user'` is missing its `s`. TypeScript reports it before the query can reach Postgres. With the name spelled `users`, the same query compiles.
+`'user'` is missing its `s`. TypeScript reports it before the query can reach the database. With the name spelled `users`, the same query compiles.
 
 ```ts twoslash hovers
 import { SlashHandler, SlashRoute } from '@seedcord/gateway';

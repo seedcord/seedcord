@@ -184,6 +184,9 @@ catalogs:
     '@tailwindcss/postcss':
       specifier: ^4.3.3
       version: 4.3.3
+    '@types/better-sqlite3':
+      specifier: ^9.6.0
+      version: 9.6.0
     '@types/hast':
       specifier: ^3.0.5
       version: 3.0.5
@@ -196,9 +199,9 @@ catalogs:
     '@types/node':
       specifier: ^26.1.2
       version: 26.6.5
-    '@types/pg':
-      specifier: ^8.23.1
-      version: 8.23.1
+    better-sqlite3:
+      specifier: ^13.2.0
+      version: 13.2.0
     cf:
       specifier: 1.0.0-beta.26
       version: 1.0.0-beta.26
@@ -363,9 +366,6 @@ catalogs:
     mongoose:
       specifier: ^9.12.0
       version: 9.12.0
-    pg:
-      specifier: ^8.22.0
-      version: 8.23.1
     typescript:
       specifier: ^6.0.3
       version: 6.0.3
@@ -743,6 +743,9 @@ importers:
       '@testing-library/user-event':
         specifier: catalog:test
         version: 14.6.8(@testing-library/dom@10.4.2)
+      '@types/better-sqlite3':
+        specifier: catalog:deps
+        version: 9.6.0
       '@types/hast':
         specifier: catalog:deps
         version: 3.0.5
@@ -753,7 +756,7 @@ importers:
         specifier: catalog:deps
         version: 2.0.14
       '@types/pg':
-        specifier: catalog:deps
+        specifier: ^8.23.1
         version: 8.23.1
       '@types/react':
         specifier: catalog:react
@@ -761,6 +764,9 @@ importers:
       '@types/react-dom':
         specifier: catalog:react
         version: 19.3.0(@types/react@19.3.0)
+      better-sqlite3:
+        specifier: catalog:deps
+        version: 13.2.0
       cross-env:
         specifier: catalog:deps
         version: 10.1.0
@@ -810,7 +816,7 @@ importers:
         specifier: catalog:peer
         version: 9.12.0
       pg:
-        specifier: catalog:peer
+        specifier: ^8.22.0
         version: 8.23.1
       prettier-plugin-tailwindcss:
         specifier: catalog:deps
@@ -1834,10 +1840,10 @@ importers:
         specifier: workspace:^
         version: link:../../tooling/vite-config
       '@types/better-sqlite3':
-        specifier: ^9.6.0
+        specifier: catalog:deps
         version: 9.6.0
       better-sqlite3:
-        specifier: ^13.2.0
+        specifier: catalog:deps
         version: 13.2.0
       envapt:
         specifier: catalog:peer
@@ -6695,10 +6701,6 @@ packages:
     resolution: {integrity: sha512-UvuxFU9P3hM29LrQdwu0cD6w6/+SFr+UlB9s/knI7+O2rK9xFxKUwSDWxGdbbqQ9/V7BJ5s0NI5nQAE4uJp3gQ==}
     engines: {node: '>=6.0.0'}
     hasBin: true
-
-  better-sqlite3@13.0.3:
-    resolution: {integrity: sha512-RbOBxmLBG8uvFUc15X9+9SFemKcQ0WBuISBVkpuiaUB2qblC8UWlHEjdWVoZ8AdhSwmoEgsiXKfopX0CQxaACQ==}
-    engines: {node: '>=22'}
 
   better-sqlite3@13.2.0:
     resolution: {integrity: sha512-Z8Q/9x/uNyKxA1v4FNodyItRVRw1TeKBrmj32JhxhR0ceNcBY+wMobt/Bv7M7TzwPAXjnZRtNaEsATnUZSKWZQ==}
@@ -12159,7 +12161,7 @@ snapshots:
 
   '@keyv/sqlite@6.1.0(keyv@6.1.0)':
     dependencies:
-      better-sqlite3: 13.0.3
+      better-sqlite3: 13.2.0
       hookified: 3.1.0
       keyv: 6.1.0
 
@@ -14364,10 +14366,6 @@ snapshots:
   balanced-match@4.0.4: {}
 
   baseline-browser-mapping@2.11.32: {}
-
-  better-sqlite3@13.0.3:
-    dependencies:
-      node-addon-api: 8.9.2
 
   better-sqlite3@13.2.0:
     dependencies:

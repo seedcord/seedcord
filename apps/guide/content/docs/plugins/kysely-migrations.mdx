@@ -1,6 +1,6 @@
 ---
 title: Migrations
-description: Create and change your Postgres tables with Kysely migrations, so every database gets the same tables, and control when they run.
+description: Create and change your database tables with Kysely migrations, so every database gets the same tables, and control when they run.
 ---
 
 Your bot's tables have to exist on every database it uses, like your laptop, a teammate's machine, and production. If you create them by running `CREATE TABLE` yourself, each database needs the same statements in the same order. If you miss one, your bot fails at the first query that touches a table or column that database doesn't have.
@@ -13,7 +13,7 @@ import type { Kysely } from 'kysely';
 export async function up(db: Kysely<any>): Promise<void> {
     await db.schema
         .createTable('users')
-        .addColumn('id', 'serial', (col) => col.primaryKey())
+        .addColumn('id', 'integer', (col) => col.primaryKey())
         .addColumn('discord_id', 'text', (col) =>
             col.notNull().unique()
         )
@@ -81,7 +81,7 @@ The recorded name omits the file extension, so `001-create-users.ts` under `seed
 
 ## When they run
 
-By default the plugin runs every pending migration while the bot starts. If a migration throws, startup stops. The plugin closes the pool, and your bot never reaches its handlers. A deploy that waits on the [health path](/build/server#the-health-server) only sees your bot once its migrations have finished.
+By default the plugin runs every pending migration while the bot starts. If a migration throws, startup stops. The plugin closes the connection, and your bot never reaches its handlers. If your deploy waits on the [health path](/build/server#the-health-server), it only gets a healthy answer once the migrations have finished.
 
 `onStartup` changes what runs at that point.
 
@@ -99,6 +99,8 @@ Set it to `false` when you run migrations as their own deploy step. A failing mi
 
 ```ts twoslash
 import { Kysely } from '@seedcord/plugin-kysely';
+import Database from 'better-sqlite3';
+import { SqliteDialect } from 'kysely';
 
 // ---cut-start---
 import type { Seedcord } from '@seedcord/gateway';
@@ -107,7 +109,8 @@ declare const seedcord: Seedcord;
 // ---cut-end---
 seedcord.attach('db', Kysely, {
     dir: './services',
-    connectionString: 'postgres://localhost:5432/seedcord',
+    dialect: () =>
+        new SqliteDialect({ database: new Database('bot.db') }),
     migrations: { dir: './migrations', onStartup: false }
 });
 ```
@@ -171,7 +174,7 @@ If a migration in that range has no `down`, Kysely skips it and keeps its row in
 
 ## When a migration fails
 
-If a migration throws an `Error`, you get that error unchanged, so a failing `CREATE TABLE` shows you Postgres's own message. The plugin throws its own codes for problems around the migrations.
+If a migration throws an `Error`, you get that error unchanged, so a failing `CREATE TABLE` shows you the database's own message. The plugin throws its own codes for problems around the migrations.
 
 {/* prettier-ignore-start */}
 
@@ -192,8 +195,8 @@ If a migration throws an `Error`, you get that error unchanged, so a failing `CR
 | --- | --- |
 | `allowUnorderedMigrations` | whether a new migration can sort before one that has already run. Defaults to `false` |
 | `migrationTableName` | the table recording which migrations ran. Defaults to `kysely_migration` |
-| `migrationLockTableName` | the table Kysely locks so two bots don't migrate at once. Defaults to `kysely_migration_lock` |
-| `migrationTableSchema` | the Postgres schema holding both of those tables |
+| `migrationLockTableName` | a table Kysely creates beside the migrations table. Defaults to `kysely_migration_lock`. The dialect's own lock keeps two bots from migrating at once, like an advisory lock on Postgres |
+| `migrationTableSchema` | the schema holding both of those tables, on a database that has schemas, like Postgres |
 | `nameComparator` | orders the recorded migrations that share a timestamp when Kysely reads them back from the database. Defaults to `localeCompare`. It never changes the order pending migrations run in |
 
 {/* prettier-ignore-end */}

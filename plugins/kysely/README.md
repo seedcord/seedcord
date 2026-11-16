@@ -23,16 +23,18 @@
 
 ## About
 
-`@seedcord/plugin-kysely` connects a seedcord bot to Postgres through Kysely. It opens a connection pool when the bot starts, runs your migrations, loads your service classes, and closes the pool when the bot shuts down. Handlers can reach each service through `this.core`. You declare your database schema once, and Kysely types every query from it.
+`@seedcord/plugin-kysely` connects a seedcord bot to a SQL database through Kysely. You pass it the Kysely dialect for your database, like SQLite, Postgres, or MySQL. It opens the connection when the bot starts, runs your migrations, loads your service classes, and closes the connection when the bot shuts down. Handlers can reach each service through `this.core`. You declare your database schema once, and Kysely types every query from it.
 
-Install it when your bot stores data in Postgres. It works with a gateway bot and with an http bot on your own server. On a Cloudflare Workers bot, attaching it is a compile error.
+Install it when your bot stores data in a SQL database. It works with a gateway bot and with an http bot on your own server. On a Cloudflare Workers bot, attaching it is a compile error.
 
 seedcord is pre-1.0, so a minor version can break your bot. Each release's changelog says what changed and how to update.
 
 ## Installation
 
+Install the plugin, Kysely, and the driver for your database. For SQLite through `better-sqlite3`:
+
 ```sh
-pnpm add @seedcord/plugin-kysely kysely pg
+pnpm add @seedcord/plugin-kysely kysely better-sqlite3
 ```
 
 ## Usage
@@ -43,8 +45,9 @@ Attach the plugin in `bot.ts`. Read it from `this.core` in a handler, under the 
 // bot.ts
 import { Seedcord } from '@seedcord/gateway';
 import { Kysely } from '@seedcord/plugin-kysely';
+import Database from 'better-sqlite3';
 import { GatewayIntentBits } from 'discord.js';
-import { Converters, Envapter } from 'envapt';
+import { SqliteDialect } from 'kysely';
 
 export default new Seedcord({
     bot: {
@@ -56,18 +59,20 @@ export default new Seedcord({
     subscribers: { path: null }
 }).attach('sql', Kysely, {
     dir: './services',
-    connectionString: Envapter.getRequired('DATABASE_URL', Converters.String),
+    dialect: () => new SqliteDialect({ database: new Database('bot.db') }),
     migrations: { dir: './migrations' }
 });
 ```
 
-Each file in `services/` holds a service for one table. `Database` is the table interface you write for Kysely:
+`dialect` is a function because `seedcord codegen` and `seedcord build` import `bot.ts` without starting the bot. The plugin calls it when the bot starts, so neither command opens your database.
+
+Each file in `services/` holds a service for one table. `AppDatabase` is the table interface you write for Kysely:
 
 ```ts
 // services/Users.ts
 import { KyselyService, RegisterKyselyService } from '@seedcord/plugin-kysely';
 
-import type { Database } from '../database';
+import type { AppDatabase } from '../database';
 
 @RegisterKyselyService('users')
 export class Users extends KyselyService<'users'> {
@@ -78,9 +83,9 @@ export class Users extends KyselyService<'users'> {
 
 declare module '@seedcord/plugin-kysely' {
     interface KyselyDatabase {
-        schema: Database;
+        schema: AppDatabase;
     }
 }
 ```
 
-Run `seedcord codegen` after you add or rename a service. It adds the service's key to `KyselyServices`, the type behind the decorator and `core.sql.services`. Then call `await this.core.sql.services.users.findByUserId(this.user.id)` from a handler. The [Kysely guide](https://seedcord.org/guide/plugins/kysely) covers the options, the schema, services, and migrations.
+Run `seedcord codegen` after you add or rename a service. It adds the service's key to `KyselyServices`, the type behind the decorator and `core.sql.services`. Then call `await this.core.sql.services.users.findByUserId(this.user.id)` from a handler. The [Kysely guide](https://seedcord.org/guide/plugins/kysely) covers the options, other databases, the schema, services, and migrations.

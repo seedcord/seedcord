@@ -51,11 +51,12 @@ catalogs:
     '@leeoniya/ufuzzy': ^1.0.19
     '@mdx-js/mdx': ^3.1.1
     '@tailwindcss/postcss': ^4.3.3
+    '@types/better-sqlite3': ^9.6.0
     '@types/hast': ^3.0.5
     '@types/mdast': ^4.0.4
     '@types/mdx': ^2.0.14
     '@types/node': ^26.1.2
-    '@types/pg': ^8.23.1
+    better-sqlite3: ^13.2.0
     cf: 1.0.0-beta.26
     chalk: ^6.0.0
     cli-spinners: ^3.4.0
@@ -113,7 +114,6 @@ catalogs:
     envapt: ^9.2.0
     kysely: ^0.29.8
     mongoose: ^9.12.0
-    pg: ^8.22.0
     typescript: ^6.0.3
     vite: ^8.3.4
     wrangler: ^4.150.0

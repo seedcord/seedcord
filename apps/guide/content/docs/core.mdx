@@ -136,7 +136,9 @@ If you construct a plugin yourself, you pass it down through imports and order i
 ```ts twoslash
 import { Seedcord } from '@seedcord/gateway';
 import { Kysely } from '@seedcord/plugin-kysely';
+import Database from 'better-sqlite3';
 import { GatewayIntentBits } from 'discord.js';
+import { SqliteDialect } from 'kysely';
 // ---cut-start---
 
 const seedcord = new Seedcord({
@@ -152,7 +154,8 @@ const seedcord = new Seedcord({
 
 export default seedcord.attach('db', Kysely, {
     dir: './services',
-    connectionString: 'postgres://localhost:5432/seedcord',
+    dialect: () =>
+        new SqliteDialect({ database: new Database('bot.db') }),
     migrations: {
         dir: './migrations'
     }

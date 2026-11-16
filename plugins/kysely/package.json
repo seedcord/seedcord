@@ -71,8 +71,8 @@
         "@seedcord/tsconfig": "workspace:^",
         "@seedcord/tsdown-config": "workspace:^",
         "@seedcord/vite-config": "workspace:^",
-        "@types/better-sqlite3": "^9.6.0",
-        "better-sqlite3": "^13.2.0",
+        "@types/better-sqlite3": "catalog:deps",
+        "better-sqlite3": "catalog:deps",
         "envapt": "catalog:peer",
         "kysely": "catalog:peer"
     },

@@ -1,13 +1,13 @@
 ---
 title: Kysely services
-description: Write a service class for each Postgres table with the kysely plugin, and read those services from any handler.
+description: Write a service class for each database table with the kysely plugin, and read those services from any handler.
 ---
 
 If every handler that looks up a user writes its own Kysely query, the same query ends up in several files. Changing how you find a user then means finding every copy.
 
 A service keeps one table's queries in one class. Extend [`KyselyService`](ref:plugin-kysely/KyselyService), pass the table name as its type argument, and decorate the class with a key. Handlers then call its methods through that key.
 
-```ts twoslash title="src/postgres/Users.ts"
+```ts twoslash title="src/services/Users.ts"
 import {
     KyselyService,
     RegisterKyselyService
@@ -46,7 +46,7 @@ Here's what each part of `Users.ts` does.
 
 - **[`@RegisterKyselyService('users')`](ref:plugin-kysely/RegisterKyselyService)** gives the class its key. Your handlers read the service from `services` under that key, and the plugin also uses it as the table name unless you [pass another one](#the-key-is-also-the-table-name).
 - **`KyselyService<'users'>`** is the base class, and its type argument is a table from [your schema](/plugins/kysely-schema). `this.table` holds that name, so `selectFrom(this.table)` checks `discord_id` against the `users` columns.
-- **`this.db`** returns the plugin's [`connection`](ref:plugin-kysely/Kysely.connection), so every service queries through the same pool. It can query every table in your schema, so a method can join `users` with another table.
+- **`this.db`** returns the plugin's [`connection`](ref:plugin-kysely/Kysely.connection), so every service queries through the same connection. It can query every table in your schema, so a method can join `users` with another table.
 - **`findByDiscordId`** keeps the lookup inside the class. Your handlers call that method on `services.users`, so none of them writes the query. `services.users` gets its type once [codegen has run](#typing-the-registry).
 
 ## You never construct a service
@@ -57,7 +57,7 @@ The plugin builds your services itself after it has connected and run your start
 
 <Callout type="warning">
 
-If a class isn't exported or has no [`@RegisterKyselyService`](ref:plugin-kysely/RegisterKyselyService), the plugin skips it without throwing or logging anything, and `services.users` reads `undefined`. Codegen skips the class too, so once it has run, `services.users` fails to compile.
+If an exported class isn't decorated with [`@RegisterKyselyService`](ref:plugin-kysely/RegisterKyselyService), the plugin logs a warning with the class name and skips it. The plugin skips an unexported class without a warning. Either way `services.users` reads `undefined`. Codegen skips the class too, so once it has run, `services.users` fails to compile.
 
 </Callout>
 

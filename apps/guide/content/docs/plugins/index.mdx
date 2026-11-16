@@ -114,7 +114,9 @@ A bot can attach more than one plugin, each under its own key. Chain another `at
 import { Seedcord } from '@seedcord/gateway';
 import { Kysely } from '@seedcord/plugin-kysely';
 import { Mongoose } from '@seedcord/plugin-mongoose';
+import Database from 'better-sqlite3';
 import { GatewayIntentBits } from 'discord.js';
+import { SqliteDialect } from 'kysely';
 
 export const seedcord = new Seedcord({
     bot: {
@@ -131,8 +133,9 @@ export const seedcord = new Seedcord({
         name: 'seedcord'
     })
     .attach('sql', Kysely, {
-        dir: './postgres',
-        connectionString: 'postgres://localhost:5432/seedcord',
+        dir: './sql',
+        dialect: () =>
+            new SqliteDialect({ database: new Database('bot.db') }),
         migrations: { dir: './migrations' }
     });
 ```
