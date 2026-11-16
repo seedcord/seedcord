@@ -27,15 +27,16 @@ import type { MigrationInfo } from 'kysely/migration';
 
 const FALLBACK_LABEL = 'database';
 
-function labelOf(dialect: Dialect): string {
-    // the constructor name of an anonymous dialect subclass is an empty string
-    return dialect.constructor.name.replace(/Dialect$/, '') || FALLBACK_LABEL;
-}
+const DIALECT_LABELS: Record<string, string> = {
+    SqliteDialect: 'SQLite',
+    MysqlDialect: 'MySQL',
+    MssqlDialect: 'MS SQL'
+};
 
-function connectionFailed(label: string, reason: string, cause: unknown, fix?: string): SeedcordError {
-    return new SeedcordError(SeedcordErrorCode.PluginConnectionFailed, [label, reason, 'dialect', undefined, fix], {
-        cause
-    });
+function labelOf(dialect: Dialect): string {
+    const { name } = dialect.constructor;
+    // the constructor name of an anonymous dialect subclass is an empty string
+    return DIALECT_LABELS[name] ?? (name.replace(/Dialect$/, '') || FALLBACK_LABEL);
 }
 
 interface Session {
@@ -127,32 +128,23 @@ export class Kysely extends Plugin<{ transport: 'any'; runtime: 'server' }> {
     }
 
     private async connect(): Promise<void> {
-        const dialect = this.dialect();
+        const dialect = this.options.dialect();
         const label = labelOf(dialect);
         const client = new KyselyClient<KyselySchema>({ dialect, ...keepDefined(this.options.kysely ?? {}) });
-        // init()'s cleanup closes the client if the first connection fails
-        this.session = { client, label };
         try {
             // kysely opens the driver on the first query
             await client.connection().execute(() => Promise.resolve());
         } catch (err) {
-            throw connectionFailed(label, errorReason(err), err);
+            await client
+                .destroy()
+                .catch((error: unknown) => this.logger.error('failed to close the connection', error));
+            throw new SeedcordError(SeedcordErrorCode.PluginConnectionFailed, [label, errorReason(err), 'dialect'], {
+                cause: err
+            });
         }
 
+        this.session = { client, label };
         this.logger.info(`Connected to ${paint.sky.bold(label)}`);
-    }
-
-    private dialect(): Dialect {
-        try {
-            return this.options.dialect();
-        } catch (err) {
-            throw connectionFailed(
-                FALLBACK_LABEL,
-                `dialect() threw: ${errorReason(err)}`,
-                err,
-                'Fix the code inside dialect().'
-            );
-        }
     }
 
     private async disconnect(): Promise<void> {

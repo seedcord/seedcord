@@ -7,19 +7,15 @@ import { heldSqlite, memorySqlite } from './utils/dialects';
 import { it } from './utils/test-env';
 
 describe('Kysely lifecycle', () => {
-    it('tells you to fix dialect() when it throws', async ({ kyselyWith }) => {
+    it('rethrows the error from a dialect() that throws', async ({ kyselyWith }) => {
+        const thrown = new Error('DATABASE_URL is required');
         const plugin = kyselyWith({
             dialect: () => {
-                throw new Error('bad option');
+                throw thrown;
             }
         });
 
-        await expect(plugin.init()).rejects.toThrow(
-            expect.objectContaining({
-                code: SeedcordErrorCode.PluginConnectionFailed,
-                message: expect.stringMatching(/bad option.*Fix the code inside dialect\(\)/) as string
-            })
-        );
+        await expect(plugin.init()).rejects.toBe(thrown);
     });
 
     it('includes the driver message when the connection is refused', async ({ kyselyWith }) => {

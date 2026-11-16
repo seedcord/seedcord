@@ -4,11 +4,21 @@ import { FolderExports } from '@seedcord/core/plugin';
 import { SeedcordErrorCode, paint } from '@seedcord/errors';
 import { SeedcordError, SeedcordTypeError } from '@seedcord/errors/internal';
 
+import { decoratorValue } from './decoratorValue';
+
 import type { Logger } from '@seedcord/logger';
 import type { HmrUpdateEvent } from '@seedcord/types';
 import type { AbstractConstructor } from 'type-fest';
 
 type ServiceClass = AbstractConstructor<object, never[]>;
+
+function describe(Service: ServiceClass, file: string): string {
+    return `${paint.sky(Service.name)} (${paint.path(file)})`;
+}
+
+function duplicateKey(key: string, first: string, second: string): SeedcordTypeError {
+    return new SeedcordTypeError(SeedcordErrorCode.CoreDuplicateName, ['service', key, [first, second]]);
+}
 
 interface PluginServicesOptions<TClass extends ServiceClass> {
     readonly pluginName: string;
@@ -24,7 +34,7 @@ interface PluginServicesOptions<TClass extends ServiceClass> {
 // one instance of each decorated service class in a folder, by the key its decorator wrote
 export class PluginServices<TClass extends ServiceClass, TServices extends object> {
     private readonly services = Object.create(null) as TServices;
-    private readonly owners = new Map<string, TClass>();
+    private readonly owners = new Map<string, { readonly Service: TClass; readonly file: string }>();
     private readonly files: FolderExports<TClass>;
     private readonly warned = new WeakSet<object>();
     private loaded = false;
@@ -33,7 +43,7 @@ export class PluginServices<TClass extends ServiceClass, TServices extends objec
         this.files = new FolderExports({
             dir: options.path,
             is: (value): value is TClass => this.isService(value),
-            register: (Service) => this.register(Service),
+            register: (Service, file) => this.register(Service, file),
             unregister: (Service) => this.unregister(Service),
             logger: options.logger
         });
@@ -72,33 +82,34 @@ export class PluginServices<TClass extends ServiceClass, TServices extends objec
 
     public async codegen(): Promise<{ services: Record<string, TClass> }> {
         const found = new Map<string, TClass>();
-        for (const Service of await this.files.scan()) this.claim(found, Service);
+        for (const Service of await this.files.scan()) {
+            const key = this.keyOf(Service);
+            const taken = found.get(key);
+            if (taken) throw duplicateKey(key, paint.sky(taken.name), paint.sky(Service.name));
+            found.set(key, Service);
+        }
         return { services: Object.fromEntries(found) };
     }
 
-    // isService has already checked that the decorator wrote this key
     private keyOf(Service: TClass): string {
-        return Reflect.getMetadata(this.options.metadataKey, Service) as string;
+        return decoratorValue(this.options.metadataKey, this.options.decorator, Service);
     }
 
-    // two classes with one key would overwrite each other's instance
-    private claim(owners: Map<string, TClass>, Service: TClass): string {
+    private register(Service: TClass, file: string): void {
         const key = this.keyOf(Service);
-        const owner = owners.get(key);
-        if (owner && owner !== Service) {
-            throw new SeedcordTypeError(SeedcordErrorCode.CoreDuplicateName, [
-                'service',
-                key,
-                [owner.name, Service.name]
-            ]);
-        }
-        owners.set(key, Service);
-        return key;
-    }
+        const owner = this.owners.get(key);
+        if (owner) throw duplicateKey(key, describe(owner.Service, owner.file), describe(Service, file));
 
-    private register(Service: TClass): void {
-        const key = this.claim(this.owners, Service);
-        Reflect.set(this.services, key, this.options.create(Service));
+        let instance: InstanceType<TClass>;
+        try {
+            instance = this.options.create(Service);
+        } catch (error) {
+            // undoes what create() did before it threw, like a mongoose model it already built
+            this.options.remove?.(Service);
+            throw error;
+        }
+        this.owners.set(key, { Service, file });
+        Reflect.set(this.services, key, instance);
     }
 
     private unregister(Service: TClass): void {

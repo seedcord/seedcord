@@ -19,7 +19,10 @@ import { RegisterService, Service } from '${fixturesPath}';
 export class ${className} extends Service {}
 `;
 
-function servicesIn(folder: string): PluginServices<new () => Service, Record<string, Service>> {
+function servicesIn(
+    folder: string,
+    remove: (Ctor: new () => Service) => void = vi.fn()
+): PluginServices<new () => Service, Record<string, Service>> {
     return new PluginServices({
         pluginName: 'Test',
         path: folder,
@@ -27,11 +30,43 @@ function servicesIn(folder: string): PluginServices<new () => Service, Record<st
         base: Service,
         metadataKey: ServiceKey,
         decorator: '@RegisterService',
-        create: (Ctor) => new Ctor()
+        create: (Ctor) => new Ctor(),
+        remove
     });
 }
 
 describe('PluginServices', () => {
+    it('undoes a class whose constructor threw and registers the fixed save', async ({ testEnv }) => {
+        const file = await testEnv.createFile('services/Users.ts', serviceSource('users'));
+        const remove = vi.fn();
+        const services = servicesIn(testEnv.resolvePath('services'), remove);
+        await services.load();
+        const first = services.map.users?.constructor;
+
+        await testEnv.createFile(
+            'services/Users.ts',
+            `
+            import { RegisterService, Service } from '${fixturesPath}';
+
+            @RegisterService('users')
+            export class Users extends Service {
+                constructor() {
+                    super();
+                    throw new Error('broken constructor');
+                }
+            }
+            `
+        );
+        await services.handle({ file, type: 'update' });
+        // remove() also runs for the first class when the save unregisters it
+        const removedThrowingClass = remove.mock.calls.some(([Ctor]) => Ctor !== first);
+        await testEnv.createFile('services/Users.ts', serviceSource('users'));
+        await services.handle({ file, type: 'update' });
+
+        expect(removedThrowingClass).toBe(true);
+        expect(services.map.users?.className).toBe('Users');
+    });
+
     it('loads each decorated class under its key, and codegen reads the same keys without loading', async ({
         testEnv
     }) => {

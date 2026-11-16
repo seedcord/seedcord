@@ -1,5 +1,6 @@
 import { SeedcordErrorCode } from '@seedcord/errors';
 import { SeedcordTypeError } from '@seedcord/errors/internal';
+import { decoratorValue } from '@seedcord/plugin-utils';
 
 import type { MongooseServiceRegistrationOptions } from '#src/types/MongooseServiceRegistrationOptions';
 import type { MongooseServiceKeys, MongooseServices } from '#src/types/MongooseServices';
@@ -9,9 +10,8 @@ import type { Constructor } from 'type-fest';
 export const ServiceMetadataKey = Symbol.for('seedcord:mongoose:service');
 const ModelNameMetadataKey = Symbol.for('seedcord:mongoose:model-name');
 
-// every registered class has one because the decorator writes it together with the service key
-export function modelNameOf(Service: object): string {
-    return Reflect.getMetadata(ModelNameMetadataKey, Service) as string;
+export function modelNameOf(Service: { readonly name: string }): string {
+    return decoratorValue(ModelNameMetadataKey, '@RegisterMongooseService', Service);
 }
 
 /**
