@@ -27,6 +27,16 @@ function from(locales: Partial<Pick<DispatchOrigin, 'userLocale' | 'guildLocale'
     return { userId: '1', guildId: null, channelId: null, userLocale: null, guildLocale: null, ...locales };
 }
 
+// [code, message] for each error that the call threw, one or several
+async function problemsOf(work: Promise<unknown>): Promise<unknown[][]> {
+    const failure: unknown = await work.then(
+        () => undefined,
+        (error: unknown) => error
+    );
+    const errors = isSeedcordError(failure, 'SeedcordAggregateError') ? failure.errors : [failure];
+    return errors.map((error) => (isSeedcordError(error) ? [error.code, stripVTControlCharacters(error.message)] : []));
+}
+
 async function tFor(
     origin: DispatchOrigin,
     options: Omit<I18nOptions, 'dir'> = {}
@@ -133,11 +143,7 @@ describe('I18n', () => {
         }
 
         async function problemsIn(fixture: string): Promise<unknown[][]> {
-            const failure: unknown = await prepared(fixture).catch((error: unknown) => error);
-            const errors = isSeedcordError(failure, 'SeedcordAggregateError') ? failure.errors : [failure];
-            return errors.map((error) =>
-                isSeedcordError(error) ? [error.code, stripVTControlCharacters(error.message)] : []
-            );
+            return problemsOf(prepared(fixture));
         }
 
         it("adds each locale's names and descriptions to every command, option, choice, and menu", async () => {
@@ -218,7 +224,7 @@ describe('I18n', () => {
             });
         });
 
-        it('notes each key a locale leaves to the base', async () => {
+        it('notes each key that a locale leaves to another file, and which file', async () => {
             const notes: string[] = [];
             using _capture = LoggerChannelRegistry.instance.installSink({
                 kind: 'capture',
@@ -227,18 +233,18 @@ describe('I18n', () => {
 
             await i18nAt('good').codegen();
 
-            expect(notes).toContainEqual(expect.stringMatching(/pl\.ftl doesn't have ping-reply/));
+            expect(notes).toContainEqual(
+                expect.stringMatching(
+                    /pl\.ftl doesn't have ping-reply, label\. Users on that locale get the en-US text/
+                )
+            );
+            expect(notes).toContainEqual(
+                expect.stringMatching(/es-419\.ftl doesn't have greeting\. Users on that locale get the es-ES text/)
+            );
         });
 
         it('reports every broken file at its line, all at once', async () => {
-            const failure: unknown = await i18nAt('broken')
-                .codegen()
-                .catch((error: unknown) => error);
-
-            if (!isSeedcordError(failure, 'SeedcordAggregateError')) throw new Error('expected an aggregate');
-            const problems = failure.errors.map((error) =>
-                isSeedcordError(error) ? [error.code, stripVTControlCharacters(error.message)] : []
-            );
+            const problems = await problemsOf(i18nAt('broken').codegen());
             expect(problems).toEqual(
                 expect.arrayContaining([
                     [
@@ -248,16 +254,19 @@ describe('I18n', () => {
                     [SeedcordErrorCode.PluginI18nNotInBase, expect.stringMatching(/de\.ftl:6 has the message greting/)],
                     [SeedcordErrorCode.PluginI18nSyntax, expect.stringMatching(/de\.ftl:7/)],
                     [SeedcordErrorCode.PluginI18nNotInBase, expect.stringMatching(/de\.ftl:11 has \.tooltip on ping/)],
+                    [SeedcordErrorCode.PluginI18nMissingReference, expect.stringMatching(/de\.ftl:14 uses -brand/)],
+                    [SeedcordErrorCode.PluginI18nMissingReference, expect.stringMatching(/de\.ftl:15 uses -brand/)],
                     [SeedcordErrorCode.PluginI18nNotALocale, expect.stringMatching(/en-US\.ftl or .*en-GB\.ftl/)]
                 ])
             );
-            expect(problems).toHaveLength(5);
+            expect(problems).toHaveLength(7);
         });
 
         it('checks every locale against the base option', async () => {
-            await expect(i18nAt('good', { base: Locale.Polish }).codegen()).rejects.toMatchObject({
-                code: SeedcordErrorCode.PluginI18nNotInBase
-            });
+            expect(await problemsOf(i18nAt('good', { base: Locale.Polish }).codegen())).toContainEqual([
+                SeedcordErrorCode.PluginI18nNotInBase,
+                expect.stringMatching(/en-US\.ftl:\d+ has the message ping-reply/)
+            ]);
         });
 
         it("throws when dir doesn't have a file for the base locale", async () => {

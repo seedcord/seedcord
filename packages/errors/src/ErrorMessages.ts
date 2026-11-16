@@ -299,6 +299,8 @@ const messages = {
         `${paint.path(file)} doesn't export command translations. Make its default export ${paint.bold('commandTranslations({ ... })')}.`,
     [SeedcordErrorCode.PluginI18nDiscordRejects]: (file: string, path: string, value: string, accepts: string) =>
         `${paint.path(file)} sets ${paint.sky(path)} to ${quoted(value)}, but Discord only accepts ${accepts}. Change the translation to fit.`,
+    [SeedcordErrorCode.PluginI18nMissingReference]: (place: string, reference: string) =>
+        `${paint.path(place)} uses ${paint.sky(reference)}, but that file doesn't define it. Define ${paint.sky(reference)} in this file too because a locale file can only use the terms and messages that it defines.`,
     [SeedcordErrorCode.PluginI18nBaseMissing]: (dir: string, baseFile: string) =>
         `${paint.path(dir)} doesn't have ${paint.path(baseFile)}, the file that lists every message. Add it, or set ${paint.bold('base')} to a locale that has a file.`,
 

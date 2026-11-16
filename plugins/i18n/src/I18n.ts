@@ -196,9 +196,9 @@ export class I18n extends Plugin {
         // a running bot doesn't need to load @fluent/syntax as only codegen needs it
         const { checkCatalog } = await import('./catalog/checkCatalog');
         const { messages, problems, untranslated } = checkCatalog(await this.localeFiles(), this.base, this.dir);
-        for (const { relativePath, keys } of untranslated) {
+        for (const { relativePath, missingKeys, fallback } of untranslated) {
             this.logger.info(
-                `${paint.path(relativePath)} doesn't have ${keys.map((key) => paint.sky(key)).join(', ')}. Users on that locale get the ${this.base} text.`
+                `${paint.path(relativePath)} doesn't have ${missingKeys.map((key) => paint.sky(key)).join(', ')}. Users on that locale get the ${paint.sky(fallback)} text.`
             );
         }
         throwSingleOrAggregate(problems, SeedcordErrorCode.CliProblems);

@@ -11,3 +11,5 @@ role = { $user } is { $role ->
    *[other] a member
 }
 ping-reply = Pong! { NUMBER($ms) }ms
+label =
+    .title = Label

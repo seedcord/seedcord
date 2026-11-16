@@ -265,6 +265,11 @@ export enum SeedcordErrorCode {
     PluginI18nNotTranslations = 2407,
     /** A translated command name, description, or choice name breaks one of Discord's rules for it. */
     PluginI18nDiscordRejects = 2408,
+    /**
+     * A locale's `.ftl` file uses a term like `{ -brand }`, or another message,
+     * without defining it in that file. A definition in another locale's file doesn't count.
+     */
+    PluginI18nMissingReference = 2409,
 
     /** Someone pressed Ctrl-C at a prompt in `seedcord` or `create-seedcord`. */
     CliCancelled = 3001,

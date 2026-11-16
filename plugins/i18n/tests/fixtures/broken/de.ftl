@@ -11,3 +11,5 @@ items = { $count ->
 ping = Ping
     .title = Ping
     .tooltip = extra
+welcome = Willkommen bei { -brand }
+-full = { -brand } Bot
