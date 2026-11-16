@@ -4,7 +4,7 @@ import type { DatabaseSync, SQLInputValue } from 'node:sqlite';
 // justified: node:sqlite throws its own error for a value it can't bind
 const asValues = (parameters: readonly unknown[]): SQLInputValue[] => parameters as SQLInputValue[];
 
-// node:sqlite reads a leading object as named parameters. Without this, a Date there shifts every value after it
+// without this, node:sqlite reads a Date in the first slot as named parameters and shifts the rest
 const NO_NAMED_PARAMETERS = {};
 
 /**

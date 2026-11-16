@@ -5,7 +5,7 @@ description: Connect a bot on your own server to SQLite, Postgres, MySQL, or ano
 
 [`@seedcord/plugin-kysely`](ref:plugin-kysely) opens your database connection and runs your migrations when the bot starts, then closes the connection when it stops. Your queries are plain [Kysely](https://kysely.dev/docs/intro) queries.
 
-You pick the database with a Kysely dialect. This tab uses SQLite through `better-sqlite3`. For another database you only change `dialect`, as in [the Postgres sample](#other-databases).
+You pick the database with a Kysely dialect. The Kysely pages use SQLite through `better-sqlite3`. For another database, install its driver and change `dialect`, as in [the Postgres sample](#other-databases). The migration and schema samples use SQLite column types, so adjust those too.
 
 <Shell add="@seedcord/plugin-kysely kysely better-sqlite3" />
 
@@ -36,13 +36,13 @@ export default seedcord;
 
 This sample builds a gateway bot. The same `attach` call works on an http `Seedcord` from `@seedcord/http` that runs on a server. On Cloudflare Workers it's a compile error because the plugin [needs a server](/plugins#a-plugin-declares-where-it-runs), and a cast that gets past it throws `CorePluginScopeMismatch`.
 
-You have to pass `path`, `dialect`, and `migrations`. A relative `path` or `migrations.path` resolves against `root`, and both folders have to be inside it, as [the folder rules](/plugins) describe. The `'bot.db'` path is different, since `better-sqlite3` opens it relative to the folder you start the bot from.
+You have to pass `path`, `dialect`, and `migrations`. A relative `path` or `migrations.path` resolves against `root`, and both folders have to be inside it, as [the folder rules](/plugins) describe. `'bot.db'` doesn't follow `root`. `better-sqlite3` opens it relative to the folder you start the bot from.
 
 ## Why `dialect` is a function
 
 `seedcord codegen` and `seedcord build` both import `bot.ts` to read your config, and neither one starts the bot. If you passed a dialect object, `new Database('bot.db')` would run on every import. Codegen would then create `bot.db` in whatever folder you ran it from, and an error in your database setup would fail codegen too.
 
-The plugin calls `dialect()` in `init()` when the bot starts. Codegen and build never call it.
+So the plugin calls `dialect()` only in `init()`, when the bot starts.
 
 ## The options
 
@@ -64,7 +64,7 @@ The [migrations](/plugins/kysely-migrations) page explains the keys under `migra
 
 Kysely ships dialects like Postgres, MySQL, and SQLite, and [its docs](https://kysely.dev/docs/dialects) list community dialects for other databases. Install the driver that your dialect needs in your project, then build the dialect inside `dialect`.
 
-For Postgres, you pass a `pg` pool, and you read its connection string from the environment. The sample reads `DATABASE_URL` through envapt, which throws if the variable is unset. [Env files and modes](/build/env) covers reading config that way.
+For Postgres, pass `PostgresDialect` a `pg` pool. The sample reads the connection string from `DATABASE_URL` through envapt, which throws if the variable is unset. [Env files and modes](/build/env) covers reading config that way.
 
 ```ts twoslash
 import { Kysely } from '@seedcord/plugin-kysely';
@@ -99,7 +99,7 @@ seedcord.attach('db', Kysely, {
 
 A Postgres setting like the session time zone only applies to the connection that ran it. Kysely calls `onCreateConnection` for every connection that the pool opens, and it waits for `set time zone 'UTC'` to finish before that connection's first query.
 
-If you'd rather not install a driver for SQLite, you can use Node's built-in `node:sqlite` through [`nodeSqlite`](ref:plugin-kysely/nodeSqlite). Kysely's `SqliteDialect` expects the API that `better-sqlite3` has, and `nodeSqlite` adapts a `DatabaseSync` to it.
+To use SQLite without installing a driver, wrap Node's built-in `node:sqlite` with [`nodeSqlite`](ref:plugin-kysely/nodeSqlite). Kysely's `SqliteDialect` expects the API that `better-sqlite3` has, and `nodeSqlite` adapts a `DatabaseSync` to it.
 
 ```ts twoslash
 import { Kysely, nodeSqlite } from '@seedcord/plugin-kysely';
@@ -129,7 +129,7 @@ If `dialect()` throws or that first connection fails, `init()` throws `PluginCon
 
 <Callout type="warning">
 
-The `path` folder and, unless you set `onStartup` to `false`, the migrations folder have to exist before the first start. If one is missing, `init()` throws `CorePathUnreadable` with the path. A built bot throws `CoreDirectoryNotBuilt` instead because `seedcord build` doesn't find a folder to bundle. An empty folder works in both. Git doesn't track an empty folder, so put a `.gitkeep` in it, which the plugin skips like every dotfile. With `onStartup: false`, `init()` never reads the migrations folder and the error appears on your first call to a migration method.
+Both `path` and the migrations folder have to exist before the first start. With `onStartup: false`, only `path` does. If one is missing, `init()` throws `CorePathUnreadable` with the path. A built bot throws `CoreDirectoryNotBuilt` instead because `seedcord build` doesn't find a folder to bundle. An empty folder works in both. Git doesn't track an empty folder, so put a `.gitkeep` in it, which the plugin skips like every dotfile. With `onStartup: false`, `init()` never reads the migrations folder and the error appears on your first call to a migration method.
 
 </Callout>
 

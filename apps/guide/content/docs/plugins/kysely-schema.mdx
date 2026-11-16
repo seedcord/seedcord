@@ -45,6 +45,8 @@ Most columns have one type whether you select, insert, or update them, like `use
 
 {/* prettier-ignore-end */}
 
+SQLite returns a timestamp as a `string`. On Postgres, `pg` returns a `Date`, so type `joined_at` as `ColumnType<Date, string | undefined, never>` there.
+
 ## Every table name compiles until you declare it
 
 With `KyselyDatabase` left empty, [`KyselySchema`](ref:plugin-kysely/KyselySchema) falls back to `Record<string, never>`. That widens [`KyselyTable`](ref:plugin-kysely/KyselyTable) to plain `string`.

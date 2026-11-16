@@ -11,9 +11,7 @@ export const KyselyTableMetadataKey = Symbol.for('seedcord:kysely:table');
 
 /**
  * Registers the service under `key`, which is also its table name unless `options.table` gives another.
- *
- * Associates a service class with a key for dependency injection.
- * The service becomes available via `core.db.services[key]`.
+ * Handlers read it from the plugin's `services[key]`.
  *
  * @typeParam TTable - The table that the service reads, defaulting to the key
  * @param key - Service key for registration and type-safe access

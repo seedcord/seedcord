@@ -8,7 +8,7 @@ import type { MongooseServiceConstructor } from './MongooseService';
 import type { MongooseDocument } from './types/MongooseDocument';
 import type { Logger } from '@seedcord/logger';
 
-// the models this plugin built because mongoose keeps one model registry for the whole process
+// mongoose keeps one model registry per process. This tracks the ones this plugin built
 export class MongooseModels {
     private readonly own = new Set<string>();
 
@@ -29,7 +29,7 @@ export class MongooseModels {
             });
         }
 
-        // tracked before the service is constructed because a throw there still has to leave the model reachable for cleanup
+        // tracked here because clear() has to delete it even when the service constructor throws
         if (!preexisting) this.own.add(model.modelName);
         return model;
     }

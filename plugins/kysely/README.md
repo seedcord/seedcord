@@ -37,6 +37,8 @@ Install the plugin, Kysely, and the driver for your database. For SQLite through
 pnpm add @seedcord/plugin-kysely kysely better-sqlite3
 ```
 
+To use Node's built-in `node:sqlite` without a driver, wrap a `DatabaseSync` with the plugin's `nodeSqlite()`.
+
 ## Usage
 
 Attach the plugin in `bot.ts`. Read it from `this.core` in a handler, under the key you pass:

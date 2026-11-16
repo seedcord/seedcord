@@ -96,7 +96,7 @@ export class Mongoose extends Plugin<{ transport: 'any'; runtime: 'server' }> {
         await this.disconnect();
     }
 
-    // the only type every service fits because a service on its own document type doesn't type-check against either service constructor type
+    // a service typed on its own document doesn't fit MongooseServiceConstructor, but every service fits Constructor<object>
     public override codegen(): Promise<{ services: Record<string, Constructor<object>> }> {
         return this.serviceRegistry.codegen();
     }

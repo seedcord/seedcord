@@ -8,7 +8,7 @@ import { nodeSqlite } from '#src/nodeSqlite';
 
 import type { Dialect } from 'kysely';
 
-// each call opens a fresh in-memory database, the same way init() calls dialect()
+// init() calls this on every start, and each call opens a fresh in-memory database
 export const memorySqlite = (): Dialect => new SqliteDialect({ database: new Database(':memory:') });
 
 export const memoryNodeSqlite = (): Dialect =>
