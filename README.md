@@ -73,7 +73,7 @@ export class Ping extends SlashHandler<'ping'> {
 - Middleware that runs around a handler
 - One `throw` that replies, logs, and reports
 - Pagination that still works after a restart
-- Replies and commands in each user's Discord language, from Fluent files
+- i18n support via Fluent files
 
 **Tooling**
 

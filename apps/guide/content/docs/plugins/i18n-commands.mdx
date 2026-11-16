@@ -174,7 +174,7 @@ export default commandTranslations({
 
 The plugin adds the translations every time seedcord reads your commands:
 
-- when a bot on a server starts and deploys its commands
+- when a bot starts and deploys its commands, which includes a Workers bot under `seedcord dev`
 - when you answer `y` to the **Refresh commands?** prompt in `seedcord dev`
 - in [`seedcord commands deploy`](/tooling/commands#deploy-your-commands) and `seedcord commands list`
 - in `seedcord build` for [Cloudflare Workers](/build/workers)
@@ -182,7 +182,7 @@ The plugin adds the translations every time seedcord reads your commands:
 
 A broken translation file stops each of these. Saving a translation file in `seedcord dev` shows the same refresh prompt as saving a command file.
 
-A Worker never deploys its own commands. To send new translations to Discord for a Worker, run `seedcord commands deploy` before you build.
+A deployed Worker never deploys its own commands. To send new translations to Discord for a Worker, run `seedcord commands deploy` before you build.
 
 A new translation changes the command in Discord, so the next deploy sends that command even if its file didn't change. seedcord only [skips a scope](/commands/deployed#seedcord-dev-skips-a-deploy-when-nothing-changed), like the global commands or one server's commands, when nothing in it changed.
 
@@ -215,8 +215,9 @@ src/locales/hi.ts sets slash.inventory.name to "मेरा सामान", b
 | --- | --- |
 | `PluginI18nNotALocale` | a code file in `dir` doesn't have a Discord locale code as its name |
 | `PluginI18nNotTranslations` | a translation file's default export isn't the result of `commandTranslations` |
-| `PluginI18nUnknownCommand` | a translation file has a command, option, subcommand, or choice that your commands don't |
+| `PluginI18nUnknownCommand` | a translation file has a command, option, subcommand, choice, or menu that your commands don't |
 | `PluginI18nDiscordRejects` | a translation breaks one of [Discord's naming rules](#what-discord-accepts) |
+| `PluginI18nCommandProblems` | the files have two or more of the problems above. Each one is in the error's `errors` |
 
 {/* prettier-ignore-end */}
 

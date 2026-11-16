@@ -244,7 +244,7 @@ describe('I18n', () => {
     });
 
     describe('codegen', () => {
-        it("types each message's and each attribute's variables, with the ones from messages it uses, merged across every locale", async () => {
+        it("types each key's variables, including those of the messages it uses, merged across locales", async () => {
             expect(await i18nAt('good').codegen()).toEqual({
                 messages: {
                     greeting: { user: 'text' },

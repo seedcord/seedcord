@@ -513,7 +513,7 @@ A user whose Discord language is Hindi gets the date in Hindi. `t.locale` is the
 | `CoreDirectoryNotListed` | `files` in `seedcord.config.ts` doesn't list `dir` |
 | `PluginI18nBaseMissing` | `dir` doesn't have a file for `base`. The message gives the file it looked for |
 | `PluginI18nSyntax` | Fluent can't parse a line in a `.ftl` file. The message gives the file and line |
-| `PluginI18nNotALocale` | a `.ftl` file or a [command translation file](/plugins/i18n-commands) doesn't have a Discord locale code as its name. The message suggests the codes that start the same way |
+| `PluginI18nNotALocale` | a `.ftl` file or a [command translation file](/plugins/i18n-commands) doesn't have a Discord locale code as its name. The message suggests the codes for the same language |
 | `PluginI18nNotInBase` | a translation has a message, a variable, or an attribute that the base file doesn't |
 | `PluginI18nMissingReference` | a `.ftl` file uses a term like `{ -brand }`, or another message, that the same file doesn't define |
 | `PluginI18nOutOfDate` | `t` got a key that the `.ftl` files no longer have. Run codegen, then fix the calls that TypeScript reports |
