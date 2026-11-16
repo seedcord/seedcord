@@ -32,7 +32,7 @@ export const seedcord = new Seedcord({
 export default seedcord;
 ```
 
-The plugin loads every task in `./tasks`. It starts them once the bot is ready, and stops them when the bot shuts down. Under `seedcord dev`, they don't start on their own. [Tasks in development](#tasks-in-development) shows how to run them.
+The plugin loads every task in `./tasks`. It starts them once the bot is ready, and stops them when the bot shuts down.
 
 [`Tasks`](ref:plugin-tasks/Tasks) works on a gateway bot and on an http bot that runs on a server. It needs a process that keeps running, so on an http bot for [Cloudflare Workers](/build/workers) the same `attach` call fails to compile.
 
@@ -68,7 +68,7 @@ export class Heartbeat extends Task {
 
 The pattern `'*/5 * * * *'` runs `Heartbeat` every five minutes. The class name becomes the task's _key_, which appears in its logs. A class without `@RegisterTask` isn't a task, and the plugin skips it.
 
-Under `seedcord dev`, `Heartbeat` doesn't run every five minutes. [Tasks in development](#tasks-in-development) explains why, and how to run it.
+Under `seedcord dev`, `Heartbeat` waits until you [run it yourself](#tasks-in-development).
 
 <Callout type="transport">
 

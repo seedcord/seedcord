@@ -23,8 +23,6 @@ import type { CoreBase } from '@seedcord/core';
 import type { HmrUpdateEvent } from '@seedcord/core/plugin';
 import type { JsonValue } from 'type-fest';
 
-const allOf = new Intl.ListFormat('en', { type: 'conjunction' });
-
 type DataOf<TTask> = TTask extends abstract new (context: TaskContext<infer TData>) => unknown ? TData : never;
 
 /**
@@ -108,33 +106,23 @@ export class Tasks extends Plugin<{ transport: 'any'; runtime: 'server' }> {
         await this.#scheduled.restore();
 
         const tasks = this.#registry.size;
+        const crons = this.#cronTasks.size;
         const jobs = this.#scheduled.size;
+        const held =
+            this.#heldInDev && crons + jobs > 0
+                ? `. seedcord dev holds them. Pass ${paint.bold('runInDev: true')} to the plugin to run them on their own`
+                : '';
         this.logger.info(
-            `loaded ${tasks} ${pluralize(tasks, 'task')}, ${this.#cronTasks.size} on a cron pattern, ${jobs} scheduled ${pluralize(jobs, 'job')}`
+            `loaded ${tasks} ${pluralize(tasks, 'task')}, ${crons} on a cron pattern, ${jobs} scheduled ${pluralize(jobs, 'job')}${held}`
         );
     }
 
     /**
-     * Starts the cron jobs and the timers for pending jobs once the bot has logged in. Under `seedcord dev`
-     * without `runInDev`, cron jobs start paused and pending jobs wait.
+     * Starts the cron jobs and the timers for pending jobs once the bot has logged in.
      */
     public override ready(): void {
         this.#cronTasks.start();
-        if (!this.#heldInDev) {
-            this.#scheduled.start();
-            return;
-        }
-
-        const held = [
-            [this.#cronTasks.size, 'cron job'],
-            [this.#scheduled.size, 'scheduled job']
-        ] as const;
-        const counts = held.filter(([count]) => count > 0).map(([count, noun]) => `${count} ${pluralize(count, noun)}`);
-        if (counts.length === 0) return;
-
-        this.logger.info(
-            `seedcord dev holds ${allOf.format(counts)}. Pass ${paint.bold('runInDev: true')} to the plugin to run them on their own`
-        );
+        if (!this.#heldInDev) this.#scheduled.start();
     }
 
     /** Stops every timer, aborts each run's `signal`, and waits for in-flight runs. The driver still holds pending jobs. */
@@ -153,8 +141,7 @@ export class Tasks extends Plugin<{ transport: 'any'; runtime: 'server' }> {
     /**
      * Stores a job that runs `Task` once, at the time `options` gives. If that time has passed, the job
      * runs right away, or in `ready()` if the bot hasn't logged in yet. Once the promise resolves, the
-     * driver holds the job, and it's still there after a restart. Under `seedcord dev` without `runInDev`,
-     * the job waits for a restart outside `seedcord dev`.
+     * driver holds the job, and it's still there after a restart. Under `seedcord dev`, it waits unless you set `runInDev`.
      *
      * If the process dies during a run, the job runs again after a restart. Write a task so a second
      * run of one job is safe.
@@ -209,8 +196,7 @@ export class Tasks extends Plugin<{ transport: 'any'; runtime: 'server' }> {
     }
 
     /**
-     * When a cron job runs next, or `null` while it's paused or waiting under `seedcord dev`, or once it doesn't
-     * have any runs left.
+     * When a cron job runs next, or `null` while it's paused or once it doesn't have any runs left.
      *
      * @throws A **SeedcordError** with `PluginTasksNotLoaded` when the plugin did not load `Task`.
      * @throws A **SeedcordTypeError** with `PluginTasksKeyTaken` when a different class loaded under `Task`'s key.

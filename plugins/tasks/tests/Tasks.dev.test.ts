@@ -17,7 +17,7 @@ const dev: TasksOptions = { path: path.resolve(import.meta.dirname, 'fixtures/de
 
 const ranTasks = (host: TestHost): string[] => [...new Set(host.runs.map((run) => run.task))].toSorted();
 
-// seedcord dev sets this channel, and nothing else does
+// only seedcord dev sets this channel
 const startDevChannel = (): void => {
     setDevChannel({ send: () => undefined, on: () => undefined, off: () => undefined });
 };
@@ -81,7 +81,9 @@ describe('Tasks under seedcord dev', () => {
         using logs = captureLogs();
         await using _booted = await start(dev, driver);
 
-        expect(logs.at('info')).toContainEqual(expect.stringContaining('holds 1 cron job and 1 scheduled job'));
+        expect(logs.at('info')).toContainEqual(
+            expect.stringContaining('1 on a cron pattern, 1 scheduled job. seedcord dev holds them')
+        );
     });
 
     it('runs every task outside seedcord dev, even in development mode', async () => {
