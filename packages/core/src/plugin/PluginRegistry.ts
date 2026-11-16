@@ -120,7 +120,7 @@ export class PluginRegistry {
         return [...this.claimed].map(([member, { key }]) => ({ key, member }));
     }
 
-    public readCommandFile(file: string): boolean {
+    public readsCommandFile(file: string): boolean {
         return this.list.some(({ instance }) => readsCommandFile(instance, file));
     }
 

@@ -1,3 +1,5 @@
+import { botFolder, matchesFileGlobs } from '@seedcord/utils/internal';
+
 import type { Kv } from '#src/kv/Kv';
 import type { ResolvedPluginLifecycleSpec } from './lifecycle';
 import type { DeclaredScope } from './options';
@@ -9,13 +11,11 @@ export const loggerSlot = Symbol('seedcord:plugin:logger');
 export const scopeSlot = Symbol('seedcord:plugin:scope');
 export const commandFilesSlot = Symbol('seedcord:plugin:command-files');
 
-export type CommandFileCheck = (file: string) => boolean;
-
 export interface PluginSlots {
     readonly [resolvedSpecSlot]: ResolvedPluginLifecycleSpec;
     readonly [loggerSlot]: Logger;
     readonly [scopeSlot]: DeclaredScope;
-    readonly [commandFilesSlot]: CommandFileCheck[];
+    readonly [commandFilesSlot]: string[];
 }
 
 interface Attaching {
@@ -55,5 +55,6 @@ export function declaredScopeOf(plugin: PluginSlots): DeclaredScope {
 }
 
 export function readsCommandFile(plugin: PluginSlots, file: string): boolean {
-    return plugin[commandFilesSlot].some((matches) => matches(file));
+    // botFolder resolves a relative pattern against root, the same as the CLI does for registerCriticalFiles
+    return matchesFileGlobs(file, plugin[commandFilesSlot], (pattern) => botFolder(pattern).path);
 }

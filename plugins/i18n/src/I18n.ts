@@ -4,7 +4,7 @@ import { Plugin } from '@seedcord/core/plugin';
 import { paint, SeedcordErrorCode } from '@seedcord/errors';
 import { SeedcordError, throwSingleOrAggregate } from '@seedcord/errors/internal';
 import { formatFilePath, importFiles, readFiles } from '@seedcord/utils';
-import { botFolder } from '@seedcord/utils/internal';
+import { botFolder, matchesFileGlobs } from '@seedcord/utils/internal';
 
 import { Catalogs } from './Catalogs';
 import { CommandLocalizer } from './CommandLocalizer';
@@ -152,7 +152,7 @@ export class I18n extends Plugin {
         this.dir = dir;
         this.base = base;
         this.resolveLocale = resolveLocale;
-        this.registerCommandFiles((file) => this.isTranslationFile(file));
+        this.registerCommandFiles(this.translationFileGlobs);
     }
 
     public async init(): Promise<void> {
@@ -173,7 +173,8 @@ export class I18n extends Plugin {
 
     public override async prepareCommands(commands: readonly RESTPostAPIApplicationCommandsJSONBody[]): Promise<void> {
         const problems: SeedcordError[] = [];
-        const translationFiles = importFiles(this.dir, { filter: ({ fullPath }) => this.isTranslationFile(fullPath) });
+        const globs = this.translationFileGlobs;
+        const translationFiles = importFiles(this.dir, { filter: ({ fullPath }) => matchesFileGlobs(fullPath, globs) });
         for await (const { fullPath, relativePath, imported } of translationFiles) {
             const locale = path.parse(fullPath).name;
             const translations = translationsIn(imported.default);
@@ -221,8 +222,8 @@ export class I18n extends Plugin {
         return this.isDirectlyInDir(file) && file.endsWith(FTL);
     }
 
-    private isTranslationFile(file: string): boolean {
-        return this.isDirectlyInDir(file) && botFolder(this.dir).holdsModule(file);
+    private get translationFileGlobs(): string[] {
+        return botFolder(this.dir).moduleGlobsInside();
     }
 
     private async localeFiles(): Promise<LocaleFile[]> {

@@ -129,9 +129,10 @@ describe('I18n', () => {
             const dir = path.join(FIXTURES, 'commands', 'good');
             const plugins = new TestHost().attach('i18n', I18n, { dir })[HostPlugins];
 
-            expect(plugins.readCommandFile(path.join(dir, 'pl.ts'))).toBe(true);
-            expect(plugins.readCommandFile(path.join(dir, 'pl.ftl'))).toBe(false);
-            expect(plugins.readCommandFile(path.join(dir, 'nested', 'pl.ts'))).toBe(false);
+            expect(plugins.readsCommandFile(path.join(dir, 'pl.ts'))).toBe(true);
+            expect(plugins.readsCommandFile(path.join(dir, 'pl.d.ts'))).toBe(false);
+            expect(plugins.readsCommandFile(path.join(dir, 'pl.ftl'))).toBe(false);
+            expect(plugins.readsCommandFile(path.join(dir, 'nested', 'pl.ts'))).toBe(false);
         });
     });
 

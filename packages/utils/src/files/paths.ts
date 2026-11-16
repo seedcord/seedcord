@@ -1,6 +1,8 @@
 import * as path from 'node:path';
 import { pathToFileURL } from 'node:url';
 
+import { partition } from 'es-toolkit';
+
 // import() needs a file url because node reads a raw windows path's drive letter as a url protocol
 export function fileUrl(file: string): string {
     return pathToFileURL(file).href;
@@ -18,6 +20,20 @@ export function toPosixPath(nativePath: string): string {
 
 export function posixRelative(from: string, to: string): string {
     return toPosixPath(path.relative(from, to));
+}
+
+// a file matches when an include pattern covers it and no ! pattern does, like an import.meta.glob list.
+// resolve turns a pattern into an absolute one
+export function matchesFileGlobs(
+    file: string,
+    patterns: readonly string[],
+    resolve: (pattern: string) => string = (pattern) => pattern
+): boolean {
+    const [excludes, includes] = partition(patterns, (pattern) => pattern.startsWith('!'));
+    // matchesGlob reads a windows separator as an escape
+    const matches = (pattern: string): boolean =>
+        path.posix.matchesGlob(toPosixPath(file), toPosixPath(resolve(pattern)));
+    return includes.some(matches) && !excludes.some((pattern) => matches(pattern.slice(1)));
 }
 
 const CODE_EXTENSION = /\.[mc]?[jt]sx?$/;

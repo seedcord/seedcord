@@ -6,7 +6,7 @@ import { SeedcordError } from '@seedcord/errors/internal';
 
 import { asError } from '#src/misc/asError';
 
-import { isInside, posixRelative } from './paths';
+import { isInside, posixRelative, toPosixPath } from './paths';
 
 // every path here is root-relative with a leading slash, like '/locales'. one beside a ./src root reads '/../logs'
 export interface BotLayoutData {
@@ -49,6 +49,13 @@ const GLOB_SYMBOLS = /[()[\]{}*?|]|[!+@](?=\()/g;
 // a key of '/' is base itself
 function globFolder(base: string, key: string): string {
     return (key === '/' ? base : `${base}${key}`).replaceAll(GLOB_SYMBOLS, String.raw`\$&`);
+}
+
+function moduleGlobsIn(folder: string): string[] {
+    return [
+        ...MODULE_EXTENSIONS.map((extension) => `${folder}/*${extension}`),
+        ...DECLARATION_EXTENSIONS.map((extension) => `!${folder}/*${extension}`)
+    ];
 }
 
 function endsWithAny(file: string, extensions: string[]): boolean {
@@ -208,12 +215,13 @@ export class BotLayout {
 
     // base is the folder import.meta.glob resolves the patterns against, relative to root
     public moduleGlobs(base = '.'): string[] {
-        const folder = globFolder(base, '/');
-        return [
-            ...MODULE_EXTENSIONS.map((extension) => `${folder}/**/*${extension}`),
-            ...DECLARATION_EXTENSIONS.map((extension) => `!${folder}/**/*${extension}`),
-            ...this.globExcludes(base)
-        ];
+        return [...moduleGlobsIn(`${globFolder(base, '/')}/**`), ...this.globExcludes(base)];
+    }
+
+    // absolute, and only the modules right inside folder
+    public moduleGlobsInside(folder: string): string[] {
+        const root = toPosixPath(this.root);
+        return [...moduleGlobsIn(globFolder(root, this.keyOf(folder))), ...this.globExcludes(root)];
     }
 
     public listedFileGlobs(base = '.'): string[] {
@@ -280,5 +288,9 @@ export class BotFolder {
     // a skipped file counts as outside the folder
     public holds(file: string): boolean {
         return isInside(this.path, file) && !this.layout.isSkipped(file);
+    }
+
+    public moduleGlobsInside(): string[] {
+        return this.layout.moduleGlobsInside(this.path);
     }
 }

@@ -25,7 +25,7 @@ import type {
     TransportAssert
 } from './options';
 import type { DispatchMemberFunctions } from './PluginRegistry';
-import type { CommandFileCheck, PluginSlots } from './pluginSlots';
+import type { PluginSlots } from './pluginSlots';
 import type { FrameworkChannel, HmrAware, HmrUpdateEvent } from '@seedcord/types';
 import type { RESTPostAPIApplicationCommandsJSONBody } from 'discord-api-types/v10';
 import type { Constructor, Promisable } from 'type-fest';
@@ -92,7 +92,7 @@ export abstract class Plugin<
     /** @internal */
     readonly [scopeSlot]: DeclaredScope;
     /** @internal */
-    readonly [commandFilesSlot]: CommandFileCheck[] = [];
+    readonly [commandFilesSlot]: string[] = [];
 
     /** Logs under the plugin's class name, on the channel its attach key sets. */
     protected readonly logger: Logger;
@@ -229,13 +229,13 @@ export abstract class Plugin<
     }
 
     /**
-     * Tells `seedcord dev` which files your `prepareCommands` reads. This way you can trigger
-     * the command redeploy prompt when one of them changes.
-     *
-     * @param matches - Gets a saved file's full path. Return `true` if your `prepareCommands` reads it.
+     * Tells `seedcord dev` which files your `prepareCommands` reads. Saving one of them in `seedcord dev`
+     * shows the command refresh prompt.
+     * @param patterns - Glob patterns. A relative one resolves against `root` from `seedcord.config.ts`.
+     * If a pattern starts with `!`, saving a file that it matches doesn't show the prompt.
      */
-    protected registerCommandFiles(matches: CommandFileCheck): void {
-        this[commandFilesSlot].push(matches);
+    protected registerCommandFiles(patterns: string[]): void {
+        this[commandFilesSlot].push(...patterns);
     }
 }
 
