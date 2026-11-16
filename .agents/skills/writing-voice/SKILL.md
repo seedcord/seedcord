@@ -39,7 +39,7 @@ Read the block as a whole. A person writes unevenly: some sentences end in four 
 
 ## 4. Say what is
 
-Write what the thing does or what's true, and give the condition in place of a selling point. "On a 429 the client waits `Retry-After` seconds" beats "retries without any manual wiring". Negation is normal English, so negate the verb: "doesn't write a log file". A sentence that repeats the one before it in reverse gets deleted.
+Write what the thing does or what's true, and give the condition in place of a selling point. "On a 429 the client waits `Retry-After` seconds" beats "retries without any manual wiring". Negation is normal English, so negate the verb: "doesn't write a log file". When one plain word already covers it, use the word: "unlisted workspaces" beats "workspaces that aren't listed". A sentence that repeats the one before it in reverse gets deleted.
 
 ## 5. The rewrite test
 

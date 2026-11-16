@@ -117,7 +117,7 @@ export class FolderExports<TUnit> {
         const lastGood = new Map(
             files.map((file) => [
                 file,
-                // what we roll back to if the new version throws. we skip the deleted file's stuff, since the barrel can't import it anymore anyway
+                // what we roll back to if the new version throws. we skip the deleted file's stuff since the barrel can't import it anymore anyway
                 this.#unload(file).held.filter((unit) => !deleted.has(unit))
             ])
         );
@@ -137,7 +137,7 @@ export class FolderExports<TUnit> {
         this.#report(type === 'create' ? 'Registered' : 'Reloaded', names, touched, Date.now() - startedAt);
     }
 
-    // one line per save, since one edit can reload every module that imports the file
+    // one line per save since one edit can reload every module that imports the file
     #report(verb: string, names: string[], files: string[], elapsedMs?: number): void {
         if (names.length === 0) return;
 
@@ -190,7 +190,7 @@ export class FolderExports<TUnit> {
         return (await import(/* @vite-ignore */ url)) as Record<string, unknown>;
     }
 
-    // returns what it called register for, leaving out units another file already holds
+    // returns what it called register for, which excludes units another file already holds
     #register(file: string, units: TUnit[]): TUnit[] {
         const registered: TUnit[] = [];
         try {

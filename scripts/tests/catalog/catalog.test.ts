@@ -56,7 +56,7 @@ describe('DependencyIndex', () => {
         ]);
     });
 
-    it('returns nothing for a dep no package lists', () => {
+    it('returns an empty list for a dep no package lists', () => {
         expect(index.refsFor('left-pad')).toEqual([]);
     });
 

@@ -15,7 +15,7 @@ export interface BotLayoutData {
     readonly listed: readonly string[];
     // outDir and the logs folder
     readonly skippedFolders: readonly string[];
-    // seedcord.config.ts. a script without a config has none
+    // seedcord.config.ts. a script without a config doesn't have one
     readonly configFile?: string | undefined;
 }
 
@@ -249,7 +249,7 @@ export class BotLayout {
         return this.configDir() ?? this.root;
     }
 
-    // import.meta.glob already leaves out dotfiles, dot-folders and node_modules
+    // import.meta.glob already skips dotfiles, dot-folders and node_modules
     private globExcludes(base: string): string[] {
         const folders = this.data.skippedFolders.map((key) => `!${globFolder(base, key)}/**`);
         const configDir = this.configDir();

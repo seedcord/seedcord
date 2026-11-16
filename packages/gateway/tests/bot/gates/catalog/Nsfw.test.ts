@@ -26,7 +26,7 @@ describe('Nsfw', () => {
         await expect(Nsfw().check(nsfwCtx({ isThread: () => true, parent: { nsfw: true } }))).resolves.toBeUndefined();
     });
 
-    it('refuses with no channel', async () => {
+    it('refuses without a channel', async () => {
         await expect(Nsfw().check(nsfwCtx(null))).rejects.toBeInstanceOf(NotNsfw);
     });
 

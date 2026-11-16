@@ -33,7 +33,7 @@ afterEach(() => {
 });
 
 describe('GuideSearch', () => {
-    it('opens nothing on Enter while the rows on screen answer the previous question', async () => {
+    it('ignores Enter while the rows on screen answer the previous question', async () => {
         serving();
         const push = vi.fn();
         const unused = (): void => undefined;

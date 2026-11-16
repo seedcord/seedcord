@@ -57,7 +57,7 @@ export class MongooseServiceRegistry {
         for (const key of Object.keys(this.services)) Reflect.deleteProperty(this.services, key);
     }
 
-    // only this plugin's own models, since the mongoose registry is global to the process
+    // only this plugin's own models since the mongoose registry is global to the process
     public clearModels(): void {
         if (this.ownModels.size === 0) return;
 
@@ -90,7 +90,7 @@ export class MongooseServiceRegistry {
     }
 
     private initializeService(Service: MongooseServiceConstructor): void {
-        // isServiceClass has already checked ServiceMetadataKey exists, since the decorator writes both keys together
+        // isServiceClass has already checked ServiceMetadataKey exists since the decorator writes both keys together
         const modelName = Reflect.getMetadata(ModelNameMetadataKey, Service) as string;
 
         // mongoose returns an existing model when the schema matches. That one is not this plugin's to delete

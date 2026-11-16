@@ -35,7 +35,7 @@ describe('DirectoryBucket', () => {
         await expect(bucket.folders('builds/')).resolves.toEqual(['builds/b/']);
     });
 
-    it('lists nothing before the first upload', async () => {
+    it('returns an empty list before the first upload', async () => {
         const { root } = await scratch();
         await expect(new DirectoryBucket(root).folders('builds/')).resolves.toEqual([]);
     });

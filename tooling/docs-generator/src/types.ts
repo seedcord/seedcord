@@ -36,7 +36,7 @@ export interface SourceEntry {
     file: string;
     line: number;
     column: number;
-    /** GitHub blob URL with the `#L<line>C<column>` anchor, absent when no repo base was supplied. */
+    /** GitHub blob URL with the `#L<line>C<column>` anchor, absent when the caller doesn't pass a repo base. */
     url?: string;
 }
 

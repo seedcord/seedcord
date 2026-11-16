@@ -31,7 +31,7 @@ interface Walk {
     collector: Collector;
 }
 
-// discord keeps component ids in 32 bits. its crawler shows nothing for -1 or 2147483648
+// discord keeps component ids in 32 bits. its crawler skips the preview for -1 or 2147483648
 const MAX_ID = 2_147_483_647;
 
 /**

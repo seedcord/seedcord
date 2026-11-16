@@ -16,7 +16,7 @@ describe('readPublished', () => {
         ]);
     });
 
-    it('reads the json from a file, which wins over the inline flag', async () => {
+    it('reads the json from the file and ignores the inline flag', async () => {
         await using dir = await mkdtempDisposable(path.join(tmpdir(), 'published-'));
         const file = path.join(dir.path, 'published.json');
         await writeFile(file, CORE);

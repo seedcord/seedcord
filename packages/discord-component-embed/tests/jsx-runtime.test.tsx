@@ -62,7 +62,7 @@ describe('jsx-runtime', () => {
         ]);
     });
 
-    it('keeps a key out of your component props, before or after a spread', () => {
+    it('keeps a key out of your component props before or after a spread', () => {
         const received: unknown[] = [];
         function Title(props: { text: string }): EmbedElement {
             received.push(props);

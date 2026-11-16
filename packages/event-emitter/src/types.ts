@@ -1,4 +1,4 @@
-/** Event map without events, the default for an emitter that emits nothing. */
+/** An empty event map, the default for an emitter that never emits. */
 export type NoEvents = Record<never, readonly unknown[]>;
 
 /**

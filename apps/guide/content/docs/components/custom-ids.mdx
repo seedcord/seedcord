@@ -7,7 +7,7 @@ Discord hands a component's `custom_id` back when someone clicks a button, picks
 
 Written by hand, that's a string like `ticket:184580573574955008:close:true` that you build in one file and split apart in another. Every value comes back as text, so turning `'true'` back into a boolean is your job too. The two sides use the same order only because you kept them matching by hand. Add a field to one side and the other reads the wrong piece, without an error until someone clicks.
 
-[`CustomId`](ref:custom-id/CustomId) declares what the string holds, once. The component that encodes it and the handler that decodes it both read that one declaration, so a field you add reaches both sides. The `AppealId` on the button from [building components](/components) is one of these.
+[`CustomId`](ref:custom-id/CustomId) declares what the string holds once. The component that encodes it and the handler that decodes it both read that one declaration, so a field you add reaches both sides. The `AppealId` on the button from [building components](/components) is one of these.
 
 ```ts twoslash hovers title="src/components/TicketActions.ts"
 import { CustomId } from '@seedcord/gateway';
@@ -38,7 +38,7 @@ export const TicketAction = new CustomId('ticket')
 
 <Callout type="warning">
 
-Each method returns a new `CustomId` and leaves the original untouched. A call whose result you don't keep adds nothing, which is why every declaration on this page is one chain.
+Each method returns a new `CustomId` and leaves the original untouched. A call whose result you don't keep does nothing, which is why every declaration on this page is one chain.
 
 ```ts plain
 const Broken = new CustomId('ticket');
@@ -97,7 +97,7 @@ TicketAction.encode({ ownerId: '123', action: '
 //                                             ^|
 ```
 
-`'archive'` below isn't one of the choices, so the build stops, and leaving out a field like `notify` stops it too.
+`'archive'` below isn't one of the choices, so the build stops, and a missing field like `notify` stops it too.
 
 ```ts twoslash
 // @errors: 2322
@@ -180,7 +180,7 @@ const { roleId } = Board.decode('...');
 //      ^?
 ```
 
-When the caller leaves the role out, pass `roleId: null` to `encode`. Each button then decodes `roleId` as `null`, which your handler reads as no filter.
+When the caller doesn't pick a role, pass `roleId: null` to `encode`. Each button then decodes `roleId` as `null`, which your handler reads as no filter.
 
 <Callout type="warning">
 
@@ -281,7 +281,7 @@ export const seedcord = new Seedcord({
 });
 ```
 
-A click whose prefix `Poll` owns never reaches a handler. The list takes `CustomId` values. A raw string fails to compile, since seedcord matches each entry by calling `owns`.
+A click whose prefix `Poll` owns never reaches a handler. The list takes `CustomId` values. A raw string fails to compile since seedcord matches each entry by calling `owns`.
 
 <Callout type="transport" only="gateway">
     An http bot does not read `ignoreCustomIds`. Discord posts every

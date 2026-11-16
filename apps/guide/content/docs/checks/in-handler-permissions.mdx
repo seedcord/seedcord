@@ -3,7 +3,7 @@ title: Permissions in a handler
 description: Check permissions inside a handler with assertPermissions() and the gateway helpers, for a member, a role, or your own bot.
 ---
 
-A permission gate checks the caller and your bot before `execute()` starts. `/ban @someone` needs the target checked too. You get the target from the options inside `execute()`, after every gate has run. By hand, that check means comparing bitfields and writing a refusal message that lists what's missing.
+A permission gate checks the caller and your bot before `execute()` starts. `/ban @someone` needs the target checked too. You get the target from the options inside `execute()` after every gate has run. By hand, that check means comparing bitfields and writing a refusal message that lists what's missing.
 
 The helpers on this page do that comparison inside your handler and throw the same refusal card a gate would. [`assertPermissions`](ref:core/assertPermissions) runs on both transports. [`checkPermissions`](ref:gateway/checkPermissions) and [`checkBotPermissions`](ref:gateway/checkBotPermissions) take discord.js objects, so they are gateway only.
 
@@ -67,7 +67,7 @@ If the notified member can't see the channel, the default refusal card starts wi
 
 The card shows `subject` exactly as you pass it. To show a mention there, pass `<@id>` for a member or `<@&id>` for a role.
 
-`getMember` can return `null` even for a required user option. It reads the member from the interaction Discord sends. Discord leaves the member out in two cases.
+`getMember` can return `null` even for a required user option. It reads the member from the interaction Discord sends. Discord doesn't send the member in two cases.
 
 - The command ran in a direct message.
 - The chosen user isn't a member of the server.

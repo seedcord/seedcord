@@ -13,7 +13,7 @@ function stubShutdown(): { shutdown: CoordinatedShutdown; addTask: ReturnType<ty
 }
 
 describe('HealthCheck.fromOption', () => {
-    it('false returns undefined and registers nothing', () => {
+    it('false returns undefined and skips the health check', () => {
         const { shutdown, addTask } = stubShutdown();
 
         expect(HealthCheck.fromOption(shutdown, false)).toBeUndefined();

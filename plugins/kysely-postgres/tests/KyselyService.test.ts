@@ -24,7 +24,7 @@ describe('KyselyService constructor guards', () => {
         );
     });
 
-    it('throws when the key is registered with no table', () => {
+    it('throws when the key is registered without a table', () => {
         expect(() => new MissingTable(kysely, core)).toThrow(
             expect.objectContaining({ code: SeedcordErrorCode.PluginKyselyServiceTableMissing })
         );

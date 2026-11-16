@@ -1,6 +1,6 @@
 import { BRAND_COLORS } from '@seedcord/brand';
 
-// the light theme takes the darker value of each pair, since it renders on cream
+// the light theme takes the darker value of each pair since it renders on cream
 const HUES = {
     ground: { dark: BRAND_COLORS.seedDark, light: BRAND_COLORS.pith },
     text: { dark: '#f4f0df', light: '#3a4233' },

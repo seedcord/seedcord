@@ -1,5 +1,4 @@
 import { BaseReplySender } from '@seedcord/core';
-import { deferFlags, sendFlags } from '@seedcord/core/internal';
 import { SeedcordErrorCode } from '@seedcord/errors';
 import { SeedcordError } from '@seedcord/errors/internal';
 import { MessageFlags } from 'discord.js';
@@ -8,7 +7,7 @@ import type { GatewayFile, GatewayReplyResponse } from '#interfaces/ReplyRespons
 import type { Repliables } from '#src/handlers/interactionTypes';
 import type { Bus, DispatchContext } from '@seedcord/core';
 import type { AckState } from '@seedcord/core/internal';
-import type { DeferOpts, ReplyFile, SendOpts } from '@seedcord/types';
+import type { ReplyFile } from '@seedcord/types';
 import type {
     APIModalInteractionResponseCallbackData,
     InteractionCallbackResponse,
@@ -40,13 +39,18 @@ function toDjsFile(file: ReplyFile | GatewayFile): GatewayFile {
     };
 }
 
-// seed the state once because djs flips `replied` on editReply, and deriving it per call would break repeated
-// update() and post-edit send() parity
-function seedState(interaction: Repliables): AckState {
-    if (interaction.deferred && interaction.ephemeral === null) return 'deferred-update';
-    if (interaction.replied) return 'replied';
-    if (interaction.deferred) return 'deferred-reply';
+// seed the state once because djs flips `replied` on editReply, and deriving it per call would break repeated update()
+function seedState({ deferred, replied, ephemeral }: Repliables): AckState {
+    // djs leaves ephemeral null after a deferUpdate
+    if (deferred && ephemeral === null) return 'deferred-update';
+    if (replied) return 'replied';
+    if (deferred) return 'deferred-reply';
     return 'unacked';
+}
+
+// an earlier deferReply sets the default the same way BaseReplySender.defer() does
+function seedEphemeral({ deferred, ephemeral }: Repliables, configured: boolean): boolean {
+    return deferred && ephemeral !== null ? ephemeral : configured;
 }
 
 /** Writes interaction responses through discord.js. The repliable handler bases and the dispatcher construct it. */
@@ -54,24 +58,26 @@ export class ReplySender extends BaseReplySender<SentMessage, GatewayFile> {
     public constructor(
         private readonly interaction: Repliables,
         dispatch: DispatchContext,
-        bus: Bus
+        bus: Bus,
+        isEphemeralByDefault: boolean
     ) {
-        super({ bus, dispatch, interactionId: interaction.id }, seedState(interaction));
+        super(
+            { bus, dispatch, interactionId: interaction.id },
+            seedEphemeral(interaction, isEphemeralByDefault),
+            seedState(interaction)
+        );
     }
 
     protected async writeReply(
         response: GatewayReplyResponse | string,
-        opts?: SendOpts
+        flags: number
     ): Promise<SentMessage | undefined> {
-        const result = await this.interaction.reply({
-            ...this.replyOptions(response, sendFlags(opts)),
-            withResponse: true
-        });
+        const result = await this.interaction.reply({ ...this.replyOptions(response, flags), withResponse: true });
         return this.createdMessage(result);
     }
 
-    protected async writeDefer(opts?: DeferOpts): Promise<void> {
-        await this.interaction.deferReply({ flags: deferFlags(opts) });
+    protected async writeDefer(flags: number): Promise<void> {
+        await this.interaction.deferReply({ flags });
     }
 
     protected async writeDeferUpdate(): Promise<void> {
@@ -84,8 +90,8 @@ export class ReplySender extends BaseReplySender<SentMessage, GatewayFile> {
         return this.createdMessage(result);
     }
 
-    protected async writeFollowUp(response: GatewayReplyResponse | string, opts?: SendOpts): Promise<SentMessage> {
-        return await this.interaction.followUp(this.replyOptions(response, sendFlags(opts)));
+    protected async writeFollowUp(response: GatewayReplyResponse | string, flags: number): Promise<SentMessage> {
+        return await this.interaction.followUp(this.replyOptions(response, flags));
     }
 
     protected async writeEditOriginal(response: GatewayReplyResponse | string): Promise<SentMessage> {

@@ -18,7 +18,7 @@ describe('class members', () => {
         expect(memberNames(await topLevel('InlineConstraintBase'))).toEqual(['stored']);
     });
 
-    it('keeps a real inherited member and leaves out the keys of an inline type argument', async () => {
+    it("keeps a real inherited member and doesn't include the keys of an inline type argument", async () => {
         expect(memberNames(await topLevel('InlineConstraintChild'))).toEqual(['ownProp', 'stored']);
     });
 
@@ -28,7 +28,7 @@ describe('class members', () => {
         expect(node.children[0]?.headerText).toContain('TypeM');
     });
 
-    it('leaves out the call, method, and construct signatures a constraint carries', async () => {
+    it("doesn't include the call, method, and construct signatures a constraint has", async () => {
         expect(memberNames(await topLevel('InlineConstraintCallable'))).toEqual(['held']);
     });
 
@@ -44,7 +44,7 @@ describe('class members', () => {
         ]);
     });
 
-    it('leaves async off an interface method', async () => {
+    it("doesn't write async on an interface method", async () => {
         const mockInterface = await topLevel('MockInterface');
         const method = mockInterface.children.find((child) => child.name === 'loadAll');
         expect(method?.flags.isAsync).toBe(false);

@@ -188,7 +188,7 @@ describe('buildUnionInputs', () => {
         expect(inputs.find((input) => input.folder === 'utils')?.workspace).toBe('packages');
     });
 
-    it('carries the emitted workspace through to the rebuilt index', () => {
+    it('passes the emitted workspace through to the rebuilt index', () => {
         const inputs = buildUnionInputs(null, [
             emit('mongoose', '0.1.0', { fullName: '@seedcord/plugin-mongoose', workspace: 'plugins' })
         ]);

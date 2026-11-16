@@ -65,7 +65,7 @@ describe("checkTarget reading a page's HTML", () => {
     });
 
     // on discord's crawler a <link> without a type never had its JSON fetched
-    it('fails a <link> with no type', async () => {
+    it('fails a <link> without a type', async () => {
         const html = page(`<link rel="discord:component-embed" href="https://embeds.example.com/post.json">`);
 
         expect(

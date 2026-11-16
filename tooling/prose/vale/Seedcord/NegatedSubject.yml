@@ -1,6 +1,6 @@
 extends: existence
 link: https://github.com/seedcord/seedcord/blob/next/.agents/skills/writing-voice/SKILL.md
-message: "Negated noun '%s'. If negating the verb keeps the meaning, write that, like 'so a committed file doesn't contain them'."
+message: "Negated noun '%s'. Rebuild the clause around something that's there. Keep 'no' when moving it changes the meaning."
 # a suggestion only. "when no row matches" and "when a row doesn't match" mean different things
 level: suggestion
 ignorecase: true

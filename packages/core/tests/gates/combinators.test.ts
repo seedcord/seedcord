@@ -264,12 +264,12 @@ describe('or', () => {
 });
 
 describe('combinator typing on the scalar base', () => {
-    it('rejects or() with no gates at compile time', () => {
+    it('rejects or() without gates at compile time', () => {
         // @ts-expect-error or requires at least two gates
         or();
     });
 
-    it('rejects and() with no gates at compile time', () => {
+    it('rejects and() without gates at compile time', () => {
         // @ts-expect-error and requires at least two gates
         and();
     });
@@ -290,7 +290,7 @@ describe('combinator typing on the scalar base', () => {
         or(AgnosticGate, AgnosticGate, { fail }, { fail });
     });
 
-    it('rejects an options object with no gates', () => {
+    it('rejects an options object without gates', () => {
         const fail = new TestNotice('x');
         // @ts-expect-error or requires at least two gates before the options
         or({ fail });

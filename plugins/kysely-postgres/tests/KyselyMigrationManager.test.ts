@@ -45,7 +45,7 @@ describe('KyselyMigrationManager', () => {
     });
 
     async function initializedPlugin(migrations: KyselyMigrationsOptions): Promise<KyselyPostgres> {
-        // the plugin reads nothing off core, this only satisfies the constructor
+        // the plugin never reads core. this only satisfies the constructor
         const core = { config: {} } as unknown as CoreBase;
         const plugin = new KyselyPostgres(core, {
             connectionString: 'postgres://localhost:5432/test',
@@ -87,7 +87,7 @@ describe('KyselyMigrationManager', () => {
         await expect(listedNames({ dir: './migrations' })).resolves.toEqual(['001-create-users']);
     });
 
-    it('lists nothing for an empty dir', async () => {
+    it('returns an empty list for an empty dir', async () => {
         await testEnv.createFile('migrations/.keep', '');
 
         await expect(listedNames({ dir: './migrations' })).resolves.toEqual([]);

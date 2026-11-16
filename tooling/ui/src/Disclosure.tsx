@@ -46,7 +46,7 @@ function useDisclosureContext(componentName: string): DisclosureContextValue {
 
 /**
  * Reads the surrounding `Disclosure`'s state. Put `panelId` on your own panel element when you
- * render one in place of `DisclosurePanel`, since `DisclosureTrigger` points `aria-controls` at it.
+ * render one in place of `DisclosurePanel` since `DisclosureTrigger` points `aria-controls` at it.
  */
 export function useDisclosure(): DisclosureContextValue {
     return useDisclosureContext('useDisclosure');

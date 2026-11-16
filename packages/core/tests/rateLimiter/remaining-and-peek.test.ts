@@ -23,11 +23,11 @@ describe('KvRateLimiter remaining semantics', () => {
 
         // a fresh key shows the slot as still available because peek is advisory
         expect(await limiter.peek('user', window)).toMatchObject({ remaining: 1 });
-        // consuming the slot leaves none because charge is exact
+        // consuming the slot leaves 0 because charge is exact
         expect(await limiter.charge('user', window)).toMatchObject({ remaining: 0 });
     });
 
-    it('keeps peek remaining constant across repeated peeks and records nothing', async () => {
+    it('keeps peek remaining constant across repeated peeks because peek only reads', async () => {
         const limiter = memoryRateLimiter();
         const window = { windowMs: 1000, limit: 3 };
 

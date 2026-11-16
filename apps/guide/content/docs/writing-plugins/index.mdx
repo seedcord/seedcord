@@ -168,9 +168,9 @@ export class GreetCommand extends SlashHandler<'greet'> {
 
 seedcord runs every plugin's `dispatchMembers` functions at the same time, and the handler waits until they've all returned or one has thrown. They run before middleware and gates, even for an interaction that a gate then refuses. So a slow function spends part of the [three seconds](/replying) that Discord gives a bot to answer an interaction. They also run for [autocomplete](/commands/autocomplete), which Discord sends as the user types. If only a few handlers need a value, give your plugin a method and call it through `this.core` in those handlers.
 
-If a function throws, seedcord skips the middleware and handlers for that interaction or event, and logs and publishes the error with the code `CorePluginMemberThrew`. seedcord answers a command, a component, a context menu or a modal with the built-in [`Fault`](ref:core/Fault) card. It skips your bot's `defaultError` here, because a card of your own might read the value that just failed. An autocomplete gets an empty list of choices. An event isn't answered at all.
+If a function throws, seedcord skips the middleware and handlers for that interaction or event, and logs and publishes the error with the code `CorePluginMemberThrew`. seedcord answers a command, a component, a context menu or a modal with the built-in [`Fault`](ref:core/Fault) card. It skips your bot's `defaultError` here because a card of your own might read the value that just failed. An autocomplete gets an empty list of choices. An event isn't answered at all.
 
-`attach()` throws `CorePluginMemberReserved` if one of your `dispatchMembers` keys is a name that seedcord uses, like `reply`, `user` or `logger`. It throws `CoreDuplicateName` if another plugin already uses the key. If you attach a plugin that has `dispatchMembers` twice, `attach()` throws `CorePluginAttachedTwice`, because both copies add the same keys. A handler or middleware can't use your keys either. If one defines a method or getter with one of them, startup stops with `CoreDuplicateName`. If it sets a field with one, every dispatch to it fails with that code, since the field would replace your value.
+`attach()` throws `CorePluginMemberReserved` if one of your `dispatchMembers` keys is a name that seedcord uses, like `reply`, `user` or `logger`. It throws `CoreDuplicateName` if another plugin already uses the key. If you attach a plugin that has `dispatchMembers` twice, `attach()` throws `CorePluginAttachedTwice` because both copies add the same keys. A handler or middleware can't use your keys either. If one defines a method or getter with one of them, startup stops with `CoreDuplicateName`. If it sets a field with one, every dispatch to it fails with that code since the field would replace your value.
 
 <Callout type="transport">
 
@@ -230,7 +230,7 @@ Each transport exports its own `Plugin` class. A transport is how the bot talks 
 
 The base also sets which bots can attach the plugin. One on the gateway base attaches only to gateway bots, one on the http base only to http bots, and one on `@seedcord/core/plugin` to bots on either transport. The gateway base also runs only on a server, while the http base and `@seedcord/core/plugin` run on Workers too. [Where it runs](/writing-plugins/runtimes) covers how a plugin narrows that.
 
-When you publish a plugin, extend `@seedcord/core/plugin` unless your plugin needs `bot`, `startup`, or `shutdown`, so that bots on both transports can attach it. If you write a plugin only for your own bot, extend your bot's transport base or `@seedcord/core/plugin`.
+When you publish a plugin, extend `@seedcord/core/plugin` unless your plugin needs `bot`, `startup`, or `shutdown` so that bots on both transports can attach it. If you write a plugin only for your own bot, extend your bot's transport base or `@seedcord/core/plugin`.
 
 ## What the constructor takes
 
@@ -269,7 +269,7 @@ The constructor runs whenever something loads `bot.ts`. [`seedcord codegen`](/to
 
 ### Rejecting bad options
 
-Catch a bad option, like an empty label, while the bot starts, before anything connects. Call [`rejectOptions`](ref:core/Plugin.rejectOptions) from the constructor to stop the bot at the `attach` call.
+Catch a bad option, like an empty label, while the bot starts before anything connects. Call [`rejectOptions`](ref:core/Plugin.rejectOptions) from the constructor to stop the bot at the `attach` call.
 
 ```ts twoslash
 import { Plugin } from '@seedcord/gateway';
@@ -333,7 +333,7 @@ export class Reminders extends Plugin {
 }
 ```
 
-`add` saves a job before it schedules it, so a crash between the two still leaves the job for `ready()` to find after a restart. The restore runs in `ready()`, after the bot has started. If a job is already due by then, a real `schedule()` sends its message right away.
+`add` saves a job before it schedules it, so a crash between the two still leaves the job for `ready()` to find after a restart. The restore runs in `ready()` after the bot has started. If a job is already due by then, a real `schedule()` sends its message right away.
 
 Handlers can call `add()` while `ready()` is still restoring, so the same id can reach `schedule()` twice. Make `schedule()` replace any timer it already holds for that id. A large collection can also take longer to restore than the 15 seconds `ready()` gets by default, and some drivers can't list their records at all. [Drivers](/built-ins/drivers) lists which ones.
 

@@ -37,7 +37,7 @@ describe('gitPlanFrom', () => {
         expect(plan.notice).toBeNull();
     });
 
-    it('keeps the git name even when init is off, since the config reads it', () => {
+    it('keeps the git name even when init is off since the config reads it', () => {
         const plan = gitPlanFrom(PRESENT, false);
 
         expect(plan.developerUsername).toBe('dhruv');

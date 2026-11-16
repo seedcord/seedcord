@@ -59,7 +59,7 @@ export function edgeViteConfig(layout: BotLayout, viteRoot: string): InlineConfi
         customLogger: workerLogger(),
         // discord's POST arrives under the tunnel's hostname. the endpoint blocks every other request
         server: { allowedHosts: true },
-        // the plugin's dep scan finds nothing in a virtual main. vite then reloads mid-start and leaves a second envapt without a source bound
+        // the plugin's dep scan comes up empty in a virtual main. vite then reloads mid-start and leaves a second envapt without a source bound
         environments: {
             [BOT_ENVIRONMENT]: {
                 // a glob reads a windows separator as an escape

@@ -33,7 +33,7 @@ This sample builds a gateway bot. The same `attach` call works on an http `Seedc
 
 `dir` and `migrations` are the two required options. `dir` and `migrations.dir` are folders of your bot, so a relative one is relative to `root`. Both have to be inside it, as [the folder rules](/plugins) describe. The sample also passes `connectionString`. Without one, `pg` reads `PGHOST`, `PGPORT`, `PGUSER`, `PGPASSWORD`, and `PGDATABASE` from the environment.
 
-A real bot reads the connection string from its environment. With `exactOptionalPropertyTypes`, which the scaffold's `@seedcord/tsconfig` turns on, `connectionString: process.env.DATABASE_URL` is a compile error, because its type is `string | undefined`. `Envapter.getRequired('DATABASE_URL', Converters.String)` from envapt returns a `string`, and it throws when the variable is unset. [Env files and modes](/build/env) covers reading config that way.
+A real bot reads the connection string from its environment. With `exactOptionalPropertyTypes`, which the scaffold's `@seedcord/tsconfig` turns on, `connectionString: process.env.DATABASE_URL` is a compile error because its type is `string | undefined`. `Envapter.getRequired('DATABASE_URL', Converters.String)` from envapt returns a `string`, and it throws when the variable is unset. [Env files and modes](/build/env) covers reading config that way.
 
 ## The options
 
@@ -52,7 +52,7 @@ A real bot reads the connection string from its environment. With `exactOptional
 
 {/* prettier-ignore-end */}
 
-If you pass a config object as `pool`, `connectionString` replaces its `connectionString` key and `forceInsecureSSL` replaces its `ssl` key. Set `forceInsecureSSL` when your database's certificate doesn't verify, like a self-signed one, because `pg` refuses that connection otherwise. It sets `ssl` to `{ rejectUnauthorized: false }`, which turns certificate checks off entirely. The connection then no longer proves which server it reached. It also turns TLS on, so `pg` can't connect to a local Postgres that doesn't have TLS set up.
+If you pass a config object as `pool`, `connectionString` replaces its `connectionString` key and `forceInsecureSSL` replaces its `ssl` key. Set `forceInsecureSSL` when your database's certificate doesn't verify, like a self-signed one because `pg` refuses that connection otherwise. It sets `ssl` to `{ rejectUnauthorized: false }`, which turns certificate checks off entirely. The connection then no longer proves which server it reached. It also turns TLS on, so `pg` can't connect to a local Postgres that doesn't have TLS set up.
 
 <Callout type="warning">
 
@@ -139,7 +139,7 @@ Two bots starting at once can both try to create it. The second one gets Postgre
 
 The plugin skips the check for:
 
-- a `Pool` you built yourself, since it never gets a config to build that first connection from
+- a `Pool` you built yourself since it never gets a config to build that first connection from
 - a target of `postgres` itself
 - a config without a database name, including one that leaves the name to `PGDATABASE`
 - a connection string that doesn't parse as a URL
@@ -148,13 +148,13 @@ If anything else fails here, like a database user without permission to create d
 
 ## Startup and shutdown
 
-`init()` connects, runs your migrations unless you [turned that off](/plugins/kysely-migrations), then loads every service class from `dir`. If any of those steps fails, `init()` closes the pool itself before it rethrows the error, since seedcord doesn't call `dispose()` for a plugin whose `init()` failed. A bot whose migration fails never reaches its handlers.
+`init()` connects, runs your migrations unless you [turned that off](/plugins/kysely-migrations), then loads every service class from `dir`. If any of those steps fails, `init()` closes the pool itself before it rethrows the error since seedcord doesn't call `dispose()` for a plugin whose `init()` failed. A bot whose migration fails never reaches its handlers.
 
 If that first connect fails, `init()` throws `PluginConnectionFailed`. Its message includes the database name when the plugin could find one, and pg's own error is in its `cause`.
 
 <Callout type="warning">
 
-Unless you set `onStartup` to `false`, the migrations folder has to exist before the first start. If it's missing, `init()` throws `CorePathUnreadable` with the path. A built bot throws `CoreDirectoryNotBuilt` instead, since `seedcord build` didn't find a folder to bundle. An empty folder works in both. With `onStartup: false`, `init()` never reads the folder, so the error waits for your first call to a migration method.
+Unless you set `onStartup` to `false`, the migrations folder has to exist before the first start. If it's missing, `init()` throws `CorePathUnreadable` with the path. A built bot throws `CoreDirectoryNotBuilt` instead since `seedcord build` didn't find a folder to bundle. An empty folder works in both. With `onStartup: false`, `init()` never reads the folder, so the error waits for your first call to a migration method.
 
 </Callout>
 

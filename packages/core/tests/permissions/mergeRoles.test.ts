@@ -7,7 +7,7 @@ describe('mergeRoles', () => {
         expect(mergeRoles(['a'], ['b'], [])).toEqual(['a', 'b']);
     });
 
-    it('leaves out the removed ids', () => {
+    it("doesn't return the removed ids", () => {
         expect(mergeRoles(['a', 'b'], [], ['b'])).toEqual(['a']);
     });
 
@@ -15,7 +15,7 @@ describe('mergeRoles', () => {
         expect(mergeRoles(['a'], ['a'], [])).toEqual(['a']);
     });
 
-    it('lets remove win over add for the same id', () => {
+    it('removes an id that is in both lists', () => {
         expect(mergeRoles(['a'], ['b'], ['b'])).toEqual(['a']);
     });
 

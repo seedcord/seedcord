@@ -141,7 +141,7 @@ describe('CommandRegistry.deploy', () => {
         expect([...(routes.warnUnhandledRoutes.mock.calls[0]?.[0] as Iterable<string>)]).toEqual(['renamed']);
     });
 
-    it('sends nothing to discord when the check throws', async () => {
+    it('never calls discord when the check throws', async () => {
         const put = vi.fn().mockResolvedValue([]);
         const check = vi.fn((_commands: readonly CommandBody[]) => {
             throw new Error('needs the Guilds intent');
@@ -153,7 +153,7 @@ describe('CommandRegistry.deploy', () => {
         expect(put).not.toHaveBeenCalled();
     });
 
-    it('reads the ids of a scope whose commands match the last deploy and puts nothing', async () => {
+    it('reads the ids of a scope that matches the last deploy and skips the put', async () => {
         cliWith(await deployedOnce());
         const put = vi.fn();
         const get = vi.fn().mockResolvedValue(BARE_AGAIN);

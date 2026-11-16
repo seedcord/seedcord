@@ -20,7 +20,7 @@ describe('hasMobileNavPanel', () => {
         expect(hasMobileNavPanel('/entity')).toBe(false);
     });
 
-    it('is false on a package with no version segment', () => {
+    it('is false on a package without a version segment', () => {
         expect(hasMobileNavPanel('/packages/seedcord')).toBe(false);
     });
 });

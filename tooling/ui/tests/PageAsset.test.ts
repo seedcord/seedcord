@@ -73,7 +73,7 @@ describe('the asset a url asks for', () => {
         expect(PageAsset.forPath('/commands/options.png')).toBe(CARD);
     });
 
-    it('finds none for a page url', () => {
+    it('returns undefined for a page url', () => {
         expect(PageAsset.forPath('/commands/options/')).toBeUndefined();
     });
 });

@@ -7,7 +7,7 @@ import type { Config } from '@seedcord/types';
 type ConfiguredDriver = NonNullable<Config['kv']>;
 
 // TValue as JSON.stringify writes it, with never in place of a function, Map, Set, or bigint.
-// a Date passes, since its toJSON() returns a string
+// a Date passes since its toJSON() returns a string
 type JsonSafe<TValue> = TValue extends string | number | boolean | null | undefined
     ? TValue
     : TValue extends { toJSON(): unknown }

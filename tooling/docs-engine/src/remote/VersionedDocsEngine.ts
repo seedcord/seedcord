@@ -149,7 +149,7 @@ export class VersionedDocsEngine implements NodeLookup, PackageRegistry {
         return null;
     }
 
-    // deferred so several setVersion calls cost one rebuild, and a slug-only render builds nothing
+    // deferred so several setVersion calls cost one rebuild, and a slug-only render skips the build
     private ensureBuilt(): void {
         if (!this.dirty) return;
         this.rebuild();

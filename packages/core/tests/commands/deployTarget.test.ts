@@ -10,11 +10,11 @@ function targetFor(meta: CommandMeta, configured: string[]): ReturnType<typeof r
 }
 
 describe('resolveDeployTarget', () => {
-    it('sends a command with no scope to the configured guilds', () => {
+    it('sends a command without a scope to the configured guilds', () => {
         expect(targetFor({ scope: 'config' }, ['111'])).toEqual({ scope: 'guild', guilds: ['111'] });
     });
 
-    it('sends a command with no scope global once the configured list empties', () => {
+    it('sends a command without a scope global once the configured list empties', () => {
         expect(targetFor({ scope: 'config' }, [])).toEqual({ scope: 'global' });
     });
 
@@ -26,7 +26,7 @@ describe('resolveDeployTarget', () => {
         expect(targetFor({ scope: 'global' }, ['111'])).toEqual({ scope: 'global' });
     });
 
-    it('uses the ids the decorator passed, leaving the configured list out', () => {
+    it('uses the ids the decorator passed and ignores the configured list', () => {
         expect(targetFor({ scope: 'guild', guilds: ['222'] }, ['111'])).toEqual({
             scope: 'guild',
             guilds: ['222']

@@ -80,17 +80,17 @@ const messages = {
     [SeedcordErrorCode.CoreDirectoryRootUnknown]: (dir: string) =>
         `${paint.path(dir)} is relative to ${paint.bold('root')}, but nothing set ${paint.bold('root')} in this process. The ${paint.bold('seedcord')} CLI sets it, but a plain script or a test doesn't. Pass an absolute path instead, like ${paint.sky(`resolve(import.meta.dirname, '${dir}')`)}. If you ran a file from your build folder, run ${paint.path('index.mjs')} from that folder instead.`,
     [SeedcordErrorCode.CoreDirectoryNotBuilt]: (dir: string, root: string) =>
-        `When ${paint.bold('seedcord build')} ran, ${paint.path(dir)} was neither a folder under ${paint.bold('root')} (${paint.path(root)}) nor one listed in ${paint.bold('files')}, so the build holds none of its files. Create the folder, then build again.`,
+        `When ${paint.bold('seedcord build')} ran, ${paint.path(dir)} was neither a folder under ${paint.bold('root')} (${paint.path(root)}) nor one listed in ${paint.bold('files')}, so its files aren't in the build. Create the folder, then build again.`,
     [SeedcordErrorCode.CoreDirectoryNotListed]: (dir: string) =>
         `${paint.bold('readFiles')} was called on ${paint.path(dir)}, which is outside every folder that ${paint.bold('files')} lists in seedcord.config.ts. ${paint.bold('seedcord build')} bundles non-code files from only those folders. Add it to ${paint.bold('files')}, like ${paint.sky("files: ['./locales']")}.`,
     [SeedcordErrorCode.CoreDirectorySkipped]: (dir: string) =>
-        `${paint.path(dir)} is in a folder ${paint.bold('seedcord build')} skips, so a built bot holds none of its files. The build skips dot-folders, node_modules, outDir, the logs folder beside seedcord.config.ts, and project files like package.json. Move the files to a folder outside those.`,
+        `${paint.path(dir)} is in a folder ${paint.bold('seedcord build')} skips, so its files aren't in a built bot. The build skips dot-folders, node_modules, outDir, the logs folder beside seedcord.config.ts, and project files like package.json. Move the files to a folder outside those.`,
     [SeedcordErrorCode.CoreKvKeysUnsupported]: () =>
         `${paint.bold('collection.entries()')} reads the key list of the Keyv store in ${paint.bold('config.kv')}, but that store can't list its keys. Cache adapters like ${paint.bold('@keyv/memcache')} never can. Pass an adapter that can, like ${paint.bold('@keyv/redis')} or ${paint.bold('@keyv/sqlite')}.`,
     [SeedcordErrorCode.CoreKvDriverFailed]: (operation: 'read' | 'write' | 'delete' | 'list', key: string) =>
         `The driver in ${paint.bold('config.kv')} failed to ${operation} ${paint.sky(key)}. Check that the storage it connects to is reachable.`,
     [SeedcordErrorCode.CoreKvUnserializable]: (key: string, reason: string) =>
-        `The record for ${paint.sky(key)} can't be stored, because ${paint.bold('JSON.stringify')} threw: ${reason}. ${paint.bold('config.kv')} stores every record as JSON. Remove the circular reference, or convert the value to a type that JSON supports, like a ${paint.bold('bigint')} to a string.`,
+        `The record for ${paint.sky(key)} can't be stored because ${paint.bold('JSON.stringify')} threw: ${reason}. ${paint.bold('config.kv')} stores every record as JSON. Remove the circular reference, or convert the value to a type that JSON supports, like a ${paint.bold('bigint')} to a string.`,
     [SeedcordErrorCode.CoreBotMemberMissing]: (guildId: string) =>
         `The member cache of guild ${paint.sky(guildId)} doesn't hold the bot's member, so seedcord can't read the bot's permissions there. If ${paint.bold('clientOptions.makeCache')} limits ${paint.bold('GuildMemberManager')}, keep the bot's member with ${paint.sky('keepOverLimit: (member) => member.id === member.client.user.id')}.`,
     [SeedcordErrorCode.CoreBuiltModuleRanDirectly]: () =>
@@ -185,7 +185,7 @@ const messages = {
     [SeedcordErrorCode.CustomIdReservedFieldName]: (field: string) =>
         `The customId field name ${quoted(field)} looks like an integer. JS reorders integer keys, which would scramble the field order. Give it a name that is not a number.`,
     [SeedcordErrorCode.CustomIdEmptyChoices]: (field: string, method: string) =>
-        `The customId field ${quoted(field)} uses ${method}() with no choices. Give it at least one choice, or make the field nullable.`,
+        `The customId field ${quoted(field)} uses ${method}() without choices. Give it at least one choice, or make the field nullable.`,
     [SeedcordErrorCode.CustomIdInvalidBounds]: (field: string, min: number, max: number) =>
         `The customId field ${quoted(field)} has min ${min}, which is greater than max ${max}. Swap them, or fix the one that is wrong.`,
     [SeedcordErrorCode.CustomIdValueRejected]: (field: string, expected: string, value: string) =>
@@ -197,7 +197,7 @@ const messages = {
     [SeedcordErrorCode.MatchCaseMissing]: (handler: string, kind: string, value: string) =>
         `${paint.bold(handler)}'s match() doesn't have a case for the ${kind} ${quoted(value)}. Add one to the object you pass to match().`,
     [SeedcordErrorCode.AutocompleteNoFocusedOption]: () =>
-        'Discord sent an autocomplete payload with no focused option.',
+        'Discord sent an autocomplete payload without a focused option.',
     [SeedcordErrorCode.ModalFieldNotFound]: (customId: string) =>
         `The submitted modal doesn't have a field with the custom id ${quoted(customId)}. Check it against the id you gave the component when you built the modal.`,
     [SeedcordErrorCode.ModalFieldWrongKind]: (customId: string, kind: string, getter?: string) =>
@@ -209,7 +209,7 @@ const messages = {
     [SeedcordErrorCode.ModalFieldChannelType]: (customId: string, picked: string, allowed: readonly string[]) =>
         `The modal field ${quoted(customId)} picked a ${picked} channel, but this read allows ${oneOf.format(allowed)}. Give the channel select the same channel types.`,
     [SeedcordErrorCode.CustomIdWireStale]: (prefix: string) =>
-        `The customId ${quoted(prefix)} was encoded under an older shape of this definition, because adding, removing, changing, or moving a field changes its layout hash.`,
+        `The customId ${quoted(prefix)} was encoded under an older shape of this definition because adding, removing, changing, or moving a field changes its layout hash.`,
     [SeedcordErrorCode.CustomIdWireInvalid]: (detail: string) =>
         `The customId could not be decoded. ${sentence(detail)}`,
     [SeedcordErrorCode.DispatchStateMissing]: (key: string) =>
@@ -289,7 +289,7 @@ const messages = {
     [SeedcordErrorCode.CliConfigInvalidExport]: () =>
         `The seedcord config file must export an object as its default, like ${paint.bold('export default defineConfig({ ... })')}.`,
     [SeedcordErrorCode.CliConfigNotFound]: (baseDir: string, candidates: readonly string[]) =>
-        `Searched ${paint.path(baseDir)} for ${oneOf.format(candidates)} and found none. Run the command from your bot's folder, or create a ${paint.sky('seedcord.config.ts')} there.`,
+        `Searched ${paint.path(baseDir)} for ${oneOf.format(candidates)} and didn't find one. Run the command from your bot's folder, or create a ${paint.sky('seedcord.config.ts')} there.`,
     [SeedcordErrorCode.CliConfigInvalidField]: (field: string, expected: string) =>
         `${paint.bold(field)} in the seedcord config must be ${expected}.`,
     [SeedcordErrorCode.CliFileNotFound]: (path: string, field: string) =>
@@ -313,7 +313,7 @@ const messages = {
     [SeedcordErrorCode.CliProblems]: (count: number) =>
         `${paint.iris(count)} problems need fixing. Each one is listed below.`,
     [SeedcordErrorCode.CliEdgeCommandsNotDeployed]: (lines: readonly string[]) =>
-        `${paint.iris(lines.length)} ${isOne(lines.length) ? 'command is' : 'commands are'} in your code with no deployed id on Discord, so the build cannot link ${isOne(lines.length) ? 'it' : 'them'}. Deploy with ${paint.bold('seedcord commands deploy')}, then build again.\n${lines.join('\n')}`,
+        `${paint.iris(lines.length)} ${isOne(lines.length) ? 'command is' : 'commands are'} in your code without a deployed id on Discord, so the build cannot link ${isOne(lines.length) ? 'it' : 'them'}. Deploy with ${paint.bold('seedcord commands deploy')}, then build again.\n${lines.join('\n')}`,
     [SeedcordErrorCode.CliDevRuntimeNotRunning]: (method: string) =>
         `${paint.bold('seedcord dev')} called ${paint.bold(method)} while the dev runtime was not running. This is a bug in seedcord.`,
     [SeedcordErrorCode.CliDeployNoCommandsFolder]: (instance: string) =>
@@ -329,7 +329,7 @@ const messages = {
     [SeedcordErrorCode.CliCommandsNotDeleted]: () =>
         'Some commands could not be deleted. The warnings above give the reason for each one.',
     [SeedcordErrorCode.CliEdgeOnBun]: () =>
-        `seedcord loads ${paint.path('cloudflare.config.ts')} through Cloudflare's config loader, which throws on Bun. Run the CLI on Node by leaving out ${paint.bold('--bun')}, as in ${paint.bold('bun run dev')}.`,
+        `seedcord loads ${paint.path('cloudflare.config.ts')} through Cloudflare's config loader, which throws on Bun. Run the CLI on Node without ${paint.bold('--bun')}, as in ${paint.bold('bun run dev')}.`,
     [SeedcordErrorCode.CliEdgeNoWorker]: (cloudflareConfig: string) =>
         `${paint.path(cloudflareConfig)} doesn't set ${paint.bold('worker')}. Set ${paint.bold('worker')} to your worker's ${paint.bold('name')} and ${paint.bold('compatibilityDate')}.`,
     [SeedcordErrorCode.CliNotProjectInstall]: (cliDir: string, projectInstall: string) =>

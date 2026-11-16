@@ -14,7 +14,7 @@ function buildDefaultSinks(): ILogSink[] {
 
 function configureForNode(config: LoggerConfig): void {
     const registry = LoggerChannelRegistry.instance;
-    // console only, because every configure({}) at dev teardown would otherwise open a new log file
+    // console only because every configure({}) at dev teardown would otherwise open a new log file
     registry.setDefaultSinks(() => [new WinstonConsoleSink()]);
     registry.configure(config);
 }

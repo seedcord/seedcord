@@ -14,7 +14,7 @@ afterAll(async () => {
 });
 
 describe('workerd bundle', () => {
-    // edge viability is proven by bundling the real entry the way a worker build would, because the
+    // edge viability is proven by bundling the real entry the way a worker build would because the
     // vitest workerd pool cannot transform @discordjs/builders
     it('bundles the workerd entry with the dispatch path reachable and no node server code', async () => {
         outDir = await mkdtemp(path.join(tmpdir(), 'seedcord-http-bundle-'));

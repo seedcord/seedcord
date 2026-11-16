@@ -9,12 +9,12 @@ const routesOf = (json: RESTPostAPIChatInputApplicationCommandsJSONBody): string
     routeLeavesOf(json).map((leaf) => leaf.route);
 
 describe('routeLeavesOf', () => {
-    it('returns one leaf at the command name for a flat command with no options', () => {
+    it('returns one leaf at the command name for a flat command without options', () => {
         const json = new SlashCommandBuilder().setName('ping').setDescription('d').toJSON();
         expect(routesOf(json)).toEqual(['ping']);
     });
 
-    it('carries the basic options of a flat command through on its single leaf', () => {
+    it('passes the basic options of a flat command through on its single leaf', () => {
         const json = new SlashCommandBuilder()
             .setName('ban')
             .setDescription('d')
@@ -63,7 +63,7 @@ describe('routeLeavesOf', () => {
         expect(routesOf(json)).toEqual(['admin/roles/add']);
     });
 
-    it('carries the options of a subcommand leaf through', () => {
+    it('passes the options of a subcommand leaf through', () => {
         const json = new SlashCommandBuilder()
             .setName('config')
             .setDescription('d')

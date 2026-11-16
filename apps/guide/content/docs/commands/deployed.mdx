@@ -5,7 +5,7 @@ description: Control when your bot sends its commands to Discord and which serve
 
 Discord keeps its own copy of your commands, and your command folder is the source for it. A deploy overwrites Discord's copy.
 
-Your bot sends one request per scope. A scope is the list of global commands, or the list of commands in one server. Discord replaces the whole scope with what arrives. If you delete a command file, Discord removes that command on the next deploy, unless it was the last one in its scope. A rename does the same to the old name.
+Your bot sends one request per scope. A scope is the list of global commands, or the list of commands in one server. Discord replaces the whole scope with what arrives. If you delete a command file, Discord removes that command on the next deploy unless it was the last one in its scope. A rename does the same to the old name.
 
 ## When a deploy happens
 
@@ -25,7 +25,7 @@ A started bot deploys on every start, and Discord [rate-limits](https://docs.dis
 
 The [`seedcord dev`](/tooling/dev) row depends on its refresh prompt, **Refresh commands? (y/n)**, which shows when you save a command file. If you answer `n`, neither Discord nor the running bot receives the change, so restart the bot to load it.
 
-The Worker row reads never because a Worker sends nothing to Discord. It reads the command ids that `seedcord build` wrote into it. Run [`seedcord commands deploy`](/tooling/commands) before you build a Worker. The build reads the ids from Discord and stops with a list of the commands that have none. Building a server bot never calls Discord, though starting it does. [Workers](/build/workers) covers the Worker build.
+The Worker row reads never because a Worker never deploys its commands. It reads the command ids that `seedcord build` wrote into it. Run [`seedcord commands deploy`](/tooling/commands) before you build a Worker. The build reads the ids from Discord and stops with a list of the commands that don't have one. Building a server bot never calls Discord, though starting it does. [Workers](/build/workers) covers the Worker build.
 
 ## Test servers
 
@@ -43,13 +43,13 @@ Run your production bot as [its own application](/discord-application#make-a-sec
 
 A bot with only guild commands has an empty global list. Sending it would wipe the global commands that another deploy put there, so a bot never sends an empty global scope.
 
-That means a deploy can't remove your _last_ global command. Your bot sends nothing, so Discord keeps the copy it has. A guild scope without commands isn't sent at start either.
+That means a deploy can't remove your _last_ global command. Your bot skips that scope, so Discord keeps the copy it has. A guild scope without commands isn't sent at start either.
 
 `seedcord dev` treats a guild differently. If you delete the last command file for a server and answer `y` to the refresh prompt, dev sends that server an empty list, which clears it. The global scope is the only one dev never clears.
 
 Adding another global command fixes the global scope on the next start. To empty a scope you can't refill, run `seedcord commands purge` for that scope, which [`seedcord commands`](/tooling/commands) explains.
 
-## `seedcord dev` skips a deploy that changes nothing
+## `seedcord dev` skips a deploy when nothing changed
 
 Every dev restart would otherwise replace every scope. That uses up the rate limit on commands that haven't changed.
 

@@ -47,10 +47,10 @@ That refusal is a [`Notice`](ref:core/Notice), so the boundary catches it and re
 
 ```txt output
 ### Outdated
-This button or menu is from an older version. Please run the command again.
+This button or menu is from an older version. Run the command again.
 ```
 
-The card is ephemeral, and nothing reaches your logs or the `handledException` bus. seedcord doesn't report a stale click, because it's the normal result of editing a shape.
+The card is ephemeral, and nothing reaches your logs or the `handledException` bus. seedcord doesn't report a stale click because it's the normal result of editing a shape.
 
 A modal and a select menu route by prefix the same way, so both go stale on the same rule.
 
@@ -62,11 +62,11 @@ A modal and a select menu route by prefix the same way, so both go stale on the 
 Invalid customId. routeKey "pollM4x" is not "ticketVrl"
 ```
 
-That one does report, since a working bot never produces it. seedcord logs it and publishes it to the `handledException` bus, where the report has the name `InvalidCustomId`. The user sees the generic card.
+That one does report since a working bot never produces it. seedcord logs it and publishes it to the `handledException` bus, where the report has the name `InvalidCustomId`. The user sees the generic card.
 
 ```txt output
 ### Cannot Proceed
-Something went wrong. Please try again.
+Something went wrong. Try again.
 ```
 
 `decode` also throws on a corrupt string, or on one you wrote by hand.
@@ -118,6 +118,6 @@ setCustomIdErrors({
 });
 ```
 
-Call it once, before your bot starts. A click that arrives before the call still gets the built-in card. One registration covers every `CustomId` in the process, and a later call replaces the earlier one.
+Call it once before your bot starts. A click that arrives before the call still gets the built-in card. One registration covers every `CustomId` in the process, and a later call replaces the earlier one.
 
 The `stale` callback receives the route prefix. The `invalid` callback receives a detail string saying what failed. Neither callback receives the interaction. The `Notice` you return still gets a [`RenderContext`](ref:types/RenderContext) when seedcord calls its `render()`, carrying the fault's `uuid` and the [dispatch context](/checks/dispatch-context) your gates and middleware filled, so read per-user details there. Return a `Notice` from both callbacks. A plain `Error` sends the generic fault card.

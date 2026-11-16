@@ -62,7 +62,7 @@ function outputInto(lines: string[]): ConstructorParameters<typeof RemovePresent
 }
 
 describe('RemoveRunner.run', () => {
-    it('reports nothing to clean and never asks or deletes when nothing is selected', async () => {
+    it('says there is nothing to clean and never asks or deletes when nothing is selected', async () => {
         const { lines, confirm, deletes } = await run({ onDiscord: {} });
 
         expect(lines.at(-1)).toMatch(/Nothing to clean\.$/u);
@@ -130,14 +130,14 @@ describe('RemoveRunner.run', () => {
         expect(lines.at(-1)).toBe('Global commands untouched.');
     });
 
-    it('deletes nothing when the delete is declined', async () => {
+    it('keeps every command when the delete is declined', async () => {
         const { deletes, lines } = await run({ answer: false });
 
         expect(deletes).toEqual([]);
         expect(lines.at(-1)).toBe('Nothing deleted.');
     });
 
-    it('clears global and each guild with purge, and leaves out the untouched line', async () => {
+    it("clears global and each guild with purge, and doesn't print the untouched line", async () => {
         const { puts, lines, confirm } = await run({ mode: new PurgeMode(true) });
 
         expect(confirm).toHaveBeenCalledWith(expect.stringContaining('Delete 3 commands?'));

@@ -25,6 +25,13 @@ export type InteractionsConfig =
            * Optional path to interaction middleware directory
            */
           middlewares?: string;
+          /**
+           * Whether replies are ephemeral by default. A reply's own `ephemeral` overrides it. It doesn't
+           * apply to error cards or notices.
+           *
+           * @defaultValue `true`
+           */
+          ephemeral?: boolean;
       }
     | {
           /** No interactions configured */

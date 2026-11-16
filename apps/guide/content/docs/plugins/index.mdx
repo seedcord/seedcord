@@ -187,7 +187,7 @@ seedcord.attach('app.users', Users).attach('app', Tickets);
 
 ## No plugin types in your handler?
 
-`this.core.db` has the type `Mongoose` in `History` because the first sample exports what `attach` returns. If you call `attach` as a statement and then export `seedcord` itself, the plugin still starts. TypeScript loses its type, since nothing keeps the type that call returns.
+`this.core.db` has the type `Mongoose` in `History` because the first sample exports what `attach` returns. If you call `attach` as a statement and then export `seedcord` itself, the plugin still starts. TypeScript loses its type since nothing keeps the type that call returns.
 
 ```ts twoslash hovers
 // @errors: 2339
@@ -208,7 +208,7 @@ The last line is the lookup codegen writes into `src/seedcord-gen.ts`, so your `
 
 ## The key is also a log channel
 
-Every mongoose log line prints on the `db` channel, since a plugin logs on the channel with its attach key's name. You can then filter or silence one plugin's logs by the key you gave it. A grouped plugin keeps its whole key, dot included, as its channel. seedcord already logs on reserved channels of its own, so those names can't be keys.
+Every mongoose log line prints on the `db` channel since a plugin logs on the channel with its attach key's name. You can then filter or silence one plugin's logs by the key you gave it. A grouped plugin keeps its whole key, dot included, as its channel. seedcord already logs on reserved channels of its own, so those names can't be keys.
 
 ```ts twoslash
 // @errors: 2345

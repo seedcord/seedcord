@@ -145,7 +145,7 @@ describe('ObjectConsoleSink', () => {
         expect((payload.error as Record<string, unknown>).message).toBe('boom');
     });
 
-    it('carries the base record fields', () => {
+    it('writes the base record fields', () => {
         const cap = capture('warn');
         new ObjectConsoleSink().onLog(record({ level: 'warn', message: 'hi', label: 'Bot', channel: 'events' }));
         expect(cap.payload()).toMatchObject({ level: 'warn', label: 'Bot', channel: 'events' });

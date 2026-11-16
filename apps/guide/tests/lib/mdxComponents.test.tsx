@@ -71,7 +71,7 @@ describe('a shell block', () => {
         expect(screen.getByRole('button', { name: /Copy/ })).toBeInTheDocument();
     });
 
-    it('refuses a block with no command', async () => {
+    it('refuses a block without a command', async () => {
         await expect(Shell({ before: 'cd my-bot' })).rejects.toThrow('at least one');
     });
 });
@@ -104,7 +104,7 @@ describe('a link', () => {
         expect(screen.getByRole('link')).toHaveAccessibleName('gateway or http');
     });
 
-    it('keeps the title a link in the guide carries', () => {
+    it("keeps a guide link's title", () => {
         render(
             <Link href="/gateway-or-http" title="Pick a transport">
                 gateway or http
@@ -132,7 +132,7 @@ describe('the image component', () => {
         );
     });
 
-    it('leaves the border off by default', () => {
+    it("doesn't draw the border by default", () => {
         render(<Image src="/logo.svg" alt="bare" />);
 
         expect(borderWidthOf('bare')).toBeUndefined();
@@ -185,7 +185,7 @@ describe('the image component', () => {
         expect(classesOf('classy')).toContain('test-only-marker');
     });
 
-    // mdx does not typecheck the props a page writes
+    // mdx doesn't typecheck the props that a page writes
     it.each(['frame', 'align'])('refuses an unknown %s', (prop) => {
         expect(() => render(<Image src="/logo.svg" alt="typo" {...{ [prop]: 'nonsense' }} />)).toThrow('nonsense');
     });

@@ -45,7 +45,7 @@ interface SubscriberRegistration {
 
 const loggerSlot = Symbol('seedcord:bus:logger');
 
-// unknown, because emitSafe only catches a rejected promise and ignores any other value
+// unknown because emitSafe only catches a rejected promise and ignores any other value
 type BusListener<KeyOfSubscribers extends SubscriptionKey> = (...args: SubscriptionTuples[KeyOfSubscribers]) => unknown;
 
 /**

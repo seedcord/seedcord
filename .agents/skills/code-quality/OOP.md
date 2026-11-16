@@ -25,9 +25,9 @@ Seedcord uses classes for stateful framework pieces and plain functions for smal
 <!--prettier-ignore-end-->
 
 ```ts
-// a function: stateless, one job (packages/utils/src/strings/capitalize.ts)
-export function capitalize(word: string): string {
-    return word.charAt(0).toUpperCase() + word.slice(1).toLowerCase();
+// a function: stateless, one job (packages/utils/src/strings/pluralize.ts)
+export function pluralize(count: number, singular: string, plural = `${singular}s`): string {
+    return plurals.select(count) === 'one' ? singular : plural;
 }
 
 // a class: holds a driver, a key prefix, and a write queue across calls (packages/core/src/kv/KvCollection.ts)

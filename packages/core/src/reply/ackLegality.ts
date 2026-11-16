@@ -40,7 +40,7 @@ const ILLEGAL: Record<ExcludeStrict<ReplyMethod, 'send'>, Partial<Record<AckStat
     reply: {
         'deferred-reply': {
             reason: 'this interaction was already deferred',
-            alternative: 'Use edit() to fill the deferred reply or followUp() for a new message.'
+            alternative: 'Use edit() to fill the deferred reply.'
         },
         'deferred-update': {
             reason: 'this interaction was already acknowledged with a deferred update',
@@ -96,13 +96,6 @@ const ILLEGAL: Record<ExcludeStrict<ReplyMethod, 'send'>, Partial<Record<AckStat
     }
 };
 
-const SEND_TARGET: Record<AckState, 'reply' | 'edit' | 'followUp'> = {
-    unacked: 'reply',
-    'deferred-reply': 'edit',
-    'deferred-update': 'followUp',
-    replied: 'followUp'
-};
-
 // throws before any API call, and ackedBy becomes the throw cause with its stack pointing at the first ack
 export function checkAckLegality(method: ReplyMethod, state: AckState, routeId: string, ackedBy?: AckTrace): void {
     if (method === 'send') return;
@@ -113,8 +106,4 @@ export function checkAckLegality(method: ReplyMethod, state: AckState, routeId: 
         [method, illegal.reason, illegal.alternative, routeId],
         { cause: ackedBy }
     );
-}
-
-export function sendTarget(state: AckState): 'reply' | 'edit' | 'followUp' {
-    return SEND_TARGET[state];
 }

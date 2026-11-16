@@ -7,7 +7,7 @@ import type { Constructor } from 'type-fest';
  * Base class for a user-facing refusal or a reported fault.
  *
  * Throw a `Notice` to stop a handler and reply to the user. The framework catches it at the controller
- * boundary and renders {@link Notice.render}, which always decides what the user sees. With `report`
+ * boundary and renders {@link Notice.render}, which always determines what the user sees. With `report`
  * false that render is all that happens. With `report` true the framework also logs the fault and
  * publishes it to the `handledException` bus. A raw, non-Notice throw shows the generic message.
  *

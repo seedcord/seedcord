@@ -20,7 +20,7 @@ describe('roundToDenomination', () => {
         expect(roundToDenomination(1234)).toBe(roundToDenomination(1240));
     });
 
-    it('carries to the next suffix when rounding fills the current one', () => {
+    it('moves to the next suffix when rounding fills the current one', () => {
         expect(roundToDenomination(999_999)).toBe('1M');
     });
 

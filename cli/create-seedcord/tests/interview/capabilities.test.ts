@@ -42,7 +42,7 @@ describe('intentsFor', () => {
         expect(intentsFor(['nonsense'])).toEqual(['Guilds']);
     });
 
-    it('carries a message event source when only message-text is picked', () => {
+    it('adds a message event source when only message-text is picked', () => {
         expect(intentsFor(['message-text'])).toContain('GuildMessages');
     });
 });
@@ -90,7 +90,7 @@ describe('privilegedFor', () => {
         ]);
     });
 
-    it('is empty for a bot that picked none of them', () => {
+    it("is empty for a bot that didn't pick any of them", () => {
         expect(privilegedFor(['guild-messages', 'reactions'])).toEqual([]);
     });
 });

@@ -51,7 +51,7 @@ Discord grants every permission to **Administrator**, so both permission gates a
 
 <Callout type="warning">
 
-You hold **Administrator** on your own test server, as the owner or through a role. Both permission gates pass there, so you cannot tell a broken one from a working one. Test with a second account that doesn't have an admin role.
+You hold **Administrator** on your own test server as the owner or through a role. Both permission gates pass there, so you cannot tell a broken one from a working one. Test with a second account that doesn't have an admin role.
 
 </Callout>
 
@@ -74,7 +74,7 @@ RequirePermissions([PermissionFlagsBits.BanMembers], { in: '
 
 | `in` | reads | holds true when |
 | --- | --- | --- |
-| `'channel'`, the default | the effective set for the invoked channel, after overwrites | Discord would allow the action right here |
+| `'channel'`, the default | the effective set for the invoked channel after overwrites | Discord would allow the action right here |
 | `'guild'` | the base set from roles alone | the roles grant it somewhere in the server |
 
 {/* prettier-ignore-end */}
@@ -129,7 +129,7 @@ An interaction payload has both channel sets. A gateway event doesn't have eithe
 | on an event, `in: 'channel'` | what happens |
 | --- | --- |
 | `RequirePermissions` | reads the caller's role-derived set, the same value `'guild'` reads. Channel overwrites go uncounted |
-| `RequireBotPermissions` | doesn't compile, since it reads `app_permissions` and an event never has it |
+| `RequireBotPermissions` | doesn't compile since it reads `app_permissions` and an event never has it |
 
 {/* prettier-ignore-end */}
 
@@ -207,6 +207,6 @@ RequirePermissions([PermissionFlagsBits.BanMembers], {
 RequireRole('221439658686939136', { missingRole: SubscribersOnly });
 ```
 
-Leaving an option out keeps the default card. The permission gates list every missing bit on it by name, and `RequireRole` mentions the role.
+Without the option, a gate uses the default card. The permission gates list every missing bit on it by name, and `RequireRole` mentions the role.
 
 A check these gates don't cover, like whether the caller linked an account, is [a gate you write yourself](/checks/your-own).

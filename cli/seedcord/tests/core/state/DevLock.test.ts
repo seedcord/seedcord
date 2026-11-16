@@ -37,7 +37,7 @@ describe('DevLock', () => {
         expect(() => new DevLock(dir.path, silentLogger).hold(APP, '/bots/other')).toThrow(refusedBy(BOT_DIR));
     });
 
-    it('frees the application once its session releases it, while a refused session leaves nothing behind', () => {
+    it('frees the application once its session releases it, while a refused session cleans up after itself', () => {
         using dir = lockDir();
         const first = new DevLock(dir.path, silentLogger);
         first.hold(APP, BOT_DIR);

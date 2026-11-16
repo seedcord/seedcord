@@ -18,7 +18,7 @@ export default defineConfig({
         rehypeCodeOptions: false,
         // the img in mdxComponents.tsx requires src to be a string
         remarkImageOptions: { useImport: false },
-        // fumadocs leaves `code` out of its default types
+        // `code` isn't in fumadocs' default types
         remarkStructureOptions: {
             types: STRUCTURE_TYPES,
             stringify: {

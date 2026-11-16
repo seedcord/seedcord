@@ -341,7 +341,7 @@ describe('TunnelCoordinator', () => {
         });
     });
 
-    it('a superseded attempt stops its own tunnel and reports nothing', async () => {
+    it('a superseded attempt stops its own tunnel quietly', async () => {
         const stopped: string[] = [];
         const slow = Promise.withResolvers<string>();
         const onStatus = vi.fn();

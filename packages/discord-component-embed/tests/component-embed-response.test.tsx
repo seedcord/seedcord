@@ -21,7 +21,7 @@ describe('componentEmbedResponse', () => {
         expect(() => componentEmbedResponse(withText('a'.repeat(3000 - OVERHEAD)))).not.toThrow();
     });
 
-    it('sends the JSON as it is, with no escaping for a script tag', async () => {
+    it('sends the JSON as it is, without escaping for a script tag', async () => {
         const content = '<:seedcord:1538077321318236281> </script> <!-- a comment -->';
 
         const body = await componentEmbedResponse(withText(content)).text();

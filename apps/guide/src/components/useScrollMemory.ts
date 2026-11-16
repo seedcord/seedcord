@@ -8,13 +8,13 @@ function sessionStore(): Storage | undefined {
     try {
         return sessionStorage;
     } catch {
-        // SecurityError, when the browser blocks storage
+        // SecurityError when the browser blocks storage
         return undefined;
     }
 }
 
 export function useScrollMemory(path: string): void {
-    // runs before paint, after next.js has scrolled the new page to the top
+    // runs before paint after next.js has scrolled the new page to the top
     useLayoutEffect(() => {
         const store = sessionStore();
         if (store === undefined) return undefined;

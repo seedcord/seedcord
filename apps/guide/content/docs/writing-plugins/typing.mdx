@@ -3,7 +3,7 @@ title: Typing what you ship
 description: Make a bot see your plugin's types, give a plugin a type parameter, and read one plugin from another without breaking attach.
 ---
 
-You can't declare your plugin on [`Core`](ref:gateway/Core) yourself, because the bot's author picks the key. Two things carry the types to them. [`attach`](ref:gateway/Seedcord.attach) returns the bot typed with your instance under the key, and [`seedcord codegen`](/tooling/codegen) copies that instance type onto `Core`, which [Typing a plugin](/plugins/typing) shows from the bot's side. Each member's type comes from your class. The key and any type argument come from the bot that attaches it.
+You can't declare your plugin on [`Core`](ref:gateway/Core) yourself because the bot's author picks the key. Two things carry the types to them. [`attach`](ref:gateway/Seedcord.attach) returns the bot typed with your instance under the key, and [`seedcord codegen`](/tooling/codegen) copies that instance type onto `Core`, which [Typing a plugin](/plugins/typing) shows from the bot's side. Each member's type comes from your class. The key and any type argument come from the bot that attaches it.
 
 ## Why the first parameter is CoreBase
 
@@ -118,6 +118,6 @@ const bot = seedcord.attach('hello', Hello);
 bot.attach('greeter', Greeter, bot.hello);
 ```
 
-`attach` returns the bot typed with the `hello` key, so `bot.hello` is the `Hello` instance that the `Greeter` constructor takes. The bot's author writes those last two lines, so tell your users to attach `Hello` first. If they attach `Greeter` first, `bot.hello` doesn't exist and the call fails to compile. Use an argument like this when your plugin needs the other plugin's methods. A plugin option works for settings.
+`attach` returns the bot typed with the `hello` key, so `bot.hello` is the `Hello` instance that the `Greeter` constructor takes. The bot's author writes those last two lines. Tell your users to attach `Hello` first. If they attach `Greeter` first, `bot.hello` doesn't exist and the call fails to compile. Use an argument like this when your plugin needs the other plugin's methods. A plugin option works for settings.
 
 If your plugin reads keys out of the bot's files, like locale messages, [codegen can type them](/writing-plugins/codegen). [Where it runs](/writing-plugins/runtimes) covers limiting a plugin to one transport or runtime.

@@ -17,9 +17,8 @@ export interface TasksOptions {
      */
     timeout?: number;
     /**
-     * Lets cron jobs and scheduled jobs run on their own under `seedcord dev`. Without it, cron jobs start
-     * paused and scheduled jobs wait for a restart outside `seedcord dev`. `trigger()` still runs a task
-     * without data by hand.
+     * Lets cron jobs and scheduled jobs run on their own under `seedcord dev`, where they otherwise wait.
+     * `trigger()` still runs a task without data by hand.
      *
      * @defaultValue `false`
      */
@@ -54,7 +53,7 @@ export interface TaskOptions<TZone extends string = string, TEvery extends strin
     /** Stops the task after this many runs. */
     maxRuns?: number;
     /**
-     * The shortest gap between two runs, as a duration in whole seconds like `'90s'` or `'5m'`. The task
+     * The shortest gap between two runs as a duration in whole seconds like `'90s'` or `'5m'`. The task
      * still only runs at times that the pattern matches. For example, `'* * 9-17 * * 1-5'` with
      * `every: '90s'` runs every 90 seconds during those hours. After `resume()`, the task runs at its
      * next match, and the gap counts from there.
@@ -114,12 +113,12 @@ export type When<TIn extends string = string> = RequireExactlyOne<{ in: ValidDur
 export type ScheduleOptions<TData, TIn extends string = string> = When<TIn> &
     (IsNoData<TData> extends true ? { data?: never } : { data: Storable<TData, 'task data'> });
 
-/** One cron job, as `crons()` reports it. */
+/** One cron job as `crons()` reports it. */
 export interface CronStatus {
     key: string;
     pattern: string;
     timezone: string | undefined;
-    /** Whether the pattern's timer is on. `false` before `ready()`, while the task is paused, and once it doesn't have any runs left. */
+    /** Whether the pattern's timer is on. `false` before `ready()`, during a pause, and once it doesn't have any runs left. */
     active: boolean;
     busy: boolean;
     nextRun: Date | null;

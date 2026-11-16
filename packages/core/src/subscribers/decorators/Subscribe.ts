@@ -1,4 +1,4 @@
-// the default reporters are decorated at Bus module load, before any entry's own polyfill import runs
+// the default reporters are decorated at Bus module load before any entry's own polyfill import runs
 import 'reflect-metadata';
 
 import { assertUniqueKeys } from '#src/decorators/assertUniqueKeys';

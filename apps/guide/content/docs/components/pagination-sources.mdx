@@ -52,9 +52,9 @@ export class HistoryList extends SlashHandler<'history'> {
 }
 ```
 
-The fetcher receives the page number and the page size, so `page * perPage` above is the offset. Return the slice and a `hasNext` flag, as a promise or a plain object.
+The fetcher receives the page number and the page size, so `page * perPage` above is the offset. Return the slice and a `hasNext` flag as a promise or a plain object.
 
-A cursor source can't see where the list ends, so it passes a page past the last one to your fetcher unchanged. Return an empty slice with `hasNext: false` there. A `true` there leaves **Next** enabled, so someone can keep clicking into empty pages.
+A cursor source can't see where the list ends, so it passes a page past the last one to your fetcher unchanged. Return an empty slice with `hasNext: false` there. A `true` there leaves **Next** enabled and lets someone keep clicking into empty pages.
 
 <Callout type="transport">
 
@@ -64,10 +64,10 @@ The fetcher's first argument is a [`PageContext`](ref:gateway/PageContext). Gate
 
 ## Without a total, no First and Last buttons
 
-`CursorSource` never requests a total, because counting every row costs a second query. Three things follow.
+`CursorSource` never requests a total because counting every row costs a second query. Three things follow.
 
 - `totalPages` comes back `undefined`.
-- The nav row leaves out **First** and **Last**, leaving **Prev**, the indicator, and **Next**.
+- The nav row shows only **Prev**, the indicator, and **Next**.
 - The indicator reads `Page 3` without a total after it.
 
 Use [`ArraySource`](ref:gateway/ArraySource) when the list is small enough to load whole and you want the count.

@@ -94,7 +94,7 @@ function deriveListProps(
     const showInitialHint = normalizedSearch.length < MIN_SEARCH_QUERY_LENGTH;
     const isSearching = searchState.status === 'loading';
     const resolvedError =
-        searchState.status === 'error' ? (searchState.error ?? 'Search failed. Please try again.') : undefined;
+        searchState.status === 'error' ? (searchState.error ?? 'Search failed. Try again.') : undefined;
     return {
         showInitialHint,
         isSearching,

@@ -74,7 +74,7 @@ export function mockFunctionWithRest(required: string, optional?: string, ...res
 }
 
 /**
- * A simple method decorator factory used for testing decorator extraction.
+ * A method decorator factory used for testing decorator extraction.
  *
  * @decorator
  * @example

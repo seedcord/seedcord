@@ -13,7 +13,7 @@ import type { Seedcord } from '#src/Seedcord';
 import type { DispatchOrigin } from '@seedcord/core';
 import type { MockInstance } from 'vite-plus/test';
 
-// a global is the only channel back to the test, since the fixture compiles into a temp dir
+// a global is the only channel back to the test since the fixture compiles into a temp dir
 function fireCalls(): string[] {
     return (globalThis as { fireCalls?: string[] }).fireCalls ?? [];
 }
@@ -262,7 +262,7 @@ describe('the per-dispatch event context', () => {
         expect(fireCalls()).toEqual(['gate:from-middleware', 'handler']);
     });
 
-    // a global is the only channel back to the test, since the fixture compiles into a temp dir
+    // a global is the only channel back to the test since the fixture compiles into a temp dir
     const AFTER_PAIR = `
         import { EventMiddleware, RegisterEventMiddleware } from '${seedcordPath}';
 

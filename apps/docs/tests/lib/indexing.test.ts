@@ -25,7 +25,7 @@ describe('latestEntitySegments', () => {
         ]);
     });
 
-    it('gives a directory to a path that carried none', () => {
+    it("gives a directory to a path that didn't have one", () => {
         expect(latestEntitySegments(entities, parsed(null, 'logger', ['logger']))).toEqual(['classes', 'logger']);
     });
 

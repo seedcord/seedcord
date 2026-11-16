@@ -23,7 +23,7 @@
 
 ## About
 
-`@seedcord/event-emitter` exports `TypedEventEmitter`, which ties each event name to its payload types. A typo in an event name or a wrong argument is a compile error. It imports nothing from Node, so it runs on Node, Bun, and Cloudflare Workers.
+`@seedcord/event-emitter` exports `TypedEventEmitter`, which ties each event name to its payload types. A typo in an event name or a wrong argument is a compile error. It doesn't import from Node, so it runs on Node, Bun, and Cloudflare Workers.
 
 Both seedcord transports depend on it and re-export it, and a bot's `this.core.bus` is one. Install it directly for a typed emitter in any project. It doesn't depend on any package.
 

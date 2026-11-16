@@ -51,7 +51,7 @@ describe('GuideSearch', () => {
         await expect(failure).rejects.toThrow(message);
     });
 
-    it('throws a plain status error for a 429 with no wait in seconds', async () => {
+    it('throws a plain status error for a 429 without a wait in seconds', async () => {
         for (const headers of [{}, { 'retry-after': 'Wed, 21 Oct 2026 07:28:00 GMT' }]) {
             answering(new Response(null, { status: ASK_WAIT_STATUS.tooManySearches, headers }));
 
@@ -62,7 +62,7 @@ describe('GuideSearch', () => {
         }
     });
 
-    it('throws with the status and leaves the question out when the endpoint fails another way', async () => {
+    it("throws with the status and doesn't include the question when the endpoint fails another way", async () => {
         answering(new Response(null, { status: 500 }));
 
         await expect(new GuideSearch(SITE).search(askedQuestion('button'), SIGNAL)).rejects.toThrow(
@@ -70,7 +70,7 @@ describe('GuideSearch', () => {
         );
     });
 
-    it('leaves the question out when the request never reaches the server', async () => {
+    it("doesn't include the question when the request never reaches the server", async () => {
         vi.stubGlobal('fetch', () => Promise.reject(new TypeError('fetch failed')));
 
         await expect(new GuideSearch(SITE).search(askedQuestion('button'), SIGNAL)).rejects.toThrow(

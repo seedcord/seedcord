@@ -260,7 +260,7 @@ describe('dispatch members on http', () => {
         expect(repliedText()).toContain('g-1:pl');
     });
 
-    it('builds members for an interaction with no handler', async () => {
+    it('builds members for an interaction without a handler', async () => {
         const tag = vi.fn(fromOrigin);
 
         await dispatched(noClasses(), tag);

@@ -162,7 +162,7 @@ export abstract class Plugin<
     abstract init(): Promisable<void>;
 
     /**
-     * Runs in the Ready phase, after every attached plugin's `init()` has resolved. The other Ready
+     * Runs in the Ready phase after every attached plugin's `init()` has resolved. The other Ready
      * tasks run alongside it, including the http server binding its port.
      *
      * Override it when your work needs a logged-in client or a resolved application id.
@@ -276,7 +276,7 @@ export type { PluginOptions } from './options';
 
 type SeedcordOnlyMember = 'init' | 'ready' | 'dispose' | 'codegen' | 'onHmr' | 'dispatchMembers' | 'prepareCommands';
 
-// a bound of Plugin<{}> rejects every plugin that declares an option, since Plugin<A> and Plugin<B>
+// a bound of Plugin<{}> rejects every plugin that declares an option since Plugin<A> and Plugin<B>
 // are mutually unassignable. no member here may depend on Opts.
 /** @internal */
 export type PluginLike = Pick<

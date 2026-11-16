@@ -12,7 +12,7 @@ export enum SeedcordErrorCode {
     ConfigEmojiNotFound = 1003,
     /** Reading the emojis of the application or guild a configured emoji points at failed. */
     ConfigEmojiSourceUnreadable = 1004,
-    /** Discord can't find a webhook at a configured URL, because it was deleted or the id or token is wrong. */
+    /** Discord can't find a webhook at a configured URL because it was deleted or the id or token is wrong. */
     ConfigWebhookNotFound = 1005,
     /** A required environment variable is unset. */
     ConfigMissingEnv = 1006,
@@ -98,7 +98,7 @@ export enum SeedcordErrorCode {
     CoreDuplicateName = 1228,
     /** A Vite plugin from `vitePlugins` threw while Vite started or loaded a file, or failed when seedcord called `vitePlugins`. */
     CoreVitePluginThrew = 1229,
-    /** `readFiles` read a folder that `files` in `seedcord.config.ts` leaves out. */
+    /** `readFiles` read a folder that `files` in `seedcord.config.ts` doesn't list. */
     CoreDirectoryNotListed = 1230,
     /** A folder is inside one that `seedcord build` skips, like a dot-folder, `node_modules`, `outDir` or the logs folder. */
     CoreDirectorySkipped = 1231,
@@ -302,7 +302,7 @@ export enum SeedcordErrorCode {
     CliTypescriptNotStarted = 3124,
     /** A config file sets a field that this bot can't set, like `entrypoint` in an edge bot's `cloudflare.config.ts`. */
     CliConfigFieldUnused = 3125,
-    /** An edge bot's `compatibilityDate` is older than Cloudflare's Node compat default, and no flag turns it on. */
+    /** An edge bot's `compatibilityDate` is older than Cloudflare's Node compat default, and the config doesn't set a flag that turns it on. */
     CliEdgeCompatDateTooOld = 3126,
     /** An edge bot sets `no_nodejs_compat`. */
     CliEdgeNodeCompatOff = 3127,

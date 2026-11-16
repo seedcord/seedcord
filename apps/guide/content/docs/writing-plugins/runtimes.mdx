@@ -56,7 +56,7 @@ this plugin narrows its transport or runtime. Give it a constructor that passes 
 
 If your constructor calls `super(host)` alone, TypeScript reports "Expected 2 arguments, but got 1".
 
-A bot on the wrong runtime fails to compile when it attaches `DriverCache`. The sample below types the bot as `PluginHost<'http', 'edge'>`, the base class of the Workers `Seedcord`, because the guide's samples compile against the Node build.
+A bot on the wrong runtime fails to compile when it attaches `DriverCache`. The sample below types the bot as `PluginHost<'http', 'edge'>`, the base class of the Workers `Seedcord` because the guide's samples compile against the Node build.
 
 ```ts twoslash
 // @errors: 2345

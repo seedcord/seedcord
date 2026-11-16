@@ -10,7 +10,7 @@ const UNIT_MS = {
 
 type DurationUnit = keyof typeof UNIT_MS;
 
-// check ms before the other units, since '500ms' also ends in 's'
+// check ms before the other units since '500ms' also ends in 's'
 type Amount<TText extends string> = TText extends `${infer Value}ms`
     ? Value
     : TText extends `${infer Value}${Exclude<DurationUnit, 'ms'>}`
@@ -25,7 +25,7 @@ type IsPositiveWhole<Value extends string> =
  * whole number above 0, followed by one of the units `ms`, `s`, `m`, `h`, or `d`.
  *
  * Use it to make your own function reject a bad duration at compile time. A call like `every('1.5h')` then fails to compile, and the error explains what a duration
- * looks like. A value typed as `string`, like one from `.env`, still compiles, so check it with
+ * looks like. A value typed as `string`, like one from `.env`, still compiles. Check it with
  * `parseDuration` at run time.
  *
  * @typeParam TText - The literal to check.

@@ -2,7 +2,7 @@
 
 Require the matching register decorator on every concrete middleware.
 
-`InteractionMiddleware` takes `@RegisterInteractionMiddleware` and `EventMiddleware` takes `@RegisterEventMiddleware`. A class carrying the other family's decorator reports, since neither dispatcher would register it. Without a decorator the middleware loads without error and never runs on a single request.
+`InteractionMiddleware` takes `@RegisterInteractionMiddleware` and `EventMiddleware` takes `@RegisterEventMiddleware`. A class carrying the other family's decorator reports since neither dispatcher would register it. Without a decorator the middleware loads without error and never runs on a single request.
 
 The base class must be imported from `seedcord` or a `@seedcord/*` package, and an `abstract` intermediate base is skipped.
 

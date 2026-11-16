@@ -19,7 +19,7 @@ export type HandlerOutcome = Pick<HandlerResult, 'handler' | 'outcome'>;
 
 /**
  * An event middleware's `after()` receives this once the event finishes. `outcome` reports the
- * middleware chain alone. `handlers` holds one entry per handler that ran. A stopped chain runs none.
+ * middleware chain alone. `handlers` holds one entry per handler that ran, and it's empty when the chain refuses or fails.
  */
 export type EventDispatchResult =
     | { readonly outcome: 'refused' | 'failed'; readonly caught: unknown; readonly handlers: readonly [] }

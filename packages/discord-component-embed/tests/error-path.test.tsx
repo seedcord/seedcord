@@ -120,7 +120,7 @@ describe('ComponentEmbedError path', () => {
         ]);
     });
 
-    it('calls a component with no name Anonymous', () => {
+    it('calls a component without a name Anonymous', () => {
         const [Unnamed] = [(): ReactElement => <TextDisplay>{''}</TextDisplay>] as const;
 
         expect(thrownBy(() => toComponentEmbed(<Container>{<Unnamed />}</Container>)).path).toEqual([

@@ -16,7 +16,7 @@ import type { WebhookReport } from '#subscribers/bases/WebhookLog';
 import type { AllSubscriptions } from '#subscribers/types/Subscriptions';
 import type { APIMessageTopLevelComponent } from 'discord-api-types/v10';
 
-// envapt snapshots process.env on its first read, before any test runs
+// envapt snapshots process.env on its first read before any test runs
 const WEBHOOK_ENV = vi.hoisted(() => {
     const env = {
         REPORTER_WEBHOOK_URL: 'https://discord.com/api/webhooks/77/tok-en'
@@ -85,7 +85,7 @@ describe('WebhookLog', () => {
         expect(options.body.username).toBe('NamedReporter');
     });
 
-    it('sends the avatar url only when the report carries one', async () => {
+    it('sends the avatar url only when the report has one', async () => {
         @Subscribe(['unknownException'])
         @WebhookUrl('REPORTER_WEBHOOK_URL')
         class Faced extends WebhookLog<'unknownException', CoreBase> {
@@ -218,7 +218,7 @@ describe('WebhookLog', () => {
         errorSpy.mockRestore();
     });
 
-    it('counts a card that report threw on, so the next one carries it', async () => {
+    it('counts a card that report threw on, so the next one includes it', async () => {
         let calls = 0;
 
         @Subscribe(['unknownException'])

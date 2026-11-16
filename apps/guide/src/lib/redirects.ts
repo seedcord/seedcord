@@ -34,9 +34,9 @@ function withoutTrailingSlash(pathname: string): string {
 /**
  * The route a renamed page moved to, or `undefined` when nothing moved.
  *
- * A page url gets a trailing slash back, since `trailingSlash` in `next.config.ts` makes that the
+ * A page url gets a trailing slash back since `trailingSlash` in `next.config.ts` makes that the
  * canonical form and a redirect to the bare path would bounce again. A twin or card keeps its
- * extension, because those urls are advertised in the `Link` header and the `og:image` tag.
+ * extension because those urls are advertised in the `Link` header and the `og:image` tag.
  */
 export function redirectFor(pathname: string): string | undefined {
     const bare = withoutTrailingSlash(pathname);

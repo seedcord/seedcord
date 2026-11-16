@@ -23,7 +23,7 @@ export interface KvDriver {
     entries(prefix: string): AsyncIterable<KvEntry> | Iterable<KvEntry>;
 }
 
-/** A key and the string stored under it, as {@link KvDriver.entries} yields them. */
+/** A key and the string stored under it as {@link KvDriver.entries} yields them. */
 export type KvEntry = [key: string, value: string];
 
 /**

@@ -24,7 +24,7 @@ describe('CleanMode', () => {
         );
     });
 
-    it('picks the guild commands that share a global command name, and leaves out guilds with none', () => {
+    it("picks the guild commands that share a global command name, and doesn't pick guilds with none", () => {
         const selected = clean.select(
             scan({
                 guilds: [
@@ -48,7 +48,7 @@ describe('CleanMode', () => {
     it('says the scanned guilds hold zero commands', () => {
         const message = clean.nothingToRemove(scan({ guilds: [{ scope: alpha, commands: [] }] }));
 
-        expect(message.outro).toBe('Scanned 1 guild with no guild commands deployed. Nothing to clean.');
+        expect(message.outro).toBe('Scanned 1 guild and found zero guild commands. Nothing to clean.');
     });
 
     it("says the app's global command list is empty", () => {

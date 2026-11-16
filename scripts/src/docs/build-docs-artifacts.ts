@@ -104,7 +104,7 @@ async function main(): Promise<void> {
 
     const missing = findReexportsMissingFromOwner(ownership);
     if (missing.length > 0) {
-        throw new Error(`Re-exported symbols with no public home:\n  ${missing.join('\n  ')}`);
+        throw new Error(`Re-exported symbols without a public home:\n  ${missing.join('\n  ')}`);
     }
 
     const index = buildIndex(inputs, { updatedAt: new Date().toISOString() });

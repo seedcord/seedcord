@@ -130,7 +130,7 @@ If the task has [`protect`](/plugins/tasks#when-a-run-takes-too-long) on and it'
 
 ## Reporting failed runs
 
-After each run that starts, the plugin publishes the `taskRan` event on the [bus](/events/bus). One subscriber can report the failed runs of every task, for example to Sentry. Use [`onError()`](ref:plugin-tasks/Task.onError) for cleanup that belongs to one task, since it runs on that task and can read `this.data`.
+After each run that starts, the plugin publishes the `taskRan` event on the [bus](/events/bus). One subscriber can report the failed runs of every task, for example to Sentry. Use [`onError()`](ref:plugin-tasks/Task.onError) for cleanup that belongs to one task since it runs on that task and can read `this.data`.
 
 ```ts twoslash title="src/subscribers/ReportTaskFailure.ts"
 import { Subscribe, Subscriber } from '@seedcord/gateway';
@@ -158,7 +158,7 @@ export class ReportTaskFailure extends Subscriber<'taskRan'> {
 
 `run` also has the task's `key`, the run's `trigger`, and `durationMs`. `jobId` is the job's id when a [job](/plugins/tasks-scheduling) started the run, and `null` otherwise.
 
-The plugin doesn't publish `taskRan` for a run that `protect` skipped, since that run never started.
+The plugin doesn't publish `taskRan` for a run that `protect` skipped since that run never started.
 
 <Callout type="transport">
 

@@ -127,7 +127,7 @@ export class ApiDocsGenerator {
     async run(): Promise<ApiDocsGeneratorResult> {
         await this.ensureOutputDirectory();
         const packageDirs = await this.discoverPackages();
-        // Built from every workspace package, including ones outside the current `--package` scope,
+        // Built from every workspace package, including ones outside the current `--package` scope
         // because a re-export's declaring package must always resolve to its real npm name.
         const packageNames = await this.buildPackageNames();
         const results: PackageDocResult[] = [];

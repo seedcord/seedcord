@@ -95,7 +95,7 @@ describe('after() on the http interaction chain', () => {
         expect(results).toEqual([{ outcome: 'handled' }]);
     });
 
-    it('carries the thrown value when the handler throws', async () => {
+    it('passes the thrown value when the handler throws', async () => {
         const boom = new Error('handler exploded');
         class BoomHandler extends SlashHandler<never> {
             execute(): Promise<void> {

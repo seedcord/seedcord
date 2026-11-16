@@ -62,7 +62,7 @@ ruleTester.run('event-handler-missing-register-event', rule, {
             errors: [{ messageId: 'missingRegister' }]
         },
         {
-            // a same-named decorator from another module satisfies nothing
+            // a same-named decorator from another module doesn't count
             code: dedent`
                 import { EventHandler } from 'seedcord';
                 import { RegisterEvent } from 'some-other-lib';

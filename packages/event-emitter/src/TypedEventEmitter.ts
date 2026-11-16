@@ -121,7 +121,7 @@ export class TypedEventEmitter<TEvents extends EventMap<TEvents>> {
         return true;
     }
 
-    /** Removes every listener for an event, or for all events when no event is given. */
+    /** Removes every listener for an event, or for all events when you don't pass one. */
     public removeAllListeners(event?: EventKey<TEvents>): this {
         if (event === undefined) this.registrations.clear();
         else this.registrations.delete(event);

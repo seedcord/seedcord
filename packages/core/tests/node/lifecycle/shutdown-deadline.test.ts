@@ -21,7 +21,7 @@ afterEach(() => {
 
 // run(_, false) leaves the process alive
 describe('CoordinatedShutdown deadline', () => {
-    it('takes the deadline from the constructor, before any startup runs', async () => {
+    it('takes the deadline from the constructor before any startup runs', async () => {
         const shutdown = new CoordinatedShutdown(DEADLINE_MS);
         shutdown.removeSignalHandlers();
         shutdown.addTask(ShutdownPhase.Unbind, 'hangs', never, TASK_TIMEOUT_MS);

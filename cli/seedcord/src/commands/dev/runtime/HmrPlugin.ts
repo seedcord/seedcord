@@ -124,7 +124,7 @@ export class HmrPlugin extends TypedEventEmitter<{ event: [DevEvent] }> {
         });
     }
 
-    // per type, because an atomic save sends a delete then a create for the same file
+    // per type because an atomic save sends a delete then a create for the same file
     private isDebounced(file: string, type: HmrEventType): boolean {
         const key = `${file}::${type}`;
         const last = this.lastUpdate.get(key);

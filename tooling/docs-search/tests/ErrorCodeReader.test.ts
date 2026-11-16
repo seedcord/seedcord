@@ -39,7 +39,7 @@ describe('ErrorCodeReader', () => {
         ['seedcord error 3116', 'seedcord error 3116 CliDependencyMissing', DEPENDENCY],
         ['getting ERROR CODE: 3116 in dev', 'getting ERROR CODE: 3116 CliDependencyMissing in dev', DEPENDENCY],
         ['websocket error 1006', 'websocket error 1006 ConfigMissingEnv', { code: 1006, name: 'ConfigMissingEnv' }]
-    ])('keeps the code in %s and adds its name, since it may belong to something else', (input, question, mention) => {
+    ])('keeps the code in %s and adds its name since it may belong to something else', (input, question, mention) => {
         expect(read(input)).toEqual({ question, swapped: [mention], hints: [] });
     });
 
@@ -76,7 +76,7 @@ describe('ErrorCodeReader', () => {
         expect(read('3102 or 3102').hints).toEqual([CONFIG]);
     });
 
-    it('leaves a swapped code out of the hints when it also appears bare', () => {
+    it("doesn't list a swapped code in the hints when it also appears bare", () => {
         expect(read('[3116] what is 3116')).toEqual({
             question: 'CliDependencyMissing what is 3116',
             swapped: [DEPENDENCY],

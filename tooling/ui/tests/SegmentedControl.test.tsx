@@ -231,7 +231,7 @@ describe('SegmentedControl full-width layout', () => {
 
 describe('SegmentedControl reduced-motion behaviour', () => {
     it('renders the same static markup whether or not prefers-reduced-motion is set', () => {
-        // justified: jsdom omits matchMedia; stub it to report a reduced-motion preference so motion/react sees the same signal a real browser would surface.
+        // justified: jsdom omits matchMedia; stub it to report a reduced-motion preference so motion/react reads the same signal a real browser would surface.
         const original = (globalThis as { matchMedia?: unknown }).matchMedia;
         Object.defineProperty(globalThis, 'matchMedia', {
             configurable: true,

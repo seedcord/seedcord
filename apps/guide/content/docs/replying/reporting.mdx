@@ -10,7 +10,7 @@ HANDLED_EXCEPTION_WEBHOOK_URL=https://discord.com/api/webhooks/...
 UNKNOWN_EXCEPTION_WEBHOOK_URL=https://discord.com/api/webhooks/...
 ```
 
-On an edge bot, declare both variables as secrets in `cloudflare.config.ts`, because only declared bindings reach its environment. [Workers](/build/workers) shows the file.
+On an edge bot, declare both variables as secrets in `cloudflare.config.ts` because only declared bindings reach its environment. [Workers](/build/workers) shows the file.
 
 {/* prettier-ignore-start */}
 
@@ -28,7 +28,7 @@ The `handledException` card shows, from the top:
 - the user, guild, channel, and interaction ids
 - the uuid and a stack, taken from the cause when the throw has one and from the throw itself otherwise
 
-seedcord attaches the raw interaction as `source.json`. A fault raised in an event handler shows the event and the handler in place of the kind, and it leaves out the command, customId, and interaction id.
+seedcord attaches the raw interaction as `source.json`. A fault raised in an event handler shows the event and the handler in place of the kind. It doesn't show the command, the customId, or the interaction id.
 
 <Image
     src="/handled-exception-card.webp"
@@ -37,7 +37,7 @@ seedcord attaches the raw interaction as `source.json`. A fault raised in an eve
     height={1270}
 />
 
-The `unknownException` card shows the guild and the user, then the uuid with the error's stack. Under that, seedcord attaches any metadata on the throw as `metadata.json`. Three timestamps appear only when the error is a `DiscordAPIError` from an interaction callback, like the 10062 a late reply throws. They show when Discord sent the interaction, when the error reached the log, and the gap between them. The card below came from a plain `Error`, so it has none.
+The `unknownException` card shows the guild and the user, then the uuid with the error's stack. Under that, seedcord attaches any metadata on the throw as `metadata.json`. Three timestamps appear only when the error is a `DiscordAPIError` from an interaction callback, like the 10062 a late reply throws. They show when Discord sent the interaction, when the error reached the log, and the gap between them. The card below came from a plain `Error`, so it doesn't show those timestamps.
 
 <Image
     src="/unknown-exception-card.webp"
@@ -100,7 +100,7 @@ export class FaultMirror extends WebhookLog<'handledException'> {
 }
 ```
 
-`this.data` is that key's payload. Give the generic on `WebhookLog` the same key you passed `@Subscribe`, since `this.data` takes its type from the generic. Return a promise from `report()` when you have to load something before the card can be built.
+`this.data` is that key's payload. Give the generic on `WebhookLog` the same key you passed `@Subscribe` since `this.data` takes its type from the generic. Return a promise from `report()` when you have to load something before the card can be built.
 
 {/* prettier-ignore-start */}
 

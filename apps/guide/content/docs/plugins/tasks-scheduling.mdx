@@ -5,7 +5,7 @@ description: Run a task once at a later time with its own data, like an unban a 
 
 Some work has to happen later, like lifting a ban a day after `/tempban`. With `setTimeout`, that unban would be a timer in your bot's memory, and a restart before it ran would lose it.
 
-The [tasks plugin](/plugins/tasks) keeps that work as a _job_: one run of a task at a later time, with some data. [`schedule()`](ref:plugin-tasks/Tasks.schedule) writes the job to your [kv store](/built-ins) first, and then sets a timer. If your kv store keeps its records on disk or in a database, the job is still there after a restart. Under `seedcord dev`, the job [waits](/plugins/tasks#tasks-in-development).
+The [tasks plugin](/plugins/tasks) keeps that work as a _job_: one run of a task at a later time, with some data. [`schedule()`](ref:plugin-tasks/Tasks.schedule) writes the job to your [kv store](/built-ins) first, and then sets a timer. If your kv store keeps its records on disk or in a database, the job is still there after a restart. The job [waits under `seedcord dev`](/plugins/tasks#tasks-in-development).
 
 This page assumes the plugin is attached under the key `tasks`. Handlers reach it as [`this.core.tasks`](/plugins#reading-it-from-a-handler) after you run [`seedcord codegen`](/plugins/typing).
 
@@ -109,16 +109,16 @@ export class TempBan extends SlashHandler<'tempban'> {
 `TempBan` does three things, in this order:
 
 1. If the member already has an unban waiting from an earlier `/tempban`, it cancels that job. Otherwise the old job would unban them early.
-2. It schedules the new unban and stores the job's `id` in the `unban-job` collection, so that `/unban` can cancel it later. The key holds the server's id and the member's id, because one member can be banned in two servers that use your bot.
+2. It schedules the new unban and stores the job's `id` in the `unban-job` collection so that `/unban` can cancel it later. The key holds the server's id and the member's id because one member can be banned in two servers that use your bot.
 3. It bans the member.
 
-Since the ban comes last, nobody gets banned if `schedule()` throws. If the ban fails instead, the unban still runs a day later. Discord rejects that unban with [`Unknown Ban`](https://discord.com/developers/docs/topics/opcodes-and-status-codes#json-json-error-codes) (10026), so the run fails and changes nothing.
+Since the ban comes last, nobody gets banned if `schedule()` throws. If the ban fails instead, the unban still runs a day later. Discord rejects that unban with [`Unknown Ban`](https://discord.com/developers/docs/topics/opcodes-and-status-codes#json-json-error-codes) (10026), so the run fails and doesn't change anything.
 
 `job` is a [`ScheduledJob`](ref:plugin-tasks/ScheduledJob) with the job's `id`, its task's `key`, and its `at` time as a `Date`. It doesn't hold the job's data, so you can't look up a member's job from [`jobs()`](ref:plugin-tasks/Tasks.jobs). That's why `TempBan` stores the id itself.
 
 `schedule()` resolves once your kv store holds the job, so always await it. TypeScript checks the call for you:
 
-- `in` has to be a whole number above 0 followed by `ms`, `s`, `m`, `h`, or `d`, as [`ValidDuration`](ref:utils/ValidDuration) describes. `'1.5h'` fails to compile.
+- [`ValidDuration`](ref:utils/ValidDuration) checks `in`: a whole number above 0 followed by `ms`, `s`, `m`, `h`, or `d`. `'1.5h'` fails to compile.
 - `data` has to match the type on `Unban`. If you leave out `userId`, it fails to compile.
 - If the task doesn't declare data, passing `data` fails to compile.
 
@@ -255,11 +255,11 @@ The plugin stores jobs under the key that you pass to `attach`, here `'tasks'`. 
 
 The plugin deletes a job once its run ends. If the process dies during the run, your kv store still holds the job, and it runs again after the restart. The same happens if the bot shuts down during the run and the task throws, and if the plugin can't delete the job after the run.
 
-The plugin doesn't stop that second run, so write each task for jobs to be safe to run twice. A second run of `Unban` gets the `Unknown Ban` error from Discord. It fails and changes nothing. A task that sends a DM isn't safe. Record each DM in [`core.kv`](/built-ins) and check for it before you send.
+The plugin doesn't stop that second run, so write each task for jobs to be safe to run twice. A second run of `Unban` gets the `Unknown Ban` error from Discord, which is harmless. A task that sends a DM isn't safe. Record each DM in [`core.kv`](/built-ins) and check for it before you send.
 
 ### Trying again after a failure
 
-If `execute()` throws, the plugin logs the error and doesn't run that job again. To try again, schedule a new job from [`onError()`](ref:plugin-tasks/Task.onError). Count the attempts in `data`, so that the retries stop after a few.
+If `execute()` throws, the plugin logs the error and doesn't run that job again. To try again, schedule a new job from [`onError()`](ref:plugin-tasks/Task.onError). Count the attempts in `data` so that the retries stop after a few.
 
 ```ts twoslash title="src/tasks/Unban.ts"
 import { RegisterTask, Task } from '@seedcord/plugin-tasks/gateway';
@@ -313,7 +313,7 @@ function isUnknownBan(error: Error): boolean {
 }
 ```
 
-With `attempt` in the data, `TempBan` has to pass `attempt: 1` too. The job runs at most three times, and `onError()` stops early on `Unknown Ban`, since that error means the member isn't banned anymore. `onError()` also stores the new job's `id` in `unban-job`, so `/unban` can cancel the retry.
+With `attempt` in the data, `TempBan` has to pass `attempt: 1` too. The job runs at most three times, and `onError()` stops early on `Unknown Ban` since that error means the member isn't banned anymore. `onError()` also stores the new job's `id` in `unban-job`, so `/unban` can cancel the retry.
 
 If the bot shuts down during a run, the plugin skips `onError()`. The job is still in your kv store and runs after the restart, so you don't need a retry for it.
 

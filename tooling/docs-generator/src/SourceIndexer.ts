@@ -15,7 +15,7 @@ interface RuntimeSourceEntry {
 interface SourceIndexOptions {
     packageDir: string;
     repoRoot: string; // recorded source paths are relative to it
-    githubBase: string; // empty leaves the github urls out
+    githubBase: string; // an empty string makes it skip the github urls
     ref: string;
     // relative to packageDir. its directory is the source root. defaults to `src/index.ts`
     entry?: string;
@@ -136,7 +136,7 @@ export class SourceIndexer {
     }
 
     // The body-bearing declaration of an overloaded callable is the implementation, which API
-    // Extractor leaves out of its overload list.
+    // Extractor doesn't include in its overload list.
     private recordDeclarations(key: string, decls: readonly ts.Declaration[]): void {
         const documented = decls.length > 1 ? decls.filter((decl) => !isOverloadImplementation(decl)) : decls;
         for (const decl of documented) this.record(key, decl);

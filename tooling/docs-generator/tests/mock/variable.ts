@@ -1,5 +1,5 @@
 /**
- * A simple mock variable for testing documentation generation.
+ * A mock variable for testing documentation generation.
  *
  * This variable serves as a basic export for testing purposes.
  *

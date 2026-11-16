@@ -6,7 +6,7 @@ import type { Except } from 'type-fest';
 import type { PluginOption } from 'vite';
 
 /**
- * Build options every bot takes. An edge bot takes only these, because `@cloudflare/vite-plugin`
+ * Build options every bot takes. An edge bot takes only these because `@cloudflare/vite-plugin`
  * writes its worker to `.cloudflare/output`.
  */
 export interface SeedcordBaseBuildConfig {
@@ -114,7 +114,7 @@ export interface SeedcordConfig {
     /**
      * Folders whose non-code files `seedcord build` bundles for `readFiles` to read, like `['./locales']`.
      * Each one includes its subfolders and resolves against `root`. A folder can sit beside `root`, like `'../assets'`
-     * with `root: './src'`, as long as it is inside the folder that holds this config.
+     * with `root: './src'` as long as it is inside the folder that holds this config.
      *
      * @defaultValue `[]`
      */
@@ -122,7 +122,7 @@ export interface SeedcordConfig {
     /**
      * How `seedcord dev` exposes an http bot's interactions server. This does nothing on a gateway bot.
      *
-     * `true` opens a cloudflared quick tunnel and writes the interactions endpoint on every run,
+     * `true` opens a cloudflared quick tunnel and writes the interactions endpoint on every run
      * since the hostname changes each time. An https URL is one you already serve, through a named
      * cloudflared tunnel, a tailscale funnel, or any reverse proxy. The CLI checks that URL reaches
      * this process, writes the endpoint when the stored value differs, and leaves it in place.

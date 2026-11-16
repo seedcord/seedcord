@@ -156,7 +156,7 @@ describe('HmrPlugin', () => {
         vi.restoreAllMocks();
     });
 
-    it('carries the config rollback flag onto the hmr payload', () => {
+    it('copies the config rollback flag onto the hmr payload', () => {
         const plugin = new HmrPlugin(
             { ...mockConfig, hmr: { rollback: false } },
             STATE,

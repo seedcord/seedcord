@@ -148,7 +148,7 @@ export const messagesOf = (records: LogRecord[]): string[] => records.map((recor
 interface StartedRuntime extends AsyncDisposable {
     readonly runtime: EdgeDevRuntime;
     readonly instance: SeedcordInstance;
-    // the endpoint's port, once startBot has finished
+    // the endpoint's port once startBot has finished
     port(): number;
 }
 

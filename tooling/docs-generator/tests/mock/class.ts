@@ -278,7 +278,7 @@ export class OverrideChild extends OverrideBase {
     }
 
     /**
-     * Loads nothing.
+     * Does nothing.
      *
      * @returns When loading finishes.
      */

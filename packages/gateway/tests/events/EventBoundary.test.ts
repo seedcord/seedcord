@@ -75,7 +75,7 @@ describe('handleEventFault', () => {
         expect(payload.metadata).toMatchObject({ eventName: 'guildMemberRemove', handler: 'Farewell' });
     });
 
-    it('publishes nothing for a Silence', () => {
+    it('skips the publish for a Silence', () => {
         handleEventFault(new Silence('filtered'), 'guildMemberAdd', 'Welcome', [{}], mockCore(publish));
 
         expect(publish).not.toHaveBeenCalled();
@@ -113,19 +113,19 @@ describe('handleEventFault', () => {
         errorLog.mockRestore();
     });
 
-    it('publishes nothing for a non-reporting denial', () => {
+    it('skips the publish for a non-reporting denial', () => {
         handleEventFault(new TestNotice(), 'voiceStateUpdate', 'Tracker', [{}], mockCore(publish));
 
         expect(publish).not.toHaveBeenCalled();
     });
 
-    it('reports a dead-resource api code by default, since ignoreEventApiCodes is empty', () => {
+    it('reports a dead-resource api code by default since ignoreEventApiCodes is empty', () => {
         handleEventFault(deadResourceError(), 'messageReactionAdd', 'ReactionRole', [{}], mockCore(publish));
 
         expect(publish).toHaveBeenCalledWith('unknownException', expect.anything());
     });
 
-    it('swallows an api code listed in ignoreEventApiCodes with no report', () => {
+    it('swallows an api code listed in ignoreEventApiCodes without a report', () => {
         // justified: the fixture implements only the Core surface the event boundary reads.
         const core = {
             bus: { [PublishDefault]: publish },

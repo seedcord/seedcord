@@ -110,7 +110,7 @@ describe('highlightToHtml', () => {
         expect(remote.every((attrs) => attrs.includes('target="_blank"'))).toBe(true);
     });
 
-    it('keeps a subtraction operator coloured in a block that carries a link', async () => {
+    it('keeps a subtraction operator coloured in a block that has a link', async () => {
         const code = 'const gap = end - start;';
         const start = code.indexOf('end');
         const html =

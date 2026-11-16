@@ -4,7 +4,7 @@
  * cannot diverge.
  *
  * @param command - The top-level command name.
- * @param subcommand - The subcommand name, when the command has subcommands.
+ * @param subcommand - The subcommand name when the command has subcommands.
  * @param group - The subcommand group name, applied only alongside a subcommand.
  * @returns `command`, `command/subcommand`, or `command/group/subcommand`.
  */

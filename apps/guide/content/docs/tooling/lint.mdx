@@ -3,7 +3,7 @@ title: Linting
 description: Catch a missing route decorator, a rejected command name, and other bot mistakes in your editor with the shared ESLint config and its rules.
 ---
 
-Some bot mistakes compile cleanly and only fail when a user clicks. A handler without its route decorator never answers, and a builder with a name Discord rejects fails when you deploy. The seedcord and discord.js lint rules report both in your editor, before the bot ever starts.
+Some bot mistakes compile cleanly and only fail when a user clicks. A handler without its route decorator never answers, and a builder with a name Discord rejects fails when you deploy. The seedcord and discord.js lint rules report both in your editor before the bot ever starts.
 
 The scaffold writes `eslint.config.ts` for you, plus two scripts that run ESLint over your `src` folder.
 
@@ -73,7 +73,7 @@ Builders get their own set. Most of these rules stop a payload Discord would rej
 
 {/* prettier-ignore-end */}
 
-`prefer-ephemeral-flag` and `prefer-v2-component` report as warnings, since both describe a preference. Every other rule on this page reports as an error.
+`prefer-ephemeral-flag` and `prefer-v2-component` report as warnings since both describe a preference. Every other rule on this page reports as an error.
 
 ## Turning one off
 

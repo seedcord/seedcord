@@ -128,7 +128,7 @@ function stubCore(): Core {
 function stubHandler(event: ReturnType<typeof startEvent>): RepliableHandler<Repliables> {
     const interaction = asRepliable(event);
     const core = stubCore();
-    const sender = new ReplySender(interaction, new DispatchContext('slash', 'page'), core.bus);
+    const sender = new ReplySender(interaction, new DispatchContext('slash', 'page'), core.bus, true);
     // justified: start reads only these three members off the handler
     return { core, getEvent: () => interaction, sender } as unknown as RepliableHandler<Repliables>;
 }
@@ -182,7 +182,7 @@ describe('Paginator.start', () => {
 });
 
 describe('Paginator.page', () => {
-    it('renders the requested page and sends nothing', async () => {
+    it('renders the requested page without sending it', async () => {
         const event = startEvent();
         const reply = await pager.page(stubHandler(event), 1);
 

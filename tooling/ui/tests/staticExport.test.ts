@@ -17,7 +17,7 @@ describe('staticExport', () => {
         expect(staticExport(PHASE_DEVELOPMENT_SERVER, GUIDE)).not.toHaveProperty('distDir');
     });
 
-    it('serves dev-only pages in dev and leaves them out of the export', () => {
+    it("serves dev-only pages in dev and doesn't include them in the export", () => {
         expect(staticExport(PHASE_DEVELOPMENT_SERVER, GUIDE).pageExtensions).toContain('dev.tsx');
         expect(staticExport(PHASE_PRODUCTION_BUILD, GUIDE).pageExtensions).not.toContain('dev.tsx');
     });

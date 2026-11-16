@@ -11,7 +11,7 @@ interface RegisteredRoutes {
 }
 
 export type MiddlewareRoute<Kind extends MiddlewareKind> = Kind extends keyof RegisteredRoutes
-    ? // middleware also runs when no handler matched, like on a stale command
+    ? // middleware also runs when the interaction didn't match a handler, like on a stale command
       LiteralUnion<RegisteredRoutes[Kind], string>
     : // no registry lists custom-ID prefixes
       string;

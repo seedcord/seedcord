@@ -71,7 +71,7 @@ describe('buildContext on http', () => {
     });
 });
 
-describe('buildContext on a gateway bot that picked nothing', () => {
+describe('buildContext on a bare gateway bot', () => {
     const context = buildContext({ ...GATEWAY, capabilities: [] }, EXTRAS);
 
     it('still writes Guilds', () => {
@@ -88,13 +88,13 @@ describe('the message capabilities', () => {
         expect(buildContext({ ...GATEWAY, capabilities: [id] }, EXTRAS).hasMessages).toBe(true);
     });
 
-    it.each(['reactions', 'voice', 'polls', 'automod'])('leaves %s out', (id) => {
+    it.each(['reactions', 'voice', 'polls', 'automod'])("doesn't set hasMessages for %s", (id) => {
         expect(buildContext({ ...GATEWAY, capabilities: [id] }, EXTRAS).hasMessages).toBe(false);
     });
 });
 
 describe('buildContext extras', () => {
-    it('carries the developer name and the run command', () => {
+    it('fills in the developer name and the run command', () => {
         const context = buildContext(GATEWAY, EXTRAS);
 
         expect(context.developerUsername).toBe('dhruv');

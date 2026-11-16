@@ -29,7 +29,7 @@ export interface ConfirmOptions {
      * Whether the prompt is ephemeral. Only the invoking user can act on it either way, a non-invoker's
      * click is ignored.
      *
-     * @defaultValue `true`
+     * @defaultValue `bot.interactions.ephemeral`
      */
     ephemeral?: boolean;
     /**
@@ -212,7 +212,7 @@ export async function getConfirmation(
     prompt: ConfirmPrompt,
     options?: DefaultConfirmOptions
 ): Promise<boolean> {
-    const { ephemeral = true, timeoutMs = DEFAULT_TIMEOUT_MS } = options ?? {};
+    const { ephemeral, timeoutMs = DEFAULT_TIMEOUT_MS } = options ?? {};
 
     const response = typeof prompt === 'string' ? defaultPrompt(prompt, options) : await prompt(CONFIRM_IDS);
     const interaction = handler.getEvent();

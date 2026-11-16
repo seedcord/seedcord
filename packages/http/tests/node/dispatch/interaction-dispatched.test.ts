@@ -281,7 +281,7 @@ describe('interactionDispatched from the http dispatcher', () => {
         expect(published[0]).toMatchObject({ routeId: 'slash:silent', outcome: 'refused' });
     });
 
-    it('reports failed when a gate throws a reporting Fault, since the gate itself broke', async () => {
+    it('reports failed when a gate throws a reporting Fault since the gate itself broke', async () => {
         const published = await dispatchedFor(resolvedSlash('brokengate', BrokenGateHandler));
 
         expect(published).toHaveLength(1);

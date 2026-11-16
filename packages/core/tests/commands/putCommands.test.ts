@@ -117,7 +117,7 @@ describe('putCommands', () => {
         expect(put).toHaveBeenCalledWith(Routes.applicationCommands(APP), { body: [], signal: undefined });
     });
 
-    it('puts nothing when no scope is given', async () => {
+    it('skips the put for an empty scope list', async () => {
         const put = vi.fn();
 
         const result = await deploy([], restWith(put)).deploying;

@@ -151,7 +151,7 @@ describe('fromPayload ids', () => {
     it.each([
         [0, 2_147_483_647],
         [1, 2]
-    ])('accepts ids %s and %s and leaves them out of the payload', (containerId, textId) => {
+    ])("accepts ids %s and %s and doesn't copy them into the payload", (containerId, textId) => {
         expect(toComponentEmbed(fromJson(withIds(containerId, textId)))).toEqual({
             component: { type: 17, components: [{ type: 10, content: 'hi' }] }
         });
@@ -192,7 +192,7 @@ describe('fromPayload ids', () => {
     });
     const BUTTON_PATH = ['component', 'components', '0', 'components', '0'];
 
-    it('accepts an id on a button and leaves it out of the payload', () => {
+    it("accepts an id on a button and doesn't copy it into the payload", () => {
         expect(toComponentEmbed(fromJson(withButtonId(1, 2)))).toEqual({
             component: {
                 type: 17,
@@ -357,7 +357,7 @@ describe('fromPayload errors', () => {
     });
 
     // discord-api-types allows null here
-    it('accepts a null accent_color and leaves it out', () => {
+    it("accepts a null accent_color and doesn't copy it", () => {
         expect(toComponentEmbed(fromJson({ component: { type: 17, accent_color: null, components: [text] } }))).toEqual(
             {
                 component: { type: 17, components: [text] }
@@ -371,7 +371,7 @@ describe('fromPayload errors', () => {
         expect(error.message).toMatch(/^Type 3 can't go in a component embed\./);
     });
 
-    it('says a button with no url got nothing', () => {
+    it('words the error for a button without a url', () => {
         const button = { type: 2, style: 5, label: 'go' };
 
         const error = thrownBy(() => toComponentEmbed(fromJson(inPayload({ type: 1, components: [button] }))));
@@ -381,7 +381,7 @@ describe('fromPayload errors', () => {
         );
     });
 
-    it('lets the tree report a section with no accessory', () => {
+    it('lets the tree report a section without an accessory', () => {
         const error = thrownBy(() => toComponentEmbed(fromJson(inPayload({ type: 9, components: [text] }))));
 
         expect(error.path).toEqual(['component', 'components', '0']);

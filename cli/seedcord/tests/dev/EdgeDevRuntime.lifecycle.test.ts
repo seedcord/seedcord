@@ -205,7 +205,7 @@ ${text}`
             lock: new DevLock(locks.path, silentLogger),
             codegen: CodegenRunner.create(quietSteps, silentLogger, new ShellMode()),
             codegenLogger: silentLogger,
-            // justified: tunnel mode off routes nothing
+            // justified: tunnel mode off never routes
             tunnel: { route: () => undefined, stop: () => Promise.resolve() } as unknown as TunnelRouter,
             // justified: edgeConfig sets an edge target
             runtime: (target) => new EdgeDevRuntime(target as ResolvedEdgeTarget)

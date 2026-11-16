@@ -60,7 +60,7 @@ describe('BuilderComponent bot color', () => {
         expect(new PresetContainer().component.data.accent_color).toBe(0xef_48_60);
     });
 
-    it('applies the default color to an embed only when the subclass set none', () => {
+    it("applies the default color to an embed only when the subclass didn't set one", () => {
         expect(new PresetEmbed().component.data.color).toBe(0xef_48_60);
         expect(new TestEmbed().component.data.color).toBe(resolveColor('Default'));
     });

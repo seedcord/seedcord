@@ -41,7 +41,7 @@ export class PluginLifecycle {
         const groups = Map.groupBy(this.attachments, (attachment) => attachment.spec.init.phase);
 
         for (const [phase, group] of groups) {
-            // Ready inits run in the combined Ready task, before the ready hooks
+            // Ready inits run in the combined Ready task before the ready hooks
             if (phase === StartupPhase.Ready) continue;
             const budget = group.reduce((sum, a) => sum + a.spec.init.timeout, 0);
             this.startup.addTask(phase, 'plugins-init', () => this.runInits(group), budget);

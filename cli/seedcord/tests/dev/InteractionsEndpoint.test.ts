@@ -140,7 +140,7 @@ describe('InteractionsEndpoint', () => {
         await expect(endpointFor(client).set(TUNNEL, RUNNING, INSTANCE)).rejects.toBe(limited);
     });
 
-    it('writes nothing once the attempt is aborted', async () => {
+    it('skips the write once the attempt is aborted', async () => {
         const { rest: client, patch } = rest();
         const attempt = new AbortController();
         attempt.abort();
@@ -149,7 +149,7 @@ describe('InteractionsEndpoint', () => {
         expect(patch).not.toHaveBeenCalled();
     });
 
-    it('clears the url it set with a null and writes nothing before a set', async () => {
+    it('clears the url it set with a null, and skips the write before any set', async () => {
         const { rest: client, patch } = rest();
         const endpoint = endpointFor(client);
 
@@ -163,7 +163,7 @@ describe('InteractionsEndpoint', () => {
         });
     });
 
-    it('clears with the token it set with, after the session that loaded it stopped', async () => {
+    it('clears with its first token once the session that loaded it has stopped', async () => {
         const { endpoint, writtenWith, readToken } = recordingEndpoint();
 
         await endpoint.set(TUNNEL, RUNNING, INSTANCE);

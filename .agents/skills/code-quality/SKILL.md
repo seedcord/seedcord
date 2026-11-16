@@ -30,7 +30,7 @@ Tools catch most problems in this repo. The files in this folder cover what a to
 | Oxfmt | Formatting | `vp fmt` / `vp fmt --check` |
 | Vale + the prose ESLint pass | Prose rules in docs, comments, and strings | `vp run lint:prose` |
 | react-doctor | React antipatterns, plus some loop and await patterns in any TS | `vp run react-doctor`, configured in `doctor.config.ts` |
-| knip | Unused files, exports, types, and dependencies | `vp run knip`, configured in `knip.json` |
+| knip | Unused files, exports, types, and dependencies | `vp run knip`, configured in `knip.ts` |
 | changesets | A published package changed without a version bump | `vp run cs`, then `vp run cs:status` |
 | Review | `paths` or `include` reaching into another package's `src` | Read every new or changed `tsconfig.json` and `vite.config.ts` |
 

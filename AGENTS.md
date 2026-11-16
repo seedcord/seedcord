@@ -76,28 +76,28 @@ When someone asks how seedcord does something, answer for gateway and for http. 
 ## Other important rules
 
 - **Never throw a raw `Error`.** Framework code throws `SeedcordError`, `SeedcordTypeError`, `SeedcordRangeError`, or `SeedcordAggregateError` from `@seedcord/errors`, each with a registered code. Translate a third-party throw before it reaches a consumer if it makes sense to do so.
-    - **Reuse a code before you add one.** Search all of `ErrorCodes.ts`, every package's range included, for a code that describes the same failure, and pass what differs as message arguments. Add a code only when no existing code describes the failure, or when the fix differs from what the look-alike asks for. Two codes for one failure means a reader who searches one code misses the other's answers.
-    - **Pick the class by what went wrong.** `SeedcordTypeError` when the caller passed a value of the wrong kind or a combination the API rejects, like a decorator on the wrong class or a color that doesn't parse. `SeedcordRangeError` when a number falls outside its limits. `SeedcordAggregateError`, through `throwSingleOrAggregate`, when one pass collects several separate problems and reports them together. `SeedcordError` for a failure at run time, like I/O, Discord, the environment, or state.
-    - **Write the message for whoever hit it.** A message can carry four parts. Give it every part the reader needs to fix the problem without opening the source:
+    - **Reuse a code before you add one.** Search all of `ErrorCodes.ts`, every package's range included, for a code that describes the same failure, and pass what differs as message arguments. Add a code only when the existing codes don't describe the failure, or when the fix differs from what the look-alike asks for. Two codes for one failure means a reader who searches one code misses the other's answers.
+    - **Pick the class by what went wrong.** `SeedcordTypeError` when the caller passed a value of the wrong kind or a combination that the API rejects, like a decorator on the wrong class or a color that doesn't parse. `SeedcordRangeError` when a number falls outside its limits. `SeedcordAggregateError`, through `throwSingleOrAggregate`, when one pass collects several separate problems and reports them together. `SeedcordError` for a failure at run time, like I/O, Discord, the environment, or state.
+    - **Write the message for whoever hit it.** A message can carry four parts. Give it every part that the reader needs to fix the problem without opening the source:
         - **What** went wrong, stated as the fact.
         - **Where** it came from: the class, file, key, route, env var, or value, painted per the rule below.
-        - **Why** it happened, when the what alone doesn't explain it.
+        - **Why** it happened when the what alone doesn't explain it.
         - **What to do**, the one step that fixes it. A vague step like "check your config" counts as missing.
 
-        Read it back as the developer who just got it at 2am, and cut anything they cannot use. Two throw sites that mean different things get different codes or better message arguments, because one message covering both tells the reader nothing.
+        Read it back as the developer who just got it at 2am, and cut anything they cannot use. Two throw sites that mean different things get different codes or better message arguments because one message covering both tells the reader nothing.
 - **Routes, class names, ids, paths, and package names get a `paint` tone** from `@seedcord/errors`. A package name gets `bold`. `paint` also has `bold`, `italic` and `underline` for the parts without color. Multi-line output uses `logger.utils`.
 - **Derive types from their source.** A constructor shape is `TypedConstructor<typeof X>`. A member union comes from `keyof`, an indexed access, or `ExtractStrict`. A hand-written copy drifts.
 - **Check what a dependency exports before you write it yourself.** Look in `es-toolkit` for runtime helpers and in `type-fest` for utility types. [Check 9](.agents/skills/code-quality/PREVENT-REINVENTION.md#9-does-a-dependency-already-in-the-tree-export-it) has the steps.
-- **Write each rule once.** When two places have to compute the same answer, like a path, a cache key, a wire format, or a validity check, both call one function/method. A comment like "keep in sync with X" means the rule exists twice. Extract the function and delete the comment. When the two copies can't share code, like a value that the build writes into generated source and the runtime reads back, add a test that fails once they differ. Without one, nothing catches two copies drifting apart. Each side's tests still pass, and someone reading one copy can't find the other.
+- **Write each rule once.** When two places have to compute the same answer, like a path, a cache key, a wire format, or a validity check, both call one function/method. A comment like "keep in sync with X" means the rule exists twice. Extract the function and delete the comment. Sometimes the two copies can't share code, like a value that the build writes into generated source and the runtime reads back. Then add a test that fails once they differ. Without one, nothing catches two copies drifting apart. Each side's tests still pass, and someone reading one copy can't find the other.
 - **Use what the language and the runtime already ship.** Before writing any helper, go looking for a built-in that does the job. Memory lags behind both, so search MDN and the Node docs, and read the `lib` declarations TypeScript ships. A hand-rolled copy of something the platform provides handles fewer cases and doesn't have a test suite.
     - **Suspect your own helper first.** Code that formats, parses, compares, or walks plain data, etc, is usually something the platform already does. Search for it before you write it, and look again when you read one that already exists.
-    - **Check that every runtime the code reaches has it.** A package runs on the oldest Node in its `engines` field, and anything the edge build imports also runs in workerd. Confirm the built-in exists in both before you use it.
+    - **Check that every runtime that the code reaches has it.** A package runs on the oldest Node in its `engines` field, and anything the edge build imports also runs in workerd. Confirm the built-in exists in both before you use it.
     - **Keep one copy.** When several packages need the same built-in wrapped, put the wrapper in `@seedcord/utils`. A package that can't import utils calls the built-in directly.
 - **Only implement what was asked.** Surface additions as a question first. Wait for the third use before extracting an abstraction.
 - **No dead code.** Before adding `export`, confirm something outside the file uses the symbol. A symbol that exists only for a test belongs in the test folder.
 - **Grep every consuming surface before deleting anything.** That includes markdown and generated output. Show that nothing calls it or point to the replacement.
-- **Commit subjects are one lowercase line without a scope or a body.** Write `feat:`, never `feat(http):`. A breaking change marks the bare type, `feat!:`. A PR title follows the same rule, because a squash merge turns it into the commit.
-- **Name a file after its main export, in that export's casing.** A file built around a class is `LogLayout.ts`, and one built around a function is `linkCommands.ts`, even when the file also defines a helper class. Rename the file when its main export changes kind. On macOS, `git mv` a case-only rename through a temporary name.
+- **Commit subjects are one lowercase line without a scope or a body.** Write `feat:`, never `feat(http):`. A breaking change marks the bare type, `feat!:`. A PR title follows the same rule because a squash merge turns it into the commit.
+- **Give a file the name of its main export, in that export's casing.** A file built around a class is `LogLayout.ts`, and one built around a function is `linkCommands.ts`, even when the file also defines a helper class. Rename the file when its main export changes kind. On macOS, `git mv` a case-only rename through a temporary name.
 - **Move files with `git mv`.** Add dependencies with `vp add` so the lockfile updates.
 
 ---
@@ -136,15 +136,15 @@ To check a public surface change in the docs site or the guide locally, run `vp 
 
 Tests live in `<package>/tests/` mirroring `src/`, never beside the source. Vitest runs them.
 
-Reproduce a bug with a failing test before fixing it. A test that passes before the fix proves nothing. This holds however the bug surfaced.
+Reproduce a bug with a failing test before fixing it. A test that passes before the fix can't show that the fix works. This holds however the bug surfaced.
 
 Tests reach behavior through the public members of a class or a module. A test that reads a private method, or mocks a collaborator you own, breaks on the next refactor and tells you nothing about the contract.
 
 The import path is a separate question. Every test imports through its own package's `#src/*` alias, which resolves to the same module the barrel re-exports. A consuming package imports by package name, so a missing barrel export already fails that package's `tc`.
 
-A test pins behavior. `tsc`, ESLint, and the build already reject a missing export, a renamed symbol, a wrong type, and a malformed manifest, so a test asserting any of those gives you a second place to edit when the rule changes.
+A test pins behavior. `tsc`, ESLint, and the build already reject a missing export, a renamed symbol, a wrong type, and a malformed manifest. A test asserting any of those gives you a second place to edit when the rule changes.
 
-No tautological tests. If a test can only fail when someone edits the value it checks, it checks nothing the code does. That covers a constant compared to its own literal, a mock checked for returning what the test stubbed, and a rule about authored content, like a page description's length.
+No tautological tests. If a test can only fail when someone edits the value it checks, the code can break and the test still passes. That covers a constant compared to its own literal, a mock checked for returning what the test stubbed, and a rule about authored content, like a page description's length.
 
 Nothing gets a test for staying absent. No caller of a deleted export compiles, and that is the proof.
 

@@ -44,7 +44,7 @@ describe('ActiveVersion', () => {
         expect(newest?.readme).toBe('# core');
     });
 
-    it('gives a page to a symbol the sidebar leaves out', async () => {
+    it("gives a page to a symbol the sidebar doesn't list", async () => {
         const active = await ActiveVersion.open(fixtureEngine('core', '@seedcord/core', CORE), 'core', '0.9.2');
 
         expect(active?.pages.map(({ label }) => label)).toEqual(['Bus', 'Hidden']);
@@ -68,7 +68,7 @@ describe('ActiveVersion', () => {
         ]);
     });
 
-    it('opens nothing for a version the index does not list', async () => {
+    it("ignores a version that the index doesn't list", async () => {
         await expect(
             ActiveVersion.open(fixtureEngine('core', '@seedcord/core', CORE), 'core', '0.1.0')
         ).resolves.toBeNull();

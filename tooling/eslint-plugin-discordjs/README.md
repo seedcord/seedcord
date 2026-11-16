@@ -1,6 +1,6 @@
 <div align="center">
   <h1>eslint-plugin-discordjs</h1>
-  <p>Catch discord.js payloads that Discord would reject, before the bot runs.</p>
+  <p>Catch discord.js payloads that Discord would reject before the bot runs.</p>
   <a href="https://github.com/seedcord/seedcord/blob/next/tooling/eslint-plugin-discordjs/CHANGELOG.md">Changelog</a> ·
   <a href="https://seedcord.org/docs/packages/eslint-plugin-discordjs/latest">Reference</a> ·
   <a href="https://seedcord.org/chat/">Discord</a>

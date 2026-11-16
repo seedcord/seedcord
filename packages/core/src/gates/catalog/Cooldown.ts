@@ -38,7 +38,7 @@ type CooldownScope = keyof typeof SCOPE_ID_FIELD;
  */
 export interface CooldownOptions {
     /**
-     * The bucket the cooldown window applies to. 'user' scopes by user ID (falls back to global when the source doesn't have a user id). 'guild' scopes by guild ID (falls back to global if no guild), and 'channel' scopes by channel ID (falls back to global if no channel).
+     * The bucket the cooldown window applies to. 'user' scopes by user ID (falls back to global when the source doesn't have a user id). 'guild' scopes by guild ID (falls back to global when the source doesn't have a guild), and 'channel' scopes by channel ID (falls back to global when the source doesn't have a channel).
      *
      * @defaultValue `'user'`
      */

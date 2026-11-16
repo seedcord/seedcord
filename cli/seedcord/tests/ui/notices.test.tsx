@@ -15,7 +15,7 @@ function running(): DevStore {
 const keysOf = (state: DevState): string[] => noticesOf(state).map((notice) => notice.key);
 
 describe('noticesOf', () => {
-    it('reports nothing while the session is clean', () => {
+    it('is empty while the session is clean', () => {
         expect(noticesOf(running().getState())).toHaveLength(0);
     });
 

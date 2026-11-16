@@ -82,7 +82,7 @@
             "inputs": ["**/*.{md,mdx,ts,tsx,yml,yaml}", ".vale.ini", "tooling/prose/**"]
         },
         "//#knip": {
-            "inputs": ["**/*.{ts,tsx,mts,cts,js,mjs,json}", "knip.json"]
+            "inputs": ["**/*.{ts,tsx,mts,cts,js,mjs,json}", "knip.ts"]
         },
         "//#react-doctor": {
             "inputs": ["apps/**/*.{ts,tsx}", "tooling/ui/**/*.{ts,tsx}", "cli/**/*.tsx", "doctor.config.ts"]

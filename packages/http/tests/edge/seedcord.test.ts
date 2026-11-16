@@ -194,7 +194,7 @@ describe('the edge Seedcord', () => {
         expect(calls).toEqual(['init', 'ready']);
     });
 
-    it('runs a startup task on the first request, before plugins in a later phase', async () => {
+    it('runs a startup task on the first request before plugins in a later phase', async () => {
         const calls: string[] = [];
         class Warm extends Plugin {
             constructor(host: CoreBase) {

@@ -45,7 +45,7 @@ describe('serializeReply', () => {
         expect(result.components).toEqual([raw, { type: ComponentType.TextDisplay, content: 'built' }]);
     });
 
-    it('carries allowedMentions and files through untouched', () => {
+    it('passes allowedMentions and files through untouched', () => {
         const response: ReplyResponse = {
             components: [new TextDisplayBuilder().setContent('a')],
             allowedMentions: { parse: ['users'] },
@@ -56,7 +56,7 @@ describe('serializeReply', () => {
         expect(result.files).toEqual([{ data: new Uint8Array([1, 2]), name: 'f.txt' }]);
     });
 
-    it('omits allowedMentions and files when the response has none', () => {
+    it("omits allowedMentions and files when the response doesn't have them", () => {
         const result = serializeReply({ components: [new TextDisplayBuilder().setContent('a')] }, ROUTE);
         expect(result.allowedMentions).toBeUndefined();
         expect(result.files).toBeUndefined();

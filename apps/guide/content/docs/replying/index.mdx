@@ -31,11 +31,21 @@ reply() was called when this interaction was already replied to.
 Use followUp() for a new message or edit() to rewrite the reply. (route slash:ban)
 ```
 
-discord.js checks too, and its error reads "The reply to this interaction has already been sent or deferred." seedcord's reports which method works from there and which route threw. Its `cause` has a stack pointing at the line that answered first. On http, `this.api` doesn't check at all, so a second callback comes back from Discord as an API error. [When a reply throws](/replying/ack-states) covers every case.
+discord.js also rejects a second answer, and its error doesn't say what to do next. seedcord's error says which method works from there and which route threw. Its `cause` points at the line that answered first. [When a reply throws](/replying/ack-states) covers every case.
 
-The state matters most when your handler refuses. You refuse by throwing a [`Notice`](ref:core/Notice). seedcord then sends its card through the same handler with [`send()`](ref:gateway/RepliableHandler.send), which reads the state to pick a method. If nothing went out yet, the card is the reply. After `defer()` it fills the thinking placeholder, and after a reply it arrives as a follow-up. You write the same `throw` from any of those points.
+The state matters most when your handler refuses. You refuse by throwing a [`Notice`](ref:core/Notice), and seedcord sends the refusal with [`send()`](ref:gateway/RepliableHandler.send), which picks the method from the state.
 
-That holds while you send every answer through the handler. `this.event.reply()` reaches Discord and leaves the state at `unacked`. A callback on `this.api.interactions` does the same on http. seedcord then sends a `Notice` thrown after it as a first reply, which Discord rejects because the interaction was already acknowledged. seedcord catches that rejection and logs a debug line. The person who ran the command sees your message and never sees the refusal.
+{/* prettier-ignore-start */}
+
+| when you throw | the refusal |
+| --- | --- |
+| before answering | is the reply |
+| after `defer()` | fills the thinking placeholder |
+| after a reply | arrives as a follow-up |
+
+{/* prettier-ignore-end */}
+
+You write the same `throw` from any of those points. That only works while you send every answer through the handler. If you answer with `this.event.reply()` or `this.api`, a `Notice` you throw afterwards never reaches the user, which [Raw acks](/replying/raw-acks#a-raw-ack-leaves-the-state-stale) explains.
 
 ## Replying with an error
 
@@ -118,7 +128,7 @@ export class Ban extends SlashHandler<'ban'> {
 }
 ```
 
-`reason` there is text someone typed into your command, so it can hold anyone's `<@id>`. The empty `parse` blocks every mention in it, so your bot doesn't ping anyone. Set one on any reply that repeats what a person typed.
+`reason` there is text someone typed into your command. It can hold anyone's `<@id>`. The empty `parse` blocks every mention in it, so your bot doesn't ping anyone. Set one on any reply that repeats what a person typed.
 
 {/* prettier-ignore-start */}
 
@@ -132,7 +142,7 @@ export class Ban extends SlashHandler<'ban'> {
 
 ## Only the person who ran the command sees it
 
-Ephemeral is on by default. Pass `ephemeral: false` to show the reply to the whole channel. `silent: true` skips push and desktop notifications.
+Ephemeral is on unless [your config turns it off](#make-replies-public-by-default). Pass `ephemeral: false` to show the reply to the whole channel. `silent: true` skips push and desktop notifications.
 
 ```ts twoslash
 import { SlashHandler, SlashRoute } from '@seedcord/gateway';
@@ -150,7 +160,30 @@ class Ban extends SlashHandler<'ban'> {
 }
 ```
 
-`followUp()` takes `ephemeral` and `silent` the same way. `edit()` doesn't take options, since it rewrites a message that already has its flags.
+`followUp()` takes `ephemeral` and `silent` the same way. `edit()` doesn't take options since it rewrites a message that already has its flags.
+
+### Make replies public by default
+
+If most of your replies should go to the whole channel, set `ephemeral: false` under `bot.interactions` in your config. Then you don't need to pass `ephemeral` on each reply.
+
+```ts twoslash title="src/bot.ts"
+import { Seedcord } from '@seedcord/gateway';
+import { GatewayIntentBits } from 'discord.js';
+
+export const seedcord = new Seedcord({
+    bot: {
+        clientOptions: { intents: [GatewayIntentBits.Guilds] },
+        interactions: { path: './handlers', ephemeral: false },
+        commands: { path: null },
+        events: { path: null }
+    },
+    subscribers: { path: null }
+});
+```
+
+Every reply without its own `ephemeral` uses that default, including `defer()`, a paginator, and a confirm prompt. After a `defer()`, [its visibility is the default](/replying/more-messages#set-ephemeral-when-you-defer) for the rest of the interaction. Pass `ephemeral: true` when only the person who ran the command should see a reply.
+
+seedcord sends error cards and [notices](/replying/throwing) as ephemeral whatever you set here.
 
 ## The message you get back
 
@@ -179,7 +212,7 @@ class Ban extends SlashHandler<'ban'> {
 
 ## Who sent the interaction
 
-On http, `this.event.user` is undefined in a server, because Discord sends `member.user` there. Use [`this.user`](ref:gateway/RepliableHandler.user) because it reads whichever one Discord sent, on every interaction handler and middleware.
+On http, `this.event.user` is undefined in a server because Discord sends `member.user` there. Use [`this.user`](ref:gateway/RepliableHandler.user) because it reads whichever one Discord sent, on every interaction handler and middleware.
 
 ```ts twoslash
 import { SlashHandler, SlashRoute } from '@seedcord/gateway';
@@ -196,6 +229,6 @@ class Ban extends SlashHandler<'ban'> {
 
 <Callout type="transport">
 
-`this.user` is a discord.js `User` on gateway and an `APIUser` on http. Separately, the server id comes from the event, as `this.event.guildId` on gateway and `this.event.guild_id` on http.
+`this.user` is a discord.js `User` on gateway and an `APIUser` on http. Separately, the server id comes from the event as `this.event.guildId` on gateway and `this.event.guild_id` on http.
 
 </Callout>

@@ -6,7 +6,7 @@ import { IANA_TIMEZONES } from '#src/types/Timezone';
 const listed = new Set<string>(IANA_TIMEZONES);
 
 describe('IanaTimezone', () => {
-    it('lists every zone this Node supports', () => {
+    it('lists every zone that this Node supports', () => {
         const missing = Intl.supportedValuesOf('timeZone').filter((zone) => !listed.has(zone));
 
         expect(missing).toEqual([]);

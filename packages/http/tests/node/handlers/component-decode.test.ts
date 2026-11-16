@@ -184,7 +184,7 @@ describe('button decode', () => {
         );
     });
 
-    it('throws MatchCaseMissing for a prototype-named prefix with no case', async () => {
+    it('throws MatchCaseMissing for a prototype-named prefix without a case', async () => {
         const Ctor = new CustomId('constructor').snowflake('userId');
         @ButtonRoute(Ctor)
         class Weird extends ButtonHandler<[typeof Ctor]> {

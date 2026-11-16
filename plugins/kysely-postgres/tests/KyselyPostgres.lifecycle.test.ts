@@ -25,7 +25,7 @@ describe('KyselyPostgres lifecycle', () => {
         await testEnv.setup();
         await testEnv.createFile('migrations/.keep', '');
         await testEnv.createFile('services/.keep', '');
-        // the plugin reads nothing off core, this only satisfies the constructor
+        // the plugin never reads core. this only satisfies the constructor
         mockCore = { config: {} } as unknown as CoreBase;
     });
 

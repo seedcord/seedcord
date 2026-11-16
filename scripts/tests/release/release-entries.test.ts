@@ -118,7 +118,7 @@ describe('ReleaseEntries', () => {
         expect(entries.patch).toEqual([]);
     });
 
-    it('reads nothing from a version the changelog lacks', () => {
+    it('returns empty lists for a version that the changelog lacks', () => {
         const entries = new ReleaseEntries([{ name: '@seedcord/core', version: '9.9.9', changelog: CORE }]);
 
         expect(entries.breaking).toEqual([]);

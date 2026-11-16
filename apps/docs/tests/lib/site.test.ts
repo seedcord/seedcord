@@ -36,7 +36,7 @@ describe('DocsPage.metadata', () => {
         expect(meta.alternates?.canonical).toBe('https://seedcord.org/docs/packages/types/latest');
     });
 
-    it('points the reference root at the base path with no trailing slash', () => {
+    it('points the reference root at the base path without a trailing slash', () => {
         expect(DocsPage.root().metadata().alternates?.canonical).toBe('https://seedcord.org/docs');
     });
 

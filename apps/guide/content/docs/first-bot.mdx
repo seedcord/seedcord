@@ -15,10 +15,10 @@ You need the token from the last page, though you can leave it for later. The co
 - **What your bot should react to.** Gateway only. A checklist of events like messages, reactions, and member joins, with a hint on each and the privileged ones marked. Your picks become the intents and partials in your `bot.ts`. Those are discord.js's options for which events and incomplete objects your bot gets.
 - **Your bot token.** Paste it now, or press Enter twice on the empty prompt to leave `DISCORD_BOT_TOKEN` empty in `.env`. Your bot won't start until you fill it in.
 - **Your test servers.** The ids of the servers where you try your commands, separated by commas. [Turn on Developer Mode in Discord](https://support.discord.com/hc/en-us/articles/206346498), right-click a server, and pick **Copy Server ID**. The ids go to `TESTING_GUILD_IDS` in `.env`. If you press Enter to leave it empty, your commands go to every server your bot is in.
-- **Your bot color.** Every embed and container you build with `BuilderComponent` takes it, unless you set a color on that one yourself.
+- **Your bot color.** Every embed and container you build with `BuilderComponent` takes it unless you set a color on that one yourself.
 - **Whether to install dependencies and set up git.** Two yes or no questions, both defaulting to yes.
 
-If you say yes to installing, the command installs your dependencies, formats the project, and runs `seedcord codegen`. If you say yes to git, it makes the first commit, unless git isn't installed or the folder is already inside a repo.
+If you say yes to installing, the command installs your dependencies, formats the project, and runs `seedcord codegen`. If you say yes to git, it makes the first commit unless git isn't installed or the folder is already inside a repo.
 
 Every question has a flag, like `--transport http` or `--testing-guilds 123,456`, and `--help` lists them all. npm passes flags on only after a `--`.
 
@@ -84,7 +84,7 @@ my-bot/
 └─ tsconfig.json
 ```
 
-`pnpm-workspace.yaml` only exists for a project made with pnpm. A project made with Bun gets a `bunfig.toml` instead, unless it's a Workers bot.
+`pnpm-workspace.yaml` only exists for a project made with pnpm. A project made with Bun gets a `bunfig.toml` instead unless it's a Workers bot.
 
 - **`src/bot.ts`** builds your bot and exports it. **`src/index.ts`** imports that and starts it. They are separate so the CLI can import `bot.ts` and read your commands without starting the bot.
 - **[`seedcord.config.ts`](/build/config)** configures the CLI. Put your bot's own settings in `bot.ts`, shown below.
@@ -99,13 +99,13 @@ my-bot/
 
 <Callout type="transport" only="http">
 
-Discord posts only interactions to an http bot, so the command doesn't create a `src/events` folder or the `Event` template. A bot for [Cloudflare Workers](/build/workers) has no `src/index.ts` either, since Cloudflare starts the worker. It gets a `cloudflare.config.ts` that declares the keys that the worker receives. The worker doesn't get any other value.
+Discord posts only interactions to an http bot, so the command doesn't create a `src/events` folder or the `Event` template. A bot for [Cloudflare Workers](/build/workers) has no `src/index.ts` either since Cloudflare starts the worker. It gets a `cloudflare.config.ts` that declares the keys that the worker receives. The worker doesn't get any other value.
 
 </Callout>
 
 ### Scripts
 
-`package.json` defines the scripts that run the CLI. If you run a global `seedcord` in a project that installs its own, it throws `CliNotProjectInstall`, because the CLI has to load the same seedcord packages your bot imports.
+`package.json` defines the scripts that run the CLI. If you run a global `seedcord` in a project that installs its own, it throws `CliNotProjectInstall` because the CLI has to load the same seedcord packages your bot imports.
 
 {/* prettier-ignore-start */}
 
@@ -192,11 +192,11 @@ export const seedcord = new Seedcord({
 export default seedcord;
 ```
 
-Each `path` key is a folder that seedcord imports files from at startup, and a `null` path scans nothing. `'./handlers'` is relative to `root`, so with `root: './src'` it means `src/handlers`. The seedcord CLI and a built bot set `root`. If a test or a `tsx` script runs the bot, a relative path throws `CoreDirectoryRootUnknown`. In those runs, use an absolute path built from `import.meta.dirname`.
+Each `path` key is a folder that seedcord imports files from at startup, and a `null` path turns that folder off. `'./handlers'` is relative to `root`, so with `root: './src'` it means `src/handlers`. The seedcord CLI and a built bot set `root`. If a test or a `tsx` script runs the bot, a relative path throws `CoreDirectoryRootUnknown`. In those runs, use an absolute path built from `import.meta.dirname`.
 
 The optional `guilds` key lists the servers where every command registered with [`RegisterCommand()`](ref:core/RegisterCommand) deploys. It reads `TESTING_GUILD_IDS` from `.env` through envapt, which splits the comma-separated ids into an array. An empty list sends those commands to every server your bot is in, so don't set `TESTING_GUILD_IDS` where you deploy. A command that passes `'global'` to the decorator ignores the list, and one that passes its own ids replaces it. [Commands](/commands) explains both. [Environment files](/build/env) explains how envapt picks `.env` files and reads your own keys.
 
-`botColor` is the color from your answer. `developerUsername` is who seedcord's generic error reply tells users to contact. The setup command fills it from your git user name, or "the developer" when git has none, so the sample's `'you'` stands for your name. `subscribers.path` is `null` because the new project starts without [subscribers](/events/bus). `.attach('uptime', Uptime)` puts the plugin on `this.core.uptime`, which [the core object](/core) shows next.
+`botColor` is the color from your answer. `developerUsername` is who seedcord's generic error reply tells users to contact. The setup command fills it from your git user name, or "the developer" when git doesn't have one, so the sample's `'you'` stands for your name. `subscribers.path` is `null` because the new project starts without [subscribers](/events/bus). `.attach('uptime', Uptime)` puts the plugin on `this.core.uptime`, which [the core object](/core) shows next.
 
 Build your bot with [`new Seedcord(...)`](ref:gateway/Seedcord) and make it the default export, the way this file does, because `instance` in `seedcord.config.ts` points at that export.
 
@@ -272,7 +272,7 @@ export class Ping extends SlashHandler<'ping'> {
 
 `execute()` runs when someone uses `/ping`. `'ping'` appears twice, on the decorator and on the generic, and both have to match the name that the command sets. The compiler catches a mismatch. [`this.options`](ref:gateway/SlashHandler.options) has `detailed` because `seedcord codegen` recorded it off the command file.
 
-`roundtrip` measures one way, from Discord creating the interaction to `execute()` running, so it is closer to a latency than a round trip. It comes from the interaction's id, so it includes any gap between your clock and Discord's. With `detailed` set, the reply adds a line like "Up since 3 minutes ago". Discord turns the `<t:...:R>` markup into a relative time.
+`roundtrip` measures one way, from Discord creating the interaction to `execute()` running, so it is closer to a latency than a round trip. It comes from the interaction's id and includes any gap between your clock and Discord's. With `detailed` set, the reply adds a line like "Up since 3 minutes ago". Discord turns the `<t:...:R>` markup into a relative time.
 
 <Callout type="transport" only="http">
 
@@ -294,7 +294,7 @@ Commands updated:
 Refresh commands? (y/n)
 ```
 
-The `Refresh commands? (y/n)` prompt appears only for the command edit, because the new definition has to go to Discord before anyone sees it. A handler edit reloads on its own.
+The `Refresh commands? (y/n)` prompt appears only for the command edit because the new definition has to go to Discord before anyone sees it. A handler edit reloads on its own.
 
 Press `y` to send the new command to Discord and run `seedcord codegen`, which rewrites `src/seedcord-gen.ts` so your handler's types match what the command now declares.
 

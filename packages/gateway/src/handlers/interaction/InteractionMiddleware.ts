@@ -11,7 +11,7 @@ import type { Promisable } from 'type-fest';
  * Base class for interaction middleware.
  *
  * Middleware runs after the dispatcher builds the handler and before the gates, over the handler's own
- * reply surface. Name the kinds in the generic and list the same ones in `{ kinds }`. Several kinds give
+ * reply surface. Write the kinds twice, in the generic and in `{ kinds }`. Several kinds give
  * `this.event` a union. The discord.js guards narrow it. A catchall reads every repliable kind.
  *
  * @typeParam Kind - One or more {@link InteractionKind} members. Defaults to every repliable kind.
@@ -40,14 +40,14 @@ export abstract class InteractionMiddleware<
     /**
      * What started this dispatch: a slash command path like `config/set`, a context menu command's
      * name, or a custom-ID prefix. When the generic lists only slash or context menu kinds, your editor
-     * offers your registered commands. It can still be any string, since middleware also runs when no
-     * handler matched, like on a deleted command that Discord still shows. For a custom ID that seedcord
+     * offers your registered commands. It can still be any string since middleware also runs when the
+     * interaction didn't match a handler, like on a deleted command that Discord still shows. For a custom ID that seedcord
      * didn't make, it can be empty or a cut-off piece of that ID.
      */
     declare protected readonly route: MiddlewareRoute<Kind>;
 
     /**
-     * Runs once the handler settles, newest middleware first. A refusal or a throw still reaches it,
+     * Runs once the handler settles, newest middleware first. A refusal or a throw still reaches it
      * since seedcord calls it on every middleware whose `execute()` started. Implement it to release
      * something this middleware took in `execute()`, such as a lock or an open span. Seedcord logs
      * a throw in here and doesn't rethrow it.
