@@ -6,5 +6,5 @@ uptime = Działa od **{ $seconds ->
 }**
 pings = Pingów: **{ $count }**
 asked-in = Zapytano w **{ $locale }**
-roll = { $actor } wyrzucił **{ $value }** na k{ $sides }
+roll = { $actor } wyrzucił **{ $value }** na k{ $sides } (#{ $count })
 roll-again = Rzuć jeszcze raz

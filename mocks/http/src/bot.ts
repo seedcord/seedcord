@@ -1,6 +1,9 @@
 import { Seedcord, WinstonConsoleSink, WinstonFileSink } from '@seedcord/http';
 import { I18n } from '@seedcord/plugin-i18n';
+import { Kysely } from '@seedcord/plugin-kysely';
+import Database from 'better-sqlite3';
 import { Converters, Envapter } from 'envapt';
+import { SqliteDialect } from 'kysely';
 
 import { PingCounter } from './plugins/PingCounter';
 import { Uptime } from './plugins/Uptime';
@@ -30,6 +33,11 @@ export const seedcord = new Seedcord({
 })
     .attach('stats.uptime', Uptime)
     .attach('stats.pings', PingCounter)
+    .attach('db', Kysely, {
+        dir: './services',
+        dialect: () => new SqliteDialect({ database: new Database(':memory:') }),
+        migrations: { dir: './migrations' }
+    })
     .attach('i18n', I18n, { path: './locales' });
 
 export default seedcord;

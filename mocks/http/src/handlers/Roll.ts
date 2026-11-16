@@ -2,7 +2,7 @@ import { ButtonBuilder, TextDisplayBuilder } from '@discordjs/builders';
 import { ButtonHandler, ButtonRoute, CustomId, RowComponent, SlashHandler, SlashRoute } from '@seedcord/http';
 import { ButtonStyle } from 'discord-api-types/v10';
 
-import type { DispatchMemberValues } from '@seedcord/http';
+import type { Core, DispatchMemberValues } from '@seedcord/http';
 
 const DEFAULT_SIDES = 20;
 
@@ -23,18 +23,27 @@ class RerollRow extends RowComponent<'button'> {
     }
 }
 
-function rollLine(t: Translate, actor: string, sides: number): TextDisplayBuilder {
+async function rollLine(
+    t: Translate,
+    core: Core,
+    userId: string,
+    actor: string,
+    sides: number
+): Promise<TextDisplayBuilder> {
     const value = 1 + Math.floor(Math.random() * sides);
-    return new TextDisplayBuilder().setContent(t('roll', { actor, value, sides }));
+    const { rolls } = core.db.services;
+    await rolls.record(userId, sides, value);
+    const count = await rolls.countFor(userId);
+    return new TextDisplayBuilder().setContent(t('roll', { actor, value, sides, count }));
 }
 
 @SlashRoute('roll')
 export class RollSlash extends SlashHandler<'roll'> {
     public async execute(): Promise<void> {
         const sides = this.options.getInteger('sides') ?? DEFAULT_SIDES;
-        const actor = this.dispatch.require('actor');
+        const line = await rollLine(this.t, this.core, this.user.id, this.dispatch.require('actor'), sides);
 
-        await this.reply({ components: [rollLine(this.t, actor, sides), new RerollRow(this.t, sides).component] });
+        await this.reply({ components: [line, new RerollRow(this.t, sides).component] });
     }
 }
 
@@ -42,8 +51,8 @@ export class RollSlash extends SlashHandler<'roll'> {
 export class RerollButton extends ButtonHandler<[typeof RerollId]> {
     public async execute(): Promise<void> {
         const { sides } = this.params;
-        const actor = this.dispatch.require('actor');
+        const line = await rollLine(this.t, this.core, this.user.id, this.dispatch.require('actor'), sides);
 
-        await this.update({ components: [rollLine(this.t, actor, sides), new RerollRow(this.t, sides).component] });
+        await this.update({ components: [line, new RerollRow(this.t, sides).component] });
     }
 }
