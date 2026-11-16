@@ -1,56 +1,36 @@
 import { setDevChannel } from '@seedcord/core/internal';
 import { Logger } from '@seedcord/logger';
-import { describe, it, expect, beforeEach, afterEach, onTestFinished, vi } from 'vite-plus/test';
+import { describe, expect, onTestFinished, vi } from 'vite-plus/test';
 
-import { Kysely } from '#src/Kysely';
-
-import { memorySqlite } from './utils/dialects';
 import { pluginsPath } from './utils/source-path';
-import { TestEnvironment } from './utils/test-env';
+import { it } from './utils/test-env';
 
-import type { CoreBase } from '@seedcord/core';
+const USER_SERVICE = `
+import { KyselyService, RegisterKyselyService } from '${pluginsPath}';
+
+@RegisterKyselyService('users')
+export class UserService extends KyselyService<any> {
+    public async findUser() {
+        return 'user';
+    }
+}
+`;
+
+const ADMIN_SERVICE = `
+import { KyselyService, RegisterKyselyService } from '${pluginsPath}';
+
+@RegisterKyselyService('admins')
+export class UserService extends KyselyService<any> {
+    public async findUser() {
+        return 'admin';
+    }
+}
+`;
 
 describe('Kysely Plugin Integration', () => {
-    let testEnv: TestEnvironment;
-
-    let plugin: Kysely;
-    let mockCore: CoreBase;
-
-    beforeEach(async () => {
-        testEnv = new TestEnvironment('kysely-test-');
-        await testEnv.setup();
-        await testEnv.createFile('migrations/.keep', '');
-        // the plugin never reads core. this only satisfies the constructor
-        mockCore = { config: {} } as unknown as CoreBase;
-    });
-
-    afterEach(async () => {
-        setDevChannel(undefined);
-        await testEnv.teardown();
-        vi.clearAllMocks();
-    });
-
-    it('should load kysely services from directory', async () => {
-        const servicesDir = 'services';
-        await testEnv.createFile(
-            `${servicesDir}/UserService.ts`,
-            `
-            import { KyselyService, RegisterKyselyService } from '${pluginsPath}';
-
-            @RegisterKyselyService('users')
-            export class UserService extends KyselyService<any> {
-                public async findUser() {
-                    return 'user';
-                }
-            }
-            `
-        );
-
-        plugin = new Kysely(mockCore, {
-            dialect: memorySqlite,
-            migrations: { dir: testEnv.resolvePath('migrations') },
-            dir: testEnv.resolvePath(servicesDir)
-        });
+    it('should load kysely services from directory', async ({ kyselyWith, testEnv }) => {
+        await testEnv.createFile('services/UserService.ts', USER_SERVICE);
+        const plugin = kyselyWith();
 
         const { services } = await plugin.codegen();
         expect(services.users?.name).toBe('UserService');
@@ -60,9 +40,11 @@ describe('Kysely Plugin Integration', () => {
         expect(plugin.services).toHaveProperty('users');
     });
 
-    it('warns once about a service class without the decorator and ignores the other exports', async () => {
-        const warn = vi.spyOn(Logger.prototype, 'warn');
-        onTestFinished(() => warn.mockRestore());
+    it('warns once about a service class without the decorator and ignores the other exports', async ({
+        kyselyWith,
+        testEnv
+    }) => {
+        using warn = vi.spyOn(Logger.prototype, 'warn');
         await testEnv.createFile(
             'services/Plain.ts',
             `
@@ -76,11 +58,7 @@ describe('Kysely Plugin Integration', () => {
             `
         );
         await testEnv.createFile('services/index.ts', "export { Plain } from './Plain';");
-        plugin = new Kysely(mockCore, {
-            dialect: memorySqlite,
-            migrations: { dir: testEnv.resolvePath('migrations') },
-            dir: testEnv.resolvePath('services')
-        });
+        const plugin = kyselyWith();
 
         await plugin.init();
 
@@ -88,73 +66,24 @@ describe('Kysely Plugin Integration', () => {
         expect(plugin.services).toEqual({});
     });
 
-    it('should handle HMR updates for kysely services', async () => {
-        const servicesDir = 'services';
-        const filePath = await testEnv.createFile(
-            `${servicesDir}/UserService.ts`,
-            `
-            import { KyselyService, RegisterKyselyService } from '${pluginsPath}';
-
-            @RegisterKyselyService('users')
-            export class UserService extends KyselyService<any> {
-                public async findUser() {
-                    return 'user';
-                }
-            }
-            `
-        );
-
-        plugin = new Kysely(mockCore, {
-            dialect: memorySqlite,
-            migrations: { dir: testEnv.resolvePath('migrations') },
-            dir: testEnv.resolvePath(servicesDir)
-        });
-
+    it('should handle HMR updates for kysely services', async ({ kyselyWith, testEnv }) => {
+        const filePath = await testEnv.createFile('services/UserService.ts', USER_SERVICE);
+        const plugin = kyselyWith();
         await plugin.init();
-
         expect(plugin.services).toHaveProperty('users');
 
         // HMR update that changes the registered key
-        await testEnv.createFile(
-            `${servicesDir}/UserService.ts`,
-            `
-            import { KyselyService, RegisterKyselyService } from '${pluginsPath}';
-
-            @RegisterKyselyService('admins')
-            export class UserService extends KyselyService<any> {
-                public async findUser() {
-                    return 'admin';
-                }
-            }
-            `
-        );
-
-        await plugin.onHmr({
-            file: filePath,
-            type: 'update'
-        });
+        await testEnv.createFile('services/UserService.ts', ADMIN_SERVICE);
+        await plugin.onHmr({ file: filePath, type: 'update' });
 
         expect(plugin.services).not.toHaveProperty('users');
         expect(plugin.services).toHaveProperty('admins');
     });
 
-    it('keeps other tracked services registered when one leaf reloads', async () => {
-        const servicesDir = 'services';
-        const userFile = await testEnv.createFile(
-            `${servicesDir}/UserService.ts`,
-            `
-            import { KyselyService, RegisterKyselyService } from '${pluginsPath}';
-
-            @RegisterKyselyService('users')
-            export class UserService extends KyselyService<any> {
-                public async findUser() {
-                    return 'user';
-                }
-            }
-            `
-        );
+    it('keeps other tracked services registered when one leaf reloads', async ({ kyselyWith, testEnv }) => {
+        const userFile = await testEnv.createFile('services/UserService.ts', USER_SERVICE);
         await testEnv.createFile(
-            `${servicesDir}/ProductService.ts`,
+            'services/ProductService.ts',
             `
             import { KyselyService, RegisterKyselyService } from '${pluginsPath}';
 
@@ -166,33 +95,13 @@ describe('Kysely Plugin Integration', () => {
             }
             `
         );
-
-        plugin = new Kysely(mockCore, {
-            dialect: memorySqlite,
-            migrations: { dir: testEnv.resolvePath('migrations') },
-            dir: testEnv.resolvePath(servicesDir)
-        });
-
+        const plugin = kyselyWith();
         await plugin.init();
-
         expect(plugin.services).toHaveProperty('users');
         expect(plugin.services).toHaveProperty('products');
 
         // reload only the user leaf
-        await testEnv.createFile(
-            `${servicesDir}/UserService.ts`,
-            `
-            import { KyselyService, RegisterKyselyService } from '${pluginsPath}';
-
-            @RegisterKyselyService('admins')
-            export class UserService extends KyselyService<any> {
-                public async findUser() {
-                    return 'admin';
-                }
-            }
-            `
-        );
-
+        await testEnv.createFile('services/UserService.ts', ADMIN_SERVICE);
         await plugin.onHmr({ file: userFile, type: 'update' });
 
         // the single-leaf reload kept the store because the unchanged product leaf is still tracked
@@ -201,11 +110,13 @@ describe('Kysely Plugin Integration', () => {
         expect(plugin.services).not.toHaveProperty('users');
     });
 
-    it('removes services registered by a failed init when the retry no longer finds them', async () => {
-        const servicesDir = 'services';
+    it('removes services registered by a failed init when the retry no longer finds them', async ({
+        kyselyWith,
+        testEnv
+    }) => {
         // this one registers before the broken file aborts the scan. A sorts before Z
         await testEnv.createFile(
-            `${servicesDir}/AUserService.ts`,
+            'services/AUserService.ts',
             `
             import { KyselyService, RegisterKyselyService } from '${pluginsPath}';
 
@@ -213,19 +124,14 @@ describe('Kysely Plugin Integration', () => {
             export class AUserService extends KyselyService<any> {}
             `
         );
-        await testEnv.createFile(`${servicesDir}/ZBroken.ts`, 'export const broken = {{{ not valid');
-
-        plugin = new Kysely(mockCore, {
-            dialect: memorySqlite,
-            migrations: { dir: testEnv.resolvePath('migrations') },
-            dir: testEnv.resolvePath(servicesDir)
-        });
+        await testEnv.createFile('services/ZBroken.ts', 'export const broken = {{{ not valid');
+        const plugin = kyselyWith();
 
         await expect(plugin.init()).rejects.toThrow();
 
-        await testEnv.removeFile(`${servicesDir}/AUserService.ts`);
+        await testEnv.removeFile('services/AUserService.ts');
         await testEnv.createFile(
-            `${servicesDir}/ZBroken.ts`,
+            'services/ZBroken.ts',
             `
             import { KyselyService, RegisterKyselyService } from '${pluginsPath}';
 
@@ -240,48 +146,26 @@ describe('Kysely Plugin Integration', () => {
         expect(plugin.services).not.toHaveProperty('users');
     });
 
-    it('keeps the last-good service when a reload throws', async () => {
-        const servicesDir = 'services';
-        const userFile = await testEnv.createFile(
-            `${servicesDir}/UserService.ts`,
-            `
-            import { KyselyService, RegisterKyselyService } from '${pluginsPath}';
-
-            @RegisterKyselyService('users')
-            export class UserService extends KyselyService<any> {
-                public async findUser() {
-                    return 'user';
-                }
-            }
-            `
-        );
-
-        plugin = new Kysely(mockCore, {
-            dialect: memorySqlite,
-            migrations: { dir: testEnv.resolvePath('migrations') },
-            dir: testEnv.resolvePath(servicesDir)
-        });
-
+    it('keeps the last-good service when a reload throws', async ({ kyselyWith, testEnv }) => {
+        const userFile = await testEnv.createFile('services/UserService.ts', USER_SERVICE);
+        const plugin = kyselyWith();
         await plugin.init();
         expect(plugin.services).toHaveProperty('users');
 
         // a broken edit, the reload import throws
-        await testEnv.createFile(`${servicesDir}/UserService.ts`, 'export const broken = {{{ not valid');
+        await testEnv.createFile('services/UserService.ts', 'export const broken = {{{ not valid');
         await plugin.onHmr({ file: userFile, type: 'update' });
 
         // the last-good service round-trips and is still registered since the failed reload rolled back
         expect(plugin.services).toHaveProperty('users');
     });
 
-    it('registers the migrations dir as a restart pattern', () => {
+    it('registers the migrations dir as a restart pattern', ({ kyselyWith }) => {
         const send = vi.fn();
         setDevChannel({ send, on: vi.fn(), off: vi.fn() });
+        onTestFinished(() => setDevChannel(undefined));
 
-        plugin = new Kysely(mockCore, {
-            dialect: memorySqlite,
-            migrations: { dir: './migrations' },
-            dir: './services'
-        });
+        kyselyWith({ migrations: { dir: './migrations' }, dir: './services' });
 
         expect(send).toHaveBeenCalledWith('seedcord:register-critical-files', { patterns: ['migrations/**'] });
     });

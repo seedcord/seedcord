@@ -1,45 +1,14 @@
 import { SeedcordErrorCode } from '@seedcord/errors';
 import { Logger } from '@seedcord/logger';
 import { SqliteDialect, sql } from 'kysely';
-import { describe, it, expect, beforeEach, afterEach, vi } from 'vite-plus/test';
-
-import { Kysely } from '#src/Kysely';
+import { describe, expect, vi } from 'vite-plus/test';
 
 import { heldSqlite, memorySqlite } from './utils/dialects';
-import { TestEnvironment } from './utils/test-env';
-
-import type { KyselyOptions } from '#src/types/KyselyOptions';
-import type { CoreBase } from '@seedcord/core';
+import { it } from './utils/test-env';
 
 describe('Kysely lifecycle', () => {
-    let testEnv: TestEnvironment;
-    let mockCore: CoreBase;
-
-    beforeEach(async () => {
-        testEnv = new TestEnvironment('kysely-lifecycle-');
-        await testEnv.setup();
-        await testEnv.createFile('migrations/.keep', '');
-        await testEnv.createFile('services/.keep', '');
-        // the plugin never reads core. this only satisfies the constructor
-        mockCore = { config: {} } as unknown as CoreBase;
-    });
-
-    afterEach(async () => {
-        await testEnv.teardown();
-        vi.clearAllMocks();
-    });
-
-    function build(options: Partial<KyselyOptions> = {}): Kysely {
-        return new Kysely(mockCore, {
-            dialect: memorySqlite,
-            migrations: { dir: testEnv.resolvePath('migrations') },
-            dir: testEnv.resolvePath('services'),
-            ...options
-        });
-    }
-
-    it('translates a dialect() that throws into PluginConnectionFailed', async () => {
-        const plugin = build({
+    it('translates a dialect() that throws into PluginConnectionFailed', async ({ kyselyWith }) => {
+        const plugin = kyselyWith({
             dialect: () => {
                 throw new Error('bad option');
             }
@@ -50,8 +19,8 @@ describe('Kysely lifecycle', () => {
         );
     });
 
-    it('translates a refused connection into PluginConnectionFailed', async () => {
-        const plugin = build({
+    it('translates a refused connection into PluginConnectionFailed', async ({ kyselyWith }) => {
+        const plugin = kyselyWith({
             dialect: () => new SqliteDialect({ database: () => Promise.reject(new Error('ECONNREFUSED')) })
         });
 
@@ -60,9 +29,9 @@ describe('Kysely lifecycle', () => {
         );
     });
 
-    it('calls dialect() in init() and never during codegen()', async () => {
+    it('calls dialect() in init() and never during codegen()', async ({ kyselyWith }) => {
         const dialect = vi.fn(memorySqlite);
-        const plugin = build({ dialect });
+        const plugin = kyselyWith({ dialect });
 
         await plugin.codegen();
         expect(dialect).not.toHaveBeenCalled();
@@ -71,11 +40,11 @@ describe('Kysely lifecycle', () => {
         expect(dialect).toHaveBeenCalledOnce();
     });
 
-    it('retries after a failed init', async () => {
+    it('retries after a failed init', async ({ kyselyWith }) => {
         const dialect = vi.fn(memorySqlite).mockImplementationOnce(() => {
             throw new Error('bad option');
         });
-        const plugin = build({ dialect });
+        const plugin = kyselyWith({ dialect });
         await expect(plugin.init()).rejects.toThrow();
 
         await plugin.init();
@@ -83,9 +52,9 @@ describe('Kysely lifecycle', () => {
         expect(plugin.services).toEqual({});
     });
 
-    it('closes the connection when service loading fails after connecting', async () => {
+    it('closes the connection when service loading fails after connecting', async ({ kyselyWith, testEnv }) => {
         const held = heldSqlite();
-        const plugin = build({ dialect: held.dialect, dir: testEnv.resolvePath('absent') });
+        const plugin = kyselyWith({ dialect: held.dialect, dir: testEnv.resolvePath('absent') });
 
         await expect(plugin.init()).rejects.toThrow(
             expect.objectContaining({ code: SeedcordErrorCode.CorePathUnreadable })
@@ -94,28 +63,28 @@ describe('Kysely lifecycle', () => {
         expect(held.database.open).toBe(false);
     });
 
-    it('keeps the init failure when the cleanup close also fails', async () => {
+    it('keeps the init failure when the cleanup close also fails', async ({ kyselyWith, testEnv }) => {
         const held = heldSqlite();
         vi.spyOn(held.database, 'close').mockImplementation(() => {
             throw new Error('still busy');
         });
-        const plugin = build({ dialect: held.dialect, dir: testEnv.resolvePath('absent') });
+        const plugin = kyselyWith({ dialect: held.dialect, dir: testEnv.resolvePath('absent') });
 
         await expect(plugin.init()).rejects.toThrow(
             expect.objectContaining({ code: SeedcordErrorCode.CorePathUnreadable })
         );
     });
 
-    it.each(['services', 'connection'] as const)('throws when %s is read before init', (member) => {
-        const plugin = build();
+    it.for(['services', 'connection'] as const)('throws when %s is read before init', (member, { kyselyWith }) => {
+        const plugin = kyselyWith();
 
         expect(() => plugin[member]).toThrow(
             expect.objectContaining({ code: SeedcordErrorCode.PluginServicesNotReady })
         );
     });
 
-    it('exposes a working connection and the services map once init resolves', async () => {
-        const plugin = build();
+    it('exposes a working connection and the services map once init resolves', async ({ kyselyWith }) => {
+        const plugin = kyselyWith();
 
         await plugin.init();
 
@@ -124,9 +93,9 @@ describe('Kysely lifecycle', () => {
         expect(plugin.services).toEqual({});
     });
 
-    it('closes the connection on dispose', async () => {
+    it('closes the connection on dispose', async ({ kyselyWith }) => {
         const held = heldSqlite();
-        const plugin = build({ dialect: held.dialect });
+        const plugin = kyselyWith({ dialect: held.dialect });
         await plugin.init();
 
         await plugin.dispose();
@@ -134,9 +103,9 @@ describe('Kysely lifecycle', () => {
         expect(held.database.open).toBe(false);
     });
 
-    it('builds a new connection when init runs after dispose', async () => {
+    it('builds a new connection when init runs after dispose', async ({ kyselyWith }) => {
         const dialect = vi.fn(memorySqlite);
-        const plugin = build({ dialect });
+        const plugin = kyselyWith({ dialect });
         await plugin.init();
         await plugin.dispose();
 
@@ -146,26 +115,29 @@ describe('Kysely lifecycle', () => {
         await expect(sql`select 1`.execute(plugin.connection)).resolves.toBeDefined();
     });
 
-    it.each(['services', 'connection'] as const)('reports %s unavailable after dispose', async (member) => {
-        const plugin = build();
-        await plugin.init();
+    it.for(['services', 'connection'] as const)(
+        'reports %s unavailable after dispose',
+        async (member, { kyselyWith }) => {
+            const plugin = kyselyWith();
+            await plugin.init();
 
-        await plugin.dispose();
+            await plugin.dispose();
 
-        expect(() => plugin[member]).toThrow(
-            expect.objectContaining({ code: SeedcordErrorCode.PluginServicesNotReady })
-        );
-    });
+            expect(() => plugin[member]).toThrow(
+                expect.objectContaining({ code: SeedcordErrorCode.PluginServicesNotReady })
+            );
+        }
+    );
 
-    it('disposes without throwing when init never ran', async () => {
-        const plugin = build();
+    it('disposes without throwing when init never ran', async ({ kyselyWith }) => {
+        const plugin = kyselyWith();
 
         await expect(plugin.dispose()).resolves.toBeUndefined();
     });
 
-    it('translates a close failure into PluginDisconnectFailed', async () => {
+    it('translates a close failure into PluginDisconnectFailed', async ({ kyselyWith }) => {
         const held = heldSqlite();
-        const plugin = build({ dialect: held.dialect });
+        const plugin = kyselyWith({ dialect: held.dialect });
         await plugin.init();
         vi.spyOn(held.database, 'close').mockImplementation(() => {
             throw new Error('still busy');
@@ -176,18 +148,17 @@ describe('Kysely lifecycle', () => {
         );
     });
 
-    it('reports a close failure once, through the thrown error', async () => {
+    it('reports a close failure once, through the thrown error', async ({ kyselyWith }) => {
         const held = heldSqlite();
-        const plugin = build({ dialect: held.dialect });
+        const plugin = kyselyWith({ dialect: held.dialect });
         await plugin.init();
         vi.spyOn(held.database, 'close').mockImplementation(() => {
             throw new Error('still busy');
         });
-        const logged = vi.spyOn(Logger.prototype, 'error');
+        using logged = vi.spyOn(Logger.prototype, 'error');
 
         await plugin.dispose().catch(() => undefined);
 
         expect(logged).not.toHaveBeenCalled();
-        logged.mockRestore();
     });
 });

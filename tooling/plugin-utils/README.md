@@ -10,3 +10,5 @@
 A private package for the code that the first-party plugins share. Each plugin that uses it bundles it through `alwaysBundle` in its `vite.config.ts`.
 
 Add code here when two or more first-party plugins share it and plugin authors don't need it. Put anything that every plugin author would want on `@seedcord/core/plugin`.
+
+Test helpers go on the `./testing` export. Only the plugins' tests import it, so the plugin builds never bundle it.

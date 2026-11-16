@@ -1,35 +1,27 @@
-import fs from 'node:fs/promises';
-import path from 'node:path';
+import { core, it as base } from '@seedcord/plugin-utils/testing';
 
-export class TestEnvironment {
-    public readonly rootDir: string;
+import { Kysely } from '#src/Kysely';
 
-    constructor(prefix = 'seedcord-test-') {
-        const RADIX = 36;
-        this.rootDir = path.join(process.cwd(), 'tests', 'temp', prefix + Math.random().toString(RADIX).slice(2));
+import { memorySqlite } from './dialects';
+
+import type { KyselyOptions } from '#src/types/KyselyOptions';
+
+type KyselyWith = (options?: Partial<KyselyOptions>) => Kysely;
+
+export const it = base.extend<{ kyselyWith: KyselyWith }>({
+    // disposes every plugin that the test built because the worker runs later test files in the same process
+    kyselyWith: async ({ testEnv }, use) => {
+        await testEnv.createFile('migrations/.keep', '');
+        await using plugins = new AsyncDisposableStack();
+        await use((options = {}) => {
+            const plugin = new Kysely(core, {
+                dialect: memorySqlite,
+                migrations: { dir: testEnv.resolvePath('migrations') },
+                dir: testEnv.resolvePath('services'),
+                ...options
+            });
+            plugins.defer(() => plugin.dispose());
+            return plugin;
+        });
     }
-
-    public async setup(): Promise<void> {
-        await fs.mkdir(this.rootDir, { recursive: true });
-    }
-
-    public async teardown(): Promise<void> {
-        await fs.rm(this.rootDir, { recursive: true, force: true });
-    }
-
-    public resolvePath(relativePath: string): string {
-        return path.resolve(this.rootDir, relativePath);
-    }
-
-    public async createFile(relativePath: string, content: string): Promise<string> {
-        const filePath = this.resolvePath(relativePath);
-        await fs.mkdir(path.dirname(filePath), { recursive: true });
-        await fs.writeFile(filePath, content, 'utf8');
-        return filePath;
-    }
-
-    public async removeFile(relativePath: string): Promise<void> {
-        const filePath = this.resolvePath(relativePath);
-        await fs.rm(filePath, { force: true });
-    }
-}
+});

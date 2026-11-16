@@ -1,15 +1,14 @@
 import { SeedcordErrorCode } from '@seedcord/errors';
+import { core } from '@seedcord/plugin-utils/testing';
 import { describe, it, expect } from 'vite-plus/test';
 
 import { KyselyServiceMetadataKey } from '#src/decorators/RegisterKyselyService';
 import { KyselyService } from '#src/KyselyService';
 
 import type { Kysely } from '#src/Kysely';
-import type { CoreBase } from '@seedcord/core';
 
-// justified: both guards throw before either argument is read
-const kysely = {} as unknown as Kysely;
-const core = {} as unknown as CoreBase;
+// justified: both guards throw before the service reads it
+const kysely = {} as Kysely;
 
 class Undecorated extends KyselyService {}
 

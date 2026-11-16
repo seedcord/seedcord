@@ -1,12 +1,11 @@
-import { describe, it, expect, beforeEach, afterEach } from 'vite-plus/test';
-
-import { Kysely } from '#src/Kysely';
+import { describe, expect } from 'vite-plus/test';
 
 import { memoryPostgres, memorySqlite } from './utils/dialects';
 import { pluginsPath } from './utils/source-path';
-import { TestEnvironment } from './utils/test-env';
+import { it as base } from './utils/test-env';
 
-import type { CoreBase } from '@seedcord/core';
+import type { Kysely } from '#src/Kysely';
+import type { Dialect } from 'kysely';
 
 interface UsersService {
     add(id: number, username: string): Promise<void>;
@@ -38,36 +37,28 @@ export class Users extends KyselyService<'users'> {
 }
 `;
 
-describe.each([
-    ['SQLite', memorySqlite],
-    ['Postgres through PGlite', memoryPostgres]
-])('on %s', (_name, dialect) => {
-    let testEnv: TestEnvironment;
-    let plugin: Kysely;
-
-    beforeEach(async () => {
-        testEnv = new TestEnvironment('kysely-dialects-');
-        await testEnv.setup();
+const it = base.extend<{ startedOn: (dialect: () => Dialect) => Promise<Kysely> }>({
+    startedOn: async ({ kyselyWith, testEnv }, use) => {
         await testEnv.createFile('migrations/001_users.ts', MIGRATION);
         await testEnv.createFile('services/Users.ts', SERVICE);
-        // the plugin never reads core. this only satisfies the constructor
-        const core = { config: {} } as unknown as CoreBase;
-        plugin = new Kysely(core, {
-            dialect,
-            migrations: { dir: testEnv.resolvePath('migrations') },
-            dir: testEnv.resolvePath('services')
+        await use(async (dialect) => {
+            const plugin = kyselyWith({ dialect });
+            await plugin.init();
+            return plugin;
         });
-        await plugin.init();
-    });
+    }
+});
 
-    afterEach(async () => {
-        await plugin.dispose();
-        await testEnv.teardown();
-    });
+// justified: codegen hasn't typed the services map in these tests, and SERVICE above defines Users
+const usersOf = (plugin: Kysely): UsersService => plugin.services['users' as never];
 
-    it('runs the startup migration and a service query with two parameters', async () => {
-        // justified: codegen hasn't typed the services map in this test, and the fixture above defines Users
-        const users = plugin.services['users' as never] as UsersService;
+describe.for([
+    ['SQLite', memorySqlite],
+    ['Postgres through PGlite', memoryPostgres]
+] as const)('on %s', ([, dialect]) => {
+    it('runs the startup migration and a service query with two parameters', async ({ startedOn }) => {
+        const plugin = await startedOn(dialect);
+        const users = usersOf(plugin);
 
         await users.add(1, 'ada');
         await users.add(2, 'bob');
@@ -76,9 +67,8 @@ describe.each([
         expect(await plugin.listPendingMigrations()).toEqual([]);
     });
 
-    it('rolls back a transaction that throws', async () => {
-        // justified: codegen hasn't typed the services map in this test, and the fixture above defines Users
-        const users = plugin.services['users' as never] as UsersService;
+    it('rolls back a transaction that throws', async ({ startedOn }) => {
+        const plugin = await startedOn(dialect);
 
         const failed = plugin.connection.transaction().execute(async (trx) => {
             await trx
@@ -89,6 +79,6 @@ describe.each([
         });
 
         await expect(failed).rejects.toThrow('roll back');
-        expect(await users.byId(3)).toBeUndefined();
+        expect(await usersOf(plugin).byId(3)).toBeUndefined();
     });
 });
