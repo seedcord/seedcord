@@ -1,6 +1,6 @@
 import { describe, expect } from 'vite-plus/test';
 
-import { memoryPostgres, memorySqlite } from './utils/dialects';
+import { memoryNodeSqlite, memoryPostgres, memorySqlite } from './utils/dialects';
 import { pluginsPath } from './utils/source-path';
 import { it as base } from './utils/test-env';
 
@@ -54,6 +54,7 @@ const usersOf = (plugin: Kysely): UsersService => plugin.services['users' as nev
 
 describe.for([
     ['SQLite', memorySqlite],
+    ['node:sqlite through nodeSqlite', memoryNodeSqlite],
     ['Postgres through PGlite', memoryPostgres]
 ] as const)('on %s', ([, dialect]) => {
     it('runs the startup migration and a service query with two parameters', async ({ startedOn }) => {

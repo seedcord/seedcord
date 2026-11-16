@@ -7,7 +7,7 @@ import { heldSqlite, memorySqlite } from './utils/dialects';
 import { it } from './utils/test-env';
 
 describe('Kysely lifecycle', () => {
-    it('translates a dialect() that throws into PluginConnectionFailed', async ({ kyselyWith }) => {
+    it('translates a dialect() that throws into PluginConnectionFailed with its message', async ({ kyselyWith }) => {
         const plugin = kyselyWith({
             dialect: () => {
                 throw new Error('bad option');
@@ -15,17 +15,25 @@ describe('Kysely lifecycle', () => {
         });
 
         await expect(plugin.init()).rejects.toThrow(
-            expect.objectContaining({ code: SeedcordErrorCode.PluginConnectionFailed })
+            expect.objectContaining({
+                code: SeedcordErrorCode.PluginConnectionFailed,
+                message: expect.stringContaining('bad option') as string
+            })
         );
     });
 
-    it('translates a refused connection into PluginConnectionFailed', async ({ kyselyWith }) => {
+    it('translates a refused connection into PluginConnectionFailed with the driver message', async ({
+        kyselyWith
+    }) => {
         const plugin = kyselyWith({
             dialect: () => new SqliteDialect({ database: () => Promise.reject(new Error('ECONNREFUSED')) })
         });
 
         await expect(plugin.init()).rejects.toThrow(
-            expect.objectContaining({ code: SeedcordErrorCode.PluginConnectionFailed })
+            expect.objectContaining({
+                code: SeedcordErrorCode.PluginConnectionFailed,
+                message: expect.stringContaining('ECONNREFUSED') as string
+            })
         );
     });
 

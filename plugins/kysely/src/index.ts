@@ -1,5 +1,6 @@
 export { KyselyService } from './KyselyService';
 export { Kysely } from './Kysely';
+export { nodeSqlite } from './nodeSqlite';
 
 export { RegisterKyselyService } from './decorators/RegisterKyselyService';
 

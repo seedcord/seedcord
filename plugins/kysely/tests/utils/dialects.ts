@@ -1,11 +1,18 @@
+import { DatabaseSync } from 'node:sqlite';
+
 import { PGlite } from '@electric-sql/pglite';
 import Database from 'better-sqlite3';
 import { PGliteDialect, SqliteDialect } from 'kysely';
+
+import { nodeSqlite } from '#src/nodeSqlite';
 
 import type { Dialect } from 'kysely';
 
 // each call opens a fresh in-memory database, the same way init() calls dialect()
 export const memorySqlite = (): Dialect => new SqliteDialect({ database: new Database(':memory:') });
+
+export const memoryNodeSqlite = (): Dialect =>
+    new SqliteDialect({ database: nodeSqlite(new DatabaseSync(':memory:')) });
 
 export const memoryPostgres = (): Dialect => new PGliteDialect({ pglite: new PGlite() });
 

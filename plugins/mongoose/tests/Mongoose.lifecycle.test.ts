@@ -223,12 +223,15 @@ describe('Mongoose lifecycle', () => {
         expect(plugin.services).toEqual({});
     });
 
-    it('translates a connect failure into PluginConnectionFailed', async ({ mongooseWith }) => {
+    it('translates a connect failure into PluginConnectionFailed with the driver message', async ({ mongooseWith }) => {
         vi.mocked(mongoose.connect).mockRejectedValueOnce(new Error('refused'));
         const plugin = mongooseWith();
 
         await expect(plugin.init()).rejects.toThrow(
-            expect.objectContaining({ code: SeedcordErrorCode.PluginConnectionFailed })
+            expect.objectContaining({
+                code: SeedcordErrorCode.PluginConnectionFailed,
+                message: expect.stringContaining('refused') as string
+            })
         );
     });
 

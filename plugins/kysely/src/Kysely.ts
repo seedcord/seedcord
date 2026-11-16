@@ -7,6 +7,7 @@ import { SeedcordErrorCode, paint } from '@seedcord/errors';
 import { SeedcordError } from '@seedcord/errors/internal';
 import { PluginServices } from '@seedcord/plugin-utils';
 import { keepDefined } from '@seedcord/utils';
+import { asError } from '@seedcord/utils/internal';
 import { Envapter } from 'envapt';
 import { Kysely as KyselyClient } from 'kysely';
 
@@ -129,7 +130,9 @@ export class Kysely extends Plugin<{ transport: 'any'; runtime: 'server' }> {
             // kysely opens the driver on the first query
             await this.client.connection().execute(() => Promise.resolve());
         } catch (err) {
-            throw new SeedcordError(SeedcordErrorCode.PluginConnectionFailed, [label], { cause: err });
+            throw new SeedcordError(SeedcordErrorCode.PluginConnectionFailed, [label, asError(err).message], {
+                cause: err
+            });
         }
 
         this.logger.info(`Connected to ${paint.sky.bold(label)}`);

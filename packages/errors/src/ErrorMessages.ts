@@ -245,8 +245,8 @@ const messages = {
         `${paint.sky(className)} is missing ${paint.bold(decorator)}. Add it to the class to register the service.`,
     [SeedcordErrorCode.PluginServicesNotReady]: (pluginName: string, member: string) =>
         `${paint.sky(`${pluginName}.${member}`)} was read before the plugin finished ${paint.bold('init()')}. Read it inside a handler, or after start() resolves.`,
-    [SeedcordErrorCode.PluginConnectionFailed]: (service: string, target?: string) =>
-        `Could not connect to ${paint.bold(service)}${target ? ` (${paint.sky(target)})` : ''}. Check that it is running and that the connection string is right.`,
+    [SeedcordErrorCode.PluginConnectionFailed]: (service: string, reason: string, target?: string) =>
+        `Could not connect to ${paint.bold(service)}${target ? ` (${paint.sky(target)})` : ''}: ${reason}. Check that it is running and that the plugin's options are right.`,
     [SeedcordErrorCode.PluginDisconnectFailed]: (service: string) =>
         `Could not close the ${paint.bold(service)} connection cleanly during shutdown.`,
 
