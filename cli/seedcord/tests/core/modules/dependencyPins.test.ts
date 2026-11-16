@@ -34,8 +34,9 @@ describe('cloudflare pins', () => {
 
 describe('rolldown pin', () => {
     // our range has to include the version vite runs because the dts plugin imports rolldown on its own.
-    // vite in this repo is vite-plus-core, which ships rolldown inside and lists its version in bundledVersions
-    it('accepts the rolldown version vite bundles', () => {
+    // vite in this repo is vite-plus-core, which ships rolldown inside and lists its version in bundledVersions.
+    // vite-ecosystem-ci swaps in upstream vite, which lists rolldown under dependencies
+    it.skipIf(process.env.ECOSYSTEM_CI)('accepts the rolldown version vite bundles', () => {
         const bundled = manifest(join(CLI_ROOT, 'node_modules/vite/package.json')).bundledVersions?.rolldown;
         const range = dependencies(join(CLI_ROOT, 'package.json')).rolldown;
 
