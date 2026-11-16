@@ -10,12 +10,33 @@ When you save a file under `seedcord dev`, seedcord unloads that file, imports t
 A saved file reloads when it holds one of these.
 
 - an interaction handler or middleware
-- a command
+- a command after you answer `y` to the [refresh prompt](#saving-a-command)
 - an event handler (gateway only)
 - a bus subscriber
 - files a plugin loads itself if the plugin implements `onHmr`. Saving the plugin's own file needs a restart. [Plugins and hot reload](/writing-plugins/hot-reload) has both
 
 Any other file, like a component or a helper, reloads through the files that import it. Editing a file that none of those groups imports doesn't trigger a reload. Reloading works only in the `development` and `test` modes, so `ENV=staging seedcord dev` never reloads.
+
+## Saving a command
+
+Discord keeps its own copy of each command's name, description, and options, so an edit there has to reach Discord before anyone sees it. When you save a file in your commands folder, the dev terminal lists the changed files and shows this prompt before seedcord sends anything:
+
+```txt output
+Commands updated:
+- src/commands/Ping.ts
+Refresh commands? (y/n)
+```
+
+{/* prettier-ignore-start */}
+
+| answer | what happens |
+| --- | --- |
+| `y` | seedcord reloads the command in the bot, runs [codegen](/tooling/codegen) again, and [deploys](/commands/deployed#when-a-deploy-happens) every scope that changed |
+| `n` | Discord and the running bot both keep the old command. Restart the bot to load the change |
+
+{/* prettier-ignore-end */}
+
+A plugin can show the same prompt for files that change your commands, like the [i18n plugin](/plugins/i18n-commands) does for its translation files. [Plugins and hot reload](/writing-plugins/hot-reload#files-that-change-your-commands) shows how.
 
 ## How it works
 

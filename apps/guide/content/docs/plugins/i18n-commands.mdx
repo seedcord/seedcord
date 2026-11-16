@@ -180,7 +180,7 @@ The plugin adds the translations every time seedcord reads your commands:
 - in `seedcord build` for [Cloudflare Workers](/build/workers)
 - in `seedcord codegen`, which only checks the files
 
-A broken translation file stops each of these. Saving a translation file in `seedcord dev` shows the same [refresh prompt](/commands/deployed#when-a-deploy-happens) as saving a command file.
+A broken translation file stops each of these. Saving a translation file in `seedcord dev` shows the same refresh prompt as saving a command file.
 
 A Worker never deploys its own commands. To send new translations to Discord for a Worker, run `seedcord commands deploy` before you build.
 

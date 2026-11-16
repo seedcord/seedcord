@@ -23,7 +23,7 @@ Your bot sends one request per scope. A scope is the list of global commands, or
 
 A started bot deploys on every start, and Discord [rate-limits](https://docs.discord.com/developers/topics/rate-limits) replacing its global commands. In practice that's twice a minute, so a third restart inside that minute has to wait. The log shows how many seconds Discord makes it wait. After 75 seconds startup stops waiting and fails.
 
-The [`seedcord dev`](/tooling/dev) row depends on its refresh prompt, **Refresh commands? (y/n)**, which shows when you save a command file. If you answer `n`, neither Discord nor the running bot receives the change, so restart the bot to load it.
+The [`seedcord dev`](/tooling/dev) row depends on its [refresh prompt](/tooling/hot-reload#saving-a-command), which shows when you save a command file.
 
 The Worker row reads never because a Worker never deploys its commands. It reads the command ids that `seedcord build` wrote into it. Run [`seedcord commands deploy`](/tooling/commands) before you build a Worker. The build reads the ids from Discord and stops with a list of the commands that don't have one. Building a server bot never calls Discord, though starting it does. [Workers](/build/workers) covers the Worker build.
 

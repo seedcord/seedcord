@@ -73,6 +73,16 @@ describe('RestartFiles', () => {
         expect(files.needsRestart(join(dirname(config), file))).toBe(expected);
     });
 
+    it("needs a restart only when a pattern matches the file and a `!` pattern doesn't", async () => {
+        const { files, config } = await configFiles();
+        const root = dirname(config);
+        files.addPatterns(['migrations/**', '!migrations/*.md']);
+
+        expect(files.needsRestart(join(root, 'migrations', '001.sql'))).toBe(true);
+        expect(files.needsRestart(join(root, 'migrations', 'README.md'))).toBe(false);
+        expect(files.needsRestart(join(root, 'src', 'Bot.ts'))).toBe(false);
+    });
+
     it('leaves a .env in another folder out', async () => {
         const { files } = await configFiles();
 

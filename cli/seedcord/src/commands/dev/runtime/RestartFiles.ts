@@ -3,8 +3,7 @@ import { basename, dirname, join, resolve } from 'node:path';
 
 import { paint } from '@seedcord/errors';
 import { Logger } from '@seedcord/logger';
-import { posixRelative } from '@seedcord/utils/internal';
-import { minimatch } from 'minimatch';
+import { matchesFileGlobs } from '@seedcord/utils/internal';
 
 import { viteEnvFiles } from '#core/modules/viteEnvFiles';
 
@@ -43,15 +42,12 @@ export class RestartFiles {
 
     public needsRestart(file: string): boolean {
         if (this.hiddenFromVite(file) || this.layout.isProjectFile(file) || file === this.config.instance) return true;
-        const fromRoot = posixRelative(this.config.root, file);
-        return [...this.patterns].some((pattern) => minimatch(fromRoot, pattern));
+        // a relative pattern resolves against root
+        return matchesFileGlobs(file, [...this.patterns], (pattern) => resolve(this.config.root, pattern));
     }
 
-    // a relative pattern resolves against root
     public addPatterns(patterns: readonly string[]): void {
-        const { root } = this.config;
-        // minimatch reads a windows separator as an escape
-        for (const pattern of patterns) this.patterns.add(posixRelative(root, resolve(root, pattern)));
+        for (const pattern of patterns) this.patterns.add(pattern);
     }
 
     // fs.watch on a file stops once an atomic save replaces it

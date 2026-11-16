@@ -223,6 +223,7 @@ export abstract class Plugin<
     /**
      * Registers critical file patterns that should trigger a full restart when changed in Dev HMR.
      * @param patterns - Glob patterns. A relative one resolves against `root` from `seedcord.config.ts`.
+     * If a pattern starts with `!`, `seedcord dev` doesn't ask for a restart when you save a file that the pattern matches.
      */
     protected registerCriticalFiles(patterns: string[]): void {
         getDevChannel()?.send('seedcord:register-critical-files', { patterns });

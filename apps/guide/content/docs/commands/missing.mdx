@@ -27,7 +27,7 @@ A command registered with its own ids, like `@RegisterCommand('guild', ['6134256
 
 These make `seedcord dev` leave a command out of Discord:
 
-- You answered `n` to the refresh prompt after saving the file. Restart the bot to load the change.
+- You answered `n` to the [refresh prompt](/tooling/hot-reload#saving-a-command) after saving the file. Restart the bot to load the change.
 - The log reads "Skipped the global commands". Dev skips a scope when its hash matches the saved one and the command names on Discord match yours. It compares names only, so versions that another checkout deployed under the same names get skipped too. Run `seedcord commands deploy --force` to deploy anyway. [Deployed commands](/commands/deployed#seedcord-dev-skips-a-deploy-when-nothing-changed) explains the check.
 
 ## A Worker never sends its commands
