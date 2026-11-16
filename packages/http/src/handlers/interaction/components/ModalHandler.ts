@@ -17,7 +17,7 @@ import type { APIModalSubmitInteraction } from 'discord-api-types/v10';
  *
  * Register the customId definitions this handler decodes with `@ModalRoute` and list the same ones in the
  * generic. Read the submitted inputs from `this.fields`. Reply through the handler members. `showModal`
- * fails compilation on this kind, because Discord forbids opening a modal in response to a modal.
+ * fails compilation on this kind because Discord forbids opening a modal in response to a modal.
  *
  * @typeParam Defs - The customId definitions this handler decodes, e.g. `[typeof ConfigId]`.
  *

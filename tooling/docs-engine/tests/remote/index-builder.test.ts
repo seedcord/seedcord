@@ -52,7 +52,7 @@ describe('buildIndex', () => {
         expect(index.packages.x?.prerelease).toBeNull();
     });
 
-    it('carries the entity slug -> tone map onto the entry', () => {
+    it('copies the entity slug -> tone map onto the entry', () => {
         const index = buildIndex(
             [{ folder: 'x', fullName: '@s/x', versions: ['1.0.0'], entities: { logger: 'class', core: 'interface' } }],
             { updatedAt: UPDATED_AT }
@@ -69,7 +69,7 @@ describe('buildIndex', () => {
         expect(index.packages.x?.entities).toBeUndefined();
     });
 
-    it('carries the package description onto the entry', () => {
+    it('copies the package description onto the entry', () => {
         const index = buildIndex(
             [{ folder: 'x', fullName: '@s/x', versions: ['1.0.0'], description: 'Utility helpers for seedcord.' }],
             { updatedAt: UPDATED_AT }

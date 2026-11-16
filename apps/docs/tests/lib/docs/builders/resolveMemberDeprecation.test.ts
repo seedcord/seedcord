@@ -18,7 +18,7 @@ const withMessage: DeprecationStatus = {
 };
 
 describe('resolveMemberDeprecation', () => {
-    it('takes the message off the signature when the member node carries the flag alone', () => {
+    it('takes the message off the signature when the member node has the flag alone', () => {
         const status = resolveMemberDeprecation(node(true), [{ deprecationStatus: withMessage }]);
 
         expect(status).toEqual(withMessage);
@@ -30,7 +30,7 @@ describe('resolveMemberDeprecation', () => {
         expect(status.isDeprecated && status.deprecationMessage?.[0]?.plain).toBe('Member text.');
     });
 
-    it('reports nothing for a member that is not deprecated', () => {
+    it('marks a current member as not deprecated', () => {
         expect(resolveMemberDeprecation(node(false), [{ deprecationStatus: withMessage }])).toEqual({
             isDeprecated: false
         });

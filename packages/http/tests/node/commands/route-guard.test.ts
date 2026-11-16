@@ -33,7 +33,7 @@ afterEach(() => {
 });
 
 describe('warnUnhandledRoutes', () => {
-    it('warns for a deployed route with no registered handler', () => {
+    it('warns for a deployed route without a registered handler', () => {
         const { dispatcher, warn } = dispatcherWith((d) =>
             d.maps[InteractionKind.Slash].set('ping', route(InteractionKind.Slash, 'ping'))
         );

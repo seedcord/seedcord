@@ -105,7 +105,7 @@ A command decorated with [`@RegisterCommand()`](ref:core/RegisterCommand) deploy
 @RegisterCommand()
 ```
 
-Without `guilds`, or without any ids in it, those same commands deploy globally. Your command files don't change. Leave `TESTING_GUILD_IDS` unset where your production bot runs, as [In production](/commands/deployed#in-production) shows.
+When `guilds` is unset or empty, those same commands deploy globally. Your command files don't change. Leave `TESTING_GUILD_IDS` unset where your production bot runs, as [In production](/commands/deployed#in-production) shows.
 
 When you pass a scope yourself, seedcord skips the list. `'global'` keeps the command global. `'guild'` with ids sends it to those servers. Add `'config'` to that array to send the command to the configured servers as well.
 
@@ -139,7 +139,7 @@ Commit that file. The next codegen run overwrites whatever you put there by hand
 
 <Callout type="tip">
 
-A stale generated file doesn't break anything at runtime, since nothing there reads these types. Run your project's `tc` script to catch it.
+A stale generated file doesn't break anything at runtime since nothing there reads these types. Run your project's `tc` script to catch it.
 
 You can turn on [`hmr.typecheck`](/build/config#every-key) to run `tsc --watch` next to the bot during `seedcord dev`, at the cost of a second node process.
 

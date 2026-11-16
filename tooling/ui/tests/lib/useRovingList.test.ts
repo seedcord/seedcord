@@ -175,7 +175,7 @@ describe('useRovingList', () => {
         expect(result.current.active).toBe('a');
     });
 
-    it('marks a row the pointer picked, until a key moves the selection', () => {
+    it('marks the row that the pointer picked until a key moves the selection', () => {
         const { result } = renderHook(() => useRovingList({ query: 'q', groups: one(ITEMS), onSelect: vi.fn() }));
 
         act(() => result.current.pointAt('c'));

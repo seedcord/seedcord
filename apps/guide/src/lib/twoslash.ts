@@ -39,7 +39,7 @@ function oneEntryCache(): TwoslashTypesCache {
     };
 }
 
-// one cache each, because a check compile reused for a hovers fence would render it bare
+// one cache each because a check compile reused for a hovers fence would render it bare
 const CACHE = { check: oneEntryCache(), hovers: oneEntryCache() };
 
 // the twoslasher and every renderer hook run sync. prettier only formats async

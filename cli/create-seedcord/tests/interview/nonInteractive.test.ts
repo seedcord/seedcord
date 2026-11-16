@@ -19,7 +19,7 @@ function neverAsks<Key extends keyof Answers>(key: Key, flag: string): Step<Key>
     };
 }
 
-describe('runFlow with no terminal', () => {
+describe('runFlow without a terminal', () => {
     it('takes every answer from the flags', async () => {
         const answers = await runFlow([neverAsks('directory', 'dir')], { directory: 'my-bot' }, NO_TERMINAL);
 

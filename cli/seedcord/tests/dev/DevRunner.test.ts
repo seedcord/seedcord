@@ -465,7 +465,7 @@ describe('DevRunner run', () => {
     }, 60_000);
 });
 
-describe('runPlain, with no terminal to answer prompts', () => {
+describe('runPlain, without a terminal to answer prompts', () => {
     afterEach(() => {
         vi.useRealTimers();
     });
@@ -483,7 +483,7 @@ describe('runPlain, with no terminal to answer prompts', () => {
         await running;
     });
 
-    it('refreshes commands once, after a burst of saves stops', async () => {
+    it('refreshes commands once after a burst of saves stops', async () => {
         const store = new DevStore();
         const runtime = fakeRuntime({ default: readyBot });
         const refresh = vi.spyOn(runtime, 'refreshCommands');

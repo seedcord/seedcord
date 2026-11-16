@@ -182,7 +182,7 @@ describe('Paginator.start', () => {
 });
 
 describe('Paginator.page', () => {
-    it('renders the requested page and sends nothing', async () => {
+    it('renders the requested page without sending it', async () => {
         const event = startEvent();
         const reply = await pager.page(stubHandler(event), 1);
 

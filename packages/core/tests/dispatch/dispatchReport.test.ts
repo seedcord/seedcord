@@ -92,7 +92,7 @@ describe('dispatch timing', () => {
         expect(message).toContain('142ms');
     });
 
-    it('traces the outcome a refused dispatch carries', () => {
+    it('traces the outcome of a refused dispatch', () => {
         const trace = traceSpy();
 
         publishedFor({ ...reportFor(), outcome: 'refused' });
@@ -155,7 +155,7 @@ describe('outcomeFor', () => {
         expect(outcomeFor(new Silence('blacklisted'))).toBe('refused');
     });
 
-    it('calls a plain Notice a refusal, since the user is meant to see it', () => {
+    it('calls a plain Notice a refusal since the user is meant to see it', () => {
         expect(outcomeFor(new Refusal())).toBe('refused');
     });
 
@@ -166,7 +166,7 @@ describe('outcomeFor', () => {
         expect(outcomeFor(notice)).toBe('failed');
     });
 
-    it('calls a Fault a failure, since report defaults to true', () => {
+    it('calls a Fault a failure since report defaults to true', () => {
         expect(outcomeFor(new Fault({ cause: new Error('db down') }))).toBe('failed');
     });
 

@@ -102,7 +102,7 @@ A node bot starts with the winston console sink, plus the file sink in developme
 
 The mode is `development` unless your shell sets another one, as [Environment and config](/build/env) explains. A tool that spawns your bot can render these codes in `message`. Colors are off when stdout is a pipe, so that tool should set `FORCE_COLOR=3` on the spawned bot. A `WinstonConsoleSink` you create without a `format` follows the same table, and `format` takes `pretty`, `json`, or `json-ansi` when you want to choose.
 
-An edge bot starts with `ObjectConsoleSink`, since both winston sinks require node. That sink puts an object you pass after the message into the record's own fields, so a Workers drain indexes `userId` on its own. A sink you write yourself runs on either runtime.
+An edge bot starts with `ObjectConsoleSink` since both winston sinks require node. That sink puts an object you pass after the message into the record's own fields, so a Workers drain indexes `userId` on its own. A sink you write yourself runs on either runtime.
 
 ### Replacing the sinks
 
@@ -138,7 +138,7 @@ export const seedcord = new Seedcord({
 
 <Callout type="transport">
 
-`@seedcord/gateway` and `@seedcord/http` both export `WinstonConsoleSink` and `WinstonFileSink`. The build of `@seedcord/http` that an edge bot gets doesn't export them, since both need node, so an edge bot configures `ObjectConsoleSink` or a sink you write.
+`@seedcord/gateway` and `@seedcord/http` both export `WinstonConsoleSink` and `WinstonFileSink`. The build of `@seedcord/http` that an edge bot gets doesn't export them since both need node, so an edge bot configures `ObjectConsoleSink` or a sink you write.
 
 </Callout>
 

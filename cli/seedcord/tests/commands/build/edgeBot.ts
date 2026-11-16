@@ -45,7 +45,7 @@ export async function copyEdgeBotForTest(): Promise<string> {
     return projectDir;
 }
 
-// the thrown error's message lists each file readFiles read in workerd, as name=hex.
+// the thrown error's message lists each file readFiles read in workerd as name=hex.
 // node loads the same module during the build and in dev's codegen copy
 export const READ_IN_WORKERD = `import { readFiles } from '@seedcord/http';
 

@@ -127,7 +127,7 @@ export interface DefaultSubscriptions {
     readonly unhandledInteractionError: {
         readonly error: Error;
     };
-    /** Triggered once per interaction dispatch, after the handler chain settles. */
+    /** Triggered once per interaction dispatch after the handler chain settles. */
     readonly interactionDispatched: {
         /** This dispatch, for joining against every other key it published. */
         readonly dispatchId: string;
@@ -136,7 +136,7 @@ export interface DefaultSubscriptions {
         readonly interactionId: string;
         readonly kind: `${InteractionKind}`;
         readonly outcome: DispatchOutcome;
-        /** True when no route matched and the unhandled default ran. */
+        /** True when the interaction didn't match a route and the unhandled default ran. */
         readonly fallback: boolean;
         /** Who ran the route. Null when the payload didn't carry a user. */
         readonly userId: string | null;
@@ -155,7 +155,7 @@ export interface DefaultSubscriptions {
     /**
      * Triggered on every write through the reply surface, several times per interaction. A write that
      * throws reports here too, with `outcome` `failed`. A write that reaches Discord and then returns an
-     * unexpected shape publishes nothing, since the callback succeeded and doesn't carry a message to name.
+     * unexpected shape skips the publish since the callback succeeded but the response doesn't include a message to name.
      */
     readonly responseAttempted: ResponseAttempt;
     /** Triggered after each command deploy, including the redeploy after a hot reload. */
@@ -189,7 +189,7 @@ export interface AllSubscriptions extends DefaultSubscriptions, Subscriptions {}
 export type SubscriptionKey = keyof AllSubscriptions;
 
 /**
- * The keys `publish` accepts. The framework's own keys are excluded, since only the framework
+ * The keys `publish` accepts. The framework's own keys are excluded since only the framework
  * produces them.
  */
 export type PublishableKey = ExcludeStrict<SubscriptionKey, keyof DefaultSubscriptions>;

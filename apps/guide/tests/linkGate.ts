@@ -32,7 +32,7 @@ interface Target {
 const GUIDE_ROOT = path.resolve(import.meta.dirname, '..');
 const CONTENT_DIR = path.join(GUIDE_ROOT, 'content/docs');
 const PUBLIC_DIR = path.join(GUIDE_ROOT, 'public');
-// vp run docs:local writes these from this checkout. a symbol that isn't published yet passes here
+// vp run docs:local writes these from this checkout. an unpublished symbol passes here
 const ARTIFACTS_DIR = path.resolve(GUIDE_ROOT, '../../generated/artifacts');
 
 const FRONTMATTER = /^---\n[\s\S]*?\n---\n/;

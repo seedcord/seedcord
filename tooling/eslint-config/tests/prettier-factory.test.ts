@@ -5,11 +5,11 @@ import { createPrettierConfig } from '#src/prettier';
 const NARROW_MDX = [{ files: 'content/**/*.mdx', options: { printWidth: 68 } }];
 
 describe('createPrettierConfig', () => {
-    it('carries the overrides it was given', () => {
+    it('passes the overrides it was given', () => {
         expect(createPrettierConfig({ overrides: NARROW_MDX }).overrides).toEqual(NARROW_MDX);
     });
 
-    it('carries them alongside the tailwind plugin', () => {
+    it('keeps them alongside the tailwind plugin', () => {
         const config = createPrettierConfig({
             tailwind: { stylesheet: './globals.css' },
             overrides: NARROW_MDX

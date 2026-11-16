@@ -16,10 +16,7 @@ export class StaleCustomId extends Notice {
     }
 
     override render(): ReplyResponse {
-        const card = new NoticeCard(
-            'This button or menu is from an older version. Please run the command again.',
-            'Outdated'
-        );
+        const card = new NoticeCard('This button or menu is from an older version. Run the command again.', 'Outdated');
         return { components: [card.component] };
     }
 }
@@ -36,7 +33,7 @@ export class InvalidCustomId extends Notice {
     }
 
     override render(): ReplyResponse {
-        const card = new NoticeCard('Something went wrong. Please try again.');
+        const card = new NoticeCard('Something went wrong. Try again.');
         return { components: [card.component] };
     }
 }

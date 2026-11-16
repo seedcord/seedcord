@@ -5,7 +5,7 @@ description: Create and change your Postgres tables with Kysely migrations, so e
 
 Your bot's tables have to exist on every database it uses, like your laptop, a teammate's machine, and production. If you create them by running `CREATE TABLE` yourself, each database needs the same statements in the same order. If you miss one, your bot fails at the first query that touches a table or column that database doesn't have.
 
-A migration is a file that exports `up` and, if you want to be able to undo it, `down`. `up` makes one change to your database, like creating a table. `down` undoes that change, and Kysely only runs it when you roll the migration back. Leave `down` out only on a change you'll never roll back, because a rollback can't undo it. Kysely keeps a table in each database listing the migrations that database has already run. By default, the plugin runs the rest while your bot starts, before any service can query the tables.
+A migration is a file that exports `up` and, if you want to be able to undo it, `down`. `up` makes one change to your database, like creating a table. `down` undoes that change, and Kysely only runs it when you roll the migration back. Leave `down` out only on a change you'll never roll back because a rollback can't undo it. Kysely keeps a table in each database listing the migrations that database has already run. By default, the plugin runs the rest while your bot starts before any service can query the tables.
 
 ```ts twoslash title="src/migrations/001-create-users.ts"
 import type { Kysely } from 'kysely';
@@ -28,7 +28,7 @@ export async function down(db: Kysely<any>): Promise<void> {
 }
 ```
 
-`up` creates the `users` table, while `down` deletes it. Both take `Kysely<any>`, because each migration runs against whatever tables the migrations before it created. [Your schema](/plugins/kysely-schema) describes the tables as they are once every migration has run.
+`up` creates the `users` table, while `down` deletes it. Both take `Kysely<any>` because each migration runs against whatever tables the migrations before it created. [Your schema](/plugins/kysely-schema) describes the tables as they are once every migration has run.
 
 ## Where to put the files and how to order them
 
@@ -44,7 +44,7 @@ The plugin also skips a `.cjs` or `.cts` file without an error, so that migratio
 
 Kysely compares the names of your migrations against the names recorded in its table to find the ones that haven't run. A migration's name is its file name without the folder or the extension, so `001-create-users.ts` is recorded as `001-create-users`. Moving that file into a subfolder keeps its name. Two files with the same name in different folders, like `users/001-init.ts` and `guilds/001-init.ts`, throw `CoreDuplicateName` with both paths.
 
-Kysely sorts the pending migrations by name, by character code, before it runs them. Start each file name with a number like `001-` or a timestamp to set the order. Pad the number with zeros, since `10-add-streaks` sorts before `9-create-users`. `nameComparator` doesn't change that order. [The options at the end](#the-rest-of-the-options) say what it does change.
+Kysely sorts the pending migrations by name, by character code, before it runs them. Start each file name with a number like `001-` or a timestamp to set the order. Pad the number with zeros since `10-add-streaks` sorts before `9-create-users`. `nameComparator` doesn't change that order. [The options at the end](#the-rest-of-the-options) say what it does change.
 
 The first sample exports `up` and `down` by name. A migration file can also default-export one object holding both functions:
 
@@ -90,7 +90,7 @@ By default the plugin runs every pending migration while the bot starts. If a mi
 | `onStartup` | what happens while the bot starts |
 | --- | --- |
 | not set, or `true` | runs every pending migration |
-| `false` | runs nothing |
+| `false` | skips the migrations |
 | a [`MigrationOptions`](ref:plugin-kysely-postgres/MigrationOptions) object | runs to the `target`, or in the `direction` and `steps` you pass |
 
 {/* prettier-ignore-end */}
@@ -163,11 +163,11 @@ That call runs every `down` in reverse order. Each one only undoes what you wrot
 
 <Callout type="warning">
 
-If a migration in that range has no `down`, Kysely skips it and keeps its row in the migrations table, then still rolls back every older one. The next start throws "corrupted migrations: expected previously executed migration", because the recorded list no longer starts with your first migration. Give every migration a `down` before you roll back to `NO_MIGRATIONS`.
+If a migration in that range has no `down`, Kysely skips it and keeps its row in the migrations table, then still rolls back every older one. The next start throws "corrupted migrations: expected previously executed migration" because the recorded list no longer starts with your first migration. Give every migration a `down` before you roll back to `NO_MIGRATIONS`.
 
 </Callout>
 
-`steps` has to be a whole number of zero or more. A fraction, a negative number, `NaN`, or `Infinity` throws `PluginKyselyInvalidStepCount`. Zero runs nothing. If you pass any other `direction`, `migrate` throws `PluginKyselyUnknownDirection`.
+`steps` has to be a whole number of zero or more. A fraction, a negative number, `NaN`, or `Infinity` throws `PluginKyselyInvalidStepCount`. Zero leaves the database as it is. If you pass any other `direction`, `migrate` throws `PluginKyselyUnknownDirection`.
 
 ## When a migration fails
 
@@ -180,7 +180,7 @@ If a migration throws an `Error`, you get that error unchanged, so a failing `CR
 | a file in the folder that doesn't export `up` | `PluginKyselyInvalidMigrationModule`, with the file path |
 | two files with the same name without the folder and extension | `CoreDuplicateName`, with both file paths |
 | a migration that throws something other than an `Error` | `PluginKyselyNonErrorFailure` |
-| a `dir` that doesn't exist | `CorePathUnreadable` under `seedcord dev`, `CoreDirectoryNotBuilt` in a built bot |
+| a missing `dir` | `CorePathUnreadable` under `seedcord dev`, `CoreDirectoryNotBuilt` in a built bot |
 
 {/* prettier-ignore-end */}
 

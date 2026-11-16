@@ -7,13 +7,13 @@ declare module '@seedcord/core/internal' {
         unhandledEventError: {
             error: Error;
         };
-        /** Triggered before an event's handlers run. An event that no handler registered never triggers it. */
+        /** Triggered before an event's handlers run. An event without a registered handler never triggers it. */
         eventDispatching: {
             [Name in keyof ClientEvents]: { dispatchId: string; name: Name; args: ClientEvents[Name] };
         }[keyof ClientEvents];
         /**
-         * Published once an event's handlers settle, pairing with `eventDispatching`. When no handlers
-         * are registered, neither key is published.
+         * Published once an event's handlers settle, pairing with `eventDispatching`. When the event
+         * doesn't have a registered handler, neither key is published.
          */
         eventDispatched: {
             /** The same id `eventDispatching` published for this dispatch. */
@@ -26,7 +26,7 @@ declare module '@seedcord/core/internal' {
             /** Dispatch entry until every handler settles. A clock change never affects it. */
             durationMs: number;
         };
-        /** Triggered for every interaction the bot receives, before routing. */
+        /** Triggered for every interaction the bot receives before routing. */
         anyInteraction: {
             interaction: Interaction;
         };

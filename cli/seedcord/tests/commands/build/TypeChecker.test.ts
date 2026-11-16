@@ -50,7 +50,7 @@ describe('TypeChecker', () => {
         });
     });
 
-    it('reports a project with no tsconfig.json and no build.tsconfig', async () => {
+    it('reports a project without tsconfig.json or build.tsconfig', async () => {
         await expect(new TypeChecker().check(projectFor())).rejects.toMatchObject({
             code: SeedcordErrorCode.CliTsconfigNotFound
         });

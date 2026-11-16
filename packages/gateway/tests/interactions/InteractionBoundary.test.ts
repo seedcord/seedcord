@@ -163,7 +163,7 @@ describe('gateway fault answers', () => {
         expect(payload.metadata).toBe(interaction);
     });
 
-    it('swallows an api code listed in ignoreApiCodes, with no reply or report', async () => {
+    it('swallows an api code listed in ignoreApiCodes, without a reply or report', async () => {
         const core = mockCore(publish, { ignoreApiCodes: [RESTJSONErrorCodes.UnknownInteraction] });
 
         await answerFault(harmlessError(), asInteraction(mock), core);
@@ -174,7 +174,7 @@ describe('gateway fault answers', () => {
 
     it('edits the deferReply placeholder and publishes handledException for a reporting fault on a deferred interaction', async () => {
         mock.deferred = true;
-        mock.ephemeral = false;
+        mock.ephemeral = true;
 
         await answerFault(new Fault({ cause: new Error('write failed') }), asInteraction(mock), mockCore(publish));
 
@@ -185,6 +185,18 @@ describe('gateway fault answers', () => {
         const [event, payload] = publish.mock.calls[0] as [string, SubscriptionData<'handledException'>];
         expect(event).toBe('handledException');
         expect(payload.denial).toBeInstanceOf(Fault);
+    });
+
+    it('swaps a public deferReply placeholder for a private fault card', async () => {
+        mock.deferred = true;
+        mock.ephemeral = false;
+
+        await answerFault(new Fault({ cause: new Error('write failed') }), asInteraction(mock), mockCore(publish));
+
+        expect(mock.editReply).not.toHaveBeenCalled();
+        expect(mock.deleteReply).toHaveBeenCalledBefore(mock.followUp);
+        const options = mock.followUp.mock.calls[0]?.[0] as { flags: number };
+        expect(options.flags & MessageFlags.Ephemeral).toBe(MessageFlags.Ephemeral);
     });
 
     it("follows up and doesn't report a fault for a non-reporting denial on a replied interaction", async () => {

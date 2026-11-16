@@ -93,7 +93,7 @@ type AssertNames<
     ? SameSet<Names, Declared> extends true
         ? TCtor
         : Mismatch<`${Decorator} does not match the ${Handler} generic`, Names, Declared>
-    : Constructor<[`${Decorator} lists a command that is not registered`, Exclude<Names, Registered>]>;
+    : Constructor<[`${Decorator} lists an unregistered command`, Exclude<Names, Registered>]>;
 
 type AssertSlashRoute<Route extends string, TCtor extends AnyHandlerCtor> = AssertNames<
     Route,
@@ -124,7 +124,7 @@ type AssertComponentRoute<
     TCtor extends AnyHandlerCtor
 > =
     SameSet<Brand, ComponentOf<TCtor>> extends true
-        ? // only one assignability direction, since a bidirectional check would reject const-inferred readonly tuples
+        ? // only one assignability direction since a bidirectional check would reject const-inferred readonly tuples
           [DefsOf<TCtor>] extends [Defs]
             ? TCtor
             : Mismatch<'the customId definitions do not match the handler generic', Defs, DefsOf<TCtor>>
@@ -160,7 +160,7 @@ export function SlashRoute<const Route extends LiteralUnion<keyof SlashRegistry,
  *
  * Pass the same command route string(s) as the handler's generic. One command branches with `this.match`
  * over its autocompletable fields, several commands share one handler whose cases span every command's
- * fields. Listing fewer or more commands than the handler declares is a compile error, since the
+ * fields. Listing fewer or more commands than the handler declares is a compile error since the
  * decorator routes and the generic must match exactly.
  *
  * @param routes - The command route string(s) this handler serves, e.g. `'search'` or `'search', 'find'`.

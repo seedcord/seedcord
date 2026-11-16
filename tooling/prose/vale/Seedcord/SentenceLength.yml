@@ -4,4 +4,4 @@ message: 'This sentence has more than 30 words. Split it into one fact per sente
 level: suggestion
 scope: sentence
 max: 30
-token: '\b(\w+)\b'
+token: "\\b\\w+(?:['’]\\w+)?\\b"

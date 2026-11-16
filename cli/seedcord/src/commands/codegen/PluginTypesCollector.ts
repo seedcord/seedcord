@@ -66,7 +66,7 @@ export class PluginTypesCollector {
         const collector = new PluginTypesCollector();
         for (const key of instance[HostPlugins].keys) await collector.add(key, codegenPluginAt(instance, key));
 
-        // built after every codegen(), since codegen() imports the files it reads
+        // built after every codegen() since codegen() imports the files it reads
         const index = await ExportIndex.create(modules, root, collector.classes(), collector.problems);
         const types = new Map(
             collector.entries
@@ -254,7 +254,7 @@ function describeValue(value: unknown): string {
     if (typeof value === 'function') return `the function ${value.name || '(anonymous)'}`;
     if (isReferable(value)) {
         const Class: unknown = Reflect.get(value, 'constructor');
-        return typeof Class === 'function' ? `a ${Class.name}` : 'an object with no class';
+        return typeof Class === 'function' ? `a ${Class.name}` : 'an object without a class';
     }
     if (typeof value === 'bigint' || typeof value === 'symbol') return `a ${typeof value}`;
     return String(value);

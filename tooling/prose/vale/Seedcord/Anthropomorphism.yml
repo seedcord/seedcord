@@ -1,6 +1,6 @@
 extends: existence
 link: https://github.com/seedcord/seedcord/blob/next/.agents/skills/writing-voice/SKILL.md
-message: "'%s' is a human verb. If its subject is a file, a value, or a function, write what the code does, like 'contains', 'reads', or 'returns'."
+message: "'%s' is a human verb. If its subject is a file, a value, or a function, write what the code actually does to it."
 level: suggestion
 ignorecase: true
 # third person only. "you want" and "its own" are fine

@@ -28,7 +28,7 @@ export interface PackageRegistry {
     // Ordered: hinted, then current, then the loaded set.
     candidatePackages(currentPackage: string, hinted?: string): string[];
     // Returns `slug`'s URL parts when its entity is listed in `fullName`'s index entry. A param or
-    // predicate slug returns null, since only real entities get indexed.
+    // predicate slug returns null since only real entities get indexed.
     crossPackageEntity(fullName: string, slug: string): CrossPackageEntity | null;
 }
 

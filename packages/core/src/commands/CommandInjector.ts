@@ -123,7 +123,7 @@ export function warnLinks(
     for (const ref of multiGuild) logger.warn(multiGuildWarning(ref));
     for (const { name, type } of notInCode) {
         logger.warn(
-            `The ${KIND_LABELS[type]} ${paint.sky.bold(name)} is deployed on Discord with no command for it in your code.`
+            `The ${KIND_LABELS[type]} ${paint.sky.bold(name)} is deployed on Discord, but your code doesn't define it.`
         );
     }
 }

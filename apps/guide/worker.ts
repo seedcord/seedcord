@@ -26,7 +26,7 @@ function at(request: Request, pathname: string): Request {
     return new Request(url, request);
 }
 
-// a real file in public/ wins over a page's generated card or twin
+// a real file in public/ takes precedence over a page's generated card or twin
 async function fromAssets(env: GuideEnv, request: Request, page: string): Promise<Response> {
     // only a page has a twin. every other url falls through to the file itself
     if (wantsMarkdown(request)) {

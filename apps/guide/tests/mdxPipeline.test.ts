@@ -9,7 +9,7 @@ describe('a markdown image', () => {
         expect(code).toContain('src="/logo.svg"');
     });
 
-    it('carries the size read off the file', async () => {
+    it('reads the size off the file', async () => {
         const code = await compileGuideMdx('![the mark](/logo.svg)');
 
         expect(code).toContain('width="596.16"');
@@ -73,7 +73,7 @@ describe('a fence caption', () => {
         return [`\`\`\`ts ${meta}`, 'const a = 1;', '```'].join('\n');
     }
 
-    it('carries the title through to the code element', async () => {
+    it('passes the title through to the code element', async () => {
         const code = await compileGuideMdx(fence('plain title="src/commands/Ping.ts"'));
 
         expect(code).toContain('src/commands/Ping.ts');

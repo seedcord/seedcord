@@ -41,7 +41,7 @@ async function main(): Promise<void> {
     const { bytes, embedded } = await new EmbeddingCache(CACHE).vectors(sections.map(embedding.document), embed);
     await writeFile(exported(GUIDE_VECTORS_PATH), bytes);
 
-    // the worker loads them like this too. a mismatch throws here in CI, before any deploy
+    // the worker loads them like this too. a mismatch throws here in CI before any deploy
     await SectionIndex.load(fromExport);
     console.log(`✅ embedded ${embedded} of ${sections.length} guide sections. The rest came from the cache.`);
 }

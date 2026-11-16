@@ -50,7 +50,7 @@ export class Role extends BuilderComponent<'command'> {
 }
 ```
 
-You put [`@RegisterCommand`](ref:core/RegisterCommand) on the parent alone, since the parent is what you send to Discord. Your subcommand classes are plain builders, and you can keep them in the same file.
+You put [`@RegisterCommand`](ref:core/RegisterCommand) on the parent alone since the parent is what you send to Discord. Your subcommand classes are plain builders, and you can keep them in the same file.
 
 ## The route
 
@@ -76,7 +76,7 @@ Options belong to the branch that declares them, so `member` and `role` are on `
 
 ## The parent stops being a route
 
-Adding a subcommand removes the parent's own route, since nobody can invoke `/role` by itself once it has branches. A handler for `'role'` stops compiling.
+Adding a subcommand removes the parent's own route since nobody can invoke `/role` by itself once it has branches. A handler for `'role'` stops compiling.
 
 ```ts twoslash
 // @errors: 2344
@@ -134,4 +134,4 @@ export class Settings extends BuilderComponent<'command'> {
 
 Discord shows that as `/settings notifications enable`, and the route is `settings/notifications/enable`.
 
-A path is three segments deep at most, because Discord only accepts a group inside a command or subcommands inside a group.
+A path is three segments deep at most because Discord only accepts a group inside a command or subcommands inside a group.

@@ -11,7 +11,7 @@ import type { LogRecord } from '@seedcord/types';
 import type { AddressInfo } from 'node:net';
 import type { Connect } from 'vite';
 
-// justified: a Connect app is a request handler, the endpoint calls nothing else on it
+// justified: a Connect app is a request handler, and the endpoint only calls it as one
 function middlewares(handle: (url: string | undefined, next: (error?: unknown) => void) => void): Connect.Server {
     return ((request: { url?: string }, _response: unknown, next: (error?: unknown) => void) =>
         handle(request.url, next)) as unknown as Connect.Server;

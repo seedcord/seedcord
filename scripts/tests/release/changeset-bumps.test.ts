@@ -23,7 +23,7 @@ describe('maxBump', () => {
         expect(maxBump([changeset("'@seedcord/a': patch\n'@seedcord/b': minor")])).toBe('minor');
     });
 
-    it('ignores a changeset body with no bump lines', () => {
+    it('ignores a changeset body without bump lines', () => {
         expect(maxBump([changeset('')])).toBeNull();
     });
 
@@ -35,7 +35,7 @@ describe('maxBump', () => {
         expect(maxBump(['---\r\n"@seedcord/a": minor\r\n---\r\n'])).toBe('minor');
     });
 
-    it('throws on a body with no frontmatter block', () => {
+    it('throws on a body without a frontmatter block', () => {
         expect(() => maxBump(['just a summary, no frontmatter'])).toThrow(/frontmatter/);
     });
 
@@ -45,7 +45,7 @@ describe('maxBump', () => {
 });
 
 describe('changesetPathsFromFiles', () => {
-    it('yields nothing for a PR that adds zero changesets (a CI-only PR)', () => {
+    it('yields an empty list for a PR that adds zero changesets (a CI-only PR)', () => {
         const files = [
             { filename: '.github/workflows/checks.yml', status: 'modified' },
             { filename: '.github/workflows/coverage.yml', status: 'modified' }

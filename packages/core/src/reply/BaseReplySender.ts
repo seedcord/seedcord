@@ -1,7 +1,7 @@
 import { SeedcordErrorCode } from '@seedcord/errors';
 import { SeedcordError } from '@seedcord/errors/internal';
 
-import { checkAckLegality, sendTarget } from './ackLegality';
+import { checkAckLegality } from './ackLegality';
 import { AckTrace } from './AckTrace';
 import { deferFlags, sendFlags } from './flags';
 import { attemptWrite, publishResponse } from './responseReport';
@@ -36,7 +36,7 @@ export abstract class BaseReplySender<TMessage extends { id: string }, TNative =
     protected constructor(
         private readonly telemetry: ReplyTelemetry,
         private readonly isEphemeralByDefault: boolean,
-        initialState: AckState = 'unacked'
+        initialState: AckState = { kind: 'unacked' }
     ) {
         this.state = initialState;
     }
@@ -63,7 +63,7 @@ export abstract class BaseReplySender<TMessage extends { id: string }, TNative =
         const startedAt = performance.now();
         const created = await this.attempt('reply', startedAt, () => this.writeReply(response, this.replyFlags(opts)));
         // record replied before the message guard can throw because the callback has already acked discord
-        this.transition('reply', 'replied');
+        this.transition('reply', { kind: 'replied' });
         const message = this.remember(this.requireMessage(created, 'reply'));
         this.report('reply', startedAt, message.id);
         return message;
@@ -72,8 +72,9 @@ export abstract class BaseReplySender<TMessage extends { id: string }, TNative =
     public async defer(opts?: DeferOpts): Promise<void> {
         this.checkLegality('defer');
         const startedAt = performance.now();
-        await this.attempt('defer', startedAt, () => this.writeDefer(deferFlags(this.ephemeral(opts))));
-        this.transition('defer', 'deferred-reply');
+        const ephemeral = this.ephemeral(opts);
+        await this.attempt('defer', startedAt, () => this.writeDefer(deferFlags(ephemeral)));
+        this.transition('defer', { kind: 'deferred-reply', ephemeral });
         this.report('defer', startedAt, null);
     }
 
@@ -81,7 +82,7 @@ export abstract class BaseReplySender<TMessage extends { id: string }, TNative =
         this.checkLegality('deferUpdate');
         const startedAt = performance.now();
         await this.attempt('deferUpdate', startedAt, () => this.writeDeferUpdate());
-        this.transition('deferUpdate', 'deferred-update');
+        this.transition('deferUpdate', { kind: 'deferred-update' });
         this.report('deferUpdate', startedAt, null);
     }
 
@@ -94,13 +95,13 @@ export abstract class BaseReplySender<TMessage extends { id: string }, TNative =
         this.checkLegality('update');
         const startedAt = performance.now();
         // in deferred-update the source message is @original and the ack-legality check above has already passed
-        if (this.state === 'deferred-update') {
+        if (this.state.kind === 'deferred-update') {
             const edited = await this.attempt('update', startedAt, () => this.editOriginal(response));
             this.report('update', startedAt, edited.id);
             return edited;
         }
         const created = await this.attempt('update', startedAt, () => this.writeUpdate(response));
-        this.transition('update', 'replied');
+        this.transition('update', { kind: 'replied' });
         const message = this.remember(this.requireMessage(created, 'update'));
         this.report('update', startedAt, message.id);
         return message;
@@ -108,6 +109,12 @@ export abstract class BaseReplySender<TMessage extends { id: string }, TNative =
 
     public async followUp(response: ReplyResponse<TNative> | string, opts?: SendOpts): Promise<TMessage> {
         this.checkLegality('followUp');
+        if (this.state.kind === 'deferred-reply') {
+            // discord edits the loading message for a followUp here anyway and ignores its ephemeral flag
+            const sameVisibility = opts?.ephemeral === undefined || opts.ephemeral === this.state.ephemeral;
+            if (sameVisibility) return await this.edit(response);
+            await this.delete();
+        }
         const startedAt = performance.now();
         const created = await this.attempt('followUp', startedAt, () =>
             this.writeFollowUp(response, this.replyFlags(opts))
@@ -151,6 +158,7 @@ export abstract class BaseReplySender<TMessage extends { id: string }, TNative =
         const startedAt = performance.now();
         if (target === undefined) {
             await this.attempt('delete', startedAt, () => this.writeDeleteOriginal());
+            this.settleDefer();
             this.report('delete', startedAt, null);
             return;
         }
@@ -163,11 +171,9 @@ export abstract class BaseReplySender<TMessage extends { id: string }, TNative =
         this.report('delete', startedAt, null);
     }
 
-    /** Routes to the verb the current ack state permits. The illegal-ack throw is unreachable because every state has a route. */
+    /** Calls {@link reply} if nothing went out yet and {@link followUp} after that. */
     public async send(response: ReplyResponse<TNative> | string, opts?: SendOpts): Promise<TMessage> {
-        const target = sendTarget(this.state);
-        if (target === 'reply') return await this.reply(response, opts);
-        if (target === 'edit') return await this.edit(response);
+        if (this.state.kind === 'unacked') return await this.reply(response, opts);
         return await this.followUp(response, opts);
     }
 
@@ -185,7 +191,7 @@ export abstract class BaseReplySender<TMessage extends { id: string }, TNative =
         }
         const startedAt = performance.now();
         await this.attempt('showModal', startedAt, () => this.writeModal(data));
-        this.transition('showModal', 'replied');
+        this.transition('showModal', { kind: 'replied' });
         this.report('showModal', startedAt, null);
     }
 
@@ -207,8 +213,14 @@ export abstract class BaseReplySender<TMessage extends { id: string }, TNative =
     private async editOriginal(response: ReplyResponse<TNative> | string): Promise<TMessage> {
         const edited = await this.writeEditOriginal(response);
         // after a deferUpdate the source message is @original, which this interaction did not send
-        if (this.state !== 'deferred-update') this.remember(edited);
+        if (this.state.kind !== 'deferred-update') this.remember(edited);
+        this.settleDefer();
         return edited;
+    }
+
+    // once the loading message is filled or deleted, a send makes a new message the same way it does after a reply
+    private settleDefer(): void {
+        if (this.state.kind === 'deferred-reply') this.state = { kind: 'replied' };
     }
 
     private ephemeral(opts: SendOpts | DeferOpts | undefined): boolean {
@@ -220,7 +232,7 @@ export abstract class BaseReplySender<TMessage extends { id: string }, TNative =
     }
 
     private checkLegality(method: ReplyMethod): void {
-        checkAckLegality(method, this.state, this.routeId, this.ackedBy);
+        checkAckLegality(method, this.state.kind, this.routeId, this.ackedBy);
     }
 
     private transition(method: ReplyMethod, state: AckState): void {

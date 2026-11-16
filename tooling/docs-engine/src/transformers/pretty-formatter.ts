@@ -64,7 +64,7 @@ function inlineStripped(inline: InlineType | undefined, refs: InternalRef[], res
     return buf.join('');
 }
 
-// single-pass and offset-correct, since this only appends to `out` and never rewrites it
+// single-pass and offset-correct since this only appends to `out` and never rewrites it
 function substituteRefs(formatted: string, refs: readonly InternalRef[]): FormattedOutput {
     if (refs.length === 0) return { text: formatted, refs: [] };
 
@@ -93,7 +93,7 @@ function substituteRefs(formatted: string, refs: readonly InternalRef[]): Format
 // Method-shape inputs (`name<T>(p): R`) aren't valid top-level TS. Wrapping as a function
 // declaration lets prettier (and downstream shiki) parse a complete statement, and the body
 // gets extracted afterward. The function wrap also tokenizes multi-line type-param constraints
-// correctly, which `class _ {…}` does not, because TextMate grammar fails across newlines inside a class body.
+// correctly, which `class _ {…}` does not because TextMate grammar fails across newlines inside a class body.
 async function tryPrettierAsMethod(stripped: string): Promise<string | null> {
     try {
         const formatted = await format(`function ${stripped} {}`, PRETTIER_OPTIONS);

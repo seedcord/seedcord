@@ -45,7 +45,7 @@ describe('serializeReply', () => {
         expect(result.components).toEqual([raw, { type: ComponentType.TextDisplay, content: 'built' }]);
     });
 
-    it('carries allowedMentions and files through untouched', () => {
+    it('passes allowedMentions and files through untouched', () => {
         const response: ReplyResponse = {
             components: [new TextDisplayBuilder().setContent('a')],
             allowedMentions: { parse: ['users'] },

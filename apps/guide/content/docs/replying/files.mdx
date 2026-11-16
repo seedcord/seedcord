@@ -59,7 +59,7 @@ An upload without a component pointing at it still reaches Discord. Nobody readi
 
 | field | takes | what it does |
 | --- | --- | --- |
-| `data` | `Uint8Array` | the bytes. A node `Buffer` assigns here, since it extends `Uint8Array` |
+| `data` | `Uint8Array` | the bytes. A node `Buffer` assigns here since it extends `Uint8Array` |
 | `name` | `string` | the filename Discord shows, and what an `attachment://` reference resolves against |
 | `description` | `string` | alt text, read by screen readers and shown on hover |
 | `title` | `string` | a display title Discord shows in place of the filename |
@@ -87,7 +87,7 @@ files: [
 
 Http takes `ReplyFile` alone, so a discord.js file form is a compile error there.
 
-Gateway takes every form that discord.js takes, since it passes `files` straight to the library.
+Gateway takes every form that discord.js takes since it passes `files` straight to the library.
 
 ```ts plain
 files: [
@@ -97,7 +97,7 @@ files: [
 ];
 ```
 
-That includes `AttachmentBuilder`, an `Attachment` from an existing message, a bare `Buffer`, a node `Stream`, a path or URL string, and an `{ attachment, name }` payload. One `files` array mixes them with `ReplyFile` entries freely, since each element types on its own.
+That includes `AttachmentBuilder`, an `Attachment` from an existing message, a bare `Buffer`, a node `Stream`, a path or URL string, and an `{ attachment, name }` payload. One `files` array mixes them with `ReplyFile` entries freely since each element types on its own.
 
 Use [`GatewayReplyResponse`](ref:gateway/GatewayReplyResponse) to type a helper that returns one of these.
 

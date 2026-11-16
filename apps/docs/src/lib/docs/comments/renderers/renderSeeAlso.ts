@@ -52,7 +52,7 @@ export function renderSeeAlso(comment: DocComment, context: FormatContext): SeeA
 
     for (const entry of collected) {
         let href = entry.href;
-        // this resolves X by name through search even when the target is absent, because api extractor
+        // this resolves X by name through search even when the target is absent because api extractor
         // leaves many in-repo `@see {@link X}` destinations unresolved.
         if (!href) {
             try {

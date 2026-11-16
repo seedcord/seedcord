@@ -112,7 +112,7 @@ describe('useGuideSearch', () => {
         expect(matchedRows(result.current)[0]).toBe(before);
     });
 
-    it('says nothing matched once every group comes back empty', async () => {
+    it('says that nothing matched once every group comes back empty', async () => {
         serving([Response.json(SECTIONS)]);
         const search = await freshSearch();
         const { result } = renderHook(() => search('z', true).groups);

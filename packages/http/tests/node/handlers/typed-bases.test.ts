@@ -140,7 +140,7 @@ describe('SlashHandler options and match', () => {
         );
     });
 
-    it('throws MatchCaseMissing for a route with no case', async () => {
+    it('throws MatchCaseMissing for a route without a case', async () => {
         class Ban extends SlashHandler<'hbBan'> {
             async execute(): Promise<void> {
                 await this.match({ hbBan: () => undefined });
@@ -155,7 +155,7 @@ describe('SlashHandler options and match', () => {
         );
     });
 
-    it('throws MatchCaseMissing for a prototype-named route with no case', async () => {
+    it('throws MatchCaseMissing for a prototype-named route without a case', async () => {
         class Ban extends SlashHandler<'hbBan'> {
             async execute(): Promise<void> {
                 await this.match({ hbBan: () => undefined });
@@ -233,7 +233,7 @@ describe('AutocompleteHandler focused, match, options, route', () => {
         expect(route).toBe('hbSearch');
     });
 
-    it('throws MatchCaseMissing for a focused field with no case', async () => {
+    it('throws MatchCaseMissing for a focused field without a case', async () => {
         class Search extends AutocompleteHandler<'hbSearch'> {
             async execute(): Promise<void> {
                 await this.match({

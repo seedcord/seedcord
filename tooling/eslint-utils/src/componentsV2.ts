@@ -44,7 +44,7 @@ function componentsValueIsV2(
     return arrayHoldsV2(services.getTypeAtLocation(value), checker);
 }
 
-// the last components contributor (a key or a spread) wins because object properties apply left to right
+// the last components contributor (a key or a spread) sets the value because object properties apply left to right
 export function hasV2Components(
     node: TSESTree.ObjectExpression,
     services: ParserServicesWithTypeInformation,

@@ -79,7 +79,7 @@ describe('a ref: link', () => {
     });
 
     it.each([
-        ['ref:core/', 'has a slash with no symbol after it'],
+        ['ref:core/', 'has a slash without a symbol after it'],
         ['ref:/Notice', 'is missing the package'],
         ['ref:core/a/b', 'has a path after the symbol'],
         ['ref:', 'is missing the package'],
@@ -99,7 +99,7 @@ describe('a ref: link', () => {
         await expect(compileGuideMdx(source)).rejects.toThrow('is still a plain url');
     });
 
-    it('refuses one with no link text', async () => {
+    it('refuses one without link text', async () => {
         await expect(compileGuideMdx('a [](ref:core/Notice) link')).rejects.toThrow("doesn't have link text");
     });
 

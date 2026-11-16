@@ -76,13 +76,14 @@ class Checkout {
     private stringAlerts(file: string): Alert[] {
         const config = join(this.root, 'tooling/prose/prose.config.ts');
         if (!existsSync(config)) return [];
-        const args = ['--no-config-lookup', '-c', config, '--quiet', '--no-warn-ignored', '--format', 'json', file];
+        // keep --quiet off. index.ts sets string-hints to warn, and --quiet would hide every string suggestion
+        const args = ['--no-config-lookup', '-c', config, '--no-warn-ignored', '--format', 'json', file];
         const [result] = JSON.parse(this.run('eslint', 'bin/eslint.js', args) || '[]') as {
-            messages: { line: number; message: string }[];
+            messages: { line: number; message: string; severity: 1 | 2 }[];
         }[];
-        return (result?.messages ?? []).map(({ line, message }) => ({
+        return (result?.messages ?? []).map(({ line, message, severity }) => ({
             Line: line,
-            Severity: 'error',
+            Severity: severity === 2 ? 'error' : 'suggestion',
             Check: 'Seedcord.Strings',
             Message: message
         }));

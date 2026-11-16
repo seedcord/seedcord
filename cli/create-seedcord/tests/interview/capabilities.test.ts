@@ -42,7 +42,7 @@ describe('intentsFor', () => {
         expect(intentsFor(['nonsense'])).toEqual(['Guilds']);
     });
 
-    it('carries a message event source when only message-text is picked', () => {
+    it('adds a message event source when only message-text is picked', () => {
         expect(intentsFor(['message-text'])).toContain('GuildMessages');
     });
 });

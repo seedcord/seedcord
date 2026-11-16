@@ -292,7 +292,7 @@ describe('toComponentEmbed with sections, galleries, and rows', () => {
         );
     });
 
-    it('rejects a section with no accessory or two of them', () => {
+    it('rejects a section without an accessory or with two of them', () => {
         const oneAccessory = 'A <Section> needs exactly one accessory, a <Thumbnail> or a <LinkButton>, got';
         const bare = (
             // @ts-expect-error a JS caller can still leave it out
@@ -471,7 +471,7 @@ describe('toComponentEmbed with text', () => {
         );
     });
 
-    it('rejects a text display with no text', () => {
+    it('rejects a text display without text', () => {
         expectEmbedError(
             () =>
                 toComponentEmbed(

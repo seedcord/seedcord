@@ -140,7 +140,7 @@ describe('MakeRunner', () => {
         });
     });
 
-    it('writes nothing when a prompt is cancelled', async () => {
+    it('leaves the folder untouched when a prompt is cancelled', async () => {
         using terminal = new PromptTerminal();
         const projectDir = makeProject({ ...BOT_FILES, 'templates/Button/{{pascal name}}.ts.hbs': '{{label}}' });
         const done = make(terminal, projectDir);

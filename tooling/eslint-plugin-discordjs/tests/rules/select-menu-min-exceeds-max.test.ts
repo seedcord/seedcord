@@ -129,7 +129,7 @@ ruleTester.run('select-menu-min-exceeds-max', rule, {
             errors: [{ messageId: 'minOverMax' }]
         },
         {
-            // the last setMinValues wins and it exceeds the max
+            // the last setMinValues is the one compared, and it exceeds the max
             code: dedent`
                 import { StringSelectMenuBuilder } from 'discord.js';
                 new StringSelectMenuBuilder().setCustomId('c').setMinValues(1).setMinValues(9).setMaxValues(3);

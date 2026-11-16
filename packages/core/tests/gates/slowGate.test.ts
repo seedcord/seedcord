@@ -44,7 +44,7 @@ describe('slowGateMonitor', () => {
         expect(warn).not.toHaveBeenCalled();
     });
 
-    it('is silent with no readings', () => {
+    it('is silent without readings', () => {
         const warn = warnSpy();
         slowGateMonitor()?.report(null);
 

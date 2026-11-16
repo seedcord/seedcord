@@ -44,7 +44,7 @@ describe('PageNav', () => {
         expect(screen.queryByText(/Previous/)).not.toBeInTheDocument();
     });
 
-    it('renders nothing on a page standing alone', () => {
+    it('renders empty on a page standing alone', () => {
         const { container } = renderNav({});
 
         expect(container).toBeEmptyDOMElement();

@@ -10,7 +10,7 @@ import type { ESLint, Linter } from 'eslint';
  * so the canonical-class rules can borrow a sibling app's entry.
  *
  * @param packageRoot - Absolute path to the consuming package's root (typically `import.meta.dirname`).
- * @param candidates - Relative paths tried in order, first existing wins.
+ * @param candidates - Relative paths tried in order. The first one that exists is used.
  * @returns Absolute path to the first existing candidate, or `undefined` if none exist.
  */
 export function resolveSharedTailwindEntry(packageRoot: string, candidates: string[]): string | undefined {

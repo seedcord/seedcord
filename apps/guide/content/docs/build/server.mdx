@@ -47,9 +47,9 @@ Each `✔︎` line of the build output is one step. The three that do the work:
 
 - **load bot** imports your `instance` file and constructs the bot, the same way `seedcord dev` does. An env value your config reads at construction has to exist in CI too, or the build stops here.
 - **type check** runs `tsc --noEmit` against the `tsconfig.json` beside `seedcord.config.ts`, from your project's own `typescript`. [`build.tsconfig`](/build/config) points it at another file.
-- **bundle** runs Vite and writes `dist`, with `index.mjs` as the entry, one `.js` file for each of your modules, and a source map beside each. The build doesn't minify the code. [Every code file under `root`](/build/config#keep-tool-files-outside-root) builds, whether or not your bot imports it. Always run `index.mjs`, because it sets the paths that the `.js` files read.
+- **bundle** runs Vite and writes `dist`, with `index.mjs` as the entry, one `.js` file for each of your modules, and a source map beside each. The build doesn't minify the code. [Every code file under `root`](/build/config#keep-tool-files-outside-root) builds, whether or not your bot imports it. Always run `index.mjs` because it sets the paths that the `.js` files read.
 
-The last two lines print the commands that start what it built. The `run` line uses the runtime the CLI ran on, so `bun --bun run build` prints `bun dist/index.mjs`. The `compile` line takes the binary's name from your `package.json`, without the scope, so `@acme/my-bot` builds to `my-bot`.
+The last two lines print the commands that start what it built. The `run` line uses the runtime the CLI ran on, so `bun --bun run build` prints `bun dist/index.mjs`. The `compile` line takes the binary's name from your `package.json`, without the scope. `@acme/my-bot` builds to `my-bot`.
 
 ### outDir gets emptied
 
@@ -77,7 +77,7 @@ node --enable-source-maps dist/index.mjs
 
 The printed `run` line doesn't include the flag, so add it yourself. Without it, a stack trace points at lines in `dist`. With it, node reads the source maps the build wrote and points at your `.ts` lines.
 
-To run it on a host, copy the whole `dist` folder there, along with `package.json` and your production dependencies, since `dist` imports packages like `@seedcord/gateway` from `node_modules`.
+To run it on a host, copy the whole `dist` folder there, along with `package.json` and your production dependencies since `dist` imports packages like `@seedcord/gateway` from `node_modules`.
 
 An http bot's interactions server listens on port 3000. To use another port, pass `port` to `new Seedcord({ ... })`. [Reading a value](/build/env#reading-a-value) has a sample that takes it from a `PORT` variable.
 

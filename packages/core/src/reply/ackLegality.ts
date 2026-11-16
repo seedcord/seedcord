@@ -4,7 +4,14 @@ import { SeedcordError } from '@seedcord/errors/internal';
 import type { AckTrace } from './AckTrace';
 import type { ExcludeStrict } from 'type-fest';
 
-export type AckState = 'unacked' | 'deferred-reply' | 'deferred-update' | 'replied';
+// a deferred reply keeps its visibility because discord can't change it once the loading message exists
+export type AckState =
+    | { kind: 'unacked' }
+    | { kind: 'deferred-reply'; ephemeral: boolean }
+    | { kind: 'deferred-update' }
+    | { kind: 'replied' };
+
+type AckKind = AckState['kind'];
 
 export type ReplyMethod =
     | 'reply'
@@ -36,11 +43,11 @@ function deferReason(what: string): Illegal {
 }
 
 // a missing entry means legal in that state
-const ILLEGAL: Record<ExcludeStrict<ReplyMethod, 'send'>, Partial<Record<AckState, Illegal>>> = {
+const ILLEGAL: Record<ExcludeStrict<ReplyMethod, 'send'>, Partial<Record<AckKind, Illegal>>> = {
     reply: {
         'deferred-reply': {
             reason: 'this interaction was already deferred',
-            alternative: 'Use edit() to fill the deferred reply or followUp() for a new message.'
+            alternative: 'Use edit() to fill the deferred reply.'
         },
         'deferred-update': {
             reason: 'this interaction was already acknowledged with a deferred update',
@@ -96,15 +103,8 @@ const ILLEGAL: Record<ExcludeStrict<ReplyMethod, 'send'>, Partial<Record<AckStat
     }
 };
 
-const SEND_TARGET: Record<AckState, 'reply' | 'edit' | 'followUp'> = {
-    unacked: 'reply',
-    'deferred-reply': 'edit',
-    'deferred-update': 'followUp',
-    replied: 'followUp'
-};
-
 // throws before any API call, and ackedBy becomes the throw cause with its stack pointing at the first ack
-export function checkAckLegality(method: ReplyMethod, state: AckState, routeId: string, ackedBy?: AckTrace): void {
+export function checkAckLegality(method: ReplyMethod, state: AckKind, routeId: string, ackedBy?: AckTrace): void {
     if (method === 'send') return;
     const illegal = ILLEGAL[method][state];
     if (!illegal) return;
@@ -113,8 +113,4 @@ export function checkAckLegality(method: ReplyMethod, state: AckState, routeId: 
         [method, illegal.reason, illegal.alternative, routeId],
         { cause: ackedBy }
     );
-}
-
-export function sendTarget(state: AckState): 'reply' | 'edit' | 'followUp' {
-    return SEND_TARGET[state];
 }

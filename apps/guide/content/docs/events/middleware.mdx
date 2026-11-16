@@ -5,7 +5,7 @@ description: Run code before and after your event handlers with event middleware
 
 Suppose three handlers respond to `messageCreate`, and none of them should answer a muted member. Each handler would repeat the same mute lookup. If you add a fourth handler and forget the lookup, it answers anyway.
 
-An event middleware runs that check once, before every handler registered for the event. If the middleware throws, none of those handlers run.
+An event middleware runs that check once before every handler registered for the event. If the middleware throws, none of those handlers run.
 
 ```ts twoslash title="src/events/middlewares/SkipMuted.ts"
 import {
@@ -69,7 +69,7 @@ export class CountMessages extends EventMiddleware<
 }
 ```
 
-`name` is `Events.MessageCreate | Events.MessageDelete`. Without `{ events }`, the middleware runs on every event your handlers registered. Leave the generic off too, since a generic without `{ events }` fails to compile.
+`name` is `Events.MessageCreate | Events.MessageDelete`. Without `{ events }`, the middleware runs on every event your handlers registered. Leave the generic off too since a generic without `{ events }` fails to compile.
 
 ```ts twoslash title="src/events/middlewares/Trace.ts"
 import {
@@ -85,7 +85,7 @@ export class Trace extends EventMiddleware {
 }
 ```
 
-`Trace` reads `this.route` because a catchall can't read the payload. An event middleware doesn't have `match`, because it runs the same code for every event it lists. When your check reads the payload of several events, write one middleware class per event.
+`Trace` reads `this.route` because a catchall can't read the payload. An event middleware doesn't have `match` because it runs the same code for every event it lists. When your check reads the payload of several events, write one middleware class per event.
 
 ## Order
 

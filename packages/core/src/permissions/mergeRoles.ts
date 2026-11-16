@@ -1,5 +1,5 @@
 /**
- * The role ids a member holds after adding and removing the given sets. Removals win over additions.
+ * The role ids a member holds after adding and removing the given sets. An id in both sets is removed.
  *
  * This does not write the roles. Apply the result with `member.roles.set()` on gateway, or PATCH the member over HTTP.
  *

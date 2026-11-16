@@ -2,7 +2,7 @@ import type { UUID } from '#src/uuid';
 import type { DispatchBag, DispatchMemberValues } from './Dispatch';
 import type { APIMessageTopLevelComponent } from 'discord-api-types/v10';
 
-/** A ComponentsV2 top-level component, as discord.js accepts it in a message's `components` field. */
+/** A ComponentsV2 top-level component as discord.js accepts it in a message's `components` field. */
 export interface V2Component {
     toJSON(): APIMessageTopLevelComponent;
 }
@@ -49,7 +49,7 @@ export interface ReplyFile {
  * {@link ReplyFile} alone assigns to either transport.
  */
 export interface ReplyResponse<TNative = never> {
-    /** The component tree the reply renders from, as builders or as the raw json Discord's API takes. */
+    /** The component tree the reply renders from as builders or as the raw json Discord's API takes. */
     readonly components: (V2Component | APIMessageTopLevelComponent)[];
     /** Which mentions written inside the components resolve into real pings. */
     readonly allowedMentions?: ReplyAllowedMentions;

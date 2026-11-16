@@ -3,7 +3,7 @@ title: Faults
 description: See how a user still gets an answer when your handler throws an error it doesn't catch, and change the card seedcord shows.
 ---
 
-Some calls fail in ways the user can't fix, like a database write. Catch the error and throw a [`Fault`](ref:core/Fault). The user gets a generic card with a tracking id, and seedcord sends the error you caught to your fault report along with the command and the user who ran it. If the user can fix the problem, like by creating a profile, [throw](/replying/throwing) a [`Notice`](ref:core/Notice) that tells them how.
+Some calls fail in ways the user can't fix, like a database write. Catch the error and throw a [`Fault`](ref:core/Fault). The user gets a generic card with a tracking id. seedcord sends the error you caught to your fault report, along with the command and the user who ran it. If the user can fix the problem, like by creating a profile, [throw](/replying/throwing) a [`Notice`](ref:core/Notice) that tells them how.
 
 ```ts twoslash title="src/handlers/Ban.ts"
 import { Fault, SlashHandler, SlashRoute } from '@seedcord/gateway';
@@ -90,7 +90,7 @@ Two config keys change this. `errors.defaultError` takes a `Notice` subclass tha
 
 ## Stopping without a reply
 
-`Silence` stops the handler, and seedcord does not call Discord at all. That fits an event handler, since nothing is waiting on a response.
+`Silence` stops the handler, and seedcord does not call Discord at all. That fits an event handler since nothing is waiting on a response.
 
 ```ts twoslash title="src/events/Welcome.ts"
 import {
@@ -157,7 +157,7 @@ Both listeners run outside any interaction, so nobody sees a reply. When your ap
 
 <Callout type="transport" only="http">
 
-An edge bot registers neither listener, since its [`Seedcord`](ref:http/Seedcord) never starts a host process.
+An edge bot registers neither listener since its [`Seedcord`](ref:http/Seedcord) never starts a host process.
 
 </Callout>
 

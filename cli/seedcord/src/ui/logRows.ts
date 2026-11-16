@@ -32,7 +32,7 @@ function closesBlock(logs: readonly LogEntry[], index: number): boolean {
     return log !== undefined && !log.head && isBlockLine(log) && (next === undefined || next.head);
 }
 
-// adjacent blocks share one rule, because the block above already drew its bottom
+// adjacent blocks share one rule because the block above already drew its bottom
 function prevClosedBlock(logs: readonly LogEntry[], index: number): boolean {
     const prev = logs[index - 1];
     return prev !== undefined && !prev.head && isBlockLine(prev);

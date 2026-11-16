@@ -91,9 +91,9 @@ export default seedcord;
 
 Each call takes the phase, a name for the logs, the function to run, and an optional timeout in milliseconds. A startup task gets 10000 unless you pass a timeout. A shutdown task gets 5000.
 
-Add every task before the bot starts, because `addTask` throws `LifecycleTaskChangeRejected` once startup is running or finished. The sample does it at the top level of `bot.ts`.
+Add every task before the bot starts because `addTask` throws `LifecycleTaskChangeRejected` once startup is running or finished. The sample does it at the top level of `bot.ts`.
 
-A startup task's function receives an `AbortSignal`, and the sample passes it to `openCache`. Pass it to any request the task makes, because it aborts if the task times out or startup stops. A shutdown task gets a signal too, and it aborts if that task times out.
+A startup task's function receives an `AbortSignal`, and the sample passes it to `openCache`. Pass it to any request the task makes because it aborts if the task times out or startup stops. A shutdown task gets a signal too, and it aborts if that task times out.
 
 Pick the phase by what must already be ready when your task runs. The sample registers `open-cache` in `Configuration`, before anything connects, and `close-cache` in `Disconnect`, the phase for closing external resources. [Plugin lifecycle](/plugins/lifecycle) has a table of every startup and shutdown phase and what has run before it.
 
@@ -113,7 +113,7 @@ All the shutdown phases share one deadline of 25000 milliseconds, and after them
 
 On [Cloudflare Workers](/build/workers), startup tasks run on the first POST request each worker instance receives, in the same phases and with the same timeouts. Requests that arrive meanwhile wait for them. If a task fails, the next request runs the tasks again.
 
-`shutdown.addTask` throws `CoreLifecycleUnavailable` there, because Cloudflare doesn't have a shutdown hook for a worker. Do your cleanup inside a handler. A Workers config doesn't take a `lifecycle`.
+`shutdown.addTask` throws `CoreLifecycleUnavailable` there because Cloudflare doesn't have a shutdown hook for a worker. Do your cleanup inside a handler. A Workers config doesn't take a `lifecycle`.
 
 </Callout>
 
@@ -121,7 +121,7 @@ On [Cloudflare Workers](/build/workers), startup tasks run on the first POST req
 
 A process runs one `Seedcord`. If you construct a second before the first has shut down, the constructor throws `CoreSingletonViolation`. Import the instance that you already have, like the one that `src/bot.ts` exports, or run the second bot in its own process.
 
-A script that starts a bot for one job can shut it down with `await using`, which runs the shutdown when the block ends. You can construct a new `Seedcord` after that. This only works on a server, since an edge bot doesn't have a shutdown.
+A script that starts a bot for one job can shut it down with `await using`, which runs the shutdown when the block ends. You can construct a new `Seedcord` after that. This only works on a server since an edge bot doesn't have a shutdown.
 
 ```ts plain
 await using bot = await new Seedcord(config).start();

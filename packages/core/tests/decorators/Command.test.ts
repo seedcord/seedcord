@@ -78,7 +78,7 @@ describe('RegisterCommand', () => {
         expect(message).toContain('@RegisterCommand()');
     });
 
-    it('throws when global scope carries guild ids', () => {
+    it('throws when global scope has guild ids', () => {
         let caught: unknown;
         try {
             registerRaw('global', ['123'])(freshCommand());

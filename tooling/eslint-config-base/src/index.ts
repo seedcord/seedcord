@@ -201,7 +201,7 @@ function createConfig(options: CreateConfigOptions = {}): FlatConfig {
         // Must come after the rule blocks above so it can disable any formatting rules they enable.
         prettierConfig,
 
-        // Last so consumer overrides win over everything above.
+        // Last so consumer overrides replace everything above.
         ...userConfigs
     );
 }

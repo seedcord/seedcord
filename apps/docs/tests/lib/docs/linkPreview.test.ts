@@ -145,7 +145,7 @@ describe('symbolPreview', () => {
         );
     });
 
-    it("doesn't add a source link for a symbol with no source", () => {
+    it("doesn't add a source link for a symbol without a source", () => {
         const labels = symbolPreview(resolved({ kind: 'type' }), undefined).links.map(({ label }) => label);
 
         expect(labels).toEqual(['Markdown']);

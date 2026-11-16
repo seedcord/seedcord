@@ -35,7 +35,7 @@ describe('setCustomIdErrors', () => {
         expect(() => Report.decode('zzz000:A')).toThrow('invalid:routeKey "zzz000" is not');
     });
 
-    it('lets the last call win', () => {
+    it('throws the errors from the last call', () => {
         class Later extends Error {}
         setCustomIdErrors({ stale: (p) => new OwnStale(p), invalid: (d) => new OwnInvalid(d) });
         setCustomIdErrors({ stale: (p) => new Later(p), invalid: (d) => new Later(d) });

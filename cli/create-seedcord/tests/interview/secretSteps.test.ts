@@ -29,7 +29,7 @@ describe('tokenStep', () => {
         expect(() => tokenStep.flag.parse('aaa..ccc')).toThrow();
     });
 
-    it('rejects nothing at all', () => {
+    it('rejects a blank token', () => {
         expect(() => tokenStep.flag.parse('   ')).toThrow();
     });
 

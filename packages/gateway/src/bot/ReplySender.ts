@@ -39,13 +39,13 @@ function toDjsFile(file: ReplyFile | GatewayFile): GatewayFile {
     };
 }
 
-// seed the state once because djs flips `replied` on editReply, and deriving it per call would break repeated
-// update() and post-edit send() parity
-function seedState(interaction: Repliables): AckState {
-    if (interaction.deferred && interaction.ephemeral === null) return 'deferred-update';
-    if (interaction.replied) return 'replied';
-    if (interaction.deferred) return 'deferred-reply';
-    return 'unacked';
+// seed the state once because djs flips `replied` on editReply, and deriving it per call would break repeated update()
+function seedState({ deferred, replied, ephemeral }: Repliables): AckState {
+    // djs leaves ephemeral null after a deferUpdate
+    if (deferred && ephemeral === null) return { kind: 'deferred-update' };
+    if (replied) return { kind: 'replied' };
+    if (deferred) return { kind: 'deferred-reply', ephemeral: ephemeral === true };
+    return { kind: 'unacked' };
 }
 
 /** Writes interaction responses through discord.js. The repliable handler bases and the dispatcher construct it. */

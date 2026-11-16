@@ -37,7 +37,7 @@ seedcord is pre-1.0, so a minor version can break your bot. Each release's chang
 pnpm add -D seedcord vite
 ```
 
-Run it through your project's scripts, like `pnpm dev`. A global `seedcord` throws `CliNotProjectInstall`, because the CLI has to load the same seedcord packages your bot imports.
+Run it through your project's scripts, like `pnpm dev`. A global `seedcord` throws `CliNotProjectInstall` because the CLI has to load the same seedcord packages your bot imports.
 
 ## Commands
 

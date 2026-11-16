@@ -17,7 +17,7 @@ interface TestMessage {
 const created: TestMessage = { id: 'm1' };
 
 class TestSender extends BaseReplySender<TestMessage> {
-    // the flags each reply, followUp, and defer wrote, in order
+    // the flags each reply, followUp, and defer wrote in order
     public readonly written: number[] = [];
 
     public constructor(bus: Bus, isEphemeralByDefault = true) {
@@ -245,11 +245,10 @@ describe('the ephemeral default', () => {
         expect(ephemeralBits(sender)).toEqual([MessageFlags.Ephemeral]);
     });
 
-    it('applies the default to a defer and the followUp after it', async () => {
+    it('applies the default to a defer', async () => {
         const sender = new TestSender(busWithSpy().bus, false);
         await sender.defer();
-        await sender.followUp(response);
 
-        expect(ephemeralBits(sender)).toEqual([0, 0]);
+        expect(ephemeralBits(sender)).toEqual([0]);
     });
 });

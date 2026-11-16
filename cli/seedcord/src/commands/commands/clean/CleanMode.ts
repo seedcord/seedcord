@@ -43,7 +43,7 @@ export class CleanMode extends RemoveMode {
         const guilds = plural(scan.guilds.length, 'guild');
         const scanned = commandCount(scan.guilds);
         if (scanned === 0)
-            return { info: [], outro: `Scanned ${guilds} with no guild commands deployed. Nothing to clean.` };
+            return { info: [], outro: `Scanned ${guilds} and found zero guild commands. Nothing to clean.` };
         if (scan.global.length === 0) {
             return {
                 info: ["This app doesn't have global commands, so nothing can duplicate one.", PURGE_HINT],

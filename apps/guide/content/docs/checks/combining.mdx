@@ -53,7 +53,7 @@ const staffOrOwner = or(staff, OwnerOnly());
 //    ^?
 ```
 
-`staff` runs `GuildOnly` before `RequireRole`, since gates run left to right. The first refusal stops the rest.
+`staff` runs `GuildOnly` before `RequireRole` since gates run left to right. The first refusal stops the rest.
 
 The combined gate has the names of its gates, joined with `&` for an `and` and `|` for an `or`. A combinator nested inside another gets parentheses around its name, which is why `staffOrOwner` above reads `(GuildOnly & RequireRole) | OwnerOnly`.
 
@@ -79,7 +79,7 @@ The gates decide which handlers the combined gate fits.
 
 {/* prettier-ignore-end */}
 
-An `and` of an event-only gate and an interaction-only gate doesn't fit any handler, since a handler can't provide both contexts. The compiler catches it at the `@Gated` line.
+An `and` of an event-only gate and an interaction-only gate doesn't fit any handler since a handler can't provide both contexts. The compiler catches it at the `@Gated` line.
 
 ## What counts as declining
 
@@ -103,8 +103,8 @@ Setting `report = true` on your own `Notice` to get a refusal into your logs tak
 
 `or` picks what to throw in three steps.
 
-1. The `fail` option, when you passed one.
-2. A list of what each gate needed, when every refusal carried a `summary`.
+1. The `fail` option when you passed one.
+2. A list of what each gate needed when every refusal carried a `summary`.
 3. A generic refusal reading "You are not allowed to use this command."
 
 Every catalog gate that refuses with a `Notice` sets a `summary`, so an `or` built from those alone reaches step two. A `notice` you pass to a catalog gate replaces its default, summary included.
@@ -115,7 +115,7 @@ You need to meet at least one of these:
 • hold the <@&221439658686939136> role
 ```
 
-A [gate of your own](/checks/your-own) joins that list once its `Notice` sets `summary`. If a single gate doesn't set a summary, the `or` replaces the whole list with the generic refusal, since a list that misses an option would mislead.
+A [gate of your own](/checks/your-own) joins that list once its `Notice` sets `summary`. If a single gate doesn't set a summary, the `or` replaces the whole list with the generic refusal since a partial list would mislead.
 
 ## Wording it yourself
 

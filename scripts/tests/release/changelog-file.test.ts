@@ -29,7 +29,7 @@ describe('ChangelogFile sections', () => {
         expect(section).not.toContain('shutdown deadline');
     });
 
-    it('returns nothing for a version the file lacks', () => {
+    it('returns undefined for a version the file lacks', () => {
         expect(new ChangelogFile(changelog).sectionFor('9.9.9')).toBeUndefined();
     });
 

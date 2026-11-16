@@ -56,7 +56,7 @@ describe('ListRunner', () => {
         expect(output).toContain('  global  2 commands\n      /ping  ping-id\n      /legacy  legacy-id\n');
     });
 
-    it('lists only the global scope for a bot with no commands folder', async () => {
+    it('lists only the global scope for a bot without a commands folder', async () => {
         const { rest } = fakeDiscord(ON_DISCORD);
 
         const output = await list(await fakeProject({ commandsPath: null }), rest);

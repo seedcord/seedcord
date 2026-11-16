@@ -73,7 +73,7 @@ The clicked thing arrives as a discord.js object on gateway and as a `discord-ap
 
 Both transports give `this.target` an `id`. A user target has `username` too, and a message target reaches its author through `author`.
 
-`this.targetMember` differs further. Gateway gives it `id` and `displayName`. Http holds the guild fields alone there, since Discord sends that person's user object once under `resolved.users`.
+`this.targetMember` differs further. Gateway gives it `id` and `displayName`. Http holds the guild fields alone there since Discord sends that person's user object once under `resolved.users`.
 
 </Callout>
 

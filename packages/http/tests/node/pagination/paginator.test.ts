@@ -156,7 +156,7 @@ describe('http Paginator custom source', () => {
 });
 
 describe('http Paginator.page', () => {
-    it('renders the requested page and sends nothing', async () => {
+    it('renders the requested page without sending it', async () => {
         const post = vi.fn().mockResolvedValue({ resource: { message: { id: 'm-1' } } });
 
         const reply = await pagerFor().page(stubHandler(post), 1);

@@ -140,7 +140,7 @@ describe('the edge Seedcord under seedcord dev', () => {
         expect(put).toHaveBeenCalledWith(Routes.applicationCommands(APP_ID), expect.anything());
     });
 
-    it('reads the ids and deploys nothing when the CLI passes the hashes of an unchanged deploy', async () => {
+    it('reads the ids and skips the deploy when the CLI passes the hashes of an unchanged deploy', async () => {
         @RegisterCommand('global')
         class Ping extends BuilderComponent<'command'> {
             constructor() {

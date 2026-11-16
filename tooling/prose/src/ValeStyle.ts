@@ -12,6 +12,8 @@ interface ValeRule {
     nonword?: boolean;
 }
 
+export type ValeLevel = ValeRule['level'];
+
 interface ProsePattern {
     rule: string;
     regex: RegExp;
@@ -50,12 +52,12 @@ function patternsOf(name: string, rule: ValeRule): ProsePattern[] {
 export class ValeStyle {
     private constructor(private readonly patterns: readonly ProsePattern[]) {}
 
-    static load(folder: URL = STYLE): ValeStyle {
+    static load(level: ValeLevel, folder: URL = STYLE): ValeStyle {
         const patterns = readdirSync(folder)
             .filter((file) => file.endsWith('.yml'))
             .flatMap((file) => {
                 const rule = parse(readFileSync(new URL(file, folder), 'utf8')) as ValeRule;
-                return rule.level === 'error' ? patternsOf(file.slice(0, -'.yml'.length), rule) : [];
+                return rule.level === level ? patternsOf(file.slice(0, -'.yml'.length), rule) : [];
             });
         return new ValeStyle(patterns);
     }

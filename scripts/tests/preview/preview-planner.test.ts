@@ -81,7 +81,7 @@ describe('PreviewPlanner', () => {
         );
     });
 
-    it('refuses a comment on a closed pull request, since nothing would delete its workers', async () => {
+    it('refuses a comment on a closed pull request since nothing would delete its workers', async () => {
         await expect(commentBy('admin', [BUILT], 'closed').forComment('someone')).rejects.toThrow(
             '#442 is closed. /preview only works on an open pull request.'
         );

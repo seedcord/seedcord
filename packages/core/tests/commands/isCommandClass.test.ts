@@ -31,7 +31,7 @@ describe('isCommandClass', () => {
         expect(isCommandClass(Cmd)).toBe(true);
     });
 
-    it('rejects a command class with no decorator', () => {
+    it('rejects a command class without a decorator', () => {
         expect(isCommandClass(freshCommand())).toBe(false);
     });
 
@@ -41,7 +41,7 @@ describe('isCommandClass', () => {
         expect(isCommandClass(Cmd)).toBe(true);
     });
 
-    it('rejects a class that carries the metadata without extending BuilderComponent', () => {
+    it('rejects a class that has the metadata without extending BuilderComponent', () => {
         class Forged {
             public readonly component = {};
         }

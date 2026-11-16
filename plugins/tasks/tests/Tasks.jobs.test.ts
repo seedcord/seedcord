@@ -175,7 +175,7 @@ describe('Tasks scheduled tasks', () => {
         expect(host.runs).toHaveLength(2);
     });
 
-    it('does not run a job again after it throws, and carries on when onError throws too', async () => {
+    it('does not run a job again after it throws, and keeps running when onError throws too', async () => {
         using logs = captureLogs();
         await using booted = await start(jobs, driver);
         const { host, tasks } = booted;
@@ -477,7 +477,7 @@ describe('Tasks job upkeep', () => {
         expect(logs.at('warn')).toEqual([]);
     });
 
-    describe('rejects', () => {
+    describe('schedule', () => {
         // each case fails before it stores anything. One plugin is enough for all of them
         const shared = new FakeDriver();
         let tasks: Tasks;
@@ -487,7 +487,7 @@ describe('Tasks job upkeep', () => {
             return () => tasks.dispose();
         });
 
-        it('a duration parseDuration cannot read', async () => {
+        it('rejects a duration that parseDuration cannot read', async () => {
             const duration = String('soon');
 
             await expect(tasks.schedule(Reminder, { in: duration })).rejects.toMatchObject({
@@ -495,7 +495,7 @@ describe('Tasks job upkeep', () => {
             });
         });
 
-        it('a duration that ends past the last date a Date can hold, and stores nothing', async () => {
+        it('rejects a duration past the last date that a Date can hold before storing it', async () => {
             const duration = String('100000001d');
 
             await expect(tasks.schedule(Reminder, { in: duration })).rejects.toMatchObject({
@@ -505,7 +505,7 @@ describe('Tasks job upkeep', () => {
             expect(shared.stored.size).toBe(0);
         });
 
-        it('an at in seconds', async () => {
+        it('rejects an at in seconds', async () => {
             const seconds = Math.floor(Date.now() / SECOND_MS);
 
             await expect(tasks.schedule(Reminder, { at: seconds })).rejects.toMatchObject({
@@ -514,21 +514,21 @@ describe('Tasks job upkeep', () => {
             });
         });
 
-        it.each([new Date('nope'), Number.NaN])('the invalid date %s', async (at) => {
+        it.each([new Date('nope'), Number.NaN])('rejects the invalid date %s', async (at) => {
             await expect(tasks.schedule(Reminder, { at })).rejects.toMatchObject({
                 type: 'SeedcordTypeError',
                 code: SeedcordErrorCode.PluginTasksInvalidOption
             });
         });
 
-        it.each([0, -1])('the at %s, as a likely missing value', async (at) => {
+        it.each([0, -1])('rejects an at of %s as a likely missing value', async (at) => {
             await expect(tasks.schedule(Reminder, { at })).rejects.toMatchObject({
                 type: 'SeedcordRangeError',
                 code: SeedcordErrorCode.PluginTasksAtTooEarly
             });
         });
 
-        it('data with a cycle, and stores nothing', async () => {
+        it('rejects data with a cycle before storing it', async () => {
             const data = { text: 'hi', sentAt: new Date() };
             Object.assign(data, { self: data });
 
@@ -538,7 +538,7 @@ describe('Tasks job upkeep', () => {
             expect(shared.stored.size).toBe(0);
         });
 
-        it('a class that shares its key with a loaded task, and stores nothing', async () => {
+        it('rejects a class that shares its key with a loaded task before storing it', async () => {
             const scheduling = tasks.schedule(TwinReminder, { in: '1s', data: { text: 'hi' } });
 
             await expect(scheduling).rejects.toMatchObject({ code: SeedcordErrorCode.PluginTasksKeyTaken });
@@ -546,7 +546,7 @@ describe('Tasks job upkeep', () => {
             expect(shared.stored.size).toBe(0);
         });
 
-        it('a task the plugin did not load', async () => {
+        it('rejects a task that the plugin did not load', async () => {
             await using booted = await start(partial, driver);
             const { tasks: partialTasks } = booted;
 

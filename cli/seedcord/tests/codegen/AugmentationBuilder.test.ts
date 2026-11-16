@@ -38,7 +38,7 @@ describe('AugmentationBuilder', () => {
         });
     });
 
-    it('builds subcommands and groups into leaves with no root route', () => {
+    it('builds subcommands and groups into leaves without a root route', () => {
         const tables = tablesFor(
             new SlashCommandBuilder()
                 .setName('demo')
@@ -161,7 +161,7 @@ describe('AugmentationBuilder', () => {
         expect(warnings.some((warning) => warning.includes('admin/empty'))).toBe(true);
     });
 
-    it('emits a route with an empty option table for a command with no options', () => {
+    it('emits a route with an empty option table for a command without options', () => {
         expect(tablesFor(new SlashCommandBuilder().setName('ping').setDescription('Pong'))).toEqual({ ping: {} });
     });
 
@@ -243,7 +243,7 @@ describe('AugmentationBuilder', () => {
         });
     });
 
-    it('omits the choices key entirely for an option with no choices', () => {
+    it('omits the choices key entirely for an option without choices', () => {
         const tables = tablesFor(
             new SlashCommandBuilder()
                 .setName('plain')
@@ -255,7 +255,7 @@ describe('AugmentationBuilder', () => {
         expect(tables).toEqual({ plain: { text: { kind: 'string', required: false } } });
     });
 
-    it('builds a bare subcommand into a cmd/sub leaf with no root route', () => {
+    it('builds a bare subcommand into a cmd/sub leaf without a root route', () => {
         const tables = tablesFor(
             new SlashCommandBuilder()
                 .setName('cfg')
@@ -360,7 +360,7 @@ describe('AugmentationBuilder', () => {
         });
     });
 
-    it('emits an empty option table for a subcommand with no options', () => {
+    it('emits an empty option table for a subcommand without options', () => {
         const tables = tablesFor(
             new SlashCommandBuilder()
                 .setName('demo')

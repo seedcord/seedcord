@@ -3,7 +3,7 @@ import type { CoreBase } from '@seedcord/core';
 import type { Logger } from '@seedcord/logger';
 
 /**
- * Base class for a task. A field doesn't keep its value between runs, since each run gets a fresh
+ * Base class for a task. A field doesn't keep its value between runs since each run gets a fresh
  * instance.
  *
  * Import it from `@seedcord/plugin-tasks/gateway` or `/http` to type `this.core` as your bot's `Core`.
@@ -48,7 +48,7 @@ export abstract class Task<TData = void, TCore extends CoreBase = CoreBase> {
     /** The task's work. The plugin logs a throw, publishes it as a failed `taskRan`, and passes it to `onError()`. */
     public abstract execute(): Promise<void>;
 
-    /** Runs after `execute()` throws, once the plugin has logged the error. If `execute()` throws after shutdown aborted `signal`, the plugin skips this. */
+    /** Runs after `execute()` throws and the plugin has logged the error. If `execute()` throws after shutdown aborted `signal`, the plugin skips this. */
     public onError?(error: Error): Promise<void>;
 
     /** Runs in place of `execute()` when a `protect`ed task gets a cron or manual run before its previous run has finished. */

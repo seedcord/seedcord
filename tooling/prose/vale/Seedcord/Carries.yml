@@ -1,7 +1,7 @@
-extends: substitution
+extends: existence
 link: https://github.com/seedcord/seedcord/blob/next/.agents/skills/writing-voice/SKILL.md
-message: "Write '%s' in place of '%s' when it means the value holds something."
-level: suggestion
+message: "'%s' pictures something being moved. Write what the code actually does with the value."
+level: error
 ignorecase: true
-swap:
-  'carries': has
+tokens:
+  - 'carries'

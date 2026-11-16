@@ -9,7 +9,7 @@ import type { Promisable } from 'type-fest';
 const DEFAULT_PER_PAGE = 10;
 
 /**
- * The one method a paginator calls on a source, once per click. Implement it to supply a custom source.
+ * The one method a paginator calls on a source once per click. Implement it to supply a custom source.
  *
  * @typeParam Item - The item type the source pages over.
  * @typeParam Ctx - The transport's page context, handed to the loader.

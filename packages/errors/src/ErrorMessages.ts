@@ -90,7 +90,7 @@ const messages = {
     [SeedcordErrorCode.CoreKvDriverFailed]: (operation: 'read' | 'write' | 'delete' | 'list', key: string) =>
         `The driver in ${paint.bold('config.kv')} failed to ${operation} ${paint.sky(key)}. Check that the storage it connects to is reachable.`,
     [SeedcordErrorCode.CoreKvUnserializable]: (key: string, reason: string) =>
-        `The record for ${paint.sky(key)} can't be stored, because ${paint.bold('JSON.stringify')} threw: ${reason}. ${paint.bold('config.kv')} stores every record as JSON. Remove the circular reference, or convert the value to a type that JSON supports, like a ${paint.bold('bigint')} to a string.`,
+        `The record for ${paint.sky(key)} can't be stored because ${paint.bold('JSON.stringify')} threw: ${reason}. ${paint.bold('config.kv')} stores every record as JSON. Remove the circular reference, or convert the value to a type that JSON supports, like a ${paint.bold('bigint')} to a string.`,
     [SeedcordErrorCode.CoreBotMemberMissing]: (guildId: string) =>
         `The member cache of guild ${paint.sky(guildId)} doesn't hold the bot's member, so seedcord can't read the bot's permissions there. If ${paint.bold('clientOptions.makeCache')} limits ${paint.bold('GuildMemberManager')}, keep the bot's member with ${paint.sky('keepOverLimit: (member) => member.id === member.client.user.id')}.`,
     [SeedcordErrorCode.CoreBuiltModuleRanDirectly]: () =>
@@ -185,7 +185,7 @@ const messages = {
     [SeedcordErrorCode.CustomIdReservedFieldName]: (field: string) =>
         `The customId field name ${quoted(field)} looks like an integer. JS reorders integer keys, which would scramble the field order. Give it a name that is not a number.`,
     [SeedcordErrorCode.CustomIdEmptyChoices]: (field: string, method: string) =>
-        `The customId field ${quoted(field)} uses ${method}() with no choices. Give it at least one choice, or make the field nullable.`,
+        `The customId field ${quoted(field)} uses ${method}() without choices. Give it at least one choice, or make the field nullable.`,
     [SeedcordErrorCode.CustomIdInvalidBounds]: (field: string, min: number, max: number) =>
         `The customId field ${quoted(field)} has min ${min}, which is greater than max ${max}. Swap them, or fix the one that is wrong.`,
     [SeedcordErrorCode.CustomIdValueRejected]: (field: string, expected: string, value: string) =>
@@ -197,7 +197,7 @@ const messages = {
     [SeedcordErrorCode.MatchCaseMissing]: (handler: string, kind: string, value: string) =>
         `${paint.bold(handler)}'s match() doesn't have a case for the ${kind} ${quoted(value)}. Add one to the object you pass to match().`,
     [SeedcordErrorCode.AutocompleteNoFocusedOption]: () =>
-        'Discord sent an autocomplete payload with no focused option.',
+        'Discord sent an autocomplete payload without a focused option.',
     [SeedcordErrorCode.ModalFieldNotFound]: (customId: string) =>
         `The submitted modal doesn't have a field with the custom id ${quoted(customId)}. Check it against the id you gave the component when you built the modal.`,
     [SeedcordErrorCode.ModalFieldWrongKind]: (customId: string, kind: string, getter?: string) =>
@@ -209,7 +209,7 @@ const messages = {
     [SeedcordErrorCode.ModalFieldChannelType]: (customId: string, picked: string, allowed: readonly string[]) =>
         `The modal field ${quoted(customId)} picked a ${picked} channel, but this read allows ${oneOf.format(allowed)}. Give the channel select the same channel types.`,
     [SeedcordErrorCode.CustomIdWireStale]: (prefix: string) =>
-        `The customId ${quoted(prefix)} was encoded under an older shape of this definition, because adding, removing, changing, or moving a field changes its layout hash.`,
+        `The customId ${quoted(prefix)} was encoded under an older shape of this definition because adding, removing, changing, or moving a field changes its layout hash.`,
     [SeedcordErrorCode.CustomIdWireInvalid]: (detail: string) =>
         `The customId could not be decoded. ${sentence(detail)}`,
     [SeedcordErrorCode.DispatchStateMissing]: (key: string) =>
@@ -313,7 +313,7 @@ const messages = {
     [SeedcordErrorCode.CliProblems]: (count: number) =>
         `${paint.iris(count)} problems need fixing. Each one is listed below.`,
     [SeedcordErrorCode.CliEdgeCommandsNotDeployed]: (lines: readonly string[]) =>
-        `${paint.iris(lines.length)} ${isOne(lines.length) ? 'command is' : 'commands are'} in your code with no deployed id on Discord, so the build cannot link ${isOne(lines.length) ? 'it' : 'them'}. Deploy with ${paint.bold('seedcord commands deploy')}, then build again.\n${lines.join('\n')}`,
+        `${paint.iris(lines.length)} ${isOne(lines.length) ? 'command is' : 'commands are'} in your code without a deployed id on Discord, so the build cannot link ${isOne(lines.length) ? 'it' : 'them'}. Deploy with ${paint.bold('seedcord commands deploy')}, then build again.\n${lines.join('\n')}`,
     [SeedcordErrorCode.CliDevRuntimeNotRunning]: (method: string) =>
         `${paint.bold('seedcord dev')} called ${paint.bold(method)} while the dev runtime was not running. This is a bug in seedcord.`,
     [SeedcordErrorCode.CliDeployNoCommandsFolder]: (instance: string) =>

@@ -32,7 +32,7 @@ function frameOf(store: DevStore, { filtered = false, filtersShown = false }: Fi
 }
 
 describe('StatusLine', () => {
-    it('carries the brand, the phase, and the key that opens the filters', () => {
+    it('shows the brand, the phase, and the key that opens the filters', () => {
         const frame = frameOf(running());
 
         expect(frame).toContain('seedcord');

@@ -75,7 +75,7 @@ describe('DeployRunner', () => {
         expect(output).toMatch(/deploy +\S+ +1 global, 1 in 1 guild/u);
     });
 
-    it('says when a scope gains and loses nothing', async () => {
+    it("says when a scope doesn't gain or lose anything", async () => {
         const { rest } = fakeDiscord({ [Routes.applicationCommands(APP_ID)]: [slash('ping')] });
 
         const output = await deploy(await fakeProject({ commands: [Ping] }), rest);
@@ -100,7 +100,7 @@ describe('DeployRunner', () => {
         expect(output).not.toContain('/ban');
     });
 
-    it('skips every scope on a second deploy that changed nothing', async () => {
+    it('skips every scope when a second deploy matches the first', async () => {
         const project = await fakeProject();
         const { rest, puts } = fakeDiscord();
         await deploy(project, rest);
@@ -139,7 +139,7 @@ describe('DeployRunner', () => {
         ]);
     });
 
-    it('deploys nothing when the skipped scopes are declined', async () => {
+    it('prints "Nothing deployed." when the skipped scopes are declined', async () => {
         const project = await fakeProject();
         const { rest, puts } = fakeDiscord();
         await deploy(project, rest);
@@ -190,7 +190,7 @@ describe('DeployRunner', () => {
         expect(confirm).toHaveBeenCalledWith(expect.stringContaining('Deploy to 2 scopes?'));
     });
 
-    it('says there is nothing to deploy and asks nothing when the code defines zero commands', async () => {
+    it('says there is nothing to deploy and skips the prompt when the code defines zero commands', async () => {
         const { rest, puts } = fakeDiscord();
         const confirm = vi.fn((_message: string) => Promise.resolve(true));
 
@@ -210,7 +210,7 @@ describe('DeployRunner', () => {
         expect(confirm).toHaveBeenCalledWith(expect.stringContaining('Deploy to 1 scope?'));
     });
 
-    it('deploys nothing and says so when the deploy is declined', async () => {
+    it('stops and says so when the deploy is declined', async () => {
         const { rest, puts } = fakeDiscord();
 
         const output = await deploy(await fakeProject(), rest, { answer: false });
@@ -219,7 +219,7 @@ describe('DeployRunner', () => {
         expect(output.trimEnd().split('\n').at(-1)).toBe('  Nothing deployed.');
     });
 
-    it('deploys nothing and prints cancelled when the question is cancelled', async () => {
+    it('stops and prints cancelled when the question is cancelled', async () => {
         const { rest, puts } = fakeDiscord();
 
         const output = await deploy(await fakeProject(), rest, {
@@ -230,7 +230,7 @@ describe('DeployRunner', () => {
         expect(output.trimEnd().split('\n').at(-1)).toBe('  cancelled');
     });
 
-    it("throws CliDeployNoCommandsFolder and sends nothing when the bot doesn't have a commands folder", async () => {
+    it("throws CliDeployNoCommandsFolder before any request when the bot doesn't have a commands folder", async () => {
         const { rest, puts } = fakeDiscord();
 
         const deploying = deploy(await fakeProject({ commandsPath: null }), rest);

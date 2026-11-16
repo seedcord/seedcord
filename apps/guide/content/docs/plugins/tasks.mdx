@@ -179,7 +179,7 @@ export class Poll extends Task {
 | [`data`](ref:plugin-tasks/Task.data) | the data of a [job](/plugins/tasks-scheduling). A cron job doesn't get any |
 | [`signal`](ref:plugin-tasks/Task.signal) | an `AbortSignal` that aborts when the bot shuts down |
 | [`startedAt`](ref:plugin-tasks/Task.startedAt) | when this run started |
-| [`trigger`](ref:plugin-tasks/Task.trigger) | what started this run, as a [`TaskTrigger`](ref:plugin-tasks/TaskTrigger): `'cron'`, `'scheduled'` for a job, or `'manual'` |
+| [`trigger`](ref:plugin-tasks/Task.trigger) | what started this run as a [`TaskTrigger`](ref:plugin-tasks/TaskTrigger): `'cron'`, `'scheduled'` for a job, or `'manual'` |
 
 {/* prettier-ignore-end */}
 
@@ -189,7 +189,7 @@ The plugin creates a new instance of your class for each run. If you set a field
 
 Say a task deletes old records every minute, and one run takes 90 seconds. Without a guard, a second run would start deleting the same records while the first one is still running.
 
-`protect` is the guard, and it's on by default. If the last run hasn't finished when the pattern matches, the plugin skips the new run and logs a warning. It also calls [`onOverrun()`](ref:plugin-tasks/Task.onOverrun) on the task, if you wrote one.
+`protect` is the guard, and it's on by default. If the last run hasn't finished when the pattern matches, the plugin skips the new run and logs a warning. It also calls [`onOverrun()`](ref:plugin-tasks/Task.onOverrun) on the task if you wrote one.
 
 ```ts twoslash title="src/tasks/Prune.ts"
 import { RegisterTask, Task } from '@seedcord/plugin-tasks/gateway';
@@ -218,7 +218,7 @@ To report every failed run in one place, for example to Sentry, subscribe to the
 
 ## Shutting down
 
-When the bot shuts down, the plugin stops every timer, aborts `this.signal`, and waits for running tasks to finish. It does this in the `Drain` [shutdown phase](/plugins/lifecycle), before database plugins disconnect. A task can still write to your database while it finishes, for up to `timeout` milliseconds.
+When the bot shuts down, the plugin stops every timer, aborts `this.signal`, and waits for running tasks to finish. It does this in the `Drain` [shutdown phase](/plugins/lifecycle) before database plugins disconnect. A task can still write to your database while it finishes, for up to `timeout` milliseconds.
 
 Pass `this.signal` to anything slow, like a `fetch`. When the bot shuts down, the request stops right away. Without the signal, shutdown waits for the request until `timeout` passes, and then [stops waiting](/plugins/lifecycle#timeouts).
 
@@ -239,7 +239,7 @@ export class SyncStatus extends Task {
 
 When the signal aborts, `fetch` rejects, so `SyncStatus` throws. Since the bot is shutting down, the plugin doesn't call `onError()` for that run.
 
-If a task can run longer than 10 seconds, raise `timeout` so shutdown waits for it. Keep `timeout` below the [shutdown deadline](/plugins/lifecycle#the-shutdown-deadline), since your host stops the process once that passes.
+If a task can run longer than 10 seconds, raise `timeout` so shutdown waits for it. Keep `timeout` below the [shutdown deadline](/plugins/lifecycle#the-shutdown-deadline) since your host stops the process once that passes.
 
 ## Running more than one process
 
@@ -254,9 +254,9 @@ A rolling deploy also runs two processes for a short time. A match during that t
 When daylight saving changes the clock, some times happen twice or don't happen at all. In `America/New_York`, 01:00 to 02:00 happens twice in autumn, and 02:00 to 03:00 doesn't happen in spring.
 
 - A task with one fixed time runs once. `30 1 * * *` runs once on the day when 01:30 happens twice. `30 2 * * *` runs right after the gap on the day when 02:30 doesn't exist.
-- Every other task, like `*/5 * * * *`, runs at each match in both of the repeated hours. It skips the times that don't exist.
+- Every other task, like `*/5 * * * *`, runs at each match in both of the repeated hours. It skips the times in the gap.
 
-croner reads a `startAt` or `stopAt` string in the task's timezone, unless the string has its own offset, like `Z` or `+02:00`. A match at exactly `startAt` runs, and a match at exactly `stopAt` doesn't.
+croner reads a `startAt` or `stopAt` string in the task's timezone unless the string has its own offset, like `Z` or `+02:00`. A match at exactly `startAt` runs, and a match at exactly `stopAt` doesn't.
 
 ## Errors while the bot starts
 

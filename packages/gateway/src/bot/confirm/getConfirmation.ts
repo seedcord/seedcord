@@ -27,7 +27,9 @@ type ConfirmPrompt = string | ((ids: { confirm: string; cancel: string }) => Pro
 export interface ConfirmOptions {
     /**
      * Whether the prompt is ephemeral. Only the invoking user can act on it either way, a non-invoker's
-     * click is ignored. Leave it out to use `bot.interactions.ephemeral`.
+     * click is ignored.
+     *
+     * @defaultValue `bot.interactions.ephemeral`
      */
     ephemeral?: boolean;
     /**

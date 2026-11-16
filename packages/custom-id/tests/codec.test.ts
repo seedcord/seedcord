@@ -151,7 +151,7 @@ describe('CustomId round-trips', () => {
         expect(Big.encode({ n: Number.MAX_SAFE_INTEGER })).not.toBe(Big.encode({ n: Number.MAX_SAFE_INTEGER - 1 }));
     });
 
-    it('round-trips a customId with no fields', () => {
+    it('round-trips a customId without fields', () => {
         const Refresh = new CustomId('refresh');
         expect(Refresh.decode(Refresh.encode({}))).toEqual({});
     });
@@ -528,13 +528,13 @@ describe('CustomId definition guards', () => {
         );
     });
 
-    it('rejects a oneOf with no choices', () => {
+    it('rejects a oneOf without choices', () => {
         expect(thrownCode(() => new CustomId('poll').oneOf('choice', empty))).toBe(
             SeedcordErrorCode.CustomIdEmptyChoices
         );
     });
 
-    it('rejects a someOf with no choices', () => {
+    it('rejects a someOf without choices', () => {
         expect(thrownCode(() => new CustomId('assign').someOf('roles', empty))).toBe(
             SeedcordErrorCode.CustomIdEmptyChoices
         );

@@ -67,7 +67,7 @@ describe('TunnelRouter', () => {
         expect(warn).toHaveBeenCalledOnce();
     });
 
-    it('stop resolves with no coordinator', async () => {
+    it('stop resolves without a coordinator', async () => {
         await expect(router(undefined).stop()).resolves.toBeUndefined();
     });
 

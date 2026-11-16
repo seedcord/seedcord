@@ -52,7 +52,7 @@ const CONTENT = cn(
     tw`font-mono text-xs/relaxed whitespace-pre-wrap`
 );
 
-// radix cannot anchor to a token that wasn't rendered
+// radix cannot anchor to an unrendered token
 function anchorRect(shown: Shown): CSSProperties {
     return {
         position: 'fixed',
@@ -143,7 +143,7 @@ function focusLeftTheBlock(event: FocusEvent<HTMLDivElement>): boolean {
 
 type Show = (event: { target: EventTarget | null }, fromKey?: boolean) => void;
 
-// one tab stop per code block, since a page carries dozens of tokens
+// one tab stop per code block since a page has dozens of tokens
 function useTokenWalk(
     marked: RefObject<Element | null>,
     show: Show,

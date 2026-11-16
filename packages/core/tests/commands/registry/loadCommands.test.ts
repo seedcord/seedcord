@@ -17,7 +17,7 @@ function registryWith(guilds?: string[]): CommandRegistry {
 }
 
 describe('CommandRegistry.init', () => {
-    it('loads a command with no scope into every configured guild', async () => {
+    it('loads a command without a scope into every configured guild', async () => {
         const registry = registryWith(['111', '222']);
 
         await registry.init();
@@ -27,7 +27,7 @@ describe('CommandRegistry.init', () => {
         expect(registry.scopedCommands.has(GLOBAL_ID)).toBe(false);
     });
 
-    it('loads a command with no scope globally when the config has an empty guild list', async () => {
+    it('loads a command without a scope globally when the config has an empty guild list', async () => {
         const registry = registryWith();
 
         await registry.init();

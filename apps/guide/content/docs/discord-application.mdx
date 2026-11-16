@@ -11,7 +11,7 @@ Open **Bot** in the sidebar. Discord shows a token once. **Reset Token** gives y
 
 ![The Token block on the Bot page, with a Reset Token button](/portal-token.webp)
 
-Keep the token private, because anyone who holds it controls your bot. You paste it in when you [create your project](/first-bot), which stores it in `.env`.
+Keep the token private because anyone who holds it controls your bot. You paste it in when you [create your project](/first-bot), which stores it in `.env`.
 
 <Callout type="warning">
     The **Client Secret** on the **OAuth2** page is a different
@@ -53,7 +53,7 @@ A switch here only allows an intent. Your bot also has to list the intents it us
     A gateway bot doesn't use an endpoint URL.
 </Callout>
 
-**General Information** has an **Interactions Endpoint URL** field. Discord sends a signed request to a URL before it saves it ([Discord's interactions docs](https://docs.discord.com/developers/interactions/overview#configuring-an-interactions-endpoint-url) describe the check), so you can't fill the field until a bot is answering. `seedcord dev` waits for your bot to answer, then writes the URL for you. Once you deploy, you enter your bot's public URL here yourself.
+**General Information** has an **Interactions Endpoint URL** field. Discord sends a signed request to a URL before it saves it ([Discord's interactions docs](https://docs.discord.com/developers/interactions/overview#configuring-an-interactions-endpoint-url) describe the check). You can't fill the field until a bot is answering. `seedcord dev` waits for your bot to answer, then writes the URL for you. Once you deploy, you enter your bot's public URL here yourself.
 
 The same page shows your **Public Key**. An http bot uses it to verify Discord's signature on every request, but you don't copy it anywhere. A bot reads the key from Discord with your token when it starts, and `seedcord build` writes it into a [Cloudflare Worker](/build/workers#building).
 

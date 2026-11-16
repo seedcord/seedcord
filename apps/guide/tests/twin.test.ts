@@ -92,7 +92,7 @@ describe('what an agent reads instead of the page', () => {
         expect(await twinOf(source)).toBe('```ts\nnew Ping();\n```\n');
     });
 
-    it('keeps the title a fence carries', async () => {
+    it("keeps a fence's title", async () => {
         const source = '```ts title="src/bot.ts"\nconst a = 1;\n```\n';
 
         expect(await twinOf(source)).toBe('```ts title="src/bot.ts"\nconst a = 1;\n```\n');

@@ -26,7 +26,7 @@ describe('LogStore', () => {
         );
     });
 
-    it('carries level, label, channel, head, and the record timestamp onto each entry', async () => {
+    it('copies level, label, channel, head, and the record timestamp onto each entry', async () => {
         store.onLog(record({ level: 'warn', label: 'Mongoose', channel: 'db', message: 'up', timestamp: 42 }));
         await store.flush();
 

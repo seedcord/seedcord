@@ -71,7 +71,7 @@ describe('subscribers loaded from the built files on workerd', () => {
         });
     });
 
-    it('warns at registration and never registers a reporter with no url set', async () => {
+    it('warns at registration and never registers a reporter without a url set', async () => {
         const bus = stubBus();
         // the warn comes off the bus's own logger instance
         const warn = vi.spyOn(Logger.prototype, 'warn');

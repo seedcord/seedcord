@@ -1,0 +1,8 @@
+extends: existence
+link: https://github.com/seedcord/seedcord/blob/next/.agents/skills/writing-voice/SKILL.md
+message: 'Delete this comma when the sentence needs the clause after it. Keep it when the clause adds an aside or a contrast, or when deleting the comma changes the meaning.'
+level: suggestion
+ignorecase: true
+nonword: true
+tokens:
+  - ',\s+(?:because|since(?!\s+then\b)|as(?!\s+in\b)|before|when|after|while|unless|so that|once|if|until)\b'

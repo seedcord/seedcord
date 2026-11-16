@@ -2,10 +2,8 @@ import { AST_NODE_TYPES, ESLintUtils } from '@typescript-eslint/utils';
 
 import { ValeStyle } from '#src/ValeStyle';
 
-import type { TSESTree } from '@typescript-eslint/utils';
-
-// strings get the Semicolon exception that comments have. CauseFirst only covers comments
-const style = ValeStyle.load().without('Semicolon', 'CauseFirst');
+import type { ValeLevel } from '#src/ValeStyle';
+import type { TSESLint, TSESTree } from '@typescript-eslint/utils';
 
 const PLAIN_WORD = /^[A-Za-z][A-Za-z']*[.,!?:]?$/;
 // under three words is an identifier, a path, or a key
@@ -76,55 +74,66 @@ interface Options {
     only?: 'test-names';
 }
 
-export const strings = ESLintUtils.RuleCreator.withoutDocs<[Options], 'prose'>({
-    meta: {
-        type: 'suggestion',
-        docs: {
-            description: 'Apply the repo prose rules to string literals, where error messages and CLI output live.'
+const DESCRIPTIONS = {
+    error: 'Apply the repo prose rules to string literals, where error messages and CLI output live.',
+    suggestion: 'Report the repo prose suggestions in string literals, for a reviewer to judge.'
+} satisfies Partial<Record<ValeLevel, string>>;
+
+function proseRule(level: keyof typeof DESCRIPTIONS): TSESLint.RuleModule<'prose', [Options]> {
+    // strings get the Semicolon exception that comments have. CauseFirst only covers comments
+    const style = ValeStyle.load(level).without('Semicolon', 'CauseFirst');
+
+    return ESLintUtils.RuleCreator.withoutDocs<[Options], 'prose'>({
+        meta: {
+            type: 'suggestion',
+            docs: { description: DESCRIPTIONS[level] },
+            messages: { prose: '{{rule}}: {{message}}' },
+            schema: [
+                {
+                    type: 'object',
+                    properties: { only: { type: 'string', enum: ['test-names'] } },
+                    additionalProperties: false
+                }
+            ],
+            defaultOptions: [{}]
         },
-        messages: { prose: '{{rule}}: {{message}}' },
-        schema: [
-            {
-                type: 'object',
-                properties: { only: { type: 'string', enum: ['test-names'] } },
-                additionalProperties: false
-            }
-        ],
-        defaultOptions: [{}]
-    },
-    create(context, [{ only }]) {
-        const wanted = (literal: TSESTree.Node): boolean => only === undefined || isTestName(literal);
+        create(context, [{ only }]) {
+            const wanted = (literal: TSESTree.Node): boolean => only === undefined || isTestName(literal);
 
-        function ignored(node: TSESTree.Node): boolean {
-            const previous = context.sourceCode.lines[node.loc.start.line - 2];
-            return previous !== undefined && IGNORE_NEXT_LINE.test(previous);
+            function ignored(node: TSESTree.Node): boolean {
+                const previous = context.sourceCode.lines[node.loc.start.line - 2];
+                return previous !== undefined && IGNORE_NEXT_LINE.test(previous);
+            }
+
+            function check(chunk: TSESTree.Node, raw: string, whole: TSESTree.Node): void {
+                const { text, sourceOffset } = decode(raw);
+                if (!wanted(whole) || !isProse(text) || ignored(whole)) return;
+                // + 1 skips the opening quote, or the backtick or } in front of a template chunk
+                const contentStart = chunk.range[0] + 1;
+                for (const { rule, message, index, length } of style.matches(blankCode(text))) {
+                    context.report({
+                        node: chunk,
+                        loc: {
+                            start: context.sourceCode.getLocFromIndex(contentStart + sourceOffset(index)),
+                            end: context.sourceCode.getLocFromIndex(contentStart + sourceOffset(index + length))
+                        },
+                        messageId: 'prose',
+                        data: { rule, message }
+                    });
+                }
+            }
+
+            return {
+                Literal(node) {
+                    if (typeof node.value === 'string') check(node, node.raw.slice(1, -1), node);
+                },
+                TemplateElement(node) {
+                    if (node.parent.type === AST_NODE_TYPES.TemplateLiteral) check(node, node.value.raw, node.parent);
+                }
+            };
         }
+    });
+}
 
-        function check(chunk: TSESTree.Node, raw: string, whole: TSESTree.Node): void {
-            const { text, sourceOffset } = decode(raw);
-            if (!wanted(whole) || !isProse(text) || ignored(whole)) return;
-            // + 1 skips the opening quote, or the backtick or } in front of a template chunk
-            const contentStart = chunk.range[0] + 1;
-            for (const { rule, message, index, length } of style.matches(blankCode(text))) {
-                context.report({
-                    node: chunk,
-                    loc: {
-                        start: context.sourceCode.getLocFromIndex(contentStart + sourceOffset(index)),
-                        end: context.sourceCode.getLocFromIndex(contentStart + sourceOffset(index + length))
-                    },
-                    messageId: 'prose',
-                    data: { rule, message }
-                });
-            }
-        }
-
-        return {
-            Literal(node) {
-                if (typeof node.value === 'string') check(node, node.raw.slice(1, -1), node);
-            },
-            TemplateElement(node) {
-                if (node.parent.type === AST_NODE_TYPES.TemplateLiteral) check(node, node.value.raw, node.parent);
-            }
-        };
-    }
-});
+export const strings = proseRule('error');
+export const stringHints = proseRule('suggestion');

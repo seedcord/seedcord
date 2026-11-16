@@ -48,7 +48,7 @@ class Ban extends SlashHandler<'ban'> {
 }
 ```
 
-`edit()` doesn't take options, so the reply keeps whatever `defer()` used.
+`edit()` doesn't take options, so whatever you pass `defer()` is what the reply has. Discord [keeps a message's visibility](https://discord.com/developers/docs/interactions/receiving-and-responding#create-followup-message) once it exists. If a `followUp()` or `send()` passes the other `ephemeral` value before anything fills the placeholder, seedcord deletes the placeholder and sends a new message with that value.
 
 ## reply() after a deferral throws
 
@@ -56,15 +56,14 @@ The deferral was the initial response. `edit()` rewrites it.
 
 ```txt output
 reply() was called when this interaction was already deferred.
-Use edit() to fill the deferred reply or followUp() for a new
-message. (route slash:ban)
+Use edit() to fill the deferred reply. (route slash:ban)
 ```
 
-[`followUp()`](ref:gateway/RepliableHandler.followUp) sends a second message beside the first, which [the next section](#sending-more-messages) covers, and [`delete()`](ref:gateway/RepliableHandler.delete) removes the loading state. [The full table](/replying/ack-states) lists every state and how you reach it.
+If nothing has filled the placeholder yet, [`followUp()`](ref:gateway/RepliableHandler.followUp) fills it the way `edit()` does. After that it sends a second message beside the first, which [the next section](#sending-more-messages) covers. [`delete()`](ref:gateway/RepliableHandler.delete) removes the loading state. [The full table](/replying/ack-states) lists every state and how you reach it.
 
 ## Defer before anything slow
 
-[`reply()`](ref:gateway/RepliableHandler.reply) after the three seconds throws Discord's own error, `DiscordAPIError[10062]`, since the interaction has expired by then. seedcord rethrows it untouched, then sends its [error card](/replying/faults) to that same interaction. Discord rejects the card too, and seedcord catches that rejection and logs a debug line. The person who ran the command sees the interaction fail.
+[`reply()`](ref:gateway/RepliableHandler.reply) after the three seconds throws Discord's own `DiscordAPIError[10062]` since the interaction has expired by then. seedcord rethrows it untouched, then sends its [error card](/replying/faults) to that same interaction. Discord rejects the card too, and seedcord catches that rejection and logs a debug line. The person who ran the command sees the interaction fail.
 
 Defer first whenever you can't predict how long the handler takes.
 
@@ -134,23 +133,8 @@ class Ban extends SlashHandler<'ban'> {
 
 ## send() picks the method for you
 
-[`this.send()`](ref:gateway/RepliableHandler.send) works from every state, so it never throws [the wrong-state error](/replying/ack-states) that the other methods throw.
-
-{/* prettier-ignore-start */}
-
-| state | send() calls |
-| --- | --- |
-| nothing sent yet | `reply()` |
-| deferred a reply | `edit()`, filling the placeholder |
-| deferred an update | `followUp()` |
-| replied | `followUp()` |
-
-{/* prettier-ignore-end */}
-
-`ephemeral` and `silent` apply only when `send()` creates a message. On the `edit()` row it ignores them, since `edit()` doesn't take options.
+[`this.send()`](ref:gateway/RepliableHandler.send) works from every state, so it never throws [the wrong-state error](/replying/ack-states) that the other methods throw. It calls `reply()` if nothing went out yet and `followUp()` after that. After a deferral, the first `send()` fills the placeholder and the next one sends a new message. Its `ephemeral` and `silent` options work the same as on `followUp()`.
 
 Use `send()` in code that runs from more than one state, like a helper that a deferring handler and a replying handler both call.
 
 If you already know the state, call `reply()` or `edit()` directly. Each one throws on a state it can't run in, so a misplaced `defer()` surfaces as a throw from `reply()`.
-
-After a deferral, `send()` edits the placeholder. Call `followUp()` for a new message.

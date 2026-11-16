@@ -240,7 +240,7 @@ describe('mentionable select', () => {
         expect(rolesOnly.getSelectedMembers('targets')).toBeNull();
     });
 
-    it('throws when a required role read finds nothing', () => {
+    it('throws when a required role read comes back empty', () => {
         const empty = new ModalFields({
             custom_id: 'form',
             components: [labelled(1, { type: ComponentType.RoleSelect, id: 2, custom_id: 'ping', values: [] })]
@@ -248,7 +248,7 @@ describe('mentionable select', () => {
         expect(codeFrom(() => empty.getSelectedRoles('ping', true))).toBe(SeedcordErrorCode.ModalFieldEmpty);
     });
 
-    it('returns null for a mentionable field that picked nothing', () => {
+    it('returns null for an empty mentionable field', () => {
         const empty = new ModalFields({
             custom_id: 'form',
             components: [
@@ -287,7 +287,7 @@ describe('channel select', () => {
         );
     });
 
-    it('throws when a required channel read finds nothing picked', () => {
+    it('throws when nothing is picked for a required channel read', () => {
         const empty = new ModalFields(
             submission([labelled(1, { type: ComponentType.ChannelSelect, id: 2, custom_id: 'where', values: [] })])
         );
@@ -349,7 +349,7 @@ describe('radio groups and checkboxes', () => {
         expect(fields.getCheckbox('agree')).toBe(false);
     });
 
-    it('throws when a required radio read finds nothing picked', () => {
+    it('throws when nothing is picked for a required radio read', () => {
         const empty = new ModalFields(
             submission([labelled(1, { type: ComponentType.RadioGroup, id: 2, custom_id: 'plan', value: null })])
         );

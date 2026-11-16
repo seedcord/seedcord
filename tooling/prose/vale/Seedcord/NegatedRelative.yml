@@ -1,0 +1,8 @@
+extends: existence
+link: https://github.com/seedcord/seedcord/blob/next/.agents/skills/writing-voice/SKILL.md
+message: "'%s' describes the thing by what it isn't. If one plain word covers it, use that word."
+level: suggestion
+ignorecase: true
+tokens:
+  - '(?:that|which) (?:is|are|was|were)(?:n''t| not) \w+ed'
+  - "(?:that|which) (?:does|do|did)(?:n't| not) exist"

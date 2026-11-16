@@ -12,7 +12,7 @@ import type { Repliables } from '#src/handlers/interactionTypes';
 import type { Config } from '@seedcord/types';
 
 class Host extends PluginHost<'http', 'server'> {
-    // justified: attach reads nothing off these
+    // justified: attach never reads these
     public readonly config = {} as Config;
     public readonly rest = {} as PluginHost<'http', 'server'>['rest'];
     public readonly applicationId = 'app-1';

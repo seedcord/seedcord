@@ -68,7 +68,7 @@ export class ChangelogFile {
     }
 }
 
-// history rewritten by hand left some prerelease entries that no stable section repeats
+// history rewritten by hand left some prerelease entries that the stable sections don't repeat
 function carriesEveryEntry(stable: string, prerelease: string): boolean {
     const entries = prerelease
         .split(SECTION_START)

@@ -23,7 +23,9 @@ export interface PaginatorConfig<Item, Prefix extends string, Ctx> {
     render?: PageRender<Item>;
     /**
      * Whether the first page is ephemeral. Set `false` to post a public message, where anyone who can see it can
-     * click the nav buttons and change the page for everyone. Leave it out to use `bot.interactions.ephemeral`.
+     * click the nav buttons and change the page for everyone.
+     *
+     * @defaultValue `bot.interactions.ephemeral`
      */
     ephemeral?: boolean;
 }

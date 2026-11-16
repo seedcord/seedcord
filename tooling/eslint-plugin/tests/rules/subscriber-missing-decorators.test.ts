@@ -74,7 +74,7 @@ ruleTester.run('subscriber-missing-decorators', rule, {
             errors: [{ messageId: 'missingSubscribe' }]
         },
         {
-            // a same-named decorator from another module satisfies nothing
+            // a same-named decorator from another module doesn't count
             code: dedent`
                 import { Subscriber } from 'seedcord';
                 import { Subscribe } from 'some-other-lib';

@@ -38,7 +38,7 @@ export async function smoke(kind: Kind, command: string, args: string[] = []): P
         const collect = (chunk: Buffer): void => {
             output += String(chunk);
             const port = /fixture:listening (\d+)/.exec(output)?.[1];
-            // a gateway bot loads its handlers inside login, before it would reach discord
+            // a gateway bot loads its handlers inside login before it would reach discord
             if (kind === 'http' ? port === undefined : !output.includes('fixture:handlers-loaded')) return;
 
             clearTimeout(timer);

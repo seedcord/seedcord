@@ -55,7 +55,7 @@ describe('the http root catch', () => {
         expect(seen[0]?.error.message).toBe('router exploded');
     });
 
-    it('wraps a non-Error throw, so the payload still carries an Error', async () => {
+    it('wraps a non-Error throw, so the payload still has an Error', async () => {
         const { seen } = await routerThrows('router string');
 
         expect(seen).toHaveLength(1);

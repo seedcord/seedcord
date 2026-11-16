@@ -40,7 +40,7 @@ interface ImageProps extends ComponentProps<'img'> {
     align?: keyof typeof ALIGNMENTS;
 }
 
-// a typo would otherwise render as a padded box with no edge
+// a typo would otherwise render as a padded box without an edge
 function pick<Options extends Record<string, string>>(options: Options, key: keyof Options, prop: string): string {
     const found = options[key];
     if (found === undefined)

@@ -106,7 +106,7 @@ describe('a payload carrying no values key', () => {
     });
 });
 
-// discord omits resolved when a menu resolved nothing, which discord.js guards against too
+// discord omits resolved for an empty menu, which discord.js guards against too
 describe('a payload carrying no resolved key', () => {
     it('reads every user menu member as an empty collection', async () => {
         let users: unknown;

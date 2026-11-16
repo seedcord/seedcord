@@ -80,7 +80,7 @@ describe('renderReadme', () => {
         expect(html).toMatch(/style="[^"]*color:/i);
     });
 
-    it('highlights a fence with no language as the ts default', async () => {
+    it('highlights a fence without a language as the ts default', async () => {
         // a bare ``` fence gives Marked an empty lang string, which must still use the ts default
         const html = await renderReadme('```\nconst answer = 42;\n```');
 

@@ -13,11 +13,11 @@ Only an http bot runs on Workers. `@seedcord/gateway` holds a websocket to Disco
 
 ## Limits on Workers
 
-A Worker never starts as one process. The bot starts on the first POST that reaches each isolate. That request loads your handlers, runs the startup tasks, and runs every plugin's [`init()`](/plugins/lifecycle#on-cloudflare-workers), and any request that arrives meanwhile waits for it. Cloudflare can start a new isolate whenever it likes, and each new one pays that cost again.
+A Worker never starts as one process. The bot starts on the first POST that reaches each isolate. That request loads your handlers, runs the startup tasks, and runs every plugin's [`init()`](/plugins/lifecycle#on-cloudflare-workers), and any request that arrives meanwhile waits for it. Cloudflare can start a new isolate at any time, and each new one pays that cost again.
 
 Each isolate has its own memory. By default, [`core.kv`](/built-ins/) and [cooldowns](/checks/rate-limiter) keep their records there, so a new isolate starts with none and two isolates can't see each other's. To share them, store them in D1, as [Drivers](/built-ins/drivers#on-cloudflare-workers) shows.
 
-An isolate also stops without warning, since Cloudflare doesn't give a worker a shutdown hook. `shutdown.addTask` throws there, and the config doesn't take `lifecycle` or `port`. Some plugins need a server too. [Mongoose](/plugins/mongoose) and [Kysely](/plugins/kysely) declare themselves server-only, so attaching either one to an edge bot fails.
+An isolate also stops without warning since Cloudflare doesn't give a worker a shutdown hook. `shutdown.addTask` throws there, and the config doesn't take `lifecycle` or `port`. Some plugins need a server too. [Mongoose](/plugins/mongoose) and [Kysely](/plugins/kysely) declare themselves server-only, so attaching either one to an edge bot fails.
 
 Run on a server if your bot needs one of those plugins, or needs state in memory to outlive a request.
 
@@ -84,9 +84,9 @@ Before that file exists, an import from `cloudflare:workers` fails the type chec
 
 ### The seedcord config and bot.ts
 
-In your `seedcord.config.ts`, point `root` at your bot's code, like `'./src'`, and leave out `build.start`, since Cloudflare starts a worker without a file. [An edge bot's config](/build/config#an-edge-bots-config) has the rest of that shape.
+In your `seedcord.config.ts`, point `root` at your bot's code, like `'./src'`, and leave out `build.start` since Cloudflare starts a worker without a file. [An edge bot's config](/build/config#an-edge-bots-config) has the rest of that shape.
 
-Make the bot the default export of `bot.ts`, because Cloudflare calls its `fetch` for every request.
+Make the bot the default export of `bot.ts` because Cloudflare calls its `fetch` for every request.
 
 ```ts plain title="src/bot.ts"
 import { Seedcord } from '@seedcord/http';
@@ -177,12 +177,12 @@ Cloudflare [fails a deploy](https://developers.cloudflare.com/workers/configurat
 The whole first deploy, in order:
 
 1. Log in to Cloudflare once: `pnpm exec cf auth login`.
-2. Deploy your commands, since the build reads their ids from Discord: `pnpm exec seedcord commands deploy`.
+2. Deploy your commands since the build reads their ids from Discord: `pnpm exec seedcord commands deploy`.
 3. Build: `pnpm build`.
 4. Deploy with the secrets: `pnpm exec cf deploy --prebuilt --secrets-file .secrets.env`. Add an entry to `.secrets.env` for every secret declared in `cloudflare.config.ts`.
 5. Point Discord at the worker. Cloudflare serves a new worker at `https://<name>.<your-subdomain>.workers.dev`, with `name` from `cloudflare.config.ts` ([workers.dev](https://developers.cloudflare.com/workers/configuration/routing/workers-dev/) has the details). Paste that URL into **Interactions Endpoint URL** on your app's **General Information** page in the [developer portal](https://discord.com/developers/applications), then save.
 
-After that the secrets are configured on the worker, so `pnpm run deploy` works on its own. When you add or rename a command, deploy your commands again before `pnpm run deploy`, since the worker holds the ids from its last build.
+After that the secrets are configured on the worker, so `pnpm run deploy` works on its own. When you add or rename a command, deploy your commands again before `pnpm run deploy` since the worker holds the ids from its last build.
 
 ### From CI
 
@@ -226,7 +226,7 @@ jobs:
 
 `pnpm/action-setup` reads the pnpm version from `packageManager` in your `package.json`. The first run creates the worker, though you still paste its URL into the portal once, as in step 5.
 
-`pnpm check` runs the type check, lint, and format check, so a push that doesn't compile stops before it changes your commands on Discord. The build can't move up with it, because it reads each command's id from Discord, and a command you just added gets its id from the deploy step.
+`pnpm check` runs the type check, lint, and format check, so a push that doesn't compile stops before it changes your commands on Discord. The build can't move up with it because it reads each command's id from Discord, and a command you just added gets its id from the deploy step.
 
 The commands step deploys with `--yes`, which skips the preview, and Discord replaces the whole scope. A command you deleted from your code disappears from Discord on the next push. [Deploy your commands](/tooling/commands#deploy-your-commands) shows what that preview lists. This job deploys your production application, so leave `TESTING_GUILD_IDS` unset here. Its commands then go out globally. [In production](/commands/deployed#in-production) has why.
 

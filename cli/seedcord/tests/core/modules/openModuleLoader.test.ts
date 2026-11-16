@@ -84,7 +84,7 @@ describe('openModuleLoader', () => {
         expect(logged).not.toHaveBeenCalled();
     });
 
-    it("writes nothing to the project's vite cache", async () => {
+    it("leaves the project's vite cache untouched", async () => {
         const root = await project();
 
         await using modules = await openModuleLoader(root, SERVER, 'development', BOT_CODE);
@@ -175,7 +175,7 @@ describe('openModuleLoader', () => {
         await expect(modules.importModule(entry)).rejects.toMatchObject({ code: SeedcordErrorCode.CliPathHasHash });
     });
 
-    it('resolves a relative import with no paths declared', async () => {
+    it('resolves a relative import without paths declared', async () => {
         const root = await project();
         const entry = await writeEntry(root, './lib/greeting');
 

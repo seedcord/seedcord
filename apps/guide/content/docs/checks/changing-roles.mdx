@@ -3,7 +3,7 @@ title: Changing roles
 description: Check that your bot can assign a role with hasPermsToAssign(), then build and write a member's new role list with mergeRoles().
 ---
 
-Your bot holds Manage Roles, yet `roles.add` still fails. Holding the permission isn't enough, because Discord also checks role position. A bot can change only the roles below its own highest role. Discord rejects a write to a role at or above it. Without a check first, you only find out from the error Discord returns.
+Your bot holds Manage Roles, yet `roles.add` still fails. Holding the permission isn't enough because Discord also checks role position. A bot can change only the roles below its own highest role. Discord rejects a write to a role at or above it. Without a check first, you only find out from the error Discord returns.
 
 [`hasPermsToAssign`](ref:gateway/hasPermsToAssign) checks role position and two other rules before the write. If one fails, it refuses with a card the caller can read. [`mergeRoles`](ref:core/mergeRoles) returns the list to write.
 
@@ -41,7 +41,7 @@ To compare positions, `hasPermsToAssign` reads your bot's own role from the guil
 
 ## Replacing the notices
 
-The default cards say what went wrong in general terms. If you want to tell the caller something specific, like which role to move up in server settings, pass your own `Notice` class next to `role` for any refusal you want to replace. seedcord constructs it with the arguments below.
+The default cards say what went wrong in general terms. To tell the caller something specific, like which role to move up in server settings, pass your own `Notice` class next to `role`. Do that for each refusal you want to replace. seedcord constructs it with the arguments below.
 
 {/* prettier-ignore-start */}
 
@@ -74,9 +74,9 @@ hasPermsToAssign({ role, higher: TooHigh });
 
 discord.js has `member.roles.add()` and `member.roles.remove()`. Each call sends its own request. Swapping a trial role for a staff role that way takes two requests. Between them, the member holds both roles, or neither.
 
-To make every change in one request, set the member's whole role list at once. That list holds every role they keep, since Discord removes any role you leave out. Building it by hand means copying the held ids, pushing one, filtering one out, and removing duplicates.
+To make every change in one request, set the member's whole role list at once. That list holds every role they keep since Discord removes any role you leave out. Building it by hand means copying the held ids, pushing one, filtering one out, and removing duplicates.
 
-`mergeRoles` does that in one call. You pass it the ids that a member holds, the ids to add, and the ids to remove. It returns the merged list without duplicates. If an id is in both the add list and the remove list, the removal wins and `mergeRoles` doesn't return it.
+`mergeRoles` does that in one call. You pass it the ids that a member holds, the ids to add, and the ids to remove. It returns the merged list without duplicates. If an id is in both the add list and the remove list, `mergeRoles` removes it.
 
 ```ts twoslash title="src/handlers/AddRole.ts"
 import {

@@ -8,7 +8,7 @@ import { NPM_URL } from '#lib/site';
 
 import type { ReactNode } from 'react';
 
-// the workspace version runs ahead of the registry during changesets pre-mode
+// the workspace version is newer than the registry's during changesets pre-mode
 const LATEST_API = 'https://registry.npmjs.org/seedcord/latest';
 
 export function NpmVersion(): ReactNode {

@@ -55,7 +55,7 @@ class Declared extends Plugin<{ transport: 'http' }> {
     }
 }
 
-// a plugin that declares nothing should always be scoped to only this base
+// a plugin with an empty declaration should always be scoped to only this base
 expectTypeOf<Plugin>().toEqualTypeOf<Declared>();
 
 describe('the http plugin base', () => {

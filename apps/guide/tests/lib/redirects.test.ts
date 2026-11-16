@@ -21,7 +21,7 @@ describe('the rename log', () => {
         expect(pageExists(from)).toBe(false);
     });
 
-    it('answers a request that carries the trailing slash', () => {
+    it('answers a request with the trailing slash', () => {
         expect(redirectFor('/throwing/faults/')).toBe('/replying/faults/');
     });
 

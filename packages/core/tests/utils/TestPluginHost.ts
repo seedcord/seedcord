@@ -9,7 +9,7 @@ export class TestPluginHost<BotT extends Transport = 'gateway', BotRt extends Ru
     BotT,
     BotRt
 > {
-    // justified: attach reads nothing off config
+    // justified: attach never reads config
     public readonly config = {} as Config;
     public readonly rest = new REST();
     public readonly applicationId = 'app-1';

@@ -37,7 +37,7 @@ const build = (day: number): SiteBuild => new SiteBuild(`202610${String(day).pad
 const pages = (count: number): string[] => Array.from({ length: count }, (_, i) => `page-${String(i)}.html`);
 
 describe('DocsSiteUpload.upload', () => {
-    it('writes every file into the folder of its build and deletes nothing', async () => {
+    it('writes every file into the folder of its build and keeps the old files', async () => {
         const bucket = new FakeBucket([build(1), build(2)]);
 
         await new DocsSiteUpload(bucket).upload(build(5), files('index.html', 'index.json'));

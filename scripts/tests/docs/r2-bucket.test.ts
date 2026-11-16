@@ -116,7 +116,7 @@ describe('R2Bucket objects', () => {
 });
 
 describe('R2Bucket site files', () => {
-    it('uploads a rendered page with no artifact headers', async () => {
+    it('uploads a rendered page without artifact headers', async () => {
         const { sent, client } = stub({});
 
         await new R2Bucket(client, 'site').putFile('index.html', path.join(process.cwd(), 'package.json'));

@@ -12,7 +12,7 @@ describe('ReleaseName', () => {
         expect(name.title).toBe('September 11, 2026');
     });
 
-    it('adds a letter when the day already carries a release', () => {
+    it('adds a letter when the day already has a release', () => {
         const name = ReleaseName.next(AT, ['release-2026.09.11']);
 
         expect(name.tag).toBe('release-2026.09.11a');

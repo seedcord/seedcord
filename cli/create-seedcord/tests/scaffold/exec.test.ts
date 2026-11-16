@@ -91,7 +91,7 @@ async function warningOf(...statements: string[]): Promise<string | null> {
 }
 
 describe('execRunner', () => {
-    it('resolves with no warning when the command exits zero', async () => {
+    it('resolves without a warning when the command exits zero', async () => {
         await expect(execRunner(process.execPath, ['-e', ''], process.cwd())).resolves.toBeNull();
     });
 
@@ -106,7 +106,7 @@ describe('execRunner', () => {
         expect(warning).toContain('pnpm approve-builds');
     });
 
-    it('keeps the line that carries the cause, above the boilerplate npm ends on', async () => {
+    it('keeps the line that has the cause, above the boilerplate npm ends on', async () => {
         const captured = await capturedBy(
             noise('resolving', 40),
             `console.log('npm error code ECONNREFUSED');`,
@@ -160,7 +160,7 @@ describe('execRunner', () => {
         expect(await failureOf('')).toContain(process.execPath);
     });
 
-    it('reports the exit code when the command printed nothing', async () => {
+    it('reports the exit code for a command that printed zero lines', async () => {
         expect(await failureOf('')).toContain('exited with 1');
     });
 

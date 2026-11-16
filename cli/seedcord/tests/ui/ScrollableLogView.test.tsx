@@ -84,7 +84,7 @@ describe('ScrollableLogView', () => {
         expect(lines.some((line) => line.includes('Loaded handlers') && line.includes('─'))).toBe(false);
     });
 
-    it('carries a long message onto a second line with no second prefix', () => {
+    it('wraps a long message onto a second line without a second prefix', () => {
         const layout = LogLayout.fit(LogLayout.fit(0, 3, 'auto').messageColumn + 20, 3, 'auto');
         const lines = linesOf(
             frameOf([entry({ text: 'alpha bravo charlie delta echo foxtrot golf hotel india' })], layout)
@@ -95,7 +95,7 @@ describe('ScrollableLogView', () => {
         expect(lines.at(-1)).toContain('india');
     });
 
-    it('renders nothing until measured', () => {
+    it('waits for a measurement before it renders', () => {
         const { lastFrame } = render(
             <ScrollableLogView visible={[]} layout={WIDE} viewportHeight={10} measured={false} />
         );

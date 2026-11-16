@@ -8,7 +8,7 @@ Most of these publish.
 
 ## The exports map is the surface
 
-A package's `exports` block in its `package.json` sets what consumers can import. Adding a file to `src/` publishes nothing until the map lists it.
+A package's `exports` block in its `package.json` sets what consumers can import. A file that you add to `src/` publishes only once the map lists it.
 
 `./internal` entries carry framework wiring between packages. Nothing outside the package consumes a symbol reachable only through one, so it skips the TSDoc block. [Changesets](#changesets) covers when a change to one still needs a changeset.
 
@@ -51,9 +51,9 @@ Translate a third-party throw into a seedcord error before it reaches a consumer
 
 Write one with `vp run cs` when you change a published package in a way that someone on the latest release will notice. Skip it when you fix code that isn't on `main` yet. That bug never shipped. `git log origin/main -- <path>` shows whether `main` has the file.
 
-A changeset is one or two plain sentences saying what changed for the user. Skip the sub-changes that rode along, since the changelog reader has the diff. Mark a breaking change with a bold `**BREAKING:**` prefix line.
+A changeset is one or two plain sentences saying what changed for the user. Skip the sub-changes that rode along since the changelog reader has the diff. Mark a breaking change with a bold `**BREAKING:**` prefix line.
 
-A change to an `./internal` entry gets a patch changeset once another package imports from it. Without one the package doesn't publish, and the importing package ships asking for an export the registry doesn't have. Write one line saying which package reads it now, like "`@seedcord/logger` and `seedcord` now read `isPlainObject` from here." Skip it when the package already has a pending changeset, because that one publishes the package anyway.
+A change to an `./internal` entry gets a patch changeset once another package imports from it. Without one the package doesn't publish, and the importing package ships asking for an export the registry doesn't have. Write one line saying which package reads it now, like "`@seedcord/logger` and `seedcord` now read `isPlainObject` from here." Skip it when the package already has a pending changeset because that one publishes the package anyway.
 
 ---
 

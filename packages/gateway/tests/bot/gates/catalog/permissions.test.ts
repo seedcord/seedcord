@@ -55,7 +55,7 @@ describe('checkPermissions', () => {
     it('refuses with a card that mentions the member', () => {
         const caught = thrownBy(() => checkPermissions({ for: memberWith([], 'm7'), scope: [BanMembers] }));
         expect(caught).toBeInstanceOf(Notice);
-        // the permission card reads nothing off the render context
+        // the permission card never reads the render context
         const card = (caught as Notice).render({} as RenderContext);
         expect(JSON.stringify(card)).toContain('<@m7>');
     });

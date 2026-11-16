@@ -121,7 +121,7 @@ describe('Cooldown', () => {
         await expect(gate.check(ctx)).rejects.toBeInstanceOf(OnCooldown);
     });
 
-    it('carries the rate-limiter retry-after on the refusal', async () => {
+    it('puts the rate-limiter retry-after on the refusal', async () => {
         const rl = { peek: () => ({ limited: true, resetAt: 1_700_000_000_000 }), charge: vi.fn() };
         let caught: unknown;
         await Cooldown(5)

@@ -30,7 +30,7 @@ describe('the portable file', () => {
         expect(Buffer.isBuffer((files as { attachment: unknown }[])[0]?.attachment)).toBe(true);
     });
 
-    it('carries alt text through', async () => {
+    it('passes alt text through', async () => {
         const files = await replyWith([{ data: BYTES, name: 'seed.txt', description: 'four bytes' }]);
 
         expect(files).toEqual([{ attachment: Buffer.from(BYTES), name: 'seed.txt', description: 'four bytes' }]);
@@ -44,13 +44,13 @@ describe('the portable file', () => {
 });
 
 describe('the attachment metadata', () => {
-    it('carries a title through', async () => {
+    it('passes a title through', async () => {
         const files = await replyWith([{ data: BYTES, name: 'note.ogg', title: 'Voice note' }]);
 
         expect(files).toEqual([{ attachment: Buffer.from(BYTES), name: 'note.ogg', title: 'Voice note' }]);
     });
 
-    it('carries a title and alt text together', async () => {
+    it('passes a title and alt text together', async () => {
         const files = await replyWith([{ data: BYTES, name: 'a.png', title: 'T', description: 'D' }]);
 
         expect(files).toEqual([{ attachment: Buffer.from(BYTES), name: 'a.png', description: 'D', title: 'T' }]);
@@ -98,7 +98,7 @@ describe('the discord.js file forms', () => {
         expect(await replyWith([stream])).toEqual([stream]);
     });
 
-    it('passes an Attachment a message already carries through untouched', async () => {
+    it('passes an Attachment through untouched when the message already has one', async () => {
         // justified: Attachment's constructor is private, and typing it keeps the GatewayFile check
         const attachment = Reflect.construct(Attachment, [
             { id: '1', filename: 'a.txt', size: 4, url: 'https://cdn.discordapp.com/a.txt', proxy_url: 'x' }
@@ -135,7 +135,7 @@ describe('what the types allow', () => {
         void response;
     });
 
-    it('rejects a file with no name', () => {
+    it('rejects a file without a name', () => {
         // @ts-expect-error name is required because an unnamed file cannot be referenced by a v2 component
         const response: GatewayReplyResponse = { components, files: [{ data: BYTES }] };
         void response;

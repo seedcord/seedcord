@@ -270,7 +270,7 @@ describe('a folder seedcord build skips, under seedcord dev', () => {
     });
 });
 
-describe('a relative folder with no root', () => {
+describe('a relative folder without a root', () => {
     it('throws for importFiles with the path it was given', async () => {
         const error = await rejection(importFiles('./walk'));
 

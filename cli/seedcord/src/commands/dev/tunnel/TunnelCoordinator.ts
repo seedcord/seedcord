@@ -34,7 +34,7 @@ export interface CoordinatorDeps {
     readonly logger: ILogger;
 }
 
-// a call, because a direct read of signal.aborted narrows to false past the first check
+// a call because a direct read of signal.aborted narrows to false past the first check
 function superseded(attempt: AbortController): boolean {
     return attempt.signal.aborted;
 }

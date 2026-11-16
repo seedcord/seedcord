@@ -33,7 +33,7 @@ vi.mock('#lib/docs/loadEntityModel', () => ({
 const { resolveEntity } = await import('#lib/docs/resolveEntity');
 
 describe('resolveEntity', () => {
-    it('sets the version and loads the model on one engine instance, with no cache dedup', async () => {
+    it('sets the version and loads the model on one engine instance, without cache dedup', async () => {
         const resolved = await resolveEntity({
             packageId: 'core',
             versionId: '1.0.0',

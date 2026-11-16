@@ -32,7 +32,7 @@ const codegenIn = (projectDir: string): Promise<{ code: number; stderr: string }
 
 describe('the seedcord CLI', () => {
     it.each([[['codegen']], [['commands', 'list']]])(
-        'refuses to run %j in a project with no seedcord installed',
+        'refuses to run %j in a project without seedcord installed',
         async (args) => {
             const { code, stderr } = await cliIn(tempProject(), ...args);
 

@@ -48,6 +48,13 @@ describe('ReplySender state seeding', () => {
         expect(mock.editReply).toHaveBeenCalledOnce();
     });
 
+    it("seeds the defer's visibility, so a private send replaces a public deferred reply", async () => {
+        const mock = mockInteraction({ deferred: true, ephemeral: false });
+        await senderFor(mock).send(reply, { ephemeral: true });
+        expect(mock.deleteReply).toHaveBeenCalledWith();
+        expect((mock.followUp.mock.calls[0]?.[0] as { flags?: number }).flags).toBe(V2_EPHEMERAL);
+    });
+
     it('seeds deferred-update from a deferUpdate (ephemeral null), so send follows up', async () => {
         const mock = mockInteraction({ deferred: true, ephemeral: null });
         await senderFor(mock).send(reply);
@@ -120,7 +127,7 @@ describe('ReplySender.reply', () => {
         expect(mock.reply).toHaveBeenCalledOnce();
     });
 
-    it('carries the first ack as the cause on a double reply', async () => {
+    it('uses the first ack as the cause on a double reply', async () => {
         const mock = mockInteraction();
         const sender = senderFor(mock);
         await sender.reply(reply);
@@ -164,7 +171,7 @@ describe('ReplySender.defer', () => {
         expect(mock.deferReply).not.toHaveBeenCalled();
     });
 
-    it('carries the defer as the cause when a reply follows a defer', async () => {
+    it('uses the defer as the cause when a reply follows a defer', async () => {
         const mock = mockInteraction();
         const sender = senderFor(mock);
         await sender.defer();
@@ -299,14 +306,15 @@ describe('ReplySender.followUp', () => {
         expect(mock.followUp).toHaveBeenCalledOnce();
     });
 
-    it('reaches the webhook after a defer', async () => {
+    it('fills the deferred reply when it follows up a defer', async () => {
         const mock = mockInteraction();
         const sender = senderFor(mock);
         await sender.defer();
 
         await sender.followUp(reply);
 
-        expect(mock.followUp).toHaveBeenCalledOnce();
+        expect(mock.editReply).toHaveBeenCalledOnce();
+        expect(mock.followUp).not.toHaveBeenCalled();
     });
 
     it('follows up with the v2 ephemeral flag once acked', async () => {
@@ -490,7 +498,7 @@ describe('ReplySender.send', () => {
         expect(mock.editReply).toHaveBeenCalledOnce();
     });
 
-    it('overwrites @original on a second send after a deferred reply', async () => {
+    it('follows up on a second send once the first one fills the deferred reply', async () => {
         const mock = mockInteraction();
         const sender = senderFor(mock);
         await sender.defer();
@@ -498,8 +506,20 @@ describe('ReplySender.send', () => {
         await sender.send(reply);
         await sender.send(reply);
 
-        expect(mock.editReply).toHaveBeenCalledTimes(2);
-        expect(mock.followUp).not.toHaveBeenCalled();
+        expect(mock.editReply).toHaveBeenCalledOnce();
+        expect(mock.followUp).toHaveBeenCalledOnce();
+    });
+
+    it('follows up once a bare delete removes the deferred reply', async () => {
+        const mock = mockInteraction();
+        const sender = senderFor(mock);
+        await sender.defer();
+        await sender.delete();
+
+        await sender.send(reply);
+
+        expect(mock.followUp).toHaveBeenCalledOnce();
+        expect(mock.editReply).not.toHaveBeenCalled();
     });
 
     it('follows up after a deferUpdate, leaving the source message untouched', async () => {
@@ -525,15 +545,16 @@ describe('ReplySender.send', () => {
         expect(replyOptions(mock).flags).toBe(V2);
     });
 
-    it("doesn't pass send opts when the deferred-reply path edits @original", async () => {
+    it('deletes the deferred reply and follows up when send passes a different visibility', async () => {
         const mock = mockInteraction();
         const sender = senderFor(mock);
         await sender.defer();
 
         await sender.send(reply, { ephemeral: false });
 
-        const body = mock.editReply.mock.calls[0]?.[0] as { flags?: number };
-        expect(body.flags).toBe(V2);
+        expect(mock.editReply).not.toHaveBeenCalled();
+        expect(mock.deleteReply).toHaveBeenCalledBefore(mock.followUp);
+        expect((mock.followUp.mock.calls[0]?.[0] as { flags?: number }).flags).toBe(V2);
     });
 });
 

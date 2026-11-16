@@ -89,7 +89,7 @@ describe('getConfirmation', () => {
     const run = (prompt: Prompt, options?: DefaultConfirmOptions): Promise<boolean> =>
         (getConfirmation as ConfirmCall)(handlerFor(event), prompt, options);
 
-    it('sends the prompt through the handler sender, so the publish carries the handler routeId', async () => {
+    it('sends the prompt through the handler sender, so the publish has the handler routeId', async () => {
         const publish = vi.fn();
         // justified: the sender reads only the publish slot off the bus
         const bus = { [PublishDefault]: publish } as unknown as Bus;

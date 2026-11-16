@@ -147,7 +147,7 @@ describe('this.params on a single-route handler', () => {
         expect(denialNameFrom(() => handler.read())).toBe('InvalidCustomId');
     });
 
-    it('throws MatchCaseMissing for a prototype-named prefix with no case', async () => {
+    it('throws MatchCaseMissing for a prototype-named prefix without a case', async () => {
         const Ctor = new CustomId('constructor').snowflake('userId');
         @ButtonRoute(Ctor)
         class WeirdButton extends ButtonHandler<[typeof Ctor]> {
