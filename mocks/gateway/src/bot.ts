@@ -56,6 +56,6 @@ export const seedcord = new Seedcord({
         uri: Vars.mongoUri,
         name: Vars.dbName
     })
-    .attach('i18n', I18n, { dir: './locales' });
+    .attach('i18n', I18n, { path: './locales' });
 
 export default seedcord;

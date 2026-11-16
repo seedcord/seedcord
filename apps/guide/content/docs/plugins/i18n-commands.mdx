@@ -5,11 +5,11 @@ description: Show your slash command and context menu names, descriptions, and c
 
 Discord shows a command in the user's language if the command has [localizations](https://discord.com/developers/docs/interactions/application-commands#localization) for it. With discord.js builders, you'd set localizations on every command, option, and choice, so each command file would hold a block for every language.
 
-The [i18n plugin](/plugins/i18n) keeps those localizations out of your command files. You write one file per language. The plugin's [`prepareCommands`](ref:plugin-i18n/I18n.prepareCommands) adds them to your commands before seedcord sends them to Discord. The plugin reads these files from its `dir`, so attach the plugin first, the way [the i18n page](/plugins/i18n#attaching-the-plugin) shows.
+The [i18n plugin](/plugins/i18n) keeps those localizations out of your command files. You write one file per language. The plugin's [`prepareCommands`](ref:plugin-i18n/I18n.prepareCommands) adds them to your commands before seedcord sends them to Discord. The plugin reads these files from its `path`, so attach the plugin first, the way [the i18n page](/plugins/i18n#attaching-the-plugin) shows.
 
 ## Writing a translation file
 
-Put a `.ts` file for each language in the plugin's `dir`, in the same folder as the `.ftl` files. Use a [Discord locale code](https://discord.com/developers/docs/reference#locales) as its name:
+Put a `.ts` file for each language in the plugin's `path`, in the same folder as the `.ftl` files. Use a [Discord locale code](https://discord.com/developers/docs/reference#locales) as its name:
 
 ```txt title="src/locales"
 en-US.ftl
@@ -19,7 +19,7 @@ hi.ts
 
 <Callout type="warning">
 
-The plugin treats every code file directly in `dir` as a translation file, like `.ts` or `.js`. A helper file there fails with `PluginI18nNotALocale`, so keep your other code somewhere else.
+The plugin treats every code file directly in `path` as a translation file, like `.ts` or `.js`. A helper file there fails with `PluginI18nNotALocale`, so keep your other code somewhere else.
 
 </Callout>
 
@@ -213,7 +213,7 @@ src/locales/hi.ts sets slash.inventory.name to "मेरा सामान", b
 
 | error | when |
 | --- | --- |
-| `PluginI18nNotALocale` | a code file in `dir` doesn't have a Discord locale code as its name |
+| `PluginI18nNotALocale` | a code file in `path` doesn't have a Discord locale code as its name |
 | `PluginI18nNotTranslations` | a translation file's default export isn't the result of `commandTranslations` |
 | `PluginI18nUnknownCommand` | a translation file has a command, option, subcommand, choice, or menu that your commands don't |
 | `PluginI18nDiscordRejects` | a translation breaks one of [Discord's naming rules](#what-discord-accepts) |

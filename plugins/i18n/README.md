@@ -50,7 +50,7 @@ export default new Seedcord({
         commands: { path: './commands' }
     },
     subscribers: { path: null }
-}).attach('i18n', I18n, { dir: './locales', base: 'en-US' });
+}).attach('i18n', I18n, { path: './locales', base: 'en-US' });
 ```
 
 ```ts

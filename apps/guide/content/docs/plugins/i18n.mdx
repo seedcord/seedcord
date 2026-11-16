@@ -26,12 +26,12 @@ export const seedcord = new Seedcord({
         events: { path: null }
     },
     subscribers: { path: null }
-}).attach('i18n', I18n, { dir: './locales', base: 'en-US' });
+}).attach('i18n', I18n, { path: './locales', base: 'en-US' });
 
 export default seedcord;
 ```
 
-The plugin reads every `.ftl` file in `./locales` while the bot starts. `dir` and `base` have defaults, so `.attach('i18n', I18n)` does the same thing here.
+The plugin reads every `.ftl` file in `./locales` while the bot starts. `path` and `base` have defaults, so `.attach('i18n', I18n)` does the same thing here.
 
 [`I18n`](ref:plugin-i18n/I18n) works on a gateway bot, an http bot on a server, and an http bot for [Cloudflare Workers](/build/workers). On an http bot, import `Seedcord` from `@seedcord/http` and write the same `attach` call.
 
@@ -45,7 +45,7 @@ Add the folder to [`files`](/build/data-files) in `seedcord.config.ts`, like `fi
 
 | option | required | what it sets |
 | --- | --- | --- |
-| [`dir`](ref:plugin-i18n/I18nOptions.dir) | no | the folder of `.ftl` files. A relative path is relative to `root` in your `seedcord.config.ts`. Defaults to `'./locales'` |
+| [`path`](ref:plugin-i18n/I18nOptions.path) | no | the folder of `.ftl` files. A relative path is relative to `root` in your `seedcord.config.ts`. Defaults to `'./locales'` |
 | [`base`](ref:plugin-i18n/I18nOptions.base) | no | the locale whose file lists every message. Defaults to `'en-US'` |
 | [`resolveLocale`](ref:plugin-i18n/I18nOptions.resolveLocale) | no | a function that [picks the locale](#picking-the-language-yourself) for an interaction or event |
 
@@ -55,7 +55,7 @@ Add the folder to [`files`](/build/data-files) in `seedcord.config.ts`, like `fi
 
 ## Writing the translation files
 
-The plugin reads the locale from each file's name, so use a [Discord locale code](https://discord.com/developers/docs/reference#locales) as the name, like `en-US.ftl`, `hi.ftl`, or `es-419.ftl`. The plugin skips subfolders of `dir` because each locale is one file.
+The plugin reads the locale from each file's name, so use a [Discord locale code](https://discord.com/developers/docs/reference#locales) as the name, like `en-US.ftl`, `hi.ftl`, or `es-419.ftl`. The plugin skips subfolders of `path` because each locale is one file.
 
 Put every message that your bot sends in the base file. Each message has a key on the left and its text on the right. `{ $user }` puts a variable into the text:
 
@@ -508,10 +508,10 @@ A user whose Discord language is Hindi gets the date in Hindi. `t.locale` is the
 
 | error | when |
 | --- | --- |
-| `PluginOptionsRejected` | `dir` is an empty string |
-| `CorePathOutsideRoot` | `dir` is outside `root`, so the build wouldn't bundle your translation files |
-| `CoreDirectoryNotListed` | `files` in `seedcord.config.ts` doesn't list `dir` |
-| `PluginI18nBaseMissing` | `dir` doesn't have a file for `base`. The message gives the file it looked for |
+| `PluginOptionsRejected` | `path` is an empty string |
+| `CorePathOutsideRoot` | `path` is outside `root`, so the build wouldn't bundle your translation files |
+| `CoreDirectoryNotListed` | `files` in `seedcord.config.ts` doesn't list `path` |
+| `PluginI18nBaseMissing` | `path` doesn't have a file for `base`. The message gives the file it looked for |
 | `PluginI18nSyntax` | Fluent can't parse a line in a `.ftl` file. The message gives the file and line |
 | `PluginI18nNotALocale` | a `.ftl` file or a [command translation file](/plugins/i18n-commands) doesn't have a Discord locale code as its name. The message suggests the codes for the same language |
 | `PluginI18nNotInBase` | a translation has a message, a variable, or an attribute that the base file doesn't |

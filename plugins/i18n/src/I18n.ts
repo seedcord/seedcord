@@ -24,7 +24,7 @@ const FTL = '.ftl';
 /** The options {@link I18n} takes. */
 export interface I18nOptions {
     /** The folder that holds one `.ftl` file per locale, and one `.ts` file per locale for command translations. Defaults to `./locales`. */
-    readonly dir?: string;
+    readonly path?: string;
     /** The locale whose file lists every message and the variables each one takes. Defaults to `en-US`. */
     readonly base?: LocaleCode;
     /**
@@ -37,7 +37,7 @@ export interface I18nOptions {
 /**
  * Gives every handler `this.t`, which formats your Fluent messages in the user's language.
  *
- * Put one `.ftl` file per Discord locale in `dir`, like `en-US.ftl` and `pl.ftl`. In gates and
+ * Put one `.ftl` file per Discord locale in `path`, like `en-US.ftl` and `pl.ftl`. In gates and
  * `Notice.render`, read the same function from `ctx.t`.
  *
  * @example
@@ -61,7 +61,7 @@ export interface I18nOptions {
  * });
  *
  * // bot.ts
- * seedcord.attach('i18n', I18n, { dir: './locales', base: 'en-US' });
+ * seedcord.attach('i18n', I18n, { path: './locales', base: 'en-US' });
  * ```
  *
  * @example
@@ -140,12 +140,12 @@ export class I18n extends Plugin {
 
     private catalogs: Promise<Catalogs> | undefined;
 
-    public constructor(host: CoreBase, { dir = './locales', base = 'en-US', resolveLocale }: I18nOptions = {}) {
+    public constructor(host: CoreBase, { path: dir = './locales', base = 'en-US', resolveLocale }: I18nOptions = {}) {
         super(host);
 
         if (dir.length === 0) {
             this.rejectOptions(
-                `${paint.bold('dir')} is empty. Pass the folder that holds your .ftl files, like ${paint.sky("'./locales'")}`
+                `${paint.bold('path')} is empty. Pass the folder that holds your .ftl files, like ${paint.sky("'./locales'")}`
             );
         }
 

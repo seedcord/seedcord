@@ -30,6 +30,6 @@ export const seedcord = new Seedcord({
 })
     .attach('stats.uptime', Uptime)
     .attach('stats.pings', PingCounter)
-    .attach('i18n', I18n, { dir: './locales' });
+    .attach('i18n', I18n, { path: './locales' });
 
 export default seedcord;

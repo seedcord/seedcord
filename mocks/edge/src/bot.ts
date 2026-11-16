@@ -29,4 +29,4 @@ export default new Seedcord({
     )
 })
     .attach('pings', PingCounter)
-    .attach('i18n', I18n, { dir: './locales' });
+    .attach('i18n', I18n, { path: './locales' });

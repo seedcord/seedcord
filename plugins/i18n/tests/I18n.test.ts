@@ -19,8 +19,8 @@ import type { DispatchOrigin } from '@seedcord/core';
 
 const FIXTURES = path.join(import.meta.dirname, 'fixtures');
 
-function i18nAt(fixture: string, options: Omit<I18nOptions, 'dir'> = {}): I18n {
-    return new TestHost().attach('i18n', I18n, { dir: path.join(FIXTURES, fixture), ...options }).i18n;
+function i18nAt(fixture: string, options: Omit<I18nOptions, 'path'> = {}): I18n {
+    return new TestHost().attach('i18n', I18n, { path: path.join(FIXTURES, fixture), ...options }).i18n;
 }
 
 function from(locales: Partial<Pick<DispatchOrigin, 'userLocale' | 'guildLocale'>>): DispatchOrigin {
@@ -39,7 +39,7 @@ async function problemsOf(work: Promise<unknown>): Promise<unknown[][]> {
 
 async function tFor(
     origin: DispatchOrigin,
-    options: Omit<I18nOptions, 'dir'> = {}
+    options: Omit<I18nOptions, 'path'> = {}
 ): ReturnType<I18n['dispatchMembers']['t']> {
     const i18n = i18nAt('good', options);
     await i18n.init();
@@ -47,16 +47,16 @@ async function tFor(
 }
 
 describe('I18n', () => {
-    it('throws on attach when dir is outside root', () => {
+    it('throws on attach when the folder is outside root', () => {
         using _dev = setDevFiles({ root: path.join(FIXTURES, 'good'), listed: [], skippedFolders: [] });
 
-        expect(() => new TestHost().attach('i18n', I18n, { dir: path.join(FIXTURES, 'commands') })).toThrow(
+        expect(() => new TestHost().attach('i18n', I18n, { path: path.join(FIXTURES, 'commands') })).toThrow(
             expect.objectContaining({ code: SeedcordErrorCode.CorePathOutsideRoot })
         );
     });
 
-    it('rejects an empty dir', () => {
-        expect(() => new TestHost().attach('i18n', I18n, { dir: '' })).toThrow(
+    it('rejects an empty path', () => {
+        expect(() => new TestHost().attach('i18n', I18n, { path: '' })).toThrow(
             expect.objectContaining({ code: SeedcordErrorCode.PluginOptionsRejected })
         );
     });
@@ -138,7 +138,7 @@ describe('I18n', () => {
     describe('saves under seedcord dev', () => {
         it('reads a saved .ftl file the next time t runs', async () => {
             await using catalog = await tempCatalog('good', 'saved-ftl');
-            const host = new TestHost().attach('i18n', I18n, { dir: catalog.path });
+            const host = new TestHost().attach('i18n', I18n, { path: catalog.path });
             await host.i18n.init();
             const file = path.join(catalog.path, 'en-US.ftl');
             await writeFile(file, 'greeting = Hey { $user }\n');
@@ -202,17 +202,17 @@ describe('I18n', () => {
             ]);
         });
 
-        it('reads the translation files from a dir whose path has glob characters', async () => {
+        it('reads the translation files from a folder whose path has glob characters', async () => {
             await using catalog = await tempCatalog('commands/good', 'bracket [v2]');
             const bodies = commandBodies();
-            const i18n = new TestHost().attach('i18n', I18n, { dir: catalog.path }).i18n;
+            const i18n = new TestHost().attach('i18n', I18n, { path: catalog.path }).i18n;
 
             await i18n.prepareCommands(bodies);
 
             expect(bodies[0]?.name_localizations?.pl).toBe('kula');
         });
 
-        it("doesn't import the code files in a subfolder of `dir`", async () => {
+        it("doesn't import the code files in a subfolder of `path`", async () => {
             const i18n = i18nAt('commands/nested-helper');
 
             await expect(i18n.prepareCommands(commandBodies())).resolves.toBeUndefined();
@@ -304,7 +304,7 @@ describe('I18n', () => {
             ]);
         });
 
-        it("throws when dir doesn't have a file for the base locale", async () => {
+        it("throws when the folder doesn't have a file for the base locale", async () => {
             await expect(i18nAt('good', { base: 'de' }).codegen()).rejects.toMatchObject({
                 code: SeedcordErrorCode.PluginI18nBaseMissing
             });
