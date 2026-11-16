@@ -193,6 +193,16 @@ describe('I18n', () => {
             ]);
         });
 
+        it('reads the translation files from a dir whose path has glob characters', async () => {
+            await using catalog = await tempCatalog('commands/good', 'bracket [v2]');
+            const bodies = commandBodies();
+            const i18n = new TestHost().attach('i18n', I18n, { dir: catalog.path }).i18n;
+
+            await i18n.prepareCommands(bodies);
+
+            expect(bodies[0]?.name_localizations?.pl).toBe('kula');
+        });
+
         it("doesn't import the code files in a subfolder of `dir`", async () => {
             const i18n = i18nAt('commands/nested-helper');
 

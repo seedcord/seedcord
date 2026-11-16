@@ -22,8 +22,20 @@ export function posixRelative(from: string, to: string): string {
     return toPosixPath(path.relative(from, to));
 }
 
-// a file matches when an include pattern covers it and no ! pattern does, like an import.meta.glob list.
-// resolve turns a pattern into an absolute one
+const GLOB_SYMBOLS = /[()[\]{}*?]/g;
+
+// node's matchesGlob reads a backslash as a separator, and a character class keeps the symbol literal
+export function escapeGlob(text: string): string {
+    return text.replaceAll(GLOB_SYMBOLS, '[$&]');
+}
+
+// the root part matches as plain text, like a [ or a ( in the bot's folder name
+export function rootedGlob(root: string, pattern: string): string {
+    const base = escapeGlob(toPosixPath(root));
+    if (!path.isAbsolute(pattern)) return path.posix.join(base, toPosixPath(pattern));
+    return isInside(root, pattern) ? path.posix.join(base, posixRelative(root, pattern)) : toPosixPath(pattern);
+}
+
 export function matchesFileGlobs(
     file: string,
     patterns: readonly string[],

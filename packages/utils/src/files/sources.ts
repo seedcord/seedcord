@@ -176,3 +176,8 @@ export function fileSource(): FileSource {
 export function botFolder(dir: string): BotFolder {
     return fileSource().layoutFor(dir).folderAt(dir);
 }
+
+// only an absolute pattern can match when a script runs without a config
+export function matchesBotGlobs(file: string, patterns: readonly string[]): boolean {
+    return fileSource().layoutFor(file).matchesFiles(file, patterns);
+}

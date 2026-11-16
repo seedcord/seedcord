@@ -6,7 +6,7 @@ import { SeedcordError } from '@seedcord/errors/internal';
 
 import { asError } from '#src/misc/asError';
 
-import { isInside, posixRelative, toPosixPath } from './paths';
+import { escapeGlob, isInside, matchesFileGlobs, posixRelative, rootedGlob, toPosixPath } from './paths';
 
 // every path here is root-relative with a leading slash, like '/locales'. one beside a ./src root reads '/../logs'
 export interface BotLayoutData {
@@ -46,9 +46,14 @@ function isProjectFileName(name: string): boolean {
 // i would use the dependency directly, but the edge bundle can't resolve tinyglobby's fs import
 const GLOB_SYMBOLS = /[()[\]{}*?|]|[!+@](?=\()/g;
 
+type Escape = (text: string) => string;
+
+// vite's import.meta.glob reads a backslash as an escape
+const viteEscape: Escape = (text) => text.replaceAll(GLOB_SYMBOLS, String.raw`\$&`);
+
 // a key of '/' is base itself
-function globFolder(base: string, key: string): string {
-    return (key === '/' ? base : `${base}${key}`).replaceAll(GLOB_SYMBOLS, String.raw`\$&`);
+function globFolder(base: string, key: string, escape: Escape = viteEscape): string {
+    return escape(key === '/' ? base : `${base}${key}`);
 }
 
 function moduleGlobsIn(folder: string): string[] {
@@ -218,10 +223,17 @@ export class BotLayout {
         return [...moduleGlobsIn(`${globFolder(base, '/')}/**`), ...this.globExcludes(base)];
     }
 
-    // absolute, and only the modules right inside folder
-    public moduleGlobsInside(folder: string): string[] {
+    // for matchesFiles, which takes absolute globs as they are
+    public moduleGlobsDirectlyIn(folder: string): string[] {
         const root = toPosixPath(this.root);
-        return [...moduleGlobsIn(globFolder(root, this.keyOf(folder))), ...this.globExcludes(root)];
+        return [
+            ...moduleGlobsIn(globFolder(root, this.keyOf(folder), escapeGlob)),
+            ...this.globExcludes(root, escapeGlob)
+        ];
+    }
+
+    public matchesFiles(file: string, patterns: readonly string[]): boolean {
+        return matchesFileGlobs(file, patterns, (pattern) => rootedGlob(this.root, pattern));
     }
 
     public listedFileGlobs(base = '.'): string[] {
@@ -258,13 +270,13 @@ export class BotLayout {
     }
 
     // import.meta.glob already skips dotfiles, dot-folders and node_modules
-    private globExcludes(base: string): string[] {
-        const folders = this.data.skippedFolders.map((key) => `!${globFolder(base, key)}/**`);
+    private globExcludes(base: string, escape?: Escape): string[] {
+        const folders = this.data.skippedFolders.map((key) => `!${globFolder(base, key, escape)}/**`);
         const configDir = this.configDir();
         const projectFiles =
             configDir === undefined
                 ? []
-                : PROJECT_FILE_GLOBS.map((name) => `!${globFolder(base, this.keyOf(configDir))}/${name}`);
+                : PROJECT_FILE_GLOBS.map((name) => `!${globFolder(base, this.keyOf(configDir), escape)}/${name}`);
         return [...folders, ...projectFiles];
     }
 
@@ -290,8 +302,8 @@ export class BotFolder {
         return isInside(this.path, file) && !this.layout.isSkipped(file);
     }
 
-    public moduleGlobsInside(): string[] {
-        return this.layout.moduleGlobsInside(this.path);
+    public moduleGlobsDirectlyIn(): string[] {
+        return this.layout.moduleGlobsDirectlyIn(this.path);
     }
 
     public assertBundled(): void {

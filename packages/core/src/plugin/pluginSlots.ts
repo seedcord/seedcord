@@ -1,4 +1,4 @@
-import { botFolder, matchesFileGlobs } from '@seedcord/utils/internal';
+import { matchesBotGlobs } from '@seedcord/utils/internal';
 
 import type { Kv } from '#src/kv/Kv';
 import type { ResolvedPluginLifecycleSpec } from './lifecycle';
@@ -55,6 +55,5 @@ export function declaredScopeOf(plugin: PluginSlots): DeclaredScope {
 }
 
 export function readsCommandFile(plugin: PluginSlots, file: string): boolean {
-    // botFolder resolves a relative pattern against root, the same as the CLI does for registerCriticalFiles
-    return matchesFileGlobs(file, plugin[commandFilesSlot], (pattern) => botFolder(pattern).path);
+    return matchesBotGlobs(file, plugin[commandFilesSlot]);
 }

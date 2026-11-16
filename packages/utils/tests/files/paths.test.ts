@@ -5,18 +5,7 @@ import { describe, expect, it } from 'vite-plus/test';
 import { importSpecifier, matchesFileGlobs, workerdPath } from '#src/files/paths';
 
 describe('matchesFileGlobs', () => {
-    const patterns = ['/bot/src/locales/*.ts', '!/bot/src/locales/*.d.ts'];
-
-    it.each([
-        ['matches a file directly in the folder', '/bot/src/locales/pl.ts', true],
-        ['skips a file that a `!` pattern matches', '/bot/src/locales/pl.d.ts', false],
-        ['skips a file in a subfolder', '/bot/src/locales/nested/pl.ts', false],
-        ['skips a file with another extension', '/bot/src/locales/pl.ftl', false]
-    ])('%s', (_case, file, matches) => {
-        expect(matchesFileGlobs(file, patterns)).toBe(matches);
-    });
-
-    it('resolves each pattern before it matches', () => {
+    it('resolves each pattern, then skips a file that a `!` pattern matches', () => {
         const resolve = (pattern: string): string => `/bot/src/${pattern}`;
 
         expect(matchesFileGlobs('/bot/src/locales/pl.d.ts', ['locales/*.ts', '!locales/*.d.ts'], resolve)).toBe(false);

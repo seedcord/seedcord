@@ -3,7 +3,6 @@ import { basename, dirname, join, resolve } from 'node:path';
 
 import { paint } from '@seedcord/errors';
 import { Logger } from '@seedcord/logger';
-import { matchesFileGlobs } from '@seedcord/utils/internal';
 
 import { viteEnvFiles } from '#core/modules/viteEnvFiles';
 
@@ -42,8 +41,7 @@ export class RestartFiles {
 
     public needsRestart(file: string): boolean {
         if (this.hiddenFromVite(file) || this.layout.isProjectFile(file) || file === this.config.instance) return true;
-        // a relative pattern resolves against root
-        return matchesFileGlobs(file, [...this.patterns], (pattern) => resolve(this.config.root, pattern));
+        return this.layout.matchesFiles(file, [...this.patterns]);
     }
 
     public addPatterns(patterns: readonly string[]): void {
