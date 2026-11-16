@@ -5,7 +5,7 @@ import { pluginsPath } from './utils/source-path';
 import { it } from './utils/test-env';
 
 describe('Kysely Plugin Integration', () => {
-    it('should load kysely services from directory', async ({ kyselyWith, testEnv }) => {
+    it('loads services from path', async ({ kyselyWith, testEnv }) => {
         await testEnv.createFile(
             'services/UserService.ts',
             `
@@ -25,7 +25,7 @@ describe('Kysely Plugin Integration', () => {
         expect(plugin.services).toHaveProperty('users');
     });
 
-    it('registers the migrations dir as a restart pattern', ({ kyselyWith }) => {
+    it('registers the migrations path as a restart pattern', ({ kyselyWith }) => {
         const send = vi.fn();
         setDevChannel({ send, on: vi.fn(), off: vi.fn() });
         onTestFinished(() => setDevChannel(undefined));

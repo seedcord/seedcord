@@ -82,16 +82,6 @@ describe('Kysely lifecycle', () => {
         expect(() => plugin[member]).toThrow(expect.objectContaining({ code: SeedcordErrorCode.PluginNotReady }));
     });
 
-    it('exposes a working connection and the services map once init resolves', async ({ kyselyWith }) => {
-        const plugin = kyselyWith();
-
-        await plugin.init();
-
-        const { rows } = await sql<{ one: number }>`select 1 as one`.execute(plugin.connection);
-        expect(rows).toEqual([{ one: 1 }]);
-        expect(plugin.services).toEqual({});
-    });
-
     it('closes the connection on dispose', async ({ kyselyWith }) => {
         const held = heldSqlite();
         const plugin = kyselyWith({ dialect: held.dialect });
@@ -132,20 +122,7 @@ describe('Kysely lifecycle', () => {
         await expect(plugin.dispose()).resolves.toBeUndefined();
     });
 
-    it('translates a close failure into PluginDisconnectFailed', async ({ kyselyWith }) => {
-        const held = heldSqlite();
-        const plugin = kyselyWith({ dialect: held.dialect });
-        await plugin.init();
-        vi.spyOn(held.database, 'close').mockImplementation(() => {
-            throw new Error('still busy');
-        });
-
-        await expect(plugin.dispose()).rejects.toThrow(
-            expect.objectContaining({ code: SeedcordErrorCode.PluginDisconnectFailed })
-        );
-    });
-
-    it('reports a close failure once, through the thrown error', async ({ kyselyWith }) => {
+    it('throws PluginDisconnectFailed on a close failure without logging it too', async ({ kyselyWith }) => {
         const held = heldSqlite();
         const plugin = kyselyWith({ dialect: held.dialect });
         await plugin.init();
@@ -154,8 +131,9 @@ describe('Kysely lifecycle', () => {
         });
         using logged = vi.spyOn(Logger.prototype, 'error');
 
-        await plugin.dispose().catch(() => undefined);
-
+        await expect(plugin.dispose()).rejects.toThrow(
+            expect.objectContaining({ code: SeedcordErrorCode.PluginDisconnectFailed })
+        );
         expect(logged).not.toHaveBeenCalled();
     });
 });

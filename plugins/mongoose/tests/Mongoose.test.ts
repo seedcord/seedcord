@@ -19,7 +19,7 @@ export class UserService extends MongooseService {
 `;
 
 describe('Mongoose Plugin Integration', () => {
-    it('should load mongoose services from directory', async ({ mongooseWith, testEnv }) => {
+    it('loads services from path', async ({ mongooseWith, testEnv }) => {
         await testEnv.createFile('services/UserService.ts', USER_SERVICE);
         const plugin = mongooseWith();
 

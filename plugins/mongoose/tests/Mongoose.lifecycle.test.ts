@@ -254,24 +254,15 @@ describe('Mongoose lifecycle', () => {
         await expect(plugin.dispose()).resolves.toBeUndefined();
     });
 
-    it('translates a disconnect failure into PluginDisconnectFailed', async ({ mongooseWith }) => {
-        const plugin = mongooseWith();
-        await plugin.init();
-        vi.mocked(plugin.connection.disconnect).mockRejectedValueOnce(new Error('still busy'));
-
-        await expect(plugin.dispose()).rejects.toThrow(
-            expect.objectContaining({ code: SeedcordErrorCode.PluginDisconnectFailed })
-        );
-    });
-
-    it('reports a disconnect failure once, through the thrown error', async ({ mongooseWith }) => {
+    it('throws PluginDisconnectFailed on a disconnect failure without logging it too', async ({ mongooseWith }) => {
         const plugin = mongooseWith();
         await plugin.init();
         vi.mocked(plugin.connection.disconnect).mockRejectedValueOnce(new Error('still busy'));
         using logged = vi.spyOn(Logger.prototype, 'error');
 
-        await plugin.dispose().catch(() => undefined);
-
+        await expect(plugin.dispose()).rejects.toThrow(
+            expect.objectContaining({ code: SeedcordErrorCode.PluginDisconnectFailed })
+        );
         expect(logged).not.toHaveBeenCalled();
     });
 });
