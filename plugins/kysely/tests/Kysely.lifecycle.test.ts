@@ -22,17 +22,18 @@ describe('Kysely lifecycle', () => {
         );
     });
 
-    it('translates a refused connection into PluginConnectionFailed with the driver message', async ({
-        kyselyWith
-    }) => {
-        const plugin = kyselyWith({
-            dialect: () => new SqliteDialect({ database: () => Promise.reject(new Error('ECONNREFUSED')) })
-        });
+    it('includes the driver messages when the connection is refused on every address', async ({ kyselyWith }) => {
+        const refused = new AggregateError(
+            [new Error('connect ECONNREFUSED ::1:5432'), new Error('connect ECONNREFUSED 127.0.0.1:5432')],
+            // eslint-disable-next-line unicorn/error-message -- pg refuses a localhost connection with an empty message
+            ''
+        );
+        const plugin = kyselyWith({ dialect: () => new SqliteDialect({ database: () => Promise.reject(refused) }) });
 
         await expect(plugin.init()).rejects.toThrow(
             expect.objectContaining({
                 code: SeedcordErrorCode.PluginConnectionFailed,
-                message: expect.stringContaining('ECONNREFUSED') as string
+                message: expect.stringContaining('connect ECONNREFUSED 127.0.0.1:5432') as string
             })
         );
     });

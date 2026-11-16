@@ -195,7 +195,7 @@ If a migration throws an `Error`, you get that error unchanged, so a failing `CR
 | --- | --- |
 | `allowUnorderedMigrations` | whether a new migration can sort before one that has already run. Defaults to `false` |
 | `migrationTableName` | the table recording which migrations ran. Defaults to `kysely_migration` |
-| `migrationLockTableName` | a table Kysely creates beside the migrations table. Defaults to `kysely_migration_lock`. The dialect's own lock keeps two bots from migrating at once, like an advisory lock on Postgres |
+| `migrationLockTableName` | a table Kysely creates beside the migrations table. Defaults to `kysely_migration_lock`. Kysely doesn't lock it. On Postgres and MySQL, a database lock keeps two bots from migrating at once. SQLite doesn't have that lock, so run one bot per file |
 | `migrationTableSchema` | the schema holding both of those tables, on a database that has schemas, like Postgres |
 | `nameComparator` | orders the recorded migrations that share a timestamp when Kysely reads them back from the database. Defaults to `localeCompare`. It never changes the order pending migrations run in |
 

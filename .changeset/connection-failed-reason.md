@@ -4,4 +4,4 @@
 '@seedcord/plugin-mongoose': patch
 ---
 
-`PluginConnectionFailed` now includes the driver's own message, like `ECONNREFUSED`, so you don't have to dig it out of `cause`.
+`PluginConnectionFailed` now includes the driver's error, like `connect ECONNREFUSED 127.0.0.1:5432`, and the option to check.

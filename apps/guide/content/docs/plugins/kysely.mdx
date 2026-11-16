@@ -125,7 +125,7 @@ seedcord.attach('db', Kysely, {
 
 `init()` calls `dialect()`, opens the first connection, runs your migrations unless you [set `onStartup` to `false`](/plugins/kysely-migrations#when-they-run), then loads every service class from `dir`. If any of those steps fails, `init()` closes the connection before it rethrows the error because seedcord doesn't call `dispose()` for a plugin whose `init()` failed. If a migration fails, the bot never reaches its handlers.
 
-If `dialect()` throws or that first connection fails, `init()` throws `PluginConnectionFailed`. Its message includes the driver's own message, like the `connect ECONNREFUSED` that `pg` gives for a server that isn't running, and the full driver error is in its `cause`. `start()` reports it along with any other plugin's failure, as [the lifecycle page](/plugins/lifecycle#when-init-fails) explains.
+If `dialect()` throws or that first connection fails, `init()` throws `PluginConnectionFailed`. If `dialect()` threw, the message says so. Otherwise it includes the driver's own message, like `connect ECONNREFUSED 127.0.0.1:5432` from `pg` when the server isn't running. The full driver error is in its `cause`. `start()` reports it along with any other plugin's failure, as [the lifecycle page](/plugins/lifecycle#when-init-fails) explains.
 
 <Callout type="warning">
 

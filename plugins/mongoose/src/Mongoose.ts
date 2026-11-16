@@ -5,7 +5,7 @@ import { SeedcordErrorCode, paint } from '@seedcord/errors';
 import { SeedcordError } from '@seedcord/errors/internal';
 import { PluginServices } from '@seedcord/plugin-utils';
 import { keepDefined } from '@seedcord/utils';
-import { asError } from '@seedcord/utils/internal';
+import { errorReason } from '@seedcord/utils/internal';
 import { Envapter } from 'envapt';
 import mongoose from 'mongoose';
 
@@ -105,7 +105,7 @@ export class Mongoose extends Plugin<{ transport: 'any'; runtime: 'server' }> {
             .catch((err) => {
                 throw new SeedcordError(
                     SeedcordErrorCode.PluginConnectionFailed,
-                    ['MongoDB', asError(err).message, this.options.name],
+                    ['MongoDB', errorReason(err), 'uri', this.options.name],
                     { cause: err }
                 );
             });

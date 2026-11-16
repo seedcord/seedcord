@@ -7,7 +7,7 @@ import { SeedcordErrorCode, paint } from '@seedcord/errors';
 import { SeedcordError } from '@seedcord/errors/internal';
 import { PluginServices } from '@seedcord/plugin-utils';
 import { keepDefined } from '@seedcord/utils';
-import { asError } from '@seedcord/utils/internal';
+import { errorReason } from '@seedcord/utils/internal';
 import { Envapter } from 'envapt';
 import { Kysely as KyselyClient } from 'kysely';
 
@@ -25,9 +25,12 @@ import type { HmrUpdateEvent } from '@seedcord/types';
 import type { Dialect } from 'kysely';
 import type { MigrationInfo } from 'kysely/migration';
 
-// the dialect's class name without its suffix, like Postgres for PostgresDialect
 function labelOf(dialect: Dialect): string {
     return dialect.constructor.name.replace(/Dialect$/, '');
+}
+
+function connectionFailed(label: string, reason: string, cause: unknown): SeedcordError {
+    return new SeedcordError(SeedcordErrorCode.PluginConnectionFailed, [label, reason, 'dialect'], { cause });
 }
 
 /**
@@ -121,21 +124,26 @@ export class Kysely extends Plugin<{ transport: 'any'; runtime: 'server' }> {
     }
 
     private async connect(): Promise<void> {
-        let label = 'the database';
+        const dialect = this.dialect();
+        const label = labelOf(dialect);
+        this.label = label;
         try {
-            const dialect = this.options.dialect();
-            label = labelOf(dialect);
-            this.label = label;
             this.client = new KyselyClient<KyselySchema>({ dialect, ...keepDefined(this.options.kysely ?? {}) });
             // kysely opens the driver on the first query
             await this.client.connection().execute(() => Promise.resolve());
         } catch (err) {
-            throw new SeedcordError(SeedcordErrorCode.PluginConnectionFailed, [label, asError(err).message], {
-                cause: err
-            });
+            throw connectionFailed(label, errorReason(err), err);
         }
 
         this.logger.info(`Connected to ${paint.sky.bold(label)}`);
+    }
+
+    private dialect(): Dialect {
+        try {
+            return this.options.dialect();
+        } catch (err) {
+            throw connectionFailed('the database', `dialect() threw: ${errorReason(err)}`, err);
+        }
     }
 
     private async disconnect(): Promise<void> {
