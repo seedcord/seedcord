@@ -3,10 +3,10 @@ title: Your schema
 description: Type your Postgres tables for the kysely plugin by declaring a schema on KyselyDatabase, and keep it in step with your migrations.
 ---
 
-TypeScript can't read your tables out of Postgres while it compiles, so Kysely types every query against an interface you write by hand. To give the plugin that interface, declare `schema` on [`KyselyDatabase`](ref:plugin-kysely-postgres/KyselyDatabase). The plugin's [`connection`](ref:plugin-kysely-postgres/KyselyPostgres.connection) and every service get their table and column types from it.
+TypeScript can't read your tables out of Postgres while it compiles, so Kysely types every query against an interface you write by hand. To give the plugin that interface, declare `schema` on [`KyselyDatabase`](ref:plugin-kysely/KyselyDatabase). The plugin's [`connection`](ref:plugin-kysely/Kysely.connection) and every service get their table and column types from it.
 
 ```ts twoslash title="src/database.ts"
-import type { KyselyDatabase } from '@seedcord/plugin-kysely-postgres';
+import type { KyselyDatabase } from '@seedcord/plugin-kysely';
 
 // ---cut---
 import type { ColumnType, Generated } from 'kysely';
@@ -22,7 +22,7 @@ export interface AppDatabase {
     users: UsersTable;
 }
 
-declare module '@seedcord/plugin-kysely-postgres' {
+declare module '@seedcord/plugin-kysely' {
     interface KyselyDatabase {
         schema: AppDatabase;
     }
@@ -47,10 +47,10 @@ Most columns have one type whether you select, insert, or update them, like `use
 
 ## Every table name compiles until you declare it
 
-With `KyselyDatabase` left empty, [`KyselySchema`](ref:plugin-kysely-postgres/KyselySchema) falls back to `Record<string, never>`. That widens [`KyselyTable`](ref:plugin-kysely-postgres/KyselyTable) to plain `string`.
+With `KyselyDatabase` left empty, [`KyselySchema`](ref:plugin-kysely/KyselySchema) falls back to `Record<string, never>`. That widens [`KyselyTable`](ref:plugin-kysely/KyselyTable) to plain `string`.
 
 ```ts twoslash
-import type { KyselyTable } from '@seedcord/plugin-kysely-postgres';
+import type { KyselyTable } from '@seedcord/plugin-kysely';
 
 declare const table: KyselyTable;
 //            ^?
@@ -66,7 +66,7 @@ Once you declare the schema, that typo fails to compile.
 // @errors: 2345
 import { SlashHandler, SlashRoute } from '@seedcord/gateway';
 
-import type { KyselyPostgres } from '@seedcord/plugin-kysely-postgres';
+import type { Kysely } from '@seedcord/plugin-kysely';
 import type { Generated } from 'kysely';
 
 interface UsersTable {
@@ -74,7 +74,7 @@ interface UsersTable {
     username: string;
 }
 
-declare module '@seedcord/plugin-kysely-postgres' {
+declare module '@seedcord/plugin-kysely' {
     interface KyselyDatabase {
         schema: { users: UsersTable };
     }
@@ -82,7 +82,7 @@ declare module '@seedcord/plugin-kysely-postgres' {
 
 declare module '@seedcord/gateway' {
     interface Core {
-        db: KyselyPostgres;
+        db: Kysely;
     }
 }
 
@@ -104,7 +104,7 @@ class Leaderboard extends SlashHandler<'leaderboard'> {
 ```ts twoslash hovers
 import { SlashHandler, SlashRoute } from '@seedcord/gateway';
 
-import type { KyselyPostgres } from '@seedcord/plugin-kysely-postgres';
+import type { Kysely } from '@seedcord/plugin-kysely';
 import type { Generated } from 'kysely';
 
 interface UsersTable {
@@ -112,7 +112,7 @@ interface UsersTable {
     username: string;
 }
 
-declare module '@seedcord/plugin-kysely-postgres' {
+declare module '@seedcord/plugin-kysely' {
     interface KyselyDatabase {
         schema: { users: UsersTable };
     }
@@ -120,7 +120,7 @@ declare module '@seedcord/plugin-kysely-postgres' {
 
 declare module '@seedcord/gateway' {
     interface Core {
-        db: KyselyPostgres;
+        db: Kysely;
     }
 }
 
@@ -156,7 +156,7 @@ The command reads the connection string from `DATABASE_URL`, either in your envi
 ```ts plain title="src/database.ts"
 import type { DB } from './db';
 
-declare module '@seedcord/plugin-kysely-postgres' {
+declare module '@seedcord/plugin-kysely' {
     interface KyselyDatabase {
         schema: DB;
     }

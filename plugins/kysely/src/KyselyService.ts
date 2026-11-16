@@ -3,15 +3,15 @@ import { SeedcordTypeError } from '@seedcord/errors/internal';
 
 import { KyselyServiceMetadataKey, KyselyTableMetadataKey } from './decorators/RegisterKyselyService';
 
-import type { KyselyPostgres } from './KyselyPostgres';
+import type { Kysely } from './Kysely';
 import type { KyselySchema, KyselyTable } from './types/KyselyDatabase';
 import type { CoreBase } from '@seedcord/core';
 import type { TypedConstructor } from '@seedcord/types';
-import type { Kysely } from 'kysely';
+import type { Kysely as KyselyClient } from 'kysely';
 import type { LiteralUnion } from 'type-fest';
 
 /**
- * Base class for KyselyPostgres services.
+ * Base class for Kysely services.
  *
  * Provides a small, typed shim around the shared Kysely instance and ensures
  * that subclasses have been decorated with `@RegisterKyselyService`.
@@ -38,7 +38,7 @@ export abstract class KyselyService<TTable extends LiteralUnion<KyselyTable, str
     public readonly table: TTable;
 
     public constructor(
-        protected readonly kysely: KyselyPostgres,
+        protected readonly kysely: Kysely,
         protected readonly core: CoreBase
     ) {
         const ctor = this.constructor;
@@ -63,7 +63,7 @@ export abstract class KyselyService<TTable extends LiteralUnion<KyselyTable, str
     /**
      * Shared Kysely instance used to interact with the Postgres database.
      */
-    public get db(): Kysely<KyselySchema> {
+    public get db(): KyselyClient<KyselySchema> {
         return this.kysely.connection;
     }
 }

@@ -13,9 +13,9 @@
 '📦 plugin-mongoose':
   - changed-files:
       - any-glob-to-any-file: 'plugins/mongoose/**'
-'📦 plugin-kysely-postgres':
+'📦 plugin-kysely':
   - changed-files:
-      - any-glob-to-any-file: 'plugins/kysely-postgres/**'
+      - any-glob-to-any-file: 'plugins/kysely/**'
 '📦 plugin-tasks':
   - changed-files:
       - any-glob-to-any-file: 'plugins/tasks/**'

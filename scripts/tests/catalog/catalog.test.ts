@@ -19,8 +19,8 @@ const names = (violations: readonly { depName: string }[]): string[] => violatio
 describe('distinctPackages', () => {
     it('counts one package that lists the dep in two fields once', () => {
         const refs = [
-            ref('plugins/kysely-postgres/package.json', 'devDependencies'),
-            ref('plugins/kysely-postgres/package.json', 'peerDependencies')
+            ref('plugins/kysely/package.json', 'devDependencies'),
+            ref('plugins/kysely/package.json', 'peerDependencies')
         ];
 
         expect(distinctPackages(refs)).toBe(1);
@@ -28,7 +28,7 @@ describe('distinctPackages', () => {
 
     it('counts each package that lists the dep', () => {
         const refs = [
-            ref('plugins/kysely-postgres/package.json', 'devDependencies'),
+            ref('plugins/kysely/package.json', 'devDependencies'),
             ref('apps/guide/package.json', 'devDependencies')
         ];
 

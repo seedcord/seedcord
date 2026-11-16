@@ -26,9 +26,9 @@ const PACKAGE_OVERRIDES: Record<string, PackageOverride> = {
         displayName: 'plugin-mongoose',
         aliases: ['plugin-mongoose', 'mongoose', 'mongo']
     },
-    '@seedcord/plugin-kysely-postgres': {
-        displayName: 'plugin-kysely-postgres',
-        aliases: ['plugin-kysely-postgres', 'kysely', 'postgres', 'pg']
+    '@seedcord/plugin-kysely': {
+        displayName: 'plugin-kysely',
+        aliases: ['plugin-kysely', 'kysely', 'postgres', 'pg']
     },
     '@seedcord/plugin-tasks': {
         displayName: 'plugin-tasks',

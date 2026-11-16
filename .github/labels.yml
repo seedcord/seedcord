@@ -11,7 +11,7 @@
   color: bca562
 - name: '📦 plugin-mongoose'
   color: 7fbc62
-- name: '📦 plugin-kysely-postgres'
+- name: '📦 plugin-kysely'
   color: 6fbc62
 - name: '📦 plugin-tasks'
   color: 5fbc62

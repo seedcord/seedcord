@@ -2,21 +2,21 @@ import { setDevChannel } from '@seedcord/core/internal';
 import { Logger } from '@seedcord/logger';
 import { describe, it, expect, beforeEach, afterEach, onTestFinished, vi } from 'vite-plus/test';
 
-import { KyselyPostgres } from '#src/KyselyPostgres';
+import { Kysely } from '#src/Kysely';
 
 import { pluginsPath } from './utils/source-path';
 import { TestEnvironment } from './utils/test-env';
 
 import type { CoreBase } from '@seedcord/core';
 
-describe('KyselyPostgres Plugin Integration', () => {
+describe('Kysely Plugin Integration', () => {
     let testEnv: TestEnvironment;
 
-    let plugin: KyselyPostgres;
+    let plugin: Kysely;
     let mockCore: CoreBase;
 
     beforeEach(async () => {
-        testEnv = new TestEnvironment('kysely-postgres-test-');
+        testEnv = new TestEnvironment('kysely-test-');
         await testEnv.setup();
         await testEnv.createFile('migrations/.keep', '');
         // the plugin never reads core. this only satisfies the constructor
@@ -45,7 +45,7 @@ describe('KyselyPostgres Plugin Integration', () => {
             `
         );
 
-        plugin = new KyselyPostgres(mockCore, {
+        plugin = new Kysely(mockCore, {
             connectionString: 'postgres://localhost:5432/test',
             migrations: { dir: testEnv.resolvePath('migrations') },
             dir: testEnv.resolvePath(servicesDir)
@@ -75,7 +75,7 @@ describe('KyselyPostgres Plugin Integration', () => {
             `
         );
         await testEnv.createFile('services/index.ts', "export { Plain } from './Plain';");
-        plugin = new KyselyPostgres(mockCore, {
+        plugin = new Kysely(mockCore, {
             connectionString: 'postgres://localhost:5432/test',
             migrations: { dir: testEnv.resolvePath('migrations') },
             dir: testEnv.resolvePath('services')
@@ -103,7 +103,7 @@ describe('KyselyPostgres Plugin Integration', () => {
             `
         );
 
-        plugin = new KyselyPostgres(mockCore, {
+        plugin = new Kysely(mockCore, {
             connectionString: 'postgres://localhost:5432/test',
             migrations: { dir: testEnv.resolvePath('migrations') },
             dir: testEnv.resolvePath(servicesDir)
@@ -166,7 +166,7 @@ describe('KyselyPostgres Plugin Integration', () => {
             `
         );
 
-        plugin = new KyselyPostgres(mockCore, {
+        plugin = new Kysely(mockCore, {
             connectionString: 'postgres://localhost:5432/test',
             migrations: { dir: testEnv.resolvePath('migrations') },
             dir: testEnv.resolvePath(servicesDir)
@@ -214,7 +214,7 @@ describe('KyselyPostgres Plugin Integration', () => {
         );
         await testEnv.createFile(`${servicesDir}/ZBroken.ts`, 'export const broken = {{{ not valid');
 
-        plugin = new KyselyPostgres(mockCore, {
+        plugin = new Kysely(mockCore, {
             connectionString: 'postgres://localhost:5432/test',
             migrations: { dir: testEnv.resolvePath('migrations') },
             dir: testEnv.resolvePath(servicesDir)
@@ -255,7 +255,7 @@ describe('KyselyPostgres Plugin Integration', () => {
             `
         );
 
-        plugin = new KyselyPostgres(mockCore, {
+        plugin = new Kysely(mockCore, {
             connectionString: 'postgres://localhost:5432/test',
             migrations: { dir: testEnv.resolvePath('migrations') },
             dir: testEnv.resolvePath(servicesDir)
@@ -276,7 +276,7 @@ describe('KyselyPostgres Plugin Integration', () => {
         const send = vi.fn();
         setDevChannel({ send, on: vi.fn(), off: vi.fn() });
 
-        plugin = new KyselyPostgres(mockCore, {
+        plugin = new Kysely(mockCore, {
             connectionString: 'postgres://localhost:5432/test',
             migrations: { dir: './migrations' },
             dir: './services'

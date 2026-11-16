@@ -10,7 +10,7 @@ class Orders extends KyselyService<'products'> {}
 // the row that seedcord codegen writes for this plugin
 declare module '@seedcord/core/plugin' {
     interface PluginTypes {
-        '@seedcord/plugin-kysely-postgres': { services: { orders: typeof Orders } };
+        '@seedcord/plugin-kysely': { services: { orders: typeof Orders } };
     }
 }
 

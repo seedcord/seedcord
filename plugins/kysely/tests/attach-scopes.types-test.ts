@@ -1,4 +1,4 @@
-import { KyselyPostgres } from '#src/KyselyPostgres';
+import { Kysely } from '#src/Kysely';
 
 import type { KyselyOptions } from '#src/types/KyselyOptions';
 import type { PluginHost } from '@seedcord/core/plugin';
@@ -12,17 +12,17 @@ const options: KyselyOptions = {
 };
 
 function probeGatewayAccepts(bot: GatewaySeedcord): void {
-    bot.attach('sql', KyselyPostgres, options);
+    bot.attach('sql', Kysely, options);
 }
 
 function probeHttpServerAccepts(bot: HttpSeedcord): void {
-    bot.attach('sql', KyselyPostgres, options);
+    bot.attach('sql', Kysely, options);
 }
 
 // the edge Seedcord extends this base
 function probeEdgeRejects(bot: PluginHost<'http', 'edge'>): void {
-    // @ts-expect-error KyselyPostgres declares runtime 'server'
-    bot.attach('sql', KyselyPostgres, options);
+    // @ts-expect-error Kysely declares runtime 'server'
+    bot.attach('sql', Kysely, options);
 }
 
 void probeGatewayAccepts;

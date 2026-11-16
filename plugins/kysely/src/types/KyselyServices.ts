@@ -1,7 +1,7 @@
-import type { KyselyPostgres } from '#src/KyselyPostgres';
+import type { Kysely } from '#src/Kysely';
 import type { Generated } from '@seedcord/core/plugin';
 
-type FoundServices = Generated<typeof KyselyPostgres>['services'];
+type FoundServices = Generated<typeof Kysely>['services'];
 
 type ServiceInstances = { [Key in keyof FoundServices]: InstanceType<FoundServices[Key]> };
 

@@ -710,9 +710,9 @@ importers:
       '@seedcord/plugin-i18n':
         specifier: workspace:^
         version: link:../../plugins/i18n
-      '@seedcord/plugin-kysely-postgres':
+      '@seedcord/plugin-kysely':
         specifier: workspace:^
-        version: link:../../plugins/kysely-postgres
+        version: link:../../plugins/kysely
       '@seedcord/plugin-mongoose':
         specifier: workspace:^
         version: link:../../plugins/mongoose
@@ -1779,7 +1779,7 @@ importers:
         specifier: workspace:^
         version: link:../../tooling/vite-config
 
-  plugins/kysely-postgres:
+  plugins/kysely:
     dependencies:
       '@seedcord/errors':
         specifier: workspace:^

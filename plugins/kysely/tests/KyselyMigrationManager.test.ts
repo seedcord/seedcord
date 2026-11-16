@@ -3,7 +3,7 @@ import { Logger } from '@seedcord/logger';
 import { setDevFiles } from '@seedcord/utils/internal';
 import { afterEach, beforeEach, describe, expect, it, vi, type Mock } from 'vite-plus/test';
 
-import { KyselyPostgres } from '#src/KyselyPostgres';
+import { Kysely } from '#src/Kysely';
 
 import { TestEnvironment } from './utils/test-env';
 
@@ -44,10 +44,10 @@ describe('KyselyMigrationManager', () => {
         await testEnv.teardown();
     });
 
-    async function initializedPlugin(migrations: KyselyMigrationsOptions): Promise<KyselyPostgres> {
+    async function initializedPlugin(migrations: KyselyMigrationsOptions): Promise<Kysely> {
         // the plugin never reads core. this only satisfies the constructor
         const core = { config: {} } as unknown as CoreBase;
-        const plugin = new KyselyPostgres(core, {
+        const plugin = new Kysely(core, {
             connectionString: 'postgres://localhost:5432/test',
             migrations,
             dir: './services'

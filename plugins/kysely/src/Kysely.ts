@@ -8,7 +8,7 @@ import { SeedcordError } from '@seedcord/errors/internal';
 import { PluginServices } from '@seedcord/plugin-utils';
 import { keepDefined } from '@seedcord/utils';
 import { Envapter } from 'envapt';
-import { Kysely, PostgresDialect } from 'kysely';
+import { Kysely as KyselyClient, PostgresDialect } from 'kysely';
 import { Pool, type PoolConfig, type PoolClient } from 'pg';
 
 import { KyselyServiceMetadataKey } from './decorators/RegisterKyselyService';
@@ -31,11 +31,11 @@ import type { MigrationInfo } from 'kysely/migration';
  * Sets up the connection pool, applies migrations, and registers decorated
  * services so the core can resolve them.
  */
-export class KyselyPostgres extends Plugin<{ transport: 'any'; runtime: 'server' }> {
-    public static readonly id = '@seedcord/plugin-kysely-postgres';
+export class Kysely extends Plugin<{ transport: 'any'; runtime: 'server' }> {
+    public static readonly id = '@seedcord/plugin-kysely';
 
     /** Exposed Kysely instance once `init` completes. */
-    declare public connection: Kysely<KyselySchema>;
+    declare public connection: KyselyClient<KyselySchema>;
     private pool: Pool | null = null;
     private onConnectHandler: ((client: PoolClient) => void) | null = null;
     private migrationManager: KyselyMigrationManager | null = null;
@@ -117,7 +117,7 @@ export class KyselyPostgres extends Plugin<{ transport: 'any'; runtime: 'server'
         try {
             await this.testPoolConnection(pool);
 
-            this.connection = new Kysely<KyselySchema>({
+            this.connection = new KyselyClient<KyselySchema>({
                 dialect: new PostgresDialect({ pool }),
                 ...keepDefined(this.options.kysely ?? {})
             });

@@ -112,7 +112,7 @@ A bot can attach more than one plugin, each under its own key. Chain another `at
 
 ```ts twoslash
 import { Seedcord } from '@seedcord/gateway';
-import { KyselyPostgres } from '@seedcord/plugin-kysely-postgres';
+import { Kysely } from '@seedcord/plugin-kysely';
 import { Mongoose } from '@seedcord/plugin-mongoose';
 import { GatewayIntentBits } from 'discord.js';
 
@@ -130,7 +130,7 @@ export const seedcord = new Seedcord({
         uri: 'mongodb://localhost:27017/',
         name: 'seedcord'
     })
-    .attach('sql', KyselyPostgres, {
+    .attach('sql', Kysely, {
         dir: './postgres',
         connectionString: 'postgres://localhost:5432/seedcord',
         migrations: { dir: './migrations' }

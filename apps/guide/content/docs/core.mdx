@@ -135,7 +135,7 @@ If you construct a plugin yourself, you pass it down through imports and order i
 
 ```ts twoslash
 import { Seedcord } from '@seedcord/gateway';
-import { KyselyPostgres } from '@seedcord/plugin-kysely-postgres';
+import { Kysely } from '@seedcord/plugin-kysely';
 import { GatewayIntentBits } from 'discord.js';
 // ---cut-start---
 
@@ -150,7 +150,7 @@ const seedcord = new Seedcord({
 });
 // ---cut-end---
 
-export default seedcord.attach('db', KyselyPostgres, {
+export default seedcord.attach('db', Kysely, {
     dir: './services',
     connectionString: 'postgres://localhost:5432/seedcord',
     migrations: {

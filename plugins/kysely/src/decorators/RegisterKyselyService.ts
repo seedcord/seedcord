@@ -6,8 +6,8 @@ import type { KyselyServiceRegistrationOptions } from '#src/types/KyselyServiceR
 import type { KyselyServices, KyselyServiceKeys } from '#src/types/KyselyServices';
 import type { Constructor } from 'type-fest';
 
-export const KyselyServiceMetadataKey = Symbol.for('seedcord:kysely-postgres:service');
-export const KyselyTableMetadataKey = Symbol.for('seedcord:kysely-postgres:table');
+export const KyselyServiceMetadataKey = Symbol.for('seedcord:kysely:service');
+export const KyselyTableMetadataKey = Symbol.for('seedcord:kysely:table');
 
 /**
  * Registers a Kysely Postgres service with the specified key and options.

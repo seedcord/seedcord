@@ -1,5 +1,5 @@
 export { KyselyService } from './KyselyService';
-export { KyselyPostgres } from './KyselyPostgres';
+export { Kysely } from './Kysely';
 
 export { RegisterKyselyService } from './decorators/RegisterKyselyService';
 

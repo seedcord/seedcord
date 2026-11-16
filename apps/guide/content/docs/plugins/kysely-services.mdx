@@ -5,13 +5,13 @@ description: Write a service class for each Postgres table with the kysely plugi
 
 If every handler that looks up a user writes its own Kysely query, the same query ends up in several files. Changing how you find a user then means finding every copy.
 
-A service keeps one table's queries in one class. Extend [`KyselyService`](ref:plugin-kysely-postgres/KyselyService), pass the table name as its type argument, and decorate the class with a key. Handlers then call its methods through that key.
+A service keeps one table's queries in one class. Extend [`KyselyService`](ref:plugin-kysely/KyselyService), pass the table name as its type argument, and decorate the class with a key. Handlers then call its methods through that key.
 
 ```ts twoslash title="src/postgres/Users.ts"
 import {
     KyselyService,
     RegisterKyselyService
-} from '@seedcord/plugin-kysely-postgres';
+} from '@seedcord/plugin-kysely';
 
 // ---cut-start---
 import type { Generated } from 'kysely';
@@ -23,7 +23,7 @@ interface UsersTable {
     streak: number;
 }
 
-declare module '@seedcord/plugin-kysely-postgres' {
+declare module '@seedcord/plugin-kysely' {
     interface KyselyDatabase {
         schema: { users: UsersTable };
     }
@@ -44,9 +44,9 @@ export class Users extends KyselyService<'users'> {
 
 Here's what each part of `Users.ts` does.
 
-- **[`@RegisterKyselyService('users')`](ref:plugin-kysely-postgres/RegisterKyselyService)** gives the class its key. Your handlers read the service from `services` under that key, and the plugin also uses it as the table name unless you [pass another one](#the-key-is-also-the-table-name).
+- **[`@RegisterKyselyService('users')`](ref:plugin-kysely/RegisterKyselyService)** gives the class its key. Your handlers read the service from `services` under that key, and the plugin also uses it as the table name unless you [pass another one](#the-key-is-also-the-table-name).
 - **`KyselyService<'users'>`** is the base class, and its type argument is a table from [your schema](/plugins/kysely-schema). `this.table` holds that name, so `selectFrom(this.table)` checks `discord_id` against the `users` columns.
-- **`this.db`** returns the plugin's [`connection`](ref:plugin-kysely-postgres/KyselyPostgres.connection), so every service queries through the same pool. It can query every table in your schema, so a method can join `users` with another table.
+- **`this.db`** returns the plugin's [`connection`](ref:plugin-kysely/Kysely.connection), so every service queries through the same pool. It can query every table in your schema, so a method can join `users` with another table.
 - **`findByDiscordId`** keeps the lookup inside the class. Your handlers call that method on `services.users`, so none of them writes the query. `services.users` gets its type once [codegen has run](#typing-the-registry).
 
 ## You never construct a service
@@ -57,7 +57,7 @@ The plugin builds your services itself after it has connected and run your start
 
 <Callout type="warning">
 
-If a class isn't exported or has no [`@RegisterKyselyService`](ref:plugin-kysely-postgres/RegisterKyselyService), the plugin skips it without throwing or logging anything, and `services.users` reads `undefined`. Codegen skips the class too, so once it has run, `services.users` fails to compile.
+If a class isn't exported or has no [`@RegisterKyselyService`](ref:plugin-kysely/RegisterKyselyService), the plugin skips it without throwing or logging anything, and `services.users` reads `undefined`. Codegen skips the class too, so once it has run, `services.users` fails to compile.
 
 </Callout>
 
@@ -69,7 +69,7 @@ A service registered as `'users'` reads and writes the `users` table because the
 import {
     KyselyService,
     RegisterKyselyService
-} from '@seedcord/plugin-kysely-postgres';
+} from '@seedcord/plugin-kysely';
 
 import type { Generated } from 'kysely';
 
@@ -79,7 +79,7 @@ interface UsersTable {
 }
 
 // ---cut---
-declare module '@seedcord/plugin-kysely-postgres' {
+declare module '@seedcord/plugin-kysely' {
     // write this in src/database.ts. it's only here for the example
     interface KyselyDatabase {
         schema: { app_users: UsersTable };
@@ -99,7 +99,7 @@ Your editor also reads that schema to suggest table names for `table`. With a `b
 
 ```ts twoslash
 // @noErrors
-import { RegisterKyselyService } from '@seedcord/plugin-kysely-postgres';
+import { RegisterKyselyService } from '@seedcord/plugin-kysely';
 
 declare class Users {}
 interface UsersTable {
@@ -110,7 +110,7 @@ interface BansTable {
 }
 
 // ---cut---
-declare module '@seedcord/plugin-kysely-postgres' {
+declare module '@seedcord/plugin-kysely' {
     // write this in src/database.ts. it's only here for the example
     interface KyselyDatabase {
         schema: { app_users: UsersTable; bans: BansTable };
@@ -131,7 +131,7 @@ The plugin finds your services by importing `dir` when the bot starts. TypeScrip
 
 ```ts twoslash
 // @noErrors
-import { RegisterKyselyService } from '@seedcord/plugin-kysely-postgres';
+import { RegisterKyselyService } from '@seedcord/plugin-kysely';
 
 import type {} from '@seedcord/gateway';
 
@@ -140,7 +140,7 @@ declare class Guilds {}
 
 declare module '@seedcord/gateway' {
     interface PluginTypes {
-        '@seedcord/plugin-kysely-postgres': {
+        '@seedcord/plugin-kysely': {
             services: { users: typeof Users; guilds: typeof Guilds };
         };
     }
@@ -161,16 +161,16 @@ If you add a service or change its key, the decorator rejects the new key until 
 
 ## Reading a service
 
-A handler gets a service from the plugin's [`services`](ref:plugin-kysely-postgres/KyselyPostgres.services) map, under the key you declared.
+A handler gets a service from the plugin's [`services`](ref:plugin-kysely/Kysely.services) map, under the key you declared.
 
 ```ts twoslash hovers
 import { SlashHandler, SlashRoute } from '@seedcord/gateway';
 import {
     KyselyService,
     RegisterKyselyService
-} from '@seedcord/plugin-kysely-postgres';
+} from '@seedcord/plugin-kysely';
 
-import type { KyselyPostgres } from '@seedcord/plugin-kysely-postgres';
+import type { Kysely } from '@seedcord/plugin-kysely';
 import type { Generated } from 'kysely';
 
 interface UsersTable {
@@ -180,7 +180,7 @@ interface UsersTable {
     streak: number;
 }
 
-declare module '@seedcord/plugin-kysely-postgres' {
+declare module '@seedcord/plugin-kysely' {
     interface KyselyDatabase {
         schema: { users: UsersTable };
     }
@@ -199,10 +199,10 @@ class Users extends KyselyService<'users'> {
 
 declare module '@seedcord/gateway' {
     interface Core {
-        db: KyselyPostgres;
+        db: Kysely;
     }
     interface PluginTypes {
-        '@seedcord/plugin-kysely-postgres': {
+        '@seedcord/plugin-kysely': {
             services: { users: typeof Users };
         };
     }

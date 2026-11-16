@@ -17,13 +17,13 @@
 
 <div align="center">
 
-[![npm](https://img.shields.io/npm/v/@seedcord/plugin-kysely-postgres?style=flat-square&label=npm&labelColor=1f1f1f&color=c8341f)](https://www.npmjs.com/package/@seedcord/plugin-kysely-postgres) [![node](https://img.shields.io/node/v/@seedcord/plugin-kysely-postgres?style=flat-square&label=node&labelColor=1f1f1f&color=4d7d33)](https://nodejs.org) [![bun](https://img.shields.io/badge/dynamic/json?url=https%3A%2F%2Fraw.githubusercontent.com%2Fseedcord%2Fseedcord%2Fnext%2Fplugins%2Fkysely-postgres%2Fpackage.json&query=%24.engines.bun&style=flat-square&label=bun&labelColor=1f1f1f&color=fbf0df)](https://bun.com) [![license](https://img.shields.io/npm/l/@seedcord/plugin-kysely-postgres?style=flat-square&label=license&labelColor=1f1f1f&color=f8f6e8)](LICENSE)
+[![npm](https://img.shields.io/npm/v/@seedcord/plugin-kysely?style=flat-square&label=npm&labelColor=1f1f1f&color=c8341f)](https://www.npmjs.com/package/@seedcord/plugin-kysely) [![node](https://img.shields.io/node/v/@seedcord/plugin-kysely?style=flat-square&label=node&labelColor=1f1f1f&color=4d7d33)](https://nodejs.org) [![bun](https://img.shields.io/badge/dynamic/json?url=https%3A%2F%2Fraw.githubusercontent.com%2Fseedcord%2Fseedcord%2Fnext%2Fplugins%2Fkysely%2Fpackage.json&query=%24.engines.bun&style=flat-square&label=bun&labelColor=1f1f1f&color=fbf0df)](https://bun.com) [![license](https://img.shields.io/npm/l/@seedcord/plugin-kysely?style=flat-square&label=license&labelColor=1f1f1f&color=f8f6e8)](LICENSE)
 
 </div>
 
 ## About
 
-`@seedcord/plugin-kysely-postgres` connects a seedcord bot to Postgres through Kysely. It opens a connection pool when the bot starts, runs your migrations, loads your service classes, and closes the pool when the bot shuts down. Handlers can reach each service through `this.core`. You declare your database schema once, and Kysely types every query from it.
+`@seedcord/plugin-kysely` connects a seedcord bot to Postgres through Kysely. It opens a connection pool when the bot starts, runs your migrations, loads your service classes, and closes the pool when the bot shuts down. Handlers can reach each service through `this.core`. You declare your database schema once, and Kysely types every query from it.
 
 Install it when your bot stores data in Postgres. It works with a gateway bot and with an http bot on your own server. On a Cloudflare Workers bot, attaching it is a compile error.
 
@@ -32,7 +32,7 @@ seedcord is pre-1.0, so a minor version can break your bot. Each release's chang
 ## Installation
 
 ```sh
-pnpm add @seedcord/plugin-kysely-postgres kysely pg
+pnpm add @seedcord/plugin-kysely kysely pg
 ```
 
 ## Usage
@@ -42,7 +42,7 @@ Attach the plugin in `bot.ts`. Read it from `this.core` in a handler, under the 
 ```ts
 // bot.ts
 import { Seedcord } from '@seedcord/gateway';
-import { KyselyPostgres } from '@seedcord/plugin-kysely-postgres';
+import { Kysely } from '@seedcord/plugin-kysely';
 import { GatewayIntentBits } from 'discord.js';
 import { Converters, Envapter } from 'envapt';
 
@@ -54,7 +54,7 @@ export default new Seedcord({
         events: { path: null }
     },
     subscribers: { path: null }
-}).attach('sql', KyselyPostgres, {
+}).attach('sql', Kysely, {
     dir: './services',
     connectionString: Envapter.getRequired('DATABASE_URL', Converters.String),
     migrations: { dir: './migrations' }
@@ -65,7 +65,7 @@ Each file in `services/` holds a service for one table. `Database` is the table 
 
 ```ts
 // services/Users.ts
-import { KyselyService, RegisterKyselyService } from '@seedcord/plugin-kysely-postgres';
+import { KyselyService, RegisterKyselyService } from '@seedcord/plugin-kysely';
 
 import type { Database } from '../database';
 
@@ -76,7 +76,7 @@ export class Users extends KyselyService<'users'> {
     }
 }
 
-declare module '@seedcord/plugin-kysely-postgres' {
+declare module '@seedcord/plugin-kysely' {
     interface KyselyDatabase {
         schema: Database;
     }

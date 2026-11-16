@@ -56,7 +56,7 @@ export default {
                 '@seedcord/core',
                 '@keyv/sqlite',
                 '@seedcord/plugin-i18n',
-                '@seedcord/plugin-kysely-postgres',
+                '@seedcord/plugin-kysely',
                 '@seedcord/plugin-mongoose',
                 '@seedcord/plugin-tasks',
                 '@types/pg',
@@ -94,7 +94,7 @@ export default {
         'packages/types': typeTestsOnly,
         'packages/utils': { entry: [TYPE_TESTS], ignore: ['tests/files/fixtures/**'] },
         'plugins/i18n': typeTestsAndFixtures,
-        'plugins/kysely-postgres': typeTestsOnly,
+        'plugins/kysely': typeTestsOnly,
         'plugins/mongoose': typeTestsOnly,
         'plugins/tasks': typeTestsAndFixtures,
         'cli/seedcord': {

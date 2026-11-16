@@ -4,11 +4,11 @@ import { describe, it, expect } from 'vite-plus/test';
 import { KyselyServiceMetadataKey } from '#src/decorators/RegisterKyselyService';
 import { KyselyService } from '#src/KyselyService';
 
-import type { KyselyPostgres } from '#src/KyselyPostgres';
+import type { Kysely } from '#src/Kysely';
 import type { CoreBase } from '@seedcord/core';
 
 // justified: both guards throw before either argument is read
-const kysely = {} as unknown as KyselyPostgres;
+const kysely = {} as unknown as Kysely;
 const core = {} as unknown as CoreBase;
 
 class Undecorated extends KyselyService {}

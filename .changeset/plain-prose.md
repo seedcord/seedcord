@@ -12,7 +12,7 @@
 '@seedcord/types': patch
 '@seedcord/utils': patch
 '@seedcord/plugin-mongoose': patch
-'@seedcord/plugin-kysely-postgres': patch
+'@seedcord/plugin-kysely': patch
 '@seedcord/eslint-plugin': patch
 'eslint-plugin-discordjs': patch
 ---

@@ -48,7 +48,7 @@
         "@seedcord/gateway": "workspace:^",
         "@seedcord/http": "workspace:^",
         "@seedcord/plugin-i18n": "workspace:^",
-        "@seedcord/plugin-kysely-postgres": "workspace:^",
+        "@seedcord/plugin-kysely": "workspace:^",
         "@seedcord/plugin-mongoose": "workspace:^",
         "@seedcord/plugin-tasks": "workspace:^",
         "@seedcord/prose": "workspace:^",

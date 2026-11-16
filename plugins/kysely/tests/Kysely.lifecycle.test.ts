@@ -2,7 +2,7 @@ import { SeedcordErrorCode } from '@seedcord/errors';
 import { Logger } from '@seedcord/logger';
 import { describe, it, expect, beforeEach, afterEach, vi } from 'vite-plus/test';
 
-import { KyselyPostgres } from '#src/KyselyPostgres';
+import { Kysely } from '#src/Kysely';
 
 import { TestEnvironment } from './utils/test-env';
 
@@ -16,7 +16,7 @@ const { poolEnd, poolConnect, poolConstruct, poolQuery } = (await import('pg')) 
     poolQuery: ReturnType<typeof vi.fn>;
 };
 
-describe('KyselyPostgres lifecycle', () => {
+describe('Kysely lifecycle', () => {
     let testEnv: TestEnvironment;
     let mockCore: CoreBase;
 
@@ -34,8 +34,8 @@ describe('KyselyPostgres lifecycle', () => {
         vi.clearAllMocks();
     });
 
-    function build(timeout?: number): KyselyPostgres {
-        return new KyselyPostgres(mockCore, {
+    function build(timeout?: number): Kysely {
+        return new Kysely(mockCore, {
             connectionString: 'postgres://localhost:5432/test',
             migrations: { dir: testEnv.resolvePath('migrations') },
             dir: testEnv.resolvePath('services'),
@@ -44,7 +44,7 @@ describe('KyselyPostgres lifecycle', () => {
     }
 
     it('translates a connect failure into PluginConnectionFailed', async () => {
-        const plugin = new KyselyPostgres(mockCore, {
+        const plugin = new Kysely(mockCore, {
             connectionString: 'postgres://localhost:5432/postgres',
             migrations: { dir: testEnv.resolvePath('migrations') },
             dir: testEnv.resolvePath('services')
@@ -67,7 +67,7 @@ describe('KyselyPostgres lifecycle', () => {
 
     it('closes the pool when the connection test fails', async () => {
         // the only connect is the plugin's because targeting the admin db returns ensure() early
-        const plugin = new KyselyPostgres(mockCore, {
+        const plugin = new Kysely(mockCore, {
             connectionString: 'postgres://localhost:5432/postgres',
             migrations: { dir: testEnv.resolvePath('migrations') },
             dir: testEnv.resolvePath('services')
@@ -101,7 +101,7 @@ describe('KyselyPostgres lifecycle', () => {
     });
 
     it('retries after a failed init', async () => {
-        const plugin = new KyselyPostgres(mockCore, {
+        const plugin = new Kysely(mockCore, {
             connectionString: 'postgres://localhost:5432/postgres',
             migrations: { dir: testEnv.resolvePath('migrations') },
             dir: testEnv.resolvePath('services')
@@ -115,7 +115,7 @@ describe('KyselyPostgres lifecycle', () => {
     });
 
     it('closes the pool when service loading fails after connecting', async () => {
-        const plugin = new KyselyPostgres(mockCore, {
+        const plugin = new Kysely(mockCore, {
             connectionString: 'postgres://localhost:5432/test',
             migrations: { dir: testEnv.resolvePath('migrations') },
             dir: testEnv.resolvePath('absent')
@@ -130,7 +130,7 @@ describe('KyselyPostgres lifecycle', () => {
     });
 
     it('keeps the init failure when the cleanup close also fails', async () => {
-        const plugin = new KyselyPostgres(mockCore, {
+        const plugin = new Kysely(mockCore, {
             connectionString: 'postgres://localhost:5432/test',
             migrations: { dir: testEnv.resolvePath('migrations') },
             dir: testEnv.resolvePath('absent')
