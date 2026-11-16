@@ -158,7 +158,7 @@ The build then writes the worker to `.cloudflare/output` and starts it once in w
   deploy   cf deploy --prebuilt
 ```
 
-A worker that `seedcord build` didn't write has none of those ids, so its first request throws `CoreEdgeUnbuilt`.
+If `seedcord build` didn't write the worker, it doesn't have those ids, so its first request throws `CoreEdgeUnbuilt`.
 
 Besides those ids, the build leaves the worker unminified, with a source map beside it in `.cloudflare/output`. Cloudflare [maps the stack trace of an uncaught exception](https://developers.cloudflare.com/workers/observability/source-maps/) back to your source with that map. Cloudflare doesn't apply the map to an error that your bot catches and logs itself, though that trace is still readable since the bundle keeps your own names.
 
@@ -172,7 +172,7 @@ That runs `seedcord build && cf deploy --prebuilt`. `--prebuilt` tells `cf` to d
 
 ### The first deploy
 
-Cloudflare [fails a deploy](https://developers.cloudflare.com/workers/configuration/secrets/#validate-secrets-before-deploy) while a secret that the worker declares isn't configured on it. A new worker has none configured, so its first deploy passes every secret's value with `--secrets-file`, which takes a JSON or a `.env` file. Keep that file out of git.
+Cloudflare [fails a deploy](https://developers.cloudflare.com/workers/configuration/secrets/#validate-secrets-before-deploy) while a secret that the worker declares isn't configured on it. A new worker doesn't have any secrets configured, so its first deploy passes every secret's value with `--secrets-file`, which takes a JSON or a `.env` file. Keep that file out of git.
 
 The whole first deploy, in order:
 

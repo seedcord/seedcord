@@ -23,7 +23,7 @@ export interface GateContextBase extends DispatchOrigin, DispatchMemberValues {
     readonly core: CoreBase;
     /**
      * The member's role ids without the everyone role, the shape a raw interaction payload
-     * contains. Empty outside a guild or when the source contains none.
+     * contains. Empty outside a guild, or when the event doesn't carry the member's roles.
      */
     readonly memberRoleIds: readonly string[];
     /**

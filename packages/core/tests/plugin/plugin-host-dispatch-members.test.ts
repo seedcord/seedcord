@@ -57,7 +57,7 @@ describe('dispatch members at attach', () => {
         );
     });
 
-    it('claims none of a plugin members when one of them is rejected', () => {
+    it("doesn't claim any of a plugin's members when one of them is rejected", () => {
         class Mixed extends Bare {
             public override readonly dispatchMembers = { tag: (): string => 'a', reply: (): string => 'b' };
         }

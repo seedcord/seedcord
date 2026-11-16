@@ -23,7 +23,7 @@ describe('signal handlers on a plugin host', () => {
         TestServerHost.resetHost();
     });
 
-    it('installs none while the bot is only constructed', () => {
+    it("doesn't install a handler when you only construct the bot", () => {
         const before = signalListeners();
 
         signalHost();
@@ -40,7 +40,7 @@ describe('signal handlers on a plugin host', () => {
         expect(signalListeners()).toEqual([sigterm + 1, sigint + 1]);
     });
 
-    it('installs none on start under seedcord dev, which stops the bot itself', async () => {
+    it("doesn't install a handler on start under seedcord dev, which stops the bot itself", async () => {
         const before = signalListeners();
         using _dev = setDevFiles({ root: process.cwd(), listed: [], skippedFolders: [] });
 

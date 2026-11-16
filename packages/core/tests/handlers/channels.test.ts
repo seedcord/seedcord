@@ -81,7 +81,7 @@ describe('handler log channels', () => {
         expect(sink.records[0]?.label).toBe('Eventish');
     });
 
-    it('falls back to the default channel when a base declares none', async () => {
+    it("falls back to the default channel when a base doesn't declare one", async () => {
         await new Unchanneled('u').execute();
 
         expect(sink.records[0]?.channel).toBe('default');

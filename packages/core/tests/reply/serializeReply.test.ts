@@ -56,7 +56,7 @@ describe('serializeReply', () => {
         expect(result.files).toEqual([{ data: new Uint8Array([1, 2]), name: 'f.txt' }]);
     });
 
-    it('omits allowedMentions and files when the response has none', () => {
+    it("omits allowedMentions and files when the response doesn't have them", () => {
         const result = serializeReply({ components: [new TextDisplayBuilder().setContent('a')] }, ROUTE);
         expect(result.allowedMentions).toBeUndefined();
         expect(result.files).toBeUndefined();

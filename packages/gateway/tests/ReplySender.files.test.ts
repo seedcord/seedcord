@@ -36,7 +36,7 @@ describe('the portable file', () => {
         expect(files).toEqual([{ attachment: Buffer.from(BYTES), name: 'seed.txt', description: 'four bytes' }]);
     });
 
-    it('omits description when the file sets none', async () => {
+    it("omits description when the file doesn't set one", async () => {
         const files = await replyWith([{ data: BYTES, name: 'seed.txt' }]);
 
         expect(files?.[0]).not.toHaveProperty('description');
@@ -56,7 +56,7 @@ describe('the attachment metadata', () => {
         expect(files).toEqual([{ attachment: Buffer.from(BYTES), name: 'a.png', description: 'D', title: 'T' }]);
     });
 
-    it('omits title when the file sets none', async () => {
+    it("omits title when the file doesn't set one", async () => {
         const files = await replyWith([{ data: BYTES, name: 'a.png' }]);
 
         expect(files?.[0]).not.toHaveProperty('title');

@@ -19,7 +19,7 @@ function handlerOn(...routes: string[]): Ctor {
 }
 
 describe('RouteRegistry', () => {
-    it('writes none of the routes when a later one belongs to another class', () => {
+    it("doesn't write any of the routes when a later one belongs to another class", () => {
         const registry = new RouteRegistry<Slots>();
         registry.register(handlerOn('taken'), 'Keeper.ts');
 

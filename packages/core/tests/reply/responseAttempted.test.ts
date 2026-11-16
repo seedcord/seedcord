@@ -34,7 +34,7 @@ describe('responseAttempted', () => {
         expect(sent[0]).toMatchObject({ routeId: 'slash:ping', method: 'reply', messageId: 'm1' });
     });
 
-    it('reports a null message id for the acks that carry none', async () => {
+    it("reports a null message id for the acks that don't carry one", async () => {
         const { bus, sent } = busWithSpy();
         const sender = new TestSender(bus);
 

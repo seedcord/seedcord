@@ -45,7 +45,7 @@ describe('h', () => {
         expectEmbedError(() => toComponentEmbed(inContainer(nestedText)), '<TextDisplay> only takes text.');
     });
 
-    it('rejects children on a component that takes none, in TypeScript', () => {
+    it("rejects children on a component that doesn't take any, in TypeScript", () => {
         function Title(): EmbedElement {
             return h(TextDisplay, null, 'hi');
         }

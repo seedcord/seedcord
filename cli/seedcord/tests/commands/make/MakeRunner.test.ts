@@ -130,7 +130,7 @@ describe('MakeRunner', () => {
         });
     });
 
-    it('throws MakeNoTemplates with the templates folder when the bot and its plugins have none', async () => {
+    it("throws MakeNoTemplates with the templates folder when the bot and its plugins don't have any", async () => {
         using terminal = new PromptTerminal();
         const projectDir = makeProject(BOT_FILES);
 

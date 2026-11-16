@@ -120,24 +120,7 @@ prettify('someLongOption', { capitalize: true }); // 'Some long option'
 
 `capitalize` raises the first letter of the whole phrase and lowers the rest, which gives you a sentence. Title case takes your own pass over the words.
 
-## Picking at random
-
-[`fyShuffle`](ref:utils/fyShuffle) returns a shuffled copy and leaves the input alone. It runs Fisher-Yates, so every ordering is equally likely.
-
-```ts twoslash
-import { fyShuffle } from '@seedcord/gateway';
-
-declare const entrants: string[];
-
-// ---cut---
-const [winner] = fyShuffle(entrants);
-```
-
-<Callout type="tip">
-
-`items.sort(() => Math.random() - 0.5)` is the common way to write this by hand. It's measurably biased. A comparator has to give the same answer every time it gets a pair. That one answers at random on each call, which leaves some orderings far more likely than others.
-
-</Callout>
+## Random number codes
 
 [`generateCode`](ref:utils/generateCode) returns a random number with exactly that many digits, never starting with a zero. It draws from `Math.random()`, which suits a pairing code. Someone who sees enough of its earlier outputs can predict the next one, so use `node:crypto` for a code that guards something.
 

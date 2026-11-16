@@ -80,11 +80,11 @@ const messages = {
     [SeedcordErrorCode.CoreDirectoryRootUnknown]: (dir: string) =>
         `${paint.path(dir)} is relative to ${paint.bold('root')}, but nothing set ${paint.bold('root')} in this process. The ${paint.bold('seedcord')} CLI sets it, but a plain script or a test doesn't. Pass an absolute path instead, like ${paint.sky(`resolve(import.meta.dirname, '${dir}')`)}. If you ran a file from your build folder, run ${paint.path('index.mjs')} from that folder instead.`,
     [SeedcordErrorCode.CoreDirectoryNotBuilt]: (dir: string, root: string) =>
-        `When ${paint.bold('seedcord build')} ran, ${paint.path(dir)} was neither a folder under ${paint.bold('root')} (${paint.path(root)}) nor one listed in ${paint.bold('files')}, so the build holds none of its files. Create the folder, then build again.`,
+        `When ${paint.bold('seedcord build')} ran, ${paint.path(dir)} was neither a folder under ${paint.bold('root')} (${paint.path(root)}) nor one listed in ${paint.bold('files')}, so its files aren't in the build. Create the folder, then build again.`,
     [SeedcordErrorCode.CoreDirectoryNotListed]: (dir: string) =>
         `${paint.bold('readFiles')} was called on ${paint.path(dir)}, which is outside every folder that ${paint.bold('files')} lists in seedcord.config.ts. ${paint.bold('seedcord build')} bundles non-code files from only those folders. Add it to ${paint.bold('files')}, like ${paint.sky("files: ['./locales']")}.`,
     [SeedcordErrorCode.CoreDirectorySkipped]: (dir: string) =>
-        `${paint.path(dir)} is in a folder ${paint.bold('seedcord build')} skips, so a built bot holds none of its files. The build skips dot-folders, node_modules, outDir, the logs folder beside seedcord.config.ts, and project files like package.json. Move the files to a folder outside those.`,
+        `${paint.path(dir)} is in a folder ${paint.bold('seedcord build')} skips, so its files aren't in a built bot. The build skips dot-folders, node_modules, outDir, the logs folder beside seedcord.config.ts, and project files like package.json. Move the files to a folder outside those.`,
     [SeedcordErrorCode.CoreKvKeysUnsupported]: () =>
         `${paint.bold('collection.entries()')} reads the key list of the Keyv store in ${paint.bold('config.kv')}, but that store can't list its keys. Cache adapters like ${paint.bold('@keyv/memcache')} never can. Pass an adapter that can, like ${paint.bold('@keyv/redis')} or ${paint.bold('@keyv/sqlite')}.`,
     [SeedcordErrorCode.CoreKvDriverFailed]: (operation: 'read' | 'write' | 'delete' | 'list', key: string) =>
@@ -289,7 +289,7 @@ const messages = {
     [SeedcordErrorCode.CliConfigInvalidExport]: () =>
         `The seedcord config file must export an object as its default, like ${paint.bold('export default defineConfig({ ... })')}.`,
     [SeedcordErrorCode.CliConfigNotFound]: (baseDir: string, candidates: readonly string[]) =>
-        `Searched ${paint.path(baseDir)} for ${oneOf.format(candidates)} and found none. Run the command from your bot's folder, or create a ${paint.sky('seedcord.config.ts')} there.`,
+        `Searched ${paint.path(baseDir)} for ${oneOf.format(candidates)} and didn't find one. Run the command from your bot's folder, or create a ${paint.sky('seedcord.config.ts')} there.`,
     [SeedcordErrorCode.CliConfigInvalidField]: (field: string, expected: string) =>
         `${paint.bold(field)} in the seedcord config must be ${expected}.`,
     [SeedcordErrorCode.CliFileNotFound]: (path: string, field: string) =>

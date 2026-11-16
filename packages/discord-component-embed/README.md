@@ -423,7 +423,7 @@ Discord shows a preview only for a page served as `text/html` or `application/xh
 
 Discord waits about 10 seconds in total for the page and its linked JSON, then doesn't show a preview. The command stops at the same 10 seconds. A page that runs out of time counts as unreadable, and a linked JSON that runs out fails the check. If the page and its JSON take over 9 seconds together, the target passes with a warning.
 
-Pass a `.html` file to check a static build before you deploy it. For a `<link>`, the command still fetches its URL, and it can't check the host because a file has none.
+Pass a `.html` file to check a static build before you deploy it. For a `<link>`, the command still fetches its URL, and it can't check the host because a file doesn't have one.
 
 ```sh
 npx discord-component-embed check dist/blog/*.html

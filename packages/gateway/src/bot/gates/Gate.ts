@@ -68,7 +68,7 @@ export interface EventGateContext<
     readonly eventName: Names;
     /** The event's arguments, typed to that event's args tuple. */
     readonly payload: ClientEvents[Names];
-    /** The acting user derived from the payload, or null when the event has none. */
+    /** The acting user derived from the payload, or null when the event doesn't have one. */
     readonly user: User | null;
     /** The guild derived from the payload, or null. */
     readonly guild: Guild | null;

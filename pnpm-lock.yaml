@@ -1686,6 +1686,9 @@ importers:
       discord-api-types:
         specifier: ^0.38.52
         version: 0.38.57
+      es-toolkit:
+        specifier: catalog:deps
+        version: 1.53.2
       type-fest:
         specifier: catalog:deps
         version: 5.10.0

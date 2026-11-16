@@ -2,7 +2,7 @@
 
 Disallow conflicting props on a button builder.
 
-A button cannot set both a `customId` and a `url`. A Link button takes a `url` and cannot have a `customId` or a `skuId`. The other non-premium styles take a `customId` and cannot have a `url` or a `skuId`. A Premium button takes only a `skuId` and cannot have a `customId`, `label`, `url`, or `emoji`. The builders throw a `RangeError` at `toJSON` for every one of these combinations, and `disableValidators()` skips none of them.
+A button cannot set both a `customId` and a `url`. A Link button takes a `url` and cannot have a `customId` or a `skuId`. The other non-premium styles take a `customId` and cannot have a `url` or a `skuId`. A Premium button takes only a `skuId` and cannot have a `customId`, `label`, `url`, or `emoji`. The builders throw a `RangeError` at `toJSON` for every one of these combinations, and `disableValidators()` doesn't skip any of them.
 
 The rule reads a single fluent chain plus the constructor data behind it, so `new ButtonBuilder({ url })` counts the same as `.setURL(url)`, in either key casing. Props split across separate statements are not flagged, and style-specific checks only apply when the style is a static value. A `skuId` beside a `customId`, `label`, `url`, or `emoji` reports without any style, the pair throws under every style.
 

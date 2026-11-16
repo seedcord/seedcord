@@ -30,7 +30,7 @@ afterEach(() => {
 });
 
 describe('ShellMode', () => {
-    it('returns the default when the shell sets none of ENVIRONMENT, ENV, NODE_ENV and MODE', async () => {
+    it("returns the default when the shell doesn't set any of ENVIRONMENT, ENV, NODE_ENV and MODE", async () => {
         const dir = await configDir();
 
         expect(readShell({}).applyMode('production', dir)).toBe('production');
