@@ -8,13 +8,11 @@ import { SeedcordError } from '@seedcord/errors/internal';
 import { PluginServices } from '@seedcord/plugin-utils';
 import { keepDefined } from '@seedcord/utils';
 import { Envapter } from 'envapt';
-import { Kysely as KyselyClient, PostgresDialect } from 'kysely';
-import { Pool, type PoolConfig, type PoolClient } from 'pg';
+import { Kysely as KyselyClient } from 'kysely';
 
 import { KyselyServiceMetadataKey } from './decorators/RegisterKyselyService';
 import { KyselyMigrationManager } from './KyselyMigrationManager';
 import { KyselyService } from './KyselyService';
-import { PostgresDatabaseBootstrapper } from './PostgresDatabaseBootstrapper';
 
 import type { KyselyServiceConstructor } from './KyselyService';
 import type { KyselySchema } from './types/KyselyDatabase';
@@ -23,25 +21,25 @@ import type { KyselyOptions } from './types/KyselyOptions';
 import type { KyselyServices } from './types/KyselyServices';
 import type { CoreBase } from '@seedcord/core';
 import type { HmrUpdateEvent } from '@seedcord/types';
+import type { Dialect } from 'kysely';
 import type { MigrationInfo } from 'kysely/migration';
 
+// the dialect's class name without its suffix, like Postgres for PostgresDialect
+function labelOf(dialect: Dialect): string {
+    return dialect.constructor.name.replace(/Dialect$/, '');
+}
+
 /**
- * Postgres plugin using Kysely.
+ * Connects a bot to any database that Kysely has a dialect for.
  *
- * Sets up the connection pool, applies migrations, and registers decorated
- * services so the core can resolve them.
+ * Opens the connection, applies migrations, and registers decorated services so the core can resolve them.
  */
 export class Kysely extends Plugin<{ transport: 'any'; runtime: 'server' }> {
     public static readonly id = '@seedcord/plugin-kysely';
 
-    /** Exposed Kysely instance once `init` completes. */
-    declare public connection: KyselyClient<KyselySchema>;
-    private pool: Pool | null = null;
-    private onConnectHandler: ((client: PoolClient) => void) | null = null;
-    private migrationManager: KyselyMigrationManager | null = null;
+    private client: KyselyClient<KyselySchema> | null = null;
+    declare private label: string;
     private readonly serviceRegistry: PluginServices<KyselyServiceConstructor, KyselyServices>;
-    private readonly databaseBootstrapper: PostgresDatabaseBootstrapper;
-    private databaseName: string | null = null;
 
     /**
      * Map of all services registered with the plugin, keyed by their decorator name.
@@ -50,6 +48,18 @@ export class Kysely extends Plugin<{ transport: 'any'; runtime: 'server' }> {
      */
     public get services(): KyselyServices {
         return this.serviceRegistry.map;
+    }
+
+    /**
+     * The Kysely instance that the plugin built from your dialect.
+     *
+     * @throws A **SeedcordError** if accessed before the plugin connects.
+     */
+    public get connection(): KyselyClient<KyselySchema> {
+        if (!this.client) {
+            throw new SeedcordError(SeedcordErrorCode.PluginServicesNotReady, [this.constructor.name, 'connection']);
+        }
+        return this.client;
     }
 
     constructor(
@@ -66,7 +76,6 @@ export class Kysely extends Plugin<{ transport: 'any'; runtime: 'server' }> {
             decorator: '@RegisterKyselyService',
             create: (Service) => new Service(this, this.core)
         });
-        this.databaseBootstrapper = new PostgresDatabaseBootstrapper(this.logger);
 
         if (!Envapter.isDevelopment) return;
 
@@ -79,7 +88,7 @@ export class Kysely extends Plugin<{ transport: 'any'; runtime: 'server' }> {
     }
 
     /**
-     * Connects to Postgres, runs any startup migrations, and loads decorated services.
+     * Connects through your dialect, runs any startup migrations, and loads decorated services.
      */
     public async init(): Promise<void> {
         try {
@@ -95,7 +104,9 @@ export class Kysely extends Plugin<{ transport: 'any'; runtime: 'server' }> {
             await this.serviceRegistry.load();
         } catch (caught) {
             // the host skips dispose for a plugin whose init rejected so need to disconnect here
-            await this.disconnect().catch((error: unknown) => this.logger.error('failed to close the pool', error));
+            await this.disconnect().catch((error: unknown) =>
+                this.logger.error('failed to close the connection', error)
+            );
             throw caught;
         }
     }
@@ -109,159 +120,87 @@ export class Kysely extends Plugin<{ transport: 'any'; runtime: 'server' }> {
     }
 
     private async connect(): Promise<void> {
-        const pool = await this.resolvePool();
-        this.pool = pool;
-
-        this.registerOnConnectStatements(pool, this.options.onConnectSQL);
-
+        let label = 'the database';
         try {
-            await this.testPoolConnection(pool);
-
-            this.connection = new KyselyClient<KyselySchema>({
-                dialect: new PostgresDialect({ pool }),
-                ...keepDefined(this.options.kysely ?? {})
-            });
-
-            this.migrationManager = new KyselyMigrationManager({
-                db: this.connection,
-                logger: this.logger,
-                config: this.options.migrations
-            });
-
-            const dbLabel = this.databaseName ?? 'unknown';
-            this.logger.info(`Connected to Postgres database ${paint.sky.bold(dbLabel)}`);
+            const dialect = this.options.dialect();
+            label = labelOf(dialect);
+            this.label = label;
+            this.client = new KyselyClient<KyselySchema>({ dialect, ...keepDefined(this.options.kysely ?? {}) });
+            // kysely opens the driver on the first query
+            await this.client.connection().execute(() => Promise.resolve());
         } catch (err) {
-            throw new SeedcordError(
-                SeedcordErrorCode.PluginConnectionFailed,
-                ['Postgres', this.databaseName ?? undefined],
-                {
-                    cause: err
-                }
-            );
+            throw new SeedcordError(SeedcordErrorCode.PluginConnectionFailed, [label], { cause: err });
         }
+
+        this.logger.info(`Connected to ${paint.sky.bold(label)}`);
     }
 
     private async disconnect(): Promise<void> {
         this.serviceRegistry.clear();
 
-        const pool = this.pool;
-        if (!pool) return;
+        const { client } = this;
+        if (!client) return;
+        this.client = null;
 
-        if (this.onConnectHandler) {
-            pool.removeListener('connect', this.onConnectHandler);
-            this.onConnectHandler = null;
-        }
-
-        this.pool = null;
-        this.migrationManager = null;
-
-        this.logger.debug(paint.mute('Closing Postgres pool.'));
-        await pool.end().catch((err: unknown) => {
-            throw new SeedcordError(SeedcordErrorCode.PluginDisconnectFailed, ['Postgres'], { cause: err });
+        this.logger.debug(paint.mute(`Closing the ${this.label} connection.`));
+        await client.destroy().catch((err: unknown) => {
+            throw new SeedcordError(SeedcordErrorCode.PluginDisconnectFailed, [this.label], { cause: err });
         });
-        this.logger.info(paint.coral.bold('Disconnected from Postgres'));
+        this.logger.info(paint.coral.bold(`Disconnected from ${this.label}`));
     }
 
     /**
      * Runs migrations using the supplied options.
      *
      * @param options - Target migration or direction overrides
+     * @throws A **SeedcordError** if called before the plugin connects.
      */
     public async migrate(options?: MigrationOptions): Promise<void> {
-        await this.getMigrationManager().migrate(options);
+        await this.migrations().migrate(options);
     }
 
     /**
      * Runs a single upwards migration step unless a custom count is provided.
+     *
+     * @throws A **SeedcordError** if called before the plugin connects.
      */
     public async migrateUp(options?: StepMigrationOptions): Promise<void> {
-        await this.getMigrationManager().migrateUp(options);
+        await this.migrations().migrateUp(options);
     }
 
     /**
      * Runs a single downwards migration step unless a custom count is provided.
+     *
+     * @throws A **SeedcordError** if called before the plugin connects.
      */
     public async migrateDown(options?: StepMigrationOptions): Promise<void> {
-        await this.getMigrationManager().migrateDown(options);
+        await this.migrations().migrateDown(options);
     }
 
     /**
      * Lists every migration registered with the manager along with its execution state.
+     *
+     * @throws A **SeedcordError** if called before the plugin connects.
      */
     public listMigrations(): Promise<readonly MigrationInfo[]> {
-        return this.getMigrationManager().listMigrations();
+        return this.migrations().listMigrations();
     }
 
     /**
      * Lists unapplied migrations.
+     *
+     * @throws A **SeedcordError** if called before the plugin connects.
      */
     public async listPendingMigrations(): Promise<MigrationInfo[]> {
         const all = await this.listMigrations();
         return all.filter((m) => !m.executedAt);
     }
 
-    private getMigrationManager(): KyselyMigrationManager {
-        if (this.migrationManager) return this.migrationManager;
-
-        const manager = new KyselyMigrationManager({
+    private migrations(): KyselyMigrationManager {
+        return new KyselyMigrationManager({
             db: this.connection,
             logger: this.logger,
             config: this.options.migrations
         });
-
-        this.migrationManager = manager;
-        return manager;
-    }
-
-    private async resolvePool(): Promise<Pool> {
-        const { pool: providedPool, connectionString } = this.options;
-
-        if (providedPool instanceof Pool) {
-            this.logger.debug(paint.mute('Reusing provided Postgres pool instance.'));
-            this.databaseName = this.databaseBootstrapper.resolveDatabaseFromPool(providedPool);
-            return providedPool;
-        }
-
-        const baseConfig = this.createPoolConfig(providedPool, connectionString);
-        await this.databaseBootstrapper.ensure(baseConfig);
-        this.databaseName = this.databaseBootstrapper.resolveDatabaseName(baseConfig);
-
-        this.logger.debug(paint.mute('Creating new Postgres pool.'));
-        return new Pool(baseConfig);
-    }
-
-    private createPoolConfig(poolConfig?: PoolConfig, connectionString?: string): PoolConfig {
-        const config: PoolConfig = poolConfig ? { ...poolConfig } : {};
-
-        if (connectionString) {
-            config.connectionString = connectionString;
-        }
-
-        if (this.options.forceInsecureSSL) {
-            config.ssl = { rejectUnauthorized: false };
-        }
-
-        return config;
-    }
-
-    private registerOnConnectStatements(pool: Pool, statements?: string[]): void {
-        if (!statements?.length) return;
-
-        const queuedStatements = [...statements];
-        const handler = (client: PoolClient): void => {
-            void (async () => {
-                for (const sql of queuedStatements) {
-                    await client.query(sql);
-                }
-            })().catch((err) => this.logger.error('Failed to run onConnect SQL', err));
-        };
-
-        this.onConnectHandler = handler;
-        pool.on('connect', handler);
-    }
-
-    private async testPoolConnection(pool: Pool): Promise<void> {
-        const client = await pool.connect();
-        client.release();
     }
 }

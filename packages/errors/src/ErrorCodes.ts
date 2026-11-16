@@ -209,7 +209,7 @@ export enum SeedcordErrorCode {
     PluginDisposeFailures = 2002,
     /** A plugin service class is missing the decorator that registers it. */
     PluginServiceDecoratorMissing = 2003,
-    /** A plugin's `services` was read before the plugin finished `init()`. */
+    /** A plugin member, like `services` or `connection`, was read before the plugin finished `init()`. */
     PluginServicesNotReady = 2004,
     /** A plugin could not connect to the service it wraps. */
     PluginConnectionFailed = 2005,
@@ -231,8 +231,6 @@ export enum SeedcordErrorCode {
     PluginKyselyInvalidMigrationModule = 2204,
     /** A migration failed with a thrown value that is not an `Error`. */
     PluginKyselyNonErrorFailure = 2205,
-    /** Creating the target Postgres database failed. */
-    PluginKyselyBootstrapFailed = 2206,
 
     /** A `Tasks` method got a task class that its `path` did not load. */
     PluginTasksNotLoaded = 2301,

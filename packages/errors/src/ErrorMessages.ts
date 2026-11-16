@@ -243,8 +243,8 @@ const messages = {
         `${paint.iris(count)} plugins failed to dispose. Each one is listed below.`,
     [SeedcordErrorCode.PluginServiceDecoratorMissing]: (decorator: string, className: string) =>
         `${paint.sky(className)} is missing ${paint.bold(decorator)}. Add it to the class to register the service.`,
-    [SeedcordErrorCode.PluginServicesNotReady]: (pluginName: string) =>
-        `${paint.sky(`${pluginName}.services`)} was read before the plugin finished ${paint.bold('init()')}. Read it inside a handler, or after start() resolves.`,
+    [SeedcordErrorCode.PluginServicesNotReady]: (pluginName: string, member: string) =>
+        `${paint.sky(`${pluginName}.${member}`)} was read before the plugin finished ${paint.bold('init()')}. Read it inside a handler, or after start() resolves.`,
     [SeedcordErrorCode.PluginConnectionFailed]: (service: string, target?: string) =>
         `Could not connect to ${paint.bold(service)}${target ? ` (${paint.sky(target)})` : ''}. Check that it is running and that the connection string is right.`,
     [SeedcordErrorCode.PluginDisconnectFailed]: (service: string) =>
@@ -265,8 +265,6 @@ const messages = {
         `${paint.path(filePath)} needs an up function because it is in the migrations folder. Export up, and down if you need it, by name or on a default export object. If the file is a helper, move it out of the folder.`,
     [SeedcordErrorCode.PluginKyselyNonErrorFailure]: (message: string) =>
         `A migration failed with a value that is not an Error: ${message}.`,
-    [SeedcordErrorCode.PluginKyselyBootstrapFailed]: (databaseName: string) =>
-        `Could not create the database ${paint.sky(databaseName)}. Check that the database user may create databases, or create it yourself.`,
 
     [SeedcordErrorCode.PluginTasksNotLoaded]: (key: string, path: string) =>
         `${paint.sky(key)} is not a loaded task. Export it from a file under ${paint.path(path)} with ${paint.bold('@RegisterTask')}.`,

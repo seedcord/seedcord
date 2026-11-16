@@ -1,12 +1,14 @@
 import { Kysely } from '#src/Kysely';
 
+import { memorySqlite } from './utils/dialects';
+
 import type { KyselyOptions } from '#src/types/KyselyOptions';
 import type { PluginHost } from '@seedcord/core/plugin';
 import type { Seedcord as GatewaySeedcord } from '@seedcord/gateway';
 import type { Seedcord as HttpSeedcord } from '@seedcord/http';
 
 const options: KyselyOptions = {
-    connectionString: 'postgres://localhost:5432/test',
+    dialect: memorySqlite,
     migrations: { dir: '/migrations' },
     dir: '/services'
 };

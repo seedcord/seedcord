@@ -1,6 +1,5 @@
 import type { MigrationOptions } from './KyselyMigration';
-import type { KyselyConfig } from 'kysely';
-import type { Pool, PoolConfig } from 'pg';
+import type { Dialect, KyselyConfig } from 'kysely';
 import type { Except } from 'type-fest';
 
 /**
@@ -25,25 +24,22 @@ export interface KyselyMigrationsOptions {
 }
 
 /**
- * Configuration options for Postgres connection and service discovery.
+ * Options for the Kysely plugin's connection, migrations and services.
  */
 export interface KyselyOptions {
     /** Directory containing service classes. Make sure file(s)/folder(s) are built to `.js` in dist and aren't merged into a single file. */
     readonly dir: string;
     /** Migration settings */
     readonly migrations: KyselyMigrationsOptions;
-    /** Optional existing Pool instance or configuration overrides */
-    readonly pool?: Pool | PoolConfig;
-    /** Optional connection string used when a pool config is provided */
-    readonly connectionString?: string;
-    /** Optional SQL statements executed for each new connection */
-    readonly onConnectSQL?: string[];
-    /** Force using insecure SSL */
-    readonly forceInsecureSSL?: boolean;
-    /** Kysely config (excludes dialect because it's Postgres for this plugin) */
+    /**
+     * Builds the Kysely dialect for your database. The plugin calls it in `init()` and never while
+     * `seedcord build` or `seedcord codegen` loads your bot.
+     */
+    readonly dialect: () => Dialect;
+    /** Kysely config, apart from the dialect */
     readonly kysely?: Except<KyselyConfig, 'dialect'>;
     /**
-     * How long closing the pool may take during shutdown, in milliseconds.
+     * How long closing the connection may take during shutdown, in milliseconds.
      *
      * @defaultValue `10_000`
      */

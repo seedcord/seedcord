@@ -38,7 +38,7 @@ export class PluginServices<TClass extends object, TServices extends object> {
 
     public get map(): TServices {
         if (!this.loaded) {
-            throw new SeedcordError(SeedcordErrorCode.PluginServicesNotReady, [this.options.pluginName]);
+            throw new SeedcordError(SeedcordErrorCode.PluginServicesNotReady, [this.options.pluginName, 'services']);
         }
         return this.services;
     }

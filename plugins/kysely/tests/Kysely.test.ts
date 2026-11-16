@@ -4,6 +4,7 @@ import { describe, it, expect, beforeEach, afterEach, onTestFinished, vi } from 
 
 import { Kysely } from '#src/Kysely';
 
+import { memorySqlite } from './utils/dialects';
 import { pluginsPath } from './utils/source-path';
 import { TestEnvironment } from './utils/test-env';
 
@@ -46,7 +47,7 @@ describe('Kysely Plugin Integration', () => {
         );
 
         plugin = new Kysely(mockCore, {
-            connectionString: 'postgres://localhost:5432/test',
+            dialect: memorySqlite,
             migrations: { dir: testEnv.resolvePath('migrations') },
             dir: testEnv.resolvePath(servicesDir)
         });
@@ -76,7 +77,7 @@ describe('Kysely Plugin Integration', () => {
         );
         await testEnv.createFile('services/index.ts', "export { Plain } from './Plain';");
         plugin = new Kysely(mockCore, {
-            connectionString: 'postgres://localhost:5432/test',
+            dialect: memorySqlite,
             migrations: { dir: testEnv.resolvePath('migrations') },
             dir: testEnv.resolvePath('services')
         });
@@ -104,7 +105,7 @@ describe('Kysely Plugin Integration', () => {
         );
 
         plugin = new Kysely(mockCore, {
-            connectionString: 'postgres://localhost:5432/test',
+            dialect: memorySqlite,
             migrations: { dir: testEnv.resolvePath('migrations') },
             dir: testEnv.resolvePath(servicesDir)
         });
@@ -167,7 +168,7 @@ describe('Kysely Plugin Integration', () => {
         );
 
         plugin = new Kysely(mockCore, {
-            connectionString: 'postgres://localhost:5432/test',
+            dialect: memorySqlite,
             migrations: { dir: testEnv.resolvePath('migrations') },
             dir: testEnv.resolvePath(servicesDir)
         });
@@ -215,7 +216,7 @@ describe('Kysely Plugin Integration', () => {
         await testEnv.createFile(`${servicesDir}/ZBroken.ts`, 'export const broken = {{{ not valid');
 
         plugin = new Kysely(mockCore, {
-            connectionString: 'postgres://localhost:5432/test',
+            dialect: memorySqlite,
             migrations: { dir: testEnv.resolvePath('migrations') },
             dir: testEnv.resolvePath(servicesDir)
         });
@@ -256,7 +257,7 @@ describe('Kysely Plugin Integration', () => {
         );
 
         plugin = new Kysely(mockCore, {
-            connectionString: 'postgres://localhost:5432/test',
+            dialect: memorySqlite,
             migrations: { dir: testEnv.resolvePath('migrations') },
             dir: testEnv.resolvePath(servicesDir)
         });
@@ -277,7 +278,7 @@ describe('Kysely Plugin Integration', () => {
         setDevChannel({ send, on: vi.fn(), off: vi.fn() });
 
         plugin = new Kysely(mockCore, {
-            connectionString: 'postgres://localhost:5432/test',
+            dialect: memorySqlite,
             migrations: { dir: './migrations' },
             dir: './services'
         });
