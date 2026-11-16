@@ -45,7 +45,7 @@ declare module '@seedcord/gateway' {
     }
     // SlashRegistry, the context menu registries, and EmojiMap follow
     interface PluginTypes {
-        'seedcord-locales': Fits<(typeof Bot)['i18n'], { messages: { bye: true; greet: true } }>;
+        '@seedcord/plugin-i18n': Fits<(typeof Bot)['i18n'], { messages: { bye: {}; greet: { user: 'text' } } }>;
     }
     interface DispatchMemberValues {
         t: Awaited<ReturnType<(typeof Bot)['i18n']['dispatchMembers']['t']>>;
@@ -59,7 +59,7 @@ export {};
 
 [`AttachedPlugin`](ref:core/AttachedPlugin) is the type that omits those members. It also omits the class's private members, so `this.core.db` isn't assignable to a parameter typed as the [`Mongoose`](ref:plugin-mongoose/Mongoose) class. To pass it to a function of your own, type that parameter as `AttachedPlugin<Mongoose>`.
 
-[`PluginTypes`](ref:core/PluginTypes) holds the types that each plugin's [`codegen()`](ref:core/Plugin.codegen) returns from your project's files. Say a translations plugin attached as `i18n` writes the row above. It lists the message keys in your `locales` folder, so `this.core.i18n.t()` accepts `'bye'` or `'greet'` and rejects a typo. Each row is keyed by the plugin's `static id`, like `'seedcord-locales'`, and `Fits` checks it against the plugin at every key you attached it under. To add a row from your own plugin, read [Writing types from codegen](/writing-plugins/codegen).
+[`PluginTypes`](ref:core/PluginTypes) holds the types that each plugin's [`codegen()`](ref:core/Plugin.codegen) returns from your project's files. The [i18n plugin](/plugins/i18n), attached as `i18n`, writes the row above. It lists the message keys in your `locales` folder and the variables each one takes, so `this.t()` accepts `'bye'` or `'greet'` and rejects a typo. Each row is keyed by the plugin's `static id`, like `'@seedcord/plugin-i18n'`. `Fits` checks the row against the plugin at every key you attached it under. To add a row from your own plugin, read [Writing types from codegen](/writing-plugins/codegen).
 
 [`DispatchMemberValues`](ref:types/DispatchMemberValues) gets one row for each key in a plugin's [`dispatchMembers`](/writing-plugins#adding-a-value-to-every-handler). The `t` row types `this.t` on every handler.
 

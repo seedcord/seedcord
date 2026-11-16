@@ -3,6 +3,7 @@ import { SeedcordError, SeedcordTypeError } from '@seedcord/errors/internal';
 import { asError } from '@seedcord/utils/internal';
 
 import { MemberValues } from '#src/dispatch/DispatchContext';
+import { readsCommandFile } from '#src/plugin/pluginSlots';
 
 import type { DispatchContext } from '#src/dispatch/DispatchContext';
 import type { DispatchOrigin } from '#src/dispatch/DispatchOrigin';
@@ -117,6 +118,10 @@ export class PluginRegistry {
 
     public get members(): readonly { readonly key: string; readonly member: string }[] {
         return [...this.claimed].map(([member, { key }]) => ({ key, member }));
+    }
+
+    public readsCommandFile(file: string): boolean {
+        return this.list.some(({ instance }) => readsCommandFile(instance, file));
     }
 
     public add(attachment: Attachment): void {

@@ -1,10 +1,9 @@
 import { Seedcord } from '@seedcord/gateway';
+import { I18n } from '@seedcord/plugin-i18n';
 import { Mongoose } from '@seedcord/plugin-mongoose';
 import { GatewayIntentBits, Partials } from 'discord.js';
 import { Converters, Envapter } from 'envapt';
 import { Envapt } from 'envapt/legacy';
-
-import { I18n } from './plugins/I18n';
 
 export class Vars extends Envapter {
     @Envapt('MONGO_URI', { fallback: 'mongodb://localhost:27017/' })
@@ -57,6 +56,6 @@ export const seedcord = new Seedcord({
         uri: Vars.mongoUri,
         name: Vars.dbName
     })
-    .attach('i18n', I18n, './locales');
+    .attach('i18n', I18n, { path: './locales' });
 
 export default seedcord;

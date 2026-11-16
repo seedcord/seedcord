@@ -248,6 +248,31 @@ export enum SeedcordErrorCode {
     PluginTasksDurationTooLong = 2306,
     /** A `Tasks` method got a class whose task key belongs to a different loaded class. */
     PluginTasksKeyTaken = 2307,
+    /** A `.ftl` file under the i18n plugin's `dir` has a line Fluent can't parse. */
+    PluginI18nSyntax = 2401,
+    /** A locale file's name under the i18n plugin's `dir` isn't one of Discord's locale codes. */
+    PluginI18nNotALocale = 2402,
+    /** A locale file has a message, variable, or attribute that the base locale's file doesn't have. */
+    PluginI18nNotInBase = 2403,
+    /** The i18n plugin's `dir` doesn't have a file for its base locale. */
+    PluginI18nBaseMissing = 2404,
+    /** A `t()` call has a key that no `.ftl` file has, usually because codegen hasn't run since the files changed. */
+    PluginI18nOutOfDate = 2405,
+    /** A locale's command translations have a name that isn't on any command, option, choice, or menu. */
+    PluginI18nUnknownCommand = 2406,
+    /** A `.ts` file under the i18n plugin's `dir` doesn't export `commandTranslations(...)` as its default. */
+    PluginI18nNotTranslations = 2407,
+    /** A translated command name, description, or choice name breaks one of Discord's rules for it. */
+    PluginI18nDiscordRejects = 2408,
+    /**
+     * A locale's `.ftl` file uses a term like `{ -brand }`, or another message,
+     * without defining it in that file. A definition in another locale's file doesn't count.
+     */
+    PluginI18nMissingReference = 2409,
+    /** Fluent threw while `t()` formatted a message, like for a variable that the call didn't pass. */
+    PluginI18nFormatFailed = 2410,
+    /** Two or more command translation files have problems. Each one is in the error's `errors`. */
+    PluginI18nCommandProblems = 2411,
 
     /** Someone pressed Ctrl-C at a prompt in `seedcord` or `create-seedcord`. */
     CliCancelled = 3001,

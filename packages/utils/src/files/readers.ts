@@ -4,16 +4,26 @@ import { displayPath, SeedcordError } from '@seedcord/errors/internal';
 import { importFailed } from '#src/files/importFailed';
 import { asError } from '#src/misc/asError';
 
+import { posixRelative } from './paths';
 import { fileSource } from './sources';
 
 import type { Buffer } from 'node:buffer';
 
+/** A file that {@link importFiles} or {@link readFiles} found and hasn't imported or read yet. */
 interface FoundFile {
     fullPath: string;
     /**
      * The path to show in logs. A file under the working directory gets a relative path. Any other file gets its absolute path.
      */
     relativePath: string;
+    /** The file's path inside the folder you passed, with forward slashes, like `nested/faq.md`. */
+    pathInDir: string;
+}
+
+/** Options for {@link importFiles} and {@link readFiles}. */
+interface FileWalkOptions {
+    /** Return `false` to skip a file. A skipped file is never imported or read. */
+    readonly filter?: (file: FoundFile) => boolean;
 }
 
 interface ImportedFile extends FoundFile {
@@ -22,6 +32,17 @@ interface ImportedFile extends FoundFile {
 
 interface ReadFile extends FoundFile {
     bytes: Buffer;
+}
+
+function* filteredFiles<Loader>(
+    folder: string,
+    files: Iterable<[fullPath: string, load: Loader]>,
+    { filter }: FileWalkOptions
+): Generator<[FoundFile, Loader]> {
+    for (const [fullPath, load] of files) {
+        const found = { fullPath, relativePath: displayPath(fullPath), pathInDir: posixRelative(folder, fullPath) };
+        if (!filter || filter(found)) yield [found, load];
+    }
 }
 
 /**
@@ -42,16 +63,16 @@ interface ReadFile extends FoundFile {
  * }
  * ```
  */
-export async function* importFiles(dir: string): AsyncGenerator<ImportedFile> {
-    for (const [fullPath, load] of await fileSource().modules(dir)) {
-        const relativePath = displayPath(fullPath);
+export async function* importFiles(dir: string, options: FileWalkOptions = {}): AsyncGenerator<ImportedFile> {
+    const { folder, files } = await fileSource().modules(dir);
+    for (const [found, load] of filteredFiles(folder, files, options)) {
         let imported: Record<string, unknown>;
         try {
             imported = await load();
         } catch (err) {
-            throw importFailed(relativePath, err);
+            throw importFailed(found.relativePath, err);
         }
-        yield { fullPath, relativePath, imported };
+        yield { ...found, imported };
     }
 }
 
@@ -73,17 +94,17 @@ export async function* importFiles(dir: string): AsyncGenerator<ImportedFile> {
  * }
  * ```
  */
-export async function* readFiles(dir: string): AsyncGenerator<ReadFile> {
-    for (const [fullPath, load] of await fileSource().files(dir)) {
-        const relativePath = displayPath(fullPath);
+export async function* readFiles(dir: string, options: FileWalkOptions = {}): AsyncGenerator<ReadFile> {
+    const { folder, files } = await fileSource().files(dir);
+    for (const [found, load] of filteredFiles(folder, files, options)) {
         let bytes: Buffer;
         try {
             bytes = await load();
         } catch (err) {
-            throw new SeedcordError(SeedcordErrorCode.CorePathUnreadable, [relativePath, asError(err).message], {
+            throw new SeedcordError(SeedcordErrorCode.CorePathUnreadable, [found.relativePath, asError(err).message], {
                 cause: err
             });
         }
-        yield { fullPath, relativePath, bytes };
+        yield { ...found, bytes };
     }
 }

@@ -10,6 +10,7 @@ import { testConfig } from '#tests/utils/test-config';
 import { it } from '#tests/utils/test-env';
 
 import type { Core } from '#interfaces/Core';
+import type { CoreBase } from '@seedcord/core';
 import type { CommandRegistry } from '@seedcord/core/internal';
 import type { DevChannel, SeedcordCliEvents, SeedcordFrameworkEvents } from '@seedcord/types/internal';
 import type { Mock } from 'vite-plus/test';
@@ -39,6 +40,15 @@ class CriticalPlugin extends Plugin {
     public declareCritical(patterns: string[]): void {
         this.registerCriticalFiles(patterns);
     }
+}
+
+class TranslationsPlugin extends Plugin {
+    public constructor(host: CoreBase, patterns: string[]) {
+        super(host);
+        this.registerCommandFiles(patterns);
+    }
+
+    public init(): void {}
 }
 
 const PING_COMMAND = `
@@ -120,6 +130,30 @@ describe('dev channel routing', () => {
         expect(sentEvents).toContain('seedcord:commands-update-prompt');
         const promptPayload = send.mock.calls.find((args) => args[0] === 'seedcord:commands-update-prompt')?.[1];
         expect(promptPayload).toHaveProperty('files');
+    });
+
+    it('CommandRegistry.onHmr prompts a commands update for a file that a plugin registered', async ({ testEnv }) => {
+        const { channel, send } = fakeChannel();
+        setDevChannel(channel);
+
+        await testEnv.createFile('commands/Ping.ts', PING_COMMAND);
+        const translations = await testEnv.createFile('locales/pl.ts', 'export default {};\n');
+        const notes = await testEnv.createFile('locales/notes/pl.ts', 'export default {};\n');
+        const declarations = await testEnv.createFile('locales/pl.d.ts', 'export {};\n');
+        const config = testConfig({ commands: testEnv.resolvePath('commands') });
+        const locales = testEnv.resolvePath('locales');
+        await using seedcord = new Seedcord(config).attach('translations', TranslationsPlugin, [
+            `${locales}/*.ts`,
+            `!${locales}/*.d.ts`
+        ]);
+        await registryOf(seedcord).init();
+
+        await registryOf(seedcord).onHmr({ file: notes, type: 'update' });
+        await registryOf(seedcord).onHmr({ file: declarations, type: 'update' });
+        await registryOf(seedcord).onHmr({ file: translations, type: 'update' });
+
+        const prompts = send.mock.calls.filter((args) => args[0] === 'seedcord:commands-update-prompt');
+        expect(prompts.map((args) => args[1])).toEqual([{ files: [expect.stringContaining('pl.ts')] }]);
     });
 
     it('CommandRegistry.onHmr skips the prompt for a sibling folder that shares the commands prefix', async ({

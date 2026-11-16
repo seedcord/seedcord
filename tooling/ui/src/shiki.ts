@@ -1,4 +1,5 @@
 import langBash from '@shikijs/langs/bash';
+import langFluent from '@shikijs/langs/fluent';
 import langJs from '@shikijs/langs/javascript';
 import langJson from '@shikijs/langs/json';
 import langJsx from '@shikijs/langs/jsx';
@@ -35,6 +36,8 @@ const HIGHLIGHTABLE = [
     'yml',
     'toml',
     'hbs',
+    'fluent',
+    'ftl',
     ...SHELLS,
     'txt',
     'text',
@@ -65,7 +68,7 @@ let highlighterPromise: Promise<HighlighterCore> | null = null;
 function ensureHighlighter(): Promise<HighlighterCore> {
     highlighterPromise ??= createHighlighterCore({
         themes: [seedcordBrandLight, seedcordBrandDark],
-        langs: [langTs, langTsx, langJs, langJsx, langJson, langYaml, langToml, langHandlebars, langBash],
+        langs: [langTs, langTsx, langJs, langJsx, langJson, langYaml, langToml, langHandlebars, langBash, langFluent],
         engine: createOnigurumaEngine(import('shiki/wasm'))
     });
     return highlighterPromise;

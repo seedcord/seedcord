@@ -707,6 +707,9 @@ importers:
       '@seedcord/http':
         specifier: workspace:^
         version: link:../../packages/http
+      '@seedcord/plugin-i18n':
+        specifier: workspace:^
+        version: link:../../plugins/i18n
       '@seedcord/plugin-kysely-postgres':
         specifier: workspace:^
         version: link:../../plugins/kysely-postgres
@@ -1174,6 +1177,9 @@ importers:
       '@seedcord/http':
         specifier: workspace:^
         version: link:../../packages/http
+      '@seedcord/plugin-i18n':
+        specifier: workspace:^
+        version: link:../../plugins/i18n
       db0:
         specifier: catalog:deps
         version: 0.4.2
@@ -1214,6 +1220,9 @@ importers:
       '@seedcord/gateway':
         specifier: workspace:^
         version: link:../../packages/gateway
+      '@seedcord/plugin-i18n':
+        specifier: workspace:^
+        version: link:../../plugins/i18n
       '@seedcord/plugin-mongoose':
         specifier: workspace:^
         version: link:../../plugins/mongoose
@@ -1248,6 +1257,9 @@ importers:
       '@seedcord/http':
         specifier: workspace:^
         version: link:../../packages/http
+      '@seedcord/plugin-i18n':
+        specifier: workspace:^
+        version: link:../../plugins/i18n
       discord-api-types:
         specifier: ^0.38.52
         version: 0.38.57
@@ -1689,6 +1701,9 @@ importers:
       es-toolkit:
         specifier: catalog:deps
         version: 1.53.2
+      picomatch:
+        specifier: ^4.0.7
+        version: 4.0.7
       type-fest:
         specifier: catalog:deps
         version: 5.10.0
@@ -1711,9 +1726,58 @@ importers:
       '@seedcord/vite-config':
         specifier: workspace:^
         version: link:../../tooling/vite-config
+      '@types/picomatch':
+        specifier: ^4.0.3
+        version: 4.0.3
       discord.js:
         specifier: catalog:peer
         version: 14.27.0
+
+  plugins/i18n:
+    dependencies:
+      '@fluent/bundle':
+        specifier: ^0.19.1
+        version: 0.19.1
+      '@fluent/syntax':
+        specifier: ^0.19.0
+        version: 0.19.0
+      '@seedcord/errors':
+        specifier: workspace:^
+        version: link:../../packages/errors
+      '@seedcord/utils':
+        specifier: workspace:^
+        version: link:../../packages/utils
+      discord-api-types:
+        specifier: ^0.38.52
+        version: 0.38.57
+      type-fest:
+        specifier: catalog:deps
+        version: 5.10.0
+      typescript:
+        specifier: catalog:consumerTypes
+        version: 6.0.3
+    devDependencies:
+      '@seedcord/core':
+        specifier: workspace:^
+        version: link:../../packages/core
+      '@seedcord/eslint-config':
+        specifier: workspace:^
+        version: link:../../tooling/eslint-config
+      '@seedcord/logger':
+        specifier: workspace:^
+        version: link:../../packages/logger
+      '@seedcord/prose':
+        specifier: workspace:^
+        version: link:../../tooling/prose
+      '@seedcord/tsconfig':
+        specifier: workspace:^
+        version: link:../../tooling/tsconfig
+      '@seedcord/tsdown-config':
+        specifier: workspace:^
+        version: link:../../tooling/tsdown-config
+      '@seedcord/vite-config':
+        specifier: workspace:^
+        version: link:../../tooling/vite-config
 
   plugins/kysely-postgres:
     dependencies:
@@ -3517,6 +3581,14 @@ packages:
 
   '@floating-ui/utils@0.2.12':
     resolution: {integrity: sha512-HpCo8tmWzLVad5s2d19EhAz5zqrrQ6s69qd6moPMQvkOuSwDT1YgRfWSVuc4ennqrgv3OHppiOGMQ7oC13yIww==}
+
+  '@fluent/bundle@0.19.1':
+    resolution: {integrity: sha512-SWJLZrPamDPsJlFFOW1nkgN0j0rbPbmSdmK0XAoXlyqKieLtMVl4vzng3aR5pwKoUx0scug8+YY2oct3fdfy9A==}
+    engines: {node: '>=18.0.0', npm: '>=7.0.0'}
+
+  '@fluent/syntax@0.19.0':
+    resolution: {integrity: sha512-5D2qVpZrgpjtqU4eNOcWGp1gnUCgjfM+vKGE2y03kKN6z5EBhtx0qdRFbg8QuNNj8wXNoX93KJoYb+NqoxswmQ==}
+    engines: {node: '>=14.0.0', npm: '>=7.0.0'}
 
   '@fumari/image-size@0.1.1':
     resolution: {integrity: sha512-iaiV2wyzJ4mW358NX4CX3yGit+WjKYzpaQ+rldK9BjL/5jFpeV6ruWnZVq7MEyMn3Gd0DLi8g/79NZAAQaGscw==}
@@ -5718,6 +5790,9 @@ packages:
 
   '@types/pg@8.23.1':
     resolution: {integrity: sha512-fKVHpikPdg4GKks3JuLEhvwSyvwzF23hnabPy6DD8ljVbC7+6J5dQzdv4arV6jqq57djnMgs1HKBxX4P8aBI3A==}
+
+  '@types/picomatch@4.0.3':
+    resolution: {integrity: sha512-iG0T6+nYJ9FAPmx9SsUlnwcq1ZVRuCXcVEvWnntoPlrOpwtSTKNDC9uVAxTsC3PUvJ+99n4RpAcNgBbHX3JSnQ==}
 
   '@types/react-dom@19.3.0':
     resolution: {integrity: sha512-ZI7bU42mZXXKHn/qNLEw2IrbiINU7X5+vfgdixBHkCNpYWXjKgfQ/P+uyGb5CjOLB9UcnTeg3rylQtV2hym44Q==}
@@ -11717,6 +11792,10 @@ snapshots:
 
   '@floating-ui/utils@0.2.12': {}
 
+  '@fluent/bundle@0.19.1': {}
+
+  '@fluent/syntax@0.19.0': {}
+
   '@fumari/image-size@0.1.1': {}
 
   '@henrygd/queue@1.2.0': {}
@@ -13424,6 +13503,8 @@ snapshots:
       '@types/node': 26.6.5
       pg-protocol: 1.16.1
       pg-types: 2.2.0
+
+  '@types/picomatch@4.0.3': {}
 
   '@types/react-dom@19.3.0(@types/react@19.3.0)':
     dependencies:

@@ -124,16 +124,28 @@ function buildSettings(p: BrandPalette): BrandThemeSetting[] {
             ],
             settings: { foreground: p.punctuation }
         },
-        {
-            scope: ['meta.type.tuple meta.brace.square'],
-            settings: { foreground: p.type, fontStyle: 'italic' }
-        },
-        {
-            scope: ['meta.type variable.other'],
-            settings: { foreground: p.type, fontStyle: 'italic' }
-        },
+        ...typePositionSettings(p),
+        ...grammarSettings(p)
+    ];
+}
+
+// everything written in a type reads italic, like the type names around it
+function typePositionSettings(p: BrandPalette): BrandThemeSetting[] {
+    return [
+        { scope: ['meta.type.tuple meta.brace.square'], settings: { foreground: p.type, fontStyle: 'italic' } },
+        { scope: ['meta.type variable.other'], settings: { foreground: p.type, fontStyle: 'italic' } },
+        { scope: ['meta.type string'], settings: { foreground: p.string, fontStyle: 'italic' } }
+    ];
+}
+
+// overrides for langs that look weird with the rules above
+function grammarSettings(p: BrandPalette): BrandThemeSetting[] {
+    return [
         { scope: ['meta.mustache.hbs'], settings: { foreground: p.placeholder } },
-        { scope: ['meta.mustache.hbs variable.other'], settings: { foreground: p.placeholder, fontStyle: 'italic' } }
+        { scope: ['meta.mustache.hbs variable.other'], settings: { foreground: p.placeholder, fontStyle: 'italic' } },
+        // the fluent grammar scopes message keys as support.class and variant brackets as support.function
+        { scope: ['source.ftl support.class'], settings: { foreground: p.type, fontStyle: '' } },
+        { scope: ['source.ftl support.function'], settings: { foreground: p.fn, fontStyle: '' } }
     ];
 }
 

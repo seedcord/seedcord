@@ -46,7 +46,7 @@ describe('useGuidePageKeys', () => {
         expect(hrefs).toEqual(['/core', '/commands/options', '/', '/tooling/cli']);
     });
 
-    it('does nothing past the last page and tab, and on a page outside every tab', () => {
+    it("doesn't move past the last page and tab, or from a page outside every tab", () => {
         const atEnd = pressed({ ...TARGETS, activeHref: '/tooling/cli', neighbours: {} }, [
             { key: 'ArrowRight' },
             { key: 'ArrowRight', shiftKey: true }

@@ -1,0 +1,528 @@
+---
+title: i18n
+description: Reply in each user's Discord language from Fluent translation files, through a t() function that codegen types with your message keys and variables.
+---
+
+Discord sends the language that each user picked in their settings with [every interaction](https://discord.com/developers/docs/interactions/receiving-and-responding#interaction-object). With plain discord.js, you'd keep a table of strings for each language and pick the right one in every reply. You'd also write each language's plural rules yourself, and some languages have more forms than English, like Arabic with six.
+
+[`@seedcord/plugin-i18n`](ref:plugin-i18n) keeps those strings in [Fluent](https://projectfluent.org/) files, one per language. It adds a `t` function to every handler, which formats a message in the user's language. You write the plural rules in the Fluent file, so you call `this.t('items', { count })` the same way for every language.
+
+Command names and descriptions have [their own page](/plugins/i18n-commands).
+
+<Shell add="@seedcord/plugin-i18n" />
+
+## Attaching the plugin
+
+```ts twoslash title="src/bot.ts"
+import { Seedcord } from '@seedcord/gateway';
+import { I18n } from '@seedcord/plugin-i18n';
+import { GatewayIntentBits } from 'discord.js';
+
+export const seedcord = new Seedcord({
+    bot: {
+        clientOptions: { intents: [GatewayIntentBits.Guilds] },
+        interactions: { path: './handlers' },
+        commands: { path: './commands' },
+        events: { path: null }
+    },
+    subscribers: { path: null }
+}).attach('i18n', I18n, { path: './locales', base: 'en-US' });
+
+export default seedcord;
+```
+
+The plugin reads every `.ftl` file in `./locales` while the bot starts. `path` and `base` have defaults, so `.attach('i18n', I18n)` does the same thing here.
+
+[`I18n`](ref:plugin-i18n/I18n) works on a gateway bot, an http bot on a server, and an http bot for [Cloudflare Workers](/build/workers). On an http bot, import `Seedcord` from `@seedcord/http` and write the same `attach` call.
+
+<Callout type="warning">
+
+Add the folder to [`files`](/build/data-files) in `seedcord.config.ts`, like `files: ['./locales']`. The plugin reads it with [`readFiles`](ref:utils/readFiles), which only reads folders listed there. Without it, the bot throws `CoreDirectoryNotListed` when it starts, in dev and in a built bot.
+
+</Callout>
+
+{/* prettier-ignore-start */}
+
+| option | required | what it sets |
+| --- | --- | --- |
+| [`path`](ref:plugin-i18n/I18nOptions.path) | no | the folder of `.ftl` files. A relative path is relative to `root` in your `seedcord.config.ts`. Defaults to `'./locales'` |
+| [`base`](ref:plugin-i18n/I18nOptions.base) | no | the locale whose file lists every message. Defaults to `'en-US'` |
+| [`resolveLocale`](ref:plugin-i18n/I18nOptions.resolveLocale) | no | a function that [picks the locale](#picking-the-language-yourself) for an interaction or event |
+
+{/* prettier-ignore-end */}
+
+`base` takes a Discord locale code, like `'hi'` or `'es-419'`, or a member of the `Locale` enum from discord.js, like `Locale.Hindi`.
+
+## Writing the translation files
+
+The plugin reads the locale from each file's name, so use a [Discord locale code](https://discord.com/developers/docs/reference#locales) as the name, like `en-US.ftl`, `hi.ftl`, or `es-419.ftl`. The plugin skips subfolders of `path` because each locale is one file.
+
+Put every message that your bot sends in the base file. Each message has a key on the left and its text on the right. `{ $user }` puts a variable into the text:
+
+```ftl title="src/locales/en-US.ftl"
+greeting = Hi { $user }!
+
+farewell = See you later
+
+items =
+    { $count ->
+        [one] You have { $count } item
+       *[other] You have { $count } items
+    }
+
+rank =
+    { $rank ->
+        [admin] You run this server
+        [mod] You moderate this server
+       *[member] You're a member here
+    }
+```
+
+Each line in brackets under `items` and `rank` is a _variant_. For `items`, Fluent picks a variant with the language's plural rules. For `rank`, it picks the variant whose name in brackets matches `$rank`. The variant marked `*` is the default, which Fluent uses when nothing else matches.
+
+In every other file, you translate the messages from the base file:
+
+```ftl title="src/locales/hi.ftl"
+greeting = नमस्ते { $user }!
+
+farewell = फिर मिलेंगे
+
+items =
+    { $count ->
+        [0] आपके पास कुछ नहीं है
+        [one] आपके पास { $count } चीज़ है
+       *[other] आपके पास { $count } चीज़ें हैं
+    }
+```
+
+A variant can also match an exact number, like `[0]` in `hi.ftl`. Fluent takes the first variant that matches. Hindi's plural rules count 0 as `one`, so keep `[0]` above `[one]`. A user with 0 items then reads "आपके पास कुछ नहीं है". A translation can add variants like this that the base file doesn't have. `hi.ftl` doesn't have `rank` yet. A user whose Discord language is Hindi gets the English `rank` until you add it, as [this section](#which-language-t-uses) explains.
+
+A translation can leave messages out, but it can't add any. If `hi.ftl` has a message, a variable, or an attribute that `en-US.ftl` doesn't, [`seedcord codegen`](/plugins/typing) throws `PluginI18nNotInBase`. An extra message would be unusable because `t` only accepts keys from the base file.
+
+The [Fluent syntax guide](https://projectfluent.org/fluent/guide/) covers the rest of the format, like terms and functions.
+
+### Attributes
+
+A message can hold more text on `.name = ...` lines under it, which Fluent calls attributes. They keep the strings of one component together, like a modal field's label and placeholder:
+
+```ftl title="src/locales/en-US.ftl"
+email-field = Your email
+    .placeholder = name@example.com
+```
+
+To format an attribute, put the message key in front of its name, like `t('email-field.placeholder')`. Each attribute has its own variables, so codegen types `email-field` and `email-field.placeholder` separately. If `hi.ftl` translates `email-field` but not its `.placeholder`, a Hindi user gets the English placeholder.
+
+## Calling t in a handler
+
+Once you've run [`seedcord codegen`](/plugins/typing), every handler has `this.t`. It formats a message in the language of the user who ran the command or clicked the button.
+
+```ts twoslash hovers title="src/handlers/Inventory.ts"
+import { SlashHandler, SlashRoute } from '@seedcord/gateway';
+// ---cut-start---
+import type { I18n } from '@seedcord/plugin-i18n';
+declare module '@seedcord/gateway' {
+    interface SlashRegistry {
+        inventory: { options: {}; cache: 'cached' };
+    }
+    interface PluginTypes {
+        '@seedcord/plugin-i18n': {
+            messages: {
+                greeting: { user: 'text' };
+                farewell: {};
+                items: { count: 'number' };
+                rank: { rank: ['admin', 'member', 'mod'] };
+            };
+        };
+    }
+    interface DispatchMemberValues {
+        t: Awaited<ReturnType<I18n['dispatchMembers']['t']>>;
+    }
+}
+declare function itemsOf(userId: string): Promise<string[]>;
+// ---cut-end---
+
+@SlashRoute('inventory')
+export class Inventory extends SlashHandler<'inventory'> {
+    public async execute(): Promise<void> {
+        const items = await itemsOf(this.event.user.id);
+
+        await this.reply(this.t('items', { count: items.length }));
+    }
+}
+```
+
+In English, a user with three items reads "You have 3 items". In Hindi, they read "आपके पास 3 चीज़ें हैं". If a message doesn't have variables, like `farewell`, pass only the key: `this.t('farewell')`.
+
+Codegen reads your base file and writes each key and its variables into `seedcord-gen.ts`. That's where `t` gets its types, so your editor lists the keys as you type:
+
+```ts twoslash
+// @noErrors
+import { SlashHandler, SlashRoute } from '@seedcord/gateway';
+import type { I18n } from '@seedcord/plugin-i18n';
+declare module '@seedcord/gateway' {
+    interface SlashRegistry {
+        inventory: { options: {}; cache: 'cached' };
+    }
+    interface PluginTypes {
+        '@seedcord/plugin-i18n': {
+            messages: {
+                greeting: { user: 'text' };
+                farewell: {};
+                items: { count: 'number' };
+                rank: { rank: ['admin', 'member', 'mod'] };
+            };
+        };
+    }
+    interface DispatchMemberValues {
+        t: Awaited<ReturnType<I18n['dispatchMembers']['t']>>;
+    }
+}
+
+@SlashRoute('inventory')
+export class Inventory extends SlashHandler<'inventory'> {
+    public async execute(): Promise<void> {
+        // ---cut---
+        this.t('
+        //      ^|
+        // ---cut-after---
+    }
+}
+```
+
+A missing or misspelled variable fails to compile:
+
+```ts twoslash
+// @errors: 2554 2561
+import { SlashHandler, SlashRoute } from '@seedcord/gateway';
+// ---cut-start---
+import type { I18n } from '@seedcord/plugin-i18n';
+declare module '@seedcord/gateway' {
+    interface SlashRegistry {
+        inventory: { options: {}; cache: 'cached' };
+    }
+    interface PluginTypes {
+        '@seedcord/plugin-i18n': {
+            messages: {
+                greeting: { user: 'text' };
+                farewell: {};
+                items: { count: 'number' };
+                rank: { rank: ['admin', 'member', 'mod'] };
+            };
+        };
+    }
+    interface DispatchMemberValues {
+        t: Awaited<ReturnType<I18n['dispatchMembers']['t']>>;
+    }
+}
+// ---cut-end---
+// ---cut---
+@SlashRoute('inventory')
+export class Inventory extends SlashHandler<'inventory'> {
+    public async execute(): Promise<void> {
+        await this.reply(this.t('items'));
+        await this.reply(this.t('items', { cout: 3 }));
+    }
+}
+```
+
+The first call doesn't pass `count`, and the second misspells it as `cout`. A key that isn't in the base file fails to compile too.
+
+After you add a message or a variable to the base file, run codegen again. Until you do, TypeScript rejects calls that use it, the same way it rejects `cout` above.
+
+In `seedcord dev`, saving a `.ftl` file reloads it, and the next `t` call uses the new text. If you only change the words in a message, that's all you need. Press `g` to run codegen when you add or remove a message, a variable, or a variant name.
+
+### What each variable accepts
+
+Codegen picks each variable's type from how the `.ftl` files use it.
+
+{/* prettier-ignore-start */}
+
+| how a file uses it | what `t` accepts | in the sample |
+| --- | --- | --- |
+| in the text, like `{ $user }` | a string or a number | `$user` |
+| picks a variant by plural rules, or is passed to Fluent's `NUMBER()` function | a number | `$count` |
+| picks a variant by name | one of the names in brackets, or any other string | `$rank` |
+
+{/* prettier-ignore-end */}
+
+Your editor lists the names in brackets as you type the value:
+
+```ts twoslash
+// @noErrors
+import { SlashHandler, SlashRoute } from '@seedcord/gateway';
+import type { I18n } from '@seedcord/plugin-i18n';
+declare module '@seedcord/gateway' {
+    interface SlashRegistry {
+        inventory: { options: {}; cache: 'cached' };
+    }
+    interface PluginTypes {
+        '@seedcord/plugin-i18n': {
+            messages: {
+                greeting: { user: 'text' };
+                farewell: {};
+                items: { count: 'number' };
+                rank: { rank: ['admin', 'member', 'mod'] };
+            };
+        };
+    }
+    interface DispatchMemberValues {
+        t: Awaited<ReturnType<I18n['dispatchMembers']['t']>>;
+    }
+}
+
+@SlashRoute('inventory')
+export class Inventory extends SlashHandler<'inventory'> {
+    public async execute(): Promise<void> {
+        // ---cut---
+        this.t('rank', { rank: '
+        //                      ^|
+        // ---cut-after---
+    }
+}
+```
+
+Any other string gets the default variant. `t('rank', { rank: 'owner' })` gives "You're a member here".
+
+Codegen merges the variable types from every `.ftl` file. If one file passes `$count` to `NUMBER()`, `t` only accepts a number for it, even where another file writes `$count` as plain text.
+
+## Gates, notices, and components
+
+In a [gate](/checks/gates) and in the [`render()`](/replying/throwing#writing-a-notice) of a [`Notice`](ref:core/Notice), the same function is `ctx.t`. It uses the same language as `this.t` in the handler.
+
+seedcord doesn't build your components, so it can't give them `t`. Pass `t` to the constructor, typed as [`DispatchMemberValues['t']`](ref:types/DispatchMemberValues):
+
+```ts twoslash title="src/components/InventoryCard.ts"
+import { BuilderComponent, Notice } from '@seedcord/gateway';
+
+import type {
+    DispatchMemberValues,
+    RenderContext,
+    ReplyResponse
+} from '@seedcord/gateway';
+// ---cut-start---
+import type { I18n } from '@seedcord/plugin-i18n';
+declare module '@seedcord/gateway' {
+    interface PluginTypes {
+        '@seedcord/plugin-i18n': {
+            messages: {
+                greeting: { user: 'text' };
+                farewell: {};
+                items: { count: 'number' };
+                rank: { rank: ['admin', 'member', 'mod'] };
+            };
+        };
+    }
+    interface DispatchMemberValues {
+        t: Awaited<ReturnType<I18n['dispatchMembers']['t']>>;
+    }
+}
+// ---cut-end---
+
+export class InventoryCard extends BuilderComponent<'container'> {
+    constructor(t: DispatchMemberValues['t'], count: number) {
+        super('container');
+
+        this.instance.addTextDisplayComponents((text) =>
+            text.setContent(t('items', { count }))
+        );
+    }
+}
+
+export class EmptyInventory extends Notice {
+    constructor() {
+        super('the inventory is empty');
+    }
+
+    public override render(ctx: RenderContext): ReplyResponse {
+        return {
+            components: [new InventoryCard(ctx.t, 0).component]
+        };
+    }
+}
+```
+
+In a handler, you build the same component with `new InventoryCard(this.t, items.length)`. `EmptyInventory` passes `ctx.t`, so the card text is in the user's language too.
+
+A modal works the same way. `EmailModal` reads its field's label and placeholder from the [attributes](#attributes) of `email-field`:
+
+```ts twoslash title="src/components/EmailModal.ts"
+import type { LabelBuilder } from '@discordjs/builders';
+import { BuilderComponent } from '@seedcord/gateway';
+import { TextInputStyle } from 'discord.js';
+
+import type { DispatchMemberValues } from '@seedcord/gateway';
+// ---cut-start---
+import type { I18n } from '@seedcord/plugin-i18n';
+declare module '@seedcord/gateway' {
+    interface PluginTypes {
+        '@seedcord/plugin-i18n': {
+            messages: {
+                'email-field': {};
+                'email-field.placeholder': {};
+            };
+        };
+    }
+    interface DispatchMemberValues {
+        t: Awaited<ReturnType<I18n['dispatchMembers']['t']>>;
+    }
+}
+// ---cut-end---
+
+type T = DispatchMemberValues['t'];
+
+export class EmailModal extends BuilderComponent<'modal'> {
+    constructor(t: T) {
+        super('modal');
+
+        this.instance
+            .setCustomId('email')
+            .setTitle(t('email-field'))
+            .addLabelComponents((label) => this.email(label, t));
+    }
+
+    private email(label: LabelBuilder, t: T): LabelBuilder {
+        return label
+            .setLabel(t('email-field'))
+            .setTextInputComponent((input) =>
+                input
+                    .setCustomId('email')
+                    .setStyle(TextInputStyle.Short)
+                    .setPlaceholder(t('email-field.placeholder'))
+            );
+    }
+}
+```
+
+## Which language t uses
+
+For each interaction or event, the plugin uses the first of these that's set:
+
+1. what your `resolveLocale` returns
+2. the language that the user picked in Discord
+3. the server's language. Only a [Community server](https://docs.discord.com/developers/resources/guild#guild-object) can set one. Discord reports `en-US` for every other server
+4. `base`
+
+<Callout type="transport">
+
+On a gateway bot, an event like `messageCreate` doesn't include the user's language because a discord.js `User` doesn't have one. `t` in an event handler uses the server's language, then `base`. An interaction includes the user's language on both transports.
+
+</Callout>
+
+If you don't have a file for that locale, `t` tries the other variety of the same language, and then `base`:
+
+{/* prettier-ignore-start */}
+
+| locale | tried next |
+| --- | --- |
+| `en-US` | `en-GB` |
+| `en-GB` | `en-US` |
+| `es-ES` | `es-419` |
+| `es-419` | `es-ES` |
+
+{/* prettier-ignore-end */}
+
+For every other locale, `t` uses `base` right away. `t` does the same for a single message that a file doesn't have, so `rank` comes from `en-US.ftl`.
+
+Codegen logs every message that a file doesn't have, so you can see what's left to translate:
+
+```txt output
+src/locales/hi.ftl doesn't have rank. Users on that locale get the en-US text.
+```
+
+### Picking the language yourself
+
+Some bots let users pick a language with a command. To use that language in place of the user's Discord language, return it from `resolveLocale`:
+
+```ts twoslash title="src/bot.ts"
+import { Seedcord } from '@seedcord/gateway';
+import { I18n } from '@seedcord/plugin-i18n';
+import { GatewayIntentBits } from 'discord.js';
+// ---cut-start---
+type LocaleCode = 'en-US' | 'hi' | 'de';
+declare const languages: {
+    get(userId: string): Promise<LocaleCode | undefined>;
+};
+// ---cut-end---
+// ---cut---
+export const seedcord = new Seedcord({
+    bot: {
+        clientOptions: { intents: [GatewayIntentBits.Guilds] },
+        interactions: { path: './handlers' },
+        commands: { path: './commands' },
+        events: { path: null }
+    },
+    subscribers: { path: null }
+}).attach('i18n', I18n, {
+    resolveLocale: async ({ userId }) => {
+        if (!userId) return undefined;
+        return languages.get(userId);
+    }
+});
+```
+
+`resolveLocale` gets the [`DispatchOrigin`](ref:core/DispatchOrigin): `userId`, `guildId`, `channelId`, `userLocale`, and `guildLocale`. It returns a locale code, or a promise that resolves to one. Return `undefined` or `null` to fall back to the user's Discord language. If an event doesn't have a user, `userId` is `null`, so the sample checks it first.
+
+If `resolveLocale` returns a locale that you don't have a file for, `t` tries that locale's other variety and then `base`. It doesn't go back to the user's Discord language.
+
+<Callout type="warning">
+
+The plugin calls `resolveLocale` before every handler runs. A slow lookup delays every reply, and Discord only [waits three seconds](https://discord.com/developers/docs/interactions/receiving-and-responding#responding-to-an-interaction) for the first one. If `resolveLocale` throws, the handler doesn't run and seedcord reports `CorePluginMemberThrew`. Cache the lookup, and return `undefined` if it fails.
+
+</Callout>
+
+## Dates and numbers
+
+`this.t.locale` is the locale that `t` uses. Pass it to `Intl.DateTimeFormat` or `Intl.NumberFormat` to format a date or a number in the same language:
+
+```ts twoslash
+import { SlashHandler, SlashRoute } from '@seedcord/gateway';
+// ---cut-start---
+import type { I18n } from '@seedcord/plugin-i18n';
+declare module '@seedcord/gateway' {
+    interface SlashRegistry {
+        joined: { options: {}; cache: 'cached' };
+    }
+    interface DispatchMemberValues {
+        t: Awaited<ReturnType<I18n['dispatchMembers']['t']>>;
+    }
+}
+// ---cut-end---
+// ---cut---
+@SlashRoute('joined')
+export class Joined extends SlashHandler<'joined'> {
+    public async execute(): Promise<void> {
+        const format = new Intl.DateTimeFormat(this.t.locale, {
+            dateStyle: 'long'
+        });
+
+        await this.reply(format.format(this.event.user.createdAt));
+    }
+}
+```
+
+A user whose Discord language is Hindi gets the date in Hindi. `t.locale` is the locale of the first file that `t` reads, which can be the other variety or `base`. If you only have `en-US.ftl`, a user on `en-GB` gets `'en-US'`.
+
+## Errors
+
+{/* prettier-ignore-start */}
+
+| error | when |
+| --- | --- |
+| `PluginOptionsRejected` | `path` is an empty string |
+| `CorePathOutsideRoot` | `path` is outside `root`, so the build wouldn't bundle your translation files |
+| `CoreDirectoryNotListed` | `files` in `seedcord.config.ts` doesn't list `path` |
+| `PluginI18nBaseMissing` | `path` doesn't have a file for `base`. The message gives the file it looked for |
+| `PluginI18nSyntax` | Fluent can't parse a line in a `.ftl` file. The message gives the file and line |
+| `PluginI18nNotALocale` | a `.ftl` file or a [command translation file](/plugins/i18n-commands) doesn't have a Discord locale code as its name. The message suggests the codes for the same language |
+| `PluginI18nNotInBase` | a translation has a message, a variable, or an attribute that the base file doesn't |
+| `PluginI18nMissingReference` | a `.ftl` file uses a term like `{ -brand }`, or another message, that the same file doesn't define |
+| `PluginI18nOutOfDate` | `t` got a key that the `.ftl` files no longer have. Run codegen, then fix the calls that TypeScript reports |
+| `PluginI18nFormatFailed` | Fluent couldn't format the text, like when a call through a cast didn't pass a variable. The message gives Fluent's reason |
+
+{/* prettier-ignore-end */}
+
+`PluginOptionsRejected` and `CorePathOutsideRoot` throw when you call `attach`, and `CoreDirectoryNotListed` throws while the bot starts. `PluginI18nOutOfDate` and `PluginI18nFormatFailed` throw from the `t` call.
+
+`PluginI18nBaseMissing`, `PluginI18nSyntax`, `PluginI18nNotALocale`, `PluginI18nNotInBase`, and `PluginI18nMissingReference` come from codegen, which reports every problem it finds in one error. `seedcord codegen` and `seedcord codegen --check` in CI fail with it. `seedcord dev` runs codegen after the bot starts and only logs the error, so the bot keeps running on the files it loaded.
+
+To translate your command names and descriptions, read [Translating commands](/plugins/i18n-commands) next.

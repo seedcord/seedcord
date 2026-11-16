@@ -75,14 +75,14 @@ abstract class FileSource {
         return this.access.layoutAt(this.access.resolve(dir));
     }
 
-    public modules(dir: string): Promise<Loaders<ModuleLoader>> {
+    public async modules(dir: string): Promise<{ folder: string; files: Loaders<ModuleLoader> }> {
         const folder = this.access.resolveBundled(dir);
-        return this.modulesIn(folder, this.access.layoutAt(folder));
+        return { folder, files: await this.modulesIn(folder, this.access.layoutAt(folder)) };
     }
 
-    public files(dir: string): Promise<Loaders<BytesLoader>> {
+    public async files(dir: string): Promise<{ folder: string; files: Loaders<BytesLoader> }> {
         const folder = this.access.resolveListed(dir);
-        return this.filesIn(folder, this.access.layoutAt(folder));
+        return { folder, files: await this.filesIn(folder, this.access.layoutAt(folder)) };
     }
 
     protected abstract modulesIn(folder: string, layout: BotLayout): Promise<Loaders<ModuleLoader>>;
@@ -175,4 +175,9 @@ export function fileSource(): FileSource {
 
 export function botFolder(dir: string): BotFolder {
     return fileSource().layoutFor(dir).folderAt(dir);
+}
+
+// only an absolute pattern can match when a script runs without a config
+export function matchesBotGlobs(file: string, patterns: readonly string[]): boolean {
+    return fileSource().layoutFor(file).matchesFiles(file, patterns);
 }

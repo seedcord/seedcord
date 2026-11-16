@@ -14,7 +14,7 @@ export {
     setCliFiles,
     setDevFiles
 } from './files/slots';
-export { botFolder } from './files/sources';
+export { botFolder, matchesBotGlobs } from './files/sources';
 export { withoutQuery } from './files/withoutQuery';
 export * from './misc/asError';
 export * from './misc/hasErrorCode';

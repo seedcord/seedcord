@@ -15,6 +15,7 @@ import { capturingCtx } from '#tests/helpers/interactions';
 
 import type { HttpEdgeConfig } from '#interfaces/Config';
 import type { Signer } from '#tests/helpers/ed25519';
+import type { CoreBase } from '@seedcord/core';
 import type { HmrUpdateEvent } from '@seedcord/types';
 import type { DeployedHashes } from '@seedcord/types/internal';
 
@@ -241,6 +242,40 @@ describe('the edge Seedcord under seedcord dev', () => {
         cli.save({ file: '/bot/config/cache.json', type: 'update' });
 
         await vi.waitFor(() => expect(saved).toEqual(['/bot/config/cache.json']));
+    });
+
+    it("prompts a commands refresh for a file that a plugin's registerCommandFiles matches", async () => {
+        @RegisterCommand('global')
+        class Ping extends BuilderComponent<'command'> {
+            constructor() {
+                super('command');
+                this.instance.setName('ping').setDescription('Replies with pong');
+            }
+        }
+        class Descriptions extends Plugin {
+            public constructor(host: CoreBase) {
+                super(host);
+                this.registerCommandFiles([`${BUILT_ROOT}/descriptions/*.txt`]);
+            }
+            public init(): Promise<void> {
+                return Promise.resolve();
+            }
+        }
+        registerBuiltFiles({ '/commands/Ping.ts': { Ping } });
+        const cli = connectCli();
+        await liveEnv();
+        const seedcord = new Seedcord({
+            ...config,
+            bot: { ...config.bot, commands: { path: `${BUILT_ROOT}/commands` } }
+        }).attach('descriptions', Descriptions);
+        stubDiscord(seedcord);
+        Object.assign(seedcord.rest, { put: vi.fn().mockResolvedValue([]) });
+        cli.start();
+        await vi.waitFor(() => expect(cli.events()).toContain('seedcord:started'));
+
+        cli.save({ file: `${BUILT_ROOT}/descriptions/ping.txt`, type: 'update' });
+
+        await vi.waitFor(() => expect(cli.events()).toContain('seedcord:commands-update-prompt'));
     });
 
     it('writes each log to the console for the CLI as it happens', async () => {

@@ -116,7 +116,7 @@ vp -C mocks/gateway run dev
 
 Check a mock's `src/bot.ts` for what else it connects to. The gateway mock attaches a database plugin, so it needs that database running. The http mock needs a public URL for Discord to post to, and `seedcord dev` opens one through [cloudflared](https://seedcord.org/guide/tooling/tunnel).
 
-Try every change a bot author would notice in a mock, and use it like they would. Unit tests miss things you only catch by using the bot, like a confusing error message or a button that does nothing after a restart.
+Try every change a bot author would notice in a mock, and use it like they would. Unit tests miss things you only catch by using the bot, like a confusing error message or a button that stops responding after a restart.
 
 When you add or change a handler in a mock, run `vp -C mocks/<name> run codegen`. The gate fails on a stale generated file.
 
@@ -161,7 +161,7 @@ Run `vp run prePush` before you open the PR. It checks the packages that your br
 
     To see your changeset as the GitHub release post, commit it and run `vp run release:preview`. It writes the post for the stable release on `main` to `release.md` in the repo root, and `--pre` writes the one for the next prerelease. It versions a temporary copy of `HEAD`, so it doesn't mess with your checkout.
 
-4. **Write the failing test first.** Watch it fail, then fix the code. A regression test that passes before your change can't show that your change fixed the bug. Tests live in `<package>/tests/`, mirroring `src/`, and `vp -C <package> run test:watch` reruns them as you work.
+4. **Write the failing test first.** Watch it fail, then fix the code. A regression test that passes before your change can't show that your change fixed the bug. Put tests in `<package>/tests/`, mirroring `src/`. `vp -C <package> run test:watch` reruns them as you work.
 
 5. **Say which transport you tested on.** Gateway and http share most of their surface and differ in places. If a change touches both, say so.
 

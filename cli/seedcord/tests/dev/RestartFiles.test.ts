@@ -73,6 +73,16 @@ describe('RestartFiles', () => {
         expect(files.needsRestart(join(dirname(config), file))).toBe(expected);
     });
 
+    it('applies a `!` pattern only to the patterns registered with it', async () => {
+        const { files, config } = await configFiles();
+        const root = dirname(config);
+        files.addPatterns(['docs/**']);
+        files.addPatterns(['locales/**', '!**/*.md']);
+
+        expect(files.needsRestart(join(root, 'docs', 'README.md'))).toBe(true);
+        expect(files.needsRestart(join(root, 'locales', 'README.md'))).toBe(false);
+    });
+
     it('leaves a .env in another folder out', async () => {
         const { files } = await configFiles();
 

@@ -16,6 +16,9 @@
         "---Tasks---",
         "tasks",
         "tasks-scheduling",
-        "tasks-control"
+        "tasks-control",
+        "---i18n---",
+        "i18n",
+        "i18n-commands"
     ]
 }

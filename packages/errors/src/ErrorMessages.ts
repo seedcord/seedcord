@@ -1,4 +1,3 @@
-/* eslint-disable max-lines -- the satisfies check below covers every code only while all messages are in one map */
 import { PRODUCTION_SITES } from '@seedcord/brand';
 
 import { SeedcordErrorCode } from './ErrorCodes';
@@ -283,6 +282,30 @@ const messages = {
         `${paint.bold('schedule()')} got ${quoted(duration)} for ${paint.sky(key)}, which ends after the last date a JavaScript ${paint.bold('Date')} can hold, in the year 275760. Pass a shorter duration as ${paint.bold('in')}.`,
     [SeedcordErrorCode.PluginTasksKeyTaken]: (key: string, loadedFrom: string) =>
         `${paint.sky(key)} is the key of a different class, loaded from ${paint.path(loadedFrom)}. Pass that class, or give one of them its own ${paint.bold('key')}.`,
+    [SeedcordErrorCode.PluginI18nSyntax]: (place: string, detail: string) =>
+        `Fluent can't parse ${paint.path(place)}: ${detail}. Fix the syntax on that line.`,
+    [SeedcordErrorCode.PluginI18nNotALocale]: (file: string, like: readonly string[]) => {
+        const extension = file.slice(file.lastIndexOf('.'));
+        return `${paint.path(file)} isn't named after a Discord locale code. Rename it to ${like.length > 0 ? oneOf.format(like.map((locale) => paint.path(`${locale}${extension}`))) : `a code from Discord's locale list, like ${paint.path(`en-US${extension}`)}`}.`;
+    },
+    [SeedcordErrorCode.PluginI18nNotInBase]: (place: string, what: string, baseFile: string) =>
+        `${paint.path(place)} has ${what}, but ${paint.path(baseFile)} doesn't. ${paint.bold('t()')} only accepts the keys and variables in the base file. Add it to ${paint.path(baseFile)} first, or remove it here.`,
+    [SeedcordErrorCode.PluginI18nOutOfDate]: (key: string) =>
+        `${paint.bold(`t('${key}')`)} isn't in any locale file. Run ${paint.bold('seedcord codegen')} to update what ${paint.bold('t()')} accepts, then fix the calls that TypeScript reports.`,
+    [SeedcordErrorCode.PluginI18nCommandProblems]: (count: number) =>
+        `${paint.iris(count)} problems in the command translation files need fixing. Each one is listed below.`,
+    [SeedcordErrorCode.PluginI18nFormatFailed]: (key: string, file: string, reason: string) =>
+        `${paint.bold(`t('${key}')`)} couldn't format the text in ${paint.path(file)}: ${reason}. Pass every variable that the message and the messages it uses need.`,
+    [SeedcordErrorCode.PluginI18nUnknownCommand]: (file: string, path: string) =>
+        `${paint.path(file)} translates ${paint.sky(path)}, but none of your commands has it. Fix the name. Running ${paint.bold('seedcord codegen')} and a type-check finds these before a deploy.`,
+    [SeedcordErrorCode.PluginI18nNotTranslations]: (file: string) =>
+        `${paint.path(file)} doesn't export command translations. Make its default export ${paint.bold('commandTranslations({ ... })')}.`,
+    [SeedcordErrorCode.PluginI18nDiscordRejects]: (file: string, path: string, value: string, accepts: string) =>
+        `${paint.path(file)} sets ${paint.sky(path)} to ${quoted(value)}, but Discord only accepts ${accepts}. Change the translation to fit.`,
+    [SeedcordErrorCode.PluginI18nMissingReference]: (place: string, reference: string) =>
+        `${paint.path(place)} uses ${paint.sky(reference)}, but that file doesn't define it. Define ${paint.sky(reference)} in this file too. Fluent formats each file on its own.`,
+    [SeedcordErrorCode.PluginI18nBaseMissing]: (dir: string, baseFile: string) =>
+        `${paint.path(dir)} doesn't have ${paint.path(baseFile)}, the file that lists every message. Add it, or set ${paint.bold('base')} to a locale that has a file.`,
 
     [SeedcordErrorCode.CliCancelled]: () => 'Cancelled.',
 

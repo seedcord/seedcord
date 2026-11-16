@@ -3,10 +3,13 @@ import * as path from 'node:path';
 
 import { SeedcordErrorCode } from '@seedcord/errors';
 import { SeedcordError } from '@seedcord/errors/internal';
+import { partition } from 'es-toolkit';
+// node's esm loader needs the .js because picomatch doesn't have an exports map
+import picomatch from 'picomatch/posix.js';
 
 import { asError } from '#src/misc/asError';
 
-import { isInside, posixRelative } from './paths';
+import { isInside, posixRelative, toPosixPath } from './paths';
 
 // every path here is root-relative with a leading slash, like '/locales'. one beside a ./src root reads '/../logs'
 export interface BotLayoutData {
@@ -46,9 +49,21 @@ function isProjectFileName(name: string): boolean {
 // i would use the dependency directly, but the edge bundle can't resolve tinyglobby's fs import
 const GLOB_SYMBOLS = /[()[\]{}*?|]|[!+@](?=\()/g;
 
+// vite's import.meta.glob and picomatch both read a backslash as an escape
+function escapeGlob(text: string): string {
+    return text.replaceAll(GLOB_SYMBOLS, String.raw`\$&`);
+}
+
 // a key of '/' is base itself
 function globFolder(base: string, key: string): string {
-    return (key === '/' ? base : `${base}${key}`).replaceAll(GLOB_SYMBOLS, String.raw`\$&`);
+    return escapeGlob(key === '/' ? base : `${base}${key}`);
+}
+
+function moduleGlobsIn(folder: string): string[] {
+    return [
+        ...MODULE_EXTENSIONS.map((extension) => `${folder}/*${extension}`),
+        ...DECLARATION_EXTENSIONS.map((extension) => `!${folder}/*${extension}`)
+    ];
 }
 
 function endsWithAny(file: string, extensions: string[]): boolean {
@@ -208,12 +223,19 @@ export class BotLayout {
 
     // base is the folder import.meta.glob resolves the patterns against, relative to root
     public moduleGlobs(base = '.'): string[] {
-        const folder = globFolder(base, '/');
-        return [
-            ...MODULE_EXTENSIONS.map((extension) => `${folder}/**/*${extension}`),
-            ...DECLARATION_EXTENSIONS.map((extension) => `!${folder}/**/*${extension}`),
-            ...this.globExcludes(base)
-        ];
+        return [...moduleGlobsIn(`${globFolder(base, '/')}/**`), ...this.globExcludes(base)];
+    }
+
+    public moduleGlobsDirectlyIn(folder: string): string[] {
+        return [...moduleGlobsIn(globFolder('.', this.keyOf(folder))), ...this.globExcludes('.')];
+    }
+
+    // picomatch/posix runs on workerd, which throws on node's path.matchesGlob
+    public matchesFiles(file: string, patterns: readonly string[]): boolean {
+        const [excludes, includes] = partition(patterns, (pattern) => pattern.startsWith('!'));
+        const posixFile = toPosixPath(file);
+        const matches = (pattern: string): boolean => picomatch.isMatch(posixFile, this.rootedGlob(pattern));
+        return includes.some(matches) && !excludes.some((pattern) => matches(pattern.slice(1)));
     }
 
     public listedFileGlobs(base = '.'): string[] {
@@ -260,6 +282,14 @@ export class BotLayout {
         return [...folders, ...projectFiles];
     }
 
+    // the root's own [ or ( matches as plain text
+    private rootedGlob(pattern: string): string {
+        const root = escapeGlob(toPosixPath(this.root));
+        if (!path.isAbsolute(pattern)) return path.posix.join(root, toPosixPath(pattern));
+        if (!isInside(this.root, pattern)) return toPosixPath(pattern);
+        return path.posix.join(root, posixRelative(this.root, pattern));
+    }
+
     private pathOf(key: string): string {
         return path.resolve(this.root, `.${key}`);
     }
@@ -280,5 +310,18 @@ export class BotFolder {
     // a skipped file counts as outside the folder
     public holds(file: string): boolean {
         return isInside(this.path, file) && !this.layout.isSkipped(file);
+    }
+
+    public moduleGlobsDirectlyIn(): string[] {
+        return this.layout.moduleGlobsDirectlyIn(this.path);
+    }
+
+    // without a config, a relative glob resolves against this folder
+    public matchesFiles(file: string, patterns: readonly string[]): boolean {
+        return this.layout.matchesFiles(file, patterns);
+    }
+
+    public assertBundled(): void {
+        this.layout.assertBundled(this.path);
     }
 }

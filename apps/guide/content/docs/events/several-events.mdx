@@ -75,7 +75,7 @@ class MemberLog extends EventHandler<
 
 ## Every case is required
 
-Without `match`, you'd branch with a `switch` on the event name. Then you add a third event to the decorator and forget its case. That event then silently does nothing. `match` checks the cases against the union, so a missing case fails to compile.
+Without `match`, you'd branch with a `switch` on the event name. Then you add a third event to the decorator and forget its case. When Discord sends that event, the `switch` skips every case and the handler returns without an error. `match` checks the cases against the union, so a missing case fails to compile.
 
 ```ts twoslash
 // @errors: 2345

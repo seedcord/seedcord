@@ -14,7 +14,7 @@ Every primitive is in `tooling/ui/src/`. Read that folder before you build anyth
 
 `cn()` for class composition comes from `@seedcord/ui`. One definition serves all three apps.
 
-Design tokens live in `@seedcord/ui` as `tokens.css` and `tokens.ts`. Read a color from a token. An inlined hex splits the look across the apps.
+`@seedcord/ui` defines the design tokens in `tokens.css` and `tokens.ts`. Read a color from a token. An inlined hex splits the look across the apps.
 
 An app-local `src/components/` folder holds pieces specific to that app. A pattern that shows up in a second app moves to `@seedcord/ui`. Migrate the first app off its local copy in the same change.
 

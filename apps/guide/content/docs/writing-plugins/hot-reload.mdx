@@ -1,135 +1,124 @@
 ---
 title: Reloading in dev
-description: Reload the files that your plugin loads when you save them under seedcord dev, and ask for a restart for the ones it reads once.
+description: Reload the files that your plugin loads when you save them under seedcord dev, and ask for a restart or a command refresh for the rest.
 ---
 
-Under [`seedcord dev`](/tooling/dev), a save swaps the file into the running bot. A plugin that loaded the file itself, like a service class from its folder, keeps the old copy because seedcord can't tell that the plugin read that file. Restarting for every edit costs the connection you were trying to keep.
+When you save a handler, a command, or a subscriber under [`seedcord dev`](/tooling/dev), seedcord reloads it in the running bot without a restart. It only reloads the folders that seedcord loads itself. If your plugin imports files from its own folder, the plugin keeps running the old code until you restart, and a restart reconnects a gateway bot to Discord. This page shows how to reload those files from your plugin, and how to ask for a restart when a reload can't help.
 
-## What reaches onHmr when a file is saved
+## What reaches `onHmr` when a file is saved
 
-Every save sends your plugin an [`HmrUpdateEvent`](ref:types/HmrUpdateEvent) through [`onHmr`](ref:core/Plugin.onHmr). `file` is the saved path, and `type` is `create`, `createDir`, `update`, `delete`, or `deleteDir`. `affectedModules` lists the file and every file that imports it, and `rollback` tells you whether a failed reload keeps the last working version. The default `onHmr` does nothing, and it never runs outside `seedcord dev`. If your `onHmr` throws, seedcord logs the error and the bot's other reloaders still run.
+When seedcord can reload a save, it calls your plugin's [`onHmr`](ref:core/Plugin.onHmr) with an [`HmrUpdateEvent`](ref:types/HmrUpdateEvent). A save that needs a restart doesn't reach it.
+
+{/* prettier-ignore-start */}
+
+| field | what it holds |
+| --- | --- |
+| `file` | the saved path |
+| `type` | `create`, `createDir`, `update`, `delete`, or `deleteDir` |
+| `affectedModules` | the file and every file that imports it, directly or through another file. A folder event doesn't have it |
+| `rollback` | whether a failed reload keeps the last working version |
+
+{/* prettier-ignore-end */}
+
+The default `onHmr` is empty, and seedcord only calls it under `seedcord dev`. If your `onHmr` throws, seedcord logs the error, and the rest of the reload still runs.
 
 ## Reloading files the plugin loaded
 
-[`FolderExports`](ref:core/FolderExports) registers what a folder's files export at startup, then reloads a file's exports each time you save it. Import it from your transport package, or from `@seedcord/core/plugin` if your plugin works on both transports. You give it the folder, a check for which exports count, and how to register and unregister one.
+With [`FolderExports`](ref:core/FolderExports), you register what a folder's files export at startup and reload a file's exports each time you save it. Import it from your transport package, or from `@seedcord/core/plugin` if your plugin works on both transports. You give it the folder, a check for which exports count, how to register and unregister one, and the logger that it reports reloads on.
 
-```ts twoslash title="src/plugins/Jobs.ts"
+Say your bot answers a few keywords in chat, and you keep one class per keyword in a `responders` folder:
+
+```ts twoslash hovers title="src/plugins/Responders.ts"
 import { FolderExports, Plugin } from '@seedcord/gateway';
 
 import type { CoreBase, HmrUpdateEvent } from '@seedcord/gateway';
 
-type JobClass = new () => { run(): Promise<void> };
+interface Responder {
+    readonly keyword: string;
+    reply(): string;
+}
+type ResponderClass = new () => Responder;
 
-const isJob = (value: unknown): value is JobClass =>
+const isResponder = (value: unknown): value is ResponderClass =>
     typeof value === 'function' &&
-    typeof value.prototype?.run === 'function';
+    typeof value.prototype?.reply === 'function';
 
-export class Jobs extends Plugin {
-    private readonly jobs = new Map<string, JobClass>();
-    private readonly jobFiles: FolderExports<JobClass>;
+export class Responders extends Plugin {
+    private readonly responders = new Map<
+        ResponderClass,
+        Responder
+    >();
+    private readonly files: FolderExports<ResponderClass>;
 
     public constructor(host: CoreBase, dir: string) {
         super(host);
-        this.jobFiles = new FolderExports({
+        this.files = new FolderExports({
             dir,
-            is: isJob,
-            register: (job) => this.jobs.set(job.name, job),
-            unregister: (job) => this.jobs.delete(job.name),
+            is: isResponder,
+            register: (r) => this.responders.set(r, new r()),
+            unregister: (r) => this.responders.delete(r),
             logger: this.logger
         });
     }
 
     public async init(): Promise<void> {
-        await this.jobFiles.load();
+        await this.files.load();
     }
 
     public override async onHmr(
         event: HmrUpdateEvent
     ): Promise<void> {
-        await this.jobFiles.handle(event);
+        await this.files.handle(event);
+    }
+
+    public replyFor(content: string): string | undefined {
+        const all = [...this.responders.values()];
+        return all
+            .find((r) => content.includes(r.keyword))
+            ?.reply();
     }
 }
 ```
 
-`init()` calls `load()`, which imports every file under `dir` and passes each export that `isJob` accepts to `register`. It runs the same way in production, so the bot registers its jobs through one path whether dev is running or not. `isJob` receives every value that a file exports, helpers and constants included. It has to pick out your classes.
+In `init()`, you call `load()`, which imports every file under `dir` and passes each export that `isResponder` accepts to `register`. `load()` runs the same way in production, so the bot registers its responders through one path whether dev is running or not. `isResponder` receives every value that a file exports, helpers and constants included. It has to pick out your classes. In a handler, you call `replyFor(message.content)` and send the reply if it returns one.
 
-If `jobs/index.ts` re-exports a job, `load()` still only registers it once. `handle()` unregisters it only after neither file exports it, so deleting the barrel leaves the job running.
+If `responders/index.ts` re-exports the responder in `Greeting.ts`, `load()` still registers it once. `handle()` only unregisters it when neither `Greeting.ts` nor `index.ts` exports it, so deleting `index.ts` leaves the responder answering.
 
 ### What each save does
 
-`onHmr` passes each save to `handle()`, which ignores files outside `dir` and reads the event's `type`:
+In `onHmr`, you pass each save to `handle()`. It ignores files outside `dir` and does this for each `type`:
 
 {/* prettier-ignore-start */}
 
 | type | what `handle()` does |
 | --- | --- |
 | `create`, `update` | re-imports the saved file and every file in `affectedModules` that sits under `dir`, unregisters what each one exported before, and registers what it exports now |
-| `delete`, `deleteDir` | unregisters what that path exported, apart from a value that another file still exports, then re-imports the files in `affectedModules` that import it |
-| `createDir` | nothing. Each file in the new folder arrives as its own `create` event |
+| `delete` | unregisters what that file exported, apart from a value that another file still exports, then re-imports the files in `affectedModules` that import it |
+| `createDir`, `deleteDir` | nothing. A folder isn't a module, and each file in it arrives as its own `create` or `delete` event |
 
 {/* prettier-ignore-end */}
 
-If a file throws while it imports, `handle()` has already unregistered its old exports. With `rollback` on, the default, it registers them again and logs a warning. If you set [`hmr.rollback`](/build/config#every-key) to `false`, `handle()` leaves them unregistered until a save that imports cleanly. [A save that throws on import](/tooling/hot-reload#a-save-that-throws-on-import) walks through the same case for your own handlers.
+If a file throws while it imports, `handle()` has already unregistered its old exports. If `rollback` is on, which it is by default, `handle()` registers them again and logs a warning. If you set [`hmr.rollback`](/build/config#every-key) to `false`, `handle()` leaves them unregistered until a save that imports cleanly. The Tooling tab walks through [the same case](/tooling/hot-reload#a-save-that-throws-on-import) for your own handlers.
 
-If your `register` throws, `handle()` unregisters whatever that file registered before the throw. It tries the file again on the next save that unloads something. That covers moving a job to a new file since the new file often loads before the old one unloads. If your `register` rejects a name that's already taken, the first try fails, and the retry succeeds after `handle()` unregisters the old file's job.
+If your `register` throws, `handle()` unregisters whatever that file registered before the throw. It tries the file again on the next save that unregisters something. This handles moving a responder to a new file because the new file often loads before the old one unloads. Say your `register` throws on a keyword that's already taken. The first try fails, and the retry succeeds once `handle()` unregisters the old file's responder.
 
-Each reload logs one line at debug level on your plugin's logger, in the `hmr` channel, like "Reloaded ResetStreaks from jobs/ResetStreaks.ts in 4ms".
+Each reload logs one line at debug level on your plugin's logger, in the `hmr` channel, like "Reloaded Greeting from responders/Greeting.ts in 4ms".
 
 ### Undoing what a registration made
 
-`unregister` gets only the old value. That's enough for `Jobs` since registering only stored the class in a map. If registering creates something you have to undo later, keep it in a map keyed by the class and look it up in `unregister`. Here `schedule()` starts a timer for each job:
+`unregister` gets only the old class. `Responders` keys its map by that class, so `unregister` finds the instance that `register` made for it and deletes it.
 
-```ts twoslash title="src/plugins/Jobs.ts"
-import { FolderExports, Plugin } from '@seedcord/gateway';
-
-import type { CoreBase } from '@seedcord/gateway';
-
-type JobClass = new () => { run(): Promise<void> };
-
-declare const isJob: (value: unknown) => value is JobClass;
-
-class Jobs extends Plugin {
-    private readonly timers = new Map<JobClass, NodeJS.Timeout>();
-    private readonly jobFiles: FolderExports<JobClass>;
-
-    public constructor(host: CoreBase, dir: string) {
-        super(host);
-        // ---cut---
-        this.jobFiles = new FolderExports({
-            dir,
-            is: isJob,
-            register: (job) => this.schedule(job),
-            unregister: (job) => {
-                clearInterval(this.timers.get(job));
-                this.timers.delete(job);
-            },
-            logger: this.logger
-        });
-        // ---cut-after---
-    }
-
-    public async init(): Promise<void> {
-        await this.jobFiles.load();
-    }
-
-    private schedule(job: JobClass): void {
-        const run = (): void => void new job().run();
-        this.timers.set(job, setInterval(run, 60_000));
-    }
-}
-```
-
-A save to a job file clears the old class's timer before the new class starts its own. Without `clearInterval` in `unregister`, every save would leave one more timer running the old code.
+Keep anything else that `register` starts in a map keyed the same way, like a timer or a listener, and stop it in `unregister`. If you don't, every save leaves one more copy running the old code. `unregister` only runs on a save. `seedcord dev` restarts the bot in the same process, so stop whatever is still running in [`dispose()`](ref:core/Plugin.dispose) too.
 
 ### More than one folder
 
-A `FolderExports` covers one folder and one kind of value. For a second kind, like hooks that run around each job, make a second `FolderExports` with its own `is`, `register`, and `unregister`. Call `load()` on both in `init()` and `handle()` on both in `onHmr()` since each one ignores saves outside its own folder.
+A `FolderExports` covers one folder and one kind of value. For a second kind, like reaction responders that answer an emoji, make a second `FolderExports` with its own `is`, `register`, and `unregister`. Call `load()` on both in `init()` and `handle()` on both in `onHmr()` since each one ignores saves outside its own folder.
 
-If the hooks folder is a subfolder of the jobs folder, pass it to the jobs instance as `exclude: [hooksDir]`. Without it, a hook file that throws on import logs its error once from each instance. The dir should be relative to the `root` of your project, or an absolute path.
+If the reactions folder is a subfolder of the responders folder, pass it to the first instance as `exclude: [reactionsDir]`. Without it, the responders instance imports the reaction files too, and a reaction file that throws on import logs its error twice. A relative path in `exclude` resolves against `root` from `seedcord.config.ts`.
 
 ## Files read once
 
-A reload only helps with files your plugin reads again. If `init()` read a locale folder at startup, your plugin still has the old copy because swapping the file doesn't repeat the read. Pass glob patterns for files like that to [`registerCriticalFiles`](ref:core/Plugin.registerCriticalFiles). When one of them changes, the dev terminal shows a **Restart required** card telling you to press `r`, which [the Tooling tab](/tooling/hot-reload#saves-that-need-a-restart) describes.
+If `init()` reads a folder at startup, like a locale folder, your plugin keeps the old contents after you save a file in it because the reload doesn't repeat the read. Pass glob patterns for files like that to [`registerCriticalFiles`](ref:core/Plugin.registerCriticalFiles). When one of them changes, the dev terminal shows a [**Restart required** card](/tooling/hot-reload#saves-that-need-a-restart) telling you to press `r`.
 
 ```ts twoslash title="src/plugins/Locales.ts"
 import { Plugin, readFiles } from '@seedcord/gateway';
@@ -153,8 +142,53 @@ export class Locales extends Plugin {
 }
 ```
 
-Saving anything under `dir` now needs a restart. A relative pattern resolves against `root`, and the call does nothing outside `seedcord dev`. Register only the files that your plugin reads because seedcord already asks for a restart on its own startup files.
+Saving a file under `dir` now shows the **Restart required** card. A relative pattern resolves against `root`, and only `seedcord dev` reads the patterns. Register only the files that your plugin reads because seedcord already asks for a restart on its own startup files, like `seedcord.config.ts`.
+
+## Files that change your commands
+
+`seedcord dev` only shows its [refresh prompt](/tooling/hot-reload#saving-a-command) when you save a file in your commands folder. If your plugin's [`prepareCommands()`](ref:core/Plugin.prepareCommands) reads other files to change your commands, pass glob patterns for those files to [`registerCommandFiles`](ref:core/Plugin.registerCommandFiles) so a save to one of them shows the prompt too.
+
+```ts twoslash title="src/plugins/Descriptions.ts"
+import { Plugin, readFiles } from '@seedcord/gateway';
+
+import type { CoreBase } from '@seedcord/gateway';
+import type { RESTPostAPIApplicationCommandsJSONBody as Body } from 'discord-api-types/v10';
+
+export class Descriptions extends Plugin {
+    public constructor(host: CoreBase) {
+        super(host);
+        this.registerCommandFiles(['descriptions/*.txt']);
+    }
+
+    public init(): void {}
+
+    public override async prepareCommands(
+        commands: readonly Body[]
+    ): Promise<void> {
+        for await (const file of readFiles('descriptions')) {
+            const text = file.bytes.toString().trim();
+            this.describe(commands, file.pathInDir, text);
+        }
+    }
+
+    private describe(
+        commands: readonly Body[],
+        file: string,
+        text: string
+    ) {
+        const command = commands.find(
+            (c) => `${c.name}.txt` === file
+        );
+        if (command && 'description' in command)
+            command.description = text;
+    }
+}
+```
+
+Each file in `descriptions` holds the description for the command it's named after, so `ban.txt` would have the description of `/ban` for example. [`readFiles`](ref:utils/readFiles) only reads a folder that you list in [`files`](/build/data-files). If you list `descriptions` there and save `ban.txt`, `seedcord dev` should show the same prompt as it does for a command file. When you answer `y`, seedcord runs `prepareCommands` again before it sends your commands.
+
+If a pattern starts with `!`, saving a file that it matches doesn't show the prompt. A `descriptions/README.txt` doesn't change any command, so add `'!descriptions/README.txt'` to the list to stop a save to it from showing the prompt. Outside `seedcord dev`, seedcord never reads these patterns.
 
 ## Saving the plugin's own source
 
-A plugin you keep in `src/plugins` needs a restart when you save it, and a hook can't change that. Your bot file imports the plugin and attaches it once at startup, and `seedcord dev` asks for a restart on a save to any file the bot file imports. A hot reload would leave the attached instance running the old code. [Testing it in a bot](/writing-plugins/publishing#test-it-in-a-bot-first) covers a plugin from another package.
+If you keep a plugin in `src/plugins`, saving it needs a restart, and `onHmr` can't change that. Your bot file imports the plugin and attaches it once at startup. `seedcord dev` shows the restart card when you save a file that the bot file imports. A hot reload would leave the attached instance running the old code. To try a plugin from another package, [test it in a bot](/writing-plugins/publishing#test-it-in-a-bot-first) first.

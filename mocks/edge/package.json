@@ -25,6 +25,7 @@
     "dependencies": {
         "@discordjs/builders": "catalog:peer",
         "@seedcord/http": "workspace:^",
+        "@seedcord/plugin-i18n": "workspace:^",
         "db0": "catalog:deps",
         "discord-api-types": "catalog:deps",
         "envapt": "catalog:peer",

@@ -23,6 +23,7 @@
     "dependencies": {
         "@discordjs/builders": "catalog:peer",
         "@seedcord/gateway": "workspace:^",
+        "@seedcord/plugin-i18n": "workspace:^",
         "@seedcord/plugin-mongoose": "workspace:^",
         "discord.js": "catalog:peer",
         "envapt": "catalog:peer",

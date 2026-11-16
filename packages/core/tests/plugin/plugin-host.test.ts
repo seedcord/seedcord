@@ -21,7 +21,7 @@ describe('PluginHost', () => {
         vi.unstubAllEnvs();
     });
 
-    it('lets two hosts live in one process', () => {
+    it('lets two hosts run in one process', () => {
         const first = new TestPluginHost().attach('counter', Counter);
         const second = new TestPluginHost().attach('counter', Counter);
 
