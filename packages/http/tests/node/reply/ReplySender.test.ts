@@ -78,6 +78,12 @@ function postCall(rest: RestMock, index = 0): { route: string; options: PostOpti
     return { route, options };
 }
 
+// a followUp posts the message fields as the body, and the callback wraps them in type and data
+function followUpCall(rest: RestMock, index = 0): { route: string; options: WebhookOptions } {
+    const [route, options] = rest.post.mock.calls[index] as [string, WebhookOptions];
+    return { route, options };
+}
+
 function patchCall(rest: RestMock, index = 0): { route: string; options: WebhookOptions } {
     const [route, options] = rest.patch.mock.calls[index] as [string, WebhookOptions];
     return { route, options };
@@ -344,16 +350,16 @@ describe('ReplySender.followUp', () => {
         expect(postCall(rest).options.query?.get('wait')).toBe('true');
     });
 
-    it('posts the webhook route after a defer', async () => {
+    it('fills @original when it follows up a defer', async () => {
         const rest = restMock();
         const sender = senderFor(rest);
         await sender.defer();
         rest.post.mockClear();
-        rest.post.mockResolvedValue(message);
 
         await sender.followUp(reply);
 
-        expect(postCall(rest).route).toBe(WEBHOOK_ROUTE);
+        expect(patchCall(rest).route).toBe(ORIGINAL_ROUTE);
+        expect(rest.post).not.toHaveBeenCalled();
     });
 
     it('posts the webhook route after a deferUpdate without a PATCH', async () => {
@@ -609,27 +615,48 @@ describe('ReplySender.send', () => {
         expect(postCall(rest).options.body.data?.flags).toBe(V2);
     });
 
-    it('overwrites @original on a second send after a deferred reply', async () => {
+    it('follows up on a second send once the first one fills the deferred reply', async () => {
         const rest = restMock();
         const sender = senderFor(rest);
         await sender.defer();
+        rest.post.mockClear();
+        rest.post.mockResolvedValue(message);
 
         await sender.send(reply);
         await sender.send(reply);
 
-        expect(patchCall(rest, 0).route).toBe(ORIGINAL_ROUTE);
-        expect(patchCall(rest, 1).route).toBe(ORIGINAL_ROUTE);
+        expect(rest.patch).toHaveBeenCalledOnce();
+        expect(postCall(rest).route).toBe(WEBHOOK_ROUTE);
     });
 
-    it("doesn't pass send opts when the deferred-reply path edits", async () => {
+    it('follows up once a bare delete removes the deferred reply', async () => {
         const rest = restMock();
         const sender = senderFor(rest);
         await sender.defer();
+        await sender.delete();
+        rest.post.mockClear();
+        rest.post.mockResolvedValue(message);
+
+        await sender.send(reply);
+
+        expect(postCall(rest).route).toBe(WEBHOOK_ROUTE);
+        expect(rest.patch).not.toHaveBeenCalled();
+    });
+
+    it('deletes the deferred reply and follows up when send passes a different visibility', async () => {
+        const rest = restMock();
+        const sender = senderFor(rest);
+        await sender.defer();
+        rest.post.mockClear();
+        rest.post.mockResolvedValue(message);
 
         await sender.send(reply, { ephemeral: false });
 
-        expect(patchCall(rest).route).toBe(ORIGINAL_ROUTE);
-        expect(patchCall(rest).options.body.flags).toBe(V2);
+        expect(rest.patch).not.toHaveBeenCalled();
+        expect(deleteRoute(rest)).toBe(ORIGINAL_ROUTE);
+        expect(rest.delete).toHaveBeenCalledBefore(rest.post);
+        expect(followUpCall(rest).route).toBe(WEBHOOK_ROUTE);
+        expect(followUpCall(rest).options.body.flags).toBe(V2);
     });
 });
 

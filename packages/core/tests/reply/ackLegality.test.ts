@@ -1,7 +1,7 @@
 import { SeedcordErrorCode, isSeedcordError } from '@seedcord/errors';
 import { describe, expect, it } from 'vite-plus/test';
 
-import { checkAckLegality, sendTarget } from '#reply/ackLegality';
+import { checkAckLegality } from '#reply/ackLegality';
 import { AckTrace } from '#reply/AckTrace';
 
 import { stripAnsi } from './helpers';
@@ -10,7 +10,9 @@ import type { AckState, ReplyMethod } from '#reply/ackLegality';
 
 const ROUTE = 'slash:ban';
 
-const LEGAL: Record<AckState, ReplyMethod[]> = {
+type AckKind = AckState['kind'];
+
+const LEGAL: Record<AckKind, ReplyMethod[]> = {
     unacked: ['reply', 'defer', 'deferUpdate', 'update', 'send', 'showModal'],
     'deferred-reply': ['followUp', 'edit', 'delete', 'send'],
     'deferred-update': ['update', 'followUp', 'edit', 'delete', 'send'],
@@ -29,7 +31,7 @@ const ALL_METHODS: ReplyMethod[] = [
     'showModal'
 ];
 
-function captureMessage(method: ReplyMethod, state: AckState): string {
+function captureMessage(method: ReplyMethod, state: AckKind): string {
     try {
         checkAckLegality(method, state, ROUTE);
     } catch (error) {
@@ -40,7 +42,7 @@ function captureMessage(method: ReplyMethod, state: AckState): string {
 }
 
 describe('checkAckLegality', () => {
-    for (const state of Object.keys(LEGAL) as AckState[]) {
+    for (const state of Object.keys(LEGAL) as AckKind[]) {
         for (const method of ALL_METHODS) {
             const legal = LEGAL[state].includes(method);
             it(`${legal ? 'permits' : 'rejects'} ${method} in ${state}`, () => {
@@ -70,10 +72,9 @@ describe('checkAckLegality', () => {
         expect(message).toContain('edit()');
     });
 
-    it('suggests edit and followUp when reply is called after a deferred reply', () => {
+    it('points reply after a deferred reply at edit, which fills it', () => {
         const message = captureMessage('reply', 'deferred-reply');
-        expect(message).toContain('edit()');
-        expect(message).toContain('followUp()');
+        expect(message).toContain('Use edit() to fill the deferred reply.');
     });
 
     it('suggests only followUp when reply is called after a deferred update', () => {
@@ -133,14 +134,5 @@ describe('checkAckLegality', () => {
             if (!isSeedcordError(error)) throw error;
             expect(error.cause).toBeUndefined();
         }
-    });
-});
-
-describe('sendTarget', () => {
-    it('maps each ack state to its concrete dispatch method', () => {
-        expect(sendTarget('unacked')).toBe('reply');
-        expect(sendTarget('deferred-reply')).toBe('edit');
-        expect(sendTarget('deferred-update')).toBe('followUp');
-        expect(sendTarget('replied')).toBe('followUp');
     });
 });

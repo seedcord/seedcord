@@ -33,6 +33,8 @@ Send with reply() or defer() first. After that, edit() rewrites it. (route slash
 
 Every later call reads that same stale state, so [`followUp()`](ref:gateway/RepliableHandler.followUp) and [`delete()`](ref:gateway/RepliableHandler.delete) throw too.
 
+A [`Notice`](ref:core/Notice) thrown after a raw ack never reaches the user. seedcord sends the refusal as a first reply, and Discord rejects it because the interaction was already acknowledged. seedcord catches that rejection and logs a debug line. On http, a callback on `this.api.interactions` has the same effect.
+
 ## The lint rule
 
 The `edit()` call above throws only when someone runs the command. The lint rule reports the raw call while you write it.

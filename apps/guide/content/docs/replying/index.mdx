@@ -31,11 +31,21 @@ reply() was called when this interaction was already replied to.
 Use followUp() for a new message or edit() to rewrite the reply. (route slash:ban)
 ```
 
-discord.js checks too. Its error reads "The reply to this interaction has already been sent or deferred." seedcord's reports which method works from there and which route threw. Its `cause` has a stack pointing at the line that answered first. On http, `this.api` doesn't check at all, so a second callback comes back from Discord as an API error. [When a reply throws](/replying/ack-states) covers every case.
+discord.js also rejects a second answer, and its error doesn't say what to do next. seedcord's error says which method works from there and which route threw. Its `cause` points at the line that answered first. [When a reply throws](/replying/ack-states) covers every case.
 
-The state matters most when your handler refuses. You refuse by throwing a [`Notice`](ref:core/Notice). seedcord then sends its card through the same handler with [`send()`](ref:gateway/RepliableHandler.send), which reads the state to pick a method. If nothing went out yet, the card is the reply. After `defer()` it fills the thinking placeholder, and after a reply it arrives as a follow-up. You write the same `throw` from any of those points.
+The state matters most when your handler refuses. You refuse by throwing a [`Notice`](ref:core/Notice), and seedcord sends the refusal with [`send()`](ref:gateway/RepliableHandler.send), which picks the method from the state.
 
-That holds while you send every answer through the handler. `this.event.reply()` reaches Discord and leaves the state at `unacked`. A callback on `this.api.interactions` does the same on http. seedcord then sends a `Notice` thrown after it as a first reply, which Discord rejects because the interaction was already acknowledged. seedcord catches that rejection and logs a debug line. The person who ran the command sees your message and never sees the refusal.
+{/* prettier-ignore-start */}
+
+| when you throw | the refusal |
+| --- | --- |
+| before answering | is the reply |
+| after `defer()` | fills the thinking placeholder |
+| after a reply | arrives as a follow-up |
+
+{/* prettier-ignore-end */}
+
+You write the same `throw` from any of those points. That only works while you send every answer through the handler. If you answer with `this.event.reply()` or `this.api`, a `Notice` you throw afterwards never reaches the user, which [Raw acks](/replying/raw-acks#a-raw-ack-leaves-the-state-stale) explains.
 
 ## Replying with an error
 
