@@ -89,6 +89,13 @@ describe('I18n', () => {
             expect(neither.locale).toBe('en-US');
         });
 
+        it("formats an attribute as message.attribute, and reads the base's when the locale's file doesn't have it", async () => {
+            const t = await tFor(from({ userLocale: Locale.Polish }));
+
+            expect(t('email-field', {})).toBe('E-mail');
+            expect(t('email-field.placeholder', { domain: 'seedcord.org' })).toBe('you@seedcord.org');
+        });
+
         it("binds to the base for a locale that doesn't have a file", async () => {
             const t = await tFor(from({ userLocale: Locale.Japanese }));
 
@@ -220,13 +227,16 @@ describe('I18n', () => {
     });
 
     describe('codegen', () => {
-        it("types each message's variables, merged across every locale", async () => {
+        it("types each message's and each attribute's variables, merged across every locale", async () => {
             expect(await i18nAt('good').codegen()).toEqual({
                 messages: {
                     greeting: { user: 'text' },
                     items: { count: 'number' },
                     role: { user: 'text', role: ['admin', 'mod', 'other', 'owner'] },
-                    'ping-reply': { ms: 'number' }
+                    'ping-reply': { ms: 'number' },
+                    'label.title': {},
+                    'email-field': {},
+                    'email-field.placeholder': { domain: 'text' }
                 }
             });
         });
@@ -242,7 +252,7 @@ describe('I18n', () => {
 
             expect(notes).toContainEqual(
                 expect.stringMatching(
-                    /pl\.ftl doesn't have ping-reply, label\. Users on that locale get the en-US text/
+                    /pl\.ftl doesn't have ping-reply, label\.title, email-field\.placeholder\. Users on that locale get the en-US text/
                 )
             );
             expect(notes).toContainEqual(

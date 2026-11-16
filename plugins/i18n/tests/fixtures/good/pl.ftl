@@ -12,3 +12,4 @@ role = { $user } jest { $role ->
     [owner] właścicielem
    *[other] członkiem
 }
+email-field = E-mail

@@ -13,3 +13,5 @@ role = { $user } is { $role ->
 ping-reply = Pong! { NUMBER($ms) }ms
 label =
     .title = Label
+email-field = Email
+    .placeholder = you@{ $domain }

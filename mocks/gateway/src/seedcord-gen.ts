@@ -34,7 +34,7 @@ declare module '@seedcord/gateway' {
         Confirm: 'application';
     }
     interface PluginTypes {
-        '@seedcord/plugin-i18n': Fits<(typeof Bot)['i18n'], { messages: { 'asked-in': { locale: 'text' }; greet: { name: 'text' }; profile: { joined: 'text'; tag: 'text' }; 'profile-cooldown': { when: 'text' }; roundtrip: { ms: 'number' }; uptime: { seconds: 'number' } } }>;
+        '@seedcord/plugin-i18n': Fits<(typeof Bot)['i18n'], { messages: { 'asked-in': { locale: 'text' }; greet: { name: 'text' }; profile: { joined: 'text'; tag: 'text' }; 'profile-cooldown': { when: 'text' }; 'profile.title': { tag: 'text' }; roundtrip: { ms: 'number' }; uptime: { seconds: 'number' } } }>;
         '@seedcord/plugin-mongoose': Fits<(typeof Bot)['db'], { services: { users: (typeof import('./services/Users'))['Users'] } }>;
     }
     interface DispatchMemberValues {

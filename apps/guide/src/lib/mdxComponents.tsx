@@ -179,9 +179,10 @@ const OFF_SITE = /^[a-z]+:/i;
 type MarkdownLinkProps = Pick<ComponentProps<'a'>, 'href' | 'title' | 'children'>;
 
 function GuideLink({ href, children, ...props }: MarkdownLinkProps): ReactElement {
-    if (href === undefined) {
+    // next's Link skips the scroll when the url already ends in the same #hash, and the browser doesn't
+    if (href === undefined || href.startsWith('#')) {
         return (
-            <a {...props} className={cn(LINK)}>
+            <a {...props} href={href} className={cn(LINK)}>
                 {children}
             </a>
         );

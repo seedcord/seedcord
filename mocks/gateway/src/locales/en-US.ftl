@@ -6,4 +6,5 @@ uptime = Up for **{ $seconds ->
 }**
 asked-in = Asked in **{ $locale }**
 profile = Profile for { $tag }, on Discord since { $joined }.
+    .title = { $tag }'s profile
 profile-cooldown = Slow down. You can view another profile { $when }.

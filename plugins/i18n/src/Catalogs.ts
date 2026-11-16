@@ -4,6 +4,7 @@ import { SeedcordError } from '@seedcord/errors/internal';
 import { asError } from '@seedcord/utils/internal';
 
 import { fallbackChain } from './locales';
+import { splitKey } from './messageKey';
 
 import type { MessageTable, VariableKind } from './catalog/checkCatalog';
 import type { LocaleCode } from './locales';
@@ -44,12 +45,14 @@ export class Catalogs {
     }
 
     private format(locale: LocaleCode, key: string, args?: Args): string {
+        const [id, attribute] = splitKey(key);
         for (const code of fallbackChain(locale, this.base)) {
             const bundle = this.bundle(code);
-            const message = bundle?.getMessage(key);
-            if (!bundle || !message?.value) continue;
+            const message = bundle?.getMessage(id);
+            const pattern = attribute === undefined ? message?.value : message?.attributes[attribute];
+            if (!bundle || !pattern) continue;
             try {
-                return bundle.formatPattern(message.value, args);
+                return bundle.formatPattern(pattern, args);
             } catch (error) {
                 throw new SeedcordError(SeedcordErrorCode.PluginI18nOutOfDate, [
                     key,

@@ -3,12 +3,14 @@ import { paint, SeedcordErrorCode } from '@seedcord/errors';
 import { SeedcordError } from '@seedcord/errors/internal';
 
 import { fallbackChain, isDiscordLocale, localesLike } from '#src/locales';
+import { messageKey, splitKey } from '#src/messageKey';
 
 import type { LocaleCode } from '#src/locales';
 import type {
     FunctionReference,
     Message,
     MessageReference,
+    Pattern,
     SelectExpression,
     Term,
     TermReference,
@@ -42,8 +44,7 @@ interface EntryReferences {
     readonly references: ReadonlySet<string>;
 }
 
-interface ParsedMessage {
-    readonly entry: Message;
+interface ParsedKey {
     readonly line: number;
     readonly variables: MessageVariables;
 }
@@ -105,10 +106,27 @@ class EntryScan extends Visitor {
     }
 }
 
-function scan(entry: Message | Term): EntryScan {
+function scan(node: Message | Term | Pattern): EntryScan {
     const entryScan = new EntryScan();
-    entryScan.visit(entry);
+    entryScan.visit(node);
     return entryScan;
+}
+
+function keysOf(entry: Message, line: number): [key: string, parsed: ParsedKey][] {
+    const id = entry.id.name;
+    const keys: [string, ParsedKey][] = entry.attributes.map(({ id: attribute, value }) => [
+        messageKey(id, attribute.name),
+        { line, variables: scan(value).variables }
+    ]);
+    if (entry.value) keys.unshift([messageKey(id), { line, variables: scan(entry.value).variables }]);
+    return keys;
+}
+
+function describe(key: string): string {
+    const [id, attribute] = splitKey(key);
+    return attribute === undefined
+        ? `the message ${paint.sky(id)}`
+        : `${paint.sky(`.${attribute}`)} on ${paint.sky(id)}`;
 }
 
 function lineAt(source: string, offset: number): number {
@@ -144,11 +162,10 @@ class CatalogCheck {
             for (const [fallback, missingKeys] of byFallback) {
                 untranslated.push({ relativePath: file.relativePath, missingKeys, fallback });
             }
-            for (const [key, message] of messages) this.compare(file.relativePath, key, message, baseMessages.get(key));
+            for (const [key, parsedKey] of messages)
+                this.compare(file.relativePath, key, parsedKey, baseMessages.get(key));
         }
-        // t() can't format a message that only has attributes
-        const withText = baseMessages.entries().filter(([, { entry }]) => entry.value !== null);
-        const messages = Object.fromEntries(withText.map(([key, { variables }]) => [key, variables]));
+        const messages = Object.fromEntries(baseMessages.entries().map(([key, { variables }]) => [key, variables]));
         return { messages, problems: this.problems, untranslated };
     }
 
@@ -156,20 +173,20 @@ class CatalogCheck {
     private fallbackFor(
         locale: LocaleCode,
         key: string,
-        parsed: ReadonlyMap<string, { readonly messages: ReadonlyMap<string, ParsedMessage> }>
+        parsed: ReadonlyMap<string, { readonly messages: ReadonlyMap<string, ParsedKey> }>
     ): LocaleCode {
         const pairs = fallbackChain(locale, this.base).filter((code) => code !== locale && code !== this.base);
         return pairs.find((code) => parsed.get(code)?.messages.has(key)) ?? this.base;
     }
 
-    private parse({ locale, relativePath, source }: LocaleFile): Map<string, ParsedMessage> {
+    private parse({ locale, relativePath, source }: LocaleFile): Map<string, ParsedKey> {
         if (!isDiscordLocale(locale)) {
             this.problems.push(
                 new SeedcordError(SeedcordErrorCode.PluginI18nNotALocale, [relativePath, localesLike(locale)])
             );
         }
 
-        const messages = new Map<string, ParsedMessage>();
+        const messages = new Map<string, ParsedKey>();
         const defined = new Set<string>();
         const uses: EntryReferences[] = [];
         for (const entry of parse(source, { withSpans: true }).body) {
@@ -182,13 +199,12 @@ class CatalogCheck {
             }
             if (entry.type !== 'Message' && entry.type !== 'Term') continue;
 
-            const { variables, references } = scan(entry);
-            uses.push({ line, references });
+            uses.push({ line, references: scan(entry).references });
             if (entry.type === 'Term') {
                 defined.add(`-${entry.id.name}`);
             } else {
                 defined.add(entry.id.name);
-                messages.set(entry.id.name, { entry, line, variables });
+                for (const [key, parsedKey] of keysOf(entry, line)) messages.set(key, parsedKey);
             }
         }
         this.checkReferences(relativePath, uses, defined);
@@ -213,24 +229,19 @@ class CatalogCheck {
     private compare(
         relativePath: string,
         key: string,
-        { entry, line, variables }: ParsedMessage,
-        inBase: ParsedMessage | undefined
+        { line, variables }: ParsedKey,
+        inBase: ParsedKey | undefined
     ): void {
         const at = `${relativePath}:${line}`;
         if (!inBase) {
-            this.notInBase(at, `the message ${paint.sky(key)}`);
+            this.notInBase(at, describe(key));
             return;
         }
 
-        // each translation merges its variables into the base message's
+        // each translation merges its variables into the base key's
         for (const [name, kind] of Object.entries(variables)) {
             if (Object.hasOwn(inBase.variables, name)) inBase.variables[name] = merge(inBase.variables[name], kind);
             else this.notInBase(at, `${paint.sky(`$${name}`)} in ${paint.sky(key)}`);
-        }
-
-        const baseAttributes = new Set(inBase.entry.attributes.map(({ id }) => id.name));
-        for (const { id } of entry.attributes) {
-            if (!baseAttributes.has(id.name)) this.notInBase(at, `${paint.sky(`.${id.name}`)} on ${paint.sky(key)}`);
         }
     }
 

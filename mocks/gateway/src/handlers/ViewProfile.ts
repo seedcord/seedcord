@@ -28,6 +28,7 @@ export class ViewProfile extends UserContextMenuHandler<'View Profile'> {
     public async execute(): Promise<void> {
         const { tag, createdAt } = this.target;
 
-        await this.reply(this.t('profile', { tag, joined: time(createdAt, 'R') }));
+        const heading = this.t('profile.title', { tag });
+        await this.reply(`### ${heading}\n${this.t('profile', { tag, joined: time(createdAt, 'R') })}`);
     }
 }

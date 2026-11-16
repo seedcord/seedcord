@@ -7,4 +7,5 @@ uptime = Działa od **{ $seconds ->
 }**
 asked-in = Zapytano w **{ $locale }**
 profile = Profil { $tag }, na Discordzie od { $joined }.
+    .title = Profil { $tag }
 profile-cooldown = Zwolnij. Kolejny profil możesz zobaczyć { $when }.

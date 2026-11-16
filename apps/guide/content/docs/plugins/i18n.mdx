@@ -99,7 +99,18 @@ A variant can also match an exact number, like `[0]` in `hi.ftl`. Fluent takes t
 
 A translation can leave messages out, but it can't add any. If `hi.ftl` has a message, a variable, or an attribute that `en-US.ftl` doesn't, [`seedcord codegen`](/plugins/typing) throws `PluginI18nNotInBase`. An extra message would be unusable because `t` only accepts keys from the base file.
 
-The [Fluent syntax guide](https://projectfluent.org/fluent/guide/) covers the rest of the format, like terms and functions. Attributes are the `.name = ...` lines that Fluent allows under a message. `t` only formats a message's main text and skips its attributes.
+The [Fluent syntax guide](https://projectfluent.org/fluent/guide/) covers the rest of the format, like terms and functions.
+
+### Attributes
+
+A message can hold more text on `.name = ...` lines under it, which Fluent calls attributes. They keep the strings of one component together, like a modal field's label and placeholder:
+
+```ftl title="src/locales/en-US.ftl"
+email-field = Your email
+    .placeholder = name@example.com
+```
+
+To format an attribute, put the message key in front of its name, like `t('email-field.placeholder')`. Each attribute has its own variables, so codegen types `email-field` and `email-field.placeholder` separately. If `hi.ftl` translates `email-field` but not its `.placeholder`, a Hindi user gets the English placeholder.
 
 ## Calling t in a handler
 
@@ -331,6 +342,56 @@ export class EmptyInventory extends Notice {
 ```
 
 In a handler, you build the same component with `new InventoryCard(this.t, items.length)`. `EmptyInventory` passes `ctx.t`, so the card text is in the user's language too.
+
+A modal works the same way. `EmailModal` reads its field's label and placeholder from the [attributes](#attributes) of `email-field`:
+
+```ts twoslash title="src/components/EmailModal.ts"
+import type { LabelBuilder } from '@discordjs/builders';
+import { BuilderComponent } from '@seedcord/gateway';
+import { TextInputStyle } from 'discord.js';
+
+import type { DispatchMemberValues } from '@seedcord/gateway';
+// ---cut-start---
+import type { I18n } from '@seedcord/plugin-i18n';
+declare module '@seedcord/gateway' {
+    interface PluginTypes {
+        '@seedcord/plugin-i18n': {
+            messages: {
+                'email-field': {};
+                'email-field.placeholder': {};
+            };
+        };
+    }
+    interface DispatchMemberValues {
+        t: Awaited<ReturnType<I18n['dispatchMembers']['t']>>;
+    }
+}
+// ---cut-end---
+
+type T = DispatchMemberValues['t'];
+
+export class EmailModal extends BuilderComponent<'modal'> {
+    constructor(t: T) {
+        super('modal');
+
+        this.instance
+            .setCustomId('email')
+            .setTitle(t('email-field'))
+            .addLabelComponents((label) => this.email(label, t));
+    }
+
+    private email(label: LabelBuilder, t: T): LabelBuilder {
+        return label
+            .setLabel(t('email-field'))
+            .setTextInputComponent((input) =>
+                input
+                    .setCustomId('email')
+                    .setStyle(TextInputStyle.Short)
+                    .setPlaceholder(t('email-field.placeholder'))
+            );
+    }
+}
+```
 
 ## Which language t uses
 
