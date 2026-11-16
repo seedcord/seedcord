@@ -5,7 +5,7 @@ description: Connect a bot on your own server to SQLite, Postgres, MySQL, or ano
 
 [`@seedcord/plugin-kysely`](ref:plugin-kysely) opens your database connection and runs your migrations when the bot starts, then closes the connection when it stops. Your queries are plain [Kysely](https://kysely.dev/docs/intro) queries.
 
-You pick the database with a Kysely dialect. This tab uses SQLite through `better-sqlite3`. For another database, only `dialect` changes, like in [the Postgres sample](#other-databases).
+You pick the database with a Kysely dialect. This tab uses SQLite through `better-sqlite3`. For another database you only change `dialect`, as in [the Postgres sample](#other-databases).
 
 <Shell add="@seedcord/plugin-kysely kysely better-sqlite3" />
 
@@ -36,7 +36,7 @@ export default seedcord;
 
 This sample builds a gateway bot. The same `attach` call works on an http `Seedcord` from `@seedcord/http` that runs on a server. On Cloudflare Workers it's a compile error because the plugin [needs a server](/plugins#a-plugin-declares-where-it-runs), and a cast that gets past it throws `CorePluginScopeMismatch`.
 
-You have to pass `dir`, `dialect`, and `migrations`. `dir` and `migrations.dir` are folders of your bot. A relative path is relative to `root`, and both have to be inside it, as [the folder rules](/plugins) describe. The `'bot.db'` path is different, since `better-sqlite3` opens it relative to the folder you start the bot from.
+You have to pass `dir`, `dialect`, and `migrations`. A relative `dir` or `migrations.dir` resolves against `root`, and both folders have to be inside it, as [the folder rules](/plugins) describe. The `'bot.db'` path is different, since `better-sqlite3` opens it relative to the folder you start the bot from.
 
 ## Why `dialect` is a function
 
@@ -129,7 +129,7 @@ If `dialect()` throws or that first connection fails, `init()` throws `PluginCon
 
 <Callout type="warning">
 
-The `dir` folder and, unless you set `onStartup` to `false`, the migrations folder have to exist before the first start. If one is missing, `init()` throws `CorePathUnreadable` with the path. A built bot throws `CoreDirectoryNotBuilt` instead because `seedcord build` doesn't find a folder to bundle. An empty folder works in both. Git doesn't track an empty folder, though, so put a `.gitkeep` in it, which the plugin skips like every dotfile. With `onStartup: false`, `init()` never reads the migrations folder, so the error appears on your first call to a migration method.
+The `dir` folder and, unless you set `onStartup` to `false`, the migrations folder have to exist before the first start. If one is missing, `init()` throws `CorePathUnreadable` with the path. A built bot throws `CoreDirectoryNotBuilt` instead because `seedcord build` doesn't find a folder to bundle. An empty folder works in both. Git doesn't track an empty folder, so put a `.gitkeep` in it, which the plugin skips like every dotfile. With `onStartup: false`, `init()` never reads the migrations folder and the error appears on your first call to a migration method.
 
 </Callout>
 

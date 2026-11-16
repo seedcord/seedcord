@@ -7,4 +7,4 @@
 
 # @seedcord/eslint-config-base
 
-A private package with the ESLint rules exported via `@seedcord/eslint-config`, which bundles it. The private packages run ESLint with it directly.
+A private package with the ESLint rules that `@seedcord/eslint-config` bundles. `@seedcord/eslint-config` depends on the ESLint plugins and `vite-config`, so those packages and the ones they build on lint with this package directly.

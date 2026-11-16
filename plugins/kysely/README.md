@@ -66,7 +66,7 @@ export default new Seedcord({
 
 `dialect` is a function because `seedcord codegen` and `seedcord build` import `bot.ts` without starting the bot. The plugin calls it when the bot starts, so neither command opens your database.
 
-Each file in `services/` holds a service for one table. `AppDatabase` is the table interface you write for Kysely:
+Each file in `services/` holds a service for one table. `AppDatabase` is the interface you write that lists your tables:
 
 ```ts
 // services/Users.ts

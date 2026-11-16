@@ -211,7 +211,7 @@ const GROUPS: Group[] = [
             { icon: Languages, label: 'i18n', gloss: "replies and commands in each user's language" },
             { icon: CalendarClock, label: 'Tasks', gloss: 'cron jobs and scheduled tasks' },
             { icon: Leaf, label: 'Mongoose', gloss: 'MongoDB, services typed by key' },
-            { icon: Database, label: 'Kysely', gloss: 'SQLite, Postgres, MySQL, schema typed queries' }
+            { icon: Database, label: 'Kysely', gloss: 'SQLite, Postgres, MySQL, queries typed off your schema' }
         ]
     }
 ];
