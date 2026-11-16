@@ -111,8 +111,8 @@ catalogs:
     '@discordjs/builders': ^1.14.1
     discord.js: ^14.27.0
     envapt: ^9.2.0
-    kysely: ^0.29.4
-    mongoose: ^9.9.1
+    kysely: ^0.29.8
+    mongoose: ^9.12.0
     pg: ^8.22.0
     typescript: ^6.0.3
     vite: ^8.3.4

@@ -5,15 +5,18 @@ import path from 'node:path';
 import { Plugin } from '@seedcord/core/plugin';
 import { SeedcordErrorCode, paint } from '@seedcord/errors';
 import { SeedcordError } from '@seedcord/errors/internal';
+import { PluginServices } from '@seedcord/plugin-utils';
 import { keepDefined } from '@seedcord/utils';
 import { Envapter } from 'envapt';
 import { Kysely, PostgresDialect } from 'kysely';
 import { Pool, type PoolConfig, type PoolClient } from 'pg';
 
+import { KyselyServiceMetadataKey } from './decorators/RegisterKyselyService';
 import { KyselyMigrationManager } from './KyselyMigrationManager';
-import { KyselyServiceRegistry } from './KyselyServiceRegistry';
+import { KyselyService } from './KyselyService';
 import { PostgresDatabaseBootstrapper } from './PostgresDatabaseBootstrapper';
 
+import type { KyselyServiceConstructor } from './KyselyService';
 import type { KyselySchema } from './types/KyselyDatabase';
 import type { MigrationOptions, StepMigrationOptions } from './types/KyselyMigration';
 import type { KyselyOptions } from './types/KyselyOptions';
@@ -21,7 +24,6 @@ import type { KyselyServices } from './types/KyselyServices';
 import type { CoreBase } from '@seedcord/core';
 import type { HmrUpdateEvent } from '@seedcord/types';
 import type { MigrationInfo } from 'kysely/migration';
-import type { Constructor } from 'type-fest';
 
 /**
  * Postgres plugin using Kysely.
@@ -32,16 +34,12 @@ import type { Constructor } from 'type-fest';
 export class KyselyPostgres extends Plugin<{ transport: 'any'; runtime: 'server' }> {
     public static readonly id = '@seedcord/plugin-kysely-postgres';
 
-    private isInitialised = false;
-    private servicesReady = false;
-    private inFlight: Promise<void> | null = null;
-
     /** Exposed Kysely instance once `init` completes. */
     declare public connection: Kysely<KyselySchema>;
     private pool: Pool | null = null;
     private onConnectHandler: ((client: PoolClient) => void) | null = null;
     private migrationManager: KyselyMigrationManager | null = null;
-    private readonly serviceRegistry: KyselyServiceRegistry;
+    private readonly serviceRegistry: PluginServices<KyselyServiceConstructor, KyselyServices>;
     private readonly databaseBootstrapper: PostgresDatabaseBootstrapper;
     private databaseName: string | null = null;
 
@@ -51,9 +49,6 @@ export class KyselyPostgres extends Plugin<{ transport: 'any'; runtime: 'server'
      * @throws A **SeedcordError** if accessed before the plugin finishes initializing.
      */
     public get services(): KyselyServices {
-        if (!this.servicesReady) {
-            throw new SeedcordError(SeedcordErrorCode.PluginServicesNotReady, [this.constructor.name]);
-        }
         return this.serviceRegistry.map;
     }
 
@@ -62,7 +57,15 @@ export class KyselyPostgres extends Plugin<{ transport: 'any'; runtime: 'server'
         private readonly options: KyselyOptions
     ) {
         super(host, { runtime: 'server', dispose: keepDefined({ timeout: options.timeout }) });
-        this.serviceRegistry = new KyselyServiceRegistry(this, this.core, this.logger, options.dir);
+        this.serviceRegistry = new PluginServices({
+            pluginName: this.constructor.name,
+            dir: options.dir,
+            logger: this.logger,
+            base: KyselyService,
+            metadataKey: KyselyServiceMetadataKey,
+            decorator: '@RegisterKyselyService',
+            create: (Service) => new Service(this, this.core)
+        });
         this.databaseBootstrapper = new PostgresDatabaseBootstrapper(this.logger);
 
         if (!Envapter.isDevelopment) return;
@@ -72,24 +75,13 @@ export class KyselyPostgres extends Plugin<{ transport: 'any'; runtime: 'server'
 
     /** @internal For use in dev mode */
     public override async onHmr(event: HmrUpdateEvent): Promise<void> {
-        await this.serviceRegistry.onHmr(event);
+        await this.serviceRegistry.handle(event);
     }
 
     /**
      * Connects to Postgres, runs any startup migrations, and loads decorated services.
-     *
-     * Safe to call multiple times, subsequent calls exit early.
      */
-    public init(): Promise<void> {
-        if (this.isInitialised) return Promise.resolve();
-        // racing callers share one attempt, and clearing it on settle means the next call starts a fresh one
-        this.inFlight ??= this.runInit().finally(() => {
-            this.inFlight = null;
-        });
-        return this.inFlight;
-    }
-
-    private async runInit(): Promise<void> {
+    public async init(): Promise<void> {
         try {
             await this.connect();
             const startupConfig = this.options.migrations.onStartup;
@@ -106,17 +98,14 @@ export class KyselyPostgres extends Plugin<{ transport: 'any'; runtime: 'server'
             await this.disconnect().catch((error: unknown) => this.logger.error('failed to close the pool', error));
             throw caught;
         }
-        this.servicesReady = true;
-        this.isInitialised = true;
     }
 
     public override async dispose(): Promise<void> {
         await this.disconnect();
     }
 
-    public override async codegen(): Promise<{ services: Record<string, Constructor<object>> }> {
-        const found = await Array.fromAsync(this.serviceRegistry.serviceClassesIn(this.options.dir));
-        return { services: Object.fromEntries(found.map(({ key, Service }) => [key, Service])) };
+    public override codegen(): Promise<{ services: Record<string, KyselyServiceConstructor> }> {
+        return this.serviceRegistry.codegen();
     }
 
     private async connect(): Promise<void> {
@@ -154,8 +143,6 @@ export class KyselyPostgres extends Plugin<{ transport: 'any'; runtime: 'server'
 
     private async disconnect(): Promise<void> {
         this.serviceRegistry.clear();
-        this.servicesReady = false;
-        this.isInitialised = false;
 
         const pool = this.pool;
         if (!pool) return;
@@ -224,11 +211,6 @@ export class KyselyPostgres extends Plugin<{ transport: 'any'; runtime: 'server'
 
         this.migrationManager = manager;
         return manager;
-    }
-
-    /** @internal */
-    _register(key: string, instance: unknown): void {
-        this.serviceRegistry.register(key, instance);
     }
 
     private async resolvePool(): Promise<Pool> {

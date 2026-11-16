@@ -43,8 +43,7 @@ export abstract class KyselyService<TTable extends LiteralUnion<KyselyTable, str
     ) {
         const ctor = this.constructor;
 
-        const key = Reflect.getMetadata(KyselyServiceMetadataKey, ctor) as string | undefined;
-        if (!key) {
+        if (!Reflect.hasMetadata(KyselyServiceMetadataKey, ctor)) {
             throw new SeedcordTypeError(SeedcordErrorCode.PluginServiceDecoratorMissing, [
                 '@RegisterKyselyService',
                 ctor.name
@@ -59,7 +58,6 @@ export abstract class KyselyService<TTable extends LiteralUnion<KyselyTable, str
         }
 
         this.table = table;
-        this.kysely._register(key, this);
     }
 
     /**

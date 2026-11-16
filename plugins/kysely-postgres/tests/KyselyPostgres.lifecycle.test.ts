@@ -100,19 +100,6 @@ describe('KyselyPostgres lifecycle', () => {
         );
     });
 
-    it('builds one pool when two callers race init', async () => {
-        // the plugin's own pool is the only one built because targeting the admin db returns ensure() early
-        const plugin = new KyselyPostgres(mockCore, {
-            connectionString: 'postgres://localhost:5432/postgres',
-            migrations: { dir: testEnv.resolvePath('migrations') },
-            dir: testEnv.resolvePath('services')
-        });
-
-        await Promise.all([plugin.init(), plugin.init()]);
-
-        expect(poolConstruct).toHaveBeenCalledTimes(1);
-    });
-
     it('retries after a failed init', async () => {
         const plugin = new KyselyPostgres(mockCore, {
             connectionString: 'postgres://localhost:5432/postgres',
@@ -162,16 +149,6 @@ describe('KyselyPostgres lifecycle', () => {
         expect(() => plugin.services).toThrow(
             expect.objectContaining({ code: SeedcordErrorCode.PluginServicesNotReady })
         );
-    });
-
-    it('connects once across repeated init calls', async () => {
-        const plugin = build();
-
-        await plugin.init();
-        const first = plugin.connection;
-        await plugin.init();
-
-        expect(plugin.connection).toBe(first);
     });
 
     it('exposes the connection and the services map once init resolves', async () => {

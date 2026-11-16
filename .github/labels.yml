@@ -51,6 +51,9 @@
 - name: '📦 eslint-utils'
   color: 6278bc
   description: Internal shared utilities for the eslint plugins
+- name: '📦 plugin-utils'
+  color: 6278bc
+  description: Internal code the first-party plugins share
 - name: '📦 prose'
   color: 6278bc
   description: The repo's prose rules, Vale styles and the write-time hook

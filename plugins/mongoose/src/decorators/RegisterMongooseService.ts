@@ -7,7 +7,12 @@ import type mongoose from 'mongoose';
 import type { Constructor } from 'type-fest';
 
 export const ServiceMetadataKey = Symbol.for('seedcord:mongoose:service');
-export const ModelNameMetadataKey = Symbol.for('seedcord:mongoose:model-name');
+const ModelNameMetadataKey = Symbol.for('seedcord:mongoose:model-name');
+
+// every registered class has one because the decorator writes it together with the service key
+export function modelNameOf(Service: object): string {
+    return Reflect.getMetadata(ModelNameMetadataKey, Service) as string;
+}
 
 /**
  * Registers a database service with a typed key.

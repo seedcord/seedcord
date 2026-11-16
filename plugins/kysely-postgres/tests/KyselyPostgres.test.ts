@@ -1,5 +1,6 @@
 import { setDevChannel } from '@seedcord/core/internal';
-import { describe, it, expect, beforeEach, afterEach, vi } from 'vite-plus/test';
+import { Logger } from '@seedcord/logger';
+import { describe, it, expect, beforeEach, afterEach, onTestFinished, vi } from 'vite-plus/test';
 
 import { KyselyPostgres } from '#src/KyselyPostgres';
 
@@ -56,6 +57,34 @@ describe('KyselyPostgres Plugin Integration', () => {
         await plugin.init();
 
         expect(plugin.services).toHaveProperty('users');
+    });
+
+    it('warns once about a service class without the decorator and ignores the other exports', async () => {
+        const warn = vi.spyOn(Logger.prototype, 'warn');
+        onTestFinished(() => warn.mockRestore());
+        await testEnv.createFile(
+            'services/Plain.ts',
+            `
+            import { KyselyService } from '${pluginsPath}';
+
+            export class Plain extends KyselyService<any> {}
+            export const LIMIT = 5;
+            export function helper(): string {
+                return 'not a service';
+            }
+            `
+        );
+        await testEnv.createFile('services/index.ts', "export { Plain } from './Plain';");
+        plugin = new KyselyPostgres(mockCore, {
+            connectionString: 'postgres://localhost:5432/test',
+            migrations: { dir: testEnv.resolvePath('migrations') },
+            dir: testEnv.resolvePath('services')
+        });
+
+        await plugin.init();
+
+        expect(warn.mock.calls.map(([message]) => message)).toEqual([expect.stringContaining('Plain')]);
+        expect(plugin.services).toEqual({});
     });
 
     it('should handle HMR updates for kysely services', async () => {

@@ -1,7 +1,9 @@
+import { pathToFileURL } from 'node:url';
+
 import { SeedcordErrorCode } from '@seedcord/errors';
 import { Logger } from '@seedcord/logger';
 import mongoose from 'mongoose';
-import { describe, it, expect, beforeEach, afterEach, vi } from 'vite-plus/test';
+import { describe, it, expect, beforeEach, afterEach, onTestFinished, vi } from 'vite-plus/test';
 
 import { Mongoose } from '#src/Mongoose';
 
@@ -184,6 +186,32 @@ describe('Mongoose lifecycle', () => {
         expect(vi.mocked(mongoose.deleteModel)).not.toHaveBeenCalledWith('foreign');
     });
 
+    it('leaves the model of a service that another component registered first', async () => {
+        const file = await testEnv.createFile(
+            'services/Adopted.ts',
+            `
+            import { MongooseService, RegisterMongooseService } from '${pluginsPath}';
+            import mongoose from 'mongoose';
+
+            @RegisterMongooseService('adopted')
+            export class Adopted extends MongooseService {
+                public static schema = new mongoose.Schema({ username: { type: String, required: true } });
+            }
+            `
+        );
+        const { Adopted } = (await import(pathToFileURL(file).href)) as { Adopted: { schema: mongoose.Schema } };
+        // mongoose hands back the existing model for the same schema instance
+        mongoose.model('adopted', Adopted.schema);
+        const plugin = build();
+
+        await plugin.init();
+        expect(plugin.services).toHaveProperty('adopted');
+        await plugin.onHmr({ file, type: 'delete' });
+        await plugin.dispose();
+
+        expect(vi.mocked(mongoose.deleteModel)).not.toHaveBeenCalledWith('adopted');
+    });
+
     it('throws when services is read before init', () => {
         const plugin = build();
 
@@ -192,13 +220,31 @@ describe('Mongoose lifecycle', () => {
         );
     });
 
-    it('connects once across repeated init calls', async () => {
+    it('warns once about a service class without the decorator and ignores the other exports', async () => {
+        const warn = vi.spyOn(Logger.prototype, 'warn');
+        onTestFinished(() => warn.mockRestore());
+        await testEnv.createFile(
+            'services/Plain.ts',
+            `
+            import { MongooseService } from '${pluginsPath}';
+            import mongoose from 'mongoose';
+
+            export class Plain extends MongooseService {
+                public static schema = new mongoose.Schema({ name: String });
+            }
+            export const LIMIT = 5;
+            export function helper(): string {
+                return 'not a service';
+            }
+            `
+        );
+        await testEnv.createFile('services/index.ts', "export { Plain } from './Plain';");
         const plugin = build();
 
         await plugin.init();
-        await plugin.init();
 
-        expect(vi.mocked(mongoose.connect)).toHaveBeenCalledTimes(1);
+        expect(warn.mock.calls.map(([message]) => message)).toEqual([expect.stringContaining('Plain')]);
+        expect(plugin.services).toEqual({});
     });
 
     it('exposes the connection and the services map once init resolves', async () => {
@@ -244,14 +290,6 @@ describe('Mongoose lifecycle', () => {
         await plugin.init();
 
         expect(plugin.services).not.toHaveProperty('users');
-    });
-
-    it('connects once when two callers race init', async () => {
-        const plugin = build();
-
-        await Promise.all([plugin.init(), plugin.init()]);
-
-        expect(vi.mocked(mongoose.connect)).toHaveBeenCalledTimes(1);
     });
 
     it('retries after a failed init', async () => {

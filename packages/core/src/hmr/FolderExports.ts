@@ -71,6 +71,28 @@ export class FolderExports<TUnit> {
     }
 
     /**
+     * Imports every file in the folder and returns what `is` accepts, without registering any of it.
+     * Call it from your plugin's `codegen()`, which runs without `init()`.
+     *
+     * @throws A **SeedcordError** when a file throws while it imports.
+     * @example
+     * ```ts
+     * public override async codegen() {
+     *     const jobs = await this.jobFiles.scan();
+     *     return { jobs: Object.fromEntries(jobs.map((job) => [job.name, job])) };
+     * }
+     * ```
+     */
+    public async scan(): Promise<TUnit[]> {
+        const units = new Set<TUnit>();
+        for await (const { fullPath, imported } of importFiles(this.#options.dir)) {
+            if (!this.#holds(fullPath)) continue;
+            for (const unit of this.#unitsIn(imported)) units.add(unit);
+        }
+        return [...units];
+    }
+
+    /**
      * Unloads or reloads the files in this folder that an {@link HmrUpdateEvent} affects. When that
      * unloads something, it also retries every file whose `register` threw earlier.
      */

@@ -61,6 +61,9 @@
 '📦 eslint-utils':
   - changed-files:
       - any-glob-to-any-file: 'tooling/eslint-utils/**'
+'📦 plugin-utils':
+  - changed-files:
+      - any-glob-to-any-file: 'tooling/plugin-utils/**'
 '📦 prose':
   - changed-files:
       - any-glob-to-any-file: ['tooling/prose/**', '.vale.ini']
