@@ -187,6 +187,12 @@ describe('I18n', () => {
             ]);
         });
 
+        it("doesn't import the code files in a subfolder of `dir`", async () => {
+            const i18n = i18nAt('commands/nested-helper');
+
+            await expect(i18n.prepareCommands(commandBodies())).resolves.toBeUndefined();
+        });
+
         it("throws for a file whose default export commandTranslations didn't make", async () => {
             expect(await problemsIn('plain')).toEqual([
                 [SeedcordErrorCode.PluginI18nNotTranslations, expect.stringMatching(/pl\.ts/)]

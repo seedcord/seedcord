@@ -60,6 +60,19 @@ describe('importFiles', () => {
         expect(seen).toEqual(['A.ts', 'B.tsx', 'C.mts', 'D.js', 'E.jsx', 'F.mjs']);
     });
 
+    it('imports a file only when `filter` returns true for it', async () => {
+        const dir = path.join(scratch, 'filtered');
+        await mkdir(path.join(dir, 'helpers'), { recursive: true });
+        await writeFile(path.join(dir, 'Keep.ts'), 'export {};\n');
+        await writeFile(path.join(dir, 'helpers', 'Throws.ts'), "throw new Error('imported');\n");
+        const seen: string[] = [];
+
+        const kept = importFiles(dir, { filter: ({ pathInDir }) => !pathInDir.includes('/') });
+        for await (const { pathInDir } of kept) seen.push(pathInDir);
+
+        expect(seen).toEqual(['Keep.ts']);
+    });
+
     it('reports the file whose module failed to import, keeping the original as the cause', async () => {
         const error = await rejection(importFiles(path.join(FIXTURES, 'broken')));
 
@@ -309,6 +322,15 @@ describe('readFiles', () => {
         const seen: string[] = [];
 
         for await (const { fullPath } of readFiles(dir)) seen.push(path.relative(dir, fullPath));
+
+        expect(seen).toEqual(['en.json']);
+    });
+
+    it('reads a file only when `filter` returns true for it', async () => {
+        const seen: string[] = [];
+
+        const kept = readFiles(path.join(FIXTURES, 'text'), { filter: ({ pathInDir }) => pathInDir.endsWith('.json') });
+        for await (const { pathInDir } of kept) seen.push(pathInDir);
 
         expect(seen).toEqual(['en.json']);
     });

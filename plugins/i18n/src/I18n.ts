@@ -173,8 +173,8 @@ export class I18n extends Plugin {
 
     public override async prepareCommands(commands: readonly RESTPostAPIApplicationCommandsJSONBody[]): Promise<void> {
         const problems: SeedcordError[] = [];
-        for await (const { fullPath, relativePath, imported } of importFiles(this.dir)) {
-            if (!this.isTranslationFile(fullPath)) continue;
+        const translationFiles = importFiles(this.dir, { filter: ({ fullPath }) => this.isTranslationFile(fullPath) });
+        for await (const { fullPath, relativePath, imported } of translationFiles) {
             const locale = path.parse(fullPath).name;
             const translations = translationsIn(imported.default);
             if (!isDiscordLocale(locale)) {
@@ -227,8 +227,8 @@ export class I18n extends Plugin {
 
     private async localeFiles(): Promise<LocaleFile[]> {
         const files: LocaleFile[] = [];
-        for await (const { fullPath, relativePath, bytes } of readFiles(this.dir)) {
-            if (!this.isCatalogFile(fullPath)) continue;
+        const catalogFiles = readFiles(this.dir, { filter: ({ fullPath }) => this.isCatalogFile(fullPath) });
+        for await (const { fullPath, relativePath, bytes } of catalogFiles) {
             files.push({ locale: path.basename(fullPath, FTL), relativePath, source: bytes.toString() });
         }
         return files;

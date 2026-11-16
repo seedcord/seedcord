@@ -9,6 +9,7 @@ import { fileSource } from './sources';
 
 import type { Buffer } from 'node:buffer';
 
+/** A file that {@link importFiles} or {@link readFiles} found and hasn't imported or read yet. */
 interface FoundFile {
     fullPath: string;
     /**
@@ -19,12 +20,29 @@ interface FoundFile {
     pathInDir: string;
 }
 
+/** Options for {@link importFiles} and {@link readFiles}. */
+interface FileWalkOptions {
+    /** Return `false` to skip a file. A skipped file is never imported or read. */
+    readonly filter?: (file: FoundFile) => boolean;
+}
+
 interface ImportedFile extends FoundFile {
     imported: Record<string, unknown>;
 }
 
 interface ReadFile extends FoundFile {
     bytes: Buffer;
+}
+
+function* filteredFiles<Loader>(
+    folder: string,
+    files: Iterable<[fullPath: string, load: Loader]>,
+    { filter }: FileWalkOptions
+): Generator<[FoundFile, Loader]> {
+    for (const [fullPath, load] of files) {
+        const found = { fullPath, relativePath: displayPath(fullPath), pathInDir: posixRelative(folder, fullPath) };
+        if (!filter || filter(found)) yield [found, load];
+    }
 }
 
 /**
@@ -45,17 +63,16 @@ interface ReadFile extends FoundFile {
  * }
  * ```
  */
-export async function* importFiles(dir: string): AsyncGenerator<ImportedFile> {
+export async function* importFiles(dir: string, options: FileWalkOptions = {}): AsyncGenerator<ImportedFile> {
     const { folder, files } = await fileSource().modules(dir);
-    for (const [fullPath, load] of files) {
-        const relativePath = displayPath(fullPath);
+    for (const [found, load] of filteredFiles(folder, files, options)) {
         let imported: Record<string, unknown>;
         try {
             imported = await load();
         } catch (err) {
-            throw importFailed(relativePath, err);
+            throw importFailed(found.relativePath, err);
         }
-        yield { fullPath, relativePath, pathInDir: posixRelative(folder, fullPath), imported };
+        yield { ...found, imported };
     }
 }
 
@@ -77,18 +94,17 @@ export async function* importFiles(dir: string): AsyncGenerator<ImportedFile> {
  * }
  * ```
  */
-export async function* readFiles(dir: string): AsyncGenerator<ReadFile> {
+export async function* readFiles(dir: string, options: FileWalkOptions = {}): AsyncGenerator<ReadFile> {
     const { folder, files } = await fileSource().files(dir);
-    for (const [fullPath, load] of files) {
-        const relativePath = displayPath(fullPath);
+    for (const [found, load] of filteredFiles(folder, files, options)) {
         let bytes: Buffer;
         try {
             bytes = await load();
         } catch (err) {
-            throw new SeedcordError(SeedcordErrorCode.CorePathUnreadable, [relativePath, asError(err).message], {
+            throw new SeedcordError(SeedcordErrorCode.CorePathUnreadable, [found.relativePath, asError(err).message], {
                 cause: err
             });
         }
-        yield { fullPath, relativePath, pathInDir: posixRelative(folder, fullPath), bytes };
+        yield { ...found, bytes };
     }
 }
