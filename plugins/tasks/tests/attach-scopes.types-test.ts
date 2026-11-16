@@ -15,7 +15,7 @@ function probeHttpServerAccepts(bot: HttpSeedcord): void {
     bot.attach('tasks', Tasks, options);
 }
 
-// the edge Seedcord extends this base
+// the edge Seedcord is a subclass of this base
 function probeEdgeRejects(bot: PluginHost<'http', 'edge'>): void {
     // @ts-expect-error Tasks declares runtime 'server'
     bot.attach('tasks', Tasks, options);

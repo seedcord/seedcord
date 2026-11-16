@@ -16,6 +16,13 @@ export interface TasksOptions {
      * @defaultValue `10_000`
      */
     timeout?: number;
+    /**
+     * Lets cron jobs and scheduled jobs run on their own under `seedcord dev`, where they otherwise wait.
+     * `trigger()` still runs a task without data by hand.
+     *
+     * @defaultValue `false`
+     */
+    runInDev?: boolean;
 }
 
 /** The options `@RegisterTask` takes after a cron pattern. */
@@ -111,7 +118,7 @@ export interface CronStatus {
     key: string;
     pattern: string;
     timezone: string | undefined;
-    /** Whether the pattern's timer is on. `false` before `ready()`, while the task is paused, and once it doesn't have any runs left. */
+    /** Whether the pattern's timer is on. `false` before `ready()`, during a pause, and once it doesn't have any runs left. */
     active: boolean;
     busy: boolean;
     nextRun: Date | null;

@@ -5,7 +5,7 @@ description: Run a task once at a later time with its own data, like an unban a 
 
 Some work has to happen later, like lifting a ban a day after `/tempban`. With `setTimeout`, that unban would be a timer in your bot's memory, and a restart before it ran would lose it.
 
-The [tasks plugin](/plugins/tasks) keeps that work as a _job_: one run of a task at a later time, with some data. [`schedule()`](ref:plugin-tasks/Tasks.schedule) writes the job to your [kv store](/built-ins) first, and then sets a timer. If your kv store keeps its records on disk or in a database, the job is still there after a restart.
+The [tasks plugin](/plugins/tasks) keeps that work as a _job_: one run of a task at a later time, with some data. [`schedule()`](ref:plugin-tasks/Tasks.schedule) writes the job to your [kv store](/built-ins) first, and then sets a timer. If your kv store keeps its records on disk or in a database, the job is still there after a restart. The job [waits under `seedcord dev`](/plugins/tasks#tasks-in-development).
 
 This page assumes the plugin is attached under the key `tasks`. Handlers reach it as [`this.core.tasks`](/plugins#reading-it-from-a-handler) after you run [`seedcord codegen`](/plugins/typing).
 
@@ -118,7 +118,7 @@ Since the ban comes last, nobody gets banned if `schedule()` throws. If the ban 
 
 `schedule()` resolves once your kv store holds the job, so always await it. TypeScript checks the call for you:
 
-- `in` has to be a whole number above 0 followed by `ms`, `s`, `m`, `h`, or `d`, as [`ValidDuration`](ref:utils/ValidDuration) describes. `'1.5h'` fails to compile.
+- [`ValidDuration`](ref:utils/ValidDuration) checks `in`: a whole number above 0 followed by `ms`, `s`, `m`, `h`, or `d`. `'1.5h'` fails to compile.
 - `data` has to match the type on `Unban`. If you leave out `userId`, it fails to compile.
 - If the task doesn't declare data, passing `data` fails to compile.
 

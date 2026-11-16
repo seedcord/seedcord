@@ -461,7 +461,7 @@ describe('Tasks job upkeep', () => {
         const { tasks } = booted;
 
         await tasks.schedule(Reminder, { in: '1h' });
-        expect(logs.at('warn')).toEqual([expect.stringContaining('lost when it exits')]);
+        expect(logs.at('warn')).toEqual([expect.stringContaining('lost when this process exits')]);
 
         await tasks.schedule(Reminder, { in: '2h' });
         expect(logs.at('warn')).toHaveLength(1);

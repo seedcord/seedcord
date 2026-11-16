@@ -17,7 +17,7 @@ export interface CronEntry {
     readonly job: CronJob;
     readonly pattern: string;
     readonly timezone: string | undefined;
-    readonly pausedByDecorator: boolean;
+    readonly startsPaused: boolean;
 }
 
 // holds the run in flight and the pause state for one key. A save registers the key again and reuses this slot
@@ -36,7 +36,7 @@ export class TaskSlot {
     }
 
     public get paused(): boolean {
-        return this.pausedByCall ?? this.entry?.pausedByDecorator ?? false;
+        return this.pausedByCall ?? this.entry?.startsPaused ?? false;
     }
 
     public load(loaded: LoadedTask, cron: CronEntry | undefined): void {

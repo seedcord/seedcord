@@ -22,7 +22,8 @@ export class CronTasks {
     constructor(
         private readonly registry: TaskRegistry,
         private readonly runner: TaskRunner,
-        private readonly defaultTimezone: string | undefined
+        private readonly defaultTimezone: string | undefined,
+        private readonly heldInDev: boolean
     ) {}
 
     public get size(): number {
@@ -82,7 +83,7 @@ export class CronTasks {
             );
         }
 
-        return { job, pattern, timezone, pausedByDecorator: meta.paused ?? false };
+        return { job, pattern, timezone, startsPaused: (meta.paused ?? false) || this.heldInDev };
     }
 
     public start(): void {
@@ -151,7 +152,7 @@ function checkDates(
         throw new SeedcordTypeError(SeedcordErrorCode.PluginTasksInvalidOption, [
             optionOf(loaded, 'stopAt'),
             String(stopAt),
-            `That isn't after its ${paint.bold('startAt')} of ${paint.sky(String(startAt))}, so the task never runs. Move ${paint.bold('stopAt')} later.`
+            `The task never runs because that isn't after its ${paint.bold('startAt')} of ${paint.sky(String(startAt))}. Move ${paint.bold('stopAt')} later.`
         ]);
     }
 

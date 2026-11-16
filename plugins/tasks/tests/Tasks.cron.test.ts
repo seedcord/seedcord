@@ -160,7 +160,7 @@ describe('Tasks cron jobs', () => {
                 );
             });
 
-            it('keeps the runs a task has left', async () => {
+            it('keeps the runs that a task has left', async () => {
                 await using booted = await startResume();
                 const { host, tasks } = booted;
                 await vi.advanceTimersByTimeAsync(SECOND_MS);
@@ -294,7 +294,7 @@ describe('Tasks cron jobs', () => {
     });
 
     describe('run state', () => {
-        it('skips a run the task starts on itself before its first await', async () => {
+        it('skips a run that the task starts on itself before its first await', async () => {
             using _logs = captureLogs();
             await using booted = await start(crons);
             const { host, tasks } = booted;

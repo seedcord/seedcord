@@ -1,4 +1,5 @@
 import { MemoryDriver, ShutdownPhase } from '@seedcord/core';
+import { getDevChannel } from '@seedcord/core/internal';
 import { FolderExports, Plugin } from '@seedcord/core/plugin';
 import { SeedcordErrorCode, paint } from '@seedcord/errors';
 import { SeedcordError, SeedcordTypeError } from '@seedcord/errors/internal';
@@ -47,6 +48,7 @@ export class Tasks extends Plugin<{ transport: 'any'; runtime: 'server' }> {
     readonly #scheduled: ScheduledJobs;
     readonly #reloader: FolderExports<TaskClass>;
     readonly #path: string;
+    readonly #heldInDev: boolean;
     public constructor(host: CoreBase, options: TasksOptions) {
         // Drain lets in-flight runs finish before database plugins disconnect
         super(host, {
@@ -64,8 +66,9 @@ export class Tasks extends Plugin<{ transport: 'any'; runtime: 'server' }> {
         }
 
         this.#path = options.path;
+        this.#heldInDev = getDevChannel() !== undefined && !(options.runInDev ?? false);
         this.#runner = new TaskRunner(this.core, this.logger);
-        this.#cronTasks = new CronTasks(this.#registry, this.#runner, options.timezone);
+        this.#cronTasks = new CronTasks(this.#registry, this.#runner, options.timezone, this.#heldInDev);
         this.#scheduled = new ScheduledJobs(
             this.kv.collection<JobRecord>('job'),
             this.#runner,
@@ -103,16 +106,23 @@ export class Tasks extends Plugin<{ transport: 'any'; runtime: 'server' }> {
         await this.#scheduled.restore();
 
         const tasks = this.#registry.size;
+        const crons = this.#cronTasks.size;
         const jobs = this.#scheduled.size;
+        const held =
+            this.#heldInDev && crons + jobs > 0
+                ? `. seedcord dev holds them. Pass ${paint.bold('runInDev: true')} to the plugin to run them on their own`
+                : '';
         this.logger.info(
-            `loaded ${tasks} ${pluralize(tasks, 'task')}, ${this.#cronTasks.size} on a cron pattern, ${jobs} scheduled ${pluralize(jobs, 'job')}`
+            `loaded ${tasks} ${pluralize(tasks, 'task')}, ${crons} on a cron pattern, ${jobs} scheduled ${pluralize(jobs, 'job')}${held}`
         );
     }
 
-    /** Starts the cron jobs and the timers for pending jobs once the bot has logged in. */
+    /**
+     * Starts the cron jobs and the timers for pending jobs once the bot has logged in.
+     */
     public override ready(): void {
         this.#cronTasks.start();
-        this.#scheduled.start();
+        if (!this.#heldInDev) this.#scheduled.start();
     }
 
     /** Stops every timer, aborts each run's `signal`, and waits for in-flight runs. The driver still holds pending jobs. */
@@ -131,7 +141,7 @@ export class Tasks extends Plugin<{ transport: 'any'; runtime: 'server' }> {
     /**
      * Stores a job that runs `Task` once, at the time `options` gives. If that time has passed, the job
      * runs right away, or in `ready()` if the bot hasn't logged in yet. Once the promise resolves, the
-     * driver holds the job, and it's still there after a restart.
+     * driver holds the job, and it's still there after a restart. It waits under `seedcord dev` unless you set `runInDev`.
      *
      * If the process dies during a run, the job runs again after a restart. Write a task so a second
      * run of one job is safe.
@@ -210,8 +220,8 @@ export class Tasks extends Plugin<{ transport: 'any'; runtime: 'server' }> {
     }
 
     /**
-     * Starts a cron job that `pause()` or the `paused` option stopped. It runs at its next match and skips the
-     * ones it missed.
+     * Starts a cron job that `pause()`, the `paused` option, or `seedcord dev` stopped. It runs at its next match
+     * and skips the ones it missed.
      *
      * @throws A **SeedcordError** with `PluginTasksNotLoaded` when the plugin did not load `Task`.
      * @throws A **SeedcordTypeError** with `PluginTasksKeyTaken` when a different class loaded under `Task`'s key.

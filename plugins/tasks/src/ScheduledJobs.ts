@@ -36,7 +36,7 @@ export class ScheduledJobs {
     private started = false;
     private readonly warnInMemory = once(() => {
         this.logger.warn(
-            `this process holds scheduled tasks in memory, so they're lost when it exits. Pass a driver as ${paint.bold('kv')} in your config to keep them through a restart`
+            `scheduled tasks are lost when this process exits because it keeps them in memory. Pass a driver as ${paint.bold('kv')} in your config to keep them through a restart`
         );
     });
 
@@ -165,7 +165,7 @@ export class ScheduledJobs {
 
             if (!loaded) {
                 this.logger.warn(
-                    `no task has the key ${paint.sky(record.key)}, so job ${paint.sky(job.id)} is still in the store`
+                    `job ${paint.sky(job.id)} is still in the store because the plugin didn't load a task with the key ${paint.sky(record.key)}`
                 );
                 return;
             }
@@ -210,7 +210,7 @@ export class ScheduledJobs {
         try {
             await this.records.delete(id);
         } catch (error) {
-            this.logger.error(`could not delete job ${paint.sky(id)}, so it runs again after a restart`, error);
+            this.logger.error(`job ${paint.sky(id)} runs again after a restart because the delete failed`, error);
         }
     }
 }
