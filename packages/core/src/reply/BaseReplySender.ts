@@ -35,8 +35,8 @@ export abstract class BaseReplySender<TMessage extends { id: string }, TNative =
 
     protected constructor(
         private readonly telemetry: ReplyTelemetry,
-        private readonly isEphemeralByDefault: boolean,
-        initialState: AckState = { kind: 'unacked' }
+        private isEphemeralByDefault: boolean, // defer() overwrites it with its own visibility
+        initialState: AckState = 'unacked'
     ) {
         this.state = initialState;
     }
@@ -63,7 +63,7 @@ export abstract class BaseReplySender<TMessage extends { id: string }, TNative =
         const startedAt = performance.now();
         const created = await this.attempt('reply', startedAt, () => this.writeReply(response, this.replyFlags(opts)));
         // record replied before the message guard can throw because the callback has already acked discord
-        this.transition('reply', { kind: 'replied' });
+        this.transition('reply', 'replied');
         const message = this.remember(this.requireMessage(created, 'reply'));
         this.report('reply', startedAt, message.id);
         return message;
@@ -74,7 +74,8 @@ export abstract class BaseReplySender<TMessage extends { id: string }, TNative =
         const startedAt = performance.now();
         const ephemeral = this.ephemeral(opts);
         await this.attempt('defer', startedAt, () => this.writeDefer(deferFlags(ephemeral)));
-        this.transition('defer', { kind: 'deferred-reply', ephemeral });
+        this.isEphemeralByDefault = ephemeral;
+        this.transition('defer', 'deferred-reply');
         this.report('defer', startedAt, null);
     }
 
@@ -82,7 +83,7 @@ export abstract class BaseReplySender<TMessage extends { id: string }, TNative =
         this.checkLegality('deferUpdate');
         const startedAt = performance.now();
         await this.attempt('deferUpdate', startedAt, () => this.writeDeferUpdate());
-        this.transition('deferUpdate', { kind: 'deferred-update' });
+        this.transition('deferUpdate', 'deferred-update');
         this.report('deferUpdate', startedAt, null);
     }
 
@@ -95,13 +96,13 @@ export abstract class BaseReplySender<TMessage extends { id: string }, TNative =
         this.checkLegality('update');
         const startedAt = performance.now();
         // in deferred-update the source message is @original and the ack-legality check above has already passed
-        if (this.state.kind === 'deferred-update') {
+        if (this.state === 'deferred-update') {
             const edited = await this.attempt('update', startedAt, () => this.editOriginal(response));
             this.report('update', startedAt, edited.id);
             return edited;
         }
         const created = await this.attempt('update', startedAt, () => this.writeUpdate(response));
-        this.transition('update', { kind: 'replied' });
+        this.transition('update', 'replied');
         const message = this.remember(this.requireMessage(created, 'update'));
         this.report('update', startedAt, message.id);
         return message;
@@ -109,10 +110,9 @@ export abstract class BaseReplySender<TMessage extends { id: string }, TNative =
 
     public async followUp(response: ReplyResponse<TNative> | string, opts?: SendOpts): Promise<TMessage> {
         this.checkLegality('followUp');
-        if (this.state.kind === 'deferred-reply') {
+        if (this.state === 'deferred-reply') {
             // discord edits the loading message for a followUp here anyway and ignores its ephemeral flag
-            const sameVisibility = opts?.ephemeral === undefined || opts.ephemeral === this.state.ephemeral;
-            if (sameVisibility) return await this.edit(response);
+            if (this.ephemeral(opts) === this.isEphemeralByDefault) return await this.edit(response);
             await this.delete();
         }
         const startedAt = performance.now();
@@ -173,7 +173,7 @@ export abstract class BaseReplySender<TMessage extends { id: string }, TNative =
 
     /** Calls {@link reply} if nothing went out yet and {@link followUp} after that. */
     public async send(response: ReplyResponse<TNative> | string, opts?: SendOpts): Promise<TMessage> {
-        if (this.state.kind === 'unacked') return await this.reply(response, opts);
+        if (this.state === 'unacked') return await this.reply(response, opts);
         return await this.followUp(response, opts);
     }
 
@@ -191,7 +191,7 @@ export abstract class BaseReplySender<TMessage extends { id: string }, TNative =
         }
         const startedAt = performance.now();
         await this.attempt('showModal', startedAt, () => this.writeModal(data));
-        this.transition('showModal', { kind: 'replied' });
+        this.transition('showModal', 'replied');
         this.report('showModal', startedAt, null);
     }
 
@@ -213,14 +213,14 @@ export abstract class BaseReplySender<TMessage extends { id: string }, TNative =
     private async editOriginal(response: ReplyResponse<TNative> | string): Promise<TMessage> {
         const edited = await this.writeEditOriginal(response);
         // after a deferUpdate the source message is @original, which this interaction did not send
-        if (this.state.kind !== 'deferred-update') this.remember(edited);
+        if (this.state !== 'deferred-update') this.remember(edited);
         this.settleDefer();
         return edited;
     }
 
     // once the loading message is filled or deleted, a send makes a new message the same way it does after a reply
     private settleDefer(): void {
-        if (this.state.kind === 'deferred-reply') this.state = { kind: 'replied' };
+        if (this.state === 'deferred-reply') this.state = 'replied';
     }
 
     private ephemeral(opts: SendOpts | DeferOpts | undefined): boolean {
@@ -232,7 +232,7 @@ export abstract class BaseReplySender<TMessage extends { id: string }, TNative =
     }
 
     private checkLegality(method: ReplyMethod): void {
-        checkAckLegality(method, this.state.kind, this.routeId, this.ackedBy);
+        checkAckLegality(method, this.state, this.routeId, this.ackedBy);
     }
 
     private transition(method: ReplyMethod, state: AckState): void {

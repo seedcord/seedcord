@@ -1,63 +1,14 @@
-import { MessageFlags } from 'discord-api-types/v10';
 import { describe, expect, it, vi } from 'vite-plus/test';
 
-import { BaseReplySender } from '#reply/BaseReplySender';
-import { DispatchContext } from '#src/dispatch/DispatchContext';
 import { Bus } from '#subscribers/Bus';
+
+import { created, TestSender } from './helpers';
 
 import type { CoreBase } from '#interfaces/CoreBase';
 import type { ModalLike } from '#reply/BaseReplySender';
 import type { ResponseFailed, SubscriptionData } from '#subscribers/types/Subscriptions';
+import type { TestMessage } from './helpers';
 import type { ReplyResponse } from '@seedcord/types';
-
-interface TestMessage {
-    id: string;
-}
-
-const created: TestMessage = { id: 'm1' };
-
-class TestSender extends BaseReplySender<TestMessage> {
-    // the flags each reply, followUp, and defer wrote in order
-    public readonly written: number[] = [];
-
-    public constructor(bus: Bus, isEphemeralByDefault = true) {
-        super({ bus, dispatch: new DispatchContext('slash', 'ping'), interactionId: 'i1' }, isEphemeralByDefault);
-    }
-
-    protected writeReply(_response: unknown, flags: number): Promise<TestMessage> {
-        this.written.push(flags);
-        return Promise.resolve(created);
-    }
-    protected writeDefer(flags: number): Promise<void> {
-        this.written.push(flags);
-        return Promise.resolve();
-    }
-    protected writeDeferUpdate(): Promise<void> {
-        return Promise.resolve();
-    }
-    protected writeUpdate(): Promise<TestMessage> {
-        return Promise.resolve(created);
-    }
-    protected writeFollowUp(_response: unknown, flags: number): Promise<TestMessage> {
-        this.written.push(flags);
-        return Promise.resolve(created);
-    }
-    protected writeEditOriginal(): Promise<TestMessage> {
-        return Promise.resolve(created);
-    }
-    protected writeEditTarget(): Promise<TestMessage> {
-        return Promise.resolve(created);
-    }
-    protected writeDeleteOriginal(): Promise<void> {
-        return Promise.resolve();
-    }
-    protected writeDeleteTarget(): Promise<void> {
-        return Promise.resolve();
-    }
-    protected writeModal(): Promise<void> {
-        return Promise.resolve();
-    }
-}
 
 function failedWrite(payload: SubscriptionData<'responseAttempted'> | undefined): ResponseFailed {
     if (payload?.outcome !== 'failed') throw new Error(`expected a failed write, got ${String(payload?.outcome)}`);
@@ -216,39 +167,5 @@ describe('responseAttempted', () => {
             ['edit', 'm1'],
             ['delete', null]
         ]);
-    });
-});
-
-describe('the ephemeral default', () => {
-    function ephemeralBits(sender: TestSender): number[] {
-        return sender.written.map((flags) => flags & MessageFlags.Ephemeral);
-    }
-
-    it('makes a reply ephemeral when the bot keeps the default', async () => {
-        const sender = new TestSender(busWithSpy().bus);
-        await sender.reply(response);
-
-        expect(ephemeralBits(sender)).toEqual([MessageFlags.Ephemeral]);
-    });
-
-    it('makes a reply public when the bot defaults to public', async () => {
-        const sender = new TestSender(busWithSpy().bus, false);
-        await sender.reply(response);
-
-        expect(ephemeralBits(sender)).toEqual([0]);
-    });
-
-    it("lets a reply's own ephemeral override the default", async () => {
-        const sender = new TestSender(busWithSpy().bus, false);
-        await sender.reply(response, { ephemeral: true });
-
-        expect(ephemeralBits(sender)).toEqual([MessageFlags.Ephemeral]);
-    });
-
-    it('applies the default to a defer', async () => {
-        const sender = new TestSender(busWithSpy().bus, false);
-        await sender.defer();
-
-        expect(ephemeralBits(sender)).toEqual([0]);
     });
 });

@@ -42,10 +42,15 @@ function toDjsFile(file: ReplyFile | GatewayFile): GatewayFile {
 // seed the state once because djs flips `replied` on editReply, and deriving it per call would break repeated update()
 function seedState({ deferred, replied, ephemeral }: Repliables): AckState {
     // djs leaves ephemeral null after a deferUpdate
-    if (deferred && ephemeral === null) return { kind: 'deferred-update' };
-    if (replied) return { kind: 'replied' };
-    if (deferred) return { kind: 'deferred-reply', ephemeral: ephemeral === true };
-    return { kind: 'unacked' };
+    if (deferred && ephemeral === null) return 'deferred-update';
+    if (replied) return 'replied';
+    if (deferred) return 'deferred-reply';
+    return 'unacked';
+}
+
+// an earlier deferReply sets the default the same way BaseReplySender.defer() does
+function seedEphemeral({ deferred, ephemeral }: Repliables, configured: boolean): boolean {
+    return deferred && ephemeral !== null ? ephemeral : configured;
 }
 
 /** Writes interaction responses through discord.js. The repliable handler bases and the dispatcher construct it. */
@@ -56,7 +61,11 @@ export class ReplySender extends BaseReplySender<SentMessage, GatewayFile> {
         bus: Bus,
         isEphemeralByDefault: boolean
     ) {
-        super({ bus, dispatch, interactionId: interaction.id }, isEphemeralByDefault, seedState(interaction));
+        super(
+            { bus, dispatch, interactionId: interaction.id },
+            seedEphemeral(interaction, isEphemeralByDefault),
+            seedState(interaction)
+        );
     }
 
     protected async writeReply(

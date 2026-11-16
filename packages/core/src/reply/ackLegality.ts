@@ -4,14 +4,7 @@ import { SeedcordError } from '@seedcord/errors/internal';
 import type { AckTrace } from './AckTrace';
 import type { ExcludeStrict } from 'type-fest';
 
-// a deferred reply keeps its visibility because discord can't change it once the loading message exists
-export type AckState =
-    | { kind: 'unacked' }
-    | { kind: 'deferred-reply'; ephemeral: boolean }
-    | { kind: 'deferred-update' }
-    | { kind: 'replied' };
-
-type AckKind = AckState['kind'];
+export type AckState = 'unacked' | 'deferred-reply' | 'deferred-update' | 'replied';
 
 export type ReplyMethod =
     | 'reply'
@@ -43,7 +36,7 @@ function deferReason(what: string): Illegal {
 }
 
 // a missing entry means legal in that state
-const ILLEGAL: Record<ExcludeStrict<ReplyMethod, 'send'>, Partial<Record<AckKind, Illegal>>> = {
+const ILLEGAL: Record<ExcludeStrict<ReplyMethod, 'send'>, Partial<Record<AckState, Illegal>>> = {
     reply: {
         'deferred-reply': {
             reason: 'this interaction was already deferred',
@@ -104,7 +97,7 @@ const ILLEGAL: Record<ExcludeStrict<ReplyMethod, 'send'>, Partial<Record<AckKind
 };
 
 // throws before any API call, and ackedBy becomes the throw cause with its stack pointing at the first ack
-export function checkAckLegality(method: ReplyMethod, state: AckKind, routeId: string, ackedBy?: AckTrace): void {
+export function checkAckLegality(method: ReplyMethod, state: AckState, routeId: string, ackedBy?: AckTrace): void {
     if (method === 'send') return;
     const illegal = ILLEGAL[method][state];
     if (!illegal) return;

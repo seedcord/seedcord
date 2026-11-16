@@ -4,7 +4,7 @@ export interface SendOpts {
      * Whether only the invoking user sees the reply. If the `defer()` placeholder is still empty and this doesn't
      * match it, the placeholder gets deleted and a new message is sent.
      *
-     * @defaultValue `bot.interactions.ephemeral`
+     * @defaultValue what `defer()` used, or `bot.interactions.ephemeral` without a defer
      */
     readonly ephemeral?: boolean | undefined;
     /**

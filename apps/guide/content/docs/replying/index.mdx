@@ -181,7 +181,7 @@ export const seedcord = new Seedcord({
 });
 ```
 
-Every reply without its own `ephemeral` uses that default, including `defer()`, a paginator, and a confirm prompt. Pass `ephemeral: true` when only the person who ran the command should see a reply.
+Every reply without its own `ephemeral` uses that default, including `defer()`, a paginator, and a confirm prompt. After a `defer()`, [its visibility is the default](/replying/more-messages#set-ephemeral-when-you-defer) for the rest of the interaction. Pass `ephemeral: true` when only the person who ran the command should see a reply.
 
 seedcord sends error cards and [notices](/replying/throwing) as ephemeral whatever you set here.
 
