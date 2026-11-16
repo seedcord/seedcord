@@ -289,7 +289,7 @@ Codegen merges the variable types from every `.ftl` file. If one file passes `$c
 
 In a [gate](/checks/gates) and in the [`render()`](/replying/throwing#writing-a-notice) of a [`Notice`](ref:core/Notice), the same function is `ctx.t`. It uses the same language as `this.t` in the handler.
 
-Your own code creates your components, so seedcord can't give them `t`. Pass `t` to the constructor, typed as [`DispatchMemberValues['t']`](ref:types/DispatchMemberValues):
+seedcord doesn't build your components, so it can't give them `t`. Pass `t` to the constructor, typed as [`DispatchMemberValues['t']`](ref:types/DispatchMemberValues):
 
 ```ts twoslash title="src/components/InventoryCard.ts"
 import { BuilderComponent, Notice } from '@seedcord/gateway';
@@ -426,7 +426,7 @@ For every other locale, `t` uses `base` right away. `t` does the same for a sing
 Codegen logs every message that a file doesn't have, so you can see what's left to translate:
 
 ```txt output
-locales/hi.ftl doesn't have rank. Users on that locale get the en-US text.
+src/locales/hi.ftl doesn't have rank. Users on that locale get the en-US text.
 ```
 
 ### Picking the language yourself
@@ -500,7 +500,7 @@ export class Joined extends SlashHandler<'joined'> {
 }
 ```
 
-A user whose Discord language is Hindi gets the date in Hindi. `t.locale` follows the files you have, so it can be the other variety or `base`. If you only have `en-US.ftl`, a user on `en-GB` gets `'en-US'`.
+A user whose Discord language is Hindi gets the date in Hindi. `t.locale` is the locale of the first file that `t` reads, which can be the other variety or `base`. If you only have `en-US.ftl`, a user on `en-GB` gets `'en-US'`.
 
 ## Errors
 
@@ -509,16 +509,17 @@ A user whose Discord language is Hindi gets the date in Hindi. `t.locale` follow
 | error | when |
 | --- | --- |
 | `PluginOptionsRejected` | `dir` is an empty string |
+| `CorePathOutsideRoot` | `dir` is outside `root`, so the build wouldn't bundle your translation files |
 | `CoreDirectoryNotListed` | `files` in `seedcord.config.ts` doesn't list `dir` |
 | `PluginI18nBaseMissing` | `dir` doesn't have a file for `base`. The message gives the file it looked for |
 | `PluginI18nSyntax` | Fluent can't parse a line in a `.ftl` file. The message gives the file and line |
-| `PluginI18nNotALocale` | a `.ftl` file doesn't have a Discord locale code as its name. The message suggests the codes that start the same way |
+| `PluginI18nNotALocale` | a `.ftl` file or a [command translation file](/plugins/i18n-commands) doesn't have a Discord locale code as its name. The message suggests the codes that start the same way |
 | `PluginI18nNotInBase` | a translation has a message, a variable, or an attribute that the base file doesn't |
 | `PluginI18nOutOfDate` | `t` got a key that the `.ftl` files no longer have, or the call didn't pass a variable that the message needs. Run codegen, then fix the calls that TypeScript reports |
 
 {/* prettier-ignore-end */}
 
-`PluginOptionsRejected` throws when you call `attach`, and `CoreDirectoryNotListed` throws while the bot starts. `PluginI18nOutOfDate` throws from the `t` call when the `.ftl` files changed after codegen last ran.
+`PluginOptionsRejected` and `CorePathOutsideRoot` throw when you call `attach`, and `CoreDirectoryNotListed` throws while the bot starts. `PluginI18nOutOfDate` throws from the `t` call when the `.ftl` files changed after codegen last ran.
 
 `PluginI18nBaseMissing`, `PluginI18nSyntax`, `PluginI18nNotALocale`, and `PluginI18nNotInBase` come from codegen, which reports every problem it finds in one error. `seedcord codegen` and `seedcord codegen --check` in CI fail with it. `seedcord dev` runs codegen after the bot starts and only logs the error, so the bot keeps running on the files it loaded.
 

@@ -65,7 +65,6 @@
         "@seedcord/prose": "workspace:^",
         "@seedcord/tsconfig": "workspace:^",
         "@seedcord/tsdown-config": "workspace:^",
-        "@seedcord/types": "workspace:^",
         "@seedcord/vite-config": "workspace:^"
     },
     "peerDependencies": {

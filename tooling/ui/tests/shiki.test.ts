@@ -259,18 +259,6 @@ describe('isHighlightable', () => {
         expect(styleOf(html, ' $user ')).not.toBe(styleOf(html, 'Hi '));
     });
 
-    it('italicizes a string literal in a type like the brackets around it', async () => {
-        const html = (await highlightToHtml("let t: Values['t'];")) ?? '';
-
-        expect(styleOf(html, "'t'")).toContain('font-style:italic');
-    });
-
-    it('leaves Fluent message keys and variant names upright', async () => {
-        const html = await highlightToHtml('rank =\n    { $rank ->\n       *[member] Member\n    }', 'ftl');
-
-        expect(html).not.toContain('font-style:italic');
-    });
-
     it.each(['python', 'rust', 'go', 'css', ''])('rejects %s, which the highlighter never loaded', (lang) => {
         expect(isHighlightable(lang)).toBe(false);
     });

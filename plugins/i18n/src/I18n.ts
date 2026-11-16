@@ -149,6 +149,8 @@ export class I18n extends Plugin {
             );
         }
 
+        // prepareCommands imports the translation files, and the build only bundles code under root
+        botFolder(dir).assertBundled();
         this.dir = dir;
         this.base = base;
         this.resolveLocale = resolveLocale;
@@ -213,7 +215,6 @@ export class I18n extends Plugin {
         return this.catalogs;
     }
 
-    // each locale is one file in dir itself
     private isDirectlyInDir(file: string): boolean {
         return path.dirname(file) === botFolder(this.dir).path;
     }

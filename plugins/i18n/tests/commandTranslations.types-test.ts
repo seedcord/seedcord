@@ -4,10 +4,9 @@ import './registries';
 
 import type { CommandTranslations, TranslationTree } from '#src/commandTranslations';
 
+declare const anyBotsFile: CommandTranslations;
 // the plugin reads every bot's file through TranslationTree
-export function readAsTree(translations: CommandTranslations): TranslationTree {
-    return translations;
-}
+anyBotsFile satisfies TranslationTree;
 
 commandTranslations({
     slash: {

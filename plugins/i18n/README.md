@@ -40,7 +40,7 @@ pnpm add @seedcord/plugin-i18n
 Attach the plugin in `bot.ts`, and list its folder under `files` in `seedcord.config.ts`:
 
 ```ts
-// bot.ts
+// src/bot.ts
 import { Seedcord } from '@seedcord/http';
 import { I18n } from '@seedcord/plugin-i18n';
 
@@ -53,10 +53,20 @@ export default new Seedcord({
 }).attach('i18n', I18n, { dir: './locales', base: 'en-US' });
 ```
 
+```ts
+// seedcord.config.ts
+import { defineConfig } from 'seedcord';
+
+export default defineConfig({
+    root: './src',
+    files: ['./locales']
+});
+```
+
 Put every message in the base file. Give each other locale a file with its Discord locale code as the name, like `hi.ftl`:
 
 ```ftl
-# locales/en-US.ftl
+# src/locales/en-US.ftl
 items =
     { $count ->
         [one] You have { $count } item

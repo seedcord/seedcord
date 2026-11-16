@@ -293,4 +293,8 @@ export class BotFolder {
     public moduleGlobsInside(): string[] {
         return this.layout.moduleGlobsInside(this.path);
     }
+
+    public assertBundled(): void {
+        this.layout.assertBundled(this.path);
+    }
 }

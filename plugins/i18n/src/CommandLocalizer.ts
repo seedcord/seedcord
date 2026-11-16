@@ -19,6 +19,11 @@ const MAX_TEXT = 100;
 // discord's rule for slash command, subcommand, and option names, from its application command docs
 const SLASH_NAME = new RegExp(String.raw`^[-_'\p{L}\p{N}\p{sc=Deva}\p{sc=Thai}]{1,${MAX_NAME}}$`, 'u');
 
+const MENUS = [
+    ['userMenus', ApplicationCommandType.User],
+    ['messageMenus', ApplicationCommandType.Message]
+] as const satisfies readonly (readonly [keyof TranslationTree, ApplicationCommandType])[];
+
 type SlashNode = NonNullable<NonNullable<TranslationTree['slash']>[string]>;
 type OptionNode = NonNullable<NonNullable<SlashNode['options']>[string]>;
 
@@ -42,7 +47,6 @@ function entries<Value>(record: Readonly<Record<string, Value | undefined>> | un
     return Object.entries(record ?? {}).filter((entry): entry is [string, Value] => entry[1] !== undefined);
 }
 
-// fills in one locale's name_localizations and description_localizations, and collects what Discord would reject
 export class CommandLocalizer {
     public readonly problems: SeedcordError[] = [];
 
@@ -57,8 +61,7 @@ export class CommandLocalizer {
             if (command) this.slash(command, node, `slash.${name}`);
             else this.unknown(`slash.${name}`);
         }
-        this.menus(commands, ApplicationCommandType.User, 'userMenus', translations.userMenus);
-        this.menus(commands, ApplicationCommandType.Message, 'messageMenus', translations.messageMenus);
+        for (const [section, type] of MENUS) this.menus(commands, type, section, translations[section]);
     }
 
     private slash(target: SlashTarget, node: SlashNode, path: string): void {
@@ -95,8 +98,8 @@ export class CommandLocalizer {
 
     private menus(
         commands: readonly RESTPostAPIApplicationCommandsJSONBody[],
-        type: ApplicationCommandType.User | ApplicationCommandType.Message,
-        section: 'userMenus' | 'messageMenus',
+        type: (typeof MENUS)[number][1],
+        section: (typeof MENUS)[number][0],
         translations: Readonly<Record<string, string | undefined>> | undefined
     ): void {
         for (const [name, translated] of entries(translations)) {

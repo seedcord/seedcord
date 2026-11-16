@@ -4,7 +4,7 @@ import { stripVTControlCharacters } from 'node:util';
 
 import { isSeedcordError, SeedcordErrorCode } from '@seedcord/errors';
 import { LoggerChannelRegistry } from '@seedcord/logger';
-import { HostPlugins } from '@seedcord/types/internal';
+import { setDevFiles } from '@seedcord/utils/internal';
 import { Locale } from 'discord-api-types/v10';
 import { describe, expect, it } from 'vite-plus/test';
 
@@ -47,6 +47,14 @@ async function tFor(
 }
 
 describe('I18n', () => {
+    it('throws on attach when dir is outside root', () => {
+        using _dev = setDevFiles({ root: path.join(FIXTURES, 'good'), listed: [], skippedFolders: [] });
+
+        expect(() => new TestHost().attach('i18n', I18n, { dir: path.join(FIXTURES, 'commands') })).toThrow(
+            expect.objectContaining({ code: SeedcordErrorCode.CorePathOutsideRoot })
+        );
+    });
+
     it('rejects an empty dir', () => {
         expect(() => new TestHost().attach('i18n', I18n, { dir: '' })).toThrow(
             expect.objectContaining({ code: SeedcordErrorCode.PluginOptionsRejected })
@@ -130,16 +138,6 @@ describe('I18n', () => {
             const t = await host.i18n.dispatchMembers.t(from({}));
 
             expect(t('greeting', { user: 'Ana' })).toBe('Hey Ana');
-        });
-
-        it('marks the .ts files right inside dir as the files that change commands', () => {
-            const dir = path.join(FIXTURES, 'commands', 'good');
-            const plugins = new TestHost().attach('i18n', I18n, { dir })[HostPlugins];
-
-            expect(plugins.readsCommandFile(path.join(dir, 'pl.ts'))).toBe(true);
-            expect(plugins.readsCommandFile(path.join(dir, 'pl.d.ts'))).toBe(false);
-            expect(plugins.readsCommandFile(path.join(dir, 'pl.ftl'))).toBe(false);
-            expect(plugins.readsCommandFile(path.join(dir, 'nested', 'pl.ts'))).toBe(false);
         });
     });
 

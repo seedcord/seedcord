@@ -1,4 +1,3 @@
-/* eslint-disable max-lines -- one enum holds every code, the same way ErrorMessages holds every message */
 /* eslint-disable no-magic-numbers */
 
 /**
@@ -251,7 +250,7 @@ export enum SeedcordErrorCode {
     PluginTasksKeyTaken = 2307,
     /** A `.ftl` file under the i18n plugin's `dir` has a line Fluent can't parse. */
     PluginI18nSyntax = 2401,
-    /** A `.ftl` file's name isn't one of Discord's locale codes. */
+    /** A locale file's name under the i18n plugin's `dir` isn't one of Discord's locale codes. */
     PluginI18nNotALocale = 2402,
     /** A locale file has a message, variable, or attribute that the base locale's file doesn't have. */
     PluginI18nNotInBase = 2403,
@@ -308,7 +307,7 @@ export enum SeedcordErrorCode {
     CliDependencyMissing = 3116,
     /** `build.outDir` already has other files in it. */
     CliBuildOutDirNotEmpty = 3117,
-    /** One CLI step found two or more problems. Each one is in the error's `errors`. */
+    /** A CLI step, or a started bot's command deploy, found two or more problems. Each one is in the error's `errors`. */
     CliProblems = 3118,
     /** `seedcord codegen --check` found the committed augmentations out of date. */
     CliCodegenOutOfDate = 3119,

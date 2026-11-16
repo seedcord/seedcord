@@ -35,7 +35,7 @@ export function constructAttached<TPlugin>(key: string, kv: Kv, construct: () =>
     }
 }
 
-// cleared on read. a plugin that a plugin's constructor builds by hand doesn't get the outer key
+// cleared on read. if a plugin's constructor builds another plugin by hand, that one doesn't get the outer key
 export function takeAttaching(): Attaching | undefined {
     const current = attaching;
     attaching = undefined;

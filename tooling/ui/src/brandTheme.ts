@@ -138,7 +138,7 @@ function typePositionSettings(p: BrandPalette): BrandThemeSetting[] {
     ];
 }
 
-// rules for the grammars that read wrong under the ones above
+// overrides for langs that look weird with the rules above
 function grammarSettings(p: BrandPalette): BrandThemeSetting[] {
     return [
         { scope: ['meta.mustache.hbs'], settings: { foreground: p.placeholder } },

@@ -1,4 +1,3 @@
-/* eslint-disable max-lines -- the satisfies check below covers every code only while all messages are in one map */
 import { PRODUCTION_SITES } from '@seedcord/brand';
 
 import { SeedcordErrorCode } from './ErrorCodes';

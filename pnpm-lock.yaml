@@ -1769,9 +1769,6 @@ importers:
       '@seedcord/tsdown-config':
         specifier: workspace:^
         version: link:../../tooling/tsdown-config
-      '@seedcord/types':
-        specifier: workspace:^
-        version: link:../../packages/types
       '@seedcord/vite-config':
         specifier: workspace:^
         version: link:../../tooling/vite-config
