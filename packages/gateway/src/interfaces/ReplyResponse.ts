@@ -9,7 +9,7 @@ export type GatewayFile = NonNullable<BaseMessageOptions['files']>[number];
 
 /**
  * A reply that may attach files in any form discord.js accepts, on top of the portable `ReplyFile`. The
- * reply verbs already take this. Name it only to type a variable or a helper's return. A `Notice`
+ * reply verbs already take this. Import it only to type a variable or a helper's return. A `Notice`
  * render or a paginator page returns the plain `ReplyResponse`, which takes a `ReplyFile` alone.
  *
  * @example

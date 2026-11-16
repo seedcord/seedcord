@@ -5,7 +5,7 @@ description: Control when your bot sends its commands to Discord and which serve
 
 Discord keeps its own copy of your commands, and your command folder is the source for it. A deploy overwrites Discord's copy.
 
-Your bot sends one request per scope. A scope is the list of global commands, or the list of commands in one server. Discord replaces the whole scope with what arrives. If you delete a command file, Discord removes that command on the next deploy, unless it was the last one in its scope. A rename does the same to the old name.
+Your bot sends one request per scope. A scope is the list of global commands, or the list of commands in one server. Discord replaces the whole scope with what arrives. If you delete a command file, Discord removes that command on the next deploy unless it was the last one in its scope. A rename does the same to the old name.
 
 ## When a deploy happens
 

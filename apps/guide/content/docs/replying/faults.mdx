@@ -90,7 +90,7 @@ Two config keys change this. `errors.defaultError` takes a `Notice` subclass tha
 
 ## Stopping without a reply
 
-`Silence` stops the handler, and seedcord does not call Discord at all. That fits an event handler, since nothing is waiting on a response.
+`Silence` stops the handler, and seedcord does not call Discord at all. That fits an event handler since nothing is waiting on a response.
 
 ```ts twoslash title="src/events/Welcome.ts"
 import {
@@ -157,7 +157,7 @@ Both listeners run outside any interaction, so nobody sees a reply. When your ap
 
 <Callout type="transport" only="http">
 
-An edge bot registers neither listener, since its [`Seedcord`](ref:http/Seedcord) never starts a host process.
+An edge bot registers neither listener since its [`Seedcord`](ref:http/Seedcord) never starts a host process.
 
 </Callout>
 

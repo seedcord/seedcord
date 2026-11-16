@@ -483,7 +483,7 @@ describe('runPlain, without a terminal to answer prompts', () => {
         await running;
     });
 
-    it('refreshes commands once, after a burst of saves stops', async () => {
+    it('refreshes commands once after a burst of saves stops', async () => {
         const store = new DevStore();
         const runtime = fakeRuntime({ default: readyBot });
         const refresh = vi.spyOn(runtime, 'refreshCommands');

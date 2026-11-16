@@ -107,7 +107,7 @@ export class Ban extends SlashHandler<'ban'> {
 
 Your logs and your fault reports read the string you pass to `super()`. Since `OpenCaseExists` overrides `render()`, the user never sees that string, so you can put the id there. `render()` builds the reply and returns a [`ReplyResponse`](ref:types/ReplyResponse), the same `{ components }` shape that [`this.reply()`](ref:gateway/RepliableHandler.reply) takes. If you leave `render()` out, seedcord replies with its own refusal card and your `super()` string as the text.
 
-`assertNoOpenCase` refuses on its own. `execute()` calls it and continues, since a refusal never comes back as a return value.
+`assertNoOpenCase` refuses on its own. `execute()` calls it and continues since a refusal never comes back as a return value.
 
 `super()` takes a second argument too, for the error you caught.
 
@@ -179,7 +179,7 @@ Only the `or` gate reads `summary`. [Combining gates](/checks/combining) shows w
 
 <Callout type="warning">
 
-Throwing a custom `Notice` for a real bug only shows its card, because `report` starts `false`. Throw a [`Fault`](ref:core/Fault) when you need the error in your logs or set `report = true` on the `Notice`.
+Throwing a custom `Notice` for a real bug only shows its card because `report` starts `false`. Throw a [`Fault`](ref:core/Fault) when you need the error in your logs or set `report = true` on the `Notice`.
 
 </Callout>
 

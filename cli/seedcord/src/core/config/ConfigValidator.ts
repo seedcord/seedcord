@@ -65,7 +65,7 @@ function* makeProblems(value: unknown): Generator<SeedcordTypeError> {
     }
     for (const [name, helper] of Object.entries(value.helpers)) {
         const field = `make.helpers.${name}`;
-        if (TAKEN_NAMES.has(name)) yield invalidField(field, `renamed, since templates already use ${name}`);
+        if (TAKEN_NAMES.has(name)) yield invalidField(field, `renamed because templates already use ${name}`);
         else if (typeof helper !== 'function') yield invalidField(field, 'a function');
     }
 }

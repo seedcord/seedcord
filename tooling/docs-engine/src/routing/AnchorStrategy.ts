@@ -96,7 +96,7 @@ export class AnchorStrategy {
         return '/404';
     }
 
-    // a `@link` to a parameter resolves to the owning method or constructor anchor, since parameters
+    // a `@link` to a parameter resolves to the owning method or constructor anchor since parameters
     // render inline on the parent's signature
     private buildParameterAnchor(packageName: string, entityHref: string, parentSlug: string): string {
         const parentNode =

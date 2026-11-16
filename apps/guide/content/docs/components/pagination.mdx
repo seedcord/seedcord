@@ -50,7 +50,7 @@ The first page is page 0, so `Roles.start(this, 3)` opens the fourth page. If th
 
 </Callout>
 
-[`page()`](ref:gateway/Paginator.page) builds the same message and hands it back without sending. Its page number is required, as in `Roles.page(this, 0)`. You can pass the result to `this.reply()` or `this.followUp()` as is, since seedcord's reply methods add the Components V2 flag. If you send it another way, like discord.js's `channel.send()` or your own REST call, add `flags: MessageFlags.IsComponentsV2`.
+[`page()`](ref:gateway/Paginator.page) builds the same message and hands it back without sending. Its page number is required, as in `Roles.page(this, 0)`. You can pass the result to `this.reply()` or `this.followUp()` as is since seedcord's reply methods add the Components V2 flag. If you send it another way, like discord.js's `channel.send()` or your own REST call, add `flags: MessageFlags.IsComponentsV2`.
 
 ## Where the items come from
 
@@ -117,7 +117,7 @@ export const Reports = new Paginator({
 });
 ```
 
-Return `ReportRow` whole, since seedcord reads `.component` from it.
+Return `ReportRow` whole since seedcord reads `.component` from it.
 
 One page can mix both forms. Each `ReportRow` breaks the run of text lines and renders as its own block, in the same order as your items.
 

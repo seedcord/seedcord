@@ -109,7 +109,7 @@ export class TempBan extends SlashHandler<'tempban'> {
 `TempBan` does three things, in this order:
 
 1. If the member already has an unban waiting from an earlier `/tempban`, it cancels that job. Otherwise the old job would unban them early.
-2. It schedules the new unban and stores the job's `id` in the `unban-job` collection, so that `/unban` can cancel it later. The key holds the server's id and the member's id, because one member can be banned in two servers that use your bot.
+2. It schedules the new unban and stores the job's `id` in the `unban-job` collection so that `/unban` can cancel it later. The key holds the server's id and the member's id because one member can be banned in two servers that use your bot.
 3. It bans the member.
 
 Since the ban comes last, nobody gets banned if `schedule()` throws. If the ban fails instead, the unban still runs a day later. Discord rejects that unban with [`Unknown Ban`](https://discord.com/developers/docs/topics/opcodes-and-status-codes#json-json-error-codes) (10026), so the run fails and doesn't change anything.
@@ -259,7 +259,7 @@ The plugin doesn't stop that second run, so write each task for jobs to be safe 
 
 ### Trying again after a failure
 
-If `execute()` throws, the plugin logs the error and doesn't run that job again. To try again, schedule a new job from [`onError()`](ref:plugin-tasks/Task.onError). Count the attempts in `data`, so that the retries stop after a few.
+If `execute()` throws, the plugin logs the error and doesn't run that job again. To try again, schedule a new job from [`onError()`](ref:plugin-tasks/Task.onError). Count the attempts in `data` so that the retries stop after a few.
 
 ```ts twoslash title="src/tasks/Unban.ts"
 import { RegisterTask, Task } from '@seedcord/plugin-tasks/gateway';
@@ -313,7 +313,7 @@ function isUnknownBan(error: Error): boolean {
 }
 ```
 
-With `attempt` in the data, `TempBan` has to pass `attempt: 1` too. The job runs at most three times, and `onError()` stops early on `Unknown Ban`, since that error means the member isn't banned anymore. `onError()` also stores the new job's `id` in `unban-job`, so `/unban` can cancel the retry.
+With `attempt` in the data, `TempBan` has to pass `attempt: 1` too. The job runs at most three times, and `onError()` stops early on `Unknown Ban` since that error means the member isn't banned anymore. `onError()` also stores the new job's `id` in `unban-job`, so `/unban` can cancel the retry.
 
 If the bot shuts down during a run, the plugin skips `onError()`. The job is still in your kv store and runs after the restart, so you don't need a retry for it.
 

@@ -16,7 +16,7 @@ import type { WebhookReport } from '#subscribers/bases/WebhookLog';
 import type { AllSubscriptions } from '#subscribers/types/Subscriptions';
 import type { APIMessageTopLevelComponent } from 'discord-api-types/v10';
 
-// envapt snapshots process.env on its first read, before any test runs
+// envapt snapshots process.env on its first read before any test runs
 const WEBHOOK_ENV = vi.hoisted(() => {
     const env = {
         REPORTER_WEBHOOK_URL: 'https://discord.com/api/webhooks/77/tok-en'

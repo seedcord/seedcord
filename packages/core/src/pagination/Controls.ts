@@ -26,7 +26,7 @@ export interface ControlCosmetics {
 export interface PaginatorControls {
     /**
      * A fresh `ButtonBuilder` for one control, already stamped with its target page and disabled-at-bounds
-     * state. Call only cosmetic setters on it, because a `setCustomId` or `setStyle(Link)` un-routes it.
+     * state. Call only cosmetic setters on it because a `setCustomId` or `setStyle(Link)` un-routes it.
      */
     button(key: ControlKey, cosmetics?: ControlCosmetics): ButtonBuilder;
     /**

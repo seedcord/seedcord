@@ -14,7 +14,7 @@ function loaderOf(instance: Seedcord): SubscriberLoader {
     return new SubscriberLoader(instance.bus, instance.config.subscribers.path);
 }
 
-// envapt snapshots process.env on its first read, before any test runs
+// envapt snapshots process.env on its first read before any test runs
 const WEBHOOK_ENV = vi.hoisted(() => {
     const env = {
         MALFORMED_REPORTER_WEBHOOK_URL: 'https://example.com/not-a-webhook',

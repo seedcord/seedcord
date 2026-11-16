@@ -87,7 +87,7 @@ The first POST starts the bot. `next build` can load a route's module while it c
 
 `next dev` loads the route module again after you edit it. `start()` on a bot that has already started returns the same startup, so that doesn't deploy again. If Next.js loads a fresh copy of the bot's own module, that copy starts and deploys once more.
 
-Next.js bundles the bot again, so `import.meta.dirname` is undefined in its bundle. Handlers, commands, and the files you list under [`files`](/build/data-files) still load, since the build put all of them inside the bundle. A read from disk relative to the bot's folder, like `fs.readFile` next to `import.meta.dirname`, breaks. Read data files through [`readFiles`](ref:utils/readFiles), which reads them from the build.
+Next.js bundles the bot again, so `import.meta.dirname` is undefined in its bundle. Handlers, commands, and the files you list under [`files`](/build/data-files) still load since the build put all of them inside the bundle. A read from disk relative to the bot's folder, like `fs.readFile` next to `import.meta.dirname`, breaks. Read data files through [`readFiles`](ref:utils/readFiles), which reads them from the build.
 
 ## Express
 
@@ -167,4 +167,4 @@ export default new Seedcord({
 }
 ```
 
-`pnpm dev` in the bot's package then serves on 3001 behind the tunnel, the way a bot on its own server does. Your server never sets `BOT_PORT`, so the built bot it imports keeps `port: false`. Keep `BOT_PORT` in the dev script. A line in the bot's `.env` would also reach the built bot, because a built bot reads the `.env` beside its `seedcord.config.ts` while that file is on disk.
+`pnpm dev` in the bot's package then serves on 3001 behind the tunnel, the way a bot on its own server does. Your server never sets `BOT_PORT`, so the built bot it imports keeps `port: false`. Keep `BOT_PORT` in the dev script. A line in the bot's `.env` would also reach the built bot because a built bot reads the `.env` beside its `seedcord.config.ts` while that file is on disk.

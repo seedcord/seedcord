@@ -337,7 +337,7 @@ describe('FolderExports', () => {
 
         beforeEach(() => {
             owner = undefined;
-            // a plain Error, since a plugin's registry throws its own errors
+            // a plain Error since a plugin's registry throws its own errors
             register.mockImplementation((ctor) => {
                 if (owner && owner !== ctor) throw new Error('slash:versions is taken');
                 owner = ctor;

@@ -26,7 +26,7 @@ declare module '@seedcord/core/internal' {
             /** Dispatch entry until every handler settles. A clock change never affects it. */
             durationMs: number;
         };
-        /** Triggered for every interaction the bot receives, before routing. */
+        /** Triggered for every interaction the bot receives before routing. */
         anyInteraction: {
             interaction: Interaction;
         };

@@ -54,7 +54,7 @@ export class FeedList extends SlashHandler<'feed'> {
 }
 ```
 
-If you run that, you get one line of text and no button to reach page two. `FeedNav` is wired correctly. It never runs, because the message doesn't have a button with its route. Everything below puts the buttons back.
+If you run that, you get one line of text and no button to reach page two. `FeedNav` is wired correctly. It never runs because the message doesn't have a button with its route. Everything below puts the buttons back.
 
 A string is one of three shapes `render` can return.
 
@@ -70,7 +70,7 @@ A string is one of three shapes `render` can return.
 
 ## Putting the buttons back
 
-[`controls.row()`](ref:core/PaginatorControls.row) returns a finished action row. Name the keys you want, in the order you want them on screen.
+[`controls.row()`](ref:core/PaginatorControls.row) returns a finished action row. List the keys you want in the order you want them on screen.
 
 ```ts twoslash title="src/components/FeedCard.ts"
 import { BuilderComponent } from '@seedcord/gateway';
@@ -157,7 +157,7 @@ controls.row('
 //            ^|
 ```
 
-The indicator is a disabled button showing the page text, `Page 2 of 4` when the source counted and `Page 2` when it couldn't. A cursor source never counts, so `last` can't point at a page and `controls` always disables it there. `first` still works, since page zero doesn't need a total. The fence above skips both and keeps three keys, the same row seedcord's default draws for a cursor source.
+The indicator is a disabled button showing the page text, `Page 2 of 4` when the source counted and `Page 2` when it couldn't. A cursor source never counts, so `last` can't point at a page and `controls` always disables it there. `first` still works since page zero doesn't need a total. The fence above skips both and keeps three keys, the same row seedcord's default draws for a cursor source.
 
 An [`ArraySource`](ref:gateway/ArraySource) has its total, so a row there can take every key.
 
@@ -209,10 +209,10 @@ An emoji with no `label` gives an icon-only button, which is what `prev` and `ne
 
 <Callout type="warning">
 
-Call cosmetic setters only. `setCustomId` overwrites the page that the button targets. `setStyle` with `ButtonStyle.Link` or `ButtonStyle.Premium` strips the custom id entirely, since Discord doesn't allow a custom id on either style. Any of the three leaves a button that doesn't reach a handler.
+Call cosmetic setters only. `setCustomId` overwrites the page that the button targets. `setStyle` with `ButtonStyle.Link` or `ButtonStyle.Premium` strips the custom id entirely since Discord doesn't allow a custom id on either style. Any of the three leaves a button that doesn't reach a handler.
 
 </Callout>
 
-If your own header prints the total, check `view.totalPages` first, since a cursor source leaves it `undefined`. [Sources](/components/pagination-sources) lists every field on a `PageView`.
+If your own header prints the total, check `view.totalPages` first since a cursor source leaves it `undefined`. [Sources](/components/pagination-sources) lists every field on a `PageView`.
 
 [Paging it yourself](/components/pagination-headless) is the last step. It uses the page math without the paginator.

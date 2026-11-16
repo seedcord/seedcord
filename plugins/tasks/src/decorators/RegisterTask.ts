@@ -27,7 +27,7 @@ const registry = new WeakMap<object, TaskMetadata>();
  * code calls `schedule()`.
  *
  * A literal pattern, timezone, or `every` with a mistake in it fails to compile. A cron job can't declare
- * data, since nothing passes it any.
+ * data since nothing passes it any.
  *
  * @param pattern - 5, 6, or 7 fields in croner's grammar, or a nickname like `@daily`.
  * @example

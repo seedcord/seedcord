@@ -18,7 +18,7 @@ export default defineConfig({
 });
 ```
 
-`'./locales'` resolves against `root`, so it means `src/locales`, subfolders included. A folder beside `root` works too, like `'../assets'` for `assets/card.png`, as long as it's inside the folder that holds `seedcord.config.ts`.
+`'./locales'` resolves against `root`, so it means `src/locales`, subfolders included. A folder beside `root` works too, like `'../assets'` for `assets/card.png` as long as it's inside the folder that holds `seedcord.config.ts`.
 
 ## Reading data files
 
@@ -92,4 +92,4 @@ The CLI checks `files` too. Every command throws `CliListedFolderUnusable` for a
 
 You don't list code in `files`. The build includes every `.ts`, `.tsx`, `.mts`, `.js`, `.jsx`, and `.mjs` file under `root`. `readFiles` skips those files, even inside a listed folder. seedcord loads your handler folders through [`importFiles`](ref:utils/importFiles), which imports every code file in a folder.
 
-A plugin you publish can't use `files`, because the bot that installs the plugin writes that list. Import the plugin's data files from its own code, like `./defaults.json`, so the plugin's build includes them in the package. [Loading a bot's files](/writing-plugins/files) covers a plugin that reads the bot's own folders.
+A plugin you publish can't use `files` because the bot that installs the plugin writes that list. Import the plugin's data files from its own code, like `./defaults.json`, so the plugin's build includes them in the package. [Loading a bot's files](/writing-plugins/files) covers a plugin that reads the bot's own folders.

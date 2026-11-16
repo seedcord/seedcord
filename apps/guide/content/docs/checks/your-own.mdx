@@ -99,7 +99,7 @@ Leaving the `ctx` parameter unannotated makes it a [`GateContextBase`](ref:core/
 
 A gate that reads _only_ these fields fits any handler you attach it to. `InChannel` above reads one of them, so it works on a slash command, a button, and a message event.
 
-Discord sends your bot's permissions in the invoked channel only with an interaction, as its [`app_permissions`](https://discord.com/developers/docs/interactions/receiving-and-responding#interaction-object-interaction-structure) field. To read them, annotate `ctx` with [`AppPermissionsContext`](ref:core/AppPermissionsContext) and read `ctx.appPermissions`. The gate then fits interaction handlers only.
+Discord sends your bot's permissions in the invoked channel only with an interaction as its [`app_permissions`](https://discord.com/developers/docs/interactions/receiving-and-responding#interaction-object-interaction-structure) field. To read them, annotate `ctx` with [`AppPermissionsContext`](ref:core/AppPermissionsContext) and read `ctx.appPermissions`. The gate then fits interaction handlers only.
 
 ## Narrowing what the gate accepts
 
@@ -157,7 +157,7 @@ The gateway cache builds that discord.js `Guild`. An http bot doesn't run one. D
 
 ## The two guild permission fields
 
-On an interaction, `memberPermissions` and `appPermissions` hold the set for the channel the command ran in, after overwrites. A gate about the whole server, like one guarding a server-wide setting, needs what the roles grant instead. [`GuildPermissionsContext`](ref:core/GuildPermissionsContext) adds `memberGuildPermissions` and `appGuildPermissions`, the permission sets computed from roles alone.
+On an interaction, `memberPermissions` and `appPermissions` hold the set for the channel the command ran in after overwrites. A gate about the whole server, like one guarding a server-wide setting, needs what the roles grant instead. [`GuildPermissionsContext`](ref:core/GuildPermissionsContext) adds `memberGuildPermissions` and `appGuildPermissions`, the permission sets computed from roles alone.
 
 <Callout type="transport" only="gateway">
 

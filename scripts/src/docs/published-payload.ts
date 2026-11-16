@@ -1,12 +1,12 @@
 /* eslint-disable no-console -- CLI script */
 /**
- * Prints the `published` input for a manual `docs-publish` run, as a JSON array of
+ * Prints the `published` input for a manual `docs-publish` run as a JSON array of
  * `{ name, version }` for every documented package at the version the extractor recorded.
  *
  * `publish.yml` normally passes this from the changesets action. A failed publish skips the
  * downstream docs sync even when npm accepted every version. This fills that gap.
  *
- * Run `vp run docs:extract` first, since this reads the generated manifest.
+ * Run `vp run docs:extract` first since this reads the generated manifest.
  */
 import path from 'node:path';
 

@@ -3,7 +3,7 @@ title: Reloading in dev
 description: Reload the files that your plugin loads when you save them under seedcord dev, and ask for a restart for the ones it reads once.
 ---
 
-Under [`seedcord dev`](/tooling/dev), a save swaps the file into the running bot. A plugin that loaded the file itself, like a service class from its folder, keeps the old copy, because seedcord can't tell that the plugin read that file. Restarting for every edit costs the connection you were trying to keep.
+Under [`seedcord dev`](/tooling/dev), a save swaps the file into the running bot. A plugin that loaded the file itself, like a service class from its folder, keeps the old copy because seedcord can't tell that the plugin read that file. Restarting for every edit costs the connection you were trying to keep.
 
 ## What reaches onHmr when a file is saved
 
@@ -71,13 +71,13 @@ If `jobs/index.ts` re-exports a job, `load()` still only registers it once. `han
 
 If a file throws while it imports, `handle()` has already unregistered its old exports. With `rollback` on, the default, it registers them again and logs a warning. If you set [`hmr.rollback`](/build/config#every-key) to `false`, `handle()` leaves them unregistered until a save that imports cleanly. [A save that throws on import](/tooling/hot-reload#a-save-that-throws-on-import) walks through the same case for your own handlers.
 
-If your `register` throws, `handle()` unregisters whatever that file registered before the throw. It tries the file again on the next save that unloads something. That covers moving a job to a new file, since the new file often loads before the old one unloads. If your `register` rejects a name that's already taken, the first try fails, and the retry succeeds after `handle()` unregisters the old file's job.
+If your `register` throws, `handle()` unregisters whatever that file registered before the throw. It tries the file again on the next save that unloads something. That covers moving a job to a new file since the new file often loads before the old one unloads. If your `register` rejects a name that's already taken, the first try fails, and the retry succeeds after `handle()` unregisters the old file's job.
 
 Each reload logs one line at debug level on your plugin's logger, in the `hmr` channel, like "Reloaded ResetStreaks from jobs/ResetStreaks.ts in 4ms".
 
 ### Undoing what a registration made
 
-`unregister` gets only the old value. That's enough for `Jobs`, since registering only stored the class in a map. If registering creates something you have to undo later, keep it in a map keyed by the class and look it up in `unregister`. Here `schedule()` starts a timer for each job:
+`unregister` gets only the old value. That's enough for `Jobs` since registering only stored the class in a map. If registering creates something you have to undo later, keep it in a map keyed by the class and look it up in `unregister`. Here `schedule()` starts a timer for each job:
 
 ```ts twoslash title="src/plugins/Jobs.ts"
 import { FolderExports, Plugin } from '@seedcord/gateway';
@@ -123,13 +123,13 @@ A save to a job file clears the old class's timer before the new class starts it
 
 ### More than one folder
 
-A `FolderExports` covers one folder and one kind of value. For a second kind, like hooks that run around each job, make a second `FolderExports` with its own `is`, `register`, and `unregister`. Call `load()` on both in `init()` and `handle()` on both in `onHmr()`, since each one ignores saves outside its own folder.
+A `FolderExports` covers one folder and one kind of value. For a second kind, like hooks that run around each job, make a second `FolderExports` with its own `is`, `register`, and `unregister`. Call `load()` on both in `init()` and `handle()` on both in `onHmr()` since each one ignores saves outside its own folder.
 
 If the hooks folder is a subfolder of the jobs folder, pass it to the jobs instance as `exclude: [hooksDir]`. Without it, a hook file that throws on import logs its error once from each instance. The dir should be relative to the `root` of your project, or an absolute path.
 
 ## Files read once
 
-A reload only helps with files your plugin reads again. If `init()` read a locale folder at startup, your plugin still has the old copy, because swapping the file doesn't repeat the read. Pass glob patterns for files like that to [`registerCriticalFiles`](ref:core/Plugin.registerCriticalFiles). When one of them changes, the dev terminal shows a **Restart required** card telling you to press `r`, which [the Tooling tab](/tooling/hot-reload#saves-that-need-a-restart) describes.
+A reload only helps with files your plugin reads again. If `init()` read a locale folder at startup, your plugin still has the old copy because swapping the file doesn't repeat the read. Pass glob patterns for files like that to [`registerCriticalFiles`](ref:core/Plugin.registerCriticalFiles). When one of them changes, the dev terminal shows a **Restart required** card telling you to press `r`, which [the Tooling tab](/tooling/hot-reload#saves-that-need-a-restart) describes.
 
 ```ts twoslash title="src/plugins/Locales.ts"
 import { Plugin, readFiles } from '@seedcord/gateway';
@@ -153,7 +153,7 @@ export class Locales extends Plugin {
 }
 ```
 
-Saving anything under `dir` now needs a restart. A relative pattern resolves against `root`, and the call does nothing outside `seedcord dev`. Register only the files that your plugin reads, because seedcord already asks for a restart on its own startup files.
+Saving anything under `dir` now needs a restart. A relative pattern resolves against `root`, and the call does nothing outside `seedcord dev`. Register only the files that your plugin reads because seedcord already asks for a restart on its own startup files.
 
 ## Saving the plugin's own source
 

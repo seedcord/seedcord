@@ -3,7 +3,7 @@ title: Permissions in a handler
 description: Check permissions inside a handler with assertPermissions() and the gateway helpers, for a member, a role, or your own bot.
 ---
 
-A permission gate checks the caller and your bot before `execute()` starts. `/ban @someone` needs the target checked too. You get the target from the options inside `execute()`, after every gate has run. By hand, that check means comparing bitfields and writing a refusal message that lists what's missing.
+A permission gate checks the caller and your bot before `execute()` starts. `/ban @someone` needs the target checked too. You get the target from the options inside `execute()` after every gate has run. By hand, that check means comparing bitfields and writing a refusal message that lists what's missing.
 
 The helpers on this page do that comparison inside your handler and throw the same refusal card a gate would. [`assertPermissions`](ref:core/assertPermissions) runs on both transports. [`checkPermissions`](ref:gateway/checkPermissions) and [`checkBotPermissions`](ref:gateway/checkBotPermissions) take discord.js objects, so they are gateway only.
 

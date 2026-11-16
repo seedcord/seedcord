@@ -64,7 +64,7 @@ message. (route slash:ban)
 
 ## Defer before anything slow
 
-[`reply()`](ref:gateway/RepliableHandler.reply) after the three seconds throws Discord's own error, `DiscordAPIError[10062]`, since the interaction has expired by then. seedcord rethrows it untouched, then sends its [error card](/replying/faults) to that same interaction. Discord rejects the card too, and seedcord catches that rejection and logs a debug line. The person who ran the command sees the interaction fail.
+[`reply()`](ref:gateway/RepliableHandler.reply) after the three seconds throws Discord's own `DiscordAPIError[10062]` since the interaction has expired by then. seedcord rethrows it untouched, then sends its [error card](/replying/faults) to that same interaction. Discord rejects the card too, and seedcord catches that rejection and logs a debug line. The person who ran the command sees the interaction fail.
 
 Defer first whenever you can't predict how long the handler takes.
 
@@ -147,7 +147,7 @@ class Ban extends SlashHandler<'ban'> {
 
 {/* prettier-ignore-end */}
 
-`ephemeral` and `silent` apply only when `send()` creates a message. On the `edit()` row it ignores them, since `edit()` doesn't take options.
+`ephemeral` and `silent` apply only when `send()` creates a message. On the `edit()` row it ignores them since `edit()` doesn't take options.
 
 Use `send()` in code that runs from more than one state, like a helper that a deferring handler and a replying handler both call.
 

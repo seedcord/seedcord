@@ -66,7 +66,7 @@ describe('checkTarget on a file', () => {
         expect(result).not.toHaveProperty('hint');
     });
 
-    it('measures text full of </ as sent, before any script escaping', async () => {
+    it('measures text full of </ as sent before any script escaping', async () => {
         const text = card({ type: 10, content: '</'.repeat(1400) });
 
         expect(await checkTarget('embed.json', withFiles({ 'embed.json': text }))).toEqual({
@@ -383,7 +383,7 @@ describe('checkTarget on an html file', () => {
         });
     });
 
-    it("fails a relative <link> href, since the file doesn't have a host to resolve it against", async () => {
+    it("fails a relative <link> href since the file doesn't have a host to resolve it against", async () => {
         const html = page(`<link rel="discord:component-embed" type="application/json" href="/post.json">`);
 
         expect(await checkTarget('dist/post.html', withFilesAndPages({ 'dist/post.html': html }))).toEqual({

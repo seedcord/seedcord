@@ -29,7 +29,7 @@ export class Presence extends Plugin {
 }
 ```
 
-`setActivity` needs a logged-in client, so `Presence` starts its timer in `ready()`. `dispose()` clears that timer, since an interval left running keeps calling a client that has logged out.
+`setActivity` needs a logged-in client, so `Presence` starts its timer in `ready()`. `dispose()` clears that timer since an interval left running keeps calling a client that has logged out.
 
 <Callout type="transport" only="gateway">
 
@@ -119,7 +119,7 @@ export class Presence extends Plugin {
 }
 ```
 
-`Presence` moves `init()` to Login, gives `ready()` 20 seconds, and moves `dispose()` to Drain with 30 seconds. The `ready` field takes a timeout without a phase, since `ready()` always runs in the Ready phase. If you move an `init()` to Ready, it still runs before every plugin's `ready()`.
+`Presence` moves `init()` to Login, gives `ready()` 20 seconds, and moves `dispose()` to Drain with 30 seconds. The `ready` field takes a timeout without a phase since `ready()` always runs in the Ready phase. If you move an `init()` to Ready, it still runs before every plugin's `ready()`.
 
 ## Timeouts
 
@@ -133,7 +133,7 @@ Task "Plugin:db:ready" timed out after 15000ms. Check what it waits on, or give 
 Task "Plugin:db:dispose" timed out after 10000ms. Check what it waits on, or give it a longer timeout.
 ```
 
-A timeout of zero, a negative number, or `Infinity` throws `LifecycleInvalidTimeout` in the constructor, before any of your code runs.
+A timeout of zero, a negative number, or `Infinity` throws `LifecycleInvalidTimeout` in the constructor before any of your code runs.
 
 ### The shutdown deadline
 
@@ -216,6 +216,6 @@ If one `dispose()` fails, the others still run. With `db` and `settings` from ea
 
 A Workers bot has no `start()` call, so its plugins start when the first POST reaches an isolate. `init()` and `ready()` run in the same phases and order as above, and requests that arrive meanwhile wait for them. Cloudflare can run several isolates of your bot at once. Each one starts its own copy of every plugin. A field like a counter holds one value per isolate.
 
-Cloudflare gives [a Worker's isolate](https://developers.cloudflare.com/workers/reference/how-workers-works/) no shutdown hook, so the shutdown phases never run. `dispose()` runs only when startup fails. Then seedcord disposes the plugins whose `init()` had finished, in reverse attach order, and the request that triggered startup gets the error. A plugin can't flush its state on the way out. Write it as you go. After a failed startup the next request starts up again. A plugin's `init()` can then run a second time on the same instance, after its `dispose()`. Write `init()` so it can run twice.
+Cloudflare gives [a Worker's isolate](https://developers.cloudflare.com/workers/reference/how-workers-works/) no shutdown hook, so the shutdown phases never run. `dispose()` runs only when startup fails. Then seedcord disposes the plugins whose `init()` had finished, in reverse attach order, and the request that triggered startup gets the error. A plugin can't flush its state on the way out. Write it as you go. After a failed startup the next request starts up again. A plugin's `init()` can then run a second time on the same instance after its `dispose()`. Write `init()` so it can run twice.
 
 `shutdown.addTask` throws `CoreLifecycleUnavailable` on a Workers bot, and `lifecycle` isn't a config key there.

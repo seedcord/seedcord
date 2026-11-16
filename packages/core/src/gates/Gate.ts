@@ -6,7 +6,7 @@ import type { Promisable } from 'type-fest';
 
 /**
  * The transport-agnostic gate context, the scalar identity of the acting user resolvable from any
- * transport's payload. Every field except `core` is nullable, since an event or DM may carry no
+ * transport's payload. Every field except `core` is nullable since an event or DM may carry no
  * guild or member. Each transport extends it with its own context. For example, the gateway adds the djs
  * `user`/`guild`/`member` objects and the live interaction or event payload.
  *
@@ -84,7 +84,7 @@ declare const GateBrand: unique symbol;
  * A precondition attached to a handler. It refuses by throwing a `Notice` (a reply) or a `Silence`
  * (no reply), and passes by returning. `Ctx` is the context it requires, so a gate that reads
  * a field absent on a handler's context is rejected at compile time. `Name` is captured as a literal so
- * a mismatch error can name the gate. Build one with {@link defineGate} or {@link defineEffectGate}.
+ * a mismatch error can show the gate's name. Build one with {@link defineGate} or {@link defineEffectGate}.
  *
  * @typeParam Ctx - The context that the gate requires. A field missing from it is a compile error.
  * @typeParam Name - The gate's literal name, named in a mismatch error.
@@ -147,7 +147,7 @@ export interface EffectGate<Ctx extends GateContextBase = GateContextBase, Name 
 
 /**
  * Builds a {@link Gate} from a check. The check refuses by throwing a Notice or a Silence and passes
- * by returning. Annotate `ctx` as narrowly as the fields that the check reads, because the required context
+ * by returning. Annotate `ctx` as narrowly as the fields that the check reads because the required context
  * is inferred from it. No annotation defaults to {@link GateContextBase}, an agnostic gate that fits
  * every handler.
  *
@@ -191,7 +191,7 @@ export function defineGate<const Name extends string, Ctx extends GateContextBas
  * commits. In an `or`, seedcord rolls back the commit a refusing gate queued. This is how {@link Cooldown} peeks
  * in `check` and charges the slot in `commit`.
  *
- * @typeParam Name - The gate's literal name, used to name a mismatch error.
+ * @typeParam Name - The gate's literal name, which a mismatch error shows.
  * @typeParam Ctx - The context both `check` and `commit` read, inferred from the `ctx` annotation.
  *
  * @param name - The gate's name, used in mismatch errors.

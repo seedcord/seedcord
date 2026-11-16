@@ -20,7 +20,7 @@ export default defineConfig({
 
 <Shell run="build" />
 
-`dist/index.mjs` default exports the bot your `instance` file exports. The build's `write types` step also writes `dist/index.d.mts`, so the project that installs it gets the bot's full type, plugins included. The build doesn't print a run command, since nothing in `dist` starts the bot.
+`dist/index.mjs` default exports the bot your `instance` file exports. The build's `write types` step also writes `dist/index.d.mts`, so the project that installs it gets the bot's full type, plugins included. The build doesn't print a run command since nothing in `dist` starts the bot.
 
 The project that installs it imports the bot and starts it:
 
@@ -67,7 +67,7 @@ console.log(bot.stats.uptime.sinceStart());
 
 `@discordjs/builders` and `envapt` are peer dependencies of `@seedcord/http`. `discord-api-types` stands in for whatever your own handlers import. Put every package that your bot imports at runtime in `dependencies`. `dist` leaves them as imports that resolve from `node_modules`, and `index.d.mts` imports its types from `@seedcord/http` or `@seedcord/gateway`. If you leave one in `devDependencies`, the installing project doesn't get it, so the first import of it fails there.
 
-Keep the CLI, `vite`, and `typescript` in `devDependencies`, since only your own build uses them.
+Keep the CLI, `vite`, and `typescript` in `devDependencies` since only your own build uses them.
 
 `files` publishes `dist`.
 

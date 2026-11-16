@@ -163,7 +163,7 @@ describe('InteractionsEndpoint', () => {
         });
     });
 
-    it('clears with the token it set with, after the session that loaded it stopped', async () => {
+    it('clears with its first token once the session that loaded it has stopped', async () => {
         const { endpoint, writtenWith, readToken } = recordingEndpoint();
 
         await endpoint.set(TUNNEL, RUNNING, INSTANCE);

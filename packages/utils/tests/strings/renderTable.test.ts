@@ -187,7 +187,7 @@ describe('renderTable markdown alignment and escaping', () => {
         expect(header).toContain(String.raw`c\\d`);
     });
 
-    it('caps a cell at maxWidth without asking for truncate, since a GFM cell cannot wrap', () => {
+    it('caps a cell at maxWidth without asking for truncate since a GFM cell cannot wrap', () => {
         const table = renderTable([['description'], ['hello world this is long']], {
             border: 'markdown',
             maxWidth: 10

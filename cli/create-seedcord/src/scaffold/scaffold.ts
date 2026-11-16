@@ -69,7 +69,7 @@ function withReleaseTag(name: string): string {
     return isPrerelease && NEXT_TAGGED_PACKAGES.has(name) ? `${name}@next` : name;
 }
 
-// cf is in the first add, since bun runs the project's postinstall after every one
+// cf is in the first add since bun runs the project's postinstall after every one
 function addCommands(manager: PackageManager, context: TemplateContext): ResolvedCommand[] {
     return [
         manager.add(devPackages(context).map(withReleaseTag), true),

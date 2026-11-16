@@ -66,7 +66,7 @@ export class PluginTypesCollector {
         const collector = new PluginTypesCollector();
         for (const key of instance[HostPlugins].keys) await collector.add(key, codegenPluginAt(instance, key));
 
-        // built after every codegen(), since codegen() imports the files it reads
+        // built after every codegen() since codegen() imports the files it reads
         const index = await ExportIndex.create(modules, root, collector.classes(), collector.problems);
         const types = new Map(
             collector.entries

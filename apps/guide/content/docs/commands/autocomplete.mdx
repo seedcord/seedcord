@@ -118,7 +118,7 @@ class SearchAutocomplete extends AutocompleteHandler<'search'> {
 
 ## One handler for several commands
 
-Name every command in the decorator, and repeat those names in the generic, so the cases reach every autocompletable field across all of them.
+List every command in the decorator, and repeat those names in the generic, so the cases reach every autocompletable field across all of them.
 
 `search` completes `query` and `limit`. A second command, `probe`, completes `query`, `count`, and `ratio`. One handler for both needs four cases.
 
@@ -186,7 +186,7 @@ class SearchAutocomplete extends AutocompleteHandler<'search'> {
 }
 ```
 
-Discord sends the raw text, so someone typing `120` sends `'1'`, then `'12'`, then `'120'`. Parse it yourself and guard the result, since an empty field sends an empty string.
+Discord sends the raw text, so someone typing `120` sends `'1'`, then `'12'`, then `'120'`. Parse it yourself and guard the result since an empty field sends an empty string.
 
 What you send back has the real type. `limit` takes `{ value: number }`.
 

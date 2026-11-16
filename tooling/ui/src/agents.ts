@@ -51,7 +51,7 @@ function serialize({ rel, href, type }: AgentLink): string {
 /**
  * The `Link` header a site sends on every html page.
  *
- * Pass `twin` on a site that publishes a markdown copy of the page, as the path that serves it.
+ * On a site that publishes a markdown copy of the page, pass `twin` as the path that serves it.
  */
 export function agentLinkHeader(site: SeedcordSite, twin?: string): string {
     const twinLink: AgentLink[] = twin === undefined ? [] : [{ rel: 'alternate', href: twin, type: 'text/markdown' }];

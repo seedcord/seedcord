@@ -9,7 +9,7 @@ discord.js can still send that poll. On gateway, `this.event` is the discord.js 
 
 ## A raw ack leaves the state stale
 
-The reply sender reads the interaction's state once, when seedcord constructs your handler. That happens before `execute()` runs, and only seedcord's own reply methods move it afterwards. If you send an ack yourself, the copy still holds the state from the last seedcord call.
+The reply sender reads the interaction's state once when seedcord constructs your handler. That happens before `execute()` runs, and only seedcord's own reply methods move it afterwards. If you send an ack yourself, the copy still holds the state from the last seedcord call.
 
 ```ts twoslash title="src/handlers/Ban.ts"
 import { SlashHandler, SlashRoute } from '@seedcord/gateway';
@@ -61,7 +61,7 @@ src/handlers/Ban.ts
 
 {/* prettier-ignore-end */}
 
-The rule resolves the receiver's type, which is how it reports `this.event.reply()` and a local alias alike. It misses a destructured `const { reply } = this.event`, since that call doesn't keep a receiver to resolve.
+The rule resolves the receiver's type, which is how it reports `this.event.reply()` and a local alias alike. It misses a destructured `const { reply } = this.event` since that call doesn't keep a receiver to resolve.
 
 ## When you actually need one
 

@@ -77,7 +77,7 @@ describe('the runtime check on bun', () => {
         expectUnsupported(onRuntime({ bun: '1.4.1' }));
     });
 
-    it('skips the node range, since bun reports its own node version', () => {
+    it('skips the node range since bun reports its own node version', () => {
         expect(onRuntime({ nodeRange: '>=99', bun: '1.4.2' })).not.toThrow();
     });
 

@@ -39,7 +39,7 @@ describe('ErrorCodeReader', () => {
         ['seedcord error 3116', 'seedcord error 3116 CliDependencyMissing', DEPENDENCY],
         ['getting ERROR CODE: 3116 in dev', 'getting ERROR CODE: 3116 CliDependencyMissing in dev', DEPENDENCY],
         ['websocket error 1006', 'websocket error 1006 ConfigMissingEnv', { code: 1006, name: 'ConfigMissingEnv' }]
-    ])('keeps the code in %s and adds its name, since it may belong to something else', (input, question, mention) => {
+    ])('keeps the code in %s and adds its name since it may belong to something else', (input, question, mention) => {
         expect(read(input)).toEqual({ question, swapped: [mention], hints: [] });
     });
 

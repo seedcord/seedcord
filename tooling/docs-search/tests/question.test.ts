@@ -14,7 +14,7 @@ describe('parseQuestion', () => {
         expect(parseQuestion(longest)).toBe(longest);
     });
 
-    it('takes a bare number, since it can be an error code', () => {
+    it('takes a bare number since it can be an error code', () => {
         expect(parseQuestion('3116')).toBe('3116');
     });
 

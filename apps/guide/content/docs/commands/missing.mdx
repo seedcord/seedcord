@@ -40,11 +40,11 @@ Discord hides a command from the picker when the person doesn't have permission 
 
 The permission comes from two places. `setDefaultMemberPermissions` in your command file sets who can use it by default. A server's admins can change it for their server. In **Server Settings**, then **Integrations**, they can limit your command to some roles or channels, or turn it off for everyone.
 
-If a command shows in one server and not another, check **Integrations** in the server that hides it, since your bot's token can't change those settings.
+If a command shows in one server and not another, check **Integrations** in the server that hides it since your bot's token can't change those settings.
 
 ## It's missing in direct messages
 
-A command doesn't show in DMs by default, since [`BuilderComponent`](ref:core/BuilderComponent) sets `InteractionContextType.Guild`. To show it in a DM, call `setContexts` with `InteractionContextType.Guild` and `InteractionContextType.BotDM`. The call replaces the whole list, so include `Guild` again.
+A command doesn't show in DMs by default since [`BuilderComponent`](ref:core/BuilderComponent) sets `InteractionContextType.Guild`. To show it in a DM, call `setContexts` with `InteractionContextType.Guild` and `InteractionContextType.BotDM`. The call replaces the whole list, so include `Guild` again.
 
 ## You are near a limit
 

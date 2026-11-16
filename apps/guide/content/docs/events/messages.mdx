@@ -27,7 +27,7 @@ Without the Message Content intent, `Echo` logs an empty string every time.
 content: ""
 ```
 
-Nothing throws, so you only notice when a feature quietly never matches. The compiler can't warn you either, since `text` is typed `string` with or without the intent.
+Nothing throws, so you only notice when a feature quietly never matches. The compiler can't warn you either since `text` is typed `string` with or without the intent.
 
 ## What the intent gates
 
@@ -116,4 +116,4 @@ Message Content is a privileged intent. Once more than 10,000 unique users can s
 
 Don't build commands on a prefix like `!help` or `?play`. Make them slash commands. Discord's page on avoiding a privileged intent opens its checklist with this question: "Is my bot using prefix commands (`!help`, `?play`) that could be migrated to slash commands?"
 
-A slash command runs without a privileged intent. It also gives you typed options and a place in Discord's command picker. [Commands](/commands) covers slash commands. A message context menu command is the other route, since it receives the full message, content included.
+A slash command runs without a privileged intent. It also gives you typed options and a place in Discord's command picker. [Commands](/commands) covers slash commands. A message context menu command is the other route since it receives the full message, content included.

@@ -51,7 +51,7 @@ function refsToLinks(refs: readonly RefRange[], currentPackage: string): CodeLin
 }
 
 // dompurify's html5 reparse splits a link that crosses a shiki span boundary into the real anchor plus
-// an empty one, because the parser copies the href onto the tag it reopens. the loop repeats for
+// an empty one because the parser copies the href onto the tag it reopens. the loop repeats for
 // back-to-back boundaries.
 const EMPTY_ANCHOR = /<a\b[^>]*>\s*<\/a>/g;
 

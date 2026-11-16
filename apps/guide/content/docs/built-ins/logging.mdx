@@ -85,7 +85,7 @@ TypeError: Cannot read properties of undefined
     at Ping.execute (src/handlers/Ping.ts:14:19)
 ```
 
-An object prints as a block under the message, and the caught `error` prints its stack there. A string or a number prints on the same line, after the message. A JSON sink writes one _record_ per call, a single object. Every one of those arguments arrives in an `extras` array on it, and the first `Error` fills its `stack` as well.
+An object prints as a block under the message, and the caught `error` prints its stack there. A string or a number prints on the same line after the message. A JSON sink writes one _record_ per call, a single object. Every one of those arguments arrives in an `extras` array on it, and the first `Error` fills its `stack` as well.
 
 ### Format specifiers
 
@@ -129,7 +129,7 @@ These names belong to the framework, and [`FRAMEWORK_CHANNELS`](ref:logger/FRAME
 | `plugins` | how long each plugin took to start |
 | `hmr` | what reloaded while `seedcord dev` runs |
 | `cli` | status and errors from the CLI, codegen and the tunnel included |
-| `tsc` | output from `tsc --watch`, once you turn `hmr.typecheck` on |
+| `tsc` | output from `tsc --watch` once you turn `hmr.typecheck` on |
 
 {/* prettier-ignore-end */}
 
@@ -154,7 +154,7 @@ export class Ping extends SlashHandler<'ping'> {
 }
 ```
 
-That line shows `Ping` as its label and arrives on `payments`. Name your own channels after the parts of your bot you'll want to filter. [`setChannel`](ref:logger/Logger.setChannel) moves the logger you already have to a new channel for every later line.
+That line shows `Ping` as its label and arrives on `payments`. Give each part of your bot that you'll want to filter its own channel. [`setChannel`](ref:logger/Logger.setChannel) moves the logger you already have to a new channel for every later line.
 
 ## Several lines at once
 

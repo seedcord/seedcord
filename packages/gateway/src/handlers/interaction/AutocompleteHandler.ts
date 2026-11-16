@@ -134,7 +134,7 @@ export abstract class AutocompleteHandler<
 
     /**
      * The already-entered options on this command, restricted to the kinds Discord resolves during autocomplete
-     * (string, integer, number, boolean) with every read nullable, since a sibling is partial while the user
+     * (string, integer, number, boolean) with every read nullable since a sibling is partial while the user
      * types the focused field. The focused field is on `this.focused`.
      */
     protected get options(): AutocompleteOptions<Route> {

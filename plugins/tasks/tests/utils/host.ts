@@ -117,7 +117,7 @@ export class TestHost extends PluginHost<'gateway', 'server'> {
     public readonly gates: Promise<void>[] = [];
     public releaseOverrun: () => void = () => undefined;
     public failOverrun = false;
-    // Slow calls this once, before its first await
+    // Slow calls this once before its first await
     public reenter: (() => Promise<void>) | undefined;
     public overrunGate: Promise<void> = Promise.resolve();
 

@@ -3,7 +3,7 @@ title: Typing what you ship
 description: Make a bot see your plugin's types, give a plugin a type parameter, and read one plugin from another without breaking attach.
 ---
 
-You can't declare your plugin on [`Core`](ref:gateway/Core) yourself, because the bot's author picks the key. Two things carry the types to them. [`attach`](ref:gateway/Seedcord.attach) returns the bot typed with your instance under the key, and [`seedcord codegen`](/tooling/codegen) copies that instance type onto `Core`, which [Typing a plugin](/plugins/typing) shows from the bot's side. Each member's type comes from your class. The key and any type argument come from the bot that attaches it.
+You can't declare your plugin on [`Core`](ref:gateway/Core) yourself because the bot's author picks the key. Two things carry the types to them. [`attach`](ref:gateway/Seedcord.attach) returns the bot typed with your instance under the key, and [`seedcord codegen`](/tooling/codegen) copies that instance type onto `Core`, which [Typing a plugin](/plugins/typing) shows from the bot's side. Each member's type comes from your class. The key and any type argument come from the bot that attaches it.
 
 ## Why the first parameter is CoreBase
 

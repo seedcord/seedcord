@@ -7,7 +7,7 @@ import type { KeyName } from '#src/KeyCap';
 export interface HotkeySpec {
     key: KeyName;
     mod?: boolean; // Cmd on a mac, Ctrl everywhere else
-    // ignored for a key that types a character, since keyboard layouts put `?` and `/` on different keys
+    // ignored for a key that types a character since keyboard layouts put `?` and `/` on different keys
     shift?: boolean;
     description: string;
 }

@@ -7,7 +7,7 @@ A middleware runs before your handler. Write one when several handlers all need 
 
 A middleware runs for every handler of the kinds it lists, without being attached to any of them. A [gate](/checks/gates) runs _only_ on the handlers you put it on. Put work that every [dispatch](/checks#what-a-dispatch-is) needs in a middleware. Put a check that only some commands need in a gate on those commands.
 
-seedcord builds your handler first, so its constructor runs even if a middleware or gate then refuses. A middleware's `execute()` runs next, before any gate.
+seedcord builds your handler first, so its constructor runs even if a middleware or gate then refuses. A middleware's `execute()` runs next before any gate.
 
 The smallest middleware is a class with the decorator and an `execute()`. `Trace` logs the route every dispatch matched.
 
@@ -84,7 +84,7 @@ InteractionKind.
 //              ^|
 ```
 
-`Autocomplete` is the one that a middleware can't list, since Discord accepts only a list of choices in reply to one. When the generic lists only slash or context menu kinds, your editor suggests your registered commands for `this.route`.
+`Autocomplete` is the one that a middleware can't list since Discord accepts only a list of choices in reply to one. When the generic lists only slash or context menu kinds, your editor suggests your registered commands for `this.route`.
 
 <Callout type="transport">
 
@@ -135,13 +135,13 @@ A middleware uses the same reply methods as its handler. `reply`, `defer`, `foll
 
 <Callout type="warning">
 
-seedcord builds your handler first, before any middleware or gate runs. If your constructor queries your database, that query runs even when a middleware or a gate refuses the interaction afterwards. Only set fields in the constructor. Put database calls and other work in `execute()`, which runs only after every middleware and gate has passed.
+seedcord builds your handler first before any middleware or gate runs. If your constructor queries your database, that query runs even when a middleware or a gate refuses the interaction afterwards. Only set fields in the constructor. Put database calls and other work in `execute()`, which runs only after every middleware and gate has passed.
 
 </Callout>
 
 ## After the handler runs
 
-A middleware can also have an `after()` method. seedcord calls it once the whole dispatch is over, after your handler's `execute()` has finished or something stopped the dispatch early.
+A middleware can also have an `after()` method. seedcord calls it once the whole dispatch is over after your handler's `execute()` has finished or something stopped the dispatch early.
 
 A middleware gets its `after()` call as long as its own `execute()` started, even if that `execute()` threw. Say middleware `A` runs before middleware `B`.
 
@@ -182,7 +182,7 @@ export class Span extends InteractionMiddleware {
 }
 ```
 
-The base class declares `after()`, so your version overrides it. Mark it `override`, since a version without it is a compile error under TypeScript's `noImplicitOverride`.
+The base class declares `after()`, so your version overrides it. Mark it `override` since a version without it is a compile error under TypeScript's `noImplicitOverride`.
 
 `after()` receives a [`DispatchResult`](ref:core/DispatchResult) that reports how the dispatch ended. The `Span` sample ends its tracing span with `result.outcome`.
 

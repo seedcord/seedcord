@@ -1,6 +1,6 @@
 ---
 title: The kv store
-description: Keep settings, counters, and saved jobs between interactions with core.kv, as typed records that can expire and, with a driver, outlast a restart.
+description: Keep settings, counters, and saved jobs between interactions with core.kv as typed records that can expire and, with a driver, outlast a restart.
 ---
 
 Your bot has to remember some things after a handler returns, like a member's timezone, how often they claimed a daily reward, or a reminder due tomorrow. A `Map` at the top of a module holds them until the process restarts. Every handler that needs it imports it. Nothing removes an entry once it's stale.
@@ -55,7 +55,7 @@ const updatedAt = saved?.updatedAt;
 //    ^?
 ```
 
-`updatedAt` reads back as a `string`, because JSON keeps a `Date` as its ISO text. Pass it to `new Date()` to get the date again. `get` resolves to `undefined` when nothing is stored under the id.
+`updatedAt` reads back as a `string` because JSON keeps a `Date` as its ISO text. Pass it to `new Date()` to get the date again. `get` resolves to `undefined` when nothing is stored under the id.
 
 A `Set`, a `Map`, a function, and a `bigint` can't be written as JSON at all. If the record type holds one, the `collection()` call fails to compile:
 

@@ -16,7 +16,7 @@ describe('ReplySender.showModal', () => {
         expect(mock.showModal).toHaveBeenCalledWith({ title: 'Feedback', custom_id: 'fb', components: [] });
     });
 
-    it('throws ReplyIllegalAckState after a defer, before any djs call', async () => {
+    it('throws ReplyIllegalAckState after a defer before any djs call', async () => {
         const mock = mockInteraction();
         const sender = senderFor(mock);
         await sender.defer();
@@ -27,7 +27,7 @@ describe('ReplySender.showModal', () => {
         expect(mock.showModal).not.toHaveBeenCalled();
     });
 
-    it('throws ReplyIllegalAckState after a deferUpdate, before any djs call', async () => {
+    it('throws ReplyIllegalAckState after a deferUpdate before any djs call', async () => {
         const mock = mockInteraction();
         const sender = senderFor(mock);
         await sender.deferUpdate();

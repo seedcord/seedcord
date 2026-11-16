@@ -124,7 +124,7 @@ export class ModalFields {
     }
 
     /**
-     * Returns the field with this custom id, as Discord sent it. Use it for a component type the typed
+     * Returns the field with this custom id as Discord sent it. Use it for a component type the typed
      * getters do not cover.
      *
      * Pass a component type to get that exact type back.

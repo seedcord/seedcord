@@ -10,7 +10,7 @@ HANDLED_EXCEPTION_WEBHOOK_URL=https://discord.com/api/webhooks/...
 UNKNOWN_EXCEPTION_WEBHOOK_URL=https://discord.com/api/webhooks/...
 ```
 
-On an edge bot, declare both variables as secrets in `cloudflare.config.ts`, because only declared bindings reach its environment. [Workers](/build/workers) shows the file.
+On an edge bot, declare both variables as secrets in `cloudflare.config.ts` because only declared bindings reach its environment. [Workers](/build/workers) shows the file.
 
 {/* prettier-ignore-start */}
 
@@ -100,7 +100,7 @@ export class FaultMirror extends WebhookLog<'handledException'> {
 }
 ```
 
-`this.data` is that key's payload. Give the generic on `WebhookLog` the same key you passed `@Subscribe`, since `this.data` takes its type from the generic. Return a promise from `report()` when you have to load something before the card can be built.
+`this.data` is that key's payload. Give the generic on `WebhookLog` the same key you passed `@Subscribe` since `this.data` takes its type from the generic. Return a promise from `report()` when you have to load something before the card can be built.
 
 {/* prettier-ignore-start */}
 

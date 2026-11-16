@@ -24,7 +24,7 @@ export interface ErrorsConfig {
      */
     errorStack?: boolean;
     /**
-     * Whether a `Silence` debug-logs its reason. Turn it off to quiet a busy stream, because a
+     * Whether a `Silence` debug-logs its reason. Turn it off to quiet a busy stream because a
      * per-event silence (a message from a bot) emits this line once per event.
      *
      * @defaultValue `true`

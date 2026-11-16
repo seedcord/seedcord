@@ -18,7 +18,7 @@ let active: CustomIdErrors = defaults;
 
 /**
  * Replace the errors that {@link CustomId.decode} throws. Call it before your bot receives any
- * interaction, because the setting is process-wide and each call replaces the last one.
+ * interaction because the setting is process-wide and each call replaces the last one.
  *
  * `stale` gets the route prefix and `invalid` gets a detail string. You can't localize the message per user
  * because neither one gets the interaction.

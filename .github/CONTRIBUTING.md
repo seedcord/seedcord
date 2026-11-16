@@ -141,7 +141,7 @@ When a prose error is wrong for one spot, turn that rule off around it, with the
 - In MDX, use `{/* vale Seedcord.StandIn = NO */}` and `{/* vale Seedcord.StandIn = YES */}`.
 - Above a string, like one that quotes Discord's own wording, add `// prose-ignore-next-line -- <why>`.
 
-A code comment doesn't have a switch, since its wording is always yours. Reword it instead.
+A code comment doesn't have a switch since its wording is always yours. Reword it instead.
 
 Run `vp run prePush` before you open the PR. It checks the packages that your branch changed since `next` and the ones that depend on them. `vp run prePush:all` checks every package. The root `package.json` has both chains.
 
@@ -195,7 +195,7 @@ Have it load the others only for these tasks:
 - [`release-docs`](../.agents/skills/release-docs/SKILL.md) for bringing the changesets, READMEs, home page and guide up to date before a release, a maintainer-only job
 - [`test-performance`](../.agents/skills/test-performance/SKILL.md) when writing a test, a test helper, or a vitest config, or when a test is slow or fails only in the full suite
 
-Before every push, type [`/branch-audit`](../.agents/skills/branch-audit/SKILL.md) yourself (`$branch-audit` in Codex), since agents can't start it on their own. It audits everything your branch changes against `next`, and then it works through the findings with you, one decision at a time. Run it again after the fixes, until a round finds only nits. The skill has the full loop.
+Before every push, type [`/branch-audit`](../.agents/skills/branch-audit/SKILL.md) yourself (`$branch-audit` in Codex) since agents can't start it on their own. It audits everything your branch changes against `next`, and then it works through the findings with you, one decision at a time. Run it again after the fixes until a round finds only nits. The skill has the full loop.
 
 The audit reads callers and imports to check its claims. [codebase-memory](https://github.com/DeusData/codebase-memory-mcp) makes that faster and cheaper, but it's optional. Install it with `--skip-config` and add it to your agent's MCP config yourself, so the installer doesn't change your other agent setups.
 

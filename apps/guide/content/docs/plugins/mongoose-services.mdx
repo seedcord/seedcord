@@ -39,7 +39,7 @@ export class Users extends MongooseService<IUser> {
 - **`IUser`** lists the fields a user document has. It extends [`MongooseDocument`](ref:plugin-mongoose/MongooseDocument), which declares `_id: string`, the one field every document has.
 - **[`@RegisterMongooseService('users')`](ref:plugin-mongoose/RegisterMongooseService)** gives the class its key. Your handlers read the service from `services` under that key, typed as `Users` once [codegen has run](#typing-the-registry).
 - **`MongooseService<IUser>`** is the base class. Passing `IUser` types `this.model` as `Model<IUser>`, so TypeScript checks the fields in every query on that model against `username` and `streak`. Without the type argument, the model's type only has `_id`.
-- **`schema`** is the Mongoose schema the plugin builds the model from. Make sure it's `static`, because the decorator fails to compile without it.
+- **`schema`** is the Mongoose schema the plugin builds the model from. Make sure it's `static` because the decorator fails to compile without it.
 - **`findByName`** keeps the lookup inside the class. Your handlers call that method, so none of them writes the query.
 
 ## You never construct a service
@@ -112,7 +112,7 @@ Until codegen has run once, the decorator accepts any key, and TypeScript types 
 
 <Callout type="warning">
 
-If you add or rename a service, its decorator fails to compile until codegen runs again, since the generated file only lists the keys from the last run. Run `seedcord codegen` after each one.
+If you add or rename a service, its decorator fails to compile until codegen runs again since the generated file only lists the keys from the last run. Run `seedcord codegen` after each one.
 
 </Callout>
 

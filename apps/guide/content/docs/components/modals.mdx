@@ -39,7 +39,7 @@ export class AppealModal extends BuilderComponent<'modal'> {
 }
 ```
 
-A modal has two kinds of custom id. You mint the modal's own id with [`CustomId`](ref:custom-id/CustomId), since seedcord routes the submit by it. Each input takes a plain string id you pick, like `'reason'` above, and you read that field back by the same string.
+A modal has two kinds of custom id. You mint the modal's own id with [`CustomId`](ref:custom-id/CustomId) since seedcord routes the submit by it. Each input takes a plain string id you pick, like `'reason'` above, and you read that field back by the same string.
 
 A modal holds up to five top-level components, and each label wraps one input. `addTextDisplayComponents` adds a line of plain text, which counts toward the same five as a label.
 
@@ -70,7 +70,7 @@ export class Appeal extends SlashHandler<'ban'> {
 
 <Callout type="danger">
 
-`showModal()` has to be the _initial_ response. Calling it after `reply()`, `defer()`, or `deferUpdate()` throws `ReplyIllegalAckState`, covered in [When a reply throws](/replying/ack-states). Any lookup that the form needs has to finish inside Discord's three seconds, because you can't defer first. Discord also forbids a modal opening another modal, so the call fails to compile inside a [`ModalHandler`](ref:gateway/ModalHandler).
+`showModal()` has to be the _initial_ response. Calling it after `reply()`, `defer()`, or `deferUpdate()` throws `ReplyIllegalAckState`, covered in [When a reply throws](/replying/ack-states). Any lookup that the form needs has to finish inside Discord's three seconds because you can't defer first. Discord also forbids a modal opening another modal, so the call fails to compile inside a [`ModalHandler`](ref:gateway/ModalHandler).
 
 </Callout>
 
@@ -149,4 +149,4 @@ Most getters that can return `null` take a `required` flag. Pass `true` to make 
 
 A modal opened from a button keeps that button's message as its source, so `this.update()` rewrites it.
 
-A slash command can open the same modal. Discord omits the source message in that case, so `update()` and `deferUpdate()` both throw `ReplyUpdateWithoutSource`. The message says "Use reply() or defer() instead". `followUp()` throws there as well, since nothing has acknowledged the submit yet.
+A slash command can open the same modal. Discord omits the source message in that case, so `update()` and `deferUpdate()` both throw `ReplyUpdateWithoutSource`. The message says "Use reply() or defer() instead". `followUp()` throws there as well since nothing has acknowledged the submit yet.

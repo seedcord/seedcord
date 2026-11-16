@@ -14,12 +14,12 @@ export type OptionKind =
 
 /**
  * The cache state a command's interaction arrives in, read from the `contexts` it declares. A guild-only
- * command is `'cached'`. A command that a DM or a private channel can reach is `undefined`, since it can
+ * command is `'cached'`. A command that a DM or a private channel can reach is `undefined` since it can
  * arrive from outside a guild.
  */
 export type RouteCache = 'cached' | undefined;
 
-/** The type-relevant shape of one slash option, as emitted by `seedcord codegen` into a registry row. */
+/** The type-relevant shape of one slash option as emitted by `seedcord codegen` into a registry row. */
 export interface SlashOption {
     kind: OptionKind;
     required: boolean;

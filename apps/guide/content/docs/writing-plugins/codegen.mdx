@@ -350,7 +350,7 @@ interface PluginTypes {
 
 ## The id
 
-Rows in the bot's file share one list, keyed by your plugin's id. You declare the id on the class because your package reads its own row with `Generated<typeof Locales>` when it builds, before any bot has picked an attach key. Use your package's name, like `'seedcord-locales'` here, so another plugin doesn't write the same key.
+Rows in the bot's file share one list, keyed by your plugin's id. You declare the id on the class because your package reads its own row with `Generated<typeof Locales>` when it builds before any bot has picked an attach key. Use your package's name, like `'seedcord-locales'` here, so another plugin doesn't write the same key.
 
 Write it `static readonly`. Without `readonly`, TypeScript types the id as `string`, and each field of `Generated` turns into a message saying to add it.
 
@@ -360,9 +360,9 @@ A bot can attach your plugin under two keys, like two `Locales` for two folders.
 
 `seedcord codegen` constructs the bot and never calls `init()`, and neither does a CI job running `seedcord codegen --check`. Anything `init()` sets up, like a connection, doesn't exist yet. Inside `codegen()`, use only what the constructor stored and the bot's files.
 
-[`readFiles`](ref:utils/readFiles) and `importFiles` work there, since the CLI sets the bot's `root` before it loads your plugin. `readFiles` still needs the folder listed in the bot's [`files`](/build/data-files), the same as when the bot runs.
+[`readFiles`](ref:utils/readFiles) and `importFiles` work there since the CLI sets the bot's `root` before it loads your plugin. `readFiles` still needs the folder listed in the bot's [`files`](/build/data-files), the same as when the bot runs.
 
-For a server bot, `seedcord dev` writes the file after the bot has started, when `init()` has already run. An edge bot runs in workerd, and dev runs codegen on a separate copy in Node that never calls `init()`. A `codegen()` that reads `init()` state works for a server bot in dev and fails everywhere else, so test yours with `seedcord codegen`.
+For a server bot, `seedcord dev` writes the file after the bot has started and `init()` has run. An edge bot runs in workerd, and dev runs codegen on a separate copy in Node that never calls `init()`. A `codegen()` that reads `init()` state works for a server bot in dev and fails everywhere else, so test yours with `seedcord codegen`.
 
 ## When codegen stops
 

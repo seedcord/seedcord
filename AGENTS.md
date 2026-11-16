@@ -81,10 +81,10 @@ When someone asks how seedcord does something, answer for gateway and for http. 
     - **Write the message for whoever hit it.** A message can carry four parts. Give it every part that the reader needs to fix the problem without opening the source:
         - **What** went wrong, stated as the fact.
         - **Where** it came from: the class, file, key, route, env var, or value, painted per the rule below.
-        - **Why** it happened, when the what alone doesn't explain it.
+        - **Why** it happened when the what alone doesn't explain it.
         - **What to do**, the one step that fixes it. A vague step like "check your config" counts as missing.
 
-        Read it back as the developer who just got it at 2am, and cut anything they cannot use. Two throw sites that mean different things get different codes or better message arguments, because one message covering both tells the reader nothing.
+        Read it back as the developer who just got it at 2am, and cut anything they cannot use. Two throw sites that mean different things get different codes or better message arguments because one message covering both tells the reader nothing.
 - **Routes, class names, ids, paths, and package names get a `paint` tone** from `@seedcord/errors`. A package name gets `bold`. `paint` also has `bold`, `italic` and `underline` for the parts without color. Multi-line output uses `logger.utils`.
 - **Derive types from their source.** A constructor shape is `TypedConstructor<typeof X>`. A member union comes from `keyof`, an indexed access, or `ExtractStrict`. A hand-written copy drifts.
 - **Check what a dependency exports before you write it yourself.** Look in `es-toolkit` for runtime helpers and in `type-fest` for utility types. [Check 9](.agents/skills/code-quality/PREVENT-REINVENTION.md#9-does-a-dependency-already-in-the-tree-export-it) has the steps.
@@ -96,8 +96,8 @@ When someone asks how seedcord does something, answer for gateway and for http. 
 - **Only implement what was asked.** Surface additions as a question first. Wait for the third use before extracting an abstraction.
 - **No dead code.** Before adding `export`, confirm something outside the file uses the symbol. A symbol that exists only for a test belongs in the test folder.
 - **Grep every consuming surface before deleting anything.** That includes markdown and generated output. Show that nothing calls it or point to the replacement.
-- **Commit subjects are one lowercase line without a scope or a body.** Write `feat:`, never `feat(http):`. A breaking change marks the bare type, `feat!:`. A PR title follows the same rule, because a squash merge turns it into the commit.
-- **Name a file after its main export, in that export's casing.** A file built around a class is `LogLayout.ts`, and one built around a function is `linkCommands.ts`, even when the file also defines a helper class. Rename the file when its main export changes kind. On macOS, `git mv` a case-only rename through a temporary name.
+- **Commit subjects are one lowercase line without a scope or a body.** Write `feat:`, never `feat(http):`. A breaking change marks the bare type, `feat!:`. A PR title follows the same rule because a squash merge turns it into the commit.
+- **Give a file the name of its main export, in that export's casing.** A file built around a class is `LogLayout.ts`, and one built around a function is `linkCommands.ts`, even when the file also defines a helper class. Rename the file when its main export changes kind. On macOS, `git mv` a case-only rename through a temporary name.
 - **Move files with `git mv`.** Add dependencies with `vp add` so the lockfile updates.
 
 ---

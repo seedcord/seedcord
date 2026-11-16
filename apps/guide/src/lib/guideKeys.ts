@@ -1,6 +1,6 @@
 import type { HotkeySpec } from '@seedcord/ui';
 
-// a plain module, since PageNav renders on the server and reads these too
+// a plain module since PageNav renders on the server and reads these too
 export const GUIDE_KEYS = {
     previousPage: { key: 'ArrowLeft', description: 'Previous page' },
     nextPage: { key: 'ArrowRight', description: 'Next page' },

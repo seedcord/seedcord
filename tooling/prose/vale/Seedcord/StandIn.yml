@@ -38,3 +38,5 @@ tokens:
   - 'names\s+(?:the|a|an|that|this|these|those|your|its|their|our|every|each|both|it|them|which|what)'
   # left out on purpose: "only names" and "names you" are usually the noun
   - '(?:it|this|also|still|never|then) names'
+  # the bare verb opens a sentence or follows a word that takes one, like "so name each file"
+  - '(?<=^|[.!?:]\s|\b(?:to|so|and|or|then|you|can|should|must|will|please)\s)name\s+(?:the|a|an|that|this|these|those|your|its|their|our|every|each|both|it|them|one|any)'

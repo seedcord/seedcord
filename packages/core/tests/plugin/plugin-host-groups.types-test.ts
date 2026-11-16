@@ -1,4 +1,4 @@
-// compile-only. tc is the assertion here, since an unused @ts-expect-error fails it.
+// compile-only. tc is the assertion here since an unused @ts-expect-error fails it.
 import { Plugin } from '#src/plugin/Plugin';
 
 import type { PluginHost } from '#src/plugin/PluginHost';

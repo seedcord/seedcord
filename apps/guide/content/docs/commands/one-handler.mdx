@@ -141,7 +141,7 @@ class Moderation extends SlashHandler<'ban' | 'kick'> {
 
 ## Use what the cases return
 
-The code after [`match`](ref:gateway/SlashHandler.match) often needs a value that each case worked out. If you assign that value to a `let` above `match`, TypeScript reports the `let` as used before it's assigned, because it doesn't follow assignments inside the callbacks.
+The code after [`match`](ref:gateway/SlashHandler.match) often needs a value that each case worked out. If you assign that value to a `let` above `match`, TypeScript reports the `let` as used before it's assigned because it doesn't follow assignments inside the callbacks.
 
 Return the value from each case. `match` resolves to what the case returned.
 
@@ -162,7 +162,7 @@ class Moderation extends SlashHandler<'ban' | 'kick'> {
 }
 ```
 
-`outcome` is a union of both shapes, because each case returned its own. `kick` returns a promise, and `match` waits for it before it resolves.
+`outcome` is a union of both shapes because each case returned its own. `kick` returns a promise, and `match` waits for it before it resolves.
 
 ### Make every case return the same type
 

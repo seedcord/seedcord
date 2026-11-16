@@ -37,7 +37,7 @@ An option's name and its required flag are arguments to method calls. Those call
 
 Run it after you add a command, change its options, attach a plugin, or edit your emoji block. Also run it after you add something an attached plugin types for you, like a new message in a translations plugin's locale files.
 
-Your handler then reads its options through `this.options`. `getString('query')` comes back as `string`, because you marked that option required. A typo in the name stops the build. [Command options](/commands/options) covers what each kind returns.
+Your handler then reads its options through `this.options`. `getString('query')` comes back as `string` because you marked that option required. A typo in the name stops the build. [Command options](/commands/options) covers what each kind returns.
 
 `seedcord dev` runs codegen every time the bot starts, and again when you answer `y` to its refresh prompt. If you edit commands while dev is stopped, or your project never runs dev, run it yourself.
 
@@ -62,11 +62,11 @@ Every run rewrites the whole file from scratch.
 
 `Core` only appears once you attach a plugin, and `PluginTypes` once a plugin finds something to type. [Typing a plugin](/plugins/typing) shows both.
 
-Codegen records only the keys you attached. TypeScript resolves each plugin's type from the bot you built, since your `attach()` call already passes the plugin class. Your handler still reads `this.core.db` with every method that plugin declares.
+Codegen records only the keys you attached. TypeScript resolves each plugin's type from the bot you built since your `attach()` call already passes the plugin class. Your handler still reads `this.core.db` with every method that plugin declares.
 
 <Callout type="transport">
 
-The rows codegen adds are the same either way. The interface it adds them to differs, since gateway's [`Core`](ref:gateway/Core) has a `bot` member holding the discord.js client and its token. http's [`Core`](ref:http/Core) does not hold a connection.
+The rows codegen adds are the same either way. The interface it adds them to differs since gateway's [`Core`](ref:gateway/Core) has a `bot` member holding the discord.js client and its token. http's [`Core`](ref:http/Core) does not hold a connection.
 
 </Callout>
 
@@ -78,7 +78,7 @@ Even so, your bot never starts. Nothing calls `start()`, so plugins don't connec
 
 Codegen does call `codegen()` on each attached plugin that has one. That method can read your project's files, like a translations plugin reading its `locales` folder, and it returns what the plugin types for you. If one throws, the run stops with `CliPluginCodegenThrew`, which gives the plugin's key and what it threw.
 
-A command constructor that throws fails the whole run, since codegen has to construct the class to read its options. `CliCommandConstructorThrew` shows the class, the file, and what your constructor threw. Keep anything that can fail out of a command constructor.
+A command constructor that throws fails the whole run since codegen has to construct the class to read its options. `CliCommandConstructorThrew` shows the class, the file, and what your constructor threw. Keep anything that can fail out of a command constructor.
 
 ## Catching a stale file in CI
 
@@ -102,7 +102,7 @@ It prints a line per step, like plain codegen. If the file matches, the last lin
 
 `--check` only reports. To fix the drift, run plain `seedcord codegen`. The scaffold doesn't wire a script for it, so put it wherever your pipeline runs its checks.
 
-If codegen can't read your commands folder, it throws `CorePathUnreadable`, because a run that didn't find any commands would pass `--check` against a file that's already stale.
+If codegen can't read your commands folder, it throws `CorePathUnreadable` because a run that didn't find any commands would pass `--check` against a file that's already stale.
 
 ## Commands codegen passes over
 

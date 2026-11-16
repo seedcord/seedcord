@@ -5,7 +5,7 @@ import type { IsNever } from 'type-fest';
 
 type Row<Route extends keyof SlashRegistry> = SlashRegistry[Route]['options'];
 
-// deliberately non-distributive because a union Route intersects to the names shared by every route, since a
+// deliberately non-distributive because a union Route intersects to the names shared by every route.
 // a distributed union would type a required option as non-null even on a route without that option
 type NamesOfKind<Route extends keyof SlashRegistry, Kind extends OptionKind> = {
     [Name in keyof Row<Route>]: Row<Route>[Name] extends { kind: Kind } ? Name : never;

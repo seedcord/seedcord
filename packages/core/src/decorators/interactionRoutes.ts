@@ -37,7 +37,7 @@ export function storeInteractionRoute(
     const saved: unknown = Reflect.getMetadata(key, constructor);
     const existing = isStringArray(saved) ? saved : [];
     const toStore = typeof routes === 'string' ? [routes] : routes;
-    // own metadata, since a subclass can list a route that its parent lists
+    // own metadata since a subclass can list a route that its parent lists
     const own: unknown = Reflect.getOwnMetadata(key, constructor);
     assertUniqueKeys(routeDecoratorOf(route), constructor, [...(isStringArray(own) ? own : []), ...toStore], fix);
     Reflect.defineMetadata(key, [...existing, ...toStore], constructor);

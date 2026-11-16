@@ -119,7 +119,7 @@ describe('handleEventFault', () => {
         expect(publish).not.toHaveBeenCalled();
     });
 
-    it('reports a dead-resource api code by default, since ignoreEventApiCodes is empty', () => {
+    it('reports a dead-resource api code by default since ignoreEventApiCodes is empty', () => {
         handleEventFault(deadResourceError(), 'messageReactionAdd', 'ReactionRole', [{}], mockCore(publish));
 
         expect(publish).toHaveBeenCalledWith('unknownException', expect.anything());

@@ -185,7 +185,7 @@ const GROUPS: Group[] = [
                 label: 'seedcord commands',
                 gloss: 'deploy, list and clean up your commands on Discord'
             },
-            { icon: SpellCheck, label: 'eslint rules', gloss: 'flags payloads Discord rejects, before you send them' }
+            { icon: SpellCheck, label: 'eslint rules', gloss: 'flags payloads Discord rejects before you send them' }
         ]
     },
     {

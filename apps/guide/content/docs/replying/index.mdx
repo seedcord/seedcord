@@ -150,7 +150,7 @@ class Ban extends SlashHandler<'ban'> {
 }
 ```
 
-`followUp()` takes `ephemeral` and `silent` the same way. `edit()` doesn't take options, since it rewrites a message that already has its flags.
+`followUp()` takes `ephemeral` and `silent` the same way. `edit()` doesn't take options since it rewrites a message that already has its flags.
 
 ## The message you get back
 
@@ -179,7 +179,7 @@ class Ban extends SlashHandler<'ban'> {
 
 ## Who sent the interaction
 
-On http, `this.event.user` is undefined in a server, because Discord sends `member.user` there. Use [`this.user`](ref:gateway/RepliableHandler.user) because it reads whichever one Discord sent, on every interaction handler and middleware.
+On http, `this.event.user` is undefined in a server because Discord sends `member.user` there. Use [`this.user`](ref:gateway/RepliableHandler.user) because it reads whichever one Discord sent, on every interaction handler and middleware.
 
 ```ts twoslash
 import { SlashHandler, SlashRoute } from '@seedcord/gateway';
@@ -196,6 +196,6 @@ class Ban extends SlashHandler<'ban'> {
 
 <Callout type="transport">
 
-`this.user` is a discord.js `User` on gateway and an `APIUser` on http. Separately, the server id comes from the event, as `this.event.guildId` on gateway and `this.event.guild_id` on http.
+`this.user` is a discord.js `User` on gateway and an `APIUser` on http. Separately, the server id comes from the event as `this.event.guildId` on gateway and `this.event.guild_id` on http.
 
 </Callout>

@@ -10,7 +10,7 @@ const UNIT_MS = {
 
 type DurationUnit = keyof typeof UNIT_MS;
 
-// check ms before the other units, since '500ms' also ends in 's'
+// check ms before the other units since '500ms' also ends in 's'
 type Amount<TText extends string> = TText extends `${infer Value}ms`
     ? Value
     : TText extends `${infer Value}${Exclude<DurationUnit, 'ms'>}`

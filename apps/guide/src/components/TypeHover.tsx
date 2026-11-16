@@ -143,7 +143,7 @@ function focusLeftTheBlock(event: FocusEvent<HTMLDivElement>): boolean {
 
 type Show = (event: { target: EventTarget | null }, fromKey?: boolean) => void;
 
-// one tab stop per code block, since a page has dozens of tokens
+// one tab stop per code block since a page has dozens of tokens
 function useTokenWalk(
     marked: RefObject<Element | null>,
     show: Show,

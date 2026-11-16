@@ -137,7 +137,7 @@ One command sets this up, along with the tsconfig, lint, and formatter files.
 
 You pick one transport when you create the project.
 
-`@seedcord/gateway` holds a websocket connection through the discord.js client, so the events Discord sends about a server reach your bot, as far as the intents you ask for allow.
+`@seedcord/gateway` holds a websocket connection through the discord.js client, so the events Discord sends about a server reach your bot as far as the intents you ask for allow.
 
 `@seedcord/http` answers the interaction requests Discord posts to your URL, and Discord posts only interactions there. seedcord checks each signature, rejects a stale or repeated request, and answers the check Discord runs before it accepts your URL. It runs on your own server, in an HTTP route of an app you already have, or on Cloudflare Workers. It doesn't depend on discord.js.
 

@@ -24,7 +24,7 @@ export class DocsLinks {
         return DocsLinks.loading;
     }
 
-    // the twoslash renderer runs sync, after twoslashBlock awaited load()
+    // the twoslash renderer runs sync after twoslashBlock awaited load()
     static current(): DocsLinks {
         if (!DocsLinks.loaded) throw new Error('read the reference index with DocsLinks.load() first');
         return DocsLinks.loaded;

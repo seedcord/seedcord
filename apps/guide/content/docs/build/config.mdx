@@ -69,7 +69,7 @@ That's also why `root` is usually `./src`. If you leave `root` at the config's f
 
 The CLI checks the type of every key before it loads your bot. If several are wrong, it reports them together in one `CliProblems` error. Three more checks look at the folders and each stops the CLI by itself:
 
-- If `root` is inside `build.outDir`, the CLI throws `CliConfigOutDirDeletesRoot`, because the build empties `outDir` before it writes.
+- If `root` is inside `build.outDir`, the CLI throws `CliConfigOutDirDeletesRoot` because the build empties `outDir` before it writes.
 - If `instance` or `build.start` points at a missing file, the CLI throws `CliFileNotFound` and reports which key.
 - If an entry in `files` sits outside the config's folder, every command throws `CliListedFolderUnusable`. `seedcord build` throws it too for an entry that's missing or is a file.
 
@@ -79,7 +79,7 @@ If a path resolves somewhere you didn't expect, pass `--verbose` to `seedcord bu
 
 A `cloudflare.config.ts` beside `seedcord.config.ts` makes your bot an edge bot, which `seedcord build` turns into a Cloudflare Worker. Add `"customConditions": ["workerd"]` to its tsconfig too. The CLI throws if one of the two is there without the other. Under that condition `defineConfig` takes the edge keys:
 
-- `build` takes only `tsconfig`, because the build always writes the worker to `.cloudflare/output` and runs without a start file.
+- `build` takes only `tsconfig` because the build always writes the worker to `.cloudflare/output` and runs without a start file.
 - `port` sets where `seedcord dev` serves the worker.
 - `root` can't be the config's folder or any folder above it. The worker bundles every file under it. Tool configs like `eslint.config.ts` break that bundle, so the build throws `CliEdgeRootHoldsConfig`.
 

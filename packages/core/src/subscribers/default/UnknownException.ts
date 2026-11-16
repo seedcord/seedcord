@@ -31,7 +31,7 @@ export class UnknownException extends WebhookLog<'unknownException', CoreBase> {
     }
 }
 
-// discord.js puts the api code in the name, as `DiscordAPIError[10062]`
+// discord.js puts the api code in the name as `DiscordAPIError[10062]`
 function nameOf(error: Error): string {
     return error.name === 'Error' ? error.constructor.name : error.name;
 }

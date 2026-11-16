@@ -103,7 +103,7 @@ export class Award extends SlashHandler<'award'> {
 
 `publish` returns `true` if the key had at least one `on` listener. It counts those listeners only, so a key with three subscribers and zero listeners returns `false`.
 
-Subscribers on the same key start at the same time, so any of them can finish first. Don't make one subscriber depend on another's result, since nothing guarantees the order.
+Subscribers on the same key start at the same time, so any of them can finish first. Don't make one subscriber depend on another's result since nothing guarantees the order.
 
 ## Running once
 
@@ -158,7 +158,7 @@ export class LevelLog extends Subscriber<'levelUp' | 'levelReset'> {
 }
 ```
 
-`this.data` is `never` on `LevelLog`, since its type depends on which key the bus published. [`this.key`](ref:core/Subscriber.key) holds that key. [`this.match`](ref:core/Subscriber.match) runs the case for that key, and each case receives that key's payload. TypeScript reports an error if you leave out a case, or add a case for a key that the generic doesn't list. Set `frequency` per tuple, like `['levelUp', { frequency: 'once' }]`.
+`this.data` is `never` on `LevelLog` since its type depends on which key the bus published. [`this.key`](ref:core/Subscriber.key) holds that key. [`this.match`](ref:core/Subscriber.match) runs the case for that key, and each case receives that key's payload. TypeScript reports an error if you leave out a case, or add a case for a key that the generic doesn't list. Set `frequency` per tuple, like `['levelUp', { frequency: 'once' }]`.
 
 ## Where to put subscribers
 

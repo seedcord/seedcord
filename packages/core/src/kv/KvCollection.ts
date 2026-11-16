@@ -7,7 +7,7 @@ import type { KvDriver } from '@seedcord/types';
 import type { Jsonify, Simplify } from 'type-fest';
 
 /**
- * `TRecord` as a {@link KvCollection} reads it back, after `JSON.stringify` and `JSON.parse`. A `Date`
+ * `TRecord` as a {@link KvCollection} reads it back after `JSON.stringify` and `JSON.parse`. A `Date`
  * reads back as its ISO string.
  */
 // a hover shows the record's fields in place of JsonifyObject<...>. SimplifyDeep hits TS2589 in get()

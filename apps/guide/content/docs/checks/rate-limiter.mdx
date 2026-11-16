@@ -3,7 +3,7 @@ title: The rate limiter
 description: Count uses against any key you build with the rate limiter, and pass a durable kv driver to keep the counts through a restart.
 ---
 
-Some limits don't belong to whoever ran the command. A member can receive three awards a day, however many people hand them out. A [`Cooldown`](ref:core/Cooldown) gate can't express that, since it counts per caller, per server, or per channel.
+Some limits don't belong to whoever ran the command. A member can receive three awards a day, however many people hand them out. A [`Cooldown`](ref:core/Cooldown) gate can't express that since it counts per caller, per server, or per channel.
 
 For those limits you charge a window yourself. [`core.rateLimiter`](ref:types/IRateLimiter) is the same rate limiter `Cooldown` charges. It counts uses against any key you build. A handler reads it through `this.core.rateLimiter`. A gate reads it through `ctx.core.rateLimiter`.
 

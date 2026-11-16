@@ -12,7 +12,7 @@ export enum SeedcordErrorCode {
     ConfigEmojiNotFound = 1003,
     /** Reading the emojis of the application or guild a configured emoji points at failed. */
     ConfigEmojiSourceUnreadable = 1004,
-    /** Discord can't find a webhook at a configured URL, because it was deleted or the id or token is wrong. */
+    /** Discord can't find a webhook at a configured URL because it was deleted or the id or token is wrong. */
     ConfigWebhookNotFound = 1005,
     /** A required environment variable is unset. */
     ConfigMissingEnv = 1006,

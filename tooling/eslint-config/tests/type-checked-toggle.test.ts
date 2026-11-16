@@ -37,7 +37,7 @@ describe('registerTypescriptConfigs', () => {
         expect(severity(rules, SYNTAX_ONLY)).toBe(2);
     });
 
-    it('keeps the parser project on no-type-checked, because the seedcord rules read types', async () => {
+    it('keeps the parser project on no-type-checked because the seedcord rules read types', async () => {
         const config = await resolveConfig(
             { registerTypescriptConfigs: 'no-type-checked', registerSeedcordPlugin: true },
             'src/example.ts'

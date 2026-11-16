@@ -28,7 +28,7 @@ function resolveAgainst(folderUrl: string, token: Tokens.Link | Tokens.Image): v
 // a separate marked instance keeps readme rendering independent of the shiki-configured global marked
 // in renderParagraphs.ts.
 function readmeMarked(folderUrl: string | undefined): Marked {
-    // one per readme, since it numbers repeated headings
+    // one per readme since it numbers repeated headings
     const slugger = new GithubSlugger();
 
     return new Marked({

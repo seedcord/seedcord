@@ -120,7 +120,7 @@ renderTable(
 ╰────────┴───────╯
 ```
 
-The test skips an empty cell. A cell holding one space passes it, because `Number(' ')` is `0`. If you set `emptyCell` to something like `'-'`, the test reads a `'-'` in every empty cell, which makes the column non-numeric.
+The test skips an empty cell. A cell holding one space passes it because `Number(' ')` is `0`. If you set `emptyCell` to something like `'-'`, the test reads a `'-'` in every empty cell, which makes the column non-numeric.
 
 ## Capping a column
 
@@ -182,7 +182,7 @@ renderTable([
 ╰───────┴───────╯
 ```
 
-That block is the terminal render. Discord draws an emoji as an image sized to the line height, which is wider than two characters. Discord then draws that row's right border further right. Padding can't correct it, since the count is in columns and the client is placing pictures.
+That block is the terminal render. Discord draws an emoji as an image sized to the line height, which is wider than two characters. Discord then draws that row's right border further right. Padding can't correct it since the count is in columns and the client is placing pictures.
 
 Put emoji in a line above or below the table. Keep the columns to text.
 
@@ -221,7 +221,7 @@ const pages = renderTable(rows, { budget: 2000, fence: true });
 
 You get the array whenever the options object has a `budget` key, whatever its value. Passing `budget: undefined` still returns an array.
 
-`budget` is a target. A single row longer than the whole budget still gets a page of its own, since a page smaller than one row cannot exist. With `fence` on, each page is measured with its fence included, so every page still fits.
+`budget` is a target. A single row longer than the whole budget still gets a page of its own since a page smaller than one row cannot exist. With `fence` on, each page is measured with its fence included, so every page still fits.
 
 <Callout type="note">
 
