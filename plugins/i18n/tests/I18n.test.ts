@@ -192,7 +192,7 @@ describe('I18n', () => {
 
             expect(problems).toEqual(
                 expect.arrayContaining([
-                    [SeedcordErrorCode.PluginI18nNotALocale, expect.stringMatching(/en\.ts/)],
+                    [SeedcordErrorCode.PluginI18nNotALocale, expect.stringMatching(/en\.ts.*en-US\.ts/)],
                     [SeedcordErrorCode.PluginI18nDiscordRejects, expect.stringMatching(/slash\.8ball\.name/)],
                     [SeedcordErrorCode.PluginI18nDiscordRejects, expect.stringMatching(/slash\.8ball\.description/)],
                     [

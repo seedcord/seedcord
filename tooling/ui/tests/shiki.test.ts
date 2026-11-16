@@ -34,6 +34,11 @@ function codeText(html: string): string {
 // hast sets the attribute order
 const ANCHOR_RE = /<a\s([^>]*)>/g;
 
+// the style of the token whose text is exactly `text`
+function styleOf(html: string, text: string): string | undefined {
+    return [...html.matchAll(/<span style="([^"]*)">([^<]*)<\/span>/g)].find((match) => match[2] === text)?.[1];
+}
+
 function attrsFor(html: string, href: string): string[] {
     return [...html.matchAll(ANCHOR_RE)]
         .map((match) => match[1] ?? '')
@@ -230,7 +235,9 @@ describe('isHighlightable', () => {
         'shell',
         'zsh',
         'txt',
-        'hbs'
+        'hbs',
+        'fluent',
+        'ftl'
     ])('accepts %s, and the highlighter has its grammar', async (lang) => {
         if (!isHighlightable(lang)) throw new Error(`${lang} is not highlightable`);
 
@@ -239,12 +246,29 @@ describe('isHighlightable', () => {
 
     it('colours a yaml key apart from its value', async () => {
         const html = (await highlightToHtml('name: Deploy', 'yaml')) ?? '';
-        const colourOf = (text: string): string | undefined =>
-            new RegExp(`<span style="([^"]*)">${text}</span>`).exec(html)?.[1];
 
-        expect(colourOf('name')).toBeDefined();
-        expect(colourOf(' Deploy')).toBeDefined();
-        expect(colourOf('name')).not.toBe(colourOf(' Deploy'));
+        expect(styleOf(html, 'name')).toBeDefined();
+        expect(styleOf(html, ' Deploy')).toBeDefined();
+        expect(styleOf(html, 'name')).not.toBe(styleOf(html, ' Deploy'));
+    });
+
+    it('colours a Fluent variable apart from the text around it', async () => {
+        const html = (await highlightToHtml('greeting = Hi { $user }', 'ftl')) ?? '';
+
+        expect(styleOf(html, ' $user ')).toBeDefined();
+        expect(styleOf(html, ' $user ')).not.toBe(styleOf(html, 'Hi '));
+    });
+
+    it('italicizes a string literal in a type like the brackets around it', async () => {
+        const html = (await highlightToHtml("let t: Values['t'];")) ?? '';
+
+        expect(styleOf(html, "'t'")).toContain('font-style:italic');
+    });
+
+    it('leaves Fluent message keys and variant names upright', async () => {
+        const html = await highlightToHtml('rank =\n    { $rank ->\n       *[member] Member\n    }', 'ftl');
+
+        expect(html).not.toContain('font-style:italic');
     });
 
     it.each(['python', 'rust', 'go', 'css', ''])('rejects %s, which the highlighter never loaded', (lang) => {

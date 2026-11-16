@@ -23,7 +23,7 @@ const FTL = '.ftl';
 
 /** The options {@link I18n} takes. */
 export interface I18nOptions {
-    /** The folder that holds one `.ftl` file per locale, and the command translations in its `commands` folder. Defaults to `./locales`. */
+    /** The folder that holds one `.ftl` file per locale, and one `.ts` file per locale for command translations. Defaults to `./locales`. */
     readonly dir?: string;
     /** The locale whose file lists every message and the variables each one takes. Defaults to `en-US`. */
     readonly base?: LocaleCode;
@@ -101,7 +101,7 @@ export interface I18nOptions {
  *     }
  *
  *     override render(ctx: RenderContext): ReplyResponse {
- *         return { content: ctx.t('items', { count: 0 }) };
+ *         return { components: [new CartSummary(ctx.t, 0).component] };
  *     }
  * }
  * ```
@@ -198,7 +198,7 @@ export class I18n extends Plugin {
         const { messages, problems, untranslated } = checkCatalog(await this.localeFiles(), this.base, this.dir);
         for (const { relativePath, keys } of untranslated) {
             this.logger.info(
-                `${paint.path(relativePath)} doesn't have ${keys.map((key) => paint.sky(key)).join(', ')}. Users on that locale get the ${this.base} text for them.`
+                `${paint.path(relativePath)} doesn't have ${keys.map((key) => paint.sky(key)).join(', ')}. Users on that locale get the ${this.base} text.`
             );
         }
         throwSingleOrAggregate(problems, SeedcordErrorCode.CliProblems);
@@ -212,7 +212,7 @@ export class I18n extends Plugin {
         return this.catalogs;
     }
 
-    // a subfolder's files aren't catalogs or command translations
+    // each locale is one file in dir itself
     private isDirectlyInDir(file: string): boolean {
         return path.dirname(file) === botFolder(this.dir).path;
     }

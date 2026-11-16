@@ -7,7 +7,7 @@ export default function generator(plop: PlopTypes.NodePlopAPI): void {
         // the folder omits the prefix the package name keeps for npm because every directory under plugins/ is a plugin
         return dir === 'plugins' ? unscoped.replace(/^plugin-/, '') : unscoped;
     });
-    // pair with {{{ }}}, since {{ }} html-escapes an apostrophe into &#x27;
+    // pair with {{{ }}} because {{ }} html-escapes an apostrophe into &#x27;
     plop.setHelper('json', (value: string) => JSON.stringify(value));
 
     plop.setGenerator('package', {

@@ -11,6 +11,7 @@ const NEXT_ROUTES_WITH_DEV = `${NEXT_ROUTES}{,.dev}.{ts,tsx}`;
 const ESLINT_RUNTIME_DEPS = ['@types/eslint-plugin-security', '@typescript-eslint/parser'];
 
 const typeTestsOnly = { entry: [TYPE_TESTS] };
+const typeTestsAndFixtures = { entry: [TYPE_TESTS, 'tests/fixtures/**/*.ts'] };
 const eslintPlugin = { ignore: [TEST_FIXTURES], ignoreDependencies: ['discord.js'] };
 
 // unlisted workspaces get knip defaults
@@ -54,6 +55,7 @@ export default {
                 '@discordjs/builders',
                 '@seedcord/core',
                 '@keyv/sqlite',
+                '@seedcord/plugin-i18n',
                 '@seedcord/plugin-kysely-postgres',
                 '@seedcord/plugin-mongoose',
                 '@seedcord/plugin-tasks',
@@ -91,10 +93,10 @@ export default {
         'packages/logger': { entry: [TYPE_TESTS, 'tests/fixtures/*.ts'] },
         'packages/types': typeTestsOnly,
         'packages/utils': { entry: [TYPE_TESTS], ignore: ['tests/files/fixtures/**'] },
-        'plugins/i18n': { entry: [TYPE_TESTS, 'tests/fixtures/**/*.ts'] },
+        'plugins/i18n': typeTestsAndFixtures,
         'plugins/kysely-postgres': typeTestsOnly,
         'plugins/mongoose': typeTestsOnly,
-        'plugins/tasks': { entry: [TYPE_TESTS, 'tests/fixtures/**/*.ts'] },
+        'plugins/tasks': typeTestsAndFixtures,
         'cli/seedcord': {
             entry: [TYPE_TESTS, 'playground/**/*.{ts,tsx}', 'tests/fixtures/*/**/*.{ts,tsx,mts,js,jsx,mjs}'],
             ignoreDependencies: ['cloudflare', '@leeoniya/ufuzzy', 'handlebars']

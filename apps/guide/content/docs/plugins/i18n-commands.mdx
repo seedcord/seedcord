@@ -1,0 +1,223 @@
+---
+title: Translating commands
+description: Show your slash command and context menu names, descriptions, and choices in each user's Discord language without editing the command files.
+---
+
+Discord shows a command in the user's language if the command has [localizations](https://discord.com/developers/docs/interactions/application-commands#localization) for it. With discord.js builders, you'd set localizations on every command, option, and choice, so each command file would hold a block for every language.
+
+The [i18n plugin](/plugins/i18n) keeps those localizations out of your command files. You write one file per language. The plugin's [`prepareCommands`](ref:plugin-i18n/I18n.prepareCommands) adds them to your commands before seedcord sends them to Discord. The plugin reads these files from its `dir`, so attach the plugin first, the way [the i18n page](/plugins/i18n#attaching-the-plugin) shows.
+
+## Writing a translation file
+
+Put a `.ts` file for each language in the plugin's `dir`, in the same folder as the `.ftl` files. Use a [Discord locale code](https://discord.com/developers/docs/reference#locales) as its name:
+
+```txt title="src/locales"
+en-US.ftl
+hi.ftl
+hi.ts
+```
+
+<Callout type="warning">
+
+The plugin treats every code file directly in `dir` as a translation file, like `.ts` or `.js`. A helper file there fails with `PluginI18nNotALocale`, so keep your other code somewhere else.
+
+</Callout>
+
+Translation files are TypeScript so that TypeScript can check every key against your commands. The default export has to be a [`commandTranslations`](ref:plugin-i18n/commandTranslations) call. Anything else throws `PluginI18nNotTranslations`.
+
+```ts twoslash hovers title="src/locales/hi.ts"
+import { commandTranslations } from '@seedcord/plugin-i18n';
+// ---cut-start---
+import type {} from '@seedcord/gateway';
+declare module '@seedcord/gateway' {
+    interface SlashRegistry {
+        inventory: {
+            options: {
+                sort: {
+                    kind: 'string';
+                    required: false;
+                    choices: ['newest', 'oldest'];
+                };
+            };
+            cache: 'cached';
+        };
+        'settings/language': {
+            options: {
+                language: { kind: 'string'; required: true };
+            };
+            cache: 'cached';
+        };
+        'settings/reset': { options: {}; cache: 'cached' };
+    }
+    interface UserContextMenuRegistry {
+        'View Profile': { cache: 'cached' };
+    }
+    interface MessageContextMenuRegistry {
+        'Report Message': { cache: 'cached' };
+    }
+}
+// ---cut-end---
+
+export default commandTranslations({
+    slash: {
+        inventory: {
+            name: 'सामान',
+            description: 'अपना सामान देखें',
+            options: {
+                sort: {
+                    name: 'क्रम',
+                    description: 'सामान किस क्रम में दिखे',
+                    choices: {
+                        newest: 'सबसे नया',
+                        oldest: 'सबसे पुराना'
+                    }
+                }
+            }
+        },
+        settings: {
+            name: 'सेटिंग्स',
+            subcommands: {
+                language: {
+                    name: 'भाषा',
+                    description: 'बॉट की भाषा चुनें'
+                }
+            }
+        }
+    },
+    userMenus: { 'View Profile': 'प्रोफ़ाइल देखें' },
+    messageMenus: { 'Report Message': 'मैसेज रिपोर्ट करें' }
+});
+```
+
+The keys under `slash`, `options`, `subcommands`, and the two menu sections are the ones from your code, like `inventory`, `sort`, and `'View Profile'`. Users whose Discord language is Hindi see `/सामान` in the command picker, and **प्रोफ़ाइल देखें** when they right-click a member.
+
+{/* prettier-ignore-start */}
+
+| key | takes |
+| --- | --- |
+| a command under `slash` | `name`, `description`, `options`, and `subcommands` |
+| an option under `options` | `name`, `description`, and `choices` |
+| a subcommand or a subcommand group under `subcommands` | `name`, `description`, `options`, and `subcommands` for a group's own subcommands |
+| a menu under `userMenus` or `messageMenus` | its translated name as a string |
+
+{/* prettier-ignore-end */}
+
+The keys of `choices` are the choice values, like `newest`, because your code gets the same value back in every language. A number value is written as a string, like `'5'`.
+
+Every field is optional. If you leave a field out, Discord shows the text from your code, so `settings` in the sample keeps its English description.
+
+### The keys come from your commands
+
+[`seedcord codegen`](/plugins/typing) writes your commands, their options and choices, and your context menus into `seedcord-gen.ts`. `commandTranslations` gets its types from that file, so run codegen after you add or rename a command. Then your editor shows what each key can be, like the values of a choice:
+
+```ts twoslash
+// @noErrors
+import { commandTranslations } from '@seedcord/plugin-i18n';
+import type {} from '@seedcord/gateway';
+declare module '@seedcord/gateway' {
+    interface SlashRegistry {
+        inventory: {
+            options: {
+                sort: {
+                    kind: 'string';
+                    required: false;
+                    choices: ['newest', 'oldest'];
+                };
+            };
+            cache: 'cached';
+        };
+    }
+}
+// ---cut---
+export default commandTranslations({
+    slash: {
+        inventory: {
+            options: { sort: { choices: { '
+//                                         ^|
+```
+
+If you rename a command or an option and run codegen, every translation file that still uses the old name fails to compile:
+
+```ts twoslash
+// @errors: 2353
+import { commandTranslations } from '@seedcord/plugin-i18n';
+// ---cut-start---
+import type {} from '@seedcord/gateway';
+declare module '@seedcord/gateway' {
+    interface SlashRegistry {
+        inventory: {
+            options: {
+                sort: {
+                    kind: 'string';
+                    required: false;
+                    choices: ['newest', 'oldest'];
+                };
+            };
+            cache: 'cached';
+        };
+    }
+}
+// ---cut-end---
+// ---cut---
+export default commandTranslations({
+    slash: {
+        inventory: {
+            options: { order: { name: 'क्रम' } }
+        }
+    }
+});
+```
+
+`order` isn't an option of `inventory`, so TypeScript reports it. If you haven't run codegen since the rename, TypeScript misses it. The plugin still finds it before the deploy and throws `PluginI18nUnknownCommand`.
+
+## When the plugin applies them
+
+The plugin adds the translations every time seedcord reads your commands:
+
+- when a bot on a server starts and deploys its commands
+- when you answer `y` to the **Refresh commands?** prompt in `seedcord dev`
+- in [`seedcord commands deploy`](/tooling/commands#deploy-your-commands) and `seedcord commands list`
+- in `seedcord build` for [Cloudflare Workers](/build/workers)
+- in `seedcord codegen`, which only checks the files
+
+A broken translation file stops each of these. Saving a translation file in `seedcord dev` shows the same [refresh prompt](/commands/deployed#when-a-deploy-happens) as saving a command file.
+
+A Worker never deploys its own commands. To send new translations to Discord for a Worker, run `seedcord commands deploy` before you build.
+
+A new translation changes the command in Discord, so the next deploy sends that command even if its file didn't change. seedcord only [skips a scope](/commands/deployed#seedcord-dev-skips-a-deploy-when-nothing-changed), like the global commands or one server's commands, when nothing in it changed.
+
+## What Discord accepts
+
+Discord rejects a whole deploy if one translation breaks its [naming rules](https://discord.com/developers/docs/interactions/application-commands#application-command-object-application-command-naming). The plugin checks each translation against these rules before anything reaches Discord:
+
+{/* prettier-ignore-start */}
+
+| field | Discord accepts |
+| --- | --- |
+| a slash command, subcommand, or option `name` | 1 to 32 characters of letters, numbers, `-`, `_`, or `'`, without spaces. Letters have to be lowercase in a script that has case. Hindi's script doesn't have case |
+| a `description` | 1 to 100 characters |
+| a choice's name | 1 to 100 characters |
+| a `userMenus` or `messageMenus` name | 1 to 32 characters. Capitals and spaces are fine |
+
+{/* prettier-ignore-end */}
+
+If a translation breaks one of these rules, the plugin throws `PluginI18nDiscordRejects`. The message gives the file, the path to the field inside it, the value, and the rule:
+
+```txt output
+locales/hi.ts sets slash.inventory.name to "मेरा सामान", but Discord only accepts a name of 1 to 32 lowercase letters, numbers, -, _ or ', without spaces. Change the translation to fit.
+```
+
+## Errors
+
+{/* prettier-ignore-start */}
+
+| error | when |
+| --- | --- |
+| `PluginI18nNotALocale` | a code file in `dir` doesn't have a Discord locale code as its name |
+| `PluginI18nNotTranslations` | a translation file's default export isn't the result of `commandTranslations` |
+| `PluginI18nUnknownCommand` | a translation file has a command, option, subcommand, or choice that your commands don't |
+| `PluginI18nDiscordRejects` | a translation breaks one of [Discord's naming rules](#what-discord-accepts) |
+
+{/* prettier-ignore-end */}
+
+The plugin checks every translation file before it throws, and reports every problem it finds in one error. Fix them and run codegen again, or press `g` in `seedcord dev`.

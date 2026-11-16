@@ -12,7 +12,7 @@ It prompts for the npm name, a description, and the workspace folder, then write
 
 `<folder>` is the npm name without `@seedcord/`, so `@seedcord/core` scaffolds into `packages/core/`. Under `plugins/` the folder also omits the `plugin-` prefix: `@seedcord/plugin-mongoose` scaffolds into `plugins/mongoose/`. The prefix earns its place on npm, where a package name doesn't have a parent folder.
 
-Every tool that walks the workspace reads each package's name from its `package.json`, so the folder name is only a label for people. The globs below are the exception and name the folder directly.
+Every tool that walks the workspace reads each package's name from its `package.json`, so the folder name is only a label for people. The globs below are the exception and match the folder name directly.
 
 Add a new workspace root (a sibling of `packages/`, `plugins/`, `cli/`, and `tooling/`) to `pnpm-workspace.yaml` first. Docs extraction and the catalog check both read the package roots from there, and docs extraction skips every package marked `private`.
 
@@ -58,4 +58,4 @@ Finish these after generating. None of them are automated.
     npm view <name> dist-tags
     ```
 
-10. Add `publish.yml` as the package's trusted publisher on npm. Only `@materwelonDhruv` can do this as well. Tick **Allow npm publish**, because `changeset publish` runs a plain `npm publish` and npm rejects it without that box. Leave **Allow npm dist-tag** off, since the workflow sets tags while it publishes.
+10. Add `publish.yml` as the package's trusted publisher on npm. Only `@materwelonDhruv` can do this as well. Tick **Allow npm publish** because `changeset publish` runs a plain `npm publish`, which npm rejects without that box. Leave **Allow npm dist-tag** off because the workflow sets tags while it publishes.

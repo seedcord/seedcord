@@ -13,10 +13,11 @@ import type {
     RESTPostAPIChatInputApplicationCommandsJSONBody
 } from 'discord-api-types/v10';
 
-// discord's rule for slash command, subcommand, and option names, from its application command docs
-const SLASH_NAME = /^[-_'\p{L}\p{N}\p{sc=Deva}\p{sc=Thai}]{1,32}$/u;
-const MAX_MENU_NAME = 32;
+// discord caps every command, option, and menu name at 32 characters
+const MAX_NAME = 32;
 const MAX_TEXT = 100;
+// discord's rule for slash command, subcommand, and option names, from its application command docs
+const SLASH_NAME = new RegExp(String.raw`^[-_'\p{L}\p{N}\p{sc=Deva}\p{sc=Thai}]{1,${MAX_NAME}}$`, 'u');
 
 type SlashNode = NonNullable<NonNullable<TranslationTree['slash']>[string]>;
 type OptionNode = NonNullable<NonNullable<SlashNode['options']>[string]>;
@@ -86,7 +87,7 @@ export class CommandLocalizer {
             const choice = choices.find((candidate) => String(candidate.value) === value);
             if (!choice) {
                 this.unknown(`${path}.choices.${value}`);
-            } else if (this.fits(name, MAX_TEXT, `${path}.choices.${value}`, 'a choice name is 1 to 100 characters')) {
+            } else if (this.fits(name, MAX_TEXT, `${path}.choices.${value}`, 'a choice name')) {
                 choice.name_localizations = { ...choice.name_localizations, [this.locale]: name };
             }
         }
@@ -102,7 +103,7 @@ export class CommandLocalizer {
             const menu = commands.find((body) => body.type === type && body.name === name);
             const path = `${section}.${name}`;
             if (!menu) this.unknown(path);
-            else if (this.fits(translated, MAX_MENU_NAME, path, 'a menu name is 1 to 32 characters')) {
+            else if (this.fits(translated, MAX_NAME, path, 'a menu name')) {
                 menu.name_localizations = { ...menu.name_localizations, [this.locale]: translated };
             }
         }
@@ -110,26 +111,26 @@ export class CommandLocalizer {
 
     private name(target: SlashTarget | APIApplicationCommandOption, name: string, path: string): void {
         if (!SLASH_NAME.test(name) || name !== name.toLocaleLowerCase(this.locale)) {
-            this.reject(path, name, 'a name is 1 to 32 lowercase letters, numbers, - or _, with no spaces');
+            this.reject(path, name, `a name of 1 to ${MAX_NAME} lowercase letters, numbers, -, _ or ', without spaces`);
             return;
         }
         target.name_localizations = { ...target.name_localizations, [this.locale]: name };
     }
 
     private description(target: SlashTarget | APIApplicationCommandOption, description: string, path: string): void {
-        if (!this.fits(description, MAX_TEXT, path, 'a description is 1 to 100 characters')) return;
+        if (!this.fits(description, MAX_TEXT, path, 'a description')) return;
         target.description_localizations = { ...target.description_localizations, [this.locale]: description };
     }
 
-    private fits(text: string, max: number, path: string, rule: string): boolean {
+    private fits(text: string, max: number, path: string, field: string): boolean {
         if (text.length > 0 && text.length <= max) return true;
-        this.reject(path, text, rule);
+        this.reject(path, text, `${field} of 1 to ${max} characters`);
         return false;
     }
 
-    private reject(path: string, value: string, rule: string): void {
+    private reject(path: string, value: string, accepts: string): void {
         this.problems.push(
-            new SeedcordError(SeedcordErrorCode.PluginI18nDiscordRejects, [this.file, path, value, rule])
+            new SeedcordError(SeedcordErrorCode.PluginI18nDiscordRejects, [this.file, path, value, accepts])
         );
     }
 

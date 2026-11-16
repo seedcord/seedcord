@@ -285,8 +285,10 @@ const messages = {
         `${paint.sky(key)} is the key of a different class, loaded from ${paint.path(loadedFrom)}. Pass that class, or give one of them its own ${paint.bold('key')}.`,
     [SeedcordErrorCode.PluginI18nSyntax]: (place: string, detail: string) =>
         `Fluent can't parse ${paint.path(place)}: ${detail}. Fix the syntax on that line.`,
-    [SeedcordErrorCode.PluginI18nNotALocale]: (file: string, like: readonly string[]) =>
-        `${paint.path(file)} isn't named after a Discord locale code. Rename it to ${like.length > 0 ? oneOf.format(like.map((locale) => paint.path(`${locale}.ftl`))) : `a code from Discord's locale list, like ${paint.path('en-US.ftl')}`}.`,
+    [SeedcordErrorCode.PluginI18nNotALocale]: (file: string, like: readonly string[]) => {
+        const extension = file.slice(file.lastIndexOf('.'));
+        return `${paint.path(file)} isn't named after a Discord locale code. Rename it to ${like.length > 0 ? oneOf.format(like.map((locale) => paint.path(`${locale}${extension}`))) : `a code from Discord's locale list, like ${paint.path(`en-US${extension}`)}`}.`;
+    },
     [SeedcordErrorCode.PluginI18nNotInBase]: (place: string, what: string, baseFile: string) =>
         `${paint.path(place)} has ${what}, but ${paint.path(baseFile)} doesn't. ${paint.bold('t()')} only reads what the base file has. Add it to ${paint.path(baseFile)} first, or remove it here.`,
     [SeedcordErrorCode.PluginI18nOutOfDate]: (key: string, problem: string) =>
@@ -295,8 +297,8 @@ const messages = {
         `${paint.path(file)} translates ${paint.sky(path)}, but none of your commands has it. Fix the name, or run ${paint.bold('seedcord codegen')} and type-check to find these before a deploy.`,
     [SeedcordErrorCode.PluginI18nNotTranslations]: (file: string) =>
         `${paint.path(file)} doesn't export command translations. Make its default export ${paint.bold('commandTranslations({ ... })')}.`,
-    [SeedcordErrorCode.PluginI18nDiscordRejects]: (file: string, path: string, value: string, rule: string) =>
-        `${paint.path(file)} sets ${paint.sky(path)} to ${quoted(value)}. Discord rejects it: ${rule}. Change the translation to fit.`,
+    [SeedcordErrorCode.PluginI18nDiscordRejects]: (file: string, path: string, value: string, accepts: string) =>
+        `${paint.path(file)} sets ${paint.sky(path)} to ${quoted(value)}, but Discord only accepts ${accepts}. Change the translation to fit.`,
     [SeedcordErrorCode.PluginI18nBaseMissing]: (dir: string, baseFile: string) =>
         `${paint.path(dir)} doesn't have ${paint.path(baseFile)}, the file that lists every message. Add it, or set ${paint.bold('base')} to a locale that has a file.`,
 

@@ -20,6 +20,7 @@ import {
     HeartPulse,
     Hourglass,
     KeyRound,
+    Languages,
     Layers,
     Leaf,
     ListTree,
@@ -207,9 +208,10 @@ const GROUPS: Group[] = [
         accent: 'rind',
         rows: [
             { icon: Plug, label: 'typed plugins', gloss: 'attach once, codegen types it on core' },
+            { icon: Languages, label: 'i18n', gloss: "replies and commands in each user's language" },
+            { icon: CalendarClock, label: 'Tasks', gloss: 'cron jobs and scheduled tasks' },
             { icon: Leaf, label: 'Mongoose', gloss: 'MongoDB, services typed by key' },
-            { icon: Database, label: 'Kysely', gloss: 'Postgres, queries typed off your schema' },
-            { icon: CalendarClock, label: 'Tasks', gloss: 'cron jobs and scheduled tasks' }
+            { icon: Database, label: 'Kysely', gloss: 'Postgres, queries typed off your schema' }
         ]
     }
 ];

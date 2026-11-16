@@ -707,6 +707,9 @@ importers:
       '@seedcord/http':
         specifier: workspace:^
         version: link:../../packages/http
+      '@seedcord/plugin-i18n':
+        specifier: workspace:^
+        version: link:../../plugins/i18n
       '@seedcord/plugin-kysely-postgres':
         specifier: workspace:^
         version: link:../../plugins/kysely-postgres
