@@ -84,7 +84,7 @@ describe('openModuleLoader', () => {
         expect(logged).not.toHaveBeenCalled();
     });
 
-    it("leaves the project's vite cache untouched", async () => {
+    it("doesn't create the project's vite cache", async () => {
         const root = await project();
 
         await using modules = await openModuleLoader(root, SERVER, 'development', BOT_CODE);

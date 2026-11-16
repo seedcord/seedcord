@@ -52,7 +52,7 @@ function firstErrorStack(args?: unknown[]): string | undefined {
     return error?.stack;
 }
 
-// winston sets info.stack for logger.error('msg', err), but logger.log(info) leaves it unset
+// winston sets info.stack for logger.error('msg', err), but logger.log(info) doesn't set it
 export function toInfo(record: LogRecord): WinstonInfo {
     const stack = firstErrorStack(record.args);
     return {

@@ -51,7 +51,7 @@ describe('BuilderComponent bot color', () => {
         expect(new TestEmbed().component.data.color).toBe(0x12_34_56);
     });
 
-    it('leaves the container accent unset when no bot color is configured', () => {
+    it("doesn't set the container accent when no bot color is configured", () => {
         expect(new TestContainer().component.data.accent_color).toBeUndefined();
     });
 

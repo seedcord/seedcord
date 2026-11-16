@@ -61,4 +61,4 @@ A change to an `./internal` entry gets a patch changeset once another package im
 
 Tests live in `<package>/tests/` mirroring `src/`. Run `vp run check --filter=<package>`.
 
-`id` on a discord.js structure is a prototype getter, so build a stub with `Object.create(proto)`. A plain object literal leaves `id` undefined.
+`id` on a discord.js structure is a prototype getter, so build a stub with `Object.create(proto)`. On a plain object literal, `id` is `undefined`.

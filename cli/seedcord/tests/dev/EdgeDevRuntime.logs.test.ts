@@ -135,7 +135,7 @@ describe('EdgeDevRuntime logs', () => {
 
     it("writes the worker's logs to the session's log file after a server session reset the logger", async () => {
         asDevelopment();
-        // what ServerHost.reset leaves behind
+        // the logger state after ServerHost.reset
         LoggerChannelRegistry.instance.configure({});
         await using project = await edgeProject();
         const { projectDir } = project;

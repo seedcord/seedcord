@@ -54,7 +54,7 @@ describe('assertGuildsIntent', () => {
         expect(check([], dmOnly)).not.toThrow();
     });
 
-    it('leaves a bot without commands alone', () => {
+    it("doesn't throw for a bot without commands", () => {
         expect(check([])).not.toThrow();
     });
 });

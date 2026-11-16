@@ -128,7 +128,7 @@ describe('wantsVersion', () => {
         expect(wantsVersion(['my-bot', '--no-git'])).toBe(false);
     });
 
-    it('leaves a directory called version alone', () => {
+    it("doesn't read a directory called version as a flag", () => {
         expect(wantsVersion(['version'])).toBe(false);
     });
 });

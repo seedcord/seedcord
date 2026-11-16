@@ -582,7 +582,7 @@ describe('ReplySender.send', () => {
         expect(rest.patch).toHaveBeenCalledWith(ORIGINAL_ROUTE, expect.anything());
     });
 
-    it('follows up after a deferUpdate, leaving the source message untouched', async () => {
+    it('follows up after a deferUpdate, without editing the source message', async () => {
         const rest = restMock();
         const sender = senderFor(rest);
         await sender.deferUpdate();

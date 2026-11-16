@@ -122,7 +122,7 @@ describe('RemoveRunner.run', () => {
         expect(lines).toContain('/ban  ban-id');
     });
 
-    it('asks before it deletes, then deletes the duplicates and leaves global alone', async () => {
+    it("asks before it deletes, then deletes the duplicates and doesn't touch global", async () => {
         const { confirm, deletes, lines } = await run();
 
         expect(confirm).toHaveBeenCalledWith(expect.stringContaining('Delete 1 command?'));

@@ -132,7 +132,7 @@ describe('EmojiInjector', () => {
     it('fetches a guild before reading its emoji cache', async () => {
         const wave: EmojiStub = { id: '9', name: 'wave' };
         const cache = new Collection<string, EmojiStub>();
-        // removing the fetch leaves the cache empty and resolution fails because the emoji only appears after fetch
+        // without the fetch the cache is empty, and resolution fails because the emoji only appears after fetch
         const guild = {
             emojis: {
                 fetch: vi.fn(() => {

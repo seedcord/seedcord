@@ -169,7 +169,7 @@ export const seedcord = new Seedcord({
 
 Reading `.component` applies it. An embed takes it as its color, and a container takes it as its accent. Every other builder is unaffected since nothing else has one.
 
-Set your own in the constructor, with `setColor` on an embed or `setAccentColor` on a container. The check only fills an empty color, so it leaves yours alone.
+Set your own in the constructor, with `setColor` on an embed or `setAccentColor` on a container. The check only fills an empty color without overwriting yours.
 
 ```ts twoslash title="src/components/MaintenanceEmbed.ts"
 import { BuilderComponent } from '@seedcord/gateway';

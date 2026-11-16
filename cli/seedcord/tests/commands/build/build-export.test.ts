@@ -120,7 +120,7 @@ describe('seedcord build without build.start on an http bot', () => {
         expect(stderr).toContain('only exports your bot');
     }, 120_000);
 
-    it('still loads its folders once a bundler leaves import.meta.dirname undefined', async () => {
+    it('still loads its folders once a bundler replaces import.meta.dirname with undefined', async () => {
         const outDir = join(projectDir, 'bundled');
         await build({
             configFile: false,

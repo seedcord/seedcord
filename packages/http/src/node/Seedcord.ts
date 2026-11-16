@@ -190,7 +190,7 @@ export class Seedcord extends ServerHost<'http'> implements SeedcordInstance {
         const server = createServer((incoming, outgoing) => {
             void (async () => {
                 const response = await this.#endpoint.fetch(await toWebRequest(incoming));
-                // node's close() leaves a busy connection open once it becomes idle
+                // node's close() doesn't close a busy connection once it becomes idle
                 if (!server.listening) outgoing.setHeader('connection', 'close');
                 await writeWebResponse(response, outgoing);
             })().catch((error: unknown) => {

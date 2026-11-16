@@ -12,7 +12,7 @@ export interface NavbarProps {
     center?: ReactNode;
     actions?: ReactNode;
     tabs?: ReactNode;
-    /** Hide the tab row here. Hiding the tabs themselves leaves this row's border behind. */
+    /** Hide the tab row here. If you hide the tabs themselves, this row's border still shows. */
     tabsClassName?: string | undefined;
     className?: string | undefined;
 }

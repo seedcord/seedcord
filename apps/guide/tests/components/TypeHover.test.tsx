@@ -144,7 +144,7 @@ describe('the type hover', () => {
             });
         });
 
-        it('leaves focus alone when a mouse opens the popup', async () => {
+        it("doesn't move focus when a mouse opens the popup", async () => {
             renderBlock();
             const target = document.querySelector('.twoslash-hover');
             if (!(target instanceof HTMLElement)) throw new Error('no token');

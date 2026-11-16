@@ -19,7 +19,7 @@ describe('twinDocument', () => {
     });
 
     // the stringified body opens on a blank line
-    it('leaves one blank line above the body', () => {
+    it('puts one blank line above the body', () => {
         expect(twinDocument({ title: 'Options', body: '\n\nProse.\n' })).toBe('# Options\n\nProse.\n');
     });
 });

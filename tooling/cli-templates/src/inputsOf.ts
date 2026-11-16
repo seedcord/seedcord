@@ -87,14 +87,14 @@ const ast = Handlebars.AST.helpers as typeof Handlebars.AST.helpers & {
     scopedId: (path: hbs.AST.PathExpression) => boolean;
 };
 
-// the parser leaves blockParams undefined on a block without `as |x|`, whatever the types say
+// the parser doesn't set blockParams on a block without `as |x|`, whatever the types say
 type ParsedProgram = OverrideProperties<hbs.AST.Program, { readonly blockParams?: readonly string[] }>;
 
 function blockParamsOf(program: ParsedProgram): readonly string[] {
     return program.blockParams ?? [];
 }
 
-// the parser also leaves hash undefined on a call without key=value pairs
+// the parser also doesn't set hash on a call without key=value pairs
 function pairsOf(call: { readonly hash?: hbs.AST.Hash }): readonly hbs.AST.HashPair[] {
     return call.hash?.pairs ?? [];
 }

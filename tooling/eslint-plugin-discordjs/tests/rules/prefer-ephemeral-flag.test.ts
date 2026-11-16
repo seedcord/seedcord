@@ -30,7 +30,7 @@ ruleTester.run('prefer-ephemeral-flag', rule, {
             declare const mock: { reply(options: { ephemeral: boolean }): void };
             mock.reply({ ephemeral: true });
         `,
-        // a reassigned options variable, its initializer is dead so the rule leaves it alone
+        // a reassigned options variable, its initializer is dead so the rule doesn't report it
         dedent`
             import { ChatInputCommandInteraction } from 'discord.js';
             declare const interaction: ChatInputCommandInteraction;

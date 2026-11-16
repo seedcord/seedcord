@@ -39,7 +39,7 @@ describe('the links an agent follows out of llms.txt', () => {
         );
     });
 
-    it('leaves a folder row alone since it links nowhere', () => {
+    it("doesn't rewrite a folder row since it links nowhere", () => {
         expect(twinLinks('- **Commands**')).toBe('- **Commands**');
     });
 

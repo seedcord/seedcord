@@ -98,7 +98,7 @@ describe('Seedcord host', () => {
         expect(() => new Seedcord(testConfig())).not.toThrow();
     });
 
-    it('a stale host retrying start leaves the live host alone', async () => {
+    it("a stale host retrying start doesn't replace the live host", async () => {
         const dead = new Seedcord(testConfig());
         dead.startup.addTask(StartupPhase.Configuration, 'boom', () => Promise.reject(new Error('boom')));
         await expect(dead.start()).rejects.toThrow();

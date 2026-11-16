@@ -35,7 +35,7 @@ describe('a link to another guide page', () => {
             '[docs](https://seedcord.org/docs/packages/core)',
             'href="https://seedcord.org/docs/packages/core"'
         ]
-    ])('leaves a link to %s alone', async (_what, source, href) => {
+    ])("doesn't change a link to %s", async (_what, source, href) => {
         expect(await compileGuideMdx(source)).toContain(href);
     });
 });

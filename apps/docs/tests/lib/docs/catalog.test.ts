@@ -211,7 +211,7 @@ describe('withVersion', () => {
     const categories: NavigationCategory[] = [{ id: 'classes', title: 'Classes', tone: 'class', items: [] }];
     const filled = { ...makeVersion('1.0.0', { isLatest: true }), categories };
 
-    it('swaps in only the matching (package, version) and leaves the rest empty', () => {
+    it("swaps in only the matching (package, version) and doesn't fill the rest", () => {
         const catalog = [makeEntry([makeVersion('1.0.0', { isLatest: true }), makeVersion('0.9.0')])];
 
         const [entry] = withVersion(catalog, 'seedcord', filled);

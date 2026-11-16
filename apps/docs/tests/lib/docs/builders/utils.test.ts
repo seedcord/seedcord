@@ -113,7 +113,7 @@ describe('selectDescription', () => {
         expect(result).toEqual({ description: null, signatureIndex: null });
     });
 
-    it('leaves the overloads alone when two or more document themselves', () => {
+    it("doesn't pin an overload to the header when two or more document themselves", () => {
         const signatureComments = [
             makeFormattedComment([makeParagraph('unbounded form')]),
             makeFormattedComment([makeParagraph('bounded form')])

@@ -482,7 +482,7 @@ describe('scaffold cleanup', () => {
         await expect(readdir(target)).rejects.toThrow();
     });
 
-    it('leaves a pre-existing empty directory standing when writing fails', async () => {
+    it("doesn't remove a pre-existing empty directory when writing fails", async () => {
         const target = await scratchTarget();
         await mkdir(target, { recursive: true });
         const { runner } = recorder();

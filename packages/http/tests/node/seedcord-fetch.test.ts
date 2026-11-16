@@ -57,7 +57,7 @@ describe('http Seedcord.fetch on node', () => {
         expect(order).toEqual(['released', 'answered']);
     });
 
-    it('leaves host.port undefined on port: false', async () => {
+    it("doesn't set host.port on port: false", async () => {
         await bindSignedEnv();
         await using host = new Seedcord({ ...config(), port: false });
 

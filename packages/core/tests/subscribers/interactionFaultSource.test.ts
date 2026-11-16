@@ -12,7 +12,7 @@ describe('interactionFaultSource', () => {
         expect(source).toMatchObject({ kind: 'interaction', interactionKind: 'context-menu', command: 'Report' });
     });
 
-    it('leaves command empty on a component and keeps its custom id', () => {
+    it('sets command to null on a component and keeps its custom id', () => {
         const source = interactionFaultSource(new DispatchContext(InteractionKind.RoleMenu, 'pick'), {
             ...fields,
             customId: 'pick:abc'

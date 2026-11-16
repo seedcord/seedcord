@@ -197,7 +197,7 @@ describe('or', () => {
         expect(description).toContain('be a bot owner');
     });
 
-    it('falls back to the neutral refusal when a gate leaves summary unset', async () => {
+    it("falls back to the neutral refusal when a gate doesn't set summary", async () => {
         const A = defineGate('a', () => {
             const notice = new TestNotice('a');
             notice.summary = 'Manage Server';

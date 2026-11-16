@@ -75,7 +75,7 @@ class Appeal extends ButtonHandler<[typeof AppealId]> {
 }
 ```
 
-Discord shows "This interaction failed" on a click that nobody answers within three seconds. For a click that doesn't change the message, [`this.deferUpdate()`](ref:gateway/ComponentHandler.deferUpdate) answers it and leaves the message unchanged.
+Discord shows "This interaction failed" on a click that nobody answers within three seconds. For a click that doesn't change the message, [`this.deferUpdate()`](ref:gateway/ComponentHandler.deferUpdate) answers it without changing the message.
 
 <Callout type="transport">
     `update()` resolves to a discord.js `Message` on gateway and an

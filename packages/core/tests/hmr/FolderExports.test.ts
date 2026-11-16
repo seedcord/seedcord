@@ -439,7 +439,7 @@ describe('FolderExports', () => {
             expect(spies.error).toHaveBeenCalledTimes(2);
         });
 
-        it('leaves a file alone when it failed to import', async () => {
+        it("doesn't log a second error when a file that failed to import is deleted", async () => {
             write('Versions.mjs', 'export class Versions {\n');
             await folder.handle({ file: newFile, type: 'create' });
             await folder.handle({ file: oldFile, type: 'update' });

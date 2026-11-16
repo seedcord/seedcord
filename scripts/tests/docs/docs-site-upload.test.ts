@@ -90,7 +90,7 @@ describe('DocsSiteUpload.prune', () => {
         expect(new Set(deleted)).toEqual(new Set([build(1).id, build(3).id]));
     });
 
-    it('leaves a newer build alone', async () => {
+    it("doesn't delete a newer build", async () => {
         const bucket = new FakeBucket([build(9)]);
 
         await new DocsSiteUpload(bucket).prune(build(4), null);

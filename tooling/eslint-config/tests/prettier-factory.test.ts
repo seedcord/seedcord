@@ -19,7 +19,7 @@ describe('createPrettierConfig', () => {
         expect(config.plugins).toContain('prettier-plugin-tailwindcss');
     });
 
-    it('leaves overrides undefined when none are given', () => {
+    it("doesn't set overrides when none are given", () => {
         expect(createPrettierConfig().overrides).toBeUndefined();
     });
 });

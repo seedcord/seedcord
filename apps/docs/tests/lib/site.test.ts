@@ -98,7 +98,7 @@ describe('DocsPage.metadata', () => {
         expect(meta.robots).toEqual({ index: false, follow: true });
     });
 
-    it('leaves robots undefined on a page that has a canonical', () => {
+    it("doesn't set robots on a page that has a canonical", () => {
         const meta = DocsPage.forEntity(ENTITY_PATH, entity('Here', 'x'), VERSION, ENTITY_PATH).metadata();
         expect(meta.robots).toBeUndefined();
     });

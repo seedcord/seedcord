@@ -45,7 +45,7 @@ The state matters most when your handler refuses. You refuse by throwing a [`Not
 
 {/* prettier-ignore-end */}
 
-You write the same `throw` from any of those points. That only works while you send every answer through the handler. If you answer with `this.event.reply()` or `this.api`, a `Notice` you throw afterwards never reaches the user, which [Raw acks](/replying/raw-acks#a-raw-ack-leaves-the-state-stale) explains.
+You write the same `throw` from any of those points. That only works while you send every answer through the handler. If you answer with `this.event.reply()` or `this.api`, a `Notice` you throw afterwards never reaches the user, which [Raw acks](/replying/raw-acks#a-raw-ack-doesnt-update-the-state) explains.
 
 ## Replying with an error
 

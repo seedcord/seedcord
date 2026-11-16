@@ -60,7 +60,7 @@ describe('runFlow without a terminal', () => {
         expect(answers.install).toBe(true);
     });
 
-    it('leaves a skipped step alone', async () => {
+    it("doesn't set an answer for a skipped step", async () => {
         const capabilities: Step<'capabilities'> = {
             ...neverAsks('capabilities', 'capabilities'),
             skip: (answers) => answers.transport === 'http'

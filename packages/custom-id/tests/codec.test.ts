@@ -80,7 +80,7 @@ describe('nullable fields', () => {
         expect(thrownCode(() => after.decode(wire))).toBe(SeedcordErrorCode.CustomIdWireStale);
     });
 
-    it('leaves a field alone when nullable is false', () => {
+    it("doesn't change a field when nullable is false", () => {
         const Plain = new CustomId('plain').snowflake('userId', { nullable: false });
         const Omitted = new CustomId('plain').snowflake('userId');
 

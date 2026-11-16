@@ -148,7 +148,7 @@ describe('the guide worker', () => {
     });
 
     // a screenshot added to public/ keeps its own url
-    it('leaves a real file alone', async () => {
+    it("doesn't rewrite the path of a real file", async () => {
         const assets = recording('/guide/portal-token.png');
 
         await get('/portal-token.png', assets);
@@ -268,7 +268,7 @@ describe('the guide worker', () => {
         expect(assets.asked).toEqual([]);
     });
 
-    it('leaves a live page alone', async () => {
+    it("doesn't redirect a live page", async () => {
         const response = await get('/commands/options/', serving(html()));
 
         expect(response.status).toBe(200);

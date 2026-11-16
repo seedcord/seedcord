@@ -204,7 +204,7 @@ ruleTester.run('require-button-props', rule, {
             errors: [{ messageId: 'missingCustomId', data: { style: 'Danger' } }]
         },
         {
-            // an assertion on the declarator init leaves the lifetime alone
+            // an assertion on the declarator init doesn't change the lifetime
             code: dedent`
                 import { ButtonBuilder, ButtonStyle } from 'discord.js';
                 export const btn = new ButtonBuilder()

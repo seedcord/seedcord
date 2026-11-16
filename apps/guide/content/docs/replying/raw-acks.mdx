@@ -7,7 +7,7 @@ Let's assume your ban command ends with a poll that asks the server whether to m
 
 discord.js can still send that poll. On gateway, `this.event` is the discord.js interaction, so `this.event.reply()` reaches Discord the same way `this.reply()` does. However, it skips the ack state that seedcord's own methods keep.
 
-## A raw ack leaves the state stale
+## A raw ack doesn't update the state
 
 The reply sender reads the interaction's state once when seedcord constructs your handler. That happens before `execute()` runs, and only seedcord's own reply methods move it afterwards. If you send an ack yourself, the copy still holds the state from the last seedcord call.
 
@@ -130,6 +130,6 @@ For http, you make these through [`this.api`](ref:http/RepliableHandler.api), a 
 
 To pass `this.api` to a helper, import its type, `API`, from `@seedcord/http`. `core.rest` works the same way with `REST`. If you install `@discordjs/core` or `@discordjs/rest` yourself, your copy can resolve to a different version, and TypeScript then rejects the value because the two types don't match.
 
-The callbacks on `api.interactions` answer the interaction directly, which leaves the state stale the same way. The lint rule reads discord.js interaction types alone, so those calls pass it.
+The callbacks on `api.interactions` answer the interaction directly, which skips the state update the same way. The lint rule reads discord.js interaction types alone, so those calls pass it.
 
 </Callout>

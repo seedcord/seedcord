@@ -393,7 +393,7 @@ describe('CodegenRunner', () => {
         expect(written).toContain("declare module '@seedcord/gateway'");
     });
 
-    it('--check leaves a current registry untouched', async () => {
+    it("--check doesn't rewrite a current registry", async () => {
         const root = await tempDir('codegen-');
         const cmdDir = await commandsUnder(root);
         await writeFile(join(cmdDir, 'ban.ts'), 'export {};', 'utf8');
@@ -417,7 +417,7 @@ describe('CodegenRunner', () => {
         expect([first.changed, second.changed]).toStrictEqual([true, false]);
     });
 
-    it('leaves an unchanged registry file untouched on a regular run', async () => {
+    it("doesn't rewrite an unchanged registry file on a regular run", async () => {
         const root = await tempDir('codegen-');
         await makeRunner(root, silentLogger).run(false);
         const outputPath = resolve(root, OUTPUT);

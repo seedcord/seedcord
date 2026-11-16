@@ -522,7 +522,7 @@ describe('ReplySender.send', () => {
         expect(mock.editReply).not.toHaveBeenCalled();
     });
 
-    it('follows up after a deferUpdate, leaving the source message untouched', async () => {
+    it('follows up after a deferUpdate, without editing the source message', async () => {
         const mock = mockInteraction();
         const sender = senderFor(mock);
         await sender.deferUpdate();

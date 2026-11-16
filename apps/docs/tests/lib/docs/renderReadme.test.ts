@@ -40,9 +40,12 @@ describe('a README link written for github', () => {
         expect(html).toContain('src="https://img.shields.io/badge/x"');
     });
 
-    it.each(['https://seedcord.org/guide', '#install', 'mailto:hi@seedcord.org'])('leaves %s alone', async (href) => {
-        expect(await renderReadme(`[x](${href})`, FOLDER)).toContain(`href="${href}"`);
-    });
+    it.each(['https://seedcord.org/guide', '#install', 'mailto:hi@seedcord.org'])(
+        "doesn't change a link to %s",
+        async (href) => {
+            expect(await renderReadme(`[x](${href})`, FOLDER)).toContain(`href="${href}"`);
+        }
+    );
 });
 
 describe('renderReadme', () => {
@@ -59,7 +62,7 @@ describe('renderReadme', () => {
         expect(html).toContain('wordmark-dark.webp');
     });
 
-    it('leaves a plain README image untouched', async () => {
+    it("doesn't rewrite a plain README image", async () => {
         const html = await renderReadme('![banner](https://cdn.seedcord.org/assets/banner.webp)');
 
         expect(html).toContain('src="https://cdn.seedcord.org/assets/banner.webp"');

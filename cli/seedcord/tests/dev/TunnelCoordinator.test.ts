@@ -241,7 +241,7 @@ describe('TunnelCoordinator', () => {
         expect(set).toHaveBeenCalledExactlyOnceWith(urlFor(4321), expect.any(AbortSignal), INSTANCE);
     });
 
-    it('leaves the tunnel alone when the port is unchanged', async () => {
+    it("doesn't reopen the tunnel when the port is unchanged", async () => {
         const open = vi.fn<PortTunnel['open']>().mockResolvedValue(urlFor(3000));
         const coordinator = new TunnelCoordinator(deps({ makeTunnel: () => ({ open, stop: () => undefined }) }));
 
@@ -331,7 +331,7 @@ describe('TunnelCoordinator', () => {
             expect(warn).toHaveBeenCalledExactlyOnceWith('no port');
         });
 
-        it('leaves the endpoint alone when no tunnel ran before', async () => {
+        it("doesn't clear the endpoint when no tunnel ran before", async () => {
             const clear = vi.fn<CoordinatorDeps['endpoint']['clear']>().mockResolvedValue();
             const coordinator = new TunnelCoordinator(deps({ endpoint: { set: () => Promise.resolve(), clear } }));
 

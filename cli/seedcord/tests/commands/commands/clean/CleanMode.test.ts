@@ -37,7 +37,7 @@ describe('CleanMode', () => {
         expect(selected).toEqual([{ scope: alpha, commands: [slash('ban')] }]);
     });
 
-    it('leaves a guild context menu alone when only a global slash command shares its name', () => {
+    it("doesn't select a guild context menu when only a global slash command shares its name", () => {
         const userMenu = { ...slash('ban'), id: 'menu-id', type: ApplicationCommandType.User };
 
         const selected = clean.select(scan({ guilds: [{ scope: alpha, commands: [userMenu] }] }));

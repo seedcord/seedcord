@@ -538,7 +538,7 @@ describe('InteractionDispatcher Integration', () => {
             `
         );
 
-        // the chain leaves the dispatch alone because the first version skips slash
+        // the chain doesn't change the dispatch because the first version skips slash
         const mwPath = await testEnv.createFile(
             `${middlewaresDir}/Audit.ts`,
             `

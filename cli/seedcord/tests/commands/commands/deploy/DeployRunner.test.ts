@@ -91,7 +91,7 @@ describe('DeployRunner', () => {
         expect(output).toContain('    - /legacy\n      /ping\n');
     });
 
-    it("leaves the global commands alone when the code doesn't have any", async () => {
+    it("doesn't change the global commands when the code doesn't have any", async () => {
         const { rest, puts } = fakeDiscord({ [Routes.applicationCommands(APP_ID)]: [slash('ban')] });
 
         const output = await deploy(await fakeProject({ commands: [Config] }), rest);

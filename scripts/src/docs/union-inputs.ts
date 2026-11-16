@@ -56,7 +56,7 @@ export function buildUnionInputs(remote: IndexJson | null, emitted: readonly Emi
         };
         current.versions.add(e.version);
         // the docs site reads this map as the symbols the newest stable version documents. a prerelease
-        // or a backport to an older minor leaves the remote map alone
+        // or a backport to an older minor doesn't replace the remote map
         if (e.version === newestStable([...current.versions])) current.entities = e.entities;
         current.description = e.description;
         current.workspace = e.workspace;

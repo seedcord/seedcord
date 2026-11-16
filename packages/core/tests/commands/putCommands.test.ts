@@ -100,7 +100,7 @@ describe('putCommands', () => {
         expect(result.get(GLOBAL_ID)?.get('123')?.name).toBe('ping');
     });
 
-    it('puts each guild to its own route and leaves the global scope alone when none is given', async () => {
+    it("puts each guild to its own route and doesn't touch the global scope when none is given", async () => {
         const put: Put = vi.fn().mockResolvedValue(deployedAs('g-1', 'config'));
 
         const result = await deploy([['111', [CONFIG]]], restWith(put)).deploying;

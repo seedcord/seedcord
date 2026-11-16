@@ -158,7 +158,7 @@ When discord.js emits an event, seedcord runs every handler you registered for i
 
 {/* prettier-ignore-end */}
 
-`outcome` describes the middleware chain alone. Where the chain refuses the event, it reads `refused` and leaves `handlers` empty since the handlers never started. Each entry in `handlers` has its own class name and outcome.
+`outcome` describes the middleware chain alone. When the chain refuses the event, `outcome` is `refused` and `handlers` is empty. Each handler entry has its own class name and outcome.
 
 ```ts twoslash title="src/subscribers/FlakyHandlers.ts"
 import { Subscribe, Subscriber } from '@seedcord/gateway';

@@ -25,7 +25,7 @@ describe('KvRateLimiter key isolation', () => {
         expect(await limiter.charge(buildKey('cooldown', '222'), window)).toMatchObject({ limited: false });
     });
 
-    it('resets one key and leaves the others intact', async () => {
+    it('resets one key without touching the others', async () => {
         const limiter = memoryRateLimiter();
         const window = { windowMs: 1000 };
         await limiter.charge('a', window);

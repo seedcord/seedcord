@@ -31,8 +31,8 @@ type DataOf<TTask> = TTask extends abstract new (context: TaskContext<infer TDat
  *
  * The plugin stores scheduled tasks in the bot's `config.kv`, under its attach key. With a driver that
  * keeps its records, a pending job is still there after a restart. A job whose time passed while the
- * bot was down runs as soon as the bot starts. Renaming the attach key leaves the old key's
- * jobs behind.
+ * bot was down runs as soon as the bot starts. If you rename the attach key, the plugin doesn't
+ * read or delete the jobs stored under the old one.
  *
  * @example
  * ```ts

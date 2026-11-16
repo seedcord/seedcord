@@ -97,7 +97,7 @@ describe('subpath entry points', () => {
         expect(fetch?.sources[0]?.fileName).toMatch(/workerd\.index\.ts$/);
     });
 
-    it('links an inherited member to its base class and leaves a same-named class alone', () => {
+    it('links an inherited member to its base class and not to a same-named class', () => {
         const node = engine.getNodeBySlug(MOCK_PACKAGE_FULL_NAME, 'mock-runtime-host');
         const fetch = node?.children.find((child) => child.name === 'fetch');
 

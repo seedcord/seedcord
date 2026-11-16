@@ -39,7 +39,7 @@ export function markCommits(ctx: GateContextBase): number {
     return commitQueues.get(ctx)?.length ?? 0;
 }
 
-// and rolls back to it when the gate refuses, leaving no commit behind
+// and rolls back to it when the gate refuses, which removes every commit queued after the mark
 export function rollbackCommits(ctx: GateContextBase, mark: number): void {
     const queue = commitQueues.get(ctx);
     if (queue && queue.length > mark) queue.length = mark;

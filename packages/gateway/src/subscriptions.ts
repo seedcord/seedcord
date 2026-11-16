@@ -19,7 +19,7 @@ declare module '@seedcord/core/internal' {
             /** The same id `eventDispatching` published for this dispatch. */
             dispatchId: string;
             name: keyof ClientEvents;
-            /** How the middleware chain ended. A chain that refused the event leaves `handlers` empty. */
+            /** How the middleware chain ended. If the chain refused the event, `handlers` is empty. */
             outcome: DispatchOutcome;
             /** One entry per handler that ran, in the order they ran. */
             handlers: readonly HandlerOutcome[];

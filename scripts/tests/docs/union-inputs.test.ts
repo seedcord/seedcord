@@ -121,7 +121,7 @@ describe('buildUnionInputs', () => {
         expect(inputs.find((input) => input.folder === 'seedcord')?.entities).toEqual({ fresh: 'interface' });
     });
 
-    it('adds a brand-new package that is absent from the remote index, leaving others untouched', () => {
+    it('adds a brand-new package that is absent from the remote index, without touching the others', () => {
         const remote = remoteWith({ folder: 'seedcord', fullName: 'seedcord', versions: ['0.10.6'] });
 
         const inputs = buildUnionInputs(remote, [

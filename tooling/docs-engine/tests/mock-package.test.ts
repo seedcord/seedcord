@@ -99,7 +99,7 @@ describe('DocsEngine mock package integration', () => {
             expect(child('describe')?.flags.isOverwriting).toBe(true);
         });
 
-        it('leaves an instance method alone when only a base static shares its name', () => {
+        it("doesn't mark an instance method as overriding when only a base static shares its name", () => {
             expect(child('create')?.flags.isOverwriting).toBe(false);
         });
 

@@ -41,7 +41,7 @@ describe('http middleware discovery', () => {
         expect(names(dispatcher.middlewares.chainFor(InteractionKind.Button))).toEqual(['ButtonAudit']);
     });
 
-    it('leaves the chains empty without a middlewares directory', async () => {
+    it('builds empty chains without a middlewares directory', async () => {
         const dispatcher = await readyDispatcher();
 
         expect(dispatcher.middlewares.chainFor(InteractionKind.Slash)).toEqual([]);

@@ -70,7 +70,7 @@ describe('a package with more than one public entry point', () => {
         ]);
     });
 
-    it('extracts the workerd build to its own model and leaves the root model alone', () => {
+    it('extracts the workerd build to its own model and keeps the root model separate', () => {
         const workerd = mock.entries.find((entry) => entry.condition === 'workerd')!;
         const root = mock.entries.find((entry) => entry.subpath === '.' && !entry.condition)!;
 

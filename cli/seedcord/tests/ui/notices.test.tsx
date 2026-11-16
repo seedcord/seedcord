@@ -102,7 +102,7 @@ describe('noticesOf', () => {
         expect(noticesOf(store.getState())[0]?.summary).toBe('connect ECONNREFUSED 127.0.0.1:27017');
     });
 
-    it('leaves the restart summary empty', () => {
+    it('gives the restart notice an empty summary', () => {
         const store = running();
         store.apply({ type: 'restart-required' });
 

@@ -54,7 +54,7 @@ describe('ChangelogSections headings', () => {
         expect(out).not.toContain('Breaking');
     });
 
-    it('leaves a file without sections alone', () => {
+    it("doesn't change a file without sections", () => {
         const text = lines('# @seedcord/core', '');
 
         expect(regrouped(text)).toBe(text);
@@ -138,7 +138,7 @@ describe('ChangelogSections marker placement', () => {
 });
 
 describe('ChangelogSections text it does not recognize', () => {
-    it('leaves a version alone when a section has an unknown #### heading', () => {
+    it("doesn't change a version when a section has an unknown #### heading", () => {
         const text = lines(
             '## 0.1.0',
             '',
@@ -155,7 +155,7 @@ describe('ChangelogSections text it does not recognize', () => {
         expect(regrouped(text)).toBe(text);
     });
 
-    it('leaves a version alone when text sits above the first entry', () => {
+    it("doesn't change a version when text sits above the first entry", () => {
         const text = lines(
             '## 0.1.0',
             '',

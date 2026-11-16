@@ -29,7 +29,7 @@ describe('tokensToSigParts', () => {
         expect(part.ref.packageName).toBe('winston');
     });
 
-    it('leaves a normal reference identifier untouched', () => {
+    it("doesn't change a normal reference identifier", () => {
         const [part] = tokensToSigParts([refToken('GuildMember', 'discord.js!GuildMember:class')]);
         if (part?.kind !== 'ref') throw new Error('expected a ref part');
         expect(part.text).toBe('GuildMember');
@@ -56,7 +56,7 @@ describe('tokensToSigParts', () => {
         expect(parts.map((part) => (part.kind === 'space' ? ' ' : part.text)).join('')).toBe("'any'");
     });
 
-    it('leaves the literal alone across the newlines of a type alias body', () => {
+    it("doesn't link the literal across the newlines of a type alias body", () => {
         const parts = tokensToSigParts([contentToken('TypedOmit<P, "t"> & {\n    transport?: "gateway" | "any";\n}')]);
 
         expect(parts.filter((part) => part.kind === 'ref')).toEqual([]);

@@ -96,7 +96,7 @@ describe('the dispatch context on an http gate', () => {
         expect(seen).toEqual(['from-middleware']);
     });
 
-    it('leaves the key undefined when no middleware wrote it', async () => {
+    it("doesn't set the key when no middleware wrote it", async () => {
         await dispatchThrough(GuardedHandler);
 
         expect(seen).toEqual([undefined]);

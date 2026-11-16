@@ -143,7 +143,7 @@ describe('the edge Seedcord', () => {
         expect(calls).toEqual([]);
     });
 
-    it("applies config.logger when it starts, and leaves the process's logger alone before that", async () => {
+    it("applies config.logger when it starts, and doesn't change the process's logger before that", async () => {
         const signer = await signedEnv();
         const written: string[] = [];
         // what seedcord dev's codegen copy shares with the CLI
