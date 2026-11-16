@@ -134,7 +134,7 @@ To check a public surface change in the docs site or the guide locally, run `vp 
 
 ## Tests
 
-Tests live in `<package>/tests/` mirroring `src/`, never beside the source. Vitest runs them.
+Put tests in `<package>/tests/` mirroring `src/`, never beside the source. Vitest runs them.
 
 Reproduce a bug with a failing test before fixing it. A test that passes before the fix can't show that the fix works. This holds however the bug surfaced.
 

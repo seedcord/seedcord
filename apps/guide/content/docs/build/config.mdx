@@ -3,7 +3,7 @@ title: seedcord.config.ts
 description: Tell the seedcord CLI where your bot lives and how to build it with seedcord.config.ts, and look up what each key does and where its paths resolve.
 ---
 
-The CLI has to find `bot.ts` before it can import it, so the paths that locate it can't live inside `bot.ts`. Put `instance` and `root` in `seedcord.config.ts`, beside your `package.json`. `seedcord.config.mts` works too. The CLI looks only in the folder you run it from, which is your project folder when you run it through a `package.json` script.
+The CLI has to find `bot.ts` before it can import it, so you can't put the paths that locate it inside `bot.ts`. Put `instance` and `root` in `seedcord.config.ts`, beside your `package.json`. `seedcord.config.mts` works too. The CLI looks only in the folder you run it from, which is your project folder when you run it through a `package.json` script.
 
 Put your bot's own settings, like its intents and its handler folders, in `new Seedcord({ ... })` in `bot.ts`. [Tooling](/tooling) lists those.
 

@@ -3,7 +3,7 @@ title: Vite plugins
 description: Add a Vite plugin to your bot so handlers can import YAML, SQL, or any file a plugin can load, in seedcord dev, codegen, and the build alike.
 ---
 
-Your bot's replies live in a `messages.yaml` file, and a handler needs them as an object. Node can't import a `.yaml` file, and neither can Vite on its own. A Vite plugin can. seedcord runs the plugins you list on your bot's code in every command that loads it.
+Say you keep your bot's replies in a `messages.yaml` file, and a handler needs them as an object. Node can't import a `.yaml` file, and neither can Vite on its own. A Vite plugin can. seedcord runs the plugins you list on your bot's code in every command that loads it.
 
 List them under `vitePlugins` in `seedcord.config.ts`. This one uses [`@rollup/plugin-yaml`](https://github.com/rollup/plugins/tree/master/packages/yaml), which turns a YAML file into a default export:
 

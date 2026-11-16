@@ -24,8 +24,8 @@ function DevIndex(): ReactElement {
                     Dev playground
                 </h1>
                 <p className={cn('text-subtle text-sm')}>
-                    Previews for the pieces of the guide shell that live in @seedcord/ui. Each one renders against mock
-                    data so only the thing under review changes between variants.
+                    Previews for the pieces of the guide shell that come from @seedcord/ui. Each one renders against
+                    mock data so only the thing under review changes between variants.
                 </p>
             </header>
             <section className={cn('space-y-3')}>

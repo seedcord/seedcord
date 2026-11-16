@@ -394,6 +394,37 @@ permission bits, and every framework symbol name real things, and this reader
 either knows them or can look them up. This pass hunts the English a dictionary
 does not resolve.
 
+Then a pass numbered 23, on who does the verb. List every sentence whose
+subject is a piece of code: a handler, a component, a gate, a command, a
+plugin, a file, a class, or a sample's own class name. For each one, write one
+line answering a single question. Does that thing do the verb by itself at run
+time, or does the reader write the code that does it?
+
+"A handler calls t('items', { count })" fails. The handler only runs, and the
+reader is the one who writes that call. "A handler builds the same component
+with new InventoryCard(this.t)" fails the same way. "The plugin calls
+resolveLocale before every handler runs" passes because the plugin's own code
+makes that call.
+
+Report every failure, rewritten with `you` as the subject, as in "you call
+this.t('items', { count })" or "in a handler, you build the same component".
+Show the whole list, passes included, so the author can see the pass ran. An
+empty list on a page that has code subjects means you skipped it.
+
+Then a pass numbered 24, on link text. List every link whose text is a heading
+or a page title. For each one, read the sentence aloud with the link text in
+place and ask whether it reads as English. "as Which language t uses explains"
+and "breaks one of the rules in What Discord accepts" fail, because a clause
+sits where a noun belongs. Report each failure with a rewrite that links words
+the sentence already needs, as in "as this section explains" or "breaks one of
+Discord's naming rules". A title that reads as a noun, like "read Scheduling
+jobs next", passes.
+
+Then check every link whose text is filler, like "here's a sample", "read more",
+"see this", or "click here". That text says nothing about where the link goes.
+Report each one with a rewrite that puts the link on the thing the sentence is
+about, as in "Add the folder to files" with files linked.
+
 Return only a list. For each finding give the exact sentence, the pattern's name
 as written above, and the repair. Name the pattern rather than numbering it,
 since a number can drift out of step with the rulebook. Where a pattern produced

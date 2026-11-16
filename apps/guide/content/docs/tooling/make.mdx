@@ -13,7 +13,7 @@ It only runs in a terminal since every answer comes from a prompt. It doesn't ta
 
 ## Writing a template
 
-Templates live in a `templates` folder beside `seedcord.config.ts`. Each folder directly inside it is one template, and the first prompt lists them by folder name. seedcord skips a folder whose name starts with `_`, so [partials](#partials) can live there. `make.templates` in your config points at a different folder, as [Your own helpers](#your-own-helpers) shows.
+seedcord reads templates from a `templates` folder beside `seedcord.config.ts`. Each folder directly inside it is one template, and the first prompt lists them by folder name. seedcord skips a folder whose name starts with `_`, so you can keep [partials](#partials) there. `make.templates` in your config points at a different folder, as [this section](#your-own-helpers) shows.
 
 This `Button` template writes a button row and the handler that answers it:
 

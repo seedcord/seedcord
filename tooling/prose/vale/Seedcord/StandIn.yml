@@ -4,7 +4,7 @@ message: "'%s' stands in for what actually happens. Write who does what, like 't
 level: error
 ignorecase: true
 tokens:
-  - 'lives (?:in|on|inside)'
+  - '(?<!-)(?:lives?|living) (?:in|on|inside)'
   - 'sits? (?:on|in|inside)'
   - 'lands?'
   - 'landed'
