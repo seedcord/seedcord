@@ -20,6 +20,17 @@ describe('matchesFiles', () => {
         expect(layout.matchesFiles(path.join(root, file), globs)).toBe(matches);
     });
 
+    it('matches an absolute pattern that starts with the root as written', () => {
+        expect(layout.matchesFiles(path.join(root, 'migrations', '001.sql'), [`${root}/migrations/**`])).toBe(true);
+    });
+
+    it('matches an absolute pattern outside root as a plain glob', () => {
+        const elsewhere = path.resolve('/srv/shared');
+
+        expect(layout.matchesFiles(path.join(elsewhere, 'seed.sql'), [`${elsewhere}/*.sql`])).toBe(true);
+        expect(layout.matchesFiles(path.join(root, 'seed.sql'), [`${elsewhere}/*.sql`])).toBe(false);
+    });
+
     it('resolves a relative pattern against root, and skips what a `!` pattern matches', () => {
         const patterns = ['migrations/**', '!migrations/*.md'];
 

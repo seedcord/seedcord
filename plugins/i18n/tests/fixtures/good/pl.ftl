@@ -12,4 +12,5 @@ role = { $user } jest { $role ->
     [owner] właścicielem
    *[other] członkiem
 }
+welcome-back = { greeting }. Miło cię znowu widzieć
 email-field = E-mail

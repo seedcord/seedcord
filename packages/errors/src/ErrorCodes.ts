@@ -256,7 +256,7 @@ export enum SeedcordErrorCode {
     PluginI18nNotInBase = 2403,
     /** The i18n plugin's `dir` doesn't have a file for its base locale. */
     PluginI18nBaseMissing = 2404,
-    /** A `t()` call doesn't match the `.ftl` files. They changed after `seedcord codegen` last ran. */
+    /** A `t()` call has a key that no `.ftl` file has, usually because codegen hasn't run since the files changed. */
     PluginI18nOutOfDate = 2405,
     /** A locale's command translations have a name that isn't on any command, option, choice, or menu. */
     PluginI18nUnknownCommand = 2406,
@@ -269,6 +269,8 @@ export enum SeedcordErrorCode {
      * without defining it in that file. A definition in another locale's file doesn't count.
      */
     PluginI18nMissingReference = 2409,
+    /** Fluent threw while `t()` formatted a message, like for a variable that the call didn't pass. */
+    PluginI18nFormatFailed = 2410,
 
     /** Someone pressed Ctrl-C at a prompt in `seedcord` or `create-seedcord`. */
     CliCancelled = 3001,
@@ -307,7 +309,7 @@ export enum SeedcordErrorCode {
     CliDependencyMissing = 3116,
     /** `build.outDir` already has other files in it. */
     CliBuildOutDirNotEmpty = 3117,
-    /** A CLI step, or a started bot's command deploy, found two or more problems. Each one is in the error's `errors`. */
+    /** One step found two or more problems, like codegen or a command deploy. Each one is in the error's `errors`. */
     CliProblems = 3118,
     /** `seedcord codegen --check` found the committed augmentations out of date. */
     CliCodegenOutOfDate = 3119,

@@ -54,9 +54,10 @@ export class Catalogs {
             try {
                 return bundle.formatPattern(pattern, args);
             } catch (error) {
-                throw new SeedcordError(SeedcordErrorCode.PluginI18nOutOfDate, [
+                throw new SeedcordError(SeedcordErrorCode.PluginI18nFormatFailed, [
                     key,
-                    `failed in ${code}.ftl: ${asError(error).message}`
+                    `${code}.ftl`,
+                    asError(error).message
                 ]);
             }
         }

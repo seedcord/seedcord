@@ -292,6 +292,8 @@ const messages = {
         `${paint.path(place)} has ${what}, but ${paint.path(baseFile)} doesn't. ${paint.bold('t()')} only reads what the base file has. Add it to ${paint.path(baseFile)} first, or remove it here.`,
     [SeedcordErrorCode.PluginI18nOutOfDate]: (key: string, problem: string) =>
         `${paint.bold(`t('${key}')`)} ${problem}. The .ftl files changed after ${paint.bold('seedcord codegen')} last ran. Run it to update what ${paint.bold('t()')} accepts, then fix this call.`,
+    [SeedcordErrorCode.PluginI18nFormatFailed]: (key: string, file: string, reason: string) =>
+        `${paint.bold(`t('${key}')`)} couldn't format the text in ${paint.path(file)}: ${reason}. Pass every variable that the message and the messages it uses need.`,
     [SeedcordErrorCode.PluginI18nUnknownCommand]: (file: string, path: string) =>
         `${paint.path(file)} translates ${paint.sky(path)}, but none of your commands has it. Fix the name, or run ${paint.bold('seedcord codegen')} and type-check to find these before a deploy.`,
     [SeedcordErrorCode.PluginI18nNotTranslations]: (file: string) =>
@@ -299,7 +301,7 @@ const messages = {
     [SeedcordErrorCode.PluginI18nDiscordRejects]: (file: string, path: string, value: string, accepts: string) =>
         `${paint.path(file)} sets ${paint.sky(path)} to ${quoted(value)}, but Discord only accepts ${accepts}. Change the translation to fit.`,
     [SeedcordErrorCode.PluginI18nMissingReference]: (place: string, reference: string) =>
-        `${paint.path(place)} uses ${paint.sky(reference)}, but that file doesn't define it. Define ${paint.sky(reference)} in this file too because a locale file can only use the terms and messages that it defines.`,
+        `${paint.path(place)} uses ${paint.sky(reference)}, but that file doesn't define it. Define ${paint.sky(reference)} in this file too. Fluent formats each file on its own.`,
     [SeedcordErrorCode.PluginI18nBaseMissing]: (dir: string, baseFile: string) =>
         `${paint.path(dir)} doesn't have ${paint.path(baseFile)}, the file that lists every message. Add it, or set ${paint.bold('base')} to a locale that has a file.`,
 

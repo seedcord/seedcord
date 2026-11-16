@@ -95,7 +95,7 @@ items =
     }
 ```
 
-A variant can also match an exact number, like `[0]` in `hi.ftl`. Fluent takes the first variant that matches. Hindi's plural rules count 0 as `one`, so keep `[0]` above `[one]`. A user with 0 items then reads "आपके पास कुछ नहीं है". A translation can add variants like this that the base file doesn't have. `hi.ftl` doesn't have `rank` yet, which is fine. A user whose Discord language is Hindi gets the English `rank` until you add it, as [this section](#which-language-t-uses) explains.
+A variant can also match an exact number, like `[0]` in `hi.ftl`. Fluent takes the first variant that matches. Hindi's plural rules count 0 as `one`, so keep `[0]` above `[one]`. A user with 0 items then reads "आपके पास कुछ नहीं है". A translation can add variants like this that the base file doesn't have. `hi.ftl` doesn't have `rank` yet. A user whose Discord language is Hindi gets the English `rank` until you add it, as [this section](#which-language-t-uses) explains.
 
 A translation can leave messages out, but it can't add any. If `hi.ftl` has a message, a variable, or an attribute that `en-US.ftl` doesn't, [`seedcord codegen`](/plugins/typing) throws `PluginI18nNotInBase`. An extra message would be unusable because `t` only accepts keys from the base file.
 
@@ -515,12 +515,14 @@ A user whose Discord language is Hindi gets the date in Hindi. `t.locale` is the
 | `PluginI18nSyntax` | Fluent can't parse a line in a `.ftl` file. The message gives the file and line |
 | `PluginI18nNotALocale` | a `.ftl` file or a [command translation file](/plugins/i18n-commands) doesn't have a Discord locale code as its name. The message suggests the codes that start the same way |
 | `PluginI18nNotInBase` | a translation has a message, a variable, or an attribute that the base file doesn't |
-| `PluginI18nOutOfDate` | `t` got a key that the `.ftl` files no longer have, or the call didn't pass a variable that the message needs. Run codegen, then fix the calls that TypeScript reports |
+| `PluginI18nMissingReference` | a `.ftl` file uses a term like `{ -brand }`, or another message, that the same file doesn't define |
+| `PluginI18nOutOfDate` | `t` got a key that the `.ftl` files no longer have. Run codegen, then fix the calls that TypeScript reports |
+| `PluginI18nFormatFailed` | Fluent couldn't format the text, like when a call through a cast didn't pass a variable. The message gives Fluent's reason |
 
 {/* prettier-ignore-end */}
 
-`PluginOptionsRejected` and `CorePathOutsideRoot` throw when you call `attach`, and `CoreDirectoryNotListed` throws while the bot starts. `PluginI18nOutOfDate` throws from the `t` call when the `.ftl` files changed after codegen last ran.
+`PluginOptionsRejected` and `CorePathOutsideRoot` throw when you call `attach`, and `CoreDirectoryNotListed` throws while the bot starts. `PluginI18nOutOfDate` and `PluginI18nFormatFailed` throw from the `t` call.
 
-`PluginI18nBaseMissing`, `PluginI18nSyntax`, `PluginI18nNotALocale`, and `PluginI18nNotInBase` come from codegen, which reports every problem it finds in one error. `seedcord codegen` and `seedcord codegen --check` in CI fail with it. `seedcord dev` runs codegen after the bot starts and only logs the error, so the bot keeps running on the files it loaded.
+`PluginI18nBaseMissing`, `PluginI18nSyntax`, `PluginI18nNotALocale`, `PluginI18nNotInBase`, and `PluginI18nMissingReference` come from codegen, which reports every problem it finds in one error. `seedcord codegen` and `seedcord codegen --check` in CI fail with it. `seedcord dev` runs codegen after the bot starts and only logs the error, so the bot keeps running on the files it loaded.
 
 To translate your command names and descriptions, read [Translating commands](/plugins/i18n-commands) next.

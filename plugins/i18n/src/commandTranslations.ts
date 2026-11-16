@@ -108,6 +108,6 @@ export function commandTranslations(translations: CommandTranslations): CommandT
 
 export function translationsIn(exported: unknown): TranslationTree | undefined {
     if (typeof exported !== 'object' || exported === null || !(TRANSLATIONS in exported)) return undefined;
-    // justified: only commandTranslations() writes this symbol, and its argument fits TranslationTree
+    // justified: only commandTranslations() writes this symbol
     return exported[TRANSLATIONS] as TranslationTree;
 }

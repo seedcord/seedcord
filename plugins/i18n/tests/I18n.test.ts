@@ -117,6 +117,15 @@ describe('I18n', () => {
             expect(t.locale).toBe('pl');
         });
 
+        it("throws with Fluent's reason when a call doesn't pass a variable that the message uses", async () => {
+            const t = await tFor(from({}));
+
+            // justified: a call that gets past the generated types, like one through a cast
+            expect(() => t('greeting', {})).toThrow(
+                expect.objectContaining({ code: SeedcordErrorCode.PluginI18nFormatFailed })
+            );
+        });
+
         it('throws for a message that no locale file has, like one a stale seedcord-gen.ts still offers', async () => {
             const t = await tFor(from({}));
 
@@ -235,7 +244,7 @@ describe('I18n', () => {
     });
 
     describe('codegen', () => {
-        it("types each message's and each attribute's variables, merged across every locale", async () => {
+        it("types each message's and each attribute's variables, with the ones from messages it uses, merged across every locale", async () => {
             expect(await i18nAt('good').codegen()).toEqual({
                 messages: {
                     greeting: { user: 'text' },
@@ -243,6 +252,7 @@ describe('I18n', () => {
                     role: { user: 'text', role: ['admin', 'mod', 'other', 'owner'] },
                     'ping-reply': { ms: 'number' },
                     'label.title': {},
+                    'welcome-back': { user: 'text' },
                     'email-field': {},
                     'email-field.placeholder': { domain: 'text' }
                 }

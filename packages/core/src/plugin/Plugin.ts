@@ -230,8 +230,8 @@ export abstract class Plugin<
     }
 
     /**
-     * Tells `seedcord dev` which files your `prepareCommands` reads. Saving one of them in `seedcord dev`
-     * shows the command refresh prompt.
+     * Lists the files that your `prepareCommands` reads. Saving one of them in `seedcord dev` shows the
+     * command refresh prompt.
      * @param patterns - Glob patterns. A relative one resolves against `root` from `seedcord.config.ts`.
      * If a pattern starts with `!`, saving a file that it matches doesn't show the prompt.
      */

@@ -179,24 +179,26 @@ export class I18n extends Plugin {
         const translationFiles = importFiles(this.dir, { filter: ({ fullPath }) => matchesBotGlobs(fullPath, globs) });
         for await (const { fullPath, relativePath, imported } of translationFiles) {
             const locale = path.parse(fullPath).name;
-            const translations = translationsIn(imported.default);
             if (!isDiscordLocale(locale)) {
                 problems.push(
                     new SeedcordError(SeedcordErrorCode.PluginI18nNotALocale, [relativePath, localesLike(locale)])
                 );
-            } else if (!translations) {
-                problems.push(new SeedcordError(SeedcordErrorCode.PluginI18nNotTranslations, [relativePath]));
-            } else {
-                const localizer = new CommandLocalizer(locale, relativePath);
-                localizer.apply(commands, translations);
-                problems.push(...localizer.problems);
+                continue;
             }
+            const translations = translationsIn(imported.default);
+            if (!translations) {
+                problems.push(new SeedcordError(SeedcordErrorCode.PluginI18nNotTranslations, [relativePath]));
+                continue;
+            }
+            const localizer = new CommandLocalizer(locale, relativePath);
+            localizer.apply(commands, translations);
+            problems.push(...localizer.problems);
         }
         throwSingleOrAggregate(problems, SeedcordErrorCode.CliProblems);
     }
 
     public override async codegen(): Promise<{ messages: MessageTable }> {
-        // a running bot doesn't need to load @fluent/syntax as only codegen needs it
+        // only codegen needs @fluent/syntax
         const { checkCatalog } = await import('./catalog/checkCatalog');
         const { messages, problems, untranslated } = checkCatalog(await this.localeFiles(), this.base, this.dir);
         for (const { relativePath, missingKeys, fallback } of untranslated) {

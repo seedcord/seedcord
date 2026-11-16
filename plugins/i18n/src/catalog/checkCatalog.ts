@@ -47,6 +47,7 @@ interface EntryReferences {
 interface ParsedKey {
     readonly line: number;
     readonly variables: MessageVariables;
+    readonly usedKeys: ReadonlySet<string>;
 }
 
 const PLURAL_CATEGORIES = new Set<string>([
@@ -69,6 +70,7 @@ function merge(earlier: VariableKind | undefined, incoming: VariableKind): Varia
 class EntryScan extends Visitor {
     public readonly variables: MessageVariables = {};
     public readonly references = new Set<string>();
+    public readonly usedKeys = new Set<string>();
 
     public override visitSelectExpression(node: SelectExpression): void {
         const { selector } = node;
@@ -99,6 +101,7 @@ class EntryScan extends Visitor {
 
     public override visitMessageReference(node: MessageReference): void {
         this.references.add(node.id.name);
+        this.usedKeys.add(messageKey(node.id.name, node.attribute?.name));
     }
 
     private add(name: string, kind: VariableKind): void {
@@ -114,12 +117,33 @@ function scan(node: Message | Term | Pattern): EntryScan {
 
 function keysOf(entry: Message, line: number): [key: string, parsed: ParsedKey][] {
     const id = entry.id.name;
+    const parsedKey = (pattern: Pattern): ParsedKey => {
+        const { variables, usedKeys } = scan(pattern);
+        return { line, variables, usedKeys };
+    };
     const keys: [string, ParsedKey][] = entry.attributes.map(({ id: attribute, value }) => [
         messageKey(id, attribute.name),
-        { line, variables: scan(value).variables }
+        parsedKey(value)
     ]);
-    if (entry.value) keys.unshift([messageKey(id), { line, variables: scan(entry.value).variables }]);
+    if (entry.value) keys.unshift([messageKey(id), parsedKey(entry.value)]);
     return keys;
+}
+
+// a t() call passes a used message's variables too because fluent formats it with the call's arguments
+function addUsedVariables(keys: ReadonlyMap<string, ParsedKey>): void {
+    const visited = new Set<string>();
+    const variablesOf = (key: string): MessageVariables => {
+        const parsedKey = keys.get(key);
+        if (!parsedKey || visited.has(key)) return parsedKey?.variables ?? {};
+        visited.add(key);
+        for (const used of parsedKey.usedKeys) {
+            for (const [name, kind] of Object.entries(variablesOf(used))) {
+                parsedKey.variables[name] = merge(parsedKey.variables[name], kind);
+            }
+        }
+        return parsedKey.variables;
+    };
+    for (const key of keys.keys()) variablesOf(key);
 }
 
 function describe(key: string): string {
@@ -163,7 +187,7 @@ class CatalogCheck {
                 untranslated.push({ relativePath: file.relativePath, missingKeys, fallback });
             }
             for (const [key, parsedKey] of messages)
-                this.compare(file.relativePath, key, parsedKey, baseMessages.get(key));
+                this.mergeIntoBase(file.relativePath, key, parsedKey, baseMessages.get(key));
         }
         const messages = Object.fromEntries(baseMessages.entries().map(([key, { variables }]) => [key, variables]));
         return { messages, problems: this.problems, untranslated };
@@ -208,6 +232,7 @@ class CatalogCheck {
             }
         }
         this.checkReferences(relativePath, uses, defined);
+        addUsedVariables(messages);
         return messages;
     }
 
@@ -226,7 +251,7 @@ class CatalogCheck {
         }
     }
 
-    private compare(
+    private mergeIntoBase(
         relativePath: string,
         key: string,
         { line, variables }: ParsedKey,
