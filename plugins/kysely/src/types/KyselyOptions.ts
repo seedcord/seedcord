@@ -36,7 +36,7 @@ export interface KyselyOptions {
      * `seedcord build` or `seedcord codegen` loads your bot.
      */
     readonly dialect: () => Dialect;
-    /** Kysely config, apart from the dialect */
+    /** Any other Kysely config, like `log` or `plugins` */
     readonly kysely?: Except<KyselyConfig, 'dialect'>;
     /**
      * How long closing the connection may take during shutdown, in milliseconds.

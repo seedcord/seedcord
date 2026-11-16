@@ -32,6 +32,7 @@ export class Mongoose extends Plugin<{ transport: 'any'; runtime: 'server' }> {
 
     private readonly uri: string;
 
+    private client: MongooseInstance | null = null;
     private readonly models: MongooseModels;
     private readonly serviceRegistry: PluginServices<MongooseServiceConstructor, MongooseServices>;
 
@@ -44,8 +45,17 @@ export class Mongoose extends Plugin<{ transport: 'any'; runtime: 'server' }> {
         return this.serviceRegistry.map;
     }
 
-    /** Exposed Mongoose instance once `init` completes. */
-    declare public connection: MongooseInstance;
+    /**
+     * The Mongoose instance that `mongoose.connect()` returned.
+     *
+     * @throws A **SeedcordError** if accessed before the plugin connects.
+     */
+    public get connection(): MongooseInstance {
+        if (!this.client) {
+            throw new SeedcordError(SeedcordErrorCode.PluginServicesNotReady, [this.constructor.name, 'connection']);
+        }
+        return this.client;
+    }
 
     constructor(
         host: CoreBase,
@@ -92,7 +102,7 @@ export class Mongoose extends Plugin<{ transport: 'any'; runtime: 'server' }> {
     }
 
     private async connect(): Promise<void> {
-        this.connection = await mongoose
+        this.client = await mongoose
             .connect(this.uri, {
                 dbName: this.options.name,
                 ...(Envapter.isProduction && { tls: true, ssl: true }),
@@ -115,10 +125,11 @@ export class Mongoose extends Plugin<{ transport: 'any'; runtime: 'server' }> {
         this.serviceRegistry.clear();
         this.models.clear();
 
-        // eslint-disable-next-line @typescript-eslint/no-unnecessary-condition -- connect() may have failed before assigning, so there is nothing to disconnect
-        if (!this.connection) return;
+        const { client } = this;
+        if (!client) return;
+        this.client = null;
 
-        await this.connection
+        await client
             .disconnect()
             .then(() => this.logger.info(paint.coral.bold('Disconnected from MongoDB')))
             .catch((err: unknown) => {

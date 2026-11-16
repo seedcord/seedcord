@@ -44,6 +44,7 @@
         "@seedcord/tsconfig": "workspace:^",
         "@seedcord/tsdown-config": "workspace:^",
         "@seedcord/vite-config": "workspace:^",
+        "type-fest": "catalog:deps",
         "vite-plus": "catalog:deps"
     },
     "peerDependencies": {

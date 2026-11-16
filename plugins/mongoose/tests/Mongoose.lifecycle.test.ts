@@ -11,10 +11,11 @@ import { it } from './utils/test-env';
 describe('Mongoose lifecycle', () => {
     it('closes the connection when service loading fails after connecting', async ({ mongooseWith, testEnv }) => {
         const plugin = mongooseWith({ dir: testEnv.resolvePath('absent') });
+        const connection = await mongoose.connect('');
 
         await expect(plugin.init()).rejects.toThrow();
 
-        expect(vi.mocked(plugin.connection.disconnect)).toHaveBeenCalled();
+        expect(vi.mocked(connection.disconnect)).toHaveBeenCalled();
     });
 
     it('keeps the init failure when the cleanup disconnect also fails', async ({ mongooseWith, testEnv }) => {
@@ -177,10 +178,10 @@ describe('Mongoose lifecycle', () => {
         expect(vi.mocked(mongoose.deleteModel)).not.toHaveBeenCalledWith('adopted');
     });
 
-    it('throws when services is read before init', ({ mongooseWith }) => {
+    it.for(['services', 'connection'] as const)('throws when %s is read before init', (member, { mongooseWith }) => {
         const plugin = mongooseWith();
 
-        expect(() => plugin.services).toThrow(
+        expect(() => plugin[member]).toThrow(
             expect.objectContaining({ code: SeedcordErrorCode.PluginServicesNotReady })
         );
     });
@@ -296,16 +297,19 @@ describe('Mongoose lifecycle', () => {
         expect(vi.mocked(mongoose.connect)).toHaveBeenCalled();
     });
 
-    it('reports services unavailable after dispose', async ({ mongooseWith }) => {
-        const plugin = mongooseWith();
-        await plugin.init();
+    it.for(['services', 'connection'] as const)(
+        'reports %s unavailable after dispose',
+        async (member, { mongooseWith }) => {
+            const plugin = mongooseWith();
+            await plugin.init();
 
-        await plugin.dispose();
+            await plugin.dispose();
 
-        expect(() => plugin.services).toThrow(
-            expect.objectContaining({ code: SeedcordErrorCode.PluginServicesNotReady })
-        );
-    });
+            expect(() => plugin[member]).toThrow(
+                expect.objectContaining({ code: SeedcordErrorCode.PluginServicesNotReady })
+            );
+        }
+    );
 
     it('disposes without throwing when init never ran', async ({ mongooseWith }) => {
         const plugin = mongooseWith();

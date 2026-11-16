@@ -10,7 +10,7 @@ export const KyselyServiceMetadataKey = Symbol.for('seedcord:kysely:service');
 export const KyselyTableMetadataKey = Symbol.for('seedcord:kysely:table');
 
 /**
- * Registers a Kysely Postgres service with the specified key and options.
+ * Registers the service under `key`, which is also its table name unless `options.table` gives another.
  *
  * Associates a service class with a key for dependency injection.
  * The service becomes available via `core.db.services[key]`.

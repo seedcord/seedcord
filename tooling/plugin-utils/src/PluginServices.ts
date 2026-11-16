@@ -6,21 +6,24 @@ import { SeedcordError } from '@seedcord/errors/internal';
 
 import type { Logger } from '@seedcord/logger';
 import type { HmrUpdateEvent } from '@seedcord/types';
+import type { AbstractConstructor } from 'type-fest';
 
-interface PluginServicesOptions<TClass> {
+type ServiceClass = AbstractConstructor<object, never[]>;
+
+interface PluginServicesOptions<TClass extends ServiceClass> {
     readonly pluginName: string;
     readonly dir: string;
     readonly logger: Logger;
-    readonly base: abstract new (...args: never[]) => object;
+    readonly base: AbstractConstructor<InstanceType<TClass>, never[]>;
     readonly metadataKey: symbol;
     readonly decorator: string;
-    // object because TClass only describes the base class. TServices, which codegen fills in, types each instance
+    // TClass only types the base class. TServices types each instance once codegen runs
     readonly create: (Service: TClass) => object;
     readonly remove?: (Service: TClass) => void;
 }
 
 // one instance of each decorated service class in a folder, by the key its decorator wrote
-export class PluginServices<TClass extends object, TServices extends object> {
+export class PluginServices<TClass extends ServiceClass, TServices extends object> {
     private readonly services = Object.create(null) as TServices;
     private readonly files: FolderExports<TClass>;
     private readonly warned = new WeakSet<object>();
@@ -91,7 +94,7 @@ export class PluginServices<TClass extends object, TServices extends object> {
         if (this.warned.has(value)) return;
         this.warned.add(value);
         this.options.logger.warn(
-            `${paint.sky(value.name)} extends the service base but has no ${paint.bold(this.options.decorator)}, so ${paint.bold(this.options.pluginName)} skipped it. Add the decorator to register it.`
+            `${paint.bold(this.options.pluginName)} skipped ${paint.sky(value.name)} because it isn't decorated with ${paint.bold(this.options.decorator)}. Add the decorator to register it, or move a shared base class out of ${paint.path(this.options.dir)}.`
         );
     }
 }

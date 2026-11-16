@@ -61,7 +61,7 @@ export abstract class KyselyService<TTable extends LiteralUnion<KyselyTable, str
     }
 
     /**
-     * Shared Kysely instance used to interact with the Postgres database.
+     * The plugin's Kysely instance.
      */
     public get db(): KyselyClient<KyselySchema> {
         return this.kysely.connection;

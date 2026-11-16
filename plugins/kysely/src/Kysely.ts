@@ -25,28 +25,35 @@ import type { HmrUpdateEvent } from '@seedcord/types';
 import type { Dialect } from 'kysely';
 import type { MigrationInfo } from 'kysely/migration';
 
+// the constructor name of an anonymous dialect subclass is an empty string
+const UNNAMED_DIALECT = 'database';
+
 function labelOf(dialect: Dialect): string {
-    return dialect.constructor.name.replace(/Dialect$/, '');
+    return dialect.constructor.name.replace(/Dialect$/, '') || UNNAMED_DIALECT;
 }
 
 function connectionFailed(label: string, reason: string, cause: unknown): SeedcordError {
     return new SeedcordError(SeedcordErrorCode.PluginConnectionFailed, [label, reason, 'dialect'], { cause });
 }
 
+interface Session {
+    readonly client: KyselyClient<KyselySchema>;
+    readonly label: string;
+}
+
 /**
  * Connects a bot to any database that Kysely has a dialect for.
  *
- * Opens the connection, applies migrations, and registers decorated services so the core can resolve them.
+ * Opens the connection, runs your migrations, and loads your service classes.
  */
 export class Kysely extends Plugin<{ transport: 'any'; runtime: 'server' }> {
     public static readonly id = '@seedcord/plugin-kysely';
 
-    private client: KyselyClient<KyselySchema> | null = null;
-    declare private label: string;
+    private session: Session | null = null;
     private readonly serviceRegistry: PluginServices<KyselyServiceConstructor, KyselyServices>;
 
     /**
-     * Map of all services registered with the plugin, keyed by their decorator name.
+     * Your services, keyed by the name you pass to `@RegisterKyselyService`.
      *
      * @throws A **SeedcordError** if accessed before the plugin finishes initializing.
      */
@@ -60,10 +67,10 @@ export class Kysely extends Plugin<{ transport: 'any'; runtime: 'server' }> {
      * @throws A **SeedcordError** if accessed before the plugin connects.
      */
     public get connection(): KyselyClient<KyselySchema> {
-        if (!this.client) {
+        if (!this.session) {
             throw new SeedcordError(SeedcordErrorCode.PluginServicesNotReady, [this.constructor.name, 'connection']);
         }
-        return this.client;
+        return this.session.client;
     }
 
     constructor(
@@ -97,17 +104,11 @@ export class Kysely extends Plugin<{ transport: 'any'; runtime: 'server' }> {
     public async init(): Promise<void> {
         try {
             await this.connect();
-            const startupConfig = this.options.migrations.onStartup;
-            if (startupConfig !== false) {
-                if (startupConfig && typeof startupConfig !== 'boolean') {
-                    await this.migrate(startupConfig);
-                } else {
-                    await this.migrate();
-                }
-            }
+            const { onStartup } = this.options.migrations;
+            if (onStartup !== false) await this.migrate(typeof onStartup === 'object' ? onStartup : undefined);
             await this.serviceRegistry.load();
         } catch (caught) {
-            // the host skips dispose for a plugin whose init rejected so need to disconnect here
+            // the host skips dispose for a plugin whose init rejected
             await this.disconnect().catch((error: unknown) =>
                 this.logger.error('failed to close the connection', error)
             );
@@ -126,11 +127,12 @@ export class Kysely extends Plugin<{ transport: 'any'; runtime: 'server' }> {
     private async connect(): Promise<void> {
         const dialect = this.dialect();
         const label = labelOf(dialect);
-        this.label = label;
+        const client = new KyselyClient<KyselySchema>({ dialect, ...keepDefined(this.options.kysely ?? {}) });
+        // init()'s cleanup closes the client if the first connection fails
+        this.session = { client, label };
         try {
-            this.client = new KyselyClient<KyselySchema>({ dialect, ...keepDefined(this.options.kysely ?? {}) });
             // kysely opens the driver on the first query
-            await this.client.connection().execute(() => Promise.resolve());
+            await client.connection().execute(() => Promise.resolve());
         } catch (err) {
             throw connectionFailed(label, errorReason(err), err);
         }
@@ -142,22 +144,22 @@ export class Kysely extends Plugin<{ transport: 'any'; runtime: 'server' }> {
         try {
             return this.options.dialect();
         } catch (err) {
-            throw connectionFailed('the database', `dialect() threw: ${errorReason(err)}`, err);
+            throw connectionFailed(UNNAMED_DIALECT, `dialect() threw: ${errorReason(err)}`, err);
         }
     }
 
     private async disconnect(): Promise<void> {
         this.serviceRegistry.clear();
 
-        const { client } = this;
-        if (!client) return;
-        this.client = null;
+        const { session } = this;
+        if (!session) return;
+        this.session = null;
 
-        this.logger.debug(paint.mute(`Closing the ${this.label} connection.`));
-        await client.destroy().catch((err: unknown) => {
-            throw new SeedcordError(SeedcordErrorCode.PluginDisconnectFailed, [this.label], { cause: err });
+        this.logger.debug(paint.mute(`Closing the ${session.label} connection.`));
+        await session.client.destroy().catch((err: unknown) => {
+            throw new SeedcordError(SeedcordErrorCode.PluginDisconnectFailed, [session.label], { cause: err });
         });
-        this.logger.info(paint.coral.bold(`Disconnected from ${this.label}`));
+        this.logger.info(paint.coral.bold(`Disconnected from ${session.label}`));
     }
 
     /**
@@ -171,7 +173,7 @@ export class Kysely extends Plugin<{ transport: 'any'; runtime: 'server' }> {
     }
 
     /**
-     * Runs a single upwards migration step unless a custom count is provided.
+     * Runs the next pending migration, or `steps` of them.
      *
      * @throws A **SeedcordError** if called before the plugin connects.
      */
@@ -180,7 +182,7 @@ export class Kysely extends Plugin<{ transport: 'any'; runtime: 'server' }> {
     }
 
     /**
-     * Runs a single downwards migration step unless a custom count is provided.
+     * Reverts the last migration, or the last `steps` of them.
      *
      * @throws A **SeedcordError** if called before the plugin connects.
      */
@@ -189,7 +191,7 @@ export class Kysely extends Plugin<{ transport: 'any'; runtime: 'server' }> {
     }
 
     /**
-     * Lists every migration registered with the manager along with its execution state.
+     * Lists every migration and whether it has run.
      *
      * @throws A **SeedcordError** if called before the plugin connects.
      */
