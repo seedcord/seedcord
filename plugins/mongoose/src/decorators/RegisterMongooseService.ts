@@ -1,5 +1,6 @@
 import { SeedcordErrorCode } from '@seedcord/errors';
 import { SeedcordTypeError } from '@seedcord/errors/internal';
+import { decoratorValue } from '@seedcord/plugin-utils';
 
 import type { MongooseServiceRegistrationOptions } from '#src/types/MongooseServiceRegistrationOptions';
 import type { MongooseServiceKeys, MongooseServices } from '#src/types/MongooseServices';
@@ -7,7 +8,11 @@ import type mongoose from 'mongoose';
 import type { Constructor } from 'type-fest';
 
 export const ServiceMetadataKey = Symbol.for('seedcord:mongoose:service');
-export const ModelNameMetadataKey = Symbol.for('seedcord:mongoose:model-name');
+const ModelNameMetadataKey = Symbol.for('seedcord:mongoose:model-name');
+
+export function modelNameOf(Service: { readonly name: string }): string {
+    return decoratorValue(ModelNameMetadataKey, '@RegisterMongooseService', Service);
+}
 
 /**
  * Registers a database service with a typed key.

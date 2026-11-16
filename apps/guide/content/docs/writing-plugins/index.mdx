@@ -92,25 +92,27 @@ On Cloudflare Workers, the first request waits for the whole startup, `ready()` 
 
 ## Adding a value to every handler
 
-Suppose your plugin translates messages, and each translation depends on the language of the user who ran the command. Without `dispatchMembers`, every handler would read that language from its interaction and pass it into every call. A function in your plugin's [`dispatchMembers`](ref:core/Plugin.dispatchMembers) reads the language once per interaction, so a handler calls `this.t('greet')` without passing it.
+Suppose your plugin stores settings for each guild, like how many warnings a member gets, and a handler needs the settings of the guild it runs in. Without `dispatchMembers`, every handler would read the guild id from its interaction and pass it into every call. A function in your plugin's [`dispatchMembers`](ref:core/Plugin.dispatchMembers) looks up the settings once per interaction, so a handler reads `this.settings` without passing anything.
 
-```ts twoslash title="src/plugins/Translations.ts"
+```ts twoslash title="src/plugins/GuildSettings.ts"
 import { Plugin } from '@seedcord/gateway';
 
 import type { DispatchOrigin } from '@seedcord/gateway';
 
-const MESSAGES: Record<string, Record<string, string>> = {
-    'en-US': { greet: 'Hello' },
-    fr: { greet: 'Bonjour' }
-};
+interface Settings {
+    logChannel: string | null;
+    maxWarnings: number;
+}
 
-export class Translations extends Plugin {
+const DEFAULTS: Settings = { logChannel: null, maxWarnings: 3 };
+
+export class GuildSettings extends Plugin {
+    private readonly byGuild = new Map<string, Settings>();
+
     public override readonly dispatchMembers = {
-        t: (origin: DispatchOrigin) => {
-            const locale = origin.userLocale ?? origin.guildLocale;
-            const messages =
-                MESSAGES[locale ?? 'en-US'] ?? MESSAGES['en-US'];
-            return (key: string): string => messages?.[key] ?? key;
+        settings: ({ guildId }: DispatchOrigin): Settings => {
+            if (!guildId) return DEFAULTS;
+            return this.byGuild.get(guildId) ?? DEFAULTS;
         }
     };
 
@@ -118,7 +120,7 @@ export class Translations extends Plugin {
 }
 ```
 
-`dispatchMembers` is a plain object of functions. seedcord calls each function once per interaction, and once per event if the event has a handler. Each handler gets what `t` returns as `this.t`. A function can be async, and handlers then get the value it resolves to.
+`dispatchMembers` is a plain object of functions. seedcord calls each function once per interaction, and once per event if the event has a handler. Each handler gets what `settings` returns as `this.settings`. A function can be async, and handlers then get the value it resolves to.
 
 Each function gets a [`DispatchOrigin`](ref:core/DispatchOrigin), with these fields:
 
@@ -138,33 +140,39 @@ An interaction always has `userId` and `userLocale`. The other fields can be nul
 - `channelId` is null when the interaction or event doesn't happen in a channel.
 - `userId` is null on an event without a user, and `userLocale` is null on every gateway event.
 
-That's why `t` falls back to `guildLocale` and then to the `'en-US'` messages.
+That's why `settings` returns the defaults when `guildId` is null.
 
-To type `this.t` on every handler, attach the plugin and run [`seedcord codegen`](/plugins/typing). Codegen writes one row for each key, and TypeScript reads the row's type from the function's return type. Leave the `dispatchMembers` object without a type annotation. With one, like `Record<string, (origin: DispatchOrigin) => unknown>`, `this.t` becomes `unknown`.
+To type `this.settings` on every handler, attach the plugin and run [`seedcord codegen`](/plugins/typing). Codegen writes one row for each key, and TypeScript reads the row's type from the function's return type. Leave the `dispatchMembers` object without a type annotation. With one, like `Record<string, (origin: DispatchOrigin) => unknown>`, `this.settings` becomes `unknown`.
 
-```ts twoslash title="src/handlers/GreetCommand.ts"
+```ts twoslash title="src/handlers/LimitsCommand.ts"
 // ---cut-start---
 import { SlashHandler, SlashRoute } from '@seedcord/gateway';
 
+interface Settings {
+    logChannel: string | null;
+    maxWarnings: number;
+}
+
 declare module '@seedcord/gateway' {
     interface DispatchMemberValues {
-        t: (key: string) => string;
+        settings: Settings;
     }
     interface SlashRegistry {
-        greet: { options: {}; cache: 'cached' };
+        limits: { options: {}; cache: 'cached' };
     }
 }
 // ---cut-end---
-@SlashRoute('greet')
-export class GreetCommand extends SlashHandler<'greet'> {
+@SlashRoute('limits')
+export class LimitsCommand extends SlashHandler<'limits'> {
     public async execute(): Promise<void> {
-        await this.reply(this.t('greet'));
-        //                    ^?
+        const { maxWarnings } = this.settings;
+        //                           ^?
+        await this.reply(`Members get ${maxWarnings} warnings.`);
     }
 }
 ```
 
-`this.t` has the type that the `t` function returns. [Middleware](/checks/middleware) reads `this.t` too. [Gates](/checks/gates) and a [`Notice`](ref:core/Notice)'s `render` read it as `ctx.t`.
+`this.settings` has the type that the `settings` function returns. [Middleware](/checks/middleware) reads `this.settings` too. [Gates](/checks/gates) and a [`Notice`](ref:core/Notice)'s `render` read it as `ctx.settings`.
 
 seedcord runs every plugin's `dispatchMembers` functions at the same time, and the handler waits until they've all returned or one has thrown. They run before middleware and gates, even for an interaction that a gate then refuses. So a slow function spends part of the [three seconds](/replying) that Discord gives a bot to answer an interaction. They also run for [autocomplete](/commands/autocomplete), which Discord sends as the user types. If only a few handlers need a value, give your plugin a method and call it through `this.core` in those handlers.
 
@@ -259,7 +267,7 @@ export class Uptime extends Plugin {
 
 Import `CoreBase` from the package you import `Plugin` from. On the `@seedcord/core/plugin` base, that's `@seedcord/core`, which a new bot doesn't install. Add it to your bot, and list it as a peer dependency when you publish the plugin, so the bot and the plugin share one copy. With two copies, `attach` rejects the plugin with the code `CorePluginFromOtherCore`. The `peerDependencies` entry is in [Publishing](/writing-plugins/publishing#the-peer-entry).
 
-The second argument to `super()` is an optional [`PluginLifecycleSpec`](ref:core/PluginLifecycleSpec), and every field in it is optional too. `init` and `dispose` can each take a `phase`, like [`StartupPhase.Login`](ref:core/StartupPhase), and a `timeout` in milliseconds. `ready` can take a `timeout`. Without them, `init()` runs in Configuration, `dispose()` runs in Disconnect, and the timeouts are 15000ms for `init()` and `ready()` and 10000ms for `dispose()`. A plugin that declares a `transport` or a `runtime` has to pass the spec, as [Where it runs](/writing-plugins/runtimes) shows. [The lifecycle page](/plugins/lifecycle#moving-a-method-to-another-phase) has a sample.
+The second argument to `super()` is an optional [`PluginLifecycleSpec`](ref:core/PluginLifecycleSpec), and every field in it is optional too. `init` can take a [`StartupPhase`](ref:core/StartupPhase) and `dispose` a [`ShutdownPhase`](ref:core/ShutdownPhase), each with a `timeout` in milliseconds. `ready` can take a `timeout`. Without them, `init()` runs in Configuration, `dispose()` runs in Disconnect, and the timeouts are 15000ms for `init()` and `ready()` and 10000ms for `dispose()`. A plugin that declares a `transport` or a `runtime` has to pass the spec, as [Where it runs](/writing-plugins/runtimes) shows. [The lifecycle page](/plugins/lifecycle#moving-a-method-to-another-phase) has a sample.
 
 <Callout type="warning">
 
@@ -301,45 +309,47 @@ Log through [`this.logger`](ref:core/Plugin.logger). It exists from the construc
 
 ## Keeping records
 
-A plugin that schedules jobs or tracks how far a sync got needs to read those records again after a restart. [`this.kv`](ref:core/Plugin.kv) is a key-value store for your plugin. It stores records in the bot's [kv driver](/built-ins/drivers), under your plugin's key. The bot's own [`core.kv`](ref:core/CoreBase.kv) and every other plugin write under their own prefixes, so the records don't mix. Records are stored as JSON, which is why the sample below types `runAt` as a string. [Built-ins](/built-ins/) has the other collection methods and what JSON keeps.
+A plugin that tracks posted messages or how far a sync got needs to read those records again after a restart. [`this.kv`](ref:core/Plugin.kv) is a key-value store for your plugin. It stores records in the bot's [kv driver](/built-ins/drivers), under your plugin's key. The bot's own [`core.kv`](ref:core/CoreBase.kv) and every other plugin write under their own prefixes, so the records don't mix. Records are stored as JSON, which is why the sample below types `postedAt` as a string. [Built-ins](/built-ins/) has the other collection methods and what JSON keeps.
 
 ```ts twoslash
 import { Plugin } from '@seedcord/gateway';
 // ---cut---
-interface Job {
+interface Post {
     channelId: string;
-    runAt: string;
+    postedAt: string;
 }
 
-export class Reminders extends Plugin {
-    private readonly jobs = this.kv.collection<Job>('job');
+export class Starboard extends Plugin {
+    private readonly posts = this.kv.collection<Post>('post');
+    private readonly tracked = new Map<string, Post>();
 
     public async init(): Promise<void> {}
 
     public override async ready(): Promise<void> {
-        for await (const [id, job] of this.jobs.entries()) {
-            this.schedule(id, job);
+        for await (const [id, post] of this.posts.entries()) {
+            this.track(id, post);
         }
     }
 
-    public async add(id: string, job: Job): Promise<void> {
-        await this.jobs.set(id, job);
-        this.schedule(id, job);
+    public async add(id: string, post: Post): Promise<void> {
+        await this.posts.set(id, post);
+        this.track(id, post);
     }
 
-    private schedule(id: string, job: Job): void {
-        this.logger.debug(`${id} runs at ${job.runAt}`);
+    private track(id: string, post: Post): void {
+        this.tracked.set(id, post);
+        this.logger.debug(`${id} posted at ${post.postedAt}`);
     }
 }
 ```
 
-`add` saves a job before it schedules it, so a crash between the two still leaves the job for `ready()` to find after a restart. The restore runs in `ready()` after the bot has started. If a job is already due by then, a real `schedule()` sends its message right away.
+`add` saves a post before it tracks it, so a crash between the two still leaves the post for `ready()` to find after a restart. The restore runs in `ready()` after the bot has started. By then, a real `track()` can fetch the starred message from Discord.
 
-Handlers can call `add()` while `ready()` is still restoring, so the same id can reach `schedule()` twice. Make `schedule()` replace any timer it already holds for that id. A large collection can also take longer to restore than the 15 seconds `ready()` gets by default, and some drivers can't list their records at all. [Drivers](/built-ins/drivers) lists which ones.
+Handlers can call `add()` while `ready()` is still restoring, so the same id can reach `track()` twice. Keep `track()` safe to call twice for one id, like the `Map` here, which replaces the first entry. A large collection can also take longer to restore than the 15 seconds `ready()` gets by default, and some drivers can't list their records at all. [Drivers](/built-ins/drivers) lists which ones.
 
-`jobs` reads `this.kv` in a field initializer. That works because `attach` sets it before your constructor runs, so the constructor and every method can read it too. Each key keeps its own records:
+`posts` reads `this.kv` in a field initializer. That works because `attach` sets it before your constructor runs, so the constructor and every method can read it too. Each key keeps its own records:
 
-- If a bot attaches `Reminders` twice under two keys, each one keeps its own jobs.
+- If a bot attaches `Starboard` twice under two keys, each one keeps its own posts.
 - If the bot renames the key, the plugin starts empty. The driver still holds the records under the old key.
 
 The default driver keeps records in memory, so a restart loses them. To keep them, set `kv` in your bot's config to a driver that writes somewhere else. [Drivers](/built-ins/drivers) has a sample for each backend.

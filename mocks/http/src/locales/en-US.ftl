@@ -9,5 +9,5 @@ pings = Pinged **{ $count ->
    *[other] { $count } times
 }**
 asked-in = Asked in **{ $locale }**
-roll = { $actor } rolled **{ $value }** on a d{ $sides }
+roll = { $actor } rolled **{ $value }** on a d{ $sides } (#{ $count })
 roll-again = Roll again

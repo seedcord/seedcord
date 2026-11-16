@@ -13,7 +13,7 @@ import type mongoose from 'mongoose';
  * Base class for MongoDB service layers
  *
  * Provides typed access to MongoDB collections through Mongoose models.
- * Services are automatically registered with the Mongoose plugin when instantiated.
+ * The plugin builds each service's model from its `schema` and constructs the service for you.
  *
  * @typeParam Doc - The document type this service manages
  * @example
@@ -44,15 +44,12 @@ export abstract class MongooseService<Doc extends MongooseDocument = MongooseDoc
     ) {
         const ctor = this.constructor;
 
-        const key = Reflect.getMetadata(ServiceMetadataKey, ctor) as string | undefined;
-        if (!key) {
+        if (!Reflect.hasMetadata(ServiceMetadataKey, ctor)) {
             throw new SeedcordTypeError(SeedcordErrorCode.PluginServiceDecoratorMissing, [
                 '@RegisterMongooseService',
                 ctor.name
             ]);
         }
-
-        db._register(key, this);
     }
 }
 

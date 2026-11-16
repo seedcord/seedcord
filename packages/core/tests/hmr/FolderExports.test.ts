@@ -90,6 +90,18 @@ describe('FolderExports', () => {
         });
     });
 
+    describe('scan', () => {
+        it('returns what is() accepts once each, without registering it', async () => {
+            write('Ping.mjs', 'export class Ping {}\nexport const helper = 1;\n');
+            write('index.mjs', "export { Ping } from './Ping.mjs';\n");
+
+            const found = await folder.scan();
+
+            expect(found.map((unit) => unit.name)).toEqual(['Ping']);
+            expect(register).not.toHaveBeenCalled();
+        });
+    });
+
     describe('saves outside the folder', () => {
         it('ignores a sibling directory that shares the folder prefix', async () => {
             const siblingDir = join(dir, 'commands-extra');

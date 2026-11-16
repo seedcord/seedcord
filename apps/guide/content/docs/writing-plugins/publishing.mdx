@@ -7,7 +7,7 @@ Someone looking for a plugin searches npm for seedcord, and that search reads pa
 
 ## The peer entry
 
-Put whichever package you import `Plugin` from in `peerDependencies`, with the versions you tested against. A peer dependency is a package that your plugin expects the bot to install. Your plugin uses the bot's copy. Mongoose declares `@seedcord/core` at `>=0.2.0 <1.0.0` since it extends the base from `@seedcord/core/plugin`. Below 1.0, a breaking change can ship in a minor, so a plugin written for 0.2 can break on 0.3. The range tells people which versions work before they install. Keep the same package in `devDependencies` for your own builds.
+Put whichever package you import `Plugin` from in `peerDependencies`, with the versions you tested against. A peer dependency is a package that your plugin expects the bot to install. Your plugin uses the bot's copy. Below 1.0, a breaking change can ship in a minor, so the range tells people which versions work before they install. Keep the same package in `devDependencies` for your own builds.
 
 The entry also controls how the `seedcord` CLI loads your plugin. `seedcord dev`, `build`, and `codegen` run the bot [through Vite](/build), which evaluates the bot's `@seedcord/*` packages itself. They read each installed package's `dependencies` and `peerDependencies`, and load one that lists a `@seedcord/*` package through Vite too. If a package doesn't list one, Node loads it. In a test, such a plugin attached fine from a plain Node script, then failed under `seedcord codegen` with `CorePluginFromOtherCore`. Node and Vite each held an instance of `@seedcord/core`, though only one copy was installed. A `devDependencies` entry doesn't count.
 
@@ -17,7 +17,7 @@ This package holds a plugin on the `@seedcord/core/plugin` base that reads files
 
 ```json title="package.json"
 {
-    "name": "seedcord-plugin-locales",
+    "name": "seedcord-plugin-tags",
     "version": "0.1.0",
     "type": "module",
     "keywords": ["seedcord", "plugin"],
@@ -99,10 +99,10 @@ These results come from pnpm, with a plugin that lists `@seedcord/core` and `@se
 
 | setup | in the bot | copies of `@seedcord/core` | after you change the plugin |
 | --- | --- | --- | --- |
-| tarball | `pnpm add ../locales/seedcord-plugin-locales-0.1.1.tgz` | one | bump the version, build, pack, add the new file |
-| `file:` folder | `pnpm add file:../locales` | one | build, then `pnpm install` |
-| workspace | `"seedcord-plugin-locales": "workspace:*"` | one | build the plugin |
-| `link:` | `pnpm add link:../locales` | two | switch to a workspace |
+| tarball | `pnpm add ../tags/seedcord-plugin-tags-0.1.1.tgz` | one | bump the version, build, pack, add the new file |
+| `file:` folder | `pnpm add file:../tags` | one | build, then `pnpm install` |
+| workspace | `"seedcord-plugin-tags": "workspace:*"` | one | build the plugin |
+| `link:` | `pnpm add link:../tags` | two | switch to a workspace |
 
 {/* prettier-ignore-end */}
 
@@ -124,7 +124,7 @@ const botCore = findPackageJSON(
 );
 const pluginCore = findPackageJSON(
     '@seedcord/core',
-    import.meta.resolve('seedcord-plugin-locales')
+    import.meta.resolve('seedcord-plugin-tags')
 );
 console.log(
     realpathSync(botCore) === realpathSync(pluginCore)
@@ -143,15 +143,15 @@ Packing a tarball tests exactly what a publish would ship, and the pack command 
 
 Then install the new file in your bot.
 
-<Shell add="../locales/seedcord-plugin-locales-0.1.2-dev.0.tgz" />
+<Shell add="../tags/seedcord-plugin-tags-0.1.2-dev.0.tgz" />
 
 ### Telling whether the new code loaded
 
-Press `r` in the terminal running `seedcord dev`. It stops the running bot and starts a new session, which loads `bot.ts` again and runs every plugin's constructor and `init()` again. The status line shows "Starting the bot…" and then the bot's name followed by "is ready!". That status line doesn't mention your plugin, so put a log line in its `init()` while you test, like `this.logger.info('locales v2')`. If the old text still prints after `r`, the old build is still installed.
+Press `r` in the terminal running `seedcord dev`. It stops the running bot and starts a new session, which loads `bot.ts` again and runs every plugin's constructor and `init()` again. The status line shows "Starting the bot…" and then the bot's name followed by "is ready!". That status line doesn't mention your plugin, so put a log line in its `init()` while you test, like `this.logger.info('tags v2')`. If the old text still prints after `r`, the old build is still installed.
 
 ### Testing in a workspace
 
-In a pnpm workspace, the bot's `node_modules` links to the plugin folder, so a rebuilt `dist` is available without an install. A bot made by `create-seedcord` already has a `pnpm-workspace.yaml`, which holds only pnpm settings. Keep the plugin in a folder inside the bot, like `packages/locales`, and add a `packages` list above those settings. A plugin folder outside the bot can't join it since a workspace has one `pnpm-workspace.yaml`.
+In a pnpm workspace, the bot's `node_modules` links to the plugin folder, so a rebuilt `dist` is available without an install. A bot made by `create-seedcord` already has a `pnpm-workspace.yaml`, which holds only pnpm settings. Keep the plugin in a folder inside the bot, like `packages/tags`, and add a `packages` list above those settings. A plugin folder outside the bot can't join it since a workspace has one `pnpm-workspace.yaml`.
 
 ```yaml title="pnpm-workspace.yaml"
 packages:
@@ -160,7 +160,7 @@ allowBuilds:
     unrs-resolver: false
 ```
 
-Add `"seedcord-plugin-locales": "workspace:*"` to the bot's dependencies and run `pnpm install`. In the plugin's `devDependencies`, use the same `@seedcord` versions that the bot installs. Build with `pnpm -C packages/locales build`, then press `r`. The `root` in `seedcord.config.ts` is `./src`, so the bot doesn't treat `packages/` as part of its code.
+Add `"seedcord-plugin-tags": "workspace:*"` to the bot's dependencies and run `pnpm install`. In the plugin's `devDependencies`, use the same `@seedcord` versions that the bot installs. Build with `pnpm -C packages/tags build`, then press `r`. The `root` in `seedcord.config.ts` is `./src`, so the bot doesn't treat `packages/` as part of its code.
 
 A [server build](/build/server) leaves your plugin as an import in `dist`, so the built bot loads it from `node_modules`. Deploy it from a tarball, `file:` or workspace install, which give one copy. Don't deploy it from a `link:`.
 

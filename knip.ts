@@ -56,10 +56,12 @@ export default {
                 '@seedcord/core',
                 '@keyv/sqlite',
                 '@seedcord/plugin-i18n',
-                '@seedcord/plugin-kysely-postgres',
+                '@seedcord/plugin-kysely',
                 '@seedcord/plugin-mongoose',
                 '@seedcord/plugin-tasks',
+                '@types/better-sqlite3',
                 '@types/pg',
+                'better-sqlite3',
                 'db0',
                 'discord-api-types',
                 'discord.js',
@@ -94,7 +96,7 @@ export default {
         'packages/types': typeTestsOnly,
         'packages/utils': { entry: [TYPE_TESTS], ignore: ['tests/files/fixtures/**'] },
         'plugins/i18n': typeTestsAndFixtures,
-        'plugins/kysely-postgres': typeTestsOnly,
+        'plugins/kysely': typeTestsOnly,
         'plugins/mongoose': typeTestsOnly,
         'plugins/tasks': typeTestsAndFixtures,
         'cli/seedcord': {
@@ -103,6 +105,7 @@ export default {
         },
         'cli/create-seedcord': typeTestsOnly,
         'tooling/cli-prompts': { entry: ['playground/preview.ts'] },
+        'tooling/plugin-utils': { entry: [TEST_FIXTURES] },
         'tooling/docs-generator': { ignore: ['tests/mock/**', 'tests/mock-base/**'] },
         'tooling/eslint-config': {
             ignoreDependencies: [

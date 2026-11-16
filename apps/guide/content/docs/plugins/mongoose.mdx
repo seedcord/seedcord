@@ -3,7 +3,7 @@ title: Mongoose
 description: Connect a gateway or http bot to MongoDB with the mongoose plugin, which opens and closes the connection with your bot.
 ---
 
-A bot that stores data in MongoDB needs the connection open before the first handler reads it, and closed when the bot shuts down. [`@seedcord/plugin-mongoose`](ref:plugin-mongoose) opens that connection during startup and loads your service classes from a directory. The plugin opens and closes the connection. Everything else is plain [Mongoose](https://mongoosejs.com/docs/), so schemas and queries you've written with Mongoose before work the same here.
+[`@seedcord/plugin-mongoose`](ref:plugin-mongoose) connects to MongoDB and loads your service classes when the bot starts, then disconnects when it stops. Your schemas and queries are plain [Mongoose](https://mongoosejs.com/docs/).
 
 <Shell add="@seedcord/plugin-mongoose mongoose" />
 
@@ -21,7 +21,7 @@ export const seedcord = new Seedcord({
     },
     subscribers: { path: null }
 }).attach('db', Mongoose, {
-    dir: './services',
+    path: './services',
     uri: 'mongodb://localhost:27017/',
     name: 'seedcord',
     connectionOptions: { serverSelectionTimeoutMS: 5000 },
@@ -31,9 +31,9 @@ export const seedcord = new Seedcord({
 export default seedcord;
 ```
 
-This sample builds a gateway bot. The same `attach` call works on an http `Seedcord` from `@seedcord/http` that runs on a server. Mongoose is a server-only plugin, so on an http bot for Cloudflare Workers the same call is a compile error, and a cast that gets past it throws `CorePluginScopeMismatch`. A Workers bot [attaches other plugins](/plugins#a-plugin-declares-where-it-runs) as usual.
+This sample builds a gateway bot. The same `attach` call works on an http `Seedcord` from `@seedcord/http` that runs on a server. On Cloudflare Workers it's a compile error because the plugin [needs a server](/plugins#a-plugin-declares-where-it-runs), and a cast that gets past it throws `CorePluginScopeMismatch`.
 
-A real bot reads the connection string from its environment. `process.env.MONGO_URI` has the type `string | undefined`, which `uri` rejects. `Envapter.getRequired('MONGO_URI', Converters.String)` from envapt returns a `string`, and it throws when the variable is unset. [Env files and modes](/build/env) covers reading config that way.
+Read `uri` from the environment with envapt's `Envapter.getRequired`, which throws if the variable is unset. `uri` rejects `process.env.MONGO_URI` because its type is `string | undefined`. [Env files and modes](/build/env) has the details.
 
 ## The options
 
@@ -41,7 +41,7 @@ A real bot reads the connection string from its environment. `process.env.MONGO_
 
 | option | required | what it sets |
 | --- | --- | --- |
-| `dir` | yes | the folder that the plugin scans for service classes. A relative path is relative to `root`, and the folder has to be inside it, as [the folder rules](/plugins) describe |
+| `path` | yes | the folder that the plugin scans for service classes. A relative path is relative to `root`, and the folder has to be inside it, as [the folder rules](/plugins) describe |
 | `uri` | yes | the MongoDB connection string |
 | `name` | yes | the database, passed to mongoose as `dbName` |
 | `connectionOptions` | no | any `mongoose.ConnectOptions`, merged over what the plugin sets |
@@ -59,9 +59,9 @@ When the environment is `production`, the plugin adds `tls: true` and `ssl: true
 
 ## Startup and shutdown
 
-A bot that fails halfway through startup can leave its MongoDB connection open. The mongoose plugin closes that connection for you. `init()` connects, then loads every service class from `dir`. If either step fails, `init()` closes the connection before it rethrows the error.
+A bot that fails halfway through startup can leave its MongoDB connection open. The mongoose plugin closes that connection for you. `init()` connects, then loads every service class from `path`. If either step fails, `init()` closes the connection before it rethrows the error.
 
-If the connection fails, `init()` throws `PluginConnectionFailed`. Its message includes the database from your `name` option, and mongoose's own error is in its `cause`.
+If the connection fails, `init()` throws `PluginConnectionFailed`. Its message includes the database from your `name` option and mongoose's own message, and the full mongoose error is in its `cause`.
 
 Shutdown runs the same steps backwards. `dispose()` clears the service registry and every loaded model, then closes the connection. If closing fails, `dispose()` throws `PluginDisconnectFailed`.
 
@@ -97,8 +97,8 @@ The handler reads `readyState` from Mongoose's `Connection`, which is `1` while 
 
 <Callout type="warning">
 
-`connection` and `services` are only ready after `init()` resolves. If you read `connection` before then, you get `undefined`, even though its type marks it as always set. Reading `services` before then throws `PluginServicesNotReady`.
+`connection` and `services` are only ready after `init()` resolves. Reading either one before then, or after `dispose()`, throws `PluginNotReady`.
 
 </Callout>
 
-Next, write the [service classes](/plugins/mongoose-services) the plugin loads from `dir`.
+Next, write the [service classes](/plugins/mongoose-services) the plugin loads from `path`.

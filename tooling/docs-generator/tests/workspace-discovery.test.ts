@@ -17,7 +17,7 @@ describe('workspace discovery', () => {
     it('finds packages under every workspace root', async () => {
         const dirs = await discover();
         expect(dirs).toContain('packages/gateway');
-        expect(dirs).toContain('plugins/kysely-postgres');
+        expect(dirs).toContain('plugins/kysely');
         expect(dirs).toContain('cli/seedcord');
         expect(dirs).toContain('tooling/eslint-config');
     });

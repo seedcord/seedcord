@@ -3,12 +3,17 @@ import 'reflect-metadata';
 import { Plugin } from '@seedcord/core/plugin';
 import { SeedcordErrorCode, paint } from '@seedcord/errors';
 import { SeedcordError } from '@seedcord/errors/internal';
+import { PluginServices } from '@seedcord/plugin-utils';
 import { keepDefined } from '@seedcord/utils';
+import { errorReason } from '@seedcord/utils/internal';
 import { Envapter } from 'envapt';
 import mongoose from 'mongoose';
 
-import { MongooseServiceRegistry } from './MongooseServiceRegistry';
+import { ServiceMetadataKey } from './decorators/RegisterMongooseService';
+import { MongooseModels } from './MongooseModels';
+import { MongooseService } from './MongooseService';
 
+import type { MongooseServiceConstructor } from './MongooseService';
 import type { MongooseOptions } from './types/MongooseOptions';
 import type { MongooseServices } from './types/MongooseServices';
 import type { CoreBase } from '@seedcord/core';
@@ -25,12 +30,11 @@ import type { Constructor } from 'type-fest';
 export class Mongoose extends Plugin<{ transport: 'any'; runtime: 'server' }> {
     public static readonly id = '@seedcord/plugin-mongoose';
 
-    private isInitialised = false;
-    private servicesReady = false;
-    private inFlight: Promise<void> | null = null;
     private readonly uri: string;
 
-    private readonly serviceRegistry: MongooseServiceRegistry;
+    private client: MongooseInstance | null = null;
+    private readonly models: MongooseModels;
+    private readonly serviceRegistry: PluginServices<MongooseServiceConstructor, MongooseServices>;
 
     /**
      * Map of all loaded services. Keys come from `@RegisterMongooseService('key')`.
@@ -38,14 +42,20 @@ export class Mongoose extends Plugin<{ transport: 'any'; runtime: 'server' }> {
      * @throws A **SeedcordError** if accessed before the plugin finishes initializing.
      */
     public get services(): MongooseServices {
-        if (!this.servicesReady) {
-            throw new SeedcordError(SeedcordErrorCode.PluginServicesNotReady, [this.constructor.name]);
-        }
         return this.serviceRegistry.map;
     }
 
-    /** Exposed Mongoose instance once `init` completes. */
-    declare public connection: MongooseInstance;
+    /**
+     * The Mongoose instance that `mongoose.connect()` returned.
+     *
+     * @throws A **SeedcordError** if accessed before the plugin connects.
+     */
+    public get connection(): MongooseInstance {
+        if (!this.client) {
+            throw new SeedcordError(SeedcordErrorCode.PluginNotReady, [this.constructor.name, 'connection']);
+        }
+        return this.client;
+    }
 
     constructor(
         host: CoreBase,
@@ -53,24 +63,25 @@ export class Mongoose extends Plugin<{ transport: 'any'; runtime: 'server' }> {
     ) {
         super(host, { runtime: 'server', dispose: keepDefined({ timeout: options.timeout }) });
         this.uri = options.uri;
-        this.serviceRegistry = new MongooseServiceRegistry(this, this.core, this.logger, options.dir);
+        this.models = new MongooseModels(this.logger);
+        this.serviceRegistry = new PluginServices({
+            pluginName: this.constructor.name,
+            path: options.path,
+            logger: this.logger,
+            base: MongooseService,
+            metadataKey: ServiceMetadataKey,
+            decorator: '@RegisterMongooseService',
+            create: (Service) => new Service(this, this.core, this.models.build(Service)),
+            remove: (Service) => this.models.remove(Service)
+        });
     }
 
     /** @internal For use in dev mode */
     public override async onHmr(event: HmrUpdateEvent): Promise<void> {
-        await this.serviceRegistry.onHmr(event);
+        await this.serviceRegistry.handle(event);
     }
 
-    public init(): Promise<void> {
-        if (this.isInitialised) return Promise.resolve();
-        // racing callers share one attempt, and clearing it on settle lets the next call start fresh
-        this.inFlight ??= this.runInit().finally(() => {
-            this.inFlight = null;
-        });
-        return this.inFlight;
-    }
-
-    private async runInit(): Promise<void> {
+    public async init(): Promise<void> {
         try {
             await this.connect();
             await this.serviceRegistry.load();
@@ -79,22 +90,19 @@ export class Mongoose extends Plugin<{ transport: 'any'; runtime: 'server' }> {
             await this.disconnect().catch((error: unknown) => this.logger.error('failed to disconnect', error));
             throw caught;
         }
-        this.servicesReady = true;
-        this.isInitialised = true;
     }
 
     public override async dispose(): Promise<void> {
         await this.disconnect();
     }
 
-    // every service class fits this, whatever its document type
-    public override async codegen(): Promise<{ services: Record<string, Constructor<object>> }> {
-        const found = await Array.fromAsync(this.serviceRegistry.serviceClassesIn(this.options.dir));
-        return { services: Object.fromEntries(found.map(({ key, Service }) => [key, Service])) };
+    // a service typed on its own document doesn't fit MongooseServiceConstructor, but every service fits Constructor<object>
+    public override codegen(): Promise<{ services: Record<string, Constructor<object>> }> {
+        return this.serviceRegistry.codegen();
     }
 
     private async connect(): Promise<void> {
-        this.connection = await mongoose
+        this.client = await mongoose
             .connect(this.uri, {
                 dbName: this.options.name,
                 ...(Envapter.isProduction && { tls: true, ssl: true }),
@@ -105,32 +113,27 @@ export class Mongoose extends Plugin<{ transport: 'any'; runtime: 'server' }> {
                 return conn;
             })
             .catch((err) => {
-                throw new SeedcordError(SeedcordErrorCode.PluginConnectionFailed, ['MongoDB', this.options.name], {
-                    cause: err
-                });
+                throw new SeedcordError(
+                    SeedcordErrorCode.PluginConnectionFailed,
+                    ['MongoDB', errorReason(err), 'uri', this.options.name],
+                    { cause: err }
+                );
             });
     }
 
     private async disconnect(): Promise<void> {
         this.serviceRegistry.clear();
-        this.servicesReady = false;
-        this.isInitialised = false;
+        this.models.clear();
 
-        this.serviceRegistry.clearModels();
+        const { client } = this;
+        if (!client) return;
+        this.client = null;
 
-        // eslint-disable-next-line @typescript-eslint/no-unnecessary-condition -- connect() may have failed before assigning, so there is nothing to disconnect
-        if (!this.connection) return;
-
-        await this.connection
+        await client
             .disconnect()
             .then(() => this.logger.info(paint.coral.bold('Disconnected from MongoDB')))
             .catch((err: unknown) => {
                 throw new SeedcordError(SeedcordErrorCode.PluginDisconnectFailed, ['MongoDB'], { cause: err });
             });
-    }
-
-    /** @internal */
-    _register(key: string, instance: unknown): void {
-        this.serviceRegistry.register(key, instance);
     }
 }

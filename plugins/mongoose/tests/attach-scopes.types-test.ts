@@ -5,7 +5,7 @@ import type { PluginHost } from '@seedcord/core/plugin';
 import type { Seedcord as GatewaySeedcord } from '@seedcord/gateway';
 import type { Seedcord as HttpSeedcord } from '@seedcord/http';
 
-const options: MongooseOptions = { uri: 'mongodb://localhost:27017', name: 'test', dir: '/services' };
+const options: MongooseOptions = { uri: 'mongodb://localhost:27017', name: 'test', path: '/services' };
 
 function probeGatewayAccepts(bot: GatewaySeedcord): void {
     bot.attach('db', Mongoose, options);

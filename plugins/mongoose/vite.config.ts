@@ -7,6 +7,7 @@ export default createViteConfig(import.meta.url, {
         setupFiles: ['./tests/setup.ts']
     },
     pack: createTsdownConfig({
-        entry: ['src/index.ts']
+        entry: ['src/index.ts'],
+        deps: { alwaysBundle: ['@seedcord/plugin-utils'] }
     })
 });

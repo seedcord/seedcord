@@ -1,35 +1,26 @@
-import fs from 'node:fs/promises';
-import path from 'node:path';
+import { core, it as base } from '@seedcord/plugin-utils/testing';
+import mongoose from 'mongoose';
+import { vi } from 'vite-plus/test';
 
-export class TestEnvironment {
-    public readonly rootDir: string;
+import { Mongoose } from '#src/Mongoose';
 
-    constructor(prefix = 'seedcord-test-') {
-        const RADIX = 36;
-        this.rootDir = path.join(process.cwd(), 'tests', 'temp', prefix + Math.random().toString(RADIX).slice(2));
+import type { MongooseOptions } from '#src/types/MongooseOptions';
+
+type MongooseWith = (options?: Partial<MongooseOptions>) => Mongoose;
+
+export const it = base.extend<{ mongooseWith: MongooseWith }>({
+    mongooseWith: async ({ testEnv }, use) => {
+        await use(
+            (options = {}) =>
+                new Mongoose(core, {
+                    uri: 'mongodb://localhost:27017',
+                    name: 'test',
+                    path: testEnv.resolvePath('services'),
+                    ...options
+                })
+        );
+        // every test file shares the mongoose mock from setup.ts. a model left here is still registered in the next test
+        for (const name of Object.keys(mongoose.models)) Reflect.deleteProperty(mongoose.models, name);
+        vi.clearAllMocks();
     }
-
-    public async setup(): Promise<void> {
-        await fs.mkdir(this.rootDir, { recursive: true });
-    }
-
-    public async teardown(): Promise<void> {
-        await fs.rm(this.rootDir, { recursive: true, force: true });
-    }
-
-    public resolvePath(relativePath: string): string {
-        return path.resolve(this.rootDir, relativePath);
-    }
-
-    public async createFile(relativePath: string, content: string): Promise<string> {
-        const filePath = this.resolvePath(relativePath);
-        await fs.mkdir(path.dirname(filePath), { recursive: true });
-        await fs.writeFile(filePath, content, 'utf8');
-        return filePath;
-    }
-
-    public async removeFile(relativePath: string): Promise<void> {
-        const filePath = this.resolvePath(relativePath);
-        await fs.rm(filePath, { force: true });
-    }
-}
+});

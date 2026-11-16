@@ -24,12 +24,16 @@
         "@discordjs/builders": "catalog:peer",
         "@seedcord/http": "workspace:^",
         "@seedcord/plugin-i18n": "workspace:^",
+        "@seedcord/plugin-kysely": "workspace:^",
+        "better-sqlite3": "catalog:deps",
         "discord-api-types": "catalog:deps",
-        "envapt": "catalog:peer"
+        "envapt": "catalog:peer",
+        "kysely": "catalog:peer"
     },
     "devDependencies": {
         "@seedcord/eslint-config": "workspace:^",
         "@seedcord/tsconfig": "workspace:^",
+        "@types/better-sqlite3": "catalog:deps",
         "seedcord": "workspace:^"
     },
     "peerDependencies": {
