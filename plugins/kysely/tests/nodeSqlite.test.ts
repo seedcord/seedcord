@@ -31,7 +31,9 @@ describe('nodeSqlite', () => {
     it('rejects a Date in the first parameter instead of shifting the others', async () => {
         const db = await notesTable();
 
-        await expect(db.insertInto('notes').values({ first: new Date(), second: 'b' }).execute()).rejects.toThrow();
+        await expect(db.insertInto('notes').values({ first: new Date(), second: 'b' }).execute()).rejects.toThrow(
+            /cannot be bound/
+        );
         expect(await db.selectFrom('notes').selectAll().execute()).toEqual([]);
     });
 });

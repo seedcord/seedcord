@@ -32,7 +32,7 @@ export class Users extends KyselyService<'users'> {
     }
 
     public byId(id: number) {
-        return this.db.selectFrom(this.table).selectAll().where('id', '=', id).where('username', '!=', '').executeTakeFirst();
+        return this.db.selectFrom(this.table).selectAll().where('id', '=', id).executeTakeFirst();
     }
 }
 `;
@@ -57,29 +57,26 @@ describe.for([
     ['node:sqlite through nodeSqlite', memoryNodeSqlite],
     ['Postgres through PGlite', memoryPostgres]
 ] as const)('on %s', ([, dialect]) => {
-    it('runs the startup migration and a service query with two parameters', async ({ startedOn }) => {
+    // one test per dialect because PGlite takes about half a second to start
+    it('runs the startup migration, a service query, and a rolled-back transaction', async ({ startedOn }) => {
         const plugin = await startedOn(dialect);
         const users = usersOf(plugin);
 
         await users.add(1, 'ada');
         await users.add(2, 'bob');
+        await expect(
+            plugin.connection.transaction().execute(async (trx) => {
+                // justified: codegen hasn't typed the schema in these tests either
+                await trx
+                    .insertInto('users' as never)
+                    .values({ id: 3, username: 'gone' })
+                    .execute();
+                throw new Error('roll back');
+            })
+        ).rejects.toThrow('roll back');
 
-        expect(await users.byId(2)).toMatchObject({ id: 2, username: 'bob' });
         expect(await plugin.listPendingMigrations()).toEqual([]);
-    });
-
-    it('rolls back a transaction that throws', async ({ startedOn }) => {
-        const plugin = await startedOn(dialect);
-
-        const failed = plugin.connection.transaction().execute(async (trx) => {
-            await trx
-                .insertInto('users' as never)
-                .values({ id: 3, username: 'gone' })
-                .execute();
-            throw new Error('roll back');
-        });
-
-        await expect(failed).rejects.toThrow('roll back');
-        expect(await usersOf(plugin).byId(3)).toBeUndefined();
+        expect(await users.byId(2)).toMatchObject({ id: 2, username: 'bob' });
+        expect(await users.byId(3)).toBeUndefined();
     });
 });

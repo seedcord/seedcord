@@ -23,7 +23,7 @@ class RerollRow extends RowComponent<'button'> {
     }
 }
 
-async function rollLine(
+async function recordRoll(
     t: Translate,
     core: Core,
     userId: string,
@@ -41,7 +41,7 @@ async function rollLine(
 export class RollSlash extends SlashHandler<'roll'> {
     public async execute(): Promise<void> {
         const sides = this.options.getInteger('sides') ?? DEFAULT_SIDES;
-        const line = await rollLine(this.t, this.core, this.user.id, this.dispatch.require('actor'), sides);
+        const line = await recordRoll(this.t, this.core, this.user.id, this.dispatch.require('actor'), sides);
 
         await this.reply({ components: [line, new RerollRow(this.t, sides).component] });
     }
@@ -51,7 +51,7 @@ export class RollSlash extends SlashHandler<'roll'> {
 export class RerollButton extends ButtonHandler<[typeof RerollId]> {
     public async execute(): Promise<void> {
         const { sides } = this.params;
-        const line = await rollLine(this.t, this.core, this.user.id, this.dispatch.require('actor'), sides);
+        const line = await recordRoll(this.t, this.core, this.user.id, this.dispatch.require('actor'), sides);
 
         await this.update({ components: [line, new RerollRow(this.t, sides).component] });
     }

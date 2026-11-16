@@ -12,7 +12,7 @@ describe('Kysely Plugin Integration', () => {
             import { KyselyService, RegisterKyselyService } from '${pluginsPath}';
 
             @RegisterKyselyService('users')
-            export class UserService extends KyselyService<any> {}
+            export class UserService extends KyselyService {}
             `
         );
         const plugin = kyselyWith();
