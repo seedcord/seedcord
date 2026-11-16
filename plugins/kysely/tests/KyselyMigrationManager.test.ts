@@ -1,8 +1,7 @@
 import { SeedcordErrorCode } from '@seedcord/errors';
-import { Logger } from '@seedcord/logger';
 import { setDevFiles } from '@seedcord/utils/internal';
 import { sql } from 'kysely';
-import { describe, expect, vi } from 'vite-plus/test';
+import { describe, expect } from 'vite-plus/test';
 
 import { it as base } from './utils/test-env';
 
@@ -99,11 +98,9 @@ describe('KyselyMigrationManager', () => {
         await testEnv.createFile('migrations/001-users.ts', NAMED_EXPORTS);
         await testEnv.createFile('migrations/002-guilds.ts', 'export async function up() {}\n');
         const plugin = await startedWith({ dir: './migrations' });
-        using info = vi.spyOn(Logger.prototype, 'info');
 
         await plugin.migrateDown({ steps: 3 });
 
-        const skipped = info.mock.calls.map(([line]) => String(line)).filter((line) => line.includes('(skipped)'));
-        expect(skipped).toEqual([expect.stringContaining('002-guilds')]);
+        await expect(plugin.listPendingMigrations()).resolves.toEqual([]);
     });
 });

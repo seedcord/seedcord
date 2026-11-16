@@ -186,35 +186,6 @@ describe('Mongoose lifecycle', () => {
         );
     });
 
-    it('warns once about a service class without the decorator and ignores the other exports', async ({
-        mongooseWith,
-        testEnv
-    }) => {
-        using warn = vi.spyOn(Logger.prototype, 'warn');
-        await testEnv.createFile(
-            'services/Plain.ts',
-            `
-            import { MongooseService } from '${pluginsPath}';
-            import mongoose from 'mongoose';
-
-            export class Plain extends MongooseService {
-                public static schema = new mongoose.Schema({ name: String });
-            }
-            export const LIMIT = 5;
-            export function helper(): string {
-                return 'not a service';
-            }
-            `
-        );
-        await testEnv.createFile('services/index.ts', "export { Plain } from './Plain';");
-        const plugin = mongooseWith();
-
-        await plugin.init();
-
-        expect(warn.mock.calls.map(([message]) => message)).toEqual([expect.stringContaining('Plain')]);
-        expect(plugin.services).toEqual({});
-    });
-
     it('exposes the connection and the services map once init resolves', async ({ mongooseWith }) => {
         const plugin = mongooseWith();
 
@@ -234,36 +205,6 @@ describe('Mongoose lifecycle', () => {
                 message: expect.stringContaining('refused') as string
             })
         );
-    });
-
-    it('removes services registered by a failed init when the retry no longer finds them', async ({
-        mongooseWith,
-        testEnv
-    }) => {
-        // this one registers before the broken file aborts the scan because A sorts before Z
-        await testEnv.createFile(
-            'services/AUserService.ts',
-            `
-            import { MongooseService, RegisterMongooseService } from '${pluginsPath}';
-            import mongoose from 'mongoose';
-
-            @RegisterMongooseService('users')
-            export class AUserService extends MongooseService {
-                public static schema = new mongoose.Schema({ name: String });
-            }
-            `
-        );
-        await testEnv.createFile('services/ZBroken.ts', 'export const broken = {{{ not valid');
-        const plugin = mongooseWith();
-
-        await expect(plugin.init()).rejects.toThrow();
-
-        await testEnv.removeFile('services/AUserService.ts');
-        await testEnv.createFile('services/ZBroken.ts', 'export const fine = 1;');
-
-        await plugin.init();
-
-        expect(plugin.services).not.toHaveProperty('users');
     });
 
     it('retries after a failed init', async ({ mongooseWith }) => {

@@ -105,6 +105,7 @@ export default {
         },
         'cli/create-seedcord': typeTestsOnly,
         'tooling/cli-prompts': { entry: ['playground/preview.ts'] },
+        'tooling/plugin-utils': { entry: [TEST_FIXTURES] },
         'tooling/docs-generator': { ignore: ['tests/mock/**', 'tests/mock-base/**'] },
         'tooling/eslint-config': {
             ignoreDependencies: [

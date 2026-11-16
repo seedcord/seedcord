@@ -1,17 +1,11 @@
 import { Kysely } from '#src/Kysely';
 
-import { memorySqlite } from './utils/dialects';
-
 import type { KyselyOptions } from '#src/types/KyselyOptions';
 import type { PluginHost } from '@seedcord/core/plugin';
 import type { Seedcord as GatewaySeedcord } from '@seedcord/gateway';
 import type { Seedcord as HttpSeedcord } from '@seedcord/http';
 
-const options: KyselyOptions = {
-    dialect: memorySqlite,
-    migrations: { dir: '/migrations' },
-    dir: '/services'
-};
+declare const options: KyselyOptions;
 
 function probeGatewayAccepts(bot: GatewaySeedcord): void {
     bot.attach('sql', Kysely, options);

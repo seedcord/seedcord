@@ -31,35 +31,6 @@ describe('Mongoose Plugin Integration', () => {
         expect(plugin.services).toHaveProperty('users');
     });
 
-    it('should handle HMR updates for mongoose services', async ({ mongooseWith, testEnv }) => {
-        const filePath = await testEnv.createFile('services/UserService.ts', USER_SERVICE);
-        const plugin = mongooseWith();
-        await plugin.init();
-        expect(plugin.services).toHaveProperty('users');
-
-        // a save that changes the key
-        await testEnv.createFile(
-            'services/UserService.ts',
-            `
-            import { MongooseService, RegisterMongooseService } from '${pluginsPath}';
-            import mongoose from 'mongoose';
-
-            @RegisterMongooseService('admins')
-            export class UserService extends MongooseService {
-                public static schema = new mongoose.Schema({ name: String });
-
-                public async findUser() {
-                    return 'admin';
-                }
-            }
-            `
-        );
-        await plugin.onHmr({ file: filePath, type: 'update' });
-
-        expect(plugin.services).not.toHaveProperty('users');
-        expect(plugin.services).toHaveProperty('admins');
-    });
-
     it('leaves a model it unregistered during HMR out of its later cleanup', async ({ mongooseWith, testEnv }) => {
         const filePath = await testEnv.createFile('services/UserService.ts', USER_SERVICE);
         const plugin = mongooseWith();

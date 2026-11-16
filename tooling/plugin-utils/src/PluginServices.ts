@@ -47,7 +47,11 @@ export class PluginServices<TClass extends ServiceClass, TServices extends objec
     }
 
     public async load(): Promise<void> {
-        await this.files.load();
+        await this.files.load().catch((error: unknown) => {
+            // the files before the one that threw already registered their services
+            this.clear();
+            throw error;
+        });
         this.loaded = true;
         this.options.logger.utils.list(
             [`${paint.iris.bold(Object.keys(this.services).length)} services`],

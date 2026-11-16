@@ -5,20 +5,18 @@ import { it as base } from 'vite-plus/test';
 
 import type { CoreBase } from '@seedcord/core';
 
-const RADIX = 36;
-
 // the plugins never read core in their tests. this only satisfies the constructor
 export const core = {} as CoreBase;
 
 // a temporary folder for one test, removed when the test disposes it
-export class TestEnvironment {
+class TestEnvironment {
     private constructor(public readonly rootDir: string) {}
 
     // under the plugin's own folder because a written file has to resolve the plugin's node_modules
     public static async create(): Promise<TestEnvironment> {
-        const rootDir = path.join(process.cwd(), 'tests', 'temp', Math.random().toString(RADIX).slice(2));
-        await fs.mkdir(rootDir, { recursive: true });
-        return new TestEnvironment(rootDir);
+        const tempDir = path.join(process.cwd(), 'tests', 'temp');
+        await fs.mkdir(tempDir, { recursive: true });
+        return new TestEnvironment(await fs.mkdtemp(`${tempDir}${path.sep}`));
     }
 
     public async [Symbol.asyncDispose](): Promise<void> {
