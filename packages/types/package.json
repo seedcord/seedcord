@@ -1,6 +1,6 @@
 {
     "name": "@seedcord/types",
-    "version": "0.16.2",
+    "version": "0.17.0-next.0",
     "description": "Config shapes and shared types for seedcord bots",
     "keywords": [
         "discord-bot",

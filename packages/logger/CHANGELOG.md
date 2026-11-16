@@ -1,5 +1,17 @@
 # @seedcord/logger
 
+## 0.6.2-next.0
+
+### 🩹 Patch
+
+- Reworded error messages, CLI output, and TSDoc in plainer English. ([#449](https://github.com/seedcord/seedcord/pull/449))
+
+#### 📦 Seedcord packages
+
+- `@seedcord/errors` 0.15.1 → 0.16.0-next.0
+- `@seedcord/types` 0.16.2 → 0.17.0-next.0
+- `@seedcord/utils` 0.9.2 → 0.10.0-next.0
+
 ## 0.6.1
 
 ### 🩹 Patch

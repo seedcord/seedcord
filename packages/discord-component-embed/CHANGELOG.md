@@ -1,5 +1,11 @@
 # discord-component-embed
 
+## 1.1.1-next.0
+
+### 🩹 Patch
+
+- Reworded error messages, CLI output, and TSDoc in plainer English. ([#449](https://github.com/seedcord/seedcord/pull/449))
+
 ## 1.1.0
 
 ### 💥 Breaking

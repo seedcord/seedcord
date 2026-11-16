@@ -1,5 +1,34 @@
 # @seedcord/gateway
 
+## 0.11.0-next.0
+
+### 💥 Breaking
+
+- Fixed an error card posting publicly after `defer({ ephemeral: false })`. When a `send()` or `followUp()` passes a different `ephemeral` than the defer, seedcord now deletes the placeholder and sends a new message with that value. ([`3cfdb6d`](https://github.com/seedcord/seedcord/commit/3cfdb6d6ac81409786146a6a4d440040bd47c7ac))
+- Fixed a second `send()` after `defer()` replacing the first one. The first call fills the placeholder, and every `send()` after it now sends a new message, the same as after `reply()`. ([`3cfdb6d`](https://github.com/seedcord/seedcord/commit/3cfdb6d6ac81409786146a6a4d440040bd47c7ac))
+
+### ✨ Minor
+
+- Added `bot.interactions.ephemeral`. Set it to `false` to make replies public by default. ([#459](https://github.com/seedcord/seedcord/pull/459), thanks [@camdzic](https://github.com/camdzic))
+- A plugin can now set `dispatchMembers`, an object of functions that seedcord runs once for each interaction or event. Each result becomes `this.<name>` on handlers and middleware, and as `ctx.<name>` in gates and `Notice.render`. ([#456](https://github.com/seedcord/seedcord/pull/456))
+
+### 🩹 Patch
+
+- Fixed `ctx.guild` and `ctx.channelId` being null in an event gate when someone reacts to a message or joins a voice channel in a guild. ([#456](https://github.com/seedcord/seedcord/pull/456))
+- Fixed `EventHandler<'interactionCreate'>` and `EventMiddleware<'interactionCreate'>` compiling. They should now correctly show red squigglies. ([#453](https://github.com/seedcord/seedcord/pull/453))
+- Reworded error messages, CLI output, and TSDoc in plainer English. ([#449](https://github.com/seedcord/seedcord/pull/449))
+- Replaced hand-written types and helpers with the ones from `type-fest` and `es-toolkit`. ([#453](https://github.com/seedcord/seedcord/pull/453))
+
+#### 📦 Seedcord packages
+
+- `@seedcord/errors` 0.15.1 → 0.16.0-next.0
+- `@seedcord/core` 0.13.0 → 0.14.0-next.0
+- `@seedcord/types` 0.16.2 → 0.17.0-next.0
+- `@seedcord/custom-id` 0.3.1 → 0.3.2-next.0
+- `@seedcord/event-emitter` 0.2.1 → 0.2.2-next.0
+- `@seedcord/logger` 0.6.1 → 0.6.2-next.0
+- `@seedcord/utils` 0.9.2 → 0.10.0-next.0
+
 ## 0.10.0
 
 ### 💥 Breaking

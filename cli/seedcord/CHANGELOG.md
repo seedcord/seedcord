@@ -1,5 +1,29 @@
 # seedcord
 
+## 0.24.0-next.0
+
+### ✨ Minor
+
+- `seedcord codegen` now leaves the members that only seedcord calls, like `init()`, out of `this.core.<key>`, so `this.core.db.init()` no longer compiles in a handler. If you pass `this.core.db` to your own function, type that parameter as `AttachedPlugin<Mongoose>`. ([#456](https://github.com/seedcord/seedcord/pull/456))
+- A plugin can now set `dispatchMembers`, an object of functions that seedcord runs once for each interaction or event. Each result becomes `this.<name>` on handlers and middleware, and as `ctx.<name>` in gates and `Notice.render`. ([#456](https://github.com/seedcord/seedcord/pull/456))
+- A plugin can now define `prepareCommands` to edit commands before seedcord sends them to Discord, like setting `name_localizations`. A started bot runs it before it deploys, and so do `seedcord codegen`, a Workers build, `seedcord commands deploy`, and `seedcord commands list`. ([#456](https://github.com/seedcord/seedcord/pull/456))
+
+### 🩹 Patch
+
+- Fixed `seedcord codegen`, `seedcord commands` and the build crashing with a `TypeError` when your `@seedcord/gateway` or `@seedcord/http` doesn't match the CLI's release. The CLI now stops with `CliHostContractMismatch`, which you fix by updating both together. ([#456](https://github.com/seedcord/seedcord/pull/456))
+- Fixed `seedcord dev` restarting on almost every save when `hmr.restart` or a plugin's `registerCriticalFiles` had a `!` pattern. Now a `!` pattern excludes the files it matches from the other patterns that came with it. ([#464](https://github.com/seedcord/seedcord/pull/464))
+- Reworded error messages, CLI output, and TSDoc in plainer English. ([#449](https://github.com/seedcord/seedcord/pull/449))
+- Replaced hand-written types and helpers with the ones from `type-fest` and `es-toolkit`. ([#453](https://github.com/seedcord/seedcord/pull/453))
+
+#### 📦 Seedcord packages
+
+- `@seedcord/errors` 0.15.1 → 0.16.0-next.0
+- `@seedcord/core` 0.13.0 → 0.14.0-next.0
+- `@seedcord/types` 0.16.2 → 0.17.0-next.0
+- `@seedcord/event-emitter` 0.2.1 → 0.2.2-next.0
+- `@seedcord/logger` 0.6.1 → 0.6.2-next.0
+- `@seedcord/utils` 0.9.2 → 0.10.0-next.0
+
 ## 0.23.2
 
 ### 🩹 Patch

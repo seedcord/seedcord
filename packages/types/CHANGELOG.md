@@ -1,5 +1,21 @@
 # @seedcord/types
 
+## 0.17.0-next.0
+
+### 💥 Breaking
+
+- Removed `TypedOmit`, `TypedExclude`, and `TypedExtract` in favor of `Except`, `ExcludeStrict`, and `ExtractStrict` from `type-fest`. Removed `Tail` in favor of `ArrayTail` from `type-fest`. Removed `FilterUnionByProperty`, `StringStartsWith`, `StringEndsWith`, and `StringContains` in favor of TypeScript's `Extract`. ([#453](https://github.com/seedcord/seedcord/pull/453))
+
+### ✨ Minor
+
+- Added `bot.interactions.ephemeral`. Set it to `false` to make replies public by default. ([#459](https://github.com/seedcord/seedcord/pull/459), thanks [@camdzic](https://github.com/camdzic))
+- A plugin can now set `dispatchMembers`, an object of functions that seedcord runs once for each interaction or event. Each result becomes `this.<name>` on handlers and middleware, and as `ctx.<name>` in gates and `Notice.render`. ([#456](https://github.com/seedcord/seedcord/pull/456))
+
+### 🩹 Patch
+
+- Reworded error messages, CLI output, and TSDoc in plainer English. ([#449](https://github.com/seedcord/seedcord/pull/449))
+- Replaced hand-written types and helpers with the ones from `type-fest` and `es-toolkit`. ([#453](https://github.com/seedcord/seedcord/pull/453))
+
 ## 0.16.2
 
 ### 🩹 Patch

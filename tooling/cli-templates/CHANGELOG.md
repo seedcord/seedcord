@@ -1,5 +1,14 @@
 # @seedcord/cli-templates
 
+## 0.0.2-next.0
+
+### 🩹 Patch
+
+#### 📦 Seedcord packages
+
+- `@seedcord/errors` 0.15.1 → 0.16.0-next.0
+- `@seedcord/utils` 0.9.2 → 0.10.0-next.0
+
 ## 0.0.1
 
 ### 🩹 Patch

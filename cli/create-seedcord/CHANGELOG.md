@@ -1,5 +1,12 @@
 # create-seedcord
 
+## 0.6.2-next.0
+
+### 🩹 Patch
+
+- Reworded error messages, CLI output, and TSDoc in plainer English. ([#449](https://github.com/seedcord/seedcord/pull/449))
+- Replaced hand-written types and helpers with the ones from `type-fest` and `es-toolkit`. ([#453](https://github.com/seedcord/seedcord/pull/453))
+
 ## 0.6.1
 
 ### 🩹 Patch

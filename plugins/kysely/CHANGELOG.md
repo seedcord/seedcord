@@ -1,5 +1,34 @@
 # @seedcord/plugin-kysely-postgres
 
+## 0.9.0-next.0
+
+### 💥 Breaking
+
+- The plugin now takes `dialect`, a function that returns any Kysely dialect. It no longer takes `pool`, `connectionString`, `onConnectSQL`, or `forceInsecureSSL`, and it no longer creates a missing database. For Postgres, pass `dialect: () => new PostgresDialect({ pool: new Pool({ connectionString }) })` and run your `onConnectSQL` statements in its `onCreateConnection`. ([#465](https://github.com/seedcord/seedcord/pull/465))
+- `@seedcord/plugin-kysely-postgres` is now `@seedcord/plugin-kysely`, and its `KyselyPostgres` class is now `Kysely`. Update your imports and your `declare module` block, then run `seedcord codegen`. ([#465](https://github.com/seedcord/seedcord/pull/465))
+- The services folder option is now `path`, matching `interactions: { path }` in the bot config, and Kysely's `migrations.dir` is now `migrations.path`. Rename `dir` to `path` in your `attach` options. ([#465](https://github.com/seedcord/seedcord/pull/465))
+
+### ✨ Minor
+
+- Added `nodeSqlite()`, which wraps a `node:sqlite` database for Kysely's `SqliteDialect`, like `new SqliteDialect({ database: nodeSqlite(new DatabaseSync('bot.db')) })`. ([#465](https://github.com/seedcord/seedcord/pull/465))
+- The plugin now needs `@seedcord/core` 0.14 or newer. ([#456](https://github.com/seedcord/seedcord/pull/456))
+- `@seedcord/plugin-mongoose` now needs `mongoose` 9.12 or newer, and `@seedcord/plugin-kysely` needs `kysely` 0.29.8 or newer. ([#465](https://github.com/seedcord/seedcord/pull/465))
+
+### 🩹 Patch
+
+- `PluginConnectionFailed` now includes the driver's error, like `connect ECONNREFUSED 127.0.0.1:5432`, and the option to check. ([#465](https://github.com/seedcord/seedcord/pull/465))
+- Fixed two service classes registered under the same key replacing each other. Startup and `seedcord codegen` now throw `CoreDuplicateName` with both class names. ([#465](https://github.com/seedcord/seedcord/pull/465))
+- Fixed `connection` reading `undefined` before `init()`. It now throws `PluginNotReady`, the same as `services`. ([#465](https://github.com/seedcord/seedcord/pull/465))
+- Reworded error messages, CLI output, and TSDoc in plainer English. ([#449](https://github.com/seedcord/seedcord/pull/449))
+- The plugin now logs a warning for an exported class in `path` that extends its service base but isn't decorated. It used to skip that class without saying anything. ([#465](https://github.com/seedcord/seedcord/pull/465))
+
+#### 📦 Seedcord packages
+
+- `@seedcord/errors` 0.15.1 → 0.16.0-next.0
+- `@seedcord/types` 0.16.2 → 0.17.0-next.0
+- `@seedcord/logger` 0.6.1 → 0.6.2-next.0
+- `@seedcord/utils` 0.9.2 → 0.10.0-next.0
+
 ## 0.8.1
 
 ### 🩹 Patch

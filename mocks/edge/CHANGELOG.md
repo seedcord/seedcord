@@ -1,5 +1,14 @@
 # @seedcord/mock-edge
 
+## 0.0.4-next.0
+
+### 🩹 Patch
+
+#### 📦 Seedcord packages
+
+- `@seedcord/http` 0.13.0 → 0.14.0-next.0
+- `@seedcord/plugin-i18n` 0.0.1 → 0.1.0-next.0
+
 ## 0.0.3
 
 ### 🩹 Patch

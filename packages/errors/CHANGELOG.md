@@ -1,5 +1,24 @@
 # @seedcord/errors
 
+## 0.16.0-next.0
+
+### 💥 Breaking
+
+- Renamed `GateInvalidCooldownDuration` to `InvalidDuration` because `Cooldown` and `@seedcord/plugin-tasks` throw it for the same bad duration. The code is still 1701. ([#434](https://github.com/seedcord/seedcord/pull/434), thanks [@camdzic](https://github.com/camdzic))
+- `PluginServicesNotReady` is now `PluginNotReady`, since it also covers `connection` and reads after `dispose()`. Update any code that checks for the old name. ([#465](https://github.com/seedcord/seedcord/pull/465))
+- Removed `PluginKyselyBootstrapFailed` because `@seedcord/plugin-kysely` no longer creates databases. ([#465](https://github.com/seedcord/seedcord/pull/465))
+
+### ✨ Minor
+
+- A plugin can now set `dispatchMembers`, an object of functions that seedcord runs once for each interaction or event. Each result becomes `this.<name>` on handlers and middleware, and as `ctx.<name>` in gates and `Notice.render`. ([#456](https://github.com/seedcord/seedcord/pull/456))
+- Added the `PluginI18n` error codes that `@seedcord/plugin-i18n` throws. ([#464](https://github.com/seedcord/seedcord/pull/464))
+- Added the `PluginTasks` error codes that `@seedcord/plugin-tasks` throws. ([#434](https://github.com/seedcord/seedcord/pull/434), thanks [@camdzic](https://github.com/camdzic))
+
+### 🩹 Patch
+
+- `PluginConnectionFailed` now includes the driver's error, like `connect ECONNREFUSED 127.0.0.1:5432`, and the option to check. ([#465](https://github.com/seedcord/seedcord/pull/465))
+- Reworded error messages, CLI output, and TSDoc in plainer English. ([#449](https://github.com/seedcord/seedcord/pull/449))
+
 ## 0.15.1
 
 ### 🩹 Patch
