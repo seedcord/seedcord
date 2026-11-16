@@ -142,7 +142,7 @@ export class Ban extends SlashHandler<'ban'> {
 
 ## Only the person who ran the command sees it
 
-Ephemeral is on by default. Pass `ephemeral: false` to show the reply to the whole channel. `silent: true` skips push and desktop notifications.
+Ephemeral is on unless [your config turns it off](#make-replies-public-by-default). Pass `ephemeral: false` to show the reply to the whole channel. `silent: true` skips push and desktop notifications.
 
 ```ts twoslash
 import { SlashHandler, SlashRoute } from '@seedcord/gateway';
@@ -161,6 +161,29 @@ class Ban extends SlashHandler<'ban'> {
 ```
 
 `followUp()` takes `ephemeral` and `silent` the same way. `edit()` doesn't take options since it rewrites a message that already has its flags.
+
+### Make replies public by default
+
+If most of your replies should go to the whole channel, set `ephemeral: false` under `bot.interactions` in your config. Then you don't need to pass `ephemeral` on each reply.
+
+```ts twoslash title="src/bot.ts"
+import { Seedcord } from '@seedcord/gateway';
+import { GatewayIntentBits } from 'discord.js';
+
+export const seedcord = new Seedcord({
+    bot: {
+        clientOptions: { intents: [GatewayIntentBits.Guilds] },
+        interactions: { path: './handlers', ephemeral: false },
+        commands: { path: null },
+        events: { path: null }
+    },
+    subscribers: { path: null }
+});
+```
+
+Every reply without its own `ephemeral` uses that default, including `defer()`, a paginator, and a confirm prompt. After a `defer()`, [its visibility is the default](/replying/more-messages#set-ephemeral-when-you-defer) for the rest of the interaction. Pass `ephemeral: true` when only the person who ran the command should see a reply.
+
+seedcord sends error cards and [notices](/replying/throwing) as ephemeral whatever you set here.
 
 ## The message you get back
 

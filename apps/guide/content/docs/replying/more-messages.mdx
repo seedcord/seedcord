@@ -33,7 +33,7 @@ The person who ran the command sees your bot thinking until [`edit()`](ref:gatew
 
 ## Set ephemeral when you defer
 
-`defer()` takes an `ephemeral` option, and it's on by default. Only the person who ran the command sees the placeholder and the reply that fills it.
+`defer()` takes an `ephemeral` option, and without one it uses [your bot's default](/replying#make-replies-public-by-default). If the defer is ephemeral, only the person who ran the command sees the placeholder and the reply that fills it.
 
 ```ts twoslash
 import { SlashHandler, SlashRoute } from '@seedcord/gateway';
@@ -48,7 +48,19 @@ class Ban extends SlashHandler<'ban'> {
 }
 ```
 
-`edit()` doesn't take options, so whatever you pass `defer()` is what the reply has. Discord [keeps a message's visibility](https://discord.com/developers/docs/interactions/receiving-and-responding#create-followup-message) once it exists. If a `followUp()` or `send()` passes the other `ephemeral` value before anything fills the placeholder, seedcord deletes the placeholder and sends a new message with that value.
+After a defer, the later calls in that interaction work like this:
+
+{/* prettier-ignore-start */}
+
+| after `defer()`, you call | what happens |
+| --- | --- |
+| `edit()` | fills the placeholder with the defer's visibility |
+| `send()` or `followUp()` without `ephemeral` | the first fills the placeholder, and later ones send new messages with the defer's visibility |
+| `send()` or `followUp()` with the other `ephemeral` | if the placeholder is still empty, seedcord deletes it and sends a new message with your value |
+
+{/* prettier-ignore-end */}
+
+The last row deletes the placeholder because Discord [keeps a message's visibility](https://discord.com/developers/docs/interactions/receiving-and-responding#create-followup-message) once it exists.
 
 ## reply() after a deferral throws
 

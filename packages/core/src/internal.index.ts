@@ -114,6 +114,7 @@ export { PAGE_MAX, pageCursor, type PageCursor } from '#pagination/cursor';
 export { checkAckLegality, type AckState, type ReplyMethod } from '#reply/ackLegality';
 export { AckTrace } from '#reply/AckTrace';
 export { AutocompleteResponder } from '#reply/AutocompleteResponder';
+export { isEphemeralByDefault } from '#reply/flags';
 export { reportedWrite, type ReplyTelemetry } from '#reply/responseReport';
 export { translateSerializationError } from '#reply/translateSerialization';
 export { serializeReply, type SerializedReply } from '#reply/serializeReply';

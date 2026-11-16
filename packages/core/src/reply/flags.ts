@@ -1,7 +1,12 @@
+import { hasKeys } from '@seedcord/utils';
 import { MessageFlags } from 'discord-api-types/v10';
 
-import type { SendOpts } from '@seedcord/types';
+import type { InteractionsConfig, SendOpts } from '@seedcord/types';
 import type { Except } from 'type-fest';
+
+export function isEphemeralByDefault(interactions: InteractionsConfig): boolean {
+    return hasKeys(interactions, ['ephemeral']) ? interactions.ephemeral : true;
+}
 
 // IsComponentsV2 is unconditional since every framework reply is v2
 export function sendFlags(opts: Except<SendOpts, 'ephemeral'> & { readonly ephemeral: boolean }): number {

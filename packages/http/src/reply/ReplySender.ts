@@ -72,9 +72,10 @@ export class ReplySender extends BaseReplySender<SentMessage> {
         private readonly ref: InteractionRef,
         private readonly rest: REST,
         dispatch: DispatchContext,
-        bus: Bus
+        bus: Bus,
+        isEphemeralByDefault: boolean
     ) {
-        super({ bus, dispatch, interactionId: ref.id });
+        super({ bus, dispatch, interactionId: ref.id }, isEphemeralByDefault);
     }
 
     protected async writeReply(response: ReplyResponse | string, flags: number): Promise<SentMessage | undefined> {

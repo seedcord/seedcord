@@ -1,56 +1,14 @@
 import { describe, expect, it, vi } from 'vite-plus/test';
 
-import { BaseReplySender } from '#reply/BaseReplySender';
-import { DispatchContext } from '#src/dispatch/DispatchContext';
 import { Bus } from '#subscribers/Bus';
+
+import { created, TestSender } from './helpers';
 
 import type { CoreBase } from '#interfaces/CoreBase';
 import type { ModalLike } from '#reply/BaseReplySender';
 import type { ResponseFailed, SubscriptionData } from '#subscribers/types/Subscriptions';
+import type { TestMessage } from './helpers';
 import type { ReplyResponse } from '@seedcord/types';
-
-interface TestMessage {
-    id: string;
-}
-
-const created: TestMessage = { id: 'm1' };
-
-class TestSender extends BaseReplySender<TestMessage> {
-    public constructor(bus: Bus) {
-        super({ bus, dispatch: new DispatchContext('slash', 'ping'), interactionId: 'i1' });
-    }
-
-    protected writeReply(): Promise<TestMessage> {
-        return Promise.resolve(created);
-    }
-    protected writeDefer(): Promise<void> {
-        return Promise.resolve();
-    }
-    protected writeDeferUpdate(): Promise<void> {
-        return Promise.resolve();
-    }
-    protected writeUpdate(): Promise<TestMessage> {
-        return Promise.resolve(created);
-    }
-    protected writeFollowUp(): Promise<TestMessage> {
-        return Promise.resolve(created);
-    }
-    protected writeEditOriginal(): Promise<TestMessage> {
-        return Promise.resolve(created);
-    }
-    protected writeEditTarget(): Promise<TestMessage> {
-        return Promise.resolve(created);
-    }
-    protected writeDeleteOriginal(): Promise<void> {
-        return Promise.resolve();
-    }
-    protected writeDeleteTarget(): Promise<void> {
-        return Promise.resolve();
-    }
-    protected writeModal(): Promise<void> {
-        return Promise.resolve();
-    }
-}
 
 function failedWrite(payload: SubscriptionData<'responseAttempted'> | undefined): ResponseFailed {
     if (payload?.outcome !== 'failed') throw new Error(`expected a failed write, got ${String(payload?.outcome)}`);

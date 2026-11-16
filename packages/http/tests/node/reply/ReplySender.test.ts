@@ -45,7 +45,7 @@ const ref: InteractionRef = { application_id: APP_ID, id: INTERACTION_ID, token:
 
 // justified: the fixture implements only the REST surface ReplySender reads.
 function senderFor(rest: RestMock): ReplySender {
-    return new ReplySender(ref, rest as unknown as REST, new DispatchContext('slash', 'ban'), stubBus());
+    return new ReplySender(ref, rest as unknown as REST, new DispatchContext('slash', 'ban'), stubBus(), true);
 }
 
 const reply: ReplyResponse = { components: [new TextDisplayBuilder().setContent('hi')] };

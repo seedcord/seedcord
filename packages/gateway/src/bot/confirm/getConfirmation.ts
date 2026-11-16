@@ -29,7 +29,7 @@ export interface ConfirmOptions {
      * Whether the prompt is ephemeral. Only the invoking user can act on it either way, a non-invoker's
      * click is ignored.
      *
-     * @defaultValue `true`
+     * @defaultValue `bot.interactions.ephemeral`
      */
     ephemeral?: boolean;
     /**

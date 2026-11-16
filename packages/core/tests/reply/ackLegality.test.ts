@@ -10,9 +10,7 @@ import type { AckState, ReplyMethod } from '#reply/ackLegality';
 
 const ROUTE = 'slash:ban';
 
-type AckKind = AckState['kind'];
-
-const LEGAL: Record<AckKind, ReplyMethod[]> = {
+const LEGAL: Record<AckState, ReplyMethod[]> = {
     unacked: ['reply', 'defer', 'deferUpdate', 'update', 'send', 'showModal'],
     'deferred-reply': ['followUp', 'edit', 'delete', 'send'],
     'deferred-update': ['update', 'followUp', 'edit', 'delete', 'send'],
@@ -31,7 +29,7 @@ const ALL_METHODS: ReplyMethod[] = [
     'showModal'
 ];
 
-function captureMessage(method: ReplyMethod, state: AckKind): string {
+function captureMessage(method: ReplyMethod, state: AckState): string {
     try {
         checkAckLegality(method, state, ROUTE);
     } catch (error) {
@@ -42,7 +40,7 @@ function captureMessage(method: ReplyMethod, state: AckKind): string {
 }
 
 describe('checkAckLegality', () => {
-    for (const state of Object.keys(LEGAL) as AckKind[]) {
+    for (const state of Object.keys(LEGAL) as AckState[]) {
         for (const method of ALL_METHODS) {
             const legal = LEGAL[state].includes(method);
             it(`${legal ? 'permits' : 'rejects'} ${method} in ${state}`, () => {
