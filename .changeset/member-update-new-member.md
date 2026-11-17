@@ -1,5 +1,5 @@
 ---
-'@seedcord/gateway': patch
+'@seedcord/gateway': minor
 ---
 
-Fixed a `guildMemberUpdate` event gate reading the old roles and permissions, so a role check saw the member as they were before the update.
+**BREAKING:** Fixed a `guildMemberUpdate` event gate reading the old roles and permissions. Role and permission gates now check the member after the update, so a role change can start or stop a handler that ran before.
