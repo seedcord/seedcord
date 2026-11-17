@@ -375,6 +375,8 @@ export enum SeedcordErrorCode {
     CliAskFailed = 3149,
     /** The bot comes from a version of `@seedcord/gateway` or `@seedcord/http` that this CLI can't load. */
     CliHostContractMismatch = 3150,
+    /** cloudflared exited before the tunnel was ready. */
+    CliTunnelExited = 3151,
 
     /** A flag answers a question that the earlier answers skip. */
     CreateFlagNotApplicable = 3201,

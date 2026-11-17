@@ -74,14 +74,26 @@ export class CloudflaredTunnel {
 
         const url = `https://${await this.readHostname(metricsPort, signal)}`;
         onResolving?.();
-        // this has to come before the waits below, or an exit during them never reaches onLost
+        const opening = new AbortController();
+        let live = false;
+        // this has to come before the waits below, or an exit during them returns a dead url
         child.once('exit', () => {
-            if (this.child === child) this.onLost();
+            if (this.child !== child) return;
+            opening.abort();
+            if (live) this.onLost();
         });
         // cloudflare publishes the record ~2.5s later and an early lookup caches NXDOMAIN for a 30 minute negative TTL
         await this.deps.wait(SETTLE_MS);
-        // this only shortens the wait because local dns resolving doesn't mean discord's resolver has too
-        await awaitReachable(url, this.deps, signal);
+        this.throwIfExited();
+        try {
+            // this only shortens the wait because local dns resolving doesn't mean discord's resolver has too
+            await awaitReachable(url, this.deps, AbortSignal.any([signal, opening.signal]));
+        } catch (error) {
+            this.throwIfExited();
+            throw error;
+        }
+        this.throwIfExited();
+        live = true;
         return url;
     }
 
@@ -98,6 +110,14 @@ export class CloudflaredTunnel {
         child.once('exit', () => {
             clearTimeout(escalate);
         });
+    }
+
+    private throwIfExited(): void {
+        if (!this.failure) return;
+
+        const cause = this.failure;
+        this.stop();
+        throw new SeedcordError(SeedcordErrorCode.CliTunnelExited, { cause });
     }
 
     private async readHostname(metricsPort: number, signal: AbortSignal): Promise<string> {

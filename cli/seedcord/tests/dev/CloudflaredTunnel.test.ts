@@ -182,7 +182,7 @@ describe('CloudflaredTunnel', () => {
         expect(lost).toHaveBeenCalledOnce();
     });
 
-    it('reports a loss when the child exits while the tunnel settles', async () => {
+    it('fails startup when the child exits while the tunnel settles', async () => {
         const child = fakeChild();
         const lost = vi.fn();
         const tunnel = new CloudflaredTunnel(
@@ -197,9 +197,27 @@ describe('CloudflaredTunnel', () => {
             lost
         );
 
-        await tunnel.open(RUNNING, 3000);
+        const error = await caught(tunnel.open(RUNNING, 3000));
 
-        expect(lost).toHaveBeenCalledOnce();
+        expect(isSeedcordError(error, undefined, SeedcordErrorCode.CliTunnelExited)).toBe(true);
+        expect(lost).not.toHaveBeenCalled();
+    });
+
+    it('stops probing when the child exits during the reachability wait', async () => {
+        const child = fakeChild();
+        const fetch = vi.fn<TunnelDeps['fetch']>((url) => {
+            if (url.startsWith('https://')) {
+                child.emit('exit', 1);
+                return Promise.reject(new Error('refused'));
+            }
+            return Promise.resolve(Response.json({ hostname: 'abc.trycloudflare.com' }));
+        });
+        const tunnel = new CloudflaredTunnel(deps({ spawn: () => child, fetch }), BINARY, LOST);
+
+        const error = await caught(tunnel.open(RUNNING, 3000));
+
+        expect(isSeedcordError(error, undefined, SeedcordErrorCode.CliTunnelExited)).toBe(true);
+        expect(fetch).toHaveBeenCalledTimes(2);
     });
 
     it("doesn't report a loss when stop kills the child", async () => {

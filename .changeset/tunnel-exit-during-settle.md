@@ -1,5 +1,6 @@
 ---
 'seedcord': patch
+'@seedcord/errors': patch
 ---
 
-Fixed dev not reporting a cloudflared exit during the wait after it printed the hostname, which left dev registering an address that no longer answers.
+Fixed dev registering a quick tunnel address after cloudflared exited during the wait before the URL answered. The startup attempt now fails with `CliTunnelExited` instead.

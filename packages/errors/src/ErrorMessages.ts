@@ -407,6 +407,8 @@ const messages = {
         `Discord rejected ${paint.sky(url)} as an interactions endpoint. Discord tests the endpoint with a request it signs with your application's key, so check that ${paint.bold('DISCORD_PUBLIC_KEY')} matches your application.`,
     [SeedcordErrorCode.CliTunnelUnreachable]: (url: string, seconds: number) =>
         `${paint.sky(url)} did not answer within ${seconds}s, so nothing was PATCHed to Discord.`,
+    [SeedcordErrorCode.CliTunnelExited]: () =>
+        'cloudflared exited before the tunnel was ready. Check that cloudflared runs on its own, then restart the tunnel.',
 
     [SeedcordErrorCode.CreateFlagNotApplicable]: (flag: string) =>
         `The --${flag} flag does not apply to the answers you gave.`,

@@ -13,7 +13,6 @@ import type { TunnelDeps } from './CloudflaredTunnel';
 import type { TunnelKind, TunnelStatus } from './TunnelCoordinator';
 import type { ILogger } from '@seedcord/types';
 
-const PASTE_HINT = 'The tunnel is still up, so try pasting that URL into the dashboard.';
 const RESTART_HINT = 'Restart for a fresh hostname, or set `tunnel` to an https URL you already serve.';
 const NO_PORT_HINT = `seedcord didn't start a tunnel since the bot runs with ${paint.bold('port: false')} and cloudflared doesn't have a port to forward to. Give the bot a port while you develop, or set ${paint.amber('tunnel')} to the URL of the server that serves your bot: ${paint.sky(PRODUCTION_SITES.guide.at('build/embed'))}`;
 
@@ -74,7 +73,7 @@ function quickKind(deps: TunnelDeps, binary: string | undefined): TunnelKind | u
                 }
             };
         },
-        failureHint: (tunnelStopped) => (tunnelStopped ? RESTART_HINT : PASTE_HINT),
+        failureHint: () => RESTART_HINT,
         // a quick hostname lasts only as long as this process
         clearsEndpointOnStop: true
     };

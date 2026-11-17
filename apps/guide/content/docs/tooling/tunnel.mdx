@@ -90,6 +90,7 @@ Your bot keeps running through each of these, and seedcord logs the error to the
 | what happened | the error in your log |
 | --- | --- |
 | cloudflared didn't report a hostname within 60 seconds | `CliTunnelUrlUnavailable` |
+| cloudflared exited before the tunnel was ready | `CliTunnelExited` |
 | your own URL didn't answer the `401` check within 60 seconds | `CliTunnelUnreachable` |
 | Discord refused the address | `CliTunnelNotVerified` |
 | cloudflared exited after the tunnel opened | cloudflared exited, so the bot lost its public endpoint |
