@@ -113,6 +113,22 @@ TicketAction.encode({ ownerId: '123', action: 'archive' });
 
 The type can't check a value's range or format. `900` compiles against `int('page', 1, 50)`, and so does `'abc'` for a `snowflake`. `encode` throws on both when it runs.
 
+### Two ids with the same fields
+
+Accept and decline buttons often carry the same values. To give a second id the same fields under its own prefix, pass the first id's `shape` as the second argument to `new CustomId`.
+
+```ts twoslash title="src/components/ChallengeActions.ts"
+import { CustomId } from '@seedcord/gateway';
+
+export const Accept = new CustomId('accept')
+    .snowflake('challengerId')
+    .int('raceTo', 1, 15);
+
+export const Decline = new CustomId('decline', Accept.shape);
+```
+
+Each one routes to its own handler by its prefix. `encode` on either one takes `{ challengerId, raceTo }`.
+
 ## The field kinds
 
 The kind you pick sets the type that your handler gets back and how many characters the value takes. Pick the narrowest kind that fits.
