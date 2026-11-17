@@ -153,7 +153,7 @@ export enum SeedcordErrorCode {
     CustomIdReservedFieldName = 1602,
     /** A `oneOf()` or `someOf()` field was declared without choices. */
     CustomIdEmptyChoices = 1603,
-    /** An `int()` field was declared with a min greater than its max. */
+    /** An `int()` field was declared with a fractional bound, or with a min greater than its max. */
     CustomIdInvalidBounds = 1604,
     /** `encode()` got a value that doesn't fit its field. */
     CustomIdValueRejected = 1605,

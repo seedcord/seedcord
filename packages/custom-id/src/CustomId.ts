@@ -197,7 +197,8 @@ export class CustomId<Prefix extends string, Shape extends CustomIdShape = {}> {
         opts?: FieldOptions<Nullable>
     ): CustomId<Prefix, WithField<Shape, Name, Nullish<number, Nullable>>> {
         const min = typeof minOrOpts === 'number' ? minOrOpts : undefined;
-        if (min !== undefined && max !== undefined && min > max) {
+        // eslint-disable-next-line unicorn/prefer-number-is-safe-integer -- a bound may be 2**53 exactly (a power of two, exact in float64)
+        if (min !== undefined && max !== undefined && (!Number.isInteger(min) || !Number.isInteger(max) || min > max)) {
             throw new SeedcordRangeError(SeedcordErrorCode.CustomIdInvalidBounds, [name, min, max]);
         }
         const options = typeof minOrOpts === 'number' ? opts : minOrOpts;

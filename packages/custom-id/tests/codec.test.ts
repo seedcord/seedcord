@@ -548,6 +548,12 @@ describe('CustomId definition guards', () => {
     it('rejects an int with min over max', () => {
         expect(thrownCode(() => new CustomId('page').int('index', 5, 2))).toBe(SeedcordErrorCode.CustomIdInvalidBounds);
     });
+
+    it('rejects an int with a fractional bound', () => {
+        expect(thrownCode(() => new CustomId('page').int('index', 1.5, 10))).toBe(
+            SeedcordErrorCode.CustomIdInvalidBounds
+        );
+    });
 });
 
 describe('decodeFor', () => {

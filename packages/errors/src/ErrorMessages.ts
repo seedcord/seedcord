@@ -186,7 +186,7 @@ const messages = {
     [SeedcordErrorCode.CustomIdEmptyChoices]: (field: string, method: string) =>
         `The customId field ${quoted(field)} uses ${method}() without choices. Give it at least one choice, or make the field nullable.`,
     [SeedcordErrorCode.CustomIdInvalidBounds]: (field: string, min: number, max: number) =>
-        `The customId field ${quoted(field)} has min ${min}, which is greater than max ${max}. Swap them, or fix the one that is wrong.`,
+        `The customId field ${quoted(field)} declares bounds ${min} to ${max}. Pass integers with min at or below max.`,
     [SeedcordErrorCode.CustomIdValueRejected]: (field: string, expected: string, value: string) =>
         `The customId field ${quoted(field)} expects ${expected}, but encode() got ${value}.`,
     [SeedcordErrorCode.CustomIdWireTooLong]: (prefix: string, length: number) =>
