@@ -2,6 +2,7 @@ import { describe, expect, it } from 'vite-plus/test';
 
 import { botColorStep, COLOR_NAMES } from '#interview/steps/botColor';
 import { capabilitiesStep } from '#interview/steps/capabilities';
+import { toolsStep } from '#interview/steps/tools';
 
 describe('capabilitiesStep', () => {
     it('splits a comma list into ids', () => {
@@ -58,5 +59,21 @@ describe('botColorStep', () => {
         expect(() => botColorStep.flag.parse('#fff')).toThrow();
         expect(() => botColorStep.flag.parse('#fe565aa')).toThrow();
         expect(() => botColorStep.flag.parse('#gggggg')).toThrow();
+    });
+});
+
+describe('toolsStep', () => {
+    it('accepts Biome and Oxlint', () => {
+        expect(toolsStep.flag.parse('biome')).toBe('biome');
+        expect(toolsStep.flag.parse('oxlint')).toBe('oxlint');
+    });
+
+    it('matches tooling names regardless of case', () => {
+        expect(toolsStep.flag.parse('Biome')).toBe('biome');
+        expect(toolsStep.flag.parse('OXLINT')).toBe('oxlint');
+    });
+
+    it('lists every supported tooling choice when the value is unknown', () => {
+        expect(() => toolsStep.flag.parse('brawlstarslint')).toThrow(/eslint.*biome.*oxlint/);
     });
 });

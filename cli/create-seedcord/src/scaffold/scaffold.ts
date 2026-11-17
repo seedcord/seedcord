@@ -33,22 +33,30 @@ interface DependencyOutcome {
 
 export type ScaffoldResult = { created: false } | ({ created: true } & DependencyOutcome);
 
-const DEV_PACKAGES = [
-    '@seedcord/eslint-config',
+const BASE_DEV_PACKAGES = [
     '@seedcord/tsconfig',
     // @seedcord/tsconfig sets types: ['node']
     '@types/node',
-    // @seedcord/eslint-config takes this as a required peer
-    'eslint',
-    // eslint reads eslint.config.ts through jiti
-    'jiti',
-    'prettier',
     'seedcord',
     // typescript-eslint 8 caps typescript below 6.1
     'typescript@~6.0',
     // seedcord's peer range
     'vite@^8.3.4'
 ];
+
+const ESLINT_DEV_PACKAGES = [
+    '@seedcord/eslint-config',
+    // @seedcord/eslint-config takes this as a required peer
+    'eslint',
+    // eslint reads eslint.config.ts through jiti
+    'jiti',
+    'prettier'
+];
+
+const BIOME_DEV_PACKAGES = ['@biomejs/biome'];
+
+const OX_DEV_PACKAGES = ['oxlint', 'oxfmt'];
+
 // both are betas, pinned to the versions seedcord's own edge tests run on
 const EDGE_DEV_PACKAGES = ['cf@1.0.0-beta.26', '@cloudflare/vite-plugin@2.0.0-beta.v.8'];
 // the starters import ButtonStyle and TextInputStyle from discord-api-types
@@ -61,8 +69,11 @@ function runtimePackages({ isGateway }: TemplateContext): string[] {
     return [...transport, ...SHARED_PACKAGES];
 }
 
-function devPackages({ isEdge }: TemplateContext): string[] {
-    return isEdge ? [...DEV_PACKAGES, ...EDGE_DEV_PACKAGES] : DEV_PACKAGES;
+function devPackages({ isEdge, tools }: TemplateContext): string[] {
+    const toolPackages = tools.isBiome ? BIOME_DEV_PACKAGES : tools.isOx ? OX_DEV_PACKAGES : ESLINT_DEV_PACKAGES;
+
+    const base = [...BASE_DEV_PACKAGES, ...toolPackages];
+    return isEdge ? [...base, ...EDGE_DEV_PACKAGES] : base;
 }
 
 function withReleaseTag(name: string): string {
@@ -114,9 +125,15 @@ async function gitNoticeFor(input: ScaffoldInput, run: CommandRunner, plan: GitP
 async function formatAndWriteTypes(
     { manager, steps, target }: ScaffoldInput,
     run: CommandRunner,
-    { isEdge }: TemplateContext
+    { isEdge, tools }: TemplateContext
 ): Promise<boolean> {
-    const format = manager.exec(['prettier', '--write', '.']);
+    const formatArgs = tools.isBiome
+        ? ['biome', 'format', '--write', '.']
+        : tools.isOx
+          ? ['oxfmt', '.']
+          : ['prettier', '--write', '.'];
+
+    const format = manager.exec(formatArgs);
     const codegen = manager.exec(['seedcord', 'codegen']);
 
     const formatted = await succeeded(steps, 'format', () => run(format.command, format.args, target));

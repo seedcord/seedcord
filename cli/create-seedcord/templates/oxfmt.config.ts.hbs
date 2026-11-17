@@ -1,0 +1,22 @@
+{{#if tools.isOx}}
+import { defineConfig } from "oxfmt";
+
+export default defineConfig({
+    tabWidth: 4,
+    useTabs: false,
+    semi: true,
+    singleQuote: true,
+    trailingComma: "none",
+    printWidth: 120,
+    bracketSpacing: true,
+    bracketSameLine: false,
+    arrowParens: "always",
+    endOfLine: "lf",
+    quoteProps: "as-needed",
+    proseWrap: "never",
+    ignorePatterns: [
+        "**/seedcord-gen.ts",
+        "templates/**"
+    ]
+})
+{{/if}}

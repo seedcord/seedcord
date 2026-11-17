@@ -1,0 +1,52 @@
+{{#if tools.isBiome}}
+{
+    "$schema": "https://biomejs.dev/schemas/2.6.6/schema.json",
+    "vcs": {
+        "enabled": true,
+        "clientKind": "git",
+        "useIgnoreFile": true
+    },
+    "files": {
+        "includes": ["**", "!**/seedcord-gen.ts", "!**/templates/**"]
+    },
+    "formatter": {
+        "enabled": true,
+        "indentStyle": "space",
+        "indentWidth": 4,
+        "lineWidth": 120,
+        "lineEnding": "lf",
+        "bracketSpacing": true
+    },
+    "javascript": {
+        "formatter": {
+            "arrowParentheses": "always",
+            "bracketSameLine": false,
+            "bracketSpacing": true,
+            "quoteProperties": "asNeeded",
+            "quoteStyle": "single",
+            "semicolons": "always",
+            "trailingCommas": "none"
+        }
+    },
+    "linter": {
+        "enabled": true,
+        "rules": {
+            "preset": "recommended",
+            "correctness": {
+                "noUnusedImports": "error",
+                "noUnusedVariables": "error"
+            },
+            "style": {
+                "noNonNullAssertion": "error",
+                "useConst": "error",
+                "useImportType": "error"
+            },
+            "suspicious": {
+                "noDebugger": "error",
+                "noDoubleEquals": "error",
+                "noExplicitAny": "error"
+            }
+        }
+    }
+}
+{{/if}}

@@ -23,10 +23,22 @@
         "commands": "seedcord commands",
         "commands:deploy": "seedcord commands deploy",
         "tc": "tsc --noEmit",
+{{#if tools.isBiome}}
+        "lint": "biome lint src",
+        "lint:fix": "biome lint --write src",
+        "fmt": "biome format --write src",
+        "fmt:check": "biome format src",
+{{else if tools.isOx}}
+        "lint": "oxlint src",
+        "lint:fix": "oxlint --fix src",
+        "fmt": "oxfmt",
+        "fmt:check": "oxfmt --check",
+{{else}}
         "lint": "eslint \"src/**/*.ts\" --cache",
         "lint:fix": "eslint \"src/**/*.ts\" --fix --cache",
         "fmt": "prettier --write \"src/**/*.{ts,json,md}\" --cache",
         "fmt:check": "prettier --check \"src/**/*.{ts,json,md}\" --cache",
+{{/if}}
         "check": "{{ pm.run }} tc && {{ pm.run }} lint && {{ pm.run }} fmt:check"{{#if isEdge}},
         "postinstall": "cf workers types"{{/if}}
     }

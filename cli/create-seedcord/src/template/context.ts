@@ -38,6 +38,7 @@ export interface TemplateContext extends TransportVariables {
     developerUsername: string;
     cliOnBun: boolean;
     pm: { run: string; exec: string; isPnpm: boolean };
+    tools: { isEslint: boolean; isBiome: boolean; isOx: boolean };
     engines: { node: string; bun: string };
 }
 
@@ -58,6 +59,7 @@ export function requireScaffoldAnswers(answers: Partial<Answers>): ScaffoldAnswe
         token: required(answers, 'token'),
         testingGuilds: required(answers, 'testingGuilds'),
         botColor: required(answers, 'botColor'),
+        tools: required(answers, 'tools'),
         install: required(answers, 'install'),
         git: required(answers, 'git')
     };
@@ -94,6 +96,11 @@ export function buildContext(
             run: extras.manager.runPrefix(),
             exec: extras.manager.execPrefix(),
             isPnpm: extras.manager.name === 'pnpm'
+        },
+        tools: {
+            isEslint: answers.tools === 'eslint',
+            isBiome: answers.tools === 'biome',
+            isOx: answers.tools === 'oxlint'
         },
         engines: ownPackage.engines
     };

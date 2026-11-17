@@ -3,6 +3,8 @@ import type { Runtime, Transport } from '@seedcord/core/internal';
 import type { BotToken } from '@seedcord/errors/internal';
 import type { ColorName } from '@seedcord/types';
 
+type Tooling = 'eslint' | 'biome' | 'oxlint';
+
 export interface Answers {
     directory: string;
     transport: Transport;
@@ -11,6 +13,7 @@ export interface Answers {
     token: BotToken | null;
     testingGuilds: string[];
     botColor: ColorName | `#${string}`;
+    tools: Tooling;
     install: boolean;
     git: boolean;
 }
