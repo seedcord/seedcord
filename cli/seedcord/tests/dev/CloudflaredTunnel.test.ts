@@ -182,6 +182,26 @@ describe('CloudflaredTunnel', () => {
         expect(lost).toHaveBeenCalledOnce();
     });
 
+    it('reports a loss when the child exits while the tunnel settles', async () => {
+        const child = fakeChild();
+        const lost = vi.fn();
+        const tunnel = new CloudflaredTunnel(
+            deps({
+                spawn: () => child,
+                wait: () => {
+                    child.emit('exit', 1);
+                    return Promise.resolve();
+                }
+            }),
+            BINARY,
+            lost
+        );
+
+        await tunnel.open(RUNNING, 3000);
+
+        expect(lost).toHaveBeenCalledOnce();
+    });
+
     it("doesn't report a loss when stop kills the child", async () => {
         const child = fakeChild();
         const lost = vi.fn();

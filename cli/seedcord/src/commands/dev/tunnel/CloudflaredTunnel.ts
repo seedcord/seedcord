@@ -74,13 +74,14 @@ export class CloudflaredTunnel {
 
         const url = `https://${await this.readHostname(metricsPort, signal)}`;
         onResolving?.();
+        // this has to come before the waits below, or an exit during them never reaches onLost
+        child.once('exit', () => {
+            if (this.child === child) this.onLost();
+        });
         // cloudflare publishes the record ~2.5s later and an early lookup caches NXDOMAIN for a 30 minute negative TTL
         await this.deps.wait(SETTLE_MS);
         // this only shortens the wait because local dns resolving doesn't mean discord's resolver has too
         await awaitReachable(url, this.deps, signal);
-        child.once('exit', () => {
-            if (this.child === child) this.onLost();
-        });
         return url;
     }
 
