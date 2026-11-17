@@ -214,6 +214,25 @@ describe('eventGateContext', () => {
         expect(built).toMatchObject({ userId: null, guildId: 'g1', channelId: 'c1' });
     });
 
+    it('reads a guild member update off the new member', () => {
+        const oldMember = fakeMember(['old'], 4n);
+        const newMember = fakeMember(['new'], 8n);
+        Object.defineProperties(oldMember, {
+            guild: { value: guild },
+            user: { value: { id: 'u1' } }
+        });
+        Object.defineProperties(newMember, {
+            guild: { value: guild },
+            user: { value: { id: 'u1' } }
+        });
+        const payload = [oldMember, newMember] as unknown as Parameters<typeof eventGateContext>[1];
+
+        const built = eventGateContext('guildMemberUpdate', payload, {} as unknown as Core, dispatch);
+
+        expect(built.memberRoleIds).toEqual(['new']);
+        expect(built.member).toBe(newMember);
+    });
+
     it('reads a voice update off the new state', () => {
         const member = fakeMember([], 0n);
         Object.defineProperties(member, { user: { value: { id: 'u1' } } });

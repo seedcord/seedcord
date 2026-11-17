@@ -27,6 +27,7 @@ export function deriveEventActor(args: unknown): EventActor {
     let partial: PartialMessage | undefined;
     let reaction: MessageReaction | undefined;
     let voice: VoiceState | undefined;
+    let member: GuildMember | undefined;
     for (const arg of tuple) {
         if (arg instanceof MessageReaction) reaction = arg;
         // the new state overwrites the old one because voiceStateUpdate passes the old one first
@@ -37,9 +38,11 @@ export function deriveEventActor(args: unknown): EventActor {
             if (!message.partial) return actorOf(message);
             partial ??= message;
         }
-        if (arg instanceof GuildMember) return { guild: arg.guild, member: arg, user: arg.user, channelId: null };
+        // the new member overwrites the old one because guildMemberUpdate passes the old one first
+        if (arg instanceof GuildMember) member = arg;
         if (arg instanceof User) return { ...placeOf(reaction), member: null, user: arg };
     }
+    if (member) return { guild: member.guild, member, user: member.user, channelId: null };
     if (voice) return actorOfVoice(voice);
     return partial ? actorOf(partial) : { ...placeOf(reaction), member: null, user: null };
 }
