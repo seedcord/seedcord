@@ -311,10 +311,10 @@ describe('the ask endpoint', () => {
             embedded,
             ASSETS: { fetch: (request) => Promise.resolve(files[new URL(request.url).pathname]?.() ?? new Response()) },
             AI: {
-                run: (_, { text }) => {
+                run: (_, { input }) => {
                     if (aiError) return Promise.reject(aiError);
-                    embedded.push(...text);
-                    return Promise.resolve({ data: [toward(1)] });
+                    embedded.push(...input);
+                    return Promise.resolve({ data: [{ embedding: toward(1) }] });
                 }
             },
             ASK_LIMIT: { limit: () => Promise.resolve({ success: allowed }) }

@@ -8,16 +8,16 @@ function fakeWorkersAi(resultFor: (texts: string[]) => unknown): { ai: WorkersAi
     const calls: [string, number][] = [];
     const http: HttpFetch = (url, init) => {
         // justified: WorkersAi always sends a JSON body
-        const { text } = JSON.parse(init?.body ?? '{}') as { text: string[] };
-        calls.push([url, text.length]);
-        const result = resultFor(text);
+        const { input } = JSON.parse(init?.body ?? '{}') as { input: string[] };
+        calls.push([url, input.length]);
+        const result = resultFor(input);
         return Promise.resolve({ ok: true, status: 200, json: () => Promise.resolve({ success: true, result }) });
     };
     return { ai: new WorkersAi('account-1', new CloudflareApi('secret', http)), calls };
 }
 
 it('embeds in batches of 100 and keeps the vectors in input order', async () => {
-    const { ai, calls } = fakeWorkersAi((texts) => ({ data: texts.map((value) => [Number(value)]) }));
+    const { ai, calls } = fakeWorkersAi((texts) => ({ data: texts.map((value) => ({ embedding: [Number(value)] })) }));
     const texts = Array.from({ length: 150 }, (_, index) => String(index));
 
     const vectors = await ai.embed(texts);
@@ -31,7 +31,7 @@ it('embeds in batches of 100 and keeps the vectors in input order', async () => 
 });
 
 it('throws when a batch comes back with fewer vectors than texts', async () => {
-    const { ai } = fakeWorkersAi((texts) => ({ data: texts.slice(1).map(() => [0]) }));
+    const { ai } = fakeWorkersAi((texts) => ({ data: texts.slice(1).map(() => ({ embedding: [0] })) }));
 
     await expect(ai.embed(['a', 'b'])).rejects.toThrow(/1 vectors for 2 texts/);
 });
