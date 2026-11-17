@@ -49,8 +49,8 @@ const DEV_PACKAGES = [
     // seedcord's peer range
     'vite@^8.3.4'
 ];
-// both are betas, pinned to the versions seedcord's own edge tests run on
-const EDGE_DEV_PACKAGES = ['cf@1.0.0-beta.26', '@cloudflare/vite-plugin@2.0.0-beta.v.8'];
+// both are release candidates, pinned to the versions seedcord's own edge tests run on
+const EDGE_DEV_PACKAGES = ['cf@1.0.0-rc.0', '@cloudflare/vite-plugin@2.0.0-rc.0'];
 // the starters import ButtonStyle and TextInputStyle from discord-api-types
 const SHARED_PACKAGES = ['@discordjs/builders', 'discord-api-types', 'envapt'];
 
