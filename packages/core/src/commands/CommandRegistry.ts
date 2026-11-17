@@ -36,7 +36,7 @@ import type { AllSubscriptions } from '#subscribers/types/Subscriptions';
 import type { HmrAware, HmrUpdateEvent } from '@seedcord/types';
 import type { APIApplicationCommand } from 'discord-api-types/v10';
 
-type RegisteredCommand = DeployTarget & { name: string };
+type RegisteredCommand = DeployTarget & { component: CommandBuilder };
 
 // gateway's and http's InteractionDispatcher both fit this
 interface RouteWarnings {
@@ -207,7 +207,7 @@ export class CommandRegistry implements Initializeable, HmrAware {
             else this.scopedCommands.set(scope, [comp]);
         }
 
-        this.ctorToCommand.set(Ctor, { name: comp.name, ...target });
+        this.ctorToCommand.set(Ctor, { component: comp, ...target });
 
         if (this.loading) {
             this.loadedCommands.push({ name: comp.name, from: displayPath(file), kind });
@@ -219,8 +219,10 @@ export class CommandRegistry implements Initializeable, HmrAware {
         if (!info) return;
 
         for (const scope of scopeIdsOf(info)) {
-            const inScope = this.scopedCommands.get(scope) ?? [];
-            const idx = inScope.findIndex((c) => c.name === info.name);
+            const inScope = this.scopedCommands.get(scope);
+            if (!inScope) continue;
+
+            const idx = inScope.indexOf(info.component);
             if (idx !== -1) inScope.splice(idx, 1);
         }
         this.ctorToCommand.delete(ctor);
