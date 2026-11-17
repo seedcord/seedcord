@@ -7,7 +7,9 @@ export const createImportSettings = (rootDir: string) => ({
     'import-x/resolver-next': [
         createTypeScriptImportResolver({
             alwaysTryTypes: true,
-            project: [path.join(rootDir, 'tsconfig.json')]
+            // with several matches the resolver tries the closest tsconfig whose files cover the importer
+            project: [path.join(rootDir, '**/tsconfig.json')],
+            noWarnOnMultipleProjects: true
         })
     ],
     'import-x/extensions': ['.js', '.mjs', '.cjs', '.ts', '.tsx'],
