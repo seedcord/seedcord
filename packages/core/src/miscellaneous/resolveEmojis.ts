@@ -1,5 +1,5 @@
-import { SeedcordErrorCode, paint } from '@seedcord/errors';
-import { SeedcordError, SeedcordTypeError, throwSingleOrAggregate } from '@seedcord/errors/internal';
+import { SeedcordErrorCode } from '@seedcord/errors';
+import { SeedcordError, SeedcordTypeError, throwSingleOrAggregate, token } from '@seedcord/errors/internal';
 import { asError } from '@seedcord/utils/internal';
 import { Routes } from 'discord-api-types/v10';
 
@@ -46,13 +46,7 @@ class EmojiResolver {
         this.application ??= await this.applicationEmojis();
 
         if (Error.isError(this.application)) {
-            this.unreadable(
-                key,
-                name,
-                'the application',
-                this.application,
-                `Check that ${paint.bold('DISCORD_BOT_TOKEN')} is still valid.`
-            );
+            this.unreadable(key, name, 'the application', this.application, `Check that ${token()} is still valid.`);
             return;
         }
         this.pick(key, name, this.application, 'the application');

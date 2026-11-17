@@ -1,6 +1,6 @@
 import { currentApplication } from '@seedcord/core/internal';
 import { SeedcordErrorCode, paint } from '@seedcord/errors';
-import { SeedcordError } from '@seedcord/errors/internal';
+import { SeedcordError, token } from '@seedcord/errors/internal';
 import { asError } from '@seedcord/utils/internal';
 import { Envapter } from 'envapt';
 
@@ -19,7 +19,7 @@ export async function publicKeyOf(rest: Pick<REST, 'get'>): Promise<string> {
             [
                 'the public key',
                 asError(error).message,
-                `The bot reads it there because ${paint.bold('DISCORD_PUBLIC_KEY')} is unset. Check ${paint.bold('DISCORD_BOT_TOKEN')}, or set ${paint.bold('DISCORD_PUBLIC_KEY')} to the key from your application's General Information page.`
+                `The bot reads it there because ${paint.bold('DISCORD_PUBLIC_KEY')} is unset. Check ${token()}, or set ${paint.bold('DISCORD_PUBLIC_KEY')} to the key from your application's General Information page.`
             ],
             { cause: error }
         );

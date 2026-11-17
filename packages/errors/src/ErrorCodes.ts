@@ -92,7 +92,7 @@ export enum SeedcordErrorCode {
     CoreDirectoryNotBuilt = 1225,
     /** A webhook sender was constructed with a URL that is not a Discord webhook URL. */
     CoreWebhookUrlInvalid = 1226,
-    /** Reading from Discord with `DISCORD_BOT_TOKEN` failed, like the application, its public key, or its commands. */
+    /** Reading from Discord with the bot token failed, like the application, its public key, or its commands. */
     CoreDiscordReadFailed = 1227,
     /** Two routes, commands, migrations, customId fields, or dispatch members have the same name, or two code files build to the same file. */
     CoreDuplicateName = 1228,
