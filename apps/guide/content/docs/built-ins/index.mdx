@@ -144,7 +144,7 @@ for await (const [userId, saved] of preferences.entries()) {
 }
 ```
 
-The Keyv and unstorage drivers read every key in the storage to find one collection's records, so a large store makes `entries()` slow. Call it at startup or from a timer. `entries()` throws on a [driver that can't list its keys](/built-ins/drivers#keyv).
+The Keyv and unstorage drivers read every key in the storage to find one collection's records, so a large store makes `entries()` slow. Call it at startup or from a timer. `entries()` throws on a [driver that can't list its keys](/built-ins/drivers#keyv-or-unstorage).
 
 To run a job later and keep it through a restart, use the [Tasks plugin](/plugins/tasks-scheduling#keeping-jobs-through-a-restart).
 

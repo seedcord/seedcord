@@ -64,7 +64,10 @@ The [migrations](/plugins/kysely-migrations) page covers the keys under `migrati
 
 Kysely ships dialects like Postgres, MySQL, and SQLite, and [its docs](https://kysely.dev/docs/dialects) list community dialects for other databases. Install the driver that your dialect needs in your project, then build the dialect inside `dialect`.
 
-For Postgres, pass `PostgresDialect` a `pg` pool. Here you read the connection string from `DATABASE_URL` through envapt, which throws if the variable is unset. [Env files and modes](/build/env) covers reading config that way.
+<Tabs>
+<Tab label="Postgres">
+
+Pass `PostgresDialect` a `pg` pool. Here you read the connection string from `DATABASE_URL` through envapt, which throws if the variable is unset. [Env files and modes](/build/env) covers reading config that way.
 
 ```ts twoslash
 import { Kysely } from '@seedcord/plugin-kysely';
@@ -92,6 +95,9 @@ seedcord.attach('db', Kysely, {
 });
 ```
 
+</Tab>
+<Tab label="node:sqlite">
+
 To use SQLite without installing a driver, wrap Node's built-in `node:sqlite` with [`nodeSqlite`](ref:plugin-kysely/nodeSqlite). Kysely's `SqliteDialect` expects the API that `better-sqlite3` has, and `nodeSqlite` adapts a `DatabaseSync` to it.
 
 ```ts twoslash
@@ -113,6 +119,9 @@ seedcord.attach('db', Kysely, {
     migrations: { path: './migrations' }
 });
 ```
+
+</Tab>
+</Tabs>
 
 ## Startup and shutdown
 

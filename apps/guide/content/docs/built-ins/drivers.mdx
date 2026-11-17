@@ -9,7 +9,10 @@ A driver connects the store to storage that keeps the records after the process 
 
 [`KeyvDriver`](ref:core/KeyvDriver) and [`UnstorageDriver`](ref:core/UnstorageDriver) each wrap a library you install. [Keyv](https://keyv.org) connects to SQLite, Redis, Postgres, MongoDB, and others through one adapter package per database. [unstorage](https://unstorage.unjs.io) has its own drivers for the filesystem, Redis, and other hosted stores, plus D1 through db0. Pick the one with an adapter for the storage you already run. On a server without storage yet, Keyv over SQLite keeps everything in one file.
 
-## Keyv
+## Keyv or unstorage
+
+<Tabs>
+<Tab label="Keyv">
 
 <Shell add="keyv @keyv/sqlite" />
 
@@ -45,7 +48,8 @@ If you listen for Keyv's `error` event, Keyv stops throwing when the store fails
 
 </Callout>
 
-## unstorage
+</Tab>
+<Tab label="unstorage">
 
 <Shell add="unstorage" />
 
@@ -72,6 +76,9 @@ export default seedcord;
 ```
 
 Each record becomes a file under `.kv`. `UnstorageDriver` takes a storage from unstorage 1 or 2.
+
+</Tab>
+</Tabs>
 
 ## On Cloudflare Workers
 
@@ -179,7 +186,12 @@ Declare `KvTypes` on the package your bot imports from, `@seedcord/gateway` or `
 
 Every bot writes its keys under the same prefixes, like `app:` for `core.kv` and `seedcord:` for the rate limiter. If two bots share one database and use the same collection name and id, they read and overwrite each other's records. A dev bot and a production bot that use the same Redis do exactly that.
 
-Give each bot its own prefix. Keyv takes it as the `namespace` option:
+Give each bot its own prefix.
+
+<Tabs>
+<Tab label="Keyv">
+
+Keyv takes it as the `namespace` option:
 
 ```ts twoslash
 import KeyvSqlite from '@keyv/sqlite';
@@ -190,7 +202,10 @@ const keyv = new Keyv(new KeyvSqlite('sqlite://./kv.sqlite'), {
 });
 ```
 
-With unstorage, wrap the storage in `prefixStorage` before you pass it to `UnstorageDriver`:
+</Tab>
+<Tab label="unstorage">
+
+Wrap the storage in `prefixStorage` before you pass it to `UnstorageDriver`:
 
 ```ts twoslash
 import { createStorage, prefixStorage } from 'unstorage';
@@ -201,6 +216,9 @@ const storage = prefixStorage(
     'staging'
 );
 ```
+
+</Tab>
+</Tabs>
 
 ## Closing the connection
 
