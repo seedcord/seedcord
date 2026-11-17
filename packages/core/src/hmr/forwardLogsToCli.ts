@@ -20,8 +20,8 @@ const WORKER_ROUTED = [
     'warn'
 ] as const satisfies readonly ConsoleMethod[];
 
-// workaround: workerd cancels a hot.send made during a request. @cloudflare/vite-plugin's runner never awaits it.
-// move this back to the dev channel once the plugin gets fixed
+// workaround for cloudflare/workers-sdk#16251. @cloudflare/vite-plugin's runner never awaits a hot.send, and workerd
+// cancels it once an empty response ends the request. move this back to the dev channel once the plugin gets fixed
 export function forwardLogsToCli(): void {
     const registry = LoggerChannelRegistry.instance;
     // eslint-disable-next-line no-console -- console is the transport

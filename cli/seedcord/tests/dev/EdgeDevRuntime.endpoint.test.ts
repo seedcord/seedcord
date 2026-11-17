@@ -165,6 +165,24 @@ describe('EdgeDevRuntime endpoint', () => {
         );
     }, 120_000);
 
+    // cloudflare/workers-sdk#16251. this fails over the dev channel because the empty 202 ends the request before a hot.send finishes
+    it('reaches the CLI with every line that a handler logs during one request', async () => {
+        await using project = await edgeProject();
+        const { projectDir } = project;
+        const { publicKey, sign } = await writeSigningEnv(projectDir);
+        await writeDevVars(projectDir, { DISCORD_BOT_TOKEN: FAKE_TOKEN, DISCORD_PUBLIC_KEY: publicKey });
+        const lines = ['burst 1', 'burst 2', 'burst 3', 'burst 4', 'burst 5'];
+        await writeFile(join(projectDir, 'src/handlers/Wave.ts'), waveHandler(...lines));
+        const logs = captureLogs();
+        await using started = await startedRuntime(projectDir);
+        await started.runtime.startBot(started.instance);
+
+        const body = WAVE_INTERACTION;
+        await fetch(`http://localhost:${started.port()}/`, { method: 'POST', body, headers: await sign(body) });
+
+        await vi.waitFor(() => expect(messagesOf(logs)).toEqual(expect.arrayContaining(lines)), { timeout: 10_000 });
+    }, 120_000);
+
     // cloudflare/workers-sdk#16339
     it('logs the error a plugin throws with a circular field when a handler reload fails', async () => {
         await using project = await edgeProject();
