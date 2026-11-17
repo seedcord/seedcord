@@ -50,6 +50,8 @@ export function emptyRouteMaps<Slots extends HandlerSlots, Extra extends object 
     };
 }
 
+export const UNHANDLED_REPLY = "This doesn't do anything right now.";
+
 export function unhandledSlots<Repliable, Autocomplete>(
     repliable: Repliable,
     autocomplete: Autocomplete
