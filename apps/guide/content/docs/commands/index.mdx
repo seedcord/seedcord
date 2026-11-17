@@ -65,7 +65,11 @@ For one server, pass `'guild'` with the ids. The command appears there right awa
 
 That speed is why you point your test application at test servers. With the decorator bare, [`commands.guilds`](#one-list-of-servers-for-every-command) picks the servers for each environment. Pass `'guild'` with ids only for a command that belongs in those servers in production too, like an admin command for your own server.
 
+<Callout type="warning">
+
 If you change a command's decorator from `'guild'` to `'global'`, Discord keeps the guild copy, so those servers show it twice in the picker. [`seedcord commands clean`](/tooling/commands#delete-what-your-code-no-longer-sends) deletes the guild copy.
+
+</Callout>
 
 ```ts plain
 @RegisterCommand('guild', ['613425648685547541'])

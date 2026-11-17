@@ -124,7 +124,7 @@ You write three more files:
 
 For seedcord's lint rules, add an `eslint.config.ts` from [the lint setup for an existing project](/tooling/lint#starting-from-an-existing-project). seedcord reads the token from `DISCORD_BOT_TOKEN`, or from `BOT_TOKEN` if your `.env` already uses that name.
 
-<Callout type="warning">
+<Callout type="danger">
 
 Point that token at a [test application](/discord-application#make-a-second-application-for-production) until every command is ported. Each deploy replaces Discord's whole list of commands for a scope, so starting seedcord against your live bot removes every command you haven't ported yet.
 

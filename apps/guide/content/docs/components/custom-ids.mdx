@@ -259,13 +259,13 @@ const { prefix, params } = decodeFor([TicketAction, Poll], wire);
 
 [`decodeFor`](ref:custom-id/decodeFor) tries each id in the array against the string. It returns the `prefix` that matched with that id's own `params`, and checking `prefix` narrows `params` to match.
 
-<Callout type="danger">
+<Callout type="warning">
 
 A custom id you write by hand compiles. `setCustomId('ticket:123')` skips the shape hash `encode` adds, so seedcord reads that prefix as `tic`. No handler matches the click. Mint every id through `encode`.
 
 </Callout>
 
-<Callout type="danger">
+<Callout type="warning">
 
 `CustomId` ships in `@seedcord/custom-id`, and your transport package re-exports it. Import it from `@seedcord/gateway` or `@seedcord/http`. Adding `@seedcord/custom-id` to your own dependencies can resolve a second copy. A decode failure from that copy skips the [rendered notices](/components/stale) seedcord provides.
 

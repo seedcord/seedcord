@@ -128,7 +128,13 @@ If you forget `@RegisterEvent` on a handler class, that handler never runs. seed
 
 ## Several handlers for one event
 
-Several handlers can register the same event, so you can keep a welcome message and a join log, for example, in separate files. They run at the same time, and if one of them throws, the rest still run. Don't make one handler depend on another's result since nothing guarantees the order. [Refusing a request](/replying/throwing) covers what seedcord does with the error.
+Several handlers can register the same event, so you can keep a welcome message and a join log, for example, in separate files. They run at the same time, and if one of them throws, the rest still run. [Refusing a request](/replying/throwing) covers what seedcord does with the error.
+
+<Callout type="warning">
+
+Don't make one handler depend on another's result since nothing guarantees the order.
+
+</Callout>
 
 Processing one event with every handler registered for it is an _event dispatch_. The [event middleware](/events/middleware) for that event runs once per event dispatch before all of those handlers. Each event dispatch runs in this order.
 

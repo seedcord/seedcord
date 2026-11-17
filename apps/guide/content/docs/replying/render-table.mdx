@@ -30,7 +30,7 @@ const table = renderTable([
 
 The first argument is rows of strings, and row zero becomes the header. Each column grows to fit its widest cell.
 
-<Callout type="tip">
+<Callout type="warning">
 
 Discord shows a message in a proportional font, so the columns don't line up. Pass `fence: true` to wrap the output in a code block.
 
@@ -150,11 +150,7 @@ wrap             truncate
 
 A markdown row holds one line, so that border truncates whatever `overflow` is set to.
 
-<Callout type="warning">
-
 `maxWidth` throws a `RangeError` on zero, a negative, or a fraction. `padding` throws on a negative or a fraction. Both checks run before any drawing.
-
-</Callout>
 
 ## Wide characters and emoji
 

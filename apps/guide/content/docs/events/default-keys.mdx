@@ -80,7 +80,7 @@ export class Trace extends Subscriber<'eventDispatching'> {
 
 `Trace` reads only `args.length`, which works for any event. `name` and `args` narrow together, so a check like `name === 'messageCreate'` gives you that event's own tuple in `args`.
 
-<Callout type="warning">
+<Callout type="note">
 
 seedcord publishes `eventDispatching` only when at least one handler is about to run. It doesn't publish it for an event with zero registered handlers, or for an event whose handlers were all `once` and have already run. The key is published before middleware runs, including when middleware later stops the dispatch.
 
