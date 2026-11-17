@@ -71,7 +71,9 @@ describe('what an agent reads instead of the page', () => {
     });
 
     it('writes every tab in order, each under its label', async () => {
-        const twin = await twinOf('<Tabs>\n<Tab label="Gateway">\n\nUses the cache.\n\n</Tab>\n<Tab label="Http">\n\nCalls REST.\n\n</Tab>\n</Tabs>\n');
+        const twin = await twinOf(
+            '<Tabs>\n<Tab label="Gateway">\n\nUses the cache.\n\n</Tab>\n<Tab label="Http">\n\nCalls REST.\n\n</Tab>\n</Tabs>\n'
+        );
 
         expect(twin).toBe('**Gateway**\n\nUses the cache.\n\n**Http**\n\nCalls REST.\n');
     });

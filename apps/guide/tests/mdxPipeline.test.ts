@@ -28,7 +28,9 @@ describe('the text search reads', () => {
     });
 
     it('reads a tab as its label followed by its content', async () => {
-        const code = await compileGuideMdx('<Tabs>\n<Tab label="Errors and checks">\n\nThrow a `Notice`.\n\n</Tab>\n</Tabs>\n');
+        const code = await compileGuideMdx(
+            '<Tabs>\n<Tab label="Errors and checks">\n\nThrow a `Notice`.\n\n</Tab>\n</Tabs>\n'
+        );
 
         expect(code).toContain('"content": "Errors and checks: Throw a Notice."');
     });
