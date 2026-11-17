@@ -155,7 +155,7 @@ seedcord registers an `unhandledRejection` and an `uncaughtException` listener w
 
 Both listeners run outside any interaction, so nobody sees a reply. When your application registers its own pair, set `errors.catchProcessErrors` to `false`, which [Configuring](/replying/error-behavior) shows in a real config.
 
-<Callout type="transport" only="http">
+<Callout type="transport" only="edge">
 
 An edge bot registers neither listener since its [`Seedcord`](ref:http/Seedcord) never starts a host process.
 

@@ -109,7 +109,7 @@ All the shutdown phases share one deadline of 25000 milliseconds, and after them
 
 </Callout>
 
-<Callout type="transport" only="http">
+<Callout type="transport" only="edge">
 
 On [Cloudflare Workers](/build/workers), startup tasks run on the first POST request each worker instance receives, in the same phases and with the same timeouts. Requests that arrive meanwhile wait for them. If a task fails, the next request runs the tasks again.
 
