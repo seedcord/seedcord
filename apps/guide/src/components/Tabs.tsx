@@ -37,7 +37,7 @@ export function Tabs({ children }: TabsProps): ReactElement {
     const [active, setActive] = useState(options[0]?.value ?? '');
 
     return (
-        <Card as="div" size="none" className={cn('px-4 py-3')}>
+        <Card as="div" size="sm">
             <div className={cn('nice-scroll overflow-x-auto')}>
                 <SegmentedControl
                     options={options}
