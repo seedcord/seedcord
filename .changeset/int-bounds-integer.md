@@ -1,6 +1,5 @@
 ---
-'@seedcord/custom-id': patch
-'@seedcord/errors': patch
+'@seedcord/custom-id': minor
 ---
 
-Fixed `.int()` accepting a bound that isn't an integer, which made `encode()` and `decode()` throw a raw `RangeError` instead of `CustomIdInvalidBounds`.
+**BREAKING:** Fixed `.int()` accepting a bound that isn't an integer. A fractional or `NaN` bound now throws `CustomIdInvalidBounds` when the field is declared, instead of a raw `RangeError` on the first encode or decode.

@@ -554,6 +554,12 @@ describe('CustomId definition guards', () => {
             SeedcordErrorCode.CustomIdInvalidBounds
         );
     });
+
+    it('rejects a hand-built int shape with a fractional bound', () => {
+        expect(thrownCode(() => new CustomId('page', { index: { kind: 'int', min: 1.5, max: 10 } }))).toBe(
+            SeedcordErrorCode.CustomIdInvalidBounds
+        );
+    });
 });
 
 describe('decodeFor', () => {

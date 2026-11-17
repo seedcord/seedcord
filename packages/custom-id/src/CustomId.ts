@@ -28,6 +28,14 @@ function routeKeyOf(wire: string): string {
     return colon === -1 ? '' : wire.slice(0, colon);
 }
 
+function assertIntBounds(name: string, field: CustomIdField<unknown>): void {
+    if (field.kind !== 'int' || field.min === undefined || field.max === undefined) return;
+    // eslint-disable-next-line unicorn/prefer-number-is-safe-integer -- a bound may be 2**53 exactly (a power of two, exact in float64)
+    if (!Number.isInteger(field.min) || !Number.isInteger(field.max) || field.min > field.max) {
+        throw new SeedcordRangeError(SeedcordErrorCode.CustomIdInvalidBounds, [name, field.min, field.max]);
+    }
+}
+
 /**
  * Strip the layout hash off a wire and return the prefix that the customId was declared with.
  *
@@ -115,6 +123,7 @@ export class CustomId<Prefix extends string, Shape extends CustomIdShape = {}> {
         if (!prefix || /[:\x1B\x1F]/.test(prefix)) {
             throw new SeedcordTypeError(SeedcordErrorCode.CustomIdInvalidPrefix, [prefix]);
         }
+        for (const [name, field] of Object.entries(shape)) assertIntBounds(name, field);
         this.prefix = prefix;
         this.shape = shape;
         this.routeKey = prefix + computeLayoutHash(shape);
@@ -197,10 +206,6 @@ export class CustomId<Prefix extends string, Shape extends CustomIdShape = {}> {
         opts?: FieldOptions<Nullable>
     ): CustomId<Prefix, WithField<Shape, Name, Nullish<number, Nullable>>> {
         const min = typeof minOrOpts === 'number' ? minOrOpts : undefined;
-        // eslint-disable-next-line unicorn/prefer-number-is-safe-integer -- a bound may be 2**53 exactly (a power of two, exact in float64)
-        if (min !== undefined && max !== undefined && (!Number.isInteger(min) || !Number.isInteger(max) || min > max)) {
-            throw new SeedcordRangeError(SeedcordErrorCode.CustomIdInvalidBounds, [name, min, max]);
-        }
         const options = typeof minOrOpts === 'number' ? opts : minOrOpts;
         const bounds = min === undefined || max === undefined ? {} : { min, max };
         return this.add<Name, Nullish<number, Nullable>>(name, { ...options, kind: 'int', ...bounds });
