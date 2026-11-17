@@ -21,6 +21,9 @@ import type { HmrUpdateEvent } from '@seedcord/types';
 import type { Mongoose as MongooseInstance } from 'mongoose';
 import type { Constructor } from 'type-fest';
 
+// the driver waits 30s for a server by default, past the 15s that core gives init() before it times out
+const SERVER_SELECTION_TIMEOUT_MS = 10_000;
+
 /**
  * MongoDB integration plugin for Seedcord.
  *
@@ -105,6 +108,7 @@ export class Mongoose extends Plugin<{ transport: 'any'; runtime: 'server' }> {
         this.client = await mongoose
             .connect(this.uri, {
                 dbName: this.options.name,
+                serverSelectionTimeoutMS: SERVER_SELECTION_TIMEOUT_MS,
                 ...(Envapter.isProduction && { tls: true, ssl: true }),
                 ...keepDefined(this.options.connectionOptions ?? {})
             })
