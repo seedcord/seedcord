@@ -8,9 +8,11 @@ import type { LoggerConfig } from './LogSink';
 // interactions, commands, services, bus subscribers
 
 /**
- * Interaction handlers configuration
+ * Interaction handlers configuration.
+ *
+ * @typeParam Unhandled - Each transport sets `Unhandled` to its own handler class type.
  */
-export type InteractionsConfig =
+export type InteractionsConfig<Unhandled = unknown> =
     | {
           /**
            * Path to dir containing interaction handlers.
@@ -32,6 +34,13 @@ export type InteractionsConfig =
            * @defaultValue `true`
            */
           ephemeral?: boolean;
+          /**
+           * The handler class that answers an interaction without a handler of its own. An unhandled
+           * autocomplete still answers with an empty list.
+           *
+           * @defaultValue a handler that replies "This doesn't do anything right now."
+           */
+          unhandled?: Unhandled;
       }
     | {
           /** No interactions configured */

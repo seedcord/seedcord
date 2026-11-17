@@ -137,7 +137,7 @@ Say your repo also runs an API or a dashboard that reads the same database as th
 ## What breaks after you move
 
 - **Collectors end on a restart.** A collector runs in the process that opened it, so a restart ends every prompt that's still waiting. seedcord routes a click to your `ButtonHandler` by its custom id, so the handler still answers after a restart. If you keep a collector, give its buttons a `CustomId` and list it under [`ignoreCustomIds`](/components/custom-ids#clicks-the-router-should-skip). Otherwise the router answers those clicks too, and Discord rejects whichever answer comes second.
-- **Buttons on old messages get the default reply.** Their custom ids are strings you wrote by hand, so they don't match any seedcord handler. seedcord answers a click on one of those buttons with "Feature not implemented yet.", which only the person who clicked can see.
+- **Buttons on old messages get the default reply.** Their custom ids are strings you wrote by hand, so they don't match any seedcord handler. seedcord answers a click on one of those buttons with "This doesn't do anything right now.", which only the person who clicked can see. You can [replace that reply](/commands#a-command-without-a-handler) with your own handler.
 - **Prefix commands need a privileged intent.** Reading message text needs the Message Content intent. [The intent review](/events/messages#prefix-commands-and-the-intent-review) that comes with it is the reason to move them to slash commands.
 - **An http bot doesn't cache anything or receive message events.** Discord posts only interactions to it, so every read of a member or a guild is a REST call.
 

@@ -16,7 +16,6 @@ import { SeedcordErrorCode, paint } from '@seedcord/errors';
 import { SeedcordError } from '@seedcord/errors/internal';
 import { Logger } from '@seedcord/logger';
 import { HostPlugins } from '@seedcord/types/internal';
-import { hasKeys } from '@seedcord/utils';
 import { asError } from '@seedcord/utils/internal';
 import { Events } from 'discord.js';
 
@@ -41,13 +40,12 @@ import type { InFlight } from '@seedcord/core/node/internal';
 import type { CustomIdMatcher, HmrAware, HmrUpdateEvent } from '@seedcord/types';
 import type { Interaction } from 'discord.js';
 
-const UNHANDLED: HandlerSlots = unhandledSlots(UnhandledRepliable, UnhandledAutocomplete);
-
 export class InteractionDispatcher implements Initializeable, HmrAware {
     private readonly logger = new Logger('Interactions', { channel: 'interactions' });
     private isInitialized = false;
 
     private readonly routes = new RouteRegistry<HandlerSlots>();
+    private readonly unhandled: HandlerSlots;
 
     private get maps(): RouteMaps<HandlerSlots> {
         return this.routes.maps;
@@ -62,29 +60,23 @@ export class InteractionDispatcher implements Initializeable, HmrAware {
         protected core: Core,
         private readonly inFlight: InFlight
     ) {
-        const ignoredKeysFromConfig = hasKeys(this.core.config.bot.interactions, ['ignoreCustomIds'])
-            ? this.core.config.bot.interactions.ignoreCustomIds
-            : undefined;
-        if (ignoredKeysFromConfig) {
-            for (const ignoredKey of ignoredKeysFromConfig) this.keysToIgnore.add(ignoredKey);
-        }
-
-        // the global router would double-ack these clicks because the in-process getConfirmation() collector consumes them
-        this.keysToIgnore.add(CONFIRM_DEF);
-
-        const interactionsDir = this.core.config.bot.interactions.path;
-        if (!interactionsDir) {
+        const interactions = this.core.config.bot.interactions;
+        if (!interactions.path) {
             throw new SeedcordError(SeedcordErrorCode.CoreControllerPathMissing, [
                 'InteractionDispatcher',
                 'interactions'
             ]);
         }
 
+        for (const ignoredKey of interactions.ignoreCustomIds ?? []) this.keysToIgnore.add(ignoredKey);
+        // the global router would double-ack these clicks because the in-process getConfirmation() collector consumes them
+        this.keysToIgnore.add(CONFIRM_DEF);
+
+        this.unhandled = unhandledSlots(interactions.unhandled ?? UnhandledRepliable, UnhandledAutocomplete);
+
         this.loader = new HandlerLoader({
-            handlersDir: interactionsDir,
-            middlewaresDir: hasKeys(this.core.config.bot.interactions, ['middlewares'])
-                ? this.core.config.bot.interactions.middlewares
-                : undefined,
+            handlersDir: interactions.path,
+            middlewaresDir: interactions.middlewares,
             middlewares: this.middlewares,
             plugins: this.core[HostPlugins],
             logger: this.logger,
@@ -236,7 +228,7 @@ export class InteractionDispatcher implements Initializeable, HmrAware {
         key: string,
         event: Payloads[Kind]
     ): ResolvedInteraction<Kind> {
-        return { ...matchRoute(this.maps, kind, key, UNHANDLED), event };
+        return { ...matchRoute(this.maps, kind, key, this.unhandled), event };
     }
 
     private async run(resolved: ResolvedInteraction): Promise<void> {

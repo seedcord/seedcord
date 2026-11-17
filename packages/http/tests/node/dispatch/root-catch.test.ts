@@ -5,6 +5,7 @@ import { emptyRouteMaps, interactionMiddleware, MiddlewareRegistry } from '@seed
 import { Envapter, PortableSource } from 'envapt';
 import { afterEach, describe, expect, it, vi } from 'vite-plus/test';
 
+import { routesOf } from '#src/dispatch/resolve';
 import { InteractionEngine } from '#src/InteractionEngine';
 import { testCore } from '#tests/helpers/core';
 import { createSigner } from '#tests/helpers/ed25519';
@@ -37,7 +38,7 @@ async function routerThrows(thrown: unknown): Promise<{
     });
     const engine = new InteractionEngine(
         core,
-        maps,
+        routesOf(maps),
         new MiddlewareRegistry<InteractionMiddlewareConstructor>(interactionMiddleware),
         signer.publicKeyHex
     );

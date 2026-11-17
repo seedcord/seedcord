@@ -1,11 +1,17 @@
+import type { InteractionHandler } from '#handlers/interaction/InteractionHandler';
+import type { Repliables } from '#handlers/interactionTypes';
 import type { RESTOptions } from '@discordjs/rest';
-import type { BotConfig, Config, HealthCheckConfig } from '@seedcord/types';
+import type { BotConfig, Config, HealthCheckConfig, InteractionsConfig, TypedConstructor } from '@seedcord/types';
 import type { Except } from 'type-fest';
+
+export type UnhandledHandler = TypedConstructor<typeof InteractionHandler<Repliables>>;
 
 // workerd throws when a timer starts at a worker's global scope
 export type EdgeSweeperKey = 'hashSweepInterval' | 'handlerSweepInterval';
 
 interface HttpBotConfig<Options> extends BotConfig {
+    interactions: InteractionsConfig<UnhandledHandler>;
+
     /**
      * Passed to the `REST` client from `@discordjs/rest`.
      */

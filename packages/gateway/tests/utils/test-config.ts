@@ -1,9 +1,12 @@
 import type { GatewayConfig } from '#interfaces/Config';
 import type { CustomIdMatcher, HealthCheckOption } from '@seedcord/types';
 
+type UnhandledHandler = Extract<GatewayConfig['bot']['interactions'], { path: string }>['unhandled'];
+
 interface TestConfigOverrides {
     interactions?: string;
     interactionMiddlewares?: string;
+    unhandled?: UnhandledHandler;
     events?: string;
     eventMiddlewares?: string;
     commands?: string;
@@ -17,6 +20,7 @@ export function testConfig(overrides: TestConfigOverrides = {}): GatewayConfig {
     const {
         interactions,
         interactionMiddlewares,
+        unhandled,
         events,
         eventMiddlewares,
         commands,
@@ -34,6 +38,7 @@ export function testConfig(overrides: TestConfigOverrides = {}): GatewayConfig {
                     : {
                           path: interactions,
                           ...(ignoreCustomIds && { ignoreCustomIds }),
+                          ...(unhandled && { unhandled }),
                           ...(interactionMiddlewares && { middlewares: interactionMiddlewares })
                       },
             events:

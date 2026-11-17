@@ -49,8 +49,11 @@ function filesOf(classes: BotClasses): Record<string, Record<string, unknown>> {
     return files;
 }
 
+type UnhandledHandler = Extract<HttpEdgeConfig['bot']['interactions'], { path: string }>['unhandled'];
+
 interface EngineOptions {
     readonly settings?: Except<HttpEdgeConfig, 'bot' | 'subscribers'>;
+    readonly unhandled?: UnhandledHandler;
     readonly env?: Readonly<Record<string, string>>;
     readonly attach?: (bot: Seedcord) => void;
 }
@@ -74,7 +77,8 @@ export async function readyEngine(classes: BotClasses, options: EngineOptions = 
         bot: {
             interactions: {
                 path: `${BUILT_ROOT}/${FOLDERS.handlers}`,
-                middlewares: `${BUILT_ROOT}/${FOLDERS.middleware}`
+                middlewares: `${BUILT_ROOT}/${FOLDERS.middleware}`,
+                ...(options.unhandled && { unhandled: options.unhandled })
             },
             commands: { path: null }
         },

@@ -1,5 +1,9 @@
-import type { BotConfig, Config, HealthCheckOption } from '@seedcord/types';
+import type { InteractionHandler } from '#handlers/interaction/InteractionHandler';
+import type { Repliables } from '#handlers/interactionTypes';
+import type { BotConfig, Config, HealthCheckOption, InteractionsConfig, TypedConstructor } from '@seedcord/types';
 import type { ClientOptions } from 'discord.js';
+
+type UnhandledHandler = TypedConstructor<typeof InteractionHandler<Repliables>>;
 
 /**
  * Djs Events handlers
@@ -25,6 +29,8 @@ export type EventsConfig =
  * gateway bot has, the discord.js client options and the gateway event handlers.
  */
 export interface GatewayBotConfig extends BotConfig {
+    interactions: InteractionsConfig<UnhandledHandler>;
+
     /**
      * Passed directly to the discord.js `Client` constructor.
      */

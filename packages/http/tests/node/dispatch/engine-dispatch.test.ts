@@ -3,11 +3,13 @@ import { PublishDefault } from '@seedcord/core/internal';
 import { beforeEach, describe, expect, it } from 'vite-plus/test';
 
 import { ButtonHandler } from '#handlers/interaction/components/ButtonHandler';
+import { InteractionHandler } from '#handlers/interaction/InteractionHandler';
 import { SlashHandler } from '#handlers/interaction/SlashHandler';
 import { restClients } from '#tests/helpers/restClients';
 
 import { capturingCtx, noClasses, readyEngine, routedHandler, signedRequest, slashPayload } from './harness';
 
+import type { Repliables } from '#handlers/interactionTypes';
 import type { Core } from '#interfaces/Core';
 
 beforeEach(() => {
@@ -162,7 +164,27 @@ describe('engine dispatch', () => {
         ];
         expect(route).toBe('/interactions/int-1/tok/callback');
         expect(options.body.type).toBe(4);
-        expect(options.body.data.components[0]?.content).toBe('Feature not implemented yet.');
+        expect(options.body.data.components[0]?.content).toBe("This doesn't do anything right now.");
+    });
+
+    it('dispatches an unmatched slash to the configured unhandled class', async () => {
+        class Unhandled extends InteractionHandler<Repliables> {
+            async execute(): Promise<void> {
+                await this.reply('nothing here yet');
+            }
+        }
+        using engine = await readyEngine(noClasses(), { unhandled: Unhandled });
+        const { signer, handle } = engine;
+        const ctx = capturingCtx();
+
+        await handle(await signedRequest(signer, slashPayload('ghost')), ctx);
+        await ctx.settled();
+
+        const [, options] = restClients()[0]?.post.mock.calls[0] as [
+            string,
+            { body: { data: { components: { content?: string }[] } } }
+        ];
+        expect(options.body.data.components[0]?.content).toBe('nothing here yet');
     });
 
     it('answers an unmatched autocomplete through the unhandled default with empty choices', async () => {
