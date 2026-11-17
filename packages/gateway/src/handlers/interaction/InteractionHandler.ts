@@ -8,9 +8,10 @@ import type { DispatchContext, ModalLike } from '@seedcord/core';
 /**
  * Shared base the typed interaction handlers extend.
  *
- * Not a public entry point. Extend {@link SlashHandler}, {@link ButtonHandler}, {@link ModalHandler},
- * or one of the select menu bases instead. This class adds `showModal` on top of the reply members
- * those bases share.
+ * For a handler with a route, extend {@link SlashHandler}, {@link ButtonHandler}, {@link ModalHandler},
+ * or one of the select menu bases. Extend this class directly only for `interactions.unhandled`, which
+ * answers every interaction kind. This class adds `showModal` on top of the reply members those bases
+ * share.
  *
  * @typeParam Repliable - The interaction type this handler processes
  */

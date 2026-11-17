@@ -8,6 +8,7 @@ import Link from 'next/link';
 import { Callout } from '#components/Callout';
 import { HoverHint } from '#components/HoverHint';
 import { Shell } from '#components/Shell';
+import { Tab, Tabs } from '#components/Tabs';
 import { LINK, Ref } from '#components/Ref';
 import { TypeHover } from '#components/TypeHover';
 import { FENCE_ATTR } from '#lib/rehypeFenceMeta';
@@ -233,5 +234,7 @@ export const mdxComponents = {
     Image: GuideImage,
     Callout,
     Shell,
-    Ref
+    Ref,
+    Tabs,
+    Tab
 } satisfies MDXComponents;

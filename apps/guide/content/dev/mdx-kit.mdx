@@ -232,6 +232,30 @@ A callout takes whole blocks. A fence renders inside one.
 
 </Callout>
 
+## Tabs
+
+Tabs hold any blocks, one `Tab` per label. The Markdown copy of the page prints every tab in order under its bold label.
+
+<Tabs>
+<Tab label="A table">
+
+| what      | where it runs       |
+| --------- | ------------------- |
+| `Notice`  | a gate or a handler |
+| `Silence` | a gate              |
+
+</Tab>
+<Tab label="Prose and a fence">
+
+A handler throws a `Notice` to refuse a request.
+
+```ts plain
+throw new NotInGuild();
+```
+
+</Tab>
+</Tabs>
+
 ## Reference links
 
 A symbol link is a markdown link with a `ref:` target, and the slug comes off the symbol. [Notice](ref:core/Notice), [Silence](ref:core/Silence), and [Fault](ref:core/Fault).

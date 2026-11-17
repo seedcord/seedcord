@@ -70,6 +70,12 @@ describe('what an agent reads instead of the page', () => {
         expect(twin).toBe('> **Warning**\n>\n> Mind the cap.\n');
     });
 
+    it('writes every tab in order, each under its label', async () => {
+        const twin = await twinOf('<Tabs>\n<Tab label="Gateway">\n\nUses the cache.\n\n</Tab>\n<Tab label="Http">\n\nCalls REST.\n\n</Tab>\n</Tabs>\n');
+
+        expect(twin).toBe('**Gateway**\n\nUses the cache.\n\n**Http**\n\nCalls REST.\n');
+    });
+
     it('says which transport a transport callout applies to', async () => {
         const twin = await twinOf('<Callout type="transport" only="gateway">\n\nOnly here.\n\n</Callout>\n');
 

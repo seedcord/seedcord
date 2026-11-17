@@ -27,6 +27,12 @@ describe('the text search reads', () => {
         expect(code).toContain('"content": "key · means; per · who shares"');
     });
 
+    it('reads a tab as its label followed by its content', async () => {
+        const code = await compileGuideMdx('<Tabs>\n<Tab label="Errors and checks">\n\nThrow a `Notice`.\n\n</Tab>\n</Tabs>\n');
+
+        expect(code).toContain('"content": "Errors and checks: Throw a Notice."');
+    });
+
     it('removes quote markers, reference links, and strikethrough', async () => {
         const code = await compileGuideMdx('> See the [store][s] and ~~old~~ text.\n\n[s]: /checks/rate-limiter');
 
