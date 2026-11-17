@@ -157,7 +157,7 @@ const messages = {
     [SeedcordErrorCode.DecoratorInvalidMiddlewarePriority]: (className: string, priority: string) =>
         `${paint.sky(className)} sets its middleware priority to ${priority}. Pass a finite number.`,
     [SeedcordErrorCode.DecoratorWebhookUrlMissing]: (className: string) =>
-        `${paint.sky(className)} extends WebhookLog without a ${paint.bold('@WebhookUrl')} decorator. Add one with the name of the env var that holds the webhook URL.`,
+        `${paint.sky(className)} extends WebhookLog without a ${paint.bold('@WebhookUrl')} decorator. Pass it the name of the env var that holds the webhook URL, or a function that returns the URL.`,
     [SeedcordErrorCode.DecoratorEmptyMiddlewareFilter]: (className: string, key: string) =>
         `${paint.sky(className)} passes an empty array as ${paint.bold(key)}. Remove the key to run the middleware on everything.`,
     [SeedcordErrorCode.DecoratorDuplicateKey]: (decorator: string, className: string, key: string, fix: string) =>
