@@ -26,9 +26,9 @@ export default createConfig({
 });
 ```
 
-[`createConfig`](ref:eslint-config/createConfig) returns a flat config array, so ESLint reads it directly. By default it turns on the typescript-eslint presets, import ordering, TSDoc syntax checking, unicorn, the security plugin, and prettier compatibility. `tsconfigRootDir` points the type-aware rules at your `tsconfig.json`. `import.meta.dirname` is the folder holding `eslint.config.ts`. That value is right whenever your `tsconfig.json` is in the same folder as `eslint.config.ts`.
+[`createConfig`](ref:eslint-config/createConfig) returns a flat config array, so ESLint reads it directly. By default it turns on the typescript-eslint presets, import ordering, TSDoc syntax checking, unicorn, the security plugin, and prettier compatibility. `tsconfigRootDir` points the type-aware rules at your `tsconfig.json`. `import.meta.dirname` is the folder holding `eslint.config.ts`. That value is right whenever your `tsconfig.json` is in that folder too.
 
-`registerDiscordjsPlugin` and `registerSeedcordPlugin` add the rules written for bots. If you leave either one out, its rules never run. The next two sections list what each one brings in.
+`registerDiscordjsPlugin` and `registerSeedcordPlugin` add the rules written for bots. If you leave either one out, its rules never run.
 
 ## What the seedcord rules catch
 

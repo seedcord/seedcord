@@ -20,7 +20,7 @@ declare module '@seedcord/gateway' {
 }
 ```
 
-This file declares two keys, `actor` for the caller's username and `locale` for their language. The rest of the page uses both.
+This file declares two keys, `actor` for the caller's username and `locale` for their language.
 
 <Callout type="note">
 
@@ -110,7 +110,7 @@ Everything `this.dispatch` holds:
 
 | member | what it does |
 | --- | --- |
-| [`id`](ref:core/DispatchContext.id) | **the one unique id of this dispatch** |
+| [`id`](ref:core/DispatchContext.id) | the unique id of this dispatch |
 | [`set(key, value)`](ref:core/DispatchContext.set) | writes a value for the rest of this dispatch |
 | [`get(key)`](ref:core/DispatchContext.get) | reads a value, or `undefined` if it isn't set |
 | [`require(key)`](ref:core/DispatchContext.require) | reads a value, throws `DispatchStateMissing` if it's `undefined` |

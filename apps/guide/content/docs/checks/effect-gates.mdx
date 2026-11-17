@@ -90,7 +90,7 @@ A refusal anywhere in step one cancels every queued commit. The same holds when 
 
 <Callout type="warning">
 
-Step two finishes before step three starts. Your handler runs after every commit, so a throw inside it leaves the credit spent. If your users paid for that credit or can see their balance, catch the throw in your handler and refund the credit there.
+Your handler runs after every commit, so a throw inside it leaves the credit spent. If your users paid for that credit or can see their balance, catch the throw in your handler and refund the credit there.
 
 Commits run one at a time. If a commit throws, the commits after it don't run, and neither does your handler. The commits before it have already run, and seedcord doesn't undo them.
 
@@ -168,7 +168,7 @@ The owner keeps their credit and still spends a cooldown slot. Only the gate tha
 
 <Callout type="note">
 
-Every commit runs after every check. A check never reads what another gate's commit wrote.
+A check never reads what another gate's commit wrote because every commit runs after every check.
 
 </Callout>
 

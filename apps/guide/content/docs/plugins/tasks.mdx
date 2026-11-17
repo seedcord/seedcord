@@ -164,7 +164,7 @@ export class Poll extends Task {
 }
 ```
 
-`Poll` runs every 90 seconds from 09:00 to 16:59 on Mondays and Thursdays. Outside those days and hours, it doesn't run at all.
+`Poll` runs every 90 seconds from 09:00 to 16:59 on Mondays and Thursdays.
 
 `every` sets the shortest gap, but the task still waits for a match. That's why the pattern has six fields. With five, it only matches second 0 of each minute. 90 seconds after a run is halfway through a minute, so the next match would come 2 minutes after the run.
 

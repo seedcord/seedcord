@@ -91,6 +91,8 @@ Leaving the `ctx` parameter unannotated makes it a [`GateContextBase`](ref:core/
 | `userId` | `string \| null` | the acting user's id, null on an event without one |
 | `guildId` | `string \| null` | the server id, null in a direct message |
 | `channelId` | `string \| null` | the channel id, null when the source doesn't have one |
+| `userLocale` | `Locale \| null` | the language that the user picked in Discord, null on a gateway event |
+| `guildLocale` | `Locale \| null` | the server's preferred language, null outside a server |
 | `memberRoleIds` | `readonly string[]` | the caller's role ids without the everyone role, empty outside a server |
 | `memberPermissions` | `bigint \| null` | the caller's permission bits, channel-scoped on an interaction and role-derived on a gateway event, null outside a server |
 | `dispatch` | `DispatchContext` | the [dispatch context](/checks/dispatch-context), holding what a middleware wrote before the first gate ran |
@@ -138,7 +140,7 @@ The two gateway contexts carry different fields. Narrow on `ctx.kind` before rea
 
 | annotation | fits | adds |
 | --- | --- | --- |
-| `GateContextBase` | every handler, both transports | the eight fields above |
+| `GateContextBase` | every handler, both transports | the fields above |
 | [`InteractionGateContext`](ref:gateway/InteractionGateContext) | any interaction handler | `interaction`, `user`, `guild`, `member` |
 | `InteractionGateContext<ButtonInteraction>` | button handlers | the same, with `interaction` typed to a button |
 | [`EventGateContext`](ref:gateway/EventGateContext) | any event handler | `eventName`, `payload`, `user`, `guild`, `member` |

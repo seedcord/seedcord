@@ -317,7 +317,9 @@ Uptime rejected its options. Label is empty.
 
 ## Logging
 
-Log through [`this.logger`](ref:core/Plugin.logger). It exists from the constructor onward and labels each line with your class name. The logger writes each line to a channel, a named stream that a bot can filter or silence. `attach` sets the channel to the key before your constructor runs. For example, if someone attaches your plugin as `metrics`, the logger writes every line to the `metrics` channel, and [the log channel section](/plugins#the-key-is-also-a-log-channel) shows how a bot filters it. To label one job's lines, call [`this.logger.withLabel('sync')`](ref:logger/Logger.withLabel), which returns a logger with that label on the same channel. [`withChannel()`](ref:logger/Logger.withChannel) returns one that writes to another channel.
+Log through [`this.logger`](ref:core/Plugin.logger). It exists from the constructor onward and labels each line with your class name. The logger writes each line to a channel, a named stream that a bot can filter or silence. `attach` sets the channel to the key before your constructor runs, so a plugin attached as `metrics` writes every line to the `metrics` channel. [The log channel section](/plugins#the-key-is-also-a-log-channel) shows how a bot filters it.
+
+To label one job's lines, call [`this.logger.withLabel('sync')`](ref:logger/Logger.withLabel), which returns a logger with that label on the same channel. [`withChannel()`](ref:logger/Logger.withChannel) returns one that writes to another channel.
 
 ## Keeping records
 
