@@ -1,6 +1,6 @@
 ---
 title: Mongoose
-description: Connect a gateway or http bot to MongoDB with the mongoose plugin, which opens and closes the connection with your bot.
+description: Connect a bot on your own server to MongoDB with the mongoose plugin, which opens and closes the connection with your bot.
 ---
 
 [`@seedcord/plugin-mongoose`](ref:plugin-mongoose) connects to MongoDB and loads your service classes when the bot starts, then disconnects when it stops. Your schemas and queries are plain [Mongoose](https://mongoosejs.com/docs/).
@@ -11,6 +11,7 @@ description: Connect a gateway or http bot to MongoDB with the mongoose plugin, 
 import { Seedcord } from '@seedcord/gateway';
 import { Mongoose } from '@seedcord/plugin-mongoose';
 import { GatewayIntentBits } from 'discord.js';
+import { Converters, Envapter } from 'envapt';
 
 export const seedcord = new Seedcord({
     bot: {
@@ -22,7 +23,7 @@ export const seedcord = new Seedcord({
     subscribers: { path: null }
 }).attach('db', Mongoose, {
     path: './services',
-    uri: 'mongodb://localhost:27017/',
+    uri: Envapter.getRequired('MONGO_URI', Converters.String),
     name: 'seedcord',
     connectionOptions: { serverSelectionTimeoutMS: 5000 },
     timeout: 15_000
@@ -31,9 +32,9 @@ export const seedcord = new Seedcord({
 export default seedcord;
 ```
 
-This sample builds a gateway bot. The same `attach` call works on an http `Seedcord` from `@seedcord/http` that runs on a server. On Cloudflare Workers it's a compile error because the plugin [needs a server](/plugins#a-plugin-declares-where-it-runs), and a cast that gets past it throws `CorePluginScopeMismatch`.
+This sample builds a gateway bot. The same `attach` call works on an http `Seedcord` from `@seedcord/http` that runs on a server. On Cloudflare Workers it's a compile error because the plugin [needs a server](/plugins#a-plugin-declares-where-it-runs), and a cast that bypasses the check throws `CorePluginScopeMismatch`.
 
-Read `uri` from the environment with envapt's `Envapter.getRequired`, which throws if the variable is unset. `uri` rejects `process.env.MONGO_URI` because its type is `string | undefined`. [Env files and modes](/build/env) has the details.
+The sample reads `uri` with envapt's `Envapter.getRequired`, which throws if `MONGO_URI` is unset. TypeScript rejects `process.env.MONGO_URI` there because its type is `string | undefined`. [Env files and modes](/build/env) has the details.
 
 ## The options
 
@@ -53,21 +54,21 @@ Read `uri` from the environment with envapt's `Envapter.getRequired`, which thro
 
 <Callout type="warning">
 
-When the environment is `production`, the plugin adds `tls: true` and `ssl: true`. seedcord reads the environment from the first of `ENVIRONMENT`, `ENV`, `NODE_ENV`, or `MODE` that you set. If you run production mode against a local database without TLS, that database refuses the connection, so set `tls: false` and `ssl: false` in `connectionOptions`.
+When the environment is `production`, the plugin adds `tls: true` and `ssl: true`. seedcord reads the environment from the first of `ENVIRONMENT`, `ENV`, `NODE_ENV`, or `MODE` that you set. If you run production mode against a local database without TLS, the connection fails, so set `tls: false` and `ssl: false` in `connectionOptions`.
 
 </Callout>
 
 ## Startup and shutdown
 
-A bot that fails halfway through startup can leave its MongoDB connection open. The mongoose plugin closes that connection for you. `init()` connects, then loads every service class from `path`. If either step fails, `init()` closes the connection before it rethrows the error.
+By hand, a bot that fails halfway through startup would leave its MongoDB connection open. The mongoose plugin closes that connection for you. `init()` connects, then loads every service class from `path`. If either step fails, `init()` closes the connection before it rethrows the error.
 
 If the connection fails, `init()` throws `PluginConnectionFailed`. Its message includes the database from your `name` option and mongoose's own message, and the full mongoose error is in its `cause`.
 
-Shutdown runs the same steps backwards. `dispose()` clears the service registry and every loaded model, then closes the connection. If closing fails, `dispose()` throws `PluginDisconnectFailed`.
+`dispose()` clears the services and every model the plugin built, then closes the connection. If closing fails, `dispose()` throws `PluginDisconnectFailed`.
 
 ## The mongoose instance
 
-You write most of your queries in [service classes](/plugins/mongoose-services). Some work doesn't belong in a service, like checking whether the bot is still connected to MongoDB. For that, use `this.core.db.connection`, the Mongoose instance that `mongoose.connect()` returned. Its `connection` property is Mongoose's `Connection` object, and its `model()` method builds a model.
+You write most of your queries in [service classes](/plugins/mongoose-services). Some work doesn't belong in a service, like checking whether the bot is still connected to MongoDB. For that, read the plugin's [`connection`](ref:plugin-mongoose/Mongoose.connection), the Mongoose instance that `mongoose.connect()` returned. Its own `connection` property is Mongoose's `Connection` object.
 
 ```ts twoslash
 import { SlashHandler, SlashRoute } from '@seedcord/gateway';
@@ -85,7 +86,6 @@ class History extends SlashHandler<'history'> {
     public async execute(): Promise<void> {
         // ---cut---
         const state = this.core.db.connection.connection.readyState;
-        //    ^?
 
         await this.reply(`Connection state ${String(state)}.`);
         // ---cut-after---
@@ -93,11 +93,11 @@ class History extends SlashHandler<'history'> {
 }
 ```
 
-The handler reads `readyState` from Mongoose's `Connection`, which is `1` while the bot is connected. `this.core.db` only has a type once you've run [`seedcord codegen`](/plugins/typing).
+`readyState` is `1` while the bot is connected. `this.core.db` only has a type once you've run [`seedcord codegen`](/plugins/typing).
 
 <Callout type="warning">
 
-`connection` and `services` are only ready after `init()` resolves. Reading either one before then, or after `dispose()`, throws `PluginNotReady`.
+`connection` and `services` are only ready after `init()` resolves. Reading either one before that, or after `dispose()`, throws `PluginNotReady`.
 
 </Callout>
 

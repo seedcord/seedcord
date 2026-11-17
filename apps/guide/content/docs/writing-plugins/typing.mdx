@@ -1,13 +1,13 @@
 ---
 title: Typing what you ship
-description: Make a bot see your plugin's types, give a plugin a type parameter, and read one plugin from another without breaking attach.
+description: Get your plugin's methods typed on this.core in every bot that attaches it, even though each bot's author picks the key.
 ---
 
-You can't declare your plugin on [`Core`](ref:gateway/Core) yourself because the bot's author picks the key. Two things carry the types to them. [`attach`](ref:gateway/Seedcord.attach) returns the bot typed with your instance under the key, and [`seedcord codegen`](/tooling/codegen) copies that instance type onto `Core`, which [Typing a plugin](/plugins/typing) shows from the bot's side. Each member's type comes from your class. The key and any type argument come from the bot that attaches it.
+You can't declare your plugin on [`Core`](ref:gateway/Core) yourself because the bot's author picks the key. Two things carry your types to the bot's handlers. [`attach`](ref:gateway/Seedcord.attach) returns the bot typed with your instance under the key, and [`seedcord codegen`](/tooling/codegen) copies that instance type onto `Core`. The [bot-side typing page](/plugins/typing) shows that step. The type of each member a handler can call comes from your class. The key and any type argument come from the bot that attaches it.
 
 ## Why the first parameter is CoreBase
 
-Codegen adds every attached plugin to the transport's `Core`. If a constructor types its first parameter as that `Core`, the plugin's type depends on itself, which TypeScript can't resolve. `attach` rejects such a plugin at compile time.
+Codegen adds every attached plugin to the transport's `Core`, and `attach` reads your constructor's parameters. A first parameter typed as that `Core` would pull your own plugin back into the types `attach` reads. So `attach` rejects any first parameter narrower than `CoreBase` at compile time.
 
 ```ts twoslash
 // @errors: 2345
@@ -28,13 +28,13 @@ class Uptime extends Plugin {
 seedcord.attach('uptime', Uptime);
 ```
 
-The compiler rejects `Uptime` as the argument to `attach` and prints this requirement under it.
+The compiler rejects `Uptime` as the argument to `attach` and prints this requirement under the call.
 
 ```txt output
 this plugin constructor must take CoreBase as its first parameter and read the transport Core off this.core
 ```
 
-Type the first parameter as [`CoreBase`](ref:core/CoreBase). To reach the transport's `Core`, read `this.core`, which your base class already types. [Writing a plugin](/writing-plugins#what-the-constructor-takes) has the working constructor.
+Type the first parameter as [`CoreBase`](ref:core/CoreBase), the part of `Core` that every transport shares. To reach the transport's `Core`, read `this.core`, which your base class already types. [Writing a plugin](/writing-plugins#what-the-constructor-takes) has the working constructor.
 
 ## A plugin with a type parameter
 
@@ -65,13 +65,17 @@ const session = bot.sessions.get('abc');
 //    ^?
 ```
 
-`KeyValue<Session>` in the `attach` call sets `TValue`, so `session` comes back as `Session | undefined`. The `<Session>` after a value is an instantiation expression, which needs TypeScript 4.7 or later. A handler reading `this.core.sessions` gets the same type.
+Writing `KeyValue<Session>` in the `attach` call sets `TValue`, so `session` comes back as `Session | undefined`. The `<Session>` after a value is an instantiation expression. A handler reading `this.core.sessions` gets the same type.
+
+<Callout type="warning">
 
 If you pass `KeyValue` alone, `TValue` becomes `unknown`, the fallback for a type parameter with no `extends`. That holds even when `TValue` has a default. Passing a value to the constructor doesn't set `TValue` either. Tell your users to write the type argument in the `attach` call.
 
+</Callout>
+
 ## Reading another plugin
 
-A plugin on the base from `@seedcord/core/plugin` has a `this.core` typed as `CoreBase`, which doesn't list attached plugins. Reading another plugin by key fails to compile.
+A plugin on the base from `@seedcord/core/plugin` has a `this.core` typed as `CoreBase`, which doesn't list attached plugins. If you read another plugin by key there, it fails to compile.
 
 ```ts twoslash
 // @errors: 2339
@@ -118,6 +122,6 @@ const bot = seedcord.attach('hello', Hello);
 bot.attach('greeter', Greeter, bot.hello);
 ```
 
-`attach` returns the bot typed with the `hello` key, so `bot.hello` is the `Hello` instance that the `Greeter` constructor takes. The bot's author writes those last two lines. Tell your users to attach `Hello` first. If they attach `Greeter` first, `bot.hello` doesn't exist and the call fails to compile. Use an argument like this when your plugin needs the other plugin's methods. A plugin option works for settings.
+`attach` returns the bot typed with the `hello` key, so `bot.hello` is the `Hello` instance that the `Greeter` constructor takes. The bot's author writes those last two lines. Tell your users to attach `Hello` first. If they attach `Greeter` first, `bot.hello` doesn't exist and the call fails to compile. Pass the other plugin when yours needs its methods. For a setting, pass the value itself.
 
-If your plugin reads keys out of the bot's files, like tag names, [codegen can type them](/writing-plugins/codegen). [Where it runs](/writing-plugins/runtimes) covers limiting a plugin to one transport or runtime.
+If your plugin reads keys out of the bot's files, like tag names, [codegen can type them](/writing-plugins/codegen). A plugin can also [limit itself to one transport or runtime](/writing-plugins/runtimes).

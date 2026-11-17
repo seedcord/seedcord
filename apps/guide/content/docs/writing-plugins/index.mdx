@@ -3,7 +3,7 @@ title: Writing a plugin
 description: Add your own functionality to seedcord with a plugin, a class that starts and stops with your bot and that every handler reads from this.core.
 ---
 
-Say your bot talks to an outside service, like a metrics API or a cache, and exports its client from `bot.ts`. Without a plugin, nothing closes that client when the bot shuts down, and a handler can import it before it has connected. As a plugin, the client starts and stops with your bot, and handlers read it from [`this.core`](ref:core/CoreBase) under the key you attach it with. A plugin can also give every handler a value built from the interaction, and keep records across restarts. If nothing needs to start or stop with the bot, a plain module works too. [Using a plugin](/plugins) covers attaching one to a bot.
+Say your bot talks to an outside service, like a metrics API or a cache, and exports its client from `bot.ts`. Without a plugin, nothing closes that client when the bot shuts down, and a handler can import it before it has connected. As a plugin, the client starts and stops with your bot, and handlers read it from [`this.core`](ref:core/CoreBase) under the key you attach it with. If nothing needs to start or stop with the bot, a plain module works too.
 
 To write a plugin, extend [`Plugin`](ref:core/Plugin) and write [`init()`](ref:core/Plugin.init). Everything else on `Plugin` is optional. The samples on this page import from `@seedcord/gateway`, and an http bot imports the same names from `@seedcord/http`.
 
@@ -78,11 +78,11 @@ export class UptimeCommand extends SlashHandler<'uptime'> {
 }
 ```
 
-[Typing what you ship](/writing-plugins/typing) explains how the return type of `elapsed()` reaches `this.core`.
+To type `this.core.uptime`, run [`seedcord codegen`](/tooling/codegen) after you attach the plugin. The [typing page](/writing-plugins/typing) explains how the return type of `elapsed()` reaches it.
 
-A handler can use every public member of your class except the ones that only seedcord uses: `init()`, [`ready()`](ref:core/Plugin.ready), [`dispose()`](ref:core/Plugin.dispose), [`codegen()`](ref:core/Plugin.codegen), [`onHmr()`](ref:core/Plugin.onHmr), [`dispatchMembers`](ref:core/Plugin.dispatchMembers) and [`prepareCommands()`](ref:core/Plugin.prepareCommands). `startedAt` in the first sample is private, so a handler reads the time through `elapsed()`, and TypeScript rejects a handler that writes to it. Keep connections and state private, and make public only the methods you want handlers to call.
+A handler can use every public member of your class except the ones that only seedcord uses: `init()`, [`ready()`](ref:core/Plugin.ready), [`dispose()`](ref:core/Plugin.dispose), [`codegen()`](ref:core/Plugin.codegen), [`onHmr()`](ref:core/Plugin.onHmr), [`dispatchMembers`](ref:core/Plugin.dispatchMembers) and [`prepareCommands()`](ref:core/Plugin.prepareCommands). `startedAt` in the first sample is private, so a handler reads the time through `elapsed()`. TypeScript rejects a handler that writes to `startedAt`. Keep connections and state private, and make public only the methods you want handlers to call.
 
-Put work in `ready()` when it needs the logged-in client or the bot's application id, which `init()` can't read yet. Handlers start receiving interactions when the last startup phase, Ready, begins. `ready()` runs in that phase too, so a handler can call your method before `ready()` finishes. If a method reads something that `ready()` sets, check for it first. Throw if the handler can't do its job without it, and return early if it can skip the work. The full startup order is on [the lifecycle page](/plugins/lifecycle).
+Put work in `ready()` when it needs the logged-in client or the bot's application id. Neither is ready yet when `init()` runs. Handlers start receiving interactions when the last startup phase, Ready, begins. `ready()` runs in that phase too, so a handler can call your method before `ready()` finishes. If a method reads something that `ready()` sets, check for it first. Throw if the handler can't do its job without it, and return early if it can skip the work. The full startup order is on [the lifecycle page](/plugins/lifecycle).
 
 <Callout type="transport">
 
@@ -120,7 +120,7 @@ export class GuildSettings extends Plugin {
 }
 ```
 
-`dispatchMembers` is a plain object of functions. seedcord calls each function once per interaction, and once per event if the event has a handler. Each handler gets what `settings` returns as `this.settings`. A function can be async, and handlers then get the value it resolves to.
+`dispatchMembers` is a plain object of functions. seedcord calls each function once per interaction, and once per event if the event has a handler. Each handler gets what `settings` returns as `this.settings`. If a function is async, handlers get the value it resolves to.
 
 Each function gets a [`DispatchOrigin`](ref:core/DispatchOrigin), with these fields:
 
@@ -134,15 +134,15 @@ origin.
 //     ^|
 ```
 
-An interaction always has `userId` and `userLocale`. The other fields can be null:
+Every field can be null:
 
 - `guildId` and `guildLocale` are null outside a guild.
 - `channelId` is null when the interaction or event doesn't happen in a channel.
-- `userId` is null on an event without a user, and `userLocale` is null on every gateway event.
+- `userId` is null on an event without a user, and `userLocale` is null on every gateway event. An interaction always has both.
 
-That's why `settings` returns the defaults when `guildId` is null.
+For that reason, `settings` returns the defaults when `guildId` is null.
 
-To type `this.settings` on every handler, attach the plugin and run [`seedcord codegen`](/plugins/typing). Codegen writes one row for each key, and TypeScript reads the row's type from the function's return type. Leave the `dispatchMembers` object without a type annotation. With one, like `Record<string, (origin: DispatchOrigin) => unknown>`, `this.settings` becomes `unknown`.
+To type `this.settings` on every handler, attach the plugin and run [`seedcord codegen`](/plugins/typing). Codegen writes one line for each key into `seedcord-gen.ts`, and TypeScript reads that line's type from the function's return type. Leave the `dispatchMembers` object without a type annotation. With one, like a `Record` of functions, `this.settings` becomes `unknown`.
 
 ```ts twoslash title="src/handlers/LimitsCommand.ts"
 // ---cut-start---
@@ -172,13 +172,25 @@ export class LimitsCommand extends SlashHandler<'limits'> {
 }
 ```
 
-`this.settings` has the type that the `settings` function returns. [Middleware](/checks/middleware) reads `this.settings` too. [Gates](/checks/gates) and a [`Notice`](ref:core/Notice)'s `render` read it as `ctx.settings`.
+`maxWarnings` is a `number` because the `settings` function returns `Settings`. In [middleware](/checks/middleware) you read `this.settings` too, and in [gates](/checks/gates) and a [`Notice`](ref:core/Notice)'s `render` you read `ctx.settings`.
 
 seedcord runs every plugin's `dispatchMembers` functions at the same time, and the handler waits until they've all returned or one has thrown. They run before middleware and gates, even for an interaction that a gate then refuses. So a slow function spends part of the [three seconds](/replying) that Discord gives a bot to answer an interaction. They also run for [autocomplete](/commands/autocomplete), which Discord sends as the user types. If only a few handlers need a value, give your plugin a method and call it through `this.core` in those handlers.
 
 If a function throws, seedcord skips the middleware and handlers for that interaction or event, and logs and publishes the error with the code `CorePluginMemberThrew`. seedcord answers a command, a component, a context menu or a modal with the built-in [`Fault`](ref:core/Fault) card. It skips your bot's `defaultError` here because a card of your own might read the value that just failed. An autocomplete gets an empty list of choices. An event isn't answered at all.
 
-`attach()` throws `CorePluginMemberReserved` if one of your `dispatchMembers` keys is a name that seedcord uses, like `reply`, `user` or `logger`. It throws `CoreDuplicateName` if another plugin already uses the key. If you attach a plugin that has `dispatchMembers` twice, `attach()` throws `CorePluginAttachedTwice` because both copies add the same keys. A handler or middleware can't use your keys either. If one defines a method or getter with one of them, startup stops with `CoreDuplicateName`. If it sets a field with one, every dispatch to it fails with that code since the field would replace your value.
+Each key has to be free on every handler, so these fail:
+
+{/* prettier-ignore-start */}
+
+| if | fails at | code |
+| --- | --- | --- |
+| a key is a name that seedcord uses, like `reply`, `user` or `logger`, or a built-in object name like `constructor` | `attach()` | `CorePluginMemberReserved` |
+| another plugin already uses the key | `attach()` | `CoreDuplicateName` |
+| you attach a plugin that has `dispatchMembers` twice, since both copies add the same keys | `attach()` | `CorePluginAttachedTwice` |
+| a handler or middleware defines a method or getter with the key | startup | `CoreDuplicateName` |
+| a handler or middleware sets a field with the key, which would replace your value | every dispatch to it | `CoreDuplicateName` |
+
+{/* prettier-ignore-end */}
 
 <Callout type="transport">
 
@@ -214,7 +226,7 @@ If `init()` throws, seedcord skips `dispose()`. If a plugin opens two things in 
 
 </Callout>
 
-[When init fails](/plugins/lifecycle#when-init-fails) covers what seedcord cleans up for you. On Cloudflare Workers the shutdown phases never run, so `dispose()` runs only when startup fails. Write state as soon as it changes. [On Cloudflare Workers](/plugins/lifecycle#on-cloudflare-workers) lists the other differences.
+The lifecycle page lists what seedcord cleans up [when `init()` fails](/plugins/lifecycle#when-init-fails). On Cloudflare Workers the shutdown phases never run, so `dispose()` runs only if your `init()` resolved and a later startup step failed. Write state as soon as it changes. The lifecycle page also lists the [other differences on Workers](/plugins/lifecycle#on-cloudflare-workers).
 
 ## Which base to import
 
@@ -236,13 +248,13 @@ Each transport exports its own `Plugin` class. A transport is how the bot talks 
 
 </Callout>
 
-The base also sets which bots can attach the plugin. One on the gateway base attaches only to gateway bots, one on the http base only to http bots, and one on `@seedcord/core/plugin` to bots on either transport. The gateway base also runs only on a server, while the http base and `@seedcord/core/plugin` run on Workers too. [Where it runs](/writing-plugins/runtimes) covers how a plugin narrows that.
+The base also sets which bots can attach the plugin: gateway bots for the gateway base, http bots for the http base, and bots on either transport for `@seedcord/core/plugin`. The gateway base also runs only on a server, while the http base and `@seedcord/core/plugin` run on Workers too. A plugin [can narrow that](/writing-plugins/runtimes).
 
-When you publish a plugin, extend `@seedcord/core/plugin` unless your plugin needs `bot`, `startup`, or `shutdown` so that bots on both transports can attach it. If you write a plugin only for your own bot, extend your bot's transport base or `@seedcord/core/plugin`.
+To let bots on either transport attach a plugin you publish, extend `@seedcord/core/plugin` unless your plugin needs `bot`, `startup`, or `shutdown`. If you write a plugin only for your own bot, extend your bot's transport base or `@seedcord/core/plugin`.
 
 ## What the constructor takes
 
-A plugin often needs options, like a connection string or a label. The constructor's first parameter is the host, the bot that seedcord passes in when you call `attach`. Type it as `CoreBase` and pass it to `super`. You define every parameter after it. You pass their values to `attach` after the plugin class, and TypeScript checks their types. If you type the first parameter as a transport's `Core`, the `attach` call fails to compile, and [Typing what you ship](/writing-plugins/typing#why-the-first-parameter-is-corebase) gives the reason.
+A plugin often needs options, like a connection string or a label. The constructor's first parameter is the host, the bot that seedcord passes in when you call `attach`. Type it as `CoreBase` and pass it to `super`. You define every parameter after it. You pass their values to `attach` after the plugin class, and TypeScript checks their types. If you type the first parameter as a transport's `Core`, the `attach` call fails to compile, and the [typing page](/writing-plugins/typing#why-the-first-parameter-is-corebase) gives the reason.
 
 ```ts twoslash
 import { Plugin } from '@seedcord/gateway';
@@ -267,7 +279,7 @@ export class Uptime extends Plugin {
 
 Import `CoreBase` from the package you import `Plugin` from. On the `@seedcord/core/plugin` base, that's `@seedcord/core`, which a new bot doesn't install. Add it to your bot, and list it as a peer dependency when you publish the plugin, so the bot and the plugin share one copy. With two copies, `attach` rejects the plugin with the code `CorePluginFromOtherCore`. The `peerDependencies` entry is in [Publishing](/writing-plugins/publishing#the-peer-entry).
 
-The second argument to `super()` is an optional [`PluginLifecycleSpec`](ref:core/PluginLifecycleSpec), and every field in it is optional too. `init` can take a [`StartupPhase`](ref:core/StartupPhase) and `dispose` a [`ShutdownPhase`](ref:core/ShutdownPhase), each with a `timeout` in milliseconds. `ready` can take a `timeout`. Without them, `init()` runs in Configuration, `dispose()` runs in Disconnect, and the timeouts are 15000ms for `init()` and `ready()` and 10000ms for `dispose()`. A plugin that declares a `transport` or a `runtime` has to pass the spec, as [Where it runs](/writing-plugins/runtimes) shows. [The lifecycle page](/plugins/lifecycle#moving-a-method-to-another-phase) has a sample.
+The second argument to `super()` is an optional [`PluginLifecycleSpec`](ref:core/PluginLifecycleSpec), and every field in it is optional too. `init` can take a [`StartupPhase`](ref:core/StartupPhase), and `dispose` can take any [`ShutdownPhase`](ref:core/ShutdownPhase) except `Release`. Both also take a `timeout` in milliseconds, and `ready` takes only a `timeout`. A timeout has to be a finite number above 0. Without them, `init()` runs in the Configuration phase, `dispose()` runs in the Disconnect phase, and the timeouts are 15000ms for `init()` and `ready()` and 10000ms for `dispose()`. A plugin that [declares a `transport` or a `runtime`](/writing-plugins/runtimes) has to pass the spec. [The lifecycle page](/plugins/lifecycle#moving-a-method-to-another-phase) has a sample.
 
 <Callout type="warning">
 
@@ -347,7 +359,7 @@ export class Starboard extends Plugin {
 
 Handlers can call `add()` while `ready()` is still restoring, so the same id can reach `track()` twice. Keep `track()` safe to call twice for one id, like the `Map` here, which replaces the first entry. A large collection can also take longer to restore than the 15 seconds `ready()` gets by default, and some drivers can't list their records at all. [Drivers](/built-ins/drivers) lists which ones.
 
-`posts` reads `this.kv` in a field initializer. That works because `attach` sets it before your constructor runs, so the constructor and every method can read it too. Each key keeps its own records:
+`posts` reads `this.kv` in a field initializer. That works because `attach` sets it before your constructor runs, so the constructor and every method can read it too. Each attach key keeps its own records:
 
 - If a bot attaches `Starboard` twice under two keys, each one keeps its own posts.
 - If the bot renames the key, the plugin starts empty. The driver still holds the records under the old key.

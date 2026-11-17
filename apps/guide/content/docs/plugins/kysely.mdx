@@ -34,9 +34,9 @@ export const seedcord = new Seedcord({
 export default seedcord;
 ```
 
-This sample builds a gateway bot. The same `attach` call works on an http `Seedcord` from `@seedcord/http` that runs on a server. On Cloudflare Workers it's a compile error because the plugin [needs a server](/plugins#a-plugin-declares-where-it-runs). A cast that gets past it throws `CorePluginScopeMismatch`.
+This sample builds a gateway bot. The same `attach` call works on an http `Seedcord` from `@seedcord/http` that runs on a server. On Cloudflare Workers it's a compile error because the plugin [needs a server](/plugins#a-plugin-declares-where-it-runs). A cast that bypasses the check throws `CorePluginScopeMismatch`.
 
-You have to pass `path`, `dialect`, and `migrations`. A relative `path` or `migrations.path` resolves against `root`, and both folders have to be inside it, as [the folder rules](/plugins) describe. `'bot.db'` doesn't follow `root`. `better-sqlite3` opens it relative to the folder you start the bot from.
+A relative `path` or `migrations.path` resolves against `root`, and both folders have to be inside it, as [the folder rules](/plugins) describe. `'bot.db'` doesn't follow `root`. `better-sqlite3` opens it relative to the folder you start the bot from.
 
 ## Why `dialect` is a function
 
@@ -58,18 +58,18 @@ So the plugin calls `dialect()` only in `init()`, when the bot starts.
 
 {/* prettier-ignore-end */}
 
-The [migrations](/plugins/kysely-migrations) page explains the keys under `migrations`.
+The [migrations](/plugins/kysely-migrations) page covers the keys under `migrations`.
 
 ## Other databases
 
 Kysely ships dialects like Postgres, MySQL, and SQLite, and [its docs](https://kysely.dev/docs/dialects) list community dialects for other databases. Install the driver that your dialect needs in your project, then build the dialect inside `dialect`.
 
-For Postgres, pass `PostgresDialect` a `pg` pool. The sample reads the connection string from `DATABASE_URL` through envapt, which throws if the variable is unset. [Env files and modes](/build/env) covers reading config that way.
+For Postgres, pass `PostgresDialect` a `pg` pool. Here you read the connection string from `DATABASE_URL` through envapt, which throws if the variable is unset. [Env files and modes](/build/env) covers reading config that way.
 
 ```ts twoslash
 import { Kysely } from '@seedcord/plugin-kysely';
 import { Converters, Envapter } from 'envapt';
-import { CompiledQuery, PostgresDialect } from 'kysely';
+import { PostgresDialect } from 'kysely';
 import { Pool } from 'pg';
 
 // ---cut-start---
@@ -86,18 +86,11 @@ seedcord.attach('db', Kysely, {
                     'DATABASE_URL',
                     Converters.String
                 )
-            }),
-            onCreateConnection: async (connection) => {
-                await connection.executeQuery(
-                    CompiledQuery.raw("set time zone 'UTC'")
-                );
-            }
+            })
         }),
     migrations: { path: './migrations' }
 });
 ```
-
-A Postgres setting like the session time zone only applies to the connection that ran it. Kysely calls `onCreateConnection` for every connection that the pool opens, and it waits for `set time zone 'UTC'` to finish before that connection's first query.
 
 To use SQLite without installing a driver, wrap Node's built-in `node:sqlite` with [`nodeSqlite`](ref:plugin-kysely/nodeSqlite). Kysely's `SqliteDialect` expects the API that `better-sqlite3` has, and `nodeSqlite` adapts a `DatabaseSync` to it.
 
@@ -123,7 +116,7 @@ seedcord.attach('db', Kysely, {
 
 ## Startup and shutdown
 
-`init()` calls `dialect()`, opens the first connection, runs your migrations unless you [set `onStartup` to `false`](/plugins/kysely-migrations#when-they-run), then loads every service class from `path`. If any of those steps fails, `init()` closes the connection before it rethrows the error because seedcord doesn't call `dispose()` for a plugin whose `init()` failed. If a migration fails, the bot never reaches its handlers.
+`init()` calls `dialect()`, opens the first connection, runs your migrations unless you [set `onStartup` to `false`](/plugins/kysely-migrations#when-they-run), then loads every service class from `path`. seedcord doesn't call `dispose()` for a plugin whose `init()` failed, so if any of those steps fails, `init()` closes the connection itself before it rethrows the error. If a migration fails, the bot never reaches its handlers.
 
 If `dialect()` throws, `init()` rethrows that error unchanged, like envapt's error for a missing `DATABASE_URL`. If the first connection fails, `init()` throws `PluginConnectionFailed`. Its message includes the driver's error, like `connect ECONNREFUSED 127.0.0.1:5432` from `pg` when the server isn't running. The full driver error is in its `cause`. `start()` reports it along with any other plugin's failure, as [the lifecycle page](/plugins/lifecycle#when-init-fails) explains.
 
@@ -137,6 +130,6 @@ Both `path` and the migrations folder have to exist before the first start. If o
 
 ## The Kysely instance
 
-You keep the queries for one table in a [service](/plugins/kysely-services). For a transaction that writes to two tables, use the Kysely instance directly. That instance is [`connection`](ref:plugin-kysely/Kysely.connection), and in a handler you read it as `this.core.db.connection` once [codegen](/plugins/typing) has typed `db`. If you read it before `init()` connects, the read throws `PluginNotReady`.
+You keep the queries for one table in a [service](/plugins/kysely-services). For a transaction that writes to two tables, use the Kysely instance directly. That instance is [`connection`](ref:plugin-kysely/Kysely.connection), and in a handler you read it as `this.core.db.connection` once [codegen](/plugins/typing) has typed `db`. If you read it before `init()` connects or after `dispose()`, the read throws `PluginNotReady`.
 
 TypeScript checks the table and column names in those queries against a [schema](/plugins/kysely-schema) you declare yourself.

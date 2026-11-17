@@ -3,17 +3,17 @@ title: Testing and publishing
 description: Package a plugin so a bot installs it with one copy of @seedcord/core, test it in a local bot with pnpm, then publish it to npm.
 ---
 
-Someone looking for a plugin searches npm for seedcord, and that search reads package names and keywords. Call your package `seedcord-plugin-<thing>`, like `seedcord-plugin-uptime`, and add `seedcord` and `plugin` to your keywords. Official plugins are named `@seedcord/plugin-<thing>`, and only seedcord can publish under `@seedcord`.
+npm search matches package names and keywords. Call your package `seedcord-plugin-<thing>`, like `seedcord-plugin-uptime`, and add `seedcord` and `plugin` to your keywords. Official plugins are named `@seedcord/plugin-<thing>`, and only seedcord can publish under `@seedcord`.
 
 ## The peer entry
 
-Put whichever package you import `Plugin` from in `peerDependencies`, with the versions you tested against. A peer dependency is a package that your plugin expects the bot to install. Your plugin uses the bot's copy. Below 1.0, a breaking change can ship in a minor, so the range tells people which versions work before they install. Keep the same package in `devDependencies` for your own builds.
+Put whichever package you import [`Plugin`](ref:core/Plugin) from in `peerDependencies`, with the versions you tested against. Your plugin then uses the bot's copy. Below 1.0, a breaking change can ship in a minor, so the range tells people which versions work before they install. Keep the same package in `devDependencies` for your own builds.
 
-The entry also controls how the `seedcord` CLI loads your plugin. `seedcord dev`, `build`, and `codegen` run the bot [through Vite](/build), which evaluates the bot's `@seedcord/*` packages itself. They read each installed package's `dependencies` and `peerDependencies`, and load one that lists a `@seedcord/*` package through Vite too. If a package doesn't list one, Node loads it. In a test, such a plugin attached fine from a plain Node script, then failed under `seedcord codegen` with `CorePluginFromOtherCore`. Node and Vite each held an instance of `@seedcord/core`, though only one copy was installed. A `devDependencies` entry doesn't count.
+The entry also controls how the `seedcord` CLI loads your plugin. `seedcord dev`, `build`, and `codegen` run the bot [through Vite](/build), which evaluates the bot's `@seedcord/*` packages itself. They read each installed package's `dependencies` and `peerDependencies`, and load one that lists a `@seedcord/*` package through Vite too. If a package doesn't list one, Node loads it. A plugin in such a package attaches fine from a plain Node script but fails under `seedcord codegen` with `CorePluginFromOtherCore`. Node and Vite each hold an instance of `@seedcord/core`, even though only one copy is installed. The CLI doesn't read `devDependencies` for this.
 
 ## A minimal package
 
-This package holds a plugin on the `@seedcord/core/plugin` base that reads files through `readFiles`, so it lists both packages that supply those imports as peers. For a plugin on the gateway or http base, list only that one package.
+This package holds a plugin on the `@seedcord/core/plugin` base that reads files through [`readFiles`](ref:utils/readFiles), so you list `@seedcord/core` as a peer and `@seedcord/utils` as a dependency. A second copy of `@seedcord/utils` still finds the bot's files, which is why the official plugins list it under `dependencies` too. For a plugin on the gateway or http base, list only that transport as a peer. The gateway one also needs `discord.js` in `devDependencies` because `@seedcord/gateway` peers on it.
 
 ```json title="package.json"
 {
@@ -32,22 +32,23 @@ This package holds a plugin on the `@seedcord/core/plugin` base that reads files
         "build": "tsdown src/index.ts --format esm --dts"
     },
     "peerDependencies": {
-        "@seedcord/core": ">=0.10.0 <1.0.0",
-        "@seedcord/utils": ">=0.8.0 <1.0.0"
+        "@seedcord/core": "^0.13.0"
+    },
+    "dependencies": {
+        "@seedcord/utils": "^0.9.2"
     },
     "devDependencies": {
-        "@discordjs/builders": "^1.14.1",
-        "@seedcord/core": "0.10.0",
-        "@seedcord/utils": "0.8.17",
+        "@discordjs/builders": "^1.15.0",
+        "@seedcord/core": "0.13.0",
         "@types/node": "^24",
         "envapt": "^9.2.0",
-        "tsdown": "^0.23.1",
+        "tsdown": "^0.23.7",
         "typescript": "^6.0.3"
     }
 }
 ```
 
-`exports` lists `types` first, pointing at the declaration file that `tsdown` writes next to `index.mjs`. A bot reads your instance type from that file, and [Typing what you ship](/writing-plugins/typing) covers what reaches the bot's `Core`. `files` limits the tarball to `dist` plus `package.json`. The peers hold the ranges you tested, and `devDependencies` holds a version inside each range for your own builds. `@discordjs/builders` and `envapt` are there because `@seedcord/core` peers on them.
+In `exports`, list `types` first, pointing at the declaration file that `tsdown` writes next to `index.mjs`. A bot reads your plugin's types from that file, and the [typing page](/writing-plugins/typing) explains what reaches the bot's `Core`. `files` limits the tarball to `dist` plus `package.json`. `@discordjs/builders` and `envapt` are there because `@seedcord/core` peers on them.
 
 ```json title="tsconfig.json"
 {
@@ -69,9 +70,9 @@ This package holds a plugin on the `@seedcord/core/plugin` base that reads files
 
 <Shell run="build" pack="" publish="" />
 
-The pack command lists the files in the tarball. `tsdown` leaves the packages in `peerDependencies` as imports, so the built `dist/index.mjs` imports `@seedcord/core/plugin` and `@seedcord/utils` from the bot's install. A scoped name needs `--access public` on the publish command. This exact package, installed from its tarball in a bot, passed `seedcord codegen` and `seedcord build`, and the built bot read its `files` folder through the plugin's `readFiles` call.
+The pack command lists the files in the tarball. `tsdown` leaves the packages in `dependencies` and `peerDependencies` as imports, so the built `dist/index.mjs` imports `@seedcord/core/plugin` and `@seedcord/utils` from the install. A scoped name needs `--access public` on the publish command. If you install this package from its tarball in a bot, it passes `seedcord codegen` and `seedcord build`, and the built bot reads its `files` folder through the plugin's `readFiles` call.
 
-If your plugin reads a folder through `readFiles`, tell its users to list that folder in `files`, as [Loading a bot's files](/writing-plugins/files#reading-data-with-readfiles) shows.
+If your plugin reads a folder through `readFiles`, tell its users to list that folder in `files`, as the [files page](/writing-plugins/files#reading-data-with-readfiles) shows.
 
 ## Test it in a bot first
 
@@ -85,7 +86,7 @@ Hello doesn't extend the Plugin class your bot uses. That usually means two copi
 
 <Callout type="warning">
 
-TypeScript can't catch this. It compares the shape of the two `Plugin` classes, and both copies have the same shape. The type check passed in every setup below.
+TypeScript can't catch this. It compares the shape of the two `Plugin` classes, and both copies have the same shape. The type check passes in every setup below.
 
 </Callout>
 
@@ -93,7 +94,7 @@ Before you publish, install the packed plugin in a bot and run `tsc` and `seedco
 
 ### Which setups give one copy
 
-These results come from pnpm, with a plugin that lists `@seedcord/core` and `@seedcord/utils` as peer dependencies and a bot that installs the same versions. npm and yarn weren't tried.
+These results are for pnpm, with a plugin that lists `@seedcord/core` as a peer dependency and a bot that installs the same version. They don't cover npm or yarn.
 
 {/* prettier-ignore-start */}
 
@@ -133,11 +134,11 @@ console.log(
 );
 ```
 
-The script printed `one copy` for the tarball, `file:` and workspace setups and `two copies` for `link:`. `pnpm why @seedcord/core` doesn't show this. In the `link:` setup it printed "Found 1 version" for both the bot and the plugin folder because two copies of one version list as one.
+The script prints `one copy` for the tarball, `file:`, and workspace setups, and `two copies` for `link:`. `pnpm why @seedcord/core` doesn't show this. In the `link:` setup it prints "Found 1 version" for both the bot and the plugin folder because two copies of one version list as one.
 
 ### Packing a tarball
 
-Packing a tarball tests exactly what a publish would ship, and the pack command lists the files it includes. Bump `version` in the plugin's `package.json` before each pack, like to `0.1.2-dev.0`. pnpm keys a tarball by its file name, so if you pack the same version twice, `pnpm add` installs the first file again.
+Packing a tarball tests exactly what a publish would ship. Bump `version` in the plugin's `package.json` before each pack, like to `0.1.2-dev.0`. pnpm keys a tarball by its file name, so if you pack the same version twice, `pnpm add` installs the first file again.
 
 <Shell run="build" pack="" />
 
@@ -151,7 +152,7 @@ Press `r` in the terminal running `seedcord dev`. It stops the running bot and s
 
 ### Testing in a workspace
 
-In a pnpm workspace, the bot's `node_modules` links to the plugin folder, so a rebuilt `dist` is available without an install. A bot made by `create-seedcord` already has a `pnpm-workspace.yaml`, which holds only pnpm settings. Keep the plugin in a folder inside the bot, like `packages/tags`, and add a `packages` list above those settings. A plugin folder outside the bot can't join it since a workspace has one `pnpm-workspace.yaml`.
+In a pnpm workspace, the bot's `node_modules` links to the plugin folder, so a rebuilt `dist` is available without an install. A bot made by `create-seedcord` already has a `pnpm-workspace.yaml`, which holds only pnpm settings. Keep the plugin in a folder inside the bot, like `packages/tags`, and add a `packages` list above those settings. A plugin folder outside the bot can't join that workspace because a workspace has one `pnpm-workspace.yaml`.
 
 ```yaml title="pnpm-workspace.yaml"
 packages:
@@ -164,4 +165,4 @@ Add `"seedcord-plugin-tags": "workspace:*"` to the bot's dependencies and run `p
 
 A [server build](/build/server) leaves your plugin as an import in `dist`, so the built bot loads it from `node_modules`. Deploy it from a tarball, `file:` or workspace install, which give one copy. Don't deploy it from a `link:`.
 
-[Reloading in dev](/writing-plugins/hot-reload#saving-the-plugins-own-source) covers what a save inside `src/plugins` does.
+A save inside `src/plugins` [needs a restart](/writing-plugins/hot-reload#saving-the-plugins-own-source).
