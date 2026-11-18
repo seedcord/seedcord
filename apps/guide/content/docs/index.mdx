@@ -93,7 +93,7 @@ export class Ban extends SlashHandler<'ban'> {
 }
 ```
 
-The `ban` command, which isn't shown here, declares `target` as required, so it arrives as a plain `User`. If you leave `target` optional, the same call returns `User | null`. Every option you declare is typed. A misspelled name stops the build, like `resaon` on the last line above.
+The `ban` command (not shown here) declares `target` as required, so it arrives as a plain `User`. If you leave `target` optional, the same call returns `User | null`. Every option you declare is typed. A misspelled name stops the build, like `resaon` on the last line above.
 
 <Callout type="transport">
 

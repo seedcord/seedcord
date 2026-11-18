@@ -209,7 +209,7 @@ An emoji with no `label` gives an icon-only button, which is what `prev` and `ne
 
 <Callout type="warning">
 
-Call cosmetic setters only. `setCustomId` overwrites the page that the button targets. `setStyle` with `ButtonStyle.Link` or `ButtonStyle.Premium` strips the custom id entirely since Discord doesn't allow a custom id on either style. Any of the three leaves a button that doesn't reach a handler.
+Call cosmetic setters only. `setCustomId` overwrites the page that the button targets. `setStyle` with `ButtonStyle.Link` or `ButtonStyle.Premium` strips the custom id entirely since Discord doesn't allow a custom id on either style. After any of the three, a click on the button doesn't reach a handler.
 
 </Callout>
 
