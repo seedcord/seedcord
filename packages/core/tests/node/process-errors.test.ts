@@ -1,4 +1,4 @@
-import { LoggerChannelRegistry } from '@seedcord/logger';
+import { captureLogs } from '@seedcord/logger/internal';
 import { describe, it, expect, afterEach, vi } from 'vite-plus/test';
 
 import { CoordinatedShutdown } from '#node/Lifecycle/CoordinatedShutdown';
@@ -7,7 +7,7 @@ import { StartupPhase } from '#src/lifecycle/phases';
 import { TestServerHost } from '#tests/utils/TestServerHost';
 
 import type { SubscriptionData } from '#subscribers/types/Subscriptions';
-import type { Config, LogRecord } from '@seedcord/types';
+import type { Config } from '@seedcord/types';
 
 // justified: this startup path reads only config.errors on Config
 async function startHost(config: Config = {} as Config): Promise<{
@@ -46,8 +46,7 @@ describe('process error handlers', () => {
         const { shutdown, reported } = await startHost();
         const run = vi.spyOn(shutdown, 'run');
         const thrown = new Error('forgot an await');
-        const logged: LogRecord[] = [];
-        using _capture = LoggerChannelRegistry.instance.installSink({ kind: 'capture', onLog: (r) => logged.push(r) });
+        using logs = captureLogs();
 
         fireRejection(thrown);
 
@@ -56,18 +55,17 @@ describe('process error handlers', () => {
         });
         expect(reported[0]?.error).toBe(thrown);
         expect(reported[0]?.origin).toBe('process:unhandledRejection');
-        expect(logged.at(-1)?.args).toEqual([thrown]);
+        expect(logs.argsAt('error')).toEqual([thrown]);
         expect(run).not.toHaveBeenCalled();
     });
 
     it('logs the message and its cause on one line with errorStack off', async () => {
         await startHost({ errors: { errorStack: false } } as unknown as Config);
-        const logged: LogRecord[] = [];
-        using _capture = LoggerChannelRegistry.instance.installSink({ kind: 'capture', onLog: (r) => logged.push(r) });
+        using logs = captureLogs();
 
         fireRejection(new Error('sync failed', { cause: new TypeError('fetch failed\nat line 2') }));
 
-        expect(logged.at(-1)?.message).toMatch(/ \| sync failed\ncaused by TypeError: fetch failed$/u);
+        expect(logs.at('error').at(-1)).toMatch(/ \| sync failed\ncaused by TypeError: fetch failed$/u);
     });
 
     it('reports an uncaught exception and shuts down with exit code 1', async () => {

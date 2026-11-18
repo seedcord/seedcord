@@ -1,4 +1,4 @@
-import { Logger, LoggerChannelRegistry } from '@seedcord/logger';
+import { captureLogs } from '@seedcord/logger/internal';
 import { RESTJSONErrorCodes } from 'discord-api-types/v10';
 import { afterEach, describe, expect, it, vi, type Mock } from 'vite-plus/test';
 
@@ -14,7 +14,7 @@ import { TestNotice } from '#tests/utils/TestNotice';
 import type { CoreBase } from '#interfaces/CoreBase';
 import type { FaultDetails, FaultSender } from '#src/notices/FaultBoundary';
 import type { FaultSource } from '#subscribers/types/Subscriptions';
-import type { Config, LogRecord, RenderContext, ReplyResponse } from '@seedcord/types';
+import type { Config, RenderContext, ReplyResponse } from '@seedcord/types';
 
 class FakeApiError extends Error {
     constructor(public readonly code: number) {
@@ -101,17 +101,6 @@ class ExplodingNotice extends Notice {
     }
 }
 
-function logCapture(level: LogRecord['level']): { lines: LogRecord[] } & Disposable {
-    const lines: LogRecord[] = [];
-    const sink = LoggerChannelRegistry.instance.installSink({
-        kind: 'capture',
-        onLog: (record) => {
-            if (record.level === level) lines.push(record);
-        }
-    });
-    return { lines, [Symbol.dispose]: () => sink[Symbol.dispose]() };
-}
-
 afterEach(() => {
     vi.restoreAllMocks();
 });
@@ -138,13 +127,13 @@ describe('FaultBoundary', () => {
 
         it('publishes unknownException for a raw throw and logs its stack', () => {
             const { boundary, published } = harness();
-            using log = logCapture('error');
+            using logs = captureLogs();
             const thrown = new Error('a bug');
 
             boundary.report(thrown);
 
             expect(published).toEqual([{ event: 'unknownException', error: thrown }]);
-            expect(log.lines.at(-1)?.args).toEqual([thrown]);
+            expect(logs.argsAt('error')).toEqual([thrown]);
         });
 
         it("skips the publish for a Notice that doesn't report", () => {
@@ -164,15 +153,14 @@ describe('FaultBoundary', () => {
         });
 
         it('returns null for a Silence and logs its reason only when logSilences allows it', () => {
-            const debug = vi.spyOn(Logger.prototype, 'debug').mockImplementation(() => undefined);
+            using logs = captureLogs();
             const on = harness();
             const off = harness({ logSilences: false });
 
             expect(on.boundary.report(new Silence('first'))).toBeNull();
             expect(off.boundary.report(new Silence('second'))).toBeNull();
 
-            expect(debug).toHaveBeenCalledWith('Silence: first');
-            expect(debug).not.toHaveBeenCalledWith('Silence: second');
+            expect(logs.at('debug')).toEqual(['Silence: first']);
             expect(on.published).toEqual([]);
         });
 
@@ -245,16 +233,14 @@ describe('FaultBoundary', () => {
 
         it('logs the error and sends the built-in Fault card when the defaultError render throws too', async () => {
             const { boundary, send } = harness({ defaultError: BrokenCard });
-            using log = logCapture('error');
+            using logs = captureLogs();
 
             await boundary.answerWithReply(new Error('boom'), { send });
 
             expect(send).toHaveBeenCalledWith(expect.objectContaining({ components: expect.any(Array) as unknown }), {
                 ephemeral: true
             });
-            expect(log.lines.flatMap((line) => line.args ?? [])).toContainEqual(
-                expect.objectContaining({ message: 'card exploded' })
-            );
+            expect(logs.argsAt('error')).toContainEqual(expect.objectContaining({ message: 'card exploded' }));
         });
 
         it.each([
@@ -263,11 +249,11 @@ describe('FaultBoundary', () => {
         ])('logs a send failure only when it is unexpected ($reported)', async ({ failure, reported }) => {
             const { boundary, send } = harness();
             send.mockRejectedValueOnce(failure);
-            using log = logCapture('error');
+            using logs = captureLogs();
 
             await boundary.answerWithReply(new TestNotice(), { send });
 
-            expect(log.lines.flatMap((line) => line.args ?? []).includes(failure)).toBe(reported);
+            expect(logs.argsAt('error').includes(failure)).toBe(reported);
         });
     });
 

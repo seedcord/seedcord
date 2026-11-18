@@ -1,5 +1,5 @@
-import { Logger } from '@seedcord/logger';
-import { describe, it, expect, afterEach, vi } from 'vite-plus/test';
+import { captureLogs } from '@seedcord/logger/internal';
+import { describe, it, expect, afterEach } from 'vite-plus/test';
 
 import { CoordinatedShutdown } from '#node/Lifecycle/CoordinatedShutdown';
 import { CoordinatedStartup } from '#src/lifecycle/CoordinatedStartup';
@@ -41,7 +41,6 @@ function makeHost(): TestServerHost {
 describe('a plugin whose init outlasts its timeout', () => {
     afterEach(() => {
         TestServerHost.resetHost();
-        vi.restoreAllMocks();
     });
 
     it('disposes what init opened once init resolves', async () => {
@@ -63,15 +62,14 @@ describe('a plugin whose init outlasts its timeout', () => {
             }
         }
 
-        const warn = vi.spyOn(Logger.prototype, 'warn').mockImplementation(() => undefined);
+        using logs = captureLogs();
         const host = makeHost();
         host.attach('slow', SlowFailure);
 
         await expect(host.run()).rejects.toThrow();
         await delay(SETTLE_MS);
 
-        const logged = warn.mock.calls.some((call) => call.some((arg) => String(arg).includes('late failure')));
-        expect(logged).toBe(true);
+        expect(logs.argsAt('warn')).toContainEqual(expect.objectContaining({ message: 'late failure' }));
     });
 
     it('treats an immediate init rejection as a plain failure', async () => {
@@ -81,14 +79,14 @@ describe('a plugin whose init outlasts its timeout', () => {
             }
         }
 
-        const warn = vi.spyOn(Logger.prototype, 'warn').mockImplementation(() => undefined);
+        using logs = captureLogs();
         const host = makeHost();
         host.attach('slow', FastFailure);
 
         await expect(host.run()).rejects.toThrow();
         await delay(SETTLE_MS);
 
-        expect(warn).not.toHaveBeenCalled();
+        expect(logs.at('warn')).toEqual([]);
     });
 
     it("logs a late rejection from a plugin that doesn't declare dispose", async () => {
@@ -103,15 +101,14 @@ describe('a plugin whose init outlasts its timeout', () => {
             }
         }
 
-        const warn = vi.spyOn(Logger.prototype, 'warn').mockImplementation(() => undefined);
+        using logs = captureLogs();
         const host = makeHost();
         host.attach('slow', NoDispose);
 
         await expect(host.run()).rejects.toThrow();
         await delay(SETTLE_MS);
 
-        const logged = warn.mock.calls.some((call) => call.some((arg) => String(arg).includes('late failure')));
-        expect(logged).toBe(true);
+        expect(logs.argsAt('warn')).toContainEqual(expect.objectContaining({ message: 'late failure' }));
     });
 
     it("doesn't log when a late init fulfils on a plugin that doesn't declare dispose", async () => {
@@ -125,14 +122,14 @@ describe('a plugin whose init outlasts its timeout', () => {
             }
         }
 
-        const warn = vi.spyOn(Logger.prototype, 'warn').mockImplementation(() => undefined);
+        using logs = captureLogs();
         const host = makeHost();
         host.attach('slow', NoDisposeSlow);
 
         await expect(host.run()).rejects.toThrow();
         await delay(SETTLE_MS);
 
-        expect(warn).not.toHaveBeenCalled();
+        expect(logs.at('warn')).toEqual([]);
     });
 
     it('disposes each plugin once across the rollback, the late init, and a shutdown', async () => {

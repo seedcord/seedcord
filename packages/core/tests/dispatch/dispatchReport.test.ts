@@ -1,6 +1,6 @@
-import { Logger, LoggerChannelRegistry } from '@seedcord/logger';
+import { captureLogs } from '@seedcord/logger/internal';
 import { timestampFromSnowflake } from '@seedcord/utils';
-import { afterEach, describe, expect, it, vi, type MockInstance } from 'vite-plus/test';
+import { afterEach, describe, expect, it, vi } from 'vite-plus/test';
 
 import { DispatchContext } from '#src/dispatch/DispatchContext';
 import { outcomeFor, queuedMsFor, reportDispatch } from '#src/dispatch/dispatchReport';
@@ -12,7 +12,7 @@ import { Bus } from '#subscribers/Bus';
 
 import type { CoreBase } from '#interfaces/CoreBase';
 import type { SubscriptionData } from '#subscribers/types/Subscriptions';
-import type { LogRecord, ReplyResponse } from '@seedcord/types';
+import type { ReplyResponse } from '@seedcord/types';
 
 // minted 2022-01-01, always in the past
 const SNOWFLAKE = '926845371392000000';
@@ -50,34 +50,24 @@ function publishedFor(report: Parameters<typeof reportDispatch>[1]): Subscriptio
     return first;
 }
 
-function traceSpy(): MockInstance<Logger['trace']> {
-    return vi.spyOn(Logger.prototype, 'trace').mockImplementation(() => undefined);
-}
-
 afterEach(() => {
     vi.restoreAllMocks();
-    LoggerChannelRegistry.instance.configure({});
 });
 
 describe('dispatch timing', () => {
     it('puts the line on the interactions channel at trace', () => {
-        const records: LogRecord[] = [];
-        LoggerChannelRegistry.instance.configure({ level: 'trace', sinks: [] });
-        using _capture = LoggerChannelRegistry.instance.installSink({
-            kind: 'capture',
-            onLog: (record) => records.push(record)
-        });
+        using logs = captureLogs();
 
         publishedFor(reportFor());
 
-        expect(records.find((record) => record.label === 'Dispatch')).toMatchObject({
+        expect(logs.records.find((record) => record.label === 'Dispatch')).toMatchObject({
             channel: 'interactions',
             level: 'trace'
         });
     });
 
     it('traces the route, the outcome, and the elapsed dispatch', () => {
-        const trace = traceSpy();
+        using logs = captureLogs();
         let clock = 1000;
         vi.spyOn(performance, 'now').mockImplementation(() => clock);
         const startedAt = performance.now();
@@ -85,19 +75,20 @@ describe('dispatch timing', () => {
 
         publishedFor({ ...reportFor(), startedAt });
 
-        expect(trace).toHaveBeenCalledTimes(1);
-        const message = trace.mock.calls[0]?.[0] ?? '';
+        const traces = logs.at('trace');
+        expect(traces).toHaveLength(1);
+        const [message] = traces;
         expect(message).toContain('slash:ping');
         expect(message).toContain('handled');
         expect(message).toContain('142ms');
     });
 
     it('traces the outcome of a refused dispatch', () => {
-        const trace = traceSpy();
+        using logs = captureLogs();
 
         publishedFor({ ...reportFor(), outcome: 'refused' });
 
-        expect(trace.mock.calls[0]?.[0] ?? '').toContain('refused');
+        expect(logs.at('trace')[0]).toContain('refused');
     });
 });
 

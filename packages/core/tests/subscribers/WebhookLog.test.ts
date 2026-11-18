@@ -1,6 +1,6 @@
 import { REST } from '@discordjs/rest';
 import { SeedcordErrorCode } from '@seedcord/errors';
-import { Logger } from '@seedcord/logger';
+import { captureLogs } from '@seedcord/logger/internal';
 import { ComponentType } from 'discord-api-types/v10';
 import { Envapter, FileSource, PortableSource } from 'envapt';
 import { afterAll, afterEach, beforeEach, describe, expect, it, vi, type MockInstance } from 'vite-plus/test';
@@ -121,11 +121,10 @@ describe('WebhookLog', () => {
         }
 
         post.mockRejectedValueOnce(new Error('down'));
-        const errorSpy = vi.spyOn(Logger.prototype, 'error').mockImplementation(() => undefined);
+        using logs = captureLogs();
 
         await expect(new FailingReporter(data, core, 'unknownException').execute()).resolves.toBeUndefined();
-        expect(errorSpy).toHaveBeenCalled();
-        errorSpy.mockRestore();
+        expect(logs.at('error')).toEqual(['Webhook report failed']);
     });
 
     it('warns once at registration and never registers a reporter whose env var is unset', () => {
@@ -137,16 +136,14 @@ describe('WebhookLog', () => {
             }
         }
 
-        const warnSpy = vi.spyOn(Logger.prototype, 'warn').mockImplementation(() => undefined);
+        using logs = captureLogs();
         const bus = new Bus(core);
 
         bus[RegisterSubscriber](UnsetReporter);
         bus[PublishDefault]('unknownException', data);
 
-        expect(warnSpy).toHaveBeenCalledOnce();
-        expect(warnSpy).toHaveBeenCalledWith(expect.stringContaining('UnsetReporter'));
+        expect(logs.at('warn')).toEqual([expect.stringContaining('UnsetReporter')]);
         expect(post).not.toHaveBeenCalled();
-        warnSpy.mockRestore();
     });
 
     it("sends every event when the reporter doesn't set a throttle key", async () => {
@@ -204,7 +201,7 @@ describe('WebhookLog', () => {
         }
 
         const own = freshCore();
-        const errorSpy = vi.spyOn(Logger.prototype, 'error').mockImplementation(() => undefined);
+        using _logs = captureLogs();
         post.mockRejectedValueOnce(new Error('down'));
 
         vi.useFakeTimers();
@@ -216,7 +213,6 @@ describe('WebhookLog', () => {
 
         const sent = post.mock.calls.map(([, options]) => (options as SentBody).body.username);
         expect(sent).toEqual(['n=0', 'n=2']);
-        errorSpy.mockRestore();
     });
 
     it('counts a card that report threw on, so the next one includes it', async () => {
@@ -237,7 +233,7 @@ describe('WebhookLog', () => {
         }
 
         const own = freshCore();
-        const errorSpy = vi.spyOn(Logger.prototype, 'error').mockImplementation(() => undefined);
+        using _logs = captureLogs();
 
         vi.useFakeTimers();
         await new Flaky(data, own, 'unknownException').execute();
@@ -247,7 +243,6 @@ describe('WebhookLog', () => {
 
         const sent = post.mock.calls.map(([, options]) => (options as SentBody).body.username);
         expect(sent).toEqual(['n=1']);
-        errorSpy.mockRestore();
     });
 
     it('sends the report to the url a function returns', async () => {
@@ -276,15 +271,14 @@ describe('WebhookLog', () => {
             }
         }
 
-        const warnSpy = vi.spyOn(Logger.prototype, 'warn').mockImplementation(() => undefined);
+        using logs = captureLogs();
         const bus = new Bus(core);
 
         bus[RegisterSubscriber](NoUrl);
         bus[PublishDefault]('unknownException', data);
 
-        expect(warnSpy).toHaveBeenCalledWith(expect.stringContaining('NoUrl'));
+        expect(logs.at('warn')).toEqual([expect.stringContaining('NoUrl')]);
         expect(post).not.toHaveBeenCalled();
-        warnSpy.mockRestore();
     });
 
     it('throws at registration when the url function returns something that is not a webhook url', () => {

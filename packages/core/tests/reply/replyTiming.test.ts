@@ -1,49 +1,38 @@
-import { Logger, LoggerChannelRegistry } from '@seedcord/logger';
-import { afterEach, describe, expect, it, vi, type MockInstance } from 'vite-plus/test';
+import { captureLogs } from '@seedcord/logger/internal';
+import { afterEach, describe, expect, it, vi } from 'vite-plus/test';
 
 import { publishResponse } from '#reply/responseReport';
 import { DispatchContext } from '#src/dispatch/DispatchContext';
 import { Bus } from '#subscribers/Bus';
 
 import type { CoreBase } from '#interfaces/CoreBase';
-import type { LogRecord } from '@seedcord/types';
 
 // justified: the Bus only stores core, no member is read during publish
 function stubBus(): Bus {
     return new Bus({} as unknown as CoreBase);
 }
 
-function traceSpy(): MockInstance<Logger['trace']> {
-    return vi.spyOn(Logger.prototype, 'trace').mockImplementation(() => undefined);
-}
-
 afterEach(() => {
     vi.restoreAllMocks();
-    LoggerChannelRegistry.instance.configure({});
 });
 
 describe('reply timing', () => {
     it('puts the line on the interactions channel at trace', () => {
-        const records: LogRecord[] = [];
-        LoggerChannelRegistry.instance.configure({ level: 'trace', sinks: [] });
-        using _capture = LoggerChannelRegistry.instance.installSink({
-            kind: 'capture',
-            onLog: (record) => records.push(record)
-        });
+        using logs = captureLogs();
 
         publishResponse(
             { bus: stubBus(), dispatch: new DispatchContext('slash', 'ban'), interactionId: 'i1' },
             { method: 'reply', startedAt: performance.now(), outcome: 'sent', messageId: 'm1' }
         );
 
-        expect(records.find((record) => record.label === 'Reply')).toMatchObject({
+        expect(logs.records.find((record) => record.label === 'Reply')).toMatchObject({
             channel: 'interactions',
             level: 'trace'
         });
     });
 
     it('traces the route, the verb, the outcome, and the elapsed write', () => {
-        const trace = traceSpy();
+        using logs = captureLogs();
         let clock = 1000;
         vi.spyOn(performance, 'now').mockImplementation(() => clock);
         const startedAt = performance.now();
@@ -54,8 +43,9 @@ describe('reply timing', () => {
             { method: 'reply', startedAt, outcome: 'sent', messageId: 'm1' }
         );
 
-        expect(trace).toHaveBeenCalledTimes(1);
-        const message = trace.mock.calls[0]?.[0] ?? '';
+        const traces = logs.at('trace');
+        expect(traces).toHaveLength(1);
+        const [message] = traces;
         expect(message).toContain('slash:ban');
         expect(message).toContain('reply');
         expect(message).toContain('sent');
@@ -63,7 +53,7 @@ describe('reply timing', () => {
     });
 
     it('traces a failed write with its outcome', () => {
-        const trace = traceSpy();
+        using logs = captureLogs();
 
         publishResponse(
             { bus: stubBus(), dispatch: new DispatchContext('slash', 'ban'), interactionId: 'i1' },
@@ -75,7 +65,7 @@ describe('reply timing', () => {
             }
         );
 
-        const message = trace.mock.calls[0]?.[0] ?? '';
+        const [message] = logs.at('trace');
         expect(message).toContain('respond');
         expect(message).toContain('failed');
     });

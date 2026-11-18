@@ -1,6 +1,6 @@
 import { isSeedcordError, SeedcordErrorCode } from '@seedcord/errors';
 import { SeedcordError } from '@seedcord/errors/internal';
-import { Logger } from '@seedcord/logger';
+import { captureLogs } from '@seedcord/logger/internal';
 import { describe, it, expect, expectTypeOf, afterEach, vi } from 'vite-plus/test';
 
 import { CoordinatedShutdown } from '#node/Lifecycle/CoordinatedShutdown';
@@ -224,11 +224,11 @@ describe('ServerHost', () => {
             host.attach('b', FailingDispose, 'b');
             await host.run();
 
-            const errors = vi.spyOn(Logger.prototype, 'error');
+            using logs = captureLogs();
             await shutdown.run(0, false);
 
-            const call = errors.mock.calls.find(([msg]) => String(msg).includes('Coordinated shutdown failed'));
-            const [failure] = call?.slice(1) ?? [];
+            const [failure] =
+                logs.records.find(({ message }) => message.includes('Coordinated shutdown failed'))?.args ?? [];
             expect(isSeedcordError(failure, undefined, SeedcordErrorCode.LifecyclePhaseFailures)).toBe(true);
             expect((failure as Error).message).toContain('Disconnect');
 
@@ -249,16 +249,14 @@ describe('ServerHost', () => {
             host.attach('b', FailingDispose, 'b');
             await host.run();
 
-            const errors = vi.spyOn(Logger.prototype, 'error');
+            using logs = captureLogs();
             await shutdown.run(0, false);
 
-            const call = errors.mock.calls.find(([msg]) => String(msg).includes('plugins-dispose'));
-            const [thrown] = call?.slice(1) ?? [];
-            expect(isSeedcordError(thrown, 'SeedcordAggregateError', SeedcordErrorCode.PluginDisposeFailures)).toBe(
-                true
-            );
-            expect((thrown as AggregateError).errors).toHaveLength(2);
-            expect((thrown as Error).message).toContain('2 plugins failed to dispose');
+            const thrown = logs
+                .argsAt('error')
+                .find((arg) => isSeedcordError(arg, 'SeedcordAggregateError', SeedcordErrorCode.PluginDisposeFailures));
+            expect(thrown?.errors).toHaveLength(2);
+            expect(thrown?.message).toContain('2 plugins failed to dispose');
         });
 
         it('a shared non-default dispose phase runs both disposes in reverse attach order', async () => {

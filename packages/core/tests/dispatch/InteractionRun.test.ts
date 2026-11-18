@@ -1,4 +1,5 @@
 import { Logger } from '@seedcord/logger';
+import { captureLogs } from '@seedcord/logger/internal';
 import { HostPlugins } from '@seedcord/types/internal';
 import { describe, expect, it, vi } from 'vite-plus/test';
 
@@ -83,7 +84,7 @@ describe('InteractionRun', () => {
         class Unhandled {
             execute = vi.fn();
         }
-        const warn = vi.spyOn(Logger.prototype, 'warn').mockImplementation(() => undefined);
+        using logs = captureLogs();
         const config = {
             ...configFor(InteractionKind.Button, Unhandled, {
                 responder: { clear: vi.fn() },
@@ -95,8 +96,7 @@ describe('InteractionRun', () => {
 
         await new InteractionRun(config).prepare();
 
-        expect(warn).toHaveBeenCalledWith(expect.stringContaining(warning));
-        warn.mockRestore();
+        expect(logs.at('warn')).toContainEqual(expect.stringContaining(warning));
     });
 
     it('clears the choices when an autocomplete handler throws a Silence', async () => {

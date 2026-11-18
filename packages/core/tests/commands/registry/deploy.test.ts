@@ -2,7 +2,7 @@ import path from 'node:path';
 import { stripVTControlCharacters } from 'node:util';
 
 import { SeedcordErrorCode } from '@seedcord/errors';
-import { LoggerChannelRegistry } from '@seedcord/logger';
+import { captureLogs, type CapturedLogs } from '@seedcord/logger/internal';
 import { HostPlugins } from '@seedcord/types/internal';
 import { ApplicationCommandType, Routes } from 'discord-api-types/v10';
 import { describe, expect, it, onTestFinished, vi } from 'vite-plus/test';
@@ -70,11 +70,8 @@ function guildNamed(name: string): Mock {
     return vi.fn((route: string) => Promise.resolve(route === Routes.guild('111') ? { id: '111', name } : BARE));
 }
 
-function captureLogs(messages: string[]): Disposable {
-    return LoggerChannelRegistry.instance.installSink({
-        kind: 'capture',
-        onLog: (record) => messages.push(stripVTControlCharacters(record.message))
-    });
+function plainInfo(logs: CapturedLogs): string[] {
+    return logs.at('info').map((message) => stripVTControlCharacters(message));
 }
 
 interface FakeCli {
@@ -263,14 +260,14 @@ describe('CommandRegistry.deploy', () => {
         cliWith(undefined);
         const get = guildNamed('Alpha');
         const registry = new CommandRegistry(coreWith(vi.fn().mockResolvedValue(BARE), get, ['111']));
-        const messages: string[] = [];
-        using _capture = captureLogs(messages);
+        using logs = captureLogs();
 
         await registry.deploy(new AbortController().signal, {});
         await registry.setCommands();
 
-        expect(messages).toContainEqual(expect.stringContaining('Deployed 1 command to Alpha'));
-        expect(messages).toContain('Skipped the commands in Alpha because they match the last deploy.');
+        const info = plainInfo(logs);
+        expect(info).toContainEqual(expect.stringContaining('Deployed 1 command to Alpha'));
+        expect(info).toContain('Skipped the commands in Alpha because they match the last deploy.');
         expect(get.mock.calls.filter(([route]) => route === Routes.guild('111'))).toHaveLength(1);
     });
 
@@ -292,12 +289,11 @@ describe('CommandRegistry.deploy', () => {
     it("logs a guild by its id outside seedcord dev, and doesn't read the guild", async () => {
         const get = guildNamed('Alpha');
         const registry = new CommandRegistry(coreWith(vi.fn().mockResolvedValue(BARE), get, ['111']));
-        const messages: string[] = [];
-        using _capture = captureLogs(messages);
+        using logs = captureLogs();
 
         await registry.deploy(new AbortController().signal, {});
 
-        expect(messages).toContainEqual(expect.stringContaining('Deployed 1 command to 111'));
+        expect(plainInfo(logs)).toContainEqual(expect.stringContaining('Deployed 1 command to 111'));
         expect(get).not.toHaveBeenCalledWith(Routes.guild('111'));
     });
 
