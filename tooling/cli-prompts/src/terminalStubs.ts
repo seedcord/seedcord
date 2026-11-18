@@ -1,6 +1,7 @@
 import { PassThrough, Writable } from 'node:stream';
 
 import headless from '@xterm/headless';
+import { expect, vi } from 'vite-plus/test';
 
 export interface Size {
     readonly rows: number;
@@ -11,8 +12,14 @@ export interface Size {
 export class KeyboardStdin extends PassThrough {
     public readonly isTTY = true;
 
-    public setRawMode(): this {
+    public setRawMode(_mode: boolean): this {
         return this;
+    }
+
+    // ink reads two keys left in the stream together as one pasted string
+    public async press(key: string): Promise<void> {
+        this.write(key);
+        await vi.waitFor(() => expect(this.readableLength).toBe(0), { interval: 1 });
     }
 }
 
