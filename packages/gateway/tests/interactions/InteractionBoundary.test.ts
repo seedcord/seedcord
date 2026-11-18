@@ -130,10 +130,8 @@ function answerFault(caught: Error, interaction: ValidInteractionTypes, core: Co
     throw new Error('the mock is a slash command or an autocomplete');
 }
 
-function faultEvents(publish: ReturnType<typeof vi.fn>): unknown[] {
-    return publish.mock.calls
-        .map(([event]) => event as unknown)
-        .filter((event) => event === 'handledException' || event === 'unknownException');
+function faultCalls(publish: ReturnType<typeof vi.fn>): unknown[][] {
+    return publish.mock.calls.filter(([event]) => event === 'handledException' || event === 'unknownException');
 }
 
 describe('gateway fault answers', () => {
@@ -149,7 +147,7 @@ describe('gateway fault answers', () => {
         await answerFault(new Error('boom'), asInteraction(mock), mockCore(publish));
 
         expect(mock.reply).toHaveBeenCalledTimes(1);
-        const [event, payload] = publish.mock.calls[0] as [string, SubscriptionData<'unknownException'>];
+        const [event, payload] = faultCalls(publish)[0] as [string, SubscriptionData<'unknownException'>];
         expect(event).toBe('unknownException');
         expect(payload.error).toBeInstanceOf(Error);
     });
@@ -159,7 +157,7 @@ describe('gateway fault answers', () => {
 
         await answerFault(new Error('boom'), interaction, mockCore(publish));
 
-        const [, payload] = publish.mock.calls[0] as [string, SubscriptionData<'unknownException'>];
+        const [, payload] = faultCalls(publish)[0] as [string, SubscriptionData<'unknownException'>];
         expect(payload.metadata).toBe(interaction);
     });
 
@@ -169,7 +167,7 @@ describe('gateway fault answers', () => {
         await answerFault(harmlessError(), asInteraction(mock), core);
 
         expect(mock.reply).not.toHaveBeenCalled();
-        expect(faultEvents(publish)).toEqual([]);
+        expect(faultCalls(publish)).toEqual([]);
     });
 
     it('edits the deferReply placeholder and publishes handledException for a reporting fault on a deferred interaction', async () => {
@@ -182,7 +180,7 @@ describe('gateway fault answers', () => {
         expect(mock.followUp).not.toHaveBeenCalled();
         expect(mock.deleteReply).not.toHaveBeenCalled();
         expect(mock.reply).not.toHaveBeenCalled();
-        const [event, payload] = publish.mock.calls[0] as [string, SubscriptionData<'handledException'>];
+        const [event, payload] = faultCalls(publish)[0] as [string, SubscriptionData<'handledException'>];
         expect(event).toBe('handledException');
         expect(payload.denial).toBeInstanceOf(Fault);
     });
@@ -205,7 +203,7 @@ describe('gateway fault answers', () => {
         await answerFault(new TestNotice(), asInteraction(mock), mockCore(publish));
 
         expect(mock.followUp).toHaveBeenCalledTimes(1);
-        expect(faultEvents(publish)).toEqual([]);
+        expect(faultCalls(publish)).toEqual([]);
     });
 
     it('replies ephemerally for a refusal by default', async () => {
@@ -227,7 +225,7 @@ describe('gateway fault answers', () => {
 
             expect(mock.respond).toHaveBeenCalledWith([]);
             expect(mock.reply).not.toHaveBeenCalled();
-            const [event, payload] = publish.mock.calls[0] as [string, SubscriptionData<'unknownException'>];
+            const [event, payload] = faultCalls(publish)[0] as [string, SubscriptionData<'unknownException'>];
             expect(event).toBe('unknownException');
             expect(payload.metadata).toBe(interaction);
         });

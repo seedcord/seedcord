@@ -31,7 +31,10 @@ describe('waitUntil and subscribers', () => {
         }
         class Ban extends SlashHandler<never> {
             public async execute(): Promise<void> {
-                this.core.bus[PublishDefault]('unhandledInteractionError', { error: new Error('boom') });
+                this.core.bus[PublishDefault]('unhandledInteractionError', {
+                    error: new Error('boom'),
+                    interactionId: this.event.id
+                });
                 await this.reply('done');
             }
         }

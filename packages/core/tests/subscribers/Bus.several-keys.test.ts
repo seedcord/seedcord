@@ -16,7 +16,10 @@ const unknown: AllSubscriptions['unknownException'] = {
     error: new Error('unknown boom'),
     origin: 'slash:probe'
 };
-const unhandled: AllSubscriptions['unhandledInteractionError'] = { error: new Error('unhandled boom') };
+const unhandled: AllSubscriptions['unhandledInteractionError'] = {
+    error: new Error('unhandled boom'),
+    interactionId: 'i-1'
+};
 
 describe('a subscriber on several keys', () => {
     it("runs the case for the published key, with that key's payload", async () => {

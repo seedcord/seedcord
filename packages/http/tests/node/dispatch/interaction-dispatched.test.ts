@@ -186,6 +186,25 @@ describe('interactionDispatched from the http dispatcher', () => {
         });
     });
 
+    it('publishes interactionDispatching before interactionDispatched, with the same dispatch id', async () => {
+        Envapter.useSource(new PortableSource({}));
+        const core = testCore(nullPathConfig, VALID_TOKEN);
+        const seen: { key: string; dispatchId: string; interactionId: string }[] = [];
+        for (const key of ['interactionDispatching', 'interactionDispatched'] as const) {
+            core.bus.on(key, ({ dispatchId, interactionId }) => seen.push({ key, dispatchId, interactionId }));
+        }
+
+        const execute = await dispatchInteraction({
+            resolved: resolvedSlash('ok', OkHandler),
+            core,
+            middlewares: new MiddlewareRegistry<InteractionMiddlewareConstructor>(interactionMiddleware)
+        });
+        await execute?.();
+
+        expect(seen.map(({ key }) => key)).toEqual(['interactionDispatching', 'interactionDispatched']);
+        expect(seen[0]).toMatchObject({ dispatchId: seen[1]?.dispatchId, interactionId: 'int-1' });
+    });
+
     it('runs a registered middleware on a matching dispatch', async () => {
         const { execute, published } = await dispatchedThrough(Audit);
         await execute?.();

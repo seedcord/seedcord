@@ -3,7 +3,7 @@ import type { InteractionKind } from '#src/metadataKeys';
 import type { Notice } from '#stops/Notice';
 import type { UUID } from '@seedcord/types/internal';
 import type { APIApplicationCommand } from 'discord-api-types/v10';
-import type { ExcludeStrict } from 'type-fest';
+import type { ExcludeStrict, Simplify } from 'type-fest';
 
 /**
  * How a dispatch finished. The thrown value's type sets this, wherever it was thrown. A `Silence` and a
@@ -126,7 +126,19 @@ export interface DefaultSubscriptions {
     /** Triggered when an interaction dispatch throws past the fault boundary. */
     readonly unhandledInteractionError: {
         readonly error: Error;
+        readonly interactionId: string;
     };
+    /**
+     * Triggered once per interaction dispatch before plugin members, middleware, gates, and the handler run.
+     * It shares its `dispatchId` with the `interactionDispatched` that follows, which seedcord publishes only
+     * once the handler settles.
+     */
+    readonly interactionDispatching: Simplify<
+        Pick<
+            DefaultSubscriptions['interactionDispatched'],
+            'dispatchId' | 'routeId' | 'interactionId' | 'kind' | 'fallback'
+        >
+    >;
     /** Triggered once per interaction dispatch after the handler chain settles. */
     readonly interactionDispatched: {
         /** This dispatch, for joining against every other key it published. */

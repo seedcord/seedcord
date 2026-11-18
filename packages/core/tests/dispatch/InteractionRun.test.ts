@@ -14,6 +14,7 @@ import { busWith } from '#tests/utils/busWith';
 import type { GateContextBase } from '#gates/Gate';
 import type { CoreBase } from '#interfaces/CoreBase';
 import type { InteractionRunConfig } from '#src/dispatch/InteractionRun';
+import type { SubscriptionData } from '#subscribers/types/Subscriptions';
 
 function configFor(
     kind: InteractionKind,
@@ -97,6 +98,33 @@ describe('InteractionRun', () => {
         await new InteractionRun(config).prepare();
 
         expect(logs.at('warn')).toContainEqual(expect.stringContaining(warning));
+    });
+
+    it('publishes interactionDispatching for a handler that never settles', async () => {
+        class Hangs {
+            execute(): Promise<void> {
+                return new Promise(() => undefined);
+            }
+        }
+        const config = configFor(InteractionKind.Autocomplete, Hangs, {
+            responder: { clear: vi.fn() },
+            handler: () => new Hangs()
+        });
+        const starts: SubscriptionData<'interactionDispatching'>[] = [];
+        config.core.bus.on('interactionDispatching', (payload) => starts.push(payload));
+
+        const start = await new InteractionRun(config).prepare();
+        void start?.();
+
+        expect(starts).toEqual([
+            {
+                dispatchId: config.dispatch.id,
+                routeId: 'autocomplete:probe',
+                interactionId: 'i1',
+                kind: 'autocomplete',
+                fallback: false
+            }
+        ]);
     });
 
     it('clears the choices when an autocomplete handler throws a Silence', async () => {

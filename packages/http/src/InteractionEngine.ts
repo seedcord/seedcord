@@ -106,17 +106,19 @@ export class InteractionEngine {
             if (resolved) {
                 const start = await dispatchInteraction({ resolved, core: this.core, middlewares: this.middlewares });
                 // without this catch the rejection reaches the process unhandled
-                if (start) keepRequestOpenFor(start().catch((caught: unknown) => this.rootFault(caught)));
+                if (start) {
+                    keepRequestOpenFor(start().catch((caught: unknown) => this.rootFault(caught, interaction.id)));
+                }
             }
         } catch (caught) {
             // handle() has to return the 202 either way or discord fails the interaction
-            this.rootFault(caught);
+            this.rootFault(caught, interaction.id);
         }
     }
 
-    private rootFault(caught: unknown): void {
+    private rootFault(caught: unknown, interactionId: string): void {
         const error = asError(caught);
         this.logger.error('dispatch failed past the boundary', error);
-        this.core.bus[PublishDefault]('unhandledInteractionError', { error });
+        this.core.bus[PublishDefault]('unhandledInteractionError', { error, interactionId });
     }
 }

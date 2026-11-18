@@ -14,6 +14,7 @@ The `where` column lists which transport publishes each key.
 | `unknownException` | both | a raw throw reaches the fault boundary, or the Node process catches an unhandled error |
 | `handledException` | both | a [`Notice`](ref:core/Notice) with `report` true is caught |
 | `unhandledInteractionError` | both | an interaction dispatch throws past the boundary |
+| `interactionDispatching` | both | an interaction dispatch starts, before its middleware, gates, and handler run |
 | `interactionDispatched` | both | one dispatch finishes |
 | `responseAttempted` | both | any write through the reply surface |
 | `commandsDeployed` | both | a command deploy finishes |
@@ -90,7 +91,7 @@ seedcord publishes `eventDispatched` once the handlers finish. Its fields, inclu
 
 ## The two unhandled errors
 
-A throw from your handlers, gates, or middleware reaches the fault boundary, which catches and reports it. `unhandledInteractionError` and `unhandledEventError` cover a throw the boundary never catches, like one inside seedcord's own dispatch code ([report it](https://github.com/seedcord/seedcord/issues/new?template=bug_report.yml)). Both carry only `{ error: Error }`. Subscribe to them to hear about those failures in production since your handlers' own reporting never receives them.
+A throw from your handlers, gates, or middleware reaches the fault boundary, which catches and reports it. `unhandledInteractionError` and `unhandledEventError` cover a throw the boundary never catches, like one inside seedcord's own dispatch code ([report it](https://github.com/seedcord/seedcord/issues/new?template=bug_report.yml)). Each payload has the `error`, plus the `interactionId` on `unhandledInteractionError` or the event's `name` on `unhandledEventError`, so you can tell which one failed. Subscribe to them to hear about those failures in production since your handlers' own reporting never receives them.
 
 ## The fault keys
 

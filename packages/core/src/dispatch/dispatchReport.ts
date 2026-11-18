@@ -8,7 +8,7 @@ import { PublishDefault } from '#subscribers/publishDefault';
 
 import type { InteractionDispatch } from '#src/dispatch/DispatchContext';
 import type { Bus } from '#subscribers/Bus';
-import type { DispatchOutcome } from '#subscribers/types/Subscriptions';
+import type { DispatchOutcome, SubscriptionData } from '#subscribers/types/Subscriptions';
 import type { ExcludeStrict } from 'type-fest';
 
 const logger = lazyLogger('Dispatch', { channel: 'interactions' });
@@ -38,15 +38,28 @@ export function queuedMsFor(interactionId: string): number {
     }
 }
 
+function dispatchFields(
+    dispatch: InteractionDispatch,
+    interactionId: string
+): SubscriptionData<'interactionDispatching'> {
+    return {
+        dispatchId: dispatch.id,
+        routeId: dispatch.routeId,
+        interactionId,
+        kind: dispatch.kind,
+        fallback: dispatch.fallback
+    };
+}
+
+export function reportDispatching(bus: Bus, dispatch: InteractionDispatch, interactionId: string): void {
+    bus[PublishDefault]('interactionDispatching', dispatchFields(dispatch, interactionId));
+}
+
 export function reportDispatch(bus: Bus, report: DispatchReport): void {
     const durationMs = performance.now() - report.startedAt;
     bus[PublishDefault]('interactionDispatched', {
-        dispatchId: report.dispatch.id,
-        routeId: report.dispatch.routeId,
-        interactionId: report.interactionId,
-        kind: report.dispatch.kind,
+        ...dispatchFields(report.dispatch, report.interactionId),
         outcome: report.outcome,
-        fallback: report.dispatch.fallback,
         userId: report.userId,
         guildId: report.guildId,
         durationMs,

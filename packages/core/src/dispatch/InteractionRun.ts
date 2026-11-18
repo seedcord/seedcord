@@ -4,7 +4,7 @@ import { HostPlugins } from '@seedcord/types/internal';
 import { runInteractionGates } from '#gates/runGates';
 import { FaultBoundary } from '#src/notices/FaultBoundary';
 
-import { outcomeFor, queuedMsFor, reportDispatch } from './dispatchReport';
+import { outcomeFor, queuedMsFor, reportDispatch, reportDispatching } from './dispatchReport';
 import { resultFor, runAfter } from './runAfter';
 
 import type { GateContextBase } from '#gates/Gate';
@@ -72,7 +72,8 @@ export class InteractionRun {
     }
 
     public async prepare(): Promise<PreparedRun> {
-        const { target } = this.config;
+        const { target, core, dispatch, interactionId } = this.config;
+        reportDispatching(core.bus, dispatch, interactionId);
         this.warnIfUnhandled();
         return 'responder' in target ? this.prepareAutocomplete(target) : this.prepareRepliable(target);
     }
