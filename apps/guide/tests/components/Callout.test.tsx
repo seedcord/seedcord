@@ -15,7 +15,8 @@ describe('Callout', () => {
 
     it.each([
         ['gateway', 'Gateway only'],
-        ['http', 'Http only']
+        ['http', 'Http only'],
+        ['edge', 'Cloudflare Workers only']
     ] as const)('says %s only', (only, label) => {
         render(
             <Callout type="transport" only={only}>

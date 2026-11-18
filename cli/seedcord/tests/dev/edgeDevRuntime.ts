@@ -64,12 +64,12 @@ export const WAVE_INTERACTION = JSON.stringify({
     data: { type: 1, name: 'wave' }
 });
 
-export const waveHandler = (says: string): string => `import { SlashHandler, SlashRoute } from '@seedcord/http';
+export const waveHandler = (...says: string[]): string => `import { SlashHandler, SlashRoute } from '@seedcord/http';
 
 @SlashRoute('wave')
 export class WaveHandler extends SlashHandler<'wave'> {
     public execute(): Promise<void> {
-        console.log('${says}');
+        ${says.map((line) => `console.log('${line}');`).join('\n        ')}
         return Promise.resolve();
     }
 }

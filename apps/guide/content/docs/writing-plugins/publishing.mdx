@@ -163,6 +163,10 @@ allowBuilds:
 
 Add `"seedcord-plugin-tags": "workspace:*"` to the bot's dependencies and run `pnpm install`. In the plugin's `devDependencies`, use the same `@seedcord` versions that the bot installs. Build with `pnpm -C packages/tags build`, then press `r`. The `root` in `seedcord.config.ts` is `./src`, so the bot doesn't treat `packages/` as part of its code.
 
+<Callout type="warning">
+
 A [server build](/build/server) leaves your plugin as an import in `dist`, so the built bot loads it from `node_modules`. Deploy it from a tarball, `file:` or workspace install, which give one copy. Don't deploy it from a `link:`.
+
+</Callout>
 
 A save inside `src/plugins` [needs a restart](/writing-plugins/hot-reload#saving-the-plugins-own-source).

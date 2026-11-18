@@ -256,11 +256,7 @@ export class Faults extends Subscriber<'unknownException'> {
 
 `Dispatches` and `Faults` store rows you can join on that column.
 
-<Callout type="warning">
-
 `unknownException.dispatchId` is `string | null`. An unhandled rejection reaches Node outside any dispatch, which is the case that reports `null`.
-
-</Callout>
 
 ## Typing a payload yourself
 

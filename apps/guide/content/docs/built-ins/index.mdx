@@ -144,7 +144,7 @@ for await (const [userId, saved] of preferences.entries()) {
 }
 ```
 
-The Keyv and unstorage drivers read every key in the storage to find one collection's records, so a large store makes `entries()` slow. Call it at startup or from a timer. `entries()` throws on a [driver that can't list its keys](/built-ins/drivers#keyv).
+The Keyv and unstorage drivers read every key in the storage to find one collection's records, so a large store makes `entries()` slow. Call it at startup or from a timer. `entries()` throws on a [driver that can't list its keys](/built-ins/drivers#keyv-or-unstorage).
 
 To run a job later and keep it through a restart, use the [Tasks plugin](/plugins/tasks-scheduling#keeping-jobs-through-a-restart).
 
@@ -152,7 +152,7 @@ To run a job later and keep it through a restart, use the [Tasks plugin](/plugin
 
 Every read and write uses the driver you pass as `kv` in your bot's config. If you leave `kv` out, seedcord uses a [`MemoryDriver`](ref:core/MemoryDriver), which keeps records in the memory of one process. A restart empties it. [Drivers](/built-ins/drivers) shows the ones that keep records in a file or a database.
 
-<Callout type="transport" only="http">
+<Callout type="transport" only="edge">
 
 On [Cloudflare Workers](/build/workers) each isolate, one running copy of your worker, has its own `MemoryDriver`. Cloudflare starts a new isolate whenever it needs one, and the new one starts empty. Pass a [driver over D1](/built-ins/drivers#on-cloudflare-workers) to share records between them.
 

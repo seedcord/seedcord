@@ -103,7 +103,11 @@ export class Award extends SlashHandler<'award'> {
 
 `publish` returns `true` if the key had at least one `on` listener. It counts those listeners only, so a key with three subscribers and zero listeners returns `false`.
 
+<Callout type="warning">
+
 Subscribers on the same key start at the same time, so any of them can finish first. Don't make one subscriber depend on another's result since nothing guarantees the order.
+
+</Callout>
 
 ## Running once
 
@@ -185,7 +189,11 @@ export const seedcord = new Seedcord({
 });
 ```
 
+<Callout type="warning">
+
 If a class in that folder doesn't have `@Subscribe`, it still loads but never runs. The `subscriber-missing-decorators` lint rule flags the missing decorator while you write the class.
+
+</Callout>
 
 ## Listening without a class
 

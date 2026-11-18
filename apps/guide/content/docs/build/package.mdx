@@ -132,6 +132,10 @@ Pack the bot and install the tarball into another project to check it the way a 
 
 <Shell pack="" />
 
+<Callout type="warning">
+
 If you pack again without changing `version`, pnpm can keep the old contents for the same file name and version. Bump the version before each pack, or delete the installing project's `node_modules` and lockfile before you reinstall.
+
+</Callout>
 
 The pack command also lists every file in the tarball. Every code file under `root` ends up in that list, whether your bot imports it or not. [Keep tool files outside root](/build/config#keep-tool-files-outside-root) so the package has only the bot.

@@ -218,7 +218,13 @@ export const seedcord = new Seedcord({
 });
 ```
 
-seedcord imports every file in that `./events/middlewares` folder. If a class there doesn't have `@RegisterEventMiddleware`, it still loads but never runs, the same as an event handler without `@RegisterEvent`. The `middleware-missing-register-decorator` lint rule flags the missing decorator while you write the class.
+seedcord imports every file in that `./events/middlewares` folder.
+
+<Callout type="warning">
+
+If a class there doesn't have `@RegisterEventMiddleware`, it still loads but never runs, the same as an event handler without `@RegisterEvent`. The `middleware-missing-register-decorator` lint rule flags the missing decorator while you write the class.
+
+</Callout>
 
 <Callout type="warning">
 

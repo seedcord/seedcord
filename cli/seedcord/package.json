@@ -63,8 +63,8 @@
         "coverage": "vp test run --coverage"
     },
     "dependencies": {
-        "@cloudflare/build-output-utils": "0.9.6",
-        "@cloudflare/config": "0.29.0",
+        "@cloudflare/build-output-utils": "1.0.0-rc.0",
+        "@cloudflare/config": "1.0.0-rc.0",
         "@commander-js/extra-typings": "^15.0.0",
         "@discordjs/rest": "catalog:deps",
         "@leeoniya/ufuzzy": "catalog:deps",

@@ -1,4 +1,5 @@
 import { REST } from '@discordjs/rest';
+import { SeedcordErrorCode } from '@seedcord/errors';
 import { Logger } from '@seedcord/logger';
 import { ComponentType } from 'discord-api-types/v10';
 import { Envapter, FileSource, PortableSource } from 'envapt';
@@ -249,6 +250,57 @@ describe('WebhookLog', () => {
         errorSpy.mockRestore();
     });
 
+    it('sends the report to the url a function returns', async () => {
+        const settings = { banWebhook: 'https://discord.com/api/webhooks/88/fn-tok' };
+
+        @Subscribe(['unknownException'])
+        @WebhookUrl(() => settings.banWebhook)
+        class FromSettings extends WebhookLog<'unknownException', CoreBase> {
+            report(): WebhookReport {
+                return { components: [component] };
+            }
+        }
+
+        await new FromSettings(data, freshCore(), 'unknownException').execute();
+
+        const [route] = post.mock.calls[0] as [string];
+        expect(route).toBe('/webhooks/88/fn-tok');
+    });
+
+    it('warns at registration and skips a reporter whose url function returns undefined', () => {
+        @Subscribe(['unknownException'])
+        @WebhookUrl(() => undefined)
+        class NoUrl extends WebhookLog<'unknownException', CoreBase> {
+            report(): WebhookReport {
+                return { components: [] };
+            }
+        }
+
+        const warnSpy = vi.spyOn(Logger.prototype, 'warn').mockImplementation(() => undefined);
+        const bus = new Bus(core);
+
+        bus[RegisterSubscriber](NoUrl);
+        bus[PublishDefault]('unknownException', data);
+
+        expect(warnSpy).toHaveBeenCalledWith(expect.stringContaining('NoUrl'));
+        expect(post).not.toHaveBeenCalled();
+        warnSpy.mockRestore();
+    });
+
+    it('throws at registration when the url function returns something that is not a webhook url', () => {
+        @Subscribe(['unknownException'])
+        @WebhookUrl(() => 'https://example.com/hook')
+        class BadUrl extends WebhookLog<'unknownException', CoreBase> {
+            report(): WebhookReport {
+                return { components: [] };
+            }
+        }
+
+        expect(() => new Bus(core)[RegisterSubscriber](BadUrl)).toThrow(
+            expect.objectContaining({ code: SeedcordErrorCode.CoreWebhookUrlInvalid })
+        );
+    });
+
     it('throws at execute when the decorator is missing', async () => {
         @Subscribe(['unknownException'])
         // eslint-disable-next-line @seedcord/subscriber-missing-decorators -- the missing @WebhookUrl is the case under test
@@ -262,12 +314,20 @@ describe('WebhookLog', () => {
     });
 });
 
-describe('WebhookLog.urlOf', () => {
+describe('WebhookLog.targetOf', () => {
     afterEach(() => Envapter.useSource(new FileSource()));
+
+    @Subscribe(['unknownException'])
+    @WebhookUrl('URL_UNDER_TEST')
+    class EnvReporter extends WebhookLog<'unknownException', CoreBase> {
+        report(): WebhookReport {
+            return { components: [] };
+        }
+    }
 
     const urlFor = (value: string): string | null => {
         Envapter.useSource(new PortableSource({ URL_UNDER_TEST: value }));
-        return WebhookLog.urlOf('URL_UNDER_TEST');
+        return WebhookLog.targetOf(EnvReporter).url;
     };
 
     it.each(['', '   '])('returns null for %j', (value) => {

@@ -11,6 +11,7 @@ import { isDiscordWebhookUrl } from './webhookHelpers';
 import { WebhookSender } from './WebhookSender';
 
 import type { CoreBase } from '#interfaces/CoreBase';
+import type { WebhookUrl } from '#subscribers/decorators/WebhookUrl';
 import type { SubscriptionKey } from '#subscribers/types/Subscriptions';
 import type { WebhookFile } from './WebhookSender';
 import type { APIMessageTopLevelComponent } from 'discord-api-types/v10';
@@ -31,9 +32,9 @@ export interface WebhookReport {
 /**
  * Base class for subscribers that deliver their event to a Discord webhook.
  *
- * Declare the url's environment variable with `@WebhookUrl` and implement {@link report}. The base
+ * Declare where the url comes from with `@WebhookUrl` and implement {@link report}. The base
  * resolves the url, validates it, and sends through the bot's REST client. Registration skips a reporter
- * whose variable is unset and warns at boot.
+ * without a url and warns at boot.
  *
  * @typeParam KeyOfSubscribers - The subscription key or keys that this reporter receives, the same ones as `@Subscribe`
  * @typeParam TCore - The transport's Core
@@ -57,10 +58,12 @@ export abstract class WebhookLog<KeyOfSubscribers extends SubscriptionKey, TCore
     }
 
     async execute(): Promise<void> {
-        const envKey = WebhookLog.envKeyOf(this.constructor);
-        const url = WebhookLog.urlOf(envKey);
-        // Bus.probeWebhook skipped every url-less reporter at registration. reaching this means the env changed since.
-        if (url === null) throw new SeedcordError(SeedcordErrorCode.ConfigMissingEnv, [envKey]);
+        const target = WebhookLog.targetOf(this.constructor);
+        // Bus.probeWebhook skipped every url-less reporter at registration. the url went away since then
+        if (target.url === null) {
+            this.logger.warn(target.offWarning);
+            return;
+        }
 
         const key = this.throttleKey();
         const throttle = ReportThrottle.for(this.core);
@@ -72,7 +75,7 @@ export abstract class WebhookLog<KeyOfSubscribers extends SubscriptionKey, TCore
 
         try {
             const { username, avatarUrl, components, files } = await this.report(suppressed);
-            await new WebhookSender(this.core.rest, url).send({
+            await new WebhookSender(this.core.rest, target.url).send({
                 flags: sendFlags({ ephemeral: false }),
                 username: username ?? this.constructor.name,
                 avatarUrl,
@@ -85,23 +88,36 @@ export abstract class WebhookLog<KeyOfSubscribers extends SubscriptionKey, TCore
         }
     }
 
-    /** @internal */
-    static envKeyOf(ctor: NewableFunction): string {
-        const envKey = Reflect.getMetadata(WebhookUrlMetadataKey, ctor) as string | undefined;
-        if (!envKey) throw new SeedcordTypeError(SeedcordErrorCode.DecoratorWebhookUrlMissing, [ctor.name]);
-        return envKey;
-    }
+    /** @internal Throws when the url is set but isn't a Discord webhook url. */
+    static targetOf(ctor: NewableFunction): WebhookTarget {
+        const source = Reflect.getMetadata(WebhookUrlMetadataKey, ctor) as Parameters<typeof WebhookUrl>[0] | undefined;
+        if (!source) throw new SeedcordTypeError(SeedcordErrorCode.DecoratorWebhookUrlMissing, [ctor.name]);
 
-    /** @internal Returns null when the env var is unset, throws when set but malformed. */
-    static urlOf(envKey: string): string | null {
-        const raw = Envapter.get(envKey)?.trim();
-        if (!raw) return null;
-        if (!isDiscordWebhookUrl(raw)) {
-            throw new SeedcordError(SeedcordErrorCode.ConfigInvalidEnv, [
-                envKey,
-                "the webhook URL from the channel's Integrations settings"
-            ]);
-        }
-        return raw;
+        const from =
+            typeof source === 'string'
+                ? {
+                      raw: Envapter.get(source),
+                      label: source,
+                      unset: `${paint.amber.bold(source)} is not set`,
+                      invalid: () =>
+                          new SeedcordError(SeedcordErrorCode.ConfigInvalidEnv, [
+                              source,
+                              "the webhook URL from the channel's Integrations settings"
+                          ])
+                  }
+                : {
+                      raw: source(),
+                      label: `${ctor.name}'s @WebhookUrl`,
+                      unset: 'its @WebhookUrl function returned undefined',
+                      invalid: () => new SeedcordTypeError(SeedcordErrorCode.CoreWebhookUrlInvalid, [ctor.name])
+                  };
+
+        const url = from.raw?.trim();
+        if (!url) return { url: null, offWarning: `${paint.sky.bold(ctor.name)} is off because ${from.unset}` };
+        if (!isDiscordWebhookUrl(url)) throw from.invalid();
+        return { url, label: from.label };
     }
 }
+
+// label is where the url came from, for an error that lists several webhooks
+type WebhookTarget = { url: string; label: string } | { url: null; offWarning: string };

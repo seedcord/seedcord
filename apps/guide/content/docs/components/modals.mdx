@@ -68,7 +68,7 @@ export class Appeal extends SlashHandler<'ban'> {
 }
 ```
 
-<Callout type="danger">
+<Callout type="warning">
 
 `showModal()` has to be the _initial_ response. Calling it after `reply()`, `defer()`, or `deferUpdate()` throws `ReplyIllegalAckState`, covered in [When a reply throws](/replying/ack-states). Any lookup that the form needs has to finish inside Discord's three seconds because you can't defer first. Discord also forbids a modal opening another modal, so the call fails to compile inside a [`ModalHandler`](ref:gateway/ModalHandler).
 

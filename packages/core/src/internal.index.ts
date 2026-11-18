@@ -137,6 +137,7 @@ export {
     emptyRouteMaps,
     matchRoute,
     RouteRegistry,
+    UNHANDLED_REPLY,
     unhandledSlots,
     type RegisteredRoute,
     type ResolvedRoute,

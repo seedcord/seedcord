@@ -30,7 +30,7 @@ Your server imports the built bot, by its package name if you published it, or f
 
 Point your application's interactions endpoint URL in the [Discord developer portal](https://discord.com/developers/applications) at the route, like `https://example.com/interactions`.
 
-Any server works if it can hand `fetch()` a web `Request` and send back the `Response` it returns. Hono, a Next.js route handler, and a plain Bun or Deno server already use web `Request` objects, so they pass theirs straight through. A Node framework like Express or Fastify takes a few lines to convert its own request and response. The samples below show Hono and Next.js for the first kind, and Express for the second.
+Any server works if it can hand `fetch()` a web `Request` and send back the `Response` it returns. Hono, a Next.js route handler, and a plain Bun or Deno server already use web `Request` objects, so they pass theirs straight through. A Node framework like Express or Fastify takes a few lines to convert its own request and response. The tabs below show Hono and Next.js for the first kind, and Express for the second.
 
 ## Call start() before fetch()
 
@@ -44,7 +44,10 @@ A request that arrives while `start()` runs waits until your commands finish dep
 
 Once shutdown begins, or if `start()` failed, `fetch()` answers 503.
 
-## Hono
+## Passing requests to fetch()
+
+<Tabs>
+<Tab label="Hono">
 
 In Hono, `c.req.raw` is the request that your server received, already a web `Request`:
 
@@ -61,7 +64,8 @@ app.post('/interactions', (c) => bot.fetch(c.req.raw));
 serve({ fetch: app.fetch, port: 3000 });
 ```
 
-## Next.js route handler
+</Tab>
+<Tab label="Next.js">
 
 Keep the bot in its own package, with its own `package.json`, `seedcord.config.ts`, and `src`. In a monorepo that's a folder beside the Next app, like `packages/bot`, and the app depends on it as `"@acme/my-bot": "workspace:*"`. The bot's `root` then never overlaps the app's `src`, which matters because the bot's build includes [every code file under root](/build/config#keep-tool-files-outside-root). Build the bot before the app, so `dist` exists when Next.js imports it.
 
@@ -89,7 +93,8 @@ The first POST starts the bot. `next build` can load a route's module while it c
 
 Next.js bundles the bot again, so `import.meta.dirname` is undefined in its bundle. Handlers, commands, and the files you list under [`files`](/build/data-files) still load since the build put all of them inside the bundle. A read from disk relative to the bot's folder, like `fs.readFile` next to `import.meta.dirname`, breaks. Read data files through [`readFiles`](ref:utils/readFiles), which reads them from the build.
 
-## Express
+</Tab>
+<Tab label="Express">
 
 Discord [signs every request](https://docs.discord.com/developers/interactions/overview#validating-security-request-headers) over the timestamp plus the exact bytes of the body, and the bot checks that signature before anything else runs. Most Express apps add `express.json()` for every route, which swaps the body for a parsed object. Your interactions route has to keep the raw bytes, and you turn Express's request into a web `Request` yourself:
 
@@ -140,6 +145,9 @@ app.listen(3000);
 `express.raw({ type: '*/*' })` keeps the body as a `Buffer`. It has to run before any app-wide `express.json()`, so register the route before `app.use(express.json())`. The rest of your app keeps its JSON parsing.
 
 If `express.json()` reads the body first, the route only gets the parsed object. `JSON.stringify` turns it back into text, but those bytes match Discord's only if Discord wrote its JSON with the same spacing and escapes `JSON.stringify` does. Every other request fails the signature check with a 401.
+
+</Tab>
+</Tabs>
 
 ## Developing the bot locally
 

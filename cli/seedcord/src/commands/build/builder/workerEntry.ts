@@ -16,8 +16,11 @@ const WORKER_ENTRY_ID = 'virtual:seedcord/worker';
 
 type EntryCustomizer = NonNullable<PluginConfig['config']>;
 
-// the fields this returns replace the ones in cloudflare.config.ts
-export const workerEntryConfig: EntryCustomizer = () => ({ entrypoint: WORKER_ENTRY_ID });
+// copies every other field over because the plugin uses what this returns in place of cloudflare.config.ts
+export const workerEntryConfig: EntryCustomizer = (loaded) => ({
+    ...loaded,
+    worker: { ...loaded.worker, entrypoint: WORKER_ENTRY_ID }
+});
 
 const BIND_ENV_ID = 'virtual:seedcord/bind-env';
 const BUILT_FILES_ID = 'virtual:seedcord/built-files';

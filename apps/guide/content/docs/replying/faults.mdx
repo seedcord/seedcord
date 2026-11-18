@@ -134,7 +134,7 @@ Only a gateway bot receives client events, so only `@seedcord/gateway` exports [
 
 The reason string reaches a debug log and stops there. `new Silence()` without one skips that log line, and setting `errors.logSilences` to `false` skips it for every `Silence`.
 
-<Callout type="danger">
+<Callout type="warning">
 
 Throwing a `Silence` from an interaction handler leaves the user with Discord's own failure message. Before any ack Discord says the application did not respond, and after a `defer()` it keeps showing the thinking placeholder. Throw a `Notice` there.
 
@@ -155,7 +155,7 @@ seedcord registers an `unhandledRejection` and an `uncaughtException` listener w
 
 Both listeners run outside any interaction, so nobody sees a reply. When your application registers its own pair, set `errors.catchProcessErrors` to `false`, which [Configuring](/replying/error-behavior) shows in a real config.
 
-<Callout type="transport" only="http">
+<Callout type="transport" only="edge">
 
 An edge bot registers neither listener since its [`Seedcord`](ref:http/Seedcord) never starts a host process.
 

@@ -4,28 +4,19 @@ import { defaultHandlers } from 'mdast-util-to-markdown';
 
 import { CALLOUT_LABELS, TRANSPORT_LABELS } from '#lib/callout';
 import { cleanFence } from '#lib/fence';
+import { jsxAttribute } from '#lib/jsxAttribute';
 import { commandLines, getServerManager, isVerb } from '#lib/packageManager';
 import { FENCE_MODES } from '#lib/rehypeFenceMeta';
 import { canonicalUrl } from '#lib/site';
 
 import type { CalloutType, Transport } from '#lib/callout';
+import type { JsxNode } from '#lib/jsxAttribute';
 import type { LLMsOptions } from 'fumadocs-core/mdx-plugins/remark-llms';
-import type { MdxJsxFlowElement, MdxJsxTextElement } from 'mdast-util-mdx';
 import type { Nodes } from 'mdast';
 
-type JsxNode = MdxJsxFlowElement | MdxJsxTextElement;
-
-function attribute(node: JsxNode, name: string): string | undefined {
-    for (const attr of node.attributes) {
-        if (attr.type !== 'mdxJsxAttribute' || attr.name !== name) continue;
-        if (typeof attr.value === 'string') return attr.value;
-    }
-    return undefined;
-}
-
 function calloutLabel(node: JsxNode): string {
-    const type = attribute(node, 'type') as CalloutType | undefined;
-    const only = attribute(node, 'only') as Transport | undefined;
+    const type = jsxAttribute(node, 'type') as CalloutType | undefined;
+    const only = jsxAttribute(node, 'only') as Transport | undefined;
 
     if (only !== undefined) return TRANSPORT_LABELS[only];
     return type === undefined ? CALLOUT_LABELS.note : CALLOUT_LABELS[type];
@@ -40,7 +31,7 @@ function quoted(body: string): string {
 
 function shellCommand(node: JsxNode): string {
     const manager = getServerManager();
-    const before = attribute(node, 'before');
+    const before = jsxAttribute(node, 'before');
     const lead = before === undefined ? '' : `${before}\n`;
 
     const verbs = node.attributes.flatMap((attr) =>
@@ -73,7 +64,7 @@ export const TWIN_OPTIONS: LLMsOptions = {
 
         switch (node.name) {
             case 'Ref':
-                return `[${state.containerPhrasing(node, info)}](${attribute(node, 'href') ?? ''})`;
+                return `[${state.containerPhrasing(node, info)}](${jsxAttribute(node, 'href') ?? ''})`;
             case 'Callout': {
                 const body =
                     node.type === 'mdxJsxFlowElement'
@@ -83,6 +74,12 @@ export const TWIN_OPTIONS: LLMsOptions = {
             }
             case 'Shell':
                 return `\`\`\`sh\n${shellCommand(node)}\n\`\`\``;
+            case 'Tabs':
+            case 'Tab': {
+                if (node.type !== 'mdxJsxFlowElement') return undefined;
+                const body = state.containerFlow(node, info);
+                return node.name === 'Tab' ? `**${jsxAttribute(node, 'label') ?? ''}**\n\n${body}` : body;
+            }
             default:
                 return undefined;
         }

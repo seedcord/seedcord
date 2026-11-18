@@ -60,7 +60,7 @@ export class Bus extends TypedEventEmitter<SubscriptionTuples> {
 
     readonly #subscribersMap = new Map<SubscriptionKey, SubscriberRegistration[]>();
     readonly #onceRuns = new OnceTracker();
-    // url -> env keys
+    // url -> each env key or @WebhookUrl function that returned it
     readonly #webhookProbes = new Map<string, string[]>();
     #onRun: (run: Promise<void>) => void = () => undefined;
 
@@ -104,12 +104,12 @@ export class Bus extends TypedEventEmitter<SubscriptionTuples> {
     public async [VerifyWebhooks](): Promise<void> {
         const missing: string[] = [];
         await Promise.all(
-            [...this.#webhookProbes].map(async ([url, envKeys]) => {
+            [...this.#webhookProbes].map(async ([url, labels]) => {
                 const result = await new WebhookSender(this.core.rest, url).verify();
-                if (result === 'missing') missing.push(...envKeys);
+                if (result === 'missing') missing.push(...labels);
                 else if (result === 'unreachable')
                     this.#logger.warn(
-                        `could not verify webhook at ${envKeys.map((key) => paint.amber.bold(key)).join(', ')}`
+                        `could not verify webhook at ${labels.map((label) => paint.amber.bold(label)).join(', ')}`
                     );
             })
         );
@@ -121,15 +121,14 @@ export class Bus extends TypedEventEmitter<SubscriptionTuples> {
     #probeWebhook(ctor: StoredSubscriberCtor): boolean {
         if (!(ctor.prototype instanceof WebhookLog)) return true;
 
-        const envKey = WebhookLog.envKeyOf(ctor);
-        const url = WebhookLog.urlOf(envKey);
-        if (url === null) {
-            this.#logger.warn(`${paint.sky.bold(ctor.name)} is off because ${paint.amber.bold(envKey)} is not set`);
+        const target = WebhookLog.targetOf(ctor);
+        if (target.url === null) {
+            this.#logger.warn(target.offWarning);
             return false;
         }
-        const envKeys = this.#webhookProbes.get(url) ?? [];
-        if (!envKeys.includes(envKey)) envKeys.push(envKey);
-        this.#webhookProbes.set(url, envKeys);
+        const labels = this.#webhookProbes.get(target.url) ?? [];
+        if (!labels.includes(target.label)) labels.push(target.label);
+        this.#webhookProbes.set(target.url, labels);
         return true;
     }
 
