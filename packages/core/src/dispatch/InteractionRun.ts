@@ -6,6 +6,7 @@ import { FaultBoundary } from '#src/notices/FaultBoundary';
 
 import { outcomeFor, queuedMsFor, reportDispatch, reportDispatching } from './dispatchReport';
 import { resultFor, runAfter } from './runAfter';
+import { watchAck } from './watchAck';
 
 import type { GateContextBase } from '#gates/Gate';
 import type { CoreBase } from '#interfaces/CoreBase';
@@ -62,10 +63,12 @@ export class InteractionRun {
     private readonly startedAt = performance.now();
     private readonly queuedMs: number;
     private readonly boundary: FaultBoundary;
+    private readonly stopAckWatch: () => void;
 
     constructor(private readonly config: InteractionRunConfig) {
         const { core, apiError, interactionId, dispatch } = config;
         this.queuedMs = queuedMsFor(interactionId);
+        this.stopAckWatch = watchAck(core.bus, dispatch);
         this.boundary = new FaultBoundary(core, core.config.errors?.ignoreApiCodes, apiError, dispatch, () =>
             config.faultDetails()
         );
@@ -165,6 +168,7 @@ export class InteractionRun {
 
     private report(outcome: DispatchOutcome): void {
         const { core, dispatch, interactionId, origin } = this.config;
+        this.stopAckWatch();
         reportDispatch(core.bus, {
             dispatch,
             interactionId,

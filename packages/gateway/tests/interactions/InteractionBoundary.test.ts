@@ -10,6 +10,7 @@ import { UnhandledAutocomplete, UnhandledRepliable } from '#bot/defaults';
 import { InteractionHandler } from '#handlers/interaction/InteractionHandler';
 import { harmlessError } from '#tests/utils/harmlessError';
 import { pluginWithMembers } from '#tests/utils/pluginWithMembers';
+import { stubBus } from '#tests/utils/stubBus';
 import { TestNotice } from '#tests/utils/TestNotice';
 
 import type { HandlerSlots } from '#handlers/constructors';
@@ -19,6 +20,9 @@ import type { SubscriptionData } from '@seedcord/core';
 import type { InteractionRunConfig } from '@seedcord/core/internal';
 import type { Config, InteractionsConfig } from '@seedcord/types';
 import type { AutocompleteInteraction, ChatInputCommandInteraction } from 'discord.js';
+import type { Mock as VitestMock } from 'vite-plus/test';
+
+type Publish = VitestMock<(key: string, data: unknown) => void>;
 
 const withResponse = { resource: { message: { id: 'sent' } } };
 
@@ -57,16 +61,21 @@ class BoundaryHost extends PluginHost<'gateway', 'server'> {
     public readonly rest = {} as PluginHost<'gateway', 'server'>['rest'];
     public readonly applicationId = 'app-1';
 
-    constructor(publish: ReturnType<typeof vi.fn>, errors: Config['errors'], interactions: InteractionsConfig) {
+    constructor(publish: Publish, errors: Config['errors'], interactions: InteractionsConfig) {
         super('gateway', 'server', undefined);
         // justified: the boundary reads only these config sections
         this.config = { bot: { interactions }, errors, notifications: {} } as unknown as Config;
-        Object.assign(this, { bus: { [PublishDefault]: publish } });
+        const bus = stubBus();
+        vi.spyOn(bus, PublishDefault).mockImplementation((key, data) => {
+            publish(key, data);
+            return true;
+        });
+        Object.assign(this, { bus });
     }
 }
 
 function mockCore(
-    publish: ReturnType<typeof vi.fn>,
+    publish: Publish,
     errors: Config['errors'] = {},
     interactions: InteractionsConfig = { path: null }
 ): BoundaryHost & Core {
@@ -130,13 +139,13 @@ function answerFault(caught: Error, interaction: ValidInteractionTypes, core: Co
     throw new Error('the mock is a slash command or an autocomplete');
 }
 
-function faultCalls(publish: ReturnType<typeof vi.fn>): unknown[][] {
+function faultCalls(publish: Publish): unknown[][] {
     return publish.mock.calls.filter(([event]) => event === 'handledException' || event === 'unknownException');
 }
 
 describe('gateway fault answers', () => {
     let mock: ReturnType<typeof mockInteraction>;
-    let publish: ReturnType<typeof vi.fn>;
+    let publish: Publish;
 
     beforeEach(() => {
         mock = mockInteraction();
