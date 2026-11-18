@@ -3,7 +3,7 @@ import userEvent from '@testing-library/user-event';
 import { useState } from 'react';
 import { describe, expect, it, vi } from 'vite-plus/test';
 
-import { SegmentedControl } from '#src/SegmentedControl';
+import { SegmentedControl, segmentIds } from '#src/SegmentedControl';
 
 import type { SegmentedControlOption } from '#src/SegmentedControl';
 import type { ReactElement } from 'react';
@@ -18,16 +18,19 @@ const OPTIONS: readonly SegmentedControlOption<View>[] = [
 
 function Harness({
     initial = 'list',
-    onChangeSpy
+    onChangeSpy,
+    tabsPrefix
 }: {
     initial?: View;
     onChangeSpy?: (next: View) => void;
+    tabsPrefix?: string;
 }): ReactElement {
     const [value, setValue] = useState<View>(initial);
     return (
         <SegmentedControl
             aria-label="View mode"
             options={OPTIONS}
+            tabsPrefix={tabsPrefix}
             value={value}
             onChange={(next) => {
                 onChangeSpy?.(next);
@@ -59,6 +62,26 @@ describe('SegmentedControl radio-group ARIA', () => {
         expect(list).toHaveAttribute('aria-checked', 'false');
         expect(grid).toHaveAttribute('aria-checked', 'true');
         expect(table).toHaveAttribute('aria-checked', 'false');
+    });
+});
+
+describe('SegmentedControl as tabs', () => {
+    it('renders a tablist whose tabs point at the panels from segmentIds', () => {
+        render(<Harness initial="grid" tabsPrefix="views" />);
+        expect(screen.getByRole('tablist', { name: 'View mode' })).toBeInTheDocument();
+        const grid = screen.getByRole('tab', { name: 'Grid' });
+        expect(grid).toHaveAttribute('aria-selected', 'true');
+        expect(grid).toHaveAttribute('id', segmentIds('views', 1).tab);
+        expect(grid).toHaveAttribute('aria-controls', segmentIds('views', 1).panel);
+        expect(screen.getByRole('tab', { name: 'List' })).toHaveAttribute('aria-selected', 'false');
+    });
+
+    it('moves focus between tabs with the arrow keys', async () => {
+        const user = userEvent.setup();
+        render(<Harness tabsPrefix="views" />);
+        await user.click(screen.getByRole('tab', { name: 'List' }));
+        await user.keyboard('{ArrowRight}');
+        expect(screen.getByRole('tab', { name: 'Grid' })).toHaveFocus();
     });
 });
 

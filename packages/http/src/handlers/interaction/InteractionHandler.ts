@@ -12,8 +12,8 @@ import type { ExcludeStrict } from 'type-fest';
  *
  * For a handler with a route, extend {@link SlashHandler}, {@link ContextMenuHandler},
  * {@link ButtonHandler}, {@link ModalHandler}, or one of the select menu bases. Extend this class
- * directly only for `interactions.unhandled`, which answers every interaction kind. This class adds
- * `showModal` on top of the reply members.
+ * directly only for `interactions.unhandled`, which answers every interaction without a handler except
+ * autocomplete. This class adds `showModal` on top of the reply members.
  *
  * @typeParam Event - The repliable interaction type this handler processes
  */

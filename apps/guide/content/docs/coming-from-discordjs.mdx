@@ -222,11 +222,8 @@ function rewriteIds(node: unknown): boolean {
 export class Unhandled extends InteractionHandler<Repliables> {
     public async execute(): Promise<void> {
         if (await this.rewroteOldIds()) {
-            await this.reply(
-                'This message was just updated. Try again.',
-                {
-                    ephemeral: true
-                }
+            await this.edit(
+                'This message was just updated. Try again.'
             );
             return;
         }
@@ -244,6 +241,7 @@ export class Unhandled extends InteractionHandler<Repliables> {
         );
         if (!rewriteIds(components)) return false;
 
+        await this.defer({ ephemeral: true });
         await message.edit({
             components,
             flags: message.flags.bitfield
@@ -255,9 +253,7 @@ export class Unhandled extends InteractionHandler<Repliables> {
 
 You add one row to `LEGACY_IDS` for each id your old bot wrote. `old` matches the old string. `next` builds the new id from the parts that `old` captured, like the two user ids in `accept-123-456`. Import `RegisterId` and `AcceptId` from the files that build your buttons. If a copy's shape drifts from the real one, it encodes ids that your handler reads as stale.
 
-`rewriteIds` walks every key at every depth, so it reaches the buttons and menus inside rows and containers. The edit passes `flags` back unchanged because [Discord asks for every flag](https://docs.discord.com/developers/resources/message#edit-message) the message already has when you edit it.
-
-Pass `Unhandled` as `interactions.unhandled` in your config. It answers every interaction that doesn't have a handler, so `execute` ends on the same reply that seedcord sends by default. If someone clicks an old button, they get "This message was just updated. Try again." Their next click then reaches your real handler. A message that nobody clicks keeps its old ids.
+`rewriteIds` walks every key at every depth, so it reaches the buttons and menus inside rows and containers. The edit passes `flags` back unchanged because [Discord asks for every flag](https://docs.discord.com/developers/resources/message#edit-message) the message already has when you edit it. Pass `Unhandled` as `interactions.unhandled` in your config. It answers every interaction that doesn't have a handler, so `execute` ends on the same reply that seedcord sends by default. If someone clicks an old button, they get "This message was just updated. Try again." Their next click then reaches your real handler. A message that nobody clicks keeps its old ids.
 
 <Callout type="transport" only="http">
 
@@ -275,6 +271,7 @@ export class Unhandled extends InteractionHandler<Repliables> {
         const { message } = this.event;
         if (!rewriteIds(message.components)) return false;
 
+        await this.defer({ ephemeral: true });
         await this.api.channels.editMessage(
             message.channel_id,
             message.id,
