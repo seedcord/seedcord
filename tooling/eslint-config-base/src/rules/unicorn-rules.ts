@@ -5,7 +5,6 @@ import { Linter } from 'eslint';
 export const UNICORN_RULES: Linter.RulesRecord = {
     'unicorn/error-message': 'error',
     'unicorn/new-for-builtins': 'error',
-    'unicorn/throw-new-error': 'error',
     'unicorn/prefer-type-error': 'error',
     'unicorn/no-instanceof-builtins': 'error',
     'unicorn/no-invalid-fetch-options': 'error',

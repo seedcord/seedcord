@@ -16,6 +16,7 @@ import { slashRouteOf } from './slashRouteOf';
 import type { HandlerSlots, ResolvedInteraction } from '#handlers/constructors';
 import type { SelectInteraction } from '#handlers/interaction/components/SelectMenuHandler';
 import type { Payloads } from '#handlers/interaction/middlewareKinds';
+import type { UnhandledHandler } from '#interfaces/Config';
 import type { RouteMaps as CoreRouteMaps } from '@seedcord/core/internal';
 import type {
     APIApplicationCommandInteraction,
@@ -33,7 +34,14 @@ import type {
 
 export type RouteMaps = CoreRouteMaps<HandlerSlots>;
 
-const UNHANDLED: HandlerSlots = unhandledSlots(UnhandledRepliable, UnhandledAutocomplete);
+export interface Routes {
+    readonly maps: RouteMaps;
+    readonly unhandled: HandlerSlots;
+}
+
+export function routesOf(maps: RouteMaps, unhandled?: UnhandledHandler): Routes {
+    return { maps, unhandled: unhandledSlots(unhandled ?? UnhandledRepliable, UnhandledAutocomplete) };
+}
 
 interface SelectData {
     [ComponentType.StringSelect]: APIMessageStringSelectInteractionData;
@@ -64,48 +72,48 @@ function isMessageCommand(
 }
 
 function resolved<Kind extends InteractionKind>(
-    maps: RouteMaps,
+    routes: Routes,
     kind: Kind,
     key: string,
     event: Payloads[Kind]
 ): ResolvedInteraction<Kind> {
-    return { ...matchRoute(maps, kind, key, UNHANDLED), event };
+    return { ...matchRoute(routes.maps, kind, key, routes.unhandled), event };
 }
 
-function resolveCommand(maps: RouteMaps, interaction: APIApplicationCommandInteraction): ResolvedInteraction | null {
+function resolveCommand(routes: Routes, interaction: APIApplicationCommandInteraction): ResolvedInteraction | null {
     if (isChatInputApplicationCommandInteraction(interaction)) {
-        return resolved(maps, InteractionKind.Slash, slashRouteOf(interaction.data), interaction);
+        return resolved(routes, InteractionKind.Slash, slashRouteOf(interaction.data), interaction);
     }
     if (isUserCommand(interaction)) {
-        return resolved(maps, InteractionKind.UserContextMenu, interaction.data.name, interaction);
+        return resolved(routes, InteractionKind.UserContextMenu, interaction.data.name, interaction);
     }
     if (isMessageCommand(interaction)) {
-        return resolved(maps, InteractionKind.MessageContextMenu, interaction.data.name, interaction);
+        return resolved(routes, InteractionKind.MessageContextMenu, interaction.data.name, interaction);
     }
     return null;
 }
 
 // components and modals route by the stable customId prefix
-function resolveComponent(maps: RouteMaps, interaction: APIMessageComponentInteraction): ResolvedInteraction | null {
+function resolveComponent(routes: Routes, interaction: APIMessageComponentInteraction): ResolvedInteraction | null {
     const key = prefixOf(interaction.data.custom_id);
     if (isMessageComponentButtonInteraction(interaction)) {
-        return resolved(maps, InteractionKind.Button, key, interaction);
+        return resolved(routes, InteractionKind.Button, key, interaction);
     }
     if (!isMessageComponentSelectMenuInteraction(interaction)) return null;
     if (isSelect(interaction, ComponentType.StringSelect)) {
-        return resolved(maps, InteractionKind.StringMenu, key, interaction);
+        return resolved(routes, InteractionKind.StringMenu, key, interaction);
     }
     if (isSelect(interaction, ComponentType.UserSelect)) {
-        return resolved(maps, InteractionKind.UserMenu, key, interaction);
+        return resolved(routes, InteractionKind.UserMenu, key, interaction);
     }
     if (isSelect(interaction, ComponentType.RoleSelect)) {
-        return resolved(maps, InteractionKind.RoleMenu, key, interaction);
+        return resolved(routes, InteractionKind.RoleMenu, key, interaction);
     }
     if (isSelect(interaction, ComponentType.ChannelSelect)) {
-        return resolved(maps, InteractionKind.ChannelMenu, key, interaction);
+        return resolved(routes, InteractionKind.ChannelMenu, key, interaction);
     }
     if (isSelect(interaction, ComponentType.MentionableSelect)) {
-        return resolved(maps, InteractionKind.MentionableMenu, key, interaction);
+        return resolved(routes, InteractionKind.MentionableMenu, key, interaction);
     }
     return null;
 }
@@ -116,19 +124,19 @@ function resolveComponent(maps: RouteMaps, interaction: APIMessageComponentInter
  * without dispatching. A wire whose layout hash drifted still reaches its handler, where decode refuses
  * with `StaleCustomId`.
  */
-export function resolve(maps: RouteMaps, interaction: APIInteraction): ResolvedInteraction | null {
+export function resolve(routes: Routes, interaction: APIInteraction): ResolvedInteraction | null {
     switch (interaction.type) {
         case InteractionType.ApplicationCommand: {
-            return resolveCommand(maps, interaction);
+            return resolveCommand(routes, interaction);
         }
         case InteractionType.ApplicationCommandAutocomplete: {
-            return resolved(maps, InteractionKind.Autocomplete, slashRouteOf(interaction.data), interaction);
+            return resolved(routes, InteractionKind.Autocomplete, slashRouteOf(interaction.data), interaction);
         }
         case InteractionType.MessageComponent: {
-            return resolveComponent(maps, interaction);
+            return resolveComponent(routes, interaction);
         }
         case InteractionType.ModalSubmit: {
-            return resolved(maps, InteractionKind.Modal, prefixOf(interaction.data.custom_id), interaction);
+            return resolved(routes, InteractionKind.Modal, prefixOf(interaction.data.custom_id), interaction);
         }
         default: {
             return null;

@@ -4,7 +4,7 @@ Thanks for wanting to help! Bug fixes, features and better docs are all welcome.
 
 seedcord is pre-1.0 and breaks things between minors. Open an issue before starting anything large and wait for my reply. I can't keep up with large PRs nobody asked for, so those may get closed without a detailed review. Check whether an issue or PR already covers your idea first.
 
-Everyone here follows the [code of conduct](CODE_OF_CONDUCT.md). Report a security problem the way [SECURITY.md](SECURITY.md) describes. If you're using AI, read the [AI policy](../AI_POLICY.md) too.
+Everyone here follows the [code of conduct](CODE_OF_CONDUCT.md). Report a security problem the way [SECURITY.md](SECURITY.md) describes. If you're using AI, read the [AI policy](../AI_POLICY.md) too. Issues, discussions, PR descriptions and comments have to be written by you.
 
 ## Setup
 

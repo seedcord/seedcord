@@ -205,6 +205,26 @@ describe('Mongoose lifecycle', () => {
         );
     });
 
+    it('stops looking for a server after 10 seconds so a dead one fails init with the driver error', async ({
+        mongooseWith
+    }) => {
+        await mongooseWith().init();
+
+        expect(vi.mocked(mongoose.connect)).toHaveBeenCalledWith(
+            expect.any(String),
+            expect.objectContaining({ serverSelectionTimeoutMS: 10_000 })
+        );
+    });
+
+    it('keeps a serverSelectionTimeoutMS from connectionOptions', async ({ mongooseWith }) => {
+        await mongooseWith({ connectionOptions: { serverSelectionTimeoutMS: 2000 } }).init();
+
+        expect(vi.mocked(mongoose.connect)).toHaveBeenCalledWith(
+            expect.any(String),
+            expect.objectContaining({ serverSelectionTimeoutMS: 2000 })
+        );
+    });
+
     it('retries after a failed init', async ({ mongooseWith }) => {
         vi.mocked(mongoose.connect).mockRejectedValueOnce(new Error('refused'));
         const plugin = mongooseWith();

@@ -10,7 +10,7 @@ import type { ExtractStrict } from 'type-fest';
 
 export interface AnswerEnv {
     ASSETS: Assets;
-    AI: { run(model: typeof embedding.model, input: { text: string[] }): Promise<{ data: number[][] }> };
+    AI: { run(model: typeof embedding.model, input: ReturnType<typeof embedding.request>): Promise<unknown> };
 }
 
 type Ranked = { hits: ReturnType<SectionIndex['rank']> } | ExtractStrict<GuideAnswer, { retryAfterSeconds: number }>;
@@ -39,15 +39,15 @@ export class GuideAnswers implements GuideService {
 
     async rank(asked: Question, index: SectionIndex): Promise<Ranked> {
         const { question } = ERROR_CODES.read(asked);
-        let data: number[][];
+        let result: unknown;
         try {
-            ({ data } = await this.env.AI.run(embedding.model, { text: [embedding.query(question)] }));
+            result = await this.env.AI.run(embedding.model, embedding.request([embedding.query(question)]));
         } catch (error) {
             if (!isOutForTheDay(error)) throw error;
             return { retryAfterSeconds: secondsUntilReset(Date.now()) };
         }
-        const [vector] = data;
-        if (!vector) throw new Error(`${embedding.model} didn't return an embedding.`);
+        // one query in, one vector out
+        const vector = embedding.vectors(result, 1).flat();
         return { hits: index.rank(vector, RESULTS) };
     }
 

@@ -1,3 +1,4 @@
+import { BOT_TOKEN_ENV } from './botTokenKeys';
 import { paint } from './palette';
 
 export interface VitePluginPlace {
@@ -25,7 +26,7 @@ export const listedFolderProblems = {
 };
 
 // the edge worker sets chalk's color level after this module loads
-export const token = (): string => paint.bold('DISCORD_BOT_TOKEN');
+export const token = (): string => paint.bold(BOT_TOKEN_ENV);
 
 const BAD_REQUEST = 400;
 const UNAUTHORIZED = 401;

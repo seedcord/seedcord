@@ -12,7 +12,7 @@ import { keepRequestOpenFor } from './requestScope';
 
 import type { InteractionMiddlewareConstructor } from '#handlers/constructors';
 import type { Core } from '#interfaces/Core';
-import type { RouteMaps } from './dispatch/resolve';
+import type { Routes } from './dispatch/resolve';
 import type { MiddlewareRegistry } from '@seedcord/core/internal';
 import type { APIInteraction } from 'discord-api-types/v10';
 
@@ -49,7 +49,7 @@ export class InteractionEngine {
 
     constructor(
         private readonly core: Core,
-        private readonly maps: RouteMaps,
+        private readonly routes: Routes,
         private readonly middlewares: MiddlewareRegistry<InteractionMiddlewareConstructor>,
         publicKey: string
     ) {
@@ -102,7 +102,7 @@ export class InteractionEngine {
     private async dispatch(interaction: APIInteraction): Promise<void> {
         try {
             this.core.bus[PublishDefault]('anyInteraction', { interaction });
-            const resolved = resolve(this.maps, interaction);
+            const resolved = resolve(this.routes, interaction);
             if (resolved) {
                 const start = await dispatchInteraction({ resolved, core: this.core, middlewares: this.middlewares });
                 // without this catch the rejection reaches the process unhandled

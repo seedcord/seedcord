@@ -47,9 +47,6 @@ export default createConfig({
             rules: { 'import/no-default-export': 'off' }
         },
 
-        // workerd/tsconfig.json doesn't include the DOM lib, which clashes with cloudflare's types
-        { files: ['workerd/**/*.ts'], languageOptions: { parserOptions: { project: ['./workerd/tsconfig.json'] } } },
-
         {
             ignores: [
                 '.next/**',

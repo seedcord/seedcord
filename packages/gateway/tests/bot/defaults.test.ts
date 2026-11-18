@@ -24,7 +24,7 @@ function asSlash(mock: ReturnType<typeof mockInteraction>): Slash {
     return mock as unknown as Slash;
 }
 
-const notImplemented = new TextDisplayBuilder().setContent('Feature not implemented yet.').toJSON();
+const notImplemented = new TextDisplayBuilder().setContent("This doesn't do anything right now.").toJSON();
 
 describe('UnhandledRepliable', () => {
     it('replies the not-implemented text through the sender, v2 and ephemeral', async () => {

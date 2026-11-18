@@ -4,7 +4,7 @@ import { PluginRegistry } from '@seedcord/core/internal';
 import { describe, expect, it } from 'vite-plus/test';
 
 import { InteractionDispatcher } from '#src/dispatch/InteractionDispatcher';
-import { resolve } from '#src/dispatch/resolve';
+import { resolve, routesOf } from '#src/dispatch/resolve';
 
 import { ConfirmId } from './fixtures/handlers/ConfirmControls';
 
@@ -24,7 +24,7 @@ function slashPayload(name: string): APIInteraction {
 }
 
 function registeredClassName(dispatcher: InteractionDispatcher, payload: APIInteraction): string | null {
-    const match = resolve(dispatcher.maps, payload);
+    const match = resolve(routesOf(dispatcher.maps), payload);
     if (!match || match.fallback) return null;
     return match.ctor.name;
 }
@@ -80,7 +80,7 @@ describe('http InteractionDispatcher discovery', () => {
     it('an unregistered route resolves to the unhandled default', async () => {
         const dispatcher = await readyDispatcher();
 
-        const match = resolve(dispatcher.maps, slashPayload('missing'));
+        const match = resolve(routesOf(dispatcher.maps), slashPayload('missing'));
         expect(match?.fallback).toBe(true);
     });
 
@@ -89,7 +89,7 @@ describe('http InteractionDispatcher discovery', () => {
 
         await dispatcher.onHmr({ type: 'delete', file: path.join(HANDLERS_DIR, 'PingCommand.ts') });
 
-        const match = resolve(dispatcher.maps, slashPayload('ping'));
+        const match = resolve(routesOf(dispatcher.maps), slashPayload('ping'));
         expect(match?.fallback).toBe(true);
     });
 });

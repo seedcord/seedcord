@@ -58,6 +58,7 @@
         "lint:fix": "eslint '**/*.{ts,tsx}' 'bin/**/*.mjs' --fix --max-warnings=0 --cache --no-error-on-unmatched-pattern",
         "tc": "tsgo --noEmit",
         "test": "vp test run",
+        "test:vite": "vp test related $(git grep -lE \"from 'vite['/]\" -- src) --run",
         "test:watch": "vp test dev",
         "coverage": "vp test run --coverage"
     },

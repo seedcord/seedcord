@@ -3,9 +3,9 @@ title: seedcord.config.ts
 description: Tell the seedcord CLI where your bot lives and how to build it with seedcord.config.ts, and look up what each key does and where its paths resolve.
 ---
 
-The CLI has to find `bot.ts` before it can import it, so you can't put the paths that locate it inside `bot.ts`. Put `instance` and `root` in `seedcord.config.ts`, beside your `package.json`. `seedcord.config.mts` works too. The CLI looks only in the folder you run it from, which is your project folder when you run it through a `package.json` script.
+The CLI has to find `bot.ts` before it can import it, so you can't put the paths that locate it inside `bot.ts`. Put them in `seedcord.config.ts`, beside your `package.json`. `seedcord.config.mts` works too. The CLI looks only in the folder you run it from, which is your project folder when you run it through a `package.json` script.
 
-Put your bot's own settings, like its intents and its handler folders, in `new Seedcord({ ... })` in `bot.ts`. [Tooling](/tooling) lists those.
+Put your bot's own settings, like its intents and its handler folders, in `new Seedcord({ ... })` in `bot.ts`. [Your first bot](/first-bot#your-bots-settings) shows those.
 
 ```ts twoslash title="seedcord.config.ts"
 import { defineConfig } from 'seedcord';
@@ -23,7 +23,7 @@ export default defineConfig({
 });
 ```
 
-`instance` is the only key you have to write. `defineConfig` comes from the `seedcord` package and types every key.
+`instance` is the only key a server bot has to write, and an [edge bot](#an-edge-bots-config) also needs `root`. `defineConfig` comes from the `seedcord` package and types every key.
 
 ## Every key
 
@@ -32,30 +32,30 @@ export default defineConfig({
 | key | default | relative to | what it does |
 | --- | --- | --- | --- |
 | `instance` | required | `root` | the module whose default export is your configured `Seedcord` |
-| `root` | the config's folder | the config's folder | the folder that holds your bot's code. Everything under it builds |
+| `root` | the config's folder | the config's folder | the folder that holds your bot's code. `seedcord build` builds everything under it |
 | `files` | `[]` | `root` | folders of non-code files a built bot reads through [`readFiles`](ref:utils/readFiles). [Data files](/build/data-files) |
 | `vitePlugins` | none | | a function returning the Vite plugins that run on your bot's code. [Vite plugins](/build/vite-plugins) |
 | `build.start` | none | `root` | the file that calls `start()`. Leave it out to [build the bot as a package](/build/package). Server bots only |
 | `build.outDir` | `./dist` | the config's folder | where `seedcord build` writes. Server bots only |
 | `build.tsconfig` | `tsconfig.json` beside the config | the config's folder | the tsconfig `seedcord build` type checks against |
 | `tunnel` | `true` | | how `seedcord dev` exposes an http bot. [The tunnel](/tooling/tunnel) |
-| `port` | `3000` | | the port `seedcord dev` serves an edge bot on. `0` picks a free one. Edge bots only |
+| `port` | `3000` | | the port `seedcord dev` serves an edge bot on. `0` picks a free one, which a `tunnel` URL can't use. Edge bots only |
 | `hmr.restart` | `[]` | `root` | globs for files whose save restarts the bot. [Hot reload](/tooling/hot-reload) |
 | `hmr.rollback` | `true` | | whether a failed reload rolls back to the last version that loaded |
-| `hmr.typecheck` | `false` | `root` | `true` runs `tsc --watch` beside the bot, and `{ tsconfig }` picks the tsconfig |
+| `hmr.typecheck` | `false` | `root` | `true` runs `tsc --watch` beside the bot, and `{ tsconfig }` picks a tsconfig other than the nearest one |
 | `idleAnimation` | `true` | | whether the [dev terminal](/tooling/dev) animates while nothing happens |
 | `make.templates` | `./templates` | the config's folder | the folder [`seedcord make`](/tooling/make) reads templates from |
 | `make.helpers` | `{}` | | [your own Handlebars helpers](/tooling/make#your-own-helpers) for those templates |
 
 {/* prettier-ignore-end */}
 
-`tunnel` takes `true`, `false`, or an https URL you already serve, and a gateway bot ignores it. A Node http bot takes its port in `new Seedcord({ port })`, so TypeScript rejects `port` here.
+`tunnel` takes `true`, `false`, or an https URL you already serve. A gateway bot ignores it. A Node http bot takes its port in `new Seedcord({ port })`, so TypeScript rejects `port` here.
 
 ## Where paths resolve
 
-Every relative path is relative to one of two folders. `root`, `build.outDir`, and `build.tsconfig` are relative to the folder that holds `seedcord.config.ts`. Everything that points into your bot's code is relative to `root`, so with `root: './src'` you write `instance: './bot.ts'`. Writing `'./src/bot.ts'` there would look for `src/src/bot.ts`.
+Every relative path is relative to one of two folders. `root`, `build.outDir`, `build.tsconfig`, and `make.templates` are relative to the folder that holds `seedcord.config.ts`. Everything that points into your bot's code is relative to `root`, so with `root: './src'` you write `instance: './bot.ts'`. Writing `'./src/bot.ts'` there would look for `src/src/bot.ts`.
 
-The folder paths inside `new Seedcord({ ... })` follow the same rule, so `interactions: { path: './handlers' }` reaches `src/handlers`. seedcord loads the same code files from a handler folder that [`importFiles`](ref:utils/importFiles) does. A plugin that reads a folder, like Mongoose with its `path`, [resolves it the same way](/writing-plugins/files#where-a-relative-path-starts).
+The folder paths inside `new Seedcord({ ... })` follow the same rule, so `interactions: { path: './handlers' }` reaches `src/handlers`. From a handler folder, seedcord loads the same code files that [`importFiles`](ref:utils/importFiles) would. A plugin that reads a folder, like Mongoose with its `path`, [resolves it the same way](/writing-plugins/files#where-a-relative-path-starts).
 
 A test or a `tsx` script that imports `bot.ts` runs without `root`, so [Your first bot](/first-bot#your-bots-settings) shows the absolute paths those runs need.
 
@@ -67,11 +67,11 @@ That's also why `root` is usually `./src`. If you leave `root` at the config's f
 
 ## Config mistakes
 
-The CLI checks the type of every key before it loads your bot. If several are wrong, it reports them together in one `CliProblems` error. Three more checks look at the folders and each stops the CLI by itself:
+The CLI checks the type of every key before it loads your bot. If several are wrong, it reports them together in one `CliProblems` error. It also checks the paths:
 
-- If `root` is inside `build.outDir`, the CLI throws `CliConfigOutDirDeletesRoot` because the build empties `outDir` before it writes.
+- If `root` is `build.outDir` or inside it, the CLI throws `CliConfigOutDirDeletesRoot` because the build empties `outDir` before it writes.
 - If `instance` or `build.start` points at a missing file, the CLI throws `CliFileNotFound` and reports which key.
-- If an entry in `files` sits outside the config's folder, every command throws `CliListedFolderUnusable`. `seedcord build` throws it too for an entry that's missing or is a file.
+- If an entry in `files` sits outside the config's folder, every command throws `CliListedFolderUnusable`. `seedcord build` throws it too for an entry that's missing or is a file. If several entries are wrong, the CLI reports them together in one `CliProblems` error.
 
 If a path resolves somewhere you didn't expect, pass `--verbose` to `seedcord build`, `codegen`, or `commands`. It prints where the CLI resolved `root`, `instance`, `build.start`, and `build.outDir`.
 
@@ -81,6 +81,6 @@ A `cloudflare.config.ts` beside `seedcord.config.ts` makes your bot an edge bot,
 
 - `build` takes only `tsconfig` because the build always writes the worker to `.cloudflare/output` and runs without a start file.
 - `port` sets where `seedcord dev` serves the worker.
-- `root` can't be the config's folder or any folder above it. The worker bundles every file under it. Tool configs like `eslint.config.ts` break that bundle, so the build throws `CliEdgeRootHoldsConfig`.
+- `root` can't be the config's folder or any folder above it because the worker bundles every file under `root`. Tool configs like `eslint.config.ts` break that bundle, so the build throws `CliEdgeRootHoldsConfig`.
 
 [Cloudflare Workers](/build/workers) covers the rest of an edge bot's setup.

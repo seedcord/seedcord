@@ -10,11 +10,11 @@ AI is fine here. I use it a lot myself. Just that there are a few rules if you'r
 
 - **Fix things you actually ran into.** Pointing an agent at the repo and asking it to find bugs gets you a pile of edge cases that are so unlikely to happen that it's a waste of time to solve. Fix the thing that broke your bot, one fix per PR.
 
-- **Edit what the AI writes for you.** Issues, discussions, PR descriptions and replies can be AI-assisted, but read them and cut them down before you post. AI loves writing three paragraphs where one line would do. I'd rather read your one line, typos and all.
+- **Write your own words.** Issues, discussions, PR descriptions, comments and replies to the review bots all have to come from you. AI can write the code, but don't paste its text into any of those. I'd rather read your one line, typos and all, than three paragraphs an agent wrote. I don't want to have to read any long, verbose, sloppy AI output.
 
 - **No AI-generated images, videos, audio, etc.** Text and code only, following the rest of these rules.
 
-- **I'll close obvious slop.** If a PR or issue is clearly AI output you didn't read, I'll close it without a review. **Keep sending them and you'll get blocked from the repo.** If you're still learning, that's totally fine! Skip the AI, ask me stuff, and I'll help you out 😄
+- **I'll close obvious slop.** If a PR or issue is clearly AI output, like code you didn't read or a description you didn't write, I'll close it without a review. **Keep sending them and you'll get blocked from the repo.** If you're still learning, that's totally fine! Skip the AI, ask me stuff, and I'll help you out 😄
 
 > Please don't open a PR just to become a contributor either. Use seedcord, build a bot with it, and contribute when something gets in your way. That's the kind of contributor I'm after 🙏🏻
 

@@ -26,7 +26,7 @@ export class Trace extends InteractionMiddleware {
 }
 ```
 
-You can omit the options object on [`@RegisterInteractionMiddleware`](ref:core/RegisterInteractionMiddleware) entirely, the way `Trace` does. Both of its keys are optional on their own too. If you omit both, the middleware runs on every kind that has a reply target.
+The options object on [`@RegisterInteractionMiddleware`](ref:core/RegisterInteractionMiddleware) is optional, as in `Trace`, and so is each key in it. With neither key set, the middleware runs on every kind that has a reply target.
 
 ## Which interactions it runs for
 

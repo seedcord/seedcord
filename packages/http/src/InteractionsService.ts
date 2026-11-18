@@ -12,11 +12,12 @@ import { LoggerChannelRegistry } from '@seedcord/logger';
 import { HostPlugins } from '@seedcord/types/internal';
 
 import { InteractionDispatcher } from '#src/dispatch/InteractionDispatcher';
+import { routesOf } from '#src/dispatch/resolve';
 import { InteractionEngine } from '#src/InteractionEngine';
 import { keepRequestOpenFor } from '#src/requestScope';
 
 import type { InteractionMiddlewareConstructor } from '#handlers/constructors';
-import type { HttpConfig } from '#interfaces/Config';
+import type { HttpConfig, UnhandledHandler } from '#interfaces/Config';
 import type { Core } from '#interfaces/Core';
 import type { REST } from '@discordjs/rest';
 import type { BotToken } from '@seedcord/errors/internal';
@@ -28,6 +29,7 @@ export class InteractionsService {
 
     private token?: BotToken;
     private builtEngine?: InteractionEngine;
+    private readonly unhandled: UnhandledHandler | undefined;
 
     constructor(
         private readonly host: Core,
@@ -40,9 +42,10 @@ export class InteractionsService {
         this.subscribers = new SubscriberLoader(host.bus, config.subscribers.path);
 
         const interactions = config.bot.interactions;
-        this.interactions = interactions.path
-            ? new InteractionDispatcher(host[HostPlugins], interactions.path, interactions.middlewares)
-            : undefined;
+        if (!interactions.path) return;
+
+        this.interactions = new InteractionDispatcher(host[HostPlugins], interactions.path, interactions.middlewares);
+        this.unhandled = interactions.unhandled;
     }
 
     public get applicationId(): string {
@@ -65,6 +68,6 @@ export class InteractionsService {
             maps: emptyRouteMaps(),
             middlewares: new MiddlewareRegistry<InteractionMiddlewareConstructor>(interactionMiddleware)
         };
-        this.builtEngine ??= new InteractionEngine(this.host, maps, middlewares, publicKey);
+        this.builtEngine ??= new InteractionEngine(this.host, routesOf(maps, this.unhandled), middlewares, publicKey);
     }
 }

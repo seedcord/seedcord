@@ -3,11 +3,11 @@ title: Writing types from codegen
 description: Give your plugin's methods autocomplete and exact types for what it reads from the bot's project, like the names in its JSON files, using codegen().
 ---
 
-Say your plugin sends saved replies, called tags. A bot keeps them in `tags/*.json`, a handler calls `tag('rules')`, and your plugin looks up `rules` in those files. You write the plugin before any bot exists, so its types can't list which tags a bot's files will hold. Without codegen, `tag()` takes any `string`. The bot's author doesn't get suggestions, and a typo like `tag('rulse')` only shows up when a user gets the wrong reply.
+Say your plugin sends saved replies, called tags. A bot keeps them in `tags/*.json`, a handler calls `tag('rules')`, and your plugin looks up `rules` in those files. You write the plugin before any bot exists, so its types can't list which tags a bot's files will hold. Without codegen, `tag()` takes any `string`. The bot's author doesn't get suggestions, and a typo like `tag('rulse')` is only caught when a user gets the wrong reply.
 
 ## How it works
 
-You add a `codegen()` method and a `static readonly id` to your plugin. Three things then happen:
+You add a [`codegen()`](ref:core/Plugin.codegen) method and a `static readonly id` to your plugin. Three things then happen:
 
 ```txt output
 1. your codegen() returns a value
@@ -20,7 +20,7 @@ You add a `codegen()` method and a `static readonly id` to your plugin. Three th
    { rules: true; welcome: true }
 ```
 
-So you design the return value as the type you want. Each key of an object becomes a key of the type, an array becomes a tuple, and a string becomes its literal. `seedcord codegen` runs your `codegen()` in every bot that attaches your plugin, and `seedcord dev` runs it each time the bot starts, so every bot gets a type built from its own files.
+Shape the return value like the type you want. Each key of an object becomes a key of the type, an array becomes a tuple, and a string becomes its literal. `seedcord codegen` runs your `codegen()` in every bot that attaches your plugin, and `seedcord dev` runs it each time the bot starts. Each bot gets a type built from its own files.
 
 ```ts twoslash title="src/plugins/Tags.ts"
 import { Plugin, readFiles } from '@seedcord/gateway';
@@ -75,7 +75,7 @@ export class Tags extends Plugin {
 }
 ```
 
-`codegen()` reads the same files `init()` does, through one `read()` method, and returns each tag's name set to `true`. `tag()` only needs the names, and `true` gives each name something to hold. If a bot attaches it as `tags` and its `tags/server.json` holds `{ "rules": "Be nice.", "welcome": "Hi!" }`, codegen writes this row into the bot's file:
+`codegen()` reads the same files `init()` does, through one `read()` method, and returns each tag's name set to `true`. `tag()` only needs the names, but an object needs a value for each key, so `true` fills it. If a bot attaches it as `tags` and its `tags/server.json` holds `{ "rules": "Be nice.", "welcome": "Hi!" }`, codegen adds this row for your plugin to `PluginTypes` in the bot's file:
 
 ```ts title="src/seedcord-gen.ts" output
 interface PluginTypes {
@@ -86,9 +86,9 @@ interface PluginTypes {
 }
 ```
 
-`Fits` is a type defined at the top of that file. The bot's `tc` fails on it when the row doesn't match your `codegen()` return type.
+`Fits` is a type defined at the top of that file. The bot's type check fails on it when the row doesn't match your `codegen()` return type.
 
-`Replies` reads its keys from that row, so `tag()` accepts `'rules'` or `'welcome'`, and a handler's editor offers both:
+`Replies` reads its keys from that row, so `tag()` accepts `'rules'` or `'welcome'`, and the bot author's editor offers both:
 
 ```ts twoslash
 // @noErrors
@@ -123,11 +123,11 @@ Before codegen first runs in a bot, [`Generated`](ref:core/Generated) falls back
 
 <Callout type="warning">
 
-Tell your users in your README to run `seedcord codegen` after they add a tag, and after they upgrade to a release of your plugin that changes what `codegen()` returns. Until they do, a new key fails to compile. After such an upgrade, their `tc` fails on your row's `Fits` line until codegen rewrites it.
+Tell your users in your README to run `seedcord codegen` after they add a tag, and after they upgrade to a release of your plugin that changes what `codegen()` returns. Until they run it, a new key fails to compile. After such an upgrade, their type check fails on your row's `Fits` line until codegen rewrites it.
 
 </Callout>
 
-The sample extends the gateway `Plugin`, so it only attaches to a gateway bot. To support both transports, import `Plugin` and `Generated` from `@seedcord/core/plugin` and `readFiles` from `@seedcord/utils`, as [Loading a bot's files](/writing-plugins/files) explains.
+The sample extends the gateway `Plugin`, so it only attaches to a gateway bot. To support both transports, import `Plugin` and `Generated` from `@seedcord/core/plugin` and `readFiles` from `@seedcord/utils`, as the [page on loading a bot's files](/writing-plugins/files) explains.
 
 ## Typing more than keys
 
@@ -205,7 +205,7 @@ export class Tags extends Plugin {
 }
 ```
 
-With `"welcome": "Welcome {name}!"` and `"rules": "Be nice."`, codegen writes `{ rules: []; welcome: ['name'] }`. `Replies['welcome'][number]` is `'name'`, so `tag('welcome')` needs a `name` and `tag('rules')` takes an empty object:
+With `"welcome": "Welcome {name}!"` and `"rules": "Be nice."`, codegen writes `{ rules: []; welcome: ['name'] }`. `Replies['welcome'][number]` is `'name'`, so `tag('welcome')` needs a `name`. `tag('rules')` takes an empty object:
 
 ```ts twoslash
 // @errors: 2345
@@ -244,31 +244,31 @@ tags.tag('welcome', {});
 
 ## Getting the type you want
 
-`codegen()` returns plain data, and your plugin shapes it into the type its methods take. In this table, `Row` stands for the field you read off `Generated<typeof YourPlugin>`, like `Replies` above.
+`codegen()` returns plain data, and you shape it into the type your methods take. In this table, `Field` stands for the field you read off `Generated<typeof YourPlugin>`, like `Replies` above.
 
 {/* prettier-ignore-start */}
 
 | you want | return | read it as |
 | --- | --- | --- |
-| a union of names | an object, `{ rules: true, welcome: true }` | `keyof Row` is `'rules' \| 'welcome'` |
-| a union of values | an array, `['faq', 'mod']` | `Row[number]` is `'faq' \| 'mod'` |
-| data for each name | an object of data, `{ welcome: ['name'] }` | `Row[Key]` is `['name']` for `'welcome'` |
-| a fixed value | a string, a finite number, a boolean, or `null` | `Row` is that literal, like `'faq'` |
+| a union of names | an object, `{ rules: true, welcome: true }` | `keyof Field` is `'rules' \| 'welcome'` |
+| a union of values | an array, `['faq', 'mod']` | `Field[number]` is `'faq' \| 'mod'` |
+| data for each name | an object of data, `{ welcome: ['name'] }` | `Field[Key]` is `['name']` for `'welcome'` |
+| a fixed value | a string, a finite number, a boolean, or `null` | `Field` is that literal, like `'faq'` |
 | a nested shape | objects and arrays inside each other | the same shape, with object keys sorted |
-| a class | a class a project file exports | `Row` is the class, and `InstanceType<Row>` is an instance of it |
+| a class | a class a project file exports | `Field` is the class, and `InstanceType<Field>` is an instance of it |
 
 {/* prettier-ignore-end */}
 
 A few rules decide what you can return:
 
-- **A class or object needs a file that exports it.** Codegen writes it as an import of that file, so the bot or your `codegen()` has to have imported the file. If your own package exports it, codegen imports it by package name. The generated file reads any exported value through that import, so declare exported data `as const` to keep its literal types.
+- **A class needs a file that exports it.** Codegen writes any exported value, a class or an object, as an import of that file, so the bot or your `codegen()` has to have imported the file. If your own package exports it, codegen imports it by package name. Declare exported data `as const` to keep its literal types.
 - **Anything else has to be plain data.** A `Date`, a class instance, or a function that no file exports stops codegen with `CliPluginCodegenValue`.
 - **Prefer an object over an array if a bot can attach your plugin twice.** Codegen merges two objects key by key. Two arrays have to match as a whole, or codegen stops with `CliPluginCodegenConflict`.
 - **Return only what your types need.** Codegen writes every value into the bot's committed file. If you returned the reply text, `seedcord codegen --check` would fail each time someone rewords a tag.
 
 ## Returning classes
 
-Say your plugin runs minigames, and a bot writes each game as a class in its `games` folder. A [`FolderExports`](ref:core/FolderExports) registers those classes in `init()`, and its `scan()` imports the same folder for `codegen()` without registering anything. `codegen()` returns the game classes themselves, keyed by their class name:
+Say your plugin runs minigames, and a bot writes each game as a class in its `games` folder. A [`FolderExports`](ref:core/FolderExports) imports a folder and hands each matching export to your `register` callback when you call `load()` in `init()`. Its `scan()` imports the same folder for `codegen()` without registering anything. `codegen()` returns the game classes themselves, keyed by their class name:
 
 ```ts twoslash title="src/plugins/Arcade.ts"
 import { FolderExports, Plugin } from '@seedcord/gateway';
@@ -345,23 +345,23 @@ interface PluginTypes {
 }
 ```
 
-`Games['Trivia']` is the class itself, so `create('Trivia')` returns `InstanceType<Games['Trivia']>`, a `Trivia` with every method the bot wrote on it. [Mongoose](/plugins/mongoose-services#typing-the-registry) types its services the same way.
+`Games['Trivia']` is the class itself, so `create('Trivia')` returns `InstanceType<Games['Trivia']>`, a `Trivia` with every method the bot wrote on it. [Mongoose](/plugins/mongoose-services#typing-the-services) types its services the same way.
 
 ## The id
 
-Rows in the bot's file share one list, keyed by your plugin's id. You declare the id on the class because your package reads its own row with `Generated<typeof Tags>` when it builds before any bot has picked an attach key. Use your package's name, like `'seedcord-tags'` here, so another plugin doesn't write the same key.
+Every plugin's row in the bot's `PluginTypes` is keyed by its id. You declare the id on the class because your package reads its own row with `Generated<typeof Tags>` when it builds before any bot has picked an attach key. Use your package's name, like `'seedcord-tags'` here, so another plugin doesn't write the same id.
 
-Write it `static readonly`. Without `readonly`, TypeScript types the id as `string`, and each field of `Generated` turns into a message saying to add it.
+Write it `static readonly`. Without `readonly`, TypeScript types the id as `string`, and each field of `Generated` becomes a message telling you to add `readonly`.
 
-A bot can attach your plugin under two keys, like two `Tags` for two folders. Both share the one row, so codegen merges what the two `codegen()` calls returned, key by key. Two folders that hold the same key have to return the same value for it.
+A bot can attach your plugin under two keys, like two `Tags` for two folders. Both share the one row, so codegen merges what the two `codegen()` calls returned. Two folders that hold the same tag have to return the same value for it.
 
 ## codegen() runs without init()
 
-`seedcord codegen` constructs the bot and never calls `init()`, and neither does a CI job running `seedcord codegen --check`. Anything `init()` sets up, like a connection, doesn't exist yet. Inside `codegen()`, use only what the constructor stored and the bot's files.
+`seedcord codegen` constructs the bot and never calls `init()`. A CI job running `seedcord codegen --check` doesn't call it either. Anything `init()` sets up, like a connection, doesn't exist yet. Inside `codegen()`, use only what the constructor stored and the bot's files.
 
 [`readFiles`](ref:utils/readFiles) and `scan()` work there since the CLI sets the bot's `root` before it loads your plugin. `readFiles` still needs the folder listed in the bot's [`files`](/build/data-files), the same as when the bot runs.
 
-For a server bot, `seedcord dev` writes the file after the bot has started and `init()` has run. An edge bot runs in workerd, and dev runs codegen on a separate copy in Node that never calls `init()`. A `codegen()` that reads `init()` state works for a server bot in dev and fails everywhere else, so test yours with `seedcord codegen`.
+For a server bot, `seedcord dev` writes the file after the bot has started and `init()` has run. An edge bot runs in workerd, and dev runs codegen on a separate copy in Node that never calls `init()`. A `codegen()` that reads `init()` state works only for a server bot under `seedcord dev`. It fails under `seedcord codegen`, in CI, and on an edge bot, so test yours with `seedcord codegen`.
 
 ## When codegen stops
 

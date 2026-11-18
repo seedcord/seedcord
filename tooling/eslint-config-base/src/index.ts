@@ -82,11 +82,6 @@ function createConfig(options: CreateConfigOptions = {}): FlatConfig {
     assertRelativeImportsMode(relativeImports);
     assertTypescriptConfigsLevel(registerTypescriptConfigs);
 
-    const createTsParserOptions = (rootDir: string) => ({
-        project: ['./tsconfig.json'],
-        tsconfigRootDir: rootDir
-    });
-
     const tsConfigs: FlatConfigItem[] = [];
 
     if (registerTypescriptConfigs === 'rules-only') {
@@ -102,8 +97,8 @@ function createConfig(options: CreateConfigOptions = {}): FlatConfig {
         );
 
         if (registerTypescriptConfigs === 'no-type-checked') {
-            // rules only. the full config clears parserOptions.project which the seedcord and
-            // discordjs still need to do their type aware linting
+            // rules only. the full config turns off parserOptions.projectService, which the seedcord
+            // and discordjs rules still need to do their type aware linting
             tsConfigs.push({
                 files: [...TS_FILES],
                 rules: merge({}, tseslint.configs.disableTypeChecked.rules)
@@ -129,7 +124,7 @@ function createConfig(options: CreateConfigOptions = {}): FlatConfig {
             files: [...TS_FILES],
             languageOptions: merge({}, TYPESCRIPT_LANGUAGE_OPTIONS, {
                 parser: tseslint.parser,
-                parserOptions: createTsParserOptions(tsconfigRootDir)
+                parserOptions: { projectService: true, tsconfigRootDir }
             }),
             linterOptions: COMMON_LINTER_OPTIONS
         },

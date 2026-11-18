@@ -12,6 +12,13 @@ export default createConfig({
             rules: {
                 'no-console': 'off'
             }
+        },
+        // the mock imports @seedcord/fixture-base, which resolves only after the test harness installs it
+        {
+            files: ['tests/mock/**/*.ts'],
+            rules: {
+                'import-x/no-unresolved': 'off'
+            }
         }
     ]
 });

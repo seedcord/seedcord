@@ -3,11 +3,11 @@ title: Reloading in dev
 description: Reload the files that your plugin loads when you save them under seedcord dev, and ask for a restart or a command refresh for the rest.
 ---
 
-When you save a handler, a command, or a subscriber under [`seedcord dev`](/tooling/dev), seedcord reloads it in the running bot without a restart. It only reloads the folders that seedcord loads itself. If your plugin imports files from its own folder, the plugin keeps running the old code until you restart, and a restart reconnects a gateway bot to Discord. This page shows how to reload those files from your plugin, and how to ask for a restart when a reload can't help.
+When you save a handler, a command, or a subscriber under [`seedcord dev`](/tooling/dev), seedcord reloads it in the running bot without a restart. A folder that your plugin imports reloads only if your plugin reloads it in `onHmr`. Otherwise the plugin keeps running the old code until you restart, and a restart reconnects a gateway bot to Discord.
 
 ## What reaches `onHmr` when a file is saved
 
-When seedcord can reload a save, it calls your plugin's [`onHmr`](ref:core/Plugin.onHmr) with an [`HmrUpdateEvent`](ref:types/HmrUpdateEvent). A save that needs a restart doesn't reach it.
+When seedcord can reload a save, it calls your plugin's [`onHmr`](ref:core/Plugin.onHmr) with an [`HmrUpdateEvent`](ref:types/HmrUpdateEvent). If a save needs a restart, `onHmr` doesn't receive it.
 
 {/* prettier-ignore-start */}
 
@@ -16,11 +16,11 @@ When seedcord can reload a save, it calls your plugin's [`onHmr`](ref:core/Plugi
 | `file` | the saved path |
 | `type` | `create`, `createDir`, `update`, `delete`, or `deleteDir` |
 | `affectedModules` | the file and every file that imports it, directly or through another file. A folder event doesn't have it |
-| `rollback` | whether a failed reload keeps the last working version |
+| `rollback` | whether a failed reload keeps the last working version. Optional, and `true` by default |
 
 {/* prettier-ignore-end */}
 
-The default `onHmr` is empty, and seedcord only calls it under `seedcord dev`. If your `onHmr` throws, seedcord logs the error, and the rest of the reload still runs.
+The default `onHmr` is empty, and seedcord only calls it under `seedcord dev` in the [development or test mode](/build/env#picking-the-mode). If your `onHmr` throws, seedcord logs the error, and the rest of the reload still runs.
 
 ## Reloading files the plugin loaded
 
@@ -80,45 +80,45 @@ export class Responders extends Plugin {
 }
 ```
 
-In `init()`, you call `load()`, which imports every file under `dir` and passes each export that `isResponder` accepts to `register`. `load()` runs the same way in production, so the bot registers its responders through one path whether dev is running or not. `isResponder` receives every value that a file exports, helpers and constants included. It has to pick out your classes. In a handler, you call `replyFor(message.content)` and send the reply if it returns one.
+In `init()`, you call [`load()`](ref:core/FolderExports.load), which imports every file under `dir` and passes each export that `isResponder` accepts to `register`. `load()` runs the same way in production, so the bot registers its responders through one path whether dev is running or not. `isResponder` receives every value that a file exports, helpers and constants included. It has to select only your classes.
 
-If `responders/index.ts` re-exports the responder in `Greeting.ts`, `load()` still registers it once. `handle()` only unregisters it when neither `Greeting.ts` nor `index.ts` exports it, so deleting `index.ts` leaves the responder answering.
+If `responders/index.ts` re-exports the responder in `Greeting.ts`, `load()` still registers it once. `handle()` only unregisters it when neither `Greeting.ts` nor `index.ts` exports it, so deleting `index.ts` leaves the responder still replying.
 
 ### What each save does
 
-In `onHmr`, you pass each save to `handle()`. It ignores files outside `dir` and does this for each `type`:
+In `onHmr`, you pass each save to [`handle()`](ref:core/FolderExports.handle). It ignores files outside `dir` and does this for each `type`:
 
 {/* prettier-ignore-start */}
 
 | type | what `handle()` does |
 | --- | --- |
-| `create`, `update` | re-imports the saved file and every file in `affectedModules` that sits under `dir`, unregisters what each one exported before, and registers what it exports now |
+| `create`, `update` | re-imports the saved file and every file in `affectedModules` that is inside `dir`, unregisters what each one exported before, and registers what it exports now |
 | `delete` | unregisters what that file exported, apart from a value that another file still exports, then re-imports the files in `affectedModules` that import it |
 | `createDir`, `deleteDir` | nothing. A folder isn't a module, and each file in it arrives as its own `create` or `delete` event |
 
 {/* prettier-ignore-end */}
 
-If a file throws while it imports, `handle()` has already unregistered its old exports. If `rollback` is on, which it is by default, `handle()` registers them again and logs a warning. If you set [`hmr.rollback`](/build/config#every-key) to `false`, `handle()` leaves them unregistered until a save that imports cleanly. The Tooling tab walks through [the same case](/tooling/hot-reload#a-save-that-throws-on-import) for your own handlers.
+If a file throws while it imports, `handle()` has already unregistered its old exports. If `rollback` is on, which it is by default, `handle()` registers them again and logs a warning. If you set [`hmr.rollback`](/build/config#every-key) to `false`, `handle()` leaves them unregistered until a save that imports cleanly. The Tooling tab walks through [a save that throws on import](/tooling/hot-reload#a-save-that-throws-on-import) for your own handlers.
 
-If your `register` throws, `handle()` unregisters whatever that file registered before the throw. It tries the file again on the next save that unregisters something. This handles moving a responder to a new file because the new file often loads before the old one unloads. Say your `register` throws on a keyword that's already taken. The first try fails, and the retry succeeds once `handle()` unregisters the old file's responder.
+If your `register` throws, `handle()` unregisters whatever that file registered before the throw. It tries the file again on the next save that unregisters something. Say you add a check to `register` that throws on a keyword that's already taken, then move a responder to a new file. The new file often loads before the old one unloads, so the first try fails. The retry succeeds once `handle()` unregisters the old file's responder.
 
-Each reload logs one line at debug level on your plugin's logger, in the `hmr` channel, like "Reloaded Greeting from responders/Greeting.ts in 4ms".
+Each reload logs one line at debug level through a copy of your plugin's logger that writes to the `hmr` [channel](/built-ins/logger-config#one-channel-at-a-time). An update logs a line like "Reloaded Greeting from responders/Greeting.ts in 4ms".
 
 ### Undoing what a registration made
 
-`unregister` gets only the old class. `Responders` keys its map by that class, so `unregister` finds the instance that `register` made for it and deletes it.
+`unregister` gets only the old class. You key the map by that class, so your `unregister` can find the instance that `register` made for it and delete it.
 
-Keep anything else that `register` starts in a map keyed the same way, like a timer or a listener, and stop it in `unregister`. If you don't, every save leaves one more copy running the old code. `unregister` only runs on a save. `seedcord dev` restarts the bot in the same process, so stop whatever is still running in [`dispose()`](ref:core/Plugin.dispose) too.
+Keep anything else that `register` starts in a map keyed the same way, like a timer or a listener, and stop it in `unregister`. If you don't, every save leaves one more copy running the old code. `unregister` doesn't run at shutdown, so stop whatever is still running in [`dispose()`](ref:core/Plugin.dispose) too.
 
 ### More than one folder
 
-A `FolderExports` covers one folder and one kind of value. For a second kind, like reaction responders that answer an emoji, make a second `FolderExports` with its own `is`, `register`, and `unregister`. Call `load()` on both in `init()` and `handle()` on both in `onHmr()` since each one ignores saves outside its own folder.
+A `FolderExports` covers one folder and one kind of value. For a second kind, like reaction responders that answer an emoji, make a second `FolderExports` with its own `is`, `register`, and `unregister`. Call `load()` on both in `init()`, and `handle()` on both in `onHmr()`. Each one ignores saves outside its own folder.
 
-If the reactions folder is a subfolder of the responders folder, pass it to the first instance as `exclude: [reactionsDir]`. Without it, the responders instance imports the reaction files too, and a reaction file that throws on import logs its error twice. A relative path in `exclude` resolves against `root` from `seedcord.config.ts`.
+If the reactions folder is a subfolder of the responders folder, pass it to the first instance as `exclude: [reactionsDir]`. Without it, the responders instance imports the reaction files too, and if a reaction file throws on import, its error is logged twice. A relative path in `exclude` resolves against `root` from `seedcord.config.ts`.
 
 ## Files read once
 
-If `init()` reads a folder at startup, like a folder of tags, your plugin keeps the old contents after you save a file in it because the reload doesn't repeat the read. Pass glob patterns for files like that to [`registerCriticalFiles`](ref:core/Plugin.registerCriticalFiles). When one of them changes, the dev terminal shows a [**Restart required** card](/tooling/hot-reload#saves-that-need-a-restart) telling you to press `r`.
+If `init()` reads a folder at startup, like a folder of tags, the reload doesn't repeat the read. Your plugin keeps the old contents after you save a file in it. Pass glob patterns for files like that to [`registerCriticalFiles`](ref:core/Plugin.registerCriticalFiles). When one of them changes, the dev terminal shows a [**Restart required** card](/tooling/hot-reload#saves-that-need-a-restart) telling you to press `r`.
 
 ```ts twoslash title="src/plugins/Tags.ts"
 import { Plugin, readFiles } from '@seedcord/gateway';
@@ -142,7 +142,7 @@ export class Tags extends Plugin {
 }
 ```
 
-Saving a file under `dir` now shows the **Restart required** card. A relative pattern resolves against `root`, and only `seedcord dev` reads the patterns. Register only the files that your plugin reads because seedcord already asks for a restart on its own startup files, like `seedcord.config.ts`.
+Saving a file under `dir` now shows the **Restart required** card. A relative pattern resolves against `root`, and only `seedcord dev` reads the patterns. Register only the files that your plugin reads, since a save to any match restarts the bot. seedcord already covers its own startup files, like `seedcord.config.ts`.
 
 ## Files that change your commands
 
@@ -185,10 +185,10 @@ export class Descriptions extends Plugin {
 }
 ```
 
-Each file in `descriptions` holds the description for the command it's named after, so `ban.txt` would have the description of `/ban` for example. [`readFiles`](ref:utils/readFiles) only reads a folder that you list in [`files`](/build/data-files). If you list `descriptions` there and save `ban.txt`, `seedcord dev` should show the same prompt as it does for a command file. When you answer `y`, seedcord runs `prepareCommands` again before it sends your commands.
+Each file in `descriptions` holds the description for the command it's named after, so `ban.txt` would have the description of `/ban` for example. [`readFiles`](ref:utils/readFiles) only reads a folder that you list in [`files`](/build/data-files). If you list `descriptions` there and save `ban.txt`, `seedcord dev` shows the same prompt as it does for a command file. When you answer `y`, seedcord runs `prepareCommands` again before it sends your commands.
 
 If a pattern starts with `!`, saving a file that it matches doesn't show the prompt. A `descriptions/README.txt` doesn't change any command, so add `'!descriptions/README.txt'` to the list to stop a save to it from showing the prompt. Outside `seedcord dev`, seedcord never reads these patterns.
 
 ## Saving the plugin's own source
 
-If you keep a plugin in `src/plugins`, saving it needs a restart, and `onHmr` can't change that. Your bot file imports the plugin and attaches it once at startup. `seedcord dev` shows the restart card when you save a file that the bot file imports. A hot reload would leave the attached instance running the old code. To try a plugin from another package, [test it in a bot](/writing-plugins/publishing#test-it-in-a-bot-first) first.
+If you keep a plugin in `src/plugins`, saving it needs a restart, and `onHmr` can't change that. In your bot file, you import the plugin and attach it once at startup. `seedcord dev` shows the restart card when you save a file that the bot file imports. A hot reload would leave the attached instance running the old code. To try a plugin from another package, [test it in a bot](/writing-plugins/publishing#test-it-in-a-bot-first) first.

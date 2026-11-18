@@ -182,11 +182,11 @@ export class Ban extends SlashHandler<'ban'> {
 }
 ```
 
-`'ban'` appears twice, on the decorator and on the generic. You write the command's own name in both. A mismatch is a compile error.
+`'ban'` appears twice, on the decorator and on the generic, and both take the command's own name. A mismatch is a compile error.
 
 The two do different jobs. The decorator registers the route at startup, and the generic types `this.options` from what the command declared. Writing the name in both keeps `extends` a plain class name, so go-to-definition opens `SlashHandler` itself.
 
-`target` was required on the command, so it arrives without a null check. `reason` was optional, so it can be null.
+`target` was required on the command so it doesn't need a null check. `reason` was optional, so it can be null.
 
 Put this handler's file under the `interactions` path, the folder seedcord scans for handlers.
 
@@ -198,11 +198,42 @@ seedcord warns at startup about any route with nothing to answer it. The error s
 Slash route ban doesn't have a registered @SlashRoute handler.
 ```
 
-The command still reaches Discord. Anyone who runs it gets `Feature not implemented yet.`
+The command still reaches Discord. Anyone who runs it gets `This doesn't do anything right now.`
+
+<Callout type="tip">
+
+To send something else, pass your own [`InteractionHandler`](ref:gateway/InteractionHandler) class as `interactions.unhandled`. It answers every command, button, menu, and modal that doesn't have a handler. You can do whatever you'd do in a regular handler inside it.
+
+```ts twoslash title="src/bot.ts"
+import {
+    InteractionHandler,
+    Seedcord,
+    type Repliables
+} from '@seedcord/gateway';
+import { GatewayIntentBits } from 'discord.js';
+
+class Unhandled extends InteractionHandler<Repliables> {
+    async execute(): Promise<void> {
+        await this.reply('This one is still being built.');
+    }
+}
+
+export const seedcord = new Seedcord({
+    bot: {
+        clientOptions: { intents: [GatewayIntentBits.Guilds] },
+        interactions: { path: './handlers', unhandled: Unhandled },
+        commands: { path: './commands' },
+        events: { path: null }
+    },
+    subscribers: { path: null }
+});
+```
+
+</Callout>
 
 ## When a command's constructor throws
 
-Codegen constructs every command it finds. A throw stops the run, and the error says which class and which file.
+Codegen constructs every command it finds. An error thrown in a constructor stops the run, and it'll tell you which class and which file.
 
 ```txt output
 Roster threw while codegen constructed it. Fix its constructor in

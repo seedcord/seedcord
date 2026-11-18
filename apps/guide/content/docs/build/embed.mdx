@@ -3,7 +3,7 @@ title: Inside your own server
 description: Run an http bot inside a server you already have, like Hono, Next.js, or Express, so one process and one port answer both your app and Discord's interactions.
 ---
 
-Say you already run a web server, like a Next.js site, a Hono API, or an Express app. A second process for the bot would mean a second port to expose, a second thing to deploy, and a second process to keep alive, all for one route.
+Say you already run a web server, like a Next.js site, a Hono API, or an Express app. A second process for the bot would mean a second port to expose and a second thing to deploy and keep alive, all for one route.
 
 An http bot can answer that route from inside your server instead. Build it the way [a package](/build/package) builds, with no `build.start`, and set `port: false` so it never opens a port of its own:
 

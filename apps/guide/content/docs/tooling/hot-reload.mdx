@@ -13,7 +13,7 @@ A saved file reloads when it holds one of these.
 - a command after you answer `y` to the [refresh prompt](#saving-a-command)
 - an event handler (gateway only)
 - a bus subscriber
-- files a plugin loads itself if the plugin implements `onHmr`. Saving the plugin's own file needs a restart. [Plugins and hot reload](/writing-plugins/hot-reload) has both
+- files a plugin loads itself if the plugin implements `onHmr`. Saving the plugin's own file needs a restart. [Reloading in dev](/writing-plugins/hot-reload) has both
 
 Any other file, like a component or a helper, reloads through the files that import it. Editing a file that none of those groups imports doesn't trigger a reload. Reloading works only in the `development` and `test` modes, so `ENV=staging seedcord dev` never reloads.
 
@@ -36,7 +36,7 @@ Refresh commands? (y/n)
 
 {/* prettier-ignore-end */}
 
-A plugin can show the same prompt for files that change your commands, like the [i18n plugin](/plugins/i18n-commands) does for its translation files. [Plugins and hot reload](/writing-plugins/hot-reload#files-that-change-your-commands) shows how.
+A plugin can show the same prompt for files that change your commands, like the [i18n plugin](/plugins/i18n-commands) does for its translation files. [Reloading in dev](/writing-plugins/hot-reload#files-that-change-your-commands) shows how.
 
 ## How it works
 

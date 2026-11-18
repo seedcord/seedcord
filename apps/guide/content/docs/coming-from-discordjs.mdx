@@ -1,0 +1,144 @@
+---
+title: Coming from discord.js
+description: Move a discord.js bot to seedcord by finding what replaces each habit, like an interactionCreate switch or a collector, then add seedcord to your repo.
+---
+
+A gateway bot runs on discord.js, so your client, your builders, and the interactions your handlers receive are the same objects you use today. You move your code into handler classes and one config object.
+
+## What replaces each habit
+
+{/* prettier-ignore-start */}
+
+| in discord.js | in seedcord | read |
+| --- | --- | --- |
+| a `switch` inside `interactionCreate` | a handler class per route, like [`SlashHandler`](ref:gateway/SlashHandler) | [Commands](/commands) |
+| a collector on buttons | a [`ButtonHandler`](ref:gateway/ButtonHandler) for a [`CustomId`](ref:custom-id/CustomId) | [Buttons](/components/buttons) |
+| prefix commands in `messageCreate` | slash commands, or an [`EventHandler`](ref:gateway/EventHandler) on gateway | [Handling messages](/events/messages) |
+| `client.on()` for other events, like `guildMemberAdd` | an [`EventHandler`](ref:gateway/EventHandler) per event, on gateway | [Your first event handler](/events) |
+| a `try`/`catch` in each handler that replies with an error | throw a [`Notice`](ref:core/Notice), and seedcord sends the reply | [Refusing a request](/replying/throwing) |
+| a `Map` of timestamps for cooldowns | the [`Cooldown`](ref:core/Cooldown) gate | [Cooldowns](/checks/cooldown) |
+| a database client or a `Map` exported from a module | a [`Plugin`](ref:core/Plugin), or records in [`this.core.kv`](ref:core/Kv) | [Plugins](/plugins), [The kv store](/built-ins) |
+| `console.log` | a [`Logger`](ref:logger/Logger) with a channel and a level | [Logging](/built-ins/logging) |
+| a deploy-commands script | the bot deploys changed commands when it starts | [Deployed commands](/commands/deployed) |
+| choosing between `reply()` and `deferReply()` | [`this.reply()`](ref:gateway/RepliableHandler.reply) and [`this.defer()`](ref:gateway/RepliableHandler.defer), which throw before Discord can reject a call | [Replying](/replying) |
+| permission `if`s at the top of a handler | [`Gated`](ref:gateway/Gated) with [`RequirePermissions`](ref:core/RequirePermissions) | [Permissions](/checks/permissions) |
+| reading `guild.members.cache` | the same cache on gateway, a REST call on http | [Gateway or http](/gateway-or-http) |
+| `client.login()` in the entry file | [`new Seedcord({ ... })`](ref:gateway/Seedcord) in `bot.ts`, started by `index.ts` | [Your first bot](/first-bot#your-bots-settings) |
+
+{/* prettier-ignore-end */}
+
+Take the first row. In plain discord.js, you write one listener that receives every interaction and branches on the command name.
+
+```ts plain title="index.ts"
+client.on('interactionCreate', async (interaction) => {
+    if (!interaction.isChatInputCommand()) return;
+
+    switch (interaction.commandName) {
+        case 'ping':
+            await interaction.reply('Pong');
+            break;
+        case 'ban': {
+            const target = interaction.options.getUser(
+                'target',
+                true
+            );
+            await interaction.reply(`Banned ${target.username}.`);
+            break;
+        }
+    }
+});
+```
+
+In seedcord, you move each `case` into its own class. The `ban` case becomes this one.
+
+```ts twoslash title="src/handlers/Ban.ts"
+import { SlashHandler, SlashRoute } from '@seedcord/gateway';
+
+@SlashRoute('ban')
+export class Ban extends SlashHandler<'ban'> {
+    public async execute(): Promise<void> {
+        const target = this.options.getUser('target');
+
+        await this.reply(`Banned ${target.username}.`);
+    }
+}
+```
+
+You write the name that the `switch` compares in `@SlashRoute('ban')` and again in `SlashHandler<'ban'>`, and the compiler catches a mismatch. `getUser('target')` has no `true` because [`seedcord codegen`](/tooling/codegen) reads your command file and types `target` as required, so `target` is never `null`. You write a button's `case` as a `ButtonHandler` with [`@ButtonRoute`](ref:core/ButtonRoute), which takes the `CustomId` that minted the button.
+
+## What's still discord.js
+
+On gateway, these are plain discord.js:
+
+- **The client.** `this.core.bot.client` is the discord.js `Client`. [The core object](/core#what-it-holds) lists what else the core holds.
+- **The client options.** seedcord passes `clientOptions` from `new Seedcord({ ... })` to `new Client()` unchanged, intents and partials included.
+- **The interaction.** In a command or component handler, `this.event` is the discord.js interaction.
+- **The builders.** In a [`BuilderComponent`](ref:core/BuilderComponent) subclass, `this.instance` is the discord.js builder. [Components](/components) shows the class.
+- **The cache.** Anything you read from `guild.members.cache` or another manager comes from discord.js.
+
+<Callout type="warning">
+
+Reply through `this.reply()`. seedcord doesn't see a raw `this.event.reply()` call, so its ack state for the interaction still reads `unacked`. A later `this.edit()` then throws, and a later `this.reply()` reaches Discord, which rejects it. The `@seedcord/no-raw-interaction-acks` lint rule reports the raw call, and [Raw acks](/replying/raw-acks) has the few cases where you need one.
+
+</Callout>
+
+<Callout type="transport" only="http">
+
+An http bot doesn't use discord.js. `this.event` is Discord's raw payload, like `APIChatInputApplicationCommandInteraction` where gateway has `ChatInputCommandInteraction`. An option getter like `getUser` returns an `APIUser` where gateway returns a `User`. You call Discord's API through [`this.api`](ref:http/RepliableHandler.api).
+
+</Callout>
+
+## Adding seedcord to an existing repo
+
+`pnpm create seedcord` only writes into a new or empty folder. To use it, scaffold a project beside your bot and move your code in. To keep your repo as it is, set it up by hand.
+
+seedcord's packages ship only ESM builds. Set `"type": "module"` in your `package.json`, as the scaffold does. Then install the transport with its peer dependencies, plus the CLI and its tools for development.
+
+<Shell add="@seedcord/gateway discord.js @discordjs/builders envapt" />
+
+<Shell add="-D seedcord vite typescript @seedcord/tsconfig @types/node" />
+
+<Callout type="transport" only="http">
+
+An http bot installs `@seedcord/http` with `@discordjs/builders` and `envapt`. It doesn't need discord.js.
+
+</Callout>
+
+Extend seedcord's `tsconfig`. It turns on `experimentalDecorators` because every route decorator needs that flag. `vite/client` types `import.meta.env`, where Vite puts your [build-time values](/build/env#build-time-values).
+
+```json title="tsconfig.json"
+{
+    "extends": "@seedcord/tsconfig/node",
+    "compilerOptions": {
+        "types": ["node", "vite/client"]
+    },
+    "include": ["src/**/*.ts", "seedcord.config.ts"]
+}
+```
+
+You write three more files:
+
+- **`seedcord.config.ts`**, where you tell the CLI where your code is. Copy the scaffold's version from [Your first bot](/first-bot#where-your-folders-resolve).
+- **`src/bot.ts`**, where you build your bot with `new Seedcord({ ... })` and export it as the default, like the [scaffold's `bot.ts`](/first-bot#your-bots-settings).
+- **`src/index.ts`**, where you import that default export and call `await seedcord.start()`. A bot on Cloudflare Workers skips this file.
+
+For seedcord's lint rules, add an `eslint.config.ts` from [the lint setup for an existing project](/tooling/lint#starting-from-an-existing-project). seedcord reads the token from `DISCORD_BOT_TOKEN`, or from `BOT_TOKEN` if your `.env` already uses that name.
+
+<Callout type="warning">
+
+Point that token at a [test application](/discord-application#make-a-second-application-for-production) until every command is ported. Each deploy replaces Discord's whole list of commands for a scope, so starting seedcord against your live bot removes every command you haven't ported yet.
+
+</Callout>
+
+## Sharing code with an API or a dashboard
+
+Say your repo also runs an API or a dashboard that reads the same database as the bot. Put the models and queries in their own package that doesn't import seedcord, and import that package from both programs. A plugin's services need a running bot to build them, so an API can't reuse them. In the bot, a [plugin](/plugins) can wrap the shared package so its connection opens and closes with the bot.
+
+## What breaks after you move
+
+- **Collectors end on a restart.** A collector runs in the process that opened it, so a restart ends every prompt that's still waiting. seedcord routes a click to your `ButtonHandler` by its custom id, so the handler still answers after a restart. If you keep a collector, give its buttons a `CustomId` and list it under [`ignoreCustomIds`](/components/custom-ids#clicks-the-router-should-skip). Otherwise the router answers those clicks too, and Discord rejects whichever answer comes second.
+- **Buttons on old messages get the default reply.** Their custom ids are strings you wrote by hand, so they don't match any seedcord handler. seedcord answers a click on one of those buttons with "This doesn't do anything right now.", which only the person who clicked can see. You can [replace that reply](/commands#a-command-without-a-handler) with your own handler.
+- **Prefix commands need a privileged intent.** Reading message text needs the Message Content intent. [The intent review](/events/messages#prefix-commands-and-the-intent-review) that comes with it is the reason to move them to slash commands.
+- **An http bot doesn't cache anything or receive message events.** Discord posts only interactions to it, so every read of a member or a guild is a REST call.
+
+Once your commands answer, [where to go next](/where-to-go-next) walks through the rest of the guide.

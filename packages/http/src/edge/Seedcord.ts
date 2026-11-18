@@ -48,10 +48,11 @@ function bakedIds(): BakedIds {
  * The HTTP-interactions bot on Cloudflare Workers. Default-export it from `bot.ts`. Cloudflare
  * calls `fetch` for every request.
  *
- * The constructor stores the config. The first POST in each isolate reads `DISCORD_BOT_TOKEN`
- * and the public key, command ids, and emoji ids that `seedcord build` wrote into the worker. It
- * loads the handler and subscriber folders, then runs the startup tasks and every plugin's `init()`
- * and `ready()`. Requests that arrive meanwhile wait for it.
+ * The constructor stores the config. The first POST in each isolate reads the bot token, plus the
+ * public key, command ids, and emoji ids that `seedcord build` wrote into the worker. If
+ * `DISCORD_BOT_TOKEN` is unset, the token comes from `BOT_TOKEN`. It loads the handler and subscriber
+ * folders, then runs the startup tasks and every plugin's `init()` and `ready()`. Requests that
+ * arrive meanwhile wait for it.
  *
  * Under `seedcord dev` the bot starts when the CLI starts it. It reads the public key and emoji
  * ids from Discord and deploys your commands, the way a node bot does.

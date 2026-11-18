@@ -1,6 +1,6 @@
 ## What and why
 
-<!-- What changes, and what prompted it, in your own words. Link an issue with "Closes #123" if there is one. -->
+<!-- What changes, and what prompted it. Write this yourself, since AI_POLICY.md doesn't allow AI-written text here. Link an issue with "Closes #123" if there is one. -->
 
 ## AI use
 
@@ -8,6 +8,7 @@
 
 ## Checklist
 
+- [ ] I wrote this description and my replies on this PR myself
 - [ ] Tests cover the change
 - [ ] I ran the change in a mock bot and tried it like someone building a bot would (if relevant)
 - [ ] `vp run prePush` is green

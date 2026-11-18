@@ -8,11 +8,13 @@ import { describe, expect, beforeEach, afterEach, vi } from 'vite-plus/test';
 
 import { botLoggerOf, interactionsOf } from '#bot/Bot';
 import { CONFIRM_DEF } from '#bot/confirm/reserved';
+import { InteractionHandler } from '#handlers/interaction/InteractionHandler';
 import { Seedcord } from '#src/Seedcord';
 import { seedcordPath } from '#tests/utils/source-path';
 import { testConfig } from '#tests/utils/test-config';
 import { it as base } from '#tests/utils/test-env';
 
+import type { Repliables } from '#handlers/interactionTypes';
 import type { SubscriptionData } from '@seedcord/core';
 import type { InFlight } from '@seedcord/core/node/internal';
 
@@ -353,6 +355,27 @@ describe('InteractionDispatcher Integration', () => {
         await controller.handleInteraction(interaction);
 
         expect(interaction.respond).toHaveBeenCalledWith([]);
+    });
+
+    it('replies through the configured unhandled class for a button without a handler', async ({ testEnv }) => {
+        class Unhandled extends InteractionHandler<Repliables> {
+            async execute(): Promise<void> {
+                await this.reply('nothing here yet');
+            }
+        }
+        await testEnv.createDir('interactions');
+        const config = testConfig({ interactions: testEnv.resolvePath('interactions'), unhandled: Unhandled });
+
+        await using seedcord = new Seedcord(config);
+        const controller = controllerOf(seedcord);
+        await controller.init();
+
+        const interaction = fakeButton(new CustomId('ghost').encode({}));
+        await controller.handleInteraction(interaction);
+
+        expect(interaction.reply).toHaveBeenCalledWith(
+            expect.objectContaining({ components: [expect.objectContaining({ content: 'nothing here yet' })] })
+        );
     });
 
     it('routes a registered autocomplete to the handler respond', async ({ testEnv }) => {

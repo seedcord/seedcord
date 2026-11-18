@@ -4,6 +4,7 @@ import { emptyRouteMaps, interactionMiddleware, MiddlewareRegistry } from '@seed
 import { Envapter, PortableSource } from 'envapt';
 import { afterEach, describe, expect, it } from 'vite-plus/test';
 
+import { routesOf } from '#src/dispatch/resolve';
 import { InteractionEngine } from '#src/InteractionEngine';
 import { testCore } from '#tests/helpers/core';
 import { createSigner } from '#tests/helpers/ed25519';
@@ -24,7 +25,7 @@ async function published(payload: object): Promise<SubscriptionData<'anyInteract
 
     const engine = new InteractionEngine(
         core,
-        emptyRouteMaps(),
+        routesOf(emptyRouteMaps()),
         new MiddlewareRegistry<InteractionMiddlewareConstructor>(interactionMiddleware),
         signer.publicKeyHex
     );

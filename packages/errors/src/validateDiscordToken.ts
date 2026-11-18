@@ -1,8 +1,7 @@
+import { BOT_TOKEN_ENV } from './botTokenKeys';
 import { SeedcordErrorCode } from './ErrorCodes';
 import { isSnowflake } from './isSnowflake';
 import { SeedcordError } from './SeedcordError';
-
-const ENV_NAME = 'DISCORD_BOT_TOKEN';
 
 const TOKEN_SOURCE = "the bot token from your application's Bot page";
 
@@ -18,7 +17,7 @@ function unreadable(cause?: unknown): SeedcordError {
     return new SeedcordError(
         SeedcordErrorCode.ConfigInvalidEnv,
         [
-            ENV_NAME,
+            BOT_TOKEN_ENV,
             TOKEN_SOURCE,
             "Discord builds the first part of a bot token from the application id, but this one doesn't have it. Check that the token wasn't cut off or mistyped."
         ],
@@ -48,16 +47,16 @@ function applicationIdOf(value: string): string {
 /** @internal */
 export function validateDiscordToken(raw: unknown): BotToken {
     if (raw === null || raw === undefined) {
-        throw new SeedcordError(SeedcordErrorCode.ConfigMissingEnv, [ENV_NAME]);
+        throw new SeedcordError(SeedcordErrorCode.ConfigMissingEnv, [BOT_TOKEN_ENV]);
     }
 
     if (typeof raw !== 'string') {
-        throw new SeedcordError(SeedcordErrorCode.ConfigInvalidEnv, [ENV_NAME, TOKEN_SOURCE]);
+        throw new SeedcordError(SeedcordErrorCode.ConfigInvalidEnv, [BOT_TOKEN_ENV, TOKEN_SOURCE]);
     }
 
     const value = raw.trim();
     if (value === '') {
-        throw new SeedcordError(SeedcordErrorCode.ConfigMissingEnv, [ENV_NAME]);
+        throw new SeedcordError(SeedcordErrorCode.ConfigMissingEnv, [BOT_TOKEN_ENV]);
     }
 
     // a 17-digit application id encodes to 23 chars. apps made before october 2015 have one
@@ -65,7 +64,7 @@ export function validateDiscordToken(raw: unknown): BotToken {
 
     if (!tokenRegex.test(value)) {
         throw new SeedcordError(SeedcordErrorCode.ConfigInvalidEnv, [
-            ENV_NAME,
+            BOT_TOKEN_ENV,
             TOKEN_SOURCE,
             'It does not have the three dot-separated parts of a bot token.'
         ]);

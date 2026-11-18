@@ -63,7 +63,7 @@ Reading `.component` also applies your [bot color](#your-bot-color). The color r
 
 seedcord imports your commands, handlers, events, and subscribers from the paths you set in your bot config. Your own code imports a component directly, so your config never mentions that folder. Make one anyway, at `src/components`, and think in building blocks.
 
-A container is a building block, and so is a text display or a row of buttons. A modal is a building block, and a row of inputs is another. Maybe you have a menu builder that dynamically creates its values, or you want to create items in one conditionally. Each one is a `BuilderComponent` subclass in that folder. Your handlers import the ones they send.
+A container is a building block, and so is a text display, a row of buttons, a modal, or a row of inputs. So is a menu builder that creates its values dynamically or adds items conditionally. Each one is a `BuilderComponent` subclass in that folder. Your handlers import the ones they send.
 
 For example, you put a `BanCard` and a `BanActions` row of buttons in that folder, and your `Ban` handler imports both.
 
