@@ -34,7 +34,7 @@ interface TabPanelProps {
 function TabPanel({ prefix, index, hidden, children }: TabPanelProps): ReactElement {
     const ids = segmentIds(prefix, index);
     return (
-        <div id={ids.panel} role="tabpanel" aria-labelledby={ids.tab} hidden={hidden}>
+        <div id={ids.panel} role="tabpanel" aria-labelledby={ids.tab} tabIndex={0} hidden={hidden}>
             {children}
         </div>
     );
