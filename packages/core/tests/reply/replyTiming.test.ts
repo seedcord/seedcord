@@ -1,30 +1,19 @@
 import { captureLogs } from '@seedcord/logger/internal';
 import { afterEach, describe, expect, it, vi } from 'vite-plus/test';
 
-import { publishResponse } from '#reply/responseReport';
-import { DispatchContext } from '#src/dispatch/DispatchContext';
-import { Bus } from '#subscribers/Bus';
+import { created, TestSender } from './helpers';
 
-import type { CoreBase } from '#interfaces/CoreBase';
-
-// justified: the Bus only stores core, no member is read during publish
-function stubBus(): Bus {
-    return new Bus({} as unknown as CoreBase);
-}
+import type { TestMessage } from './helpers';
 
 afterEach(() => {
     vi.restoreAllMocks();
 });
 
 describe('reply timing', () => {
-    it('puts the line on the interactions channel at trace', () => {
+    it('puts the line on the interactions channel at trace', async () => {
         using logs = captureLogs();
 
-        publishResponse(
-            { bus: stubBus(), dispatch: new DispatchContext('slash', 'ban'), interactionId: 'i1' },
-            performance.now(),
-            { method: 'defer', body: null, outcome: 'sent', messageId: null }
-        );
+        await new TestSender().defer();
 
         expect(logs.records.find((record) => record.label === 'Reply')).toMatchObject({
             channel: 'interactions',
@@ -32,39 +21,40 @@ describe('reply timing', () => {
         });
     });
 
-    it('traces the route, the verb, the outcome, and the elapsed write', () => {
+    it('traces the route, the verb, the outcome, and the elapsed write', async () => {
         using logs = captureLogs();
+        const sender = new TestSender();
         let clock = 1000;
         vi.spyOn(performance, 'now').mockImplementation(() => clock);
-        const startedAt = performance.now();
-        clock += 88;
-
-        publishResponse(
-            { bus: stubBus(), dispatch: new DispatchContext('slash', 'ban'), interactionId: 'i1' },
-            startedAt,
-            { method: 'reply', body: { components: [] }, outcome: 'sent', messageId: 'm1' }
+        vi.spyOn(sender as unknown as { writeReply: () => Promise<TestMessage> }, 'writeReply').mockImplementation(
+            () => {
+                clock += 88;
+                return Promise.resolve(created);
+            }
         );
+
+        await sender.reply('hi');
 
         const traces = logs.at('trace');
         expect(traces).toHaveLength(1);
         const [message] = traces;
-        expect(message).toContain('slash:ban');
+        expect(message).toContain('slash:ping');
         expect(message).toContain('reply');
         expect(message).toContain('sent');
         expect(message).toContain('88ms');
     });
 
-    it('traces a failed write with its outcome', () => {
+    it('traces a failed write with its outcome', async () => {
         using logs = captureLogs();
-
-        publishResponse(
-            { bus: stubBus(), dispatch: new DispatchContext('slash', 'ban'), interactionId: 'i1' },
-            performance.now(),
-            { method: 'respond', body: null, outcome: 'failed', messageId: null, error: new Error('discord said no') }
+        const sender = new TestSender();
+        vi.spyOn(sender as unknown as { writeDefer: () => Promise<void> }, 'writeDefer').mockRejectedValue(
+            new Error('discord said no')
         );
 
+        await expect(sender.defer()).rejects.toThrow('discord said no');
+
         const [message] = logs.at('trace');
-        expect(message).toContain('respond');
+        expect(message).toContain('defer');
         expect(message).toContain('failed');
     });
 });

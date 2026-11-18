@@ -76,7 +76,7 @@ export interface ResponseSent<Method extends WriteMethod = WriteMethod> extends 
     readonly messageId: string | null;
     /**
      * What the write sent, user text included. `reply`, `followUp`, `update`, and `edit` hold the message,
-     * and its files list each file's name and alt text without the bytes. `showModal` holds the modal. Every
+     * and its files list each file's name, alt text, and title without the bytes. `showModal` holds the modal. Every
      * other verb holds null.
      */
     readonly body: WriteBody<Method>;

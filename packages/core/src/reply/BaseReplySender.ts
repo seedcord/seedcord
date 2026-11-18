@@ -5,8 +5,7 @@ import { checkAckLegality } from './ackLegality';
 import { AckTrace } from './AckTrace';
 import { deferFlags, sendFlags } from './flags';
 import { attemptWrite, messageBody, publishSent } from './responseReport';
-import { serializeReply } from './serializeReply';
-import { translateSerializationError } from './translateSerialization';
+import { serializeModal, serializeReply } from './serializeReply';
 
 import type { AckState, ReplyMethod } from './ackLegality';
 import type { MessageMethod, PendingWrite, ReplyTelemetry, SentWrite } from './responseReport';
@@ -204,15 +203,10 @@ export abstract class BaseReplySender<TMessage extends { id: string }, TNative =
     public async showModal(modal: ModalLike): Promise<void> {
         this.checkLegality('showModal');
         this.guardModalSource();
-        let data: APIModalInteractionResponseCallbackData;
-        try {
-            data = modal.toJSON();
-        } catch (error) {
-            // eslint-disable-next-line @typescript-eslint/no-unnecessary-condition -- a null-prototype modal has no constructor at runtime
-            const name = modal.constructor?.name;
-            throw translateSerializationError(error, !name || name === 'Object' ? 'modal' : name, 0, this.routeId);
-        }
         const startedAt = performance.now();
+        const data = await this.attempt(startedAt, { method: 'showModal', body: null }, () =>
+            serializeModal(modal, this.routeId)
+        );
         const sent = { method: 'showModal', body: data } as const;
         await this.attempt(startedAt, sent, () => this.writeModal(data));
         this.transition('showModal', 'replied');

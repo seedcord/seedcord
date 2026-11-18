@@ -11,7 +11,15 @@ import type { ReplyMethod } from './ackLegality';
 import type { SerializedReply } from './serializeReply';
 import type { ReplyFile } from '@seedcord/types';
 import type { APIModalInteractionResponseCallbackData } from 'discord-api-types/v10';
-import type { DistributedOmit, Except, ExcludeStrict, ExtractStrict, Promisable, Simplify } from 'type-fest';
+import type {
+    DistributedOmit,
+    DistributedPick,
+    Except,
+    ExcludeStrict,
+    ExtractStrict,
+    Promisable,
+    Simplify
+} from 'type-fest';
 
 const logger = lazyLogger('Reply', { channel: 'interactions' });
 
@@ -26,10 +34,10 @@ export type WriteMethod = ExcludeStrict<ReplyMethod, 'send'> | 'respond';
 
 export type MessageMethod = ExtractStrict<WriteMethod, 'reply' | 'followUp' | 'update' | 'edit'>;
 
-// messageBody copies only the name and alt text since JSON.stringify on the event would print every byte
-type SentFile = Simplify<Pick<ReplyFile, 'description'> & { readonly name: ReplyFile['name'] | null }>;
+// messageBody copies only the file metadata since JSON.stringify on the event would print every byte
+type SentFile = Simplify<Pick<ReplyFile, 'description' | 'title'> & { readonly name: ReplyFile['name'] | null }>;
 
-export type MessageBody = Simplify<Except<SerializedReply, 'files'> & { readonly files?: SentFile[] }>;
+type MessageBody = Simplify<Except<SerializedReply, 'files'> & { readonly files?: SentFile[] }>;
 
 export type WriteBody<Method extends WriteMethod> = Method extends MessageMethod
     ? MessageBody
@@ -37,31 +45,40 @@ export type WriteBody<Method extends WriteMethod> = Method extends MessageMethod
       ? APIModalInteractionResponseCallbackData
       : null;
 
-// null until the body serializes
-export type PendingWrite = {
-    [Method in WriteMethod]: { readonly method: Method; readonly body: WriteBody<Method> | null };
-}[WriteMethod];
+type WriteOf<Outcome extends ResponseAttempt['outcome']> = DistributedPick<
+    ExtractStrict<ResponseAttempt, { outcome: Outcome }>,
+    'method' | 'body'
+>;
 
-export type SentWrite = {
-    [Method in WriteMethod]: { readonly method: Method; readonly body: WriteBody<Method> };
-}[WriteMethod];
+// null until the body serializes
+export type PendingWrite = WriteOf<'failed'>;
+
+export type SentWrite = WriteOf<'sent'>;
 
 type ResponseReport = DistributedOmit<ResponseAttempt, ExcludeStrict<keyof AttemptedWrite, 'method'>>;
 
-// a discord.js file form may carry a name and alt text, or be a bare Buffer, stream, or path
+function stringField(file: object, key: keyof SentFile): string | undefined {
+    const value: unknown = Reflect.get(file, key);
+    return typeof value === 'string' ? value : undefined;
+}
+
+// a discord.js file form may carry a name, alt text, and title, or be a bare Buffer, stream, or path
 function sentFile(file: unknown): SentFile {
     if (typeof file !== 'object' || file === null) return { name: null };
-    const name = 'name' in file && typeof file.name === 'string' ? file.name : null;
-    if (!('description' in file) || typeof file.description !== 'string') return { name };
-    return { name, description: file.description };
+    const description = stringField(file, 'description');
+    const title = stringField(file, 'title');
+    return {
+        name: stringField(file, 'name') ?? null,
+        ...(description !== undefined && { description }),
+        ...(title !== undefined && { title })
+    };
 }
 
 export function messageBody({ files, ...message }: SerializedReply<unknown>): MessageBody {
     return files ? { ...message, files: files.map(sentFile) } : message;
 }
 
-/** @internal */
-export function publishResponse(telemetry: ReplyTelemetry, startedAt: number, report: ResponseReport): void {
+function publishResponse(telemetry: ReplyTelemetry, startedAt: number, report: ResponseReport): void {
     const durationMs = performance.now() - startedAt;
     const { routeId } = telemetry.dispatch;
     telemetry.bus[PublishDefault]('responseAttempted', {
@@ -87,14 +104,14 @@ export function publishSent(
     publishResponse(telemetry, startedAt, { ...sent, outcome: 'sent', messageId });
 }
 
-export async function reportedWrite<Result>(
+export async function reportedRespond<Result>(
     telemetry: ReplyTelemetry,
-    method: 'respond',
     write: () => Promise<Result>
 ): Promise<Result> {
     const startedAt = performance.now();
-    const result = await attemptWrite(telemetry, startedAt, { method, body: null }, write);
-    publishSent(telemetry, startedAt, { method, body: null }, null);
+    const respond = { method: 'respond', body: null } as const;
+    const result = await attemptWrite(telemetry, startedAt, respond, write);
+    publishSent(telemetry, startedAt, respond, null);
     return result;
 }
 

@@ -69,12 +69,14 @@ describe('responseAttempted', () => {
 
         await new TestSender(bus).reply({
             components: [],
-            files: [{ data: new Uint8Array([1, 2, 3]), name: 'chart.png', description: 'Sales by month' }]
+            files: [
+                { data: new Uint8Array([1, 2, 3]), name: 'chart.png', description: 'Sales by month', title: 'Sales' }
+            ]
         });
 
         expect(sent[0]?.body).toEqual({
             components: [],
-            files: [{ name: 'chart.png', description: 'Sales by month' }]
+            files: [{ name: 'chart.png', description: 'Sales by month', title: 'Sales' }]
         });
     });
 
@@ -93,7 +95,7 @@ describe('responseAttempted', () => {
         expect(sent[1]).toMatchObject({ method: 'edit', outcome: 'failed', body: { components: [text] } });
     });
 
-    it('reports a null body when the reply fails to serialize', async () => {
+    it('reports a failed write with a null body when a builder fails to serialize', async () => {
         const { bus, sent } = busWithSpy();
         const broken = {
             toJSON: () => {
@@ -102,9 +104,12 @@ describe('responseAttempted', () => {
         };
 
         await expect(new TestSender(bus).reply({ components: [broken] })).rejects.toThrow();
+        await expect(new TestSender(bus).showModal(broken)).rejects.toThrow();
 
-        expect(sent).toHaveLength(1);
-        expect(sent[0]).toMatchObject({ method: 'reply', outcome: 'failed', body: null });
+        expect(sent.map((payload) => [payload.method, payload.outcome, payload.body])).toEqual([
+            ['reply', 'failed', null],
+            ['showModal', 'failed', null]
+        ]);
     });
 
     it('reports the routed verb for send, never send itself', async () => {

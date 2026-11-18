@@ -2,13 +2,22 @@ import { TextDisplayBuilder } from '@discordjs/builders';
 
 import { translateSerializationError } from './translateSerialization';
 
+import type { ModalLike } from './BaseReplySender';
 import type { ReplyResponse } from '@seedcord/types';
-import type { APIMessageTopLevelComponent } from 'discord-api-types/v10';
+import type { APIMessageTopLevelComponent, APIModalInteractionResponseCallbackData } from 'discord-api-types/v10';
 
 export interface SerializedReply<TNative = never> {
     readonly components: APIMessageTopLevelComponent[];
     readonly allowedMentions?: ReplyResponse['allowedMentions'];
     readonly files?: ReplyResponse<TNative>['files'];
+}
+
+// untyped code can pass null, and a null-prototype value doesn't have a constructor
+function builderName(value: unknown, fallback: string): string {
+    if (typeof value !== 'object' || value === null) return fallback;
+    const ctor: unknown = Reflect.get(value, 'constructor');
+    const name = typeof ctor === 'function' ? ctor.name : '';
+    return name === '' || name === 'Object' ? fallback : name;
 }
 
 export function serializeReply<TNative>(
@@ -27,9 +36,7 @@ export function serializeReply<TNative>(
         try {
             return 'toJSON' in component ? component.toJSON() : component;
         } catch (error) {
-            // eslint-disable-next-line @typescript-eslint/no-unnecessary-condition -- untyped code can pass null, and a null-prototype value has no constructor
-            const name = component?.constructor?.name;
-            throw translateSerializationError(error, !name || name === 'Object' ? 'component' : name, index, routeId);
+            throw translateSerializationError(error, builderName(component, 'component'), index, routeId);
         }
     });
 
@@ -38,4 +45,12 @@ export function serializeReply<TNative>(
         ...(response.allowedMentions && { allowedMentions: response.allowedMentions }),
         ...(response.files && { files: response.files })
     };
+}
+
+export function serializeModal(modal: ModalLike, routeId: string): APIModalInteractionResponseCallbackData {
+    try {
+        return modal.toJSON();
+    } catch (error) {
+        throw translateSerializationError(error, builderName(modal, 'modal'), 0, routeId);
+    }
 }
