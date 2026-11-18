@@ -1,4 +1,4 @@
-import type { WriteMethod } from '#reply/responseReport';
+import type { WriteBody, WriteMethod } from '#reply/responseReport';
 import type { InteractionKind } from '#src/metadataKeys';
 import type { Notice } from '#stops/Notice';
 import type { UUID } from '@seedcord/types/internal';
@@ -56,39 +56,49 @@ export interface EventFaultSource {
 /**
  * The fields both `responseAttempted` shapes carry.
  */
-export interface AttemptedWrite {
+export interface AttemptedWrite<Method extends WriteMethod = WriteMethod> {
     /** The dispatch that this write belongs to, for joining against every other key it published. */
     readonly dispatchId: string;
     readonly routeId: string;
     /** The interaction that this write belongs to, for joining against `interactionDispatched`. */
     readonly interactionId: string;
     /** The verb that ran. A `send` reports the verb it routed to. */
-    readonly method: WriteMethod;
+    readonly method: Method;
     readonly durationMs: number;
 }
 
 /**
  * A write Discord accepted.
  */
-export interface ResponseSent extends AttemptedWrite {
+export interface ResponseSent<Method extends WriteMethod = WriteMethod> extends AttemptedWrite<Method> {
     readonly outcome: 'sent';
     /** Null for every ack-only and choice-only verb. */
     readonly messageId: string | null;
+    /**
+     * What the write sent, user text included. `reply`, `followUp`, `update`, and `edit` hold the message,
+     * and its files list each file's name and alt text without the bytes. `showModal` holds the modal. Every
+     * other verb holds null.
+     */
+    readonly body: WriteBody<Method>;
 }
 
 /**
  * A write that threw. A non-Error throw arrives wrapped, carrying the thrown value as its `cause`.
  */
-export interface ResponseFailed extends AttemptedWrite {
+export interface ResponseFailed<Method extends WriteMethod = WriteMethod> extends AttemptedWrite<Method> {
     readonly outcome: 'failed';
     readonly messageId: null;
     readonly error: Error;
+    /** What the write tried to send. If the reply threw while it serialized, this is null since nothing reached Discord. */
+    readonly body: WriteBody<Method> | null;
 }
 
 /**
- * One write through the reply surface. Check `outcome` to reach `error`.
+ * One write through the reply surface. Check `outcome` to reach `error`, and `method` to narrow `body`.
  */
-export type ResponseAttempt = ResponseSent | ResponseFailed;
+export type ResponseAttempt = {
+    [Method in WriteMethod]: ResponseSent<Method> | ResponseFailed<Method>;
+}[WriteMethod];
 
 /** Whether a write through the reply surface reached Discord. */
 export type ResponseOutcome = ResponseAttempt['outcome'];
@@ -154,7 +164,7 @@ export interface DefaultSubscriptions {
         readonly userId: string | null;
         /** Guild the interaction came from, null in DMs. */
         readonly guildId: string | null;
-        /** Dispatch entry until the user has a response, replies included. A clock change never affects it. */
+        /** Dispatch entry until the handler returns or its error card is sent. A clock change never affects it. */
         readonly durationMs: number;
         /**
          * Discord's interaction creation until dispatch entry, read from the snowflake. This covers

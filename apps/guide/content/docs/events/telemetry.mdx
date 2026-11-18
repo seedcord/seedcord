@@ -106,12 +106,21 @@ A dispatch can be slow because one Discord call was slow. `responseAttempted` ti
 | `durationMs` | `number` | the write itself, monotonic |
 | `messageId` | `string \| null` | the id of the message Discord returned |
 | `error` | `Error` | only on a failed write |
+| `body` | message, modal, or `null` | what the write sent, user text included |
 
 {/* prettier-ignore-end */}
 
-`send` picks a method from the [ack state](/replying/ack-states), and `method` reports the one that ran. The type also allows `send`, but a published write never has it.
+`send` picks a method from the [ack state](/replying/ack-states), and `method` reports the one that ran.
 
 `messageId` holds an id for `reply`, `update`, `followUp`, and `edit`. Every other method reports `null`, as does a failed write.
+
+`body` is what the write sent. Check `method` to narrow it.
+
+- `reply`, `update`, `followUp`, and `edit` have the message. Files show only their name and alt text.
+- `showModal` has the modal.
+- Every other method has `null`.
+
+`body` still has what the write tried to send when the write fails. If a builder threw first, it's `null`.
 
 ### Catching a failed reply or other write
 

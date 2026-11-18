@@ -3,10 +3,10 @@ import { SeedcordErrorCode } from '@seedcord/errors';
 import { SeedcordError } from '@seedcord/errors/internal';
 import { MessageFlags } from 'discord.js';
 
-import type { GatewayFile, GatewayReplyResponse } from '#interfaces/ReplyResponse';
+import type { GatewayFile } from '#interfaces/ReplyResponse';
 import type { Repliables } from '#src/handlers/interactionTypes';
 import type { Bus, DispatchContext } from '@seedcord/core';
-import type { AckState } from '@seedcord/core/internal';
+import type { AckState, SerializedReply } from '@seedcord/core/internal';
 import type { ReplyFile } from '@seedcord/types';
 import type {
     APIModalInteractionResponseCallbackData,
@@ -23,6 +23,8 @@ import type {
 type SourceInteraction = MessageComponentInteraction | ModalMessageModalSubmitInteraction;
 
 export type SentMessage = Message;
+
+type GatewayReply = SerializedReply<GatewayFile>;
 
 function isReplyFile(file: ReplyFile | GatewayFile): file is ReplyFile {
     return typeof file === 'object' && 'data' in file && ArrayBuffer.isView(file.data);
@@ -68,11 +70,8 @@ export class ReplySender extends BaseReplySender<SentMessage, GatewayFile> {
         );
     }
 
-    protected async writeReply(
-        response: GatewayReplyResponse | string,
-        flags: number
-    ): Promise<SentMessage | undefined> {
-        const result = await this.interaction.reply({ ...this.replyOptions(response, flags), withResponse: true });
+    protected async writeReply(reply: GatewayReply, flags: number): Promise<SentMessage | undefined> {
+        const result = await this.interaction.reply({ ...this.replyOptions(reply, flags), withResponse: true });
         return this.createdMessage(result);
     }
 
@@ -84,22 +83,22 @@ export class ReplySender extends BaseReplySender<SentMessage, GatewayFile> {
         await this.sourceInteraction('deferUpdate').deferUpdate();
     }
 
-    protected async writeUpdate(response: GatewayReplyResponse | string): Promise<SentMessage | undefined> {
+    protected async writeUpdate(reply: GatewayReply): Promise<SentMessage | undefined> {
         const source = this.sourceInteraction('update');
-        const result = await source.update({ ...this.updateOptions(response), withResponse: true });
+        const result = await source.update({ ...this.updateOptions(reply), withResponse: true });
         return this.createdMessage(result);
     }
 
-    protected async writeFollowUp(response: GatewayReplyResponse | string, flags: number): Promise<SentMessage> {
-        return await this.interaction.followUp(this.replyOptions(response, flags));
+    protected async writeFollowUp(reply: GatewayReply, flags: number): Promise<SentMessage> {
+        return await this.interaction.followUp(this.replyOptions(reply, flags));
     }
 
-    protected async writeEditOriginal(response: GatewayReplyResponse | string): Promise<SentMessage> {
-        return await this.interaction.editReply(this.editOptions(response));
+    protected async writeEditOriginal(reply: GatewayReply): Promise<SentMessage> {
+        return await this.interaction.editReply(this.editOptions(reply));
     }
 
-    protected async writeEditTarget(targetId: string, response: GatewayReplyResponse | string): Promise<SentMessage> {
-        return await this.interaction.webhook.editMessage(targetId, this.editOptions(response));
+    protected async writeEditTarget(targetId: string, reply: GatewayReply): Promise<SentMessage> {
+        return await this.interaction.webhook.editMessage(targetId, this.editOptions(reply));
     }
 
     protected async writeDeleteOriginal(): Promise<void> {
@@ -138,8 +137,7 @@ export class ReplySender extends BaseReplySender<SentMessage, GatewayFile> {
         throw new SeedcordError(SeedcordErrorCode.ReplyUpdateWithoutSource, [method, this.routeId]);
     }
 
-    private replyOptions(response: GatewayReplyResponse | string, flags: number): InteractionReplyOptions {
-        const reply = this.serialize(response);
+    private replyOptions(reply: GatewayReply, flags: number): InteractionReplyOptions {
         return {
             components: reply.components,
             flags,
@@ -148,8 +146,7 @@ export class ReplySender extends BaseReplySender<SentMessage, GatewayFile> {
         };
     }
 
-    private editOptions(response: GatewayReplyResponse | string): WebhookMessageEditOptions {
-        const reply = this.serialize(response);
+    private editOptions(reply: GatewayReply): WebhookMessageEditOptions {
         return {
             components: reply.components,
             flags: MessageFlags.IsComponentsV2,
@@ -158,8 +155,7 @@ export class ReplySender extends BaseReplySender<SentMessage, GatewayFile> {
         };
     }
 
-    private updateOptions(response: GatewayReplyResponse | string): InteractionUpdateOptions {
-        const reply = this.serialize(response);
+    private updateOptions(reply: GatewayReply): InteractionUpdateOptions {
         return {
             components: reply.components,
             flags: MessageFlags.IsComponentsV2,

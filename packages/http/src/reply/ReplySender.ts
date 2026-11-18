@@ -78,8 +78,7 @@ export class ReplySender extends BaseReplySender<SentMessage> {
         super({ bus, dispatch, interactionId: ref.id }, isEphemeralByDefault);
     }
 
-    protected async writeReply(response: ReplyResponse | string, flags: number): Promise<SentMessage | undefined> {
-        const reply = this.serialize(response);
+    protected async writeReply(reply: SerializedReply, flags: number): Promise<SentMessage | undefined> {
         const result = await this.callback(
             InteractionResponseType.ChannelMessageWithSource,
             callbackData(reply, flags),
@@ -96,8 +95,7 @@ export class ReplySender extends BaseReplySender<SentMessage> {
         await this.callback(InteractionResponseType.DeferredMessageUpdate);
     }
 
-    protected async writeUpdate(response: ReplyResponse | string): Promise<SentMessage | undefined> {
-        const reply = this.serialize(response);
+    protected async writeUpdate(reply: SerializedReply): Promise<SentMessage | undefined> {
         const result = await this.callback(
             InteractionResponseType.UpdateMessage,
             callbackData(reply, MessageFlags.IsComponentsV2),
@@ -106,8 +104,7 @@ export class ReplySender extends BaseReplySender<SentMessage> {
         return this.createdMessage(result);
     }
 
-    protected async writeFollowUp(response: ReplyResponse | string, flags: number): Promise<SentMessage> {
-        const reply = this.serialize(response);
+    protected async writeFollowUp(reply: SerializedReply, flags: number): Promise<SentMessage> {
         // discord returns the created message for interaction-token followups either way. wait=true pins
         // that contract and matches the djs webhook client
         const result = await this.rest.post(Routes.webhook(this.ref.application_id, this.ref.token), {
@@ -119,16 +116,12 @@ export class ReplySender extends BaseReplySender<SentMessage> {
         return result as SentMessage;
     }
 
-    protected writeEditOriginal(response: ReplyResponse | string): Promise<SentMessage> {
-        return this.editMessage(
-            Routes.webhookMessage(this.ref.application_id, this.ref.token),
-            this.serialize(response)
-        );
+    protected writeEditOriginal(reply: SerializedReply): Promise<SentMessage> {
+        return this.editMessage(Routes.webhookMessage(this.ref.application_id, this.ref.token), reply);
     }
 
-    protected writeEditTarget(targetId: string, response: ReplyResponse | string): Promise<SentMessage> {
-        const route = Routes.webhookMessage(this.ref.application_id, this.ref.token, targetId);
-        return this.editMessage(route, this.serialize(response));
+    protected writeEditTarget(targetId: string, reply: SerializedReply): Promise<SentMessage> {
+        return this.editMessage(Routes.webhookMessage(this.ref.application_id, this.ref.token, targetId), reply);
     }
 
     protected async writeDeleteOriginal(): Promise<void> {

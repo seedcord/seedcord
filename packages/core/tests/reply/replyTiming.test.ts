@@ -22,7 +22,8 @@ describe('reply timing', () => {
 
         publishResponse(
             { bus: stubBus(), dispatch: new DispatchContext('slash', 'ban'), interactionId: 'i1' },
-            { method: 'reply', startedAt: performance.now(), outcome: 'sent', messageId: 'm1' }
+            performance.now(),
+            { method: 'defer', body: null, outcome: 'sent', messageId: null }
         );
 
         expect(logs.records.find((record) => record.label === 'Reply')).toMatchObject({
@@ -40,7 +41,8 @@ describe('reply timing', () => {
 
         publishResponse(
             { bus: stubBus(), dispatch: new DispatchContext('slash', 'ban'), interactionId: 'i1' },
-            { method: 'reply', startedAt, outcome: 'sent', messageId: 'm1' }
+            startedAt,
+            { method: 'reply', body: { components: [] }, outcome: 'sent', messageId: 'm1' }
         );
 
         const traces = logs.at('trace');
@@ -57,12 +59,8 @@ describe('reply timing', () => {
 
         publishResponse(
             { bus: stubBus(), dispatch: new DispatchContext('slash', 'ban'), interactionId: 'i1' },
-            {
-                method: 'respond',
-                startedAt: performance.now(),
-                outcome: 'failed',
-                error: new Error('discord said no')
-            }
+            performance.now(),
+            { method: 'respond', body: null, outcome: 'failed', messageId: null, error: new Error('discord said no') }
         );
 
         const [message] = logs.at('trace');

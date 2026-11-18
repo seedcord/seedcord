@@ -1,3 +1,4 @@
+import { ComponentType } from 'discord-api-types/v10';
 import { describe, expect, it, vi } from 'vite-plus/test';
 
 import { Bus } from '#subscribers/Bus';
@@ -5,7 +6,6 @@ import { Bus } from '#subscribers/Bus';
 import { created, TestSender } from './helpers';
 
 import type { CoreBase } from '#interfaces/CoreBase';
-import type { ModalLike } from '#reply/BaseReplySender';
 import type { ResponseFailed, SubscriptionData } from '#subscribers/types/Subscriptions';
 import type { TestMessage } from './helpers';
 import type { ReplyResponse } from '@seedcord/types';
@@ -34,24 +34,77 @@ describe('responseAttempted', () => {
         expect(sent[0]).toMatchObject({ routeId: 'slash:ping', method: 'reply', messageId: 'm1' });
     });
 
-    it("reports a null message id for the acks that don't carry one", async () => {
+    it("reports a null message id and body for the acks that don't send a message", async () => {
         const { bus, sent } = busWithSpy();
         const sender = new TestSender(bus);
 
         await sender.defer();
         await sender.delete();
 
-        expect(sent.map((payload) => [payload.method, payload.messageId])).toEqual([
-            ['defer', null],
-            ['delete', null]
+        expect(sent.map((payload) => [payload.method, payload.messageId, payload.body])).toEqual([
+            ['defer', null, null],
+            ['delete', null, null]
         ]);
     });
 
-    it('reports showModal, which acks without a message', async () => {
+    it('reports showModal with the modal it opened', async () => {
         const { bus, sent } = busWithSpy();
-        await new TestSender(bus).showModal({ toJSON: () => ({}) } as unknown as ModalLike);
+        const modal = { custom_id: 'feedback', title: 'Feedback', components: [] };
+        await new TestSender(bus).showModal({ toJSON: () => modal });
 
-        expect(sent[0]).toMatchObject({ method: 'showModal', messageId: null });
+        expect(sent[0]).toMatchObject({ method: 'showModal', messageId: null, body: modal });
+    });
+
+    it('reports the components and mentions a reply sent', async () => {
+        const { bus, sent } = busWithSpy();
+        const text = { type: ComponentType.TextDisplay, content: 'hi <@1>' } as const;
+
+        await new TestSender(bus).reply({ components: [text], allowedMentions: { users: ['1'] } });
+
+        expect(sent[0]?.body).toEqual({ components: [text], allowedMentions: { users: ['1'] } });
+    });
+
+    it('reports file names and descriptions without their bytes', async () => {
+        const { bus, sent } = busWithSpy();
+
+        await new TestSender(bus).reply({
+            components: [],
+            files: [{ data: new Uint8Array([1, 2, 3]), name: 'chart.png', description: 'Sales by month' }]
+        });
+
+        expect(sent[0]?.body).toEqual({
+            components: [],
+            files: [{ name: 'chart.png', description: 'Sales by month' }]
+        });
+    });
+
+    it('reports the body a failed edit tried to send, next to the error', async () => {
+        const { bus, sent } = busWithSpy();
+        const sender = new TestSender(bus);
+        const text = { type: ComponentType.TextDisplay, content: 'edited' } as const;
+        await sender.reply(response);
+        vi.spyOn(
+            sender as unknown as { writeEditOriginal: () => Promise<TestMessage> },
+            'writeEditOriginal'
+        ).mockRejectedValue(new Error('Invalid Form Body'));
+
+        await expect(sender.edit({ components: [text] })).rejects.toThrow('Invalid Form Body');
+
+        expect(sent[1]).toMatchObject({ method: 'edit', outcome: 'failed', body: { components: [text] } });
+    });
+
+    it('reports a null body when the reply fails to serialize', async () => {
+        const { bus, sent } = busWithSpy();
+        const broken = {
+            toJSON: () => {
+                throw new Error('missing content');
+            }
+        };
+
+        await expect(new TestSender(bus).reply({ components: [broken] })).rejects.toThrow();
+
+        expect(sent).toHaveLength(1);
+        expect(sent[0]).toMatchObject({ method: 'reply', outcome: 'failed', body: null });
     });
 
     it('reports the routed verb for send, never send itself', async () => {
