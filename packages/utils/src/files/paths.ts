@@ -12,6 +12,12 @@ export function isInside(folder: string, target: string): boolean {
     return relative !== '..' && !relative.startsWith(`..${path.sep}`) && !path.isAbsolute(relative);
 }
 
+// importFiles and readFiles hand files over in this order on disk and in a built bot
+export function comparePaths(a: string, b: string): number {
+    if (a === b) return 0;
+    return a < b ? -1 : 1;
+}
+
 export function toPosixPath(nativePath: string): string {
     return nativePath.split(path.sep).join('/');
 }

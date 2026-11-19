@@ -209,6 +209,7 @@ describe("the folders and files the build doesn't include, under seedcord dev", 
         await mkdir(path.join(root, 'handlers'), { recursive: true });
         await writeFile(path.join(root, 'seedcord.config.ts'), 'export {};\n');
         await writeFile(path.join(root, 'package.json'), '{}\n');
+        await writeFile(path.join(root, 'tsconfig.build.json'), '{}\n');
         await writeFile(path.join(root, 'dist', 'index.js'), 'export {};\n');
         await writeFile(path.join(root, 'logs', 'today.log'), 'line\n');
         await writeFile(path.join(root, 'handlers', 'Ping.ts'), 'export {};\n');

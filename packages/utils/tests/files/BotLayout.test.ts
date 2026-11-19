@@ -4,6 +4,16 @@ import { describe, expect, it } from 'vite-plus/test';
 
 import { BotLayout } from '#src/files/BotLayout';
 
+describe('isProjectFile', () => {
+    // the path differs from the config folder as a string, the way chokidar's forward slashes do on windows
+    it('counts a project file whose path is written differently from the config folder', () => {
+        const root = path.resolve('/home/me/bot');
+        const layout = new BotLayout({ root, listed: ['/'], skippedFolders: [], configFile: '/seedcord.config.ts' });
+
+        expect(layout.isProjectFile(`${root}/./package.json`)).toBe(true);
+    });
+});
+
 describe('matchesFiles', () => {
     // glob syntax in the root's path has to match as plain text
     const root = path.resolve('/home/me/bot [v2] (copy)/src');

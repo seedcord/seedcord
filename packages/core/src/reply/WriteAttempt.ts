@@ -12,7 +12,8 @@ const logger = lazyLogger('Reply', { channel: 'interactions' });
 
 type ResponseReport = DistributedOmit<ResponseAttempt, ExcludeStrict<keyof AttemptedWrite, 'method'>>;
 
-// one write through the reply surface, timed from construction
+// a write reports from two places, run() when it throws and sent() after the caller updates
+// its ack state. both need the same start time, captured before the reply serializes
 export class WriteAttempt {
     private readonly startedAt = performance.now();
 
@@ -24,8 +25,7 @@ export class WriteAttempt {
             return await write();
         } catch (caught) {
             this.publish({ ...pending, outcome: 'failed', messageId: null, error: asError(caught) });
-            // rethrown raw
-            throw caught;
+            throw caught; // rethrown raw
         }
     }
 
