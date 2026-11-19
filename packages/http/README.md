@@ -84,7 +84,7 @@ import bot from './bot';
 await bot.start();
 
 const app = new Hono();
-app.post('/interactions', (c) => bot.fetch(c.req.raw));
+app.all('*', (c) => bot.fetch(c.req.raw));
 ```
 
 ### Cloudflare Workers

@@ -1,0 +1,98 @@
+---
+title: Answering web requests
+description: Serve your own routes from a plugin, like an OAuth callback or a webhook from another service, by writing fetch() for the requests your bot receives.
+---
+
+Some plugins need a URL of their own, like an OAuth callback or a route that GitHub posts webhooks to. Without a way to answer those from the bot, you'd run a second web server beside it for a route or two.
+
+A plugin can answer those requests itself. You write a [`fetch()`](ref:core/Plugin.fetch) method that gets a web `Request`, and you return a `Response`, or `undefined` to pass the request on.
+
+```ts twoslash title="src/plugins/Status.ts"
+import { Plugin } from '@seedcord/gateway';
+
+export class Status extends Plugin {
+    public async init(): Promise<void> {}
+
+    public override fetch(request: Request): Response | undefined {
+        const { pathname } = new URL(request.url);
+        if (pathname !== '/status') return undefined;
+
+        const guilds = this.core.bot.client.guilds.cache.size;
+        return Response.json({ guilds });
+    }
+}
+```
+
+In `Status`, you answer `/status` and return `undefined` for every other path. seedcord doesn't route requests, so you compare the path yourself.
+
+## Which step answers
+
+seedcord tries these steps in order, and the first one to return a `Response` answers the request:
+
+{/* prettier-ignore-start */}
+
+| step | gateway | http |
+| --- | --- | --- |
+| 1 | the [health path](/build/server#the-health-server) | the health path, on a server |
+| 2 | each plugin's [`fetch()`](ref:core/Plugin.fetch), in attach order | each plugin's [`fetch()`](ref:core/Plugin.fetch), in attach order |
+| 3 | a 404 | the interactions engine for a POST, a 404 for anything else |
+
+{/* prettier-ignore-end */}
+
+Keep your routes off the path that your interactions endpoint URL points at. If your `fetch()` answers there, Discord's POSTs never reach the interactions engine.
+
+## Check the path before you await
+
+On an http bot, every interaction passes through your `fetch()` first, and Discord gives the bot [three seconds](/replying) to answer it. An `await` before your path check uses up part of that time on every interaction. Check the path and the method, return `undefined` for anything that isn't yours, and await only after that.
+
+```ts twoslash title="src/plugins/GithubHooks.ts"
+import { Plugin } from '@seedcord/http';
+// ---cut---
+export class GithubHooks extends Plugin {
+    public async init(): Promise<void> {}
+
+    public override async fetch(
+        request: Request
+    ): Promise<Response | undefined> {
+        const { pathname } = new URL(request.url);
+        if (request.method !== 'POST') return undefined;
+        if (pathname !== '/github/push') return undefined;
+
+        const body = await request.text();
+        this.logger.info(`push of ${body.length} bytes`);
+        return new Response(null, { status: 204 });
+    }
+}
+```
+
+The two `return undefined` lines run before the `await`. You read `body` as text because [GitHub signs the exact payload](https://docs.github.com/en/webhooks/using-webhooks/validating-webhook-deliveries) that it sends. Check the request's `X-Hub-Signature-256` header against `body` before you trust it because anyone can post to a public route.
+
+## Reading the body
+
+<Callout type="warning">
+
+A request's body can only be read once. If you read it in `fetch()`, or call `getReader()` on it, and then return `undefined`, the plugins after yours can't read it. Neither can the interactions engine, which checks Discord's signature against those exact bytes. seedcord stops that request with an error:
+
+```txt output
+[1241] Webhooks read or locked the body of a request to http://localhost:3000/interactions, then returned undefined. The steps after it can't read that body again. Check the path in fetch before you touch the body.
+```
+
+</Callout>
+
+`GithubHooks` avoids it by reading the body only after both checks pass. To look at a body before you decide, read a copy with `await request.clone().text()`.
+
+## When `fetch()` throws
+
+seedcord logs the error on your plugin's logger, with the method and the URL, and passes the request to the next step. Interactions keep reaching your handlers while that route is broken. If you read the body before the throw, the request stops with the error above.
+
+## Where requests arrive
+
+A gateway bot serves web requests on its [health server](/build/server#the-health-server). An http bot serves them on its interactions port. A bot inside [your own server](/build/embed) gets whatever paths your server passes to `bot.fetch()`.
+
+Requests reach `fetch()` once every plugin's `init()` has finished, the same as your handlers. Your plugin's `ready()` may still be running then. If a route reads something that `ready()` sets, check for it first. [The lifecycle page](/plugins/lifecycle#where-each-one-runs) has the full order.
+
+<Callout type="transport" only="edge">
+
+Once a plugin has `fetch()`, the first request of any kind starts the bot in its isolate so the plugin can answer it. A crawler's request counts too. Without a plugin that has `fetch()`, the Worker answers anything besides a POST with a 404 before the bot starts.
+
+</Callout>

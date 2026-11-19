@@ -1,5 +1,5 @@
 {
     "title": "Writing plugins",
     "root": true,
-    "pages": ["index", "typing", "codegen", "runtimes", "files", "hot-reload", "publishing"]
+    "pages": ["index", "web-requests", "typing", "codegen", "runtimes", "files", "hot-reload", "publishing"]
 }

@@ -22,15 +22,15 @@ export default new Seedcord({
 
 <Callout type="transport" only="http">
 
-`port: false` and this `fetch(request)` belong to http's Node `Seedcord`. A gateway bot connects out to Discord over a websocket and never receives an interactions request to hand over. On Workers, Cloudflare calls the edge bot's own `fetch`, which [Cloudflare Workers](/build/workers) covers.
+`port: false` applies only to http's Node `Seedcord`. A gateway bot connects out to Discord over a websocket and never receives an interactions request to hand over. On Workers, Cloudflare calls the edge bot's own `fetch`, which [Cloudflare Workers](/build/workers) covers.
 
 </Callout>
 
-Your server imports the built bot, by its package name if you published it, or from its `dist/index.mjs`. The samples below import `@acme/my-bot`. In your server, call `start()` once, then hand every request on your interactions route to [`fetch()`](ref:http/Seedcord.fetch), which takes a web `Request` and returns the `Response` to send back.
+Your server imports the built bot, by its package name if you published it, or from its `dist/index.mjs`. The samples below import `@acme/my-bot`. In your server, call `start()` once, then pass requests to [`fetch()`](ref:http/Seedcord.fetch), which takes a web `Request` and returns the `Response` to send back. If a plugin serves [routes of its own](/writing-plugins/web-requests), pass the bot those paths too. The Hono sample passes it every path, and in Next.js or Express you add a route for each one.
 
 Point your application's interactions endpoint URL in the [Discord developer portal](https://discord.com/developers/applications) at the route, like `https://example.com/interactions`.
 
-Any server works if it can hand `fetch()` a web `Request` and send back the `Response` it returns. Hono, a Next.js route handler, and a plain Bun or Deno server already use web `Request` objects, so they pass theirs straight through. A Node framework like Express or Fastify takes a few lines to convert its own request and response. The tabs below show Hono and Next.js for the first kind, and Express for the second.
+Any server works if it can pass `fetch()` a web `Request` and send back the `Response` it returns. Hono, a Next.js route handler, and a plain Bun or Deno server already use web `Request` objects, so they pass theirs straight through. A Node framework like Express or Fastify takes a few lines to convert its own request and response. The tabs below show Hono and Next.js for the first kind, and Express for the second.
 
 ## Call start() before fetch()
 
@@ -59,10 +59,13 @@ import { Hono } from 'hono';
 await bot.start();
 
 const app = new Hono();
-app.post('/interactions', (c) => bot.fetch(c.req.raw));
+// register your routes first, because '*' matches every path
+app.all('*', (c) => bot.fetch(c.req.raw));
 
 serve({ fetch: app.fetch, port: 3000 });
 ```
+
+With `app.all('*')`, the bot also gets requests for its own `/health` path. Set `healthCheck: false` if your server answers health itself.
 
 </Tab>
 <Tab label="Next.js">
