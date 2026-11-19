@@ -4,8 +4,6 @@ import { afterEach, beforeEach, describe, expect, it, vi, type MockInstance } fr
 
 import { WebhookSender } from '#subscribers/bases/WebhookSender';
 
-import type { APIMessageTopLevelComponent } from 'discord-api-types/v10';
-
 let postMock: MockInstance<REST['post']>;
 let getMock: MockInstance<REST['get']>;
 
@@ -28,9 +26,7 @@ describe('WebhookSender', () => {
         await sender.send({
             flags: 32_768,
             username: 'Unknown Exception',
-            components: [
-                { toJSON: (): APIMessageTopLevelComponent => ({ type: ComponentType.Container, components: [] }) }
-            ],
+            components: [{ type: ComponentType.Container, components: [] }],
             files: [{ name: 'metadata.json', description: 'error metadata', data: Buffer.from('{}') }]
         });
 

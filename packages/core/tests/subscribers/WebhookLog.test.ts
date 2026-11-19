@@ -127,6 +127,29 @@ describe('WebhookLog', () => {
         expect(logs.at('error')).toEqual(['Webhook report failed']);
     });
 
+    it('logs which component failed and why when the card fails to serialize', async () => {
+        @Subscribe(['unknownException'])
+        @WebhookUrl('REPORTER_WEBHOOK_URL')
+        class BrokenCard extends WebhookLog<'unknownException', CoreBase> {
+            report(): WebhookReport {
+                const broken = {
+                    toJSON: (): APIMessageTopLevelComponent => {
+                        throw new Error('missing content');
+                    }
+                };
+                return { components: [broken] };
+            }
+        }
+        using logs = captureLogs();
+
+        await new BrokenCard(data, freshCore(), 'unknownException').execute();
+
+        expect(post).not.toHaveBeenCalled();
+        expect(logs.argsAt('error')).toContainEqual(
+            expect.objectContaining({ code: SeedcordErrorCode.ReplyComponentSerialization })
+        );
+    });
+
     it('warns once at registration and never registers a reporter whose env var is unset', () => {
         @Subscribe(['unknownException'], ['handledException'])
         @WebhookUrl('NEVER_SET_WEBHOOK_URL')

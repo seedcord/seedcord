@@ -19,7 +19,7 @@ export interface WebhookSendOptions {
     flags: number;
     username: string;
     avatarUrl?: string | undefined;
-    components: readonly { toJSON(): APIMessageTopLevelComponent }[];
+    components: readonly APIMessageTopLevelComponent[];
     files?: readonly WebhookFile[] | undefined;
 }
 
@@ -61,7 +61,7 @@ export class WebhookSender {
                 flags,
                 username,
                 ...(avatarUrl && { avatar_url: avatarUrl }),
-                components: components.map((component) => component.toJSON()),
+                components,
                 ...(files?.length && {
                     attachments: files.map((file, id) => ({ id, filename: file.name, description: file.description }))
                 })

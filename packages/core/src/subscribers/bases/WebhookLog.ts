@@ -3,6 +3,7 @@ import { SeedcordError, SeedcordTypeError } from '@seedcord/errors/internal';
 import { Envapter } from 'envapt';
 
 import { sendFlags } from '#reply/flags';
+import { serializeReply } from '#reply/serializeReply';
 import { WebhookUrlMetadataKey } from '#src/metadataKeys';
 import { ReportThrottle } from '#subscribers/ReportThrottle';
 import { Subscriber } from '#subscribers/Subscriber';
@@ -75,11 +76,12 @@ export abstract class WebhookLog<KeyOfSubscribers extends SubscriptionKey, TCore
 
         try {
             const { username, avatarUrl, components, files } = await this.report(suppressed);
+            const card = serializeReply({ components: [...components] }, `webhook:${this.constructor.name}`);
             await new WebhookSender(this.core.rest, target.url).send({
                 flags: sendFlags({ ephemeral: false }),
                 username: username ?? this.constructor.name,
                 avatarUrl,
-                components,
+                components: card.components,
                 files
             });
         } catch (error) {
