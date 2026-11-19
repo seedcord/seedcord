@@ -26,11 +26,11 @@ export interface CoreBase {
      * The address people reach your bot at, from `server.url` in your config. Its path always ends in
      * a slash.
      *
-     * Under `seedcord dev` a bot without `server.url` gets its `dev.tunnel` URL if you set one, and
-     * its localhost address otherwise.
+     * Under `seedcord dev`, a bot without `server.url` gets its localhost address, and an http bot
+     * whose `dev.tunnel` is a URL gets that URL.
      *
-     * @throws A **SeedcordError** when you read it and you haven't set `server.url`, except under `seedcord dev`.
-     * @throws A **SeedcordTypeError** when you read it and `server.url` isn't a URL.
+     * @throws A **SeedcordError** when you read it and you haven't set `server.url` unless `seedcord dev` gave the bot an address.
+     * @throws A **SeedcordTypeError** when you read it and `server.url` isn't an http or https address.
      * @example
      * ```ts
      * // with server.url set to 'https://example.com/bot'

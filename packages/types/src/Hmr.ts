@@ -32,7 +32,7 @@ export interface SeedcordFrameworkEvents {
 export interface SeedcordCliEvents {
     'seedcord:hmr': HmrUpdateEvent;
     'seedcord:refresh-commands': { shouldRefresh: boolean };
-    // core.url returns url while server.url is unset
+    // core.url falls back to url when server.url is unset
     // eslint-disable-next-line no-magic-numbers -- chalk's ColorSupportLevel for the CLI's terminal, copied to keep chalk out of types
     'seedcord:start': { colorLevel: 0 | 1 | 2 | 3; url: string };
     'seedcord:last-deploy': { deployed: DeployedHashes | undefined };

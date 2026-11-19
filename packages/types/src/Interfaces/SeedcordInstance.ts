@@ -34,7 +34,7 @@ export interface SeedcordInstance {
     readonly [HostShutdown]: { run(exitCode?: number, exitProcess?: boolean): Promise<void> };
     readonly [HostStartup]: { abort(): void };
     // seedcord dev sets this before start() for a quick tunnel
-    // an interactions server binds every address when unset
+    // the web server binds every address when unset
     [HostListenHost]?: string | undefined;
     // seedcord dev sets this before start() when `dev.tunnel` is a URL. core.url returns it while server.url is unset
     [HostDevUrl]?: string | undefined;

@@ -155,7 +155,8 @@ export class Seedcord extends PluginHost<'http', 'edge'> {
      * The address people reach your bot at, from `server.url` in your config. You only need to set
      * `server.url` if a plugin or your own code reads this.
      *
-     * @throws A **SeedcordError** when you read it and you haven't set `server.url`, except under `seedcord dev`.
+     * @throws A **SeedcordError** when you read it and you haven't set `server.url` unless `seedcord dev` gave the bot an address.
+     * @throws A **SeedcordTypeError** when you read it and `server.url` isn't an http or https address.
      */
     public get url(): URL {
         return publicUrl(this.config.server?.url, this.#devUrl);

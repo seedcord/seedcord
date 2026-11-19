@@ -213,7 +213,7 @@ export interface ResolvedSeedcordConfig {
     instance: RealPath;
     files: RealPath[];
     tunnel: ResolvedTunnel;
-    idleAnimation: boolean;
+    idleAnimation: NonNullable<SeedcordDevConfig['idleAnimation']>;
     vitePlugins: VitePlugins;
     configFile: RealPath;
     target: ResolvedTarget;

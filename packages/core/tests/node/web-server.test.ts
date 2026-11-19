@@ -43,9 +43,19 @@ function webServer(setup: Setup = {}): WebServer {
     });
 }
 
-async function listening(server: WebServer): Promise<string> {
+interface Listening extends AsyncDisposable {
+    readonly server: WebServer;
+    readonly url: string;
+}
+
+async function listening(setup: Setup = {}): Promise<Listening> {
+    const server = webServer(setup);
     await server.serve(undefined);
-    return `http://127.0.0.1:${String(server.port)}`;
+    return {
+        server,
+        url: `http://127.0.0.1:${String(server.port)}`,
+        [Symbol.asyncDispose]: () => server.close()
+    };
 }
 
 const get = (path: string): Request => new Request(`http://bot.test${path}`);
@@ -119,8 +129,8 @@ describe('WebServer requests', () => {
 
 describe('WebServer on a port', () => {
     it('answers on its port, then closes without hanging when closed twice at once', async () => {
-        const server = webServer();
-        const url = await listening(server);
+        await using bot = await listening();
+        const { server, url } = bot;
 
         const answered = await fetch(`${url}/page`);
         const passed = await fetch(`${url}/other`);
@@ -159,17 +169,15 @@ describe('WebServer on a port', () => {
 
     it('answers 413 to a body past bodyLimit and never runs the plugins', async () => {
         const seen: string[] = [];
-        const server = webServer({
+        await using bot = await listening({
             config: { ...LOCAL, bodyLimit: 16 },
             answer: (request) => {
                 seen.push(request.url);
                 return Promise.resolve(undefined);
             }
         });
-        const url = await listening(server);
 
-        const response = await fetch(url, { method: 'POST', body: new Uint8Array(32) });
-        await server.close();
+        const response = await fetch(bot.url, { method: 'POST', body: new Uint8Array(32) });
 
         expect(response.status).toBe(413);
         expect(seen).toEqual([]);
@@ -178,28 +186,24 @@ describe('WebServer on a port', () => {
     it('passes the request bytes through unchanged', async () => {
         const sent = new Uint8Array(256).map((_, index) => index);
         let received: Uint8Array | undefined;
-        const server = webServer({
+        await using bot = await listening({
             answer: async (request) => {
                 received = new Uint8Array(await request.arrayBuffer());
                 return new Response(null, { status: 202 });
             }
         });
-        const url = await listening(server);
 
-        await fetch(url, { method: 'POST', body: sent });
-        await server.close();
+        await fetch(bot.url, { method: 'POST', body: sent });
 
         expect(received).toEqual(sent);
     });
 
     it('writes the status and headers of an empty response', async () => {
-        const server = webServer({
+        await using bot = await listening({
             answer: () => Promise.resolve(new Response(null, { status: 418, headers: { 'x-a': '1' } }))
         });
-        const url = await listening(server);
 
-        const response = await fetch(url);
-        await server.close();
+        const response = await fetch(bot.url);
 
         expect(response.status).toBe(418);
         expect(response.headers.get('x-a')).toBe('1');
@@ -207,7 +211,7 @@ describe('WebServer on a port', () => {
     });
 
     it('keeps each set-cookie header separate', async () => {
-        const server = webServer({
+        await using bot = await listening({
             answer: () => {
                 const headers = new Headers();
                 headers.append('set-cookie', 'a=1; Path=/; Expires=Wed, 09 Jun 2027 10:18:14 GMT');
@@ -215,10 +219,8 @@ describe('WebServer on a port', () => {
                 return Promise.resolve(new Response(null, { status: 204, headers }));
             }
         });
-        const url = await listening(server);
 
-        const response = await fetch(url);
-        await server.close();
+        const response = await fetch(bot.url);
 
         expect(response.headers.getSetCookie()).toEqual([
             'a=1; Path=/; Expires=Wed, 09 Jun 2027 10:18:14 GMT',
@@ -228,10 +230,7 @@ describe('WebServer on a port', () => {
 
     it('logs a localhost address when it binds every interface', async () => {
         using logs = captureLogs();
-        const server = webServer({ config: { port: 0 } });
-
-        await server.serve(undefined);
-        await server.close();
+        await using _bot = await listening({ config: { port: 0 } });
 
         const listened = logs.at('info').join('\n');
         expect(listened).toContain('http://localhost:');

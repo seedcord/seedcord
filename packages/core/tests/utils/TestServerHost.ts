@@ -4,7 +4,7 @@ import { CoordinatedShutdown } from '#node/Lifecycle/CoordinatedShutdown';
 import { ServerHost } from '#node/ServerHost';
 import { CoordinatedStartup } from '#src/lifecycle/CoordinatedStartup';
 
-import type { Config, ServerHostConfig } from '@seedcord/types';
+import type { ServerHostConfig } from '@seedcord/types';
 
 export class TestServerHost extends ServerHost<'gateway'> {
     public readonly config: ServerHostConfig;
@@ -15,7 +15,7 @@ export class TestServerHost extends ServerHost<'gateway'> {
     constructor(
         shutdown = new CoordinatedShutdown(),
         startup = new CoordinatedStartup(),
-        config: ServerHostConfig = {} as Config
+        config = {} as ServerHostConfig
     ) {
         super('gateway', shutdown, startup, config.kv);
         // test files run side by side, and a default server would put them all on port 3000

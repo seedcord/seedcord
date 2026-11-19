@@ -57,7 +57,7 @@ export function edgeViteConfig(layout: BotLayout, viteRoot: string): InlineConfi
     return mergeViteConfig(devViteConfig(userCodeBase(), layout), {
         root: viteRoot,
         customLogger: workerLogger(),
-        // discord's POST arrives under the tunnel's hostname. the endpoint blocks every other request
+        // requests arrive under the tunnel's hostname, and vite blocks unlisted hosts
         server: { allowedHosts: true },
         // the plugin's dep scan comes up empty in a virtual main. vite then reloads mid-start and leaves a second envapt without a source bound
         environments: {

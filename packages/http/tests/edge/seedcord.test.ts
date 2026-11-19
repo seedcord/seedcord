@@ -375,17 +375,10 @@ describe('the edge Seedcord', () => {
 
     it('reads core.url from server.url, and throws without one', () => {
         const seedcord = new Seedcord(config());
-        const unset: unknown = (() => {
-            try {
-                return seedcord.url;
-            } catch (caught) {
-                return caught;
-            }
-        })();
+
+        expect(() => seedcord.url).toThrow(expect.objectContaining({ code: SeedcordErrorCode.CoreServerUrlUnset }));
 
         seedcord.config.server = { url: 'https://bot.example.com' };
-
-        expect(unset).toMatchObject({ code: SeedcordErrorCode.CoreServerUrlUnset });
         expect(seedcord.url.href).toBe('https://bot.example.com/');
     });
 

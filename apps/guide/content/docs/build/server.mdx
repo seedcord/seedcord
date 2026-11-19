@@ -168,10 +168,10 @@ Some plugins send people to your bot in a browser, like an OAuth login that come
 A plugin reads that address as [`core.url`](ref:core/CoreBase.url). If a plugin reads it and `server.url` isn't set, the bot throws:
 
 ```txt output
-[1242] Something read core.url, usually a plugin that sends people to your bot, but you haven't set server.url. Add server: { url: 'https://your-bot.example.com' } to the config you pass to new Seedcord(), with the address people reach your bot at.
+[1242] A plugin or your code read core.url, but server.url isn't set. Add server: { url: 'https://your-bot.example.com' } to the config you pass to new Seedcord(), with the address people reach your bot at.
 ```
 
-You don't have to set `url` while you develop. Under `seedcord dev`, a bot without one gets an address automatically. If you gave [`dev.tunnel`](/tooling/tunnel#when-you-already-have-a-url) a URL, the bot uses that. Otherwise it uses its own localhost address, like `http://localhost:3000`.
+You don't have to set `url` while you develop. Under `seedcord dev`, a bot without one uses its own localhost address, like `http://localhost:3000`. An http bot whose [`dev.tunnel`](/tooling/tunnel#when-you-already-have-a-url) is a URL uses that URL. A bot with `server: { port: false }` doesn't have a localhost address, so give it a `url`.
 
 ## When the build fails
 

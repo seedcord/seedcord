@@ -176,7 +176,7 @@ export abstract class Plugin<
      * this method. On a server, requests reach it once the Ready phase begins. It can run before
      * `ready()` finishes, and before an `init()` that you moved to Ready.
      *
-     * @throws A **SeedcordError** when this method reads or locks the body and returns `undefined`.
+     * @throws seedcord throws a **SeedcordError** when this method reads or locks the body without answering the request.
      * @example
      * ```ts
      * public fetch(request: Request): Response | undefined {

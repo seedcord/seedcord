@@ -148,27 +148,6 @@ describe('Seedcord host', () => {
         expect(seen).not.toEqual([]);
     });
 
-    it('opens its server when Ready begins, with health at 503 until every plugin is ready', async () => {
-        const { promise: readyGate, resolve: finishReady } = Promise.withResolvers<undefined>();
-        class SlowReady extends Page {
-            public override ready(): Promise<void> {
-                return readyGate;
-            }
-        }
-        await using seedcord = new Seedcord(testConfig({ server: ANY_PORT })).attach('slow', SlowReady);
-        readyOnLogin(seedcord);
-
-        const starting = seedcord.start();
-        await vi.waitFor(() => expect(seedcord.port).toBeDefined());
-        const healthWhileReadying = await get(seedcord, '/health');
-        const page = await get(seedcord, '/page');
-        finishReady(undefined);
-        await starting;
-        const healthOnceReady = await get(seedcord, '/health');
-
-        expect([healthWhileReadying.status, await page.text(), healthOnceReady.status]).toEqual([503, 'page', 200]);
-    });
-
     it('disposes a plugin whose init() finishes after startup was aborted', async () => {
         const { promise: initStarted, resolve: markInitStarted } = Promise.withResolvers<undefined>();
         const { promise: initGate, resolve: finishInit } = Promise.withResolvers<undefined>();

@@ -74,7 +74,7 @@ The two `return undefined` lines run before the `await`. You read `body` as text
 A request's body can only be read once. If you read it in `fetch()`, or call `getReader()` on it, and then return `undefined`, the plugins after yours can't read it. Neither can the interactions engine, which checks Discord's signature against those exact bytes. seedcord stops that request with an error:
 
 ```txt output
-[1241] GithubHooks read or locked the body of a request to /interactions, then returned undefined. The steps after it can't read that body again. Check the path in fetch before you touch the body.
+[1241] GithubHooks at hooks read or locked the body of a request to /interactions without answering it. The steps after it can't read that body again. Check the path in fetch before you touch the body.
 ```
 
 </Callout>
@@ -107,10 +107,10 @@ export class Login extends Plugin {
 
 A bot on Node or Bun serves web requests on its [web server](/build/server#the-web-server), which listens on port 3000 unless the bot sets `server.port`. A bot inside [your own server](/build/embed) gets whatever paths your server passes to `bot.fetch()`.
 
-Requests reach `fetch()` when the Ready phase begins, the same as your handlers. Your plugin's `ready()` may still be running then, and so may an `init()` that you moved to Ready. If a route reads something that one of them sets, check for it first. [The lifecycle page](/plugins/lifecycle#where-each-one-runs) has the full order.
+On Node or Bun, requests reach `fetch()` when the Ready phase begins, the same as your handlers. Your plugin's `ready()` may still be running then, and so may an `init()` that you moved to Ready. If a route reads something that one of them sets, check for it first. [The lifecycle page](/plugins/lifecycle#where-each-one-runs) has the full order.
 
 <Callout type="transport" only="edge">
 
-Once a plugin has `fetch()`, the first request of any kind starts the bot in its isolate so the plugin can answer it. A crawler's request counts too. Without a plugin that has `fetch()`, the Worker answers anything besides a POST with a 404 before the bot starts.
+Once a plugin has `fetch()`, the first request of any kind starts the bot in its isolate so the plugin can answer it. A crawler's request counts too. That request waits for the whole startup, so every `ready()` has finished before `fetch()` runs. Without a plugin that has `fetch()`, the Worker answers anything besides a POST with a 404 before the bot starts.
 
 </Callout>
