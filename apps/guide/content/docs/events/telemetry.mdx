@@ -27,7 +27,7 @@ export class SlowDispatch extends Subscriber<'interactionDispatched'> {
 
 `SlowDispatch` logs any dispatch that took longer than `SLOW_MS`, two seconds, with its route and outcome. If your handler hangs though, seedcord never publishes `interactionDispatched`, so `SlowDispatch` can't log it.
 
-seedcord also publishes `interactionDispatching` when a dispatch starts, with the same `dispatchId`. If an id shows up there and never in `interactionDispatched`, that dispatch is still running. The one exception is a throw past the boundary, which publishes `unhandledInteractionError` with the same `interactionId`.
+seedcord also publishes `interactionDispatching` when a dispatch starts, with the same `dispatchId`. If an id shows up there and never in `interactionDispatched`, that dispatch is still running.
 
 ## What one `interactionDispatched` reports
 

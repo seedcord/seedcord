@@ -20,10 +20,14 @@ import type { SubscriptionData } from '@seedcord/core';
 import type { InteractionRunConfig } from '@seedcord/core/internal';
 import type { Config, InteractionsConfig } from '@seedcord/types';
 import type { AutocompleteInteraction, ChatInputCommandInteraction } from 'discord.js';
-// each [key, payload] the bus published, in order
-type Published = [key: string, data: unknown][];
+import type { ExtractStrict } from 'type-fest';
 
-const RECORDED_KEYS = ['unknownException', 'handledException', 'responseAttempted'] as const;
+type RecordedKey = 'unknownException' | 'handledException' | 'responseAttempted';
+type FaultKey = ExtractStrict<RecordedKey, 'unknownException' | 'handledException'>;
+type Entry<Key extends RecordedKey> = { [K in Key]: [key: K, data: SubscriptionData<K>] }[Key];
+
+// each [key, payload] the bus published, in order
+type Published = Entry<RecordedKey>[];
 
 const withResponse = { resource: { message: { id: 'sent' } } };
 
@@ -67,7 +71,9 @@ class BoundaryHost extends PluginHost<'gateway', 'server'> {
         // justified: the boundary reads only these config sections
         this.config = { bot: { interactions }, errors, notifications: {} } as unknown as Config;
         const bus = stubBus();
-        for (const key of RECORDED_KEYS) bus.on(key, (data) => published.push([key, data]));
+        bus.on('unknownException', (data) => published.push(['unknownException', data]));
+        bus.on('handledException', (data) => published.push(['handledException', data]));
+        bus.on('responseAttempted', (data) => published.push(['responseAttempted', data]));
         Object.assign(this, { bus });
     }
 }
@@ -137,8 +143,16 @@ function answerFault(caught: Error, interaction: ValidInteractionTypes, core: Co
     throw new Error('the mock is a slash command or an autocomplete');
 }
 
-function faultCalls(published: Published): Published {
-    return published.filter(([event]) => event === 'handledException' || event === 'unknownException');
+function faultCalls(published: Published): Entry<FaultKey>[] {
+    return published.filter((entry): entry is Entry<FaultKey> => entry[0] !== 'responseAttempted');
+}
+
+function firstFault(published: Published, key: 'unknownException'): SubscriptionData<'unknownException'>;
+function firstFault(published: Published, key: 'handledException'): SubscriptionData<'handledException'>;
+function firstFault(published: Published, key: FaultKey): SubscriptionData<FaultKey> {
+    const [first] = faultCalls(published);
+    if (first?.[0] !== key) throw new Error(`expected ${key} first, got ${String(first?.[0])}`);
+    return first[1];
 }
 
 describe('gateway fault answers', () => {
@@ -154,9 +168,7 @@ describe('gateway fault answers', () => {
         await answerFault(new Error('boom'), asInteraction(mock), mockCore(published));
 
         expect(mock.reply).toHaveBeenCalledTimes(1);
-        const [event, payload] = faultCalls(published)[0] as [string, SubscriptionData<'unknownException'>];
-        expect(event).toBe('unknownException');
-        expect(payload.error).toBeInstanceOf(Error);
+        expect(firstFault(published, 'unknownException').error).toBeInstanceOf(Error);
     });
 
     it('attaches the interaction as metadata on a raw fault, so the report keeps its metadata.json', async () => {
@@ -164,8 +176,7 @@ describe('gateway fault answers', () => {
 
         await answerFault(new Error('boom'), interaction, mockCore(published));
 
-        const [, payload] = faultCalls(published)[0] as [string, SubscriptionData<'unknownException'>];
-        expect(payload.metadata).toBe(interaction);
+        expect(firstFault(published, 'unknownException').metadata).toBe(interaction);
     });
 
     it('swallows an api code listed in ignoreApiCodes, without a reply or report', async () => {
@@ -187,9 +198,7 @@ describe('gateway fault answers', () => {
         expect(mock.followUp).not.toHaveBeenCalled();
         expect(mock.deleteReply).not.toHaveBeenCalled();
         expect(mock.reply).not.toHaveBeenCalled();
-        const [event, payload] = faultCalls(published)[0] as [string, SubscriptionData<'handledException'>];
-        expect(event).toBe('handledException');
-        expect(payload.denial).toBeInstanceOf(Fault);
+        expect(firstFault(published, 'handledException').denial).toBeInstanceOf(Fault);
     });
 
     it('swaps a public deferReply placeholder for a private fault card', async () => {
@@ -232,9 +241,7 @@ describe('gateway fault answers', () => {
 
             expect(mock.respond).toHaveBeenCalledWith([]);
             expect(mock.reply).not.toHaveBeenCalled();
-            const [event, payload] = faultCalls(published)[0] as [string, SubscriptionData<'unknownException'>];
-            expect(event).toBe('unknownException');
-            expect(payload.metadata).toBe(interaction);
+            expect(firstFault(published, 'unknownException').metadata).toBe(interaction);
         });
 
         it('does not send empty choices after the handler already responded', async () => {
@@ -253,9 +260,9 @@ describe('gateway fault answers', () => {
         it('publishes responseAttempted for the empty-choices send', async () => {
             await answerFault(new Error('boom'), asInteraction(mock), mockCore(published));
 
-            const writes = published.filter(([key]) => key === 'responseAttempted');
+            const writes = published.flatMap(([key, data]) => (key === 'responseAttempted' ? [data] : []));
             expect(writes).toHaveLength(1);
-            expect(writes[0]?.[1] as SubscriptionData<'responseAttempted'>).toMatchObject({
+            expect(writes[0]).toMatchObject({
                 method: 'respond',
                 outcome: 'sent',
                 messageId: null

@@ -144,10 +144,10 @@ describe('WebhookLog', () => {
 
         await new BrokenCard(data, freshCore(), 'unknownException').execute();
 
+        const logged = logs.argsAt('error').find((arg) => Error.isError(arg));
         expect(post).not.toHaveBeenCalled();
-        expect(logs.argsAt('error')).toContainEqual(
-            expect.objectContaining({ code: SeedcordErrorCode.ReplyComponentSerialization })
-        );
+        expect(logged).toMatchObject({ code: SeedcordErrorCode.ReplyComponentSerialization });
+        expect(logged?.message).toContain('webhook:BrokenCard');
     });
 
     it('warns once at registration and never registers a reporter whose env var is unset', () => {

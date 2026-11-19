@@ -57,8 +57,13 @@ export abstract class BaseReplySender<TMessage extends { id: string }, TNative =
         write: WriteAttempt,
         response: ReplyResponse<TNative> | string
     ): Promise<PreparedMessage<TNative>> {
-        const reply = await write.run({ method, body: null }, () => serializeReply(response, this.routeId));
-        return { reply, sent: { method, body: messageBody(reply, (file) => this.describeFile(file)) } };
+        return await write.run({ method, body: null }, () => {
+            const reply = serializeReply(response, this.routeId);
+            return {
+                reply,
+                sent: { method, body: messageBody(reply, (file) => this.describeFile(file)) }
+            };
+        });
     }
 
     public async reply(response: ReplyResponse<TNative> | string, opts?: SendOpts): Promise<TMessage> {

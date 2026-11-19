@@ -3,11 +3,10 @@ import { describe, expect, it, vi } from 'vite-plus/test';
 
 import { Bus } from '#subscribers/Bus';
 
-import { created, TestSender } from './helpers';
+import { TestSender } from './helpers';
 
 import type { CoreBase } from '#interfaces/CoreBase';
 import type { ResponseFailed, SubscriptionData } from '#subscribers/types/Subscriptions';
-import type { TestMessage } from './helpers';
 import type { ReplyResponse } from '@seedcord/types';
 
 function failedWrite(payload: SubscriptionData<'responseAttempted'> | undefined): ResponseFailed {
@@ -85,14 +84,23 @@ describe('responseAttempted', () => {
         const sender = new TestSender(bus);
         const text = { type: ComponentType.TextDisplay, content: 'edited' } as const;
         await sender.reply(response);
-        vi.spyOn(
-            sender as unknown as { writeEditOriginal: () => Promise<TestMessage> },
-            'writeEditOriginal'
-        ).mockRejectedValue(new Error('Invalid Form Body'));
+        sender.beforeWrite = () => Promise.reject(new Error('Invalid Form Body'));
 
         await expect(sender.edit({ components: [text] })).rejects.toThrow('Invalid Form Body');
 
         expect(sent[1]).toMatchObject({ method: 'edit', outcome: 'failed', body: { components: [text] } });
+    });
+
+    it('reports a failed write with a null body when a file entry is broken', async () => {
+        const { bus, sent } = busWithSpy();
+        // justified: plain JavaScript can pass null here
+        const files = [null] as unknown as NonNullable<ReplyResponse['files']>;
+
+        await expect(new TestSender(bus).reply({ components: [], files })).rejects.toThrow();
+
+        expect(sent.map((payload) => [payload.method, payload.outcome, payload.body])).toEqual([
+            ['reply', 'failed', null]
+        ]);
     });
 
     it('reports a failed write with a null body when a builder fails to serialize', async () => {
@@ -125,12 +133,10 @@ describe('responseAttempted', () => {
         const sender = new TestSender(bus);
         let clock = 500;
         vi.spyOn(performance, 'now').mockImplementation(() => clock);
-        vi.spyOn(sender as unknown as { writeReply: () => Promise<TestMessage> }, 'writeReply').mockImplementation(
-            () => {
-                clock += 250;
-                return Promise.resolve(created);
-            }
-        );
+        sender.beforeWrite = () => {
+            clock += 250;
+            return Promise.resolve();
+        };
 
         await sender.reply(response);
 
@@ -141,9 +147,7 @@ describe('responseAttempted', () => {
     it('wraps a non-Error rejection, so the failed write still reports', async () => {
         const { bus, sent } = busWithSpy();
         const sender = new TestSender(bus);
-        vi.spyOn(sender as unknown as { writeReply: () => Promise<TestMessage> }, 'writeReply').mockRejectedValue(
-            'discord said no'
-        );
+        sender.beforeWrite = vi.fn<() => Promise<void>>().mockRejectedValue('discord said no');
 
         // the caller still receives the value that was thrown
         await expect(sender.reply(response)).rejects.toBe('discord said no');
@@ -157,9 +161,7 @@ describe('responseAttempted', () => {
         const { bus, sent } = busWithSpy();
         const sender = new TestSender(bus);
         const thrown = { code: 500 };
-        vi.spyOn(sender as unknown as { writeReply: () => Promise<TestMessage> }, 'writeReply').mockRejectedValue(
-            thrown
-        );
+        sender.beforeWrite = vi.fn<() => Promise<void>>().mockRejectedValue(thrown);
 
         await expect(sender.reply(response)).rejects.toBe(thrown);
 
@@ -169,9 +171,7 @@ describe('responseAttempted', () => {
     it('reports a failed write, carrying the error and no message id', async () => {
         const { bus, sent } = busWithSpy();
         const sender = new TestSender(bus);
-        vi.spyOn(sender as unknown as { writeReply: () => Promise<TestMessage> }, 'writeReply').mockRejectedValue(
-            new Error('discord said no')
-        );
+        sender.beforeWrite = () => Promise.reject(new Error('discord said no'));
 
         await expect(sender.reply(response)).rejects.toThrow('discord said no');
 
