@@ -115,7 +115,7 @@ export { checkAckLegality, type AckState, type ReplyMethod } from '#reply/ackLeg
 export { AckTrace } from '#reply/AckTrace';
 export { AutocompleteResponder } from '#reply/AutocompleteResponder';
 export { isEphemeralByDefault } from '#reply/flags';
-export type { ReplyTelemetry } from '#reply/responseReport';
+export { replyFileInfo, type ReplyTelemetry, type SentFile } from '#reply/responseReport';
 export { translateSerializationError } from '#reply/translateSerialization';
 export { serializeReply, type SerializedReply } from '#reply/serializeReply';
 

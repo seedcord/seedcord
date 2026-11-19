@@ -106,7 +106,7 @@ A dispatch can be slow because one Discord call was slow. `responseAttempted` ti
 | `durationMs` | `number` | the write itself, monotonic |
 | `messageId` | `string \| null` | the id of the message Discord returned |
 | `error` | `Error` | only on a failed write |
-| `body` | message, modal, or `null` | what the write sent, user text included |
+| `body` | message, modal, or `null` | what the write sent, which can include text your users typed |
 
 {/* prettier-ignore-end */}
 

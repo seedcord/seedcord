@@ -1,4 +1,4 @@
-import { reportedRespond } from './responseReport';
+import { WriteAttempt } from './WriteAttempt';
 
 import type { ReplyTelemetry } from './responseReport';
 
@@ -11,7 +11,9 @@ export class AutocompleteResponder<Choice> {
     ) {}
 
     public respond(choices: readonly Choice[]): Promise<void> {
-        this.attempt = reportedRespond(this.telemetry, () => this.post(choices)).then(() => undefined);
+        const write = new WriteAttempt(this.telemetry);
+        const respond = { method: 'respond', body: null } as const;
+        this.attempt = write.run(respond, () => this.post(choices)).then(() => write.sent(respond, null));
         return this.attempt;
     }
 

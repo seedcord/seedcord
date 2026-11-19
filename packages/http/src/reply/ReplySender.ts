@@ -1,10 +1,11 @@
 import { BaseReplySender } from '@seedcord/core';
+import { replyFileInfo } from '@seedcord/core/internal';
 import { InteractionResponseType, MessageFlags, Routes } from 'discord-api-types/v10';
 
 import type { REST, RawFile } from '@discordjs/rest';
 import type { Bus, DispatchContext } from '@seedcord/core';
-import type { SerializedReply } from '@seedcord/core/internal';
-import type { ReplyResponse } from '@seedcord/types';
+import type { SentFile, SerializedReply } from '@seedcord/core/internal';
+import type { ReplyFile, ReplyResponse } from '@seedcord/types';
 import type { APIMessage, APIModalInteractionResponseCallbackData } from 'discord-api-types/v10';
 import type { Except } from 'type-fest';
 
@@ -134,6 +135,10 @@ export class ReplySender extends BaseReplySender<SentMessage> {
 
     protected async writeModal(data: APIModalInteractionResponseCallbackData): Promise<void> {
         await this.callback(InteractionResponseType.Modal, data);
+    }
+
+    protected describeFile(file: ReplyFile): SentFile {
+        return replyFileInfo(file);
     }
 
     private async callback(

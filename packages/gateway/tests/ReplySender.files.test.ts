@@ -125,7 +125,7 @@ describe('the discord.js file forms', () => {
 });
 
 describe('the body responseAttempted reports', () => {
-    it("lists each file form by its name and alt text, with a null name when it doesn't have one", async () => {
+    it('lists each file form by the name discord.js uploads it with', async () => {
         const bus = stubBus();
         const reported: SubscriptionData<'responseAttempted'>[] = [];
         bus.on('responseAttempted', (payload) => reported.push(payload));
@@ -137,7 +137,12 @@ describe('the body responseAttempted reports', () => {
         });
 
         expect(reported[0]?.body).toMatchObject({
-            files: [{ name: 'seed.txt', description: 'four bytes' }, { name: 'a.txt' }, { name: null }, { name: null }]
+            files: [
+                { name: 'seed.txt', description: 'four bytes' },
+                { name: 'a.txt' },
+                { name: 'file.jpg' },
+                { name: 'fixture.txt' }
+            ]
         });
     });
 });

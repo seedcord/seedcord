@@ -75,7 +75,7 @@ export interface ResponseSent<Method extends WriteMethod = WriteMethod> extends 
     /** Null for every ack-only and choice-only verb. */
     readonly messageId: string | null;
     /**
-     * What the write sent, user text included. `reply`, `followUp`, `update`, and `edit` hold the message,
+     * What the write sent, which can include text your users typed. `reply`, `followUp`, `update`, and `edit` hold the message,
      * and its files list each file's name, alt text, and title without the bytes. `showModal` holds the modal. Every
      * other verb holds null.
      */
@@ -89,7 +89,7 @@ export interface ResponseFailed<Method extends WriteMethod = WriteMethod> extend
     readonly outcome: 'failed';
     readonly messageId: null;
     readonly error: Error;
-    /** What the write tried to send. If the reply threw while it serialized, this is null since nothing reached Discord. */
+    /** What the write tried to send. Null if a builder threw before the write started. */
     readonly body: WriteBody<Method> | null;
 }
 

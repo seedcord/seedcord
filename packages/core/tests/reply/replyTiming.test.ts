@@ -1,9 +1,7 @@
 import { captureLogs } from '@seedcord/logger/internal';
 import { afterEach, describe, expect, it, vi } from 'vite-plus/test';
 
-import { created, TestSender } from './helpers';
-
-import type { TestMessage } from './helpers';
+import { TestSender } from './helpers';
 
 afterEach(() => {
     vi.restoreAllMocks();
@@ -26,12 +24,10 @@ describe('reply timing', () => {
         const sender = new TestSender();
         let clock = 1000;
         vi.spyOn(performance, 'now').mockImplementation(() => clock);
-        vi.spyOn(sender as unknown as { writeReply: () => Promise<TestMessage> }, 'writeReply').mockImplementation(
-            () => {
-                clock += 88;
-                return Promise.resolve(created);
-            }
-        );
+        sender.beforeWrite = () => {
+            clock += 88;
+            return Promise.resolve();
+        };
 
         await sender.reply('hi');
 
@@ -47,9 +43,7 @@ describe('reply timing', () => {
     it('traces a failed write with its outcome', async () => {
         using logs = captureLogs();
         const sender = new TestSender();
-        vi.spyOn(sender as unknown as { writeDefer: () => Promise<void> }, 'writeDefer').mockRejectedValue(
-            new Error('discord said no')
-        );
+        sender.beforeWrite = () => Promise.reject(new Error('discord said no'));
 
         await expect(sender.defer()).rejects.toThrow('discord said no');
 

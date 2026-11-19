@@ -1,4 +1,7 @@
+import { basename } from 'node:path';
+
 import { BaseReplySender } from '@seedcord/core';
+import { replyFileInfo } from '@seedcord/core/internal';
 import { SeedcordErrorCode } from '@seedcord/errors';
 import { SeedcordError } from '@seedcord/errors/internal';
 import { MessageFlags } from 'discord.js';
@@ -6,7 +9,7 @@ import { MessageFlags } from 'discord.js';
 import type { GatewayFile } from '#interfaces/ReplyResponse';
 import type { Repliables } from '#src/handlers/interactionTypes';
 import type { Bus, DispatchContext } from '@seedcord/core';
-import type { AckState, SerializedReply } from '@seedcord/core/internal';
+import type { AckState, SentFile, SerializedReply } from '@seedcord/core/internal';
 import type { ReplyFile } from '@seedcord/types';
 import type {
     APIModalInteractionResponseCallbackData,
@@ -38,6 +41,33 @@ function toDjsFile(file: ReplyFile | GatewayFile): GatewayFile {
         name: file.name,
         ...(file.description !== undefined && { description: file.description }),
         ...(file.title !== undefined && { title: file.title })
+    };
+}
+
+function stringField(file: object, key: string): string | undefined {
+    const value: unknown = Reflect.get(file, key);
+    return typeof value === 'string' ? value : undefined;
+}
+
+// discord.js's naming rule for an upload without a name, from MessagePayload.resolveFile
+function djsFileName(attachment: unknown): string {
+    if (typeof attachment === 'string') return basename(attachment);
+    const streamPath =
+        typeof attachment === 'object' && attachment !== null ? stringField(attachment, 'path') : undefined;
+    return streamPath === undefined ? 'file.jpg' : basename(streamPath);
+}
+
+function gatewayFileInfo(file: GatewayFile): SentFile {
+    // the same check discord.js runs: a path, a Buffer, or a stream is its own attachment
+    if (typeof file === 'string' || Buffer.isBuffer(file) || typeof Reflect.get(file, 'pipe') === 'function') {
+        return { name: djsFileName(file) };
+    }
+    const description = stringField(file, 'description');
+    const title = stringField(file, 'title');
+    return {
+        name: stringField(file, 'name') ?? djsFileName(Reflect.get(file, 'attachment')),
+        ...(description !== undefined && { description }),
+        ...(title !== undefined && { title })
     };
 }
 
@@ -114,6 +144,10 @@ export class ReplySender extends BaseReplySender<SentMessage, GatewayFile> {
         // unreachable after guardModalSource, the throw re-narrows the union for showModal
         if (interaction.isModalSubmit()) this.rejectModalSubmit();
         await interaction.showModal(data);
+    }
+
+    protected describeFile(file: ReplyFile | GatewayFile): SentFile {
+        return isReplyFile(file) ? replyFileInfo(file) : gatewayFileInfo(file);
     }
 
     protected override guardModalSource(): void {
