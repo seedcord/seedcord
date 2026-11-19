@@ -40,6 +40,17 @@ class BodyReader extends Plugin {
     }
 }
 
+class BodyReaderThatThrows extends Plugin {
+    public init(): Promise<void> {
+        return Promise.resolve();
+    }
+
+    public override async fetch(request: Request): Promise<never> {
+        await request.text();
+        throw new Error('boom');
+    }
+}
+
 class BodyLocker extends Plugin {
     public init(): Promise<void> {
         return Promise.resolve();
@@ -95,15 +106,20 @@ describe('a plugin fetch method on node', () => {
     });
 
     it.each([
-        ['reads the body', BodyReader],
+        ['reads the body and passes the request on', BodyReader],
+        ['reads the body and throws', BodyReaderThatThrows],
         ['locks the body with a reader', BodyLocker]
-    ])('throws when a plugin %s and passes the request on', async (_case, Reader) => {
+    ])('throws when a plugin %s', async (_case, Reader) => {
         const signer = await bindSignedEnv();
         await using host = new Seedcord(config()).attach('reader', Reader);
         await host.start();
+        using _logs = captureLogs();
 
         await expect(host.fetch(await signedRequest(signer, PING))).rejects.toThrow(
-            expect.objectContaining({ code: SeedcordErrorCode.CorePluginFetchReadBody })
+            expect.objectContaining({
+                code: SeedcordErrorCode.CorePluginFetchReadBody,
+                message: expect.stringContaining(`${Reader.name} at reader`) as string
+            })
         );
     });
 

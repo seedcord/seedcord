@@ -103,11 +103,11 @@ const messages = {
     [SeedcordErrorCode.CorePluginAttachedTwice]: (plugin: string, firstKey: string, secondKey: string) =>
         `${paint.bold(plugin)} is attached at both ${paint.sky(firstKey)} and ${paint.sky(secondKey)}, and each copy adds the same ${paint.bold('dispatchMembers')}. Attach it once.`,
     [SeedcordErrorCode.CorePluginFetchReadBody]: (plugin: string, path: string) =>
-        `${paint.sky(plugin)} read or locked the body of a request to ${paint.path(path)}, then returned ${paint.bold('undefined')}. The steps after it can't read that body again. Check the path in ${paint.bold('fetch')} before you touch the body.`,
+        `${plugin} read or locked the body of a request to ${paint.path(path)} without answering it. The steps after it can't read that body again. Check the path in ${paint.bold('fetch')} before you touch the body.`,
     [SeedcordErrorCode.CoreServerUrlUnset]: () =>
-        `Something read ${paint.bold('core.url')}, usually a plugin that sends people to your bot, but you haven't set ${paint.bold('server.url')}. Add ${paint.bold("server: { url: 'https://your-bot.example.com' }")} to the config you pass to ${paint.bold('new Seedcord()')}, with the address people reach your bot at.`,
+        `A plugin or your code read ${paint.bold('core.url')}, but ${paint.bold('server.url')} isn't set. Add ${paint.bold("server: { url: 'https://your-bot.example.com' }")} to the config you pass to ${paint.bold('new Seedcord()')}, with the address people reach your bot at.`,
     [SeedcordErrorCode.CoreServerUrlInvalid]: (url: string) =>
-        `${paint.bold('server.url')} is ${paint.path(url)}, and that doesn't parse as a URL. Write the whole address, like ${paint.path('https://your-bot.example.com')}.`,
+        `${paint.bold('server.url')} is ${paint.path(url)}, which isn't an http or https address. Write the whole address, like ${paint.path('https://your-bot.example.com')}.`,
     [SeedcordErrorCode.CorePluginGroupTaken]: (head: string, key: string) =>
         `${paint.bold(head)} is already taken on this bot, so ${paint.sky(key)} cannot nest under it. Pick another group name.`,
     [SeedcordErrorCode.CorePluginKeyMalformed]: (key: string, reason: string) =>

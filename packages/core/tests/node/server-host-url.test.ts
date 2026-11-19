@@ -34,7 +34,12 @@ describe('core.url on a server host', () => {
 
     it.each([
         ['without server.url', undefined, SeedcordErrorCode.CoreServerUrlUnset],
-        ['when server.url is not a URL', 'bot.example.com', SeedcordErrorCode.CoreServerUrlInvalid]
+        ['when server.url is not a URL', 'bot.example.com', SeedcordErrorCode.CoreServerUrlInvalid],
+        [
+            'when server.url has a host and a port without a scheme',
+            'localhost:3000',
+            SeedcordErrorCode.CoreServerUrlInvalid
+        ]
     ])('throws %s', (_case, url, code) => {
         const host = hostWith({ port: false, ...(url !== undefined && { url }) });
 

@@ -3,7 +3,7 @@ import { dirname } from 'node:path';
 import { HostDevUrl, HostListenHost } from '@seedcord/types/internal';
 import { createServerModuleRunner } from 'vite';
 
-import { listenHostFor, stableUrlOf } from '#commands/dev/tunnel/listenHost';
+import { listenHostFor, stableUrlOf, tunnelFor } from '#commands/dev/tunnel/listenHost';
 import { rethrowVitePluginError } from '#core/config/vitePlugins';
 import { BOT_ENVIRONMENT, botEnvironment } from '#core/modules/botEnvironment';
 import { envBootstrap } from '#core/modules/envBootstrap';
@@ -43,7 +43,7 @@ export class ServerDevRuntime extends BaseDevRuntime {
     }
 
     public startBot(instance: SeedcordInstance): Promise<string | undefined> {
-        const { tunnel } = this.require('startBot').context.config;
+        const tunnel = tunnelFor(instance, this.require('startBot').context.config.tunnel);
         instance[HostListenHost] = listenHostFor(tunnel);
         instance[HostDevUrl] = stableUrlOf(tunnel);
         return this.lifecycle.start(instance);
