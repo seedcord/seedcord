@@ -10,10 +10,13 @@
     "packageRules": [
         {
             "matchManagers": ["npm"],
-            "matchUpdateTypes": ["minor", "patch"],
-            "groupName": "all non major npm updates",
             "semanticCommitType": "chore",
             "semanticCommitScope": "deps"
+        },
+        {
+            "matchManagers": ["npm"],
+            "matchUpdateTypes": ["minor", "patch"],
+            "groupName": "all non major npm updates"
         },
         {
             "matchManagers": ["github-actions"],
