@@ -40,7 +40,7 @@ function httpGet(url: string): Promise<{ status: number; body: string }> {
 
 describe('HealthCheck', () => {
     it('resolves stop() immediately when never initialized', async () => {
-        const hc = new HealthCheck(shutdownStub);
+        const hc = new HealthCheck(shutdownStub, undefined, () => Promise.resolve(undefined));
         await expect(hc.stop()).resolves.toBeUndefined();
     });
 
@@ -49,7 +49,7 @@ describe('HealthCheck', () => {
         await once(server, 'listening');
         // a listening TCP server always has an AddressInfo
         const { port } = server.address() as AddressInfo;
-        const hc = new HealthCheck(shutdownStub, { port });
+        const hc = new HealthCheck(shutdownStub, { port }, () => Promise.resolve(undefined));
 
         await expect(hc.init()).rejects.toMatchObject({
             code: SeedcordErrorCode.PortInUse,
@@ -59,7 +59,7 @@ describe('HealthCheck', () => {
 
     it('serves 200 on the health path and 404 elsewhere, then stops without hanging', async () => {
         const port = await freePort();
-        const hc = new HealthCheck(shutdownStub, { port, host: '127.0.0.1' });
+        const hc = new HealthCheck(shutdownStub, { port, host: '127.0.0.1' }, () => Promise.resolve(undefined));
 
         await hc.init();
 

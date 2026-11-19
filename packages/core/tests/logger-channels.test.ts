@@ -38,7 +38,7 @@ describe('flat-site log channels', () => {
     it('puts the health check on the health channel', () => {
         // justified: the ctor only reaches addTask
         const shutdown = { addTask: vi.fn() } as unknown as CoordinatedShutdown;
-        new HealthCheck(shutdown, { port: 0 }).logger.info('ran');
+        new HealthCheck(shutdown, { port: 0 }, () => Promise.resolve(undefined)).logger.info('ran');
 
         expect(sink.records[0]).toMatchObject({ channel: 'health', label: 'HealthCheck' });
     });

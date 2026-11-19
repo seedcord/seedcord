@@ -4,11 +4,25 @@ import { createServer } from 'node:http';
 import { REST } from '@discordjs/rest';
 import { bindBotColor, busLoggerOf, connectDevChannel, getDevChannel, HmrManager } from '@seedcord/core/internal';
 import { CoordinatedShutdown, CoordinatedStartup, ServerHost } from '@seedcord/core/node';
-import { DRAIN_TASK_TIMEOUT_MS, HealthResponder, ShutdownPhase, StartupPhase } from '@seedcord/core/node/internal';
+import {
+    DRAIN_TASK_TIMEOUT_MS,
+    HealthResponder,
+    ShutdownPhase,
+    StartupPhase,
+    toWebRequest,
+    writeWebResponse
+} from '@seedcord/core/node/internal';
 import { paint, SeedcordErrorCode } from '@seedcord/errors';
 import { SeedcordError } from '@seedcord/errors/internal';
 import { Logger } from '@seedcord/logger';
-import { HostAugmentTarget, HostListenHost, HostStartup, HostVersion, SeedcordBrand } from '@seedcord/types/internal';
+import {
+    HostAugmentTarget,
+    HostListenHost,
+    HostPlugins,
+    HostStartup,
+    HostVersion,
+    SeedcordBrand
+} from '@seedcord/types/internal';
 import { isPortInUse } from '@seedcord/utils/internal';
 import { Envapter } from 'envapt';
 
@@ -18,7 +32,6 @@ import { usernameOf } from '#src/username';
 import { version as packageVersion } from '#src/version';
 
 import { NodeEndpoint } from './NodeEndpoint';
-import { toWebRequest, writeWebResponse } from './webBridge';
 
 import type { HttpServerConfig } from '#interfaces/Config';
 import type { SeedcordInstance } from '@seedcord/types/internal';
@@ -76,7 +89,8 @@ export class Seedcord extends ServerHost<'http'> implements SeedcordInstance {
             this.#service,
             this.#logger,
             HealthResponder.fromOption(config.healthCheck),
-            this[HostStartup]
+            this[HostStartup],
+            async (request) => this[HostPlugins].answer(request)
         );
 
         this.#hmrManager = new HmrManager();
@@ -104,8 +118,9 @@ export class Seedcord extends ServerHost<'http'> implements SeedcordInstance {
     }
 
     /**
-     * Answers one request to the interactions endpoint. Mount it in your own server when the
-     * config sets `port: false`.
+     * Answers one web request: the health path, then any plugin's `fetch`, then Discord's
+     * interactions. Mount it in your own server when the config sets `port: false`, and send it
+     * every path so plugin routes reach the bot.
      *
      * Rejects with `CoreFetchBeforeStart` until `start()` is called. A request that arrives while
      * `start()` runs waits until the command deploy finishes. Answers 503 once shutdown begins or
@@ -118,7 +133,7 @@ export class Seedcord extends ServerHost<'http'> implements SeedcordInstance {
      * await seedcord.start();
      *
      * const app = new Hono();
-     * app.post('/interactions', (c) => seedcord.fetch(c.req.raw));
+     * app.all('*', (c) => seedcord.fetch(c.req.raw));
      * ```
      */
     public fetch(request: Request): Promise<Response> {

@@ -1,6 +1,7 @@
 import { once } from 'node:events';
 import { createServer as createNetServer } from 'node:net';
 
+import { DEV_URL_HEADER } from '@seedcord/core/internal';
 import { SeedcordErrorCode } from '@seedcord/errors';
 import { LoggerChannelRegistry } from '@seedcord/logger';
 import { describe, expect, it, onTestFinished } from 'vite-plus/test';
@@ -8,13 +9,16 @@ import { describe, expect, it, onTestFinished } from 'vite-plus/test';
 import { listenForInteractions } from '#commands/dev/runtime/listenForInteractions';
 
 import type { LogRecord } from '@seedcord/types';
+import type { IncomingMessage } from 'node:http';
 import type { AddressInfo } from 'node:net';
 import type { Connect } from 'vite';
 
+type Handle = (request: IncomingMessage, next: (error?: unknown) => void) => void;
+
 // justified: a Connect app is a request handler, and the endpoint only calls it as one
-function middlewares(handle: (url: string | undefined, next: (error?: unknown) => void) => void): Connect.Server {
-    return ((request: { url?: string }, _response: unknown, next: (error?: unknown) => void) =>
-        handle(request.url, next)) as unknown as Connect.Server;
+function middlewares(handle: Handle): Connect.Server {
+    return ((request: IncomingMessage, _response: unknown, next: (error?: unknown) => void) =>
+        handle(request, next)) as unknown as Connect.Server;
 }
 
 const QUICK = { port: 0, host: '127.0.0.1', configFile: 'seedcord.config.ts' };
@@ -31,8 +35,8 @@ describe('listenForInteractions', () => {
     it('hands every POST to the worker as /', async () => {
         const seen: (string | undefined)[] = [];
         const url = await listening(
-            middlewares((path, next) => {
-                seen.push(path);
+            middlewares(({ url }, next) => {
+                seen.push(url);
                 next();
             })
         );
@@ -42,14 +46,18 @@ describe('listenForInteractions', () => {
         expect(seen).toEqual(['/']);
     });
 
-    it('answers a GET with 405 and never reaches the worker', async () => {
-        const seen: (string | undefined)[] = [];
-        const url = await listening(middlewares((path) => seen.push(path)));
+    it('rewrites a GET to / and sends its real path in a header', async () => {
+        const seen: { url: string | undefined; devUrl: unknown }[] = [];
+        const url = await listening(
+            middlewares(({ url: path, headers }, next) => {
+                seen.push({ url: path, devUrl: headers[DEV_URL_HEADER] });
+                next();
+            })
+        );
 
-        const response = await fetch(`${url}/src/bot.ts`);
+        await fetch(`${url}/src/bot.ts`);
 
-        expect(response.status).toBe(405);
-        expect(seen).toEqual([]);
+        expect(seen).toEqual([{ url: '/', devUrl: '/src/bot.ts' }]);
     });
 
     it('throws PortInUse when another process holds the port on 127.0.0.1', async () => {
@@ -74,7 +82,7 @@ describe('listenForInteractions', () => {
         const { port } = holder.address() as AddressInfo;
 
         const endpoint = await listenForInteractions(
-            middlewares(() => undefined),
+            middlewares((_request, next) => next()),
             { ...QUICK, port }
         ).catch((error: unknown) => error);
 
@@ -87,15 +95,16 @@ describe('listenForInteractions', () => {
         onTestFinished(() => {
             server.close();
         });
+        // a 404 here comes from the endpoint because the holder answers 200 to everything
         const response = await fetch(`http://127.0.0.1:${String(port)}/`);
-        expect(response.status).toBe(405);
+        expect(response.status).toBe(404);
     });
 
     it('answers 500 and logs the error a middleware passes on', async () => {
         const records: LogRecord[] = [];
         const sink = LoggerChannelRegistry.instance.installSink({ kind: 'capture', onLog: (r) => records.push(r) });
         onTestFinished(() => sink.dispose());
-        const url = await listening(middlewares((_path, next) => next(new Error('worker crashed'))));
+        const url = await listening(middlewares((_request, next) => next(new Error('worker crashed'))));
 
         const response = await fetch(url, { method: 'POST', body: '{}' });
 

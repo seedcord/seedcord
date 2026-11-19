@@ -10,7 +10,7 @@ describe('HealthCheck.stop', () => {
     it('concurrent stops both settle and the server ends closed', async () => {
         // justified: the ctor only reaches addTask
         const shutdown = { addTask: vi.fn() } as unknown as CoordinatedShutdown;
-        const check = new HealthCheck(shutdown, { port: 0 });
+        const check = new HealthCheck(shutdown, { port: 0 }, () => Promise.resolve(undefined));
         await check.init();
 
         await expect(Promise.all([check.stop(), check.stop()])).resolves.toBeDefined();

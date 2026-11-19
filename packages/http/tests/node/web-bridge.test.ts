@@ -1,11 +1,11 @@
 import { once } from 'node:events';
 import { createServer, type Server } from 'node:http';
 
+import { toWebRequest, writeWebResponse } from '@seedcord/core/node/internal';
 import { Envapter, PortableSource } from 'envapt';
 import { describe, expect, it } from 'vite-plus/test';
 
 import { Seedcord } from '#src/edge/Seedcord';
-import { toWebRequest, writeWebResponse } from '#src/node/webBridge';
 import { registerBakedIds } from '#tests/helpers/bakedIds';
 import { createSigner, type Signer } from '#tests/helpers/ed25519';
 import { VALID_TOKEN } from '#tests/helpers/fixtures';

@@ -167,6 +167,25 @@ export abstract class Plugin<
     dispose?(): Promisable<void>;
 
     /**
+     * Answers a web request sent to the bot. For every request, interactions included, seedcord calls
+     * this on each plugin in attach order and returns the first `Response` it gets. Return `undefined`
+     * to pass the request on. If this method throws, seedcord logs the error on this plugin's logger
+     * and tries the next plugin.
+     *
+     * Check the path before you await anything because every interaction waits for this method.
+     *
+     * @throws A **SeedcordError** when this method reads or locks the body and returns `undefined`.
+     * @example
+     * ```ts
+     * public fetch(request: Request): Response | undefined {
+     *     if (new URL(request.url).pathname !== '/status') return undefined;
+     *     return Response.json({ ok: true });
+     * }
+     * ```
+     */
+    fetch?(request: Request): Promisable<Response | undefined>;
+
+    /**
      * Returns data that `seedcord codegen` writes into the bot's `seedcord-gen.ts` as a type.
      * Read it back with `Generated<typeof YourPlugin>`. Return plain data, or classes and objects
      * that a project file or your plugin's package exports. The class needs a `static readonly id`.
@@ -248,7 +267,15 @@ export function extendsThisCorePlugin(ctor: PluginCtor): boolean {
 export type { PluginLifecycleSpec } from './lifecycle';
 export type { PluginOptions } from './options';
 
-type SeedcordOnlyMember = 'init' | 'ready' | 'dispose' | 'codegen' | 'onHmr' | 'dispatchMembers' | 'prepareCommands';
+type SeedcordOnlyMember =
+    | 'init'
+    | 'ready'
+    | 'dispose'
+    | 'fetch'
+    | 'codegen'
+    | 'onHmr'
+    | 'dispatchMembers'
+    | 'prepareCommands';
 
 // a bound of Plugin<{}> rejects every plugin that declares an option since Plugin<A> and Plugin<B>
 // are mutually unassignable. no member here may depend on Opts.

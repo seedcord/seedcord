@@ -3,7 +3,7 @@ import { SeedcordError, SeedcordTypeError } from '@seedcord/errors/internal';
 import { asError } from '@seedcord/utils/internal';
 
 import { MemberValues } from '#src/dispatch/DispatchContext';
-import { readsCommandFile } from '#src/plugin/pluginSlots';
+import { pluginLoggerOf, readsCommandFile } from '#src/plugin/pluginSlots';
 
 import type { DispatchContext } from '#src/dispatch/DispatchContext';
 import type { DispatchOrigin } from '#src/dispatch/DispatchOrigin';
@@ -18,6 +18,8 @@ export interface Attachment {
 }
 
 export type DispatchMemberFunctions = Readonly<Record<string, (origin: DispatchOrigin) => unknown>>;
+
+export type PluginAnswer = (request: Request) => Promise<Response | undefined>;
 
 interface HandlerClass {
     readonly name: string;
@@ -94,6 +96,19 @@ function throwTaken(member: string, first: string, second: string, note?: string
         [first, second],
         note
     ]);
+}
+
+// a throw here would fail every interaction because http runs plugins before the engine
+async function answerOrLog(plugin: PluginLike, request: Request): Promise<Response | undefined> {
+    try {
+        return await plugin.fetch?.(request);
+    } catch (caught) {
+        pluginLoggerOf(plugin).error(
+            `fetch threw on ${request.method} ${request.url}. seedcord passed the request on.`,
+            caught
+        );
+        return undefined;
+    }
 }
 
 interface ClaimedMember {
@@ -190,5 +205,25 @@ export class PluginRegistry {
 
     public async prepareCommands(commands: readonly RESTPostAPIApplicationCommandsJSONBody[]): Promise<void> {
         for (const { instance } of this.list) await instance.prepareCommands?.(commands);
+    }
+
+    public get answersRequests(): boolean {
+        return this.list.some(({ instance }) => instance.fetch);
+    }
+
+    // the first plugin to return a Response answers the request
+    public async answer(request: Request): Promise<Response | undefined> {
+        for (const { instance } of this.list) {
+            const response = await answerOrLog(instance, request);
+            if (response) return response;
+            // getReader() locks the body without setting bodyUsed
+            if (request.bodyUsed || request.body?.locked) {
+                throw new SeedcordError(SeedcordErrorCode.CorePluginFetchReadBody, [
+                    instance.constructor.name,
+                    request.url
+                ]);
+            }
+        }
+        return undefined;
     }
 }

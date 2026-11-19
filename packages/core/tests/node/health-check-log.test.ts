@@ -8,7 +8,7 @@ describe('HealthCheck listen log', () => {
     it('prints a fetchable address when no host is configured', async () => {
         // justified: the ctor only reaches addTask
         const shutdown = { addTask: vi.fn() } as unknown as CoordinatedShutdown;
-        const check = new HealthCheck(shutdown, { port: 0 });
+        const check = new HealthCheck(shutdown, { port: 0 }, () => Promise.resolve(undefined));
         const info = vi.spyOn(check.logger, 'info').mockImplementation(() => check.logger);
 
         await check.init();

@@ -61,9 +61,16 @@ export class Seedcord extends ServerHost<'gateway'> implements SeedcordInstance 
         this.#subscribers = new SubscriberLoader(this.bus, config.subscribers.path);
         this.bot = new Bot(this);
         this.rest = this.bot.client.rest;
-        this.#healthCheck = HealthCheck.fromOption(shutdownOf(this), config.healthCheck);
+        this.#healthCheck = HealthCheck.fromOption(shutdownOf(this), config.healthCheck, async (request) =>
+            this[HostPlugins].answer(request)
+        );
 
         this.#registerStartupTasks();
+    }
+
+    /** Answers one web request with the attached plugins, or a 404 when none of them answers. */
+    public async fetch(request: Request): Promise<Response> {
+        return (await this[HostPlugins].answer(request)) ?? new Response(null, { status: 404 });
     }
 
     /** The bot's discord username, populated after login. */

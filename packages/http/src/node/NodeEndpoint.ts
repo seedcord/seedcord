@@ -7,6 +7,7 @@ import { requestScope } from '#src/requestScope';
 
 import type { InteractionsService } from '#src/InteractionsService';
 import type { EngineContext } from '#src/requestScope';
+import type { PluginAnswer } from '@seedcord/core/internal';
 import type { CoordinatedStartup } from '@seedcord/core/node';
 import type { HealthResponder } from '@seedcord/core/node/internal';
 import type { Logger } from '@seedcord/logger';
@@ -24,7 +25,8 @@ export class NodeEndpoint implements EngineContext {
         private readonly service: InteractionsService,
         logger: Logger,
         private readonly health: HealthResponder | undefined,
-        private readonly startup: Pick<CoordinatedStartup, 'isReady' | 'hasBegun'>
+        private readonly startup: Pick<CoordinatedStartup, 'isReady' | 'hasBegun'>,
+        private readonly answerWithPlugins: PluginAnswer
     ) {
         this.inFlight = new InFlight(logger, 'Interactions');
     }
@@ -34,9 +36,14 @@ export class NodeEndpoint implements EngineContext {
         return (await this.inFlight.admit(() => this.respond(request))) ?? unavailable();
     }
 
-    private async respond(request: Request): Promise<Response> {
-        const answer = this.health?.answer(request, this.startup.isReady) ?? rejectNonPost(request);
-        return answer ?? requestScope.run(this, () => this.service.engine.handle(request));
+    private respond(request: Request): Promise<Response> {
+        return requestScope.run(this, async () => {
+            const answer =
+                this.health?.answer(request, this.startup.isReady) ??
+                (await this.answerWithPlugins(request)) ??
+                rejectNonPost(request);
+            return answer ?? this.service.engine.handle(request);
+        });
     }
 
     public waitUntil(work: Promise<unknown>): void {

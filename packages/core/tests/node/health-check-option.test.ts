@@ -16,14 +16,14 @@ describe('HealthCheck.fromOption', () => {
     it('false returns undefined and skips the health check', () => {
         const { shutdown, addTask } = stubShutdown();
 
-        expect(HealthCheck.fromOption(shutdown, false)).toBeUndefined();
+        expect(HealthCheck.fromOption(shutdown, false, () => Promise.resolve(undefined))).toBeUndefined();
         expect(addTask).not.toHaveBeenCalled();
     });
 
     it('undefined takes the defaults and registers the stop task', () => {
         const { shutdown, addTask } = stubShutdown();
 
-        const check = HealthCheck.fromOption(shutdown, undefined);
+        const check = HealthCheck.fromOption(shutdown, undefined, () => Promise.resolve(undefined));
 
         expect(check?.port).toBe(6967);
         expect(check?.path).toBe('/health');
@@ -33,7 +33,9 @@ describe('HealthCheck.fromOption', () => {
     it('applies an options object', () => {
         const { shutdown } = stubShutdown();
 
-        const check = HealthCheck.fromOption(shutdown, { port: 7000, host: '0.0.0.0', path: '/ready' });
+        const check = HealthCheck.fromOption(shutdown, { port: 7000, host: '0.0.0.0', path: '/ready' }, () =>
+            Promise.resolve(undefined)
+        );
 
         expect(check?.port).toBe(7000);
         expect(check?.host).toBe('0.0.0.0');

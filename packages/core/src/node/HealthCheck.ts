@@ -3,12 +3,14 @@ import { createServer } from 'node:http';
 import { paint, SeedcordErrorCode } from '@seedcord/errors';
 import { SeedcordError } from '@seedcord/errors/internal';
 import { Logger } from '@seedcord/logger';
-import { isPortInUse } from '@seedcord/utils/internal';
+import { asError, isPortInUse } from '@seedcord/utils/internal';
 
 import { ShutdownPhase } from '#src/lifecycle/phases';
 
 import { healthCheckConfig, HealthResponder } from './HealthResponder';
+import { toWebRequest, writeWebResponse } from './webBridge';
 
+import type { PluginAnswer } from '#src/plugin/PluginRegistry';
 import type { CoordinatedShutdown } from './Lifecycle/CoordinatedShutdown';
 import type { HealthCheckConfig, HealthCheckOption } from '@seedcord/types';
 import type { IncomingMessage, Server, ServerResponse } from 'node:http';
@@ -26,7 +28,11 @@ export class HealthCheck {
     private readonly responder: HealthResponder;
     private server?: Server;
 
-    constructor(shutdown: CoordinatedShutdown, options?: HealthCheckConfig) {
+    constructor(
+        shutdown: CoordinatedShutdown,
+        options: HealthCheckConfig | undefined,
+        private readonly answerWithPlugins: PluginAnswer
+    ) {
         this._port = options?.port ?? DEFAULT_HEALTH_CHECK_PORT;
         this._host = options?.host;
         this.responder = new HealthResponder(options?.path);
@@ -46,9 +52,18 @@ export class HealthCheck {
         return this.responder.path;
     }
 
-    public static fromOption(shutdown: CoordinatedShutdown, option?: HealthCheckOption): HealthCheck | undefined {
+    public static fromOption(
+        shutdown: CoordinatedShutdown,
+        option: HealthCheckOption | undefined,
+        answerWithPlugins: PluginAnswer
+    ): HealthCheck | undefined {
         const config = healthCheckConfig(option);
-        return config && new HealthCheck(shutdown, config);
+        return config && new HealthCheck(shutdown, config, answerWithPlugins);
+    }
+
+    private async answer(req: IncomingMessage, res: ServerResponse): Promise<void> {
+        const answered = await this.answerWithPlugins(await toWebRequest(req));
+        await writeWebResponse(answered ?? Response.json({ status: 'not found' }, { status: HTTP_NOT_FOUND }), res);
     }
 
     public async init(): Promise<void> {
@@ -56,8 +71,7 @@ export class HealthCheck {
             const server = createServer((req: IncomingMessage, res: ServerResponse) => {
                 if (this.responder.tryRespond(req, res)) return;
 
-                res.writeHead(HTTP_NOT_FOUND, { 'Content-Type': 'application/json' });
-                res.end(JSON.stringify({ status: 'not found' }));
+                void this.answer(req, res).catch((error: unknown) => res.destroy(asError(error)));
             });
             this.server = server;
 

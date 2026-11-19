@@ -3,6 +3,7 @@ import {
     bindBotColor,
     connectDevChannel,
     CoordinatedStartup,
+    DEV_URL_HEADER,
     forwardLogsToCli,
     HmrManager,
     installLinks,
@@ -142,18 +143,26 @@ export class Seedcord extends PluginHost<'http', 'edge'> {
     }
 
     /**
-     * Answers one request to the interactions endpoint. Cloudflare passes `env` and `ctx`, but this
-     * method reads only `ctx`. Import your bindings as `env` from `cloudflare:workers`.
-     * `cf workers types` writes their types. Work that continues after the 202 response runs under `ctx.waitUntil`. Any request
-     * besides a POST gets a 405 before the bot starts.
+     * Answers one web request: any plugin's `fetch` first, then Discord's interactions. Cloudflare
+     * passes `env` and `ctx`, but this method reads only `ctx`. Import your bindings as `env` from
+     * `cloudflare:workers`. `cf workers types` writes their types. Work that continues after the 202
+     * response runs under `ctx.waitUntil`.
+     *
+     * Until you attach a plugin with `fetch`, any request besides a POST gets a 405 before the bot
+     * starts. After that, the bot starts first so the plugin can answer.
      */
-    public async fetch(request: Request, _env: unknown, ctx: EngineContext): Promise<Response> {
+    public async fetch(incoming: Request, _env: unknown, ctx: EngineContext): Promise<Response> {
+        // seedcord dev sends every request to / so vite can't serve the bot's source
+        const devUrl = this.#readsBakedIds ? null : incoming.headers.get(DEV_URL_HEADER);
+        const request = devUrl === null ? incoming : new Request(new URL(devUrl, incoming.url), incoming);
+
         const notPost = rejectNonPost(request);
-        if (notPost) return notPost;
+        // a bot without a fetch plugin answers this before it starts
+        if (notPost && !this[HostPlugins].answersRequests) return notPost;
 
         return requestScope.run(ctx, async () => {
             await this.#start();
-            return this.#service.engine.handle(request);
+            return (await this[HostPlugins].answer(request)) ?? notPost ?? this.#service.engine.handle(request);
         });
     }
 
