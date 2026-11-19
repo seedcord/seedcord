@@ -28,9 +28,8 @@ export default createRule({
             description: 'Require @Subscribe on every concrete subscriber and @WebhookUrl on every webhook reporter.'
         },
         messages: {
-            missingSubscribe: 'This subscriber has no @Subscribe decorator, so the bus never registers it.',
-            missingWebhookUrl:
-                'This WebhookLog has no @WebhookUrl decorator naming its url env var, so registration throws at boot.'
+            missingSubscribe: 'This subscriber is missing @Subscribe, so the bus never registers it.',
+            missingWebhookUrl: 'This WebhookLog is missing @WebhookUrl, so registration throws at boot.'
         },
         schema: []
     },

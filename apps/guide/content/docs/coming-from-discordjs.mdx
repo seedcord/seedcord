@@ -89,7 +89,7 @@ export class Ban extends SlashHandler<'ban'> {
 }
 ```
 
-You write the name that the `switch` compares in `@SlashRoute('ban')` and again in `SlashHandler<'ban'>`, and the compiler catches a mismatch. `getUser('target')` has no `true` because [`seedcord codegen`](/tooling/codegen) reads your command file and types `target` as required, so `target` is never `null`. You write a button's `case` as a `ButtonHandler` with [`@ButtonRoute`](ref:core/ButtonRoute), which takes the `CustomId` that minted the button.
+You write the name that the `switch` compares in `@SlashRoute('ban')` and again in `SlashHandler<'ban'>`, and the compiler catches a mismatch. You call `getUser('target')` without `true` because [`seedcord codegen`](/tooling/codegen) reads your command file and types `target` as required, so `target` is never `null`. You write a button's `case` as a `ButtonHandler` with [`@ButtonRoute`](ref:core/ButtonRoute), which takes the `CustomId` that minted the button.
 
 ## What's still discord.js
 

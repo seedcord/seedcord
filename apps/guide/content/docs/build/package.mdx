@@ -3,7 +3,7 @@ title: Your bot as a package
 description: Publish your bot as an npm package that another project installs, imports, and starts, with its plugins typed and its port picked by whoever runs it.
 ---
 
-Sometimes the bot isn't the whole project. You keep it in its own repository, and a dashboard, a monorepo app, or somebody else's server installs it and starts it. That project has no `seedcord.config.ts` and never runs the seedcord CLI, so it needs a bot that's already built and imports like any other dependency.
+Sometimes the bot isn't the whole project. You keep it in its own repository, and a dashboard, a monorepo app, or somebody else's server installs it and starts it. That project never runs the seedcord CLI, so it needs a bot that's already built and imports like any other dependency.
 
 `seedcord build` writes one when your config doesn't set `build.start`:
 

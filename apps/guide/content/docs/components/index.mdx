@@ -22,7 +22,7 @@ export class BanCard extends BuilderComponent<'container'> {
 }
 ```
 
-`'container'` appears twice up there, once in the generic and once in the `super()` call. The `super()` argument picks which builder gets constructed. The generic types `this.instance` as that builder. A `ContainerBuilder` declares no `setTitle`, so calling one stops the build.
+`'container'` appears twice up there, once in the generic and once in the `super()` call. The `super()` argument picks which builder gets constructed. The generic types `this.instance` as that builder. `ContainerBuilder` doesn't have `setTitle`, so calling it will stop the build.
 
 Write the two the same. The compiler rejects a mismatch.
 

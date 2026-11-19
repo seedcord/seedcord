@@ -30,7 +30,7 @@ A `cloudflare.config.ts` beside `seedcord.config.ts` makes the bot an edge bot, 
 
 Saving `cloudflare.config.ts`, `.dev.vars`, `.dev.vars.<mode>`, or an `.env` file needs a restart with `r`. [Hot reload](/tooling/hot-reload#saves-that-need-a-restart) lists every save that does.
 
-Edge dev can't run on Bun. If the CLI runs on Bun, `seedcord dev` throws `CliEdgeOnBun`. An edge bot made with `bun create seedcord` gets no `bunfig.toml`, so `bun run dev` already starts on Node.
+Edge dev can't run on Bun. If the CLI runs on Bun, `seedcord dev` throws `CliEdgeOnBun`. `bun create seedcord` doesn't add a `bunfig.toml` to an edge bot, so `bun run dev` starts on Node.
 
 ## One session per Discord application
 

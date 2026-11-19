@@ -166,7 +166,7 @@ That call runs the `down` of every migration that has one, newest first. Each on
 
 <Callout type="warning">
 
-If a migration in that range has no `down`, Kysely skips it and keeps its row in the migrations table, then still rolls back every older one. The next start throws "corrupted migrations: expected previously executed migration" because the recorded list no longer starts with your first migration. Give every migration a `down` before you roll back to `NO_MIGRATIONS`.
+If a migration in that range is missing its `down`, Kysely skips it and keeps its row in the migrations table, then still rolls back every older one. The next start throws "corrupted migrations: expected previously executed migration" because the recorded list no longer starts with your first migration. Give every migration a `down` before you roll back to `NO_MIGRATIONS`.
 
 </Callout>
 

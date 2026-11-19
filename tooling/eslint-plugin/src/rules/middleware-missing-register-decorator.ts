@@ -29,7 +29,7 @@ export default createRule({
             description: 'Require the matching register decorator on every concrete middleware.'
         },
         messages: {
-            missingMiddleware: 'This {{base}} has no @{{decorator}} decorator, so it never runs.'
+            missingMiddleware: 'This {{base}} is missing @{{decorator}}, so it never runs.'
         },
         schema: []
     },

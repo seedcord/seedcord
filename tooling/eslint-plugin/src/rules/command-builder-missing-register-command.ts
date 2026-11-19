@@ -54,7 +54,7 @@ export default createRule({
             description: 'Require @RegisterCommand on every command builder.'
         },
         messages: {
-            missingRegister: 'This {{label}} has no @RegisterCommand decorator, so it never deploys to Discord.'
+            missingRegister: 'This {{label}} is missing @RegisterCommand, so it never deploys to Discord.'
         },
         schema: []
     },

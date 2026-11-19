@@ -99,7 +99,7 @@ my-bot/
 
 <Callout type="transport" only="http">
 
-Discord posts only interactions to an http bot, so the command doesn't create a `src/events` folder or the `Event` template. A bot for [Cloudflare Workers](/build/workers) has no `src/index.ts` either since Cloudflare starts the worker. It gets a `cloudflare.config.ts` that declares the keys that the worker receives. The worker doesn't get any other value.
+Discord posts only interactions to an http bot, so the command doesn't create a `src/events` folder or the `Event` template. A bot for [Cloudflare Workers](/build/workers) doesn't get a `src/index.ts` either, since Cloudflare starts the worker. It gets a `cloudflare.config.ts` that declares the keys that the worker receives. The worker doesn't get any other value.
 
 </Callout>
 
@@ -147,7 +147,7 @@ export default defineConfig({
 });
 ```
 
-`instance` is the file that exports your bot, and `build.start` is the file that starts it. If you leave `build.start` out, the build exports the bot as a [package](/build/package) instead. Both paths are relative to `root`, and so is every relative folder path in `bot.ts`. A Workers bot's config has no `build.start`.
+`instance` is the file that exports your bot, and `build.start` is the file that starts it. If you leave `build.start` out, the build exports the bot as a [package](/build/package) instead. Both paths are relative to `root`, and so is every relative folder path in `bot.ts`. A Workers bot's config doesn't set `build.start`.
 
 ### Your bot's settings
 
@@ -202,7 +202,7 @@ Build your bot with [`new Seedcord(...)`](ref:gateway/Seedcord) and make it the 
 
 <Callout type="transport" only="http">
 
-An http bot imports `Seedcord` from `@seedcord/http` and has no `clientOptions` or `events`. On a server it takes a top-level `port`, which defaults to 3000. `port: false` turns the built-in server off for a bot [inside your own server](/build/embed). A bot on Workers has neither `port` nor `lifecycle`.
+An http bot imports `Seedcord` from `@seedcord/http`. `clientOptions` and `events` are gateway only. On a server it takes a top-level `port`, which defaults to 3000. `port: false` turns the built-in server off for a bot [inside your own server](/build/embed). A bot on Workers has neither `port` nor `lifecycle`.
 
 </Callout>
 

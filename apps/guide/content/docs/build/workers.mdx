@@ -241,7 +241,7 @@ The commands step deploys with `--yes`, which skips the preview, and Discord rep
 | `root` holds `seedcord.config.ts` | `CliEdgeRootHoldsConfig` |
 | `@cloudflare/vite-plugin` or `cf` isn't installed | `CliDependencyMissing` |
 | the CLI ran on Bun | `CliEdgeOnBun` |
-| `cloudflare.config.ts` sets no `worker` | `CliEdgeNoWorker` |
+| `cloudflare.config.ts` is missing `worker` | `CliEdgeNoWorker` |
 | `cloudflare.config.ts` sets `entrypoint` | `CliConfigFieldUnused` |
 | `compatibilityFlags` holds `'no_nodejs_compat'` | `CliEdgeNodeCompatOff` |
 | `compatibilityDate` is before `2026-08-04` without `'nodejs_compat'` | `CliEdgeCompatDateTooOld` |

@@ -162,7 +162,7 @@ With the name typed as `roll dice`:
 
 {/* prettier-ignore-end */}
 
-`importOf` takes the path of a folder inside the template, like `"components"`. It returns the import path from the file being written to the file in that folder. The path doesn't end in `.ts` or `.js`. If that folder contains no `.hbs` file or more than one, `make` throws `MakeImportOfUnmatched`.
+`importOf` takes the path of a folder inside the template, like `"components"`. It returns the import path from the file being written to the file in that folder. The path doesn't end in `.ts` or `.js`. If that folder doesn't contain exactly one `.hbs` file, `make` throws `MakeImportOfUnmatched`.
 
 ## Your own helpers
 

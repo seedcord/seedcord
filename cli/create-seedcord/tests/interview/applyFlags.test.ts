@@ -69,7 +69,7 @@ describe('applyFlags', () => {
         expect(applyFlags([token], { 'no-token': false })).toEqual({});
     });
 
-    it('reads no --no- flag for a step that cannot wait', () => {
+    it('ignores the --no- flag for a step that cannot wait', () => {
         expect(applyFlags([directory], { 'no-dir': true })).toEqual({});
     });
 });

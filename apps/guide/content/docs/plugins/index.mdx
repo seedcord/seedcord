@@ -39,7 +39,7 @@ Mongoose reads its `path` relative to `root` in [`seedcord.config.ts`](/build/co
 | --- | --- |
 | is outside `root` | `CorePathOutsideRoot` |
 | is inside a dot-folder, `node_modules`, your `outDir`, or the logs folder | `CoreDirectorySkipped` |
-| is relative in a test or `tsx` script, which has no `root` | `CoreDirectoryRootUnknown`. Pass an absolute path there |
+| is relative in a test or `tsx` script | `CoreDirectoryRootUnknown`. Pass an absolute path there |
 
 {/* prettier-ignore-end */}
 
