@@ -13,11 +13,11 @@ Only an http bot runs on Workers. `@seedcord/gateway` holds a websocket to Disco
 
 ## Limits on Workers
 
-A Worker never starts as one process. The bot starts on the first POST that reaches each isolate. That request loads your handlers, runs the startup tasks, and runs every plugin's [`init()`](/plugins/lifecycle#on-cloudflare-workers), and any request that arrives meanwhile waits for it. Cloudflare can start a new isolate at any time, and each new one pays that cost again.
+A Worker never starts as one process. The bot starts on [the first request that needs it](/plugins/lifecycle#on-cloudflare-workers) in each isolate. That request loads your handlers, runs the startup tasks, and runs every plugin's [`init()`](/plugins/lifecycle#on-cloudflare-workers), and any request that arrives meanwhile waits for it. Cloudflare can start a new isolate at any time, and each new one pays that cost again.
 
 Each isolate has its own memory. By default, [`core.kv`](/built-ins/) and [cooldowns](/checks/rate-limiter) keep their records there, so a new isolate starts with none and two isolates can't see each other's. To share them, store them in D1, as [Drivers](/built-ins/drivers#on-cloudflare-workers) shows.
 
-An isolate also stops without warning since Cloudflare doesn't give a worker a shutdown hook. `shutdown.addTask` throws there, and the config doesn't take `lifecycle` or `port`. Some plugins need a server too. [Mongoose](/plugins/mongoose) and [Kysely](/plugins/kysely) declare themselves server-only, so attaching either one to an edge bot fails.
+An isolate also stops without warning since Cloudflare doesn't give a worker a shutdown hook. `shutdown.addTask` throws there, and the config doesn't take `lifecycle` or `server.port`. Some plugins need a server too. [Mongoose](/plugins/mongoose) and [Kysely](/plugins/kysely) declare themselves server-only, so attaching either one to an edge bot fails.
 
 Run on a server if your bot needs one of those plugins, or needs state in memory to outlive a request.
 
@@ -134,7 +134,7 @@ Use `mode` for anything that differs per environment. A local env file never rep
 
 <Shell run="dev" />
 
-[`seedcord dev`](/tooling/dev#running-an-edge-bot) runs your bot in workerd, the runtime Cloudflare uses, through the Vite plugin. It serves on port 3000, or on `port` from `seedcord.config.ts`, and opens [the tunnel](/tooling/tunnel) the way it does for any http bot. A saved handler reloads in place.
+[`seedcord dev`](/tooling/dev#running-an-edge-bot) runs your bot in workerd, the runtime Cloudflare uses, through the Vite plugin. It serves on port 3000, or on `dev.port` from `seedcord.config.ts`, and opens [the tunnel](/tooling/tunnel) the way it does for any http bot. A saved handler reloads in place.
 
 The worker reads `cloudflare.config.ts`, `.dev.vars` and your `.env` files once when it starts, so press `r` to restart after you change one. The bot reads its public key and emoji ids from Discord and deploys your commands, the same way a Node bot does.
 

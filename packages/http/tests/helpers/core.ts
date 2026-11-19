@@ -11,6 +11,7 @@ class TestCore extends PluginHost<'http', 'edge'> implements Core {
     public readonly rest: REST;
     public readonly startup: Core['startup'] = { addTask: () => undefined };
     public readonly shutdown = edgeShutdown;
+    public readonly url = new URL('https://bot.test/');
 
     constructor(
         public readonly config: HttpConfig,

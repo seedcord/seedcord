@@ -1,6 +1,7 @@
 import type {
     HostAugmentTarget,
     HostContract,
+    HostDevUrl,
     HostListenHost,
     HostPlugins,
     HostShutdown,
@@ -35,5 +36,7 @@ export interface SeedcordInstance {
     // seedcord dev sets this before start() for a quick tunnel
     // an interactions server binds every address when unset
     [HostListenHost]?: string | undefined;
+    // seedcord dev sets this before start() when `dev.tunnel` is a URL. core.url returns it while server.url is unset
+    [HostDevUrl]?: string | undefined;
     start(): Promise<unknown>;
 }

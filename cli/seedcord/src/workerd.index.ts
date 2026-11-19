@@ -3,6 +3,7 @@ import type { SeedcordConfig } from '#core/config/schema';
 export type {
     SeedcordBaseBuildConfig,
     SeedcordConfig,
+    SeedcordDevConfig,
     SeedcordHmrConfig,
     SeedcordMakeConfig,
     SeedcordMakeHelpers

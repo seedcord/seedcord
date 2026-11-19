@@ -34,6 +34,7 @@ Other code reaches the same object. A gate, which is a check that runs before a 
 | `config` | the object you passed to `new Seedcord()` |
 | `rest` | Discord's REST client, which is the discord.js client's own on gateway |
 | `applicationId` | your bot's Discord application id. On gateway, reading it before the Login phase throws |
+| `url` | [the address people reach your bot at](/build/server#your-bots-address), from `server.url` in your config |
 | `rateLimiter` | the counters behind [`Cooldown`](/checks/cooldown), which you can also use directly |
 | `kv` | the [key-value store](/built-ins/), where your handlers keep records between interactions |
 | `bus` | [publishing and subscribing](/events/bus) for framework and application events |
@@ -111,7 +112,7 @@ All the shutdown phases share one deadline of 25000 milliseconds, and after them
 
 <Callout type="transport" only="edge">
 
-On [Cloudflare Workers](/build/workers), startup tasks run on the first POST request each worker instance receives, in the same phases and with the same timeouts. Requests that arrive meanwhile wait for them. If a task fails, the next request runs the tasks again.
+On [Cloudflare Workers](/build/workers), startup tasks run on [the first request that starts the bot](/plugins/lifecycle#on-cloudflare-workers) in each worker instance, in the same phases and with the same timeouts. Requests that arrive meanwhile wait for them. If a task fails, the next request runs the tasks again.
 
 `shutdown.addTask` throws `CoreLifecycleUnavailable` there because Cloudflare doesn't have a shutdown hook for a worker. Do your cleanup inside a handler. A Workers config doesn't take a `lifecycle`.
 

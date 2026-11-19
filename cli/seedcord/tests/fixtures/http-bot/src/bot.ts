@@ -14,5 +14,5 @@ export default new Seedcord({
         commands: { path: null }
     },
     subscribers: { path: resolve(import.meta.dirname, './subscribers') },
-    port: 0
+    server: { port: 0 }
 });

@@ -111,32 +111,73 @@ export interface BotConfig {
     emojis?: EmojiConfig;
 }
 
-/**
- * The transport configs' `healthCheck` field. `false` turns the health path off, `true` and
- * `undefined` use the defaults, an object supplies {@link HealthCheckConfig} options.
- */
-export type HealthCheckOption = boolean | HealthCheckConfig;
-
-/**
- * Health-check HTTP server settings.
- */
-export interface HealthCheckConfig {
+interface BaseServerConfig {
     /**
-     * Port the health-check server listens on. Plugin routes use the same port.
-     *
-     * @defaultValue `6967`
-     */
-    port?: number;
-    /**
-     * Path the health-check server responds on.
+     * The path that answers your host's health check. It answers 503 until every plugin's `ready()`
+     * finishes, then 200, and 503 again once shutdown starts. `false` turns it off.
      *
      * @defaultValue `'/health'`
      */
-    path?: string;
+    health?: `/${string}` | false;
     /**
-     * Host/interface to bind. Omit to bind all interfaces.
+     * The address people reach your bot at, like `https://bot.example.com`. Plugins that send
+     * someone to the bot, like an OAuth callback, build their links from it. Include the path if your
+     * host serves the bot under one.
+     */
+    url?: string | URL;
+}
+
+interface ListeningServer extends BaseServerConfig {
+    /**
+     * Port the bot's web server listens on.
+     *
+     * @defaultValue `3000`
+     */
+    port?: number;
+    /**
+     * Network interface to listen on.
+     *
+     * @defaultValue every interface
      */
     host?: string;
+    /**
+     * The largest request body the server reads, in bytes. A larger one gets a 413.
+     *
+     * @defaultValue `1048576`
+     */
+    bodyLimit?: number;
+}
+
+interface MountedServer extends BaseServerConfig {
+    /** `false` keeps the bot off every port. Your own server passes requests to `seedcord.fetch()`. */
+    port: false;
+    // your own server listens and reads the body
+    host?: never;
+    bodyLimit?: never;
+}
+
+/**
+ * The bot's web server on node or bun. It answers the health path, plugin routes, and on an http
+ * bot Discord's interactions.
+ */
+export type ServerConfig = ListeningServer | MountedServer;
+
+/** Config for a bot that runs as a node or bun process. */
+export interface ServerHostConfig extends Config {
+    /**
+     * The bot's web server.
+     *
+     * @defaultValue a server on port `3000` that answers `/health`
+     * @example
+     * ```ts
+     * // listens on 8080 and answers the health check on /healthz
+     * server: { port: 8080, health: '/healthz' }
+     *
+     * // keeps the bot off every port so your own server can pass it requests
+     * server: { port: false }
+     * ```
+     */
+    server?: ServerConfig;
 }
 
 /**

@@ -19,7 +19,7 @@ export default defineConfig({
 
 Only `instance` is required. Without `build.start`, the build's `index.mjs` default-exports the bot for your own node server to start. An edge bot, which [runs on Cloudflare Workers](/build/workers), doesn't set it either. [Your first bot](/first-bot#where-your-folders-resolve) explains how `root`, `instance`, and `build.start` fit together.
 
-Every other key is optional: `root`, `files`, `vitePlugins`, `tunnel`, `hmr`, `idleAnimation`, `make`, the rest of `build`, and `port` on an edge bot. [The config reference](/build/config) lists each one with its default. `vitePlugins` takes a function that returns [Vite plugins](/build/vite-plugins), like `() => [yaml()]`.
+Every other key is optional: `root`, `files`, `vitePlugins`, `make`, the rest of `build`, and the `dev` group, which holds `tunnel`, `hmr`, `idleAnimation`, and `port` on an edge bot. [The config reference](/build/config) lists each one with its default. `vitePlugins` takes a function that returns [Vite plugins](/build/vite-plugins), like `() => [yaml()]`.
 
 ## The commands
 
@@ -68,8 +68,8 @@ A project from `create-seedcord` wraps these as scripts, along with `check`, `co
 
 Each transport package declares its own `Seedcord` and its own config type, and a few keys only exist on one of them.
 
-- Both http configs take `bot.restOptions`. Only a node http server takes `port`, which defaults to 3000, and `port: false` lets [your own server](/build/embed) host the bot. TypeScript rejects `port`, `lifecycle`, and `healthCheck` on an edge bot.
-- `healthCheck` takes different options on gateway and on a node http server. [The health server](/build/server#the-health-server) covers both.
+- Both http configs take `bot.restOptions`.
+- A gateway bot and a node http bot take the same [`server`](/build/server#the-web-server) block, and `server: { port: false }` lets [your own server](/build/embed) host the bot. An edge bot's `server` takes only `url`, and TypeScript rejects `lifecycle` on one.
 - [`Emojis`](ref:gateway/Emojis) on gateway holds a subclass of [`ResolvedEmoji`](ref:core/ResolvedEmoji) tied to the discord.js `GuildEmoji` or `ApplicationEmoji`. [`Emojis`](ref:http/Emojis) on http holds a plain `ResolvedEmoji`.
 
 </Callout>

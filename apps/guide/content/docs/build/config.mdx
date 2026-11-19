@@ -18,7 +18,9 @@ export default defineConfig({
         start: './index.ts',
         outDir: './dist'
     },
-    hmr: { restart: ['./config/**'] },
+    dev: {
+        hmr: { restart: ['./config/**'] }
+    },
     vitePlugins: () => []
 });
 ```
@@ -38,18 +40,18 @@ export default defineConfig({
 | `build.start` | none | `root` | the file that calls `start()`. Leave it out to [build the bot as a package](/build/package). Server bots only |
 | `build.outDir` | `./dist` | the config's folder | where `seedcord build` writes. Server bots only |
 | `build.tsconfig` | `tsconfig.json` beside the config | the config's folder | the tsconfig `seedcord build` type checks against |
-| `tunnel` | `true` | | how `seedcord dev` exposes an http bot. [The tunnel](/tooling/tunnel) |
-| `port` | `3000` | | the port `seedcord dev` serves an edge bot on. `0` picks a free one, which a `tunnel` URL can't use. Edge bots only |
-| `hmr.restart` | `[]` | `root` | globs for files whose save restarts the bot. [Hot reload](/tooling/hot-reload) |
-| `hmr.rollback` | `true` | | whether a failed reload rolls back to the last version that loaded |
-| `hmr.typecheck` | `false` | `root` | `true` runs `tsc --watch` beside the bot, and `{ tsconfig }` picks a tsconfig other than the nearest one |
-| `idleAnimation` | `true` | | whether the [dev terminal](/tooling/dev) animates while nothing happens |
+| `dev.tunnel` | `true` | | how `seedcord dev` exposes an http bot. [The tunnel](/tooling/tunnel) |
+| `dev.port` | `3000` | | the port `seedcord dev` serves an edge bot on. `0` picks a free one, which a `dev.tunnel` URL can't use. Edge bots only |
+| `dev.hmr.restart` | `[]` | `root` | globs for files whose save restarts the bot. [Hot reload](/tooling/hot-reload) |
+| `dev.hmr.rollback` | `true` | | whether a failed reload rolls back to the last version that loaded |
+| `dev.hmr.typecheck` | `false` | `root` | `true` runs `tsc --watch` beside the bot, and `{ tsconfig }` picks a tsconfig other than the nearest one |
+| `dev.idleAnimation` | `true` | | whether the [dev terminal](/tooling/dev) animates while nothing happens |
 | `make.templates` | `./templates` | the config's folder | the folder [`seedcord make`](/tooling/make) reads templates from |
 | `make.helpers` | `{}` | | [your own Handlebars helpers](/tooling/make#your-own-helpers) for those templates |
 
 {/* prettier-ignore-end */}
 
-`tunnel` takes `true`, `false`, or an https URL you already serve. A gateway bot ignores it. A Node http bot takes its port in `new Seedcord({ port })`, so TypeScript rejects `port` here.
+The `dev` keys only apply to `seedcord dev`. `dev.tunnel` takes `true`, `false`, or an https URL you already serve. A gateway bot ignores it. A bot on Node or Bun takes its port in `new Seedcord({ server: { port } })`, so TypeScript rejects `dev.port` on one.
 
 ## Where paths resolve
 
@@ -80,7 +82,7 @@ If a path resolves somewhere you didn't expect, pass `--verbose` to `seedcord bu
 A `cloudflare.config.ts` beside `seedcord.config.ts` makes your bot an edge bot, which `seedcord build` turns into a Cloudflare Worker. Add `"customConditions": ["workerd"]` to its tsconfig too. The CLI throws if one of the two is there without the other. Under that condition `defineConfig` takes the edge keys:
 
 - `build` takes only `tsconfig` because the build always writes the worker to `.cloudflare/output` and runs without a start file.
-- `port` sets where `seedcord dev` serves the worker.
+- `dev.port` sets where `seedcord dev` serves the worker.
 - `root` can't be the config's folder or any folder above it because the worker bundles every file under `root`. Tool configs like `eslint.config.ts` break that bundle, so the build throws `CliEdgeRootHoldsConfig`.
 
 [Cloudflare Workers](/build/workers) covers the rest of an edge bot's setup.

@@ -7,3 +7,8 @@ export const DEV_SERVER_HOST = '127.0.0.1';
 export function listenHostFor(tunnel: ResolvedTunnel): string | undefined {
     return tunnel.mode === 'quick' ? DEV_SERVER_HOST : undefined;
 }
+
+// a quick tunnel's hostname changes on every run, which would change the URLs pasted into the Discord portal
+export function stableUrlOf(tunnel: ResolvedTunnel): string | undefined {
+    return tunnel.mode === 'url' ? tunnel.url : undefined;
+}

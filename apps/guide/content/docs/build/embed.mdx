@@ -5,7 +5,7 @@ description: Run an http bot inside a server you already have, like Hono, Next.j
 
 Say you already run a web server, like a Next.js site, a Hono API, or an Express app. A second process for the bot would mean a second port to expose and a second thing to deploy and keep alive, all for one route.
 
-An http bot can answer that route from inside your server instead. Build it the way [a package](/build/package) builds, with no `build.start`, and set `port: false` so it never opens a port of its own:
+An http bot can answer that route from inside your server instead. Build it the way [a package](/build/package) builds, with no `build.start`, and set `server.port` to `false` so it never opens a port of its own:
 
 ```ts twoslash title="src/bot.ts"
 import { Seedcord } from '@seedcord/http';
@@ -16,13 +16,13 @@ export default new Seedcord({
         commands: { path: './commands' }
     },
     subscribers: { path: null },
-    port: false
+    server: { port: false }
 });
 ```
 
-<Callout type="transport" only="http">
+<Callout type="transport">
 
-`port: false` applies only to http's Node `Seedcord`. A gateway bot connects out to Discord over a websocket and never receives an interactions request to hand over. On Workers, Cloudflare calls the edge bot's own `fetch`, which [Cloudflare Workers](/build/workers) covers.
+A gateway bot takes `server: { port: false }` too. Its interactions arrive over the websocket, so its `fetch()` only answers the health path and [plugin routes](/writing-plugins/web-requests). On Workers, Cloudflare calls the edge bot's own `fetch`, which [Cloudflare Workers](/build/workers) covers.
 
 </Callout>
 
@@ -65,7 +65,7 @@ app.all('*', (c) => bot.fetch(c.req.raw));
 serve({ fetch: app.fetch, port: 3000 });
 ```
 
-With `app.all('*')`, the bot also gets requests for its own `/health` path. Set `healthCheck: false` if your server answers health itself.
+With `app.all('*')`, the bot also gets requests for its own `/health` path. Add `health: false` to `server` if your server answers `/health` itself.
 
 </Tab>
 <Tab label="Next.js">
@@ -154,7 +154,7 @@ If `express.json()` reads the body first, the route only gets the parsed object.
 
 ## Developing the bot locally
 
-`seedcord dev` opens [its tunnel](/tooling/tunnel) once the bot's own server is listening. With `port: false` the bot never listens, so the tunnel never opens and Discord can't reach it. Give the bot a port only while you develop it, from a variable your dev script sets:
+`seedcord dev` opens [its tunnel](/tooling/tunnel) once the bot's own server is listening. With `server.port` set to `false` the bot never listens, so the tunnel never opens and Discord can't reach it. Give the bot a port only while you develop it, from a variable your dev script sets:
 
 ```ts twoslash title="src/bot.ts"
 import { Seedcord } from '@seedcord/http';
@@ -166,7 +166,9 @@ export default new Seedcord({
         commands: { path: './commands' }
     },
     subscribers: { path: null },
-    port: Envapter.getAs('BOT_PORT', Converters.Port) ?? false
+    server: {
+        port: Envapter.getAs('BOT_PORT', Converters.Port) ?? false
+    }
 });
 ```
 
@@ -178,4 +180,4 @@ export default new Seedcord({
 }
 ```
 
-`pnpm dev` in the bot's package then serves on 3001 behind the tunnel, the way a bot on its own server does. Your server never sets `BOT_PORT`, so the built bot it imports keeps `port: false`. Keep `BOT_PORT` in the dev script. A line in the bot's `.env` would also reach the built bot because a built bot reads the `.env` beside its `seedcord.config.ts` while that file is on disk.
+`pnpm dev` in the bot's package then serves on 3001 behind the tunnel, the way a bot on its own server does. Your server never sets `BOT_PORT`, so the built bot it imports keeps `port` at `false`. Keep `BOT_PORT` in the dev script. A line in the bot's `.env` would also reach the built bot because a built bot reads the `.env` beside its `seedcord.config.ts` while that file is on disk.

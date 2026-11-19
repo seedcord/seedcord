@@ -1,4 +1,5 @@
 import { settled } from '@seedcord/cli-prompts/testing';
+import { FRAMEWORK_CHANNELS } from '@seedcord/logger';
 import { Box, Text, useBoxMetrics } from 'ink';
 import { render } from 'ink-testing-library';
 import React, { useRef } from 'react';
@@ -19,24 +20,6 @@ import type { DevState } from '#ui/stores/DevStore';
 import type { LogRecord } from '@seedcord/types';
 import type { DOMElement } from 'ink';
 import type { ReactElement, Ref } from 'react';
-
-// every channel that the framework logs on, which is the tallest the chip list gets without plugins
-const FRAMEWORK_CHANNELS = [
-    'default',
-    'bot',
-    'lifecycle',
-    'health',
-    'interactions',
-    'events',
-    'commands',
-    'subscribers',
-    'errors',
-    'gates',
-    'plugins',
-    'hmr',
-    'cli',
-    'tsc'
-];
 
 function runningState(): DevState {
     const store = new DevStore();

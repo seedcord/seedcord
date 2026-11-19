@@ -7,7 +7,7 @@ Discord delivers interactions by posting them to a public URL. Your laptop doesn
 
 <Callout type="transport" only="http">
 
-A gateway bot opens its own connection to Discord, so it ignores the `tunnel` setting.
+A gateway bot opens its own connection to Discord, so it ignores the `dev.tunnel` setting.
 
 </Callout>
 
@@ -39,7 +39,7 @@ Without `cloudflared` your bot still runs. The terminal prints an install hint, 
 
 ## The default, a quick tunnel
 
-A quick tunnel works without a Cloudflare account or a domain, so you get one on every run if you don't set `tunnel`. Writing the endpoint uses your bot's token, which seedcord reads from `DISCORD_BOT_TOKEN`.
+A quick tunnel works without a Cloudflare account or a domain, so you get one on every run if you don't set `dev.tunnel`. Writing the endpoint uses your bot's token, which seedcord reads from `DISCORD_BOT_TOKEN`.
 
 Each start follows these steps.
 
@@ -60,7 +60,7 @@ Cloudflare assigns a fresh hostname every run, so the last step writes a new end
 
 ## When you already have a URL
 
-A quick tunnel changes your endpoint on every run, and each run takes a few seconds to set up. When you want an address that doesn't change, give `tunnel` an https URL you already serve. A named cloudflared tunnel, a tailscale funnel, a reverse proxy, or a staging server all work.
+A quick tunnel changes your endpoint on every run, and each run takes a few seconds to set up. When you want an address that doesn't change, give `dev.tunnel` an https URL you already serve. A named cloudflared tunnel, a tailscale funnel, a reverse proxy, or a staging server all work.
 
 ```ts twoslash title="seedcord.config.ts"
 import { defineConfig } from 'seedcord';
@@ -69,7 +69,7 @@ export default defineConfig({
     root: './src',
     instance: './bot.ts',
     build: { start: './index.ts' },
-    tunnel: 'https://bot.example.com'
+    dev: { tunnel: 'https://bot.example.com' }
 });
 ```
 
@@ -79,7 +79,7 @@ seedcord runs the same `401` check, then writes the endpoint only when your appl
 
 ## Turning it off
 
-Set `tunnel` to `false` to skip all of it. Use this when you set the endpoint yourself in the developer portal. It also fits work on a part of your bot that runs without a click, like a migration, a subscriber, or the shape of a component.
+Set `dev.tunnel` to `false` to skip all of it. Use this when you set the endpoint yourself in the developer portal. It also fits work on a part of your bot that runs without a click, like a migration, a subscriber, or the shape of a component.
 
 ## When it fails
 

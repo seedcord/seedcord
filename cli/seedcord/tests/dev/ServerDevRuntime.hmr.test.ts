@@ -161,7 +161,7 @@ describe('dev runtime hot reload', () => {
     }, 60_000);
 
     it.each([
-        ['seedcord.config.ts', 'export default { idleAnimation: false };\n'],
+        ['seedcord.config.ts', 'export default { dev: { idleAnimation: false } };\n'],
         ['.env', 'GREETING=after\n'],
         ['package.json', '{ "name": "hmr-fixture", "type": "module", "version": "1.0.1" }\n'],
         ['tsconfig.json', '{}\n']

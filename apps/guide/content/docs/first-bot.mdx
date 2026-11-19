@@ -138,11 +138,13 @@ export default defineConfig({
     root: './src',
     instance: './bot.ts',
     build: { start: './index.ts' },
-    // set false to hold the running arc and live dot still, which cuts idle redraws by ~80%
-    idleAnimation: true,
-    hmr: {
-        // set true to run tsc --watch alongside the bot, at the cost of a second node process
-        typecheck: false
+    dev: {
+        // set false to hold the running arc and live dot still, which cuts idle redraws by ~80%
+        idleAnimation: true,
+        hmr: {
+            // set true to run tsc --watch alongside the bot, at the cost of a second node process
+            typecheck: false
+        }
     }
 });
 ```
@@ -202,7 +204,7 @@ Build your bot with [`new Seedcord(...)`](ref:gateway/Seedcord) and make it the 
 
 <Callout type="transport" only="http">
 
-An http bot imports `Seedcord` from `@seedcord/http`. `clientOptions` and `events` are gateway only. On a server it takes a top-level `port`, which defaults to 3000. `port: false` turns the built-in server off for a bot [inside your own server](/build/embed). A bot on Workers has neither `port` nor `lifecycle`.
+An http bot imports `Seedcord` from `@seedcord/http`. `clientOptions` and `events` are gateway only. On a server, Discord posts interactions to its [web server](/build/server#the-web-server), which listens on port 3000 unless you set `server.port`. `server: { port: false }` turns that server off for a bot [inside your own server](/build/embed). A bot on Workers doesn't take `server.port` or `lifecycle`.
 
 </Callout>
 

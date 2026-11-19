@@ -81,7 +81,7 @@ The recorded name omits the file extension, so `001-create-users.ts` under `seed
 
 ## When they run
 
-By default the plugin runs every pending migration while the bot starts. If a migration throws, startup stops before your bot reaches its handlers, and the plugin closes the connection. If your deploy waits on the [health path](/build/server#the-health-server), it only gets a healthy answer once the migrations have finished.
+By default the plugin runs every pending migration while the bot starts. If a migration throws, startup stops before your bot reaches its handlers, and the plugin closes the connection. If your deploy waits on the [health path](/build/server#the-health-check), it only gets a healthy answer once the migrations have finished.
 
 `onStartup` changes what runs at that point.
 

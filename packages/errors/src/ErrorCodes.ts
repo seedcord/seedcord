@@ -122,6 +122,10 @@ export enum SeedcordErrorCode {
     CorePluginAttachedTwice = 1240,
     /** A plugin's `fetch` read or locked the request body, then returned `undefined`. */
     CorePluginFetchReadBody = 1241,
+    /** `core.url` was read while `server.url` is unset. */
+    CoreServerUrlUnset = 1242,
+    /** The config's `server.url` isn't a URL. */
+    CoreServerUrlInvalid = 1243,
 
     /** A command class has `@RegisterCommand` twice. */
     DecoratorCommandAlreadyRegistered = 1301,

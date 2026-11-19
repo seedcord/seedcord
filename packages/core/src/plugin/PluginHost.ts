@@ -28,6 +28,7 @@ export abstract class PluginHost<BotT extends Transport, BotRt extends Runtime> 
     public abstract readonly config: Config;
     public abstract readonly rest: REST;
     public abstract readonly applicationId: string;
+    public abstract readonly url: URL;
 
     /** @see {@link Bus} */
     public readonly bus: Bus;

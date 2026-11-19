@@ -5,4 +5,4 @@
 '@seedcord/http': minor
 ---
 
-**BREAKING:** The bot's web server now logs on a new `server` channel on both transports. That makes `server` a reserved name, so rename any plugin you attach under the key `server`.
+**BREAKING:** seedcord doesn't log on a `health` channel anymore. The bot's web server logs on a new `server` channel, so rename any plugin attached under the key `server`.

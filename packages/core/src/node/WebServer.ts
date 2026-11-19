@@ -7,46 +7,46 @@ import { Logger } from '@seedcord/logger';
 import { asError, isPortInUse } from '@seedcord/utils/internal';
 
 import { ShutdownPhase } from '#src/lifecycle/phases';
+import { requestPath } from '#src/requestPath';
+import { DEFAULT_SERVER_PORT } from '#src/webConstants';
 
+import { answerHealth } from './answerHealth';
 import { DRAIN_TASK_TIMEOUT_MS, DRAIN_WINDOW_MS } from './Lifecycle/drainWindow';
 import { InFlight } from './Lifecycle/InFlight';
 import { toWebRequest, writeWebResponse } from './webBridge';
 
 import type { CoordinatedStartup } from '#src/lifecycle/CoordinatedStartup';
-import type { PluginAnswer } from '#src/plugin/PluginRegistry';
-import type { HealthResponder } from './HealthResponder';
+import type { PluginRegistry } from '#src/plugin/PluginRegistry';
 import type { ShutdownTasks } from './Lifecycle/CoordinatedShutdown';
+import type { ServerConfig } from '@seedcord/types';
 import type { IncomingMessage, Server, ServerResponse } from 'node:http';
 import type { AddressInfo } from 'node:net';
 
+const DEFAULT_HEALTH_PATH = '/health';
 // far above any interaction payload. it keeps a large POST from filling memory
-const BODY_LIMIT = 1_048_576;
+const DEFAULT_BODY_LIMIT = 1_048_576;
+const NOT_FOUND = 404;
 const PAYLOAD_TOO_LARGE = 413;
 const SERVICE_UNAVAILABLE = 503;
 const STOP_TIMEOUT_MS = 5000;
 
-export interface ListenAddress {
-    readonly port: number;
-    readonly host: string | undefined;
-}
-
 export interface WebServerOptions {
+    // a function because a bot can change its config until start() runs
+    readonly config: () => ServerConfig | undefined;
     readonly shutdown: ShutdownTasks;
     readonly startup: Pick<CoordinatedStartup, 'isReady' | 'hasBegun'>;
-    readonly health: HealthResponder | undefined;
-    readonly plugins: PluginAnswer;
-    // what the transport does with a request that every plugin passed on
-    readonly tail: (request: Request) => Promise<Response>;
-    // the config key a PortInUse error points at, like 'port'
-    readonly portSetting: string;
+    readonly plugins: Pick<PluginRegistry, 'answer' | 'answersRequests'>;
+    // http answers Discord's interactions here. a gateway bot takes them over its websocket
+    readonly interactions: ((request: Request, server: WebServer) => Promise<Response>) | undefined;
 }
 
-// a node bot's web requests: health, then the plugins, then the transport's tail.
+// a node bot's web requests: health, then the plugins, then interactions or a 404.
 // fetch() answers on its own, and serve() can also put it on a port
 export class WebServer {
     private readonly logger = new Logger('Server', { channel: 'server' });
     private readonly inFlight = new InFlight(this.logger, 'Requests');
     private server?: Server;
+    private bound: number | undefined;
 
     constructor(private readonly options: WebServerOptions) {
         const { shutdown } = options;
@@ -54,16 +54,28 @@ export class WebServer {
         shutdown.addTask(ShutdownPhase.Drain, 'drain-requests', () => this.drain(), DRAIN_TASK_TIMEOUT_MS);
     }
 
+    private get config(): ServerConfig {
+        return this.options.config() ?? {};
+    }
+
+    private get healthPath(): string | undefined {
+        const { health = DEFAULT_HEALTH_PATH } = this.config;
+        return health === false ? undefined : health;
+    }
+
     public async fetch(request: Request): Promise<Response> {
-        const { startup, health } = this.options;
+        const { startup, plugins, interactions } = this.options;
         if (!startup.hasBegun) throw new SeedcordError(SeedcordErrorCode.CoreFetchBeforeStart);
 
         // a host's health check during startup gets its 503 at once because health answers before admit()
-        const answered = health?.answer(request, startup.isReady && !this.inFlight.closed);
-        if (answered) return answered;
+        const { healthPath } = this;
+        const health = healthPath && answerHealth(request, healthPath, startup.isReady && !this.inFlight.closed);
+        if (health) return health;
 
         const response = await this.inFlight.admit(
-            async () => (await this.options.plugins(request)) ?? this.options.tail(request)
+            async () =>
+                (await plugins.answer(request)) ??
+                (interactions ? interactions(request, this) : new Response(null, { status: NOT_FOUND }))
         );
         return response ?? new Response(null, { status: SERVICE_UNAVAILABLE });
     }
@@ -73,17 +85,38 @@ export class WebServer {
         this.inFlight.track(work);
     }
 
-    // both transports call this when Ready begins, and requests that arrive earlier wait until then.
-    // resolves with the bound port, which differs from address.port when that's 0
-    public async serve(address: ListenAddress | undefined): Promise<number | undefined> {
+    // ServerHost calls this when Ready begins, and requests that arrive earlier wait until then.
+    // seedcord dev passes devHost for a quick tunnel
+    public async serve(devHost: string | undefined): Promise<void> {
         this.inFlight.open();
-        return address && this.listen(address.port, address.host);
+        const { port = DEFAULT_SERVER_PORT, host } = this.config;
+        if (port !== false && this.hasRoutes) await this.listen(port, devHost ?? host);
     }
 
-    private async listen(port: number, host: string | undefined): Promise<number> {
+    // the port it listens on, which differs from the config's port when that's 0
+    public get port(): number | undefined {
+        return this.bound;
+    }
+
+    // seedcord dev's core.url. the config's port is right before the server listens unless it's 0
+    public get localUrl(): string | undefined {
+        const { port = DEFAULT_SERVER_PORT } = this.config;
+        return port === false ? undefined : `http://localhost:${String(this.bound ?? port)}`;
+    }
+
+    // false on a gateway bot with health off and without a plugin route
+    private get hasRoutes(): boolean {
+        const { interactions, plugins } = this.options;
+        return this.healthPath !== undefined || interactions !== undefined || plugins.answersRequests;
+    }
+
+    private async listen(port: number, host: string | undefined): Promise<void> {
         const server = createServer((incoming, outgoing) => {
             this.answer(server, incoming, outgoing).catch((error: unknown) => {
-                this.logger.error(`Failed to answer ${incoming.method ?? 'GET'} ${incoming.url ?? '/'}`, error);
+                this.logger.error(
+                    `Failed to answer ${incoming.method ?? 'GET'} ${requestPath(incoming.url ?? '/')}`,
+                    error
+                );
                 // a swallowed throw would hang the client without a cause
                 outgoing.destroy(asError(error));
             });
@@ -95,19 +128,20 @@ export class WebServer {
             await once(server, 'listening');
         } catch (error: unknown) {
             if (!isPortInUse(error)) throw error;
-            throw new SeedcordError(SeedcordErrorCode.PortInUse, [port, this.options.portSetting], { cause: error });
+            throw new SeedcordError(SeedcordErrorCode.PortInUse, [port, 'server.port'], { cause: error });
         }
+        // node throws process-wide on an 'error' that nothing listens for
+        server.on('error', (error) => this.logger.error('Server error', error));
 
         // justified: address() is AddressInfo once a TCP server is listening
-        const bound = (server.address() as AddressInfo).port;
+        this.bound = (server.address() as AddressInfo).port;
         // every interface includes localhost, and a browser can't open 0.0.0.0
-        const url = `http://${host ?? 'localhost'}:${String(bound)}`;
+        const url = `http://${host ?? 'localhost'}:${String(this.bound)}`;
         this.logger.info(`Server listening on ${paint.sky.bold(url)}`);
-        return bound;
     }
 
     private async answer(server: Server, incoming: IncomingMessage, outgoing: ServerResponse): Promise<void> {
-        const request = await toWebRequest(incoming, BODY_LIMIT);
+        const request = await toWebRequest(incoming, this.config.bodyLimit ?? DEFAULT_BODY_LIMIT);
         const response = request ? await this.fetch(request) : new Response(null, { status: PAYLOAD_TOO_LARGE });
         // node's close() doesn't close a busy connection once it becomes idle
         if (!server.listening) outgoing.setHeader('connection', 'close');

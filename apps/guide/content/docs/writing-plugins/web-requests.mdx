@@ -5,7 +5,7 @@ description: Serve your own routes from a plugin, like an OAuth callback or a we
 
 Some plugins need a URL of their own, like an OAuth callback or a route that GitHub posts webhooks to. Without a way to answer those from the bot, you'd run a second web server beside it for a route or two.
 
-A plugin can answer those requests itself. You write a [`fetch()`](ref:core/Plugin.fetch) method that gets a web `Request`, and you return a `Response`, or `undefined` to pass the request on.
+A plugin can answer those requests itself. Give it a [`fetch()`](ref:core/Plugin.fetch) method that takes a web `Request` and returns a `Response`, or `undefined` to pass the request on.
 
 ```ts twoslash title="src/plugins/Status.ts"
 import { Plugin } from '@seedcord/gateway';
@@ -23,7 +23,7 @@ export class Status extends Plugin {
 }
 ```
 
-In `Status`, you answer `/status` and return `undefined` for every other path. seedcord doesn't route requests, so you compare the path yourself.
+`Status` answers `/status` and returns `undefined` for every other path. seedcord doesn't route requests, so you compare the path yourself.
 
 ## Which step answers
 
@@ -33,7 +33,7 @@ seedcord tries these steps in order, and the first one to return a `Response` an
 
 | step | gateway | http |
 | --- | --- | --- |
-| 1 | the [health path](/build/server#the-health-server) | the health path, on a server |
+| 1 | the [health path](/build/server#the-health-check) | the health path, on a server |
 | 2 | each plugin's [`fetch()`](ref:core/Plugin.fetch), in attach order | each plugin's [`fetch()`](ref:core/Plugin.fetch), in attach order |
 | 3 | a 404 | the interactions engine for a POST, a 404 for anything else |
 
@@ -74,7 +74,7 @@ The two `return undefined` lines run before the `await`. You read `body` as text
 A request's body can only be read once. If you read it in `fetch()`, or call `getReader()` on it, and then return `undefined`, the plugins after yours can't read it. Neither can the interactions engine, which checks Discord's signature against those exact bytes. seedcord stops that request with an error:
 
 ```txt output
-[1241] Webhooks read or locked the body of a request to http://localhost:3000/interactions, then returned undefined. The steps after it can't read that body again. Check the path in fetch before you touch the body.
+[1241] GithubHooks read or locked the body of a request to /interactions, then returned undefined. The steps after it can't read that body again. Check the path in fetch before you touch the body.
 ```
 
 </Callout>
@@ -83,13 +83,31 @@ A request's body can only be read once. If you read it in `fetch()`, or call `ge
 
 ## When `fetch()` throws
 
-seedcord logs the error on your plugin's logger, with the method and the URL, and passes the request to the next step. Interactions keep reaching your handlers while that route is broken. If you read the body before the throw, the request stops with the error above.
+seedcord logs the error on your plugin's logger, with the method and the path, and passes the request to the next step. Interactions keep reaching your handlers while that route is broken. If you read the body before the throw, the request stops with the error above.
+
+## Linking to your route
+
+If your plugin sends someone to one of its routes, like the callback of an OAuth login, it needs the address people reach the bot at. Read it from [`core.url`](ref:core/CoreBase.url):
+
+```ts twoslash title="src/plugins/Login.ts"
+import { Plugin } from '@seedcord/http';
+// ---cut---
+export class Login extends Plugin {
+    public async init(): Promise<void> {}
+
+    public callbackUrl(): string {
+        return new URL('login/callback', this.core.url).href;
+    }
+}
+```
+
+`core.url` always ends in a slash. For a bot at `https://example.com/bot`, `callbackUrl()` would return `https://example.com/bot/login/callback`. The bot's author sets that address as [`server.url`](/build/server#your-bots-address). If they haven't, `core.url` throws an error that tells them the line to add.
 
 ## Where requests arrive
 
-A gateway bot serves web requests on its [health server](/build/server#the-health-server). An http bot serves them on its interactions port. A bot inside [your own server](/build/embed) gets whatever paths your server passes to `bot.fetch()`.
+A bot on Node or Bun serves web requests on its [web server](/build/server#the-web-server), which listens on port 3000 unless the bot sets `server.port`. A bot inside [your own server](/build/embed) gets whatever paths your server passes to `bot.fetch()`.
 
-Requests reach `fetch()` once every plugin's `init()` has finished, the same as your handlers. Your plugin's `ready()` may still be running then. If a route reads something that `ready()` sets, check for it first. [The lifecycle page](/plugins/lifecycle#where-each-one-runs) has the full order.
+Requests reach `fetch()` when the Ready phase begins, the same as your handlers. Your plugin's `ready()` may still be running then, and so may an `init()` that you moved to Ready. If a route reads something that one of them sets, check for it first. [The lifecycle page](/plugins/lifecycle#where-each-one-runs) has the full order.
 
 <Callout type="transport" only="edge">
 

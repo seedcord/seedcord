@@ -41,9 +41,9 @@ describe('the health path on a node http bot', () => {
         expect([whileReadying, await page.text(), await healthStatus(host)]).toEqual([503, 'page', 200]);
     });
 
-    it('leaves the path to the interactions server with healthCheck: false', async () => {
+    it('leaves the path to the interactions server with health: false', async () => {
         await bindSignedEnv();
-        await using host = await new Seedcord({ ...serverConfig(), healthCheck: false }).start();
+        await using host = await new Seedcord({ ...serverConfig(), server: { port: 0, health: false } }).start();
 
         expect(await healthStatus(host)).toBe(404);
     });

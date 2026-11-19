@@ -1,16 +1,9 @@
 import { REST } from '@discordjs/rest';
-import { bindBotColor, busLoggerOf, connectDevChannel, getDevChannel, HmrManager } from '@seedcord/core/internal';
+import { bindBotColor, busLoggerOf, connectDevChannel, HmrManager } from '@seedcord/core/internal';
 import { CoordinatedShutdown, CoordinatedStartup, ServerHost } from '@seedcord/core/node';
-import { HealthResponder, StartupPhase, WebServer } from '@seedcord/core/node/internal';
+import { StartupPhase } from '@seedcord/core/node/internal';
 import { Logger } from '@seedcord/logger';
-import {
-    HostAugmentTarget,
-    HostListenHost,
-    HostPlugins,
-    HostStartup,
-    HostVersion,
-    SeedcordBrand
-} from '@seedcord/types/internal';
+import { HostAugmentTarget, HostVersion, SeedcordBrand } from '@seedcord/types/internal';
 import { Envapter } from 'envapt';
 
 import { HttpStartupTasks } from '#src/HttpStartupTasks';
@@ -20,13 +13,13 @@ import { usernameOf } from '#src/username';
 import { version as packageVersion } from '#src/version';
 
 import type { HttpServerConfig } from '#interfaces/Config';
+import type { EngineContext } from '#src/requestScope';
 import type { SeedcordInstance } from '@seedcord/types/internal';
-
-const DEFAULT_PORT = 3000;
 
 /**
  * The HTTP-interactions bot on node. `start()` loads handlers from `config.bot.interactions.path`
- * and binds a server on `port`. With `port: false`, your own server passes requests to `fetch()`.
+ * and binds a server on `server.port`. With `server: { port: false }`, your own server passes
+ * requests to `fetch()`.
  *
  * Shutdown waits up to 5s for interactions that are still running.
  */
@@ -39,18 +32,14 @@ export class Seedcord extends ServerHost<'http'> implements SeedcordInstance {
     public readonly [HostAugmentTarget] = '@seedcord/http';
     /** @internal */
     public readonly [HostVersion]: string = packageVersion;
-    /** @internal */
-    public [HostListenHost]?: string | undefined;
 
     /** Discord REST client built from `bot.restOptions`. `start()` sets the token. */
     public readonly rest: REST;
 
     readonly #service: InteractionsService;
-    readonly #web: WebServer;
     readonly #hmrManager: HmrManager;
-    readonly #logger = new Logger('Server', { channel: 'bot' });
+    readonly #logger = new Logger('Bot', { channel: 'bot' });
 
-    #boundPort: number | undefined;
     #fetchedUsername?: string | undefined;
 
     public readonly config: HttpServerConfig;
@@ -67,14 +56,6 @@ export class Seedcord extends ServerHost<'http'> implements SeedcordInstance {
 
         this.#service = new InteractionsService(this, config, new REST(config.bot.restOptions));
         this.rest = this.#service.rest;
-        this.#web = new WebServer({
-            shutdown: this.shutdown,
-            startup: this[HostStartup],
-            health: HealthResponder.fromOption(config.healthCheck),
-            plugins: async (request) => this[HostPlugins].answer(request),
-            tail: async (request) => requestScope.run(this.#web, async () => this.#service.engine.handle(request)),
-            portSetting: 'port'
-        });
 
         this.#hmrManager = new HmrManager();
         this.#hmrManager.init(connectDevChannel());
@@ -87,11 +68,6 @@ export class Seedcord extends ServerHost<'http'> implements SeedcordInstance {
         return this.#fetchedUsername;
     }
 
-    /** The bound server port, set once `start()` is listening. Always `undefined` with `port: false`. */
-    public get port(): number | undefined {
-        return this.#boundPort;
-    }
-
     /**
      * Starts the host and runs the startup tasks.
      */
@@ -99,28 +75,9 @@ export class Seedcord extends ServerHost<'http'> implements SeedcordInstance {
         return this.init();
     }
 
-    /**
-     * Answers one web request: the health path, then each plugin's `fetch` in attach order, then
-     * Discord's interactions. Anything besides a POST that reaches the interactions gets a 404. Mount
-     * it in your own server when the config sets `port: false`, and send it every path so plugin
-     * routes reach the bot.
-     *
-     * Rejects with `CoreFetchBeforeStart` until `start()` is called. Until every plugin's `ready()`
-     * finishes, the health path answers 503. Any other request waits until the Ready phase begins.
-     * Answers 503 once shutdown begins or `start()` fails.
-     *
-     * @example
-     * ```ts
-     * // Hono passes the untouched request through c.req.raw
-     * const seedcord = new Seedcord({ ...config, port: false });
-     * await seedcord.start();
-     *
-     * const app = new Hono();
-     * app.all('*', (c) => seedcord.fetch(c.req.raw));
-     * ```
-     */
-    public fetch(request: Request): Promise<Response> {
-        return this.#web.fetch(request);
+    /** @internal */
+    protected override answerInteractions(request: Request, server: EngineContext): Promise<Response> {
+        return requestScope.run(server, async () => this.#service.engine.handle(request));
     }
 
     #registerStartupTasks(): void {
@@ -149,13 +106,6 @@ export class Seedcord extends ServerHost<'http'> implements SeedcordInstance {
 
         // the Login tasks read the token authenticate sets
         tasks.addDiscordTasks();
-
-        this.startup.addTask(StartupPhase.Ready, 'web-server', async () => {
-            const { port = DEFAULT_PORT } = this.config;
-            this.#boundPort = await this.#web.serve(port === false ? undefined : { port, host: this[HostListenHost] });
-            // seedcord dev opens its tunnel to this port
-            getDevChannel()?.send('seedcord:server-port', { port: this.#boundPort ?? false });
-        });
 
         if (!Envapter.isTest) {
             this.startup.addTask(StartupPhase.Ready, 'identity', () => this.#fetchUsername());

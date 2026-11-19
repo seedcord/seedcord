@@ -118,7 +118,7 @@ seedcord is pre-1.0, so a minor version can break your bot. Each release's chang
 | a Node or Bun server | set `build.start` to the file that starts your bot, then `seedcord build` and `node --enable-source-maps dist/index.mjs` |
 | one Bun binary | `seedcord build` prints the `bun build --compile` line for your bot |
 | Cloudflare Workers | an http bot with a `cloudflare.config.ts`, then `seedcord build && cf deploy --prebuilt` |
-| inside your own server | an http bot with `port: false` takes each request from your Hono or Next.js route through `bot.fetch()` |
+| inside your own server | an http bot with `server: { port: false }` takes each request from your Hono or Next.js route through `bot.fetch()` |
 
 <!-- prettier-ignore-end -->
 

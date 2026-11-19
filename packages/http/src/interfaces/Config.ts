@@ -1,7 +1,14 @@
 import type { InteractionHandler } from '#handlers/interaction/InteractionHandler';
 import type { Repliables } from '#handlers/interactionTypes';
 import type { RESTOptions } from '@discordjs/rest';
-import type { BotConfig, Config, HealthCheckConfig, InteractionsConfig, TypedConstructor } from '@seedcord/types';
+import type {
+    BotConfig,
+    Config,
+    InteractionsConfig,
+    ServerConfig,
+    ServerHostConfig,
+    TypedConstructor
+} from '@seedcord/types';
 import type { Except } from 'type-fest';
 
 export type UnhandledHandler = TypedConstructor<typeof InteractionHandler<Repliables>>;
@@ -21,22 +28,8 @@ interface HttpBotConfig<Options> extends BotConfig {
 /**
  * Config for a long-running node server. Pass to `new Seedcord(config).start()`.
  */
-export interface HttpServerConfig extends Config {
+export interface HttpServerConfig extends ServerHostConfig {
     bot: HttpBotConfig<Partial<RESTOptions>>;
-
-    /**
-     * Port the interactions server uses. `false` turns off the built-in server. Mount
-     * `seedcord.fetch()` in your own server to answer requests.
-     *
-     * @defaultValue `3000`
-     */
-    port?: number | false;
-
-    /**
-     * The health path on the interactions server. It answers 503 until startup finishes, then 200.
-     * `false` turns it off, `true` or omit for `/health`, `{ path }` sets the path.
-     */
-    healthCheck?: boolean | Pick<HealthCheckConfig, 'path'>;
 }
 
 /**
@@ -44,7 +37,8 @@ export interface HttpServerConfig extends Config {
  */
 export interface HttpEdgeConfig extends Config {
     bot: HttpBotConfig<Partial<Except<RESTOptions, EdgeSweeperKey>>>;
-    port?: never;
+    /** A Worker only sets its `url` because Cloudflare runs the server. */
+    server?: Pick<ServerConfig, 'url'>;
     // an isolate does not run a coordinated shutdown
     lifecycle?: never;
 }

@@ -26,7 +26,7 @@ With that file, `bun run dev` runs the CLI on Bun, along with the bot it loads. 
 
 ## Running an edge bot
 
-A `cloudflare.config.ts` beside `seedcord.config.ts` makes the bot an edge bot, which [Workers](/build/workers) sets up. `seedcord dev` runs it in workerd, the runtime Cloudflare runs a Worker on, through Cloudflare's Vite plugin. The Worker listens on the `port` in `seedcord.config.ts`, 3000 by default, and [the dev tunnel](/tooling/tunnel) points Discord at it. A saved handler reloads in place, as it does for a server bot.
+A `cloudflare.config.ts` beside `seedcord.config.ts` makes the bot an edge bot, which [Workers](/build/workers) sets up. `seedcord dev` runs it in workerd, the runtime Cloudflare runs a Worker on, through Cloudflare's Vite plugin. The Worker listens on `dev.port` from `seedcord.config.ts`, 3000 by default, and [the dev tunnel](/tooling/tunnel) points Discord at it. A saved handler reloads in place, as it does for a server bot.
 
 Saving `cloudflare.config.ts`, `.dev.vars`, `.dev.vars.<mode>`, or an `.env` file needs a restart with `r`. [Hot reload](/tooling/hot-reload#saves-that-need-a-restart) lists every save that does.
 
@@ -160,6 +160,6 @@ The bot writes a new file there each time it starts, restarts included, without 
 
 </Callout>
 
-## The health server
+## The web server
 
-Under `seedcord dev`, a gateway or node http bot answers the same health path your host calls in production. [The server build](/build/server#the-health-server) covers what it answers and how to configure it.
+Under `seedcord dev`, a gateway or node http bot runs the same web server it runs in production, health path and plugin routes included. [The server build](/build/server#the-web-server) covers what it answers and how to configure it.

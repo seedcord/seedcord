@@ -23,7 +23,7 @@ export const seedcord = new Seedcord({
         path: null
     },
     botColor: '#fe565a',
-    port: 6967,
+    server: { port: 6967 },
     logger: {
         sinks: [
             new WinstonConsoleSink({ format: 'json' }),

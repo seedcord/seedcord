@@ -167,14 +167,14 @@ export abstract class Plugin<
     dispose?(): Promisable<void>;
 
     /**
-     * Answers a web request sent to the bot. For every request, interactions included, seedcord calls
-     * this on each plugin in attach order and returns the first `Response` it gets. Return `undefined`
-     * to pass the request on. If this method throws, seedcord logs the error on this plugin's logger
-     * and tries the next plugin.
+     * Answers a web request sent to the bot. seedcord calls this on each plugin in attach order and
+     * answers with the first `Response`. On an http bot, seedcord calls it for interactions too.
+     * Return `undefined` to pass the request on. If this method throws, seedcord logs the error on
+     * this plugin's logger and tries the next plugin.
      *
-     * Check the path before you await anything because every interaction waits for this method.
-     * On a server, it can run before `ready()` finishes because requests reach it once the Ready
-     * phase begins.
+     * On an http bot, check the path before you await anything because every interaction waits for
+     * this method. On a server, requests reach it once the Ready phase begins. It can run before
+     * `ready()` finishes, and before an `init()` that you moved to Ready.
      *
      * @throws A **SeedcordError** when this method reads or locks the body and returns `undefined`.
      * @example

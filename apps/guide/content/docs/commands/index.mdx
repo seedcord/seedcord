@@ -145,7 +145,7 @@ Commit that file. The next codegen run overwrites whatever you put there by hand
 
 A stale generated file doesn't break anything at runtime since nothing there reads these types. Run your project's `tc` script to catch it.
 
-You can turn on [`hmr.typecheck`](/build/config#every-key) to run `tsc --watch` next to the bot during `seedcord dev`, at the cost of a second node process.
+You can turn on [`dev.hmr.typecheck`](/build/config#every-key) to run `tsc --watch` next to the bot during `seedcord dev`, at the cost of a second node process.
 
 ```ts twoslash title="seedcord.config.ts"
 import { defineConfig } from 'seedcord';
@@ -154,8 +154,8 @@ export default defineConfig({
     root: './src',
     instance: './bot.ts',
     build: { start: './index.ts' },
-    hmr: {
-        typecheck: true
+    dev: {
+        hmr: { typecheck: true }
     }
 });
 ```

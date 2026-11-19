@@ -15,7 +15,7 @@ const HANDLERS_DIR = path.resolve(__dirname, './discovery/fixtures/handlers');
 const PING = '{"type":1}';
 
 function config(): HttpServerConfig {
-    return { ...serverConfig({ interactions: { path: HANDLERS_DIR } }), port: false };
+    return { ...serverConfig({ interactions: { path: HANDLERS_DIR } }), server: { port: false } };
 }
 
 class Pages extends Plugin {
@@ -61,24 +61,17 @@ class Thrower extends Plugin {
 }
 
 describe('a plugin fetch method on node', () => {
-    it('answers a GET on its path', async () => {
+    it.each([
+        ['GET', null],
+        ['POST', 'x']
+    ])('answers a %s on its path', async (method, body) => {
         await bindSignedEnv();
         await using host = new Seedcord(config()).attach('pages', Pages);
         await host.start();
 
-        const response = await host.fetch(new Request('http://bot.test/page'));
+        const response = await host.fetch(new Request('http://bot.test/page', { method, body }));
 
-        expect(await response.text()).toBe('GET page');
-    });
-
-    it('answers a POST on its path', async () => {
-        await bindSignedEnv();
-        await using host = new Seedcord(config()).attach('pages', Pages);
-        await host.start();
-
-        const response = await host.fetch(new Request('http://bot.test/page', { method: 'POST', body: 'x' }));
-
-        expect(await response.text()).toBe('POST page');
+        expect(await response.text()).toBe(`${method} page`);
     });
 
     it('sends a signed interaction past the plugins to the engine', async () => {
@@ -120,12 +113,15 @@ describe('a plugin fetch method on node', () => {
         await host.start();
         using logs = captureLogs();
 
-        const page = await host.fetch(new Request('http://bot.test/page'));
+        const page = await host.fetch(new Request('http://bot.test/page?code=secret'));
         const interaction = await host.fetch(await signedRequest(signer, PING));
 
         expect(await page.text()).toBe('GET page');
         expect(await interaction.json()).toEqual({ type: 1 });
-        expect(logs.at('error')).toContainEqual(expect.stringContaining('GET http://bot.test/page'));
+        // Discord puts an OAuth callback's code in the query
+        const logged = logs.at('error').join('\n');
+        expect(logged).toContain('GET /page');
+        expect(logged).not.toContain('secret');
         expect(logs.argsAt('error')).toContainEqual(expect.objectContaining({ message: 'boom' }));
     });
 });

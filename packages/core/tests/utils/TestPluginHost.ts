@@ -13,6 +13,7 @@ export class TestPluginHost<BotT extends Transport = 'gateway', BotRt extends Ru
     public readonly config = {} as Config;
     public readonly rest = new REST();
     public readonly applicationId = 'app-1';
+    public readonly url = new URL('https://bot.test/');
 
     constructor(transport?: BotT, runtime?: BotRt, driver?: Config['kv']) {
         // justified: the fallbacks are the class's default type arguments

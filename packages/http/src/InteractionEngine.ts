@@ -32,7 +32,7 @@ const decoder = new TextDecoder();
 type Outcome = 'not-post' | 'unsigned' | 'stale' | 'bad-signature' | 'bad-body' | 'ping' | 'replay' | 'dispatched';
 type Answer = readonly [Response, Outcome];
 
-// discord only POSTs interactions, and plugins have already passed on anything else
+// discord only POSTs interactions and the plugins have already passed on anything else
 export function rejectNonPost(request: Request): Response | undefined {
     if (request.method === 'POST') return undefined;
     return new Response(null, { status: NOT_FOUND });

@@ -11,5 +11,5 @@ export default new Seedcord({
         events: { path: './events' }
     },
     subscribers: { path: null },
-    healthCheck: false
+    server: { port: false }
 });

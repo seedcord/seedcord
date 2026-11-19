@@ -1,7 +1,7 @@
 import { bindBotColor, busLoggerOf, connectDevChannel, HmrManager, SubscriberLoader } from '@seedcord/core/internal';
 import { CoordinatedShutdown, CoordinatedStartup, ServerHost } from '@seedcord/core/node';
-import { healthCheckConfig, HealthResponder, StartupPhase, WebServer } from '@seedcord/core/node/internal';
-import { HostAugmentTarget, HostPlugins, HostStartup, HostVersion, SeedcordBrand } from '@seedcord/types/internal';
+import { StartupPhase } from '@seedcord/core/node/internal';
+import { HostAugmentTarget, HostPlugins, HostVersion, SeedcordBrand } from '@seedcord/types/internal';
 import { Envapter } from 'envapt';
 
 import { Bot } from './bot/Bot';
@@ -9,11 +9,7 @@ import { version as packageVersion } from './version';
 
 import type { GatewayConfig } from './interfaces/Config';
 import type { REST } from '@discordjs/rest';
-import type { HealthCheckConfig } from '@seedcord/types';
 import type { SeedcordInstance } from '@seedcord/types/internal';
-
-const DEFAULT_HEALTH_PORT = 6967;
-const NOT_FOUND = 404;
 
 /**
  * The gateway bot host. Opens a discord.js gateway session, discovers handlers, and runs
@@ -29,8 +25,6 @@ export class Seedcord extends ServerHost<'gateway'> implements SeedcordInstance 
     /** @internal */
     public readonly [HostVersion]: string = packageVersion;
 
-    readonly #health: HealthCheckConfig | undefined;
-    readonly #web: WebServer;
     readonly #hmrManager: HmrManager;
 
     readonly #subscribers: SubscriberLoader;
@@ -66,29 +60,8 @@ export class Seedcord extends ServerHost<'gateway'> implements SeedcordInstance 
         this.#subscribers = new SubscriberLoader(this.bus, config.subscribers.path);
         this.bot = new Bot(this);
         this.rest = this.bot.client.rest;
-        this.#health = healthCheckConfig(config.healthCheck);
-        this.#web = new WebServer({
-            shutdown: this.shutdown,
-            startup: this[HostStartup],
-            health: this.#health && new HealthResponder(this.#health.path),
-            plugins: async (request) => this[HostPlugins].answer(request),
-            // every other path gets a 404 because a gateway bot takes its interactions over the websocket
-            tail: () => Promise.resolve(new Response(null, { status: NOT_FOUND })),
-            portSetting: 'healthCheck.port'
-        });
 
         this.#registerStartupTasks();
-    }
-
-    /**
-     * Answers one web request: the health path, then each plugin's `fetch` in attach order, then a 404.
-     *
-     * Rejects with `CoreFetchBeforeStart` until `start()` is called. Until every plugin's `ready()`
-     * finishes, the health path answers 503. Any other request waits until the Ready phase begins.
-     * Answers 503 once shutdown begins or `start()` fails.
-     */
-    public fetch(request: Request): Promise<Response> {
-        return this.#web.fetch(request);
     }
 
     /** The bot's discord username, populated after login. */
@@ -103,14 +76,6 @@ export class Seedcord extends ServerHost<'gateway'> implements SeedcordInstance 
             busLoggerOf(this.bus).utils.initialization('Subscribers', 'start');
             await this.#subscribers.init();
             busLoggerOf(this.bus).utils.initialization('Subscribers', 'end');
-        });
-
-        this.startup.addTask(StartupPhase.Ready, 'web-server', async () => {
-            const health = this.#health;
-            const listens = health !== undefined || this[HostPlugins].answersRequests;
-            await this.#web.serve(
-                listens ? { port: health?.port ?? DEFAULT_HEALTH_PORT, host: health?.host } : undefined
-            );
         });
     }
 

@@ -21,7 +21,10 @@ describe('http dev channel', () => {
         setDevChannel({ send: (event, data) => sent.push([event, data]), on: () => undefined, off: () => undefined });
 
         await bindSignedEnv();
-        await using host = new Seedcord({ ...serverConfig({ interactions: { path: HANDLERS_DIR } }), port });
+        await using host = new Seedcord({
+            ...serverConfig({ interactions: { path: HANDLERS_DIR } }),
+            server: { port }
+        });
         await host.start();
 
         expect(sent).toContainEqual(['seedcord:server-port', { port: host.port ?? false }]);

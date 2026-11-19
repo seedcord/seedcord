@@ -49,7 +49,7 @@ function connectCli(deployed?: DeployedHashes): FakeCli {
     return {
         sent,
         events: () => sent.map(([event]) => event),
-        start: () => handlers.get('seedcord:start')?.({ colorLevel: 0 }),
+        start: () => handlers.get('seedcord:start')?.({ colorLevel: 0, url: 'http://localhost:3000' }),
         save: (event) => handlers.get('seedcord:hmr')?.(event)
     };
 }
@@ -107,6 +107,7 @@ describe('the edge Seedcord under seedcord dev', () => {
         await vi.waitFor(() => expect(cli.sent).toContainEqual(['seedcord:started', { username: 'wave-bot' }]));
         const response = await seedcord.fetch(await signedRequest(signer, ping), undefined, capturingCtx());
         expect(response.status).toBe(200);
+        expect(seedcord.url.href).toBe('http://localhost:3000/');
     });
 
     it('takes only the path and query from the dev header and keeps its own origin', async () => {

@@ -22,6 +22,22 @@ export interface CoreBase {
     readonly rest: REST;
     /** The bot's Discord application id. Throws if you read it before the host resolves it. */
     readonly applicationId: string;
+    /**
+     * The address people reach your bot at, from `server.url` in your config. Its path always ends in
+     * a slash.
+     *
+     * Under `seedcord dev` a bot without `server.url` gets its `dev.tunnel` URL if you set one, and
+     * its localhost address otherwise.
+     *
+     * @throws A **SeedcordError** when you read it and you haven't set `server.url`, except under `seedcord dev`.
+     * @throws A **SeedcordTypeError** when you read it and `server.url` isn't a URL.
+     * @example
+     * ```ts
+     * // with server.url set to 'https://example.com/bot'
+     * new URL('callback', core.url).href; // 'https://example.com/bot/callback'
+     * ```
+     */
+    readonly url: URL;
     /** Sliding-window rate limiting, the `Cooldown` gate's backend and a public direct-use API. */
     readonly rateLimiter: IRateLimiter;
     /** Publish and subscribe to framework and application events. */

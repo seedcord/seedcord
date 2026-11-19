@@ -1,4 +1,4 @@
-import { WORKER_PROBE } from '@seedcord/core/internal';
+import { DEV_URL_HEADER, WORKER_PROBE } from '@seedcord/core/internal';
 import { Plugin } from '@seedcord/core/plugin';
 import { Envapter, PortableSource } from 'envapt';
 import { afterEach, describe, expect, it } from 'vite-plus/test';
@@ -37,17 +37,19 @@ describe('a plugin fetch method on edge', () => {
         calls.length = 0;
     });
 
-    it('starts the bot for a GET and answers it from the plugin', async () => {
+    it('starts the bot for a GET, answers it from the plugin, and ignores the dev header in production', async () => {
         const signer = await createSigner();
         Envapter.useSource(new PortableSource({ DISCORD_BOT_TOKEN: VALID_TOKEN }));
         registerBakedIds({ publicKey: signer.publicKeyHex });
         const seedcord = new Seedcord(CONFIG).attach('page', Page);
+        const rewrite = new Request('https://bot.test/', { headers: { [DEV_URL_HEADER]: '/page' } });
 
         const answered = await seedcord.fetch(new Request('https://bot.test/page'), undefined, capturingCtx());
         const passed = await seedcord.fetch(new Request('https://bot.test/other'), undefined, capturingCtx());
+        const rewritten = await seedcord.fetch(rewrite, undefined, capturingCtx());
 
         expect(await answered.text()).toBe('page');
-        expect(passed.status).toBe(404);
+        expect([passed.status, rewritten.status]).toEqual([404, 404]);
         expect(calls).toEqual(['init']);
     });
 

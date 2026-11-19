@@ -22,7 +22,7 @@ An http bot never holds a connection to Discord, so it can't cache anything. To 
 The URL can point at any of these:
 
 - Your bot's own [server](/build/server), a Node or Bun process that listens on a port.
-- An HTTP route in an app you already run, like a Hono or Next.js app. With `port: false`, you pass each request from that route to `bot.fetch()`. [Inside your own server](/build/embed) has the setup.
+- An HTTP route in an app you already run, like a Hono or Next.js app. With `server: { port: false }`, you pass each request from that route to `bot.fetch()`. [Inside your own server](/build/embed) has the setup.
 - [Cloudflare Workers](/build/workers), where nothing runs between requests. A Workers bot runs its startup tasks on the first request it receives and never runs a shutdown hook.
 
 ## How to pick
@@ -35,7 +35,7 @@ Gateway also fits a bot that reads server state often because discord.js serves 
 
 ## Switching later
 
-Most of what you import comes from `@seedcord/core`, which both packages re-export. A handler that doesn't use discord.js types usually needs only a new import line, plus a few changes in `bot.ts`. Gateway takes `clientOptions` and `events` there, and an http bot on a server takes a `port`.
+Most of what you import comes from `@seedcord/core`, which both packages re-export. A handler that doesn't use discord.js types usually needs only a new import line, plus a few changes in `bot.ts`. Gateway takes `clientOptions` and `events` there.
 
 Code that uses discord.js types needs changes. So do the few things that exist on one transport only: event handlers, `getConfirmation`, and `this.core.bot` on gateway, and `ModalFields` on http.
 

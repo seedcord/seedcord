@@ -28,8 +28,7 @@ describe('gateway startup order', () => {
         const seedcord = seedcordWith(
             testConfig({
                 interactions: testEnv.resolvePath('interactions'),
-                events: testEnv.resolvePath('events'),
-                healthCheck: false
+                events: testEnv.resolvePath('events')
             })
         );
         vi.spyOn(seedcord.bot, 'botToken', 'get').mockReturnValue('token');

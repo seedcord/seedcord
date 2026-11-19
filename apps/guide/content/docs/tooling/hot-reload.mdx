@@ -66,7 +66,7 @@ Restart required. Press r to restart.
 
 Nothing restarts automatically. Press `r` once you're ready to disconnect for a moment.
 
-Your own files can need a restart too. The usual case is a file that opens a connection or computes something once at import since a reload imports it again and repeats that work. `hmr.restart` takes glob patterns. They're relative to `root`, so `./config/**` and `config/**` match the same files. An absolute path works too.
+Your own files can need a restart too. The usual case is a file that opens a connection or computes something once at import since a reload imports it again and repeats that work. `dev.hmr.restart` takes glob patterns. They're relative to `root`, so `./config/**` and `config/**` match the same files. An absolute path works too.
 
 ```ts twoslash title="seedcord.config.ts"
 import { defineConfig } from 'seedcord';
@@ -75,8 +75,8 @@ export default defineConfig({
     root: './src',
     instance: './bot.ts',
     build: { start: './index.ts' },
-    hmr: {
-        restart: ['config/**', 'constants.ts']
+    dev: {
+        hmr: { restart: ['config/**', 'constants.ts'] }
     }
 });
 ```
@@ -93,7 +93,7 @@ Rolled back ./src/handlers/Ping.ts to the last-good version
 
 `Ping` keeps answering with its old code until your next working save replaces it, so a quick test in Discord can pass against the version you meant to replace. A new file that has never loaded doesn't have a last working version and doesn't register anything until it imports cleanly.
 
-Setting `hmr.rollback` to `false` turns rollback off. seedcord then removes a broken file's handlers, so the route stops answering until you fix it.
+Setting `dev.hmr.rollback` to `false` turns rollback off. seedcord then removes a broken file's handlers, so the route stops answering until you fix it.
 
 ```ts twoslash title="seedcord.config.ts"
 import { defineConfig } from 'seedcord';
@@ -102,15 +102,15 @@ export default defineConfig({
     root: './src',
     instance: './bot.ts',
     build: { start: './index.ts' },
-    hmr: {
-        rollback: false
+    dev: {
+        hmr: { rollback: false }
     }
 });
 ```
 
 ## Type errors while you work
 
-`seedcord dev` runs your code without checking types, so a type error only reaches you when your editor shows it. A handler with a wrong type still loads and can fail at runtime. Turning on `hmr.typecheck` runs `tsc --watch` alongside the bot and reports what it finds on the `tsc` channel, which you can [filter to](/tooling/dev#filtering-the-log).
+`seedcord dev` runs your code without checking types, so a type error only reaches you when your editor shows it. A handler with a wrong type still loads and can fail at runtime. Turning on `dev.hmr.typecheck` runs `tsc --watch` alongside the bot and reports what it finds on the `tsc` channel, which you can [filter to](/tooling/dev#filtering-the-log).
 
 ```ts twoslash title="seedcord.config.ts"
 import { defineConfig } from 'seedcord';
@@ -119,8 +119,8 @@ export default defineConfig({
     root: './src',
     instance: './bot.ts',
     build: { start: './index.ts' },
-    hmr: {
-        typecheck: true
+    dev: {
+        hmr: { typecheck: true }
     }
 });
 ```
@@ -136,10 +136,12 @@ export default defineConfig({
     root: './src',
     instance: './bot.ts',
     build: { start: './index.ts' },
-    hmr: {
-        typecheck: { tsconfig: './tsconfig.build.json' }
+    dev: {
+        hmr: {
+            typecheck: { tsconfig: './tsconfig.build.json' }
+        }
     }
 });
 ```
 
-The path resolves against `root`, like the other paths in `hmr`.
+The path resolves against `root`, like the other paths in `dev.hmr`.

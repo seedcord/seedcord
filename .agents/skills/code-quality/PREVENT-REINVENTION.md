@@ -24,7 +24,7 @@ If you're about to write a string utility, number helper, object helper, type-fe
 
 - `packages/utils/src/index.ts` re-exports `files`, `misc`, `numbers`, `objects`, `strings`. Look here for guards, formatting helpers, set/object operations, and string transforms before writing your own.
 - `packages/types/src/index.ts` exports shared TypeScript `Types` and `Interfaces`. Use `import type { … } from '@seedcord/types'` for the existing alias. Do not define the same alias locally.
-- `@seedcord/core/node`, `HealthCheck` and the lifecycle coordinators. `@seedcord/logger`, the `Logger`. Compose these. Do not parallel-implement them inside a bot or plugin.
+- `@seedcord/core/node`, the lifecycle coordinators. `@seedcord/logger`, the `Logger`. Compose these. Do not parallel-implement them inside a bot or plugin.
 - `packages/event-emitter/src/index.ts`, `TypedEventEmitter`, the typed cross-runtime event emitter. Extend it for typed events. Do not hand-roll an emitter or add `mitt` / `eventemitter3`.
 - `packages/core/src/subscribers` holds the bus: `core.bus`, `Subscriber`, `@Subscribe(...)`, and the `Subscriptions` interface a bot augments with its own events. Both transports re-export it. Extend it before building another event channel.
 - `plugins/*` holds the first-party plugin packages. If your "feature" is really a plugin, it becomes a package there. The contract itself is `@seedcord/core/plugin`.

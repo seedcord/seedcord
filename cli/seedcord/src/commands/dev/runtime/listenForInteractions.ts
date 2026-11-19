@@ -52,7 +52,7 @@ export async function listenForInteractions(
         await once(server, 'listening');
     } catch (error: unknown) {
         if (!isPortInUse(error)) throw error;
-        throw new SeedcordError(SeedcordErrorCode.PortInUse, [port, 'port', configFile], { cause: error });
+        throw new SeedcordError(SeedcordErrorCode.PortInUse, [port, 'dev.port', configFile], { cause: error });
     }
     // justified: address() is AddressInfo once a TCP server is listening
     return { server, port: (server.address() as AddressInfo).port };
