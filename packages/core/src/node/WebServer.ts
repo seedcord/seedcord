@@ -3,6 +3,7 @@ import { createServer } from 'node:http';
 
 import { paint, SeedcordErrorCode } from '@seedcord/errors';
 import { SeedcordError } from '@seedcord/errors/internal';
+import { Logger } from '@seedcord/logger';
 import { asError, isPortInUse } from '@seedcord/utils/internal';
 
 import { ShutdownPhase } from '#src/lifecycle/phases';
@@ -15,7 +16,6 @@ import type { CoordinatedStartup } from '#src/lifecycle/CoordinatedStartup';
 import type { PluginAnswer } from '#src/plugin/PluginRegistry';
 import type { HealthResponder } from './HealthResponder';
 import type { ShutdownTasks } from './Lifecycle/CoordinatedShutdown';
-import type { Logger } from '@seedcord/logger';
 import type { IncomingMessage, Server, ServerResponse } from 'node:http';
 import type { AddressInfo } from 'node:net';
 
@@ -31,7 +31,6 @@ export interface ListenAddress {
 }
 
 export interface WebServerOptions {
-    readonly logger: Logger;
     readonly shutdown: ShutdownTasks;
     readonly startup: Pick<CoordinatedStartup, 'isReady' | 'hasBegun'>;
     readonly health: HealthResponder | undefined;
@@ -45,11 +44,11 @@ export interface WebServerOptions {
 // a node bot's web requests: health, then the plugins, then the transport's tail.
 // fetch() answers on its own, and serve() can also put it on a port
 export class WebServer {
-    private readonly inFlight: InFlight;
+    private readonly logger = new Logger('Server', { channel: 'server' });
+    private readonly inFlight = new InFlight(this.logger, 'Requests');
     private server?: Server;
 
     constructor(private readonly options: WebServerOptions) {
-        this.inFlight = new InFlight(options.logger, 'Requests');
         const { shutdown } = options;
         shutdown.addTask(ShutdownPhase.Unbind, 'close-web-server', () => this.close(), STOP_TIMEOUT_MS);
         shutdown.addTask(ShutdownPhase.Drain, 'drain-requests', () => this.drain(), DRAIN_TASK_TIMEOUT_MS);
@@ -84,7 +83,7 @@ export class WebServer {
     private async listen(port: number, host: string | undefined): Promise<number> {
         const server = createServer((incoming, outgoing) => {
             this.answer(server, incoming, outgoing).catch((error: unknown) => {
-                this.options.logger.error(`Failed to answer ${incoming.method ?? 'GET'} ${incoming.url ?? '/'}`, error);
+                this.logger.error(`Failed to answer ${incoming.method ?? 'GET'} ${incoming.url ?? '/'}`, error);
                 // a swallowed throw would hang the client without a cause
                 outgoing.destroy(asError(error));
             });
@@ -103,7 +102,7 @@ export class WebServer {
         const bound = (server.address() as AddressInfo).port;
         // every interface includes localhost, and a browser can't open 0.0.0.0
         const url = `http://${host ?? 'localhost'}:${String(bound)}`;
-        this.options.logger.info(`Server listening on ${paint.sky.bold(url)}`);
+        this.logger.info(`Server listening on ${paint.sky.bold(url)}`);
         return bound;
     }
 
@@ -128,7 +127,7 @@ export class WebServer {
                     reject(error);
                     return;
                 }
-                this.options.logger.info(paint.coral.bold('Server stopped'));
+                this.logger.info(paint.coral.bold('Server stopped'));
                 resolve();
             });
         });

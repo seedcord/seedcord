@@ -78,7 +78,7 @@ function probeEdgeRejects(bot: EdgeSeedcord): void {
     // @ts-expect-error GatewayOnly declares transport 'gateway'
     bot.attach('gw', GatewayOnly);
     // @ts-expect-error ServerOnly declares runtime 'server'
-    bot.attach('server', ServerOnly);
+    bot.attach('serverOnly', ServerOnly);
 }
 
 void probeServerAccepts;

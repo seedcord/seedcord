@@ -377,7 +377,7 @@ describe('the edge Seedcord', () => {
         const seedcord = new Seedcord(config());
 
         // @ts-expect-error ServerOnly declares runtime 'server'
-        expect(() => seedcord.attach('server', ServerOnly)).toThrow(
+        expect(() => seedcord.attach('serverOnly', ServerOnly)).toThrow(
             expect.objectContaining({ code: SeedcordErrorCode.CorePluginScopeMismatch })
         );
     });

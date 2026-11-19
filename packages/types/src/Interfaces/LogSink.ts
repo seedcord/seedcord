@@ -8,6 +8,7 @@ export type LogLevel = keyof ILogger;
 export type FrameworkChannel =
     | 'default'
     | 'bot'
+    | 'server'
     | 'lifecycle'
     | 'interactions'
     | 'events'

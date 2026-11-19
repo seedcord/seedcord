@@ -68,7 +68,6 @@ export class Seedcord extends ServerHost<'http'> implements SeedcordInstance {
         this.#service = new InteractionsService(this, config, new REST(config.bot.restOptions));
         this.rest = this.#service.rest;
         this.#web = new WebServer({
-            logger: this.#logger,
             shutdown: this.shutdown,
             startup: this[HostStartup],
             health: HealthResponder.fromOption(config.healthCheck),

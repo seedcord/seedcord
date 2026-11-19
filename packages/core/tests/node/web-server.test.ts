@@ -2,7 +2,6 @@ import { once } from 'node:events';
 import { createServer } from 'node:net';
 
 import { SeedcordErrorCode } from '@seedcord/errors';
-import { Logger } from '@seedcord/logger';
 import { captureLogs } from '@seedcord/logger/internal';
 import { describe, expect, it } from 'vite-plus/test';
 
@@ -21,7 +20,6 @@ const started = (): Startup => ({ isReady: true, hasBegun: true });
 
 function webServer(overrides: Partial<WebServerOptions> = {}): WebServer {
     return new WebServer({
-        logger: new Logger('Server'),
         shutdown: { addTask: () => undefined },
         startup: started(),
         health: new HealthResponder(),

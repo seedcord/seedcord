@@ -1,5 +1,4 @@
 import { WebServer } from '@seedcord/core/node/internal';
-import { Logger } from '@seedcord/logger';
 import { Envapter, PortableSource } from 'envapt';
 import { describe, expect, it } from 'vite-plus/test';
 
@@ -26,7 +25,6 @@ async function readySeedcord(): Promise<ReadySeedcord> {
         subscribers: { path: null }
     });
     const server = new WebServer({
-        logger: new Logger('Server'),
         shutdown: { addTask: () => undefined },
         startup: { isReady: true, hasBegun: true },
         health: undefined,

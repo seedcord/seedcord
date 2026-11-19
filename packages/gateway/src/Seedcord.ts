@@ -1,7 +1,6 @@
 import { bindBotColor, busLoggerOf, connectDevChannel, HmrManager, SubscriberLoader } from '@seedcord/core/internal';
 import { CoordinatedShutdown, CoordinatedStartup, ServerHost } from '@seedcord/core/node';
 import { healthCheckConfig, HealthResponder, StartupPhase, WebServer } from '@seedcord/core/node/internal';
-import { Logger } from '@seedcord/logger';
 import { HostAugmentTarget, HostPlugins, HostStartup, HostVersion, SeedcordBrand } from '@seedcord/types/internal';
 import { Envapter } from 'envapt';
 
@@ -32,7 +31,6 @@ export class Seedcord extends ServerHost<'gateway'> implements SeedcordInstance 
 
     readonly #health: HealthCheckConfig | undefined;
     readonly #web: WebServer;
-    readonly #logger = new Logger('Server', { channel: 'bot' });
     readonly #hmrManager: HmrManager;
 
     readonly #subscribers: SubscriberLoader;
@@ -70,7 +68,6 @@ export class Seedcord extends ServerHost<'gateway'> implements SeedcordInstance 
         this.rest = this.bot.client.rest;
         this.#health = healthCheckConfig(config.healthCheck);
         this.#web = new WebServer({
-            logger: this.#logger,
             shutdown: this.shutdown,
             startup: this[HostStartup],
             health: this.#health && new HealthResponder(this.#health.path),
