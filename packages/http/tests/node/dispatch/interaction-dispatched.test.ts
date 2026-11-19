@@ -186,13 +186,10 @@ describe('interactionDispatched from the http dispatcher', () => {
         });
     });
 
-    it('publishes interactionDispatching before interactionDispatched, with the same dispatch id', async () => {
-        Envapter.useSource(new PortableSource({}));
+    it('publishes interactionDispatching with the interaction id', async () => {
         const core = testCore(nullPathConfig, VALID_TOKEN);
-        const seen: { key: string; dispatchId: string; interactionId: string }[] = [];
-        for (const key of ['interactionDispatching', 'interactionDispatched'] as const) {
-            core.bus.on(key, ({ dispatchId, interactionId }) => seen.push({ key, dispatchId, interactionId }));
-        }
+        const starts: SubscriptionData<'interactionDispatching'>[] = [];
+        core.bus.on('interactionDispatching', (payload) => starts.push(payload));
 
         const execute = await dispatchInteraction({
             resolved: resolvedSlash('ok', OkHandler),
@@ -201,8 +198,7 @@ describe('interactionDispatched from the http dispatcher', () => {
         });
         await execute?.();
 
-        expect(seen.map(({ key }) => key)).toEqual(['interactionDispatching', 'interactionDispatched']);
-        expect(seen[0]).toMatchObject({ dispatchId: seen[1]?.dispatchId, interactionId: 'int-1' });
+        expect(starts[0]?.interactionId).toBe('int-1');
     });
 
     it('runs a registered middleware on a matching dispatch', async () => {

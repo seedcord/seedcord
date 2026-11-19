@@ -6,6 +6,10 @@ import type { ExcludeStrict } from 'type-fest';
 
 export type AckState = 'unacked' | 'deferred-reply' | 'deferred-update' | 'replied';
 
+// discord fails the interaction if the bot hasn't sent a first response by then
+// https://docs.discord.com/developers/interactions/receiving-and-responding#responding-to-an-interaction
+export const ACK_DEADLINE_MS = 3000;
+
 export type ReplyMethod =
     | 'reply'
     | 'defer'

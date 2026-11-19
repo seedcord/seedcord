@@ -361,7 +361,7 @@ A bot can attach your plugin under two keys, like two `Tags` for two folders. Bo
 
 [`readFiles`](ref:utils/readFiles) and `scan()` work there since the CLI sets the bot's `root` before it loads your plugin. `readFiles` still needs the folder listed in the bot's [`files`](/build/data-files), the same as when the bot runs.
 
-For a server bot, `seedcord dev` writes the file after the bot has started and `init()` has run. An edge bot runs in workerd, and dev runs codegen on a separate copy in Node, and that copy never calls `init()`. A `codegen()` that reads `init()` state works only for a server bot under `seedcord dev`. It fails under `seedcord codegen`, in CI, and on an edge bot, so test yours with `seedcord codegen`.
+For a server bot, `seedcord dev` writes the file after the bot has started and `init()` has run. An edge bot runs in workerd. For codegen, dev loads a separate copy in Node, and that copy never calls `init()`. A `codegen()` that reads `init()` state works only for a server bot under `seedcord dev`. It fails under `seedcord codegen`, in CI, and on an edge bot, so test yours with `seedcord codegen`.
 
 ## When codegen stops
 

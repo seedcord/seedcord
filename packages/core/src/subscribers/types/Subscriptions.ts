@@ -164,7 +164,7 @@ export interface DefaultSubscriptions {
         readonly userId: string | null;
         /** Guild the interaction came from, null in DMs. */
         readonly guildId: string | null;
-        /** Dispatch entry until the handler returns or its error card is sent. A clock change never affects it. */
+        /** Dispatch entry until the handler returns or seedcord answers its throw or refusal. A clock change never affects it. */
         readonly durationMs: number;
         /**
          * Discord's interaction creation until dispatch entry, read from the snowflake. This covers

@@ -102,6 +102,28 @@ describe('InteractionRun', () => {
         expect(logs.at('warn')).toContainEqual(expect.stringContaining(warning));
     });
 
+    it('publishes interactionDispatching before interactionDispatched, with the same dispatch id', async () => {
+        class Done {
+            execute = vi.fn();
+        }
+        const config = configFor(InteractionKind.Autocomplete, Done, {
+            responder: { clear: vi.fn() },
+            handler: () => new Done()
+        });
+        const seen: string[][] = [];
+        for (const key of ['interactionDispatching', 'interactionDispatched'] as const) {
+            config.core.bus.on(key, ({ dispatchId }) => seen.push([key, dispatchId]));
+        }
+
+        const start = await new InteractionRun(config).prepare();
+        await start?.();
+
+        expect(seen).toEqual([
+            ['interactionDispatching', config.dispatch.id],
+            ['interactionDispatched', config.dispatch.id]
+        ]);
+    });
+
     it('clears the choices when an autocomplete handler throws a Silence', async () => {
         class Quiet {
             execute(): void {

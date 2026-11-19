@@ -1177,9 +1177,7 @@ describe('InteractionDispatcher Integration', () => {
             });
         });
 
-        it('publishes interactionDispatching before interactionDispatched, with the same dispatch id', async ({
-            bootWith
-        }) => {
+        it('publishes interactionDispatching with the interaction id', async ({ bootWith }) => {
             const { seedcord, controller } = await bootWith(
                 `
                 import { SlashHandler, SlashRoute } from '${seedcordPath}';
@@ -1192,15 +1190,12 @@ describe('InteractionDispatcher Integration', () => {
                 }
                 `
             );
-            const seen: { key: string; dispatchId: string; interactionId: string }[] = [];
-            for (const key of ['interactionDispatching', 'interactionDispatched'] as const) {
-                seedcord.bus.on(key, ({ dispatchId, interactionId }) => seen.push({ key, dispatchId, interactionId }));
-            }
+            const starts: SubscriptionData<'interactionDispatching'>[] = [];
+            seedcord.bus.on('interactionDispatching', (payload) => starts.push(payload));
 
             await controller.handleInteraction(fakeSlash('ok'));
 
-            expect(seen.map(({ key }) => key)).toEqual(['interactionDispatching', 'interactionDispatched']);
-            expect(seen[0]).toMatchObject({ dispatchId: seen[1]?.dispatchId, interactionId: 'i1' });
+            expect(starts[0]?.interactionId).toBe('i1');
         });
 
         it('reports a null guildId for a dispatch outside a guild', async ({ bootWith }) => {

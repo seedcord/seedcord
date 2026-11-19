@@ -14,7 +14,7 @@ The `where` column lists which transport publishes each key.
 | `unknownException` | both | a raw throw reaches the fault boundary, or the Node process catches an unhandled error |
 | `handledException` | both | a [`Notice`](ref:core/Notice) with `report` true is caught |
 | `unhandledInteractionError` | both | an interaction dispatch throws past the boundary |
-| `interactionDispatching` | both | an interaction dispatch starts, before its middleware, gates, and handler run |
+| `interactionDispatching` | both | an interaction dispatch starts, before its plugin members, middleware, gates, and handler run |
 | `interactionDispatched` | both | one dispatch finishes |
 | `responseAttempted` | both | any write through the reply surface |
 | `commandsDeployed` | both | a command deploy finishes |

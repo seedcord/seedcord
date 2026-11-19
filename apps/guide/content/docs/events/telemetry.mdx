@@ -27,7 +27,7 @@ export class SlowDispatch extends Subscriber<'interactionDispatched'> {
 
 `SlowDispatch` logs any dispatch that took longer than `SLOW_MS`, two seconds, with its route and outcome. If your handler hangs though, seedcord never publishes `interactionDispatched`, so `SlowDispatch` can't log it.
 
-seedcord also publishes `interactionDispatching` when a dispatch starts, with the same `dispatchId`. If an id shows up there and never in `interactionDispatched`, that dispatch's handler is still running.
+seedcord also publishes `interactionDispatching` when a dispatch starts, with the same `dispatchId`. If an id shows up there and never in `interactionDispatched`, that dispatch is still running. The one exception is a throw past the boundary, which publishes `unhandledInteractionError` with the same `interactionId`.
 
 ## What one `interactionDispatched` reports
 
@@ -43,7 +43,7 @@ seedcord also publishes `interactionDispatching` when a dispatch starts, with th
 | `fallback` | `boolean` | true when the interaction didn't match a route and the unhandled default ran |
 | `userId` | `string \| null` | who ran the route, null when the payload didn't carry a user |
 | `guildId` | `string \| null` | the guild it came from, null in DMs |
-| `durationMs` | `number` | dispatch entry until the handler returns or its error card is sent |
+| `durationMs` | `number` | dispatch entry until the handler returns or seedcord answers its throw or refusal |
 | `queuedMs` | `number` | Discord's interaction creation until dispatch entry |
 
 {/* prettier-ignore-end */}
