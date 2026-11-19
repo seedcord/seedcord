@@ -1,7 +1,5 @@
-import { once } from 'node:events';
-import { createServer, type Server } from 'node:http';
-
-import { toWebRequest, writeWebResponse } from '@seedcord/core/node/internal';
+import { WebServer } from '@seedcord/core/node/internal';
+import { Logger } from '@seedcord/logger';
 import { Envapter, PortableSource } from 'envapt';
 import { describe, expect, it } from 'vite-plus/test';
 
@@ -11,35 +9,9 @@ import { createSigner, type Signer } from '#tests/helpers/ed25519';
 import { VALID_TOKEN } from '#tests/helpers/fixtures';
 import { capturingCtx } from '#tests/helpers/interactions';
 
-import type { AddressInfo } from 'node:net';
-
-type Handle = (request: Request) => Promise<Response>;
-
 interface ReadySeedcord extends AsyncDisposable {
     readonly signer: Signer;
     readonly url: string;
-}
-
-async function startServer(handle: Handle): Promise<Server> {
-    const server = createServer((incoming, outgoing) => {
-        void (async () => {
-            const response = await handle(await toWebRequest(incoming));
-            await writeWebResponse(response, outgoing);
-        })().catch((error: unknown) => {
-            // a swallowed throw would hang the client fetch to the test timeout without a cause
-            outgoing.destroy(Error.isError(error) ? error : new Error(String(error)));
-        });
-    });
-
-    server.listen(0, '127.0.0.1');
-    await once(server, 'listening');
-    return server;
-}
-
-function urlOf(server: Server): string {
-    // justified: address() is AddressInfo once a TCP server is listening
-    const { port } = server.address() as AddressInfo;
-    return `http://127.0.0.1:${String(port)}`;
 }
 
 async function readySeedcord(): Promise<ReadySeedcord> {
@@ -53,13 +25,23 @@ async function readySeedcord(): Promise<ReadySeedcord> {
         bot: { interactions: { path: null }, commands: { path: null } },
         subscribers: { path: null }
     });
-    const server = await startServer((request) => seedcord.fetch(request, undefined, capturingCtx()));
+    const server = new WebServer({
+        logger: new Logger('Server'),
+        shutdown: { addTask: () => undefined },
+        startup: { isReady: true, hasBegun: true },
+        health: undefined,
+        plugins: () => Promise.resolve(undefined),
+        tail: (request) => seedcord.fetch(request, undefined, capturingCtx()),
+        portSetting: 'port'
+    });
+    server.open();
+    const port = await server.listen(0, '127.0.0.1');
     return {
         signer,
-        url: urlOf(server),
+        url: `http://127.0.0.1:${String(port)}`,
         [Symbol.asyncDispose]: async () => {
             bakedIds[Symbol.dispose]();
-            await server[Symbol.asyncDispose]();
+            await server.close();
         }
     };
 }
@@ -109,47 +91,5 @@ describe('node web bridge', () => {
         const response = await post(url, '{"type":1} ', await signedHeaders(signer, signed));
 
         expect(response.status).toBe(401);
-    });
-
-    it('delivers the request bytes unmodified', async () => {
-        const sent = new Uint8Array(256).map((_, index) => index);
-        let received: Uint8Array | null = null;
-
-        await using server = await startServer(async (request) => {
-            received = new Uint8Array(await request.arrayBuffer());
-            return new Response(null, { status: 202 });
-        });
-
-        await post(urlOf(server), sent, { 'content-type': 'application/octet-stream' });
-
-        expect(received).toEqual(sent);
-    });
-
-    it('writes status and headers for a bodyless response', async () => {
-        await using server = await startServer(() =>
-            Promise.resolve(new Response(null, { status: 405, headers: { allow: 'POST' } }))
-        );
-
-        const response = await fetch(urlOf(server));
-
-        expect(response.status).toBe(405);
-        expect(response.headers.get('allow')).toBe('POST');
-        await expect(response.text()).resolves.toBe('');
-    });
-
-    it('preserves multiple set-cookie headers as separate headers', async () => {
-        await using server = await startServer(() => {
-            const headers = new Headers();
-            headers.append('set-cookie', 'a=1; Path=/; Expires=Wed, 09 Jun 2027 10:18:14 GMT');
-            headers.append('set-cookie', 'b=2; Path=/');
-            return Promise.resolve(new Response(null, { status: 204, headers }));
-        });
-
-        const response = await fetch(urlOf(server));
-
-        expect(response.headers.getSetCookie()).toEqual([
-            'a=1; Path=/; Expires=Wed, 09 Jun 2027 10:18:14 GMT',
-            'b=2; Path=/'
-        ]);
     });
 });

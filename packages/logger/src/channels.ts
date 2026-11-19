@@ -6,7 +6,6 @@ export const FRAMEWORK_CHANNELS = [
     'default',
     'bot',
     'lifecycle',
-    'health',
     'interactions',
     'events',
     'commands',

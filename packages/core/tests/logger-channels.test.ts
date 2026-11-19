@@ -1,11 +1,9 @@
 import { LoggerChannelRegistry } from '@seedcord/logger';
-import { beforeEach, describe, expect, it, vi } from 'vite-plus/test';
+import { beforeEach, describe, expect, it } from 'vite-plus/test';
 
-import { HealthCheck } from '#node/HealthCheck';
 import { Bus, busLoggerOf } from '#subscribers/Bus';
 
 import type { CoreBase } from '#interfaces/CoreBase';
-import type { CoordinatedShutdown } from '#node/Lifecycle/CoordinatedShutdown';
 import type { ILogSink, LogRecord } from '@seedcord/types';
 
 class FakeSink implements ILogSink {
@@ -33,13 +31,5 @@ describe('flat-site log channels', () => {
         busLoggerOf(new Bus({} as CoreBase)).info('ran');
 
         expect(sink.records[0]).toMatchObject({ channel: 'subscribers', label: 'Subscribers' });
-    });
-
-    it('puts the health check on the health channel', () => {
-        // justified: the ctor only reaches addTask
-        const shutdown = { addTask: vi.fn() } as unknown as CoordinatedShutdown;
-        new HealthCheck(shutdown, { port: 0 }, () => Promise.resolve(undefined)).logger.info('ran');
-
-        expect(sink.records[0]).toMatchObject({ channel: 'health', label: 'HealthCheck' });
     });
 });

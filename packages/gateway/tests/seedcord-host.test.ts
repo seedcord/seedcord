@@ -1,6 +1,6 @@
 import { createServer } from 'node:net';
 
-import { ShutdownPhase, shutdownOf, StartupPhase } from '@seedcord/core/node/internal';
+import { ShutdownPhase, StartupPhase } from '@seedcord/core/node/internal';
 import { SeedcordErrorCode } from '@seedcord/errors';
 import { Logger, LoggerChannelRegistry } from '@seedcord/logger';
 import { HostShutdown, HostStartup } from '@seedcord/types/internal';
@@ -41,6 +41,15 @@ async function healthStatusWithin(port: number, ms: number): Promise<number | 'r
     return 'refused';
 }
 
+// the mock client never connects, and login waits on ClientReady
+function readyOnLogin(seedcord: Seedcord): void {
+    vi.spyOn(seedcord.bot, 'botToken', 'get').mockReturnValue('token');
+    const client = seedcord.bot.client as unknown as { once: Mock };
+    client.once.mockImplementation((event: Events, onReady: () => void) => {
+        if (event === Events.ClientReady) onReady();
+    });
+}
+
 function reset(): void {
     // @ts-expect-error reset the Seedcord singleton between tests
     Seedcord.reset();
@@ -77,16 +86,25 @@ describe('Seedcord host', () => {
         expect(seedcord.rest).toBe(seedcord.bot.client.rest);
     });
 
-    it('registers the health server by default', () => {
-        const seedcord = new Seedcord(testConfig());
+    it("serves a plugin's route on its server and answers 404 to any other path", async () => {
+        const port = await freePort();
+        class Page extends Plugin {
+            public init(): Promise<void> {
+                return Promise.resolve();
+            }
 
-        expect(shutdownOf(seedcord).removeTask(ShutdownPhase.Drain, 'stop-healthcheck-server')).toBe(true);
-    });
+            public override fetch(request: Request): Response | undefined {
+                return new URL(request.url).pathname === '/page' ? new Response('page') : undefined;
+            }
+        }
+        await using seedcord = new Seedcord(testConfig({ healthCheck: { port } })).attach('page', Page);
+        readyOnLogin(seedcord);
+        await seedcord.start();
 
-    it('healthCheck: false skips the health server', () => {
-        const seedcord = new Seedcord(testConfig({ healthCheck: false }));
+        const page = await fetch(`http://127.0.0.1:${String(port)}/page`);
+        const other = await fetch(`http://127.0.0.1:${String(port)}/other`);
 
-        expect(shutdownOf(seedcord).removeTask(ShutdownPhase.Drain, 'stop-healthcheck-server')).toBe(false);
+        expect([await page.text(), other.status]).toEqual(['page', 404]);
     });
 
     it('rejects a restart after a failed start', async () => {
@@ -157,12 +175,7 @@ describe('Seedcord host', () => {
             }
         }
         await using seedcord = new Seedcord(testConfig({ healthCheck: { port } })).attach('slow', SlowReady);
-        vi.spyOn(seedcord.bot, 'botToken', 'get').mockReturnValue('token');
-        // the mock client never connects. login waits on ClientReady
-        const client = seedcord.bot.client as unknown as { once: Mock };
-        client.once.mockImplementation((event: Events, onReady: () => void) => {
-            if (event === Events.ClientReady) onReady();
-        });
+        readyOnLogin(seedcord);
 
         const starting = seedcord.start();
         await readyStarted;

@@ -91,14 +91,14 @@ describe('a plugin fetch method on node', () => {
         expect(await response.json()).toEqual({ type: 1 });
     });
 
-    it('answers 405 for a GET that every plugin passes on', async () => {
+    it('answers 404 for a GET that every plugin passes on', async () => {
         await bindSignedEnv();
         await using host = new Seedcord(config()).attach('pages', Pages);
         await host.start();
 
         const response = await host.fetch(new Request('http://bot.test/other'));
 
-        expect(response.status).toBe(405);
+        expect(response.status).toBe(404);
     });
 
     it.each([

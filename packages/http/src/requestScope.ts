@@ -5,7 +5,7 @@ export interface EngineContext {
     waitUntil(promise: Promise<unknown>): void;
 }
 
-// edge Seedcord.fetch and NodeEndpoint run each request inside this with its ctx.
+// edge Seedcord.fetch and the node Seedcord's endpoint run each engine request inside this with its ctx.
 // anything that request kicks off, even a subscriber publishing way later, gets the same ctx back
 export const requestScope = new AsyncLocalStorage<EngineContext>();
 

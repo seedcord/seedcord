@@ -164,13 +164,12 @@ describe('the interactions engine', () => {
         expect(response.status).toBe(400);
     });
 
-    it('rejects a non-POST method with 405', async () => {
+    it('answers a non-POST method with 404', async () => {
         const { handle } = await readySeedcord();
 
         const response = await handle(new Request('https://bot.example/interactions'));
 
-        expect(response.status).toBe(405);
-        expect(response.headers.get('allow')).toBe('POST');
+        expect(response.status).toBe(404);
     });
 
     it('throws CoreEdgeUnbuilt when the worker is missing ids from seedcord build', async () => {

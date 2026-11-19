@@ -19,7 +19,7 @@ export { FaultBoundary, type FaultDetails } from '#src/notices/FaultBoundary';
 export { FixedScope } from '#src/plugin/Plugin';
 export type { PluginArgs, PluginCtor } from '#src/plugin/Plugin';
 export type { Runtime, Transport } from '#src/plugin/options';
-export { DEV_URL_HEADER } from '#src/devUrlHeader';
+export { DEV_URL_HEADER, WORKER_PROBE } from '#src/cliHeaders';
 export { sealAttachments } from '#src/plugin/PluginHost';
 export { PluginRegistry, type PluginAnswer } from '#src/plugin/PluginRegistry';
 export { splitPluginKey } from '#src/plugin/splitPluginKey';

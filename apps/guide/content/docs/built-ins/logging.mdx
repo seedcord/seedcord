@@ -117,9 +117,8 @@ These names belong to the framework, and [`FRAMEWORK_CHANNELS`](ref:logger/FRAME
 | channel | what arrives there |
 | --- | --- |
 | `default` | a logger built without a channel |
-| `bot` | the client login on gateway, the interactions server on http, plus emoji and command injection |
+| `bot` | the client login on gateway, the web server and its errors, plus emoji and command injection |
 | `lifecycle` | each startup and shutdown task, and the signal that stopped your bot |
-| `health` | the health check server binding and its errors |
 | `interactions` | which handler ran, unmatched routes, and how long dispatch and the reply took |
 | `events` | which listeners attached, and which handler ran for an event. Gateway only |
 | `commands` | the commands seedcord loaded, and the deploy summary |

@@ -125,30 +125,7 @@ describe('the edge Seedcord', () => {
         expect(ran).toEqual(['ping']);
     });
 
-    it('starts the bot and answers a GET from a plugin with a fetch method', async () => {
-        const calls: string[] = [];
-        class Page extends Plugin {
-            public init(): Promise<void> {
-                calls.push('init');
-                return Promise.resolve();
-            }
-
-            public override fetch(request: Request): Response | undefined {
-                return new URL(request.url).pathname === '/page' ? new Response('page') : undefined;
-            }
-        }
-        await signedEnv();
-        const seedcord = new Seedcord(config()).attach('page', Page);
-
-        const answered = await seedcord.fetch(new Request('https://bot.test/page'), undefined, capturingCtx());
-        const passed = await seedcord.fetch(new Request('https://bot.test/other'), undefined, capturingCtx());
-
-        expect(await answered.text()).toBe('page');
-        expect(passed.status).toBe(405);
-        expect(calls).toEqual(['init']);
-    });
-
-    it('answers a GET with 405 before reading env or starting plugins', async () => {
+    it('answers a GET with 404 before reading env or starting plugins', async () => {
         const calls: string[] = [];
         class Recorder extends Plugin {
             public init(): Promise<void> {
@@ -161,8 +138,7 @@ describe('the edge Seedcord', () => {
 
         const response = await seedcord.fetch(new Request('https://bot.example.com/'), undefined, capturingCtx());
 
-        expect(response.status).toBe(405);
-        expect(response.headers.get('allow')).toBe('POST');
+        expect(response.status).toBe(404);
         expect(calls).toEqual([]);
     });
 

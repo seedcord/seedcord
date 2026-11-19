@@ -22,20 +22,20 @@ const TIMESTAMP_HEADER = 'x-signature-timestamp';
 const ACCEPTED = 202;
 const BAD_REQUEST = 400;
 const UNAUTHORIZED = 401;
-const METHOD_NOT_ALLOWED = 405;
+const NOT_FOUND = 404;
 
 // widened so the raw payload's number field compares without an unsafe enum comparison
 const PING: number = InteractionType.Ping;
 
 const decoder = new TextDecoder();
 
-type Outcome = 'unsigned' | 'stale' | 'bad-signature' | 'bad-body' | 'ping' | 'replay' | 'dispatched';
+type Outcome = 'not-post' | 'unsigned' | 'stale' | 'bad-signature' | 'bad-body' | 'ping' | 'replay' | 'dispatched';
 type Answer = readonly [Response, Outcome];
 
-// discord only POSTs to the interactions endpoint
+// discord only POSTs interactions, and plugins have already passed on anything else
 export function rejectNonPost(request: Request): Response | undefined {
     if (request.method === 'POST') return undefined;
-    return new Response(null, { status: METHOD_NOT_ALLOWED, headers: { allow: 'POST' } });
+    return new Response(null, { status: NOT_FOUND });
 }
 
 function hasInteractionType(payload: unknown): payload is { type: number } {
@@ -62,8 +62,10 @@ export class InteractionEngine {
         return response;
     }
 
-    // only POSTs get here. edge Seedcord.fetch and NodeEndpoint reject every other method first
     private async respond(request: Request): Promise<Answer> {
+        const notPost = rejectNonPost(request);
+        if (notPost) return [notPost, 'not-post'];
+
         const signature = request.headers.get(SIGNATURE_HEADER);
         const timestamp = request.headers.get(TIMESTAMP_HEADER);
         if (signature === null || timestamp === null) return [new Response(null, { status: UNAUTHORIZED }), 'unsigned'];

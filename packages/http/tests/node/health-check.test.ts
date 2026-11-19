@@ -40,6 +40,6 @@ describe('the health path on a node http bot', () => {
         await bindSignedEnv();
         await using host = await new Seedcord({ ...serverConfig(), healthCheck: false }).start();
 
-        expect(await healthStatus(host)).toBe(405);
+        expect(await healthStatus(host)).toBe(404);
     });
 });

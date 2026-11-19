@@ -9,7 +9,6 @@ export type FrameworkChannel =
     | 'default'
     | 'bot'
     | 'lifecycle'
-    | 'health'
     | 'interactions'
     | 'events'
     | 'commands'

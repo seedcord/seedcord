@@ -10,7 +10,8 @@ import {
     PluginLifecycle,
     sealAttachments,
     settleWithin,
-    toWireError
+    toWireError,
+    WORKER_PROBE
 } from '@seedcord/core/internal';
 import { PluginHost } from '@seedcord/core/plugin';
 import { SeedcordErrorCode } from '@seedcord/errors';
@@ -143,26 +144,28 @@ export class Seedcord extends PluginHost<'http', 'edge'> {
     }
 
     /**
-     * Answers one web request: any plugin's `fetch` first, then Discord's interactions. Cloudflare
-     * passes `env` and `ctx`, but this method reads only `ctx`. Import your bindings as `env` from
-     * `cloudflare:workers`. `cf workers types` writes their types. Work that continues after the 202
-     * response runs under `ctx.waitUntil`.
+     * Answers one web request: each plugin's `fetch` in attach order, then Discord's interactions.
+     * Anything besides a POST that reaches the interactions gets a 404. Until you attach a plugin
+     * with `fetch`, that 404 comes back before the bot starts.
      *
-     * Until you attach a plugin with `fetch`, any request besides a POST gets a 405 before the bot
-     * starts. After that, the bot starts first so the plugin can answer.
+     * Cloudflare passes `env` and `ctx`, but this method reads only `ctx`. Import your bindings as
+     * `env` from `cloudflare:workers`. `cf workers types` writes their types. Work that continues
+     * after the 202 response runs under `ctx.waitUntil`.
      */
     public async fetch(incoming: Request, _env: unknown, ctx: EngineContext): Promise<Response> {
+        if (incoming.headers.has(WORKER_PROBE.header)) return new Response(null, { status: WORKER_PROBE.status });
+
         // seedcord dev sends every request to / so vite can't serve the bot's source
         const devUrl = this.#readsBakedIds ? null : incoming.headers.get(DEV_URL_HEADER);
         const request = devUrl === null ? incoming : new Request(new URL(devUrl, incoming.url), incoming);
 
-        const notPost = rejectNonPost(request);
-        // a bot without a fetch plugin answers this before it starts
-        if (notPost && !this[HostPlugins].answersRequests) return notPost;
+        // skips starting the bot when only the engine could answer
+        const early = this[HostPlugins].answersRequests ? undefined : rejectNonPost(request);
+        if (early) return early;
 
         return requestScope.run(ctx, async () => {
             await this.#start();
-            return (await this[HostPlugins].answer(request)) ?? notPost ?? this.#service.engine.handle(request);
+            return (await this[HostPlugins].answer(request)) ?? this.#service.engine.handle(request);
         });
     }
 

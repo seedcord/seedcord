@@ -95,7 +95,7 @@ export abstract class ServerHost<BotT extends Transport> extends PluginHost<BotT
 
         try {
             // nothing a plugin adds through startup.addTask runs after this
-            await this[HostStartup].run(() => this.openHealth());
+            await this[HostStartup].run(() => this.openServer());
         } catch (caught) {
             this.#startFailed = true;
             await this.#lifecycle.rollback();
@@ -108,7 +108,7 @@ export abstract class ServerHost<BotT extends Transport> extends PluginHost<BotT
     }
 
     /** @internal */
-    protected openHealth(): Promisable<void> {}
+    protected openServer(): Promisable<void> {}
 
     /**
      * Runs the coordinated shutdown without calling `process.exit`. A new `Seedcord` can be
