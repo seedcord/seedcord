@@ -112,7 +112,7 @@ export interface BotConfig {
 }
 
 /**
- * The transport configs' `healthCheck` field. `false` disables the health server, `true` and
+ * The transport configs' `healthCheck` field. `false` turns the health path off, `true` and
  * `undefined` use the defaults, an object supplies {@link HealthCheckConfig} options.
  */
 export type HealthCheckOption = boolean | HealthCheckConfig;
@@ -122,7 +122,7 @@ export type HealthCheckOption = boolean | HealthCheckConfig;
  */
 export interface HealthCheckConfig {
     /**
-     * Port the health-check server listens on.
+     * Port the health-check server listens on. Plugin routes use the same port.
      *
      * @defaultValue `6967`
      */

@@ -160,7 +160,7 @@ describe('Seedcord host', () => {
         expect(seen).not.toEqual([]);
     });
 
-    it('answers the health path only once every plugin is ready', async () => {
+    it('opens its server when Ready begins, with health at 503 until every plugin is ready', async () => {
         const port = await freePort();
         const { promise: readyStarted, resolve: markReadyStarted } = Promise.withResolvers<undefined>();
         const { promise: readyGate, resolve: finishReady } = Promise.withResolvers<undefined>();
@@ -173,17 +173,23 @@ describe('Seedcord host', () => {
                 markReadyStarted(undefined);
                 return readyGate;
             }
+
+            public override fetch(request: Request): Response | undefined {
+                return new URL(request.url).pathname === '/page' ? new Response('page') : undefined;
+            }
         }
         await using seedcord = new Seedcord(testConfig({ healthCheck: { port } })).attach('slow', SlowReady);
         readyOnLogin(seedcord);
 
         const starting = seedcord.start();
         await readyStarted;
-        const whileReadying = await healthStatusWithin(port, 200);
+        const healthWhileReadying = await healthStatusWithin(port, 1000);
+        const page = await fetch(`http://127.0.0.1:${String(port)}/page`);
         finishReady(undefined);
         await starting;
 
-        expect([whileReadying, await healthStatusWithin(port, 1000)]).toEqual(['refused', 200]);
+        expect([healthWhileReadying, await page.text()]).toEqual([503, 'page']);
+        expect(await healthStatusWithin(port, 1000)).toBe(200);
     });
 
     it('disposes a plugin whose init() finishes after startup was aborted', async () => {

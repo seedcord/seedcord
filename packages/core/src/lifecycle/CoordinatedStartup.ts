@@ -6,7 +6,6 @@ import { StartupPhase } from '#src/lifecycle/phases';
 import { CoordinatedLifecycle } from './CoordinatedLifecycle';
 
 import type { LifecycleTask } from './LifecycleTypes';
-import type { Promisable } from 'type-fest';
 
 const PHASE_ORDER: StartupPhase[] = [StartupPhase.Configuration, StartupPhase.Login, StartupPhase.Ready];
 
@@ -67,7 +66,7 @@ export class CoordinatedStartup extends CoordinatedLifecycle<StartupPhase> {
 
     // each phase completes fully before the next begins
     /** @internal */
-    public async run(afterReady?: () => Promisable<void>): Promise<void> {
+    public async run(): Promise<void> {
         if (this.#state === 'finished') {
             this.logger.warn('Startup sequence has already completed');
             return;
@@ -82,12 +81,9 @@ export class CoordinatedStartup extends CoordinatedLifecycle<StartupPhase> {
         this.beginRun();
         this.logger.info(`${paint.mint.bold('Starting')} coordinated startup sequence`);
 
-        const steps: (() => Promisable<void>)[] = PHASE_ORDER.map((phase) => () => this.runPhase(phase));
-        if (afterReady) steps.push(afterReady);
-
         try {
-            for (const step of steps) {
-                await step();
+            for (const phase of PHASE_ORDER) {
+                await this.runPhase(phase);
                 if (this.isAborted()) {
                     this.logger.warn('Startup sequence aborted');
                     return;

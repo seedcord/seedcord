@@ -16,7 +16,6 @@ import type { CoordinatedShutdown, ShutdownTasks } from '#node/Lifecycle/Coordin
 import type { CoordinatedStartup, StartupTasks } from '#src/lifecycle/CoordinatedStartup';
 import type { Transport } from '#src/plugin/options';
 import type { Config } from '@seedcord/types';
-import type { Promisable } from 'type-fest';
 
 /** Base class for a transport `Seedcord` class that runs as a long-lived node or bun process. */
 export abstract class ServerHost<BotT extends Transport> extends PluginHost<BotT, 'server'> {
@@ -94,8 +93,7 @@ export abstract class ServerHost<BotT extends Transport> extends PluginHost<BotT
         this[HostShutdown].gateOnStartup(startupSettled.promise);
 
         try {
-            // nothing a plugin adds through startup.addTask runs after this
-            await this[HostStartup].run(() => this.openServer());
+            await this[HostStartup].run();
         } catch (caught) {
             this.#startFailed = true;
             await this.#lifecycle.rollback();
@@ -106,9 +104,6 @@ export abstract class ServerHost<BotT extends Transport> extends PluginHost<BotT
 
         return this;
     }
-
-    /** @internal */
-    protected openServer(): Promisable<void> {}
 
     /**
      * Runs the coordinated shutdown without calling `process.exit`. A new `Seedcord` can be

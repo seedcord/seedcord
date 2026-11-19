@@ -36,8 +36,7 @@ function webServer(overrides: Partial<WebServerOptions> = {}): WebServer {
 }
 
 async function listening(server: WebServer): Promise<string> {
-    server.open();
-    const port = await server.listen(0, '127.0.0.1');
+    const port = await server.serve({ port: 0, host: '127.0.0.1' });
     return `http://127.0.0.1:${String(port)}`;
 }
 
@@ -79,7 +78,7 @@ describe('WebServer requests', () => {
         const pending = server.fetch(get('/other'));
         await Promise.resolve();
         const heldBeforeOpen = [...seen];
-        server.open();
+        await server.serve(undefined);
         const response = await pending;
 
         expect(heldBeforeOpen).toEqual([]);
@@ -89,7 +88,7 @@ describe('WebServer requests', () => {
 
     it('answers 503 to health and every other request once closed', async () => {
         const server = webServer();
-        server.open();
+        await server.serve(undefined);
         await server.close();
 
         const health = await server.fetch(get('/health'));
@@ -121,7 +120,7 @@ describe('WebServer on a port', () => {
         // justified: address() is AddressInfo once a TCP server is listening
         const { port } = holder.address() as AddressInfo;
 
-        await expect(webServer().listen(port, '127.0.0.1')).rejects.toMatchObject({
+        await expect(webServer().serve({ port, host: '127.0.0.1' })).rejects.toMatchObject({
             code: SeedcordErrorCode.PortInUse,
             message: expect.stringContaining('server.port') as string
         });
@@ -199,7 +198,7 @@ describe('WebServer on a port', () => {
         using logs = captureLogs();
         const server = webServer();
 
-        await server.listen(0, undefined);
+        await server.serve({ port: 0, host: undefined });
         await server.close();
 
         const listened = logs.at('info').join('\n');

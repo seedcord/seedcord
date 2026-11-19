@@ -50,7 +50,7 @@ export class Seedcord extends ServerHost<'http'> implements SeedcordInstance {
     readonly #hmrManager: HmrManager;
     readonly #logger = new Logger('Server', { channel: 'bot' });
 
-    #boundPort?: number;
+    #boundPort: number | undefined;
     #fetchedUsername?: string | undefined;
 
     public readonly config: HttpServerConfig;
@@ -106,9 +106,9 @@ export class Seedcord extends ServerHost<'http'> implements SeedcordInstance {
      * it in your own server when the config sets `port: false`, and send it every path so plugin
      * routes reach the bot.
      *
-     * Rejects with `CoreFetchBeforeStart` until `start()` is called. While `start()` runs, the health
-     * path answers 503 and any other request waits until startup finishes. Answers 503 once shutdown
-     * begins or `start()` fails.
+     * Rejects with `CoreFetchBeforeStart` until `start()` is called. Until every plugin's `ready()`
+     * finishes, the health path answers 503. Any other request waits until the Ready phase begins.
+     * Answers 503 once shutdown begins or `start()` fails.
      *
      * @example
      * ```ts
@@ -151,10 +151,10 @@ export class Seedcord extends ServerHost<'http'> implements SeedcordInstance {
         // the Login tasks read the token authenticate sets
         tasks.addDiscordTasks();
 
-        // listens during Ready so seedcord dev can open its tunnel. requests wait for openServer()
-        this.startup.addTask(StartupPhase.Ready, 'http-server', async () => {
+        this.startup.addTask(StartupPhase.Ready, 'web-server', async () => {
             const { port = DEFAULT_PORT } = this.config;
-            if (port !== false) this.#boundPort = await this.#web.listen(port, this[HostListenHost]);
+            this.#boundPort = await this.#web.serve(port === false ? undefined : { port, host: this[HostListenHost] });
+            // seedcord dev opens its tunnel to this port
             getDevChannel()?.send('seedcord:server-port', { port: this.#boundPort ?? false });
         });
 
@@ -166,11 +166,6 @@ export class Seedcord extends ServerHost<'http'> implements SeedcordInstance {
     /** The bot's Discord application id. Throws if you read it before the Configuration phase. */
     public get applicationId(): string {
         return this.#service.applicationId;
-    }
-
-    /** @internal */
-    protected override openServer(): void {
-        this.#web.open();
     }
 
     async #fetchUsername(): Promise<void> {

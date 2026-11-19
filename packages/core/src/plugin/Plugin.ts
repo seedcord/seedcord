@@ -173,6 +173,8 @@ export abstract class Plugin<
      * and tries the next plugin.
      *
      * Check the path before you await anything because every interaction waits for this method.
+     * On a server, it can run before `ready()` finishes because requests reach it once the Ready
+     * phase begins.
      *
      * @throws A **SeedcordError** when this method reads or locks the body and returns `undefined`.
      * @example

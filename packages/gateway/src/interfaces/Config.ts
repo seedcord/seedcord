@@ -46,8 +46,9 @@ export interface GatewayConfig extends Config {
     bot: GatewayBotConfig;
 
     /**
-     * The health-check server. `false` disables it, `true` or omit for the defaults, an object
-     * configures it.
+     * The bot's web server, which answers the health path and plugin routes. `false` turns the health
+     * path off, and the server then opens only if a plugin has `fetch`. `true` or omit for the
+     * defaults, an object configures it.
      */
     healthCheck?: HealthCheckOption;
 }

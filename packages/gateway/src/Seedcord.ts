@@ -75,7 +75,7 @@ export class Seedcord extends ServerHost<'gateway'> implements SeedcordInstance 
             startup: this[HostStartup],
             health: this.#health && new HealthResponder(this.#health.path),
             plugins: async (request) => this[HostPlugins].answer(request),
-            // nothing else sits at any path because a gateway bot takes interactions over the websocket
+            // every other path gets a 404 because a gateway bot takes its interactions over the websocket
             tail: () => Promise.resolve(new Response(null, { status: NOT_FOUND })),
             portSetting: 'healthCheck.port'
         });
@@ -85,11 +85,10 @@ export class Seedcord extends ServerHost<'gateway'> implements SeedcordInstance 
 
     /**
      * Answers one web request: the health path, then each plugin's `fetch` in attach order, then a 404.
-     * Mount it in your own server to serve plugin routes on a port you already run.
      *
-     * Rejects with `CoreFetchBeforeStart` until `start()` is called. While `start()` runs, the health
-     * path answers 503 and any other request waits until startup finishes. Answers 503 once shutdown
-     * begins or `start()` fails.
+     * Rejects with `CoreFetchBeforeStart` until `start()` is called. Until every plugin's `ready()`
+     * finishes, the health path answers 503. Any other request waits until the Ready phase begins.
+     * Answers 503 once shutdown begins or `start()` fails.
      */
     public fetch(request: Request): Promise<Response> {
         return this.#web.fetch(request);
@@ -108,15 +107,14 @@ export class Seedcord extends ServerHost<'gateway'> implements SeedcordInstance 
             await this.#subscribers.init();
             busLoggerOf(this.bus).utils.initialization('Subscribers', 'end');
         });
-    }
 
-    /** @internal */
-    protected override async openServer(): Promise<void> {
-        const health = this.#health;
-        if (health || this[HostPlugins].answersRequests) {
-            await this.#web.listen(health?.port ?? DEFAULT_HEALTH_PORT, health?.host);
-        }
-        this.#web.open();
+        this.startup.addTask(StartupPhase.Ready, 'web-server', async () => {
+            const health = this.#health;
+            const listens = health !== undefined || this[HostPlugins].answersRequests;
+            await this.#web.serve(
+                listens ? { port: health?.port ?? DEFAULT_HEALTH_PORT, host: health?.host } : undefined
+            );
+        });
     }
 
     /**

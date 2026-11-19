@@ -25,6 +25,11 @@ const PAYLOAD_TOO_LARGE = 413;
 const SERVICE_UNAVAILABLE = 503;
 const STOP_TIMEOUT_MS = 5000;
 
+export interface ListenAddress {
+    readonly port: number;
+    readonly host: string | undefined;
+}
+
 export interface WebServerOptions {
     readonly logger: Logger;
     readonly shutdown: ShutdownTasks;
@@ -38,7 +43,7 @@ export interface WebServerOptions {
 }
 
 // a node bot's web requests: health, then the plugins, then the transport's tail.
-// fetch() answers on its own, and listen() also serves it on a port
+// fetch() answers on its own, and serve() can also put it on a port
 export class WebServer {
     private readonly inFlight: InFlight;
     private server?: Server;
@@ -54,7 +59,7 @@ export class WebServer {
         const { startup, health } = this.options;
         if (!startup.hasBegun) throw new SeedcordError(SeedcordErrorCode.CoreFetchBeforeStart);
 
-        // a probe during startup gets its 503 right away because health skips the hold
+        // a host's health check during startup gets its 503 at once because health answers before admit()
         const answered = health?.answer(request, startup.isReady && !this.inFlight.closed);
         if (answered) return answered;
 
@@ -69,13 +74,14 @@ export class WebServer {
         this.inFlight.track(work);
     }
 
-    // requests that arrive before this wait in the hold
-    public open(): void {
+    // both transports call this when Ready begins, and requests that arrive earlier wait until then.
+    // resolves with the bound port, which differs from address.port when that's 0
+    public async serve(address: ListenAddress | undefined): Promise<number | undefined> {
         this.inFlight.open();
+        return address && this.listen(address.port, address.host);
     }
 
-    // resolves with the bound port, which differs from port when port is 0
-    public async listen(port: number, host: string | undefined): Promise<number> {
+    private async listen(port: number, host: string | undefined): Promise<number> {
         const server = createServer((incoming, outgoing) => {
             this.answer(server, incoming, outgoing).catch((error: unknown) => {
                 this.options.logger.error(`Failed to answer ${incoming.method ?? 'GET'} ${incoming.url ?? '/'}`, error);

@@ -34,8 +34,7 @@ async function readySeedcord(): Promise<ReadySeedcord> {
         tail: (request) => seedcord.fetch(request, undefined, capturingCtx()),
         portSetting: 'port'
     });
-    server.open();
-    const port = await server.listen(0, '127.0.0.1');
+    const port = await server.serve({ port: 0, host: '127.0.0.1' });
     return {
         signer,
         url: `http://127.0.0.1:${String(port)}`,
