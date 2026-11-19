@@ -4,12 +4,17 @@ import { GitHubApi } from '#src/lib/GitHubApi';
 
 const isCiPath = (path: string): boolean => /^\.github\/(workflows|actions)\//.test(path);
 const isBlogPath = (path: string): boolean => path.startsWith('apps/home/content/blog/');
+const isTasksPluginPath = (path: string): boolean => path.startsWith('plugins/tasks/');
 
 const REVIEW_RULES = [
     { reviewers: ['SerenModz21'], matches: () => true },
     {
         reviewers: ['KTrain5169'],
         matches: (paths: readonly string[]) => paths.some((path) => isCiPath(path) || isBlogPath(path))
+    },
+    {
+        reviewers: ['camdzic'],
+        matches: (paths: readonly string[]) => paths.some(isTasksPluginPath)
     }
 ];
 

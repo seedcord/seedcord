@@ -60,11 +60,18 @@ describe('the link gate', () => {
     });
 });
 
-describe('the guide', () => {
-    it('links only to pages, headings, files, and symbols that exist', async () => {
-        const site = await loadGuideSite();
-        const problems = [...site.sources].flatMap(([route, source]) => brokenLinks(site, route, source));
+// it's doing a lot of work reading every guide page and the docs symbol
+const WHOLE_GUIDE_TIMEOUT_MS = 30_000;
 
-        expect(problems).toEqual([]);
-    });
+describe('the guide', () => {
+    it(
+        'links only to pages, headings, files, and symbols that exist',
+        async () => {
+            const site = await loadGuideSite();
+            const problems = [...site.sources].flatMap(([route, source]) => brokenLinks(site, route, source));
+
+            expect(problems).toEqual([]);
+        },
+        WHOLE_GUIDE_TIMEOUT_MS
+    );
 });
