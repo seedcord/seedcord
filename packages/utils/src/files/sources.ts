@@ -6,7 +6,7 @@ import { SeedcordError } from '@seedcord/errors/internal';
 
 import { BotLayout } from './BotLayout';
 import { decodeFile } from './encodedFile';
-import { fileUrl } from './paths';
+import { comparePaths, fileUrl } from './paths';
 import { botFilesSlot } from './slots';
 
 import type { BotFolder } from './BotLayout';
@@ -109,7 +109,7 @@ class DiskFiles extends FileSource {
         return entries
             .filter(({ isFolder }) => !isFolder)
             .map(({ path: file }) => file)
-            .toSorted();
+            .toSorted(comparePaths);
     }
 }
 
@@ -153,7 +153,7 @@ class BuiltFiles extends FileSource {
         }
 
         const prefix = path.join(folder, path.sep);
-        return [...loaders].filter(([file]) => file.startsWith(prefix)).sort(([a], [b]) => (a < b ? -1 : 1));
+        return [...loaders].filter(([file]) => file.startsWith(prefix)).sort(([a], [b]) => comparePaths(a, b));
     }
 }
 

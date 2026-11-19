@@ -186,6 +186,21 @@ describe('interactionDispatched from the http dispatcher', () => {
         });
     });
 
+    it('publishes interactionDispatching with the interaction id', async () => {
+        const core = testCore(nullPathConfig, VALID_TOKEN);
+        const starts: SubscriptionData<'interactionDispatching'>[] = [];
+        core.bus.on('interactionDispatching', (payload) => starts.push(payload));
+
+        const execute = await dispatchInteraction({
+            resolved: resolvedSlash('ok', OkHandler),
+            core,
+            middlewares: new MiddlewareRegistry<InteractionMiddlewareConstructor>(interactionMiddleware)
+        });
+        await execute?.();
+
+        expect(starts[0]?.interactionId).toBe('int-1');
+    });
+
     it('runs a registered middleware on a matching dispatch', async () => {
         const { execute, published } = await dispatchedThrough(Audit);
         await execute?.();

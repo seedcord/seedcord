@@ -5,8 +5,10 @@ import { Attachment, AttachmentBuilder } from 'discord.js';
 import { describe, expect, it } from 'vite-plus/test';
 
 import { mockInteraction, senderFor } from './utils/senderMock';
+import { stubBus } from './utils/stubBus';
 
 import type { GatewayReplyResponse } from '#interfaces/ReplyResponse';
+import type { SubscriptionData } from '@seedcord/core';
 import type { ReplyResponse } from '@seedcord/types';
 
 const BYTES = new Uint8Array([0x73, 0x65, 0x65, 0x64]);
@@ -119,6 +121,29 @@ describe('the discord.js file forms', () => {
         const files = await replyWith([{ data: BYTES, name: 'a.txt' }, builder]);
 
         expect(files).toEqual([{ attachment: Buffer.from(BYTES), name: 'a.txt' }, builder]);
+    });
+});
+
+describe('the body responseAttempted reports', () => {
+    it('lists each file form by the name discord.js uploads it with', async () => {
+        const bus = stubBus();
+        const reported: SubscriptionData<'responseAttempted'>[] = [];
+        bus.on('responseAttempted', (payload) => reported.push(payload));
+        const builder = new AttachmentBuilder(Buffer.from(BYTES), { name: 'seed.txt', description: 'four bytes' });
+
+        await senderFor(mockInteraction(), bus).reply({
+            components,
+            files: [builder, { data: BYTES, name: 'a.txt' }, Buffer.from(BYTES), './fixture.txt']
+        });
+
+        expect(reported[0]?.body).toMatchObject({
+            files: [
+                { name: 'seed.txt', description: 'four bytes' },
+                { name: 'a.txt' },
+                { name: 'file.jpg' },
+                { name: 'fixture.txt' }
+            ]
+        });
     });
 });
 

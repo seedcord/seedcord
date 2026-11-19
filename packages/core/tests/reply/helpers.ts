@@ -1,8 +1,11 @@
 import { BaseReplySender } from '#reply/BaseReplySender';
+import { replyFileInfo } from '#reply/responseReport';
 import { DispatchContext } from '#src/dispatch/DispatchContext';
 import { busWith } from '#tests/utils/busWith';
 
+import type { SentFile } from '#reply/responseReport';
 import type { Bus } from '#subscribers/Bus';
+import type { ReplyFile } from '@seedcord/types';
 
 // chalk styles the messages
 export const stripAnsi = (input: string): string => input.replaceAll(/\[[0-9;]*m/g, '');
@@ -11,47 +14,61 @@ export interface TestMessage {
     id: string;
 }
 
-export const created: TestMessage = { id: 'm1' };
+const created: TestMessage = { id: 'm1' };
 
 export class TestSender extends BaseReplySender<TestMessage> {
     // the flags each reply, followUp, and defer wrote in order
     public readonly written: number[] = [];
+    // a test sets this to delay a write or make it reject. every writer awaits it first
+    public beforeWrite: () => Promise<void> = () => Promise.resolve();
 
-    public constructor(bus: Bus = busWith(), isEphemeralByDefault = true) {
-        super({ bus, dispatch: new DispatchContext('slash', 'ping'), interactionId: 'i1' }, isEphemeralByDefault);
+    public constructor(
+        bus: Bus = busWith(),
+        isEphemeralByDefault = true,
+        dispatch: DispatchContext = new DispatchContext('slash', 'ping')
+    ) {
+        super({ bus, dispatch, interactionId: 'i1' }, isEphemeralByDefault);
     }
 
-    protected writeReply(_response: unknown, flags: number): Promise<TestMessage> {
+    protected async writeReply(_response: unknown, flags: number): Promise<TestMessage> {
+        await this.beforeWrite();
         this.written.push(flags);
-        return Promise.resolve(created);
+        return created;
     }
-    protected writeDefer(flags: number): Promise<void> {
+    protected async writeDefer(flags: number): Promise<void> {
+        await this.beforeWrite();
         this.written.push(flags);
-        return Promise.resolve();
     }
-    protected writeDeferUpdate(): Promise<void> {
-        return Promise.resolve();
+    protected async writeDeferUpdate(): Promise<void> {
+        await this.beforeWrite();
     }
-    protected writeUpdate(): Promise<TestMessage> {
-        return Promise.resolve(created);
+    protected async writeUpdate(): Promise<TestMessage> {
+        await this.beforeWrite();
+        return created;
     }
-    protected writeFollowUp(_response: unknown, flags: number): Promise<TestMessage> {
+    protected async writeFollowUp(_response: unknown, flags: number): Promise<TestMessage> {
+        await this.beforeWrite();
         this.written.push(flags);
-        return Promise.resolve(created);
+        return created;
     }
-    protected writeEditOriginal(): Promise<TestMessage> {
-        return Promise.resolve(created);
+    protected async writeEditOriginal(): Promise<TestMessage> {
+        await this.beforeWrite();
+        return created;
     }
-    protected writeEditTarget(): Promise<TestMessage> {
-        return Promise.resolve(created);
+    protected async writeEditTarget(): Promise<TestMessage> {
+        await this.beforeWrite();
+        return created;
     }
-    protected writeDeleteOriginal(): Promise<void> {
-        return Promise.resolve();
+    protected async writeDeleteOriginal(): Promise<void> {
+        await this.beforeWrite();
     }
-    protected writeDeleteTarget(): Promise<void> {
-        return Promise.resolve();
+    protected async writeDeleteTarget(): Promise<void> {
+        await this.beforeWrite();
     }
-    protected writeModal(): Promise<void> {
-        return Promise.resolve();
+    protected async writeModal(): Promise<void> {
+        await this.beforeWrite();
+    }
+    protected describeFile(file: ReplyFile): SentFile {
+        return replyFileInfo(file);
     }
 }

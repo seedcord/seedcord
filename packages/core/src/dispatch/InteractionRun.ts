@@ -4,13 +4,13 @@ import { HostPlugins } from '@seedcord/types/internal';
 import { runInteractionGates } from '#gates/runGates';
 import { FaultBoundary } from '#src/notices/FaultBoundary';
 
-import { outcomeFor, queuedMsFor, reportDispatch } from './dispatchReport';
+import { DispatchTelemetry } from './DispatchTelemetry';
+import { outcomeFor } from './outcomeFor';
 import { resultFor, runAfter } from './runAfter';
 
 import type { GateContextBase } from '#gates/Gate';
 import type { CoreBase } from '#interfaces/CoreBase';
 import type { ApiErrorClass, FaultDetails, FaultSender } from '#src/notices/FaultBoundary';
-import type { DispatchOutcome } from '#subscribers/types/Subscriptions';
 import type { InteractionDispatch } from './DispatchContext';
 import type { DispatchOrigin } from './DispatchOrigin';
 import type { DispatchResult } from './dispatchResult';
@@ -59,13 +59,12 @@ export interface InteractionRunConfig {
 
 export class InteractionRun {
     private readonly ran: RunnableMiddleware[] = [];
-    private readonly startedAt = performance.now();
-    private readonly queuedMs: number;
+    private readonly telemetry: DispatchTelemetry;
     private readonly boundary: FaultBoundary;
 
     constructor(private readonly config: InteractionRunConfig) {
-        const { core, apiError, interactionId, dispatch } = config;
-        this.queuedMs = queuedMsFor(interactionId);
+        const { core, apiError, dispatch } = config;
+        this.telemetry = DispatchTelemetry.start(core.bus, config);
         this.boundary = new FaultBoundary(core, core.config.errors?.ignoreApiCodes, apiError, dispatch, () =>
             config.faultDetails()
         );
@@ -149,7 +148,7 @@ export class InteractionRun {
             await this.finish(answer, caught);
             return;
         }
-        this.report('handled');
+        this.telemetry.finish('handled');
         await runAfter(this.ran, { outcome: 'handled' }, this.config.logger);
     }
 
@@ -157,21 +156,8 @@ export class InteractionRun {
         try {
             await answer(caught);
         } finally {
-            this.report(outcomeFor(caught));
+            this.telemetry.finish(outcomeFor(caught));
             await runAfter(this.ran, resultFor(caught), this.config.logger);
         }
-    }
-
-    private report(outcome: DispatchOutcome): void {
-        const { core, dispatch, interactionId, origin } = this.config;
-        reportDispatch(core.bus, {
-            dispatch,
-            interactionId,
-            outcome,
-            userId: origin.userId,
-            guildId: origin.guildId,
-            startedAt: this.startedAt,
-            queuedMs: this.queuedMs
-        });
     }
 }

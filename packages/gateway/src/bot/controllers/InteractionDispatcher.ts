@@ -167,7 +167,10 @@ export class InteractionDispatcher implements Initializeable, HmrAware {
                 return this.handleInteraction(interaction).catch((caught: unknown) => {
                     const error = asError(caught);
                     this.logger.error(`[${paint.coral.bold('UNHANDLED ERROR AT ROOT')}] ${error.name}`, error.stack);
-                    this.core.bus[PublishDefault]('unhandledInteractionError', { error });
+                    this.core.bus[PublishDefault]('unhandledInteractionError', {
+                        error,
+                        interactionId: interaction.id
+                    });
                 });
             });
         });

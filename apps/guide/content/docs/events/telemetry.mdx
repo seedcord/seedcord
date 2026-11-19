@@ -25,7 +25,9 @@ export class SlowDispatch extends Subscriber<'interactionDispatched'> {
 }
 ```
 
-`SlowDispatch` logs any dispatch that took longer than `SLOW_MS`, two seconds, with its route and outcome.
+`SlowDispatch` logs any dispatch that took longer than `SLOW_MS`, two seconds, with its route and outcome. If your handler hangs though, seedcord never publishes `interactionDispatched`, so `SlowDispatch` can't log it.
+
+seedcord also publishes `interactionDispatching` when a dispatch starts, with the same `dispatchId`. If an id shows up there and never in `interactionDispatched`, that dispatch is still running.
 
 ## What one `interactionDispatched` reports
 
@@ -41,7 +43,7 @@ export class SlowDispatch extends Subscriber<'interactionDispatched'> {
 | `fallback` | `boolean` | true when the interaction didn't match a route and the unhandled default ran |
 | `userId` | `string \| null` | who ran the route, null when the payload didn't carry a user |
 | `guildId` | `string \| null` | the guild it came from, null in DMs |
-| `durationMs` | `number` | dispatch entry until the handler returns or its error card is sent |
+| `durationMs` | `number` | dispatch entry until the handler returns or seedcord answers its throw or refusal |
 | `queuedMs` | `number` | Discord's interaction creation until dispatch entry |
 
 {/* prettier-ignore-end */}
@@ -104,12 +106,21 @@ A dispatch can be slow because one Discord call was slow. `responseAttempted` ti
 | `durationMs` | `number` | the write itself, monotonic |
 | `messageId` | `string \| null` | the id of the message Discord returned |
 | `error` | `Error` | only on a failed write |
+| `body` | message, modal, or `null` | what the write sent, which can include text your users typed |
 
 {/* prettier-ignore-end */}
 
-`send` picks a method from the [ack state](/replying/ack-states), and `method` reports the one that ran. The type also allows `send`, but a published write never has it.
+`send` picks a method from the [ack state](/replying/ack-states), and `method` reports the one that ran.
 
 `messageId` holds an id for `reply`, `update`, `followUp`, and `edit`. Every other method reports `null`, as does a failed write.
+
+`body` is what the write sent. Check `method` to narrow it.
+
+- `reply`, `update`, `followUp`, and `edit` have the message. Files show only their name, alt text, and title.
+- `showModal` has the modal.
+- Every other method has `null`.
+
+`body` still has what the write tried to send when the write fails. If a builder threw first, it's `null`.
 
 ### Catching a failed reply or other write
 

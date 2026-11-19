@@ -6,6 +6,7 @@ declare module '@seedcord/core/internal' {
         /** Triggered when an event dispatch throws past the fault boundary. */
         unhandledEventError: {
             error: Error;
+            name: keyof ClientEvents;
         };
         /** Triggered before an event's handlers run. An event without a registered handler never triggers it. */
         eventDispatching: {

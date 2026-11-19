@@ -5,7 +5,7 @@ description: Limit a plugin to one transport or runtime so a wrong attach fails 
 
 A plugin that reads `this.core.bot` needs a gateway bot. One that talks to a database through a Node driver can't run on Workers. If you attach either to the wrong bot, you find out when the plugin first reads something that isn't there.
 
-You can catch the wrong bot at compile time. If you declare the transport or the runtime that your plugin needs, an [`attach`](ref:gateway/Seedcord.attach) call on a bot that doesn't match fails to compile. A transport is how the bot talks to Discord, `'gateway'` or `'http'`. A runtime is where the bot's code runs, `'server'` for Node or Bun and `'edge'` for Cloudflare Workers. A type cast or plain JavaScript gets past the compiler, and then `attach` throws when it runs.
+You can catch the wrong bot at compile time. If you declare the transport or the runtime that your plugin needs, an [`attach`](ref:gateway/Seedcord.attach) call fails to compile when the bot doesn't match. A transport is how the bot talks to Discord, `'gateway'` or `'http'`. A runtime is where the bot's code runs, `'server'` for Node or Bun and `'edge'` for Cloudflare Workers. A type cast or plain JavaScript gets past the compiler, and then `attach` throws when it runs.
 
 ## Limiting where a plugin runs
 

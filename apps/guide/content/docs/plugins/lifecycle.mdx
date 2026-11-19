@@ -123,7 +123,7 @@ export class Presence extends Plugin {
 
 ## Timeouts
 
-An `init()` waiting on a service that never answers would hang your bot's startup forever, so each method gets its own timeout. `init()` and `ready()` default to 15000ms, and `dispose()` defaults to 10000ms.
+Each method gets its own timeout, so if a service hangs in `init()`, startup fails with an error. `init()` and `ready()` default to 15000ms, and `dispose()` defaults to 10000ms.
 
 If a method runs past its timeout, seedcord throws `LifecycleTaskTimeout`. The task name in the message includes the attach key and which method ran.
 

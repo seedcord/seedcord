@@ -1052,7 +1052,7 @@ describe('InteractionDispatcher Integration', () => {
             });
         });
 
-        it('wraps a non-Error rejection at the root, so the payload still has an Error', async ({ client }) => {
+        it('wraps a non-Error rejection at the root and publishes the interaction id', async ({ client }) => {
             const { seedcord, controller, fire } = client;
             vi.spyOn(controller, 'handleInteraction').mockRejectedValue('a bare string');
             vi.spyOn(botLoggerOf(seedcord.bot), 'error').mockImplementation(() => undefined);
@@ -1066,6 +1066,7 @@ describe('InteractionDispatcher Integration', () => {
                 expect(seen).toHaveLength(1);
             });
             expect(seen[0]?.error.message).toBe('a bare string');
+            expect(seen[0]?.interactionId).toBe('i1');
         });
 
         it('stops dispatching new interactions after stopAccepting, and drain resolves', async ({ client }) => {
@@ -1174,6 +1175,27 @@ describe('InteractionDispatcher Integration', () => {
                 userId: 'u1',
                 guildId: 'g1'
             });
+        });
+
+        it('publishes interactionDispatching with the interaction id', async ({ bootWith }) => {
+            const { seedcord, controller } = await bootWith(
+                `
+                import { SlashHandler, SlashRoute } from '${seedcordPath}';
+
+                @SlashRoute('ok')
+                export class OkHandler extends SlashHandler<'ok'> {
+                    public async execute() {
+                        await this.event.reply('done');
+                    }
+                }
+                `
+            );
+            const starts: SubscriptionData<'interactionDispatching'>[] = [];
+            seedcord.bus.on('interactionDispatching', (payload) => starts.push(payload));
+
+            await controller.handleInteraction(fakeSlash('ok'));
+
+            expect(starts[0]?.interactionId).toBe('i1');
         });
 
         it('reports a null guildId for a dispatch outside a guild', async ({ bootWith }) => {

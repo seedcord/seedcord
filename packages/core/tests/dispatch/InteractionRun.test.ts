@@ -1,7 +1,8 @@
 import { Logger } from '@seedcord/logger';
 import { captureLogs } from '@seedcord/logger/internal';
 import { HostPlugins } from '@seedcord/types/internal';
-import { describe, expect, it, vi } from 'vite-plus/test';
+import { Envapter, PortableSource } from 'envapt';
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vite-plus/test';
 
 import { defineGate } from '#gates/Gate';
 import { DispatchContext } from '#src/dispatch/DispatchContext';
@@ -9,11 +10,13 @@ import { InteractionRun } from '#src/dispatch/InteractionRun';
 import { GatedMetadataKey, InteractionKind } from '#src/metadataKeys';
 import { PluginRegistry } from '#src/plugin/PluginRegistry';
 import { Silence } from '#stops/Silence';
+import { TestSender } from '#tests/reply/helpers';
 import { busWith } from '#tests/utils/busWith';
 
 import type { GateContextBase } from '#gates/Gate';
 import type { CoreBase } from '#interfaces/CoreBase';
 import type { InteractionRunConfig } from '#src/dispatch/InteractionRun';
+import type { SubscriptionData } from '#subscribers/types/Subscriptions';
 
 function configFor(
     kind: InteractionKind,
@@ -99,6 +102,28 @@ describe('InteractionRun', () => {
         expect(logs.at('warn')).toContainEqual(expect.stringContaining(warning));
     });
 
+    it('publishes interactionDispatching before interactionDispatched, with the same dispatch id', async () => {
+        class Done {
+            execute = vi.fn();
+        }
+        const config = configFor(InteractionKind.Autocomplete, Done, {
+            responder: { clear: vi.fn() },
+            handler: () => new Done()
+        });
+        const seen: string[][] = [];
+        for (const key of ['interactionDispatching', 'interactionDispatched'] as const) {
+            config.core.bus.on(key, ({ dispatchId }) => seen.push([key, dispatchId]));
+        }
+
+        const start = await new InteractionRun(config).prepare();
+        await start?.();
+
+        expect(seen).toEqual([
+            ['interactionDispatching', config.dispatch.id],
+            ['interactionDispatched', config.dispatch.id]
+        ]);
+    });
+
     it('clears the choices when an autocomplete handler throws a Silence', async () => {
         class Quiet {
             execute(): void {
@@ -113,5 +138,84 @@ describe('InteractionRun', () => {
         await start?.();
 
         expect(clear).toHaveBeenCalledOnce();
+    });
+});
+
+describe('a dispatch that is still running', () => {
+    const never = (): Promise<void> => new Promise(() => undefined);
+
+    // the handler runs as soon as the run starts because autocomplete skips middleware and gates
+    function runningConfig(execute: () => Promise<void> = never): InteractionRunConfig {
+        class Hangs {
+            execute = execute;
+        }
+        return configFor(InteractionKind.Autocomplete, Hangs, {
+            responder: { clear: vi.fn() },
+            handler: () => new Hangs()
+        });
+    }
+
+    async function start(config: InteractionRunConfig): Promise<void> {
+        const run = await new InteractionRun(config).prepare();
+        void run?.();
+    }
+
+    beforeEach(() => {
+        vi.useFakeTimers();
+    });
+
+    afterEach(() => {
+        vi.useRealTimers();
+        Envapter.useSource(new PortableSource({}));
+    });
+
+    it('publishes interactionDispatching', async () => {
+        const config = runningConfig();
+        const starts: SubscriptionData<'interactionDispatching'>[] = [];
+        config.core.bus.on('interactionDispatching', (payload) => starts.push(payload));
+
+        await start(config);
+
+        expect(starts).toEqual([
+            {
+                dispatchId: config.dispatch.id,
+                routeId: 'autocomplete:probe',
+                interactionId: 'i1',
+                kind: 'autocomplete',
+                fallback: false
+            }
+        ]);
+    });
+
+    it("doesn't warn once the handler has responded", async () => {
+        using logs = captureLogs();
+        const config: InteractionRunConfig = runningConfig(async () => {
+            await new TestSender(config.core.bus, true, config.dispatch).defer();
+            await never();
+        });
+
+        await start(config);
+        await vi.advanceTimersByTimeAsync(2500);
+
+        expect(logs.at('warn')).toEqual([]);
+    });
+
+    it("doesn't warn once the dispatch has finished", async () => {
+        using logs = captureLogs();
+
+        await start(runningConfig(() => Promise.reject(new Silence('nothing to suggest'))));
+        await vi.advanceTimersByTimeAsync(2500);
+
+        expect(logs.at('warn')).toEqual([]);
+    });
+
+    it("doesn't warn in production", async () => {
+        Envapter.useSource(new PortableSource({ ENVIRONMENT: 'production' }));
+        using logs = captureLogs();
+
+        await start(runningConfig());
+        vi.advanceTimersByTime(2500);
+
+        expect(logs.at('warn')).toEqual([]);
     });
 });

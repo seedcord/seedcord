@@ -1,5 +1,5 @@
 import { InteractionKind, Fault, Silence } from '@seedcord/core';
-import { InteractionRun, PublishDefault } from '@seedcord/core/internal';
+import { InteractionRun } from '@seedcord/core/internal';
 import { PluginHost } from '@seedcord/core/plugin';
 import { Logger } from '@seedcord/logger';
 import { MessageFlags, RESTJSONErrorCodes } from 'discord.js';
@@ -10,6 +10,7 @@ import { UnhandledAutocomplete, UnhandledRepliable } from '#bot/defaults';
 import { InteractionHandler } from '#handlers/interaction/InteractionHandler';
 import { harmlessError } from '#tests/utils/harmlessError';
 import { pluginWithMembers } from '#tests/utils/pluginWithMembers';
+import { stubBus } from '#tests/utils/stubBus';
 import { TestNotice } from '#tests/utils/TestNotice';
 
 import type { HandlerSlots } from '#handlers/constructors';
@@ -19,6 +20,14 @@ import type { SubscriptionData } from '@seedcord/core';
 import type { InteractionRunConfig } from '@seedcord/core/internal';
 import type { Config, InteractionsConfig } from '@seedcord/types';
 import type { AutocompleteInteraction, ChatInputCommandInteraction } from 'discord.js';
+import type { ExtractStrict } from 'type-fest';
+
+type RecordedKey = 'unknownException' | 'handledException' | 'responseAttempted';
+type FaultKey = ExtractStrict<RecordedKey, 'unknownException' | 'handledException'>;
+type Entry<Key extends RecordedKey> = { [K in Key]: [key: K, data: SubscriptionData<K>] }[Key];
+
+// each [key, payload] the bus published, in order
+type Published = Entry<RecordedKey>[];
 
 const withResponse = { resource: { message: { id: 'sent' } } };
 
@@ -57,21 +66,25 @@ class BoundaryHost extends PluginHost<'gateway', 'server'> {
     public readonly rest = {} as PluginHost<'gateway', 'server'>['rest'];
     public readonly applicationId = 'app-1';
 
-    constructor(publish: ReturnType<typeof vi.fn>, errors: Config['errors'], interactions: InteractionsConfig) {
+    constructor(published: Published, errors: Config['errors'], interactions: InteractionsConfig) {
         super('gateway', 'server', undefined);
         // justified: the boundary reads only these config sections
         this.config = { bot: { interactions }, errors, notifications: {} } as unknown as Config;
-        Object.assign(this, { bus: { [PublishDefault]: publish } });
+        const bus = stubBus();
+        bus.on('unknownException', (data) => published.push(['unknownException', data]));
+        bus.on('handledException', (data) => published.push(['handledException', data]));
+        bus.on('responseAttempted', (data) => published.push(['responseAttempted', data]));
+        Object.assign(this, { bus });
     }
 }
 
 function mockCore(
-    publish: ReturnType<typeof vi.fn>,
+    published: Published,
     errors: Config['errors'] = {},
     interactions: InteractionsConfig = { path: null }
 ): BoundaryHost & Core {
     // justified: the fixture implements only the Core surface the boundary reads.
-    return new BoundaryHost(publish, errors, interactions) as unknown as BoundaryHost & Core;
+    return new BoundaryHost(published, errors, interactions) as unknown as BoundaryHost & Core;
 }
 
 type Mock = ReturnType<typeof mockInteraction>;
@@ -130,68 +143,69 @@ function answerFault(caught: Error, interaction: ValidInteractionTypes, core: Co
     throw new Error('the mock is a slash command or an autocomplete');
 }
 
-function faultEvents(publish: ReturnType<typeof vi.fn>): unknown[] {
-    return publish.mock.calls
-        .map(([event]) => event as unknown)
-        .filter((event) => event === 'handledException' || event === 'unknownException');
+function faultCalls(published: Published): Entry<FaultKey>[] {
+    return published.filter((entry): entry is Entry<FaultKey> => entry[0] !== 'responseAttempted');
+}
+
+function firstFault(published: Published, key: 'unknownException'): SubscriptionData<'unknownException'>;
+function firstFault(published: Published, key: 'handledException'): SubscriptionData<'handledException'>;
+function firstFault(published: Published, key: FaultKey): SubscriptionData<FaultKey> {
+    const [first] = faultCalls(published);
+    if (first?.[0] !== key) throw new Error(`expected ${key} first, got ${String(first?.[0])}`);
+    return first[1];
 }
 
 describe('gateway fault answers', () => {
     let mock: ReturnType<typeof mockInteraction>;
-    let publish: ReturnType<typeof vi.fn>;
+    let published: Published;
 
     beforeEach(() => {
         mock = mockInteraction();
-        publish = vi.fn();
+        published = [];
     });
 
     it('replies the generic and publishes unknownException for a raw error on an unacked interaction', async () => {
-        await answerFault(new Error('boom'), asInteraction(mock), mockCore(publish));
+        await answerFault(new Error('boom'), asInteraction(mock), mockCore(published));
 
         expect(mock.reply).toHaveBeenCalledTimes(1);
-        const [event, payload] = publish.mock.calls[0] as [string, SubscriptionData<'unknownException'>];
-        expect(event).toBe('unknownException');
-        expect(payload.error).toBeInstanceOf(Error);
+        expect(firstFault(published, 'unknownException').error).toBeInstanceOf(Error);
     });
 
     it('attaches the interaction as metadata on a raw fault, so the report keeps its metadata.json', async () => {
         const interaction = asInteraction(mock);
 
-        await answerFault(new Error('boom'), interaction, mockCore(publish));
+        await answerFault(new Error('boom'), interaction, mockCore(published));
 
-        const [, payload] = publish.mock.calls[0] as [string, SubscriptionData<'unknownException'>];
-        expect(payload.metadata).toBe(interaction);
+        expect(firstFault(published, 'unknownException').metadata).toBe(interaction);
     });
 
     it('swallows an api code listed in ignoreApiCodes, without a reply or report', async () => {
-        const core = mockCore(publish, { ignoreApiCodes: [RESTJSONErrorCodes.UnknownInteraction] });
+        const core = mockCore(published, { ignoreApiCodes: [RESTJSONErrorCodes.UnknownInteraction] });
 
         await answerFault(harmlessError(), asInteraction(mock), core);
 
         expect(mock.reply).not.toHaveBeenCalled();
-        expect(faultEvents(publish)).toEqual([]);
+        expect(faultCalls(published)).toEqual([]);
     });
 
     it('edits the deferReply placeholder and publishes handledException for a reporting fault on a deferred interaction', async () => {
         mock.deferred = true;
         mock.ephemeral = true;
 
-        await answerFault(new Fault({ cause: new Error('write failed') }), asInteraction(mock), mockCore(publish));
+        await answerFault(new Fault({ cause: new Error('write failed') }), asInteraction(mock), mockCore(published));
 
         expect(mock.editReply).toHaveBeenCalledTimes(1);
         expect(mock.followUp).not.toHaveBeenCalled();
         expect(mock.deleteReply).not.toHaveBeenCalled();
         expect(mock.reply).not.toHaveBeenCalled();
-        const [event, payload] = publish.mock.calls[0] as [string, SubscriptionData<'handledException'>];
-        expect(event).toBe('handledException');
-        expect(payload.denial).toBeInstanceOf(Fault);
+        expect(firstFault(published, 'handledException').denial).toBeInstanceOf(Fault);
     });
 
     it('swaps a public deferReply placeholder for a private fault card', async () => {
         mock.deferred = true;
         mock.ephemeral = false;
 
-        await answerFault(new Fault({ cause: new Error('write failed') }), asInteraction(mock), mockCore(publish));
+        await answerFault(new Fault({ cause: new Error('write failed') }), asInteraction(mock), mockCore(published));
 
         expect(mock.editReply).not.toHaveBeenCalled();
         expect(mock.deleteReply).toHaveBeenCalledBefore(mock.followUp);
@@ -202,14 +216,14 @@ describe('gateway fault answers', () => {
     it("follows up and doesn't report a fault for a non-reporting denial on a replied interaction", async () => {
         mock.replied = true;
 
-        await answerFault(new TestNotice(), asInteraction(mock), mockCore(publish));
+        await answerFault(new TestNotice(), asInteraction(mock), mockCore(published));
 
         expect(mock.followUp).toHaveBeenCalledTimes(1);
-        expect(faultEvents(publish)).toEqual([]);
+        expect(faultCalls(published)).toEqual([]);
     });
 
     it('replies ephemerally for a refusal by default', async () => {
-        await answerFault(new TestNotice(), asInteraction(mock), mockCore(publish));
+        await answerFault(new TestNotice(), asInteraction(mock), mockCore(published));
 
         const options = mock.reply.mock.calls[0]?.[0] as { flags: number };
         expect(options.flags & MessageFlags.Ephemeral).toBe(MessageFlags.Ephemeral);
@@ -223,13 +237,11 @@ describe('gateway fault answers', () => {
         it('responds with empty choices and publishes unknownException with metadata for a raw error', async () => {
             const interaction = asInteraction(mock);
 
-            await answerFault(new Error('boom'), interaction, mockCore(publish));
+            await answerFault(new Error('boom'), interaction, mockCore(published));
 
             expect(mock.respond).toHaveBeenCalledWith([]);
             expect(mock.reply).not.toHaveBeenCalled();
-            const [event, payload] = publish.mock.calls[0] as [string, SubscriptionData<'unknownException'>];
-            expect(event).toBe('unknownException');
-            expect(payload.metadata).toBe(interaction);
+            expect(firstFault(published, 'unknownException').metadata).toBe(interaction);
         });
 
         it('does not send empty choices after the handler already responded', async () => {
@@ -240,17 +252,17 @@ describe('gateway fault answers', () => {
                 }
             }
 
-            await runAutocomplete(RespondsThenStops, asAutocomplete(mock), mockCore(publish));
+            await runAutocomplete(RespondsThenStops, asAutocomplete(mock), mockCore(published));
 
             expect(mock.respond).toHaveBeenCalledTimes(1);
         });
 
         it('publishes responseAttempted for the empty-choices send', async () => {
-            await answerFault(new Error('boom'), asInteraction(mock), mockCore(publish));
+            await answerFault(new Error('boom'), asInteraction(mock), mockCore(published));
 
-            const writes = publish.mock.calls.filter(([key]) => key === 'responseAttempted');
+            const writes = published.flatMap(([key, data]) => (key === 'responseAttempted' ? [data] : []));
             expect(writes).toHaveLength(1);
-            expect(writes[0]?.[1] as SubscriptionData<'responseAttempted'>).toMatchObject({
+            expect(writes[0]).toMatchObject({
                 method: 'respond',
                 outcome: 'sent',
                 messageId: null
@@ -267,7 +279,7 @@ describe('gateway fault answers', () => {
                 }
             }
 
-            await runSlash(RepliesThenThrows, asSlash(mock), mockCore(publish));
+            await runSlash(RepliesThenThrows, asSlash(mock), mockCore(published));
 
             expect(mock.reply).toHaveBeenCalledTimes(1);
             expect(mock.followUp).toHaveBeenCalledTimes(1);
@@ -281,7 +293,7 @@ describe('gateway fault answers', () => {
                 }
             }
 
-            await runSlash(ThrowsOnBuild, asSlash(mock), mockCore(publish));
+            await runSlash(ThrowsOnBuild, asSlash(mock), mockCore(published));
 
             expect(mock.reply).toHaveBeenCalledTimes(1);
             expect(mock.followUp).not.toHaveBeenCalled();
@@ -305,7 +317,7 @@ describe('the interactions ephemeral default on gateway', () => {
         }
         const mock = mockInteraction();
 
-        await runSlash(Replies, asSlash(mock), mockCore(vi.fn(), {}, publicByDefault));
+        await runSlash(Replies, asSlash(mock), mockCore([], {}, publicByDefault));
 
         expect(replyFlags(mock)).toBe(0);
     });
@@ -313,7 +325,7 @@ describe('the interactions ephemeral default on gateway', () => {
     it('keeps the unhandled fallback reply ephemeral when the config sets it false', async () => {
         const mock = mockInteraction();
 
-        await runSlash(UnhandledRepliable, asSlash(mock), mockCore(vi.fn(), {}, publicByDefault));
+        await runSlash(UnhandledRepliable, asSlash(mock), mockCore([], {}, publicByDefault));
 
         expect(replyFlags(mock)).toBe(MessageFlags.Ephemeral);
     });
@@ -329,7 +341,7 @@ describe('plugin members on a gateway interaction', () => {
                 return Promise.resolve();
             }
         }
-        const core = mockCore(vi.fn());
+        const core = mockCore([]);
         core.attach(
             'tagging',
             pluginWithMembers({ tag: (origin) => `${String(origin.guildId)}:${String(origin.userLocale)}` })

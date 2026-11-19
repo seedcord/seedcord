@@ -5,6 +5,8 @@ description: Keep an interaction open past Discord's three-second limit, then se
 
 Some handlers need longer than the three seconds Discord allows for a first response. [`this.defer()`](ref:gateway/RepliableHandler.defer) answers inside that with a loading state, which leaves the real reply for later.
 
+In development, seedcord logs a warning if an interaction still hasn't been answered 2.5 seconds after Discord created it. That warning is off in production.
+
 ```ts twoslash title="src/handlers/Ban.ts"
 import { SlashHandler, SlashRoute } from '@seedcord/gateway';
 // ---cut-start---

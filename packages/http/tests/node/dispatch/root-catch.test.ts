@@ -53,7 +53,7 @@ describe('the http root catch', () => {
         // handle() still returns the ack because a dispatch throw never stops it
         expect(response.status).toBe(202);
         expect(seen).toHaveLength(1);
-        expect(seen[0]?.error.message).toBe('router exploded');
+        expect(seen[0]).toMatchObject({ error: { message: 'router exploded' }, interactionId: 'int-1' });
     });
 
     it('wraps a non-Error throw, so the payload still has an Error', async () => {

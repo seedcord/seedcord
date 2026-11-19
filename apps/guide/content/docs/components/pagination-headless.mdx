@@ -95,7 +95,7 @@ Both handlers call `renderBoard`, so the first reply and every click build the s
 
 ## The cursor you declare
 
-`Board` here holds only a page. **Prev** targets `page - 1` while **Next** targets `page + 1`, two numbers that never collide.
+`Board` here holds only a page. **Prev** targets `page - 1` while **Next** targets `page + 1`, so the two never collide.
 
 A third button breaks that. From page 1, **First** and **Prev** both target page 0. Discord rejects a message carrying two identical custom ids, so you give the cursor a second field, `.int('slot', 0, 4)`, and pass each button its own slot.
 

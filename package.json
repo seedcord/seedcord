@@ -79,7 +79,7 @@
         "cross-env": "catalog:deps",
         "eslint": "catalog:eslint",
         "knip": "^6.31.0",
-        "markdownlint-cli2": "^0.24.0",
+        "markdownlint-cli2": "^0.24.1",
         "react-doctor": "^0.9.3",
         "taze": "^21.3.0",
         "turbo": "^2.11.2",

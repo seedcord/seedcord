@@ -226,7 +226,7 @@ jobs:
 
 `pnpm/action-setup` reads the pnpm version from `packageManager` in your `package.json`. The first run creates the worker, though you still paste its URL into the portal once, as in step 5.
 
-`pnpm check` runs the type check, lint, and format check, so a push that doesn't compile stops before it changes your commands on Discord. The build can't move up with it because it reads each command's id from Discord, and a command you just added gets its id from the deploy step.
+`pnpm check` runs the type check, lint, and format check, so a failing check stops the job before your commands on Discord change. The build can't move up with it because it reads each command's id from Discord, and a command you just added gets its id from the deploy step.
 
 The commands step deploys with `--yes`, which skips the preview, and Discord replaces the whole scope. A command you deleted from your code disappears from Discord on the next push. [Deploy your commands](/tooling/commands#deploy-your-commands) shows what that preview lists. This job deploys your production application, so leave `TESTING_GUILD_IDS` unset here. Its commands then go out globally. [In production](/commands/deployed#in-production) has why.
 

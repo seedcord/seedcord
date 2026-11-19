@@ -9,7 +9,7 @@ import picomatch from 'picomatch/posix.js';
 
 import { asError } from '#src/misc/asError';
 
-import { isInside, posixRelative, toPosixPath } from './paths';
+import { comparePaths, isInside, posixRelative, toPosixPath } from './paths';
 
 // every path here is root-relative with a leading slash, like '/locales'. one beside a ./src root reads '/../logs'
 export interface BotLayoutData {
@@ -30,20 +30,17 @@ export interface BotEntry {
 const MODULE_EXTENSIONS = ['.ts', '.tsx', '.mts', '.js', '.jsx', '.mjs'];
 const DECLARATION_EXTENSIONS = ['.d.ts', '.d.mts'];
 const CODE_AND_MAP_EXTENSIONS = [...MODULE_EXTENSIONS, '.map'];
-const PROJECT_FILE_NAMES = new Set([
+const PROJECT_FILE_GLOBS = [
+    'seedcord.config.*',
+    'tsconfig*.json',
     'package.json',
     'pnpm-lock.yaml',
     'package-lock.json',
     'yarn.lock',
     'bun.lock',
     'bun.lockb'
-]);
-const PROJECT_FILE_GLOBS = ['seedcord.config.*', 'tsconfig*.json', ...PROJECT_FILE_NAMES];
-
-function isProjectFileName(name: string): boolean {
-    if (PROJECT_FILE_NAMES.has(name)) return true;
-    return name.startsWith('seedcord.config.') || (name.startsWith('tsconfig') && name.endsWith('.json'));
-}
+];
+const isProjectFileName = picomatch(PROJECT_FILE_GLOBS);
 
 // the symbols tinyglobby's escapePath escapes in a posix path.
 // i would use the dependency directly, but the edge bundle can't resolve tinyglobby's fs import
@@ -84,8 +81,8 @@ export class BotLayout {
     public readonly root: string;
     public readonly configFile: string | undefined;
     private readonly data: Readonly<BotLayoutData>;
-    private readonly listed: readonly string[];
-    private readonly skippedFolders: readonly string[];
+    private readonly listedPaths: readonly string[];
+    private readonly skippedPaths: readonly string[];
 
     public constructor({ root, listed, skippedFolders, configFile }: BotLayoutData) {
         this.root = path.resolve(root);
@@ -95,8 +92,8 @@ export class BotLayout {
             skippedFolders: [...skippedFolders],
             configFile
         });
-        this.listed = this.data.listed.map((key) => this.pathOf(key));
-        this.skippedFolders = this.data.skippedFolders.map((key) => this.pathOf(key));
+        this.listedPaths = this.data.listed.map((key) => this.pathOf(key));
+        this.skippedPaths = this.data.skippedFolders.map((key) => this.pathOf(key));
         this.configFile = configFile === undefined ? undefined : this.pathOf(configFile);
     }
 
@@ -134,7 +131,7 @@ export class BotLayout {
     }
 
     public isSkipped(file: string): boolean {
-        if (this.skippedFolders.some((folder) => isInside(folder, file))) return true;
+        if (this.skippedPaths.some((folder) => isInside(folder, file))) return true;
         if (this.isProjectFile(file)) return true;
         const base = this.holds(file) ? this.root : this.projectDir();
         return isInside(base, file) && path.relative(base, file).split(path.sep).some(isSkippedName);
@@ -142,7 +139,10 @@ export class BotLayout {
 
     // also true for one written after the layout was built
     public isProjectFile(file: string): boolean {
-        return path.dirname(file) === this.configDir() && isProjectFileName(path.basename(file));
+        const configDir = this.configDir();
+        if (configDir === undefined) return false;
+        // on windows, path.relative treats c:/proj and C:\proj as one folder
+        return path.relative(configDir, path.dirname(file)) === '' && isProjectFileName(path.basename(file));
     }
 
     public bundleProblem(folder: string): SeedcordError | undefined {
@@ -164,10 +164,13 @@ export class BotLayout {
     }
 
     public listedBesideRoot(): string[] {
-        return this.listed.filter((folder) => !this.holds(folder));
+        return this.listedPaths.filter((folder) => !this.holds(folder));
     }
 
-    // a key under root climbs out of outDir for a listed folder beside root
+    // the build writes each listed file to _virtual/files plus this key.
+    // it starts at the project folder because a locales folder
+    // beside a ./src root would key as /../locales/en.json from root,
+    // and the build would write it outside _virtual/files
     public listedKeyOf(file: string): string {
         return BotLayout.keyUnder(this.projectDir(), file);
     }
@@ -178,7 +181,7 @@ export class BotLayout {
     }
 
     public isListed(folder: string): boolean {
-        return this.listed.some((listed) => isInside(listed, folder));
+        return this.listedPaths.some((listed) => isInside(listed, folder));
     }
 
     public isModule(file: string): boolean {
@@ -193,13 +196,12 @@ export class BotLayout {
         return new BotFolder(this.resolve(dir), this);
     }
 
-    // sorted by path, the order importFiles loads them in
     public async modulesUnder(folder: string): Promise<string[]> {
         const entries = await Array.fromAsync(this.entriesUnder(folder));
         return entries
             .filter(({ path: file, isFolder }) => !isFolder && this.isModule(file))
             .map(({ path: file }) => file)
-            .toSorted();
+            .toSorted(comparePaths);
     }
 
     // never reads inside a skipped folder
@@ -255,9 +257,8 @@ export class BotLayout {
 
     // a built bot resolves these against its own root, where a skipped key like '/../dist' is the bot itself.
     // the built entry writes its own configFile, relative to outDir
-    public bundledData(): BotLayoutData {
+    public bundledData(): Pick<BotLayoutData, 'listed' | 'skippedFolders'> {
         return {
-            root: this.root,
             listed: [...this.data.listed],
             skippedFolders: this.data.skippedFolders.filter((key) => this.holds(this.pathOf(key)))
         };
@@ -316,7 +317,7 @@ export class BotFolder {
         return this.layout.moduleGlobsDirectlyIn(this.path);
     }
 
-    // without a config, a relative glob resolves against this folder
+    // a relative glob resolves against the bot's root, which is this folder when a script runs without a config
     public matchesFiles(file: string, patterns: readonly string[]): boolean {
         return this.layout.matchesFiles(file, patterns);
     }

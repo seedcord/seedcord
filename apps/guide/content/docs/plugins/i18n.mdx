@@ -225,7 +225,7 @@ export class Inventory extends SlashHandler<'inventory'> {
 }
 ```
 
-The first call doesn't pass `count`, and the second misspells it as `cout`. A key that isn't in the base file fails to compile too.
+The first call doesn't pass `count`, and the second misspells it as `cout`. A call with a key missing from the base file fails to compile too.
 
 After you add a message or a variable to the base file, run codegen again. Until you do, TypeScript rejects calls that use it, the same way it rejects `cout` above.
 

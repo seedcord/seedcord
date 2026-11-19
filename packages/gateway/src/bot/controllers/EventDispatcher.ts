@@ -236,15 +236,15 @@ export class EventDispatcher implements Initializeable, HmrAware {
 
         this.core.bot.client.on(eventName, (...args: ClientEvents[typeof eventName]) => {
             void this.inFlight.admit(() =>
-                this.processEvent(eventName, args).catch((caught: unknown) => this.reportUnhandled(caught))
+                this.processEvent(eventName, args).catch((caught: unknown) => this.reportUnhandled(caught, eventName))
             );
         });
     }
 
-    private reportUnhandled(caught: unknown): void {
+    private reportUnhandled(caught: unknown, name: ValidNonInteractionKeys): void {
         const error = asError(caught);
         this.logger.error(`[${paint.coral.bold('UNHANDLED ERROR AT ROOT')}] ${error.name}`, error.stack);
-        this.core.bus[PublishDefault]('unhandledEventError', { error });
+        this.core.bus[PublishDefault]('unhandledEventError', { error, name });
     }
 
     private async processEvent<KeyOfEvents extends ValidNonInteractionKeys>(
