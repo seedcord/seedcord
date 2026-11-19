@@ -9,9 +9,15 @@ import { TestServerHost } from '#tests/utils/TestServerHost';
 
 import type { ServerConfig, ServerHostConfig } from '@seedcord/types';
 
-function hostWith(server: ServerConfig): TestServerHost {
+class InteractionsHost extends TestServerHost {
+    protected override answerInteractions(): Promise<Response> {
+        return Promise.resolve(new Response());
+    }
+}
+
+function hostWith(server: ServerConfig, Host = TestServerHost): TestServerHost {
     // justified: ServerHost reads only kv, errors, and server off the config
-    return new TestServerHost(new CoordinatedShutdown(), new CoordinatedStartup(), { server } as ServerHostConfig);
+    return new Host(new CoordinatedShutdown(), new CoordinatedStartup(), { server } as ServerHostConfig);
 }
 
 describe('core.url on a server host', () => {
@@ -47,7 +53,7 @@ describe('core.url on a server host', () => {
     });
 
     it('returns the URL that seedcord dev set unless the config has its own server.url', () => {
-        const host = hostWith({ port: false });
+        const host = hostWith({ port: false }, InteractionsHost);
         host[HostDevUrl] = 'https://tunnel.example.com';
         const fromDev = host.url.href;
 
@@ -56,9 +62,10 @@ describe('core.url on a server host', () => {
         expect([fromDev, host.url.href]).toEqual(['https://tunnel.example.com/', 'https://bot.example.com/']);
     });
 
-    it('returns its localhost address under seedcord dev', () => {
+    it("returns its localhost address under seedcord dev, even with a tunnel URL when it doesn't take interactions", () => {
         using _dev = setDevFiles({ root: import.meta.dirname, listed: [], skippedFolders: [] });
         const host = hostWith({ port: 4321 });
+        host[HostDevUrl] = 'https://tunnel.example.com';
 
         expect(host.url.href).toBe('http://localhost:4321/');
     });

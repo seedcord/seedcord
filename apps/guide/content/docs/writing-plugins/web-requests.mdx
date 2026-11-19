@@ -10,12 +10,13 @@ A plugin can answer those requests itself. Give it a [`fetch()`](ref:core/Plugin
 ```ts twoslash title="src/plugins/Status.ts"
 import { Plugin } from '@seedcord/gateway';
 
+const STATUS = new URLPattern({ pathname: '/status' });
+
 export class Status extends Plugin {
     public async init(): Promise<void> {}
 
     public override fetch(request: Request): Response | undefined {
-        const { pathname } = new URL(request.url);
-        if (pathname !== '/status') return undefined;
+        if (!STATUS.test(request.url)) return undefined;
 
         const guilds = this.core.bot.client.guilds.cache.size;
         return Response.json({ guilds });
@@ -23,7 +24,7 @@ export class Status extends Plugin {
 }
 ```
 
-`Status` answers `/status` and returns `undefined` for every other path. seedcord doesn't route requests, so you compare the path yourself.
+`Status` answers `/status` and returns `undefined` for every other path. seedcord doesn't route requests, so you match the path yourself. [`URLPattern`](https://developer.mozilla.org/en-US/docs/Web/API/URLPattern) is built into Node, Bun, and Workers, and `STATUS.test()` returns whether a URL fits the pattern.
 
 ## Which step answers
 
@@ -48,24 +49,26 @@ On an http bot, every interaction passes through your `fetch()` first, and Disco
 ```ts twoslash title="src/plugins/GithubHooks.ts"
 import { Plugin } from '@seedcord/http';
 // ---cut---
+const PUSH = new URLPattern({ pathname: '/github/:repo/push' });
+
 export class GithubHooks extends Plugin {
     public async init(): Promise<void> {}
 
     public override async fetch(
         request: Request
     ): Promise<Response | undefined> {
-        const { pathname } = new URL(request.url);
         if (request.method !== 'POST') return undefined;
-        if (pathname !== '/github/push') return undefined;
+        const repo = PUSH.exec(request.url)?.pathname.groups.repo;
+        if (!repo) return undefined;
 
         const body = await request.text();
-        this.logger.info(`push of ${body.length} bytes`);
+        this.logger.info(`push to ${repo}, ${body.length} bytes`);
         return new Response(null, { status: 204 });
     }
 }
 ```
 
-The two `return undefined` lines run before the `await`. You read `body` as text because [GitHub signs the exact payload](https://docs.github.com/en/webhooks/using-webhooks/validating-webhook-deliveries) that it sends. Check the request's `X-Hub-Signature-256` header against `body` before you trust it because anyone can post to a public route.
+The two `return undefined` lines run before the `await`. `:repo` in the pattern matches one part of the path, and `exec()` returns it under `pathname.groups`. You read `body` as text because [GitHub signs the exact payload](https://docs.github.com/en/webhooks/using-webhooks/validating-webhook-deliveries) that it sends. Check the request's `X-Hub-Signature-256` header against `body` before you trust it because anyone can post to a public route.
 
 ## Reading the body
 
@@ -107,10 +110,10 @@ export class Login extends Plugin {
 
 A bot on Node or Bun serves web requests on its [web server](/build/server#the-web-server), which listens on port 3000 unless the bot sets `server.port`. A bot inside [your own server](/build/embed) gets whatever paths your server passes to `bot.fetch()`.
 
-On Node or Bun, requests reach `fetch()` when the Ready phase begins, the same as your handlers. Your plugin's `ready()` may still be running then, and so may an `init()` that you moved to Ready. If a route reads something that one of them sets, check for it first. [The lifecycle page](/plugins/lifecycle#where-each-one-runs) has the full order.
+Set up whatever your `fetch()` reads in `init()`. Every `init()` finishes before the first request reaches `fetch()` unless you moved it to the Ready phase. A `ready()` can still be running when a request arrives. [The lifecycle page](/plugins/lifecycle#where-each-one-runs) has the full order.
 
 <Callout type="transport" only="edge">
 
-Once a plugin has `fetch()`, the first request of any kind starts the bot in its isolate so the plugin can answer it. A crawler's request counts too. That request waits for the whole startup, so every `ready()` has finished before `fetch()` runs. Without a plugin that has `fetch()`, the Worker answers anything besides a POST with a 404 before the bot starts.
+Once a plugin has `fetch()`, the first request of any kind starts the bot in its isolate so the plugin can answer it. A crawler's request counts too. Without a plugin that has `fetch()`, the Worker answers anything besides a POST with a 404 before the bot starts.
 
 </Callout>

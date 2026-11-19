@@ -3,7 +3,7 @@ import { join } from 'node:path';
 
 import { SeedcordErrorCode } from '@seedcord/errors';
 import { LoggerChannelRegistry } from '@seedcord/logger';
-import { HostAugmentTarget, HostDevUrl, HostListenHost, HostShutdown } from '@seedcord/types/internal';
+import { HostDevUrl, HostListenHost, HostShutdown } from '@seedcord/types/internal';
 import { readFiles } from '@seedcord/utils';
 import { afterAll, describe, expect, it, onTestFinished, vi } from 'vite-plus/test';
 
@@ -238,28 +238,16 @@ export const runtime = Envapter.get('RUNTIME_GREETING');
     }, 60_000);
 
     it.each([
-        { bot: '@seedcord/http', tunnel: { mode: 'quick' }, host: '127.0.0.1', url: undefined },
-        {
-            bot: '@seedcord/http',
-            tunnel: { mode: 'url', url: 'https://bot.example.com' },
-            host: undefined,
-            url: 'https://bot.example.com'
-        },
-        { bot: '@seedcord/http', tunnel: { mode: 'off' }, host: undefined, url: undefined },
-        { bot: '@seedcord/gateway', tunnel: { mode: 'quick' }, host: undefined, url: undefined },
-        {
-            bot: '@seedcord/gateway',
-            tunnel: { mode: 'url', url: 'https://bot.example.com' },
-            host: undefined,
-            url: undefined
-        }
+        { tunnel: { mode: 'quick' }, host: '127.0.0.1', url: undefined },
+        { tunnel: { mode: 'url', url: 'https://bot.example.com' }, host: undefined, url: 'https://bot.example.com' },
+        { tunnel: { mode: 'off' }, host: undefined, url: undefined }
     ] as const)(
-        'sets the listen host and the dev URL on a $bot bot when the tunnel mode is $tunnel.mode',
-        async ({ bot: transport, tunnel, host, url }) => {
+        'sets the listen host and the dev URL on a bot when the tunnel mode is $tunnel.mode',
+        async ({ tunnel, host, url }) => {
             await mkdir(SCRATCH_ROOT, { recursive: true });
             const dir = await mkdtemp(join(SCRATCH_ROOT, 'dev-'));
             await writeProject(dir);
-            const bot = fakeBot({ [HostAugmentTarget]: transport });
+            const bot = fakeBot();
 
             const runtime = new ServerDevRuntime();
             const context = devContextFor(dir, 'index.ts');

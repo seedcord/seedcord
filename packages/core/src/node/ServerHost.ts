@@ -82,14 +82,20 @@ export abstract class ServerHost<BotT extends Transport> extends PluginHost<BotT
             interactions: this.answerInteractions?.bind(this)
         });
         startup.addTask(StartupPhase.Ready, 'web-server', async () => {
-            await this.#web.serve(this[HostListenHost]);
-            // seedcord dev opens its tunnel to the port that takes interactions
-            if (this.answerInteractions) getDevChannel()?.send('seedcord:server-port', { port: this.port ?? false });
+            const tunnel = this.#devTunnel;
+            await this.#web.serve(tunnel?.listenHost);
+            if (tunnel) getDevChannel()?.send('seedcord:server-port', { port: this.port ?? false });
         });
     }
 
     /** @internal */
     protected answerInteractions?(request: Request, server: Pick<WebServer, 'waitUntil'>): Promise<Response>;
+
+    // seedcord dev opens its tunnel only to a server that takes interactions
+    get #devTunnel(): { listenHost: string | undefined; url: string | undefined } | undefined {
+        if (!this.answerInteractions) return undefined;
+        return { listenHost: this[HostListenHost], url: this[HostDevUrl] };
+    }
 
     /** The port the bot's web server listens on. `undefined` until `start()` opens it, and when the bot doesn't open one. */
     public get port(): number | undefined {
@@ -104,7 +110,7 @@ export abstract class ServerHost<BotT extends Transport> extends PluginHost<BotT
      * @throws A **SeedcordTypeError** when you read it and `server.url` isn't an http or https address.
      */
     public get url(): URL {
-        const devUrl = this[HostDevUrl] ?? (runsUnderSeedcordDev() ? this.#web.localUrl : undefined);
+        const devUrl = this.#devTunnel?.url ?? (runsUnderSeedcordDev() ? this.#web.localUrl : undefined);
         return publicUrl(this.config.server?.url, devUrl);
     }
 
