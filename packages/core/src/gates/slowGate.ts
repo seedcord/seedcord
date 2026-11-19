@@ -6,7 +6,7 @@ import { lazyLogger } from '#src/miscellaneous/lazyLogger';
 
 import type { GateObserver } from './runGates';
 
-// combined check time slower than this cuts into ACK_DEADLINE_MS
+// past this total, the gate checks leave little of discord's ack deadline for the handler
 const SLOW_GATE_MS = 750;
 
 const logger = lazyLogger('Gates', { channel: 'gates' });

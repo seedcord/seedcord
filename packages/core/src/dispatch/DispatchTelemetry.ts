@@ -11,11 +11,22 @@ import type { Bus } from '#subscribers/Bus';
 import type { DispatchOutcome, SubscriptionData } from '#subscribers/types/Subscriptions';
 import type { InteractionRunConfig } from './InteractionRun';
 
-// half a second of notice before discord fails the interaction
 const ACK_NOTICE_MS = 500;
 const SLOW_ACK_MS = ACK_DEADLINE_MS - ACK_NOTICE_MS;
 
 const logger = lazyLogger('Dispatch', { channel: 'interactions' });
+
+const secondsFormat = new Intl.NumberFormat('en', {
+    style: 'unit',
+    unit: 'second',
+    unitDisplay: 'narrow',
+    maximumFractionDigits: 1
+});
+
+// 2500 prints as 2.5s
+function seconds(ms: number): string {
+    return secondsFormat.format(ms / 1000);
+}
 
 type DispatchSource = Pick<InteractionRunConfig, 'dispatch' | 'interactionId' | 'origin'>;
 
@@ -28,7 +39,7 @@ function queuedMsFor(interactionId: string): number {
     }
 }
 
-// publishes the start and end of one interaction dispatch, and warns in dev when it's slow to respond
+// publishes when one interaction dispatch starts and finishes, and warns in dev if it hasn't responded in time
 export class DispatchTelemetry {
     private readonly startedAt = performance.now();
     private readonly queuedMs: number;
@@ -80,9 +91,6 @@ export class DispatchTelemetry {
         if (Envapter.isProduction) return () => undefined;
         const { dispatch } = this.source;
 
-        // discord's clock starts when it creates the interaction. a host clock behind discord's makes queuedMs negative
-        const waited = Math.max(0, this.queuedMs);
-        const timer = setTimeout(() => this.warnSlowAck(), Math.max(0, SLOW_ACK_MS - waited));
         const stop = (): void => {
             clearTimeout(timer);
             this.bus.off('responseAttempted', onWrite);
@@ -90,16 +98,24 @@ export class DispatchTelemetry {
         const onWrite = ({ dispatchId, outcome }: SubscriptionData<'responseAttempted'>): void => {
             if (dispatchId === dispatch.id && outcome === 'sent') stop();
         };
+        // the deadline counts from discord creating the interaction. queuedMs is negative when the host clock runs behind discord's
+        const timer = setTimeout(
+            () => {
+                stop();
+                this.warnSlowAck();
+            },
+            SLOW_ACK_MS - Math.max(0, this.queuedMs)
+        );
         this.bus.on('responseAttempted', onWrite);
         return stop;
     }
 
     private warnSlowAck(): void {
         const { dispatch } = this.source;
-        const deadline = `${ACK_DEADLINE_MS / 1000}s`;
+        const arrival = this.queuedMs > 0 ? ` It reached your bot after ${seconds(this.queuedMs)}.` : '';
         const advice = dispatch.kind === InteractionKind.Autocomplete ? '' : ' Call defer() before slow work.';
         logger().warn(
-            `${paint.sky.bold(dispatch.routeId)} hasn't responded within ${SLOW_ACK_MS}ms of Discord creating it. Discord fails it at ${deadline}.${advice}`
+            `${paint.sky.bold(dispatch.routeId)} hasn't responded ${seconds(SLOW_ACK_MS)} after Discord created it.${arrival} Discord fails it at ${seconds(ACK_DEADLINE_MS)}.${advice}`
         );
     }
 }

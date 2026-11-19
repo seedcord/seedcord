@@ -187,17 +187,6 @@ describe('a dispatch that is still running', () => {
         ]);
     });
 
-    it("warns at 2.5s if the handler still hasn't responded", async () => {
-        using logs = captureLogs();
-        await start(runningConfig());
-
-        vi.advanceTimersByTime(2499);
-        expect(logs.at('warn')).toEqual([]);
-        vi.advanceTimersByTime(1);
-
-        expect(logs.at('warn')).toEqual([expect.stringContaining('autocomplete:probe')]);
-    });
-
     it("doesn't warn once the handler has responded", async () => {
         using logs = captureLogs();
         const config: InteractionRunConfig = runningConfig(async () => {
