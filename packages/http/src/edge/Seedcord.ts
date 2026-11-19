@@ -46,15 +46,21 @@ function bakedIds(): BakedIds {
     return ids;
 }
 
+// a header like //other.host/x changes only the path because this keeps the worker's own origin
+function atDevPath(incoming: Request, devUrl: string): Request {
+    const { pathname, search } = new URL(devUrl, incoming.url);
+    return new Request(new URL(`${pathname}${search}`, incoming.url), incoming);
+}
+
 /**
  * The HTTP-interactions bot on Cloudflare Workers. Default-export it from `bot.ts`. Cloudflare
  * calls `fetch` for every request.
  *
- * The constructor stores the config. The first POST in each isolate reads the bot token, plus the
- * public key, command ids, and emoji ids that `seedcord build` wrote into the worker. If
- * `DISCORD_BOT_TOKEN` is unset, the token comes from `BOT_TOKEN`. It loads the handler and subscriber
- * folders, then runs the startup tasks and every plugin's `init()` and `ready()`. Requests that
- * arrive meanwhile wait for it.
+ * The constructor stores the config. The first request that needs the bot in each isolate reads
+ * the bot token, plus the public key, command ids, and emoji ids that `seedcord build` wrote into
+ * the worker. If `DISCORD_BOT_TOKEN` is unset, the token comes from `BOT_TOKEN`. It loads the
+ * handler and subscriber folders, then runs the startup tasks and every plugin's `init()` and
+ * `ready()`. Requests that arrive meanwhile wait for it.
  *
  * Under `seedcord dev` the bot starts when the CLI starts it. It reads the public key and emoji
  * ids from Discord and deploys your commands, the way a node bot does.
@@ -157,7 +163,7 @@ export class Seedcord extends PluginHost<'http', 'edge'> {
 
         // seedcord dev sends every request to / so vite can't serve the bot's source
         const devUrl = this.#readsBakedIds ? null : incoming.headers.get(DEV_URL_HEADER);
-        const request = devUrl === null ? incoming : new Request(new URL(devUrl, incoming.url), incoming);
+        const request = devUrl === null ? incoming : atDevPath(incoming, devUrl);
 
         // skips starting the bot when only the engine could answer
         const early = this[HostPlugins].answersRequests ? undefined : rejectNonPost(request);

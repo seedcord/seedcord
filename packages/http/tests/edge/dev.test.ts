@@ -1,5 +1,5 @@
 import { BuilderComponent, RegisterCommand } from '@seedcord/core';
-import { fromDevLogLine, setDevChannel } from '@seedcord/core/internal';
+import { DEV_URL_HEADER, fromDevLogLine, setDevChannel } from '@seedcord/core/internal';
 import { Plugin } from '@seedcord/core/plugin';
 import { SeedcordErrorCode } from '@seedcord/errors';
 import { Logger, LoggerChannelRegistry } from '@seedcord/logger';
@@ -107,6 +107,31 @@ describe('the edge Seedcord under seedcord dev', () => {
         await vi.waitFor(() => expect(cli.sent).toContainEqual(['seedcord:started', { username: 'wave-bot' }]));
         const response = await seedcord.fetch(await signedRequest(signer, ping), undefined, capturingCtx());
         expect(response.status).toBe(200);
+    });
+
+    it('takes only the path and query from the dev header and keeps its own origin', async () => {
+        const seen: string[] = [];
+        class Recorder extends Plugin {
+            public init(): Promise<void> {
+                return Promise.resolve();
+            }
+
+            public override fetch(request: Request): Response {
+                seen.push(request.url);
+                return new Response('ok');
+            }
+        }
+        const cli = connectCli();
+        await liveEnv();
+        const seedcord = new Seedcord(config).attach('recorder', Recorder);
+        stubDiscord(seedcord);
+        cli.start();
+        await vi.waitFor(() => expect(cli.events()).toContain('seedcord:started'));
+
+        const headers = { [DEV_URL_HEADER]: '//other.test/page?x=1' };
+        await seedcord.fetch(new Request('http://127.0.0.1:3000/', { headers }), undefined, capturingCtx());
+
+        expect(seen).toEqual(['http://127.0.0.1:3000/page?x=1']);
     });
 
     it('deploys the commands from the bot files when it starts', async () => {
