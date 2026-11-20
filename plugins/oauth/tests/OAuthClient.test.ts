@@ -11,7 +11,7 @@ import type { SeenRequest } from './fakeDiscord';
 
 const APP_ID = '1564002376115949650';
 const USER = { id: '111', username: 'dhruv' };
-const WEEK_SECONDS = 604_800;
+const WEEK_SECONDS = 7 * 24 * 60 * 60;
 
 interface Discord {
     requests: SeenRequest[];
@@ -68,7 +68,7 @@ async function discordGranting(expiresIn: number, scope = 'identify guilds'): Pr
                 store,
                 clientId: APP_ID,
                 clientSecret: 'client-secret',
-                redirectUri: 'https://bot.test/oauth/callback',
+                baseUrl: 'https://bot.test/',
                 scopes: ['guilds'],
                 extraScopes: ['connections']
             })
@@ -141,7 +141,7 @@ describe('OAuthClient', () => {
             store: new Map(),
             clientId: APP_ID,
             clientSecret: 'client-secret',
-            redirectUri: 'https://bot.test/oauth/callback',
+            baseUrl: 'https://bot.test/',
             scopes: []
         });
 
@@ -289,7 +289,7 @@ describe('OAuthClient scopes', () => {
             store: discord.store,
             clientId: APP_ID,
             clientSecret: 'client-secret',
-            redirectUri: 'https://bot.test/oauth/callback',
+            baseUrl: 'https://bot.test/',
             scopes: ['guilds'],
             extraScopes: ['guilds']
         });
@@ -308,8 +308,8 @@ describe('OAuthClient scopes', () => {
         expect(discord.store.size).toBe(0);
     });
 
-    // a client that another process just refreshed past. its first read gets the record from before the
-    // refresh, whose access token Discord already ended
+    // a client that's one refresh behind. another process refreshed the tokens, and this client's first
+    // read still gets the old record with the access token that Discord already ended
     async function clientBehindARefresh(): Promise<{ discord: Discord; oauth: ReturnType<Discord['client']> }> {
         const discord = await discordGranting(WEEK_SECONDS);
         await discord.client().exchange('the-code');
@@ -384,7 +384,7 @@ describe('OAuthClient calls that write', () => {
             store,
             clientId: APP_ID,
             clientSecret: 'client-secret',
-            redirectUri: 'https://bot.test/oauth/callback',
+            baseUrl: 'https://bot.test/',
             scopes: ['guilds.join', 'role_connections.write']
         });
         await oauth.exchange('the-code');
@@ -455,7 +455,7 @@ describe('OAuthClient with the bot and webhook scopes', () => {
             store: new Map(),
             clientId: APP_ID,
             clientSecret: 'client-secret',
-            redirectUri: 'https://bot.test/oauth/callback',
+            baseUrl: 'https://bot.test/',
             scopes: ['bot', 'webhook.incoming']
         });
     }

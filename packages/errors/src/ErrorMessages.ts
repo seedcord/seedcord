@@ -25,8 +25,8 @@ const messages = {
         `Could not read the emojis in ${where} to resolve ${paint.sky(key)} (${paint.bold(name)}). ${reasonThen(reason, fix)}`,
     [SeedcordErrorCode.ConfigWebhookNotFound]: (envKey: string) =>
         `Discord can't find a webhook at the URL in ${paint.bold(envKey)}. Someone deleted it, or the id or token in the URL is wrong. Create a webhook and copy its URL.`,
-    [SeedcordErrorCode.ConfigMissingEnv]: (name: string) =>
-        `${paint.bold(name)} is not set. Add it to your environment or your .env file.`,
+    [SeedcordErrorCode.ConfigMissingEnv]: (name: string, whereToFindIt?: string) =>
+        `${paint.bold(name)} is not set.${whereToFindIt ? ` ${whereToFindIt}` : ''} Add it to your environment or your .env file.`,
     [SeedcordErrorCode.ConfigInvalidEnv]: (name: string, expected: string, why?: string) =>
         `${paint.bold(name)} has a value seedcord cannot use.${why ? ` ${why}` : ''} Set it to ${expected}.`,
     [SeedcordErrorCode.MissingGuildsIntent]: (commands: readonly string[]) =>
@@ -315,6 +315,8 @@ const messages = {
         `The user ${paint.sky(userId)} doesn't have Discord tokens saved that still work. They never logged in, they removed the app, or the client secret changed. Send them through the login again.`,
     [SeedcordErrorCode.PluginOAuthIdentifyMissing]: () =>
         `Discord didn't say who logged in because the login's scopes don't include ${paint.bold('identify')}. Add ${paint.bold('identify')} to the scopes. The tokens are saved under the user's id.`,
+    [SeedcordErrorCode.PluginOAuthTokensInMemory]: (plugin: string) =>
+        `${paint.sky(plugin)} saves each user's tokens in ${paint.bold('kv')}, and this bot's ${paint.bold('kv')} is the default one that keeps everything in memory. A restart would delete the tokens, and on Workers each isolate would have its own. Set ${paint.bold('kv')} in your bot's config to a driver that saves to a file or a database, like ${paint.bold("new KeyvDriver(new Keyv(new KeyvSqlite('sqlite://./kv.sqlite')))")}.`,
 
     [SeedcordErrorCode.CliCancelled]: () => 'Cancelled.',
 

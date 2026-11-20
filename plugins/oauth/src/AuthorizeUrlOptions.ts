@@ -1,5 +1,6 @@
 import type { OAuthScope } from './UserCalls';
 import type { ApplicationIntegrationType } from 'discord-api-types/v10';
+import type { Except, IsNever } from 'type-fest';
 
 /** What a link can set when its scopes include `bot`, which adds the bot to a server during the login. */
 export interface BotLinkOptions {
@@ -30,11 +31,8 @@ interface EveryLinkOptions<TExtra extends OAuthScope> {
 }
 
 // an option only exists with its scope because discord only documents it for that kind of link
-type WithScope<TScopes extends OAuthScope, TWanted extends OAuthScope, TOptions> = [Extract<TScopes, TWanted>] extends [
-    never
-]
-    ? unknown
-    : TOptions;
+type WithScope<TScopes extends OAuthScope, TWanted extends OAuthScope, TOptions> =
+    IsNever<Extract<TScopes, TWanted>> extends true ? unknown : TOptions;
 
 /**
  * What `authorizeUrl()` puts in the link, besides the client's `scopes`. The options for adding the bot
@@ -49,3 +47,20 @@ export type AuthorizeUrlOptions<
 > = EveryLinkOptions<TExtra> &
     WithScope<TScopes | TExtra, 'bot', BotLinkOptions> &
     WithScope<TScopes | TExtra, 'bot' | 'applications.commands', InstallLinkOptions>;
+
+/**
+ * What `loginUrl()` puts in a login link.
+ *
+ * @typeParam TScopes - The client's `scopes`.
+ * @typeParam TExtra - The client's `extraScopes`.
+ */
+export type LoginLink<TScopes extends OAuthScope = OAuthScope, TExtra extends OAuthScope = OAuthScope> = Except<
+    AuthorizeUrlOptions<TScopes, TExtra>,
+    'state' | 'codeChallenge'
+> & {
+    /**
+     * Where the visitor should end up after the login. As a path on your own site like `'/dashboard'`.
+     * The finished login has it as `returnTo`. Anything that points at another site is discarded.
+     */
+    returnTo?: string | undefined;
+};

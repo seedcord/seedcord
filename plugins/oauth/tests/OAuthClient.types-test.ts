@@ -19,7 +19,7 @@ const base = {
     store: new Map<string, string>(),
     clientId: '1',
     clientSecret: 's',
-    redirectUri: 'https://a.test'
+    baseUrl: 'https://a.test'
 };
 
 function typesTheCallsItsScopesAllow(): void {

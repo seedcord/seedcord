@@ -34,7 +34,8 @@ export type GuildJoinOptions = Except<RESTPutAPIGuildMemberJSONBody, 'access_tok
 /** `bot.rest`'s `get`, `post`, `put`, `patch`, and `delete`, sent with one user's token. */
 export type UserRest = Pick<REST, 'get' | 'post' | 'put' | 'patch' | 'delete'>;
 
-// a string argument against the real parameters renders the message in the compile error
+// the string is never a real argument. it's the parameter type because typescript prints it in the
+// compile error
 type ScopedArgs<
     TAllowed extends OAuthScope,
     TScope extends OAuthScope,

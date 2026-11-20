@@ -2,74 +2,33 @@ import { DiscordAPIError, makeURLSearchParams, RequestMethod } from '@discordjs/
 import { SeedcordErrorCode } from '@seedcord/errors';
 import { SeedcordError, SeedcordTypeError } from '@seedcord/errors/internal';
 import { OAuth2Routes, Routes } from 'discord-api-types/v10';
-import { delay } from 'es-toolkit';
+import { delay, difference, union } from 'es-toolkit';
 
+import { AuthorizationFlow } from './AuthorizationFlow';
+import { MountedPath } from './MountedPath';
 import { TokenEndpoint } from './TokenEndpoint';
 import { TokenVault } from './TokenVault';
 
-import type { AuthorizeUrlOptions } from './AuthorizeUrlOptions';
-import type { SavedTokens, TokenStore } from './TokenVault';
+import type { AuthorizeUrlOptions, LoginLink } from './AuthorizeUrlOptions';
+import type { LoginOutcome, OAuthLogin } from './LoginOutcome';
+import type { OAuthClientOptions } from './OAuthClientOptions';
+import type { SavedTokens } from './TokenVault';
 import type { GuildJoin, GuildJoinOptions, OAuthScope, UserCalls, UserRest } from './UserCalls';
 import type { REST, RequestData } from '@discordjs/rest';
 import type {
-    APIGuild,
     APIGuildMember,
-    APIUser,
-    APIWebhook,
     RESTGetAPIOAuth2CurrentAuthorizationResult,
     RESTPostOAuth2AccessTokenResult
 } from 'discord-api-types/v10';
+import type { Promisable } from 'type-fest';
 
-/**
- * What {@link OAuthClient} needs to talk to Discord and to keep each user's tokens.
- *
- * @typeParam TScopes - The `scopes` you pass.
- * @typeParam TExtra - The `extraScopes` you pass.
- */
-export interface OAuthClientOptions<TScopes extends OAuthScope = never, TExtra extends OAuthScope = never> {
-    /**
-     * A `@discordjs/rest` client, like `bot.rest`. The client sends every call with it, which queues them
-     * behind its rate limits. They don't carry the bot's token.
-     */
-    rest: REST;
-    /** Where the tokens are kept, encrypted. In a seedcord bot, pass `bot.kv.collection<string>('oauth-tokens')`. */
-    store: TokenStore;
-    /** The application's id, like `bot.applicationId`. */
-    clientId: string;
-    /**
-     * The client secret from the application's OAuth2 page. The client also derives the key that encrypts
-     * the tokens from it. After you rotate it, every user has to log in again.
-     */
-    clientSecret: string;
-    /** The callback address. It has to match one of the redirects on the application's OAuth2 page exactly. */
-    redirectUri: string | URL;
-    /** The scopes to request on every login. `identify` is always added. */
-    scopes?: readonly TScopes[] | undefined;
-    /**
-     * Scopes that one feature needs, requested only by a login link that lists them. A user who never
-     * opened such a link doesn't have them, and the typed calls for them resolve to `undefined`.
-     */
-    extraScopes?: readonly TExtra[] | undefined;
-}
+// discord's access tokens last 7 days. we refresh 5 minutes early so one doesn't expire in the middle
+// of a request
+const REFRESH_EARLY_MS = 5 * 60 * 1000;
 
-/** A finished login. */
-export interface OAuthLogin {
-    user: APIUser;
-    /** The scopes Discord granted. Discord adds scopes that the user approved for the application earlier. */
-    scopes: OAuthScope[];
-    /** The server that the bot was added to when the login had the `bot` scope. */
-    guild?: APIGuild | undefined;
-    /** The webhook that Discord created when the login had the `webhook.incoming` scope. */
-    webhook?: APIWebhook | undefined;
-}
-
-// discord's access tokens last 7 days. refreshing 5 minutes early keeps a token from expiring while a
-// request that uses it is on its way
-const REFRESH_EARLY_MS = 300_000;
-
-// the process that won a refresh race gets its 200 at about the same moment the loser gets its 400, and
-// writes the new tokens to the store a few milliseconds later. 250ms is a guess that leaves room for a
-// slow store
+// when two processes refresh at once, the loser gets its 400 at about the same time the winner gets its
+// 200, and the winner still has to save the new tokens. the loser waits this long before it reads the
+// store. 250ms is a guess that should cover a slow store
 const RACE_WAIT_MS = 250;
 
 const UNAUTHORIZED = 401;
@@ -82,63 +41,114 @@ interface UserRequest {
 }
 
 /**
- * Discord's OAuth2 flow for one application, with each user's tokens kept encrypted in a store and
- * refreshed before they expire.
+ * Discord's OAuth2 login for one application. It serves the login and callback routes, keeps each
+ * user's tokens encrypted in a store, and refreshes them before they expire.
  *
- * `@seedcord/plugin-oauth`'s `OAuth` plugin builds one for you. Build your own when you want the calls
- * without attaching the plugin.
+ * `@seedcord/plugin-oauth`'s `OAuth` plugin builds one for you. Build your own to use it without
+ * seedcord, in any server that has a `Request` and takes a `Response`.
  *
  * @typeParam TScopes - The `scopes` from the options. Leave it out.
  * @typeParam TExtra - The `extraScopes` from the options. Leave it out.
  * @example
  * ```ts
  * const oauth = new OAuthClient({
- *     rest: bot.rest,
- *     store: bot.kv.collection<string>('oauth-tokens'),
- *     clientId: bot.applicationId,
- *     clientSecret: Envapter.getRequired('DISCORD_CLIENT_SECRET'),
- *     redirectUri: new URL('oauth/callback', bot.url),
+ *     rest: new REST(),
+ *     store: new Map(),
+ *     clientId: '1564002376115949650',
+ *     clientSecret: process.env.DISCORD_CLIENT_SECRET,
+ *     baseUrl: 'https://example.com',
  *     scopes: ['guilds'],
  *     extraScopes: ['connections']
  * });
  *
- * const login = await oauth.exchange(code);
- * const guilds = await oauth.as(login.user.id).guilds();
- * const connections = await oauth.as(login.user.id).connections(); // undefined until they grant it
+ * // in your server's request handler
+ * const response = await oauth.fetch(request, (outcome) =>
+ *     outcome.kind === 'login'
+ *         ? Response.redirect(new URL(outcome.login.returnTo ?? '/dashboard', request.url))
+ *         : new Response('The login failed.', { status: 400 })
+ * );
+ *
+ * // anywhere after that
+ * const guilds = await oauth.as(userId).guilds();
+ * const connections = await oauth.as(userId).connections(); // undefined until they grant it
  * ```
  */
 export class OAuthClient<TScopes extends OAuthScope = never, TExtra extends OAuthScope = never> {
+    /** The scopes that every login requests, `identify` included. */
+    public readonly scopes: readonly OAuthScope[];
+    /** The scopes that only a login link can add. A scope that's also in `scopes` isn't in this set. */
+    public readonly extraScopes: ReadonlySet<OAuthScope>;
+    /** The callback route's full address. Discord refuses logins until it's under Redirects on the OAuth2 page. */
+    public readonly redirectUri: string;
+
     readonly #rest: REST;
     readonly #clientId: string;
-    readonly #redirectUri: string;
-    readonly #scopes: readonly OAuthScope[];
-    readonly #extraScopes: ReadonlySet<OAuthScope>;
     readonly #endpoint: TokenEndpoint;
     readonly #vault: TokenVault;
+    readonly #flow: AuthorizationFlow;
 
     constructor({
         rest,
         store,
         clientId,
         clientSecret,
-        redirectUri,
+        baseUrl,
+        routes = {},
         scopes = [],
         extraScopes = []
     }: OAuthClientOptions<TScopes, TExtra>) {
         this.#rest = rest;
         this.#clientId = clientId;
-        this.#redirectUri = String(redirectUri);
         // the tokens are saved under the user's id, and discord only returns the user with identify
-        this.#scopes = ['identify', ...scopes];
-        // a scope in both lists is on every login, and the types read it that way too
-        this.#extraScopes = new Set<OAuthScope>(extraScopes).difference(new Set(this.#scopes));
+        this.scopes = union<OAuthScope>(['identify'], scopes);
+        // a scope that's in both lists counts as a normal scope. the types treat it that way too
+        this.extraScopes = new Set(difference<OAuthScope>(extraScopes, this.scopes));
         this.#endpoint = new TokenEndpoint(rest, clientId, clientSecret);
         this.#vault = new TokenVault(store, clientId, clientSecret);
+
+        const callback = new MountedPath(baseUrl, routes.callback ?? 'oauth/callback');
+        this.redirectUri = callback.url.href;
+        this.#flow = new AuthorizationFlow({
+            client: this,
+            login: new MountedPath(baseUrl, routes.login ?? 'oauth/login'),
+            callback
+        });
     }
 
-    /** Builds the link that sends a visitor to Discord's consent screen. */
+    /**
+     * Answers a request for the login route or the callback route. Resolves to `undefined` for any other
+     * request, which your server should answer itself.
+     *
+     * The login route sends the visitor to Discord. The callback route checks that this browser started
+     * the login, saves the user's tokens, and then calls `respond`.
+     *
+     * @param respond - Returns what the visitor's browser gets after the callback, usually a redirect.
+     */
+    public async fetch(
+        request: Request,
+        respond: (outcome: LoginOutcome) => Promisable<Response>
+    ): Promise<Response | undefined> {
+        return this.#flow.fetch(request, respond);
+    }
+
+    /**
+     * The address of the login route. Send a browser there, or put it in a message.
+     *
+     * @example
+     * ```ts
+     * // requests one more scope, and ends on the page that needed it
+     * oauth.loginUrl({ scopes: ['connections'], returnTo: '/dashboard/accounts' });
+     * ```
+     */
+    public loginUrl(link?: LoginLink<TScopes, TExtra>): string;
+    // callers get the overload above, with only the options their scopes allow. the flow reads them all
+    public loginUrl(link?: LoginLink): string {
+        return this.#flow.loginUrl(link);
+    }
+
+    /** The link to Discord's consent screen. `fetch()` builds it for you unless you keep your own `state`. */
     public authorizeUrl(options: AuthorizeUrlOptions<TScopes, TExtra>): string;
-    // the implementation reads every option. the signature above only offers the ones for the client's scopes
+    // callers get the overload above, with only the options their scopes allow. this one reads them all
     public authorizeUrl({
         state,
         codeChallenge,
@@ -151,9 +161,9 @@ export class OAuthClient<TScopes extends OAuthScope = never, TExtra extends OAut
         const url = new URL(OAuth2Routes.authorizationURL);
         url.search = makeURLSearchParams({
             client_id: this.#clientId,
-            redirect_uri: this.#redirectUri,
+            redirect_uri: this.redirectUri,
             response_type: 'code',
-            scope: [...new Set([...this.#scopes, ...scopes])].join(' '),
+            scope: union(this.scopes, scopes).join(' '),
             state,
             code_challenge: codeChallenge,
             code_challenge_method: codeChallenge === undefined ? undefined : 'S256',
@@ -166,7 +176,8 @@ export class OAuthClient<TScopes extends OAuthScope = never, TExtra extends OAut
     }
 
     /**
-     * Trades the `code` from Discord's redirect for the user's tokens and saves them.
+     * Trades the `code` from Discord's redirect for the user's tokens and saves them. Only for a server
+     * that keeps its own `state`. `fetch()` does this for you.
      *
      * Resolves to `undefined` when Discord refuses the code. A reloaded callback page gets `undefined`
      * because a code works once.
@@ -175,7 +186,7 @@ export class OAuthClient<TScopes extends OAuthScope = never, TExtra extends OAut
      * @throws A **SeedcordTypeError** when the login's scopes don't include `identify`.
      */
     public async exchange(code: string, codeVerifier?: string): Promise<OAuthLogin | undefined> {
-        const granted = await this.#endpoint.exchange({ code, redirectUri: this.#redirectUri, codeVerifier });
+        const granted = await this.#endpoint.exchange({ code, redirectUri: this.redirectUri, codeVerifier });
         if (!granted) return undefined;
 
         // justified: discord documents this body for the route
@@ -207,23 +218,27 @@ export class OAuthClient<TScopes extends OAuthScope = never, TExtra extends OAut
      * ```
      */
     public as(userId: string): UserCalls<TScopes, TExtra> {
-        // the client can't tell which scope an arbitrary route needs, which is why these skip the scope check
+        // these skip the scope check because we can't know which scope a random route needs
         const unscoped =
             (method: keyof UserRest) =>
             async (route: `/${string}`, options?: RequestData): Promise<unknown> =>
-                this.#send(userId, await this.#tokens(userId), { method, route, options }, false);
+                this.#send(userId, await this.#tokens(userId), { method, route, options });
         const roleConnection = Routes.userApplicationRoleConnection(this.#clientId);
 
-        // typed with every scope as an extra one, the case where each scoped call can resolve to undefined
+        // typed as if every scope was an extra one. that's the widest version, where every typed call
+        // can give undefined
         const calls: UserCalls<never, OAuthScope> = {
             get: unscoped('get'),
             post: unscoped('post'),
             put: unscoped('put'),
             patch: unscoped('patch'),
             delete: unscoped('delete'),
-            // every saved login has identify, which exchange() checks
-            user: async () =>
-                this.#send(userId, await this.#tokens(userId), { method: 'get', route: Routes.user('@me') }, true),
+            // identify isn't checked here because exchange() already refuses a login without it
+            user: async () => {
+                const saved = await this.#tokens(userId);
+                const request: UserRequest = { method: 'get', route: Routes.user('@me') };
+                return this.#grantEndedOn401(userId, this.#send(userId, saved, request));
+            },
             guilds: async (query) =>
                 this.#scoped(userId, 'guilds', {
                     method: 'get',
@@ -244,7 +259,8 @@ export class OAuthClient<TScopes extends OAuthScope = never, TExtra extends OAut
                     options: { body: connection }
                 })
         };
-        // justified: the two lists only change which of these calls compile, and whether one admits undefined
+        // justified: the object is the same whatever the two lists are. they only change which calls
+        // compile and which can give undefined
         return calls as UserCalls<TScopes, TExtra>;
     }
 
@@ -274,16 +290,26 @@ export class OAuthClient<TScopes extends OAuthScope = never, TExtra extends OAut
 
     async #scoped<TResult>(userId: string, scope: OAuthScope, request: UserRequest): Promise<TResult | undefined> {
         const saved = await this.#granted(userId, scope);
-        return saved ? this.#send(userId, saved, request, true) : undefined;
+        return saved ? this.#grantEndedOn401(userId, this.#send<TResult>(userId, saved, request)) : undefined;
     }
 
-    // TResult is unchecked. discord documents each route's body, and a typed call passes the type that
-    // matches its route
+    // only for a call whose scope the user granted. discord also answers 401 for a scope that they never
+    // granted, while their grant still works
+    async #grantEndedOn401<TResult>(userId: string, call: Promise<TResult>): Promise<TResult> {
+        try {
+            return await call;
+        } catch (error) {
+            if (!isUnauthorized(error)) throw error;
+            await this.#vault.delete(userId);
+            throw new SeedcordError(SeedcordErrorCode.PluginOAuthLoginNeeded, [userId]);
+        }
+    }
+
+    // nothing checks TResult. each typed call passes the type that discord documents for its route
     async #send<TResult>(
         userId: string,
         saved: SavedTokens,
-        { method, route, options }: UserRequest,
-        scopeGranted: boolean
+        { method, route, options }: UserRequest
     ): Promise<TResult> {
         const send = async (accessToken: string): Promise<TResult> =>
             // justified: see above
@@ -291,15 +317,12 @@ export class OAuthClient<TScopes extends OAuthScope = never, TExtra extends OAut
         try {
             return await send(saved.accessToken);
         } catch (error) {
-            if (!(error instanceof DiscordAPIError) || error.status !== UNAUTHORIZED) throw error;
-            // another process may have just refreshed these tokens, which ends the old access token at once
+            if (!isUnauthorized(error)) throw error;
+            // a 401 can just mean another process refreshed these tokens. discord ends the old access
+            // token as soon as that happens
             const latest = await this.#vault.read(userId);
             if (latest && latest.accessToken !== saved.accessToken) return send(latest.accessToken);
-            // discord also answers 401 for a scope that the user never granted. only a call whose scope
-            // was checked can tell that the grant ended
-            if (!scopeGranted) throw error;
-            await this.#vault.delete(userId);
-            throw new SeedcordError(SeedcordErrorCode.PluginOAuthLoginNeeded, [userId]);
+            throw error;
         }
     }
 
@@ -308,8 +331,7 @@ export class OAuthClient<TScopes extends OAuthScope = never, TExtra extends OAut
         const saved = await this.#granted(userId, 'guilds.join');
         if (!saved) return undefined;
 
-        // queueRequest returns the response itself. put() would only return the parsed body, and the
-        // status is what tells the two answers apart
+        // queueRequest because we need the status code, and put() only gives the parsed body
         const response = await this.#rest.queueRequest({
             method: RequestMethod.Put,
             fullRoute: Routes.guildMember(guildId, userId),
@@ -324,7 +346,7 @@ export class OAuthClient<TScopes extends OAuthScope = never, TExtra extends OAut
     async #granted(userId: string, scope: OAuthScope): Promise<SavedTokens | undefined> {
         const saved = await this.#tokens(userId);
         if (saved.scopes.includes(scope)) return saved;
-        if (this.#extraScopes.has(scope)) return undefined;
+        if (this.extraScopes.has(scope)) return undefined;
         // a login from before this scope was added to `scopes`
         throw new SeedcordError(SeedcordErrorCode.PluginOAuthLoginNeeded, [userId]);
     }
@@ -364,6 +386,10 @@ export class OAuthClient<TScopes extends OAuthScope = never, TExtra extends OAut
         await this.#vault.save(userId, tokens);
         return tokens;
     }
+}
+
+function isUnauthorized(error: unknown): boolean {
+    return error instanceof DiscordAPIError && error.status === UNAUTHORIZED;
 }
 
 // auth: false stops @discordjs/rest from sending the bot token, and from clearing it when a user's call gets a 401

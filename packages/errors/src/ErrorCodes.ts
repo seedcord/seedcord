@@ -282,6 +282,8 @@ export enum SeedcordErrorCode {
     PluginOAuthLoginNeeded = 2501,
     /** Discord didn't return a user for a finished login because the login's scopes don't include `identify`. */
     PluginOAuthIdentifyMissing = 2502,
+    /** A plugin that saves users' tokens started on a bot whose `kv` is the default one in memory. */
+    PluginOAuthTokensInMemory = 2503,
 
     /** Someone pressed Ctrl-C at a prompt in `seedcord` or `create-seedcord`. */
     CliCancelled = 3001,

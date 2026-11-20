@@ -1963,9 +1963,15 @@ importers:
         specifier: catalog:consumerTypes
         version: 6.0.3
     devDependencies:
+      '@seedcord/core':
+        specifier: workspace:^
+        version: link:../../packages/core
       '@seedcord/eslint-config':
         specifier: workspace:^
         version: link:../../tooling/eslint-config
+      '@seedcord/logger':
+        specifier: workspace:^
+        version: link:../../packages/logger
       '@seedcord/prose':
         specifier: workspace:^
         version: link:../../tooling/prose
@@ -1978,6 +1984,9 @@ importers:
       '@seedcord/vite-config':
         specifier: workspace:^
         version: link:../../tooling/vite-config
+      envapt:
+        specifier: catalog:peer
+        version: 9.2.0
 
   plugins/tasks:
     dependencies:

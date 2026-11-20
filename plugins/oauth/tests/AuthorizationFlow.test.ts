@@ -3,13 +3,12 @@ import { createHash } from 'node:crypto';
 import { REST } from '@discordjs/rest';
 import { describe, expect, it } from 'vite-plus/test';
 
-import { AuthorizationFlow } from '#src/AuthorizationFlow';
-import { MountedPath } from '#src/MountedPath';
 import { OAuthClient } from '#src/OAuthClient';
 
 import { fakeDiscord } from './fakeDiscord';
 
-import type { FlowOutcome } from '#src/AuthorizationFlow';
+import type { LoginOutcome } from '#src/LoginOutcome';
+import type { OAuthRoutes } from '#src/OAuthClientOptions';
 import type { OAuthScope } from '#src/UserCalls';
 import type { SeenRequest } from './fakeDiscord';
 
@@ -18,14 +17,13 @@ const ISSUER = 'https://discord.com';
 
 interface Flow {
     fetch(url: string, init?: RequestInit): Promise<Response | undefined>;
-    loginUrl: AuthorizationFlow['loginUrl'];
-    outcomes: FlowOutcome[];
+    loginUrl: OAuthClient<OAuthScope, 'connections'>['loginUrl'];
+    outcomes: LoginOutcome[];
     tokenRequests(): SeenRequest[];
 }
 
-// a flow at `base`, against a discord that grants every code except 'refused'
-async function flowAt(base: string, scopes: OAuthScope[] = []): Promise<Flow> {
-    const extraScopes: OAuthScope[] = ['connections'];
+// a client at `base`, against a discord that grants every code except 'refused'
+async function flowAt(base: string, scopes: OAuthScope[] = [], routes?: OAuthRoutes): Promise<Flow> {
     const discord = await fakeDiscord(({ route, body }) => {
         if (route !== '/oauth2/token') return { json: { user: USER, scopes: ['identify'] } };
         if (new URLSearchParams(body).get('code') === 'refused')
@@ -40,25 +38,18 @@ async function flowAt(base: string, scopes: OAuthScope[] = []): Promise<Flow> {
             }
         };
     });
-    const baseUrl = new URL(base);
-    const callback = new MountedPath(baseUrl, 'oauth/callback');
-    const flow = new AuthorizationFlow({
-        client: new OAuthClient({
-            rest: new REST({ api: discord.api }),
-            store: new Map(),
-            clientId: '1564002376115949650',
-            clientSecret: 'client-secret',
-            redirectUri: callback.url,
-            scopes,
-            extraScopes
-        }),
-        login: new MountedPath(baseUrl, 'oauth/login'),
-        callback,
+    const flow = new OAuthClient({
+        rest: new REST({ api: discord.api }),
+        store: new Map(),
+        clientId: '1564002376115949650',
+        clientSecret: 'client-secret',
+        baseUrl: base,
+        routes,
         scopes,
-        extraScopes
+        extraScopes: ['connections']
     });
 
-    const outcomes: FlowOutcome[] = [];
+    const outcomes: LoginOutcome[] = [];
     return {
         outcomes,
         loginUrl: (link) => flow.loginUrl(link),
@@ -264,7 +255,7 @@ describe('AuthorizationFlow adding the bot', () => {
             headers: { cookie }
         });
 
-        expect(flow.outcomes[0]).toMatchObject({ kind: 'login', permissions: '8' });
+        expect(flow.outcomes[0]).toMatchObject({ kind: 'login', login: { permissions: '8' } });
     });
 });
 
@@ -276,8 +267,21 @@ describe('AuthorizationFlow returnTo', () => {
         await flow.fetch(callbackUrl(BASE, { code: 'the-code', state, iss: ISSUER }), { headers: { cookie } });
 
         const [outcome] = flow.outcomes;
-        return outcome?.kind === 'login' ? outcome.returnTo : 'the login failed';
+        return outcome?.kind === 'login' ? outcome.login.returnTo : 'the login failed';
     }
+
+    it("doesn't pass on another site that a visitor wrote into their own cookie", async () => {
+        const flow = await flowAt(BASE);
+        const { authorize } = await start(flow, `${BASE}oauth/login`);
+        const state = authorize.get('state') ?? '';
+        const edited = Buffer.from(JSON.stringify({ state, returnTo: 'https://evil.test/' })).toString('base64url');
+
+        await flow.fetch(callbackUrl(BASE, { code: 'the-code', state, iss: ISSUER }), {
+            headers: { cookie: `seedcord_oauth=${edited}` }
+        });
+
+        expect(flow.outcomes).toMatchObject([{ kind: 'login', login: { returnTo: undefined } }]);
+    });
 
     it("hands the login link's path to the callback", async () => {
         expect(await returnToAfterLogin('/dashboard/servers?tab=roles')).toBe('/dashboard/servers?tab=roles');
@@ -304,5 +308,38 @@ describe('AuthorizationFlow under a path', () => {
         expect(stripped.authorize.get('redirect_uri')).toBe('http://localhost:3000/app/oauth/callback');
         // a browser ignores a Secure cookie that arrives over plain http
         expect(prefixed.cookieAttributes).toEqual(['HttpOnly', 'SameSite=Lax', 'Path=/app/oauth/', 'Max-Age=600']);
+    });
+
+    it('reads a base without its last slash and a route with a first slash the same way', async () => {
+        const flow = await flowAt('http://localhost:3000/app', [], { callback: '/oauth/callback' });
+
+        const { authorize } = await start(flow, `${MOUNTED}oauth/login`);
+
+        expect(authorize.get('redirect_uri')).toBe('http://localhost:3000/app/oauth/callback');
+    });
+});
+
+describe('AuthorizationFlow on other routes', () => {
+    const ROUTES = { login: 'linked-roles/verify', callback: 'linked-roles/callback' };
+
+    it('serves the login and the callback at the paths in routes', async () => {
+        const flow = await flowAt(BASE, [], ROUTES);
+        const { cookie, cookieAttributes, authorize } = await start(flow, flow.loginUrl());
+        const state = authorize.get('state') ?? '';
+
+        const query = new URLSearchParams({ code: 'c', state, iss: ISSUER }).toString();
+        await flow.fetch(`${BASE}linked-roles/callback?${query}`, { headers: { cookie } });
+
+        expect(flow.loginUrl()).toBe('https://bot.test/linked-roles/verify');
+        expect(authorize.get('redirect_uri')).toBe('https://bot.test/linked-roles/callback');
+        expect(cookieAttributes).toContain('Path=/linked-roles/');
+        expect(flow.outcomes).toMatchObject([{ kind: 'login' }]);
+    });
+
+    it('passes on a request for the routes it would serve without the option', async () => {
+        const flow = await flowAt(BASE, [], ROUTES);
+
+        expect(await flow.fetch(`${BASE}oauth/login`)).toBeUndefined();
+        expect(await flow.fetch(`${BASE}oauth/callback`)).toBeUndefined();
     });
 });

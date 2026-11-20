@@ -1,0 +1,37 @@
+import type { OAuthScope } from './UserCalls';
+import type { APIGuild, APIUser, APIWebhook } from 'discord-api-types/v10';
+
+/** What `exchange()` resolves to: who logged in, and what Discord gave back with the tokens. */
+export interface OAuthLogin {
+    user: APIUser;
+    /** The scopes Discord granted. Discord adds scopes that the user approved for the application earlier. */
+    scopes: OAuthScope[];
+    /** The server that the bot was added to when the login had the `bot` scope. */
+    guild: APIGuild | undefined;
+    /** The webhook that Discord created when the login had the `webhook.incoming` scope. */
+    webhook: APIWebhook | undefined;
+}
+
+/** A login that finished on the callback route. */
+export interface CompletedLogin extends OAuthLogin {
+    /** The path that the login link asked to end on, from `loginUrl({ returnTo })`. It always starts with one `/`. */
+    returnTo: string | undefined;
+    /**
+     * The permission bitfield that the visitor approved for the bot, for a login with the `bot` scope. They
+     * can untick permissions on Discord's screen.
+     */
+    permissions: string | undefined;
+}
+
+/**
+ * A login that didn't finish.
+ *
+ * - `denied`: the visitor pressed cancel on Discord's consent screen, or Discord refused the request.
+ *   `error` is Discord's reason, like `access_denied`.
+ * - `invalid`: the login link expired, the page was reloaded, or the visit didn't come from a login that
+ *   this browser started.
+ */
+export type FailedLogin = { kind: 'denied'; error: string } | { kind: 'invalid' };
+
+/** How a visit to the callback route ended. */
+export type LoginOutcome = { kind: 'login'; login: CompletedLogin } | FailedLogin;

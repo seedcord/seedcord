@@ -47,14 +47,14 @@ export interface SavedTokens {
     scopes: OAuthScope[];
 }
 
-// this is NIST's recommendation of 12 bytes for an AES-GCM iv
+// 12 bytes is what NIST recommends for an AES-GCM iv
 const IV_BYTES = 12;
 
 const encoder = new TextEncoder();
 const decoder = new TextDecoder();
 
-// AES takes a key of an exact size, and the client secret is a password for discord's api. HKDF derives
-// that key out of it
+// the client secret is just a password, and AES needs a key of an exact size. HKDF makes that key out
+// of the password
 async function deriveKey(clientId: string, clientSecret: string): Promise<CryptoKey> {
     const secret = await crypto.subtle.importKey('raw', encoder.encode(clientSecret), 'HKDF', false, ['deriveKey']);
     return crypto.subtle.deriveKey(
@@ -104,7 +104,8 @@ export class TokenVault {
         const key = await this.key();
         const opened = await crypto.subtle
             .decrypt(this.cipher(bytes.subarray(0, IV_BYTES), userId), key, bytes.subarray(IV_BYTES))
-            // fails for a wrong key, a wrong user id, or a changed record. all three mean no usable tokens
+            // this throws for a wrong key, a wrong user id, or a changed record. either way we don't
+            // have tokens we can use
             .catch(() => undefined);
         if (!opened) return undefined;
 

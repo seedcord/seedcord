@@ -3,8 +3,10 @@
     "version": "0.0.0",
     "description": "Log people in with Discord from a seedcord bot and call the API as them",
     "keywords": [
+        "discord-auth",
         "discord-bot",
         "discord-login",
+        "oauth",
         "oauth2",
         "plugin",
         "seedcord"
@@ -33,6 +35,12 @@
                 "types": "./dist/index.d.mts",
                 "default": "./dist/index.mjs"
             }
+        },
+        "./client": {
+            "import": {
+                "types": "./dist/client.index.d.mts",
+                "default": "./dist/client.index.mjs"
+            }
         }
     },
     "publishConfig": {
@@ -57,14 +65,27 @@
         "type-fest": "catalog:deps"
     },
     "devDependencies": {
+        "@seedcord/core": "workspace:^",
         "@seedcord/eslint-config": "workspace:^",
+        "@seedcord/logger": "workspace:^",
         "@seedcord/prose": "workspace:^",
         "@seedcord/tsconfig": "workspace:^",
         "@seedcord/tsdown-config": "workspace:^",
-        "@seedcord/vite-config": "workspace:^"
+        "@seedcord/vite-config": "workspace:^",
+        "envapt": "catalog:peer"
     },
     "peerDependencies": {
+        "@seedcord/core": "workspace:>=0.14.0-next.0",
+        "envapt": "catalog:peer",
         "typescript": "catalog:consumerTypes"
+    },
+    "peerDependenciesMeta": {
+        "@seedcord/core": {
+            "optional": true
+        },
+        "envapt": {
+            "optional": true
+        }
     },
     "engines": {
         "bun": ">=1.4.2",

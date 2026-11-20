@@ -1,12 +1,13 @@
 import { makeURLSearchParams } from '@discordjs/rest';
+import { compact } from 'es-toolkit';
 
 import { fromBase64Url, toBase64Url } from './base64';
 
-import type { AuthorizeUrlOptions, BotLinkOptions, InstallLinkOptions } from './AuthorizeUrlOptions';
+import type { AuthorizeUrlOptions, BotLinkOptions, InstallLinkOptions, LoginLink } from './AuthorizeUrlOptions';
+import type { LoginOutcome, OAuthLogin } from './LoginOutcome';
 import type { MountedPath } from './MountedPath';
-import type { OAuthClient, OAuthLogin } from './OAuthClient';
 import type { OAuthScope } from './UserCalls';
-import type { Except, Promisable } from 'type-fest';
+import type { Promisable } from 'type-fest';
 
 // the browser half of a login. the login route sends the visitor to discord, and discord sends them back
 // to the callback route.
@@ -24,45 +25,31 @@ import type { Except, Promisable } from 'type-fest';
 // `iss` is discord's own address, which it adds to every callback. checking it mostly matters for an app
 // with more than one login provider. it's just one comparison though, and RFC 9207 suggests to do it.
 
-/**
- * How a visit to the callback route ended.
- *
- * - `login`: Discord accepted the code, and the user's tokens are saved. `returnTo` is the path that the login
- *   link asked to end on. `permissions` is the bitfield that the visitor approved for the bot, for a login with
- *   the `bot` scope. They can untick permissions on Discord's screen.
- * - `denied`: the visitor pressed cancel on Discord's consent screen, or Discord refused the request. `error` is Discord's
- *   reason, like `access_denied`.
- * - `invalid`: the callback can't be trusted or used. The link expired, the page was reloaded, or the
- *   request didn't come from a login this browser started.
- */
-export type FlowOutcome =
-    | { kind: 'login'; login: OAuthLogin; returnTo: string | undefined; permissions: string | undefined }
-    | { kind: 'denied'; error: string }
-    | { kind: 'invalid' };
-
-interface FlowOptions {
-    // typed for every scope because the flow reads the scopes of a login link at run time
-    client: Pick<OAuthClient<OAuthScope, OAuthScope>, 'authorizeUrl' | 'exchange'>;
-    login: MountedPath;
-    callback: MountedPath;
-    scopes: readonly OAuthScope[];
-    extraScopes: readonly OAuthScope[];
+// the parts of an OAuthClient that the flow calls
+interface LoginSteps {
+    readonly scopes: readonly OAuthScope[];
+    readonly extraScopes: ReadonlySet<OAuthScope>;
+    // every scope is allowed here because the flow only finds out a link's scopes when a request comes in
+    authorizeUrl(options: AuthorizeUrlOptions<OAuthScope, OAuthScope>): string;
+    exchange(code: string, codeVerifier?: string): Promise<OAuthLogin | undefined>;
 }
 
-export type LoginLink = Except<AuthorizeUrlOptions<OAuthScope, OAuthScope>, 'state' | 'codeChallenge'> & {
-    returnTo?: string | undefined;
-};
+interface FlowOptions {
+    client: LoginSteps;
+    login: MountedPath;
+    callback: MountedPath;
+}
 
 interface Pending {
     state: string;
-    verifier?: string;
-    returnTo?: string;
+    verifier: string | undefined;
+    returnTo: string | undefined;
 }
 
 const ISSUER = 'https://discord.com';
 const COOKIE = 'seedcord_oauth';
 // how long a visitor has to get through discord's consent screen. 10 minutes is a guess
-const COOKIE_SECONDS = 600;
+const COOKIE_SECONDS = 10 * 60;
 const RANDOM_BYTES = 32;
 const BAD_REQUEST = 400;
 const FOUND = 302;
@@ -86,16 +73,17 @@ function cookieOf(request: Request, name: string): string | undefined {
     return pair?.slice(name.length + 1);
 }
 
-// a return address from the query could send the visitor to someone else's site after a real login.
-// parsing it against a made-up origin shows whether it's only a path: '//evil.test' and '/\evil.test'
-// both come out with another origin
-function ownPath(returnTo: string | null): string | undefined {
+// returnTo comes from the url, and anyone can write a link. without this check a real login could end
+// on someone else's site. '//evil.test' and '/\evil.test' both look like paths, but a browser reads them
+// as another site. parsing against a fake origin catches those because the origin changes
+function ownPath(returnTo: string | null | undefined): string | undefined {
     if (!returnTo?.startsWith('/')) return undefined;
     const origin = 'https://own.invalid';
     return URL.parse(returnTo, origin)?.origin === origin ? returnTo : undefined;
 }
 
-// what loginUrl() writes into the login route's query, read back. anything that isn't a number is discarded
+// reads back the options that loginUrl() put in the query. a visitor can edit the url, and that's why
+// only digits get through
 function installOptionsIn(query: URLSearchParams): BotLinkOptions & InstallLinkOptions {
     const digits = (name: string): string | undefined => {
         const value = query.get(name);
@@ -115,7 +103,7 @@ export class AuthorizationFlow {
 
     public async fetch(
         request: Request,
-        respond: (outcome: FlowOutcome) => Promisable<Response>
+        respond: (outcome: LoginOutcome) => Promisable<Response>
     ): Promise<Response | undefined> {
         if (request.method !== 'GET') return undefined;
         const url = new URL(request.url);
@@ -136,31 +124,34 @@ export class AuthorizationFlow {
     }
 
     private async begin(query: URLSearchParams): Promise<Response> {
-        const asked = new Set(query.get('scopes')?.split(' ').filter(Boolean));
-        const extra = this.options.extraScopes.filter((scope) => asked.has(scope));
-        if (!asked.isSubsetOf(new Set<string>(extra))) {
+        const { client } = this.options;
+        const asked = new Set(compact(query.get('scopes')?.split(' ') ?? []));
+        const extra = client.extraScopes.intersection(asked);
+        if (extra.size < asked.size) {
             return new Response('This login link requests a scope that the bot does not list in extraScopes.', {
                 status: BAD_REQUEST
             });
         }
 
-        const pending: Pending = { state: randomToken() };
         // discord refuses a PKCE challenge together with this scope
-        if (![...this.options.scopes, ...extra].includes('role_connections.write')) pending.verifier = randomToken();
-        const returnTo = ownPath(query.get('returnTo'));
-        if (returnTo !== undefined) pending.returnTo = returnTo;
+        const pkce = !client.scopes.includes('role_connections.write') && !extra.has('role_connections.write');
+        const pending: Pending = {
+            state: randomToken(),
+            verifier: pkce ? randomToken() : undefined,
+            returnTo: ownPath(query.get('returnTo'))
+        };
 
-        const location = this.options.client.authorizeUrl({
+        const location = client.authorizeUrl({
             ...installOptionsIn(query),
             state: pending.state,
             codeChallenge: pending.verifier === undefined ? undefined : await challengeOf(pending.verifier),
-            scopes: extra
+            scopes: [...extra]
         });
         const cookie = this.cookie(toBase64Url(encoder.encode(JSON.stringify(pending))), COOKIE_SECONDS);
         return this.withHeaders(new Response(null, { status: FOUND, headers: { location } }), cookie);
     }
 
-    private async finish(request: Request, query: URLSearchParams): Promise<FlowOutcome> {
+    private async finish(request: Request, query: URLSearchParams): Promise<LoginOutcome> {
         const pending = this.pendingOf(request);
         if (!pending) return { kind: 'invalid' };
         if (query.get('state') !== pending.state || query.get('iss') !== ISSUER) return { kind: 'invalid' };
@@ -171,7 +162,9 @@ export class AuthorizationFlow {
         const code = query.get('code');
         const login = code === null ? undefined : await this.options.client.exchange(code, pending.verifier);
         if (!login) return { kind: 'invalid' };
-        return { kind: 'login', login, returnTo: pending.returnTo, permissions: query.get('permissions') ?? undefined };
+        // checked again here because a visitor can edit their own cookie
+        const returnTo = ownPath(pending.returnTo);
+        return { kind: 'login', login: { ...login, returnTo, permissions: query.get('permissions') ?? undefined } };
     }
 
     private pendingOf(request: Request): Pending | undefined {
@@ -185,8 +178,8 @@ export class AuthorizationFlow {
         }
     }
 
-    // HttpOnly keeps page scripts from reading it. Lax still sends it on the redirect back from discord,
-    // which Strict wouldn't. the path is the public one because the browser only has the public address
+    // HttpOnly so page scripts can't read it. it has to be Lax because Strict wouldn't send it when
+    // discord redirects back. the path comes from the public url since that's the only one the browser has
     private cookie(value: string, maxAge: number): string {
         const { url } = this.options.callback;
         const secure = url.protocol === 'https:' ? '; Secure' : '';
@@ -194,10 +187,10 @@ export class AuthorizationFlow {
     }
 
     private withHeaders(response: Response, cookie: string): Response {
-        // a response from Response.redirect() has headers that can't be changed
+        // copied because Response.redirect() gives headers that can't be changed
         const copy = new Response(response.body, response);
         copy.headers.append('set-cookie', cookie);
-        // the callback's url has the code in it, and the login's redirect has the state
+        // these urls have the code and the state in them, and a cache shouldn't keep either
         copy.headers.set('cache-control', 'no-store');
         return copy;
     }
