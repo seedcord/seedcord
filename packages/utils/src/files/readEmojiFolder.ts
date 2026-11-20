@@ -8,9 +8,7 @@ import { pascalCase } from 'es-toolkit';
 import { BotLayout } from './BotLayout';
 
 export interface FolderEmoji {
-    // what Emojis.<key> reads
     key: string;
-    // the emoji's name on Discord
     name: string;
 }
 

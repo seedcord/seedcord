@@ -10,7 +10,6 @@ type ProjectPaths = Pick<ResolvedSeedcordConfig, 'root' | 'configFile' | 'files'
 
 // the build writes these into the entry because a built bot can't read them from disk
 export interface BuiltLists {
-    // every folder under root, empty ones included
     folders: string[];
     emojis: FolderEmoji[];
 }
