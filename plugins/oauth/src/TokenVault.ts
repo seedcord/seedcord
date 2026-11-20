@@ -2,6 +2,7 @@ import { once } from 'es-toolkit';
 
 import { fromBase64, toBase64 } from './base64';
 
+import type { OAuthScope } from './UserCalls';
 import type { Promisable } from 'type-fest';
 
 // discord gives the bot an access token and a refresh token for every user who logs in. anyone who has
@@ -14,18 +15,13 @@ import type { Promisable } from 'type-fest';
 // leaked database alone gets you nothing. just that when you rotate the secret the users would have to log in
 // again. that's fine though.
 //
-// the scrambling is AES-GCM, the same thing https uses. it hides the tokens, and unscrambling fails if
+// the scrambling is AES-GCM. it hides the tokens, and unscrambling fails if
 // anyone changed the record, even by one character. you never get wrong tokens back.
 //
 // every save makes 12 new random bytes, the iv (initialization vector). without them, the same tokens saved
 // twice would give the same record twice, and someone reading the database could tell. the iv isn't secret
 // and unscrambling needs it, which is why it's stored right in front of the scrambled tokens. the store ends up
-// with one string per user, the base64 of [iv][scrambled tokens].
-//
-// save() passes the user id as a label when scrambling. without it, someone who can write to the
-// database could copy another user's record under their own id, and the bot would then make calls as
-// that other user for them. the label isn't stored in the record, and unscrambling only works with the
-// same label, which is why a copied record doesn't open.
+// with one string per user, the base64 of [iv][scrambled tokens]
 
 /**
  * Where an `OAuthClient` keeps each user's tokens. Every value is one encrypted string, saved under the
@@ -47,10 +43,8 @@ export interface TokenStore {
 export interface SavedTokens {
     accessToken: string;
     refreshToken: string;
-    // epoch milliseconds
-    expiresAt: number;
-    // what Discord granted, which can be more than the flow asked for
-    scopes: string[];
+    expiresAt: number; // epoch ms
+    scopes: OAuthScope[];
 }
 
 // this is NIST's recommendation of 12 bytes for an AES-GCM iv
@@ -59,10 +53,8 @@ const IV_BYTES = 12;
 const encoder = new TextEncoder();
 const decoder = new TextDecoder();
 
-// AES takes a key of an exact size, and the client secret is a password for discord's api. HKDF makes
-// that key out of it. a restarted bot still opens its old records because the same secret and app id
-// always gives the same key. the app id is mixed in too. two apps then get different keys even if they
-// somehow had the same secret.
+// AES takes a key of an exact size, and the client secret is a password for discord's api. HKDF derives
+// that key out of it
 async function deriveKey(clientId: string, clientSecret: string): Promise<CryptoKey> {
     const secret = await crypto.subtle.importKey('raw', encoder.encode(clientSecret), 'HKDF', false, ['deriveKey']);
     return crypto.subtle.deriveKey(
@@ -87,7 +79,6 @@ export class TokenVault {
         clientId: string,
         clientSecret: string
     ) {
-        // made on the first save or read, then reused
         this.key = once(async () => deriveKey(clientId, clientSecret));
     }
 
@@ -125,7 +116,6 @@ export class TokenVault {
         await this.records.delete(userId);
     }
 
-    // additionalData is the user id label
     private cipher(iv: Uint8Array<ArrayBuffer>, userId: string): Parameters<SubtleCrypto['encrypt']>[0] {
         return { name: 'AES-GCM', iv, additionalData: encoder.encode(userId) };
     }

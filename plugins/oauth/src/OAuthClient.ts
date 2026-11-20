@@ -1,4 +1,4 @@
-import { makeURLSearchParams } from '@discordjs/rest';
+import { DiscordAPIError, makeURLSearchParams, RequestMethod } from '@discordjs/rest';
 import { SeedcordErrorCode } from '@seedcord/errors';
 import { SeedcordError, SeedcordTypeError } from '@seedcord/errors/internal';
 import { OAuth2Routes, Routes } from 'discord-api-types/v10';
@@ -8,28 +8,22 @@ import { TokenEndpoint } from './TokenEndpoint';
 import { TokenVault } from './TokenVault';
 
 import type { SavedTokens, TokenStore } from './TokenVault';
+import type { GuildJoin, GuildJoinOptions, OAuthScope, UserCalls, UserRest } from './UserCalls';
 import type { REST, RequestData } from '@discordjs/rest';
 import type {
+    APIGuildMember,
     APIUser,
-    OAuth2Scopes,
-    RESTGetAPICurrentUserConnectionsResult,
-    RESTGetAPICurrentUserGuildsQuery,
-    RESTGetAPICurrentUserGuildsResult,
-    RESTGetAPICurrentUserResult,
     RESTGetAPIOAuth2CurrentAuthorizationResult,
-    RESTGetCurrentUserGuildMemberResult,
     RESTPostOAuth2AccessTokenResult
 } from 'discord-api-types/v10';
-
-/** One of Discord's OAuth2 scopes, like `'identify'` or `'guilds'`. */
-export type OAuthScope = `${OAuth2Scopes}`;
 
 /**
  * What {@link OAuthClient} needs to talk to Discord and to keep each user's tokens.
  *
- * @typeParam TScopes - The scopes you pass. {@link OAuthClient.as} reads them to type the calls it allows.
+ * @typeParam TScopes - The `scopes` you pass.
+ * @typeParam TExtra - The `extraScopes` you pass.
  */
-export interface OAuthClientOptions<TScopes extends OAuthScope = OAuthScope> {
+export interface OAuthClientOptions<TScopes extends OAuthScope = never, TExtra extends OAuthScope = never> {
     /**
      * A `@discordjs/rest` client, like `bot.rest`. The client sends every call with it, which queues them
      * behind its rate limits. They don't carry the bot's token.
@@ -47,11 +41,20 @@ export interface OAuthClientOptions<TScopes extends OAuthScope = OAuthScope> {
     /** The callback address. It has to match one of the redirects on the application's OAuth2 page exactly. */
     redirectUri: string | URL;
     /** The scopes to request on every login. `identify` is always added. */
-    scopes: readonly TScopes[];
+    scopes?: readonly TScopes[] | undefined;
+    /**
+     * Scopes that one feature needs, requested only by a login link that lists them. A user who never
+     * opened such a link doesn't have them, and the typed calls for them resolve to `undefined`.
+     */
+    extraScopes?: readonly TExtra[] | undefined;
 }
 
-/** What {@link OAuthClient.authorizeUrl} puts in the link, besides the client's scopes. */
-export interface AuthorizeUrlOptions {
+/**
+ * What {@link OAuthClient.authorizeUrl} puts in the link, besides the client's `scopes`.
+ *
+ * @typeParam TExtra - The client's `extraScopes`.
+ */
+export interface AuthorizeUrlOptions<TExtra extends OAuthScope = never> {
     /** A random value that you tie to the visitor's browser and compare when Discord sends it back. */
     state: string;
     /**
@@ -59,6 +62,8 @@ export interface AuthorizeUrlOptions {
      * Discord refuses a challenge together with the `role_connections.write` scope.
      */
     codeChallenge?: string | undefined;
+    /** The `extraScopes` this link also requests. */
+    scopes?: readonly TExtra[] | undefined;
 }
 
 /** A finished login. */
@@ -66,37 +71,6 @@ export interface OAuthLogin {
     user: APIUser;
     /** The scopes Discord granted. Discord adds scopes that the user approved for the application earlier. */
     scopes: OAuthScope[];
-}
-
-/** `bot.rest`'s verbs, sent with one user's token. */
-export type UserRest = Pick<REST, 'get' | 'post' | 'put' | 'patch' | 'delete'>;
-
-// a string argument against the real parameters renders the message in the compile error
-type ScopedArgs<
-    TScopes extends OAuthScope,
-    TScope extends OAuthScope,
-    TArgs extends unknown[] = []
-> = TScope extends TScopes ? TArgs : [`This call needs the '${TScope}' scope. Add it to the client's scopes.`];
-
-/**
- * Discord calls made as one user. The typed methods cover what the common scopes allow, and each one only
- * compiles when the client's scopes include the scope it needs. The verbs reach every other route.
- *
- * @typeParam TScopes - The client's scopes.
- */
-export interface UserCalls<TScopes extends OAuthScope = OAuthScope> extends UserRest {
-    /** The user's own account. */
-    user(): Promise<RESTGetAPICurrentUserResult>;
-    /** The servers that the user is in. Needs the `guilds` scope. */
-    guilds(
-        ...args: ScopedArgs<TScopes, 'guilds', [query?: RESTGetAPICurrentUserGuildsQuery]>
-    ): Promise<RESTGetAPICurrentUserGuildsResult>;
-    /** The user's member object in one server. Needs the `guilds.members.read` scope. */
-    guildMember(
-        ...args: ScopedArgs<TScopes, 'guilds.members.read', [guildId: string]>
-    ): Promise<RESTGetCurrentUserGuildMemberResult>;
-    /** The accounts that the user connected on Discord, like GitHub. Needs the `connections` scope. */
-    connections(...args: ScopedArgs<TScopes, 'connections'>): Promise<RESTGetAPICurrentUserConnectionsResult>;
 }
 
 // discord's access tokens last 7 days. refreshing 5 minutes early keeps a token from expiring while a
@@ -108,6 +82,15 @@ const REFRESH_EARLY_MS = 300_000;
 // slow store
 const RACE_WAIT_MS = 250;
 
+const UNAUTHORIZED = 401;
+const NO_CONTENT = 204;
+
+interface UserRequest {
+    method: keyof UserRest;
+    route: `/${string}`;
+    options?: RequestData | undefined;
+}
+
 /**
  * Discord's OAuth2 flow for one application, with each user's tokens kept encrypted in a store and
  * refreshed before they expire.
@@ -115,7 +98,8 @@ const RACE_WAIT_MS = 250;
  * `@seedcord/plugin-oauth`'s `OAuth` plugin builds one for you. Build your own when you want the calls
  * without attaching the plugin.
  *
- * @typeParam TScopes - The scopes from the options. Leave it out.
+ * @typeParam TScopes - The `scopes` from the options. Leave it out.
+ * @typeParam TExtra - The `extraScopes` from the options. Leave it out.
  * @example
  * ```ts
  * const oauth = new OAuthClient({
@@ -124,39 +108,52 @@ const RACE_WAIT_MS = 250;
  *     clientId: bot.applicationId,
  *     clientSecret: Envapter.getRequired('DISCORD_CLIENT_SECRET'),
  *     redirectUri: new URL('oauth/callback', bot.url),
- *     scopes: ['guilds']
+ *     scopes: ['guilds'],
+ *     extraScopes: ['connections']
  * });
  *
  * const login = await oauth.exchange(code);
  * const guilds = await oauth.as(login.user.id).guilds();
+ * const connections = await oauth.as(login.user.id).connections(); // undefined until they grant it
  * ```
  */
-export class OAuthClient<TScopes extends OAuthScope = OAuthScope> {
+export class OAuthClient<TScopes extends OAuthScope = never, TExtra extends OAuthScope = never> {
     readonly #rest: REST;
     readonly #clientId: string;
     readonly #redirectUri: string;
-    readonly #scope: string;
+    readonly #scopes: readonly OAuthScope[];
+    readonly #extraScopes: ReadonlySet<OAuthScope>;
     readonly #endpoint: TokenEndpoint;
     readonly #vault: TokenVault;
 
-    constructor({ rest, store, clientId, clientSecret, redirectUri, scopes }: OAuthClientOptions<TScopes>) {
+    constructor({
+        rest,
+        store,
+        clientId,
+        clientSecret,
+        redirectUri,
+        scopes = [],
+        extraScopes = []
+    }: OAuthClientOptions<TScopes, TExtra>) {
         this.#rest = rest;
         this.#clientId = clientId;
         this.#redirectUri = String(redirectUri);
         // the tokens are saved under the user's id, and discord only returns the user with identify
-        this.#scope = [...new Set<OAuthScope>(['identify', ...scopes])].join(' ');
+        this.#scopes = ['identify', ...scopes];
+        // a scope in both lists is on every login, and the types read it that way too
+        this.#extraScopes = new Set<OAuthScope>(extraScopes).difference(new Set(this.#scopes));
         this.#endpoint = new TokenEndpoint(rest, clientId, clientSecret);
         this.#vault = new TokenVault(store, clientId, clientSecret);
     }
 
     /** Builds the link that sends a visitor to Discord's consent screen. */
-    public authorizeUrl({ state, codeChallenge }: AuthorizeUrlOptions): string {
+    public authorizeUrl({ state, codeChallenge, scopes = [] }: AuthorizeUrlOptions<TExtra>): string {
         const url = new URL(OAuth2Routes.authorizationURL);
         url.search = new URLSearchParams({
             client_id: this.#clientId,
             redirect_uri: this.#redirectUri,
             response_type: 'code',
-            scope: this.#scope,
+            scope: [...new Set([...this.#scopes, ...scopes])].join(' '),
             state,
             ...(codeChallenge !== undefined && { code_challenge: codeChallenge, code_challenge_method: 'S256' })
         }).toString();
@@ -183,47 +180,73 @@ export class OAuthClient<TScopes extends OAuthScope = OAuthScope> {
         )) as RESTGetAPIOAuth2CurrentAuthorizationResult;
         if (!user) throw new SeedcordTypeError(SeedcordErrorCode.PluginOAuthIdentifyMissing);
 
-        await this.#save(user.id, granted);
-        // justified: discord answers with its own scope names
-        return { user, scopes: granted.scope.split(' ') as OAuthScope[] };
+        const { scopes } = await this.#save(user.id, granted);
+        return { user, scopes };
     }
 
     /**
      * Calls Discord as a user who logged in. `user()`, `guilds()`, `guildMember()`, and `connections()`
-     * return typed results. The verbs take what `bot.rest`'s take and reach every other route.
+     * return typed results. `get`, `post`, `put`, `patch`, and `delete` take what `bot.rest`'s take and
+     * reach every other route.
      *
-     * Each call reads the user's tokens and refreshes them first when they're about to expire.
+     * Each call reads the user's tokens and refreshes them first when they're about to expire. A typed
+     * call also checks that the user granted its scope before it calls Discord.
      *
      * @throws A **SeedcordError** with the code `PluginOAuthLoginNeeded` from any call when the user never
-     * logged in or their grant ended. Send them through the login again.
+     * logged in or their grant ended, and from a typed call when the user's login is older than a scope
+     * you added to `scopes`. Send them through the login again.
      * @example
      * ```ts
      * const guilds = await oauth.as(userId).guilds({ with_counts: true });
      * const entitlements = await oauth.as(userId).get('/users/@me/entitlements');
      * ```
      */
-    public as(userId: string): UserCalls<TScopes> {
-        const call =
-            (verb: keyof UserRest) =>
-            async (route: `/${string}`, options: RequestData = {}): Promise<unknown> =>
-                this.#rest[verb](route, { ...options, ...bearer(await this.#accessToken(userId), options.headers) });
-        // justified: discord documents each route's body, and the caller's annotation picks the matching type
-        const get = async <TResult>(route: `/${string}`, options?: RequestData): Promise<TResult> =>
-            (await call('get')(route, options)) as TResult;
+    public as(userId: string): UserCalls<TScopes, TExtra> {
+        // the client can't tell which scope an arbitrary route needs, which is why these skip the scope check
+        const unscoped =
+            (method: keyof UserRest) =>
+            async (route: `/${string}`, options?: RequestData): Promise<unknown> =>
+                this.#send(userId, await this.#tokens(userId), { method, route, options }, false);
+        const roleConnection = Routes.userApplicationRoleConnection(this.#clientId);
 
-        const calls: UserCalls = {
-            get: call('get'),
-            post: call('post'),
-            put: call('put'),
-            patch: call('patch'),
-            delete: call('delete'),
-            user: async () => get(Routes.user('@me')),
-            guilds: async (query) => get(Routes.userGuilds(), { query: makeURLSearchParams(query) }),
-            guildMember: async (guildId) => get(Routes.userGuildMember(guildId)),
-            connections: async () => get(Routes.userConnections())
+        // typed with every scope as an extra one, the case where each scoped call can resolve to undefined
+        const calls: UserCalls<never, OAuthScope> = {
+            get: unscoped('get'),
+            post: unscoped('post'),
+            put: unscoped('put'),
+            patch: unscoped('patch'),
+            delete: unscoped('delete'),
+            // every saved login has identify, which exchange() checks
+            user: async () =>
+                this.#send(userId, await this.#tokens(userId), { method: 'get', route: Routes.user('@me') }, true),
+            guilds: async (query) =>
+                this.#scoped(userId, 'guilds', {
+                    method: 'get',
+                    route: Routes.userGuilds(),
+                    options: { query: makeURLSearchParams(query) }
+                }),
+            guildMember: async (guildId) =>
+                this.#scoped(userId, 'guilds.members.read', { method: 'get', route: Routes.userGuildMember(guildId) }),
+            connections: async () =>
+                this.#scoped(userId, 'connections', { method: 'get', route: Routes.userConnections() }),
+            joinGuild: async (guildId, options) => this.#joinGuild(userId, guildId, options),
+            roleConnection: async () =>
+                this.#scoped(userId, 'role_connections.write', { method: 'get', route: roleConnection }),
+            setRoleConnection: async (connection) =>
+                this.#scoped(userId, 'role_connections.write', {
+                    method: 'put',
+                    route: roleConnection,
+                    options: { body: connection }
+                })
         };
-        // justified: TScopes only narrows which of these calls compile for the caller
-        return calls as UserCalls<TScopes>;
+        // justified: the two lists only change which of these calls compile, and whether one admits undefined
+        return calls as UserCalls<TScopes, TExtra>;
+    }
+
+    /** The scopes that a user granted, or `undefined` for a user without saved tokens. It doesn't call Discord. */
+    public async scopesOf(userId: string): Promise<OAuthScope[] | undefined> {
+        const saved = await this.#vault.read(userId);
+        return saved?.scopes;
     }
 
     /** Deletes a user's saved tokens. It doesn't call Discord, and the user's grant there keeps working. */
@@ -244,12 +267,68 @@ export class OAuthClient<TScopes extends OAuthScope = OAuthScope> {
         await this.#vault.delete(userId);
     }
 
-    async #accessToken(userId: string): Promise<string> {
+    async #scoped<TResult>(userId: string, scope: OAuthScope, request: UserRequest): Promise<TResult | undefined> {
+        const saved = await this.#granted(userId, scope);
+        return saved ? this.#send(userId, saved, request, true) : undefined;
+    }
+
+    // TResult is unchecked. discord documents each route's body, and a typed call passes the type that
+    // matches its route
+    async #send<TResult>(
+        userId: string,
+        saved: SavedTokens,
+        { method, route, options }: UserRequest,
+        scopeGranted: boolean
+    ): Promise<TResult> {
+        const send = async (accessToken: string): Promise<TResult> =>
+            // justified: see above
+            (await this.#rest[method](route, { ...options, ...bearer(accessToken, options?.headers) })) as TResult;
+        try {
+            return await send(saved.accessToken);
+        } catch (error) {
+            if (!(error instanceof DiscordAPIError) || error.status !== UNAUTHORIZED) throw error;
+            // another process may have just refreshed these tokens, which ends the old access token at once
+            const latest = await this.#vault.read(userId);
+            if (latest && latest.accessToken !== saved.accessToken) return send(latest.accessToken);
+            // discord also answers 401 for a scope that the user never granted. only a call whose scope
+            // was checked can tell that the grant ended
+            if (!scopeGranted) throw error;
+            await this.#vault.delete(userId);
+            throw new SeedcordError(SeedcordErrorCode.PluginOAuthLoginNeeded, [userId]);
+        }
+    }
+
+    // discord only accepts this one from the bot, with the user's access token in the body
+    async #joinGuild(userId: string, guildId: string, options?: GuildJoinOptions): Promise<GuildJoin | undefined> {
+        const saved = await this.#granted(userId, 'guilds.join');
+        if (!saved) return undefined;
+
+        // queueRequest returns the response itself. put() would only return the parsed body, and the
+        // status is what tells the two answers apart
+        const response = await this.#rest.queueRequest({
+            method: RequestMethod.Put,
+            fullRoute: Routes.guildMember(guildId, userId),
+            body: { ...options, access_token: saved.accessToken }
+        });
+        // discord answers 204 without a body for a user who is already in the server
+        if (response.status === NO_CONTENT) return { added: false };
+        // justified: discord documents this body for a 201
+        return { added: true, member: (await response.json()) as APIGuildMember };
+    }
+
+    async #granted(userId: string, scope: OAuthScope): Promise<SavedTokens | undefined> {
+        const saved = await this.#tokens(userId);
+        if (saved.scopes.includes(scope)) return saved;
+        if (this.#extraScopes.has(scope)) return undefined;
+        // a login from before this scope was added to `scopes`
+        throw new SeedcordError(SeedcordErrorCode.PluginOAuthLoginNeeded, [userId]);
+    }
+
+    async #tokens(userId: string): Promise<SavedTokens> {
         const saved = await this.#vault.read(userId);
         if (!saved) throw new SeedcordError(SeedcordErrorCode.PluginOAuthLoginNeeded, [userId]);
-        if (saved.expiresAt - REFRESH_EARLY_MS > Date.now()) return saved.accessToken;
-        const refreshed = await this.#refresh(userId, saved);
-        return refreshed.accessToken;
+        if (saved.expiresAt - REFRESH_EARLY_MS > Date.now()) return saved;
+        return this.#refresh(userId, saved);
     }
 
     // a refresh token works once. when two processes refresh the same one, discord answers the second
@@ -274,7 +353,8 @@ export class OAuthClient<TScopes extends OAuthScope = OAuthScope> {
             accessToken: granted.access_token,
             refreshToken: granted.refresh_token,
             expiresAt: Date.now() + granted.expires_in * 1000,
-            scopes: granted.scope.split(' ')
+            // justified: discord answers with its own scope names
+            scopes: granted.scope.split(' ') as OAuthScope[]
         };
         await this.#vault.save(userId, tokens);
         return tokens;

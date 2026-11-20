@@ -4,6 +4,16 @@ import { Routes } from 'discord-api-types/v10';
 import type { REST } from '@discordjs/rest';
 import type { RESTPostOAuth2AccessTokenResult } from 'discord-api-types/v10';
 
+// discord's two token routes. /oauth2/token trades a login code for tokens and refreshes them, and
+// /oauth2/token/revoke ends a grant.
+//
+// these calls aren't made like the bot's other calls. they're sent as the app, with
+// the client id and secret, and discord takes them as a form.
+//
+// it's also the one place that reads `invalid_grant`. discord answers that for a code that was used,
+// expired, or made up, and for a refresh token that was already used or whose grant ended. exchange() and
+// refresh() give undefined for it and throw for anything else.
+
 interface CodeExchange {
     code: string;
     redirectUri: string;
@@ -11,8 +21,6 @@ interface CodeExchange {
     codeVerifier?: string | undefined;
 }
 
-// discord's token routes. every call here is made as the app, with the client id and secret, and never
-// with the bot's token.
 export class TokenEndpoint {
     private readonly authorization: string;
 
@@ -42,8 +50,6 @@ export class TokenEndpoint {
         await this.post(Routes.oauth2TokenRevocation(), { token });
     }
 
-    // undefined means discord answered invalid_grant. a code gets that when it was used, expired, or made
-    // up. a refresh token gets it when it was already used, or when the user or a revoke ended the grant.
     private async grant(fields: Record<string, string>): Promise<RESTPostOAuth2AccessTokenResult | undefined> {
         try {
             // justified: discord documents this body for both grant types

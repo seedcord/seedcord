@@ -28,6 +28,7 @@ interface FakeDiscord {
 }
 
 const OK = 200;
+const NO_CONTENT = 204;
 
 export async function fakeDiscord(reply: (request: SeenRequest) => Reply): Promise<FakeDiscord> {
     const requests: SeenRequest[] = [];
@@ -45,6 +46,10 @@ export async function fakeDiscord(reply: (request: SeenRequest) => Reply): Promi
             };
             requests.push(seen);
             const { status = OK, json = {} } = reply(seen);
+            if (status === NO_CONTENT) {
+                response.writeHead(status).end();
+                return;
+            }
             response.writeHead(status, { 'content-type': 'application/json' });
             response.end(JSON.stringify(json));
         });

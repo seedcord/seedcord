@@ -11,3 +11,7 @@ export function fromBase64(text: string): Uint8Array<ArrayBuffer> {
 export function toBase64Url(bytes: Uint8Array): string {
     return toBase64(bytes).replaceAll('+', '-').replaceAll('/', '_').replace(/=+$/u, '');
 }
+
+export function fromBase64Url(text: string): Uint8Array<ArrayBuffer> {
+    return fromBase64(text.replaceAll('-', '+').replaceAll('_', '/'));
+}

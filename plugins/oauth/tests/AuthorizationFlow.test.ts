@@ -10,6 +10,7 @@ import { OAuthClient } from '#src/OAuthClient';
 import { fakeDiscord } from './fakeDiscord';
 
 import type { FlowOutcome } from '#src/AuthorizationFlow';
+import type { OAuthScope } from '#src/UserCalls';
 import type { SeenRequest } from './fakeDiscord';
 
 const USER = { id: '111', username: 'dhruv' };
@@ -17,13 +18,14 @@ const ISSUER = 'https://discord.com';
 
 interface Flow {
     fetch(url: string, init?: RequestInit): Promise<Response | undefined>;
-    // what the flow passed to its respond callback, in order
+    loginUrl: AuthorizationFlow['loginUrl'];
     outcomes: FlowOutcome[];
     tokenRequests(): SeenRequest[];
 }
 
 // a flow at `base`, against a discord that grants every code except 'refused'
-async function flowAt(base: string, pkce = true): Promise<Flow> {
+async function flowAt(base: string, scopes: OAuthScope[] = []): Promise<Flow> {
+    const extraScopes: OAuthScope[] = ['connections'];
     const discord = await fakeDiscord(({ route, body }) => {
         if (route !== '/oauth2/token') return { json: { user: USER, scopes: ['identify'] } };
         if (new URLSearchParams(body).get('code') === 'refused')
@@ -47,16 +49,19 @@ async function flowAt(base: string, pkce = true): Promise<Flow> {
             clientId: '1564002376115949650',
             clientSecret: 'client-secret',
             redirectUri: callback.url,
-            scopes: []
+            scopes,
+            extraScopes
         }),
         login: new MountedPath(baseUrl, 'oauth/login'),
         callback,
-        pkce
+        scopes,
+        extraScopes
     });
 
     const outcomes: FlowOutcome[] = [];
     return {
         outcomes,
+        loginUrl: (link) => flow.loginUrl(link),
         tokenRequests: () => discord.requests.filter((request) => request.route === '/oauth2/token'),
         fetch: async (url, init) =>
             flow.fetch(new Request(url, init), (outcome) => {
@@ -82,6 +87,11 @@ async function start(flow: Flow, loginUrl: string): Promise<Started> {
     return { cookie, cookieAttributes, authorize, response };
 }
 
+function stateIn(cookie: string): unknown {
+    const value = cookie.slice(cookie.indexOf('=') + 1);
+    return (JSON.parse(Buffer.from(value, 'base64url').toString()) as { state: unknown }).state;
+}
+
 function callbackUrl(base: string, query: Record<string, string>): string {
     return `${base}oauth/callback?${new URLSearchParams(query).toString()}`;
 }
@@ -98,7 +108,7 @@ describe('AuthorizationFlow login route', () => {
         expect(response.headers.get('cache-control')).toBe('no-store');
         expect(authorize.get('redirect_uri')).toBe('https://bot.test/oauth/callback');
         expect(authorize.get('code_challenge_method')).toBe('S256');
-        expect(cookie).toContain(authorize.get('state'));
+        expect(stateIn(cookie)).toBe(authorize.get('state'));
         expect(cookieAttributes).toEqual(['HttpOnly', 'SameSite=Lax', 'Path=/oauth/', 'Max-Age=600', 'Secure']);
     });
 
@@ -111,12 +121,38 @@ describe('AuthorizationFlow login route', () => {
         expect(first.authorize.get('state')).not.toBe(second.authorize.get('state'));
     });
 
-    it("doesn't send a challenge when PKCE is off", async () => {
-        const flow = await flowAt(BASE, false);
+    it("doesn't send a challenge with role_connections.write, which Discord refuses it with", async () => {
+        const flow = await flowAt(BASE, ['role_connections.write']);
 
         const { authorize } = await start(flow, `${BASE}oauth/login`);
 
+        expect(authorize.get('scope')).toBe('identify role_connections.write');
         expect(authorize.has('code_challenge')).toBe(false);
+    });
+
+    it('adds an extra scope that the login link lists', async () => {
+        const flow = await flowAt(BASE, ['guilds']);
+
+        const { authorize } = await start(flow, flow.loginUrl({ scopes: ['connections'] }));
+
+        expect(authorize.get('scope')).toBe('identify guilds connections');
+    });
+
+    it('requests a scope once when the login link lists it twice', async () => {
+        const flow = await flowAt(BASE);
+
+        const { authorize } = await start(flow, `${BASE}oauth/login?scopes=connections+connections`);
+
+        expect(authorize.get('scope')).toBe('identify connections');
+    });
+
+    it('answers 400 to a link with a scope outside extraScopes', async () => {
+        const flow = await flowAt(BASE);
+
+        const response = await flow.fetch(`${BASE}oauth/login?scopes=guilds.join`);
+
+        expect(response?.status).toBe(400);
+        expect(response?.headers.has('set-cookie')).toBe(false);
     });
 
     it('passes on a request for any other path or method', async () => {
@@ -193,6 +229,29 @@ describe('AuthorizationFlow callback route', () => {
 
         expect(flow.outcomes).toEqual([{ kind: 'invalid' }]);
     });
+});
+
+describe('AuthorizationFlow returnTo', () => {
+    async function returnToAfterLogin(returnTo: string): Promise<string | undefined> {
+        const flow = await flowAt(BASE);
+        const { cookie, authorize } = await start(flow, flow.loginUrl({ returnTo }));
+        const state = authorize.get('state') ?? '';
+        await flow.fetch(callbackUrl(BASE, { code: 'the-code', state, iss: ISSUER }), { headers: { cookie } });
+
+        const [outcome] = flow.outcomes;
+        return outcome?.kind === 'login' ? outcome.returnTo : 'the login failed';
+    }
+
+    it("hands the login link's path to the callback", async () => {
+        expect(await returnToAfterLogin('/dashboard/servers?tab=roles')).toBe('/dashboard/servers?tab=roles');
+    });
+
+    it.each(['https://evil.test/', '//evil.test/', String.raw`/\evil.test/`, 'dashboard'])(
+        "doesn't pass on %s, which is not a path on this site",
+        async (returnTo) => {
+            expect(await returnToAfterLogin(returnTo)).toBeUndefined();
+        }
+    );
 });
 
 describe('AuthorizationFlow under a path', () => {
