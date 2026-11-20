@@ -8,6 +8,7 @@ export class TestHost extends PluginHost<'gateway', 'server'> {
     public readonly config = {} as CoreBase['config'];
     public readonly rest = {} as CoreBase['rest'];
     public readonly applicationId = 'app';
+    public readonly url = new URL('https://bot.test/');
 
     constructor() {
         super('gateway', 'server', new MemoryDriver());

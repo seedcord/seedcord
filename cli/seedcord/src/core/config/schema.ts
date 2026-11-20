@@ -97,28 +97,9 @@ export interface SeedcordMakeConfig {
 }
 
 /**
- * The `seedcord.config.ts` of a bot that runs on Cloudflare Workers. For a bot on node or bun, use
- * {@link SeedcordServerConfig}. Its `build` also takes `outDir` and `start`.
+ * Options for `seedcord dev`.
  */
-export interface SeedcordConfig {
-    /**
-     * Root directory used for resolving relative paths.
-     *
-     * @defaultValue the config directory
-     */
-    root?: string;
-    /**
-     * Path to the module whose default export is a configured `Seedcord` instance.
-     */
-    instance: string;
-    /**
-     * Folders whose non-code files `seedcord build` bundles for `readFiles` to read, like `['./locales']`.
-     * Each one includes its subfolders and resolves against `root`. A folder can sit beside `root`, like `'../assets'`
-     * with `root: './src'` as long as it is inside the folder that holds this config.
-     *
-     * @defaultValue `[]`
-     */
-    files?: string[];
+export interface SeedcordDevConfig {
     /**
      * How `seedcord dev` exposes an http bot's interactions server. A gateway bot ignores it.
      *
@@ -144,13 +125,42 @@ export interface SeedcordConfig {
      */
     idleAnimation?: boolean;
     /**
+     * Optional HMR configuration.
+     */
+    hmr?: SeedcordHmrConfig;
+}
+
+/**
+ * The `seedcord.config.ts` of a bot that runs on Cloudflare Workers. For a bot on node or bun, use
+ * {@link SeedcordServerConfig}. Its `build` also takes `outDir` and `start`.
+ */
+export interface SeedcordConfig {
+    /**
+     * Root directory used for resolving relative paths.
+     *
+     * @defaultValue the config directory
+     */
+    root?: string;
+    /**
+     * Path to the module whose default export is a configured `Seedcord` instance.
+     */
+    instance: string;
+    /**
+     * Folders whose non-code files `seedcord build` bundles for `readFiles` to read, like `['./locales']`.
+     * Each one includes its subfolders and resolves against `root`. A folder can sit beside `root`, like `'../assets'`
+     * with `root: './src'` as long as it is inside the folder that holds this config.
+     *
+     * @defaultValue `[]`
+     */
+    files?: string[];
+    /**
      * Optional build configuration overrides.
      */
     build?: SeedcordBaseBuildConfig;
     /**
-     * Optional HMR configuration.
+     * Options for `seedcord dev`.
      */
-    hmr?: SeedcordHmrConfig;
+    dev?: SeedcordDevConfig;
     /**
      * A function that returns the Vite plugins to run on your bot's code in every `seedcord` command
      * that loads it, like `() => [yaml()]`. They change what an import loads, like turning a `.yaml`
@@ -172,9 +182,10 @@ export interface SeedcordServerConfig extends SeedcordConfig {
      */
     build?: SeedcordBuildConfig;
     /**
-     * A node http bot takes its port in `new Seedcord({ port })`.
+     * Options for `seedcord dev`. A bot on node or bun takes its port in
+     * `new Seedcord({ server: { port } })`.
      */
-    port?: never;
+    dev?: Except<SeedcordDevConfig, 'port'> & { port?: never };
 }
 
 export type ResolvedTunnel = { mode: 'off' } | { mode: 'quick' } | { mode: 'url'; url: string };
@@ -196,14 +207,13 @@ interface ResolvedSeedcordMakeConfig {
     helpers: SeedcordMakeHelpers;
 }
 
-export interface ResolvedSeedcordConfig extends Required<
-    Except<SeedcordConfig, 'build' | 'hmr' | 'tunnel' | 'port' | 'vitePlugins' | 'root' | 'instance' | 'files' | 'make'>
-> {
+export interface ResolvedSeedcordConfig {
     make: ResolvedSeedcordMakeConfig;
     root: RealPath;
     instance: RealPath;
     files: RealPath[];
     tunnel: ResolvedTunnel;
+    idleAnimation: NonNullable<SeedcordDevConfig['idleAnimation']>;
     vitePlugins: VitePlugins;
     configFile: RealPath;
     target: ResolvedTarget;

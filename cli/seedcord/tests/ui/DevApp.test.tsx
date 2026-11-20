@@ -1,4 +1,5 @@
 import { settled, stableFrame } from '@seedcord/cli-prompts/testing';
+import { FRAMEWORK_CHANNELS } from '@seedcord/logger';
 import React from 'react';
 import { describe, expect, it, vi } from 'vite-plus/test';
 
@@ -50,24 +51,6 @@ function view(
         size
     );
 }
-
-// every channel that the framework logs on
-const MANY_CHANNELS = [
-    'default',
-    'bot',
-    'lifecycle',
-    'health',
-    'interactions',
-    'events',
-    'commands',
-    'subscribers',
-    'errors',
-    'gates',
-    'plugins',
-    'hmr',
-    'cli',
-    'tsc'
-];
 
 function logOn(channel: string): LogRecord {
     return { level: 'info', message: `from ${channel}`, label: 'Bot', channel, timestamp: 1_700_000_000_000 };
@@ -288,7 +271,7 @@ describe('DevApp filters below the full layout', () => {
     it('asks for more room and holds the filter keys when the chips do not fit', async () => {
         const onPrefsChange = vi.fn();
         const app = view({ rows: 9, columns: 79 }, { onPrefsChange });
-        for (const record of MANY_CHANNELS.map(logOn)) LogStore.instance.onLog(record);
+        for (const record of FRAMEWORK_CHANNELS.map(logOn)) LogStore.instance.onLog(record);
         await LogStore.instance.flush();
 
         app.press('f');
@@ -302,7 +285,7 @@ describe('DevApp filters below the full layout', () => {
 
     it('shows every chip once the panel has room', async () => {
         const app = view({ rows: 12, columns: 79 });
-        for (const record of MANY_CHANNELS.map(logOn)) LogStore.instance.onLog(record);
+        for (const record of FRAMEWORK_CHANNELS.map(logOn)) LogStore.instance.onLog(record);
         await LogStore.instance.flush();
 
         app.press('f');

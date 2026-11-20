@@ -110,21 +110,15 @@ export default new Seedcord({
         commands: { path: './commands' }
     },
     subscribers: { path: null },
-    port: Envapter.getAs('PORT', Converters.Port, 3000)
+    server: { port: Envapter.getAs('PORT', Converters.Port, 3000) }
 }).attach('stats.uptime', Uptime);
 ```
 
 `PORT=8080 node server.ts` then serves on 8080, and the bot falls back to 3000 when `PORT` isn't set. [Reading a value](/build/env#reading-a-value) covers `getAs` and its converters.
 
-<Callout type="transport">
-
-`port` is on http's config only. A gateway bot connects out to Discord and never binds a port for interactions. The one port it opens is [the health server's](/build/server#the-health-server), which `healthCheck.port` sets the same way.
-
-</Callout>
-
 `Uptime` is a plugin class from the bot's own code. The `.attach('stats.uptime', Uptime)` at the end is where `bot.stats.uptime` in the installing project's sample comes from. [Typing plugins](/plugins/typing) explains why the default export has to be that whole chain.
 
-The bot can also skip a port of its own and run inside a server the installing project already has. [Embedding the bot](/build/embed) sets `port: false` and hands each request to it.
+The bot can also skip a port of its own and run inside a server the installing project already has. [Embedding the bot](/build/embed) sets `server.port` to `false` and hands each request to it.
 
 ## Testing the package locally
 

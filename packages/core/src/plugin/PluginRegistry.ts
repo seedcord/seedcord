@@ -3,7 +3,8 @@ import { SeedcordError, SeedcordTypeError } from '@seedcord/errors/internal';
 import { asError } from '@seedcord/utils/internal';
 
 import { MemberValues } from '#src/dispatch/DispatchContext';
-import { readsCommandFile } from '#src/plugin/pluginSlots';
+import { pluginLoggerOf, readsCommandFile } from '#src/plugin/pluginSlots';
+import { requestPath } from '#src/requestPath';
 
 import type { DispatchContext } from '#src/dispatch/DispatchContext';
 import type { DispatchOrigin } from '#src/dispatch/DispatchOrigin';
@@ -96,6 +97,20 @@ function throwTaken(member: string, first: string, second: string, note?: string
     ]);
 }
 
+function labelOf({ key, instance }: Attachment): string {
+    return `${paint.sky(instance.constructor.name)} at ${paint.sky(key)}`;
+}
+
+// a throw here would fail every interaction because http runs plugins before the engine
+async function answerOrLog(plugin: PluginLike, request: Request): Promise<Response | undefined> {
+    try {
+        return await plugin.fetch?.(request);
+    } catch (caught) {
+        pluginLoggerOf(plugin).error(`fetch threw on ${request.method} ${requestPath(request.url)}`, caught);
+        return undefined;
+    }
+}
+
 interface ClaimedMember {
     readonly key: string;
     readonly plugin: string;
@@ -126,7 +141,7 @@ export class PluginRegistry {
 
     public add(attachment: Attachment): void {
         const { key, instance } = attachment;
-        const plugin = `${paint.sky(instance.constructor.name)} at ${paint.sky(key)}`;
+        const plugin = labelOf(attachment);
         const functions = Object.entries(instance.dispatchMembers ?? {});
         for (const [member] of functions) this.assertFree(member, key, plugin, instance);
         for (const [member, build] of functions) this.claimed.set(member, { key, plugin, instance, build });
@@ -190,5 +205,24 @@ export class PluginRegistry {
 
     public async prepareCommands(commands: readonly RESTPostAPIApplicationCommandsJSONBody[]): Promise<void> {
         for (const { instance } of this.list) await instance.prepareCommands?.(commands);
+    }
+
+    public get answersRequests(): boolean {
+        return this.list.some(({ instance }) => instance.fetch);
+    }
+
+    public async answer(request: Request): Promise<Response | undefined> {
+        for (const attachment of this.list) {
+            const response = await answerOrLog(attachment.instance, request);
+            if (response) return response;
+            // getReader() locks the body without setting bodyUsed
+            if (request.bodyUsed || request.body?.locked) {
+                throw new SeedcordError(SeedcordErrorCode.CorePluginFetchReadBody, [
+                    labelOf(attachment),
+                    requestPath(request.url)
+                ]);
+            }
+        }
+        return undefined;
     }
 }

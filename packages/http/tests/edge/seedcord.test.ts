@@ -125,7 +125,7 @@ describe('the edge Seedcord', () => {
         expect(ran).toEqual(['ping']);
     });
 
-    it('answers a GET with 405 before reading env or starting plugins', async () => {
+    it('answers a GET with 404 before reading env or starting plugins', async () => {
         const calls: string[] = [];
         class Recorder extends Plugin {
             public init(): Promise<void> {
@@ -138,8 +138,7 @@ describe('the edge Seedcord', () => {
 
         const response = await seedcord.fetch(new Request('https://bot.example.com/'), undefined, capturingCtx());
 
-        expect(response.status).toBe(405);
-        expect(response.headers.get('allow')).toBe('POST');
+        expect(response.status).toBe(404);
         expect(calls).toEqual([]);
     });
 
@@ -374,11 +373,20 @@ describe('the edge Seedcord', () => {
         );
     });
 
+    it('reads core.url from server.url, and throws without one', () => {
+        const seedcord = new Seedcord(config());
+
+        expect(() => seedcord.url).toThrow(expect.objectContaining({ code: SeedcordErrorCode.CoreServerUrlUnset }));
+
+        seedcord.config.server = { url: 'https://bot.example.com' };
+        expect(seedcord.url.href).toBe('https://bot.example.com/');
+    });
+
     it('rejects a server-only plugin', () => {
         const seedcord = new Seedcord(config());
 
         // @ts-expect-error ServerOnly declares runtime 'server'
-        expect(() => seedcord.attach('server', ServerOnly)).toThrow(
+        expect(() => seedcord.attach('serverOnly', ServerOnly)).toThrow(
             expect.objectContaining({ code: SeedcordErrorCode.CorePluginScopeMismatch })
         );
     });

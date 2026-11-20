@@ -79,7 +79,7 @@ The printed `run` line doesn't include the flag, so add it yourself. Without it,
 
 To run it on a host, copy the whole `dist` folder there, along with `package.json` and your production dependencies since `dist` imports packages like `@seedcord/gateway` from `node_modules`.
 
-An http bot's interactions server listens on port 3000. To use another port, pass `port` to `new Seedcord({ ... })`. [Reading a value](/build/env#reading-a-value) has a sample that takes it from a `PORT` variable.
+The bot's [web server](#the-web-server) listens on port 3000. To use another port, set `server.port` in `new Seedcord({ ... })`. [Reading a value](/build/env#reading-a-value) has a sample that takes it from a `PORT` variable.
 
 If you copy only `dist` and `package.json` to your host, the bot looks for `.env` in a different place. [A built bot's .env files](/build/env#in-a-built-bot) has both cases.
 
@@ -111,9 +111,9 @@ Bun stores the bot's files inside the executable, under a virtual `/$bunfs` fold
 
 A bot that calls `Bun.*` only runs on Bun after that, so use these APIs only if you've already picked Bun for production.
 
-## The health server
+## The web server
 
-Most hosting platforms call an http endpoint to check that your process is still alive. A gateway bot opens a small server that answers `/health` on port 6967 once startup finishes, after every plugin's `ready()`, and closes it when the bot shuts down. It does this under `seedcord dev` too.
+A bot on Node or Bun runs one web server. It answers your host's health check and any [plugin routes](/writing-plugins/web-requests), and on an http bot it's also where Discord posts interactions. The `server` key holds all of its settings:
 
 ```ts twoslash title="src/bot.ts"
 import { Seedcord } from '@seedcord/gateway';
@@ -127,19 +127,51 @@ export default new Seedcord({
         events: { path: null }
     },
     subscribers: { path: null },
-    healthCheck: { port: 8080, path: '/healthz' }
+    server: {
+        port: 8080,
+        health: '/healthz',
+        url: 'https://bot.example.com'
+    }
 });
 ```
 
-This bot answers `/healthz` on port 8080. All three keys are optional. `port` defaults to 6967, `path` to `/health`, and `host` to every network interface. `healthCheck: true` and a missing `healthCheck` key both give you those defaults. `healthCheck: false` turns the server off.
+This bot listens on port 8080 and answers its health check on `/healthz`. Every key is optional, and a gateway bot and an http bot take the same ones:
 
-Change `port` or `path` if your host expects its health check somewhere else. Set `host` if the server should only listen inside a container network. Turn it off if nothing calls it or port 6967 is already taken on the machine.
+{/* prettier-ignore-start */}
 
-<Callout type="transport" only="http">
+| key | default | what it sets |
+| --- | --- | --- |
+| `port` | `3000` | the port that the server listens on. `false` keeps the bot off every port, for a bot [inside your own server](/build/embed) |
+| `host` | every network interface | the interface it listens on. Set it if the server should only listen inside a container network |
+| `health` | `'/health'` | the path that answers the health check. `false` turns it off |
+| `bodyLimit` | `1048576` | the largest request body the server reads, in bytes. A larger one gets a 413 before any plugin runs |
+| `url` | none | [the address people reach your bot at](#your-bots-address) |
 
-A node http bot answers `/health` on its own `port` with a 503 until startup finishes, then with a 200. Once shutdown starts, it answers 503 again. Its `healthCheck` takes `false` to turn that off, `true` or nothing for `/health`, or `{ path }` to move it. A bot on Cloudflare Workers doesn't answer a health path.
+{/* prettier-ignore-end */}
+
+<Callout type="transport" only="edge">
+
+Cloudflare runs the server for a bot on Workers, so its `server` takes only `url`. A Workers bot doesn't answer a health path.
 
 </Callout>
+
+### The health check
+
+Most hosting platforms call an http endpoint to check that your process is still alive. The health path answers 503 until every plugin's `ready()` has finished, then 200. Once shutdown starts, it answers 503 again. It answers the same way under `seedcord dev`.
+
+Set `health` to another path if your host expects its health check somewhere else, or to `false` if your host doesn't call it. A gateway bot with `health: false` opens its server only if a plugin has [`fetch()`](ref:core/Plugin.fetch).
+
+### Your bot's address
+
+Some plugins send people to your bot in a browser, like an OAuth login that comes back to a route on the bot. The bot can't work out its own public address because requests usually reach it through a proxy or your host's router. Set `server.url` to the address people reach it at, as the sample above does. If your host serves the bot under a path, include the path.
+
+A plugin reads that address as [`core.url`](ref:core/CoreBase.url). If a plugin reads it and `server.url` isn't set, the bot throws:
+
+```txt output
+[1242] A plugin or your code read core.url, but server.url isn't set. Add server: { url: 'https://your-bot.example.com' } to the config you pass to new Seedcord(), with the address people reach your bot at.
+```
+
+You don't have to set `url` while you develop. Under `seedcord dev`, a bot without one uses its own localhost address, like `http://localhost:3000`. An http bot whose [`dev.tunnel`](/tooling/tunnel#when-you-already-have-a-url) is a URL uses that URL. A bot with `server: { port: false }` doesn't have a localhost address, so give it a `url`.
 
 ## When the build fails
 

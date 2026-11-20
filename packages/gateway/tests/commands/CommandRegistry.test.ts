@@ -182,7 +182,7 @@ describe('CommandRegistry Integration', () => {
             }
             `
         );
-        const config = testConfig({ commands: testEnv.resolvePath('commands'), healthCheck: false });
+        const config = testConfig({ commands: testEnv.resolvePath('commands') });
         config.bot.clientOptions = { intents: [GatewayIntentBits.Guilds] };
         vi.useFakeTimers({ toFake: ['setTimeout', 'clearTimeout', 'performance'] });
         try {
@@ -211,7 +211,7 @@ describe('CommandRegistry Integration', () => {
 
     it('fails startup at the login timeout when login hangs', async ({ testEnv }) => {
         await testEnv.createFile('commands/.keep', '');
-        const config = testConfig({ commands: testEnv.resolvePath('commands'), healthCheck: false });
+        const config = testConfig({ commands: testEnv.resolvePath('commands') });
         vi.useFakeTimers({ toFake: ['setTimeout', 'clearTimeout', 'performance'] });
         try {
             await using seedcord = new Seedcord(config);
@@ -257,7 +257,7 @@ describe('CommandRegistry Integration', () => {
                 return Promise.resolve();
             }
         }
-        const config = testConfig({ commands: testEnv.resolvePath('commands'), healthCheck: false });
+        const config = testConfig({ commands: testEnv.resolvePath('commands') });
         config.bot.clientOptions = { intents: [GatewayIntentBits.Guilds] };
         await using seedcord = new Seedcord(config).attach('reader', ReadsCommands);
         vi.spyOn(seedcord.bot, 'botToken', 'get').mockReturnValue('token');
@@ -289,7 +289,7 @@ describe('CommandRegistry Integration', () => {
         );
         // a cached module keeps the import well inside the 100ms emoji fetch
         await import(commandFile);
-        const config = testConfig({ commands: testEnv.resolvePath('commands'), healthCheck: false });
+        const config = testConfig({ commands: testEnv.resolvePath('commands') });
         config.bot.clientOptions = { intents: [GatewayIntentBits.Guilds] };
         config.bot.emojis = { Wave: 'wave' };
         await using seedcord = new Seedcord(config);

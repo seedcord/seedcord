@@ -1,5 +1,5 @@
 import { BuilderComponent, RegisterCommand } from '@seedcord/core';
-import { fromDevLogLine, setDevChannel } from '@seedcord/core/internal';
+import { DEV_URL_HEADER, fromDevLogLine, setDevChannel } from '@seedcord/core/internal';
 import { Plugin } from '@seedcord/core/plugin';
 import { SeedcordErrorCode } from '@seedcord/errors';
 import { Logger, LoggerChannelRegistry } from '@seedcord/logger';
@@ -49,7 +49,7 @@ function connectCli(deployed?: DeployedHashes): FakeCli {
     return {
         sent,
         events: () => sent.map(([event]) => event),
-        start: () => handlers.get('seedcord:start')?.({ colorLevel: 0 }),
+        start: () => handlers.get('seedcord:start')?.({ colorLevel: 0, url: 'http://localhost:3000' }),
         save: (event) => handlers.get('seedcord:hmr')?.(event)
     };
 }
@@ -107,6 +107,36 @@ describe('the edge Seedcord under seedcord dev', () => {
         await vi.waitFor(() => expect(cli.sent).toContainEqual(['seedcord:started', { username: 'wave-bot' }]));
         const response = await seedcord.fetch(await signedRequest(signer, ping), undefined, capturingCtx());
         expect(response.status).toBe(200);
+        expect(seedcord.url.href).toBe('http://localhost:3000/');
+    });
+
+    it.each([
+        ['//other.test/page?x=1', 'http://127.0.0.1:3000/page?x=1'],
+        // the first parse turns /./ into a path that starts with two slashes
+        ['/.//other.test/page?x=1', 'http://127.0.0.1:3000//other.test/page?x=1']
+    ])('keeps its own origin when the dev header is %s', async (header, expected) => {
+        const seen: string[] = [];
+        class Recorder extends Plugin {
+            public init(): Promise<void> {
+                return Promise.resolve();
+            }
+
+            public override fetch(request: Request): Response {
+                seen.push(request.url);
+                return new Response('ok');
+            }
+        }
+        const cli = connectCli();
+        await liveEnv();
+        const seedcord = new Seedcord(config).attach('recorder', Recorder);
+        stubDiscord(seedcord);
+        cli.start();
+        await vi.waitFor(() => expect(cli.events()).toContain('seedcord:started'));
+
+        const headers = { [DEV_URL_HEADER]: header };
+        await seedcord.fetch(new Request('http://127.0.0.1:3000/', { headers }), undefined, capturingCtx());
+
+        expect(seen).toEqual([expected]);
     });
 
     it('deploys the commands from the bot files when it starts', async () => {

@@ -117,9 +117,9 @@ These names belong to the framework, and [`FRAMEWORK_CHANNELS`](ref:logger/FRAME
 | channel | what arrives there |
 | --- | --- |
 | `default` | a logger built without a channel |
-| `bot` | the client login on gateway, the interactions server on http, plus emoji and command injection |
+| `bot` | the client login on gateway, the bot's username lookup and its interactions engine on http, plus emoji and command injection |
+| `server` | the bot's own web server: when it starts listening and stops, and requests it failed to answer |
 | `lifecycle` | each startup and shutdown task, and the signal that stopped your bot |
-| `health` | the health check server binding and its errors |
 | `interactions` | which handler ran, unmatched routes, and how long dispatch and the reply took |
 | `events` | which listeners attached, and which handler ran for an event. Gateway only |
 | `commands` | the commands seedcord loaded, and the deploy summary |
@@ -129,7 +129,7 @@ These names belong to the framework, and [`FRAMEWORK_CHANNELS`](ref:logger/FRAME
 | `plugins` | how long each plugin took to start |
 | `hmr` | what reloaded while `seedcord dev` runs |
 | `cli` | status and errors from the CLI, codegen and the tunnel included |
-| `tsc` | output from `tsc --watch` once you turn `hmr.typecheck` on |
+| `tsc` | output from `tsc --watch` once you turn `dev.hmr.typecheck` on |
 
 {/* prettier-ignore-end */}
 

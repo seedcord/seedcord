@@ -1,5 +1,5 @@
 import type { GatewayConfig } from '#interfaces/Config';
-import type { CustomIdMatcher, HealthCheckOption } from '@seedcord/types';
+import type { CustomIdMatcher, ServerConfig } from '@seedcord/types';
 
 type UnhandledHandler = Extract<GatewayConfig['bot']['interactions'], { path: string }>['unhandled'];
 
@@ -13,7 +13,7 @@ interface TestConfigOverrides {
     subscribers?: string;
     ignoreCustomIds?: CustomIdMatcher[];
     ownerIds?: string[];
-    healthCheck?: HealthCheckOption;
+    server?: ServerConfig;
 }
 
 export function testConfig(overrides: TestConfigOverrides = {}): GatewayConfig {
@@ -27,7 +27,8 @@ export function testConfig(overrides: TestConfigOverrides = {}): GatewayConfig {
         subscribers,
         ignoreCustomIds,
         ownerIds,
-        healthCheck
+        // test files run side by side, and a default server would put them all on port 3000
+        server = { port: false }
     } = overrides;
 
     const config: GatewayConfig = {
@@ -48,11 +49,11 @@ export function testConfig(overrides: TestConfigOverrides = {}): GatewayConfig {
             commands: commands === undefined ? { path: null } : { path: commands },
             clientOptions: { intents: [] }
         },
-        subscribers: subscribers === undefined ? { path: null } : { path: subscribers }
+        subscribers: subscribers === undefined ? { path: null } : { path: subscribers },
+        server
     };
 
     if (ownerIds) config.ownerIds = ownerIds;
-    if (healthCheck !== undefined) config.healthCheck = healthCheck;
 
     return config;
 }

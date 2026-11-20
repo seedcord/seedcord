@@ -9,7 +9,7 @@ import { VALID_TOKEN } from '#tests/helpers/fixtures';
 
 import type { HandlerConstructor, InteractionMiddlewareConstructor } from '#handlers/constructors';
 import type { HttpEdgeConfig } from '#interfaces/Config';
-import type { EngineContext } from '#src/requestScope';
+import type { EngineContext } from '#interfaces/EngineContext';
 import type { InteractionKind } from '@seedcord/core';
 import type { StoredSubscriberCtor } from '@seedcord/core/internal';
 import type { Except } from 'type-fest';

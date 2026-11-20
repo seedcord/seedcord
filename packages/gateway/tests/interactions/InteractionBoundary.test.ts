@@ -65,6 +65,7 @@ class BoundaryHost extends PluginHost<'gateway', 'server'> {
     // justified: the boundary never reads rest
     public readonly rest = {} as PluginHost<'gateway', 'server'>['rest'];
     public readonly applicationId = 'app-1';
+    public readonly url = new URL('https://bot.test/');
 
     constructor(published: Published, errors: Config['errors'], interactions: InteractionsConfig) {
         super('gateway', 'server', undefined);

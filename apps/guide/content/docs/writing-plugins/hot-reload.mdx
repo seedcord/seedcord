@@ -98,7 +98,7 @@ In `onHmr`, you pass each save to [`handle()`](ref:core/FolderExports.handle). I
 
 {/* prettier-ignore-end */}
 
-If a file throws while it imports, `handle()` has already unregistered its old exports. If `rollback` is on, which it is by default, `handle()` registers them again and logs a warning. If you set [`hmr.rollback`](/build/config#every-key) to `false`, `handle()` leaves them unregistered until a save that imports cleanly. The Tooling tab walks through [a save that throws on import](/tooling/hot-reload#a-save-that-throws-on-import) for your own handlers.
+If a file throws while it imports, `handle()` has already unregistered its old exports. If `rollback` is on, which it is by default, `handle()` registers them again and logs a warning. If you set [`dev.hmr.rollback`](/build/config#every-key) to `false`, `handle()` leaves them unregistered until a save that imports cleanly. The Tooling tab walks through [a save that throws on import](/tooling/hot-reload#a-save-that-throws-on-import) for your own handlers.
 
 If your `register` throws, `handle()` unregisters whatever that file registered before the throw. It tries the file again on the next save that unregisters something. Say you add a check to `register` that throws on a keyword that's already taken, then move a responder to a new file. The new file often loads before the old one unloads, so the first try fails. The retry succeeds once `handle()` unregisters the old file's responder.
 

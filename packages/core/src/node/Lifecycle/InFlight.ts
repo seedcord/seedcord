@@ -1,4 +1,5 @@
 import { settleWithin } from '#src/lifecycle/withTimeout';
+import { requestScope } from '#src/requestScope';
 
 import type { Logger } from '@seedcord/logger';
 
@@ -6,6 +7,8 @@ export class InFlight {
     private readonly running = new Set<Promise<unknown>>();
     private readonly opening = Promise.withResolvers<boolean>();
     private state: 'held' | 'open' | 'closed' = 'held';
+    // what keepRequestOpenFor reaches from inside admitted work
+    private readonly context = { waitUntil: (work: Promise<unknown>): void => this.track(work) };
 
     constructor(
         private readonly logger: Logger,
@@ -29,8 +32,9 @@ export class InFlight {
 
     public admit<Result>(work: () => Promise<Result>): Promise<Result | undefined> {
         if (this.state === 'closed') return Promise.resolve(undefined);
+        const run = (): Promise<Result> => requestScope.run(this.context, work);
         const admitted =
-            this.state === 'open' ? work() : this.opening.promise.then((opened) => (opened ? work() : undefined));
+            this.state === 'open' ? run() : this.opening.promise.then((opened) => (opened ? run() : undefined));
         this.track(admitted);
         return admitted;
     }

@@ -51,7 +51,7 @@ Startup runs three phases in order.
 
 {/* prettier-ignore-end */}
 
-Once Ready finishes, a bot on a server starts answering its [health path](/build/server#the-health-server). Nothing a plugin adds runs after it, so a host that waits on the health path sees a bot whose `ready()` calls have all finished.
+A bot on a server answers its [health path](/build/server#the-health-check) with a 200 only after every `ready()` finishes.
 
 On a server, shutdown runs five phases. A bot on [Cloudflare Workers](#on-cloudflare-workers) never reaches them.
 
@@ -214,7 +214,7 @@ If one `dispose()` fails, the others still run. With `db` and `settings` from ea
 
 ## On Cloudflare Workers
 
-A Workers bot has no `start()` call, so its plugins start when the first POST reaches an isolate. `init()` and `ready()` run in the same phases and order as above, and requests that arrive meanwhile wait for them. Cloudflare can run several isolates of your bot at once. Each one starts its own copy of every plugin. A field like a counter holds one value per isolate.
+You don't call `start()` on a Workers bot, so its plugins start when the first POST reaches an isolate, or the first request of any kind once a plugin has [`fetch()`](/writing-plugins/web-requests#where-requests-arrive). `init()` and `ready()` run in the same phases and order as above, and requests that arrive meanwhile wait for them. Cloudflare can run several isolates of your bot at once. Each one starts its own copy of every plugin. A field like a counter holds one value per isolate.
 
 Cloudflare gives [a Worker's isolate](https://developers.cloudflare.com/workers/reference/how-workers-works/) no shutdown hook, so the shutdown phases never run. `dispose()` runs only when startup fails. Then seedcord disposes the plugins whose `init()` had finished, in reverse attach order, and the request that triggered startup gets the error. A plugin can't flush its state on the way out. Write it as you go. After a failed startup the next request starts up again. A plugin's `init()` can then run a second time on the same instance after its `dispose()`. Write `init()` so it can run twice.
 

@@ -1,6 +1,7 @@
 import { once } from 'node:events';
 import { createServer } from 'node:http';
 
+import { DEV_URL_HEADER } from '@seedcord/core/internal';
 import { SeedcordErrorCode } from '@seedcord/errors';
 import { SeedcordError } from '@seedcord/errors/internal';
 import { isPortInUse } from '@seedcord/utils/internal';
@@ -11,7 +12,6 @@ import type { Server } from 'node:http';
 import type { AddressInfo } from 'node:net';
 import type { Connect } from 'vite';
 
-const METHOD_NOT_ALLOWED = 405;
 const NOT_FOUND = 404;
 const SERVER_ERROR = 500;
 
@@ -35,10 +35,7 @@ export async function listenForInteractions(
     { port, host, configFile }: ListenOptions
 ): Promise<InteractionsEndpoint> {
     const server = createServer((request, response) => {
-        if (request.method !== 'POST') {
-            response.writeHead(METHOD_NOT_ALLOWED, { allow: 'POST' }).end();
-            return;
-        }
+        request.headers[DEV_URL_HEADER] = request.url ?? '/';
         // vite serves the bot's source at /src/... and /@fs/...
         request.url = '/';
         middlewares(request, response, (error?: unknown) => {
@@ -55,7 +52,7 @@ export async function listenForInteractions(
         await once(server, 'listening');
     } catch (error: unknown) {
         if (!isPortInUse(error)) throw error;
-        throw new SeedcordError(SeedcordErrorCode.PortInUse, [port, 'port', configFile], { cause: error });
+        throw new SeedcordError(SeedcordErrorCode.PortInUse, [port, 'dev.port', configFile], { cause: error });
     }
     // justified: address() is AddressInfo once a TCP server is listening
     return { server, port: (server.address() as AddressInfo).port };

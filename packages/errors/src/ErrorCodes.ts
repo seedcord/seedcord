@@ -120,6 +120,12 @@ export enum SeedcordErrorCode {
     CorePluginMemberThrew = 1239,
     /** A plugin that has `dispatchMembers` is attached twice, and both copies add the same members. */
     CorePluginAttachedTwice = 1240,
+    /** A plugin's `fetch` read or locked the request body without answering the request. */
+    CorePluginFetchReadBody = 1241,
+    /** `core.url` was read while `server.url` is unset. */
+    CoreServerUrlUnset = 1242,
+    /** `server.url` isn't an http or https address. */
+    CoreServerUrlInvalid = 1243,
 
     /** A command class has `@RegisterCommand` twice. */
     DecoratorCommandAlreadyRegistered = 1301,

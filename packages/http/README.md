@@ -70,11 +70,11 @@ Handlers read raw payloads from `discord-api-types`. Slash commands, components,
 
 ### Its own server
 
-On Node or Bun, `Seedcord` listens on `port`, 3000 by default.
+On Node or Bun, `Seedcord` listens on `server.port`, 3000 by default.
 
 ### Inside your server
 
-Set `port: false`, start the bot, then pass each request to `bot.fetch()`. It takes a web `Request` and returns a `Response`, so a Hono or Next.js route can forward to it:
+Set `server: { port: false }`, start the bot, then pass each request to `bot.fetch()`. It takes a web `Request` and returns a `Response`, so a Hono or Next.js route can forward to it:
 
 ```ts
 import { Hono } from 'hono';
@@ -84,7 +84,7 @@ import bot from './bot';
 await bot.start();
 
 const app = new Hono();
-app.post('/interactions', (c) => bot.fetch(c.req.raw));
+app.all('*', (c) => bot.fetch(c.req.raw));
 ```
 
 ### Cloudflare Workers

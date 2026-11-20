@@ -17,6 +17,7 @@ class Host extends PluginHost<'gateway', 'server'> {
     public readonly config = {} as Config;
     public readonly rest = {} as PluginHost<'gateway', 'server'>['rest'];
     public readonly applicationId = 'app-1';
+    public readonly url = new URL('https://bot.test/');
 
     constructor() {
         super('gateway', 'server', undefined);

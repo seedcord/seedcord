@@ -8,5 +8,5 @@ export default new Seedcord({
         commands: { path: null }
     },
     subscribers: { path: null },
-    port: 0
+    server: { port: 0 }
 });

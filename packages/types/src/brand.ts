@@ -11,11 +11,12 @@ export const HostStartup = Symbol.for('seedcord:host:startup');
 export const HostVersion = Symbol.for('seedcord:host:version');
 export const HostAugmentTarget = Symbol.for('seedcord:host:augment-target');
 export const HostListenHost = Symbol.for('seedcord:host:listen-host');
+export const HostDevUrl = Symbol.for('seedcord:host:dev-url');
 export const HostPlugins = Symbol.for('seedcord:host:plugins');
 export const HostContract = Symbol.for('seedcord:host:contract');
 
 // VERY IMPORTANT!!!
 // bump this whenever SeedcordInstance changes
 // the CLI refuses a bot stamped with another number
-export const HOST_CONTRACT = 1;
+export const HOST_CONTRACT = 2;
 // VERY IMPORTANT!!!

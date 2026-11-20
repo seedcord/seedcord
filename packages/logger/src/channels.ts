@@ -5,8 +5,8 @@ import type { FrameworkChannel } from '@seedcord/types';
 export const FRAMEWORK_CHANNELS = [
     'default',
     'bot',
+    'server',
     'lifecycle',
-    'health',
     'interactions',
     'events',
     'commands',

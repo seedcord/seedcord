@@ -1,15 +1,9 @@
-import { once } from 'node:events';
-import { createServer } from 'node:http';
-
 import { REST } from '@discordjs/rest';
-import { bindBotColor, busLoggerOf, connectDevChannel, getDevChannel, HmrManager } from '@seedcord/core/internal';
+import { bindBotColor, busLoggerOf, connectDevChannel, HmrManager } from '@seedcord/core/internal';
 import { CoordinatedShutdown, CoordinatedStartup, ServerHost } from '@seedcord/core/node';
-import { DRAIN_TASK_TIMEOUT_MS, HealthResponder, ShutdownPhase, StartupPhase } from '@seedcord/core/node/internal';
-import { paint, SeedcordErrorCode } from '@seedcord/errors';
-import { SeedcordError } from '@seedcord/errors/internal';
+import { StartupPhase } from '@seedcord/core/node/internal';
 import { Logger } from '@seedcord/logger';
-import { HostAugmentTarget, HostListenHost, HostStartup, HostVersion, SeedcordBrand } from '@seedcord/types/internal';
-import { isPortInUse } from '@seedcord/utils/internal';
+import { HostAugmentTarget, HostVersion, SeedcordBrand } from '@seedcord/types/internal';
 import { Envapter } from 'envapt';
 
 import { HttpStartupTasks } from '#src/HttpStartupTasks';
@@ -17,20 +11,13 @@ import { InteractionsService } from '#src/InteractionsService';
 import { usernameOf } from '#src/username';
 import { version as packageVersion } from '#src/version';
 
-import { NodeEndpoint } from './NodeEndpoint';
-import { toWebRequest, writeWebResponse } from './webBridge';
-
 import type { HttpServerConfig } from '#interfaces/Config';
 import type { SeedcordInstance } from '@seedcord/types/internal';
-import type { Server } from 'node:http';
-import type { AddressInfo } from 'node:net';
-
-const DEFAULT_PORT = 3000;
-const SERVER_SHUTDOWN_TIMEOUT_MS = 5000;
 
 /**
  * The HTTP-interactions bot on node. `start()` loads handlers from `config.bot.interactions.path`
- * and binds a server on `port`. With `port: false`, your own server passes requests to `fetch()`.
+ * and binds a server on `server.port`. With `server: { port: false }`, your own server passes
+ * requests to `fetch()`.
  *
  * Shutdown waits up to 5s for interactions that are still running.
  */
@@ -43,19 +30,14 @@ export class Seedcord extends ServerHost<'http'> implements SeedcordInstance {
     public readonly [HostAugmentTarget] = '@seedcord/http';
     /** @internal */
     public readonly [HostVersion]: string = packageVersion;
-    /** @internal */
-    public [HostListenHost]?: string | undefined;
 
     /** Discord REST client built from `bot.restOptions`. `start()` sets the token. */
     public readonly rest: REST;
 
     readonly #service: InteractionsService;
-    readonly #endpoint: NodeEndpoint;
     readonly #hmrManager: HmrManager;
-    readonly #logger = new Logger('Server', { channel: 'bot' });
+    readonly #logger = new Logger('Bot', { channel: 'bot' });
 
-    #server?: Server;
-    #boundPort?: number;
     #fetchedUsername?: string | undefined;
 
     public readonly config: HttpServerConfig;
@@ -72,28 +54,16 @@ export class Seedcord extends ServerHost<'http'> implements SeedcordInstance {
 
         this.#service = new InteractionsService(this, config, new REST(config.bot.restOptions));
         this.rest = this.#service.rest;
-        this.#endpoint = new NodeEndpoint(
-            this.#service,
-            this.#logger,
-            HealthResponder.fromOption(config.healthCheck),
-            this[HostStartup]
-        );
 
         this.#hmrManager = new HmrManager();
         this.#hmrManager.init(connectDevChannel());
 
         this.#registerStartupTasks();
-        this.#registerShutdownTasks();
     }
 
     /** The bot's discord username, populated by the ready fetch. */
     public get username(): string | undefined {
         return this.#fetchedUsername;
-    }
-
-    /** The bound server port, set once `start()` is listening. Always `undefined` with `port: false`. */
-    public get port(): number | undefined {
-        return this.#boundPort;
     }
 
     /**
@@ -103,26 +73,9 @@ export class Seedcord extends ServerHost<'http'> implements SeedcordInstance {
         return this.init();
     }
 
-    /**
-     * Answers one request to the interactions endpoint. Mount it in your own server when the
-     * config sets `port: false`.
-     *
-     * Rejects with `CoreFetchBeforeStart` until `start()` is called. A request that arrives while
-     * `start()` runs waits until the command deploy finishes. Answers 503 once shutdown begins or
-     * `start()` fails.
-     *
-     * @example
-     * ```ts
-     * // Hono passes the untouched request through c.req.raw
-     * const seedcord = new Seedcord({ ...config, port: false });
-     * await seedcord.start();
-     *
-     * const app = new Hono();
-     * app.post('/interactions', (c) => seedcord.fetch(c.req.raw));
-     * ```
-     */
-    public fetch(request: Request): Promise<Response> {
-        return this.#endpoint.fetch(request);
+    /** @internal */
+    protected override answerInteractions(request: Request): Promise<Response> {
+        return this.#service.engine.handle(request);
     }
 
     #registerStartupTasks(): void {
@@ -152,33 +105,9 @@ export class Seedcord extends ServerHost<'http'> implements SeedcordInstance {
         // the Login tasks read the token authenticate sets
         tasks.addDiscordTasks();
 
-        this.startup.addTask(StartupPhase.Ready, 'open-endpoint', () => {
-            this.#endpoint.open();
-            return Promise.resolve();
-        });
-
-        this.startup.addTask(StartupPhase.Ready, 'http-server', async () => {
-            const { port = DEFAULT_PORT } = this.config;
-            if (port !== false) await this.#listen(port);
-            getDevChannel()?.send('seedcord:server-port', { port: this.#boundPort ?? false });
-        });
-
         if (!Envapter.isTest) {
             this.startup.addTask(StartupPhase.Ready, 'identity', () => this.#fetchUsername());
         }
-    }
-
-    #registerShutdownTasks(): void {
-        this.shutdown.addTask(ShutdownPhase.Unbind, 'close-endpoint', () => {
-            this.#endpoint.close();
-            return Promise.resolve();
-        });
-        this.shutdown.addTask(
-            ShutdownPhase.Drain,
-            'drain-inflight',
-            () => this.#endpoint.drain(),
-            DRAIN_TASK_TIMEOUT_MS
-        );
     }
 
     /** The bot's Discord application id. Throws if you read it before the Configuration phase. */
@@ -186,56 +115,7 @@ export class Seedcord extends ServerHost<'http'> implements SeedcordInstance {
         return this.#service.applicationId;
     }
 
-    async #listen(port: number): Promise<void> {
-        const server = createServer((incoming, outgoing) => {
-            void (async () => {
-                const response = await this.#endpoint.fetch(await toWebRequest(incoming));
-                // node's close() doesn't close a busy connection once it becomes idle
-                if (!server.listening) outgoing.setHeader('connection', 'close');
-                await writeWebResponse(response, outgoing);
-            })().catch((error: unknown) => {
-                // a swallowed throw would hang the client without a cause
-                outgoing.destroy(Error.isError(error) ? error : new Error(String(error)));
-            });
-        });
-        this.#server = server;
-
-        server.listen(port, this[HostListenHost]);
-        try {
-            await once(server, 'listening');
-        } catch (error: unknown) {
-            if (!isPortInUse(error)) throw error;
-            throw new SeedcordError(SeedcordErrorCode.PortInUse, [port, 'port'], { cause: error });
-        }
-        // justified: address() is AddressInfo once a TCP server is listening
-        this.#boundPort = (server.address() as AddressInfo).port;
-        this.#logger.info(`Interactions server listening on port ${paint.sky.bold(String(this.#boundPort))}`);
-
-        this.shutdown.addTask(
-            ShutdownPhase.Unbind,
-            'stop-http-server',
-            () => this.#stopServer(),
-            SERVER_SHUTDOWN_TIMEOUT_MS
-        );
-    }
-
     async #fetchUsername(): Promise<void> {
         this.#fetchedUsername = await usernameOf(this.rest, this.#logger);
-    }
-
-    #stopServer(): Promise<void> {
-        const server = this.#server;
-        if (!server?.listening) return Promise.resolve();
-
-        return new Promise((resolveClose, rejectClose) => {
-            server.close((err) => {
-                if (err) {
-                    rejectClose(err);
-                    return;
-                }
-                this.#logger.info(paint.coral.bold('Interactions server stopped'));
-                resolveClose();
-            });
-        });
     }
 }

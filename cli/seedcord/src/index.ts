@@ -4,6 +4,7 @@ export {
     type SeedcordBaseBuildConfig,
     type SeedcordBuildConfig,
     type SeedcordConfig,
+    type SeedcordDevConfig,
     type SeedcordHmrConfig,
     type SeedcordMakeConfig,
     type SeedcordMakeHelpers,

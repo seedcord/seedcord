@@ -4,7 +4,5 @@ import { assertDeclaredRuntime } from '#node/assertRuntimeVersion';
 assertDeclaredRuntime();
 
 export * from '#node/Lifecycle';
-export * from '#node/HealthCheck';
-export { HealthResponder } from '#node/HealthResponder';
 export { shutdownOf } from '#node/ServerHost';
 export { setEnvaptBaseDir } from '#node/envaptBaseDir';

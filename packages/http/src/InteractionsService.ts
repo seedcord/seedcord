@@ -2,19 +2,16 @@ import {
     emptyRouteMaps,
     interactionMiddleware,
     MiddlewareRegistry,
-    OnRun,
     readBotToken,
     SubscriberLoader
 } from '@seedcord/core/internal';
 import { SeedcordErrorCode } from '@seedcord/errors';
 import { SeedcordError } from '@seedcord/errors/internal';
-import { LoggerChannelRegistry } from '@seedcord/logger';
 import { HostPlugins } from '@seedcord/types/internal';
 
 import { InteractionDispatcher } from '#src/dispatch/InteractionDispatcher';
 import { routesOf } from '#src/dispatch/resolve';
 import { InteractionEngine } from '#src/InteractionEngine';
-import { keepRequestOpenFor } from '#src/requestScope';
 
 import type { InteractionMiddlewareConstructor } from '#handlers/constructors';
 import type { HttpConfig, UnhandledHandler } from '#interfaces/Config';
@@ -37,8 +34,6 @@ export class InteractionsService {
         rest: REST
     ) {
         this.rest = rest;
-        host.bus[OnRun] = keepRequestOpenFor;
-        LoggerChannelRegistry.instance.trackSinkRuns(keepRequestOpenFor);
         this.subscribers = new SubscriberLoader(host.bus, config.subscribers.path);
 
         const interactions = config.bot.interactions;

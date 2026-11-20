@@ -367,7 +367,7 @@ ${text}`
         });
     }, 60_000);
 
-    it('throws CliStartFailed when the worker answers a GET with something other than 405', async () => {
+    it("throws CliStartFailed when the worker doesn't answer seedcord's probe", async () => {
         await using project = await edgeProject();
         await writeFile(
             join(project.projectDir, 'src/bot.ts'),
@@ -376,7 +376,7 @@ ${text}`
 
         await expect(startedRuntime(project.projectDir)).rejects.toMatchObject({
             code: SeedcordErrorCode.CliStartFailed,
-            message: expect.stringContaining('answered a GET with 200') as string
+            message: expect.stringContaining("answered seedcord's probe with 200") as string
         });
     }, 60_000);
 

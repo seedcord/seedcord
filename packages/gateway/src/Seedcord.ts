@@ -1,6 +1,6 @@
 import { bindBotColor, busLoggerOf, connectDevChannel, HmrManager, SubscriberLoader } from '@seedcord/core/internal';
 import { CoordinatedShutdown, CoordinatedStartup, ServerHost } from '@seedcord/core/node';
-import { HealthCheck, shutdownOf, StartupPhase } from '@seedcord/core/node/internal';
+import { StartupPhase } from '@seedcord/core/node/internal';
 import { HostAugmentTarget, HostPlugins, HostVersion, SeedcordBrand } from '@seedcord/types/internal';
 import { Envapter } from 'envapt';
 
@@ -25,7 +25,6 @@ export class Seedcord extends ServerHost<'gateway'> implements SeedcordInstance 
     /** @internal */
     public readonly [HostVersion]: string = packageVersion;
 
-    readonly #healthCheck?: HealthCheck | undefined;
     readonly #hmrManager: HmrManager;
 
     readonly #subscribers: SubscriberLoader;
@@ -61,7 +60,6 @@ export class Seedcord extends ServerHost<'gateway'> implements SeedcordInstance 
         this.#subscribers = new SubscriberLoader(this.bus, config.subscribers.path);
         this.bot = new Bot(this);
         this.rest = this.bot.client.rest;
-        this.#healthCheck = HealthCheck.fromOption(shutdownOf(this), config.healthCheck);
 
         this.#registerStartupTasks();
     }
@@ -79,15 +77,6 @@ export class Seedcord extends ServerHost<'gateway'> implements SeedcordInstance 
             await this.#subscribers.init();
             busLoggerOf(this.bus).utils.initialization('Subscribers', 'end');
         });
-    }
-
-    /** @internal */
-    protected override async openHealth(): Promise<void> {
-        const healthCheck = this.#healthCheck;
-        if (!healthCheck) return;
-        healthCheck.logger.utils.initialization('HealthCheck', 'start');
-        await healthCheck.init();
-        healthCheck.logger.utils.initialization('HealthCheck', 'end');
     }
 
     /**

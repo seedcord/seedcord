@@ -167,6 +167,27 @@ export abstract class Plugin<
     dispose?(): Promisable<void>;
 
     /**
+     * Answers a web request sent to the bot. seedcord calls this on each plugin in attach order and
+     * answers with the first `Response`. On an http bot, seedcord calls it for interactions too.
+     * Return `undefined` to pass the request on. If this method throws, seedcord logs the error on
+     * this plugin's logger and tries the next plugin.
+     *
+     * On an http bot, check the path before you await anything because every interaction waits for
+     * this method. On a server, requests reach it once the Ready phase begins. It can run before
+     * `ready()` finishes, and before an `init()` that you moved to Ready.
+     *
+     * @throws seedcord throws a **SeedcordError** when this method reads or locks the body without answering the request.
+     * @example
+     * ```ts
+     * public fetch(request: Request): Response | undefined {
+     *     if (new URL(request.url).pathname !== '/status') return undefined;
+     *     return Response.json({ ok: true });
+     * }
+     * ```
+     */
+    fetch?(request: Request): Promisable<Response | undefined>;
+
+    /**
      * Returns data that `seedcord codegen` writes into the bot's `seedcord-gen.ts` as a type.
      * Read it back with `Generated<typeof YourPlugin>`. Return plain data, or classes and objects
      * that a project file or your plugin's package exports. The class needs a `static readonly id`.
@@ -248,7 +269,15 @@ export function extendsThisCorePlugin(ctor: PluginCtor): boolean {
 export type { PluginLifecycleSpec } from './lifecycle';
 export type { PluginOptions } from './options';
 
-type SeedcordOnlyMember = 'init' | 'ready' | 'dispose' | 'codegen' | 'onHmr' | 'dispatchMembers' | 'prepareCommands';
+type SeedcordOnlyMember =
+    | 'init'
+    | 'ready'
+    | 'dispose'
+    | 'fetch'
+    | 'codegen'
+    | 'onHmr'
+    | 'dispatchMembers'
+    | 'prepareCommands';
 
 // a bound of Plugin<{}> rejects every plugin that declares an option since Plugin<A> and Plugin<B>
 // are mutually unassignable. no member here may depend on Opts.

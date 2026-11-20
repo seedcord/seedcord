@@ -19,6 +19,9 @@ export { FaultBoundary, type FaultDetails } from '#src/notices/FaultBoundary';
 export { FixedScope } from '#src/plugin/Plugin';
 export type { PluginArgs, PluginCtor } from '#src/plugin/Plugin';
 export type { Runtime, Transport } from '#src/plugin/options';
+export { DEFAULT_SERVER_PORT, DEV_URL_HEADER, WORKER_PROBE } from '#src/webConstants';
+export { publicUrl } from '#src/publicUrl';
+export { keepRequestOpenFor, requestScope } from '#src/requestScope';
 export { sealAttachments } from '#src/plugin/PluginHost';
 export { PluginRegistry } from '#src/plugin/PluginRegistry';
 export { splitPluginKey } from '#src/plugin/splitPluginKey';
@@ -123,7 +126,6 @@ export { type StoredSubscriberCtor } from '#subscribers/Bus';
 export { ReportThrottle } from '#subscribers/ReportThrottle';
 export { PublishDefault } from '#subscribers/publishDefault';
 export {
-    OnRun,
     RegisterDefaults,
     RegisteredCount,
     RegisterSubscriber,

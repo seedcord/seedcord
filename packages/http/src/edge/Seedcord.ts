@@ -3,13 +3,18 @@ import {
     bindBotColor,
     connectDevChannel,
     CoordinatedStartup,
+    DEV_URL_HEADER,
     forwardLogsToCli,
     HmrManager,
     installLinks,
+    keepRequestOpenFor,
     PluginLifecycle,
+    publicUrl,
+    requestScope,
     sealAttachments,
     settleWithin,
-    toWireError
+    toWireError,
+    WORKER_PROBE
 } from '@seedcord/core/internal';
 import { PluginHost } from '@seedcord/core/plugin';
 import { SeedcordErrorCode } from '@seedcord/errors';
@@ -21,7 +26,6 @@ import { installEmojis } from '#src/emojis/EmojiInjector';
 import { HttpStartupTasks } from '#src/HttpStartupTasks';
 import { rejectNonPost } from '#src/InteractionEngine';
 import { InteractionsService } from '#src/InteractionsService';
-import { keepRequestOpenFor, requestScope } from '#src/requestScope';
 import { usernameOf } from '#src/username';
 import { version as packageVersion } from '#src/version';
 
@@ -29,7 +33,7 @@ import { edgeRestOptions, edgeShutdown } from './defaults';
 import { RequestRest } from './RequestRest';
 
 import type { HttpEdgeConfig } from '#interfaces/Config';
-import type { EngineContext } from '#src/requestScope';
+import type { EngineContext } from '#interfaces/EngineContext';
 import type { REST } from '@discordjs/rest';
 import type { StartupTasks, BakedIds } from '@seedcord/core/internal';
 import type { DevChannel, SeedcordCliEvents, SeedcordFrameworkEvents } from '@seedcord/types/internal';
@@ -44,15 +48,24 @@ function bakedIds(): BakedIds {
     return ids;
 }
 
+// new URL() on a path that starts with // would read it as a host
+function atDevPath(incoming: Request, devUrl: string): Request {
+    const { pathname, search } = new URL(devUrl, incoming.url);
+    const url = new URL(incoming.url);
+    url.pathname = pathname;
+    url.search = search;
+    return new Request(url, incoming);
+}
+
 /**
  * The HTTP-interactions bot on Cloudflare Workers. Default-export it from `bot.ts`. Cloudflare
  * calls `fetch` for every request.
  *
- * The constructor stores the config. The first POST in each isolate reads the bot token, plus the
- * public key, command ids, and emoji ids that `seedcord build` wrote into the worker. If
- * `DISCORD_BOT_TOKEN` is unset, the token comes from `BOT_TOKEN`. It loads the handler and subscriber
- * folders, then runs the startup tasks and every plugin's `init()` and `ready()`. Requests that
- * arrive meanwhile wait for it.
+ * The constructor stores the config. The first request that needs the bot in each isolate reads
+ * the bot token, plus the public key, command ids, and emoji ids that `seedcord build` wrote into
+ * the worker. If `DISCORD_BOT_TOKEN` is unset, the token comes from `BOT_TOKEN`. It loads the
+ * handler and subscriber folders, then runs the startup tasks and every plugin's `init()` and
+ * `ready()`. Requests that arrive meanwhile wait for it.
  *
  * Under `seedcord dev` the bot starts when the CLI starts it. It reads the public key and emoji
  * ids from Discord and deploys your commands, the way a node bot does.
@@ -75,7 +88,7 @@ export class Seedcord extends PluginHost<'http', 'edge'> {
      */
     public readonly shutdown = edgeShutdown;
 
-    /** Add a task that runs during startup, on the first POST. */
+    /** Add a task that runs during startup, on the first request that starts the bot in each isolate. */
     public readonly startup: StartupTasks;
 
     public readonly config: HttpEdgeConfig;
@@ -86,10 +99,10 @@ export class Seedcord extends PluginHost<'http', 'edge'> {
     readonly #plugins = new PluginLifecycle(this.#startup, { addTask: () => undefined });
 
     readonly #hmr = new HmrManager();
-    readonly #logger = new Logger('Server', { channel: 'bot' });
-    // seedcord dev reads them from Discord in its startup tasks
-    readonly #readsBakedIds: boolean;
+    readonly #logger = new Logger('Bot', { channel: 'bot' });
+    readonly #underDev: boolean;
 
+    #devUrl?: string;
     #prepared?: Promise<void>;
     #started?: Promise<void> | undefined;
 
@@ -108,7 +121,7 @@ export class Seedcord extends PluginHost<'http', 'edge'> {
         this.rest = this.#service.rest;
 
         const cli = connectDevChannel();
-        this.#readsBakedIds = !cli;
+        this.#underDev = cli !== undefined;
         if (cli) {
             forwardLogsToCli();
             this.#startWhenAsked(cli);
@@ -120,8 +133,9 @@ export class Seedcord extends PluginHost<'http', 'edge'> {
         const tasks = new HttpStartupTasks(this, this.#service);
         tasks.registerHmr(this.#hmr);
         tasks.addDiscordTasks();
-        cli.on('seedcord:start', ({ colorLevel }) => {
+        cli.on('seedcord:start', ({ colorLevel, url }) => {
             setColorLevel(colorLevel);
+            this.#devUrl = url;
             void this.#startForCli(cli);
         });
     }
@@ -142,18 +156,39 @@ export class Seedcord extends PluginHost<'http', 'edge'> {
     }
 
     /**
-     * Answers one request to the interactions endpoint. Cloudflare passes `env` and `ctx`, but this
-     * method reads only `ctx`. Import your bindings as `env` from `cloudflare:workers`.
-     * `cf workers types` writes their types. Work that continues after the 202 response runs under `ctx.waitUntil`. Any request
-     * besides a POST gets a 405 before the bot starts.
+     * The address people reach your bot at, from `server.url` in your config. You only need to set
+     * `server.url` if a plugin or your own code reads this.
+     *
+     * @throws A **SeedcordError** when you read it and you haven't set `server.url` unless `seedcord dev` gave the bot an address.
+     * @throws A **SeedcordTypeError** when you read it and `server.url` isn't an http or https address.
      */
-    public async fetch(request: Request, _env: unknown, ctx: EngineContext): Promise<Response> {
-        const notPost = rejectNonPost(request);
-        if (notPost) return notPost;
+    public get url(): URL {
+        return publicUrl(this.config.server?.url, this.#devUrl);
+    }
+
+    /**
+     * Answers one web request: each plugin's `fetch` in attach order, then Discord's interactions.
+     * When every plugin passes, the interactions engine gets a POST and anything else gets a 404.
+     * Until you attach a plugin with `fetch`, that 404 comes back before the bot starts.
+     *
+     * Cloudflare passes `env` and `ctx`, but this method reads only `ctx`. Import your bindings as
+     * `env` from `cloudflare:workers`. `cf workers types` writes their types. Work that continues
+     * after the 202 response runs under `ctx.waitUntil`.
+     */
+    public async fetch(incoming: Request, _env: unknown, ctx: EngineContext): Promise<Response> {
+        if (incoming.headers.has(WORKER_PROBE.header)) return new Response(null, { status: WORKER_PROBE.status });
+
+        // seedcord dev sends every request to / so vite can't serve the bot's source
+        const devUrl = this.#underDev ? incoming.headers.get(DEV_URL_HEADER) : null;
+        const request = devUrl === null ? incoming : atDevPath(incoming, devUrl);
+
+        // skips starting the bot when only the engine could answer
+        const early = this[HostPlugins].answersRequests ? undefined : rejectNonPost(request);
+        if (early) return early;
 
         return requestScope.run(ctx, async () => {
             await this.#start();
-            return this.#service.engine.handle(request);
+            return (await this[HostPlugins].answer(request)) ?? this.#service.engine.handle(request);
         });
     }
 
@@ -179,7 +214,8 @@ export class Seedcord extends PluginHost<'http', 'edge'> {
         Logger.configure(this.config.logger ?? {});
         // seal before interactions.init(), which checks handlers against plugin members
         sealAttachments(this);
-        const ids = this.#readsBakedIds ? bakedIds() : undefined;
+        // seedcord dev reads the ids from Discord in its startup tasks
+        const ids = this.#underDev ? undefined : bakedIds();
         this.#service.authenticate();
         await this.#service.subscribers.init();
         await this.#service.interactions?.init();

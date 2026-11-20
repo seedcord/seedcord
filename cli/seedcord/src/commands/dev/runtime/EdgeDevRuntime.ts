@@ -9,7 +9,7 @@ import chalk from 'chalk';
 
 import { CloudflareWorker } from '#commands/build/builder/CloudflareWorker';
 import { workerEntry } from '#commands/build/builder/workerEntry';
-import { listenHostFor } from '#commands/dev/tunnel/listenHost';
+import { listenHostFor, stableUrlOf } from '#commands/dev/tunnel/listenHost';
 import { rethrowVitePluginError } from '#core/config/vitePlugins';
 import { BOT_ENVIRONMENT, botEnvironment } from '#core/modules/botEnvironment';
 import { openModuleLoader } from '#core/modules/openModuleLoader';
@@ -145,7 +145,8 @@ export class EdgeDevRuntime extends BaseDevRuntime<EdgeStarted> {
                 resolve(username);
             });
             cli.on('seedcord:start-failed', ({ error }) => reject(fromWireError(error)));
-            cli.send('seedcord:start', { colorLevel: chalk.level });
+            const url = stableUrlOf(context.config.tunnel) ?? `http://localhost:${String(port)}`;
+            cli.send('seedcord:start', { colorLevel: chalk.level, url });
         });
     }
 

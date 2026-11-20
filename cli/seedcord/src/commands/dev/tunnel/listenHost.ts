@@ -7,3 +7,8 @@ export const DEV_SERVER_HOST = '127.0.0.1';
 export function listenHostFor(tunnel: ResolvedTunnel): string | undefined {
     return tunnel.mode === 'quick' ? DEV_SERVER_HOST : undefined;
 }
+
+// core.url skips a quick tunnel because its hostname changes every run
+export function stableUrlOf(tunnel: ResolvedTunnel): string | undefined {
+    return tunnel.mode === 'url' ? tunnel.url : undefined;
+}
