@@ -200,11 +200,13 @@ These two work without seedcord. `eslint-plugin-discordjs` lints any discord.js 
 
 ## Agents
 
-seedcord is newer than most models' training data, so your coding agent has to read the docs first. `pnpm create seedcord` writes an `AGENTS.md` into your project that points it there.
+seedcord is newer than most models' training data, so your coding agent has to look its API up. `pnpm create seedcord` writes an `AGENTS.md` into your project that tells it how.
 
+- `seedcord ask "<question>"` searches the guide from the terminal and prints the pages that match. It also takes a pasted error or an error code.
+- `pnpm dlx skills add https://seedcord.org` installs the seedcord skill into your agent. It has the rules for every change and the steps for starting or porting a bot. The file itself is at [`seedcord.org/.well-known/agent-skills/seedcord/SKILL.md`](https://seedcord.org/.well-known/agent-skills/seedcord/SKILL.md).
+- `seedcord dev` logs JSON lines and takes commands on stdin when it runs without a terminal, so your agent can start the bot and read what it logged.
 - [`seedcord.org/guide/llms.txt`](https://seedcord.org/guide/llms.txt) indexes the guide, and [`seedcord.org/docs/llms.txt`](https://seedcord.org/docs/llms.txt) indexes the reference.
 - Every guide and reference page has a Markdown copy at the same URL plus `.md`.
-- `pnpm dlx skills add https://seedcord.org` installs the seedcord skill into your agent. The file itself is at [`seedcord.org/.well-known/agent-skills/seedcord/SKILL.md`](https://seedcord.org/.well-known/agent-skills/seedcord/SKILL.md).
 
 ---
 

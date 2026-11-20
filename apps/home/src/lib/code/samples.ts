@@ -30,7 +30,6 @@ export const typedDxHandler = `import {
 @SlashRoute('search')
 export class SearchHandler extends SlashHandler<'search'> {
     public async execute(): Promise<void> {
-        // generated accessor, no cast, no null check
         const category = this.options.getString('category');
         //    ^?  'books' | 'films'
 
@@ -38,37 +37,42 @@ export class SearchHandler extends SlashHandler<'search'> {
     }
 }`;
 
-export const resolvedCheck = `const category = getString('category');
-//    ^?  'books' | 'films'
+export const beforeRawDjs = `// deploy-commands.ts
+const rest = new REST().setToken(token);
+await rest.put(Routes.applicationCommands(appId), {
+    body: [library.toJSON()]
+});
 
-const valid: 'books' | 'films' = category; // OK
-const wrong: 'audio' = category; // Error 2322`;
-
-export const beforeRawDjs = `// build it, route to the subcommand,
-// validate, all by hand
-const data = new SlashCommandBuilder()
-    .setName('library')
-    .addSubcommand((s) =>
-        s.setName('search').addStringOption(...)
-    );
-
+// index.ts
 client.on(Events.InteractionCreate, async (i) => {
     if (!i.isChatInputCommand()) return;
     if (i.commandName !== 'library') return;
     if (i.options.getSubcommand() !== 'search') return;
 
-    const raw = i.options.getString('query');
-    if (raw === null) throw new Error('required');
-    // cast
-    const query = raw as 'fiction' | 'nonfiction';
+    if (!i.inCachedGuild()) {
+        await i.reply({
+            content: 'Use this in a server.',
+            flags: MessageFlags.Ephemeral
+        });
+        return;
+    }
 
-    // ...manual guard and cooldown checks...
-    await i.reply(\`Searching for \${query}\`);
-});
+    try {
+        const query = i.options.getString('query', true) as
+            'fiction' | 'nonfiction';
 
-// plus a REST register script,
-// plus a switch per subcommand,
-// plus a full process restart on every edit`;
+        await i.reply(\`Searching for \${query}\`);
+    } catch (error) {
+        console.error(error);
+        const failed = {
+            content: 'Something went wrong.',
+            flags: MessageFlags.Ephemeral
+        } as const;
+
+        if (i.replied || i.deferred) await i.followUp(failed);
+        else await i.reply(failed);
+    }
+});`;
 
 export const afterSeedcord = `import {
     SlashRoute, SlashHandler,
@@ -85,47 +89,48 @@ export class SearchHandler extends
 
         await this.reply(\`Searching for \${query}\`);
     }
-}
-
-// the route, registration and guards are done.
-// edit, save, hot reload, the connection is still up.`;
+}`;
 
 export const codecComponent = `import {
     BuilderComponent, CustomId
 } from '@seedcord/gateway';
+import { ButtonStyle } from 'discord.js';
 
-export const Roles = new CustomId('roles')
-    .snowflake('memberId')
-    .oneOf('mode', ['add', 'remove']);
+export const Ticket = new CustomId('ticket')
+    .snowflake('ownerId')
+    .snowflake('channelId')
+    .uuid('caseId')
+    .oneOf('action', [
+        'close', 'reopen', 'escalate'
+    ]);
 
-export class RolePicker extends
-    BuilderComponent<'menu_role'> {
-    constructor(memberId: string) {
-        super('menu_role');
-        const id = Roles.encode({
-            memberId,
-            mode: 'add'
-        });
+type Fields = Parameters<typeof Ticket.encode>[0];
+
+export class TicketButton extends
+    BuilderComponent<'button'> {
+    constructor(fields: Fields) {
+        super('button');
         this.instance
-            .setPlaceholder('Roles to add')
-            .setCustomId(id);
+            .setCustomId(Ticket.encode(fields))
+            .setLabel(fields.action)
+            .setStyle(ButtonStyle.Secondary);
     }
 }`;
 
 export const codecHandler = `import {
-    RoleMenuHandler, RoleMenuRoute
+    ButtonHandler, ButtonRoute
 } from '@seedcord/gateway';
-import { Roles } from '#components/role-picker';
+import { Ticket } from '#components/ticket';
 
-@RoleMenuRoute(Roles)
-export class RolePickerHandler extends
-    RoleMenuHandler<[typeof Roles]> {
+@ButtonRoute(Ticket)
+export class TicketHandler extends
+    ButtonHandler<[typeof Ticket]> {
     public async execute(): Promise<void> {
-        const { memberId, mode } = this.params;
-        // memberId: string, mode: 'add' | 'remove'
-        const picked = this.event.values;
+        const { ownerId, action } = this.params;
+        // ownerId: string
+        // action: 'close' | 'reopen' | 'escalate'
         await this.reply(
-            \`\${mode} \${picked.length} <@\${memberId}>\`
+            \`<@\${ownerId}> asked to \${action} it\`
         );
     }
 }`;
@@ -146,66 +151,79 @@ declare module '@seedcord/gateway' {
     }
 }`;
 
-export const startTerminal = `# scaffold a typed bot
-$ pnpm create seedcord my-bot
-$ cd my-bot
-
-# tui with hot reload, the gateway is still up
-$ seedcord dev
-
-# bot online, every slash option fully typed`;
+export const startTerminal = `pnpm create seedcord my-bot
+cd my-bot
+pnpm dev`;
 
 export const gatesSample = `import {
-    Gated, and, or,
-    GuildOnly, OwnerOnly, RequireRole,
+    Gated, or, GuildOnly,
+    RequirePermissions, RequireRole,
+    RequireBotPermissions,
     SlashRoute, SlashHandler
 } from '@seedcord/gateway';
+import { PermissionFlagsBits } from 'discord.js';
 
-@Gated(or(
-    OwnerOnly(),
-    and(GuildOnly(), RequireRole(modRoleId))
-))
+const { BanMembers } = PermissionFlagsBits;
+
+@Gated(
+    GuildOnly(),
+    or(
+        RequirePermissions([BanMembers]),
+        RequireRole(modRoleId)
+    ),
+    RequireBotPermissions([BanMembers])
+)
 @SlashRoute('ban')
-export class BanHandler extends SlashHandler<'ban'> {
+export class BanHandler extends
+    SlashHandler<'ban'> {
     public async execute() {
-        // an owner, or a mod in a guild, gets through
+        // in a server, from someone who can
+        // ban or a mod, and the bot can ban
     }
 }`;
 
-export const pluginSource = `import { Plugin } from '@seedcord/core/plugin';
-import type { CoreBase } from '@seedcord/core';
+export const pluginSource = `import { Plugin } from '@seedcord/gateway';
 
-export class Uptime extends Plugin {
-    public startedAt = 0;
+const HOUR = 3_600_000;
+const API = 'https://api.github.com/repos';
 
-    constructor(
-        host: CoreBase,
-        private readonly label: string
-    ) {
-        super(host);
-    }
+export class GitHub extends Plugin {
+    public async init(): Promise<void> {}
 
-    public async init(): Promise<void> {
-        this.startedAt = Date.now();
-        this.logger.info(\`\${this.label} up\`);
+    public async stars(repo: string): Promise<number> {
+        const cache = this.kv.collection<number>('stars');
+        const cached = await cache.get(repo);
+        if (cached !== undefined) return cached;
+
+        const response = await fetch(\`\${API}/\${repo}\`);
+        const { stargazers_count: count } =
+            (await response.json()) as {
+                stargazers_count: number;
+            };
+
+        await cache.set(repo, count, HOUR);
+        return count;
     }
 }`;
 
-export const pluginAttach = `import { Uptime } from '#plugins/uptime';
+export const pluginAttach = `import { Seedcord } from '@seedcord/gateway';
+import { GitHub } from '#plugins/GitHub';
 
 export default new Seedcord({
     // ...your bot config
-}).attach('uptime', Uptime, 'my-bot');`;
+}).attach('github', GitHub);`;
 
 export const pluginUsage = `import {
     SlashRoute, SlashHandler
 } from '@seedcord/gateway';
 
-@SlashRoute('uptime')
-export class UptimeHandler extends SlashHandler<'uptime'> {
+@SlashRoute('stars')
+export class StarsHandler extends SlashHandler<'stars'> {
     public async execute(): Promise<void> {
-        const up = Date.now() - this.core.uptime.startedAt;
-        await this.reply(\`Up for \${Math.round(up / 1000)}s\`);
+        const repo = this.options.getString('repo');
+        const stars = await this.core.github.stars(repo);
+
+        await this.reply(\`\${repo} has \${stars} stars\`);
     }
 }`;
 
@@ -235,3 +253,76 @@ export class GreetHandler extends SlashHandler<'greet'> {
 export const packageConsumer = `import bot from 'your-bot';
 
 await bot.start();`;
+
+export const mistakeRoute = `// the command is named 'probe'
+@SlashRoute('prob')
+export class Search extends
+    SlashHandler<'probe'> {
+    public async execute() {
+        const text = 'Searching';
+        await this.reply(text);
+    }
+}`;
+
+export const mistakeOption = `// the option is named 'query'
+@SlashRoute('probe')
+export class Search extends
+    SlashHandler<'probe'> {
+    public async execute() {
+        const query = this.options
+            .getString('qury');
+        await this.reply(query);
+    }
+}`;
+
+export const mistakeReply = `// discord.js's own reply
+@SlashRoute('probe')
+export class Search extends
+    SlashHandler<'probe'> {
+    public async execute() {
+        const text = 'Searching';
+        await this.event.reply(text);
+    }
+}`;
+
+export const mistakeCustomId = `// an id built by hand
+@SlashRoute('probe')
+export class Search extends
+    SlashHandler<'probe'> {
+    public async execute() {
+        new ButtonBuilder()
+            .setCustomId(\`more:\${page}\`)
+            .setLabel('More');
+    }
+}`;
+
+export const mistakeDecorator = `// no @SlashRoute above the class
+@Gated(GuildOnly())
+export class Recent extends
+    SlashHandler<'probe'> {
+    public async execute() {
+        const text = 'Nothing yet.';
+        await this.reply(text);
+    }
+}`;
+
+export const mistakeDuplicate = `// commands/Ping.ts has this name too
+@RegisterCommand()
+export class Pong extends
+    BuilderComponent<'command'> {
+    constructor() {
+        super('command');
+        this.instance.setName('ping');
+    }
+}`;
+
+export const mistakeFixed = `// the route and the option both exist
+@SlashRoute('probe')
+export class Search extends
+    SlashHandler<'probe'> {
+    public async execute() {
+        const query = this.options
+            .getString('query');
+        await this.reply(query);
+    }
+}`;

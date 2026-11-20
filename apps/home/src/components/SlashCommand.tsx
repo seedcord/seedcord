@@ -154,7 +154,7 @@ function Palette({ query, selected, onSelect, onChange, onRun }: PaletteProps): 
     };
 
     return (
-        <div hidden={!open} className={cn('rule blk-sm pointer-events-auto overflow-hidden rounded-sm bg-(--pith)')}>
+        <div hidden={!open} className={cn('pointer-events-auto blk-sm overflow-hidden rounded-sm bg-(--pith) rule')}>
             {matches.length > 0 && (
                 <CommandOptions matches={matches} selected={selected} onHover={onSelect} onRun={run} />
             )}
@@ -178,7 +178,7 @@ function Palette({ query, selected, onSelect, onChange, onRun }: PaletteProps): 
 function ReplyBubble({ text }: { text: string }): ReactNode {
     return (
         <div
-            className={cn('rule blk-sm pointer-events-auto flex items-center gap-3 rounded-sm bg-(--pith) px-3 py-2.5')}
+            className={cn('pointer-events-auto blk-sm flex items-center gap-3 rounded-sm bg-(--pith) px-3 py-2.5 rule')}
         >
             <Materwelon className={cn('drop-shadow-mark size-8 shrink-0')} />
             <div>

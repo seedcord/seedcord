@@ -57,13 +57,13 @@ export function Vite(): ReactNode {
                     code={viteConfig}
                     filename="seedcord.config.ts"
                     note="add a plugin"
-                    className={cn('rule-pith blk-pith')}
+                    className={cn('blk-pith rule-pith')}
                 />
                 <CodeCard
                     code={viteHandler}
                     filename="handlers/greet.ts"
                     note="import what it loads"
-                    className={cn('rule-pith blk-pith')}
+                    className={cn('blk-pith rule-pith')}
                 />
             </div>
         </Section>

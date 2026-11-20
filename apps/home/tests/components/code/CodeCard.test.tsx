@@ -6,11 +6,11 @@ import { CodeCard } from '#components/code/CodeCard';
 const textOf = (html: string): string => html.replaceAll(/<[^>]+>/g, '');
 
 describe('CodeCard', () => {
-    it("keeps the first line's indentation and removes blank lines around the code", async () => {
+    it("keeps the first line's indentation as a tab and removes blank lines around the code", async () => {
         const html = renderToStaticMarkup(
             await CodeCard({ code: '\n    indented();\nflush();\n\n', filename: 'a.ts' })
         );
 
-        expect(textOf(html)).toBe('a.ts    indented();\nflush();');
+        expect(textOf(html)).toBe('a.ts\tindented();\nflush();');
     });
 });

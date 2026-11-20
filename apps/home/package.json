@@ -18,9 +18,13 @@
     "dependencies": {
         "@fumari/image-size": "^0.1.1",
         "@seedcord/brand": "workspace:^",
+        "@seedcord/custom-id": "workspace:^",
+        "@seedcord/errors": "workspace:^",
+        "@seedcord/eslint-plugin": "workspace:^",
         "@seedcord/ui": "workspace:^",
         "discord-component-embed": "workspace:^",
         "es-toolkit": "catalog:deps",
+        "eslint-plugin-discordjs": "workspace:^",
         "fumadocs-core": "catalog:deps",
         "fumadocs-mdx": "catalog:deps",
         "lucide-react": "catalog:deps",

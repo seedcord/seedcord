@@ -34,10 +34,7 @@ export function Transports(): ReactNode {
             </p>
             <div className={cn('mt-10 grid gap-6 lg:grid-cols-2 lg:gap-10')}>
                 {TRANSPORTS.map((transport) => (
-                    <div
-                        key={transport.name}
-                        className={cn('rule-pith blk-pith rounded-sm bg-(--seed-dark) p-6 lg:p-7')}
-                    >
+                    <div key={transport.name} className={cn('blk-pith rounded-sm bg-(--seed-dark) p-6 rule lg:p-7')}>
                         <p className={cn('flex items-center gap-2.5')}>
                             <Icon icon={transport.icon} size={18} className={cn('shrink-0 text-(--flesh)')} />
                             <span className={cn('font-mono-code text-sm font-semibold')}>{transport.name}</span>

@@ -75,7 +75,7 @@ function TargetCard({ target }: { target: Target }): ReactNode {
     return (
         <div
             className={cn(
-                'rule blk-rind rounded-sm bg-(--seed-dark) p-6 text-(--pith)',
+                'blk-rind rounded-sm bg-(--seed-dark) p-6 text-(--pith) rule',
                 target.sample && 'grid gap-5 sm:col-span-2 md:grid-cols-2'
             )}
         >

@@ -13,8 +13,11 @@ const GROUND: Record<Ground, string> = {
     pith: tw`bg-(--pith) text-(--seed-dark)`,
     rind: tw`bg-(--rind-deep) text-(--pith)`,
     flesh: tw`bg-(--flesh-deep) text-(--pith)`,
-    ink: tw`bg-(--seed-dark) text-(--pith)`
+    // the dark rule can't show against ink. ink covers the one above it with a cream rule
+    ink: tw`relative -mt-0.75 border-t-[3px] border-t-(--pith) bg-(--seed-dark) text-(--pith)`
 };
+
+const AFTER_INK = tw`[[data-ground=ink]+&]:border-t-[3px] [[data-ground=ink]+&]:border-t-(--pith)`;
 
 export function Section({
     ground,
@@ -26,7 +29,7 @@ export function Section({
     children: ReactNode;
 }): ReactNode {
     return (
-        <section className={cn('border-b-[3px] border-(--seed-dark)', GROUND[ground])}>
+        <section data-ground={ground} className={cn('border-b-[3px] border-(--seed-dark)', AFTER_INK, GROUND[ground])}>
             <div className={cn('mx-auto max-w-(--shell-max) px-5 py-14 lg:py-20', className)}>{children}</div>
         </section>
     );

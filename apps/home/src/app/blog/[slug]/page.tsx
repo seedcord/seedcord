@@ -58,7 +58,7 @@ function PostCover({ cover }: { cover: NonNullable<PostSummary['cover']> }): Rea
                 height={cover.height}
                 alt={cover.alt}
                 preload
-                className={cn('rule blk-rind h-auto w-full rounded-sm')}
+                className={cn('blk-rind h-auto w-full rounded-sm rule')}
             />
             {cover.credit ? (
                 <figcaption className={cn('text-center text-sm font-medium text-(--seed-dark)/70')}>

@@ -13,7 +13,7 @@ import type { HighlightLanguage } from '@seedcord/ui/shiki';
 import type { MDXComponents } from 'mdx/types';
 import type { ComponentProps, ReactElement, ReactNode } from 'react';
 
-const MEDIA = tw`rule blk-rind my-3`;
+const MEDIA = tw`my-3 blk-rind rule`;
 
 function captionFor(tag: string | undefined): string {
     if (tag === undefined) return 'text';

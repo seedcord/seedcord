@@ -135,7 +135,11 @@ function typePositionSettings(p: BrandPalette): BrandThemeSetting[] {
         { scope: ['meta.type.tuple meta.brace.square'], settings: { foreground: p.type, fontStyle: 'italic' } },
         { scope: ['meta.type.tuple entity.name.label'], settings: { foreground: p.fg, fontStyle: 'italic' } },
         { scope: ['meta.type variable.other'], settings: { foreground: p.type, fontStyle: 'italic' } },
-        { scope: ['meta.type string'], settings: { foreground: p.string, fontStyle: 'italic' } }
+        { scope: ['meta.type string'], settings: { foreground: p.string, fontStyle: 'italic' } },
+        {
+            scope: ['meta.type constant.numeric', 'meta.type constant.language'],
+            settings: { foreground: p.number, fontStyle: 'italic' }
+        }
     ];
 }
 

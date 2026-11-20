@@ -225,10 +225,6 @@ const ACCENT_TEXT: Record<Accent, string> = {
 
 const ROW = tw`group flex items-start gap-3 py-2`;
 
-function pad(count: number): string {
-    return count.toString().padStart(2, '0');
-}
-
 export function FeatureGrid(): ReactNode {
     return (
         <Section ground="pith">
@@ -236,20 +232,20 @@ export function FeatureGrid(): ReactNode {
                 It all comes <span className={cn('text-(--flesh-deep)')}>built in.</span>
             </h2>
 
-            <div className={cn('rule blk mt-10 rounded-sm bg-(--pith)')}>
+            <div className={cn('mt-10 blk rounded-sm bg-(--pith) rule')}>
                 {GROUPS.map((group, groupIndex) => (
                     <div
                         key={group.area}
                         className={cn('p-5 sm:p-6', groupIndex > 0 && 'border-t border-(--seed-dark)/10')}
                     >
-                        <p
+                        <h3
                             className={cn(
-                                'font-mono-code mb-3 text-xs font-semibold tracking-wide uppercase',
+                                'font-display mb-3 text-2xl font-semibold tracking-tight',
                                 ACCENT_TEXT[group.accent]
                             )}
                         >
-                            {group.area} · {pad(group.rows.length)}
-                        </p>
+                            {group.area}
+                        </h3>
                         <div className={cn('grid gap-x-6 sm:grid-cols-2 lg:grid-cols-3')}>
                             {group.rows.map((row) => (
                                 <div key={row.label} className={cn(ROW)}>

@@ -50,7 +50,7 @@ function PostRow({ post }: { post: PostSummary }): ReactNode {
                     width={post.thumbnail.width}
                     height={post.thumbnail.height}
                     alt=""
-                    className={cn('rule hidden aspect-video w-full rounded-sm object-cover md:block')}
+                    className={cn('hidden aspect-video w-full rounded-sm object-cover rule md:block')}
                 />
             ) : null}
         </li>
@@ -95,11 +95,11 @@ export default async function BlogPage(): Promise<ReactNode> {
                         </p>
                     </div>
                     {posts.length === 0 ? (
-                        <p className={cn('rule blk mt-10 rounded-sm p-7 text-(--seed-dark)/70')}>
+                        <p className={cn('mt-10 blk rounded-sm p-7 text-(--seed-dark)/70 rule')}>
                             The first post is on its way.
                         </p>
                     ) : (
-                        <ol className={cn('rule blk mt-10 divide-y divide-(--seed-dark)/10 rounded-sm bg-(--pith)')}>
+                        <ol className={cn('mt-10 blk divide-y divide-(--seed-dark)/10 rounded-sm bg-(--pith) rule')}>
                             {posts.map((post) => (
                                 <PostRow key={post.slug} post={post} />
                             ))}

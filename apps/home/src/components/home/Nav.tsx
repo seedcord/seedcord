@@ -39,10 +39,14 @@ interface NavProps {
 export function Nav({ onBlogIndex = false }: NavProps): ReactNode {
     return (
         <header className={cn('sticky top-0 z-50 border-b-[3px] border-(--seed-dark) bg-(--pith)')}>
-            <div className={cn('mx-auto flex h-16 max-w-(--shell-max) items-center gap-2 px-5')}>
-                <Link href="/" className={cn('order-1 flex items-center gap-3 sm:me-2')}>
-                    <Materwelon className={cn('drop-shadow-mark size-9')} />
-                    <span className={cn('font-display text-xl font-semibold tracking-tight text-(--seed-dark)')}>
+            <div className={cn('mx-auto flex h-16 max-w-(--shell-max) items-center gap-2 px-5 max-[400px]:px-3')}>
+                <Link href="/" className={cn('order-1 flex items-center gap-3 max-[400px]:gap-2 sm:me-2')}>
+                    <Materwelon className={cn('drop-shadow-mark size-9 max-[400px]:size-8')} />
+                    <span
+                        className={cn(
+                            'font-display text-xl font-semibold tracking-tight whitespace-nowrap text-(--seed-dark) max-[400px]:text-lg'
+                        )}
+                    >
                         seedcord <span className={cn('font-normal text-(--flesh-deep)')}>{STAGE}</span>
                     </span>
                 </Link>
@@ -63,7 +67,9 @@ export function Nav({ onBlogIndex = false }: NavProps): ReactNode {
                 </nav>
                 <span aria-hidden className={cn('order-2 flex-1')} />
                 <span className={cn('order-4 flex items-center gap-2')}>
-                    <NpmVersion />
+                    <span className={cn('contents max-[359px]:hidden')}>
+                        <NpmVersion />
+                    </span>
                     <PosterButton href={REPO_URL} variant="ink">
                         <GithubIcon variant="mark" size={20} aria-hidden className={cn('shrink-0 md:hidden')} />
                         <span className={cn('sr-only md:not-sr-only')}>GitHub</span>

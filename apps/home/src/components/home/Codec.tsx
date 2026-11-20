@@ -1,19 +1,13 @@
 import { cn } from '@seedcord/ui';
-import { ArrowLeftFromLine, ArrowRightFromLine } from 'lucide-react';
 
 import { CodeCard } from '#components/code/CodeCard';
+import { CustomIdDemo } from '#components/home/CustomIdDemo';
 import { SECTION_HEADING, Section } from '#components/home/Section';
-import { Chips } from '#components/ui/Chips';
 import { Code } from '#components/ui/Code';
 import { CODE_MARK_DARK } from '#lib/code/marks';
 import { codecComponent, codecHandler } from '#lib/code/samples';
 
 import type { ReactNode } from 'react';
-
-const CHIPS = [
-    { icon: ArrowRightFromLine, label: 'encode(values) to string' },
-    { icon: ArrowLeftFromLine, label: 'decode(id) to typed values' }
-] as const;
 
 export function Codec(): ReactNode {
     return (
@@ -37,22 +31,26 @@ export function Codec(): ReactNode {
                         Discord caps that string at 100 characters. The codec packs your fields into fewer of them than
                         joining the values would.
                     </p>
-                    <Chips items={CHIPS} ground="flesh" />
                 </div>
             </div>
-            {/* columns and gutter match the text grid above */}
-            <div className={cn('mt-10 grid gap-x-10 gap-y-5 lg:grid-cols-2')}>
-                <CodeCard
-                    code={codecComponent}
-                    filename="components/role-picker.ts"
-                    note="component"
-                    className={cn('rule-pith blk-pith')}
-                />
-                <CodeCard
-                    code={codecHandler}
-                    filename="handlers/role-picker.ts"
-                    note="select handler"
-                    className={cn('rule-pith blk-pith')}
+            <div className={cn('mt-10')}>
+                <CustomIdDemo
+                    component={
+                        <CodeCard
+                            code={codecComponent}
+                            filename="components/ticket.ts"
+                            note="component"
+                            className={cn('blk-pith rule')}
+                        />
+                    }
+                    handler={
+                        <CodeCard
+                            code={codecHandler}
+                            filename="handlers/ticket.ts"
+                            note="button handler"
+                            className={cn('blk-pith rule')}
+                        />
+                    }
                 />
             </div>
         </Section>

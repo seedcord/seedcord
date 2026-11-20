@@ -8,7 +8,7 @@ import { pluginAttach, pluginSource, pluginUsage } from '#lib/code/samples';
 
 import type { ReactNode } from 'react';
 
-const CARD = tw`rule blk-rind`;
+const CARD = tw`blk-rind rule`;
 
 export function Plugins(): ReactNode {
     return (
@@ -21,14 +21,15 @@ export function Plugins(): ReactNode {
                 </h2>
                 <div className={cn('min-w-0')}>
                     <p className={cn('text-lg/snug font-medium text-(--seed-dark)/85')}>
-                        A plugin extends seedcord with whatever your bot needs, a database, a cache, a metrics client.
-                        Extend <Code className={cn(CODE_MARK_LIGHT)}>Plugin</Code> and give it a key when you attach it.
+                        A plugin extends seedcord with whatever your bot needs, like cron jobs, translations, a webhook
+                        endpoint, or a client for another API. Extend{' '}
+                        <Code className={cn(CODE_MARK_LIGHT)}>Plugin</Code> and give it a key when you attach it.
                     </p>
                     <p className={cn('mt-4 text-lg/snug font-medium text-(--seed-dark)/85')}>
                         That key becomes a property on the same object every handler already carries.{' '}
                         <Code className={cn(CODE_MARK_LIGHT)}>seedcord codegen</Code> writes its type, so{' '}
-                        <Code className={cn(CODE_MARK_LIGHT)}>this.core.uptime.startedAt</Code> compiles wherever you
-                        need it.
+                        <Code className={cn(CODE_MARK_LIGHT)}>this.core.github.stars()</Code> compiles wherever you need
+                        it.
                     </p>
                     <p className={cn('mt-4 text-lg/snug font-medium text-(--seed-dark)/85')}>
                         A plugin runs on both transports, and on Cloudflare Workers unless it needs a server. You can
@@ -38,10 +39,10 @@ export function Plugins(): ReactNode {
             </div>
             {/* a third column cuts each card to 354px and clips the longest import lines */}
             <div className={cn('mt-10 grid gap-x-10 gap-y-5 lg:grid-cols-2')}>
-                <CodeCard code={pluginSource} filename="plugins/uptime.ts" note="write it" className={cn(CARD)} />
+                <CodeCard code={pluginSource} filename="plugins/GitHub.ts" note="write it" className={cn(CARD)} />
                 <div className={cn('grid grid-rows-[auto_1fr] gap-5')}>
                     <CodeCard code={pluginAttach} filename="bot.ts" note="attach it" className={cn(CARD)} />
-                    <CodeCard code={pluginUsage} filename="handlers/uptime.ts" note="use it" className={cn(CARD)} />
+                    <CodeCard code={pluginUsage} filename="handlers/stars.ts" note="use it" className={cn(CARD)} />
                 </div>
             </div>
         </Section>

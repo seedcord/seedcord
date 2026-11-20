@@ -33,7 +33,7 @@ export function DevTui(): ReactNode {
                 tunnel status too. Save a handler and Vite swaps it in a few milliseconds with the bot still up, so your
                 change reaches Discord without a restart.
             </p>
-            <figure className={cn('rule-pith blk-pith relative mt-10 overflow-hidden rounded-sm')}>
+            <figure className={cn('relative mt-10 blk-pith overflow-hidden rounded-sm rule-pith')}>
                 {/* idk why safari sometimes doesn't paints this image */}
                 <div
                     className={cn('absolute inset-0 scale-110 bg-cover bg-center blur-xl')}

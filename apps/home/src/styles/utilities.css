@@ -20,36 +20,38 @@
         color: transparent;
         font-size: 0;
     }
-
-    /* main poster theme */
-    .blk {
-        box-shadow: 10px 10px 0 0 var(--seed-dark);
-    }
-    .blk-sm {
-        box-shadow: 6px 6px 0 0 var(--seed-dark);
-    }
-    .rule {
-        border: 3px solid var(--seed-dark);
-    }
-    .rule-pith {
-        border: 3px solid var(--pith);
-    }
-    .blk-pith {
-        box-shadow: 10px 10px 0 0 var(--pith);
-    }
-    .blk-rind {
-        box-shadow: 10px 10px 0 0 var(--rind);
-    }
 }
 
-/* the shadow draws outside the box, so a full-width card reads 10px left of centre without this */
-@media (width < 64rem) {
-    .blk,
-    .blk-pith,
-    .blk-rind {
+/* main poster theme */
+@utility rule {
+    border: 3px solid var(--seed-dark);
+}
+@utility rule-pith {
+    border: 3px solid var(--pith);
+}
+
+/* a full-width card reads left of centre below lg without the margin because the shadow draws outside the box */
+@utility blk {
+    box-shadow: 10px 10px 0 0 var(--seed-dark);
+    @media (width < 64rem) {
         margin-right: 10px;
     }
-    .blk-sm {
+}
+@utility blk-pith {
+    box-shadow: 10px 10px 0 0 var(--pith);
+    @media (width < 64rem) {
+        margin-right: 10px;
+    }
+}
+@utility blk-rind {
+    box-shadow: 10px 10px 0 0 var(--rind);
+    @media (width < 64rem) {
+        margin-right: 10px;
+    }
+}
+@utility blk-sm {
+    box-shadow: 6px 6px 0 0 var(--seed-dark);
+    @media (width < 64rem) {
         margin-right: 6px;
     }
 }
@@ -60,7 +62,6 @@
     }
 }
 
-/* three decaying beats, then gone to stop infinite skeleton */
 @keyframes shot-settle {
     0% {
         opacity: 0.28;
@@ -104,6 +105,29 @@
     line-height: 1.55;
     scrollbar-width: thin;
     scrollbar-color: var(--husk) transparent;
+    tab-size: 4;
+}
+/* a phone fits about 37 characters at the desktop size, and the samples run to 60 */
+@media (width < 40rem) {
+    .code-card .shiki {
+        padding: 0.875rem;
+        font-size: 0.71875rem;
+        tab-size: 2;
+        white-space: pre-wrap;
+        overflow-wrap: anywhere;
+    }
+    /* a flex column drops the newline between two lines, so each line can be a block */
+    .code-card .shiki code {
+        display: flex;
+        flex-direction: column;
+    }
+    /* CodeCard sets --depth to the line's tab count. the 2 matches tab-size, and the extra 2ch sets a wrapped part in */
+    .code-card .shiki .line {
+        --hang: calc((var(--depth) * 2 + 2) * 1ch);
+        min-height: 1lh;
+        padding-left: var(--hang);
+        text-indent: calc(var(--hang) * -1);
+    }
 }
 .code-card .shiki::-webkit-scrollbar {
     height: 8px;
@@ -114,4 +138,29 @@
 }
 .code-card .shiki:hover::-webkit-scrollbar-thumb {
     background-color: var(--rind);
+}
+
+/* MistakePicker registers this highlight over the wrong code */
+::highlight(mistake) {
+    text-decoration: underline wavy var(--flesh);
+    /* 1px draws an editor's short tight wave because a browser sizes the wave from the thickness */
+    text-decoration-thickness: 1px;
+    text-underline-offset: 3px;
+}
+
+/* Thread registers this over the same value in several code cards */
+::highlight(thread) {
+    text-decoration: underline var(--amber);
+    text-decoration-thickness: 2px;
+    text-underline-offset: 4px;
+}
+
+/* GateEvaluator registers these two over the gates in its code card */
+::highlight(gate-pass) {
+    background-color: var(--rind-deep);
+    color: var(--pith);
+}
+::highlight(gate-fail) {
+    background-color: var(--flesh-deep);
+    color: var(--pith);
 }
