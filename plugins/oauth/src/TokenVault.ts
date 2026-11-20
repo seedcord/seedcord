@@ -99,7 +99,10 @@ export class TokenVault {
             encoder.encode(JSON.stringify(tokens))
         );
         // iv first, then the scrambled tokens. read() splits them at IV_BYTES
-        await this.records.set(userId, toBase64(new Uint8Array([...iv, ...new Uint8Array(sealed)])));
+        const record = new Uint8Array(IV_BYTES + sealed.byteLength);
+        record.set(iv);
+        record.set(new Uint8Array(sealed), IV_BYTES);
+        await this.records.set(userId, toBase64(record));
     }
 
     public async read(userId: string): Promise<SavedTokens | undefined> {
