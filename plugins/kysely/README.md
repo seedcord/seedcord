@@ -27,7 +27,7 @@
 
 Install it when your bot stores data in a SQL database. It works with a gateway bot and with an http bot on your own server. On a Cloudflare Workers bot, attaching it is a compile error.
 
-seedcord is pre-1.0, so a minor version can break your bot. Each release's changelog says what changed and how to update.
+seedcord is in beta, so a minor version can break your bot. Each release's changelog says what changed and how to update.
 
 ## Installation
 

@@ -27,7 +27,7 @@
 
 Both transports depend on core and re-export all of it, so a bot imports everything from its transport. Install core directly when you write a plugin that works on both transports.
 
-seedcord is pre-1.0, so a minor version can break your plugin. Each release's changelog says what changed and how to update.
+seedcord is in beta, so a minor version can break your plugin. Each release's changelog says what changed and how to update.
 
 ## Installation
 

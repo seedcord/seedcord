@@ -109,7 +109,7 @@ pnpm create seedcord
 
 **[Read the guide →](https://seedcord.org/guide)**
 
-seedcord is pre-1.0, so a minor version can break your bot. Each release's changelog says what changed and how to update.
+seedcord is in beta, so a minor version can break your bot. Each release's changelog says what changed and how to update.
 
 ## Where it runs
 

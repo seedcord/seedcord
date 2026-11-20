@@ -27,7 +27,7 @@
 
 It loads your bot through Vite every time, with any Vite plugin you add. Those plugins, your `.env` modes, and bundled data files you set up in dev work the same way in the build. One `seedcord build` makes a Node or Bun server, a single Bun binary, a Cloudflare Worker, or a package another app installs and starts.
 
-seedcord is pre-1.0, so a minor version can break your bot. Each release's changelog says what changed and how to update.
+seedcord is in beta, so a minor version can break your bot. Each release's changelog says what changed and how to update.
 
 ## Installation
 

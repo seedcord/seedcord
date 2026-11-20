@@ -27,7 +27,7 @@
 
 Both seedcord transports depend on it and re-export it, so a bot imports `isSeedcordError` from its transport. Install it directly in a plugin or a library that catches errors from a seedcord package, like [`@seedcord/custom-id`](https://www.npmjs.com/package/@seedcord/custom-id) in a discord.js bot.
 
-seedcord is pre-1.0, so a minor version can break your code. Each release's changelog says what changed and how to update.
+seedcord is in beta, so a minor version can break your code. Each release's changelog says what changed and how to update.
 
 ## Installation
 

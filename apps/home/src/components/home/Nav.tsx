@@ -1,4 +1,4 @@
-import { PRODUCTION_SITES } from '@seedcord/brand';
+import { PRODUCTION_SITES, STAGE } from '@seedcord/brand';
 import { cn, GithubIcon } from '@seedcord/ui';
 import { Materwelon } from '@seedcord/ui/Materwelon';
 import Link from 'next/link';
@@ -43,7 +43,7 @@ export function Nav({ onBlogIndex = false }: NavProps): ReactNode {
                 <Link href="/" className={cn('order-1 flex items-center gap-3 sm:me-2')}>
                     <Materwelon className={cn('drop-shadow-mark size-9')} />
                     <span className={cn('font-display text-xl font-semibold tracking-tight text-(--seed-dark)')}>
-                        seedcord
+                        seedcord <span className={cn('font-normal text-(--flesh-deep)')}>{STAGE}</span>
                     </span>
                 </Link>
                 <nav aria-label="Primary" className={cn('contents')}>

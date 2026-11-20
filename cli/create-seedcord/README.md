@@ -25,7 +25,7 @@
 
 `create-seedcord` sets up a new seedcord bot. It asks a few questions, writes the project, and can install its dependencies and make the first git commit. You run it once when you start a new bot.
 
-seedcord is pre-1.0, so a minor version can break your bot. Each release's changelog says what changed and how to update.
+seedcord is in beta, so a minor version can break your bot. Each release's changelog says what changed and how to update.
 
 ## Usage
 

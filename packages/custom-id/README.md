@@ -29,7 +29,7 @@ Each id also has a short hash of its fields. A click on a component built before
 
 Both seedcord transports depend on it, and a seedcord bot imports `CustomId` from its transport. Install it directly to use it with discord.js or any other Discord library, without seedcord. You then match each click to its definition yourself.
 
-seedcord is pre-1.0, so a minor version can break your bot. Each release's changelog says what changed and how to update.
+seedcord is in beta, so a minor version can break your bot. Each release's changelog says what changed and how to update.
 
 ## Installation
 

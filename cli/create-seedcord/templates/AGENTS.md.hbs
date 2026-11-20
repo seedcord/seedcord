@@ -46,6 +46,8 @@ Anything that holds a connection, keeps state between interactions, or runs in t
 
 Before you install another seedcord package, check whether `{{ transport }}` already exports what you need since the transports re-export most packages.
 
+A seedcord package below 1.0 can break your bot in a minor version. Read its changelog before you bump it.
+
 Never import from a seedcord path ending in `/internal`, like `@seedcord/core/internal`. Those paths wire seedcord's own packages together and change without notice. If the only way to do something is through one of those imports, tell the user so they can open an issue at <https://github.com/seedcord/seedcord/issues>.
 
 ## Trying a change

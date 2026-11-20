@@ -27,7 +27,7 @@
 
 Both seedcord transports depend on it and re-export its types, so a bot imports them from its transport. Install it directly when a plugin or a tool needs seedcord's types without depending on a transport.
 
-seedcord is pre-1.0, so a minor version can break your code. Each release's changelog says what changed and how to update.
+seedcord is in beta, so a minor version can break your code. Each release's changelog says what changed and how to update.
 
 ## Installation
 

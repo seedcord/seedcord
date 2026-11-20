@@ -27,7 +27,7 @@
 
 It works with a gateway bot, with an http bot on your own server, and with an http bot on Cloudflare Workers.
 
-seedcord is pre-1.0, so a minor version can break your bot. Each release's changelog says what changed and how to update.
+seedcord is in beta, so a minor version can break your bot. Each release's changelog says what changed and how to update.
 
 ## Installation
 

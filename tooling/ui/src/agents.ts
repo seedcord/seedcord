@@ -1,4 +1,4 @@
-import { PRODUCTION_SITES } from '@seedcord/brand';
+import { PRODUCTION_SITES, stageNotice } from '@seedcord/brand';
 
 import { GUIDE, HOME, REPO_URL } from './sites';
 import { AGENT_SKILLS_BASE, skillUrl } from './skills';
@@ -66,6 +66,7 @@ const FRAMEWORK_RULES = [
     SEARCH_RULE,
     "`seedcord` on npm is the command line tool. A bot installs `@seedcord/gateway` for a websocket connection, or `@seedcord/http` to answer Discord's interactions endpoint. It installs one of the two. Before you install another seedcord package, check whether that one already exports what you need since the transports re-export most packages.",
     'Read the current version of every package from the npm registry. Each one has its own version number.',
+    `${stageNotice('your bot')} Read that changelog before you bump a seedcord package.`,
     'A command is declared in one file and answered in another, by a handler class carrying a route decorator. seedcord reads those decorators at startup and dispatches every interaction itself.',
     CODEGEN_RULE,
     DEV_RULE,

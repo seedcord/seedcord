@@ -27,7 +27,7 @@
 
 A bot that only answers commands and components can use [`@seedcord/http`](https://www.npmjs.com/package/@seedcord/http) instead, which doesn't keep a connection open and also runs on Cloudflare Workers.
 
-seedcord is pre-1.0, so a minor version can break your bot. Each release's changelog says what changed and how to update.
+seedcord is in beta, so a minor version can break your bot. Each release's changelog says what changed and how to update.
 
 If you use a coding agent, point it at [`seedcord.org/guide/llms.txt`](https://seedcord.org/guide/llms.txt), which lists every page in the guide.
 

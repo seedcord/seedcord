@@ -27,7 +27,7 @@
 
 Both seedcord transports depend on it and re-export it, and a bot's `this.core.bus` is one. Install it directly for a typed emitter in any project. It doesn't depend on any package.
 
-seedcord is pre-1.0, so a minor version can break your code. Each release's changelog says what changed and how to update.
+seedcord is in beta, so a minor version can break your code. Each release's changelog says what changed and how to update.
 
 ## Installation
 

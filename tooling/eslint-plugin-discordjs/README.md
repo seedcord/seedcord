@@ -20,7 +20,7 @@
 
 Install it in any discord.js project. It works without a seedcord package.
 
-seedcord is pre-1.0, so a minor version can break your lint setup. Each release's changelog says what changed and how to update.
+seedcord is in beta, so a minor version can break your lint setup. Each release's changelog says what changed and how to update.
 
 ## Installation
 

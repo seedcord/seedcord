@@ -27,7 +27,7 @@
 
 Both seedcord transports depend on it and re-export it, so a bot imports these from its transport. Install it directly for the helpers in a plugin or any other project.
 
-seedcord is pre-1.0, so a minor version can break your code. Each release's changelog says what changed and how to update.
+seedcord is in beta, so a minor version can break your code. Each release's changelog says what changed and how to update.
 
 ## Installation
 

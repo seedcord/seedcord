@@ -27,7 +27,7 @@
 
 Install it in a seedcord bot that has its own ESLint config. A bot on [`@seedcord/eslint-config`](https://www.npmjs.com/package/@seedcord/eslint-config) already has it, through `registerSeedcordPlugin`.
 
-seedcord is pre-1.0, so a minor version can break your lint setup. Each release's changelog says what changed and how to update.
+seedcord is in beta, so a minor version can break your lint setup. Each release's changelog says what changed and how to update.
 
 ## Installation
 
