@@ -8,7 +8,7 @@ import { asError, isPortInUse } from '@seedcord/utils/internal';
 
 import { ShutdownPhase } from '#src/lifecycle/phases';
 import { requestPath } from '#src/requestPath';
-import { DEFAULT_SERVER_PORT } from '#src/webConstants';
+import { DEFAULT_SERVER_PORT, INTERNAL_SERVER_ERROR } from '#src/webConstants';
 
 import { answerHealth } from './answerHealth';
 import { DRAIN_TASK_TIMEOUT_MS, DRAIN_WINDOW_MS } from './Lifecycle/drainWindow';
@@ -114,8 +114,9 @@ export class WebServer {
                     `Failed to answer ${incoming.method ?? 'GET'} ${requestPath(incoming.url ?? '/')}`,
                     error
                 );
-                // a swallowed throw would hang the client without a cause
-                outgoing.destroy(asError(error));
+                // once a stream's status is out, closing the socket is the only way left to report a failure
+                if (outgoing.headersSent) outgoing.destroy(asError(error));
+                else outgoing.writeHead(INTERNAL_SERVER_ERROR).end();
             });
         });
         this.server = server;

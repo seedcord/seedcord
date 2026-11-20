@@ -6,3 +6,5 @@ export const WORKER_PROBE = { header: 'x-seedcord-probe', status: 204 } as const
 
 // a node bot's server.port, and the port that seedcord dev serves an edge bot on
 export const DEFAULT_SERVER_PORT = 3000;
+
+export const INTERNAL_SERVER_ERROR = 500;

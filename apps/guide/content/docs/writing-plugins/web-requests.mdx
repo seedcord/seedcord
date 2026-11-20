@@ -86,7 +86,9 @@ A request's body can only be read once. If you read it in `fetch()`, or call `ge
 
 ## When `fetch()` throws
 
-seedcord logs the error on your plugin's logger, with the method and the path, and passes the request to the next step. Interactions keep reaching your handlers while that route is broken. If you read the body before the throw, the request stops with the error above.
+seedcord logs the error on your plugin's logger, with the method and the path, and answers the request with a 500. The plugins after yours and the interactions engine never get that request.
+
+On an http bot every interaction gets a 500 if your `fetch()` throws before its path check. Make sure you always do the path check first.
 
 ## Linking to your route
 

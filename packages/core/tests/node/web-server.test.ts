@@ -201,6 +201,42 @@ describe('WebServer on a port', () => {
         expect(received).toEqual(sent);
     });
 
+    it('answers 500 when answering a request throws', async () => {
+        using _logs = captureLogs();
+        await using bot = await listening({ answer: () => Promise.reject(new Error('boom')) });
+
+        const response = await fetch(bot.url).then(
+            ({ status }) => status,
+            () => 'connection dropped'
+        );
+
+        expect(response).toBe(500);
+    });
+
+    it('closes the connection when a response stream fails after its status went out', async () => {
+        using _logs = captureLogs();
+        const fail = Promise.withResolvers<undefined>();
+        const failing = new ReadableStream<Uint8Array>({
+            start: (controller) => controller.enqueue(new TextEncoder().encode('first')),
+            pull: async (controller) => {
+                await fail.promise;
+                controller.error(new Error('boom'));
+            }
+        });
+        await using bot = await listening({ answer: () => Promise.resolve(new Response(failing)) });
+
+        const response = await fetch(bot.url);
+        const reader = response.body?.getReader();
+        await reader?.read();
+        fail.resolve(undefined);
+        const rest = await reader?.read().then(
+            () => 'read to the end',
+            () => 'connection closed'
+        );
+
+        expect([response.status, rest]).toEqual([200, 'connection closed']);
+    });
+
     it('sends a streamed response chunk by chunk, and cancels the stream when the client leaves', async () => {
         const encoder = new TextEncoder();
         const cancelled = Promise.withResolvers<string>();

@@ -125,7 +125,6 @@ describe('a plugin fetch method on node', () => {
 
     it.each([
         ['reads the body and passes the request on', BodyReader],
-        ['reads the body and throws', BodyReaderThatThrows],
         ['locks the body with a reader', BodyLocker]
     ])('throws when a plugin %s', async (_case, Reader) => {
         const signer = await bindSignedEnv();
@@ -161,20 +160,21 @@ describe('a plugin fetch method on node', () => {
         expect([whileSinkRuns, await closing]).toEqual(['still open', 'closed']);
     });
 
-    it('logs a throw from one plugin and keeps answering through the rest', async () => {
+    it.each([
+        ['throws', Thrower],
+        ['reads the body and throws', BodyReaderThatThrows]
+    ])('answers 500 when a plugin %s, and the plugins after it never run', async (_case, Broken) => {
         const signer = await bindSignedEnv();
-        await using host = new Seedcord(config()).attach('thrower', Thrower).attach('pages', Pages);
+        await using host = new Seedcord(config()).attach('broken', Broken).attach('pages', Pages);
         await host.start();
         using logs = captureLogs();
 
-        const page = await host.fetch(new Request('http://bot.test/page?code=secret'));
+        const page = await host.fetch(new Request('http://bot.test/page?token=secret', { method: 'POST', body: 'x' }));
         const interaction = await host.fetch(await signedRequest(signer, PING));
 
-        expect(await page.text()).toBe('GET page');
-        expect(await interaction.json()).toEqual({ type: 1 });
-        // Discord puts an OAuth callback's code in the query
+        expect([page.status, interaction.status]).toEqual([500, 500]);
         const logged = logs.at('error').join('\n');
-        expect(logged).toContain('GET /page');
+        expect(logged).toContain('POST /page');
         expect(logged).not.toContain('secret');
         expect(logs.argsAt('error')).toContainEqual(expect.objectContaining({ message: 'boom' }));
     });

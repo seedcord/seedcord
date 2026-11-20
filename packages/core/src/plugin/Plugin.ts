@@ -170,7 +170,7 @@ export abstract class Plugin<
      * Answers a web request sent to the bot. seedcord calls this on each plugin in attach order and
      * answers with the first `Response`. On an http bot, seedcord calls it for interactions too.
      * Return `undefined` to pass the request on. If this method throws, seedcord logs the error on
-     * this plugin's logger and tries the next plugin.
+     * this plugin's logger and answers the request with a 500.
      *
      * On an http bot, check the path before you await anything because every interaction waits for
      * this method. On a server, requests reach it once the Ready phase begins. It can run before

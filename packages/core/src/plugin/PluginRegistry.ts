@@ -5,6 +5,7 @@ import { asError } from '@seedcord/utils/internal';
 import { MemberValues } from '#src/dispatch/DispatchContext';
 import { pluginLoggerOf, readsCommandFile } from '#src/plugin/pluginSlots';
 import { requestPath } from '#src/requestPath';
+import { INTERNAL_SERVER_ERROR } from '#src/webConstants';
 
 import type { DispatchContext } from '#src/dispatch/DispatchContext';
 import type { DispatchOrigin } from '#src/dispatch/DispatchOrigin';
@@ -101,13 +102,12 @@ function labelOf({ key, instance }: Attachment): string {
     return `${paint.sky(instance.constructor.name)} at ${paint.sky(key)}`;
 }
 
-// a throw here would fail every interaction because http runs plugins before the engine
-async function answerOrLog(plugin: PluginLike, request: Request): Promise<Response | undefined> {
+async function answerFrom(plugin: PluginLike, request: Request): Promise<Response | undefined> {
     try {
         return await plugin.fetch?.(request);
     } catch (caught) {
         pluginLoggerOf(plugin).error(`fetch threw on ${request.method} ${requestPath(request.url)}`, caught);
-        return undefined;
+        return new Response(null, { status: INTERNAL_SERVER_ERROR });
     }
 }
 
@@ -213,7 +213,7 @@ export class PluginRegistry {
 
     public async answer(request: Request): Promise<Response | undefined> {
         for (const attachment of this.list) {
-            const response = await answerOrLog(attachment.instance, request);
+            const response = await answerFrom(attachment.instance, request);
             if (response) return response;
             // getReader() locks the body without setting bodyUsed
             if (request.bodyUsed || request.body?.locked) {
