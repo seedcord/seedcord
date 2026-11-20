@@ -1,5 +1,7 @@
 import { once } from 'es-toolkit';
 
+import { fromBase64, toBase64 } from './base64';
+
 import type { Promisable } from 'type-fest';
 
 // discord gives the bot an access token and a refresh token for every user who logs in. anyone who has
@@ -75,15 +77,6 @@ async function deriveKey(clientId: string, clientSecret: string): Promise<Crypto
         false,
         ['encrypt', 'decrypt']
     );
-}
-
-// the store keeps text, and base64 writes raw bytes as text.
-function toBase64(bytes: Uint8Array): string {
-    return btoa(String.fromCharCode(...bytes));
-}
-
-function fromBase64(text: string): Uint8Array<ArrayBuffer> {
-    return Uint8Array.from(atob(text), (char) => char.charCodeAt(0));
 }
 
 export class TokenVault {
