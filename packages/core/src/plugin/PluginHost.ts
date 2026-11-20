@@ -1,11 +1,12 @@
 import { SeedcordErrorCode } from '@seedcord/errors';
 import { SeedcordError, SeedcordTypeError } from '@seedcord/errors/internal';
-import { FRAMEWORK_CHANNELS } from '@seedcord/logger';
+import { FRAMEWORK_CHANNELS, LoggerChannelRegistry } from '@seedcord/logger';
 import { HOST_CONTRACT, HostContract, HostPlugins } from '@seedcord/types/internal';
 
 import { Kv } from '#src/kv/Kv';
 import { MemoryDriver } from '#src/kv/MemoryDriver';
 import { KvRateLimiter } from '#src/rateLimiter/KvRateLimiter';
+import { keepRequestOpenFor } from '#src/requestScope';
 import { Bus } from '#subscribers/Bus';
 
 import { extendsThisCorePlugin } from './Plugin';
@@ -50,6 +51,7 @@ export abstract class PluginHost<BotT extends Transport, BotRt extends Runtime> 
     constructor(transport: BotT, runtime: BotRt, driver: Config['kv']) {
         this.#scope = { transport, runtime };
         this.bus = new Bus(this);
+        LoggerChannelRegistry.instance.trackSinkRuns(keepRequestOpenFor);
         const kvDriver = driver ?? new MemoryDriver();
         this.kv = new Kv(kvDriver, 'app');
         this.rateLimiter = new KvRateLimiter(new Kv(kvDriver, 'seedcord'));

@@ -8,7 +8,6 @@ import { asError, isPortInUse } from '@seedcord/utils/internal';
 
 import { ShutdownPhase } from '#src/lifecycle/phases';
 import { requestPath } from '#src/requestPath';
-import { requestScope } from '#src/requestScope';
 import { DEFAULT_SERVER_PORT } from '#src/webConstants';
 
 import { answerHealth } from './answerHealth';
@@ -76,20 +75,12 @@ export class WebServer {
         const health = healthPath && answerHealth(request, healthPath, startup.isReady && !this.inFlight.closed);
         if (health) return health;
 
-        const response = await this.inFlight.admit(() =>
-            requestScope.run(
-                this,
-                async () =>
-                    (await plugins.answer(request)) ??
-                    (interactions ? interactions(request) : new Response(null, { status: NOT_FOUND }))
-            )
+        const response = await this.inFlight.admit(
+            async () =>
+                (await plugins.answer(request)) ??
+                (interactions ? interactions(request) : new Response(null, { status: NOT_FOUND }))
         );
         return response ?? new Response(null, { status: SERVICE_UNAVAILABLE });
-    }
-
-    // keepRequestOpenFor calls this
-    public waitUntil(work: Promise<unknown>): void {
-        this.inFlight.track(work);
     }
 
     // ServerHost calls this when Ready begins, and requests that arrive earlier wait until then.

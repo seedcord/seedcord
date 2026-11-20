@@ -5,20 +5,14 @@ import { Logger } from '@seedcord/logger';
 
 import { OnceTracker } from '#src/dispatch/OnceTracker';
 import { SubscribeMetadataKey } from '#src/metadataKeys';
+import { keepRequestOpenFor } from '#src/requestScope';
 
 import { WebhookLog } from './bases/WebhookLog';
 import { WebhookSender } from './bases/WebhookSender';
 import { HandledException } from './default/HandledException';
 import { UnknownException } from './default/UnknownException';
 import { PublishDefault } from './publishDefault';
-import {
-    OnRun,
-    RegisterDefaults,
-    RegisteredCount,
-    RegisterSubscriber,
-    UnregisterSubscriber,
-    VerifyWebhooks
-} from './slots';
+import { RegisterDefaults, RegisteredCount, RegisterSubscriber, UnregisterSubscriber, VerifyWebhooks } from './slots';
 
 import type { CoreBase } from '#interfaces/CoreBase';
 import type { SubscribeMetadataEntry } from './decorators/Subscribe';
@@ -62,7 +56,6 @@ export class Bus extends TypedEventEmitter<SubscriptionTuples> {
     readonly #onceRuns = new OnceTracker();
     // url -> each env key or @WebhookUrl function that returned it
     readonly #webhookProbes = new Map<string, string[]>();
-    #onRun: (run: Promise<void>) => void = () => undefined;
 
     constructor(protected core: CoreBase) {
         super();
@@ -168,7 +161,7 @@ export class Bus extends TypedEventEmitter<SubscriptionTuples> {
 
     /**
      * Registers a listener that runs on every publish of the key. The listener can be async. `publish`
-     * catches what it throws, and an edge bot keeps the request open until it finishes.
+     * catches what it throws. A Workers request and a graceful shutdown both wait until it finishes.
      */
     public override on<KeyOfSubscribers extends SubscriptionKey>(
         event: KeyOfSubscribers,
@@ -209,22 +202,17 @@ export class Bus extends TypedEventEmitter<SubscriptionTuples> {
         return this.#dispatchKey(event, data);
     }
 
-    /** @internal the http host keeps the publishing request open for each subscriber and listener run */
-    public set [OnRun](listener: (run: Promise<void>) => void) {
-        this.#onRun = listener;
-    }
-
     #dispatchKey<KeyOfSubscribers extends SubscriptionKey>(
         event: KeyOfSubscribers,
         data: AllSubscriptions[KeyOfSubscribers]
     ): boolean {
-        this.#onRun(this.#processSubscriber(event, data));
+        keepRequestOpenFor(this.#processSubscriber(event, data));
         // justified: a generic key can't reduce SubscriptionTuples[K], but data is this event's payload by the signature
         return this.emitSafe(event, ...([data] as SubscriptionTuples[KeyOfSubscribers]));
     }
 
     protected override onListenerRun(run: Promise<void>): void {
-        this.#onRun(run);
+        keepRequestOpenFor(run);
     }
 
     protected override onListenerError(error: unknown, event: string | symbol): void {

@@ -1,4 +1,6 @@
-import { ShutdownPhase, StartupPhase } from '@seedcord/core/node/internal';
+import { setTimeout as sleep } from 'node:timers/promises';
+
+import { ShutdownPhase, shutdownOf, StartupPhase } from '@seedcord/core/node/internal';
 import { SeedcordErrorCode } from '@seedcord/errors';
 import { Logger, LoggerChannelRegistry } from '@seedcord/logger';
 import { HostShutdown, HostStartup } from '@seedcord/types/internal';
@@ -16,6 +18,8 @@ import type { Mock } from 'vite-plus/test';
 
 // port 0 has node pick a free port
 const ANY_PORT = { port: 0 } as const;
+// a shutdown with nothing to wait for finishes well inside this
+const STILL_OPEN_MS = 300;
 
 class Page extends Plugin {
     public init(): Promise<void> {
@@ -85,6 +89,37 @@ describe('Seedcord host', () => {
         const other = await get(seedcord, '/other');
 
         expect([await page.text(), other.status]).toEqual(['page', 404]);
+    });
+
+    it('holds a shutdown open for a log sink that a plugin route started', async () => {
+        const routeLog = 'answered from the route';
+        class Logs extends Plugin {
+            public init(): Promise<void> {
+                return Promise.resolve();
+            }
+
+            public override fetch(): Response {
+                this.logger.info(routeLog);
+                return new Response('logged');
+            }
+        }
+        const release = Promise.withResolvers<undefined>();
+        await using seedcord = new Seedcord(testConfig()).attach('logs', Logs);
+        readyOnLogin(seedcord);
+        await seedcord.start();
+        using _sink = LoggerChannelRegistry.instance.installSink({
+            kind: 'capture',
+            onLog: ({ message }) => (message === routeLog ? release.promise : undefined)
+        });
+
+        await seedcord.fetch(new Request('http://bot.test/page'));
+        const closing = shutdownOf(seedcord)
+            .run(0, false)
+            .then(() => 'closed');
+        const whileSinkRuns = await Promise.race([closing, sleep(STILL_OPEN_MS).then(() => 'still open')]);
+        release.resolve(undefined);
+
+        expect([whileSinkRuns, await closing]).toEqual(['still open', 'closed']);
     });
 
     it("doesn't open a server with health: false unless a plugin has fetch", async () => {

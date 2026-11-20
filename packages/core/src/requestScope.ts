@@ -4,7 +4,7 @@ interface RequestContext {
     waitUntil(work: Promise<unknown>): void;
 }
 
-// WebServer.fetch and the edge Seedcord.fetch run each request inside this
+// InFlight.admit and the edge Seedcord.fetch run their work inside this
 export const requestScope = new AsyncLocalStorage<RequestContext>();
 
 // no store means we're outside a request, like dev startup. nothing to keep open then

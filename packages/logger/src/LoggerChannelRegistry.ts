@@ -60,7 +60,7 @@ export class LoggerChannelRegistry {
         this.buildDefaultSinks = build;
     }
 
-    /** @internal the http host keeps the logging request open for each sink run */
+    /** @internal the host keeps the request that logged open for each sink run */
     public trackSinkRuns(track: (run: Promise<unknown>) => void): void {
         this.onSinkRun = track;
     }
