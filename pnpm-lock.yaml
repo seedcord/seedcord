@@ -1944,6 +1944,12 @@ importers:
 
   plugins/oauth:
     dependencies:
+      '@discordjs/rest':
+        specifier: catalog:deps
+        version: 2.6.3
+      discord-api-types:
+        specifier: ^0.38.59
+        version: 0.38.59
       es-toolkit:
         specifier: catalog:deps
         version: 1.53.2

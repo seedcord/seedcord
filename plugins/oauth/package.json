@@ -50,6 +50,8 @@
         "coverage": "vp test run --coverage"
     },
     "dependencies": {
+        "@discordjs/rest": "catalog:deps",
+        "discord-api-types": "catalog:deps",
         "es-toolkit": "catalog:deps"
     },
     "devDependencies": {
