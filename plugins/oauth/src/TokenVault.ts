@@ -1,9 +1,9 @@
 import { once } from 'es-toolkit';
 
-import type { Kv, KvCollection } from '@seedcord/core';
+import type { Promisable } from 'type-fest';
 
 // discord gives the bot an access token and a refresh token for every user who logs in. anyone who has
-// those can act as that user. kv can be a sqlite file or a redis that other things read too, and that's
+// those can act as that user. the store can be a sqlite file or a redis that other things read too, and that's
 // why saving them as plain text is a bad idea. this file scrambles them before they get saved.
 //
 // scrambling needs a secret key, and keeping it in the same database as the tokens wouldn't protect
@@ -17,13 +17,30 @@ import type { Kv, KvCollection } from '@seedcord/core';
 //
 // every save makes 12 new random bytes, the iv (initialization vector). without them, the same tokens saved
 // twice would give the same record twice, and someone reading the database could tell. the iv isn't secret
-// and unscrambling needs it, which is why it's stored right in front of the scrambled tokens. kv ends up
+// and unscrambling needs it, which is why it's stored right in front of the scrambled tokens. the store ends up
 // with one string per user, the base64 of [iv][scrambled tokens].
 //
 // save() passes the user id as a label when scrambling. without it, someone who can write to the
 // database could copy another user's record under their own id, and the bot would then make calls as
 // that other user for them. the label isn't stored in the record, and unscrambling only works with the
 // same label, which is why a copied record doesn't open.
+
+/**
+ * Where an `OAuthClient` keeps each user's tokens. Every value is one encrypted string, saved under the
+ * user's id.
+ *
+ * A seedcord `KvCollection<string>` fits, and so does a `Map<string, string>`.
+ *
+ * @example
+ * ```ts
+ * const store: TokenStore = bot.kv.collection<string>('oauth-tokens');
+ * ```
+ */
+export interface TokenStore {
+    get(userId: string): Promisable<string | undefined>;
+    set(userId: string, sealed: string): Promisable<unknown>;
+    delete(userId: string): Promisable<unknown>;
+}
 
 export interface SavedTokens {
     accessToken: string;
@@ -60,7 +77,7 @@ async function deriveKey(clientId: string, clientSecret: string): Promise<Crypto
     );
 }
 
-// kv stores text, and base64 writes raw bytes as text.
+// the store keeps text, and base64 writes raw bytes as text.
 function toBase64(bytes: Uint8Array): string {
     return btoa(String.fromCharCode(...bytes));
 }
@@ -70,11 +87,13 @@ function fromBase64(text: string): Uint8Array<ArrayBuffer> {
 }
 
 export class TokenVault {
-    private readonly records: KvCollection<string>;
     private readonly key: () => Promise<CryptoKey>;
 
-    constructor(kv: Kv, clientId: string, clientSecret: string) {
-        this.records = kv.collection<string>('oauth-tokens');
+    constructor(
+        private readonly records: TokenStore,
+        clientId: string,
+        clientSecret: string
+    ) {
         // made on the first save or read, then reused
         this.key = once(async () => deriveKey(clientId, clientSecret));
     }

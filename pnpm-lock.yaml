@@ -1947,19 +1947,22 @@ importers:
       '@discordjs/rest':
         specifier: catalog:deps
         version: 2.6.3
+      '@seedcord/errors':
+        specifier: workspace:^
+        version: link:../../packages/errors
       discord-api-types:
         specifier: ^0.38.59
         version: 0.38.59
       es-toolkit:
         specifier: catalog:deps
         version: 1.53.2
+      type-fest:
+        specifier: catalog:deps
+        version: 5.10.0
       typescript:
         specifier: catalog:consumerTypes
         version: 6.0.3
     devDependencies:
-      '@seedcord/core':
-        specifier: workspace:^
-        version: link:../../packages/core
       '@seedcord/eslint-config':
         specifier: workspace:^
         version: link:../../tooling/eslint-config

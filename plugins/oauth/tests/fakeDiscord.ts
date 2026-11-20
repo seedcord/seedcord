@@ -10,6 +10,8 @@ export interface SeenRequest {
     method: string;
     // without the api prefix or the query
     route: string;
+    // the query with its `?`, or an empty string
+    search: string;
     headers: IncomingHttpHeaders;
     body: string;
 }
@@ -33,9 +35,11 @@ export async function fakeDiscord(reply: (request: SeenRequest) => Reply): Promi
         const chunks: Buffer[] = [];
         request.on('data', (chunk: Buffer) => chunks.push(chunk));
         request.on('end', () => {
+            const url = new URL(request.url ?? '', 'http://localhost');
             const seen: SeenRequest = {
                 method: request.method ?? '',
-                route: request.url?.replace(/^\/api\/v\d+/u, '').split('?')[0] ?? '',
+                route: url.pathname.replace(/^\/api\/v\d+/u, ''),
+                search: url.search,
                 headers: request.headers,
                 body: Buffer.concat(chunks).toString()
             };

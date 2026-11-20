@@ -311,6 +311,11 @@ const messages = {
     [SeedcordErrorCode.PluginI18nBaseMissing]: (dir: string, baseFile: string) =>
         `${paint.path(dir)} doesn't have ${paint.path(baseFile)}, the file that lists every message. Add it, or set ${paint.bold('base')} to a locale that has a file.`,
 
+    [SeedcordErrorCode.PluginOAuthLoginNeeded]: (userId: string) =>
+        `The user ${paint.sky(userId)} doesn't have Discord tokens saved that still work. They never logged in, they removed the app, or the client secret changed. Send them through the login again.`,
+    [SeedcordErrorCode.PluginOAuthIdentifyMissing]: () =>
+        `Discord didn't say who logged in because the login's scopes don't include ${paint.bold('identify')}. Add ${paint.bold('identify')} to the scopes. The tokens are saved under the user's id.`,
+
     [SeedcordErrorCode.CliCancelled]: () => 'Cancelled.',
 
     [SeedcordErrorCode.CliConfigInvalidExport]: () =>

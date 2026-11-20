@@ -51,11 +51,12 @@
     },
     "dependencies": {
         "@discordjs/rest": "catalog:deps",
+        "@seedcord/errors": "workspace:^",
         "discord-api-types": "catalog:deps",
-        "es-toolkit": "catalog:deps"
+        "es-toolkit": "catalog:deps",
+        "type-fest": "catalog:deps"
     },
     "devDependencies": {
-        "@seedcord/core": "workspace:^",
         "@seedcord/eslint-config": "workspace:^",
         "@seedcord/prose": "workspace:^",
         "@seedcord/tsconfig": "workspace:^",
@@ -63,7 +64,6 @@
         "@seedcord/vite-config": "workspace:^"
     },
     "peerDependencies": {
-        "@seedcord/core": "workspace:>=0.14.0-next.0",
         "typescript": "catalog:consumerTypes"
     },
     "engines": {
