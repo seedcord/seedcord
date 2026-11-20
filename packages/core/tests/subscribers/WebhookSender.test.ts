@@ -3,6 +3,7 @@ import { ComponentType } from 'discord-api-types/v10';
 import { afterEach, beforeEach, describe, expect, it, vi, type MockInstance } from 'vite-plus/test';
 
 import { WebhookSender } from '#subscribers/bases/WebhookSender';
+import { CommonJsDiscordAPIError } from '#tests/utils/commonJsRest';
 
 let postMock: MockInstance<REST['post']>;
 let getMock: MockInstance<REST['get']>;
@@ -67,6 +68,13 @@ describe('WebhookSender.verify', () => {
     it('resolves missing on a 404 from discord', async () => {
         getMock.mockRejectedValueOnce(
             new DiscordAPIError({ message: 'Unknown Webhook', code: 10_015 }, 10_015, 404, 'GET', 'url', {})
+        );
+        await expect(sender().verify()).resolves.toBe('missing');
+    });
+
+    it("resolves missing on a 404 from a gateway bot's rest", async () => {
+        getMock.mockRejectedValueOnce(
+            new CommonJsDiscordAPIError({ message: 'Unknown Webhook', code: 10_015 }, 10_015, 404, 'GET', 'url', {})
         );
         await expect(sender().verify()).resolves.toBe('missing');
     });

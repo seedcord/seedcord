@@ -1,5 +1,4 @@
 import { DispatchContext, isEphemeralByDefault } from '@seedcord/core/internal';
-import { DiscordAPIError } from 'discord.js';
 
 import { autocompleteResponder } from '#bot/autocompleteResponder';
 import { interactionGateContext, interactionOrigin } from '#bot/gates/context';
@@ -61,7 +60,6 @@ function runConfig<Kind extends InteractionKind>(
         dispatch,
         core,
         HandlerCtor: ctor,
-        apiError: DiscordAPIError,
         logger,
         interactionId: event.id,
         origin: interactionOrigin(event),

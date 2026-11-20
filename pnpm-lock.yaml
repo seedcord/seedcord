@@ -1740,6 +1740,9 @@ importers:
         specifier: catalog:consumerTypes
         version: 6.0.3
     devDependencies:
+      '@discordjs/rest':
+        specifier: catalog:deps
+        version: 2.6.3
       '@seedcord/eslint-config':
         specifier: workspace:^
         version: link:../../tooling/eslint-config

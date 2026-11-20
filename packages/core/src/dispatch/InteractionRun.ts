@@ -10,7 +10,7 @@ import { resultFor, runAfter } from './runAfter';
 
 import type { GateContextBase } from '#gates/Gate';
 import type { CoreBase } from '#interfaces/CoreBase';
-import type { ApiErrorClass, FaultDetails, FaultSender } from '#src/notices/FaultBoundary';
+import type { FaultDetails, FaultSender } from '#src/notices/FaultBoundary';
 import type { InteractionDispatch } from './DispatchContext';
 import type { DispatchOrigin } from './DispatchOrigin';
 import type { DispatchResult } from './dispatchResult';
@@ -49,7 +49,6 @@ export interface InteractionRunConfig {
     readonly core: CoreBase;
     readonly customId: string | null;
     readonly HandlerCtor: { readonly name: string };
-    readonly apiError: ApiErrorClass;
     readonly logger: Logger;
     readonly interactionId: string;
     readonly origin: SetNonNullable<DispatchOrigin, 'userId'>;
@@ -63,9 +62,9 @@ export class InteractionRun {
     private readonly boundary: FaultBoundary;
 
     constructor(private readonly config: InteractionRunConfig) {
-        const { core, apiError, dispatch } = config;
+        const { core, dispatch } = config;
         this.telemetry = DispatchTelemetry.start(core.bus, config);
-        this.boundary = new FaultBoundary(core, core.config.errors?.ignoreApiCodes, apiError, dispatch, () =>
+        this.boundary = new FaultBoundary(core, core.config.errors?.ignoreApiCodes, dispatch, () =>
             config.faultDetails()
         );
     }

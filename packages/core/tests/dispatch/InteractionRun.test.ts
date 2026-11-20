@@ -28,9 +28,6 @@ function configFor(
         // justified: the run reads only core.config.errors, core.bus, and the members
         core: { bus: busWith(), config: {}, [HostPlugins]: new PluginRegistry() } as unknown as CoreBase,
         HandlerCtor,
-        apiError: class extends Error {
-            readonly code = 0;
-        },
         logger: new Logger('Test'),
         interactionId: 'i1',
         origin: { userId: 'u1', guildId: null, channelId: null, userLocale: null, guildLocale: null },

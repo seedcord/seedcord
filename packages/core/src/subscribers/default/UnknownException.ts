@@ -1,5 +1,5 @@
-import { DiscordAPIError } from '@discordjs/rest';
 import { timestampFromSnowflake } from '@seedcord/utils';
+import { discordErrorOf } from '@seedcord/utils/internal';
 
 import { BuilderComponent } from '#components/Component';
 import { errorReport, jsonAttachment, WebhookSeparator } from '#subscribers/bases/webhookHelpers';
@@ -71,11 +71,12 @@ class UnhandledErrorContainer extends BuilderComponent<'container'> {
     }
 
     private addTimestampsIfAvailable(error: Error): void {
-        if (!(error instanceof DiscordAPIError)) return;
+        const url = discordErrorOf(error)?.url;
+        if (url === undefined) return;
 
         const now = Date.now();
 
-        const snowflake = error.url.match(/\/interactions\/(\d+)\//)?.[1];
+        const snowflake = url.match(/\/interactions\/(\d+)\//)?.[1];
         if (!snowflake) return undefined;
 
         const interactionTs = timestampFromSnowflake(snowflake);

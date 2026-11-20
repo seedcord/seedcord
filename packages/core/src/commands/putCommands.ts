@@ -1,7 +1,7 @@
-import { DiscordAPIError, HTTPError, RESTEvents } from '@discordjs/rest';
+import { RESTEvents } from '@discordjs/rest';
 import { SeedcordErrorCode, paint } from '@seedcord/errors';
 import { SeedcordError } from '@seedcord/errors/internal';
-import { asError, unlessAborted } from '@seedcord/utils/internal';
+import { asError, discordErrorOf, unlessAborted } from '@seedcord/utils/internal';
 
 import { indexById } from '#src/commands/linkCommands';
 import { commandsRoute, GLOBAL_ID, globalFirst } from '#src/commands/scopes';
@@ -46,15 +46,11 @@ async function putScope(
         return await put(commandsRoute(options.applicationId, scope), commands, options);
     } catch (error) {
         if (options.signal?.aborted) throw error;
-        const refusal: [string, number | undefined] = [asError(error).message, statusOf(error)];
+        const refusal: [string, number | undefined] = [asError(error).message, discordErrorOf(error)?.status];
         throw scope === GLOBAL_ID
             ? new SeedcordError(SeedcordErrorCode.CoreCommandGlobalDeployFailed, refusal, { cause: error })
             : new SeedcordError(SeedcordErrorCode.CoreCommandGuildDeployFailed, [scope, ...refusal], { cause: error });
     }
-}
-
-function statusOf(error: unknown): number | undefined {
-    return error instanceof DiscordAPIError || error instanceof HTTPError ? error.status : undefined;
 }
 
 async function put(

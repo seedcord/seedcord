@@ -1,3 +1,4 @@
+import { DiscordAPIError } from '@discordjs/rest';
 import { captureLogs } from '@seedcord/logger/internal';
 import { RESTJSONErrorCodes } from 'discord-api-types/v10';
 import { afterEach, describe, expect, it, vi, type Mock } from 'vite-plus/test';
@@ -9,6 +10,7 @@ import { Fault } from '#stops/Fault';
 import { Notice } from '#stops/Notice';
 import { Silence } from '#stops/Silence';
 import { busWith } from '#tests/utils/busWith';
+import { CommonJsDiscordAPIError } from '#tests/utils/commonJsRest';
 import { TestNotice } from '#tests/utils/TestNotice';
 
 import type { CoreBase } from '#interfaces/CoreBase';
@@ -16,10 +18,8 @@ import type { FaultDetails, FaultSender } from '#src/notices/FaultBoundary';
 import type { FaultSource } from '#subscribers/types/Subscriptions';
 import type { Config, RenderContext, ReplyResponse } from '@seedcord/types';
 
-class FakeApiError extends Error {
-    constructor(public readonly code: number) {
-        super(`api ${code}`);
-    }
+function apiError(code: number, ApiError: typeof DiscordAPIError = DiscordAPIError): DiscordAPIError {
+    return new ApiError({ code, message: `api ${code}` }, code, 404, 'POST', 'url', {});
 }
 
 const source: FaultSource = {
@@ -63,7 +63,7 @@ function harness(errors: NonNullable<Config['errors']> = {}, details: Partial<Fa
         ...details
     });
     return {
-        boundary: new FaultBoundary(core, errors.ignoreApiCodes, FakeApiError, dispatch, detailsOf),
+        boundary: new FaultBoundary(core, errors.ignoreApiCodes, dispatch, detailsOf),
         published,
         send: vi.fn<FaultSender['send']>().mockResolvedValue(undefined)
     };
@@ -164,13 +164,16 @@ describe('FaultBoundary', () => {
             expect(on.published).toEqual([]);
         });
 
-        it('returns null for an ignored api code and reports any other', () => {
+        it.each([
+            ['', DiscordAPIError],
+            [', thrown by a discord.js call', CommonJsDiscordAPIError]
+        ])('returns null for an ignored api code and reports any other%s', (_source, ApiError) => {
             const { boundary, published } = harness({ ignoreApiCodes: [10_008] });
 
-            expect(boundary.report(new FakeApiError(10_008))).toBeNull();
+            expect(boundary.report(apiError(10_008, ApiError))).toBeNull();
             expect(published).toEqual([]);
 
-            expect(boundary.report(new FakeApiError(10_009))).not.toBeNull();
+            expect(boundary.report(apiError(10_009, ApiError))).not.toBeNull();
             expect(published).toHaveLength(1);
         });
     });
@@ -245,7 +248,8 @@ describe('FaultBoundary', () => {
 
         it.each([
             { failure: new Error('network down'), reported: true },
-            { failure: new FakeApiError(RESTJSONErrorCodes.UnknownInteraction), reported: false }
+            { failure: apiError(RESTJSONErrorCodes.UnknownInteraction), reported: false },
+            { failure: apiError(RESTJSONErrorCodes.UnknownInteraction, CommonJsDiscordAPIError), reported: false }
         ])('logs a send failure only when it is unexpected ($reported)', async ({ failure, reported }) => {
             const { boundary, send } = harness();
             send.mockRejectedValueOnce(failure);

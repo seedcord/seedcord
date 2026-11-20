@@ -1,6 +1,6 @@
-import { DiscordAPIError } from '@discordjs/rest';
 import { SeedcordErrorCode } from '@seedcord/errors';
 import { SeedcordTypeError } from '@seedcord/errors/internal';
+import { discordErrorOf } from '@seedcord/utils/internal';
 import { Routes } from 'discord-api-types/v10';
 
 import type { REST } from '@discordjs/rest';
@@ -43,9 +43,8 @@ export class WebhookSender {
             await this.rest.get(this.route, { auth: false });
             return 'ok';
         } catch (error) {
-            const gone =
-                error instanceof DiscordAPIError &&
-                (error.status === HTTP_NOT_FOUND || error.status === HTTP_UNAUTHORIZED);
+            const status = discordErrorOf(error)?.status;
+            const gone = status === HTTP_NOT_FOUND || status === HTTP_UNAUTHORIZED;
             return gone ? 'missing' : 'unreachable';
         }
     }

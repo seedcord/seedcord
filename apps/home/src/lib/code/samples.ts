@@ -184,7 +184,7 @@ export class BanHandler extends
 
 export const pluginSource = `import { Plugin } from '@seedcord/gateway';
 
-const HOUR = 3_600_000;
+const TTL = 60 * 60 * 1000;
 const API = 'https://api.github.com/repos';
 
 export class GitHub extends Plugin {
@@ -201,7 +201,7 @@ export class GitHub extends Plugin {
                 stargazers_count: number;
             };
 
-        await cache.set(repo, count, HOUR);
+        await cache.set(repo, count, TTL);
         return count;
     }
 }`;

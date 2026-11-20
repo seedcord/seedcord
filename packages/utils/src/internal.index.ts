@@ -17,6 +17,7 @@ export {
 export { botFolder, matchesBotGlobs } from './files/sources';
 export { withoutQuery } from './files/withoutQuery';
 export * from './misc/asError';
+export * from './misc/discordErrorOf';
 export * from './misc/errorReason';
 export * from './misc/hasErrorCode';
 export * from './misc/isInteractive';

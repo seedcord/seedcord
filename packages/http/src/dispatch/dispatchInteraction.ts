@@ -1,4 +1,3 @@
-import { DiscordAPIError } from '@discordjs/rest';
 import { InteractionKind } from '@seedcord/core';
 import { DispatchContext, isEphemeralByDefault, InteractionRun, lazyLogger } from '@seedcord/core/internal';
 
@@ -76,7 +75,6 @@ function runConfig<Kind extends InteractionKind>(
         dispatch,
         core,
         HandlerCtor: ctor,
-        apiError: DiscordAPIError,
         logger: logger(),
         interactionId: event.id,
         origin: interactionOrigin(event),

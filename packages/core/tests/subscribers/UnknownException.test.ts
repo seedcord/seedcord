@@ -1,10 +1,12 @@
 import { randomUUID } from 'node:crypto';
 
+import { DiscordAPIError } from '@discordjs/rest';
 import { AckTrace } from '@seedcord/core/internal';
 import { ComponentType } from 'discord-api-types/v10';
 import { describe, expect, it } from 'vite-plus/test';
 
 import { UnknownException } from '#subscribers/default/UnknownException';
+import { CommonJsDiscordAPIError } from '#tests/utils/commonJsRest';
 
 import type { CoreBase } from '#interfaces/CoreBase';
 import type { APIComponentInContainer, APIContainerComponent } from 'discord-api-types/v10';
@@ -44,5 +46,15 @@ describe('UnknownException.report', () => {
 
     it("doesn't print a count when nothing was suppressed", () => {
         expect(reportText(new Error('db down'))).not.toContain('more');
+    });
+
+    it.each([
+        ['', DiscordAPIError],
+        [', thrown by a discord.js call', CommonJsDiscordAPIError]
+    ])("adds the interaction's timestamps to a Discord error on its callback%s", (_source, ApiError) => {
+        const url = 'https://discord.com/api/v10/interactions/1450000000000000000/token/callback';
+        const error = new ApiError({ message: 'Unknown interaction', code: 10_062 }, 10_062, 404, 'POST', url, {});
+
+        expect(reportText(error)).toContain('### Timestamps');
     });
 });
