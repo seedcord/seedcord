@@ -231,6 +231,43 @@ describe('AuthorizationFlow callback route', () => {
     });
 });
 
+describe('AuthorizationFlow adding the bot', () => {
+    it("passes the link's permissions and server on to Discord", async () => {
+        const flow = await flowAt(BASE);
+
+        const link = flow.loginUrl({ permissions: 8n, guildId: '42', disableGuildSelect: true, integrationType: 0 });
+        const { authorize } = await start(flow, link);
+
+        expect(Object.fromEntries(authorize)).toMatchObject({
+            permissions: '8',
+            guild_id: '42',
+            disable_guild_select: 'true',
+            integration_type: '0'
+        });
+    });
+
+    it("doesn't pass on a permissions value that isn't a number", async () => {
+        const flow = await flowAt(BASE);
+
+        const { authorize } = await start(flow, `${BASE}oauth/login?permissions=all&guildId=mine`);
+
+        expect(authorize.has('permissions')).toBe(false);
+        expect(authorize.has('guild_id')).toBe(false);
+    });
+
+    it('reports the permissions that the visitor approved', async () => {
+        const flow = await flowAt(BASE);
+        const { cookie, authorize } = await start(flow, `${BASE}oauth/login`);
+        const state = authorize.get('state') ?? '';
+
+        await flow.fetch(callbackUrl(BASE, { code: 'c', state, iss: ISSUER, guild_id: '42', permissions: '8' }), {
+            headers: { cookie }
+        });
+
+        expect(flow.outcomes[0]).toMatchObject({ kind: 'login', permissions: '8' });
+    });
+});
+
 describe('AuthorizationFlow returnTo', () => {
     async function returnToAfterLogin(returnTo: string): Promise<string | undefined> {
         const flow = await flowAt(BASE);

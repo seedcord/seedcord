@@ -84,6 +84,20 @@ function rejectsAScopeThatALoginCannotGrant(): void {
     void new OAuthClient({ ...base, scopes: ['applications.commands.update'] });
 }
 
+function offersTheBotOptionsOnlyWithTheBotScope(): void {
+    const installer = new OAuthClient({ ...base, extraScopes: ['bot'] });
+    void installer.authorizeUrl({ state: 's', scopes: ['bot'], permissions: 8n, guildId: '42', integrationType: 0 });
+
+    const commandsOnly = new OAuthClient({ ...base, scopes: ['applications.commands'] });
+    void commandsOnly.authorizeUrl({ state: 's', integrationType: 1 });
+    // @ts-expect-error permissions belongs to the bot scope
+    void commandsOnly.authorizeUrl({ state: 's', permissions: 8n });
+
+    // @ts-expect-error a client without the bot scope can't set the bot's permissions
+    void new OAuthClient({ ...base, scopes: ['guilds'] }).authorizeUrl({ state: 's', permissions: 8n });
+}
+
+void offersTheBotOptionsOnlyWithTheBotScope;
 void typesTheCallsItsScopesAllow;
 void rejectsACallWithoutItsScope;
 void admitsUndefinedForAnExtraScope;

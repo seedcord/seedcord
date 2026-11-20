@@ -1,9 +1,12 @@
+import { makeURLSearchParams } from '@discordjs/rest';
+
 import { fromBase64Url, toBase64Url } from './base64';
 
+import type { AuthorizeUrlOptions, BotLinkOptions, InstallLinkOptions } from './AuthorizeUrlOptions';
 import type { MountedPath } from './MountedPath';
 import type { OAuthClient, OAuthLogin } from './OAuthClient';
 import type { OAuthScope } from './UserCalls';
-import type { Promisable } from 'type-fest';
+import type { Except, Promisable } from 'type-fest';
 
 // the browser half of a login. the login route sends the visitor to discord, and discord sends them back
 // to the callback route.
@@ -25,14 +28,15 @@ import type { Promisable } from 'type-fest';
  * How a visit to the callback route ended.
  *
  * - `login`: Discord accepted the code, and the user's tokens are saved. `returnTo` is the path that the login
- *   link asked to end on.
+ *   link asked to end on. `permissions` is the bitfield that the visitor approved for the bot, for a login with
+ *   the `bot` scope. They can untick permissions on Discord's screen.
  * - `denied`: the visitor pressed cancel on Discord's consent screen, or Discord refused the request. `error` is Discord's
  *   reason, like `access_denied`.
  * - `invalid`: the callback can't be trusted or used. The link expired, the page was reloaded, or the
  *   request didn't come from a login this browser started.
  */
 export type FlowOutcome =
-    | { kind: 'login'; login: OAuthLogin; returnTo: string | undefined }
+    | { kind: 'login'; login: OAuthLogin; returnTo: string | undefined; permissions: string | undefined }
     | { kind: 'denied'; error: string }
     | { kind: 'invalid' };
 
@@ -45,10 +49,9 @@ interface FlowOptions {
     extraScopes: readonly OAuthScope[];
 }
 
-export interface LoginLink {
-    scopes?: readonly OAuthScope[] | undefined;
+export type LoginLink = Except<AuthorizeUrlOptions<OAuthScope, OAuthScope>, 'state' | 'codeChallenge'> & {
     returnTo?: string | undefined;
-}
+};
 
 interface Pending {
     state: string;
@@ -92,6 +95,21 @@ function ownPath(returnTo: string | null): string | undefined {
     return URL.parse(returnTo, origin)?.origin === origin ? returnTo : undefined;
 }
 
+// what loginUrl() writes into the login route's query, read back. anything that isn't a number is discarded
+function installOptionsIn(query: URLSearchParams): BotLinkOptions & InstallLinkOptions {
+    const digits = (name: string): string | undefined => {
+        const value = query.get(name);
+        return value !== null && /^\d+$/u.test(value) ? value : undefined;
+    };
+    const integrationType = digits('integrationType');
+    return {
+        permissions: digits('permissions'),
+        guildId: digits('guildId'),
+        disableGuildSelect: query.get('disableGuildSelect') === 'true' ? true : undefined,
+        integrationType: integrationType === undefined ? undefined : Number(integrationType)
+    };
+}
+
 export class AuthorizationFlow {
     constructor(private readonly options: FlowOptions) {}
 
@@ -108,10 +126,12 @@ export class AuthorizationFlow {
         return this.withHeaders(response, this.cookie('', 0));
     }
 
-    public loginUrl({ scopes = [], returnTo }: LoginLink = {}): string {
+    public loginUrl({ scopes = [], ...link }: LoginLink = {}): string {
         const url = new URL(this.options.login.url);
-        if (scopes.length > 0) url.searchParams.set('scopes', scopes.join(' '));
-        if (returnTo !== undefined) url.searchParams.set('returnTo', returnTo);
+        url.search = makeURLSearchParams({
+            scopes: scopes.length > 0 ? scopes.join(' ') : undefined,
+            ...link
+        }).toString();
         return url.href;
     }
 
@@ -131,6 +151,7 @@ export class AuthorizationFlow {
         if (returnTo !== undefined) pending.returnTo = returnTo;
 
         const location = this.options.client.authorizeUrl({
+            ...installOptionsIn(query),
             state: pending.state,
             codeChallenge: pending.verifier === undefined ? undefined : await challengeOf(pending.verifier),
             scopes: extra
@@ -149,7 +170,8 @@ export class AuthorizationFlow {
 
         const code = query.get('code');
         const login = code === null ? undefined : await this.options.client.exchange(code, pending.verifier);
-        return login ? { kind: 'login', login, returnTo: pending.returnTo } : { kind: 'invalid' };
+        if (!login) return { kind: 'invalid' };
+        return { kind: 'login', login, returnTo: pending.returnTo, permissions: query.get('permissions') ?? undefined };
     }
 
     private pendingOf(request: Request): Pending | undefined {

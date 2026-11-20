@@ -428,3 +428,68 @@ describe('OAuthClient calls that write', () => {
         expect(requests.at(-1)?.headers.authorization).toBe('Bearer a');
     });
 });
+
+describe('OAuthClient with the bot and webhook scopes', () => {
+    const GUILD = { id: '42', name: 'seedcord' };
+    const WEBHOOK = { id: '7', url: 'https://discord.com/api/webhooks/7/token' };
+
+    async function installer(): Promise<OAuthClient<'bot' | 'webhook.incoming'>> {
+        const scope = 'identify bot webhook.incoming';
+        const server = await fakeDiscord(({ route }) =>
+            route === '/oauth2/token'
+                ? {
+                      json: {
+                          token_type: 'Bearer',
+                          access_token: 'a',
+                          refresh_token: 'r',
+                          expires_in: WEEK_SECONDS,
+                          scope,
+                          guild: GUILD,
+                          webhook: WEBHOOK
+                      }
+                  }
+                : { json: { user: USER, scopes: scope.split(' ') } }
+        );
+        return new OAuthClient({
+            rest: new REST({ api: server.api }),
+            store: new Map(),
+            clientId: APP_ID,
+            clientSecret: 'client-secret',
+            redirectUri: 'https://bot.test/oauth/callback',
+            scopes: ['bot', 'webhook.incoming']
+        });
+    }
+
+    it('puts the permissions and the server pick in the authorize url', async () => {
+        const oauth = await installer();
+
+        const url = new URL(
+            oauth.authorizeUrl({
+                state: 's',
+                permissions: 268_435_456n,
+                guildId: '42',
+                disableGuildSelect: true,
+                integrationType: 0
+            })
+        );
+
+        expect(Object.fromEntries(url.searchParams)).toMatchObject({
+            scope: 'identify bot webhook.incoming',
+            permissions: '268435456',
+            guild_id: '42',
+            disable_guild_select: 'true',
+            integration_type: '0'
+        });
+    });
+
+    it('returns the server that the bot joined and the webhook that Discord created', async () => {
+        const oauth = await installer();
+
+        expect(await oauth.exchange('the-code')).toEqual({
+            user: USER,
+            scopes: ['identify', 'bot', 'webhook.incoming'],
+            guild: GUILD,
+            webhook: WEBHOOK
+        });
+    });
+});

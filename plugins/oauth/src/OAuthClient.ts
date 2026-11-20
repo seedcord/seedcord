@@ -7,12 +7,15 @@ import { delay } from 'es-toolkit';
 import { TokenEndpoint } from './TokenEndpoint';
 import { TokenVault } from './TokenVault';
 
+import type { AuthorizeUrlOptions } from './AuthorizeUrlOptions';
 import type { SavedTokens, TokenStore } from './TokenVault';
 import type { GuildJoin, GuildJoinOptions, OAuthScope, UserCalls, UserRest } from './UserCalls';
 import type { REST, RequestData } from '@discordjs/rest';
 import type {
+    APIGuild,
     APIGuildMember,
     APIUser,
+    APIWebhook,
     RESTGetAPIOAuth2CurrentAuthorizationResult,
     RESTPostOAuth2AccessTokenResult
 } from 'discord-api-types/v10';
@@ -49,28 +52,15 @@ export interface OAuthClientOptions<TScopes extends OAuthScope = never, TExtra e
     extraScopes?: readonly TExtra[] | undefined;
 }
 
-/**
- * What {@link OAuthClient.authorizeUrl} puts in the link, besides the client's `scopes`.
- *
- * @typeParam TExtra - The client's `extraScopes`.
- */
-export interface AuthorizeUrlOptions<TExtra extends OAuthScope = never> {
-    /** A random value that you tie to the visitor's browser and compare when Discord sends it back. */
-    state: string;
-    /**
-     * The SHA-256 PKCE challenge, base64url encoded. Pass its verifier to {@link OAuthClient.exchange}.
-     * Discord refuses a challenge together with the `role_connections.write` scope.
-     */
-    codeChallenge?: string | undefined;
-    /** The `extraScopes` this link also requests. */
-    scopes?: readonly TExtra[] | undefined;
-}
-
 /** A finished login. */
 export interface OAuthLogin {
     user: APIUser;
     /** The scopes Discord granted. Discord adds scopes that the user approved for the application earlier. */
     scopes: OAuthScope[];
+    /** The server that the bot was added to when the login had the `bot` scope. */
+    guild?: APIGuild | undefined;
+    /** The webhook that Discord created when the login had the `webhook.incoming` scope. */
+    webhook?: APIWebhook | undefined;
 }
 
 // discord's access tokens last 7 days. refreshing 5 minutes early keeps a token from expiring while a
@@ -147,15 +137,30 @@ export class OAuthClient<TScopes extends OAuthScope = never, TExtra extends OAut
     }
 
     /** Builds the link that sends a visitor to Discord's consent screen. */
-    public authorizeUrl({ state, codeChallenge, scopes = [] }: AuthorizeUrlOptions<TExtra>): string {
+    public authorizeUrl(options: AuthorizeUrlOptions<TScopes, TExtra>): string;
+    // the implementation reads every option. the signature above only offers the ones for the client's scopes
+    public authorizeUrl({
+        state,
+        codeChallenge,
+        scopes = [],
+        permissions,
+        guildId,
+        disableGuildSelect,
+        integrationType
+    }: AuthorizeUrlOptions<OAuthScope, OAuthScope>): string {
         const url = new URL(OAuth2Routes.authorizationURL);
-        url.search = new URLSearchParams({
+        url.search = makeURLSearchParams({
             client_id: this.#clientId,
             redirect_uri: this.#redirectUri,
             response_type: 'code',
             scope: [...new Set([...this.#scopes, ...scopes])].join(' '),
             state,
-            ...(codeChallenge !== undefined && { code_challenge: codeChallenge, code_challenge_method: 'S256' })
+            code_challenge: codeChallenge,
+            code_challenge_method: codeChallenge === undefined ? undefined : 'S256',
+            permissions,
+            guild_id: guildId,
+            disable_guild_select: disableGuildSelect,
+            integration_type: integrationType
         }).toString();
         return url.href;
     }
@@ -181,7 +186,7 @@ export class OAuthClient<TScopes extends OAuthScope = never, TExtra extends OAut
         if (!user) throw new SeedcordTypeError(SeedcordErrorCode.PluginOAuthIdentifyMissing);
 
         const { scopes } = await this.#save(user.id, granted);
-        return { user, scopes };
+        return { user, scopes, guild: granted.guild, webhook: granted.webhook };
     }
 
     /**

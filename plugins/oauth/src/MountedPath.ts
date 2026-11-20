@@ -1,8 +1,7 @@
 // one route of a plugin, like 'oauth/callback', at wherever the bot is hosted.
 //
 // we need this because a bot can be hosted under a path, like https://example.com/bot. some proxies pass
-// the request on as /bot/oauth/callback, and some cut the /bot part off first. a route has to match both
-// catch that locally.
+// the request on as /bot/oauth/callback, and some cut the /bot part off first. a route has to match both.
 
 type WithoutLeadingSlash<TPath extends string> = TPath extends `/${string}`
     ? `Write '${TPath}' without the slash at its start.`

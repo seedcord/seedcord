@@ -2,7 +2,18 @@ import { DiscordAPIError } from '@discordjs/rest';
 import { Routes } from 'discord-api-types/v10';
 
 import type { REST } from '@discordjs/rest';
-import type { RESTPostOAuth2AccessTokenResult } from 'discord-api-types/v10';
+import type {
+    RESTPostOAuth2AccessTokenResult,
+    RESTPostOAuth2AccessTokenWithBotAndGuildsAndWebhookIncomingScopeResult
+} from 'discord-api-types/v10';
+import type { Simplify } from 'type-fest';
+
+// what a code exchange answers. `guild` is there for a login with the bot scope, and `webhook` for one
+// with webhook.incoming
+type ExchangeResult = Simplify<
+    RESTPostOAuth2AccessTokenResult &
+        Partial<Pick<RESTPostOAuth2AccessTokenWithBotAndGuildsAndWebhookIncomingScopeResult, 'guild' | 'webhook'>>
+>;
 
 // discord's two token routes. /oauth2/token trades a login code for tokens and refreshes them, and
 // /oauth2/token/revoke ends a grant.
@@ -32,11 +43,7 @@ export class TokenEndpoint {
         this.authorization = `Basic ${btoa(`${clientId}:${clientSecret}`)}`;
     }
 
-    public async exchange({
-        code,
-        redirectUri,
-        codeVerifier
-    }: CodeExchange): Promise<RESTPostOAuth2AccessTokenResult | undefined> {
+    public async exchange({ code, redirectUri, codeVerifier }: CodeExchange): Promise<ExchangeResult | undefined> {
         const fields = { grant_type: 'authorization_code', code, redirect_uri: redirectUri };
         return this.grant(codeVerifier === undefined ? fields : { ...fields, code_verifier: codeVerifier });
     }

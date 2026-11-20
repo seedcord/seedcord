@@ -1,6 +1,7 @@
 export { OAuthClient } from './OAuthClient';
 
-export type { AuthorizeUrlOptions, OAuthClientOptions, OAuthLogin } from './OAuthClient';
+export type { AuthorizeUrlOptions, BotLinkOptions, InstallLinkOptions } from './AuthorizeUrlOptions';
+export type { OAuthClientOptions, OAuthLogin } from './OAuthClient';
 export type { TokenStore } from './TokenVault';
 export type { GuildJoin, GuildJoinOptions, OAuthScope, UserCalls, UserRest } from './UserCalls';
 
