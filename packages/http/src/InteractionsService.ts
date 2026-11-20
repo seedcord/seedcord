@@ -1,6 +1,7 @@
 import {
     emptyRouteMaps,
     interactionMiddleware,
+    keepRequestOpenFor,
     MiddlewareRegistry,
     OnRun,
     readBotToken,
@@ -14,7 +15,6 @@ import { HostPlugins } from '@seedcord/types/internal';
 import { InteractionDispatcher } from '#src/dispatch/InteractionDispatcher';
 import { routesOf } from '#src/dispatch/resolve';
 import { InteractionEngine } from '#src/InteractionEngine';
-import { keepRequestOpenFor } from '#src/requestScope';
 
 import type { InteractionMiddlewareConstructor } from '#handlers/constructors';
 import type { HttpConfig, UnhandledHandler } from '#interfaces/Config';

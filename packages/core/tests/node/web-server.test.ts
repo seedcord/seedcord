@@ -1,5 +1,6 @@
 import { once } from 'node:events';
 import { createServer } from 'node:net';
+import { setTimeout as sleep } from 'node:timers/promises';
 
 import { SeedcordErrorCode } from '@seedcord/errors';
 import { captureLogs } from '@seedcord/logger/internal';
@@ -24,6 +25,8 @@ interface Setup {
     interactions?: WebServerOptions['interactions'];
 }
 
+// a chunk on localhost arrives well inside this
+const STREAM_WAIT_MS = 500;
 const LOCAL: ServerConfig = { port: 0, host: '127.0.0.1' };
 const MOUNTED: ServerConfig = { port: false };
 
@@ -196,6 +199,31 @@ describe('WebServer on a port', () => {
         await fetch(bot.url, { method: 'POST', body: sent });
 
         expect(received).toEqual(sent);
+    });
+
+    it('sends a streamed response chunk by chunk, and cancels the stream when the client leaves', async () => {
+        const encoder = new TextEncoder();
+        const cancelled = Promise.withResolvers<string>();
+        await using bot = await listening({
+            answer: () => {
+                const stream = new ReadableStream<Uint8Array>({
+                    // like a server-sent events stream, this one never closes
+                    start: (controller) => controller.enqueue(encoder.encode('first')),
+                    cancel: () => cancelled.resolve('cancelled')
+                });
+                return Promise.resolve(new Response(stream));
+            }
+        });
+        const client = new AbortController();
+
+        const firstChunk = fetch(bot.url, { signal: client.signal })
+            .then((response) => response.body?.pipeThrough(new TextDecoderStream()).getReader().read())
+            .then((chunk) => chunk?.value);
+        const first = await Promise.race([firstChunk, sleep(STREAM_WAIT_MS).then(() => 'nothing arrived')]);
+        client.abort();
+        const afterAbort = await Promise.race([cancelled.promise, sleep(STREAM_WAIT_MS).then(() => 'still open')]);
+
+        expect([first, afterAbort]).toEqual(['first', 'cancelled']);
     });
 
     it('writes the status and headers of an empty response', async () => {

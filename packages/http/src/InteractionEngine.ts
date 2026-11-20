@@ -1,4 +1,4 @@
-import { PublishDefault } from '@seedcord/core/internal';
+import { keepRequestOpenFor, PublishDefault } from '@seedcord/core/internal';
 import { paint } from '@seedcord/errors';
 import { Logger } from '@seedcord/logger';
 import { asError } from '@seedcord/utils/internal';
@@ -8,7 +8,6 @@ import { dispatchInteraction } from './dispatch/dispatchInteraction';
 import { resolve } from './dispatch/resolve';
 import { Ed25519Verifier } from './receiver/Ed25519Verifier';
 import { ReplayGuard } from './receiver/ReplayGuard';
-import { keepRequestOpenFor } from './requestScope';
 
 import type { InteractionMiddlewareConstructor } from '#handlers/constructors';
 import type { Core } from '#interfaces/Core';

@@ -1,3 +1,8 @@
+import { Readable } from 'node:stream';
+import { pipeline } from 'node:stream/promises';
+
+import { hasErrorCode } from '@seedcord/utils/internal';
+
 import type { IncomingHttpHeaders, IncomingMessage, ServerResponse } from 'node:http';
 import type { Arrayable } from 'type-fest';
 
@@ -44,5 +49,16 @@ export async function writeWebResponse(response: Response, out: ServerResponse):
     if (cookies.length > 0) headers['set-cookie'] = cookies;
 
     out.writeHead(response.status, headers);
-    out.end(response.body === null ? undefined : Buffer.from(await response.arrayBuffer()));
+    if (response.body === null) {
+        out.end();
+        return;
+    }
+
+    try {
+        // a body can be a stream that never ends, like server-sent events
+        await pipeline(Readable.fromWeb(response.body), out);
+    } catch (error) {
+        // the client disconnected
+        if (!hasErrorCode(error, 'ERR_STREAM_PREMATURE_CLOSE')) throw error;
+    }
 }

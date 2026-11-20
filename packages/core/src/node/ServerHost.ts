@@ -89,7 +89,7 @@ export abstract class ServerHost<BotT extends Transport> extends PluginHost<BotT
     }
 
     /** @internal */
-    protected answerInteractions?(request: Request, server: Pick<WebServer, 'waitUntil'>): Promise<Response>;
+    protected answerInteractions?(request: Request): Promise<Response>;
 
     // seedcord dev opens its tunnel only to a server that takes interactions
     get #devTunnel(): { listenHost: string | undefined; url: string | undefined } | undefined {

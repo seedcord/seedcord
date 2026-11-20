@@ -7,8 +7,10 @@ import {
     forwardLogsToCli,
     HmrManager,
     installLinks,
+    keepRequestOpenFor,
     PluginLifecycle,
     publicUrl,
+    requestScope,
     sealAttachments,
     settleWithin,
     toWireError,
@@ -24,7 +26,6 @@ import { installEmojis } from '#src/emojis/EmojiInjector';
 import { HttpStartupTasks } from '#src/HttpStartupTasks';
 import { rejectNonPost } from '#src/InteractionEngine';
 import { InteractionsService } from '#src/InteractionsService';
-import { keepRequestOpenFor, requestScope } from '#src/requestScope';
 import { usernameOf } from '#src/username';
 import { version as packageVersion } from '#src/version';
 
@@ -32,7 +33,7 @@ import { edgeRestOptions, edgeShutdown } from './defaults';
 import { RequestRest } from './RequestRest';
 
 import type { HttpEdgeConfig } from '#interfaces/Config';
-import type { EngineContext } from '#src/requestScope';
+import type { EngineContext } from '#interfaces/EngineContext';
 import type { REST } from '@discordjs/rest';
 import type { StartupTasks, BakedIds } from '@seedcord/core/internal';
 import type { DevChannel, SeedcordCliEvents, SeedcordFrameworkEvents } from '@seedcord/types/internal';
@@ -47,10 +48,13 @@ function bakedIds(): BakedIds {
     return ids;
 }
 
-// a header like //other.host/x only changes the path because this keeps the worker's origin
+// new URL() on a path that starts with // would read it as a host
 function atDevPath(incoming: Request, devUrl: string): Request {
     const { pathname, search } = new URL(devUrl, incoming.url);
-    return new Request(new URL(`${pathname}${search}`, incoming.url), incoming);
+    const url = new URL(incoming.url);
+    url.pathname = pathname;
+    url.search = search;
+    return new Request(url, incoming);
 }
 
 /**

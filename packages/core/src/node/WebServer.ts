@@ -8,6 +8,7 @@ import { asError, isPortInUse } from '@seedcord/utils/internal';
 
 import { ShutdownPhase } from '#src/lifecycle/phases';
 import { requestPath } from '#src/requestPath';
+import { requestScope } from '#src/requestScope';
 import { DEFAULT_SERVER_PORT } from '#src/webConstants';
 
 import { answerHealth } from './answerHealth';
@@ -36,7 +37,7 @@ export interface WebServerOptions {
     readonly startup: Pick<CoordinatedStartup, 'isReady' | 'hasBegun'>;
     readonly plugins: Pick<PluginRegistry, 'answer' | 'answersRequests'>;
     // http answers Discord's interactions here. a gateway bot takes them over its websocket
-    readonly interactions: ((request: Request, server: Pick<WebServer, 'waitUntil'>) => Promise<Response>) | undefined;
+    readonly interactions: ((request: Request) => Promise<Response>) | undefined;
 }
 
 // answers a node bot's web requests: health, plugins, then interactions or a 404. serve() also puts it on a port
@@ -75,15 +76,18 @@ export class WebServer {
         const health = healthPath && answerHealth(request, healthPath, startup.isReady && !this.inFlight.closed);
         if (health) return health;
 
-        const response = await this.inFlight.admit(
-            async () =>
-                (await plugins.answer(request)) ??
-                (interactions ? interactions(request, this) : new Response(null, { status: NOT_FOUND }))
+        const response = await this.inFlight.admit(() =>
+            requestScope.run(
+                this,
+                async () =>
+                    (await plugins.answer(request)) ??
+                    (interactions ? interactions(request) : new Response(null, { status: NOT_FOUND }))
+            )
         );
         return response ?? new Response(null, { status: SERVICE_UNAVAILABLE });
     }
 
-    // http's engine calls this through requestScope for work that runs after the response
+    // keepRequestOpenFor calls this
     public waitUntil(work: Promise<unknown>): void {
         this.inFlight.track(work);
     }

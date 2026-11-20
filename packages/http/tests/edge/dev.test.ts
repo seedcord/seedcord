@@ -110,7 +110,11 @@ describe('the edge Seedcord under seedcord dev', () => {
         expect(seedcord.url.href).toBe('http://localhost:3000/');
     });
 
-    it('takes only the path and query from the dev header and keeps its own origin', async () => {
+    it.each([
+        ['//other.test/page?x=1', 'http://127.0.0.1:3000/page?x=1'],
+        // the first parse turns /./ into a path that starts with two slashes
+        ['/.//other.test/page?x=1', 'http://127.0.0.1:3000//other.test/page?x=1']
+    ])('keeps its own origin when the dev header is %s', async (header, expected) => {
         const seen: string[] = [];
         class Recorder extends Plugin {
             public init(): Promise<void> {
@@ -129,10 +133,10 @@ describe('the edge Seedcord under seedcord dev', () => {
         cli.start();
         await vi.waitFor(() => expect(cli.events()).toContain('seedcord:started'));
 
-        const headers = { [DEV_URL_HEADER]: '//other.test/page?x=1' };
+        const headers = { [DEV_URL_HEADER]: header };
         await seedcord.fetch(new Request('http://127.0.0.1:3000/', { headers }), undefined, capturingCtx());
 
-        expect(seen).toEqual(['http://127.0.0.1:3000/page?x=1']);
+        expect(seen).toEqual([expected]);
     });
 
     it('deploys the commands from the bot files when it starts', async () => {

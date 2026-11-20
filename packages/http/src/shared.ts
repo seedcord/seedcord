@@ -3,7 +3,7 @@ import './subscriptions';
 
 // both entries export this module, each with its own Seedcord beside it
 
-export type { EngineContext } from './requestScope';
+export type { EngineContext } from '#interfaces/EngineContext';
 
 export { Plugin } from './Plugin';
 export type { HttpPluginOptions, PluginLifecycleSpec, PluginOptions } from './Plugin';

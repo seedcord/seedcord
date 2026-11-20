@@ -1,8 +1,7 @@
 import { REST } from '@discordjs/rest';
+import { requestScope } from '@seedcord/core/internal';
 
-import { requestScope } from '#src/requestScope';
-
-import type { EngineContext } from '#src/requestScope';
+import type { EngineContext } from '#interfaces/EngineContext';
 import type { InternalRequest, RESTOptions, ResponseLike } from '@discordjs/rest';
 
 class RequestClient extends REST {

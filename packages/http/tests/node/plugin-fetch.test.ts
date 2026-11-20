@@ -1,7 +1,10 @@
 import path from 'node:path';
+import { setTimeout as sleep } from 'node:timers/promises';
 
+import { shutdownOf } from '@seedcord/core/node/internal';
 import { Plugin } from '@seedcord/core/plugin';
 import { SeedcordErrorCode } from '@seedcord/errors';
+import { LoggerChannelRegistry } from '@seedcord/logger';
 import { captureLogs } from '@seedcord/logger/internal';
 import { describe, expect, it } from 'vite-plus/test';
 
@@ -13,6 +16,8 @@ import type { HttpServerConfig } from '#src/interfaces/Config';
 
 const HANDLERS_DIR = path.resolve(__dirname, './discovery/fixtures/handlers');
 const PING = '{"type":1}';
+// a shutdown with nothing to wait for finishes well inside this
+const STILL_OPEN_MS = 300;
 
 function config(): HttpServerConfig {
     return { ...serverConfig({ interactions: { path: HANDLERS_DIR } }), server: { port: false } };
@@ -58,6 +63,19 @@ class BodyLocker extends Plugin {
 
     public override fetch(request: Request): undefined {
         request.body?.getReader();
+    }
+}
+
+const ROUTE_LOG = 'answered from the route';
+
+class Logs extends Plugin {
+    public init(): Promise<void> {
+        return Promise.resolve();
+    }
+
+    public override fetch(): Response {
+        this.logger.info(ROUTE_LOG);
+        return new Response('logged');
     }
 }
 
@@ -121,6 +139,26 @@ describe('a plugin fetch method on node', () => {
                 message: expect.stringContaining(`${Reader.name} at reader`) as string
             })
         );
+    });
+
+    it('holds a shutdown open for a log sink that a plugin route started', async () => {
+        const release = Promise.withResolvers<undefined>();
+        await bindSignedEnv();
+        await using host = new Seedcord(config()).attach('logs', Logs);
+        await host.start();
+        using _sink = LoggerChannelRegistry.instance.installSink({
+            kind: 'capture',
+            onLog: ({ message }) => (message === ROUTE_LOG ? release.promise : undefined)
+        });
+
+        await host.fetch(new Request('http://bot.test/page'));
+        const closing = shutdownOf(host)
+            .run(0, false)
+            .then(() => 'closed');
+        const whileSinkRuns = await Promise.race([closing, sleep(STILL_OPEN_MS).then(() => 'still open')]);
+        release.resolve(undefined);
+
+        expect([whileSinkRuns, await closing]).toEqual(['still open', 'closed']);
     });
 
     it('logs a throw from one plugin and keeps answering through the rest', async () => {

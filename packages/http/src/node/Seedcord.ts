@@ -8,12 +8,10 @@ import { Envapter } from 'envapt';
 
 import { HttpStartupTasks } from '#src/HttpStartupTasks';
 import { InteractionsService } from '#src/InteractionsService';
-import { requestScope } from '#src/requestScope';
 import { usernameOf } from '#src/username';
 import { version as packageVersion } from '#src/version';
 
 import type { HttpServerConfig } from '#interfaces/Config';
-import type { EngineContext } from '#src/requestScope';
 import type { SeedcordInstance } from '@seedcord/types/internal';
 
 /**
@@ -76,8 +74,8 @@ export class Seedcord extends ServerHost<'http'> implements SeedcordInstance {
     }
 
     /** @internal */
-    protected override answerInteractions(request: Request, server: EngineContext): Promise<Response> {
-        return requestScope.run(server, async () => this.#service.engine.handle(request));
+    protected override answerInteractions(request: Request): Promise<Response> {
+        return this.#service.engine.handle(request);
     }
 
     #registerStartupTasks(): void {
