@@ -14,7 +14,7 @@ This project runs on the {{#if isGateway}}gateway{{else}}http{{/if}} transport{{
 
 ## Before you write it by hand
 
-`tc` and lint pass even when you hand-write something that seedcord already has. Before you write anything more than a plain reply, ask questions via `{{ pm.run }} ask "<question>"`. It searches the guide and prints the matching pages with their `.md` links. It also takes a pasted error or an error code like `3116`.
+`tc` and lint pass even when you hand-write something that seedcord already has. Before you write anything more than a plain reply, like a helper, a component, a timer, a store, or a workaround, run `{{ pm.run }} ask "<what you need>"`. It also takes a pasted error or an error code like `3116`.
 
 ## How a command works here
 
@@ -56,4 +56,4 @@ Never import from a seedcord path ending in `/internal`, like `@seedcord/core/in
 
 ## Before you call it done
 
-Run `{{ pm.run }} tc` and `{{ pm.run }} lint`. A wrong route or a wrong option name is a compile error, so a green type-check catches most of what an invented API gets wrong. If the change alters what the bot sends or keeps, try it under `{{ pm.run }} dev` too.
+Run `{{ pm.run }} check`. It type-checks, lints, and checks the formatting, and `{{ pm.run }} fmt` fixes a formatting failure. A wrong route or a wrong option name is a compile error, so a green type-check catches most of what an invented API gets wrong. If the change alters what the bot sends or keeps, try it under `{{ pm.run }} dev` too.

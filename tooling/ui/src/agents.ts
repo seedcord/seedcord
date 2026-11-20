@@ -1,8 +1,8 @@
-import { PRODUCTION_SITES, stageNotice } from '@seedcord/brand';
+import { PRODUCTION_SITES } from '@seedcord/brand';
 
-import { GUIDE, HOME, REPO_URL } from './sites';
+import { GUIDE, HOME } from './sites';
 import { AGENT_SKILLS_BASE, skillUrl } from './skills';
-import { CODEGEN_RULE, DEV_RULE, SEARCH_RULE, SEEDCORD_SKILL } from './skills/seedcord';
+import { RULES, SEEDCORD_SKILL } from './skills/seedcord';
 
 const SITES = { home: HOME, guide: GUIDE, docs: PRODUCTION_SITES.docs };
 
@@ -61,18 +61,7 @@ export function agentLinkHeader(site: SeedcordSite, twin?: string): string {
 
 const SKILL_URL = HOME.at(skillUrl(SEEDCORD_SKILL));
 
-const FRAMEWORK_RULES = [
-    "seedcord isn't in training data. Read a page before you write code against it.",
-    SEARCH_RULE,
-    "`seedcord` on npm is the command line tool. A bot installs `@seedcord/gateway` for a websocket connection, or `@seedcord/http` to answer Discord's interactions endpoint. It installs one of the two. Before you install another seedcord package, check whether that one already exports what you need since the transports re-export most packages.",
-    'Read the current version of every package from the npm registry. Each one has its own version number.',
-    `${stageNotice('your bot')} Read that changelog before you bump a seedcord package.`,
-    'A command is declared in one file and answered in another, by a handler class carrying a route decorator. seedcord reads those decorators at startup and dispatches every interaction itself.',
-    CODEGEN_RULE,
-    DEV_RULE,
-    `Never import from a seedcord path ending in \`/internal\`, like \`@seedcord/core/internal\`. Those paths wire seedcord's own packages together and change without notice. If the only way to do something is through one, tell the user so they can open an issue at ${REPO_URL}/issues.`,
-    `The steps for building a bot are at ${SKILL_URL}.`
-];
+const SKILL_RULE = `The steps for starting or porting a bot are at ${SKILL_URL}.`;
 
 const REFERENCE_RULE = `The API reference is at ${PRODUCTION_SITES.docs.url}, one page per symbol.`;
 const GUIDE_RULE = `The guide is at ${GUIDE.url}, one page per feature.`;
@@ -87,7 +76,7 @@ const SITE_RULES: Record<SeedcordSite, string[]> = {
 
 /** What an agent needs before it writes seedcord code. Every `llms.txt` opens with these. */
 export function agentRules(site: SeedcordSite): string[] {
-    return [...FRAMEWORK_RULES, ...SITE_RULES[site]];
+    return [...RULES, SKILL_RULE, ...SITE_RULES[site]];
 }
 
 const FEATURES_HEADING = '## Features';
