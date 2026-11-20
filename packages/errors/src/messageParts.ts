@@ -25,6 +25,12 @@ export const listedFolderProblems = {
     outsideProject: `which is outside the folder that holds seedcord.config.ts. Move it into that folder and list its new path.`
 };
 
+export const emojiFileProblems = {
+    name: 'Discord takes a name of 2 to 32 letters, digits, and underscores. Rename the file.',
+    key: `seedcord makes the ${paint.bold('Emojis')} key from the file's name, and this name doesn't make one that code can read. Rename the file so that its name starts with a letter.`,
+    format: 'Discord takes a PNG, JPEG, GIF, APNG, WebP, or AVIF file. Convert this one, or move it out of the emojis folder.'
+};
+
 // the edge worker sets chalk's color level after this module loads
 export const token = (): string => paint.bold(BOT_TOKEN_ENV);
 

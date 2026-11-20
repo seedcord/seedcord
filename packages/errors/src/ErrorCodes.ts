@@ -26,6 +26,8 @@ export enum SeedcordErrorCode {
     ConfigEdgeRestSweeper = 1010,
     /** Another process already listens on the port seedcord tries to listen on. */
     PortInUse = 1011,
+    /** A file in the emojis folder can't become an emoji. */
+    ConfigEmojiFileUnusable = 1012,
 
     /** A startup task was added or removed while startup ran, or added after it finished. */
     LifecycleTaskChangeRejected = 1101,

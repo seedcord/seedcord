@@ -1,7 +1,7 @@
 import { PRODUCTION_SITES } from '@seedcord/brand';
 
 import { SeedcordErrorCode } from './ErrorCodes';
-import { deployFix, listedFolderProblems, placeText, token, vitePluginFix } from './messageParts';
+import { deployFix, emojiFileProblems, listedFolderProblems, placeText, token, vitePluginFix } from './messageParts';
 import { allOf, capitalized, counted, isOne, oneOf, quoted, reasonThen, sentence } from './messageText';
 import { paint } from './palette';
 
@@ -37,6 +37,8 @@ const messages = {
         `Remove ${paint.sky(`bot.restOptions.${key}`)} from your edge config. A sweeper interval starts a timer at the worker's global scope, where workerd throws.`,
     [SeedcordErrorCode.PortInUse]: (port: number, setting: string, configFile?: string) =>
         `Another process already listens on port ${port}. Stop it, or set ${paint.bold(setting)} in ${configFile ? paint.path(configFile) : 'your Seedcord config'} to a free port.`,
+    [SeedcordErrorCode.ConfigEmojiFileUnusable]: (file: string, problem: keyof typeof emojiFileProblems) =>
+        `${paint.path(file)} can't be an emoji. ${emojiFileProblems[problem]}`,
 
     [SeedcordErrorCode.LifecycleTaskChangeRejected]: (action: 'add' | 'remove', startup: 'running' | 'finished') =>
         `${startup === 'running' ? 'Startup is running, so its tasks cannot change.' : 'Startup already finished, so this task would never run.'} ${action === 'add' ? 'Add' : 'Remove'} startup tasks before you call ${paint.bold('start()')}.`,

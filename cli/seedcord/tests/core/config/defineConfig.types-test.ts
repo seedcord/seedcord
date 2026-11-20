@@ -21,5 +21,8 @@ defineServerConfig({
     make: { templates: './tpl', helpers: { shout: (value: string) => value } }
 });
 
+defineServerConfig({ instance: './bot.ts', emojis: { dir: './assets/emojis' } });
+defineConfig({ instance: './bot.ts', emojis: { dir: './assets/emojis' } });
+
 // @ts-expect-error seedcord ships pascal
 defineServerConfig({ instance: './bot.ts', make: { helpers: { pascal: (value: string) => value } } });
