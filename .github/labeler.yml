@@ -22,6 +22,9 @@
 '📦 plugin-i18n':
   - changed-files:
       - any-glob-to-any-file: 'plugins/i18n/**'
+'📦 plugin-oauth':
+  - changed-files:
+      - any-glob-to-any-file: 'plugins/oauth/**'
 '📦 custom-id':
   - changed-files:
       - any-glob-to-any-file: 'packages/custom-id/**'
