@@ -1,6 +1,5 @@
 import { cn, Icon, tw } from '@seedcord/ui';
 import {
-    Activity,
     AtSign,
     Blocks,
     Binary,
@@ -16,6 +15,7 @@ import {
     GalleryHorizontalEnd,
     Gauge,
     GitMerge,
+    Globe,
     HardDrive,
     HeartPulse,
     Hourglass,
@@ -40,6 +40,7 @@ import {
     Server,
     ShieldAlert,
     ShieldCheck,
+    Signpost,
     SlidersHorizontal,
     Smile,
     Sparkles,
@@ -151,7 +152,7 @@ const GROUPS: Group[] = [
         rows: [
             { icon: HeartPulse, label: 'lifecycle', gloss: 'phased startup and shutdown' },
             { icon: ScrollText, label: 'logger', gloss: 'named channels, levels and sinks' },
-            { icon: Activity, label: 'health check', gloss: 'an HTTP endpoint that reports readiness' },
+            { icon: Globe, label: 'web server', gloss: 'a health check and your plugin routes on one port' },
             { icon: Webhook, label: 'webhook reporters', gloss: 'faults posted to a Discord webhook' },
             { icon: Variable, label: 'typed env', gloss: 'envapt reads .env, your shell and Worker bindings' },
             {
@@ -208,6 +209,7 @@ const GROUPS: Group[] = [
         accent: 'rind',
         rows: [
             { icon: Plug, label: 'typed plugins', gloss: 'attach once, codegen types it on core' },
+            { icon: Signpost, label: 'web routes', gloss: 'a plugin answers requests with fetch()' },
             { icon: Languages, label: 'i18n', gloss: "replies and commands in each user's language" },
             { icon: CalendarClock, label: 'Tasks', gloss: 'cron jobs and scheduled tasks' },
             { icon: Leaf, label: 'Mongoose', gloss: 'MongoDB, services typed by key' },

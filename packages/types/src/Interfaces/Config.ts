@@ -120,9 +120,9 @@ interface BaseServerConfig {
      */
     health?: `/${string}` | false;
     /**
-     * The address people reach your bot at, like `https://bot.example.com`. Plugins that send
-     * someone to the bot, like an OAuth callback, build their links from it. Include the path if your
-     * host serves the bot under one.
+     * The address people reach your bot at, like `https://bot.example.com`. A plugin builds links
+     * to its own routes from it, like a webhook URL. Include the path if your host serves the bot
+     * under one.
      */
     url?: string | URL;
 }

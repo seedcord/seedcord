@@ -1,9 +1,9 @@
 ---
 title: Answering web requests
-description: Serve your own routes from a plugin, like an OAuth callback or a webhook from another service, by writing fetch() for the requests your bot receives.
+description: Serve your own routes from a plugin, like a webhook from another service or a status page, by writing fetch() for the requests your bot receives.
 ---
 
-Some plugins need a URL of their own, like an OAuth callback or a route that GitHub posts webhooks to. Without a way to answer those from the bot, you'd run a second web server beside it for a route or two.
+Some plugins need a URL of their own, like a route that GitHub posts webhooks to or a status page. Without a way to answer those from the bot, you'd run a second web server beside it for a route or two.
 
 A plugin can answer those requests itself. Give it a [`fetch()`](ref:core/Plugin.fetch) method that takes a web `Request` and returns a `Response`, or `undefined` to pass the request on.
 
@@ -92,21 +92,20 @@ On an http bot every interaction gets a 500 if your `fetch()` throws before its 
 
 ## Linking to your route
 
-If your plugin sends someone to one of its routes, like the callback of an OAuth login, it needs the address people reach the bot at. Read it from [`core.url`](ref:core/CoreBase.url):
+Sometimes your plugin has to tell someone where one of its routes is, like the webhook URL that you paste into GitHub. For that, it needs the address people reach the bot at. Read it from [`core.url`](ref:core/CoreBase.url):
 
-```ts twoslash title="src/plugins/Login.ts"
+```ts twoslash title="src/plugins/GithubHooks.ts"
 import { Plugin } from '@seedcord/http';
 // ---cut---
-export class Login extends Plugin {
-    public async init(): Promise<void> {}
-
-    public callbackUrl(): string {
-        return new URL('login/callback', this.core.url).href;
+export class GithubHooks extends Plugin {
+    public async init(): Promise<void> {
+        const url = new URL('github/seedcord/push', this.core.url);
+        this.logger.info(`add this webhook in GitHub: ${url.href}`);
     }
 }
 ```
 
-`core.url` always ends in a slash. For a bot at `https://example.com/bot`, `callbackUrl()` would return `https://example.com/bot/login/callback`. The bot's author sets that address as [`server.url`](/build/server#your-bots-address). If they haven't, `core.url` throws an error that tells them the line to add.
+`core.url` always ends in a slash. For a bot at `https://example.com/bot`, `GithubHooks` logs `https://example.com/bot/github/seedcord/push`. The bot's author sets that address as [`server.url`](/build/server#your-bots-address). If they haven't, `core.url` throws an error that tells them the line to add, and reading it in `init()` makes that happen at startup.
 
 ## Where requests arrive
 

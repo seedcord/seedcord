@@ -163,7 +163,7 @@ Set `health` to another path if your host expects its health check somewhere els
 
 ### Your bot's address
 
-Some plugins send people to your bot in a browser, like an OAuth login that comes back to a route on the bot. The bot can't work out its own public address because requests usually reach it through a proxy or your host's router. Set `server.url` to the address people reach it at, as the sample above does. If your host serves the bot under a path, include the path.
+Some plugins have to tell another service where your bot is, like a webhook URL that you paste into GitHub. The bot can't work out its own public address because requests usually reach it through a proxy or your host's router. Set `server.url` to the address people reach it at, as the sample above does. If your host serves the bot under a path, include the path.
 
 A plugin reads that address as [`core.url`](ref:core/CoreBase.url). If a plugin reads it and `server.url` isn't set, the bot throws:
 
