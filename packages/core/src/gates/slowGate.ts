@@ -33,8 +33,8 @@ export function slowGateMonitor(): SlowGateMonitor | undefined {
                 .toSorted((a, b) => b.ms - a.ms)
                 .map((reading) => `${paint.sky.bold(reading.name)} ${paint.mute(`${Math.round(reading.ms)}ms`)}`);
             const route = declaredRoute === null ? '' : ` for ${paint.sky.bold(declaredRoute)}`;
-            const headline = `gates${route} took ${paint.amber(`${Math.round(total)}ms`)} of the ${ACK_DEADLINE_MS / 1000}s ack budget`;
-            logger().utils.block(headline, shares, 'warn', (text) => text);
+            const headline = `gates${route} took ${Math.round(total)}ms of the ${ACK_DEADLINE_MS / 1000}s ack budget`;
+            logger().utils.block(headline, shares, 'warn');
         }
     };
 }

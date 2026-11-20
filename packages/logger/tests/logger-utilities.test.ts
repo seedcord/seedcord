@@ -1,4 +1,7 @@
-import { describe, expect, it } from 'vite-plus/test';
+import { paint } from '@seedcord/errors';
+import { setColorLevel } from '@seedcord/errors/internal';
+import chalk from 'chalk';
+import { describe, expect, it, onTestFinished } from 'vite-plus/test';
 
 import { LoggerUtilities } from '#src/LoggerUtilities';
 
@@ -92,6 +95,20 @@ describe('LoggerUtilities', () => {
         expect(parts[0]).toContain('Loaded handlers');
         expect(parts[1]).toContain('alpha');
         expect(parts[2]).toContain('beta');
+    });
+
+    it.each([
+        ['warn', 'amber'],
+        ['error', 'coral'],
+        ['info', 'mint']
+    ] as const)('colors a %s block heading %s', (level, tone) => {
+        const before = chalk.level;
+        setColorLevel(3);
+        onTestFinished(() => setColorLevel(before));
+        const logger = new FakeLogger();
+        new LoggerUtilities(logger).block('Head', ['line'], level);
+
+        expect(logger.calls[0]?.text.split('\n')[0]).toBe(paint[tone].bold('Head'));
     });
 
     it('applies a custom heading styler to a block', () => {
