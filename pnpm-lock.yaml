@@ -1944,10 +1944,16 @@ importers:
 
   plugins/oauth:
     dependencies:
+      es-toolkit:
+        specifier: catalog:deps
+        version: 1.53.2
       typescript:
         specifier: catalog:consumerTypes
         version: 6.0.3
     devDependencies:
+      '@seedcord/core':
+        specifier: workspace:^
+        version: link:../../packages/core
       '@seedcord/eslint-config':
         specifier: workspace:^
         version: link:../../tooling/eslint-config

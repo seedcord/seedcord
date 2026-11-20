@@ -49,7 +49,11 @@
         "test:watch": "vp test dev",
         "coverage": "vp test run --coverage"
     },
+    "dependencies": {
+        "es-toolkit": "catalog:deps"
+    },
     "devDependencies": {
+        "@seedcord/core": "workspace:^",
         "@seedcord/eslint-config": "workspace:^",
         "@seedcord/prose": "workspace:^",
         "@seedcord/tsconfig": "workspace:^",
@@ -57,6 +61,7 @@
         "@seedcord/vite-config": "workspace:^"
     },
     "peerDependencies": {
+        "@seedcord/core": "workspace:>=0.14.0-next.0",
         "typescript": "catalog:consumerTypes"
     },
     "engines": {
