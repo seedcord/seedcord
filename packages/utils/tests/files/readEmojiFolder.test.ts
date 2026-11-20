@@ -5,7 +5,7 @@ import { dirname, join } from 'node:path';
 import { SeedcordErrorCode } from '@seedcord/errors';
 import { describe, expect, it, onTestFinished } from 'vite-plus/test';
 
-import { readEmojiFolder } from '#core/project/readEmojiFolder';
+import { readEmojiFolder } from '#src/files/readEmojiFolder';
 
 async function folderWith(...files: string[]): Promise<string> {
     const tmp = await mkdtempDisposable(join(tmpdir(), 'seedcord-emojis-'));

@@ -40,10 +40,9 @@ describe('route-key parity between AugmentationBuilder and buildSlashRoute', () 
             .addUserOption((o) => o.setName('target').setDescription('Who').setRequired(true));
         const json = builder.toJSON();
 
-        const tables: SlashTables = new AugmentationBuilder(silentLogger).generate(
-            [{ sourceFile: 'ban.ts', json }],
-            {}
-        ).slash;
+        const tables: SlashTables = new AugmentationBuilder(silentLogger).generate([
+            { sourceFile: 'ban.ts', json }
+        ]).slash;
 
         expect(new Set(Object.keys(tables))).toEqual(new Set(expectedRoutesFromJson(json)));
         expect(Object.keys(tables)).toEqual([buildSlashRoute('ban')]);
@@ -72,10 +71,9 @@ describe('route-key parity between AugmentationBuilder and buildSlashRoute', () 
             );
         const json = builder.toJSON();
 
-        const tables: SlashTables = new AugmentationBuilder(silentLogger).generate(
-            [{ sourceFile: 'demo.ts', json }],
-            {}
-        ).slash;
+        const tables: SlashTables = new AugmentationBuilder(silentLogger).generate([
+            { sourceFile: 'demo.ts', json }
+        ]).slash;
 
         expect(new Set(Object.keys(tables))).toEqual(new Set(expectedRoutesFromJson(json)));
     });
@@ -88,10 +86,9 @@ describe('route-key parity between AugmentationBuilder and buildSlashRoute', () 
             .addSubcommand((sc) => sc.setName('ping').setDescription('pd'));
         const json = builder.toJSON();
 
-        const tables: SlashTables = new AugmentationBuilder(silentLogger).generate(
-            [{ sourceFile: 'admin.ts', json }],
-            {}
-        ).slash;
+        const tables: SlashTables = new AugmentationBuilder(silentLogger).generate([
+            { sourceFile: 'admin.ts', json }
+        ]).slash;
 
         expect(new Set(Object.keys(tables))).toEqual(new Set(expectedRoutesFromJson(json)));
         expect(Object.keys(tables)).toEqual([buildSlashRoute('admin', 'ping')]);

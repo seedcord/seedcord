@@ -13,8 +13,7 @@ function tablesFor(
     ...commands: { toJSON: () => RESTPostAPIApplicationCommandsJSONBody }[]
 ): Record<string, RouteOptions> {
     const { slash } = new AugmentationBuilder(silentLogger).generate(
-        commands.map((command, index) => ({ sourceFile: `command-${index}.ts`, json: command.toJSON() })),
-        {}
+        commands.map((command, index) => ({ sourceFile: `command-${index}.ts`, json: command.toJSON() }))
     );
 
     return Object.fromEntries(Object.entries(slash).map(([route, row]) => [route, row.options]));
@@ -133,7 +132,7 @@ describe('AugmentationBuilder', () => {
 
         let caught: unknown;
         try {
-            generator.generate(commands, {});
+            generator.generate(commands);
         } catch (error: unknown) {
             caught = error;
         }
@@ -155,7 +154,7 @@ describe('AugmentationBuilder', () => {
             .addSubcommand((sc) => sc.setName('ping').setDescription('pd'))
             .toJSON();
 
-        const { slash } = new AugmentationBuilder(logger).generate([{ sourceFile: 'admin.ts', json }], {});
+        const { slash } = new AugmentationBuilder(logger).generate([{ sourceFile: 'admin.ts', json }]);
 
         expect(slash).toEqual({ 'admin/ping': { options: {}, cache: undefined } });
         expect(warnings.some((warning) => warning.includes('admin/empty'))).toBe(true);
@@ -381,7 +380,7 @@ describe('AugmentationBuilder', () => {
             .addSubcommand((sc) => sc.setName('ping').setDescription('pd'))
             .toJSON();
 
-        const { slash } = new AugmentationBuilder(logger).generate([{ sourceFile: 'admin.ts', json }], {});
+        const { slash } = new AugmentationBuilder(logger).generate([{ sourceFile: 'admin.ts', json }]);
 
         expect(slash).toEqual({ 'admin/ping': { options: {}, cache: undefined } });
         expect(slash).not.toHaveProperty('admin/empty');
@@ -421,7 +420,7 @@ describe('AugmentationBuilder', () => {
 
         let caught: unknown;
         try {
-            generator.generate(commands, {});
+            generator.generate(commands);
         } catch (error: unknown) {
             caught = error;
         }
@@ -439,13 +438,10 @@ describe('AugmentationBuilder', () => {
             .setName('Report Message')
             .setType(ApplicationCommandType.Message);
 
-        const registry = new AugmentationBuilder(silentLogger).generate(
-            [
-                { sourceFile: 'view.ts', json: view.toJSON() },
-                { sourceFile: 'report.ts', json: report.toJSON() }
-            ],
-            {}
-        );
+        const registry = new AugmentationBuilder(silentLogger).generate([
+            { sourceFile: 'view.ts', json: view.toJSON() },
+            { sourceFile: 'report.ts', json: report.toJSON() }
+        ]);
 
         expect(registry.slash).toEqual({});
         expect(registry.userContextMenus).toEqual({ 'View Profile': { cache: undefined } });
@@ -456,13 +452,10 @@ describe('AugmentationBuilder', () => {
         const userReport = new ContextMenuCommandBuilder().setName('Report').setType(ApplicationCommandType.User);
         const messageReport = new ContextMenuCommandBuilder().setName('Report').setType(ApplicationCommandType.Message);
 
-        const registry = new AugmentationBuilder(silentLogger).generate(
-            [
-                { sourceFile: 'user-report.ts', json: userReport.toJSON() },
-                { sourceFile: 'message-report.ts', json: messageReport.toJSON() }
-            ],
-            {}
-        );
+        const registry = new AugmentationBuilder(silentLogger).generate([
+            { sourceFile: 'user-report.ts', json: userReport.toJSON() },
+            { sourceFile: 'message-report.ts', json: messageReport.toJSON() }
+        ]);
 
         expect(registry.userContextMenus).toEqual({ Report: { cache: undefined } });
         expect(registry.messageContextMenus).toEqual({ Report: { cache: undefined } });
@@ -489,7 +482,7 @@ describe('AugmentationBuilder', () => {
 
         let caught: unknown;
         try {
-            generator.generate(commands, {});
+            generator.generate(commands);
         } catch (error: unknown) {
             caught = error;
         }
@@ -517,7 +510,7 @@ describe('AugmentationBuilder', () => {
 
         let caught: unknown;
         try {
-            generator.generate(commands, {});
+            generator.generate(commands);
         } catch (error: unknown) {
             caught = error;
         }

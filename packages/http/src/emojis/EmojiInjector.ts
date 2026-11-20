@@ -1,5 +1,5 @@
 import { ResolvedEmoji } from '@seedcord/core';
-import { accessorStore, clearStore, guardedAccessor, resolveEmojis } from '@seedcord/core/internal';
+import { accessorStore, clearStore, expectedEmojis, guardedAccessor, resolveEmojis } from '@seedcord/core/internal';
 import { Logger } from '@seedcord/logger';
 
 import type { Core } from '#interfaces/Core';
@@ -35,14 +35,14 @@ export class EmojiInjector {
     constructor(private readonly core: Core) {}
 
     public async init(): Promise<void> {
-        const configured = this.core.config.bot.emojis;
-        if (!configured || Object.keys(configured).length === 0) {
+        const expected = await expectedEmojis(this.core.config.bot.emojis);
+        if (expected.length === 0) {
             installEmojis({});
             this.logger.debug('No emojis configured, skipping emoji injection.');
             return;
         }
 
-        installEmojis(await resolveEmojis(this.core.rest, this.core.applicationId, configured));
+        installEmojis(await resolveEmojis(this.core.rest, this.core.applicationId, expected));
         this.logger.utils.summary('Loaded emojis', { emojis: Object.keys(emojiStorage).length });
     }
 }

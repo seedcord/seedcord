@@ -3,14 +3,18 @@ import { parse } from 'node:path';
 
 import { paint, SeedcordErrorCode } from '@seedcord/errors';
 import { SeedcordTypeError, throwSingleOrAggregate } from '@seedcord/errors/internal';
-import { BotLayout } from '@seedcord/utils/internal';
 import { pascalCase } from 'es-toolkit';
 
-export interface EmojiFile {
+import { BotLayout } from './BotLayout';
+
+export interface FolderEmoji {
     // what Emojis.<key> reads
     key: string;
     // the emoji's name on Discord
     name: string;
+}
+
+export interface EmojiFile extends FolderEmoji {
     file: string;
 }
 
@@ -33,17 +37,16 @@ function fileProblem(found: EmojiFile): SeedcordTypeError | undefined {
 }
 
 function clashes(kind: string, sharedBy: ReadonlyMap<string, readonly EmojiFile[]>): SeedcordTypeError[] {
-    return [...sharedBy].flatMap(([value, sharing]) =>
-        sharing.length > 1
-            ? [
-                  new SeedcordTypeError(SeedcordErrorCode.CoreDuplicateName, [
-                      kind,
-                      value,
-                      sharing.map(({ file }) => paint.path(file))
-                  ])
-              ]
-            : []
-    );
+    return [...sharedBy]
+        .filter(([, sharing]) => sharing.length > 1)
+        .map(
+            ([value, sharing]) =>
+                new SeedcordTypeError(SeedcordErrorCode.CoreDuplicateName, [
+                    kind,
+                    value,
+                    sharing.map(({ file }) => paint.path(file))
+                ])
+        );
 }
 
 async function filesIn(folder: string): Promise<EmojiFile[]> {
@@ -56,6 +59,12 @@ async function filesIn(folder: string): Promise<EmojiFile[]> {
             const { name } = parse(file);
             return { key: pascalCase(name), name, file };
         });
+}
+
+// the build writes this list into the bot, which can't use the file paths
+export async function folderEmojisIn(folder: string): Promise<FolderEmoji[]> {
+    const files = await readEmojiFolder(folder);
+    return files.map(({ key, name }) => ({ key, name }));
 }
 
 // sorted by path, subfolders included. a missing folder reads as empty
@@ -71,7 +80,7 @@ export async function readEmojiFolder(folder: string): Promise<EmojiFile[]> {
 
     throwSingleOrAggregate(
         [...unusable, ...clashes('emoji', byName), ...clashes(`${paint.bold('Emojis')} key`, byKey)],
-        SeedcordErrorCode.CliProblems
+        SeedcordErrorCode.ConfigEmojiUnresolved
     );
     return usable;
 }

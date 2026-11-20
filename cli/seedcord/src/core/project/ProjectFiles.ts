@@ -1,14 +1,21 @@
 import { basename, dirname, relative } from 'node:path';
 
 import { logsFolderIn } from '@seedcord/logger/internal';
-import { BotLayout } from '@seedcord/utils/internal';
+import { BotLayout, folderEmojisIn } from '@seedcord/utils/internal';
 
 import type { ResolvedSeedcordConfig } from '#core/config/schema';
-import type { BotEntry } from '@seedcord/utils/internal';
+import type { BotEntry, FolderEmoji } from '@seedcord/utils/internal';
 
-type ProjectPaths = Pick<ResolvedSeedcordConfig, 'root' | 'configFile' | 'files' | 'target'>;
+type ProjectPaths = Pick<ResolvedSeedcordConfig, 'root' | 'configFile' | 'files' | 'target' | 'emojis'>;
 
-function layoutOf({ root, configFile, files, target }: ProjectPaths): BotLayout {
+// the build writes these into the entry because a built bot can't read them from disk
+export interface BuiltLists {
+    // every folder under root, empty ones included
+    folders: string[];
+    emojis: FolderEmoji[];
+}
+
+function layoutOf({ root, configFile, files, target, emojis }: ProjectPaths): BotLayout {
     const configDir = dirname(configFile);
     const keysOf = (paths: string[]): string[] => paths.map((path) => BotLayout.keyUnder(root, path));
     const outDir = target.kind === 'server' ? [target.outDir] : [];
@@ -17,15 +24,18 @@ function layoutOf({ root, configFile, files, target }: ProjectPaths): BotLayout 
         root,
         listed: keysOf(files),
         skippedFolders: keysOf([...outDir, logsFolderIn(configDir)]),
-        configFile: BotLayout.keyUnder(root, configFile)
+        configFile: BotLayout.keyUnder(root, configFile),
+        emojiFolder: BotLayout.keyUnder(root, emojis.dir)
     });
 }
 
 export class ProjectFiles {
     public readonly layout: BotLayout;
+    private readonly emojiFolder: string;
 
     constructor(paths: ProjectPaths) {
         this.layout = layoutOf(paths);
+        this.emojiFolder = paths.emojis.dir;
     }
 
     public async modulePaths(folder = this.layout.root): Promise<string[]> {
@@ -33,9 +43,10 @@ export class ProjectFiles {
         return this.layout.modulesUnder(folder);
     }
 
-    public async foldersIncludingEmpty(): Promise<string[]> {
-        const entries = await this.entries();
-        return entries.flatMap(({ isFolder, path }) => (isFolder ? [this.layout.keyOf(path)] : [])).toSorted();
+    public async builtLists(): Promise<BuiltLists> {
+        const [entries, emojis] = await Promise.all([this.entries(), folderEmojisIn(this.emojiFolder)]);
+        const folders = entries.flatMap(({ isFolder, path }) => (isFolder ? [this.layout.keyOf(path)] : [])).toSorted();
+        return { folders, emojis };
     }
 
     public async pathsWithHash(): Promise<string[]> {

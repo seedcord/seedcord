@@ -14,7 +14,9 @@ export {
     setCliFiles,
     setDevFiles
 } from './files/slots';
-export { botFolder, matchesBotGlobs } from './files/sources';
+export { folderEmojisIn } from './files/readEmojiFolder';
+export type { FolderEmoji } from './files/readEmojiFolder';
+export { botFolder, folderEmojis, matchesBotGlobs } from './files/sources';
 export { withoutQuery } from './files/withoutQuery';
 export * from './misc/asError';
 export * from './misc/discordErrorOf';

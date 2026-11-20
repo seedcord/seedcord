@@ -2,6 +2,7 @@ import { readFile } from 'node:fs/promises';
 
 import { BOT_FILES_KEY, BUILT_FILES_READY_KEY, encodeFile, withoutQuery } from '@seedcord/utils/internal';
 
+import type { BuiltLists } from '#core/project/ProjectFiles';
 import type { BotLayout } from '@seedcord/utils/internal';
 import type { Plugin } from 'vite';
 
@@ -50,7 +51,7 @@ export type EntryPlugins = [entry: Plugin, listedFiles: Plugin];
 
 interface BuiltFilesOptions {
     layout: BotLayout;
-    folders: string[];
+    lists: BuiltLists;
     rootExpression: string;
     rootKey: string;
     sourcePaths: boolean;
@@ -59,7 +60,7 @@ interface BuiltFilesOptions {
 
 export function builtFilesSource({
     layout,
-    folders,
+    lists: { folders, emojis },
     rootExpression,
     rootKey,
     sourcePaths,
@@ -76,6 +77,7 @@ export function builtFilesSource({
         `    listed: ${JSON.stringify(listed)},`,
         `    skippedFolders: ${JSON.stringify(skippedFolders)},`,
         `    folders: ${JSON.stringify(folders)},`,
+        `    emojis: ${JSON.stringify(emojis)},`,
         `    modules: import.meta.glob(${JSON.stringify(layout.moduleGlobs())}, ${JSON.stringify(moduleOptions)}),`,
         `    listedFiles: import.meta.glob(${JSON.stringify(layout.listedFileGlobs())}, ${JSON.stringify(fileOptions)}),`,
         `    sourcePaths: ${String(sourcePaths)},`,

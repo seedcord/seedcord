@@ -8,6 +8,7 @@ import { BotLayout } from './BotLayout';
 
 import type { BotLayoutData } from './BotLayout';
 import type { EncodedFile } from './encodedFile';
+import type { FolderEmoji } from './readEmojiFolder';
 import type { Except } from 'type-fest';
 
 export type ModuleLoader = () => Promise<Record<string, unknown>>;
@@ -17,6 +18,7 @@ export interface BuiltSlot extends BotLayoutData {
     kind: 'built';
     // every folder under root, empty ones included
     folders: string[];
+    emojis: readonly FolderEmoji[];
     modules: Record<string, ModuleLoader>;
     listedFiles: Record<string, EncodedFileLoader>;
     // seedcord dev runs the source files themselves

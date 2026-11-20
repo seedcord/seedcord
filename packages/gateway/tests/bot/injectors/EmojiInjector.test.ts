@@ -1,5 +1,6 @@
 import { ButtonBuilder } from '@discordjs/builders';
 import { SeedcordErrorCode } from '@seedcord/errors';
+import { setBuiltFiles } from '@seedcord/utils/internal';
 import { Collection } from 'discord.js';
 import { afterEach, describe, expect, it, vi } from 'vite-plus/test';
 
@@ -51,6 +52,19 @@ function stubCore(opts: StubOptions): Core {
     } as unknown as Core;
 }
 
+// a built bot whose build found dot.png in the emojis folder
+function builtWithDot(): Disposable {
+    return setBuiltFiles({
+        root: process.cwd(),
+        listed: [],
+        skippedFolders: [],
+        folders: [],
+        modules: {},
+        listedFiles: {},
+        emojis: [{ key: 'Dot', name: 'dot' }]
+    });
+}
+
 // read runtime values through a plain record because the global is typed by the (empty in tests) EmojiMap
 const stored = Emojis as Record<string, unknown>;
 
@@ -84,6 +98,26 @@ describe('EmojiInjector', () => {
         await new EmojiInjector(stubCore({ emojis: { Confirm: 'check' }, appEmojis: [check] })).init();
 
         expect(() => new ButtonBuilder().setCustomId('c').setEmoji(stored.Confirm as EmojiArgument)).not.toThrow();
+    });
+
+    it('resolves an emoji that only the emojis folder has', async () => {
+        using _built = builtWithDot();
+        const dot: EmojiStub = { id: '5', name: 'dot' };
+
+        await new EmojiInjector(stubCore({ emojis: {}, appEmojis: [dot] })).init();
+
+        expect((stored.Dot as GatewayEmoji).source).toBe(dot);
+    });
+
+    it('gives the push command when the application is missing a folder emoji', async () => {
+        using _built = builtWithDot();
+
+        const error = await initError(stubCore({ emojis: {}, appEmojis: [] }));
+
+        expect(error).toMatchObject({
+            code: SeedcordErrorCode.ConfigEmojiNotFound,
+            message: expect.stringContaining('seedcord emojis push') as string
+        });
     });
 
     it('resolves a tuple emoji from its guild', async () => {

@@ -171,10 +171,12 @@ describe('CodegenRunner plugin capabilities', () => {
 });
 
 describe('CodegenRunner writeFrom', () => {
-    it("scans with dev's loader, never opens the project, and leaves dev's files slot in place", async () => {
+    it("scans with dev's loader, never opens the project, types the emojis folder, and leaves dev's files slot in place", async () => {
         const root = await tempDir('codegen-');
         const cmdDir = await commandsUnder(root);
         await writeFile(join(cmdDir, 'ban.ts'), 'export {};', 'utf8');
+        await mkdir(join(root, 'emojis'));
+        await writeFile(join(root, 'emojis', 'dot.png'), '');
         const config = configAt(root, resolve(root, 'bot.ts'));
         const files = new ProjectFiles(config);
         using _devFiles = setDevFiles(files.layout.toJSON());
@@ -199,6 +201,7 @@ describe('CodegenRunner writeFrom', () => {
         const written = await readFile(resolve(root, OUTPUT), 'utf8');
         expect(written).toContain("ban: { options: {}; cache: 'cached' }");
         expect(runsUnderSeedcordDev()).toBe(true);
+        expect(written).toContain("Dot: 'application';");
     });
 });
 

@@ -22,6 +22,7 @@ export function registerBuiltFiles(
         listed: [],
         skippedFolders: [],
         folders: [...new Set([...foldersOf(Object.keys(modules)), ...emptyFolders])],
+        emojis: [],
         modules: Object.fromEntries(
             Object.entries(modules).map(([key, exported]) => [key, () => Promise.resolve(exported)])
         ),

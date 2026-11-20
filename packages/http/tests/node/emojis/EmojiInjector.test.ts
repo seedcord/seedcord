@@ -1,4 +1,5 @@
 import { isSeedcordError, SeedcordErrorCode } from '@seedcord/errors';
+import { setBuiltFiles } from '@seedcord/utils/internal';
 import { Routes } from 'discord-api-types/v10';
 import { describe, expect, it, vi } from 'vite-plus/test';
 
@@ -44,6 +45,23 @@ describe('EmojiInjector', () => {
         await new EmojiInjector(coreWith({ Confirm: 'confirm' }).core).init();
 
         expect(emojis.Confirm).toEqual({ name: 'confirm', id: '111', animated: false });
+        expect(String(emojis.Confirm)).toBe('<:confirm:111>');
+    });
+
+    it('resolves an emoji that only the emojis folder has', async () => {
+        // a built bot whose build found confirm.png in the emojis folder
+        using _built = setBuiltFiles({
+            root: process.cwd(),
+            listed: [],
+            skippedFolders: [],
+            folders: [],
+            modules: {},
+            listedFiles: {},
+            emojis: [{ key: 'Confirm', name: 'confirm' }]
+        });
+
+        await new EmojiInjector(coreWith(undefined).core).init();
+
         expect(String(emojis.Confirm)).toBe('<:confirm:111>');
     });
 

@@ -20,6 +20,8 @@ export interface BotLayoutData {
     readonly skippedFolders: readonly string[];
     // seedcord.config.ts. a script without a config doesn't have one
     readonly configFile?: string | undefined;
+    // emojis.dir in seedcord.config.ts. a script without a config doesn't have one
+    readonly emojiFolder?: string | undefined;
 }
 
 export interface BotEntry {
@@ -80,21 +82,24 @@ function isSkippedName(name: string): boolean {
 export class BotLayout {
     public readonly root: string;
     public readonly configFile: string | undefined;
+    public readonly emojiFolder: string | undefined;
     private readonly data: Readonly<BotLayoutData>;
     private readonly listedPaths: readonly string[];
     private readonly skippedPaths: readonly string[];
 
-    public constructor({ root, listed, skippedFolders, configFile }: BotLayoutData) {
+    public constructor({ root, listed, skippedFolders, configFile, emojiFolder }: BotLayoutData) {
         this.root = path.resolve(root);
         this.data = Object.freeze({
             root: this.root,
             listed: [...listed],
             skippedFolders: [...skippedFolders],
-            configFile
+            configFile,
+            emojiFolder
         });
         this.listedPaths = this.data.listed.map((key) => this.pathOf(key));
         this.skippedPaths = this.data.skippedFolders.map((key) => this.pathOf(key));
         this.configFile = configFile === undefined ? undefined : this.pathOf(configFile);
+        this.emojiFolder = emojiFolder === undefined ? undefined : this.pathOf(emojiFolder);
     }
 
     // a script that reads an absolute folder without a config gets every file in it

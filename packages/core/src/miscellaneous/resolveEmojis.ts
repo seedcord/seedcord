@@ -1,12 +1,13 @@
 import { SeedcordErrorCode } from '@seedcord/errors';
-import { SeedcordError, SeedcordTypeError, throwSingleOrAggregate, token } from '@seedcord/errors/internal';
+import { throwSingleOrAggregate, token } from '@seedcord/errors/internal';
 import { asError } from '@seedcord/utils/internal';
 import { Routes } from 'discord-api-types/v10';
 
-import { isEmojiTuple } from '#src/miscellaneous/emojiConfig';
+import { emojiNotFound, emojiUnreadable } from '#src/miscellaneous/expectedEmojis';
 import { accessorStore } from '#src/miscellaneous/guarded';
 import { ResolvedEmoji } from '#src/miscellaneous/ResolvedEmoji';
 
+import type { ExpectedEmoji } from '#src/miscellaneous/expectedEmojis';
 import type { REST } from '@discordjs/rest';
 import type { APIEmoji, RESTGetAPIApplicationEmojisResult, RESTGetAPIGuildEmojisResult } from 'discord-api-types/v10';
 
@@ -23,92 +24,67 @@ function byName(list: readonly APIEmoji[]): EmojisByName {
 class EmojiResolver {
     private readonly resolved = accessorStore<ResolvedEmoji>();
     private readonly problems: Error[] = [];
-    private readonly guilds = new Map<string, EmojisByName | Error>();
-    private application?: EmojisByName | Error;
+    private readonly listsByRoute = new Map<string, EmojisByName | Error>();
 
     constructor(
         private readonly rest: EmojiRest,
         private readonly applicationId: string
     ) {}
 
-    public async resolve(configured: Readonly<Record<string, unknown>>): Promise<Record<string, ResolvedEmoji>> {
-        for (const [key, value] of Object.entries(configured)) {
-            if (isEmojiTuple(value)) await this.fromGuild(key, value);
-            else if (typeof value === 'string') await this.fromApplication(key, value);
-            else this.problems.push(new SeedcordTypeError(SeedcordErrorCode.ConfigEmojiInvalid, [key]));
-        }
+    public async resolve(expected: readonly ExpectedEmoji[]): Promise<Record<string, ResolvedEmoji>> {
+        for (const emoji of expected) await this.resolveOne(emoji);
 
         throwSingleOrAggregate(this.problems, SeedcordErrorCode.ConfigEmojiUnresolved);
         return this.resolved;
     }
 
-    private async fromApplication(key: string, name: string): Promise<void> {
-        this.application ??= await this.applicationEmojis();
-
-        if (Error.isError(this.application)) {
-            this.unreadable(key, name, 'the application', this.application, `Check that ${token()} is still valid.`);
+    private async resolveOne(emoji: ExpectedEmoji): Promise<void> {
+        const list = await this.listFor(emoji);
+        if (Error.isError(list)) {
+            const fix =
+                emoji.kind === 'guild'
+                    ? 'Check that the bot is in that guild.'
+                    : `Check that ${token()} is still valid.`;
+            this.problems.push(emojiUnreadable(emoji, list.message, fix, list));
             return;
         }
-        this.pick(key, name, this.application, 'the application');
-    }
 
-    private async applicationEmojis(): Promise<EmojisByName | Error> {
-        try {
-            // justified: the discord api contract for this route
-            const listed = (await this.rest.get(
-                Routes.applicationEmojis(this.applicationId)
-            )) as RESTGetAPIApplicationEmojisResult;
-            return byName(listed.items);
-        } catch (error) {
-            return asError(error);
-        }
-    }
-
-    private async fromGuild(key: string, [name, guildId]: readonly [string, string]): Promise<void> {
-        let guild = this.guilds.get(guildId);
-        if (!guild) {
-            guild = await this.guildEmojis(guildId);
-            this.guilds.set(guildId, guild);
-        }
-
-        if (Error.isError(guild)) {
-            this.unreadable(key, name, `guild ${guildId}`, guild, 'Check that the bot is in that guild.');
-            return;
-        }
-        this.pick(key, name, guild, `guild ${guildId}`);
-    }
-
-    private async guildEmojis(guildId: string): Promise<EmojisByName | Error> {
-        try {
-            // justified: the discord api contract for this route
-            return byName((await this.rest.get(Routes.guildEmojis(guildId))) as RESTGetAPIGuildEmojisResult);
-        } catch (error) {
-            return asError(error);
-        }
-    }
-
-    private pick(key: string, name: string, source: EmojisByName, where: string): void {
-        const found = source.get(name);
+        const found = list.get(emoji.name);
         if (!found?.id) {
-            this.problems.push(new SeedcordError(SeedcordErrorCode.ConfigEmojiNotFound, [key, name, where]));
+            this.problems.push(emojiNotFound(emoji));
             return;
         }
-        this.resolved[key] = new ResolvedEmoji(name, found.id, found.animated ?? false);
+        this.resolved[emoji.key] = new ResolvedEmoji(emoji.name, found.id, found.animated ?? false);
     }
 
-    private unreadable(key: string, name: string, where: string, cause: Error, fix: string): void {
-        this.problems.push(
-            new SeedcordError(SeedcordErrorCode.ConfigEmojiSourceUnreadable, [key, name, where, cause.message, fix], {
-                cause
-            })
-        );
+    private async listFor(emoji: ExpectedEmoji): Promise<EmojisByName | Error> {
+        const route =
+            emoji.kind === 'guild' ? Routes.guildEmojis(emoji.guildId) : Routes.applicationEmojis(this.applicationId);
+        let list = this.listsByRoute.get(route);
+        if (!list) {
+            list = await this.read(route);
+            this.listsByRoute.set(route, list);
+        }
+        return list;
+    }
+
+    private async read(route: `/${string}`): Promise<EmojisByName | Error> {
+        try {
+            // justified: the discord api contract for the two emoji list routes
+            const listed = (await this.rest.get(route)) as
+                | RESTGetAPIApplicationEmojisResult
+                | RESTGetAPIGuildEmojisResult;
+            return byName(Array.isArray(listed) ? listed : listed.items);
+        } catch (error) {
+            return asError(error);
+        }
     }
 }
 
 export function resolveEmojis(
     rest: EmojiRest,
     applicationId: string,
-    configured: Readonly<Record<string, unknown>>
+    expected: readonly ExpectedEmoji[]
 ): Promise<Record<string, ResolvedEmoji>> {
-    return new EmojiResolver(rest, applicationId).resolve(configured);
+    return new EmojiResolver(rest, applicationId).resolve(expected);
 }

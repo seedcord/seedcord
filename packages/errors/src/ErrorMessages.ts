@@ -13,8 +13,8 @@ const messages = {
         `${paint.iris(count)} configured emojis could not be resolved. Each one is listed below.`,
     [SeedcordErrorCode.ConfigEmojiInvalid]: (key: string) =>
         `The emoji ${paint.sky(key)} in ${paint.bold('bot.emojis')} has a value seedcord cannot read. Set it to the emoji's name, or to a ${paint.bold('[name, guildId]')} pair for a guild emoji.`,
-    [SeedcordErrorCode.ConfigEmojiNotFound]: (key: string, name: string, where: string) =>
-        `The emoji ${paint.sky(key)} points at ${paint.bold(name)}, but ${where} doesn't have an emoji with that name. Check the spelling, or upload the emoji there.`,
+    [SeedcordErrorCode.ConfigEmojiNotFound]: (key: string, name: string, where: string, fix: string) =>
+        `The emoji ${paint.sky(key)} points at ${paint.bold(name)}, but ${where} doesn't have an emoji with that name. ${fix}`,
     [SeedcordErrorCode.ConfigEmojiSourceUnreadable]: (
         key: string,
         name: string,

@@ -1,6 +1,6 @@
 import { splitPluginKey } from '@seedcord/core/internal';
 
-import type { EmojiKinds, Augmentation, ContextMenuTables, RouteOptions, SlashTables } from './AugmentationBuilder';
+import type { Augmentation, ContextMenuTables, EmojiTags, RouteOptions, SlashTables } from './AugmentationBuilder';
 import type { SlashOption } from '@seedcord/core/internal';
 import type { HostPlugins, SeedcordInstance } from '@seedcord/types/internal';
 
@@ -120,9 +120,8 @@ function renderCache(cache: 'cached' | undefined): string {
     return cache === undefined ? 'undefined' : `'${cache}'`;
 }
 
-// InjectedEmojiMap reads this tag to type Emojis.X as GuildEmoji or ApplicationEmoji
-function emojiRows(emojis: EmojiKinds): Row[] {
-    return Object.entries(emojis).map(([key, kind]) => [key, `'${kind === 'tuple' ? 'guild' : 'application'}'`]);
+function emojiRows(emojis: EmojiTags): Row[] {
+    return Object.entries(emojis).map(([key, tag]) => [key, `'${tag}'`]);
 }
 
 function renderOptions(options: RouteOptions): string {

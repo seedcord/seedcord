@@ -9,7 +9,7 @@ import { serverViteConfig } from '#commands/dev/runtime/devServerConfig';
 import { botEnvironment } from '#core/modules/botEnvironment';
 import { mergeViteConfig } from '#core/modules/userCodeConfig';
 import { ProjectFiles } from '#core/project/ProjectFiles';
-import { realPath } from '#core/project/realPath';
+import { resolvedConfigOf } from '#tests/resolvedConfigOf';
 
 import type { ViteDevServer } from 'vite';
 
@@ -90,14 +90,9 @@ describe('dev runtime module resolution', () => {
         root = await mkdtemp(join(tmpdir(), 'seedcord-dev-'));
         await writeFixture(root);
 
-        const config = {
-            root: realPath(join(root, 'src')),
-            configFile: realPath(join(root, 'seedcord.config.ts')),
-            files: [],
-            target: { kind: 'server', start: undefined, outDir: realPath(join(root, 'dist')) }
-        } as const;
+        const config = resolvedConfigOf(root);
         server = await createServer(
-            mergeViteConfig(serverViteConfig(config, new ProjectFiles({ ...config, files: [] }).layout), {
+            mergeViteConfig(serverViteConfig(config, new ProjectFiles(config).layout), {
                 server: { hmr: false, watch: null }
             })
         );

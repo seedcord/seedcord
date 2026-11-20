@@ -57,7 +57,7 @@ export abstract class ServerBuild<Target extends ResolvedServerTarget = Resolved
         const { root } = config;
         const builtFiles = {
             layout,
-            folders: await files.foldersIncludingEmpty(),
+            lists: await files.builtLists(),
             rootKey: BotLayout.keyUnder(configDir, root),
             configFile: BotLayout.keyUnder(outDir, config.configFile)
         };
