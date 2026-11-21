@@ -27,8 +27,6 @@ interface UserTokensOptions {
     clientSecret: string;
 }
 
-// each user's tokens, from the login that grants them to the refreshes that keep them working.
-//
 // nothing in here deletes a user's tokens because discord refused them. a refresh token works once, and
 // when two processes refresh the same one, discord refuses the second. that refusal looks like the one
 // for a user who removed the app. the only difference is in the store, where the winner saves newer
@@ -46,7 +44,6 @@ export class UserTokens {
         this.vault = new TokenVault(store, clientId, clientSecret);
     }
 
-    // undefined for a code that discord answers `invalid_grant` to
     public async claim(exchange: CodeExchange): Promise<OAuthLogin | undefined> {
         const granted = await this.endpoint.exchange(exchange);
         if (!granted) return undefined;

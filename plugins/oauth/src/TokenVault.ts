@@ -49,8 +49,7 @@ const IV_BYTES = 12;
 const encoder = new TextEncoder();
 const decoder = new TextDecoder();
 
-// the client secret is just a password, and AES needs a key of an exact size. HKDF makes that key out
-// of the password
+// AES needs a key of an exact size, and HKDF makes one from the client secret
 async function deriveKey(clientId: string, clientSecret: string): Promise<CryptoKey> {
     const secret = await crypto.subtle.importKey('raw', encoder.encode(clientSecret), 'HKDF', false, ['deriveKey']);
     return crypto.subtle.deriveKey(

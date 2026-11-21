@@ -8,7 +8,7 @@ import { OAuthClient } from '#src/OAuthClient';
 import { fakeDiscord, WEEK_SECONDS } from './fakeDiscord';
 
 import type { LoginOutcome } from '#src/LoginOutcome';
-import type { OAuthRoutes } from '#src/OAuthClientOptions';
+import type { OAuthClientOptions } from '#src/OAuthClientOptions';
 import type { OAuthScope } from '#src/UserCalls';
 import type { SeenRequest } from './fakeDiscord';
 
@@ -26,7 +26,11 @@ interface Flow {
 }
 
 // a client at `base`, against a discord that grants every code except 'refused'
-async function flowAt(base: string, scopes: EveryLoginScope[] = [], routes?: OAuthRoutes): Promise<Flow> {
+async function flowAt(
+    base: string,
+    scopes: EveryLoginScope[] = [],
+    routes?: OAuthClientOptions['routes']
+): Promise<Flow> {
     const discord = await fakeDiscord(({ route, body }) => {
         if (route !== '/oauth2/token') return { json: { user: USER, scopes: ['identify'] } };
         if (new URLSearchParams(body).get('code') === 'refused')
@@ -132,20 +136,15 @@ describe('AuthorizationFlow login route', () => {
         expect(authorize.get('scope')).toBe('identify guilds connections');
     });
 
-    it('requests a scope once when the login link lists it twice', async () => {
-        const flow = await flowAt(BASE);
+    it.each([
+        ['the link lists it twice', [], 'connections+connections', 'identify connections'],
+        ['every login already requests it', ['guilds'], 'guilds+connections', 'identify guilds connections']
+    ] as const)('requests a scope once when %s', async (_when, scopes, listed, requested) => {
+        const flow = await flowAt(BASE, [...scopes]);
 
-        const { authorize } = await start(flow, `${BASE}oauth/login?scopes=connections+connections`);
+        const { authorize } = await start(flow, `${BASE}oauth/login?scopes=${listed}`);
 
-        expect(authorize.get('scope')).toBe('identify connections');
-    });
-
-    it('requests a scope once when the link lists one that every login already has', async () => {
-        const flow = await flowAt(BASE, ['guilds']);
-
-        const { authorize } = await start(flow, `${BASE}oauth/login?scopes=guilds+connections`);
-
-        expect(authorize.get('scope')).toBe('identify guilds connections');
+        expect(authorize.get('scope')).toBe(requested);
     });
 
     it('reports a link with a scope outside extraScopes, without sending the visitor to Discord', async () => {

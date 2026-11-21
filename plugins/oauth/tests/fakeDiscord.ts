@@ -6,9 +6,8 @@ import { onTestFinished } from 'vite-plus/test';
 import type { IncomingHttpHeaders } from 'node:http';
 import type { AddressInfo } from 'node:net';
 
-const DAYS_IN_A_WEEK = 7;
 // how long discord's access tokens last
-export const WEEK_SECONDS = DAYS_IN_A_WEEK * 24 * 60 * 60;
+export const WEEK_SECONDS = 7 * 24 * 60 * 60;
 
 export interface SeenRequest {
     method: string;

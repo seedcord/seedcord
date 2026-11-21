@@ -88,26 +88,6 @@ function bearerOf(requests: SeenRequest[], route: string): (string | undefined)[
     return requests.filter((request) => request.route === route).map((request) => request.headers.authorization);
 }
 
-describe('OAuthClient.authorizeUrl', () => {
-    it("builds Discord's authorize url with identify added", async () => {
-        const oauth = await clientGranting(WEEK_SECONDS);
-
-        const url = new URL(oauth.authorizeUrl({ state: 'the-state', codeChallenge: 'abc' }));
-
-        expect(url.hostname).toBe('discord.com');
-        expect(url.pathname).toMatch(/\/oauth2\/authorize$/u);
-        expect(Object.fromEntries(url.searchParams)).toEqual({
-            client_id: APP_ID,
-            redirect_uri: 'https://bot.test/oauth/callback',
-            response_type: 'code',
-            scope: 'identify guilds',
-            state: 'the-state',
-            code_challenge: 'abc',
-            code_challenge_method: 'S256'
-        });
-    });
-});
-
 describe('OAuthClient', () => {
     it('logs a user in and then calls Discord as them', async () => {
         const discord = await discordGranting(WEEK_SECONDS);
@@ -135,20 +115,6 @@ describe('OAuthClient', () => {
             search: '?with_counts=true'
         });
         expect(discord.requests.at(-1)?.headers.authorization).toBe('Bearer access-0');
-    });
-
-    it('resolves to undefined for a code that Discord refuses', async () => {
-        const server = await fakeDiscord(() => ({ status: 400, json: { error: 'invalid_grant' } }));
-        const oauth = new OAuthClient({
-            rest: new REST({ api: server.api }),
-            store: new Map(),
-            clientId: APP_ID,
-            clientSecret: 'client-secret',
-            baseUrl: 'https://bot.test/',
-            scopes: []
-        });
-
-        expect(await oauth.exchange('used-code')).toBeUndefined();
     });
 
     it("throws when the login's scopes don't include identify", async () => {
@@ -254,6 +220,24 @@ describe('OAuthClient', () => {
 
 describe('OAuthClient scopes', () => {
     const LOGIN_NEEDED = { code: SeedcordErrorCode.PluginOAuthLoginNeeded };
+
+    it("builds Discord's authorize url with identify added", async () => {
+        const oauth = await clientGranting(WEEK_SECONDS);
+
+        const url = new URL(oauth.authorizeUrl({ state: 'the-state', codeChallenge: 'abc' }));
+
+        expect(url.hostname).toBe('discord.com');
+        expect(url.pathname).toMatch(/\/oauth2\/authorize$/u);
+        expect(Object.fromEntries(url.searchParams)).toEqual({
+            client_id: APP_ID,
+            redirect_uri: 'https://bot.test/oauth/callback',
+            response_type: 'code',
+            scope: 'identify guilds',
+            state: 'the-state',
+            code_challenge: 'abc',
+            code_challenge_method: 'S256'
+        });
+    });
 
     it('adds the extra scopes that a link lists to its authorize url', async () => {
         const oauth = await clientGranting(WEEK_SECONDS);

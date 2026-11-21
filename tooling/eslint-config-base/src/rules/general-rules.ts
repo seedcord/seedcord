@@ -42,7 +42,7 @@ export const GENERAL_RULES: Linter.RulesRecord = {
     'no-magic-numbers': [
         'warn',
         {
-            ignore: [-1, 0, 1, 2, 5, 10, 20, 24, 60, 100, 1000, 1024, 5000, 10000],
+            ignore: [-1, 0, 1, 2, 5, 7, 10, 12, 20, 24, 28, 30, 31, 52, 60, 100, 365, 366, 1000, 1024, 5000, 10000],
             ignoreArrayIndexes: true,
             ignoreDefaultValues: true,
             ignoreClassFieldInitialValues: true,

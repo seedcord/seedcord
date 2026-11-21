@@ -103,7 +103,7 @@ export class Login extends SlashHandler<'login'> {
 }
 ```
 
-`this.core.oauth` is typed because [`seedcord codegen`](/plugins/typing) copies each attached plugin onto `Core`.
+`this.core.oauth` is typed because [`seedcord codegen`](/plugins/typing) adds each attached plugin to the `Core` type.
 
 The link is your `server.url` followed by `oauth/login?returnTo=%2Fservers`. When a visitor opens it, your bot redirects them to Discord's consent screen. Discord then sends them back to `oauth/callback`. The plugin serves both routes.
 
@@ -143,7 +143,7 @@ export const WithSession = OAuth.with({
 
 The plugin calls `onLogin` with the finished login and the callback's `Request`, and sends the visitor the `Response` that `onLogin` returns. A browser resolves the `returnTo` path against your bot's address. If your site is at another address, build the full one from `returnTo` yourself.
 
-The plugin doesn't keep a session for you. `sessions` in the sample is a file of your own that makes the cookie. It saves tokens under `user.id`, and your own cookie is what tells you later which user a browser belongs to. Without `onLogin`, the visitor gets a plain page that says the login worked, which is enough for a bot that only uses the tokens from its commands.
+The plugin doesn't keep a session for you. `sessions` in the sample is a file of your own that makes the cookie. The plugin saves tokens under `user.id`, and your own cookie is what tells you later which user a browser belongs to. Without `onLogin`, the visitor gets a plain page that says the login worked, which is enough for a bot that only uses the tokens from its commands.
 
 {/* prettier-ignore-start */}
 

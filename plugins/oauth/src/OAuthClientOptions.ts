@@ -3,7 +3,7 @@ import type { OAuthScope } from './UserCalls';
 import type { REST } from '@discordjs/rest';
 
 /** The paths of the two login routes under `baseUrl`. */
-export interface OAuthRoutes {
+interface OAuthRoutes {
     /** The route that sends a visitor to Discord. `'oauth/login'` when you leave it out. */
     login?: string | undefined;
     /**
@@ -21,8 +21,8 @@ export interface OAuthRoutes {
  */
 export interface OAuthClientOptions<TScopes extends OAuthScope = never, TExtra extends OAuthScope = never> {
     /**
-     * A `@discordjs/rest` client. The client makes every call through it, and each one waits in its
-     * rate limit queue. Only `joinGuild()` sends its bot token.
+     * A `@discordjs/rest` client. Every call waits in its rate limit queue. Only `joinGuild()` sends its
+     * bot token.
      */
     rest: REST;
     /** Where the tokens are kept, encrypted. */

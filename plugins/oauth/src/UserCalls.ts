@@ -31,7 +31,7 @@ export type GuildJoin = { added: true; member: APIGuildMember } | { added: false
 /** What {@link UserCalls.joinGuild} gives the new member: a nickname, roles, mute, and deafen. */
 export type GuildJoinOptions = Except<RESTPutAPIGuildMemberJSONBody, 'access_token'>;
 
-/** `bot.rest`'s `get`, `post`, `put`, `patch`, and `delete`, sent with one user's token. */
+/** A `REST` client's `get`, `post`, `put`, `patch`, and `delete`, sent with one user's token. */
 export type UserRest = Pick<REST, 'get' | 'post' | 'put' | 'patch' | 'delete'>;
 
 // the string is never a real argument. it's the parameter type because typescript prints it in the

@@ -112,9 +112,10 @@ export class OAuthClient<TScopes extends OAuthScope = never, TExtra extends OAut
      * request, which your server should answer itself.
      *
      * The login route sends the visitor to Discord. The callback route checks that this browser started
-     * the login, saves the user's tokens, and then calls `respond`.
+     * the login, saves the user's tokens, and then calls `respond`. The login route also calls `respond`,
+     * with an `unlisted` outcome, for a link that requests a scope outside `extraScopes`.
      *
-     * @param respond - Returns what the visitor's browser gets after the callback, usually a redirect.
+     * @param respond - Returns what the visitor's browser gets for that outcome, usually a redirect.
      */
     public async fetch(
         request: Request,
@@ -159,8 +160,8 @@ export class OAuthClient<TScopes extends OAuthScope = never, TExtra extends OAut
 
     /**
      * Calls Discord as a user who logged in. `user()`, `guilds()`, `guildMember()`, and `connections()`
-     * return typed results. `get`, `post`, `put`, `patch`, and `delete` take what `bot.rest`'s take and
-     * reach every other route.
+     * return typed results. `get`, `post`, `put`, `patch`, and `delete` take the same arguments as your `REST`
+     * client's methods and reach any other route.
      *
      * Each call reads the user's tokens and refreshes them first when they're about to expire. A typed
      * call also checks that the user granted its scope before it calls Discord.
@@ -176,7 +177,7 @@ export class OAuthClient<TScopes extends OAuthScope = never, TExtra extends OAut
      * ```
      */
     public as(userId: string): UserCalls<TScopes, TExtra> {
-        // these skip the scope check because we can't know which scope a random route needs
+        // these skip the scope check because the client can't tell which scope a route needs
         const unscoped =
             (method: keyof UserRest) =>
             async (route: `/${string}`, options?: RequestData): Promise<unknown> =>
@@ -192,7 +193,10 @@ export class OAuthClient<TScopes extends OAuthScope = never, TExtra extends OAut
             put: unscoped('put'),
             patch: unscoped('patch'),
             delete: unscoped('delete'),
-            // identify isn't checked here because a login without it never gets saved
+            // user() skips scoped() on purpose. every login requests identify, and a login without it never
+            // gets saved, which makes the scope check pointless here. putting it through scoped() would
+            // also make this return `| undefined`, like an extra scope does. the other way is a second
+            // helper just for this one call, and that was felt like a bit too much for this
             user: async () =>
                 this.#sendGranted(
                     userId,
@@ -280,8 +284,8 @@ export class OAuthClient<TScopes extends OAuthScope = never, TExtra extends OAut
         throw new SeedcordError(SeedcordErrorCode.PluginOAuthLoginNeeded, [userId, { missingScope: scope }]);
     }
 
-    // only for a call whose scope the user granted. discord also refuses a token for a scope that they
-    // never granted, while their grant still works
+    // only call this once the user granted the scope. discord also answers 401 for a scope that they never
+    // granted, and their tokens still work then
     async #sendGranted<TResult>(userId: string, saved: SavedTokens, call: TokenCall<TResult>): Promise<TResult> {
         try {
             return await this.#send(userId, saved, call);

@@ -37,8 +37,8 @@ type MadeByLoginRoute = 'state' | 'codeChallenge';
 
 interface ReturnTo {
     /**
-     * Where the visitor should end up after the login. As a path on your own site like `'/dashboard'`.
-     * The finished login has it as `returnTo`. Anything that points at another site is discarded.
+     * A path on your own site, like `'/dashboard'`, for the visitor to end up on after the login. The
+     * finished login has it as `returnTo`. Anything that points at another site is discarded.
      */
     returnTo?: string | undefined;
 }

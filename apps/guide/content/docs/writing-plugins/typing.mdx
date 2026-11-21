@@ -118,7 +118,12 @@ const { flags } = seedcord.attach('flags', WithNames);
 
 `Flags` is `abstract`, which makes `attach('flags', Flags)` a compile error. Without that, a bot could attach the class directly and get the untyped version without noticing.
 
-Two things are different from a plugin without `with()`. `attach` passes every argument after the class to your constructor, and that's where a plugin's options usually go. Your users pass them to `with()` here, so say that in your README. The class that `with()` returns also has its own name, `Attached` in this sample, and seedcord's logger labels a plugin's lines with its class name. The `Object.defineProperty` line sets that name to `Flags`. [`OAuth.with()`](ref:plugin-oauth/OAuth.with) in `@seedcord/plugin-oauth` works this way.
+Two things are different from a plugin without `with()`:
+
+- **Where the options go.** `attach` passes every argument after the class to your constructor, and that's where a plugin's options usually go. Your users pass them to `with()` here, so say that in your README.
+- **The class name.** The class that `with()` returns has its own name, `Attached` in this sample, and seedcord's logger labels a plugin's lines with its class name. The `Object.defineProperty` line sets that name to `Flags`.
+
+[`OAuth.with()`](ref:plugin-oauth/OAuth.with) in `@seedcord/plugin-oauth` works this way.
 
 Skip `with()` when your options don't change a type. A plain constructor argument is less for your users to learn.
 

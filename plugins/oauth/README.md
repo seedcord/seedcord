@@ -58,7 +58,7 @@ export default new Seedcord({
     'oauth',
     OAuth.with({
         scopes: ['guilds'],
-        onLogin: ({ user, returnTo }) => Response.redirect(`https://bot.example.com${returnTo ?? '/'}`)
+        onLogin: ({ returnTo }) => Response.redirect(`https://bot.example.com${returnTo ?? '/'}`)
     })
 );
 ```
@@ -114,7 +114,7 @@ const oauth = new OAuthClient({
 Bun.serve({
     async fetch(request) {
         const login = await oauth.fetch(request, (outcome) =>
-            // runs on /oauth/callback, after the user's tokens are saved
+            // gets every outcome. a login arrives from /oauth/callback, after the user's tokens are saved
             outcome.kind === 'login'
                 ? Response.redirect('https://example.com/')
                 : new Response('Try again.', { status: 400 })

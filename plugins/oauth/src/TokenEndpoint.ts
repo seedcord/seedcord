@@ -13,16 +13,10 @@ import type { Simplify } from 'type-fest';
 
 // what a code exchange answers. `guild` is there for a login with the bot scope, and `webhook` for one
 // with webhook.incoming
-export type ExchangeResult = Simplify<
+type ExchangeResult = Simplify<
     RESTPostOAuth2AccessTokenResult &
         Partial<Pick<RESTPostOAuth2AccessTokenWithBotAndGuildsAndWebhookIncomingScopeResult, 'guild' | 'webhook'>>
 >;
-
-// discord's oauth2 routes. /oauth2/token trades a login code for tokens and refreshes them,
-// /oauth2/token/revoke ends a grant, and /oauth2/@me returns the user that a token belongs to.
-//
-// the two token routes aren't called like the bot's other calls. they're sent as the app, with
-// the client id and secret, and discord takes them as a form.
 
 export interface CodeExchange {
     code: string;
@@ -38,7 +32,7 @@ type TokenAnswer<TGrant> =
     | { kind: 'granted'; grant: TGrant }
     | { kind: 'refused'; invalidGrant: boolean; error: unknown };
 
-export type RefreshAnswer = TokenAnswer<RESTPostOAuth2AccessTokenResult>;
+type RefreshAnswer = TokenAnswer<RESTPostOAuth2AccessTokenResult>;
 
 // auth: false stops @discordjs/rest from sending the bot token, and from clearing it when the call gets a 401
 const AS_ANOTHER_IDENTITY = { auth: false } satisfies RequestData;
@@ -88,22 +82,25 @@ export class TokenEndpoint {
             return { kind: 'granted', grant: (await this.post(Routes.oauth2TokenExchange(), fields)) as TGrant };
         } catch (error) {
             const code = discordErrorOf(error)?.code;
-            if (code === 'invalid_client') {
-                throw new SeedcordError(SeedcordErrorCode.PluginOAuthSecretRefused, { cause: error });
-            }
             // an oauth error's code is a word. discord's other errors have a number
             if (typeof code !== 'string') throw error;
             return { kind: 'refused', invalidGrant: code === 'invalid_grant', error };
         }
     }
 
+    // discord takes the token routes as a form, sent as the app with the client id and secret
     private async post(route: `/${string}`, fields: Record<string, string>): Promise<unknown> {
-        return this.rest.post(route, {
-            ...AS_ANOTHER_IDENTITY,
-            headers: { Authorization: this.authorization, 'Content-Type': 'application/x-www-form-urlencoded' },
-            body: new URLSearchParams(fields),
-            passThroughBody: true
-        });
+        try {
+            return await this.rest.post(route, {
+                ...AS_ANOTHER_IDENTITY,
+                headers: { Authorization: this.authorization, 'Content-Type': 'application/x-www-form-urlencoded' },
+                body: new URLSearchParams(fields),
+                passThroughBody: true
+            });
+        } catch (error) {
+            if (discordErrorOf(error)?.code !== 'invalid_client') throw error;
+            throw new SeedcordError(SeedcordErrorCode.PluginOAuthSecretRefused, { cause: error });
+        }
     }
 }
 

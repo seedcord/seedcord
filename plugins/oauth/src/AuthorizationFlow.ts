@@ -1,13 +1,15 @@
 import { Buffer } from 'node:buffer';
 
 import { makeURLSearchParams } from '@discordjs/rest';
-import { isPlainObject } from '@seedcord/utils/internal';
 import { OAuth2Routes } from 'discord-api-types/v10';
 import { compact, difference, union } from 'es-toolkit';
+
+import { PendingCookie } from './PendingCookie';
 
 import type { AnyAuthorizeUrlOptions, AnyLoginLink, BotLinkOptions, InstallLinkOptions } from './AuthorizeUrlOptions';
 import type { FailedLogin, LoginOutcome, OAuthLogin } from './LoginOutcome';
 import type { MountedPath } from './MountedPath';
+import type { PendingLogin } from './PendingCookie';
 import type { OAuthScope } from './UserCalls';
 import type { UserTokens } from './UserTokens';
 import type { Promisable } from 'type-fest';
@@ -37,19 +39,8 @@ interface FlowOptions {
     callback: MountedPath;
 }
 
-interface Pending {
-    verifier: string | undefined;
-    returnTo: string | undefined;
-}
-
 const ISSUER = 'https://discord.com';
-const COOKIE = 'seedcord_oauth';
-// how long a visitor has to get through discord's consent screen. 10 minutes is a guess
-const COOKIE_SECONDS = 10 * 60;
 const RANDOM_BYTES = 32;
-// the shape of a randomToken(). the callback puts the url's `state` in a cookie's name, and a `state`
-// of any other shape could add its own cookie attributes there
-const RANDOM_TOKEN = /^[\w-]{43}$/u;
 const FOUND = 302;
 
 function randomToken(): string {
@@ -60,41 +51,8 @@ async function challengeOf(verifier: string): Promise<string> {
     return Buffer.from(await crypto.subtle.digest('SHA-256', Buffer.from(verifier))).toString('base64url');
 }
 
-function cookieOf(request: Request, name: string): string | undefined {
-    const pair = request.headers
-        .get('cookie')
-        ?.split('; ')
-        .find((part) => part.startsWith(`${name}=`));
-    return pair?.slice(name.length + 1);
-}
-
-// returnTo comes from the url, and anyone can write a link. without this check a real login could end
-// on someone else's site. '//evil.test' and '/\evil.test' both look like paths, but a browser reads them
-// as another site. parsing against a fake origin catches those because the origin changes
-function ownPath(returnTo: string): string | undefined {
-    if (!returnTo.startsWith('/')) return undefined;
-    const origin = 'https://own.invalid';
-    return URL.parse(returnTo, origin)?.origin === origin ? returnTo : undefined;
-}
-
-// a visitor can edit their own cookie. every field is checked here, the one place that reads it
-function pendingIn(cookie: string | undefined): Pending | undefined {
-    if (cookie === undefined) return undefined;
-    let saved: unknown;
-    try {
-        saved = JSON.parse(Buffer.from(cookie, 'base64url').toString());
-    } catch {
-        return undefined;
-    }
-    if (!isPlainObject(saved)) return undefined;
-
-    const { verifier, returnTo } = saved;
-    if (verifier !== undefined && typeof verifier !== 'string') return undefined;
-    return { verifier, returnTo: typeof returnTo === 'string' ? ownPath(returnTo) : undefined };
-}
-
-// reads back the options that loginUrl() put in the query. a visitor can edit the url, and that's why
-// only digits get through
+// reads back the options that loginUrl() put in the query. only digits get through because a visitor
+// can edit the url
 function installOptionsIn(query: URLSearchParams): BotLinkOptions & InstallLinkOptions {
     const digits = (name: string): string | undefined => {
         const value = query.get(name);
@@ -110,7 +68,11 @@ function installOptionsIn(query: URLSearchParams): BotLinkOptions & InstallLinkO
 }
 
 export class AuthorizationFlow {
-    constructor(private readonly options: FlowOptions) {}
+    private readonly cookies: PendingCookie;
+
+    constructor(private readonly options: FlowOptions) {
+        this.cookies = new PendingCookie(options.callback.url);
+    }
 
     public async fetch(
         request: Request,
@@ -127,11 +89,11 @@ export class AuthorizationFlow {
         if (!this.options.callback.matches(url.pathname)) return undefined;
 
         const state = query.get('state') ?? '';
-        const pending = RANDOM_TOKEN.test(state) ? pendingIn(cookieOf(request, this.cookieName(state))) : undefined;
+        const pending = this.cookies.read(request, state);
         if (!pending) return this.uncached(await respond({ kind: 'invalid' }));
 
         const response = this.uncached(await respond(await this.finish(query, pending)));
-        response.headers.append('set-cookie', this.cookie(state, '', 0));
+        response.headers.append('set-cookie', this.cookies.clear(state));
         return response;
     }
 
@@ -186,7 +148,6 @@ export class AuthorizationFlow {
         const pkce = !union(scopes, extra).includes('role_connections.write');
         const state = randomToken();
         const verifier = pkce ? randomToken() : undefined;
-        const pending = { verifier, returnTo: query.get('returnTo') ?? undefined };
 
         const location = this.authorizeUrl({
             ...installOptionsIn(query),
@@ -195,12 +156,12 @@ export class AuthorizationFlow {
             scopes: extra
         });
         const response = this.uncached(new Response(null, { status: FOUND, headers: { location } }));
-        const saved = Buffer.from(JSON.stringify(pending)).toString('base64url');
-        response.headers.append('set-cookie', this.cookie(state, saved, COOKIE_SECONDS));
+        const returnTo = query.get('returnTo') ?? undefined;
+        response.headers.append('set-cookie', this.cookies.save(state, { verifier, returnTo }));
         return response;
     }
 
-    private async finish(query: URLSearchParams, pending: Pending): Promise<LoginOutcome> {
+    private async finish(query: URLSearchParams, pending: PendingLogin): Promise<LoginOutcome> {
         if (query.get('iss') !== ISSUER) return { kind: 'invalid' };
 
         const error = query.get('error');
@@ -211,20 +172,6 @@ export class AuthorizationFlow {
         if (!login) return { kind: 'invalid' };
         const permissions = query.get('permissions') ?? undefined;
         return { kind: 'login', login: { ...login, returnTo: pending.returnTo, permissions } };
-    }
-
-    // each login has its own cookie because a second tab's login would replace a shared one
-    private cookieName(state: string): string {
-        return `${COOKIE}_${state}`;
-    }
-
-    // HttpOnly so page scripts can't read it. it has to be Lax because Strict wouldn't send it when
-    // discord redirects back. the path comes from the public url since that's the only one the browser has
-    private cookie(state: string, value: string, maxAge: number): string {
-        const { url } = this.options.callback;
-        const secure = url.protocol === 'https:' ? '; Secure' : '';
-        const path = new URL('.', url).pathname;
-        return `${this.cookieName(state)}=${value}; HttpOnly; SameSite=Lax; Path=${path}; Max-Age=${maxAge}${secure}`;
     }
 
     // these urls have the code and the state in them, and a cache shouldn't keep either

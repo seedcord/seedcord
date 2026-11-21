@@ -312,13 +312,13 @@ const messages = {
         `${paint.path(dir)} doesn't have ${paint.path(baseFile)}, the file that lists every message. Add it, or set ${paint.bold('base')} to a locale that has a file.`,
 
     [SeedcordErrorCode.PluginOAuthLoginNeeded]: (userId: string, why: LoginNeededReason) =>
-        `The user ${paint.sky(userId)} has to log in with Discord again. ${loginNeededBecause(why)} Send them to the login link.`,
+        `The user ${paint.sky(userId)} has to log in with Discord. ${loginNeededBecause(why)} Send them to the login link.`,
     [SeedcordErrorCode.PluginOAuthIdentifyMissing]: () =>
         `Discord didn't return the user who logged in because the authorize link didn't request the ${paint.bold('identify')} scope. Build the link with ${paint.bold('authorizeUrl()')}, which always adds it.`,
     [SeedcordErrorCode.PluginOAuthTokensInMemory]: (plugin: string) =>
         `${paint.sky(plugin)} saves each user's tokens in ${paint.bold('kv')}, and this bot's ${paint.bold('kv')} keeps everything in memory. A restart would delete the tokens. Set ${paint.bold('kv')} in your bot's config to a driver that saves to a file or a database.`,
     [SeedcordErrorCode.PluginOAuthSecretRefused]: () =>
-        `Discord refused the client secret. Copy it again from your application's OAuth2 page in the Developer Portal. The OAuth plugin reads it from ${paint.bold('DISCORD_CLIENT_SECRET')}.`,
+        `Discord refused the client secret. Copy it again from your application's OAuth2 page in the Developer Portal. The OAuth plugin reads it from ${paint.bold('DISCORD_CLIENT_SECRET')}, and ${paint.sky('OAuthClient')} takes it as ${paint.bold('clientSecret')}.`,
 
     [SeedcordErrorCode.CliCancelled]: () => 'Cancelled.',
 

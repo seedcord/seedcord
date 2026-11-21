@@ -1,7 +1,7 @@
 import { paint } from '@seedcord/errors';
 import { setColorLevel } from '@seedcord/errors/internal';
 import chalk from 'chalk';
-import { describe, expect, it, onTestFinished } from 'vite-plus/test';
+import { describe, expect, it } from 'vite-plus/test';
 
 import { LoggerUtilities } from '#src/LoggerUtilities';
 
@@ -18,6 +18,13 @@ class FakeLogger implements ILogger {
     private record(level: LogLevel) {
         return (text: string): void => void this.calls.push({ level, text });
     }
+}
+
+// chalk's level belongs to the whole worker, and the next test file would inherit it
+function fullColor(): Disposable {
+    const before = chalk.level;
+    setColorLevel(3);
+    return { [Symbol.dispose]: () => setColorLevel(before) };
 }
 
 const plain = (value: string): string =>
@@ -102,9 +109,7 @@ describe('LoggerUtilities', () => {
         ['error', 'coral'],
         ['info', 'mint']
     ] as const)('colors a %s block heading %s', (level, tone) => {
-        const before = chalk.level;
-        setColorLevel(3);
-        onTestFinished(() => setColorLevel(before));
+        using _colors = fullColor();
         const logger = new FakeLogger();
         new LoggerUtilities(logger).block('Head', ['line'], level);
 

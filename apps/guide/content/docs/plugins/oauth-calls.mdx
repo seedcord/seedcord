@@ -5,7 +5,7 @@ description: Call Discord as a user who logged in, with typed calls for each sco
 
 A user's tokens only work for the scopes that they approved. With a plain HTTP client, you'd find out that a call needs a scope you never requested when Discord refuses it.
 
-[`@seedcord/plugin-oauth`](/plugins/oauth) types each call by the scopes you list. You get a call for every scope you request, and a call for a scope you didn't list doesn't compile.
+[`@seedcord/plugin-oauth`](/plugins/oauth) types each call by the scopes you list. You get a call for every scope you request.
 
 ## The calls for your scopes
 
@@ -45,7 +45,7 @@ This bot attaches the plugin with `scopes: ['guilds']`, so `calls.guilds()` comp
 | [`guilds()`](ref:plugin-oauth/UserCalls.guilds) | `guilds` | the servers that the user is in |
 | [`guildMember(guildId)`](ref:plugin-oauth/UserCalls.guildMember) | `guilds.members.read` | the user's member object in one server |
 | [`connections()`](ref:plugin-oauth/UserCalls.connections) | `connections` | the accounts that the user connected on Discord, like GitHub |
-| [`joinGuild(guildId)`](ref:plugin-oauth/UserCalls.joinGuild) | `guilds.join` | `{ added: true, member }`, or `{ added: false }` for a user who was already in the server. Your bot has to be in that server |
+| [`joinGuild(guildId)`](ref:plugin-oauth/UserCalls.joinGuild) | `guilds.join` | `{ added: true, member }`, or `{ added: false }` for a user who was already in the server. Your bot has to be in that server and [have Create Invite there](https://docs.discord.com/developers/resources/guild#add-guild-member) |
 | [`roleConnection()`](ref:plugin-oauth/UserCalls.roleConnection) | `role_connections.write` | what your application stored for the user's Linked Roles |
 | [`setRoleConnection(connection)`](ref:plugin-oauth/UserCalls.setRoleConnection) | `role_connections.write` | the role connection that Discord stored |
 

@@ -4,7 +4,6 @@ import { Plugin } from '@seedcord/core/plugin';
 import { paint, SeedcordErrorCode } from '@seedcord/errors';
 import { SeedcordError, SeedcordTypeError } from '@seedcord/errors/internal';
 import { Converters, Envapter } from 'envapt';
-import { memoize } from 'es-toolkit';
 
 import { OAuthClient } from './OAuthClient';
 
@@ -36,13 +35,14 @@ export interface OAuthOptions<TScopes extends OAuthScope = never, TExtra extends
 
 const BAD_REQUEST = 400;
 const CLIENT_SECRET_KEY = 'DISCORD_CLIENT_SECRET';
-// the redirect can get removed in the portal later, and then we want the warning back. once a day is a guess
+// someone can remove the redirect in the portal later, and the warning should come back then. once a day
+// is a guess
 const RECHECK_REDIRECT_MS = 24 * 60 * 60 * 1000;
 
 const FAILURE_PAGES = {
     denied: 'The login was cancelled. You can close this tab.',
     invalid: "This login didn't finish. Go back and start again.",
-    unlisted: "This login link requests something that the bot doesn't allow."
+    unlisted: "This login link requests a scope that this bot doesn't allow."
 } satisfies Record<FailedLogin['kind'], string>;
 
 /**
@@ -81,25 +81,11 @@ const FAILURE_PAGES = {
 export abstract class OAuth<TScopes extends OAuthScope = never, TExtra extends OAuthScope = never> extends Plugin {
     protected abstract readonly options: OAuthOptions<TScopes, TExtra>;
 
-    // built on first use since a gateway bot only has its application id after it logs in.
-    // don't swap this for once(). if the first call throws, once() still counts it as done and every
-    // call after that returns undefined
-    readonly #client = memoize(
-        () =>
-            new OAuthClient({
-                rest: this.core.rest,
-                store: this.kv.collection<string>('tokens'),
-                clientId: this.core.applicationId,
-                clientSecret: this.#clientSecret(),
-                baseUrl: this.core.url,
-                scopes: this.options.scopes,
-                extraScopes: this.options.extraScopes
-            })
-    );
+    #built?: OAuthClient<TScopes, TExtra> | undefined;
 
     /**
-     * Returns the plugin class to attach, with your options in it. Attaching `OAuth` directly would lose
-     * your scopes in the types.
+     * Returns the plugin class to attach, with your options in it. Attaching `OAuth` directly
+     * doesn't compile, because it's abstract.
      *
      * @example
      * ```ts
@@ -131,8 +117,8 @@ export abstract class OAuth<TScopes extends OAuthScope = never, TExtra extends O
     }
 
     public override async ready(): Promise<void> {
-        // an edge bot runs ready() every time an isolate starts. saving the confirmed address in kv means
-        // we only call discord for it once a day
+        // an edge bot runs ready() every time an isolate starts. with the confirmed address in kv, discord
+        // gets asked once a day
         const confirmed = this.kv.collection<string>('portal');
         try {
             const callback = this.#client().redirectUri;
@@ -189,11 +175,25 @@ export abstract class OAuth<TScopes extends OAuthScope = never, TExtra extends O
      * @example
      * ```ts
      * // requests one more scope, and ends on the page that needed it
-     * bot.oauth.loginUrl({ scopes: ['connections'], returnTo: '/dashboard/accounts' });
+     * this.core.oauth.loginUrl({ scopes: ['connections'], returnTo: '/dashboard/accounts' });
      * ```
      */
     public loginUrl(link?: LoginLink<TScopes, TExtra>): string {
         return this.#client().loginUrl(link);
+    }
+
+    // built on first use since a gateway bot only has its application id after it logs in
+    #client(): OAuthClient<TScopes, TExtra> {
+        this.#built ??= new OAuthClient({
+            rest: this.core.rest,
+            store: this.kv.collection<string>('tokens'),
+            clientId: this.core.applicationId,
+            clientSecret: this.#clientSecret(),
+            baseUrl: this.core.url,
+            scopes: this.options.scopes,
+            extraScopes: this.options.extraScopes
+        });
+        return this.#built;
     }
 
     async #respond(outcome: LoginOutcome, request: Request): Promise<Response> {
@@ -204,8 +204,7 @@ export abstract class OAuth<TScopes extends OAuthScope = never, TExtra extends O
         return onLogin?.(outcome.login, request) ?? new Response('You are logged in. You can close this tab.');
     }
 
-    // a method because the secret can't be read in the constructor. on workers envapt throws if you read
-    // before the bot binds its env, and plugins get built before that
+    // envapt throws on workers if you read before the bot binds its env, and plugins get built before that
     #clientSecret(): string {
         if (!Envapter.has(CLIENT_SECRET_KEY)) {
             throw new SeedcordError(SeedcordErrorCode.ConfigMissingEnv, [
