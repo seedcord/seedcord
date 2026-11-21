@@ -3,8 +3,19 @@ import { paint } from '@seedcord/errors';
 import type { StepPrinter } from '#core/output/StepPrinter';
 
 export interface SectionRow {
-    marker?: string;
+    marker?: string | undefined;
     items: string[];
+}
+
+interface RowItem {
+    label: string;
+    detail: string;
+}
+
+// one row for all the labels, or a row each when the details show
+export function itemRows(items: readonly RowItem[], detailed: boolean, marker?: string): SectionRow[] {
+    if (detailed) return items.map(({ label, detail }) => ({ marker, items: [`${label}  ${paint.mute(detail)}`] }));
+    return items.length === 0 ? [] : [{ marker, items: items.map(({ label }) => label) }];
 }
 
 export interface Section {

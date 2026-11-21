@@ -2,6 +2,8 @@ import { commandRefOf } from '@seedcord/core/internal';
 import { paint } from '@seedcord/errors';
 import { ApplicationCommandType } from 'discord-api-types/v10';
 
+import { itemRows } from '#core/output/printSections';
+
 import type { SectionRow } from '#core/output/printSections';
 
 type CommandLike = Parameters<typeof commandRefOf>[0];
@@ -24,6 +26,8 @@ export function commandLabel(command: CommandLike, tone?: Tone): string {
 }
 
 export function labelRows(commands: readonly (CommandLike & { id: string })[], verbose: boolean): SectionRow[] {
-    if (verbose) return commands.map((command) => ({ items: [`${commandLabel(command)}  ${paint.mute(command.id)}`] }));
-    return [{ items: commands.map((command) => commandLabel(command)) }];
+    return itemRows(
+        commands.map((command) => ({ label: commandLabel(command), detail: command.id })),
+        verbose
+    );
 }

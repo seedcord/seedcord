@@ -5,10 +5,14 @@ import { isInteractive } from '@seedcord/utils/internal';
 
 import { BaseCommand } from '#core/BaseCommand';
 import { confirmOrYes } from '#core/output/confirm';
+import { stderrSteps } from '#core/output/stderrSteps';
 import { isVerbose } from '#core/verbose';
 
+import { ListPresenter } from './list/ListPresenter';
+import { ListRunner } from './list/ListRunner';
 import { PushPresenter } from './push/PushPresenter';
 import { PUSH_STEPS, PushRunner } from './push/PushRunner';
+import { EMOJI_STEPS } from './readEmojis';
 
 import type { PushPrompts } from './push/PushPresenter';
 import type { PushOptions } from './push/PushRunner';
@@ -16,6 +20,7 @@ import type { Command, CommandUnknownOpts } from '@commander-js/extra-typings';
 
 interface EmojisDeps {
     pushRunner: PushRunner;
+    listRunner: ListRunner;
     prompter: Prompter;
 }
 
@@ -23,11 +28,17 @@ type PushFlags = PushOptions & { readonly yes?: boolean | undefined };
 
 export class EmojisCommand extends BaseCommand {
     private readonly pushRunner: PushRunner;
+    private readonly listRunner: ListRunner;
     private readonly prompter: Prompter;
 
-    constructor({ pushRunner = PushRunner.create(), prompter = new Prompter() }: Partial<EmojisDeps> = {}) {
+    constructor({
+        pushRunner = PushRunner.create(),
+        listRunner = ListRunner.create(),
+        prompter = new Prompter()
+    }: Partial<EmojisDeps> = {}) {
         super('emojis', "Manage your application's emojis on Discord");
         this.pushRunner = pushRunner;
+        this.listRunner = listRunner;
         this.prompter = prompter;
     }
 
@@ -46,6 +57,18 @@ export class EmojisCommand extends BaseCommand {
                     this.pushRunner.run(new PushPresenter(printer, this.pushPrompts(flags), isVerbose(command)), flags)
                 )
             );
+
+        emojis
+            .command('list')
+            .description('Compare your emojis folder with the emojis on Discord')
+            .option('--check', 'Exit with an error when the folder has files that are missing on Discord')
+            .option('--json', 'Print the listing as JSON for scripts')
+            .action((flags, command) => {
+                if (flags.json) return this.runJson(command, () => this.listRunner.json(stderrSteps(), flags));
+                return this.runSteps(command, EMOJI_STEPS, (printer) =>
+                    this.listRunner.run(new ListPresenter(printer, isVerbose(command)), flags)
+                );
+            });
 
         return emojis;
     }

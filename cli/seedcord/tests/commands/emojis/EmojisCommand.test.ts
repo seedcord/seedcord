@@ -4,6 +4,7 @@ import { SeedcordErrorCode } from '@seedcord/errors';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vite-plus/test';
 
 import { EmojisCommand } from '#commands/emojis/EmojisCommand';
+import { ListRunner } from '#commands/emojis/list/ListRunner';
 import { PushRunner } from '#commands/emojis/push/PushRunner';
 import { captureOutput } from '#tests/captureOutput';
 import { fakeProject } from '#tests/commands/commands/fakeBot';
@@ -20,10 +21,11 @@ async function run(args: string[], prompter?: Prompter): Promise<Ran> {
     const project = await fakeProject();
     await writeEmojis(project.dir, { 'wave.png': 'new wave', 'seed.png': 's', 'fresh.png': 'f' });
     const discord = fakeEmojiDiscord({ emojis: ['wave', 'seed'] });
-    const pushRunner = new PushRunner({ projectLoader: project, openDiscord: () => discord.rest });
+    const deps = { projectLoader: project, openDiscord: () => discord.rest };
+    const runners = { pushRunner: new PushRunner(deps), listRunner: new ListRunner(deps) };
 
     const program = new Command().exitOverride();
-    new EmojisCommand(prompter ? { pushRunner, prompter } : { pushRunner }).register(program);
+    new EmojisCommand(prompter ? { ...runners, prompter } : runners).register(program);
     return { discord, done: program.parseAsync(['emojis', ...args], { from: 'user' }).then(() => undefined) };
 }
 
@@ -111,5 +113,41 @@ describe('seedcord emojis push, off a terminal', () => {
         await ran.done;
 
         expect(changes(ran)).toEqual(['POST fresh', 'PATCH wave to sc_wave-id', 'POST wave', 'DELETE sc_wave-id']);
+    });
+});
+
+describe('seedcord emojis list', () => {
+    it('prints only the JSON on stdout with --json', async () => {
+        using output = captureOutput();
+
+        const ran = await run(['list', '--json']);
+        await ran.done;
+
+        expect(JSON.parse(output.stdout())).toMatchObject({
+            application: { name: 'seed beta' },
+            notUploaded: [{ name: 'fresh', key: 'Fresh' }]
+        });
+    });
+
+    it('exits 1 under --check when a file is missing on Discord', async () => {
+        using output = captureOutput();
+
+        const ran = await run(['list', '--check']);
+        await ran.done;
+
+        expect(output.stdout()).toContain('  not uploaded  1 emoji\n    + fresh\n');
+        expect(output.stderr()).toContain(`[${SeedcordErrorCode.ConfigEmojiNotFound}]`);
+        expect(process.exitCode).toBe(1);
+    });
+
+    it('exits 1 for --check with --json and prints the error in place of the JSON', async () => {
+        using output = captureOutput();
+
+        const ran = await run(['list', '--check', '--json']);
+        await ran.done;
+
+        expect(output.stdout()).toBe('');
+        expect(output.stderr()).toContain(`[${SeedcordErrorCode.ConfigEmojiNotFound}]`);
+        expect(process.exitCode).toBe(1);
     });
 });

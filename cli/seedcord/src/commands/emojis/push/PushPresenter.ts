@@ -7,22 +7,15 @@ import { printEdgeHint } from '#core/output/printEdgeHint';
 import { printSections } from '#core/output/printSections';
 import { StepsPresenter } from '#core/output/StepsPresenter';
 
-import type { UploadedEmoji, UploadedFile } from '#commands/emojis/emojiDiff';
-import type { EmojiSession } from '#commands/emojis/EmojiSession';
+import type { UploadedFile } from '#commands/emojis/emojiDiff';
 import type { Confirm } from '#core/output/confirm';
 import type { Section, SectionRow } from '#core/output/printSections';
 import type { PresenterOutput } from '#core/output/StepsPresenter';
 import type { PushPlan, PushResult, PushStep } from './PushRunner';
-import type { EmojiFile } from '@seedcord/utils/internal';
 
 export interface PushPrompts {
     confirm: Confirm;
     pick: (names: readonly string[]) => Promise<string[]>;
-}
-
-interface DiscordRead {
-    session: EmojiSession;
-    onDiscord: readonly UploadedEmoji[];
 }
 
 const emojis = (count: number): string => plural(count, 'emoji');
@@ -50,20 +43,6 @@ export class PushPresenter extends StepsPresenter<PushStep> {
         private readonly verbose: boolean
     ) {
         super(output);
-    }
-
-    public readFolder(task: () => Promise<EmojiFile[]>): Promise<EmojiFile[]> {
-        return this.output.step('read folder', task, (files) => emojis(files.length));
-    }
-
-    public async readDiscord(task: () => Promise<DiscordRead>): Promise<DiscordRead> {
-        const read = await this.output.step(
-            'read discord',
-            task,
-            ({ session, onDiscord }) => `${emojis(onDiscord.length)} on ${paint.bold(session.app.name)}`
-        );
-        this.output.detail('app', paint.mute(read.session.app.id));
-        return read;
     }
 
     // undefined when the picker was cancelled

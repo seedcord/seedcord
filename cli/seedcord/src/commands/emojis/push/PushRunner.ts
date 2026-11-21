@@ -2,20 +2,19 @@ import { stat } from 'node:fs/promises';
 
 import { SeedcordErrorCode } from '@seedcord/errors';
 import { SeedcordError, SeedcordTypeError, throwSingleOrAggregate } from '@seedcord/errors/internal';
-import { discordErrorOf, errorReason, readEmojiFolder } from '@seedcord/utils/internal';
+import { discordErrorOf, errorReason } from '@seedcord/utils/internal';
 import { RESTJSONErrorCodes } from 'discord-api-types/v10';
 
-import { diffEmojis } from '#commands/emojis/emojiDiff';
-import { EmojiSession } from '#commands/emojis/EmojiSession';
+import { EMOJI_STEPS, readEmojis } from '#commands/emojis/readEmojis';
 import { defaultRunnerDeps } from '#core/discord/runnerDeps';
-import { BOT_STEPS, loadBot } from '#core/modules/loadBot';
 
 import type { EmojiDiff, UploadedEmoji, UploadedFile } from '#commands/emojis/emojiDiff';
+import type { EmojiSession } from '#commands/emojis/EmojiSession';
 import type { RunnerDeps } from '#core/discord/runnerDeps';
 import type { PushPresenter } from './PushPresenter';
 import type { EmojiFile } from '@seedcord/utils/internal';
 
-export const PUSH_STEPS = [...BOT_STEPS, 'read folder', 'read discord', 'upload'] as const;
+export const PUSH_STEPS = [...EMOJI_STEPS, 'upload'] as const;
 export type PushStep = (typeof PUSH_STEPS)[number];
 
 export interface PushOptions {
@@ -89,15 +88,7 @@ export class PushRunner {
     }
 
     public async run(presenter: PushPresenter, { replace = [] }: PushOptions): Promise<void> {
-        const { config, instance } = await loadBot(presenter, this.deps.projectLoader, process.cwd());
-        const folder = config.emojis.dir;
-
-        const files = await presenter.readFolder(() => readEmojiFolder(folder));
-        const { session, onDiscord } = await presenter.readDiscord(async () => {
-            const session = await EmojiSession.open(this.deps.openDiscord(instance));
-            return { session, onDiscord: await session.list() };
-        });
-        const diff = diffEmojis(files, onDiscord);
+        const { folder, target, session, files, diff } = await readEmojis(presenter, this.deps, process.cwd());
 
         const names = replace === true ? await presenter.pickReplacements(diff.uploaded) : replace;
         if (names === undefined) return;
@@ -118,7 +109,7 @@ export class PushRunner {
         if (!(await presenter.approve(plan))) return;
 
         const result = await presenter.upload(() => this.send(session, plan));
-        presenter.result(result, config.target.kind === 'edge');
+        presenter.result(result, target === 'edge');
         if (result.failed.length > 0) throw new SeedcordError(SeedcordErrorCode.CliSomeFailed, ['emojis', 'uploaded']);
     }
 
