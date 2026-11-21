@@ -48,7 +48,7 @@
         "coverage": "vp test run --coverage"
     },
     "dependencies": {
-        "@microsoft/api-extractor-model": "7.33.14",
+        "@microsoft/api-extractor-model": "7.33.16",
         "@microsoft/tsdoc": "^0.17.1",
         "@seedcord/docs-generator": "workspace:^",
         "@seedcord/docs-search": "workspace:^",
