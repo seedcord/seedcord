@@ -11,11 +11,13 @@ declare module '@seedcord/http' {
     interface Core {
         db: AttachedPlugin<(typeof Bot)['db']>;
         i18n: AttachedPlugin<(typeof Bot)['i18n']>;
+        oauth: AttachedPlugin<(typeof Bot)['oauth']>;
         stats: AttachedPlugin<(typeof Bot)['stats']>;
     }
     interface SlashRegistry {
         ping: { options: { detailed: { kind: 'boolean'; required: false } }; cache: 'cached' };
         roll: { options: { sides: { kind: 'integer'; required: false } }; cache: 'cached' };
+        servers: { options: {}; cache: 'cached' };
     }
     interface UserContextMenuRegistry {
 

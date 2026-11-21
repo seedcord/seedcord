@@ -278,6 +278,15 @@ export enum SeedcordErrorCode {
     /** Two or more command translation files have problems. Each one is in the error's `errors`. */
     PluginI18nCommandProblems = 2411,
 
+    /** A call as a user needs that user to log in with Discord again. */
+    PluginOAuthLoginNeeded = 2501,
+    /** Discord didn't return a user for a finished login because its authorize link didn't request `identify`. */
+    PluginOAuthIdentifyMissing = 2502,
+    /** The OAuth plugin started on a bot whose `kv` keeps everything in memory. */
+    PluginOAuthTokensInMemory = 2503,
+    /** Discord refused the client secret on a token call. */
+    PluginOAuthSecretRefused = 2504,
+
     /** Someone pressed Ctrl-C at a prompt in `seedcord` or `create-seedcord`. */
     CliCancelled = 3001,
 
