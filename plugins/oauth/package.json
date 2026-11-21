@@ -60,6 +60,7 @@
     "dependencies": {
         "@discordjs/rest": "catalog:deps",
         "@seedcord/errors": "workspace:^",
+        "@seedcord/utils": "workspace:^",
         "discord-api-types": "catalog:deps",
         "es-toolkit": "catalog:deps",
         "type-fest": "catalog:deps"

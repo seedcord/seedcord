@@ -4,7 +4,7 @@ import { describe, expect, it } from 'vite-plus/test';
 
 import { OAuthClient } from '#src/OAuthClient';
 
-import { fakeDiscord } from './fakeDiscord';
+import { CommonJsREST, fakeDiscord } from './fakeDiscord';
 
 import type { TokenStore } from '#src/TokenVault';
 import type { SeenRequest } from './fakeDiscord';
@@ -25,7 +25,11 @@ interface Discord {
 
 // acts like Discord for one user. every refresh token works once, each token it grants lasts `expiresIn`,
 // and the tokens are numbered in the order it granted them: access-0 and refresh-0, then access-1
-async function discordGranting(expiresIn: number, scope = 'identify guilds'): Promise<Discord> {
+async function discordGranting(
+    expiresIn: number,
+    scope = 'identify guilds',
+    Rest: typeof REST = REST
+): Promise<Discord> {
     const live = { refreshToken: '', granted: 0 };
     const grant = (): object => {
         const number = live.granted++;
@@ -64,7 +68,7 @@ async function discordGranting(expiresIn: number, scope = 'identify guilds'): Pr
         store: new Map(),
         client: (store = discord.store) =>
             new OAuthClient({
-                rest: new REST({ api: server.api }).setToken('bot-token'),
+                rest: new Rest({ api: server.api }).setToken('bot-token'),
                 store,
                 clientId: APP_ID,
                 clientSecret: 'client-secret',
@@ -167,8 +171,11 @@ describe('OAuthClient', () => {
         expect(bearerOf(discord.requests, '/users/@me/guilds')).toEqual(['Bearer access-1']);
     });
 
-    it('uses the tokens another process saved when it loses a refresh race', async () => {
-        const discord = await discordGranting(60);
+    it.each([
+        ['', REST],
+        [', on the CommonJS build of @discordjs/rest', CommonJsREST]
+    ])('uses the tokens another process saved when it loses a refresh race%s', async (_build, Rest) => {
+        const discord = await discordGranting(60, undefined, Rest);
         const [first, second] = [discord.client(), discord.client()];
         await first.exchange('the-code');
 
@@ -298,8 +305,11 @@ describe('OAuthClient scopes', () => {
         await expect(oauth.as(USER.id).guilds()).rejects.toMatchObject(LOGIN_NEEDED);
     });
 
-    it('deletes the tokens and throws when a typed call gets a 401', async () => {
-        const discord = await discordGranting(WEEK_SECONDS);
+    it.each([
+        ['', REST],
+        [', on the CommonJS build of @discordjs/rest', CommonJsREST]
+    ])('deletes the tokens and throws when a typed call gets a 401%s', async (_build, Rest) => {
+        const discord = await discordGranting(WEEK_SECONDS, undefined, Rest);
         const oauth = discord.client();
         await oauth.exchange('the-code');
         discord.deadAccessTokens.add('access-0');

@@ -113,14 +113,13 @@ export abstract class OAuth<TScopes extends OAuthScope = never, TExtra extends O
     public static with<TScopes extends OAuthScope = never, TExtra extends OAuthScope = never>(
         options: OAuthOptions<TScopes, TExtra> = {}
     ): new (host: CoreBase) => OAuth<TScopes, TExtra> {
-        // wrapped in an object to get a class called OAuth. the logger prints constructor.name, and an
-        // anonymous class gets its name from the property it's assigned to
-        const named = {
-            OAuth: class extends OAuth<TScopes, TExtra> {
-                protected readonly options = options;
-            }
+        const Attached = class extends OAuth<TScopes, TExtra> {
+            protected readonly options = options;
         };
-        return named.OAuth;
+        // the logger prints `constructor.name`. bun sets it to '' for `{ OAuth: class {} }.OAuth`, and the build
+        // turns a class in an object property into exactly that
+        Object.defineProperty(Attached, 'name', { value: 'OAuth' });
+        return Attached;
     }
 
     /**

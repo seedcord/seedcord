@@ -1950,6 +1950,9 @@ importers:
       '@seedcord/errors':
         specifier: workspace:^
         version: link:../../packages/errors
+      '@seedcord/utils':
+        specifier: workspace:^
+        version: link:../../packages/utils
       discord-api-types:
         specifier: ^0.38.59
         version: 0.38.59

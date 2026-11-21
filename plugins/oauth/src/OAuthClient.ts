@@ -1,6 +1,7 @@
-import { DiscordAPIError, makeURLSearchParams, RequestMethod } from '@discordjs/rest';
+import { makeURLSearchParams, RequestMethod } from '@discordjs/rest';
 import { SeedcordErrorCode } from '@seedcord/errors';
 import { SeedcordError, SeedcordTypeError } from '@seedcord/errors/internal';
+import { discordErrorOf } from '@seedcord/utils/internal';
 import { OAuth2Routes, Routes } from 'discord-api-types/v10';
 import { delay, difference, union } from 'es-toolkit';
 
@@ -389,7 +390,7 @@ export class OAuthClient<TScopes extends OAuthScope = never, TExtra extends OAut
 }
 
 function isUnauthorized(error: unknown): boolean {
-    return error instanceof DiscordAPIError && error.status === UNAUTHORIZED;
+    return discordErrorOf(error)?.status === UNAUTHORIZED;
 }
 
 // auth: false stops @discordjs/rest from sending the bot token, and from clearing it when a user's call gets a 401

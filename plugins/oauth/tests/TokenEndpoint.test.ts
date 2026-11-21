@@ -3,7 +3,7 @@ import { describe, expect, it } from 'vite-plus/test';
 
 import { TokenEndpoint } from '#src/TokenEndpoint';
 
-import { fakeDiscord } from './fakeDiscord';
+import { CommonJsREST, fakeDiscord } from './fakeDiscord';
 
 import type { SeenRequest } from './fakeDiscord';
 
@@ -74,6 +74,16 @@ describe('TokenEndpoint', () => {
 
         expect(await endpoint.exchange({ code: 'used', redirectUri: 'https://bot.test/cb' })).toBeUndefined();
         expect(await endpoint.refresh('used')).toBeUndefined();
+    });
+
+    it('resolves to undefined for invalid_grant on the CommonJS build of @discordjs/rest', async () => {
+        const discord = await fakeDiscord(() => ({
+            status: 400,
+            json: { error: 'invalid_grant', error_description: 'Invalid "code" in request.' }
+        }));
+        const endpoint = new TokenEndpoint(new CommonJsREST({ api: discord.api }), APP_ID, SECRET);
+
+        expect(await endpoint.exchange({ code: 'made-up', redirectUri: 'https://bot.test/cb' })).toBeUndefined();
     });
 
     it("throws on any other refusal and keeps the bot's token set", async () => {

@@ -1,4 +1,4 @@
-import { DiscordAPIError } from '@discordjs/rest';
+import { discordErrorOf } from '@seedcord/utils/internal';
 import { Routes } from 'discord-api-types/v10';
 
 import type { REST } from '@discordjs/rest';
@@ -62,7 +62,7 @@ export class TokenEndpoint {
             // justified: discord documents this body for both grant types
             return (await this.post(Routes.oauth2TokenExchange(), fields)) as RESTPostOAuth2AccessTokenResult;
         } catch (error) {
-            if (error instanceof DiscordAPIError && error.code === 'invalid_grant') return undefined;
+            if (discordErrorOf(error)?.code === 'invalid_grant') return undefined;
             throw error;
         }
     }

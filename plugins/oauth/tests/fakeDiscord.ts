@@ -1,10 +1,16 @@
 import { once } from 'node:events';
 import { createServer } from 'node:http';
+import { createRequire } from 'node:module';
 
 import { onTestFinished } from 'vite-plus/test';
 
+import type { REST } from '@discordjs/rest';
 import type { IncomingHttpHeaders } from 'node:http';
 import type { AddressInfo } from 'node:net';
+
+// a gateway bot's rest throws the DiscordAPIError from this build because discord.js loads the CommonJS one
+// justified: both builds export the same REST class
+export const { REST: CommonJsREST } = createRequire(import.meta.url)('@discordjs/rest') as { REST: typeof REST };
 
 export interface SeenRequest {
     method: string;
