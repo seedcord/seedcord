@@ -1,8 +1,8 @@
 import { render, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
-import { describe, expect, it } from 'vite-plus/test';
+import { afterEach, describe, expect, it } from 'vite-plus/test';
 
-import { Disclosure, DisclosurePanel, DisclosureTrigger } from '#src/Disclosure';
+import { Disclosure, DisclosurePanel, DisclosureTrigger, useDisclosure } from '#src/Disclosure';
 
 import type { RenderResult } from '@testing-library/react';
 import type { ComponentProps } from 'react';
@@ -85,5 +85,50 @@ describe('Disclosure defaultOpen prop', () => {
         expect(trigger).toHaveAttribute('aria-expanded', 'true');
         const panel = screen.getByText('Panel body').parentElement;
         expect(panel).toHaveAttribute('data-state', 'open');
+    });
+});
+
+describe('Disclosure storageKey', () => {
+    const STORAGE_KEY = 'test:disclosure';
+
+    afterEach(() => {
+        localStorage.clear();
+    });
+
+    function RecordOpen({ renders }: { renders: boolean[] }): null {
+        renders.push(useDisclosure().open);
+        return null;
+    }
+
+    it('mounts in the saved state without first rendering its default', () => {
+        localStorage.setItem(STORAGE_KEY, 'true');
+        const renders: boolean[] = [];
+        render(
+            <Disclosure storageKey={STORAGE_KEY}>
+                <RecordOpen renders={renders} />
+                <DisclosureTrigger>Toggle</DisclosureTrigger>
+            </Disclosure>
+        );
+
+        expect(renders).not.toContain(false);
+        expect(screen.getByRole('button', { name: 'Toggle' })).toHaveAttribute('aria-expanded', 'true');
+    });
+
+    it('toggles every disclosure that shares its key', async () => {
+        const user = userEvent.setup();
+        render(
+            <>
+                <Disclosure storageKey={STORAGE_KEY} defaultOpen>
+                    <DisclosureTrigger>First</DisclosureTrigger>
+                </Disclosure>
+                <Disclosure storageKey={STORAGE_KEY} defaultOpen>
+                    <DisclosureTrigger>Second</DisclosureTrigger>
+                </Disclosure>
+            </>
+        );
+
+        await user.click(screen.getByRole('button', { name: 'First' }));
+
+        expect(screen.getByRole('button', { name: 'Second' })).toHaveAttribute('aria-expanded', 'false');
     });
 });
