@@ -171,7 +171,7 @@ export function DisclosurePanel({ children, className, ...props }: DisclosurePan
         <div
             {...props}
             id={panelId}
-            aria-hidden={!open}
+            inert={!open}
             data-state={open ? 'open' : 'closed'}
             className={cn(disclosurePanelBaseClassName, className)}
         >

@@ -60,11 +60,11 @@ describe('Disclosure aria wiring', () => {
 });
 
 describe('Disclosure Panel data-state', () => {
-    it('reflects closed state by default and aria-hidden is true', () => {
+    it('starts closed with the panel inert', () => {
         renderDisclosure();
         const panel = screen.getByText('Panel body').parentElement;
         expect(panel).toHaveAttribute('data-state', 'closed');
-        expect(panel).toHaveAttribute('aria-hidden', 'true');
+        expect(panel).toHaveAttribute('inert');
     });
 
     it('transitions to open state after Trigger click', async () => {
@@ -74,7 +74,7 @@ describe('Disclosure Panel data-state', () => {
         await user.click(trigger);
         const panel = screen.getByText('Panel body').parentElement;
         expect(panel).toHaveAttribute('data-state', 'open');
-        expect(panel).toHaveAttribute('aria-hidden', 'false');
+        expect(panel).not.toHaveAttribute('inert');
     });
 });
 

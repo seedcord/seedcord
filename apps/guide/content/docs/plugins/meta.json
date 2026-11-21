@@ -1,6 +1,7 @@
 {
     "title": "Plugins",
     "root": true,
+    "closed": ["Mongoose", "Kysely", "Tasks", "i18n"],
     "pages": [
         "index",
         "typing",

@@ -12,8 +12,8 @@ const TABS: readonly GuideTab[] = [
 ];
 
 const SIDEBARS: SidebarsByTab = {
-    '/docs': [{ links: [{ label: 'Install', href: '/docs/install' }] }],
-    '/docs/tooling': [{ links: [{ label: 'The CLI', href: '/docs/tooling/cli' }] }]
+    '/docs': [{ kind: 'lead', links: [{ label: 'Install', href: '/docs/install' }] }],
+    '/docs/tooling': [{ kind: 'lead', links: [{ label: 'The CLI', href: '/docs/tooling/cli' }] }]
 };
 
 function renderNav(activeHref = '/docs'): ReturnType<typeof render> {
